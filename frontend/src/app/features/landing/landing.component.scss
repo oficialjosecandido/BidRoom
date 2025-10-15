@@ -1,0 +1,336 @@
+.hero {
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+  color: white;
+  padding: 6rem 0;
+  text-align: center;
+
+  h1 {
+    font-size: 3.5rem;
+    font-weight: 800;
+    margin-bottom: 1.5rem;
+  }
+
+  .hero-subtitle {
+    font-size: 1.25rem;
+    margin-bottom: 2rem;
+    opacity: 0.95;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .hero-cta {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+
+    .btn-outline {
+      background-color: transparent;
+      border-color: white;
+      color: white;
+
+      &:hover {
+        background-color: white;
+        color: var(--primary-color);
+      }
+    }
+  }
+}
+
+.stats-section {
+  padding: 4rem 0;
+  background-color: white;
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 2rem;
+  }
+
+  .stat-card {
+    text-align: center;
+
+    .stat-value {
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: var(--primary-color);
+      margin-bottom: 0.5rem;
+    }
+
+    .stat-label {
+      color: var(--gray-600);
+      font-size: 1rem;
+    }
+  }
+}
+
+.auctions-section,
+.promoted-section,
+.how-it-works-section {
+  padding: 4rem 0;
+
+  .section-header {
+    text-align: center;
+    margin-bottom: 3rem;
+
+    h2 {
+      font-size: 2.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    p {
+      color: var(--gray-600);
+      font-size: 1.125rem;
+    }
+  }
+}
+
+.auction-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 2rem;
+
+  .auction-card {
+    background: white;
+    border-radius: var(--border-radius-lg);
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+    &:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-lg);
+    }
+
+    .auction-image {
+      position: relative;
+      width: 100%;
+      height: 200px;
+      overflow: hidden;
+
+      img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .verified-badge {
+        position: absolute;
+        top: 0.75rem;
+        right: 0.75rem;
+        background-color: var(--success-color);
+        color: white;
+        padding: 0.375rem 0.75rem;
+        border-radius: var(--border-radius);
+        font-size: 0.8125rem;
+        font-weight: 600;
+      }
+    }
+
+    .auction-details {
+      padding: 1.25rem;
+
+      h3 {
+        font-size: 1.125rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .auction-meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.75rem;
+
+        .current-bid {
+          .label {
+            display: block;
+            font-size: 0.75rem;
+            color: var(--gray-600);
+            margin-bottom: 0.25rem;
+          }
+
+          .value {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--primary-color);
+          }
+        }
+
+        .bid-count {
+          font-size: 0.875rem;
+          color: var(--gray-600);
+        }
+      }
+
+      .auction-footer {
+        padding-top: 0.75rem;
+        border-top: 1px solid var(--gray-200);
+
+        .time-remaining {
+          font-size: 0.875rem;
+          color: var(--danger-color);
+          font-weight: 600;
+        }
+      }
+    }
+  }
+}
+
+.promoted-section {
+  background-color: var(--gray-50);
+
+  .promoted-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 2rem;
+
+    .promoted-card {
+      background: white;
+      border-radius: var(--border-radius-lg);
+      overflow: hidden;
+      box-shadow: var(--shadow-md);
+      cursor: pointer;
+      transition: all 0.2s ease;
+
+      &:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-xl);
+      }
+
+      .promoted-image {
+        height: 220px;
+        overflow: hidden;
+
+        img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+        }
+      }
+
+      .promoted-details {
+        padding: 1.5rem;
+
+        h3 {
+          font-size: 1.25rem;
+          margin-bottom: 0.75rem;
+        }
+
+        .description {
+          color: var(--gray-600);
+          font-size: 0.9375rem;
+          margin-bottom: 1rem;
+        }
+
+        .promoted-meta {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+
+          .price {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+          }
+
+          .watchers {
+            font-size: 0.875rem;
+            color: var(--gray-600);
+          }
+        }
+      }
+    }
+  }
+}
+
+.how-it-works-section {
+  .steps-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 3rem;
+    margin-top: 3rem;
+
+    .step {
+      text-align: center;
+
+      .step-number {
+        width: 60px;
+        height: 60px;
+        background-color: var(--primary-color);
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin: 0 auto 1.5rem;
+      }
+
+      h3 {
+        font-size: 1.25rem;
+        margin-bottom: 0.75rem;
+      }
+
+      p {
+        color: var(--gray-600);
+      }
+    }
+  }
+}
+
+.cta-section {
+  padding: 5rem 0;
+  background: linear-gradient(135deg, var(--primary-light) 0%, var(--primary-color) 100%);
+  color: white;
+
+  h2 {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+  }
+
+  p {
+    font-size: 1.125rem;
+    margin-bottom: 2rem;
+    opacity: 0.95;
+  }
+
+  .btn-primary {
+    background-color: white;
+    color: var(--primary-color);
+
+    &:hover {
+      background-color: var(--gray-100);
+    }
+  }
+}
+
+.loading-container {
+  display: flex;
+  justify-content: center;
+  padding: 3rem 0;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 3rem 0;
+  color: var(--gray-600);
+}
+
+@media (max-width: 768px) {
+  .hero h1 {
+    font-size: 2.5rem;
+  }
+
+  .auction-grid,
+  .promoted-grid {
+    grid-template-columns: 1fr;
+  }
+}
+

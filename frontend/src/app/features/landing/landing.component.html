@@ -1,0 +1,151 @@
+<!-- Hero Section -->
+<section class="hero">
+  <div class="container">
+    <div class="hero-content">
+      <h1>Verified Value. Decisive Win.</h1>
+      <p class="hero-subtitle">
+        Join the real-time auction platform where verified listings meet competitive bidding.
+        Experience the thrill of the Private Room.
+      </p>
+      <div class="hero-cta">
+        <button class="btn btn-primary btn-lg" (click)="viewAllAuctions()">
+          Browse Auctions
+        </button>
+        <button class="btn btn-outline btn-lg">
+          How It Works
+        </button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Stats Section -->
+<section class="stats-section">
+  <div class="container">
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-value">{{ stats.totalBidders.toLocaleString() }}</div>
+        <div class="stat-label">Total Bidders</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">${{ (stats.valueTraded / 1000000).toFixed(1) }}M</div>
+        <div class="stat-label">Value Traded</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">{{ stats.activeAuctions }}</div>
+        <div class="stat-label">Active Auctions</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Ending Soon Section -->
+<section class="auctions-section">
+  <div class="container">
+    <div class="section-header">
+      <h2>⏰ Ending Soon</h2>
+      <p>Don't miss these auctions closing within the next few hours</p>
+    </div>
+
+    <div *ngIf="loading" class="loading-container">
+      <div class="spinner"></div>
+    </div>
+
+    <div *ngIf="!loading && endingSoonAuctions.length > 0" class="auction-grid">
+      <div *ngFor="let auction of endingSoonAuctions" class="auction-card" (click)="viewAuction(auction._id)">
+        <div class="auction-image">
+          <img [src]="auction.images[0]?.url || '/assets/placeholder.jpg'" [alt]="auction.title">
+          <span *ngIf="auction.isVerified" class="verified-badge">✓ Verified</span>
+        </div>
+        <div class="auction-details">
+          <h3>{{ auction.title }}</h3>
+          <div class="auction-meta">
+            <div class="current-bid">
+              <span class="label">Current Bid:</span>
+              <span class="value">${{ auction.currentBid.toFixed(2) }}</span>
+            </div>
+            <div class="bid-count">{{ auction.totalBids }} bids</div>
+          </div>
+          <div class="auction-footer">
+            <span class="time-remaining">Ends in 2h 15m</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div *ngIf="!loading && endingSoonAuctions.length === 0" class="empty-state">
+      <p>No auctions ending soon at the moment.</p>
+    </div>
+  </div>
+</section>
+
+<!-- Promoted Auctions Section -->
+<section class="promoted-section">
+  <div class="container">
+    <div class="section-header">
+      <h2>⭐ Featured Auctions</h2>
+      <p>Premium verified listings from trusted sellers</p>
+    </div>
+
+    <div *ngIf="!loading && promotedAuctions.length > 0" class="promoted-grid">
+      <div *ngFor="let auction of promotedAuctions" class="promoted-card" (click)="viewAuction(auction._id)">
+        <div class="promoted-image">
+          <img [src]="auction.images[0]?.url || '/assets/placeholder.jpg'" [alt]="auction.title">
+        </div>
+        <div class="promoted-details">
+          <h3>{{ auction.title }}</h3>
+          <p class="description">{{ auction.description | slice:0:100 }}...</p>
+          <div class="promoted-meta">
+            <div class="price">${{ auction.currentBid.toFixed(2) }}</div>
+            <div class="watchers">{{ auction.watcherCount }} watching</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- How It Works Section -->
+<section class="how-it-works-section">
+  <div class="container">
+    <h2 class="text-center">How Bidroom Works</h2>
+    
+    <div class="steps-grid">
+      <div class="step">
+        <div class="step-number">1</div>
+        <h3>Browse & Watch</h3>
+        <p>Explore verified listings and add items to your watchlist</p>
+      </div>
+      
+      <div class="step">
+        <div class="step-number">2</div>
+        <h3>Authorize & Bid</h3>
+        <p>Complete payment authorization and start bidding on your favorite items</p>
+      </div>
+      
+      <div class="step">
+        <div class="step-number">3</div>
+        <h3>Private Room</h3>
+        <p>Top 5 bidders compete in an exclusive private room with overtime rules</p>
+      </div>
+      
+      <div class="step">
+        <div class="step-number">4</div>
+        <h3>Win & Transact</h3>
+        <p>Secure escrow payment ensures safe transactions for both parties</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA Section -->
+<section class="cta-section">
+  <div class="container text-center">
+    <h2>Ready to Start Bidding?</h2>
+    <p>Join thousands of bidders winning verified items every day</p>
+    <button class="btn btn-primary btn-lg" (click)="viewAllAuctions()">
+      View All Auctions
+    </button>
+  </div>
+</section>
+
