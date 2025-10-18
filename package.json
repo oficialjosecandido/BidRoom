@@ -1,0 +1,19 @@
+{
+  "name": "bidroom",
+  "version": "1.0.0",
+  "description": "A full-stack application built with Angular frontend and Node.js backend",
+  "scripts": {
+    "start": "./start-dev.sh",
+    "start:backend": "cd backend && npm run dev",
+    "start:frontend": "cd frontend && npm start",
+    "build:frontend": "cd frontend && npm run build",
+    "install:all": "npm install && cd backend && npm install && cd ../frontend && npm install",
+    "clean": "rm -rf node_modules backend/node_modules frontend/node_modules frontend/dist"
+  },
+  "keywords": ["angular", "nodejs", "express", "typescript", "fullstack"],
+  "author": "",
+  "license": "ISC",
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
