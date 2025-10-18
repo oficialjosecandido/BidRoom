@@ -1,6 +1,5 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
-import { MsalGuard } from '@azure/msal-angular';
 
 const routes: Routes = [
   {
@@ -17,13 +16,18 @@ const routes: Routes = [
     path: 'dashboard',
     loadChildren: () =>
       import('./features/dashboard/dashboard.module').then((m) => m.DashboardModule),
-    canActivate: [MsalGuard],
   },
   {
     path: 'auth',
     loadChildren: () =>
       import('./features/auth/auth.module').then((m) => m.AuthModule),
   },
+  {
+    path: 'info',
+    loadChildren: () =>
+      import('./features/info/info.module').then((m) => m.InfoModule),
+  },
+  // MSAL redirect route - handled by MSAL automatically
   {
     path: '**',
     redirectTo: '',

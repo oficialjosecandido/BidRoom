@@ -1,0 +1,115 @@
+<div class="verify-bidding-container">
+  <div class="verify-bidding-card">
+    <!-- Loading State -->
+    <div *ngIf="isLoading" class="loading-state">
+      <div class="loading-spinner">
+        <div class="spinner"></div>
+      </div>
+      <p>Loading your account status...</p>
+    </div>
+
+    <!-- Main Content -->
+    <div *ngIf="!isLoading && currentUser" class="verify-content">
+      <div class="verify-header">
+        <div class="status-icon">
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+          </svg>
+        </div>
+        <h1>Account Verification Required</h1>
+        <p class="status-message">{{ getBiddingStatusMessage() }}</p>
+      </div>
+
+      <!-- Current Status -->
+      <div class="current-status">
+        <h2>Your Current Status</h2>
+        <div class="status-card">
+          <div class="status-info">
+            <div class="status-badge" [class]="'status-' + currentUser.biddingStatus.tier">
+              {{ currentUser.biddingStatus.tier | titlecase }}
+            </div>
+            <div class="status-details">
+              <h3>{{ currentUser.biddingStatus.tier | titlecase }} Account</h3>
+              <p *ngIf="currentUser.biddingStatus.preAuthAmount">
+                Pre-authorized: ${{ currentUser.biddingStatus.preAuthAmount }}
+              </p>
+              <p *ngIf="currentUser.biddingStatus.preAuthExpiry">
+                Expires: {{ currentUser.biddingStatus.preAuthExpiry | date:'short' }}
+              </p>
+            </div>
+          </div>
+          <div class="status-actions">
+            <button 
+              *ngIf="!currentUser.biddingStatus.isActive"
+              class="btn btn-primary"
+              (click)="startVerification()">
+              Verify Account
+            </button>
+            <button 
+              *ngIf="currentUser.biddingStatus.isActive"
+              class="btn btn-outline-secondary"
+              (click)="startVerification()">
+              Update Verification
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Benefits Section -->
+      <div class="benefits-section">
+        <h2>Verified Account Benefits</h2>
+        <div class="benefits-grid">
+          <div *ngFor="let benefit of getTierBenefits()" class="benefit-item">
+            <div class="benefit-icon">
+              <svg viewBox="0 0 24 24" fill="currentColor">
+                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+              </svg>
+            </div>
+            <span>{{ benefit }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Requirements Steps -->
+      <div class="requirements-section">
+        <h2>Verification Process</h2>
+        <div class="steps-list">
+          <div *ngFor="let step of getRequirementSteps()" class="step-item">
+            <div class="step-number">{{ step.step }}</div>
+            <div class="step-content">
+              <h3>{{ step.title }}</h3>
+              <p>{{ step.description }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Security Notice -->
+      <div class="security-notice">
+        <div class="security-icon">
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/>
+          </svg>
+        </div>
+        <div class="security-content">
+          <h4>Secure & Protected</h4>
+          <p>Your payment information is encrypted and processed securely. Pre-authorization holds are temporary and automatically released if you don't win auctions.</p>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="action-buttons">
+        <button 
+          class="btn btn-primary btn-lg"
+          (click)="startVerification()">
+          Start Verification Process
+        </button>
+        <button 
+          class="btn btn-outline-secondary"
+          (click)="router.navigate(['/dashboard'])">
+          Continue to Dashboard
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

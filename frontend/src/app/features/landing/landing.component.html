@@ -1,103 +1,353 @@
 <!-- Hero Section -->
 <section class="hero">
+  <div class="hero-background">
+    <div class="hero-overlay"></div>
+  </div>
   <div class="container">
     <div class="hero-content">
-      <h1>Verified Value. Decisive Win.</h1>
-      <p class="hero-subtitle">
-        Join the real-time auction platform where verified listings meet competitive bidding.
-        Experience the thrill of the Private Room.
-      </p>
-      <div class="hero-cta">
-        <button class="btn btn-primary btn-lg" (click)="viewAllAuctions()">
-          Browse Auctions
-        </button>
-        <button class="btn btn-outline btn-lg">
-          How It Works
-        </button>
+      <h1 class="hero-title">FIND YOUR TRUE WORTH</h1>
+      <p class="hero-subtitle">THE SMART WAY TO BID AND SELL</p>
+      <button class="btn btn-primary btn-lg hero-cta" (click)="startBidding()">
+        START BIDDING NOW
+      </button>
+      <div class="search-container">
+        <div class="search-bar">
+          <svg class="search-icon" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+          </svg>
+          <input type="text" placeholder="Search auctions..." class="search-input" 
+                 [(ngModel)]="searchQuery" (keyup.enter)="performSearch()">
+        </div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- Stats Section -->
+<!-- Platform Stats Section -->
 <section class="stats-section">
   <div class="container">
     <div class="stats-grid">
       <div class="stat-card">
-        <div class="stat-value">{{ stats.totalBidders.toLocaleString() }}</div>
+        <div class="stat-value">{{ platformStats.totalBidders.toLocaleString() }}+</div>
         <div class="stat-label">Total Bidders</div>
       </div>
       <div class="stat-card">
-        <div class="stat-value">${{ (stats.valueTraded / 1000000).toFixed(1) }}M</div>
+        <div class="stat-value">${{ (platformStats.valueTraded / 1000000).toFixed(1) }}M</div>
         <div class="stat-label">Value Traded</div>
       </div>
       <div class="stat-card">
-        <div class="stat-value">{{ stats.activeAuctions }}</div>
-        <div class="stat-label">Active Auctions</div>
+        <div class="stat-value">{{ platformStats.activeAuctions }}+</div>
+        <div class="stat-label">Listings Live Now</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">{{ platformStats.verifiedListings }}+</div>
+        <div class="stat-label">Verified Items</div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- Ending Soon Section -->
-<section class="auctions-section">
+<!-- Feature Section -->
+<section class="features-section">
   <div class="container">
-    <div class="section-header">
-      <h2>⏰ Ending Soon</h2>
-      <p>Don't miss these auctions closing within the next few hours</p>
+    <div class="features-grid">
+      <div class="feature-item">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/>
+          </svg>
+        </div>
+        <h3>VERIFIED LISTINGS</h3>
+        <p>Items authenticated and secured in our warehouse</p>
+      </div>
+      <div class="feature-item">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/>
+          </svg>
+        </div>
+        <h3>MAXIMIZE VALUE</h3>
+        <p>Competitive bidding drives optimal prices</p>
+      </div>
+      <div class="feature-item">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path d="M16 4c0-1.11.89-2 2-2s2 .89 2 2-.89 2-2 2-2-.89-2-2zm4 18v-6h2.5l-2.54-7.63A1.5 1.5 0 0 0 18.54 8H16c-.8 0-1.54.37-2.01.99L12 11.5 10.01 8.99A2.5 2.5 0 0 0 8 8H5.46c-.8 0-1.54.37-2.01.99L1 15.5V22h2v-6h2.5L8 18.5V22h2v-6h2.5L15 18.5V22h5z"/>
+          </svg>
+        </div>
+        <h3>COMMITTED SELLERS</h3>
+        <p>Verified sellers with proven track records</p>
+      </div>
     </div>
+  </div>
+</section>
 
-    <div *ngIf="loading" class="loading-container">
-      <div class="spinner"></div>
+<!-- Ending Soon Urgency Banner -->
+<section class="ending-soon-banner">
+  <div class="container">
+    <div class="urgency-header">
+      <div class="urgency-icon">
+        <svg viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm4.2 14.2L11 13V7h1.5v5.2l4.5 2.7-.8 1.3z"/>
+        </svg>
+      </div>
+      <div class="urgency-content">
+        <h2>ENDING SOON - ACT FAST!</h2>
+        <p>Don't miss these auctions closing within the next few hours</p>
+      </div>
     </div>
-
-    <div *ngIf="!loading && endingSoonAuctions.length > 0" class="auction-grid">
-      <div *ngFor="let auction of endingSoonAuctions" class="auction-card" (click)="viewAuction(auction._id)">
-        <div class="auction-image">
-          <img [src]="auction.images[0]?.url || '/assets/placeholder.jpg'" [alt]="auction.title">
+    
+    <div class="ending-soon-grid">
+      <div *ngFor="let auction of endingSoonAuctions.slice(0, 6)" class="urgency-card" (click)="viewAuction(auction._id)">
+        <div class="urgency-image">
+          <img [src]="auction.images[0].url || '/assets/placeholder.jpg'" [alt]="auction.title">
+          <div class="urgency-timer">
+            <span class="time-remaining">{{ getTimeRemaining(auction) }}</span>
+          </div>
           <span *ngIf="auction.isVerified" class="verified-badge">✓ Verified</span>
         </div>
-        <div class="auction-details">
-          <h3>{{ auction.title }}</h3>
-          <div class="auction-meta">
-            <div class="current-bid">
-              <span class="label">Current Bid:</span>
-              <span class="value">${{ auction.currentBid.toFixed(2) }}</span>
-            </div>
-            <div class="bid-count">{{ auction.totalBids }} bids</div>
-          </div>
-          <div class="auction-footer">
-            <span class="time-remaining">Ends in 2h 15m</span>
-          </div>
+        <div class="urgency-details">
+          <h4>{{ auction.title }}</h4>
+          <div class="current-bid">£{{ auction.currentBid?.toFixed(0) || '0' }}</div>
+          <button class="btn btn-danger btn-sm">BID NOW</button>
         </div>
       </div>
     </div>
-
-    <div *ngIf="!loading && endingSoonAuctions.length === 0" class="empty-state">
-      <p>No auctions ending soon at the moment.</p>
+    
+    <div class="view-all-container">
+      <button class="btn btn-outline-primary" (click)="viewEndingSoon()">
+        View All Ending Soon
+      </button>
     </div>
   </div>
 </section>
 
-<!-- Promoted Auctions Section -->
-<section class="promoted-section">
+<!-- Success Story Spotlight -->
+<section class="success-story">
   <div class="container">
-    <div class="section-header">
-      <h2>⭐ Featured Auctions</h2>
-      <p>Premium verified listings from trusted sellers</p>
-    </div>
-
-    <div *ngIf="!loading && promotedAuctions.length > 0" class="promoted-grid">
-      <div *ngFor="let auction of promotedAuctions" class="promoted-card" (click)="viewAuction(auction._id)">
-        <div class="promoted-image">
-          <img [src]="auction.images[0]?.url || '/assets/placeholder.jpg'" [alt]="auction.title">
+    <div class="success-content">
+      <div class="success-image">
+        <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300" alt="Seller of the Week">
+      </div>
+      <div class="success-text">
+        <div class="success-badge">Seller of the Week</div>
+        <h3>Meet Sarah - Sold $15,000 in Art This Month</h3>
+        <blockquote>
+          "Bidroom helped me sell my art collection for 40% more than I expected. The verified listing feature gave buyers confidence, and the competitive bidding drove up prices naturally."
+        </blockquote>
+        <div class="seller-stats">
+          <div class="stat">
+            <span class="stat-value">$15,000</span>
+            <span class="stat-label">Sold This Month</span>
+          </div>
+          <div class="stat">
+            <span class="stat-value">12</span>
+            <span class="stat-label">Items Sold</span>
+          </div>
+          <div class="stat">
+            <span class="stat-value">4.9★</span>
+            <span class="stat-label">Rating</span>
+          </div>
         </div>
-        <div class="promoted-details">
-          <h3>{{ auction.title }}</h3>
-          <p class="description">{{ auction.description | slice:0:100 }}...</p>
-          <div class="promoted-meta">
-            <div class="price">${{ auction.currentBid.toFixed(2) }}</div>
-            <div class="watchers">{{ auction.watcherCount }} watching</div>
+        <button class="btn btn-primary" (click)="startSelling()">
+          Start Selling Like Sarah
+        </button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Main Content Section -->
+<section class="main-content">
+  <div class="container">
+    <div class="content-layout">
+      <!-- Left Sidebar -->
+      <div class="sidebar">
+        <div class="sidebar-section">
+          <h3 class="sidebar-title">Filter & Sort</h3>
+          
+          <div class="filter-group">
+            <h4>Categories</h4>
+            <select class="filter-select" [(ngModel)]="selectedCategory" (change)="applyFilters()">
+              <option value="">All Categories</option>
+              <option value="Electronics">Electronics</option>
+              <option value="Art">Art</option>
+              <option value="Collectibles">Collectibles</option>
+              <option value="Fashion">Fashion</option>
+              <option value="Jewelry">Jewelry</option>
+              <option value="Photography">Photography</option>
+              <option value="Sports">Sports</option>
+              <option value="Musical Instruments">Musical Instruments</option>
+              <option value="Watches">Watches</option>
+            </select>
+          </div>
+
+          <div class="filter-group">
+            <h4>Sort By</h4>
+            <select class="filter-select" [(ngModel)]="sortBy" (change)="applyFilters()">
+              <option value="deadline">Ending Soonest</option>
+              <option value="newest">Newest First</option>
+              <option value="highest_price">Highest Price</option>
+              <option value="lowest_price">Lowest Price</option>
+              <option value="most_bids">Most Bids</option>
+            </select>
+          </div>
+
+          <div class="filter-group">
+            <h4>Price Range</h4>
+            <div class="price-range">
+              <input type="range" min="0" max="50000" [(ngModel)]="maxPrice" 
+                     (input)="updatePriceRange()" class="range-slider">
+              <span class="range-value">£{{ maxPrice.toLocaleString() }}</span>
+            </div>
+            <div class="price-inputs">
+              <input type="number" [(ngModel)]="minPrice" placeholder="Min" 
+                     (change)="applyFilters()" class="price-input">
+              <span>-</span>
+              <input type="number" [(ngModel)]="maxPrice" placeholder="Max" 
+                     (change)="applyFilters()" class="price-input">
+            </div>
+          </div>
+
+          <div class="filter-group">
+            <h4>Minimum Bids</h4>
+            <input type="number" [(ngModel)]="minBids" (change)="applyFilters()" 
+                   class="filter-input" placeholder="Enter minimum bids">
+          </div>
+
+          <div class="filter-group">
+            <h4>Listing Type</h4>
+            <div class="filter-checkboxes">
+              <label class="checkbox-label">
+                <input type="checkbox" [(ngModel)]="showFeatured" (change)="applyFilters()">
+                <span class="featured-option">Featured Listings</span>
+              </label>
+              <label class="checkbox-label">
+                <input type="checkbox" [(ngModel)]="showVerified" (change)="applyFilters()">
+                <span class="verified-option">Verified Only</span>
+                <div class="tooltip" title="Items authenticated and secured in our warehouse">ℹ️</div>
+              </label>
+              <label class="checkbox-label">
+                <input type="checkbox" [(ngModel)]="showBuyNow" (change)="applyFilters()">
+                <span>Buy Now Available</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="filter-actions">
+            <button class="btn btn-outline-secondary btn-sm" (click)="clearFilters()">
+              Clear Filters
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Content Area -->
+      <div class="main-area">
+        <!-- Results Header -->
+        <div class="results-header">
+          <div class="results-info">
+            <h2>Active Auctions</h2>
+            <span class="results-count">{{ filteredAuctions.length }} listings found</span>
+          </div>
+          <div class="view-options">
+            <button class="view-toggle" [class.active]="viewMode === 'grid'" (click)="setViewMode('grid')">
+              <svg viewBox="0 0 24 24" fill="currentColor">
+                <path d="M3 11h8V3H3v8zm2-6h4v4H5V5zM13 3v8h8V3h-8zm6 6h-4V5h4v4zM3 21h8v-8H3v8zm2-6h4v4H5v-4zM13 13h8v8h-8v-8zm6 6h-4v-4h4v4z"/>
+              </svg>
+            </button>
+            <button class="view-toggle" [class.active]="viewMode === 'list'" (click)="setViewMode('list')">
+              <svg viewBox="0 0 24 24" fill="currentColor">
+                <path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Featured Listings (Always at top) -->
+        <div *ngIf="featuredAuctions.length > 0" class="featured-section">
+          <div class="section-header">
+            <h3 class="section-title">
+              <svg class="section-icon" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+              </svg>
+              Featured Listings
+            </h3>
+            <span class="featured-badge">Promoted by sellers</span>
+          </div>
+
+          <div class="auction-grid featured-grid" *ngIf="featuredAuctions.length > 0">
+            <div *ngFor="let auction of featuredAuctions" class="auction-card featured-card" (click)="viewAuction(auction._id)">
+              <div class="auction-image">
+                <img [src]="auction.images[0].url || '/assets/placeholder.jpg'" [alt]="auction.title">
+                <div class="listing-badges">
+                  <span class="featured-badge">⭐ Featured</span>
+                  <span *ngIf="auction.isVerified" class="verified-badge">✓ Verified</span>
+                </div>
+                <button class="watch-btn" (click)="toggleWatchlist(auction, $event)">
+                  <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2z"/>
+                  </svg>
+                </button>
+              </div>
+              <div class="auction-details">
+                <h4 class="auction-title">{{ auction.title }}</h4>
+                <div class="auction-category">{{ auction.category }}</div>
+                <div class="auction-price">
+                  <span class="current-bid">Current Bid: £{{ auction.currentBid?.toFixed(0) || '0' }}</span>
+                  <span class="bid-count">{{ auction.totalBids }} bids</span>
+                </div>
+                <div class="auction-time">{{ getTimeRemaining(auction) }}</div>
+                <button class="btn btn-primary btn-sm full-width">BID NOW</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- All Auctions Grid -->
+        <div class="all-auctions-section">
+          <div class="auction-grid" [class.list-view]="viewMode === 'list'">
+            <div *ngFor="let auction of filteredAuctions" class="auction-card" 
+                 [class.list-card]="viewMode === 'list'"
+                 (click)="viewAuction(auction._id)">
+              <div class="auction-image">
+                <img [src]="auction.images[0].url || '/assets/placeholder.jpg'" [alt]="auction.title">
+                <div class="listing-badges">
+                  <span *ngIf="auction.isPromoted" class="featured-badge">⭐ Featured</span>
+                  <span *ngIf="auction.isVerified" class="verified-badge">✓ Verified</span>
+                </div>
+                <button class="watch-btn" (click)="toggleWatchlist(auction, $event)">
+                  <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2z"/>
+                  </svg>
+                </button>
+              </div>
+              <div class="auction-details">
+                <h4 class="auction-title">{{ auction.title }}</h4>
+                <div class="auction-category">{{ auction.category }}</div>
+                <div class="auction-price">
+                  <span class="current-bid">Current Bid: £{{ auction.currentBid?.toFixed(0) || '0' }}</span>
+                  <span class="bid-count">{{ auction.totalBids }} bids</span>
+                </div>
+                <div class="auction-time">{{ getTimeRemaining(auction) }}</div>
+                <button class="btn btn-primary btn-sm full-width">BID NOW</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Load More Button -->
+          <div *ngIf="hasMoreAuctions" class="load-more-container">
+            <button class="btn btn-outline-primary" (click)="loadMoreAuctions()">
+              Load More Auctions
+            </button>
+          </div>
+
+          <!-- No Results -->
+          <div *ngIf="filteredAuctions.length === 0" class="no-results">
+            <div class="no-results-icon">🔍</div>
+            <h3>No auctions found</h3>
+            <p>Try adjusting your filters or search terms</p>
+            <button class="btn btn-primary" (click)="clearFilters()">Clear Filters</button>
           </div>
         </div>
       </div>
@@ -106,46 +356,61 @@
 </section>
 
 <!-- How It Works Section -->
-<section class="how-it-works-section">
+<section class="how-it-works">
   <div class="container">
-    <h2 class="text-center">How Bidroom Works</h2>
-    
+    <h2 class="section-title text-center">Bidroom Works in Three Simple Steps</h2>
     <div class="steps-grid">
       <div class="step">
-        <div class="step-number">1</div>
-        <h3>Browse & Watch</h3>
-        <p>Explore verified listings and add items to your watchlist</p>
+        <div class="step-icon">
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+          </svg>
+        </div>
+        <h3>1. DISCOVER</h3>
+        <p>Browse verified listings and find items you love</p>
       </div>
-      
       <div class="step">
-        <div class="step-number">2</div>
-        <h3>Authorize & Bid</h3>
-        <p>Complete payment authorization and start bidding on your favorite items</p>
+        <div class="step-icon">
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+          </svg>
+        </div>
+        <h3>2. BID/OFFER</h3>
+        <p>Place your bid and compete with other bidders</p>
       </div>
-      
       <div class="step">
-        <div class="step-number">3</div>
-        <h3>Private Room</h3>
-        <p>Top 5 bidders compete in an exclusive private room with overtime rules</p>
-      </div>
-      
-      <div class="step">
-        <div class="step-number">4</div>
-        <h3>Win & Transact</h3>
-        <p>Secure escrow payment ensures safe transactions for both parties</p>
+        <div class="step-icon">
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+          </svg>
+        </div>
+        <h3>3. OWN</h3>
+        <p>Win the auction and own your dream item</p>
       </div>
     </div>
   </div>
 </section>
 
-<!-- CTA Section -->
-<section class="cta-section">
-  <div class="container text-center">
-    <h2>Ready to Start Bidding?</h2>
-    <p>Join thousands of bidders winning verified items every day</p>
-    <button class="btn btn-primary btn-lg" (click)="viewAllAuctions()">
-      View All Auctions
-    </button>
+<!-- Watchlist Modal -->
+<div class="modal-overlay" *ngIf="showWatchlistModal" (click)="closeWatchlistModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Save to Watchlist</h3>
+      <button class="close-btn" (click)="closeWatchlistModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-icon">👀</div>
+      <h4>Want to keep track of this auction?</h4>
+      <p>Sign up to save items to your watchlist and get notified when the auction is about to end.</p>
+      <div class="modal-actions">
+        <button class="btn btn-outline-secondary" (click)="closeWatchlistModal()">
+          Maybe Later
+        </button>
+        <button class="btn btn-primary" (click)="signUpForWatchlist()">
+          Sign Up Free
+        </button>
+      </div>
+    </div>
   </div>
-</section>
+</div>
 

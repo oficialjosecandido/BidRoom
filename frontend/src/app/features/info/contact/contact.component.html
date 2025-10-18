@@ -1,0 +1,152 @@
+<div class="contact-page">
+  <div class="container">
+    <!-- Hero Section -->
+    <section class="hero-section">
+      <h1>Contact Us</h1>
+      <p class="hero-subtitle">We're here to help. Get in touch with our support team.</p>
+    </section>
+
+    <div class="contact-layout">
+      <!-- Contact Form -->
+      <div class="contact-form-section">
+        <h2>Send us a message</h2>
+        <form class="contact-form" (ngSubmit)="submitContactForm()" #form="ngForm">
+          <div class="form-group">
+            <label for="name">Full Name *</label>
+            <input type="text" id="name" name="name" [(ngModel)]="contactForm.name" 
+                   required class="form-input" placeholder="Enter your full name">
+          </div>
+
+          <div class="form-group">
+            <label for="email">Email Address *</label>
+            <input type="email" id="email" name="email" [(ngModel)]="contactForm.email" 
+                   required class="form-input" placeholder="Enter your email address">
+          </div>
+
+          <div class="form-group">
+            <label for="subject">Subject *</label>
+            <select id="subject" name="subject" [(ngModel)]="contactForm.subject" 
+                    required class="form-select">
+              <option value="">Select a subject</option>
+              <option value="general">General Inquiry</option>
+              <option value="bidding">Bidding Support</option>
+              <option value="selling">Selling Support</option>
+              <option value="account">Account Issues</option>
+              <option value="payment">Payment Problems</option>
+              <option value="dispute">Dispute Resolution</option>
+              <option value="technical">Technical Support</option>
+              <option value="verification">Verification Process</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="message">Message *</label>
+            <textarea id="message" name="message" [(ngModel)]="contactForm.message" 
+                      required class="form-textarea" rows="6" 
+                      placeholder="Please provide details about your inquiry..."></textarea>
+          </div>
+
+          <div class="form-group">
+            <label class="checkbox-label">
+              <input type="checkbox" [(ngModel)]="contactForm.newsletter" name="newsletter">
+              <span>Subscribe to our newsletter for updates and tips</span>
+            </label>
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-lg" 
+                  [disabled]="!form.valid || isSubmitting">
+            <span *ngIf="!isSubmitting">Send Message</span>
+            <span *ngIf="isSubmitting">Sending...</span>
+          </button>
+        </form>
+      </div>
+
+      <!-- Contact Information -->
+      <div class="contact-info-section">
+        <h2>Get in touch</h2>
+        
+        <div class="contact-methods">
+          <div class="contact-method">
+            <div class="method-icon">
+              <svg viewBox="0 0 24 24" fill="currentColor">
+                <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
+              </svg>
+            </div>
+            <div class="method-content">
+              <h3>Email Support</h3>
+              <p>support&#64;bidroom.co</p>
+              <span class="response-time">Response within 24 hours</span>
+            </div>
+          </div>
+
+          <div class="contact-method">
+            <div class="method-icon">
+              <svg viewBox="0 0 24 24" fill="currentColor">
+                <path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/>
+              </svg>
+            </div>
+            <div class="method-content">
+              <h3>Phone Support</h3>
+              <p>+44 20 7946 0958</p>
+              <span class="response-time">Mon-Fri 9AM-6PM GMT</span>
+            </div>
+          </div>
+
+          <div class="contact-method">
+            <div class="method-icon">
+              <svg viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+              </svg>
+            </div>
+            <div class="method-content">
+              <h3>Office Address</h3>
+              <p>
+                123 Auction Street<br>
+                London, SW1A 1AA<br>
+                United Kingdom
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- FAQ Quick Links -->
+        <div class="faq-quick-links">
+          <h3>Quick Help</h3>
+          <ul>
+            <li><a href="/faq#bidding">How to place a bid</a></li>
+            <li><a href="/faq#selling">How to create a listing</a></li>
+            <li><a href="/faq#payments">Payment issues</a></li>
+            <li><a href="/faq#account">Account problems</a></li>
+            <li><a href="/faq#verification">Verification process</a></li>
+          </ul>
+        </div>
+
+        <!-- Social Media -->
+        <div class="social-links">
+          <h3>Follow Us</h3>
+          <div class="social-icons">
+            <a href="#" class="social-link">
+              <svg viewBox="0 0 24 24" fill="currentColor">
+                <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/>
+              </svg>
+              Twitter
+            </a>
+            <a href="#" class="social-link">
+              <svg viewBox="0 0 24 24" fill="currentColor">
+                <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+              </svg>
+              Facebook
+            </a>
+            <a href="#" class="social-link">
+              <svg viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12.017 0C5.396 0 .029 5.367.029 11.987c0 6.62 5.367 11.987 11.988 11.987s11.987-5.367 11.987-11.987C24.004 5.367 18.637.001 12.017.001zM8.449 16.988c-1.297 0-2.448-.49-3.323-1.297C4.198 14.895 3.708 13.744 3.708 12.447s.49-2.448 1.418-3.323c.875-.807 2.026-1.297 3.323-1.297s2.448.49 3.323 1.297c.928.875 1.418 2.026 1.418 3.323s-.49 2.448-1.418 3.244c-.875.807-2.026 1.297-3.323 1.297zm7.83-9.281h-1.418v1.418h1.418V7.707zm-3.323 1.418c-2.026 0-3.674 1.648-3.674 3.674s1.648 3.674 3.674 3.674 3.674-1.648 3.674-3.674-1.648-3.674-3.674-3.674z"/>
+              </svg>
+              Instagram
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

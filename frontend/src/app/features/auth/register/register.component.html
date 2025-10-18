@@ -1,0 +1,181 @@
+<div class="register-container">
+  <div class="register-card">
+    <div class="register-header">
+      <h1>Join Bidroom</h1>
+      <p>Create your account to start bidding and selling</p>
+    </div>
+
+    <!-- Azure AD B2C Registration -->
+    <div *ngIf="useAzureLogin" class="azure-register">
+      <button 
+        class="btn btn-primary btn-lg azure-register-btn"
+        (click)="registerWithAzure()"
+        [disabled]="isLoading">
+        <svg class="azure-icon" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+        </svg>
+        <span *ngIf="!isLoading">Sign up with Microsoft</span>
+        <span *ngIf="isLoading">Creating account...</span>
+      </button>
+
+      <div class="register-divider">
+        <span>or</span>
+      </div>
+
+      <button 
+        class="btn btn-outline-secondary"
+        (click)="toggleRegistrationMethod()">
+        Use email and password
+      </button>
+    </div>
+
+    <!-- Traditional Email/Password Registration -->
+    <div *ngIf="!useAzureLogin" class="traditional-register">
+      <form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
+        <div class="form-group">
+          <label for="name">Full Name</label>
+          <input
+            type="text"
+            id="name"
+            formControlName="name"
+            class="form-control"
+            [class.is-invalid]="name?.invalid && name?.touched"
+            placeholder="Enter your full name">
+          <div *ngIf="name?.invalid && name?.touched" class="invalid-feedback">
+            <div *ngIf="name?.errors?.['required']">Name is required</div>
+            <div *ngIf="name?.errors?.['minlength']">Name must be at least 2 characters</div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="email">Email Address</label>
+          <input
+            type="email"
+            id="email"
+            formControlName="email"
+            class="form-control"
+            [class.is-invalid]="email?.invalid && email?.touched"
+            placeholder="Enter your email">
+          <div *ngIf="email?.invalid && email?.touched" class="invalid-feedback">
+            <div *ngIf="email?.errors?.['required']">Email is required</div>
+            <div *ngIf="email?.errors?.['email']">Please enter a valid email</div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input
+            type="password"
+            id="password"
+            formControlName="password"
+            class="form-control"
+            [class.is-invalid]="password?.invalid && password?.touched"
+            placeholder="Create a password">
+          <div *ngIf="password?.invalid && password?.touched" class="invalid-feedback">
+            <div *ngIf="password?.errors?.['required']">Password is required</div>
+            <div *ngIf="password?.errors?.['minlength']">Password must be at least 6 characters</div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="confirmPassword">Confirm Password</label>
+          <input
+            type="password"
+            id="confirmPassword"
+            formControlName="confirmPassword"
+            class="form-control"
+            [class.is-invalid]="confirmPassword?.invalid && confirmPassword?.touched"
+            placeholder="Confirm your password">
+          <div *ngIf="confirmPassword?.invalid && confirmPassword?.touched" class="invalid-feedback">
+            <div *ngIf="confirmPassword?.errors?.['required']">Please confirm your password</div>
+            <div *ngIf="confirmPassword?.errors?.['passwordMismatch']">Passwords do not match</div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="checkbox-label">
+            <input
+              type="checkbox"
+              formControlName="agreeToTerms"
+              [class.is-invalid]="agreeToTerms?.invalid && agreeToTerms?.touched">
+            <span class="checkmark"></span>
+            I agree to the <a href="/terms" target="_blank">Terms of Service</a> and <a href="/privacy" target="_blank">Privacy Policy</a>
+          </label>
+          <div *ngIf="agreeToTerms?.invalid && agreeToTerms?.touched" class="invalid-feedback">
+            You must agree to the terms and conditions
+          </div>
+        </div>
+
+        <button
+          type="submit"
+          class="btn btn-primary btn-lg register-btn"
+          [disabled]="registerForm.invalid || isLoading">
+          <span *ngIf="!isLoading">Create Account</span>
+          <span *ngIf="isLoading">Creating account...</span>
+        </button>
+      </form>
+
+      <div class="register-divider">
+        <span>or</span>
+      </div>
+
+      <button 
+        class="btn btn-outline-secondary"
+        (click)="toggleRegistrationMethod()">
+        Use Microsoft Account
+      </button>
+    </div>
+
+    <!-- Error Message -->
+    <div *ngIf="errorMessage" class="alert alert-danger">
+      {{ errorMessage }}
+    </div>
+
+    <!-- Success Message -->
+    <div *ngIf="successMessage" class="alert alert-success">
+      {{ successMessage }}
+      
+    </div>
+
+    <!-- Additional Links -->
+    <div class="register-footer">
+      <p>
+        Already have an account? 
+        <a routerLink="/auth/login">Sign in here</a>
+      </p>
+    </div>
+  </div>
+
+  <!-- Features Section -->
+  <div class="register-features">
+    <div class="feature">
+      <div class="feature-icon">
+        <svg viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+        </svg>
+      </div>
+      <h3>Join the Community</h3>
+      <p>Connect with thousands of buyers and sellers worldwide</p>
+    </div>
+
+    <div class="feature">
+      <div class="feature-icon">
+        <svg viewBox="0 0 24 24" fill="currentColor">
+          <path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/>
+        </svg>
+      </div>
+      <h3>Secure Transactions</h3>
+      <p>Your payments and personal data are protected with bank-level security</p>
+    </div>
+
+    <div class="feature">
+      <div class="feature-icon">
+        <svg viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/>
+        </svg>
+      </div>
+      <h3>Verified Members</h3>
+      <p>All members are verified to ensure a safe and trustworthy marketplace</p>
+    </div>
+  </div>
+</div>

@@ -9,7 +9,7 @@ interface AuthenticatedSocket extends Socket {
 }
 
 export function setupAuctionHandlers(
-  io: SocketIOServer,
+  _io: SocketIOServer,
   socket: AuthenticatedSocket,
   redisClient: RedisClientType<any>
 ): void {
@@ -108,12 +108,13 @@ export function setupAuctionHandlers(
         return;
       }
 
-      if (auction.canStartPrivateRoom()) {
-        socket.emit('auction:private-room:eligible', {
-          auctionId: auction._id,
-          message: 'This auction is eligible for a private room!',
-        });
-      }
+      // Temporarily disabled - canStartPrivateRoom method not implemented
+      // if (auction.canStartPrivateRoom) {
+      //   socket.emit('auction:private-room:eligible', {
+      //     auctionId: auction._id,
+      //     message: 'This auction is eligible for a private room!',
+      //   });
+      // }
     } catch (error) {
       logger.error('Error checking private room eligibility:', error);
     }

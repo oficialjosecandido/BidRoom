@@ -7,11 +7,11 @@ const router = Router();
 
 // Placeholder controller
 const disputeController = {
-  getAll: (req: any, res: any) => res.json({ message: 'Get disputes - to be implemented' }),
-  getById: (req: any, res: any) => res.json({ message: 'Get dispute - to be implemented' }),
-  create: (req: any, res: any) => res.json({ message: 'Create dispute - to be implemented' }),
-  addMessage: (req: any, res: any) => res.json({ message: 'Add message - to be implemented' }),
-  uploadEvidence: (req: any, res: any) => res.json({ message: 'Upload evidence - to be implemented' }),
+  getAll: (_req: any, res: any) => res.json({ message: 'Get disputes - to be implemented' }),
+  getById: (_req: any, res: any) => res.json({ message: 'Get dispute - to be implemented' }),
+  create: (_req: any, res: any) => res.json({ message: 'Create dispute - to be implemented' }),
+  addMessage: (_req: any, res: any) => res.json({ message: 'Add message - to be implemented' }),
+  uploadEvidence: (_req: any, res: any) => res.json({ message: 'Upload evidence - to be implemented' }),
 };
 
 // Get user's disputes

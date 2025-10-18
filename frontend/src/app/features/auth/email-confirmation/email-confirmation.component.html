@@ -1,0 +1,104 @@
+<div class="email-confirmation-container">
+  <div class="confirmation-card">
+    <div class="confirmation-header">
+      <div class="confirmation-icon" [class.success]="isConfirmed" [class.error]="errorMessage">
+        <svg *ngIf="!isLoading && !isConfirmed && !errorMessage" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+        </svg>
+        <svg *ngIf="isConfirmed" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+        </svg>
+        <svg *ngIf="errorMessage" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z"/>
+        </svg>
+        <div *ngIf="isLoading" class="loading-spinner"></div>
+      </div>
+      
+      <h1 *ngIf="!isConfirmed && !errorMessage">Confirm Your Email</h1>
+      <h1 *ngIf="isConfirmed">Email Confirmed!</h1>
+      <h1 *ngIf="errorMessage">Confirmation Failed</h1>
+    </div>
+
+    <div class="confirmation-content">
+      <!-- Loading State -->
+      <div *ngIf="isLoading" class="loading-state">
+        <p>Confirming your email address...</p>
+      </div>
+
+      <!-- Success State -->
+      <div *ngIf="isConfirmed" class="success-state">
+        <p>{{ successMessage }}</p>
+        <p class="redirect-message">You will be redirected to your dashboard in a few seconds...</p>
+      </div>
+
+      <!-- Error State -->
+      <div *ngIf="errorMessage" class="error-state">
+        <p>{{ errorMessage }}</p>
+        
+        <div *ngIf="email" class="resend-section">
+          <p>Didn't receive the email? We can send it again.</p>
+          <button 
+            class="btn btn-primary" 
+            (click)="resendConfirmation()"
+            [disabled]="isLoading">
+            <span *ngIf="!isLoading">Resend Confirmation Email</span>
+            <span *ngIf="isLoading">Sending...</span>
+          </button>
+        </div>
+
+        <div class="action-buttons">
+          <button class="btn btn-outline-primary" (click)="goToLogin()">
+            Go to Login
+          </button>
+        </div>
+      </div>
+
+      <!-- Initial State -->
+      <div *ngIf="!isLoading && !isConfirmed && !errorMessage" class="initial-state">
+        <p>We're confirming your email address...</p>
+        
+      </div>
+    </div>
+
+    <!-- Success Message -->
+    <div *ngIf="successMessage && !isConfirmed" class="alert alert-success">
+      {{ successMessage }}
+    </div>
+  </div>
+
+  <!-- Information Section -->
+  <div class="confirmation-info">
+    <h3>What's Next?</h3>
+    <div class="info-grid">
+      <div class="info-item">
+        <div class="info-icon">
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+          </svg>
+        </div>
+        <h4>Start Bidding</h4>
+        <p>Once confirmed, you can start bidding on auctions and selling your items.</p>
+      </div>
+
+      <div class="info-item">
+        <div class="info-icon">
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/>
+          </svg>
+        </div>
+        <h4>Secure Account</h4>
+        <p>Email confirmation helps us keep your account secure and verify your identity.</p>
+      </div>
+
+      <div class="info-item">
+        <div class="info-icon">
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/>
+          </svg>
+        </div>
+        <h4>Get Notified</h4>
+        <p>Receive important updates about your auctions and account activity.</p>
+      </div>
+    </div>
+  </div>
+</div>

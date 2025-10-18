@@ -1,119 +1,88 @@
-// Bidroom Azure Infrastructure as Code (Bicep)
-// This file defines all Azure resources needed for the platform
-
-@description('Location for all resources')
+// Bidroom Azure Infrastructure - Main Template
+param environment string = 'dev'
 param location string = resourceGroup().location
-
-@description('Environment name (dev, staging, prod)')
-@allowed([
-  'dev'
-  'staging'
-  'prod'
-])
-param environmentName string = 'dev'
-
-@description('Application name')
-param appName string = 'bidroom'
+param appServicePlanSku string = environment == 'prod' ? 'P2V2' : 'B1'
 
 // Variables
-var uniqueSuffix = uniqueString(resourceGroup().id)
-var acrName = '${appName}${environmentName}${uniqueSuffix}'
-var aksName = '${appName}-aks-${environmentName}'
-var redisCacheName = '${appName}-redis-${environmentName}-${uniqueSuffix}'
-var storageAccountName = '${appName}storage${environmentName}${uniqueSuffix}'
-var appInsightsName = '${appName}-insights-${environmentName}'
-var logAnalyticsName = '${appName}-logs-${environmentName}'
+var resourcePrefix = 'bidroom-${environment}'
+var appServiceName = '${resourcePrefix}-web'
+var apiServiceName = '${resourcePrefix}-api'
+var storageAccountName = '${resourcePrefix}storage${uniqueString(resourceGroup().id)}'
+var keyVaultName = '${resourcePrefix}-kv-${uniqueString(resourceGroup().id)}'
+var applicationInsightsName = '${resourcePrefix}-ai'
 
-// Azure Container Registry
-resource acr 'Microsoft.ContainerRegistry/registries@2023-01-01-preview' = {
-  name: acrName
+// Application Insights
+resource applicationInsights 'Microsoft.Insights/components@2020-02-02' = {
+  name: applicationInsightsName
   location: location
-  sku: {
-    name: 'Standard'
-  }
+  kind: 'web'
   properties: {
-    adminUserEnabled: true
+    Application_Type: 'web'
+    WorkspaceResourceId: logAnalyticsWorkspace.id
   }
 }
 
 // Log Analytics Workspace
-resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2022-10-01' = {
-  name: logAnalyticsName
+resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2021-12-01-preview' = {
+  name: '${resourcePrefix}-logs'
   location: location
   properties: {
     sku: {
       name: 'PerGB2018'
     }
-    retentionInDays: 30
+    retentionInDays: environment == 'prod' ? 90 : 30
   }
 }
 
-// Application Insights
-resource appInsights 'Microsoft.Insights/components@2020-02-02' = {
-  name: appInsightsName
-  location: location
-  kind: 'web'
-  properties: {
-    Application_Type: 'web'
-    WorkspaceResourceId: logAnalytics.id
-  }
-}
-
-// Azure Kubernetes Service
-resource aks 'Microsoft.ContainerService/managedClusters@2023-07-01' = {
-  name: aksName
-  location: location
-  identity: {
-    type: 'SystemAssigned'
-  }
-  properties: {
-    dnsPrefix: '${appName}-${environmentName}'
-    agentPoolProfiles: [
-      {
-        name: 'agentpool'
-        count: 3
-        vmSize: 'Standard_D2s_v3'
-        mode: 'System'
-        enableAutoScaling: true
-        minCount: 3
-        maxCount: 10
-      }
-    ]
-    networkProfile: {
-      networkPlugin: 'azure'
-      loadBalancerSku: 'standard'
-    }
-    addonProfiles: {
-      omsagent: {
-        enabled: true
-        config: {
-          logAnalyticsWorkspaceResourceID: logAnalytics.id
-        }
-      }
-    }
-  }
-}
-
-// Azure Cache for Redis
-resource redisCache 'Microsoft.Cache/redis@2023-08-01' = {
-  name: redisCacheName
+// Key Vault for secrets
+resource keyVault 'Microsoft.KeyVault/vaults@2022-07-01' = {
+  name: keyVaultName
   location: location
   properties: {
     sku: {
-      name: 'Standard'
-      family: 'C'
-      capacity: 1
+      name: 'standard'
+      family: 'A'
     }
-    enableNonSslPort: false
-    minimumTlsVersion: '1.2'
-    redisConfiguration: {
-      'maxmemory-policy': 'allkeys-lru'
-    }
+    tenantId: subscription().tenantId
+    accessPolicies: [
+      {
+        tenantId: subscription().tenantId
+        objectId: systemAssignedIdentity.principalId
+        permissions: {
+          secrets: ['get', 'list']
+          certificates: ['get', 'list']
+        }
+      }
+    ]
+    enabledForDeployment: false
+    enabledForDiskEncryption: false
+    enabledForTemplateDeployment: true
   }
 }
 
-// Storage Account
-resource storageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' = {
+// App Service Plan
+resource appServicePlan 'Microsoft.Web/serverfarms@2022-03-01' = {
+  name: '${resourcePrefix}-plan'
+  location: location
+  sku: {
+    name: appServicePlanSku
+    tier: environment == 'prod' ? 'PremiumV2' : 'Basic'
+    capacity: environment == 'prod' ? 2 : 1
+  }
+  kind: 'linux'
+  properties: {
+    reserved: true
+  }
+}
+
+// System Assigned Identity for App Services
+resource systemAssignedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2021-09-30-preview' = {
+  name: '${resourcePrefix}-identity'
+  location: location
+}
+
+// Storage Account for static files and images
+resource storageAccount 'Microsoft.Storage/storageAccounts@2022-05-01' = {
   name: storageAccountName
   location: location
   sku: {
@@ -122,41 +91,187 @@ resource storageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' = {
   kind: 'StorageV2'
   properties: {
     accessTier: 'Hot'
-    supportsHttpsTrafficOnly: true
+    allowBlobPublicAccess: false
     minimumTlsVersion: 'TLS1_2'
+    supportsHttpsTrafficOnly: true
   }
 }
 
 // Blob Container for images
-resource blobService 'Microsoft.Storage/storageAccounts/blobServices@2023-01-01' = {
-  parent: storageAccount
-  name: 'default'
-}
-
-resource imagesContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-01-01' = {
-  parent: blobService
-  name: 'bidroom-images'
+resource blobContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2022-05-01' = {
+  parent: storageAccount::storageAccount::default
+  name: 'images'
   properties: {
-    publicAccess: 'Blob'
+    publicAccess: 'None'
   }
 }
 
-// Role assignment for AKS to pull from ACR
-resource acrPullRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: guid(resourceGroup().id, aks.id, acr.id)
-  scope: acr
+// Frontend App Service (Angular)
+resource frontendApp 'Microsoft.Web/sites@2022-03-01' = {
+  name: appServiceName
+  location: location
+  kind: 'app,linux'
   properties: {
-    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '7f951dda-4ed3-4680-a7ca-43fe172d538d') // AcrPull role
-    principalId: aks.properties.identityProfile.kubeletidentity.objectId
-    principalType: 'ServicePrincipal'
+    serverFarmId: appServicePlan.id
+    siteConfig: {
+      linuxFxVersion: 'NODE|18-lts'
+      appSettings: [
+        {
+          name: 'WEBSITE_NODE_DEFAULT_VERSION'
+          value: '18-lts'
+        }
+        {
+          name: 'API_URL'
+          value: 'https://${apiServiceName}.azurewebsites.net/api/v1'
+        }
+        {
+          name: 'SOCKET_URL'
+          value: 'https://${apiServiceName}.azurewebsites.net'
+        }
+        {
+          name: 'AZURE_AD_B2C_CLIENT_ID'
+          value: '@Microsoft.KeyVault(VaultName=${keyVaultName};SecretName=azure-ad-b2c-client-id)'
+        }
+        {
+          name: 'AZURE_AD_B2C_AUTHORITY'
+          value: '@Microsoft.KeyVault(VaultName=${keyVaultName};SecretName=azure-ad-b2c-authority)'
+        }
+        {
+          name: 'AZURE_AD_B2C_REDIRECT_URI'
+          value: environment == 'prod' ? 'https://www.bidroom.co/auth/callback' : environment == 'qa' ? 'https://qa.bidroom.co/auth/callback' : 'http://localhost:4201/auth/callback'
+        }
+        {
+          name: 'APPINSIGHTS_INSTRUMENTATIONKEY'
+          value: applicationInsights.properties.InstrumentationKey
+        }
+      ]
+      cors: {
+        allowedOrigins: [
+          'https://www.bidroom.co'
+          'https://qa.bidroom.co'
+          'http://localhost:4201'
+        ]
+      }
+    }
+    identity: {
+      type: 'SystemAssigned'
+    }
+  }
+}
+
+// Backend App Service (Node.js)
+resource backendApp 'Microsoft.Web/sites@2022-03-01' = {
+  name: apiServiceName
+  location: location
+  kind: 'app,linux'
+  properties: {
+    serverFarmId: appServicePlan.id
+    siteConfig: {
+      linuxFxVersion: 'NODE|18-lts'
+      appSettings: [
+        {
+          name: 'NODE_ENV'
+          value: environment
+        }
+        {
+          name: 'PORT'
+          value: '8080'
+        }
+        {
+          name: 'MONGODB_URI'
+          value: '@Microsoft.KeyVault(VaultName=${keyVaultName};SecretName=mongodb-connection-string)'
+        }
+        {
+          name: 'REDIS_URL'
+          value: '@Microsoft.KeyVault(VaultName=${keyVaultName};SecretName=redis-connection-string)'
+        }
+        {
+          name: 'JWT_SECRET'
+          value: '@Microsoft.KeyVault(VaultName=${keyVaultName};SecretName=jwt-secret)'
+        }
+        {
+          name: 'JWT_REFRESH_SECRET'
+          value: '@Microsoft.KeyVault(VaultName=${keyVaultName};SecretName=jwt-refresh-secret)'
+        }
+        {
+          name: 'AZURE_AD_B2C_CLIENT_ID'
+          value: '@Microsoft.KeyVault(VaultName=${keyVaultName};SecretName=azure-ad-b2c-client-id)'
+        }
+        {
+          name: 'AZURE_AD_B2C_CLIENT_SECRET'
+          value: '@Microsoft.KeyVault(VaultName=${keyVaultName};SecretName=azure-ad-b2c-client-secret)'
+        }
+        {
+          name: 'AZURE_AD_B2C_AUTHORITY'
+          value: '@Microsoft.KeyVault(VaultName=${keyVaultName};SecretName=azure-ad-b2c-authority)'
+        }
+        {
+          name: 'STRIPE_SECRET_KEY'
+          value: '@Microsoft.KeyVault(VaultName=${keyVaultName};SecretName=stripe-secret-key)'
+        }
+        {
+          name: 'STRIPE_WEBHOOK_SECRET'
+          value: '@Microsoft.KeyVault(VaultName=${keyVaultName};SecretName=stripe-webhook-secret)'
+        }
+        {
+          name: 'AZURE_STORAGE_CONNECTION_STRING'
+          value: '@Microsoft.KeyVault(VaultName=${keyVaultName};SecretName=azure-storage-connection-string)'
+        }
+        {
+          name: 'APPINSIGHTS_INSTRUMENTATIONKEY'
+          value: applicationInsights.properties.InstrumentationKey
+        }
+      ]
+      cors: {
+        allowedOrigins: [
+          'https://www.bidroom.co'
+          'https://qa.bidroom.co'
+          'http://localhost:4201'
+        ]
+      }
+    }
+    identity: {
+      type: 'SystemAssigned'
+    }
+  }
+}
+
+// Key Vault Access Policy for App Services
+resource keyVaultAccessPolicy 'Microsoft.KeyVault/vaults/accessPolicies@2022-07-01' = {
+  parent: keyVault
+  name: '${frontendApp.properties.name}-access'
+  properties: {
+    accessPolicies: [
+      {
+        tenantId: subscription().tenantId
+        objectId: frontendApp.identity.principalId
+        permissions: {
+          secrets: ['get', 'list']
+        }
+      }
+    ]
+  }
+}
+
+resource keyVaultAccessPolicyBackend 'Microsoft.KeyVault/vaults/accessPolicies@2022-07-01' = {
+  parent: keyVault
+  name: '${backendApp.properties.name}-access'
+  properties: {
+    accessPolicies: [
+      {
+        tenantId: subscription().tenantId
+        objectId: backendApp.identity.principalId
+        permissions: {
+          secrets: ['get', 'list']
+        }
+      }
+    ]
   }
 }
 
 // Outputs
-output acrLoginServer string = acr.properties.loginServer
-output aksClusterName string = aks.name
-output redisCacheHostName string = redisCache.properties.hostName
-output storageAccountName string = storageAccount.name
-output appInsightsInstrumentationKey string = appInsights.properties.InstrumentationKey
-output appInsightsConnectionString string = appInsights.properties.ConnectionString
-
+output frontendUrl string = 'https://${frontendApp.properties.defaultHostName}'
+output backendUrl string = 'https://${backendApp.properties.defaultHostName}'
+output keyVaultName string = keyVaultName
+output storageAccountName string = storageAccountName
+output applicationInsightsConnectionString string = applicationInsights.properties.ConnectionString

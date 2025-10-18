@@ -7,10 +7,10 @@ const router = Router();
 
 // Placeholder controller
 const transactionController = {
-  getAll: (req: any, res: any) => res.json({ message: 'Get transactions - to be implemented' }),
-  getById: (req: any, res: any) => res.json({ message: 'Get transaction - to be implemented' }),
-  getSelling: (req: any, res: any) => res.json({ message: 'Get selling transactions - to be implemented' }),
-  getBuying: (req: any, res: any) => res.json({ message: 'Get buying transactions - to be implemented' }),
+  getAll: (_req: any, res: any) => res.json({ message: 'Get transactions - to be implemented' }),
+  getById: (_req: any, res: any) => res.json({ message: 'Get transaction - to be implemented' }),
+  getSelling: (_req: any, res: any) => res.json({ message: 'Get selling transactions - to be implemented' }),
+  getBuying: (_req: any, res: any) => res.json({ message: 'Get buying transactions - to be implemented' }),
 };
 
 // Get all user transactions

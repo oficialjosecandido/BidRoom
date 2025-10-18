@@ -8,9 +8,9 @@ const router = Router();
 
 // Placeholder controller
 const bidController = {
-  placeBid: (req: any, res: any) => res.json({ message: 'Place bid - to be implemented' }),
-  getAuctionBids: (req: any, res: any) => res.json({ message: 'Get auction bids - to be implemented' }),
-  getUserBids: (req: any, res: any) => res.json({ message: 'Get user bids - to be implemented' }),
+  placeBid: (_req: any, res: any) => res.json({ message: 'Place bid - to be implemented' }),
+  getAuctionBids: (_req: any, res: any) => res.json({ message: 'Get auction bids - to be implemented' }),
+  getUserBids: (_req: any, res: any) => res.json({ message: 'Get user bids - to be implemented' }),
 };
 
 // Place a bid

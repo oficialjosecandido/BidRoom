@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { body, param } from 'express-validator';
+import { body } from 'express-validator';
 import { authenticate } from '../middleware/auth.middleware';
 import { validate } from '../middleware/validation.middleware';
 
@@ -8,14 +8,14 @@ const router = Router();
 // Placeholder controller
 const userController = {
   getProfile: (req: any, res: any) => res.json({ user: req.user }),
-  updateProfile: (req: any, res: any) => res.json({ message: 'Update profile - to be implemented' }),
-  getStats: (req: any, res: any) => res.json({ message: 'Get stats - to be implemented' }),
-  getPaymentMethods: (req: any, res: any) => res.json({ message: 'Get payment methods - to be implemented' }),
-  addPaymentMethod: (req: any, res: any) => res.json({ message: 'Add payment method - to be implemented' }),
-  removePaymentMethod: (req: any, res: any) => res.json({ message: 'Remove payment method - to be implemented' }),
-  updatePreAuth: (req: any, res: any) => res.json({ message: 'Update pre-auth - to be implemented' }),
+  updateProfile: (_req: any, res: any) => res.json({ message: 'Update profile - to be implemented' }),
+  getStats: (_req: any, res: any) => res.json({ message: 'Get stats - to be implemented' }),
+  getPaymentMethods: (_req: any, res: any) => res.json({ message: 'Get payment methods - to be implemented' }),
+  addPaymentMethod: (_req: any, res: any) => res.json({ message: 'Add payment method - to be implemented' }),
+  removePaymentMethod: (_req: any, res: any) => res.json({ message: 'Remove payment method - to be implemented' }),
+  updatePreAuth: (_req: any, res: any) => res.json({ message: 'Update pre-auth - to be implemented' }),
   getNotificationPreferences: (req: any, res: any) => res.json({ preferences: req.user.notificationPreferences }),
-  updateNotificationPreferences: (req: any, res: any) => res.json({ message: 'Update preferences - to be implemented' }),
+  updateNotificationPreferences: (_req: any, res: any) => res.json({ message: 'Update preferences - to be implemented' }),
 };
 
 // Get current user profile

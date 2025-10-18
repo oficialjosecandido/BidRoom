@@ -24,9 +24,13 @@
   "license": "PROPRIETARY",
   "dependencies": {
     "@azure/identity": "^4.0.0",
-    "@azure/storage-blob": "^12.17.0",
     "@azure/monitor-opentelemetry-exporter": "^1.0.0-beta.21",
+    "@azure/storage-blob": "^12.17.0",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/nodemailer": "^7.0.2",
+    "@types/passport-azure-ad": "^4.3.6",
     "bcrypt": "^5.1.1",
+    "bcryptjs": "^3.0.2",
     "compression": "^1.7.4",
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
@@ -34,15 +38,18 @@
     "express-rate-limit": "^7.1.5",
     "express-validator": "^7.0.1",
     "helmet": "^7.1.0",
+    "hpp": "^0.2.3",
+    "isomorphic-dompurify": "^2.29.0",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.0.3",
     "morgan": "^1.10.0",
+    "nodemailer": "^7.0.9",
     "passport": "^0.7.0",
     "passport-azure-ad": "^4.3.5",
     "passport-jwt": "^4.0.1",
     "redis": "^4.6.12",
     "socket.io": "^4.6.0",
-    "stripe": "^14.10.0",
+    "stripe": "^14.25.0",
     "uuid": "^9.0.1",
     "winston": "^3.11.0"
   },
@@ -56,7 +63,7 @@
     "@types/morgan": "^1.9.9",
     "@types/node": "^20.10.6",
     "@types/passport": "^1.0.16",
-    "@types/passport-jwt": "^4.0.0",
+    "@types/passport-jwt": "^4.0.1",
     "@types/uuid": "^9.0.7",
     "@typescript-eslint/eslint-plugin": "^6.17.0",
     "@typescript-eslint/parser": "^6.17.0",
@@ -72,4 +79,3 @@
     "npm": ">=9.0.0"
   }
 }
-

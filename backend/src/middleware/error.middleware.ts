@@ -18,7 +18,7 @@ export const errorHandler = (
   err: Error | AppError,
   req: Request,
   res: Response,
-  next: NextFunction
+  _next: NextFunction
 ): void => {
   // Log error
   logger.error('Error occurred:', {
@@ -31,40 +31,34 @@ export const errorHandler = (
   // Default error values
   let statusCode = 500;
   let message = 'Internal Server Error';
-  let isOperational = false;
 
   // Check if it's an AppError
   if (err instanceof AppError) {
     statusCode = err.statusCode;
     message = err.message;
-    isOperational = err.isOperational;
   }
 
   // Mongoose validation errors
   if (err.name === 'ValidationError') {
     statusCode = 400;
     message = 'Validation Error';
-    isOperational = true;
   }
 
   // Mongoose duplicate key error
   if (err.name === 'MongoError' && (err as any).code === 11000) {
     statusCode = 409;
     message = 'Duplicate entry';
-    isOperational = true;
   }
 
   // JWT errors
   if (err.name === 'JsonWebTokenError') {
     statusCode = 401;
     message = 'Invalid token';
-    isOperational = true;
   }
 
   if (err.name === 'TokenExpiredError') {
     statusCode = 401;
     message = 'Token expired';
-    isOperational = true;
   }
 
   // Send error response

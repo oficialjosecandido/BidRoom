@@ -22,16 +22,17 @@ interface Config {
   
   jwt: {
     secret: string;
+    refreshSecret: string;
     expiresIn: string;
     refreshExpiresIn: string;
   };
   
   azureAdB2C: {
-    tenantName: string;
+    tenantId: string;
     clientId: string;
     clientSecret: string;
-    policyName: string;
     redirectUri: string;
+    authority: string;
   };
   
   azureStorage: {
@@ -91,17 +92,28 @@ const config: Config = {
   },
   
   jwt: {
-    secret: process.env.JWT_SECRET || 'your-super-secret-jwt-key',
+    secret: process.env.JWT_SECRET || (() => {
+      if (process.env.NODE_ENV === 'production') {
+        throw new Error('JWT_SECRET environment variable is required in production');
+      }
+      return 'dev-secret-key-only';
+    })(),
+    refreshSecret: process.env.JWT_REFRESH_SECRET || (() => {
+      if (process.env.NODE_ENV === 'production') {
+        throw new Error('JWT_REFRESH_SECRET environment variable is required in production');
+      }
+      return 'dev-refresh-secret-key-only';
+    })(),
     expiresIn: process.env.JWT_EXPIRES_IN || '1d',
     refreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '30d',
   },
   
   azureAdB2C: {
-    tenantName: process.env.AZURE_AD_B2C_TENANT_NAME || '',
-    clientId: process.env.AZURE_AD_B2C_CLIENT_ID || '',
-    clientSecret: process.env.AZURE_AD_B2C_CLIENT_SECRET || '',
-    policyName: process.env.AZURE_AD_B2C_POLICY_NAME || 'B2C_1_signupsignin',
-    redirectUri: process.env.AZURE_AD_B2C_REDIRECT_URI || 'http://localhost:4200/auth/callback',
+    tenantId: process.env.AZURE_AD_TENANT_ID || '',
+    clientId: process.env.AZURE_AD_CLIENT_ID || '',
+    clientSecret: process.env.AZURE_AD_CLIENT_SECRET || '',
+    redirectUri: process.env.AZURE_AD_REDIRECT_URI || 'http://localhost:4201/auth/callback',
+    authority: process.env.AZURE_AD_AUTHORITY || `https://login.microsoftonline.com/${process.env.AZURE_AD_TENANT_ID || ''}`,
   },
   
   azureStorage: {
@@ -133,7 +145,7 @@ const config: Config = {
   },
   
   cors: {
-    origin: process.env.FRONTEND_URL || 'http://localhost:4200',
+    origin: process.env.FRONTEND_URL || ['http://localhost:4200', 'http://localhost:4201'],
   },
   
   rateLimit: {

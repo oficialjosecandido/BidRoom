@@ -15,7 +15,7 @@ interface NotificationData {
 }
 
 export function setupNotificationHandlers(
-  io: SocketIOServer,
+  _io: SocketIOServer,
   socket: AuthenticatedSocket,
   redisClient: RedisClientType<any>
 ): void {

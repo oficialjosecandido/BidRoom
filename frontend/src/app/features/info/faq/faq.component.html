@@ -1,0 +1,72 @@
+<div class="faq-page">
+  <div class="container">
+    <!-- Hero Section -->
+    <section class="hero-section">
+      <h1>Frequently Asked Questions</h1>
+      <p class="hero-subtitle">Find answers to common questions about bidding, selling, and using Bidroom</p>
+    </section>
+
+    <!-- Search FAQ -->
+    <section class="search-section">
+      <div class="search-container">
+        <svg class="search-icon" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+        </svg>
+        <input type="text" placeholder="Search FAQ..." class="search-input" 
+               [(ngModel)]="searchQuery" (input)="filterFAQs()">
+      </div>
+    </section>
+
+    <!-- FAQ Categories -->
+    <section class="categories-section">
+      <div class="category-tabs">
+        <button *ngFor="let category of categories" 
+                class="category-tab" 
+                [class.active]="selectedCategory === category.id"
+                (click)="selectCategory(category.id)">
+          {{ category.name }}
+        </button>
+      </div>
+    </section>
+
+    <!-- FAQ Items -->
+    <section class="faq-section">
+      <div class="faq-grid">
+        <div *ngFor="let faq of filteredFAQs" class="faq-item" [class.open]="faq.isOpen">
+          <div class="faq-question" (click)="toggleFAQ(faq)">
+            <h3>{{ faq.question }}</h3>
+            <svg class="expand-icon" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/>
+            </svg>
+          </div>
+          <div class="faq-answer">
+            <div class="answer-content" [innerHTML]="faq.answer"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- No Results -->
+      <div *ngIf="filteredFAQs.length === 0" class="no-results">
+        <div class="no-results-icon">🔍</div>
+        <h3>No FAQs found</h3>
+        <p>Try adjusting your search terms or browse by category</p>
+      </div>
+    </section>
+
+    <!-- Contact Support -->
+    <section class="support-section">
+      <div class="support-content">
+        <h2>Still have questions?</h2>
+        <p>Our support team is here to help you 24/7</p>
+        <div class="support-options">
+          <button class="btn btn-primary" (click)="contactSupport()">
+            Contact Support
+          </button>
+          <button class="btn btn-outline-primary" (click)="viewHelpCenter()">
+            Help Center
+          </button>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>

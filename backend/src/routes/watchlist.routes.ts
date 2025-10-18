@@ -7,10 +7,10 @@ const router = Router();
 
 // Placeholder controller
 const watchlistController = {
-  getAll: (req: any, res: any) => res.json({ message: 'Get watchlist - to be implemented' }),
-  add: (req: any, res: any) => res.json({ message: 'Add to watchlist - to be implemented' }),
-  remove: (req: any, res: any) => res.json({ message: 'Remove from watchlist - to be implemented' }),
-  update: (req: any, res: any) => res.json({ message: 'Update watchlist item - to be implemented' }),
+  getAll: (_req: any, res: any) => res.json({ message: 'Get watchlist - to be implemented' }),
+  add: (_req: any, res: any) => res.json({ message: 'Add to watchlist - to be implemented' }),
+  remove: (_req: any, res: any) => res.json({ message: 'Remove from watchlist - to be implemented' }),
+  update: (_req: any, res: any) => res.json({ message: 'Update watchlist item - to be implemented' }),
 };
 
 // Get user's watchlist

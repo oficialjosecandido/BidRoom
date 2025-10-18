@@ -23,8 +23,8 @@
     "@angular/platform-browser": "^17.0.0",
     "@angular/platform-browser-dynamic": "^17.0.0",
     "@angular/router": "^17.0.0",
-    "@azure/msal-angular": "^3.0.9",
-    "@azure/msal-browser": "^3.6.0",
+    "@azure/msal-angular": "^3.1.0",
+    "@azure/msal-browser": "^3.30.0",
     "rxjs": "^7.8.1",
     "socket.io-client": "^4.6.0",
     "tslib": "^2.6.2",
@@ -48,4 +48,3 @@
     "typescript": "^5.2.2"
   }
 }
-

@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { environment } from '@environments/environment';
 
 export interface Auction {
@@ -18,8 +19,10 @@ export interface Auction {
   format: 'highest_bid' | 'best_offer';
   duration: '2h' | '24h' | '3d' | '7d';
   startingBid: number;
-  currentBid: number;
+  isPromoted: boolean;
+  isVerified: boolean;
   buyNowPrice?: number;
+  currentBid: number;
   reservePrice?: number;
   minBidIncrement: number;
   allowPrivateRoom: boolean;
@@ -30,8 +33,6 @@ export interface Auction {
   uniqueBidders: number;
   viewCount: number;
   watcherCount: number;
-  isVerified: boolean;
-  isPromoted: boolean;
 }
 
 export interface AuctionFilters {
@@ -73,15 +74,56 @@ export class AuctionService {
   }
 
   getEndingSoon(limit: number = 10): Observable<Auction[]> {
-    return this.http.get<Auction[]>(`${this.apiUrl}/ending-soon`, {
+    return this.http.get<any[]>(`${this.apiUrl}/ending-soon`, {
       params: { limit: limit.toString() },
-    });
+    }).pipe(
+      map(response => this.transformAuctions(response))
+    );
   }
 
   getPromoted(limit: number = 5): Observable<Auction[]> {
-    return this.http.get<Auction[]>(`${this.apiUrl}/promoted`, {
+    return this.http.get<any[]>(`${this.apiUrl}/promoted`, {
       params: { limit: limit.toString() },
-    });
+    }).pipe(
+      map(response => this.transformAuctions(response))
+    );
+  }
+
+  getAllAuctions(): Observable<Auction[]> {
+    return this.http.get<any[]>(this.apiUrl).pipe(
+      map(response => this.transformAuctions(response))
+    );
+  }
+
+  private transformAuctions(backendAuctions: any[]): Auction[] {
+    return backendAuctions.map(auction => ({
+      _id: auction.id,
+      sellerId: auction.seller?.id || 'unknown',
+      title: auction.title,
+      description: auction.description,
+      category: auction.category,
+      tags: [auction.category],
+      images: auction.images?.map((img: string, index: number) => ({
+        url: img,
+        alt: auction.title,
+        isPrimary: index === 0
+      })) || [],
+      format: 'highest_bid' as const,
+      duration: '7d' as const,
+      startingBid: auction.startingPrice,
+      currentBid: auction.currentPrice || auction.currentBid,
+      minBidIncrement: 1,
+      allowPrivateRoom: true,
+      status: 'active' as const,
+      startTime: new Date(),
+      endTime: new Date(auction.endTime),
+      totalBids: auction.bidCount || 0,
+      uniqueBidders: auction.bidCount || 0,
+      viewCount: 0,
+      watcherCount: 0,
+      isVerified: auction.verified || auction.isVerified || false,
+      isPromoted: auction.isPromoted || auction.featured || false
+    }));
   }
 
   createAuction(auction: Partial<Auction>): Observable<Auction> {

@@ -1,0 +1,105 @@
+<div class="pre-auth-container">
+  <div class="pre-auth-card">
+    <div class="pre-auth-header">
+      <h1>Verify Your Bidding Account</h1>
+      <p>To ensure serious bidders and protect our community, we require payment verification.</p>
+    </div>
+
+    <!-- Tier Selection -->
+    <div class="tier-selection">
+      <h2>Choose Your Bidding Level</h2>
+      <div class="tiers-grid">
+        <div 
+          *ngFor="let tier of tiers" 
+          class="tier-card"
+          [class.selected]="selectedTier.id === tier.id"
+          (click)="selectTier(tier.id)">
+          <div class="tier-header">
+            <h3>{{ tier.name }}</h3>
+            <div class="tier-price">
+              <span *ngIf="tier.amount > 0" class="price">${{ tier.amount }}</span>
+              <span *ngIf="tier.amount === 0" class="price free">Free</span>
+            </div>
+          </div>
+          <p class="tier-description">{{ tier.description }}</p>
+          <ul class="tier-features">
+            <li *ngFor="let feature of tier.features">{{ feature }}</li>
+          </ul>
+          <div class="tier-badge" *ngIf="tier.id === 'verified'">Recommended</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Payment Form -->
+    <div class="payment-section" *ngIf="selectedTier.amount > 0">
+      <h2>Payment Verification</h2>
+      <p class="payment-info">
+        A temporary hold of ${{ selectedTier.amount }} will be placed on your card. 
+        No money will be charged unless you win an auction.
+      </p>
+
+      <div class="payment-form">
+        <div class="card-element-container">
+          <label for="card-element">Credit or debit card</label>
+          <div id="card-element">
+            <!-- Stripe Elements will create form elements here -->
+          </div>
+          <div id="card-errors" role="alert" *ngIf="errorMessage">
+            {{ errorMessage }}
+          </div>
+        </div>
+
+        <div class="payment-actions">
+          <button 
+            *ngIf="!clientSecret"
+            class="btn btn-primary btn-lg"
+            (click)="createPreAuthorization()"
+            [disabled]="isLoading || preAuthForm.invalid">
+            <span *ngIf="!isLoading">Verify Payment Method</span>
+            <span *ngIf="isLoading">Initializing...</span>
+          </button>
+
+          <button 
+            *ngIf="clientSecret"
+            class="btn btn-primary btn-lg"
+            (click)="confirmPayment()"
+            [disabled]="isLoading">
+            <span *ngIf="!isLoading">Complete Verification</span>
+            <span *ngIf="isLoading">Processing...</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Free Tier Actions -->
+    <div class="free-tier-section" *ngIf="selectedTier.amount === 0">
+      <div class="free-tier-info">
+        <h2>Basic Account</h2>
+        <p>You can browse auctions with basic verification. To bid on auctions, please select a verified tier above.</p>
+      </div>
+      <button 
+        class="btn btn-outline-primary btn-lg"
+        (click)="skipVerification()">
+        Continue with Basic Account
+      </button>
+    </div>
+
+    <!-- Success Message -->
+    <div *ngIf="successMessage" class="alert alert-success">
+      {{ successMessage }}
+    </div>
+
+    <!-- Security Notice -->
+    <div class="security-notice">
+      <div class="security-icon">
+        <svg viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/>
+        </svg>
+      </div>
+      <div class="security-content">
+        <h4>Secure Payment Processing</h4>
+        <p>Your payment information is encrypted and processed securely by Stripe. We never store your full card details.</p>
+      </div>
+    </div>
+  </div>
+</div>

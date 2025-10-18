@@ -1,6 +1,6 @@
 import { NgModule, Optional, SkipSelf } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { HttpClientModule } from '@angular/common/http';
+import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
 
 // Services
 import { AuthService } from './services/auth.service';
@@ -9,6 +9,10 @@ import { BidService } from './services/bid.service';
 import { UserService } from './services/user.service';
 import { SocketService } from './services/socket.service';
 import { NotificationService } from './services/notification.service';
+import { Logger } from './services/logger.service';
+
+// Interceptors
+import { AuthInterceptor } from './interceptors/auth.interceptor';
 
 @NgModule({
   imports: [CommonModule, HttpClientModule],
@@ -19,6 +23,12 @@ import { NotificationService } from './services/notification.service';
     UserService,
     SocketService,
     NotificationService,
+    Logger,
+    {
+      provide: HTTP_INTERCEPTORS,
+      useClass: AuthInterceptor,
+      multi: true,
+    },
   ],
 })
 export class CoreModule {

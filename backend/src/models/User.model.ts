@@ -60,6 +60,11 @@ export interface IUser extends Document {
   isSuspended: boolean;
   suspensionReason?: string;
   
+  // Additional properties
+  lastLoginAt?: Date;
+  role?: string;
+  address?: string;
+  
   createdAt: Date;
   updatedAt: Date;
 }
@@ -179,9 +184,7 @@ const userSchema = new Schema<IUser>(
   }
 );
 
-// Indexes
-userSchema.index({ email: 1 });
-userSchema.index({ azureAdB2CId: 1 });
+// Indexes (email and azureAdB2CId already have index: true in schema)
 userSchema.index({ reputationScore: -1 });
 userSchema.index({ 'preAuthStatus.isAuthorized': 1 });
 
@@ -192,6 +195,13 @@ userSchema.virtual('fullName').get(function () {
 
 // Methods
 userSchema.methods.canBid = function (): boolean {
+  if (!this.isActive || this.isSuspended) return false;
+  if (!this.preAuthStatus.isAuthorized) return false;
+  if (this.preAuthStatus.expiresAt && this.preAuthStatus.expiresAt < new Date()) return false;
+  return true;
+};
+
+userSchema.methods.canBid = function(): boolean {
   if (!this.isActive || this.isSuspended) return false;
   if (!this.preAuthStatus.isAuthorized) return false;
   if (this.preAuthStatus.expiresAt && this.preAuthStatus.expiresAt < new Date()) return false;

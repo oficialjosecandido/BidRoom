@@ -34,7 +34,7 @@ export function setupSocketIO(io: SocketIOServer, redisClient: RedisClientType<a
       }
 
       // Attach user to socket
-      socket.userId = user._id.toString();
+      socket.userId = (user._id as any).toString();
       socket.user = user;
 
       next();

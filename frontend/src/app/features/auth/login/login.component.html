@@ -1,0 +1,134 @@
+<div class="login-container">
+  <div class="login-card">
+    <div class="login-header">
+      <h1>Welcome to Bidroom</h1>
+      <p>Sign in to start bidding and selling</p>
+    </div>
+
+    <!-- Azure AD B2C Login -->
+    <div *ngIf="useAzureLogin" class="azure-login">
+      <button 
+        class="btn btn-primary btn-lg azure-login-btn"
+        (click)="loginWithAzure()"
+        [disabled]="isLoading">
+        <svg class="azure-icon" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+        </svg>
+        <span *ngIf="!isLoading">Sign in with Microsoft</span>
+        <span *ngIf="isLoading">Signing in...</span>
+      </button>
+
+      <div class="login-divider">
+        <span>or</span>
+      </div>
+
+      <button 
+        class="btn btn-outline-secondary"
+        (click)="toggleLoginMethod()">
+        Use email and password
+      </button>
+    </div>
+
+    <!-- Traditional Email/Password Login -->
+    <div *ngIf="!useAzureLogin" class="traditional-login">
+      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+        <div class="form-group">
+          <label for="email">Email Address</label>
+          <input
+            type="email"
+            id="email"
+            formControlName="email"
+            class="form-control"
+            [class.is-invalid]="email?.invalid && email?.touched"
+            placeholder="Enter your email">
+          <div *ngIf="email?.invalid && email?.touched" class="invalid-feedback">
+            <div *ngIf="email?.errors?.['required']">Email is required</div>
+            <div *ngIf="email?.errors?.['email']">Please enter a valid email</div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input
+            type="password"
+            id="password"
+            formControlName="password"
+            class="form-control"
+            [class.is-invalid]="password?.invalid && password?.touched"
+            placeholder="Enter your password">
+          <div *ngIf="password?.invalid && password?.touched" class="invalid-feedback">
+            <div *ngIf="password?.errors?.['required']">Password is required</div>
+            <div *ngIf="password?.errors?.['minlength']">Password must be at least 6 characters</div>
+          </div>
+        </div>
+
+        <button
+          type="submit"
+          class="btn btn-primary btn-lg login-btn"
+          [disabled]="loginForm.invalid || isLoading">
+          <span *ngIf="!isLoading">Sign In</span>
+          <span *ngIf="isLoading">Signing in...</span>
+        </button>
+      </form>
+
+      <div class="login-divider">
+        <span>or</span>
+      </div>
+
+      <button 
+        class="btn btn-outline-secondary"
+        (click)="toggleLoginMethod()">
+        Use Microsoft Account
+      </button>
+    </div>
+
+    <!-- Error Message -->
+    <div *ngIf="errorMessage" class="alert alert-danger">
+      {{ errorMessage }}
+    </div>
+
+    <!-- Additional Links -->
+    <div class="login-footer">
+      <p>
+        Don't have an account? 
+        <a routerLink="/auth/register">Sign up here</a>
+      </p>
+      <p>
+        <a href="#">Forgot your password?</a>
+      </p>
+    </div>
+  </div>
+
+  <!-- Features Section -->
+  <div class="login-features">
+    <div class="feature">
+      <div class="feature-icon">
+        <svg viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+        </svg>
+      </div>
+      <h3>Secure Authentication</h3>
+      <p>Your account is protected with enterprise-grade security</p>
+    </div>
+
+    <div class="feature">
+      <div class="feature-icon">
+        <svg viewBox="0 0 24 24" fill="currentColor">
+          <path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/>
+        </svg>
+      </div>
+      <h3>Verified Bidding</h3>
+      <p>Credit card verification ensures serious bidders only</p>
+    </div>
+
+    <div class="feature">
+      <div class="feature-icon">
+        <svg viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/>
+        </svg>
+      </div>
+      <h3>Protected Transactions</h3>
+      <p>All payments are secured with industry-standard encryption</p>
+    </div>
+  </div>
+</div>
