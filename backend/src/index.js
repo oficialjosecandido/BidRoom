@@ -8,6 +8,9 @@ require('dotenv').config();
 const connectDB = require('./config/database');
 const User = require('./models/User');
 
+// Import routes
+const authRoutes = require('./routes/auth');
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -19,6 +22,8 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Routes
+app.use('/api/auth', authRoutes);
+
 app.get('/', (req, res) => {
   res.json({
     message: 'BidRoom API is running!',
@@ -54,33 +59,6 @@ app.get('/test-db', async (req, res) => {
   }
 });
 
-// Create a test user endpoint (for testing purposes)
-app.post('/test-user', async (req, res) => {
-  try {
-    const testUser = new User({
-      username: 'testuser',
-      email: 'test@example.com',
-      firstName: 'Test',
-      lastName: 'User'
-    });
-    
-    await testUser.save();
-    
-    res.json({
-      message: 'Test user created successfully!',
-      user: {
-        id: testUser._id,
-        username: testUser.username,
-        email: testUser.email
-      }
-    });
-  } catch (error) {
-    res.status(500).json({
-      error: 'Failed to create test user',
-      message: error.message
-    });
-  }
-});
 
 // Error handling middleware
 app.use((err, req, res, next) => {

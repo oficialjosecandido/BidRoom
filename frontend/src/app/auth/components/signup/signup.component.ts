@@ -1,0 +1,105 @@
+import { Component, OnInit } from '@angular/core';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
+import { CommonModule } from '@angular/common';
+import { AuthService, RegisterRequest } from '../../services/auth.service';
+
+@Component({
+  selector: 'app-signup',
+  standalone: true,
+  imports: [CommonModule, ReactiveFormsModule],
+  templateUrl: './signup.component.html',
+  styleUrls: ['./signup.component.scss']
+})
+export class SignupComponent implements OnInit {
+  signupForm: FormGroup;
+  isLoading = false;
+  errorMessage = '';
+  successMessage = '';
+
+  constructor(
+    private fb: FormBuilder,
+    private authService: AuthService,
+    private router: Router
+  ) {
+    this.signupForm = this.fb.group({
+      firstName: ['', [Validators.required, Validators.minLength(2)]],
+      lastName: ['', [Validators.required, Validators.minLength(2)]],
+      email: ['', [Validators.required, Validators.email]],
+      password: ['', [Validators.required, Validators.minLength(6)]],
+      confirmPassword: ['', [Validators.required]]
+    }, { validators: this.passwordMatchValidator });
+  }
+
+  ngOnInit(): void {}
+
+  passwordMatchValidator(form: FormGroup) {
+    const password = form.get('password');
+    const confirmPassword = form.get('confirmPassword');
+    
+    if (password && confirmPassword && password.value !== confirmPassword.value) {
+      confirmPassword.setErrors({ passwordMismatch: true });
+      return { passwordMismatch: true };
+    }
+    
+    return null;
+  }
+
+  onSubmit(): void {
+    if (this.signupForm.valid && !this.isLoading) {
+      this.isLoading = true;
+      this.errorMessage = '';
+      this.successMessage = '';
+
+      const signupData: RegisterRequest = {
+        firstName: this.signupForm.value.firstName,
+        lastName: this.signupForm.value.lastName,
+        email: this.signupForm.value.email,
+        password: this.signupForm.value.password
+      };
+
+      this.authService.register(signupData).subscribe({
+        next: (response) => {
+          this.isLoading = false;
+          this.successMessage = 'Registration successful! Please check your email to verify your account.';
+          // Optionally redirect to login after a delay
+          setTimeout(() => {
+            this.router.navigate(['/login']);
+          }, 3000);
+        },
+        error: (error) => {
+          this.isLoading = false;
+          this.errorMessage = error.error?.message || 'Registration failed. Please try again.';
+        }
+      });
+    }
+  }
+
+  loginWithGoogle(): void {
+    // TODO: Implement Google OAuth
+    console.log('Google signup not implemented yet');
+  }
+
+  navigateToLogin(): void {
+    this.router.navigate(['/auth/login']);
+  }
+
+  getFieldError(fieldName: string): string {
+    const field = this.signupForm.get(fieldName);
+    if (field?.errors && field.touched) {
+      if (field.errors['required']) {
+        return `${fieldName} is required`;
+      }
+      if (field.errors['email']) {
+        return 'Please enter a valid email address';
+      }
+      if (field.errors['minlength']) {
+        return `${fieldName} must be at least ${field.errors['minlength'].requiredLength} characters long`;
+      }
+      if (field.errors['passwordMismatch']) {
+        return 'Passwords do not match';
+      }
+    }
+    return '';
+  }
+}
