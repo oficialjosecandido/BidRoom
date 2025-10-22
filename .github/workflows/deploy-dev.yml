@@ -83,6 +83,8 @@ jobs:
     - name: Create frontend deployment package
       run: |
         cd frontend/dist/frontend
+        npm init -y
+        npm install serve
         zip -r ../../../frontend-deploy.zip . -x "*.git*"
         
     - name: Login to Azure
@@ -95,4 +97,3 @@ jobs:
       with:
         app-name: 'bidroom-frontend-dev'
         package: './frontend-deploy.zip'
-        startup-command: 'npm start'
