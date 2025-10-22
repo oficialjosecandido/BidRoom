@@ -107,3 +107,4 @@ Copy `.env.example` to `.env` in the backend directory and configure as needed.
 - `npm test` - Run unit tests
 - `npm run e2e` - Run end-to-end tests
 # Deployment test
+# Testing deployment with correct publish profiles
