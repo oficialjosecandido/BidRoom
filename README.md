@@ -110,3 +110,4 @@ Copy `.env.example` to `.env` in the backend directory and configure as needed.
 # Testing deployment with correct publish profiles
 # Fix deployment issues
 # Fix frontend deployment issue
+# Fix ZIP Deploy issues for both backend and frontend
