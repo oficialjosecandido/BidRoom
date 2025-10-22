@@ -37,11 +37,15 @@ jobs:
       working-directory: ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
       run: npm run build
       
+    - name: Login to Azure
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+        
     - name: Deploy to Azure App Service
       uses: azure/webapps-deploy@v2
       with:
         app-name: ${{ env.AZURE_WEBAPP_NAME }}
-        publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
         package: ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
         startup-command: 'npm start'
 
@@ -71,10 +75,14 @@ jobs:
       env:
         NODE_ENV: production
         
+    - name: Login to Azure
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+        
     - name: Deploy to Azure App Service
       uses: azure/webapps-deploy@v2
       with:
         app-name: 'bidroom-frontend-dev'
-        publish-profile: ${{ secrets.AZURE_FRONTEND_PUBLISH_PROFILE }}
         package: './frontend/dist/frontend'
         startup-command: 'npm start'
