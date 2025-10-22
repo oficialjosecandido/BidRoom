@@ -40,7 +40,7 @@ jobs:
     - name: Create deployment package
       working-directory: ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
       run: |
-        zip -r ../backend-deploy.zip . -x "node_modules/*" "*.log" ".env*" "*.git*"
+        zip -r backend-deploy.zip . -x "node_modules/*" "*.log" ".env*" "*.git*" "*.zip"
         
     - name: Login to Azure
       uses: azure/login@v1
@@ -51,8 +51,7 @@ jobs:
       uses: azure/webapps-deploy@v2
       with:
         app-name: ${{ env.AZURE_WEBAPP_NAME }}
-        package: ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}/../backend-deploy.zip
-        startup-command: 'npm start'
+        package: ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}/backend-deploy.zip
 
   # Frontend Deployment
   deploy-frontend:

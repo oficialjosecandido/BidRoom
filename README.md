@@ -113,3 +113,4 @@ Copy `.env.example` to `.env` in the backend directory and configure as needed.
 # Fix ZIP Deploy issues for both backend and frontend
 # Fix 503 errors - configure proper startup commands
 # Trigger backend redeployment with correct startup command
+# Fix backend ZIP Deploy path issue
