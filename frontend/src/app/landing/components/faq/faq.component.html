@@ -1,0 +1,136 @@
+<app-header activePage="faq"></app-header>
+
+<!-- Page Header -->
+<section class="page-header">
+  <div class="container">
+    <h1>Frequently Asked Questions</h1>
+    <p>Find answers to common questions about BidRoom and our auction process.</p>
+  </div>
+</section>
+
+<!-- FAQ Section -->
+<section class="faq-section">
+  <div class="container">
+    <!-- Search and Filter -->
+    <div class="faq-controls">
+      <div class="search-box">
+        <input
+          type="text"
+          placeholder="Search FAQs..."
+          [(ngModel)]="searchTerm"
+          class="search-input"
+        />
+        <span class="search-icon">🔍</span>
+      </div>
+      
+      <div class="category-filter">
+        <select [(ngModel)]="selectedCategory" class="category-select">
+          <option value="all">All Categories</option>
+          <option value="account">Account & Billing</option>
+          <option value="bidding">Bidding & Auctions</option>
+          <option value="technical">Technical Support</option>
+          <option value="shipping">Shipping & Returns</option>
+          <option value="security">Security & Trust</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- FAQ Items -->
+    <div class="faq-content">
+      <div class="faq-category-header" *ngIf="selectedCategory !== 'all'">
+        <h2>{{ getCategoryName(selectedCategory) }}</h2>
+        <p>{{ filteredFAQs.length }} question(s) found</p>
+      </div>
+
+      <div class="faq-items">
+        <div 
+          class="faq-item" 
+          *ngFor="let item of filteredFAQs"
+          [class.expanded]="isExpanded(item.id)"
+        >
+          <div class="faq-question" (click)="toggleExpanded(item.id)">
+            <h3>{{ item.question }}</h3>
+            <span class="expand-icon" [class.expanded]="isExpanded(item.id)">+</span>
+          </div>
+          <div class="faq-answer" *ngIf="isExpanded(item.id)">
+            <p>{{ item.answer }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- No Results -->
+      <div class="no-results" *ngIf="filteredFAQs.length === 0">
+        <h3>No questions found</h3>
+        <p>Try adjusting your search terms or browse all categories.</p>
+        <button class="btn btn-secondary" (click)="searchTerm = ''; selectedCategory = 'all'">Clear Filters</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Quick Help Section -->
+<section class="quick-help">
+  <div class="container">
+    <h2 class="section-title">Still Need Help?</h2>
+    <p class="section-subtitle">Can't find what you're looking for? We're here to help!</p>
+    
+    <div class="row">
+      <div class="col-4">
+        <div class="help-card">
+          <div class="help-icon">📧</div>
+          <h3>Email Support</h3>
+          <p>Send us a detailed message and we'll get back to you within 24 hours.</p>
+          <button class="btn btn-primary" (click)="navigateToContact()">Contact Us</button>
+        </div>
+      </div>
+      <div class="col-4">
+        <div class="help-card">
+          <div class="help-icon">💬</div>
+          <h3>Live Chat</h3>
+          <p>Chat with our support team in real-time during business hours.</p>
+          <button class="btn btn-secondary">Start Chat</button>
+        </div>
+      </div>
+      <div class="col-4">
+        <div class="help-card">
+          <div class="help-icon">📞</div>
+          <h3>Phone Support</h3>
+          <p>Call us directly for immediate assistance with urgent issues.</p>
+          <button class="btn btn-secondary">Call Now</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Popular Topics -->
+<section class="popular-topics">
+  <div class="container">
+    <h2 class="section-title">Popular Topics</h2>
+    
+    <div class="row">
+      <div class="col-6">
+        <div class="topic-card">
+          <h3>Getting Started</h3>
+          <ul>
+            <li><a href="#" (click)="selectedCategory = 'account'; searchTerm = ''">How to create an account</a></li>
+            <li><a href="#" (click)="selectedCategory = 'bidding'; searchTerm = ''">How bidding works</a></li>
+            <li><a href="#" (click)="selectedCategory = 'account'; searchTerm = 'payment'">Payment methods</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="col-6">
+        <div class="topic-card">
+          <h3>Account Management</h3>
+          <ul>
+            <li><a href="#" (click)="selectedCategory = 'account'; searchTerm = 'update'">Updating account info</a></li>
+            <li><a href="#" (click)="selectedCategory = 'technical'; searchTerm = 'password'">Password issues</a></li>
+            <li><a href="#" (click)="selectedCategory = 'account'; searchTerm = 'cancel'">Account cancellation</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<app-footer></app-footer>

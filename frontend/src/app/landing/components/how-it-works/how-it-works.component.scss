@@ -1,0 +1,467 @@
+// Header Styles (reused from home)
+.header {
+  background: var(--primary-white);
+  border-bottom: 1px solid var(--border-gray);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  
+  .header-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 0;
+  }
+  
+  .logo h1 {
+    color: var(--accent-purple);
+    font-size: 28px;
+    font-weight: 700;
+    margin: 0;
+  }
+  
+  .main-nav {
+    display: flex;
+    gap: 32px;
+    
+    .nav-link {
+      color: var(--text-dark);
+      font-weight: 500;
+      transition: color 0.2s ease;
+      
+      &:hover, &.active {
+        color: var(--accent-purple);
+      }
+    }
+  }
+  
+  .header-actions {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+  }
+}
+
+// Page Header
+.page-header {
+  background: linear-gradient(135deg, var(--light-purple) 0%, var(--primary-white) 100%);
+  padding: 80px 0;
+  text-align: center;
+  
+  h1 {
+    font-size: 48px;
+    font-weight: 700;
+    color: var(--text-dark);
+    margin-bottom: 16px;
+  }
+  
+  p {
+    font-size: 20px;
+    color: var(--text-gray);
+    max-width: 600px;
+    margin: 0 auto;
+  }
+}
+
+// Main Process Section
+.main-process {
+  padding: 80px 0;
+  
+  .section-title {
+    text-align: center;
+    margin-bottom: 60px;
+    color: var(--text-dark);
+  }
+  
+  .process-step {
+    text-align: center;
+    padding: 40px 20px;
+    
+    .step-number {
+      width: 60px;
+      height: 60px;
+      background: var(--accent-purple);
+      color: var(--primary-white);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      font-weight: 700;
+      margin: 0 auto 24px;
+    }
+    
+    .step-content {
+      h3 {
+        font-size: 24px;
+        margin-bottom: 16px;
+        color: var(--text-dark);
+      }
+      
+      p {
+        color: var(--text-gray);
+        margin-bottom: 20px;
+        line-height: 1.6;
+      }
+      
+      ul {
+        list-style: none;
+        text-align: left;
+        max-width: 300px;
+        margin: 0 auto;
+        
+        li {
+          color: var(--text-gray);
+          margin-bottom: 8px;
+          position: relative;
+          padding-left: 20px;
+          
+          &:before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: var(--accent-purple);
+            font-weight: bold;
+          }
+        }
+      }
+    }
+  }
+}
+
+// Detailed Steps Section
+.detailed-steps {
+  padding: 80px 0;
+  background: var(--light-gray);
+  
+  .section-title {
+    text-align: center;
+    margin-bottom: 60px;
+    color: var(--text-dark);
+  }
+  
+  .step-detail {
+    margin-bottom: 60px;
+    
+    &:last-child {
+      margin-bottom: 0;
+    }
+    
+    .step-detail-content {
+      display: flex;
+      align-items: center;
+      gap: 60px;
+      
+      &:nth-child(even) {
+        flex-direction: row-reverse;
+      }
+    }
+    
+    .step-detail-text {
+      flex: 1;
+      
+      h3 {
+        font-size: 28px;
+        margin-bottom: 20px;
+        color: var(--text-dark);
+      }
+      
+      p {
+        color: var(--text-gray);
+        margin-bottom: 24px;
+        line-height: 1.6;
+        font-size: 16px;
+      }
+      
+      ul {
+        list-style: none;
+        
+        li {
+          color: var(--text-gray);
+          margin-bottom: 12px;
+          position: relative;
+          padding-left: 24px;
+          line-height: 1.5;
+          
+          &:before {
+            content: '•';
+            position: absolute;
+            left: 0;
+            color: var(--accent-purple);
+            font-weight: bold;
+            font-size: 18px;
+          }
+        }
+      }
+    }
+    
+    .step-detail-image {
+      flex: 1;
+      text-align: center;
+      
+      .placeholder-image {
+        width: 200px;
+        height: 200px;
+        background: var(--light-purple);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 80px;
+        margin: 0 auto;
+      }
+    }
+  }
+}
+
+// Tips Section
+.tips-section {
+  padding: 80px 0;
+  
+  .section-title {
+    text-align: center;
+    margin-bottom: 60px;
+    color: var(--text-dark);
+  }
+  
+  .tip-card {
+    background: var(--primary-white);
+    border: 1px solid var(--border-gray);
+    border-radius: 8px;
+    padding: 40px 30px;
+    height: 100%;
+    
+    h3 {
+      font-size: 20px;
+      margin-bottom: 20px;
+      color: var(--text-dark);
+    }
+    
+    ul {
+      list-style: none;
+      
+      li {
+        color: var(--text-gray);
+        margin-bottom: 12px;
+        position: relative;
+        padding-left: 24px;
+        line-height: 1.5;
+        
+        &:before {
+          content: '→';
+          position: absolute;
+          left: 0;
+          color: var(--accent-purple);
+          font-weight: bold;
+        }
+      }
+    }
+  }
+}
+
+// FAQ Preview Section
+.faq-preview {
+  padding: 80px 0;
+  background: var(--light-gray);
+  
+  .section-title {
+    text-align: center;
+    margin-bottom: 60px;
+    color: var(--text-dark);
+  }
+  
+  .faq-item {
+    background: var(--primary-white);
+    border-radius: 8px;
+    padding: 30px;
+    margin-bottom: 20px;
+    
+    h4 {
+      font-size: 18px;
+      margin-bottom: 12px;
+      color: var(--text-dark);
+    }
+    
+    p {
+      color: var(--text-gray);
+      line-height: 1.6;
+      margin: 0;
+    }
+  }
+}
+
+// CTA Section
+.cta-section {
+  background: var(--accent-purple);
+  color: var(--primary-white);
+  padding: 80px 0;
+  text-align: center;
+  
+  .cta-content {
+    h2 {
+      font-size: 36px;
+      margin-bottom: 16px;
+      color: var(--primary-white);
+    }
+    
+    p {
+      font-size: 18px;
+      margin-bottom: 32px;
+      opacity: 0.9;
+    }
+  }
+}
+
+// Footer (reused from home)
+.footer {
+  background: var(--primary-black);
+  color: var(--primary-white);
+  padding: 60px 0 20px;
+  
+  h4 {
+    color: var(--primary-white);
+    margin-bottom: 20px;
+    font-size: 18px;
+  }
+  
+  p {
+    color: var(--text-gray);
+    line-height: 1.6;
+    margin-bottom: 20px;
+  }
+  
+  ul {
+    list-style: none;
+    
+    li {
+      margin-bottom: 8px;
+      
+      a {
+        color: var(--text-gray);
+        transition: color 0.2s ease;
+        
+        &:hover {
+          color: var(--primary-white);
+        }
+      }
+    }
+  }
+  
+  .social-links {
+    display: flex;
+    gap: 16px;
+    
+    a {
+      color: var(--text-gray);
+      transition: color 0.2s ease;
+      
+      &:hover {
+        color: var(--primary-white);
+      }
+    }
+  }
+  
+  .footer-bottom {
+    border-top: 1px solid #333;
+    margin-top: 40px;
+    padding-top: 20px;
+    text-align: center;
+    
+    p {
+      color: var(--text-gray);
+      font-size: 14px;
+      margin: 0;
+    }
+  }
+}
+
+// Responsive Design
+@media (max-width: 768px) {
+  .header {
+    .header-content {
+      flex-direction: column;
+      gap: 20px;
+    }
+    
+    .main-nav {
+      gap: 20px;
+    }
+    
+    .header-actions {
+      flex-direction: column;
+      width: 100%;
+      
+      .btn {
+        width: 100%;
+      }
+    }
+  }
+  
+  .page-header {
+    padding: 60px 0;
+    
+    h1 {
+      font-size: 36px;
+    }
+    
+    p {
+      font-size: 18px;
+    }
+  }
+  
+  .main-process {
+    padding: 60px 0;
+    
+    .process-step {
+      padding: 30px 15px;
+    }
+  }
+  
+  .detailed-steps {
+    padding: 60px 0;
+    
+    .step-detail-content {
+      flex-direction: column !important;
+      gap: 30px;
+      text-align: center;
+    }
+    
+    .step-detail-text {
+      text-align: left;
+    }
+  }
+  
+  .tips-section {
+    padding: 60px 0;
+    
+    .tip-card {
+      padding: 30px 20px;
+      margin-bottom: 20px;
+    }
+  }
+  
+  .faq-preview {
+    padding: 60px 0;
+    
+    .faq-item {
+      padding: 20px;
+    }
+  }
+  
+  .cta-section {
+    padding: 60px 0;
+    
+    .cta-content h2 {
+      font-size: 28px;
+    }
+  }
+  
+  .footer {
+    padding: 40px 0 20px;
+    
+    .row {
+      flex-direction: column;
+      gap: 30px;
+    }
+  }
+}

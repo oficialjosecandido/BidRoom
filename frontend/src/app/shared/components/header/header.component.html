@@ -1,0 +1,22 @@
+<!-- Header -->
+<header class="header">
+  <div class="container">
+    <div class="header-content">
+      <div class="logo">
+        <h1 (click)="navigateToHome()">BidRoom | DEV</h1>
+      </div>
+      
+      <nav class="main-nav">
+        <a href="#" class="nav-link" [class.active]="activePage === 'auctions'">Auctions</a>
+        <a href="#" class="nav-link" [class.active]="activePage === 'categories'">Categories</a>
+        <a href="#" class="nav-link" [class.active]="activePage === 'how-it-works'" (click)="navigateToHowItWorks()">How It Works</a>
+        <a href="#" class="nav-link" [class.active]="activePage === 'contact'" (click)="navigateToContact()">Contact</a>
+      </nav>
+      
+      <div class="header-actions">
+        <button class="btn btn-secondary" (click)="navigateToLogin()">Sign In</button>
+        <button class="btn btn-primary" (click)="navigateToAuth()">Start Bidding</button>
+      </div>
+    </div>
+  </div>
+</header>

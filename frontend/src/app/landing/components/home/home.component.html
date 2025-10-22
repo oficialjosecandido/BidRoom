@@ -1,0 +1,155 @@
+<app-header activePage="home"></app-header>
+
+<!-- Hero Section -->
+<section class="hero">
+  <div class="container">
+    <div class="hero-content">
+      <h1 class="hero-title">Find Your True Worth</h1>
+      <p class="hero-subtitle">Discover unique items, place winning bids, and own what you love. Join thousands of bidders in our premium auction marketplace.</p>
+      <div class="hero-actions">
+        <button class="btn btn-primary btn-large" (click)="navigateToAuth()">Start Bidding Now</button>
+        <button class="btn btn-secondary btn-large" (click)="navigateToLogin()">Sign In</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Stats Section -->
+<section class="stats">
+  <div class="container">
+    <div class="row">
+      <div class="col-4">
+        <div class="stat-item">
+          <h3>2,847</h3>
+          <p>Active Bidders</p>
+        </div>
+      </div>
+      <div class="col-4">
+        <div class="stat-item">
+          <h3>$1.2M</h3>
+          <p>Total Value Traded</p>
+        </div>
+      </div>
+      <div class="col-4">
+        <div class="stat-item">
+          <h3>156</h3>
+          <p>Listings Live Now</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Visual Onboarding -->
+<section class="onboarding">
+  <div class="container">
+    <h2 class="section-title">How BidRoom Works</h2>
+    <div class="row">
+      <div class="col-4">
+        <div class="step">
+          <div class="step-icon">🔍</div>
+          <h3>Discover</h3>
+          <p>Browse thousands of unique items across categories. Find exactly what you're looking for with our advanced search and filters.</p>
+        </div>
+      </div>
+      <div class="col-4">
+        <div class="step">
+          <div class="step-icon">💰</div>
+          <h3>Bid</h3>
+          <p>Place your bids strategically. Watch the competition and bid at the perfect moment to secure your desired items.</p>
+        </div>
+      </div>
+      <div class="col-4">
+        <div class="step">
+          <div class="step-icon">🏆</div>
+          <h3>Own</h3>
+          <p>Win the auction and complete your purchase securely. Your new treasure will be shipped directly to your door.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Ending Soon Banner -->
+<section class="ending-soon">
+  <div class="container">
+    <div class="ending-soon-content">
+      <div class="ending-soon-text">
+        <h2>⏰ Auctions Ending Soon</h2>
+        <p>Don't miss out on these incredible deals! Act fast before they're gone.</p>
+      </div>
+      <button class="btn btn-urgent">View Ending Soon</button>
+    </div>
+  </div>
+</section>
+
+<!-- Categories Section -->
+<section class="categories">
+  <div class="container">
+    <h2 class="section-title">Browse by Category</h2>
+    <div class="row">
+      <div class="col-3">
+        <div class="category-card">
+          <div class="category-icon">📱</div>
+          <h3>Electronics</h3>
+          <p>Latest gadgets and tech</p>
+        </div>
+      </div>
+      <div class="col-3">
+        <div class="category-card">
+          <div class="category-icon">🎨</div>
+          <h3>Art & Collectibles</h3>
+          <p>Unique pieces and rare finds</p>
+        </div>
+      </div>
+      <div class="col-3">
+        <div class="category-card">
+          <div class="category-icon">💎</div>
+          <h3>Jewelry</h3>
+          <p>Precious metals and gems</p>
+        </div>
+      </div>
+      <div class="col-3">
+        <div class="category-card">
+          <div class="category-icon">🏠</div>
+          <h3>Home & Garden</h3>
+          <p>Furniture and decor</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Auction Listings Core -->
+<section class="auction-listings">
+  <div class="container">
+    <div class="listings-header">
+      <h2 class="section-title">Live Auctions</h2>
+      <div class="listings-controls">
+        <div class="sort-options">
+          <select class="sort-select">
+            <option value="deadline">Ending Soonest</option>
+            <option value="newest">Newest</option>
+            <option value="highest">Highest Price</option>
+            <option value="lowest">Lowest Price</option>
+            <option value="bids">Most Bids</option>
+          </select>
+        </div>
+        <div class="filter-options">
+          <button class="btn btn-secondary btn-small">Filters</button>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Placeholder for auction listings -->
+    <div class="listings-placeholder">
+      <div class="placeholder-content">
+        <h3>No auctions available at the moment</h3>
+        <p>Check back soon for exciting new listings!</p>
+        <button class="btn btn-primary" (click)="navigateToAuth()">Get Notified</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<app-footer></app-footer>

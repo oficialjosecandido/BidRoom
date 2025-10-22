@@ -1,0 +1,293 @@
+// Home component specific styles
+
+// Hero Section
+.hero {
+  background: linear-gradient(135deg, var(--light-purple) 0%, var(--primary-white) 100%);
+  padding: 80px 0;
+  text-align: center;
+  
+  .hero-content {
+    max-width: 800px;
+    margin: 0 auto;
+  }
+  
+  .hero-title {
+    font-size: 48px;
+    font-weight: 700;
+    color: var(--text-dark);
+    margin-bottom: 24px;
+    line-height: 1.2;
+  }
+  
+  .hero-subtitle {
+    font-size: 20px;
+    color: var(--text-gray);
+    margin-bottom: 40px;
+    line-height: 1.6;
+  }
+  
+  .hero-actions {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+}
+
+// Stats Section
+.stats {
+  background: var(--primary-black);
+  color: var(--primary-white);
+  padding: 60px 0;
+  
+  .stat-item {
+    text-align: center;
+    
+    h3 {
+      font-size: 36px;
+      font-weight: 700;
+      color: var(--primary-white);
+      margin-bottom: 8px;
+    }
+    
+    p {
+      font-size: 16px;
+      color: var(--text-gray);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+  }
+}
+
+// Onboarding Section
+.onboarding {
+  padding: 80px 0;
+  background: var(--light-gray);
+  
+  .section-title {
+    text-align: center;
+    margin-bottom: 60px;
+    color: var(--text-dark);
+  }
+  
+  .step {
+    text-align: center;
+    padding: 40px 20px;
+    
+    .step-icon {
+      font-size: 48px;
+      margin-bottom: 24px;
+    }
+    
+    h3 {
+      font-size: 24px;
+      margin-bottom: 16px;
+      color: var(--text-dark);
+    }
+    
+    p {
+      color: var(--text-gray);
+      line-height: 1.6;
+    }
+  }
+}
+
+// Ending Soon Banner
+.ending-soon {
+  background: var(--accent-peach);
+  color: var(--primary-white);
+  padding: 40px 0;
+  
+  .ending-soon-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    
+    .ending-soon-text {
+      h2 {
+        font-size: 28px;
+        margin-bottom: 8px;
+        color: var(--primary-white);
+      }
+      
+      p {
+        font-size: 16px;
+        opacity: 0.9;
+      }
+    }
+  }
+}
+
+// Categories Section
+.categories {
+  padding: 80px 0;
+  
+  .section-title {
+    text-align: center;
+    margin-bottom: 60px;
+    color: var(--text-dark);
+  }
+  
+  .category-card {
+    background: var(--primary-white);
+    border: 1px solid var(--border-gray);
+    border-radius: 8px;
+    padding: 40px 20px;
+    text-align: center;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    
+    &:hover {
+      border-color: var(--accent-purple);
+      transform: translateY(-4px);
+      box-shadow: 0 8px 24px rgba(139, 90, 150, 0.15);
+    }
+    
+    .category-icon {
+      font-size: 48px;
+      margin-bottom: 24px;
+    }
+    
+    h3 {
+      font-size: 20px;
+      margin-bottom: 12px;
+      color: var(--text-dark);
+    }
+    
+    p {
+      color: var(--text-gray);
+      font-size: 14px;
+    }
+  }
+}
+
+// Auction Listings Section
+.auction-listings {
+  padding: 80px 0;
+  background: var(--light-gray);
+  
+  .listings-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 40px;
+    
+    .section-title {
+      margin: 0;
+      color: var(--text-dark);
+    }
+    
+    .listings-controls {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      
+      .sort-select {
+        padding: 8px 16px;
+        border: 1px solid var(--border-gray);
+        border-radius: 4px;
+        background: var(--primary-white);
+        font-size: 14px;
+        min-width: 160px;
+      }
+    }
+  }
+  
+  .listings-placeholder {
+    background: var(--primary-white);
+    border-radius: 8px;
+    padding: 80px 40px;
+    text-align: center;
+    border: 2px dashed var(--border-gray);
+    
+    .placeholder-content {
+      h3 {
+        font-size: 24px;
+        margin-bottom: 16px;
+        color: var(--text-dark);
+      }
+      
+      p {
+        color: var(--text-gray);
+        margin-bottom: 32px;
+        font-size: 16px;
+      }
+    }
+  }
+}
+
+// Footer styles are now in the shared footer component
+
+// Responsive Design
+@media (max-width: 768px) {
+  
+  .hero {
+    padding: 60px 0;
+    
+    .hero-title {
+      font-size: 36px;
+    }
+    
+    .hero-subtitle {
+      font-size: 18px;
+    }
+    
+    .hero-actions {
+      flex-direction: column;
+      align-items: center;
+      
+      .btn {
+        width: 100%;
+        max-width: 300px;
+      }
+    }
+  }
+  
+  .stats {
+    padding: 40px 0;
+    
+    .stat-item h3 {
+      font-size: 28px;
+    }
+  }
+  
+  .onboarding {
+    padding: 60px 0;
+    
+    .step {
+      padding: 30px 15px;
+    }
+  }
+  
+  .ending-soon {
+    .ending-soon-content {
+      flex-direction: column;
+      gap: 20px;
+      text-align: center;
+    }
+  }
+  
+  .categories {
+    padding: 60px 0;
+    
+    .category-card {
+      padding: 30px 15px;
+    }
+  }
+  
+  .auction-listings {
+    padding: 60px 0;
+    
+    .listings-header {
+      flex-direction: column;
+      gap: 20px;
+      align-items: stretch;
+      
+      .listings-controls {
+        justify-content: center;
+      }
+    }
+  }
+  
+  // Footer responsive styles are in the shared footer component
+}
