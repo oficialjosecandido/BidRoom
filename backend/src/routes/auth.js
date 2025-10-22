@@ -20,10 +20,12 @@ router.post('/register', async (req, res) => {
       });
     }
 
-    if (password.length < 6) {
+    // Validate password strength
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{12,}$/;
+    if (!passwordRegex.test(password)) {
       return res.status(400).json({
-        error: 'Password too short',
-        message: 'Password must be at least 6 characters long'
+        error: 'Password too weak',
+        message: 'Password must be at least 12 characters long and contain at least one uppercase letter, one lowercase letter, and one number'
       });
     }
 
@@ -260,10 +262,12 @@ router.post('/reset-password', async (req, res) => {
       });
     }
 
-    if (password.length < 6) {
+    // Validate password strength
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{12,}$/;
+    if (!passwordRegex.test(password)) {
       return res.status(400).json({
-        error: 'Password too short',
-        message: 'Password must be at least 6 characters long'
+        error: 'Password too weak',
+        message: 'Password must be at least 12 characters long and contain at least one uppercase letter, one lowercase letter, and one number'
       });
     }
 

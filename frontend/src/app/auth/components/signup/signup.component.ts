@@ -16,6 +16,8 @@ export class SignupComponent implements OnInit {
   isLoading = false;
   errorMessage = '';
   successMessage = '';
+  showPassword = false;
+  showConfirmPassword = false;
 
   constructor(
     private fb: FormBuilder,
@@ -26,12 +28,29 @@ export class SignupComponent implements OnInit {
       firstName: ['', [Validators.required, Validators.minLength(2)]],
       lastName: ['', [Validators.required, Validators.minLength(2)]],
       email: ['', [Validators.required, Validators.email]],
-      password: ['', [Validators.required, Validators.minLength(6)]],
+      password: ['', [Validators.required, Validators.minLength(12), this.strongPasswordValidator]],
       confirmPassword: ['', [Validators.required]]
     }, { validators: this.passwordMatchValidator });
   }
 
   ngOnInit(): void {}
+
+  strongPasswordValidator(control: any) {
+    const password = control.value;
+    if (!password) return null;
+
+    const hasUpperCase = /[A-Z]/.test(password);
+    const hasLowerCase = /[a-z]/.test(password);
+    const hasNumbers = /\d/.test(password);
+    const hasMinimumLength = password.length >= 12;
+
+    const isValid = hasUpperCase && hasLowerCase && hasNumbers && hasMinimumLength;
+
+    if (!isValid) {
+      return { strongPassword: true };
+    }
+    return null;
+  }
 
   passwordMatchValidator(form: FormGroup) {
     const password = form.get('password');
@@ -84,6 +103,14 @@ export class SignupComponent implements OnInit {
     this.router.navigate(['/auth/login']);
   }
 
+  togglePasswordVisibility(): void {
+    this.showPassword = !this.showPassword;
+  }
+
+  toggleConfirmPasswordVisibility(): void {
+    this.showConfirmPassword = !this.showConfirmPassword;
+  }
+
   getFieldError(fieldName: string): string {
     const field = this.signupForm.get(fieldName);
     if (field?.errors && field.touched) {
@@ -95,6 +122,9 @@ export class SignupComponent implements OnInit {
       }
       if (field.errors['minlength']) {
         return `${fieldName} must be at least ${field.errors['minlength'].requiredLength} characters long`;
+      }
+      if (field.errors['strongPassword']) {
+        return 'Password must be at least 12 characters long and contain at least one uppercase letter, one lowercase letter, and one number';
       }
       if (field.errors['passwordMismatch']) {
         return 'Passwords do not match';

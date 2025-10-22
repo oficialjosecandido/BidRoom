@@ -17,6 +17,8 @@ export class ResetPasswordComponent implements OnInit {
   errorMessage = '';
   successMessage = '';
   token = '';
+  showPassword = false;
+  showConfirmPassword = false;
 
   constructor(
     private fb: FormBuilder,
@@ -25,7 +27,7 @@ export class ResetPasswordComponent implements OnInit {
     private route: ActivatedRoute
   ) {
     this.resetPasswordForm = this.fb.group({
-      password: ['', [Validators.required, Validators.minLength(6)]],
+      password: ['', [Validators.required, Validators.minLength(12), this.strongPasswordValidator]],
       confirmPassword: ['', [Validators.required]]
     }, { validators: this.passwordMatchValidator });
   }
@@ -38,6 +40,23 @@ export class ResetPasswordComponent implements OnInit {
         this.errorMessage = 'Invalid or missing reset token.';
       }
     });
+  }
+
+  strongPasswordValidator(control: any) {
+    const password = control.value;
+    if (!password) return null;
+
+    const hasUpperCase = /[A-Z]/.test(password);
+    const hasLowerCase = /[a-z]/.test(password);
+    const hasNumbers = /\d/.test(password);
+    const hasMinimumLength = password.length >= 12;
+
+    const isValid = hasUpperCase && hasLowerCase && hasNumbers && hasMinimumLength;
+
+    if (!isValid) {
+      return { strongPassword: true };
+    }
+    return null;
   }
 
   passwordMatchValidator(form: FormGroup) {
@@ -81,6 +100,14 @@ export class ResetPasswordComponent implements OnInit {
     this.router.navigate(['/auth/login']);
   }
 
+  togglePasswordVisibility(): void {
+    this.showPassword = !this.showPassword;
+  }
+
+  toggleConfirmPasswordVisibility(): void {
+    this.showConfirmPassword = !this.showConfirmPassword;
+  }
+
   getFieldError(fieldName: string): string {
     const field = this.resetPasswordForm.get(fieldName);
     if (field?.errors && field.touched) {
@@ -88,7 +115,10 @@ export class ResetPasswordComponent implements OnInit {
         return `${fieldName} is required`;
       }
       if (field.errors['minlength']) {
-        return 'Password must be at least 6 characters long';
+        return 'Password must be at least 12 characters long';
+      }
+      if (field.errors['strongPassword']) {
+        return 'Password must be at least 12 characters long and contain at least one uppercase letter, one lowercase letter, and one number';
       }
       if (field.errors['passwordMismatch']) {
         return 'Passwords do not match';

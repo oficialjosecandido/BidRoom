@@ -16,6 +16,7 @@ export class LoginComponent implements OnInit {
   isLoading = false;
   errorMessage = '';
   returnUrl = '';
+  showPassword = false;
 
   constructor(
     private fb: FormBuilder,
@@ -25,7 +26,7 @@ export class LoginComponent implements OnInit {
   ) {
     this.loginForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
-      password: ['', [Validators.required, Validators.minLength(6)]]
+      password: ['', [Validators.required]]
     });
   }
 
@@ -70,6 +71,10 @@ export class LoginComponent implements OnInit {
     this.router.navigate(['/auth/forgot-password']);
   }
 
+  togglePasswordVisibility(): void {
+    this.showPassword = !this.showPassword;
+  }
+
   getFieldError(fieldName: string): string {
     const field = this.loginForm.get(fieldName);
     if (field?.errors && field.touched) {
@@ -78,9 +83,6 @@ export class LoginComponent implements OnInit {
       }
       if (field.errors['email']) {
         return 'Please enter a valid email address';
-      }
-      if (field.errors['minlength']) {
-        return 'Password must be at least 6 characters long';
       }
     }
     return '';
