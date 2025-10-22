@@ -109,3 +109,4 @@ Copy `.env.example` to `.env` in the backend directory and configure as needed.
 # Deployment test
 # Testing deployment with correct publish profiles
 # Fix deployment issues
+# Fix frontend deployment issue
