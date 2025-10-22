@@ -24,4 +24,12 @@ export class FooterComponent {
   navigateToFaq(): void {
     this.router.navigate(['/landing/faq']);
   }
+
+  navigateToPrivacyPolicy(): void {
+    this.router.navigate(['/landing/privacy-policy']);
+  }
+
+  navigateToTermsConditions(): void {
+    this.router.navigate(['/landing/terms-conditions']);
+  }
 }
