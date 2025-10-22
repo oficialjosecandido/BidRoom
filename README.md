@@ -115,3 +115,4 @@ Copy `.env.example` to `.env` in the backend directory and configure as needed.
 # Trigger backend redeployment with correct startup command
 # Fix backend ZIP Deploy path issue
 # Fix frontend ZIP Deploy path issue
+# Include node_modules and fix backend startup command
