@@ -1,9 +1,0 @@
-<step title="Incoming Request" date="2025-10-22T19:51:08.503" instance="1f3da1" url="/api/deployments/latest?deployer=GITHUB_ZIP_DEPLOY&amp;time=2025-10-22_19-49-56Z" method="GET" type="request" pid="823,1,23" Host="bidroom-backend-dev.scm.azurewebsites.net" User-Agent="GITHUBACTIONS_DeployWebAppToAzure_6de2bc44e69059d9d9ce42c606985f5dcdd5fa77485c110a6b921aefce570604" Authorization="Bea..." Content-Type="application/json; charset=utf-8" Cookie="ARRAffinity=1f3da11623084ee450007a46dc09ba0f2fc3a7a09ff3fa995eb97c87e917e2b2;Path=/;HttpOnly;Secure;Domain=bidroom-backend-dev.scm.azurewebsites.net; ARRAffinitySameSite=1f3da11623084ee450007a46dc09ba0f2fc3a7a09ff3fa995eb97c87e917e2b2;Path=/;HttpOnly;SameSite=None;Secure;Domain=bidroom-backend-dev.scm.azurewebsites.net" Content-Length="0" X-ARR-LOG-ID="290e2a77-653c-4dfb-b112-a0b3e1c495ea" CLIENT-IP="52.161.82.118:21544" X-SITE-DEPLOYMENT-ID="bidroom-backend-dev" WAS-DEFAULT-HOSTNAME="bidroom-backend-dev.scm.azurewebsites.net" X-Forwarded-Proto="https" X-AppService-Proto="https" X-Forwarded-TlsVersion="1.3" X-WAWS-Unencoded-URL="/api/deployments/latest?deployer=GITHUB_ZIP_DEPLOY&amp;time=2025-10-22_19-49-56Z" X-Client-IP="52.161.82.118" X-Client-Port="21544" >
-  <step title="Cleanup Xml Logs" date="2025-10-22T19:51:08.541" /><!-- duration: 49ms -->
-  <step title="DeploymentService.GetResult" date="2025-10-22T19:51:08.682" >
-    <step title="DeploymentService.GetLatestDeployment" date="2025-10-22T19:51:08.703" >
-      <step title="DeploymentManager.GetResults" date="2025-10-22T19:51:08.721" /><!-- duration: 1357ms -->
-    </step><!-- duration: 1395ms -->
-  </step><!-- duration: 1436ms -->
-  <step title="Outgoing response" date="2025-10-22T19:51:10.141" type="response" statusCode="202" statusText="Accepted" /><!-- duration: 29ms -->
-</step><!-- duration: 1696ms -->

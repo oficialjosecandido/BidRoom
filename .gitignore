@@ -65,3 +65,6 @@ Thumbs.db
 # Angular specific
 frontend/dist/
 frontend/.angular/
+LogFiles/
+deployments/
+*.zip
