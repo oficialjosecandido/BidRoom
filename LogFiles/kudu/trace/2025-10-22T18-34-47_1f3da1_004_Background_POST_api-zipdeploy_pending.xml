@@ -1,0 +1,21 @@
+<step title="BackgroundTrace" date="2025-10-22T18:34:47.307" instance="1f3da1" url="/api/zipdeploy" method="POST" >
+  <step title="Cleanup Xml Logs" date="2025-10-22T18:34:47.405" /><!-- duration: 32ms -->
+  <step title="Creating temporary deployment - FetchDeploymentManager" date="2025-10-22T18:34:49.014" /><!-- duration: 10ms -->
+  <step title="Creating temporary deployment" date="2025-10-22T18:34:49.082" /><!-- duration: 350ms -->
+  <step title="Performing fetch based deployment" date="2025-10-22T18:34:49.855" >
+    <step title="Cleaning up temp folders from previous zip deployments and extracting pushed zip file /tmp/zipdeploy/fa4c7876-ab43-436f-8e82-6075c0f404f4.zip (14.23 MB) to /tmp/zipdeploy/extracted" date="2025-10-22T18:34:51.354" >
+      <step title="ChmodRecursive Process exited with total time taken in ms: 872" date="2025-10-22T18:35:35.029" /><!-- duration: 82ms -->
+    </step><!-- duration: 43806ms -->
+    <step title="Deployment timer started" date="2025-10-22T18:35:37.293" >
+      <step title="DeploymentManager.Deploy(id:a5542c11-adaa-40f6-b4fb-b918488c53b8)" date="2025-10-22T18:35:37.324" >
+        <step title="Collecting changeset information" date="2025-10-22T18:35:37.442" /><!-- duration: 231ms -->
+        <step title="Updating submodules" date="2025-10-22T18:35:37.743" /><!-- duration: 1438ms -->
+        <step title="Determining deployment builder" date="2025-10-22T18:35:39.714" >
+          <step title="Builder is BasicBuilder" date="2025-10-22T18:35:39.822" /><!-- duration: 130ms -->
+        </step><!-- duration: 309ms -->
+        <step title="PreDeployment: context.CleanOutputPath False" date="2025-10-22T18:35:40.296" >
+          <step title="PreDeployment: context.OutputPath /home/site/wwwroot" date="2025-10-22T18:35:40.706" >
+            <step title="Building" date="2025-10-22T18:35:40.999" >
+              <step title="Executing external process" date="2025-10-22T18:35:43.738" type="process" path="starter.sh" arguments="/opt/Kudu/Scripts/absoluteTar.sh /tmp/zipdeploy/extracted/node_modules /tmp/zipdeploy/extracted/node_modules.tar.gz" >
+                <step title="Cpu: gzip(886,4.390s)+sh(885,0.010s)+tar(884,1.170s)+absoluteTar.sh(882,0.020s)=total(5.590s)" date="2025-10-22T18:36:46.301" /><!-- duration: 218ms -->
+                <step title="starter.sh: no io activity for 60s, prev-cpu=-1.000s, current-cpu=5.590s" date="2025-10-22T18:36:46.610" /><!-- duration: 150ms -->

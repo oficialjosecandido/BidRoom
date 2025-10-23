@@ -1,0 +1,18 @@
+<step title="Incoming Request" date="2025-10-22T18:22:05.651" instance="1f3da1" url="/api/zipdeploy?isAsync=true&amp;deployer=GITHUB_ZIP_DEPLOY&amp;message=%7B%22type%22%3A%22deployment%22%2C%22sha%22%3A%22f757521783c9d635c05fa2b30776ed095a8126bd%22%2C%22repoName%22%3A%22oficialjosecandido%2FBidRoom%22%2C%22actor%22%3A%22oficialjosecandido%22%2C%22slotName%22%3A%22production%22%2C%22commitMessage%22%3A%22v0.2%22%7D" method="POST" type="request" pid="833,1,3" Host="bidroom-backend-dev.scm.azurewebsites.net" User-Agent="GITHUBACTIONS_DeployWebAppToAzure_6de2bc44e69059d9d9ce42c606985f5dcdd5fa77485c110a6b921aefce570604" Authorization="Bea..." Content-Type="application/octet-stream" Cookie="ARRAffinity=1f3da11623084ee450007a46dc09ba0f2fc3a7a09ff3fa995eb97c87e917e2b2;Path=/;HttpOnly;Secure;Domain=bidroom-backend-dev.scm.azurewebsites.net; ARRAffinitySameSite=1f3da11623084ee450007a46dc09ba0f2fc3a7a09ff3fa995eb97c87e917e2b2;Path=/;HttpOnly;SameSite=None;Secure;Domain=bidroom-backend-dev.scm.azurewebsites.net" Transfer-Encoding="chunked" X-ARR-LOG-ID="82e4ffc8-7ffd-4a6e-b99b-50f07c3e9491" CLIENT-IP="4.246.135.165:35873" X-SITE-DEPLOYMENT-ID="bidroom-backend-dev" WAS-DEFAULT-HOSTNAME="bidroom-backend-dev.scm.azurewebsites.net" X-Forwarded-Proto="https" X-AppService-Proto="https" X-Forwarded-TlsVersion="1.3" X-WAWS-Unencoded-URL="/api/zipdeploy?isAsync=true&amp;deployer=GITHUB_ZIP_DEPLOY&amp;message=%7B%22type%22%3A%22deployment%22%2C%22sha%22%3A%22f757521783c9d635c05fa2b30776ed095a8126bd%22%2C%22repoName%22%3A%22oficialjosecandido%2FBidRoom%22%2C%22actor%22%3A%22oficialjosecandido%22%2C%22slotName%22%3A%22production%22%2C%22commitMessage%22%3A%22v0.2%22%7D" X-Client-IP="4.246.135.165" X-Client-Port="35873" >
+  <step title="Cleanup Xml Logs" date="2025-10-22T18:22:05.661" /><!-- duration: 34ms -->
+  <step title="ZipPushDeploy" date="2025-10-22T18:22:05.989" >
+    <step title="ZipDeploy. Extract zip." date="2025-10-22T18:22:06.049" /><!-- duration: 12ms -->
+    <step title="None repository commit" date="2025-10-22T18:22:06.092" >
+      <step title="Commit id: 3c746293-0227-443a-b0d7-c86ec2d4f272" date="2025-10-22T18:22:06.104" Message="N/A" AuthorName="N/A" AuthorEmail="N/A" /><!-- duration: 18ms -->
+    </step><!-- duration: 41ms -->
+    <step title="Starting PushDeployAsync" date="2025-10-22T18:22:06.149" /><!-- duration: 10ms -->
+    <step title="Writing artifact to /tmp/zipdeploy/5c7bd207-983f-4b54-84ce-62e1128f61d3.zip" date="2025-10-22T18:22:06.204" >
+      <step title="Writing multipart request body to /tmp/zipdeploy/5c7bd207-983f-4b54-84ce-62e1128f61d3.zip" date="2025-10-22T18:22:06.214" /><!-- duration: 19ms -->
+    </step><!-- duration: 721ms -->
+    <step title="Start deployment in the background" date="2025-10-22T18:22:06.964" >
+      <step title="Acquiring Deployment Lock" date="2025-10-22T18:22:07.025" /><!-- duration: 11ms -->
+      <step title="Acquired Deployment Lock" date="2025-10-22T18:22:07.167" /><!-- duration: 7ms -->
+    </step><!-- duration: 357ms -->
+  </step><!-- duration: 1360ms -->
+  <step title="Outgoing response" date="2025-10-22T18:22:07.387" type="response" statusCode="202" statusText="Accepted" /><!-- duration: 20ms -->
+</step><!-- duration: 1778ms -->

@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<deployment>
+  <id>82a480d0-c0d6-49b6-9b76-8d45776bb1db</id>
+  <author>N/A</author>
+  <deployer>GITHUB_ZIP_DEPLOY</deployer>
+  <authorEmail>N/A</authorEmail>
+  <message>{"type":"deployment","sha":"61756c8cb5bd1f3bdc7799f2d34ca671cb74df09","repoName":"oficialjosecandido/BidRoom","actor":"oficialjosecandido","slotName":"production","commitMessage":"new yml"}</message>
+  <progress></progress>
+  <status>Success</status>
+  <statusText></statusText>
+  <lastSuccessEndTime>2025-10-23T10:50:05.119233Z</lastSuccessEndTime>
+  <receivedTime>2025-10-23T10:49:45.4087258Z</receivedTime>
+  <startTime>2025-10-23T10:49:47.1154725Z</startTime>
+  <endTime>2025-10-23T10:50:05.119233Z</endTime>
+  <complete>True</complete>
+  <is_temp>False</is_temp>
+  <is_readonly>True</is_readonly>
+  <buildSummary />
+</deployment>

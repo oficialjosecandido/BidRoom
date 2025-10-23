@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<deployment>
+  <id>0456ff2c-19da-4639-9f4a-2c6c652b91a9</id>
+  <author>N/A</author>
+  <deployer>GITHUB_ZIP_DEPLOY</deployer>
+  <authorEmail>N/A</authorEmail>
+  <message>{"type":"deployment","sha":"3c5048682896b68bb739ab466ea3fa3c1017a864","repoName":"oficialjosecandido/BidRoom","actor":"oficialjosecandido","slotName":"production","commitMessage":"Fix frontend deployment - deploy from browser subdirectory where index.html is located"}</message>
+  <progress></progress>
+  <status>Success</status>
+  <statusText></statusText>
+  <lastSuccessEndTime>2025-10-23T10:36:24.4920398Z</lastSuccessEndTime>
+  <receivedTime>2025-10-23T10:35:37.526839Z</receivedTime>
+  <startTime>2025-10-23T10:35:39.2038532Z</startTime>
+  <endTime>2025-10-23T10:36:24.4920398Z</endTime>
+  <complete>True</complete>
+  <is_temp>False</is_temp>
+  <is_readonly>True</is_readonly>
+  <buildSummary />
+</deployment>

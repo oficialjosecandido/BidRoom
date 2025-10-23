@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<deployment>
+  <id>cdaf78f1-ed9e-444f-8455-01addc3c802d</id>
+  <author>N/A</author>
+  <deployer>GITHUB_ZIP_DEPLOY</deployer>
+  <authorEmail>N/A</authorEmail>
+  <message>{"type":"deployment","sha":"6d6ec4616b03994e7854d9d27d09b5aaa640c74d","repoName":"oficialjosecandido/BidRoom","actor":"oficialjosecandido","slotName":"production","commitMessage":"Switch frontend to Azure Static Web Apps - separate backend and frontend deployments"}</message>
+  <progress>Express Node Deploy: Running rsync...</progress>
+  <status>Building</status>
+  <statusText>Building and Deploying 'cdaf78f1-ed9e-444f-8455-01addc3c802d'.</statusText>
+  <lastSuccessEndTime />
+  <receivedTime>2025-10-23T11:05:37.7269087Z</receivedTime>
+  <startTime>2025-10-23T11:05:40.1495449Z</startTime>
+  <endTime />
+  <complete>False</complete>
+  <is_temp>False</is_temp>
+  <is_readonly>True</is_readonly>
+  <buildSummary />
+</deployment>

@@ -1,0 +1,16 @@
+<step title="Incoming Request" date="2025-10-22T19:25:45.505" instance="1f3da1" url="/api/zipdeploy?isAsync=true&amp;deployer=GITHUB_ZIP_DEPLOY&amp;message=%7B%22type%22%3A%22deployment%22%2C%22sha%22%3A%226cdc6eec43605dbc8a5122f8f7c3dc72cc83a001%22%2C%22repoName%22%3A%22oficialjosecandido%2FBidRoom%22%2C%22actor%22%3A%22oficialjosecandido%22%2C%22slotName%22%3A%22production%22%2C%22commitMessage%22%3A%22Fix%20frontend%20deployment%20-%20Application%20Error%22%7D" method="POST" type="request" pid="829,1,16" Host="bidroom-backend-dev.scm.azurewebsites.net" User-Agent="GITHUBACTIONS_DeployWebAppToAzure_6de2bc44e69059d9d9ce42c606985f5dcdd5fa77485c110a6b921aefce570604" Authorization="Bea..." Content-Type="application/octet-stream" Cookie="ARRAffinity=1f3da11623084ee450007a46dc09ba0f2fc3a7a09ff3fa995eb97c87e917e2b2;Path=/;HttpOnly;Secure;Domain=bidroom-backend-dev.scm.azurewebsites.net; ARRAffinitySameSite=1f3da11623084ee450007a46dc09ba0f2fc3a7a09ff3fa995eb97c87e917e2b2;Path=/;HttpOnly;SameSite=None;Secure;Domain=bidroom-backend-dev.scm.azurewebsites.net" Transfer-Encoding="chunked" X-ARR-LOG-ID="4d356521-0cbe-463a-9f9e-bd117f40f0a3" CLIENT-IP="52.154.20.54:37938" X-SITE-DEPLOYMENT-ID="bidroom-backend-dev" WAS-DEFAULT-HOSTNAME="bidroom-backend-dev.scm.azurewebsites.net" X-Forwarded-Proto="https" X-AppService-Proto="https" X-Forwarded-TlsVersion="1.3" X-WAWS-Unencoded-URL="/api/zipdeploy?isAsync=true&amp;deployer=GITHUB_ZIP_DEPLOY&amp;message=%7B%22type%22%3A%22deployment%22%2C%22sha%22%3A%226cdc6eec43605dbc8a5122f8f7c3dc72cc83a001%22%2C%22repoName%22%3A%22oficialjosecandido%2FBidRoom%22%2C%22actor%22%3A%22oficialjosecandido%22%2C%22slotName%22%3A%22production%22%2C%22commitMessage%22%3A%22Fix%20frontend%20deployment%20-%20Application%20Error%22%7D" X-Client-IP="52.154.20.54" X-Client-Port="37938" >
+  <step title="Cleanup Xml Logs" date="2025-10-22T19:25:45.556" /><!-- duration: 120ms -->
+  <step title="ZipPushDeploy" date="2025-10-22T19:25:45.740" >
+    <step title="ZipDeploy. Extract zip." date="2025-10-22T19:25:45.786" /><!-- duration: 20ms -->
+    <step title="Starting PushDeployAsync" date="2025-10-22T19:25:45.845" /><!-- duration: 11ms -->
+    <step title="Writing artifact to /tmp/zipdeploy/529c544f-d2e9-44ea-9e10-a5b0d9fdaf02.zip" date="2025-10-22T19:25:45.895" >
+      <step title="Writing multipart request body to /tmp/zipdeploy/529c544f-d2e9-44ea-9e10-a5b0d9fdaf02.zip" date="2025-10-22T19:25:45.907" /><!-- duration: 18ms -->
+    </step><!-- duration: 1691ms -->
+    <step title="Start deployment in the background" date="2025-10-22T19:25:47.645" >
+      <step title="Acquiring Deployment Lock" date="2025-10-22T19:25:47.708" /><!-- duration: 40ms -->
+      <step title="Cannot Acquire Deployment Lock already held" date="2025-10-22T19:25:47.801" /><!-- duration: 38ms -->
+    </step><!-- duration: 334ms -->
+    <step title="There is a deployment currently in progress. Please try again when it completes." date="2025-10-22T19:25:48.010" /><!-- duration: 52ms -->
+  </step><!-- duration: 2342ms -->
+  <step title="Outgoing response" date="2025-10-22T19:25:48.111" type="response" statusCode="409" statusText="Conflict" /><!-- duration: 18ms -->
+</step><!-- duration: 2635ms -->
