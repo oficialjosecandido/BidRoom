@@ -118,3 +118,4 @@ Copy `.env.example` to `.env` in the backend directory and configure as needed.
 # Include node_modules and fix backend startup command
 # Check deployment status and logs
 # Fix frontend deployment - include web.config
+# Fix frontend for Linux Node.js - use Express server

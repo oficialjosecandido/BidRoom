@@ -81,9 +81,15 @@ jobs:
         
     - name: Create frontend deployment package
       run: |
-        cd frontend/dist/frontend/browser
-        cp ../../../../frontend/web.config .
-        zip -r frontend-deploy.zip . -x "*.git*" "*.zip"
+        cd frontend
+        cp -r dist/frontend/browser dist-server
+        mv dist-server/browser/* dist-server/ 2>/dev/null || true
+        rmdir dist-server/browser 2>/dev/null || true
+        cp server.js dist-server/
+        cp package.json dist-server/
+        cp package-lock.json dist-server/
+        cd dist-server
+        zip -r ../../frontend-deploy.zip . -x "*.git*" "*.zip"
         
     - name: Login to Azure
       uses: azure/login@v1
@@ -94,4 +100,4 @@ jobs:
       uses: azure/webapps-deploy@v2
       with:
         app-name: 'bidroom-frontend-dev'
-        package: './frontend/dist/frontend/browser/frontend-deploy.zip'
+        package: './frontend-deploy.zip'
