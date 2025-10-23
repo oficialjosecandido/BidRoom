@@ -1,10 +1,12 @@
-name: Deploy to Azure Dev Environment
+name: Deploy Backend to Azure Dev Environment
 
 on:
   push:
     branches: [ dev ]
-  pull_request:
-    branches: [ dev ]
+    paths:
+      - 'backend/**'
+      - '.github/workflows/deploy-dev.yml'
+  workflow_dispatch:
 
 env:
   NODE_VERSION: '20.x'
@@ -13,7 +15,6 @@ env:
   NODE_ENV: 'development'
 
 jobs:
-  # Backend Deployment
   deploy-backend:
     runs-on: ubuntu-latest
     environment: dev
@@ -52,52 +53,3 @@ jobs:
       with:
         app-name: ${{ env.AZURE_WEBAPP_NAME }}
         package: ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}/backend-deploy.zip
-
-  # Frontend Deployment
-  deploy-frontend:
-    runs-on: ubuntu-latest
-    environment: dev
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: ${{ env.NODE_VERSION }}
-        cache: 'npm'
-        cache-dependency-path: './frontend/package-lock.json'
-        
-    - name: Install frontend dependencies
-      working-directory: ./frontend
-      run: npm ci
-      
-    - name: Build frontend
-      working-directory: ./frontend
-      run: npm run build
-      env:
-        NODE_ENV: production
-        
-    - name: Create frontend deployment package
-      run: |
-        cd frontend
-        cp -r dist/frontend/browser dist-server
-        mv dist-server/browser/* dist-server/ 2>/dev/null || true
-        rmdir dist-server/browser 2>/dev/null || true
-        cp server.js dist-server/
-        cp package.json dist-server/
-        cp package-lock.json dist-server/
-        cd dist-server
-        zip -r ../../frontend-deploy.zip . -x "*.git*" "*.zip"
-        
-    - name: Login to Azure
-      uses: azure/login@v1
-      with:
-        creds: ${{ secrets.AZURE_CREDENTIALS }}
-        
-    - name: Deploy to Azure App Service
-      uses: azure/webapps-deploy@v2
-      with:
-        app-name: 'bidroom-frontend-dev'
-        package: './frontend-deploy.zip'
