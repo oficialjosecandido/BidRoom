@@ -84,6 +84,7 @@ jobs:
         cd frontend/dist/frontend
         npm init -y
         npm install serve
+        cp ../../../frontend/web.config .
         zip -r frontend-deploy.zip . -x "*.git*" "*.zip"
         
     - name: Login to Azure

@@ -117,3 +117,4 @@ Copy `.env.example` to `.env` in the backend directory and configure as needed.
 # Fix frontend ZIP Deploy path issue
 # Include node_modules and fix backend startup command
 # Check deployment status and logs
+# Fix frontend deployment - include web.config
