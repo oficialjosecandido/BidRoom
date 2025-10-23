@@ -98,29 +98,21 @@ Add these IPs to MongoDB Atlas Network Access:
 
 ---
 
-### 3. Create GitHub Environment and Secrets
+### 3. Add GitHub Repository Secrets
 
-#### Create E2E Environment:
-1. Go to: https://github.com/oficialjosecandido/BidRoom/settings/environments
-2. Click: **New environment**
-3. Name: `e2e`
-4. Click: **Configure environment**
+You need to add this secret at the repository level:
 
-#### Add GitHub Secrets:
+**AZURE_STATIC_WEB_APPS_API_TOKEN_E2E**
+- Value: `446d03464cef66e37e1ccc312d9ca889683146057aac9d24f79f754f273ba2b703-557c33f6-d460-4b32-92c9-c3f3c352e70600f051008af4ce0f`
 
-You need to add these secrets to the **e2e** environment:
-
-1. **AZURE_CREDENTIALS** (Reuse from dev environment)
-   - This is the Service Principal credentials you already have
-
-2. **AZURE_STATIC_WEB_APPS_API_TOKEN_E2E**
-   - Value: `446d03464cef66e37e1ccc312d9ca889683146057aac9d24f79f754f273ba2b703-557c33f6-d460-4b32-92c9-c3f3c352e70600f051008af4ce0f`
-
-**Steps to add secrets:**
+**Steps to add the secret:**
 1. Go to: https://github.com/oficialjosecandido/BidRoom/settings/secrets/actions
-2. Under **Environment secrets**, select `e2e` environment
-3. Click: **Add secret**
-4. Add `AZURE_STATIC_WEB_APPS_API_TOKEN_E2E` with the token above
+2. Click: **New repository secret**
+3. Name: `AZURE_STATIC_WEB_APPS_API_TOKEN_E2E`
+4. Value: `446d03464cef66e37e1ccc312d9ca889683146057aac9d24f79f754f273ba2b703-557c33f6-d460-4b32-92c9-c3f3c352e70600f051008af4ce0f`
+5. Click: **Add secret**
+
+**Note:** The workflows have been simplified to use repository-level secrets instead of environment-specific secrets.
 
 ---
 
@@ -183,8 +175,7 @@ git push origin e2e
 
 - [ ] Set backend environment variables in Azure Portal
 - [ ] Add E2E backend IPs to MongoDB Atlas Network Access
-- [ ] Create `e2e` GitHub environment
-- [ ] Add `AZURE_STATIC_WEB_APPS_API_TOKEN_E2E` secret
+- [ ] Add `AZURE_STATIC_WEB_APPS_API_TOKEN_E2E` repository secret
 - [ ] Test backend deployment by pushing to `e2e` branch
 - [ ] Test frontend deployment by pushing to `e2e` branch
 - [ ] Verify backend API is accessible
