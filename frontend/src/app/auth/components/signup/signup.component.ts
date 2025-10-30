@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { AuthService, RegisterRequest } from '../../services/auth.service';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-signup',
@@ -70,15 +70,10 @@ export class SignupComponent implements OnInit {
       this.errorMessage = '';
       this.successMessage = '';
 
-      const signupData: RegisterRequest = {
-        firstName: this.signupForm.value.firstName,
-        lastName: this.signupForm.value.lastName,
-        email: this.signupForm.value.email,
-        password: this.signupForm.value.password
-      };
+      const displayName = `${this.signupForm.value.firstName} ${this.signupForm.value.lastName}`.trim();
 
-      this.authService.register(signupData).subscribe({
-        next: (response) => {
+      this.authService.register(this.signupForm.value.email, this.signupForm.value.password, displayName).subscribe({
+        next: () => {
           this.isLoading = false;
           this.successMessage = 'Registration successful! Please check your email to verify your account.';
           // Optionally redirect to login after a delay
@@ -88,15 +83,26 @@ export class SignupComponent implements OnInit {
         },
         error: (error) => {
           this.isLoading = false;
-          this.errorMessage = error.error?.message || 'Registration failed. Please try again.';
+          this.errorMessage = error?.message || 'Registration failed. Please try again.';
         }
       });
     }
   }
 
   loginWithGoogle(): void {
-    // TODO: Implement Google OAuth
-    console.log('Google signup not implemented yet');
+    if (this.isLoading) return;
+    this.isLoading = true;
+    this.errorMessage = '';
+    this.authService.loginWithGoogle().subscribe({
+      next: () => {
+        this.isLoading = false;
+        this.router.navigate(['/dashboard']);
+      },
+      error: (error) => {
+        this.isLoading = false;
+        this.errorMessage = error?.message || 'Google sign-in failed. Please try again.';
+      }
+    });
   }
 
   navigateToLogin(): void {

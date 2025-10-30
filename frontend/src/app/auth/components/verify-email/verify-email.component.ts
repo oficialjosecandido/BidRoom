@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { AuthService } from '../../services/auth.service';
+import { Auth, applyActionCode } from '@angular/fire/auth';
 
 @Component({
   selector: 'app-verify-email',
@@ -14,38 +14,37 @@ export class VerifyEmailComponent implements OnInit {
   isLoading = true;
   isVerified = false;
   errorMessage = '';
-  token = '';
+  code = '';
 
   constructor(
     private route: ActivatedRoute,
     private router: Router,
-    private authService: AuthService
+    private auth: Auth
   ) {}
 
   ngOnInit(): void {
-    // Get token from query parameters
+    // Get oobCode from query parameters (Firebase email verification)
     this.route.queryParams.subscribe(params => {
-      this.token = params['token'];
-      if (this.token) {
+      this.code = params['oobCode'];
+      if (this.code) {
         this.verifyEmail();
       } else {
-        this.errorMessage = 'Invalid or missing verification token.';
+        this.errorMessage = 'Invalid or missing verification code.';
         this.isLoading = false;
       }
     });
   }
 
   verifyEmail(): void {
-    this.authService.verifyEmail(this.token).subscribe({
-      next: (response) => {
+    applyActionCode(this.auth, this.code)
+      .then(() => {
         this.isLoading = false;
         this.isVerified = true;
-      },
-      error: (error) => {
+      })
+      .catch((error: any) => {
         this.isLoading = false;
-        this.errorMessage = error.error?.message || 'Email verification failed.';
-      }
-    });
+        this.errorMessage = error?.message || 'Email verification failed.';
+      });
   }
 
   navigateToLogin(): void {

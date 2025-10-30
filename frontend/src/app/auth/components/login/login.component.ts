@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { AuthService, LoginRequest } from '../../services/auth.service';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-login',
@@ -31,8 +31,8 @@ export class LoginComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    // Get return url from route parameters or default to '/'
-    this.returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/';
+    // Get return url from route parameters or default to '/dashboard'
+    this.returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/dashboard';
   }
 
   onSubmit(): void {
@@ -40,27 +40,33 @@ export class LoginComponent implements OnInit {
       this.isLoading = true;
       this.errorMessage = '';
 
-      const loginData: LoginRequest = {
-        email: this.loginForm.value.email,
-        password: this.loginForm.value.password
-      };
-
-      this.authService.login(loginData).subscribe({
-        next: (response) => {
+      this.authService.login(this.loginForm.value.email, this.loginForm.value.password).subscribe({
+        next: () => {
           this.isLoading = false;
           this.router.navigate([this.returnUrl]);
         },
         error: (error) => {
           this.isLoading = false;
-          this.errorMessage = error.error?.message || 'Login failed. Please try again.';
+          this.errorMessage = error?.message || 'Login failed. Please try again.';
         }
       });
     }
   }
 
   loginWithGoogle(): void {
-    // TODO: Implement Google OAuth
-    console.log('Google login not implemented yet');
+    if (this.isLoading) return;
+    this.isLoading = true;
+    this.errorMessage = '';
+    this.authService.loginWithGoogle().subscribe({
+      next: () => {
+        this.isLoading = false;
+        this.router.navigate([this.returnUrl]);
+      },
+      error: (error) => {
+        this.isLoading = false;
+        this.errorMessage = error?.message || 'Google login failed. Please try again.';
+      }
+    });
   }
 
   navigateToSignup(): void {
