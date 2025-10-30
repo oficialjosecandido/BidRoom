@@ -4,6 +4,9 @@ const helmet = require('helmet');
 const morgan = require('morgan');
 require('dotenv').config();
 
+// Initialize Firebase Admin
+require('./config/firebaseAdmin');
+
 // Import database connection
 const connectDB = require('./config/database');
 const User = require('./models/User');

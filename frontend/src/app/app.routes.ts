@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { AuthGuard } from './auth/guards/auth.guard';
 
 export const routes: Routes = [
   { path: '', redirectTo: '/landing', pathMatch: 'full' },
@@ -10,7 +11,17 @@ export const routes: Routes = [
     path: 'landing',
     loadChildren: () => import('./landing/landing.module').then(m => m.LandingModule)
   },
-  // TODO: Add protected routes with AuthGuard
-  // { path: 'dashboard', loadComponent: () => import('./components/dashboard/dashboard.component').then(m => m.DashboardComponent), canActivate: [AuthGuard] },
+  {
+    path: 'dashboard',
+    loadComponent: () => import('./dashboard/dashboard.component').then(m => m.DashboardComponent),
+    canActivate: [AuthGuard],
+    children: [
+      { path: '', redirectTo: 'my-account', pathMatch: 'full' },
+      { 
+        path: 'my-account', 
+        loadComponent: () => import('./dashboard/components/my-account/my-account.component').then(m => m.MyAccountComponent)
+      }
+    ]
+  },
   { path: '**', redirectTo: '/landing' }
 ];

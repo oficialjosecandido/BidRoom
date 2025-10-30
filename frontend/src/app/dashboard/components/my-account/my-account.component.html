@@ -1,0 +1,60 @@
+<div class="my-account-container">
+  <div class="page-header">
+    <h1 class="page-title">My Account</h1>
+    <p class="page-subtitle">Manage your account settings and profile information</p>
+  </div>
+
+  <div class="account-content">
+    <div class="account-card">
+      <div class="card-header">
+        <h2 class="card-title">Profile Information</h2>
+      </div>
+
+      <div class="card-body" *ngIf="currentUser$ | async as user">
+        <div class="info-row">
+          <div class="info-label">Email</div>
+          <div class="info-value">{{ user.email || 'Not provided' }}</div>
+        </div>
+
+        <div class="info-row">
+          <div class="info-label">Display Name</div>
+          <div class="info-value">{{ user.displayName || 'Not provided' }}</div>
+        </div>
+
+        <div class="info-row">
+          <div class="info-label">Email Verified</div>
+          <div class="info-value">
+            <span class="badge" [class.verified]="user.emailVerified" [class.unverified]="!user.emailVerified">
+              {{ user.emailVerified ? 'Verified' : 'Not Verified' }}
+            </span>
+          </div>
+        </div>
+
+        <div class="info-row" *ngIf="user.photoURL">
+          <div class="info-label">Profile Photo</div>
+          <div class="info-value">
+            <img [src]="user.photoURL" alt="Profile photo" class="profile-photo" />
+          </div>
+        </div>
+
+        <div class="info-row">
+          <div class="info-label">User ID</div>
+          <div class="info-value">
+            <code class="uid">{{ user.uid }}</code>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="account-card">
+      <div class="card-header">
+        <h2 class="card-title">Account Settings</h2>
+      </div>
+
+      <div class="card-body">
+        <p class="coming-soon">More account settings will be available here soon.</p>
+      </div>
+    </div>
+  </div>
+</div>
+

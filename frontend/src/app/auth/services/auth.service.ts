@@ -1,190 +1,103 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { BehaviorSubject, Observable, throwError } from 'rxjs';
-import { map, catchError, tap } from 'rxjs/operators';
+import { BehaviorSubject, Observable, from, of, throwError } from 'rxjs';
+import { map, switchMap, catchError } from 'rxjs/operators';
+import { Auth, GoogleAuthProvider, User as FirebaseUser, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithPopup, sendPasswordResetEmail, sendEmailVerification, updateProfile, signOut, getIdToken, confirmPasswordReset, verifyPasswordResetCode } from '@angular/fire/auth';
 
-export interface User {
-  id: string;
-  email: string;
-  firstName: string;
-  lastName: string;
-  lastLogin?: string;
-}
-
-export interface AuthResponse {
-  message: string;
-  user: User;
-  tokens: {
-    accessToken: string;
-    refreshToken: string;
-  };
-}
-
-export interface LoginRequest {
-  email: string;
-  password: string;
-}
-
-export interface RegisterRequest {
-  email: string;
-  password: string;
-  firstName: string;
-  lastName: string;
+export interface AppUser {
+  uid: string;
+  email: string | null;
+  displayName: string | null;
+  photoURL: string | null;
+  emailVerified: boolean;
 }
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
-  private readonly API_URL = 'http://localhost:3000/api/auth';
-  private currentUserSubject = new BehaviorSubject<User | null>(null);
+  private currentUserSubject = new BehaviorSubject<AppUser | null>(null);
   public currentUser$ = this.currentUserSubject.asObservable();
 
-  constructor(private http: HttpClient) {
-    this.loadUserFromStorage();
+  constructor(private auth: Auth) {
+    onAuthStateChanged(this.auth, (fbUser: FirebaseUser | null) => {
+      const mapped = this.mapFirebaseUser(fbUser);
+      this.currentUserSubject.next(mapped);
+    });
   }
 
-  private loadUserFromStorage(): void {
-    const token = localStorage.getItem('accessToken');
-    const userStr = localStorage.getItem('currentUser');
-    
-    if (token && userStr) {
-      try {
-        const user = JSON.parse(userStr);
-        this.currentUserSubject.next(user);
-      } catch (error) {
-        this.clearAuthData();
-      }
-    }
+  private mapFirebaseUser(user: FirebaseUser | null): AppUser | null {
+    if (!user) return null;
+    return {
+      uid: user.uid,
+      email: user.email,
+      displayName: user.displayName,
+      photoURL: user.photoURL,
+      emailVerified: user.emailVerified
+    };
   }
 
-  private clearAuthData(): void {
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('refreshToken');
-    localStorage.removeItem('currentUser');
-    this.currentUserSubject.next(null);
+  login(email: string, password: string): Observable<AppUser> {
+    return from(signInWithEmailAndPassword(this.auth, email, password)).pipe(
+      switchMap((cred) => {
+        // Check if email is verified
+        if (!cred.user.emailVerified) {
+          // Sign out the user immediately
+          return from(signOut(this.auth)).pipe(
+            switchMap(() => {
+              return throwError(() => new Error('Please verify your email address before logging in. Check your inbox for the verification email.'));
+            })
+          );
+        }
+        return of(this.mapFirebaseUser(cred.user) as AppUser);
+      })
+    );
   }
 
-  private saveAuthData(user: User, tokens: { accessToken: string; refreshToken: string }): void {
-    localStorage.setItem('accessToken', tokens.accessToken);
-    localStorage.setItem('refreshToken', tokens.refreshToken);
-    localStorage.setItem('currentUser', JSON.stringify(user));
-    this.currentUserSubject.next(user);
+  register(email: string, password: string, displayName?: string): Observable<AppUser> {
+    return from(createUserWithEmailAndPassword(this.auth, email, password)).pipe(
+      switchMap(async (cred) => {
+        if (displayName) {
+          await updateProfile(cred.user, { displayName });
+        }
+        await sendEmailVerification(cred.user);
+        return this.mapFirebaseUser(cred.user) as AppUser;
+      })
+    );
   }
 
-  login(credentials: LoginRequest): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${this.API_URL}/login`, credentials)
-      .pipe(
-        tap(response => {
-          this.saveAuthData(response.user, response.tokens);
-        }),
-        catchError(error => {
-          console.error('Login error:', error);
-          return throwError(() => error);
-        })
-      );
+  loginWithGoogle(): Observable<AppUser> {
+    const provider = new GoogleAuthProvider();
+    return from(signInWithPopup(this.auth, provider)).pipe(
+      map(cred => this.mapFirebaseUser(cred.user) as AppUser)
+    );
   }
 
-  register(userData: RegisterRequest): Observable<any> {
-    return this.http.post(`${this.API_URL}/register`, userData)
-      .pipe(
-        catchError(error => {
-          console.error('Registration error:', error);
-          return throwError(() => error);
-        })
-      );
+  forgotPassword(email: string): Observable<void> {
+    return from(sendPasswordResetEmail(this.auth, email));
   }
 
-  logout(): void {
-    this.clearAuthData();
+  confirmPasswordReset(code: string, newPassword: string): Observable<void> {
+    return from(confirmPasswordReset(this.auth, code, newPassword));
   }
 
-  getCurrentUser(): User | null {
+  verifyPasswordResetCode(code: string): Observable<string> {
+    return from(verifyPasswordResetCode(this.auth, code));
+  }
+
+  async getAccessToken(): Promise<string | null> {
+    if (!this.auth.currentUser) return null;
+    return await getIdToken(this.auth.currentUser, false);
+  }
+
+  isAuthenticated(): Observable<boolean> {
+    return this.currentUser$.pipe(map(user => !!user));
+  }
+
+  getCurrentUser(): AppUser | null {
     return this.currentUserSubject.value;
   }
 
-  isAuthenticated(): boolean {
-    const token = localStorage.getItem('accessToken');
-    if (!token) return false;
-
-    try {
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      const currentTime = Date.now() / 1000;
-      return payload.exp > currentTime;
-    } catch (error) {
-      return false;
-    }
-  }
-
-  getAccessToken(): string | null {
-    return localStorage.getItem('accessToken');
-  }
-
-  getRefreshToken(): string | null {
-    return localStorage.getItem('refreshToken');
-  }
-
-  refreshAccessToken(): Observable<{ tokens: { accessToken: string; refreshToken: string } }> {
-    const refreshToken = this.getRefreshToken();
-    if (!refreshToken) {
-      return throwError(() => new Error('No refresh token available'));
-    }
-
-    return this.http.post<{ tokens: { accessToken: string; refreshToken: string } }>(`${this.API_URL}/refresh`, { refreshToken })
-      .pipe(
-        tap(response => {
-          localStorage.setItem('accessToken', response.tokens.accessToken);
-          localStorage.setItem('refreshToken', response.tokens.refreshToken);
-        }),
-        catchError(error => {
-          this.logout();
-          return throwError(() => error);
-        })
-      );
-  }
-
-  verifyEmail(token: string): Observable<any> {
-    return this.http.post(`${this.API_URL}/verify-email`, { token })
-      .pipe(
-        catchError(error => {
-          console.error('Email verification error:', error);
-          return throwError(() => error);
-        })
-      );
-  }
-
-  forgotPassword(email: string): Observable<any> {
-    return this.http.post(`${this.API_URL}/forgot-password`, { email })
-      .pipe(
-        catchError(error => {
-          console.error('Forgot password error:', error);
-          return throwError(() => error);
-        })
-      );
-  }
-
-  resetPassword(token: string, password: string): Observable<any> {
-    return this.http.post(`${this.API_URL}/reset-password`, { token, password })
-      .pipe(
-        catchError(error => {
-          console.error('Reset password error:', error);
-          return throwError(() => error);
-        })
-      );
-  }
-
-  getCurrentUserProfile(): Observable<User> {
-    return this.http.get<{ user: User }>(`${this.API_URL}/me`)
-      .pipe(
-        map(response => response.user),
-        tap(user => {
-          localStorage.setItem('currentUser', JSON.stringify(user));
-          this.currentUserSubject.next(user);
-        }),
-        catchError(error => {
-          console.error('Get profile error:', error);
-          return throwError(() => error);
-        })
-      );
+  logout(): Observable<void> {
+    return from(signOut(this.auth));
   }
 }

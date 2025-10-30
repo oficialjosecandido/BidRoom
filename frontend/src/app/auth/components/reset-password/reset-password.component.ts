@@ -16,7 +16,7 @@ export class ResetPasswordComponent implements OnInit {
   isLoading = false;
   errorMessage = '';
   successMessage = '';
-  token = '';
+  code = '';
   showPassword = false;
   showConfirmPassword = false;
 
@@ -33,12 +33,20 @@ export class ResetPasswordComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    // Get token from query parameters
+    // Get Firebase oobCode from query parameters
     this.route.queryParams.subscribe(params => {
-      this.token = params['token'];
-      if (!this.token) {
-        this.errorMessage = 'Invalid or missing reset token.';
+      this.code = params['oobCode'];
+      if (!this.code) {
+        this.errorMessage = 'Invalid or missing reset code.';
+        return;
       }
+      // Optionally verify code to pre-validate
+      this.authService.verifyPasswordResetCode(this.code).subscribe({
+        next: () => {},
+        error: () => {
+          this.errorMessage = 'The reset link is invalid or expired.';
+        }
+      });
     });
   }
 
@@ -72,14 +80,14 @@ export class ResetPasswordComponent implements OnInit {
   }
 
   onSubmit(): void {
-    if (this.resetPasswordForm.valid && !this.isLoading && this.token) {
+    if (this.resetPasswordForm.valid && !this.isLoading && this.code) {
       this.isLoading = true;
       this.errorMessage = '';
       this.successMessage = '';
 
       const password = this.resetPasswordForm.value.password;
 
-      this.authService.resetPassword(this.token, password).subscribe({
+      this.authService.confirmPasswordReset(this.code, password).subscribe({
         next: (response) => {
           this.isLoading = false;
           this.successMessage = 'Password reset successfully! You can now log in with your new password.';
@@ -90,7 +98,7 @@ export class ResetPasswordComponent implements OnInit {
         },
         error: (error) => {
           this.isLoading = false;
-          this.errorMessage = error.error?.message || 'Failed to reset password. Please try again.';
+          this.errorMessage = error?.message || 'Failed to reset password. Please try again.';
         }
       });
     }
