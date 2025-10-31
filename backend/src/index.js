@@ -13,6 +13,9 @@ const User = require('./models/User');
 
 // Import routes
 const authRoutes = require('./routes/auth');
+const listingRoutes = require('./routes/listings');
+const bidRoutes = require('./routes/bids');
+const offerRoutes = require('./routes/offers');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -26,6 +29,9 @@ app.use(express.urlencoded({ extended: true }));
 
 // Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/listings', listingRoutes);
+app.use('/api/bids', bidRoutes);
+app.use('/api/offers', offerRoutes);
 
 app.get('/', (req, res) => {
   res.json({

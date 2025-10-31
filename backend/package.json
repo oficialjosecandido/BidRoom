@@ -7,7 +7,9 @@
     "start": "node src/index.js",
     "dev": "nodemon src/index.js",
     "build": "echo 'Build completed - no build step required for Node.js'",
-    "test": "jest"
+    "test": "jest",
+    "seed:listing": "node src/scripts/seedListing.js",
+    "migrate:slugs": "node src/scripts/addSlugsToExistingListings.js"
   },
   "keywords": [
     "nodejs",
