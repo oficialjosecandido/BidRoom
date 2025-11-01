@@ -2,7 +2,21 @@ const mongoose = require('mongoose');
 
 const connectDB = async () => {
   try {
-    const mongoURI = process.env.MONGO_URI + 'bidroom';
+    // MONGO_URI should already include the database name
+    // e.g., mongodb+srv://user:pass@cluster.mongodb.net/bidroom_dev
+    // If it doesn't end with a database name, append it
+    let mongoURI = process.env.MONGO_URI;
+    if (!mongoURI) {
+      throw new Error('MONGO_URI environment variable is not set');
+    }
+    
+    // Check if URI already has a database name
+    // MongoDB URI format: mongodb+srv://...@host.net/database_name
+    if (!mongoURI.includes('/') || mongoURI.split('/').pop().includes('?')) {
+      // No database name or database name is empty, append it
+      const dbName = process.env.NODE_ENV === 'production' ? 'bidroom_prod' : 'bidroom_dev';
+      mongoURI = mongoURI.endsWith('/') ? mongoURI + dbName : mongoURI + '/' + dbName;
+    }
     
     const conn = await mongoose.connect(mongoURI);
 
