@@ -53,11 +53,11 @@ jobs:
 
       - name: Copy build output to deployment location
         run: |
-          # Copy build output to a location Azure Static Web Apps expects
-          mkdir -p dist
-          cp -r frontend/dist/frontend/browser/* dist/
-          echo "✅ Copied build output to dist/"
-          ls -la dist/index.html
+          # Copy build output to frontend/dist (relative to app_location)
+          mkdir -p frontend/dist
+          cp -r frontend/dist/frontend/browser/* frontend/dist/
+          echo "✅ Copied build output to frontend/dist/"
+          ls -la frontend/dist/index.html
 
       - name: Deploy to Azure Static Web Apps
         uses: Azure/static-web-apps-deploy@v1
