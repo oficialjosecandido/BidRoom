@@ -28,6 +28,12 @@
   color: #333;
   margin: 0;
   letter-spacing: -0.5px;
+  cursor: pointer;
+  transition: color 0.2s ease;
+
+  &:hover {
+    color: #667eea;
+  }
 }
 
 .sidebar-nav {

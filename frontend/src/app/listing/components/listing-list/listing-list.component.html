@@ -1,0 +1,90 @@
+<app-header activePage="auctions"></app-header>
+
+<section class="listing-list-page">
+  <div class="container">
+    <div class="page-header">
+      <h1 class="page-title">All Auctions</h1>
+      <p class="page-subtitle">Browse through all active listings</p>
+    </div>
+
+    <div class="filters-section">
+      <div class="filters-row">
+        <div class="filter-group">
+          <label for="category">Category</label>
+          <select id="category" class="filter-select" [(ngModel)]="selectedCategory" (change)="onCategoryChange()">
+            <option value="">All Categories</option>
+            <option *ngFor="let category of categories" [value]="category">{{ category }}</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label for="sort">Sort By</label>
+          <select id="sort" class="filter-select" [(ngModel)]="sortBy" (change)="onSortChange()">
+            <option value="deadline">Ending Soonest</option>
+            <option value="newest">Newest</option>
+            <option value="highest">Highest Price</option>
+            <option value="lowest">Lowest Price</option>
+            <option value="bids">Most Bids</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="loading" class="loading-state">
+      <p>Loading listings...</p>
+    </div>
+
+    <!-- Error State -->
+    <div *ngIf="error && !loading" class="error-state">
+      <div class="error-content">
+        <h3>⚠️ Error</h3>
+        <p>{{ error }}</p>
+        <button class="btn btn-primary" (click)="loadListings()">Try Again</button>
+      </div>
+    </div>
+
+    <!-- Listings Grid -->
+    <div *ngIf="!loading && !error && listings.length > 0" class="listings-grid">
+      <div class="listing-card" *ngFor="let listing of listings" (click)="viewListing(listing.slug)">
+        <div class="listing-image-container">
+          <img [src]="listing.images[0] || 'https://via.placeholder.com/400x300?text=No+Image'" [alt]="listing.title" class="listing-image">
+          <div class="listing-badges">
+            <span class="badge badge-featured" *ngIf="listing.isFeatured">⭐ Featured</span>
+            <span class="badge badge-verified" *ngIf="listing.isVerified">✓ Verified</span>
+            <span class="badge badge-ending-soon" *ngIf="listing.endingSoon">⏰ Ending Soon</span>
+          </div>
+        </div>
+        <div class="listing-content">
+          <div class="listing-header">
+            <h3 class="listing-title">{{ listing.title }}</h3>
+            <span class="listing-category">{{ listing.category }}</span>
+          </div>
+          <p class="listing-description">{{ listing.description.substring(0, 100) }}...</p>
+          <div class="listing-meta">
+            <div class="listing-price-info">
+              <span class="listing-current-price">{{ formatPrice(listing.currentPrice) }}</span>
+              <span class="listing-starting-price" *ngIf="listing.currentPrice > listing.startingPrice">
+                Started at {{ formatPrice(listing.startingPrice) }}
+              </span>
+            </div>
+            <div class="listing-bid-info">
+              <span class="bid-count">{{ listing.bidCount }} {{ listing.bidCount === 1 ? 'bid' : 'bids' }}</span>
+              <span class="time-remaining">⏱️ {{ formatTimeRemaining(listing) }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <div *ngIf="!loading && !error && listings.length === 0" class="empty-state">
+      <div class="empty-content">
+        <h3>No listings found</h3>
+        <p>Try adjusting your filters or check back later.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<app-footer></app-footer>
+

@@ -1,0 +1,141 @@
+import { Injectable } from '@angular/core';
+import { io, Socket } from 'socket.io-client';
+import { Observable } from 'rxjs';
+
+export interface NewBidEvent {
+  bid: any;
+  listingId: string;
+  currentPrice: number;
+  bidCount: number;
+  updatedAt: string;
+}
+
+export interface ListingUpdateEvent {
+  listingId: string;
+  currentPrice: number;
+  bidCount: number;
+  updatedAt: string;
+}
+
+@Injectable({
+  providedIn: 'root'
+})
+export class SocketService {
+  private socket: Socket | null = null;
+  private readonly apiUrl: string;
+
+  constructor() {
+    // Import API_CONFIG at runtime
+    // Note: We can't use import here due to circular dependency, so we'll check at connect time
+    this.apiUrl = 'http://localhost:3000'; // Default, will be updated in connect()
+  }
+
+  private getApiUrl(): string {
+    // Try to get from window config (for Azure Static Web Apps)
+    if (typeof window !== 'undefined' && (window as any).APP_CONFIG?.API_URL) {
+      const url = (window as any).APP_CONFIG.API_URL;
+      // Remove /api suffix if present for WebSocket connection
+      return url.replace('/api', '').replace('https://', '').replace('http://', '');
+    }
+    
+    const hostname = typeof window !== 'undefined' ? window.location.hostname : 'localhost';
+    
+    if (hostname === 'localhost' || hostname === '127.0.0.1') {
+      return 'http://localhost:3000';
+    }
+    
+    // Production default - Azure App Service
+    return 'https://bidroom-backend-dev.azurewebsites.net';
+  }
+
+  connect(): void {
+    if (this.socket?.connected) {
+      return;
+    }
+
+    // Update API URL based on environment
+    this.apiUrl = this.getApiUrl();
+
+    this.socket = io(this.apiUrl, {
+      transports: ['websocket', 'polling'],
+      reconnection: true,
+      reconnectionDelay: 1000,
+      reconnectionAttempts: 5,
+      reconnectionDelayMax: 5000
+    });
+
+    this.socket.on('connect', () => {
+      console.log('🔌 Connected to Socket.io server');
+    });
+
+    this.socket.on('disconnect', () => {
+      console.log('🔌 Disconnected from Socket.io server');
+    });
+
+    this.socket.on('connect_error', (error) => {
+      console.error('❌ Socket.io connection error:', error);
+    });
+  }
+
+  disconnect(): void {
+    if (this.socket) {
+      this.socket.disconnect();
+      this.socket = null;
+    }
+  }
+
+  joinListing(listingId: string): void {
+    if (!this.socket?.connected) {
+      this.connect();
+    }
+    
+    this.socket?.emit('join-listing', listingId);
+    console.log(`👤 Joined listing room: ${listingId}`);
+  }
+
+  leaveListing(listingId: string): void {
+    this.socket?.emit('leave-listing', listingId);
+    console.log(`👤 Left listing room: ${listingId}`);
+  }
+
+  onNewBid(): Observable<NewBidEvent> {
+    return new Observable<NewBidEvent>((observer) => {
+      if (!this.socket) {
+        this.connect();
+      }
+
+      const handler = (data: NewBidEvent) => {
+        observer.next(data);
+      };
+
+      this.socket?.on('new-bid', handler);
+
+      return () => {
+        this.socket?.off('new-bid', handler);
+      };
+    });
+  }
+
+  onListingUpdate(): Observable<ListingUpdateEvent> {
+    return new Observable<ListingUpdateEvent>((observer) => {
+      if (!this.socket) {
+        this.connect();
+      }
+
+      const handler = (data: ListingUpdateEvent) => {
+        observer.next(data);
+      };
+
+      this.socket?.on('listing-update', handler);
+
+      return () => {
+        this.socket?.off('listing-update', handler);
+      };
+    });
+  }
+
+  isConnected(): boolean {
+    return this.socket?.connected || false;
+  }
+}
+

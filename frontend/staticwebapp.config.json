@@ -1,14 +1,27 @@
 {
   "navigationFallback": {
     "rewrite": "/index.html",
-    "exclude": [
-      "/*.{js,css,png,jpg,gif,ico,svg,woff,woff2,ttf,eot,json}"
-    ]
+    "exclude": ["/images/*.{png,jpg,gif}", "/css/*"]
+  },
+  "routes": [
+    {
+      "route": "/*",
+      "serve": "/index.html",
+      "statusCode": 200
+    }
+  ],
+  "responseOverrides": {
+    "404": {
+      "rewrite": "/index.html",
+      "statusCode": 200
+    }
+  },
+  "globalHeaders": {
+    "Cache-Control": "no-cache, no-store, must-revalidate",
+    "Pragma": "no-cache",
+    "Expires": "0"
   },
   "mimeTypes": {
-    ".js": "text/javascript",
-    ".css": "text/css",
     ".json": "application/json"
   }
 }
-

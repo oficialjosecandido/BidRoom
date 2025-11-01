@@ -4,25 +4,23 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { HeaderComponent } from '../../../shared/components/header/header.component';
 import { FooterComponent } from '../../../shared/components/footer/footer.component';
-import { ListingsService, Listing, ListingsQueryParams, StatsOverview } from '../../../shared/services/listings.service';
+import { ListingsService, Listing, ListingsQueryParams } from '../../../shared/services/listings.service';
 
 @Component({
-  selector: 'app-home',
+  selector: 'app-listing-list',
   standalone: true,
   imports: [CommonModule, FormsModule, HeaderComponent, FooterComponent],
-  templateUrl: './home.component.html',
-  styleUrls: ['./home.component.scss']
+  templateUrl: './listing-list.component.html',
+  styleUrls: ['./listing-list.component.scss']
 })
-export class HomeComponent implements OnInit {
+export class ListingListComponent implements OnInit {
   listings: Listing[] = [];
   loading = true;
   error: string | null = null;
   sortBy: 'deadline' | 'newest' | 'highest' | 'lowest' | 'bids' = 'deadline';
-  stats: StatsOverview = {
-    totalBidders: 0,
-    activeListings: 0,
-    totalValueTraded: 0
-  };
+  selectedCategory: string = '';
+
+  categories = ['Electronics', 'Art', 'Collectibles', 'Jewelry', 'Home & Garden', 'Watches', 'Fashion', 'Sports', 'Books', 'Other'];
 
   constructor(
     private router: Router,
@@ -30,20 +28,7 @@ export class HomeComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.loadStats();
     this.loadListings();
-  }
-
-  loadStats(): void {
-    this.listingsService.getStats().subscribe({
-      next: (stats) => {
-        this.stats = stats;
-      },
-      error: (err) => {
-        console.error('Error loading stats:', err);
-        // Use default values on error
-      }
-    });
   }
 
   loadListings(): void {
@@ -55,6 +40,10 @@ export class HomeComponent implements OnInit {
       status: 'active',
       limit: 50
     };
+
+    if (this.selectedCategory) {
+      params.category = this.selectedCategory;
+    }
 
     this.listingsService.getListings(params).subscribe({
       next: (response) => {
@@ -73,12 +62,16 @@ export class HomeComponent implements OnInit {
     this.loadListings();
   }
 
-  navigateToAuth(): void {
-    this.router.navigate(['/auth/signup']);
+  onCategoryChange(): void {
+    this.loadListings();
   }
 
-  navigateToLogin(): void {
-    this.router.navigate(['/auth/login']);
+  viewListing(slug: string | undefined): void {
+    if (!slug) {
+      console.error('Listing slug is undefined');
+      return;
+    }
+    this.router.navigate(['/listing', slug]);
   }
 
   formatPrice(price: number): string {
@@ -105,18 +98,5 @@ export class HomeComponent implements OnInit {
       return `${minutes}m`;
     }
   }
-
-  getEndingSoonListings(): Listing[] {
-    return this.listings
-      .filter(listing => listing.endingSoon && listing.status === 'active')
-      .slice(0, 3);
-  }
-
-  viewListing(slug: string | undefined): void {
-    if (!slug) {
-      console.error('Listing slug is undefined');
-      return;
-    }
-    this.router.navigate(['/listing', slug]);
-  }
 }
+
