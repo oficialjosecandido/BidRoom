@@ -118,7 +118,35 @@ Or configure via `staticwebapp.config.json` (already included in the project).
 
 ### Backend Deployment
 
-#### Option A: Azure CLI (Recommended for initial setup)
+#### Option A: GitHub Actions (Recommended - Automated)
+
+GitHub Actions workflows are already configured! Just set up the secrets:
+
+1. **Get Publish Profile**:
+   ```bash
+   az webapp deployment list-publishing-profiles \
+     --name bidroom-backend-dev \
+     --resource-group bidroom-dev-rg \
+     --xml
+   ```
+
+2. **Add GitHub Secret**:
+   - Go to: `https://github.com/oficialjosecandido/BidRoom/settings/secrets/actions`
+   - Click **"New repository secret"**
+   - Name: `AZURE_WEBAPP_PUBLISH_PROFILE`
+   - Value: Paste the entire XML from step 1
+   - Click **"Add secret"**
+
+3. **Push to trigger deployment**:
+   ```bash
+   git add .
+   git commit -m "Trigger backend deployment"
+   git push origin main
+   ```
+
+The workflow will automatically deploy when you push changes to `backend/` folder.
+
+#### Option B: Azure CLI (Manual deployment)
 
 ```bash
 cd backend
@@ -131,42 +159,45 @@ az webapp deploy \
   --type zip
 ```
 
-#### Option B: GitHub Actions
-
-Create `.github/workflows/azure-backend.yml`:
-
-```yaml
-name: Deploy Backend to Azure
-
-on:
-  push:
-    branches: [ main ]
-    paths:
-      - 'backend/**'
-
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - uses: azure/webapps-deploy@v2
-        with:
-          app-name: 'bidroom-backend-dev'
-          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
-          package: './backend'
-```
-
 ### Frontend Deployment
 
-#### Option A: Automatic via GitHub (Recommended)
+#### Option A: GitHub Actions (Recommended - Automated)
 
-Azure Static Web App will automatically deploy when you push to the connected branch.
+GitHub Actions workflows are already configured! Just set up the secrets:
+
+1. **Get Static Web App Deployment Token**:
+   ```bash
+   az staticwebapp secrets list \
+     --name bidroom-frontend-dev \
+     --resource-group bidroom-dev-rg \
+     --query properties.apiKey -o tsv
+   ```
+
+2. **Add GitHub Secret**:
+   - Go to: `https://github.com/oficialjosecandido/BidRoom/settings/secrets/actions`
+   - Click **"New repository secret"**
+   - Name: `AZURE_STATIC_WEB_APPS_API_TOKEN`
+   - Value: Paste the token from step 1
+   - Click **"Add secret"**
+
+3. **Push to trigger deployment**:
+   ```bash
+   git add .
+   git commit -m "Trigger frontend deployment"
+   git push origin main
+   ```
+
+The workflow will automatically build and deploy when you push changes to `frontend/` folder.
+
+#### Option B: Automatic via Azure Static Web App (Alternative)
+
+Azure Static Web App can also auto-deploy when connected to your GitHub repo:
 
 1. Connect your GitHub repository in Azure Portal
 2. Push to the `main` branch
 3. Deployment will trigger automatically
 
-#### Option B: Azure CLI
+#### Option C: Azure CLI (Manual deployment)
 
 ```bash
 npm install -g @azure/static-web-apps-cli
@@ -250,6 +281,25 @@ Visit: `https://bidroom-frontend-dev.azurestaticapps.net`
 - Using App Service Plan Free tier (with limitations)
 - Using Redis Cache only when needed
 - Shutting down resources when not in use
+
+## GitHub Actions Setup
+
+### Required GitHub Secrets
+
+Add these secrets to your GitHub repository:
+
+1. **AZURE_WEBAPP_PUBLISH_PROFILE** (for backend deployment)
+   - Get from: `az webapp deployment list-publishing-profiles --name bidroom-backend-dev --resource-group bidroom-dev-rg --xml`
+   - Or download from Azure Portal: App Services → bidroom-backend-dev → Get publish profile
+
+2. **AZURE_STATIC_WEB_APPS_API_TOKEN** (for frontend deployment)
+   - Get from: `az staticwebapp secrets list --name bidroom-frontend-dev --resource-group bidroom-dev-rg --query properties.apiKey -o tsv`
+
+### Workflows Created
+
+- `.github/workflows/deploy-backend.yml` - Auto-deploys backend on push to `backend/` folder
+- `.github/workflows/deploy-frontend.yml` - Auto-deploys frontend on push to `frontend/` folder
+- `.github/workflows/ci.yml` - Runs tests on pull requests
 
 ## Next Steps
 
