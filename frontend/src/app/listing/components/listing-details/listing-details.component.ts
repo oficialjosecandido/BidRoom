@@ -6,6 +6,7 @@ import { HeaderComponent } from '../../../shared/components/header/header.compon
 import { FooterComponent } from '../../../shared/components/footer/footer.component';
 import { ListingsService, Listing } from '../../../shared/services/listings.service';
 import { BidsService, Bid } from '../../../shared/services/bids.service';
+import { OffersService, Offer } from '../../../shared/services/offers.service';
 import { SocketService } from '../../../shared/services/socket.service';
 
 @Component({
@@ -20,10 +21,13 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
   loading = true;
   error: string | null = null;
   activeImageIndex = 0;
-  activeTab: 'description' | 'bids' = 'description';
+  activeTab: 'description' | 'bids' | 'offers' = 'description';
   bids: Bid[] = [];
   bidsLoading = false;
   bidsError: string | null = null;
+  offers: Offer[] = [];
+  offersLoading = false;
+  offersError: string | null = null;
   private socketSubscriptions: Subscription[] = [];
 
   constructor(
@@ -31,6 +35,7 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
     private router: Router,
     private listingsService: ListingsService,
     private bidsService: BidsService,
+    private offersService: OffersService,
     private socketService: SocketService
   ) {}
 
@@ -58,9 +63,13 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
       next: (listing) => {
         this.listing = listing;
         this.loading = false;
-        // Load bids when listing is loaded
+        // Load bids or offers when listing is loaded
         if (listing._id) {
-          this.loadBids(listing._id);
+          if (listing.auctionFormat === 'best-offer') {
+            this.loadOffers(listing._id);
+          } else {
+            this.loadBids(listing._id);
+          }
           // Connect to Socket.io and join listing room for real-time updates
           this.setupRealTimeUpdates(listing._id);
         }
@@ -90,8 +99,25 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
     });
   }
 
-  setActiveTab(tab: 'description' | 'bids'): void {
+  setActiveTab(tab: 'description' | 'bids' | 'offers'): void {
     this.activeTab = tab;
+  }
+
+  loadOffers(listingId: string): void {
+    this.offersLoading = true;
+    this.offersError = null;
+
+    this.offersService.getOffersByListing(listingId).subscribe({
+      next: (response) => {
+        this.offers = response.offers;
+        this.offersLoading = false;
+      },
+      error: (err) => {
+        console.error('Error loading offers:', err);
+        this.offersError = 'Failed to load offer history';
+        this.offersLoading = false;
+      }
+    });
   }
 
   setActiveImage(index: number): void {
@@ -210,8 +236,52 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
   }
 
   placeOffer(): void {
-    // TODO: Implement offer placement for Best Offer format
-    alert('Offer placement functionality coming soon!');
+    if (!this.listing) return;
+
+    const startingPrice = this.listing.startingPrice || this.listing.currentPrice || 0;
+    const minimumOffer = this.listing.minimumOfferPrice || startingPrice;
+    
+    const offerAmountStr = prompt(
+      `Starting Offer: ${this.formatPrice(startingPrice)}\n` +
+      (this.listing.minimumOfferPrice ? `Minimum Offer: ${this.formatPrice(this.listing.minimumOfferPrice)}\n` : '') +
+      `\nEnter your offer amount:`
+    );
+
+    if (!offerAmountStr) return;
+
+    const offerAmount = parseFloat(offerAmountStr.replace(/[^0-9.]/g, ''));
+
+    if (isNaN(offerAmount)) {
+      alert('Please enter a valid amount');
+      return;
+    }
+
+    if (this.listing.minimumOfferPrice && offerAmount < this.listing.minimumOfferPrice) {
+      alert(`Offer amount must be at least ${this.formatPrice(this.listing.minimumOfferPrice)}`);
+      return;
+    }
+
+    const message = prompt('Optional message to seller (press Cancel to skip):');
+
+    // Create offer via HTTP API
+    this.offersService.createOffer({
+      listingId: this.listing._id!,
+      amount: offerAmount,
+      message: message || undefined
+    }).subscribe({
+      next: (offer) => {
+        // Offer was placed successfully
+        alert('Offer placed successfully! The seller will review your offer.');
+        // Reload offers to show the new one
+        if (this.listing?._id) {
+          this.loadOffers(this.listing._id);
+        }
+      },
+      error: (err) => {
+        console.error('Error placing offer:', err);
+        alert(err.error?.message || 'Failed to place offer. Please try again.');
+      }
+    });
   }
 
   buyNow(): void {
@@ -266,6 +336,36 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
       minimumFractionDigits: 0,
       maximumFractionDigits: 2
     }).format(amount);
+  }
+
+  formatOfferDate(dateString: string): string {
+    const date = new Date(dateString);
+    return new Intl.DateTimeFormat('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    }).format(date);
+  }
+
+  formatOfferStatus(status: string): string {
+    switch (status) {
+      case 'pending':
+        return 'Pending';
+      case 'accepted':
+        return 'Accepted';
+      case 'rejected':
+        return 'Rejected';
+      case 'expired':
+        return 'Expired';
+      default:
+        return status;
+    }
+  }
+
+  isBestOfferListing(): boolean {
+    return this.listing?.auctionFormat === 'best-offer';
   }
 
   ngOnDestroy(): void {

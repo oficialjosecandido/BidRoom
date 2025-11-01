@@ -133,7 +133,7 @@
             </button>
             <button 
               class="btn btn-primary btn-large" 
-              
+              *ngIf="listing.auctionFormat === 'best-offer'"
               (click)="placeOffer()">
               Make Offer
             </button>
@@ -211,8 +211,16 @@
           <button 
             class="tab-button" 
             [class.active]="activeTab === 'bids'"
+            *ngIf="listing.auctionFormat === 'highest-bid'"
             (click)="setActiveTab('bids')">
             Bid History ({{ bids.length }})
+          </button>
+          <button 
+            class="tab-button" 
+            [class.active]="activeTab === 'offers'"
+            *ngIf="listing.auctionFormat === 'best-offer'"
+            (click)="setActiveTab('offers')">
+            Offers ({{ offers.length }})
           </button>
         </div>
 
@@ -222,7 +230,7 @@
         </div>
 
         <!-- Bid History Tab Content -->
-        <div class="tab-content" *ngIf="activeTab === 'bids'">
+        <div class="tab-content" *ngIf="activeTab === 'bids' && listing.auctionFormat === 'highest-bid'">
           <div class="bid-history">
             <!-- Loading State -->
             <div *ngIf="bidsLoading" class="bids-loading">
@@ -264,6 +272,61 @@
                     <div class="bid-meta">
                       <span class="bid-date">{{ formatBidDate(bid.createdAt) }}</span>
                       <span class="bid-type" *ngIf="bid.bidType !== 'manual'">{{ bid.bidType }}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Offers Tab Content -->
+        <div class="tab-content" *ngIf="activeTab === 'offers' && listing.auctionFormat === 'best-offer'">
+          <div class="offer-history">
+            <!-- Loading State -->
+            <div *ngIf="offersLoading" class="offers-loading">
+              <p>Loading offers...</p>
+            </div>
+
+            <!-- Error State -->
+            <div *ngIf="offersError && !offersLoading" class="offers-error">
+              <p>{{ offersError }}</p>
+              <button class="btn btn-secondary" (click)="listing && loadOffers(listing._id)">Try Again</button>
+            </div>
+
+            <!-- Offers List -->
+            <div *ngIf="!offersLoading && !offersError">
+              <div *ngIf="offers.length === 0" class="no-offers">
+                <div class="no-offers-content">
+                  <span class="no-offers-icon">💰</span>
+                  <h3>No Offers Yet</h3>
+                  <p>Be the first to make an offer on this item!</p>
+                </div>
+              </div>
+
+              <div *ngIf="offers.length > 0" class="offers-list">
+                <div class="offer-item" *ngFor="let offer of offers" [class.accepted]="offer.status === 'accepted'" [class.rejected]="offer.status === 'rejected'">
+                  <div class="offer-avatar">
+                    {{ offer.offererInitials || 'A' }}
+                  </div>
+                  <div class="offer-info">
+                    <div class="offer-header">
+                      <div class="offer-offerer">
+                        <span class="offerer-name">{{ offer.offererName || 'Anonymous' }}</span>
+                        <span class="offer-status" [class.pending]="offer.status === 'pending'" [class.accepted]="offer.status === 'accepted'" [class.rejected]="offer.status === 'rejected'">
+                          {{ formatOfferStatus(offer.status) }}
+                        </span>
+                      </div>
+                      <div class="offer-amount">
+                        {{ formatBidAmount(offer.amount) }}
+                      </div>
+                    </div>
+                    <div class="offer-meta">
+                      <span class="offer-date">{{ formatOfferDate(offer.createdAt) }}</span>
+                      <span class="offer-message" *ngIf="offer.message">{{ offer.message }}</span>
+                      <span class="seller-response" *ngIf="offer.sellerResponse && offer.status !== 'pending'">
+                        Seller: {{ offer.sellerResponse }}
+                      </span>
                     </div>
                   </div>
                 </div>

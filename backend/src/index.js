@@ -47,7 +47,7 @@ app.use('/api/offers', offerRoutes);
 
 app.get('/', (req, res) => {
   res.json({
-    message: 'BidRoom API is running!',
+    message: 'BidRoom API is running on DEV environment!',
     version: '1.0.0',
     timestamp: new Date().toISOString()
   });
