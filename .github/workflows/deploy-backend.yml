@@ -38,9 +38,10 @@ jobs:
       - name: Create deployment package
         run: |
           cd backend
+          # Include node_modules in deployment package
+          # Azure App Service needs all dependencies available
           zip -r ../backend-deploy.zip . \
             -x "*.git*" \
-            -x "*node_modules*" \
             -x "*.log" \
             -x "*.env*" \
             -x "*.example" \
