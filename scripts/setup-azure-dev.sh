@@ -87,6 +87,26 @@ fi
 # Create Redis Cache (Azure Cache for Redis)
 echo ""
 echo "🔴 Creating Azure Cache for Redis..."
+
+# Check if Microsoft.Cache provider is registered
+echo "🔍 Checking resource provider registration..."
+CACHE_PROVIDER_STATE=$(az provider show --namespace Microsoft.Cache --query "registrationState" -o tsv 2>/dev/null || echo "NotRegistered")
+
+if [ "$CACHE_PROVIDER_STATE" != "Registered" ]; then
+    print_warning "Microsoft.Cache provider is not registered. Registering now..."
+    print_info "This may take 1-2 minutes..."
+    az provider register --namespace Microsoft.Cache --output table
+    
+    # Wait for registration to complete
+    print_info "Waiting for provider registration..."
+    while [ "$(az provider show --namespace Microsoft.Cache --query 'registrationState' -o tsv)" != "Registered" ]; do
+        echo -n "."
+        sleep 5
+    done
+    echo ""
+    print_status "Provider registration complete!"
+fi
+
 if az redis show --name $REDIS_CACHE_NAME --resource-group $RESOURCE_GROUP &> /dev/null; then
     print_warning "Redis Cache $REDIS_CACHE_NAME already exists. Skipping creation."
     REDIS_HOST=$(az redis show --name $REDIS_CACHE_NAME --resource-group $RESOURCE_GROUP --query hostName -o tsv)
@@ -102,9 +122,22 @@ else
         --vm-size c0 \
         --output table
     
-    # Wait for Redis to be ready
+    # Wait for Redis to be ready (poll provisioning state)
     print_info "Waiting for Redis Cache to be ready..."
-    az redis wait --name $REDIS_CACHE_NAME --resource-group $RESOURCE_GROUP --created
+    PROVISIONING_STATE="Creating"
+    while [ "$PROVISIONING_STATE" != "Succeeded" ]; do
+        sleep 10
+        PROVISIONING_STATE=$(az redis show --name $REDIS_CACHE_NAME --resource-group $RESOURCE_GROUP --query provisioningState -o tsv 2>/dev/null || echo "Creating")
+        if [ "$PROVISIONING_STATE" == "Succeeded" ]; then
+            break
+        elif [ "$PROVISIONING_STATE" == "Failed" ]; then
+            print_error "Redis Cache creation failed!"
+            exit 1
+        fi
+        echo -n "."
+    done
+    echo ""
+    print_status "Redis Cache is ready!"
     
     REDIS_HOST=$(az redis show --name $REDIS_CACHE_NAME --resource-group $RESOURCE_GROUP --query hostName -o tsv)
     REDIS_PORT=$(az redis show --name $REDIS_CACHE_NAME --resource-group $RESOURCE_GROUP --query port -o tsv)
