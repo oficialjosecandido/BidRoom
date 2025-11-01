@@ -22,20 +22,19 @@ export interface ListingUpdateEvent {
 })
 export class SocketService {
   private socket: Socket | null = null;
-  private readonly apiUrl: string;
-
-  constructor() {
-    // Import API_CONFIG at runtime
-    // Note: We can't use import here due to circular dependency, so we'll check at connect time
-    this.apiUrl = 'http://localhost:3000'; // Default, will be updated in connect()
-  }
 
   private getApiUrl(): string {
     // Try to get from window config (for Azure Static Web Apps)
     if (typeof window !== 'undefined' && (window as any).APP_CONFIG?.API_URL) {
       const url = (window as any).APP_CONFIG.API_URL;
       // Remove /api suffix if present for WebSocket connection
-      return url.replace('/api', '').replace('https://', '').replace('http://', '');
+      const baseUrl = url.replace('/api', '');
+      // Ensure we have http/https prefix
+      if (baseUrl.startsWith('http://') || baseUrl.startsWith('https://')) {
+        return baseUrl;
+      }
+      // If no protocol, default to https for production
+      return baseUrl.startsWith('localhost') ? `http://${baseUrl}` : `https://${baseUrl}`;
     }
     
     const hostname = typeof window !== 'undefined' ? window.location.hostname : 'localhost';
@@ -53,10 +52,10 @@ export class SocketService {
       return;
     }
 
-    // Update API URL based on environment
-    this.apiUrl = this.getApiUrl();
+    // Get API URL based on environment
+    const apiUrl = this.getApiUrl();
 
-    this.socket = io(this.apiUrl, {
+    this.socket = io(apiUrl, {
       transports: ['websocket', 'polling'],
       reconnection: true,
       reconnectionDelay: 1000,
