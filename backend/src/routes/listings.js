@@ -282,6 +282,35 @@ router.get('/slug/:slug', async (req, res) => {
   }
 });
 
+// GET /api/listings/stats/overview - Get aggregated stats
+// IMPORTANT: This route must come BEFORE /:id route to avoid route conflicts
+router.get('/stats/overview', async (req, res) => {
+  try {
+    const totalBidders = await Listing.distinct('seller').then(users => users.length);
+    const activeListings = await Listing.countDocuments({ status: 'active' });
+    
+    // Calculate total value traded (sum of currentPrice for all active listings)
+    const valueResult = await Listing.aggregate([
+      { $match: { status: 'active' } },
+      { $group: { _id: null, totalValue: { $sum: '$currentPrice' } } }
+    ]);
+    
+    const totalValueTraded = valueResult.length > 0 ? valueResult[0].totalValue : 0;
+
+    res.json({
+      totalBidders,
+      activeListings,
+      totalValueTraded: Math.round(totalValueTraded)
+    });
+  } catch (error) {
+    console.error('Error fetching stats:', error);
+    res.status(500).json({
+      error: 'Failed to fetch stats',
+      message: error.message
+    });
+  }
+});
+
 // GET /api/listings/:id - Get a single listing by ID (for backward compatibility)
 router.get('/:id', async (req, res) => {
   try {
@@ -363,34 +392,6 @@ router.post('/', authenticateToken, async (req, res) => {
     console.error('Error creating listing:', error);
     res.status(400).json({
       error: 'Failed to create listing',
-      message: error.message
-    });
-  }
-});
-
-// GET /api/listings/stats/overview - Get aggregated stats
-router.get('/stats/overview', async (req, res) => {
-  try {
-    const totalBidders = await Listing.distinct('seller').then(users => users.length);
-    const activeListings = await Listing.countDocuments({ status: 'active' });
-    
-    // Calculate total value traded (sum of currentPrice for all active listings)
-    const valueResult = await Listing.aggregate([
-      { $match: { status: 'active' } },
-      { $group: { _id: null, totalValue: { $sum: '$currentPrice' } } }
-    ]);
-    
-    const totalValueTraded = valueResult.length > 0 ? valueResult[0].totalValue : 0;
-
-    res.json({
-      totalBidders,
-      activeListings,
-      totalValueTraded: Math.round(totalValueTraded)
-    });
-  } catch (error) {
-    console.error('Error fetching stats:', error);
-    res.status(500).json({
-      error: 'Failed to fetch stats',
       message: error.message
     });
   }
