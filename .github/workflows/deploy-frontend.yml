@@ -18,12 +18,6 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-      - name: Check for deployment token secret
-        if: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN == '' }}
-        run: |
-          echo "❌ AZURE_STATIC_WEB_APPS_API_TOKEN secret is not set!"
-          echo "Please add it in GitHub Settings → Secrets and variables → Actions"
-          exit 1
       - name: Checkout code
         uses: actions/checkout@v4
         with:
