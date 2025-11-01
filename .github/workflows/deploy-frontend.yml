@@ -50,6 +50,6 @@ jobs:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           action: "upload"
           app_location: "/frontend"
-          output_location: "dist/frontend/browser"
+          output_location: "frontend/dist/frontend/browser"
           skip_app_build: true
 
