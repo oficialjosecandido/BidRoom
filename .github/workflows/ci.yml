@@ -5,10 +5,18 @@ on:
     branches:
       - main
       - dev
+    paths:
+      - 'backend/**'
+      - 'frontend/**'
+      - '.github/workflows/ci.yml'
   push:
     branches:
       - main
       - dev
+    paths:
+      - 'backend/**'
+      - 'frontend/**'
+      - '.github/workflows/ci.yml'
 
 env:
   NODE_VERSION: '20.x'
@@ -17,6 +25,7 @@ jobs:
   backend-test:
     name: Backend Tests
     runs-on: ubuntu-latest
+    if: contains(github.event.head_commit.message, '[skip ci]') == false
     
     steps:
       - name: Checkout code
@@ -34,21 +43,33 @@ jobs:
           cd backend
           npm ci
 
-      - name: Run tests
+      - name: Check for tests
+        id: check-tests
         run: |
           cd backend
-          npm test || echo "No tests configured yet"
+          if [ -f "package.json" ] && grep -q '"test"' package.json; then
+            echo "has_tests=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_tests=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Run tests
+        if: steps.check-tests.outputs.has_tests == 'true'
+        timeout-minutes: 5
+        run: |
+          cd backend
+          npm test
         continue-on-error: true
 
-      - name: Check code quality
+      - name: Skip tests
+        if: steps.check-tests.outputs.has_tests == 'false'
         run: |
-          cd backend
-          echo "Backend code check completed"
-        continue-on-error: true
+          echo "✅ No tests configured - skipping"
 
   frontend-test:
     name: Frontend Tests
     runs-on: ubuntu-latest
+    if: contains(github.event.head_commit.message, '[skip ci]') == false
     
     steps:
       - name: Checkout code
@@ -62,19 +83,37 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
 
       - name: Install dependencies
+        timeout-minutes: 5
         run: |
           cd frontend
           npm ci
 
       - name: Build frontend
+        timeout-minutes: 10
         run: |
           cd frontend
           npm run build
-        continue-on-error: true
 
-      - name: Run tests
+      - name: Check for tests
+        id: check-tests
         run: |
           cd frontend
-          npm test || echo "No tests configured yet"
+          if [ -f "package.json" ] && grep -q '"test"' package.json; then
+            echo "has_tests=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_tests=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Run tests
+        if: steps.check-tests.outputs.has_tests == 'true'
+        timeout-minutes: 5
+        run: |
+          cd frontend
+          npm test -- --watch=false --browsers=ChromeHeadless
         continue-on-error: true
+
+      - name: Skip tests
+        if: steps.check-tests.outputs.has_tests == 'false'
+        run: |
+          echo "✅ No tests configured - skipping"
 
