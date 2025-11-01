@@ -63,6 +63,12 @@ jobs:
           # Copy only the built files (not source files)
           cp -r frontend/dist/frontend/browser/* deploy/
           
+          # Copy staticwebapp.config.json if it exists (needed for SPA routing)
+          if [ -f "frontend/staticwebapp.config.json" ]; then
+            cp frontend/staticwebapp.config.json deploy/
+            echo "✅ Copied staticwebapp.config.json"
+          fi
+          
           # Calculate size
           echo "📊 Deployment size:"
           du -sh deploy
@@ -70,6 +76,7 @@ jobs:
           
           echo "✅ Deployment files ready in deploy/"
           ls -la deploy/index.html
+          ls -la deploy/staticwebapp.config.json 2>/dev/null || echo "⚠️  staticwebapp.config.json not found"
 
       - name: Deploy to Azure Static Web Apps
         uses: Azure/static-web-apps-deploy@v1

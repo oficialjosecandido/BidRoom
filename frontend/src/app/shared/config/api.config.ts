@@ -1,11 +1,10 @@
 /**
  * API Configuration
- * Determines the API URL based on the environment
+ * Determines the API URL based on the environment:
+ * - Local: http://localhost:3000/api (when running on localhost)
+ * - Dev: https://bidroom-backend-dev.azurewebsites.net/api (when running on Azure Static Web Apps)
  */
 export const API_CONFIG = {
-  // Get API URL from environment or use defaults
-  // In production, this should be set via environment variables
-  // For Azure Static Web Apps, you can set this via Azure Portal application settings
   getApiUrl(): string {
     // Check for environment variable (set via Azure Static Web App configuration)
     if (typeof window !== 'undefined' && (window as any).APP_CONFIG?.API_URL) {
@@ -13,21 +12,21 @@ export const API_CONFIG = {
     }
     
     // Check for process.env (for build-time configuration)
-    // In Angular, you can use environment files, but for Azure Static Web Apps,
-    // runtime configuration is more flexible
     const envApiUrl = (window as any).process?.env?.['NG_APP_API_URL'];
     if (envApiUrl) {
       return envApiUrl;
     }
     
-    // Default: Use Azure backend URL for production, localhost for development
+    // Detect environment based on hostname
     const hostname = typeof window !== 'undefined' ? window.location.hostname : 'localhost';
     
-    if (hostname === 'localhost' || hostname === '127.0.0.1') {
+    // Local development: use local backend
+    if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '0.0.0.0') {
       return 'http://localhost:3000/api';
     }
     
-    // Production default - Azure App Service
+    // Azure Static Web Apps (DEV environment): use Azure dev backend
+    // Any other hostname (including *.azurestaticapps.net) uses the dev backend
     return 'https://bidroom-backend-dev.azurewebsites.net/api';
   },
   
