@@ -111,7 +111,7 @@
                 <span class="detail-label">Bid Increment:</span>
                 <span class="detail-value">{{ formatPrice(listing.bidIncrement) }}</span>
               </div>
-              <div class="price-detail-item">
+              <!-- <div class="price-detail-item">
                 <span class="detail-label">Duration:</span>
                 <span class="detail-value">{{ listing.durationSlot }}</span>
               </div>
@@ -119,7 +119,7 @@
                 <span class="detail-label">Commission:</span>
                 <span class="detail-value">{{ (listing.commissionRate * 100).toFixed(1) }}%</span>
                 <span class="commission-note" *ngIf="listing.allowPrivateRoom && listing.auctionFormat === 'highest-bid'">(Private Room enabled)</span>
-              </div>
+              </div> -->
             </div>
           </div>
 
@@ -133,7 +133,7 @@
             </button>
             <button 
               class="btn btn-primary btn-large" 
-              *ngIf="listing.auctionFormat === 'best-offer'"
+              
               (click)="placeOffer()">
               Make Offer
             </button>
@@ -181,12 +181,6 @@
                 <p>{{ listing.verificationDetails }}</p>
               </div>
             </div>
-          </div>
-
-          <!-- Action Buttons -->
-          <div class="action-buttons">
-            <button class="btn btn-primary btn-large" (click)="placeBid()">Place Bid</button>
-            <button class="btn btn-secondary btn-large" (click)="addToWatchlist()">Add to Watchlist</button>
           </div>
 
           <!-- Seller Info -->

@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { API_CONFIG } from '../config/api.config';
 
 export interface Listing {
   _id: string;
@@ -84,7 +85,7 @@ export interface StatsOverview {
   providedIn: 'root'
 })
 export class ListingsService {
-  private apiUrl = 'http://localhost:3000/api/listings';
+  private apiUrl = `${API_CONFIG.getApiUrl()}/listings`;
 
   constructor(private http: HttpClient) {}
 

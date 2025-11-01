@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { API_CONFIG } from '../config/api.config';
 
 export interface Bid {
   _id: string;
@@ -47,7 +48,7 @@ export interface CreateBidRequest {
   providedIn: 'root'
 })
 export class BidsService {
-  private apiUrl = 'http://localhost:3000/api/bids';
+  private apiUrl = `${API_CONFIG.getApiUrl()}/bids`;
 
   constructor(private http: HttpClient) {}
 

@@ -14,8 +14,12 @@
       </nav>
       
       <div class="header-actions">
-        <button class="btn btn-secondary" (click)="navigateToLogin()">Sign In</button>
-        <button class="btn btn-primary" (click)="navigateToAuth()">Start Bidding</button>
+        @if (isAuthenticated$ | async) {
+          <button class="btn btn-primary" (click)="navigateToDashboard()">My Account</button>
+        } @else {
+          <button class="btn btn-secondary" (click)="navigateToLogin()">Sign In</button>
+          <button class="btn btn-primary" (click)="navigateToAuth()">Start Bidding</button>
+        }
       </div>
     </div>
   </div>

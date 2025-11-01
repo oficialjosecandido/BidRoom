@@ -1,6 +1,8 @@
 import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
+import { Observable } from 'rxjs';
+import { AuthService } from '../../../auth/services/auth.service';
 
 @Component({
   selector: 'app-header',
@@ -11,8 +13,14 @@ import { Router } from '@angular/router';
 })
 export class HeaderComponent {
   @Input() activePage: string = '';
+  isAuthenticated$!: Observable<boolean>;
 
-  constructor(private router: Router) {}
+  constructor(
+    private router: Router,
+    private authService: AuthService
+  ) {
+    this.isAuthenticated$ = this.authService.isAuthenticated();
+  }
 
   navigateToAuth(): void {
     this.router.navigate(['/auth/signup']);
@@ -36,5 +44,9 @@ export class HeaderComponent {
 
   navigateToFaq(): void {
     this.router.navigate(['/landing/faq']);
+  }
+
+  navigateToDashboard(): void {
+    this.router.navigate(['/dashboard']);
   }
 }

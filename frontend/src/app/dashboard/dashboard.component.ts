@@ -16,6 +16,10 @@ export class DashboardComponent {
     private router: Router
   ) {}
 
+  navigateToLanding(): void {
+    this.router.navigate(['/landing']);
+  }
+
   logout(): void {
     this.authService.logout().subscribe({
       next: () => {

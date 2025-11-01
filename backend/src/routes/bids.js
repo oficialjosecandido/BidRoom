@@ -227,11 +227,55 @@ router.post('/', authenticateToken, async (req, res) => {
       .populate('bidder', 'firstName lastName email')
       .lean();
 
-    res.status(201).json({
+    const formattedBid = {
       ...populatedBid,
       bidderName: `${populatedBid.bidder.firstName} ${populatedBid.bidder.lastName}`,
       bidderInitials: `${populatedBid.bidder.firstName.charAt(0)}${populatedBid.bidder.lastName.charAt(0)}`
-    });
+    };
+
+    // Get Socket.io instance and Redis service from app
+    const io = req.app.get('io');
+    const redisService = req.app.get('redisService');
+
+    // Cache current bid information in Redis
+    const cacheData = {
+      currentPrice: listing.currentPrice,
+      bidCount: listing.bidCount,
+      latestBid: formattedBid,
+      listingId: listingId.toString(),
+      timestamp: new Date().toISOString()
+    };
+    await redisService.cacheListingBid(listingId.toString(), cacheData);
+
+    // Cache listing stats
+    const stats = {
+      totalBids: listing.bidCount,
+      currentPrice: listing.currentPrice,
+      uniqueBidders: listing.uniqueBidders?.length || 0,
+      updatedAt: new Date().toISOString()
+    };
+    await redisService.cacheListingStats(listingId.toString(), stats);
+
+    // Emit real-time bid update via Socket.io to all clients watching this listing
+    if (io) {
+      io.to(`listing:${listingId}`).emit('new-bid', {
+        bid: formattedBid,
+        listingId: listingId.toString(),
+        currentPrice: listing.currentPrice,
+        bidCount: listing.bidCount,
+        updatedAt: new Date().toISOString()
+      });
+
+      // Also emit listing update with current price and bid count
+      io.to(`listing:${listingId}`).emit('listing-update', {
+        listingId: listingId.toString(),
+        currentPrice: listing.currentPrice,
+        bidCount: listing.bidCount,
+        updatedAt: new Date().toISOString()
+      });
+    }
+
+    res.status(201).json(formattedBid);
   } catch (error) {
     console.error('Error creating bid:', error);
     res.status(400).json({
