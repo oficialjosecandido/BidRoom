@@ -30,6 +30,21 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: true
   },
+  emailVerified: {
+    type: Boolean,
+    default: false,
+    index: true
+  },
+  hasDeposit: {
+    type: Boolean,
+    default: false,
+    index: true
+  },
+  depositAmount: {
+    type: Number,
+    default: 0,
+    min: 0
+  },
   lastLogin: {
     type: Date,
     default: null

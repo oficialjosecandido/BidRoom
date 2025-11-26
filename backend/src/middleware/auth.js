@@ -44,6 +44,48 @@ const authenticateToken = async (req, res, next) => {
   }
 };
 
+// Optional authentication - allows unauthenticated requests but validates email if provided
+const optionalAuth = async (req, res, next) => {
+  try {
+    const authHeader = req.headers['authorization'];
+    const idToken = authHeader && authHeader.split(' ')[1];
+
+    if (idToken) {
+      // User is authenticated - verify token and attach user
+      try {
+        const decodedToken = await admin.auth().verifyIdToken(idToken);
+        req.user = {
+          uid: decodedToken.uid,
+          email: decodedToken.email,
+          emailVerified: decodedToken.email_verified,
+          name: decodedToken.name || null,
+          picture: decodedToken.picture || null,
+          provider: decodedToken.firebase?.sign_in_provider || null,
+          claims: decodedToken
+        };
+        req.isAuthenticated = true;
+      } catch (error) {
+        // Invalid token - treat as unauthenticated
+        req.isAuthenticated = false;
+        req.user = null;
+      }
+    } else {
+      // No token - unauthenticated user
+      req.isAuthenticated = false;
+      req.user = null;
+    }
+
+    next();
+  } catch (error) {
+    console.error('Optional auth middleware error:', error);
+    // Continue as unauthenticated on error
+    req.isAuthenticated = false;
+    req.user = null;
+    next();
+  }
+};
+
 module.exports = {
-  authenticateToken
+  authenticateToken,
+  optionalAuth
 };

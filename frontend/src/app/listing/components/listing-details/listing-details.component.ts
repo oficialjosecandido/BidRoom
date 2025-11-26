@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Subscription } from 'rxjs';
@@ -8,6 +8,7 @@ import { ListingsService, Listing } from '../../../shared/services/listings.serv
 import { BidsService, Bid } from '../../../shared/services/bids.service';
 import { OffersService, Offer } from '../../../shared/services/offers.service';
 import { SocketService } from '../../../shared/services/socket.service';
+import { AuthService } from '../../../auth/services/auth.service';
 
 @Component({
   selector: 'app-listing-details',
@@ -28,7 +29,10 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
   offers: Offer[] = [];
   offersLoading = false;
   offersError: string | null = null;
+  isAuthenticated = false;
   private socketSubscriptions: Subscription[] = [];
+  private countdownInterval: any = null;
+  displayedTimeRemaining: string = '';
 
   constructor(
     private route: ActivatedRoute,
@@ -36,7 +40,9 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
     private listingsService: ListingsService,
     private bidsService: BidsService,
     private offersService: OffersService,
-    private socketService: SocketService
+    private socketService: SocketService,
+    private authService: AuthService,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
@@ -47,6 +53,11 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
       this.error = 'Invalid listing URL';
       this.loading = false;
     }
+    
+    // Check authentication status
+    this.authService.isAuthenticated().subscribe(isAuth => {
+      this.isAuthenticated = isAuth;
+    });
   }
 
   loadListing(slug: string): void {
@@ -63,6 +74,8 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
       next: (listing) => {
         this.listing = listing;
         this.loading = false;
+        // Start countdown timer
+        this.startCountdown();
         // Load bids or offers when listing is loaded
         if (listing._id) {
           if (listing.auctionFormat === 'best-offer') {
@@ -133,32 +146,103 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
     }).format(price);
   }
 
+  startCountdown(): void {
+    // Clear any existing interval
+    if (this.countdownInterval) {
+      clearInterval(this.countdownInterval);
+    }
+
+    // Calculate and display immediately
+    this.updateCountdown();
+
+    // Update every second
+    this.countdownInterval = setInterval(() => {
+      this.updateCountdown();
+    }, 1000);
+  }
+
+  updateCountdown(): void {
+    if (!this.listing) {
+      this.displayedTimeRemaining = 'N/A';
+      return;
+    }
+
+    // Determine which end date to use
+    let endDate: Date | null = null;
+    
+    if (this.listing.privateRoomStatus === 'active' && this.listing.privateRoomEndDate) {
+      endDate = new Date(this.listing.privateRoomEndDate);
+    } else if (this.listing.endDate) {
+      endDate = new Date(this.listing.endDate);
+    }
+
+    if (!endDate) {
+      this.displayedTimeRemaining = 'N/A';
+      return;
+    }
+
+    const now = new Date();
+    const diff = endDate.getTime() - now.getTime();
+
+    if (diff <= 0) {
+      this.displayedTimeRemaining = 'Ended';
+      if (this.countdownInterval) {
+        clearInterval(this.countdownInterval);
+      }
+      return;
+    }
+
+    // Calculate time components
+    const totalSeconds = Math.floor(diff / 1000);
+    const days = Math.floor(totalSeconds / (24 * 60 * 60));
+    const hours = Math.floor((totalSeconds % (24 * 60 * 60)) / (60 * 60));
+    const minutes = Math.floor((totalSeconds % (60 * 60)) / 60);
+    const seconds = totalSeconds % 60;
+
+    // If less than 24 hours remaining, show HH:MM:SS format
+    if (days === 0) {
+      const hStr = String(hours).padStart(2, '0');
+      const mStr = String(minutes).padStart(2, '0');
+      const sStr = String(seconds).padStart(2, '0');
+      this.displayedTimeRemaining = `${hStr}:${mStr}:${sStr}`;
+    } else {
+      // If 24 hours or more, show days and hours
+      const parts: string[] = [];
+      if (days > 0) {
+        parts.push(`${days} day${days !== 1 ? 's' : ''}`);
+      }
+      if (hours > 0) {
+        parts.push(`${hours} hour${hours !== 1 ? 's' : ''}`);
+      }
+      this.displayedTimeRemaining = parts.length > 0 ? parts.join(' ') : 'Ending Soon';
+    }
+
+    // Trigger change detection
+    this.cdr.detectChanges();
+  }
+
   formatTimeRemaining(): string {
-    if (!this.listing?.timeRemaining) return 'N/A';
-    
-    const { ended, days, hours, minutes } = this.listing.timeRemaining;
-    
-    if (ended) return 'Ended';
-    
-    // Format with days, hours, and minutes for clarity
-    const parts: string[] = [];
-    
-    if (days > 0) {
-      parts.push(`${days} day${days !== 1 ? 's' : ''}`);
+    // Return the displayed time that updates in real-time
+    return this.displayedTimeRemaining || (this.listing?.timeRemaining?.ended ? 'Ended' : 'N/A');
+  }
+
+  getAuctionEndType(): 'regular' | 'private-room' | 'ended' {
+    if (!this.listing) return 'ended';
+    if (this.listing.timeRemaining?.ended) return 'ended';
+    if (this.listing.privateRoomStatus === 'active') return 'private-room';
+    return 'regular';
+  }
+
+  getAuctionEndLabel(): string {
+    const endType = this.getAuctionEndType();
+    switch (endType) {
+      case 'private-room':
+        return 'Private Room Ends';
+      case 'ended':
+        return 'Auction Ended';
+      default:
+        return 'Auction Ends';
     }
-    if (hours > 0) {
-      parts.push(`${hours} hour${hours !== 1 ? 's' : ''}`);
-    }
-    if (minutes > 0 && days === 0) {
-      // Only show minutes if less than a day remaining (for urgency)
-      parts.push(`${minutes} minute${minutes !== 1 ? 's' : ''}`);
-    }
-    
-    if (parts.length === 0) {
-      return 'Ending Soon';
-    }
-    
-    return parts.join(' ');
   }
 
   setupRealTimeUpdates(listingId: string): void {
@@ -183,11 +267,24 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
     });
     this.socketSubscriptions.push(newBidSubscription);
 
-    // Subscribe to listing update events (price, bid count changes)
+    // Subscribe to listing update events (price, bid count changes, private room updates)
     const listingUpdateSubscription = this.socketService.onListingUpdate().subscribe((event) => {
       if (event.listingId === listingId && this.listing) {
         this.listing.currentPrice = event.currentPrice;
         this.listing.bidCount = event.bidCount;
+        
+        // Update private room end date if provided (e.g., when private room is extended)
+        if (event.privateRoomEndDate) {
+          this.listing.privateRoomEndDate = event.privateRoomEndDate;
+        }
+        
+        // Update private room status if provided
+        if (event.privateRoomStatus) {
+          this.listing.privateRoomStatus = event.privateRoomStatus;
+        }
+        
+        // Restart countdown if end date changed
+        this.startCountdown();
       }
     });
     this.socketSubscriptions.push(listingUpdateSubscription);
@@ -199,6 +296,7 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
     const currentPrice = this.listing.currentPrice || this.listing.startingPrice;
     const minBid = currentPrice + (this.listing.bidIncrement || 1);
     
+    // Collect bid amount
     const bidAmountStr = prompt(
       `Current bid: ${this.formatPrice(currentPrice)}\n` +
       `Minimum bid: ${this.formatPrice(minBid)}\n\n` +
@@ -214,14 +312,47 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
       return;
     }
 
+    // Collect email if user is not authenticated
+    let email: string | undefined = undefined;
+    if (!this.isAuthenticated) {
+      const emailInput = prompt(
+        `Please provide your email address:\n` +
+        `(You'll receive notifications about this bid)`
+      );
+
+      if (!emailInput) {
+        alert('Email is required to place a bid. Please provide your email address.');
+        return;
+      }
+
+      // Basic email validation
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(emailInput.trim())) {
+        alert('Please enter a valid email address.');
+        return;
+      }
+
+      email = emailInput.trim();
+    }
+
     // Place bid via HTTP API (Socket.io will broadcast automatically on backend)
-    this.bidsService.createBid({
+    const bidData: any = {
       listingId: this.listing._id,
       amount: bidAmount,
       bidType: 'manual'
-    }).subscribe({
+    };
+
+    // Include email if user is not authenticated
+    if (!this.isAuthenticated && email) {
+      bidData.email = email;
+    }
+
+    this.bidsService.createBid(bidData).subscribe({
       next: (bid) => {
         // Bid was placed successfully
+        if (!this.isAuthenticated) {
+          alert('Bid placed successfully! Please check your email for confirmation.');
+        }
         // Real-time update will come through Socket.io automatically
         // Optionally reload bids to ensure sync
         if (this.listing?._id) {
@@ -368,7 +499,23 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
     return this.listing?.auctionFormat === 'best-offer';
   }
 
+  getOfferOrBidCount(): number {
+    if (!this.listing) return 0;
+    if (this.listing.auctionFormat === 'best-offer') {
+      // For best-offer listings, use the actual offers array length
+      return this.offers.length;
+    }
+    // For auction listings, use bidCount from listing
+    return this.listing.bidCount || 0;
+  }
+
   ngOnDestroy(): void {
+    // Clear countdown interval
+    if (this.countdownInterval) {
+      clearInterval(this.countdownInterval);
+      this.countdownInterval = null;
+    }
+
     // Unsubscribe from Socket.io events
     this.socketSubscriptions.forEach(sub => sub.unsubscribe());
     

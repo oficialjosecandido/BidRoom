@@ -84,10 +84,10 @@
             </div>
             <!-- Time Remaining Display -->
             <div class="time-remaining-display" *ngIf="listing.timeRemaining && !listing.timeRemaining.ended">
-              <div class="time-remaining-content">
-                <span class="time-icon">⏰</span>
+              <div class="time-remaining-content" [class.private-room]="getAuctionEndType() === 'private-room'">
+                <span class="time-icon">{{ getAuctionEndType() === 'private-room' ? '🔒' : '⏰' }}</span>
                 <div class="time-text">
-                  <span class="time-label">Auction Ends In</span>
+                  <span class="time-label">{{ getAuctionEndLabel() }}</span>
                   <span class="time-value">{{ formatTimeRemaining() }}</span>
                 </div>
               </div>
@@ -129,15 +129,18 @@
               class="btn btn-primary btn-large" 
               *ngIf="listing.auctionFormat === 'highest-bid'"
               (click)="placeBid()">
-              Place Bid
+              {{ isAuthenticated ? 'Place Bid' : 'Place Bid (Email Required)' }}
             </button>
+            <!-- <p *ngIf="!isAuthenticated && listing.auctionFormat === 'highest-bid'" class="email-note">
+              You'll need to provide your email address to place a bid
+            </p> -->
             <button 
               class="btn btn-primary btn-large" 
               *ngIf="listing.auctionFormat === 'best-offer'"
               (click)="placeOffer()">
               Make Offer
             </button>
-            <button class="btn btn-secondary btn-large" (click)="addToWatchlist()">Add to Watchlist</button>
+            <button class="btn btn-secondary btn-large" *ngIf="isAuthenticated" (click)="addToWatchlist()">Add to Watchlist</button>
           </div>
 
           <!-- Auction Info -->
@@ -146,14 +149,14 @@
               <span class="info-icon">👥</span>
               <div class="info-content">
                 <span class="info-label">{{ listing.auctionFormat === 'highest-bid' ? 'Bids' : 'Offers' }}</span>
-                <span class="info-value">{{ listing.bidCount }} {{ listing.bidCount === 1 ? (listing.auctionFormat === 'highest-bid' ? 'bid' : 'offer') : (listing.auctionFormat === 'highest-bid' ? 'bids' : 'offers') }}</span>
+                <span class="info-value">{{ getOfferOrBidCount() }} {{ getOfferOrBidCount() === 1 ? (listing.auctionFormat === 'highest-bid' ? 'bid' : 'offer') : (listing.auctionFormat === 'highest-bid' ? 'bids' : 'offers') }}</span>
               </div>
             </div>
             <div class="info-item">
-              <span class="info-icon">⏰</span>
+              <span class="info-icon">👤</span>
               <div class="info-content">
-                <span class="info-label">Time Remaining</span>
-                <span class="info-value">{{ formatTimeRemaining() }}</span>
+                <span class="info-label">Seller</span>
+                <span class="info-value">{{ listing.seller.firstName }} {{ listing.seller.lastName }}</span>
               </div>
             </div>
             <div class="info-item">
@@ -183,19 +186,7 @@
             </div>
           </div>
 
-          <!-- Seller Info -->
-          <div class="seller-section">
-            <h3>Seller Information</h3>
-            <div class="seller-info">
-              <div class="seller-avatar">
-                {{ listing.seller.firstName.charAt(0) }}{{ listing.seller.lastName.charAt(0) }}
-              </div>
-              <div class="seller-details">
-                <p class="seller-name">{{ listing.seller.firstName }} {{ listing.seller.lastName }}</p>
-                <p class="seller-email">{{ listing.seller.email }}</p>
-              </div>
-            </div>
-          </div>
+          
         </div>
       </div>
 
@@ -254,24 +245,50 @@
               </div>
 
               <div *ngIf="bids.length > 0" class="bids-list">
-                <div class="bid-item" *ngFor="let bid of bids; let i = index" [class.winning]="bid.isWinning">
+                <div class="bid-item" *ngFor="let bid of bids; let i = index" [class.top-bid]="i === 0">
+                  <div class="bid-rank">{{ i + 1 }}</div>
                   <div class="bid-avatar">
                     {{ bid.bidderInitials || 'A' }}
                   </div>
                   <div class="bid-info">
                     <div class="bid-header">
                       <div class="bid-bidder">
-                        <span class="bidder-name">{{ bid.bidderName || 'Anonymous' }}</span>
-                        <span class="bid-status" *ngIf="bid.isWinning">Winning</span>
-                        <span class="bid-status outbid" *ngIf="bid.status === 'outbid'">Outbid</span>
+                        <div class="bidder-main-info">
+                          <span class="bidder-name">
+                            <span *ngIf="bid.bidderFirstName && bid.bidderLastName">
+                              {{ bid.bidderFirstName }} {{ bid.bidderLastName }}
+                            </span>
+                            <span *ngIf="!bid.bidderFirstName || !bid.bidderLastName">
+                              {{ bid.bidderName || 'Anonymous' }}
+                            </span>
+                          </span>
+                          <div class="bidder-badges">
+                            <span class="badge badge-authenticated" *ngIf="bid.isAuthenticated">
+                              <span class="badge-icon">✓</span>
+                              Authenticated
+                            </span>
+                            <span class="badge badge-unauthenticated" *ngIf="!bid.isAuthenticated">
+                              <span class="badge-icon">⚠</span>
+                              Guest Bidder
+                            </span>
+                            <span class="badge badge-verified" *ngIf="bid.bidderVerified">
+                              <span class="badge-icon">✓</span>
+                              Verified
+                            </span>
+                            <span class="badge badge-deposit" *ngIf="bid.bidderHasDeposit">
+                              <span class="badge-icon">$</span>
+                              Deposit
+                            </span>
+                          </div>
+                        </div>
                       </div>
-                      <div class="bid-amount">
-                        {{ formatBidAmount(bid.amount) }}
+                      <div class="bid-amount-container">
+                        <div class="bid-amount">{{ formatBidAmount(bid.amount) }}</div>
+                        <div class="bid-date-time">
+                          <span class="bid-date">{{ formatBidDate(bid.createdAt) }}</span>
+                          <span class="bid-type" *ngIf="bid.bidType !== 'manual'">{{ bid.bidType }}</span>
+                        </div>
                       </div>
-                    </div>
-                    <div class="bid-meta">
-                      <span class="bid-date">{{ formatBidDate(bid.createdAt) }}</span>
-                      <span class="bid-type" *ngIf="bid.bidType !== 'manual'">{{ bid.bidType }}</span>
                     </div>
                   </div>
                 </div>

@@ -6,20 +6,26 @@ import { API_CONFIG } from '../config/api.config';
 export interface Bid {
   _id: string;
   listing: string;
-  bidder: {
+  bidder?: {
     _id: string;
     firstName: string;
     lastName: string;
     email: string;
-  };
+    emailVerified?: boolean;
+    hasDeposit?: boolean;
+  } | null;
+  bidderEmail?: string | null;
   amount: number;
   bidType: 'manual' | 'proxy' | 'auto';
   maxBid?: number;
-  status: 'active' | 'outbid' | 'winning' | 'cancelled';
-  isWinning: boolean;
   notes?: string;
   bidderName?: string;
   bidderInitials?: string;
+  bidderFirstName?: string | null;
+  bidderLastName?: string | null;
+  isAuthenticated?: boolean;
+  bidderVerified?: boolean;
+  bidderHasDeposit?: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -42,6 +48,7 @@ export interface CreateBidRequest {
   maxBid?: number;
   bidType?: 'manual' | 'proxy' | 'auto';
   notes?: string;
+  email?: string; // Required for unauthenticated users
 }
 
 @Injectable({

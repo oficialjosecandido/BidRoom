@@ -388,9 +388,16 @@ router.post('/', authenticateToken, async (req, res) => {
         email: req.user.email,
         firstName: req.user.name?.split(' ')[0] || 'User',
         lastName: req.user.name?.split(' ').slice(1).join(' ') || '',
-        isActive: true
+        isActive: true,
+        emailVerified: req.user.emailVerified || false
       });
       await user.save();
+    } else {
+      // Update email verification status if changed
+      if (req.user.emailVerified !== undefined && user.emailVerified !== req.user.emailVerified) {
+        user.emailVerified = req.user.emailVerified;
+        await user.save();
+      }
     }
 
     // Extract and validate required fields
@@ -573,7 +580,8 @@ router.post('/:id/buy-now', authenticateToken, async (req, res) => {
         email: req.user.email,
         firstName: req.user.name?.split(' ')[0] || 'User',
         lastName: req.user.name?.split(' ').slice(1).join(' ') || '',
-        isActive: true
+        isActive: true,
+        emailVerified: req.user.emailVerified || false
       });
       await user.save();
     }

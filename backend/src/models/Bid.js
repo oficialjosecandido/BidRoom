@@ -10,8 +10,27 @@ const bidSchema = new mongoose.Schema({
   bidder: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
-    required: true,
-    index: true
+    required: false, // Optional for unauthenticated bids
+    index: true,
+    default: null
+  },
+  bidderEmail: {
+    type: String,
+    required: false,
+    lowercase: true,
+    trim: true,
+    default: null,
+    validate: {
+      validator: function(email) {
+        // If email is provided, validate it
+        if (email && email.trim() !== '') {
+          const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+          return emailRegex.test(email);
+        }
+        return true;
+      },
+      message: 'Valid email format required if provided'
+    }
   },
   amount: {
     type: Number,
@@ -28,17 +47,6 @@ const bidSchema = new mongoose.Schema({
     default: null,
     min: 0
   },
-  status: {
-    type: String,
-    enum: ['active', 'outbid', 'winning', 'cancelled'],
-    default: 'active',
-    index: true
-  },
-  isWinning: {
-    type: Boolean,
-    default: false,
-    index: true
-  },
   notes: {
     type: String,
     maxlength: 500,
@@ -51,7 +59,6 @@ const bidSchema = new mongoose.Schema({
 // Indexes for common queries
 bidSchema.index({ listing: 1, createdAt: -1 }); // For listing bid history
 bidSchema.index({ bidder: 1, createdAt: -1 }); // For user bid history
-bidSchema.index({ listing: 1, isWinning: 1 }); // For finding winning bids
 bidSchema.index({ listing: 1, amount: -1 }); // For finding highest bid
 
 // Virtual for bidder display name
@@ -60,6 +67,14 @@ bidSchema.virtual('bidderName').get(function() {
     return `${this.bidder.firstName} ${this.bidder.lastName}`;
   }
   return 'Anonymous';
+});
+
+// Pre-save validation: ensure either bidder or bidderEmail is provided
+bidSchema.pre('save', function(next) {
+  if (!this.bidder && !this.bidderEmail) {
+    return next(new Error('Either bidder (authenticated user) or bidderEmail (unauthenticated user) must be provided'));
+  }
+  next();
 });
 
 const Bid = mongoose.model('Bid', bidSchema);

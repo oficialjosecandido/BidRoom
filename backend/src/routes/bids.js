@@ -2,7 +2,7 @@ const express = require('express');
 const Bid = require('../models/Bid');
 const Listing = require('../models/Listing');
 const User = require('../models/User');
-const { authenticateToken } = require('../middleware/auth');
+const { authenticateToken, optionalAuth } = require('../middleware/auth');
 
 const router = express.Router();
 
@@ -14,7 +14,7 @@ router.get('/listing/:listingId', async (req, res) => {
     const sortOrder = sort === 'asc' ? 1 : -1;
 
     const bids = await Bid.find({ listing: req.params.listingId })
-      .populate('bidder', 'firstName lastName email')
+      .populate('bidder', 'firstName lastName email emailVerified hasDeposit')
       .sort({ createdAt: sortOrder })
       .lean();
 
@@ -23,10 +23,17 @@ router.get('/listing/:listingId', async (req, res) => {
       ...bid,
       bidderName: bid.bidder 
         ? `${bid.bidder.firstName} ${bid.bidder.lastName}`
-        : 'Anonymous',
+        : (bid.bidderEmail ? bid.bidderEmail.split('@')[0] : 'Anonymous'),
       bidderInitials: bid.bidder
         ? `${bid.bidder.firstName.charAt(0)}${bid.bidder.lastName.charAt(0)}`
-        : 'A'
+        : (bid.bidderEmail ? bid.bidderEmail.charAt(0).toUpperCase() : 'A'),
+      bidderEmail: bid.bidderEmail || (bid.bidder ? bid.bidder.email : null),
+      // Add verification and deposit info for authenticated bidders
+      isAuthenticated: !!bid.bidder,
+      bidderVerified: bid.bidder ? (bid.bidder.emailVerified || false) : false,
+      bidderHasDeposit: bid.bidder ? (bid.bidder.hasDeposit || false) : false,
+      bidderFirstName: bid.bidder ? bid.bidder.firstName : null,
+      bidderLastName: bid.bidder ? bid.bidder.lastName : null
     }));
 
     res.json({
@@ -47,9 +54,21 @@ router.get('/listing/:listingId/stats', async (req, res) => {
   try {
     const bids = await Bid.find({ listing: req.params.listingId });
 
+    // Count unique bidders: authenticated users by user ID, unauthenticated by email
+    const uniqueBidderIds = new Set();
+    const uniqueEmails = new Set();
+    
+    bids.forEach(bid => {
+      if (bid.bidder) {
+        uniqueBidderIds.add(bid.bidder.toString());
+      } else if (bid.bidderEmail) {
+        uniqueEmails.add(bid.bidderEmail.toLowerCase());
+      }
+    });
+
     const stats = {
       totalBids: bids.length,
-      uniqueBidders: new Set(bids.map(b => b.bidder.toString())).size,
+      uniqueBidders: uniqueBidderIds.size + uniqueEmails.size,
       highestBid: bids.length > 0 ? Math.max(...bids.map(b => b.amount)) : 0,
       averageBid: bids.length > 0 
         ? bids.reduce((sum, b) => sum + b.amount, 0) / bids.length 
@@ -66,10 +85,10 @@ router.get('/listing/:listingId/stats', async (req, res) => {
   }
 });
 
-// POST /api/bids - Create a new bid (requires authentication)
-router.post('/', authenticateToken, async (req, res) => {
+// POST /api/bids - Create a new bid (authentication optional, but email required if not authenticated)
+router.post('/', optionalAuth, async (req, res) => {
   try {
-    const { listingId, amount, maxBid, bidType = 'manual', notes } = req.body;
+    const { listingId, amount, maxBid, bidType = 'manual', notes, email } = req.body;
 
     if (!listingId || !amount) {
       return res.status(400).json({
@@ -78,17 +97,49 @@ router.post('/', authenticateToken, async (req, res) => {
       });
     }
 
-    // Find or create user in database from Firebase UID
-    let user = await User.findOne({ uid: req.user.uid });
-    if (!user) {
-      user = new User({
-        uid: req.user.uid,
-        email: req.user.email,
-        firstName: req.user.name?.split(' ')[0] || 'User',
-        lastName: req.user.name?.split(' ').slice(1).join(' ') || '',
-        isActive: true
-      });
-      await user.save();
+    let user = null;
+    let bidderEmail = null;
+
+    // Handle authenticated user
+    if (req.isAuthenticated && req.user) {
+      // Find or create user in database from Firebase UID
+      user = await User.findOne({ uid: req.user.uid });
+      if (!user) {
+        user = new User({
+          uid: req.user.uid,
+          email: req.user.email,
+          firstName: req.user.name?.split(' ')[0] || 'User',
+          lastName: req.user.name?.split(' ').slice(1).join(' ') || '',
+          isActive: true,
+          emailVerified: req.user.emailVerified || false
+        });
+        await user.save();
+      } else {
+        // Update email verification status if changed
+        if (req.user.emailVerified !== undefined && user.emailVerified !== req.user.emailVerified) {
+          user.emailVerified = req.user.emailVerified;
+          await user.save();
+        }
+      }
+    } else {
+      // Handle unauthenticated user - email is required
+      if (!email) {
+        return res.status(400).json({
+          error: 'Email required',
+          message: 'Please provide your email address to place a bid'
+        });
+      }
+
+      // Validate email format
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        return res.status(400).json({
+          error: 'Invalid email',
+          message: 'Please provide a valid email address'
+        });
+      }
+
+      bidderEmail = email.toLowerCase().trim();
     }
 
     // Get the listing
@@ -128,7 +179,14 @@ router.post('/', authenticateToken, async (req, res) => {
         });
       }
       
-      // Check if user is in top 5 bidders
+      // Check if user is in top 5 bidders (only authenticated users can participate in Private Room)
+      if (!user) {
+        return res.status(403).json({
+          error: 'Authentication required',
+          message: 'You must be logged in to participate in the Private Room'
+        });
+      }
+
       const topBidders = await listing.getTop5Bidders();
       const isInTop5 = topBidders.some(tb => tb.bidder._id.toString() === user._id.toString());
       
@@ -177,13 +235,12 @@ router.post('/', authenticateToken, async (req, res) => {
     // Create the bid
     const bid = new Bid({
       listing: listingId,
-      bidder: user._id,
+      bidder: user ? user._id : null,
+      bidderEmail: bidderEmail || null,
       amount: amount,
       maxBid: maxBid || amount,
       bidType: bidType,
-      notes: notes || null,
-      status: 'active',
-      isWinning: true // Will be updated if outbid
+      notes: notes || null
     });
 
     await bid.save();
@@ -192,12 +249,14 @@ router.post('/', authenticateToken, async (req, res) => {
     listing.currentPrice = amount;
     listing.bidCount = await Bid.countDocuments({ listing: listingId });
     
-    // Track unique bidders for Private Room trigger
-    if (!listing.uniqueBidders) {
-      listing.uniqueBidders = [];
-    }
-    if (!listing.uniqueBidders.some(id => id.toString() === user._id.toString())) {
-      listing.uniqueBidders.push(user._id);
+    // Track unique bidders for Private Room trigger (only for authenticated users)
+    if (user) {
+      if (!listing.uniqueBidders) {
+        listing.uniqueBidders = [];
+      }
+      if (!listing.uniqueBidders.some(id => id.toString() === user._id.toString())) {
+        listing.uniqueBidders.push(user._id);
+      }
     }
     
     // Check if reserve price is met (seller must sell if met or exceeded)
@@ -206,31 +265,30 @@ router.post('/', authenticateToken, async (req, res) => {
       reserveMet = true;
       // Reserve price is met - seller is committed to sell
     }
-    
-    // Update previous winning bids to outbid
-    await Bid.updateMany(
-      { 
-        listing: listingId, 
-        isWinning: true, 
-        _id: { $ne: bid._id } 
-      },
-      { 
-        status: 'outbid',
-        isWinning: false 
-      }
-    );
 
     await listing.save();
 
     // Populate bid for response
     const populatedBid = await Bid.findById(bid._id)
-      .populate('bidder', 'firstName lastName email')
+      .populate('bidder', 'firstName lastName email emailVerified hasDeposit')
       .lean();
 
+    // Format bid response for both authenticated and unauthenticated bidders
     const formattedBid = {
       ...populatedBid,
-      bidderName: `${populatedBid.bidder.firstName} ${populatedBid.bidder.lastName}`,
-      bidderInitials: `${populatedBid.bidder.firstName.charAt(0)}${populatedBid.bidder.lastName.charAt(0)}`
+      bidderName: populatedBid.bidder
+        ? `${populatedBid.bidder.firstName} ${populatedBid.bidder.lastName}`
+        : (populatedBid.bidderEmail ? populatedBid.bidderEmail.split('@')[0] : 'Anonymous'),
+      bidderInitials: populatedBid.bidder
+        ? `${populatedBid.bidder.firstName.charAt(0)}${populatedBid.bidder.lastName.charAt(0)}`
+        : (populatedBid.bidderEmail ? populatedBid.bidderEmail.charAt(0).toUpperCase() : 'A'),
+      bidderEmail: populatedBid.bidderEmail || (populatedBid.bidder ? populatedBid.bidder.email : null),
+      // Add verification and deposit info for authenticated bidders
+      isAuthenticated: !!populatedBid.bidder,
+      bidderVerified: populatedBid.bidder ? (populatedBid.bidder.emailVerified || false) : false,
+      bidderHasDeposit: populatedBid.bidder ? (populatedBid.bidder.hasDeposit || false) : false,
+      bidderFirstName: populatedBid.bidder ? populatedBid.bidder.firstName : null,
+      bidderLastName: populatedBid.bidder ? populatedBid.bidder.lastName : null
     };
 
     // Get Socket.io instance and Redis service from app

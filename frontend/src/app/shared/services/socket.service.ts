@@ -15,6 +15,8 @@ export interface ListingUpdateEvent {
   currentPrice: number;
   bidCount: number;
   updatedAt: string;
+  privateRoomEndDate?: string;
+  privateRoomStatus?: 'not-triggered' | 'eligible' | 'active' | 'ended';
 }
 
 @Injectable({
