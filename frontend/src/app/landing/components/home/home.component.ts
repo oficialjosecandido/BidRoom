@@ -81,6 +81,10 @@ export class HomeComponent implements OnInit {
     this.router.navigate(['/auth/login']);
   }
 
+  navigateToAddListing(): void {
+    this.router.navigate(['/listing/add']);
+  }
+
   formatPrice(price: number): string {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',

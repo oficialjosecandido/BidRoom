@@ -19,6 +19,7 @@ const authRoutes = require('./routes/auth');
 const listingRoutes = require('./routes/listings');
 const bidRoutes = require('./routes/bids');
 const offerRoutes = require('./routes/offers');
+const uploadRoutes = require('./routes/uploads');
 
 const app = express();
 const server = http.createServer(app);
@@ -44,6 +45,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/listings', listingRoutes);
 app.use('/api/bids', bidRoutes);
 app.use('/api/offers', offerRoutes);
+app.use('/api/uploads', uploadRoutes);
 
 app.get('/', (req, res) => {
   res.json({

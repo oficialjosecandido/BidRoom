@@ -5,7 +5,7 @@ const listingSchema = new mongoose.Schema({
     type: String,
     required: true,
     trim: true,
-    maxlength: 200
+    maxlength: 80
   },
   slug: {
     type: String,
@@ -23,8 +23,13 @@ const listingSchema = new mongoose.Schema({
   category: {
     type: String,
     required: true,
-    enum: ['Electronics', 'Art', 'Collectibles', 'Jewelry', 'Home & Garden', 'Watches', 'Fashion', 'Sports', 'Books', 'Other'],
+    enum: ['electronics', 'art-collectibles', 'jewelry', 'home-garden', 'watches', 'fashion', 'sports', 'books', 'other'],
     index: true
+  },
+  subCategory: {
+    type: String,
+    required: true,
+    trim: true
   },
   images: {
     type: [String],
@@ -101,8 +106,8 @@ const listingSchema = new mongoose.Schema({
   },
   condition: {
     type: String,
-    enum: ['New', 'Like New', 'Used - Excellent', 'Used - Good', 'Used - Fair'],
-    default: 'Used - Good'
+    enum: ['New', 'Used - Excellent', 'Used - Very Good', 'Used - Good', 'Used - Fair', 'For Parts or Not Working'],
+    required: true
   },
   location: {
     type: String,
@@ -113,6 +118,34 @@ const listingSchema = new mongoose.Schema({
     default: 0,
     min: 0
   },
+  shippingOption: {
+    type: String,
+    enum: ['flat-rate', 'calculated', 'local-pickup', 'free'],
+    required: true
+  },
+  handlingTime: {
+    type: Number,
+    required: true,
+    min: 1,
+    max: 30 // Max 30 business days
+  },
+  returnPolicy: {
+    type: String,
+    enum: ['30-days', '14-days', 'no-returns', 'custom'],
+    required: true
+  },
+  specifications: [{
+    key: {
+      type: String,
+      required: true,
+      trim: true
+    },
+    value: {
+      type: String,
+      required: true,
+      trim: true
+    }
+  }],
   // Auction format and mechanics
   auctionFormat: {
     type: String,

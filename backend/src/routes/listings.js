@@ -286,21 +286,46 @@ router.get('/slug/:slug', async (req, res) => {
 // IMPORTANT: This route must come BEFORE /:id route to avoid route conflicts
 router.get('/stats/overview', async (req, res) => {
   try {
-    const totalBidders = await Listing.distinct('seller').then(users => users.length);
-    const activeListings = await Listing.countDocuments({ status: 'active' });
-    
-    // Calculate total value traded (sum of currentPrice for all active listings)
-    const valueResult = await Listing.aggregate([
-      { $match: { status: 'active' } },
-      { $group: { _id: null, totalValue: { $sum: '$currentPrice' } } }
+    // Optimize: Use aggregate pipeline to get all stats in one query
+    const statsResult = await Listing.aggregate([
+      {
+        $group: {
+          _id: null,
+          totalBidders: { $addToSet: '$seller' }, // Get unique sellers
+          activeListings: {
+            $sum: { $cond: [{ $eq: ['$status', 'active'] }, 1, 0] }
+          },
+          totalValueTraded: {
+            $sum: {
+              $cond: [
+                { $eq: ['$status', 'active'] },
+                { $ifNull: ['$currentPrice', 0] },
+                0
+              ]
+            }
+          }
+        }
+      },
+      {
+        $project: {
+          totalBidders: { $size: '$totalBidders' },
+          activeListings: 1,
+          totalValueTraded: 1
+        }
+      }
     ]);
-    
-    const totalValueTraded = valueResult.length > 0 ? valueResult[0].totalValue : 0;
+
+    // If no listings exist, return zeros
+    const stats = statsResult.length > 0 ? statsResult[0] : {
+      totalBidders: 0,
+      activeListings: 0,
+      totalValueTraded: 0
+    };
 
     res.json({
-      totalBidders,
-      activeListings,
-      totalValueTraded: Math.round(totalValueTraded)
+      totalBidders: stats.totalBidders || 0,
+      activeListings: stats.activeListings || 0,
+      totalValueTraded: Math.round(stats.totalValueTraded || 0)
     });
   } catch (error) {
     console.error('Error fetching stats:', error);
@@ -368,15 +393,145 @@ router.post('/', authenticateToken, async (req, res) => {
       await user.save();
     }
 
+    // Extract and validate required fields
+    const {
+      title,
+      description,
+      category,
+      subCategory,
+      condition,
+      listingFormat,
+      duration,
+      startingPrice,
+      reservePrice,
+      buyNowPrice,
+      minimumOfferPrice,
+      allowPrivateRoom,
+      commissionRate,
+      location,
+      shippingCost,
+      shippingOption,
+      handlingTime,
+      returnPolicy,
+      specifications,
+      images = []
+    } = req.body;
+
+    // Validate required fields
+    if (!title || title.trim().length === 0) {
+      return res.status(400).json({ error: 'Title is required' });
+    }
+    if (!description || description.trim().length < 50) {
+      return res.status(400).json({ error: 'Description must be at least 50 characters' });
+    }
+    if (!category) {
+      return res.status(400).json({ error: 'Category is required' });
+    }
+    if (!subCategory) {
+      return res.status(400).json({ error: 'Sub-category is required' });
+    }
+    if (!condition) {
+      return res.status(400).json({ error: 'Item condition is required' });
+    }
+    if (!duration) {
+      return res.status(400).json({ error: 'Listing duration is required' });
+    }
+    if (!shippingOption) {
+      return res.status(400).json({ error: 'Shipping option is required' });
+    }
+    if (!handlingTime) {
+      return res.status(400).json({ error: 'Handling time is required' });
+    }
+    if (!returnPolicy) {
+      return res.status(400).json({ error: 'Return policy is required' });
+    }
+    // Note: Image upload will be handled separately. For now, allow empty images array.
+    // Frontend should upload images first, then send URLs in the images array.
+
+    // Validate format-specific fields
+    const isAuction = listingFormat === 'highest-bid' || listingFormat === 'auction';
+    if (isAuction) {
+      if (!startingPrice || startingPrice <= 0) {
+        return res.status(400).json({ error: 'Starting bid is required for auction format' });
+      }
+      if (buyNowPrice && buyNowPrice <= startingPrice) {
+        return res.status(400).json({ error: 'Buy Now price must be higher than Starting Bid' });
+      }
+    }
+
+    // Validate shipping cost for flat-rate
+    if (shippingOption === 'flat-rate' && (!shippingCost || shippingCost < 0)) {
+      return res.status(400).json({ error: 'Shipping cost is required for flat-rate shipping' });
+    }
+
+    // Prepare listing data
     const listingData = {
-      ...req.body,
+      title: title.trim(),
+      description: description.trim(),
+      category: category.toLowerCase().replace(/\s+/g, '-'), // Normalize category
+      subCategory: subCategory.trim(),
+      condition,
+      auctionFormat: (listingFormat === 'best-offer') ? 'best-offer' : 'highest-bid',
+      durationSlot: duration,
+      startingPrice: isAuction ? parseFloat(startingPrice) : 0,
+      currentPrice: isAuction ? parseFloat(startingPrice) : 0,
+      reservePrice: reservePrice ? parseFloat(reservePrice) : undefined,
+      buyNowPrice: buyNowPrice ? parseFloat(buyNowPrice) : undefined,
+      minimumOfferPrice: minimumOfferPrice ? parseFloat(minimumOfferPrice) : undefined,
+      allowPrivateRoom: allowPrivateRoom === true || allowPrivateRoom === 'true',
+      commissionRate: commissionRate ? parseFloat(commissionRate) / 100 : undefined, // Convert percentage to decimal
+      location: location || undefined,
+      shippingCost: shippingCost ? parseFloat(shippingCost) : 0,
+      shippingOption,
+      handlingTime: parseInt(handlingTime),
+      returnPolicy,
+      specifications: specifications || [],
+      images: Array.isArray(images) && images.length > 0 ? images : ['https://via.placeholder.com/400x300?text=No+Image'], // Temporary placeholder until image upload is implemented
       seller: user._id,
-      currentPrice: req.body.startingPrice || req.body.currentPrice
+      status: 'active' // Create as active listing
     };
 
+    // Calculate end date based on duration slot
+    const durations = {
+      '2 hours': 2 * 60 * 60 * 1000,
+      '24 hours': 24 * 60 * 60 * 1000,
+      '3 days': 3 * 24 * 60 * 60 * 1000,
+      '7 days': 7 * 24 * 60 * 60 * 1000
+    };
+    const durationMs = durations[duration] || durations['7 days'];
+    listingData.startDate = new Date();
+    listingData.endDate = new Date(listingData.startDate.getTime() + durationMs);
+
+    // Generate slug from title
+    function generateSlug(title) {
+      return title
+        .toLowerCase()
+        .trim()
+        .replace(/[^\w\s-]/g, '') // Remove special characters
+        .replace(/[\s_-]+/g, '-') // Replace spaces and underscores with hyphens
+        .replace(/^-+|-+$/g, ''); // Remove leading/trailing hyphens
+    }
+
+    let baseSlug = generateSlug(listingData.title);
+    // Fallback if slug is empty (e.g., title contains only special characters)
+    if (!baseSlug || baseSlug.length === 0) {
+      baseSlug = 'listing-' + Date.now();
+    }
+    let slug = baseSlug;
+    let counter = 1;
+
+    // Ensure uniqueness by appending counter if needed
+    while (await Listing.findOne({ slug })) {
+      slug = `${baseSlug}-${counter}`;
+      counter++;
+    }
+    listingData.slug = slug;
+
+    // Create the listing
     const listing = new Listing(listingData);
     await listing.save();
 
+    // Populate and return the listing
     const populatedListing = await Listing.findById(listing._id)
       .populate('seller', 'firstName lastName email')
       .lean();
@@ -390,6 +545,16 @@ router.post('/', authenticateToken, async (req, res) => {
     });
   } catch (error) {
     console.error('Error creating listing:', error);
+    
+    // Handle Mongoose validation errors
+    if (error.name === 'ValidationError') {
+      const errors = Object.values(error.errors).map(err => err.message);
+      return res.status(400).json({
+        error: 'Validation failed',
+        message: errors.join(', ')
+      });
+    }
+
     res.status(400).json({
       error: 'Failed to create listing',
       message: error.message

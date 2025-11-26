@@ -1,0 +1,499 @@
+<app-header></app-header>
+
+<div class="add-listing-container">
+  <div class="container">
+    <div class="page-header">
+      <h1>List Your Item</h1>
+      <p>Follow the steps below to create your listing</p>
+    </div>
+
+    <!-- Stepper -->
+    <div class="stepper">
+      <div class="stepper-steps">
+        <div 
+          class="step-indicator" 
+          [class.active]="isStep(1)" 
+          [class.completed]="currentStep > 1"
+          (click)="goToStep(1)">
+          <div class="step-number">1</div>
+          <div class="step-label">Item Identity</div>
+        </div>
+        <div class="step-connector" [class.completed]="currentStep > 1"></div>
+        <div 
+          class="step-indicator" 
+          [class.active]="isStep(2)" 
+          [class.completed]="currentStep > 2"
+          (click)="goToStep(2)">
+          <div class="step-number">2</div>
+          <div class="step-label">Details & Media</div>
+        </div>
+        <div class="step-connector" [class.completed]="currentStep > 2"></div>
+        <div 
+          class="step-indicator" 
+          [class.active]="isStep(3)" 
+          [class.completed]="currentStep > 3"
+          (click)="goToStep(3)">
+          <div class="step-number">3</div>
+          <div class="step-label">Pricing & Rules</div>
+        </div>
+        <div class="step-connector" [class.completed]="currentStep > 3"></div>
+        <div 
+          class="step-indicator" 
+          [class.active]="isStep(4)" 
+          [class.completed]="currentStep > 4">
+          <div class="step-number">4</div>
+          <div class="step-label">Shipping & Review</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Error Message -->
+    <div class="error-message" *ngIf="errorMessage">
+      {{ errorMessage }}
+    </div>
+
+    <!-- Form -->
+    <form [formGroup]="listingForm" (ngSubmit)="onSubmit()" class="listing-form">
+      
+      <!-- Step 1: Item Identity and Format -->
+      <div class="form-step" *ngIf="isStep(1)">
+        <h2>Step 1: Item Identity and Format</h2>
+        
+        <div class="form-group">
+          <label for="title">Listing Title *</label>
+          <input
+            type="text"
+            id="title"
+            formControlName="title"
+            [class.error]="getFieldError('title')"
+            placeholder="Enter a descriptive title (max 80 characters)"
+            maxlength="80"
+          />
+          <div class="field-error" *ngIf="getFieldError('title')">
+            {{ getFieldError('title') }}
+          </div>
+          <div class="field-hint">{{ listingForm.get('title')?.value?.length || 0 }}/80 characters</div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="category">Category *</label>
+            <select
+              id="category"
+              formControlName="category"
+              [class.error]="getFieldError('category')">
+              <option value="">Select Category</option>
+              <option *ngFor="let cat of categories" [value]="cat.id">{{ cat.name }}</option>
+            </select>
+            <div class="field-error" *ngIf="getFieldError('category')">
+              {{ getFieldError('category') }}
+            </div>
+          </div>
+
+          <div class="form-group" *ngIf="selectedCategory">
+            <label for="subCategory">Sub-Category *</label>
+            <select
+              id="subCategory"
+              formControlName="subCategory"
+              [class.error]="getFieldError('subCategory')">
+              <option value="">Select Sub-Category</option>
+              <option *ngFor="let subCat of getSelectedSubCategories()" [value]="subCat">{{ subCat }}</option>
+            </select>
+            <div class="field-error" *ngIf="getFieldError('subCategory')">
+              {{ getFieldError('subCategory') }}
+            </div>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Listing Format *</label>
+            <div class="radio-group">
+              <label class="radio-option">
+                <input
+                  type="radio"
+                  formControlName="listingFormat"
+                  value="auction"
+                />
+                <span>Auction (Highest Bid Wins)</span>
+              </label>
+              <label class="radio-option">
+                <input
+                  type="radio"
+                  formControlName="listingFormat"
+                  value="best-offer"
+                />
+                <span>Best Offer (Seller Chooses Offer)</span>
+              </label>
+            </div>
+            <div class="field-error" *ngIf="getFieldError('listingFormat')">
+              {{ getFieldError('listingFormat') }}
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="condition">Item Condition *</label>
+            <select
+              id="condition"
+              formControlName="condition"
+              [class.error]="getFieldError('condition')">
+              <option value="">Select Condition</option>
+              <option *ngFor="let condition of itemConditions" [value]="condition">{{ condition }}</option>
+            </select>
+            <div class="field-error" *ngIf="getFieldError('condition')">
+              {{ getFieldError('condition') }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 2: Details and Media -->
+      <div class="form-step" *ngIf="isStep(2)">
+        <h2>Step 2: Details and Media</h2>
+        
+        <div class="form-group">
+          <label for="description">Full Description *</label>
+          <textarea
+            id="description"
+            formControlName="description"
+            [class.error]="getFieldError('description')"
+            placeholder="Describe your item in detail, including its history, any defects, and all included components..."
+            rows="8"
+          ></textarea>
+          <div class="field-error" *ngIf="getFieldError('description')">
+            {{ getFieldError('description') }}
+          </div>
+          <div class="field-hint" [class.error]="listingForm.get('description')?.invalid && (listingForm.get('description')?.touched || isStep(2))">
+            <span *ngIf="listingForm.get('description')?.invalid && (listingForm.get('description')?.touched || isStep(2))" style="color: #dc3545; font-weight: 600;">
+              ⚠️ Minimum 50 characters required. 
+            </span>
+            Current: {{ listingForm.get('description')?.value?.length || 0 }}/50 characters
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Media Upload * (Minimum 3 photos)</label>
+          <div class="file-upload-area" 
+               (dragover)="$event.preventDefault()" 
+               (drop)="$event.preventDefault()">
+            <input
+              type="file"
+              id="mediaUpload"
+              multiple
+              accept="image/*,video/*"
+              (change)="onFileSelected($event)"
+              style="display: none;"
+            />
+            <label for="mediaUpload" class="upload-button">
+              <span>📷 Click to upload or drag files here</span>
+            </label>
+            <div class="uploaded-files" *ngIf="uploadedFiles.length > 0">
+              <div class="file-item" *ngFor="let file of uploadedFiles; let i = index">
+                <img *ngIf="previewUrls[i]" [src]="previewUrls[i] || ''" alt="Preview" class="file-preview">
+                <div class="file-info">
+                  <span>{{ file.name }}</span>
+                  <button type="button" (click)="removeFile(i)" class="remove-file-btn">×</button>
+                </div>
+              </div>
+            </div>
+            <div class="field-error" *ngIf="uploadedFiles.length < 1 && (listingForm.get('media')?.touched || isStep(4))">
+              Please upload at least 1 image (3 recommended)
+            </div>
+            <div class="field-hint">{{ uploadedFiles.length }}/3+ files uploaded (minimum 1 for testing)</div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Key Specifications (Optional)</label>
+          <div formArrayName="specifications">
+            <div *ngFor="let spec of specifications.controls; let i = index" [formGroupName]="i" class="spec-row">
+              <input type="text" formControlName="key" placeholder="Specification (e.g., Model, Brand)" class="spec-key">
+              <input type="text" formControlName="value" placeholder="Value" class="spec-value">
+              <button type="button" (click)="removeSpecification(i)" class="remove-btn">Remove</button>
+            </div>
+          </div>
+          <button type="button" (click)="addSpecification()" class="add-btn">+ Add Specification</button>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="locationCity">City *</label>
+            <input
+              type="text"
+              id="locationCity"
+              formControlName="locationCity"
+              [class.error]="getFieldError('locationCity')"
+              placeholder="City"
+            />
+            <div class="field-error" *ngIf="getFieldError('locationCity')">
+              {{ getFieldError('locationCity') }}
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="locationRegion">Region/State *</label>
+            <input
+              type="text"
+              id="locationRegion"
+              formControlName="locationRegion"
+              [class.error]="getFieldError('locationRegion')"
+              placeholder="Region or State"
+            />
+            <div class="field-error" *ngIf="getFieldError('locationRegion')">
+              {{ getFieldError('locationRegion') }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 3: Pricing and Auction Rules -->
+      <div class="form-step" *ngIf="isStep(3)">
+        <h2>Step 3: Pricing and Auction Rules</h2>
+        
+        <div class="form-group">
+          <label>Listing Duration *</label>
+          <div class="radio-group">
+            <label class="radio-option" *ngFor="let duration of listingDurations">
+              <input
+                type="radio"
+                formControlName="duration"
+                [value]="duration.value"
+              />
+              <span>{{ duration.label }}</span>
+            </label>
+          </div>
+          <div class="field-error" *ngIf="getFieldError('duration')">
+            {{ getFieldError('duration') }}
+          </div>
+        </div>
+
+        <div *ngIf="listingForm.get('listingFormat')?.value === 'auction'">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="startingBid">Starting Bid *</label>
+              <div class="input-with-currency">
+                <span class="currency">$</span>
+                <input
+                  type="number"
+                  id="startingBid"
+                  formControlName="startingBid"
+                  [class.error]="getFieldError('startingBid')"
+                  placeholder="0.00"
+                  min="0.01"
+                  step="0.01"
+                  style="padding-left: 25px;"
+                />
+              </div>
+              <div class="field-error" *ngIf="getFieldError('startingBid')">
+                {{ getFieldError('startingBid') }}
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="reservePrice">Seller Reserve Price (Optional)</label>
+              <div class="input-with-currency">
+                <span class="currency">$</span>
+                <input
+                  type="number"
+                  id="reservePrice"
+                  formControlName="reservePrice"
+                  placeholder="0.00"
+                  min="0.01"
+                  step="0.01"
+                  style="padding-left: 25px;"
+                />
+              </div>
+              <div class="field-hint">Confidential minimum price that forces the sale if met</div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="buyNowPrice">Buy Now Price (Optional)</label>
+            <div class="input-with-currency">
+              <span class="currency">$</span>
+              <input
+                type="number"
+                id="buyNowPrice"
+                formControlName="buyNowPrice"
+                [class.error]="getFieldError('buyNowPrice')"
+                placeholder="0.00"
+                min="0.01"
+                step="0.01"
+                style="padding-left: 25px;"
+              />
+            </div>
+            <div class="field-error" *ngIf="getFieldError('buyNowPrice')">
+              {{ getFieldError('buyNowPrice') }}
+            </div>
+            <div class="field-hint">Must be higher than Starting Bid. Allows instant purchase.</div>
+          </div>
+        </div>
+
+        <div *ngIf="listingForm.get('listingFormat')?.value === 'best-offer'">
+          <div class="form-group">
+            <label for="minimumAcceptPrice">Minimum Accept Price (Optional)</label>
+            <div class="input-with-currency">
+              <span class="currency" style=" margin-right: 5px;">$</span>
+              <input
+                type="number"
+                id="minimumAcceptPrice"
+                formControlName="minimumAcceptPrice"
+                placeholder="0.00"
+                min="0.01"
+                step="0.01"
+                style="padding-left: 25px;"
+              />
+            </div>
+            <div class="field-hint">Price threshold where you must accept a qualifying offer</div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="checkbox-option">
+            <input
+              type="checkbox"
+              formControlName="allowPrivateRoom"
+            />
+            <span style="margin-left: 5px;">Enable Private Room Feature</span>
+          </label>
+          <div class="field-hint">
+            <strong>Important:</strong> Enabling Private Room increases your commission rate from 0.5% to 2.0%.
+            You must commit to this choice.
+          </div>
+          <div class="commission-notice" *ngIf="listingForm.get('allowPrivateRoom')?.value">
+            <strong>⚠️ Commission Rate: 2.0%</strong> (Private Room enabled)
+          </div>
+          <div class="commission-notice" *ngIf="!listingForm.get('allowPrivateRoom')?.value">
+            Commission Rate: 0.5% (Standard)
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 4: Shipping and Final Review -->
+      <div class="form-step" *ngIf="isStep(4)">
+        <h2>Step 4: Shipping and Final Review</h2>
+        
+        <div class="form-group">
+          <label for="shippingOption">Shipping Options *</label>
+          <select
+            id="shippingOption"
+            formControlName="shippingOption"
+            [class.error]="getFieldError('shippingOption')">
+            <option value="">Select Shipping Option</option>
+            <option *ngFor="let option of shippingOptions" [value]="option.value">{{ option.label }}</option>
+          </select>
+          <div class="field-error" *ngIf="getFieldError('shippingOption')">
+            {{ getFieldError('shippingOption') }}
+          </div>
+        </div>
+
+        <div class="form-group" *ngIf="listingForm.get('shippingOption')?.value === 'flat-rate'">
+          <label for="flatRateShipping">Flat Rate Shipping Cost *</label>
+          <div class="input-with-currency">
+            <span class="currency">$</span>
+            <input
+              type="number"
+              id="flatRateShipping"
+              formControlName="flatRateShipping"
+              placeholder="0.00"
+              min="0"
+              step="0.01"
+            />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="handlingTime">Handling Time *</label>
+          <select
+            id="handlingTime"
+            formControlName="handlingTime"
+            [class.error]="getFieldError('handlingTime')">
+            <option value="">Select Handling Time</option>
+            <option *ngFor="let time of handlingTimes" [value]="time.value">{{ time.label }}</option>
+          </select>
+          <div class="field-error" *ngIf="getFieldError('handlingTime')">
+            {{ getFieldError('handlingTime') }}
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="returnPolicy">Return Policy *</label>
+          <select
+            id="returnPolicy"
+            formControlName="returnPolicy"
+            [class.error]="getFieldError('returnPolicy')">
+            <option value="">Select Return Policy</option>
+            <option *ngFor="let policy of returnPolicies" [value]="policy.value">{{ policy.label }}</option>
+          </select>
+          <div class="field-error" *ngIf="getFieldError('returnPolicy')">
+            {{ getFieldError('returnPolicy') }}
+          </div>
+        </div>
+
+        <!-- Fee Summary -->
+        <div class="fee-summary">
+          <h3>Fee Summary</h3>
+          <div class="fee-item">
+            <span>Commission ({{ commissionRate }}%):</span>
+            <span>${{ calculateEstimatedCommission().toFixed(2) }}</span>
+          </div>
+          <div class="fee-item">
+            <span>Payment Processing (~2.9% + $0.30):</span>
+            <span>${{ calculateEstimatedFees().paymentProcessing.toFixed(2) }}</span>
+          </div>
+          <div class="fee-total">
+            <span>Estimated Total Fees:</span>
+            <span>${{ calculateEstimatedFees().total.toFixed(2) }}</span>
+          </div>
+          <div class="fee-note">
+            * Final fees may vary based on final sale price
+          </div>
+        </div>
+
+        <!-- Seller Declaration -->
+        <div class="form-group">
+          <label class="checkbox-option">
+            <input
+              type="checkbox"
+              formControlName="sellerDeclaration"
+            />
+            <span style="margin-left: 5px;">I confirm that I am the legal owner of this item and agree to Bidroom's Terms & Conditions and commission structure. *</span>
+          </label>
+          <div class="field-error" *ngIf="getFieldError('sellerDeclaration')">
+            {{ getFieldError('sellerDeclaration') }}
+          </div>
+        </div>
+      </div>
+
+      <!-- Navigation Buttons -->
+      <div class="form-actions">
+        <button
+          type="button"
+          class="btn btn-secondary"
+          (click)="previousStep()"
+          *ngIf="currentStep > 1">
+          ← Previous
+        </button>
+        <div class="spacer"></div>
+        <button
+          type="button"
+          class="btn btn-primary"
+          (click)="nextStep()"
+          *ngIf="currentStep < totalSteps">
+          Next →
+        </button>
+        <button
+          type="submit"
+          class="btn btn-primary"
+          [disabled]="isSubmitting || isUploadingImages || !listingForm.valid || uploadedFiles.length < 1"
+          *ngIf="isStep(totalSteps)">
+          <span *ngIf="isUploadingImages">Uploading Images...</span>
+          <span *ngIf="!isUploadingImages && isSubmitting">Creating Listing...</span>
+          <span *ngIf="!isUploadingImages && !isSubmitting">List Item Now</span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<app-footer></app-footer>
