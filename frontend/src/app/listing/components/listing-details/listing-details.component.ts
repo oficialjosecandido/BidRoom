@@ -228,9 +228,17 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
 
   getAuctionEndType(): 'regular' | 'private-room' | 'ended' {
     if (!this.listing) return 'ended';
-    if (this.listing.timeRemaining?.ended) return 'ended';
+    if (this.listing.status === 'ended' || this.displayedTimeRemaining === 'Ended') return 'ended';
     if (this.listing.privateRoomStatus === 'active') return 'private-room';
     return 'regular';
+  }
+
+  isAuctionEnded(): boolean {
+    return this.getAuctionEndType() === 'ended';
+  }
+
+  hasPrivateRoom(): boolean {
+    return this.listing?.privateRoomStatus === 'active';
   }
 
   getAuctionEndLabel(): string {

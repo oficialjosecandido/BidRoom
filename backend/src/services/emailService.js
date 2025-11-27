@@ -2,20 +2,20 @@ const nodemailer = require('nodemailer');
 
 // Create a transporter (you'll need to configure this with your email provider)
 const createTransporter = () => {
-  // For development, you can use a test account or your own SMTP settings
-  // For production, use domain-specific SMTP settings
-  
-  if (process.env.NODE_ENV === 'production') {
-    return nodemailer.createTransporter({
-      service: 'gmail', // or your email provider
+  // Check if Gmail credentials are provided (works for both development and production)
+  if (process.env.EMAIL_USER && process.env.EMAIL_PASSWORD) {
+    return nodemailer.createTransport({
+      service: 'gmail',
       auth: {
         user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASSWORD
+        pass: process.env.EMAIL_PASSWORD // This should be an App Password, not your regular Gmail password
       }
     });
-  } else {
-    // For development, you can use a test account
-    return nodemailer.createTransporter({
+  }
+  
+  // Fallback to Ethereal for development (if no Gmail credentials)
+  if (process.env.NODE_ENV !== 'production') {
+    return nodemailer.createTransport({
       host: 'smtp.ethereal.email',
       port: 587,
       auth: {
@@ -24,32 +24,111 @@ const createTransporter = () => {
       }
     });
   }
+  
+  // Production fallback - should not reach here if EMAIL_USER is set
+  throw new Error('Email configuration missing. Please set EMAIL_USER and EMAIL_PASSWORD environment variables.');
 };
 
-const sendEmail = async (to, subject, html) => {
-  try {
-    const transporter = createTransporter();
-    
-    const mailOptions = {
-      from: process.env.EMAIL_FROM || 'noreply@bidroom.com',
-      to,
-      subject,
-      html
-    };
+/**
+ * Send email with retry logic for rate limiting
+ * Optimized for fast delivery (within 5 seconds when possible)
+ * @param {string} to - Recipient email
+ * @param {string} subject - Email subject
+ * @param {string} html - Email HTML content
+ * @param {number} maxRetries - Maximum number of retries (default: 3)
+ * @param {number} retryDelay - Base delay between retries in ms (default: 1000)
+ */
+const sendEmail = async (to, subject, html, maxRetries = 3, retryDelay = 1000) => {
+  let lastError;
+  
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      const transporter = createTransporter();
+      
+      const mailOptions = {
+        from: process.env.EMAIL_FROM || 'noreply@bidroom.com',
+        to,
+        subject,
+        html
+      };
 
-    const info = await transporter.sendMail(mailOptions);
-    console.log('📧 Email sent:', info.messageId);
-    
-    // In development, log the preview URL
-    if (process.env.NODE_ENV !== 'production') {
-      console.log('📧 Preview URL:', nodemailer.getTestMessageUrl(info));
+      const info = await transporter.sendMail(mailOptions);
+      console.log('📧 Email sent:', info.messageId);
+      
+      // In development, log the preview URL
+      if (process.env.NODE_ENV !== 'production') {
+        const previewUrl = nodemailer.getTestMessageUrl(info);
+        if (previewUrl) {
+          console.log('📧 Preview URL:', previewUrl);
+        }
+      }
+      
+      return info;
+    } catch (error) {
+      lastError = error;
+      
+      // Check if it's a rate limit error
+      const isRateLimit = error.responseCode === 403 || 
+                         (error.response && error.response.includes('rate limited')) ||
+                         (error.message && error.message.includes('rate limited'));
+      
+      if (isRateLimit && attempt < maxRetries) {
+        // Extract wait time from error message - try multiple formats
+        let waitTime = retryDelay;
+        const errorMessage = (error.response || error.message || '').toLowerCase();
+        
+        // Try to extract wait time: "check again in 1 seconds" or "rate limited. check again in 1 seconds"
+        const patterns = [
+          /check again in (\d+)\s*seconds?/i,
+          /wait (\d+)\s*seconds?/i,
+          /retry after (\d+)\s*seconds?/i,
+          /(\d+)\s*seconds?/i  // Last resort: any number followed by "seconds"
+        ];
+        
+        let matchedSeconds = null;
+        for (const pattern of patterns) {
+          const match = errorMessage.match(pattern);
+          if (match) {
+            matchedSeconds = parseInt(match[1]);
+            // Sanity check: don't wait more than 10 seconds
+            if (matchedSeconds > 0 && matchedSeconds <= 10) {
+              break;
+            }
+            matchedSeconds = null; // Invalid value, try next pattern
+          }
+        }
+        
+        if (matchedSeconds) {
+          // Use extracted time + 0.5 second buffer (max 5 seconds total)
+          waitTime = Math.min((matchedSeconds + 0.5) * 1000, 5000);
+        } else {
+          // Default short delays: 1s, 2s, 3s (to stay under 5 seconds total)
+          waitTime = retryDelay * attempt;
+        }
+        
+        console.warn(`⚠️  Email rate limited. Retrying in ${(waitTime/1000).toFixed(1)}s... (attempt ${attempt}/${maxRetries})`);
+        await new Promise(resolve => setTimeout(resolve, waitTime));
+        continue;
+      }
+      
+      // For other errors or final attempt, log and throw
+      if (attempt === maxRetries) {
+        console.error(`❌ Email sending failed after ${maxRetries} attempts:`, error.message);
+        // In development, log email details instead of failing completely
+        if (process.env.NODE_ENV !== 'production') {
+          console.log('\n📧 EMAIL CONTENT (would have been sent):');
+          console.log('=====================================');
+          console.log(`To: ${to}`);
+          console.log(`Subject: ${subject}`);
+          console.log(`HTML Length: ${html.length} chars`);
+          console.log('=====================================\n');
+        }
+      }
     }
-    
-    return info;
-  } catch (error) {
-    console.error('❌ Email sending failed:', error);
-    throw error;
   }
+  
+  // If we get here, all retries failed
+  throw lastError;
 };
 
 const sendEmailVerification = async (email, firstName, verificationToken) => {

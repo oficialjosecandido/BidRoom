@@ -43,6 +43,15 @@ export interface Listing {
   minimumOfferPrice?: number; // For Best Offer format
   renewalRequired?: boolean;
   uniqueBidders?: string[];
+  winner?: {
+    _id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+  };
+  winnerBid?: string;
+  winnerSelectedAt?: string;
+  winnerSelectionDeadline?: string;
   timeRemaining?: {
     ended: boolean;
     days: number;

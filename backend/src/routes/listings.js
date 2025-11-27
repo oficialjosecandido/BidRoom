@@ -1,7 +1,9 @@
 const express = require('express');
 const Listing = require('../models/Listing');
 const User = require('../models/User');
+const Bid = require('../models/Bid');
 const { authenticateToken } = require('../middleware/auth');
+const { handleWinnerSelection } = require('../services/auctionNotificationService');
 
 const router = express.Router();
 
@@ -622,6 +624,142 @@ router.post('/:id/buy-now', authenticateToken, async (req, res) => {
     console.error('Error processing buy now:', error);
     res.status(400).json({
       error: 'Failed to process Buy Now',
+      message: error.message
+    });
+  }
+});
+
+// POST /api/listings/:id/choose-winner - Seller chooses a winner
+router.post('/:id/choose-winner', authenticateToken, async (req, res) => {
+  try {
+    const listing = await Listing.findById(req.params.id).populate('seller', 'uid email');
+
+    if (!listing) {
+      return res.status(404).json({
+        error: 'Listing not found'
+      });
+    }
+
+    // Verify user is the seller
+    const user = await User.findOne({ uid: req.user.uid });
+    if (!user || listing.seller._id.toString() !== user._id.toString()) {
+      return res.status(403).json({
+        error: 'Unauthorized',
+        message: 'Only the seller can choose a winner'
+      });
+    }
+
+    // Verify listing has ended
+    if (listing.status !== 'ended') {
+      return res.status(400).json({
+        error: 'Listing not ended',
+        message: 'The auction must be ended before choosing a winner'
+      });
+    }
+
+    // Verify winner hasn't been selected yet
+    if (listing.winner) {
+      return res.status(400).json({
+        error: 'Winner already selected',
+        message: 'A winner has already been selected for this auction'
+      });
+    }
+
+    const { winnerBidId } = req.body;
+
+    if (!winnerBidId) {
+      return res.status(400).json({
+        error: 'Missing winner bid ID',
+        message: 'Please provide the winnerBidId'
+      });
+    }
+
+    // Verify the bid exists and belongs to this listing
+    const winnerBid = await Bid.findById(winnerBidId);
+    if (!winnerBid || winnerBid.listing.toString() !== listing._id.toString()) {
+      return res.status(404).json({
+        error: 'Invalid bid',
+        message: 'The specified bid does not exist or does not belong to this listing'
+      });
+    }
+
+    // Handle winner selection (sends notification)
+    await handleWinnerSelection(listing._id, winnerBidId);
+
+    // Reload listing to get updated data
+    const updatedListing = await Listing.findById(listing._id)
+      .populate('seller', 'firstName lastName email')
+      .populate('winner', 'firstName lastName email')
+      .populate('winnerBid')
+      .lean();
+
+    res.json({
+      message: 'Winner selected successfully',
+      listing: updatedListing
+    });
+  } catch (error) {
+    console.error('Error choosing winner:', error);
+    res.status(400).json({
+      error: 'Failed to choose winner',
+      message: error.message
+    });
+  }
+});
+
+// GET /api/listings/:id/bids - Get all bids for a listing (for seller to choose winner)
+router.get('/:id/bids', authenticateToken, async (req, res) => {
+  try {
+    const listing = await Listing.findById(req.params.id).populate('seller', 'uid');
+
+    if (!listing) {
+      return res.status(404).json({
+        error: 'Listing not found'
+      });
+    }
+
+    // Verify user is the seller
+    const user = await User.findOne({ uid: req.user.uid });
+    if (!user || listing.seller._id.toString() !== user._id.toString()) {
+      return res.status(403).json({
+        error: 'Unauthorized',
+        message: 'Only the seller can view bids for winner selection'
+      });
+    }
+
+    // Get all bids sorted by amount (highest first)
+    const bids = await Bid.find({ listing: listing._id })
+      .populate('bidder', 'firstName lastName email emailVerified hasDeposit')
+      .sort({ amount: -1, createdAt: -1 })
+      .lean();
+
+    // Format bids
+    const formattedBids = bids.map(bid => ({
+      ...bid,
+      bidderName: bid.bidder
+        ? `${bid.bidder.firstName} ${bid.bidder.lastName}`
+        : (bid.bidderEmail ? bid.bidderEmail.split('@')[0] : 'Anonymous'),
+      bidderEmail: bid.bidderEmail || (bid.bidder ? bid.bidder.email : null),
+      isAuthenticated: !!bid.bidder,
+      bidderVerified: bid.bidder ? (bid.bidder.emailVerified || false) : false,
+      bidderHasDeposit: bid.bidder ? (bid.bidder.hasDeposit || false) : false
+    }));
+
+    res.json({
+      bids: formattedBids,
+      total: formattedBids.length,
+      listing: {
+        _id: listing._id,
+        title: listing.title,
+        status: listing.status,
+        currentPrice: listing.currentPrice,
+        winner: listing.winner,
+        winnerSelectedAt: listing.winnerSelectedAt
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching bids for winner selection:', error);
+    res.status(500).json({
+      error: 'Failed to fetch bids',
       message: error.message
     });
   }

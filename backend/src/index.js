@@ -21,6 +21,9 @@ const bidRoutes = require('./routes/bids');
 const offerRoutes = require('./routes/offers');
 const uploadRoutes = require('./routes/uploads');
 
+// Import services
+const auctionEndScheduler = require('./services/auctionEndScheduler');
+
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
@@ -140,6 +143,10 @@ const startServer = async () => {
       console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
       console.log(`🌐 API URL: http://localhost:${PORT}`);
       console.log(`🔌 Socket.io server is ready`);
+      
+      // Start auction end scheduler (checks every 1 minute)
+      auctionEndScheduler.startScheduler(1);
+      console.log(`⏰ Auction end scheduler started`);
     });
   } catch (error) {
     console.error('❌ Failed to start server:', error.message);

@@ -210,7 +210,26 @@ const listingSchema = new mongoose.Schema({
   uniqueBidders: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
-  }]
+  }],
+  // Winner selection
+  winner: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    default: null
+  },
+  winnerBid: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Bid',
+    default: null
+  },
+  winnerSelectedAt: {
+    type: Date,
+    default: null
+  },
+  winnerSelectionDeadline: {
+    type: Date,
+    default: null // Set to 24 hours after auction ends
+  }
 }, {
   timestamps: true // Adds createdAt and updatedAt fields
 });

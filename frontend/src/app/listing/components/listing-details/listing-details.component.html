@@ -64,7 +64,7 @@
             </div>
             
             <!-- Buy Now Price Display -->
-            <div class="buy-now-section" *ngIf="listing.buyNowPrice && listing.auctionFormat === 'highest-bid'">
+            <div class="buy-now-section" *ngIf="listing.buyNowPrice && listing.auctionFormat === 'highest-bid' && !isAuctionEnded()">
               <div class="buy-now-content">
                 <span class="buy-now-label">Buy Now</span>
                 <span class="buy-now-price">{{ formatPrice(listing.buyNowPrice) }}</span>
@@ -83,12 +83,22 @@
               </div>
             </div>
             <!-- Time Remaining Display -->
-            <div class="time-remaining-display" *ngIf="listing.timeRemaining && !listing.timeRemaining.ended">
+            <div class="time-remaining-display" *ngIf="!isAuctionEnded() && listing.timeRemaining && !listing.timeRemaining.ended">
               <div class="time-remaining-content" [class.private-room]="getAuctionEndType() === 'private-room'">
                 <span class="time-icon">{{ getAuctionEndType() === 'private-room' ? '🔒' : '⏰' }}</span>
                 <div class="time-text">
                   <span class="time-label">{{ getAuctionEndLabel() }}</span>
                   <span class="time-value">{{ formatTimeRemaining() }}</span>
+                </div>
+              </div>
+            </div>
+            <!-- Auction Ended Message -->
+            <div class="auction-ended-banner" *ngIf="isAuctionEnded() && !hasPrivateRoom()">
+              <div class="auction-ended-content">
+                <span class="ended-icon">🏁</span>
+                <div class="ended-text">
+                  <h4>Auction Ended</h4>
+                  <p>The seller will select a winner within 24 hours.</p>
                 </div>
               </div>
             </div>
@@ -127,10 +137,14 @@
           <div class="action-buttons">
             <button 
               class="btn btn-primary btn-large" 
-              *ngIf="listing.auctionFormat === 'highest-bid'"
+              *ngIf="listing.auctionFormat === 'highest-bid' && !isAuctionEnded()"
+              [disabled]="isAuctionEnded() && !hasPrivateRoom()"
               (click)="placeBid()">
               {{ isAuthenticated ? 'Place Bid' : 'Place Bid (Email Required)' }}
             </button>
+            <div *ngIf="isAuctionEnded() && !hasPrivateRoom()" class="auction-ended-message">
+              <p>This auction has ended. The seller will select a winner within 24 hours.</p>
+            </div>
             <!-- <p *ngIf="!isAuthenticated && listing.auctionFormat === 'highest-bid'" class="email-note">
               You'll need to provide your email address to place a bid
             </p> -->

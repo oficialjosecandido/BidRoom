@@ -272,6 +272,51 @@
           }
         }
 
+        .auction-ended-banner {
+          margin: 20px 0;
+          padding: 16px;
+          background: linear-gradient(135deg, #6c757d, #868e96);
+          border-radius: 8px;
+          color: var(--primary-white);
+
+          .auction-ended-content {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+
+            .ended-icon {
+              font-size: 32px;
+            }
+
+            .ended-text {
+              flex: 1;
+
+              h4 {
+                font-size: 16px;
+                margin: 0 0 4px 0;
+                font-weight: 700;
+              }
+
+              p {
+                font-size: 14px;
+                margin: 0;
+                opacity: 0.9;
+              }
+            }
+          }
+        }
+
+        .auction-ended-message {
+          margin-top: 12px;
+          padding: 12px;
+          background: rgba(108, 117, 125, 0.1);
+          border-left: 4px solid #6c757d;
+          border-radius: 4px;
+          color: #6c757d;
+          font-size: 14px;
+          text-align: center;
+        }
+
         .private-room-banner {
           margin: 20px 0;
           padding: 16px;

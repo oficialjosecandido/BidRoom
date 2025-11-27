@@ -3,6 +3,7 @@ const Bid = require('../models/Bid');
 const Listing = require('../models/Listing');
 const User = require('../models/User');
 const { authenticateToken, optionalAuth } = require('../middleware/auth');
+const { sendFirstBidNotification } = require('../services/auctionNotificationService');
 
 const router = express.Router();
 
@@ -232,6 +233,21 @@ router.post('/', optionalAuth, async (req, res) => {
       });
     }
 
+    // Check if this is the user's first bid on this listing (BEFORE creating the bid)
+    const previousBidsQuery = {
+      listing: listingId
+    };
+    
+    if (user) {
+      previousBidsQuery.bidder = user._id;
+    } else if (bidderEmail) {
+      previousBidsQuery.bidderEmail = bidderEmail.toLowerCase();
+      previousBidsQuery.bidder = null;
+    }
+    
+    const previousBidsCount = await Bid.countDocuments(previousBidsQuery);
+    const isFirstBid = previousBidsCount === 0;
+
     // Create the bid
     const bid = new Bid({
       listing: listingId,
@@ -272,6 +288,23 @@ router.post('/', optionalAuth, async (req, res) => {
     const populatedBid = await Bid.findById(bid._id)
       .populate('bidder', 'firstName lastName email emailVerified hasDeposit')
       .lean();
+
+    // Send first bid notification (non-blocking, don't fail if email fails)
+    if (isFirstBid) {
+      let bidderEmailForNotification = bidderEmail;
+      let bidderNameForNotification = bidderEmail ? bidderEmail.split('@')[0] : 'Guest Bidder';
+      
+      if (populatedBid.bidder) {
+        bidderEmailForNotification = populatedBid.bidder.email;
+        bidderNameForNotification = `${populatedBid.bidder.firstName} ${populatedBid.bidder.lastName}`;
+      }
+
+      // Send notification asynchronously (don't wait)
+      sendFirstBidNotification(listing, populatedBid, bidderEmailForNotification, bidderNameForNotification)
+        .catch(err => {
+          console.error('Failed to send first bid notification:', err);
+        });
+    }
 
     // Format bid response for both authenticated and unauthenticated bidders
     const formattedBid = {

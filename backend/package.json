@@ -9,7 +9,8 @@
     "build": "echo 'Build completed - no build step required for Node.js'",
     "test": "jest",
     "seed:listing": "node src/scripts/seedListing.js",
-    "migrate:slugs": "node src/scripts/addSlugsToExistingListings.js"
+    "migrate:slugs": "node src/scripts/addSlugsToExistingListings.js",
+    "email:create-template": "node scripts/create-email-template.js"
   },
   "keywords": [
     "nodejs",
