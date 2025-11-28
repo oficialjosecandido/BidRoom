@@ -7,7 +7,14 @@
 
     <!-- Error Message -->
     <div class="error-message" *ngIf="errorMessage">
-      {{ errorMessage }}
+      <div class="error-icon">⚠️</div>
+      <div class="error-content">
+        <p class="error-text">{{ errorMessage }}</p>
+        <div class="error-actions" *ngIf="errorMessage.includes('No account found') || errorMessage.includes('Incorrect password')">
+          <button type="button" class="action-link" (click)="navigateToSignup()" *ngIf="errorMessage.includes('No account found')">Sign up</button>
+          <button type="button" class="action-link" (click)="navigateToForgotPassword()" *ngIf="errorMessage.includes('Incorrect password') || errorMessage.includes('Too many failed')">Reset password</button>
+        </div>
+      </div>
     </div>
 
     <!-- Google Login Button -->

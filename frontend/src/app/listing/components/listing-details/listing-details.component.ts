@@ -452,6 +452,12 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
     this.router.navigate(['/listing/list']);
   }
 
+  openPrivateRoom(): void {
+    if (!this.listing?._id) return;
+    const url = `/private-room/auction/${this.listing._id}`;
+    window.open(url, '_blank', 'width=1200,height=800');
+  }
+
   getFormattedDescription(): string {
     if (!this.listing?.description) return '';
     return this.listing.description.replace(/\n/g, '<br>');

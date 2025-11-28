@@ -20,6 +20,8 @@ const listingRoutes = require('./routes/listings');
 const bidRoutes = require('./routes/bids');
 const offerRoutes = require('./routes/offers');
 const uploadRoutes = require('./routes/uploads');
+const adminRoutes = require('./routes/admin');
+const privateRoomRoutes = require('./routes/privateRoom');
 
 // Import services
 const auctionEndScheduler = require('./services/auctionEndScheduler');
@@ -49,6 +51,8 @@ app.use('/api/listings', listingRoutes);
 app.use('/api/bids', bidRoutes);
 app.use('/api/offers', offerRoutes);
 app.use('/api/uploads', uploadRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/private-room', privateRoomRoutes);
 
 app.get('/', (req, res) => {
   res.json({
@@ -103,6 +107,9 @@ app.use('*', (req, res) => {
   });
 });
 
+// Track viewer counts per room
+const viewerCounts = new Map();
+
 // Socket.io connection handling
 io.on('connection', (socket) => {
   console.log(`🔌 Client connected: ${socket.id}`);
@@ -111,18 +118,62 @@ io.on('connection', (socket) => {
   socket.on('join-listing', (listingId) => {
     socket.join(`listing:${listingId}`);
     console.log(`👤 ${socket.id} joined listing room: ${listingId}`);
+    
+    // Update viewer count for this listing
+    updateViewerCount(io, listingId);
+  });
+
+  // Join a private room as a viewer
+  socket.on('join-private-room-viewer', (listingId) => {
+    socket.join(`private-room:${listingId}`);
+    console.log(`👁️ ${socket.id} joined private room viewer: ${listingId}`);
+    
+    // Update viewer count for private room
+    updatePrivateRoomViewerCount(io, listingId);
   });
 
   // Leave a listing room
   socket.on('leave-listing', (listingId) => {
     socket.leave(`listing:${listingId}`);
     console.log(`👤 ${socket.id} left listing room: ${listingId}`);
+    
+    // Update viewer count
+    updateViewerCount(io, listingId);
+  });
+
+  // Leave a private room viewer
+  socket.on('leave-private-room-viewer', (listingId) => {
+    socket.leave(`private-room:${listingId}`);
+    console.log(`👁️ ${socket.id} left private room viewer: ${listingId}`);
+    
+    // Update viewer count
+    updatePrivateRoomViewerCount(io, listingId);
   });
 
   socket.on('disconnect', () => {
     console.log(`🔌 Client disconnected: ${socket.id}`);
   });
 });
+
+// Helper function to update viewer count for listings
+function updateViewerCount(io, listingId) {
+  const room = io.sockets.adapter.rooms.get(`listing:${listingId}`);
+  const count = room ? room.size : 0;
+  io.to(`listing:${listingId}`).emit('viewer-count-update', {
+    listingId,
+    count
+  });
+}
+
+// Helper function to update viewer count for private rooms
+function updatePrivateRoomViewerCount(io, listingId) {
+  const room = io.sockets.adapter.rooms.get(`private-room:${listingId}`);
+  const count = room ? room.size : 0;
+  io.to(`private-room:${listingId}`).emit('private-room-viewer-count-update', {
+    listingId,
+    count
+  });
+}
 
 // Make io available to routes
 app.set('io', io);
@@ -145,7 +196,7 @@ const startServer = async () => {
       console.log(`🔌 Socket.io server is ready`);
       
       // Start auction end scheduler (checks every 1 minute)
-      auctionEndScheduler.startScheduler(1);
+      auctionEndScheduler.startScheduler(1, io);
       console.log(`⏰ Auction end scheduler started`);
     });
   } catch (error) {

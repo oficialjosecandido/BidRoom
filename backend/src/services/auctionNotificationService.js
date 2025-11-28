@@ -223,36 +223,76 @@ async function handleAuctionEnd(listingId) {
       return;
     }
 
-    // Mark listing as ended and set winner selection deadline
-    listing.status = 'ended';
-    const deadline = new Date();
-    deadline.setHours(deadline.getHours() + 24); // 24 hours from now
-    listing.winnerSelectionDeadline = deadline;
-    await listing.save();
+    // Check if private room is enabled and has platinum bidders
+    if (listing.allowPrivateRoom && listing.platinumBidders && listing.platinumBidders.length > 0) {
+      // Set acceptance window deadline (5 minutes from now)
+      const now = new Date();
+      const acceptanceDeadline = new Date(now.getTime() + 5 * 60 * 1000); // 5 minutes
+      
+      listing.status = 'ended'; // Mark main auction as ended
+      listing.privateRoomStatus = 'eligible'; // Set to eligible for acceptance window
+      listing.platinumBidderAcceptanceDeadline = acceptanceDeadline;
+      
+      await listing.save();
 
-    // Get highest bid (potential winner)
-    const highestBid = await Bid.findOne({ listing: listingId })
-      .sort({ amount: -1 })
-      .populate('bidder', 'firstName lastName email')
-      .lean();
+      // Get highest bid for notifications
+      const highestBid = await Bid.findOne({ listing: listingId })
+        .sort({ amount: -1 })
+        .populate('bidder', 'firstName lastName email')
+        .lean();
 
-    // Send notifications to all bidders (except winner and seller)
-    if (highestBid) {
-      await sendAuctionClosedNotifications(listing, highestBid._id);
+      // Send notifications to all bidders (except winner and seller)
+      if (highestBid) {
+        await sendAuctionClosedNotifications(listing, highestBid._id);
+      } else {
+        await sendAuctionClosedNotifications(listing);
+      }
+
+      // Send notification to seller about 5-minute window
+      await sendChooseWinnerNotification(listing);
+
+      console.log(`⏳ Private room acceptance window started for listing: ${listingId}. Window closes at ${acceptanceDeadline.toISOString()}`);
+      console.log(`✅ Auction end notifications sent for listing: ${listingId}`);
+
+      return {
+        listingId,
+        notified: true,
+        hasBids: !!highestBid,
+        privateRoomWindow: true,
+        acceptanceDeadline: acceptanceDeadline
+      };
     } else {
-      await sendAuctionClosedNotifications(listing);
+      // Regular auction end (no private room)
+      listing.status = 'ended';
+      const deadline = new Date();
+      deadline.setHours(deadline.getHours() + 24); // 24 hours from now
+      listing.winnerSelectionDeadline = deadline;
+      await listing.save();
+
+      // Get highest bid (potential winner)
+      const highestBid = await Bid.findOne({ listing: listingId })
+        .sort({ amount: -1 })
+        .populate('bidder', 'firstName lastName email')
+        .lean();
+
+      // Send notifications to all bidders (except winner and seller)
+      if (highestBid) {
+        await sendAuctionClosedNotifications(listing, highestBid._id);
+      } else {
+        await sendAuctionClosedNotifications(listing);
+      }
+
+      // Send notification to seller to choose winner
+      await sendChooseWinnerNotification(listing);
+
+      console.log(`✅ Auction end notifications sent for listing: ${listingId}`);
+
+      return {
+        listingId,
+        notified: true,
+        hasBids: !!highestBid
+      };
     }
-
-    // Send notification to seller to choose winner
-    await sendChooseWinnerNotification(listing);
-
-    console.log(`✅ Auction end notifications sent for listing: ${listingId}`);
-
-    return {
-      listingId,
-      notified: true,
-      hasBids: !!highestBid
-    };
   } catch (error) {
     console.error('Error handling auction end:', error);
     throw error;

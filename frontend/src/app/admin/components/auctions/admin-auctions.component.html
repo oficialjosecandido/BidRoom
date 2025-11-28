@@ -1,0 +1,105 @@
+<div class="admin-layout">
+  <app-admin-sidebar></app-admin-sidebar>
+  
+  <div class="admin-content">
+    <div class="admin-auctions">
+      
+
+      <!-- Filters -->
+      <div class="filters-section">
+        <div class="filter-group">
+          <label for="category-filter">Category:</label>
+          <select id="category-filter" [(ngModel)]="selectedCategory" (change)="onCategoryChange()" class="filter-select">
+            <option *ngFor="let category of categories" [value]="category.value">
+              {{ category.label }}
+            </option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label for="status-filter">Status:</label>
+          <select id="status-filter" [(ngModel)]="selectedStatus" (change)="onStatusChange()" class="filter-select">
+            <option *ngFor="let status of statuses" [value]="status.value">
+              {{ status.label }}
+            </option>
+          </select>
+        </div>
+
+        <div class="results-count">
+          Showing {{ filteredAuctions.length }} of {{ auctions.length }} auctions
+        </div>
+      </div>
+
+      <!-- Loading State -->
+      <div class="loading-state" *ngIf="isLoading">
+        <div class="spinner"></div>
+        <p>Loading auctions...</p>
+      </div>
+
+      <!-- Error State -->
+      <div class="error-state" *ngIf="error && !isLoading">
+        <div class="error-icon">⚠️</div>
+        <p class="error-message">{{ error }}</p>
+        <button class="retry-btn" (click)="loadAuctions()">Try Again</button>
+      </div>
+
+      <!-- Auctions Table -->
+      <div class="table-container" *ngIf="!isLoading && !error">
+        <table class="auctions-table" *ngIf="filteredAuctions.length > 0">
+          <thead>
+            <tr>
+              <th>Title</th>
+              <th>Category</th>
+              <th>Seller</th>
+              <th>Current Price</th>
+              <th>Bids</th>
+              <th>Status</th>
+              <th>End Date</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let auction of filteredAuctions">
+              <td class="title-cell">
+                <div class="title-content">
+                  <img *ngIf="auction.images && auction.images.length > 0" 
+                       [src]="auction.images[0]" 
+                       [alt]="auction.title"
+                       class="auction-thumbnail">
+                  <span class="title-text">{{ auction.title }}</span>
+                </div>
+              </td>
+              <td class="category-cell">{{ auction.category }}</td>
+              <td class="seller-cell">
+                {{ auction.seller.firstName }} {{ auction.seller.lastName }}
+              </td>
+              <td class="price-cell">${{ auction.currentPrice | number:'1.2-2' }}</td>
+              <td class="bids-cell">{{ auction.bidCount }}</td>
+              <td class="status-cell">
+                <span class="status-badge" [ngClass]="getStatusClass(auction.status)">
+                  {{ auction.status }}
+                </span>
+              </td>
+              <td class="date-cell">{{ formatDate(auction.endDate) }}</td>
+              <td class="actions-cell">
+                <button class="action-btn view-action" 
+                        [routerLink]="['/nexus/auctions', auction._id]"
+                        title="View Details">
+                  👁️
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <!-- Empty State -->
+        <div class="empty-state" *ngIf="filteredAuctions.length === 0 && !isLoading">
+          <div class="empty-icon">📋</div>
+          <p class="empty-message">No auctions found</p>
+          <p class="empty-description">Try adjusting your filters</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+

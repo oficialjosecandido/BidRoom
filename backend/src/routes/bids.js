@@ -103,14 +103,27 @@ router.post('/', optionalAuth, async (req, res) => {
 
     // Handle authenticated user
     if (req.isAuthenticated && req.user) {
+      // Require email verification for authenticated users
+      if (!req.user.emailVerified) {
+        return res.status(403).json({
+          error: 'Email verification required',
+          message: 'Please verify your email address before placing a bid. Check your inbox for the verification email.'
+        });
+      }
+      
       // Find or create user in database from Firebase UID
       user = await User.findOne({ uid: req.user.uid });
       if (!user) {
+        // Parse name from Firebase user
+        const nameParts = req.user.name?.split(' ') || [];
+        const firstName = nameParts[0] || 'User';
+        const lastName = nameParts.slice(1).join(' ') || 'User'; // Use 'User' as default if no lastName
+        
         user = new User({
           uid: req.user.uid,
           email: req.user.email,
-          firstName: req.user.name?.split(' ')[0] || 'User',
-          lastName: req.user.name?.split(' ').slice(1).join(' ') || '',
+          firstName: firstName,
+          lastName: lastName,
           isActive: true,
           emailVerified: req.user.emailVerified || false
         });
@@ -143,8 +156,9 @@ router.post('/', optionalAuth, async (req, res) => {
       bidderEmail = email.toLowerCase().trim();
     }
 
-    // Get the listing
-    const listing = await Listing.findById(listingId);
+    // Get the listing (populate platinum bidder invitations if they exist)
+    const listing = await Listing.findById(listingId)
+      .populate('platinumBidderInvitations.bidder', '_id');
     if (!listing) {
       return res.status(404).json({
         error: 'Listing not found'
@@ -180,7 +194,7 @@ router.post('/', optionalAuth, async (req, res) => {
         });
       }
       
-      // Check if user is in top 5 bidders (only authenticated users can participate in Private Room)
+      // Check if user is a platinum bidder (only authenticated users can participate in Private Room)
       if (!user) {
         return res.status(403).json({
           error: 'Authentication required',
@@ -188,14 +202,30 @@ router.post('/', optionalAuth, async (req, res) => {
         });
       }
 
-      const topBidders = await listing.getTop5Bidders();
-      const isInTop5 = topBidders.some(tb => tb.bidder._id.toString() === user._id.toString());
+      // Check if user is in the platinum bidders list
+      const isInPlatinumBidders = listing.platinumBidders && listing.platinumBidders.some(
+        pbId => pbId.toString() === user._id.toString()
+      );
       
-      if (!isInTop5) {
+      if (!isInPlatinumBidders) {
         return res.status(403).json({
           error: 'Not eligible',
-          message: 'Only the top 5 bidders can participate in the Private Room'
+          message: 'Only Platinum Bidders can participate in the Private Room'
         });
+      }
+
+      // If invitations exist, check if user has accepted their invitation
+      if (listing.platinumBidderInvitations && listing.platinumBidderInvitations.length > 0) {
+        const invitation = listing.platinumBidderInvitations.find(
+          inv => inv.bidder.toString() === user._id.toString()
+        );
+        
+        if (!invitation || invitation.status !== 'accepted') {
+          return res.status(403).json({
+            error: 'Invitation not accepted',
+            message: 'You must accept your Platinum Bidder invitation before placing bids in the Private Room'
+          });
+        }
       }
       
       // Extend Private Room deadline by 1 minute with each bid

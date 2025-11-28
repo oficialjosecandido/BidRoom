@@ -385,11 +385,16 @@ router.post('/', authenticateToken, async (req, res) => {
     let user = await User.findOne({ uid: req.user.uid });
     if (!user) {
       // If user doesn't exist, create one
+      // Parse name from Firebase user
+      const nameParts = req.user.name?.split(' ') || [];
+      const firstName = nameParts[0] || 'User';
+      const lastName = nameParts.slice(1).join(' ') || 'User'; // Use 'User' as default if no lastName
+      
       user = new User({
         uid: req.user.uid,
         email: req.user.email,
-        firstName: req.user.name?.split(' ')[0] || 'User',
-        lastName: req.user.name?.split(' ').slice(1).join(' ') || '',
+        firstName: firstName,
+        lastName: lastName,
         isActive: true,
         emailVerified: req.user.emailVerified || false
       });
@@ -577,11 +582,16 @@ router.post('/:id/buy-now', authenticateToken, async (req, res) => {
     // Find or create user
     let user = await User.findOne({ uid: req.user.uid });
     if (!user) {
+      // Parse name from Firebase user
+      const nameParts = req.user.name?.split(' ') || [];
+      const firstName = nameParts[0] || 'User';
+      const lastName = nameParts.slice(1).join(' ') || 'User'; // Use 'User' as default if no lastName
+      
       user = new User({
         uid: req.user.uid,
         email: req.user.email,
-        firstName: req.user.name?.split(' ')[0] || 'User',
-        lastName: req.user.name?.split(' ').slice(1).join(' ') || '',
+        firstName: firstName,
+        lastName: lastName,
         isActive: true,
         emailVerified: req.user.emailVerified || false
       });
@@ -760,6 +770,69 @@ router.get('/:id/bids', authenticateToken, async (req, res) => {
     console.error('Error fetching bids for winner selection:', error);
     res.status(500).json({
       error: 'Failed to fetch bids',
+      message: error.message
+    });
+  }
+});
+
+// GET /api/listings/seller/my-listings - Get all listings for the authenticated seller
+router.get('/seller/my-listings', authenticateToken, async (req, res) => {
+  try {
+    const user = await User.findOne({ uid: req.user.uid });
+    
+    if (!user) {
+      return res.status(404).json({
+        error: 'User not found'
+      });
+    }
+
+    const listings = await Listing.find({ seller: user._id })
+      .populate('platinumBidders', 'firstName lastName email')
+      .sort({ createdAt: -1 })
+      .lean();
+
+      // Enhance listings with platinum bidder invitation status
+      const enhancedListings = listings.map(listing => {
+        const listingObj = listing.toObject ? listing.toObject() : listing;
+        
+        // Get invitation status for each platinum bidder
+        const platinumBidderStatus = [];
+        if (listingObj.platinumBidderInvitations && listingObj.platinumBidderInvitations.length > 0) {
+          listingObj.platinumBidderInvitations.forEach((invitation) => {
+            const bidder = listingObj.platinumBidders?.find((pb) => 
+              pb._id.toString() === invitation.bidder.toString()
+            );
+          
+          if (bidder) {
+            platinumBidderStatus.push({
+              bidder: {
+                _id: bidder._id,
+                firstName: bidder.firstName,
+                lastName: bidder.lastName,
+                email: bidder.email
+              },
+              status: invitation.status, // pending, accepted, declined
+              invitedAt: invitation.invitedAt,
+              acceptedAt: invitation.acceptedAt
+            });
+          }
+        });
+      }
+      
+      return {
+        ...listingObj,
+        platinumBidderStatus
+      };
+    });
+
+    res.json({
+      listings: enhancedListings,
+      total: enhancedListings.length
+    });
+  } catch (error) {
+    console.error('Error fetching seller listings:', error);
+    res.status(500).json({
+      error: 'Failed to fetch listings',
       message: error.message
     });
   }

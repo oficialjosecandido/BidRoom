@@ -83,7 +83,12 @@ export class SignupComponent implements OnInit {
         },
         error: (error) => {
           this.isLoading = false;
-          this.errorMessage = error?.message || 'Registration failed. Please try again.';
+          this.errorMessage = this.getErrorMessage(error);
+          // Mark email field as invalid if email is already in use
+          if (error?.code === 'auth/email-already-in-use') {
+            this.signupForm.get('email')?.setErrors({ emailExists: true });
+            this.signupForm.get('email')?.markAsTouched();
+          }
         }
       });
     }
@@ -100,7 +105,7 @@ export class SignupComponent implements OnInit {
       },
       error: (error) => {
         this.isLoading = false;
-        this.errorMessage = error?.message || 'Google sign-in failed. Please try again.';
+        this.errorMessage = this.getErrorMessage(error);
       }
     });
   }
@@ -126,6 +131,9 @@ export class SignupComponent implements OnInit {
       if (field.errors['email']) {
         return 'Please enter a valid email address';
       }
+      if (field.errors['emailExists']) {
+        return 'This email is already registered';
+      }
       if (field.errors['minlength']) {
         return `${fieldName} must be at least ${field.errors['minlength'].requiredLength} characters long`;
       }
@@ -137,5 +145,34 @@ export class SignupComponent implements OnInit {
       }
     }
     return '';
+  }
+
+  getErrorMessage(error: any): string {
+    const errorCode = error?.code || '';
+    
+    switch (errorCode) {
+      case 'auth/email-already-in-use':
+        return 'This email address is already registered. Please log in instead or use a different email.';
+      case 'auth/invalid-email':
+        return 'Please enter a valid email address.';
+      case 'auth/operation-not-allowed':
+        return 'This operation is not allowed. Please contact support.';
+      case 'auth/weak-password':
+        return 'The password is too weak. Please choose a stronger password.';
+      case 'auth/popup-closed-by-user':
+        return 'Sign-in popup was closed. Please try again.';
+      case 'auth/cancelled-popup-request':
+        return 'Only one popup request is allowed at a time. Please try again.';
+      case 'auth/popup-blocked':
+        return 'Popup was blocked by your browser. Please allow popups and try again.';
+      default:
+        return error?.message || 'Registration failed. Please try again.';
+    }
+  }
+
+  navigateToForgotPassword(): void {
+    this.router.navigate(['/auth/forgot-password'], {
+      queryParams: { email: this.signupForm.value.email }
+    });
   }
 }

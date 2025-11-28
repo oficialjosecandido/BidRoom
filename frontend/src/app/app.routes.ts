@@ -24,8 +24,20 @@ export const routes: Routes = [
       { 
         path: 'my-account', 
         loadComponent: () => import('./dashboard/components/my-account/my-account.component').then(m => m.MyAccountComponent)
+      },
+      {
+        path: 'my-auctions',
+        loadComponent: () => import('./dashboard/components/my-auctions/my-auctions.component').then(m => m.MyAuctionsComponent)
       }
     ]
+  },
+  {
+    path: 'nexus',
+    loadChildren: () => import('./admin/admin.module').then(m => m.AdminModule)
+  },
+  {
+    path: 'private-room',
+    loadChildren: () => import('./private-room/private-room.module').then(m => m.PrivateRoomModule)
   },
   { path: '**', redirectTo: '/landing' }
 ];

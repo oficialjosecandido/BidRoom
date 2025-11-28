@@ -19,9 +19,31 @@ export class AuthService {
   public currentUser$ = this.currentUserSubject.asObservable();
 
   constructor(private auth: Auth) {
-    onAuthStateChanged(this.auth, (fbUser: FirebaseUser | null) => {
+    onAuthStateChanged(this.auth, async (fbUser: FirebaseUser | null) => {
+      if (fbUser && !fbUser.emailVerified) {
+        // User is logged in but email is not verified - sign them out
+        console.warn('User logged in but email not verified. Signing out...');
+        await signOut(this.auth);
+        this.currentUserSubject.next(null);
+        return;
+      }
       const mapped = this.mapFirebaseUser(fbUser);
       this.currentUserSubject.next(mapped);
+      
+      // If user is admin and there's a saved admin route, redirect there
+      // This handles page refresh scenario
+      if (mapped && mapped.email?.toLowerCase() === 'josevcandido@gmail.com') {
+        const adminRoute = localStorage.getItem('admin_route');
+        if (adminRoute) {
+          const currentPath = window.location.pathname;
+          // Redirect if we're on auth pages or landing page, but not if already on admin route
+          if ((currentPath.startsWith('/auth') || currentPath === '/landing' || currentPath === '/') && !currentPath.startsWith('/nexus')) {
+            setTimeout(() => {
+              window.location.href = adminRoute;
+            }, 100);
+          }
+        }
+      }
     });
   }
 
@@ -68,7 +90,18 @@ export class AuthService {
   loginWithGoogle(): Observable<AppUser> {
     const provider = new GoogleAuthProvider();
     return from(signInWithPopup(this.auth, provider)).pipe(
-      map(cred => this.mapFirebaseUser(cred.user) as AppUser)
+      switchMap((cred) => {
+        // Google accounts are typically verified, but check anyway
+        if (!cred.user.emailVerified) {
+          // Sign out the user immediately
+          return from(signOut(this.auth)).pipe(
+            switchMap(() => {
+              return throwError(() => new Error('Your Google account email must be verified. Please verify your email address in your Google account settings.'));
+            })
+          );
+        }
+        return of(this.mapFirebaseUser(cred.user) as AppUser);
+      })
     );
   }
 
@@ -90,7 +123,11 @@ export class AuthService {
   }
 
   isAuthenticated(): Observable<boolean> {
-    return this.currentUser$.pipe(map(user => !!user));
+    return this.currentUser$.pipe(map(user => !!user && user.emailVerified === true));
+  }
+  
+  isAuthenticatedButNotVerified(): Observable<boolean> {
+    return this.currentUser$.pipe(map(user => !!user && user.emailVerified === false));
   }
 
   getCurrentUser(): AppUser | null {
@@ -98,6 +135,8 @@ export class AuthService {
   }
 
   logout(): Observable<void> {
+    // Clear admin route from localStorage on logout
+    localStorage.removeItem('admin_route');
     return from(signOut(this.auth));
   }
 }

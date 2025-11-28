@@ -64,7 +64,7 @@
             </div>
             
             <!-- Buy Now Price Display -->
-            <div class="buy-now-section" *ngIf="listing.buyNowPrice && listing.auctionFormat === 'highest-bid' && !isAuctionEnded()">
+            <div class="buy-now-section" *ngIf="listing.buyNowPrice && listing.auctionFormat === 'highest-bid' && !isAuctionEnded() && !hasPrivateRoom()">
               <div class="buy-now-content">
                 <span class="buy-now-label">Buy Now</span>
                 <span class="buy-now-price">{{ formatPrice(listing.buyNowPrice) }}</span>
@@ -78,8 +78,11 @@
                 <span class="private-room-icon">🔒</span>
                 <div class="private-room-text">
                   <h4>Private Room Active</h4>
-                  <p>Top 5 bidders only. Each bid extends the deadline by 2 minutes.</p>
+                  <p>Only Platinum Bidders can place bids. Each bid extends the deadline by 30 seconds.</p>
                 </div>
+                <button class="btn btn-view-room" (click)="openPrivateRoom()" title="Open in new window">
+                  View Private Room
+                </button>
               </div>
             </div>
             <!-- Time Remaining Display -->
@@ -135,26 +138,28 @@
 
           <!-- Action Buttons -->
           <div class="action-buttons">
+            <!-- Only show action buttons if private room is NOT active -->
             <button 
               class="btn btn-primary btn-large" 
-              *ngIf="listing.auctionFormat === 'highest-bid' && !isAuctionEnded()"
-              [disabled]="isAuctionEnded() && !hasPrivateRoom()"
+              *ngIf="listing.auctionFormat === 'highest-bid' && !isAuctionEnded() && !hasPrivateRoom()"
               (click)="placeBid()">
               {{ isAuthenticated ? 'Place Bid' : 'Place Bid (Email Required)' }}
             </button>
             <div *ngIf="isAuctionEnded() && !hasPrivateRoom()" class="auction-ended-message">
               <p>This auction has ended. The seller will select a winner within 24 hours.</p>
             </div>
-            <!-- <p *ngIf="!isAuthenticated && listing.auctionFormat === 'highest-bid'" class="email-note">
-              You'll need to provide your email address to place a bid
-            </p> -->
             <button 
               class="btn btn-primary btn-large" 
-              *ngIf="listing.auctionFormat === 'best-offer'"
+              *ngIf="listing.auctionFormat === 'best-offer' && !hasPrivateRoom()"
               (click)="placeOffer()">
               Make Offer
             </button>
-            <button class="btn btn-secondary btn-large" *ngIf="isAuthenticated" (click)="addToWatchlist()">Add to Watchlist</button>
+            <button 
+              class="btn btn-secondary btn-large" 
+              *ngIf="isAuthenticated && !hasPrivateRoom()" 
+              (click)="addToWatchlist()">
+              Add to Watchlist
+            </button>
           </div>
 
           <!-- Auction Info -->

@@ -1,0 +1,247 @@
+<div class="admin-layout">
+  <app-admin-sidebar></app-admin-sidebar>
+  
+  <div class="admin-content">
+    <div class="auction-details">
+      <div class="header-section">
+        <button class="back-btn" (click)="goBack()">← Back to Auctions</button>
+        <h1 class="page-title">Auction Details</h1>
+      </div>
+
+      <!-- Loading State -->
+      <div class="loading-state" *ngIf="isLoading">
+        <div class="spinner"></div>
+        <p>Loading auction details...</p>
+      </div>
+
+      <!-- Error State -->
+      <div class="error-state" *ngIf="error && !isLoading">
+        <div class="error-icon">⚠️</div>
+        <p class="error-message">{{ error }}</p>
+        <button class="retry-btn" (click)="loadAuctionDetails()">Try Again</button>
+      </div>
+
+      <!-- Auction Details -->
+      <div class="details-content" *ngIf="auction && !isLoading">
+        <!-- Auction Info Card -->
+        <div class="info-card">
+          <h2 class="card-title">Auction Information</h2>
+          
+          <div class="auction-images" *ngIf="auction.images && auction.images.length > 0">
+            <img *ngFor="let image of auction.images" [src]="image" [alt]="auction.title" class="auction-image">
+          </div>
+
+          <div class="info-grid">
+            <div class="info-item">
+              <span class="info-label">Title:</span>
+              <span class="info-value">{{ auction.title }}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Auction Type:</span>
+              <span class="info-value">{{ getAuctionTypeLabel(auction.auctionFormat) }}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Category:</span>
+              <span class="info-value">{{ auction.category }}<span *ngIf="auction.subCategory"> - {{ auction.subCategory }}</span></span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Status:</span>
+              <span class="info-value status-badge" [ngClass]="'status-' + auction.status">{{ auction.status }}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Starting Price:</span>
+              <span class="info-value">${{ auction.startingPrice | number:'1.2-2' }}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Current Price:</span>
+              <span class="info-value price-highlight">${{ auction.currentPrice | number:'1.2-2' }}</span>
+            </div>
+            <div class="info-item" *ngIf="auction.reservePrice">
+              <span class="info-label">Reserve Price:</span>
+              <span class="info-value">${{ auction.reservePrice | number:'1.2-2' }}</span>
+            </div>
+            <div class="info-item" *ngIf="auction.buyNowPrice">
+              <span class="info-label">Buy Now Price:</span>
+              <span class="info-value">${{ auction.buyNowPrice | number:'1.2-2' }}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Total Bids:</span>
+              <span class="info-value">{{ auction.bidCount }}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Start Date:</span>
+              <span class="info-value">{{ formatDate(auction.startDate) }}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">End Date:</span>
+              <span class="info-value">{{ formatDate(auction.endDate) }}</span>
+            </div>
+            <div class="info-item" *ngIf="auction.privateRoomStatus">
+              <span class="info-label">Private Room Status:</span>
+              <span class="info-value">{{ auction.privateRoomStatus }}</span>
+            </div>
+          </div>
+
+          <div class="description-section">
+            <h3 class="section-title">Description</h3>
+            <p class="description-text">{{ auction.description }}</p>
+          </div>
+        </div>
+
+        <!-- Seller Info Card -->
+        <div class="info-card">
+          <h2 class="card-title">Seller Information</h2>
+          <div class="info-grid">
+            <div class="info-item">
+              <span class="info-label">Name:</span>
+              <span class="info-value">{{ auction.seller.firstName }} {{ auction.seller.lastName }}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Email:</span>
+              <span class="info-value">{{ auction.seller.email }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bidders Card -->
+        <div class="info-card">
+          <div class="card-header">
+            <h2 class="card-title">Bidders ({{ bidders.length }})</h2>
+          </div>
+
+          <div class="bidders-list" *ngIf="bidders.length > 0">
+            <div *ngFor="let bidder of bidders" class="bidder-item">
+              <div class="bidder-main-info">
+                <h3 class="bidder-name">{{ getBidderName(bidder) }}</h3>
+                <p class="bidder-email">{{ bidder.email }}</p>
+              </div>
+              <div class="bidder-stats">
+                <div class="bidder-stat">
+                  <span class="stat-label">Bids:</span>
+                  <span class="stat-value">{{ bidder.bidCount }}</span>
+                </div>
+                <div class="bidder-stat">
+                  <span class="stat-label">Highest Bid:</span>
+                  <span class="stat-value">${{ bidder.highestBid | number:'1.2-2' }}</span>
+                </div>
+              </div>
+              <div class="bidder-badges">
+                <span class="badge authenticated" *ngIf="bidder.isAuthenticated">Authenticated</span>
+                <span class="badge unauthenticated" *ngIf="!bidder.isAuthenticated">Guest</span>
+                <span class="badge verified" *ngIf="bidder.emailVerified">Verified</span>
+                <span class="badge deposit" *ngIf="bidder.hasDeposit">Deposit</span>
+                <span class="badge platinum" *ngIf="isPlatinumBidder(bidder._id)">Platinum</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="empty-state" *ngIf="bidders.length === 0">
+            <p>No bidders yet</p>
+          </div>
+        </div>
+
+        <!-- Actions Card -->
+        <div class="info-card actions-card">
+          <h2 class="card-title">Actions</h2>
+          <div class="actions-content">
+            <!-- Create Private Room Button -->
+            <button 
+              class="create-room-btn" 
+              (click)="openPlatinumSelection()"
+              [disabled]="isCreatingPrivateRoom || auction.privateRoomStatus === 'active' || auction.privateRoomStatus === 'eligible'"
+            >
+              <span class="btn-icon">🔒</span>
+              <span *ngIf="!isCreatingPrivateRoom">Create Private Room</span>
+              <span *ngIf="isCreatingPrivateRoom">Creating...</span>
+            </button>
+            
+            <!-- Close Private Room & End Auction Button -->
+            <button 
+              class="close-room-btn" 
+              (click)="closePrivateRoomAndEndAuction()"
+              [disabled]="isClosingPrivateRoom || (auction.privateRoomStatus !== 'active' && auction.privateRoomStatus !== 'eligible') || auction.status === 'ended'"
+            >
+              <span class="btn-icon">🏁</span>
+              <span *ngIf="!isClosingPrivateRoom">Close Private Room & End Auction</span>
+              <span *ngIf="isClosingPrivateRoom">Closing...</span>
+            </button>
+            
+            <p class="action-hint" *ngIf="auction.privateRoomStatus === 'active' || auction.privateRoomStatus === 'eligible'">
+              Private Room is {{ auction.privateRoomStatus === 'active' ? 'active' : 'awaiting acceptance' }} for this auction
+            </p>
+            <p class="action-hint" *ngIf="auction.privateRoomStatus !== 'active' && auction.privateRoomStatus !== 'eligible'">
+              Select up to 5 Platinum Bidders to invite to the private room
+            </p>
+            <p class="action-hint warning" *ngIf="auction.status === 'ended'">
+              This auction has already ended
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Platinum Bidders Selection Modal -->
+  <div class="modal-overlay" *ngIf="showPlatinumSelection" (click)="closePlatinumSelection()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Select Platinum Bidders</h2>
+        <button class="close-btn" (click)="closePlatinumSelection()">×</button>
+      </div>
+      
+      <div class="modal-body">
+        <p class="selection-info">
+          Select up to 5 Platinum Bidders to invite to the private auction room. 
+          Only authenticated users can be selected.
+        </p>
+        
+        <div class="selected-count">
+          Selected: {{ selectedPlatinumBidders.length }} / 5
+        </div>
+
+        <div class="bidders-selection-list" *ngIf="getAuthenticatedBidders().length > 0">
+          <div 
+            *ngFor="let bidder of getAuthenticatedBidders()" 
+            class="bidder-selection-item"
+            [class.selected]="isPlatinumSelected(bidder._id)"
+            (click)="togglePlatinumBidder(bidder._id)"
+          >
+            <div class="selection-checkbox">
+              <span *ngIf="isPlatinumSelected(bidder._id)">✓</span>
+            </div>
+            <div class="bidder-selection-info">
+              <h4>{{ getBidderName(bidder) }}</h4>
+              <p>{{ bidder.email }}</p>
+              <div class="bidder-selection-stats">
+                <span>{{ bidder.bidCount }} bids</span>
+                <span>•</span>
+                <span>${{ bidder.highestBid | number:'1.2-2' }} highest</span>
+              </div>
+            </div>
+            <div class="bidder-selection-badges">
+              <span class="badge verified" *ngIf="bidder.emailVerified">Verified</span>
+              <span class="badge deposit" *ngIf="bidder.hasDeposit">Deposit</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="empty-state" *ngIf="getAuthenticatedBidders().length === 0">
+          <p>No authenticated bidders available</p>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="closePlatinumSelection()">Cancel</button>
+        <button 
+          class="btn btn-primary" 
+          (click)="createPrivateRoom()"
+          [disabled]="selectedPlatinumBidders.length === 0 || isCreatingPrivateRoom"
+        >
+          <span *ngIf="!isCreatingPrivateRoom">Create Private Room & Send Invitations</span>
+          <span *ngIf="isCreatingPrivateRoom">Creating...</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+

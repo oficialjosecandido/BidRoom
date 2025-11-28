@@ -7,14 +7,16 @@
       </div>
       
       <nav class="main-nav">
-        <a href="#" class="nav-link" [class.active]="activePage === 'auctions'">Auctions</a>
-        <a href="#" class="nav-link" [class.active]="activePage === 'categories'">Categories</a>
-        <a href="#" class="nav-link" [class.active]="activePage === 'how-it-works'" (click)="navigateToHowItWorks()">How It Works</a>
-        <a href="#" class="nav-link" [class.active]="activePage === 'contact'" (click)="navigateToContact()">Contact</a>
+        <a class="nav-link" [class.active]="activePage === 'auctions'" (click)="navigateToAuctions()">Auctions</a>
+        <a class="nav-link" [class.active]="activePage === 'categories'" (click)="navigateToCategories()">Categories</a>
+        <a class="nav-link" [class.active]="activePage === 'how-it-works'" (click)="navigateToHowItWorks()">How It Works</a>
+        <a class="nav-link" [class.active]="activePage === 'faq'" (click)="navigateToFaq()">FAQ</a>
+        <a class="nav-link" [class.active]="activePage === 'contact'" (click)="navigateToContact()">Contact</a>
       </nav>
       
       <div class="header-actions">
         @if (isAuthenticated$ | async) {
+          <button class="btn btn-secondary" (click)="navigateToAddListing()">List Your Item</button>
           <button class="btn btn-primary" (click)="navigateToDashboard()">My Account</button>
         } @else {
           <button class="btn btn-secondary" (click)="navigateToLogin()">Sign In</button>

@@ -191,6 +191,47 @@ const listingSchema = new mongoose.Schema({
     type: Date,
     default: null
   },
+  // Platinum Bidders (up to 5 selected by seller)
+  platinumBidders: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    default: []
+  }],
+  platinumBidderInvitedAt: {
+    type: Date,
+    default: null
+  },
+  // Acceptance window deadline (5 minutes after auction ends)
+  platinumBidderAcceptanceDeadline: {
+    type: Date,
+    default: null
+  },
+  // Track invitation status for each platinum bidder
+  platinumBidderInvitations: [{
+    bidder: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: true
+    },
+    status: {
+      type: String,
+      enum: ['pending', 'accepted', 'declined'],
+      default: 'pending'
+    },
+    invitedAt: {
+      type: Date,
+      default: Date.now
+    },
+    acceptedAt: {
+      type: Date,
+      default: null
+    },
+    invitationToken: {
+      type: String,
+      required: true,
+      unique: true
+    }
+  }],
   // Best Offer specific fields
   minimumOfferPrice: {
     type: Number,

@@ -52,11 +52,16 @@ router.post('/', authenticateToken, async (req, res) => {
     // Find or create user
     let user = await User.findOne({ uid: req.user.uid });
     if (!user) {
+      // Parse name from Firebase user
+      const nameParts = req.user.name?.split(' ') || [];
+      const firstName = nameParts[0] || 'User';
+      const lastName = nameParts.slice(1).join(' ') || 'User'; // Use 'User' as default if no lastName
+      
       user = new User({
         uid: req.user.uid,
         email: req.user.email,
-        firstName: req.user.name?.split(' ')[0] || 'User',
-        lastName: req.user.name?.split(' ').slice(1).join(' ') || '',
+        firstName: firstName,
+        lastName: lastName,
         isActive: true,
         emailVerified: req.user.emailVerified || false
       });

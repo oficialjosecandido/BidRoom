@@ -19,6 +19,11 @@ export interface ListingUpdateEvent {
   privateRoomStatus?: 'not-triggered' | 'eligible' | 'active' | 'ended';
 }
 
+export interface ViewerCountUpdateEvent {
+  listingId: string;
+  count: number;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -131,6 +136,38 @@ export class SocketService {
 
       return () => {
         this.socket?.off('listing-update', handler);
+      };
+    });
+  }
+
+  joinPrivateRoomViewer(listingId: string): void {
+    if (!this.socket?.connected) {
+      this.connect();
+    }
+    
+    this.socket?.emit('join-private-room-viewer', listingId);
+    console.log(`👁️ Joined private room viewer: ${listingId}`);
+  }
+
+  leavePrivateRoomViewer(listingId: string): void {
+    this.socket?.emit('leave-private-room-viewer', listingId);
+    console.log(`👁️ Left private room viewer: ${listingId}`);
+  }
+
+  onPrivateRoomViewerCountUpdate(): Observable<ViewerCountUpdateEvent> {
+    return new Observable<ViewerCountUpdateEvent>((observer) => {
+      if (!this.socket) {
+        this.connect();
+      }
+
+      const handler = (data: ViewerCountUpdateEvent) => {
+        observer.next(data);
+      };
+
+      this.socket?.on('private-room-viewer-count-update', handler);
+
+      return () => {
+        this.socket?.off('private-room-viewer-count-update', handler);
       };
     });
   }

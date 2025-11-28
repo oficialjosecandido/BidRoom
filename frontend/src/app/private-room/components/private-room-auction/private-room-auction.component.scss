@@ -1,0 +1,1668 @@
+.private-room-container {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  padding: 1rem;
+  color: white;
+
+  @media (min-width: 769px) {
+    padding: 2rem;
+  }
+}
+
+.private-room-header {
+  margin-bottom: 2rem;
+
+  @media (min-width: 769px) {
+    margin-bottom: 3rem;
+  }
+  
+  .header-top {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+
+    @media (min-width: 769px) {
+      flex-direction: row;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 2rem;
+    }
+  }
+
+  .title-section {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex: 1;
+
+    @media (min-width: 769px) {
+      gap: 1.5rem;
+    }
+    
+    .title-icon {
+      font-size: 2.5rem;
+      filter: drop-shadow(0 4px 8px rgba(255, 215, 0, 0.4));
+      flex-shrink: 0;
+      animation: glow 2s ease-in-out infinite;
+
+      @media (min-width: 769px) {
+        font-size: 3.5rem;
+      }
+    }
+
+    .title-content {
+      flex: 1;
+      min-width: 0;
+    }
+    
+    .room-title {
+      font-size: 1.75rem;
+      font-weight: 700;
+      margin: 0 0 0.5rem 0;
+      color: #fff;
+      text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.5);
+      background: linear-gradient(135deg, #fff 0%, #e0e0e0 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+
+      @media (min-width: 769px) {
+        font-size: 2.5rem;
+      }
+    }
+
+    .room-info {
+      font-size: 0.95rem;
+
+      @media (min-width: 769px) {
+        font-size: 1.1rem;
+      }
+      
+      .room-label {
+        color: rgba(255, 255, 255, 0.7);
+        margin-right: 0.5rem;
+      }
+      
+      .room-listing-title {
+        color: #ffd700;
+        font-weight: 600;
+        text-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+        word-break: break-word;
+      }
+    }
+  }
+
+  .header-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+
+    @media (min-width: 769px) {
+      flex-direction: row;
+      gap: 1.5rem;
+    }
+  }
+
+  .stat-card {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%);
+    padding: 1.25rem 1.5rem;
+    border-radius: 16px;
+    backdrop-filter: blur(20px);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 
+      0 8px 32px rgba(0, 0, 0, 0.3),
+      inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    min-width: 180px;
+
+    @media (min-width: 769px) {
+      min-width: 200px;
+    }
+
+    .stat-icon {
+      font-size: 2rem;
+      flex-shrink: 0;
+    }
+
+    .stat-content {
+      flex: 1;
+      min-width: 0;
+      
+      .stat-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+        color: #fff;
+        text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        margin-bottom: 0.25rem;
+        
+        &.countdown-value {
+          color: #ffd700;
+          text-shadow: 
+            0 0 20px rgba(255, 215, 0, 0.8),
+            0 0 40px rgba(255, 215, 0, 0.4);
+          letter-spacing: 1px;
+        }
+      }
+      
+      .stat-label {
+        font-size: 0.85rem;
+        color: rgba(255, 255, 255, 0.8);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        font-weight: 600;
+      }
+
+      .countdown-subtext {
+        font-size: 0.75rem;
+        color: #ff9800;
+        margin-top: 0.25rem;
+        font-weight: 600;
+        animation: blink 1s infinite;
+      }
+    }
+
+    &.viewer-card {
+      border-color: rgba(102, 126, 234, 0.4);
+      background: linear-gradient(135deg, rgba(102, 126, 234, 0.2) 0%, rgba(118, 75, 162, 0.15) 100%);
+    }
+
+    &.countdown-card {
+      &.warning {
+        border-color: rgba(255, 193, 7, 0.5);
+        background: linear-gradient(135deg, rgba(255, 193, 7, 0.2) 0%, rgba(255, 152, 0, 0.1) 100%);
+        animation: pulse-warning 2s infinite;
+      }
+
+      &.critical {
+        border-color: rgba(255, 82, 82, 0.7);
+        background: linear-gradient(135deg, rgba(255, 82, 82, 0.25) 0%, rgba(244, 67, 54, 0.15) 100%);
+        animation: pulse-critical 1s infinite;
+      }
+    }
+  }
+
+  .current-user-banner {
+    display: flex;
+    max-width: 40%;
+    float: right;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.75rem 1.25rem;
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.15) 0%, rgba(118, 75, 162, 0.1) 100%);
+    border-radius: 12px;
+    backdrop-filter: blur(10px);
+    border: 2px solid rgba(102, 126, 234, 0.3);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      flex: 1;
+      min-width: 0;
+
+      .user-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 1rem;
+        color: white;
+        box-shadow: 
+          0 4px 15px rgba(102, 126, 234, 0.5),
+          inset 0 2px 4px rgba(255, 255, 255, 0.2);
+        flex-shrink: 0;
+
+        .avatar-initial {
+          text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
+        }
+      }
+
+      .user-details {
+        flex: 1;
+        min-width: 0;
+
+        .user-name {
+          font-weight: 600;
+          color: #fff;
+          font-size: 0.95rem;
+          text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+          margin-bottom: 0.15rem;
+        }
+
+        .user-badge-inline {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.3rem;
+          background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+          padding: 0.2rem 0.6rem;
+          border-radius: 12px;
+          box-shadow: 0 2px 8px rgba(255, 215, 0, 0.3);
+
+          .badge-icon {
+            font-size: 0.85rem;
+          }
+
+          .badge-text {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #1a1a2e;
+          }
+        }
+      }
+    }
+
+    .logout-btn {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: rgba(255, 255, 255, 0.9);
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      flex-shrink: 0;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.15);
+        border-color: rgba(255, 255, 255, 0.3);
+        transform: translateY(-1px);
+      }
+
+      &:active {
+        transform: translateY(0);
+      }
+
+      .logout-icon {
+        font-size: 1rem;
+      }
+
+      .logout-text {
+        @media (max-width: 768px) {
+          display: none;
+        }
+      }
+    }
+  }
+}
+
+@keyframes glow {
+  0%, 100% { 
+    filter: drop-shadow(0 4px 8px rgba(255, 215, 0, 0.4));
+  }
+  50% { 
+    filter: drop-shadow(0 4px 16px rgba(255, 215, 0, 0.8));
+  }
+}
+
+@keyframes pulse-warning {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+}
+
+@keyframes pulse-critical {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.loading-state,
+.error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 50vh;
+  gap: 1rem;
+
+  .spinner {
+    width: 50px;
+    height: 50px;
+    border: 4px solid rgba(255, 255, 255, 0.3);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+
+  .error-icon {
+    font-size: 3rem;
+  }
+
+  .error-message {
+    font-size: 1.2rem;
+    color: #ff6b6b;
+  }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.private-room-content {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+// Mobile Layout - Stacked vertically
+.mobile-layout {
+  display: block;
+
+  @media (min-width: 769px) {
+    display: none;
+  }
+}
+
+// Desktop Layout - Poker table
+.desktop-layout {
+  display: none;
+
+  @media (min-width: 769px) {
+    display: block;
+  }
+}
+
+// Mobile-specific styles
+.current-bid-card {
+  background: linear-gradient(135deg, rgba(13, 81, 50, 0.9) 0%, rgba(10, 61, 34, 0.9) 100%);
+  border-radius: 20px;
+  padding: 2rem 1.5rem;
+  margin-bottom: 2rem;
+  border: 3px solid #8b4513;
+  box-shadow: 
+    0 8px 30px rgba(0, 0, 0, 0.5),
+    inset 0 2px 10px rgba(0, 0, 0, 0.3);
+  text-align: center;
+
+  .bid-label {
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.9);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 1rem;
+    font-weight: 600;
+  }
+
+  .bid-amount-large {
+    font-size: 3rem;
+    font-weight: 700;
+    color: #ffd700;
+    text-shadow: 
+      0 0 20px rgba(255, 215, 0, 0.8),
+      0 0 40px rgba(255, 215, 0, 0.4),
+      0 4px 8px rgba(0, 0, 0, 0.5);
+    letter-spacing: 2px;
+    margin-bottom: 1rem;
+
+    &.pulse {
+      animation: bid-pulse 1s ease-in-out infinite;
+    }
+  }
+
+  .bid-count-info {
+    font-size: 1rem;
+    color: rgba(255, 255, 255, 0.9);
+    background: rgba(0, 0, 0, 0.4);
+    padding: 0.75rem 1.5rem;
+    border-radius: 25px;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+
+    .count-icon {
+      font-size: 1.2rem;
+    }
+  }
+
+  .soft-close-info {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(255, 152, 0, 0.2);
+    color: #ff9800;
+    padding: 0.6rem 1.2rem;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    border: 1px solid rgba(255, 152, 0, 0.4);
+    animation: blink 1.5s infinite;
+
+    .info-icon {
+      font-size: 1.1rem;
+    }
+  }
+}
+
+.mobile-bidders {
+  margin-bottom: 2rem;
+
+  .bidders-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 1.5rem;
+    text-align: center;
+  }
+
+  .bidders-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+
+  .mobile-bidder-card {
+    background: linear-gradient(135deg, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0.5) 100%);
+    border-radius: 16px;
+    padding: 1.5rem;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+
+    .bidder-avatar {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 1.5rem;
+      color: white;
+      box-shadow: 
+        0 4px 15px rgba(102, 126, 234, 0.5),
+        inset 0 2px 4px rgba(255, 255, 255, 0.2);
+      flex-shrink: 0;
+
+      .avatar-initial {
+        text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
+      }
+    }
+
+    .bidder-details {
+      flex: 1;
+      min-width: 0;
+
+      .bidder-name {
+        font-weight: 700;
+        color: #fff;
+        font-size: 1.1rem;
+        margin-bottom: 0.5rem;
+        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+      }
+
+      .bidder-bid {
+        display: flex;
+        align-items: baseline;
+        gap: 2px;
+        margin-bottom: 0.5rem;
+
+        .currency {
+          color: #ffd700;
+          font-weight: 600;
+          font-size: 1rem;
+        }
+
+        .amount {
+          color: #ffd700;
+          font-weight: 700;
+          font-size: 1.3rem;
+          text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+        }
+      }
+
+      .bidder-count {
+        .count-badge {
+          display: inline-block;
+          background: rgba(255, 255, 255, 0.15);
+          color: rgba(255, 255, 255, 0.9);
+          font-size: 0.85rem;
+          font-weight: 600;
+          padding: 0.3rem 0.8rem;
+          border-radius: 12px;
+          border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+      }
+    }
+  }
+}
+
+.table-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 4rem 0;
+  position: relative;
+  min-height: 700px;
+  width: 100%;
+  overflow: visible;
+}
+
+.poker-table {
+  position: relative;
+  width: 320px;
+  height: 320px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #0d5132 0%, #0a3d22 50%, #0d5132 100%);
+  border: 10px solid #8b4513;
+
+  @media (min-width: 769px) {
+    width: 450px;
+    height: 450px;
+    border-width: 14px;
+  }
+  box-shadow: 
+    0 0 40px rgba(0, 0, 0, 0.8),
+    0 0 80px rgba(0, 0, 0, 0.4),
+    inset 0 0 60px rgba(0, 0, 0, 0.4),
+    inset 0 4px 20px rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+  transition: all 0.3s ease;
+
+  // Outer glow
+  &::before {
+    content: '';
+    position: absolute;
+    top: -30px;
+    left: -30px;
+    right: -30px;
+    bottom: -30px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255, 215, 0, 0.15) 0%, transparent 70%);
+    pointer-events: none;
+    animation: glow 3s ease-in-out infinite;
+  }
+
+  // Table felt texture
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border-radius: 50%;
+    background: 
+      radial-gradient(circle at 20% 50%, rgba(13, 81, 50, 0.4) 0%, transparent 50%),
+      radial-gradient(circle at 80% 50%, rgba(10, 61, 34, 0.4) 0%, transparent 50%),
+      radial-gradient(circle at center, rgba(255, 255, 255, 0.05) 0%, transparent 70%);
+    pointer-events: none;
+  }
+}
+
+@keyframes glow {
+  0%, 100% { opacity: 0.5; transform: scale(1); }
+  50% { opacity: 0.8; transform: scale(1.05); }
+}
+
+.table-center {
+  position: absolute;
+  text-align: center;
+  z-index: 10;
+
+  .center-glow {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255, 215, 0, 0.2) 0%, transparent 70%);
+    animation: center-glow 2s ease-in-out infinite;
+    pointer-events: none;
+  }
+
+  .current-bid {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+    position: relative;
+    z-index: 1;
+
+    .bid-label {
+      font-size: 0.8rem;
+      color: rgba(255, 255, 255, 0.8);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      font-weight: 600;
+
+      @media (min-width: 769px) {
+        font-size: 0.9rem;
+        letter-spacing: 2px;
+      }
+    }
+
+    .bid-amount {
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: #ffd700;
+      text-shadow: 
+        0 0 20px rgba(255, 215, 0, 0.8),
+        0 0 40px rgba(255, 215, 0, 0.4),
+        0 4px 8px rgba(0, 0, 0, 0.5);
+      letter-spacing: 1px;
+      transition: all 0.3s ease;
+
+      @media (min-width: 769px) {
+        font-size: 3.5rem;
+        letter-spacing: 2px;
+      }
+
+      &.pulse {
+        animation: bid-pulse 1s ease-in-out infinite;
+      }
+    }
+  }
+
+  .bid-count {
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.9);
+    background: linear-gradient(135deg, rgba(0, 0, 0, 0.5) 0%, rgba(0, 0, 0, 0.3) 100%);
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
+    margin-bottom: 0.75rem;
+
+    @media (min-width: 769px) {
+      font-size: 0.95rem;
+      padding: 0.6rem 1.2rem;
+      border-radius: 25px;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .count-icon {
+      font-size: 1rem;
+    }
+  }
+
+  .soft-close-info {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(255, 152, 0, 0.2);
+    color: #ff9800;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    border: 1px solid rgba(255, 152, 0, 0.4);
+    animation: blink 1.5s infinite;
+
+    .info-icon {
+      font-size: 1rem;
+    }
+  }
+}
+
+@keyframes center-glow {
+  0%, 100% { opacity: 0.3; transform: translate(-50%, -50%) scale(1); }
+  50% { opacity: 0.6; transform: translate(-50%, -50%) scale(1.1); }
+}
+
+@keyframes bid-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+.bidder-positions {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100vw;
+  height: 100vw;
+  max-width: 600px;
+  max-height: 600px;
+  margin: 0 auto;
+
+  @media (min-width: 769px) {
+    width: 800px;
+    height: 800px;
+    max-width: none;
+    max-height: none;
+  }
+}
+
+.bidder-seat {
+  position: absolute;
+  width: 110px;
+  height: 110px;
+  top: 0;
+  left: 0;
+  transform-origin: 0 0;
+  z-index: 5;
+
+  @media (min-width: 769px) {
+    width: 150px;
+    height: 150px;
+  }
+
+  .seat-content {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    background: linear-gradient(135deg, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0.5) 100%);
+    border-radius: 16px;
+    padding: 0.8rem;
+    backdrop-filter: blur(15px);
+    border: 3px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 
+      0 6px 20px rgba(0, 0, 0, 0.5),
+      0 0 0 1px rgba(255, 255, 255, 0.1),
+      inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: visible;
+
+    @media (min-width: 769px) {
+      gap: 0.75rem;
+      border-radius: 20px;
+      padding: 1.2rem;
+    }
+
+    .seat-glow {
+      position: absolute;
+      top: -100%;
+      left: -100%;
+      width: 300%;
+      height: 300%;
+      background: radial-gradient(circle, rgba(255, 215, 0, 0.15) 0%, transparent 70%);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      pointer-events: none;
+    }
+
+    &:hover {
+      background: linear-gradient(135deg, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.7) 100%);
+      border-color: rgba(255, 215, 0, 0.7);
+      transform: scale(1.1) translateY(-5px);
+      box-shadow: 
+        0 12px 35px rgba(0, 0, 0, 0.7),
+        0 0 40px rgba(255, 215, 0, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.25);
+
+      .seat-glow {
+        opacity: 1;
+      }
+    }
+  }
+
+  &.empty-seat {
+    .seat-content {
+      opacity: 0.4;
+      border-style: dashed;
+
+      .empty-seat-placeholder {
+        font-size: 0.8rem;
+        color: rgba(255, 255, 255, 0.5);
+        text-align: center;
+      }
+    }
+  }
+
+  .bidder-avatar {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 1rem;
+    color: white;
+    box-shadow: 
+      0 4px 15px rgba(102, 126, 234, 0.5),
+      inset 0 2px 4px rgba(255, 255, 255, 0.2);
+    position: relative;
+    z-index: 1;
+    transition: all 0.3s ease;
+
+    @media (min-width: 769px) {
+      width: 60px;
+      height: 60px;
+      font-size: 1.3rem;
+    }
+
+    .avatar-glow {
+      position: absolute;
+      top: -10px;
+      left: -10px;
+      right: -10px;
+      bottom: -10px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(102, 126, 234, 0.4) 0%, transparent 70%);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .avatar-initial {
+      text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
+      position: relative;
+      z-index: 1;
+    }
+  }
+
+  .seat-content:hover .bidder-avatar {
+    transform: scale(1.1);
+    box-shadow: 
+      0 6px 20px rgba(102, 126, 234, 0.7),
+      inset 0 2px 4px rgba(255, 255, 255, 0.3);
+
+    .avatar-glow {
+      opacity: 1;
+    }
+  }
+
+  .bidder-info {
+    text-align: center;
+    font-size: 0.85rem;
+    z-index: 1;
+    position: relative;
+
+    .bidder-name {
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 0.3rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 90px;
+      font-size: 0.75rem;
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+
+      @media (min-width: 769px) {
+        margin-bottom: 0.5rem;
+        max-width: 110px;
+        font-size: 0.85rem;
+      }
+    }
+
+    .bidder-bid {
+      display: flex;
+      align-items: baseline;
+      justify-content: center;
+      gap: 2px;
+      margin-bottom: 0.4rem;
+
+      .currency {
+        color: #ffd700;
+        font-weight: 600;
+        font-size: 0.9rem;
+      }
+
+      .amount {
+        color: #ffd700;
+        font-weight: 700;
+        font-size: 0.95rem;
+        text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+
+        @media (min-width: 769px) {
+          font-size: 1.1rem;
+        }
+      }
+    }
+
+    .bidder-count {
+      .count-badge {
+        display: inline-block;
+        background: rgba(255, 255, 255, 0.15);
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 0.7rem;
+        font-weight: 600;
+        padding: 0.2rem 0.6rem;
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+      }
+    }
+  }
+}
+
+// Mobile Login Prompt
+.mobile-login-prompt {
+  margin-bottom: 2rem;
+
+  .login-card {
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.2) 0%, rgba(118, 75, 162, 0.15) 100%);
+    border-radius: 20px;
+    padding: 2rem 1.5rem;
+    border: 2px solid rgba(102, 126, 234, 0.4);
+    backdrop-filter: blur(10px);
+    text-align: center;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+
+    .login-icon {
+      font-size: 3.5rem;
+      margin-bottom: 1.5rem;
+      animation: float 3s ease-in-out infinite;
+    }
+
+    h3 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 1rem;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    }
+
+    p {
+      font-size: 1rem;
+      color: rgba(255, 255, 255, 0.9);
+      margin-bottom: 0.75rem;
+      line-height: 1.6;
+    }
+
+    .login-subtext {
+      font-size: 0.9rem;
+      color: rgba(255, 255, 255, 0.7);
+      margin-bottom: 1.5rem;
+    }
+
+    .login-btn {
+      width: 100%;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      padding: 1rem 2rem;
+      font-size: 1.1rem;
+      font-weight: 700;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+      min-height: 50px;
+
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.6);
+      }
+
+      &:active {
+        transform: translateY(0);
+      }
+    }
+  }
+}
+
+// Mobile Bid Action
+.mobile-bid-action {
+  margin-bottom: 2rem;
+
+  .bid-action-card {
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.2) 0%, rgba(118, 75, 162, 0.15) 100%);
+    border-radius: 20px;
+    padding: 2rem 1.5rem;
+    border: 2px solid rgba(102, 126, 234, 0.4);
+    backdrop-filter: blur(10px);
+    text-align: center;
+
+    h3 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 1.5rem;
+    }
+
+    .bid-info-mobile {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+      padding: 1.5rem;
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 16px;
+
+      .info-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+
+        .info-label {
+          font-size: 1rem;
+          color: rgba(255, 255, 255, 0.8);
+          font-weight: 500;
+        }
+
+        .info-value {
+          font-size: 1.3rem;
+          font-weight: 700;
+          color: #ffd700;
+
+          &.highlight {
+            font-size: 1.5rem;
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+          }
+        }
+      }
+    }
+
+    .place-bid-btn-mobile {
+      width: 100%;
+      padding: 1.25rem 2rem;
+      font-size: 1.2rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 16px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+      min-height: 56px;
+
+      &:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.6);
+      }
+
+      &:active:not(:disabled) {
+        transform: translateY(0);
+      }
+
+      &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+    }
+
+    .bid-note-mobile {
+      margin-top: 1rem;
+      font-size: 0.9rem;
+      color: rgba(255, 255, 255, 0.7);
+      line-height: 1.5;
+    }
+  }
+}
+
+.actions-section {
+  margin: 2rem auto;
+  max-width: 500px;
+  padding: 0 1rem;
+
+  @media (min-width: 769px) {
+    margin: 3rem auto;
+    padding: 0;
+  }
+
+  .action-card {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    padding: 1.5rem;
+
+    @media (min-width: 769px) {
+      padding: 2rem;
+    }
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    text-align: center;
+
+    h3 {
+      font-size: 1.5rem;
+      margin-bottom: 1.5rem;
+      color: #fff;
+    }
+
+    .bid-info {
+      display: flex;
+      justify-content: space-around;
+      margin-bottom: 1.5rem;
+      gap: 1rem;
+
+      .current-price-info,
+      .next-bid-info {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+
+        .label {
+          font-size: 0.9rem;
+          color: rgba(255, 255, 255, 0.7);
+        }
+
+        .value {
+          font-size: 1.5rem;
+          font-weight: bold;
+          color: #ffd700;
+
+          &.highlight {
+            font-size: 1.8rem;
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+          }
+        }
+      }
+    }
+
+    .place-bid-btn {
+      width: 100%;
+      padding: 1rem 2rem;
+      font-size: 1.1rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+      min-height: 48px;
+
+      @media (min-width: 769px) {
+        font-size: 1.3rem;
+        padding: 1.25rem 2rem;
+        min-height: auto;
+      }
+
+      &:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+      }
+
+      &:active:not(:disabled) {
+        transform: translateY(0);
+      }
+
+      &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+    }
+
+    .bid-note {
+      margin-top: 1rem;
+      font-size: 0.9rem;
+      color: rgba(255, 255, 255, 0.7);
+    }
+  }
+}
+
+// Fixed Login Prompt (shown while loading or if listing not available)
+.login-prompt-fixed {
+  margin: 4rem auto;
+  max-width: 500px;
+  padding: 0 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+
+  @media (min-width: 769px) {
+    margin: 6rem auto;
+  }
+
+  .login-card {
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.2) 0%, rgba(118, 75, 162, 0.15) 100%);
+    border-radius: 20px;
+    padding: 3rem 2rem;
+    text-align: center;
+    border: 2px solid rgba(102, 126, 234, 0.4);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+    width: 100%;
+
+    .login-icon {
+      font-size: 4rem;
+      margin-bottom: 1.5rem;
+      animation: float 3s ease-in-out infinite;
+    }
+
+    h3 {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 1rem;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    }
+
+    p {
+      font-size: 1rem;
+      color: rgba(255, 255, 255, 0.9);
+      margin-bottom: 0.75rem;
+      line-height: 1.6;
+    }
+
+    .login-subtext {
+      font-size: 0.9rem;
+      color: rgba(255, 255, 255, 0.7);
+      margin-bottom: 2rem;
+    }
+
+    .login-btn {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      padding: 1rem 2.5rem;
+      font-size: 1.1rem;
+      font-weight: 700;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+      min-height: 50px;
+
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.6);
+      }
+
+      &:active {
+        transform: translateY(0);
+      }
+    }
+  }
+}
+
+// Login Prompt
+.login-prompt {
+  margin: 3rem auto;
+  max-width: 500px;
+  padding: 0 1rem;
+
+  @media (min-width: 769px) {
+    margin: 4rem auto;
+  }
+
+  .login-card {
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.15) 0%, rgba(118, 75, 162, 0.1) 100%);
+    border-radius: 20px;
+    padding: 3rem 2rem;
+    text-align: center;
+    border: 2px solid rgba(102, 126, 234, 0.3);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+
+    .login-icon {
+      font-size: 4rem;
+      margin-bottom: 1.5rem;
+      animation: float 3s ease-in-out infinite;
+    }
+
+    h3 {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 1rem;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    }
+
+    p {
+      font-size: 1rem;
+      color: rgba(255, 255, 255, 0.9);
+      margin-bottom: 0.75rem;
+      line-height: 1.6;
+    }
+
+    .login-subtext {
+      font-size: 0.9rem;
+      color: rgba(255, 255, 255, 0.7);
+      margin-bottom: 2rem;
+    }
+
+    .login-btn {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      padding: 1rem 2.5rem;
+      font-size: 1.1rem;
+      font-weight: 700;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+      min-height: 50px;
+
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.6);
+      }
+
+      &:active {
+        transform: translateY(0);
+      }
+    }
+  }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+.viewer-notice {
+  margin: 3rem auto;
+  max-width: 500px;
+  padding: 0 1rem;
+
+  @media (min-width: 769px) {
+    margin: 4rem auto;
+  }
+
+  .notice-card {
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.15) 0%, rgba(118, 75, 162, 0.1) 100%);
+    border-radius: 20px;
+    padding: 2rem;
+    text-align: center;
+    border: 2px solid rgba(102, 126, 234, 0.3);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+
+    .notice-icon {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+    }
+
+    h3 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+      color: #fff;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    }
+
+    p {
+      color: rgba(255, 255, 255, 0.9);
+      line-height: 1.6;
+      margin-bottom: 0.5rem;
+      font-size: 1rem;
+    }
+
+    .notice-subtext {
+      font-size: 0.9rem;
+      color: rgba(255, 255, 255, 0.7);
+      margin-top: 1rem;
+    }
+  }
+}
+
+.recent-bids-section {
+  margin: 2rem auto;
+  max-width: 900px;
+  padding: 0 1rem;
+
+  @media (min-width: 769px) {
+    margin: 3rem auto;
+    padding: 0;
+  }
+
+  .section-header {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+
+    @media (min-width: 769px) {
+      flex-direction: row;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0;
+    }
+
+    h3 {
+      font-size: 1.5rem;
+      margin: 0;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-weight: 700;
+
+      @media (min-width: 769px) {
+        font-size: 1.8rem;
+      }
+
+      .section-icon {
+        font-size: 1.5rem;
+      }
+    }
+
+    .bid-total {
+      background: rgba(255, 255, 255, 0.15);
+      color: rgba(255, 255, 255, 0.9);
+      padding: 0.5rem 1rem;
+      border-radius: 20px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+  }
+
+  .bids-list {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%);
+    border-radius: 16px;
+    padding: 1rem;
+    backdrop-filter: blur(20px);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 
+      0 8px 32px rgba(0, 0, 0, 0.3),
+      inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    max-height: 350px;
+    overflow-y: auto;
+
+    @media (min-width: 769px) {
+      border-radius: 20px;
+      padding: 1.5rem;
+      max-height: 450px;
+    }
+
+    .bid-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      padding: 1rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      transition: all 0.3s ease;
+      margin-bottom: 0.5rem;
+      flex-wrap: wrap;
+
+      @media (min-width: 769px) {
+        gap: 1.5rem;
+        padding: 1.25rem;
+        flex-wrap: nowrap;
+      }
+
+      &:last-child {
+        border-bottom: none;
+        margin-bottom: 0;
+      }
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.1);
+        transform: translateX(5px);
+      }
+
+      &.latest {
+        background: linear-gradient(135deg, rgba(255, 215, 0, 0.15) 0%, rgba(255, 193, 7, 0.05) 100%);
+        border-left: 4px solid #ffd700;
+        box-shadow: 0 4px 15px rgba(255, 215, 0, 0.2);
+
+        .bid-rank {
+          background: linear-gradient(135deg, #ffd700 0%, #ffc107 100%);
+          color: #1a1a2e;
+          font-weight: 700;
+        }
+      }
+
+      .bid-left {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        flex: 1;
+
+        .bid-rank {
+          background: rgba(255, 255, 255, 0.2);
+          color: #fff;
+          width: 32px;
+          height: 32px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 0.85rem;
+          font-weight: 600;
+          flex-shrink: 0;
+        }
+
+        .bid-bidder {
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+
+          .bidder-name {
+            font-weight: 700;
+            color: #fff;
+            font-size: 1rem;
+          }
+
+          .bidder-badge {
+            background: linear-gradient(135deg, #ffd700 0%, #ffc107 100%);
+            color: #1a1a2e;
+            font-size: 0.7rem;
+            font-weight: 700;
+            padding: 0.2rem 0.6rem;
+            border-radius: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+          }
+        }
+      }
+
+      .bid-right {
+        display: flex;
+        align-items: center;
+        gap: 2rem;
+
+        .bid-amount {
+          display: flex;
+          align-items: baseline;
+          gap: 2px;
+
+          .currency {
+            color: #ffd700;
+            font-weight: 600;
+            font-size: 1rem;
+          }
+
+          .amount {
+            font-weight: 700;
+            color: #ffd700;
+            font-size: 1.3rem;
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+          }
+        }
+
+        .bid-time {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          color: rgba(255, 255, 255, 0.7);
+          font-size: 0.9rem;
+
+          .time-icon {
+            font-size: 0.9rem;
+          }
+        }
+      }
+    }
+
+    .empty-bids {
+      text-align: center;
+      padding: 3rem 2rem;
+      color: rgba(255, 255, 255, 0.7);
+
+      .empty-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        opacity: 0.5;
+      }
+
+      p {
+        margin: 0.5rem 0;
+        font-size: 1.1rem;
+      }
+
+      .empty-subtext {
+        font-size: 0.9rem;
+        color: rgba(255, 255, 255, 0.5);
+      }
+    }
+  }
+}
+
+// Success Toast
+.bid-success-toast {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+  color: white;
+  padding: 1rem 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 8px 25px rgba(34, 197, 94, 0.4);
+  z-index: 10000;
+  font-weight: 600;
+  font-size: 1rem;
+  transform: translateX(400px);
+  transition: transform 0.3s ease;
+  pointer-events: none;
+
+  &.show {
+    transform: translateX(0);
+  }
+}
+
+// Scrollbar styling
+.bids-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.bids-list::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+}
+
+.bids-list::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 4px;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.5);
+  }
+}
+
+

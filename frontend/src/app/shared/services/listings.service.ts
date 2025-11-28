@@ -9,6 +9,7 @@ export interface Listing {
   title: string;
   description: string;
   category: string;
+  subCategory?: string;
   images: string[];
   startingPrice: number;
   currentPrice: number;
@@ -40,6 +41,20 @@ export interface Listing {
   privateRoomStatus?: 'not-triggered' | 'eligible' | 'active' | 'ended';
   privateRoomEndDate?: string;
   privateRoomLastBidTime?: string;
+  platinumBidders?: string[] | Array<{ _id: string; firstName: string; lastName: string; email: string }>;
+  platinumBidderInvitedAt?: string;
+  platinumBidderAcceptanceDeadline?: string;
+  platinumBidderStatus?: Array<{
+    bidder: {
+      _id: string;
+      firstName: string;
+      lastName: string;
+      email: string;
+    };
+    status: 'pending' | 'accepted' | 'declined';
+    invitedAt: string;
+    acceptedAt?: string | null;
+  }>;
   minimumOfferPrice?: number; // For Best Offer format
   renewalRequired?: boolean;
   uniqueBidders?: string[];
@@ -121,6 +136,10 @@ export class ListingsService {
     return this.http.get<Listing>(`${this.apiUrl}/slug/${slug}`);
   }
 
+  getListing(id: string): Observable<Listing> {
+    return this.http.get<Listing>(`${this.apiUrl}/${id}`);
+  }
+
   getStats(): Observable<StatsOverview> {
     return this.http.get<StatsOverview>(`${this.apiUrl}/stats/overview`);
   }
@@ -131,6 +150,10 @@ export class ListingsService {
 
   buyNow(listingId: string): Observable<any> {
     return this.http.post(`${this.apiUrl}/${listingId}/buy-now`, {});
+  }
+
+  getMyListings(): Observable<ListingsResponse> {
+    return this.http.get<ListingsResponse>(`${this.apiUrl}/seller/my-listings`);
   }
 }
 

@@ -1,0 +1,141 @@
+<div class="my-auctions-container">
+  <div class="page-header">
+    <h1>My Auctions</h1>
+    <p class="subtitle">Manage your listings and track platinum bidder invitations</p>
+  </div>
+
+  <!-- Loading State -->
+  <div class="loading-state" *ngIf="isLoading">
+    <div class="spinner"></div>
+    <p>Loading your auctions...</p>
+  </div>
+
+  <!-- Error State -->
+  <div class="error-state" *ngIf="error && !isLoading">
+    <div class="error-icon">⚠️</div>
+    <p class="error-message">{{ error }}</p>
+    <button class="retry-btn" (click)="loadMyListings()">Try Again</button>
+  </div>
+
+  <!-- Listings List -->
+  <div class="listings-list" *ngIf="!isLoading && !error">
+    <div class="empty-state" *ngIf="listings.length === 0">
+      <div class="empty-icon">📦</div>
+      <h3>No Auctions Yet</h3>
+      <p>You haven't created any auctions yet. Start by creating your first listing!</p>
+      <a routerLink="/listing/add" class="create-btn">Create Your First Auction</a>
+    </div>
+
+    <div class="auction-card" *ngFor="let listing of listings">
+      <div class="auction-header">
+        <div class="auction-title-section">
+          <h2 class="auction-title">
+            <a [routerLink]="['/listing', listing.slug]">{{ listing.title }}</a>
+          </h2>
+          <span class="status-badge" [ngClass]="getStatusBadgeClass(listing.status)">
+            {{ listing.status }}
+          </span>
+        </div>
+        <div class="auction-price">
+          <span class="price-label">Current Price</span>
+          <span class="price-value">${{ listing.currentPrice | number:'1.2-2' }}</span>
+        </div>
+      </div>
+
+      <div class="auction-stats">
+        <div class="stat-item">
+          <span class="stat-label">Bids</span>
+          <span class="stat-value">{{ listing.bidCount }}</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">Started</span>
+          <span class="stat-value">{{ formatDate(listing.startDate) }}</span>
+        </div>
+      </div>
+
+      <!-- Private Room Status -->
+      <div class="private-room-section" *ngIf="listing.privateRoomStatus && listing.privateRoomStatus !== 'not-triggered'">
+        <div class="private-room-header">
+          <div class="private-room-title-group">
+            <span class="private-room-icon">🔒</span>
+            <div>
+              <h3>Private Auction Room</h3>
+              <span class="private-room-status-badge" [ngClass]="'status-' + listing.privateRoomStatus">
+                {{ listing.privateRoomStatus === 'active' ? 'Active' : 
+                   listing.privateRoomStatus === 'eligible' ? 'Awaiting Acceptance' : 
+                   listing.privateRoomStatus === 'ended' ? 'Ended' : listing.privateRoomStatus }}
+              </span>
+            </div>
+          </div>
+          <a [routerLink]="['/private-room/auction', listing._id]" class="private-room-link" *ngIf="listing.privateRoomStatus === 'active' || listing.privateRoomStatus === 'eligible'">
+            <span>Go to Private Room</span>
+            <span class="link-arrow">→</span>
+          </a>
+        </div>
+
+        <!-- Platinum Bidder Invitations -->
+        <div class="platinum-bidders-section" *ngIf="listing.platinumBidderStatus && listing.platinumBidderStatus.length > 0">
+          <div class="platinum-section-header">
+            <h4>
+              <span class="platinum-icon">✨</span>
+              Platinum Bidders
+              <span class="platinum-count">({{ listing.platinumBidderStatus.length }})</span>
+            </h4>
+            <div class="platinum-status-summary">
+              <span class="status-item accepted" *ngIf="getPlatinumStatusCounts(listing).accepted > 0">
+                <span class="status-icon">✓</span>
+                <span class="status-text">{{ getPlatinumStatusCounts(listing).accepted }} Accepted</span>
+              </span>
+              <span class="status-item pending" *ngIf="getPlatinumStatusCounts(listing).pending > 0">
+                <span class="status-icon">⏳</span>
+                <span class="status-text">{{ getPlatinumStatusCounts(listing).pending }} Pending</span>
+              </span>
+              <span class="status-item declined" *ngIf="getPlatinumStatusCounts(listing).declined > 0">
+                <span class="status-icon">✗</span>
+                <span class="status-text">{{ getPlatinumStatusCounts(listing).declined }} Declined</span>
+              </span>
+            </div>
+          </div>
+          
+          <div class="platinum-bidders-list">
+            <div 
+              *ngFor="let platinumStatus of listing.platinumBidderStatus" 
+              class="platinum-bidder-item"
+              [ngClass]="'status-' + platinumStatus.status"
+            >
+              <div class="bidder-avatar">
+                <span class="avatar-initial">{{ platinumStatus.bidder.firstName[0] }}{{ platinumStatus.bidder.lastName[0] }}</span>
+              </div>
+              <div class="bidder-details">
+                <div class="bidder-name-row">
+                  <span class="bidder-name">
+                    {{ platinumStatus.bidder.firstName }} {{ platinumStatus.bidder.lastName }}
+                  </span>
+                  <span class="status-badge-small" [ngClass]="'badge-' + platinumStatus.status">
+                    {{ platinumStatus.status === 'accepted' ? '✓ Accepted' : 
+                       platinumStatus.status === 'pending' ? '⏳ Pending' : 
+                       '✗ Declined' }}
+                  </span>
+                </div>
+                <span class="bidder-email">{{ platinumStatus.bidder.email }}</span>
+                <div class="bidder-timestamps">
+                  <span class="timestamp" *ngIf="platinumStatus.acceptedAt">
+                    Accepted: {{ formatDate(platinumStatus.acceptedAt) }}
+                  </span>
+                  <span class="timestamp" *ngIf="!platinumStatus.acceptedAt && platinumStatus.status !== 'declined'">
+                    Invited: {{ formatDate(platinumStatus.invitedAt) }}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="auction-actions">
+        <a [routerLink]="['/listing', listing.slug]" class="view-btn">View Listing</a>
+      </div>
+    </div>
+  </div>
+</div>
+

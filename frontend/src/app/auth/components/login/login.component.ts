@@ -33,6 +33,11 @@ export class LoginComponent implements OnInit {
   ngOnInit(): void {
     // Get return url from route parameters or default to '/dashboard'
     this.returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/dashboard';
+    
+    // Check if redirected here due to unverified email
+    if (this.route.snapshot.queryParams['verifyEmail'] === 'true') {
+      this.errorMessage = 'Please verify your email address before accessing your account. Check your inbox for the verification email.';
+    }
   }
 
   onSubmit(): void {
@@ -41,13 +46,19 @@ export class LoginComponent implements OnInit {
       this.errorMessage = '';
 
       this.authService.login(this.loginForm.value.email, this.loginForm.value.password).subscribe({
-        next: () => {
+        next: (user) => {
           this.isLoading = false;
-          this.router.navigate([this.returnUrl]);
+          // Check if user is admin and has a saved admin route
+          const adminRoute = localStorage.getItem('admin_route');
+          if (user.email?.toLowerCase() === 'josevcandido@gmail.com' && adminRoute) {
+            this.router.navigate([adminRoute]);
+          } else {
+            this.router.navigate([this.returnUrl]);
+          }
         },
         error: (error) => {
           this.isLoading = false;
-          this.errorMessage = error?.message || 'Login failed. Please try again.';
+          this.errorMessage = this.getErrorMessage(error);
         }
       });
     }
@@ -58,14 +69,20 @@ export class LoginComponent implements OnInit {
     this.isLoading = true;
     this.errorMessage = '';
     this.authService.loginWithGoogle().subscribe({
-      next: () => {
+      next: (user) => {
         this.isLoading = false;
-        this.router.navigate([this.returnUrl]);
+        // Check if user is admin and has a saved admin route
+        const adminRoute = localStorage.getItem('admin_route');
+        if (user.email?.toLowerCase() === 'josevcandido@gmail.com' && adminRoute) {
+          this.router.navigate([adminRoute]);
+        } else {
+          this.router.navigate([this.returnUrl]);
+        }
       },
-      error: (error) => {
-        this.isLoading = false;
-        this.errorMessage = error?.message || 'Google login failed. Please try again.';
-      }
+        error: (error) => {
+          this.isLoading = false;
+          this.errorMessage = this.getErrorMessage(error);
+        }
     });
   }
 
@@ -92,5 +109,33 @@ export class LoginComponent implements OnInit {
       }
     }
     return '';
+  }
+
+  getErrorMessage(error: any): string {
+    const errorCode = error?.code || '';
+    
+    switch (errorCode) {
+      case 'auth/user-not-found':
+        return 'No account found with this email address. Please sign up or check your email.';
+      case 'auth/wrong-password':
+      case 'auth/invalid-credential':
+        return 'Incorrect password. Please try again or reset your password.';
+      case 'auth/invalid-email':
+        return 'Please enter a valid email address.';
+      case 'auth/user-disabled':
+        return 'This account has been disabled. Please contact support.';
+      case 'auth/too-many-requests':
+        return 'Too many failed login attempts. Please try again later or reset your password.';
+      case 'auth/operation-not-allowed':
+        return 'This operation is not allowed. Please contact support.';
+      case 'auth/popup-closed-by-user':
+        return 'Sign-in popup was closed. Please try again.';
+      case 'auth/cancelled-popup-request':
+        return 'Only one popup request is allowed at a time. Please try again.';
+      case 'auth/popup-blocked':
+        return 'Popup was blocked by your browser. Please allow popups and try again.';
+      default:
+        return error?.message || 'Login failed. Please try again.';
+    }
   }
 }

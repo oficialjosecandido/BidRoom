@@ -5,8 +5,16 @@
     <h2 class="title">Create your Bidroom account</h2>
 
     <!-- Error Message -->
-    <div class="error-message" *ngIf="errorMessage">
-      {{ errorMessage }}
+    <div class="error-message" *ngIf="errorMessage" [class.email-exists]="signupForm.get('email')?.errors?.['emailExists']">
+      <div class="error-icon">⚠️</div>
+      <div class="error-content">
+        <p class="error-text">{{ errorMessage }}</p>
+        <div class="error-actions" *ngIf="errorMessage.includes('already registered')">
+          <button type="button" class="action-link" (click)="navigateToLogin()">Log in</button>
+          <span class="action-separator">or</span>
+          <button type="button" class="action-link" (click)="navigateToForgotPassword()">Reset password</button>
+        </div>
+      </div>
     </div>
 
     <!-- Success Message -->

@@ -35,6 +35,8 @@
       font-weight: 500;
       transition: color 0.2s ease;
       cursor: pointer;
+      text-decoration: none;
+      user-select: none;
       
       &:hover, &.active {
         color: var(--accent-purple);

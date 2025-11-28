@@ -46,6 +46,18 @@ export class HeaderComponent {
     this.router.navigate(['/landing/faq']);
   }
 
+  navigateToAuctions(): void {
+    this.router.navigate(['/landing']);
+  }
+
+  navigateToCategories(): void {
+    this.router.navigate(['/landing'], { fragment: 'categories' });
+  }
+
+  navigateToAddListing(): void {
+    this.router.navigate(['/listing/add']);
+  }
+
   navigateToDashboard(): void {
     this.router.navigate(['/dashboard']);
   }

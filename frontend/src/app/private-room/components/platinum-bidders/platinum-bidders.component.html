@@ -1,0 +1,108 @@
+<div class="platinum-bidders-container">
+  <div class="header-section">
+    <button class="back-btn" (click)="navigateToDashboard()">
+      ← Back to Dashboard
+    </button>
+    <h1 class="page-title">Select Platinum Bidders</h1>
+    <p class="page-description">
+      Select up to 5 bidders to invite to the Private Room. These bidders will be able to continue bidding after the main auction ends.
+    </p>
+  </div>
+
+  <!-- Loading State -->
+  <div class="loading-state" *ngIf="isLoading">
+    <div class="spinner"></div>
+    <p>Loading bidders...</p>
+  </div>
+
+  <!-- Error State -->
+  <div class="error-state" *ngIf="error && !isLoading">
+    <div class="error-icon">⚠️</div>
+    <p class="error-message">{{ error }}</p>
+    <button class="retry-btn" (click)="loadBidders()">Try Again</button>
+  </div>
+
+  <!-- Success Message -->
+  <div class="success-state" *ngIf="successMessage">
+    <div class="success-icon">✓</div>
+    <p class="success-message">{{ successMessage }}</p>
+  </div>
+
+  <!-- Bidders List -->
+  <div class="content-section" *ngIf="!isLoading && !error">
+    <div class="selection-info">
+      <span class="selection-count">
+        {{ selectedBidderIds.length }} of 5 selected
+      </span>
+      <button 
+        class="save-btn" 
+        [class.disabled]="!canSelect() || isSaving"
+        [disabled]="!canSelect() || isSaving"
+        (click)="saveSelection()"
+      >
+        <span *ngIf="!isSaving">Save Selection</span>
+        <span *ngIf="isSaving">Saving...</span>
+      </button>
+    </div>
+
+    <div class="bidders-grid" *ngIf="bidders.length > 0">
+      <div 
+        *ngFor="let bidder of bidders" 
+        class="bidder-card"
+        [class.selected]="isSelected(bidder._id || '')"
+        [class.authenticated]="bidder.isAuthenticated"
+        [class.unauthenticated]="!bidder.isAuthenticated"
+        (click)="bidder.isAuthenticated && bidder._id ? toggleBidder(bidder._id) : null"
+      >
+        <div class="bidder-header">
+          <input 
+            type="checkbox"
+            [checked]="isSelected(bidder._id || '')"
+            [disabled]="!bidder.isAuthenticated || !bidder._id"
+            (change)="bidder.isAuthenticated && bidder._id ? toggleBidder(bidder._id) : null"
+            class="bidder-checkbox"
+          />
+          <div class="bidder-badges">
+            <span class="badge authenticated" *ngIf="bidder.isAuthenticated">Authenticated</span>
+            <span class="badge unauthenticated" *ngIf="!bidder.isAuthenticated">Guest</span>
+            <span class="badge verified" *ngIf="bidder.emailVerified">Verified</span>
+            <span class="badge deposit" *ngIf="bidder.hasDeposit">Deposit</span>
+            <span class="badge platinum" *ngIf="currentPlatinumBidders.includes(bidder._id || '')">Platinum</span>
+          </div>
+        </div>
+
+        <div class="bidder-info">
+          <h3 class="bidder-name">{{ getBidderName(bidder) }}</h3>
+          <p class="bidder-email">{{ bidder.email }}</p>
+        </div>
+
+        <div class="bidder-stats">
+          <div class="stat-item">
+            <span class="stat-label">Bids:</span>
+            <span class="stat-value">{{ bidder.bidCount }}</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">Highest Bid:</span>
+            <span class="stat-value">${{ bidder.highestBid | number:'1.2-2' }}</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">Last Bid:</span>
+            <span class="stat-value">{{ formatDate(bidder.lastBidDate) }}</span>
+          </div>
+        </div>
+
+        <div class="unavailable-message" *ngIf="!bidder.isAuthenticated || !bidder._id">
+          <p>Guest bidders cannot be selected as Platinum Bidders</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <div class="empty-state" *ngIf="bidders.length === 0">
+      <div class="empty-icon">👥</div>
+      <p class="empty-message">No bidders found</p>
+      <p class="empty-description">Bidders will appear here once they place bids on your listing.</p>
+    </div>
+  </div>
+</div>
+

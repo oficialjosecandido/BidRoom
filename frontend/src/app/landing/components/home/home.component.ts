@@ -1,7 +1,7 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { HeaderComponent } from '../../../shared/components/header/header.component';
 import { FooterComponent } from '../../../shared/components/footer/footer.component';
 import { ListingsService, Listing, ListingsQueryParams, StatsOverview } from '../../../shared/services/listings.service';
@@ -13,7 +13,7 @@ import { ListingsService, Listing, ListingsQueryParams, StatsOverview } from '..
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.scss']
 })
-export class HomeComponent implements OnInit {
+export class HomeComponent implements OnInit, AfterViewInit {
   listings: Listing[] = [];
   loading = true;
   error: string | null = null;
@@ -26,12 +26,27 @@ export class HomeComponent implements OnInit {
 
   constructor(
     private router: Router,
+    private route: ActivatedRoute,
     private listingsService: ListingsService
   ) {}
 
   ngOnInit(): void {
     this.loadStats();
     this.loadListings();
+  }
+
+  ngAfterViewInit(): void {
+    // Handle fragment navigation (e.g., #categories)
+    this.route.fragment.subscribe(fragment => {
+      if (fragment === 'categories') {
+        setTimeout(() => {
+          const element = document.getElementById('categories');
+          if (element) {
+            element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+        }, 100);
+      }
+    });
   }
 
   loadStats(): void {
