@@ -183,15 +183,19 @@ router.post('/', optionalAuth, async (req, res) => {
 
     // Check if auction has ended (for main auction)
     const now = new Date();
-    const isPrivateRoom = listing.privateRoomStatus === 'active';
+    const isPrivateRoom = listing.privateRoomStatus === 'active' || listing.privateRoomStatus === 'eligible';
     
-    if (isPrivateRoom) {
-      // Private Room logic: check if still active
-      if (!listing.privateRoomEndDate || now > listing.privateRoomEndDate) {
-        return res.status(400).json({
-          error: 'Private Room ended',
-          message: 'The Private Room has closed'
-        });
+      if (isPrivateRoom) {
+      // Private Room logic: check if still active/eligible
+      // Note: Invitation acceptance is no longer required - platinum bidders can bid immediately
+      if (listing.privateRoomStatus === 'active') {
+        // Private Room is active - check if it has ended
+        if (!listing.privateRoomEndDate || now > listing.privateRoomEndDate) {
+          return res.status(400).json({
+            error: 'Private Room ended',
+            message: 'The Private Room has closed'
+          });
+        }
       }
       
       // Check if user is a platinum bidder (only authenticated users can participate in Private Room)
@@ -214,22 +218,24 @@ router.post('/', optionalAuth, async (req, res) => {
         });
       }
 
-      // If invitations exist, check if user has accepted their invitation
-      if (listing.platinumBidderInvitations && listing.platinumBidderInvitations.length > 0) {
-        const invitation = listing.platinumBidderInvitations.find(
-          inv => inv.bidder.toString() === user._id.toString()
-        );
-        
-        if (!invitation || invitation.status !== 'accepted') {
-          return res.status(403).json({
-            error: 'Invitation not accepted',
-            message: 'You must accept your Platinum Bidder invitation before placing bids in the Private Room'
-          });
+      // Note: Invitation acceptance is no longer required - platinum bidders can bid immediately
+      
+      // Extend Private Room deadline by 30 seconds with each bid (soft closing)
+      const extendByMs = 30 * 1000; // 30 seconds
+      
+      // If status is 'eligible' and this is the first bid, activate the room
+      if (listing.privateRoomStatus === 'eligible') {
+        listing.privateRoomStatus = 'active';
+        listing.status = 'active'; // Ensure listing is active
+        // Set initial end date if not set (24 hours from now, or extend from current)
+        if (!listing.privateRoomEndDate) {
+          listing.privateRoomEndDate = new Date(now.getTime() + 24 * 60 * 60 * 1000); // 24 hours
         }
       }
       
-      // Extend Private Room deadline by 1 minute with each bid
-      const newEndDate = new Date(now.getTime() + 2 * 60 * 1000); // 2 minutes from now
+      // Extend the deadline by 30 seconds with each bid
+      const currentEndDate = listing.privateRoomEndDate || new Date(now.getTime() + 24 * 60 * 60 * 1000);
+      const newEndDate = new Date(Math.max(currentEndDate.getTime(), now.getTime()) + extendByMs);
       listing.privateRoomEndDate = newEndDate;
       listing.privateRoomLastBidTime = now;
     } else {

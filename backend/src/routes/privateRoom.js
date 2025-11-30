@@ -330,22 +330,10 @@ router.get('/listings/:id/check-platinum', authenticateToken, async (req, res) =
       return res.json({ isPlatinumBidder: false });
     }
 
-    // If invitations exist, check if user has accepted their invitation
-    if (listing.platinumBidderInvitations && listing.platinumBidderInvitations.length > 0) {
-      const invitation = listing.platinumBidderInvitations.find(
-        inv => inv.bidder.toString() === user._id.toString()
-      );
-      
-      if (invitation && invitation.status !== 'accepted') {
-        return res.json({ 
-          isPlatinumBidder: false,
-          needsAcceptance: true,
-          invitationStatus: invitation.status 
-        });
-      }
-    }
-
-    res.json({ isPlatinumBidder: true });
+    // User is a platinum bidder - no invitation acceptance required
+    res.json({ 
+      isPlatinumBidder: true
+    });
   } catch (error) {
     console.error('Error checking platinum bidder status:', error);
     res.status(500).json({ 

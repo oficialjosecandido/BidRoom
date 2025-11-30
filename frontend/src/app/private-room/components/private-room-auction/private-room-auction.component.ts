@@ -197,10 +197,18 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
     this.privateRoomService.checkPlatinumBidderStatus(this.listingId).subscribe({
       next: (response) => {
         console.log('Platinum bidder status response:', response);
+        const wasPlatinum = this.isPlatinumBidder;
         this.isPlatinumBidder = response.isPlatinumBidder;
-        if (response.needsAcceptance) {
-          console.warn('User needs to accept invitation:', response);
-        }
+        
+        const canBid = this.isPlatinumBidder && 
+          (this.listing?.privateRoomStatus === 'active' || this.listing?.privateRoomStatus === 'eligible');
+        
+        console.log('Platinum bidder status updated:', { 
+          wasPlatinum, 
+          isNowPlatinum: this.isPlatinumBidder,
+          listingStatus: this.listing?.privateRoomStatus,
+          canBid: canBid
+        });
       },
       error: (error) => {
         console.error('Error checking platinum bidder status:', error);
@@ -301,7 +309,20 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
   }
 
   placeBid(): void {
-    if (!this.listing || !this.isPlatinumBidder || this.isPlacingBid) return;
+    if (!this.listing || this.isPlacingBid) return;
+
+    // Check if user can bid
+    const canBid = this.isPlatinumBidder && 
+      (this.listing.privateRoomStatus === 'active' || this.listing.privateRoomStatus === 'eligible');
+
+    if (!canBid) {
+      if (!this.isPlatinumBidder) {
+        alert('Only Platinum Bidders can place bids in the Private Room.');
+      } else {
+        alert('Bidding is not currently available. The Private Room may have ended or is not yet active.');
+      }
+      return;
+    }
 
     // Get current price and calculate next bid
     const currentPrice = this.listing.currentPrice;
@@ -337,7 +358,9 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
       },
       error: (error) => {
         this.isPlacingBid = false;
-        alert(error?.error?.message || error?.message || 'Failed to place bid. Please try again.');
+        const errorMessage = error?.error?.message || error?.message || 'Failed to place bid. Please try again.';
+        alert(errorMessage);
+        console.error('Bid error:', error);
       }
     });
   }
