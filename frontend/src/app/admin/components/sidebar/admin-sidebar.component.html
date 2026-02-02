@@ -1,0 +1,19 @@
+<nav class="admin-sidebar">
+  <div class="sidebar-header">
+    <h2 class="sidebar-title">Nexus</h2>
+  </div>
+  
+  <ul class="sidebar-menu">
+    <li *ngFor="let item of sidebarItems" class="menu-item">
+      <button 
+        class="menu-link" 
+        [class.active]="isActiveRoute(item.route)"
+        (click)="navigateTo(item.route)"
+      >
+        <span class="menu-icon">{{ item.icon }}</span>
+        <span class="menu-label">{{ item.label }}</span>
+      </button>
+    </li>
+  </ul>
+</nav>
+

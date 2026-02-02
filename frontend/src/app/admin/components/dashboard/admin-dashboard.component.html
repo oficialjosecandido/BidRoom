@@ -1,0 +1,55 @@
+<div class="admin-layout">
+  <app-admin-sidebar></app-admin-sidebar>
+  
+  <div class="admin-content">
+    <div class="admin-dashboard">
+      <div class="dashboard-header">
+        <h1 class="dashboard-title">Admin Dashboard</h1>
+        <button class="refresh-btn" (click)="refreshStatistics()" [disabled]="isLoading">
+          <span class="refresh-icon">🔄</span>
+          Refresh
+        </button>
+      </div>
+
+  <!-- Loading State -->
+  <div class="loading-state" *ngIf="isLoading">
+    <div class="spinner"></div>
+    <p>Loading statistics...</p>
+  </div>
+
+  <!-- Error State -->
+  <div class="error-state" *ngIf="error && !isLoading">
+    <div class="error-icon">⚠️</div>
+    <p class="error-message">{{ error }}</p>
+    <button class="retry-btn" (click)="refreshStatistics()">Try Again</button>
+  </div>
+
+  <!-- Statistics Cards -->
+  <div class="statistics-grid" *ngIf="statistics && !isLoading">
+    <div class="stat-card">
+      <div class="stat-icon users-icon">👥</div>
+      <div class="stat-content">
+        <h3 class="stat-label">Registered Users</h3>
+        <p class="stat-value">{{ statistics.totalUsers | number }}</p>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon auctions-icon">🔨</div>
+      <div class="stat-content">
+        <h3 class="stat-label">Total Auctions</h3>
+        <p class="stat-value">{{ statistics.totalAuctions | number }}</p>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon active-icon">⚡</div>
+      <div class="stat-content">
+        <h3 class="stat-label">Active Auctions</h3>
+        <p class="stat-value">{{ statistics.activeAuctions | number }}</p>
+      </div>
+    </div>
+  </div>
+  </div>
+</div>
+

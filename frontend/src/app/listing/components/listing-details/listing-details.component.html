@@ -1,0 +1,393 @@
+<app-header activePage="auctions"></app-header>
+
+<div class="listing-details-page">
+  <div class="container">
+    <!-- Loading State -->
+    <div *ngIf="loading" class="loading-state">
+      <p>Loading listing details...</p>
+    </div>
+
+    <!-- Error State -->
+    <div *ngIf="error && !loading" class="error-state">
+      <div class="error-content">
+        <h2>⚠️ {{ error }}</h2>
+        <button class="btn btn-primary" (click)="goBack()">Back to Listings</button>
+      </div>
+    </div>
+
+    <!-- Listing Details -->
+    <div *ngIf="listing && !loading && !error" class="listing-details">
+      <!-- Back Button -->
+      <button class="btn-back" (click)="goBack()">← Back to Listings</button>
+
+      <!-- Main Content -->
+      <div class="listing-main">
+        <!-- Images Section -->
+        <div class="listing-images">
+          <div class="main-image-container">
+            <img 
+              [src]="listing.images[activeImageIndex] || listing.images[0] || 'https://via.placeholder.com/800x600?text=No+Image'" 
+              [alt]="listing.title" 
+              class="main-image">
+            <div class="listing-badges">
+              <span class="badge badge-featured" *ngIf="listing.isFeatured">⭐ Featured</span>
+              <span class="badge badge-verified" *ngIf="listing.isVerified">✓ Verified</span>
+              <span class="badge badge-ending-soon" *ngIf="listing.endingSoon">⏰ Ending Soon</span>
+            </div>
+          </div>
+          
+          <!-- Thumbnail Images -->
+          <div class="thumbnail-images" *ngIf="listing.images.length > 1">
+            <div 
+              *ngFor="let image of listing.images; let i = index"
+              class="thumbnail"
+              [class.active]="i === activeImageIndex"
+              (click)="setActiveImage(i)">
+              <img [src]="image" [alt]="listing.title + ' thumbnail ' + (i + 1)">
+            </div>
+          </div>
+        </div>
+
+        <!-- Details Section -->
+        <div class="listing-info">
+          <div class="listing-header">
+            <h1 class="listing-title">{{ listing.title }}</h1>
+            <span class="listing-category">{{ listing.category }}</span>
+          </div>
+
+          <!-- Price and Bid Info -->
+          <div class="price-section">
+            <div class="current-price">
+              <span class="price-label" *ngIf="listing.auctionFormat === 'highest-bid'">Current Bid</span>
+              <span class="price-label" *ngIf="listing.auctionFormat === 'best-offer'">Current Offer</span>
+              <span class="price-amount">{{ formatPrice(listing.currentPrice) }}</span>
+            </div>
+            
+            <!-- Buy Now Price Display -->
+            <div class="buy-now-section" *ngIf="listing.buyNowPrice && listing.auctionFormat === 'highest-bid' && !isAuctionEnded() && !hasPrivateRoom()">
+              <div class="buy-now-content">
+                <span class="buy-now-label">Buy Now</span>
+                <span class="buy-now-price">{{ formatPrice(listing.buyNowPrice) }}</span>
+                <button class="btn btn-urgent btn-small" (click)="buyNow()">Buy Now</button>
+              </div>
+            </div>
+            
+            <!-- Private Room Status -->
+            <div class="private-room-banner" *ngIf="listing.privateRoomStatus === 'active'">
+              <div class="private-room-content">
+                <span class="private-room-icon">🔒</span>
+                <div class="private-room-text">
+                  <h4>Private Room Active</h4>
+                  <p>Only Platinum Bidders can place bids. Each bid extends the deadline by 30 seconds.</p>
+                </div>
+                <button class="btn btn-view-room" (click)="openPrivateRoom()" title="Open in new window">
+                  View Private Room
+                </button>
+              </div>
+            </div>
+            <!-- Time Remaining Display -->
+            <div class="time-remaining-display" *ngIf="!isAuctionEnded() && listing.timeRemaining && !listing.timeRemaining.ended">
+              <div class="time-remaining-content" [class.private-room]="getAuctionEndType() === 'private-room'">
+                <span class="time-icon">{{ getAuctionEndType() === 'private-room' ? '🔒' : '⏰' }}</span>
+                <div class="time-text">
+                  <span class="time-label">{{ getAuctionEndLabel() }}</span>
+                  <span class="time-value">{{ formatTimeRemaining() }}</span>
+                </div>
+              </div>
+            </div>
+            <!-- Auction Ended Message -->
+            <div class="auction-ended-banner" *ngIf="isAuctionEnded() && !hasPrivateRoom()">
+              <div class="auction-ended-content">
+                <span class="ended-icon">🏁</span>
+                <div class="ended-text">
+                  <h4>Auction Ended</h4>
+                  <p>The seller will select a winner within 24 hours.</p>
+                </div>
+              </div>
+            </div>
+            <div class="price-details">
+              <div class="price-detail-item">
+                <span class="detail-label">Starting {{ listing.auctionFormat === 'highest-bid' ? 'Bid' : 'Offer' }}:</span>
+                <span class="detail-value">{{ formatPrice(listing.startingPrice) }}</span>
+              </div>
+              <div class="price-detail-item" *ngIf="listing.reservePrice && listing.auctionFormat === 'highest-bid'">
+                <span class="detail-label">Reserve Price:</span>
+                <span class="detail-value">{{ formatPrice(listing.reservePrice) }}</span>
+                <span class="reserve-note">(Seller must sell if met)</span>
+              </div>
+              <div class="price-detail-item" *ngIf="listing.minimumOfferPrice && listing.auctionFormat === 'best-offer'">
+                <span class="detail-label">Minimum Offer:</span>
+                <span class="detail-value">{{ formatPrice(listing.minimumOfferPrice) }}</span>
+                <span class="reserve-note">(Auto-accepts if met)</span>
+              </div>
+              <div class="price-detail-item" *ngIf="listing.auctionFormat === 'highest-bid'">
+                <span class="detail-label">Bid Increment:</span>
+                <span class="detail-value">{{ formatPrice(listing.bidIncrement) }}</span>
+              </div>
+              <!-- <div class="price-detail-item">
+                <span class="detail-label">Duration:</span>
+                <span class="detail-value">{{ listing.durationSlot }}</span>
+              </div>
+              <div class="price-detail-item">
+                <span class="detail-label">Commission:</span>
+                <span class="detail-value">{{ (listing.commissionRate * 100).toFixed(1) }}%</span>
+                <span class="commission-note" *ngIf="listing.allowPrivateRoom && listing.auctionFormat === 'highest-bid'">(Private Room enabled)</span>
+              </div> -->
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="action-buttons">
+            <!-- Only show action buttons if private room is NOT active -->
+            <button 
+              class="btn btn-primary btn-large" 
+              *ngIf="listing.auctionFormat === 'highest-bid' && !isAuctionEnded() && !hasPrivateRoom()"
+              (click)="placeBid()">
+              {{ isAuthenticated ? 'Place Bid' : 'Place Bid (Email Required)' }}
+            </button>
+            <div *ngIf="isAuctionEnded() && !hasPrivateRoom()" class="auction-ended-message">
+              <p>This auction has ended. The seller will select a winner within 24 hours.</p>
+            </div>
+            <button 
+              class="btn btn-primary btn-large" 
+              *ngIf="listing.auctionFormat === 'best-offer' && !hasPrivateRoom()"
+              (click)="placeOffer()">
+              Make Offer
+            </button>
+            <button 
+              class="btn btn-secondary btn-large" 
+              *ngIf="isAuthenticated && !hasPrivateRoom()" 
+              (click)="addToWatchlist()">
+              Add to Watchlist
+            </button>
+          </div>
+
+          <!-- Auction Info -->
+          <div class="auction-info">
+            <div class="info-item">
+              <span class="info-icon">👥</span>
+              <div class="info-content">
+                <span class="info-label">{{ listing.auctionFormat === 'highest-bid' ? 'Bids' : 'Offers' }}</span>
+                <span class="info-value">{{ getOfferOrBidCount() }} {{ getOfferOrBidCount() === 1 ? (listing.auctionFormat === 'highest-bid' ? 'bid' : 'offer') : (listing.auctionFormat === 'highest-bid' ? 'bids' : 'offers') }}</span>
+              </div>
+            </div>
+            <div class="info-item">
+              <span class="info-icon">👤</span>
+              <div class="info-content">
+                <span class="info-label">Seller</span>
+                <span class="info-value">{{ listing.seller.firstName }} {{ listing.seller.lastName }}</span>
+              </div>
+            </div>
+            <div class="info-item">
+              <span class="info-icon">🏷️</span>
+              <div class="info-content">
+                <span class="info-label">Condition</span>
+                <span class="info-value">{{ listing.condition }}</span>
+              </div>
+            </div>
+            <div class="info-item" *ngIf="listing.location">
+              <span class="info-icon">📍</span>
+              <div class="info-content">
+                <span class="info-label">Location</span>
+                <span class="info-value">{{ listing.location }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Verification Info -->
+          <div class="verification-section" *ngIf="listing.isVerified && listing.verificationDetails">
+            <div class="verification-badge">
+              <span class="verify-icon">✓</span>
+              <div class="verification-content">
+                <h4>Verified Listing</h4>
+                <p>{{ listing.verificationDetails }}</p>
+              </div>
+            </div>
+          </div>
+
+          
+        </div>
+      </div>
+
+      <!-- Tabs Section -->
+      <div class="tabs-section">
+        <div class="tabs-header">
+          <button 
+            class="tab-button" 
+            [class.active]="activeTab === 'description'"
+            (click)="setActiveTab('description')">
+            Description
+          </button>
+          <button 
+            class="tab-button" 
+            [class.active]="activeTab === 'bids'"
+            *ngIf="listing.auctionFormat === 'highest-bid'"
+            (click)="setActiveTab('bids')">
+            Bid History ({{ bids.length }})
+          </button>
+          <button 
+            class="tab-button" 
+            [class.active]="activeTab === 'offers'"
+            *ngIf="listing.auctionFormat === 'best-offer'"
+            (click)="setActiveTab('offers')">
+            Offers ({{ offers.length }})
+          </button>
+        </div>
+
+        <!-- Description Tab Content -->
+        <div class="tab-content" *ngIf="activeTab === 'description'">
+          <div class="description-content" [innerHTML]="getFormattedDescription()"></div>
+        </div>
+
+        <!-- Bid History Tab Content -->
+        <div class="tab-content" *ngIf="activeTab === 'bids' && listing.auctionFormat === 'highest-bid'">
+          <div class="bid-history">
+            <!-- Loading State -->
+            <div *ngIf="bidsLoading" class="bids-loading">
+              <p>Loading bid history...</p>
+            </div>
+
+            <!-- Error State -->
+            <div *ngIf="bidsError && !bidsLoading" class="bids-error">
+              <p>{{ bidsError }}</p>
+              <button class="btn btn-secondary" (click)="listing && loadBids(listing._id)">Try Again</button>
+            </div>
+
+            <!-- Bids List -->
+            <div *ngIf="!bidsLoading && !bidsError">
+              <div *ngIf="bids.length === 0" class="no-bids">
+                <div class="no-bids-content">
+                  <span class="no-bids-icon">💰</span>
+                  <h3>No Bids Yet</h3>
+                  <p>Be the first to place a bid on this item!</p>
+                </div>
+              </div>
+
+              <div *ngIf="bids.length > 0" class="bids-list">
+                <div class="bid-item" *ngFor="let bid of bids; let i = index" [class.top-bid]="i === 0">
+                  <div class="bid-rank">{{ i + 1 }}</div>
+                  <div class="bid-avatar">
+                    {{ bid.bidderInitials || 'A' }}
+                  </div>
+                  <div class="bid-info">
+                    <div class="bid-header">
+                      <div class="bid-bidder">
+                        <div class="bidder-main-info">
+                          <span class="bidder-name">
+                            <span *ngIf="bid.bidderFirstName && bid.bidderLastName">
+                              {{ bid.bidderFirstName }} {{ bid.bidderLastName }}
+                            </span>
+                            <span *ngIf="!bid.bidderFirstName || !bid.bidderLastName">
+                              {{ bid.bidderName || 'Anonymous' }}
+                            </span>
+                          </span>
+                          <div class="bidder-badges">
+                            <span class="badge badge-authenticated" *ngIf="bid.isAuthenticated">
+                              <span class="badge-icon">✓</span>
+                              Authenticated
+                            </span>
+                            <span class="badge badge-unauthenticated" *ngIf="!bid.isAuthenticated">
+                              <span class="badge-icon">⚠</span>
+                              Guest Bidder
+                            </span>
+                            <span class="badge badge-verified" *ngIf="bid.bidderVerified">
+                              <span class="badge-icon">✓</span>
+                              Verified
+                            </span>
+                            <span class="badge badge-deposit" *ngIf="bid.bidderHasDeposit">
+                              <span class="badge-icon">$</span>
+                              Deposit
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="bid-amount-container">
+                        <div class="bid-amount">{{ formatBidAmount(bid.amount) }}</div>
+                        <div class="bid-date-time">
+                          <span class="bid-date">{{ formatBidDate(bid.createdAt) }}</span>
+                          <span class="bid-type" *ngIf="bid.bidType !== 'manual'">{{ bid.bidType }}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Offers Tab Content -->
+        <div class="tab-content" *ngIf="activeTab === 'offers' && listing.auctionFormat === 'best-offer'">
+          <div class="offer-history">
+            <!-- Loading State -->
+            <div *ngIf="offersLoading" class="offers-loading">
+              <p>Loading offers...</p>
+            </div>
+
+            <!-- Error State -->
+            <div *ngIf="offersError && !offersLoading" class="offers-error">
+              <p>{{ offersError }}</p>
+              <button class="btn btn-secondary" (click)="listing && loadOffers(listing._id)">Try Again</button>
+            </div>
+
+            <!-- Offers List -->
+            <div *ngIf="!offersLoading && !offersError">
+              <div *ngIf="offers.length === 0" class="no-offers">
+                <div class="no-offers-content">
+                  <span class="no-offers-icon">💰</span>
+                  <h3>No Offers Yet</h3>
+                  <p>Be the first to make an offer on this item!</p>
+                </div>
+              </div>
+
+              <div *ngIf="offers.length > 0" class="offers-list">
+                <div class="offer-item" *ngFor="let offer of offers" [class.accepted]="offer.status === 'accepted'" [class.rejected]="offer.status === 'rejected'">
+                  <div class="offer-avatar">
+                    {{ offer.offererInitials || 'A' }}
+                  </div>
+                  <div class="offer-info">
+                    <div class="offer-header">
+                      <div class="offer-offerer">
+                        <span class="offerer-name">{{ offer.offererName || 'Anonymous' }}</span>
+                        <span class="offer-status" [class.pending]="offer.status === 'pending'" [class.accepted]="offer.status === 'accepted'" [class.rejected]="offer.status === 'rejected'">
+                          {{ formatOfferStatus(offer.status) }}
+                        </span>
+                      </div>
+                      <div class="offer-amount">
+                        {{ formatBidAmount(offer.amount) }}
+                      </div>
+                    </div>
+                    <div class="offer-meta">
+                      <span class="offer-date">{{ formatOfferDate(offer.createdAt) }}</span>
+                      <span class="offer-message" *ngIf="offer.message">{{ offer.message }}</span>
+                      <span class="seller-response" *ngIf="offer.sellerResponse && offer.status !== 'pending'">
+                        Seller: {{ offer.sellerResponse }}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Additional Info -->
+      <div class="additional-info">
+        <div class="info-card">
+          <h3>Shipping</h3>
+          <p>Shipping cost: {{ formatPrice(listing.shippingCost) }}</p>
+          <p *ngIf="listing.location">From: {{ listing.location }}</p>
+        </div>
+        <div class="info-card">
+          <h3>Auction Timeline</h3>
+          <p>Started: {{ listing.startDate | date:'medium' }}</p>
+          <p>Ends: {{ listing.endDate | date:'medium' }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<app-footer></app-footer>
+

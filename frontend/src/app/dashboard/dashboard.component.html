@@ -1,0 +1,33 @@
+<div class="dashboard-container">
+  <!-- Sidebar Navigation -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <h1 class="logo" (click)="navigateToLanding()">BidRoom | DEV</h1>
+    </div>
+    
+    <nav class="sidebar-nav">
+      <a routerLink="/dashboard/my-account" routerLinkActive="active" class="nav-item">
+        <span class="nav-icon">👤</span>
+        <span class="nav-text">My Account</span>
+      </a>
+      <a routerLink="/dashboard/my-auctions" routerLinkActive="active" class="nav-item">
+        <span class="nav-icon">🔨</span>
+        <span class="nav-text">My Auctions</span>
+      </a>
+      <!-- More nav items will be added here -->
+    </nav>
+
+    <div class="sidebar-footer">
+      <button class="logout-btn" (click)="logout()">
+        <span class="nav-icon">🚪</span>
+        <span class="nav-text">Logout</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- Main Content Area -->
+  <main class="dashboard-main">
+    <router-outlet></router-outlet>
+  </main>
+</div>
+

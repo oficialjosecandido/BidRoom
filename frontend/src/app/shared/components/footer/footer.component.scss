@@ -1,0 +1,75 @@
+// Footer Styles
+.footer {
+  background: var(--primary-black);
+  color: var(--primary-white);
+  padding: 60px 0 20px;
+  
+  h4 {
+    color: var(--primary-white);
+    margin-bottom: 20px;
+    font-size: 18px;
+  }
+  
+  p {
+    color: var(--text-gray);
+    line-height: 1.6;
+    margin-bottom: 20px;
+  }
+  
+  ul {
+    list-style: none;
+    
+    li {
+      margin-bottom: 8px;
+      
+      a {
+        color: var(--text-gray);
+        transition: color 0.2s ease;
+        cursor: pointer;
+        
+        &:hover {
+          color: var(--primary-white);
+        }
+      }
+    }
+  }
+  
+  .social-links {
+    display: flex;
+    gap: 16px;
+    
+    a {
+      color: var(--text-gray);
+      transition: color 0.2s ease;
+      
+      &:hover {
+        color: var(--primary-white);
+      }
+    }
+  }
+  
+  .footer-bottom {
+    border-top: 1px solid #333;
+    margin-top: 40px;
+    padding-top: 20px;
+    text-align: center;
+    
+    p {
+      color: var(--text-gray);
+      font-size: 14px;
+      margin: 0;
+    }
+  }
+}
+
+// Responsive Design
+@media (max-width: 768px) {
+  .footer {
+    padding: 40px 0 20px;
+    
+    .row {
+      flex-direction: column;
+      gap: 30px;
+    }
+  }
+}

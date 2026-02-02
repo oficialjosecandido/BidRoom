@@ -1,0 +1,257 @@
+.listing-list-page {
+  padding: 40px 0 80px;
+  min-height: 60vh;
+
+  .page-header {
+    margin-bottom: 40px;
+    text-align: center;
+
+    .page-title {
+      font-size: 36px;
+      font-weight: 700;
+      color: var(--text-dark);
+      margin-bottom: 12px;
+    }
+
+    .page-subtitle {
+      font-size: 18px;
+      color: var(--text-gray);
+    }
+  }
+
+  .filters-section {
+    background: var(--primary-white);
+    border-radius: 8px;
+    padding: 24px;
+    margin-bottom: 40px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+
+    .filters-row {
+      display: flex;
+      gap: 24px;
+      flex-wrap: wrap;
+    }
+
+    .filter-group {
+      flex: 1;
+      min-width: 200px;
+
+      label {
+        display: block;
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--text-dark);
+        margin-bottom: 8px;
+      }
+
+      .filter-select {
+        width: 100%;
+        padding: 10px 16px;
+        border: 1px solid var(--border-gray);
+        border-radius: 4px;
+        background: var(--primary-white);
+        font-size: 14px;
+        cursor: pointer;
+        transition: border-color 0.2s ease;
+
+        &:hover {
+          border-color: var(--accent-purple);
+        }
+
+        &:focus {
+          outline: none;
+          border-color: var(--accent-purple);
+          box-shadow: 0 0 0 3px rgba(139, 90, 150, 0.1);
+        }
+      }
+    }
+  }
+
+  .loading-state,
+  .error-state,
+  .empty-state {
+    text-align: center;
+    padding: 80px 40px;
+
+    p {
+      font-size: 18px;
+      color: var(--text-gray);
+    }
+  }
+
+  .error-state {
+    .error-content {
+      h3 {
+        font-size: 24px;
+        margin-bottom: 16px;
+        color: var(--text-dark);
+      }
+
+      p {
+        margin-bottom: 32px;
+      }
+    }
+  }
+
+  .listings-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 24px;
+  }
+
+  .listing-card {
+    background: var(--primary-white);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    cursor: pointer;
+
+    &:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    }
+
+    .listing-image-container {
+      position: relative;
+      width: 100%;
+      height: 250px;
+      overflow: hidden;
+
+      .listing-image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.3s ease;
+      }
+
+      &:hover .listing-image {
+        transform: scale(1.1);
+      }
+
+      .listing-badges {
+        position: absolute;
+        top: 12px;
+        left: 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        z-index: 2;
+
+        .badge {
+          padding: 6px 12px;
+          border-radius: 20px;
+          font-size: 12px;
+          font-weight: 600;
+          white-space: nowrap;
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+
+          &.badge-featured {
+            background: linear-gradient(135deg, #FFD700, #FFA500);
+            color: var(--text-dark);
+          }
+
+          &.badge-verified {
+            background: var(--accent-purple);
+            color: var(--primary-white);
+          }
+
+          &.badge-ending-soon {
+            background: var(--accent-peach);
+            color: var(--primary-white);
+          }
+        }
+      }
+    }
+
+    .listing-content {
+      padding: 20px;
+
+      .listing-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 12px;
+
+        .listing-title {
+          font-size: 18px;
+          font-weight: 600;
+          color: var(--text-dark);
+          margin: 0;
+          flex: 1;
+          line-height: 1.4;
+        }
+
+        .listing-category {
+          font-size: 12px;
+          color: var(--text-gray);
+          background: var(--light-gray);
+          padding: 4px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+          margin-left: 12px;
+        }
+      }
+
+      .listing-description {
+        font-size: 14px;
+        color: var(--text-gray);
+        line-height: 1.6;
+        margin-bottom: 16px;
+      }
+
+      .listing-meta {
+        .listing-price-info {
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+          margin-bottom: 12px;
+
+          .listing-current-price {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--accent-purple);
+          }
+
+          .listing-starting-price {
+            font-size: 12px;
+            color: var(--text-gray);
+          }
+        }
+
+        .listing-bid-info {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          font-size: 14px;
+          color: var(--text-gray);
+
+          .bid-count {
+            font-weight: 600;
+          }
+
+          .time-remaining {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+          }
+        }
+      }
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .listing-list-page {
+    .filters-section {
+      .filters-row {
+        flex-direction: column;
+      }
+    }
+
+    .listings-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+}
+

@@ -1,0 +1,11 @@
+{
+  "name": "bidroom",
+  "version": "1.0.0",
+  "description": "BidRoom - Auction Marketplace",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "scripts": {
+    "build": "cd frontend && npm run build"
+  }
+}

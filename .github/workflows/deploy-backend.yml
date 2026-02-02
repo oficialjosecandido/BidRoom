@@ -1,0 +1,63 @@
+name: Deploy Backend to Azure
+
+on:
+  push:
+    branches:
+      - main
+      - dev
+    paths:
+      - 'backend/**'
+      - '.github/workflows/deploy-backend.yml'
+  workflow_dispatch:
+
+env:
+  AZURE_WEBAPP_NAME: bidroom-backend-dev
+  AZURE_RESOURCE_GROUP: bidroom-dev-rg
+  NODE_VERSION: '20.x'
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install dependencies
+        run: |
+          cd backend
+          npm ci
+
+      - name: Create deployment package
+        run: |
+          cd backend
+          # Include node_modules in deployment package
+          # Azure App Service needs all dependencies available
+          zip -r ../backend-deploy.zip . \
+            -x "*.git*" \
+            -x "*.log" \
+            -x "*.env*" \
+            -x "*.example" \
+            -x "*.md" \
+            -x "*test*" \
+            -x "*.test.js" \
+            -x "*.spec.js"
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Deploy to Azure Web App
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ env.AZURE_WEBAPP_NAME }}
+          package: ./backend-deploy.zip
+

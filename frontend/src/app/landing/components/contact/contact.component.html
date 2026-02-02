@@ -1,0 +1,203 @@
+<app-header activePage="contact"></app-header>
+
+<!-- Page Header -->
+<section class="page-header">
+  <div class="container">
+    <h1>Contact Us</h1>
+    <p>We're here to help! Get in touch with our support team for any questions or concerns.</p>
+  </div>
+</section>
+
+<!-- Contact Section -->
+<section class="contact-section">
+  <div class="container">
+    <div class="row">
+      <!-- Contact Form -->
+      <div class="col-8">
+        <div class="contact-form-container">
+          <h2>Send us a Message</h2>
+          <p>Fill out the form below and we'll get back to you as soon as possible.</p>
+          
+          <form [formGroup]="contactForm" (ngSubmit)="onSubmit()" class="contact-form">
+            <div class="form-row">
+              <div class="form-group">
+                <label for="name">Full Name *</label>
+                <input
+                  type="text"
+                  id="name"
+                  formControlName="name"
+                  [class.error]="getFieldError('name')"
+                  placeholder="Your full name"
+                />
+                <div class="field-error" *ngIf="getFieldError('name')">
+                  {{ getFieldError('name') }}
+                </div>
+              </div>
+              
+              <div class="form-group">
+                <label for="email">Email Address *</label>
+                <input
+                  type="email"
+                  id="email"
+                  formControlName="email"
+                  [class.error]="getFieldError('email')"
+                  placeholder="your.email@example.com"
+                />
+                <div class="field-error" *ngIf="getFieldError('email')">
+                  {{ getFieldError('email') }}
+                </div>
+              </div>
+            </div>
+            
+            <div class="form-group">
+              <label for="inquiryType">Inquiry Type *</label>
+              <select
+                id="inquiryType"
+                formControlName="inquiryType"
+                [class.error]="getFieldError('inquiryType')"
+              >
+                <option value="general">General Question</option>
+                <option value="technical">Technical Support</option>
+                <option value="billing">Billing & Payments</option>
+                <option value="account">Account Issues</option>
+                <option value="report">Report a Problem</option>
+                <option value="partnership">Partnership Inquiry</option>
+              </select>
+              <div class="field-error" *ngIf="getFieldError('inquiryType')">
+                {{ getFieldError('inquiryType') }}
+              </div>
+            </div>
+            
+            <div class="form-group">
+              <label for="subject">Subject *</label>
+              <input
+                type="text"
+                id="subject"
+                formControlName="subject"
+                [class.error]="getFieldError('subject')"
+                placeholder="Brief description of your inquiry"
+              />
+              <div class="field-error" *ngIf="getFieldError('subject')">
+                {{ getFieldError('subject') }}
+              </div>
+            </div>
+            
+            <div class="form-group">
+              <label for="message">Message *</label>
+              <textarea
+                id="message"
+                formControlName="message"
+                [class.error]="getFieldError('message')"
+                placeholder="Please provide details about your inquiry..."
+                rows="6"
+              ></textarea>
+              <div class="field-error" *ngIf="getFieldError('message')">
+                {{ getFieldError('message') }}
+              </div>
+            </div>
+            
+            <button
+              type="submit"
+              class="btn btn-primary btn-large"
+              [disabled]="contactForm.invalid || isSubmitting"
+            >
+              <span *ngIf="!isSubmitting">Send Message</span>
+              <span *ngIf="isSubmitting">Sending...</span>
+            </button>
+            
+            <div class="submit-message" *ngIf="submitMessage">
+              {{ submitMessage }}
+            </div>
+          </form>
+        </div>
+      </div>
+      
+      <!-- Contact Information -->
+      <div class="col-4">
+        <div class="contact-info">
+          <h3>Get in Touch</h3>
+          <p>We're here to help with any questions you might have about BidRoom.</p>
+          
+          <div class="contact-methods">
+            <div class="contact-method">
+              <div class="contact-icon">📧</div>
+              <div class="contact-details">
+                <h4>Email Support</h4>
+                <p>support@bidroom.com</p>
+                <small>Response within 24 hours</small>
+              </div>
+            </div>
+            
+            <div class="contact-method">
+              <div class="contact-icon">💬</div>
+              <div class="contact-details">
+                <h4>Live Chat</h4>
+                <p>Available 9 AM - 6 PM EST</p>
+                <small>Monday through Friday</small>
+              </div>
+            </div>
+            
+            <div class="contact-method">
+              <div class="contact-icon">📞</div>
+              <div class="contact-details">
+                <h4>Phone Support</h4>
+                <p>1-800-BIDROOM</p>
+                <small>9 AM - 6 PM EST</small>
+              </div>
+            </div>
+          </div>
+          
+          <div class="business-hours">
+            <h4>Business Hours</h4>
+            <ul>
+              <li>Monday - Friday: 9:00 AM - 6:00 PM EST</li>
+              <li>Saturday: 10:00 AM - 4:00 PM EST</li>
+              <li>Sunday: Closed</li>
+            </ul>
+          </div>
+          
+          <div class="emergency-contact">
+            <h4>Urgent Issues</h4>
+            <p>For urgent account or security issues, please call our emergency line:</p>
+            <p><strong>1-800-URGENT-1</strong></p>
+            <small>Available 24/7 for critical issues only</small>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ Quick Links -->
+<section class="faq-links">
+  <div class="container">
+    <h2 class="section-title">Quick Answers</h2>
+    <p class="section-subtitle">Check our FAQ for instant answers to common questions.</p>
+    
+    <div class="row">
+      <div class="col-4">
+        <div class="faq-link-card">
+          <h3>Account & Billing</h3>
+          <p>Questions about your account, payments, and billing.</p>
+          <a href="/landing/faq#account" class="btn btn-secondary">View FAQ</a>
+        </div>
+      </div>
+      <div class="col-4">
+        <div class="faq-link-card">
+          <h3>Bidding & Auctions</h3>
+          <p>Learn how to bid, win auctions, and understand the process.</p>
+          <a href="/landing/faq#bidding" class="btn btn-secondary">View FAQ</a>
+        </div>
+      </div>
+      <div class="col-4">
+        <div class="faq-link-card">
+          <h3>Technical Support</h3>
+          <p>Help with website issues, mobile app, and technical problems.</p>
+          <a href="/landing/faq#technical" class="btn btn-secondary">View FAQ</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<app-footer></app-footer>
