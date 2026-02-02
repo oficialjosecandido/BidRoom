@@ -191,125 +191,12 @@ router.post('/listings/:id/platinum-bidders', authenticateToken, async (req, res
   }
 });
 
-// Accept platinum bidder invitation (public endpoint - uses token)
-router.post('/invitation/accept', async (req, res) => {
-  try {
-    const { token, listingId } = req.body;
-
-    if (!token || !listingId) {
-      return res.status(400).json({ 
-        error: 'Invalid request',
-        message: 'Token and listing ID are required' 
-      });
-    }
-
-    const listing = await Listing.findById(listingId);
-    if (!listing) {
-      return res.status(404).json({ error: 'Listing not found' });
-    }
-
-    // Find the invitation
-    const invitation = listing.platinumBidderInvitations.find(
-      inv => inv.invitationToken === token && inv.status === 'pending'
-    );
-
-    if (!invitation) {
-      return res.status(404).json({ 
-        error: 'Invalid invitation',
-        message: 'Invitation not found or already processed' 
-      });
-    }
-
-    // Update invitation status
-    invitation.status = 'accepted';
-    invitation.acceptedAt = new Date();
-
-    await listing.save();
-
-    // Emit socket event if available
-    const io = req.app.get('io');
-    if (io) {
-      io.to(`listing:${listingId}`).emit('listing-updated', {
-        listingId: listing._id.toString(),
-        privateRoomStatus: listing.privateRoomStatus
-      });
-    }
-
-    res.json({
-      success: true,
-      message: 'Invitation accepted successfully',
-      privateRoomStatus: listing.privateRoomStatus
-    });
-  } catch (error) {
-    console.error('Error accepting invitation:', error);
-    res.status(500).json({ 
-      error: 'Failed to accept invitation',
-      message: error.message 
-    });
-  }
-});
-
-// Decline platinum bidder invitation (public endpoint - uses token)
-router.post('/invitation/decline', async (req, res) => {
-  try {
-    const { token, listingId } = req.body;
-
-    if (!token || !listingId) {
-      return res.status(400).json({ 
-        error: 'Invalid request',
-        message: 'Token and listing ID are required' 
-      });
-    }
-
-    const listing = await Listing.findById(listingId);
-    if (!listing) {
-      return res.status(404).json({ error: 'Listing not found' });
-    }
-
-    // Find the invitation
-    const invitation = listing.platinumBidderInvitations.find(
-      inv => inv.invitationToken === token && inv.status === 'pending'
-    );
-
-    if (!invitation) {
-      return res.status(404).json({ 
-        error: 'Invalid invitation',
-        message: 'Invitation not found or already processed' 
-      });
-    }
-
-    // Update invitation status
-    invitation.status = 'declined';
-
-    // Remove bidder from platinum bidders list
-    listing.platinumBidders = listing.platinumBidders.filter(
-      pb => pb.toString() !== invitation.bidder.toString()
-    );
-
-    // Note: Private room activation happens after acceptance window expires (handled by scheduler)
-    // We just save the decline status here
-
-    await listing.save();
-
-    res.json({
-      success: true,
-      message: 'Invitation declined'
-    });
-  } catch (error) {
-    console.error('Error declining invitation:', error);
-    res.status(500).json({ 
-      error: 'Failed to decline invitation',
-      message: error.message 
-    });
-  }
-});
-
 // Check if current user is a platinum bidder for a listing
 router.get('/listings/:id/check-platinum', authenticateToken, async (req, res) => {
   try {
     const listingId = req.params.id;
     const listing = await Listing.findById(listingId)
-      .select('platinumBidders platinumBidderInvitations');
+      .select('platinumBidders');
     
     if (!listing) {
       return res.status(404).json({ error: 'Listing not found' });

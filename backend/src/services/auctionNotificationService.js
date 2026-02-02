@@ -223,16 +223,17 @@ async function handleAuctionEnd(listingId) {
       return;
     }
 
-    // Check if private room is enabled and has platinum bidders
+    // Check if private room is enabled and has platinum bidders - activate private room immediately (no acceptance window)
     if (listing.allowPrivateRoom && listing.platinumBidders && listing.platinumBidders.length > 0) {
-      // Set acceptance window deadline (5 minutes from now)
       const now = new Date();
-      const acceptanceDeadline = new Date(now.getTime() + 5 * 60 * 1000); // 5 minutes
-      
-      listing.status = 'ended'; // Mark main auction as ended
-      listing.privateRoomStatus = 'eligible'; // Set to eligible for acceptance window
-      listing.platinumBidderAcceptanceDeadline = acceptanceDeadline;
-      
+      const privateRoomEndDate = new Date(now.getTime() + 24 * 60 * 60 * 1000); // 24 hours from now
+
+      listing.status = 'active'; // Keep active so platinum bidders can bid in private room
+      listing.privateRoomStatus = 'active'; // Private room active immediately - platinum bidders can bid without accepting
+      listing.privateRoomEndDate = privateRoomEndDate;
+      listing.privateRoomLastBidTime = null;
+      listing.endDate = privateRoomEndDate; // Extend end date for private room
+
       await listing.save();
 
       // Get highest bid for notifications
@@ -241,25 +242,23 @@ async function handleAuctionEnd(listingId) {
         .populate('bidder', 'firstName lastName email')
         .lean();
 
-      // Send notifications to all bidders (except winner and seller)
       if (highestBid) {
         await sendAuctionClosedNotifications(listing, highestBid._id);
       } else {
         await sendAuctionClosedNotifications(listing);
       }
 
-      // Send notification to seller about 5-minute window
       await sendChooseWinnerNotification(listing);
 
-      console.log(`⏳ Private room acceptance window started for listing: ${listingId}. Window closes at ${acceptanceDeadline.toISOString()}`);
+      console.log(`🔒 Private room activated for listing: ${listingId}. Ends at ${privateRoomEndDate.toISOString()}`);
       console.log(`✅ Auction end notifications sent for listing: ${listingId}`);
 
       return {
         listingId,
         notified: true,
         hasBids: !!highestBid,
-        privateRoomWindow: true,
-        acceptanceDeadline: acceptanceDeadline
+        privateRoomActive: true,
+        privateRoomEndDate
       };
     } else {
       // Regular auction end (no private room)

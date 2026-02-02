@@ -1,5 +1,4 @@
 const express = require('express');
-const crypto = require('crypto');
 const { authenticateToken } = require('../middleware/auth');
 const User = require('../models/User');
 const Listing = require('../models/Listing');
@@ -141,29 +140,14 @@ router.post('/auctions/:id/private-room', authenticateToken, requireAdmin, async
       });
     }
 
-    // Generate invitation tokens and create invitations
-    const invitations = platinumBidderIds.map(bidderId => {
-      const invitationToken = crypto.randomBytes(32).toString('hex');
-      return {
-        bidder: bidderId,
-        status: 'pending',
-        invitedAt: new Date(),
-        invitationToken
-      };
-    });
-
-    // Set platinum bidders and invitations
+    // Set platinum bidders (no acceptance required - room is active immediately)
     listing.platinumBidders = platinumBidderIds;
-    listing.platinumBidderInvitations = invitations;
     listing.platinumBidderInvitedAt = new Date();
 
-    // Set private room status to 'eligible' (will become 'active' after acceptance window)
-    // Note: If auction hasn't ended yet, invitations will be sent but private room won't start until auction ends
-    // The 5-minute acceptance window starts when the auction ends
     const now = new Date();
     const privateRoomEndDate = new Date(now.getTime() + 24 * 60 * 60 * 1000); // 24 hours from now
 
-    listing.privateRoomStatus = 'eligible';
+    listing.privateRoomStatus = 'active';
     listing.privateRoomEndDate = privateRoomEndDate;
     listing.privateRoomLastBidTime = null;
     
@@ -180,60 +164,49 @@ router.post('/auctions/:id/private-room', authenticateToken, requireAdmin, async
 
     await listing.save();
 
-    // Send invitation emails to all selected bidders
+    // Send notification emails to all platinum bidders (no accept/decline - they can join immediately)
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:4200';
-    
+    const listingUrl = `${frontendUrl}/listing/${listing.slug}`;
+
     for (const bidder of validBidders) {
       try {
-        const invitation = invitations.find(inv => inv.bidder.toString() === bidder._id.toString());
-        if (!invitation) continue;
-
-        const acceptUrl = `${frontendUrl}/private-room/invitation/accept?token=${invitation.invitationToken}&listingId=${listingId}&action=accept`;
-        const declineUrl = `${frontendUrl}/private-room/invitation/decline?token=${invitation.invitationToken}&listingId=${listingId}&action=decline`;
-
         const emailData = {
           bidderName: `${bidder.firstName} ${bidder.lastName}`,
           listingTitle: listing.title,
-          listingUrl: `${frontendUrl}/listing/${listing.slug}`,
-          acceptUrl,
-          declineUrl,
+          listingUrl,
           currentPrice: listing.currentPrice,
-          endDate: privateRoomEndDate.toLocaleString('en-US', { 
-            year: 'numeric', 
-            month: 'long', 
+          endDate: privateRoomEndDate.toLocaleString('en-US', {
+            year: 'numeric',
+            month: 'long',
             day: 'numeric',
             hour: '2-digit',
             minute: '2-digit'
           })
         };
 
-        // Try to get email template (create if it doesn't exist)
         let emailContent;
         try {
           emailContent = renderEmailTemplate('platinumBidderInvitation', 'en', emailData);
         } catch (templateError) {
-          // Fallback email if template doesn't exist
           emailContent = {
-            subject: `🎯 You're Invited to a Private Auction Room: ${listing.title}`,
+            subject: `🎯 You're in the Private Auction Room: ${listing.title}`,
             html: `
-              <h2>Private Auction Room Invitation</h2>
+              <h2>Private Auction Room</h2>
               <p>Hello ${bidder.firstName},</p>
               <p>You have been selected as a Platinum Bidder for the private auction room of:</p>
               <h3>${listing.title}</h3>
               <p><strong>Current Price:</strong> $${listing.currentPrice.toFixed(2)}</p>
               <p><strong>Private Room Ends:</strong> ${emailData.endDate}</p>
-              <p>Only Platinum Bidders can place bids in this exclusive auction room. Each bid extends the deadline by 30 seconds.</p>
-              <p><a href="${acceptUrl}">Accept Invitation</a> | <a href="${declineUrl}">Decline</a></p>
-              <p>You must accept this invitation to participate in the private room.</p>
+              <p>You can place bids now. Each bid extends the deadline by 30 seconds.</p>
+              <p><a href="${listingUrl}">Join the Private Room</a></p>
             `
           };
         }
 
         await sendEmail(bidder.email, emailContent.subject, emailContent.html);
-        console.log(`📧 Invitation sent to ${bidder.email}`);
+        console.log(`📧 Notification sent to ${bidder.email}`);
       } catch (emailError) {
-        console.error(`Failed to send invitation to ${bidder.email}:`, emailError);
-        // Continue with other invitations even if one fails
+        console.error(`Failed to send notification to ${bidder.email}:`, emailError);
       }
     }
 

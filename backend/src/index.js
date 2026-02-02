@@ -56,7 +56,7 @@ app.use('/api/private-room', privateRoomRoutes);
 
 app.get('/', (req, res) => {
   res.json({
-    message: 'BidRoom API is running on DEV environment!',
+    message: `BidRoom API is running (${process.env.NODE_ENV || 'development'})`,
     version: '1.0.0',
     timestamp: new Date().toISOString()
   });
@@ -70,24 +70,24 @@ app.get('/health', (req, res) => {
   });
 });
 
-// Test MongoDB connection endpoint
-app.get('/test-db', async (req, res) => {
-  try {
-    // Test database connection by counting users
-    const userCount = await User.countDocuments();
-    
-    res.json({
-      message: 'MongoDB connection successful!',
-      userCount: userCount,
-      timestamp: new Date().toISOString()
-    });
-  } catch (error) {
-    res.status(500).json({
-      error: 'Database connection failed',
-      message: error.message
-    });
-  }
-});
+// Test MongoDB connection endpoint (development only)
+if (process.env.NODE_ENV === 'development') {
+  app.get('/test-db', async (req, res) => {
+    try {
+      const userCount = await User.countDocuments();
+      res.json({
+        message: 'MongoDB connection successful!',
+        userCount: userCount,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      res.status(500).json({
+        error: 'Database connection failed',
+        message: error.message
+      });
+    }
+  });
+}
 
 
 // Error handling middleware
@@ -106,9 +106,6 @@ app.use('*', (req, res) => {
     path: req.originalUrl
   });
 });
-
-// Track viewer counts per room
-const viewerCounts = new Map();
 
 // Socket.io connection handling
 io.on('connection', (socket) => {
