@@ -31,8 +31,8 @@ export class LoginComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    // Get return url from route parameters or default to '/dashboard'
-    this.returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/dashboard';
+    // Get return url from route parameters or default to dashboard home
+    this.returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/dashboard/home';
     
     // Check if redirected here due to unverified email
     if (this.route.snapshot.queryParams['verifyEmail'] === 'true') {

@@ -156,13 +156,30 @@ router.post('/', optionalAuth, async (req, res) => {
       bidderEmail = email.toLowerCase().trim();
     }
 
-    // Get the listing (populate platinum bidder invitations if they exist)
+    // Get the listing (populate seller for own-listing check, platinum bidder invitations if they exist)
     const listing = await Listing.findById(listingId)
+      .populate('seller', '_id email')
       .populate('platinumBidderInvitations.bidder', '_id');
     if (!listing) {
       return res.status(404).json({
         error: 'Listing not found'
       });
+    }
+
+    // Block seller from bidding on their own listing
+    if (user && listing.seller && listing.seller._id.toString() === user._id.toString()) {
+      return res.status(403).json({
+        error: 'Cannot bid on your own listing',
+        message: 'You cannot place a bid on your own listing.'
+      });
+    }
+    if (!user && bidderEmail && listing.seller && listing.seller.email) {
+      if (listing.seller.email.toLowerCase() === bidderEmail.toLowerCase()) {
+        return res.status(403).json({
+          error: 'Cannot bid on your own listing',
+          message: 'You cannot place a bid on your own listing.'
+        });
+      }
     }
 
     // Check auction format

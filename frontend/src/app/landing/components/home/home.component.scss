@@ -59,35 +59,129 @@
   }
 }
 
-// Onboarding Section
+// Onboarding Section – keyframes for step cards
+@keyframes stepCardEnter {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .onboarding {
   padding: 80px 0;
-  background: var(--light-gray);
+  background: linear-gradient(180deg, var(--light-gray) 0%, var(--primary-white) 100%);
   
-  .section-title {
+  .onboarding-header {
     text-align: center;
-    margin-bottom: 60px;
-    color: var(--text-dark);
+    margin-bottom: 56px;
   }
   
-  .step {
+  .section-title {
+    margin: 0 0 12px 0;
+    color: var(--text-dark);
+    font-size: 36px;
+    font-weight: 700;
+  }
+  
+  .section-title-accent {
+    display: block;
+    width: 48px;
+    height: 4px;
+    margin: 0 auto 16px auto;
+    background: linear-gradient(90deg, var(--accent-purple, #7A4F84), rgba(122, 79, 132, 0.5));
+    border-radius: 2px;
+  }
+  
+  .section-subtitle {
+    margin: 0;
+    font-size: 18px;
+    color: var(--text-gray);
+    max-width: 480px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  
+  .steps-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 32px;
+    max-width: 1000px;
+    margin: 0 auto;
+  }
+  
+  .step-card {
+    position: relative;
+    background: var(--primary-white);
+    border-radius: 16px;
+    padding: 32px 24px 36px;
     text-align: center;
-    padding: 40px 20px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+    opacity: 0;
+    animation: stepCardEnter 0.5s ease forwards;
+    
+    &.step-card-1 { animation-delay: 0.1s; }
+    &.step-card-2 { animation-delay: 0.2s; }
+    &.step-card-3 { animation-delay: 0.3s; }
+    
+    &:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 32px rgba(122, 79, 132, 0.12);
+      border-color: rgba(122, 79, 132, 0.15);
+    }
+    
+    .step-number {
+      position: absolute;
+      top: 16px;
+      left: 16px;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--accent-purple, #7A4F84);
+      color: var(--primary-white);
+      font-size: 15px;
+      font-weight: 700;
+      border-radius: 50%;
+      box-shadow: 0 2px 8px rgba(122, 79, 132, 0.3);
+    }
+    
+    .step-icon-wrap {
+      width: 76px;
+      height: 76px;
+      margin: 0 auto 20px auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, rgba(122, 79, 132, 0.14) 0%, rgba(122, 79, 132, 0.06) 100%);
+      border: 1px solid rgba(122, 79, 132, 0.12);
+      border-radius: 18px;
+    }
     
     .step-icon {
-      font-size: 48px;
-      margin-bottom: 24px;
+      font-size: 38px;
+      line-height: 1;
     }
     
-    h3 {
-      font-size: 24px;
-      margin-bottom: 16px;
+    .step-title {
+      font-size: 22px;
+      font-weight: 700;
       color: var(--text-dark);
+      margin: 0 0 12px 0;
     }
     
-    p {
+    .step-desc {
+      font-size: 15px;
       color: var(--text-gray);
-      line-height: 1.6;
+      line-height: 1.65;
+      margin: 0;
+      min-height: 3.3em;
     }
   }
 }
@@ -164,45 +258,112 @@
   }
 }
 
-// Categories Section
+// Categories Section – keyframes for card entrance
+@keyframes categoryCardEnter {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .categories {
   padding: 80px 0;
+  background: var(--primary-white);
+  
+  .categories-header {
+    text-align: center;
+    margin-bottom: 48px;
+  }
   
   .section-title {
-    text-align: center;
-    margin-bottom: 60px;
+    margin: 0 0 12px 0;
     color: var(--text-dark);
+    font-size: 36px;
+    font-weight: 700;
+  }
+  
+  .section-title-accent {
+    display: block;
+    width: 48px;
+    height: 4px;
+    margin: 0 auto 16px auto;
+    background: linear-gradient(90deg, var(--accent-purple, #7A4F84), rgba(122, 79, 132, 0.5));
+    border-radius: 2px;
+  }
+  
+  .section-subtitle {
+    margin: 0;
+    font-size: 18px;
+    color: var(--text-gray);
+    max-width: 420px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  
+  .categories-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 24px;
+    max-width: 1000px;
+    margin: 0 auto;
   }
   
   .category-card {
     background: var(--primary-white);
-    border: 1px solid var(--border-gray);
-    border-radius: 8px;
-    padding: 40px 20px;
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    border-radius: 16px;
+    padding: 32px 20px 36px;
     text-align: center;
-    transition: all 0.2s ease;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+    transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
     cursor: pointer;
+    opacity: 0;
+    animation: categoryCardEnter 0.45s ease forwards;
+    
+    &.category-card-1 { animation-delay: 0.05s; }
+    &.category-card-2 { animation-delay: 0.12s; }
+    &.category-card-3 { animation-delay: 0.19s; }
+    &.category-card-4 { animation-delay: 0.26s; }
     
     &:hover {
-      border-color: var(--accent-purple);
+      border-color: rgba(122, 79, 132, 0.2);
       transform: translateY(-4px);
-      box-shadow: 0 8px 24px rgba(139, 90, 150, 0.15);
+      box-shadow: 0 12px 32px rgba(122, 79, 132, 0.12);
+    }
+    
+    .category-icon-wrap {
+      width: 72px;
+      height: 72px;
+      margin: 0 auto 20px auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, rgba(122, 79, 132, 0.12) 0%, rgba(122, 79, 132, 0.06) 100%);
+      border: 1px solid rgba(122, 79, 132, 0.1);
+      border-radius: 18px;
     }
     
     .category-icon {
-      font-size: 48px;
-      margin-bottom: 24px;
+      font-size: 40px;
+      line-height: 1;
     }
     
-    h3 {
+    .category-title {
       font-size: 20px;
-      margin-bottom: 12px;
+      font-weight: 700;
+      margin: 0 0 8px 0;
       color: var(--text-dark);
     }
     
-    p {
-      color: var(--text-gray);
+    .category-desc {
       font-size: 14px;
+      color: var(--text-gray);
+      line-height: 1.5;
+      margin: 0;
     }
   }
 }
@@ -539,10 +700,68 @@
   }
   
   .onboarding {
-    padding: 60px 0;
+    padding: 48px 0 56px 0;
     
-    .step {
-      padding: 30px 15px;
+    .onboarding-header {
+      margin-bottom: 36px;
+      padding: 0 16px;
+    }
+    
+    .section-title {
+      font-size: 28px;
+      margin-bottom: 8px;
+    }
+    
+    .section-title-accent {
+      width: 40px;
+      height: 3px;
+      margin-bottom: 12px;
+    }
+    
+    .section-subtitle {
+      font-size: 16px;
+    }
+    
+    .steps-row {
+      grid-template-columns: 1fr;
+      gap: 20px;
+      padding: 0 16px;
+    }
+    
+    .step-card {
+      padding: 24px 20px 32px 20px;
+      text-align: left;
+      border-radius: 18px;
+      
+      .step-number {
+        top: 14px;
+        left: 14px;
+        width: 28px;
+        height: 28px;
+        font-size: 14px;
+      }
+      
+      .step-icon-wrap {
+        width: 56px;
+        height: 56px;
+        margin: 8px 0 16px 0;
+        border-radius: 14px;
+      }
+      
+      .step-icon {
+        font-size: 28px;
+      }
+      
+      .step-title {
+        font-size: 20px;
+        margin-bottom: 10px;
+      }
+      
+      .step-desc {
+        font-size: 15px;
+        line-height: 1.55;
+        min-height: 0;
+      }
     }
   }
   
@@ -557,8 +776,55 @@
   .categories {
     padding: 60px 0;
     
+    .categories-header {
+      margin-bottom: 36px;
+      padding: 0 16px;
+    }
+    
+    .section-title {
+      font-size: 28px;
+      margin-bottom: 8px;
+    }
+    
+    .section-title-accent {
+      width: 40px;
+      height: 3px;
+      margin-bottom: 12px;
+    }
+    
+    .section-subtitle {
+      font-size: 16px;
+    }
+    
+    .categories-grid {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+      padding: 0 16px;
+    }
+    
     .category-card {
-      padding: 30px 15px;
+      padding: 24px 16px 28px;
+      border-radius: 18px;
+      
+      .category-icon-wrap {
+        width: 56px;
+        height: 56px;
+        margin-bottom: 16px;
+        border-radius: 14px;
+      }
+      
+      .category-icon {
+        font-size: 32px;
+      }
+      
+      .category-title {
+        font-size: 17px;
+        margin-bottom: 6px;
+      }
+      
+      .category-desc {
+        font-size: 13px;
+      }
     }
   }
   

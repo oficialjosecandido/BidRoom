@@ -1,0 +1,114 @@
+<div class="dashboard-home">
+  <div class="page-header">
+    <h1 class="page-title">Dashboard</h1>
+    <p class="page-subtitle" *ngIf="customer?.user; else fallbackWelcome">
+      Welcome back, {{ customer?.user?.firstName }} {{ customer?.user?.lastName }}
+    </p>
+    <ng-template #fallbackWelcome>
+      <p class="page-subtitle" *ngIf="currentUser$ | async as user">
+        Welcome back, {{ user.displayName || user.email || 'there' }}
+      </p>
+    </ng-template>
+  </div>
+
+  <!-- Summary cards -->
+  <div class="stats-grid">
+    <div class="stat-card stat-active">
+      <div class="stat-icon">🔨</div>
+      <div class="stat-content">
+        <span class="stat-value">{{ activeListings.length }}</span>
+        <span class="stat-label">Active listings</span>
+      </div>
+      <a routerLink="/dashboard/my-listings" class="stat-link">View all</a>
+    </div>
+    <div class="stat-card stat-ended">
+      <div class="stat-icon">📦</div>
+      <div class="stat-content">
+        <span class="stat-value">{{ endedListings.length }}</span>
+        <span class="stat-label">Ended / unavailable</span>
+      </div>
+      <a routerLink="/dashboard/my-listings" class="stat-link">View all</a>
+    </div>
+    <div class="stat-card stat-balance">
+      <div class="stat-icon">💰</div>
+      <div class="stat-content">
+        <span class="stat-value">{{ formatPrice(balance) }}</span>
+        <span class="stat-label">Balance</span>
+      </div>
+    </div>
+    <div class="stat-card stat-reviews">
+      <div class="stat-icon">⭐</div>
+      <div class="stat-content">
+        <span class="stat-value">{{ reviewCount }}</span>
+        <span class="stat-label">Reviews</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div class="loading-state" *ngIf="isLoading">
+    <div class="spinner"></div>
+    <p>Loading your dashboard...</p>
+  </div>
+
+  <!-- Error -->
+  <div class="error-state" *ngIf="error && !isLoading">
+    <p class="error-message">{{ error }}</p>
+    <button class="retry-btn" (click)="loadMyListings()">Try again</button>
+  </div>
+
+  <!-- Active listings preview -->
+  <section class="section" *ngIf="!isLoading && !error">
+    <div class="section-header">
+      <h2 class="section-title">Active listings</h2>
+      <a routerLink="/dashboard/my-listings" class="section-link">My Listings</a>
+    </div>
+    <div class="listings-preview" *ngIf="activeListings.length > 0">
+      <div class="listing-card" *ngFor="let listing of activeListings.slice(0, 5)">
+        <a [routerLink]="['/listing', listing.slug]" class="listing-title">{{ listing.title }}</a>
+        <div class="listing-meta">
+          <span class="listing-price">{{ formatPrice(listing.currentPrice) }}</span>
+          <span class="listing-bids">{{ listing.bidCount }} bid(s)</span>
+          <span class="listing-end">Ends {{ formatDate(listing.endDate) }}</span>
+        </div>
+      </div>
+    </div>
+    <div class="empty-preview" *ngIf="activeListings.length === 0">
+      <p>You have no active listings.</p>
+      <a routerLink="/listing/add" class="create-link">Create a listing</a>
+    </div>
+  </section>
+
+  <!-- Ended / unavailable preview -->
+  <section class="section" *ngIf="!isLoading && !error && endedListings.length > 0">
+    <div class="section-header">
+      <h2 class="section-title">Recently ended</h2>
+      <a routerLink="/dashboard/my-listings" class="section-link">My Listings</a>
+    </div>
+    <div class="listings-preview">
+      <div class="listing-card ended" *ngFor="let listing of endedListings.slice(0, 3)">
+        <a [routerLink]="['/listing', listing.slug]" class="listing-title">{{ listing.title }}</a>
+        <div class="listing-meta">
+          <span class="listing-price">{{ formatPrice(listing.currentPrice) }}</span>
+          <span class="listing-status" [class]="'status-' + listing.status">{{ listing.status }}</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Quick links -->
+  <div class="quick-links" *ngIf="!isLoading">
+    <a routerLink="/dashboard/my-account" class="quick-link">
+      <span class="quick-icon">👤</span>
+      <span>Profile &amp; settings</span>
+    </a>
+    <a routerLink="/dashboard/my-listings" class="quick-link">
+      <span class="quick-icon">📦</span>
+      <span>My listings</span>
+    </a>
+    <a routerLink="/listing/add" class="quick-link">
+      <span class="quick-icon">➕</span>
+      <span>Create listing</span>
+    </a>
+  </div>
+</div>

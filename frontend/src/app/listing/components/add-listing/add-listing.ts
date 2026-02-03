@@ -147,6 +147,7 @@ export class AddListing implements OnInit {
     this.listingForm.get('listingFormat')?.valueChanges.subscribe(format => {
       this.updateConditionalValidators(format);
     });
+    this.updateConditionalValidators(this.listingForm.get('listingFormat')?.value || 'auction');
 
     // Conditional validators for shipping option
     this.listingForm.get('shippingOption')?.valueChanges.subscribe(option => {
@@ -175,13 +176,28 @@ export class AddListing implements OnInit {
 
   updateConditionalValidators(format: string): void {
     const startingBidControl = this.listingForm.get('startingBid');
+    const reservePriceControl = this.listingForm.get('reservePrice');
     const buyNowPriceControl = this.listingForm.get('buyNowPrice');
     const minimumAcceptPriceControl = this.listingForm.get('minimumAcceptPrice');
 
     if (format === 'auction') {
       startingBidControl?.setValidators([Validators.required, Validators.min(0.01)]);
+      reservePriceControl?.setValidators([Validators.required, Validators.min(0.01)]);
       buyNowPriceControl?.setValidators([]);
       minimumAcceptPriceControl?.clearValidators();
+      
+      // Reserve price must be >= Starting Bid
+      const checkReserveVsStarting = () => {
+        const start = startingBidControl?.value;
+        const reserve = reservePriceControl?.value;
+        if (reserve != null && start != null && reserve < start) {
+          reservePriceControl?.setErrors({ ...reservePriceControl?.errors, mustBeAtLeastStartingBid: true });
+        } else {
+          reservePriceControl?.updateValueAndValidity();
+        }
+      };
+      startingBidControl?.valueChanges.subscribe(() => checkReserveVsStarting());
+      reservePriceControl?.valueChanges.subscribe(() => checkReserveVsStarting());
       
       // Buy Now must be higher than Starting Bid
       buyNowPriceControl?.valueChanges.subscribe(value => {
@@ -191,11 +207,13 @@ export class AddListing implements OnInit {
       });
     } else if (format === 'best-offer') {
       startingBidControl?.clearValidators();
+      reservePriceControl?.clearValidators();
       buyNowPriceControl?.clearValidators();
       minimumAcceptPriceControl?.setValidators([]);
     }
 
     startingBidControl?.updateValueAndValidity();
+    reservePriceControl?.updateValueAndValidity();
     buyNowPriceControl?.updateValueAndValidity();
     minimumAcceptPriceControl?.updateValueAndValidity();
   }
@@ -529,6 +547,9 @@ export class AddListing implements OnInit {
       if (control.hasError('mustBeHigherThanStartingBid')) {
         return 'Buy Now price must be higher than Starting Bid';
       }
+      if (control.hasError('mustBeAtLeastStartingBid')) {
+        return 'Reserve price must be at least the starting bid';
+      }
     }
     return '';
   }
@@ -545,6 +566,7 @@ export class AddListing implements OnInit {
       locationRegion: 'Region/State',
       duration: 'Listing Duration',
       startingBid: 'Starting Bid',
+      reservePrice: 'Seller Reserve Price',
       shippingOption: 'Shipping Option',
       handlingTime: 'Handling Time',
       returnPolicy: 'Return Policy'

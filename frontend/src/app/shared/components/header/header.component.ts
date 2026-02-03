@@ -14,6 +14,7 @@ import { AuthService } from '../../../auth/services/auth.service';
 export class HeaderComponent {
   @Input() activePage: string = '';
   isAuthenticated$!: Observable<boolean>;
+  menuOpen = false;
 
   constructor(
     private router: Router,
@@ -22,43 +23,61 @@ export class HeaderComponent {
     this.isAuthenticated$ = this.authService.isAuthenticated();
   }
 
+  toggleMenu(): void {
+    this.menuOpen = !this.menuOpen;
+  }
+
+  closeMenu(): void {
+    this.menuOpen = false;
+  }
+
   navigateToAuth(): void {
+    this.closeMenu();
     this.router.navigate(['/auth/signup']);
   }
 
   navigateToLogin(): void {
+    this.closeMenu();
     this.router.navigate(['/auth/login']);
   }
 
   navigateToHome(): void {
+    this.closeMenu();
     this.router.navigate(['/landing']);
   }
 
   navigateToHowItWorks(): void {
+    this.closeMenu();
     this.router.navigate(['/landing/how-it-works']);
   }
 
   navigateToContact(): void {
+    this.closeMenu();
     this.router.navigate(['/landing/contact']);
   }
 
   navigateToFaq(): void {
+    this.closeMenu();
     this.router.navigate(['/landing/faq']);
   }
 
   navigateToAuctions(): void {
+    this.closeMenu();
     this.router.navigate(['/landing']);
   }
 
   navigateToCategories(): void {
+    this.closeMenu();
     this.router.navigate(['/landing'], { fragment: 'categories' });
   }
 
   navigateToAddListing(): void {
+    this.closeMenu();
     this.router.navigate(['/listing/add']);
   }
 
   navigateToDashboard(): void {
+    this.closeMenu();
     this.router.navigate(['/dashboard']);
   }
 }

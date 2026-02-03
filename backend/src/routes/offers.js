@@ -82,6 +82,14 @@ router.post('/', authenticateToken, async (req, res) => {
       });
     }
 
+    // Block seller from making an offer on their own listing
+    if (listing.seller && listing.seller.toString() === user._id.toString()) {
+      return res.status(403).json({
+        error: 'Cannot offer on your own listing',
+        message: 'You cannot make an offer on your own listing.'
+      });
+    }
+
     // Verify it's a Best Offer listing
     if (listing.auctionFormat !== 'best-offer') {
       return res.status(400).json({

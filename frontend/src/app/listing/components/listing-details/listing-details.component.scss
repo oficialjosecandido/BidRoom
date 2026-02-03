@@ -306,7 +306,8 @@
           }
         }
 
-        .auction-ended-message {
+        .auction-ended-message,
+        .own-listing-message {
           margin-top: 12px;
           padding: 12px;
           background: rgba(108, 117, 125, 0.1);
@@ -503,11 +504,17 @@
       .action-buttons {
         display: flex;
         gap: 12px;
-        margin-bottom: 40px;
+        margin-bottom: 16px;
 
         .btn {
           flex: 1;
         }
+      }
+
+      .watchlist-count {
+        font-size: 14px;
+        color: var(--text-gray);
+        margin: 0 0 40px 0;
       }
 
       .email-note {
@@ -610,6 +617,33 @@
       }
 
       .bid-history {
+        .bid-history-seller-note {
+          display: flex;
+          align-items: flex-start;
+          gap: 12px;
+          padding: 14px 18px;
+          margin-bottom: 20px;
+          background: rgba(122, 79, 132, 0.08);
+          border: 1px solid rgba(122, 79, 132, 0.2);
+          border-radius: 12px;
+
+          .seller-note-icon {
+            font-size: 20px;
+            flex-shrink: 0;
+          }
+
+          p {
+            margin: 0;
+            font-size: 14px;
+            color: var(--text-dark);
+            line-height: 1.5;
+
+            strong {
+              color: var(--accent-purple);
+            }
+          }
+        }
+
         .bids-loading,
         .bids-error,
         .no-bids {
@@ -659,6 +693,11 @@
             transition: all 0.2s ease;
             position: relative;
 
+            &.bid-not-eligible {
+              opacity: 0.85;
+              border-left-color: rgba(0, 0, 0, 0.1);
+            }
+
             &:hover {
               background: rgba(139, 90, 150, 0.05);
               transform: translateX(4px);
@@ -674,7 +713,7 @@
             .bid-rank {
               position: absolute;
               top: 12px;
-              right: 12px;
+              right: -10px;
               width: 28px;
               height: 28px;
               border-radius: 50%;
@@ -832,6 +871,25 @@
                       font-weight: 600;
                     }
                   }
+
+                  .bid-select-winner-wrap {
+                    margin-top: 12px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: flex-end;
+                    gap: 8px;
+
+                    .bid-select-winner-btn {
+                      padding: 8px 14px;
+                      font-size: 13px;
+                    }
+
+                    .bid-verified-required {
+                      font-size: 13px;
+                      color: var(--text-gray);
+                      font-style: italic;
+                    }
+                  }
                 }
               }
             }
@@ -905,6 +963,229 @@
         grid-template-columns: 1fr;
       }
     }
+  }
+}
+
+// Watchlist login modal (global within component)
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.watchlist-login-modal {
+  background: var(--white, #fff);
+  border-radius: 12px;
+  padding: 24px;
+  max-width: 400px;
+  width: 100%;
+  position: relative;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+
+  .modal-close {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: none;
+    border: none;
+    font-size: 24px;
+    line-height: 1;
+    cursor: pointer;
+    color: var(--text-gray);
+    padding: 4px;
+
+    &:hover {
+      color: var(--text-dark);
+    }
+  }
+
+  h3 {
+    margin: 0 0 12px 0;
+    font-size: 20px;
+    color: var(--text-dark);
+  }
+
+  p {
+    margin: 0 0 24px 0;
+    font-size: 15px;
+    color: var(--text-gray);
+    line-height: 1.5;
+  }
+
+  .modal-actions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+
+    .btn {
+      flex: 1;
+      min-width: 120px;
+    }
+  }
+}
+
+// Select winner modal (seller, ended auction with bids)
+.select-winner-modal {
+  background: var(--primary-white, #fff);
+  border-radius: 12px;
+  padding: 24px;
+  max-width: 480px;
+  width: 100%;
+  max-height: 85vh;
+  overflow-y: auto;
+  position: relative;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+
+  .modal-close {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: none;
+    border: none;
+    font-size: 24px;
+    line-height: 1;
+    cursor: pointer;
+    color: var(--text-gray);
+    padding: 4px;
+
+    &:hover {
+      color: var(--text-dark);
+    }
+  }
+
+  h3 {
+    margin: 0 0 8px 0;
+    font-size: 20px;
+    color: var(--text-dark);
+  }
+
+  .modal-subtitle {
+    margin: 0 0 20px 0;
+    font-size: 14px;
+    color: var(--text-gray);
+    line-height: 1.5;
+
+    strong {
+      color: var(--accent-purple);
+    }
+  }
+
+  .modal-loading,
+  .modal-empty {
+    padding: 24px;
+    text-align: center;
+    color: var(--text-gray);
+  }
+
+  .select-winner-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .select-winner-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 14px 16px;
+    background: var(--light-gray, #f8f9fa);
+    border-radius: 10px;
+    border: 1px solid rgba(0, 0, 0, 0.06);
+
+    &.select-winner-item--ineligible {
+      opacity: 0.85;
+      background: rgba(0, 0, 0, 0.03);
+      border-color: rgba(0, 0, 0, 0.08);
+    }
+  }
+
+  .select-winner-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    min-width: 0;
+  }
+
+  .select-winner-rank {
+    font-weight: 700;
+    color: var(--text-gray);
+    font-size: 14px;
+  }
+
+  .select-winner-bidder {
+    font-weight: 600;
+    color: var(--text-dark);
+  }
+
+  .select-winner-amount {
+    font-weight: 700;
+    color: var(--accent-purple, #7A4F84);
+    margin-left: auto;
+  }
+
+  .select-winner-badges {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .select-winner-badge {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    padding: 4px 8px;
+    border-radius: 4px;
+
+    &.verified {
+      background: rgba(59, 130, 246, 0.12);
+      color: #3b82f6;
+    }
+
+    &.guest {
+      background: rgba(251, 191, 36, 0.12);
+      color: #b45309;
+    }
+
+    &.unverified {
+      background: rgba(107, 114, 128, 0.12);
+      color: #6b7280;
+    }
+  }
+
+  .select-winner-action {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+  }
+
+  .select-winner-ineligible {
+    font-size: 12px;
+    color: var(--text-gray);
+    font-style: italic;
+  }
+
+  .btn-small {
+    padding: 8px 14px;
+    font-size: 13px;
+    flex-shrink: 0;
+  }
+}
+
+.auction-ended-message {
+  .reopen-btn {
+    margin-top: 12px;
   }
 }
 

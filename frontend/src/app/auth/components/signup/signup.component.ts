@@ -1,13 +1,13 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-signup',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink],
   templateUrl: './signup.component.html',
   styleUrls: ['./signup.component.scss']
 })
@@ -29,7 +29,8 @@ export class SignupComponent implements OnInit {
       lastName: ['', [Validators.required, Validators.minLength(2)]],
       email: ['', [Validators.required, Validators.email]],
       password: ['', [Validators.required, Validators.minLength(12), this.strongPasswordValidator]],
-      confirmPassword: ['', [Validators.required]]
+      confirmPassword: ['', [Validators.required]],
+      acceptTerms: [false, [Validators.requiredTrue]]
     }, { validators: this.passwordMatchValidator });
   }
 
@@ -75,11 +76,9 @@ export class SignupComponent implements OnInit {
       this.authService.register(this.signupForm.value.email, this.signupForm.value.password, displayName).subscribe({
         next: () => {
           this.isLoading = false;
-          this.successMessage = 'Registration successful! Please check your email to verify your account.';
-          // Optionally redirect to login after a delay
-          setTimeout(() => {
-            this.router.navigate(['/login']);
-          }, 3000);
+          this.router.navigate(['/auth/check-email'], {
+            queryParams: { email: this.signupForm.value.email }
+          });
         },
         error: (error) => {
           this.isLoading = false;
@@ -101,7 +100,7 @@ export class SignupComponent implements OnInit {
     this.authService.loginWithGoogle().subscribe({
       next: () => {
         this.isLoading = false;
-        this.router.navigate(['/dashboard']);
+        this.router.navigate(['/dashboard/home']);
       },
       error: (error) => {
         this.isLoading = false;
@@ -125,6 +124,9 @@ export class SignupComponent implements OnInit {
   getFieldError(fieldName: string): string {
     const field = this.signupForm.get(fieldName);
     if (field?.errors && field.touched) {
+      if (fieldName === 'acceptTerms' && field.errors['required']) {
+        return 'You must accept the Terms and Conditions';
+      }
       if (field.errors['required']) {
         return `${fieldName} is required`;
       }

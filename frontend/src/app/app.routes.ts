@@ -20,14 +20,26 @@ export const routes: Routes = [
     loadComponent: () => import('./dashboard/dashboard.component').then(m => m.DashboardComponent),
     canActivate: [AuthGuard],
     children: [
-      { path: '', redirectTo: 'my-account', pathMatch: 'full' },
+      { path: '', redirectTo: 'home', pathMatch: 'full' },
+      {
+        path: 'home',
+        loadComponent: () => import('./dashboard/components/home/dashboard-home.component').then(m => m.DashboardHomeComponent)
+      },
       { 
         path: 'my-account', 
         loadComponent: () => import('./dashboard/components/my-account/my-account.component').then(m => m.MyAccountComponent)
       },
       {
-        path: 'my-auctions',
+        path: 'my-listings',
         loadComponent: () => import('./dashboard/components/my-auctions/my-auctions.component').then(m => m.MyAuctionsComponent)
+      },
+      {
+        path: 'my-auctions',
+        loadComponent: () => import('./dashboard/components/my-auctions-bidder/my-auctions-bidder.component').then(m => m.MyAuctionsBidderComponent)
+      },
+      {
+        path: 'watchlist',
+        loadComponent: () => import('./dashboard/components/watchlist/dashboard-watchlist.component').then(m => m.DashboardWatchlistComponent)
       }
     ]
   },

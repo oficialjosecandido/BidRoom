@@ -18,6 +18,10 @@ export class AuthService {
   private currentUserSubject = new BehaviorSubject<AppUser | null>(null);
   public currentUser$ = this.currentUserSubject.asObservable();
 
+  /** Emits true once Firebase has completed the initial auth state check (e.g. on page refresh). */
+  private authReadySubject = new BehaviorSubject<boolean>(false);
+  public authReady$ = this.authReadySubject.asObservable();
+
   constructor(private auth: Auth) {
     onAuthStateChanged(this.auth, async (fbUser: FirebaseUser | null) => {
       if (fbUser && !fbUser.emailVerified) {
@@ -25,10 +29,12 @@ export class AuthService {
         console.warn('User logged in but email not verified. Signing out...');
         await signOut(this.auth);
         this.currentUserSubject.next(null);
+        this.authReadySubject.next(true);
         return;
       }
       const mapped = this.mapFirebaseUser(fbUser);
       this.currentUserSubject.next(mapped);
+      this.authReadySubject.next(true);
       
       // If user is admin and there's a saved admin route, redirect there
       // This handles page refresh scenario

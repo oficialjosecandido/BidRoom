@@ -101,7 +101,16 @@
                 <span class="ended-icon">🏁</span>
                 <div class="ended-text">
                   <h4>Auction Ended</h4>
-                  <p>The seller will select a winner within 24 hours.</p>
+                  <!-- Seller, no bids: closed -->
+                  <p *ngIf="isOwnListing && getEndedBidCount() === 0">This auction closed with no bids. You can reopen it for another 7 days below.</p>
+                  <!-- Seller, has bids, no winner yet: select winner -->
+                  <p *ngIf="isOwnListing && getEndedBidCount() > 0 && !listing.winner">Select a winner below.</p>
+                  <!-- Seller, winner selected -->
+                  <p *ngIf="isOwnListing && listing.winner">Winner has been selected.</p>
+                  <!-- Non-seller, no bids -->
+                  <p *ngIf="!isOwnListing && getEndedBidCount() === 0">This auction closed with no bids.</p>
+                  <!-- Non-seller, has bids -->
+                  <p *ngIf="!isOwnListing && getEndedBidCount() > 0">The seller will select a winner within 24 hours.</p>
                 </div>
               </div>
             </div>
@@ -141,26 +150,54 @@
             <!-- Only show action buttons if private room is NOT active -->
             <button 
               class="btn btn-primary btn-large" 
-              *ngIf="listing.auctionFormat === 'highest-bid' && !isAuctionEnded() && !hasPrivateRoom()"
+              *ngIf="listing.auctionFormat === 'highest-bid' && !isAuctionEnded() && !hasPrivateRoom() && !isOwnListing"
               (click)="placeBid()">
               {{ isAuthenticated ? 'Place Bid' : 'Place Bid (Email Required)' }}
             </button>
-            <div *ngIf="isAuctionEnded() && !hasPrivateRoom()" class="auction-ended-message">
-              <p>This auction has ended. The seller will select a winner within 24 hours.</p>
+            <div *ngIf="isOwnListing && listing.auctionFormat === 'highest-bid' && !hasPrivateRoom() && !isAuctionEnded()" class="own-listing-message">
+              <p>You can't bid on your own listing.</p>
+            </div>
+            <!-- Seller: ended with bids → Select winner button -->
+            <button
+              *ngIf="isOwnListing && isAuctionEnded() && !hasPrivateRoom() && getEndedBidCount() > 0 && !listing.winner"
+              class="btn btn-primary btn-large"
+              (click)="openSelectWinnerModal()">
+              Select winner
+            </button>
+            <!-- Seller: ended with no bids → Closed + Reopen -->
+            <div *ngIf="isOwnListing && isAuctionEnded() && !hasPrivateRoom() && getEndedBidCount() === 0" class="auction-ended-message">
+              <p>Auction closed with no bids.</p>
+              <button type="button" class="btn btn-primary btn-large reopen-btn" (click)="reopenAuction()" [disabled]="reopenLoading">
+                {{ reopenLoading ? 'Reopening…' : 'Reopen auction for 7 days' }}
+              </button>
+            </div>
+            <!-- Non-seller: ended → message only -->
+            <div *ngIf="!isOwnListing && isAuctionEnded() && !hasPrivateRoom()" class="auction-ended-message">
+              <p *ngIf="getEndedBidCount() === 0">This auction has ended with no bids.</p>
+              <p *ngIf="getEndedBidCount() > 0">This auction has ended. The seller will select a winner within 24 hours.</p>
             </div>
             <button 
               class="btn btn-primary btn-large" 
-              *ngIf="listing.auctionFormat === 'best-offer' && !hasPrivateRoom()"
+              *ngIf="listing.auctionFormat === 'best-offer' && !hasPrivateRoom() && !isOwnListing"
               (click)="placeOffer()">
               Make Offer
             </button>
+            <div *ngIf="isOwnListing && listing.auctionFormat === 'best-offer' && !hasPrivateRoom()" class="own-listing-message">
+              <p>You can't make an offer on your own listing.</p>
+            </div>
             <button 
               class="btn btn-secondary btn-large" 
-              *ngIf="isAuthenticated && !hasPrivateRoom()" 
-              (click)="addToWatchlist()">
-              Add to Watchlist
+              *ngIf="!hasPrivateRoom()" 
+              (click)="addToWatchlist()"
+              [disabled]="watchlistLoading">
+              <span *ngIf="watchlistLoading">...</span>
+              <span *ngIf="!watchlistLoading && inWatchlist">Remove from Watchlist</span>
+              <span *ngIf="!watchlistLoading && !inWatchlist">Add to Watchlist</span>
             </button>
           </div>
+          <p class="watchlist-count" *ngIf="listing.watchlistCount != null && listing.watchlistCount > 0">
+            {{ listing.watchlistCount }} {{ listing.watchlistCount === 1 ? 'person has' : 'people have' }} this in their watchlist
+          </p>
 
           <!-- Auction Info -->
           <div class="auction-info">
@@ -242,6 +279,12 @@
         <!-- Bid History Tab Content -->
         <div class="tab-content" *ngIf="activeTab === 'bids' && listing.auctionFormat === 'highest-bid'">
           <div class="bid-history">
+            <!-- Seller note: only verified bidders can be selected -->
+            <div *ngIf="isOwnListing && isAuctionEnded() && !listing.winner && bids.length > 0" class="bid-history-seller-note">
+              <span class="seller-note-icon">ℹ️</span>
+              <p>Only bids from <strong>registered, verified</strong> accounts can be selected as the winning bid. Guest bidders must create an account and verify their email to be eligible.</p>
+            </div>
+
             <!-- Loading State -->
             <div *ngIf="bidsLoading" class="bids-loading">
               <p>Loading bid history...</p>
@@ -264,7 +307,7 @@
               </div>
 
               <div *ngIf="bids.length > 0" class="bids-list">
-                <div class="bid-item" *ngFor="let bid of bids; let i = index" [class.top-bid]="i === 0">
+                <div class="bid-item" *ngFor="let bid of bids; let i = index" [class.top-bid]="i === 0" [class.bid-not-eligible]="isOwnListing && isAuctionEnded() && !listing.winner && !canSelectBidAsWinner(bid)">
                   <div class="bid-rank">{{ i + 1 }}</div>
                   <div class="bid-avatar">
                     {{ bid.bidderInitials || 'A' }}
@@ -306,6 +349,13 @@
                         <div class="bid-date-time">
                           <span class="bid-date">{{ formatBidDate(bid.createdAt) }}</span>
                           <span class="bid-type" *ngIf="bid.bidType !== 'manual'">{{ bid.bidType }}</span>
+                        </div>
+                        <!-- Seller: Select as winner (only for verified bidders) -->
+                        <div *ngIf="isOwnListing && isAuctionEnded() && !listing.winner" class="bid-select-winner-wrap">
+                          <button *ngIf="canSelectBidAsWinner(bid)" type="button" class="btn btn-primary btn-small bid-select-winner-btn" (click)="selectWinner(bid._id)" [disabled]="selectingWinner">
+                            {{ selectingWinner ? 'Selecting…' : 'Select as winner' }}
+                          </button>
+                          <span *ngIf="!canSelectBidAsWinner(bid)" class="bid-verified-required">Verified account required</span>
                         </div>
                       </div>
                     </div>
@@ -386,6 +436,50 @@
         </div>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- Login / Signup modal for watchlist (non-authenticated users) -->
+<div class="modal-overlay" *ngIf="showLoginModal" (click)="closeLoginModal()">
+  <div class="modal-content watchlist-login-modal" (click)="$event.stopPropagation()">
+    <button type="button" class="modal-close" aria-label="Close" (click)="closeLoginModal()">&times;</button>
+    <h3>Save to Watchlist</h3>
+    <p>Log in or create an account to save this item to your watchlist and see it in your dashboard.</p>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-primary" (click)="goToLogin()">Log in</button>
+      <button type="button" class="btn btn-secondary" (click)="goToSignup()">Create account</button>
+    </div>
+  </div>
+</div>
+
+<!-- Select winner modal (seller, ended auction with bids) -->
+<div class="modal-overlay" *ngIf="showSelectWinnerModal" (click)="closeSelectWinnerModal()">
+  <div class="modal-content select-winner-modal" (click)="$event.stopPropagation()">
+    <button type="button" class="modal-close" aria-label="Close" (click)="closeSelectWinnerModal()">&times;</button>
+    <h3>Select winner</h3>
+    <p class="modal-subtitle">Only bids from <strong>registered, verified</strong> accounts can be selected. Guest bidders are not eligible.</p>
+    <div *ngIf="bidsLoading" class="modal-loading">Loading bids…</div>
+    <div *ngIf="!bidsLoading && bids.length === 0" class="modal-empty">No bids to display.</div>
+    <ul *ngIf="!bidsLoading && bids.length > 0" class="select-winner-list">
+      <li *ngFor="let bid of bids; let i = index" class="select-winner-item" [class.select-winner-item--ineligible]="!canSelectBidAsWinner(bid)">
+        <div class="select-winner-info">
+          <span class="select-winner-rank">#{{ i + 1 }}</span>
+          <span class="select-winner-bidder">{{ bid.bidderFirstName && bid.bidderLastName ? bid.bidderFirstName + ' ' + bid.bidderLastName : (bid.bidderName || 'Anonymous') }}</span>
+          <span class="select-winner-amount">{{ formatBidAmount(bid.amount) }}</span>
+          <span class="select-winner-badges">
+            <span class="select-winner-badge verified" *ngIf="bid.bidderVerified">Verified</span>
+            <span class="select-winner-badge guest" *ngIf="!bid.isAuthenticated">Guest</span>
+            <span class="select-winner-badge unverified" *ngIf="bid.isAuthenticated && !bid.bidderVerified">Unverified</span>
+          </span>
+        </div>
+        <div class="select-winner-action">
+          <button *ngIf="canSelectBidAsWinner(bid)" type="button" class="btn btn-primary btn-small" (click)="selectWinner(bid._id)" [disabled]="selectingWinner">
+            {{ selectingWinner ? 'Selecting…' : 'Select as winner' }}
+          </button>
+          <span *ngIf="!canSelectBidAsWinner(bid)" class="select-winner-ineligible">Verified account required</span>
+        </div>
+      </li>
+    </ul>
   </div>
 </div>
 

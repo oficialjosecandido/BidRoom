@@ -1,0 +1,22 @@
+<div class="check-email-container">
+  <div class="check-email-card">
+    <div class="icon-wrapper">
+      <span class="icon">✉️</span>
+    </div>
+    <h1 class="title">Check your inbox</h1>
+    <p class="message">
+      We've sent a confirmation email to
+      <strong *ngIf="email">{{ email }}</strong>
+      <span *ngIf="!email">your email address</span>.
+    </p>
+    <p class="instructions">
+      Click the link in the email to verify your account. You can then log in and start using BidRoom.
+    </p>
+    <p class="hint">
+      Didn't receive the email? Check your spam folder or wait a few minutes and try again.
+    </p>
+    <button type="button" class="login-btn" (click)="goToLogin()">
+      Go to login
+    </button>
+  </div>
+</div>

@@ -1,0 +1,65 @@
+<div class="my-auctions-bidder-container">
+  <div class="page-header">
+    <h1>My Auctions</h1>
+    <p class="subtitle">Auctions you've bid on. Track your bids and current prices.</p>
+  </div>
+
+  <!-- Loading State -->
+  <div class="loading-state" *ngIf="isLoading">
+    <div class="spinner"></div>
+    <p>Loading your auctions...</p>
+  </div>
+
+  <!-- Error State -->
+  <div class="error-state" *ngIf="error && !isLoading">
+    <div class="error-icon">⚠️</div>
+    <p class="error-message">{{ error }}</p>
+    <button type="button" class="retry-btn" (click)="loadMyAuctions()">Try Again</button>
+  </div>
+
+  <!-- Listings List -->
+  <div class="listings-list" *ngIf="!isLoading && !error">
+    <div class="empty-state" *ngIf="listings.length === 0">
+      <div class="empty-icon">🔨</div>
+      <h3>No auctions yet</h3>
+      <p>You haven't placed any bids yet. Browse listings and place your first bid!</p>
+      <a routerLink="/listing/list" class="browse-btn">Browse auctions</a>
+    </div>
+
+    <div class="auction-card" *ngFor="let listing of listings">
+      <div class="auction-header">
+        <div class="auction-title-section">
+          <h2 class="auction-title">
+            <a [routerLink]="['/listing', listing.slug]">{{ listing.title }}</a>
+          </h2>
+          <span class="status-badge" [ngClass]="getStatusBadgeClass(listing.status)">
+            {{ listing.status }}
+          </span>
+        </div>
+        <div class="auction-price">
+          <span class="price-label">Current Price</span>
+          <span class="price-value">${{ listing.currentPrice | number:'1.2-2' }}</span>
+        </div>
+      </div>
+
+      <div class="auction-stats">
+        <div class="stat-item">
+          <span class="stat-label">My highest bid</span>
+          <span class="stat-value">{{ listing.myHighestBid != null ? formatPrice(listing.myHighestBid) : '—' }}</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">Total bids</span>
+          <span class="stat-value">{{ listing.bidCount }}</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">Ends</span>
+          <span class="stat-value">{{ formatDate(listing.endDate) }}</span>
+        </div>
+      </div>
+
+      <div class="auction-actions">
+        <a [routerLink]="['/listing', listing.slug]" class="view-btn">View Listing</a>
+      </div>
+    </div>
+  </div>
+</div>

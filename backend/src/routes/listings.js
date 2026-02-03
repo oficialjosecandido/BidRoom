@@ -2,7 +2,8 @@ const express = require('express');
 const Listing = require('../models/Listing');
 const User = require('../models/User');
 const Bid = require('../models/Bid');
-const { authenticateToken } = require('../middleware/auth');
+const Watchlist = require('../models/Watchlist');
+const { authenticateToken, optionalAuth } = require('../middleware/auth');
 const { handleWinnerSelection } = require('../services/auctionNotificationService');
 
 const router = express.Router();
@@ -149,8 +150,8 @@ function generateSlug(title) {
     .replace(/^-+|-+$/g, ''); // Remove leading/trailing hyphens
 }
 
-// GET /api/listings/slug/:slug - Get a single listing by slug
-router.get('/slug/:slug', async (req, res) => {
+// GET /api/listings/slug/:slug - Get a single listing by slug (optionalAuth for inWatchlist)
+router.get('/slug/:slug', optionalAuth, async (req, res) => {
   try {
     let listing = await Listing.findOne({ slug: req.params.slug })
       .populate('seller', 'firstName lastName email')
@@ -269,11 +270,24 @@ router.get('/slug/:slug', async (req, res) => {
     }
 
     const timeRemaining = new Listing(listing).getTimeRemaining();
-    
+
+    // Watchlist count (for sellers) and inWatchlist (for authenticated users)
+    const [watchlistCount, inWatchlist] = await Promise.all([
+      Watchlist.countDocuments({ listing: listing._id }),
+      req.user ? (async () => {
+        const user = await User.findOne({ uid: req.user.uid });
+        if (!user) return false;
+        const entry = await Watchlist.findOne({ user: user._id, listing: listing._id });
+        return !!entry;
+      })() : Promise.resolve(false)
+    ]);
+
     res.json({
       ...listing,
       timeRemaining,
-      endingSoon: timeRemaining.ended ? false : (timeRemaining.days === 0 && timeRemaining.hours <= 24)
+      endingSoon: timeRemaining.ended ? false : (timeRemaining.days === 0 && timeRemaining.hours <= 24),
+      watchlistCount,
+      inWatchlist: !!inWatchlist
     });
   } catch (error) {
     console.error('Error fetching listing:', error);
@@ -468,6 +482,14 @@ router.post('/', authenticateToken, async (req, res) => {
       if (!startingPrice || startingPrice <= 0) {
         return res.status(400).json({ error: 'Starting bid is required for auction format' });
       }
+      if (!reservePrice || reservePrice <= 0) {
+        return res.status(400).json({ error: 'Seller reserve price is required for auction format' });
+      }
+      const startNum = parseFloat(startingPrice);
+      const reserveNum = parseFloat(reservePrice);
+      if (reserveNum < startNum) {
+        return res.status(400).json({ error: 'Reserve price must be at least the starting bid' });
+      }
       if (buyNowPrice && buyNowPrice <= startingPrice) {
         return res.status(400).json({ error: 'Buy Now price must be higher than Starting Bid' });
       }
@@ -489,7 +511,7 @@ router.post('/', authenticateToken, async (req, res) => {
       durationSlot: duration,
       startingPrice: isAuction ? parseFloat(startingPrice) : 0,
       currentPrice: isAuction ? parseFloat(startingPrice) : 0,
-      reservePrice: reservePrice ? parseFloat(reservePrice) : undefined,
+      reservePrice: isAuction ? parseFloat(reservePrice) : (reservePrice ? parseFloat(reservePrice) : undefined),
       buyNowPrice: buyNowPrice ? parseFloat(buyNowPrice) : undefined,
       minimumOfferPrice: minimumOfferPrice ? parseFloat(minimumOfferPrice) : undefined,
       allowPrivateRoom: allowPrivateRoom === true || allowPrivateRoom === 'true',
@@ -685,11 +707,27 @@ router.post('/:id/choose-winner', authenticateToken, async (req, res) => {
     }
 
     // Verify the bid exists and belongs to this listing
-    const winnerBid = await Bid.findById(winnerBidId);
+    let winnerBid = await Bid.findById(winnerBidId).populate('bidder', 'emailVerified');
     if (!winnerBid || winnerBid.listing.toString() !== listing._id.toString()) {
       return res.status(404).json({
         error: 'Invalid bid',
         message: 'The specified bid does not exist or does not belong to this listing'
+      });
+    }
+
+    // Only registered (authenticated) bidders can be selected as winner
+    if (!winnerBid.bidder) {
+      return res.status(400).json({
+        error: 'Guest bid cannot be selected',
+        message: 'Only bids from registered accounts can be selected as the winning bid. The bidder must be logged in and have a verified account.'
+      });
+    }
+
+    // Only verified accounts can be selected as winner
+    if (!winnerBid.bidder.emailVerified) {
+      return res.status(400).json({
+        error: 'Unverified bidder',
+        message: 'The selected bidder must have a verified account to be chosen as the winner.'
       });
     }
 
@@ -711,6 +749,75 @@ router.post('/:id/choose-winner', authenticateToken, async (req, res) => {
     console.error('Error choosing winner:', error);
     res.status(400).json({
       error: 'Failed to choose winner',
+      message: error.message
+    });
+  }
+});
+
+// POST /api/listings/:id/reopen - Seller reopens an ended auction with no bids (extends by 7 days)
+router.post('/:id/reopen', authenticateToken, async (req, res) => {
+  try {
+    const listing = await Listing.findById(req.params.id).populate('seller', 'uid');
+
+    if (!listing) {
+      return res.status(404).json({
+        error: 'Listing not found'
+      });
+    }
+
+    const user = await User.findOne({ uid: req.user.uid });
+    if (!user || listing.seller._id.toString() !== user._id.toString()) {
+      return res.status(403).json({
+        error: 'Unauthorized',
+        message: 'Only the seller can reopen this listing'
+      });
+    }
+
+    if (listing.status !== 'ended') {
+      return res.status(400).json({
+        error: 'Listing not ended',
+        message: 'Only ended auctions can be reopened'
+      });
+    }
+
+    if (listing.winner) {
+      return res.status(400).json({
+        error: 'Winner already selected',
+        message: 'Cannot reopen an auction after a winner has been selected'
+      });
+    }
+
+    const bidCount = await Bid.countDocuments({ listing: listing._id });
+    if (bidCount > 0) {
+      return res.status(400).json({
+        error: 'Auction has bids',
+        message: 'Only auctions with no bids can be reopened'
+      });
+    }
+
+    const sevenDaysMs = 7 * 24 * 60 * 60 * 1000;
+    const newEndDate = new Date(Date.now() + sevenDaysMs);
+
+    await Listing.findByIdAndUpdate(listing._id, {
+      $set: {
+        status: 'active',
+        endDate: newEndDate,
+        winnerSelectionDeadline: null
+      }
+    });
+
+    const updatedListing = await Listing.findById(listing._id)
+      .populate('seller', 'firstName lastName email')
+      .lean();
+
+    res.json({
+      message: 'Auction reopened for 7 days',
+      listing: updatedListing
+    });
+  } catch (error) {
+    console.error('Error reopening listing:', error);
+    res.status(400).json({
+      error: 'Failed to reopen auction',
       message: error.message
     });
   }
@@ -778,12 +885,48 @@ router.get('/:id/bids', authenticateToken, async (req, res) => {
 // GET /api/listings/seller/my-listings - Get all listings for the authenticated seller
 router.get('/seller/my-listings', authenticateToken, async (req, res) => {
   try {
-    const user = await User.findOne({ uid: req.user.uid });
-    
+    let user = await User.findOne({ uid: req.user.uid });
+
+    if (!user && req.user.email) {
+      const email = req.user.email.toLowerCase().trim();
+      user = await User.findOne({ email });
+      if (user) {
+        await User.updateOne(
+          { _id: user._id },
+          { $set: { uid: req.user.uid, emailVerified: req.user.emailVerified ?? true } }
+        );
+        user = await User.findById(user._id);
+      }
+    }
+
     if (!user) {
-      return res.status(404).json({
-        error: 'User not found'
+      const nameParts = (req.user.name || '').split(' ').filter(Boolean);
+      const firstName = nameParts[0] || 'User';
+      const lastName = nameParts.slice(1).join(' ') || 'User';
+      user = new User({
+        uid: req.user.uid,
+        email: req.user.email || '',
+        firstName,
+        lastName,
+        isActive: true,
+        emailVerified: req.user.emailVerified ?? false
       });
+      try {
+        await user.save();
+      } catch (err) {
+        if (err.code === 11000 && req.user.email) {
+          user = await User.findOne({ email: (req.user.email || '').toLowerCase().trim() });
+          if (user) {
+            await User.updateOne(
+              { _id: user._id },
+              { $set: { uid: req.user.uid, emailVerified: req.user.emailVerified ?? true } }
+            );
+            user = await User.findById(user._id);
+          }
+        } else {
+          throw err;
+        }
+      }
     }
 
     const listings = await Listing.find({ seller: user._id })
@@ -791,18 +934,28 @@ router.get('/seller/my-listings', authenticateToken, async (req, res) => {
       .sort({ createdAt: -1 })
       .lean();
 
-      // Enhance listings with platinum bidder invitation status
-      const enhancedListings = listings.map(listing => {
-        const listingObj = listing.toObject ? listing.toObject() : listing;
-        
-        // Get invitation status for each platinum bidder
-        const platinumBidderStatus = [];
-        if (listingObj.platinumBidderInvitations && listingObj.platinumBidderInvitations.length > 0) {
-          listingObj.platinumBidderInvitations.forEach((invitation) => {
-            const bidder = listingObj.platinumBidders?.find((pb) => 
-              pb._id.toString() === invitation.bidder.toString()
-            );
-          
+    // Watchlist counts per listing (one aggregation for all seller's listings)
+    const listingIds = listings.map((l) => l._id);
+    const watchlistCounts = await Watchlist.aggregate([
+      { $match: { listing: { $in: listingIds } } },
+      { $group: { _id: '$listing', count: { $sum: 1 } } }
+    ]);
+    const watchlistByListing = Object.fromEntries(
+      watchlistCounts.map((row) => [row._id.toString(), row.count])
+    );
+
+    // Enhance listings with platinum bidder invitation status and watchlist count
+    const enhancedListings = listings.map((listing) => {
+      const listingObj = listing.toObject ? listing.toObject() : listing;
+
+      // Get invitation status for each platinum bidder
+      const platinumBidderStatus = [];
+      if (listingObj.platinumBidderInvitations && listingObj.platinumBidderInvitations.length > 0) {
+        listingObj.platinumBidderInvitations.forEach((invitation) => {
+          const bidder = listingObj.platinumBidders?.find((pb) =>
+            pb._id.toString() === invitation.bidder.toString()
+          );
+
           if (bidder) {
             platinumBidderStatus.push({
               bidder: {
@@ -811,17 +964,18 @@ router.get('/seller/my-listings', authenticateToken, async (req, res) => {
                 lastName: bidder.lastName,
                 email: bidder.email
               },
-              status: invitation.status, // pending, accepted, declined
+              status: invitation.status,
               invitedAt: invitation.invitedAt,
               acceptedAt: invitation.acceptedAt
             });
           }
         });
       }
-      
+
       return {
         ...listingObj,
-        platinumBidderStatus
+        platinumBidderStatus,
+        watchlistCount: watchlistByListing[listing._id.toString()] ?? 0
       };
     });
 
@@ -833,6 +987,57 @@ router.get('/seller/my-listings', authenticateToken, async (req, res) => {
     console.error('Error fetching seller listings:', error);
     res.status(500).json({
       error: 'Failed to fetch listings',
+      message: error.message
+    });
+  }
+});
+
+// GET /api/listings/bidder/my-auctions - Listings where the current user has placed at least one bid
+router.get('/bidder/my-auctions', authenticateToken, async (req, res) => {
+  try {
+    const user = await User.findOne({ uid: req.user.uid });
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const myBids = await Bid.find({ bidder: user._id })
+      .select('listing amount createdAt')
+      .sort({ amount: -1 })
+      .lean();
+
+    const listingIds = [...new Set(myBids.map((b) => b.listing.toString()))];
+    if (listingIds.length === 0) {
+      return res.json({ listings: [], total: 0 });
+    }
+
+    const listings = await Listing.find({ _id: { $in: listingIds } })
+      .populate('seller', 'firstName lastName')
+      .sort({ endDate: -1 })
+      .lean();
+
+    const myHighestByListing = {};
+    for (const b of myBids) {
+      const id = b.listing.toString();
+      if (myHighestByListing[id] == null || b.amount > myHighestByListing[id].amount) {
+        myHighestByListing[id] = { amount: b.amount, createdAt: b.createdAt };
+      }
+    }
+
+    const enhanced = listings.map((listing) => {
+      const id = listing._id.toString();
+      const myBid = myHighestByListing[id];
+      return {
+        ...listing,
+        myHighestBid: myBid?.amount ?? null,
+        myLastBidAt: myBid?.createdAt ?? null
+      };
+    });
+
+    res.json({ listings: enhanced, total: enhanced.length });
+  } catch (error) {
+    console.error('Error fetching bidder auctions:', error);
+    res.status(500).json({
+      error: 'Failed to fetch your auctions',
       message: error.message
     });
   }

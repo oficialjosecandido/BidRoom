@@ -7,6 +7,7 @@ import { FooterComponent } from '../../../shared/components/footer/footer.compon
 import { ListingsService, Listing } from '../../../shared/services/listings.service';
 import { BidsService, Bid } from '../../../shared/services/bids.service';
 import { OffersService, Offer } from '../../../shared/services/offers.service';
+import { WatchlistService } from '../../../shared/services/watchlist.service';
 import { SocketService } from '../../../shared/services/socket.service';
 import { AuthService } from '../../../auth/services/auth.service';
 
@@ -30,6 +31,13 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
   offersLoading = false;
   offersError: string | null = null;
   isAuthenticated = false;
+  inWatchlist = false;
+  showLoginModal = false;
+  watchlistLoading = false;
+  isOwnListing = false;
+  showSelectWinnerModal = false;
+  selectingWinner = false;
+  reopenLoading = false;
   private socketSubscriptions: Subscription[] = [];
   private countdownInterval: any = null;
   displayedTimeRemaining: string = '';
@@ -40,12 +48,14 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
     private listingsService: ListingsService,
     private bidsService: BidsService,
     private offersService: OffersService,
+    private watchlistService: WatchlistService,
     private socketService: SocketService,
     private authService: AuthService,
     private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
+    window.scrollTo(0, 0);
     const slug = this.route.snapshot.paramMap.get('slug');
     if (slug) {
       this.loadListing(slug);
@@ -54,10 +64,12 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
       this.loading = false;
     }
     
-    // Check authentication status
+    // Check authentication status and whether current user is the seller
     this.authService.isAuthenticated().subscribe(isAuth => {
       this.isAuthenticated = isAuth;
+      this.updateIsOwnListing();
     });
+    this.authService.currentUser$.subscribe(() => this.updateIsOwnListing());
   }
 
   loadListing(slug: string): void {
@@ -73,7 +85,10 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
     this.listingsService.getListingBySlug(slug).subscribe({
       next: (listing) => {
         this.listing = listing;
+        this.inWatchlist = !!listing.inWatchlist;
+        this.updateIsOwnListing();
         this.loading = false;
+        window.scrollTo(0, 0);
         // Start countdown timer
         this.startCountdown();
         // Load bids or offers when listing is loaded
@@ -235,6 +250,17 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
 
   isAuctionEnded(): boolean {
     return this.getAuctionEndType() === 'ended';
+  }
+
+  /** Bid count for ended highest-bid auctions (used for seller UI: select winner vs reopen). */
+  getEndedBidCount(): number {
+    if (!this.listing || this.listing.auctionFormat !== 'highest-bid') return 0;
+    return this.listing.bidCount ?? 0;
+  }
+
+  /** Only registered, verified bidders can be selected as winner. */
+  canSelectBidAsWinner(bid: Bid): boolean {
+    return !!(bid.isAuthenticated && bid.bidderVerified);
   }
 
   hasPrivateRoom(): boolean {
@@ -444,8 +470,122 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
   }
 
   addToWatchlist(): void {
-    // TODO: Implement watchlist functionality
-    alert('Watchlist functionality coming soon!');
+    if (!this.listing?._id) return;
+    if (!this.isAuthenticated) {
+      this.showLoginModal = true;
+      return;
+    }
+    this.watchlistLoading = true;
+    if (this.inWatchlist) {
+      this.watchlistService.remove(this.listing._id).subscribe({
+        next: (res) => {
+          this.inWatchlist = res.inWatchlist;
+          this.watchlistLoading = false;
+          this.updateListingWatchlistCount(-1);
+          this.cdr.detectChanges();
+        },
+        error: () => {
+          this.watchlistLoading = false;
+          this.cdr.detectChanges();
+        }
+      });
+    } else {
+      this.watchlistService.add(this.listing._id).subscribe({
+        next: (res) => {
+          this.inWatchlist = res.inWatchlist;
+          this.watchlistLoading = false;
+          this.updateListingWatchlistCount(1);
+          this.cdr.detectChanges();
+        },
+        error: () => {
+          this.watchlistLoading = false;
+          this.cdr.detectChanges();
+        }
+      });
+    }
+  }
+
+  private updateListingWatchlistCount(delta: number): void {
+    if (!this.listing) return;
+    const current = this.listing.watchlistCount ?? 0;
+    this.listing = { ...this.listing, watchlistCount: Math.max(0, current + delta) };
+  }
+
+  updateIsOwnListing(): void {
+    if (!this.listing?.seller?.email) {
+      this.isOwnListing = false;
+      return;
+    }
+    const currentUser = this.authService.getCurrentUser();
+    this.isOwnListing = !!(
+      currentUser?.email &&
+      this.listing.seller.email &&
+      currentUser.email.toLowerCase() === (this.listing.seller as { email?: string }).email?.toLowerCase()
+    );
+    this.cdr.detectChanges();
+  }
+
+  closeLoginModal(): void {
+    this.showLoginModal = false;
+  }
+
+  goToLogin(): void {
+    const returnUrl = this.listing?.slug ? `/listing/${this.listing.slug}` : '/listing/list';
+    this.router.navigate(['/auth/login'], { queryParams: { returnUrl } });
+    this.closeLoginModal();
+  }
+
+  goToSignup(): void {
+    const returnUrl = this.listing?.slug ? `/listing/${this.listing.slug}` : '/listing/list';
+    this.router.navigate(['/auth/signup'], { queryParams: { returnUrl } });
+    this.closeLoginModal();
+  }
+
+  openSelectWinnerModal(): void {
+    this.showSelectWinnerModal = true;
+    if (this.listing?._id && this.bids.length === 0 && !this.bidsLoading) {
+      this.loadBids(this.listing._id);
+    }
+  }
+
+  closeSelectWinnerModal(): void {
+    this.showSelectWinnerModal = false;
+  }
+
+  selectWinner(bidId: string): void {
+    if (!this.listing?._id || this.selectingWinner) return;
+    this.selectingWinner = true;
+    this.listingsService.chooseWinner(this.listing._id, bidId).subscribe({
+      next: (res) => {
+        this.listing = res.listing;
+        this.closeSelectWinnerModal();
+        this.selectingWinner = false;
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        this.selectingWinner = false;
+        this.cdr.detectChanges();
+        alert(err.error?.message || 'Failed to select winner');
+      }
+    });
+  }
+
+  reopenAuction(): void {
+    if (!this.listing?._id || this.reopenLoading) return;
+    this.reopenLoading = true;
+    this.listingsService.reopen(this.listing._id).subscribe({
+      next: (res) => {
+        this.listing = res.listing;
+        this.reopenLoading = false;
+        this.startCountdown();
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        this.reopenLoading = false;
+        this.cdr.detectChanges();
+        alert(err.error?.message || 'Failed to reopen auction');
+      }
+    });
   }
 
   goBack(): void {

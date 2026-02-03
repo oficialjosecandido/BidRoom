@@ -1,0 +1,55 @@
+const mongoose = require('mongoose');
+
+/**
+ * Customer - profile and account info for dashboard.
+ * Stored in "customers" collection. Linked to Firebase/auth by uid.
+ */
+const customerSchema = new mongoose.Schema({
+  uid: {
+    type: String,
+    required: true,
+    unique: true,
+    index: true,
+    trim: true
+  },
+  email: {
+    type: String,
+    required: true,
+    lowercase: true,
+    trim: true,
+    index: true
+  },
+  firstName: {
+    type: String,
+    required: true,
+    trim: true,
+    maxlength: 50
+  },
+  lastName: {
+    type: String,
+    required: true,
+    trim: true,
+    maxlength: 50
+  },
+  balance: {
+    type: Number,
+    default: 0,
+    min: 0
+  },
+  reviewCount: {
+    type: Number,
+    default: 0,
+    min: 0
+  },
+  lastLogin: {
+    type: Date,
+    default: null
+  }
+}, {
+  timestamps: true,
+  collection: 'customers'
+});
+
+const Customer = mongoose.model('Customer', customerSchema);
+
+module.exports = Customer;

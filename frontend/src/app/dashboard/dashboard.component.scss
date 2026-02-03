@@ -1,122 +1,276 @@
 .dashboard-container {
   display: flex;
   min-height: 100vh;
-  background: #f5f7fa;
+  background: var(--light-gray, #f5f7fa);
 }
 
+$sidebar-width: 280px;
+$sidebar-collapsed-width: 72px;
+
 .sidebar {
-  width: 260px;
-  background: white;
-  border-right: 1px solid #e0e0e0;
+  width: $sidebar-width;
+  background: var(--primary-white);
+  border-right: 1px solid rgba(0, 0, 0, 0.06);
   display: flex;
   flex-direction: column;
   position: fixed;
   height: 100vh;
   left: 0;
   top: 0;
+  overflow-x: hidden;
   overflow-y: auto;
+  box-shadow: 2px 0 12px rgba(0, 0, 0, 0.04);
+  transition: width 0.25s ease;
+
+  &.sidebar--collapsed {
+    width: $sidebar-collapsed-width;
+
+    .logo-full {
+      opacity: 0;
+      visibility: hidden;
+      width: 0;
+      overflow: hidden;
+    }
+
+    .logo-short {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .sidebar-toggle .toggle-icon {
+      transform: rotate(0deg);
+    }
+
+    .nav-text,
+    .logout-btn .nav-text {
+      opacity: 0;
+      visibility: hidden;
+      width: 0;
+      overflow: hidden;
+      margin: 0;
+    }
+
+    .nav-item,
+    .logout-btn {
+      justify-content: center;
+      padding-left: 0;
+      padding-right: 0;
+    }
+
+    .nav-icon {
+      margin-right: 0;
+    }
+
+    .sidebar-header {
+      padding: 16px 8px;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .sidebar-toggle {
+      width: 32px;
+      height: 32px;
+      order: 2;
+    }
+
+    .logo {
+      order: 1;
+    }
+  }
 }
 
 .sidebar-header {
-  padding: 24px 20px;
-  border-bottom: 1px solid #e0e0e0;
+  padding: 20px 16px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 56px;
+  flex-shrink: 0;
 }
 
 .logo {
-  font-size: 24px;
-  font-weight: 400;
-  color: #333;
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--text-dark, #333);
   margin: 0;
-  letter-spacing: -0.5px;
+  letter-spacing: -0.3px;
   cursor: pointer;
   transition: color 0.2s ease;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  flex: 1;
 
   &:hover {
-    color: #667eea;
+    color: var(--accent-purple, #7A4F84);
+  }
+}
+
+.logo-full {
+  white-space: nowrap;
+  transition: opacity 0.2s ease, width 0.2s ease, visibility 0.2s ease;
+}
+
+.logo-short {
+  font-size: 18px;
+  font-weight: 700;
+  opacity: 0;
+  visibility: hidden;
+  width: 0;
+  overflow: hidden;
+  transition: opacity 0.2s ease, visibility 0.2s ease, width 0.2s ease;
+}
+
+.sidebar--collapsed .logo {
+  justify-content: center;
+}
+
+.sidebar--collapsed .logo-short {
+  width: auto;
+  overflow: visible;
+}
+
+.sidebar-toggle {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(122, 79, 132, 0.1);
+  border: 1px solid rgba(122, 79, 132, 0.2);
+  border-radius: 10px;
+  color: var(--accent-purple, #7A4F84);
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease;
+
+  &:hover {
+    background: rgba(122, 79, 132, 0.15);
+    border-color: rgba(122, 79, 132, 0.3);
+  }
+
+  .toggle-icon {
+    font-size: 20px;
+    font-weight: 700;
+    line-height: 1;
+    transition: transform 0.2s ease;
+  }
+
+  .sidebar:not(.sidebar--collapsed) .toggle-icon {
+    transform: rotate(0deg);
   }
 }
 
 .sidebar-nav {
   flex: 1;
-  padding: 16px 0;
+  padding: 20px 12px;
 }
 
 .nav-item {
   display: flex;
   align-items: center;
-  padding: 12px 20px;
-  color: #666;
+  padding: 14px 16px;
+  margin: 0 8px 4px 8px;
+  color: var(--text-gray, #666);
   text-decoration: none;
-  transition: all 0.2s ease;
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
   cursor: pointer;
-  border-left: 3px solid transparent;
+  border-radius: 12px;
+  border: 1px solid transparent;
 
   &:hover {
-    background: #f8f9fa;
-    color: #333;
+    background: rgba(122, 79, 132, 0.06);
+    color: var(--text-dark, #333);
   }
 
   &.active {
-    background: #f0f4ff;
-    color: #667eea;
-    border-left-color: #667eea;
-    font-weight: 500;
+    background: rgba(122, 79, 132, 0.1);
+    color: var(--accent-purple, #7A4F84);
+    border-color: rgba(122, 79, 132, 0.2);
+    font-weight: 600;
   }
 }
 
 .nav-icon {
   font-size: 20px;
-  margin-right: 12px;
-  width: 24px;
+  margin-right: 14px;
+  width: 28px;
+  flex-shrink: 0;
   text-align: center;
+  line-height: 1;
 }
 
 .nav-text {
   font-size: 15px;
+  white-space: nowrap;
+  transition: opacity 0.2s ease, width 0.2s ease, visibility 0.2s ease, margin 0.2s ease;
 }
 
 .sidebar-footer {
-  padding: 16px 20px;
-  border-top: 1px solid #e0e0e0;
+  padding: 20px 12px 24px;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
 }
 
 .logout-btn {
   display: flex;
   align-items: center;
   width: 100%;
-  padding: 12px 20px;
+  padding: 14px 16px;
+  margin: 0 8px;
   background: transparent;
-  border: none;
-  color: #d32f2f;
+  border: 1px solid transparent;
+  color: #c62828;
   font-size: 15px;
+  font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s ease;
-  border-radius: 6px;
+  transition: background 0.2s ease, border-color 0.2s ease;
+  border-radius: 12px;
 
   &:hover {
-    background: #ffebee;
+    background: rgba(198, 40, 40, 0.08);
+    border-color: rgba(198, 40, 40, 0.15);
   }
 
   .nav-icon {
-    margin-right: 12px;
+    margin-right: 14px;
+    flex-shrink: 0;
+  }
+
+  .nav-text {
+    transition: opacity 0.2s ease, width 0.2s ease, visibility 0.2s ease, margin 0.2s ease;
   }
 }
 
 .dashboard-main {
   flex: 1;
-  margin-left: 260px;
+  margin-left: $sidebar-width;
   padding: 40px;
   min-height: 100vh;
+  transition: margin-left 0.25s ease;
+
+  &.dashboard-main--collapsed {
+    margin-left: $sidebar-collapsed-width;
+  }
 }
 
 @media (max-width: 768px) {
   .sidebar {
-    width: 240px;
+    width: 260px;
+
+    &.sidebar--collapsed {
+      width: $sidebar-collapsed-width;
+    }
   }
 
   .dashboard-main {
-    margin-left: 240px;
-    padding: 20px;
+    margin-left: 260px;
+
+    &.dashboard-main--collapsed {
+      margin-left: $sidebar-collapsed-width;
+    }
+    padding: 24px 20px;
   }
 }
 

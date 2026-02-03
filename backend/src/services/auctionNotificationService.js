@@ -228,13 +228,22 @@ async function handleAuctionEnd(listingId) {
       const now = new Date();
       const privateRoomEndDate = new Date(now.getTime() + 24 * 60 * 60 * 1000); // 24 hours from now
 
-      listing.status = 'active'; // Keep active so platinum bidders can bid in private room
-      listing.privateRoomStatus = 'active'; // Private room active immediately - platinum bidders can bid without accepting
-      listing.privateRoomEndDate = privateRoomEndDate;
-      listing.privateRoomLastBidTime = null;
-      listing.endDate = privateRoomEndDate; // Extend end date for private room
+      // Update only the fields we need (avoids full document validation for manually inserted listings)
+      await Listing.findByIdAndUpdate(listingId, {
+        $set: {
+          status: 'active',
+          privateRoomStatus: 'active',
+          privateRoomEndDate,
+          privateRoomLastBidTime: null,
+          endDate: privateRoomEndDate
+        }
+      }, { runValidators: false });
 
-      await listing.save();
+      // Re-fetch with seller populated for notifications
+      const updatedListing = await Listing.findById(listingId)
+        .populate('seller', 'firstName lastName email');
+      if (!updatedListing) throw new Error('Listing not found');
+      const listingForNotify = updatedListing;
 
       // Get highest bid for notifications
       const highestBid = await Bid.findOne({ listing: listingId })
@@ -243,12 +252,12 @@ async function handleAuctionEnd(listingId) {
         .lean();
 
       if (highestBid) {
-        await sendAuctionClosedNotifications(listing, highestBid._id);
+        await sendAuctionClosedNotifications(listingForNotify, highestBid._id);
       } else {
-        await sendAuctionClosedNotifications(listing);
+        await sendAuctionClosedNotifications(listingForNotify);
       }
 
-      await sendChooseWinnerNotification(listing);
+      await sendChooseWinnerNotification(listingForNotify);
 
       console.log(`🔒 Private room activated for listing: ${listingId}. Ends at ${privateRoomEndDate.toISOString()}`);
       console.log(`✅ Auction end notifications sent for listing: ${listingId}`);
@@ -261,12 +270,16 @@ async function handleAuctionEnd(listingId) {
         privateRoomEndDate
       };
     } else {
-      // Regular auction end (no private room)
-      listing.status = 'ended';
+      // Regular auction end (no private room) - update only changed fields (avoids full document validation)
       const deadline = new Date();
       deadline.setHours(deadline.getHours() + 24); // 24 hours from now
-      listing.winnerSelectionDeadline = deadline;
-      await listing.save();
+      await Listing.findByIdAndUpdate(listingId, {
+        $set: { status: 'ended', winnerSelectionDeadline: deadline }
+      }, { runValidators: false });
+
+      const listingForNotify = await Listing.findById(listingId)
+        .populate('seller', 'firstName lastName email');
+      if (!listingForNotify) throw new Error('Listing not found');
 
       // Get highest bid (potential winner)
       const highestBid = await Bid.findOne({ listing: listingId })
@@ -276,13 +289,13 @@ async function handleAuctionEnd(listingId) {
 
       // Send notifications to all bidders (except winner and seller)
       if (highestBid) {
-        await sendAuctionClosedNotifications(listing, highestBid._id);
+        await sendAuctionClosedNotifications(listingForNotify, highestBid._id);
       } else {
-        await sendAuctionClosedNotifications(listing);
+        await sendAuctionClosedNotifications(listingForNotify);
       }
 
       // Send notification to seller to choose winner
-      await sendChooseWinnerNotification(listing);
+      await sendChooseWinnerNotification(listingForNotify);
 
       console.log(`✅ Auction end notifications sent for listing: ${listingId}`);
 
@@ -318,11 +331,14 @@ async function handleWinnerSelection(listingId, winnerBidId) {
       throw new Error('Winner bid not found');
     }
 
-    // Store winner information in listing
-    listing.winner = winnerBid.bidder ? winnerBid.bidder._id : null;
-    listing.winnerBid = winnerBidId;
-    listing.winnerSelectedAt = new Date();
-    await listing.save();
+    // Store winner in listing (update only these fields to avoid full document validation)
+    await Listing.findByIdAndUpdate(listingId, {
+      $set: {
+        winner: winnerBid.bidder ? winnerBid.bidder._id : null,
+        winnerBid: winnerBidId,
+        winnerSelectedAt: new Date()
+      }
+    }, { runValidators: false });
 
     // Send winner notification
     await sendWinnerNotification(listing, winnerBid);

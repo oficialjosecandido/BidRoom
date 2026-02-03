@@ -1,0 +1,77 @@
+.check-email-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 20px;
+}
+
+.check-email-card {
+  background: white;
+  border-radius: 12px;
+  padding: 40px;
+  width: 100%;
+  max-width: 440px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+.icon-wrapper {
+  margin-bottom: 24px;
+
+  .icon {
+    font-size: 56px;
+    line-height: 1;
+  }
+}
+
+.title {
+  font-size: 26px;
+  font-weight: 600;
+  color: #333;
+  margin: 0 0 16px 0;
+}
+
+.message {
+  font-size: 16px;
+  color: #555;
+  margin: 0 0 16px 0;
+  line-height: 1.5;
+
+  strong {
+    color: #333;
+    word-break: break-all;
+  }
+}
+
+.instructions {
+  font-size: 15px;
+  color: #555;
+  margin: 0 0 20px 0;
+  line-height: 1.5;
+}
+
+.hint {
+  font-size: 13px;
+  color: #888;
+  margin: 0 0 28px 0;
+  line-height: 1.4;
+}
+
+.login-btn {
+  width: 100%;
+  padding: 12px 24px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+
+  &:hover {
+    opacity: 0.95;
+  }
+}

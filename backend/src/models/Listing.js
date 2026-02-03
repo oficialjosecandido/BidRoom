@@ -228,8 +228,8 @@ const listingSchema = new mongoose.Schema({
     },
     invitationToken: {
       type: String,
-      required: true,
-      unique: true
+      default: null
+      // No longer used (acceptance flow removed); kept for backwards compatibility
     }
   }],
   // Best Offer specific fields
@@ -285,13 +285,11 @@ function generateSlug(title) {
     .replace(/^-+|-+$/g, ''); // Remove leading/trailing hyphens
 }
 
-// Indexes for common queries
+// Indexes for common queries (slug and isVerified already have index: true in schema)
 listingSchema.index({ status: 1, endDate: 1 }); // For active listings sorted by deadline
 listingSchema.index({ category: 1, status: 1 });
 listingSchema.index({ isFeatured: -1, createdAt: -1 }); // For featured listings
-listingSchema.index({ isVerified: 1 });
 listingSchema.index({ currentPrice: 1, bidCount: 1 }); // For sorting
-listingSchema.index({ slug: 1 }); // Unique index for slug
 
 // Virtual for checking if auction is ending soon (within 24 hours)
 listingSchema.virtual('endingSoon').get(function() {

@@ -12,6 +12,7 @@ require('./config/firebaseAdmin');
 // Import database connection
 const connectDB = require('./config/database');
 const User = require('./models/User');
+const Listing = require('./models/Listing');
 const redisService = require('./services/redis.service');
 
 // Import routes
@@ -22,6 +23,8 @@ const offerRoutes = require('./routes/offers');
 const uploadRoutes = require('./routes/uploads');
 const adminRoutes = require('./routes/admin');
 const privateRoomRoutes = require('./routes/privateRoom');
+const customerRoutes = require('./routes/customers');
+const watchlistRoutes = require('./routes/watchlist');
 
 // Import services
 const auctionEndScheduler = require('./services/auctionEndScheduler');
@@ -53,6 +56,8 @@ app.use('/api/offers', offerRoutes);
 app.use('/api/uploads', uploadRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/private-room', privateRoomRoutes);
+app.use('/api/customers', customerRoutes);
+app.use('/api/watchlist', watchlistRoutes);
 
 app.get('/', (req, res) => {
   res.json({
@@ -181,7 +186,15 @@ const startServer = async () => {
   try {
     // Connect to MongoDB
     await connectDB();
-    
+
+    // Drop legacy unique index on platinumBidderInvitations.invitationToken (no longer used)
+    try {
+      await Listing.collection.dropIndex('platinumBidderInvitations.invitationToken_1');
+      console.log('🗑️ Dropped legacy index platinumBidderInvitations.invitationToken_1');
+    } catch (e) {
+      if (e.code !== 27) console.warn('Index drop (optional):', e.message);
+    }
+
     // Connect to Redis
     await redisService.connect();
     

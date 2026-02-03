@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common';
 import { Router, RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../auth/services/auth.service';
 
+const STORAGE_KEY = 'bidroom-dashboard-sidebar-collapsed';
+
 @Component({
   selector: 'app-dashboard',
   standalone: true,
@@ -11,10 +13,22 @@ import { AuthService } from '../auth/services/auth.service';
   styleUrls: ['./dashboard.component.scss']
 })
 export class DashboardComponent {
+  sidebarCollapsed = false;
+
   constructor(
     private authService: AuthService,
     private router: Router
-  ) {}
+  ) {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored !== null) {
+      this.sidebarCollapsed = stored === 'true';
+    }
+  }
+
+  toggleSidebar(): void {
+    this.sidebarCollapsed = !this.sidebarCollapsed;
+    localStorage.setItem(STORAGE_KEY, String(this.sidebarCollapsed));
+  }
 
   navigateToLanding(): void {
     this.router.navigate(['/landing']);

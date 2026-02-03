@@ -1,13 +1,13 @@
 <div class="my-auctions-container">
   <div class="page-header">
-    <h1>My Auctions</h1>
-    <p class="subtitle">Manage your listings and track platinum bidder invitations</p>
+    <h1>My Listings</h1>
+    <p class="subtitle">Manage your listings as a seller and track platinum bidder invitations</p>
   </div>
 
   <!-- Loading State -->
   <div class="loading-state" *ngIf="isLoading">
     <div class="spinner"></div>
-    <p>Loading your auctions...</p>
+    <p>Loading your listings...</p>
   </div>
 
   <!-- Error State -->
@@ -21,9 +21,9 @@
   <div class="listings-list" *ngIf="!isLoading && !error">
     <div class="empty-state" *ngIf="listings.length === 0">
       <div class="empty-icon">📦</div>
-      <h3>No Auctions Yet</h3>
-      <p>You haven't created any auctions yet. Start by creating your first listing!</p>
-      <a routerLink="/listing/add" class="create-btn">Create Your First Auction</a>
+      <h3>No Listings Yet</h3>
+      <p>You haven't created any listings yet. Start by creating your first listing!</p>
+      <a routerLink="/listing/add" class="create-btn">Create Your First Listing</a>
     </div>
 
     <div class="auction-card" *ngFor="let listing of listings">
@@ -46,6 +46,10 @@
         <div class="stat-item">
           <span class="stat-label">Bids</span>
           <span class="stat-value">{{ listing.bidCount }}</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">Watchlist</span>
+          <span class="stat-value">{{ listing.watchlistCount ?? 0 }}</span>
         </div>
         <div class="stat-item">
           <span class="stat-label">Started</span>

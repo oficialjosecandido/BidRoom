@@ -77,6 +77,12 @@ export interface Listing {
   endingSoon?: boolean;
   createdAt: string;
   updatedAt: string;
+  watchlistCount?: number;
+  inWatchlist?: boolean;
+  /** Set on bidder/my-auctions: user's highest bid on this listing */
+  myHighestBid?: number | null;
+  /** Set on bidder/my-auctions: when user last bid */
+  myLastBidAt?: string | null;
 }
 
 export interface ListingsResponse {
@@ -154,6 +160,27 @@ export class ListingsService {
 
   getMyListings(): Observable<ListingsResponse> {
     return this.http.get<ListingsResponse>(`${this.apiUrl}/seller/my-listings`);
+  }
+
+  /** Listings where the current user has placed at least one bid (bidder view) */
+  getBidderAuctions(): Observable<ListingsResponse> {
+    return this.http.get<ListingsResponse>(`${this.apiUrl}/bidder/my-auctions`);
+  }
+
+  /** Seller chooses a winner for an ended auction (requires winnerBidId) */
+  chooseWinner(listingId: string, winnerBidId: string): Observable<{ listing: Listing; message: string }> {
+    return this.http.post<{ listing: Listing; message: string }>(
+      `${this.apiUrl}/${listingId}/choose-winner`,
+      { winnerBidId }
+    );
+  }
+
+  /** Seller reopens an ended auction with no bids (extends by 7 days) */
+  reopen(listingId: string): Observable<{ listing: Listing; message: string }> {
+    return this.http.post<{ listing: Listing; message: string }>(
+      `${this.apiUrl}/${listingId}/reopen`,
+      {}
+    );
   }
 }
 

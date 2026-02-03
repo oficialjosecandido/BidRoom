@@ -12,10 +12,11 @@ const connectDB = async () => {
     
     // Check if URI already has a database name
     // MongoDB URI format: mongodb+srv://...@host.net/database_name
-    if (!mongoURI.includes('/') || mongoURI.split('/').pop().includes('?')) {
-      // No database name or database name is empty, append it
+    const lastSegment = mongoURI.split('/').pop() || '';
+    const hasDbName = lastSegment.trim() && !lastSegment.includes('?');
+    if (!hasDbName) {
       const dbName = process.env.NODE_ENV === 'production' ? 'bidroom_prod' : 'bidroom_dev';
-      mongoURI = mongoURI.endsWith('/') ? mongoURI + dbName : mongoURI + '/' + dbName;
+      mongoURI = mongoURI.replace(/\/?$/, '/') + dbName;
     }
     
     const conn = await mongoose.connect(mongoURI);

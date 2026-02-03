@@ -1,0 +1,52 @@
+<div class="watchlist-container">
+  <div class="page-header">
+    <h1>My Watchlist</h1>
+    <p class="subtitle">Items you've saved. Click through to view or bid.</p>
+  </div>
+
+  <!-- Loading State -->
+  <div class="loading-state" *ngIf="isLoading">
+    <div class="spinner"></div>
+    <p>Loading your watchlist...</p>
+  </div>
+
+  <!-- Error State -->
+  <div class="error-state" *ngIf="error && !isLoading">
+    <div class="error-icon">⚠️</div>
+    <p class="error-message">{{ error }}</p>
+    <button type="button" class="retry-btn" (click)="loadWatchlist()">Try Again</button>
+  </div>
+
+  <!-- Watchlist Grid -->
+  <div class="watchlist-grid" *ngIf="!isLoading && !error">
+    <div class="empty-state" *ngIf="watchlist.length === 0">
+      <div class="empty-icon">👀</div>
+      <h3>No items in your watchlist</h3>
+      <p>When you add items to your watchlist from a listing page, they'll appear here.</p>
+      <a routerLink="/listing/list" class="browse-btn">Browse auctions</a>
+    </div>
+
+    <div class="watchlist-card" *ngFor="let listing of watchlist">
+      <a [routerLink]="['/listing', listing.slug]" class="card-link">
+        <div class="card-image">
+          <img [src]="getImage(listing)" [alt]="listing.title" />
+        </div>
+        <div class="card-body">
+          <h2 class="card-title">{{ listing.title }}</h2>
+          <div class="card-price">{{ formatPrice(listing.currentPrice) }}</div>
+          <div class="card-meta" *ngIf="listing.status">
+            <span class="status-badge" [class.ended]="listing.status === 'ended'">{{ listing.status }}</span>
+          </div>
+        </div>
+      </a>
+      <button
+        type="button"
+        class="remove-btn"
+        (click)="removeFromWatchlist(listing); $event.stopPropagation()"
+        [disabled]="removingId === listing._id"
+        title="Remove from watchlist">
+        {{ removingId === listing._id ? '...' : 'Remove' }}
+      </button>
+    </div>
+  </div>
+</div>

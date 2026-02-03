@@ -1,24 +1,41 @@
 <div class="dashboard-container">
   <!-- Sidebar Navigation -->
-  <aside class="sidebar">
+  <aside class="sidebar" [class.sidebar--collapsed]="sidebarCollapsed">
     <div class="sidebar-header">
-      <h1 class="logo" (click)="navigateToLanding()">BidRoom | DEV</h1>
+      <h1 class="logo" (click)="navigateToLanding()">
+        <span class="logo-full">BidRoom | DEV</span>
+        <span class="logo-short" aria-hidden="true">BR</span>
+      </h1>
+      <button type="button" class="sidebar-toggle" (click)="toggleSidebar()" [attr.aria-label]="sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'" [attr.aria-expanded]="!sidebarCollapsed">
+        <span class="toggle-icon" aria-hidden="true">{{ sidebarCollapsed ? '›' : '‹' }}</span>
+      </button>
     </div>
-    
+
     <nav class="sidebar-nav">
-      <a routerLink="/dashboard/my-account" routerLinkActive="active" class="nav-item">
+      <a routerLink="/dashboard/home" routerLinkActive="active" class="nav-item" title="Home">
+        <span class="nav-icon">🏠</span>
+        <span class="nav-text">Home</span>
+      </a>
+      <a routerLink="/dashboard/my-account" routerLinkActive="active" class="nav-item" title="My Account">
         <span class="nav-icon">👤</span>
         <span class="nav-text">My Account</span>
       </a>
-      <a routerLink="/dashboard/my-auctions" routerLinkActive="active" class="nav-item">
+      <a routerLink="/dashboard/my-listings" routerLinkActive="active" class="nav-item" title="My Listings">
+        <span class="nav-icon">📦</span>
+        <span class="nav-text">My Listings</span>
+      </a>
+      <a routerLink="/dashboard/my-auctions" routerLinkActive="active" class="nav-item" title="My Auctions">
         <span class="nav-icon">🔨</span>
         <span class="nav-text">My Auctions</span>
       </a>
-      <!-- More nav items will be added here -->
+      <a routerLink="/dashboard/watchlist" routerLinkActive="active" class="nav-item" title="Watchlist">
+        <span class="nav-icon">👀</span>
+        <span class="nav-text">Watchlist</span>
+      </a>
     </nav>
 
     <div class="sidebar-footer">
-      <button class="logout-btn" (click)="logout()">
+      <button type="button" class="logout-btn" (click)="logout()" title="Logout">
         <span class="nav-icon">🚪</span>
         <span class="nav-text">Logout</span>
       </button>
@@ -26,7 +43,7 @@
   </aside>
 
   <!-- Main Content Area -->
-  <main class="dashboard-main">
+  <main class="dashboard-main" [class.dashboard-main--collapsed]="sidebarCollapsed">
     <router-outlet></router-outlet>
   </main>
 </div>
