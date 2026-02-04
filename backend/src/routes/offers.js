@@ -106,13 +106,11 @@ router.post('/', optionalAuth, async (req, res) => {
         message: 'You cannot make an offer on your own listing.'
       });
     }
-    if (offererEmail && listing.seller && listing.seller.email) {
-      if (listing.seller.email.toLowerCase() === offererEmail) {
-        return res.status(403).json({
-          error: 'Cannot offer on your own listing',
-          message: 'You cannot make an offer on your own listing.'
-        });
-      }
+    if (offererEmail && listing.seller?.email && listing.seller.email.toLowerCase() === offererEmail) {
+      return res.status(403).json({
+        error: 'Cannot offer on your own listing',
+        message: 'You cannot make an offer on your own listing.'
+      });
     }
 
     // Verify it's a Best Offer listing
@@ -206,6 +204,7 @@ router.post('/', optionalAuth, async (req, res) => {
       offererName: name,
       offererInitials: initials
     });
+  }
   } catch (error) {
     console.error('Error creating offer:', error);
     res.status(400).json({
