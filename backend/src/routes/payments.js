@@ -171,6 +171,9 @@ async function sendPaymentConfirmationEmail(toEmail, firstName, amountDollars) {
     console.log(`${LOG_PREFIX} Confirmation email sent to ${toEmail} amount=${amountStr}`);
   } catch (err) {
     console.error(`${LOG_PREFIX} Failed to send payment confirmation email to ${toEmail}:`, err.message);
+    if (err.message && err.message.includes('535')) {
+      console.warn(`${LOG_PREFIX} Gmail SMTP auth failed: set EMAIL_USER and EMAIL_PASSWORD (use a Gmail App Password) in your environment.`);
+    }
   }
 }
 

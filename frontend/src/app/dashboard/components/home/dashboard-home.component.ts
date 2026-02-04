@@ -1,7 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import Swal from 'sweetalert2';
 import { AuthService, AppUser } from '../../../auth/services/auth.service';
 import { ListingsService, Listing } from '../../../shared/services/listings.service';
 import { CustomerService, CustomerInfo } from '../../../shared/services/customer.service';
@@ -59,7 +60,8 @@ export class DashboardHomeComponent implements OnInit {
     private listingsService: ListingsService,
     private customerService: CustomerService,
     private paymentsService: PaymentsService,
-    private reviewsService: ReviewsService
+    private reviewsService: ReviewsService,
+    private router: Router
   ) {
     this.currentUser$ = this.authService.currentUser$;
   }
@@ -77,20 +79,24 @@ export class DashboardHomeComponent implements OnInit {
     const payment = params.get('payment');
     const sessionId = params.get('session_id');
     if (payment === 'success') {
+      const done = () => {
+        this.loadCustomer();
+        this.router.navigate(['/dashboard/home'], { replaceUrl: true }).then(() => {
+          Swal.fire({
+            icon: 'success',
+            title: 'Payment successful',
+            text: 'Your balance has been updated. You can use it for auctions and offers.',
+            confirmButtonColor: '#7A4F84'
+          });
+        });
+      };
       if (sessionId) {
         this.paymentsService.confirmSession(sessionId).subscribe({
-          next: () => {
-            this.loadCustomer();
-            window.history.replaceState({}, document.title, window.location.pathname);
-          },
-          error: () => {
-            this.loadCustomer();
-            window.history.replaceState({}, document.title, window.location.pathname);
-          }
+          next: () => done(),
+          error: () => done()
         });
       } else {
-        this.loadCustomer();
-        window.history.replaceState({}, document.title, window.location.pathname);
+        done();
       }
     }
   }
