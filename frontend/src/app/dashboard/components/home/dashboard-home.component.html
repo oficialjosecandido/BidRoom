@@ -35,6 +35,7 @@
         <span class="stat-value">{{ formatPrice(balance) }}</span>
         <span class="stat-label">Balance</span>
       </div>
+      <button type="button" class="stat-action-btn" (click)="openBalanceModal()">Increase balance</button>
     </div>
     <div class="stat-card stat-buyer-score">
       <div class="stat-icon">🛒</div>
@@ -53,6 +54,18 @@
       </div>
     </div>
   </div>
+
+  <!-- Membership tiers -->
+  <section class="section membership-section" *ngIf="!isLoading">
+    <h2 class="section-title">Membership</h2>
+    <p class="membership-desc">Add funds to your balance to secure your membership tier. Your balance is used to participate in auctions and offers.</p>
+    <div class="membership-tiers">
+      <div class="tier-card" *ngFor="let tier of membershipTiers">
+        <span class="tier-name">{{ tier.name }}</span>
+        <span class="tier-price">{{ formatPrice(tier.amount) }}</span>
+      </div>
+    </div>
+  </section>
 
   <!-- Loading -->
   <div class="loading-state" *ngIf="isLoading">
@@ -151,6 +164,60 @@
         <button type="button" class="btn btn-secondary" (click)="closeReviewModal()">Cancel</button>
         <button type="button" class="btn btn-primary" (click)="submitReview()" [disabled]="reviewSubmitting">
           {{ reviewSubmitting ? 'Submitting…' : 'Submit review' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Increase balance modal -->
+  <div class="modal-overlay" *ngIf="showBalanceModal" (click)="closeBalanceModal()">
+    <div class="modal-content balance-modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3 class="modal-title">Increase balance</h3>
+        <button type="button" class="modal-close" (click)="closeBalanceModal()" aria-label="Close">×</button>
+      </div>
+      <div class="modal-body">
+        <p class="balance-modal-desc">Add funds to your balance to secure your membership. You’ll complete payment securely via Stripe.</p>
+        <p class="balance-modal-label">Quick select</p>
+        <div class="balance-tier-options">
+          <button
+            type="button"
+            class="tier-option"
+            *ngFor="let tier of membershipTiers"
+            [class.selected]="!balanceModalIsCustom && balanceModalAmount === tier.amount"
+            (click)="selectBalanceTier(tier.amount)"
+          >
+            <span class="tier-option-name">{{ tier.name }}</span>
+            <span class="tier-option-price">{{ formatPrice(tier.amount) }}</span>
+          </button>
+        </div>
+        <div class="balance-custom-row">
+          <p class="balance-modal-label">Or custom amount</p>
+          <div class="balance-custom-input-wrap">
+            <span class="balance-currency">$</span>
+            <input
+              type="number"
+              class="balance-custom-input"
+              [(ngModel)]="balanceModalCustomInput"
+              (ngModelChange)="onBalanceCustomInputChange()"
+              (focus)="selectBalanceCustom()"
+              [min]="minBalanceAmount"
+              step="0.01"
+              placeholder="5.00"
+              inputmode="decimal"
+            />
+          </div>
+          <span class="balance-custom-hint">Minimum {{ formatPrice(minBalanceAmount) }}</span>
+        </div>
+        <p class="balance-summary" *ngIf="getCheckoutAmount() != null">
+          You’ll add <strong>{{ formatPrice(getCheckoutAmount()!) }}</strong> to your balance.
+        </p>
+        <p class="balance-modal-error" *ngIf="balanceModalError">{{ balanceModalError }}</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="closeBalanceModal()">Cancel</button>
+        <button type="button" class="btn btn-primary" (click)="submitBalanceCheckout()" [disabled]="getCheckoutAmount() == null || balanceModalSubmitting">
+          {{ balanceModalSubmitting ? 'Redirecting…' : 'Continue to checkout' }}
         </button>
       </div>
     </div>

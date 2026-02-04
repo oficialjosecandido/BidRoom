@@ -151,7 +151,7 @@
             <button 
               class="btn btn-primary btn-large" 
               *ngIf="listing.auctionFormat === 'highest-bid' && !isAuctionEnded() && !hasPrivateRoom() && !isOwnListing"
-              (click)="placeBid()">
+              (click)="openBidModal()">
               {{ isAuthenticated ? 'Place Bid' : 'Place Bid (Email Required)' }}
             </button>
             <div *ngIf="isOwnListing && listing.auctionFormat === 'highest-bid' && !hasPrivateRoom() && !isAuctionEnded()" class="own-listing-message">
@@ -179,7 +179,7 @@
             <button 
               class="btn btn-primary btn-large" 
               *ngIf="listing.auctionFormat === 'best-offer' && !hasPrivateRoom() && !isOwnListing"
-              (click)="placeOffer()">
+              (click)="openOfferModal()">
               Make Offer
             </button>
             <div *ngIf="isOwnListing && listing.auctionFormat === 'best-offer' && !hasPrivateRoom()" class="own-listing-message">
@@ -347,9 +347,13 @@
                               <span class="badge-icon">$</span>
                               Deposit
                             </span>
-                            <span class="badge badge-buyer-score" *ngIf="bid.isAuthenticated && (bid.buyerScore != null || (bid.buyerReviewCount ?? 0) > 0)">
+                            <!-- Buyer rating: only for authenticated bidders; guests have no rate -->
+                            <span class="badge badge-buyer-score" *ngIf="bid.isAuthenticated">
                               <span class="badge-icon">🛒</span>
-                              Buyer {{ bid.buyerScore != null ? (bid.buyerScore | number:'1.1-1') : '—' }} ({{ bid.buyerReviewCount ?? 0 }} review{{ (bid.buyerReviewCount ?? 0) !== 1 ? 's' : '' }})
+                              <span *ngIf="bid.buyerScore != null || (bid.buyerReviewCount ?? 0) > 0">
+                                Buyer ★ {{ bid.buyerScore != null ? (bid.buyerScore | number:'1.1-1') : '—' }} ({{ bid.buyerReviewCount ?? 0 }} review{{ (bid.buyerReviewCount ?? 0) !== 1 ? 's' : '' }})
+                              </span>
+                              <span *ngIf="bid.buyerScore == null && (bid.buyerReviewCount ?? 0) === 0">No buyer reviews</span>
                             </span>
                           </div>
                         </div>
@@ -445,6 +449,110 @@
           <p>Ends: {{ listing.endDate | date:'medium' }}</p>
         </div>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- Place Bid modal -->
+<div class="modal-overlay" *ngIf="showBidModal" (click)="closeBidModal()">
+  <div class="modal-content place-bid-offer-modal" (click)="$event.stopPropagation()">
+    <button type="button" class="modal-close" aria-label="Close" (click)="closeBidModal()">&times;</button>
+    <h3 class="modal-title">Place a bid</h3>
+    <p class="modal-transparency">So you know exactly where you stand:</p>
+    <div class="modal-info-box">
+      <div class="modal-info-row">
+        <span class="modal-info-label">Current bid</span>
+        <span class="modal-info-value">{{ formatPrice(listing?.currentPrice || listing?.startingPrice || 0) }}</span>
+      </div>
+      <div class="modal-info-row">
+        <span class="modal-info-label">Minimum next bid</span>
+        <span class="modal-info-value">{{ formatPrice(getMinBid()) }}</span>
+      </div>
+      <div class="modal-info-row" *ngIf="listing?.bidIncrement">
+        <span class="modal-info-label">Bid increment</span>
+        <span class="modal-info-value">{{ formatPrice(listing?.bidIncrement ?? 0) }}</span>
+      </div>
+    </div>
+    <div class="modal-form">
+      <label class="modal-label" for="bid-amount">Your bid amount</label>
+      <input
+        id="bid-amount"
+        type="text"
+        class="modal-input"
+        [(ngModel)]="bidAmount"
+        placeholder="{{ formatPrice(getMinBid()) }}"
+        inputmode="decimal"
+        autocomplete="off"
+      />
+      <div *ngIf="!isAuthenticated" class="modal-email-section">
+        <label class="modal-label" for="bid-email">Your email</label>
+        <input
+          id="bid-email"
+          type="email"
+          class="modal-input"
+          [(ngModel)]="bidEmail"
+          placeholder="you@example.com"
+          autocomplete="email"
+        />
+        <p class="modal-hint">We’ll use this to confirm your bid and notify you if you’re outbid.</p>
+      </div>
+      <p class="modal-error" *ngIf="bidModalError">{{ bidModalError }}</p>
+    </div>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-secondary" (click)="closeBidModal()">Cancel</button>
+      <button type="button" class="btn btn-primary" (click)="submitBid()" [disabled]="bidSubmitting">
+        {{ bidSubmitting ? 'Placing bid…' : 'Place bid' }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Make Offer modal -->
+<div class="modal-overlay" *ngIf="showOfferModal" (click)="closeOfferModal()">
+  <div class="modal-content place-bid-offer-modal" (click)="$event.stopPropagation()">
+    <button type="button" class="modal-close" aria-label="Close" (click)="closeOfferModal()">&times;</button>
+    <h3 class="modal-title">Make an offer</h3>
+    <p class="modal-transparency">So you know exactly what you’re offering:</p>
+    <div class="modal-info-box">
+      <div class="modal-info-row">
+        <span class="modal-info-label">Starting / current</span>
+        <span class="modal-info-value">{{ formatPrice(listing?.startingPrice || listing?.currentPrice || 0) }}</span>
+      </div>
+      <div class="modal-info-row" *ngIf="listing?.minimumOfferPrice">
+        <span class="modal-info-label">Minimum offer</span>
+        <span class="modal-info-value">{{ formatPrice(+(listing?.minimumOfferPrice ?? 0)) }}</span>
+      </div>
+    </div>
+    <div class="modal-form">
+      <label class="modal-label" for="offer-amount">Your offer amount</label>
+      <input
+        id="offer-amount"
+        type="text"
+        class="modal-input"
+        [(ngModel)]="offerAmount"
+        [placeholder]="formatPrice(+(listing?.minimumOfferPrice ?? listing?.startingPrice ?? 0))"
+        inputmode="decimal"
+        autocomplete="off"
+      />
+      <div *ngIf="!isAuthenticated" class="modal-email-section">
+        <label class="modal-label" for="offer-email">Your email</label>
+        <input
+          id="offer-email"
+          type="email"
+          class="modal-input"
+          [(ngModel)]="offerEmail"
+          placeholder="you@example.com"
+          autocomplete="email"
+        />
+        <p class="modal-hint">The seller will use this to respond to your offer.</p>
+      </div>
+      <p class="modal-error" *ngIf="offerModalError">{{ offerModalError }}</p>
+    </div>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-secondary" (click)="closeOfferModal()">Cancel</button>
+      <button type="button" class="btn btn-primary" (click)="submitOffer()" [disabled]="offerSubmitting">
+        {{ offerSubmitting ? 'Sending offer…' : 'Send offer' }}
+      </button>
     </div>
   </div>
 </div>

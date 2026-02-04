@@ -187,7 +187,7 @@ router.post('/', optionalAuth, async (req, res) => {
       if (listing.seller.email.toLowerCase() === bidderEmail.toLowerCase()) {
         return res.status(403).json({
           error: 'Cannot bid on your own listing',
-          message: 'You cannot place a bid on your own listing.'
+          message: 'The email you entered is the seller\'s email for this item. You cannot bid on your own listing. Use a different email to place a bid as a guest, or log in with another account.'
         });
       }
     }

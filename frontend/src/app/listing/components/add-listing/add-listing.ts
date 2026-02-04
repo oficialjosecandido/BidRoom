@@ -68,6 +68,7 @@ export class AddListing implements OnInit {
   ];
 
   listingDurations = [
+    { value: '5 minutes', label: '5 Minutes' },
     { value: '2 hours', label: '2 Hours' },
     { value: '24 hours', label: '24 Hours' },
     { value: '3 days', label: '3 Days' },

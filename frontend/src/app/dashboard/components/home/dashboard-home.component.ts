@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { AuthService, AppUser } from '../../../auth/services/auth.service';
 import { ListingsService, Listing } from '../../../shared/services/listings.service';
 import { CustomerService, CustomerInfo } from '../../../shared/services/customer.service';
+import { PaymentsService } from '../../../shared/services/payments.service';
 import { ReviewsService, PendingReview } from '../../../shared/services/reviews.service';
 import { Observable } from 'rxjs';
 
@@ -38,10 +39,26 @@ export class DashboardHomeComponent implements OnInit {
   reviewSubmitting = false;
   reviewError: string | null = null;
 
+  showBalanceModal = false;
+  balanceModalAmount: number | null = null;
+  balanceModalIsCustom = false;
+  balanceModalCustomInput = '';
+  balanceModalSubmitting = false;
+  balanceModalError: string | null = null;
+
+  readonly minBalanceAmount = 5;
+  readonly membershipTiers = [
+    { name: 'Bronze', amount: 10 },
+    { name: 'Silver', amount: 25 },
+    { name: 'Gold', amount: 100 },
+    { name: 'Platinum', amount: 1000 }
+  ] as const;
+
   constructor(
     private authService: AuthService,
     private listingsService: ListingsService,
     private customerService: CustomerService,
+    private paymentsService: PaymentsService,
     private reviewsService: ReviewsService
   ) {
     this.currentUser$ = this.authService.currentUser$;
@@ -51,6 +68,105 @@ export class DashboardHomeComponent implements OnInit {
     this.loadCustomer();
     this.loadMyListings();
     this.loadPendingReviews();
+    this.checkPaymentReturn();
+  }
+
+  checkPaymentReturn(): void {
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    const payment = params.get('payment');
+    const sessionId = params.get('session_id');
+    if (payment === 'success') {
+      if (sessionId) {
+        this.paymentsService.confirmSession(sessionId).subscribe({
+          next: () => {
+            this.loadCustomer();
+            window.history.replaceState({}, document.title, window.location.pathname);
+          },
+          error: () => {
+            this.loadCustomer();
+            window.history.replaceState({}, document.title, window.location.pathname);
+          }
+        });
+      } else {
+        this.loadCustomer();
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
+    }
+  }
+
+  openBalanceModal(): void {
+    this.showBalanceModal = true;
+    this.balanceModalAmount = null;
+    this.balanceModalIsCustom = false;
+    this.balanceModalCustomInput = '';
+    this.balanceModalError = null;
+  }
+
+  closeBalanceModal(): void {
+    this.showBalanceModal = false;
+    this.balanceModalAmount = null;
+    this.balanceModalIsCustom = false;
+    this.balanceModalCustomInput = '';
+    this.balanceModalError = null;
+  }
+
+  selectBalanceTier(amount: number): void {
+    this.balanceModalAmount = amount;
+    this.balanceModalIsCustom = false;
+    this.balanceModalCustomInput = '';
+    this.balanceModalError = null;
+  }
+
+  selectBalanceCustom(): void {
+    this.balanceModalIsCustom = true;
+    this.balanceModalCustomInput = this.balanceModalCustomInput || String(this.minBalanceAmount);
+    this.updateBalanceCustomAmount();
+    this.balanceModalError = null;
+  }
+
+  onBalanceCustomInputChange(): void {
+    this.updateBalanceCustomAmount();
+    this.balanceModalError = null;
+  }
+
+  private updateBalanceCustomAmount(): void {
+    const parsed = parseFloat(this.balanceModalCustomInput);
+    this.balanceModalAmount = !Number.isNaN(parsed) && parsed >= this.minBalanceAmount ? parsed : null;
+  }
+
+  getCheckoutAmount(): number | null {
+    if (this.balanceModalIsCustom) {
+      const parsed = parseFloat(this.balanceModalCustomInput);
+      return !Number.isNaN(parsed) && parsed >= this.minBalanceAmount ? parsed : null;
+    }
+    return this.balanceModalAmount;
+  }
+
+  submitBalanceCheckout(): void {
+    const amount = this.getCheckoutAmount();
+    if (amount == null) {
+      this.balanceModalError = this.balanceModalIsCustom
+        ? `Please enter at least $${this.minBalanceAmount}.`
+        : 'Please select an amount or enter a custom value (min $5).';
+      return;
+    }
+    this.balanceModalSubmitting = true;
+    this.balanceModalError = null;
+    this.paymentsService.createCheckoutSession(amount).subscribe({
+      next: (res) => {
+        this.balanceModalSubmitting = false;
+        if (res?.url) {
+          window.location.href = res.url;
+        } else {
+          this.balanceModalError = 'No checkout URL received.';
+        }
+      },
+      error: (err) => {
+        this.balanceModalSubmitting = false;
+        this.balanceModalError = err?.error?.message || 'Failed to start checkout. Try again.';
+      }
+    });
   }
 
   loadPendingReviews(): void {

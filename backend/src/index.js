@@ -26,6 +26,7 @@ const privateRoomRoutes = require('./routes/privateRoom');
 const customerRoutes = require('./routes/customers');
 const watchlistRoutes = require('./routes/watchlist');
 const reviewRoutes = require('./routes/reviews');
+const { router: paymentsRouter, stripeWebhookHandler } = require('./routes/payments');
 
 // Import services
 const auctionEndScheduler = require('./services/auctionEndScheduler');
@@ -44,8 +45,18 @@ const PORT = process.env.PORT || 3000;
 
 // Middleware
 app.use(helmet());
-app.use(cors());
+const frontendOrigin = process.env.FRONTEND_URL || 'http://localhost:4200';
+app.use(cors({
+  origin: [frontendOrigin, 'http://localhost:4200', 'https://localhost:4200'],
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
+}));
 app.use(morgan('combined'));
+
+// Stripe webhook needs raw body for signature verification (must be before express.json())
+app.post('/api/payments/webhook', express.raw({ type: 'application/json' }), stripeWebhookHandler);
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -60,6 +71,7 @@ app.use('/api/private-room', privateRoomRoutes);
 app.use('/api/customers', customerRoutes);
 app.use('/api/watchlist', watchlistRoutes);
 app.use('/api/reviews', reviewRoutes);
+app.use('/api/payments', paymentsRouter);
 
 app.get('/', (req, res) => {
   res.json({

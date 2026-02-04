@@ -156,7 +156,7 @@ const listingSchema = new mongoose.Schema({
   // Duration slot (fixed auction lengths)
   durationSlot: {
     type: String,
-    enum: ['2 hours', '24 hours', '3 days', '7 days'],
+    enum: ['5 minutes', '2 hours', '24 hours', '3 days', '7 days'],
     default: '7 days',
     required: true
   },
@@ -318,6 +318,7 @@ listingSchema.methods.getTimeRemaining = function() {
 listingSchema.methods.calculateEndDate = function(startDate) {
   const start = startDate || this.startDate || new Date();
   const durations = {
+    '5 minutes': 5 * 60 * 1000,
     '2 hours': 2 * 60 * 60 * 1000,
     '24 hours': 24 * 60 * 60 * 1000,
     '3 days': 3 * 24 * 60 * 60 * 1000,

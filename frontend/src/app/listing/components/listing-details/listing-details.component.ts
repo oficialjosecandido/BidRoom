@@ -1,7 +1,9 @@
 import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Subscription } from 'rxjs';
+import Swal from 'sweetalert2';
 import { HeaderComponent } from '../../../shared/components/header/header.component';
 import { FooterComponent } from '../../../shared/components/footer/footer.component';
 import { ListingsService, Listing } from '../../../shared/services/listings.service';
@@ -14,7 +16,7 @@ import { AuthService } from '../../../auth/services/auth.service';
 @Component({
   selector: 'app-listing-details',
   standalone: true,
-  imports: [CommonModule, HeaderComponent, FooterComponent],
+  imports: [CommonModule, FormsModule, HeaderComponent, FooterComponent],
   templateUrl: './listing-details.component.html',
   styleUrls: ['./listing-details.component.scss']
 })
@@ -41,6 +43,20 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
   private socketSubscriptions: Subscription[] = [];
   private countdownInterval: any = null;
   displayedTimeRemaining: string = '';
+
+  // Place Bid modal
+  showBidModal = false;
+  bidAmount: string = '';
+  bidEmail: string = '';
+  bidSubmitting = false;
+  bidModalError: string | null = null;
+
+  // Make Offer modal
+  showOfferModal = false;
+  offerAmount: string = '';
+  offerEmail: string = '';
+  offerSubmitting = false;
+  offerModalError: string | null = null;
 
   constructor(
     private route: ActivatedRoute,
@@ -324,149 +340,147 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
     this.socketSubscriptions.push(listingUpdateSubscription);
   }
 
-  placeBid(): void {
+  getMinBid(): number {
+    if (!this.listing) return 0;
+    const current = this.listing.currentPrice || this.listing.startingPrice;
+    return current + (this.listing.bidIncrement || 1);
+  }
+
+  openBidModal(): void {
     if (!this.listing) return;
+    this.bidAmount = '';
+    this.bidEmail = '';
+    this.bidModalError = null;
+    this.showBidModal = true;
+  }
 
-    const currentPrice = this.listing.currentPrice || this.listing.startingPrice;
-    const minBid = currentPrice + (this.listing.bidIncrement || 1);
-    
-    // Collect bid amount
-    const bidAmountStr = prompt(
-      `Current bid: ${this.formatPrice(currentPrice)}\n` +
-      `Minimum bid: ${this.formatPrice(minBid)}\n\n` +
-      `Enter your bid amount:`
-    );
+  closeBidModal(): void {
+    this.showBidModal = false;
+    this.bidModalError = null;
+  }
 
-    if (!bidAmountStr) return;
-
-    const bidAmount = parseFloat(bidAmountStr.replace(/[^0-9.]/g, ''));
-
-    if (isNaN(bidAmount) || bidAmount < minBid) {
-      alert(`Bid amount must be at least ${this.formatPrice(minBid)}`);
+  submitBid(): void {
+    if (!this.listing) return;
+    this.bidModalError = null;
+    const minBid = this.getMinBid();
+    const amount = parseFloat((this.bidAmount || '').replace(/[^0-9.]/g, ''));
+    if (isNaN(amount) || amount < minBid) {
+      this.bidModalError = `Your bid must be at least ${this.formatPrice(minBid)}.`;
       return;
     }
-
-    // Collect email if user is not authenticated
-    let email: string | undefined = undefined;
+    let email: string | undefined;
     if (!this.isAuthenticated) {
-      const emailInput = prompt(
-        `Please provide your email address:\n` +
-        `(You'll receive notifications about this bid)`
-      );
-
-      if (!emailInput) {
-        alert('Email is required to place a bid. Please provide your email address.');
+      const trimmed = (this.bidEmail || '').trim();
+      if (!trimmed) {
+        this.bidModalError = 'Please enter your email address to receive bid notifications.';
         return;
       }
-
-      // Basic email validation
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(emailInput.trim())) {
-        alert('Please enter a valid email address.');
+      if (!emailRegex.test(trimmed)) {
+        this.bidModalError = 'Please enter a valid email address.';
         return;
       }
-
-      email = emailInput.trim();
+      email = trimmed;
     }
-
-    // Place bid via HTTP API (Socket.io will broadcast automatically on backend)
-    const bidData: any = {
-      listingId: this.listing._id,
-      amount: bidAmount,
-      bidType: 'manual'
-    };
-
-    // Include email if user is not authenticated
-    if (!this.isAuthenticated && email) {
-      bidData.email = email;
-    }
-
+    this.bidSubmitting = true;
+    const bidData: any = { listingId: this.listing._id, amount, bidType: 'manual' };
+    if (!this.isAuthenticated && email) bidData.email = email;
     this.bidsService.createBid(bidData).subscribe({
-      next: (bid) => {
-        // Bid was placed successfully
-        if (!this.isAuthenticated) {
-          alert('Bid placed successfully! Please check your email for confirmation.');
-        }
-        // Real-time update will come through Socket.io automatically
-        // Optionally reload bids to ensure sync
-        if (this.listing?._id) {
-          this.loadBids(this.listing._id);
-        }
+      next: () => {
+        this.bidSubmitting = false;
+        this.closeBidModal();
+        if (this.listing?._id) this.loadBids(this.listing._id);
+        Swal.fire({
+          icon: 'success',
+          title: 'Bid placed',
+          html: this.isAuthenticated
+            ? 'Your bid has been placed. You\'ll see it in the bid history and receive updates if you\'re outbid.'
+            : 'Your bid has been placed. Check your email for confirmation and updates.',
+          confirmButtonColor: '#7A4F84'
+        });
       },
       error: (err) => {
-        console.error('Error placing bid:', err);
-        alert(err.error?.message || 'Failed to place bid. Please try again.');
+        this.bidSubmitting = false;
+        const msg = err.error?.message || 'Failed to place bid. Please try again.';
+        this.bidModalError = msg;
+        Swal.fire({
+          icon: 'error',
+          title: 'Bid failed',
+          text: msg,
+          confirmButtonColor: '#7A4F84'
+        });
       }
     });
   }
 
-  placeOffer(): void {
+  openOfferModal(): void {
     if (!this.listing) return;
+    this.offerAmount = '';
+    this.offerEmail = '';
+    this.offerModalError = null;
+    this.showOfferModal = true;
+  }
 
-    const startingPrice = this.listing.startingPrice || this.listing.currentPrice || 0;
-    const minimumOffer = this.listing.minimumOfferPrice || startingPrice;
-    
-    const offerAmountStr = prompt(
-      `Starting Offer: ${this.formatPrice(startingPrice)}\n` +
-      (this.listing.minimumOfferPrice ? `Minimum Offer: ${this.formatPrice(this.listing.minimumOfferPrice)}\n` : '') +
-      `\nEnter your offer amount:`
-    );
+  closeOfferModal(): void {
+    this.showOfferModal = false;
+    this.offerModalError = null;
+  }
 
-    if (!offerAmountStr) return;
-
-    const offerAmount = parseFloat(offerAmountStr.replace(/[^0-9.]/g, ''));
-
-    if (isNaN(offerAmount)) {
-      alert('Please enter a valid amount');
+  submitOffer(): void {
+    if (!this.listing) return;
+    this.offerModalError = null;
+    const amount = parseFloat((this.offerAmount || '').replace(/[^0-9.]/g, ''));
+    const minOffer = this.listing.minimumOfferPrice ?? this.listing.startingPrice ?? this.listing.currentPrice ?? 0;
+    if (isNaN(amount) || amount <= 0) {
+      this.offerModalError = 'Please enter a valid amount.';
       return;
     }
-
-    if (this.listing.minimumOfferPrice && offerAmount < this.listing.minimumOfferPrice) {
-      alert(`Offer amount must be at least ${this.formatPrice(this.listing.minimumOfferPrice)}`);
+    if (this.listing.minimumOfferPrice != null && amount < this.listing.minimumOfferPrice) {
+      this.offerModalError = `Minimum offer is ${this.formatPrice(this.listing.minimumOfferPrice)}.`;
       return;
     }
-
-    // Collect email if user is not authenticated
-    let email: string | undefined = undefined;
+    let email: string | undefined;
     if (!this.isAuthenticated) {
-      const emailInput = prompt(
-        'Please provide your email address so the seller can contact you:'
-      );
-      if (!emailInput || !emailInput.trim()) {
-        alert('Email is required to make an offer.');
+      const trimmed = (this.offerEmail || '').trim();
+      if (!trimmed) {
+        this.offerModalError = 'Please enter your email so the seller can contact you.';
         return;
       }
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(emailInput.trim())) {
-        alert('Please enter a valid email address.');
+      if (!emailRegex.test(trimmed)) {
+        this.offerModalError = 'Please enter a valid email address.';
         return;
       }
-      email = emailInput.trim();
+      email = trimmed;
     }
-
-    const message = prompt('Optional message to seller (press Cancel to skip):');
-
-    const offerData: { listingId: string; amount: number; message?: string; email?: string } = {
+    this.offerSubmitting = true;
+    const offerData: { listingId: string; amount: number; email?: string } = {
       listingId: this.listing._id!,
-      amount: offerAmount,
-      message: message || undefined
+      amount
     };
-    if (!this.isAuthenticated && email) {
-      offerData.email = email;
-    }
-
+    if (!this.isAuthenticated && email) offerData.email = email;
     this.offersService.createOffer(offerData).subscribe({
-      next: (offer) => {
-        // Offer was placed successfully
-        alert('Offer placed successfully! The seller will review your offer.');
-        // Reload offers to show the new one
-        if (this.listing?._id) {
-          this.loadOffers(this.listing._id);
-        }
+      next: () => {
+        this.offerSubmitting = false;
+        this.closeOfferModal();
+        if (this.listing?._id) this.loadOffers(this.listing._id);
+        Swal.fire({
+          icon: 'success',
+          title: 'Offer sent',
+          html: 'Your offer has been sent to the seller. They will review it and you\'ll be notified of their decision.',
+          confirmButtonColor: '#7A4F84'
+        });
       },
       error: (err) => {
-        console.error('Error placing offer:', err);
-        alert(err.error?.message || 'Failed to place offer. Please try again.');
+        this.offerSubmitting = false;
+        const msg = err.error?.message || 'Failed to place offer. Please try again.';
+        this.offerModalError = msg;
+        Swal.fire({
+          icon: 'error',
+          title: 'Offer failed',
+          text: msg,
+          confirmButtonColor: '#7A4F84'
+        });
       }
     });
   }

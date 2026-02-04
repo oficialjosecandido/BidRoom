@@ -1053,6 +1053,139 @@
   }
 }
 
+// Place Bid / Make Offer modals (transparent info + form)
+.place-bid-offer-modal {
+  background: var(--primary-white, #fff);
+  border-radius: 16px;
+  padding: 28px;
+  max-width: 440px;
+  width: 100%;
+  position: relative;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18);
+
+  .modal-close {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: none;
+    border: none;
+    font-size: 26px;
+    line-height: 1;
+    cursor: pointer;
+    color: var(--text-gray);
+    padding: 4px;
+
+    &:hover {
+      color: var(--text-dark);
+    }
+  }
+
+  .modal-title {
+    margin: 0 0 6px 0;
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--text-dark);
+  }
+
+  .modal-transparency {
+    margin: 0 0 16px 0;
+    font-size: 14px;
+    color: var(--text-gray);
+    line-height: 1.4;
+  }
+
+  .modal-info-box {
+    background: rgba(122, 79, 132, 0.08);
+    border: 1px solid rgba(122, 79, 132, 0.2);
+    border-radius: 12px;
+    padding: 14px 18px;
+    margin-bottom: 24px;
+  }
+
+  .modal-info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 0;
+
+    &:not(:last-child) {
+      border-bottom: 1px solid rgba(122, 79, 132, 0.12);
+    }
+  }
+
+  .modal-info-label {
+    font-size: 14px;
+    color: var(--text-gray);
+  }
+
+  .modal-info-value {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--accent-purple, #7A4F84);
+  }
+
+  .modal-form {
+    margin-bottom: 24px;
+  }
+
+  .modal-label {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-dark);
+    margin-bottom: 8px;
+  }
+
+  .modal-input {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1px solid rgba(0, 0, 0, 0.15);
+    border-radius: 10px;
+    font-size: 16px;
+    box-sizing: border-box;
+    margin-bottom: 16px;
+
+    &:focus {
+      outline: none;
+      border-color: var(--accent-purple, #7A4F84);
+      box-shadow: 0 0 0 2px rgba(122, 79, 132, 0.2);
+    }
+
+    &::placeholder {
+      color: var(--text-gray);
+      opacity: 0.8;
+    }
+  }
+
+  .modal-email-section {
+    margin-top: 16px;
+  }
+
+  .modal-hint {
+    font-size: 13px;
+    color: var(--text-gray);
+    margin: -8px 0 16px 0;
+    line-height: 1.4;
+  }
+
+  .modal-error {
+    font-size: 14px;
+    color: #c53030;
+    margin: 0 0 8px 0;
+  }
+
+  .modal-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+
+    .btn {
+      min-width: 100px;
+    }
+  }
+}
+
 // Select winner modal (seller, ended auction with bids)
 .select-winner-modal {
   background: var(--primary-white, #fff);

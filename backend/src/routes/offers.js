@@ -169,6 +169,14 @@ router.post('/', optionalAuth, async (req, res) => {
       });
     }
 
+    // Defensive: must have either authenticated user or guest email
+    if (!user && !offererEmail) {
+      return res.status(400).json({
+        error: 'Identification required',
+        message: 'Please log in or provide your email address to make an offer.'
+      });
+    }
+
     // Create new offer
     const offer = new Offer({
       listing: listingId,

@@ -35,7 +35,7 @@ export interface Listing {
   shippingCost: number;
   // New auction mechanics
   auctionFormat: 'highest-bid' | 'best-offer';
-  durationSlot: '2 hours' | '24 hours' | '3 days' | '7 days';
+  durationSlot: '5 minutes' | '2 hours' | '24 hours' | '3 days' | '7 days';
   allowPrivateRoom: boolean;
   commissionRate: number;
   privateRoomStatus?: 'not-triggered' | 'eligible' | 'active' | 'ended';

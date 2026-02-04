@@ -542,6 +542,7 @@ router.post('/', authenticateToken, async (req, res) => {
 
     // Calculate end date based on duration slot
     const durations = {
+      '5 minutes': 5 * 60 * 1000,
       '2 hours': 2 * 60 * 60 * 1000,
       '24 hours': 24 * 60 * 60 * 1000,
       '3 days': 3 * 24 * 60 * 60 * 1000,

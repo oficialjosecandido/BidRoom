@@ -44,6 +44,11 @@ const customerSchema = new mongoose.Schema({
   lastLogin: {
     type: Date,
     default: null
+  },
+  /** Stripe checkout session IDs already credited (idempotency for webhook + confirm-session). */
+  creditedStripeSessionIds: {
+    type: [String],
+    default: []
   }
 }, {
   timestamps: true,
