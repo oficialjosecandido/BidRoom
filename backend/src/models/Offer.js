@@ -10,8 +10,26 @@ const offerSchema = new mongoose.Schema({
   offerer: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
-    required: true,
-    index: true
+    required: false,
+    index: true,
+    default: null
+  },
+  offererEmail: {
+    type: String,
+    required: false,
+    lowercase: true,
+    trim: true,
+    default: null,
+    validate: {
+      validator: function(email) {
+        if (email && email.trim() !== '') {
+          const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+          return emailRegex.test(email);
+        }
+        return true;
+      },
+      message: 'Valid email format required if provided'
+    }
   },
   amount: {
     type: Number,
@@ -58,7 +76,18 @@ offerSchema.virtual('offererName').get(function() {
   if (this.populated('offerer')) {
     return `${this.offerer.firstName} ${this.offerer.lastName}`;
   }
+  if (this.offererEmail) {
+    return this.offererEmail.split('@')[0];
+  }
   return 'Anonymous';
+});
+
+// Pre-save: either offerer or offererEmail must be provided
+offerSchema.pre('save', function(next) {
+  if (!this.offerer && !this.offererEmail) {
+    return next(new Error('Either offerer (authenticated user) or offererEmail (guest) must be provided'));
+  }
+  next();
 });
 
 // Auto-expire offers after 7 days if not responded to

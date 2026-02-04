@@ -5,6 +5,7 @@ const Bid = require('../models/Bid');
 const Watchlist = require('../models/Watchlist');
 const { authenticateToken, optionalAuth } = require('../middleware/auth');
 const { handleWinnerSelection } = require('../services/auctionNotificationService');
+const { getReviewScoresForUser } = require('../services/reviewService');
 
 const router = express.Router();
 
@@ -282,12 +283,24 @@ router.get('/slug/:slug', optionalAuth, async (req, res) => {
       })() : Promise.resolve(false)
     ]);
 
+    // Seller review score (as seller) for listing details
+    let sellerScore = null;
+    let sellerReviewCount = 0;
+    const sellerId = listing.seller && (listing.seller._id || listing.seller);
+    if (sellerId) {
+      const scores = await getReviewScoresForUser(sellerId);
+      sellerScore = scores.sellerScore;
+      sellerReviewCount = scores.sellerReviewCount;
+    }
+
     res.json({
       ...listing,
       timeRemaining,
       endingSoon: timeRemaining.ended ? false : (timeRemaining.days === 0 && timeRemaining.hours <= 24),
       watchlistCount,
-      inWatchlist: !!inWatchlist
+      inWatchlist: !!inWatchlist,
+      sellerScore,
+      sellerReviewCount
     });
   } catch (error) {
     console.error('Error fetching listing:', error);

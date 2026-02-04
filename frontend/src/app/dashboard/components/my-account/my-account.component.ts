@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AuthService, AppUser } from '../../../auth/services/auth.service';
+import { CustomerService } from '../../../shared/services/customer.service';
 import { Observable } from 'rxjs';
 
 @Component({
@@ -12,13 +13,27 @@ import { Observable } from 'rxjs';
 })
 export class MyAccountComponent implements OnInit {
   currentUser$: Observable<AppUser | null>;
+  buyerScore: number | null = null;
+  sellerScore: number | null = null;
+  buyerReviewCount = 0;
+  sellerReviewCount = 0;
 
-  constructor(private authService: AuthService) {
+  constructor(
+    private authService: AuthService,
+    private customerService: CustomerService
+  ) {
     this.currentUser$ = this.authService.currentUser$;
   }
 
   ngOnInit(): void {
-    // Component initialization if needed
+    this.customerService.getCustomer().subscribe({
+      next: (info) => {
+        this.buyerScore = info.buyerScore ?? null;
+        this.sellerScore = info.sellerScore ?? null;
+        this.buyerReviewCount = info.buyerReviewCount ?? 0;
+        this.sellerReviewCount = info.sellerReviewCount ?? 0;
+      }
+    });
   }
 }
 

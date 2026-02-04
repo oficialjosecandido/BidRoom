@@ -2,7 +2,7 @@ const express = require('express');
 const Offer = require('../models/Offer');
 const Listing = require('../models/Listing');
 const User = require('../models/User');
-const { authenticateToken } = require('../middleware/auth');
+const { authenticateToken, optionalAuth } = require('../middleware/auth');
 
 const router = express.Router();
 
@@ -18,10 +18,10 @@ router.get('/listing/:listingId', async (req, res) => {
       ...offer,
       offererName: offer.offerer
         ? `${offer.offerer.firstName} ${offer.offerer.lastName}`
-        : 'Anonymous',
+        : (offer.offererEmail ? offer.offererEmail.split('@')[0] : 'Anonymous'),
       offererInitials: offer.offerer
         ? `${offer.offerer.firstName.charAt(0)}${offer.offerer.lastName.charAt(0)}`
-        : 'A'
+        : (offer.offererEmail ? offer.offererEmail.charAt(0).toUpperCase() : 'A')
     }));
 
     res.json({
@@ -37,10 +37,10 @@ router.get('/listing/:listingId', async (req, res) => {
   }
 });
 
-// POST /api/offers - Create a new offer (requires authentication)
-router.post('/', authenticateToken, async (req, res) => {
+// POST /api/offers - Create a new offer (auth optional; guests must provide email)
+router.post('/', optionalAuth, async (req, res) => {
   try {
-    const { listingId, amount, message } = req.body;
+    const { listingId, amount, message, email } = req.body;
 
     if (!listingId || !amount) {
       return res.status(400).json({
@@ -49,33 +49,50 @@ router.post('/', authenticateToken, async (req, res) => {
       });
     }
 
-    // Find or create user
-    let user = await User.findOne({ uid: req.user.uid });
-    if (!user) {
-      // Parse name from Firebase user
-      const nameParts = req.user.name?.split(' ') || [];
-      const firstName = nameParts[0] || 'User';
-      const lastName = nameParts.slice(1).join(' ') || 'User'; // Use 'User' as default if no lastName
-      
-      user = new User({
-        uid: req.user.uid,
-        email: req.user.email,
-        firstName: firstName,
-        lastName: lastName,
-        isActive: true,
-        emailVerified: req.user.emailVerified || false
-      });
-      await user.save();
-    } else {
-      // Update email verification status if changed
-      if (req.user.emailVerified !== undefined && user.emailVerified !== req.user.emailVerified) {
-        user.emailVerified = req.user.emailVerified;
+    let user = null;
+    let offererEmail = null;
+
+    if (req.isAuthenticated && req.user) {
+      // Find or create user
+      user = await User.findOne({ uid: req.user.uid });
+      if (!user) {
+        const nameParts = req.user.name?.split(' ') || [];
+        const firstName = nameParts[0] || 'User';
+        const lastName = nameParts.slice(1).join(' ') || 'User';
+        user = new User({
+          uid: req.user.uid,
+          email: req.user.email,
+          firstName,
+          lastName,
+          isActive: true,
+          emailVerified: req.user.emailVerified || false
+        });
         await user.save();
+      } else {
+        if (req.user.emailVerified !== undefined && user.emailVerified !== req.user.emailVerified) {
+          user.emailVerified = req.user.emailVerified;
+          await user.save();
+        }
       }
+    } else {
+      // Guest: email required
+      if (!email || typeof email !== 'string' || !email.trim()) {
+        return res.status(400).json({
+          error: 'Email required',
+          message: 'Please provide your email address to make an offer'
+        });
+      }
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email.trim())) {
+        return res.status(400).json({
+          error: 'Invalid email',
+          message: 'Please provide a valid email address'
+        });
+      offererEmail = email.toLowerCase().trim();
     }
 
-    // Get the listing
-    const listing = await Listing.findById(listingId);
+    // Get the listing (populate seller for email check)
+    const listing = await Listing.findById(listingId).populate('seller', 'email');
     if (!listing) {
       return res.status(404).json({
         error: 'Listing not found'
@@ -83,11 +100,19 @@ router.post('/', authenticateToken, async (req, res) => {
     }
 
     // Block seller from making an offer on their own listing
-    if (listing.seller && listing.seller.toString() === user._id.toString()) {
+    if (user && listing.seller && listing.seller._id.toString() === user._id.toString()) {
       return res.status(403).json({
         error: 'Cannot offer on your own listing',
         message: 'You cannot make an offer on your own listing.'
       });
+    }
+    if (offererEmail && listing.seller && listing.seller.email) {
+      if (listing.seller.email.toLowerCase() === offererEmail) {
+        return res.status(403).json({
+          error: 'Cannot offer on your own listing',
+          message: 'You cannot make an offer on your own listing.'
+        });
+      }
     }
 
     // Verify it's a Best Offer listing
@@ -114,15 +139,17 @@ router.post('/', authenticateToken, async (req, res) => {
       });
     }
 
-    // Check if user already has a pending offer
-    const existingOffer = await Offer.findOne({
-      listing: listingId,
-      offerer: user._id,
-      status: 'pending'
-    });
+    // Check if offerer already has a pending offer (by user id or guest email)
+    const existingQuery = { listing: listingId, status: 'pending' };
+    if (user) {
+      existingQuery.offerer = user._id;
+    } else {
+      existingQuery.offerer = null;
+      existingQuery.offererEmail = offererEmail;
+    }
+    const existingOffer = await Offer.findOne(existingQuery);
 
     if (existingOffer) {
-      // Update existing offer
       existingOffer.amount = amount;
       existingOffer.message = message || null;
       await existingOffer.save();
@@ -130,19 +157,26 @@ router.post('/', authenticateToken, async (req, res) => {
       const populatedOffer = await Offer.findById(existingOffer._id)
         .populate('offerer', 'firstName lastName email')
         .lean();
+      const name = populatedOffer.offerer
+        ? `${populatedOffer.offerer.firstName} ${populatedOffer.offerer.lastName}`
+        : (populatedOffer.offererEmail ? populatedOffer.offererEmail.split('@')[0] : 'Anonymous');
+      const initials = populatedOffer.offerer
+        ? `${populatedOffer.offerer.firstName.charAt(0)}${populatedOffer.offerer.lastName.charAt(0)}`
+        : (populatedOffer.offererEmail ? populatedOffer.offererEmail.charAt(0).toUpperCase() : 'A');
 
       return res.json({
         ...populatedOffer,
-        offererName: `${populatedOffer.offerer.firstName} ${populatedOffer.offerer.lastName}`,
-        offererInitials: `${populatedOffer.offerer.firstName.charAt(0)}${populatedOffer.offerer.lastName.charAt(0)}`
+        offererName: name,
+        offererInitials: initials
       });
     }
 
     // Create new offer
     const offer = new Offer({
       listing: listingId,
-      offerer: user._id,
-      amount: amount,
+      offerer: user ? user._id : null,
+      offererEmail: offererEmail || null,
+      amount,
       message: message || null,
       status: 'pending'
     });
@@ -160,11 +194,17 @@ router.post('/', authenticateToken, async (req, res) => {
     const populatedOffer = await Offer.findById(offer._id)
       .populate('offerer', 'firstName lastName email')
       .lean();
+    const name = populatedOffer.offerer
+      ? `${populatedOffer.offerer.firstName} ${populatedOffer.offerer.lastName}`
+      : (populatedOffer.offererEmail ? populatedOffer.offererEmail.split('@')[0] : 'Anonymous');
+    const initials = populatedOffer.offerer
+      ? `${populatedOffer.offerer.firstName.charAt(0)}${populatedOffer.offerer.lastName.charAt(0)}`
+      : (populatedOffer.offererEmail ? populatedOffer.offererEmail.charAt(0).toUpperCase() : 'A');
 
     res.status(201).json({
       ...populatedOffer,
-      offererName: `${populatedOffer.offerer.firstName} ${populatedOffer.offerer.lastName}`,
-      offererInitials: `${populatedOffer.offerer.firstName.charAt(0)}${populatedOffer.offerer.lastName.charAt(0)}`
+      offererName: name,
+      offererInitials: initials
     });
   } catch (error) {
     console.error('Error creating offer:', error);
@@ -226,9 +266,13 @@ router.patch('/:offerId/accept', authenticateToken, async (req, res) => {
 
     await Promise.all([offer.save(), offer.listing.save()]);
 
+    const offererName = offer.offerer
+      ? `${offer.offerer.firstName} ${offer.offerer.lastName}`
+      : (offer.offererEmail ? offer.offererEmail.split('@')[0] : 'Guest');
+
     res.json({
       ...offer.toObject(),
-      offererName: `${offer.offerer.firstName} ${offer.offerer.lastName}`
+      offererName
     });
   } catch (error) {
     console.error('Error accepting offer:', error);

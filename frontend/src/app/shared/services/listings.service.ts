@@ -79,6 +79,10 @@ export interface Listing {
   updatedAt: string;
   watchlistCount?: number;
   inWatchlist?: boolean;
+  /** Seller's average rating as seller (from reviews) */
+  sellerScore?: number | null;
+  /** Number of reviews the seller has received as seller */
+  sellerReviewCount?: number;
   /** Set on bidder/my-auctions: user's highest bid on this listing */
   myHighestBid?: number | null;
   /** Set on bidder/my-auctions: when user last bid */

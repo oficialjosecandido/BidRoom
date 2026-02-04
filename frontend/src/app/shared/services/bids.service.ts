@@ -26,6 +26,10 @@ export interface Bid {
   isAuthenticated?: boolean;
   bidderVerified?: boolean;
   bidderHasDeposit?: boolean;
+  /** Bidder's average rating as buyer (from reviews) */
+  buyerScore?: number | null;
+  /** Number of reviews the bidder has received as buyer */
+  buyerReviewCount?: number;
   createdAt: string;
   updatedAt: string;
 }

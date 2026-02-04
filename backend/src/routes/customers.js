@@ -1,6 +1,8 @@
 const express = require('express');
 const { authenticateToken } = require('../middleware/auth');
 const Customer = require('../models/Customer');
+const User = require('../models/User');
+const { getReviewScoresForUser } = require('../services/reviewService');
 
 const router = express.Router();
 
@@ -8,6 +10,7 @@ const router = express.Router();
  * GET /api/customers/profile
  * Returns the authenticated customer's profile from the customers collection.
  * Creates a customer document if one doesn't exist (from Firebase token).
+ * Includes buyer and seller review scores (from User/reviews).
  */
 router.get('/profile', authenticateToken, async (req, res) => {
   try {
@@ -44,6 +47,20 @@ router.get('/profile', authenticateToken, async (req, res) => {
       customer = await Customer.findOne({ uid }).lean();
     }
 
+    // Resolve User by uid for review scores (buyer/seller scores are per User)
+    const dbUser = await User.findOne({ uid }).select('_id').lean();
+    let buyerScore = null;
+    let sellerScore = null;
+    let buyerReviewCount = 0;
+    let sellerReviewCount = 0;
+    if (dbUser) {
+      const scores = await getReviewScoresForUser(dbUser._id);
+      buyerScore = scores.buyerScore;
+      sellerScore = scores.sellerScore;
+      buyerReviewCount = scores.buyerReviewCount;
+      sellerReviewCount = scores.sellerReviewCount;
+    }
+
     res.json({
       user: {
         _id: customer._id,
@@ -57,7 +74,11 @@ router.get('/profile', authenticateToken, async (req, res) => {
         createdAt: customer.createdAt
       },
       balance: customer.balance ?? 0,
-      reviewCount: customer.reviewCount ?? 0
+      reviewCount: customer.reviewCount ?? 0,
+      buyerScore,
+      sellerScore,
+      buyerReviewCount,
+      sellerReviewCount
     });
   } catch (error) {
     console.error('Error fetching customer profile:', error);

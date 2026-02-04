@@ -4,6 +4,7 @@ const Listing = require('../models/Listing');
 const User = require('../models/User');
 const { authenticateToken, optionalAuth } = require('../middleware/auth');
 const { sendFirstBidNotification } = require('../services/auctionNotificationService');
+const { getReviewScoresForUsers } = require('../services/reviewService');
 
 const router = express.Router();
 
@@ -19,23 +20,32 @@ router.get('/listing/:listingId', async (req, res) => {
       .sort({ createdAt: sortOrder })
       .lean();
 
+    // Get buyer review scores for all bidders (authenticated users only)
+    const bidderIds = bids.filter((b) => b.bidder && b.bidder._id).map((b) => b.bidder._id.toString());
+    const scoreMap = bidderIds.length > 0 ? await getReviewScoresForUsers(bidderIds) : {};
+
     // Format bids for frontend
-    const formattedBids = bids.map(bid => ({
-      ...bid,
-      bidderName: bid.bidder 
-        ? `${bid.bidder.firstName} ${bid.bidder.lastName}`
-        : (bid.bidderEmail ? bid.bidderEmail.split('@')[0] : 'Anonymous'),
-      bidderInitials: bid.bidder
-        ? `${bid.bidder.firstName.charAt(0)}${bid.bidder.lastName.charAt(0)}`
-        : (bid.bidderEmail ? bid.bidderEmail.charAt(0).toUpperCase() : 'A'),
-      bidderEmail: bid.bidderEmail || (bid.bidder ? bid.bidder.email : null),
-      // Add verification and deposit info for authenticated bidders
-      isAuthenticated: !!bid.bidder,
-      bidderVerified: bid.bidder ? (bid.bidder.emailVerified || false) : false,
-      bidderHasDeposit: bid.bidder ? (bid.bidder.hasDeposit || false) : false,
-      bidderFirstName: bid.bidder ? bid.bidder.firstName : null,
-      bidderLastName: bid.bidder ? bid.bidder.lastName : null
-    }));
+    const formattedBids = bids.map(bid => {
+      const bidderId = bid.bidder && bid.bidder._id ? bid.bidder._id.toString() : null;
+      const scores = bidderId ? scoreMap[bidderId] : null;
+      return {
+        ...bid,
+        bidderName: bid.bidder
+          ? `${bid.bidder.firstName} ${bid.bidder.lastName}`
+          : (bid.bidderEmail ? bid.bidderEmail.split('@')[0] : 'Anonymous'),
+        bidderInitials: bid.bidder
+          ? `${bid.bidder.firstName.charAt(0)}${bid.bidder.lastName.charAt(0)}`
+          : (bid.bidderEmail ? bid.bidderEmail.charAt(0).toUpperCase() : 'A'),
+        bidderEmail: bid.bidderEmail || (bid.bidder ? bid.bidder.email : null),
+        isAuthenticated: !!bid.bidder,
+        bidderVerified: bid.bidder ? (bid.bidder.emailVerified || false) : false,
+        bidderHasDeposit: bid.bidder ? (bid.bidder.hasDeposit || false) : false,
+        bidderFirstName: bid.bidder ? bid.bidder.firstName : null,
+        bidderLastName: bid.bidder ? bid.bidder.lastName : null,
+        buyerScore: scores ? scores.buyerScore : null,
+        buyerReviewCount: scores ? scores.buyerReviewCount : 0
+      };
+    });
 
     res.json({
       bids: formattedBids,

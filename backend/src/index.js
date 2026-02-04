@@ -25,6 +25,7 @@ const adminRoutes = require('./routes/admin');
 const privateRoomRoutes = require('./routes/privateRoom');
 const customerRoutes = require('./routes/customers');
 const watchlistRoutes = require('./routes/watchlist');
+const reviewRoutes = require('./routes/reviews');
 
 // Import services
 const auctionEndScheduler = require('./services/auctionEndScheduler');
@@ -58,6 +59,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/private-room', privateRoomRoutes);
 app.use('/api/customers', customerRoutes);
 app.use('/api/watchlist', watchlistRoutes);
+app.use('/api/reviews', reviewRoutes);
 
 app.get('/', (req, res) => {
   res.json({

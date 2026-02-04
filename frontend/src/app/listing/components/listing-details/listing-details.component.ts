@@ -426,14 +426,36 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
       return;
     }
 
+    // Collect email if user is not authenticated
+    let email: string | undefined = undefined;
+    if (!this.isAuthenticated) {
+      const emailInput = prompt(
+        'Please provide your email address so the seller can contact you:'
+      );
+      if (!emailInput || !emailInput.trim()) {
+        alert('Email is required to make an offer.');
+        return;
+      }
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(emailInput.trim())) {
+        alert('Please enter a valid email address.');
+        return;
+      }
+      email = emailInput.trim();
+    }
+
     const message = prompt('Optional message to seller (press Cancel to skip):');
 
-    // Create offer via HTTP API
-    this.offersService.createOffer({
+    const offerData: { listingId: string; amount: number; message?: string; email?: string } = {
       listingId: this.listing._id!,
       amount: offerAmount,
       message: message || undefined
-    }).subscribe({
+    };
+    if (!this.isAuthenticated && email) {
+      offerData.email = email;
+    }
+
+    this.offersService.createOffer(offerData).subscribe({
       next: (offer) => {
         // Offer was placed successfully
         alert('Offer placed successfully! The seller will review your offer.');

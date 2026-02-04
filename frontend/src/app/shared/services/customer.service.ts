@@ -21,6 +21,10 @@ export interface CustomerInfo {
   user: CustomerUser;
   balance: number;
   reviewCount: number;
+  buyerScore: number | null;
+  sellerScore: number | null;
+  buyerReviewCount: number;
+  sellerReviewCount: number;
 }
 
 @Injectable({

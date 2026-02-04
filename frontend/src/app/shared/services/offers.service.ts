@@ -32,6 +32,8 @@ export interface CreateOfferRequest {
   listingId: string;
   amount: number;
   message?: string;
+  /** Required when not authenticated (guest offer) */
+  email?: string;
 }
 
 @Injectable({

@@ -109,6 +109,44 @@
   color: #666;
 }
 
+.reviews-scores {
+  .score-row {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid #f0f0f0;
+
+    &:last-of-type {
+      border-bottom: none;
+    }
+  }
+
+  .score-label {
+    font-weight: 500;
+    color: #666;
+    min-width: 120px;
+    font-size: 14px;
+  }
+
+  .score-value {
+    font-weight: 600;
+    color: #333;
+    font-size: 16px;
+  }
+
+  .score-count {
+    font-size: 13px;
+    color: #999;
+  }
+
+  .score-note {
+    margin: 16px 0 0;
+    font-size: 13px;
+    color: #999;
+  }
+}
+
 .coming-soon {
   color: #999;
   font-style: italic;
