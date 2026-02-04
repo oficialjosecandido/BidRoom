@@ -45,9 +45,26 @@ const PORT = process.env.PORT || 3000;
 
 // Middleware
 app.use(helmet());
-const frontendOrigin = process.env.FRONTEND_URL || 'http://localhost:4200';
+// CORS: allow FRONTEND_URL, localhost, and any Azure Static Web Apps origin (*.azurestaticapps.net)
+const allowedOrigins = [
+  process.env.FRONTEND_URL || 'http://localhost:4200',
+  'http://localhost:4200',
+  'https://localhost:4200'
+];
+const isAllowedOrigin = (origin) => {
+  if (!origin) return false;
+  if (allowedOrigins.includes(origin)) return true;
+  if (origin.endsWith('.azurestaticapps.net')) return true;
+  return false;
+};
 app.use(cors({
-  origin: [frontendOrigin, 'http://localhost:4200', 'https://localhost:4200'],
+  origin: (origin, callback) => {
+    if (isAllowedOrigin(origin)) {
+      callback(null, true);
+    } else {
+      callback(null, allowedOrigins[0]);
+    }
+  },
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true
