@@ -4,37 +4,58 @@
  */
 
 const Listing = require('../models/Listing');
-const { handleAuctionEnd } = require('./auctionNotificationService');
+const { handleAuctionEnd, handlePrivateRoomEnd } = require('./auctionNotificationService');
 
 let checkInterval = null;
 let ioInstance = null;
 
 /**
- * Check for ended auctions and process them
+ * Check for ended auctions and process them (regular auctions and private rooms past their end time)
  */
 async function checkEndedAuctions() {
   try {
     const now = new Date();
+    let processed = 0;
 
-    // Find auctions that have ended but haven't been processed yet
+    // 1) Regular auctions: endDate passed, not in active private room
     const endedAuctions = await Listing.find({
       status: 'active',
       endDate: { $lte: now },
-      privateRoomStatus: { $ne: 'active' } // Only check regular auctions, not private room
+      privateRoomStatus: { $ne: 'active' }
     }).populate('seller', 'email');
-
-    console.log(`🔍 Found ${endedAuctions.length} ended auction(s) to process`);
 
     for (const listing of endedAuctions) {
       try {
         await handleAuctionEnd(listing._id);
+        processed++;
         console.log(`✅ Processed ended auction: ${listing._id} - ${listing.title}`);
       } catch (error) {
         console.error(`❌ Error processing auction ${listing._id}:`, error.message);
       }
     }
 
-    return { processed: endedAuctions.length };
+    // 2) Active private rooms whose privateRoomEndDate has passed
+    const endedPrivateRooms = await Listing.find({
+      status: 'active',
+      privateRoomStatus: 'active',
+      privateRoomEndDate: { $lte: now }
+    });
+
+    for (const listing of endedPrivateRooms) {
+      try {
+        await handlePrivateRoomEnd(listing._id, ioInstance);
+        processed++;
+        console.log(`✅ Closed private room (time expired): ${listing._id} - ${listing.title}`);
+      } catch (error) {
+        console.error(`❌ Error closing private room ${listing._id}:`, error.message);
+      }
+    }
+
+    if (endedAuctions.length > 0 || endedPrivateRooms.length > 0) {
+      console.log(`🔍 Processed ${processed} ended auction(s) / private room(s)`);
+    }
+
+    return { processed };
   } catch (error) {
     console.error('Error checking ended auctions:', error);
     throw error;

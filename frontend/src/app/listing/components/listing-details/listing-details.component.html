@@ -128,8 +128,8 @@
                   <h4>Auction Ended</h4>
                   <!-- Seller, no bids: closed -->
                   <p *ngIf="isOwnListing && getEndedBidCount() === 0">This auction closed with no bids. You can reopen it for another 7 days below.</p>
-                  <!-- Seller, has bids, no winner yet: select winner -->
-                  <p *ngIf="isOwnListing && getEndedBidCount() > 0 && !listing.winner && !canCreatePrivateRoom()">Select a winner below.</p>
+                  <!-- Seller, has bids, no winner yet: select winner (not for private room ended – winner was auto-selected) -->
+                  <p *ngIf="isOwnListing && getEndedBidCount() > 0 && !listing.winner && !canCreatePrivateRoom() && !isPrivateRoomEnded()">Select a winner below.</p>
                   <!-- Seller, winner selected -->
                   <p *ngIf="isOwnListing && listing.winner">Winner has been selected.</p>
                   <!-- Non-seller, no bids -->
@@ -189,9 +189,9 @@
               (click)="openCreatePrivateRoomModal()">
               Create private room
             </button>
-            <!-- Seller: ended with bids, not private room eligible → Select winner -->
+            <!-- Seller: ended with bids, not private room eligible → Select winner (hidden when private room ended; winner was auto-selected) -->
             <button
-              *ngIf="isOwnListing && isAuctionEnded() && !hasPrivateRoom() && getEndedBidCount() > 0 && !listing.winner && !canCreatePrivateRoom()"
+              *ngIf="isOwnListing && isAuctionEnded() && !hasPrivateRoom() && getEndedBidCount() > 0 && !listing.winner && !canCreatePrivateRoom() && !isPrivateRoomEnded()"
               class="btn btn-primary btn-large"
               (click)="openSelectWinnerModal()">
               Select winner
@@ -345,7 +345,7 @@
               </div>
 
               <div *ngIf="bids.length > 0" class="bids-list">
-                <div class="bid-item" *ngFor="let bid of bids; let i = index" [class.top-bid]="i === 0" [class.bid-not-eligible]="isOwnListing && isAuctionEnded() && !listing.winner && !canSelectBidAsWinner(bid)">
+                <div class="bid-item" *ngFor="let bid of bids; let i = index" [class.top-bid]="i === 0" [class.bid-not-eligible]="isOwnListing && isAuctionEnded() && !listing.winner && !isPrivateRoomEnded() && !canSelectBidAsWinner(bid)">
                   <div class="bid-rank">{{ i + 1 }}</div>
                   <div class="bid-avatar">
                     {{ bid.bidderInitials || 'A' }}
@@ -396,8 +396,8 @@
                           <span class="bid-date">{{ formatBidDate(bid.createdAt) }}</span>
                           <span class="bid-type" *ngIf="bid.bidType !== 'manual'">{{ bid.bidType }}</span>
                         </div>
-                        <!-- Seller: Select as winner (only for verified bidders) -->
-                        <div *ngIf="isOwnListing && isAuctionEnded() && !listing.winner" class="bid-select-winner-wrap">
+                        <!-- Seller: Select as winner (only when seller may choose; not when private room ended – winner auto-selected) -->
+                        <div *ngIf="isOwnListing && isAuctionEnded() && !listing.winner && !isPrivateRoomEnded()" class="bid-select-winner-wrap">
                           <button *ngIf="canSelectBidAsWinner(bid)" type="button" class="btn btn-primary btn-small bid-select-winner-btn" (click)="selectWinner(bid._id)" [disabled]="selectingWinner">
                             {{ selectingWinner ? 'Selecting…' : 'Select as winner' }}
                           </button>
@@ -472,8 +472,13 @@
       <div class="additional-info">
         <div class="info-card">
           <h3>Shipping</h3>
-          <p>Shipping cost: {{ formatPrice(listing.shippingCost) }}</p>
+          <p *ngIf="listing.shippingOption === 'free'">Free shipping</p>
+          <p *ngIf="listing.shippingOption !== 'free'">Shipping cost: {{ formatPrice(listing.shippingCost) }}</p>
           <p *ngIf="listing.location">From: {{ listing.location }}</p>
+        </div>
+        <div class="info-card" *ngIf="listing.returnPolicy">
+          <h3>Return policy</h3>
+          <p>{{ getReturnPolicyLabel(listing.returnPolicy) }}</p>
         </div>
         <div class="info-card">
           <h3>Auction Timeline</h3>
@@ -608,8 +613,8 @@
   </div>
 </div>
 
-<!-- Select winner modal (seller, ended auction with bids) -->
-<div class="modal-overlay" *ngIf="showSelectWinnerModal" (click)="closeSelectWinnerModal()">
+<!-- Select winner modal (seller, ended auction with bids; not shown when private room ended) -->
+<div class="modal-overlay" *ngIf="showSelectWinnerModal && !isPrivateRoomEnded()" (click)="closeSelectWinnerModal()">
   <div class="modal-content select-winner-modal" (click)="$event.stopPropagation()">
     <button type="button" class="modal-close" aria-label="Close" (click)="closeSelectWinnerModal()">&times;</button>
     <h3>Select winner</h3>

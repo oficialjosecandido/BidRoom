@@ -33,6 +33,8 @@ export interface Listing {
   condition: string;
   location?: string;
   shippingCost: number;
+  shippingOption?: string;
+  returnPolicy?: string;
   // New auction mechanics
   auctionFormat: 'highest-bid' | 'best-offer';
   durationSlot: '5 minutes' | '2 hours' | '24 hours' | '3 days' | '7 days';

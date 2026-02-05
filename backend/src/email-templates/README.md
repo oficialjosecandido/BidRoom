@@ -66,7 +66,9 @@ This will create template files for all supported languages (en, pt, es, fr, de)
 
 - `auctionClosed` - Sent to bidders when auction ends (except winner/seller)
 - `chooseWinner` - Sent to seller to choose winner (24h deadline)
-- `youWon` - Sent to winner when selected
+- `youWon` - Sent to winner when selected (manual winner selection)
+- `privateRoomWinner` - Sent to winner when private room closes (highest bid not outbid for 60s)
+- `privateRoomNotWinner` - Sent to other bidders when private room closes (they did not win)
 - `firstBidPlaced` - Sent to user when they place their first bid on a listing
 
 ## Usage

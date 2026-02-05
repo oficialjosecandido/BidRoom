@@ -277,6 +277,12 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
         if (update.privateRoomStatus) {
           this.listing.privateRoomStatus = update.privateRoomStatus;
         }
+        if (update.status) {
+          this.listing.status = update.status;
+        }
+        if (update.endDate) {
+          this.listing.endDate = update.endDate;
+        }
         this.loadBids(); // Reload bids to get latest
       }
     });

@@ -26,6 +26,7 @@ const privateRoomRoutes = require('./routes/privateRoom');
 const customerRoutes = require('./routes/customers');
 const watchlistRoutes = require('./routes/watchlist');
 const reviewRoutes = require('./routes/reviews');
+const transactionsRoutes = require('./routes/transactions');
 const { router: paymentsRouter, stripeWebhookHandler } = require('./routes/payments');
 
 // Import services
@@ -88,6 +89,7 @@ app.use('/api/private-room', privateRoomRoutes);
 app.use('/api/customers', customerRoutes);
 app.use('/api/watchlist', watchlistRoutes);
 app.use('/api/reviews', reviewRoutes);
+app.use('/api/transactions', transactionsRoutes);
 app.use('/api/payments', paymentsRouter);
 
 app.get('/', (req, res) => {

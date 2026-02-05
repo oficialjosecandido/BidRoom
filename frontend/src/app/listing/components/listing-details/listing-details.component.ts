@@ -305,6 +305,11 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
     return this.listing?.privateRoomStatus === 'active';
   }
 
+  /** True when this listing had a private room that has ended (winner was auto-selected by 60s rule; seller must not choose). */
+  isPrivateRoomEnded(): boolean {
+    return !!(this.listing?.allowPrivateRoom && this.listing?.privateRoomStatus === 'ended');
+  }
+
   /** Seller can create private room when auction ended, private room enabled, eligible, within 1h deadline, and there are bids. */
   canCreatePrivateRoom(): boolean {
     if (!this.listing || !this.isOwnListing || this.listing.auctionFormat !== 'highest-bid') return false;
@@ -323,6 +328,16 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
       default:
         return 'Auction Ends';
     }
+  }
+
+  getReturnPolicyLabel(value: string): string {
+    const labels: Record<string, string> = {
+      '30-days': '30 Day Returns',
+      '14-days': '14 Day Returns',
+      'no-returns': 'No Returns Accepted',
+      'custom': 'Custom Policy'
+    };
+    return labels[value] || value || '';
   }
 
   setupRealTimeUpdates(listingId: string): void {

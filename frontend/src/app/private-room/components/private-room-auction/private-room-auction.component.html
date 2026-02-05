@@ -14,7 +14,7 @@
       </div>
       
       <div class="header-stats">
-        <div class="stat-card viewer-card">
+        <div class="stat-card viewer-card" *ngIf="listing?.privateRoomStatus !== 'ended'">
           <div class="stat-icon">👁️</div>
           <div class="stat-content">
             <div class="stat-value">{{ viewerCount }}</div>
@@ -22,12 +22,20 @@
           </div>
         </div>
         
-        <div class="stat-card countdown-card" [class.warning]="countdown <= 300" [class.critical]="countdown <= 60">
+        <div class="stat-card countdown-card" [class.warning]="countdown <= 300" [class.critical]="countdown <= 60" *ngIf="listing?.privateRoomStatus !== 'ended'">
           <div class="stat-icon">⏰</div>
           <div class="stat-content">
             <div class="stat-value countdown-value">{{ formatCountdown() }}</div>
             <div class="stat-label">Time remaining</div>
             <div class="countdown-subtext" *ngIf="countdown <= 60">⚡ Closing soon!</div>
+          </div>
+        </div>
+
+        <div class="stat-card ended-card" *ngIf="listing?.privateRoomStatus === 'ended'">
+          <div class="stat-icon">🏁</div>
+          <div class="stat-content">
+            <div class="stat-value">Auction ended</div>
+            <div class="stat-label">Room closed</div>
           </div>
         </div>
       </div>
@@ -80,6 +88,19 @@
 
   <!-- Poker Table View -->
   <div class="private-room-content" *ngIf="listing && !loading && !error">
+    <!-- Room ended state -->
+    <div class="room-ended-state" *ngIf="listing.privateRoomStatus === 'ended'">
+      <div class="room-ended-card">
+        <div class="room-ended-badge">Auction ended</div>
+        <div class="room-ended-icon">🏁</div>
+        <h2>Private room closed</h2>
+        <p>The auction has ended. The winner was the highest bid that wasn't outbid for 60 seconds. You will be notified by email if you won.</p>
+        <a *ngIf="listing.slug" [href]="getListingPageUrl()" class="room-ended-link" target="_blank" rel="noopener noreferrer">View listing</a>
+      </div>
+    </div>
+
+    <!-- Active room content -->
+    <div *ngIf="listing.privateRoomStatus !== 'ended'">
     <!-- Mobile Layout: Stacked -->
     <div class="mobile-layout">
       <!-- Mobile User Info -->
@@ -360,6 +381,7 @@
           <p class="empty-subtext">Be the first to place a bid!</p>
         </div>
       </div>
+    </div>
     </div>
   </div>
 </div>

@@ -133,7 +133,7 @@
   <section class="section" *ngIf="!isLoading && !error">
     <div class="section-header">
       <h2 class="section-title">Active listings</h2>
-      <a routerLink="/dashboard/my-listings" class="section-link">My Listings</a>
+      <a routerLink="/dashboard/my-listings" class="section-link">Selling Items</a>
     </div>
     <div class="listings-preview" *ngIf="activeListings.length > 0">
       <div class="listing-card" *ngFor="let listing of activeListings.slice(0, 5)">
@@ -155,7 +155,7 @@
   <section class="section" *ngIf="!isLoading && !error && endedListings.length > 0">
     <div class="section-header">
       <h2 class="section-title">Recently ended</h2>
-      <a routerLink="/dashboard/my-listings" class="section-link">My Listings</a>
+      <a routerLink="/dashboard/my-listings" class="section-link">Selling Items</a>
     </div>
     <div class="listings-preview">
       <div class="listing-card ended" *ngFor="let listing of endedListings.slice(0, 3)">
@@ -281,7 +281,7 @@
     </a>
     <a routerLink="/dashboard/my-listings" class="quick-link">
       <span class="quick-icon">📦</span>
-      <span>My listings</span>
+      <span>Selling items</span>
     </a>
     <a routerLink="/listing/add" class="quick-link">
       <span class="quick-icon">➕</span>

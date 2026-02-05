@@ -1,0 +1,81 @@
+<div class="transactions-container">
+  <div class="page-header">
+    <h1>Transactions</h1>
+    <p class="subtitle">Track payment and shipping for your won auctions and sold items</p>
+  </div>
+
+  <!-- Loading -->
+  <div class="loading-state" *ngIf="isLoading">
+    <div class="spinner"></div>
+    <p>Loading transactions...</p>
+  </div>
+
+  <!-- Error -->
+  <div class="error-state" *ngIf="error && !isLoading">
+    <div class="error-icon">⚠️</div>
+    <p class="error-message">{{ error }}</p>
+    <button type="button" class="retry-btn" (click)="loadTransactions()">Try again</button>
+  </div>
+
+  <!-- List -->
+  <div class="transactions-list" *ngIf="!isLoading && !error">
+    <div class="empty-state" *ngIf="transactions.length === 0">
+      <div class="empty-icon">💳</div>
+      <h3>No transactions yet</h3>
+      <p>When you win an auction or sell an item, the transaction will appear here so you can track payment and shipping.</p>
+      <a routerLink="/listing/list" class="browse-btn">Browse auctions</a>
+    </div>
+
+    <div class="transaction-card" *ngFor="let t of transactions">
+      <a [routerLink]="getListingUrl(t)" class="card-main">
+        <div class="card-image">
+          <img [src]="getListingImage(t)" [alt]="t.listing.title" />
+        </div>
+        <div class="card-body">
+          <h2 class="card-title">{{ t.listing.title }}</h2>
+          <div class="card-amount">{{ formatPrice(t.amount) }}</div>
+          <span class="status-badge" [ngClass]="getStatusClass(getEffectiveStatus(t))">{{ getStatusLabel(getEffectiveStatus(t)) }}</span>
+          <p class="card-role" *ngIf="isBuyer(t)">
+            You are the <strong>buyer</strong>. Seller: {{ t.seller.firstName }} {{ t.seller.lastName }}
+          </p>
+          <p class="card-role" *ngIf="isSeller(t)">
+            You are the <strong>seller</strong>. Buyer: {{ t.buyer.firstName }} {{ t.buyer.lastName }}
+          </p>
+          <p class="tracking-info" *ngIf="t.trackingNumber && t.status !== 'pending_payment'">
+            <span *ngIf="t.trackingCarrier">{{ t.trackingCarrier }}:</span> {{ t.trackingNumber }}
+          </p>
+        </div>
+      </a>
+
+      <div class="card-actions">
+        <!-- Buyer actions -->
+        <ng-container *ngIf="isBuyer(t)">
+          <a *ngIf="getEffectiveStatus(t) === 'pending_payment'" [routerLink]="getPaymentUrl(t)" class="btn btn-primary">Pay now</a>
+          <button *ngIf="getEffectiveStatus(t) === 'pending_payment'" type="button" class="btn btn-secondary" (click)="markAsPaid(t)" [disabled]="updatingId === t._id">
+            {{ updatingId === t._id ? 'Updating…' : 'Mark as paid' }}
+          </button>
+          <button *ngIf="getEffectiveStatus(t) === 'shipped'" type="button" class="btn btn-secondary" (click)="markAsDelivered(t)" [disabled]="updatingId === t._id">
+            {{ updatingId === t._id ? 'Updating…' : 'Mark as delivered' }}
+          </button>
+          <button *ngIf="['paid','shipped','delivered'].includes(getEffectiveStatus(t))" type="button" class="btn btn-secondary" (click)="markAsCompleted(t)" [disabled]="updatingId === t._id">
+            {{ updatingId === t._id ? 'Updating…' : 'Mark as completed' }}
+          </button>
+        </ng-container>
+
+        <!-- Seller actions -->
+        <ng-container *ngIf="isSeller(t)">
+          <button *ngIf="getEffectiveStatus(t) === 'pending_payment' || getEffectiveStatus(t) === 'paid'" type="button" class="btn btn-primary" (click)="toggleTrackingForm(t)">
+            {{ showTrackingFormId === t._id ? 'Cancel' : 'Mark as shipped' }}
+          </button>
+          <div class="tracking-form" *ngIf="showTrackingFormId === t._id">
+            <input type="text" [(ngModel)]="trackingCarrier" placeholder="Carrier (e.g. USPS, UPS)" class="form-input" />
+            <input type="text" [(ngModel)]="trackingNumber" placeholder="Tracking number" class="form-input" />
+            <button type="button" class="btn btn-primary" (click)="submitShipped(t)" [disabled]="updatingId === t._id">
+              {{ updatingId === t._id ? 'Updating…' : 'Confirm shipped' }}
+            </button>
+          </div>
+        </ng-container>
+      </div>
+    </div>
+  </div>
+</div>
