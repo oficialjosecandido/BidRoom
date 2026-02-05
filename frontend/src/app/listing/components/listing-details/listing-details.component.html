@@ -72,17 +72,41 @@
               </div>
             </div>
             
-            <!-- Private Room Status -->
+            <!-- Private Room: Active (seller started it; anyone can watch) -->
             <div class="private-room-banner" *ngIf="listing.privateRoomStatus === 'active'">
               <div class="private-room-content">
                 <span class="private-room-icon">🔒</span>
                 <div class="private-room-text">
                   <h4>Private Room Active</h4>
-                  <p>Only Platinum Bidders can place bids. Each bid extends the deadline by 30 seconds.</p>
+                  <p>The seller started the private room. Anyone can watch; only invited bidders can place bids. The room ends 60 seconds after the last bid.</p>
                 </div>
-                <button class="btn btn-view-room" (click)="openPrivateRoom()" title="Open in new window">
-                  View Private Room
-                </button>
+                <div class="private-room-watch">
+                  <button class="btn btn-view-room" (click)="openPrivateRoom()" title="Open in new window">
+                    Watch private room
+                  </button>
+                  <span class="watch-hint">Anyone can watch</span>
+                </div>
+              </div>
+            </div>
+            <!-- Private Room: Eligible (to be created by seller) -->
+            <div class="private-room-banner private-room-eligible" *ngIf="listing.allowPrivateRoom && listing.privateRoomStatus === 'eligible' && listing.status === 'ended'">
+              <div class="private-room-content">
+                <span class="private-room-icon">🔒</span>
+                <div class="private-room-text">
+                  <h4>Private room available</h4>
+                  <p *ngIf="isOwnListing">Create your private room and invite 2–5 bidders to continue. You received an email with a link to get started.</p>
+                  <p *ngIf="!isOwnListing">The seller can create a private room and invite some bidders to continue. You’ll be notified if you’re invited.</p>
+                </div>
+              </div>
+            </div>
+            <!-- Private Room: Ended (final price) -->
+            <div class="private-room-banner private-room-ended" *ngIf="listing.allowPrivateRoom && listing.privateRoomStatus === 'ended'">
+              <div class="private-room-content">
+                <span class="private-room-icon">🔒</span>
+                <div class="private-room-text">
+                  <h4>Private room closed</h4>
+                  <p>The private room has ended. Final price: <strong>{{ formatPrice(listing.currentPrice) }}</strong>.</p>
+                </div>
               </div>
             </div>
             <!-- Time Remaining Display -->
@@ -92,11 +116,12 @@
                 <div class="time-text">
                   <span class="time-label">{{ getAuctionEndLabel() }}</span>
                   <span class="time-value">{{ formatTimeRemaining() }}</span>
+                  <span class="time-sublabel" *ngIf="getAuctionEndType() === 'private-room'">(ends 60s after last bid)</span>
                 </div>
               </div>
             </div>
             <!-- Auction Ended Message -->
-            <div class="auction-ended-banner" *ngIf="isAuctionEnded() && !hasPrivateRoom()">
+            <div class="auction-ended-banner" *ngIf="isAuctionEnded() && !hasPrivateRoom() && !(listing.allowPrivateRoom && listing.privateRoomStatus === 'eligible')">
               <div class="auction-ended-content">
                 <span class="ended-icon">🏁</span>
                 <div class="ended-text">
@@ -104,7 +129,7 @@
                   <!-- Seller, no bids: closed -->
                   <p *ngIf="isOwnListing && getEndedBidCount() === 0">This auction closed with no bids. You can reopen it for another 7 days below.</p>
                   <!-- Seller, has bids, no winner yet: select winner -->
-                  <p *ngIf="isOwnListing && getEndedBidCount() > 0 && !listing.winner">Select a winner below.</p>
+                  <p *ngIf="isOwnListing && getEndedBidCount() > 0 && !listing.winner && !canCreatePrivateRoom()">Select a winner below.</p>
                   <!-- Seller, winner selected -->
                   <p *ngIf="isOwnListing && listing.winner">Winner has been selected.</p>
                   <!-- Non-seller, no bids -->
@@ -157,9 +182,16 @@
             <div *ngIf="isOwnListing && listing.auctionFormat === 'highest-bid' && !hasPrivateRoom() && !isAuctionEnded()" class="own-listing-message">
               <p>You can't bid on your own listing.</p>
             </div>
-            <!-- Seller: ended with bids → Select winner button -->
+            <!-- Seller: ended with bids + private room eligible → Create private room -->
             <button
-              *ngIf="isOwnListing && isAuctionEnded() && !hasPrivateRoom() && getEndedBidCount() > 0 && !listing.winner"
+              *ngIf="canCreatePrivateRoom()"
+              class="btn btn-primary btn-large"
+              (click)="openCreatePrivateRoomModal()">
+              Create private room
+            </button>
+            <!-- Seller: ended with bids, not private room eligible → Select winner -->
+            <button
+              *ngIf="isOwnListing && isAuctionEnded() && !hasPrivateRoom() && getEndedBidCount() > 0 && !listing.winner && !canCreatePrivateRoom()"
               class="btn btn-primary btn-large"
               (click)="openSelectWinnerModal()">
               Select winner
@@ -494,7 +526,13 @@
           placeholder="you@example.com"
           autocomplete="email"
         />
-        <p class="modal-hint">We’ll use this to confirm your bid and notify you if you’re outbid.</p>
+        <p class="modal-hint">We’ll use this to confirm your bid.</p>
+      </div>
+      <div class="modal-notify-toggle">
+        <label class="toggle-label">
+          <input type="checkbox" [(ngModel)]="bidNotifyWhenOutbid" name="bidNotifyWhenOutbid" />
+          <span>Email me when I'm outbid on this auction</span>
+        </label>
       </div>
       <p class="modal-error" *ngIf="bidModalError">{{ bidModalError }}</p>
     </div>
@@ -598,6 +636,42 @@
         </div>
       </li>
     </ul>
+  </div>
+</div>
+
+<!-- Create private room modal (seller, ended + private room eligible) -->
+<div class="modal-overlay" *ngIf="showCreatePrivateRoomModal" (click)="closeCreatePrivateRoomModal()">
+  <div class="modal-content select-winner-modal create-private-room-modal" (click)="$event.stopPropagation()">
+    <button type="button" class="modal-close" aria-label="Close" (click)="closeCreatePrivateRoomModal()">&times;</button>
+    <h3>Create private room</h3>
+    <p class="modal-subtitle">Choose between 2 and 5 bidders to invite. Only <strong>registered</strong> bidders can be invited. Invited bidders will receive a link to the private room; others will be notified they were not selected.</p>
+    <div *ngIf="createPrivateRoomBiddersLoading" class="modal-loading">Loading bidders…</div>
+    <div *ngIf="!createPrivateRoomBiddersLoading && createPrivateRoomBidders.length === 0" class="modal-empty">No bidders to display.</div>
+    <ul *ngIf="!createPrivateRoomBiddersLoading && createPrivateRoomBidders.length > 0" class="select-winner-list">
+      <li *ngFor="let b of createPrivateRoomBidders" class="select-winner-item" [class.select-winner-item--ineligible]="!b.isAuthenticated">
+        <div class="select-winner-info">
+          <span class="select-winner-bidder">{{ (b.firstName && b.lastName) ? b.firstName + ' ' + b.lastName : (b.email || 'Bidder') }}</span>
+          <span class="select-winner-amount">High: {{ b.highestBid | number:'1.2-2' }} · {{ b.bidCount }} bid(s)</span>
+          <span class="select-winner-badges">
+            <span class="select-winner-badge verified" *ngIf="b.emailVerified">Verified</span>
+            <span class="select-winner-badge guest" *ngIf="!b.isAuthenticated">Guest (cannot invite)</span>
+          </span>
+        </div>
+        <div class="select-winner-action">
+          <label *ngIf="b.isAuthenticated && b._id" class="checkbox-label">
+            <input type="checkbox" [checked]="isPrivateRoomBidderSelected(b)" (change)="togglePrivateRoomBidder(b)">
+            Invite
+          </label>
+          <span *ngIf="!b.isAuthenticated" class="select-winner-ineligible">Register to be eligible</span>
+        </div>
+      </li>
+    </ul>
+    <div *ngIf="!createPrivateRoomBiddersLoading && createPrivateRoomBidders.length > 0" class="modal-actions create-private-room-actions">
+      <span class="selection-count">Selected: {{ selectedPrivateRoomBidderIds.size }} (min 2, max 5)</span>
+      <button type="button" class="btn btn-primary" (click)="submitCreatePrivateRoom()" [disabled]="createPrivateRoomSubmitting || selectedPrivateRoomBidderIds.size < 2">
+        {{ createPrivateRoomSubmitting ? 'Creating…' : 'Create room & send invites' }}
+      </button>
+    </div>
   </div>
 </div>
 

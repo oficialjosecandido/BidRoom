@@ -295,6 +295,10 @@ router.get('/slug/:slug', optionalAuth, async (req, res) => {
 
     res.json({
       ...listing,
+      status: listing.status,
+      allowPrivateRoom: listing.allowPrivateRoom,
+      privateRoomStatus: listing.privateRoomStatus,
+      privateRoomEndDate: listing.privateRoomEndDate,
       timeRemaining,
       endingSoon: timeRemaining.ended ? false : (timeRemaining.days === 0 && timeRemaining.hours <= 24),
       watchlistCount,
@@ -1015,7 +1019,7 @@ router.get('/bidder/my-auctions', authenticateToken, async (req, res) => {
     }
 
     const myBids = await Bid.find({ bidder: user._id })
-      .select('listing amount createdAt')
+      .select('listing amount createdAt notifyWhenOutbid')
       .sort({ amount: -1 })
       .lean();
 
@@ -1030,20 +1034,33 @@ router.get('/bidder/my-auctions', authenticateToken, async (req, res) => {
       .lean();
 
     const myHighestByListing = {};
+    const latestBidByListing = {}; // notifyWhenOutbid from each user's latest bid per listing (by createdAt)
     for (const b of myBids) {
       const id = b.listing.toString();
       if (myHighestByListing[id] == null || b.amount > myHighestByListing[id].amount) {
         myHighestByListing[id] = { amount: b.amount, createdAt: b.createdAt };
       }
     }
+    const myBidsByCreated = await Bid.find({ bidder: user._id })
+      .select('listing notifyWhenOutbid createdAt')
+      .sort({ createdAt: -1 })
+      .lean();
+    for (const b of myBidsByCreated) {
+      const id = b.listing.toString();
+      if (latestBidByListing[id] == null) {
+        latestBidByListing[id] = { notifyWhenOutbid: b.notifyWhenOutbid !== false };
+      }
+    }
 
     const enhanced = listings.map((listing) => {
       const id = listing._id.toString();
       const myBid = myHighestByListing[id];
+      const latest = latestBidByListing[id];
       return {
         ...listing,
         myHighestBid: myBid?.amount ?? null,
-        myLastBidAt: myBid?.createdAt ?? null
+        myLastBidAt: myBid?.createdAt ?? null,
+        notifyWhenOutbid: latest?.notifyWhenOutbid ?? true
       };
     });
 

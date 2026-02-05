@@ -1,26 +1,27 @@
 .private-room-container {
   min-height: 100vh;
   background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-  padding: 1rem;
+  padding: 0.5rem;
   color: white;
+  box-sizing: border-box;
 
   @media (min-width: 769px) {
-    padding: 2rem;
+    padding: 1rem;
   }
 }
 
 .private-room-header {
-  margin-bottom: 2rem;
+  margin-bottom: 1rem;
 
   @media (min-width: 769px) {
-    margin-bottom: 3rem;
+    margin-bottom: 1.25rem;
   }
-  
+
   .header-top {
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
-    margin-bottom: 1.5rem;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
 
     @media (min-width: 769px) {
       flex-direction: row;
@@ -41,13 +42,13 @@
     }
     
     .title-icon {
-      font-size: 2.5rem;
+      font-size: 1.75rem;
       filter: drop-shadow(0 4px 8px rgba(255, 215, 0, 0.4));
       flex-shrink: 0;
       animation: glow 2s ease-in-out infinite;
 
       @media (min-width: 769px) {
-        font-size: 3.5rem;
+        font-size: 2.25rem;
       }
     }
 
@@ -57,9 +58,9 @@
     }
     
     .room-title {
-      font-size: 1.75rem;
+      font-size: 1.25rem;
       font-weight: 700;
-      margin: 0 0 0.5rem 0;
+      margin: 0 0 0.25rem 0;
       color: #fff;
       text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.5);
       background: linear-gradient(135deg, #fff 0%, #e0e0e0 100%);
@@ -68,15 +69,15 @@
       background-clip: text;
 
       @media (min-width: 769px) {
-        font-size: 2.5rem;
+        font-size: 1.5rem;
       }
     }
 
     .room-info {
-      font-size: 0.95rem;
+      font-size: 0.85rem;
 
       @media (min-width: 769px) {
-        font-size: 1.1rem;
+        font-size: 0.95rem;
       }
       
       .room-label {
@@ -89,6 +90,20 @@
         font-weight: 600;
         text-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
         word-break: break-word;
+      }
+
+      .room-listing-link {
+        color: #ffd700;
+        font-weight: 600;
+        text-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+        word-break: break-word;
+        text-decoration: underline;
+        cursor: pointer;
+
+        &:hover {
+          color: #ffed4e;
+          text-decoration: underline;
+        }
       }
     }
   }
@@ -106,8 +121,8 @@
 
   .stat-card {
     background: linear-gradient(135deg, rgba(102, 126, 234, 0.2) 0%, rgba(118, 75, 162, 0.15) 100%);
-    padding: 1.5rem;
-    border-radius: 20px;
+    padding: 0.75rem 1rem;
+    border-radius: 14px;
     backdrop-filter: blur(20px);
     border: 2px solid rgba(255, 255, 255, 0.25);
     box-shadow: 
@@ -143,12 +158,12 @@
     }
 
     @media (min-width: 769px) {
-      min-width: 220px;
-      padding: 1.75rem;
+      min-width: 160px;
+      padding: 1rem;
     }
 
     .stat-icon {
-      font-size: 2.5rem;
+      font-size: 1.75rem;
       flex-shrink: 0;
       filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
       animation: float 3s ease-in-out infinite;
@@ -918,13 +933,7 @@
   border-radius: 50%;
   background: linear-gradient(135deg, #0d5132 0%, #0a3d22 50%, #0d5132 100%);
   border: 10px solid #8b4513;
-
-  @media (min-width: 769px) {
-    width: 450px;
-    height: 450px;
-    border-width: 14px;
-  }
-  box-shadow: 
+  box-shadow:
     0 0 40px rgba(0, 0, 0, 0.8),
     0 0 80px rgba(0, 0, 0, 0.4),
     inset 0 0 60px rgba(0, 0, 0, 0.4),
@@ -934,6 +943,12 @@
   justify-content: center;
   margin: 0 auto;
   transition: all 0.3s ease;
+
+  @media (min-width: 769px) {
+    width: 450px;
+    height: 450px;
+    border-width: 14px;
+  }
 
   // Outer glow
   &::before {
@@ -975,6 +990,58 @@
   position: absolute;
   text-align: center;
   z-index: 10;
+
+  .center-seller-action {
+    margin-bottom: 0.75rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  .start-auction-btn {
+    padding: 0.6rem 1.25rem;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #1a1a2e;
+    background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(255, 215, 0, 0.4);
+    transition: transform 0.2s, box-shadow 0.2s;
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(255, 215, 0, 0.5);
+    }
+  }
+
+  .temporary-winner {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    margin-top: 0.5rem;
+    padding: 0.4rem 0.75rem;
+    background: rgba(34, 197, 94, 0.2);
+    border-radius: 10px;
+    border: 1px solid rgba(34, 197, 94, 0.4);
+    font-size: 0.8rem;
+    position: relative;
+    z-index: 1;
+
+    .winner-label {
+      color: rgba(255, 255, 255, 0.8);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .winner-name {
+      color: #86efac;
+      font-weight: 600;
+    }
+    .winner-amount {
+      color: #ffd700;
+      font-weight: 700;
+    }
+  }
 
   .center-glow {
     position: absolute;
@@ -1688,17 +1755,21 @@
   to { transform: rotate(360deg); }
 }
 
-// Prominent Bid Section - Always visible for authenticated users
+// Prominent Bid Section - Invited bidders only
 .prominent-bid-section {
-  margin: 3rem auto;
-  max-width: 600px;
-  padding: 0 1rem;
+  margin: 1rem auto;
+  max-width: 520px;
+  padding: 0 0.5rem;
+
+  @media (min-width: 769px) {
+    margin: 1.25rem auto;
+  }
 
   .prominent-bid-card {
     background: linear-gradient(135deg, rgba(102, 126, 234, 0.25) 0%, rgba(118, 75, 162, 0.2) 100%);
-    border-radius: 24px;
-    padding: 2.5rem 2rem;
-    border: 3px solid rgba(102, 126, 234, 0.5);
+    border-radius: 16px;
+    padding: 1.25rem 1.5rem;
+    border: 2px solid rgba(102, 126, 234, 0.5);
     backdrop-filter: blur(15px);
     box-shadow: 
       0 12px 40px rgba(0, 0, 0, 0.4),
@@ -1706,13 +1777,13 @@
     text-align: center;
 
     .prominent-bid-header {
-      margin-bottom: 2rem;
+      margin-bottom: 1rem;
 
       h2 {
-        font-size: 2rem;
+        font-size: 1.35rem;
         font-weight: 700;
         color: #fff;
-        margin-bottom: 0.75rem;
+        margin-bottom: 0.5rem;
         text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
       }
 
@@ -1740,11 +1811,11 @@
     .prominent-bid-info {
       display: flex;
       justify-content: space-around;
-      gap: 2rem;
-      margin-bottom: 2rem;
-      padding: 1.5rem;
+      gap: 1rem;
+      margin-bottom: 1rem;
+      padding: 0.75rem 1rem;
       background: rgba(0, 0, 0, 0.3);
-      border-radius: 16px;
+      border-radius: 12px;
 
       .bid-detail {
         display: flex;
@@ -1758,16 +1829,58 @@
         }
 
         .detail-value {
-          font-size: 1.8rem;
+          font-size: 1.35rem;
           font-weight: 700;
           color: #ffd700;
           text-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
 
           &.highlight {
-            font-size: 2.2rem;
+            font-size: 1.5rem;
             animation: pulse-glow 2s ease-in-out infinite;
           }
         }
+      }
+    }
+
+    .bid-amount-input-row {
+      text-align: left;
+      margin-bottom: 1.5rem;
+
+      .input-label {
+        display: block;
+        font-size: 0.95rem;
+        color: rgba(255, 255, 255, 0.9);
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+      }
+
+      .bid-amount-input {
+        width: 100%;
+        max-width: 200px;
+        padding: 0.75rem 1rem;
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #1a1a2e;
+        background: rgba(255, 255, 255, 0.95);
+        border: 2px solid rgba(102, 126, 234, 0.5);
+        border-radius: 10px;
+        box-sizing: border-box;
+
+        &::placeholder {
+          color: rgba(0, 0, 0, 0.4);
+        }
+      }
+
+      .bid-input-hint {
+        font-size: 0.8rem;
+        color: rgba(255, 255, 255, 0.7);
+        margin: 0.5rem 0 0 0;
+      }
+
+      .bid-input-error {
+        font-size: 0.9rem;
+        color: #ff6b6b;
+        margin: 0.5rem 0 0 0;
       }
     }
 
@@ -2045,21 +2158,21 @@
   }
 }
 
-.recent-bids-section {
-  margin: 2rem auto;
+.recent-bids-section.bid-history-section {
+  margin: 1rem auto;
   max-width: 900px;
-  padding: 0 1rem;
+  padding: 0 0.5rem;
 
   @media (min-width: 769px) {
-    margin: 3rem auto;
+    margin: 1.25rem auto;
     padding: 0;
   }
 
   .section-header {
     display: flex;
     flex-direction: column;
-    gap: 0.75rem;
-    margin-bottom: 1.5rem;
+    gap: 0.35rem;
+    margin-bottom: 0.75rem;
 
     @media (min-width: 769px) {
       flex-direction: row;
@@ -2069,29 +2182,29 @@
     }
 
     h3 {
-      font-size: 1.5rem;
+      font-size: 1.15rem;
       margin: 0;
       color: #fff;
       display: flex;
       align-items: center;
-      gap: 0.75rem;
+      gap: 0.5rem;
       font-weight: 700;
 
       @media (min-width: 769px) {
-        font-size: 1.8rem;
+        font-size: 1.35rem;
       }
 
       .section-icon {
-        font-size: 1.5rem;
+        font-size: 1.2rem;
       }
     }
 
     .bid-total {
       background: rgba(255, 255, 255, 0.15);
       color: rgba(255, 255, 255, 0.9);
-      padding: 0.5rem 1rem;
-      border-radius: 20px;
-      font-size: 0.9rem;
+      padding: 0.4rem 0.75rem;
+      border-radius: 14px;
+      font-size: 0.85rem;
       font-weight: 600;
       border: 1px solid rgba(255, 255, 255, 0.2);
     }
@@ -2099,20 +2212,20 @@
 
   .bids-list {
     background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%);
-    border-radius: 16px;
-    padding: 1rem;
+    border-radius: 12px;
+    padding: 0.75rem;
     backdrop-filter: blur(20px);
     border: 2px solid rgba(255, 255, 255, 0.2);
     box-shadow: 
       0 8px 32px rgba(0, 0, 0, 0.3),
       inset 0 1px 0 rgba(255, 255, 255, 0.1);
-    max-height: 350px;
+    max-height: 220px;
     overflow-y: auto;
 
     @media (min-width: 769px) {
-      border-radius: 20px;
-      padding: 1.5rem;
-      max-height: 450px;
+      border-radius: 14px;
+      padding: 1rem;
+      max-height: 280px;
     }
 
     .bid-item {

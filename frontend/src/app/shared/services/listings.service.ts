@@ -87,6 +87,8 @@ export interface Listing {
   myHighestBid?: number | null;
   /** Set on bidder/my-auctions: when user last bid */
   myLastBidAt?: string | null;
+  /** Set on bidder/my-auctions: user's preference to receive outbid emails */
+  notifyWhenOutbid?: boolean;
 }
 
 export interface ListingsResponse {

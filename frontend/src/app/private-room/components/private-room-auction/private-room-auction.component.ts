@@ -1,5 +1,6 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Subscription, interval } from 'rxjs';
 import { ListingsService, Listing } from '../../../shared/services/listings.service';
@@ -11,7 +12,7 @@ import { PrivateRoomService } from '../../services/private-room.service';
 @Component({
   selector: 'app-private-room-auction',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './private-room-auction.component.html',
   styleUrls: ['./private-room-auction.component.scss']
 })
@@ -25,6 +26,8 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
   countdown: number = 0; // seconds remaining
   isAuthenticated = false;
   isPlatinumBidder = false;
+  /** Invited but not yet accepted; must accept within 30 min to place bids */
+  invitationPending = false;
   currentUserId: string | null = null;
   currentUser: any = null;
   viewerCount: number = 0;
@@ -32,6 +35,9 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
   private countdownInterval: any = null;
   isMobile: boolean = false;
   isPlacingBid: boolean = false;
+  /** Custom bid amount (user can type any number >= min); empty = use minimum next bid */
+  customBidAmount: string = '';
+  bidInputError: string | null = null;
 
   constructor(
     private route: ActivatedRoute,
@@ -195,20 +201,9 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
     // Check with backend API to get accurate status
     console.log('Checking platinum bidder status from backend...');
     this.privateRoomService.checkPlatinumBidderStatus(this.listingId).subscribe({
-      next: (response) => {
-        console.log('Platinum bidder status response:', response);
-        const wasPlatinum = this.isPlatinumBidder;
-        this.isPlatinumBidder = response.isPlatinumBidder;
-        
-        const canBid = this.isPlatinumBidder && 
-          (this.listing?.privateRoomStatus === 'active' || this.listing?.privateRoomStatus === 'eligible');
-        
-        console.log('Platinum bidder status updated:', { 
-          wasPlatinum, 
-          isNowPlatinum: this.isPlatinumBidder,
-          listingStatus: this.listing?.privateRoomStatus,
-          canBid: canBid
-        });
+      next: (response: { isPlatinumBidder: boolean; invitationPending?: boolean }) => {
+        this.isPlatinumBidder = response.isPlatinumBidder ?? false;
+        this.invitationPending = response.invitationPending ?? false;
       },
       error: (error) => {
         console.error('Error checking platinum bidder status:', error);
@@ -308,49 +303,96 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
     this.socketSubscriptions.push(viewerSub);
   }
 
+  getMinBid(): number {
+    if (!this.listing) return 0;
+    const current = this.listing.currentPrice ?? 0;
+    const increment = this.listing.bidIncrement ?? 1;
+    return current + increment;
+  }
+
+  /** True if the current user is the listing seller (match by email). */
+  get isSeller(): boolean {
+    if (!this.currentUser?.email || !this.listing?.seller) return false;
+    const seller = this.listing.seller as { email?: string };
+    const sellerEmail = (seller.email || '').toLowerCase();
+    const userEmail = (this.currentUser.email || '').toLowerCase();
+    return !!sellerEmail && !!userEmail && sellerEmail === userEmail;
+  }
+
+  /** Temporary winner = bidder with the highest bid (by amount). */
+  getTemporaryWinner(): { name: string; amount: number } | null {
+    if (!this.bids.length) return null;
+    const highest = this.bids.reduce((best, b) => (b.amount > best.amount ? b : best), this.bids[0]);
+    const name = highest.bidderFirstName && highest.bidderLastName
+      ? `${highest.bidderFirstName} ${highest.bidderLastName}`
+      : (highest.bidderName || 'Bidder');
+    return { name, amount: highest.amount };
+  }
+
+  /** URL to the listing page (for the header link). */
+  getListingPageUrl(): string {
+    const slug = this.listing?.slug;
+    return slug ? `/listing/${slug}` : '#';
+  }
+
+  /** Seller clicks "Start auction" in center — scroll to Bid History (always visible; .prominent-bid-section is only for bidders). */
+  onSellerStartAuction(): void {
+    if (this.listing?.privateRoomStatus === 'active') {
+      document.querySelector('#bid-history-section')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }
+
   placeBid(): void {
     if (!this.listing || this.isPlacingBid) return;
 
-    // Check if user can bid
-    const canBid = this.isPlatinumBidder && 
+    const canBid = this.isPlatinumBidder &&
       (this.listing.privateRoomStatus === 'active' || this.listing.privateRoomStatus === 'eligible');
 
     if (!canBid) {
       if (!this.isPlatinumBidder) {
-        alert('Only Platinum Bidders can place bids in the Private Room.');
+        alert('Only invited bidders (by the seller) can place bids. You can watch the room.');
       } else {
         alert('Bidding is not currently available. The Private Room may have ended or is not yet active.');
       }
       return;
     }
 
-    // Get current price and calculate next bid
-    const currentPrice = this.listing.currentPrice;
-    const bidIncrement = this.listing.bidIncrement || 1;
-    const nextBid = currentPrice + bidIncrement;
+    const minBid = this.getMinBid();
+    let amount: number;
 
-    if (!confirm(`Place bid of $${nextBid.toFixed(2)}? This will extend the auction deadline by 30 seconds.`)) {
-      return;
+    const trimmed = (this.customBidAmount || '').trim();
+    if (trimmed !== '') {
+      const parsed = parseFloat(trimmed.replace(/[^0-9.]/g, ''));
+      if (isNaN(parsed)) {
+        this.bidInputError = 'Please enter a valid number.';
+        return;
+      }
+      if (parsed < minBid) {
+        this.bidInputError = `Your bid must be at least $${minBid.toFixed(2)} (current bid + increment).`;
+        return;
+      }
+      amount = parsed;
+    } else {
+      amount = minBid;
     }
 
+    this.bidInputError = null;
     this.isPlacingBid = true;
 
     this.bidsService.createBid({
       listingId: this.listing._id,
-      amount: nextBid
+      amount
     }).subscribe({
       next: () => {
         this.isPlacingBid = false;
+        this.customBidAmount = '';
         this.loadBids();
         this.loadListing();
-        // Show success message
         const successMsg = document.createElement('div');
         successMsg.className = 'bid-success-toast';
-        successMsg.textContent = `✓ Bid of $${nextBid.toFixed(2)} placed successfully!`;
+        successMsg.textContent = `✓ Bid of $${amount.toFixed(2)} placed successfully!`;
         document.body.appendChild(successMsg);
-        setTimeout(() => {
-          successMsg.classList.add('show');
-        }, 100);
+        setTimeout(() => successMsg.classList.add('show'), 100);
         setTimeout(() => {
           successMsg.classList.remove('show');
           setTimeout(() => document.body.removeChild(successMsg), 300);
@@ -359,7 +401,7 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
       error: (error) => {
         this.isPlacingBid = false;
         const errorMessage = error?.error?.message || error?.message || 'Failed to place bid. Please try again.';
-        alert(errorMessage);
+        this.bidInputError = errorMessage;
         console.error('Bid error:', error);
       }
     });

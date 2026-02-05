@@ -57,6 +57,19 @@
         </div>
       </div>
 
+      <div class="auction-notify-toggle" *ngIf="listing.status === 'active'">
+        <label class="notify-toggle-label">
+          <input
+            type="checkbox"
+            [checked]="listing.notifyWhenOutbid !== false"
+            [disabled]="preferenceUpdating[listing._id]"
+            (change)="onNotifyWhenOutbidChange(listing, $any($event.target).checked)"
+          />
+          <span>Email me when I'm outbid</span>
+        </label>
+        <span class="notify-updating" *ngIf="preferenceUpdating[listing._id]">Updating…</span>
+      </div>
+
       <div class="auction-actions">
         <a [routerLink]="['/listing', listing.slug]" class="view-btn">View Listing</a>
       </div>

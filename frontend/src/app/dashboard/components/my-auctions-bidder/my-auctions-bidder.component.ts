@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { ListingsService, Listing } from '../../../shared/services/listings.service';
+import { BidsService } from '../../../shared/services/bids.service';
 
 @Component({
   selector: 'app-my-auctions-bidder',
@@ -14,8 +15,12 @@ export class MyAuctionsBidderComponent implements OnInit {
   listings: Listing[] = [];
   isLoading = true;
   error: string | null = null;
+  preferenceUpdating: Record<string, boolean> = {};
 
-  constructor(private listingsService: ListingsService) {}
+  constructor(
+    private listingsService: ListingsService,
+    private bidsService: BidsService
+  ) {}
 
   ngOnInit(): void {
     this.loadMyAuctions();
@@ -69,5 +74,19 @@ export class MyAuctionsBidderComponent implements OnInit {
       minimumFractionDigits: 0,
       maximumFractionDigits: 2
     }).format(price);
+  }
+
+  onNotifyWhenOutbidChange(listing: Listing, checked: boolean): void {
+    if (!listing._id) return;
+    this.preferenceUpdating[listing._id] = true;
+    this.bidsService.updateBidderPreference(listing._id, checked).subscribe({
+      next: () => {
+        listing.notifyWhenOutbid = checked;
+        this.preferenceUpdating[listing._id] = false;
+      },
+      error: () => {
+        this.preferenceUpdating[listing._id] = false;
+      }
+    });
   }
 }

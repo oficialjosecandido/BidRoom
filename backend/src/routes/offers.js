@@ -37,8 +37,20 @@ router.get('/listing/:listingId', async (req, res) => {
   }
 });
 
+const OFFER_CREATE_TIMEOUT_MS = 20000;
+
 // POST /api/offers - Create a new offer (auth optional; guests must provide email)
 router.post('/', optionalAuth, async (req, res) => {
+  const timeoutId = setTimeout(() => {
+    if (!res.headersSent) {
+      res.status(504).json({
+        error: 'Request timeout',
+        message: 'Offer creation took too long. Please try again.'
+      });
+    }
+  }, OFFER_CREATE_TIMEOUT_MS);
+  res.once('finish', () => clearTimeout(timeoutId));
+
   try {
     const { listingId, amount, message, email } = req.body;
 
@@ -169,7 +181,7 @@ router.post('/', optionalAuth, async (req, res) => {
       });
     }
 
-    // Defensive: must have either authenticated user or guest email
+    // Defensive: must have either authenticated user or guest email (when no existing offer)
     if (!user && !offererEmail) {
       return res.status(400).json({
         error: 'Identification required',
@@ -213,12 +225,14 @@ router.post('/', optionalAuth, async (req, res) => {
       offererInitials: initials
     });
   }
-  } catch (error) {
-    console.error('Error creating offer:', error);
-    res.status(400).json({
-      error: 'Failed to create offer',
-      message: error.message
-    });
+  } catch (err) {
+    console.error('Error creating offer:', err);
+    if (!res.headersSent) {
+      res.status(400).json({
+        error: 'Failed to create offer',
+        message: err.message
+      });
+    }
   }
 });
 

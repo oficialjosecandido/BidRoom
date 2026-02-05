@@ -1,5 +1,16 @@
 const admin = require('firebase-admin');
 
+const AUTH_VERIFY_TIMEOUT_MS = 15000;
+
+function withTimeout(promise, ms, message) {
+  return Promise.race([
+    promise,
+    new Promise((_, reject) =>
+      setTimeout(() => reject(new Error(message || 'Timeout')), ms)
+    )
+  ]);
+}
+
 const authenticateToken = async (req, res, next) => {
   try {
     const authHeader = req.headers['authorization'];
@@ -12,8 +23,12 @@ const authenticateToken = async (req, res, next) => {
       });
     }
 
-    // Verify Firebase ID token
-    const decodedToken = await admin.auth().verifyIdToken(idToken);
+    // Verify Firebase ID token (with timeout to avoid hanging)
+    const decodedToken = await withTimeout(
+      admin.auth().verifyIdToken(idToken),
+      AUTH_VERIFY_TIMEOUT_MS,
+      'Auth timeout'
+    );
 
     // Attach decoded token to request
     req.user = {
@@ -37,6 +52,12 @@ const authenticateToken = async (req, res, next) => {
     next();
   } catch (error) {
     console.error('Auth middleware error:', error);
+    if (error.message === 'Auth timeout') {
+      return res.status(503).json({
+        error: 'Authentication timeout',
+        message: 'Token verification took too long. Please try again.'
+      });
+    }
     return res.status(401).json({
       error: 'Invalid token',
       message: 'The provided Firebase token is invalid or expired'
@@ -51,9 +72,13 @@ const optionalAuth = async (req, res, next) => {
     const idToken = authHeader && authHeader.split(' ')[1];
 
     if (idToken) {
-      // User is authenticated - verify token and attach user
+      // User is authenticated - verify token and attach user (with timeout to avoid hanging)
       try {
-        const decodedToken = await admin.auth().verifyIdToken(idToken);
+        const decodedToken = await withTimeout(
+          admin.auth().verifyIdToken(idToken),
+          AUTH_VERIFY_TIMEOUT_MS,
+          'Auth timeout'
+        );
         req.user = {
           uid: decodedToken.uid,
           email: decodedToken.email,
@@ -65,7 +90,14 @@ const optionalAuth = async (req, res, next) => {
         };
         req.isAuthenticated = true;
       } catch (error) {
-        // Invalid token - treat as unauthenticated
+        // Timeout or invalid token - treat as unauthenticated or fail fast
+        if (error.message === 'Auth timeout') {
+          console.error('Optional auth: token verification timeout');
+          return res.status(503).json({
+            error: 'Authentication timeout',
+            message: 'Token verification took too long. Please try again.'
+          });
+        }
         req.isAuthenticated = false;
         req.user = null;
       }

@@ -55,15 +55,65 @@
     </div>
   </div>
 
+  <!-- Your membership level (prominent) -->
+  <section class="section membership-level-section" *ngIf="!isLoading">
+    <div class="membership-level-card" [class.has-tier]="currentMembershipTier">
+      <div class="membership-level-badge" [attr.data-tier]="currentMembershipTier?.name?.toLowerCase()">
+        <span class="membership-level-label">Your membership</span>
+        <span class="membership-level-name" *ngIf="currentMembershipTier">{{ currentMembershipTier.name }}</span>
+        <span class="membership-level-name none" *ngIf="!currentMembershipTier">—</span>
+        <p class="membership-level-hint" *ngIf="currentMembershipTier">
+          Balance {{ formatPrice(balance) }} · based on your current balance
+        </p>
+        <p class="membership-level-hint unlock" *ngIf="!currentMembershipTier && nextTierToUnlock">
+          Add at least {{ formatPrice(nextTierToUnlock.amount) }} to unlock {{ nextTierToUnlock.name }}.
+        </p>
+        <p class="membership-level-hint unlock" *ngIf="!currentMembershipTier && !nextTierToUnlock">
+          Add funds to your balance to unlock membership tiers.
+        </p>
+      </div>
+      <button type="button" class="membership-level-cta" (click)="openBalanceModal()">
+        {{ currentMembershipTier ? 'Increase balance' : 'Add funds' }}
+      </button>
+    </div>
+  </section>
+
   <!-- Membership tiers -->
   <section class="section membership-section" *ngIf="!isLoading">
     <h2 class="section-title">Membership</h2>
     <p class="membership-desc">Add funds to your balance to secure your membership tier. Your balance is used to participate in auctions and offers.</p>
     <div class="membership-tiers">
-      <div class="tier-card" *ngFor="let tier of membershipTiers">
+      <div
+        class="tier-card"
+        *ngFor="let tier of membershipTiers"
+        [class.current-tier]="currentMembershipTier?.name === tier.name"
+      >
         <span class="tier-name">{{ tier.name }}</span>
         <span class="tier-price">{{ formatPrice(tier.amount) }}</span>
+        <span class="tier-badge" *ngIf="currentMembershipTier?.name === tier.name">Current tier</span>
       </div>
+    </div>
+  </section>
+
+  <!-- Top-up history -->
+  <section class="section topup-history-section" *ngIf="!isLoading">
+    <h2 class="section-title">Top-up history</h2>
+    <p class="section-desc" *ngIf="topups.length === 0">You haven’t added any funds yet. Use “Increase balance” above to add funds to your account.</p>
+    <div class="topup-table-wrap" *ngIf="topups.length > 0">
+      <table class="topup-table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Amount</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let topup of topups">
+            <td>{{ formatDate(topup.createdAt) }}</td>
+            <td class="topup-amount">{{ formatPrice(topup.amount) }}</td>
+          </tr>
+        </tbody>
+      </table>
     </div>
   </section>
 

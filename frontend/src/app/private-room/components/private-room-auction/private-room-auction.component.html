@@ -7,7 +7,8 @@
           <h1 class="room-title">Private Auction Room</h1>
           <div class="room-info">
             <span class="room-label">Listing:</span>
-            <span class="room-listing-title">{{ listing?.title }}</span>
+            <a *ngIf="listing?.slug" [href]="getListingPageUrl()" target="_blank" rel="noopener noreferrer" class="room-listing-link">{{ listing?.title }}</a>
+            <span *ngIf="!listing?.slug" class="room-listing-title">{{ listing?.title }}</span>
           </div>
         </div>
       </div>
@@ -112,7 +113,7 @@
         </div>
         <div class="soft-close-info" *ngIf="countdown <= 30">
           <span class="info-icon">⏰</span>
-          <span>Next bid extends by 30s</span>
+          <span>Next bid extends by 60s</span>
         </div>
       </div>
 
@@ -154,27 +155,6 @@
         </div>
       </div>
 
-      <!-- Mobile Bid Action (only for platinum bidders) -->
-      <div class="mobile-bid-action" *ngIf="isPlatinumBidder && listing && (listing.privateRoomStatus === 'active' || listing.privateRoomStatus === 'eligible')">
-        <div class="bid-action-card">
-          <h3>Place Your Bid</h3>
-          <div class="bid-info-mobile">
-            <div class="info-row">
-              <span class="info-label">Current Bid:</span>
-              <span class="info-value">${{ listing.currentPrice | number:'1.2-2' }}</span>
-            </div>
-            <div class="info-row">
-              <span class="info-label">Your Bid:</span>
-              <span class="info-value highlight">${{ (listing.currentPrice + (listing.bidIncrement || 1)) | number:'1.2-2' }}</span>
-            </div>
-          </div>
-          <button class="place-bid-btn-mobile" (click)="placeBid()" [disabled]="isPlacingBid">
-            <span *ngIf="!isPlacingBid">Place Bid Now</span>
-            <span *ngIf="isPlacingBid">Placing Bid...</span>
-          </button>
-          <p class="bid-note-mobile">Each bid extends the deadline by 30 seconds</p>
-        </div>
-      </div>
     </div>
 
     <!-- Desktop Layout: Poker Table -->
@@ -182,22 +162,30 @@
       <div class="table-container">
         <!-- Poker Table -->
         <div class="poker-table">
-          <!-- Center of Table -->
+          <!-- Center of Table: seller has Start auction button; everyone sees current bid + temporary winner -->
           <div class="table-center">
             <div class="center-glow"></div>
-            <div class="current-bid">
+            <div *ngIf="isSeller && listing && (listing.privateRoomStatus === 'active' || listing.privateRoomStatus === 'eligible')" class="center-seller-action">
+              <button type="button" class="start-auction-btn" (click)="onSellerStartAuction()">Start auction</button>
+            </div>
+            <div class="current-bid" *ngIf="listing">
               <span class="bid-label">Current Bid</span>
               <span class="bid-amount" [class.pulse]="countdown <= 30">
                 ${{ listing.currentPrice | number:'1.2-2' }}
               </span>
             </div>
-            <div class="bid-count">
+            <div class="bid-count" *ngIf="listing">
               <span class="count-icon">👆</span>
               <span>{{ listing.bidCount }} {{ listing.bidCount === 1 ? 'bid' : 'bids' }}</span>
             </div>
+            <div class="temporary-winner" *ngIf="getTemporaryWinner() as winner">
+              <span class="winner-label">Leading</span>
+              <span class="winner-name">{{ winner.name }}</span>
+              <span class="winner-amount">${{ winner.amount | number:'1.2-2' }}</span>
+            </div>
             <div class="soft-close-info" *ngIf="countdown <= 30">
               <span class="info-icon">⏰</span>
-              <span>Next bid extends by 30s</span>
+              <span>Next bid extends by 60s</span>
             </div>
           </div>
 
@@ -228,22 +216,6 @@
               </div>
             </div>
 
-            <!-- Place Bid Button in Center (if user is platinum bidder) -->
-            <div 
-              class="bidder-seat place-bid-seat" 
-              *ngIf="isPlatinumBidder && listing && listing.privateRoomStatus === 'active'"
-              [style.top]="getPositionTop(platinumBidders.length)"
-              [style.left]="getPositionLeft(platinumBidders.length)"
-            >
-              <div class="seat-content place-bid-content" (click)="placeBid()" [class.disabled]="isPlacingBid">
-                <div class="bid-icon-large">💰</div>
-                <div class="bid-action-text">Place Bid</div>
-                <div class="bid-amount-next" *ngIf="listing">
-                  ${{ (listing.currentPrice + (listing.bidIncrement || 1)) | number:'1.2-2' }}
-                </div>
-              </div>
-            </div>
-
             <!-- Empty seats placeholder -->
             <div 
               *ngFor="let empty of getEmptySeats()" 
@@ -260,14 +232,13 @@
       </div>
     </div>
 
-    <!-- Prominent Bid Button - Always show for authenticated users if room is active or eligible -->
-    <div class="prominent-bid-section" *ngIf="isAuthenticated && listing && (listing.privateRoomStatus === 'active' || listing.privateRoomStatus === 'eligible')">
+    <!-- Single "Place your bid" section: only for invited (platinum) bidders; includes custom amount input -->
+    <div class="prominent-bid-section" *ngIf="isPlatinumBidder && listing && (listing.privateRoomStatus === 'active' || listing.privateRoomStatus === 'eligible')">
       <div class="prominent-bid-card">
         <div class="prominent-bid-header">
           <h2>Place Your Bid</h2>
-          <div class="bid-status-indicator" [class.platinum]="isPlatinumBidder" [class.waiting]="!isPlatinumBidder">
-            <span *ngIf="isPlatinumBidder">⭐ Platinum Bidder - Ready to Bid</span>
-            <span *ngIf="!isPlatinumBidder">⏳ Waiting for Platinum Status</span>
+          <div class="bid-status-indicator platinum">
+            <span>⭐ Invited bidder – you can place bids</span>
           </div>
         </div>
         <div class="prominent-bid-info" *ngIf="listing">
@@ -276,81 +247,49 @@
             <span class="detail-value">${{ listing.currentPrice | number:'1.2-2' }}</span>
           </div>
           <div class="bid-detail">
-            <span class="detail-label">Your Next Bid:</span>
-            <span class="detail-value highlight">${{ (listing.currentPrice + (listing.bidIncrement || 1)) | number:'1.2-2' }}</span>
+            <span class="detail-label">Minimum next bid:</span>
+            <span class="detail-value">${{ getMinBid() | number:'1.2-2' }}</span>
           </div>
         </div>
-        <button 
-          class="prominent-bid-btn" 
-          (click)="placeBid()" 
-          [disabled]="isPlacingBid || !isPlatinumBidder || (listing.privateRoomStatus !== 'active' && listing.privateRoomStatus !== 'eligible')"
-          [class.enabled]="isPlatinumBidder && (listing.privateRoomStatus === 'active' || listing.privateRoomStatus === 'eligible')"
+        <div class="bid-amount-input-row">
+          <label class="input-label" for="custom-bid-amount">Your bid amount ($)</label>
+          <input
+            id="custom-bid-amount"
+            type="text"
+            class="bid-amount-input"
+            [(ngModel)]="customBidAmount"
+            (ngModelChange)="bidInputError = null"
+            placeholder="{{ getMinBid() | number:'1.2-2' }}"
+            inputmode="decimal"
+            autocomplete="off"
+          />
+          <p class="bid-input-hint">Leave empty to bid the minimum, or enter any amount higher than the current bid.</p>
+          <p class="bid-input-error" *ngIf="bidInputError">{{ bidInputError }}</p>
+        </div>
+        <button
+          class="prominent-bid-btn enabled"
+          (click)="placeBid()"
+          [disabled]="isPlacingBid"
         >
-          <span *ngIf="!isPlacingBid && isPlatinumBidder && (listing.privateRoomStatus === 'active' || listing.privateRoomStatus === 'eligible')">
-            💰 Place Bid Now
-          </span>
-          <span *ngIf="isPlacingBid">
-            ⏳ Placing Bid...
-          </span>
-          <span *ngIf="!isPlatinumBidder">
-            ⚠️ Not Authorized to Bid
-          </span>
-          <span *ngIf="listing.privateRoomStatus !== 'active' && listing.privateRoomStatus !== 'eligible'">
-            ⏸️ Room Not Ready
-          </span>
+          <span *ngIf="!isPlacingBid">💰 Place Bid Now</span>
+          <span *ngIf="isPlacingBid">⏳ Placing Bid...</span>
         </button>
-        <p class="bid-note" *ngIf="isPlatinumBidder && (listing.privateRoomStatus === 'active' || listing.privateRoomStatus === 'eligible')">
-          Each bid extends the deadline by 30 seconds
-        </p>
-        <p class="bid-note info" *ngIf="isPlatinumBidder && listing.privateRoomStatus === 'eligible'">
-          ⏳ Private room is starting soon. You can place bids now!
-        </p>
-        <p class="bid-note warning" *ngIf="!isPlatinumBidder && isAuthenticated">
-          You need to be a Platinum Bidder to place bids. Please check if you've accepted your invitation.
+        <p class="bid-note">
+          Each bid extends the deadline by 60 seconds
         </p>
       </div>
     </div>
 
-    <!-- Actions Section (only for platinum bidders) - Desktop -->
-    <div class="actions-section" *ngIf="isPlatinumBidder && listing && (listing.privateRoomStatus === 'active' || listing.privateRoomStatus === 'eligible')">
-      <div class="action-card">
-        <div class="card-header">
-          <h3>🎯 Place Your Bid</h3>
-          <div class="bid-extend-note">⏰ Each bid extends the deadline by 30 seconds</div>
-        </div>
-        <div class="bid-info">
-          <div class="current-price-info">
-            <span class="label">Current Bid:</span>
-            <span class="value">${{ listing.currentPrice | number:'1.2-2' }}</span>
-          </div>
-          <div class="next-bid-info">
-            <span class="label">Your Bid:</span>
-            <span class="value highlight">${{ (listing.currentPrice + (listing.bidIncrement || 1)) | number:'1.2-2' }}</span>
-          </div>
-        </div>
-        <button class="place-bid-btn" (click)="placeBid()" [disabled]="isPlacingBid">
-          <span *ngIf="!isPlacingBid" class="btn-content">
-            <span class="btn-icon">✨</span>
-            <span class="btn-text">Place Bid Now</span>
-          </span>
-          <span *ngIf="isPlacingBid" class="btn-content">
-            <span class="btn-spinner">⏳</span>
-            <span class="btn-text">Placing Bid...</span>
-          </span>
-        </button>
-      </div>
-    </div>
-
-    <!-- Floating Bid Button (for platinum bidders) - Always visible -->
+    <!-- Floating quick-bid button (bottom right) - invited bidders only -->
     <div class="floating-bid-button" *ngIf="isPlatinumBidder && listing && (listing.privateRoomStatus === 'active' || listing.privateRoomStatus === 'eligible')">
-      <button class="floating-btn" (click)="placeBid()" [disabled]="isPlacingBid" title="Place Your Bid">
+      <button class="floating-btn" (click)="placeBid()" [disabled]="isPlacingBid" title="Quick bid (minimum)">
         <span class="floating-icon" *ngIf="!isPlacingBid">💰</span>
         <span class="floating-icon" *ngIf="isPlacingBid">⏳</span>
         <span class="floating-text" *ngIf="!isPlacingBid">BID</span>
         <span class="floating-text" *ngIf="isPlacingBid">...</span>
       </button>
-      <div class="floating-bid-amount" *ngIf="!isPlacingBid">
-        ${{ (listing.currentPrice + (listing.bidIncrement || 1)) | number:'1.2-2' }}
+      <div class="floating-bid-amount" *ngIf="!isPlacingBid && listing">
+        ${{ getMinBid() | number:'1.2-2' }}
       </div>
     </div>
 
@@ -367,22 +306,31 @@
       </div>
     </div>
 
-    <!-- Viewer Notice (for authenticated non-platinum bidders) -->
-    <div class="viewer-notice" *ngIf="isAuthenticated && !isPlatinumBidder && listing && listing.privateRoomStatus === 'active'">
+    <!-- Invitation pending: invited but must accept within 30 min -->
+    <div class="viewer-notice invitation-pending-notice" *ngIf="isAuthenticated && invitationPending && listing && listing.privateRoomStatus === 'active'">
       <div class="notice-card">
-        <div class="notice-icon">🔒</div>
-        <h3>Private Room Active</h3>
-        <p>You are viewing this private auction room. Only Platinum Bidders can place bids.</p>
-        <p class="notice-subtext">The auction will close 30 seconds after the last bid.</p>
+        <div class="notice-icon">✉️</div>
+        <h3>Accept your invitation</h3>
+        <p>You were invited to this private room. Accept within 30 minutes via the link in your email to place bids — otherwise you'll lose your seat.</p>
       </div>
     </div>
 
-    <!-- Recent Bids -->
-    <div class="recent-bids-section">
+    <!-- Viewer Notice (anyone can watch; only invited bidders can place bids) -->
+    <div class="viewer-notice" *ngIf="isAuthenticated && !isPlatinumBidder && !invitationPending && listing && listing.privateRoomStatus === 'active'">
+      <div class="notice-card">
+        <div class="notice-icon">👁️</div>
+        <h3>You're watching</h3>
+        <p>Anyone can watch this private room. Only bidders invited by the seller can place bids.</p>
+        <p class="notice-subtext">The room closes 60 seconds after the last bid.</p>
+      </div>
+    </div>
+
+    <!-- Bid History (scroll target for seller "Start auction") -->
+    <div id="bid-history-section" class="recent-bids-section bid-history-section">
       <div class="section-header">
         <h3>
-          <span class="section-icon">📊</span>
-          Recent Bids
+          <span class="section-icon">📋</span>
+          Bid History
         </h3>
         <span class="bid-total">{{ bids.length }} total</span>
       </div>

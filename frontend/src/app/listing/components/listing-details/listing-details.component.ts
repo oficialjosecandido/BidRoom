@@ -12,6 +12,7 @@ import { OffersService, Offer } from '../../../shared/services/offers.service';
 import { WatchlistService } from '../../../shared/services/watchlist.service';
 import { SocketService } from '../../../shared/services/socket.service';
 import { AuthService } from '../../../auth/services/auth.service';
+import { PrivateRoomService, Bidder } from '../../../private-room/services/private-room.service';
 
 @Component({
   selector: 'app-listing-details',
@@ -40,14 +41,21 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
   showSelectWinnerModal = false;
   selectingWinner = false;
   reopenLoading = false;
+  showCreatePrivateRoomModal = false;
+  createPrivateRoomBidders: Bidder[] = [];
+  createPrivateRoomBiddersLoading = false;
+  selectedPrivateRoomBidderIds: Set<string> = new Set();
+  createPrivateRoomSubmitting = false;
   private socketSubscriptions: Subscription[] = [];
   private countdownInterval: any = null;
+  private justEndedRefetched = false;
   displayedTimeRemaining: string = '';
 
   // Place Bid modal
   showBidModal = false;
   bidAmount: string = '';
   bidEmail: string = '';
+  bidNotifyWhenOutbid = true;
   bidSubmitting = false;
   bidModalError: string | null = null;
 
@@ -67,6 +75,7 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
     private watchlistService: WatchlistService,
     private socketService: SocketService,
     private authService: AuthService,
+    private privateRoomService: PrivateRoomService,
     private cdr: ChangeDetectorRef
   ) {}
 
@@ -219,6 +228,19 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
       this.displayedTimeRemaining = 'Ended';
       if (this.countdownInterval) {
         clearInterval(this.countdownInterval);
+        this.countdownInterval = null;
+      }
+      // Refetch listing once so we get updated status/privateRoomStatus (e.g. eligible for private room)
+      if (!this.justEndedRefetched && this.listing?.slug) {
+        this.justEndedRefetched = true;
+        this.listingsService.getListingBySlug(this.listing.slug).subscribe({
+          next: (listing) => {
+            this.listing = listing;
+            this.updateIsOwnListing();
+            this.startCountdown();
+            this.cdr.detectChanges();
+          }
+        });
       }
       return;
     }
@@ -281,6 +303,14 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
 
   hasPrivateRoom(): boolean {
     return this.listing?.privateRoomStatus === 'active';
+  }
+
+  /** Seller can create private room when auction ended, private room enabled, eligible, within 1h deadline, and there are bids. */
+  canCreatePrivateRoom(): boolean {
+    if (!this.listing || !this.isOwnListing || this.listing.auctionFormat !== 'highest-bid') return false;
+    if (this.listing.status !== 'ended' || !this.listing.allowPrivateRoom || this.listing.privateRoomStatus !== 'eligible' || (this.getEndedBidCount() ?? 0) === 0) return false;
+    if (this.listing.winnerSelectionDeadline && new Date(this.listing.winnerSelectionDeadline) < new Date()) return false;
+    return true;
   }
 
   getAuctionEndLabel(): string {
@@ -350,6 +380,7 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
     if (!this.listing) return;
     this.bidAmount = '';
     this.bidEmail = '';
+    this.bidNotifyWhenOutbid = true;
     this.bidModalError = null;
     this.showBidModal = true;
   }
@@ -383,7 +414,7 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
       email = trimmed;
     }
     this.bidSubmitting = true;
-    const bidData: any = { listingId: this.listing._id, amount, bidType: 'manual' };
+    const bidData: any = { listingId: this.listing._id, amount, bidType: 'manual', notifyWhenOutbid: this.bidNotifyWhenOutbid };
     if (!this.isAuthenticated && email) bidData.email = email;
     this.bidsService.createBid(bidData).subscribe({
       next: () => {
@@ -632,6 +663,84 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
     if (!this.listing?._id) return;
     const url = `/private-room/auction/${this.listing._id}`;
     window.open(url, '_blank', 'width=1200,height=800');
+  }
+
+  openCreatePrivateRoomModal(): void {
+    this.showCreatePrivateRoomModal = true;
+    this.selectedPrivateRoomBidderIds = new Set();
+    if (this.listing?._id) {
+      this.createPrivateRoomBiddersLoading = true;
+      this.privateRoomService.getBidders(this.listing._id).subscribe({
+        next: (res) => {
+          this.createPrivateRoomBidders = res.bidders || [];
+          this.createPrivateRoomBiddersLoading = false;
+          this.cdr.detectChanges();
+        },
+        error: () => {
+          this.createPrivateRoomBiddersLoading = false;
+          this.cdr.detectChanges();
+        }
+      });
+    }
+  }
+
+  closeCreatePrivateRoomModal(): void {
+    this.showCreatePrivateRoomModal = false;
+    this.createPrivateRoomBidders = [];
+    this.selectedPrivateRoomBidderIds = new Set();
+  }
+
+  togglePrivateRoomBidder(bidder: Bidder): void {
+    if (!bidder._id || !bidder.isAuthenticated) return;
+    const id = bidder._id;
+    if (this.selectedPrivateRoomBidderIds.has(id)) {
+      this.selectedPrivateRoomBidderIds.delete(id);
+    } else {
+      if (this.selectedPrivateRoomBidderIds.size >= 5) return;
+      this.selectedPrivateRoomBidderIds.add(id);
+    }
+    this.selectedPrivateRoomBidderIds = new Set(this.selectedPrivateRoomBidderIds);
+    this.cdr.detectChanges();
+  }
+
+  isPrivateRoomBidderSelected(bidder: Bidder): boolean {
+    return !!(bidder._id && this.selectedPrivateRoomBidderIds.has(bidder._id));
+  }
+
+  submitCreatePrivateRoom(): void {
+    if (!this.listing?._id || this.createPrivateRoomSubmitting) return;
+    const ids = Array.from(this.selectedPrivateRoomBidderIds);
+    if (ids.length < 2) {
+      alert('Please select between 2 and 5 bidders for the private room.');
+      return;
+    }
+    if (ids.length > 5) {
+      alert('You can invite at most 5 bidders.');
+      return;
+    }
+    this.createPrivateRoomSubmitting = true;
+    this.privateRoomService.selectPlatinumBidders(this.listing._id, ids).subscribe({
+      next: (res) => {
+        if (this.listing && res.listing) {
+          const u = res.listing as { status?: string; privateRoomStatus?: string; privateRoomEndDate?: string; endDate?: string; platinumBidders?: string[]; platinumBidderInvitedAt?: string };
+          if (u.status) this.listing.status = u.status as Listing['status'];
+          if (u.privateRoomStatus) this.listing.privateRoomStatus = u.privateRoomStatus as Listing['privateRoomStatus'];
+          if (u.privateRoomEndDate) this.listing.privateRoomEndDate = u.privateRoomEndDate;
+          if (u.endDate) this.listing.endDate = u.endDate;
+          if (u.platinumBidders) this.listing.platinumBidders = u.platinumBidders;
+          if (u.platinumBidderInvitedAt) this.listing.platinumBidderInvitedAt = u.platinumBidderInvitedAt;
+        }
+        this.closeCreatePrivateRoomModal();
+        this.createPrivateRoomSubmitting = false;
+        this.startCountdown();
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        this.createPrivateRoomSubmitting = false;
+        this.cdr.detectChanges();
+        alert(err.error?.message || err.error?.error || 'Failed to create private room');
+      }
+    });
   }
 
   getFormattedDescription(): string {

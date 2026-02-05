@@ -51,6 +51,11 @@ const bidSchema = new mongoose.Schema({
     type: String,
     maxlength: 500,
     default: null
+  },
+  /** Whether to email this bidder when they are outbid on this listing (default true) */
+  notifyWhenOutbid: {
+    type: Boolean,
+    default: true
   }
 }, {
   timestamps: true // Adds createdAt and updatedAt fields

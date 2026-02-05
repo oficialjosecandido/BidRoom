@@ -6,7 +6,7 @@ import Swal from 'sweetalert2';
 import { AuthService, AppUser } from '../../../auth/services/auth.service';
 import { ListingsService, Listing } from '../../../shared/services/listings.service';
 import { CustomerService, CustomerInfo } from '../../../shared/services/customer.service';
-import { PaymentsService } from '../../../shared/services/payments.service';
+import { PaymentsService, TopupRecord } from '../../../shared/services/payments.service';
 import { ReviewsService, PendingReview } from '../../../shared/services/reviews.service';
 import { Observable } from 'rxjs';
 
@@ -48,12 +48,27 @@ export class DashboardHomeComponent implements OnInit {
   balanceModalError: string | null = null;
 
   readonly minBalanceAmount = 5;
+  topups: TopupRecord[] = [];
+
   readonly membershipTiers = [
     { name: 'Bronze', amount: 10 },
     { name: 'Silver', amount: 25 },
     { name: 'Gold', amount: 100 },
     { name: 'Platinum', amount: 1000 }
   ] as const;
+
+  /** Current membership tier based on balance (highest tier whose threshold is <= balance). */
+  get currentMembershipTier(): { name: string; amount: number } | null {
+    const tiers = [...this.membershipTiers].sort((a, b) => b.amount - a.amount);
+    const t = tiers.find(tier => this.balance >= tier.amount);
+    return t ? { name: t.name, amount: t.amount } : null;
+  }
+
+  /** Next tier to unlock (lowest tier above current balance), if any. */
+  get nextTierToUnlock(): { name: string; amount: number } | null {
+    const sorted = [...this.membershipTiers].sort((a, b) => a.amount - b.amount);
+    return sorted.find(t => t.amount > this.balance) ?? null;
+  }
 
   constructor(
     private authService: AuthService,
@@ -70,7 +85,19 @@ export class DashboardHomeComponent implements OnInit {
     this.loadCustomer();
     this.loadMyListings();
     this.loadPendingReviews();
+    this.loadTopups();
     this.checkPaymentReturn();
+  }
+
+  loadTopups(): void {
+    this.paymentsService.getTopups().subscribe({
+      next: (res) => {
+        this.topups = res.topups || [];
+      },
+      error: () => {
+        this.topups = [];
+      }
+    });
   }
 
   checkPaymentReturn(): void {
@@ -81,6 +108,7 @@ export class DashboardHomeComponent implements OnInit {
     if (payment === 'success') {
       const done = () => {
         this.loadCustomer();
+        this.loadTopups();
         this.router.navigate(['/dashboard/home'], { replaceUrl: true }).then(() => {
           Swal.fire({
             icon: 'success',

@@ -12,6 +12,17 @@ export interface ConfirmSessionResponse {
   message?: string;
 }
 
+export interface TopupRecord {
+  amount: number;
+  currency: string;
+  createdAt: string;
+  stripeSessionId: string;
+}
+
+export interface TopupsResponse {
+  topups: TopupRecord[];
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -32,5 +43,9 @@ export class PaymentsService {
       `${this.apiUrl}/confirm-session`,
       { session_id: sessionId }
     );
+  }
+
+  getTopups(): Observable<TopupsResponse> {
+    return this.http.get<TopupsResponse>(`${this.apiUrl}/topups`);
   }
 }

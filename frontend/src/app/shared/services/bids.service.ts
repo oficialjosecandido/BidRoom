@@ -53,6 +53,8 @@ export interface CreateBidRequest {
   bidType?: 'manual' | 'proxy' | 'auto';
   notes?: string;
   email?: string; // Required for unauthenticated users
+  /** Whether to receive email when outbid on this listing (default true) */
+  notifyWhenOutbid?: boolean;
 }
 
 @Injectable({
@@ -74,6 +76,14 @@ export class BidsService {
 
   createBid(bidData: CreateBidRequest): Observable<Bid> {
     return this.http.post<Bid>(this.apiUrl, bidData);
+  }
+
+  /** Update outbid notification preference for a listing (authenticated bidders only) */
+  updateBidderPreference(listingId: string, notifyWhenOutbid: boolean): Observable<{ listingId: string; notifyWhenOutbid: boolean; updated: number }> {
+    return this.http.patch<{ listingId: string; notifyWhenOutbid: boolean; updated: number }>(
+      `${this.apiUrl}/preference`,
+      { listingId, notifyWhenOutbid }
+    );
   }
 }
 

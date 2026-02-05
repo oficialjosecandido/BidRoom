@@ -3,7 +3,7 @@ const Bid = require('../models/Bid');
 const Listing = require('../models/Listing');
 const User = require('../models/User');
 const { authenticateToken, optionalAuth } = require('../middleware/auth');
-const { sendFirstBidNotification } = require('../services/auctionNotificationService');
+const { sendFirstBidNotification, sendOutbidNotification } = require('../services/auctionNotificationService');
 const { getReviewScoresForUsers } = require('../services/reviewService');
 
 const router = express.Router();
@@ -99,7 +99,7 @@ router.get('/listing/:listingId/stats', async (req, res) => {
 // POST /api/bids - Create a new bid (authentication optional, but email required if not authenticated)
 router.post('/', optionalAuth, async (req, res) => {
   try {
-    const { listingId, amount, maxBid, bidType = 'manual', notes, email } = req.body;
+    const { listingId, amount, maxBid, bidType = 'manual', notes, email, notifyWhenOutbid } = req.body;
 
     if (!listingId || !amount) {
       return res.status(400).json({
@@ -166,7 +166,7 @@ router.post('/', optionalAuth, async (req, res) => {
       bidderEmail = email.toLowerCase().trim();
     }
 
-    // Get the listing (populate seller for own-listing check, platinum bidder invitations if they exist)
+    // Get the listing (populate seller for own-listing check, platinum bidder invitations for acceptance check)
     const listing = await Listing.findById(listingId)
       .populate('seller', '_id email')
       .populate('platinumBidderInvitations.bidder', '_id');
@@ -233,11 +233,9 @@ router.post('/', optionalAuth, async (req, res) => {
         });
       }
 
-      // Check if user is in the platinum bidders list
       const isInPlatinumBidders = listing.platinumBidders && listing.platinumBidders.some(
         pbId => pbId.toString() === user._id.toString()
       );
-      
       if (!isInPlatinumBidders) {
         return res.status(403).json({
           error: 'Not eligible',
@@ -245,24 +243,39 @@ router.post('/', optionalAuth, async (req, res) => {
         });
       }
 
-      // Note: Invitation acceptance is no longer required - platinum bidders can bid immediately
-      
-      // Extend Private Room deadline by 30 seconds with each bid (soft closing)
-      const extendByMs = 30 * 1000; // 30 seconds
-      
+      const invitations = listing.platinumBidderInvitations || [];
+      const invitation = invitations.find(
+        inv => inv.bidder && inv.bidder._id.toString() === user._id.toString()
+      );
+      if (invitation) {
+        if (invitation.status !== 'accepted') {
+          const now = new Date();
+          if (listing.platinumBidderAcceptanceDeadline && now > new Date(listing.platinumBidderAcceptanceDeadline)) {
+            return res.status(403).json({
+              error: 'Seat lost',
+              message: 'The 30 minute window to accept the invitation has passed. You can no longer place bids in this private room.'
+            });
+          }
+          return res.status(403).json({
+            error: 'Accept invitation first',
+            message: 'You must accept your private room invitation (link in your email) before you can place bids.'
+          });
+        }
+      }
+      // Private room ends 60 seconds after last bid (each bid extends by 60s)
+      const PRIVATE_ROOM_EXTEND_MS = 60 * 1000; // 60 seconds
+
       // If status is 'eligible' and this is the first bid, activate the room
       if (listing.privateRoomStatus === 'eligible') {
         listing.privateRoomStatus = 'active';
         listing.status = 'active'; // Ensure listing is active
-        // Set initial end date if not set (24 hours from now, or extend from current)
         if (!listing.privateRoomEndDate) {
-          listing.privateRoomEndDate = new Date(now.getTime() + 24 * 60 * 60 * 1000); // 24 hours
+          listing.privateRoomEndDate = new Date(now.getTime() + PRIVATE_ROOM_EXTEND_MS);
         }
       }
-      
-      // Extend the deadline by 30 seconds with each bid
-      const currentEndDate = listing.privateRoomEndDate || new Date(now.getTime() + 24 * 60 * 60 * 1000);
-      const newEndDate = new Date(Math.max(currentEndDate.getTime(), now.getTime()) + extendByMs);
+
+      // Extend the deadline to 60 seconds from now with each bid
+      const newEndDate = new Date(now.getTime() + PRIVATE_ROOM_EXTEND_MS);
       listing.privateRoomEndDate = newEndDate;
       listing.privateRoomLastBidTime = now;
     } else {
@@ -311,6 +324,11 @@ router.post('/', optionalAuth, async (req, res) => {
     const previousBidsCount = await Bid.countDocuments(previousBidsQuery);
     const isFirstBid = previousBidsCount === 0;
 
+    const preferNotifyOutbid = typeof notifyWhenOutbid === 'boolean' ? notifyWhenOutbid : true;
+
+    // Previous high bid amount (before this bid) - used to find who to notify as outbid
+    const previousHighAmount = listing.currentPrice != null ? listing.currentPrice : (listing.startingPrice || 0);
+
     // Create the bid
     const bid = new Bid({
       listing: listingId,
@@ -319,7 +337,8 @@ router.post('/', optionalAuth, async (req, res) => {
       amount: amount,
       maxBid: maxBid || amount,
       bidType: bidType,
-      notes: notes || null
+      notes: notes || null,
+      notifyWhenOutbid: preferNotifyOutbid
     });
 
     await bid.save();
@@ -367,6 +386,57 @@ router.post('/', optionalAuth, async (req, res) => {
         .catch(err => {
           console.error('Failed to send first bid notification:', err);
         });
+    }
+
+    // Send outbid notifications to previous high bidder(s) who opted in (non-blocking)
+    if (previousHighAmount > 0 && amount > previousHighAmount) {
+      const currentBidderId = user ? user._id.toString() : null;
+      const currentBidderEmail = (bidderEmail || '').toLowerCase();
+
+      const previousHighBids = await Bid.find({
+        listing: listingId,
+        amount: previousHighAmount,
+        _id: { $ne: bid._id }
+      })
+        .populate('bidder', 'firstName lastName email')
+        .sort({ createdAt: -1 })
+        .lean();
+
+      const notifiedEmails = new Set();
+      for (const prevBid of previousHighBids) {
+        let outbidEmail = null;
+        let outbidName = 'Bidder';
+        if (prevBid.bidder && prevBid.bidder.email) {
+          if (prevBid.bidder._id.toString() === currentBidderId) continue;
+          outbidEmail = prevBid.bidder.email.toLowerCase();
+          outbidName = `${prevBid.bidder.firstName} ${prevBid.bidder.lastName}`;
+        } else if (prevBid.bidderEmail) {
+          if (prevBid.bidderEmail.toLowerCase() === currentBidderEmail) continue;
+          outbidEmail = prevBid.bidderEmail.toLowerCase();
+          outbidName = prevBid.bidderEmail.split('@')[0];
+        }
+        if (!outbidEmail || notifiedEmails.has(outbidEmail)) continue;
+
+        const latestBidByOutbidder = await Bid.findOne({
+          listing: listingId,
+          $or: [
+            prevBid.bidder ? { bidder: prevBid.bidder._id } : { bidder: null, bidderEmail: prevBid.bidderEmail }
+          ]
+        })
+          .sort({ createdAt: -1 })
+          .select('notifyWhenOutbid')
+          .lean();
+        if (latestBidByOutbidder && latestBidByOutbidder.notifyWhenOutbid === false) continue;
+
+        notifiedEmails.add(outbidEmail);
+        sendOutbidNotification(
+          listing,
+          outbidEmail,
+          outbidName,
+          previousHighAmount,
+          amount
+        ).catch(err => console.error('Failed to send outbid notification:', err));
+      }
     }
 
     // Format bid response for both authenticated and unauthenticated bidders
@@ -434,6 +504,54 @@ router.post('/', optionalAuth, async (req, res) => {
     console.error('Error creating bid:', error);
     res.status(400).json({
       error: 'Failed to create bid',
+      message: error.message
+    });
+  }
+});
+
+// PATCH /api/bids/preference - Update outbid notification preference for a listing (authenticated bidders only)
+router.patch('/preference', authenticateToken, async (req, res) => {
+  try {
+    const user = await User.findOne({ uid: req.user.uid });
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const { listingId, notifyWhenOutbid } = req.body;
+    if (!listingId) {
+      return res.status(400).json({
+        error: 'Missing listingId',
+        message: 'listingId is required'
+      });
+    }
+    if (typeof notifyWhenOutbid !== 'boolean') {
+      return res.status(400).json({
+        error: 'Invalid preference',
+        message: 'notifyWhenOutbid must be true or false'
+      });
+    }
+
+    const result = await Bid.updateMany(
+      { listing: listingId, bidder: user._id },
+      { $set: { notifyWhenOutbid } }
+    );
+
+    if (result.matchedCount === 0) {
+      return res.status(404).json({
+        error: 'No bids found',
+        message: 'You have not placed any bids on this listing'
+      });
+    }
+
+    res.json({
+      listingId,
+      notifyWhenOutbid,
+      updated: result.modifiedCount
+    });
+  } catch (error) {
+    console.error('Error updating bid preference:', error);
+    res.status(500).json({
+      error: 'Failed to update preference',
       message: error.message
     });
   }

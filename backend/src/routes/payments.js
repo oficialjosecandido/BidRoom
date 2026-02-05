@@ -2,6 +2,7 @@ const express = require('express');
 const Stripe = require('stripe');
 const { authenticateToken } = require('../middleware/auth');
 const Customer = require('../models/Customer');
+const Topup = require('../models/Topup');
 const { sendEmail } = require('../services/emailService');
 
 const LOG_PREFIX = '[Payments]';
@@ -148,6 +149,28 @@ router.post('/confirm-session', authenticateToken, async (req, res) => {
 });
 
 /**
+ * GET /api/payments/topups
+ * Returns the authenticated user's top-up history (most recent first).
+ */
+router.get('/topups', authenticateToken, async (req, res) => {
+  try {
+    const uid = req.user.uid;
+    const topups = await Topup.find({ uid })
+      .sort({ createdAt: -1 })
+      .limit(100)
+      .select('amount currency createdAt stripeSessionId')
+      .lean();
+    res.json({ topups });
+  } catch (err) {
+    console.error(`${LOG_PREFIX} Get topups error:`, err.message);
+    res.status(500).json({
+      error: 'Failed to load top-up history',
+      message: err.message || 'Unknown error'
+    });
+  }
+});
+
+/**
  * Send payment confirmation email after balance is credited.
  */
 async function sendPaymentConfirmationEmail(toEmail, firstName, amountDollars) {
@@ -210,6 +233,22 @@ async function creditBalanceForSession(session) {
       $push: { creditedStripeSessionIds: sessionId }
     }
   );
+
+  try {
+    await Topup.create({
+      uid,
+      amount: amountDollars,
+      stripeSessionId: sessionId,
+      currency: 'usd'
+    });
+  } catch (err) {
+    if (err.code === 11000) {
+      console.log(`${LOG_PREFIX} Topup already recorded for session_id=${sessionId} (duplicate)`);
+    } else {
+      console.error(`${LOG_PREFIX} Failed to save topup record:`, err.message);
+    }
+  }
+
   console.log(`${LOG_PREFIX} Balance credited +$${amountDollars} for uid=${uid?.slice(0, 8)}... new balance would be ~$${(customer.balance || 0) + amountDollars}`);
 
   await sendPaymentConfirmationEmail(customer.email, customer.firstName, amountDollars);

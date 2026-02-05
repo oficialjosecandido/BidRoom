@@ -33,8 +33,12 @@ export interface SelectPlatinumBiddersResponse {
   platinumBidders: string[];
   listing: {
     id: string;
-    platinumBidders: string[];
-    platinumBidderInvitedAt: string;
+    status?: string;
+    privateRoomStatus?: string;
+    privateRoomEndDate?: string;
+    endDate?: string;
+    platinumBidders?: string[];
+    platinumBidderInvitedAt?: string;
   };
 }
 
@@ -67,8 +71,8 @@ export class PrivateRoomService {
     return this.http.post(`${this.apiUrl}/invitation/decline`, { token, listingId });
   }
 
-      checkPlatinumBidderStatus(listingId: string): Observable<{ isPlatinumBidder: boolean }> {
-        return this.http.get<{ isPlatinumBidder: boolean }>(`${this.apiUrl}/listings/${listingId}/check-platinum`);
-      }
+  checkPlatinumBidderStatus(listingId: string): Observable<{ isPlatinumBidder: boolean; invitationPending?: boolean }> {
+    return this.http.get<{ isPlatinumBidder: boolean; invitationPending?: boolean }>(`${this.apiUrl}/listings/${listingId}/check-platinum`);
+  }
 }
 
