@@ -393,6 +393,10 @@
           background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
         }
 
+        .private-room-banner.private-room-invited {
+          background: linear-gradient(135deg, #0ea5e9 0%, #6366f1 100%);
+        }
+
         .private-room-banner.private-room-ended {
           background: linear-gradient(135deg, #64748b 0%, #475569 100%);
         }

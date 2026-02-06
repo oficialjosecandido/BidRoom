@@ -354,7 +354,7 @@ async function sendPrivateRoomNotInvitedToBidders(listing, invitedUserIds) {
 }
 
 /**
- * Send platinum bidder invitation emails. Each invitee must accept within 30 min or lose their seat.
+ * Send platinum bidder invitation emails. Each invitee must accept within 15 min or lose their seat; room starts automatically after that.
  * listing must have platinumBidderInvitations populated with bidder and invitationToken.
  */
 async function sendPlatinumBidderInvitations(listing) {

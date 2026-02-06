@@ -237,6 +237,20 @@
       }
     }
 
+    &.invited-card {
+      background: linear-gradient(135deg, rgba(14, 165, 233, 0.3) 0%, rgba(99, 102, 241, 0.2) 100%);
+      border-color: rgba(14, 165, 233, 0.5);
+      .stat-value {
+        font-size: 1rem;
+        font-weight: 700;
+        color: rgba(255, 255, 255, 0.95);
+      }
+      .stat-label {
+        color: rgba(255, 255, 255, 0.85);
+        font-size: 0.75rem;
+      }
+    }
+
     &.ended-card {
       background: linear-gradient(135deg, rgba(100, 116, 139, 0.35) 0%, rgba(71, 85, 105, 0.25) 100%);
       border-color: rgba(148, 163, 184, 0.4);
@@ -439,6 +453,63 @@
 @keyframes blink {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.5; }
+}
+
+.room-invited-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 50vh;
+  padding: 2rem;
+
+  .room-invited-card {
+    text-align: center;
+    max-width: 420px;
+    padding: 2.5rem;
+    background: linear-gradient(135deg, rgba(14, 165, 233, 0.2) 0%, rgba(99, 102, 241, 0.15) 100%);
+    border-radius: 20px;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  }
+
+  .room-invited-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+  }
+
+  h2 {
+    margin: 0 0 0.75rem;
+    font-size: 1.5rem;
+    color: #fff;
+  }
+
+  p {
+    margin: 0 0 0.75rem;
+    color: rgba(255, 255, 255, 0.85);
+    line-height: 1.5;
+  }
+
+  .room-invited-sub {
+    font-size: 0.95rem;
+    opacity: 0.9;
+  }
+
+  .room-invited-link {
+    display: inline-block;
+    margin-top: 1rem;
+    padding: 0.75rem 1.5rem;
+    background: linear-gradient(135deg, #0ea5e9 0%, #6366f1 100%);
+    color: #fff;
+    border-radius: 12px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: transform 0.2s, box-shadow 0.2s;
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(14, 165, 233, 0.4);
+    }
+  }
 }
 
 .room-ended-state {

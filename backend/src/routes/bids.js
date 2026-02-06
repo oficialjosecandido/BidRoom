@@ -210,11 +210,18 @@ router.post('/', optionalAuth, async (req, res) => {
 
     // Check if auction has ended (for main auction)
     const now = new Date();
-    const isPrivateRoom = listing.privateRoomStatus === 'active' || listing.privateRoomStatus === 'eligible';
-    
-      if (isPrivateRoom) {
+    const isPrivateRoom = listing.privateRoomStatus === 'active' || listing.privateRoomStatus === 'eligible' || listing.privateRoomStatus === 'invited';
+
+    if (isPrivateRoom) {
+      // Room not started yet: invitees have 15 min to accept, then room starts automatically
+      if (listing.privateRoomStatus === 'invited') {
+        return res.status(400).json({
+          error: 'Room not started',
+          message: 'The private room has not started yet. It will start automatically after the 15 minute acceptance window.'
+        });
+      }
+
       // Private Room logic: check if still active/eligible
-      // Note: Invitation acceptance is no longer required - platinum bidders can bid immediately
       if (listing.privateRoomStatus === 'active') {
         // Private Room is active - check if it has ended
         if (!listing.privateRoomEndDate || now > listing.privateRoomEndDate) {
@@ -253,7 +260,7 @@ router.post('/', optionalAuth, async (req, res) => {
           if (listing.platinumBidderAcceptanceDeadline && now > new Date(listing.platinumBidderAcceptanceDeadline)) {
             return res.status(403).json({
               error: 'Seat lost',
-              message: 'The 30 minute window to accept the invitation has passed. You can no longer place bids in this private room.'
+              message: 'The 15 minute window to accept the invitation has passed. You can no longer place bids in this private room.'
             });
           }
           return res.status(403).json({

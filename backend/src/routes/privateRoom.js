@@ -8,7 +8,7 @@ const User = require('../models/User');
 const { sendPlatinumBidderInvitations, sendPrivateRoomNotInvitedToBidders } = require('../services/auctionNotificationService');
 
 const router = express.Router();
-const ACCEPTANCE_WINDOW_MS = 30 * 60 * 1000; // 30 minutes to accept or lose seat
+const ACCEPTANCE_WINDOW_MS = 15 * 60 * 1000; // 15 minutes to accept; after that the room starts automatically
 
 // Get bidders for a listing (for seller to select Platinum Bidders)
 router.get('/listings/:id/bidders', authenticateToken, async (req, res) => {
@@ -179,9 +179,6 @@ router.post('/listings/:id/platinum-bidders', authenticateToken, async (req, res
     }
 
     const now = new Date();
-    // Private room ends 60 seconds after last bid; seller starts it, so first end is 60s from now
-    const PRIVATE_ROOM_EXTEND_MS = 60 * 1000;
-    const privateRoomEndDate = new Date(now.getTime() + PRIVATE_ROOM_EXTEND_MS);
     const platinumBidderAcceptanceDeadline = new Date(now.getTime() + ACCEPTANCE_WINDOW_MS);
 
     const platinumBidderInvitations = validBidderIds.map((bidderId) => ({
@@ -191,6 +188,7 @@ router.post('/listings/:id/platinum-bidders', authenticateToken, async (req, res
       invitationToken: crypto.randomBytes(16).toString('hex')
     }));
 
+    // Room stays 'invited' until 15 min pass; scheduler will set 'active' and privateRoomEndDate then
     await Listing.findByIdAndUpdate(listingId, {
       $set: {
         platinumBidders: validBidderIds,
@@ -198,10 +196,7 @@ router.post('/listings/:id/platinum-bidders', authenticateToken, async (req, res
         platinumBidderInvitedAt: now,
         platinumBidderAcceptanceDeadline,
         status: 'active',
-        privateRoomStatus: 'active',
-        privateRoomEndDate,
-        privateRoomLastBidTime: now,
-        endDate: privateRoomEndDate,
+        privateRoomStatus: 'invited',
         winnerSelectionDeadline: null
       }
     }, { runValidators: false });
@@ -222,9 +217,9 @@ router.post('/listings/:id/platinum-bidders', authenticateToken, async (req, res
         id: updatedListing._id,
         status: updatedListing.status,
         privateRoomStatus: updatedListing.privateRoomStatus,
-        privateRoomEndDate: updatedListing.privateRoomEndDate,
         platinumBidders: updatedListing.platinumBidders,
-        platinumBidderInvitedAt: updatedListing.platinumBidderInvitedAt
+        platinumBidderInvitedAt: updatedListing.platinumBidderInvitedAt,
+        platinumBidderAcceptanceDeadline: updatedListing.platinumBidderAcceptanceDeadline
       }
     });
   } catch (error) {
@@ -236,7 +231,7 @@ router.post('/listings/:id/platinum-bidders', authenticateToken, async (req, res
   }
 });
 
-// Check if current user is a platinum bidder for a listing (must have accepted invitation within 30 min)
+// Check if current user is a platinum bidder for a listing (must have accepted invitation within 15 min)
 router.get('/listings/:id/check-platinum', authenticateToken, async (req, res) => {
   try {
     const listingId = req.params.id;
@@ -310,7 +305,7 @@ router.post('/invitation/accept', async (req, res) => {
     }
     const now = new Date();
     if (listing.platinumBidderAcceptanceDeadline && now > new Date(listing.platinumBidderAcceptanceDeadline)) {
-      return res.status(400).json({ error: 'Deadline passed', message: 'The 30 minute window to accept has passed. You have lost your seat in this private room.' });
+      return res.status(400).json({ error: 'Deadline passed', message: 'The 15 minute window to accept has passed. You have lost your seat in this private room.' });
     }
     const invIndex = listing.platinumBidderInvitations.findIndex(inv => inv.invitationToken === token);
     listing.platinumBidderInvitations[invIndex].status = 'accepted';

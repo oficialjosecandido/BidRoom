@@ -89,6 +89,15 @@
               </div>
             </div>
             <!-- Private Room: Eligible (to be created by seller) -->
+            <div class="private-room-banner private-room-invited" *ngIf="listing.allowPrivateRoom && listing.privateRoomStatus === 'invited'">
+              <div class="private-room-content">
+                <span class="private-room-icon">🔒</span>
+                <div class="private-room-text">
+                  <h4>Private room created</h4>
+                  <p>Invitees have <strong>15 minutes</strong> to accept. The auction will start automatically after the acceptance window.</p>
+                </div>
+              </div>
+            </div>
             <div class="private-room-banner private-room-eligible" *ngIf="listing.allowPrivateRoom && listing.privateRoomStatus === 'eligible' && listing.status === 'ended'">
               <div class="private-room-content">
                 <span class="private-room-icon">🔒</span>
@@ -121,15 +130,15 @@
               </div>
             </div>
             <!-- Auction Ended Message -->
-            <div class="auction-ended-banner" *ngIf="isAuctionEnded() && !hasPrivateRoom() && !(listing.allowPrivateRoom && listing.privateRoomStatus === 'eligible')">
+            <div class="auction-ended-banner" *ngIf="isAuctionEnded() && !hasPrivateRoom() && !(listing.allowPrivateRoom && listing.privateRoomStatus === 'eligible') && !(listing.allowPrivateRoom && listing.privateRoomStatus === 'invited')">
               <div class="auction-ended-content">
                 <span class="ended-icon">🏁</span>
                 <div class="ended-text">
                   <h4>Auction Ended</h4>
                   <!-- Seller, no bids: closed -->
                   <p *ngIf="isOwnListing && getEndedBidCount() === 0">This auction closed with no bids. You can reopen it for another 7 days below.</p>
-                  <!-- Seller, has bids, no winner yet: select winner (not for private room ended – winner was auto-selected) -->
-                  <p *ngIf="isOwnListing && getEndedBidCount() > 0 && !listing.winner && !canCreatePrivateRoom() && !isPrivateRoomEnded()">Select a winner below.</p>
+                  <!-- Seller, has bids, no winner yet: select winner (only when private room is NOT enabled) -->
+                  <p *ngIf="isOwnListing && getEndedBidCount() > 0 && !listing.winner && !listing.allowPrivateRoom && !canCreatePrivateRoom() && !isPrivateRoomEnded()">Select a winner below.</p>
                   <!-- Seller, winner selected -->
                   <p *ngIf="isOwnListing && listing.winner">Winner has been selected.</p>
                   <!-- Non-seller, no bids -->
@@ -189,9 +198,9 @@
               (click)="openCreatePrivateRoomModal()">
               Create private room
             </button>
-            <!-- Seller: ended with bids, not private room eligible → Select winner (hidden when private room ended; winner was auto-selected) -->
+            <!-- Seller: ended with bids, no private room → Select winner (never show when allowPrivateRoom; private room flow uses Create room instead) -->
             <button
-              *ngIf="isOwnListing && isAuctionEnded() && !hasPrivateRoom() && getEndedBidCount() > 0 && !listing.winner && !canCreatePrivateRoom() && !isPrivateRoomEnded()"
+              *ngIf="isOwnListing && isAuctionEnded() && !listing.allowPrivateRoom && !hasPrivateRoom() && getEndedBidCount() > 0 && !listing.winner && !canCreatePrivateRoom() && !isPrivateRoomEnded()"
               class="btn btn-primary btn-large"
               (click)="openSelectWinnerModal()">
               Select winner
@@ -317,8 +326,8 @@
         <!-- Bid History Tab Content -->
         <div class="tab-content" *ngIf="activeTab === 'bids' && listing.auctionFormat === 'highest-bid'">
           <div class="bid-history">
-            <!-- Seller note: only verified bidders can be selected -->
-            <div *ngIf="isOwnListing && isAuctionEnded() && !listing.winner && bids.length > 0" class="bid-history-seller-note">
+            <!-- Seller note: only verified bidders can be selected (not for private room listings) -->
+            <div *ngIf="isOwnListing && isAuctionEnded() && !listing.allowPrivateRoom && !listing.winner && bids.length > 0" class="bid-history-seller-note">
               <span class="seller-note-icon">ℹ️</span>
               <p>Only bids from <strong>registered, verified</strong> accounts can be selected as the winning bid. Guest bidders must create an account and verify their email to be eligible.</p>
             </div>
@@ -345,7 +354,7 @@
               </div>
 
               <div *ngIf="bids.length > 0" class="bids-list">
-                <div class="bid-item" *ngFor="let bid of bids; let i = index" [class.top-bid]="i === 0" [class.bid-not-eligible]="isOwnListing && isAuctionEnded() && !listing.winner && !isPrivateRoomEnded() && !canSelectBidAsWinner(bid)">
+                <div class="bid-item" *ngFor="let bid of bids; let i = index" [class.top-bid]="i === 0" [class.bid-not-eligible]="isOwnListing && isAuctionEnded() && !listing.allowPrivateRoom && !listing.winner && !isPrivateRoomEnded() && !canSelectBidAsWinner(bid)">
                   <div class="bid-rank">{{ i + 1 }}</div>
                   <div class="bid-avatar">
                     {{ bid.bidderInitials || 'A' }}
@@ -396,8 +405,8 @@
                           <span class="bid-date">{{ formatBidDate(bid.createdAt) }}</span>
                           <span class="bid-type" *ngIf="bid.bidType !== 'manual'">{{ bid.bidType }}</span>
                         </div>
-                        <!-- Seller: Select as winner (only when seller may choose; not when private room ended – winner auto-selected) -->
-                        <div *ngIf="isOwnListing && isAuctionEnded() && !listing.winner && !isPrivateRoomEnded()" class="bid-select-winner-wrap">
+                        <!-- Seller: Select as winner (only when no private room; private room winner is automatic) -->
+                        <div *ngIf="isOwnListing && isAuctionEnded() && !listing.allowPrivateRoom && !listing.winner && !isPrivateRoomEnded()" class="bid-select-winner-wrap">
                           <button *ngIf="canSelectBidAsWinner(bid)" type="button" class="btn btn-primary btn-small bid-select-winner-btn" (click)="selectWinner(bid._id)" [disabled]="selectingWinner">
                             {{ selectingWinner ? 'Selecting…' : 'Select as winner' }}
                           </button>

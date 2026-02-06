@@ -17,11 +17,36 @@ async function checkEndedAuctions() {
     const now = new Date();
     let processed = 0;
 
-    // 1) Regular auctions: endDate passed, not in active private room
+    // 0) Private rooms in 'invited' state past acceptance deadline → auto-start the room (15 min passed)
+    const PRIVATE_ROOM_EXTEND_MS = 60 * 1000;
+    const invitedPastDeadline = await Listing.find({
+      status: 'active',
+      privateRoomStatus: 'invited',
+      platinumBidderAcceptanceDeadline: { $lte: now }
+    });
+    for (const listing of invitedPastDeadline) {
+      try {
+        const roomEndDate = new Date(now.getTime() + PRIVATE_ROOM_EXTEND_MS);
+        await Listing.findByIdAndUpdate(listing._id, {
+          $set: {
+            privateRoomStatus: 'active',
+            privateRoomEndDate: roomEndDate,
+            privateRoomLastBidTime: now,
+            endDate: roomEndDate
+          }
+        }, { runValidators: false });
+        processed++;
+        console.log(`✅ Auto-started private room (15 min passed): ${listing._id} - ${listing.title}`);
+      } catch (error) {
+        console.error(`❌ Error auto-starting private room ${listing._id}:`, error.message);
+      }
+    }
+
+    // 1) Regular auctions: endDate passed, not in active private room and not invited
     const endedAuctions = await Listing.find({
       status: 'active',
       endDate: { $lte: now },
-      privateRoomStatus: { $ne: 'active' }
+      privateRoomStatus: { $nin: ['active', 'invited'] }
     }).populate('seller', 'email');
 
     for (const listing of endedAuctions) {
@@ -51,8 +76,8 @@ async function checkEndedAuctions() {
       }
     }
 
-    if (endedAuctions.length > 0 || endedPrivateRooms.length > 0) {
-      console.log(`🔍 Processed ${processed} ended auction(s) / private room(s)`);
+    if (invitedPastDeadline.length > 0 || endedAuctions.length > 0 || endedPrivateRooms.length > 0) {
+      console.log(`🔍 Processed ${processed} (auto-started / ended auction(s) / private room(s))`);
     }
 
     return { processed };

@@ -180,7 +180,7 @@ const listingSchema = new mongoose.Schema({
   // Private Room state
   privateRoomStatus: {
     type: String,
-    enum: ['not-triggered', 'eligible', 'active', 'ended'],
+    enum: ['not-triggered', 'eligible', 'invited', 'active', 'ended'],
     default: 'not-triggered'
   },
   privateRoomEndDate: {

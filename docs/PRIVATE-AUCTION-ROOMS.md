@@ -26,7 +26,7 @@ When these conditions are met, the listing becomes **eligible** for a private ro
 | Rule | Time |
 |------|------|
 | **Seller: create the room** | Within **1 hour** after the main auction ends. After that, the option to create a private room is no longer available. |
-| **Invited bidders: accept invitation** | Within **30 minutes** after the room is created. If a bidder does not accept in time, they lose their seat and cannot bid in the room. |
+| **Invited bidders: accept invitation** | Within **15 minutes** after the room is created. If a bidder does not accept in time, they lose their seat and cannot bid in the room. |
 | **Room end** | The room closes **60 seconds** after the **last bid**. Each new bid extends the countdown by 60 seconds from that bid’s time. |
 
 ---
@@ -44,18 +44,18 @@ When these conditions are met, the listing becomes **eligible** for a private ro
 
 ### 2. Seller creates the room and invites bidders
 
-- On the **listing page**, the seller sees a **“Create private room”** option (only while the 1 hour window is open).
+- On the **listing page**, the seller sees a **“Create private room”** option (only while the 1 hour window is open). The seller cannot select a winner manually when private room is enabled—they must create the room instead.
 - The seller selects **between 2 and 5 bidders** from the main auction (only **registered** bidders can be invited; guest bidders are not eligible).
 - On confirmation:
-  - The listing’s **private room** is created and set to **active**.
-  - Each invited bidder gets an email with an **“Accept & Join Room”** link (valid for **30 minutes**).
+  - The listing’s **private room** is created and set to **invited** (waiting for acceptances). After 15 minutes the room **starts automatically**; no manual Start by the seller.
+  - Each invited bidder gets an email with an **“Accept & Join Room”** link (valid for **15 minutes**).
   - The room’s first **end time** is set to **60 seconds** from creation (seller can then “Start auction” so the countdown is visible; the room still closes 60 seconds after the last bid).
   - Bidders who were **not** invited receive a “You were not invited to the private room” email.
 
 ### 3. Invited bidders accept (or lose their seat)
 
-- Each invitee must **accept** the invitation (via the link in the email) **within 30 minutes**.
-- If they accept in time, they become **Platinum Bidders** for that room and can place bids.
+- Each invitee must **accept** the invitation (via the link in the email) **within 15 minutes**.
+- If they accept in time, they become **Platinum Bidders** for that room and can place bids once the room has started.
 - If they do **not** accept in time, they lose their seat and cannot bid in that room.
 
 ### 4. Bidding in the room
@@ -91,7 +91,8 @@ When these conditions are met, the listing becomes **eligible** for a private ro
 | State | Meaning |
 |-------|--------|
 | `not-triggered` | Main auction not ended yet, or private room not enabled. |
-| `eligible` | Main auction ended with bids and reserve met; seller has **1 hour** to create the room and invite 2–5 bidders. |
+| `eligible` | Main auction ended with bids and reserve met; seller has **1 hour** to create the room and invite 2–5 bidders. **Select winner** is not shown—only **Create private room**. |
+| `invited` | Room created; invitees have **15 minutes** to accept. Room is not yet open for bidding; it will **start automatically** when the 15 minutes end. |
 | `active` | Private room is running; only accepted Platinum Bidders can bid; room ends **60 seconds** after the last bid. |
 | `ended` | Private room has closed; winner is the highest bid not outbid for 60 seconds; no seller choice. |
 
@@ -100,7 +101,7 @@ When these conditions are met, the listing becomes **eligible** for a private ro
 ## Emails
 
 - **Seller:** “Create private room” (when auction ends and room is eligible).
-- **Invited bidders:** “Platinum bidder invitation” with **Accept** link (30 min to accept).
+- **Invited bidders:** “Platinum bidder invitation” with **Accept** link (15 min to accept).
 - **Not invited:** “You were not invited to the private room.”
 - **When room ends:**  
   - **Winner:** “You won the private room” (highest bid not outbid for 60 seconds).  
@@ -112,7 +113,7 @@ When these conditions are met, the listing becomes **eligible** for a private ro
 
 - Private rooms are **optional** and only for **Highest Bid** listings with private room enabled.
 - **Seller** must create the room **within 1 hour** of the main auction ending and invite **2–5** registered bidders.
-- **Invitees** must **accept within 30 minutes** or lose their seat.
+- **Invitees** must **accept within 15 minutes** or lose their seat.
 - Only **accepted invitees** can bid; each bid **extends the room by 60 seconds**.
 - When **60 seconds pass with no new bid**, the room closes and the **highest bidder wins automatically**—**no seller choice**.
 - Winner and seller then use **Transactions** for payment and shipping.

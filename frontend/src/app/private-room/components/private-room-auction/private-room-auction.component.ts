@@ -26,7 +26,7 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
   countdown: number = 0; // seconds remaining
   isAuthenticated = false;
   isPlatinumBidder = false;
-  /** Invited but not yet accepted; must accept within 30 min to place bids */
+  /** Invited but not yet accepted; must accept within 15 min to place bids */
   invitationPending = false;
   currentUserId: string | null = null;
   currentUser: any = null;
@@ -351,8 +351,7 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
   placeBid(): void {
     if (!this.listing || this.isPlacingBid) return;
 
-    const canBid = this.isPlatinumBidder &&
-      (this.listing.privateRoomStatus === 'active' || this.listing.privateRoomStatus === 'eligible');
+    const canBid = this.isPlatinumBidder && this.listing.privateRoomStatus === 'active';
 
     if (!canBid) {
       if (!this.isPlatinumBidder) {

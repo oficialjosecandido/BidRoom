@@ -715,6 +715,14 @@ router.post('/:id/choose-winner', authenticateToken, async (req, res) => {
       });
     }
 
+    // Private room listings: winner is chosen only via the private room (create room, then room runs and winner is automatic). No manual select winner.
+    if (listing.allowPrivateRoom && listing.status === 'ended') {
+      return res.status(400).json({
+        error: 'Private room enabled',
+        message: 'This listing has private room enabled. Create a private room and invite bidders instead of selecting a winner manually.'
+      });
+    }
+
     const { winnerBidId } = req.body;
 
     if (!winnerBidId) {

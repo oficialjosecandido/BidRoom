@@ -22,12 +22,20 @@
           </div>
         </div>
         
-        <div class="stat-card countdown-card" [class.warning]="countdown <= 300" [class.critical]="countdown <= 60" *ngIf="listing?.privateRoomStatus !== 'ended'">
+        <div class="stat-card countdown-card" [class.warning]="countdown <= 300" [class.critical]="countdown <= 60" *ngIf="listing?.privateRoomStatus === 'active'">
           <div class="stat-icon">⏰</div>
           <div class="stat-content">
             <div class="stat-value countdown-value">{{ formatCountdown() }}</div>
             <div class="stat-label">Time remaining</div>
             <div class="countdown-subtext" *ngIf="countdown <= 60">⚡ Closing soon!</div>
+          </div>
+        </div>
+
+        <div class="stat-card invited-card" *ngIf="listing?.privateRoomStatus === 'invited'">
+          <div class="stat-icon">📩</div>
+          <div class="stat-content">
+            <div class="stat-value">Starting soon</div>
+            <div class="stat-label">Accept within 15 min; room starts automatically</div>
           </div>
         </div>
 
@@ -99,8 +107,19 @@
       </div>
     </div>
 
+    <!-- Invited: waiting for acceptances; room starts automatically after 15 min -->
+    <div class="room-invited-state" *ngIf="listing.privateRoomStatus === 'invited'">
+      <div class="room-invited-card">
+        <div class="room-invited-icon">📩</div>
+        <h2>Room not started yet</h2>
+        <p>Invitees have <strong>15 minutes</strong> to accept the invitation. The auction will start automatically after the acceptance window.</p>
+        <p class="room-invited-sub">Check your email for the accept link if you were invited.</p>
+        <a *ngIf="listing.slug" [href]="getListingPageUrl()" class="room-invited-link" target="_blank" rel="noopener noreferrer">View listing</a>
+      </div>
+    </div>
+
     <!-- Active room content -->
-    <div *ngIf="listing.privateRoomStatus !== 'ended'">
+    <div *ngIf="listing.privateRoomStatus === 'active'">
     <!-- Mobile Layout: Stacked -->
     <div class="mobile-layout">
       <!-- Mobile User Info -->
