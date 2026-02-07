@@ -33,6 +33,8 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
   viewerCount: number = 0;
   private socketSubscriptions: Subscription[] = [];
   private countdownInterval: any = null;
+  /** When countdown hits 0, poll until backend sets privateRoomStatus to 'ended'. */
+  private endCheckInterval: any = null;
   isMobile: boolean = false;
   isPlacingBid: boolean = false;
   /** Custom bid amount (user can type any number >= min); empty = use minimum next bid */
@@ -86,6 +88,11 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
     this.socketSubscriptions.forEach(sub => sub.unsubscribe());
     if (this.countdownInterval) {
       clearInterval(this.countdownInterval);
+      this.countdownInterval = null;
+    }
+    if (this.endCheckInterval) {
+      clearInterval(this.endCheckInterval);
+      this.endCheckInterval = null;
     }
     window.removeEventListener('resize', () => this.checkMobile());
     // Leave private room viewer room
@@ -241,8 +248,28 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
     this.countdown = remaining;
 
     if (remaining === 0) {
+      if (this.countdownInterval) {
+        clearInterval(this.countdownInterval);
+        this.countdownInterval = null;
+      }
       this.loadListing(); // Reload to check if room ended
+      this.startEndCheckPolling();
     }
+  }
+
+  /** Poll listing every 5s when countdown is 0 until backend sets privateRoomStatus to 'ended'. */
+  private startEndCheckPolling(): void {
+    if (this.endCheckInterval) return;
+    this.endCheckInterval = setInterval(() => {
+      if (this.listing?.privateRoomStatus === 'ended') {
+        if (this.endCheckInterval) {
+          clearInterval(this.endCheckInterval);
+          this.endCheckInterval = null;
+        }
+        return;
+      }
+      this.loadListing();
+    }, 5000);
   }
 
   formatCountdown(): string {

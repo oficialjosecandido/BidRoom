@@ -4,8 +4,8 @@ const bidSchema = new mongoose.Schema({
   listing: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Listing',
-    required: true,
-    index: true
+    required: true
+    // index omitted: compound indexes below (listing+createdAt, listing+amount) cover listing queries
   },
   bidder: {
     type: mongoose.Schema.Types.ObjectId,

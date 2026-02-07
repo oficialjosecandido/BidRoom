@@ -352,7 +352,8 @@
           </div>
         </div>
 
-        <div class="form-group">
+        <!-- Private Room is only available for Highest Bid (auction), not Best Offer -->
+        <div class="form-group" *ngIf="listingForm.get('listingFormat')?.value === 'auction'">
           <label class="checkbox-option">
             <input
               type="checkbox"

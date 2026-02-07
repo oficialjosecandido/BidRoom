@@ -4,8 +4,8 @@ const offerSchema = new mongoose.Schema({
   listing: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Listing',
-    required: true,
-    index: true
+    required: true
+    // index omitted: compound indexes below (listing+createdAt, listing+status) cover listing queries
   },
   offerer: {
     type: mongoose.Schema.Types.ObjectId,

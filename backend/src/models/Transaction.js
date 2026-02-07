@@ -4,8 +4,8 @@ const transactionSchema = new mongoose.Schema({
   listing: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Listing',
-    required: true,
-    index: true
+    required: true
+    // index omitted: schema.index({ listing: 1 }, { unique: true }) below covers it
   },
   seller: {
     type: mongoose.Schema.Types.ObjectId,

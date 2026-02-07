@@ -598,6 +598,9 @@
         />
         <p class="modal-hint">The seller will use this to respond to your offer.</p>
       </div>
+      <p class="modal-notice modal-notice-below-min" *ngIf="isOfferBelowMinimum()">
+        Your offer is below the seller’s minimum price. The seller is <strong>not obliged</strong> to accept this offer, even if you’re the only bidder.
+      </p>
       <p class="modal-error" *ngIf="offerModalError">{{ offerModalError }}</p>
     </div>
     <div class="modal-actions">

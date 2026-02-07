@@ -40,7 +40,7 @@ export interface Listing {
   durationSlot: '5 minutes' | '2 hours' | '24 hours' | '3 days' | '7 days';
   allowPrivateRoom: boolean;
   commissionRate: number;
-  privateRoomStatus?: 'not-triggered' | 'eligible' | 'active' | 'ended';
+  privateRoomStatus?: 'not-triggered' | 'eligible' | 'invited' | 'active' | 'ended';
   privateRoomEndDate?: string;
   privateRoomLastBidTime?: string;
   platinumBidders?: string[] | Array<{ _id: string; firstName: string; lastName: string; email: string }>;

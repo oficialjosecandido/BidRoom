@@ -1217,6 +1217,20 @@
     line-height: 1.4;
   }
 
+  .modal-notice {
+    font-size: 13px;
+    margin: 0 0 8px 0;
+    padding: 10px 12px;
+    border-radius: 8px;
+    line-height: 1.4;
+  }
+
+  .modal-notice-below-min {
+    background: #fef3c7;
+    color: #92400e;
+    border: 1px solid #f59e0b;
+  }
+
   .modal-error {
     font-size: 14px;
     color: #c53030;

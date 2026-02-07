@@ -39,21 +39,8 @@ router.get('/listing/:listingId', async (req, res) => {
 
 const OFFER_CREATE_TIMEOUT_MS = 20000;
 
-// POST /api/offers - Create a new offer (auth optional; guests must provide email)
-router.post('/', optionalAuth, async (req, res) => {
-  const timeoutId = setTimeout(() => {
-    if (!res.headersSent) {
-      res.status(504).json({
-        error: 'Request timeout',
-        message: 'Offer creation took too long. Please try again.'
-      });
-    }
-  }, OFFER_CREATE_TIMEOUT_MS);
-  res.once('finish', () => clearTimeout(timeoutId));
-
-  try {
-    const { listingId, amount, message, email } = req.body;
-
+async function createOffer(req, res) {
+  const { listingId, amount, message, email } = req.body;
     if (!listingId || !amount) {
       return res.status(400).json({
         error: 'Missing required fields',
@@ -100,6 +87,7 @@ router.post('/', optionalAuth, async (req, res) => {
           error: 'Invalid email',
           message: 'Please provide a valid email address'
         });
+      }
       offererEmail = email.toLowerCase().trim();
     }
 
@@ -141,13 +129,7 @@ router.post('/', optionalAuth, async (req, res) => {
       });
     }
 
-    // Check minimum offer price if set
-    if (listing.minimumOfferPrice && amount < listing.minimumOfferPrice) {
-      return res.status(400).json({
-        error: 'Offer too low',
-        message: `Minimum offer is $${listing.minimumOfferPrice.toFixed(2)}`
-      });
-    }
+    // Offers below minimum are allowed; seller is not obliged to accept (buyer sees indication in UI)
 
     // Check if offerer already has a pending offer (by user id or guest email)
     const existingQuery = { listing: listingId, status: 'pending' };
@@ -224,8 +206,20 @@ router.post('/', optionalAuth, async (req, res) => {
       offererName: name,
       offererInitials: initials
     });
-  }
-  } catch (err) {
+}
+
+// POST /api/offers - Create a new offer (auth optional; guests must provide email)
+router.post('/', optionalAuth, (req, res) => {
+  const timeoutId = setTimeout(() => {
+    if (!res.headersSent) {
+      res.status(504).json({
+        error: 'Request timeout',
+        message: 'Offer creation took too long. Please try again.'
+      });
+    }
+  }, OFFER_CREATE_TIMEOUT_MS);
+  res.once('finish', () => clearTimeout(timeoutId));
+  createOffer(req, res).catch((err) => {
     console.error('Error creating offer:', err);
     if (!res.headersSent) {
       res.status(400).json({
@@ -233,7 +227,7 @@ router.post('/', optionalAuth, async (req, res) => {
         message: err.message
       });
     }
-  }
+  });
 });
 
 // PATCH /api/offers/:offerId/accept - Seller accepts an offer

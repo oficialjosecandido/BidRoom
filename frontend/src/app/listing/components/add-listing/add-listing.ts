@@ -147,6 +147,11 @@ export class AddListing implements OnInit {
     // Conditional validators based on listing format
     this.listingForm.get('listingFormat')?.valueChanges.subscribe(format => {
       this.updateConditionalValidators(format);
+      // Private Room is only for Highest Bid (auction); clear it when switching to Best Offer
+      if (format === 'best-offer') {
+        this.listingForm.patchValue({ allowPrivateRoom: false });
+        this.commissionRate = 0.5;
+      }
     });
     this.updateConditionalValidators(this.listingForm.get('listingFormat')?.value || 'auction');
 

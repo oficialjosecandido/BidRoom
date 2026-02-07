@@ -472,19 +472,29 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
     this.offerModalError = null;
   }
 
+  /** Parsed offer amount as number (for template: below-minimum indication). */
+  getOfferAmountNumber(): number {
+    const n = parseFloat((this.offerAmount || '').replace(/[^0-9.]/g, ''));
+    return isNaN(n) ? 0 : n;
+  }
+
+  /** True when the user has entered an amount and it is below the seller's minimum (don't show when field is empty). */
+  isOfferBelowMinimum(): boolean {
+    const min = this.listing?.minimumOfferPrice;
+    if (min == null) return false;
+    const amount = this.getOfferAmountNumber();
+    return amount > 0 && amount < min;
+  }
+
   submitOffer(): void {
     if (!this.listing) return;
     this.offerModalError = null;
     const amount = parseFloat((this.offerAmount || '').replace(/[^0-9.]/g, ''));
-    const minOffer = this.listing.minimumOfferPrice ?? this.listing.startingPrice ?? this.listing.currentPrice ?? 0;
     if (isNaN(amount) || amount <= 0) {
       this.offerModalError = 'Please enter a valid amount.';
       return;
     }
-    if (this.listing.minimumOfferPrice != null && amount < this.listing.minimumOfferPrice) {
-      this.offerModalError = `Minimum offer is ${this.formatPrice(this.listing.minimumOfferPrice)}.`;
-      return;
-    }
+    // Allow offers below minimum; seller is not obliged to accept (we show an indication in the modal)
     let email: string | undefined;
     if (!this.isAuthenticated) {
       const trimmed = (this.offerEmail || '').trim();

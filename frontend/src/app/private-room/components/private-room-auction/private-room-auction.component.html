@@ -96,13 +96,14 @@
 
   <!-- Poker Table View -->
   <div class="private-room-content" *ngIf="listing && !loading && !error">
-    <!-- Room ended state -->
-    <div class="room-ended-state" *ngIf="listing.privateRoomStatus === 'ended'">
+    <!-- Room ended state (also when countdown hit 0 but backend not yet updated) -->
+    <div class="room-ended-state" *ngIf="listing.privateRoomStatus === 'ended' || (listing.privateRoomStatus === 'active' && countdown <= 0)">
       <div class="room-ended-card">
         <div class="room-ended-badge">Auction ended</div>
         <div class="room-ended-icon">🏁</div>
         <h2>Private room closed</h2>
-        <p>The auction has ended. The winner was the highest bid that wasn't outbid for 60 seconds. You will be notified by email if you won.</p>
+        <p *ngIf="listing.privateRoomStatus === 'ended'">The auction has ended. The winner was the highest bid that wasn't outbid for 60 seconds. You will be notified by email if you won.</p>
+        <p *ngIf="listing.privateRoomStatus !== 'ended' && countdown <= 0">The auction has ended. Results are being confirmed. You will be notified by email if you won.</p>
         <a *ngIf="listing.slug" [href]="getListingPageUrl()" class="room-ended-link" target="_blank" rel="noopener noreferrer">View listing</a>
       </div>
     </div>
@@ -118,8 +119,8 @@
       </div>
     </div>
 
-    <!-- Active room content -->
-    <div *ngIf="listing.privateRoomStatus === 'active'">
+    <!-- Active room content (hide when countdown reached 0 so we show ended state) -->
+    <div *ngIf="listing.privateRoomStatus === 'active' && countdown > 0">
     <!-- Mobile Layout: Stacked -->
     <div class="mobile-layout">
       <!-- Mobile User Info -->
