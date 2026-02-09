@@ -950,6 +950,221 @@
           }
         }
       }
+
+      .offer-history {
+        .offers-cta {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 16px;
+          flex-wrap: wrap;
+          padding: 16px 20px;
+          margin-bottom: 24px;
+          background: linear-gradient(135deg, rgba(139, 90, 150, 0.08) 0%, rgba(139, 90, 150, 0.03) 100%);
+          border: 1px solid rgba(139, 90, 150, 0.2);
+          border-radius: 12px;
+
+          .offers-cta-text {
+            margin: 0;
+            font-size: 15px;
+            color: var(--text-dark);
+            flex: 1;
+            min-width: 200px;
+          }
+        }
+
+        .offers-loading,
+        .offers-error,
+        .no-offers {
+          text-align: center;
+          padding: 40px 24px;
+
+          p {
+            font-size: 16px;
+            color: var(--text-gray);
+            margin-bottom: 16px;
+          }
+        }
+
+        .no-offers .no-offers-content {
+          .no-offers-icon {
+            font-size: 48px;
+            display: block;
+            margin-bottom: 12px;
+          }
+          h3 {
+            font-size: 20px;
+            margin-bottom: 8px;
+            color: var(--text-dark);
+          }
+          p {
+            margin-bottom: 16px;
+          }
+        }
+
+        .offers-list {
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+
+          .offer-item {
+            display: flex;
+            gap: 16px;
+            padding: 20px;
+            background: var(--light-gray);
+            border-radius: 12px;
+            border-left: 4px solid transparent;
+
+            &.pending {
+              border-left-color: rgba(139, 90, 150, 0.5);
+              background: rgba(139, 90, 150, 0.04);
+            }
+            &.accepted {
+              border-left-color: #22c55e;
+              background: rgba(34, 197, 94, 0.06);
+            }
+            &.rejected,
+            &.expired {
+              border-left-color: var(--text-gray);
+              opacity: 0.9;
+            }
+
+            .offer-avatar {
+              width: 48px;
+              height: 48px;
+              border-radius: 50%;
+              background: linear-gradient(135deg, var(--accent-purple) 0%, rgba(139, 90, 150, 0.8) 100%);
+              color: var(--primary-white);
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              font-size: 16px;
+              font-weight: 700;
+              flex-shrink: 0;
+            }
+
+            .offer-body {
+              flex: 1;
+              min-width: 0;
+              display: flex;
+              flex-direction: column;
+              gap: 8px;
+            }
+
+            .offer-top {
+              display: flex;
+              justify-content: space-between;
+              align-items: flex-start;
+              gap: 16px;
+              flex-wrap: wrap;
+            }
+
+            .offer-head {
+              display: flex;
+              align-items: center;
+              gap: 8px;
+              flex-wrap: wrap;
+
+              .offer-from-label,
+              .offerer-name {
+                font-size: 16px;
+                color: var(--text-dark);
+
+                strong {
+                  font-weight: 600;
+                }
+              }
+
+              .offer-badge-your {
+                font-size: 12px;
+                font-weight: 600;
+                padding: 2px 8px;
+                border-radius: 6px;
+                background: rgba(139, 90, 150, 0.15);
+                color: var(--accent-purple);
+              }
+
+              .offer-status-pill {
+                font-size: 12px;
+                font-weight: 600;
+                padding: 2px 10px;
+                border-radius: 6px;
+
+                &.pending {
+                  background: rgba(234, 179, 8, 0.2);
+                  color: #b45309;
+                }
+                &.accepted {
+                  background: rgba(34, 197, 94, 0.2);
+                  color: #15803d;
+                }
+                &.rejected,
+                &.expired {
+                  background: rgba(107, 114, 128, 0.2);
+                  color: var(--text-gray);
+                }
+              }
+            }
+
+            .offer-amount {
+              font-size: 20px;
+              font-weight: 700;
+              color: var(--accent-purple);
+              white-space: nowrap;
+            }
+
+            .offer-meta {
+              font-size: 13px;
+              color: var(--text-gray);
+            }
+
+            .offer-message {
+              margin: 0;
+              font-size: 14px;
+              color: var(--text-dark);
+              line-height: 1.5;
+            }
+
+            .seller-response {
+              margin: 0;
+              font-size: 14px;
+              color: var(--text-gray);
+              line-height: 1.5;
+            }
+
+            .offer-actions {
+              margin-top: 12px;
+              padding-top: 12px;
+              border-top: 1px solid var(--border-gray);
+              display: flex;
+              flex-direction: column;
+              gap: 10px;
+
+              .offer-respond-input {
+                width: 100%;
+                max-width: 400px;
+                padding: 8px 12px;
+                font-size: 14px;
+                border: 1px solid var(--border-gray);
+                border-radius: 8px;
+              }
+
+              .offer-action-buttons {
+                display: flex;
+                gap: 10px;
+                flex-wrap: wrap;
+
+                .btn-accept {
+                  min-width: 100px;
+                }
+                .btn-reject {
+                  min-width: 100px;
+                }
+              }
+            }
+          }
+        }
+      }
     }
 
     .additional-info {

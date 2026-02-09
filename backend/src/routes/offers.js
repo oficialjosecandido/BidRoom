@@ -183,9 +183,16 @@ async function createOffer(req, res) {
 
     await offer.save();
 
-    // If offer meets or exceeds minimum price, it's automatically accepted (forced sale)
-    if (listing.minimumOfferPrice && amount >= listing.minimumOfferPrice) {
+    // Auto-accept only when: best-offer, single offer, and offer >= minimum price
+    const offerCount = await Offer.countDocuments({ listing: listingId });
+    if (
+      offerCount === 1 &&
+      listing.minimumOfferPrice != null &&
+      amount >= listing.minimumOfferPrice
+    ) {
       offer.status = 'accepted';
+      offer.respondedAt = new Date();
+      offer.sellerResponse = 'Automatically accepted (met minimum price).';
       listing.status = 'ended';
       listing.currentPrice = amount;
       await Promise.all([offer.save(), listing.save()]);

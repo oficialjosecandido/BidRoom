@@ -26,9 +26,10 @@ Before starting, you need these installed on your computer:
 3. **Backend configuration (one-time setup)**  
    The server needs a few settings (database, etc.). Someone technical may need to prepare this once:
    - In the project folder, go into the **backend** folder.
-   - Copy the file **env.development.example** and rename the copy to **.env**.
+   - Copy the file **env.development.example** (if present) and rename the copy to **.env**, or create **.env** with the required variables.
    - Edit **.env** and fill in the real values (MongoDB address, email settings, etc.).  
-   If you’re not sure what to put, ask the person who set up the project or your team’s developer.
+   If you’re not sure what to put, ask the person who set up the project or your team’s developer.  
+   **Email (optional):** To have the app send emails (verification, bid notifications, etc.) in development, see **[Email setup for dev](EMAIL-SETUP-DEV.md)**.
 
 ---
 
@@ -120,6 +121,9 @@ To stop everything, press **Ctrl+C** in the Terminal window where you ran the sc
 
 - **Backend won’t start / “Database connection failed”**  
   Check that the **.env** file exists in the **backend** folder and that values like `MONGO_URI` are correct. Someone technical may need to set these.
+
+- **Emails not sending in dev**  
+  See **[Email setup for dev](EMAIL-SETUP-DEV.md)**. You need either Gmail (with an App Password) or Ethereal credentials in `backend/.env`. Check that `EMAIL_FROM` matches your sending address (no typos).
 
 - **Frontend shows errors or “cannot connect”**  
   Make sure the **backend** is running first (Option A, Step 1). The frontend talks to the backend at http://localhost:3000.

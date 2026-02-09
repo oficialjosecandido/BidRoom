@@ -65,6 +65,10 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
   offerEmail: string = '';
   offerSubmitting = false;
   offerModalError: string | null = null;
+  /** ID of offer being accepted/rejected (for loading state) */
+  offerActionLoadingId: string | null = null;
+  /** Optional message when accepting/rejecting an offer */
+  offerRespondMessage: string = '';
 
   constructor(
     private route: ActivatedRoute,
@@ -169,6 +173,61 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
         console.error('Error loading offers:', err);
         this.offersError = 'Failed to load offer history';
         this.offersLoading = false;
+      }
+    });
+  }
+
+  /** Offers sorted: pending first, then accepted, then rejected/expired. */
+  get sortedOffers(): Offer[] {
+    const order: Record<string, number> = { pending: 0, accepted: 1, rejected: 2, expired: 3 };
+    return [...this.offers].sort((a, b) => (order[a.status] ?? 4) - (order[b.status] ?? 4));
+  }
+
+  /** True if the current user made this offer (by email match for authenticated users). */
+  isMyOffer(offer: Offer): boolean {
+    const user = this.authService.getCurrentUser();
+    if (!user?.email || !offer.offerer) return false;
+    return (offer.offerer as { email?: string }).email?.toLowerCase() === user.email.toLowerCase();
+  }
+
+  /** Best-offer listing is still open for offers (active and not ended). */
+  isBestOfferActive(): boolean {
+    if (!this.listing || this.listing.auctionFormat !== 'best-offer') return false;
+    return this.listing.status === 'active' && !this.isAuctionEnded();
+  }
+
+  acceptOffer(offer: Offer, message?: string): void {
+    if (this.offerActionLoadingId || !this.listing) return;
+    this.offerActionLoadingId = offer._id;
+    this.offersService.acceptOffer(offer._id, message || undefined).subscribe({
+      next: () => {
+        this.offerActionLoadingId = null;
+        this.offerRespondMessage = '';
+        this.loadOffers(this.listing!._id);
+        this.loadListing(this.route.snapshot.paramMap.get('slug') || '');
+      },
+      error: (err) => {
+        this.offerActionLoadingId = null;
+        console.error('Accept offer failed', err);
+        this.offersError = err?.error?.message || 'Failed to accept offer.';
+      }
+    });
+  }
+
+  rejectOffer(offer: Offer, message?: string): void {
+    if (this.offerActionLoadingId || !this.listing) return;
+    this.offerActionLoadingId = offer._id;
+    this.offersService.rejectOffer(offer._id, message || undefined).subscribe({
+      next: () => {
+        this.offerActionLoadingId = null;
+        this.offerRespondMessage = '';
+        this.loadOffers(this.listing!._id);
+        this.loadListing(this.route.snapshot.paramMap.get('slug') || '');
+      },
+      error: (err) => {
+        this.offerActionLoadingId = null;
+        console.error('Reject offer failed', err);
+        this.offersError = err?.error?.message || 'Failed to reject offer.';
       }
     });
   }
@@ -294,6 +353,27 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
   getEndedBidCount(): number {
     if (!this.listing || this.listing.auctionFormat !== 'highest-bid') return 0;
     return this.listing.bidCount ?? 0;
+  }
+
+  /** True if we can show "Reopen" (ended with no bids for highest-bid, or no offers for best-offer). */
+  canReopenListing(): boolean {
+    if (!this.listing || !this.isOwnListing || !this.isAuctionEnded() || this.hasPrivateRoom()) return false;
+    if (this.listing.auctionFormat === 'highest-bid') return this.getEndedBidCount() === 0;
+    if (this.listing.auctionFormat === 'best-offer') return !this.offersLoading && this.offers.length === 0;
+    return false;
+  }
+
+  /** Short closed message for best-offer (no offers vs has offers). */
+  getBestOfferClosedMessage(): string {
+    if (this.offers.length === 0) return 'Listing closed with no offers.';
+    const accepted = this.offers.filter(o => o.status === 'accepted').length;
+    if (accepted > 0) return `Listing closed. You have ${accepted} accepted offer${accepted > 1 ? 's' : ''}.`;
+    return `Listing closed with ${this.offers.length} offer${this.offers.length !== 1 ? 's' : ''}.`;
+  }
+
+  /** True when this best-offer listing has at least one accepted offer (listing sold). */
+  hasAcceptedOffer(): boolean {
+    return this.offers.some(o => o.status === 'accepted');
   }
 
   /** Only registered, verified bidders can be selected as winner. */
@@ -811,12 +891,22 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
       case 'accepted':
         return 'Accepted';
       case 'rejected':
-        return 'Rejected';
+        return 'Declined';
       case 'expired':
         return 'Expired';
       default:
         return status;
     }
+  }
+
+  /** Human-readable response line for an offer (who accepted/declined and when). */
+  getOfferResponseLine(offer: Offer): string {
+    if (offer.status === 'pending' || !offer.respondedAt) return '';
+    const date = this.formatOfferDate(offer.respondedAt);
+    if (this.isOwnListing) {
+      return offer.status === 'accepted' ? `You accepted on ${date}` : `You declined on ${date}`;
+    }
+    return offer.status === 'accepted' ? `Accepted by seller on ${date}` : `Declined by seller on ${date}`;
   }
 
   isBestOfferListing(): boolean {

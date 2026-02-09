@@ -134,17 +134,25 @@
               <div class="auction-ended-content">
                 <span class="ended-icon">🏁</span>
                 <div class="ended-text">
-                  <h4>Auction Ended</h4>
-                  <!-- Seller, no bids: closed -->
-                  <p *ngIf="isOwnListing && getEndedBidCount() === 0">This auction closed with no bids. You can reopen it for another 7 days below.</p>
-                  <!-- Seller, has bids, no winner yet: select winner (only when private room is NOT enabled) -->
-                  <p *ngIf="isOwnListing && getEndedBidCount() > 0 && !listing.winner && !listing.allowPrivateRoom && !canCreatePrivateRoom() && !isPrivateRoomEnded()">Select a winner below.</p>
-                  <!-- Seller, winner selected -->
-                  <p *ngIf="isOwnListing && listing.winner">Winner has been selected.</p>
-                  <!-- Non-seller, no bids -->
-                  <p *ngIf="!isOwnListing && getEndedBidCount() === 0">This auction closed with no bids.</p>
-                  <!-- Non-seller, has bids -->
-                  <p *ngIf="!isOwnListing && getEndedBidCount() > 0">The seller will select a winner within 24 hours.</p>
+                  <h4>{{ listing.auctionFormat === 'best-offer' ? 'Listing Ended' : 'Auction Ended' }}</h4>
+                  <!-- Highest-bid: seller, no bids -->
+                  <p *ngIf="listing.auctionFormat === 'highest-bid' && isOwnListing && getEndedBidCount() === 0">This auction closed with no bids. You can reopen it for another 7 days below.</p>
+                  <!-- Highest-bid: seller, has bids, no winner yet -->
+                  <p *ngIf="listing.auctionFormat === 'highest-bid' && isOwnListing && getEndedBidCount() > 0 && !listing.winner && !listing.allowPrivateRoom && !canCreatePrivateRoom() && !isPrivateRoomEnded()">Select a winner below.</p>
+                  <!-- Highest-bid: seller, winner selected -->
+                  <p *ngIf="listing.auctionFormat === 'highest-bid' && isOwnListing && listing.winner">Winner has been selected.</p>
+                  <!-- Best-offer: seller, no offers -->
+                  <p *ngIf="listing.auctionFormat === 'best-offer' && isOwnListing && !offersLoading && offers.length === 0">This listing closed with no offers. You can reopen it for another 7 days below.</p>
+                  <!-- Best-offer: seller, has offers -->
+                  <p *ngIf="listing.auctionFormat === 'best-offer' && isOwnListing && offers.length > 0">{{ getBestOfferClosedMessage() }}</p>
+                  <!-- Highest-bid: non-seller, no bids -->
+                  <p *ngIf="listing.auctionFormat === 'highest-bid' && !isOwnListing && getEndedBidCount() === 0">This auction closed with no bids.</p>
+                  <!-- Highest-bid: non-seller, has bids -->
+                  <p *ngIf="listing.auctionFormat === 'highest-bid' && !isOwnListing && getEndedBidCount() > 0">The seller will select a winner within 24 hours.</p>
+                  <!-- Best-offer: non-seller, sold -->
+                  <p *ngIf="listing.auctionFormat === 'best-offer' && !isOwnListing && hasAcceptedOffer()">Auction ended. Listing sold.</p>
+                  <!-- Best-offer: non-seller, not sold -->
+                  <p *ngIf="listing.auctionFormat === 'best-offer' && !isOwnListing && !hasAcceptedOffer()">This listing has ended.</p>
                 </div>
               </div>
             </div>
@@ -205,21 +213,28 @@
               (click)="openSelectWinnerModal()">
               Select winner
             </button>
-            <!-- Seller: ended with no bids → Closed + Reopen -->
-            <div *ngIf="isOwnListing && isAuctionEnded() && !hasPrivateRoom() && getEndedBidCount() === 0" class="auction-ended-message">
-              <p>Auction closed with no bids.</p>
+            <!-- Seller: ended with no bids/offers → Closed + Reopen (only when nothing received) -->
+            <div *ngIf="canReopenListing()" class="auction-ended-message">
+              <p *ngIf="listing.auctionFormat === 'highest-bid'">Auction closed with no bids.</p>
+              <p *ngIf="listing.auctionFormat === 'best-offer'">Listing closed with no offers.</p>
               <button type="button" class="btn btn-primary btn-large reopen-btn" (click)="reopenAuction()" [disabled]="reopenLoading">
-                {{ reopenLoading ? 'Reopening…' : 'Reopen auction for 7 days' }}
+                {{ reopenLoading ? 'Reopening…' : 'Reopen for 7 days' }}
               </button>
+            </div>
+            <!-- Seller: best-offer ended but has offers → no Reopen -->
+            <div *ngIf="isOwnListing && listing.auctionFormat === 'best-offer' && isAuctionEnded() && !hasPrivateRoom() && offers.length > 0" class="auction-ended-message">
+              <p>{{ getBestOfferClosedMessage() }}</p>
             </div>
             <!-- Non-seller: ended → message only -->
             <div *ngIf="!isOwnListing && isAuctionEnded() && !hasPrivateRoom()" class="auction-ended-message">
-              <p *ngIf="getEndedBidCount() === 0">This auction has ended with no bids.</p>
-              <p *ngIf="getEndedBidCount() > 0">This auction has ended. The seller will select a winner within 24 hours.</p>
+              <p *ngIf="listing.auctionFormat === 'highest-bid' && getEndedBidCount() === 0">This auction has ended with no bids.</p>
+              <p *ngIf="listing.auctionFormat === 'highest-bid' && getEndedBidCount() > 0">This auction has ended. The seller will select a winner within 24 hours.</p>
+              <p *ngIf="listing.auctionFormat === 'best-offer' && hasAcceptedOffer()">Auction ended. Listing sold.</p>
+              <p *ngIf="listing.auctionFormat === 'best-offer' && !hasAcceptedOffer()">This listing has ended.</p>
             </div>
             <button 
               class="btn btn-primary btn-large" 
-              *ngIf="listing.auctionFormat === 'best-offer' && !hasPrivateRoom() && !isOwnListing"
+              *ngIf="listing.auctionFormat === 'best-offer' && !hasPrivateRoom() && !isOwnListing && isBestOfferActive()"
               (click)="openOfferModal()">
               Make Offer
             </button>
@@ -424,6 +439,14 @@
         <!-- Offers Tab Content -->
         <div class="tab-content" *ngIf="activeTab === 'offers' && listing.auctionFormat === 'best-offer'">
           <div class="offer-history">
+            <!-- Make an offer CTA (buyers, when listing is active) -->
+            <div class="offers-cta" *ngIf="!isOwnListing && isBestOfferActive()">
+              <p class="offers-cta-text">Make an offer on this item. The seller can accept, decline, or counter.</p>
+              <button type="button" class="btn btn-primary" (click)="openOfferModal()">
+                Make an offer
+              </button>
+            </div>
+
             <!-- Loading State -->
             <div *ngIf="offersLoading" class="offers-loading">
               <p>Loading offers...</p>
@@ -442,32 +465,47 @@
                   <span class="no-offers-icon">💰</span>
                   <h3>No Offers Yet</h3>
                   <p>Be the first to make an offer on this item!</p>
+                  <button *ngIf="!isOwnListing && isBestOfferActive()" type="button" class="btn btn-primary" (click)="openOfferModal()">Make an offer</button>
                 </div>
               </div>
 
               <div *ngIf="offers.length > 0" class="offers-list">
-                <div class="offer-item" *ngFor="let offer of offers" [class.accepted]="offer.status === 'accepted'" [class.rejected]="offer.status === 'rejected'">
+                <div class="offer-item" *ngFor="let offer of sortedOffers" [class.accepted]="offer.status === 'accepted'" [class.rejected]="offer.status === 'rejected'" [class.pending]="offer.status === 'pending'">
                   <div class="offer-avatar">
                     {{ offer.offererInitials || 'A' }}
                   </div>
-                  <div class="offer-info">
-                    <div class="offer-header">
-                      <div class="offer-offerer">
-                        <span class="offerer-name">{{ offer.offererName || 'Anonymous' }}</span>
-                        <span class="offer-status" [class.pending]="offer.status === 'pending'" [class.accepted]="offer.status === 'accepted'" [class.rejected]="offer.status === 'rejected'">
+                  <div class="offer-body">
+                    <div class="offer-top">
+                      <div class="offer-head">
+                        <span class="offer-from-label">Offer from <strong>{{ offer.offererName || 'Anonymous' }}</strong></span>
+                        <span class="offer-badge-your" *ngIf="isMyOffer(offer)">Your offer</span>
+                        <span class="offer-status-pill" [class.pending]="offer.status === 'pending'" [class.accepted]="offer.status === 'accepted'" [class.rejected]="offer.status === 'rejected'" [class.expired]="offer.status === 'expired'">
                           {{ formatOfferStatus(offer.status) }}
                         </span>
                       </div>
-                      <div class="offer-amount">
-                        {{ formatBidAmount(offer.amount) }}
-                      </div>
+                      <div class="offer-amount">{{ formatBidAmount(offer.amount) }}</div>
                     </div>
                     <div class="offer-meta">
-                      <span class="offer-date">{{ formatOfferDate(offer.createdAt) }}</span>
-                      <span class="offer-message" *ngIf="offer.message">{{ offer.message }}</span>
-                      <span class="seller-response" *ngIf="offer.sellerResponse && offer.status !== 'pending'">
-                        Seller: {{ offer.sellerResponse }}
+                      <span class="offer-date">Offered {{ formatOfferDate(offer.createdAt) }}</span>
+                      <span class="offer-responded" *ngIf="getOfferResponseLine(offer)">
+                        · {{ getOfferResponseLine(offer) }}
                       </span>
+                    </div>
+                    <p class="offer-message" *ngIf="offer.message">{{ offer.message }}</p>
+                    <p class="seller-response" *ngIf="offer.sellerResponse && offer.status !== 'pending'">
+                      <strong>Seller:</strong> {{ offer.sellerResponse }}
+                    </p>
+                    <!-- Seller actions on pending offers -->
+                    <div class="offer-actions" *ngIf="isOwnListing && offer.status === 'pending'">
+                      <input type="text" class="offer-respond-input" placeholder="Optional message to buyer" [(ngModel)]="offerRespondMessage" />
+                      <div class="offer-action-buttons">
+                        <button type="button" class="btn btn-primary btn-accept" (click)="acceptOffer(offer, offerRespondMessage)" [disabled]="offerActionLoadingId !== null">
+                          {{ offerActionLoadingId === offer._id ? 'Accepting…' : 'Accept' }}
+                        </button>
+                        <button type="button" class="btn btn-secondary btn-reject" (click)="rejectOffer(offer, offerRespondMessage)" [disabled]="offerActionLoadingId !== null">
+                          {{ offerActionLoadingId === offer._id ? 'Declining…' : 'Decline' }}
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
