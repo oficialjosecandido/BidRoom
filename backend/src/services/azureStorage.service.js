@@ -137,6 +137,24 @@ class AzureStorageService {
   }
 
   /**
+   * Upload proof of delivery (PDF, JPG, PNG). Stored under prefix proof-of-delivery/.
+   */
+  async uploadProofOfDelivery(buffer, originalFilename, mimetype) {
+    if (!this.containerClient) {
+      throw new Error('Azure Storage is not configured. Please set AZURE_STORAGE_CONNECTION_STRING.');
+    }
+    const uuid = require('uuid').v4();
+    const ext = this.getFileExtension(originalFilename, mimetype);
+    const sanitized = originalFilename.replace(/[^a-zA-Z0-9.-]/g, '-').toLowerCase().substring(0, 80);
+    const blobName = `proof-of-delivery/${uuid}-${sanitized}${ext}`;
+    const blockBlobClient = this.containerClient.getBlockBlobClient(blobName);
+    await blockBlobClient.upload(buffer, buffer.length, {
+      blobHTTPHeaders: { blobContentType: mimetype, blobCacheControl: 'private, max-age=2592000' }
+    });
+    return blockBlobClient.url;
+  }
+
+  /**
    * Base URL for blobs in our container (e.g. https://account.blob.core.windows.net/container-name/).
    * Used to detect our own proof-of-payment URLs for 30-day cleanup.
    */

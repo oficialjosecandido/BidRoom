@@ -39,8 +39,31 @@ async function runCleanup() {
     }
   }
 
-  if (deleted > 0) {
-    console.log(`[ProofOfPaymentCleanup] Deleted ${deleted} file(s) older than ${DAYS_TO_RETAIN} days.`);
+  const deliveryCutoff = new Date();
+  deliveryCutoff.setDate(deliveryCutoff.getDate() - DAYS_TO_RETAIN);
+  const withDeliveryProof = await Transaction.find({
+    shippedAt: { $lte: deliveryCutoff },
+    sellerProofOfDeliveryUrl: { $nin: [null, ''] }
+  }).lean();
+
+  let deliveryDeleted = 0;
+  for (const t of withDeliveryProof) {
+    const url = t.sellerProofOfDeliveryUrl;
+    if (!url || !url.startsWith(baseUrl)) continue;
+    try {
+      await azureStorageService.deleteImage(url);
+      await Transaction.updateOne(
+        { _id: t._id },
+        { $set: { sellerProofOfDeliveryUrl: null } }
+      );
+      deliveryDeleted++;
+    } catch (err) {
+      console.error('Proof-of-delivery cleanup: failed for transaction', t._id, err.message);
+    }
+  }
+
+  if (deleted > 0 || deliveryDeleted > 0) {
+    console.log(`[ProofCleanup] Deleted ${deleted} payment proof(s), ${deliveryDeleted} delivery proof(s) older than ${DAYS_TO_RETAIN} days.`);
   }
 }
 

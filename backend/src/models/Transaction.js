@@ -50,6 +50,8 @@ const transactionSchema = new mongoose.Schema({
   sellerBankAccountName: { type: String, trim: true, default: null },
   /** Buyer: optional proof of payment (e.g. receipt/screenshot URL) when marking paid */
   buyerProofOfPaymentUrl: { type: String, trim: true, default: null },
+  /** Seller: optional proof of delivery (e.g. shipping receipt URL) when marking shipped */
+  sellerProofOfDeliveryUrl: { type: String, trim: true, default: null },
   /** When seller must ship by (paidAt or payment deadline + listing handling time); used for Phase 2 */
   handlingDeadline: {
     type: Date,

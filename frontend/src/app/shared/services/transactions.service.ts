@@ -52,6 +52,8 @@ export interface Transaction {
   sellerBankAccountName?: string | null;
   /** Buyer optional proof of payment URL when marking paid */
   buyerProofOfPaymentUrl?: string | null;
+  /** Seller optional proof of delivery URL when marking shipped */
+  sellerProofOfDeliveryUrl?: string | null;
   /** Date by which seller must ship (after paid) */
   handlingDeadline?: string | null;
   createdAt: string;
@@ -90,6 +92,13 @@ export class TransactionsService {
     return this.http.post<{ url: string }>(`${this.uploadsUrl}/proof-of-payment`, formData);
   }
 
+  /** Upload proof of delivery (PDF, JPG or PNG, max 30MB). Returns the blob URL. */
+  uploadProofOfDelivery(file: File): Observable<{ url: string }> {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.http.post<{ url: string }>(`${this.uploadsUrl}/proof-of-delivery`, formData);
+  }
+
   getMyTransactions(): Observable<TransactionsResponse> {
     return this.http.get<TransactionsResponse>(this.apiUrl);
   }
@@ -108,6 +117,7 @@ export class TransactionsService {
       sellerBankSwift?: string;
       sellerBankAccountName?: string;
       buyerProofOfPaymentUrl?: string;
+      sellerProofOfDeliveryUrl?: string;
     }
   ): Observable<Transaction> {
     return this.http.patch<Transaction>(`${this.apiUrl}/${id}`, body);

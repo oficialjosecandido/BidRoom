@@ -130,6 +130,40 @@ router.post('/proof-of-payment', authenticateToken, (req, res, next) => {
 });
 
 /**
+ * POST /api/uploads/proof-of-delivery
+ * Upload a single proof of delivery file (PDF, JPG or PNG, max 30MB). Returns { url }.
+ */
+router.post('/proof-of-delivery', authenticateToken, (req, res, next) => {
+  proofUpload.single('file')(req, res, (err) => {
+    if (err) {
+      if (err.code === 'LIMIT_FILE_SIZE') {
+        return res.status(400).json({ error: 'File too large', message: 'Proof of delivery must be 30MB or less.' });
+      }
+      return res.status(400).json({ error: 'Upload error', message: err.message || 'Invalid file.' });
+    }
+    next();
+  });
+}, async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({
+        error: 'No file uploaded',
+        message: 'Please upload a PDF, JPG or PNG file (max 30MB).'
+      });
+    }
+    const url = await azureStorageService.uploadProofOfDelivery(
+      req.file.buffer,
+      req.file.originalname,
+      req.file.mimetype
+    );
+    res.json({ url });
+  } catch (error) {
+    console.error('Error uploading proof of delivery:', error);
+    res.status(500).json({ error: 'Failed to upload file', message: error.message });
+  }
+});
+
+/**
  * DELETE /api/uploads
  * Delete images from Azure Blob Storage
  * Requires authentication

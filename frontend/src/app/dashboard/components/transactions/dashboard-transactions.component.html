@@ -44,14 +44,6 @@
           <p class="card-role" *ngIf="isSeller(t)">
             You are the <strong>seller</strong>. Buyer: {{ t.buyer.firstName }} {{ t.buyer.lastName }}
           </p>
-          <!-- Seller: buyer's proof of payment (when paid and proof was uploaded) -->
-          <div class="proof-of-payment-seller" *ngIf="isSeller(t) && t.buyerProofOfPaymentUrl && getEffectiveStatus(t) !== 'pending_payment'">
-            <strong>Proof of payment:</strong>
-            <div class="proof-seller-content">
-              <img *ngIf="isProofImageUrl(t.buyerProofOfPaymentUrl)" [src]="t.buyerProofOfPaymentUrl" alt="Proof of payment" class="proof-seller-img" />
-              <a [href]="t.buyerProofOfPaymentUrl" target="_blank" rel="noopener noreferrer" class="proof-seller-link">{{ isProofImageUrl(t.buyerProofOfPaymentUrl) ? 'Open full size' : 'View proof of payment' }}</a>
-            </div>
-          </div>
           <!-- Buyer: bank details (stored on transaction); always show section when pending payment -->
           <div class="bank-details buyer-view" *ngIf="isBuyer(t) && getEffectiveStatus(t) === 'pending_payment'">
             <strong>Seller bank details (for transfer):</strong>
@@ -69,6 +61,14 @@
       </a>
 
       <div class="card-actions">
+        <!-- Seller: buyer's proof of payment (outside link so "View proof" works) -->
+        <div class="proof-of-payment-seller" *ngIf="isSeller(t) && t.buyerProofOfPaymentUrl && getEffectiveStatus(t) !== 'pending_payment'">
+          <strong>Proof of payment:</strong>
+          <div class="proof-seller-content">
+            <img *ngIf="isProofImageUrl(t.buyerProofOfPaymentUrl)" [src]="t.buyerProofOfPaymentUrl" alt="Proof of payment" class="proof-seller-img" />
+            <a [href]="t.buyerProofOfPaymentUrl" target="_blank" rel="noopener noreferrer" class="proof-seller-link">View proof of payment (opens in new tab)</a>
+          </div>
+        </div>
         <!-- Seller: bank details (Phase 1 - payment window) -->
         <ng-container *ngIf="isSeller(t) && getEffectiveStatus(t) === 'pending_payment'">
           <button *ngIf="!showBankFormId" type="button" class="btn btn-secondary" (click)="toggleBankForm(t)">
@@ -119,11 +119,39 @@
           <button *ngIf="['paid','shipped','delivered'].includes(getEffectiveStatus(t))" type="button" class="btn btn-secondary" (click)="markAsCompleted(t)" [disabled]="updatingId === t._id">
             {{ updatingId === t._id ? 'Updating…' : 'Mark as completed' }}
           </button>
+          <!-- Buyer: seller's proof of delivery (outside link so view works) -->
+          <div class="proof-of-payment-seller proof-of-delivery-buyer" *ngIf="isBuyer(t) && t.sellerProofOfDeliveryUrl && ['shipped','delivered','completed'].includes(getEffectiveStatus(t))">
+            <strong>Proof of delivery:</strong>
+            <div class="proof-seller-content">
+              <img *ngIf="isProofImageUrl(t.sellerProofOfDeliveryUrl)" [src]="t.sellerProofOfDeliveryUrl" alt="Proof of delivery" class="proof-seller-img" />
+              <a [href]="t.sellerProofOfDeliveryUrl" target="_blank" rel="noopener noreferrer" class="proof-seller-link">View proof of delivery (opens in new tab)</a>
+            </div>
+          </div>
         </ng-container>
 
-        <!-- Seller actions -->
-        <ng-container *ngIf="isSeller(t)">
-          <button *ngIf="getEffectiveStatus(t) === 'pending_payment' || getEffectiveStatus(t) === 'paid'" type="button" class="btn btn-primary" (click)="toggleTrackingForm(t)">
+        <!-- Seller actions: upload proof of delivery, then mark as shipped -->
+        <ng-container *ngIf="isSeller(t) && (getEffectiveStatus(t) === 'pending_payment' || getEffectiveStatus(t) === 'paid')">
+          <input
+            type="file"
+            #deliveryProofFileInput
+            [accept]="transactionsService.proofOfPaymentAccept"
+            (change)="onDeliveryProofFileSelected(t, deliveryProofFileInput)"
+            class="file-input-hidden"
+            style="display: none;"
+          />
+          <button type="button" class="btn btn-secondary" (click)="triggerDeliveryProofUpload(t, deliveryProofFileInput)" [disabled]="deliveryProofUploadingTxId === t._id">
+            {{ getDeliveryProofUploadButtonLabel(t) }}
+          </button>
+          <div class="proof-preview" *ngIf="hasDeliveryProofUploaded(t)">
+            <div class="proof-preview-content">
+              <img *ngIf="isDeliveryProofPreviewImage(t)" [src]="getDeliveryProofUploadedUrl(t)" [alt]="getDeliveryProofFileName(t)" class="proof-preview-img" />
+              <a *ngIf="!isDeliveryProofPreviewImage(t)" [href]="getDeliveryProofUploadedUrl(t)" target="_blank" rel="noopener noreferrer" class="proof-preview-link">View</a>
+              <span class="proof-preview-filename">{{ getDeliveryProofFileName(t) }}</span>
+              <button type="button" class="btn btn-remove" (click)="removeDeliveryProof(t)">Remove</button>
+            </div>
+          </div>
+          <p class="form-error" *ngIf="getDeliveryProofUploadError(t)">{{ getDeliveryProofUploadError(t) }}</p>
+          <button type="button" class="btn btn-primary" (click)="toggleTrackingForm(t)" [disabled]="!hasDeliveryProofUploaded(t) || updatingId === t._id">
             {{ showTrackingFormId === t._id ? 'Cancel' : 'Mark as shipped' }}
           </button>
           <div class="tracking-form" *ngIf="showTrackingFormId === t._id">

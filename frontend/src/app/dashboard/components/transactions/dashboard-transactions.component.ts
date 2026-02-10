@@ -32,6 +32,11 @@ export class DashboardTransactionsComponent implements OnInit {
   proofUploadErrorByTxId: Record<string, string> = {};
   /** Transaction ID currently uploading proof (for "Uploading…" label). */
   proofUploadingTxId: string | null = null;
+  /** Proof of delivery (seller): uploaded URL and file name per transaction. */
+  deliveryProofUploadedUrlByTxId: Record<string, string> = {};
+  deliveryProofFileNameByTxId: Record<string, string> = {};
+  deliveryProofUploadingTxId: string | null = null;
+  deliveryProofErrorByTxId: Record<string, string> = {};
 
   constructor(public transactionsService: TransactionsService) {}
 
@@ -317,14 +322,88 @@ export class DashboardTransactionsComponent implements OnInit {
     }
   }
 
+  triggerDeliveryProofUpload(t: Transaction, input: HTMLInputElement): void {
+    input.value = '';
+    input.click();
+  }
+
+  hasDeliveryProofUploaded(t: Transaction): boolean {
+    return !!this.deliveryProofUploadedUrlByTxId[t._id];
+  }
+
+  getDeliveryProofUploadButtonLabel(t: Transaction): string {
+    if (this.deliveryProofUploadingTxId === t._id) return 'Uploading…';
+    if (this.deliveryProofUploadedUrlByTxId[t._id]) return 'Proof uploaded';
+    return 'Upload proof of delivery';
+  }
+
+  getDeliveryProofFileName(t: Transaction): string {
+    return this.deliveryProofFileNameByTxId[t._id] || '';
+  }
+
+  getDeliveryProofUploadedUrl(t: Transaction): string | null {
+    return this.deliveryProofUploadedUrlByTxId[t._id] || null;
+  }
+
+  isDeliveryProofPreviewImage(t: Transaction): boolean {
+    const name = (this.deliveryProofFileNameByTxId[t._id] || '').toLowerCase();
+    return /\.(jpg|jpeg|png)$/.test(name);
+  }
+
+  removeDeliveryProof(t: Transaction): void {
+    delete this.deliveryProofUploadedUrlByTxId[t._id];
+    delete this.deliveryProofFileNameByTxId[t._id];
+    delete this.deliveryProofErrorByTxId[t._id];
+  }
+
+  getDeliveryProofUploadError(t: Transaction): string | null {
+    return this.deliveryProofErrorByTxId[t._id] || null;
+  }
+
+  onDeliveryProofFileSelected(t: Transaction, input: HTMLInputElement): void {
+    delete this.deliveryProofErrorByTxId[t._id];
+    const file = input.files?.[0];
+    if (!file) return;
+    const maxSize = this.transactionsService.proofOfPaymentMaxSize;
+    if (file.size > maxSize) {
+      this.deliveryProofErrorByTxId[t._id] = `File must be 30MB or less (${(file.size / 1024 / 1024).toFixed(1)}MB selected).`;
+      input.value = '';
+      return;
+    }
+    const allowed = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'];
+    if (!allowed.includes(file.type)) {
+      this.deliveryProofErrorByTxId[t._id] = 'Only PDF, JPG and PNG files are allowed.';
+      input.value = '';
+      return;
+    }
+    this.deliveryProofUploadingTxId = t._id;
+    this.transactionsService.uploadProofOfDelivery(file).subscribe({
+      next: (res) => {
+        this.deliveryProofUploadedUrlByTxId[t._id] = res.url;
+        this.deliveryProofFileNameByTxId[t._id] = file.name;
+        this.deliveryProofUploadingTxId = null;
+        delete this.deliveryProofErrorByTxId[t._id];
+        input.value = '';
+      },
+      error: (err) => {
+        this.deliveryProofErrorByTxId[t._id] = err.error?.message || 'Upload failed. Try again.';
+        this.deliveryProofUploadingTxId = null;
+        input.value = '';
+      }
+    });
+  }
+
   submitShipped(t: Transaction): void {
     if (this.updatingId || t.role !== 'seller' || !['pending_payment', 'paid'].includes(this.getEffectiveStatus(t))) return;
+    const proofUrl = this.deliveryProofUploadedUrlByTxId[t._id];
+    if (!proofUrl) return;
     this.updatingId = t._id;
     this.transactionsService
       .updateTransaction(t._id, {
         status: 'shipped',
         trackingNumber: this.trackingNumber || undefined,
-        trackingCarrier: this.trackingCarrier || undefined
+        trackingCarrier: this.trackingCarrier || undefined,
+        sellerProofOfDeliveryUrl: proofUrl
       })
       .subscribe({
         next: (updated) => {
@@ -333,6 +412,9 @@ export class DashboardTransactionsComponent implements OnInit {
           this.showTrackingFormId = null;
           this.trackingNumber = '';
           this.trackingCarrier = '';
+          delete this.deliveryProofUploadedUrlByTxId[t._id];
+          delete this.deliveryProofFileNameByTxId[t._id];
+          delete this.deliveryProofErrorByTxId[t._id];
         },
         error: () => (this.updatingId = null)
       });

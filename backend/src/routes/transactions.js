@@ -105,7 +105,7 @@ router.patch('/:id', async (req, res) => {
       return res.status(403).json({ error: 'You do not have access to this transaction' });
     }
 
-    const { status, trackingNumber, trackingCarrier, sellerBankIban, sellerBankSwift, sellerBankAccountName, buyerProofOfPaymentUrl } = req.body;
+    const { status, trackingNumber, trackingCarrier, sellerBankIban, sellerBankSwift, sellerBankAccountName, buyerProofOfPaymentUrl, sellerProofOfDeliveryUrl } = req.body;
     const ts = transaction.transactionStatus ?? transaction.status;
     const ps = transaction.paymentStatus ?? 'pending';
     const ss = transaction.sendingStatus ?? 'pending';
@@ -120,6 +120,7 @@ router.patch('/:id', async (req, res) => {
         transaction.shippedAt = transaction.shippedAt || new Date();
         if (trackingNumber != null) transaction.trackingNumber = trackingNumber;
         if (trackingCarrier != null) transaction.trackingCarrier = trackingCarrier;
+        if (sellerProofOfDeliveryUrl != null) transaction.sellerProofOfDeliveryUrl = sellerProofOfDeliveryUrl;
       } else if (status === 'cancelled' && ts === 'pending_payment') {
         transaction.transactionStatus = 'cancelled';
       }
