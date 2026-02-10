@@ -31,6 +31,7 @@ const { router: paymentsRouter, stripeWebhookHandler } = require('./routes/payme
 
 // Import services
 const auctionEndScheduler = require('./services/auctionEndScheduler');
+const { runCleanup: runProofOfPaymentCleanup } = require('./services/proofOfPaymentCleanup');
 
 const app = express();
 const server = http.createServer(app);
@@ -241,6 +242,11 @@ const startServer = async () => {
       // Start auction end scheduler (checks every 1 minute)
       auctionEndScheduler.startScheduler(1, io);
       console.log(`⏰ Auction end scheduler started`);
+
+      // Proof-of-payment cleanup: delete files from Azure 30 days after paid (run daily)
+      const PROOF_CLEANUP_MS = 24 * 60 * 60 * 1000;
+      setTimeout(() => runProofOfPaymentCleanup().catch(e => console.error('Proof-of-payment cleanup:', e.message)), 60000);
+      setInterval(() => runProofOfPaymentCleanup().catch(e => console.error('Proof-of-payment cleanup:', e.message)), PROOF_CLEANUP_MS);
     });
   } catch (error) {
     console.error('❌ Failed to start server:', error.message);

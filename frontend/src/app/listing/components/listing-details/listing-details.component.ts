@@ -67,8 +67,6 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
   offerModalError: string | null = null;
   /** ID of offer being accepted/rejected (for loading state) */
   offerActionLoadingId: string | null = null;
-  /** Optional message when accepting/rejecting an offer */
-  offerRespondMessage: string = '';
 
   constructor(
     private route: ActivatedRoute,
@@ -196,13 +194,18 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
     return this.listing.status === 'active' && !this.isAuctionEnded();
   }
 
-  acceptOffer(offer: Offer, message?: string): void {
+  /** True when seller can accept/decline offers (Best Offer listing and listing end date has passed). */
+  canSellerAcceptOrDeclineOffers(): boolean {
+    if (!this.listing || this.listing.auctionFormat !== 'best-offer') return false;
+    return this.isAuctionEnded();
+  }
+
+  acceptOffer(offer: Offer): void {
     if (this.offerActionLoadingId || !this.listing) return;
     this.offerActionLoadingId = offer._id;
-    this.offersService.acceptOffer(offer._id, message || undefined).subscribe({
+    this.offersService.acceptOffer(offer._id).subscribe({
       next: () => {
         this.offerActionLoadingId = null;
-        this.offerRespondMessage = '';
         this.loadOffers(this.listing!._id);
         this.loadListing(this.route.snapshot.paramMap.get('slug') || '');
       },
@@ -214,13 +217,12 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
     });
   }
 
-  rejectOffer(offer: Offer, message?: string): void {
+  rejectOffer(offer: Offer): void {
     if (this.offerActionLoadingId || !this.listing) return;
     this.offerActionLoadingId = offer._id;
-    this.offersService.rejectOffer(offer._id, message || undefined).subscribe({
+    this.offersService.rejectOffer(offer._id).subscribe({
       next: () => {
         this.offerActionLoadingId = null;
-        this.offerRespondMessage = '';
         this.loadOffers(this.listing!._id);
         this.loadListing(this.route.snapshot.paramMap.get('slug') || '');
       },
@@ -596,14 +598,24 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
     };
     if (!this.isAuthenticated && email) offerData.email = email;
     this.offersService.createOffer(offerData).subscribe({
-      next: () => {
+      next: (created) => {
         this.offerSubmitting = false;
         this.closeOfferModal();
         if (this.listing?._id) this.loadOffers(this.listing._id);
+        const wasAccepted = created?.status === 'accepted';
+        if (wasAccepted && this.listing?.slug) {
+          this.loadListing(this.listing.slug);
+        }
+        const aboveMinimum = this.listing?.minimumOfferPrice != null && amount >= this.listing.minimumOfferPrice;
+        const message = wasAccepted
+          ? 'Your offer met the minimum and was automatically accepted. The listing is now closed.'
+          : aboveMinimum
+            ? 'Your offer has been published.'
+            : 'Your offer has been sent to the seller. They will review it and you\'ll be notified of their decision.';
         Swal.fire({
           icon: 'success',
-          title: 'Offer sent',
-          html: 'Your offer has been sent to the seller. They will review it and you\'ll be notified of their decision.',
+          title: wasAccepted ? 'Offer accepted!' : 'Offer sent',
+          html: message,
           confirmButtonColor: '#7A4F84'
         });
       },

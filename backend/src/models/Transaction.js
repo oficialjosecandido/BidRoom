@@ -19,16 +19,41 @@ const transactionSchema = new mongoose.Schema({
     required: true,
     index: true
   },
+  /** Set for auction (highest-bid) transactions */
   winnerBid: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Bid',
-    required: true
+    required: false,
+    default: null
+  },
+  /** Set for best-offer transactions when an offer is accepted */
+  winnerOffer: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Offer',
+    required: false,
+    default: null
   },
   /** Final price (winning bid amount) */
   amount: {
     type: Number,
     required: true,
     min: 0
+  },
+  /** Payment window: buyer must pay and seller should add bank details by this time (T+24h from creation) */
+  paymentDeadline: {
+    type: Date,
+    default: null
+  },
+  /** Seller bank details (for this transaction only); visible to buyer for transfer */
+  sellerBankIban: { type: String, trim: true, default: null },
+  sellerBankSwift: { type: String, trim: true, default: null },
+  sellerBankAccountName: { type: String, trim: true, default: null },
+  /** Buyer: optional proof of payment (e.g. receipt/screenshot URL) when marking paid */
+  buyerProofOfPaymentUrl: { type: String, trim: true, default: null },
+  /** When seller must ship by (paidAt or payment deadline + listing handling time); used for Phase 2 */
+  handlingDeadline: {
+    type: Date,
+    default: null
   },
   /** Overall transaction state */
   transactionStatus: {

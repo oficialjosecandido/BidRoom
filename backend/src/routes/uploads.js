@@ -26,7 +26,7 @@ const fileFilter = (req, file, cb) => {
   }
 };
 
-// Multer configuration
+// Multer configuration for listing images
 const upload = multer({
   storage: storage,
   fileFilter: fileFilter,
@@ -34,6 +34,22 @@ const upload = multer({
     fileSize: 5 * 1024 * 1024, // 5MB per file
     files: 10 // Maximum 10 files per request
   }
+});
+
+// Proof of payment: PDF, JPG, PNG only; single file; max 30MB
+const PROOF_MAX_SIZE = 30 * 1024 * 1024;
+const proofFileFilter = (req, file, cb) => {
+  const allowed = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'];
+  if (allowed.includes(file.mimetype)) {
+    cb(null, true);
+  } else {
+    cb(new Error('Invalid file type. Only PDF, JPG and PNG are allowed.'), false);
+  }
+};
+const proofUpload = multer({
+  storage: multer.memoryStorage(),
+  fileFilter: proofFileFilter,
+  limits: { fileSize: PROOF_MAX_SIZE, files: 1 }
 });
 
 /**
@@ -68,6 +84,46 @@ router.post('/', authenticateToken, upload.array('images', 10), async (req, res)
     console.error('Error uploading images:', error);
     res.status(500).json({
       error: 'Failed to upload images',
+      message: error.message
+    });
+  }
+});
+
+/**
+ * POST /api/uploads/proof-of-payment
+ * Upload a single proof of payment file (PDF, JPG or PNG, max 30MB).
+ * Returns { url } for use in PATCH /api/transactions/:id (buyerProofOfPaymentUrl).
+ */
+router.post('/proof-of-payment', authenticateToken, (req, res, next) => {
+  proofUpload.single('file')(req, res, (err) => {
+    if (err) {
+      if (err.code === 'LIMIT_FILE_SIZE') {
+        return res.status(400).json({ error: 'File too large', message: 'Proof of payment must be 30MB or less.' });
+      }
+      return res.status(400).json({ error: 'Upload error', message: err.message || 'Invalid file.' });
+    }
+    next();
+  });
+}, async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({
+        error: 'No file uploaded',
+        message: 'Please upload a PDF, JPG or PNG file (max 30MB).'
+      });
+    }
+
+    const url = await azureStorageService.uploadProofOfPayment(
+      req.file.buffer,
+      req.file.originalname,
+      req.file.mimetype
+    );
+
+    res.json({ url });
+  } catch (error) {
+    console.error('Error uploading proof of payment:', error);
+    res.status(500).json({
+      error: 'Failed to upload file',
       message: error.message
     });
   }

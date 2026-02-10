@@ -11,7 +11,7 @@ export interface Offer {
     firstName: string;
     lastName: string;
     email: string;
-  };
+  } | null;
   amount: number;
   message?: string;
   status: 'pending' | 'accepted' | 'rejected' | 'expired';
@@ -19,6 +19,10 @@ export interface Offer {
   sellerResponse?: string;
   offererName?: string;
   offererInitials?: string;
+  /** Whether the bidder has verified their email (only for registered users). */
+  offererVerified?: boolean;
+  /** Membership tier from balance: Bronze, Silver, Gold, or Platinum (only for registered users with customer record). */
+  offererTier?: string | null;
   createdAt: string;
   updatedAt: string;
 }

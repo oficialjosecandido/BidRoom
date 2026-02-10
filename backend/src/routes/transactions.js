@@ -1,7 +1,9 @@
 const express = require('express');
 const Transaction = require('../models/Transaction');
+const Listing = require('../models/Listing');
 const User = require('../models/User');
 const { authenticateToken } = require('../middleware/auth');
+const { sendSellerProofOfPaymentNotification } = require('../services/emailService');
 
 const router = express.Router();
 
@@ -103,12 +105,15 @@ router.patch('/:id', async (req, res) => {
       return res.status(403).json({ error: 'You do not have access to this transaction' });
     }
 
-    const { status, trackingNumber, trackingCarrier } = req.body;
+    const { status, trackingNumber, trackingCarrier, sellerBankIban, sellerBankSwift, sellerBankAccountName, buyerProofOfPaymentUrl } = req.body;
     const ts = transaction.transactionStatus ?? transaction.status;
     const ps = transaction.paymentStatus ?? 'pending';
     const ss = transaction.sendingStatus ?? 'pending';
 
     if (isSeller) {
+      if (sellerBankIban !== undefined) transaction.sellerBankIban = sellerBankIban || null;
+      if (sellerBankSwift !== undefined) transaction.sellerBankSwift = sellerBankSwift || null;
+      if (sellerBankAccountName !== undefined) transaction.sellerBankAccountName = sellerBankAccountName || null;
       if (status === 'shipped') {
         transaction.transactionStatus = 'shipped';
         transaction.sendingStatus = 'shipped';
@@ -125,6 +130,14 @@ router.patch('/:id', async (req, res) => {
         transaction.transactionStatus = 'paid';
         transaction.paymentStatus = 'paid';
         transaction.paidAt = transaction.paidAt || new Date();
+        if (buyerProofOfPaymentUrl != null) transaction.buyerProofOfPaymentUrl = buyerProofOfPaymentUrl;
+        if (!transaction.handlingDeadline) {
+          const listing = await Listing.findById(transaction.listing).select('handlingTime').lean();
+          const days = (listing && listing.handlingTime) ? Math.max(1, listing.handlingTime) : 3;
+          const d = new Date();
+          d.setDate(d.getDate() + days);
+          transaction.handlingDeadline = d;
+        }
       } else if (status === 'delivered' && ts === 'shipped') {
         transaction.transactionStatus = 'delivered';
         transaction.sendingStatus = 'delivered';
@@ -140,6 +153,18 @@ router.patch('/:id', async (req, res) => {
       .populate('seller', 'firstName lastName email')
       .populate('buyer', 'firstName lastName email')
       .lean();
+
+    if (isBuyer && status === 'paid' && buyerProofOfPaymentUrl && updated.seller?.email) {
+      const listingTitle = updated.listing?.title || 'Item';
+      const buyerName = [updated.buyer?.firstName, updated.buyer?.lastName].filter(Boolean).join(' ') || 'Buyer';
+      sendSellerProofOfPaymentNotification(
+        updated.seller.email,
+        updated.seller.firstName,
+        listingTitle,
+        buyerName,
+        buyerProofOfPaymentUrl
+      ).catch(err => console.error('Proof of payment notification email:', err.message));
+    }
 
     res.json({ ...updated, ...normalizeTransactionStatus(updated) });
   } catch (error) {

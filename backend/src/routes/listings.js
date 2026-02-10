@@ -6,6 +6,7 @@ const Watchlist = require('../models/Watchlist');
 const { authenticateToken, optionalAuth } = require('../middleware/auth');
 const { handleWinnerSelection } = require('../services/auctionNotificationService');
 const { getReviewScoresForUser } = require('../services/reviewService');
+const { logAuctionCreated } = require('../services/bestOfferLogger');
 
 const router = express.Router();
 
@@ -589,6 +590,10 @@ router.post('/', authenticateToken, async (req, res) => {
     const populatedListing = await Listing.findById(listing._id)
       .populate('seller', 'firstName lastName email')
       .lean();
+
+    if (populatedListing.auctionFormat === 'best-offer') {
+      logAuctionCreated(populatedListing);
+    }
 
     const timeRemaining = new Listing(populatedListing).getTimeRemaining();
 

@@ -19,8 +19,21 @@ export class DashboardTransactionsComponent implements OnInit {
   showTrackingFormId: string | null = null;
   trackingNumber = '';
   trackingCarrier = '';
+  showBankFormId: string | null = null;
+  bankIban = '';
+  bankSwift = '';
+  bankAccountName = '';
+  showProofInputId: string | null = null;
+  /** Selected proof file per transaction (one file, PDF/JPG/PNG, max 30MB). */
+  proofSelectedFileByTxId: Record<string, File> = {};
+  proofSelectedFileNameByTxId: Record<string, string> = {};
+  /** Uploaded proof URL per transaction (set after successful upload; enables "Mark as paid"). */
+  proofUploadedUrlByTxId: Record<string, string> = {};
+  proofUploadErrorByTxId: Record<string, string> = {};
+  /** Transaction ID currently uploading proof (for "Uploading…" label). */
+  proofUploadingTxId: string | null = null;
 
-  constructor(private transactionsService: TransactionsService) {}
+  constructor(public transactionsService: TransactionsService) {}
 
   ngOnInit(): void {
     this.loadTransactions();
@@ -102,20 +115,174 @@ export class DashboardTransactionsComponent implements OnInit {
     return slug ? `/listing/${slug}/payment` : '#';
   }
 
-  markAsPaid(t: Transaction): void {
-    if (this.updatingId || t.role !== 'buyer' || this.getEffectiveStatus(t) !== 'pending_payment') return;
+  formatPaymentDeadline(t: Transaction): string {
+    const d = t.paymentDeadline;
+    if (!d) return '';
+    const date = new Date(d);
+    return date.toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' });
+  }
+
+  hasPaymentDeadlinePassed(t: Transaction): boolean {
+    if (!t.paymentDeadline) return false;
+    return new Date(t.paymentDeadline) < new Date();
+  }
+
+  hasSellerBankDetails(t: Transaction): boolean {
+    return !!(t.sellerBankIban || t.sellerBankSwift || t.sellerBankAccountName);
+  }
+
+  /** True if the proof URL is likely an image (for seller preview). */
+  isProofImageUrl(url: string | null | undefined): boolean {
+    if (!url) return false;
+    const path = url.split('?')[0].toLowerCase();
+    return /\.(jpg|jpeg|png)$/.test(path);
+  }
+
+  toggleBankForm(t: Transaction): void {
+    if (this.showBankFormId === t._id) {
+      this.showBankFormId = null;
+      this.bankIban = '';
+      this.bankSwift = '';
+      this.bankAccountName = '';
+    } else {
+      this.showBankFormId = t._id;
+      this.bankIban = t.sellerBankIban || '';
+      this.bankSwift = t.sellerBankSwift || '';
+      this.bankAccountName = t.sellerBankAccountName || '';
+    }
+  }
+
+  submitBankDetails(t: Transaction): void {
+    if (this.updatingId || t.role !== 'seller') return;
     this.updatingId = t._id;
-    this.transactionsService.updateTransaction(t._id, { status: 'paid' }).subscribe({
-      next: (updated) => {
-        this.replaceTransaction(updated);
-        this.updatingId = null;
+    this.transactionsService
+      .updateTransaction(t._id, {
+        sellerBankIban: this.bankIban || undefined,
+        sellerBankSwift: this.bankSwift || undefined,
+        sellerBankAccountName: this.bankAccountName || undefined
+      })
+      .subscribe({
+        next: (updated) => {
+          this.replaceTransaction(updated);
+          this.updatingId = null;
+          this.showBankFormId = null;
+          this.bankIban = '';
+          this.bankSwift = '';
+          this.bankAccountName = '';
+        },
+        error: () => (this.updatingId = null)
+      });
+  }
+
+  toggleProofInput(t: Transaction): void {
+    if (this.showProofInputId === t._id) {
+      this.showProofInputId = null;
+      delete this.proofSelectedFileByTxId[t._id];
+      delete this.proofSelectedFileNameByTxId[t._id];
+      delete this.proofUploadedUrlByTxId[t._id];
+      delete this.proofUploadErrorByTxId[t._id];
+    } else {
+      this.showProofInputId = t._id;
+    }
+  }
+
+  getProofUploadError(t: Transaction): string | null {
+    return this.proofUploadErrorByTxId[t._id] || null;
+  }
+
+  triggerProofUpload(t: Transaction, input: HTMLInputElement): void {
+    input.value = '';
+    input.click();
+  }
+
+  hasProofUploaded(t: Transaction): boolean {
+    return !!this.proofUploadedUrlByTxId[t._id];
+  }
+
+  getProofUploadButtonLabel(t: Transaction): string {
+    if (this.proofUploadingTxId === t._id) return 'Uploading…';
+    if (this.proofUploadedUrlByTxId[t._id]) return 'Proof uploaded';
+    return 'Upload proof of payment';
+  }
+
+  getProofFileName(t: Transaction): string {
+    return this.proofSelectedFileNameByTxId[t._id] || '';
+  }
+
+  getProofUploadedUrl(t: Transaction): string | null {
+    return this.proofUploadedUrlByTxId[t._id] || null;
+  }
+
+  /** True if the uploaded proof is an image (for preview); otherwise treat as PDF link. */
+  isProofPreviewImage(t: Transaction): boolean {
+    const name = (this.proofSelectedFileNameByTxId[t._id] || '').toLowerCase();
+    return /\.(jpg|jpeg|png)$/.test(name);
+  }
+
+  removeProof(t: Transaction): void {
+    delete this.proofUploadedUrlByTxId[t._id];
+    delete this.proofSelectedFileNameByTxId[t._id];
+    delete this.proofUploadErrorByTxId[t._id];
+  }
+
+  onProofFileSelected(t: Transaction, input: HTMLInputElement): void {
+    delete this.proofUploadErrorByTxId[t._id];
+    const file = input.files?.[0];
+    if (!file) return;
+
+    const maxSize = this.transactionsService.proofOfPaymentMaxSize;
+    if (file.size > maxSize) {
+      this.proofUploadErrorByTxId[t._id] = `File must be 30MB or less (${(file.size / 1024 / 1024).toFixed(1)}MB selected).`;
+      input.value = '';
+      return;
+    }
+    const allowed = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'];
+    if (!allowed.includes(file.type)) {
+      this.proofUploadErrorByTxId[t._id] = 'Only PDF, JPG and PNG files are allowed.';
+      input.value = '';
+      return;
+    }
+
+    this.proofUploadingTxId = t._id;
+    this.transactionsService.uploadProofOfPayment(file).subscribe({
+      next: (res) => {
+        this.proofUploadedUrlByTxId[t._id] = res.url;
+        this.proofSelectedFileNameByTxId[t._id] = file.name;
+        this.proofUploadingTxId = null;
+        delete this.proofUploadErrorByTxId[t._id];
+        input.value = '';
       },
-      error: () => (this.updatingId = null)
+      error: (err) => {
+        this.proofUploadErrorByTxId[t._id] = err.error?.message || 'Upload failed. Try again.';
+        this.proofUploadingTxId = null;
+        input.value = '';
+      }
     });
   }
 
+  markAsPaid(t: Transaction): void {
+    if (this.updatingId || t.role !== 'buyer' || this.getEffectiveStatus(t) !== 'pending_payment') return;
+    const url = this.proofUploadedUrlByTxId[t._id];
+    if (!url) return;
+
+    this.updatingId = t._id;
+    this.transactionsService
+      .updateTransaction(t._id, { status: 'paid', buyerProofOfPaymentUrl: url })
+      .subscribe({
+        next: (updated) => {
+          this.replaceTransaction(updated);
+          this.updatingId = null;
+          delete this.proofSelectedFileByTxId[t._id];
+          delete this.proofSelectedFileNameByTxId[t._id];
+          delete this.proofUploadedUrlByTxId[t._id];
+          delete this.proofUploadErrorByTxId[t._id];
+        },
+        error: () => (this.updatingId = null)
+      });
+  }
+
   markAsDelivered(t: Transaction): void {
-    if (this.updatingId || t.role !== 'buyer' || t.status !== 'shipped') return;
+    if (this.updatingId || t.role !== 'buyer' || this.getEffectiveStatus(t) !== 'shipped') return;
     this.updatingId = t._id;
     this.transactionsService.updateTransaction(t._id, { status: 'delivered' }).subscribe({
       next: (updated) => {
@@ -151,7 +318,7 @@ export class DashboardTransactionsComponent implements OnInit {
   }
 
   submitShipped(t: Transaction): void {
-    if (this.updatingId || t.role !== 'seller' || (t.status !== 'pending_payment' && t.status !== 'paid')) return;
+    if (this.updatingId || t.role !== 'seller' || !['pending_payment', 'paid'].includes(this.getEffectiveStatus(t))) return;
     this.updatingId = t._id;
     this.transactionsService
       .updateTransaction(t._id, {

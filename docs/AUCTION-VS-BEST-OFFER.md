@@ -13,7 +13,7 @@ BidRoom supports two listing formats: **Highest Bid** (normal auction) and **Bes
 | **Who decides** | Time runs out → seller **chooses winner** from bidders (or reopens if no bids) | Seller **accepts or rejects** each offer |
 | **Private Room** | Optional: after main auction ends, invited Platinum Bidders can continue bidding | Not used |
 | **Buy Now** | Optional: pay Buy Now price to close auction immediately | Not used in the same way |
-| **Minimum price** | Optional **reserve price** (hidden; seller can decline to sell if reserve not met) | Optional **minimum offer price** (if offer ≥ minimum, it can be **auto-accepted**) |
+| **Minimum price** | Optional **reserve price** (hidden; seller can decline to sell if reserve not met) | Optional **minimum offer price** (indication to buyers; seller always **accepts or rejects** manually) |
 | **Commission** | 2% if Private Room enabled, else 0.5% | 0.5% |
 | **Guests** | Can bid (with email) in main auction; Private Room is authenticated only | Can make offers (with email) |
 
@@ -54,11 +54,10 @@ BidRoom supports two listing formats: **Highest Bid** (normal auction) and **Bes
     - All other pending offers for that listing are **rejected**.
 
 - **Minimum offer price (optional)**
-  - The seller can set a **minimum offer price**.
-  - If a buyer’s offer is **≥ this minimum**, the system can **automatically accept** it (forced sale), close the listing, and set the current price to that amount. Otherwise, the seller accepts or rejects manually.
+  - The seller can set a **minimum offer price** as an indication to buyers (e.g. “I won’t accept below €X”). Offers below this may still be submitted; the seller always **accepts or rejects** each offer manually. The listing closes only when the seller accepts an offer.
 
 - **Guests**
-  - Buyers can make offers **without logging in** by providing their **email**. The rest of the flow (accept/reject, auto-accept if above minimum) is the same.
+  - Buyers can make offers **without logging in** by providing their **email**. The rest of the flow (seller accepts or rejects) is the same.
 
 - **No bids, no Private Room**
   - Best Offer listings do **not** use the bid or Private Room logic. There are no “bids,” no time-based auction, and no Platinum Bidder selection for a private room.
@@ -68,6 +67,6 @@ BidRoom supports two listing formats: **Highest Bid** (normal auction) and **Bes
 ## Summary
 
 - **Normal auction (Highest Bid):** Time-limited, public bidding (and optional Private Room), then **seller chooses winner**. Optional Buy Now and reserve.
-- **Best Offer:** Buyers send **offers**; **seller accepts or rejects**. Optional minimum offer price (with optional auto-accept). No bidding clock or Private Room.
+- **Best Offer:** Buyers send **offers**; **seller accepts or rejects** (no auto-accept). Optional minimum offer price as a guide. No bidding clock or Private Room.
 
 Both formats can have a **duration** on the listing (e.g. for how long the listing is active). In Best Offer, the actual sale is decided when the seller accepts an offer, not automatically when time runs out.

@@ -32,7 +32,7 @@
             <div class="listing-badges">
               <span class="badge badge-featured" *ngIf="listing.isFeatured">⭐ Featured</span>
               <span class="badge badge-verified" *ngIf="listing.isVerified">✓ Verified</span>
-              <span class="badge badge-ending-soon" *ngIf="listing.endingSoon">⏰ Ending Soon</span>
+              <span class="badge badge-ending-soon" *ngIf="listing.endingSoon && !isAuctionEnded()">⏰ Ending Soon</span>
             </div>
           </div>
           
@@ -478,8 +478,12 @@
                     <div class="offer-top">
                       <div class="offer-head">
                         <span class="offer-from-label">Offer from <strong>{{ offer.offererName || 'Anonymous' }}</strong></span>
+                        <span class="offer-bidder-meta" *ngIf="offer.offererVerified || offer.offererTier">
+                          <span class="offer-verified-badge" *ngIf="offer.offererVerified" title="Verified">✓ Verified</span>
+                          <span class="offer-tier-badge" *ngIf="offer.offererTier">{{ offer.offererTier }}</span>
+                        </span>
                         <span class="offer-badge-your" *ngIf="isMyOffer(offer)">Your offer</span>
-                        <span class="offer-status-pill" [class.pending]="offer.status === 'pending'" [class.accepted]="offer.status === 'accepted'" [class.rejected]="offer.status === 'rejected'" [class.expired]="offer.status === 'expired'">
+                        <span class="offer-status-pill" *ngIf="offer.status !== 'pending'" [class.accepted]="offer.status === 'accepted'" [class.rejected]="offer.status === 'rejected'" [class.expired]="offer.status === 'expired'">
                           {{ formatOfferStatus(offer.status) }}
                         </span>
                       </div>
@@ -495,14 +499,16 @@
                     <p class="seller-response" *ngIf="offer.sellerResponse && offer.status !== 'pending'">
                       <strong>Seller:</strong> {{ offer.sellerResponse }}
                     </p>
-                    <!-- Seller actions on pending offers -->
+                    <!-- Seller actions on pending offers (only after listing end date) -->
                     <div class="offer-actions" *ngIf="isOwnListing && offer.status === 'pending'">
-                      <input type="text" class="offer-respond-input" placeholder="Optional message to buyer" [(ngModel)]="offerRespondMessage" />
-                      <div class="offer-action-buttons">
-                        <button type="button" class="btn btn-primary btn-accept" (click)="acceptOffer(offer, offerRespondMessage)" [disabled]="offerActionLoadingId !== null">
+                      <p class="offer-actions-note" *ngIf="!canSellerAcceptOrDeclineOffers()">
+                        You can accept or decline offers after the listing end date.
+                      </p>
+                      <div class="offer-action-buttons" *ngIf="canSellerAcceptOrDeclineOffers()">
+                        <button type="button" class="btn btn-primary btn-accept" (click)="acceptOffer(offer)" [disabled]="offerActionLoadingId !== null">
                           {{ offerActionLoadingId === offer._id ? 'Accepting…' : 'Accept' }}
                         </button>
-                        <button type="button" class="btn btn-secondary btn-reject" (click)="rejectOffer(offer, offerRespondMessage)" [disabled]="offerActionLoadingId !== null">
+                        <button type="button" class="btn btn-secondary btn-reject" (click)="rejectOffer(offer)" [disabled]="offerActionLoadingId !== null">
                           {{ offerActionLoadingId === offer._id ? 'Declining…' : 'Decline' }}
                         </button>
                       </div>

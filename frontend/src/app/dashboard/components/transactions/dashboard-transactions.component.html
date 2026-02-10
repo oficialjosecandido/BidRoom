@@ -35,25 +35,84 @@
           <h2 class="card-title">{{ t.listing.title }}</h2>
           <div class="card-amount">{{ formatPrice(t.amount) }}</div>
           <span class="status-badge" [ngClass]="getStatusClass(getEffectiveStatus(t))">{{ getStatusLabel(getEffectiveStatus(t)) }}</span>
+          <p class="card-deadline" *ngIf="t.paymentDeadline && getEffectiveStatus(t) === 'pending_payment'">
+            Payment window ends: {{ formatPaymentDeadline(t) }}{{ hasPaymentDeadlinePassed(t) ? ' (passed)' : '' }}
+          </p>
           <p class="card-role" *ngIf="isBuyer(t)">
             You are the <strong>buyer</strong>. Seller: {{ t.seller.firstName }} {{ t.seller.lastName }}
           </p>
           <p class="card-role" *ngIf="isSeller(t)">
             You are the <strong>seller</strong>. Buyer: {{ t.buyer.firstName }} {{ t.buyer.lastName }}
           </p>
-          <p class="tracking-info" *ngIf="t.trackingNumber && t.status !== 'pending_payment'">
+          <!-- Seller: buyer's proof of payment (when paid and proof was uploaded) -->
+          <div class="proof-of-payment-seller" *ngIf="isSeller(t) && t.buyerProofOfPaymentUrl && getEffectiveStatus(t) !== 'pending_payment'">
+            <strong>Proof of payment:</strong>
+            <div class="proof-seller-content">
+              <img *ngIf="isProofImageUrl(t.buyerProofOfPaymentUrl)" [src]="t.buyerProofOfPaymentUrl" alt="Proof of payment" class="proof-seller-img" />
+              <a [href]="t.buyerProofOfPaymentUrl" target="_blank" rel="noopener noreferrer" class="proof-seller-link">{{ isProofImageUrl(t.buyerProofOfPaymentUrl) ? 'Open full size' : 'View proof of payment' }}</a>
+            </div>
+          </div>
+          <!-- Buyer: bank details (stored on transaction); always show section when pending payment -->
+          <div class="bank-details buyer-view" *ngIf="isBuyer(t) && getEffectiveStatus(t) === 'pending_payment'">
+            <strong>Seller bank details (for transfer):</strong>
+            <p *ngIf="hasSellerBankDetails(t)" class="bank-details-values">
+              <span *ngIf="t.sellerBankAccountName">{{ t.sellerBankAccountName }}</span>
+              <span *ngIf="t.sellerBankIban">IBAN: {{ t.sellerBankIban }}</span>
+              <span *ngIf="t.sellerBankSwift">SWIFT: {{ t.sellerBankSwift }}</span>
+            </p>
+            <p *ngIf="!hasSellerBankDetails(t)" class="bank-details-waiting">Seller has not added bank details yet. You can pay once they do.</p>
+          </div>
+          <p class="tracking-info" *ngIf="t.trackingNumber && getEffectiveStatus(t) !== 'pending_payment'">
             <span *ngIf="t.trackingCarrier">{{ t.trackingCarrier }}:</span> {{ t.trackingNumber }}
           </p>
         </div>
       </a>
 
       <div class="card-actions">
+        <!-- Seller: bank details (Phase 1 - payment window) -->
+        <ng-container *ngIf="isSeller(t) && getEffectiveStatus(t) === 'pending_payment'">
+          <button *ngIf="!showBankFormId" type="button" class="btn btn-secondary" (click)="toggleBankForm(t)">
+            {{ hasSellerBankDetails(t) ? 'Edit bank details' : 'Add bank details' }}
+          </button>
+          <div class="bank-form" *ngIf="showBankFormId === t._id">
+            <p class="form-hint">Buyer will use these for the bank transfer. Provide within 24h.</p>
+            <input type="text" [(ngModel)]="bankAccountName" placeholder="Account name" class="form-input" />
+            <input type="text" [(ngModel)]="bankIban" placeholder="IBAN" class="form-input" />
+            <input type="text" [(ngModel)]="bankSwift" placeholder="SWIFT/BIC" class="form-input" />
+            <button type="button" class="btn btn-primary" (click)="submitBankDetails(t)" [disabled]="updatingId === t._id">
+              {{ updatingId === t._id ? 'Saving…' : 'Save bank details' }}
+            </button>
+            <button type="button" class="btn btn-secondary" (click)="toggleBankForm(t)">Cancel</button>
+          </div>
+        </ng-container>
         <!-- Buyer actions -->
         <ng-container *ngIf="isBuyer(t)">
-          <a *ngIf="getEffectiveStatus(t) === 'pending_payment'" [routerLink]="getPaymentUrl(t)" class="btn btn-primary">Pay now</a>
-          <button *ngIf="getEffectiveStatus(t) === 'pending_payment'" type="button" class="btn btn-secondary" (click)="markAsPaid(t)" [disabled]="updatingId === t._id">
-            {{ updatingId === t._id ? 'Updating…' : 'Mark as paid' }}
-          </button>
+          <ng-container *ngIf="getEffectiveStatus(t) === 'pending_payment'">
+            <input
+              type="file"
+              #proofFileInput
+              [accept]="transactionsService.proofOfPaymentAccept"
+              (change)="onProofFileSelected(t, proofFileInput)"
+              class="file-input-hidden"
+              style="display: none;"
+            />
+            <button type="button" class="btn btn-secondary" (click)="triggerProofUpload(t, proofFileInput)" [disabled]="proofUploadingTxId === t._id">
+              {{ getProofUploadButtonLabel(t) }}
+            </button>
+            <div class="proof-preview" *ngIf="hasProofUploaded(t)">
+              <div class="proof-preview-content">
+                <img *ngIf="isProofPreviewImage(t)" [src]="getProofUploadedUrl(t)" [alt]="getProofFileName(t)" class="proof-preview-img" />
+                <a *ngIf="!isProofPreviewImage(t)" [href]="getProofUploadedUrl(t)" target="_blank" rel="noopener noreferrer" class="proof-preview-link">View</a>
+                <span class="proof-preview-filename">{{ getProofFileName(t) }}</span>
+                <button type="button" class="btn btn-remove" (click)="removeProof(t)">Remove</button>
+              </div>
+            </div>
+            <p class="form-hint file-name" *ngIf="getProofFileName(t) && !hasProofUploaded(t)">{{ getProofFileName(t) }}</p>
+            <p class="form-error" *ngIf="getProofUploadError(t)">{{ getProofUploadError(t) }}</p>
+            <button type="button" class="btn btn-primary" (click)="markAsPaid(t)" [disabled]="!hasProofUploaded(t) || updatingId === t._id">
+              {{ updatingId === t._id ? 'Updating…' : 'Mark as paid' }}
+            </button>
+          </ng-container>
           <button *ngIf="getEffectiveStatus(t) === 'shipped'" type="button" class="btn btn-secondary" (click)="markAsDelivered(t)" [disabled]="updatingId === t._id">
             {{ updatingId === t._id ? 'Updating…' : 'Mark as delivered' }}
           </button>

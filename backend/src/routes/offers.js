@@ -2,27 +2,66 @@ const express = require('express');
 const Offer = require('../models/Offer');
 const Listing = require('../models/Listing');
 const User = require('../models/User');
+const Customer = require('../models/Customer');
 const { authenticateToken, optionalAuth } = require('../middleware/auth');
+const { createTransactionForAcceptedOffer } = require('../services/transactionService');
+const {
+  logOfferReceived,
+  logMultipleOffers,
+  logSellerAcceptedWinner
+} = require('../services/bestOfferLogger');
 
 const router = express.Router();
+
+// Membership tier thresholds (balance >= amount). Order high to low for tier resolution.
+const TIER_THRESHOLDS = [
+  { name: 'Platinum', amount: 1000 },
+  { name: 'Gold', amount: 100 },
+  { name: 'Silver', amount: 25 },
+  { name: 'Bronze', amount: 10 }
+];
+
+function tierFromBalance(balance) {
+  if (balance == null) return null;
+  const t = TIER_THRESHOLDS.find(tier => balance >= tier.amount);
+  return t ? t.name : null;
+}
 
 // GET /api/offers/listing/:listingId - Get all offers for a listing
 router.get('/listing/:listingId', async (req, res) => {
   try {
     const offers = await Offer.find({ listing: req.params.listingId })
-      .populate('offerer', 'firstName lastName email')
+      .populate('offerer', 'firstName lastName email emailVerified uid')
       .sort({ createdAt: -1 })
       .lean();
 
-    const formattedOffers = offers.map(offer => ({
-      ...offer,
-      offererName: offer.offerer
-        ? `${offer.offerer.firstName} ${offer.offerer.lastName}`
-        : (offer.offererEmail ? offer.offererEmail.split('@')[0] : 'Anonymous'),
-      offererInitials: offer.offerer
-        ? `${offer.offerer.firstName.charAt(0)}${offer.offerer.lastName.charAt(0)}`
-        : (offer.offererEmail ? offer.offererEmail.charAt(0).toUpperCase() : 'A')
-    }));
+    const uids = [...new Set(offers.map(o => o.offerer?.uid).filter(Boolean))];
+    const customers = uids.length
+      ? await Customer.find({ uid: { $in: uids } }).select('uid balance').lean()
+      : [];
+    const balanceByUid = customers.reduce((acc, c) => { acc[c.uid] = c.balance ?? 0; return acc; }, {});
+
+    const formattedOffers = offers.map(offer => {
+      const offerer = offer.offerer;
+      const uid = offerer?.uid;
+      const balance = uid != null ? balanceByUid[uid] : null;
+      const offererTier = tierFromBalance(balance);
+      const offererVerified = !!offerer?.emailVerified;
+      const name = offerer
+        ? `${offerer.firstName} ${offerer.lastName}`
+        : (offer.offererEmail ? offer.offererEmail.split('@')[0] : 'Anonymous');
+      const initials = offerer
+        ? `${offerer.firstName.charAt(0)}${offerer.lastName.charAt(0)}`
+        : (offer.offererEmail ? offer.offererEmail.charAt(0).toUpperCase() : 'A');
+      return {
+        ...offer,
+        offerer: offerer ? { _id: offerer._id, firstName: offerer.firstName, lastName: offerer.lastName, email: offerer.email } : null,
+        offererName: name,
+        offererInitials: initials,
+        offererVerified,
+        offererTier: offererTier || null
+      };
+    });
 
     res.json({
       offers: formattedOffers,
@@ -91,8 +130,8 @@ async function createOffer(req, res) {
       offererEmail = email.toLowerCase().trim();
     }
 
-    // Get the listing (populate seller for email check)
-    const listing = await Listing.findById(listingId).populate('seller', 'email');
+    // Get the listing (populate seller for email check and logs)
+    const listing = await Listing.findById(listingId).populate('seller', 'firstName lastName email');
     if (!listing) {
       return res.status(404).json({
         error: 'Listing not found'
@@ -156,6 +195,11 @@ async function createOffer(req, res) {
         ? `${populatedOffer.offerer.firstName.charAt(0)}${populatedOffer.offerer.lastName.charAt(0)}`
         : (populatedOffer.offererEmail ? populatedOffer.offererEmail.charAt(0).toUpperCase() : 'A');
 
+      const bidderDetails = populatedOffer.offerer
+        ? { id: populatedOffer.offerer._id, email: populatedOffer.offerer.email, name: `${populatedOffer.offerer.firstName || ''} ${populatedOffer.offerer.lastName || ''}`.trim() }
+        : { guestEmail: populatedOffer.offererEmail };
+      logOfferReceived(populatedOffer, bidderDetails);
+
       return res.json({
         ...populatedOffer,
         offererName: name,
@@ -183,24 +227,26 @@ async function createOffer(req, res) {
 
     await offer.save();
 
-    // Auto-accept only when: best-offer, single offer, and offer >= minimum price
     const offerCount = await Offer.countDocuments({ listing: listingId });
-    if (
-      offerCount === 1 &&
-      listing.minimumOfferPrice != null &&
-      amount >= listing.minimumOfferPrice
-    ) {
-      offer.status = 'accepted';
-      offer.respondedAt = new Date();
-      offer.sellerResponse = 'Automatically accepted (met minimum price).';
-      listing.status = 'ended';
-      listing.currentPrice = amount;
-      await Promise.all([offer.save(), listing.save()]);
-    }
-
     const populatedOffer = await Offer.findById(offer._id)
       .populate('offerer', 'firstName lastName email')
       .lean();
+    const bidderDetails = populatedOffer.offerer
+      ? { id: populatedOffer.offerer._id, email: populatedOffer.offerer.email, name: `${populatedOffer.offerer.firstName || ''} ${populatedOffer.offerer.lastName || ''}`.trim() }
+      : { guestEmail: populatedOffer.offererEmail };
+    logOfferReceived(populatedOffer, bidderDetails);
+
+    if (offerCount > 1) {
+      const allForListing = await Offer.find({ listing: listingId }).populate('offerer', 'firstName lastName email').lean();
+      const offersDetail = allForListing.map(o => ({
+        offerId: o._id,
+        amount: o.amount,
+        status: o.status,
+        bidder: o.offerer ? { id: o.offerer._id, email: o.offerer.email, name: `${o.offerer.firstName || ''} ${o.offerer.lastName || ''}`.trim() } : { guestEmail: o.offererEmail }
+      }));
+      logMultipleOffers(listingId, offerCount, offersDetail);
+    }
+
     const name = populatedOffer.offerer
       ? `${populatedOffer.offerer.firstName} ${populatedOffer.offerer.lastName}`
       : (populatedOffer.offererEmail ? populatedOffer.offererEmail.split('@')[0] : 'Anonymous');
@@ -242,7 +288,7 @@ router.patch('/:offerId/accept', authenticateToken, async (req, res) => {
   try {
     const offer = await Offer.findById(req.params.offerId)
       .populate('listing')
-      .populate('offerer');
+      .populate('offerer', 'firstName lastName email');
 
     if (!offer) {
       return res.status(404).json({ error: 'Offer not found' });
@@ -287,6 +333,21 @@ router.patch('/:offerId/accept', authenticateToken, async (req, res) => {
     );
 
     await Promise.all([offer.save(), offer.listing.save()]);
+
+    const sellerDetails = { id: user._id, email: user.email, name: `${user.firstName || ''} ${user.lastName || ''}`.trim() };
+    const allOffers = await Offer.find({ listing: offer.listing._id }).select('_id amount status offerer offererEmail').lean();
+    const allOffersSummary = {
+      total: allOffers.length,
+      byStatus: allOffers.reduce((acc, o) => { acc[o.status] = (acc[o.status] || 0) + 1; return acc; }, {}),
+      offers: allOffers.map(o => ({ offerId: o._id, amount: o.amount, status: o.status, bidder: o.offerer ? o.offerer.toString() : o.offererEmail || 'guest' }))
+    };
+    logSellerAcceptedWinner(offer, sellerDetails, allOffersSummary);
+
+    if (offer.offerer) {
+      createTransactionForAcceptedOffer(offer.listing._id.toString(), offer._id.toString()).catch(err =>
+        console.error('Transaction create for accepted offer:', err.message)
+      );
+    }
 
     const offererName = offer.offerer
       ? `${offer.offerer.firstName} ${offer.offerer.lastName}`
