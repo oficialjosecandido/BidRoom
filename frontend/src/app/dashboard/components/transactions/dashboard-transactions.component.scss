@@ -431,3 +431,148 @@
     }
   }
 }
+
+/* Review modal */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.review-modal {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+  max-width: 440px;
+  width: 100%;
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.modal-title {
+  font-size: 20px;
+  font-weight: 600;
+  margin: 0;
+  color: #1a202c;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 28px;
+  line-height: 1;
+  color: #718096;
+  cursor: pointer;
+  padding: 0 4px;
+
+  &:hover {
+    color: #1a202c;
+  }
+}
+
+.modal-body {
+  padding: 24px;
+}
+
+.review-target-text {
+  margin: 0 0 20px;
+  font-size: 15px;
+  color: #1a202c;
+  line-height: 1.5;
+}
+
+.review-score-section {
+  margin-bottom: 20px;
+
+  .review-score-label {
+    display: block;
+    font-size: 14px;
+    font-weight: 500;
+    color: #718096;
+    margin-bottom: 8px;
+  }
+}
+
+.review-score-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+
+  .score-btn {
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    background: #f7fafc;
+    color: #4a5568;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s ease;
+
+    &:hover {
+      background: #edf2f7;
+      border-color: #cbd5e0;
+    }
+
+    &.selected {
+      background: #007bff;
+      color: white;
+      border-color: #007bff;
+    }
+  }
+}
+
+.review-description-section {
+  margin-bottom: 16px;
+
+  .review-description-label {
+    display: block;
+    font-size: 14px;
+    font-weight: 500;
+    color: #718096;
+    margin-bottom: 8px;
+  }
+
+  .review-description-input {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1px solid rgba(0, 0, 0, 0.12);
+    border-radius: 10px;
+    font-size: 14px;
+    font-family: inherit;
+    resize: vertical;
+    box-sizing: border-box;
+
+    &:focus {
+      outline: none;
+      border-color: #007bff;
+    }
+  }
+}
+
+.review-error {
+  margin: 12px 0 0;
+  font-size: 14px;
+  color: #e53e3e;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 16px 24px;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+}

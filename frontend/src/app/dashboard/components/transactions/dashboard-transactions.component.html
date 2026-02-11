@@ -48,6 +48,7 @@
           </p>
           <p class="card-role" *ngIf="isSeller(t)">
             You are the <strong>seller</strong>. Buyer: {{ t.buyer.firstName }} {{ t.buyer.lastName }}
+            <span *ngIf="t.buyer.email"> — <a [href]="'mailto:' + t.buyer.email" class="seller-email">{{ t.buyer.email }}</a></span>
           </p>
           <!-- Buyer: bank details (stored on transaction); always show section when pending payment -->
           <div class="bank-details buyer-view" *ngIf="isBuyer(t) && getEffectiveStatus(t) === 'pending_payment'">
@@ -73,6 +74,15 @@
             <a [href]="t.buyerProofOfPaymentUrl" target="_blank" rel="noopener noreferrer" class="proof-seller-link">View proof of payment (opens in new tab)</a>
           </div>
         </div>
+        <!-- Seller: Accept Payment (when buyer has submitted proof, 5-day window) -->
+        <ng-container *ngIf="isSeller(t) && canSellerAcceptPayment(t)">
+          <p class="form-hint" *ngIf="t.paymentAcceptanceDeadline">
+            Accept by {{ formatPaymentAcceptanceDeadline(t) }}{{ hasPaymentAcceptanceDeadlinePassed(t) ? ' (deadline passed)' : '' }}
+          </p>
+          <button type="button" class="btn btn-primary" (click)="acceptPayment(t)" [disabled]="updatingId === t._id">
+            {{ updatingId === t._id ? 'Accepting…' : 'Accept Payment' }}
+          </button>
+        </ng-container>
         <!-- Seller: bank details (Phase 1 - payment window) -->
         <ng-container *ngIf="isSeller(t) && getEffectiveStatus(t) === 'pending_payment'">
           <button *ngIf="!showBankFormId" type="button" class="btn btn-secondary" (click)="toggleBankForm(t)">
@@ -119,15 +129,15 @@
               {{ updatingId === t._id ? 'Updating…' : 'Mark as paid' }}
             </button>
           </ng-container>
+          <p class="form-hint" *ngIf="getEffectiveStatus(t) === 'awaiting_seller_acceptance'">
+            Seller has 5 days to confirm your payment. You'll see "Paid" once they accept.
+          </p>
           <button *ngIf="getEffectiveStatus(t) === 'shipped'" type="button" class="btn btn-secondary" (click)="markAsDelivered(t)" [disabled]="updatingId === t._id">
             {{ updatingId === t._id ? 'Updating…' : 'Mark as delivered' }}
           </button>
           <p class="form-hint review-required" *ngIf="['paid','shipped','delivered'].includes(getEffectiveStatus(t)) && !hasBothReviewed(t)">
-            Both buyer and seller must leave a review before marking as complete. <a routerLink="/dashboard">Leave your review</a> on the dashboard.
+            Both buyer and seller must leave a review to complete the transaction. It will end automatically once both have reviewed.
           </p>
-          <button *ngIf="['paid','shipped','delivered'].includes(getEffectiveStatus(t))" type="button" class="btn btn-secondary" (click)="markAsCompleted(t)" [disabled]="!canMarkAsCompleted(t) || updatingId === t._id" [title]="!hasBothReviewed(t) ? 'Both parties must leave a review before marking as complete' : ''">
-            {{ updatingId === t._id ? 'Updating…' : 'Mark as completed' }}
-          </button>
           <!-- Buyer: seller's proof of delivery (outside link so view works) -->
           <div class="proof-of-payment-seller proof-of-delivery-buyer" *ngIf="isBuyer(t) && t.sellerProofOfDeliveryUrl && ['shipped','delivered','completed'].includes(getEffectiveStatus(t))">
             <strong>Proof of delivery:</strong>
@@ -137,8 +147,8 @@
           </div>
         </ng-container>
 
-        <!-- Seller actions: upload proof of delivery, then mark as shipped -->
-        <ng-container *ngIf="isSeller(t) && (getEffectiveStatus(t) === 'pending_payment' || getEffectiveStatus(t) === 'paid')">
+        <!-- Seller actions: upload proof of delivery, then mark as shipped (only after payment accepted) -->
+        <ng-container *ngIf="isSeller(t) && getEffectiveStatus(t) === 'paid'">
           <input
             type="file"
             #deliveryProofFileInput
@@ -164,13 +174,20 @@
             {{ showTrackingFormId === t._id ? 'Cancel' : 'Mark as shipped' }}
           </button>
           <div class="tracking-form" *ngIf="showTrackingFormId === t._id">
-            <input type="text" [(ngModel)]="trackingCarrier" placeholder="Carrier (e.g. USPS, UPS)" class="form-input" />
-            <input type="text" [(ngModel)]="trackingNumber" placeholder="Tracking number" class="form-input" />
             <button type="button" class="btn btn-primary" (click)="submitShipped(t)" [disabled]="updatingId === t._id">
               {{ updatingId === t._id ? 'Updating…' : 'Confirm shipped' }}
             </button>
           </div>
         </ng-container>
+        <!-- Leave review: when delivered/completed and user hasn't reviewed yet -->
+        <button
+          *ngIf="canLeaveReview(t)"
+          type="button"
+          class="btn btn-secondary"
+          (click)="openReviewModal(t)"
+        >
+          Leave review
+        </button>
         <!-- Open dispute: only when status is not Done (not completed) and not cancelled -->
         <button
           *ngIf="!t.disputeOpen && !isDone(t) && getEffectiveStatus(t) !== 'cancelled'"
@@ -180,6 +197,42 @@
           [disabled]="updatingId === t._id"
         >
           {{ updatingId === t._id ? 'Opening…' : 'Open dispute' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Review modal -->
+  <div class="modal-overlay" *ngIf="reviewModalTransaction" (click)="closeReviewModal()">
+    <div class="modal-content review-modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3 class="modal-title">Leave a review</h3>
+        <button type="button" class="modal-close" (click)="closeReviewModal()" aria-label="Close">×</button>
+      </div>
+      <div class="modal-body">
+        <p class="review-target-text">
+          Review <strong>{{ getReviewOtherPartyName(reviewModalTransaction) }}</strong>
+          (as {{ isBuyer(reviewModalTransaction) ? 'seller' : 'buyer' }}) for
+          <em>{{ reviewModalTransaction.listing.title }}</em>
+        </p>
+        <div class="review-score-section">
+          <label class="review-score-label">Score (1–10)</label>
+          <div class="review-score-buttons">
+            <button type="button" class="score-btn" *ngFor="let i of [1,2,3,4,5,6,7,8,9,10]" (click)="setReviewScore(i)" [class.selected]="i === reviewScore">
+              {{ i }}
+            </button>
+          </div>
+        </div>
+        <div class="review-description-section">
+          <label class="review-description-label" for="review-description">Description (optional, private)</label>
+          <textarea id="review-description" class="review-description-input" [(ngModel)]="reviewDescription" rows="3" maxlength="2000" placeholder="Your feedback is private and not visible to other users."></textarea>
+        </div>
+        <p class="review-error" *ngIf="reviewError">{{ reviewError }}</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="closeReviewModal()">Cancel</button>
+        <button type="button" class="btn btn-primary" (click)="submitReview()" [disabled]="reviewSubmitting">
+          {{ reviewSubmitting ? 'Submitting…' : 'Submit review' }}
         </button>
       </div>
     </div>

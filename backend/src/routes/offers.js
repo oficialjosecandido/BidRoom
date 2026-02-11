@@ -27,6 +27,8 @@ function tierFromBalance(balance) {
   return t ? t.name : null;
 }
 
+const { formatOfferForSocket } = require('../utils/offerFormat');
+
 // GET /api/offers/listing/:listingId - Get all offers for a listing
 router.get('/listing/:listingId', async (req, res) => {
   try {
@@ -186,7 +188,7 @@ async function createOffer(req, res) {
       await existingOffer.save();
 
       const populatedOffer = await Offer.findById(existingOffer._id)
-        .populate('offerer', 'firstName lastName email')
+        .populate('offerer', 'firstName lastName email emailVerified')
         .lean();
       const name = populatedOffer.offerer
         ? `${populatedOffer.offerer.firstName} ${populatedOffer.offerer.lastName}`
@@ -204,8 +206,7 @@ async function createOffer(req, res) {
       if (io) {
         io.to(`listing:${listingId}`).emit('new-offer', {
           listingId,
-          offerId: populatedOffer._id.toString(),
-          offerCount: await Offer.countDocuments({ listing: listingId })
+          offer: formatOfferForSocket(populatedOffer)
         });
       }
 
@@ -236,15 +237,15 @@ async function createOffer(req, res) {
 
     await offer.save();
 
-    const offerCount = await Offer.countDocuments({ listing: listingId });
     const populatedOffer = await Offer.findById(offer._id)
-      .populate('offerer', 'firstName lastName email')
+      .populate('offerer', 'firstName lastName email emailVerified')
       .lean();
     const bidderDetails = populatedOffer.offerer
       ? { id: populatedOffer.offerer._id, email: populatedOffer.offerer.email, name: `${populatedOffer.offerer.firstName || ''} ${populatedOffer.offerer.lastName || ''}`.trim() }
       : { guestEmail: populatedOffer.offererEmail };
     logOfferReceived(populatedOffer, bidderDetails);
 
+    const offerCount = await Offer.countDocuments({ listing: listingId });
     if (offerCount > 1) {
       const allForListing = await Offer.find({ listing: listingId }).populate('offerer', 'firstName lastName email').lean();
       const offersDetail = allForListing.map(o => ({
@@ -267,8 +268,7 @@ async function createOffer(req, res) {
     if (io) {
       io.to(`listing:${listingId}`).emit('new-offer', {
         listingId,
-        offerId: populatedOffer._id.toString(),
-        offerCount: await Offer.countDocuments({ listing: listingId })
+        offer: formatOfferForSocket(populatedOffer)
       });
     }
 
@@ -370,10 +370,10 @@ router.patch('/:offerId/accept', authenticateToken, async (req, res) => {
     const io = req.app.get('io');
     if (io) {
       const listingId = offer.listing._id.toString();
+      const populated = await Offer.findById(offer._id).populate('offerer', 'firstName lastName email emailVerified').lean();
       io.to(`listing:${listingId}`).emit('offer-update', {
         listingId,
-        offerId: offer._id.toString(),
-        status: 'accepted',
+        offer: formatOfferForSocket(populated),
         listingStatus: 'ended'
       });
     }
@@ -421,10 +421,11 @@ router.patch('/:offerId/reject', authenticateToken, async (req, res) => {
     const io = req.app.get('io');
     if (io) {
       const listingId = offer.listing._id.toString();
+      const populated = await Offer.findById(offer._id).populate('offerer', 'firstName lastName email emailVerified').lean();
       io.to(`listing:${listingId}`).emit('offer-update', {
         listingId,
-        offerId: offer._id.toString(),
-        status: 'rejected'
+        offer: formatOfferForSocket(populated),
+        listingStatus: null
       });
     }
 

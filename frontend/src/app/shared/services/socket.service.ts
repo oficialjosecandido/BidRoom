@@ -26,17 +26,33 @@ export interface ViewerCountUpdateEvent {
   count: number;
 }
 
+/** Offer payload sent via socket (matches Offer from offers.service) */
+export interface SocketOfferPayload {
+  _id: string;
+  listing: string;
+  offerer: { _id: string; firstName: string; lastName: string; email: string } | null;
+  amount: number;
+  message?: string | null;
+  status: string;
+  respondedAt?: string | null;
+  sellerResponse?: string | null;
+  offererName?: string;
+  offererInitials?: string;
+  offererVerified?: boolean;
+  offererTier?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface NewOfferEvent {
   listingId: string;
-  offerId: string;
-  offerCount: number;
+  offer: SocketOfferPayload;
 }
 
 export interface OfferUpdateEvent {
   listingId: string;
-  offerId: string;
-  status: 'accepted' | 'rejected';
-  listingStatus?: string;
+  offer: SocketOfferPayload;
+  listingStatus?: string | null;
 }
 
 @Injectable({

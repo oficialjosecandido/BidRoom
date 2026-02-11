@@ -196,17 +196,17 @@
       </div>
       <div class="modal-body">
         <p class="review-target-text">Review <strong>{{ reviewTarget.otherPartyName }}</strong> (as {{ reviewTarget.theirRole }}) for <em>{{ reviewTarget.listingTitle }}</em></p>
-        <div class="rating-row">
-          <span class="rating-label">Rating</span>
-          <div class="star-rating">
-            <button type="button" class="star-btn" *ngFor="let i of [1,2,3,4,5]" (click)="setRating(i)" [class.filled]="i <= reviewRating">
-              ★
+        <div class="review-score-section">
+          <label class="review-score-label">Score (1–10)</label>
+          <div class="review-score-buttons">
+            <button type="button" class="score-btn" *ngFor="let i of [1,2,3,4,5,6,7,8,9,10]" (click)="setRating(i)" [class.selected]="i === reviewScore">
+              {{ i }}
             </button>
           </div>
         </div>
         <div class="comment-row">
-          <label class="comment-label" for="review-comment">Comment (optional)</label>
-          <textarea id="review-comment" class="comment-input" [(ngModel)]="reviewComment" rows="3" maxlength="1000" placeholder="Share your experience..."></textarea>
+          <label class="comment-label" for="review-description">Description (optional, private)</label>
+          <textarea id="review-description" class="comment-input" [(ngModel)]="reviewDescription" rows="3" maxlength="2000" placeholder="Your feedback is private and not visible to other users."></textarea>
         </div>
         <p class="review-error" *ngIf="reviewError">{{ reviewError }}</p>
       </div>

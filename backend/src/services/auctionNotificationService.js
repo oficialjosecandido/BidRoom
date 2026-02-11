@@ -1,9 +1,10 @@
 const Bid = require('../models/Bid');
 const Listing = require('../models/Listing');
+const Offer = require('../models/Offer');
 const User = require('../models/User');
 const { sendEmail } = require('./emailService');
 const { getEmailTemplate, getUserLanguage } = require('./emailTemplates');
-const { createTransactionForListing } = require('./transactionService');
+const { createTransactionForListing, createTransactionForAcceptedOffer } = require('./transactionService');
 
 /**
  * Send auction closed notifications to all bidders (except winner and seller)
@@ -397,8 +398,10 @@ async function sendPlatinumBidderInvitations(listing) {
 
 /**
  * Handle auction end - send all notifications
+ * @param {string} listingId
+ * @param {object} [io] - Socket.io instance for real-time updates (optional)
  */
-async function handleAuctionEnd(listingId) {
+async function handleAuctionEnd(listingId, io = null) {
   try {
     const listing = await Listing.findById(listingId)
       .populate('seller', 'firstName lastName email');
@@ -410,6 +413,48 @@ async function handleAuctionEnd(listingId) {
     if (listing.status === 'ended') {
       console.log('Listing already marked as ended:', listingId);
       return;
+    }
+
+    // Best Offer: when listing closes with exactly one offer at or above minimum → auto-accept
+    if (listing.auctionFormat === 'best-offer') {
+      const offers = await Offer.find({ listing: listingId, status: 'pending' }).lean();
+      const minimumOfferPrice = listing.minimumOfferPrice ?? 0;
+
+      if (offers.length === 1) {
+        const singleOffer = await Offer.findById(offers[0]._id).populate('listing').populate('offerer', 'firstName lastName email');
+        if (singleOffer && singleOffer.amount >= minimumOfferPrice) {
+          singleOffer.status = 'accepted';
+          singleOffer.respondedAt = new Date();
+          singleOffer.sellerResponse = 'Offer automatically accepted (met minimum price)';
+          singleOffer.listing.status = 'ended';
+          singleOffer.listing.currentPrice = singleOffer.amount;
+          await Promise.all([singleOffer.save(), singleOffer.listing.save()]);
+
+          if (singleOffer.offerer) {
+            await createTransactionForAcceptedOffer(listingId.toString(), singleOffer._id.toString()).catch(err =>
+              console.error('Transaction create for auto-accepted offer:', err.message)
+            );
+          }
+
+          if (io) {
+            const { formatOfferForSocket } = require('../utils/offerFormat');
+            const populated = await Offer.findById(singleOffer._id).populate('offerer', 'firstName lastName email emailVerified').lean();
+            io.to(`listing:${listingId}`).emit('offer-update', {
+              listingId: listingId.toString(),
+              offer: formatOfferForSocket(populated),
+              listingStatus: 'ended'
+            });
+          }
+
+          console.log(`✅ Best-offer listing ${listingId} auto-accepted single offer ($${singleOffer.amount} >= minimum $${minimumOfferPrice})`);
+          return { listingId, notified: true, bestOfferAutoAccepted: true };
+        }
+      }
+
+      // One offer below minimum, or multiple offers → just end listing; seller accepts/declines manually
+      await Listing.findByIdAndUpdate(listingId, { $set: { status: 'ended' } }, { runValidators: false });
+      console.log(`✅ Best-offer listing ${listingId} ended. ${offers.length} offer(s); seller may accept/decline manually.`);
+      return { listingId, notified: true, bestOfferEnded: true };
     }
 
     const bidCount = await Bid.countDocuments({ listing: listingId });

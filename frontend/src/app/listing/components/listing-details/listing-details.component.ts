@@ -49,6 +49,8 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
   private socketSubscriptions: Subscription[] = [];
   private countdownInterval: any = null;
   private justEndedRefetched = false;
+  private offerRefreshDebounceTimer: ReturnType<typeof setTimeout> | null = null;
+  private readonly OFFER_REFRESH_DEBOUNCE_MS = 2000;
   displayedTimeRemaining: string = '';
 
   // Place Bid modal
@@ -179,6 +181,14 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
   get sortedOffers(): Offer[] {
     const order: Record<string, number> = { pending: 0, accepted: 1, rejected: 2, expired: 3 };
     return [...this.offers].sort((a, b) => (order[a.status] ?? 4) - (order[b.status] ?? 4));
+  }
+
+  /** Highest offer amount for best-offer listings (from pending or accepted offers). */
+  getHighestOfferAmount(): number {
+    if (!this.offers.length) return this.listing?.currentPrice ?? 0;
+    const valid = this.offers.filter(o => o.status === 'pending' || o.status === 'accepted');
+    if (valid.length === 0) return this.listing?.currentPrice ?? 0;
+    return Math.max(...valid.map(o => o.amount));
   }
 
   /** True if the current user made this offer (by email match for authenticated users). */
@@ -429,20 +439,41 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
     // Join the listing room
     this.socketService.joinListing(listingId);
 
-    // Subscribe to new offer / offer update events (Best Offer listings)
+    // Subscribe to new offer / offer update events (Best Offer listings) - in-place merge + debounced refresh
     if (this.listing?.auctionFormat === 'best-offer') {
-      const newOfferSubscription = this.socketService.onNewOffer().subscribe((event) => {
-        if (event.listingId === listingId) {
+      const scheduleDebouncedRefresh = () => {
+        if (this.offerRefreshDebounceTimer) clearTimeout(this.offerRefreshDebounceTimer);
+        this.offerRefreshDebounceTimer = setTimeout(() => {
+          this.offerRefreshDebounceTimer = null;
           this.loadOffers(listingId);
+        }, this.OFFER_REFRESH_DEBOUNCE_MS);
+      };
+
+      const mergeOfferIntoList = (offer: Offer) => {
+        const idx = this.offers.findIndex(o => o._id === offer._id);
+        const merged: Offer = { ...offer, offererTier: offer.offererTier ?? null };
+        if (idx >= 0) {
+          this.offers = this.offers.map((o, i) => (i === idx ? merged : o));
+        } else {
+          this.offers = [merged, ...this.offers];
+        }
+        this.cdr.markForCheck();
+        scheduleDebouncedRefresh();
+      };
+
+      const newOfferSubscription = this.socketService.onNewOffer().subscribe((event) => {
+        if (event.listingId === listingId && event.offer) {
+          mergeOfferIntoList(event.offer as Offer);
         }
       });
       this.socketSubscriptions.push(newOfferSubscription);
 
       const offerUpdateSubscription = this.socketService.onOfferUpdate().subscribe((event) => {
-        if (event.listingId === listingId) {
-          this.loadOffers(listingId);
+        if (event.listingId === listingId && event.offer) {
+          mergeOfferIntoList(event.offer as Offer);
           if (event.listingStatus === 'ended' && this.listing) {
             this.listing.status = 'ended';
+            this.cdr.markForCheck();
           }
         }
       });
@@ -960,6 +991,10 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
     if (this.countdownInterval) {
       clearInterval(this.countdownInterval);
       this.countdownInterval = null;
+    }
+    if (this.offerRefreshDebounceTimer) {
+      clearTimeout(this.offerRefreshDebounceTimer);
+      this.offerRefreshDebounceTimer = null;
     }
 
     // Unsubscribe from Socket.io events

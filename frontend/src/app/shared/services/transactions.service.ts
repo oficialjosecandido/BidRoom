@@ -5,6 +5,7 @@ import { API_CONFIG } from '../config/api.config';
 
 export type TransactionStatus =
   | 'pending_payment'
+  | 'awaiting_seller_acceptance'
   | 'paid'
   | 'shipped'
   | 'delivered'
@@ -54,6 +55,8 @@ export interface Transaction {
   buyerProofOfPaymentUrl?: string | null;
   /** Seller optional proof of delivery URL when marking shipped */
   sellerProofOfDeliveryUrl?: string | null;
+  /** Deadline for seller to accept payment (5 days from buyer marks as paid) */
+  paymentAcceptanceDeadline?: string | null;
   /** Date by which seller must ship (after paid) */
   handlingDeadline?: string | null;
   /** Whether buyer has reviewed seller (for this listing) */
@@ -119,7 +122,7 @@ export class TransactionsService {
   updateTransaction(
     id: string,
     body: {
-      status?: TransactionStatus;
+      status?: TransactionStatus | 'accept_payment';
       trackingNumber?: string;
       trackingCarrier?: string;
       sellerBankIban?: string;

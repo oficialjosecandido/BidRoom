@@ -2,7 +2,18 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import Swal from 'sweetalert2';
 import { TransactionsService, Transaction, TransactionStatus } from '../../../shared/services/transactions.service';
+import { ReviewsService } from '../../../shared/services/reviews.service';
+
+const successToast = Swal.mixin({
+  toast: true,
+  position: 'top-end',
+  icon: 'success',
+  showConfirmButton: false,
+  timer: 3000,
+  timerProgressBar: true
+});
 
 @Component({
   selector: 'app-dashboard-transactions',
@@ -16,6 +27,12 @@ export class DashboardTransactionsComponent implements OnInit {
   isLoading = true;
   error: string | null = null;
   updatingId: string | null = null;
+  /** Review modal */
+  reviewModalTransaction: Transaction | null = null;
+  reviewScore = 0;
+  reviewDescription = '';
+  reviewError: string | null = null;
+  reviewSubmitting = false;
   showTrackingFormId: string | null = null;
   trackingNumber = '';
   trackingCarrier = '';
@@ -38,7 +55,10 @@ export class DashboardTransactionsComponent implements OnInit {
   deliveryProofUploadingTxId: string | null = null;
   deliveryProofErrorByTxId: Record<string, string> = {};
 
-  constructor(public transactionsService: TransactionsService) {}
+  constructor(
+    public transactionsService: TransactionsService,
+    private reviewsService: ReviewsService
+  ) {}
 
   ngOnInit(): void {
     this.loadTransactions();
@@ -93,6 +113,7 @@ export class DashboardTransactionsComponent implements OnInit {
   getStatusLabel(status: TransactionStatus): string {
     const labels: Record<TransactionStatus, string> = {
       pending_payment: 'Pending payment',
+      awaiting_seller_acceptance: 'Awaiting seller acceptance',
       paid: 'Paid',
       shipped: 'Shipped',
       delivered: 'Delivered',
@@ -102,7 +123,7 @@ export class DashboardTransactionsComponent implements OnInit {
     return labels[status] || status;
   }
 
-  /** Buying status: Pending Payment | Paid | Received | Pending Review | Done */
+  /** Buying status: Pending Payment | Payment Submitted | Paid | Received | Pending Review | Completed */
   getBuyingStatusLabel(t: Transaction): string {
     const s = this.getEffectiveStatus(t);
     if (['delivered', 'completed'].includes(s) && !t.buyerHasReviewedSeller) {
@@ -110,16 +131,17 @@ export class DashboardTransactionsComponent implements OnInit {
     }
     const map: Record<TransactionStatus, string> = {
       pending_payment: 'Pending Payment',
+      awaiting_seller_acceptance: 'Payment Submitted',
       paid: 'Paid',
       shipped: 'Paid',
       delivered: 'Received',
-      completed: 'Done',
+      completed: 'Completed',
       cancelled: 'Cancelled'
     };
     return map[s] || s;
   }
 
-  /** Selling status: Pending Delivery | Payment Received | Sent | Pending Review | Done */
+  /** Selling status: Pending Delivery | Pending Acceptance | Payment Received | Sent | Pending Review | Completed */
   getSellingStatusLabel(t: Transaction): string {
     const s = this.getEffectiveStatus(t);
     if (['delivered', 'completed'].includes(s) && !t.sellerHasReviewedBuyer) {
@@ -127,10 +149,11 @@ export class DashboardTransactionsComponent implements OnInit {
     }
     const map: Record<TransactionStatus, string> = {
       pending_payment: 'Pending Delivery',
+      awaiting_seller_acceptance: 'Pending Acceptance',
       paid: 'Payment Received',
       shipped: 'Sent',
       delivered: 'Sent',
-      completed: 'Done',
+      completed: 'Completed',
       cancelled: 'Cancelled'
     };
     return map[s] || s;
@@ -143,6 +166,7 @@ export class DashboardTransactionsComponent implements OnInit {
     }
     const map: Record<TransactionStatus, string> = {
       pending_payment: 'status-pending',
+      awaiting_seller_acceptance: 'status-paid',
       paid: 'status-paid',
       shipped: 'status-paid',
       delivered: 'status-delivered',
@@ -159,6 +183,7 @@ export class DashboardTransactionsComponent implements OnInit {
     }
     const map: Record<TransactionStatus, string> = {
       pending_payment: 'status-pending',
+      awaiting_seller_acceptance: 'status-pending',
       paid: 'status-paid',
       shipped: 'status-shipped',
       delivered: 'status-shipped',
@@ -171,6 +196,7 @@ export class DashboardTransactionsComponent implements OnInit {
   getStatusClass(status: TransactionStatus): string {
     const classes: Record<TransactionStatus, string> = {
       pending_payment: 'status-pending',
+      awaiting_seller_acceptance: 'status-pending',
       paid: 'status-paid',
       shipped: 'status-shipped',
       delivered: 'status-delivered',
@@ -178,6 +204,23 @@ export class DashboardTransactionsComponent implements OnInit {
       cancelled: 'status-cancelled'
     };
     return classes[status] || '';
+  }
+
+  /** Seller can accept payment when buyer has submitted proof (5-day window) */
+  canSellerAcceptPayment(t: Transaction): boolean {
+    return this.getEffectiveStatus(t) === 'awaiting_seller_acceptance';
+  }
+
+  hasPaymentAcceptanceDeadlinePassed(t: Transaction): boolean {
+    const d = t.paymentAcceptanceDeadline;
+    if (!d) return false;
+    return new Date(d) < new Date();
+  }
+
+  formatPaymentAcceptanceDeadline(t: Transaction): string {
+    const d = t.paymentAcceptanceDeadline;
+    if (!d) return '';
+    return new Date(d).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' });
   }
 
   formatPrice(amount: number): string {
@@ -352,6 +395,7 @@ export class DashboardTransactionsComponent implements OnInit {
           delete this.proofSelectedFileNameByTxId[t._id];
           delete this.proofUploadedUrlByTxId[t._id];
           delete this.proofUploadErrorByTxId[t._id];
+          successToast.fire({ title: 'Payment information sent' });
         },
         error: () => (this.updatingId = null)
       });
@@ -459,8 +503,22 @@ export class DashboardTransactionsComponent implements OnInit {
     });
   }
 
+  acceptPayment(t: Transaction): void {
+    if (this.updatingId || t.role !== 'seller' || this.getEffectiveStatus(t) !== 'awaiting_seller_acceptance') return;
+    this.updatingId = t._id;
+    this.transactionsService
+      .updateTransaction(t._id, { status: 'accept_payment' })
+      .subscribe({
+        next: (updated) => {
+          this.replaceTransaction(updated);
+          this.updatingId = null;
+        },
+        error: () => (this.updatingId = null)
+      });
+  }
+
   submitShipped(t: Transaction): void {
-    if (this.updatingId || t.role !== 'seller' || !['pending_payment', 'paid'].includes(this.getEffectiveStatus(t))) return;
+    if (this.updatingId || t.role !== 'seller' || this.getEffectiveStatus(t) !== 'paid') return;
     const proofUrl = this.deliveryProofUploadedUrlByTxId[t._id];
     if (!proofUrl) return;
     this.updatingId = t._id;
@@ -481,6 +539,7 @@ export class DashboardTransactionsComponent implements OnInit {
           delete this.deliveryProofUploadedUrlByTxId[t._id];
           delete this.deliveryProofFileNameByTxId[t._id];
           delete this.deliveryProofErrorByTxId[t._id];
+          successToast.fire({ title: 'Delivery information sent' });
         },
         error: () => (this.updatingId = null)
       });
@@ -497,6 +556,85 @@ export class DashboardTransactionsComponent implements OnInit {
           this.updatingId = null;
         },
         error: () => (this.updatingId = null)
+      });
+  }
+
+  /** Whether the current user can leave a review for this transaction (delivered/completed + hasn't reviewed) */
+  canLeaveReview(t: Transaction): boolean {
+    const s = this.getEffectiveStatus(t);
+    if (!['delivered', 'completed'].includes(s)) return false;
+    if (this.isBuyer(t) && !t.buyerHasReviewedSeller) return true;
+    if (this.isSeller(t) && !t.sellerHasReviewedBuyer) return true;
+    return false;
+  }
+
+  getReviewOtherPartyName(t: Transaction): string {
+    const other = this.isBuyer(t) ? t.seller : t.buyer;
+    if (!other) return 'Other party';
+    return `${(other as { firstName?: string }).firstName || ''} ${(other as { lastName?: string }).lastName || ''}`.trim() || (this.isBuyer(t) ? 'Seller' : 'Buyer');
+  }
+
+  /** Role for API: as_buyer = I review them as buyer; as_seller = I review them as seller */
+  getReviewRole(t: Transaction): 'as_buyer' | 'as_seller' {
+    return this.isBuyer(t) ? 'as_seller' : 'as_buyer';
+  }
+
+  getReviewOtherPartyId(t: Transaction): string {
+    const other = this.isBuyer(t) ? t.seller : t.buyer;
+    const o = other as { _id?: string };
+    return o?._id?.toString() || String(other);
+  }
+
+  openReviewModal(t: Transaction): void {
+    this.reviewModalTransaction = t;
+    this.reviewScore = 0;
+    this.reviewDescription = '';
+    this.reviewError = null;
+  }
+
+  closeReviewModal(): void {
+    this.reviewModalTransaction = null;
+    this.reviewScore = 0;
+    this.reviewDescription = '';
+    this.reviewError = null;
+  }
+
+  setReviewScore(n: number): void {
+    this.reviewScore = n;
+  }
+
+  submitReview(): void {
+    const t = this.reviewModalTransaction;
+    if (!t || this.reviewScore < 1 || this.reviewScore > 10) {
+      this.reviewError = 'Please select a score from 1 to 10.';
+      return;
+    }
+    const listingId = (t.listing && (t.listing as { _id?: string })._id ? (t.listing as { _id?: string })._id : t.listing)?.toString();
+    if (!listingId) {
+      this.reviewError = 'Transaction has no listing.';
+      return;
+    }
+    this.reviewSubmitting = true;
+    this.reviewError = null;
+    this.reviewsService
+      .createReview({
+        listingId,
+        toUserId: this.getReviewOtherPartyId(t),
+        role: this.getReviewRole(t),
+        score: this.reviewScore,
+        description: this.reviewDescription.trim() || undefined
+      })
+      .subscribe({
+        next: () => {
+          this.reviewSubmitting = false;
+          this.closeReviewModal();
+          this.loadTransactions();
+          successToast.fire({ title: 'Review submitted' });
+        },
+        error: (err) => {
+          this.reviewSubmitting = false;
+          this.reviewError = err?.error?.message || 'Failed to submit review.';
+        }
       });
   }
 

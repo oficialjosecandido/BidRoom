@@ -19,7 +19,7 @@ async function getReviewScoresForUsers(userIds) {
     {
       $group: {
         _id: { reviewee: '$reviewee', role: '$role' },
-        avgRating: { $avg: '$rating' },
+        avgRating: { $avg: { $ifNull: ['$score', '$rating'] } },
         count: { $sum: 1 }
       }
     }

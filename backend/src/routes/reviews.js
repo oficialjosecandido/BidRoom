@@ -1,6 +1,7 @@
 const express = require('express');
 const Review = require('../models/Review');
 const Listing = require('../models/Listing');
+const Transaction = require('../models/Transaction');
 const User = require('../models/User');
 const { authenticateToken } = require('../middleware/auth');
 const { getReviewScoresForUser, getReviewScoresForUsers } = require('../services/reviewService');
@@ -24,9 +25,13 @@ router.get('/scores/:userId', async (req, res) => {
   }
 });
 
+/** Transaction statuses where reviews are allowed */
+const REVIEWABLE_STATUSES = ['delivered', 'completed'];
+
 /**
  * GET /api/reviews/pending
- * Returns listings where the current user can leave a review (they were buyer or seller and haven't reviewed the other party yet).
+ * Returns items where the current user can leave a review (buyer/seller and haven't reviewed yet).
+ * Uses Transactions as primary source; falls back to Listing.winner for legacy auction-only cases.
  */
 router.get('/pending', authenticateToken, async (req, res) => {
   try {
@@ -35,64 +40,107 @@ router.get('/pending', authenticateToken, async (req, res) => {
       return res.json({ pending: [] });
     }
 
-    // Listings where I am seller and there is a winner (I can review the buyer)
-    const asSeller = await Listing.find({
-      seller: user._id,
-      winner: { $exists: true, $ne: null }
-    })
-      .select('_id title slug winner winnerSelectedAt')
-      .populate('winner', 'firstName lastName')
-      .lean();
-
-    // Listings where I am winner (I can review the seller)
-    const asBuyer = await Listing.find({
-      winner: user._id
-    })
-      .select('_id title slug seller winnerSelectedAt')
-      .populate('seller', 'firstName lastName')
-      .lean();
-
     const pending = [];
+    const seen = new Set(); // listingId to avoid duplicates
 
-    for (const listing of asSeller) {
-      if (!listing.winner || listing.winner._id.toString() === user._id.toString()) continue;
+    // Primary: Use transactions (covers auction + best-offer)
+    const txList = await Transaction.find({
+      $or: [{ seller: user._id }, { buyer: user._id }],
+      transactionStatus: { $in: REVIEWABLE_STATUSES }
+    })
+      .populate('listing', 'title slug')
+      .populate('seller', 'firstName lastName')
+      .populate('buyer', 'firstName lastName')
+      .lean();
+
+    for (const t of txList) {
+      const lid = (t.listing && t.listing._id ? t.listing._id : t.listing)?.toString();
+      if (!lid) continue;
+
+      const amSeller = t.seller?._id?.toString() === user._id.toString();
+      const otherParty = amSeller ? t.buyer : t.seller;
+      if (!otherParty) continue;
+
+      const otherId = otherParty._id?.toString() || otherParty.toString();
+      const roleForReview = amSeller ? 'as_buyer' : 'as_seller'; // I review them as buyer/seller
+
       const existing = await Review.findOne({
-        listing: listing._id,
+        listing: t.listing._id,
         reviewer: user._id,
-        reviewee: listing.winner._id
+        reviewee: otherId
       });
       if (!existing) {
-        pending.push({
-          listingId: listing._id,
-          listingTitle: listing.title,
-          listingSlug: listing.slug,
-          otherPartyId: listing.winner._id,
-          otherPartyName: `${listing.winner.firstName || ''} ${listing.winner.lastName || ''}`.trim() || 'Buyer',
-          myRole: 'seller',
-          theirRole: 'buyer',
-          roleForReview: 'as_buyer' // I review them as buyer
-        });
+        const key = `${lid}-${otherId}`;
+        if (!seen.has(key)) {
+          seen.add(key);
+          pending.push({
+            listingId: t.listing._id,
+            listingTitle: t.listing?.title || 'Item',
+            listingSlug: t.listing?.slug || '',
+            transactionId: t._id,
+            otherPartyId: otherId,
+            otherPartyName: `${otherParty.firstName || ''} ${otherParty.lastName || ''}`.trim() || (amSeller ? 'Buyer' : 'Seller'),
+            myRole: amSeller ? 'seller' : 'buyer',
+            theirRole: amSeller ? 'buyer' : 'seller',
+            roleForReview
+          });
+        }
       }
     }
 
-    for (const listing of asBuyer) {
-      if (!listing.seller) continue;
-      const existing = await Review.findOne({
-        listing: listing._id,
-        reviewer: user._id,
-        reviewee: listing.seller._id
-      });
-      if (!existing) {
-        pending.push({
-          listingId: listing._id,
-          listingTitle: listing.title,
-          listingSlug: listing.slug,
-          otherPartyId: listing.seller._id,
-          otherPartyName: `${listing.seller.firstName || ''} ${listing.seller.lastName || ''}`.trim() || 'Seller',
-          myRole: 'buyer',
-          theirRole: 'seller',
-          roleForReview: 'as_seller' // I review them as seller
+    // Fallback: listings with winner (no transaction yet, e.g. legacy)
+    if (pending.length === 0) {
+      const asSeller = await Listing.find({
+        seller: user._id,
+        winner: { $exists: true, $ne: null }
+      })
+        .select('_id title slug winner')
+        .populate('winner', 'firstName lastName')
+        .lean();
+      const asBuyer = await Listing.find({ winner: user._id })
+        .select('_id title slug seller')
+        .populate('seller', 'firstName lastName')
+        .lean();
+
+      for (const listing of asSeller) {
+        if (!listing.winner || listing.winner._id.toString() === user._id.toString()) continue;
+        const existing = await Review.findOne({
+          listing: listing._id,
+          reviewer: user._id,
+          reviewee: listing.winner._id
         });
+        if (!existing) {
+          pending.push({
+            listingId: listing._id,
+            listingTitle: listing.title,
+            listingSlug: listing.slug,
+            otherPartyId: listing.winner._id,
+            otherPartyName: `${listing.winner.firstName || ''} ${listing.winner.lastName || ''}`.trim() || 'Buyer',
+            myRole: 'seller',
+            theirRole: 'buyer',
+            roleForReview: 'as_buyer'
+          });
+        }
+      }
+      for (const listing of asBuyer) {
+        if (!listing.seller) continue;
+        const existing = await Review.findOne({
+          listing: listing._id,
+          reviewer: user._id,
+          reviewee: listing.seller._id
+        });
+        if (!existing) {
+          pending.push({
+            listingId: listing._id,
+            listingTitle: listing.title,
+            listingSlug: listing.slug,
+            otherPartyId: listing.seller._id,
+            otherPartyName: `${listing.seller.firstName || ''} ${listing.seller.lastName || ''}`.trim() || 'Seller',
+            myRole: 'buyer',
+            theirRole: 'seller',
+            roleForReview: 'as_seller'
+          });
+        }
       }
     }
 
@@ -109,16 +157,17 @@ router.get('/pending', authenticateToken, async (req, res) => {
 /**
  * POST /api/reviews
  * Create a review (after a completed transaction).
- * Body: { listingId, toUserId, role: 'as_buyer' | 'as_seller', rating, comment? }
+ * Body: { listingId, toUserId, role: 'as_buyer' | 'as_seller', score: 1-10, description? }
  */
 router.post('/', authenticateToken, async (req, res) => {
   try {
-    const { listingId, toUserId, role, rating, comment } = req.body;
+    const { listingId, toUserId, role, score, rating, description } = req.body;
+    const scoreVal = score != null ? score : rating; // support legacy 'rating' param
 
-    if (!listingId || !toUserId || !role || rating == null) {
+    if (!listingId || !toUserId || !role || scoreVal == null) {
       return res.status(400).json({
         error: 'Missing required fields',
-        message: 'listingId, toUserId, role and rating are required'
+        message: 'listingId, toUserId, role and score are required'
       });
     }
     if (!['as_buyer', 'as_seller'].includes(role)) {
@@ -127,11 +176,11 @@ router.post('/', authenticateToken, async (req, res) => {
         message: 'role must be as_buyer or as_seller'
       });
     }
-    const ratingNum = parseInt(rating, 10);
-    if (ratingNum < 1 || ratingNum > 5) {
+    const scoreNum = parseInt(scoreVal, 10);
+    if (Number.isNaN(scoreNum) || scoreNum < 1 || scoreNum > 10) {
       return res.status(400).json({
-        error: 'Invalid rating',
-        message: 'rating must be between 1 and 5'
+        error: 'Invalid score',
+        message: 'score must be between 1 and 10'
       });
     }
 
@@ -143,32 +192,46 @@ router.post('/', authenticateToken, async (req, res) => {
       });
     }
 
-    const listing = await Listing.findById(listingId)
-      .select('seller winner')
-      .lean();
-    if (!listing) {
-      return res.status(404).json({ error: 'Listing not found' });
-    }
-    const sellerId = listing.seller && listing.seller.toString();
-    const winnerId = listing.winner && listing.winner.toString();
-    if (!sellerId || !winnerId) {
-      return res.status(400).json({
-        error: 'Not a completed transaction',
-        message: 'This listing does not have a selected winner yet'
-      });
+    const toId = toUserId.toString();
+
+    // Prefer Transaction for validation (covers auction + best-offer)
+    const transaction = await Transaction.findOne({ listing: listingId }).lean();
+    let sellerId, buyerId;
+    if (transaction) {
+      sellerId = (transaction.seller && transaction.seller._id ? transaction.seller._id : transaction.seller)?.toString();
+      buyerId = (transaction.buyer && transaction.buyer._id ? transaction.buyer._id : transaction.buyer)?.toString();
+      const okStatuses = ['delivered', 'completed'];
+      const ts = transaction.transactionStatus || transaction.status;
+      if (!okStatuses.includes(ts)) {
+        return res.status(400).json({
+          error: 'Transaction not reviewable',
+          message: 'The transaction must be delivered or completed before leaving a review'
+        });
+      }
+    } else {
+      const listing = await Listing.findById(listingId).select('seller winner').lean();
+      if (!listing) {
+        return res.status(404).json({ error: 'Listing not found' });
+      }
+      sellerId = listing.seller?.toString();
+      buyerId = listing.winner?.toString();
+      if (!sellerId || !buyerId) {
+        return res.status(400).json({
+          error: 'Not a completed transaction',
+          message: 'This listing does not have a selected winner yet'
+        });
+      }
     }
 
-    const toId = toUserId.toString();
-    // Current user must be either seller or winner, and toUserId must be the other party
     const isSeller = sellerId === user._id.toString();
-    const isBuyer = winnerId === user._id.toString();
+    const isBuyer = buyerId === user._id.toString();
     if (!isSeller && !isBuyer) {
       return res.status(403).json({
         error: 'Not a party to this transaction',
         message: 'Only the buyer or seller can leave a review for this listing'
       });
     }
-    if (isSeller && toId !== winnerId) {
+    if (isSeller && toId !== buyerId) {
       return res.status(400).json({
         error: 'Invalid reviewee',
         message: 'You can only review the buyer for this listing'
@@ -198,18 +261,31 @@ router.post('/', authenticateToken, async (req, res) => {
       reviewer: user._id,
       reviewee: toUserId,
       role,
-      rating: ratingNum,
-      comment: comment && String(comment).trim().slice(0, 1000) || null
+      score: scoreNum,
+      description: description && String(description).trim().slice(0, 2000) || null
     });
     await review.save();
 
+    // Auto-complete transaction when both buyer and seller have reviewed
+    const [buyerReviewed, sellerReviewed] = await Promise.all([
+      Review.exists({ listing: listingId, role: 'as_seller' }),
+      Review.exists({ listing: listingId, role: 'as_buyer' })
+    ]);
+    if (buyerReviewed && sellerReviewed) {
+      const tx = await Transaction.findOne({ listing: listingId });
+      if (tx && ['paid', 'shipped', 'delivered'].includes(tx.transactionStatus || tx.status || '')) {
+        tx.transactionStatus = 'completed';
+        await tx.save();
+      }
+    }
+
+    // Response: score only (never expose description to other users; reviewer sees their own on create)
     res.status(201).json({
       _id: review._id,
       listing: review.listing,
       reviewee: review.reviewee,
       role: review.role,
-      rating: review.rating,
-      comment: review.comment,
+      score: review.score,
       createdAt: review.createdAt
     });
   } catch (error) {

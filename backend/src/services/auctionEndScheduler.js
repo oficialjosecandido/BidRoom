@@ -51,7 +51,7 @@ async function checkEndedAuctions() {
 
     for (const listing of endedAuctions) {
       try {
-        await handleAuctionEnd(listing._id);
+        await handleAuctionEnd(listing._id, ioInstance);
         processed++;
         console.log(`✅ Processed ended auction: ${listing._id} - ${listing.title}`);
       } catch (error) {

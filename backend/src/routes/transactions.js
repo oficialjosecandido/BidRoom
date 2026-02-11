@@ -16,6 +16,8 @@ function normalizeTransactionStatus(t) {
   return { transactionStatus, paymentStatus, sendingStatus };
 }
 
+const PAYMENT_ACCEPTANCE_DAYS = 5;
+
 router.use(authenticateToken);
 
 /**
@@ -153,7 +155,18 @@ router.patch('/:id', async (req, res) => {
       if (sellerBankIban !== undefined) transaction.sellerBankIban = sellerBankIban || null;
       if (sellerBankSwift !== undefined) transaction.sellerBankSwift = sellerBankSwift || null;
       if (sellerBankAccountName !== undefined) transaction.sellerBankAccountName = sellerBankAccountName || null;
-      if (status === 'shipped') {
+      if (status === 'accept_payment' && ts === 'awaiting_seller_acceptance') {
+        transaction.transactionStatus = 'paid';
+        transaction.paymentStatus = 'paid';
+        transaction.paidAt = transaction.paidAt || new Date();
+        if (!transaction.handlingDeadline) {
+          const listing = await Listing.findById(transaction.listing).select('handlingTime').lean();
+          const days = (listing && listing.handlingTime) ? Math.max(1, listing.handlingTime) : 3;
+          const d = new Date();
+          d.setDate(d.getDate() + days);
+          transaction.handlingDeadline = d;
+        }
+      } else if (status === 'shipped') {
         transaction.transactionStatus = 'shipped';
         transaction.sendingStatus = 'shipped';
         transaction.shippedAt = transaction.shippedAt || new Date();
@@ -175,17 +188,11 @@ router.patch('/:id', async (req, res) => {
 
     if (isBuyer) {
       if (status === 'paid') {
-        transaction.transactionStatus = 'paid';
-        transaction.paymentStatus = 'paid';
-        transaction.paidAt = transaction.paidAt || new Date();
+        transaction.transactionStatus = 'awaiting_seller_acceptance';
         if (buyerProofOfPaymentUrl != null) transaction.buyerProofOfPaymentUrl = buyerProofOfPaymentUrl;
-        if (!transaction.handlingDeadline) {
-          const listing = await Listing.findById(transaction.listing).select('handlingTime').lean();
-          const days = (listing && listing.handlingTime) ? Math.max(1, listing.handlingTime) : 3;
-          const d = new Date();
-          d.setDate(d.getDate() + days);
-          transaction.handlingDeadline = d;
-        }
+        const deadline = new Date();
+        deadline.setDate(deadline.getDate() + PAYMENT_ACCEPTANCE_DAYS);
+        transaction.paymentAcceptanceDeadline = deadline;
       } else if (status === 'delivered' && ts === 'shipped') {
         transaction.transactionStatus = 'delivered';
         transaction.sendingStatus = 'delivered';

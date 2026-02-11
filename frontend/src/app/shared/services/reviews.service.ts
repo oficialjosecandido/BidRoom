@@ -7,6 +7,7 @@ export interface PendingReview {
   listingId: string;
   listingTitle: string;
   listingSlug: string;
+  transactionId?: string;
   otherPartyId: string;
   otherPartyName: string;
   myRole: 'seller' | 'buyer';
@@ -29,7 +30,11 @@ export interface CreateReviewRequest {
   listingId: string;
   toUserId: string;
   role: 'as_buyer' | 'as_seller';
-  rating: number;
+  score: number;
+  description?: string;
+  /** @deprecated Use score */
+  rating?: number;
+  /** @deprecated Use description */
   comment?: string;
 }
 
@@ -49,7 +54,14 @@ export class ReviewsService {
     return this.http.get<ReviewScores>(`${this.apiUrl}/scores/${userId}`);
   }
 
-  createReview(body: CreateReviewRequest): Observable<{ _id: string; createdAt: string }> {
-    return this.http.post<{ _id: string; createdAt: string }>(this.apiUrl, body);
+  createReview(body: CreateReviewRequest): Observable<{ _id: string; score: number; createdAt: string }> {
+    const payload = {
+      listingId: body.listingId,
+      toUserId: body.toUserId,
+      role: body.role,
+      score: body.score,
+      description: body.description?.trim() || undefined
+    };
+    return this.http.post<{ _id: string; score: number; createdAt: string }>(this.apiUrl, payload);
   }
 }

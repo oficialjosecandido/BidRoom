@@ -60,7 +60,7 @@ const transactionSchema = new mongoose.Schema({
   /** Overall transaction state */
   transactionStatus: {
     type: String,
-    enum: ['pending_payment', 'paid', 'shipped', 'delivered', 'completed', 'cancelled'],
+    enum: ['pending_payment', 'awaiting_seller_acceptance', 'paid', 'shipped', 'delivered', 'completed', 'cancelled'],
     default: 'pending_payment',
     index: true
   },
@@ -81,9 +81,11 @@ const transactionSchema = new mongoose.Schema({
   /** @deprecated Use transactionStatus. Kept for backward compatibility with existing documents. */
   status: {
     type: String,
-    enum: ['pending_payment', 'paid', 'shipped', 'delivered', 'completed', 'cancelled'],
+    enum: ['pending_payment', 'awaiting_seller_acceptance', 'paid', 'shipped', 'delivered', 'completed', 'cancelled'],
     default: null
   },
+  /** Deadline for seller to accept payment (5 days from when buyer marks as paid) */
+  paymentAcceptanceDeadline: { type: Date, default: null },
   paidAt: {
     type: Date,
     default: null

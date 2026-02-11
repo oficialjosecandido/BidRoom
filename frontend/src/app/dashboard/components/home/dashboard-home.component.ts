@@ -35,8 +35,8 @@ export class DashboardHomeComponent implements OnInit {
 
   showReviewModal = false;
   reviewTarget: PendingReview | null = null;
-  reviewRating = 0;
-  reviewComment = '';
+  reviewScore = 0;
+  reviewDescription = '';
   reviewSubmitting = false;
   reviewError: string | null = null;
 
@@ -213,8 +213,8 @@ export class DashboardHomeComponent implements OnInit {
 
   openReviewModal(item: PendingReview): void {
     this.reviewTarget = item;
-    this.reviewRating = 0;
-    this.reviewComment = '';
+    this.reviewScore = 0;
+    this.reviewDescription = '';
     this.reviewError = null;
     this.showReviewModal = true;
   }
@@ -222,18 +222,18 @@ export class DashboardHomeComponent implements OnInit {
   closeReviewModal(): void {
     this.showReviewModal = false;
     this.reviewTarget = null;
-    this.reviewRating = 0;
-    this.reviewComment = '';
+    this.reviewScore = 0;
+    this.reviewDescription = '';
     this.reviewError = null;
   }
 
   setRating(r: number): void {
-    this.reviewRating = r;
+    this.reviewScore = r;
   }
 
   submitReview(): void {
-    if (!this.reviewTarget || this.reviewRating < 1 || this.reviewRating > 5) {
-      this.reviewError = 'Please select a rating from 1 to 5.';
+    if (!this.reviewTarget || this.reviewScore < 1 || this.reviewScore > 10) {
+      this.reviewError = 'Please select a score from 1 to 10.';
       return;
     }
     this.reviewSubmitting = true;
@@ -242,14 +242,23 @@ export class DashboardHomeComponent implements OnInit {
       listingId: this.reviewTarget.listingId,
       toUserId: this.reviewTarget.otherPartyId,
       role: this.reviewTarget.roleForReview,
-      rating: this.reviewRating,
-      comment: this.reviewComment.trim() || undefined
+      score: this.reviewScore,
+      description: this.reviewDescription.trim() || undefined
     }).subscribe({
       next: () => {
         this.reviewSubmitting = false;
         this.closeReviewModal();
         this.loadPendingReviews();
         this.loadCustomer();
+        Swal.fire({
+          toast: true,
+          position: 'top-end',
+          icon: 'success',
+          title: 'Review submitted',
+          showConfirmButton: false,
+          timer: 3000,
+          timerProgressBar: true
+        });
       },
       error: (err) => {
         this.reviewSubmitting = false;

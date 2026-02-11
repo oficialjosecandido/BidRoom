@@ -2,8 +2,12 @@ const mongoose = require('mongoose');
 
 /**
  * Review - one user reviewing another after a completed transaction.
- * role: 'as_buyer' = reviewee is being reviewed in their role as buyer (so reviewer was seller)
- *       'as_seller' = reviewee is being reviewed in their role as seller (so reviewer was buyer)
+ * reviewer: User who wrote the review
+ * reviewee: User being reviewed (the "reviewed" party)
+ * role: 'as_buyer' = reviewee is being reviewed as buyer (reviewer was seller)
+ *       'as_seller' = reviewee is being reviewed as seller (reviewer was buyer)
+ * score: 1-10 (visible to all; used for aggregations)
+ * description: optional text (private - never returned to other users)
  */
 const reviewSchema = new mongoose.Schema({
   listing: {
@@ -30,15 +34,18 @@ const reviewSchema = new mongoose.Schema({
     required: true,
     index: true
   },
-  rating: {
+  /** Score 1-10 (visible publicly) */
+  score: {
     type: Number,
     required: true,
     min: 1,
-    max: 5
+    max: 10,
+    index: true
   },
-  comment: {
+  /** Review description text (private - never exposed to other users) */
+  description: {
     type: String,
-    maxlength: 1000,
+    maxlength: 2000,
     default: null,
     trim: true
   }

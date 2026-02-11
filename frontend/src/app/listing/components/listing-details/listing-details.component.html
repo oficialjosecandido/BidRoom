@@ -59,8 +59,8 @@
           <div class="price-section">
             <div class="current-price">
               <span class="price-label" *ngIf="listing.auctionFormat === 'highest-bid'">Current Bid</span>
-              <span class="price-label" *ngIf="listing.auctionFormat === 'best-offer'">Current Offer</span>
-              <span class="price-amount">{{ formatPrice(listing.currentPrice) }}</span>
+              <span class="price-label" *ngIf="listing.auctionFormat === 'best-offer'">Highest Offer</span>
+              <span class="price-amount">{{ listing.auctionFormat === 'best-offer' ? formatPrice(getHighestOfferAmount()) : formatPrice(listing.currentPrice) }}</span>
             </div>
             
             <!-- Buy Now Price Display -->
@@ -158,8 +158,10 @@
             </div>
             <div class="price-details">
               <div class="price-detail-item">
+                @if (listing.auctionFormat === 'highest-bid') {
                 <span class="detail-label">Starting {{ listing.auctionFormat === 'highest-bid' ? 'Bid' : 'Offer' }}:</span>
                 <span class="detail-value">{{ formatPrice(listing.startingPrice) }}</span>
+                }
               </div>
               <div class="price-detail-item" *ngIf="listing.reservePrice && listing.auctionFormat === 'highest-bid'">
                 <span class="detail-label">Reserve Price:</span>
@@ -197,7 +199,7 @@
               {{ isAuthenticated ? 'Place Bid' : 'Place Bid (Email Required)' }}
             </button>
             <div *ngIf="isOwnListing && listing.auctionFormat === 'highest-bid' && !hasPrivateRoom() && !isAuctionEnded()" class="own-listing-message">
-              <p>You can't bid on your own listing.</p>
+              <p>You can't bid <br> on your own listing.</p>
             </div>
             <!-- Seller: ended with bids + private room eligible → Create private room -->
             <button
@@ -239,7 +241,7 @@
               Make Offer
             </button>
             <div *ngIf="isOwnListing && listing.auctionFormat === 'best-offer' && !hasPrivateRoom()" class="own-listing-message">
-              <p>You can't make an offer on your own listing.</p>
+              <p>You can't make an offer <br> on your own listing.</p>
             </div>
             <button 
               class="btn btn-secondary btn-large" 
@@ -737,4 +739,3 @@
 </div>
 
 <app-footer></app-footer>
-
