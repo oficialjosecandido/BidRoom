@@ -200,6 +200,15 @@ async function createOffer(req, res) {
         : { guestEmail: populatedOffer.offererEmail };
       logOfferReceived(populatedOffer, bidderDetails);
 
+      const io = req.app.get('io');
+      if (io) {
+        io.to(`listing:${listingId}`).emit('new-offer', {
+          listingId,
+          offerId: populatedOffer._id.toString(),
+          offerCount: await Offer.countDocuments({ listing: listingId })
+        });
+      }
+
       return res.json({
         ...populatedOffer,
         offererName: name,
@@ -253,6 +262,15 @@ async function createOffer(req, res) {
     const initials = populatedOffer.offerer
       ? `${populatedOffer.offerer.firstName.charAt(0)}${populatedOffer.offerer.lastName.charAt(0)}`
       : (populatedOffer.offererEmail ? populatedOffer.offererEmail.charAt(0).toUpperCase() : 'A');
+
+    const io = req.app.get('io');
+    if (io) {
+      io.to(`listing:${listingId}`).emit('new-offer', {
+        listingId,
+        offerId: populatedOffer._id.toString(),
+        offerCount: await Offer.countDocuments({ listing: listingId })
+      });
+    }
 
     res.status(201).json({
       ...populatedOffer,
@@ -349,6 +367,17 @@ router.patch('/:offerId/accept', authenticateToken, async (req, res) => {
       );
     }
 
+    const io = req.app.get('io');
+    if (io) {
+      const listingId = offer.listing._id.toString();
+      io.to(`listing:${listingId}`).emit('offer-update', {
+        listingId,
+        offerId: offer._id.toString(),
+        status: 'accepted',
+        listingStatus: 'ended'
+      });
+    }
+
     const offererName = offer.offerer
       ? `${offer.offerer.firstName} ${offer.offerer.lastName}`
       : (offer.offererEmail ? offer.offererEmail.split('@')[0] : 'Guest');
@@ -388,6 +417,16 @@ router.patch('/:offerId/reject', authenticateToken, async (req, res) => {
     offer.sellerResponse = req.body.message || 'Offer rejected';
 
     await offer.save();
+
+    const io = req.app.get('io');
+    if (io) {
+      const listingId = offer.listing._id.toString();
+      io.to(`listing:${listingId}`).emit('offer-update', {
+        listingId,
+        offerId: offer._id.toString(),
+        status: 'rejected'
+      });
+    }
 
     res.json(offer);
   } catch (error) {

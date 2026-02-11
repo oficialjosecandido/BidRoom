@@ -429,6 +429,26 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
     // Join the listing room
     this.socketService.joinListing(listingId);
 
+    // Subscribe to new offer / offer update events (Best Offer listings)
+    if (this.listing?.auctionFormat === 'best-offer') {
+      const newOfferSubscription = this.socketService.onNewOffer().subscribe((event) => {
+        if (event.listingId === listingId) {
+          this.loadOffers(listingId);
+        }
+      });
+      this.socketSubscriptions.push(newOfferSubscription);
+
+      const offerUpdateSubscription = this.socketService.onOfferUpdate().subscribe((event) => {
+        if (event.listingId === listingId) {
+          this.loadOffers(listingId);
+          if (event.listingStatus === 'ended' && this.listing) {
+            this.listing.status = 'ended';
+          }
+        }
+      });
+      this.socketSubscriptions.push(offerUpdateSubscription);
+    }
+
     // Subscribe to new bid events
     const newBidSubscription = this.socketService.onNewBid().subscribe((event) => {
       if (event.listingId === listingId) {

@@ -26,6 +26,19 @@ export interface ViewerCountUpdateEvent {
   count: number;
 }
 
+export interface NewOfferEvent {
+  listingId: string;
+  offerId: string;
+  offerCount: number;
+}
+
+export interface OfferUpdateEvent {
+  listingId: string;
+  offerId: string;
+  status: 'accepted' | 'rejected';
+  listingStatus?: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -138,6 +151,42 @@ export class SocketService {
 
       return () => {
         this.socket?.off('listing-update', handler);
+      };
+    });
+  }
+
+  onNewOffer(): Observable<NewOfferEvent> {
+    return new Observable<NewOfferEvent>((observer) => {
+      if (!this.socket) {
+        this.connect();
+      }
+
+      const handler = (data: NewOfferEvent) => {
+        observer.next(data);
+      };
+
+      this.socket?.on('new-offer', handler);
+
+      return () => {
+        this.socket?.off('new-offer', handler);
+      };
+    });
+  }
+
+  onOfferUpdate(): Observable<OfferUpdateEvent> {
+    return new Observable<OfferUpdateEvent>((observer) => {
+      if (!this.socket) {
+        this.connect();
+      }
+
+      const handler = (data: OfferUpdateEvent) => {
+        observer.next(data);
+      };
+
+      this.socket?.on('offer-update', handler);
+
+      return () => {
+        this.socket?.off('offer-update', handler);
       };
     });
   }

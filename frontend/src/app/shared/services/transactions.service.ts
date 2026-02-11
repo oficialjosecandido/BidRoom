@@ -56,6 +56,15 @@ export interface Transaction {
   sellerProofOfDeliveryUrl?: string | null;
   /** Date by which seller must ship (after paid) */
   handlingDeadline?: string | null;
+  /** Whether buyer has reviewed seller (for this listing) */
+  buyerHasReviewedSeller?: boolean;
+  /** Whether seller has reviewed buyer (for this listing) */
+  sellerHasReviewedBuyer?: boolean;
+  /** Whether a dispute has been opened for this transaction */
+  disputeOpen?: boolean;
+  disputeOpenedAt?: string | null;
+  disputeOpenedBy?: 'buyer' | 'seller' | null;
+  disputeReason?: string | null;
   createdAt: string;
   updatedAt: string;
   role?: 'seller' | 'buyer';
@@ -118,6 +127,8 @@ export class TransactionsService {
       sellerBankAccountName?: string;
       buyerProofOfPaymentUrl?: string;
       sellerProofOfDeliveryUrl?: string;
+      disputeOpen?: boolean;
+      disputeReason?: string;
     }
   ): Observable<Transaction> {
     return this.http.patch<Transaction>(`${this.apiUrl}/${id}`, body);

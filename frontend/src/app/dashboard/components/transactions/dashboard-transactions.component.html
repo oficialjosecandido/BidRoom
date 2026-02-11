@@ -34,12 +34,17 @@
         <div class="card-body">
           <h2 class="card-title">{{ t.listing.title }}</h2>
           <div class="card-amount">{{ formatPrice(t.amount) }}</div>
-          <span class="status-badge" [ngClass]="getStatusClass(getEffectiveStatus(t))">{{ getStatusLabel(getEffectiveStatus(t)) }}</span>
+          <div class="status-badges">
+            <span class="status-badge status-buying" [ngClass]="getBuyingStatusClass(t)">Buying: {{ getBuyingStatusLabel(t) }}</span>
+            <span class="status-badge status-selling" [ngClass]="getSellingStatusClass(t)">Selling: {{ getSellingStatusLabel(t) }}</span>
+            <span class="status-badge status-dispute" *ngIf="t.disputeOpen">Dispute Open</span>
+          </div>
           <p class="card-deadline" *ngIf="t.paymentDeadline && getEffectiveStatus(t) === 'pending_payment'">
             Payment window ends: {{ formatPaymentDeadline(t) }}{{ hasPaymentDeadlinePassed(t) ? ' (passed)' : '' }}
           </p>
           <p class="card-role" *ngIf="isBuyer(t)">
             You are the <strong>buyer</strong>. Seller: {{ t.seller.firstName }} {{ t.seller.lastName }}
+            <span *ngIf="t.seller.email"> — <a [href]="'mailto:' + t.seller.email" class="seller-email">{{ t.seller.email }}</a></span>
           </p>
           <p class="card-role" *ngIf="isSeller(t)">
             You are the <strong>seller</strong>. Buyer: {{ t.buyer.firstName }} {{ t.buyer.lastName }}
@@ -62,10 +67,9 @@
 
       <div class="card-actions">
         <!-- Seller: buyer's proof of payment (outside link so "View proof" works) -->
-        <div class="proof-of-payment-seller" *ngIf="isSeller(t) && t.buyerProofOfPaymentUrl && getEffectiveStatus(t) !== 'pending_payment'">
+          <div class="proof-of-payment-seller" *ngIf="isSeller(t) && t.buyerProofOfPaymentUrl && getEffectiveStatus(t) !== 'pending_payment'">
           <strong>Proof of payment:</strong>
           <div class="proof-seller-content">
-            <img *ngIf="isProofImageUrl(t.buyerProofOfPaymentUrl)" [src]="t.buyerProofOfPaymentUrl" alt="Proof of payment" class="proof-seller-img" />
             <a [href]="t.buyerProofOfPaymentUrl" target="_blank" rel="noopener noreferrer" class="proof-seller-link">View proof of payment (opens in new tab)</a>
           </div>
         </div>
@@ -101,10 +105,12 @@
             </button>
             <div class="proof-preview" *ngIf="hasProofUploaded(t)">
               <div class="proof-preview-content">
-                <img *ngIf="isProofPreviewImage(t)" [src]="getProofUploadedUrl(t)" [alt]="getProofFileName(t)" class="proof-preview-img" />
-                <a *ngIf="!isProofPreviewImage(t)" [href]="getProofUploadedUrl(t)" target="_blank" rel="noopener noreferrer" class="proof-preview-link">View</a>
+                
                 <span class="proof-preview-filename">{{ getProofFileName(t) }}</span>
-                <button type="button" class="btn btn-remove" (click)="removeProof(t)">Remove</button>
+                <div class="d-flex gap-2">
+                  <a [href]="getProofUploadedUrl(t)!" target="_blank" rel="noopener noreferrer" class="btn btn-secondary mr-2">View</a>
+                  <button type="button" class="btn btn-remove" (click)="removeProof(t)">Remove</button>
+                </div>
               </div>
             </div>
             <p class="form-hint file-name" *ngIf="getProofFileName(t) && !hasProofUploaded(t)">{{ getProofFileName(t) }}</p>
@@ -116,14 +122,16 @@
           <button *ngIf="getEffectiveStatus(t) === 'shipped'" type="button" class="btn btn-secondary" (click)="markAsDelivered(t)" [disabled]="updatingId === t._id">
             {{ updatingId === t._id ? 'Updating…' : 'Mark as delivered' }}
           </button>
-          <button *ngIf="['paid','shipped','delivered'].includes(getEffectiveStatus(t))" type="button" class="btn btn-secondary" (click)="markAsCompleted(t)" [disabled]="updatingId === t._id">
+          <p class="form-hint review-required" *ngIf="['paid','shipped','delivered'].includes(getEffectiveStatus(t)) && !hasBothReviewed(t)">
+            Both buyer and seller must leave a review before marking as complete. <a routerLink="/dashboard">Leave your review</a> on the dashboard.
+          </p>
+          <button *ngIf="['paid','shipped','delivered'].includes(getEffectiveStatus(t))" type="button" class="btn btn-secondary" (click)="markAsCompleted(t)" [disabled]="!canMarkAsCompleted(t) || updatingId === t._id" [title]="!hasBothReviewed(t) ? 'Both parties must leave a review before marking as complete' : ''">
             {{ updatingId === t._id ? 'Updating…' : 'Mark as completed' }}
           </button>
           <!-- Buyer: seller's proof of delivery (outside link so view works) -->
           <div class="proof-of-payment-seller proof-of-delivery-buyer" *ngIf="isBuyer(t) && t.sellerProofOfDeliveryUrl && ['shipped','delivered','completed'].includes(getEffectiveStatus(t))">
             <strong>Proof of delivery:</strong>
             <div class="proof-seller-content">
-              <img *ngIf="isProofImageUrl(t.sellerProofOfDeliveryUrl)" [src]="t.sellerProofOfDeliveryUrl" alt="Proof of delivery" class="proof-seller-img" />
               <a [href]="t.sellerProofOfDeliveryUrl" target="_blank" rel="noopener noreferrer" class="proof-seller-link">View proof of delivery (opens in new tab)</a>
             </div>
           </div>
@@ -143,11 +151,12 @@
             {{ getDeliveryProofUploadButtonLabel(t) }}
           </button>
           <div class="proof-preview" *ngIf="hasDeliveryProofUploaded(t)">
-            <div class="proof-preview-content">
-              <img *ngIf="isDeliveryProofPreviewImage(t)" [src]="getDeliveryProofUploadedUrl(t)" [alt]="getDeliveryProofFileName(t)" class="proof-preview-img" />
-              <a *ngIf="!isDeliveryProofPreviewImage(t)" [href]="getDeliveryProofUploadedUrl(t)" target="_blank" rel="noopener noreferrer" class="proof-preview-link">View</a>
+            <div class="proof-preview-content">              
               <span class="proof-preview-filename">{{ getDeliveryProofFileName(t) }}</span>
-              <button type="button" class="btn btn-remove" (click)="removeDeliveryProof(t)">Remove</button>
+              <div class="d-flex gap-2">
+                <a [href]="getDeliveryProofUploadedUrl(t)!" target="_blank" rel="noopener noreferrer" class="btn btn-secondary mr-2">View</a>
+                <button type="button" class="btn btn-remove" (click)="removeDeliveryProof(t)">Remove</button>
+              </div>
             </div>
           </div>
           <p class="form-error" *ngIf="getDeliveryProofUploadError(t)">{{ getDeliveryProofUploadError(t) }}</p>
@@ -162,6 +171,16 @@
             </button>
           </div>
         </ng-container>
+        <!-- Open dispute: only when status is not Done (not completed) and not cancelled -->
+        <button
+          *ngIf="!t.disputeOpen && !isDone(t) && getEffectiveStatus(t) !== 'cancelled'"
+          type="button"
+          class="btn btn-dispute"
+          (click)="openDispute(t)"
+          [disabled]="updatingId === t._id"
+        >
+          {{ updatingId === t._id ? 'Opening…' : 'Open dispute' }}
+        </button>
       </div>
     </div>
   </div>

@@ -2,6 +2,7 @@ const express = require('express');
 const Transaction = require('../models/Transaction');
 const Listing = require('../models/Listing');
 const User = require('../models/User');
+const Review = require('../models/Review');
 const { authenticateToken } = require('../middleware/auth');
 const { sendSellerProofOfPaymentNotification } = require('../services/emailService');
 
@@ -37,9 +38,34 @@ router.get('/', async (req, res) => {
       .sort({ updatedAt: -1 })
       .lean();
 
+    const listingIds = [...new Set(transactions.map(t => t.listing?._id || t.listing).filter(Boolean))];
+    const reviews = listingIds.length > 0
+      ? await Review.find({ listing: { $in: listingIds } }).select('listing reviewer reviewee role').lean()
+      : [];
+    const buyerReviewedSeller = {}; // listingId -> true if buyer reviewed seller
+    const sellerReviewedBuyer = {};
+    for (const r of reviews) {
+      const lid = (r.listing && r.listing._id ? r.listing._id : r.listing)?.toString();
+      if (!lid) continue;
+      if (r.role === 'as_seller') {
+        buyerReviewedSeller[lid] = true;
+      } else {
+        sellerReviewedBuyer[lid] = true;
+      }
+    }
+
     const withRole = transactions.map(t => {
       const role = t.seller?._id?.toString() === user._id.toString() ? 'seller' : 'buyer';
-      return { ...t, role, ...normalizeTransactionStatus(t) };
+      const listingId = (t.listing && t.listing._id ? t.listing._id : t.listing)?.toString();
+      const buyerHasReviewedSeller = !!buyerReviewedSeller[listingId];
+      const sellerHasReviewedBuyer = !!sellerReviewedBuyer[listingId];
+      return {
+        ...t,
+        role,
+        buyerHasReviewedSeller,
+        sellerHasReviewedBuyer,
+        ...normalizeTransactionStatus(t)
+      };
     });
 
     res.json({ transactions: withRole });
@@ -76,7 +102,20 @@ router.get('/:id', async (req, res) => {
       return res.status(403).json({ error: 'You do not have access to this transaction' });
     }
 
-    res.json({ ...transaction, ...normalizeTransactionStatus(transaction) });
+    const listingId = (transaction.listing && transaction.listing._id ? transaction.listing._id : transaction.listing)?.toString();
+    const [buyerReviewedSeller, sellerReviewedBuyer] = listingId
+      ? await Promise.all([
+          Review.exists({ listing: listingId, role: 'as_seller' }),
+          Review.exists({ listing: listingId, role: 'as_buyer' })
+        ])
+      : [false, false];
+
+    res.json({
+      ...transaction,
+      buyerHasReviewedSeller: !!buyerReviewedSeller,
+      sellerHasReviewedBuyer: !!sellerReviewedBuyer,
+      ...normalizeTransactionStatus(transaction)
+    });
   } catch (error) {
     console.error('Error fetching transaction:', error);
     res.status(500).json({ error: 'Failed to fetch transaction', message: error.message });
@@ -105,7 +144,7 @@ router.patch('/:id', async (req, res) => {
       return res.status(403).json({ error: 'You do not have access to this transaction' });
     }
 
-    const { status, trackingNumber, trackingCarrier, sellerBankIban, sellerBankSwift, sellerBankAccountName, buyerProofOfPaymentUrl, sellerProofOfDeliveryUrl } = req.body;
+    const { status, trackingNumber, trackingCarrier, sellerBankIban, sellerBankSwift, sellerBankAccountName, buyerProofOfPaymentUrl, sellerProofOfDeliveryUrl, disputeOpen, disputeReason } = req.body;
     const ts = transaction.transactionStatus ?? transaction.status;
     const ps = transaction.paymentStatus ?? 'pending';
     const ss = transaction.sendingStatus ?? 'pending';
@@ -126,6 +165,14 @@ router.patch('/:id', async (req, res) => {
       }
     }
 
+    /** Dispute: either buyer or seller can open; both see it. Closing requires admin. */
+    if (disputeOpen === true && !transaction.disputeOpen) {
+      transaction.disputeOpen = true;
+      transaction.disputeOpenedAt = new Date();
+      transaction.disputeOpenedBy = isSeller ? 'seller' : 'buyer';
+      if (disputeReason != null) transaction.disputeReason = String(disputeReason).trim() || null;
+    }
+
     if (isBuyer) {
       if (status === 'paid') {
         transaction.transactionStatus = 'paid';
@@ -143,6 +190,19 @@ router.patch('/:id', async (req, res) => {
         transaction.transactionStatus = 'delivered';
         transaction.sendingStatus = 'delivered';
       } else if (status === 'completed' && ['paid', 'shipped', 'delivered'].includes(ts)) {
+        const lid = transaction.listing?.toString?.() || transaction.listing;
+        const [buyerReviewed, sellerReviewed] = lid
+          ? await Promise.all([
+              Review.exists({ listing: lid, role: 'as_seller' }),
+              Review.exists({ listing: lid, role: 'as_buyer' })
+            ])
+          : [false, false];
+        if (!buyerReviewed || !sellerReviewed) {
+          return res.status(400).json({
+            error: 'Reviews required',
+            message: 'Both buyer and seller must leave a review before the transaction can be marked as complete.'
+          });
+        }
         transaction.transactionStatus = 'completed';
       }
     }
@@ -154,6 +214,18 @@ router.patch('/:id', async (req, res) => {
       .populate('seller', 'firstName lastName email')
       .populate('buyer', 'firstName lastName email')
       .lean();
+
+    const listingId = (updated.listing && updated.listing._id ? updated.listing._id : updated.listing)?.toString();
+    let buyerHasReviewedSeller = false;
+    let sellerHasReviewedBuyer = false;
+    if (listingId) {
+      const [b, s] = await Promise.all([
+        Review.exists({ listing: listingId, role: 'as_seller' }),
+        Review.exists({ listing: listingId, role: 'as_buyer' })
+      ]);
+      buyerHasReviewedSeller = !!b;
+      sellerHasReviewedBuyer = !!s;
+    }
 
     if (isBuyer && status === 'paid' && buyerProofOfPaymentUrl && updated.seller?.email) {
       const listingTitle = updated.listing?.title || 'Item';
@@ -167,7 +239,12 @@ router.patch('/:id', async (req, res) => {
       ).catch(err => console.error('Proof of payment notification email:', err.message));
     }
 
-    res.json({ ...updated, ...normalizeTransactionStatus(updated) });
+    res.json({
+      ...updated,
+      buyerHasReviewedSeller,
+      sellerHasReviewedBuyer,
+      ...normalizeTransactionStatus(updated)
+    });
   } catch (error) {
     console.error('Error updating transaction:', error);
     res.status(500).json({ error: 'Failed to update transaction', message: error.message });

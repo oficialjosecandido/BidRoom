@@ -158,12 +158,18 @@
     margin-bottom: 8px;
   }
 
+  .status-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+
   .status-badge {
     display: inline-block;
     font-size: 12px;
     padding: 4px 10px;
     border-radius: 6px;
-    margin-bottom: 8px;
 
     &.status-pending {
       background: #fef3c7;
@@ -185,6 +191,14 @@
     &.status-cancelled {
       background: #fee2e2;
       color: #991b1b;
+    }
+    &.status-dispute {
+      background: #fed7aa;
+      color: #9a3412;
+    }
+    &.status-review {
+      background: #e9d5ff;
+      color: #6b21a8;
     }
   }
 
@@ -292,6 +306,12 @@
       background: #f7fafc;
       color: #4a5568;
       border: 1px solid #e2e8f0;
+    }
+
+    &.btn-dispute {
+      background: #fed7aa;
+      color: #9a3412;
+      border: 1px solid #fdba74;
     }
 
     &:disabled {

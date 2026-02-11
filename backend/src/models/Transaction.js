@@ -106,7 +106,19 @@ const transactionSchema = new mongoose.Schema({
     type: String,
     trim: true,
     default: null
-  }
+  },
+  /** Whether a dispute has been opened for this transaction (visible to both parties) */
+  disputeOpen: {
+    type: Boolean,
+    default: false,
+    index: true
+  },
+  /** When the dispute was opened */
+  disputeOpenedAt: { type: Date, default: null },
+  /** Who opened the dispute: 'buyer' | 'seller' */
+  disputeOpenedBy: { type: String, enum: ['buyer', 'seller'], default: null },
+  /** Optional reason/description when opening a dispute */
+  disputeReason: { type: String, trim: true, default: null }
 }, {
   timestamps: true
 });

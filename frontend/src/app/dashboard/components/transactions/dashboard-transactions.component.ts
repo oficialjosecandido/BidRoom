@@ -72,6 +72,24 @@ export class DashboardTransactionsComponent implements OnInit {
     return t.transactionStatus ?? t.status ?? 'pending_payment';
   }
 
+  /** Transaction is "Done" = completed; dispute is disabled when Done */
+  isDone(t: Transaction): boolean {
+    return this.getEffectiveStatus(t) === 'completed';
+  }
+
+  /** Both buyer and seller have left their reviews; required before marking as completed */
+  hasBothReviewed(t: Transaction): boolean {
+    return !!(t.buyerHasReviewedSeller && t.sellerHasReviewedBuyer);
+  }
+
+  /** Can mark as completed only when delivered (or paid/shipped) AND both have reviewed */
+  canMarkAsCompleted(t: Transaction): boolean {
+    return (
+      ['paid', 'shipped', 'delivered'].includes(this.getEffectiveStatus(t)) &&
+      this.hasBothReviewed(t)
+    );
+  }
+
   getStatusLabel(status: TransactionStatus): string {
     const labels: Record<TransactionStatus, string> = {
       pending_payment: 'Pending payment',
@@ -82,6 +100,72 @@ export class DashboardTransactionsComponent implements OnInit {
       cancelled: 'Cancelled'
     };
     return labels[status] || status;
+  }
+
+  /** Buying status: Pending Payment | Paid | Received | Pending Review | Done */
+  getBuyingStatusLabel(t: Transaction): string {
+    const s = this.getEffectiveStatus(t);
+    if (['delivered', 'completed'].includes(s) && !t.buyerHasReviewedSeller) {
+      return 'Pending Review';
+    }
+    const map: Record<TransactionStatus, string> = {
+      pending_payment: 'Pending Payment',
+      paid: 'Paid',
+      shipped: 'Paid',
+      delivered: 'Received',
+      completed: 'Done',
+      cancelled: 'Cancelled'
+    };
+    return map[s] || s;
+  }
+
+  /** Selling status: Pending Delivery | Payment Received | Sent | Pending Review | Done */
+  getSellingStatusLabel(t: Transaction): string {
+    const s = this.getEffectiveStatus(t);
+    if (['delivered', 'completed'].includes(s) && !t.sellerHasReviewedBuyer) {
+      return 'Pending Review';
+    }
+    const map: Record<TransactionStatus, string> = {
+      pending_payment: 'Pending Delivery',
+      paid: 'Payment Received',
+      shipped: 'Sent',
+      delivered: 'Sent',
+      completed: 'Done',
+      cancelled: 'Cancelled'
+    };
+    return map[s] || s;
+  }
+
+  getBuyingStatusClass(t: Transaction): string {
+    const s = this.getEffectiveStatus(t);
+    if (['delivered', 'completed'].includes(s) && !t.buyerHasReviewedSeller) {
+      return 'status-review';
+    }
+    const map: Record<TransactionStatus, string> = {
+      pending_payment: 'status-pending',
+      paid: 'status-paid',
+      shipped: 'status-paid',
+      delivered: 'status-delivered',
+      completed: 'status-completed',
+      cancelled: 'status-cancelled'
+    };
+    return map[s] || '';
+  }
+
+  getSellingStatusClass(t: Transaction): string {
+    const s = this.getEffectiveStatus(t);
+    if (['delivered', 'completed'].includes(s) && !t.sellerHasReviewedBuyer) {
+      return 'status-review';
+    }
+    const map: Record<TransactionStatus, string> = {
+      pending_payment: 'status-pending',
+      paid: 'status-paid',
+      shipped: 'status-shipped',
+      delivered: 'status-shipped',
+      completed: 'status-completed',
+      cancelled: 'status-cancelled'
+    };
+    return map[s] || '';
   }
 
   getStatusClass(status: TransactionStatus): string {
@@ -134,13 +218,6 @@ export class DashboardTransactionsComponent implements OnInit {
 
   hasSellerBankDetails(t: Transaction): boolean {
     return !!(t.sellerBankIban || t.sellerBankSwift || t.sellerBankAccountName);
-  }
-
-  /** True if the proof URL is likely an image (for seller preview). */
-  isProofImageUrl(url: string | null | undefined): boolean {
-    if (!url) return false;
-    const path = url.split('?')[0].toLowerCase();
-    return /\.(jpg|jpeg|png)$/.test(path);
   }
 
   toggleBankForm(t: Transaction): void {
@@ -216,12 +293,6 @@ export class DashboardTransactionsComponent implements OnInit {
 
   getProofUploadedUrl(t: Transaction): string | null {
     return this.proofUploadedUrlByTxId[t._id] || null;
-  }
-
-  /** True if the uploaded proof is an image (for preview); otherwise treat as PDF link. */
-  isProofPreviewImage(t: Transaction): boolean {
-    const name = (this.proofSelectedFileNameByTxId[t._id] || '').toLowerCase();
-    return /\.(jpg|jpeg|png)$/.test(name);
   }
 
   removeProof(t: Transaction): void {
@@ -345,11 +416,6 @@ export class DashboardTransactionsComponent implements OnInit {
     return this.deliveryProofUploadedUrlByTxId[t._id] || null;
   }
 
-  isDeliveryProofPreviewImage(t: Transaction): boolean {
-    const name = (this.deliveryProofFileNameByTxId[t._id] || '').toLowerCase();
-    return /\.(jpg|jpeg|png)$/.test(name);
-  }
-
   removeDeliveryProof(t: Transaction): void {
     delete this.deliveryProofUploadedUrlByTxId[t._id];
     delete this.deliveryProofFileNameByTxId[t._id];
@@ -415,6 +481,20 @@ export class DashboardTransactionsComponent implements OnInit {
           delete this.deliveryProofUploadedUrlByTxId[t._id];
           delete this.deliveryProofFileNameByTxId[t._id];
           delete this.deliveryProofErrorByTxId[t._id];
+        },
+        error: () => (this.updatingId = null)
+      });
+  }
+
+  openDispute(t: Transaction): void {
+    if (this.updatingId || t.disputeOpen || this.getEffectiveStatus(t) === 'cancelled') return;
+    this.updatingId = t._id;
+    this.transactionsService
+      .updateTransaction(t._id, { disputeOpen: true })
+      .subscribe({
+        next: (updated) => {
+          this.replaceTransaction(updated);
+          this.updatingId = null;
         },
         error: () => (this.updatingId = null)
       });
