@@ -6,26 +6,32 @@
     </div>
 
     <!-- Loading State -->
-    <div class="loading-state" *ngIf="isLoading">
+    @if (isLoading) {
+<div class="loading-state">
       <div class="spinner"></div>
       <h2 class="title">Verifying your email...</h2>
       <p class="subtitle">Please wait while we verify your email address.</p>
     </div>
+}
 
     <!-- Success State -->
-    <div class="success-state" *ngIf="isVerified && !isLoading">
+    @if (isVerified && !isLoading) {
+<div class="success-state">
       <div class="success-icon">✓</div>
       <h2 class="title">Email verified successfully!</h2>
       <p class="subtitle">Your email address has been verified. You can now log in to your account.</p>
       <button class="login-btn" (click)="navigateToLogin()">Go to login</button>
     </div>
+}
 
     <!-- Error State -->
-    <div class="error-state" *ngIf="errorMessage && !isLoading">
+    @if (errorMessage && !isLoading) {
+<div class="error-state">
       <div class="error-icon">✗</div>
       <h2 class="title">Verification failed</h2>
       <p class="subtitle">{{ errorMessage }}</p>
       <button class="login-btn" (click)="navigateToLogin()">Go to login</button>
     </div>
+}
   </div>
 </div>

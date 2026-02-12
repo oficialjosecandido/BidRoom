@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { ActivatedRoute, Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { API_CONFIG } from '../../../shared/config/api.config';
@@ -7,7 +7,7 @@ import { API_CONFIG } from '../../../shared/config/api.config';
 @Component({
   selector: 'app-invitation-accept',
   standalone: true,
-  imports: [CommonModule],
+  imports: [],
   templateUrl: './invitation-accept.component.html',
   styleUrls: ['./invitation-accept.component.scss']
 })

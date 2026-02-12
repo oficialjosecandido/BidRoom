@@ -2,21 +2,23 @@
 
 <div class="listing-details-page">
   <div class="container">
-    <!-- Loading State -->
-    <div *ngIf="loading" class="loading-state">
-      <p>Loading listing details...</p>
-    </div>
-
-    <!-- Error State -->
-    <div *ngIf="error && !loading" class="error-state">
-      <div class="error-content">
-        <h2>⚠️ {{ error }}</h2>
-        <button class="btn btn-primary" (click)="goBack()">Back to Listings</button>
+    @if (loading) {
+      <div class="loading-state">
+        <p>Loading listing details...</p>
       </div>
-    </div>
+    }
 
-    <!-- Listing Details -->
-    <div *ngIf="listing && !loading && !error" class="listing-details">
+    @if (error && !loading) {
+      <div class="error-state">
+        <div class="error-content">
+          <h2>⚠️ {{ error }}</h2>
+          <button class="btn btn-primary" (click)="goBack()">Back to Listings</button>
+        </div>
+      </div>
+    }
+
+    @if (listing && !loading && !error) {
+    <div class="listing-details">
       <!-- Back Button -->
       <button class="btn-back" (click)="goBack()">← Back to Listings</button>
 
@@ -30,22 +32,24 @@
               [alt]="listing.title" 
               class="main-image">
             <div class="listing-badges">
-              <span class="badge badge-featured" *ngIf="listing.isFeatured">⭐ Featured</span>
-              <span class="badge badge-verified" *ngIf="listing.isVerified">✓ Verified</span>
-              <span class="badge badge-ending-soon" *ngIf="listing.endingSoon && !isAuctionEnded()">⏰ Ending Soon</span>
+              @if (listing.isFeatured) { <span class="badge badge-featured">⭐ Featured</span> }
+              @if (listing.isVerified) { <span class="badge badge-verified">✓ Verified</span> }
+              @if (listing.endingSoon && !isAuctionEnded()) { <span class="badge badge-ending-soon">⏰ Ending Soon</span> }
             </div>
           </div>
           
-          <!-- Thumbnail Images -->
-          <div class="thumbnail-images" *ngIf="listing.images.length > 1">
-            <div 
-              *ngFor="let image of listing.images; let i = index"
+          @if (listing.images.length > 1) {
+          <div class="thumbnail-images">
+            @for (image of listing.images; track $index) {
+            <div
               class="thumbnail"
-              [class.active]="i === activeImageIndex"
-              (click)="setActiveImage(i)">
-              <img [src]="image" [alt]="listing.title + ' thumbnail ' + (i + 1)">
+              [class.active]="$index === activeImageIndex"
+              (click)="setActiveImage($index)">
+              <img [src]="image" [alt]="listing.title + ' thumbnail ' + ($index + 1)">
             </div>
+            }
           </div>
+          }
         </div>
 
         <!-- Details Section -->
@@ -58,22 +62,23 @@
           <!-- Price and Bid Info -->
           <div class="price-section">
             <div class="current-price">
-              <span class="price-label" *ngIf="listing.auctionFormat === 'highest-bid'">Current Bid</span>
-              <span class="price-label" *ngIf="listing.auctionFormat === 'best-offer'">Highest Offer</span>
+              @if (listing.auctionFormat === 'highest-bid') { <span class="price-label">Current Bid</span> }
+              @if (listing.auctionFormat === 'best-offer') { <span class="price-label">Highest Offer</span> }
               <span class="price-amount">{{ listing.auctionFormat === 'best-offer' ? formatPrice(getHighestOfferAmount()) : formatPrice(listing.currentPrice) }}</span>
             </div>
             
-            <!-- Buy Now Price Display -->
-            <div class="buy-now-section" *ngIf="listing.buyNowPrice && listing.auctionFormat === 'highest-bid' && !isAuctionEnded() && !hasPrivateRoom()">
+            @if (listing.buyNowPrice && listing.auctionFormat === 'highest-bid' && !isAuctionEnded() && !hasPrivateRoom()) {
+            <div class="buy-now-section">
               <div class="buy-now-content">
                 <span class="buy-now-label">Buy Now</span>
                 <span class="buy-now-price">{{ formatPrice(listing.buyNowPrice) }}</span>
                 <button class="btn btn-urgent btn-small" (click)="buyNow()">Buy Now</button>
               </div>
             </div>
+            }
             
-            <!-- Private Room: Active (seller started it; anyone can watch) -->
-            <div class="private-room-banner" *ngIf="listing.privateRoomStatus === 'active'">
+            @if (listing.privateRoomStatus === 'active') {
+            <div class="private-room-banner">
               <div class="private-room-content">
                 <span class="private-room-icon">🔒</span>
                 <div class="private-room-text">
@@ -88,8 +93,9 @@
                 </div>
               </div>
             </div>
-            <!-- Private Room: Eligible (to be created by seller) -->
-            <div class="private-room-banner private-room-invited" *ngIf="listing.allowPrivateRoom && listing.privateRoomStatus === 'invited'">
+            }
+            @if (listing.allowPrivateRoom && listing.privateRoomStatus === 'invited') {
+            <div class="private-room-banner private-room-invited">
               <div class="private-room-content">
                 <span class="private-room-icon">🔒</span>
                 <div class="private-room-text">
@@ -98,18 +104,21 @@
                 </div>
               </div>
             </div>
-            <div class="private-room-banner private-room-eligible" *ngIf="listing.allowPrivateRoom && listing.privateRoomStatus === 'eligible' && listing.status === 'ended'">
+            }
+            @if (listing.allowPrivateRoom && listing.privateRoomStatus === 'eligible' && listing.status === 'ended') {
+            <div class="private-room-banner private-room-eligible">
               <div class="private-room-content">
                 <span class="private-room-icon">🔒</span>
                 <div class="private-room-text">
                   <h4>Private room available</h4>
-                  <p *ngIf="isOwnListing">Create your private room and invite 2–5 bidders to continue. You received an email with a link to get started.</p>
-                  <p *ngIf="!isOwnListing">The seller can create a private room and invite some bidders to continue. You’ll be notified if you’re invited.</p>
+                  @if (isOwnListing) { <p>Create your private room and invite 2–5 bidders to continue. You received an email with a link to get started.</p> }
+                  @if (!isOwnListing) { <p>The seller can create a private room and invite some bidders to continue. You'll be notified if you're invited.</p> }
                 </div>
               </div>
             </div>
-            <!-- Private Room: Ended (final price) -->
-            <div class="private-room-banner private-room-ended" *ngIf="listing.allowPrivateRoom && listing.privateRoomStatus === 'ended'">
+            }
+            @if (listing.allowPrivateRoom && listing.privateRoomStatus === 'ended') {
+            <div class="private-room-banner private-room-ended">
               <div class="private-room-content">
                 <span class="private-room-icon">🔒</span>
                 <div class="private-room-text">
@@ -118,44 +127,38 @@
                 </div>
               </div>
             </div>
-            <!-- Time Remaining Display -->
-            <div class="time-remaining-display" *ngIf="!isAuctionEnded() && listing.timeRemaining && !listing.timeRemaining.ended">
+            }
+            @if (!isAuctionEnded() && listing.timeRemaining && !listing.timeRemaining.ended) {
+            <div class="time-remaining-display">
               <div class="time-remaining-content" [class.private-room]="getAuctionEndType() === 'private-room'">
                 <span class="time-icon">{{ getAuctionEndType() === 'private-room' ? '🔒' : '⏰' }}</span>
                 <div class="time-text">
                   <span class="time-label">{{ getAuctionEndLabel() }}</span>
                   <span class="time-value">{{ formatTimeRemaining() }}</span>
-                  <span class="time-sublabel" *ngIf="getAuctionEndType() === 'private-room'">(ends 60s after last bid)</span>
+                  @if (getAuctionEndType() === 'private-room') { <span class="time-sublabel">(ends 60s after last bid)</span> }
                 </div>
               </div>
             </div>
-            <!-- Auction Ended Message -->
-            <div class="auction-ended-banner" *ngIf="isAuctionEnded() && !hasPrivateRoom() && !(listing.allowPrivateRoom && listing.privateRoomStatus === 'eligible') && !(listing.allowPrivateRoom && listing.privateRoomStatus === 'invited')">
+            }
+            @if (isAuctionEnded() && !hasPrivateRoom() && !(listing.allowPrivateRoom && listing.privateRoomStatus === 'eligible') && !(listing.allowPrivateRoom && listing.privateRoomStatus === 'invited')) {
+            <div class="auction-ended-banner">
               <div class="auction-ended-content">
                 <span class="ended-icon">🏁</span>
                 <div class="ended-text">
                   <h4>{{ listing.auctionFormat === 'best-offer' ? 'Listing Ended' : 'Auction Ended' }}</h4>
-                  <!-- Highest-bid: seller, no bids -->
-                  <p *ngIf="listing.auctionFormat === 'highest-bid' && isOwnListing && getEndedBidCount() === 0">This auction closed with no bids. You can reopen it for another 7 days below.</p>
-                  <!-- Highest-bid: seller, has bids, no winner yet -->
-                  <p *ngIf="listing.auctionFormat === 'highest-bid' && isOwnListing && getEndedBidCount() > 0 && !listing.winner && !listing.allowPrivateRoom && !canCreatePrivateRoom() && !isPrivateRoomEnded()">Select a winner below.</p>
-                  <!-- Highest-bid: seller, winner selected -->
-                  <p *ngIf="listing.auctionFormat === 'highest-bid' && isOwnListing && listing.winner">Winner has been selected.</p>
-                  <!-- Best-offer: seller, no offers -->
-                  <p *ngIf="listing.auctionFormat === 'best-offer' && isOwnListing && !offersLoading && offers.length === 0">This listing closed with no offers. You can reopen it for another 7 days below.</p>
-                  <!-- Best-offer: seller, has offers -->
-                  <p *ngIf="listing.auctionFormat === 'best-offer' && isOwnListing && offers.length > 0">{{ getBestOfferClosedMessage() }}</p>
-                  <!-- Highest-bid: non-seller, no bids -->
-                  <p *ngIf="listing.auctionFormat === 'highest-bid' && !isOwnListing && getEndedBidCount() === 0">This auction closed with no bids.</p>
-                  <!-- Highest-bid: non-seller, has bids -->
-                  <p *ngIf="listing.auctionFormat === 'highest-bid' && !isOwnListing && getEndedBidCount() > 0">The seller will select a winner within 24 hours.</p>
-                  <!-- Best-offer: non-seller, sold -->
-                  <p *ngIf="listing.auctionFormat === 'best-offer' && !isOwnListing && hasAcceptedOffer()">Auction ended. Listing sold.</p>
-                  <!-- Best-offer: non-seller, not sold -->
-                  <p *ngIf="listing.auctionFormat === 'best-offer' && !isOwnListing && !hasAcceptedOffer()">This listing has ended.</p>
+                  @if (listing.auctionFormat === 'highest-bid' && isOwnListing && getEndedBidCount() === 0) { <p>This auction closed with no bids. You can reopen it for another 7 days below.</p> }
+                  @if (listing.auctionFormat === 'highest-bid' && isOwnListing && getEndedBidCount() > 0 && !listing.winner && !listing.allowPrivateRoom && !canCreatePrivateRoom() && !isPrivateRoomEnded()) { <p>Select a winner below.</p> }
+                  @if (listing.auctionFormat === 'highest-bid' && isOwnListing && listing.winner) { <p>Winner has been selected.</p> }
+                  @if (listing.auctionFormat === 'best-offer' && isOwnListing && !offersLoading && offers.length === 0) { <p>This listing closed with no offers. You can reopen it for another 7 days below.</p> }
+                  @if (listing.auctionFormat === 'best-offer' && isOwnListing && offers.length > 0) { <p>{{ getBestOfferClosedMessage() }}</p> }
+                  @if (listing.auctionFormat === 'highest-bid' && !isOwnListing && getEndedBidCount() === 0) { <p>This auction closed with no bids.</p> }
+                  @if (listing.auctionFormat === 'highest-bid' && !isOwnListing && getEndedBidCount() > 0) { <p>The seller will select a winner within 24 hours.</p> }
+                  @if (listing.auctionFormat === 'best-offer' && !isOwnListing && hasAcceptedOffer()) { <p>Auction ended. Listing sold.</p> }
+                  @if (listing.auctionFormat === 'best-offer' && !isOwnListing && !hasAcceptedOffer()) { <p>This listing has ended.</p> }
                 </div>
               </div>
             </div>
+            }
             <div class="price-details">
               <div class="price-detail-item">
                 @if (listing.auctionFormat === 'highest-bid') {
@@ -163,20 +166,26 @@
                 <span class="detail-value">{{ formatPrice(listing.startingPrice) }}</span>
                 }
               </div>
-              <div class="price-detail-item" *ngIf="listing.reservePrice && listing.auctionFormat === 'highest-bid'">
+              @if (listing.reservePrice && listing.auctionFormat === 'highest-bid') {
+              <div class="price-detail-item">
                 <span class="detail-label">Reserve Price:</span>
                 <span class="detail-value">{{ formatPrice(listing.reservePrice) }}</span>
                 <span class="reserve-note">(Seller must sell if met)</span>
               </div>
-              <div class="price-detail-item" *ngIf="listing.minimumOfferPrice && listing.auctionFormat === 'best-offer'">
+              }
+              @if (listing.minimumOfferPrice && listing.auctionFormat === 'best-offer') {
+              <div class="price-detail-item">
                 <span class="detail-label">Minimum Offer:</span>
                 <span class="detail-value">{{ formatPrice(listing.minimumOfferPrice) }}</span>
                 <span class="reserve-note">(Auto-accepts if met)</span>
               </div>
-              <div class="price-detail-item" *ngIf="listing.auctionFormat === 'highest-bid'">
+              }
+              @if (listing.auctionFormat === 'highest-bid') {
+              <div class="price-detail-item">
                 <span class="detail-label">Bid Increment:</span>
                 <span class="detail-value">{{ formatPrice(listing.bidIncrement) }}</span>
               </div>
+              }
               <!-- <div class="price-detail-item">
                 <span class="detail-label">Duration:</span>
                 <span class="detail-value">{{ listing.durationSlot }}</span>
@@ -191,71 +200,71 @@
 
           <!-- Action Buttons -->
           <div class="action-buttons">
-            <!-- Only show action buttons if private room is NOT active -->
-            <button 
-              class="btn btn-primary btn-large" 
-              *ngIf="listing.auctionFormat === 'highest-bid' && !isAuctionEnded() && !hasPrivateRoom() && !isOwnListing"
-              (click)="openBidModal()">
+            @if (listing.auctionFormat === 'highest-bid' && !isAuctionEnded() && !hasPrivateRoom() && !isOwnListing) {
+            <button class="btn btn-primary btn-large" (click)="openBidModal()">
               {{ isAuthenticated ? 'Place Bid' : 'Place Bid (Email Required)' }}
             </button>
-            <div *ngIf="isOwnListing && listing.auctionFormat === 'highest-bid' && !hasPrivateRoom() && !isAuctionEnded()" class="own-listing-message">
+            }
+            @if (isOwnListing && listing.auctionFormat === 'highest-bid' && !hasPrivateRoom() && !isAuctionEnded()) {
+            <div class="own-listing-message">
               <p>You can't bid <br> on your own listing.</p>
             </div>
-            <!-- Seller: ended with bids + private room eligible → Create private room -->
-            <button
-              *ngIf="canCreatePrivateRoom()"
-              class="btn btn-primary btn-large"
-              (click)="openCreatePrivateRoomModal()">
+            }
+            @if (canCreatePrivateRoom()) {
+            <button class="btn btn-primary btn-large" (click)="openCreatePrivateRoomModal()">
               Create private room
             </button>
-            <!-- Seller: ended with bids, no private room → Select winner (never show when allowPrivateRoom; private room flow uses Create room instead) -->
-            <button
-              *ngIf="isOwnListing && isAuctionEnded() && !listing.allowPrivateRoom && !hasPrivateRoom() && getEndedBidCount() > 0 && !listing.winner && !canCreatePrivateRoom() && !isPrivateRoomEnded()"
-              class="btn btn-primary btn-large"
-              (click)="openSelectWinnerModal()">
+            }
+            @if (isOwnListing && isAuctionEnded() && !listing.allowPrivateRoom && !hasPrivateRoom() && getEndedBidCount() > 0 && !listing.winner && !canCreatePrivateRoom() && !isPrivateRoomEnded()) {
+            <button class="btn btn-primary btn-large" (click)="openSelectWinnerModal()">
               Select winner
             </button>
-            <!-- Seller: ended with no bids/offers → Closed + Reopen (only when nothing received) -->
-            <div *ngIf="canReopenListing()" class="auction-ended-message">
-              <p *ngIf="listing.auctionFormat === 'highest-bid'">Auction closed with no bids.</p>
-              <p *ngIf="listing.auctionFormat === 'best-offer'">Listing closed with no offers.</p>
+            }
+            @if (canReopenListing()) {
+            <div class="auction-ended-message">
+              @if (listing.auctionFormat === 'highest-bid') { <p>Auction closed with no bids.</p> }
+              @if (listing.auctionFormat === 'best-offer') { <p>Listing closed with no offers.</p> }
               <button type="button" class="btn btn-primary btn-large reopen-btn" (click)="reopenAuction()" [disabled]="reopenLoading">
                 {{ reopenLoading ? 'Reopening…' : 'Reopen for 7 days' }}
               </button>
             </div>
-            <!-- Seller: best-offer ended but has offers → no Reopen -->
-            <div *ngIf="isOwnListing && listing.auctionFormat === 'best-offer' && isAuctionEnded() && !hasPrivateRoom() && offers.length > 0" class="auction-ended-message">
+            }
+            @if (isOwnListing && listing.auctionFormat === 'best-offer' && isAuctionEnded() && !hasPrivateRoom() && offers.length > 0) {
+            <div class="auction-ended-message">
               <p>{{ getBestOfferClosedMessage() }}</p>
             </div>
-            <!-- Non-seller: ended → message only -->
-            <div *ngIf="!isOwnListing && isAuctionEnded() && !hasPrivateRoom()" class="auction-ended-message">
-              <p *ngIf="listing.auctionFormat === 'highest-bid' && getEndedBidCount() === 0">This auction has ended with no bids.</p>
-              <p *ngIf="listing.auctionFormat === 'highest-bid' && getEndedBidCount() > 0">This auction has ended. The seller will select a winner within 24 hours.</p>
-              <p *ngIf="listing.auctionFormat === 'best-offer' && hasAcceptedOffer()">Auction ended. Listing sold.</p>
-              <p *ngIf="listing.auctionFormat === 'best-offer' && !hasAcceptedOffer()">This listing has ended.</p>
+            }
+            @if (!isOwnListing && isAuctionEnded() && !hasPrivateRoom()) {
+            <div class="auction-ended-message">
+              @if (listing.auctionFormat === 'highest-bid' && getEndedBidCount() === 0) { <p>This auction has ended with no bids.</p> }
+              @if (listing.auctionFormat === 'highest-bid' && getEndedBidCount() > 0) { <p>This auction has ended. The seller will select a winner within 24 hours.</p> }
+              @if (listing.auctionFormat === 'best-offer' && hasAcceptedOffer()) { <p>Auction ended. Listing sold.</p> }
+              @if (listing.auctionFormat === 'best-offer' && !hasAcceptedOffer()) { <p>This listing has ended.</p> }
             </div>
-            <button 
-              class="btn btn-primary btn-large" 
-              *ngIf="listing.auctionFormat === 'best-offer' && !hasPrivateRoom() && !isOwnListing && isBestOfferActive()"
-              (click)="openOfferModal()">
+            }
+            @if (listing.auctionFormat === 'best-offer' && !hasPrivateRoom() && !isOwnListing && isBestOfferActive()) {
+            <button class="btn btn-primary btn-large" (click)="openOfferModal()">
               Make Offer
             </button>
-            <div *ngIf="isOwnListing && listing.auctionFormat === 'best-offer' && !hasPrivateRoom()" class="own-listing-message">
+            }
+            @if (isOwnListing && listing.auctionFormat === 'best-offer' && !hasPrivateRoom()) {
+            <div class="own-listing-message">
               <p>You can't make an offer <br> on your own listing.</p>
             </div>
-            <button 
-              class="btn btn-secondary btn-large" 
-              *ngIf="!hasPrivateRoom()" 
-              (click)="addToWatchlist()"
-              [disabled]="watchlistLoading">
-              <span *ngIf="watchlistLoading">...</span>
-              <span *ngIf="!watchlistLoading && inWatchlist">Remove from Watchlist</span>
-              <span *ngIf="!watchlistLoading && !inWatchlist">Add to Watchlist</span>
+            }
+            @if (!hasPrivateRoom()) {
+            <button class="btn btn-secondary btn-large" (click)="addToWatchlist()" [disabled]="watchlistLoading">
+              @if (watchlistLoading) { <span>...</span> }
+              @if (!watchlistLoading && inWatchlist) { <span>Remove from Watchlist</span> }
+              @if (!watchlistLoading && !inWatchlist) { <span>Add to Watchlist</span> }
             </button>
+            }
           </div>
-          <p class="watchlist-count" *ngIf="listing.watchlistCount != null && listing.watchlistCount > 0">
+          @if (listing.watchlistCount != null && listing.watchlistCount > 0) {
+          <p class="watchlist-count">
             {{ listing.watchlistCount }} {{ listing.watchlistCount === 1 ? 'person has' : 'people have' }} this in their watchlist
           </p>
+          }
 
           <!-- Auction Info -->
           <div class="auction-info">
@@ -271,12 +280,16 @@
               <div class="info-content">
                 <span class="info-label">Seller</span>
                 <span class="info-value">{{ listing.seller.firstName }} {{ listing.seller.lastName }}</span>
-                <span class="seller-review-score" *ngIf="listing.sellerScore != null">
+                @if (listing.sellerScore != null) {
+                <span class="seller-review-score">
                   ★ {{ listing.sellerScore | number:'1.1-1' }} <span class="review-count">({{ listing.sellerReviewCount ?? 0 }} review{{ (listing.sellerReviewCount ?? 0) !== 1 ? 's' : '' }})</span>
                 </span>
-                <span class="seller-review-score no-reviews" *ngIf="listing.sellerScore == null && (listing.sellerReviewCount ?? 0) === 0">
+                }
+                @if (listing.sellerScore == null && (listing.sellerReviewCount ?? 0) === 0) {
+                <span class="seller-review-score no-reviews">
                   No reviews yet
                 </span>
+                }
               </div>
             </div>
             <div class="info-item">
@@ -286,17 +299,20 @@
                 <span class="info-value">{{ listing.condition }}</span>
               </div>
             </div>
-            <div class="info-item" *ngIf="listing.location">
+            @if (listing.location) {
+            <div class="info-item">
               <span class="info-icon">📍</span>
               <div class="info-content">
                 <span class="info-label">Location</span>
                 <span class="info-value">{{ listing.location }}</span>
               </div>
             </div>
+            }
           </div>
 
           <!-- Verification Info -->
-          <div class="verification-section" *ngIf="listing.isVerified && listing.verificationDetails">
+          @if (listing.isVerified && listing.verificationDetails) {
+          <div class="verification-section">
             <div class="verification-badge">
               <span class="verify-icon">✓</span>
               <div class="verification-content">
@@ -305,6 +321,7 @@
               </div>
             </div>
           </div>
+          }
 
           
         </div>
@@ -319,59 +336,62 @@
             (click)="setActiveTab('description')">
             Description
           </button>
-          <button 
-            class="tab-button" 
-            [class.active]="activeTab === 'bids'"
-            *ngIf="listing.auctionFormat === 'highest-bid'"
-            (click)="setActiveTab('bids')">
+          @if (listing.auctionFormat === 'highest-bid') {
+          <button class="tab-button" [class.active]="activeTab === 'bids'" (click)="setActiveTab('bids')">
             Bid History ({{ bids.length }})
           </button>
-          <button 
-            class="tab-button" 
-            [class.active]="activeTab === 'offers'"
-            *ngIf="listing.auctionFormat === 'best-offer'"
-            (click)="setActiveTab('offers')">
+          }
+          @if (listing.auctionFormat === 'best-offer') {
+          <button class="tab-button" [class.active]="activeTab === 'offers'" (click)="setActiveTab('offers')">
             Offers ({{ offers.length }})
           </button>
+          }
         </div>
 
-        <!-- Description Tab Content -->
-        <div class="tab-content" *ngIf="activeTab === 'description'">
+        @if (activeTab === 'description') {
+        <div class="tab-content">
           <div class="description-content" [innerHTML]="getFormattedDescription()"></div>
         </div>
+        }
 
-        <!-- Bid History Tab Content -->
-        <div class="tab-content" *ngIf="activeTab === 'bids' && listing.auctionFormat === 'highest-bid'">
+        @if (activeTab === 'bids' && listing.auctionFormat === 'highest-bid') {
+        <div class="tab-content">
           <div class="bid-history">
-            <!-- Seller note: only verified bidders can be selected (not for private room listings) -->
-            <div *ngIf="isOwnListing && isAuctionEnded() && !listing.allowPrivateRoom && !listing.winner && bids.length > 0" class="bid-history-seller-note">
+            @if (isOwnListing && isAuctionEnded() && !listing.allowPrivateRoom && !listing.winner && bids.length > 0) {
+            <div class="bid-history-seller-note">
               <span class="seller-note-icon">ℹ️</span>
               <p>Only bids from <strong>registered, verified</strong> accounts can be selected as the winning bid. Guest bidders must create an account and verify their email to be eligible.</p>
             </div>
+            }
 
-            <!-- Loading State -->
-            <div *ngIf="bidsLoading" class="bids-loading">
+            @if (bidsLoading) {
+            <div class="bids-loading">
               <p>Loading bid history...</p>
             </div>
+            }
 
-            <!-- Error State -->
-            <div *ngIf="bidsError && !bidsLoading" class="bids-error">
+            @if (bidsError && !bidsLoading) {
+            <div class="bids-error">
               <p>{{ bidsError }}</p>
               <button class="btn btn-secondary" (click)="listing && loadBids(listing._id)">Try Again</button>
             </div>
+            }
 
-            <!-- Bids List -->
-            <div *ngIf="!bidsLoading && !bidsError">
-              <div *ngIf="bids.length === 0" class="no-bids">
+            @if (!bidsLoading && !bidsError) {
+            <div>
+              @if (bids.length === 0) {
+              <div class="no-bids">
                 <div class="no-bids-content">
                   <span class="no-bids-icon">💰</span>
                   <h3>No Bids Yet</h3>
                   <p>Be the first to place a bid on this item!</p>
                 </div>
               </div>
-
-              <div *ngIf="bids.length > 0" class="bids-list">
-                <div class="bid-item" *ngFor="let bid of bids; let i = index" [class.top-bid]="i === 0" [class.bid-not-eligible]="isOwnListing && isAuctionEnded() && !listing.allowPrivateRoom && !listing.winner && !isPrivateRoomEnded() && !canSelectBidAsWinner(bid)">
+              }
+              @if (bids.length > 0) {
+              <div class="bids-list">
+                @for (bid of bids; track bid._id; let i = $index) {
+                <div class="bid-item" [class.top-bid]="i === 0" [class.bid-not-eligible]="isOwnListing && isAuctionEnded() && !listing.allowPrivateRoom && !listing.winner && !isPrivateRoomEnded() && !canSelectBidAsWinner(bid)">
                   <div class="bid-rank">{{ i + 1 }}</div>
                   <div class="bid-avatar">
                     {{ bid.bidderInitials || 'A' }}
@@ -381,38 +401,49 @@
                       <div class="bid-bidder">
                         <div class="bidder-main-info">
                           <span class="bidder-name">
-                            <span *ngIf="bid.bidderFirstName && bid.bidderLastName">
-                              {{ bid.bidderFirstName }} {{ bid.bidderLastName }}
-                            </span>
-                            <span *ngIf="!bid.bidderFirstName || !bid.bidderLastName">
-                              {{ bid.bidderName || 'Anonymous' }}
-                            </span>
+                            @if (bid.bidderFirstName && bid.bidderLastName) {
+                            <span>{{ bid.bidderFirstName }} {{ bid.bidderLastName }}</span>
+                            }
+                            @if (!bid.bidderFirstName || !bid.bidderLastName) {
+                            <span>{{ bid.bidderName || 'Anonymous' }}</span>
+                            }
                           </span>
                           <div class="bidder-badges">
-                            <span class="badge badge-authenticated" *ngIf="bid.isAuthenticated">
+                            @if (bid.isAuthenticated) {
+                            <span class="badge badge-authenticated">
                               <span class="badge-icon">✓</span>
                               Authenticated
                             </span>
-                            <span class="badge badge-unauthenticated" *ngIf="!bid.isAuthenticated">
+                            }
+                            @if (!bid.isAuthenticated) {
+                            <span class="badge badge-unauthenticated">
                               <span class="badge-icon">⚠</span>
                               Guest Bidder
                             </span>
-                            <span class="badge badge-verified" *ngIf="bid.bidderVerified">
+                            }
+                            @if (bid.bidderVerified) {
+                            <span class="badge badge-verified">
                               <span class="badge-icon">✓</span>
                               Verified
                             </span>
-                            <span class="badge badge-deposit" *ngIf="bid.bidderHasDeposit">
+                            }
+                            @if (bid.bidderHasDeposit) {
+                            <span class="badge badge-deposit">
                               <span class="badge-icon">$</span>
                               Deposit
                             </span>
-                            <!-- Buyer rating: only for authenticated bidders; guests have no rate -->
-                            <span class="badge badge-buyer-score" *ngIf="bid.isAuthenticated">
+                            }
+                            @if (bid.isAuthenticated) {
+                            <span class="badge badge-buyer-score">
                               <span class="badge-icon">🛒</span>
-                              <span *ngIf="bid.buyerScore != null || (bid.buyerReviewCount ?? 0) > 0">
-                                Buyer ★ {{ bid.buyerScore != null ? (bid.buyerScore | number:'1.1-1') : '—' }} ({{ bid.buyerReviewCount ?? 0 }} review{{ (bid.buyerReviewCount ?? 0) !== 1 ? 's' : '' }})
-                              </span>
-                              <span *ngIf="bid.buyerScore == null && (bid.buyerReviewCount ?? 0) === 0">No buyer reviews</span>
+                              @if (bid.buyerScore != null || (bid.buyerReviewCount ?? 0) > 0) {
+                              <span>Buyer ★ {{ bid.buyerScore != null ? (bid.buyerScore | number:'1.1-1') : '—' }} ({{ bid.buyerReviewCount ?? 0 }} review{{ (bid.buyerReviewCount ?? 0) !== 1 ? 's' : '' }})</span>
+                              }
+                              @if (bid.buyerScore == null && (bid.buyerReviewCount ?? 0) === 0) {
+                              <span>No buyer reviews</span>
+                              }
                             </span>
+                            }
                           </div>
                         </div>
                       </div>
@@ -420,59 +451,74 @@
                         <div class="bid-amount">{{ formatBidAmount(bid.amount) }}</div>
                         <div class="bid-date-time">
                           <span class="bid-date">{{ formatBidDate(bid.createdAt) }}</span>
-                          <span class="bid-type" *ngIf="bid.bidType !== 'manual'">{{ bid.bidType }}</span>
+                          @if (bid.bidType !== 'manual') { <span class="bid-type">{{ bid.bidType }}</span> }
                         </div>
-                        <!-- Seller: Select as winner (only when no private room; private room winner is automatic) -->
-                        <div *ngIf="isOwnListing && isAuctionEnded() && !listing.allowPrivateRoom && !listing.winner && !isPrivateRoomEnded()" class="bid-select-winner-wrap">
-                          <button *ngIf="canSelectBidAsWinner(bid)" type="button" class="btn btn-primary btn-small bid-select-winner-btn" (click)="selectWinner(bid._id)" [disabled]="selectingWinner">
+                        @if (isOwnListing && isAuctionEnded() && !listing.allowPrivateRoom && !listing.winner && !isPrivateRoomEnded()) {
+                        <div class="bid-select-winner-wrap">
+                          @if (canSelectBidAsWinner(bid)) {
+                          <button type="button" class="btn btn-primary btn-small bid-select-winner-btn" (click)="selectWinner(bid._id)" [disabled]="selectingWinner">
                             {{ selectingWinner ? 'Selecting…' : 'Select as winner' }}
                           </button>
-                          <span *ngIf="!canSelectBidAsWinner(bid)" class="bid-verified-required">Verified account required</span>
+                          }
+                          @if (!canSelectBidAsWinner(bid)) {
+                          <span class="bid-verified-required">Verified account required</span>
+                          }
                         </div>
+                        }
                       </div>
                     </div>
                   </div>
                 </div>
+                }
               </div>
+              }
             </div>
+            }
           </div>
         </div>
+        }
 
-        <!-- Offers Tab Content -->
-        <div class="tab-content" *ngIf="activeTab === 'offers' && listing.auctionFormat === 'best-offer'">
+        @if (activeTab === 'offers' && listing.auctionFormat === 'best-offer') {
+        <div class="tab-content">
           <div class="offer-history">
-            <!-- Make an offer CTA (buyers, when listing is active) -->
-            <div class="offers-cta" *ngIf="!isOwnListing && isBestOfferActive()">
+            @if (!isOwnListing && isBestOfferActive()) {
+            <div class="offers-cta">
               <p class="offers-cta-text">Make an offer on this item. The seller can accept, decline, or counter.</p>
               <button type="button" class="btn btn-primary" (click)="openOfferModal()">
                 Make an offer
               </button>
             </div>
+            }
 
-            <!-- Loading State -->
-            <div *ngIf="offersLoading" class="offers-loading">
+            @if (offersLoading) {
+            <div class="offers-loading">
               <p>Loading offers...</p>
             </div>
+            }
 
-            <!-- Error State -->
-            <div *ngIf="offersError && !offersLoading" class="offers-error">
+            @if (offersError && !offersLoading) {
+            <div class="offers-error">
               <p>{{ offersError }}</p>
               <button class="btn btn-secondary" (click)="listing && loadOffers(listing._id)">Try Again</button>
             </div>
+            }
 
-            <!-- Offers List -->
-            <div *ngIf="!offersLoading && !offersError">
-              <div *ngIf="offers.length === 0" class="no-offers">
+            @if (!offersLoading && !offersError) {
+            <div>
+              @if (offers.length === 0) {
+              <div class="no-offers">
                 <div class="no-offers-content">
                   <span class="no-offers-icon">💰</span>
                   <h3>No Offers Yet</h3>
                   <p>Be the first to make an offer on this item!</p>
-                  <button *ngIf="!isOwnListing && isBestOfferActive()" type="button" class="btn btn-primary" (click)="openOfferModal()">Make an offer</button>
+                  @if (!isOwnListing && isBestOfferActive()) { <button type="button" class="btn btn-primary" (click)="openOfferModal()">Make an offer</button> }
                 </div>
               </div>
-
-              <div *ngIf="offers.length > 0" class="offers-list">
-                <div class="offer-item" *ngFor="let offer of sortedOffers" [class.accepted]="offer.status === 'accepted'" [class.rejected]="offer.status === 'rejected'" [class.pending]="offer.status === 'pending'">
+              }
+              @if (offers.length > 0) {
+              <div class="offers-list">
+                @for (offer of sortedOffers; track offer._id) {
+                <div class="offer-item" [class.accepted]="offer.status === 'accepted'" [class.rejected]="offer.status === 'rejected'" [class.pending]="offer.status === 'pending'">
                   <div class="offer-avatar">
                     {{ offer.offererInitials || 'A' }}
                   </div>
@@ -480,33 +526,38 @@
                     <div class="offer-top">
                       <div class="offer-head">
                         <span class="offer-from-label">Offer from <strong>{{ offer.offererName || 'Anonymous' }}</strong></span>
-                        <span class="offer-bidder-meta" *ngIf="offer.offererVerified || offer.offererTier">
-                          <span class="offer-verified-badge" *ngIf="offer.offererVerified" title="Verified">✓ Verified</span>
-                          <span class="offer-tier-badge" *ngIf="offer.offererTier">{{ offer.offererTier }}</span>
+                        @if (offer.offererVerified || offer.offererTier) {
+                        <span class="offer-bidder-meta">
+                          @if (offer.offererVerified) { <span class="offer-verified-badge" title="Verified">✓ Verified</span> }
+                          @if (offer.offererTier) { <span class="offer-tier-badge">{{ offer.offererTier }}</span> }
                         </span>
-                        <span class="offer-badge-your" *ngIf="isMyOffer(offer)">Your offer</span>
-                        <span class="offer-status-pill" *ngIf="offer.status !== 'pending'" [class.accepted]="offer.status === 'accepted'" [class.rejected]="offer.status === 'rejected'" [class.expired]="offer.status === 'expired'">
+                        }
+                        @if (isMyOffer(offer)) { <span class="offer-badge-your">Your offer</span> }
+                        @if (offer.status !== 'pending') {
+                        <span class="offer-status-pill" [class.accepted]="offer.status === 'accepted'" [class.rejected]="offer.status === 'rejected'" [class.expired]="offer.status === 'expired'">
                           {{ formatOfferStatus(offer.status) }}
                         </span>
+                        }
                       </div>
                       <div class="offer-amount">{{ formatBidAmount(offer.amount) }}</div>
                     </div>
                     <div class="offer-meta">
                       <span class="offer-date">Offered {{ formatOfferDate(offer.createdAt) }}</span>
-                      <span class="offer-responded" *ngIf="getOfferResponseLine(offer)">
-                        · {{ getOfferResponseLine(offer) }}
-                      </span>
+                      @if (getOfferResponseLine(offer)) {
+                      <span class="offer-responded">· {{ getOfferResponseLine(offer) }}</span>
+                      }
                     </div>
-                    <p class="offer-message" *ngIf="offer.message">{{ offer.message }}</p>
-                    <p class="seller-response" *ngIf="offer.sellerResponse && offer.status !== 'pending'">
-                      <strong>Seller:</strong> {{ offer.sellerResponse }}
-                    </p>
-                    <!-- Seller actions on pending offers (only after listing end date) -->
-                    <div class="offer-actions" *ngIf="isOwnListing && offer.status === 'pending'">
-                      <p class="offer-actions-note" *ngIf="!canSellerAcceptOrDeclineOffers()">
-                        You can accept or decline offers after the listing end date.
-                      </p>
-                      <div class="offer-action-buttons" *ngIf="canSellerAcceptOrDeclineOffers()">
+                    @if (offer.message) { <p class="offer-message">{{ offer.message }}</p> }
+                    @if (offer.sellerResponse && offer.status !== 'pending') {
+                    <p class="seller-response"><strong>Seller:</strong> {{ offer.sellerResponse }}</p>
+                    }
+                    @if (isOwnListing && offer.status === 'pending') {
+                    <div class="offer-actions">
+                      @if (!canSellerAcceptOrDeclineOffers()) {
+                      <p class="offer-actions-note">You can accept or decline offers after the listing end date.</p>
+                      }
+                      @if (canSellerAcceptOrDeclineOffers()) {
+                      <div class="offer-action-buttons">
                         <button type="button" class="btn btn-primary btn-accept" (click)="acceptOffer(offer)" [disabled]="offerActionLoadingId !== null">
                           {{ offerActionLoadingId === offer._id ? 'Accepting…' : 'Accept' }}
                         </button>
@@ -514,27 +565,34 @@
                           {{ offerActionLoadingId === offer._id ? 'Declining…' : 'Decline' }}
                         </button>
                       </div>
+                      }
                     </div>
+                    }
                   </div>
                 </div>
+                }
               </div>
+              }
             </div>
+            }
           </div>
         </div>
-      </div>
+        }
 
       <!-- Additional Info -->
       <div class="additional-info">
         <div class="info-card">
           <h3>Shipping</h3>
-          <p *ngIf="listing.shippingOption === 'free'">Free shipping</p>
-          <p *ngIf="listing.shippingOption !== 'free'">Shipping cost: {{ formatPrice(listing.shippingCost) }}</p>
-          <p *ngIf="listing.location">From: {{ listing.location }}</p>
+          @if (listing.shippingOption === 'free') { <p>Free shipping</p> }
+          @if (listing.shippingOption !== 'free') { <p>Shipping cost: {{ formatPrice(listing.shippingCost) }}</p> }
+          @if (listing.location) { <p>From: {{ listing.location }}</p> }
         </div>
-        <div class="info-card" *ngIf="listing.returnPolicy">
+        @if (listing.returnPolicy) {
+        <div class="info-card">
           <h3>Return policy</h3>
           <p>{{ getReturnPolicyLabel(listing.returnPolicy) }}</p>
         </div>
+        }
         <div class="info-card">
           <h3>Auction Timeline</h3>
           <p>Started: {{ listing.startDate | date:'medium' }}</p>
@@ -542,11 +600,14 @@
         </div>
       </div>
     </div>
+    </div>
+  }
   </div>
 </div>
 
+@if (showBidModal) {
 <!-- Place Bid modal -->
-<div class="modal-overlay" *ngIf="showBidModal" (click)="closeBidModal()">
+<div class="modal-overlay" (click)="closeBidModal()">
   <div class="modal-content place-bid-offer-modal" (click)="$event.stopPropagation()">
     <button type="button" class="modal-close" aria-label="Close" (click)="closeBidModal()">&times;</button>
     <h3 class="modal-title">Place a bid</h3>
@@ -560,10 +621,12 @@
         <span class="modal-info-label">Minimum next bid</span>
         <span class="modal-info-value">{{ formatPrice(getMinBid()) }}</span>
       </div>
-      <div class="modal-info-row" *ngIf="listing?.bidIncrement">
+      @if (listing?.bidIncrement) {
+      <div class="modal-info-row">
         <span class="modal-info-label">Bid increment</span>
         <span class="modal-info-value">{{ formatPrice(listing?.bidIncrement ?? 0) }}</span>
       </div>
+      }
     </div>
     <div class="modal-form">
       <label class="modal-label" for="bid-amount">Your bid amount</label>
@@ -576,7 +639,8 @@
         inputmode="decimal"
         autocomplete="off"
       />
-      <div *ngIf="!isAuthenticated" class="modal-email-section">
+      @if (!isAuthenticated) {
+      <div class="modal-email-section">
         <label class="modal-label" for="bid-email">Your email</label>
         <input
           id="bid-email"
@@ -588,13 +652,14 @@
         />
         <p class="modal-hint">We’ll use this to confirm your bid.</p>
       </div>
+      }
       <div class="modal-notify-toggle">
         <label class="toggle-label">
           <input type="checkbox" [(ngModel)]="bidNotifyWhenOutbid" name="bidNotifyWhenOutbid" />
           <span>Email me when I'm outbid on this auction</span>
         </label>
       </div>
-      <p class="modal-error" *ngIf="bidModalError">{{ bidModalError }}</p>
+      @if (bidModalError) { <p class="modal-error">{{ bidModalError }}</p> }
     </div>
     <div class="modal-actions">
       <button type="button" class="btn btn-secondary" (click)="closeBidModal()">Cancel</button>
@@ -604,9 +669,11 @@
     </div>
   </div>
 </div>
+}
 
+@if (showOfferModal) {
 <!-- Make Offer modal -->
-<div class="modal-overlay" *ngIf="showOfferModal" (click)="closeOfferModal()">
+<div class="modal-overlay" (click)="closeOfferModal()">
   <div class="modal-content place-bid-offer-modal" (click)="$event.stopPropagation()">
     <button type="button" class="modal-close" aria-label="Close" (click)="closeOfferModal()">&times;</button>
     <h3 class="modal-title">Make an offer</h3>
@@ -616,10 +683,12 @@
         <span class="modal-info-label">Starting / current</span>
         <span class="modal-info-value">{{ formatPrice(listing?.startingPrice || listing?.currentPrice || 0) }}</span>
       </div>
-      <div class="modal-info-row" *ngIf="listing?.minimumOfferPrice">
+      @if (listing?.minimumOfferPrice) {
+      <div class="modal-info-row">
         <span class="modal-info-label">Minimum offer</span>
         <span class="modal-info-value">{{ formatPrice(+(listing?.minimumOfferPrice ?? 0)) }}</span>
       </div>
+      }
     </div>
     <div class="modal-form">
       <label class="modal-label" for="offer-amount">Your offer amount</label>
@@ -632,7 +701,8 @@
         inputmode="decimal"
         autocomplete="off"
       />
-      <div *ngIf="!isAuthenticated" class="modal-email-section">
+      @if (!isAuthenticated) {
+      <div class="modal-email-section">
         <label class="modal-label" for="offer-email">Your email</label>
         <input
           id="offer-email"
@@ -644,10 +714,13 @@
         />
         <p class="modal-hint">The seller will use this to respond to your offer.</p>
       </div>
-      <p class="modal-notice modal-notice-below-min" *ngIf="isOfferBelowMinimum()">
+      }
+      @if (isOfferBelowMinimum()) {
+      <p class="modal-notice modal-notice-below-min">
         Your offer is below the seller’s minimum price. The seller is <strong>not obliged</strong> to accept this offer, even if you’re the only bidder.
       </p>
-      <p class="modal-error" *ngIf="offerModalError">{{ offerModalError }}</p>
+      }
+      @if (offerModalError) { <p class="modal-error">{{ offerModalError }}</p> }
     </div>
     <div class="modal-actions">
       <button type="button" class="btn btn-secondary" (click)="closeOfferModal()">Cancel</button>
@@ -657,9 +730,11 @@
     </div>
   </div>
 </div>
+}
 
+@if (showLoginModal) {
 <!-- Login / Signup modal for watchlist (non-authenticated users) -->
-<div class="modal-overlay" *ngIf="showLoginModal" (click)="closeLoginModal()">
+<div class="modal-overlay" (click)="closeLoginModal()">
   <div class="modal-content watchlist-login-modal" (click)="$event.stopPropagation()">
     <button type="button" class="modal-close" aria-label="Close" (click)="closeLoginModal()">&times;</button>
     <h3>Save to Watchlist</h3>
@@ -670,72 +745,91 @@
     </div>
   </div>
 </div>
+}
 
+@if (showSelectWinnerModal && !isPrivateRoomEnded()) {
 <!-- Select winner modal (seller, ended auction with bids; not shown when private room ended) -->
-<div class="modal-overlay" *ngIf="showSelectWinnerModal && !isPrivateRoomEnded()" (click)="closeSelectWinnerModal()">
+<div class="modal-overlay" (click)="closeSelectWinnerModal()">
   <div class="modal-content select-winner-modal" (click)="$event.stopPropagation()">
     <button type="button" class="modal-close" aria-label="Close" (click)="closeSelectWinnerModal()">&times;</button>
     <h3>Select winner</h3>
     <p class="modal-subtitle">Only bids from <strong>registered, verified</strong> accounts can be selected. Guest bidders are not eligible.</p>
-    <div *ngIf="bidsLoading" class="modal-loading">Loading bids…</div>
-    <div *ngIf="!bidsLoading && bids.length === 0" class="modal-empty">No bids to display.</div>
-    <ul *ngIf="!bidsLoading && bids.length > 0" class="select-winner-list">
-      <li *ngFor="let bid of bids; let i = index" class="select-winner-item" [class.select-winner-item--ineligible]="!canSelectBidAsWinner(bid)">
+    @if (bidsLoading) { <div class="modal-loading">Loading bids…</div> }
+    @if (!bidsLoading && bids.length === 0) { <div class="modal-empty">No bids to display.</div> }
+    @if (!bidsLoading && bids.length > 0) {
+    <ul class="select-winner-list">
+      @for (bid of bids; track bid._id; let i = $index) {
+      <li class="select-winner-item" [class.select-winner-item--ineligible]="!canSelectBidAsWinner(bid)">
         <div class="select-winner-info">
           <span class="select-winner-rank">#{{ i + 1 }}</span>
           <span class="select-winner-bidder">{{ bid.bidderFirstName && bid.bidderLastName ? bid.bidderFirstName + ' ' + bid.bidderLastName : (bid.bidderName || 'Anonymous') }}</span>
           <span class="select-winner-amount">{{ formatBidAmount(bid.amount) }}</span>
           <span class="select-winner-badges">
-            <span class="select-winner-badge verified" *ngIf="bid.bidderVerified">Verified</span>
-            <span class="select-winner-badge guest" *ngIf="!bid.isAuthenticated">Guest</span>
-            <span class="select-winner-badge unverified" *ngIf="bid.isAuthenticated && !bid.bidderVerified">Unverified</span>
+            @if (bid.bidderVerified) { <span class="select-winner-badge verified">Verified</span> }
+            @if (!bid.isAuthenticated) { <span class="select-winner-badge guest">Guest</span> }
+            @if (bid.isAuthenticated && !bid.bidderVerified) { <span class="select-winner-badge unverified">Unverified</span> }
           </span>
         </div>
         <div class="select-winner-action">
-          <button *ngIf="canSelectBidAsWinner(bid)" type="button" class="btn btn-primary btn-small" (click)="selectWinner(bid._id)" [disabled]="selectingWinner">
+          @if (canSelectBidAsWinner(bid)) {
+          <button type="button" class="btn btn-primary btn-small" (click)="selectWinner(bid._id)" [disabled]="selectingWinner">
             {{ selectingWinner ? 'Selecting…' : 'Select as winner' }}
           </button>
-          <span *ngIf="!canSelectBidAsWinner(bid)" class="select-winner-ineligible">Verified account required</span>
+          }
+          @if (!canSelectBidAsWinner(bid)) { <span class="select-winner-ineligible">Verified account required</span> }
         </div>
       </li>
+      }
     </ul>
+    }
   </div>
 </div>
+}
 
+@if (showCreatePrivateRoomModal) {
 <!-- Create private room modal (seller, ended + private room eligible) -->
-<div class="modal-overlay" *ngIf="showCreatePrivateRoomModal" (click)="closeCreatePrivateRoomModal()">
+<div class="modal-overlay" (click)="closeCreatePrivateRoomModal()">
   <div class="modal-content select-winner-modal create-private-room-modal" (click)="$event.stopPropagation()">
     <button type="button" class="modal-close" aria-label="Close" (click)="closeCreatePrivateRoomModal()">&times;</button>
     <h3>Create private room</h3>
     <p class="modal-subtitle">Choose between 2 and 5 bidders to invite. Only <strong>registered</strong> bidders can be invited. Invited bidders will receive a link to the private room; others will be notified they were not selected.</p>
-    <div *ngIf="createPrivateRoomBiddersLoading" class="modal-loading">Loading bidders…</div>
-    <div *ngIf="!createPrivateRoomBiddersLoading && createPrivateRoomBidders.length === 0" class="modal-empty">No bidders to display.</div>
-    <ul *ngIf="!createPrivateRoomBiddersLoading && createPrivateRoomBidders.length > 0" class="select-winner-list">
-      <li *ngFor="let b of createPrivateRoomBidders" class="select-winner-item" [class.select-winner-item--ineligible]="!b.isAuthenticated">
+    @if (createPrivateRoomBiddersLoading) { <div class="modal-loading">Loading bidders…</div> }
+    @if (!createPrivateRoomBiddersLoading && createPrivateRoomBidders.length === 0) { <div class="modal-empty">No bidders to display.</div> }
+    @if (!createPrivateRoomBiddersLoading && createPrivateRoomBidders.length > 0) {
+    <ul class="select-winner-list">
+      @for (b of createPrivateRoomBidders; track b.email) {
+      <li class="select-winner-item" [class.select-winner-item--ineligible]="!b.isAuthenticated">
         <div class="select-winner-info">
           <span class="select-winner-bidder">{{ (b.firstName && b.lastName) ? b.firstName + ' ' + b.lastName : (b.email || 'Bidder') }}</span>
           <span class="select-winner-amount">High: {{ b.highestBid | number:'1.2-2' }} · {{ b.bidCount }} bid(s)</span>
           <span class="select-winner-badges">
-            <span class="select-winner-badge verified" *ngIf="b.emailVerified">Verified</span>
-            <span class="select-winner-badge guest" *ngIf="!b.isAuthenticated">Guest (cannot invite)</span>
+            @if (b.emailVerified) { <span class="select-winner-badge verified">Verified</span> }
+            @if (!b.isAuthenticated) { <span class="select-winner-badge guest">Guest (cannot invite)</span> }
           </span>
         </div>
         <div class="select-winner-action">
-          <label *ngIf="b.isAuthenticated && b._id" class="checkbox-label">
+          @if (b.isAuthenticated && b._id) {
+          <label class="checkbox-label">
             <input type="checkbox" [checked]="isPrivateRoomBidderSelected(b)" (change)="togglePrivateRoomBidder(b)">
             Invite
           </label>
-          <span *ngIf="!b.isAuthenticated" class="select-winner-ineligible">Register to be eligible</span>
+          }
+          @if (!b.isAuthenticated) { <span class="select-winner-ineligible">Register to be eligible</span> }
         </div>
       </li>
+      }
     </ul>
-    <div *ngIf="!createPrivateRoomBiddersLoading && createPrivateRoomBidders.length > 0" class="modal-actions create-private-room-actions">
+    }
+    @if (!createPrivateRoomBiddersLoading && createPrivateRoomBidders.length > 0) {
+    <div class="modal-actions create-private-room-actions">
       <span class="selection-count">Selected: {{ selectedPrivateRoomBidderIds.size }} (min 2, max 5)</span>
       <button type="button" class="btn btn-primary" (click)="submitCreatePrivateRoom()" [disabled]="createPrivateRoomSubmitting || selectedPrivateRoomBidderIds.size < 2">
         {{ createPrivateRoomSubmitting ? 'Creating…' : 'Create room & send invites' }}
       </button>
     </div>
+    }
   </div>
 </div>
+}
 
 <app-footer></app-footer>

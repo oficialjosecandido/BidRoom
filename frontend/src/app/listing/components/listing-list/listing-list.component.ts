@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { HeaderComponent } from '../../../shared/components/header/header.component';
@@ -9,7 +9,7 @@ import { ListingsService, Listing, ListingsQueryParams } from '../../../shared/s
 @Component({
   selector: 'app-listing-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, HeaderComponent, FooterComponent],
+  imports: [FormsModule, HeaderComponent, FooterComponent],
   templateUrl: './listing-list.component.html',
   styleUrls: ['./listing-list.component.scss']
 })

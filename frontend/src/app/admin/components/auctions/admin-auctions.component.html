@@ -10,18 +10,22 @@
         <div class="filter-group">
           <label for="category-filter">Category:</label>
           <select id="category-filter" [(ngModel)]="selectedCategory" (change)="onCategoryChange()" class="filter-select">
-            <option *ngFor="let category of categories" [value]="category.value">
+            @for (category of categories; track category) {
+<option [value]="category.value">
               {{ category.label }}
             </option>
+}
           </select>
         </div>
 
         <div class="filter-group">
           <label for="status-filter">Status:</label>
           <select id="status-filter" [(ngModel)]="selectedStatus" (change)="onStatusChange()" class="filter-select">
-            <option *ngFor="let status of statuses" [value]="status.value">
+            @for (status of statuses; track status) {
+<option [value]="status.value">
               {{ status.label }}
             </option>
+}
           </select>
         </div>
 
@@ -31,21 +35,27 @@
       </div>
 
       <!-- Loading State -->
-      <div class="loading-state" *ngIf="isLoading">
+      @if (isLoading) {
+<div class="loading-state">
         <div class="spinner"></div>
         <p>Loading auctions...</p>
       </div>
+}
 
       <!-- Error State -->
-      <div class="error-state" *ngIf="error && !isLoading">
+      @if (error && !isLoading) {
+<div class="error-state">
         <div class="error-icon">⚠️</div>
         <p class="error-message">{{ error }}</p>
         <button class="retry-btn" (click)="loadAuctions()">Try Again</button>
       </div>
+}
 
       <!-- Auctions Table -->
-      <div class="table-container" *ngIf="!isLoading && !error">
-        <table class="auctions-table" *ngIf="filteredAuctions.length > 0">
+      @if (!isLoading && !error) {
+<div class="table-container">
+        @if (filteredAuctions.length > 0) {
+<table class="auctions-table">
           <thead>
             <tr>
               <th>Title</th>
@@ -59,13 +69,16 @@
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let auction of filteredAuctions">
+            @for (auction of filteredAuctions; track auction) {
+<tr>
               <td class="title-cell">
                 <div class="title-content">
-                  <img *ngIf="auction.images && auction.images.length > 0" 
+                  @if (auction.images && auction.images.length > 0) {
+<img 
                        [src]="auction.images[0]" 
                        [alt]="auction.title"
                        class="auction-thumbnail">
+}
                   <span class="title-text">{{ auction.title }}</span>
                 </div>
               </td>
@@ -89,16 +102,21 @@
                 </button>
               </td>
             </tr>
+}
           </tbody>
         </table>
+}
 
         <!-- Empty State -->
-        <div class="empty-state" *ngIf="filteredAuctions.length === 0 && !isLoading">
+        @if (filteredAuctions.length === 0 && !isLoading) {
+<div class="empty-state">
           <div class="empty-icon">📋</div>
           <p class="empty-message">No auctions found</p>
           <p class="empty-description">Try adjusting your filters</p>
         </div>
+}
       </div>
+}
     </div>
   </div>
 </div>

@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { RouterLink } from '@angular/router';
 import { WatchlistService } from '../../../shared/services/watchlist.service';
 import { Listing } from '../../../shared/services/listings.service';
@@ -7,7 +7,7 @@ import { Listing } from '../../../shared/services/listings.service';
 @Component({
   selector: 'app-dashboard-watchlist',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [RouterLink],
   templateUrl: './dashboard-watchlist.component.html',
   styleUrls: ['./dashboard-watchlist.component.scss']
 })

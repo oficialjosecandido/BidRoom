@@ -6,16 +6,24 @@
     <h2 class="title">Log into your Bidroom account</h2>
 
     <!-- Error Message -->
-    <div class="error-message" *ngIf="errorMessage">
+    @if (errorMessage) {
+<div class="error-message">
       <div class="error-icon">⚠️</div>
       <div class="error-content">
         <p class="error-text">{{ errorMessage }}</p>
-        <div class="error-actions" *ngIf="errorMessage.includes('No account found') || errorMessage.includes('Incorrect password')">
-          <button type="button" class="action-link" (click)="navigateToSignup()" *ngIf="errorMessage.includes('No account found')">Sign up</button>
-          <button type="button" class="action-link" (click)="navigateToForgotPassword()" *ngIf="errorMessage.includes('Incorrect password') || errorMessage.includes('Too many failed')">Reset password</button>
+        @if (errorMessage.includes('No account found') || errorMessage.includes('Incorrect password')) {
+<div class="error-actions">
+          @if (errorMessage.includes('No account found')) {
+<button type="button" class="action-link" (click)="navigateToSignup()">Sign up</button>
+}
+          @if (errorMessage.includes('Incorrect password') || errorMessage.includes('Too many failed')) {
+<button type="button" class="action-link" (click)="navigateToForgotPassword()">Reset password</button>
+}
         </div>
+}
       </div>
     </div>
+}
 
     <!-- Google Login Button -->
     <button
@@ -51,9 +59,11 @@
           placeholder="Enter your email"
           autocomplete="email"
         />
-        <div class="field-error" *ngIf="getFieldError('email')">
+        @if (getFieldError('email')) {
+<div class="field-error">
           {{ getFieldError('email') }}
         </div>
+}
       </div>
 
       <!-- Password Field -->
@@ -77,9 +87,11 @@
             <span class="eye-icon" [class.show]="showPassword">👁️</span>
           </button>
         </div>
-        <div class="field-error" *ngIf="getFieldError('password')">
+        @if (getFieldError('password')) {
+<div class="field-error">
           {{ getFieldError('password') }}
         </div>
+}
       </div>
 
       <!-- Login Button -->
@@ -88,8 +100,12 @@
         class="login-btn"
         [disabled]="loginForm.invalid || isLoading"
       >
-        <span *ngIf="!isLoading">Log in</span>
-        <span *ngIf="isLoading">Logging in...</span>
+        @if (!isLoading) {
+<span>Log in</span>
+}
+        @if (isLoading) {
+<span>Logging in...</span>
+}
       </button>
 
       <!-- Forgot Password Link -->

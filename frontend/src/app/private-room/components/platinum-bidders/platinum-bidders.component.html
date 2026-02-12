@@ -10,26 +10,33 @@
   </div>
 
   <!-- Loading State -->
-  <div class="loading-state" *ngIf="isLoading">
+  @if (isLoading) {
+<div class="loading-state">
     <div class="spinner"></div>
     <p>Loading bidders...</p>
   </div>
+}
 
   <!-- Error State -->
-  <div class="error-state" *ngIf="error && !isLoading">
+  @if (error && !isLoading) {
+<div class="error-state">
     <div class="error-icon">⚠️</div>
     <p class="error-message">{{ error }}</p>
     <button class="retry-btn" (click)="loadBidders()">Try Again</button>
   </div>
+}
 
   <!-- Success Message -->
-  <div class="success-state" *ngIf="successMessage">
+  @if (successMessage) {
+<div class="success-state">
     <div class="success-icon">✓</div>
     <p class="success-message">{{ successMessage }}</p>
   </div>
+}
 
   <!-- Bidders List -->
-  <div class="content-section" *ngIf="!isLoading && !error">
+  @if (!isLoading && !error) {
+<div class="content-section">
     <div class="selection-info">
       <span class="selection-count">
         {{ selectedBidderIds.length }} of 5 selected
@@ -40,14 +47,20 @@
         [disabled]="!canSelect() || isSaving"
         (click)="saveSelection()"
       >
-        <span *ngIf="!isSaving">Save Selection</span>
-        <span *ngIf="isSaving">Saving...</span>
+        @if (!isSaving) {
+<span>Save Selection</span>
+}
+        @if (isSaving) {
+<span>Saving...</span>
+}
       </button>
     </div>
 
-    <div class="bidders-grid" *ngIf="bidders.length > 0">
-      <div 
-        *ngFor="let bidder of bidders" 
+    @if (bidders.length > 0) {
+<div class="bidders-grid">
+      @for (bidder of bidders; track bidder) {
+<div 
+        
         class="bidder-card"
         [class.selected]="isSelected(bidder._id || '')"
         [class.authenticated]="bidder.isAuthenticated"
@@ -63,11 +76,21 @@
             class="bidder-checkbox"
           />
           <div class="bidder-badges">
-            <span class="badge authenticated" *ngIf="bidder.isAuthenticated">Authenticated</span>
-            <span class="badge unauthenticated" *ngIf="!bidder.isAuthenticated">Guest</span>
-            <span class="badge verified" *ngIf="bidder.emailVerified">Verified</span>
-            <span class="badge deposit" *ngIf="bidder.hasDeposit">Deposit</span>
-            <span class="badge platinum" *ngIf="currentPlatinumBidders.includes(bidder._id || '')">Platinum</span>
+            @if (bidder.isAuthenticated) {
+<span class="badge authenticated">Authenticated</span>
+}
+            @if (!bidder.isAuthenticated) {
+<span class="badge unauthenticated">Guest</span>
+}
+            @if (bidder.emailVerified) {
+<span class="badge verified">Verified</span>
+}
+            @if (bidder.hasDeposit) {
+<span class="badge deposit">Deposit</span>
+}
+            @if (currentPlatinumBidders.includes(bidder._id || '')) {
+<span class="badge platinum">Platinum</span>
+}
           </div>
         </div>
 
@@ -91,18 +114,25 @@
           </div>
         </div>
 
-        <div class="unavailable-message" *ngIf="!bidder.isAuthenticated || !bidder._id">
+        @if (!bidder.isAuthenticated || !bidder._id) {
+<div class="unavailable-message">
           <p>Guest bidders cannot be selected as Platinum Bidders</p>
         </div>
+}
       </div>
+}
     </div>
+}
 
     <!-- Empty State -->
-    <div class="empty-state" *ngIf="bidders.length === 0">
+    @if (bidders.length === 0) {
+<div class="empty-state">
       <div class="empty-icon">👥</div>
       <p class="empty-message">No bidders found</p>
       <p class="empty-description">Bidders will appear here once they place bids on your listing.</p>
     </div>
+}
   </div>
+}
 </div>
 

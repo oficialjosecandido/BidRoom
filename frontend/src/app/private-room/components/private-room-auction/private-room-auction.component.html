@@ -7,59 +7,76 @@
           <h1 class="room-title">Private Auction Room</h1>
           <div class="room-info">
             <span class="room-label">Listing:</span>
-            <a *ngIf="listing?.slug" [href]="getListingPageUrl()" target="_blank" rel="noopener noreferrer" class="room-listing-link">{{ listing?.title }}</a>
-            <span *ngIf="!listing?.slug" class="room-listing-title">{{ listing?.title }}</span>
+            @if (listing?.slug) {
+<a [href]="getListingPageUrl()" target="_blank" rel="noopener noreferrer" class="room-listing-link">{{ listing?.title }}</a>
+}
+            @if (!listing?.slug) {
+<span class="room-listing-title">{{ listing?.title }}</span>
+}
           </div>
         </div>
       </div>
       
       <div class="header-stats">
-        <div class="stat-card viewer-card" *ngIf="listing?.privateRoomStatus !== 'ended'">
+        @if (listing?.privateRoomStatus !== 'ended') {
+<div class="stat-card viewer-card">
           <div class="stat-icon">👁️</div>
           <div class="stat-content">
             <div class="stat-value">{{ viewerCount }}</div>
             <div class="stat-label">{{ viewerCount === 1 ? 'viewer' : 'viewers' }} watching</div>
           </div>
         </div>
+}
         
-        <div class="stat-card countdown-card" [class.warning]="countdown <= 300" [class.critical]="countdown <= 60" *ngIf="listing?.privateRoomStatus === 'active'">
+        @if (listing?.privateRoomStatus === 'active') {
+<div class="stat-card countdown-card" [class.warning]="countdown <= 300" [class.critical]="countdown <= 60">
           <div class="stat-icon">⏰</div>
           <div class="stat-content">
             <div class="stat-value countdown-value">{{ formatCountdown() }}</div>
             <div class="stat-label">Time remaining</div>
-            <div class="countdown-subtext" *ngIf="countdown <= 60">⚡ Closing soon!</div>
+            @if (countdown <= 60) {
+<div class="countdown-subtext">⚡ Closing soon!</div>
+}
           </div>
         </div>
+}
 
-        <div class="stat-card invited-card" *ngIf="listing?.privateRoomStatus === 'invited'">
+        @if (listing?.privateRoomStatus === 'invited') {
+<div class="stat-card invited-card">
           <div class="stat-icon">📩</div>
           <div class="stat-content">
             <div class="stat-value">Starting soon</div>
             <div class="stat-label">Accept within 15 min; room starts automatically</div>
           </div>
         </div>
+}
 
-        <div class="stat-card ended-card" *ngIf="listing?.privateRoomStatus === 'ended'">
+        @if (listing?.privateRoomStatus === 'ended') {
+<div class="stat-card ended-card">
           <div class="stat-icon">🏁</div>
           <div class="stat-content">
             <div class="stat-value">Auction ended</div>
             <div class="stat-label">Room closed</div>
           </div>
         </div>
+}
       </div>
     </div>
     
-    <div class="current-user-banner" *ngIf="isAuthenticated && currentUser">
+    @if (isAuthenticated && currentUser) {
+<div class="current-user-banner">
       <div class="user-info">
         <div class="user-avatar">
           <span class="avatar-initial">{{ getCurrentUserInitials() }}</span>
         </div>
         <div class="user-details">
           <div class="user-name">{{ getCurrentUserName() }}</div>
-          <div class="user-badge-inline" *ngIf="isPlatinumBidder">
+          @if (isPlatinumBidder) {
+<div class="user-badge-inline">
             <span class="badge-icon">⭐</span>
             <span class="badge-text">Platinum Bidder</span>
           </div>
+}
         </div>
       </div>
       <button class="logout-btn" (click)="logout()" title="Logout">
@@ -67,22 +84,28 @@
         <span class="logout-text">Logout</span>
       </button>
     </div>
+}
   </div>
 
   <!-- Loading State -->
-  <div class="loading-state" *ngIf="loading">
+  @if (loading) {
+<div class="loading-state">
     <div class="spinner"></div>
     <p>Loading private room...</p>
   </div>
+}
 
   <!-- Error State -->
-  <div class="error-state" *ngIf="error && !loading">
+  @if (error && !loading) {
+<div class="error-state">
     <div class="error-icon">⚠️</div>
     <p class="error-message">{{ error }}</p>
   </div>
+}
 
   <!-- Login Prompt - Always show if not authenticated (before listing loads) -->
-  <div class="login-prompt-fixed" *ngIf="!isAuthenticated && (loading || !listing)">
+  @if (!isAuthenticated && (loading || !listing)) {
+<div class="login-prompt-fixed">
     <div class="login-card">
       <div class="login-icon">🔐</div>
       <h3>Login Required</h3>
@@ -93,55 +116,76 @@
       </button>
     </div>
   </div>
+}
 
   <!-- Poker Table View -->
-  <div class="private-room-content" *ngIf="listing && !loading && !error">
+  @if (listing && !loading && !error) {
+<div class="private-room-content">
     <!-- Room ended state (also when countdown hit 0 but backend not yet updated) -->
-    <div class="room-ended-state" *ngIf="listing.privateRoomStatus === 'ended' || (listing.privateRoomStatus === 'active' && countdown <= 0)">
+    @if (listing.privateRoomStatus === 'ended' || (listing.privateRoomStatus === 'active' && countdown <= 0)) {
+<div class="room-ended-state">
       <div class="room-ended-card">
         <div class="room-ended-badge">Auction ended</div>
         <div class="room-ended-icon">🏁</div>
         <h2>Private room closed</h2>
-        <p *ngIf="listing.privateRoomStatus === 'ended'">The auction has ended. The winner was the highest bid that wasn't outbid for 60 seconds. You will be notified by email if you won.</p>
-        <p *ngIf="listing.privateRoomStatus !== 'ended' && countdown <= 0">The auction has ended. Results are being confirmed. You will be notified by email if you won.</p>
-        <a *ngIf="listing.slug" [href]="getListingPageUrl()" class="room-ended-link" target="_blank" rel="noopener noreferrer">View listing</a>
+        @if (listing.privateRoomStatus === 'ended') {
+<p>The auction has ended. The winner was the highest bid that wasn't outbid for 60 seconds. You will be notified by email if you won.</p>
+}
+        @if (listing.privateRoomStatus !== 'ended' && countdown <= 0) {
+<p>The auction has ended. Results are being confirmed. You will be notified by email if you won.</p>
+}
+        @if (listing.slug) {
+<a [href]="getListingPageUrl()" class="room-ended-link" target="_blank" rel="noopener noreferrer">View listing</a>
+}
       </div>
     </div>
+}
 
     <!-- Invited: waiting for acceptances; room starts automatically after 15 min -->
-    <div class="room-invited-state" *ngIf="listing.privateRoomStatus === 'invited'">
+    @if (listing.privateRoomStatus === 'invited') {
+<div class="room-invited-state">
       <div class="room-invited-card">
         <div class="room-invited-icon">📩</div>
         <h2>Room not started yet</h2>
         <p>Invitees have <strong>15 minutes</strong> to accept the invitation. The auction will start automatically after the acceptance window.</p>
         <p class="room-invited-sub">Check your email for the accept link if you were invited.</p>
-        <a *ngIf="listing.slug" [href]="getListingPageUrl()" class="room-invited-link" target="_blank" rel="noopener noreferrer">View listing</a>
+        @if (listing.slug) {
+<a [href]="getListingPageUrl()" class="room-invited-link" target="_blank" rel="noopener noreferrer">View listing</a>
+}
       </div>
     </div>
+}
 
     <!-- Active room content (hide when countdown reached 0 so we show ended state) -->
-    <div *ngIf="listing.privateRoomStatus === 'active' && countdown > 0">
+    @if (listing.privateRoomStatus === 'active' && countdown > 0) {
+<div>
     <!-- Mobile Layout: Stacked -->
     <div class="mobile-layout">
       <!-- Mobile User Info -->
-      <div class="mobile-user-info" *ngIf="isAuthenticated && currentUser">
+      @if (isAuthenticated && currentUser) {
+<div class="mobile-user-info">
         <div class="mobile-user-card">
           <div class="mobile-user-avatar">
             <span class="avatar-initial">{{ getCurrentUserInitials() }}</span>
           </div>
           <div class="mobile-user-details">
             <div class="mobile-user-name">{{ getCurrentUserName() }}</div>
-            <div class="mobile-user-badge" *ngIf="isPlatinumBidder">
+            @if (isPlatinumBidder) {
+<div class="mobile-user-badge">
               <span class="badge-icon">⭐</span>
               <span class="badge-text">Platinum Bidder</span>
             </div>
-            <div class="mobile-user-email" *ngIf="currentUser.email">{{ currentUser.email }}</div>
+}
+            @if (currentUser.email) {
+<div class="mobile-user-email">{{ currentUser.email }}</div>
+}
           </div>
           <button class="mobile-logout-btn" (click)="logout()" title="Logout">
             <span class="logout-icon">🚪</span>
           </button>
         </div>
       </div>
+}
 
       <div class="current-bid-card">
         <div class="bid-label">Current Bid</div>
@@ -152,18 +196,21 @@
           <span class="count-icon">👆</span>
           <span>{{ listing.bidCount }} {{ listing.bidCount === 1 ? 'bid' : 'bids' }}</span>
         </div>
-        <div class="soft-close-info" *ngIf="countdown <= 30">
+        @if (countdown <= 30) {
+<div class="soft-close-info">
           <span class="info-icon">⏰</span>
           <span>Next bid extends by 60s</span>
         </div>
+}
       </div>
 
       <!-- Mobile Bidders Grid -->
       <div class="mobile-bidders">
         <h3 class="bidders-title">Platinum Bidders</h3>
         <div class="bidders-grid">
-          <div 
-            *ngFor="let bidder of platinumBidders" 
+          @for (bidder of platinumBidders; track bidder) {
+<div 
+            
             class="mobile-bidder-card"
           >
             <div class="bidder-avatar">
@@ -180,11 +227,13 @@
               </div>
             </div>
           </div>
+}
         </div>
       </div>
 
       <!-- Mobile Login Prompt (for unauthenticated users) -->
-      <div class="mobile-login-prompt" *ngIf="!isAuthenticated && listing && (listing.privateRoomStatus === 'active' || listing.privateRoomStatus === 'eligible')">
+      @if (!isAuthenticated && listing && (listing.privateRoomStatus === 'active' || listing.privateRoomStatus === 'eligible')) {
+<div class="mobile-login-prompt">
         <div class="login-card">
           <div class="login-icon">🔐</div>
           <h3>Login Required</h3>
@@ -195,6 +244,7 @@
           </button>
         </div>
       </div>
+}
 
     </div>
 
@@ -206,34 +256,45 @@
           <!-- Center of Table: seller has Start auction button; everyone sees current bid + temporary winner -->
           <div class="table-center">
             <div class="center-glow"></div>
-            <div *ngIf="isSeller && listing && (listing.privateRoomStatus === 'active' || listing.privateRoomStatus === 'eligible')" class="center-seller-action">
+            @if (isSeller && listing && (listing.privateRoomStatus === 'active' || listing.privateRoomStatus === 'eligible')) {
+<div class="center-seller-action">
               <button type="button" class="start-auction-btn" (click)="onSellerStartAuction()">Start auction</button>
             </div>
-            <div class="current-bid" *ngIf="listing">
+}
+            @if (listing) {
+<div class="current-bid">
               <span class="bid-label">Current Bid</span>
               <span class="bid-amount" [class.pulse]="countdown <= 30">
                 ${{ listing.currentPrice | number:'1.2-2' }}
               </span>
             </div>
-            <div class="bid-count" *ngIf="listing">
+}
+            @if (listing) {
+<div class="bid-count">
               <span class="count-icon">👆</span>
               <span>{{ listing.bidCount }} {{ listing.bidCount === 1 ? 'bid' : 'bids' }}</span>
             </div>
-            <div class="temporary-winner" *ngIf="getTemporaryWinner() as winner">
+}
+            @if (getTemporaryWinner(); as winner) {
+<div class="temporary-winner">
               <span class="winner-label">Leading</span>
               <span class="winner-name">{{ winner.name }}</span>
               <span class="winner-amount">${{ winner.amount | number:'1.2-2' }}</span>
             </div>
-            <div class="soft-close-info" *ngIf="countdown <= 30">
+}
+            @if (countdown <= 30) {
+<div class="soft-close-info">
               <span class="info-icon">⏰</span>
               <span>Next bid extends by 60s</span>
             </div>
+}
           </div>
 
           <!-- Bidder Positions Around Table (max 5) -->
           <div class="bidder-positions">
-            <div 
-              *ngFor="let bidder of platinumBidders; let i = index" 
+            @for (bidder of platinumBidders; track bidder; let i = $index) {
+<div 
+              
               class="bidder-seat"
               [style.top]="getPositionTop(i)"
               [style.left]="getPositionLeft(i)"
@@ -256,10 +317,12 @@
                 <div class="seat-glow"></div>
               </div>
             </div>
+}
 
             <!-- Empty seats placeholder -->
-            <div 
-              *ngFor="let empty of getEmptySeats()" 
+            @for (empty of getEmptySeats(); track empty) {
+<div 
+              
               class="bidder-seat empty-seat"
               [style.top]="getPositionTop(empty)"
               [style.left]="getPositionLeft(empty)"
@@ -268,13 +331,15 @@
                 <div class="empty-seat-placeholder">Empty Seat</div>
               </div>
             </div>
+}
           </div>
         </div>
       </div>
     </div>
 
     <!-- Single "Place your bid" section: only for invited (platinum) bidders; includes custom amount input -->
-    <div class="prominent-bid-section" *ngIf="isPlatinumBidder && listing && (listing.privateRoomStatus === 'active' || listing.privateRoomStatus === 'eligible')">
+    @if (isPlatinumBidder && listing && (listing.privateRoomStatus === 'active' || listing.privateRoomStatus === 'eligible')) {
+<div class="prominent-bid-section">
       <div class="prominent-bid-card">
         <div class="prominent-bid-header">
           <h2>Place Your Bid</h2>
@@ -282,7 +347,8 @@
             <span>⭐ Invited bidder – you can place bids</span>
           </div>
         </div>
-        <div class="prominent-bid-info" *ngIf="listing">
+        @if (listing) {
+<div class="prominent-bid-info">
           <div class="bid-detail">
             <span class="detail-label">Current Bid:</span>
             <span class="detail-value">${{ listing.currentPrice | number:'1.2-2' }}</span>
@@ -292,6 +358,7 @@
             <span class="detail-value">${{ getMinBid() | number:'1.2-2' }}</span>
           </div>
         </div>
+}
         <div class="bid-amount-input-row">
           <label class="input-label" for="custom-bid-amount">Your bid amount ($)</label>
           <input
@@ -305,37 +372,57 @@
             autocomplete="off"
           />
           <p class="bid-input-hint">Leave empty to bid the minimum, or enter any amount higher than the current bid.</p>
-          <p class="bid-input-error" *ngIf="bidInputError">{{ bidInputError }}</p>
+          @if (bidInputError) {
+<p class="bid-input-error">{{ bidInputError }}</p>
+}
         </div>
         <button
           class="prominent-bid-btn enabled"
           (click)="placeBid()"
           [disabled]="isPlacingBid"
         >
-          <span *ngIf="!isPlacingBid">💰 Place Bid Now</span>
-          <span *ngIf="isPlacingBid">⏳ Placing Bid...</span>
+          @if (!isPlacingBid) {
+<span>💰 Place Bid Now</span>
+}
+          @if (isPlacingBid) {
+<span>⏳ Placing Bid...</span>
+}
         </button>
         <p class="bid-note">
           Each bid extends the deadline by 60 seconds
         </p>
       </div>
     </div>
+}
 
     <!-- Floating quick-bid button (bottom right) - invited bidders only -->
-    <div class="floating-bid-button" *ngIf="isPlatinumBidder && listing && (listing.privateRoomStatus === 'active' || listing.privateRoomStatus === 'eligible')">
+    @if (isPlatinumBidder && listing && (listing.privateRoomStatus === 'active' || listing.privateRoomStatus === 'eligible')) {
+<div class="floating-bid-button">
       <button class="floating-btn" (click)="placeBid()" [disabled]="isPlacingBid" title="Quick bid (minimum)">
-        <span class="floating-icon" *ngIf="!isPlacingBid">💰</span>
-        <span class="floating-icon" *ngIf="isPlacingBid">⏳</span>
-        <span class="floating-text" *ngIf="!isPlacingBid">BID</span>
-        <span class="floating-text" *ngIf="isPlacingBid">...</span>
+        @if (!isPlacingBid) {
+<span class="floating-icon">💰</span>
+}
+        @if (isPlacingBid) {
+<span class="floating-icon">⏳</span>
+}
+        @if (!isPlacingBid) {
+<span class="floating-text">BID</span>
+}
+        @if (isPlacingBid) {
+<span class="floating-text">...</span>
+}
       </button>
-      <div class="floating-bid-amount" *ngIf="!isPlacingBid && listing">
+      @if (!isPlacingBid && listing) {
+<div class="floating-bid-amount">
         ${{ getMinBid() | number:'1.2-2' }}
       </div>
+}
     </div>
+}
 
     <!-- Login Prompt (for unauthenticated users) -->
-    <div class="login-prompt" *ngIf="!isAuthenticated && listing && (listing.privateRoomStatus === 'active' || listing.privateRoomStatus === 'eligible')">
+    @if (!isAuthenticated && listing && (listing.privateRoomStatus === 'active' || listing.privateRoomStatus === 'eligible')) {
+<div class="login-prompt">
       <div class="login-card">
         <div class="login-icon">🔐</div>
         <h3>Login Required</h3>
@@ -346,18 +433,22 @@
         </button>
       </div>
     </div>
+}
 
     <!-- Invitation pending: invited but must accept within 30 min -->
-    <div class="viewer-notice invitation-pending-notice" *ngIf="isAuthenticated && invitationPending && listing && listing.privateRoomStatus === 'active'">
+    @if (isAuthenticated && invitationPending && listing && listing.privateRoomStatus === 'active') {
+<div class="viewer-notice invitation-pending-notice">
       <div class="notice-card">
         <div class="notice-icon">✉️</div>
         <h3>Accept your invitation</h3>
         <p>You were invited to this private room. Accept within 30 minutes via the link in your email to place bids — otherwise you'll lose your seat.</p>
       </div>
     </div>
+}
 
     <!-- Viewer Notice (anyone can watch; only invited bidders can place bids) -->
-    <div class="viewer-notice" *ngIf="isAuthenticated && !isPlatinumBidder && !invitationPending && listing && listing.privateRoomStatus === 'active'">
+    @if (isAuthenticated && !isPlatinumBidder && !invitationPending && listing && listing.privateRoomStatus === 'active') {
+<div class="viewer-notice">
       <div class="notice-card">
         <div class="notice-icon">👁️</div>
         <h3>You're watching</h3>
@@ -365,6 +456,7 @@
         <p class="notice-subtext">The room closes 60 seconds after the last bid.</p>
       </div>
     </div>
+}
 
     <!-- Bid History (scroll target for seller "Start auction") -->
     <div id="bid-history-section" class="recent-bids-section bid-history-section">
@@ -376,12 +468,17 @@
         <span class="bid-total">{{ bids.length }} total</span>
       </div>
       <div class="bids-list">
-        <div *ngFor="let bid of bids.slice(0, 10); let i = index" class="bid-item" [class.latest]="i === 0">
+        @for (bid of bids.slice(0, 10); track bid; let i = $index) {
+<div class="bid-item" [class.latest]="i === 0">
           <div class="bid-left">
-            <div class="bid-rank" *ngIf="i < 3">#{{ i + 1 }}</div>
+            @if (i < 3) {
+<div class="bid-rank">#{{ i + 1 }}</div>
+}
             <div class="bid-bidder">
               <span class="bidder-name">{{ getBidderName(bid) }}</span>
-              <span class="bidder-badge" *ngIf="i === 0">Latest</span>
+              @if (i === 0) {
+<span class="bidder-badge">Latest</span>
+}
             </div>
           </div>
           <div class="bid-right">
@@ -395,14 +492,19 @@
             </div>
           </div>
         </div>
-        <div class="empty-bids" *ngIf="bids.length === 0">
+}
+        @if (bids.length === 0) {
+<div class="empty-bids">
           <div class="empty-icon">📭</div>
           <p>No bids yet</p>
           <p class="empty-subtext">Be the first to place a bid!</p>
         </div>
+}
       </div>
     </div>
     </div>
+}
   </div>
+}
 </div>
 

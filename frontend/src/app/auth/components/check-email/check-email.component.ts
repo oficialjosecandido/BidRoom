@@ -1,11 +1,11 @@
 import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { ActivatedRoute, Router } from '@angular/router';
 
 @Component({
   selector: 'app-check-email',
   standalone: true,
-  imports: [CommonModule],
+  imports: [],
   templateUrl: './check-email.component.html',
   styleUrls: ['./check-email.component.scss']
 })

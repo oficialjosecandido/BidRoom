@@ -48,15 +48,18 @@
     </div>
 
     <!-- Error Message -->
-    <div class="error-message" *ngIf="errorMessage">
+    @if (errorMessage) {
+<div class="error-message">
       {{ errorMessage }}
     </div>
+}
 
     <!-- Form -->
     <form [formGroup]="listingForm" (ngSubmit)="onSubmit()" class="listing-form">
       
       <!-- Step 1: Item Identity and Format -->
-      <div class="form-step" *ngIf="isStep(1)">
+      @if (isStep(1)) {
+<div class="form-step">
         <h2>Step 1: Item Identity and Format</h2>
         
         <div class="form-group">
@@ -69,9 +72,11 @@
             placeholder="Enter a descriptive title (max 80 characters)"
             maxlength="80"
           />
-          <div class="field-error" *ngIf="getFieldError('title')">
+          @if (getFieldError('title')) {
+<div class="field-error">
             {{ getFieldError('title') }}
           </div>
+}
           <div class="field-hint">{{ listingForm.get('title')?.value?.length || 0 }}/80 characters</div>
         </div>
 
@@ -83,26 +88,36 @@
               formControlName="category"
               [class.error]="getFieldError('category')">
               <option value="">Select Category</option>
-              <option *ngFor="let cat of categories" [value]="cat.id">{{ cat.name }}</option>
+              @for (cat of categories; track cat) {
+<option [value]="cat.id">{{ cat.name }}</option>
+}
             </select>
-            <div class="field-error" *ngIf="getFieldError('category')">
+            @if (getFieldError('category')) {
+<div class="field-error">
               {{ getFieldError('category') }}
             </div>
+}
           </div>
 
-          <div class="form-group" *ngIf="selectedCategory">
+          @if (selectedCategory) {
+<div class="form-group">
             <label for="subCategory">Sub-Category *</label>
             <select
               id="subCategory"
               formControlName="subCategory"
               [class.error]="getFieldError('subCategory')">
               <option value="">Select Sub-Category</option>
-              <option *ngFor="let subCat of getSelectedSubCategories()" [value]="subCat">{{ subCat }}</option>
+              @for (subCat of getSelectedSubCategories(); track subCat) {
+<option [value]="subCat">{{ subCat }}</option>
+}
             </select>
-            <div class="field-error" *ngIf="getFieldError('subCategory')">
+            @if (getFieldError('subCategory')) {
+<div class="field-error">
               {{ getFieldError('subCategory') }}
             </div>
+}
           </div>
+}
         </div>
 
         <div class="form-row">
@@ -126,9 +141,11 @@
                 <span>Best Offer (Seller Chooses Offer)</span>
               </label>
             </div>
-            <div class="field-error" *ngIf="getFieldError('listingFormat')">
+            @if (getFieldError('listingFormat')) {
+<div class="field-error">
               {{ getFieldError('listingFormat') }}
             </div>
+}
           </div>
 
           <div class="form-group">
@@ -138,17 +155,23 @@
               formControlName="condition"
               [class.error]="getFieldError('condition')">
               <option value="">Select Condition</option>
-              <option *ngFor="let condition of itemConditions" [value]="condition">{{ condition }}</option>
+              @for (condition of itemConditions; track condition) {
+<option [value]="condition">{{ condition }}</option>
+}
             </select>
-            <div class="field-error" *ngIf="getFieldError('condition')">
+            @if (getFieldError('condition')) {
+<div class="field-error">
               {{ getFieldError('condition') }}
             </div>
+}
           </div>
         </div>
       </div>
+}
 
       <!-- Step 2: Details and Media -->
-      <div class="form-step" *ngIf="isStep(2)">
+      @if (isStep(2)) {
+<div class="form-step">
         <h2>Step 2: Details and Media</h2>
         
         <div class="form-group">
@@ -160,13 +183,17 @@
             placeholder="Describe your item in detail, including its history, any defects, and all included components..."
             rows="8"
           ></textarea>
-          <div class="field-error" *ngIf="getFieldError('description')">
+          @if (getFieldError('description')) {
+<div class="field-error">
             {{ getFieldError('description') }}
           </div>
+}
           <div class="field-hint" [class.error]="listingForm.get('description')?.invalid && (listingForm.get('description')?.touched || isStep(2))">
-            <span *ngIf="listingForm.get('description')?.invalid && (listingForm.get('description')?.touched || isStep(2))" style="color: #dc3545; font-weight: 600;">
+            @if (listingForm.get('description')?.invalid && (listingForm.get('description')?.touched || isStep(2))) {
+<span style="color: #dc3545; font-weight: 600;">
               ⚠️ Minimum 50 characters required. 
             </span>
+}
             Current: {{ listingForm.get('description')?.value?.length || 0 }}/50 characters
           </div>
         </div>
@@ -187,18 +214,26 @@
             <label for="mediaUpload" class="upload-button">
               <span>📷 Click to upload or drag files here</span>
             </label>
-            <div class="uploaded-files" *ngIf="uploadedFiles.length > 0">
-              <div class="file-item" *ngFor="let file of uploadedFiles; let i = index">
-                <img *ngIf="previewUrls[i]" [src]="previewUrls[i] || ''" alt="Preview" class="file-preview">
+            @if (uploadedFiles.length > 0) {
+<div class="uploaded-files">
+              @for (file of uploadedFiles; track file; let i = $index) {
+<div class="file-item">
+                @if (previewUrls[i]) {
+<img [src]="previewUrls[i] || ''" alt="Preview" class="file-preview">
+}
                 <div class="file-info">
                   <span>{{ file.name }}</span>
                   <button type="button" (click)="removeFile(i)" class="remove-file-btn">×</button>
                 </div>
               </div>
+}
             </div>
-            <div class="field-error" *ngIf="uploadedFiles.length < 1 && (listingForm.get('media')?.touched || isStep(4))">
+}
+            @if (uploadedFiles.length < 1 && (listingForm.get('media')?.touched || isStep(4))) {
+<div class="field-error">
               Please upload at least 1 image (3 recommended)
             </div>
+}
             <div class="field-hint">{{ uploadedFiles.length }}/3+ files uploaded (minimum 1 for testing)</div>
           </div>
         </div>
@@ -206,11 +241,13 @@
         <div class="form-group">
           <label>Key Specifications (Optional)</label>
           <div formArrayName="specifications">
-            <div *ngFor="let spec of specifications.controls; let i = index" [formGroupName]="i" class="spec-row">
+            @for (spec of specifications.controls; track spec; let i = $index) {
+<div [formGroupName]="i" class="spec-row">
               <input type="text" formControlName="key" placeholder="Specification (e.g., Model, Brand)" class="spec-key">
               <input type="text" formControlName="value" placeholder="Value" class="spec-value">
               <button type="button" (click)="removeSpecification(i)" class="remove-btn">Remove</button>
             </div>
+}
           </div>
           <button type="button" (click)="addSpecification()" class="add-btn">+ Add Specification</button>
         </div>
@@ -225,9 +262,11 @@
               [class.error]="getFieldError('locationCity')"
               placeholder="City"
             />
-            <div class="field-error" *ngIf="getFieldError('locationCity')">
+            @if (getFieldError('locationCity')) {
+<div class="field-error">
               {{ getFieldError('locationCity') }}
             </div>
+}
           </div>
 
           <div class="form-group">
@@ -239,21 +278,26 @@
               [class.error]="getFieldError('locationRegion')"
               placeholder="Region or State"
             />
-            <div class="field-error" *ngIf="getFieldError('locationRegion')">
+            @if (getFieldError('locationRegion')) {
+<div class="field-error">
               {{ getFieldError('locationRegion') }}
             </div>
+}
           </div>
         </div>
       </div>
+}
 
       <!-- Step 3: Pricing and Auction Rules -->
-      <div class="form-step" *ngIf="isStep(3)">
+      @if (isStep(3)) {
+<div class="form-step">
         <h2>Step 3: Pricing and Auction Rules</h2>
         
         <div class="form-group">
           <label>Listing Duration *</label>
           <div class="radio-group">
-            <label class="radio-option" *ngFor="let duration of listingDurations">
+            @for (duration of listingDurations; track duration) {
+<label class="radio-option">
               <input
                 type="radio"
                 formControlName="duration"
@@ -261,13 +305,17 @@
               />
               <span>{{ duration.label }}</span>
             </label>
+}
           </div>
-          <div class="field-error" *ngIf="getFieldError('duration')">
+          @if (getFieldError('duration')) {
+<div class="field-error">
             {{ getFieldError('duration') }}
           </div>
+}
         </div>
 
-        <div *ngIf="listingForm.get('listingFormat')?.value === 'auction'">
+        @if (listingForm.get('listingFormat')?.value === 'auction') {
+<div>
           <div class="form-row">
             <div class="form-group">
               <label for="startingBid">Starting Bid *</label>
@@ -284,9 +332,11 @@
                   style="padding-left: 25px;"
                 />
               </div>
-              <div class="field-error" *ngIf="getFieldError('startingBid')">
+              @if (getFieldError('startingBid')) {
+<div class="field-error">
                 {{ getFieldError('startingBid') }}
               </div>
+}
             </div>
 
             <div class="form-group">
@@ -304,9 +354,11 @@
                   style="padding-left: 25px;"
                 />
               </div>
-              <div class="field-error" *ngIf="getFieldError('reservePrice')">
+              @if (getFieldError('reservePrice')) {
+<div class="field-error">
                 {{ getFieldError('reservePrice') }}
               </div>
+}
               <div class="field-hint">Minimum price at which you are obliged to sell. Must be at least the starting bid.</div>
             </div>
           </div>
@@ -326,14 +378,18 @@
                 style="padding-left: 25px;"
               />
             </div>
-            <div class="field-error" *ngIf="getFieldError('buyNowPrice')">
+            @if (getFieldError('buyNowPrice')) {
+<div class="field-error">
               {{ getFieldError('buyNowPrice') }}
             </div>
+}
             <div class="field-hint">Must be higher than Starting Bid. Allows instant purchase.</div>
           </div>
         </div>
+}
 
-        <div *ngIf="listingForm.get('listingFormat')?.value === 'best-offer'">
+        @if (listingForm.get('listingFormat')?.value === 'best-offer') {
+<div>
           <div class="form-group">
             <label for="minimumAcceptPrice">Minimum Accept Price (Optional)</label>
             <div class="input-with-currency">
@@ -351,9 +407,11 @@
             <div class="field-hint">Price threshold where you must accept a qualifying offer</div>
           </div>
         </div>
+}
 
         <!-- Private Room is only available for Highest Bid (auction), not Best Offer -->
-        <div class="form-group" *ngIf="listingForm.get('listingFormat')?.value === 'auction'">
+        @if (listingForm.get('listingFormat')?.value === 'auction') {
+<div class="form-group">
           <label class="checkbox-option">
             <input
               type="checkbox"
@@ -365,17 +423,24 @@
             <strong>Important:</strong> Enabling Private Room increases your commission rate from 0.5% to 2.0%.
             You must commit to this choice.
           </div>
-          <div class="commission-notice" *ngIf="listingForm.get('allowPrivateRoom')?.value">
+          @if (listingForm.get('allowPrivateRoom')?.value) {
+<div class="commission-notice">
             <strong>⚠️ Commission Rate: 2.0%</strong> (Private Room enabled)
           </div>
-          <div class="commission-notice" *ngIf="!listingForm.get('allowPrivateRoom')?.value">
+}
+          @if (!listingForm.get('allowPrivateRoom')?.value) {
+<div class="commission-notice">
             Commission Rate: 0.5% (Standard)
           </div>
+}
         </div>
+}
       </div>
+}
 
       <!-- Step 4: Shipping and Final Review -->
-      <div class="form-step" *ngIf="isStep(4)">
+      @if (isStep(4)) {
+<div class="form-step">
         <h2>Step 4: Shipping and Final Review</h2>
         
         <div class="form-group">
@@ -385,14 +450,19 @@
             formControlName="shippingOption"
             [class.error]="getFieldError('shippingOption')">
             <option value="">Select Shipping Option</option>
-            <option *ngFor="let option of shippingOptions" [value]="option.value">{{ option.label }}</option>
+            @for (option of shippingOptions; track option) {
+<option [value]="option.value">{{ option.label }}</option>
+}
           </select>
-          <div class="field-error" *ngIf="getFieldError('shippingOption')">
+          @if (getFieldError('shippingOption')) {
+<div class="field-error">
             {{ getFieldError('shippingOption') }}
           </div>
+}
         </div>
 
-        <div class="form-group" *ngIf="listingForm.get('shippingOption')?.value === 'flat-rate'">
+        @if (listingForm.get('shippingOption')?.value === 'flat-rate') {
+<div class="form-group">
           <label for="flatRateShipping">Flat Rate Shipping Cost *</label>
           <div class="input-with-currency">
             <span class="currency">$</span>
@@ -406,6 +476,7 @@
             />
           </div>
         </div>
+}
 
         <div class="form-group">
           <label for="handlingTime">Handling Time *</label>
@@ -414,11 +485,15 @@
             formControlName="handlingTime"
             [class.error]="getFieldError('handlingTime')">
             <option value="">Select Handling Time</option>
-            <option *ngFor="let time of handlingTimes" [value]="time.value">{{ time.label }}</option>
+            @for (time of handlingTimes; track time) {
+<option [value]="time.value">{{ time.label }}</option>
+}
           </select>
-          <div class="field-error" *ngIf="getFieldError('handlingTime')">
+          @if (getFieldError('handlingTime')) {
+<div class="field-error">
             {{ getFieldError('handlingTime') }}
           </div>
+}
         </div>
 
         <div class="form-group">
@@ -428,11 +503,15 @@
             formControlName="returnPolicy"
             [class.error]="getFieldError('returnPolicy')">
             <option value="">Select Return Policy</option>
-            <option *ngFor="let policy of returnPolicies" [value]="policy.value">{{ policy.label }}</option>
+            @for (policy of returnPolicies; track policy) {
+<option [value]="policy.value">{{ policy.label }}</option>
+}
           </select>
-          <div class="field-error" *ngIf="getFieldError('returnPolicy')">
+          @if (getFieldError('returnPolicy')) {
+<div class="field-error">
             {{ getFieldError('returnPolicy') }}
           </div>
+}
         </div>
 
         <!-- Fee Summary -->
@@ -464,38 +543,53 @@
             />
             <span style="margin-left: 5px;">I confirm that I am the legal owner of this item and agree to Bidroom's Terms & Conditions and commission structure. *</span>
           </label>
-          <div class="field-error" *ngIf="getFieldError('sellerDeclaration')">
+          @if (getFieldError('sellerDeclaration')) {
+<div class="field-error">
             {{ getFieldError('sellerDeclaration') }}
           </div>
+}
         </div>
       </div>
+}
 
       <!-- Navigation Buttons -->
       <div class="form-actions">
-        <button
+        @if (currentStep > 1) {
+<button
           type="button"
           class="btn btn-secondary"
           (click)="previousStep()"
-          *ngIf="currentStep > 1">
+         >
           ← Previous
         </button>
+}
         <div class="spacer"></div>
-        <button
+        @if (currentStep < totalSteps) {
+<button
           type="button"
           class="btn btn-primary"
           (click)="nextStep()"
-          *ngIf="currentStep < totalSteps">
+         >
           Next →
         </button>
-        <button
+}
+        @if (isStep(totalSteps)) {
+<button
           type="submit"
           class="btn btn-primary"
           [disabled]="isSubmitting || isUploadingImages || !listingForm.valid || uploadedFiles.length < 1"
-          *ngIf="isStep(totalSteps)">
-          <span *ngIf="isUploadingImages">Uploading Images...</span>
-          <span *ngIf="!isUploadingImages && isSubmitting">Creating Listing...</span>
-          <span *ngIf="!isUploadingImages && !isSubmitting">List Item Now</span>
+         >
+          @if (isUploadingImages) {
+<span>Uploading Images...</span>
+}
+          @if (!isUploadingImages && isSubmitting) {
+<span>Creating Listing...</span>
+}
+          @if (!isUploadingImages && !isSubmitting) {
+<span>List Item Now</span>
+}
         </button>
+}
       </div>
     </form>
   </div>

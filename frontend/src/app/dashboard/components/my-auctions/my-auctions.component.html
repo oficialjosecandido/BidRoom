@@ -5,28 +5,36 @@
   </div>
 
   <!-- Loading State -->
-  <div class="loading-state" *ngIf="isLoading">
+  @if (isLoading) {
+<div class="loading-state">
     <div class="spinner"></div>
     <p>Loading your listings...</p>
   </div>
+}
 
   <!-- Error State -->
-  <div class="error-state" *ngIf="error && !isLoading">
+  @if (error && !isLoading) {
+<div class="error-state">
     <div class="error-icon">⚠️</div>
     <p class="error-message">{{ error }}</p>
     <button class="retry-btn" (click)="loadMyListings()">Try Again</button>
   </div>
+}
 
   <!-- Listings List -->
-  <div class="listings-list" *ngIf="!isLoading && !error">
-    <div class="empty-state" *ngIf="listings.length === 0">
+  @if (!isLoading && !error) {
+<div class="listings-list">
+    @if (listings.length === 0) {
+<div class="empty-state">
       <div class="empty-icon">📦</div>
       <h3>No Listings Yet</h3>
       <p>You haven't created any listings yet. Start by creating your first listing!</p>
       <a routerLink="/listing/add" class="create-btn">Create Your First Listing</a>
     </div>
+}
 
-    <div class="auction-card" *ngFor="let listing of listings">
+    @for (listing of listings; track listing) {
+<div class="auction-card">
       <div class="auction-header">
         <div class="auction-title-section">
           <h2 class="auction-title">
@@ -58,7 +66,8 @@
       </div>
 
       <!-- Private Room Status -->
-      <div class="private-room-section" *ngIf="listing.privateRoomStatus && listing.privateRoomStatus !== 'not-triggered'">
+      @if (listing.privateRoomStatus && listing.privateRoomStatus !== 'not-triggered') {
+<div class="private-room-section">
         <div class="private-room-header">
           <div class="private-room-title-group">
             <span class="private-room-icon">🔒</span>
@@ -71,14 +80,17 @@
               </span>
             </div>
           </div>
-          <a [routerLink]="['/private-room/auction', listing._id]" class="private-room-link" *ngIf="listing.privateRoomStatus === 'active' || listing.privateRoomStatus === 'eligible'">
+          @if (listing.privateRoomStatus === 'active' || listing.privateRoomStatus === 'eligible') {
+<a [routerLink]="['/private-room/auction', listing._id]" class="private-room-link">
             <span>Go to Private Room</span>
             <span class="link-arrow">→</span>
           </a>
+}
         </div>
 
         <!-- Platinum Bidder Invitations -->
-        <div class="platinum-bidders-section" *ngIf="listing.platinumBidderStatus && listing.platinumBidderStatus.length > 0">
+        @if (listing.platinumBidderStatus && listing.platinumBidderStatus.length > 0) {
+<div class="platinum-bidders-section">
           <div class="platinum-section-header">
             <h4>
               <span class="platinum-icon">✨</span>
@@ -86,24 +98,31 @@
               <span class="platinum-count">({{ listing.platinumBidderStatus.length }})</span>
             </h4>
             <div class="platinum-status-summary">
-              <span class="status-item accepted" *ngIf="getPlatinumStatusCounts(listing).accepted > 0">
+              @if (getPlatinumStatusCounts(listing).accepted > 0) {
+<span class="status-item accepted">
                 <span class="status-icon">✓</span>
                 <span class="status-text">{{ getPlatinumStatusCounts(listing).accepted }} Accepted</span>
               </span>
-              <span class="status-item pending" *ngIf="getPlatinumStatusCounts(listing).pending > 0">
+}
+              @if (getPlatinumStatusCounts(listing).pending > 0) {
+<span class="status-item pending">
                 <span class="status-icon">⏳</span>
                 <span class="status-text">{{ getPlatinumStatusCounts(listing).pending }} Pending</span>
               </span>
-              <span class="status-item declined" *ngIf="getPlatinumStatusCounts(listing).declined > 0">
+}
+              @if (getPlatinumStatusCounts(listing).declined > 0) {
+<span class="status-item declined">
                 <span class="status-icon">✗</span>
                 <span class="status-text">{{ getPlatinumStatusCounts(listing).declined }} Declined</span>
               </span>
+}
             </div>
           </div>
           
           <div class="platinum-bidders-list">
-            <div 
-              *ngFor="let platinumStatus of listing.platinumBidderStatus" 
+            @for (platinumStatus of listing.platinumBidderStatus; track platinumStatus) {
+<div 
+              
               class="platinum-bidder-item"
               [ngClass]="'status-' + platinumStatus.status"
             >
@@ -123,23 +142,32 @@
                 </div>
                 <span class="bidder-email">{{ platinumStatus.bidder.email }}</span>
                 <div class="bidder-timestamps">
-                  <span class="timestamp" *ngIf="platinumStatus.acceptedAt">
+                  @if (platinumStatus.acceptedAt) {
+<span class="timestamp">
                     Accepted: {{ formatDate(platinumStatus.acceptedAt) }}
                   </span>
-                  <span class="timestamp" *ngIf="!platinumStatus.acceptedAt && platinumStatus.status !== 'declined'">
+}
+                  @if (!platinumStatus.acceptedAt && platinumStatus.status !== 'declined') {
+<span class="timestamp">
                     Invited: {{ formatDate(platinumStatus.invitedAt) }}
                   </span>
+}
                 </div>
               </div>
             </div>
+}
           </div>
         </div>
+}
       </div>
+}
 
       <div class="auction-actions">
         <a [routerLink]="['/listing', listing.slug]" class="view-btn">View Listing</a>
       </div>
     </div>
+}
   </div>
+}
 </div>
 

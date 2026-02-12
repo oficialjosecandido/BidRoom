@@ -6,8 +6,12 @@
     <h1 class="title">Check your inbox</h1>
     <p class="message">
       We've sent a confirmation email to
-      <strong *ngIf="email">{{ email }}</strong>
-      <span *ngIf="!email">your email address</span>.
+      @if (email) {
+<strong>{{ email }}</strong>
+}
+      @if (!email) {
+<span>your email address</span>
+}.
     </p>
     <p class="instructions">
       Click the link in the email to verify your account. You can then log in and start using BidRoom.

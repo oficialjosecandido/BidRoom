@@ -4,7 +4,8 @@
   </div>
   
   <ul class="sidebar-menu">
-    <li *ngFor="let item of sidebarItems" class="menu-item">
+    @for (item of sidebarItems; track item) {
+<li class="menu-item">
       <button 
         class="menu-link" 
         [class.active]="isActiveRoute(item.route)"
@@ -14,6 +15,7 @@
         <span class="menu-label">{{ item.label }}</span>
       </button>
     </li>
+}
   </ul>
 
   <div class="sidebar-footer">

@@ -5,28 +5,36 @@
   </div>
 
   <!-- Loading State -->
-  <div class="loading-state" *ngIf="isLoading">
+  @if (isLoading) {
+<div class="loading-state">
     <div class="spinner"></div>
     <p>Loading your watchlist...</p>
   </div>
+}
 
   <!-- Error State -->
-  <div class="error-state" *ngIf="error && !isLoading">
+  @if (error && !isLoading) {
+<div class="error-state">
     <div class="error-icon">⚠️</div>
     <p class="error-message">{{ error }}</p>
     <button type="button" class="retry-btn" (click)="loadWatchlist()">Try Again</button>
   </div>
+}
 
   <!-- Watchlist Grid -->
-  <div class="watchlist-grid" *ngIf="!isLoading && !error">
-    <div class="empty-state" *ngIf="watchlist.length === 0">
+  @if (!isLoading && !error) {
+<div class="watchlist-grid">
+    @if (watchlist.length === 0) {
+<div class="empty-state">
       <div class="empty-icon">👀</div>
       <h3>No items in your watchlist</h3>
       <p>When you add items to your watchlist from a listing page, they'll appear here.</p>
       <a routerLink="/listing/list" class="browse-btn">Browse auctions</a>
     </div>
+}
 
-    <div class="watchlist-card" *ngFor="let listing of watchlist">
+    @for (listing of watchlist; track listing) {
+<div class="watchlist-card">
       <a [routerLink]="['/listing', listing.slug]" class="card-link">
         <div class="card-image">
           <img [src]="getImage(listing)" [alt]="listing.title" />
@@ -34,9 +42,11 @@
         <div class="card-body">
           <h2 class="card-title">{{ listing.title }}</h2>
           <div class="card-price">{{ formatPrice(listing.currentPrice) }}</div>
-          <div class="card-meta" *ngIf="listing.status">
+          @if (listing.status) {
+<div class="card-meta">
             <span class="status-badge" [class.ended]="listing.status === 'ended'">{{ listing.status }}</span>
           </div>
+}
         </div>
       </a>
       <button
@@ -48,5 +58,7 @@
         {{ removingId === listing._id ? '...' : 'Remove' }}
       </button>
     </div>
+}
   </div>
+}
 </div>

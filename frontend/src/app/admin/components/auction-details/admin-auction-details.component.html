@@ -9,27 +9,36 @@
       </div>
 
       <!-- Loading State -->
-      <div class="loading-state" *ngIf="isLoading">
+      @if (isLoading) {
+<div class="loading-state">
         <div class="spinner"></div>
         <p>Loading auction details...</p>
       </div>
+}
 
       <!-- Error State -->
-      <div class="error-state" *ngIf="error && !isLoading">
+      @if (error && !isLoading) {
+<div class="error-state">
         <div class="error-icon">⚠️</div>
         <p class="error-message">{{ error }}</p>
         <button class="retry-btn" (click)="loadAuctionDetails()">Try Again</button>
       </div>
+}
 
       <!-- Auction Details -->
-      <div class="details-content" *ngIf="auction && !isLoading">
+      @if (auction && !isLoading) {
+<div class="details-content">
         <!-- Auction Info Card -->
         <div class="info-card">
           <h2 class="card-title">Auction Information</h2>
           
-          <div class="auction-images" *ngIf="auction.images && auction.images.length > 0">
-            <img *ngFor="let image of auction.images" [src]="image" [alt]="auction.title" class="auction-image">
+          @if (auction.images && auction.images.length > 0) {
+<div class="auction-images">
+            @for (image of auction.images; track image) {
+<img [src]="image" [alt]="auction.title" class="auction-image">
+}
           </div>
+}
 
           <div class="info-grid">
             <div class="info-item">
@@ -42,7 +51,9 @@
             </div>
             <div class="info-item">
               <span class="info-label">Category:</span>
-              <span class="info-value">{{ auction.category }}<span *ngIf="auction.subCategory"> - {{ auction.subCategory }}</span></span>
+              <span class="info-value">{{ auction.category }}@if (auction.subCategory) {
+<span> - {{ auction.subCategory }}</span>
+}</span>
             </div>
             <div class="info-item">
               <span class="info-label">Status:</span>
@@ -56,14 +67,18 @@
               <span class="info-label">Current Price:</span>
               <span class="info-value price-highlight">${{ auction.currentPrice | number:'1.2-2' }}</span>
             </div>
-            <div class="info-item" *ngIf="auction.reservePrice">
+            @if (auction.reservePrice) {
+<div class="info-item">
               <span class="info-label">Reserve Price:</span>
               <span class="info-value">${{ auction.reservePrice | number:'1.2-2' }}</span>
             </div>
-            <div class="info-item" *ngIf="auction.buyNowPrice">
+}
+            @if (auction.buyNowPrice) {
+<div class="info-item">
               <span class="info-label">Buy Now Price:</span>
               <span class="info-value">${{ auction.buyNowPrice | number:'1.2-2' }}</span>
             </div>
+}
             <div class="info-item">
               <span class="info-label">Total Bids:</span>
               <span class="info-value">{{ auction.bidCount }}</span>
@@ -76,10 +91,12 @@
               <span class="info-label">End Date:</span>
               <span class="info-value">{{ formatDate(auction.endDate) }}</span>
             </div>
-            <div class="info-item" *ngIf="auction.privateRoomStatus">
+            @if (auction.privateRoomStatus) {
+<div class="info-item">
               <span class="info-label">Private Room Status:</span>
               <span class="info-value">{{ auction.privateRoomStatus }}</span>
             </div>
+}
           </div>
 
           <div class="description-section">
@@ -109,8 +126,10 @@
             <h2 class="card-title">Bidders ({{ bidders.length }})</h2>
           </div>
 
-          <div class="bidders-list" *ngIf="bidders.length > 0">
-            <div *ngFor="let bidder of bidders" class="bidder-item">
+          @if (bidders.length > 0) {
+<div class="bidders-list">
+            @for (bidder of bidders; track bidder) {
+<div class="bidder-item">
               <div class="bidder-main-info">
                 <h3 class="bidder-name">{{ getBidderName(bidder) }}</h3>
                 <p class="bidder-email">{{ bidder.email }}</p>
@@ -126,18 +145,32 @@
                 </div>
               </div>
               <div class="bidder-badges">
-                <span class="badge authenticated" *ngIf="bidder.isAuthenticated">Authenticated</span>
-                <span class="badge unauthenticated" *ngIf="!bidder.isAuthenticated">Guest</span>
-                <span class="badge verified" *ngIf="bidder.emailVerified">Verified</span>
-                <span class="badge deposit" *ngIf="bidder.hasDeposit">Deposit</span>
-                <span class="badge platinum" *ngIf="isPlatinumBidder(bidder._id)">Platinum</span>
+                @if (bidder.isAuthenticated) {
+<span class="badge authenticated">Authenticated</span>
+}
+                @if (!bidder.isAuthenticated) {
+<span class="badge unauthenticated">Guest</span>
+}
+                @if (bidder.emailVerified) {
+<span class="badge verified">Verified</span>
+}
+                @if (bidder.hasDeposit) {
+<span class="badge deposit">Deposit</span>
+}
+                @if (isPlatinumBidder(bidder._id)) {
+<span class="badge platinum">Platinum</span>
+}
               </div>
             </div>
+}
           </div>
+}
 
-          <div class="empty-state" *ngIf="bidders.length === 0">
+          @if (bidders.length === 0) {
+<div class="empty-state">
             <p>No bidders yet</p>
           </div>
+}
         </div>
 
         <!-- Actions Card -->
@@ -151,8 +184,12 @@
               [disabled]="isCreatingPrivateRoom || auction.privateRoomStatus === 'active' || auction.privateRoomStatus === 'eligible'"
             >
               <span class="btn-icon">🔒</span>
-              <span *ngIf="!isCreatingPrivateRoom">Create Private Room</span>
-              <span *ngIf="isCreatingPrivateRoom">Creating...</span>
+              @if (!isCreatingPrivateRoom) {
+<span>Create Private Room</span>
+}
+              @if (isCreatingPrivateRoom) {
+<span>Creating...</span>
+}
             </button>
             
             <!-- Close Private Room & End Auction Button -->
@@ -162,27 +199,39 @@
               [disabled]="isClosingPrivateRoom || (auction.privateRoomStatus !== 'active' && auction.privateRoomStatus !== 'eligible') || auction.status === 'ended'"
             >
               <span class="btn-icon">🏁</span>
-              <span *ngIf="!isClosingPrivateRoom">Close Private Room & End Auction</span>
-              <span *ngIf="isClosingPrivateRoom">Closing...</span>
+              @if (!isClosingPrivateRoom) {
+<span>Close Private Room & End Auction</span>
+}
+              @if (isClosingPrivateRoom) {
+<span>Closing...</span>
+}
             </button>
             
-            <p class="action-hint" *ngIf="auction.privateRoomStatus === 'active' || auction.privateRoomStatus === 'eligible'">
+            @if (auction.privateRoomStatus === 'active' || auction.privateRoomStatus === 'eligible') {
+<p class="action-hint">
               Private Room is {{ auction.privateRoomStatus === 'active' ? 'active' : 'awaiting acceptance' }} for this auction
             </p>
-            <p class="action-hint" *ngIf="auction.privateRoomStatus !== 'active' && auction.privateRoomStatus !== 'eligible'">
+}
+            @if (auction.privateRoomStatus !== 'active' && auction.privateRoomStatus !== 'eligible') {
+<p class="action-hint">
               Select up to 5 Platinum Bidders to invite to the private room
             </p>
-            <p class="action-hint warning" *ngIf="auction.status === 'ended'">
+}
+            @if (auction.status === 'ended') {
+<p class="action-hint warning">
               This auction has already ended
             </p>
+}
           </div>
         </div>
       </div>
+}
     </div>
   </div>
 
   <!-- Platinum Bidders Selection Modal -->
-  <div class="modal-overlay" *ngIf="showPlatinumSelection" (click)="closePlatinumSelection()">
+  @if (showPlatinumSelection) {
+<div class="modal-overlay" (click)="closePlatinumSelection()">
     <div class="modal-content" (click)="$event.stopPropagation()">
       <div class="modal-header">
         <h2>Select Platinum Bidders</h2>
@@ -199,15 +248,19 @@
           Selected: {{ selectedPlatinumBidders.length }} / 5
         </div>
 
-        <div class="bidders-selection-list" *ngIf="getAuthenticatedBidders().length > 0">
-          <div 
-            *ngFor="let bidder of getAuthenticatedBidders()" 
+        @if (getAuthenticatedBidders().length > 0) {
+<div class="bidders-selection-list">
+          @for (bidder of getAuthenticatedBidders(); track bidder) {
+<div 
+            
             class="bidder-selection-item"
             [class.selected]="isPlatinumSelected(bidder._id)"
             (click)="togglePlatinumBidder(bidder._id)"
           >
             <div class="selection-checkbox">
-              <span *ngIf="isPlatinumSelected(bidder._id)">✓</span>
+              @if (isPlatinumSelected(bidder._id)) {
+<span>✓</span>
+}
             </div>
             <div class="bidder-selection-info">
               <h4>{{ getBidderName(bidder) }}</h4>
@@ -219,15 +272,23 @@
               </div>
             </div>
             <div class="bidder-selection-badges">
-              <span class="badge verified" *ngIf="bidder.emailVerified">Verified</span>
-              <span class="badge deposit" *ngIf="bidder.hasDeposit">Deposit</span>
+              @if (bidder.emailVerified) {
+<span class="badge verified">Verified</span>
+}
+              @if (bidder.hasDeposit) {
+<span class="badge deposit">Deposit</span>
+}
             </div>
           </div>
+}
         </div>
+}
 
-        <div class="empty-state" *ngIf="getAuthenticatedBidders().length === 0">
+        @if (getAuthenticatedBidders().length === 0) {
+<div class="empty-state">
           <p>No authenticated bidders available</p>
         </div>
+}
       </div>
 
       <div class="modal-footer">
@@ -237,11 +298,16 @@
           (click)="createPrivateRoom()"
           [disabled]="selectedPlatinumBidders.length === 0 || isCreatingPrivateRoom"
         >
-          <span *ngIf="!isCreatingPrivateRoom">Create Private Room & Send Invitations</span>
-          <span *ngIf="isCreatingPrivateRoom">Creating...</span>
+          @if (!isCreatingPrivateRoom) {
+<span>Create Private Room & Send Invitations</span>
+}
+          @if (isCreatingPrivateRoom) {
+<span>Creating...</span>
+}
         </button>
       </div>
     </div>
   </div>
+}
 </div>
 

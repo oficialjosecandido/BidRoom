@@ -1,24 +1,30 @@
 <div class="invitation-container">
   <div class="invitation-card">
-    <div *ngIf="isLoading" class="loading-state">
+    @if (isLoading) {
+<div class="loading-state">
       <div class="spinner"></div>
       <p>Processing your invitation...</p>
     </div>
+}
 
-    <div *ngIf="success && !isLoading" class="success-state">
+    @if (success && !isLoading) {
+<div class="success-state">
       <div class="success-icon">✓</div>
       <h2>Invitation Accepted!</h2>
       <p>You've successfully accepted the Platinum Bidder invitation.</p>
       <p class="redirect-notice">Redirecting you to the private auction room...</p>
       <button class="action-btn" (click)="goToPrivateRoom()">Go to Private Room Now</button>
     </div>
+}
 
-    <div *ngIf="error && !isLoading" class="error-state">
+    @if (error && !isLoading) {
+<div class="error-state">
       <div class="error-icon">⚠️</div>
       <h2>Unable to Process Invitation</h2>
       <p class="error-message">{{ error }}</p>
       <button class="action-btn" (click)="goToPrivateRoom()">Go to Listings</button>
     </div>
+}
   </div>
 </div>
 

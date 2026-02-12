@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { Router } from '@angular/router';
 import { HeaderComponent } from '../../../shared/components/header/header.component';
 import { FooterComponent } from '../../../shared/components/footer/footer.component';
@@ -7,7 +7,7 @@ import { FooterComponent } from '../../../shared/components/footer/footer.compon
 @Component({
   selector: 'app-how-it-works',
   standalone: true,
-  imports: [CommonModule, HeaderComponent, FooterComponent],
+  imports: [HeaderComponent, FooterComponent],
   templateUrl: './how-it-works.component.html',
   styleUrls: ['./how-it-works.component.scss']
 })

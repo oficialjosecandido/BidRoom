@@ -10,7 +10,8 @@
         <h2 class="card-title">Profile Information</h2>
       </div>
 
-      <div class="card-body" *ngIf="currentUser$ | async as user">
+      @if (currentUser$ | async; as user) {
+<div class="card-body">
         <div class="info-row">
           <div class="info-label">Email</div>
           <div class="info-value">{{ user.email || 'Not provided' }}</div>
@@ -30,12 +31,14 @@
           </div>
         </div>
 
-        <div class="info-row" *ngIf="user.photoURL">
+        @if (user.photoURL) {
+<div class="info-row">
           <div class="info-label">Profile Photo</div>
           <div class="info-value">
             <img [src]="user.photoURL" alt="Profile photo" class="profile-photo" />
           </div>
         </div>
+}
 
         <div class="info-row">
           <div class="info-label">User ID</div>
@@ -44,6 +47,7 @@
           </div>
         </div>
       </div>
+}
     </div>
 
     <div class="account-card">
@@ -55,12 +59,16 @@
         <div class="score-row">
           <span class="score-label">Buyer score</span>
           <span class="score-value">{{ buyerScore != null ? (buyerScore | number:'1.1-1') : '—' }}</span>
-          <span class="score-count" *ngIf="buyerReviewCount > 0">({{ buyerReviewCount }} review{{ buyerReviewCount !== 1 ? 's' : '' }})</span>
+          @if (buyerReviewCount > 0) {
+<span class="score-count">({{ buyerReviewCount }} review{{ buyerReviewCount !== 1 ? 's' : '' }})</span>
+}
         </div>
         <div class="score-row">
           <span class="score-label">Seller score</span>
           <span class="score-value">{{ sellerScore != null ? (sellerScore | number:'1.1-1') : '—' }}</span>
-          <span class="score-count" *ngIf="sellerReviewCount > 0">({{ sellerReviewCount }} review{{ sellerReviewCount !== 1 ? 's' : '' }})</span>
+          @if (sellerReviewCount > 0) {
+<span class="score-count">({{ sellerReviewCount }} review{{ sellerReviewCount !== 1 ? 's' : '' }})</span>
+}
         </div>
         <p class="score-note">Scores are based on reviews from other users after completed transactions.</p>
       </div>

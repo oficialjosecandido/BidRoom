@@ -37,33 +37,41 @@
 
     <!-- FAQ Items -->
     <div class="faq-content">
-      <div class="faq-category-header" *ngIf="selectedCategory !== 'all'">
+      @if (selectedCategory !== 'all') {
+<div class="faq-category-header">
         <h2>{{ getCategoryName(selectedCategory) }}</h2>
         <p>{{ filteredFAQs.length }} question(s) found</p>
       </div>
+}
 
       <div class="faq-items">
-        <div 
+        @for (item of filteredFAQs; track item) {
+<div 
           class="faq-item" 
-          *ngFor="let item of filteredFAQs"
+         
           [class.expanded]="isExpanded(item.id)"
         >
           <div class="faq-question" (click)="toggleExpanded(item.id)">
             <h3>{{ item.question }}</h3>
             <span class="expand-icon" [class.expanded]="isExpanded(item.id)">+</span>
           </div>
-          <div class="faq-answer" *ngIf="isExpanded(item.id)">
+          @if (isExpanded(item.id)) {
+<div class="faq-answer">
             <p>{{ item.answer }}</p>
           </div>
+}
         </div>
+}
       </div>
 
       <!-- No Results -->
-      <div class="no-results" *ngIf="filteredFAQs.length === 0">
+      @if (filteredFAQs.length === 0) {
+<div class="no-results">
         <h3>No questions found</h3>
         <p>Try adjusting your search terms or browse all categories.</p>
         <button class="btn btn-secondary" (click)="searchTerm = ''; selectedCategory = 'all'">Clear Filters</button>
       </div>
+}
     </div>
   </div>
 </section>

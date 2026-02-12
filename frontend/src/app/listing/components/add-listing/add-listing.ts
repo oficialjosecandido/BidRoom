@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormArray, AbstractControl } from '@angular/forms';
 import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
@@ -18,7 +18,7 @@ interface Category {
 @Component({
   selector: 'app-add-listing',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, HeaderComponent, FooterComponent],
+  imports: [ReactiveFormsModule, HeaderComponent, FooterComponent],
   templateUrl: './add-listing.html',
   styleUrl: './add-listing.scss',
 })

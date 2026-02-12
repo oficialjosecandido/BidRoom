@@ -1,14 +1,20 @@
 <div class="dashboard-home">
   <div class="page-header">
     <h1 class="page-title">Dashboard</h1>
-    <p class="page-subtitle" *ngIf="customer?.user; else fallbackWelcome">
+    @if (customer?.user) {
+<p class="page-subtitle">
       Welcome back, {{ customer?.user?.firstName }} {{ customer?.user?.lastName }}
     </p>
-    <ng-template #fallbackWelcome>
-      <p class="page-subtitle" *ngIf="currentUser$ | async as user">
+} @else {
+
+      @if (currentUser$ | async; as user) {
+<p class="page-subtitle">
         Welcome back, {{ user.displayName || user.email || 'there' }}
       </p>
-    </ng-template>
+}
+    
+}
+    
   </div>
 
   <!-- Summary cards -->
@@ -42,7 +48,9 @@
       <div class="stat-content">
         <span class="stat-value">{{ buyerScore != null ? (buyerScore | number:'1.1-1') : '—' }}</span>
         <span class="stat-label">Buyer score</span>
-        <span class="stat-meta" *ngIf="buyerReviewCount > 0">({{ buyerReviewCount }} review{{ buyerReviewCount !== 1 ? 's' : '' }})</span>
+        @if (buyerReviewCount > 0) {
+<span class="stat-meta">({{ buyerReviewCount }} review{{ buyerReviewCount !== 1 ? 's' : '' }})</span>
+}
       </div>
     </div>
     <div class="stat-card stat-seller-score">
@@ -50,56 +58,80 @@
       <div class="stat-content">
         <span class="stat-value">{{ sellerScore != null ? (sellerScore | number:'1.1-1') : '—' }}</span>
         <span class="stat-label">Seller score</span>
-        <span class="stat-meta" *ngIf="sellerReviewCount > 0">({{ sellerReviewCount }} review{{ sellerReviewCount !== 1 ? 's' : '' }})</span>
+        @if (sellerReviewCount > 0) {
+<span class="stat-meta">({{ sellerReviewCount }} review{{ sellerReviewCount !== 1 ? 's' : '' }})</span>
+}
       </div>
     </div>
   </div>
 
   <!-- Your membership level (prominent) -->
-  <section class="section membership-level-section" *ngIf="!isLoading">
+  @if (!isLoading) {
+<section class="section membership-level-section">
     <div class="membership-level-card" [class.has-tier]="currentMembershipTier">
       <div class="membership-level-badge" [attr.data-tier]="currentMembershipTier?.name?.toLowerCase()">
         <span class="membership-level-label">Your membership</span>
-        <span class="membership-level-name" *ngIf="currentMembershipTier">{{ currentMembershipTier.name }}</span>
-        <span class="membership-level-name none" *ngIf="!currentMembershipTier">—</span>
-        <p class="membership-level-hint" *ngIf="currentMembershipTier">
+        @if (currentMembershipTier) {
+<span class="membership-level-name">{{ currentMembershipTier.name }}</span>
+}
+        @if (!currentMembershipTier) {
+<span class="membership-level-name none">—</span>
+}
+        @if (currentMembershipTier) {
+<p class="membership-level-hint">
           Balance {{ formatPrice(balance) }} · based on your current balance
         </p>
-        <p class="membership-level-hint unlock" *ngIf="!currentMembershipTier && nextTierToUnlock">
+}
+        @if (!currentMembershipTier && nextTierToUnlock) {
+<p class="membership-level-hint unlock">
           Add at least {{ formatPrice(nextTierToUnlock.amount) }} to unlock {{ nextTierToUnlock.name }}.
         </p>
-        <p class="membership-level-hint unlock" *ngIf="!currentMembershipTier && !nextTierToUnlock">
+}
+        @if (!currentMembershipTier && !nextTierToUnlock) {
+<p class="membership-level-hint unlock">
           Add funds to your balance to unlock membership tiers.
         </p>
+}
       </div>
       <button type="button" class="membership-level-cta" (click)="openBalanceModal()">
         {{ currentMembershipTier ? 'Increase balance' : 'Add funds' }}
       </button>
     </div>
   </section>
+}
 
   <!-- Membership tiers -->
-  <section class="section membership-section" *ngIf="!isLoading">
+  @if (!isLoading) {
+<section class="section membership-section">
     <h2 class="section-title">Membership</h2>
     <p class="membership-desc">Add funds to your balance to secure your membership tier. Your balance is used to participate in auctions and offers.</p>
     <div class="membership-tiers">
-      <div
+      @for (tier of membershipTiers; track tier) {
+<div
         class="tier-card"
-        *ngFor="let tier of membershipTiers"
+       
         [class.current-tier]="currentMembershipTier?.name === tier.name"
       >
         <span class="tier-name">{{ tier.name }}</span>
         <span class="tier-price">{{ formatPrice(tier.amount) }}</span>
-        <span class="tier-badge" *ngIf="currentMembershipTier?.name === tier.name">Current tier</span>
+        @if (currentMembershipTier?.name === tier.name) {
+<span class="tier-badge">Current tier</span>
+}
       </div>
+}
     </div>
   </section>
+}
 
   <!-- Top-up history -->
-  <section class="section topup-history-section" *ngIf="!isLoading">
+  @if (!isLoading) {
+<section class="section topup-history-section">
     <h2 class="section-title">Top-up history</h2>
-    <p class="section-desc" *ngIf="topups.length === 0">You haven’t added any funds yet. Use “Increase balance” above to add funds to your account.</p>
-    <div class="topup-table-wrap" *ngIf="topups.length > 0">
+    @if (topups.length === 0) {
+<p class="section-desc">You haven’t added any funds yet. Use “Increase balance” above to add funds to your account.</p>
+}
+    @if (topups.length > 0) {
+<div class="topup-table-wrap">
       <table class="topup-table">
         <thead>
           <tr>
@@ -108,35 +140,46 @@
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let topup of topups">
+          @for (topup of topups; track topup) {
+<tr>
             <td>{{ formatDate(topup.createdAt) }}</td>
             <td class="topup-amount">{{ formatPrice(topup.amount) }}</td>
           </tr>
+}
         </tbody>
       </table>
     </div>
+}
   </section>
+}
 
   <!-- Loading -->
-  <div class="loading-state" *ngIf="isLoading">
+  @if (isLoading) {
+<div class="loading-state">
     <div class="spinner"></div>
     <p>Loading your dashboard...</p>
   </div>
+}
 
   <!-- Error -->
-  <div class="error-state" *ngIf="error && !isLoading">
+  @if (error && !isLoading) {
+<div class="error-state">
     <p class="error-message">{{ error }}</p>
     <button class="retry-btn" (click)="loadMyListings()">Try again</button>
   </div>
+}
 
   <!-- Active listings preview -->
-  <section class="section" *ngIf="!isLoading && !error">
+  @if (!isLoading && !error) {
+<section class="section">
     <div class="section-header">
       <h2 class="section-title">Active listings</h2>
       <a routerLink="/dashboard/my-listings" class="section-link">Selling Items</a>
     </div>
-    <div class="listings-preview" *ngIf="activeListings.length > 0">
-      <div class="listing-card" *ngFor="let listing of activeListings.slice(0, 5)">
+    @if (activeListings.length > 0) {
+<div class="listings-preview">
+      @for (listing of activeListings.slice(0, 5); track listing) {
+<div class="listing-card">
         <a [routerLink]="['/listing', listing.slug]" class="listing-title">{{ listing.title }}</a>
         <div class="listing-meta">
           <span class="listing-price">{{ formatPrice(listing.currentPrice) }}</span>
@@ -144,38 +187,49 @@
           <span class="listing-end">Ends {{ formatDate(listing.endDate) }}</span>
         </div>
       </div>
+}
     </div>
-    <div class="empty-preview" *ngIf="activeListings.length === 0">
+}
+    @if (activeListings.length === 0) {
+<div class="empty-preview">
       <p>You have no active listings.</p>
       <a routerLink="/listing/add" class="create-link">Create a listing</a>
     </div>
+}
   </section>
+}
 
   <!-- Ended / unavailable preview -->
-  <section class="section" *ngIf="!isLoading && !error && endedListings.length > 0">
+  @if (!isLoading && !error && endedListings.length > 0) {
+<section class="section">
     <div class="section-header">
       <h2 class="section-title">Recently ended</h2>
       <a routerLink="/dashboard/my-listings" class="section-link">Selling Items</a>
     </div>
     <div class="listings-preview">
-      <div class="listing-card ended" *ngFor="let listing of endedListings.slice(0, 3)">
+      @for (listing of endedListings.slice(0, 3); track listing) {
+<div class="listing-card ended">
         <a [routerLink]="['/listing', listing.slug]" class="listing-title">{{ listing.title }}</a>
         <div class="listing-meta">
           <span class="listing-price">{{ formatPrice(listing.currentPrice) }}</span>
           <span class="listing-status" [class]="'status-' + listing.status">{{ listing.status }}</span>
         </div>
       </div>
+}
     </div>
   </section>
+}
 
   <!-- Pending reviews -->
-  <section class="section pending-reviews-section" *ngIf="!isLoading && pendingReviews.length > 0">
+  @if (!isLoading && pendingReviews.length > 0) {
+<section class="section pending-reviews-section">
     <div class="section-header">
       <h2 class="section-title">Leave a review</h2>
       <p class="section-desc">You have completed transactions. Leave a review for the other party.</p>
     </div>
     <div class="pending-reviews-list">
-      <div class="pending-review-card" *ngFor="let item of pendingReviews">
+      @for (item of pendingReviews; track item) {
+<div class="pending-review-card">
         <div class="pending-review-info">
           <span class="pending-listing-title">{{ item.listingTitle }}</span>
           <span class="pending-other-party">Review {{ item.otherPartyName }} as {{ item.theirRole === 'seller' ? 'seller' : 'buyer' }}</span>
@@ -184,12 +238,16 @@
           Leave review
         </button>
       </div>
+}
     </div>
   </section>
+}
 
   <!-- Review modal -->
-  <div class="modal-overlay" *ngIf="showReviewModal" (click)="closeReviewModal()">
-    <div class="modal-content review-modal" (click)="$event.stopPropagation()" *ngIf="reviewTarget">
+  @if (showReviewModal) {
+<div class="modal-overlay" (click)="closeReviewModal()">
+    @if (reviewTarget) {
+<div class="modal-content review-modal" (click)="$event.stopPropagation()">
       <div class="modal-header">
         <h3 class="modal-title">Leave a review</h3>
         <button type="button" class="modal-close" (click)="closeReviewModal()" aria-label="Close">×</button>
@@ -199,16 +257,20 @@
         <div class="review-score-section">
           <label class="review-score-label">Score (1–10)</label>
           <div class="review-score-buttons">
-            <button type="button" class="score-btn" *ngFor="let i of [1,2,3,4,5,6,7,8,9,10]" (click)="setRating(i)" [class.selected]="i === reviewScore">
+            @for (i of [1,2,3,4,5,6,7,8,9,10]; track i) {
+<button type="button" class="score-btn" (click)="setRating(i)" [class.selected]="i === reviewScore">
               {{ i }}
             </button>
+}
           </div>
         </div>
         <div class="comment-row">
           <label class="comment-label" for="review-description">Description (optional, private)</label>
           <textarea id="review-description" class="comment-input" [(ngModel)]="reviewDescription" rows="3" maxlength="2000" placeholder="Your feedback is private and not visible to other users."></textarea>
         </div>
-        <p class="review-error" *ngIf="reviewError">{{ reviewError }}</p>
+        @if (reviewError) {
+<p class="review-error">{{ reviewError }}</p>
+}
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" (click)="closeReviewModal()">Cancel</button>
@@ -217,10 +279,13 @@
         </button>
       </div>
     </div>
+}
   </div>
+}
 
   <!-- Increase balance modal -->
-  <div class="modal-overlay" *ngIf="showBalanceModal" (click)="closeBalanceModal()">
+  @if (showBalanceModal) {
+<div class="modal-overlay" (click)="closeBalanceModal()">
     <div class="modal-content balance-modal" (click)="$event.stopPropagation()">
       <div class="modal-header">
         <h3 class="modal-title">Increase balance</h3>
@@ -230,16 +295,18 @@
         <p class="balance-modal-desc">Add funds to your balance to secure your membership. You’ll complete payment securely via Stripe.</p>
         <p class="balance-modal-label">Quick select</p>
         <div class="balance-tier-options">
-          <button
+          @for (tier of membershipTiers; track tier) {
+<button
             type="button"
             class="tier-option"
-            *ngFor="let tier of membershipTiers"
+           
             [class.selected]="!balanceModalIsCustom && balanceModalAmount === tier.amount"
             (click)="selectBalanceTier(tier.amount)"
           >
             <span class="tier-option-name">{{ tier.name }}</span>
             <span class="tier-option-price">{{ formatPrice(tier.amount) }}</span>
           </button>
+}
         </div>
         <div class="balance-custom-row">
           <p class="balance-modal-label">Or custom amount</p>
@@ -259,10 +326,14 @@
           </div>
           <span class="balance-custom-hint">Minimum {{ formatPrice(minBalanceAmount) }}</span>
         </div>
-        <p class="balance-summary" *ngIf="getCheckoutAmount() != null">
+        @if (getCheckoutAmount() != null) {
+<p class="balance-summary">
           You’ll add <strong>{{ formatPrice(getCheckoutAmount()!) }}</strong> to your balance.
         </p>
-        <p class="balance-modal-error" *ngIf="balanceModalError">{{ balanceModalError }}</p>
+}
+        @if (balanceModalError) {
+<p class="balance-modal-error">{{ balanceModalError }}</p>
+}
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" (click)="closeBalanceModal()">Cancel</button>
@@ -272,9 +343,11 @@
       </div>
     </div>
   </div>
+}
 
   <!-- Quick links -->
-  <div class="quick-links" *ngIf="!isLoading">
+  @if (!isLoading) {
+<div class="quick-links">
     <a routerLink="/dashboard/my-account" class="quick-link">
       <span class="quick-icon">👤</span>
       <span>Profile &amp; settings</span>
@@ -288,4 +361,5 @@
       <span>Create listing</span>
     </a>
   </div>
+}
 </div>

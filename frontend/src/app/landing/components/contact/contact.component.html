@@ -29,9 +29,11 @@
                   [class.error]="getFieldError('name')"
                   placeholder="Your full name"
                 />
-                <div class="field-error" *ngIf="getFieldError('name')">
+                @if (getFieldError('name')) {
+<div class="field-error">
                   {{ getFieldError('name') }}
                 </div>
+}
               </div>
               
               <div class="form-group">
@@ -43,9 +45,11 @@
                   [class.error]="getFieldError('email')"
                   placeholder="your.email@example.com"
                 />
-                <div class="field-error" *ngIf="getFieldError('email')">
+                @if (getFieldError('email')) {
+<div class="field-error">
                   {{ getFieldError('email') }}
                 </div>
+}
               </div>
             </div>
             
@@ -63,9 +67,11 @@
                 <option value="report">Report a Problem</option>
                 <option value="partnership">Partnership Inquiry</option>
               </select>
-              <div class="field-error" *ngIf="getFieldError('inquiryType')">
+              @if (getFieldError('inquiryType')) {
+<div class="field-error">
                 {{ getFieldError('inquiryType') }}
               </div>
+}
             </div>
             
             <div class="form-group">
@@ -77,9 +83,11 @@
                 [class.error]="getFieldError('subject')"
                 placeholder="Brief description of your inquiry"
               />
-              <div class="field-error" *ngIf="getFieldError('subject')">
+              @if (getFieldError('subject')) {
+<div class="field-error">
                 {{ getFieldError('subject') }}
               </div>
+}
             </div>
             
             <div class="form-group">
@@ -91,9 +99,11 @@
                 placeholder="Please provide details about your inquiry..."
                 rows="6"
               ></textarea>
-              <div class="field-error" *ngIf="getFieldError('message')">
+              @if (getFieldError('message')) {
+<div class="field-error">
                 {{ getFieldError('message') }}
               </div>
+}
             </div>
             
             <button
@@ -101,13 +111,19 @@
               class="btn btn-primary btn-large"
               [disabled]="contactForm.invalid || isSubmitting"
             >
-              <span *ngIf="!isSubmitting">Send Message</span>
-              <span *ngIf="isSubmitting">Sending...</span>
+              @if (!isSubmitting) {
+<span>Send Message</span>
+}
+              @if (isSubmitting) {
+<span>Sending...</span>
+}
             </button>
             
-            <div class="submit-message" *ngIf="submitMessage">
+            @if (submitMessage) {
+<div class="submit-message">
               {{ submitMessage }}
             </div>
+}
           </form>
         </div>
       </div>

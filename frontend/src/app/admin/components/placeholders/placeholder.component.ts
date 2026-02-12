@@ -1,12 +1,12 @@
 import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { ActivatedRoute } from '@angular/router';
 import { AdminSidebarComponent } from '../sidebar/admin-sidebar.component';
 
 @Component({
   selector: 'app-placeholder',
   standalone: true,
-  imports: [CommonModule, AdminSidebarComponent],
+  imports: [AdminSidebarComponent],
   templateUrl: './placeholder.component.html',
   styleUrls: ['./placeholder.component.scss']
 })
