@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { API_CONFIG } from '../config/api.config';
@@ -42,9 +42,9 @@ export interface CreateReviewRequest {
   providedIn: 'root'
 })
 export class ReviewsService {
-  private apiUrl = `${API_CONFIG.getApiUrl()}/reviews`;
+  private http = inject(HttpClient);
 
-  constructor(private http: HttpClient) {}
+  private apiUrl = `${API_CONFIG.getApiUrl()}/reviews`;
 
   getPending(): Observable<PendingReviewsResponse> {
     return this.http.get<PendingReviewsResponse>(`${this.apiUrl}/pending`);

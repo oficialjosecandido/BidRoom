@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -14,18 +14,16 @@ import { ListingsService, Listing, ListingsQueryParams } from '../../../shared/s
   styleUrls: ['./listing-list.component.scss']
 })
 export class ListingListComponent implements OnInit {
+  private router = inject(Router);
+  private listingsService = inject(ListingsService);
+
   listings: Listing[] = [];
   loading = true;
   error: string | null = null;
   sortBy: 'deadline' | 'newest' | 'highest' | 'lowest' | 'bids' = 'deadline';
-  selectedCategory: string = '';
+  selectedCategory = '';
 
   categories = ['Electronics', 'Art', 'Collectibles', 'Jewelry', 'Home & Garden', 'Watches', 'Fashion', 'Sports', 'Books', 'Other'];
-
-  constructor(
-    private router: Router,
-    private listingsService: ListingsService
-  ) {}
 
   ngOnInit(): void {
     this.loadListings();

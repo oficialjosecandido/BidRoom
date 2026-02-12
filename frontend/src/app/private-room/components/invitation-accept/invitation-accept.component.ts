@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 
 import { ActivatedRoute, Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
@@ -12,18 +12,16 @@ import { API_CONFIG } from '../../../shared/config/api.config';
   styleUrls: ['./invitation-accept.component.scss']
 })
 export class InvitationAcceptComponent implements OnInit {
-  token: string = '';
-  listingId: string = '';
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private http = inject(HttpClient);
+
+  token = '';
+  listingId = '';
   action: 'accept' | 'decline' | null = null;
   isLoading = true;
   success = false;
   error: string | null = null;
-
-  constructor(
-    private route: ActivatedRoute,
-    private router: Router,
-    private http: HttpClient
-  ) {}
 
   ngOnInit(): void {
     this.route.queryParams.subscribe(params => {
@@ -61,7 +59,7 @@ export class InvitationAcceptComponent implements OnInit {
       token: this.token,
       listingId: this.listingId
     }).subscribe({
-      next: (response: any) => {
+      next: () => {
         this.success = true;
         this.isLoading = false;
         

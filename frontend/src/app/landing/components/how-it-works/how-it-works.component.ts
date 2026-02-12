@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, inject } from '@angular/core';
 
 import { Router } from '@angular/router';
 import { HeaderComponent } from '../../../shared/components/header/header.component';
@@ -11,11 +11,8 @@ import { FooterComponent } from '../../../shared/components/footer/footer.compon
   templateUrl: './how-it-works.component.html',
   styleUrls: ['./how-it-works.component.scss']
 })
-export class HowItWorksComponent implements OnInit {
-  
-  constructor(private router: Router) {}
-
-  ngOnInit(): void {}
+export class HowItWorksComponent {
+  private router = inject(Router);
 
   navigateToAuth(): void {
     this.router.navigate(['/auth/signup']);

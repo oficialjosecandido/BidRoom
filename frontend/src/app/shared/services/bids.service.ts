@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { API_CONFIG } from '../config/api.config';
@@ -61,9 +61,9 @@ export interface CreateBidRequest {
   providedIn: 'root'
 })
 export class BidsService {
-  private apiUrl = `${API_CONFIG.getApiUrl()}/bids`;
+  private http = inject(HttpClient);
 
-  constructor(private http: HttpClient) {}
+  private apiUrl = `${API_CONFIG.getApiUrl()}/bids`;
 
   getBidsByListing(listingId: string, sort: 'asc' | 'desc' = 'desc'): Observable<BidsResponse> {
     const params = new HttpParams().set('sort', sort);

@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -12,7 +12,11 @@ import { PrivateRoomService, Bidder } from '../../services/private-room.service'
   styleUrls: ['./platinum-bidders.component.scss']
 })
 export class PlatinumBiddersComponent implements OnInit {
-  listingId: string = '';
+  private route = inject(ActivatedRoute);
+  router = inject(Router);
+  private privateRoomService = inject(PrivateRoomService);
+
+  listingId = '';
   bidders: Bidder[] = [];
   selectedBidderIds: string[] = [];
   currentPlatinumBidders: string[] = [];
@@ -20,12 +24,6 @@ export class PlatinumBiddersComponent implements OnInit {
   isSaving = false;
   error: string | null = null;
   successMessage: string | null = null;
-
-  constructor(
-    private route: ActivatedRoute,
-    public router: Router,
-    private privateRoomService: PrivateRoomService
-  ) {}
 
   navigateToDashboard(): void {
     this.router.navigate(['/dashboard']);

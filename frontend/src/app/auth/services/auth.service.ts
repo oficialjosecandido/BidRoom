@@ -1,6 +1,6 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { BehaviorSubject, Observable, from, of, throwError } from 'rxjs';
-import { map, switchMap, catchError } from 'rxjs/operators';
+import { map, switchMap } from 'rxjs/operators';
 import { Auth, GoogleAuthProvider, User as FirebaseUser, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithPopup, sendPasswordResetEmail, sendEmailVerification, updateProfile, signOut, getIdToken, confirmPasswordReset, verifyPasswordResetCode } from '@angular/fire/auth';
 
 export interface AppUser {
@@ -15,6 +15,8 @@ export interface AppUser {
   providedIn: 'root'
 })
 export class AuthService {
+  private auth = inject(Auth);
+
   private currentUserSubject = new BehaviorSubject<AppUser | null>(null);
   public currentUser$ = this.currentUserSubject.asObservable();
 
@@ -22,7 +24,7 @@ export class AuthService {
   private authReadySubject = new BehaviorSubject<boolean>(false);
   public authReady$ = this.authReadySubject.asObservable();
 
-  constructor(private auth: Auth) {
+  constructor() {
     onAuthStateChanged(this.auth, async (fbUser: FirebaseUser | null) => {
       if (fbUser && !fbUser.emailVerified) {
         // User is logged in but email is not verified - sign them out

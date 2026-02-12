@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { API_CONFIG } from '../config/api.config';
@@ -27,9 +27,9 @@ export interface TopupsResponse {
   providedIn: 'root'
 })
 export class PaymentsService {
-  private apiUrl = `${API_CONFIG.getApiUrl()}/payments`;
+  private http = inject(HttpClient);
 
-  constructor(private http: HttpClient) {}
+  private apiUrl = `${API_CONFIG.getApiUrl()}/payments`;
 
   createCheckoutSession(amountDollars: number): Observable<CreateCheckoutSessionResponse> {
     return this.http.post<CreateCheckoutSessionResponse>(

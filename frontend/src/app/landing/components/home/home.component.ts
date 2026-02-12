@@ -1,4 +1,4 @@
-import { Component, OnInit, AfterViewInit } from '@angular/core';
+import { Component, OnInit, AfterViewInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
@@ -14,6 +14,10 @@ import { ListingsService, Listing, ListingsQueryParams, StatsOverview } from '..
   styleUrls: ['./home.component.scss']
 })
 export class HomeComponent implements OnInit, AfterViewInit {
+  private router = inject(Router);
+  private route = inject(ActivatedRoute);
+  private listingsService = inject(ListingsService);
+
   listings: Listing[] = [];
   loading = true;
   error: string | null = null;
@@ -23,12 +27,6 @@ export class HomeComponent implements OnInit, AfterViewInit {
     activeListings: 0,
     totalValueTraded: 0
   };
-
-  constructor(
-    private router: Router,
-    private route: ActivatedRoute,
-    private listingsService: ListingsService
-  ) {}
 
   ngOnInit(): void {
     this.loadStats();

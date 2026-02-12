@@ -1,6 +1,6 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormArray, AbstractControl } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormArray } from '@angular/forms';
 import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
@@ -23,9 +23,14 @@ interface Category {
   styleUrl: './add-listing.scss',
 })
 export class AddListing implements OnInit {
+  private fb = inject(FormBuilder);
+  private router = inject(Router);
+  private listingsService = inject(ListingsService);
+  private http = inject(HttpClient);
+
   listingForm!: FormGroup;
-  currentStep: number = 1;
-  totalSteps: number = 4;
+  currentStep = 1;
+  totalSteps = 4;
   isSubmitting = false;
   errorMessage = '';
   isUploadingImages = false;
@@ -98,14 +103,7 @@ export class AddListing implements OnInit {
   ];
 
   selectedCategory: Category | null = null;
-  commissionRate = 0.5; // Default 0.5%, 2.0% if Private Room enabled
-
-  constructor(
-    private fb: FormBuilder,
-    private router: Router,
-    private listingsService: ListingsService,
-    private http: HttpClient
-  ) {}
+  commissionRate = 0.5;
 
   ngOnInit(): void {
     this.initializeForm();
@@ -284,7 +282,7 @@ export class AddListing implements OnInit {
 
 
   isStepValid(step: number): boolean {
-    const stepGroups: { [key: number]: string[] } = {
+    const stepGroups: Record<number, string[]> = {
       1: ['title', 'category', 'subCategory', 'listingFormat', 'condition'],
       2: ['description', 'media', 'locationCity', 'locationRegion'],
       3: ['duration', 'allowPrivateRoom'],
@@ -344,7 +342,7 @@ export class AddListing implements OnInit {
       }
     } else {
       // Mark all fields as touched to show validation errors
-      const stepGroups: { [key: number]: string[] } = {
+      const stepGroups: Record<number, string[]> = {
         1: ['title', 'category', 'subCategory', 'listingFormat', 'condition'],
         2: ['description', 'media', 'locationCity', 'locationRegion'],
         3: ['duration', 'startingBid', 'reservePrice', 'buyNowPrice', 'minimumAcceptPrice', 'allowPrivateRoom'],
@@ -561,7 +559,7 @@ export class AddListing implements OnInit {
   }
 
   getFieldLabel(fieldName: string): string {
-    const labels: { [key: string]: string } = {
+    const labels: Record<string, string> = {
       title: 'Listing Title',
       category: 'Category',
       subCategory: 'Sub-Category',

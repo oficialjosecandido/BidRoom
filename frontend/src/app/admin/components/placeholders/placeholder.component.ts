@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 
 import { ActivatedRoute } from '@angular/router';
 import { AdminSidebarComponent } from '../sidebar/admin-sidebar.component';
@@ -11,10 +11,10 @@ import { AdminSidebarComponent } from '../sidebar/admin-sidebar.component';
   styleUrls: ['./placeholder.component.scss']
 })
 export class PlaceholderComponent implements OnInit {
-  pageTitle: string = 'Page';
-  pageIcon: string = '📄';
+  private route = inject(ActivatedRoute);
 
-  constructor(private route: ActivatedRoute) {}
+  pageTitle = 'Page';
+  pageIcon = '📄';
 
   ngOnInit(): void {
     // Get page title and icon from route data

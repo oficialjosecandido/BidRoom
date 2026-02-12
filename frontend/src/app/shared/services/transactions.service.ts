@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { API_CONFIG } from '../config/api.config';
@@ -84,10 +84,10 @@ const PROOF_ACCEPT = '.pdf,.jpg,.jpeg,.png';
   providedIn: 'root'
 })
 export class TransactionsService {
+  private http = inject(HttpClient);
+
   private apiUrl = `${API_CONFIG.getApiUrl()}/transactions`;
   private uploadsUrl = `${API_CONFIG.getApiUrl()}/uploads`;
-
-  constructor(private http: HttpClient) {}
 
   /** Accepted file types and max size for proof of payment (for use in file input). */
   get proofOfPaymentAccept(): string {

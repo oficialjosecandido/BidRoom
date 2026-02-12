@@ -46,7 +46,7 @@
     <div class="stat-card stat-buyer-score">
       <div class="stat-icon">🛒</div>
       <div class="stat-content">
-        <span class="stat-value">{{ buyerScore != null ? (buyerScore | number:'1.1-1') : '—' }}</span>
+        <span class="stat-value">{{ buyerScore !== null ? (buyerScore | number:'1.1-1') : '—' }}</span>
         <span class="stat-label">Buyer score</span>
         @if (buyerReviewCount > 0) {
 <span class="stat-meta">({{ buyerReviewCount }} review{{ buyerReviewCount !== 1 ? 's' : '' }})</span>
@@ -56,7 +56,7 @@
     <div class="stat-card stat-seller-score">
       <div class="stat-icon">⭐</div>
       <div class="stat-content">
-        <span class="stat-value">{{ sellerScore != null ? (sellerScore | number:'1.1-1') : '—' }}</span>
+        <span class="stat-value">{{ sellerScore !== null ? (sellerScore | number:'1.1-1') : '—' }}</span>
         <span class="stat-label">Seller score</span>
         @if (sellerReviewCount > 0) {
 <span class="stat-meta">({{ sellerReviewCount }} review{{ sellerReviewCount !== 1 ? 's' : '' }})</span>
@@ -254,8 +254,8 @@
       </div>
       <div class="modal-body">
         <p class="review-target-text">Review <strong>{{ reviewTarget.otherPartyName }}</strong> (as {{ reviewTarget.theirRole }}) for <em>{{ reviewTarget.listingTitle }}</em></p>
-        <div class="review-score-section">
-          <label class="review-score-label">Score (1–10)</label>
+        <fieldset class="review-score-section">
+          <legend class="review-score-label">Score (1–10)</legend>
           <div class="review-score-buttons">
             @for (i of [1,2,3,4,5,6,7,8,9,10]; track i) {
 <button type="button" class="score-btn" (click)="setRating(i)" [class.selected]="i === reviewScore">
@@ -263,7 +263,7 @@
             </button>
 }
           </div>
-        </div>
+        </fieldset>
         <div class="comment-row">
           <label class="comment-label" for="review-description">Description (optional, private)</label>
           <textarea id="review-description" class="comment-input" [(ngModel)]="reviewDescription" rows="3" maxlength="2000" placeholder="Your feedback is private and not visible to other users."></textarea>
@@ -326,7 +326,7 @@
           </div>
           <span class="balance-custom-hint">Minimum {{ formatPrice(minBalanceAmount) }}</span>
         </div>
-        @if (getCheckoutAmount() != null) {
+        @if (getCheckoutAmount() !== null) {
 <p class="balance-summary">
           You’ll add <strong>{{ formatPrice(getCheckoutAmount()!) }}</strong> to your balance.
         </p>
@@ -337,7 +337,7 @@
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" (click)="closeBalanceModal()">Cancel</button>
-        <button type="button" class="btn btn-primary" (click)="submitBalanceCheckout()" [disabled]="getCheckoutAmount() == null || balanceModalSubmitting">
+        <button type="button" class="btn btn-primary" (click)="submitBalanceCheckout()" [disabled]="getCheckoutAmount() === null || balanceModalSubmitting">
           {{ balanceModalSubmitting ? 'Redirecting…' : 'Continue to checkout' }}
         </button>
       </div>

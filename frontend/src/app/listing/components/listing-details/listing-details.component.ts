@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -22,6 +22,17 @@ import { PrivateRoomService, Bidder } from '../../../private-room/services/priva
   styleUrls: ['./listing-details.component.scss']
 })
 export class ListingDetailsComponent implements OnInit, OnDestroy {
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private listingsService = inject(ListingsService);
+  private bidsService = inject(BidsService);
+  private offersService = inject(OffersService);
+  private watchlistService = inject(WatchlistService);
+  private socketService = inject(SocketService);
+  private authService = inject(AuthService);
+  private privateRoomService = inject(PrivateRoomService);
+  private cdr = inject(ChangeDetectorRef);
+
   listing: Listing | null = null;
   loading = true;
   error: string | null = null;
@@ -44,44 +55,31 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
   showCreatePrivateRoomModal = false;
   createPrivateRoomBidders: Bidder[] = [];
   createPrivateRoomBiddersLoading = false;
-  selectedPrivateRoomBidderIds: Set<string> = new Set();
+  selectedPrivateRoomBidderIds = new Set<string>();
   createPrivateRoomSubmitting = false;
   private socketSubscriptions: Subscription[] = [];
   private countdownInterval: any = null;
   private justEndedRefetched = false;
   private offerRefreshDebounceTimer: ReturnType<typeof setTimeout> | null = null;
   private readonly OFFER_REFRESH_DEBOUNCE_MS = 2000;
-  displayedTimeRemaining: string = '';
+  displayedTimeRemaining = '';
 
   // Place Bid modal
   showBidModal = false;
-  bidAmount: string = '';
-  bidEmail: string = '';
+  bidAmount = '';
+  bidEmail = '';
   bidNotifyWhenOutbid = true;
   bidSubmitting = false;
   bidModalError: string | null = null;
 
   // Make Offer modal
   showOfferModal = false;
-  offerAmount: string = '';
-  offerEmail: string = '';
+  offerAmount = '';
+  offerEmail = '';
   offerSubmitting = false;
   offerModalError: string | null = null;
   /** ID of offer being accepted/rejected (for loading state) */
   offerActionLoadingId: string | null = null;
-
-  constructor(
-    private route: ActivatedRoute,
-    private router: Router,
-    private listingsService: ListingsService,
-    private bidsService: BidsService,
-    private offersService: OffersService,
-    private watchlistService: WatchlistService,
-    private socketService: SocketService,
-    private authService: AuthService,
-    private privateRoomService: PrivateRoomService,
-    private cdr: ChangeDetectorRef
-  ) {}
 
   ngOnInit(): void {
     window.scrollTo(0, 0);
@@ -689,7 +687,7 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
     
     if (confirm(`Buy this item now for ${this.formatPrice(this.listing.buyNowPrice!)}? This will instantly close the auction.`)) {
       this.listingsService.buyNow(this.listing._id).subscribe({
-        next: (response) => {
+        next: () => {
           alert('Purchase successful!');
           // Reload listing to show updated status
           if (this.listing?.slug) {

@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { ListingsService, Listing } from '../../../shared/services/listings.service';
@@ -27,11 +27,11 @@ interface EnhancedListing extends Listing {
   styleUrls: ['./my-auctions.component.scss']
 })
 export class MyAuctionsComponent implements OnInit {
+  private listingsService = inject(ListingsService);
+
   listings: EnhancedListing[] = [];
   isLoading = true;
   error: string | null = null;
-
-  constructor(private listingsService: ListingsService) {}
 
   ngOnInit(): void {
     this.loadMyListings();

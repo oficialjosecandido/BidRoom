@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 
 import { ActivatedRoute, Router } from '@angular/router';
 
@@ -10,12 +10,12 @@ import { ActivatedRoute, Router } from '@angular/router';
   styleUrls: ['./check-email.component.scss']
 })
 export class CheckEmailComponent {
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+
   email = '';
 
-  constructor(
-    private route: ActivatedRoute,
-    private router: Router
-  ) {
+  constructor() {
     this.email = this.route.snapshot.queryParams['email'] || '';
   }
 

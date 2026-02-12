@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { API_CONFIG } from '../../shared/config/api.config';
@@ -46,11 +46,11 @@ export interface SelectPlatinumBiddersResponse {
   providedIn: 'root'
 })
 export class PrivateRoomService {
+  private http = inject(HttpClient);
+
   private get apiUrl(): string {
     return `${API_CONFIG.getApiUrl()}/private-room`;
   }
-
-  constructor(private http: HttpClient) {}
 
   getBidders(listingId: string): Observable<BiddersResponse> {
     return this.http.get<BiddersResponse>(`${this.apiUrl}/listings/${listingId}/bidders`);

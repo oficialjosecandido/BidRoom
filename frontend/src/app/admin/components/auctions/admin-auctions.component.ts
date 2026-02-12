@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
@@ -14,14 +14,17 @@ import { ListingsService, Listing } from '../../../shared/services/listings.serv
   styleUrls: ['./admin-auctions.component.scss']
 })
 export class AdminAuctionsComponent implements OnInit {
+  private adminService = inject(AdminService);
+  private listingsService = inject(ListingsService);
+
   auctions: Listing[] = [];
   filteredAuctions: Listing[] = [];
   isLoading = false;
   error: string | null = null;
 
   // Filters
-  selectedCategory: string = 'all';
-  selectedStatus: string = 'all';
+  selectedCategory = 'all';
+  selectedStatus = 'all';
 
   categories = [
     { value: 'all', label: 'All Categories' },
@@ -43,11 +46,6 @@ export class AdminAuctionsComponent implements OnInit {
     { value: 'cancelled', label: 'Cancelled' },
     { value: 'draft', label: 'Draft' }
   ];
-
-  constructor(
-    private adminService: AdminService,
-    private listingsService: ListingsService
-  ) {}
 
   ngOnInit(): void {
     this.loadAuctions();
@@ -88,7 +86,7 @@ export class AdminAuctionsComponent implements OnInit {
 
 
   getStatusClass(status: string): string {
-    const statusClasses: { [key: string]: string } = {
+    const statusClasses: Record<string, string> = {
       'active': 'status-active',
       'ended': 'status-ended',
       'cancelled': 'status-cancelled',

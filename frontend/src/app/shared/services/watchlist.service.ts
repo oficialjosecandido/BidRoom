@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { API_CONFIG } from '../config/api.config';
@@ -23,9 +23,9 @@ export interface WatchlistActionResponse {
   providedIn: 'root'
 })
 export class WatchlistService {
-  private apiUrl = `${API_CONFIG.getApiUrl()}/watchlist`;
+  private http = inject(HttpClient);
 
-  constructor(private http: HttpClient) {}
+  private apiUrl = `${API_CONFIG.getApiUrl()}/watchlist`;
 
   add(listingId: string): Observable<WatchlistActionResponse> {
     return this.http.post<WatchlistActionResponse>(this.apiUrl, { listingId });

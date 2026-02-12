@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -23,6 +23,9 @@ const successToast = Swal.mixin({
   styleUrls: ['./dashboard-transactions.component.scss']
 })
 export class DashboardTransactionsComponent implements OnInit {
+  transactionsService = inject(TransactionsService);
+  private reviewsService = inject(ReviewsService);
+
   transactions: Transaction[] = [];
   isLoading = true;
   error: string | null = null;
@@ -54,11 +57,6 @@ export class DashboardTransactionsComponent implements OnInit {
   deliveryProofFileNameByTxId: Record<string, string> = {};
   deliveryProofUploadingTxId: string | null = null;
   deliveryProofErrorByTxId: Record<string, string> = {};
-
-  constructor(
-    public transactionsService: TransactionsService,
-    private reviewsService: ReviewsService
-  ) {}
 
   ngOnInit(): void {
     this.loadTransactions();

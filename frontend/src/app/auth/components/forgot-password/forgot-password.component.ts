@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 
@@ -12,16 +12,16 @@ import { AuthService } from '../../services/auth.service';
   styleUrls: ['./forgot-password.component.scss']
 })
 export class ForgotPasswordComponent {
+  private fb = inject(FormBuilder);
+  private authService = inject(AuthService);
+  private router = inject(Router);
+
   forgotPasswordForm: FormGroup;
   isLoading = false;
   errorMessage = '';
   successMessage = '';
 
-  constructor(
-    private fb: FormBuilder,
-    private authService: AuthService,
-    private router: Router
-  ) {
+  constructor() {
     this.forgotPasswordForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]]
     });
@@ -36,7 +36,7 @@ export class ForgotPasswordComponent {
       const email = this.forgotPasswordForm.value.email;
 
       this.authService.forgotPassword(email).subscribe({
-        next: (response) => {
+        next: () => {
           this.isLoading = false;
           this.successMessage = 'If an account with that email exists, a password reset link has been sent to your email address.';
         },

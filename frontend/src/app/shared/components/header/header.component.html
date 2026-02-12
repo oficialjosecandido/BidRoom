@@ -5,15 +5,16 @@
     class="menu-backdrop"
     [class.visible]="menuOpen"
     (click)="closeMenu()"
+    (keydown.escape)="closeMenu()"
     role="button"
-    tabindex="-1"
+    tabindex="0"
     aria-label="Close menu"
   ></div>
 
   <div class="container">
     <div class="header-content">
-      <div class="logo">
-        <h1 (click)="navigateToHome()">BidRoom | DEV</h1>
+        <div class="logo">
+        <h1 role="button" tabindex="0" (click)="navigateToHome()" (keydown.enter)="navigateToHome()" (keydown.space)="navigateToHome()">BidRoom | DEV</h1>
       </div>
 
       <button
@@ -33,11 +34,11 @@
       
       <div class="nav-wrapper" [class.open]="menuOpen">
         <nav class="main-nav">
-          <a class="nav-link" [class.active]="activePage === 'auctions'" (click)="navigateToAuctions()">Auctions</a>
-          <a class="nav-link" [class.active]="activePage === 'categories'" (click)="navigateToCategories()">Categories</a>
-          <a class="nav-link" [class.active]="activePage === 'how-it-works'" (click)="navigateToHowItWorks()">How It Works</a>
-          <a class="nav-link" [class.active]="activePage === 'faq'" (click)="navigateToFaq()">FAQ</a>
-          <a class="nav-link" [class.active]="activePage === 'contact'" (click)="navigateToContact()">Contact</a>
+          <a class="nav-link" [class.active]="activePage === 'auctions'" href="#" role="button" (click)="navigateToAuctions(); $event.preventDefault()" (keydown.enter)="navigateToAuctions(); $event.preventDefault()">Auctions</a>
+          <a class="nav-link" [class.active]="activePage === 'categories'" href="#" role="button" (click)="navigateToCategories(); $event.preventDefault()" (keydown.enter)="navigateToCategories(); $event.preventDefault()">Categories</a>
+          <a class="nav-link" [class.active]="activePage === 'how-it-works'" href="#" role="button" (click)="navigateToHowItWorks(); $event.preventDefault()" (keydown.enter)="navigateToHowItWorks(); $event.preventDefault()">How It Works</a>
+          <a class="nav-link" [class.active]="activePage === 'faq'" href="#" role="button" (click)="navigateToFaq(); $event.preventDefault()" (keydown.enter)="navigateToFaq(); $event.preventDefault()">FAQ</a>
+          <a class="nav-link" [class.active]="activePage === 'contact'" href="#" role="button" (click)="navigateToContact(); $event.preventDefault()" (keydown.enter)="navigateToContact(); $event.preventDefault()">Contact</a>
         </nav>
         
         <div class="header-actions">

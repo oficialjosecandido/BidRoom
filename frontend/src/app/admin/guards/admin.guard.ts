@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { CanActivate, Router, ActivatedRouteSnapshot, RouterStateSnapshot } from '@angular/router';
 import { Observable, of, from } from 'rxjs';
-import { map, timeout, catchError, switchMap } from 'rxjs/operators';
+import { catchError, switchMap } from 'rxjs/operators';
 import { AuthService } from '../../auth/services/auth.service';
 import { Auth } from '@angular/fire/auth';
 
@@ -12,12 +12,10 @@ const ADMIN_ROUTE_KEY = 'admin_route';
   providedIn: 'root'
 })
 export class AdminGuard implements CanActivate {
-  private auth = inject(Auth);
+  private authService = inject(AuthService);
+  private router = inject(Router);
 
-  constructor(
-    private authService: AuthService,
-    private router: Router
-  ) {}
+  private auth = inject(Auth);
 
   canActivate(
     route: ActivatedRouteSnapshot,
@@ -49,7 +47,7 @@ export class AdminGuard implements CanActivate {
           return;
         }
 
-        const unsubscribe = this.auth.onAuthStateChanged((user) => {
+        const unsubscribe = this.auth.onAuthStateChanged(() => {
           unsubscribe();
           resolve();
         });

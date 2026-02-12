@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 
 import { Router } from '@angular/router';
 
@@ -10,8 +10,8 @@ import { Router } from '@angular/router';
   styleUrls: ['./footer.component.scss']
 })
 export class FooterComponent {
-  
-  constructor(private router: Router) {}
+  private router = inject(Router);
+
 
   navigateToHowItWorks(): void {
     this.router.navigate(['/landing/how-it-works']);

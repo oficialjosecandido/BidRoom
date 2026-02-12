@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 
 import { RouterLink } from '@angular/router';
 import { WatchlistService } from '../../../shared/services/watchlist.service';
@@ -12,12 +12,12 @@ import { Listing } from '../../../shared/services/listings.service';
   styleUrls: ['./dashboard-watchlist.component.scss']
 })
 export class DashboardWatchlistComponent implements OnInit {
+  private watchlistService = inject(WatchlistService);
+
   watchlist: Listing[] = [];
   isLoading = true;
   error: string | null = null;
   removingId: string | null = null;
-
-  constructor(private watchlistService: WatchlistService) {}
 
   ngOnInit(): void {
     this.loadWatchlist();

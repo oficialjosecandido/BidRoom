@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, inject } from '@angular/core';
 
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -19,10 +19,12 @@ interface FAQItem {
   templateUrl: './faq.component.html',
   styleUrls: ['./faq.component.scss']
 })
-export class FaqComponent implements OnInit {
+export class FaqComponent {
+  private router = inject(Router);
+
   selectedCategory = 'all';
   searchTerm = '';
-  expandedItems: Set<string> = new Set();
+  expandedItems = new Set<string>();
 
   faqItems: FAQItem[] = [
     // Account & Billing
@@ -174,10 +176,6 @@ export class FaqComponent implements OnInit {
     }
   ];
 
-  constructor(private router: Router) {}
-
-  ngOnInit(): void {}
-
   get filteredFAQs(): FAQItem[] {
     let filtered = this.faqItems;
 
@@ -211,7 +209,7 @@ export class FaqComponent implements OnInit {
   }
 
   getCategoryName(category: string): string {
-    const categoryNames: { [key: string]: string } = {
+    const categoryNames: Record<string, string> = {
       'all': 'All Questions',
       'account': 'Account & Billing',
       'bidding': 'Bidding & Auctions',

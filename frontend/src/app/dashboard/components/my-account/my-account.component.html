@@ -58,14 +58,14 @@
       <div class="card-body reviews-scores">
         <div class="score-row">
           <span class="score-label">Buyer score</span>
-          <span class="score-value">{{ buyerScore != null ? (buyerScore | number:'1.1-1') : '—' }}</span>
+          <span class="score-value">{{ buyerScore !== null ? (buyerScore | number:'1.1-1') : '—' }}</span>
           @if (buyerReviewCount > 0) {
 <span class="score-count">({{ buyerReviewCount }} review{{ buyerReviewCount !== 1 ? 's' : '' }})</span>
 }
         </div>
         <div class="score-row">
           <span class="score-label">Seller score</span>
-          <span class="score-value">{{ sellerScore != null ? (sellerScore | number:'1.1-1') : '—' }}</span>
+          <span class="score-value">{{ sellerScore !== null ? (sellerScore | number:'1.1-1') : '—' }}</span>
           @if (sellerReviewCount > 0) {
 <span class="score-count">({{ sellerReviewCount }} review{{ sellerReviewCount !== 1 ? 's' : '' }})</span>
 }

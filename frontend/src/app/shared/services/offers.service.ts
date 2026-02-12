@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { API_CONFIG } from '../config/api.config';
@@ -44,9 +44,9 @@ export interface CreateOfferRequest {
   providedIn: 'root'
 })
 export class OffersService {
-  private apiUrl = `${API_CONFIG.getApiUrl()}/offers`;
+  private http = inject(HttpClient);
 
-  constructor(private http: HttpClient) {}
+  private apiUrl = `${API_CONFIG.getApiUrl()}/offers`;
 
   getOffersByListing(listingId: string): Observable<OffersResponse> {
     return this.http.get<OffersResponse>(`${this.apiUrl}/listing/${listingId}`);

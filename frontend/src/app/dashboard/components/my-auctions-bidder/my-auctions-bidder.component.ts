@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { ListingsService, Listing } from '../../../shared/services/listings.service';
@@ -12,15 +12,13 @@ import { BidsService } from '../../../shared/services/bids.service';
   styleUrls: ['./my-auctions-bidder.component.scss']
 })
 export class MyAuctionsBidderComponent implements OnInit {
+  private listingsService = inject(ListingsService);
+  private bidsService = inject(BidsService);
+
   listings: Listing[] = [];
   isLoading = true;
   error: string | null = null;
   preferenceUpdating: Record<string, boolean> = {};
-
-  constructor(
-    private listingsService: ListingsService,
-    private bidsService: BidsService
-  ) {}
 
   ngOnInit(): void {
     this.loadMyAuctions();

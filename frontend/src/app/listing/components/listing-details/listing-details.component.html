@@ -44,7 +44,11 @@
             <div
               class="thumbnail"
               [class.active]="$index === activeImageIndex"
-              (click)="setActiveImage($index)">
+              role="button"
+              tabindex="0"
+              (click)="setActiveImage($index)"
+              (keydown.enter)="setActiveImage($index)"
+              (keydown.space)="setActiveImage($index)">
               <img [src]="image" [alt]="listing.title + ' thumbnail ' + ($index + 1)">
             </div>
             }
@@ -260,7 +264,7 @@
             </button>
             }
           </div>
-          @if (listing.watchlistCount != null && listing.watchlistCount > 0) {
+          @if ((listing.watchlistCount ?? 0) > 0) {
           <p class="watchlist-count">
             {{ listing.watchlistCount }} {{ listing.watchlistCount === 1 ? 'person has' : 'people have' }} this in their watchlist
           </p>
@@ -280,12 +284,12 @@
               <div class="info-content">
                 <span class="info-label">Seller</span>
                 <span class="info-value">{{ listing.seller.firstName }} {{ listing.seller.lastName }}</span>
-                @if (listing.sellerScore != null) {
+                @if (listing.sellerScore !== null) {
                 <span class="seller-review-score">
                   ★ {{ listing.sellerScore | number:'1.1-1' }} <span class="review-count">({{ listing.sellerReviewCount ?? 0 }} review{{ (listing.sellerReviewCount ?? 0) !== 1 ? 's' : '' }})</span>
                 </span>
                 }
-                @if (listing.sellerScore == null && (listing.sellerReviewCount ?? 0) === 0) {
+                @if (listing.sellerScore === null && (listing.sellerReviewCount ?? 0) === 0) {
                 <span class="seller-review-score no-reviews">
                   No reviews yet
                 </span>
@@ -436,10 +440,10 @@
                             @if (bid.isAuthenticated) {
                             <span class="badge badge-buyer-score">
                               <span class="badge-icon">🛒</span>
-                              @if (bid.buyerScore != null || (bid.buyerReviewCount ?? 0) > 0) {
-                              <span>Buyer ★ {{ bid.buyerScore != null ? (bid.buyerScore | number:'1.1-1') : '—' }} ({{ bid.buyerReviewCount ?? 0 }} review{{ (bid.buyerReviewCount ?? 0) !== 1 ? 's' : '' }})</span>
+                              @if (bid.buyerScore !== null || (bid.buyerReviewCount ?? 0) > 0) {
+                              <span>Buyer ★ {{ bid.buyerScore !== null ? (bid.buyerScore | number:'1.1-1') : '—' }} ({{ bid.buyerReviewCount ?? 0 }} review{{ (bid.buyerReviewCount ?? 0) !== 1 ? 's' : '' }})</span>
                               }
-                              @if (bid.buyerScore == null && (bid.buyerReviewCount ?? 0) === 0) {
+                              @if (bid.buyerScore === null && (bid.buyerReviewCount ?? 0) === 0) {
                               <span>No buyer reviews</span>
                               }
                             </span>
@@ -607,8 +611,8 @@
 
 @if (showBidModal) {
 <!-- Place Bid modal -->
-<div class="modal-overlay" (click)="closeBidModal()">
-  <div class="modal-content place-bid-offer-modal" (click)="$event.stopPropagation()">
+<div class="modal-overlay" role="button" tabindex="0" (click)="closeBidModal()" (keydown.escape)="closeBidModal()">
+  <div class="modal-content place-bid-offer-modal" tabindex="0" (click)="$event.stopPropagation()" (keydown.enter)="$event.stopPropagation()" (keydown.space)="$event.stopPropagation()">
     <button type="button" class="modal-close" aria-label="Close" (click)="closeBidModal()">&times;</button>
     <h3 class="modal-title">Place a bid</h3>
     <p class="modal-transparency">So you know exactly where you stand:</p>
@@ -673,8 +677,8 @@
 
 @if (showOfferModal) {
 <!-- Make Offer modal -->
-<div class="modal-overlay" (click)="closeOfferModal()">
-  <div class="modal-content place-bid-offer-modal" (click)="$event.stopPropagation()">
+<div class="modal-overlay" role="button" tabindex="0" (click)="closeOfferModal()" (keydown.escape)="closeOfferModal()">
+  <div class="modal-content place-bid-offer-modal" tabindex="0" (click)="$event.stopPropagation()" (keydown.enter)="$event.stopPropagation()" (keydown.space)="$event.stopPropagation()">
     <button type="button" class="modal-close" aria-label="Close" (click)="closeOfferModal()">&times;</button>
     <h3 class="modal-title">Make an offer</h3>
     <p class="modal-transparency">So you know exactly what you’re offering:</p>
@@ -734,8 +738,8 @@
 
 @if (showLoginModal) {
 <!-- Login / Signup modal for watchlist (non-authenticated users) -->
-<div class="modal-overlay" (click)="closeLoginModal()">
-  <div class="modal-content watchlist-login-modal" (click)="$event.stopPropagation()">
+<div class="modal-overlay" role="button" tabindex="0" (click)="closeLoginModal()" (keydown.escape)="closeLoginModal()">
+  <div class="modal-content watchlist-login-modal" tabindex="0" (click)="$event.stopPropagation()" (keydown.enter)="$event.stopPropagation()" (keydown.space)="$event.stopPropagation()">
     <button type="button" class="modal-close" aria-label="Close" (click)="closeLoginModal()">&times;</button>
     <h3>Save to Watchlist</h3>
     <p>Log in or create an account to save this item to your watchlist and see it in your dashboard.</p>
@@ -749,8 +753,8 @@
 
 @if (showSelectWinnerModal && !isPrivateRoomEnded()) {
 <!-- Select winner modal (seller, ended auction with bids; not shown when private room ended) -->
-<div class="modal-overlay" (click)="closeSelectWinnerModal()">
-  <div class="modal-content select-winner-modal" (click)="$event.stopPropagation()">
+<div class="modal-overlay" role="button" tabindex="0" (click)="closeSelectWinnerModal()" (keydown.escape)="closeSelectWinnerModal()">
+  <div class="modal-content select-winner-modal" tabindex="0" (click)="$event.stopPropagation()" (keydown.enter)="$event.stopPropagation()" (keydown.space)="$event.stopPropagation()">
     <button type="button" class="modal-close" aria-label="Close" (click)="closeSelectWinnerModal()">&times;</button>
     <h3>Select winner</h3>
     <p class="modal-subtitle">Only bids from <strong>registered, verified</strong> accounts can be selected. Guest bidders are not eligible.</p>
@@ -788,8 +792,8 @@
 
 @if (showCreatePrivateRoomModal) {
 <!-- Create private room modal (seller, ended + private room eligible) -->
-<div class="modal-overlay" (click)="closeCreatePrivateRoomModal()">
-  <div class="modal-content select-winner-modal create-private-room-modal" (click)="$event.stopPropagation()">
+<div class="modal-overlay" role="button" tabindex="0" (click)="closeCreatePrivateRoomModal()" (keydown.escape)="closeCreatePrivateRoomModal()">
+  <div class="modal-content select-winner-modal create-private-room-modal" tabindex="0" (click)="$event.stopPropagation()" (keydown.enter)="$event.stopPropagation()" (keydown.space)="$event.stopPropagation()">
     <button type="button" class="modal-close" aria-label="Close" (click)="closeCreatePrivateRoomModal()">&times;</button>
     <h3>Create private room</h3>
     <p class="modal-subtitle">Choose between 2 and 5 bidders to invite. Only <strong>registered</strong> bidders can be invited. Invited bidders will receive a link to the private room; others will be notified they were not selected.</p>

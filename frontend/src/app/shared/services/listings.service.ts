@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { API_CONFIG } from '../config/api.config';
@@ -43,10 +43,10 @@ export interface Listing {
   privateRoomStatus?: 'not-triggered' | 'eligible' | 'invited' | 'active' | 'ended';
   privateRoomEndDate?: string;
   privateRoomLastBidTime?: string;
-  platinumBidders?: string[] | Array<{ _id: string; firstName: string; lastName: string; email: string }>;
+  platinumBidders?: string[] | { _id: string; firstName: string; lastName: string; email: string }[];
   platinumBidderInvitedAt?: string;
   platinumBidderAcceptanceDeadline?: string;
-  platinumBidderStatus?: Array<{
+  platinumBidderStatus?: {
     bidder: {
       _id: string;
       firstName: string;
@@ -56,7 +56,7 @@ export interface Listing {
     status: 'pending' | 'accepted' | 'declined';
     invitedAt: string;
     acceptedAt?: string | null;
-  }>;
+  }[];
   minimumOfferPrice?: number; // For Best Offer format
   renewalRequired?: boolean;
   uniqueBidders?: string[];
@@ -123,9 +123,9 @@ export interface StatsOverview {
   providedIn: 'root'
 })
 export class ListingsService {
-  private apiUrl = `${API_CONFIG.getApiUrl()}/listings`;
+  private http = inject(HttpClient);
 
-  constructor(private http: HttpClient) {}
+  private apiUrl = `${API_CONFIG.getApiUrl()}/listings`;
 
   getListings(params?: ListingsQueryParams): Observable<ListingsResponse> {
     let httpParams = new HttpParams();

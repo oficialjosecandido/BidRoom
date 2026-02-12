@@ -122,7 +122,8 @@
 
         <div class="form-row">
           <div class="form-group">
-            <label>Listing Format *</label>
+            <fieldset class="radio-group">
+              <legend>Listing Format *</legend>
             <div class="radio-group">
               <label class="radio-option">
                 <input
@@ -146,6 +147,7 @@
               {{ getFieldError('listingFormat') }}
             </div>
 }
+            </fieldset>
           </div>
 
           <div class="form-group">
@@ -199,7 +201,7 @@
         </div>
 
         <div class="form-group">
-          <label>Media Upload * (Minimum 3 photos)</label>
+          <label for="mediaUpload">Media Upload * (Minimum 3 photos)</label>
           <div class="file-upload-area" 
                (dragover)="$event.preventDefault()" 
                (drop)="$event.preventDefault()">
@@ -239,7 +241,8 @@
         </div>
 
         <div class="form-group">
-          <label>Key Specifications (Optional)</label>
+          <fieldset>
+            <legend>Key Specifications (Optional)</legend>
           <div formArrayName="specifications">
             @for (spec of specifications.controls; track spec; let i = $index) {
 <div [formGroupName]="i" class="spec-row">
@@ -250,6 +253,7 @@
 }
           </div>
           <button type="button" (click)="addSpecification()" class="add-btn">+ Add Specification</button>
+          </fieldset>
         </div>
 
         <div class="form-row">
@@ -294,7 +298,8 @@
         <h2>Step 3: Pricing and Auction Rules</h2>
         
         <div class="form-group">
-          <label>Listing Duration *</label>
+          <fieldset>
+            <legend>Listing Duration *</legend>
           <div class="radio-group">
             @for (duration of listingDurations; track duration) {
 <label class="radio-option">
@@ -312,6 +317,7 @@
             {{ getFieldError('duration') }}
           </div>
 }
+          </fieldset>
         </div>
 
         @if (listingForm.get('listingFormat')?.value === 'auction') {

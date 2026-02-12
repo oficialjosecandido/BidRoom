@@ -9,16 +9,16 @@
       <div class="col-3">
         <h4>Quick Links</h4>
         <ul>
-          <li><a (click)="navigateToHowItWorks()">How It Works</a></li>
-          <li><a (click)="navigateToContact()">Contact</a></li>
-          <li><a (click)="navigateToFaq()">FAQ</a></li>
+          <li><a href="#" role="button" (click)="navigateToHowItWorks(); $event.preventDefault()" (keydown.enter)="navigateToHowItWorks(); $event.preventDefault()">How It Works</a></li>
+          <li><a href="#" role="button" (click)="navigateToContact(); $event.preventDefault()" (keydown.enter)="navigateToContact(); $event.preventDefault()">Contact</a></li>
+          <li><a href="#" role="button" (click)="navigateToFaq(); $event.preventDefault()" (keydown.enter)="navigateToFaq(); $event.preventDefault()">FAQ</a></li>
         </ul>
       </div>
       <div class="col-3">
         <h4>Legal</h4>
         <ul>
-          <li><a (click)="navigateToPrivacyPolicy()">Privacy Policy</a></li>
-          <li><a (click)="navigateToTermsConditions()">Terms & Conditions</a></li>
+          <li><a href="#" role="button" (click)="navigateToPrivacyPolicy(); $event.preventDefault()" (keydown.enter)="navigateToPrivacyPolicy(); $event.preventDefault()">Privacy Policy</a></li>
+          <li><a href="#" role="button" (click)="navigateToTermsConditions(); $event.preventDefault()" (keydown.enter)="navigateToTermsConditions(); $event.preventDefault()">Terms & Conditions</a></li>
         </ul>
       </div>
       <div class="col-3">

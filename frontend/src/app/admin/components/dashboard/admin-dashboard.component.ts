@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AdminService, AdminStatistics } from '../../services/admin.service';
 import { AdminSidebarComponent } from '../sidebar/admin-sidebar.component';
@@ -11,11 +11,11 @@ import { AdminSidebarComponent } from '../sidebar/admin-sidebar.component';
   styleUrls: ['./admin-dashboard.component.scss']
 })
 export class AdminDashboardComponent implements OnInit {
+  private adminService = inject(AdminService);
+
   statistics: AdminStatistics | null = null;
   isLoading = true;
   error: string | null = null;
-
-  constructor(private adminService: AdminService) {}
 
   ngOnInit(): void {
     this.loadStatistics();

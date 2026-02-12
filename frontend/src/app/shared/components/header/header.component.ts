@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { Observable } from 'rxjs';
@@ -12,14 +12,14 @@ import { AuthService } from '../../../auth/services/auth.service';
   styleUrls: ['./header.component.scss']
 })
 export class HeaderComponent {
-  @Input() activePage: string = '';
+  private router = inject(Router);
+  private authService = inject(AuthService);
+
+  @Input() activePage = '';
   isAuthenticated$!: Observable<boolean>;
   menuOpen = false;
 
-  constructor(
-    private router: Router,
-    private authService: AuthService
-  ) {
+  constructor() {
     this.isAuthenticated$ = this.authService.isAuthenticated();
   }
 

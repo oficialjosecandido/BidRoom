@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 
 import { Router, RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../auth/services/auth.service';
@@ -13,12 +13,12 @@ const STORAGE_KEY = 'bidroom-dashboard-sidebar-collapsed';
   styleUrls: ['./dashboard.component.scss']
 })
 export class DashboardComponent {
+  private authService = inject(AuthService);
+  private router = inject(Router);
+
   sidebarCollapsed = false;
 
-  constructor(
-    private authService: AuthService,
-    private router: Router
-  ) {
+  constructor() {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored !== null) {
       this.sidebarCollapsed = stored === 'true';

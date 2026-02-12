@@ -1,5 +1,5 @@
-import { Injectable } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { Injectable, inject } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { API_CONFIG } from '../../shared/config/api.config';
 import { Listing } from '../../shared/services/listings.service';
@@ -14,11 +14,11 @@ export interface AdminStatistics {
   providedIn: 'root'
 })
 export class AdminService {
+  private http = inject(HttpClient);
+
   private get apiUrl(): string {
     return `${API_CONFIG.getApiUrl()}/admin`;
   }
-
-  constructor(private http: HttpClient) {}
 
   getStatistics(): Observable<AdminStatistics> {
     return this.http.get<AdminStatistics>(`${this.apiUrl}/statistics`);

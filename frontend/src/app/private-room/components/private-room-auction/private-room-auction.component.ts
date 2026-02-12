@@ -1,8 +1,8 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { Subscription, interval } from 'rxjs';
+import { Subscription } from 'rxjs';
 import { ListingsService, Listing } from '../../../shared/services/listings.service';
 import { BidsService, Bid } from '../../../shared/services/bids.service';
 import { SocketService } from '../../../shared/services/socket.service';
@@ -17,39 +17,37 @@ import { PrivateRoomService } from '../../services/private-room.service';
   styleUrls: ['./private-room-auction.component.scss']
 })
 export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
-  listingId: string = '';
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private listingsService = inject(ListingsService);
+  private bidsService = inject(BidsService);
+  private socketService = inject(SocketService);
+  private authService = inject(AuthService);
+  private privateRoomService = inject(PrivateRoomService);
+
+  listingId = '';
   listing: Listing | null = null;
   bids: Bid[] = [];
   platinumBidders: any[] = [];
   loading = true;
   error: string | null = null;
-  countdown: number = 0; // seconds remaining
+  countdown = 0; // seconds remaining
   isAuthenticated = false;
   isPlatinumBidder = false;
   /** Invited but not yet accepted; must accept within 15 min to place bids */
   invitationPending = false;
   currentUserId: string | null = null;
   currentUser: any = null;
-  viewerCount: number = 0;
+  viewerCount = 0;
   private socketSubscriptions: Subscription[] = [];
   private countdownInterval: any = null;
   /** When countdown hits 0, poll until backend sets privateRoomStatus to 'ended'. */
   private endCheckInterval: any = null;
-  isMobile: boolean = false;
-  isPlacingBid: boolean = false;
+  isMobile = false;
+  isPlacingBid = false;
   /** Custom bid amount (user can type any number >= min); empty = use minimum next bid */
-  customBidAmount: string = '';
+  customBidAmount = '';
   bidInputError: string | null = null;
-
-  constructor(
-    private route: ActivatedRoute,
-    private router: Router,
-    private listingsService: ListingsService,
-    private bidsService: BidsService,
-    private socketService: SocketService,
-    private authService: AuthService,
-    private privateRoomService: PrivateRoomService
-  ) {}
 
   ngOnInit(): void {
     this.listingId = this.route.snapshot.paramMap.get('id') || '';
@@ -59,7 +57,6 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
 
     // Check if user is authenticated and is a platinum bidder
     this.authService.currentUser$.subscribe(user => {
-      const wasAuthenticated = this.isAuthenticated;
       this.isAuthenticated = !!user;
       this.currentUserId = user?.uid || null;
       this.currentUser = user;

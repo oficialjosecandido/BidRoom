@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -18,6 +18,13 @@ import { Observable } from 'rxjs';
   styleUrls: ['./dashboard-home.component.scss']
 })
 export class DashboardHomeComponent implements OnInit {
+  private authService = inject(AuthService);
+  private listingsService = inject(ListingsService);
+  private customerService = inject(CustomerService);
+  private paymentsService = inject(PaymentsService);
+  private reviewsService = inject(ReviewsService);
+  private router = inject(Router);
+
   currentUser$: Observable<AppUser | null>;
   customer: CustomerInfo | null = null;
   activeListings: Listing[] = [];
@@ -70,14 +77,7 @@ export class DashboardHomeComponent implements OnInit {
     return sorted.find(t => t.amount > this.balance) ?? null;
   }
 
-  constructor(
-    private authService: AuthService,
-    private listingsService: ListingsService,
-    private customerService: CustomerService,
-    private paymentsService: PaymentsService,
-    private reviewsService: ReviewsService,
-    private router: Router
-  ) {
+  constructor() {
     this.currentUser$ = this.authService.currentUser$;
   }
 

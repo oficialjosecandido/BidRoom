@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 
 import { Auth, applyActionCode } from '@angular/fire/auth';
@@ -11,16 +11,14 @@ import { Auth, applyActionCode } from '@angular/fire/auth';
   styleUrls: ['./verify-email.component.scss']
 })
 export class VerifyEmailComponent implements OnInit {
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private auth = inject(Auth);
+
   isLoading = true;
   isVerified = false;
   errorMessage = '';
   code = '';
-
-  constructor(
-    private route: ActivatedRoute,
-    private router: Router,
-    private auth: Auth
-  ) {}
 
   ngOnInit(): void {
     // Get oobCode from query parameters (Firebase email verification)

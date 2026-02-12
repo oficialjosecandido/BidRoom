@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 
@@ -12,6 +12,11 @@ import { AuthService } from '../../services/auth.service';
   styleUrls: ['./reset-password.component.scss']
 })
 export class ResetPasswordComponent implements OnInit {
+  private fb = inject(FormBuilder);
+  private authService = inject(AuthService);
+  private router = inject(Router);
+  private route = inject(ActivatedRoute);
+
   resetPasswordForm: FormGroup;
   isLoading = false;
   errorMessage = '';
@@ -20,12 +25,7 @@ export class ResetPasswordComponent implements OnInit {
   showPassword = false;
   showConfirmPassword = false;
 
-  constructor(
-    private fb: FormBuilder,
-    private authService: AuthService,
-    private router: Router,
-    private route: ActivatedRoute
-  ) {
+  constructor() {
     this.resetPasswordForm = this.fb.group({
       password: ['', [Validators.required, Validators.minLength(12), this.strongPasswordValidator]],
       confirmPassword: ['', [Validators.required]]
@@ -42,7 +42,7 @@ export class ResetPasswordComponent implements OnInit {
       }
       // Optionally verify code to pre-validate
       this.authService.verifyPasswordResetCode(this.code).subscribe({
-        next: () => {},
+        next: () => { /* code verified successfully */ },
         error: () => {
           this.errorMessage = 'The reset link is invalid or expired.';
         }
@@ -50,7 +50,7 @@ export class ResetPasswordComponent implements OnInit {
     });
   }
 
-  strongPasswordValidator = (control: any) => {
+  strongPasswordValidator = (control: { value: string }) => {
     const password = control.value;
     if (!password) return null;
 
@@ -107,7 +107,7 @@ export class ResetPasswordComponent implements OnInit {
       this.successMessage = '';
 
       this.authService.confirmPasswordReset(this.code, password).subscribe({
-        next: (response) => {
+        next: () => {
           this.isLoading = false;
           this.successMessage = 'Password reset successfully! You can now log in with your new password.';
           // Redirect to login after a delay

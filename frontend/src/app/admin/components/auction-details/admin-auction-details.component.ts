@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AdminService } from '../../services/admin.service';
@@ -14,7 +14,12 @@ import { Listing } from '../../../shared/services/listings.service';
   styleUrls: ['./admin-auction-details.component.scss']
 })
 export class AdminAuctionDetailsComponent implements OnInit {
-  auctionId: string = '';
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private adminService = inject(AdminService);
+  private privateRoomService = inject(PrivateRoomService);
+
+  auctionId = '';
   auction: Listing | null = null;
   bidders: Bidder[] = [];
   isLoading = false;
@@ -23,13 +28,6 @@ export class AdminAuctionDetailsComponent implements OnInit {
   error: string | null = null;
   showPlatinumSelection = false;
   selectedPlatinumBidders: string[] = [];
-
-  constructor(
-    private route: ActivatedRoute,
-    private router: Router,
-    private adminService: AdminService,
-    private privateRoomService: PrivateRoomService
-  ) {}
 
   ngOnInit(): void {
     this.auctionId = this.route.snapshot.paramMap.get('id') || '';
