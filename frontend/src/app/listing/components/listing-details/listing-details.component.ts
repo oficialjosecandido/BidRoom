@@ -430,6 +430,11 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
     return labels[value] || value || '';
   }
 
+  getHandlingTimeLabel(days: number): string {
+    if (days === 1) return '1 Business Day';
+    return `${days} Business Days`;
+  }
+
   setupRealTimeUpdates(listingId: string): void {
     // Connect to Socket.io
     this.socketService.connect();
@@ -485,7 +490,7 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
         this.bids = [event.bid, ...this.bids];
         
         // Update listing current price and bid count
-        if (this.listing) {
+        if (this.listing && event.currentPrice !== undefined && event.bidCount !== undefined) {
           this.listing.currentPrice = event.currentPrice;
           this.listing.bidCount = event.bidCount;
         }
@@ -493,24 +498,28 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
     });
     this.socketSubscriptions.push(newBidSubscription);
 
-    // Subscribe to listing update events (price, bid count changes, private room updates)
+    // Subscribe to listing update events (price, bid count changes, private room updates, auction end)
     const listingUpdateSubscription = this.socketService.onListingUpdate().subscribe((event) => {
       if (event.listingId === listingId && this.listing) {
-        this.listing.currentPrice = event.currentPrice;
-        this.listing.bidCount = event.bidCount;
-        
+        if (event.currentPrice !== undefined) this.listing.currentPrice = event.currentPrice;
+        if (event.bidCount !== undefined) this.listing.bidCount = event.bidCount;
+
         // Update private room end date if provided (e.g., when private room is extended)
         if (event.privateRoomEndDate) {
           this.listing.privateRoomEndDate = event.privateRoomEndDate;
         }
-        
-        // Update private room status if provided
+
+        // Update private room status if provided (e.g., when auction ends with private room eligible)
         if (event.privateRoomStatus) {
           this.listing.privateRoomStatus = event.privateRoomStatus;
         }
-        
+
+        if (event.status) this.listing.status = event.status;
+        if (event.winnerSelectionDeadline) this.listing.winnerSelectionDeadline = event.winnerSelectionDeadline;
+
         // Restart countdown if end date changed
         this.startCountdown();
+        this.cdr.markForCheck();
       }
     });
     this.socketSubscriptions.push(listingUpdateSubscription);

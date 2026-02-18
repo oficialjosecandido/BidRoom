@@ -253,7 +253,7 @@
       }
     }
 
-    input:not(.password-input-container input) {
+    input:not(.password-input-container input):not([type="checkbox"]) {
       width: 100%;
       padding: 12px 16px;
       border: 1px solid #e0e0e0;
@@ -286,15 +286,21 @@
     &.terms-group {
       .checkbox-label {
         display: flex;
-        align-items: flex-start;
+        flex-direction: row;
+        align-items: center;
         gap: 10px;
         cursor: pointer;
         font-size: 14px;
         color: #333;
+        line-height: 1.5;
 
         input[type="checkbox"] {
-          margin-top: 3px;
-          flex-shrink: 0;
+          margin: 0;
+        }
+
+        .checkbox-text {
+          flex: 1;
+          white-space: nowrap;
         }
 
         .checkbox-text a {
@@ -372,5 +378,9 @@
   .name-row {
     grid-template-columns: 1fr !important;
     gap: 0 !important;
+  }
+
+  .terms-group .checkbox-text {
+    white-space: normal;
   }
 }

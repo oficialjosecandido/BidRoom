@@ -35,6 +35,7 @@ export interface Listing {
   shippingCost: number;
   shippingOption?: string;
   returnPolicy?: string;
+  handlingTime?: number;
   // New auction mechanics
   auctionFormat: 'highest-bid' | 'best-offer';
   durationSlot: '5 minutes' | '2 hours' | '24 hours' | '3 days' | '7 days';
@@ -46,6 +47,7 @@ export interface Listing {
   platinumBidders?: string[] | { _id: string; firstName: string; lastName: string; email: string }[];
   platinumBidderInvitedAt?: string;
   platinumBidderAcceptanceDeadline?: string;
+  currentUserPlatinumStatus?: { isPlatinumBidder: boolean; invitationPending?: boolean };
   platinumBidderStatus?: {
     bidder: {
       _id: string;

@@ -37,6 +37,17 @@ async function checkEndedAuctions() {
         }, { runValidators: false });
         processed++;
         console.log(`✅ Auto-started private room (15 min passed): ${listing._id} - ${listing.title}`);
+        if (ioInstance) {
+          ioInstance.to(`listing:${listing._id}`).emit('listing-update', {
+            listingId: listing._id.toString(),
+            status: 'active',
+            privateRoomStatus: 'active',
+            privateRoomEndDate: roomEndDate.toISOString(),
+            endDate: roomEndDate.toISOString(),
+            currentPrice: listing.currentPrice,
+            bidCount: listing.bidCount || 0
+          });
+        }
       } catch (error) {
         console.error(`❌ Error auto-starting private room ${listing._id}:`, error.message);
       }

@@ -371,7 +371,7 @@ router.get('/stats/overview', async (req, res) => {
 });
 
 // GET /api/listings/:id - Get a single listing by ID (for backward compatibility)
-router.get('/:id', async (req, res) => {
+router.get('/:id', optionalAuth, async (req, res) => {
   try {
     // Check if it's a valid ObjectId, otherwise treat as slug
     const isObjectId = /^[0-9a-fA-F]{24}$/.test(req.params.id);
@@ -380,11 +380,12 @@ router.get('/:id', async (req, res) => {
     if (isObjectId) {
       listing = await Listing.findById(req.params.id)
         .populate('seller', 'firstName lastName email')
+        .populate('platinumBidderInvitations.bidder', '_id')
         .lean();
     } else {
-      // Treat as slug
       listing = await Listing.findOne({ slug: req.params.id })
         .populate('seller', 'firstName lastName email')
+        .populate('platinumBidderInvitations.bidder', '_id')
         .lean();
     }
 
@@ -395,12 +396,46 @@ router.get('/:id', async (req, res) => {
     }
 
     const timeRemaining = new Listing(listing).getTimeRemaining();
-    
-    res.json({
+    const response = {
       ...listing,
       timeRemaining,
       endingSoon: timeRemaining.ended ? false : (timeRemaining.days === 0 && timeRemaining.hours <= 24)
-    });
+    };
+
+    // When authenticated, include platinum bidder status for current user (replaces check-platinum endpoint)
+    if (req.isAuthenticated && req.user) {
+      let user = await User.findOne({ uid: req.user.uid });
+      if (!user && req.user.email) {
+        user = await User.findOne({ email: req.user.email.toLowerCase().trim() });
+      }
+      if (user) {
+        const isInPlatinumBidders = listing.platinumBidders && listing.platinumBidders.some(
+          pbId => pbId.toString() === user._id.toString()
+        );
+        let isPlatinumBidder = false;
+        let invitationPending = false;
+        if (isInPlatinumBidders) {
+          const invitations = listing.platinumBidderInvitations || [];
+          const invitation = invitations.find(
+            inv => inv.bidder && inv.bidder._id.toString() === user._id.toString()
+          );
+          if (!invitation) {
+            isPlatinumBidder = true;
+          } else if (invitation.status === 'accepted') {
+            isPlatinumBidder = true;
+          } else if (invitation.status === 'declined') {
+            isPlatinumBidder = false;
+          } else if (listing.platinumBidderAcceptanceDeadline && new Date() > new Date(listing.platinumBidderAcceptanceDeadline)) {
+            isPlatinumBidder = false;
+          } else {
+            invitationPending = true;
+          }
+        }
+        response.currentUserPlatinumStatus = { isPlatinumBidder, invitationPending };
+      }
+    }
+    
+    res.json(response);
   } catch (error) {
     console.error('Error fetching listing:', error);
     res.status(500).json({
@@ -500,13 +535,12 @@ router.post('/', authenticateToken, async (req, res) => {
       if (!startingPrice || startingPrice <= 0) {
         return res.status(400).json({ error: 'Starting bid is required for auction format' });
       }
-      if (!reservePrice || reservePrice <= 0) {
-        return res.status(400).json({ error: 'Seller reserve price is required for auction format' });
-      }
-      const startNum = parseFloat(startingPrice);
-      const reserveNum = parseFloat(reservePrice);
-      if (reserveNum < startNum) {
-        return res.status(400).json({ error: 'Reserve price must be at least the starting bid' });
+      if (reservePrice != null && reservePrice !== '' && parseFloat(reservePrice) > 0) {
+        const startNum = parseFloat(startingPrice);
+        const reserveNum = parseFloat(reservePrice);
+        if (reserveNum < startNum) {
+          return res.status(400).json({ error: 'Reserve price must be at least the starting bid' });
+        }
       }
       if (buyNowPrice && buyNowPrice <= startingPrice) {
         return res.status(400).json({ error: 'Buy Now price must be higher than Starting Bid' });
@@ -529,7 +563,9 @@ router.post('/', authenticateToken, async (req, res) => {
       durationSlot: duration,
       startingPrice: isAuction ? parseFloat(startingPrice) : 0,
       currentPrice: isAuction ? parseFloat(startingPrice) : 0,
-      reservePrice: isAuction ? parseFloat(reservePrice) : (reservePrice ? parseFloat(reservePrice) : undefined),
+      reservePrice: isAuction
+        ? (reservePrice && parseFloat(reservePrice) > 0 ? parseFloat(reservePrice) : undefined)
+        : (reservePrice ? parseFloat(reservePrice) : undefined),
       buyNowPrice: buyNowPrice ? parseFloat(buyNowPrice) : undefined,
       minimumOfferPrice: minimumOfferPrice ? parseFloat(minimumOfferPrice) : undefined,
       allowPrivateRoom: allowPrivateRoom === true || allowPrivateRoom === 'true',

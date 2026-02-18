@@ -322,51 +322,26 @@
 
         @if (listingForm.get('listingFormat')?.value === 'auction') {
 <div>
-          <div class="form-row">
-            <div class="form-group">
-              <label for="startingBid">Starting Bid *</label>
-              <div class="input-with-currency">
-                <span class="currency">$</span>
-                <input
-                  type="number"
-                  id="startingBid"
-                  formControlName="startingBid"
-                  [class.error]="getFieldError('startingBid')"
-                  placeholder="0.00"
-                  min="0.01"
-                  step="0.01"
-                  style="padding-left: 25px;"
-                />
-              </div>
-              @if (getFieldError('startingBid')) {
-<div class="field-error">
-                {{ getFieldError('startingBid') }}
-              </div>
-}
+          <div class="form-group">
+            <label for="startingBid">Starting Bid *</label>
+            <div class="input-with-currency">
+              <span class="currency">$</span>
+              <input
+                type="number"
+                id="startingBid"
+                formControlName="startingBid"
+                [class.error]="getFieldError('startingBid')"
+                placeholder="0.00"
+                min="0.01"
+                step="0.01"
+                style="padding-left: 25px;"
+              />
             </div>
-
-            <div class="form-group">
-              <label for="reservePrice">Seller Reserve Price *</label>
-              <div class="input-with-currency">
-                <span class="currency">$</span>
-                <input
-                  type="number"
-                  id="reservePrice"
-                  formControlName="reservePrice"
-                  [class.error]="getFieldError('reservePrice')"
-                  placeholder="0.00"
-                  min="0.01"
-                  step="0.01"
-                  style="padding-left: 25px;"
-                />
-              </div>
-              @if (getFieldError('reservePrice')) {
+            @if (getFieldError('startingBid')) {
 <div class="field-error">
-                {{ getFieldError('reservePrice') }}
-              </div>
-}
-              <div class="field-hint">Minimum price at which you are obliged to sell. Must be at least the starting bid.</div>
+              {{ getFieldError('startingBid') }}
             </div>
+}
           </div>
 
           <div class="form-group">

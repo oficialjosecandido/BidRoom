@@ -205,6 +205,21 @@
       }
     }
 
+    // Fieldset reset - removes default browser black/grey border
+    fieldset {
+      border: none;
+      padding: 0;
+      margin: 0;
+      min-width: 0;
+
+      legend {
+        margin-bottom: 8px;
+        font-weight: 600;
+        color: var(--text-dark);
+        font-size: 14px;
+      }
+    }
+
     // Radio Group
     .radio-group {
       display: flex;

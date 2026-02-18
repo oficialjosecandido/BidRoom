@@ -186,22 +186,10 @@ export class AddListing implements OnInit {
 
     if (format === 'auction') {
       startingBidControl?.setValidators([Validators.required, Validators.min(0.01)]);
-      reservePriceControl?.setValidators([Validators.required, Validators.min(0.01)]);
+      reservePriceControl?.clearValidators();
+      reservePriceControl?.setValue(null);
       buyNowPriceControl?.setValidators([]);
       minimumAcceptPriceControl?.clearValidators();
-      
-      // Reserve price must be >= Starting Bid
-      const checkReserveVsStarting = () => {
-        const start = startingBidControl?.value;
-        const reserve = reservePriceControl?.value;
-        if (reserve != null && start != null && reserve < start) {
-          reservePriceControl?.setErrors({ ...reservePriceControl?.errors, mustBeAtLeastStartingBid: true });
-        } else {
-          reservePriceControl?.updateValueAndValidity();
-        }
-      };
-      startingBidControl?.valueChanges.subscribe(() => checkReserveVsStarting());
-      reservePriceControl?.valueChanges.subscribe(() => checkReserveVsStarting());
       
       // Buy Now must be higher than Starting Bid
       buyNowPriceControl?.valueChanges.subscribe(value => {
@@ -345,7 +333,7 @@ export class AddListing implements OnInit {
       const stepGroups: Record<number, string[]> = {
         1: ['title', 'category', 'subCategory', 'listingFormat', 'condition'],
         2: ['description', 'media', 'locationCity', 'locationRegion'],
-        3: ['duration', 'startingBid', 'reservePrice', 'buyNowPrice', 'minimumAcceptPrice', 'allowPrivateRoom'],
+        3: ['duration', 'startingBid', 'buyNowPrice', 'minimumAcceptPrice', 'allowPrivateRoom'],
         4: ['shippingOption', 'flatRateShipping', 'handlingTime', 'returnPolicy', 'sellerDeclaration']
       };
       
@@ -518,7 +506,7 @@ export class AddListing implements OnInit {
       listingFormat: formValue.listingFormat, // 'auction' or 'best-offer'
       duration: formValue.duration,
       startingPrice: formValue.startingBid || null,
-      reservePrice: formValue.reservePrice || null,
+      reservePrice: formValue.listingFormat === 'auction' ? null : (formValue.reservePrice || null),
       buyNowPrice: formValue.buyNowPrice || null,
       minimumOfferPrice: formValue.minimumAcceptPrice || null,
       allowPrivateRoom: formValue.allowPrivateRoom,

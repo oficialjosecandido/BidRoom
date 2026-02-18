@@ -106,6 +106,12 @@
                   <h4>Private room created</h4>
                   <p>Invitees have <strong>15 minutes</strong> to accept. The auction will start automatically after the acceptance window.</p>
                 </div>
+                <div class="private-room-watch">
+                  <button class="btn btn-view-room" (click)="openPrivateRoom()" title="Open in new window">
+                    View Private Room
+                  </button>
+                  <span class="watch-hint">Anyone can watch</span>
+                </div>
               </div>
             </div>
             }
@@ -256,7 +262,7 @@
               <p>You can't make an offer <br> on your own listing.</p>
             </div>
             }
-            @if (!hasPrivateRoom()) {
+            @if (!hasPrivateRoom() && !isOwnListing) {
             <button class="btn btn-secondary btn-large" (click)="addToWatchlist()" [disabled]="watchlistLoading">
               @if (watchlistLoading) { <span>...</span> }
               @if (!watchlistLoading && inWatchlist) { <span>Remove from Watchlist</span> }
@@ -591,10 +597,11 @@
           @if (listing.shippingOption !== 'free') { <p>Shipping cost: {{ formatPrice(listing.shippingCost) }}</p> }
           @if (listing.location) { <p>From: {{ listing.location }}</p> }
         </div>
-        @if (listing.returnPolicy) {
+        @if (listing.returnPolicy || listing.handlingTime) {
         <div class="info-card">
           <h3>Return policy</h3>
-          <p>{{ getReturnPolicyLabel(listing.returnPolicy) }}</p>
+          @if (listing.returnPolicy) { <p>{{ getReturnPolicyLabel(listing.returnPolicy) }}</p> }
+          @if (listing.handlingTime) { <p>Handling time: {{ getHandlingTimeLabel(listing.handlingTime) }}</p> }
         </div>
         }
         <div class="info-card">

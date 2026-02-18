@@ -162,10 +162,7 @@
             formControlName="acceptTerms"
             id="acceptTerms"
           />
-          <span class="checkbox-text">
-            I accept the
-            <a routerLink="/landing/terms-conditions" target="_blank" rel="noopener noreferrer">Terms and Conditions</a>
-          </span>
+          <span class="checkbox-text">I accept the <a routerLink="/landing/terms-conditions" target="_blank" rel="noopener noreferrer">Terms and Conditions</a></span>
         </label>
         @if (signupForm.get('acceptTerms')?.invalid && signupForm.get('acceptTerms')?.touched) {
 <div class="field-error">

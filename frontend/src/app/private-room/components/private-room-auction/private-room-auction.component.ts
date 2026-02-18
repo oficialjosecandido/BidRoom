@@ -41,13 +41,12 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
   viewerCount = 0;
   private socketSubscriptions: Subscription[] = [];
   private countdownInterval: any = null;
-  /** When countdown hits 0, poll until backend sets privateRoomStatus to 'ended'. */
-  private endCheckInterval: any = null;
   isMobile = false;
   isPlacingBid = false;
   /** Custom bid amount (user can type any number >= min); empty = use minimum next bid */
   customBidAmount = '';
   bidInputError: string | null = null;
+  startNowLoading = false;
 
   ngOnInit(): void {
     this.listingId = this.route.snapshot.paramMap.get('id') || '';
@@ -55,20 +54,15 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
       this.loadListing();
     }
 
-    // Check if user is authenticated and is a platinum bidder
     this.authService.currentUser$.subscribe(user => {
       this.isAuthenticated = !!user;
       this.currentUserId = user?.uid || null;
       this.currentUser = user;
-      
-      // Log for debugging
-      console.log('Auth state changed:', { isAuthenticated: this.isAuthenticated, hasUser: !!user, listingId: this.listingId });
-      
-      if (user && this.listing) {
-        // Re-check platinum status when auth state changes
-        this.checkPlatinumBidderStatusFromBackend();
-      } else if (!user) {
+      if (!user) {
         this.isPlatinumBidder = false;
+        this.invitationPending = false;
+      } else if (this.listing) {
+        this.applyPlatinumStatusFromListing();
       }
     });
 
@@ -86,10 +80,6 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
     if (this.countdownInterval) {
       clearInterval(this.countdownInterval);
       this.countdownInterval = null;
-    }
-    if (this.endCheckInterval) {
-      clearInterval(this.endCheckInterval);
-      this.endCheckInterval = null;
     }
     window.removeEventListener('resize', () => this.checkMobile());
     // Leave private room viewer room
@@ -122,7 +112,7 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
         this.listing = listing;
         this.loading = false;
         this.loadBids();
-        this.checkPlatinumBidderStatusFromBackend();
+        this.applyPlatinumStatusFromListing();
         this.startCountdown();
         this.subscribeToUpdates();
       },
@@ -183,46 +173,44 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
     this.platinumBidders = Array.from(platinumMap.values());
   }
 
-  checkPlatinumBidderStatus(): void {
-    if (!this.currentUserId || !this.listing?.platinumBidders) {
-      this.isPlatinumBidder = false;
-      return;
-    }
-
-    this.isPlatinumBidder = this.listing.platinumBidders.some((pbId: any) => {
-      const bidderId = typeof pbId === 'string' ? pbId : pbId._id;
-      return bidderId === this.currentUserId;
-    });
-  }
-
-  checkPlatinumBidderStatusFromBackend(): void {
-    if (!this.listingId || !this.isAuthenticated) {
-      this.isPlatinumBidder = false;
-      console.log('Platinum check skipped:', { listingId: this.listingId, isAuthenticated: this.isAuthenticated });
-      return;
-    }
-
-    // Check with backend API to get accurate status
-    console.log('Checking platinum bidder status from backend...');
-    this.privateRoomService.checkPlatinumBidderStatus(this.listingId).subscribe({
-      next: (response: { isPlatinumBidder: boolean; invitationPending?: boolean }) => {
-        this.isPlatinumBidder = response.isPlatinumBidder ?? false;
-        this.invitationPending = response.invitationPending ?? false;
+  startRoomNow(): void {
+    if (!this.listingId || this.startNowLoading || !this.isSeller) return;
+    this.startNowLoading = true;
+    this.privateRoomService.startRoomNow(this.listingId).subscribe({
+      next: (res) => {
+        this.startNowLoading = false;
+        if (res.listing && this.listing) {
+          this.listing.privateRoomStatus = (res.listing.privateRoomStatus ?? 'active') as Listing['privateRoomStatus'];
+          this.listing.privateRoomEndDate = res.listing.privateRoomEndDate ?? undefined;
+          this.listing.status = (res.listing.status as Listing['status']) ?? this.listing.status;
+          this.startCountdown();
+        }
       },
-      error: (error) => {
-        console.error('Error checking platinum bidder status:', error);
-        this.isPlatinumBidder = false;
-        // Fallback to frontend check
-        this.checkPlatinumBidderStatus();
+      error: () => {
+        this.startNowLoading = false;
       }
     });
   }
 
+  /** Use currentUserPlatinumStatus from listing (from GET listing when authenticated). No separate API call needed. */
+  applyPlatinumStatusFromListing(): void {
+    const status = this.listing?.currentUserPlatinumStatus;
+    if (status) {
+      this.isPlatinumBidder = status.isPlatinumBidder ?? false;
+      this.invitationPending = status.invitationPending ?? false;
+      return;
+    }
+    this.isPlatinumBidder = false;
+    this.invitationPending = false;
+  }
+
   startCountdown(): void {
-    if (!this.listing?.privateRoomEndDate) return;
+    const hasActiveCountdown = this.listing?.privateRoomStatus === 'active' && this.listing?.privateRoomEndDate;
+    const hasAcceptanceCountdown = this.listing?.privateRoomStatus === 'invited' && this.listing?.platinumBidderAcceptanceDeadline;
+    if (!hasActiveCountdown && !hasAcceptanceCountdown) return;
 
     this.updateCountdown();
-    
+
     if (this.countdownInterval) {
       clearInterval(this.countdownInterval);
     }
@@ -233,40 +221,32 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
   }
 
   updateCountdown(): void {
-    if (!this.listing?.privateRoomEndDate) {
+    if (!this.listing) {
       this.countdown = 0;
       return;
     }
 
-    const endDate = new Date(this.listing.privateRoomEndDate);
+    let endDate: Date | null = null;
+    if (this.listing.privateRoomStatus === 'invited' && this.listing.platinumBidderAcceptanceDeadline) {
+      endDate = new Date(this.listing.platinumBidderAcceptanceDeadline);
+    } else if (this.listing.privateRoomStatus === 'active' && this.listing.privateRoomEndDate) {
+      endDate = new Date(this.listing.privateRoomEndDate);
+    }
+
+    if (!endDate) {
+      this.countdown = 0;
+      return;
+    }
+
     const now = new Date();
     const remaining = Math.max(0, Math.floor((endDate.getTime() - now.getTime()) / 1000));
-    
     this.countdown = remaining;
 
-    if (remaining === 0) {
-      if (this.countdownInterval) {
-        clearInterval(this.countdownInterval);
-        this.countdownInterval = null;
-      }
-      this.loadListing(); // Reload to check if room ended
-      this.startEndCheckPolling();
+    if (remaining === 0 && this.countdownInterval) {
+      clearInterval(this.countdownInterval);
+      this.countdownInterval = null;
+      // Listing-update socket event will deliver privateRoomStatus 'ended' when backend processes it
     }
-  }
-
-  /** Poll listing every 5s when countdown is 0 until backend sets privateRoomStatus to 'ended'. */
-  private startEndCheckPolling(): void {
-    if (this.endCheckInterval) return;
-    this.endCheckInterval = setInterval(() => {
-      if (this.listing?.privateRoomStatus === 'ended') {
-        if (this.endCheckInterval) {
-          clearInterval(this.endCheckInterval);
-          this.endCheckInterval = null;
-        }
-        return;
-      }
-      this.loadListing();
-    }, 5000);
   }
 
   formatCountdown(): string {
@@ -289,25 +269,30 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
     // Join private room viewer room to track viewers
     this.socketService.joinPrivateRoomViewer(this.listingId);
 
-    // Subscribe to listing updates (filter by listingId)
+    // Subscribe to listing updates (filter by listingId) - update in-memory, no extra API calls
     const sub = this.socketService.onListingUpdate().subscribe(update => {
-      if (update.listingId === this.listingId && this.listing) {
-        this.listing.currentPrice = update.currentPrice;
-        this.listing.bidCount = update.bidCount;
-        if (update.privateRoomEndDate) {
-          this.listing.privateRoomEndDate = update.privateRoomEndDate;
-          this.startCountdown();
+      if (update.listingId !== this.listingId || !this.listing) return;
+      if (update.currentPrice !== undefined) this.listing.currentPrice = update.currentPrice;
+      if (update.bidCount !== undefined) this.listing.bidCount = update.bidCount;
+      if (update.privateRoomEndDate) {
+        this.listing.privateRoomEndDate = update.privateRoomEndDate;
+        this.startCountdown();
+      }
+      if (update.privateRoomStatus) {
+        this.listing.privateRoomStatus = update.privateRoomStatus;
+        if (update.privateRoomStatus === 'ended') {
+          this.countdown = 0;
+          if (this.countdownInterval) {
+            clearInterval(this.countdownInterval);
+            this.countdownInterval = null;
+          }
+          this.loadBids(); // Refresh bids for final state
         }
-        if (update.privateRoomStatus) {
-          this.listing.privateRoomStatus = update.privateRoomStatus;
-        }
-        if (update.status) {
-          this.listing.status = update.status;
-        }
-        if (update.endDate) {
-          this.listing.endDate = update.endDate;
-        }
-        this.loadBids(); // Reload bids to get latest
+      }
+      if (update.status) this.listing.status = update.status;
+      if (update.endDate) this.listing.endDate = update.endDate;
+      if (update.privateRoomStatus === 'active' || update.privateRoomStatus === 'invited') {
+        this.startCountdown();
       }
     });
 

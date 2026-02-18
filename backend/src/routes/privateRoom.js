@@ -231,54 +231,70 @@ router.post('/listings/:id/platinum-bidders', authenticateToken, async (req, res
   }
 });
 
-// Check if current user is a platinum bidder for a listing (must have accepted invitation within 15 min)
-router.get('/listings/:id/check-platinum', authenticateToken, async (req, res) => {
+// Start private room now (seller only, bypass 15-minute acceptance window)
+router.post('/listings/:id/start-now', authenticateToken, async (req, res) => {
   try {
     const listingId = req.params.id;
-    const listing = await Listing.findById(listingId)
-      .select('platinumBidders platinumBidderInvitations platinumBidderAcceptanceDeadline')
-      .populate('platinumBidderInvitations.bidder', '_id');
-    
+    const listing = await Listing.findById(listingId).populate('seller');
+
     if (!listing) {
       return res.status(404).json({ error: 'Listing not found' });
     }
 
     const user = await User.findOne({ uid: req.user.uid });
-    if (!user) {
-      return res.json({ isPlatinumBidder: false });
+    if (!user || listing.seller._id.toString() !== user._id.toString()) {
+      return res.status(403).json({ error: 'Forbidden', message: 'Only the seller can start the room' });
     }
 
-    const isInPlatinumBidders = listing.platinumBidders && listing.platinumBidders.some(
-      pbId => pbId.toString() === user._id.toString()
-    );
-    if (!isInPlatinumBidders) {
-      return res.json({ isPlatinumBidder: false });
+    if (listing.privateRoomStatus !== 'invited') {
+      return res.status(400).json({
+        error: 'Cannot start',
+        message: 'The room can only be started when it is in the invitation phase. It may already be active or ended.'
+      });
     }
 
     const now = new Date();
-    const invitations = listing.platinumBidderInvitations || [];
-    const invitation = invitations.find(
-      inv => inv.bidder && inv.bidder._id.toString() === user._id.toString()
-    );
+    const PRIVATE_ROOM_EXTEND_MS = 60 * 1000; // 60 seconds per bid
+    const roomEndDate = new Date(now.getTime() + PRIVATE_ROOM_EXTEND_MS);
 
-    if (!invitation) {
-      return res.json({ isPlatinumBidder: true });
+    await Listing.findByIdAndUpdate(listingId, {
+      $set: {
+        privateRoomStatus: 'active',
+        privateRoomEndDate: roomEndDate,
+        privateRoomLastBidTime: now,
+        endDate: roomEndDate
+      }
+    }, { runValidators: false });
+
+    const io = req.app.get('io');
+    if (io) {
+      io.to(`listing:${listingId}`).emit('listing-update', {
+        listingId: listingId.toString(),
+        status: 'active',
+        privateRoomStatus: 'active',
+        privateRoomEndDate: roomEndDate.toISOString(),
+        currentPrice: listing.currentPrice,
+        bidCount: listing.bidCount || 0
+      });
     }
-    if (invitation.status === 'accepted') {
-      return res.json({ isPlatinumBidder: true });
-    }
-    if (invitation.status === 'declined') {
-      return res.json({ isPlatinumBidder: false });
-    }
-    if (listing.platinumBidderAcceptanceDeadline && now > new Date(listing.platinumBidderAcceptanceDeadline)) {
-      return res.json({ isPlatinumBidder: false });
-    }
-    return res.json({ isPlatinumBidder: false, invitationPending: true });
+
+    const updated = await Listing.findById(listingId).populate('seller', 'firstName lastName email');
+    res.json({
+      success: true,
+      message: 'Private room started',
+      listing: {
+        id: updated._id,
+        status: updated.status,
+        privateRoomStatus: updated.privateRoomStatus,
+        privateRoomEndDate: updated.privateRoomEndDate,
+        endDate: updated.endDate
+      }
+    });
   } catch (error) {
-    console.error('Error checking platinum bidder status:', error);
-    res.status(500).json({ 
-      error: 'Failed to check platinum bidder status',
-      message: error.message 
+    console.error('Error starting private room:', error);
+    res.status(500).json({
+      error: 'Failed to start room',
+      message: error.message
     });
   }
 });

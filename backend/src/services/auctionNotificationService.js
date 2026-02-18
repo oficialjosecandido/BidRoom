@@ -474,6 +474,18 @@ async function handleAuctionEnd(listingId, io = null) {
         }
       }, { runValidators: false });
 
+      // Emit so clients with the page open get the Create Private Room button
+      if (io) {
+        io.to(`listing:${listingId}`).emit('listing-update', {
+          listingId: listingId.toString(),
+          status: 'ended',
+          privateRoomStatus: 'eligible',
+          winnerSelectionDeadline: deadline.toISOString(),
+          currentPrice: listing.currentPrice,
+          bidCount
+        });
+      }
+
       const listingForNotify = await Listing.findById(listingId)
         .populate('seller', 'firstName lastName email');
       if (!listingForNotify) throw new Error('Listing not found');
@@ -495,6 +507,17 @@ async function handleAuctionEnd(listingId, io = null) {
     await Listing.findByIdAndUpdate(listingId, {
       $set: { status: 'ended', winnerSelectionDeadline: deadline }
     }, { runValidators: false });
+
+    // Emit so clients with the page open get updated status
+    if (io) {
+      io.to(`listing:${listingId}`).emit('listing-update', {
+        listingId: listingId.toString(),
+        status: 'ended',
+        winnerSelectionDeadline: deadline.toISOString(),
+        currentPrice: listing.currentPrice,
+        bidCount
+      });
+    }
 
     const listingForNotify = await Listing.findById(listingId)
       .populate('seller', 'firstName lastName email');
@@ -706,13 +729,13 @@ async function handlePrivateRoomEnd(listingId, io = null) {
     }
 
     if (io) {
-      io.to(`listing:${listingId}`).emit('listing-updated', {
+      io.to(`listing:${listingId}`).emit('listing-update', {
         listingId: listingId.toString(),
         privateRoomStatus: 'ended',
         status: 'ended',
         endDate: now
       });
-      io.to(`private-room:${listingId}`).emit('listing-updated', {
+      io.to(`private-room:${listingId}`).emit('listing-update', {
         listingId: listingId.toString(),
         privateRoomStatus: 'ended',
         status: 'ended',

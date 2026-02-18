@@ -214,7 +214,7 @@ router.post('/auctions/:id/private-room', authenticateToken, requireAdmin, async
     // Emit socket event if available
     const io = req.app.get('io');
     if (io) {
-      io.to(`listing:${listingId}`).emit('listing-updated', {
+      io.to(`listing:${listingId}`).emit('listing-update', {
         listingId: listing._id.toString(),
         privateRoomStatus: listing.privateRoomStatus,
         privateRoomEndDate: listing.privateRoomEndDate,
@@ -454,7 +454,7 @@ router.post('/auctions/:id/close-private-room', authenticateToken, requireAdmin,
     // Emit socket event if available
     const io = req.app.get('io');
     if (io) {
-      io.to(`listing:${listingId}`).emit('listing-updated', {
+      io.to(`listing:${listingId}`).emit('listing-update', {
         listingId: listing._id.toString(),
         privateRoomStatus: listing.privateRoomStatus,
         status: listing.status,

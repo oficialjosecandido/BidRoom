@@ -12,13 +12,14 @@ export interface NewBidEvent {
 
 export interface ListingUpdateEvent {
   listingId: string;
-  currentPrice: number;
-  bidCount: number;
+  currentPrice?: number;
+  bidCount?: number;
   updatedAt?: string;
   privateRoomEndDate?: string;
   privateRoomStatus?: 'not-triggered' | 'eligible' | 'invited' | 'active' | 'ended';
   status?: 'draft' | 'active' | 'ended' | 'cancelled';
   endDate?: string;
+  winnerSelectionDeadline?: string;
 }
 
 export interface ViewerCountUpdateEvent {

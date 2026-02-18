@@ -71,8 +71,11 @@ export class PrivateRoomService {
     return this.http.post(`${this.apiUrl}/invitation/decline`, { token, listingId });
   }
 
-  checkPlatinumBidderStatus(listingId: string): Observable<{ isPlatinumBidder: boolean; invitationPending?: boolean }> {
-    return this.http.get<{ isPlatinumBidder: boolean; invitationPending?: boolean }>(`${this.apiUrl}/listings/${listingId}/check-platinum`);
+  startRoomNow(listingId: string): Observable<{ success: boolean; listing: { id: string; status?: string; privateRoomStatus?: string; privateRoomEndDate?: string; endDate?: string } }> {
+    return this.http.post<{ success: boolean; listing: { id: string; status?: string; privateRoomStatus?: string; privateRoomEndDate?: string; endDate?: string } }>(
+      `${this.apiUrl}/listings/${listingId}/start-now`,
+      {}
+    );
   }
 }
 
