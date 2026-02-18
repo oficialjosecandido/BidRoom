@@ -60,7 +60,7 @@ const transactionSchema = new mongoose.Schema({
   /** Overall transaction state */
   transactionStatus: {
     type: String,
-    enum: ['pending_payment', 'awaiting_seller_acceptance', 'paid', 'shipped', 'delivered', 'completed', 'cancelled'],
+    enum: ['pending_payment', 'awaiting_seller_acceptance', 'paid', 'shipped', 'delivered', 'under_dispute', 'completed', 'cancelled'],
     default: 'pending_payment',
     index: true
   },
@@ -81,7 +81,7 @@ const transactionSchema = new mongoose.Schema({
   /** @deprecated Use transactionStatus. Kept for backward compatibility with existing documents. */
   status: {
     type: String,
-    enum: ['pending_payment', 'awaiting_seller_acceptance', 'paid', 'shipped', 'delivered', 'completed', 'cancelled'],
+    enum: ['pending_payment', 'awaiting_seller_acceptance', 'paid', 'shipped', 'delivered', 'under_dispute', 'completed', 'cancelled'],
     default: null
   },
   /** Deadline for seller to accept payment (5 days from when buyer marks as paid) */
@@ -119,8 +119,22 @@ const transactionSchema = new mongoose.Schema({
   disputeOpenedAt: { type: Date, default: null },
   /** Who opened the dispute: 'buyer' | 'seller' */
   disputeOpenedBy: { type: String, enum: ['buyer', 'seller'], default: null },
-  /** Optional reason/description when opening a dispute */
-  disputeReason: { type: String, trim: true, default: null }
+  /** Reason category code (item_not_as_described, damaged_in_transit, missing_parts, counterfeit, other) or legacy free text */
+  disputeReason: { type: String, trim: true, default: null },
+  /** Detailed explanation from the buyer */
+  disputeExplanation: { type: String, trim: true, maxlength: 5000, default: null },
+  /** Buyer's evidence: at least 3 photos OR 1 video */
+  disputeBuyerMediaUrls: { type: [String], default: [] },
+  /** Seller's counter-evidence (photos/docs) */
+  disputeSellerCounterMediaUrls: { type: [String], default: [] },
+  /** Admin verdict: buyer_refund | seller_payout | partial_refund */
+  disputeAdminVerdict: { type: String, enum: ['buyer_refund', 'seller_payout', 'partial_refund'], default: null },
+  /** Refund amount (for buyer_refund or partial_refund) */
+  disputeRefundAmount: { type: Number, min: 0, default: null },
+  /** When the admin issued the ruling */
+  disputeRuledAt: { type: Date, default: null },
+  /** Admin notes (internal) */
+  disputeAdminNotes: { type: String, trim: true, maxlength: 2000, default: null }
 }, {
   timestamps: true
 });

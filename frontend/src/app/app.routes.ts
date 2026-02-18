@@ -42,6 +42,10 @@ export const routes: Routes = [
         loadComponent: () => import('./dashboard/components/transactions/dashboard-transactions.component').then(m => m.DashboardTransactionsComponent)
       },
       {
+        path: 'disputes',
+        loadComponent: () => import('./dashboard/components/disputes/dashboard-disputes.component').then(m => m.DashboardDisputesComponent)
+      },
+      {
         path: 'watchlist',
         loadComponent: () => import('./dashboard/components/watchlist/dashboard-watchlist.component').then(m => m.DashboardWatchlistComponent)
       }

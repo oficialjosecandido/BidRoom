@@ -169,9 +169,11 @@
                 </p>
               }
               @if (getEffectiveStatus(t) === 'shipped') {
-                <button type="button" class="btn btn-secondary" (click)="markAsDelivered(t)" [disabled]="updatingId === t._id">
-                  {{ updatingId === t._id ? 'Updating…' : 'Mark as delivered' }}
+                <p class="form-hint">Item has been shipped. How did you receive it?</p>
+                <button type="button" class="btn btn-primary" (click)="markAsDelivered(t)" [disabled]="updatingId === t._id">
+                  {{ updatingId === t._id ? 'Updating…' : 'Mark as Received Properly' }}
                 </button>
+                <a [routerLink]="['/dashboard/disputes']" [queryParams]="{ open: t._id }" class="btn btn-dispute" [attr.aria-label]="'Open a dispute for ' + t.listing.title">Received Not Properly</a>
               }
               @if (['paid','shipped','delivered'].includes(getEffectiveStatus(t)) && !hasBothReviewed(t)) {
                 <p class="form-hint review-required">
@@ -228,16 +230,6 @@
             @if (canLeaveReview(t)) {
               <button type="button" class="btn btn-secondary" (click)="openReviewModal(t)">
                 Leave review
-              </button>
-            }
-            @if (!t.disputeOpen && !isDone(t) && getEffectiveStatus(t) !== 'cancelled') {
-              <button
-                type="button"
-                class="btn btn-dispute"
-                (click)="openDispute(t)"
-                [disabled]="updatingId === t._id"
-              >
-                {{ updatingId === t._id ? 'Opening…' : 'Open dispute' }}
               </button>
             }
           </div>

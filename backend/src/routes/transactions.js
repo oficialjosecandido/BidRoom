@@ -4,17 +4,19 @@ const Listing = require('../models/Listing');
 const User = require('../models/User');
 const Review = require('../models/Review');
 const { authenticateToken } = require('../middleware/auth');
-const { sendSellerProofOfPaymentNotification } = require('../services/emailService');
+const { sendSellerProofOfPaymentNotification, sendSellerDisputeOpenedNotification } = require('../services/emailService');
 
 const router = express.Router();
 
 /** Ensure API always returns transactionStatus, paymentStatus, sendingStatus (for old docs that only have status) */
 function normalizeTransactionStatus(t) {
   const transactionStatus = t.transactionStatus || t.status || 'pending_payment';
-  const paymentStatus = t.paymentStatus ?? (['paid', 'shipped', 'delivered', 'completed'].includes(transactionStatus) ? 'paid' : 'pending');
-  const sendingStatus = t.sendingStatus ?? (transactionStatus === 'shipped' ? 'shipped' : ['delivered', 'completed'].includes(transactionStatus) ? 'delivered' : 'pending');
+  const paymentStatus = t.paymentStatus ?? (['paid', 'shipped', 'delivered', 'under_dispute', 'completed'].includes(transactionStatus) ? 'paid' : 'pending');
+  const sendingStatus = t.sendingStatus ?? (transactionStatus === 'shipped' ? 'shipped' : ['delivered', 'under_dispute', 'completed'].includes(transactionStatus) ? 'delivered' : 'pending');
   return { transactionStatus, paymentStatus, sendingStatus };
 }
+
+const DISPUTE_REASON_CODES = ['item_not_as_described', 'damaged_in_transit', 'missing_parts', 'counterfeit', 'other'];
 
 const PAYMENT_ACCEPTANCE_DAYS = 5;
 
@@ -125,6 +127,156 @@ router.get('/:id', async (req, res) => {
 });
 
 /**
+ * POST /api/transactions/:id/open-dispute
+ * Buyer opens a formal dispute (status must be 'shipped', handling period for receipt implied).
+ * Body: { reason, explanation, mediaUrls } - reason from DISPUTE_REASON_CODES, mediaUrls: 3+ photos or 1 video.
+ */
+router.post('/:id/open-dispute', async (req, res) => {
+  try {
+    const user = await User.findOne({ uid: req.user.uid });
+    if (!user) {
+      return res.status(404).json({ error: 'User not found.' });
+    }
+
+    const transaction = await Transaction.findById(req.params.id)
+      .populate('listing', 'title slug')
+      .populate('seller', 'firstName lastName email')
+      .populate('buyer', 'firstName lastName email');
+
+    if (!transaction) {
+      return res.status(404).json({ error: 'Transaction not found' });
+    }
+
+    const isBuyer = transaction.buyer._id.toString() === user._id.toString();
+    if (!isBuyer) {
+      return res.status(403).json({ error: 'Only the buyer can open a dispute for this transaction.' });
+    }
+
+    const ts = transaction.transactionStatus ?? transaction.status;
+    if (ts !== 'shipped') {
+      return res.status(400).json({
+        error: 'Invalid state',
+        message: 'You can only open a dispute when the item has been marked as shipped. Please choose "Received Not Properly" from the transaction.'
+      });
+    }
+
+    if (transaction.disputeOpen) {
+      return res.status(400).json({ error: 'A dispute is already open for this transaction.' });
+    }
+
+    const { reason, explanation, mediaUrls } = req.body;
+    if (!reason || !DISPUTE_REASON_CODES.includes(reason)) {
+      return res.status(400).json({
+        error: 'Invalid reason',
+        message: 'Please select a valid reason: item_not_as_described, damaged_in_transit, missing_parts, counterfeit, other'
+      });
+    }
+    if (!explanation || String(explanation).trim().length < 20) {
+      return res.status(400).json({
+        error: 'Invalid explanation',
+        message: 'Please provide a detailed explanation (at least 20 characters).'
+      });
+    }
+    if (!mediaUrls || !Array.isArray(mediaUrls) || mediaUrls.length < 1) {
+      return res.status(400).json({
+        error: 'Missing evidence',
+        message: 'Please upload at least 3 high-resolution photos or 1 video as evidence.'
+      });
+    }
+
+    transaction.disputeOpen = true;
+    transaction.disputeOpenedAt = new Date();
+    transaction.disputeOpenedBy = 'buyer';
+    transaction.disputeReason = reason;
+    transaction.disputeExplanation = String(explanation).trim();
+    transaction.disputeBuyerMediaUrls = mediaUrls.slice(0, 10);
+    transaction.transactionStatus = 'under_dispute';
+    transaction.sendingStatus = 'delivered'; // Item was received (buyer claims not properly)
+    await transaction.save();
+
+    const listingTitle = transaction.listing?.title || 'Item';
+    const buyerName = [transaction.buyer?.firstName, transaction.buyer?.lastName].filter(Boolean).join(' ') || 'Buyer';
+    if (transaction.seller?.email) {
+      sendSellerDisputeOpenedNotification(
+        transaction.seller.email,
+        transaction.seller.firstName,
+        listingTitle,
+        buyerName,
+        transaction._id.toString()
+      ).catch((err) => console.error('Dispute notification email:', err.message));
+    }
+
+    const updated = await Transaction.findById(transaction._id)
+      .populate('listing', 'title slug images status')
+      .populate('seller', 'firstName lastName email')
+      .populate('buyer', 'firstName lastName email')
+      .lean();
+
+    res.json({
+      ...updated,
+      role: 'buyer',
+      ...normalizeTransactionStatus(updated)
+    });
+  } catch (error) {
+    console.error('Error opening dispute:', error);
+    res.status(500).json({ error: 'Failed to open dispute', message: error.message });
+  }
+});
+
+/**
+ * PATCH /api/transactions/:id/dispute/counter-evidence
+ * Seller uploads counter-evidence (original listing photos, proof of secure packaging).
+ */
+router.patch('/:id/dispute/counter-evidence', async (req, res) => {
+  try {
+    const user = await User.findOne({ uid: req.user.uid });
+    if (!user) {
+      return res.status(404).json({ error: 'User not found.' });
+    }
+
+    const transaction = await Transaction.findById(req.params.id);
+    if (!transaction) {
+      return res.status(404).json({ error: 'Transaction not found' });
+    }
+
+    const isSeller = transaction.seller.toString() === user._id.toString();
+    if (!isSeller) {
+      return res.status(403).json({ error: 'Only the seller can upload counter-evidence.' });
+    }
+
+    if (!transaction.disputeOpen || transaction.disputeAdminVerdict) {
+      return res.status(400).json({
+        error: 'Invalid state',
+        message: 'No open dispute or dispute has already been ruled on.'
+      });
+    }
+
+    const { mediaUrls } = req.body;
+    if (!mediaUrls || !Array.isArray(mediaUrls)) {
+      return res.status(400).json({ error: 'Invalid request', message: 'Provide mediaUrls array.' });
+    }
+
+    transaction.disputeSellerCounterMediaUrls = mediaUrls.slice(0, 10);
+    await transaction.save();
+
+    const updated = await Transaction.findById(transaction._id)
+      .populate('listing', 'title slug images status')
+      .populate('seller', 'firstName lastName email')
+      .populate('buyer', 'firstName lastName email')
+      .lean();
+
+    res.json({
+      ...updated,
+      role: 'seller',
+      ...normalizeTransactionStatus(updated)
+    });
+  } catch (error) {
+    console.error('Error updating counter-evidence:', error);
+    res.status(500).json({ error: 'Failed to update counter-evidence', message: error.message });
+  }
+});
+
+/**
  * PATCH /api/transactions/:id
  * Update transaction status (seller: mark shipped with tracking; buyer: mark delivered)
  */
@@ -150,6 +302,14 @@ router.patch('/:id', async (req, res) => {
     const ts = transaction.transactionStatus ?? transaction.status;
     const ps = transaction.paymentStatus ?? 'pending';
     const ss = transaction.sendingStatus ?? 'pending';
+
+    /** When under dispute, lock: no status changes until admin ruling */
+    if (ts === 'under_dispute' && status) {
+      return res.status(400).json({
+        error: 'Transaction under dispute',
+        message: 'This transaction is under dispute. An admin will mediate and provide a ruling. No status changes are allowed until the dispute is resolved.'
+      });
+    }
 
     if (isSeller) {
       if (sellerBankIban !== undefined) transaction.sellerBankIban = sellerBankIban || null;
@@ -178,12 +338,13 @@ router.patch('/:id', async (req, res) => {
       }
     }
 
-    /** Dispute: either buyer or seller can open; both see it. Closing requires admin. */
+    /** Dispute: seller can open via PATCH; buyer should use POST /open-dispute for full form. */
     if (disputeOpen === true && !transaction.disputeOpen) {
       transaction.disputeOpen = true;
       transaction.disputeOpenedAt = new Date();
       transaction.disputeOpenedBy = isSeller ? 'seller' : 'buyer';
       if (disputeReason != null) transaction.disputeReason = String(disputeReason).trim() || null;
+      transaction.transactionStatus = 'under_dispute';
     }
 
     if (isBuyer) {

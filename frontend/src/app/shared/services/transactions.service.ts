@@ -9,6 +9,7 @@ export type TransactionStatus =
   | 'paid'
   | 'shipped'
   | 'delivered'
+  | 'under_dispute'
   | 'completed'
   | 'cancelled';
 
@@ -68,6 +69,13 @@ export interface Transaction {
   disputeOpenedAt?: string | null;
   disputeOpenedBy?: 'buyer' | 'seller' | null;
   disputeReason?: string | null;
+  disputeExplanation?: string | null;
+  disputeBuyerMediaUrls?: string[];
+  disputeSellerCounterMediaUrls?: string[];
+  disputeAdminVerdict?: 'buyer_refund' | 'seller_payout' | 'partial_refund' | null;
+  disputeRefundAmount?: number | null;
+  disputeRuledAt?: string | null;
+  disputeAdminNotes?: string | null;
   createdAt: string;
   updatedAt: string;
   role?: 'seller' | 'buyer';
@@ -79,6 +87,7 @@ export interface TransactionsResponse {
 
 const PROOF_MAX_SIZE = 30 * 1024 * 1024; // 30MB
 const PROOF_ACCEPT = '.pdf,.jpg,.jpeg,.png';
+const DISPUTE_EVIDENCE_ACCEPT = '.jpg,.jpeg,.png,.gif,.webp,.pdf,.mp4,.webm';
 
 @Injectable({
   providedIn: 'root'
@@ -95,6 +104,16 @@ export class TransactionsService {
   }
   get proofOfPaymentMaxSize(): number {
     return PROOF_MAX_SIZE;
+  }
+  get disputeEvidenceAccept(): string {
+    return DISPUTE_EVIDENCE_ACCEPT;
+  }
+
+  /** Upload dispute evidence (images, PDF, or video, max 30MB). Returns the blob URL. */
+  uploadDisputeEvidence(file: File): Observable<{ url: string }> {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.http.post<{ url: string }>(`${this.uploadsUrl}/dispute-evidence`, formData);
   }
 
   /** Upload a single proof-of-payment file (PDF, JPG or PNG, max 30MB). Returns the blob URL. */
@@ -135,5 +154,20 @@ export class TransactionsService {
     }
   ): Observable<Transaction> {
     return this.http.patch<Transaction>(`${this.apiUrl}/${id}`, body);
+  }
+
+  /** Open a formal dispute (buyer only, status must be shipped). */
+  openDispute(
+    id: string,
+    payload: { reason: string; explanation: string; mediaUrls: string[] }
+  ): Observable<Transaction> {
+    return this.http.post<Transaction>(`${this.apiUrl}/${id}/open-dispute`, payload);
+  }
+
+  /** Upload seller counter-evidence. */
+  updateDisputeCounterEvidence(id: string, mediaUrls: string[]): Observable<Transaction> {
+    return this.http.patch<Transaction>(`${this.apiUrl}/${id}/dispute/counter-evidence`, {
+      mediaUrls
+    });
   }
 }

@@ -1,0 +1,158 @@
+<div class="admin-layout">
+  <app-admin-sidebar></app-admin-sidebar>
+
+  <div class="admin-content">
+    <div class="admin-disputes">
+      <div class="page-header">
+        <h1 class="page-title">Disputes</h1>
+        <p class="page-subtitle">Resolve buyer-seller disputes. Sorted by time since opened.</p>
+      </div>
+
+      @if (isLoading) {
+        <div class="loading-state">
+          <div class="spinner"></div>
+          <p>Loading disputes...</p>
+        </div>
+      }
+
+      @if (error && !isLoading) {
+        <div class="error-state">
+          <div class="error-icon">&#9888;</div>
+          <p class="error-message">{{ error }}</p>
+          <button type="button" class="retry-btn" (click)="loadDisputes()">Try again</button>
+        </div>
+      }
+
+      @if (!isLoading && !error) {
+        @if (disputes.length === 0) {
+          <div class="empty-state">
+            <div class="empty-icon">&#9989;</div>
+            <p class="empty-message">No open disputes</p>
+            <p class="empty-description">All disputes have been resolved or there are none pending.</p>
+          </div>
+        } @else {
+          <div class="disputes-table-container">
+            <table class="disputes-table">
+              <thead>
+                <tr>
+                  <th>Listing</th>
+                  <th>Buyer</th>
+                  <th>Seller</th>
+                  <th>Amount</th>
+                  <th>Reason</th>
+                  <th>Opened</th>
+                  <th>Age</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (d of disputes; track d._id) {
+                  <tr>
+                    <td class="title-cell">{{ d.listing.title || '-' }}</td>
+                    <td>{{ d.buyer.firstName }} {{ d.buyer.lastName }}</td>
+                    <td>{{ d.seller.firstName }} {{ d.seller.lastName }}</td>
+                    <td class="amount-cell">{{ formatPrice(d.amount) }}</td>
+                    <td>{{ getDisputeReasonLabel(d.disputeReason || '') }}</td>
+                    <td class="date-cell">{{ formatDate(d.disputeOpenedAt) }}</td>
+                    <td>
+                      @if (d.disputeAgeDays !== undefined && d.disputeAgeDays > 0) {
+                        {{ d.disputeAgeDays }}d {{ (d.disputeAgeHours ?? 0) % 24 }}h
+                      } @else if (d.disputeAgeHours !== undefined) {
+                        {{ d.disputeAgeHours }}h
+                      } @else {
+                        -
+                      }
+                    </td>
+                    <td>
+                      <button type="button" class="action-btn view-action" (click)="selectDispute(d._id)">View & rule</button>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      }
+
+      @if (selectedDispute) {
+        <div class="modal-overlay" (click)="closeDisputeDetail()">
+          <div class="modal-content dispute-detail-modal" (click)="$event.stopPropagation()">
+            <div class="modal-header">
+              <h3 class="modal-title">Dispute: {{ selectedDispute.listing.title }}</h3>
+              <button type="button" class="modal-close" (click)="closeDisputeDetail()" aria-label="Close">×</button>
+            </div>
+            <div class="modal-body">
+              <div class="detail-section">
+                <h4>Transaction</h4>
+                <p>Amount: {{ formatPrice(selectedDispute.amount) }}</p>
+                <p>Buyer: {{ selectedDispute.buyer.firstName }} {{ selectedDispute.buyer.lastName }} ({{ selectedDispute.buyer.email }})</p>
+                <p>Seller: {{ selectedDispute.seller.firstName }} {{ selectedDispute.seller.lastName }} ({{ selectedDispute.seller.email }})</p>
+              </div>
+              <div class="detail-section">
+                <h4>Buyer claim</h4>
+                <p><strong>Reason:</strong> {{ getDisputeReasonLabel(selectedDispute.disputeReason || '') }}</p>
+                <p><strong>Explanation:</strong></p>
+                <p class="explanation-text">{{ selectedDispute.disputeExplanation || '-' }}</p>
+                @if ((selectedDispute.disputeBuyerMediaUrls ?? []).length > 0) {
+                  <p><strong>Evidence:</strong></p>
+                  <div class="evidence-links">
+                    @for (url of selectedDispute.disputeBuyerMediaUrls; track url) {
+                      <a [href]="url" target="_blank" rel="noopener noreferrer" class="evidence-link">View evidence</a>
+                    }
+                  </div>
+                }
+              </div>
+              @if ((selectedDispute.disputeSellerCounterMediaUrls ?? []).length > 0) {
+                <div class="detail-section">
+                  <h4>Seller counter-evidence</h4>
+                  <div class="evidence-links">
+                    @for (url of selectedDispute.disputeSellerCounterMediaUrls; track url) {
+                      <a [href]="url" target="_blank" rel="noopener noreferrer" class="evidence-link">View evidence</a>
+                    }
+                  </div>
+                </div>
+              }
+              <div class="ruling-section">
+                <h4>Issue ruling</h4>
+                <fieldset class="ruling-fieldset">
+                  <legend>Verdict</legend>
+                  <label class="ruling-option">
+                    <input type="radio" [(ngModel)]="rulingVerdict" name="verdict" value="buyer_refund" />
+                    Buyer refund (full amount)
+                  </label>
+                  <label class="ruling-option">
+                    <input type="radio" [(ngModel)]="rulingVerdict" name="verdict" value="seller_payout" />
+                    Seller payout (no refund)
+                  </label>
+                  <label class="ruling-option">
+                    <input type="radio" [(ngModel)]="rulingVerdict" name="verdict" value="partial_refund" />
+                    Partial refund
+                  </label>
+                </fieldset>
+                @if (rulingVerdict === 'partial_refund') {
+                  <div class="form-group">
+                    <label for="refund-amount">Refund amount</label>
+                    <input id="refund-amount" type="number" [(ngModel)]="rulingRefundAmount" min="0" [max]="selectedDispute.amount" step="0.01" class="form-input" />
+                  </div>
+                }
+                <div class="form-group">
+                  <label for="admin-notes">Admin notes (internal)</label>
+                  <textarea id="admin-notes" [(ngModel)]="rulingAdminNotes" class="form-input" rows="3" placeholder="Optional notes..."></textarea>
+                </div>
+                @if (rulingError) {
+                  <p class="ruling-error">{{ rulingError }}</p>
+                }
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" (click)="closeDisputeDetail()">Cancel</button>
+              <button type="button" class="btn btn-primary" (click)="submitRuling()" [disabled]="rulingSubmitting">
+                {{ rulingSubmitting ? 'Submitting...' : 'Issue ruling' }}
+              </button>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+</div>

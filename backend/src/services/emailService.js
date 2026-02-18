@@ -215,9 +215,29 @@ const sendSellerProofOfPaymentNotification = async (sellerEmail, sellerFirstName
   return sendEmail(sellerEmail, 'Proof of payment uploaded – ' + (listingTitle || 'Transaction'), html);
 };
 
+/**
+ * Notify the seller that the buyer has opened a dispute for a transaction.
+ */
+const sendSellerDisputeOpenedNotification = async (sellerEmail, sellerFirstName, listingTitle, buyerName, transactionId) => {
+  const dashboardUrl = `${process.env.FRONTEND_URL || 'http://localhost:4200'}/dashboard/transactions`;
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      <h2 style="color: #dc3545;">A dispute has been opened</h2>
+      <p>Hi ${sellerFirstName || 'Seller'},</p>
+      <p>The buyer${buyerName ? ` (${buyerName})` : ''} has opened a dispute for <strong>${listingTitle || 'your item'}</strong>.</p>
+      <p>You can view the buyer's evidence and upload your counter-evidence in your dashboard:</p>
+      <a href="${dashboardUrl}" style="display: inline-block; background-color: #007bff; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px;">View in Dashboard</a>
+      <p>Please respond promptly with your counter-evidence (e.g., original listing photos, proof of secure packaging).</p>
+      <p>Best regards,<br>The BidRoom Team</p>
+    </div>
+  `;
+  return sendEmail(sellerEmail, 'Dispute opened – ' + (listingTitle || 'Transaction'), html);
+};
+
 module.exports = {
   sendEmail,
   sendEmailVerification,
   sendPasswordReset,
-  sendSellerProofOfPaymentNotification
+  sendSellerProofOfPaymentNotification,
+  sendSellerDisputeOpenedNotification
 };

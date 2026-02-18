@@ -1,0 +1,203 @@
+<div class="disputes-container">
+  <div class="page-header">
+    <h1>Disputes</h1>
+    <p class="subtitle">Open a dispute or manage ongoing disputes for your transactions</p>
+  </div>
+
+  @if (isLoading) {
+    <div class="loading-state">
+      <div class="spinner"></div>
+      <p>Loading...</p>
+    </div>
+  }
+
+  @if (error && !isLoading) {
+    <div class="error-state">
+      <div class="error-icon">⚠️</div>
+      <p class="error-message">{{ error }}</p>
+      <button type="button" class="retry-btn" (click)="loadData()">Try again</button>
+    </div>
+  }
+
+  @if (!isLoading && !error) {
+    <div class="disputes-content">
+      @if (eligibleToOpen.length > 0) {
+        <section class="section">
+          <h2 class="section-title">Eligible to open a dispute</h2>
+          <p class="section-desc">You received these items as shipped. If something wasn't as described, you can open a dispute.</p>
+          <div class="disputes-list">
+            @for (t of eligibleToOpen; track t._id) {
+              <div class="dispute-card eligible-card">
+                <a [routerLink]="getListingUrl(t)" class="card-main">
+                  <div class="card-image">
+                    <img [src]="getListingImage(t)" [alt]="t.listing.title" />
+                  </div>
+                  <div class="card-body">
+                    <h2 class="card-title">{{ t.listing.title }}</h2>
+                    <div class="card-amount">{{ formatPrice(t.amount) }}</div>
+                    <p class="card-role">Seller: {{ t.seller.firstName }} {{ t.seller.lastName }}</p>
+                  </div>
+                </a>
+                <div class="card-actions">
+                  <button type="button" class="btn btn-dispute" (click)="openDisputeModal(t)">
+                    Open dispute
+                  </button>
+                </div>
+              </div>
+            }
+          </div>
+        </section>
+      }
+
+      @if (disputes.length > 0) {
+        <section class="section">
+          <h2 class="section-title">Ongoing disputes</h2>
+          <p class="section-desc">Disputes awaiting resolution. Sellers can add counter-evidence.</p>
+          <div class="disputes-list">
+            @for (t of disputes; track t._id) {
+              <div class="dispute-card">
+                <a [routerLink]="getListingUrl(t)" class="card-main">
+                  <div class="card-image">
+                    <img [src]="getListingImage(t)" [alt]="t.listing.title" />
+                  </div>
+                  <div class="card-body">
+                    <h2 class="card-title">{{ t.listing.title }}</h2>
+                    <div class="card-amount">{{ formatPrice(t.amount) }}</div>
+                    <div class="dispute-badge">Under dispute</div>
+                    <p class="dispute-reason">
+                      <strong>Reason:</strong> {{ getDisputeReasonLabel(t.disputeReason) }}
+                    </p>
+                    @if (t.disputeExplanation) {
+                      <p class="dispute-explanation">{{ getExplanationPreview(t.disputeExplanation) }}</p>
+                    }
+                    <p class="dispute-opened">
+                      Opened {{ formatDate(t.disputeOpenedAt) }}
+                      @if (isBuyer(t)) {
+                        <span class="role-badge buyer">You (buyer)</span>
+                      }
+                      @if (isSeller(t)) {
+                        <span class="role-badge seller">You (seller)</span>
+                      }
+                    </p>
+                    @if (isBuyer(t)) {
+                      <p class="card-role">Seller: {{ t.seller.firstName }} {{ t.seller.lastName }}</p>
+                    }
+                    @if (isSeller(t)) {
+                      <p class="card-role">Buyer: {{ t.buyer.firstName }} {{ t.buyer.lastName }}</p>
+                    }
+                  </div>
+                </a>
+                @if (isSeller(t)) {
+                  <div class="card-actions dispute-counter-section">
+                    <strong>Upload counter-evidence</strong>
+                    <p class="form-hint">Add photos or documents (e.g., original listing photos, proof of secure packaging)</p>
+                    <input
+                      type="file"
+                      #counterEvidenceInput
+                      [accept]="transactionsService.disputeEvidenceAccept"
+                      (change)="onCounterEvidenceSelected(t, counterEvidenceInput)"
+                      class="file-input-hidden"
+                      style="display: none;"
+                      multiple
+                    />
+                    <button type="button" class="btn btn-secondary" (click)="triggerCounterEvidenceUpload(t, counterEvidenceInput)" [disabled]="counterEvidenceUploadingTxId === t._id">
+                      {{ getCounterEvidenceButtonLabel(t) }}
+                    </button>
+                    @if ((t.disputeSellerCounterMediaUrls ?? []).length > 0 || getCounterEvidencePending(t).length > 0) {
+                      <div class="dispute-media-preview">
+                        @for (url of (t.disputeSellerCounterMediaUrls ?? []); track url) {
+                          <a [href]="url" target="_blank" rel="noopener noreferrer" class="proof-seller-link">View evidence</a>
+                        }
+                        @for (url of getCounterEvidencePending(t); track url) {
+                          <span class="dispute-media-item">✓ Pending</span>
+                        }
+                      </div>
+                    }
+                    <button type="button" class="btn btn-primary" (click)="submitCounterEvidence(t)" [disabled]="!hasEnoughCounterEvidence(t) || updatingId === t._id">
+                      {{ updatingId === t._id ? 'Saving…' : 'Submit counter-evidence' }}
+                    </button>
+                  </div>
+                }
+                @if (isBuyer(t)) {
+                  <div class="card-actions">
+                    <p class="form-hint">Awaiting admin review. You'll be notified when a ruling is made.</p>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        </section>
+      }
+
+      @if (eligibleToOpen.length === 0 && disputes.length === 0) {
+        <div class="empty-state">
+          <div class="empty-icon">⚖️</div>
+          <h3>No disputes</h3>
+          <p>You don't have any disputes to open or manage. If you received an item that wasn't as described, go to Transactions and use "Received Not Properly" to open a dispute.</p>
+          <a routerLink="/dashboard/transactions" class="browse-btn">View transactions</a>
+        </div>
+      }
+    </div>
+  }
+
+  @if (disputeModalTransaction) {
+    <div class="modal-overlay" (click)="closeDisputeModal()">
+      <div class="modal-content review-modal dispute-modal" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h3 class="modal-title">Open a dispute</h3>
+          <button type="button" class="modal-close" (click)="closeDisputeModal()" aria-label="Close">×</button>
+        </div>
+        <div class="modal-body">
+          <p class="form-hint">Describe the issue with the item you received. Provide at least 3 photos or 1 video as evidence.</p>
+          <div class="form-group">
+            <label for="dispute-reason">Reason for dispute</label>
+            <select id="dispute-reason" [(ngModel)]="disputeReason" class="form-input">
+              <option value="">Select a reason</option>
+              <option value="item_not_as_described">Item not as described</option>
+              <option value="damaged_in_transit">Damaged in transit</option>
+              <option value="missing_parts">Missing parts</option>
+              <option value="counterfeit">Counterfeit</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="dispute-explanation">Detailed explanation</label>
+            <textarea id="dispute-explanation" [(ngModel)]="disputeExplanation" class="form-input" rows="4" minlength="20" placeholder="Describe the specific issue in detail..."></textarea>
+          </div>
+          <div class="form-group">
+            <label>Media evidence</label>
+            <p class="form-hint">Upload at least 3 photos or 1 video (unboxing or showing the defect)</p>
+            <input
+              type="file"
+              #disputeEvidenceInput
+              [accept]="transactionsService.disputeEvidenceAccept"
+              (change)="onDisputeEvidenceSelected(disputeEvidenceInput)"
+              class="file-input-hidden"
+              style="display: none;"
+              multiple
+            />
+            <button type="button" class="btn btn-secondary" (click)="disputeEvidenceInput.click()" [disabled]="disputeEvidenceUploading">
+              {{ disputeEvidenceUploading ? 'Uploading…' : 'Add photos or video' }}
+            </button>
+            @if (disputeMediaUrls.length > 0) {
+              <div class="dispute-media-list">
+                @for (url of disputeMediaUrls; track url) {
+                  <span class="dispute-media-item">✓ Uploaded</span>
+                }
+              </div>
+            }
+          </div>
+          @if (disputeError) {
+            <p class="review-error">{{ disputeError }}</p>
+          }
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="closeDisputeModal()">Cancel</button>
+          <button type="button" class="btn btn-primary" (click)="submitDispute()" [disabled]="disputeSubmitting || !canSubmitDispute()">
+            {{ disputeSubmitting ? 'Submitting…' : 'Submit dispute' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

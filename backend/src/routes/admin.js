@@ -2,6 +2,7 @@ const express = require('express');
 const { authenticateToken } = require('../middleware/auth');
 const User = require('../models/User');
 const Listing = require('../models/Listing');
+const Transaction = require('../models/Transaction');
 const { sendEmail } = require('../services/emailService');
 const { renderEmailTemplate } = require('../services/templateEngine');
 
@@ -237,6 +238,149 @@ router.post('/auctions/:id/private-room', authenticateToken, requireAdmin, async
     res.status(500).json({ 
       error: 'Failed to create private room',
       message: error.message 
+    });
+  }
+});
+
+/**
+ * GET /api/admin/disputes
+ * List all open disputes, sorted by time since opened (oldest first for prioritization).
+ */
+router.get('/disputes', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const disputes = await Transaction.find({
+      disputeOpen: true,
+      disputeAdminVerdict: null
+    })
+      .populate('listing', 'title slug images')
+      .populate('seller', 'firstName lastName email')
+      .populate('buyer', 'firstName lastName email')
+      .sort({ disputeOpenedAt: 1 })
+      .lean();
+
+    const withAge = disputes.map((d) => {
+      const openedAt = d.disputeOpenedAt ? new Date(d.disputeOpenedAt) : null;
+      const ageMs = openedAt ? Date.now() - openedAt.getTime() : 0;
+      const ageHours = Math.floor(ageMs / (1000 * 60 * 60));
+      const ageDays = Math.floor(ageHours / 24);
+      return {
+        ...d,
+        disputeAgeHours: ageHours,
+        disputeAgeDays: ageDays
+      };
+    });
+
+    res.json({ disputes: withAge });
+  } catch (error) {
+    console.error('Error fetching disputes:', error);
+    res.status(500).json({
+      error: 'Failed to fetch disputes',
+      message: error.message
+    });
+  }
+});
+
+/**
+ * GET /api/admin/disputes/:transactionId
+ * Get full dispute details for a transaction.
+ */
+router.get('/disputes/:transactionId', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const transaction = await Transaction.findById(req.params.transactionId)
+      .populate('listing', 'title slug images description')
+      .populate('seller', 'firstName lastName email')
+      .populate('buyer', 'firstName lastName email')
+      .lean();
+
+    if (!transaction) {
+      return res.status(404).json({ error: 'Transaction not found' });
+    }
+    if (!transaction.disputeOpen) {
+      return res.status(400).json({ error: 'Not a dispute', message: 'This transaction does not have an open dispute.' });
+    }
+
+    res.json(transaction);
+  } catch (error) {
+    console.error('Error fetching dispute:', error);
+    res.status(500).json({
+      error: 'Failed to fetch dispute',
+      message: error.message
+    });
+  }
+});
+
+/**
+ * POST /api/admin/disputes/:transactionId/ruling
+ * Issue final ruling: buyer_refund | seller_payout | partial_refund.
+ * Body: { verdict, refundAmount?, adminNotes }
+ */
+router.post('/disputes/:transactionId/ruling', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const { verdict, refundAmount, adminNotes } = req.body;
+
+    const validVerdicts = ['buyer_refund', 'seller_payout', 'partial_refund'];
+    if (!verdict || !validVerdicts.includes(verdict)) {
+      return res.status(400).json({
+        error: 'Invalid verdict',
+        message: 'Verdict must be one of: buyer_refund, seller_payout, partial_refund'
+      });
+    }
+
+    const transaction = await Transaction.findById(req.params.transactionId)
+      .populate('seller', '_id')
+      .populate('buyer', '_id');
+
+    if (!transaction) {
+      return res.status(404).json({ error: 'Transaction not found' });
+    }
+    if (!transaction.disputeOpen || transaction.disputeAdminVerdict) {
+      return res.status(400).json({
+        error: 'Invalid state',
+        message: 'No open dispute or dispute has already been ruled on.'
+      });
+    }
+
+    let resolvedRefundAmount = null;
+    if (verdict === 'buyer_refund') {
+      resolvedRefundAmount = transaction.amount;
+    } else if (verdict === 'partial_refund') {
+      const amt = typeof refundAmount === 'number' ? refundAmount : parseFloat(refundAmount);
+      if (Number.isNaN(amt) || amt < 0 || amt > transaction.amount) {
+        return res.status(400).json({
+          error: 'Invalid refund amount',
+          message: `Refund amount must be between 0 and ${transaction.amount}`
+        });
+      }
+      resolvedRefundAmount = amt;
+    }
+
+    transaction.disputeAdminVerdict = verdict;
+    transaction.disputeRefundAmount = resolvedRefundAmount;
+    transaction.disputeRuledAt = new Date();
+    if (adminNotes != null) transaction.disputeAdminNotes = String(adminNotes).trim() || null;
+    transaction.transactionStatus = 'completed';
+    transaction.disputeOpen = false;
+    await transaction.save();
+
+    /** TODO: Financial adjustments - deduct from seller balance or charge card when buyer_refund/partial_refund */
+    /** TODO: Reputation score adjustment based on verdict (e.g. negative for seller on buyer_refund) */
+
+    const updated = await Transaction.findById(transaction._id)
+      .populate('listing', 'title slug images')
+      .populate('seller', 'firstName lastName email')
+      .populate('buyer', 'firstName lastName email')
+      .lean();
+
+    res.json({
+      success: true,
+      message: 'Dispute ruling applied successfully',
+      transaction: updated
+    });
+  } catch (error) {
+    console.error('Error issuing dispute ruling:', error);
+    res.status(500).json({
+      error: 'Failed to issue ruling',
+      message: error.message
     });
   }
 });

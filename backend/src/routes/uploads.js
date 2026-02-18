@@ -129,6 +129,64 @@ router.post('/proof-of-payment', authenticateToken, (req, res, next) => {
   }
 });
 
+// Dispute evidence: images (JPEG, PNG, GIF, WebP) or video (MP4, WebM); max 30MB per file; up to 5 files
+const DISPUTE_EVIDENCE_MAX_SIZE = 30 * 1024 * 1024;
+const disputeEvidenceFileFilter = (req, file, cb) => {
+  const allowed = [
+    'image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp',
+    'application/pdf',
+    'video/mp4', 'video/webm'
+  ];
+  if (allowed.includes(file.mimetype)) {
+    cb(null, true);
+  } else {
+    cb(new Error('Invalid file type. Only images (JPEG, PNG, GIF, WebP), PDF, or video (MP4, WebM) are allowed.'), false);
+  }
+};
+const disputeEvidenceUpload = multer({
+  storage: multer.memoryStorage(),
+  fileFilter: disputeEvidenceFileFilter,
+  limits: { fileSize: DISPUTE_EVIDENCE_MAX_SIZE, files: 5 }
+});
+
+/**
+ * POST /api/uploads/dispute-evidence
+ * Upload dispute evidence (images or video). Returns { url }.
+ * Multiple calls needed for multiple files (3 photos or 1 video minimum per spec).
+ */
+router.post('/dispute-evidence', authenticateToken, (req, res, next) => {
+  disputeEvidenceUpload.single('file')(req, res, (err) => {
+    if (err) {
+      if (err.code === 'LIMIT_FILE_SIZE') {
+        return res.status(400).json({ error: 'File too large', message: 'Dispute evidence must be 30MB or less.' });
+      }
+      return res.status(400).json({ error: 'Upload error', message: err.message || 'Invalid file.' });
+    }
+    next();
+  });
+}, async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({
+        error: 'No file uploaded',
+        message: 'Please upload an image (JPEG, PNG, GIF, WebP), PDF, or video (MP4, WebM) file (max 30MB).'
+      });
+    }
+    const url = await azureStorageService.uploadDisputeEvidence(
+      req.file.buffer,
+      req.file.originalname,
+      req.file.mimetype
+    );
+    res.json({ url });
+  } catch (error) {
+    console.error('Error uploading dispute evidence:', error);
+    res.status(500).json({
+      error: 'Upload failed',
+      message: error.message
+    });
+  }
+});
+
 /**
  * POST /api/uploads/proof-of-delivery
  * Upload a single proof of delivery file (PDF, JPG or PNG, max 30MB). Returns { url }.

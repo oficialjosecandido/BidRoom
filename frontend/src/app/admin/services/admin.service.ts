@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { API_CONFIG } from '../../shared/config/api.config';
 import { Listing } from '../../shared/services/listings.service';
+import { Transaction } from '../../shared/services/transactions.service';
 
 export interface AdminStatistics {
   totalUsers: number;
@@ -38,8 +39,23 @@ export class AdminService {
     });
   }
 
-  closePrivateRoomAndEndAuction(auctionId: string): Observable<any> {
-    return this.http.post(`${this.apiUrl}/auctions/${auctionId}/close-private-room`, {});
+  closePrivateRoomAndEndAuction(auctionId: string): Observable<{ success: boolean; listing: unknown }> {
+    return this.http.post<{ success: boolean; listing: unknown }>(`${this.apiUrl}/auctions/${auctionId}/close-private-room`, {});
+  }
+
+  getDisputes(): Observable<{ disputes: (Transaction & { disputeAgeHours?: number; disputeAgeDays?: number })[] }> {
+    return this.http.get<{ disputes: (Transaction & { disputeAgeHours?: number; disputeAgeDays?: number })[] }>(`${this.apiUrl}/disputes`);
+  }
+
+  getDispute(transactionId: string): Observable<Transaction> {
+    return this.http.get<Transaction>(`${this.apiUrl}/disputes/${transactionId}`);
+  }
+
+  issueDisputeRuling(
+    transactionId: string,
+    payload: { verdict: 'buyer_refund' | 'seller_payout' | 'partial_refund'; refundAmount?: number; adminNotes?: string }
+  ): Observable<{ success: boolean; transaction: Transaction }> {
+    return this.http.post<{ success: boolean; transaction: Transaction }>(`${this.apiUrl}/disputes/${transactionId}/ruling`, payload);
   }
 }
 

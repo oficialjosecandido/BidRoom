@@ -115,15 +115,17 @@ export class DashboardTransactionsComponent implements OnInit {
       paid: 'Paid',
       shipped: 'Shipped',
       delivered: 'Delivered',
+      under_dispute: 'Under dispute',
       completed: 'Completed',
       cancelled: 'Cancelled'
     };
     return labels[status] || status;
   }
 
-  /** Buying status: Pending Payment | Payment Submitted | Paid | Received | Pending Review | Completed */
+  /** Buying status: Pending Payment | Payment Submitted | Paid | Received | Pending Review | Under Dispute | Completed */
   getBuyingStatusLabel(t: Transaction): string {
     const s = this.getEffectiveStatus(t);
+    if (s === 'under_dispute') return 'Under Dispute';
     if (['delivered', 'completed'].includes(s) && !t.buyerHasReviewedSeller) {
       return 'Pending Review';
     }
@@ -133,15 +135,17 @@ export class DashboardTransactionsComponent implements OnInit {
       paid: 'Paid',
       shipped: 'Paid',
       delivered: 'Received',
+      under_dispute: 'Under Dispute',
       completed: 'Completed',
       cancelled: 'Cancelled'
     };
     return map[s] || s;
   }
 
-  /** Selling status: Pending Delivery | Pending Acceptance | Payment Received | Sent | Pending Review | Completed */
+  /** Selling status: Pending Delivery | Pending Acceptance | Payment Received | Sent | Pending Review | Under Dispute | Completed */
   getSellingStatusLabel(t: Transaction): string {
     const s = this.getEffectiveStatus(t);
+    if (s === 'under_dispute') return 'Under Dispute';
     if (['delivered', 'completed'].includes(s) && !t.sellerHasReviewedBuyer) {
       return 'Pending Review';
     }
@@ -151,6 +155,7 @@ export class DashboardTransactionsComponent implements OnInit {
       paid: 'Payment Received',
       shipped: 'Sent',
       delivered: 'Sent',
+      under_dispute: 'Under Dispute',
       completed: 'Completed',
       cancelled: 'Cancelled'
     };
@@ -159,6 +164,7 @@ export class DashboardTransactionsComponent implements OnInit {
 
   getBuyingStatusClass(t: Transaction): string {
     const s = this.getEffectiveStatus(t);
+    if (s === 'under_dispute') return 'status-dispute';
     if (['delivered', 'completed'].includes(s) && !t.buyerHasReviewedSeller) {
       return 'status-review';
     }
@@ -168,6 +174,7 @@ export class DashboardTransactionsComponent implements OnInit {
       paid: 'status-paid',
       shipped: 'status-paid',
       delivered: 'status-delivered',
+      under_dispute: 'status-dispute',
       completed: 'status-completed',
       cancelled: 'status-cancelled'
     };
@@ -176,6 +183,7 @@ export class DashboardTransactionsComponent implements OnInit {
 
   getSellingStatusClass(t: Transaction): string {
     const s = this.getEffectiveStatus(t);
+    if (s === 'under_dispute') return 'status-dispute';
     if (['delivered', 'completed'].includes(s) && !t.sellerHasReviewedBuyer) {
       return 'status-review';
     }
@@ -185,6 +193,7 @@ export class DashboardTransactionsComponent implements OnInit {
       paid: 'status-paid',
       shipped: 'status-shipped',
       delivered: 'status-shipped',
+      under_dispute: 'status-dispute',
       completed: 'status-completed',
       cancelled: 'status-cancelled'
     };
@@ -198,6 +207,7 @@ export class DashboardTransactionsComponent implements OnInit {
       paid: 'status-paid',
       shipped: 'status-shipped',
       delivered: 'status-delivered',
+      under_dispute: 'status-dispute',
       completed: 'status-completed',
       cancelled: 'status-cancelled'
     };
@@ -538,20 +548,6 @@ export class DashboardTransactionsComponent implements OnInit {
           delete this.deliveryProofFileNameByTxId[t._id];
           delete this.deliveryProofErrorByTxId[t._id];
           successToast.fire({ title: 'Delivery information sent' });
-        },
-        error: () => (this.updatingId = null)
-      });
-  }
-
-  openDispute(t: Transaction): void {
-    if (this.updatingId || t.disputeOpen || this.getEffectiveStatus(t) === 'cancelled') return;
-    this.updatingId = t._id;
-    this.transactionsService
-      .updateTransaction(t._id, { disputeOpen: true })
-      .subscribe({
-        next: (updated) => {
-          this.replaceTransaction(updated);
-          this.updatingId = null;
         },
         error: () => (this.updatingId = null)
       });

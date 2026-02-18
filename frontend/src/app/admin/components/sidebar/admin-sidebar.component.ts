@@ -24,7 +24,8 @@ export class AdminSidebarComponent {
     { label: 'Home', route: '/nexus', icon: '🏠' },
     { label: 'Auctions', route: '/nexus/auctions', icon: '🔨' },
     { label: 'Customers', route: '/nexus/customers', icon: '👥' },
-    { label: 'Transactions', route: '/nexus/transactions', icon: '💳' }
+    { label: 'Transactions', route: '/nexus/transactions', icon: '💳' },
+    { label: 'Disputes', route: '/nexus/disputes', icon: '⚖️' }
   ];
 
   navigateTo(route: string): void {

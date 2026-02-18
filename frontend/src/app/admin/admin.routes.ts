@@ -28,6 +28,12 @@ export const adminRoutes: Routes = [
     loadComponent: () => import('./components/placeholders/placeholder.component').then(m => m.PlaceholderComponent),
     canActivate: [AdminGuard],
     data: { title: 'Transactions', icon: '💳' }
+  },
+  {
+    path: 'disputes',
+    loadComponent: () => import('./components/disputes/admin-disputes.component').then(m => m.AdminDisputesComponent),
+    canActivate: [AdminGuard],
+    data: { title: 'Disputes', icon: '⚖️' }
   }
 ];
 
