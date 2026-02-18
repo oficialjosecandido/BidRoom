@@ -238,23 +238,39 @@ export class AddListing implements OnInit {
   onFileSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files.length > 0) {
-      Array.from(input.files).forEach(file => {
-        if (file.type.startsWith('image/') || file.type.startsWith('video/')) {
-          this.uploadedFiles.push(file);
-          
-          // Create preview
-          const reader = new FileReader();
-          reader.onload = (e) => {
-            this.previewUrls.push(e.target?.result || null);
-          };
-          reader.readAsDataURL(file);
-        }
-      });
-      
-      // Update form array - add controls for each file
-      while (this.media.length < this.uploadedFiles.length) {
-        this.media.push(this.fb.control(this.uploadedFiles[this.media.length]));
+      this.addFiles(input.files);
+      input.value = '';
+    }
+  }
+
+  onFilesDropped(event: DragEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+    const files = event.dataTransfer?.files;
+    if (files && files.length > 0) {
+      this.addFiles(files);
+    }
+  }
+
+  onDragOver(event: DragEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+  }
+
+  private addFiles(fileList: FileList | File[]): void {
+    const files = Array.from(fileList);
+    files.forEach(file => {
+      if (file.type.startsWith('image/') || file.type.startsWith('video/')) {
+        this.uploadedFiles.push(file);
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          this.previewUrls.push(e.target?.result || null);
+        };
+        reader.readAsDataURL(file);
       }
+    });
+    while (this.media.length < this.uploadedFiles.length) {
+      this.media.push(this.fb.control(this.uploadedFiles[this.media.length]));
     }
   }
 

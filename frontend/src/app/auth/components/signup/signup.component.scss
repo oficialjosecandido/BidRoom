@@ -295,12 +295,8 @@
         line-height: 1.5;
 
         input[type="checkbox"] {
-          margin: 0;
-        }
-
-        .checkbox-text {
-          flex: 1;
-          white-space: nowrap;
+          margin-top: 3px;
+          flex-shrink: 0;
         }
 
         .checkbox-text a {

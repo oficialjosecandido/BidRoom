@@ -203,8 +203,8 @@
         <div class="form-group">
           <label for="mediaUpload">Media Upload * (Minimum 3 photos)</label>
           <div class="file-upload-area" 
-               (dragover)="$event.preventDefault()" 
-               (drop)="$event.preventDefault()">
+               (dragover)="onDragOver($event)" 
+               (drop)="onFilesDropped($event)">
             <input
               type="file"
               id="mediaUpload"
