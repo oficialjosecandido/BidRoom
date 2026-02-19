@@ -4,6 +4,7 @@ import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormArray } fr
 import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
+import Swal from 'sweetalert2';
 import { ListingsService } from '../../../shared/services/listings.service';
 import { API_CONFIG } from '../../../shared/config/api.config';
 import { HeaderComponent } from '../../../shared/components/header/header.component';
@@ -491,7 +492,15 @@ export class AddListing implements OnInit {
         );
         
         this.isSubmitting = false;
-        // Navigate to the newly created listing
+        Swal.fire({
+          toast: true,
+          position: 'top-end',
+          icon: 'success',
+          title: 'Listing created successfully!',
+          showConfirmButton: false,
+          timer: 3000,
+          timerProgressBar: true
+        });
         this.router.navigate(['/listing', listing.slug]);
       } catch (error: any) {
         this.isSubmitting = false;

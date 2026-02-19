@@ -112,6 +112,12 @@
     gap: 12px;
     align-items: center;
   }
+
+  .header-notification-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
 }
 
 // Backdrop (mobile only) - hidden by default

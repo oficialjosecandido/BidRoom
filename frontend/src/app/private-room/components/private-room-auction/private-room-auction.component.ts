@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Subscription } from 'rxjs';
+import Swal from 'sweetalert2';
 import { ListingsService, Listing } from '../../../shared/services/listings.service';
 import { BidsService, Bid } from '../../../shared/services/bids.service';
 import { SocketService } from '../../../shared/services/socket.service';
@@ -402,15 +403,15 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
         this.customBidAmount = '';
         this.loadBids();
         this.loadListing();
-        const successMsg = document.createElement('div');
-        successMsg.className = 'bid-success-toast';
-        successMsg.textContent = `✓ Bid of $${amount.toFixed(2)} placed successfully!`;
-        document.body.appendChild(successMsg);
-        setTimeout(() => successMsg.classList.add('show'), 100);
-        setTimeout(() => {
-          successMsg.classList.remove('show');
-          setTimeout(() => document.body.removeChild(successMsg), 300);
-        }, 3000);
+        Swal.fire({
+          toast: true,
+          position: 'top-end',
+          icon: 'success',
+          title: `Bid of $${amount.toFixed(2)} placed successfully!`,
+          showConfirmButton: false,
+          timer: 3000,
+          timerProgressBar: true
+        });
       },
       error: (error) => {
         this.isPlacingBid = false;

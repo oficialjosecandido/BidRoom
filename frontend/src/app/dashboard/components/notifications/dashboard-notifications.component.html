@@ -1,0 +1,53 @@
+<div class="notifications-container">
+  <div class="page-header">
+    <h1>Notifications</h1>
+    <p class="subtitle">Stay updated on proposals, bids, and activity on your listings</p>
+    @if (unreadCount > 0) {
+      <button type="button" class="mark-all-btn" (click)="markAllAsRead()">Mark all as read</button>
+    }
+  </div>
+
+  @if (loading) {
+    <div class="loading-state">
+      <div class="spinner"></div>
+      <p>Loading notifications...</p>
+    </div>
+  }
+
+  @if (error && !loading) {
+    <div class="error-state">
+      <p class="error-message">{{ error }}</p>
+      <button type="button" class="retry-btn" (click)="load()">Try again</button>
+    </div>
+  }
+
+  @if (!loading && !error) {
+    @if (notifications.length === 0) {
+      <div class="empty-state">
+        <span class="empty-icon">🔔</span>
+        <h3>No notifications yet</h3>
+        <p>When you receive proposals, bids, or other activity, they'll appear here.</p>
+      </div>
+    } @else {
+      <div class="notifications-list">
+        @for (notification of notifications; track notification._id) {
+          <div
+            class="notification-card"
+            [class.read]="notification.status === 'read'"
+            role="button"
+            tabindex="0"
+            (click)="openNotification(notification)"
+            (keydown.enter)="openNotification(notification)"
+            (keydown.space)="openNotification(notification)">
+            <span class="notification-type-icon">{{ getTypeIcon(notification.type) }}</span>
+            <div class="notification-body">
+              <h3 class="notification-title">{{ notification.title }}</h3>
+              <p class="notification-message">{{ notification.message }}</p>
+              <span class="notification-time">{{ formatDate(notification.issuedAt) }}</span>
+            </div>
+          </div>
+        }
+      </div>
+    }
+  }
+</div>

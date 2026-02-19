@@ -136,6 +136,34 @@ export class SocketService {
     console.log(`👤 Left listing room: ${listingId}`);
   }
 
+  /** Join user room for real-time notification updates (uid = Firebase/auth uid) */
+  joinUser(uid: string): void {
+    if (!this.socket?.connected) {
+      this.connect();
+    }
+    if (uid) {
+      this.socket?.emit('join-user', uid);
+    }
+  }
+
+  leaveUser(uid: string): void {
+    if (uid) {
+      this.socket?.emit('leave-user', uid);
+    }
+  }
+
+  /** Fired when a new notification is created for the current user (refresh badge/list) */
+  onNewNotification(): Observable<void> {
+    return new Observable<void>((observer) => {
+      if (!this.socket) {
+        this.connect();
+      }
+      const handler = () => observer.next();
+      this.socket?.on('new-notification', handler);
+      return () => this.socket?.off('new-notification', handler);
+    });
+  }
+
   onNewBid(): Observable<NewBidEvent> {
     return new Observable<NewBidEvent>((observer) => {
       if (!this.socket) {

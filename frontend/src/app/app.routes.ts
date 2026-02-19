@@ -48,6 +48,10 @@ export const routes: Routes = [
       {
         path: 'watchlist',
         loadComponent: () => import('./dashboard/components/watchlist/dashboard-watchlist.component').then(m => m.DashboardWatchlistComponent)
+      },
+      {
+        path: 'notifications',
+        loadComponent: () => import('./dashboard/components/notifications/dashboard-notifications.component').then(m => m.DashboardNotificationsComponent)
       }
     ]
   },

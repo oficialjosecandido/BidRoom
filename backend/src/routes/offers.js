@@ -28,6 +28,7 @@ function tierFromBalance(balance) {
 }
 
 const { formatOfferForSocket } = require('../utils/offerFormat');
+const { notifyNewProposal } = require('../services/notificationService');
 
 // GET /api/offers/listing/:listingId - Get all offers for a listing
 router.get('/listing/:listingId', async (req, res) => {
@@ -270,6 +271,21 @@ async function createOffer(req, res) {
         listingId,
         offer: formatOfferForSocket(populatedOffer)
       });
+    }
+
+    // Create in-app notification for the seller
+    const { emitNewNotificationToUser } = require('../services/notificationService');
+    const sellerUserId = listing.seller?._id?.toString?.() || listing.seller?.toString?.();
+    if (sellerUserId) {
+      notifyNewProposal({
+        listingId,
+        listingSlug: listing.slug || null,
+        listingTitle: listing.title || 'Your listing',
+        offerAmount: amount,
+        offererName: name,
+        sellerUserId
+      }).catch(err => console.error('Failed to create proposal notification:', err));
+      if (io) emitNewNotificationToUser(io, sellerUserId).catch(() => {});
     }
 
     res.status(201).json({

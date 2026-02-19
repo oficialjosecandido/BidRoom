@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { Observable } from 'rxjs';
 import { AuthService } from '../../../auth/services/auth.service';
+import { ProposalNotificationsComponent } from '../../../dashboard/components/proposal-notifications/proposal-notifications.component';
 
 @Component({
   selector: 'app-header',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, ProposalNotificationsComponent],
   templateUrl: './header.component.html',
   styleUrls: ['./header.component.scss']
 })

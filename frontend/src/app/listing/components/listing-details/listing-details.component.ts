@@ -577,12 +577,13 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
         this.closeBidModal();
         if (this.listing?._id) this.loadBids(this.listing._id);
         Swal.fire({
+          toast: true,
+          position: 'top-end',
           icon: 'success',
-          title: 'Bid placed',
-          html: this.isAuthenticated
-            ? 'Your bid has been placed. You\'ll see it in the bid history and receive updates if you\'re outbid.'
-            : 'Your bid has been placed. Check your email for confirmation and updates.',
-          confirmButtonColor: '#7A4F84'
+          title: 'Bid placed successfully!',
+          showConfirmButton: false,
+          timer: 3000,
+          timerProgressBar: true
         });
       },
       error: (err) => {
@@ -664,17 +665,14 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
         if (wasAccepted && this.listing?.slug) {
           this.loadListing(this.listing.slug);
         }
-        const aboveMinimum = this.listing?.minimumOfferPrice != null && amount >= this.listing.minimumOfferPrice;
-        const message = wasAccepted
-          ? 'Your offer met the minimum and was automatically accepted. The listing is now closed.'
-          : aboveMinimum
-            ? 'Your offer has been published.'
-            : 'Your offer has been sent to the seller. They will review it and you\'ll be notified of their decision.';
         Swal.fire({
+          toast: true,
+          position: 'top-end',
           icon: 'success',
-          title: wasAccepted ? 'Offer accepted!' : 'Offer sent',
-          html: message,
-          confirmButtonColor: '#7A4F84'
+          title: wasAccepted ? 'Offer accepted!' : 'Offer sent successfully!',
+          showConfirmButton: false,
+          timer: 3000,
+          timerProgressBar: true
         });
       },
       error: (err) => {

@@ -506,6 +506,21 @@ router.post('/', optionalAuth, async (req, res) => {
       });
     }
 
+    // Create in-app notification for the seller (someone bid on their listing)
+    const { notifyNewBid, emitNewNotificationToUser } = require('../services/notificationService');
+    const sellerUserId = listing.seller?._id?.toString?.() || listing.seller?.toString?.();
+    if (sellerUserId) {
+      notifyNewBid({
+        listingId: listingId.toString(),
+        listingSlug: listing.slug || null,
+        listingTitle: listing.title || 'Your listing',
+        bidAmount: amount,
+        bidderName: formattedBid.bidderName || 'A bidder',
+        sellerUserId
+      }).catch(err => console.error('Failed to create bid notification:', err));
+      emitNewNotificationToUser(io, sellerUserId).catch(() => {});
+    }
+
     res.status(201).json(formattedBid);
   } catch (error) {
     console.error('Error creating bid:', error);

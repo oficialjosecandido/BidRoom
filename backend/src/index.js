@@ -27,6 +27,7 @@ const customerRoutes = require('./routes/customers');
 const watchlistRoutes = require('./routes/watchlist');
 const reviewRoutes = require('./routes/reviews');
 const transactionsRoutes = require('./routes/transactions');
+const notificationsRoutes = require('./routes/notifications');
 const { router: paymentsRouter, stripeWebhookHandler } = require('./routes/payments');
 
 // Import services
@@ -91,6 +92,7 @@ app.use('/api/customers', customerRoutes);
 app.use('/api/watchlist', watchlistRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/transactions', transactionsRoutes);
+app.use('/api/notifications', notificationsRoutes);
 app.use('/api/payments', paymentsRouter);
 
 app.get('/', (req, res) => {
@@ -184,6 +186,20 @@ io.on('connection', (socket) => {
     
     // Update viewer count
     updatePrivateRoomViewerCount(io, listingId);
+  });
+
+  // Join user room for real-time notification updates (uid = Firebase/auth uid)
+  socket.on('join-user', (uid) => {
+    if (uid) {
+      socket.join(`user:${uid}`);
+      console.log(`🔔 ${socket.id} joined user room: ${uid}`);
+    }
+  });
+
+  socket.on('leave-user', (uid) => {
+    if (uid) {
+      socket.leave(`user:${uid}`);
+    }
   });
 
   socket.on('disconnect', () => {

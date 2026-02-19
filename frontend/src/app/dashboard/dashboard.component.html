@@ -6,6 +6,7 @@
         <span class="logo-full">BidRoom | DEV</span>
         <span class="logo-short" aria-hidden="true">BR</span>
       </h1>
+      <app-proposal-notifications></app-proposal-notifications>
       <button type="button" class="sidebar-toggle" (click)="toggleSidebar()" [attr.aria-label]="sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'" [attr.aria-expanded]="!sidebarCollapsed">
         <span class="toggle-icon" aria-hidden="true">{{ sidebarCollapsed ? '›' : '‹' }}</span>
       </button>
@@ -31,6 +32,13 @@
       <a routerLink="/dashboard/transactions" routerLinkActive="active" class="nav-item" title="Transactions">
         <span class="nav-icon">💳</span>
         <span class="nav-text">Transactions</span>
+      </a>
+      <a routerLink="/dashboard/notifications" routerLinkActive="active" class="nav-item nav-item-with-badge" title="Notifications">
+        <span class="nav-icon">🔔</span>
+        <span class="nav-text">Notifications</span>
+        @if (notificationUnreadCount > 0) {
+          <span class="nav-badge">{{ notificationUnreadCount > 99 ? '99+' : notificationUnreadCount }}</span>
+        }
       </a>
       <a routerLink="/dashboard/disputes" routerLinkActive="active" class="nav-item" title="Disputes">
         <span class="nav-icon">⚖️</span>
