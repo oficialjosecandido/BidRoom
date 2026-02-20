@@ -5,6 +5,15 @@ const User = require('../models/User');
 const Review = require('../models/Review');
 const { authenticateToken } = require('../middleware/auth');
 const { sendSellerProofOfPaymentNotification, sendSellerDisputeOpenedNotification } = require('../services/emailService');
+const {
+  notifyDisputeOpened,
+  notifyEvidenceSubmitted,
+  notifyItemMarkedShipped,
+  notifyTrackingProvided,
+  notifyBuyerConfirmedReceipt,
+  notifyShippingDeadlineStarted,
+  emitNewNotificationToUser
+} = require('../services/notificationService');
 
 const router = express.Router();
 
@@ -196,6 +205,17 @@ router.post('/:id/open-dispute', async (req, res) => {
 
     const listingTitle = transaction.listing?.title || 'Item';
     const buyerName = [transaction.buyer?.firstName, transaction.buyer?.lastName].filter(Boolean).join(' ') || 'Buyer';
+    const sellerUserId = transaction.seller?._id?.toString?.() || transaction.seller?.toString?.();
+    if (sellerUserId) {
+      notifyDisputeOpened({
+        transactionId: transaction._id.toString(),
+        listingTitle,
+        openerName: buyerName,
+        otherPartyUserId: sellerUserId
+      }).catch(err => console.error('Failed to create dispute-opened notification:', err));
+      const io = req.app.get('io');
+      if (io) emitNewNotificationToUser(io, sellerUserId).catch(() => {});
+    }
     if (transaction.seller?.email) {
       sendSellerDisputeOpenedNotification(
         transaction.seller.email,
@@ -259,6 +279,20 @@ router.patch('/:id/dispute/counter-evidence', async (req, res) => {
     transaction.disputeSellerCounterMediaUrls = mediaUrls.slice(0, 10);
     await transaction.save();
 
+    const buyerUserId = transaction.buyer?.toString?.();
+    if (buyerUserId) {
+      const listing = await Listing.findById(transaction.listing).select('title').lean();
+      const listingTitle = listing?.title || 'the transaction';
+      notifyEvidenceSubmitted({
+        transactionId: transaction._id.toString(),
+        listingTitle,
+        submitterRole: 'seller',
+        otherPartyUserId: buyerUserId
+      }).catch(err => console.error('Failed to create evidence-submitted notification:', err));
+      const io = req.app.get('io');
+      if (io) emitNewNotificationToUser(io, buyerUserId).catch(() => {});
+    }
+
     const updated = await Transaction.findById(transaction._id)
       .populate('listing', 'title slug images status')
       .populate('seller', 'firstName lastName email')
@@ -320,11 +354,22 @@ router.patch('/:id', async (req, res) => {
         transaction.paymentStatus = 'paid';
         transaction.paidAt = transaction.paidAt || new Date();
         if (!transaction.handlingDeadline) {
-          const listing = await Listing.findById(transaction.listing).select('handlingTime').lean();
+          const listing = await Listing.findById(transaction.listing).select('handlingTime title').lean();
           const days = (listing && listing.handlingTime) ? Math.max(1, listing.handlingTime) : 3;
           const d = new Date();
           d.setDate(d.getDate() + days);
           transaction.handlingDeadline = d;
+          const sellerUserId = transaction.seller?.toString?.();
+          if (sellerUserId) {
+            const listingTitle = listing?.title || 'the item';
+            notifyShippingDeadlineStarted({
+              transactionId: transaction._id.toString(),
+              listingTitle,
+              sellerUserId
+            }).catch(err => console.error('Failed to create shipping-deadline notification:', err));
+            const io = req.app.get('io');
+            if (io) emitNewNotificationToUser(io, sellerUserId).catch(() => {});
+          }
         }
       } else if (status === 'shipped') {
         transaction.transactionStatus = 'shipped';
@@ -333,6 +378,25 @@ router.patch('/:id', async (req, res) => {
         if (trackingNumber != null) transaction.trackingNumber = trackingNumber;
         if (trackingCarrier != null) transaction.trackingCarrier = trackingCarrier;
         if (sellerProofOfDeliveryUrl != null) transaction.sellerProofOfDeliveryUrl = sellerProofOfDeliveryUrl;
+        const buyerUserId = transaction.buyer?.toString?.();
+        if (buyerUserId) {
+          const listing = await Listing.findById(transaction.listing).select('title').lean();
+          const listingTitle = listing?.title || 'Your item';
+          notifyItemMarkedShipped({
+            transactionId: transaction._id.toString(),
+            listingTitle,
+            buyerUserId
+          }).catch(err => console.error('Failed to create shipped notification:', err));
+          if (trackingNumber) {
+            notifyTrackingProvided({
+              transactionId: transaction._id.toString(),
+              listingTitle,
+              buyerUserId
+            }).catch(err => console.error('Failed to create tracking notification:', err));
+          }
+          const io = req.app.get('io');
+          if (io) emitNewNotificationToUser(io, buyerUserId).catch(() => {});
+        }
       } else if (status === 'cancelled' && ts === 'pending_payment') {
         transaction.transactionStatus = 'cancelled';
       }
@@ -357,6 +421,21 @@ router.patch('/:id', async (req, res) => {
       } else if (status === 'delivered' && ts === 'shipped') {
         transaction.transactionStatus = 'delivered';
         transaction.sendingStatus = 'delivered';
+        const sellerUserId = transaction.seller?.toString?.();
+        if (sellerUserId) {
+          const listing = await Listing.findById(transaction.listing).select('title').lean();
+          const listingTitle = listing?.title || 'the item';
+          const buyer = await User.findById(transaction.buyer).select('firstName lastName').lean();
+          const buyerName = buyer ? `${buyer.firstName || ''} ${buyer.lastName || ''}`.trim() : 'The buyer';
+          notifyBuyerConfirmedReceipt({
+            transactionId: transaction._id.toString(),
+            listingTitle,
+            buyerName,
+            sellerUserId
+          }).catch(err => console.error('Failed to create buyer-confirmed-receipt notification:', err));
+          const io = req.app.get('io');
+          if (io) emitNewNotificationToUser(io, sellerUserId).catch(() => {});
+        }
       } else if (status === 'completed' && ['paid', 'shipped', 'delivered'].includes(ts)) {
         const lid = transaction.listing?.toString?.() || transaction.listing;
         const [buyerReviewed, sellerReviewed] = lid

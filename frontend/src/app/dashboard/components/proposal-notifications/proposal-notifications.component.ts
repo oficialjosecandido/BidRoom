@@ -123,6 +123,12 @@ export class ProposalNotificationsComponent implements OnInit, OnDestroy {
       transaction: '💳',
       dispute: '⚖️',
       review: '⭐',
+      listing: '📋',
+      watchlist: '👀',
+      private_room: '🔒',
+      shipping: '📦',
+      account: '👤',
+      security: '🔐',
       system: '📢'
     };
     return icons[type] || '📢';

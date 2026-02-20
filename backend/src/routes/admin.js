@@ -5,6 +5,7 @@ const Listing = require('../models/Listing');
 const Transaction = require('../models/Transaction');
 const { sendEmail } = require('../services/emailService');
 const { renderEmailTemplate } = require('../services/templateEngine');
+const { notifyDisputeDecisionIssued, emitNewNotificationToUser } = require('../services/notificationService');
 
 const router = express.Router();
 
@@ -361,6 +362,24 @@ router.post('/disputes/:transactionId/ruling', authenticateToken, requireAdmin, 
     transaction.transactionStatus = 'completed';
     transaction.disputeOpen = false;
     await transaction.save();
+
+    const listing = await Listing.findById(transaction.listing).select('title').lean();
+    const listingTitle = listing?.title || 'the transaction';
+    const sellerUserId = transaction.seller?._id?.toString?.() || transaction.seller?.toString?.();
+    const buyerUserId = transaction.buyer?._id?.toString?.() || transaction.buyer?.toString?.();
+    if (sellerUserId) {
+      notifyDisputeDecisionIssued({ transactionId: transaction._id.toString(), listingTitle, verdict, userId: sellerUserId })
+        .catch(err => console.error('Failed to create dispute decision notification:', err));
+    }
+    if (buyerUserId) {
+      notifyDisputeDecisionIssued({ transactionId: transaction._id.toString(), listingTitle, verdict, userId: buyerUserId })
+        .catch(err => console.error('Failed to create dispute decision notification:', err));
+    }
+    const io = req.app.get('io');
+    if (io) {
+      if (sellerUserId) emitNewNotificationToUser(io, sellerUserId).catch(() => {});
+      if (buyerUserId) emitNewNotificationToUser(io, buyerUserId).catch(() => {});
+    }
 
     /** TODO: Financial adjustments - deduct from seller balance or charge card when buyer_refund/partial_refund */
     /** TODO: Reputation score adjustment based on verdict (e.g. negative for seller on buyer_refund) */

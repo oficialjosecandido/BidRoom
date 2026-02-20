@@ -8,7 +8,7 @@ export interface Notification {
   user: string;
   title: string;
   message: string;
-  type: 'proposal' | 'bid' | 'auction_ended' | 'transaction' | 'dispute' | 'review' | 'system';
+  type: 'proposal' | 'bid' | 'auction_ended' | 'transaction' | 'dispute' | 'review' | 'listing' | 'watchlist' | 'private_room' | 'shipping' | 'account' | 'security' | 'system';
   link?: string | null;
   referenceId?: string | null;
   status: 'unread' | 'read';

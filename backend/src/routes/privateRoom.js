@@ -6,6 +6,7 @@ const Listing = require('../models/Listing');
 const Bid = require('../models/Bid');
 const User = require('../models/User');
 const { sendPlatinumBidderInvitations, sendPrivateRoomNotInvitedToBidders } = require('../services/auctionNotificationService');
+const { notifyPrivateRoomInvitation, notifyPrivateRoomAccepted, notifyPrivateRoomDeclined, emitNewNotificationToUser } = require('../services/notificationService');
 
 const router = express.Router();
 const ACCEPTANCE_WINDOW_MS = 15 * 60 * 1000; // 15 minutes to accept; after that the room starts automatically
@@ -209,6 +210,18 @@ router.post('/listings/:id/platinum-bidders', authenticateToken, async (req, res
     await sendPlatinumBidderInvitations(updatedListing);
     await sendPrivateRoomNotInvitedToBidders(updatedListing, validBidderIds);
 
+    const io = req.app.get('io');
+    const listingId = updatedListing._id.toString();
+    const listingSlug = updatedListing.slug || null;
+    const listingTitle = updatedListing.title || 'an auction';
+    for (const bidderId of validBidderIds) {
+      const bidderUserId = bidderId.toString?.() || bidderId;
+      notifyPrivateRoomInvitation({ listingId, listingSlug, listingTitle, bidderUserId }).catch(err =>
+        console.error('Failed to create private room invitation notification:', err)
+      );
+      if (io) emitNewNotificationToUser(io, bidderUserId).catch(() => {});
+    }
+
     res.json({
       success: true,
       message: 'Platinum Bidders selected successfully. Invitations and notifications have been sent.',
@@ -306,7 +319,9 @@ router.post('/invitation/accept', async (req, res) => {
     if (!token || !listingId) {
       return res.status(400).json({ error: 'Missing token or listingId', message: 'Invalid invitation link.' });
     }
-    const listing = await Listing.findById(listingId);
+    const listing = await Listing.findById(listingId)
+      .populate('seller', '_id')
+      .populate('platinumBidderInvitations.bidder', 'firstName lastName');
     if (!listing) {
       return res.status(404).json({ error: 'Listing not found', message: 'This invitation is no longer valid.' });
     }
@@ -327,6 +342,20 @@ router.post('/invitation/accept', async (req, res) => {
     listing.platinumBidderInvitations[invIndex].status = 'accepted';
     listing.platinumBidderInvitations[invIndex].acceptedAt = now;
     await listing.save();
+
+    const sellerUserId = listing.seller?._id?.toString?.() || listing.seller?.toString?.();
+    const bidder = invitation.bidder;
+    const bidderName = bidder ? `${bidder.firstName || ''} ${bidder.lastName || ''}`.trim() : 'A bidder';
+    if (sellerUserId) {
+      notifyPrivateRoomAccepted({
+        listingSlug: listing.slug || null,
+        listingTitle: listing.title || 'your listing',
+        bidderName,
+        sellerUserId
+      }).catch(err => console.error('Failed to create private room accepted notification:', err));
+      const io = req.app.get('io');
+      if (io) emitNewNotificationToUser(io, sellerUserId).catch(() => {});
+    }
     return res.json({ success: true, message: 'Invitation accepted. You can now place bids in the private room.', listingId });
   } catch (error) {
     console.error('Error accepting invitation:', error);
@@ -341,7 +370,9 @@ router.post('/invitation/decline', async (req, res) => {
     if (!token || !listingId) {
       return res.status(400).json({ error: 'Missing token or listingId', message: 'Invalid invitation link.' });
     }
-    const listing = await Listing.findById(listingId);
+    const listing = await Listing.findById(listingId)
+      .populate('seller', '_id')
+      .populate('platinumBidderInvitations.bidder', 'firstName lastName');
     if (!listing) {
       return res.status(404).json({ error: 'Listing not found', message: 'This invitation is no longer valid.' });
     }
@@ -357,6 +388,20 @@ router.post('/invitation/decline', async (req, res) => {
     const invIndex = listing.platinumBidderInvitations.findIndex(inv => inv.invitationToken === token);
     listing.platinumBidderInvitations[invIndex].status = 'declined';
     await listing.save();
+
+    const sellerUserId = listing.seller?._id?.toString?.() || listing.seller?.toString?.();
+    const bidder = invitation.bidder;
+    const bidderName = bidder ? `${bidder.firstName || ''} ${bidder.lastName || ''}`.trim() : 'A bidder';
+    if (sellerUserId) {
+      notifyPrivateRoomDeclined({
+        listingSlug: listing.slug || null,
+        listingTitle: listing.title || 'your listing',
+        bidderName,
+        sellerUserId
+      }).catch(err => console.error('Failed to create private room declined notification:', err));
+      const io = req.app.get('io');
+      if (io) emitNewNotificationToUser(io, sellerUserId).catch(() => {});
+    }
     return res.json({ success: true, message: 'Invitation declined.', listingId });
   } catch (error) {
     console.error('Error declining invitation:', error);

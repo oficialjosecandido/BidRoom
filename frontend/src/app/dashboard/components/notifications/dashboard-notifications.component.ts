@@ -75,6 +75,12 @@ export class DashboardNotificationsComponent implements OnInit {
       transaction: '💳',
       dispute: '⚖️',
       review: '⭐',
+      listing: '📋',
+      watchlist: '👀',
+      private_room: '🔒',
+      shipping: '📦',
+      account: '👤',
+      security: '🔐',
       system: '📢'
     };
     return icons[type] || '📢';

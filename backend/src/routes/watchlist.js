@@ -3,6 +3,7 @@ const Watchlist = require('../models/Watchlist');
 const Listing = require('../models/Listing');
 const User = require('../models/User');
 const { authenticateToken } = require('../middleware/auth');
+const { notifyItemAddedToWatchlist, emitNewNotificationToUser } = require('../services/notificationService');
 
 const router = express.Router();
 
@@ -33,6 +34,18 @@ router.post('/', async (req, res) => {
     }
 
     await Watchlist.create({ user: user._id, listing: listingId });
+    const sellerUserId = listing.seller?.toString?.();
+    if (sellerUserId && sellerUserId !== user._id.toString()) {
+      const watcherName = `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email?.split('@')[0] || 'Someone';
+      notifyItemAddedToWatchlist({
+        listingSlug: listing.slug || null,
+        listingTitle: listing.title || 'your listing',
+        watcherName,
+        sellerUserId
+      }).catch(err => console.error('Failed to create watchlist notification:', err));
+      const io = req.app.get('io');
+      if (io) emitNewNotificationToUser(io, sellerUserId).catch(() => {});
+    }
     res.status(201).json({ success: true, message: 'Added to watchlist', inWatchlist: true });
   } catch (error) {
     if (error.code === 11000) {

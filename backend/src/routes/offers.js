@@ -28,7 +28,12 @@ function tierFromBalance(balance) {
 }
 
 const { formatOfferForSocket } = require('../utils/offerFormat');
-const { notifyNewProposal } = require('../services/notificationService');
+const {
+  notifyNewProposal,
+  notifyProposalAccepted,
+  notifyProposalDeclined,
+  emitNewNotificationToUser
+} = require('../services/notificationService');
 
 // GET /api/offers/listing/:listingId - Get all offers for a listing
 router.get('/listing/:listingId', async (req, res) => {
@@ -274,7 +279,6 @@ async function createOffer(req, res) {
     }
 
     // Create in-app notification for the seller
-    const { emitNewNotificationToUser } = require('../services/notificationService');
     const sellerUserId = listing.seller?._id?.toString?.() || listing.seller?.toString?.();
     if (sellerUserId) {
       notifyNewProposal({
@@ -377,13 +381,24 @@ router.patch('/:offerId/accept', authenticateToken, async (req, res) => {
     };
     logSellerAcceptedWinner(offer, sellerDetails, allOffersSummary);
 
+    const io = req.app.get('io');
     if (offer.offerer) {
       createTransactionForAcceptedOffer(offer.listing._id.toString(), offer._id.toString()).catch(err =>
         console.error('Transaction create for accepted offer:', err.message)
       );
+      // Notify buyer that proposal was accepted
+      const buyerUserId = offer.offerer._id?.toString?.() || offer.offerer?.toString?.();
+      const listing = offer.listing;
+      if (buyerUserId) {
+        notifyProposalAccepted({
+          listingSlug: listing.slug || null,
+          listingTitle: listing.title || 'the item',
+          offerAmount: offer.amount,
+          buyerUserId
+        }).catch(err => console.error('Failed to create proposal-accepted notification:', err));
+        if (io) emitNewNotificationToUser(io, buyerUserId).catch(() => {});
+      }
     }
-
-    const io = req.app.get('io');
     if (io) {
       const listingId = offer.listing._id.toString();
       const populated = await Offer.findById(offer._id).populate('offerer', 'firstName lastName email emailVerified').lean();
@@ -435,6 +450,19 @@ router.patch('/:offerId/reject', authenticateToken, async (req, res) => {
     await offer.save();
 
     const io = req.app.get('io');
+    if (offer.offerer) {
+      const buyerUserId = offer.offerer._id?.toString?.() || offer.offerer?.toString?.();
+      const listing = offer.listing;
+      if (buyerUserId) {
+        notifyProposalDeclined({
+          listingSlug: listing.slug || null,
+          listingTitle: listing.title || 'the item',
+          offerAmount: offer.amount,
+          buyerUserId
+        }).catch(err => console.error('Failed to create proposal-declined notification:', err));
+        if (io) emitNewNotificationToUser(io, buyerUserId).catch(() => {});
+      }
+    }
     if (io) {
       const listingId = offer.listing._id.toString();
       const populated = await Offer.findById(offer._id).populate('offerer', 'firstName lastName email emailVerified').lean();
