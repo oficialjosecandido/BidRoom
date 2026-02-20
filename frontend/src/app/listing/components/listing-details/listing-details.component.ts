@@ -391,6 +391,15 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
     return !!(bid.isAuthenticated && bid.bidderVerified);
   }
 
+  /** True if this bid is the winning bid. */
+  isWinnerBid(bid: { _id: string }): boolean {
+    if (!this.listing?.winnerBid) return false;
+    const winnerBidId = typeof this.listing.winnerBid === 'string'
+      ? this.listing.winnerBid
+      : (this.listing.winnerBid as { _id?: string })?._id;
+    return !!winnerBidId && bid._id === winnerBidId;
+  }
+
   hasPrivateRoom(): boolean {
     return this.listing?.privateRoomStatus === 'active';
   }
@@ -516,6 +525,9 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
 
         if (event.status) this.listing.status = event.status;
         if (event.winnerSelectionDeadline) this.listing.winnerSelectionDeadline = event.winnerSelectionDeadline;
+        if (event.winner && this.listing?.slug) {
+          this.loadListing(this.listing.slug);
+        }
 
         // Restart countdown if end date changed
         this.startCountdown();

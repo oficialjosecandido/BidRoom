@@ -501,14 +501,87 @@ async function handleAuctionEnd(listingId, io = null) {
       };
     }
 
-    // Regular auction end: choose winner or not sold
+    // Regular auction end (no private room): highest bid wins automatically
+    const highestBid = await Bid.findOne({ listing: listingId })
+      .sort({ amount: -1 })
+      .populate('bidder', 'firstName lastName email')
+      .lean();
+
+    // Auto-select winner when: has bids, highest bidder is authenticated (reserve not used; bids already met minimum)
+    const canAutoSelect = highestBid && highestBid.bidder;
+
+    if (canAutoSelect) {
+      const now = new Date();
+      await Listing.findByIdAndUpdate(listingId, {
+        $set: {
+          status: 'ended',
+          winner: highestBid.bidder._id,
+          winnerBid: highestBid._id,
+          winnerSelectedAt: now
+        }
+      }, { runValidators: false });
+
+      const listingForNotify = await Listing.findById(listingId)
+        .populate('seller', 'firstName lastName email');
+      if (!listingForNotify) throw new Error('Listing not found');
+
+      await sendWinnerNotification(listingForNotify, highestBid);
+      await sendAuctionClosedNotifications(listingForNotify, highestBid._id);
+      await createTransactionForListing(listingId).catch(err =>
+        console.error('Transaction create for auto-winner:', err.message)
+      );
+
+      const { notifySellerWinnerSelected, notifyBuyerAuctionWon, emitNewNotificationToUser } = require('./notificationService');
+      const winnerName = highestBid.bidder ? `${highestBid.bidder.firstName} ${highestBid.bidder.lastName}`.trim() : (highestBid.bidderEmail || 'A bidder').split('@')[0];
+      const sellerUserId = listingForNotify.seller?._id?.toString?.() || listingForNotify.seller?.toString?.();
+      const buyerUserId = highestBid.bidder?._id?.toString?.() || highestBid.bidder?.toString?.();
+      if (sellerUserId) {
+        await notifySellerWinnerSelected({
+          listingSlug: listingForNotify.slug,
+          listingTitle: listingForNotify.title,
+          winnerName,
+          winningAmount: highestBid.amount,
+          sellerUserId
+        }).catch(err => console.error('Seller winner notification:', err));
+        if (io) emitNewNotificationToUser(io, sellerUserId).catch(() => {});
+      }
+      if (buyerUserId) {
+        await notifyBuyerAuctionWon({
+          listingSlug: listingForNotify.slug,
+          listingTitle: listingForNotify.title,
+          winningAmount: highestBid.amount,
+          buyerUserId
+        }).catch(err => console.error('Buyer won notification:', err));
+        if (io) emitNewNotificationToUser(io, buyerUserId).catch(() => {});
+      }
+
+      if (io) {
+        io.to(`listing:${listingId}`).emit('listing-update', {
+          listingId: listingId.toString(),
+          status: 'ended',
+          winner: highestBid.bidder._id.toString(),
+          currentPrice: listing.currentPrice,
+          bidCount
+        });
+      }
+
+      console.log(`✅ Auction ended: highest bidder auto-selected as winner for listing: ${listingId}`);
+
+      return {
+        listingId,
+        notified: true,
+        hasBids: true,
+        autoWinnerSelected: true
+      };
+    }
+
+    // Reserve not met, no bids, or guest highest bidder → seller must choose winner
     const deadline = new Date();
     deadline.setHours(deadline.getHours() + 24);
     await Listing.findByIdAndUpdate(listingId, {
       $set: { status: 'ended', winnerSelectionDeadline: deadline }
     }, { runValidators: false });
 
-    // Emit so clients with the page open get updated status
     if (io) {
       io.to(`listing:${listingId}`).emit('listing-update', {
         listingId: listingId.toString(),
@@ -523,19 +596,14 @@ async function handleAuctionEnd(listingId, io = null) {
       .populate('seller', 'firstName lastName email');
     if (!listingForNotify) throw new Error('Listing not found');
 
-    const highestBid = await Bid.findOne({ listing: listingId })
-      .sort({ amount: -1 })
-      .populate('bidder', 'firstName lastName email')
-      .lean();
-
     if (highestBid) {
-      await sendAuctionClosedNotifications(listingForNotify, highestBid._id);
+      await sendAuctionClosedNotifications(listingForNotify, null); // Don't exclude winner - seller will choose
       await sendChooseWinnerNotification(listingForNotify);
     } else {
       await sendAuctionNotSoldNotification(listingForNotify);
     }
 
-    console.log(`✅ Auction end notifications sent for listing: ${listingId}`);
+    console.log(`✅ Auction end: choose-winner flow for listing: ${listingId} (reserve not met or guest bidder)`);
 
     return {
       listingId,
@@ -550,8 +618,11 @@ async function handleAuctionEnd(listingId, io = null) {
 
 /**
  * Handle winner selection by seller
+ * @param {string} listingId
+ * @param {string} winnerBidId
+ * @param {object} [io] - Socket.io instance for in-app notification badge
  */
-async function handleWinnerSelection(listingId, winnerBidId) {
+async function handleWinnerSelection(listingId, winnerBidId, io = null) {
   try {
     const listing = await Listing.findById(listingId)
       .populate('seller', 'firstName lastName email');
@@ -577,11 +648,36 @@ async function handleWinnerSelection(listingId, winnerBidId) {
       }
     }, { runValidators: false });
 
-    // Send winner notification
+    // Send winner email
     await sendWinnerNotification(listing, winnerBid);
 
     // Create transaction so buyer/seller can track payment and shipping
     await createTransactionForListing(listingId).catch(err => console.error('Transaction create:', err.message));
+
+    // In-app notifications for seller and winner
+    const { notifySellerWinnerSelected, notifyBuyerAuctionWon, emitNewNotificationToUser } = require('./notificationService');
+    const winnerName = winnerBid.bidder ? `${winnerBid.bidder.firstName} ${winnerBid.bidder.lastName}`.trim() : (winnerBid.bidderEmail || 'A bidder').split('@')[0];
+    const sellerUserId = listing.seller?._id?.toString?.() || listing.seller?.toString?.();
+    const buyerUserId = winnerBid.bidder?._id?.toString?.() || winnerBid.bidder?.toString?.();
+    if (sellerUserId) {
+      await notifySellerWinnerSelected({
+        listingSlug: listing.slug,
+        listingTitle: listing.title,
+        winnerName,
+        winningAmount: winnerBid.amount,
+        sellerUserId
+      }).catch(err => console.error('Seller winner notification:', err));
+      if (io) emitNewNotificationToUser(io, sellerUserId).catch(() => {});
+    }
+    if (buyerUserId) {
+      await notifyBuyerAuctionWon({
+        listingSlug: listing.slug,
+        listingTitle: listing.title,
+        winningAmount: winnerBid.amount,
+        buyerUserId
+      }).catch(err => console.error('Buyer won notification:', err));
+      if (io) emitNewNotificationToUser(io, buyerUserId).catch(() => {});
+    }
 
     console.log(`✅ Winner selected and notified for listing: ${listingId}`);
 

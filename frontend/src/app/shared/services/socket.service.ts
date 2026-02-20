@@ -20,6 +20,7 @@ export interface ListingUpdateEvent {
   status?: 'draft' | 'active' | 'ended' | 'cancelled';
   endDate?: string;
   winnerSelectionDeadline?: string;
+  winner?: string;
 }
 
 export interface ViewerCountUpdateEvent {

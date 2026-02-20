@@ -799,7 +799,8 @@ router.post('/:id/choose-winner', authenticateToken, async (req, res) => {
     }
 
     // Handle winner selection (sends notification)
-    await handleWinnerSelection(listing._id, winnerBidId);
+    const io = req.app.get('io');
+    await handleWinnerSelection(listing._id, winnerBidId, io);
 
     // Reload listing to get updated data
     const updatedListing = await Listing.findById(listing._id)

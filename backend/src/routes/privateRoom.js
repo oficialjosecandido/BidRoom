@@ -211,7 +211,6 @@ router.post('/listings/:id/platinum-bidders', authenticateToken, async (req, res
     await sendPrivateRoomNotInvitedToBidders(updatedListing, validBidderIds);
 
     const io = req.app.get('io');
-    const listingId = updatedListing._id.toString();
     const listingSlug = updatedListing.slug || null;
     const listingTitle = updatedListing.title || 'an auction';
     for (const bidderId of validBidderIds) {

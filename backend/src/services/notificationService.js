@@ -350,6 +350,32 @@ async function notifyAccountReactivated({ userId }) {
   });
 }
 
+/** Auction ended with winner - notify seller */
+async function notifySellerWinnerSelected({ listingSlug, listingTitle, winnerName, winningAmount, sellerUserId }) {
+  const link = listingSlug ? `/listing/${listingSlug}?tab=bids` : null;
+  return createNotification({
+    userId: sellerUserId,
+    title: 'Auction ended – winner selected',
+    message: `${winnerName || 'A bidder'} won "${listingTitle || 'your listing'}" with a bid of $${(winningAmount || 0).toFixed(2)}.`,
+    type: 'auction_ended',
+    link,
+    referenceId: listingSlug
+  });
+}
+
+/** Auction won - notify buyer (winner) */
+async function notifyBuyerAuctionWon({ listingSlug, listingTitle, winningAmount, buyerUserId }) {
+  const link = listingSlug ? `/listing/${listingSlug}?tab=bids` : '/dashboard/transactions';
+  return createNotification({
+    userId: buyerUserId,
+    title: 'You won the auction!',
+    message: `Congratulations! You won "${listingTitle || 'the listing'}" with your bid of $${(winningAmount || 0).toFixed(2)}. Complete payment to proceed.`,
+    type: 'auction_ended',
+    link,
+    referenceId: listingSlug
+  });
+}
+
 /** Security: login from new device */
 async function notifyLoginFromNewDevice({ userId, deviceInfo }) {
   return createNotification({
@@ -389,5 +415,7 @@ module.exports = {
   notifyAccountSuspended,
   notifyAccountReactivated,
   notifyLoginFromNewDevice,
+  notifySellerWinnerSelected,
+  notifyBuyerAuctionWon,
   emitNewNotificationToUser
 };

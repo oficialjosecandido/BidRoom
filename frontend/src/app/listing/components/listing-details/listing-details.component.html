@@ -68,7 +68,11 @@
             <div class="current-price">
               @if (listing.auctionFormat === 'highest-bid') { <span class="price-label">Current Bid</span> }
               @if (listing.auctionFormat === 'best-offer') { <span class="price-label">Highest Offer</span> }
-              <span class="price-amount">{{ listing.auctionFormat === 'best-offer' ? formatPrice(getHighestOfferAmount()) : formatPrice(listing.currentPrice) }}</span>
+              @if (listing.auctionFormat === 'best-offer' && getHighestOfferAmount() === 0) {
+                <span class="price-amount price-placeholder">No offers yet</span>
+              } @else {
+                <span class="price-amount">{{ listing.auctionFormat === 'best-offer' ? formatPrice(getHighestOfferAmount()) : formatPrice(listing.currentPrice) }}</span>
+              }
             </div>
             
             @if (listing.buyNowPrice && listing.auctionFormat === 'highest-bid' && !isAuctionEnded() && !hasPrivateRoom()) {
@@ -162,7 +166,8 @@
                   @if (listing.auctionFormat === 'best-offer' && isOwnListing && !offersLoading && offers.length === 0) { <p>This listing closed with no offers. You can reopen it for another 7 days below.</p> }
                   @if (listing.auctionFormat === 'best-offer' && isOwnListing && offers.length > 0) { <p>{{ getBestOfferClosedMessage() }}</p> }
                   @if (listing.auctionFormat === 'highest-bid' && !isOwnListing && getEndedBidCount() === 0) { <p>This auction closed with no bids.</p> }
-                  @if (listing.auctionFormat === 'highest-bid' && !isOwnListing && getEndedBidCount() > 0) { <p>The seller will select a winner within 24 hours.</p> }
+                  @if (listing.auctionFormat === 'highest-bid' && !isOwnListing && getEndedBidCount() > 0 && listing.winner) { <p>Auction ended. A winner has been selected.</p> }
+                  @if (listing.auctionFormat === 'highest-bid' && !isOwnListing && getEndedBidCount() > 0 && !listing.winner) { <p>Auction ended.</p> }
                   @if (listing.auctionFormat === 'best-offer' && !isOwnListing && hasAcceptedOffer()) { <p>Auction ended. Listing sold.</p> }
                   @if (listing.auctionFormat === 'best-offer' && !isOwnListing && !hasAcceptedOffer()) { <p>This listing has ended.</p> }
                 </div>
@@ -247,7 +252,8 @@
             @if (!isOwnListing && isAuctionEnded() && !hasPrivateRoom()) {
             <div class="auction-ended-message">
               @if (listing.auctionFormat === 'highest-bid' && getEndedBidCount() === 0) { <p>This auction has ended with no bids.</p> }
-              @if (listing.auctionFormat === 'highest-bid' && getEndedBidCount() > 0) { <p>This auction has ended. The seller will select a winner within 24 hours.</p> }
+              @if (listing.auctionFormat === 'highest-bid' && getEndedBidCount() > 0 && listing.winner) { <p>This auction has ended. A winner has been selected.</p> }
+              @if (listing.auctionFormat === 'highest-bid' && getEndedBidCount() > 0 && !listing.winner) { <p>This auction has ended.</p> }
               @if (listing.auctionFormat === 'best-offer' && hasAcceptedOffer()) { <p>Auction ended. Listing sold.</p> }
               @if (listing.auctionFormat === 'best-offer' && !hasAcceptedOffer()) { <p>This listing has ended.</p> }
             </div>
@@ -452,6 +458,12 @@
                               @if (bid.buyerScore === null && (bid.buyerReviewCount ?? 0) === 0) {
                               <span>No buyer reviews</span>
                               }
+                            </span>
+                            }
+                            @if (isWinnerBid(bid)) {
+                            <span class="badge badge-winner">
+                              <span class="badge-icon">🏆</span>
+                              Winner
                             </span>
                             }
                           </div>
