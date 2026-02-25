@@ -40,7 +40,7 @@ export class AuthService {
       
       // If user is admin and there's a saved admin route, redirect there
       // This handles page refresh scenario
-      if (mapped && mapped.email?.toLowerCase() === 'josevcandido@gmail.com') {
+      if (mapped && (mapped.email?.toLowerCase() === 'josevcandido@gmail.com' || mapped.email?.toLowerCase() === 'tomas.cascao123@gmail.com' || mapped.email?.toLowerCase() === 'pt.bidnow@gmail.com')) {
         const adminRoute = localStorage.getItem('admin_route');
         if (adminRoute) {
           const currentPath = window.location.pathname;
