@@ -2,6 +2,26 @@ const Notification = require('../models/Notification');
 const User = require('../models/User');
 
 /**
+ * Notification link (returnUrl) mapping – each notification type navigates to the most relevant page:
+ *
+ * | Notification type           | Link destination                |
+ * |----------------------------|---------------------------------|
+ * | New bid received           | /listing/:slug?tab=bids        |
+ * | New proposal               | /listing/:slug?tab=offers       |
+ * | Proposal accepted/declined| /listing/:slug?tab=offers       |
+ * | Auction ended (seller)     | /dashboard/transactions         |
+ * | Auction won (buyer)        | /dashboard/transactions         |
+ * | Listing removed/changes   | /dashboard/my-listings or listing |
+ * | Item added to watchlist    | /listing/:slug                 |
+ * | Private room (invite)     | /private-room/auction/:id       |
+ * | Private room (accepted/declined) | /listing/:slug          |
+ * | Room cancelled             | /dashboard/my-auctions          |
+ * | Shipping / delivery        | /dashboard/transactions         |
+ * | Dispute                    | /dashboard/disputes             |
+ * | Account / security         | /dashboard/my-account          |
+ */
+
+/**
  * Emit a real-time event to the user's socket room so their notification badge updates.
  * @param {object} io - Socket.io instance
  * @param {string} userMongoId - Mongo User _id (ObjectId string)
@@ -268,36 +288,39 @@ async function notifyBuyerConfirmedReceipt({ transactionId, listingTitle, buyerN
 
 /** Dispute opened - notify other party */
 async function notifyDisputeOpened({ transactionId, listingTitle, openerName, otherPartyUserId }) {
+  const link = transactionId ? `/dashboard/disputes?open=${transactionId}` : '/dashboard/disputes';
   return createNotification({
     userId: otherPartyUserId,
     title: 'Dispute opened',
     message: `${openerName || 'A party'} opened a dispute for "${listingTitle || 'the transaction'}".`,
     type: 'dispute',
-    link: `/dashboard/disputes`,
+    link,
     referenceId: transactionId
   });
 }
 
 /** Evidence submitted - notify other party */
 async function notifyEvidenceSubmitted({ transactionId, listingTitle, submitterRole, otherPartyUserId }) {
+  const link = transactionId ? `/dashboard/disputes?open=${transactionId}` : '/dashboard/disputes';
   return createNotification({
     userId: otherPartyUserId,
     title: 'Evidence submitted',
     message: `New evidence was submitted for the dispute on "${listingTitle || 'the transaction'}".`,
     type: 'dispute',
-    link: `/dashboard/disputes`,
+    link,
     referenceId: transactionId
   });
 }
 
 /** Decision issued - notify both buyer and seller */
 async function notifyDisputeDecisionIssued({ transactionId, listingTitle, verdict, userId }) {
+  const link = transactionId ? `/dashboard/disputes?open=${transactionId}` : '/dashboard/disputes';
   return createNotification({
     userId,
     title: 'Dispute decision',
     message: `A decision has been issued for the dispute on "${listingTitle || 'the transaction'}": ${verdict}.`,
     type: 'dispute',
-    link: `/dashboard/disputes`,
+    link,
     referenceId: transactionId
   });
 }
@@ -350,13 +373,47 @@ async function notifyAccountReactivated({ userId }) {
   });
 }
 
-/** Auction ended with winner - notify seller */
-async function notifySellerWinnerSelected({ listingSlug, listingTitle, winnerName, winningAmount, sellerUserId }) {
-  const link = listingSlug ? `/listing/${listingSlug}?tab=bids` : null;
+/**
+ * Format shipping for pricing overview.
+ * @param {string} shippingOption - flat-rate | calculated | local-pickup | free
+ * @param {number} shippingCost - dollar amount (used for flat-rate)
+ * @returns {string}
+ */
+function formatShippingForPricing(shippingOption, shippingCost = 0) {
+  if (!shippingOption) return '—';
+  if (shippingOption === 'free') return 'Free';
+  if (shippingOption === 'local-pickup') return 'Local pickup';
+  if (shippingOption === 'flat-rate') {
+    const cost = Number(shippingCost) || 0;
+    return cost > 0 ? `$${cost.toFixed(2)}` : 'Free';
+  }
+  if (shippingOption === 'calculated') return 'Calculated at checkout';
+  return '—';
+}
+
+/** Auction ended with winner - notify seller (link: transactions to manage sale) */
+async function notifySellerWinnerSelected({
+  listingSlug,
+  listingTitle,
+  winnerName,
+  winningAmount,
+  commissionRate = 0.005,
+  shippingCost = 0,
+  shippingOption = 'flat-rate',
+  sellerUserId
+}) {
+  const link = '/dashboard/transactions';
+  const amount = Number(winningAmount) || 0;
+  const bidRoomFee = amount * (Number(commissionRate) || 0);
+  const shippingDisplay = formatShippingForPricing(shippingOption, shippingCost);
+
+  let message = `${winnerName || 'A bidder'} won "${listingTitle || 'your listing'}" with a bid of $${amount.toFixed(2)}.`;
+  message += ` Pricing: Final price $${amount.toFixed(2)}; BidRoom fee $${bidRoomFee.toFixed(2)}; Shipping (buyer pays): ${shippingDisplay}.`;
+
   return createNotification({
     userId: sellerUserId,
     title: 'Auction ended – winner selected',
-    message: `${winnerName || 'A bidder'} won "${listingTitle || 'your listing'}" with a bid of $${(winningAmount || 0).toFixed(2)}.`,
+    message,
     type: 'auction_ended',
     link,
     referenceId: listingSlug
@@ -364,12 +421,26 @@ async function notifySellerWinnerSelected({ listingSlug, listingTitle, winnerNam
 }
 
 /** Auction won - notify buyer (winner) */
-async function notifyBuyerAuctionWon({ listingSlug, listingTitle, winningAmount, buyerUserId }) {
-  const link = listingSlug ? `/listing/${listingSlug}?tab=bids` : '/dashboard/transactions';
+async function notifyBuyerAuctionWon({
+  listingSlug,
+  listingTitle,
+  winningAmount,
+  shippingCost = 0,
+  shippingOption = 'flat-rate',
+  buyerUserId
+}) {
+  const link = '/dashboard/transactions';
+  const amount = Number(winningAmount) || 0;
+  const shippingDisplay = formatShippingForPricing(shippingOption, shippingCost);
+
+  let message = `Congratulations! You won "${listingTitle || 'the listing'}" with your bid of $${amount.toFixed(2)}.`;
+  message += ` Pricing: Item $${amount.toFixed(2)}; Shipping: ${shippingDisplay}.`;
+  message += ' Complete payment to proceed.';
+
   return createNotification({
     userId: buyerUserId,
     title: 'You won the auction!',
-    message: `Congratulations! You won "${listingTitle || 'the listing'}" with your bid of $${(winningAmount || 0).toFixed(2)}. Complete payment to proceed.`,
+    message,
     type: 'auction_ended',
     link,
     referenceId: listingSlug

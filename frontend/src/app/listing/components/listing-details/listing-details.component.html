@@ -268,7 +268,7 @@
               <p>You can't make an offer <br> on your own listing.</p>
             </div>
             }
-            @if (!hasPrivateRoom() && !isOwnListing) {
+            @if (!hasPrivateRoom() && !isOwnListing && !listing.winner) {
             <button class="btn btn-secondary btn-large" (click)="addToWatchlist()" [disabled]="watchlistLoading">
               @if (watchlistLoading) { <span>...</span> }
               @if (!watchlistLoading && inWatchlist) { <span>Remove from Watchlist</span> }

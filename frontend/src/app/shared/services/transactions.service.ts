@@ -19,6 +19,12 @@ export interface TransactionListing {
   slug: string;
   images?: string[];
   status: string;
+  /** Commission rate (0.005 = 0.5%, 0.02 = 2%) */
+  commissionRate?: number;
+  /** Shipping cost in $ (flat-rate); 0 for free/local-pickup */
+  shippingCost?: number;
+  /** flat-rate | calculated | local-pickup | free */
+  shippingOption?: string;
 }
 
 export interface TransactionUser {

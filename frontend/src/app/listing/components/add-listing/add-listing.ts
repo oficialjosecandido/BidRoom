@@ -258,18 +258,34 @@ export class AddListing implements OnInit {
     event.stopPropagation();
   }
 
+  private readonly ALLOWED_IMAGE_TYPES = [
+    'image/jpeg',
+    'image/jpg',
+    'image/png',
+    'image/gif',
+    'image/webp',
+    'image/bmp'
+  ];
+
   private addFiles(fileList: FileList | File[]): void {
+    this.errorMessage = '';
     const files = Array.from(fileList);
+    const rejected: string[] = [];
     files.forEach(file => {
-      if (file.type.startsWith('image/') || file.type.startsWith('video/')) {
+      if (this.ALLOWED_IMAGE_TYPES.includes(file.type)) {
         this.uploadedFiles.push(file);
         const reader = new FileReader();
         reader.onload = (e) => {
           this.previewUrls.push(e.target?.result || null);
         };
         reader.readAsDataURL(file);
+      } else {
+        rejected.push(file.name);
       }
     });
+    if (rejected.length > 0) {
+      this.errorMessage = `Invalid file type. Only images (JPEG, PNG, GIF, WebP, BMP) are allowed. Rejected: ${rejected.join(', ')}`;
+    }
     while (this.media.length < this.uploadedFiles.length) {
       this.media.push(this.fb.control(this.uploadedFiles[this.media.length]));
     }
@@ -342,6 +358,7 @@ export class AddListing implements OnInit {
 
   nextStep(): void {
     if (this.isStepValid(this.currentStep)) {
+      this.errorMessage = '';
       if (this.currentStep < this.totalSteps) {
         this.currentStep++;
       }

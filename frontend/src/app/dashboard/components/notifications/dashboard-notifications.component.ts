@@ -39,6 +39,17 @@ export class DashboardNotificationsComponent implements OnInit {
     });
   }
 
+  /** Get navigation URL (auction_ended always → transactions; fallback for missing links) */
+  private getNotificationUrl(notification: Notification): string | null {
+    if (notification.type === 'auction_ended') return '/dashboard/transactions';
+    const fallbacks: Record<string, string> = {
+      shipping: '/dashboard/transactions',
+      dispute: '/dashboard/disputes',
+      transaction: '/dashboard/transactions'
+    };
+    return notification.link || fallbacks[notification.type] || null;
+  }
+
   openNotification(notification: Notification): void {
     if (notification.status === 'unread') {
       this.notificationService.markAsRead(notification._id).subscribe({
@@ -49,9 +60,8 @@ export class DashboardNotificationsComponent implements OnInit {
         }
       });
     }
-    if (notification.link) {
-      this.router.navigateByUrl(notification.link);
-    }
+    const url = this.getNotificationUrl(notification);
+    if (url) this.router.navigateByUrl(url);
   }
 
   markAllAsRead(): void {

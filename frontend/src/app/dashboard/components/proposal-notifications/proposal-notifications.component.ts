@@ -86,6 +86,17 @@ export class ProposalNotificationsComponent implements OnInit, OnDestroy {
     }
   }
 
+  /** Get navigation URL for a notification (auction_ended always → transactions; fix old wrong links) */
+  private getNotificationUrl(notification: Notification): string | null {
+    if (notification.type === 'auction_ended') return '/dashboard/transactions';
+    const fallbacks: Record<string, string> = {
+      shipping: '/dashboard/transactions',
+      dispute: '/dashboard/disputes',
+      transaction: '/dashboard/transactions'
+    };
+    return notification.link || fallbacks[notification.type] || null;
+  }
+
   openNotification(notification: Notification): void {
     if (notification.status === 'unread') {
       this.notificationService.markAsRead(notification._id).subscribe({
@@ -96,8 +107,9 @@ export class ProposalNotificationsComponent implements OnInit, OnDestroy {
         }
       });
     }
-    if (notification.link) {
-      this.router.navigateByUrl(notification.link);
+    const url = this.getNotificationUrl(notification);
+    if (url) {
+      this.router.navigateByUrl(url);
     }
     this.closeDropdown();
   }

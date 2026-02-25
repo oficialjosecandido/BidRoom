@@ -196,7 +196,7 @@
               ⚠️ Minimum 50 characters required. 
             </span>
 }
-            Current: {{ listingForm.get('description')?.value?.length || 0 }}/50 characters
+            {{ listingForm.get('description')?.value?.length || 0 }} characters (minimum 50 required)
           </div>
         </div>
 
@@ -209,7 +209,7 @@
               type="file"
               id="mediaUpload"
               multiple
-              accept="image/*,video/*"
+              accept="image/jpeg,image/jpg,image/png,image/gif,image/webp,image/bmp"
               (change)="onFileSelected($event)"
               style="display: none;"
             />

@@ -240,6 +240,31 @@ export class DashboardTransactionsComponent implements OnInit {
     }).format(amount);
   }
 
+  /** Financial breakdown: BidRoom fee (commission on sale amount) */
+  getBidRoomFee(t: Transaction): number {
+    const rate = t.listing?.commissionRate ?? 0.005;
+    return t.amount * rate;
+  }
+
+  /** Shipping amount: flat-rate uses listing.shippingCost; free/local = 0; calculated = null (TBD) */
+  getShippingAmount(t: Transaction): number | null {
+    const opt = t.listing?.shippingOption || 'flat-rate';
+    if (opt === 'free' || opt === 'local-pickup') return 0;
+    if (opt === 'flat-rate') return t.listing?.shippingCost ?? 0;
+    return null; // calculated - unknown until checkout
+  }
+
+  /** Seller net (amount - BidRoom fee) */
+  getSellerNet(t: Transaction): number {
+    return t.amount - this.getBidRoomFee(t);
+  }
+
+  /** Buyer total (amount + shipping when known) */
+  getBuyerTotal(t: Transaction): number | null {
+    const shipping = this.getShippingAmount(t);
+    return shipping !== null ? t.amount + shipping : null;
+  }
+
   getListingImage(t: Transaction): string {
     const img = t.listing?.images?.[0];
     return img || 'https://via.placeholder.com/400x300?text=No+Image';

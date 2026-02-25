@@ -33,10 +33,10 @@
       @for (t of transactions; track t._id) {
         <div class="transaction-card">
           <a [routerLink]="getListingUrl(t)" class="card-main">
-            <div class="card-image">
+            <div class="card-col card-col-image">
               <img [src]="getListingImage(t)" [alt]="t.listing.title" />
             </div>
-            <div class="card-body">
+            <div class="card-col card-col-details">
               <h2 class="card-title">{{ t.listing.title }}</h2>
               <div class="card-amount">{{ formatPrice(t.amount) }}</div>
               <div class="status-badges">
@@ -44,6 +44,51 @@
                 <span class="status-badge status-selling" [ngClass]="getSellingStatusClass(t)">Selling: {{ getSellingStatusLabel(t) }}</span>
                 @if (t.disputeOpen) {
                   <span class="status-badge status-dispute">Dispute Open</span>
+                }
+              </div>
+              <div class="financial-breakdown">
+                <div class="breakdown-header">
+                  <span class="breakdown-icon">💰</span>
+                  <h4 class="breakdown-title">Financial breakdown</h4>
+                </div>
+                <div class="breakdown-rows">
+                  <div class="breakdown-row">
+                    <span class="breakdown-label">Final auction price</span>
+                    <span class="breakdown-value">{{ formatPrice(t.amount) }}</span>
+                  </div>
+                  <div class="breakdown-row">
+                    <span class="breakdown-label">BidRoom fee</span>
+                    <span class="breakdown-value">{{ formatPrice(getBidRoomFee(t)) }}</span>
+                  </div>
+                  <div class="breakdown-row">
+                    <span class="breakdown-label">Shipping</span>
+                    <span class="breakdown-value">
+                      @if (getShippingAmount(t) !== null) {
+                        {{ getShippingAmount(t) === 0 ? 'Free' : formatPrice(getShippingAmount(t)!) }}
+                      } @else {
+                        Calculated at checkout
+                      }
+                    </span>
+                  </div>
+                </div>
+                <div class="breakdown-divider"></div>
+                @if (isSeller(t)) {
+                  <div class="breakdown-total breakdown-total-seller">
+                    <span class="breakdown-total-label">You receive</span>
+                    <span class="breakdown-total-value">{{ formatPrice(getSellerNet(t)) }}</span>
+                  </div>
+                }
+                @if (isBuyer(t)) {
+                  <div class="breakdown-total breakdown-total-buyer">
+                    <span class="breakdown-total-label">Total to pay</span>
+                    <span class="breakdown-total-value">
+                      @if (getBuyerTotal(t) !== null) {
+                        {{ formatPrice(getBuyerTotal(t)!) }}
+                      } @else {
+                        {{ formatPrice(t.amount) }} + shipping
+                      }
+                    </span>
+                  </div>
                 }
               </div>
               @if (t.paymentDeadline && getEffectiveStatus(t) === 'pending_payment') {
@@ -92,6 +137,27 @@
           </a>
 
           <div class="card-actions">
+            @if (t.paymentDeadline && getEffectiveStatus(t) === 'pending_payment') {
+              <p class="card-deadline">
+                Payment window ends: {{ formatPaymentDeadline(t) }}{{ hasPaymentDeadlinePassed(t) ? ' (passed)' : '' }}
+              </p>
+            }
+            @if (isBuyer(t)) {
+              <p class="card-role">
+                You are the <strong>buyer</strong>. Seller: {{ t.seller.firstName }} {{ t.seller.lastName }}
+                @if (t.seller.email) {
+                  <span> — <a [href]="'mailto:' + t.seller.email" class="seller-email" (click)="$event.stopPropagation()">{{ t.seller.email }}</a></span>
+                }
+              </p>
+            }
+            @if (isSeller(t)) {
+              <p class="card-role">
+                You are the <strong>seller</strong>. Buyer: {{ t.buyer.firstName }} {{ t.buyer.lastName }}
+                @if (t.buyer.email) {
+                  <span> — <a [href]="'mailto:' + t.buyer.email" class="seller-email" (click)="$event.stopPropagation()">{{ t.buyer.email }}</a></span>
+                }
+              </p>
+            }
             @if (isSeller(t) && t.buyerProofOfPaymentUrl && getEffectiveStatus(t) !== 'pending_payment') {
               <div class="proof-of-payment-seller">
                 <strong>Proof of payment:</strong>

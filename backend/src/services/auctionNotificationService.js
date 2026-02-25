@@ -541,6 +541,9 @@ async function handleAuctionEnd(listingId, io = null) {
           listingTitle: listingForNotify.title,
           winnerName,
           winningAmount: highestBid.amount,
+          commissionRate: listingForNotify.commissionRate ?? 0.005,
+          shippingCost: listingForNotify.shippingCost ?? 0,
+          shippingOption: listingForNotify.shippingOption ?? 'flat-rate',
           sellerUserId
         }).catch(err => console.error('Seller winner notification:', err));
         if (io) emitNewNotificationToUser(io, sellerUserId).catch(() => {});
@@ -665,6 +668,9 @@ async function handleWinnerSelection(listingId, winnerBidId, io = null) {
         listingTitle: listing.title,
         winnerName,
         winningAmount: winnerBid.amount,
+        commissionRate: listing.commissionRate ?? 0.005,
+        shippingCost: listing.shippingCost ?? 0,
+        shippingOption: listing.shippingOption ?? 'flat-rate',
         sellerUserId
       }).catch(err => console.error('Seller winner notification:', err));
       if (io) emitNewNotificationToUser(io, sellerUserId).catch(() => {});
@@ -674,6 +680,8 @@ async function handleWinnerSelection(listingId, winnerBidId, io = null) {
         listingSlug: listing.slug,
         listingTitle: listing.title,
         winningAmount: winnerBid.amount,
+        shippingCost: listing.shippingCost ?? 0,
+        shippingOption: listing.shippingOption ?? 'flat-rate',
         buyerUserId
       }).catch(err => console.error('Buyer won notification:', err));
       if (io) emitNewNotificationToUser(io, buyerUserId).catch(() => {});
