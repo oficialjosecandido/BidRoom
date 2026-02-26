@@ -64,8 +64,12 @@
               <span class="info-value">${{ auction.startingPrice | number:'1.2-2' }}</span>
             </div>
             <div class="info-item">
-              <span class="info-label">Current Price:</span>
+              <span class="info-label">{{ auction.auctionFormat === 'best-offer' ? 'Highest Offer:' : 'Current Price:' }}</span>
+              @if (auction.auctionFormat === 'best-offer' && (auction.currentPrice == null || auction.currentPrice === 0)) {
+              <span class="info-value price-highlight">No offers yet</span>
+              } @else {
               <span class="info-value price-highlight">${{ auction.currentPrice | number:'1.2-2' }}</span>
+              }
             </div>
             @if (auction.reservePrice) {
 <div class="info-item">

@@ -38,6 +38,10 @@ export const routes: Routes = [
         loadComponent: () => import('./dashboard/components/my-auctions-bidder/my-auctions-bidder.component').then(m => m.MyAuctionsBidderComponent)
       },
       {
+        path: 'my-bets',
+        loadComponent: () => import('./dashboard/components/my-bets/my-bets.component').then(m => m.MyBetsComponent)
+      },
+      {
         path: 'transactions',
         loadComponent: () => import('./dashboard/components/transactions/dashboard-transactions.component').then(m => m.DashboardTransactionsComponent)
       },

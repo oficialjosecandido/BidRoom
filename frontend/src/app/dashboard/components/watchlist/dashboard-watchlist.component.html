@@ -41,7 +41,7 @@
         </div>
         <div class="card-body">
           <h2 class="card-title">{{ listing.title }}</h2>
-          <div class="card-price">{{ formatPrice(listing.currentPrice) }}</div>
+          <div class="card-price">@if (listing.auctionFormat === 'best-offer' && (listing.currentPrice == null || listing.currentPrice === 0)) { No offers yet } @else { {{ formatPrice(listing.currentPrice) }} }</div>
           @if (listing.status) {
 <div class="card-meta">
             <span class="status-badge" [class.ended]="listing.status === 'ended'">{{ listing.status }}</span>

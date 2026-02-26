@@ -1124,5 +1124,80 @@ router.get('/bidder/my-auctions', authenticateToken, async (req, res) => {
   }
 });
 
+// GET /api/listings/bidder/my-bets - Listings with all bets (bids + offers) per listing, for My Bets tab
+router.get('/bidder/my-bets', authenticateToken, async (req, res) => {
+  try {
+    const user = await User.findOne({ uid: req.user.uid });
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const [myBids, myOffers] = await Promise.all([
+      Bid.find({ bidder: user._id }).select('listing amount createdAt notifyWhenOutbid status').sort({ createdAt: -1 }).lean(),
+      Offer.find({ offerer: user._id }).select('listing amount createdAt status').sort({ createdAt: -1 }).lean()
+    ]);
+
+    const listingMap = new Map(); // listingId -> { listing, bets: [], type, notifyWhenOutbid }
+
+    for (const b of myBids) {
+      const id = b.listing.toString();
+      if (!listingMap.has(id)) {
+        listingMap.set(id, { type: 'bid', bets: [], notifyWhenOutbid: b.notifyWhenOutbid !== false });
+      }
+      const entry = listingMap.get(id);
+      entry.bets.push({ _id: b._id, amount: b.amount, createdAt: b.createdAt, type: 'bid', status: b.status });
+      if (entry.notifyWhenOutbid === true && b.notifyWhenOutbid === false) entry.notifyWhenOutbid = false;
+    }
+
+    for (const o of myOffers) {
+      const id = o.listing.toString();
+      if (!listingMap.has(id)) {
+        listingMap.set(id, { type: 'offer', bets: [], notifyWhenOutbid: true });
+      }
+      const entry = listingMap.get(id);
+      if (entry.type === 'bid') entry.type = 'mixed';
+      entry.bets.push({ _id: o._id, amount: o.amount, createdAt: o.createdAt, type: 'offer', status: o.status });
+    }
+
+    const listingIds = [...listingMap.keys()];
+    if (listingIds.length === 0) {
+      return res.json({ listings: [], total: 0 });
+    }
+
+    const listings = await Listing.find({ _id: { $in: listingIds } })
+      .populate('seller', 'firstName lastName')
+      .sort({ endDate: -1 })
+      .lean();
+
+    const enhanced = listings.map((listing) => {
+      const id = listing._id.toString();
+      const entry = listingMap.get(id) || { type: 'bid', bets: [], lastBid: null };
+      const bets = entry.bets;
+      const myHighest = bets.length ? Math.max(...bets.map(x => x.amount)) : null;
+      const notifyWhenOutbid = entry.lastBid && typeof entry.lastBid.notifyWhenOutbid === 'boolean'
+        ? entry.lastBid.notifyWhenOutbid
+        : true;
+      const isWinner = listing.winner?.toString?.() === user._id.toString() ||
+        (listing.auctionFormat === 'best-offer' && bets.some(x => x.type === 'offer' && x.status === 'accepted'));
+      return {
+        ...listing,
+        type: entry.type,
+        bets,
+        myHighestBid: myHighest,
+        notifyWhenOutbid,
+        isWinner
+      };
+    });
+
+    res.json({ listings: enhanced, total: enhanced.length });
+  } catch (error) {
+    console.error('Error fetching bidder bets:', error);
+    res.status(500).json({
+      error: 'Failed to fetch your bets',
+      message: error.message
+    });
+  }
+});
+
 module.exports = router;
 

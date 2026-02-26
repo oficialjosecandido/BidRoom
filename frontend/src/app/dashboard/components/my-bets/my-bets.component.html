@@ -1,0 +1,103 @@
+<div class="my-bets-container">
+  <div class="page-header">
+    <h1>My Bets</h1>
+    <p class="subtitle">All your bids and offers in one place. Expand any listing to see your bet history.</p>
+  </div>
+
+  @if (isLoading) {
+    <div class="loading-state">
+      <div class="spinner"></div>
+      <p>Loading your bets...</p>
+    </div>
+  }
+
+  @if (error && !isLoading) {
+    <div class="error-state">
+      <div class="error-icon">⚠️</div>
+      <p class="error-message">{{ error }}</p>
+      <button type="button" class="retry-btn" (click)="loadMyBets()">Try Again</button>
+    </div>
+  }
+
+  @if (!isLoading && !error) {
+    <div class="listings-list">
+      @if (listings.length === 0) {
+        <div class="empty-state">
+          <div class="empty-icon">🎯</div>
+          <h3>No bets yet</h3>
+          <p>You haven't placed any bids or offers yet. Browse listings and place your first bet!</p>
+          <a routerLink="/listing/list" class="browse-btn">Browse listings</a>
+        </div>
+      }
+
+      @for (listing of listings; track listing._id) {
+        <div class="bet-card" [class.expanded]="isExpanded(listing)">
+          <div class="card-header" (click)="toggleExpanded(listing)" role="button" tabindex="0" (keydown.enter)="toggleExpanded(listing)" (keydown.space)="toggleExpanded(listing)">
+            <div class="header-main">
+              <span class="expand-icon">{{ isExpanded(listing) ? '▼' : '▶' }}</span>
+              <div class="title-block">
+                <h2 class="listing-title">
+                  <a [routerLink]="['/listing', listing.slug]" (click)="$event.stopPropagation()">{{ listing.title }}</a>
+                </h2>
+                <div class="meta-row">
+                  <span class="status-badge" [ngClass]="getStatusBadgeClass(listing.status)">{{ listing.status }}</span>
+                  @if (listing.isWinner) {
+                    <span class="winner-badge">🏆 Winner</span>
+                  }
+                  <span class="type-pill">{{ listing.auctionFormat === 'best-offer' ? 'Offer' : 'Bid' }}</span>
+                </div>
+              </div>
+            </div>
+            <div class="header-stats">
+              <div class="stat">
+                <span class="stat-label">My best</span>
+                <span class="stat-value">{{ listing.myHighestBid != null ? formatPrice(listing.myHighestBid) : '—' }}</span>
+              </div>
+              <div class="stat">
+                <span class="stat-label">{{ listing.bets?.length ?? 0 }} {{ (listing.bets?.length ?? 0) === 1 ? 'bet' : 'bets' }}</span>
+              </div>
+              <div class="stat">
+                <span class="stat-value">{{ formatDate(listing.endDate) }}</span>
+              </div>
+            </div>
+          </div>
+
+          @if (isExpanded(listing)) {
+            <div class="card-body">
+              <div class="bets-list">
+                <h4>Your bets</h4>
+                @for (bet of listing.bets; track bet._id) {
+                  <div class="bet-row" [ngClass]="getBetStatusClass(bet.status)">
+                    <span class="bet-amount">{{ formatPrice(bet.amount) }}</span>
+                    <span class="bet-type">{{ bet.type === 'offer' ? 'Offer' : 'Bid' }}</span>
+                    <span class="bet-date">{{ formatDate(bet.createdAt) }}</span>
+                    <span class="bet-status">{{ bet.status }}</span>
+                  </div>
+                }
+              </div>
+
+              @if (canShowNotifyToggle(listing)) {
+                <div class="notify-section">
+                  <label class="notify-toggle">
+                    <input
+                      type="checkbox"
+                      [checked]="listing.notifyWhenOutbid !== false"
+                      [disabled]="preferenceUpdating[listing._id]"
+                      (change)="onNotifyWhenOutbidChange(listing, $any($event.target).checked)"
+                    />
+                    <span>Email me when I'm outbid</span>
+                  </label>
+                  @if (preferenceUpdating[listing._id]) {
+                    <span class="updating">Updating…</span>
+                  }
+                </div>
+              }
+
+              <a [routerLink]="['/listing', listing.slug]" class="view-listing-btn">View listing</a>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  }
+</div>

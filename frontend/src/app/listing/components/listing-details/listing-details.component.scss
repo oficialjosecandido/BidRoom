@@ -330,6 +330,42 @@
           text-align: center;
         }
 
+        .winner-selection-countdown {
+          margin: 16px 0;
+          padding: 16px 20px;
+          background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+          border-left: 4px solid #f59e0b;
+          border-radius: 8px;
+          color: #92400e;
+
+          .countdown-content {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+          }
+
+          .countdown-icon {
+            font-size: 24px;
+          }
+
+          .countdown-text {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+
+            strong {
+              font-size: 14px;
+            }
+
+            .countdown-value {
+              font-size: 20px;
+              font-weight: 700;
+              font-variant-numeric: tabular-nums;
+              color: #b45309;
+            }
+          }
+        }
+
         .private-room-banner {
           margin: 20px 0;
           padding: 20px;
@@ -1120,6 +1156,15 @@
                 color: var(--accent-purple);
               }
 
+              .offer-badge-selected {
+                font-size: 12px;
+                font-weight: 600;
+                padding: 2px 8px;
+                border-radius: 6px;
+                background: rgba(34, 197, 94, 0.2);
+                color: #15803d;
+              }
+
               .offer-status-pill {
                 font-size: 12px;
                 font-weight: 600;
@@ -1218,11 +1263,20 @@
         padding: 24px;
         background: var(--light-gray);
         border-radius: 12px;
+        border: 1px solid rgba(0, 0, 0, 0.06);
 
         h3 {
-          font-size: 20px;
+          font-size: 18px;
           margin-bottom: 16px;
           color: var(--text-dark);
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+
+        .info-card-icon {
+          font-size: 20px;
+          opacity: 0.9;
         }
 
         p {
@@ -1230,6 +1284,12 @@
           color: var(--text-gray);
           margin-bottom: 8px;
           line-height: 1.6;
+        }
+
+        .info-card-meta {
+          font-size: 13px;
+          color: var(--text-gray);
+          margin-bottom: 0;
         }
       }
     }

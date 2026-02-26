@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Subscription } from 'rxjs';
+import { finalize, timeout } from 'rxjs/operators';
 import Swal from 'sweetalert2';
 import { HeaderComponent } from '../../../shared/components/header/header.component';
 import { FooterComponent } from '../../../shared/components/footer/footer.component';
@@ -63,6 +64,7 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
   private offerRefreshDebounceTimer: ReturnType<typeof setTimeout> | null = null;
   private readonly OFFER_REFRESH_DEBOUNCE_MS = 2000;
   displayedTimeRemaining = '';
+  winnerSelectionCountdownDisplay = '';
 
   // Place Bid modal
   showBidModal = false;
@@ -175,10 +177,22 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
     });
   }
 
-  /** Offers sorted: pending first, then accepted, then rejected/expired. */
+  /** Offers sorted: pending first, then accepted, then rejected/expired. Within each status, highest amount first. */
   get sortedOffers(): Offer[] {
     const order: Record<string, number> = { pending: 0, accepted: 1, rejected: 2, expired: 3 };
-    return [...this.offers].sort((a, b) => (order[a.status] ?? 4) - (order[b.status] ?? 4));
+    return [...this.offers].sort((a, b) => {
+      const statusA = order[a.status] ?? 4;
+      const statusB = order[b.status] ?? 4;
+      if (statusA !== statusB) return statusA - statusB;
+      return (b.amount ?? 0) - (a.amount ?? 0);
+    });
+  }
+
+  /** Highest pending/accepted offer amount for summary display. */
+  get highestOfferAmount(): number | null {
+    const valid = this.offers.filter(o => o.status === 'pending' || o.status === 'accepted');
+    if (valid.length === 0) return null;
+    return Math.max(...valid.map(o => o.amount));
   }
 
   /** Highest offer amount for best-offer listings (from pending or accepted offers). */
@@ -339,6 +353,13 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
       this.displayedTimeRemaining = parts.length > 0 ? parts.join(' ') : 'Ending Soon';
     }
 
+    // Update winner selection countdown when auction ended and seller has 24h
+    if (this.showWinnerSelectionCountdown()) {
+      this.winnerSelectionCountdownDisplay = this.formatWinnerSelectionCountdown();
+    } else {
+      this.winnerSelectionCountdownDisplay = '';
+    }
+
     // Trigger change detection
     this.cdr.detectChanges();
   }
@@ -384,6 +405,38 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
   /** True when this best-offer listing has at least one accepted offer (listing sold). */
   hasAcceptedOffer(): boolean {
     return this.offers.some(o => o.status === 'accepted');
+  }
+
+  /** True when seller has 24h to choose/accept winner and we should show the countdown (best-offer or highest-bid). */
+  showWinnerSelectionCountdown(): boolean {
+    if (this.listing?.status !== 'ended' || !this.listing?.winnerSelectionDeadline) return false;
+    const deadline = new Date(this.listing.winnerSelectionDeadline);
+    if (deadline <= new Date()) return false;
+    if (this.listing.auctionFormat === 'best-offer') return !this.hasAcceptedOffer();
+    if (this.listing.auctionFormat === 'highest-bid') return !this.listing.winner && !this.hasPrivateRoom();
+    return false;
+  }
+
+  /** Seconds remaining until winner selection deadline. */
+  getWinnerSelectionSecondsRemaining(): number {
+    if (!this.listing?.winnerSelectionDeadline) return 0;
+    const diff = new Date(this.listing.winnerSelectionDeadline).getTime() - Date.now();
+    return Math.max(0, Math.floor(diff / 1000));
+  }
+
+  /** Formatted countdown string for 24h winner selection (HH:MM:SS). */
+  formatWinnerSelectionCountdown(): string {
+    const sec = this.getWinnerSelectionSecondsRemaining();
+    if (sec <= 0) return '00:00:00';
+    const h = Math.floor(sec / 3600);
+    const m = Math.floor((sec % 3600) / 60);
+    const s = sec % 60;
+    return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  }
+
+  /** The accepted offer (for best-offer when seller has selected one). */
+  get acceptedOffer(): Offer | null {
+    return this.offers.find(o => o.status === 'accepted') ?? null;
   }
 
   /** Only registered, verified bidders can be selected as winner. */
@@ -583,11 +636,18 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
     this.bidSubmitting = true;
     const bidData: any = { listingId: this.listing._id, amount, bidType: 'manual', notifyWhenOutbid: this.bidNotifyWhenOutbid };
     if (!this.isAuthenticated && email) bidData.email = email;
-    this.bidsService.createBid(bidData).subscribe({
-      next: () => {
+    this.bidsService.createBid(bidData).pipe(
+      timeout(45000),
+      finalize(() => {
         this.bidSubmitting = false;
+        this.cdr.markForCheck();
+      })
+    ).subscribe({
+      next: () => {
         this.closeBidModal();
         if (this.listing?._id) this.loadBids(this.listing._id);
+        this.loadListing(this.listing!.slug);
+        this.cdr.markForCheck();
         Swal.fire({
           toast: true,
           position: 'top-end',
@@ -599,9 +659,9 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
         });
       },
       error: (err) => {
-        this.bidSubmitting = false;
-        const msg = err.error?.message || 'Failed to place bid. Please try again.';
+        const msg = err?.error?.message || err?.message || 'Failed to place bid. Please try again.';
         this.bidModalError = msg;
+        this.cdr.markForCheck();
         Swal.fire({
           icon: 'error',
           title: 'Bid failed',

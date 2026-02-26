@@ -86,7 +86,7 @@
               <td class="seller-cell">
                 {{ auction.seller.firstName }} {{ auction.seller.lastName }}
               </td>
-              <td class="price-cell">${{ auction.currentPrice | number:'1.2-2' }}</td>
+              <td class="price-cell">@if (auction.auctionFormat === 'best-offer' && (auction.currentPrice == null || auction.currentPrice === 0)) { No offers yet } @else { ${{ auction.currentPrice | number:'1.2-2' }} }</td>
               <td class="bids-cell">{{ auction.bidCount }}</td>
               <td class="status-cell">
                 <span class="status-badge" [ngClass]="getStatusClass(auction.status)">

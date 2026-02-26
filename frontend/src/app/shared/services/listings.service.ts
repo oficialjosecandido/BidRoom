@@ -177,6 +177,11 @@ export class ListingsService {
     return this.http.get<ListingsResponse>(`${this.apiUrl}/bidder/my-auctions`);
   }
 
+  /** Listings with all bets (bids + offers) per listing, for My Bets tab */
+  getBidderBets(): Observable<{ listings: (Listing & { type?: string; bets?: Array<{ _id: string; amount: number; createdAt: string; type: string; status: string }>; notifyWhenOutbid?: boolean; isWinner?: boolean })[]; total: number }> {
+    return this.http.get<any>(`${this.apiUrl}/bidder/my-bets`);
+  }
+
   /** Seller chooses a winner for an ended auction (requires winnerBidId) */
   chooseWinner(listingId: string, winnerBidId: string): Observable<{ listing: Listing; message: string }> {
     return this.http.post<{ listing: Listing; message: string }>(

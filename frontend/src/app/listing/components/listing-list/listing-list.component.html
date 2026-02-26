@@ -76,8 +76,12 @@
           <p class="listing-description">{{ listing.description.substring(0, 100) }}...</p>
           <div class="listing-meta">
             <div class="listing-price-info">
+              @if (listing.auctionFormat === 'best-offer' && (listing.currentPrice == null || listing.currentPrice === 0)) {
+              <span class="listing-current-price">No offers yet</span>
+              } @else {
               <span class="listing-current-price">{{ formatPrice(listing.currentPrice) }}</span>
-              @if (listing.currentPrice > listing.startingPrice) {
+              }
+              @if (listing.auctionFormat !== 'best-offer' && listing.currentPrice > listing.startingPrice) {
 <span class="listing-starting-price">
                 Started at {{ formatPrice(listing.startingPrice) }}
               </span>

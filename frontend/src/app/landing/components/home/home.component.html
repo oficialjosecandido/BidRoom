@@ -96,7 +96,7 @@
             <img [src]="listing.images[0] || 'https://via.placeholder.com/300x200?text=No+Image'" [alt]="listing.title" class="ending-soon-image">
             <div class="ending-soon-card-content">
               <h4>{{ listing.title }}</h4>
-              <p class="ending-soon-price">{{ formatPrice(listing.currentPrice) }}</p>
+              <p class="ending-soon-price">@if (listing.auctionFormat === 'best-offer' && (listing.currentPrice == null || listing.currentPrice === 0)) { No offers yet } @else { {{ formatPrice(listing.currentPrice) }} }</p>
               <p class="ending-soon-time">⏱️ {{ formatTimeRemaining(listing) }} left</p>
             </div>
           </div>

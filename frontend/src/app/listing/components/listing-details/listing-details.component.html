@@ -263,6 +263,17 @@
               Make Offer
             </button>
             }
+            @if (showWinnerSelectionCountdown()) {
+            <div class="winner-selection-countdown">
+              <div class="countdown-content">
+                <span class="countdown-icon">⏱️</span>
+                <div class="countdown-text">
+                  <strong>Seller has 24h to {{ listing.auctionFormat === 'best-offer' ? 'accept an offer' : 'choose a winner' }}</strong>
+                  <span class="countdown-value">{{ winnerSelectionCountdownDisplay }}</span>
+                </div>
+              </div>
+            </div>
+            }
             @if (isOwnListing && listing.auctionFormat === 'best-offer' && !hasPrivateRoom()) {
             <div class="own-listing-message">
               <p>You can't make an offer <br> on your own listing.</p>
@@ -555,6 +566,7 @@
                         </span>
                         }
                         @if (isMyOffer(offer)) { <span class="offer-badge-your">Your offer</span> }
+                        @if (offer.status === 'accepted') { <span class="offer-badge-selected">Selected by seller</span> }
                         @if (offer.status !== 'pending') {
                         <span class="offer-status-pill" [class.accepted]="offer.status === 'accepted'" [class.rejected]="offer.status === 'rejected'" [class.expired]="offer.status === 'expired'">
                           {{ formatOfferStatus(offer.status) }}

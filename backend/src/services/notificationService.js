@@ -125,6 +125,45 @@ async function notifyProposalDeclined({ listingSlug, listingTitle, offerAmount, 
   });
 }
 
+/** Offer placed - confirm to offerer (best-offer auctions) */
+async function notifyOfferPlaced({ listingSlug, listingTitle, offerAmount, offererUserId }) {
+  const link = listingSlug ? `/listing/${listingSlug}?tab=offers` : null;
+  return createNotification({
+    userId: offererUserId,
+    title: 'Offer confirmed',
+    message: `Your offer of $${(offerAmount || 0).toFixed(2)} on "${listingTitle || 'the item'}" has been received.`,
+    type: 'proposal',
+    link,
+    referenceId: listingSlug
+  });
+}
+
+/** Higher offer received - notify previous highest offerer (best-offer auctions) */
+async function notifyOfferOutbid({ listingSlug, listingTitle, previousOffer, newOffer, offererUserId }) {
+  const link = listingSlug ? `/listing/${listingSlug}?tab=offers` : null;
+  return createNotification({
+    userId: offererUserId,
+    title: 'Higher offer received',
+    message: `Your offer of $${(previousOffer || 0).toFixed(2)} on "${listingTitle || 'the item'}" was exceeded. Someone offered $${(newOffer || 0).toFixed(2)}.`,
+    type: 'proposal',
+    link,
+    referenceId: listingSlug
+  });
+}
+
+/** Best-offer listing ended - notify seller to review/accept offers within 24h */
+async function notifySellerBestOfferEnded({ listingSlug, listingTitle, offerCount, sellerUserId }) {
+  const link = listingSlug ? `/listing/${listingSlug}?tab=offers` : null;
+  return createNotification({
+    userId: sellerUserId,
+    title: 'Listing ended',
+    message: `Your best-offer listing "${listingTitle || 'the item'}" has ended with ${offerCount} offer(s). You have 24 hours to review and accept an offer.`,
+    type: 'listing',
+    link,
+    referenceId: listingSlug
+  });
+}
+
 /** Listing removed due to policy violation - notify seller */
 async function notifyListingRemoved({ listingSlug, listingTitle, sellerUserId }) {
   return createNotification({
@@ -463,8 +502,11 @@ module.exports = {
   createNotification,
   notifyNewProposal,
   notifyNewBid,
+  notifyOfferPlaced,
+  notifyOfferOutbid,
   notifyProposalAccepted,
   notifyProposalDeclined,
+  notifySellerBestOfferEnded,
   notifyListingRemoved,
   notifyListingRequiresChanges,
   notifyItemAddedToWatchlist,

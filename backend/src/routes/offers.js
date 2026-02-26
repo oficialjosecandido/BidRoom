@@ -30,10 +30,16 @@ function tierFromBalance(balance) {
 const { formatOfferForSocket } = require('../utils/offerFormat');
 const {
   notifyNewProposal,
+  notifyOfferPlaced,
+  notifyOfferOutbid,
   notifyProposalAccepted,
   notifyProposalDeclined,
   emitNewNotificationToUser
 } = require('../services/notificationService');
+const {
+  sendOfferPlacedEmail,
+  sendOfferOutbidEmail
+} = require('../services/auctionNotificationService');
 
 // GET /api/offers/listing/:listingId - Get all offers for a listing
 router.get('/listing/:listingId', async (req, res) => {
@@ -209,13 +215,42 @@ async function createOffer(req, res) {
       logOfferReceived(populatedOffer, bidderDetails);
 
       const io = req.app.get('io');
+      const confirmEmail = populatedOffer.offerer?.email || populatedOffer.offererEmail;
+      const confirmUserId = populatedOffer.offerer?._id?.toString?.();
+      if (confirmUserId) {
+        notifyOfferPlaced({ listingSlug: listing.slug, listingTitle: listing.title, offerAmount: amount, offererUserId: confirmUserId })
+          .catch(err => console.error('Failed offer confirmation notification:', err));
+        if (io) emitNewNotificationToUser(io, confirmUserId).catch(() => {});
+      }
+      if (confirmEmail) {
+        sendOfferPlacedEmail(listing, confirmEmail, name, amount).catch(err => console.error('Failed offer confirmation email:', err));
+      }
+      const otherOffers = await Offer.find({ listing: listingId, status: 'pending', _id: { $ne: existingOffer._id } })
+        .populate('offerer', 'firstName lastName email')
+        .lean();
+      const prevHigh = otherOffers.length ? Math.max(...otherOffers.map(o => o.amount)) : 0;
+      if (amount > prevHigh && prevHigh > 0) {
+        const notified = new Set();
+        for (const o of otherOffers.filter(x => x.amount === prevHigh)) {
+          const e = o.offerer?.email?.toLowerCase() || o.offererEmail?.toLowerCase();
+          const u = o.offerer?._id?.toString?.();
+          if (!e || notified.has(e) || e === (confirmEmail || '').toLowerCase()) continue;
+          notified.add(e);
+          if (u) {
+            notifyOfferOutbid({ listingSlug: listing.slug, listingTitle: listing.title, previousOffer: prevHigh, newOffer: amount, offererUserId: u })
+              .catch(err => console.error('Failed offer outbid notification:', err));
+            if (io) emitNewNotificationToUser(io, u).catch(() => {});
+          }
+          sendOfferOutbidEmail(listing, e, o.offerer ? `${o.offerer.firstName} ${o.offerer.lastName}` : o.offererEmail?.split('@')[0], prevHigh, amount)
+            .catch(err => console.error('Failed offer outbid email:', err));
+        }
+      }
       if (io) {
         io.to(`listing:${listingId}`).emit('new-offer', {
           listingId,
           offer: formatOfferForSocket(populatedOffer)
         });
       }
-
       return res.json({
         ...populatedOffer,
         offererName: name,
@@ -271,14 +306,42 @@ async function createOffer(req, res) {
       : (populatedOffer.offererEmail ? populatedOffer.offererEmail.charAt(0).toUpperCase() : 'A');
 
     const io = req.app.get('io');
+    const confirmEmail = populatedOffer.offerer?.email || populatedOffer.offererEmail;
+    const confirmUserId = populatedOffer.offerer?._id?.toString?.();
+    if (confirmUserId) {
+      notifyOfferPlaced({ listingSlug: listing.slug, listingTitle: listing.title, offerAmount: amount, offererUserId: confirmUserId })
+        .catch(err => console.error('Failed offer confirmation notification:', err));
+      if (io) emitNewNotificationToUser(io, confirmUserId).catch(() => {});
+    }
+    if (confirmEmail) {
+      sendOfferPlacedEmail(listing, confirmEmail, name, amount).catch(err => console.error('Failed offer confirmation email:', err));
+    }
+    const otherOffers = await Offer.find({ listing: listingId, status: 'pending', _id: { $ne: offer._id } })
+      .populate('offerer', 'firstName lastName email')
+      .lean();
+    const prevHigh = otherOffers.length ? Math.max(...otherOffers.map(o => o.amount)) : 0;
+    if (amount > prevHigh && prevHigh > 0) {
+      const notified = new Set();
+      for (const o of otherOffers.filter(x => x.amount === prevHigh)) {
+        const e = o.offerer?.email?.toLowerCase() || o.offererEmail?.toLowerCase();
+        const u = o.offerer?._id?.toString?.();
+        if (!e || notified.has(e) || e === (confirmEmail || '').toLowerCase()) continue;
+        notified.add(e);
+        if (u) {
+          notifyOfferOutbid({ listingSlug: listing.slug, listingTitle: listing.title, previousOffer: prevHigh, newOffer: amount, offererUserId: u })
+            .catch(err => console.error('Failed offer outbid notification:', err));
+          if (io) emitNewNotificationToUser(io, u).catch(() => {});
+        }
+        sendOfferOutbidEmail(listing, e, o.offerer ? `${o.offerer.firstName} ${o.offerer.lastName}` : o.offererEmail?.split('@')[0], prevHigh, amount)
+          .catch(err => console.error('Failed offer outbid email:', err));
+      }
+    }
     if (io) {
       io.to(`listing:${listingId}`).emit('new-offer', {
         listingId,
         offer: formatOfferForSocket(populatedOffer)
       });
     }
-
-    // Create in-app notification for the seller
     const sellerUserId = listing.seller?._id?.toString?.() || listing.seller?.toString?.();
     if (sellerUserId) {
       notifyNewProposal({

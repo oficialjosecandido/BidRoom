@@ -45,8 +45,12 @@
           </span>
         </div>
         <div class="auction-price">
-          <span class="price-label">Current Price</span>
+          <span class="price-label">{{ listing.auctionFormat === 'best-offer' ? 'Highest Offer' : 'Current Price' }}</span>
+          @if (listing.auctionFormat === 'best-offer' && (listing.currentPrice == null || listing.currentPrice === 0)) {
+          <span class="price-value">No offers yet</span>
+          } @else {
           <span class="price-value">${{ listing.currentPrice | number:'1.2-2' }}</span>
+          }
         </div>
       </div>
 

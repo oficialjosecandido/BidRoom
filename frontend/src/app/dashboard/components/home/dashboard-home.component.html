@@ -211,7 +211,11 @@
 <div class="listing-card ended">
         <a [routerLink]="['/listing', listing.slug]" class="listing-title">{{ listing.title }}</a>
         <div class="listing-meta">
+          @if (listing.auctionFormat === 'best-offer' && (listing.currentPrice == null || listing.currentPrice === 0)) {
+          <span class="listing-price">No offers yet</span>
+          } @else {
           <span class="listing-price">{{ formatPrice(listing.currentPrice) }}</span>
+          }
           <span class="listing-status" [class]="'status-' + listing.status">{{ listing.status }}</span>
         </div>
       </div>

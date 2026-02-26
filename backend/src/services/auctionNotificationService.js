@@ -272,6 +272,86 @@ async function sendFirstBidNotification(listing, bid, bidderEmail, bidderName) {
 }
 
 /**
+ * Send offer confirmation email to the bidder who submitted an offer (best-offer auctions)
+ */
+async function sendOfferPlacedEmail(listing, offererEmail, offererName, offerAmount) {
+  try {
+    if (!offererEmail) return { sent: false, reason: 'no_email' };
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:4200';
+    const listingUrl = `${frontendUrl}/listing/${listing.slug}`;
+    const formattedAmount = `$${Number(offerAmount).toFixed(2)}`;
+    const email = getEmailTemplate('offerPlaced', 'en', {
+      offererName: offererName || offererEmail.split('@')[0],
+      listingTitle: listing.title,
+      offerAmount: formattedAmount,
+      listingUrl
+    });
+    await sendEmail(offererEmail, email.subject, email.html);
+    console.log(`📧 Sent offer confirmation to: ${offererEmail}`);
+    return { sent: true };
+  } catch (error) {
+    console.error('Error sending offer confirmation email:', error);
+    return { sent: false, error: error.message };
+  }
+}
+
+/**
+ * Send "higher offer received" email to a bidder whose offer was exceeded (best-offer auctions)
+ */
+async function sendOfferOutbidEmail(listing, offererEmail, offererName, previousOfferAmount, newOfferAmount) {
+  try {
+    if (!offererEmail) return { sent: false, reason: 'no_email' };
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:4200';
+    const listingUrl = `${frontendUrl}/listing/${listing.slug}`;
+    const previousOffer = `$${Number(previousOfferAmount).toFixed(2)}`;
+    const newOffer = `$${Number(newOfferAmount).toFixed(2)}`;
+    const email = getEmailTemplate('offerOutbid', 'en', {
+      offererName: offererName || offererEmail.split('@')[0],
+      listingTitle: listing.title,
+      previousOffer,
+      newOffer,
+      listingUrl
+    });
+    await sendEmail(offererEmail, email.subject, email.html);
+    console.log(`📧 Sent offer outbid notification to: ${offererEmail}`);
+    return { sent: true };
+  } catch (error) {
+    console.error('Error sending offer outbid email:', error);
+    return { sent: false, error: error.message };
+  }
+}
+
+/**
+ * Send "best-offer listing ended" notification to seller - review offers within 24h
+ */
+async function sendBestOfferEndedNotification(listing, offerCount) {
+  try {
+    const seller = listing.seller && listing.seller._id
+      ? await User.findById(listing.seller._id)
+      : await User.findById(listing.seller);
+    if (!seller || !seller.email) {
+      console.error('Seller not found or has no email for listing:', listing._id);
+      return;
+    }
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:4200';
+    const listingUrl = `${frontendUrl}/listing/${listing.slug}?tab=offers`;
+    const language = getUserLanguage(seller);
+    const email = getEmailTemplate('bestOfferEnded', language || 'en', {
+      sellerName: `${seller.firstName} ${seller.lastName}`,
+      listingTitle: listing.title,
+      offerCount,
+      listingUrl
+    });
+    await sendEmail(seller.email, email.subject, email.html);
+    console.log(`📧 Sent best-offer ended notification to seller: ${seller.email}`);
+    return { sent: true };
+  } catch (error) {
+    console.error('Error sending best-offer ended notification:', error);
+    return { sent: false, error: error.message };
+  }
+}
+
+/**
  * Send "create private room" notification to seller (auction ended, reserve met, private room enabled)
  */
 async function sendCreatePrivateRoomNotification(listing) {
@@ -867,6 +947,8 @@ module.exports = {
   sendPlatinumBidderInvitations,
   sendOutbidNotification,
   sendWinnerNotification,
-  sendFirstBidNotification
+  sendFirstBidNotification,
+  sendOfferPlacedEmail,
+  sendOfferOutbidEmail
 };
 
