@@ -137,7 +137,11 @@
                 <span class="private-room-icon">🔒</span>
                 <div class="private-room-text">
                   <h4>Private room closed</h4>
-                  <p>The private room has ended. Final price: <strong>{{ formatPrice(listing.currentPrice) }}</strong>.</p>
+                  @if (listing.winner) {
+                    <p>The private room has ended. Final price: <strong>{{ formatPrice(listing.currentPrice) }}</strong>.</p>
+                  } @else {
+                    <p>The auction was closed because no invited bidders accepted the invitation within 15 minutes. There is no winner.</p>
+                  }
                 </div>
               </div>
             </div>

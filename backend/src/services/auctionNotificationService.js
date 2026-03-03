@@ -352,6 +352,153 @@ async function sendBestOfferEndedNotification(listing, offerCount) {
 }
 
 /**
+ * Send "private room closed - no acceptances" to seller when no invited bidders accepted in time.
+ */
+async function sendPrivateRoomClosedNoAcceptanceToSeller(listing) {
+  try {
+    const seller = listing.seller && listing.seller._id
+      ? await User.findById(listing.seller._id)
+      : await User.findById(listing.seller);
+    if (!seller || !seller.email) {
+      console.error('Seller not found or has no email for listing:', listing._id);
+      return;
+    }
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:4200';
+    const listingUrl = `${frontendUrl}/listing/${listing.slug}`;
+    const language = getUserLanguage(seller);
+    const email = getEmailTemplate('privateRoomClosedNoAcceptanceSeller', language, {
+      sellerName: `${seller.firstName || ''} ${seller.lastName || ''}`.trim() || 'Seller',
+      listingTitle: listing.title,
+      listingUrl
+    });
+    await sendEmail(seller.email, email.subject, email.html);
+    console.log(`📧 Sent private room closed (no acceptances) notification to seller: ${seller.email}`);
+    return { sent: true };
+  } catch (error) {
+    console.error('Error sending private room closed (no acceptances) to seller:', error);
+    throw error;
+  }
+}
+
+/**
+ * Send "private room closed - no acceptances" to all invited bidders.
+ */
+async function sendPrivateRoomClosedNoAcceptanceToInvitedBuyers(listing) {
+  try {
+    const invitations = listing.platinumBidderInvitations || [];
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:4200';
+    const listingUrl = `${frontendUrl}/listing/${listing.slug}`;
+    const seller = listing.seller && listing.seller._id ? await User.findById(listing.seller._id) : await User.findById(listing.seller);
+    const sellerEmail = (seller && seller.email) ? seller.email.toLowerCase() : '';
+
+    for (const inv of invitations) {
+      const user = inv.bidder && inv.bidder._id ? await User.findById(inv.bidder._id) : null;
+      if (!user || !user.email) continue;
+      if (user.email.toLowerCase() === sellerEmail) continue;
+
+      const language = getUserLanguage(user);
+      const bidderName = `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email?.split('@')[0] || 'Bidder';
+      const email = getEmailTemplate('privateRoomClosedNoAcceptanceInvited', language, {
+        bidderName,
+        listingTitle: listing.title,
+        listingUrl
+      });
+      try {
+        await sendEmail(user.email, email.subject, email.html);
+        console.log(`📧 Sent private room closed (no acceptances) to invited buyer: ${user.email}`);
+      } catch (err) {
+        console.error(`Failed to send private room closed to ${user.email}:`, err.message);
+      }
+    }
+    return { sent: true };
+  } catch (error) {
+    console.error('Error sending private room closed (no acceptances) to invited buyers:', error);
+    throw error;
+  }
+}
+
+/**
+ * Handle private room closed due to no one accepting the invitation.
+ * Sets status=ended, privateRoomStatus=ended, no winner. Sends email + in-app to seller and invited buyers.
+ */
+async function handlePrivateRoomClosedNoAcceptance(listingId, io = null) {
+  try {
+    const listing = await Listing.findById(listingId)
+      .populate('seller', 'firstName lastName email')
+      .populate('platinumBidderInvitations.bidder', 'firstName lastName email');
+
+    if (!listing) throw new Error('Listing not found');
+    if (listing.privateRoomStatus !== 'invited') {
+      console.log(`Listing ${listingId} private room not in invited state, skip.`);
+      return { processed: false };
+    }
+
+    const now = new Date();
+
+    await Listing.findByIdAndUpdate(listingId, {
+      $set: {
+        status: 'ended',
+        privateRoomStatus: 'ended',
+        endDate: now
+      }
+    }, { runValidators: false });
+
+    const listingForNotify = await Listing.findById(listingId)
+      .populate('seller', 'firstName lastName email')
+      .populate('platinumBidderInvitations.bidder', 'firstName lastName email');
+
+    if (!listingForNotify) throw new Error('Listing not found after update');
+
+    await sendPrivateRoomClosedNoAcceptanceToSeller(listingForNotify);
+    await sendPrivateRoomClosedNoAcceptanceToInvitedBuyers(listingForNotify);
+
+    const { notifyPrivateRoomClosedNoAcceptanceSeller, notifyPrivateRoomClosedNoAcceptanceInvited, emitNewNotificationToUser } = require('./notificationService');
+    const sellerUserId = listingForNotify.seller?._id?.toString?.() || listingForNotify.seller?.toString?.();
+    if (sellerUserId) {
+      await notifyPrivateRoomClosedNoAcceptanceSeller({
+        listingSlug: listingForNotify.slug,
+        listingTitle: listingForNotify.title,
+        sellerUserId
+      }).catch(err => console.error('Seller notification:', err));
+      if (io) emitNewNotificationToUser(io, sellerUserId).catch(() => {});
+    }
+
+    const invitations = listingForNotify.platinumBidderInvitations || [];
+    for (const inv of invitations) {
+      const bidder = inv.bidder && inv.bidder._id ? await User.findById(inv.bidder._id) : null;
+      if (!bidder) continue;
+      const bidderUserId = bidder._id.toString();
+      await notifyPrivateRoomClosedNoAcceptanceInvited({
+        listingSlug: listingForNotify.slug,
+        listingTitle: listingForNotify.title,
+        bidderUserId
+      }).catch(err => console.error('Invited buyer notification:', err));
+      if (io) emitNewNotificationToUser(io, bidderUserId).catch(() => {});
+    }
+
+    if (io) {
+      io.to(`listing:${listingId}`).emit('listing-update', {
+        listingId: listingId.toString(),
+        privateRoomStatus: 'ended',
+        status: 'ended',
+        endDate: now
+      });
+      io.to(`private-room:${listingId}`).emit('listing-update', {
+        listingId: listingId.toString(),
+        privateRoomStatus: 'ended',
+        status: 'ended',
+        endDate: now
+      });
+    }
+
+    return { processed: true };
+  } catch (error) {
+    console.error('Error handling private room closed (no acceptances):', error);
+    throw error;
+  }
+}
+
+/**
  * Send "create private room" notification to seller (auction ended, reserve met, private room enabled)
  */
 async function sendCreatePrivateRoomNotification(listing) {
@@ -454,13 +601,14 @@ async function sendPlatinumBidderInvitations(listing) {
       const acceptInvitationUrl = `${frontendUrl}/private-room/invitation/accept?token=${encodeURIComponent(inv.invitationToken)}&listingId=${listing._id}`;
       const language = getUserLanguage(user);
       const bidderName = `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email?.split('@')[0] || 'Bidder';
+      const endDateDisplay = endDate || 'After 15-min acceptance window';
       const email = getEmailTemplate('platinumBidderInvitation', language, {
         bidderName,
         listingTitle: listing.title,
         listingUrl,
         acceptInvitationUrl,
         currentPrice,
-        endDate
+        endDate: endDateDisplay
       });
       try {
         await sendEmail(user.email, email.subject, email.html);
@@ -541,8 +689,16 @@ async function handleAuctionEnd(listingId, io = null) {
     const hasBids = bidCount > 0;
     const reserveMet = listing.reservePrice == null || listing.currentPrice >= listing.reservePrice;
 
-    // Private room enabled, has bids, reserve met → seller chooses guests after end (eligible flow). Seller has 1 hour to create room.
-    if (listing.allowPrivateRoom && hasBids && reserveMet) {
+    // Count unique authenticated bidders (private room requires 2–5 to invite; only registered bidders eligible)
+    const distinctBidders = await Bid.distinct('bidder', {
+      listing: listingId,
+      bidder: { $exists: true, $ne: null }
+    });
+    const authenticatedBidderCount = distinctBidders.filter(id => id != null).length;
+
+    // Private room enabled, has bids, reserve met, AND at least 2 authenticated bidders → seller creates room.
+    // If fewer than 2 authenticated bidders, we cannot create a private room → treat as regular auction, auto-select winner.
+    if (listing.allowPrivateRoom && hasBids && reserveMet && authenticatedBidderCount >= 2) {
       const deadline = new Date();
       deadline.setHours(deadline.getHours() + 1);
 
@@ -937,6 +1093,7 @@ async function handlePrivateRoomEnd(listingId, io = null) {
 module.exports = {
   handleAuctionEnd,
   handlePrivateRoomEnd,
+  handlePrivateRoomClosedNoAcceptance,
   handleWinnerSelection,
   sendAuctionClosedNotifications,
   sendChooseWinnerNotification,

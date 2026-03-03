@@ -16,8 +16,11 @@ Private rooms are an **optional** feature for **Highest Bid** (normal auction) l
 - **Private Room** must be **enabled** when the listing is created.
 - The **main auction** must have **ended** (end time reached).
 - There must be **at least one bid** and, if set, the **reserve price** must be **met**.
+- There must be **at least 2 unique authenticated bidders** (private room requires inviting 2–5; only registered bidders can be invited).
 
 When these conditions are met, the listing becomes **eligible** for a private room and the seller receives an email asking them to create the room.
+
+**If there is only one authenticated bidder**, a private room cannot be created (minimum 2 required). The auction closes with that single bidder as the **winner** automatically—same as a regular auction end.
 
 ---
 
@@ -37,10 +40,11 @@ When these conditions are met, the listing becomes **eligible** for a private ro
 
 - When the main auction end time is reached, the system:
   - Marks the listing as **ended**.
-  - If private room is enabled, there are bids, and reserve is met:
+  - If private room is enabled, there are bids, reserve is met, **and there are at least 2 unique authenticated bidders**:
     - Sets the listing to **eligible** for a private room.
     - Sets a **1 hour** deadline for the seller to create the room.
     - Sends the **seller** an email: “Create private room” (with a link to the listing).
+  - If private room is enabled but there is **only one authenticated bidder**, the single bidder is **auto-selected as winner**—no private room; auction closes normally.
 
 ### 2. Seller creates the room and invites bidders
 
@@ -57,6 +61,7 @@ When these conditions are met, the listing becomes **eligible** for a private ro
 - Each invitee must **accept** the invitation (via the link in the email) **within 15 minutes**.
 - If they accept in time, they become **Platinum Bidders** for that room and can place bids once the room has started.
 - If they do **not** accept in time, they lose their seat and cannot bid in that room.
+- **If no one accepts:** When the 15-minute window expires and **no invited bidder** has accepted, the auction is **closed without a winner**. The seller and all invited buyers receive email and in-app notifications.
 
 ### 4. Bidding in the room
 
@@ -94,7 +99,7 @@ When these conditions are met, the listing becomes **eligible** for a private ro
 | `eligible` | Main auction ended with bids and reserve met; seller has **1 hour** to create the room and invite 2–5 bidders. **Select winner** is not shown—only **Create private room**. |
 | `invited` | Room created; invitees have **15 minutes** to accept. Room is not yet open for bidding; it will **start automatically** when the 15 minutes end. |
 | `active` | Private room is running; only accepted Platinum Bidders can bid; room ends **60 seconds** after the last bid. |
-| `ended` | Private room has closed; winner is the highest bid not outbid for 60 seconds; no seller choice. |
+| `ended` | Private room has closed. Either: (a) winner is the highest bid not outbid for 60 seconds; or (b) no one accepted in time, so there is no winner. |
 
 ---
 
@@ -113,7 +118,7 @@ When these conditions are met, the listing becomes **eligible** for a private ro
 
 - Private rooms are **optional** and only for **Highest Bid** listings with private room enabled.
 - **Seller** must create the room **within 1 hour** of the main auction ending and invite **2–5** registered bidders.
-- **Invitees** must **accept within 15 minutes** or lose their seat.
+- **Invitees** must **accept within 15 minutes** or lose their seat. If **no one** accepts, the auction closes without a winner and everyone is notified.
 - Only **accepted invitees** can bid; each bid **extends the room by 60 seconds**.
 - When **60 seconds pass with no new bid**, the room closes and the **highest bidder wins automatically**—**no seller choice**.
 - Winner and seller then use **Transactions** for payment and shipping.

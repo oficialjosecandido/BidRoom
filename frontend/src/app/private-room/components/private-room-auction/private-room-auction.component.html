@@ -129,8 +129,12 @@
         <div class="room-ended-icon">🏁</div>
         <h2>Private room closed</h2>
         @if (listing.privateRoomStatus === 'ended') {
-<p>The auction has ended. The winner was the highest bid that wasn't outbid for 60 seconds. You will be notified by email if you won.</p>
-}
+          @if (listing.winner) {
+            <p>The auction has ended. The winner was the highest bid that wasn't outbid for 60 seconds. You will be notified by email if you won.</p>
+          } @else {
+            <p>The auction was closed because no invited bidders accepted the invitation within 15 minutes. There is no winner.</p>
+          }
+        }
         @if (listing.privateRoomStatus !== 'ended' && countdown <= 0) {
 <p>The auction has ended. Results are being confirmed. You will be notified by email if you won.</p>
 }
@@ -154,11 +158,6 @@
         <p>Invitees have <strong>15 minutes</strong> to accept the invitation. The auction will start automatically after the acceptance window.</p>
         <p class="room-invited-sub">Check your email for the accept link if you were invited.</p>
         <div class="room-invited-actions">
-          @if (isSeller) {
-          <button type="button" class="room-invited-btn room-invited-btn-primary" (click)="startRoomNow()" [disabled]="startNowLoading">
-            {{ startNowLoading ? 'Starting…' : 'Start now' }}
-          </button>
-          }
           @if (listing.slug) {
           <a [href]="getListingPageUrl()" class="room-invited-link" target="_blank" rel="noopener noreferrer">View listing</a>
           }
@@ -446,13 +445,13 @@
     </div>
 }
 
-    <!-- Invitation pending: invited but must accept within 30 min -->
+    <!-- Invitation pending: invited but must accept within 15 min -->
     @if (isAuthenticated && invitationPending && listing && listing.privateRoomStatus === 'active') {
 <div class="viewer-notice invitation-pending-notice">
       <div class="notice-card">
         <div class="notice-icon">✉️</div>
         <h3>Accept your invitation</h3>
-        <p>You were invited to this private room. Accept within 30 minutes via the link in your email to place bids — otherwise you'll lose your seat.</p>
+        <p>You were invited to this private room. Accept within 15 minutes via the link in your email to place bids — otherwise you'll lose your seat.</p>
       </div>
     </div>
 }

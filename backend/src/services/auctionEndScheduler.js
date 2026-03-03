@@ -4,7 +4,7 @@
  */
 
 const Listing = require('../models/Listing');
-const { handleAuctionEnd, handlePrivateRoomEnd } = require('./auctionNotificationService');
+const { handleAuctionEnd, handlePrivateRoomEnd, handlePrivateRoomClosedNoAcceptance } = require('./auctionNotificationService');
 
 let checkInterval = null;
 let ioInstance = null;
@@ -26,30 +26,41 @@ async function checkEndedAuctions() {
     });
     for (const listing of invitedPastDeadline) {
       try {
-        const roomEndDate = new Date(now.getTime() + PRIVATE_ROOM_EXTEND_MS);
-        await Listing.findByIdAndUpdate(listing._id, {
-          $set: {
-            privateRoomStatus: 'active',
-            privateRoomEndDate: roomEndDate,
-            privateRoomLastBidTime: now,
-            endDate: roomEndDate
+        const invitations = listing.platinumBidderInvitations || [];
+        const acceptedCount = invitations.filter(inv => inv.status === 'accepted').length;
+
+        if (acceptedCount === 0) {
+          // No one accepted → close auction without winner, notify seller and invited buyers
+          await handlePrivateRoomClosedNoAcceptance(listing._id, ioInstance);
+          processed++;
+          console.log(`✅ Private room closed (no acceptances): ${listing._id} - ${listing.title}`);
+        } else {
+          // At least one accepted → auto-start the room (existing behavior)
+          const roomEndDate = new Date(now.getTime() + PRIVATE_ROOM_EXTEND_MS);
+          await Listing.findByIdAndUpdate(listing._id, {
+            $set: {
+              privateRoomStatus: 'active',
+              privateRoomEndDate: roomEndDate,
+              privateRoomLastBidTime: now,
+              endDate: roomEndDate
+            }
+          }, { runValidators: false });
+          processed++;
+          console.log(`✅ Auto-started private room (15 min passed): ${listing._id} - ${listing.title}`);
+          if (ioInstance) {
+            ioInstance.to(`listing:${listing._id}`).emit('listing-update', {
+              listingId: listing._id.toString(),
+              status: 'active',
+              privateRoomStatus: 'active',
+              privateRoomEndDate: roomEndDate.toISOString(),
+              endDate: roomEndDate.toISOString(),
+              currentPrice: listing.currentPrice,
+              bidCount: listing.bidCount || 0
+            });
           }
-        }, { runValidators: false });
-        processed++;
-        console.log(`✅ Auto-started private room (15 min passed): ${listing._id} - ${listing.title}`);
-        if (ioInstance) {
-          ioInstance.to(`listing:${listing._id}`).emit('listing-update', {
-            listingId: listing._id.toString(),
-            status: 'active',
-            privateRoomStatus: 'active',
-            privateRoomEndDate: roomEndDate.toISOString(),
-            endDate: roomEndDate.toISOString(),
-            currentPrice: listing.currentPrice,
-            bidCount: listing.bidCount || 0
-          });
         }
       } catch (error) {
-        console.error(`❌ Error auto-starting private room ${listing._id}:`, error.message);
+        console.error(`❌ Error processing private room (invited past deadline) ${listing._id}:`, error.message);
       }
     }
 

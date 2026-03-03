@@ -468,7 +468,7 @@ router.post('/', optionalAuth, async (req, res) => {
     const io = req.app.get('io');
     const redisService = req.app.get('redisService');
 
-    // Cache current bid information in Redis
+    // Cache current bid information in Redis (non-blocking - don't block response if Redis is slow/down)
     const cacheData = {
       currentPrice: listing.currentPrice,
       bidCount: listing.bidCount,
@@ -476,16 +476,19 @@ router.post('/', optionalAuth, async (req, res) => {
       listingId: listingId.toString(),
       timestamp: new Date().toISOString()
     };
-    await redisService.cacheListingBid(listingId.toString(), cacheData);
+    redisService.cacheListingBid(listingId.toString(), cacheData).catch(err =>
+      console.error('Redis cacheListingBid failed (non-fatal):', err?.message)
+    );
 
-    // Cache listing stats
     const stats = {
       totalBids: listing.bidCount,
       currentPrice: listing.currentPrice,
       uniqueBidders: listing.uniqueBidders?.length || 0,
       updatedAt: new Date().toISOString()
     };
-    await redisService.cacheListingStats(listingId.toString(), stats);
+    redisService.cacheListingStats(listingId.toString(), stats).catch(err =>
+      console.error('Redis cacheListingStats failed (non-fatal):', err?.message)
+    );
 
     // Emit real-time bid update via Socket.io to all clients watching this listing
     if (io) {

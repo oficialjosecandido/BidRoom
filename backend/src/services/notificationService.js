@@ -241,6 +241,32 @@ async function notifyPrivateRoomDeclined({ listingSlug, listingTitle, bidderName
   });
 }
 
+/** Private room closed (no one accepted) - notify seller */
+async function notifyPrivateRoomClosedNoAcceptanceSeller({ listingSlug, listingTitle, sellerUserId }) {
+  const link = listingSlug ? `/listing/${listingSlug}` : '/dashboard/my-auctions';
+  return createNotification({
+    userId: sellerUserId,
+    title: 'Private room closed',
+    message: `The private room for "${listingTitle || 'your listing'}" was closed because no invited bidders accepted within 15 minutes. The auction ended without a winner.`,
+    type: 'private_room',
+    link,
+    referenceId: listingSlug
+  });
+}
+
+/** Private room closed (no one accepted) - notify invited buyers */
+async function notifyPrivateRoomClosedNoAcceptanceInvited({ listingSlug, listingTitle, bidderUserId }) {
+  const link = listingSlug ? `/listing/${listingSlug}` : '/dashboard/my-auctions';
+  return createNotification({
+    userId: bidderUserId,
+    title: 'Private room closed',
+    message: `The private room for "${listingTitle || 'the auction'}" was closed because no invited bidders accepted within 15 minutes. The auction ended without a winner.`,
+    type: 'private_room',
+    link,
+    referenceId: listingSlug
+  });
+}
+
 /** Room cancelled by seller - notify bidders */
 async function notifyRoomCancelled({ listingSlug, listingTitle, bidderUserId }) {
   return createNotification({
@@ -513,6 +539,8 @@ module.exports = {
   notifyPrivateRoomInvitation,
   notifyPrivateRoomAccepted,
   notifyPrivateRoomDeclined,
+  notifyPrivateRoomClosedNoAcceptanceSeller,
+  notifyPrivateRoomClosedNoAcceptanceInvited,
   notifyRoomCancelled,
   notifyItemMarkedShipped,
   notifyTrackingProvided,

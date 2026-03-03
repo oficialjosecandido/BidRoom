@@ -69,6 +69,8 @@ This will create template files for all supported languages (en, pt, es, fr, de)
 - `youWon` - Sent to winner when selected (manual winner selection)
 - `privateRoomWinner` - Sent to winner when private room closes (highest bid not outbid for 60s)
 - `privateRoomNotWinner` - Sent to other bidders when private room closes (they did not win)
+- `privateRoomClosedNoAcceptanceSeller` - Sent to seller when no invited bidders accept in time
+- `privateRoomClosedNoAcceptanceInvited` - Sent to invited buyers when no one accepts in time
 - `firstBidPlaced` - Sent to user when they place their first bid on a listing
 
 ## Usage
