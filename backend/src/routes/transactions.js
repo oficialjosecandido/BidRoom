@@ -3,7 +3,7 @@ const Transaction = require('../models/Transaction');
 const Listing = require('../models/Listing');
 const User = require('../models/User');
 const Review = require('../models/Review');
-const { authenticateToken } = require('../middleware/auth');
+const { authenticateToken, requireActiveAccount } = require('../middleware/auth');
 const { sendSellerProofOfPaymentNotification, sendSellerDisputeOpenedNotification } = require('../services/emailService');
 const {
   notifyDisputeOpened,
@@ -14,6 +14,7 @@ const {
   notifyShippingDeadlineStarted,
   emitNewNotificationToUser
 } = require('../services/notificationService');
+const { suspendBothPartiesForDispute } = require('../services/accountStatusService');
 
 const router = express.Router();
 
@@ -203,9 +204,18 @@ router.post('/:id/open-dispute', async (req, res) => {
     transaction.sendingStatus = 'delivered'; // Item was received (buyer claims not properly)
     await transaction.save();
 
+    // Suspend both buyer and seller accounts while dispute is under review
+    const buyerUserId = transaction.buyer?._id?.toString?.() || transaction.buyer?.toString?.();
+    const sellerUserId = transaction.seller?._id?.toString?.() || transaction.seller?.toString?.();
+    const io = req.app.get('io');
+    if (buyerUserId && sellerUserId) {
+      suspendBothPartiesForDispute(transaction._id, buyerUserId, sellerUserId, io).catch(err =>
+        console.error('Failed to suspend accounts for dispute:', err)
+      );
+    }
+
     const listingTitle = transaction.listing?.title || 'Item';
     const buyerName = [transaction.buyer?.firstName, transaction.buyer?.lastName].filter(Boolean).join(' ') || 'Buyer';
-    const sellerUserId = transaction.seller?._id?.toString?.() || transaction.seller?.toString?.();
     if (sellerUserId) {
       notifyDisputeOpened({
         transactionId: transaction._id.toString(),
@@ -314,7 +324,7 @@ router.patch('/:id/dispute/counter-evidence', async (req, res) => {
  * PATCH /api/transactions/:id
  * Update transaction status (seller: mark shipped with tracking; buyer: mark delivered)
  */
-router.patch('/:id', async (req, res) => {
+router.patch('/:id', requireActiveAccount, async (req, res) => {
   try {
     const user = await User.findOne({ uid: req.user.uid });
     if (!user) {

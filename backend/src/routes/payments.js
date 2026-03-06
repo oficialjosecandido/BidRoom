@@ -1,6 +1,6 @@
 const express = require('express');
 const Stripe = require('stripe');
-const { authenticateToken } = require('../middleware/auth');
+const { authenticateToken, requireActiveAccount } = require('../middleware/auth');
 const Customer = require('../models/Customer');
 const Topup = require('../models/Topup');
 const { sendEmail } = require('../services/emailService');
@@ -25,7 +25,7 @@ const MAX_AMOUNT_DOLLARS = 50000;
  * Body: { amountDollars: number } (minimum 5, any amount allowed)
  * Returns: { url: string } - Stripe Checkout URL
  */
-router.post('/create-checkout-session', authenticateToken, async (req, res) => {
+router.post('/create-checkout-session', authenticateToken, requireActiveAccount, async (req, res) => {
   try {
     if (!process.env.STRIPE_SECRET_KEY) {
       return res.status(503).json({

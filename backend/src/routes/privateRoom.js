@@ -1,12 +1,14 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const crypto = require('crypto');
-const { authenticateToken } = require('../middleware/auth');
+const { authenticateToken, requireActiveAccount } = require('../middleware/auth');
 const Listing = require('../models/Listing');
 const Bid = require('../models/Bid');
 const User = require('../models/User');
-const { sendPlatinumBidderInvitations, sendPrivateRoomNotInvitedToBidders } = require('../services/auctionNotificationService');
+const { sendPlatinumBidderInvitations, sendPrivateRoomNotInvitedToBidders, handleSellerLeftPrivateRoom } = require('../services/auctionNotificationService');
 const { notifyPrivateRoomInvitation, notifyPrivateRoomAccepted, notifyPrivateRoomDeclined, emitNewNotificationToUser } = require('../services/notificationService');
+const { isPrivateRoomEligible } = require('../services/reputationService');
+const { getReviewScoresForUsers } = require('../services/reviewService');
 
 const router = express.Router();
 const ACCEPTANCE_WINDOW_MS = 15 * 60 * 1000; // 15 minutes to accept; after that the room starts automatically
@@ -30,9 +32,9 @@ router.get('/listings/:id/bidders', authenticateToken, async (req, res) => {
       }
     }
 
-    // Get all bids for this listing
+    // Get all bids for this listing (include reputation for Private Room eligibility)
     const bids = await Bid.find({ listing: listingId })
-      .populate('bidder', 'firstName lastName email emailVerified hasDeposit')
+      .populate('bidder', 'firstName lastName email emailVerified hasDeposit reputationScore disputeLossCount')
       .sort({ createdAt: -1 });
 
     // Get unique bidders (both authenticated and unauthenticated)
@@ -50,6 +52,8 @@ router.get('/listings/:id/bidders', authenticateToken, async (req, res) => {
             email: bid.bidder.email,
             emailVerified: bid.bidder.emailVerified,
             hasDeposit: bid.bidder.hasDeposit,
+            reputationScore: bid.bidder.reputationScore ?? 100,
+            privateRoomEligible: isPrivateRoomEligible(bid.bidder),
             isAuthenticated: true,
             bidCount: 0,
             highestBid: 0,
@@ -90,7 +94,26 @@ router.get('/listings/:id/bidders', authenticateToken, async (req, res) => {
       }
     });
 
-    const biddersList = Array.from(uniqueBidders.values()).sort((a, b) => b.highestBid - a.highestBid);
+    let biddersList = Array.from(uniqueBidders.values()).sort((a, b) => b.highestBid - a.highestBid);
+
+    // Add reputation and Private Room eligibility for authenticated bidders
+    const bidderUserIds = biddersList.filter(b => b._id).map(b => b._id.toString());
+    const [reputationMap, scoreMap] = bidderUserIds.length > 0
+      ? await Promise.all([
+          User.find({ _id: { $in: bidderUserIds } }).select('reputationScore disputeLossCount depositAmount hasDeposit').lean().then(users => {
+            const m = {};
+            users.forEach(u => { m[u._id.toString()] = u; });
+            return m;
+          }),
+          getReviewScoresForUsers(bidderUserIds)
+        ])
+      : [{}, {}];
+
+    biddersList = biddersList.map(b => {
+      const u = b._id ? reputationMap[b._id.toString()] : null;
+      const eligible = u ? isPrivateRoomEligible(u) : false;
+      return { ...b, reputationScore: u?.reputationScore ?? 100, privateRoomEligible: eligible };
+    });
 
     res.json({
       listingId: listing._id,
@@ -107,7 +130,7 @@ router.get('/listings/:id/bidders', authenticateToken, async (req, res) => {
 });
 
 // Select Platinum Bidders (2–5). Allowed when listing is active (pre-end) or when ended + private room eligible.
-router.post('/listings/:id/platinum-bidders', authenticateToken, async (req, res) => {
+router.post('/listings/:id/platinum-bidders', authenticateToken, requireActiveAccount, async (req, res) => {
   try {
     const listingId = req.params.id;
     const { bidderIds } = req.body; // Array of user IDs (authenticated only)
@@ -155,16 +178,30 @@ router.post('/listings/:id/platinum-bidders', authenticateToken, async (req, res
     }
 
     const validBidderIds = [];
+    const ineligibleBidders = [];
     for (const bidderId of bidderIds) {
       if (mongoose.Types.ObjectId.isValid(bidderId)) {
-        const bidder = await User.findById(bidderId);
-        if (bidder) validBidderIds.push(bidder._id);
+        const bidder = await User.findById(bidderId)
+          .select('firstName lastName reputationScore disputeLossCount');
+        if (bidder) {
+          if (!isPrivateRoomEligible(bidder)) {
+            ineligibleBidders.push(`${bidder.firstName} ${bidder.lastName}`);
+          } else {
+            validBidderIds.push(bidder._id);
+          }
+        }
       } else {
         return res.status(400).json({
           error: 'Invalid bidder',
           message: 'Only authenticated users can be selected as Platinum Bidders'
         });
       }
+    }
+    if (ineligibleBidders.length > 0) {
+      return res.status(400).json({
+        error: 'Ineligible bidders',
+        message: `The following bidders are not eligible for Private Rooms (reputation or dispute history): ${ineligibleBidders.join(', ')}. Only users with a reputation score of 60+ and no dispute losses can participate.`
+      });
     }
 
     const bids = await Bid.find({
@@ -306,6 +343,51 @@ router.post('/listings/:id/start-now', authenticateToken, async (req, res) => {
     console.error('Error starting private room:', error);
     res.status(500).json({
       error: 'Failed to start room',
+      message: error.message
+    });
+  }
+});
+
+// Seller leaves private room – closes room, notifies buyers, logs for audit
+router.post('/listings/:id/seller-leave', authenticateToken, async (req, res) => {
+  try {
+    const listingId = req.params.id;
+    const listing = await Listing.findById(listingId).populate('seller');
+
+    if (!listing) {
+      return res.status(404).json({ error: 'Listing not found' });
+    }
+
+    const user = await User.findOne({ uid: req.user.uid });
+    if (!user || listing.seller._id.toString() !== user._id.toString()) {
+      return res.status(403).json({ error: 'Forbidden', message: 'Only the seller can leave the private room' });
+    }
+
+    if (listing.privateRoomStatus !== 'active' && listing.privateRoomStatus !== 'invited') {
+      return res.status(400).json({
+        error: 'Room not active',
+        message: 'The private room is not in a state that can be closed by leaving. It may have already ended.'
+      });
+    }
+
+    const io = req.app.get('io');
+    const result = await handleSellerLeftPrivateRoom(listingId, req.user.uid, io);
+
+    if (!result.processed) {
+      return res.status(400).json({
+        error: 'Cannot close',
+        message: 'The private room could not be closed. It may have already ended.'
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'You have left the private room. The auction has been closed and all participants have been notified.'
+    });
+  } catch (error) {
+    console.error('Error in seller-leave:', error);
+    res.status(500).json({
+      error: 'Failed to leave private room',
       message: error.message
     });
   }

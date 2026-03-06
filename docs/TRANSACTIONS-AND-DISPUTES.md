@@ -86,7 +86,30 @@ When a listing ends with a winner (auction or accepted best offer), the system c
   - Rule for **Buyer** (return/refund)
   - Rule for **Seller** (dismiss)
   - **Partial refund** (mediated)
+- **Account suspension:** When a dispute is formally opened, both buyer and seller accounts are automatically set to **Suspended**. Suspended accounts cannot create listings, place bids, or complete transactions. When the admin issues a ruling, they must also choose an **account outcome**: reactivate both, reactivate one and permanently close the other, or close both. All status changes are logged and users are notified.
 - **Data model:** `Dispute` – transaction, openedBy (buyer/seller), reason, evidence (files + text), status (open, resolved_buyer, resolved_seller, partial), admin notes, outcome.
+
+### Account Suspension During Disputes
+
+When a dispute is formally opened, **both buyer and seller accounts are automatically suspended**:
+
+- **User.accountStatus** is set to `suspended` for both parties
+- Suspended accounts **cannot**: create listings, place bids, submit offers, complete payments, or update transaction status
+- All status changes are logged in **AccountStatusAuditLog** (userId, previousStatus, newStatus, reason, transactionId, metadata)
+- Users receive in-app notifications when their account status changes
+
+**Admin ruling – account outcome:** When issuing a dispute ruling, the admin must also choose an **accountOutcome**:
+
+| Outcome | Buyer | Seller |
+|--------|-------|--------|
+| `reactivate_both` | active | active |
+| `reactivate_buyer_close_seller` | active | closed |
+| `reactivate_seller_close_buyer` | closed | active |
+| `close_both` | closed | closed |
+
+- **Closed** accounts are permanently disabled
+- **Reactivated** accounts return to normal use
+- Each change is audited and the user is notified
 
 **Implementation:**
 
@@ -94,6 +117,43 @@ When a listing ends with a winner (auction or accepted best offer), the system c
 - New API: POST dispute (open), GET disputes (admin list), PATCH dispute (admin: set outcome)
 - Admin UI: List disputes, view evidence, set outcome
 - After outcome: update transaction (e.g. completed / cancelled), trigger reputation impact (Phase 5)
+
+---
+
+## Account Suspension on Dispute
+
+When a dispute is formally opened, both the buyer and seller accounts are **automatically suspended**:
+
+- **User.accountStatus** is set to `suspended` for both parties
+- **AccountStatusAuditLog** records each status change (reason: `dispute_opened`, transactionId, timestamps)
+- **Notifications** are sent to both users informing them of the suspension
+
+**Suspended accounts cannot:**
+- Create listings
+- Place bids or offers
+- Complete transactions (payment, shipping updates)
+- Upload listing images
+- Select Platinum Bidders for private rooms
+
+**Admin ruling – account outcome**
+
+When issuing a dispute ruling, the admin must also choose an **accountOutcome** (body parameter):
+
+| Outcome | Buyer | Seller |
+|---------|-------|--------|
+| `reactivate_both` | active | active |
+| `reactivate_buyer_close_seller` | active | closed |
+| `reactivate_seller_close_buyer` | closed | active |
+| `close_both` | closed | closed |
+
+For each status change: the user is updated, an audit log entry is created, and the user is notified. All changes are logged for audit purposes.
+
+**Implementation:**
+- `User.accountStatus`: `active` | `suspended` | `closed`
+- `AccountStatusAuditLog` model: user, previousStatus, newStatus, reason, transactionId, metadata, timestamps
+- `accountStatusService`: `suspendBothPartiesForDispute`, `applyDisputeAccountOutcome`
+- `requireActiveAccount` middleware applied to listings, bids, offers, payments, transactions PATCH, uploads, platinum-bidders
+- `GET /api/auth/customer` returns `accountStatus` for frontend display
 
 ---
 
@@ -121,7 +181,7 @@ When a listing ends with a winner (auction or accepted best offer), the system c
 | 1     | Payment window, bank details, proof | In progress (schema + API + UI) |
 | 2     | Handling deadline, dispute freeze   | Planned (handlingDeadline + UI copy) |
 | 3     | Received Properly / Improperly      | Partially done (completed); add “Improperly” → dispute |
-| 4     | Dispute model, admin resolution     | Planned |
+| 4     | Dispute model, admin resolution, account suspension | Implemented |
 | 5     | Clawback, reputation impact        | Planned (builds on balance + reviews) |
 
 ---

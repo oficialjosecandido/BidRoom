@@ -5,8 +5,37 @@ const Transaction = require('../models/Transaction');
 const User = require('../models/User');
 const { authenticateToken } = require('../middleware/auth');
 const { getReviewScoresForUser, getReviewScoresForUsers } = require('../services/reviewService');
+const { checkReviewFraud, recordSuccessfulTransaction, recalculateReputation, getTrustBadges, isPrivateRoomEligible } = require('../services/reputationService');
 
 const router = express.Router();
+
+/**
+ * GET /api/reviews/reputation/:userId
+ * Public: get reputation score, trust badges, and review scores for a user.
+ */
+router.get('/reputation/:userId', async (req, res) => {
+  try {
+    const user = await User.findById(req.params.userId)
+      .select('reputationScore disputeLossCount successfulTransactionCount hasDeposit depositAmount')
+      .lean();
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    const [scores, badges] = await Promise.all([
+      getReviewScoresForUser(req.params.userId),
+      getTrustBadges(user)
+    ]);
+    res.json({
+      reputationScore: user.reputationScore ?? 100,
+      privateRoomEligible: isPrivateRoomEligible(user),
+      badges,
+      ...scores
+    });
+  } catch (error) {
+    console.error('Error fetching reputation:', error);
+    res.status(500).json({ error: 'Failed to fetch reputation', message: error.message });
+  }
+});
 
 /**
  * GET /api/reviews/scores/:userId
@@ -266,16 +295,29 @@ router.post('/', authenticateToken, async (req, res) => {
     });
     await review.save();
 
+    // Fraud detection: flag suspicious reviews for admin review
+    checkReviewFraud(review).catch(err => console.error('Review fraud check:', err.message));
+
+    // Recalculate reputation for reviewee
+    recalculateReputation(toUserId).catch(err => console.error('Reputation recalc:', err.message));
+
     // Auto-complete transaction when both buyer and seller have reviewed
     const [buyerReviewed, sellerReviewed] = await Promise.all([
       Review.exists({ listing: listingId, role: 'as_seller' }),
       Review.exists({ listing: listingId, role: 'as_buyer' })
     ]);
     if (buyerReviewed && sellerReviewed) {
-      const tx = await Transaction.findOne({ listing: listingId });
+      const tx = await Transaction.findOne({ listing: listingId })
+        .populate('seller', '_id')
+        .populate('buyer', '_id');
       if (tx && ['paid', 'shipped', 'delivered'].includes(tx.transactionStatus || tx.status || '')) {
         tx.transactionStatus = 'completed';
         await tx.save();
+        const buyerId = tx.buyer?._id?.toString?.() || tx.buyer?.toString?.();
+        const sellerId = tx.seller?._id?.toString?.() || tx.seller?.toString?.();
+        if (buyerId && sellerId) {
+          recordSuccessfulTransaction(buyerId, sellerId).catch(err => console.error('Record successful tx:', err.message));
+        }
       }
     }
 

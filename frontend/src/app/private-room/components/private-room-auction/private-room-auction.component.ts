@@ -9,6 +9,7 @@ import { BidsService, Bid } from '../../../shared/services/bids.service';
 import { SocketService } from '../../../shared/services/socket.service';
 import { AuthService } from '../../../auth/services/auth.service';
 import { PrivateRoomService } from '../../services/private-room.service';
+import { API_CONFIG } from '../../../shared/config/api.config';
 
 @Component({
   selector: 'app-private-room-auction',
@@ -86,6 +87,19 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
     // Leave private room viewer room
     if (this.listingId) {
       this.socketService.leavePrivateRoomViewer(this.listingId);
+      // If seller leaves, notify backend to close the room (fire-and-forget with keepalive)
+      if (this.isSeller && (this.listing?.privateRoomStatus === 'active' || this.listing?.privateRoomStatus === 'invited')) {
+        this.authService.getAccessToken().then((token) => {
+          if (token) {
+            const url = `${API_CONFIG.getApiUrl()}/private-room/listings/${this.listingId}/seller-leave`;
+            fetch(url, {
+              method: 'POST',
+              headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+              keepalive: true
+            }).catch(() => {});
+          }
+        });
+      }
     }
   }
 
@@ -278,6 +292,9 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
       if (update.privateRoomEndDate) {
         this.listing.privateRoomEndDate = update.privateRoomEndDate;
         this.startCountdown();
+      }
+      if ((update as any).privateRoomClosedReason) {
+        (this.listing as any).privateRoomClosedReason = (update as any).privateRoomClosedReason;
       }
       if (update.privateRoomStatus) {
         this.listing.privateRoomStatus = update.privateRoomStatus;

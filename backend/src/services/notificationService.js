@@ -267,6 +267,32 @@ async function notifyPrivateRoomClosedNoAcceptanceInvited({ listingSlug, listing
   });
 }
 
+/** Private room closed (seller left) - notify seller */
+async function notifySellerLeftPrivateRoomSeller({ listingSlug, listingTitle, sellerUserId }) {
+  const link = listingSlug ? `/listing/${listingSlug}` : '/dashboard/my-listings';
+  return createNotification({
+    userId: sellerUserId,
+    title: 'Private room closed',
+    message: `The private room for "${listingTitle || 'your listing'}" was closed because you left. The auction ended without a winner.`,
+    type: 'private_room',
+    link,
+    referenceId: listingSlug
+  });
+}
+
+/** Private room closed (seller left) - notify buyers in the room */
+async function notifySellerLeftPrivateRoomBuyers({ listingSlug, listingTitle, bidderUserId }) {
+  const link = listingSlug ? `/listing/${listingSlug}` : '/dashboard/my-auctions';
+  return createNotification({
+    userId: bidderUserId,
+    title: 'Seller left the private room',
+    message: `The seller has left the private room for "${listingTitle || 'the auction'}". The auction has been closed without a winner.`,
+    type: 'private_room',
+    link,
+    referenceId: listingSlug
+  });
+}
+
 /** Room cancelled by seller - notify bidders */
 async function notifyRoomCancelled({ listingSlug, listingTitle, bidderUserId }) {
   return createNotification({
@@ -438,6 +464,18 @@ async function notifyAccountReactivated({ userId }) {
   });
 }
 
+/** Account permanently closed */
+async function notifyAccountClosed({ userId }) {
+  return createNotification({
+    userId,
+    title: 'Account closed',
+    message: 'Your account has been permanently closed.',
+    type: 'account',
+    link: '/dashboard/my-account',
+    referenceId: 'account_closed'
+  });
+}
+
 /**
  * Format shipping for pricing overview.
  * @param {string} shippingOption - flat-rate | calculated | local-pickup | free
@@ -555,6 +593,7 @@ module.exports = {
   notifyAccountRestricted,
   notifyAccountSuspended,
   notifyAccountReactivated,
+  notifyAccountClosed,
   notifyLoginFromNewDevice,
   notifySellerWinnerSelected,
   notifyBuyerAuctionWon,

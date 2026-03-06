@@ -17,6 +17,7 @@ export interface ListingUpdateEvent {
   updatedAt?: string;
   privateRoomEndDate?: string;
   privateRoomStatus?: 'not-triggered' | 'eligible' | 'invited' | 'active' | 'ended';
+  privateRoomClosedReason?: 'no_acceptances' | 'seller_left' | 'time_expired';
   status?: 'draft' | 'active' | 'ended' | 'cancelled';
   endDate?: string;
   winnerSelectionDeadline?: string;

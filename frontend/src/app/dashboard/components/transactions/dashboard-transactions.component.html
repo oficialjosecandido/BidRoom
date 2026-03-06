@@ -239,7 +239,7 @@
                 <button type="button" class="btn btn-primary" (click)="markAsDelivered(t)" [disabled]="updatingId === t._id">
                   {{ updatingId === t._id ? 'Updating…' : 'Mark as Received Properly' }}
                 </button>
-                <a [routerLink]="['/dashboard/disputes']" [queryParams]="{ open: t._id }" class="btn btn-dispute" [attr.aria-label]="'Open a dispute for ' + t.listing.title">Received Not Properly</a>
+                <button type="button" class="btn btn-dispute" (click)="openDisputeModal(t); $event.stopPropagation()" [attr.aria-label]="'Open a dispute for ' + t.listing.title">Received Not Properly</button>
               }
               @if (['paid','shipped','delivered'].includes(getEffectiveStatus(t)) && !hasBothReviewed(t)) {
                 <p class="form-hint review-required">
@@ -301,6 +301,67 @@
           </div>
         </div>
       }
+    </div>
+  }
+
+  @if (disputeModalTransaction) {
+    <div class="modal-overlay" (click)="closeDisputeModal()">
+      <div class="modal-content review-modal dispute-modal" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h3 class="modal-title">Open a dispute</h3>
+          <button type="button" class="modal-close" (click)="closeDisputeModal()" aria-label="Close">×</button>
+        </div>
+        <div class="modal-body">
+          <p class="form-hint">Select a reason and provide evidence. <strong>Evidence photos are required</strong> (at least 3 photos or 1 video).</p>
+          <div class="form-group">
+            <label for="dispute-reason">Reason for dispute <span class="required">*</span></label>
+            <select id="dispute-reason" [(ngModel)]="disputeReason" class="form-input" required>
+              <option value="">Select a reason</option>
+              <option value="item_not_as_described">Item not as described</option>
+              <option value="damaged_in_transit">Damaged in transit</option>
+              <option value="missing_parts">Missing parts</option>
+              <option value="counterfeit">Counterfeit</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="dispute-explanation">Detailed explanation (min 20 characters) <span class="required">*</span></label>
+            <textarea id="dispute-explanation" [(ngModel)]="disputeExplanation" class="form-input" rows="4" minlength="20" placeholder="Describe the specific issue in detail..."></textarea>
+          </div>
+          <div class="form-group">
+            <label>Evidence photos / video <span class="required">*</span></label>
+            <p class="form-hint">Upload at least 3 photos or 1 video. Required to submit.</p>
+            <input
+              type="file"
+              #disputeEvidenceInput
+              [accept]="transactionsService.disputeEvidenceAccept"
+              (change)="onDisputeEvidenceSelected(disputeEvidenceInput)"
+              class="file-input-hidden"
+              style="display: none;"
+              multiple
+            />
+            <button type="button" class="btn btn-secondary" (click)="disputeEvidenceInput.click()" [disabled]="disputeEvidenceUploading">
+              {{ disputeEvidenceUploading ? 'Uploading…' : 'Add photos or video' }}
+            </button>
+            @if (disputeMediaUrls.length > 0) {
+              <div class="dispute-media-list">
+                @for (url of disputeMediaUrls; track url) {
+                  <span class="dispute-media-item">✓ Uploaded</span>
+                }
+              </div>
+            }
+          </div>
+          @if (disputeError) {
+            <p class="review-error">{{ disputeError }}</p>
+          }
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="closeDisputeModal()">Cancel</button>
+          <button type="button" class="btn btn-primary" (click)="submitDispute()" [disabled]="disputeSubmitting || !canSubmitDispute()">
+            {{ disputeSubmitting ? 'Submitting…' : 'Submit dispute' }}
+          </button>
+        </div>
+      </div>
     </div>
   }
 

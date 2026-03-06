@@ -1,0 +1,155 @@
+/**
+ * BidRoom Branding – Shared Design Tokens
+ * Use in web (SCSS) or mobile app (see React Native export below).
+ * Inspired by Sephora aesthetics.
+ */
+
+// =============================================================================
+// COLOR PALETTE
+// =============================================================================
+
+$primary-black: #000000;
+$primary-white: #ffffff;
+$accent-purple: #8B5A96;
+$accent-purple-hover: #7A4F84;
+$accent-gold: #D4AF37;
+$accent-peach: #FFB366;
+$accent-peach-hover: #FF9F4D;
+$light-purple: #F3F0F7;
+$light-gray: #F8F9FA;
+$border-gray: #E0E0E0;
+$text-gray: #666666;
+$text-dark: #333333;
+$hover-gray: #F5F5F5;
+
+// Semantic
+$color-success: #28a745;
+$color-error: #dc3545;
+$color-warning: #f59e0b;
+
+// CSS Custom Properties (for web components / Angular)
+:root {
+  --primary-black: #{$primary-black};
+  --primary-white: #{$primary-white};
+  --accent-purple: #{$accent-purple};
+  --accent-purple-hover: #{$accent-purple-hover};
+  --accent-gold: #{$accent-gold};
+  --accent-peach: #{$accent-peach};
+  --accent-peach-hover: #{$accent-peach-hover};
+  --light-purple: #{$light-purple};
+  --light-gray: #{$light-gray};
+  --border-gray: #{$border-gray};
+  --text-gray: #{$text-gray};
+  --text-dark: #{$text-dark};
+  --hover-gray: #{$hover-gray};
+  --color-success: #{$color-success};
+  --color-error: #{$color-error};
+  --color-warning: #{$color-warning};
+}
+
+// =============================================================================
+// TYPOGRAPHY
+// =============================================================================
+
+$font-family: 'Helvetica Neue', Arial, sans-serif;
+$font-size-base: 14px;
+$line-height-base: 1.6;
+$line-height-tight: 1.3;
+
+$font-size-h1: 32px;
+$font-size-h2: 28px;
+$font-size-h3: 24px;
+$font-size-h4: 20px;
+$font-size-h5: 18px;
+$font-size-h6: 16px;
+
+$font-weight-regular: 400;
+$font-weight-medium: 500;
+$font-weight-semibold: 600;
+$font-weight-bold: 700;
+
+// =============================================================================
+// SPACING
+// =============================================================================
+
+$spacing-1: 8px;
+$spacing-2: 16px;
+$spacing-3: 24px;
+$spacing-4: 32px;
+$spacing-5: 40px;
+
+// =============================================================================
+// BORDERS & RADII
+// =============================================================================
+
+$border-radius-sm: 4px;
+$border-radius-md: 8px;
+$border-radius-lg: 12px;
+$border-radius-xl: 16px;
+
+// =============================================================================
+// SHADOWS
+// =============================================================================
+
+$shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.1);
+$shadow-md: 0 4px 16px rgba(0, 0, 0, 0.15);
+$shadow-accent-purple: 0 4px 12px rgba(139, 90, 150, 0.3);
+$shadow-accent-peach: 0 4px 12px rgba(255, 179, 102, 0.3);
+$shadow-input-focus: 0 0 0 3px rgba(139, 90, 150, 0.1);
+
+// =============================================================================
+// GRADIENTS
+// =============================================================================
+
+$gradient-purple-fade: linear-gradient(90deg, #{$accent-purple}, rgba(122, 79, 132, 0.5));
+$gradient-light-purple: linear-gradient(135deg, #{$light-purple} 0%, #{$primary-white} 100%);
+$gradient-purple-hero: linear-gradient(135deg, #{$light-purple} 0%, #{$accent-purple} 100%);
+
+// =============================================================================
+// COMPONENT MAPPINGS
+// =============================================================================
+
+// Buttons
+// - Primary: black bg, white text
+// - Secondary: white bg, black text, gray border
+// - Accent: purple bg, white text
+// - Peach: peach bg, white text
+
+// Badges
+// - Featured: gold
+// - Verified: purple
+// - Urgent: red (#dc3545)
+// - New: green (#28a745)
+
+// Input focus: purple border + purple glow
+
+// =============================================================================
+// REACT NATIVE / JAVASCRIPT – Copy to theme.js or theme.ts
+// =============================================================================
+//
+// export const BidRoomTheme = {
+//   colors: {
+//     primaryBlack: '#000000',
+//     primaryWhite: '#ffffff',
+//     accentPurple: '#8B5A96',
+//     accentPurpleHover: '#7A4F84',
+//     accentGold: '#D4AF37',
+//     accentPeach: '#FFB366',
+//     accentPeachHover: '#FF9F4D',
+//     lightPurple: '#F3F0F7',
+//     lightGray: '#F8F9FA',
+//     borderGray: '#E0E0E0',
+//     textGray: '#666666',
+//     textDark: '#333333',
+//     hoverGray: '#F5F5F5',
+//     success: '#28a745',
+//     error: '#dc3545',
+//     warning: '#f59e0b',
+//   },
+//   fontFamily: { default: 'Helvetica' },
+//   fontSize: {
+//     base: 14, h1: 32, h2: 28, h3: 24, h4: 20, h5: 18, h6: 16,
+//   },
+//   spacing: { 1: 8, 2: 16, 3: 24, 4: 32, 5: 40 },
+//   borderRadius: { sm: 4, md: 8, lg: 12, xl: 16 },
+// };

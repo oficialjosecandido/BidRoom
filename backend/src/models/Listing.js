@@ -191,6 +191,12 @@ const listingSchema = new mongoose.Schema({
     type: Date,
     default: null
   },
+  /** Reason private room ended: null | 'no_acceptances' | 'seller_left' | 'time_expired' (60s rule) */
+  privateRoomClosedReason: {
+    type: String,
+    enum: ['no_acceptances', 'seller_left', 'time_expired'],
+    default: null
+  },
   // Platinum Bidders (up to 5 selected by seller)
   platinumBidders: [{
     type: mongoose.Schema.Types.ObjectId,

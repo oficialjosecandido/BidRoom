@@ -2,7 +2,7 @@ const express = require('express');
 const Bid = require('../models/Bid');
 const Listing = require('../models/Listing');
 const User = require('../models/User');
-const { authenticateToken, optionalAuth } = require('../middleware/auth');
+const { authenticateToken, optionalAuth, requireActiveAccountIfAuthenticated } = require('../middleware/auth');
 const { sendFirstBidNotification, sendOutbidNotification } = require('../services/auctionNotificationService');
 const { getReviewScoresForUsers } = require('../services/reviewService');
 
@@ -97,7 +97,7 @@ router.get('/listing/:listingId/stats', async (req, res) => {
 });
 
 // POST /api/bids - Create a new bid (authentication optional, but email required if not authenticated)
-router.post('/', optionalAuth, async (req, res) => {
+router.post('/', optionalAuth, requireActiveAccountIfAuthenticated, async (req, res) => {
   try {
     const { listingId, amount, maxBid, bidType = 'manual', notes, email, notifyWhenOutbid } = req.body;
 
@@ -202,9 +202,12 @@ router.post('/', optionalAuth, async (req, res) => {
 
     // Check if listing is still active
     if (listing.status !== 'active') {
+      const msg = listing.privateRoomClosedReason === 'seller_left'
+        ? 'The seller has left the private room. The auction has been closed.'
+        : 'This auction is no longer accepting bids';
       return res.status(400).json({
         error: 'Listing not active',
-        message: 'This auction is no longer accepting bids'
+        message: msg
       });
     }
 

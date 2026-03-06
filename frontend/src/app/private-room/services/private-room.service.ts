@@ -77,5 +77,10 @@ export class PrivateRoomService {
       {}
     );
   }
+
+  /** Call when seller leaves the private room (navigates away, closes tab). Uses keepalive for reliability. */
+  sellerLeave(listingId: string): Observable<void> {
+    return this.http.post<void>(`${this.apiUrl}/listings/${listingId}/seller-leave`, {});
+  }
 }
 

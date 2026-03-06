@@ -99,7 +99,19 @@ When these conditions are met, the listing becomes **eligible** for a private ro
 | `eligible` | Main auction ended with bids and reserve met; seller has **1 hour** to create the room and invite 2–5 bidders. **Select winner** is not shown—only **Create private room**. |
 | `invited` | Room created; invitees have **15 minutes** to accept. Room is not yet open for bidding; it will **start automatically** when the 15 minutes end. |
 | `active` | Private room is running; only accepted Platinum Bidders can bid; room ends **60 seconds** after the last bid. |
-| `ended` | Private room has closed. Either: (a) winner is the highest bid not outbid for 60 seconds; or (b) no one accepted in time, so there is no winner. |
+| `ended` | Private room has closed. Either: (a) winner is the highest bid not outbid for 60 seconds; or (b) no one accepted in time, so there is no winner; or (c) the seller left the room. |
+
+---
+
+## Seller leaves the private room
+
+If the **seller** leaves the private room (navigates away, closes the tab, or explicitly leaves) while the room is **invited** or **active**:
+
+1. The system **automatically closes** the room (`privateRoomStatus` → `ended`, `privateRoomClosedReason` → `seller_left`).
+2. **Buyers** inside the room receive a clear notification (email + in-app) explaining that the seller has left and the auction has been closed.
+3. **No further bids** can be submitted; the room is closed.
+4. **Bids remain** for audit/history; no winner is declared and no transaction is created.
+5. The event is **logged** in `PrivateRoomAuditLog` for audit purposes.
 
 ---
 
@@ -121,4 +133,5 @@ When these conditions are met, the listing becomes **eligible** for a private ro
 - **Invitees** must **accept within 15 minutes** or lose their seat. If **no one** accepts, the auction closes without a winner and everyone is notified.
 - Only **accepted invitees** can bid; each bid **extends the room by 60 seconds**.
 - When **60 seconds pass with no new bid**, the room closes and the **highest bidder wins automatically**—**no seller choice**.
+- If the **seller leaves** the room (invited or active), the room closes immediately with no winner; all participants are notified.
 - Winner and seller then use **Transactions** for payment and shipping.

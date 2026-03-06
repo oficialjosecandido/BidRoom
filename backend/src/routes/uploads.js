@@ -1,6 +1,6 @@
 const express = require('express');
 const multer = require('multer');
-const { authenticateToken } = require('../middleware/auth');
+const { authenticateToken, requireActiveAccount } = require('../middleware/auth');
 const azureStorageService = require('../services/azureStorage.service');
 
 const router = express.Router();
@@ -57,7 +57,7 @@ const proofUpload = multer({
  * Upload multiple images to Azure Blob Storage
  * Requires authentication
  */
-router.post('/', authenticateToken, upload.array('images', 10), async (req, res) => {
+router.post('/', authenticateToken, requireActiveAccount, upload.array('images', 10), async (req, res) => {
   try {
     if (!req.files || req.files.length === 0) {
       return res.status(400).json({

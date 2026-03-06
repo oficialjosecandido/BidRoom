@@ -36,6 +36,14 @@ export class DashboardTransactionsComponent implements OnInit {
   reviewDescription = '';
   reviewError: string | null = null;
   reviewSubmitting = false;
+  /** Dispute modal (opens in-place on Transactions screen) */
+  disputeModalTransaction: Transaction | null = null;
+  disputeReason = '';
+  disputeExplanation = '';
+  disputeMediaUrls: string[] = [];
+  disputeError: string | null = null;
+  disputeSubmitting = false;
+  disputeEvidenceUploading = false;
   showTrackingFormId: string | null = null;
   trackingNumber = '';
   trackingCarrier = '';
@@ -655,6 +663,113 @@ export class DashboardTransactionsComponent implements OnInit {
           this.reviewError = err?.error?.message || 'Failed to submit review.';
         }
       });
+  }
+
+  /** Open dispute modal (buyer only, status must be shipped) */
+  openDisputeModal(t: Transaction): void {
+    if (!this.isBuyer(t) || this.getEffectiveStatus(t) !== 'shipped' || t.disputeOpen) return;
+    this.disputeModalTransaction = t;
+    this.disputeReason = '';
+    this.disputeExplanation = '';
+    this.disputeMediaUrls = [];
+    this.disputeError = null;
+  }
+
+  closeDisputeModal(): void {
+    this.disputeModalTransaction = null;
+    this.disputeReason = '';
+    this.disputeExplanation = '';
+    this.disputeMediaUrls = [];
+    this.disputeError = null;
+  }
+
+  canSubmitDispute(): boolean {
+    return !!(
+      this.disputeReason &&
+      this.disputeExplanation.trim().length >= 20 &&
+      this.disputeMediaUrls.length >= 1
+    );
+  }
+
+  onDisputeEvidenceSelected(input: HTMLInputElement): void {
+    const files = input.files;
+    if (!files || files.length === 0) return;
+    this.disputeError = null;
+    const maxSize = this.transactionsService.proofOfPaymentMaxSize;
+    const allowed = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'application/pdf', 'video/mp4', 'video/webm'];
+    const toUpload: File[] = [];
+    for (let i = 0; i < files.length; i++) {
+      const f = files[i];
+      if (f.size > maxSize) {
+        this.disputeError = `File ${f.name} is too large (max 30MB).`;
+        input.value = '';
+        return;
+      }
+      if (!allowed.includes(f.type)) {
+        this.disputeError = `File ${f.name}: only images, PDF, or video (MP4/WebM) allowed.`;
+        input.value = '';
+        return;
+      }
+      toUpload.push(f);
+    }
+    if (toUpload.length + this.disputeMediaUrls.length > 10) {
+      this.disputeError = 'Maximum 10 files allowed.';
+      input.value = '';
+      return;
+    }
+    this.disputeEvidenceUploading = true;
+    let done = 0;
+    const total = toUpload.length;
+    toUpload.forEach((file) => {
+      this.transactionsService.uploadDisputeEvidence(file).subscribe({
+        next: (res) => {
+          this.disputeMediaUrls = [...this.disputeMediaUrls, res.url];
+          done++;
+          if (done === total) this.disputeEvidenceUploading = false;
+        },
+        error: () => {
+          this.disputeError = 'Upload failed.';
+          this.disputeEvidenceUploading = false;
+        }
+      });
+    });
+    input.value = '';
+  }
+
+  submitDispute(): void {
+    const t = this.disputeModalTransaction;
+    if (!t || this.disputeSubmitting || !this.canSubmitDispute()) return;
+    this.disputeSubmitting = true;
+    this.disputeError = null;
+    this.transactionsService
+      .openDispute(t._id, {
+        reason: this.disputeReason,
+        explanation: this.disputeExplanation.trim(),
+        mediaUrls: this.disputeMediaUrls
+      })
+      .subscribe({
+        next: () => {
+          this.disputeSubmitting = false;
+          this.closeDisputeModal();
+          successToast.fire({ title: 'Dispute submitted' });
+          this.loadTransactions();
+        },
+        error: (err) => {
+          this.disputeError = err?.error?.message || 'Failed to submit dispute.';
+          this.disputeSubmitting = false;
+        }
+      });
+  }
+
+  getDisputeReasonLabel(reason: string): string {
+    const labels: Record<string, string> = {
+      item_not_as_described: 'Item not as described',
+      damaged_in_transit: 'Damaged in transit',
+      missing_parts: 'Missing parts',
+      counterfeit: 'Counterfeit',
+      other: 'Other'
+    };
+    return labels[reason] || reason;
   }
 
   private replaceTransaction(updated: Transaction): void {

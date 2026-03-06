@@ -1,4 +1,5 @@
 const admin = require('firebase-admin');
+const User = require('../models/User');
 
 const AUTH_VERIFY_TIMEOUT_MS = 15000;
 
@@ -117,7 +118,52 @@ const optionalAuth = async (req, res, next) => {
   }
 };
 
+/**
+ * Require user to have an active account (not suspended or closed).
+ * Use after authenticateToken. Returns 403 if account is suspended or closed.
+ */
+const requireActiveAccount = async (req, res, next) => {
+  if (!req.user) return res.status(401).json({ error: 'Unauthorized', message: 'Authentication required.' });
+  if (!req.user?.uid) {
+    return res.status(401).json({ error: 'Unauthorized', message: 'Authentication required.' });
+  }
+  try {
+    const dbUser = await User.findOne({ uid: req.user.uid }).select('accountStatus').lean();
+    if (!dbUser) {
+      return res.status(404).json({ error: 'User not found', message: 'Please complete your profile.' });
+    }
+    const status = dbUser.accountStatus || 'active';
+    if (status === 'suspended') {
+      return res.status(403).json({
+        error: 'Account suspended',
+        message: 'Your account has been suspended while a dispute is under review. You cannot create listings, place bids, or complete transactions until the case is resolved.'
+      });
+    }
+    if (status === 'closed') {
+      return res.status(403).json({
+        error: 'Account closed',
+        message: 'Your account has been permanently closed.'
+      });
+    }
+    next();
+  } catch (error) {
+    console.error('requireActiveAccount error:', error);
+    res.status(500).json({ error: 'Failed to verify account status', message: error.message });
+  }
+};
+
+/**
+ * Same as requireActiveAccount but only runs when user is authenticated.
+ * Use after optionalAuth for routes that allow both guest and authenticated users (e.g. bids, offers).
+ */
+const requireActiveAccountIfAuthenticated = async (req, res, next) => {
+  if (!req.user || !req.isAuthenticated) return next();
+  return requireActiveAccount(req, res, next);
+};
+
 module.exports = {
   authenticateToken,
-  optionalAuth
+  optionalAuth,
+  requireActiveAccount,
+  requireActiveAccountIfAuthenticated
 };

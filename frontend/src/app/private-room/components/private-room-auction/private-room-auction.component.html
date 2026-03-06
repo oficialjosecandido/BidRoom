@@ -129,7 +129,9 @@
         <div class="room-ended-icon">🏁</div>
         <h2>Private room closed</h2>
         @if (listing.privateRoomStatus === 'ended') {
-          @if (listing.winner) {
+          @if (listing.privateRoomClosedReason === 'seller_left') {
+            <p>The seller has left the Private Room. The auction has been closed without a winner. No further bids can be placed.</p>
+          } @else if (listing.winner) {
             <p>The auction has ended. The winner was the highest bid that wasn't outbid for 60 seconds. You will be notified by email if you won.</p>
           } @else {
             <p>The auction was closed because no invited bidders accepted the invitation within 15 minutes. There is no winner.</p>

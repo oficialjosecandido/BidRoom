@@ -3,9 +3,13 @@ const { authenticateToken } = require('../middleware/auth');
 const User = require('../models/User');
 const Listing = require('../models/Listing');
 const Transaction = require('../models/Transaction');
+const ReviewFlag = require('../models/ReviewFlag');
+const Review = require('../models/Review');
 const { sendEmail } = require('../services/emailService');
 const { renderEmailTemplate } = require('../services/templateEngine');
 const { notifyDisputeDecisionIssued, emitNewNotificationToUser } = require('../services/notificationService');
+const { applyDisputeAccountOutcome } = require('../services/accountStatusService');
+const { applyDisputeVerdictImpact } = require('../services/reputationService');
 
 const router = express.Router();
 
@@ -317,7 +321,7 @@ router.get('/disputes/:transactionId', authenticateToken, requireAdmin, async (r
  */
 router.post('/disputes/:transactionId/ruling', authenticateToken, requireAdmin, async (req, res) => {
   try {
-    const { verdict, refundAmount, adminNotes } = req.body;
+    const { verdict, refundAmount, adminNotes, accountOutcome } = req.body;
 
     const validVerdicts = ['buyer_refund', 'seller_payout', 'partial_refund'];
     if (!verdict || !validVerdicts.includes(verdict)) {
@@ -381,6 +385,17 @@ router.post('/disputes/:transactionId/ruling', authenticateToken, requireAdmin, 
       if (buyerUserId) emitNewNotificationToUser(io, buyerUserId).catch(() => {});
     }
 
+    // Apply account outcome: reactivate both, reactivate one and close the other, or close both
+    const validAccountOutcomes = ['reactivate_both', 'reactivate_buyer_close_seller', 'reactivate_seller_close_buyer', 'close_both'];
+    if (accountOutcome && validAccountOutcomes.includes(accountOutcome) && buyerUserId && sellerUserId) {
+      await applyDisputeAccountOutcome(accountOutcome, buyerUserId, sellerUserId, transaction._id, io);
+    }
+
+    // Reputation impact: increment disputeLossCount for party ruled against
+    applyDisputeVerdictImpact(verdict, buyerUserId, sellerUserId).catch(err =>
+      console.error('Dispute verdict reputation impact:', err.message)
+    );
+
     /** TODO: Financial adjustments - deduct from seller balance or charge card when buyer_refund/partial_refund */
     /** TODO: Reputation score adjustment based on verdict (e.g. negative for seller on buyer_refund) */
 
@@ -401,6 +416,66 @@ router.post('/disputes/:transactionId/ruling', authenticateToken, requireAdmin, 
       error: 'Failed to issue ruling',
       message: error.message
     });
+  }
+});
+
+/**
+ * GET /api/admin/reviews/flagged
+ * List reviews flagged for potential fraud/abuse (pending admin review).
+ */
+router.get('/reviews/flagged', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const flags = await ReviewFlag.find({ status: 'pending' })
+      .populate('review')
+      .sort({ createdAt: -1 })
+      .lean();
+    const withReviewDetails = await Promise.all(
+      flags.map(async (f) => {
+        const r = f.review;
+        if (!r) return { ...f, reviewer: null, reviewee: null, listing: null };
+        const [reviewer, reviewee, listing] = await Promise.all([
+          User.findById(r.reviewer).select('firstName lastName email').lean(),
+          User.findById(r.reviewee).select('firstName lastName email').lean(),
+          Listing.findById(r.listing).select('title slug').lean()
+        ]);
+        return { ...f, reviewer, reviewee, listing };
+      })
+    );
+    res.json({ flags: withReviewDetails });
+  } catch (error) {
+    console.error('Error fetching flagged reviews:', error);
+    res.status(500).json({ error: 'Failed to fetch flagged reviews', message: error.message });
+  }
+});
+
+/**
+ * PATCH /api/admin/reviews/flags/:id
+ * Resolve a review flag: dismissed | confirmed_fake.
+ * Body: { status, adminNotes? }
+ */
+router.patch('/reviews/flags/:id', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const { status, adminNotes } = req.body;
+    if (!status || !['dismissed', 'confirmed_fake'].includes(status)) {
+      return res.status(400).json({
+        error: 'Invalid status',
+        message: 'status must be dismissed or confirmed_fake'
+      });
+    }
+    const flag = await ReviewFlag.findById(req.params.id);
+    if (!flag) return res.status(404).json({ error: 'Flag not found' });
+    if (flag.status !== 'pending') {
+      return res.status(400).json({ error: 'Already resolved', message: 'This flag has already been resolved.' });
+    }
+    flag.status = status;
+    flag.resolvedAt = new Date();
+    flag.resolvedBy = req.user?.email || 'admin';
+    if (adminNotes != null) flag.adminNotes = String(adminNotes).trim() || null;
+    await flag.save();
+    res.json({ success: true, flag });
+  } catch (error) {
+    console.error('Error resolving review flag:', error);
+    res.status(500).json({ error: 'Failed to resolve flag', message: error.message });
   }
 });
 

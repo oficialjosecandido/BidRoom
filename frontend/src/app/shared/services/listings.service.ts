@@ -42,6 +42,7 @@ export interface Listing {
   allowPrivateRoom: boolean;
   commissionRate: number;
   privateRoomStatus?: 'not-triggered' | 'eligible' | 'invited' | 'active' | 'ended';
+  privateRoomClosedReason?: 'no_acceptances' | 'seller_left' | 'time_expired';
   privateRoomEndDate?: string;
   privateRoomLastBidTime?: string;
   platinumBidders?: string[] | { _id: string; firstName: string; lastName: string; email: string }[];
