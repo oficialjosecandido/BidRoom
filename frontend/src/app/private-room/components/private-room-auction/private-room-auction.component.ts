@@ -119,20 +119,15 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
   }
 
   getCurrentUserInitials(): string {
-    if (!this.currentUser) return 'G';
-    const name = this.currentUser.displayName || this.currentUser.email || '';
-    const parts = name.split(' ');
-    if (parts.length >= 2) {
-      return (parts[0][0] + parts[1][0]).toUpperCase();
-    }
-    return name[0]?.toUpperCase() || 'U';
+    const name = this.currentUser?.displayName || this.currentUser?.email || '';
+    return this.getInitial(name) || 'G';
   }
 
   loadListing(): void {
     this.loading = true;
     this.error = null;
 
-    this.listingsService.getListing(this.listingId).subscribe({
+    this.listingsService.getListingById(this.listingId).subscribe({
       next: (listing) => {
         this.listing = listing;
         this.loading = false;
