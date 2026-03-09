@@ -16,12 +16,13 @@ export const appConfig: ApplicationConfig = {
     provideRouter(routes),
     provideHttpClient(withInterceptors([authInterceptor])),
     provideFirebaseApp(() => initializeApp({
-      apiKey: "AIzaSyDsmGTShUTb_C3C7vhzVQcDhUGuhXDHj00",
-      authDomain: "auction-80ee4.firebaseapp.com",
-      projectId: "auction-80ee4",
-      storageBucket: "auction-80ee4.firebasestorage.app",
-      messagingSenderId: "455744128769",
-      appId: "1:455744128769:web:154fbbd3e27aee79ac3d00"
+      apiKey: "AIzaSyBb3nk50nwBME8dN5pNhu2W1B7-m35qqHw",
+      authDomain: "bidroom-47cb5.firebaseapp.com",
+      projectId: "bidroom-47cb5",
+      storageBucket: "bidroom-47cb5.firebasestorage.app",
+      messagingSenderId: "16761692806",
+      appId: "1:16761692806:web:b1e10f2a57a040f8556707",
+      measurementId: "G-4FDFR1ZSRV"
     })),
     provideAuth(() => getAuth()),
     AuthService,
