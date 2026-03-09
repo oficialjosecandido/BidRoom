@@ -29,6 +29,7 @@
     "@angular/forms": "^20.3.0",
     "@angular/platform-browser": "^20.3.0",
     "@angular/router": "^20.3.0",
+    "@stripe/stripe-js": "^8.9.0",
     "firebase": "^11.1.0",
     "rxjs": "~7.8.0",
     "socket.io-client": "^4.8.1",

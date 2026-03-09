@@ -1,0 +1,192 @@
+<div class="invoice-page">
+  <!-- Loading -->
+  <div *ngIf="isLoading" class="loading-state">
+    <div class="spinner"></div>
+    <p>Loading invoice...</p>
+  </div>
+
+  <!-- Error -->
+  <div *ngIf="error && !isLoading" class="error-state">
+    <p>{{ error }}</p>
+    <a routerLink="/dashboard/transactions" class="back-link">← Back to Transactions</a>
+  </div>
+
+  <!-- Invoice -->
+  <div *ngIf="!isLoading && !error && transaction" class="invoice-wrapper">
+    <!-- Actions bar (hidden when printing) -->
+    <div class="invoice-actions no-print">
+      <a routerLink="/dashboard/transactions" class="back-link">← Back to Transactions</a>
+      <button (click)="printInvoice()" class="print-btn">🖨 Print / Save PDF</button>
+    </div>
+
+    <!-- Invoice Document -->
+    <div class="invoice-document">
+      <!-- Header -->
+      <div class="invoice-header">
+        <div class="brand">
+          <h1 class="brand-name">BidRoom</h1>
+          <p class="brand-tagline">Auction Marketplace</p>
+        </div>
+        <div class="invoice-meta">
+          <h2 class="invoice-title">INVOICE</h2>
+          <p class="invoice-number">{{ transaction.invoiceNumber }}</p>
+          <span class="status-badge" [ngClass]="getStatusClass(transaction.status)">
+            {{ getStatusLabel(transaction.status) }}
+          </span>
+        </div>
+      </div>
+
+      <hr class="divider" />
+
+      <!-- Parties -->
+      <div class="parties">
+        <div class="party">
+          <p class="party-label">BILLED TO (Buyer)</p>
+          <p class="party-name">{{ transaction.buyer.firstName }} {{ transaction.buyer.lastName }}</p>
+          <p class="party-email">{{ transaction.buyer.email }}</p>
+        </div>
+        <div class="party">
+          <p class="party-label">SELLER</p>
+          <p class="party-name">{{ transaction.seller.firstName }} {{ transaction.seller.lastName }}</p>
+          <p class="party-email">{{ transaction.seller.email }}</p>
+        </div>
+        <div class="party dates">
+          <div>
+            <p class="party-label">INVOICE DATE</p>
+            <p class="party-value">{{ formatDate(transaction.createdAt) }}</p>
+          </div>
+          <div *ngIf="transaction.paidAt">
+            <p class="party-label">PAYMENT DATE</p>
+            <p class="party-value">{{ formatDate(transaction.paidAt) }}</p>
+          </div>
+        </div>
+      </div>
+
+      <hr class="divider" />
+
+      <!-- Item Description -->
+      <div class="item-section">
+        <h3 class="section-title">Item</h3>
+        <table class="item-table">
+          <thead>
+            <tr>
+              <th>Description</th>
+              <th class="text-right">Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>
+                <p class="item-title">{{ transaction.listing.title }}</p>
+                <p class="item-meta" *ngIf="transaction.listing.condition">
+                  Condition: {{ transaction.listing.condition }}
+                </p>
+                <p class="item-meta" *ngIf="transaction.listing.category">
+                  Category: {{ transaction.listing.category | titlecase }}
+                </p>
+              </td>
+              <td class="text-right amount">{{ formatCurrency(transaction.itemPrice) }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Fee Breakdown -->
+      <div class="fee-section">
+        <h3 class="section-title">Fee Breakdown</h3>
+        <table class="fee-table">
+          <tbody>
+            <!-- Item subtotal -->
+            <tr class="fee-row subtotal">
+              <td>
+                <span class="fee-name">Winning Bid (Item Price)</span>
+              </td>
+              <td class="text-right">{{ formatCurrency(transaction.itemPrice) }}</td>
+            </tr>
+
+            <!-- BidRoom fee -->
+            <tr class="fee-row bidroom">
+              <td>
+                <span class="fee-name">BidRoom Service Fee</span>
+                <span class="fee-tag bidroom-tag">BidRoom</span>
+                <span class="fee-desc">
+                  {{ (transaction.bidRoomFeeRate * 100).toFixed(0) }}% of item price — charged to buyer
+                </span>
+              </td>
+              <td class="text-right fee-amount bidroom-amount">
+                + {{ formatCurrency(transaction.bidRoomFee) }}
+              </td>
+            </tr>
+
+            <!-- Stripe fee -->
+            <tr class="fee-row stripe">
+              <td>
+                <span class="fee-name">Payment Processing Fee</span>
+                <span class="fee-tag stripe-tag">Stripe</span>
+                <span class="fee-desc">
+                  {{ (transaction.stripeFeeRate * 100).toFixed(1) }}% + ${{ transaction.stripeFixedFee.toFixed(2) }} of total charge — deducted from seller payout
+                </span>
+              </td>
+              <td class="text-right fee-amount stripe-amount">
+                {{ formatCurrency(transaction.stripeFee) }}
+              </td>
+            </tr>
+
+            <!-- Divider row -->
+            <tr class="divider-row"><td colspan="2"><hr /></td></tr>
+
+            <!-- Total charged to buyer -->
+            <tr class="fee-row total-buyer">
+              <td>
+                <span class="fee-name">Total Charged to Buyer</span>
+                <span class="fee-desc">Item Price + BidRoom Fee + Stripe Fee</span>
+              </td>
+              <td class="text-right total-amount">
+                {{ formatCurrency(transaction.totalChargedToBuyer) }}
+              </td>
+            </tr>
+
+            <!-- Seller payout -->
+            <tr class="fee-row seller-payout">
+              <td>
+                <span class="fee-name">Seller Payout</span>
+                <span class="fee-desc">Item Price minus Stripe's processing fee</span>
+              </td>
+              <td class="text-right payout-amount">
+                {{ formatCurrency(transaction.sellerPayout) }}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Summary Box -->
+      <div class="summary-box">
+        <div class="summary-row">
+          <span>You paid (Buyer)</span>
+          <strong>{{ formatCurrency(transaction.totalChargedToBuyer) }}</strong>
+        </div>
+        <div class="summary-row highlight" *ngIf="role === 'seller'">
+          <span>Your payout (Seller)</span>
+          <strong class="payout-highlight">{{ formatCurrency(transaction.sellerPayout) }}</strong>
+        </div>
+      </div>
+
+      <!-- Payment Reference -->
+      <div class="reference-section" *ngIf="transaction.stripePaymentIntentId">
+        <p class="reference-label">Payment Reference</p>
+        <p class="reference-value">{{ transaction.stripePaymentIntentId }}</p>
+      </div>
+
+      <!-- Footer -->
+      <div class="invoice-footer">
+        <p>Thank you for using BidRoom — the premium auction marketplace.</p>
+        <p class="footer-note">
+          BidRoom charges a 2% service fee on all successful transactions.
+          Payment processing is handled securely by Stripe (2.9% + $0.30 per transaction).
+          All fees are clearly disclosed before payment.
+        </p>
+      </div>
+    </div>
+  </div>
+</div>

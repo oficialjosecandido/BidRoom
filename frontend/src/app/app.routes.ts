@@ -21,13 +21,29 @@ export const routes: Routes = [
     canActivate: [AuthGuard],
     children: [
       { path: '', redirectTo: 'my-account', pathMatch: 'full' },
-      { 
-        path: 'my-account', 
+      {
+        path: 'my-account',
         loadComponent: () => import('./dashboard/components/my-account/my-account.component').then(m => m.MyAccountComponent)
       },
       {
         path: 'my-auctions',
         loadComponent: () => import('./dashboard/components/my-auctions/my-auctions.component').then(m => m.MyAuctionsComponent)
+      },
+      {
+        path: 'transactions',
+        loadComponent: () => import('./dashboard/components/transactions/transactions.component').then(m => m.TransactionsComponent)
+      },
+      {
+        path: 'invoice/:id',
+        loadComponent: () => import('./dashboard/components/invoice/invoice.component').then(m => m.InvoiceComponent)
+      },
+      {
+        path: 'checkout',
+        loadComponent: () => import('./dashboard/components/payment-checkout/payment-checkout.component').then(m => m.PaymentCheckoutComponent)
+      },
+      {
+        path: 'payments',
+        loadComponent: () => import('./dashboard/components/seller-payments/seller-payments.component').then(m => m.SellerPaymentsComponent)
       }
     ]
   },

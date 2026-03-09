@@ -1,0 +1,111 @@
+<div class="checkout-container">
+  <div class="checkout-header no-print">
+    <a routerLink="/dashboard/my-auctions" class="back-link">← Back to My Auctions</a>
+    <h2 class="page-title">Complete Your Payment</h2>
+    <p class="page-subtitle">Secure payment powered by Stripe</p>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="isLoading" class="loading-state">
+    <div class="spinner"></div>
+    <p>Preparing your payment...</p>
+  </div>
+
+  <!-- Error (initialization) -->
+  <div *ngIf="error && !fees && !isLoading" class="error-state">
+    <div class="error-icon">⚠️</div>
+    <h3>Payment Error</h3>
+    <p>{{ error }}</p>
+    <button (click)="initPayment()" class="retry-btn">Try Again</button>
+  </div>
+
+  <!-- Success -->
+  <div *ngIf="paymentSuccess" class="success-state">
+    <div class="success-icon">✅</div>
+    <h3>Payment Successful!</h3>
+    <p>Your payment has been processed. Redirecting to your invoice...</p>
+  </div>
+
+  <!-- Checkout Form -->
+  <div *ngIf="fees && !isLoading && !paymentSuccess" class="checkout-layout">
+    <!-- Order Summary -->
+    <div class="order-summary">
+      <h3 class="summary-title">Order Summary</h3>
+
+      <div class="summary-rows">
+        <div class="summary-row">
+          <span>Item Price (Winning Bid)</span>
+          <span>{{ formatCurrency(fees.itemPrice) }}</span>
+        </div>
+
+        <div class="summary-row fee-row bidroom-row">
+          <div class="fee-label">
+            <span>BidRoom Service Fee</span>
+            <span class="fee-tag bidroom-tag">BidRoom 2%</span>
+          </div>
+          <span class="fee-value bidroom-value">+ {{ formatCurrency(fees.bidRoomFee) }}</span>
+        </div>
+
+        <div class="summary-row fee-row stripe-row">
+          <div class="fee-label">
+            <span>Payment Processing</span>
+            <span class="fee-tag stripe-tag">Stripe 2.9%+$0.30</span>
+          </div>
+          <span class="fee-value stripe-value">+ {{ formatCurrency(fees.stripeFee) }}</span>
+        </div>
+
+        <hr class="summary-divider" />
+
+        <div class="summary-row total-row">
+          <strong>Total Charged to You</strong>
+          <strong class="total-value">{{ formatCurrency(fees.totalChargedToBuyer) }}</strong>
+        </div>
+      </div>
+
+      <!-- Fee Explanation -->
+      <div class="fee-explanation">
+        <h4>About These Fees</h4>
+        <div class="fee-exp-item">
+          <span class="dot bidroom"></span>
+          <p><strong>BidRoom Fee (2%):</strong> Our service fee for connecting buyers and sellers on the platform.</p>
+        </div>
+        <div class="fee-exp-item">
+          <span class="dot stripe"></span>
+          <p><strong>Stripe Fee (2.9% + $0.30):</strong> Secure payment processing by Stripe. This fee is passed through transparently.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Payment Form -->
+    <div class="payment-form-section">
+      <h3 class="form-title">Payment Details</h3>
+
+      <!-- Stripe Payment Element Container -->
+      <div id="stripe-payment-element" class="stripe-element"></div>
+
+      <!-- Payment error -->
+      <div *ngIf="error" class="payment-error">
+        <p>⚠️ {{ error }}</p>
+      </div>
+
+      <!-- Submit button -->
+      <button
+        (click)="submitPayment()"
+        [disabled]="isProcessing"
+        class="pay-btn"
+        [class.loading]="isProcessing">
+        <span *ngIf="!isProcessing">
+          Pay {{ formatCurrency(fees.totalChargedToBuyer) }} Securely
+        </span>
+        <span *ngIf="isProcessing">
+          <span class="btn-spinner"></span> Processing...
+        </span>
+      </button>
+
+      <p class="secure-notice">
+        🔒 Payments are encrypted and processed securely by Stripe.
+        Your card details never touch BidRoom's servers.
+      </p>
+    </div>
+  </div>
+</div>

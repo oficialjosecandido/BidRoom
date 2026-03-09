@@ -1,0 +1,120 @@
+<div class="transactions-container">
+  <div class="page-header">
+    <h2 class="page-title">Transactions</h2>
+    <p class="page-subtitle">View all your payments, fees, and payouts</p>
+  </div>
+
+  <!-- Filters -->
+  <div class="filters-bar">
+    <div class="role-filters">
+      <button class="filter-btn" [class.active]="activeRole === 'all'" (click)="setRole('all')">All</button>
+      <button class="filter-btn" [class.active]="activeRole === 'buyer'" (click)="setRole('buyer')">As Buyer</button>
+      <button class="filter-btn" [class.active]="activeRole === 'seller'" (click)="setRole('seller')">As Seller</button>
+    </div>
+    <div class="status-filters">
+      <button class="filter-btn" [class.active]="activeStatus === ''" (click)="setStatus('')">All Status</button>
+      <button class="filter-btn" [class.active]="activeStatus === 'pending'" (click)="setStatus('pending')">Pending</button>
+      <button class="filter-btn" [class.active]="activeStatus === 'completed'" (click)="setStatus('completed')">Completed</button>
+      <button class="filter-btn" [class.active]="activeStatus === 'failed'" (click)="setStatus('failed')">Failed</button>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="loading-state">
+    <div class="spinner"></div>
+    <p>Loading transactions...</p>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="error && !isLoading" class="error-state">
+    <p>{{ error }}</p>
+    <button (click)="loadTransactions()" class="retry-btn">Retry</button>
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="!isLoading && !error && transactions.length === 0" class="empty-state">
+    <div class="empty-icon">💳</div>
+    <h3>No transactions yet</h3>
+    <p>Transactions will appear here once you buy or sell items on BidRoom.</p>
+  </div>
+
+  <!-- Transactions Table -->
+  <div *ngIf="!isLoading && !error && transactions.length > 0" class="transactions-table-wrapper">
+    <table class="transactions-table">
+      <thead>
+        <tr>
+          <th>Invoice</th>
+          <th>Item</th>
+          <th>Item Price</th>
+          <th>BidRoom Fee (2%)</th>
+          <th>Stripe Fee</th>
+          <th>Total Charged</th>
+          <th>Seller Payout</th>
+          <th>Status</th>
+          <th>Date</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let tx of transactions" class="transaction-row">
+          <td class="invoice-number">{{ tx.invoiceNumber }}</td>
+          <td class="item-title">
+            <a [routerLink]="['/listing', tx.listing.slug]" class="item-link">
+              {{ tx.listing.title }}
+            </a>
+          </td>
+          <td class="amount">{{ formatCurrency(tx.itemPrice) }}</td>
+          <td class="fee bidroom-fee">
+            <span class="fee-amount">{{ formatCurrency(tx.bidRoomFee) }}</span>
+            <span class="fee-badge bidroom">BidRoom 2%</span>
+          </td>
+          <td class="fee stripe-fee">
+            <span class="fee-amount">{{ formatCurrency(tx.stripeFee) }}</span>
+            <span class="fee-badge stripe">Stripe 2.9%+$0.30</span>
+          </td>
+          <td class="amount total">{{ formatCurrency(tx.totalChargedToBuyer) }}</td>
+          <td class="amount payout">{{ formatCurrency(tx.sellerPayout) }}</td>
+          <td>
+            <span class="status-badge" [ngClass]="getStatusClass(tx.status)">
+              {{ tx.status | titlecase }}
+            </span>
+          </td>
+          <td class="date">{{ formatDate(tx.createdAt) }}</td>
+          <td>
+            <a [routerLink]="['/dashboard/invoice', tx._id]" class="view-invoice-btn">
+              View Invoice
+            </a>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Fee Legend -->
+  <div *ngIf="transactions.length > 0" class="fee-legend">
+    <h4>Fee Breakdown Guide</h4>
+    <div class="legend-items">
+      <div class="legend-item">
+        <span class="legend-dot bidroom"></span>
+        <div>
+          <strong>BidRoom Fee (2%)</strong>
+          <p>Service fee charged to the buyer. Applied to the winning bid amount.</p>
+        </div>
+      </div>
+      <div class="legend-item">
+        <span class="legend-dot stripe"></span>
+        <div>
+          <strong>Stripe Processing Fee (2.9% + $0.30)</strong>
+          <p>Payment processing fee charged by Stripe. Deducted from the total before seller payout.</p>
+        </div>
+      </div>
+      <div class="legend-item">
+        <span class="legend-dot payout"></span>
+        <div>
+          <strong>Seller Payout</strong>
+          <p>Amount the seller receives: Item Price minus Stripe's processing fee.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

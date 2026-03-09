@@ -1,0 +1,108 @@
+<div class="seller-payments-container">
+  <div class="page-header">
+    <h2 class="page-title">Seller Payments</h2>
+    <p class="page-subtitle">Connect your Stripe account to receive payouts from your auctions</p>
+  </div>
+
+  <!-- Success Message -->
+  <div *ngIf="successMessage" class="success-banner">
+    ✅ {{ successMessage }}
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="isLoading" class="loading-state">
+    <div class="spinner"></div>
+    <p>Loading payment settings...</p>
+  </div>
+
+  <!-- Error -->
+  <div *ngIf="error" class="error-banner">
+    ⚠️ {{ error }}
+  </div>
+
+  <!-- Not Connected -->
+  <div *ngIf="!isLoading && accountStatus && !accountStatus.connected" class="setup-card">
+    <div class="setup-icon">💳</div>
+    <h3>Connect Your Stripe Account</h3>
+    <p>
+      To receive payments from buyers, you need to connect a Stripe account.
+      This is free and only takes a few minutes.
+    </p>
+    <ul class="setup-benefits">
+      <li>✓ Receive direct payouts to your bank account</li>
+      <li>✓ Secure payment processing via Stripe</li>
+      <li>✓ Transparent fee breakdown on every transaction</li>
+      <li>✓ BidRoom takes only 2% — you keep the rest</li>
+    </ul>
+    <button
+      (click)="connectStripe()"
+      [disabled]="isConnecting"
+      class="connect-btn">
+      <span *ngIf="!isConnecting">Connect with Stripe</span>
+      <span *ngIf="isConnecting">Setting up...</span>
+    </button>
+    <p class="powered-note">Powered by <strong>Stripe Connect</strong> — your data is secure.</p>
+  </div>
+
+  <!-- Connected but not fully set up -->
+  <div *ngIf="!isLoading && accountStatus?.connected && !accountStatus?.chargesEnabled" class="setup-card warning">
+    <div class="setup-icon">⚠️</div>
+    <h3>Complete Your Stripe Setup</h3>
+    <p>
+      Your Stripe account is connected but you haven't completed the onboarding yet.
+      Please complete the setup to start receiving payments.
+    </p>
+    <p class="account-id">Account ID: <code>{{ accountStatus?.accountId }}</code></p>
+    <button
+      (click)="openOnboardingLink()"
+      [disabled]="isConnecting"
+      class="connect-btn">
+      <span *ngIf="!isConnecting">Complete Stripe Setup</span>
+      <span *ngIf="isConnecting">Loading...</span>
+    </button>
+  </div>
+
+  <!-- Fully Connected -->
+  <div *ngIf="!isLoading && accountStatus?.connected && accountStatus?.chargesEnabled" class="connected-card">
+    <div class="connected-header">
+      <div class="connected-icon">✅</div>
+      <div>
+        <h3>Stripe Account Connected</h3>
+        <p>You're all set to receive payments from buyers.</p>
+      </div>
+    </div>
+    <div class="account-details">
+      <div class="detail-row">
+        <span class="detail-label">Account ID</span>
+        <code class="detail-value">{{ accountStatus?.accountId }}</code>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">Charges Enabled</span>
+        <span class="detail-value status-ok">✓ Yes</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">Payouts Enabled</span>
+        <span class="detail-value" [class.status-ok]="accountStatus?.payoutsEnabled">
+          {{ accountStatus?.payoutsEnabled ? '✓ Yes' : '⏳ Pending' }}
+        </span>
+      </div>
+    </div>
+    <div class="payout-info">
+      <h4>How Payouts Work</h4>
+      <p>When a buyer pays for your won auction:</p>
+      <ol>
+        <li>Buyer is charged: <strong>Item Price + 2% BidRoom fee + Stripe processing fee</strong></li>
+        <li>BidRoom retains its 2% service fee</li>
+        <li>Stripe deducts its processing fee (2.9% + $0.30)</li>
+        <li>You receive: <strong>Item Price minus Stripe's processing fee</strong></li>
+      </ol>
+    </div>
+  </div>
+
+  <!-- Link to Transactions -->
+  <div class="transactions-link" *ngIf="!isLoading">
+    <a routerLink="/dashboard/transactions" class="link-btn">
+      View All Transactions →
+    </a>
+  </div>
+</div>

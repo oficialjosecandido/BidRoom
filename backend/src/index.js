@@ -22,6 +22,7 @@ const offerRoutes = require('./routes/offers');
 const uploadRoutes = require('./routes/uploads');
 const adminRoutes = require('./routes/admin');
 const privateRoomRoutes = require('./routes/privateRoom');
+const paymentRoutes = require('./routes/payments');
 
 // Import services
 const auctionEndScheduler = require('./services/auctionEndScheduler');
@@ -42,7 +43,14 @@ const PORT = process.env.PORT || 3000;
 app.use(helmet());
 app.use(cors());
 app.use(morgan('combined'));
-app.use(express.json());
+// NOTE: Stripe webhook requires raw body — the /api/payments/webhook route handles its own body parsing
+app.use((req, res, next) => {
+  if (req.originalUrl === '/api/payments/webhook') {
+    next();
+  } else {
+    express.json()(req, res, next);
+  }
+});
 app.use(express.urlencoded({ extended: true }));
 
 // Routes
@@ -53,6 +61,7 @@ app.use('/api/offers', offerRoutes);
 app.use('/api/uploads', uploadRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/private-room', privateRoomRoutes);
+app.use('/api/payments', paymentRoutes);
 
 app.get('/', (req, res) => {
   res.json({

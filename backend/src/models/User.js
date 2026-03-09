@@ -48,6 +48,18 @@ const userSchema = new mongoose.Schema({
   lastLogin: {
     type: Date,
     default: null
+  },
+  // Stripe Connect
+  stripeAccountId: {
+    type: String,
+    default: null,
+    sparse: true,
+    index: true
+  },
+  stripeAccountStatus: {
+    type: String,
+    enum: ['not_connected', 'pending', 'active'],
+    default: 'not_connected'
   }
 }, {
   timestamps: true // Adds createdAt and updatedAt fields

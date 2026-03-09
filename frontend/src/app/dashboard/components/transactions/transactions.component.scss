@@ -1,0 +1,278 @@
+.transactions-container {
+  padding: 2rem;
+  max-width: 1400px;
+}
+
+.page-header {
+  margin-bottom: 2rem;
+
+  .page-title {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #1a1a2e;
+    margin: 0 0 0.25rem;
+  }
+
+  .page-subtitle {
+    color: #666;
+    margin: 0;
+    font-size: 0.95rem;
+  }
+}
+
+.filters-bar {
+  display: flex;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  align-items: center;
+
+  .role-filters,
+  .status-filters {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .filter-btn {
+    padding: 0.4rem 1rem;
+    border: 1.5px solid #ddd;
+    border-radius: 20px;
+    background: white;
+    cursor: pointer;
+    font-size: 0.85rem;
+    color: #555;
+    transition: all 0.2s;
+
+    &:hover {
+      border-color: #1a1a2e;
+      color: #1a1a2e;
+    }
+
+    &.active {
+      background: #1a1a2e;
+      border-color: #1a1a2e;
+      color: white;
+    }
+  }
+}
+
+.loading-state,
+.error-state,
+.empty-state {
+  text-align: center;
+  padding: 4rem 2rem;
+  color: #666;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #eee;
+  border-top-color: #1a1a2e;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin: 0 auto 1rem;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.empty-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.retry-btn {
+  margin-top: 1rem;
+  padding: 0.5rem 1.5rem;
+  background: #1a1a2e;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.transactions-table-wrapper {
+  overflow-x: auto;
+  border-radius: 12px;
+  border: 1px solid #e8e8e8;
+  margin-bottom: 2rem;
+}
+
+.transactions-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+
+  thead tr {
+    background: #f7f8fa;
+    border-bottom: 1px solid #e8e8e8;
+
+    th {
+      padding: 0.9rem 1rem;
+      text-align: left;
+      font-weight: 600;
+      color: #555;
+      white-space: nowrap;
+    }
+  }
+
+  tbody {
+    .transaction-row {
+      border-bottom: 1px solid #f0f0f0;
+      transition: background 0.15s;
+
+      &:last-child { border-bottom: none; }
+      &:hover { background: #fafbfc; }
+
+      td {
+        padding: 1rem;
+        vertical-align: middle;
+      }
+    }
+  }
+}
+
+.invoice-number {
+  font-family: monospace;
+  font-size: 0.8rem;
+  color: #888;
+}
+
+.item-link {
+  color: #1a1a2e;
+  text-decoration: none;
+  font-weight: 500;
+
+  &:hover { text-decoration: underline; }
+}
+
+.amount {
+  font-weight: 600;
+  color: #1a1a2e;
+
+  &.total {
+    color: #2563eb;
+  }
+
+  &.payout {
+    color: #16a34a;
+  }
+}
+
+.fee {
+  .fee-amount {
+    display: block;
+    font-weight: 600;
+    color: #1a1a2e;
+  }
+
+  .fee-badge {
+    display: inline-block;
+    margin-top: 2px;
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    font-weight: 500;
+
+    &.bidroom {
+      background: #fef3c7;
+      color: #92400e;
+    }
+
+    &.stripe {
+      background: #ede9fe;
+      color: #5b21b6;
+    }
+  }
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 0.25rem 0.6rem;
+  border-radius: 20px;
+  font-size: 0.78rem;
+  font-weight: 600;
+
+  &.status-pending { background: #fef3c7; color: #92400e; }
+  &.status-processing { background: #dbeafe; color: #1e40af; }
+  &.status-completed { background: #dcfce7; color: #15803d; }
+  &.status-failed { background: #fee2e2; color: #b91c1c; }
+  &.status-refunded { background: #e0f2fe; color: #0369a1; }
+  &.status-disputed { background: #fce7f3; color: #9d174d; }
+}
+
+.date {
+  color: #888;
+  white-space: nowrap;
+  font-size: 0.8rem;
+}
+
+.view-invoice-btn {
+  display: inline-block;
+  padding: 0.35rem 0.8rem;
+  background: #1a1a2e;
+  color: white;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background 0.2s;
+
+  &:hover { background: #2d2d4e; }
+}
+
+// Fee Legend
+.fee-legend {
+  background: #f7f8fa;
+  border: 1px solid #e8e8e8;
+  border-radius: 12px;
+  padding: 1.5rem;
+
+  h4 {
+    margin: 0 0 1rem;
+    color: #1a1a2e;
+    font-size: 0.95rem;
+  }
+
+  .legend-items {
+    display: flex;
+    gap: 2rem;
+    flex-wrap: wrap;
+  }
+
+  .legend-item {
+    display: flex;
+    gap: 0.75rem;
+    align-items: flex-start;
+    flex: 1;
+    min-width: 200px;
+
+    strong {
+      display: block;
+      font-size: 0.85rem;
+      color: #1a1a2e;
+      margin-bottom: 0.2rem;
+    }
+
+    p {
+      font-size: 0.78rem;
+      color: #666;
+      margin: 0;
+      line-height: 1.4;
+    }
+  }
+
+  .legend-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    margin-top: 3px;
+    flex-shrink: 0;
+
+    &.bidroom { background: #f59e0b; }
+    &.stripe { background: #7c3aed; }
+    &.payout { background: #16a34a; }
+  }
+}
