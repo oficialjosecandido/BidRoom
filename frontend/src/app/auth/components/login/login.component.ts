@@ -3,6 +3,7 @@ import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angula
 import { Router, ActivatedRoute } from '@angular/router';
 
 import { AuthService } from '../../services/auth.service';
+import { isAdminEmail } from '../../../shared/config/admin.constants';
 
 @Component({
   selector: 'app-login',
@@ -50,7 +51,7 @@ export class LoginComponent implements OnInit {
           this.isLoading = false;
           // Check if user is admin and has a saved admin route
           const adminRoute = localStorage.getItem('admin_route');
-          if (user.email?.toLowerCase() === 'josevcandido@gmail.com' && adminRoute) {
+          if (isAdminEmail(user.email) && adminRoute) {
             this.router.navigate([adminRoute]);
           } else {
             this.router.navigate([this.returnUrl]);
@@ -111,7 +112,7 @@ export class LoginComponent implements OnInit {
     return '';
   }
 
-  getErrorMessage(error: any): string {
+  getErrorMessage(error: { code?: string; message?: string }): string {
     const errorCode = error?.code || '';
     
     switch (errorCode) {

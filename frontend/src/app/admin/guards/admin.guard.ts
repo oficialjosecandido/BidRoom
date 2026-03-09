@@ -2,19 +2,16 @@ import { Injectable, inject } from '@angular/core';
 import { CanActivate, Router, ActivatedRouteSnapshot, RouterStateSnapshot } from '@angular/router';
 import { Observable, of, from } from 'rxjs';
 import { catchError, switchMap } from 'rxjs/operators';
-import { AuthService } from '../../auth/services/auth.service';
 import { Auth } from '@angular/fire/auth';
+import { isAdminEmail } from '../../shared/config/admin.constants';
 
-const ADMIN_EMAIL = 'josevcandido@gmail.com';
 const ADMIN_ROUTE_KEY = 'admin_route';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AdminGuard implements CanActivate {
-  private authService = inject(AuthService);
   private router = inject(Router);
-
   private auth = inject(Auth);
 
   canActivate(
@@ -26,7 +23,7 @@ export class AdminGuard implements CanActivate {
 
     // Check Firebase directly first (fast path)
     const fbUser = this.auth.currentUser;
-    if (fbUser && fbUser.emailVerified && fbUser.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
+    if (fbUser && fbUser.emailVerified && isAdminEmail(fbUser.email)) {
       return of(true);
     }
 
@@ -65,7 +62,7 @@ export class AdminGuard implements CanActivate {
           return of(false);
         }
 
-        if (fbUser.email?.toLowerCase() !== ADMIN_EMAIL.toLowerCase()) {
+        if (!isAdminEmail(fbUser.email)) {
           localStorage.removeItem(ADMIN_ROUTE_KEY);
           this.router.navigate(['/landing']);
           return of(false);
@@ -75,7 +72,7 @@ export class AdminGuard implements CanActivate {
       }),
       catchError(() => {
         const fbUser = this.auth.currentUser;
-        if (fbUser && fbUser.emailVerified && fbUser.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
+        if (fbUser && fbUser.emailVerified && isAdminEmail(fbUser.email)) {
           return of(true);
         }
         this.handleUnauthorized(state);
