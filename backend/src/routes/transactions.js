@@ -47,7 +47,7 @@ router.get('/', async (req, res) => {
     const transactions = await Transaction.find({
       $or: [{ seller: user._id }, { buyer: user._id }]
     })
-      .populate('listing', 'title slug images status commissionRate shippingCost shippingOption')
+      .populate('listing', 'title slug images status commissionRate shippingCost shippingOption auctionFormat allowPrivateRoom')
       .populate('seller', 'firstName lastName email')
       .populate('buyer', 'firstName lastName email')
       .sort({ updatedAt: -1 })
@@ -107,7 +107,7 @@ router.get('/:id/invoice', async (req, res) => {
     }
 
     const transaction = await Transaction.findById(req.params.id)
-      .populate('listing', 'title slug images status commissionRate shippingCost shippingOption')
+      .populate('listing', 'title slug images status commissionRate shippingCost shippingOption auctionFormat allowPrivateRoom')
       .populate('seller', 'firstName lastName email')
       .populate('buyer', 'firstName lastName email')
       .lean();
@@ -154,7 +154,7 @@ router.get('/:id', async (req, res) => {
     }
 
     const transaction = await Transaction.findById(req.params.id)
-      .populate('listing', 'title slug images status commissionRate shippingCost shippingOption')
+      .populate('listing', 'title slug images status commissionRate shippingCost shippingOption auctionFormat allowPrivateRoom')
       .populate('seller', 'firstName lastName email')
       .populate('buyer', 'firstName lastName email')
       .lean();
@@ -290,7 +290,7 @@ router.post('/:id/open-dispute', async (req, res) => {
     }
 
     const updated = await Transaction.findById(transaction._id)
-      .populate('listing', 'title slug images status commissionRate shippingCost shippingOption')
+      .populate('listing', 'title slug images status commissionRate shippingCost shippingOption auctionFormat allowPrivateRoom')
       .populate('seller', 'firstName lastName email')
       .populate('buyer', 'firstName lastName email')
       .lean();
@@ -357,7 +357,7 @@ router.patch('/:id/dispute/counter-evidence', async (req, res) => {
     }
 
     const updated = await Transaction.findById(transaction._id)
-      .populate('listing', 'title slug images status commissionRate shippingCost shippingOption')
+      .populate('listing', 'title slug images status commissionRate shippingCost shippingOption auctionFormat allowPrivateRoom')
       .populate('seller', 'firstName lastName email')
       .populate('buyer', 'firstName lastName email')
       .lean();
@@ -520,7 +520,7 @@ router.patch('/:id', requireActiveAccount, async (req, res) => {
     await transaction.save();
 
     const updated = await Transaction.findById(transaction._id)
-      .populate('listing', 'title slug images status commissionRate shippingCost shippingOption')
+      .populate('listing', 'title slug images status commissionRate shippingCost shippingOption auctionFormat allowPrivateRoom')
       .populate('seller', 'firstName lastName email')
       .populate('buyer', 'firstName lastName email')
       .lean();

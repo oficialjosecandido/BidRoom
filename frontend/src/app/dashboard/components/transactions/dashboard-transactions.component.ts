@@ -275,6 +275,25 @@ export class DashboardTransactionsComponent implements OnInit {
     return shipping !== null ? t.amount + shipping : null;
   }
 
+  /** Auction type label: Best Offer | Highest-Bid Auction (Private Room) | Highest-Bid Auction */
+  getAuctionTypeLabel(t: Transaction): string {
+    const fmt = t.listing?.auctionFormat;
+    if (fmt === 'best-offer') return 'Best Offer';
+    if (t.listing?.allowPrivateRoom) return 'Highest-Bid Auction (Private Room)';
+    return 'Highest-Bid Auction';
+  }
+
+  /** Label for the sale price row, context-aware to auction type */
+  getSalePriceLabel(t: Transaction): string {
+    return t.listing?.auctionFormat === 'best-offer' ? 'Accepted offer price' : 'Final auction price';
+  }
+
+  /** Commission rate as a formatted percentage string */
+  getCommissionRateLabel(t: Transaction): string {
+    const rate = t.listing?.commissionRate ?? 0.005;
+    return (rate * 100).toFixed(1) + '%';
+  }
+
   getListingImage(t: Transaction): string {
     const img = t.listing?.images?.[0];
     return img || 'https://via.placeholder.com/400x300?text=No+Image';
