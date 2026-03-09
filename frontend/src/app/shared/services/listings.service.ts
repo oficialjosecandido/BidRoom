@@ -153,10 +153,6 @@ export class ListingsService {
     return this.http.get<Listing>(`${this.apiUrl}/slug/${slug}`);
   }
 
-  getListing(id: string): Observable<Listing> {
-    return this.http.get<Listing>(`${this.apiUrl}/${id}`);
-  }
-
   getStats(): Observable<StatsOverview> {
     return this.http.get<StatsOverview>(`${this.apiUrl}/stats/overview`);
   }

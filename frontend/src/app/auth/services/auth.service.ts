@@ -2,6 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { BehaviorSubject, Observable, from, of, throwError } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
 import { Auth, GoogleAuthProvider, User as FirebaseUser, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithPopup, sendPasswordResetEmail, sendEmailVerification, updateProfile, signOut, getIdToken, confirmPasswordReset, verifyPasswordResetCode } from '@angular/fire/auth';
+import { isAdminEmail } from '../../shared/config/admin.constants';
 
 export interface AppUser {
   uid: string;
@@ -28,7 +29,6 @@ export class AuthService {
     onAuthStateChanged(this.auth, async (fbUser: FirebaseUser | null) => {
       if (fbUser && !fbUser.emailVerified) {
         // User is logged in but email is not verified - sign them out
-        console.warn('User logged in but email not verified. Signing out...');
         await signOut(this.auth);
         this.currentUserSubject.next(null);
         this.authReadySubject.next(true);
@@ -40,7 +40,7 @@ export class AuthService {
       
       // If user is admin and there's a saved admin route, redirect there
       // This handles page refresh scenario
-      if (mapped && (mapped.email?.toLowerCase() === 'josevcandido@gmail.com' || mapped.email?.toLowerCase() === 'tomas.cascao123@gmail.com' || mapped.email?.toLowerCase() === 'pt.bidnow@gmail.com')) {
+      if (mapped && isAdminEmail(mapped.email)) {
         const adminRoute = localStorage.getItem('admin_route');
         if (adminRoute) {
           const currentPath = window.location.pathname;

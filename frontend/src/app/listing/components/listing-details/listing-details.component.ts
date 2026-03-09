@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { finalize, timeout } from 'rxjs/operators';
+import { MAX_DISPLAYED_BIDS, EMAIL_REGEX } from '../../../shared/config/listing.constants';
 import Swal from 'sweetalert2';
 import { HeaderComponent } from '../../../shared/components/header/header.component';
 import { FooterComponent } from '../../../shared/components/footer/footer.component';
@@ -59,7 +60,7 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
   selectedPrivateRoomBidderIds = new Set<string>();
   createPrivateRoomSubmitting = false;
   private socketSubscriptions: Subscription[] = [];
-  private countdownInterval: any = null;
+  private countdownInterval: ReturnType<typeof setInterval> | null = null;
   private justEndedRefetched = false;
   private offerRefreshDebounceTimer: ReturnType<typeof setTimeout> | null = null;
   private readonly OFFER_REFRESH_DEBOUNCE_MS = 2000;
@@ -94,11 +95,15 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
     }
     
     // Check authentication status and whether current user is the seller
-    this.authService.isAuthenticated().subscribe(isAuth => {
-      this.isAuthenticated = isAuth;
-      this.updateIsOwnListing();
-    });
-    this.authService.currentUser$.subscribe(() => this.updateIsOwnListing());
+    this.socketSubscriptions.push(
+      this.authService.isAuthenticated().subscribe(isAuth => {
+        this.isAuthenticated = isAuth;
+        this.updateIsOwnListing();
+      })
+    );
+    this.socketSubscriptions.push(
+      this.authService.currentUser$.subscribe(() => this.updateIsOwnListing())
+    );
   }
 
   loadListing(slug: string): void {
@@ -131,8 +136,7 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
           this.setupRealTimeUpdates(listing._id);
         }
       },
-      error: (err) => {
-        console.error('Error loading listing:', err);
+      error: () => {
         this.error = 'Listing not found';
         this.loading = false;
       }
@@ -148,8 +152,7 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
         this.bids = response.bids;
         this.bidsLoading = false;
       },
-      error: (err) => {
-        console.error('Error loading bids:', err);
+      error: () => {
         this.bidsError = 'Failed to load bid history';
         this.bidsLoading = false;
       }
@@ -169,8 +172,7 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
         this.offers = response.offers;
         this.offersLoading = false;
       },
-      error: (err) => {
-        console.error('Error loading offers:', err);
+      error: () => {
         this.offersError = 'Failed to load offer history';
         this.offersLoading = false;
       }
@@ -228,12 +230,11 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
     this.offersService.acceptOffer(offer._id).subscribe({
       next: () => {
         this.offerActionLoadingId = null;
-        this.loadOffers(this.listing!._id);
+        // loadListing calls loadOffers internally for best-offer listings
         this.loadListing(this.route.snapshot.paramMap.get('slug') || '');
       },
       error: (err) => {
         this.offerActionLoadingId = null;
-        console.error('Accept offer failed', err);
         this.offersError = err?.error?.message || 'Failed to accept offer.';
       }
     });
@@ -245,12 +246,11 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
     this.offersService.rejectOffer(offer._id).subscribe({
       next: () => {
         this.offerActionLoadingId = null;
-        this.loadOffers(this.listing!._id);
+        // loadListing calls loadOffers internally for best-offer listings
         this.loadListing(this.route.snapshot.paramMap.get('slug') || '');
       },
       error: (err) => {
         this.offerActionLoadingId = null;
-        console.error('Reject offer failed', err);
         this.offersError = err?.error?.message || 'Failed to reject offer.';
       }
     });
@@ -360,8 +360,7 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
       this.winnerSelectionCountdownDisplay = '';
     }
 
-    // Trigger change detection
-    this.cdr.detectChanges();
+    this.cdr.markForCheck();
   }
 
   formatTimeRemaining(): string {
@@ -548,8 +547,8 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
     // Subscribe to new bid events
     const newBidSubscription = this.socketService.onNewBid().subscribe((event) => {
       if (event.listingId === listingId) {
-        // Add new bid to the list (prepend since we sort desc)
-        this.bids = [event.bid, ...this.bids];
+        // Add new bid to the list (prepend since we sort desc), capped to avoid unbounded growth
+        this.bids = [event.bid, ...this.bids].slice(0, MAX_DISPLAYED_BIDS);
         
         // Update listing current price and bid count
         if (this.listing && event.currentPrice !== undefined && event.bidCount !== undefined) {
@@ -626,15 +625,19 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
         this.bidModalError = 'Please enter your email address to receive bid notifications.';
         return;
       }
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(trimmed)) {
+      if (!EMAIL_REGEX.test(trimmed)) {
         this.bidModalError = 'Please enter a valid email address.';
         return;
       }
       email = trimmed;
     }
     this.bidSubmitting = true;
-    const bidData: any = { listingId: this.listing._id, amount, bidType: 'manual', notifyWhenOutbid: this.bidNotifyWhenOutbid };
+    const bidData: { listingId: string; amount: number; bidType: 'manual'; notifyWhenOutbid: boolean; email?: string } = {
+      listingId: this.listing._id,
+      amount,
+      bidType: 'manual',
+      notifyWhenOutbid: this.bidNotifyWhenOutbid
+    };
     if (!this.isAuthenticated && email) bidData.email = email;
     this.bidsService.createBid(bidData).pipe(
       timeout(45000),
@@ -645,8 +648,7 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
     ).subscribe({
       next: () => {
         this.closeBidModal();
-        if (this.listing?._id) this.loadBids(this.listing._id);
-        this.loadListing(this.listing!.slug);
+        this.loadListing(this.listing!.slug); // loadListing already calls loadBids internally
         this.cdr.markForCheck();
         Swal.fire({
           toast: true,
@@ -715,8 +717,7 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
         this.offerModalError = 'Please enter your email so the seller can contact you.';
         return;
       }
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(trimmed)) {
+      if (!EMAIL_REGEX.test(trimmed)) {
         this.offerModalError = 'Please enter a valid email address.';
         return;
       }
@@ -763,22 +764,27 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
 
   buyNow(): void {
     if (!this.listing) return;
-    
-    if (confirm(`Buy this item now for ${this.formatPrice(this.listing.buyNowPrice!)}? This will instantly close the auction.`)) {
-      this.listingsService.buyNow(this.listing._id).subscribe({
+    const listing = this.listing;
+    Swal.fire({
+      title: 'Buy Now',
+      text: `Buy this item now for ${this.formatPrice(listing.buyNowPrice!)}? This will instantly close the auction.`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Buy Now',
+      confirmButtonColor: '#7A4F84',
+      cancelButtonText: 'Cancel'
+    }).then(result => {
+      if (!result.isConfirmed) return;
+      this.listingsService.buyNow(listing._id).subscribe({
         next: () => {
-          alert('Purchase successful!');
-          // Reload listing to show updated status
-          if (this.listing?.slug) {
-            this.loadListing(this.listing.slug);
-          }
+          Swal.fire({ icon: 'success', title: 'Purchase successful!', confirmButtonColor: '#7A4F84' });
+          if (listing.slug) this.loadListing(listing.slug);
         },
         error: (err) => {
-          console.error('Error buying now:', err);
-          alert(err.error?.message || 'Failed to complete purchase');
+          Swal.fire({ icon: 'error', title: 'Purchase failed', text: err.error?.message || 'Failed to complete purchase', confirmButtonColor: '#7A4F84' });
         }
       });
-    }
+    });
   }
 
   addToWatchlist(): void {
@@ -877,7 +883,7 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
       error: (err) => {
         this.selectingWinner = false;
         this.cdr.detectChanges();
-        alert(err.error?.message || 'Failed to select winner');
+        Swal.fire({ icon: 'error', title: 'Failed to select winner', text: err.error?.message || 'Please try again.', confirmButtonColor: '#7A4F84' });
       }
     });
   }
@@ -895,7 +901,7 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
       error: (err) => {
         this.reopenLoading = false;
         this.cdr.detectChanges();
-        alert(err.error?.message || 'Failed to reopen auction');
+        Swal.fire({ icon: 'error', title: 'Failed to reopen auction', text: err.error?.message || 'Please try again.', confirmButtonColor: '#7A4F84' });
       }
     });
   }
@@ -955,12 +961,8 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
   submitCreatePrivateRoom(): void {
     if (!this.listing?._id || this.createPrivateRoomSubmitting) return;
     const ids = Array.from(this.selectedPrivateRoomBidderIds);
-    if (ids.length < 2) {
-      alert('Please select between 2 and 5 bidders for the private room.');
-      return;
-    }
-    if (ids.length > 5) {
-      alert('You can invite at most 5 bidders.');
+    if (ids.length < 2 || ids.length > 5) {
+      Swal.fire({ icon: 'warning', title: 'Invalid selection', text: 'Please select between 2 and 5 bidders for the private room.', confirmButtonColor: '#7A4F84' });
       return;
     }
     this.createPrivateRoomSubmitting = true;
@@ -983,7 +985,7 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
       error: (err) => {
         this.createPrivateRoomSubmitting = false;
         this.cdr.detectChanges();
-        alert(err.error?.message || err.error?.error || 'Failed to create private room');
+        Swal.fire({ icon: 'error', title: 'Failed to create private room', text: err.error?.message || err.error?.error || 'Please try again.', confirmButtonColor: '#7A4F84' });
       }
     });
   }
@@ -993,35 +995,24 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
     return this.listing.description.replace(/\n/g, '<br>');
   }
 
-  formatBidDate(dateString: string): string {
-    const date = new Date(dateString);
+  /** Format a date string for display in bid/offer history (e.g. "Jan 5, 2025, 02:30 PM"). */
+  formatDate(dateString: string): string {
     return new Intl.DateTimeFormat('en-US', {
       month: 'short',
       day: 'numeric',
       year: 'numeric',
       hour: '2-digit',
       minute: '2-digit'
-    }).format(date);
+    }).format(new Date(dateString));
   }
+
+  /** @deprecated Use formatDate instead. */
+  formatBidDate(dateString: string): string { return this.formatDate(dateString); }
+  /** @deprecated Use formatDate instead. */
+  formatOfferDate(dateString: string): string { return this.formatDate(dateString); }
 
   formatBidAmount(amount: number): string {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 2
-    }).format(amount);
-  }
-
-  formatOfferDate(dateString: string): string {
-    const date = new Date(dateString);
-    return new Intl.DateTimeFormat('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    }).format(date);
+    return this.formatPrice(amount);
   }
 
   formatOfferStatus(status: string): string {

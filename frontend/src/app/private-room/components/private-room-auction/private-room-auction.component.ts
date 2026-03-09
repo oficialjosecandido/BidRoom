@@ -7,9 +7,16 @@ import Swal from 'sweetalert2';
 import { ListingsService, Listing } from '../../../shared/services/listings.service';
 import { BidsService, Bid } from '../../../shared/services/bids.service';
 import { SocketService } from '../../../shared/services/socket.service';
-import { AuthService } from '../../../auth/services/auth.service';
+import { AuthService, AppUser } from '../../../auth/services/auth.service';
 import { PrivateRoomService } from '../../services/private-room.service';
 import { API_CONFIG } from '../../../shared/config/api.config';
+
+interface PlatinumBidderInfo {
+  id: string;
+  name: string;
+  latestBid: number;
+  bidCount: number;
+}
 
 @Component({
   selector: 'app-private-room-auction',
@@ -30,7 +37,7 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
   listingId = '';
   listing: Listing | null = null;
   bids: Bid[] = [];
-  platinumBidders: any[] = [];
+  platinumBidders: PlatinumBidderInfo[] = [];
   loading = true;
   error: string | null = null;
   countdown = 0; // seconds remaining
@@ -39,10 +46,11 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
   /** Invited but not yet accepted; must accept within 15 min to place bids */
   invitationPending = false;
   currentUserId: string | null = null;
-  currentUser: any = null;
+  currentUser: AppUser | null = null;
   viewerCount = 0;
   private socketSubscriptions: Subscription[] = [];
-  private countdownInterval: any = null;
+  private countdownInterval: ReturnType<typeof setInterval> | null = null;
+  private resizeHandler: () => void = () => this.checkMobile();
   isMobile = false;
   isPlacingBid = false;
   /** Custom bid amount (user can type any number >= min); empty = use minimum next bid */
@@ -56,21 +64,23 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
       this.loadListing();
     }
 
-    this.authService.currentUser$.subscribe(user => {
-      this.isAuthenticated = !!user;
-      this.currentUserId = user?.uid || null;
-      this.currentUser = user;
-      if (!user) {
-        this.isPlatinumBidder = false;
-        this.invitationPending = false;
-      } else if (this.listing) {
-        this.applyPlatinumStatusFromListing();
-      }
-    });
+    this.socketSubscriptions.push(
+      this.authService.currentUser$.subscribe(user => {
+        this.isAuthenticated = !!user;
+        this.currentUserId = user?.uid || null;
+        this.currentUser = user;
+        if (!user) {
+          this.isPlatinumBidder = false;
+          this.invitationPending = false;
+        } else if (this.listing) {
+          this.applyPlatinumStatusFromListing();
+        }
+      })
+    );
 
     // Detect mobile device
     this.checkMobile();
-    window.addEventListener('resize', () => this.checkMobile());
+    window.addEventListener('resize', this.resizeHandler);
   }
 
   checkMobile(): void {
@@ -83,7 +93,7 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
       clearInterval(this.countdownInterval);
       this.countdownInterval = null;
     }
-    window.removeEventListener('resize', () => this.checkMobile());
+    window.removeEventListener('resize', this.resizeHandler);
     // Leave private room viewer room
     if (this.listingId) {
       this.socketService.leavePrivateRoomViewer(this.listingId);
@@ -109,20 +119,15 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
   }
 
   getCurrentUserInitials(): string {
-    if (!this.currentUser) return 'G';
-    const name = this.currentUser.displayName || this.currentUser.email || '';
-    const parts = name.split(' ');
-    if (parts.length >= 2) {
-      return (parts[0][0] + parts[1][0]).toUpperCase();
-    }
-    return name[0]?.toUpperCase() || 'U';
+    const name = this.currentUser?.displayName || this.currentUser?.email || '';
+    return this.getInitial(name) || 'G';
   }
 
   loadListing(): void {
     this.loading = true;
     this.error = null;
 
-    this.listingsService.getListing(this.listingId).subscribe({
+    this.listingsService.getListingById(this.listingId).subscribe({
       next: (listing) => {
         this.listing = listing;
         this.loading = false;
@@ -146,9 +151,7 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
         this.bids = response.bids;
         this.updatePlatinumBidders();
       },
-      error: (error) => {
-        console.error('Failed to load bids:', error);
-      }
+      error: () => { /* bids load failure is non-critical; listing remains usable */ }
     });
   }
 
@@ -161,7 +164,7 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
     // Get unique platinum bidders with their latest bid info
     const platinumMap = new Map();
     
-    this.listing.platinumBidders.forEach((pbId: any) => {
+    this.listing.platinumBidders.forEach((pbId: string | { _id: string }) => {
       const bidderId = typeof pbId === 'string' ? pbId : pbId._id;
       // Find latest bid from this bidder
       const bidderBids = this.bids.filter(b => {
@@ -293,8 +296,8 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
         this.listing.privateRoomEndDate = update.privateRoomEndDate;
         this.startCountdown();
       }
-      if ((update as any).privateRoomClosedReason) {
-        (this.listing as any).privateRoomClosedReason = (update as any).privateRoomClosedReason;
+      if (update.privateRoomClosedReason) {
+        this.listing.privateRoomClosedReason = update.privateRoomClosedReason;
       }
       if (update.privateRoomStatus) {
         this.listing.privateRoomStatus = update.privateRoomStatus;
@@ -329,7 +332,6 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
     const viewerSub = this.socketService.onPrivateRoomViewerCountUpdate().subscribe(event => {
       if (event.listingId === this.listingId) {
         this.viewerCount = event.count;
-        console.log(`Viewer count updated: ${event.count} viewers`);
       }
     });
 
@@ -381,11 +383,14 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
     const canBid = this.isPlatinumBidder && this.listing.privateRoomStatus === 'active';
 
     if (!canBid) {
-      if (!this.isPlatinumBidder) {
-        alert('Only invited bidders (by the seller) can place bids. You can watch the room.');
-      } else {
-        alert('Bidding is not currently available. The Private Room may have ended or is not yet active.');
-      }
+      Swal.fire({
+        icon: 'info',
+        title: 'Cannot place bid',
+        text: !this.isPlatinumBidder
+          ? 'Only invited bidders (by the seller) can place bids. You can watch the room.'
+          : 'Bidding is not currently available. The Private Room may have ended or is not yet active.',
+        confirmButtonColor: '#7A4F84'
+      });
       return;
     }
 
@@ -418,8 +423,7 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
       next: () => {
         this.isPlacingBid = false;
         this.customBidAmount = '';
-        this.loadBids();
-        this.loadListing();
+        this.loadListing(); // loadListing calls loadBids internally
         Swal.fire({
           toast: true,
           position: 'top-end',
@@ -432,14 +436,12 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
       },
       error: (error) => {
         this.isPlacingBid = false;
-        const errorMessage = error?.error?.message || error?.message || 'Failed to place bid. Please try again.';
-        this.bidInputError = errorMessage;
-        console.error('Bid error:', error);
+        this.bidInputError = error?.error?.message || error?.message || 'Failed to place bid. Please try again.';
       }
     });
   }
 
-  getBidderName(bidder: any): string {
+  getBidderName(bidder: Bid): string {
     if (bidder.bidderFirstName && bidder.bidderLastName) {
       return `${bidder.bidderFirstName} ${bidder.bidderLastName}`;
     }
@@ -520,14 +522,8 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
 
   logout(): void {
     this.authService.logout().subscribe({
-      next: () => {
-        this.router.navigate(['/landing']);
-      },
-      error: (error) => {
-        console.error('Logout error:', error);
-        // Still navigate even if logout has an error
-        this.router.navigate(['/landing']);
-      }
+      next: () => this.router.navigate(['/landing']),
+      error: () => this.router.navigate(['/landing'])
     });
   }
 }
