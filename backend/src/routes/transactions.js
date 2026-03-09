@@ -15,6 +15,7 @@ const {
   emitNewNotificationToUser
 } = require('../services/notificationService');
 const { suspendBothPartiesForDispute } = require('../services/accountStatusService');
+const { generateInvoicePdf } = require('../services/invoiceService');
 
 const router = express.Router();
 
@@ -86,6 +87,58 @@ router.get('/', async (req, res) => {
   } catch (error) {
     console.error('Error fetching transactions:', error);
     res.status(500).json({ error: 'Failed to fetch transactions', message: error.message });
+  }
+});
+
+/**
+ * GET /api/transactions/:id/invoice?role=seller|buyer
+ * Download invoice/receipt PDF (completed transactions only)
+ */
+router.get('/:id/invoice', async (req, res) => {
+  try {
+    const user = await User.findOne({ uid: req.user.uid });
+    if (!user) {
+      return res.status(404).json({ error: 'User not found.' });
+    }
+
+    const role = req.query.role;
+    if (!role || !['seller', 'buyer'].includes(role)) {
+      return res.status(400).json({ error: 'Invalid or missing role. Use ?role=seller or ?role=buyer' });
+    }
+
+    const transaction = await Transaction.findById(req.params.id)
+      .populate('listing', 'title slug images status commissionRate shippingCost shippingOption')
+      .populate('seller', 'firstName lastName email')
+      .populate('buyer', 'firstName lastName email')
+      .lean();
+
+    if (!transaction) {
+      return res.status(404).json({ error: 'Transaction not found' });
+    }
+
+    const ts = transaction.transactionStatus ?? transaction.status;
+    if (ts !== 'completed') {
+      return res.status(400).json({ error: 'Invoice is only available for completed transactions.' });
+    }
+
+    const sellerId = transaction.seller?._id?.toString() || transaction.seller?.toString();
+    const buyerId = transaction.buyer?._id?.toString() || transaction.buyer?.toString();
+    if (role === 'seller' && sellerId !== user._id.toString()) {
+      return res.status(403).json({ error: 'You do not have access to the seller invoice for this transaction.' });
+    }
+    if (role === 'buyer' && buyerId !== user._id.toString()) {
+      return res.status(403).json({ error: 'You do not have access to the buyer receipt for this transaction.' });
+    }
+
+    const pdfBuffer = await generateInvoicePdf(transaction, role);
+    const filename = role === 'seller' ? `invoice-${transaction._id}.pdf` : `receipt-${transaction._id}.pdf`;
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.send(pdfBuffer);
+  } catch (error) {
+    console.error('Error generating invoice:', error);
+    res.status(500).json({ error: 'Failed to generate invoice', message: error.message });
   }
 });
 

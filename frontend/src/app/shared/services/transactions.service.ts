@@ -176,4 +176,11 @@ export class TransactionsService {
       mediaUrls
     });
   }
+
+  /** Download invoice (seller) or receipt (buyer) PDF for a completed transaction. */
+  getInvoice(id: string, role: 'seller' | 'buyer'): Observable<Blob> {
+    return this.http.get(`${this.apiUrl}/${id}/invoice?role=${role}`, {
+      responseType: 'blob'
+    });
+  }
 }

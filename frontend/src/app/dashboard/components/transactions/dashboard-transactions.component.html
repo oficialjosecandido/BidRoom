@@ -298,6 +298,11 @@
                 Leave review
               </button>
             }
+            @if (isDone(t)) {
+              <button type="button" class="btn btn-secondary" (click)="downloadInvoice(t); $event.stopPropagation()" [disabled]="invoiceDownloadingTxId === t._id">
+                {{ invoiceDownloadingTxId === t._id ? 'Downloading…' : (isSeller(t) ? 'Download invoice' : 'Download receipt') }}
+              </button>
+            }
           </div>
         </div>
       }

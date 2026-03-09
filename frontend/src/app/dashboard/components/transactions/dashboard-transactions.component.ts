@@ -65,6 +65,8 @@ export class DashboardTransactionsComponent implements OnInit {
   deliveryProofFileNameByTxId: Record<string, string> = {};
   deliveryProofUploadingTxId: string | null = null;
   deliveryProofErrorByTxId: Record<string, string> = {};
+  /** Transaction ID currently downloading invoice/receipt PDF */
+  invoiceDownloadingTxId: string | null = null;
 
   ngOnInit(): void {
     this.loadTransactions();
@@ -584,6 +586,26 @@ export class DashboardTransactionsComponent implements OnInit {
         },
         error: () => (this.updatingId = null)
       });
+  }
+
+  /** Download invoice (seller) or receipt (buyer) PDF for completed transactions */
+  downloadInvoice(t: Transaction): void {
+    if (!t.role || this.invoiceDownloadingTxId) return;
+    this.invoiceDownloadingTxId = t._id;
+    this.transactionsService.getInvoice(t._id, t.role).subscribe({
+      next: (blob) => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = t.role === 'seller' ? `invoice-${t._id}.pdf` : `receipt-${t._id}.pdf`;
+        a.click();
+        URL.revokeObjectURL(url);
+        this.invoiceDownloadingTxId = null;
+      },
+      error: () => {
+        this.invoiceDownloadingTxId = null;
+      }
+    });
   }
 
   /** Whether the current user can leave a review for this transaction (delivered/completed + hasn't reviewed) */
