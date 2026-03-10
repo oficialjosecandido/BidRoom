@@ -76,6 +76,58 @@
 
     <div class="account-card">
       <div class="card-header">
+        <h2 class="card-title">Seller Payments (Stripe)</h2>
+      </div>
+
+      <div class="card-body">
+        @if (connectStatusMessage) {
+          <div class="connect-message">{{ connectStatusMessage }}</div>
+        }
+
+        @if (connectLoading) {
+          <p class="connect-loading">Checking Stripe account status...</p>
+        } @else {
+          <div class="connect-status-row">
+            <span class="connect-label">Stripe account status:</span>
+            <span class="connect-badge" [ngClass]="connectStatusClass">{{ connectStatusLabel }}</span>
+          </div>
+
+          @if (connectStatus?.onboarded) {
+            <p class="connect-desc">
+              Your Stripe account is active. Buyers can pay you directly — payouts will be sent to your connected bank account.
+            </p>
+            @if (connectStatus?.chargesEnabled) {
+              <p class="connect-detail">Charges enabled &nbsp;·&nbsp; Payouts {{ connectStatus?.payoutsEnabled ? 'enabled' : 'pending' }}</p>
+            }
+            <button type="button" class="connect-btn connect-btn-secondary" (click)="startOnboarding()" [disabled]="connectOnboarding">
+              {{ connectOnboarding ? 'Redirecting...' : 'Update Stripe account' }}
+            </button>
+          } @else if (connectStatus?.connected) {
+            <p class="connect-desc">
+              Your Stripe account has been created but onboarding is not yet complete. Please finish setting up your account to receive payouts.
+            </p>
+            <button type="button" class="connect-btn" (click)="startOnboarding()" [disabled]="connectOnboarding">
+              {{ connectOnboarding ? 'Redirecting...' : 'Complete Stripe setup' }}
+            </button>
+          } @else {
+            <p class="connect-desc">
+              To receive payments from buyers, you need to connect a Stripe account. This takes a few minutes — you'll need to verify your identity and add your bank account details.
+            </p>
+            <ul class="connect-features">
+              <li>No Stripe account required — we create one for you</li>
+              <li>Just provide identity verification and bank account details</li>
+              <li>Payouts sent directly to your bank (2-day schedule)</li>
+            </ul>
+            <button type="button" class="connect-btn" (click)="startOnboarding()" [disabled]="connectOnboarding">
+              {{ connectOnboarding ? 'Redirecting to Stripe...' : 'Connect Stripe account' }}
+            </button>
+          }
+        }
+      </div>
+    </div>
+
+    <div class="account-card">
+      <div class="card-header">
         <h2 class="card-title">Account Settings</h2>
       </div>
 

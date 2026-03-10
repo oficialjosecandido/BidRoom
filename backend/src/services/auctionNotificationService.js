@@ -954,8 +954,8 @@ async function handleAuctionEnd(listingId, io = null) {
       .populate('bidder', 'firstName lastName email')
       .lean();
 
-    // Auto-select winner when: has bids, highest bidder is authenticated (reserve not used; bids already met minimum)
-    const canAutoSelect = highestBid && highestBid.bidder;
+    // Auto-select winner when: has bids, highest bidder is authenticated, reserve met (or no reserve)
+    const canAutoSelect = highestBid && highestBid.bidder && reserveMet;
 
     if (canAutoSelect) {
       const now = new Date();

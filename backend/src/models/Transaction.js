@@ -44,12 +44,17 @@ const transactionSchema = new mongoose.Schema({
     type: Date,
     default: null
   },
-  /** Seller bank details (for this transaction only); visible to buyer for transfer */
-  sellerBankIban: { type: String, trim: true, default: null },
-  sellerBankSwift: { type: String, trim: true, default: null },
-  sellerBankAccountName: { type: String, trim: true, default: null },
-  /** Buyer: optional proof of payment (e.g. receipt/screenshot URL) when marking paid */
-  buyerProofOfPaymentUrl: { type: String, trim: true, default: null },
+  /** Stripe Connect payment fields */
+  stripeCheckoutSessionId: { type: String, trim: true, default: null, sparse: true },
+  stripePaymentIntentId: { type: String, trim: true, default: null, sparse: true },
+  /** BidRoom platform fee charged to buyer (2% of amount, in dollars) */
+  bidRoomFeeAmount: { type: Number, default: null, min: 0 },
+  /** Stripe processing fee deducted from seller payout (retrieved from Stripe BalanceTx, in dollars) */
+  stripeFeeAmount: { type: Number, default: null, min: 0 },
+  /** Total charged to buyer including BidRoom fee and shipping (in dollars) */
+  buyerTotalPaid: { type: Number, default: null, min: 0 },
+  /** Final payout to seller (amount - bidRoomFee - stripeFee, in dollars) */
+  sellerPayoutAmount: { type: Number, default: null, min: 0 },
   /** Seller: optional proof of delivery (e.g. shipping receipt URL) when marking shipped */
   sellerProofOfDeliveryUrl: { type: String, trim: true, default: null },
   /** When seller must ship by (paidAt or payment deadline + listing handling time); used for Phase 2 */

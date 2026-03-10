@@ -80,6 +80,19 @@ const userSchema = new mongoose.Schema({
   reputationUpdatedAt: {
     type: Date,
     default: null
+  },
+  /** Stripe Connect Express account ID (acct_xxx); set when seller starts onboarding */
+  stripeConnectAccountId: {
+    type: String,
+    default: null,
+    sparse: true,
+    index: true
+  },
+  /** Whether the seller has completed Stripe Connect onboarding (KYC + bank account) */
+  stripeConnectOnboarded: {
+    type: Boolean,
+    default: false,
+    index: true
   }
 }, {
   timestamps: true // Adds createdAt and updatedAt fields

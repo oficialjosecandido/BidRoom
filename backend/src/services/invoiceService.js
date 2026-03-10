@@ -1,42 +1,25 @@
 const PDFDocument = require('pdfkit');
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
+const BIDROOMFEE_RATE = 0.02; // 2%
 
+/** Format amount as USD */
 function formatUsd(amount) {
   return '$' + Number(amount).toFixed(2);
 }
 
-function formatDate(date) {
-  if (!date) return 'N/A';
-  return new Date(date).toLocaleDateString('en-US', {
-    year: 'numeric', month: 'long', day: 'numeric'
-  });
-}
-
-function getAuctionTypeLabel(transaction) {
-  const fmt = transaction.listing?.auctionFormat;
-  if (fmt === 'best-offer') return 'Best Offer';
-  if (transaction.listing?.allowPrivateRoom) return 'Highest-Bid Auction (Private Room)';
-  return 'Highest-Bid Auction';
-}
-
-function getSalePriceLabel(transaction) {
-  const fmt = transaction.listing?.auctionFormat;
-  return fmt === 'best-offer' ? 'Accepted offer price' : 'Final auction price';
-}
-
-/** Get platform fee (commission) from transaction */
-function getPlatformFee(transaction) {
-  const rate = transaction.listing?.commissionRate ?? 0.005;
+/** BidRoom platform fee: stored on transaction when paid via Stripe, fallback to rate calculation */
+function getBidRoomFee(transaction) {
+  if (transaction.bidRoomFeeAmount != null) return transaction.bidRoomFeeAmount;
+  const rate = transaction.listing?.commissionRate ?? BIDROOMFEE_RATE;
   return transaction.amount * rate;
 }
 
-function getCommissionRateLabel(transaction) {
-  const rate = transaction.listing?.commissionRate ?? 0.005;
-  return (rate * 100).toFixed(1) + '%';
+/** Stripe processing fee: stored after payment capture; null if not yet available */
+function getStripeFee(transaction) {
+  return transaction.stripeFeeAmount ?? null;
 }
 
-/** Get shipping amount: flat-rate uses listing.shippingCost; free/local = 0; calculated = null */
+/** Shipping amount: flat-rate uses listing.shippingCost; free/local = 0; calculated = null */
 function getShippingAmount(transaction) {
   const opt = transaction.listing?.shippingOption || 'flat-rate';
   if (opt === 'free' || opt === 'local-pickup') return 0;
@@ -44,99 +27,31 @@ function getShippingAmount(transaction) {
   return null;
 }
 
-function getShippingLabel(transaction) {
-  const opt = transaction.listing?.shippingOption || 'flat-rate';
-  if (opt === 'free') return 'Free';
-  if (opt === 'local-pickup') return 'Local pickup (free)';
-  const amount = getShippingAmount(transaction);
-  return amount !== null ? formatUsd(amount) : 'Calculated separately';
-}
-
-/** Get seller payout (amount - platform fee) */
+/** Seller payout: stored on transaction when paid; fallback to calculated */
 function getSellerPayout(transaction) {
-  return transaction.amount - getPlatformFee(transaction);
+  if (transaction.sellerPayoutAmount != null) return transaction.sellerPayoutAmount;
+  const fee = getBidRoomFee(transaction);
+  const stripeFee = getStripeFee(transaction) ?? 0;
+  return transaction.amount - fee - stripeFee;
 }
 
-/** Get buyer total (amount + shipping when known) */
+/** Buyer total charged (including BidRoom fee and shipping) */
 function getBuyerTotal(transaction) {
+  if (transaction.buyerTotalPaid != null) return transaction.buyerTotalPaid;
+  const bidRoomFee = getBidRoomFee(transaction);
   const shipping = getShippingAmount(transaction);
-  return shipping !== null ? transaction.amount + shipping : null;
+  return shipping !== null ? transaction.amount + bidRoomFee + shipping : null;
 }
 
-// ─── PDF layout helpers ────────────────────────────────────────────────────────
-
-const COLORS = {
-  brand: '#1a1a2e',
-  accent: '#e94560',
-  text: '#333333',
-  muted: '#666666',
-  light: '#f5f5f5',
-  border: '#e0e0e0',
-  white: '#ffffff',
-  sellerGreen: '#1b7f4f',
-  buyerBlue: '#1a5fa8'
-};
-
-const MARGIN = 50;
-const PAGE_WIDTH = 595.28; // A4
-const CONTENT_WIDTH = PAGE_WIDTH - MARGIN * 2;
-
-function drawHorizontalLine(doc, y, color = COLORS.border) {
-  doc.save()
-    .strokeColor(color)
-    .lineWidth(0.5)
-    .moveTo(MARGIN, y)
-    .lineTo(PAGE_WIDTH - MARGIN, y)
-    .stroke()
-    .restore();
+/** Format date for display */
+function formatDate(date) {
+  if (!date) return 'N/A';
+  return new Date(date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
 }
 
-function drawHeader(doc, role) {
-  // Brand block
-  doc.save()
-    .rect(0, 0, PAGE_WIDTH, 80)
-    .fill(COLORS.brand)
-    .restore();
-
-  doc.save()
-    .fillColor(COLORS.white)
-    .fontSize(22)
-    .font('Helvetica-Bold')
-    .text('BidRoom', MARGIN, 22)
-    .restore();
-
-  doc.save()
-    .fillColor('#aaaacc')
-    .fontSize(9)
-    .font('Helvetica')
-    .text('Auction Marketplace', MARGIN, 48)
-    .restore();
-
-  const docLabel = role === 'seller' ? 'SELLER INVOICE' : 'BUYER RECEIPT';
-  const labelColor = role === 'seller' ? COLORS.sellerGreen : COLORS.buyerBlue;
-
-  doc.save()
-    .rect(PAGE_WIDTH - MARGIN - 130, 18, 130, 44)
-    .fill(labelColor)
-    .restore();
-
-  doc.save()
-    .fillColor(COLORS.white)
-    .fontSize(13)
-    .font('Helvetica-Bold')
-    .text(docLabel, PAGE_WIDTH - MARGIN - 130, 34, { width: 130, align: 'center' })
-    .restore();
-}
-
-function drawSectionTitle(doc, title, y) {
-  doc.save()
-    .fillColor(COLORS.muted)
-    .fontSize(8)
-    .font('Helvetica-Bold')
-    .text(title.toUpperCase(), MARGIN, y)
-    .restore();
-  drawHorizontalLine(doc, y + 12);
-  return y + 20;
+/** Draw a horizontal rule */
+function drawRule(doc, y) {
+  doc.moveTo(50, y).lineTo(545, y).strokeColor('#cccccc').stroke();
 }
 
 function drawKeyValue(doc, label, value, y, { bold = false, valueColor = COLORS.text } = {}) {
@@ -231,36 +146,71 @@ async function buildSellerInvoicePdf(transaction) {
     doc.on('end', () => resolve(Buffer.concat(chunks)));
     doc.on('error', reject);
 
-    const platformFee = getPlatformFee(transaction);
+    const bidRoomFee = getBidRoomFee(transaction);
+    const stripeFee = getStripeFee(transaction);
     const shipping = getShippingAmount(transaction);
     const sellerPayout = getSellerPayout(transaction);
     const listing = transaction.listing || {};
     const seller = transaction.seller || {};
     const buyer = transaction.buyer || {};
 
-    const transactionDate = formatDate(transaction.paidAt || transaction.updatedAt || transaction.createdAt);
-    const auctionType = getAuctionTypeLabel(transaction);
-    const commissionRate = getCommissionRateLabel(transaction);
-    const salePriceLabel = getSalePriceLabel(transaction);
+    doc.fontSize(20).fillColor('#7A4F84').text('Seller Invoice', { align: 'center' });
+    doc.fillColor('#000000').moveDown();
+    doc.fontSize(10);
 
-    // Header
-    drawHeader(doc, 'seller');
+    doc.text(`Transaction ID: ${transaction._id}`);
+    doc.text(`Date: ${formatDate(transaction.paidAt || transaction.updatedAt || transaction.createdAt)}`);
+    if (transaction.stripePaymentIntentId) {
+      doc.text(`Payment reference: ${transaction.stripePaymentIntentId}`);
+    }
+    doc.moveDown();
 
-    let y = 100;
+    doc.text('Seller:', { continued: false });
+    doc.text(`  ${[seller.firstName, seller.lastName].filter(Boolean).join(' ') || 'N/A'}`);
+    if (seller.email) doc.text(`  ${seller.email}`);
+    doc.moveDown();
 
-    // ── Transaction meta ──────────────────────────────────────────────────────
-    y = drawSectionTitle(doc, 'Transaction Details', y);
-    y = drawKeyValue(doc, 'Transaction ID', transaction._id.toString(), y);
-    y = drawKeyValue(doc, 'Date', transactionDate, y);
-    y = drawKeyValue(doc, 'Auction type', auctionType, y);
-    y = drawKeyValue(doc, 'Item', listing.title || 'N/A', y);
-    y += 10;
+    doc.text('Buyer:', { continued: false });
+    doc.text(`  ${[buyer.firstName, buyer.lastName].filter(Boolean).join(' ') || 'N/A'}`);
+    if (buyer.email) doc.text(`  ${buyer.email}`);
+    doc.moveDown();
 
-    // ── Parties ───────────────────────────────────────────────────────────────
-    y = drawSectionTitle(doc, 'Parties', y);
+    doc.text(`Item: ${listing.title || 'N/A'}`);
+    doc.moveDown(1.5);
 
-    const sellerName = [seller.firstName, seller.lastName].filter(Boolean).join(' ') || 'N/A';
-    const buyerName = [buyer.firstName, buyer.lastName].filter(Boolean).join(' ') || 'N/A';
+    doc.fontSize(11).text('Payment breakdown', { underline: true });
+    doc.fontSize(10).moveDown(0.5);
+
+    doc.text(`Item sale price:                         ${formatUsd(transaction.amount)}`);
+
+    doc.moveDown(0.3);
+    drawRule(doc, doc.y);
+    doc.moveDown(0.3);
+
+    doc.text(`BidRoom platform fee (2%):               – ${formatUsd(bidRoomFee)}`);
+
+    if (stripeFee !== null) {
+      doc.text(`Stripe processing fee (~2.9% + $0.30):  – ${formatUsd(stripeFee)}`);
+    } else {
+      doc.text(`Stripe processing fee:                  – (deducted by Stripe, see your Stripe dashboard)`);
+    }
+
+    if (shipping !== null && shipping > 0) {
+      doc.text(`Shipping:                                + ${formatUsd(shipping)}`);
+    } else if (shipping === 0) {
+      doc.text(`Shipping:                                Free`);
+    } else {
+      doc.text(`Shipping:                                N/A`);
+    }
+
+    doc.moveDown(0.3);
+    drawRule(doc, doc.y);
+    doc.moveDown(0.5);
+
+    doc.fontSize(12).fillColor('#7A4F84').text(`Your payout:                             ${formatUsd(sellerPayout)}`);
+    doc.fillColor('#000000').fontSize(9);
+    doc.moveDown(0.3);
+    doc.text('Note: The Stripe fee shown is approximate. Your exact payout may vary slightly based on Stripe\'s processing.');
 
     y = drawKeyValue(doc, 'Seller (you)', sellerName, y, { bold: true });
     if (seller.email) y = drawKeyValue(doc, 'Seller email', seller.email, y);
@@ -312,30 +262,59 @@ async function buildBuyerInvoicePdf(transaction) {
     doc.on('end', () => resolve(Buffer.concat(chunks)));
     doc.on('error', reject);
 
-    const platformFee = getPlatformFee(transaction);
+    const bidRoomFee = getBidRoomFee(transaction);
     const shipping = getShippingAmount(transaction);
     const buyerTotal = getBuyerTotal(transaction);
     const listing = transaction.listing || {};
     const seller = transaction.seller || {};
     const buyer = transaction.buyer || {};
 
-    const transactionDate = formatDate(transaction.paidAt || transaction.updatedAt || transaction.createdAt);
-    const auctionType = getAuctionTypeLabel(transaction);
-    const commissionRate = getCommissionRateLabel(transaction);
-    const salePriceLabel = getSalePriceLabel(transaction);
+    doc.fontSize(20).fillColor('#7A4F84').text('Purchase Receipt', { align: 'center' });
+    doc.fillColor('#000000').moveDown();
+    doc.fontSize(10);
 
-    // Header
-    drawHeader(doc, 'buyer');
+    doc.text(`Transaction ID: ${transaction._id}`);
+    doc.text(`Date: ${formatDate(transaction.paidAt || transaction.updatedAt || transaction.createdAt)}`);
+    if (transaction.stripePaymentIntentId) {
+      doc.text(`Payment reference: ${transaction.stripePaymentIntentId}`);
+    }
+    doc.moveDown();
 
-    let y = 100;
+    doc.text('Buyer:', { continued: false });
+    doc.text(`  ${[buyer.firstName, buyer.lastName].filter(Boolean).join(' ') || 'N/A'}`);
+    if (buyer.email) doc.text(`  ${buyer.email}`);
+    doc.moveDown();
 
-    // ── Transaction meta ──────────────────────────────────────────────────────
-    y = drawSectionTitle(doc, 'Transaction Details', y);
-    y = drawKeyValue(doc, 'Transaction ID', transaction._id.toString(), y);
-    y = drawKeyValue(doc, 'Date', transactionDate, y);
-    y = drawKeyValue(doc, 'Auction type', auctionType, y);
-    y = drawKeyValue(doc, 'Item', listing.title || 'N/A', y);
-    y += 10;
+    doc.text('Seller:', { continued: false });
+    doc.text(`  ${[seller.firstName, seller.lastName].filter(Boolean).join(' ') || 'N/A'}`);
+    if (seller.email) doc.text(`  ${seller.email}`);
+    doc.moveDown();
+
+    doc.text(`Item: ${listing.title || 'N/A'}`);
+    doc.moveDown(1.5);
+
+    doc.fontSize(11).text('Payment breakdown', { underline: true });
+    doc.fontSize(10).moveDown(0.5);
+
+    doc.text(`Item price:                              ${formatUsd(transaction.amount)}`);
+    doc.text(`BidRoom platform fee (2%):               ${formatUsd(bidRoomFee)}`);
+
+    if (shipping !== null) {
+      doc.text(`Shipping:                                ${shipping === 0 ? 'Free' : formatUsd(shipping)}`);
+    } else {
+      doc.text(`Shipping:                                N/A`);
+    }
+
+    doc.moveDown(0.3);
+    drawRule(doc, doc.y);
+    doc.moveDown(0.5);
+
+    doc.fontSize(12).fillColor('#7A4F84').text(
+      `Total charged:                           ${buyerTotal !== null ? formatUsd(buyerTotal) : formatUsd(transaction.amount + bidRoomFee) + ' + shipping'}`
+    );
+    doc.fillColor('#000000').fontSize(9);
+    doc.moveDown(0.3);
+    doc.text('The BidRoom platform fee (2%) is included in the total charged and covers marketplace services.');
 
     // ── Parties ───────────────────────────────────────────────────────────────
     y = drawSectionTitle(doc, 'Parties', y);
@@ -392,7 +371,8 @@ async function generateInvoicePdf(transaction, role) {
 
 module.exports = {
   generateInvoicePdf,
-  getPlatformFee,
+  getBidRoomFee,
+  getStripeFee,
   getShippingAmount,
   getSellerPayout,
   getBuyerTotal

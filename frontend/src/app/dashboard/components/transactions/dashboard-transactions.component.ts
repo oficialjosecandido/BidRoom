@@ -1,10 +1,11 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { RouterLink, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import Swal from 'sweetalert2';
 import { TransactionsService, Transaction, TransactionStatus } from '../../../shared/services/transactions.service';
 import { ReviewsService } from '../../../shared/services/reviews.service';
+import { StripeConnectService } from '../../../shared/services/stripe-connect.service';
 
 const successToast = Swal.mixin({
   toast: true,
@@ -25,6 +26,8 @@ const successToast = Swal.mixin({
 export class DashboardTransactionsComponent implements OnInit {
   transactionsService = inject(TransactionsService);
   private reviewsService = inject(ReviewsService);
+  private stripeConnect = inject(StripeConnectService);
+  private route = inject(ActivatedRoute);
 
   transactions: Transaction[] = [];
   isLoading = true;
@@ -47,19 +50,11 @@ export class DashboardTransactionsComponent implements OnInit {
   showTrackingFormId: string | null = null;
   trackingNumber = '';
   trackingCarrier = '';
-  showBankFormId: string | null = null;
-  bankIban = '';
-  bankSwift = '';
-  bankAccountName = '';
-  showProofInputId: string | null = null;
-  /** Selected proof file per transaction (one file, PDF/JPG/PNG, max 30MB). */
-  proofSelectedFileByTxId: Record<string, File> = {};
-  proofSelectedFileNameByTxId: Record<string, string> = {};
-  /** Uploaded proof URL per transaction (set after successful upload; enables "Mark as paid"). */
-  proofUploadedUrlByTxId: Record<string, string> = {};
-  proofUploadErrorByTxId: Record<string, string> = {};
-  /** Transaction ID currently uploading proof (for "Uploading…" label). */
-  proofUploadingTxId: string | null = null;
+  /** Transaction ID currently redirecting to Stripe Checkout */
+  stripePayingTxId: string | null = null;
+  /** Transaction ID currently confirming Stripe payment on return */
+  stripeConfirmingTxId: string | null = null;
+  stripePaymentError: string | null = null;
   /** Proof of delivery (seller): uploaded URL and file name per transaction. */
   deliveryProofUploadedUrlByTxId: Record<string, string> = {};
   deliveryProofFileNameByTxId: Record<string, string> = {};
@@ -70,6 +65,19 @@ export class DashboardTransactionsComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadTransactions();
+
+    // Handle return from Stripe Checkout
+    this.route.queryParams.subscribe(params => {
+      const payment = params['stripe_payment'];
+      const sessionId = params['session_id'];
+      const transactionId = params['transaction_id'];
+
+      if (payment === 'success' && sessionId && transactionId) {
+        this.confirmStripePayment(sessionId, transactionId);
+      } else if (payment === 'cancelled') {
+        this.stripePaymentError = 'Payment was cancelled. You can try again anytime.';
+      }
+    });
   }
 
   loadTransactions(): void {
@@ -250,10 +258,41 @@ export class DashboardTransactionsComponent implements OnInit {
     }).format(amount);
   }
 
-  /** Financial breakdown: BidRoom fee (commission on sale amount) */
+  /** Pay via Stripe: create checkout session and redirect */
+  payWithStripe(t: Transaction): void {
+    if (this.stripePayingTxId || t.role !== 'buyer' || this.getEffectiveStatus(t) !== 'pending_payment') return;
+    this.stripePayingTxId = t._id;
+    this.stripePaymentError = null;
+    this.stripeConnect.createCheckoutSession(t._id).subscribe({
+      next: (res) => {
+        window.location.href = res.url;
+      },
+      error: (err) => {
+        this.stripePayingTxId = null;
+        this.stripePaymentError = err?.error?.message || 'Failed to start payment. Please try again.';
+      }
+    });
+  }
+
+  confirmStripePayment(sessionId: string, transactionId: string): void {
+    this.stripeConfirmingTxId = transactionId;
+    this.stripeConnect.confirmPayment(sessionId, transactionId).subscribe({
+      next: (updated) => {
+        this.stripeConfirmingTxId = null;
+        this.replaceTransaction({ ...updated, role: 'buyer' });
+        successToast.fire({ title: 'Payment confirmed! The seller has been notified.' });
+      },
+      error: (err) => {
+        this.stripeConfirmingTxId = null;
+        this.stripePaymentError = err?.error?.message || 'Could not confirm payment. Please contact support if funds were charged.';
+      }
+    });
+  }
+
+  /** Financial breakdown: BidRoom fee (2% of item price) */
   getBidRoomFee(t: Transaction): number {
-    const rate = t.listing?.commissionRate ?? 0.005;
-    return t.amount * rate;
+    if (t.bidRoomFeeAmount != null) return t.bidRoomFeeAmount;
+    return t.amount * 0.02;
   }
 
   /** Shipping amount: flat-rate uses listing.shippingCost; free/local = 0; calculated = null (TBD) */
@@ -264,15 +303,24 @@ export class DashboardTransactionsComponent implements OnInit {
     return null; // calculated - unknown until checkout
   }
 
-  /** Seller net (amount - BidRoom fee) */
-  getSellerNet(t: Transaction): number {
-    return t.amount - this.getBidRoomFee(t);
+  /** Stripe processing fee (stored after payment; null if not yet paid) */
+  getStripeFee(t: Transaction): number | null {
+    return t.stripeFeeAmount ?? null;
   }
 
-  /** Buyer total (amount + shipping when known) */
+  /** Seller net payout */
+  getSellerNet(t: Transaction): number {
+    if (t.sellerPayoutAmount != null) return t.sellerPayoutAmount;
+    const stripeFee = this.getStripeFee(t) ?? 0;
+    return t.amount - this.getBidRoomFee(t) - stripeFee;
+  }
+
+  /** Buyer total charged (amount + BidRoom fee + shipping) */
   getBuyerTotal(t: Transaction): number | null {
+    if (t.buyerTotalPaid != null) return t.buyerTotalPaid;
+    const bidRoomFee = this.getBidRoomFee(t);
     const shipping = this.getShippingAmount(t);
-    return shipping !== null ? t.amount + shipping : null;
+    return shipping !== null ? t.amount + bidRoomFee + shipping : null;
   }
 
   /** Auction type label: Best Offer | Highest-Bid Auction (Private Room) | Highest-Bid Auction */
@@ -304,11 +352,6 @@ export class DashboardTransactionsComponent implements OnInit {
     return slug ? `/listing/${slug}` : '#';
   }
 
-  getPaymentUrl(t: Transaction): string {
-    const slug = t.listing?.slug;
-    return slug ? `/listing/${slug}/payment` : '#';
-  }
-
   formatPaymentDeadline(t: Transaction): string {
     const d = t.paymentDeadline;
     if (!d) return '';
@@ -319,148 +362,6 @@ export class DashboardTransactionsComponent implements OnInit {
   hasPaymentDeadlinePassed(t: Transaction): boolean {
     if (!t.paymentDeadline) return false;
     return new Date(t.paymentDeadline) < new Date();
-  }
-
-  hasSellerBankDetails(t: Transaction): boolean {
-    return !!(t.sellerBankIban || t.sellerBankSwift || t.sellerBankAccountName);
-  }
-
-  toggleBankForm(t: Transaction): void {
-    if (this.showBankFormId === t._id) {
-      this.showBankFormId = null;
-      this.bankIban = '';
-      this.bankSwift = '';
-      this.bankAccountName = '';
-    } else {
-      this.showBankFormId = t._id;
-      this.bankIban = t.sellerBankIban || '';
-      this.bankSwift = t.sellerBankSwift || '';
-      this.bankAccountName = t.sellerBankAccountName || '';
-    }
-  }
-
-  submitBankDetails(t: Transaction): void {
-    if (this.updatingId || t.role !== 'seller') return;
-    this.updatingId = t._id;
-    this.transactionsService
-      .updateTransaction(t._id, {
-        sellerBankIban: this.bankIban || undefined,
-        sellerBankSwift: this.bankSwift || undefined,
-        sellerBankAccountName: this.bankAccountName || undefined
-      })
-      .subscribe({
-        next: (updated) => {
-          this.replaceTransaction(updated);
-          this.updatingId = null;
-          this.showBankFormId = null;
-          this.bankIban = '';
-          this.bankSwift = '';
-          this.bankAccountName = '';
-        },
-        error: () => (this.updatingId = null)
-      });
-  }
-
-  toggleProofInput(t: Transaction): void {
-    if (this.showProofInputId === t._id) {
-      this.showProofInputId = null;
-      delete this.proofSelectedFileByTxId[t._id];
-      delete this.proofSelectedFileNameByTxId[t._id];
-      delete this.proofUploadedUrlByTxId[t._id];
-      delete this.proofUploadErrorByTxId[t._id];
-    } else {
-      this.showProofInputId = t._id;
-    }
-  }
-
-  getProofUploadError(t: Transaction): string | null {
-    return this.proofUploadErrorByTxId[t._id] || null;
-  }
-
-  triggerProofUpload(t: Transaction, input: HTMLInputElement): void {
-    input.value = '';
-    input.click();
-  }
-
-  hasProofUploaded(t: Transaction): boolean {
-    return !!this.proofUploadedUrlByTxId[t._id];
-  }
-
-  getProofUploadButtonLabel(t: Transaction): string {
-    if (this.proofUploadingTxId === t._id) return 'Uploading…';
-    if (this.proofUploadedUrlByTxId[t._id]) return 'Proof uploaded';
-    return 'Upload proof of payment';
-  }
-
-  getProofFileName(t: Transaction): string {
-    return this.proofSelectedFileNameByTxId[t._id] || '';
-  }
-
-  getProofUploadedUrl(t: Transaction): string | null {
-    return this.proofUploadedUrlByTxId[t._id] || null;
-  }
-
-  removeProof(t: Transaction): void {
-    delete this.proofUploadedUrlByTxId[t._id];
-    delete this.proofSelectedFileNameByTxId[t._id];
-    delete this.proofUploadErrorByTxId[t._id];
-  }
-
-  onProofFileSelected(t: Transaction, input: HTMLInputElement): void {
-    delete this.proofUploadErrorByTxId[t._id];
-    const file = input.files?.[0];
-    if (!file) return;
-
-    const maxSize = this.transactionsService.proofOfPaymentMaxSize;
-    if (file.size > maxSize) {
-      this.proofUploadErrorByTxId[t._id] = `File must be 30MB or less (${(file.size / 1024 / 1024).toFixed(1)}MB selected).`;
-      input.value = '';
-      return;
-    }
-    const allowed = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'];
-    if (!allowed.includes(file.type)) {
-      this.proofUploadErrorByTxId[t._id] = 'Only PDF, JPG and PNG files are allowed.';
-      input.value = '';
-      return;
-    }
-
-    this.proofUploadingTxId = t._id;
-    this.transactionsService.uploadProofOfPayment(file).subscribe({
-      next: (res) => {
-        this.proofUploadedUrlByTxId[t._id] = res.url;
-        this.proofSelectedFileNameByTxId[t._id] = file.name;
-        this.proofUploadingTxId = null;
-        delete this.proofUploadErrorByTxId[t._id];
-        input.value = '';
-      },
-      error: (err) => {
-        this.proofUploadErrorByTxId[t._id] = err.error?.message || 'Upload failed. Try again.';
-        this.proofUploadingTxId = null;
-        input.value = '';
-      }
-    });
-  }
-
-  markAsPaid(t: Transaction): void {
-    if (this.updatingId || t.role !== 'buyer' || this.getEffectiveStatus(t) !== 'pending_payment') return;
-    const url = this.proofUploadedUrlByTxId[t._id];
-    if (!url) return;
-
-    this.updatingId = t._id;
-    this.transactionsService
-      .updateTransaction(t._id, { status: 'paid', buyerProofOfPaymentUrl: url })
-      .subscribe({
-        next: (updated) => {
-          this.replaceTransaction(updated);
-          this.updatingId = null;
-          delete this.proofSelectedFileByTxId[t._id];
-          delete this.proofSelectedFileNameByTxId[t._id];
-          delete this.proofUploadedUrlByTxId[t._id];
-          delete this.proofUploadErrorByTxId[t._id];
-          successToast.fire({ title: 'Payment information sent' });
-        },
-        error: () => (this.updatingId = null)
-      });
   }
 
   markAsDelivered(t: Transaction): void {

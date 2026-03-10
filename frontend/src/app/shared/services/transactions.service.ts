@@ -74,6 +74,17 @@ export interface Transaction {
   buyerHasReviewedSeller?: boolean;
   /** Whether seller has reviewed buyer (for this listing) */
   sellerHasReviewedBuyer?: boolean;
+  /** Stripe Connect payment fields */
+  stripeCheckoutSessionId?: string | null;
+  stripePaymentIntentId?: string | null;
+  /** BidRoom platform fee charged to buyer (2% of item price, dollars) */
+  bidRoomFeeAmount?: number | null;
+  /** Stripe processing fee deducted from seller payout (dollars) */
+  stripeFeeAmount?: number | null;
+  /** Total charged to buyer including BidRoom fee and shipping (dollars) */
+  buyerTotalPaid?: number | null;
+  /** Final payout to seller (dollars) */
+  sellerPayoutAmount?: number | null;
   /** Whether a dispute has been opened for this transaction */
   disputeOpen?: boolean;
   disputeOpenedAt?: string | null;

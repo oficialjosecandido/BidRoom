@@ -19,6 +19,19 @@
     </div>
   }
 
+  @if (stripeConfirmingTxId) {
+    <div class="stripe-confirming-banner">
+      Confirming your payment with Stripe... Please wait.
+    </div>
+  }
+
+  @if (stripePaymentError) {
+    <div class="stripe-error-banner">
+      {{ stripePaymentError }}
+      <button type="button" class="stripe-error-close" (click)="stripePaymentError = null">×</button>
+    </div>
+  }
+
   @if (!isLoading && !error) {
     <div class="transactions-list">
       @if (transactions.length === 0) {
@@ -57,14 +70,16 @@
                     <span class="breakdown-label">{{ getSalePriceLabel(t) }}</span>
                     <span class="breakdown-value">{{ formatPrice(t.amount) }}</span>
                   </div>
-                  <div class="breakdown-row">
-                    <span class="breakdown-label">BidRoom fee ({{ getCommissionRateLabel(t) }})</span>
-                    <span class="breakdown-value fee-value">− {{ formatPrice(getBidRoomFee(t)) }}</span>
+                  <div class="breakdown-row breakdown-row-fee">
+                    <span class="breakdown-label">BidRoom fee (2%)</span>
+                    <span class="breakdown-value breakdown-value-fee">{{ formatPrice(getBidRoomFee(t)) }}</span>
                   </div>
-                  <div class="breakdown-row">
-                    <span class="breakdown-label">Taxes / VAT</span>
-                    <span class="breakdown-value">$0.00</span>
-                  </div>
+                  @if (getStripeFee(t) !== null) {
+                    <div class="breakdown-row breakdown-row-fee">
+                      <span class="breakdown-label">Stripe processing fee</span>
+                      <span class="breakdown-value breakdown-value-fee">{{ formatPrice(getStripeFee(t)!) }}</span>
+                    </div>
+                  }
                   <div class="breakdown-row">
                     <span class="breakdown-label">Shipping</span>
                     <span class="breakdown-value">
@@ -82,15 +97,18 @@
                     <span class="breakdown-total-label">You receive (after fee)</span>
                     <span class="breakdown-total-value">{{ formatPrice(getSellerNet(t)) }}</span>
                   </div>
+                  @if (getStripeFee(t) === null && getEffectiveStatus(t) === 'pending_payment') {
+                    <p class="breakdown-note">Stripe processing fee (~2.9% + $0.30) will be deducted from your payout at payment time.</p>
+                  }
                 }
                 @if (isBuyer(t)) {
                   <div class="breakdown-total breakdown-total-buyer">
-                    <span class="breakdown-total-label">Total to pay</span>
+                    <span class="breakdown-total-label">Total charged to you</span>
                     <span class="breakdown-total-value">
                       @if (getBuyerTotal(t) !== null) {
                         {{ formatPrice(getBuyerTotal(t)!) }}
                       } @else {
-                        {{ formatPrice(t.amount) }} + shipping
+                        {{ formatPrice(t.amount + getBidRoomFee(t)) }} + shipping
                       }
                     </span>
                   </div>
@@ -116,21 +134,6 @@
                     <span> — <a [href]="'mailto:' + t.buyer.email" class="seller-email">{{ t.buyer.email }}</a></span>
                   }
                 </p>
-              }
-              @if (isBuyer(t) && getEffectiveStatus(t) === 'pending_payment') {
-                <div class="bank-details buyer-view">
-                  <strong>Seller bank details (for transfer):</strong>
-                  @if (hasSellerBankDetails(t)) {
-                    <p class="bank-details-values">
-                      @if (t.sellerBankAccountName) { <span>{{ t.sellerBankAccountName }}</span> }
-                      @if (t.sellerBankIban) { <span>IBAN: {{ t.sellerBankIban }}</span> }
-                      @if (t.sellerBankSwift) { <span>SWIFT: {{ t.sellerBankSwift }}</span> }
-                    </p>
-                  }
-                  @if (!hasSellerBankDetails(t)) {
-                    <p class="bank-details-waiting">Seller has not added bank details yet. You can pay once they do.</p>
-                  }
-                </div>
               }
               @if (t.trackingNumber && getEffectiveStatus(t) !== 'pending_payment') {
                 <p class="tracking-info">
@@ -163,81 +166,34 @@
                 }
               </p>
             }
-            @if (isSeller(t) && t.buyerProofOfPaymentUrl && getEffectiveStatus(t) !== 'pending_payment') {
-              <div class="proof-of-payment-seller">
-                <strong>Proof of payment:</strong>
-                <div class="proof-seller-content">
-                  <a [href]="t.buyerProofOfPaymentUrl" target="_blank" rel="noopener noreferrer" class="proof-seller-link">View proof of payment (opens in new tab)</a>
-                </div>
-              </div>
-            }
             @if (isSeller(t) && canSellerAcceptPayment(t)) {
               @if (t.paymentAcceptanceDeadline) {
                 <p class="form-hint">
-                  Accept by {{ formatPaymentAcceptanceDeadline(t) }}{{ hasPaymentAcceptanceDeadlinePassed(t) ? ' (deadline passed)' : '' }}
+                  Please confirm you received the payment and are ready to ship.
+                  Acknowledge by {{ formatPaymentAcceptanceDeadline(t) }}{{ hasPaymentAcceptanceDeadlinePassed(t) ? ' (deadline passed)' : '' }}
                 </p>
               }
+              <p class="stripe-payment-confirmed">Payment confirmed via Stripe</p>
               <button type="button" class="btn btn-primary" (click)="acceptPayment(t)" [disabled]="updatingId === t._id">
-                {{ updatingId === t._id ? 'Accepting…' : 'Accept Payment' }}
+                {{ updatingId === t._id ? 'Confirming…' : 'Confirm &amp; prepare to ship' }}
               </button>
-            }
-            @if (isSeller(t) && getEffectiveStatus(t) === 'pending_payment') {
-              @if (!showBankFormId) {
-                <button type="button" class="btn btn-secondary" (click)="toggleBankForm(t)">
-                  {{ hasSellerBankDetails(t) ? 'Edit bank details' : 'Add bank details' }}
-                </button>
-              }
-              @if (showBankFormId === t._id) {
-                <div class="bank-form">
-                  <p class="form-hint">Buyer will use these for the bank transfer. Provide within 24h.</p>
-                  <input type="text" [(ngModel)]="bankAccountName" placeholder="Account name" class="form-input" />
-                  <input type="text" [(ngModel)]="bankIban" placeholder="IBAN" class="form-input" />
-                  <input type="text" [(ngModel)]="bankSwift" placeholder="SWIFT/BIC" class="form-input" />
-                  <button type="button" class="btn btn-primary" (click)="submitBankDetails(t)" [disabled]="updatingId === t._id">
-                    {{ updatingId === t._id ? 'Saving…' : 'Save bank details' }}
-                  </button>
-                  <button type="button" class="btn btn-secondary" (click)="toggleBankForm(t)">Cancel</button>
-                </div>
-              }
             }
             @if (isBuyer(t)) {
               @if (getEffectiveStatus(t) === 'pending_payment') {
-                <input
-                  type="file"
-                  #proofFileInput
-                  [accept]="transactionsService.proofOfPaymentAccept"
-                  (change)="onProofFileSelected(t, proofFileInput)"
-                  class="file-input-hidden"
-                  style="display: none;"
-                />
-                <button type="button" class="btn btn-secondary" (click)="triggerProofUpload(t, proofFileInput)" [disabled]="proofUploadingTxId === t._id">
-                  {{ getProofUploadButtonLabel(t) }}
-                </button>
-                @if (hasProofUploaded(t)) {
-                  <div class="proof-preview">
-                    <div class="proof-preview-content">
-                      <span class="proof-preview-filename">{{ getProofFileName(t) }}</span>
-                      <div class="d-flex gap-2">
-                        <a [href]="getProofUploadedUrl(t)!" target="_blank" rel="noopener noreferrer" class="btn btn-secondary mr-2">View</a>
-                        <button type="button" class="btn btn-remove" (click)="removeProof(t)">Remove</button>
-                      </div>
-                    </div>
-                  </div>
-                }
-                @if (getProofFileName(t) && !hasProofUploaded(t)) {
-                  <p class="form-hint file-name">{{ getProofFileName(t) }}</p>
-                }
-                @if (getProofUploadError(t)) {
-                  <p class="form-error">{{ getProofUploadError(t) }}</p>
-                }
-                <button type="button" class="btn btn-primary" (click)="markAsPaid(t)" [disabled]="!hasProofUploaded(t) || updatingId === t._id">
-                  {{ updatingId === t._id ? 'Updating…' : 'Mark as paid' }}
-                </button>
+                <div class="stripe-pay-section">
+                  <p class="stripe-pay-hint">Pay securely with your credit or debit card via Stripe.</p>
+                  <button type="button" class="btn btn-stripe-pay" (click)="payWithStripe(t)" [disabled]="stripePayingTxId === t._id">
+                    {{ stripePayingTxId === t._id ? 'Redirecting to Stripe...' : 'Pay now' }}
+                  </button>
+                </div>
               }
               @if (getEffectiveStatus(t) === 'awaiting_seller_acceptance') {
-                <p class="form-hint">
-                  Seller has 5 days to confirm your payment. You'll see "Paid" once they accept.
+                <p class="form-hint stripe-paid-hint">
+                  Payment confirmed. The seller has been notified and is preparing to ship.
                 </p>
+              }
+              @if (t.stripePaymentIntentId) {
+                <p class="stripe-ref">Payment ref: {{ t.stripePaymentIntentId }}</p>
               }
               @if (getEffectiveStatus(t) === 'shipped') {
                 <p class="form-hint">Item has been shipped. How did you receive it?</p>

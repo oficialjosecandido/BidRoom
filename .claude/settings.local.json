@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install @stripe/stripe-js --save)",
+      "Bash(npx ng build --configuration development)",
+      "Bash(node -e \"require\\(''./src/routes/connect''\\); console.log\\(''connect route OK''\\)\")",
+      "Bash(node -e \"require\\(''./src/routes/transactions''\\); console.log\\(''transactions route OK''\\)\")"
+    ]
+  }
+}

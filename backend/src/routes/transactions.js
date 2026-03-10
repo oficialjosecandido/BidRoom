@@ -4,7 +4,7 @@ const Listing = require('../models/Listing');
 const User = require('../models/User');
 const Review = require('../models/Review');
 const { authenticateToken, requireActiveAccount } = require('../middleware/auth');
-const { sendSellerProofOfPaymentNotification, sendSellerDisputeOpenedNotification } = require('../services/emailService');
+const { sendSellerDisputeOpenedNotification } = require('../services/emailService');
 const {
   notifyDisputeOpened,
   notifyEvidenceSubmitted,
@@ -28,8 +28,6 @@ function normalizeTransactionStatus(t) {
 }
 
 const DISPUTE_REASON_CODES = ['item_not_as_described', 'damaged_in_transit', 'missing_parts', 'counterfeit', 'other'];
-
-const PAYMENT_ACCEPTANCE_DAYS = 5;
 
 router.use(authenticateToken);
 
@@ -395,10 +393,8 @@ router.patch('/:id', requireActiveAccount, async (req, res) => {
       return res.status(403).json({ error: 'You do not have access to this transaction' });
     }
 
-    const { status, trackingNumber, trackingCarrier, sellerBankIban, sellerBankSwift, sellerBankAccountName, buyerProofOfPaymentUrl, sellerProofOfDeliveryUrl, disputeOpen, disputeReason } = req.body;
+    const { status, trackingNumber, trackingCarrier, sellerProofOfDeliveryUrl, disputeOpen, disputeReason } = req.body;
     const ts = transaction.transactionStatus ?? transaction.status;
-    const ps = transaction.paymentStatus ?? 'pending';
-    const ss = transaction.sendingStatus ?? 'pending';
 
     /** When under dispute, lock: no status changes until admin ruling */
     if (ts === 'under_dispute' && status) {
@@ -409,9 +405,6 @@ router.patch('/:id', requireActiveAccount, async (req, res) => {
     }
 
     if (isSeller) {
-      if (sellerBankIban !== undefined) transaction.sellerBankIban = sellerBankIban || null;
-      if (sellerBankSwift !== undefined) transaction.sellerBankSwift = sellerBankSwift || null;
-      if (sellerBankAccountName !== undefined) transaction.sellerBankAccountName = sellerBankAccountName || null;
       if (status === 'accept_payment' && ts === 'awaiting_seller_acceptance') {
         transaction.transactionStatus = 'paid';
         transaction.paymentStatus = 'paid';
@@ -475,13 +468,7 @@ router.patch('/:id', requireActiveAccount, async (req, res) => {
     }
 
     if (isBuyer) {
-      if (status === 'paid') {
-        transaction.transactionStatus = 'awaiting_seller_acceptance';
-        if (buyerProofOfPaymentUrl != null) transaction.buyerProofOfPaymentUrl = buyerProofOfPaymentUrl;
-        const deadline = new Date();
-        deadline.setDate(deadline.getDate() + PAYMENT_ACCEPTANCE_DAYS);
-        transaction.paymentAcceptanceDeadline = deadline;
-      } else if (status === 'delivered' && ts === 'shipped') {
+      if (status === 'delivered' && ts === 'shipped') {
         transaction.transactionStatus = 'delivered';
         transaction.sendingStatus = 'delivered';
         const sellerUserId = transaction.seller?.toString?.();
@@ -535,18 +522,6 @@ router.patch('/:id', requireActiveAccount, async (req, res) => {
       ]);
       buyerHasReviewedSeller = !!b;
       sellerHasReviewedBuyer = !!s;
-    }
-
-    if (isBuyer && status === 'paid' && buyerProofOfPaymentUrl && updated.seller?.email) {
-      const listingTitle = updated.listing?.title || 'Item';
-      const buyerName = [updated.buyer?.firstName, updated.buyer?.lastName].filter(Boolean).join(' ') || 'Buyer';
-      sendSellerProofOfPaymentNotification(
-        updated.seller.email,
-        updated.seller.firstName,
-        listingTitle,
-        buyerName,
-        buyerProofOfPaymentUrl
-      ).catch(err => console.error('Proof of payment notification email:', err.message));
     }
 
     res.json({
