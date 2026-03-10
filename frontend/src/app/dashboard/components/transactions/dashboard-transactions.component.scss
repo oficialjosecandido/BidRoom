@@ -327,6 +327,10 @@
         color: #334155;
         font-weight: 500;
       }
+
+      .fee-value {
+        color: #b91c1c;
+      }
     }
 
     .breakdown-divider {
@@ -408,6 +412,12 @@
     &.status-review {
       background: #e9d5ff;
       color: #6b21a8;
+    }
+    &.status-auction-type {
+      background: #f0f4ff;
+      color: #1a1a2e;
+      border: 1px solid #c7d2fe;
+      font-weight: 600;
     }
   }
 

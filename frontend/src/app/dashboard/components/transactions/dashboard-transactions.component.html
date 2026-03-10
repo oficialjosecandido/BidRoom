@@ -53,6 +53,7 @@
               <h2 class="card-title">{{ t.listing.title }}</h2>
               <div class="card-amount">{{ formatPrice(t.amount) }}</div>
               <div class="status-badges">
+                <span class="status-badge status-auction-type">{{ getAuctionTypeLabel(t) }}</span>
                 <span class="status-badge status-buying" [ngClass]="getBuyingStatusClass(t)">Buying: {{ getBuyingStatusLabel(t) }}</span>
                 <span class="status-badge status-selling" [ngClass]="getSellingStatusClass(t)">Selling: {{ getSellingStatusLabel(t) }}</span>
                 @if (t.disputeOpen) {
@@ -66,7 +67,7 @@
                 </div>
                 <div class="breakdown-rows">
                   <div class="breakdown-row">
-                    <span class="breakdown-label">Final auction price</span>
+                    <span class="breakdown-label">{{ getSalePriceLabel(t) }}</span>
                     <span class="breakdown-value">{{ formatPrice(t.amount) }}</span>
                   </div>
                   <div class="breakdown-row breakdown-row-fee">
@@ -85,7 +86,7 @@
                       @if (getShippingAmount(t) !== null) {
                         {{ getShippingAmount(t) === 0 ? 'Free' : formatPrice(getShippingAmount(t)!) }}
                       } @else {
-                        Calculated at checkout
+                        Calculated separately
                       }
                     </span>
                   </div>
@@ -93,7 +94,7 @@
                 <div class="breakdown-divider"></div>
                 @if (isSeller(t)) {
                   <div class="breakdown-total breakdown-total-seller">
-                    <span class="breakdown-total-label">You receive</span>
+                    <span class="breakdown-total-label">You receive (after fee)</span>
                     <span class="breakdown-total-value">{{ formatPrice(getSellerNet(t)) }}</span>
                   </div>
                   @if (getStripeFee(t) === null && getEffectiveStatus(t) === 'pending_payment') {

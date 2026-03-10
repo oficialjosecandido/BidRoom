@@ -25,6 +25,10 @@ export interface TransactionListing {
   shippingCost?: number;
   /** flat-rate | calculated | local-pickup | free */
   shippingOption?: string;
+  /** Auction format: highest-bid | best-offer */
+  auctionFormat?: 'highest-bid' | 'best-offer';
+  /** Whether the listing allowed a private room (affects commission rate) */
+  allowPrivateRoom?: boolean;
 }
 
 export interface TransactionUser {

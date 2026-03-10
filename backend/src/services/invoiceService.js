@@ -54,12 +54,95 @@ function drawRule(doc, y) {
   doc.moveTo(50, y).lineTo(545, y).strokeColor('#cccccc').stroke();
 }
 
-/** Build seller invoice PDF buffer */
+function drawKeyValue(doc, label, value, y, { bold = false, valueColor = COLORS.text } = {}) {
+  doc.save()
+    .fillColor(COLORS.muted)
+    .fontSize(9)
+    .font('Helvetica')
+    .text(label, MARGIN, y)
+    .restore();
+
+  doc.save()
+    .fillColor(valueColor)
+    .fontSize(9)
+    .font(bold ? 'Helvetica-Bold' : 'Helvetica')
+    .text(value, MARGIN + 180, y, { width: CONTENT_WIDTH - 180, align: 'right' })
+    .restore();
+
+  return y + 16;
+}
+
+function drawBreakdownRow(doc, label, value, y, { bold = false, highlight = false, valueColor = COLORS.text } = {}) {
+  if (highlight) {
+    doc.save()
+      .rect(MARGIN, y - 4, CONTENT_WIDTH, 22)
+      .fill(COLORS.light)
+      .restore();
+  }
+
+  doc.save()
+    .fillColor(bold ? COLORS.text : COLORS.muted)
+    .fontSize(9.5)
+    .font(bold ? 'Helvetica-Bold' : 'Helvetica')
+    .text(label, MARGIN + 6, y + 1)
+    .restore();
+
+  doc.save()
+    .fillColor(valueColor)
+    .fontSize(9.5)
+    .font(bold ? 'Helvetica-Bold' : 'Helvetica')
+    .text(value, MARGIN, y + 1, { width: CONTENT_WIDTH - 6, align: 'right' })
+    .restore();
+
+  return y + 18;
+}
+
+function drawTotalRow(doc, label, value, y, color) {
+  doc.save()
+    .rect(MARGIN, y - 4, CONTENT_WIDTH, 28)
+    .fill(color)
+    .restore();
+
+  doc.save()
+    .fillColor(COLORS.white)
+    .fontSize(11)
+    .font('Helvetica-Bold')
+    .text(label, MARGIN + 10, y + 3)
+    .restore();
+
+  doc.save()
+    .fillColor(COLORS.white)
+    .fontSize(11)
+    .font('Helvetica-Bold')
+    .text(value, MARGIN, y + 3, { width: CONTENT_WIDTH - 10, align: 'right' })
+    .restore();
+
+  return y + 32;
+}
+
+function drawFooter(doc) {
+  const y = doc.page.height - 50;
+  drawHorizontalLine(doc, y);
+  doc.save()
+    .fillColor(COLORS.muted)
+    .fontSize(8)
+    .font('Helvetica')
+    .text(
+      'BidRoom Auction Marketplace  •  This document is generated automatically and is for record-keeping purposes.',
+      MARGIN,
+      y + 8,
+      { width: CONTENT_WIDTH, align: 'center' }
+    )
+    .restore();
+}
+
+// ─── Seller Invoice PDF ────────────────────────────────────────────────────────
+
 async function buildSellerInvoicePdf(transaction) {
   return new Promise((resolve, reject) => {
-    const doc = new PDFDocument({ margin: 50 });
+    const doc = new PDFDocument({ margin: MARGIN, size: 'A4' });
     const chunks = [];
-    doc.on('data', (chunk) => chunks.push(chunk));
+    doc.on('data', (c) => chunks.push(c));
     doc.on('end', () => resolve(Buffer.concat(chunks)));
     doc.on('error', reject);
 
@@ -129,16 +212,53 @@ async function buildSellerInvoicePdf(transaction) {
     doc.moveDown(0.3);
     doc.text('Note: The Stripe fee shown is approximate. Your exact payout may vary slightly based on Stripe\'s processing.');
 
+    y = drawKeyValue(doc, 'Seller (you)', sellerName, y, { bold: true });
+    if (seller.email) y = drawKeyValue(doc, 'Seller email', seller.email, y);
+    y = drawKeyValue(doc, 'Buyer', buyerName, y);
+    if (buyer.email) y = drawKeyValue(doc, 'Buyer email', buyer.email, y);
+    y += 10;
+
+    // ── Payment Breakdown ─────────────────────────────────────────────────────
+    y = drawSectionTitle(doc, 'Payment Breakdown', y);
+
+    y = drawBreakdownRow(doc, salePriceLabel, formatUsd(transaction.amount), y);
+    y = drawBreakdownRow(doc, `Shipping costs (${listing.shippingOption || 'flat-rate'})`, getShippingLabel(transaction), y);
+    y = drawBreakdownRow(doc, 'Taxes / VAT', '$0.00', y);
+    y += 4;
+    drawHorizontalLine(doc, y);
+    y += 8;
+    y = drawBreakdownRow(doc, `BidRoom platform fee (${commissionRate} of sale price)`, `- ${formatUsd(platformFee)}`, y, { valueColor: COLORS.accent });
+    y += 10;
+
+    y = drawTotalRow(doc, 'Final payout to you (seller)', formatUsd(sellerPayout), y, COLORS.sellerGreen);
+    y += 14;
+
+    // ── Notes ─────────────────────────────────────────────────────────────────
+    doc.save()
+      .fillColor(COLORS.muted)
+      .fontSize(8)
+      .font('Helvetica')
+      .text(
+        `Commission rate applied: ${commissionRate}. Platform fee is deducted from the sale price at transaction completion. ` +
+        'Shipping costs are collected by the seller separately and are not deducted from the payout shown above.',
+        MARGIN,
+        y,
+        { width: CONTENT_WIDTH }
+      )
+      .restore();
+
+    drawFooter(doc);
     doc.end();
   });
 }
 
-/** Build buyer receipt/invoice PDF buffer */
+// ─── Buyer Receipt PDF ─────────────────────────────────────────────────────────
+
 async function buildBuyerInvoicePdf(transaction) {
   return new Promise((resolve, reject) => {
-    const doc = new PDFDocument({ margin: 50 });
+    const doc = new PDFDocument({ margin: MARGIN, size: 'A4' });
     const chunks = [];
-    doc.on('data', (chunk) => chunks.push(chunk));
+    doc.on('data', (c) => chunks.push(c));
     doc.on('end', () => resolve(Buffer.concat(chunks)));
     doc.on('error', reject);
 
@@ -196,20 +316,56 @@ async function buildBuyerInvoicePdf(transaction) {
     doc.moveDown(0.3);
     doc.text('The BidRoom platform fee (2%) is included in the total charged and covers marketplace services.');
 
+    // ── Parties ───────────────────────────────────────────────────────────────
+    y = drawSectionTitle(doc, 'Parties', y);
+
+    const buyerName = [buyer.firstName, buyer.lastName].filter(Boolean).join(' ') || 'N/A';
+    const sellerName = [seller.firstName, seller.lastName].filter(Boolean).join(' ') || 'N/A';
+
+    y = drawKeyValue(doc, 'Buyer (you)', buyerName, y, { bold: true });
+    if (buyer.email) y = drawKeyValue(doc, 'Buyer email', buyer.email, y);
+    y = drawKeyValue(doc, 'Seller', sellerName, y);
+    if (seller.email) y = drawKeyValue(doc, 'Seller email', seller.email, y);
+    y += 10;
+
+    // ── Payment Breakdown ─────────────────────────────────────────────────────
+    y = drawSectionTitle(doc, 'Payment Breakdown', y);
+
+    y = drawBreakdownRow(doc, salePriceLabel, formatUsd(transaction.amount), y);
+    y = drawBreakdownRow(doc, `BidRoom platform fee (${commissionRate}, included in price)`, formatUsd(platformFee), y, { valueColor: COLORS.muted });
+    y = drawBreakdownRow(doc, `Shipping costs (${listing.shippingOption || 'flat-rate'})`, getShippingLabel(transaction), y);
+    y = drawBreakdownRow(doc, 'Taxes / VAT', '$0.00', y);
+    y += 4;
+    drawHorizontalLine(doc, y);
+    y += 12;
+
+    const totalLabel = buyerTotal !== null ? formatUsd(buyerTotal) : `${formatUsd(transaction.amount)} + shipping`;
+    y = drawTotalRow(doc, 'Total amount paid', totalLabel, y, COLORS.buyerBlue);
+    y += 14;
+
+    // ── Notes ─────────────────────────────────────────────────────────────────
+    doc.save()
+      .fillColor(COLORS.muted)
+      .fontSize(8)
+      .font('Helvetica')
+      .text(
+        `The platform fee of ${commissionRate} is included within the sale price and is paid to BidRoom by the seller. ` +
+        'Shipping costs are paid separately to the seller. This receipt is for record-keeping purposes.',
+        MARGIN,
+        y,
+        { width: CONTENT_WIDTH }
+      )
+      .restore();
+
+    drawFooter(doc);
     doc.end();
   });
 }
 
-/**
- * Generate invoice PDF for seller or buyer
- * @param {Object} transaction - Populated transaction (listing, seller, buyer)
- * @param {'seller'|'buyer'} role
- * @returns {Promise<Buffer>}
- */
+// ─── Public API ───────────────────────────────────────────────────────────────
+
 async function generateInvoicePdf(transaction, role) {
-  if (role === 'seller') {
-    return buildSellerInvoicePdf(transaction);
-  }
+  if (role === 'seller') return buildSellerInvoicePdf(transaction);
   return buildBuyerInvoicePdf(transaction);
 }
 
