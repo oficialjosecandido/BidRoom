@@ -29,6 +29,7 @@ const reviewRoutes = require('./routes/reviews');
 const transactionsRoutes = require('./routes/transactions');
 const notificationsRoutes = require('./routes/notifications');
 const { router: paymentsRouter, stripeWebhookHandler } = require('./routes/payments');
+const { router: connectRouter, connectWebhookHandler } = require('./routes/connect');
 
 // Import services
 const auctionEndScheduler = require('./services/auctionEndScheduler');
@@ -74,8 +75,9 @@ app.use(cors({
 }));
 app.use(morgan('combined'));
 
-// Stripe webhook needs raw body for signature verification (must be before express.json())
+// Stripe webhooks need raw body for signature verification (must be before express.json())
 app.post('/api/payments/webhook', express.raw({ type: 'application/json' }), stripeWebhookHandler);
+app.post('/api/connect/webhook', express.raw({ type: 'application/json' }), connectWebhookHandler);
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -94,6 +96,7 @@ app.use('/api/reviews', reviewRoutes);
 app.use('/api/transactions', transactionsRoutes);
 app.use('/api/notifications', notificationsRoutes);
 app.use('/api/payments', paymentsRouter);
+app.use('/api/connect', connectRouter);
 
 app.get('/', (req, res) => {
   res.json({

@@ -30,6 +30,14 @@ export const API_CONFIG = {
     return 'https://bidroom-backend-dev.azurewebsites.net/api';
   },
   
+  getStripePublishableKey(): string {
+    if (typeof window !== 'undefined' && (window as any).APP_CONFIG?.STRIPE_PUBLISHABLE_KEY) {
+      return (window as any).APP_CONFIG.STRIPE_PUBLISHABLE_KEY;
+    }
+    // Test key for local development
+    return 'pk_test_51T98Ps1Me1kcdayq7UjnAMHVW88Blkx2MCBtwMvCL7XLmTBxb59PrSwhxSIJY8qrDiJBpbRY9YwHGPKGSOULrSzk00Mmg5sYh5';
+  },
+
   getWebSocketUrl(): string {
     const apiUrl = this.getApiUrl();
     // Remove /api suffix if present

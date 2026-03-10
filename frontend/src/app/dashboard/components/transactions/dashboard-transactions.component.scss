@@ -1,3 +1,111 @@
+// Stripe banners
+.stripe-confirming-banner {
+  background: #e8f5e9;
+  color: #2e7d32;
+  padding: 14px 20px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  font-size: 14px;
+  font-weight: 500;
+  text-align: center;
+}
+
+.stripe-error-banner {
+  background: #fdecea;
+  color: #c62828;
+  padding: 14px 20px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+
+  .stripe-error-close {
+    background: none;
+    border: none;
+    color: #c62828;
+    font-size: 20px;
+    cursor: pointer;
+    line-height: 1;
+    padding: 0 4px;
+  }
+}
+
+// Fee breakdown rows
+.breakdown-row-fee {
+  .breakdown-label {
+    color: #888;
+  }
+
+  .breakdown-value-fee {
+    color: #888;
+  }
+}
+
+.breakdown-note {
+  font-size: 11px;
+  color: #aaa;
+  margin: 4px 0 0;
+}
+
+// Stripe pay section
+.stripe-pay-section {
+  margin-top: 8px;
+}
+
+.stripe-pay-hint {
+  font-size: 13px;
+  color: #666;
+  margin: 0 0 8px;
+}
+
+.btn-stripe-pay {
+  background: #635bff;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 28px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+
+  &:hover:not(:disabled) {
+    background: #4f46e5;
+  }
+
+  &:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+  }
+}
+
+.stripe-paid-hint {
+  color: #2e7d32;
+  font-weight: 500;
+}
+
+.stripe-payment-confirmed {
+  display: inline-block;
+  background: #e8f5e9;
+  color: #2e7d32;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 4px 12px;
+  border-radius: 12px;
+  margin-bottom: 8px;
+}
+
+.stripe-ref {
+  font-size: 11px;
+  color: #bbb;
+  font-family: monospace;
+  margin: 6px 0 0;
+  word-break: break-all;
+}
+
 .transactions-container {
   padding: 32px;
   max-width: 1200px;

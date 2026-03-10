@@ -4,7 +4,7 @@ const User = require('../models/User');
 const Bid = require('../models/Bid');
 const Watchlist = require('../models/Watchlist');
 const { authenticateToken, optionalAuth, requireActiveAccount } = require('../middleware/auth');
-const { handleWinnerSelection } = require('../services/auctionNotificationService');
+const { handleWinnerSelection, handleAuctionEnd } = require('../services/auctionNotificationService');
 const { getReviewScoresForUser } = require('../services/reviewService');
 const { logAuctionCreated } = require('../services/bestOfferLogger');
 
@@ -254,6 +254,25 @@ router.get('/slug/:slug', optionalAuth, async (req, res) => {
       });
     }
 
+    // Lazy finalize: if auction has ended by time but scheduler hasn't run yet, process it now
+    // (ensures normal auctions auto-select highest bidder so seller never sees "Select winner")
+    const now = new Date();
+    if (
+      listing.status === 'active' &&
+      listing.auctionFormat === 'highest-bid' &&
+      listing.endDate && new Date(listing.endDate) <= now &&
+      !['active', 'invited'].includes(listing.privateRoomStatus || '')
+    ) {
+      try {
+        await handleAuctionEnd(listing._id, null);
+        listing = await Listing.findOne({ _id: listing._id })
+          .populate('seller', 'firstName lastName email')
+          .lean();
+      } catch (err) {
+        console.error('Lazy finalize auction on fetch:', err.message);
+      }
+    }
+
     // Ensure slug exists (generate if missing)
     if (!listing.slug && listing.title) {
       let baseSlug = generateSlug(listing.title);
@@ -393,6 +412,25 @@ router.get('/:id', optionalAuth, async (req, res) => {
       return res.status(404).json({
         error: 'Listing not found'
       });
+    }
+
+    // Lazy finalize: if auction has ended by time but scheduler hasn't run yet, process it now
+    const now = new Date();
+    if (
+      listing.status === 'active' &&
+      listing.auctionFormat === 'highest-bid' &&
+      listing.endDate && new Date(listing.endDate) <= now &&
+      !['active', 'invited'].includes(listing.privateRoomStatus || '')
+    ) {
+      try {
+        await handleAuctionEnd(listing._id, null);
+        listing = await Listing.findOne({ _id: listing._id })
+          .populate('seller', 'firstName lastName email')
+          .populate('platinumBidderInvitations.bidder', '_id')
+          .lean();
+      } catch (err) {
+        console.error('Lazy finalize auction on fetch:', err.message);
+      }
     }
 
     const timeRemaining = new Listing(listing).getTimeRemaining();
