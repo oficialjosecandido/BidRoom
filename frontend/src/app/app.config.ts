@@ -3,6 +3,8 @@ import { provideRouter } from '@angular/router';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { provideFirebaseApp, initializeApp } from '@angular/fire/app';
 import { provideAuth, getAuth } from '@angular/fire/auth';
+import { provideTranslateService } from '@ngx-translate/core';
+import { provideTranslateHttpLoader } from '@ngx-translate/http-loader';
 
 import { routes } from './app.routes';
 import { authInterceptor } from './auth/interceptors/auth.interceptor';
@@ -15,6 +17,8 @@ export const appConfig: ApplicationConfig = {
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(routes),
     provideHttpClient(withInterceptors([authInterceptor])),
+    provideTranslateService({ defaultLanguage: 'en' }),
+    provideTranslateHttpLoader({ prefix: '/i18n/', suffix: '.json' }),
     provideFirebaseApp(() => initializeApp({
       apiKey: "AIzaSyBb3nk50nwBME8dN5pNhu2W1B7-m35qqHw",
       authDomain: "bidroom-47cb5.firebaseapp.com",

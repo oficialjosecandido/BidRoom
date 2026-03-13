@@ -1,0 +1,148 @@
+{
+  "header": {
+    "nav": {
+      "auctions": "Leilões",
+      "categories": "Categorias",
+      "howItWorks": "Como Funciona",
+      "faq": "FAQ",
+      "contact": "Contacto"
+    },
+    "actions": {
+      "listYourItem": "Listar Item",
+      "myAccount": "Minha Conta",
+      "signIn": "Entrar",
+      "startBidding": "Começar a Licitar"
+    },
+    "menu": {
+      "open": "Abrir menu",
+      "close": "Fechar menu"
+    }
+  },
+  "footer": {
+    "tagline": "O seu marketplace de leilões premium para descobertas únicas e tesouros valiosos.",
+    "quickLinks": "Links Rápidos",
+    "howItWorks": "Como Funciona",
+    "contact": "Contacto",
+    "faq": "FAQ",
+    "legal": "Legal",
+    "privacyPolicy": "Política de Privacidade",
+    "termsConditions": "Termos e Condições",
+    "connect": "Redes Sociais",
+    "copyright": "© 2024 BidRoom. Todos os direitos reservados."
+  },
+  "home": {
+    "hero": {
+      "title": "Descubra o Seu Verdadeiro Valor",
+      "subtitle": "Descubra itens únicos, faça licitações vencedoras e possua o que ama. Junte-se a milhares de licitadores no nosso marketplace de leilões premium.",
+      "searchPlaceholder": "Pesquisar portáteis, relógios, selos, arte...",
+      "search": "Pesquisar",
+      "createAccount": "Criar Conta",
+      "listAnItem": "Listar um Item"
+    },
+    "stats": {
+      "activeBidders": "Licitadores Ativos",
+      "totalValueTraded": "Valor Total Transacionado",
+      "listingsLiveNow": "Anúncios Ativos"
+    },
+    "howItWorks": {
+      "title": "Como Funciona o BidRoom",
+      "subtitle": "Três passos simples para encontrar e ganhar o que ama",
+      "step1": {
+        "title": "Descubra",
+        "desc": "Navegue por milhares de itens únicos em várias categorias. Encontre exatamente o que procura com a nossa pesquisa avançada e filtros."
+      },
+      "step2": {
+        "title": "Licite",
+        "desc": "Faça as suas licitações estrategicamente. Acompanhe a competição e licite no momento perfeito para garantir os itens desejados."
+      },
+      "step3": {
+        "title": "Possua",
+        "desc": "Vença o leilão e complete a sua compra com segurança. O seu novo tesouro será enviado diretamente para a sua porta."
+      }
+    },
+    "endingSoon": {
+      "title": "Leilões a Terminar Em Breve",
+      "subtitle": "Não perca estas ofertas incríveis! Aja rápido antes que se esgotem.",
+      "viewEndingSoon": "Ver a Terminar Em Breve",
+      "noOffersYet": "Sem propostas ainda",
+      "left": "restante"
+    },
+    "categories": {
+      "title": "Navegar por Categoria",
+      "subtitle": "Encontre o que ama nas nossas categorias selecionadas",
+      "viewAll": "Ver Todas as Categorias →",
+      "electronics": { "title": "Eletrónicos", "desc": "Gadgets, câmeras e áudio" },
+      "homeGarden": { "title": "Casa & Jardim", "desc": "Mobiliário, decoração e mais" },
+      "art": { "title": "Arte", "desc": "Pinturas, esculturas e gravuras" },
+      "collectibles": { "title": "Colecionáveis", "desc": "Selos, moedas e memorabília" },
+      "jewelry": { "title": "Joalharia", "desc": "Anéis, relógios e pedras preciosas" }
+    },
+    "liveAuctions": {
+      "title": "Leilões ao Vivo",
+      "sortEndingSoonest": "A Terminar Em Breve",
+      "sortNewest": "Mais Recentes",
+      "sortHighest": "Preço Mais Alto",
+      "sortLowest": "Preço Mais Baixo",
+      "sortMostBids": "Mais Licitações",
+      "filters": "Filtros",
+      "loading": "A carregar anúncios...",
+      "error": "Erro",
+      "tryAgain": "Tentar Novamente",
+      "noAuctions": "Nenhum leilão disponível de momento",
+      "checkBack": "Volte em breve para novos anúncios!",
+      "getNotified": "Ser Notificado",
+      "featured": "Destaque",
+      "verified": "Verificado",
+      "endingSoon": "A Terminar Em Breve",
+      "viewDetails": "Ver Detalhes",
+      "addToWatchlist": "Adicionar à Lista",
+      "placeBid": "Fazer Licitação",
+      "startedAt": "Começou em",
+      "bid": "licitação",
+      "bids": "licitações",
+      "ended": "Terminado",
+      "na": "N/D"
+    }
+  },
+  "listingList": {
+    "searchPlaceholder": "Pesquisar leilões...",
+    "search": "Pesquisar",
+    "browseCategories": "Ver Categorias",
+    "filters": "Filtros:",
+    "allCategories": "Todas as Categorias",
+    "sortEndingSoonest": "A Terminar Em Breve",
+    "sortNewest": "Mais Recentes",
+    "sortHighest": "Preço Mais Alto",
+    "sortLowest": "Preço Mais Baixo",
+    "sortMostBids": "Mais Licitações",
+    "listings": "anúncios",
+    "allAuctions": "Todos os Leilões",
+    "loading": "A carregar anúncios...",
+    "error": "Erro",
+    "tryAgain": "Tentar Novamente",
+    "noOffersYet": "Sem propostas ainda",
+    "startedAt": "Começou em",
+    "bid": "licitação",
+    "bids": "licitações",
+    "ended": "Terminado",
+    "na": "N/D",
+    "noListingsFound": "Nenhum anúncio encontrado",
+    "tryDifferentSearch": "Tente um termo de pesquisa diferente, categoria ou remova alguns filtros.",
+    "clearAllFilters": "Limpar todos os filtros",
+    "featured": "Destaque",
+    "verified": "Verificado",
+    "endingSoon": "A Terminar Em Breve"
+  },
+  "categories": {
+    "title": "Navegar por Categoria",
+    "subtitle": "Explore todas as nossas categorias e subcategorias",
+    "browseAll": "Ver todos",
+    "allListings": "Todos os Anúncios"
+  },
+  "language": {
+    "en": "English",
+    "pt": "Português",
+    "es": "Español",
+    "fr": "Français"
+  }
+}

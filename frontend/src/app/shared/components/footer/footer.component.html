@@ -4,25 +4,25 @@
     <div class="row">
       <div class="col-3">
         <h4>BidRoom</h4>
-        <p>Your premier auction marketplace for unique finds and valuable treasures.</p>
+        <p>{{ 'footer.tagline' | translate }}</p>
       </div>
       <div class="col-3">
-        <h4>Quick Links</h4>
+        <h4>{{ 'footer.quickLinks' | translate }}</h4>
         <ul>
-          <li><a href="#" role="button" (click)="navigateToHowItWorks(); $event.preventDefault()" (keydown.enter)="navigateToHowItWorks(); $event.preventDefault()">How It Works</a></li>
-          <li><a href="#" role="button" (click)="navigateToContact(); $event.preventDefault()" (keydown.enter)="navigateToContact(); $event.preventDefault()">Contact</a></li>
-          <li><a href="#" role="button" (click)="navigateToFaq(); $event.preventDefault()" (keydown.enter)="navigateToFaq(); $event.preventDefault()">FAQ</a></li>
+          <li><a href="#" role="button" (click)="navigateToHowItWorks(); $event.preventDefault()" (keydown.enter)="navigateToHowItWorks(); $event.preventDefault()">{{ 'footer.howItWorks' | translate }}</a></li>
+          <li><a href="#" role="button" (click)="navigateToContact(); $event.preventDefault()" (keydown.enter)="navigateToContact(); $event.preventDefault()">{{ 'footer.contact' | translate }}</a></li>
+          <li><a href="#" role="button" (click)="navigateToFaq(); $event.preventDefault()" (keydown.enter)="navigateToFaq(); $event.preventDefault()">{{ 'footer.faq' | translate }}</a></li>
         </ul>
       </div>
       <div class="col-3">
-        <h4>Legal</h4>
+        <h4>{{ 'footer.legal' | translate }}</h4>
         <ul>
-          <li><a href="#" role="button" (click)="navigateToPrivacyPolicy(); $event.preventDefault()" (keydown.enter)="navigateToPrivacyPolicy(); $event.preventDefault()">Privacy Policy</a></li>
-          <li><a href="#" role="button" (click)="navigateToTermsConditions(); $event.preventDefault()" (keydown.enter)="navigateToTermsConditions(); $event.preventDefault()">Terms & Conditions</a></li>
+          <li><a href="#" role="button" (click)="navigateToPrivacyPolicy(); $event.preventDefault()" (keydown.enter)="navigateToPrivacyPolicy(); $event.preventDefault()">{{ 'footer.privacyPolicy' | translate }}</a></li>
+          <li><a href="#" role="button" (click)="navigateToTermsConditions(); $event.preventDefault()" (keydown.enter)="navigateToTermsConditions(); $event.preventDefault()">{{ 'footer.termsConditions' | translate }}</a></li>
         </ul>
       </div>
       <div class="col-3">
-        <h4>Connect</h4>
+        <h4>{{ 'footer.connect' | translate }}</h4>
         <div class="social-links">
           <a href="#">Facebook</a>
           <a href="#">Twitter</a>
@@ -31,7 +31,7 @@
       </div>
     </div>
     <div class="footer-bottom">
-      <p>&copy; 2024 BidRoom. All rights reserved.</p>
+      <p>{{ 'footer.copyright' | translate }}</p>
     </div>
   </div>
 </footer>

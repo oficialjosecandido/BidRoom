@@ -23,7 +23,7 @@
         (click)="toggleMenu()"
         [attr.aria-expanded]="menuOpen"
         [class.open]="menuOpen"
-        aria-label="{{ menuOpen ? 'Close menu' : 'Open menu' }}"
+        [attr.aria-label]="menuOpen ? ('header.menu.close' | translate) : ('header.menu.open' | translate)"
       >
         <span class="menu-toggle-icon" [class.open]="menuOpen">
           <span class="bar"></span>
@@ -31,26 +31,43 @@
           <span class="bar"></span>
         </span>
       </button>
-      
+
       <div class="nav-wrapper" [class.open]="menuOpen">
         <nav class="main-nav">
-          <a class="nav-link" [class.active]="activePage === 'auctions'" href="#" role="button" (click)="navigateToAuctions(); $event.preventDefault()" (keydown.enter)="navigateToAuctions(); $event.preventDefault()">Auctions</a>
-          <a class="nav-link" [class.active]="activePage === 'categories'" href="#" role="button" (click)="navigateToCategories(); $event.preventDefault()" (keydown.enter)="navigateToCategories(); $event.preventDefault()">Categories</a>
-          <a class="nav-link" [class.active]="activePage === 'how-it-works'" href="#" role="button" (click)="navigateToHowItWorks(); $event.preventDefault()" (keydown.enter)="navigateToHowItWorks(); $event.preventDefault()">How It Works</a>
-          <a class="nav-link" [class.active]="activePage === 'faq'" href="#" role="button" (click)="navigateToFaq(); $event.preventDefault()" (keydown.enter)="navigateToFaq(); $event.preventDefault()">FAQ</a>
-          <a class="nav-link" [class.active]="activePage === 'contact'" href="#" role="button" (click)="navigateToContact(); $event.preventDefault()" (keydown.enter)="navigateToContact(); $event.preventDefault()">Contact</a>
+          <a class="nav-link" [class.active]="activePage === 'auctions'" href="#" role="button" (click)="navigateToAuctions(); $event.preventDefault()" (keydown.enter)="navigateToAuctions(); $event.preventDefault()">{{ 'header.nav.auctions' | translate }}</a>
+          <a class="nav-link" [class.active]="activePage === 'categories'" href="#" role="button" (click)="navigateToCategories(); $event.preventDefault()" (keydown.enter)="navigateToCategories(); $event.preventDefault()">{{ 'header.nav.categories' | translate }}</a>
+          <a class="nav-link" [class.active]="activePage === 'how-it-works'" href="#" role="button" (click)="navigateToHowItWorks(); $event.preventDefault()" (keydown.enter)="navigateToHowItWorks(); $event.preventDefault()">{{ 'header.nav.howItWorks' | translate }}</a>
+          <a class="nav-link" [class.active]="activePage === 'faq'" href="#" role="button" (click)="navigateToFaq(); $event.preventDefault()" (keydown.enter)="navigateToFaq(); $event.preventDefault()">{{ 'header.nav.faq' | translate }}</a>
         </nav>
-        
+
         <div class="header-actions">
+          <!-- Language Switcher -->
+          <div class="lang-switcher">
+            <button class="lang-btn" (click)="toggleLangMenu()" [attr.aria-expanded]="langMenuOpen">
+              {{ currentLangLabel }} <span class="lang-chevron">▾</span>
+            </button>
+            @if (langMenuOpen) {
+              <div class="lang-dropdown">
+                @for (lang of languages; track lang.code) {
+                  <button
+                    class="lang-option"
+                    [class.active]="lang.code === currentLang"
+                    (click)="switchLanguage(lang.code)"
+                  >{{ lang.name }}</button>
+                }
+              </div>
+            }
+          </div>
+
           @if (isAuthenticated$ | async) {
             <div class="header-notification-wrap">
               <app-proposal-notifications></app-proposal-notifications>
             </div>
-            <button class="btn btn-secondary" (click)="navigateToAddListing()">List Your Item</button>
-            <button class="btn btn-primary" (click)="navigateToDashboard()">My Account</button>
+            <button class="btn btn-secondary" (click)="navigateToAddListing()">{{ 'header.actions.listYourItem' | translate }}</button>
+            <button class="btn btn-primary" (click)="navigateToDashboard()">{{ 'header.actions.myAccount' | translate }}</button>
           } @else {
-            <button class="btn btn-secondary" (click)="navigateToLogin()">Sign In</button>
-            <button class="btn btn-primary" (click)="navigateToAuth()">Start Bidding</button>
+            <button class="btn btn-secondary" (click)="navigateToLogin()">{{ 'header.actions.signIn' | translate }}</button>
+            <button class="btn btn-primary" (click)="navigateToAuth()">{{ 'header.actions.startBidding' | translate }}</button>
           }
         </div>
       </div>

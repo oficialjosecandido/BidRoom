@@ -1,0 +1,148 @@
+{
+  "header": {
+    "nav": {
+      "auctions": "Enchères",
+      "categories": "Catégories",
+      "howItWorks": "Comment Ça Marche",
+      "faq": "FAQ",
+      "contact": "Contact"
+    },
+    "actions": {
+      "listYourItem": "Mettre en Vente",
+      "myAccount": "Mon Compte",
+      "signIn": "Se Connecter",
+      "startBidding": "Commencer à Enchérir"
+    },
+    "menu": {
+      "open": "Ouvrir le menu",
+      "close": "Fermer le menu"
+    }
+  },
+  "footer": {
+    "tagline": "Votre marketplace d'enchères premium pour des trouvailles uniques et des trésors de valeur.",
+    "quickLinks": "Liens Rapides",
+    "howItWorks": "Comment Ça Marche",
+    "contact": "Contact",
+    "faq": "FAQ",
+    "legal": "Légal",
+    "privacyPolicy": "Politique de Confidentialité",
+    "termsConditions": "Conditions Générales",
+    "connect": "Réseaux Sociaux",
+    "copyright": "© 2024 BidRoom. Tous droits réservés."
+  },
+  "home": {
+    "hero": {
+      "title": "Découvrez Votre Vraie Valeur",
+      "subtitle": "Découvrez des objets uniques, faites des enchères gagnantes et possédez ce que vous aimez. Rejoignez des milliers d'enchérisseurs sur notre marketplace d'enchères premium.",
+      "searchPlaceholder": "Rechercher ordinateurs portables, montres, timbres, art...",
+      "search": "Rechercher",
+      "createAccount": "Créer un Compte",
+      "listAnItem": "Mettre un Article en Vente"
+    },
+    "stats": {
+      "activeBidders": "Enchérisseurs Actifs",
+      "totalValueTraded": "Valeur Totale Échangée",
+      "listingsLiveNow": "Annonces en Direct"
+    },
+    "howItWorks": {
+      "title": "Comment Fonctionne BidRoom",
+      "subtitle": "Trois étapes simples pour trouver et gagner ce que vous aimez",
+      "step1": {
+        "title": "Découvrir",
+        "desc": "Parcourez des milliers d'articles uniques dans toutes les catégories. Trouvez exactement ce que vous cherchez avec notre recherche avancée et nos filtres."
+      },
+      "step2": {
+        "title": "Enchérir",
+        "desc": "Placez vos enchères stratégiquement. Suivez la compétition et enchérissez au moment parfait pour sécuriser les articles désirés."
+      },
+      "step3": {
+        "title": "Posséder",
+        "desc": "Gagnez la vente aux enchères et finalisez votre achat en toute sécurité. Votre nouveau trésor sera livré directement à votre porte."
+      }
+    },
+    "endingSoon": {
+      "title": "Enchères se Terminant Bientôt",
+      "subtitle": "Ne manquez pas ces offres incroyables ! Agissez vite avant qu'elles disparaissent.",
+      "viewEndingSoon": "Voir se Terminant Bientôt",
+      "noOffersYet": "Pas d'offres encore",
+      "left": "restant"
+    },
+    "categories": {
+      "title": "Parcourir par Catégorie",
+      "subtitle": "Trouvez ce que vous aimez dans nos catégories sélectionnées",
+      "viewAll": "Voir Toutes les Catégories →",
+      "electronics": { "title": "Électronique", "desc": "Gadgets, caméras et audio" },
+      "homeGarden": { "title": "Maison & Jardin", "desc": "Meubles, décoration et plus" },
+      "art": { "title": "Art", "desc": "Peintures, sculptures et estampes" },
+      "collectibles": { "title": "Objets de Collection", "desc": "Timbres, pièces et memorabilia" },
+      "jewelry": { "title": "Bijoux", "desc": "Bagues, montres et pierres précieuses" }
+    },
+    "liveAuctions": {
+      "title": "Enchères en Direct",
+      "sortEndingSoonest": "Se Terminant Bientôt",
+      "sortNewest": "Plus Récents",
+      "sortHighest": "Prix le Plus Élevé",
+      "sortLowest": "Prix le Plus Bas",
+      "sortMostBids": "Plus d'Enchères",
+      "filters": "Filtres",
+      "loading": "Chargement des annonces...",
+      "error": "Erreur",
+      "tryAgain": "Réessayer",
+      "noAuctions": "Aucune vente aux enchères disponible pour le moment",
+      "checkBack": "Revenez bientôt pour de nouvelles annonces !",
+      "getNotified": "Être Notifié",
+      "featured": "En Vedette",
+      "verified": "Vérifié",
+      "endingSoon": "Se Termine Bientôt",
+      "viewDetails": "Voir les Détails",
+      "addToWatchlist": "Ajouter aux Favoris",
+      "placeBid": "Faire une Enchère",
+      "startedAt": "Démarré à",
+      "bid": "enchère",
+      "bids": "enchères",
+      "ended": "Terminé",
+      "na": "N/D"
+    }
+  },
+  "listingList": {
+    "searchPlaceholder": "Rechercher des enchères...",
+    "search": "Rechercher",
+    "browseCategories": "Voir les Catégories",
+    "filters": "Filtres :",
+    "allCategories": "Toutes les Catégories",
+    "sortEndingSoonest": "Se Terminant Bientôt",
+    "sortNewest": "Plus Récents",
+    "sortHighest": "Prix le Plus Élevé",
+    "sortLowest": "Prix le Plus Bas",
+    "sortMostBids": "Plus d'Enchères",
+    "listings": "annonces",
+    "allAuctions": "Toutes les Enchères",
+    "loading": "Chargement des annonces...",
+    "error": "Erreur",
+    "tryAgain": "Réessayer",
+    "noOffersYet": "Pas d'offres encore",
+    "startedAt": "Démarré à",
+    "bid": "enchère",
+    "bids": "enchères",
+    "ended": "Terminé",
+    "na": "N/D",
+    "noListingsFound": "Aucune annonce trouvée",
+    "tryDifferentSearch": "Essayez un terme de recherche différent, une catégorie ou supprimez certains filtres.",
+    "clearAllFilters": "Effacer tous les filtres",
+    "featured": "En Vedette",
+    "verified": "Vérifié",
+    "endingSoon": "Se Termine Bientôt"
+  },
+  "categories": {
+    "title": "Parcourir par Catégorie",
+    "subtitle": "Explorez toutes nos catégories et sous-catégories",
+    "browseAll": "Voir tout",
+    "allListings": "Toutes les Annonces"
+  },
+  "language": {
+    "en": "English",
+    "pt": "Português",
+    "es": "Español",
+    "fr": "Français"
+  }
+}

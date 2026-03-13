@@ -10,21 +10,21 @@
         <input
           type="text"
           class="search-input"
-          placeholder="Search auctions..."
+          [placeholder]="'listingList.searchPlaceholder' | translate"
           [(ngModel)]="searchInput"
           (keyup.enter)="onSearch()" />
         @if (searchInput) {
           <button class="search-clear" (click)="searchInput = ''; clearSearch()">✕</button>
         }
       </div>
-      <button class="btn btn-primary search-btn" (click)="onSearch()">Search</button>
-      <button class="btn btn-secondary" (click)="browseCategoriesPage()">Browse Categories</button>
+      <button class="btn btn-primary search-btn" (click)="onSearch()">{{ 'listingList.search' | translate }}</button>
+      <button class="btn btn-secondary" (click)="browseCategoriesPage()">{{ 'listingList.browseCategories' | translate }}</button>
     </div>
 
     <!-- Active Filters -->
     @if (searchQuery || selectedCategory || selectedSubCategory) {
       <div class="active-filters">
-        <span class="filters-label">Filters:</span>
+        <span class="filters-label">{{ 'listingList.filters' | translate }}</span>
         @if (searchQuery) {
           <span class="filter-chip">
             "{{ searchQuery }}"
@@ -51,12 +51,12 @@
       <div class="list-title-wrap">
         <h1 class="page-title">{{ pageTitle }}</h1>
         @if (!loading) {
-          <span class="result-count">{{ total || listings.length }} listings</span>
+          <span class="result-count">{{ total || listings.length }} {{ 'listingList.listings' | translate }}</span>
         }
       </div>
       <div class="filters-row">
         <select class="filter-select" [(ngModel)]="selectedCategory" (change)="onCategoryChange()">
-          <option value="">All Categories</option>
+          <option value="">{{ 'listingList.allCategories' | translate }}</option>
           @for (cat of categories; track cat.id) {
             <option [value]="cat.id">{{ cat.icon }} {{ cat.name }}</option>
           }
@@ -72,11 +72,11 @@
         }
 
         <select class="filter-select" [(ngModel)]="sortBy" (change)="onSortChange()">
-          <option value="deadline">Ending Soonest</option>
-          <option value="newest">Newest</option>
-          <option value="highest">Highest Price</option>
-          <option value="lowest">Lowest Price</option>
-          <option value="bids">Most Bids</option>
+          <option value="deadline">{{ 'listingList.sortEndingSoonest' | translate }}</option>
+          <option value="newest">{{ 'listingList.sortNewest' | translate }}</option>
+          <option value="highest">{{ 'listingList.sortHighest' | translate }}</option>
+          <option value="lowest">{{ 'listingList.sortLowest' | translate }}</option>
+          <option value="bids">{{ 'listingList.sortMostBids' | translate }}</option>
         </select>
       </div>
     </div>
@@ -84,16 +84,16 @@
     <!-- Loading -->
     @if (loading) {
       <div class="loading-state">
-        <p>Loading listings...</p>
+        <p>{{ 'listingList.loading' | translate }}</p>
       </div>
     }
 
     <!-- Error -->
     @if (error && !loading) {
       <div class="error-state">
-        <h3>⚠️ Error</h3>
+        <h3>⚠️ {{ 'listingList.error' | translate }}</h3>
         <p>{{ error }}</p>
-        <button class="btn btn-primary" (click)="loadListings()">Try Again</button>
+        <button class="btn btn-primary" (click)="loadListings()">{{ 'listingList.tryAgain' | translate }}</button>
       </div>
     }
 
@@ -109,13 +109,13 @@
                 class="listing-image" />
               <div class="listing-badges">
                 @if (listing.isFeatured) {
-                  <span class="badge badge-featured">⭐ Featured</span>
+                  <span class="badge badge-featured">⭐ {{ 'listingList.featured' | translate }}</span>
                 }
                 @if (listing.isVerified) {
-                  <span class="badge badge-verified">✓ Verified</span>
+                  <span class="badge badge-verified">✓ {{ 'listingList.verified' | translate }}</span>
                 }
                 @if (listing.endingSoon) {
-                  <span class="badge badge-ending-soon">⏰ Ending Soon</span>
+                  <span class="badge badge-ending-soon">⏰ {{ 'listingList.endingSoon' | translate }}</span>
                 }
               </div>
             </div>
@@ -128,16 +128,16 @@
               <div class="listing-meta">
                 <div class="listing-price-info">
                   @if (listing.auctionFormat === 'best-offer' && (listing.currentPrice == null || listing.currentPrice === 0)) {
-                    <span class="listing-current-price">No offers yet</span>
+                    <span class="listing-current-price">{{ 'listingList.noOffersYet' | translate }}</span>
                   } @else {
                     <span class="listing-current-price">{{ formatPrice(listing.currentPrice) }}</span>
                   }
                   @if (listing.auctionFormat !== 'best-offer' && listing.currentPrice > listing.startingPrice) {
-                    <span class="listing-starting-price">Started at {{ formatPrice(listing.startingPrice) }}</span>
+                    <span class="listing-starting-price">{{ 'listingList.startedAt' | translate }} {{ formatPrice(listing.startingPrice) }}</span>
                   }
                 </div>
                 <div class="listing-bid-info">
-                  <span class="bid-count">{{ listing.bidCount }} {{ listing.bidCount === 1 ? 'bid' : 'bids' }}</span>
+                  <span class="bid-count">{{ listing.bidCount }} {{ listing.bidCount === 1 ? ('listingList.bid' | translate) : ('listingList.bids' | translate) }}</span>
                   <span class="time-remaining">⏱️ {{ formatTimeRemaining(listing) }}</span>
                 </div>
               </div>
@@ -151,9 +151,9 @@
     @if (!loading && !error && listings.length === 0) {
       <div class="empty-state">
         <div class="empty-icon">🔍</div>
-        <h3>No listings found</h3>
-        <p>Try a different search term, category, or remove some filters.</p>
-        <button class="btn btn-primary" (click)="clearCategory(); clearSearch()">Clear all filters</button>
+        <h3>{{ 'listingList.noListingsFound' | translate }}</h3>
+        <p>{{ 'listingList.tryDifferentSearch' | translate }}</p>
+        <button class="btn btn-primary" (click)="clearCategory(); clearSearch()">{{ 'listingList.clearAllFilters' | translate }}</button>
       </div>
     }
 

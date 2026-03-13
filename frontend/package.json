@@ -30,6 +30,8 @@
     "@angular/forms": "^20.3.16",
     "@angular/platform-browser": "^20.3.16",
     "@angular/router": "^20.3.16",
+    "@ngx-translate/core": "^17.0.0",
+    "@ngx-translate/http-loader": "^17.0.0",
     "@stripe/stripe-js": "^8.9.0",
     "firebase": "^11.1.0",
     "rxjs": "~7.8.0",

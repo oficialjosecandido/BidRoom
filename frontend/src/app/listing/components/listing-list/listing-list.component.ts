@@ -2,6 +2,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
+import { TranslateModule } from '@ngx-translate/core';
 import { HeaderComponent } from '../../../shared/components/header/header.component';
 import { FooterComponent } from '../../../shared/components/footer/footer.component';
 import { ListingsService, Listing, ListingsQueryParams } from '../../../shared/services/listings.service';
@@ -10,7 +11,7 @@ import { CATEGORIES, Category } from '../../../shared/config/categories.config';
 @Component({
   selector: 'app-listing-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, HeaderComponent, FooterComponent],
+  imports: [CommonModule, FormsModule, TranslateModule, HeaderComponent, FooterComponent],
   templateUrl: './listing-list.component.html',
   styleUrls: ['./listing-list.component.scss']
 })

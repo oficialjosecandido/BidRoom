@@ -118,6 +118,70 @@
     display: flex;
     align-items: center;
   }
+
+  .lang-switcher {
+    position: relative;
+
+    .lang-btn {
+      background: transparent;
+      border: 1px solid var(--border-gray);
+      border-radius: 6px;
+      padding: 6px 10px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      transition: border-color 0.2s;
+
+      &:hover {
+        border-color: var(--accent-purple);
+        color: var(--accent-purple);
+      }
+
+      .lang-chevron {
+        font-size: 10px;
+        opacity: 0.7;
+      }
+    }
+
+    .lang-dropdown {
+      position: absolute;
+      top: calc(100% + 6px);
+      right: 0;
+      background: var(--primary-white);
+      border: 1px solid var(--border-gray);
+      border-radius: 8px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+      overflow: hidden;
+      z-index: 200;
+      min-width: 130px;
+
+      .lang-option {
+        display: block;
+        width: 100%;
+        padding: 9px 14px;
+        text-align: left;
+        background: transparent;
+        border: none;
+        font-size: 13px;
+        cursor: pointer;
+        color: var(--text-primary);
+        transition: background 0.15s;
+
+        &:hover {
+          background: var(--light-gray, #f5f5f5);
+        }
+
+        &.active {
+          color: var(--accent-purple);
+          font-weight: 600;
+        }
+      }
+    }
+  }
 }
 
 // Backdrop (mobile only) - hidden by default

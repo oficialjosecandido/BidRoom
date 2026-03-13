@@ -1,0 +1,148 @@
+{
+  "header": {
+    "nav": {
+      "auctions": "Subastas",
+      "categories": "Categorías",
+      "howItWorks": "Cómo Funciona",
+      "faq": "FAQ",
+      "contact": "Contacto"
+    },
+    "actions": {
+      "listYourItem": "Listar Artículo",
+      "myAccount": "Mi Cuenta",
+      "signIn": "Iniciar Sesión",
+      "startBidding": "Empezar a Pujar"
+    },
+    "menu": {
+      "open": "Abrir menú",
+      "close": "Cerrar menú"
+    }
+  },
+  "footer": {
+    "tagline": "Tu marketplace de subastas premium para hallazgos únicos y tesoros valiosos.",
+    "quickLinks": "Enlaces Rápidos",
+    "howItWorks": "Cómo Funciona",
+    "contact": "Contacto",
+    "faq": "FAQ",
+    "legal": "Legal",
+    "privacyPolicy": "Política de Privacidad",
+    "termsConditions": "Términos y Condiciones",
+    "connect": "Redes Sociales",
+    "copyright": "© 2024 BidRoom. Todos los derechos reservados."
+  },
+  "home": {
+    "hero": {
+      "title": "Descubre Tu Verdadero Valor",
+      "subtitle": "Descubre artículos únicos, haz pujas ganadoras y posee lo que amas. Únete a miles de pujadores en nuestro mercado de subastas premium.",
+      "searchPlaceholder": "Buscar portátiles, relojes, sellos, arte...",
+      "search": "Buscar",
+      "createAccount": "Crear Cuenta",
+      "listAnItem": "Listar un Artículo"
+    },
+    "stats": {
+      "activeBidders": "Pujadores Activos",
+      "totalValueTraded": "Valor Total Negociado",
+      "listingsLiveNow": "Anuncios en Vivo"
+    },
+    "howItWorks": {
+      "title": "Cómo Funciona BidRoom",
+      "subtitle": "Tres simples pasos para encontrar y ganar lo que amas",
+      "step1": {
+        "title": "Descubre",
+        "desc": "Explora miles de artículos únicos en distintas categorías. Encuentra exactamente lo que buscas con nuestra búsqueda avanzada y filtros."
+      },
+      "step2": {
+        "title": "Puja",
+        "desc": "Haz tus pujas estratégicamente. Sigue la competencia y puja en el momento perfecto para asegurar los artículos deseados."
+      },
+      "step3": {
+        "title": "Posee",
+        "desc": "Gana la subasta y completa tu compra de forma segura. Tu nuevo tesoro será enviado directamente a tu puerta."
+      }
+    },
+    "endingSoon": {
+      "title": "Subastas que Terminan Pronto",
+      "subtitle": "¡No te pierdas estas ofertas increíbles! Actúa rápido antes de que desaparezcan.",
+      "viewEndingSoon": "Ver las que Terminan Pronto",
+      "noOffersYet": "Sin ofertas aún",
+      "left": "restante"
+    },
+    "categories": {
+      "title": "Explorar por Categoría",
+      "subtitle": "Encuentra lo que amas en nuestras categorías seleccionadas",
+      "viewAll": "Ver Todas las Categorías →",
+      "electronics": { "title": "Electrónica", "desc": "Gadgets, cámaras y audio" },
+      "homeGarden": { "title": "Hogar & Jardín", "desc": "Muebles, decoración y más" },
+      "art": { "title": "Arte", "desc": "Pinturas, esculturas y grabados" },
+      "collectibles": { "title": "Coleccionables", "desc": "Sellos, monedas y memorabilia" },
+      "jewelry": { "title": "Joyería", "desc": "Anillos, relojes y piedras preciosas" }
+    },
+    "liveAuctions": {
+      "title": "Subastas en Vivo",
+      "sortEndingSoonest": "Terminando Pronto",
+      "sortNewest": "Más Recientes",
+      "sortHighest": "Precio Más Alto",
+      "sortLowest": "Precio Más Bajo",
+      "sortMostBids": "Más Pujas",
+      "filters": "Filtros",
+      "loading": "Cargando anuncios...",
+      "error": "Error",
+      "tryAgain": "Intentar de Nuevo",
+      "noAuctions": "No hay subastas disponibles en este momento",
+      "checkBack": "¡Vuelve pronto para nuevos anuncios!",
+      "getNotified": "Recibir Notificaciones",
+      "featured": "Destacado",
+      "verified": "Verificado",
+      "endingSoon": "Termina Pronto",
+      "viewDetails": "Ver Detalles",
+      "addToWatchlist": "Añadir a Favoritos",
+      "placeBid": "Hacer Puja",
+      "startedAt": "Comenzó en",
+      "bid": "puja",
+      "bids": "pujas",
+      "ended": "Terminado",
+      "na": "N/D"
+    }
+  },
+  "listingList": {
+    "searchPlaceholder": "Buscar subastas...",
+    "search": "Buscar",
+    "browseCategories": "Ver Categorías",
+    "filters": "Filtros:",
+    "allCategories": "Todas las Categorías",
+    "sortEndingSoonest": "Terminando Pronto",
+    "sortNewest": "Más Recientes",
+    "sortHighest": "Precio Más Alto",
+    "sortLowest": "Precio Más Bajo",
+    "sortMostBids": "Más Pujas",
+    "listings": "anuncios",
+    "allAuctions": "Todas las Subastas",
+    "loading": "Cargando anuncios...",
+    "error": "Error",
+    "tryAgain": "Intentar de Nuevo",
+    "noOffersYet": "Sin ofertas aún",
+    "startedAt": "Comenzó en",
+    "bid": "puja",
+    "bids": "pujas",
+    "ended": "Terminado",
+    "na": "N/D",
+    "noListingsFound": "No se encontraron anuncios",
+    "tryDifferentSearch": "Prueba un término de búsqueda diferente, categoría o elimina algunos filtros.",
+    "clearAllFilters": "Limpiar todos los filtros",
+    "featured": "Destacado",
+    "verified": "Verificado",
+    "endingSoon": "Termina Pronto"
+  },
+  "categories": {
+    "title": "Explorar por Categoría",
+    "subtitle": "Explora todas nuestras categorías y subcategorías",
+    "browseAll": "Ver todos",
+    "allListings": "Todos los Anuncios"
+  },
+  "language": {
+    "en": "English",
+    "pt": "Português",
+    "es": "Español",
+    "fr": "Français"
+  }
+}

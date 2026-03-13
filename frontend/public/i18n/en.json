@@ -1,0 +1,148 @@
+{
+  "header": {
+    "nav": {
+      "auctions": "Auctions",
+      "categories": "Categories",
+      "howItWorks": "How It Works",
+      "faq": "FAQ",
+      "contact": "Contact"
+    },
+    "actions": {
+      "listYourItem": "List Your Item",
+      "myAccount": "My Account",
+      "signIn": "Sign In",
+      "startBidding": "Start Bidding"
+    },
+    "menu": {
+      "open": "Open menu",
+      "close": "Close menu"
+    }
+  },
+  "footer": {
+    "tagline": "Your premier auction marketplace for unique finds and valuable treasures.",
+    "quickLinks": "Quick Links",
+    "howItWorks": "How It Works",
+    "contact": "Contact",
+    "faq": "FAQ",
+    "legal": "Legal",
+    "privacyPolicy": "Privacy Policy",
+    "termsConditions": "Terms & Conditions",
+    "connect": "Connect",
+    "copyright": "© 2024 BidRoom. All rights reserved."
+  },
+  "home": {
+    "hero": {
+      "title": "Find Your True Worth",
+      "subtitle": "Discover unique items, place winning bids, and own what you love. Join thousands of bidders in our premium auction marketplace.",
+      "searchPlaceholder": "Search for laptops, watches, stamps, art...",
+      "search": "Search",
+      "createAccount": "Create Account",
+      "listAnItem": "List an Item"
+    },
+    "stats": {
+      "activeBidders": "Active Bidders",
+      "totalValueTraded": "Total Value Traded",
+      "listingsLiveNow": "Listings Live Now"
+    },
+    "howItWorks": {
+      "title": "How BidRoom Works",
+      "subtitle": "Three simple steps to find and win what you love",
+      "step1": {
+        "title": "Discover",
+        "desc": "Browse thousands of unique items across categories. Find exactly what you're looking for with our advanced search and filters."
+      },
+      "step2": {
+        "title": "Bid",
+        "desc": "Place your bids strategically. Watch the competition and bid at the perfect moment to secure your desired items."
+      },
+      "step3": {
+        "title": "Own",
+        "desc": "Win the auction and complete your purchase securely. Your new treasure will be shipped directly to your door."
+      }
+    },
+    "endingSoon": {
+      "title": "Auctions Ending Soon",
+      "subtitle": "Don't miss out on these incredible deals! Act fast before they're gone.",
+      "viewEndingSoon": "View Ending Soon",
+      "noOffersYet": "No offers yet",
+      "left": "left"
+    },
+    "categories": {
+      "title": "Browse by Category",
+      "subtitle": "Find what you love across our curated categories",
+      "viewAll": "View All Categories →",
+      "electronics": { "title": "Electronics", "desc": "Gadgets, cameras and audio" },
+      "homeGarden": { "title": "Home & Garden", "desc": "Furniture, decor and more" },
+      "art": { "title": "Art", "desc": "Paintings, sculptures and prints" },
+      "collectibles": { "title": "Collectibles", "desc": "Stamps, coins and memorabilia" },
+      "jewelry": { "title": "Jewelry", "desc": "Rings, watches and gemstones" }
+    },
+    "liveAuctions": {
+      "title": "Live Auctions",
+      "sortEndingSoonest": "Ending Soonest",
+      "sortNewest": "Newest",
+      "sortHighest": "Highest Price",
+      "sortLowest": "Lowest Price",
+      "sortMostBids": "Most Bids",
+      "filters": "Filters",
+      "loading": "Loading listings...",
+      "error": "Error",
+      "tryAgain": "Try Again",
+      "noAuctions": "No auctions available at the moment",
+      "checkBack": "Check back soon for exciting new listings!",
+      "getNotified": "Get Notified",
+      "featured": "Featured",
+      "verified": "Verified",
+      "endingSoon": "Ending Soon",
+      "viewDetails": "View Details",
+      "addToWatchlist": "Add to Watchlist",
+      "placeBid": "Place Bid",
+      "startedAt": "Started at",
+      "bid": "bid",
+      "bids": "bids",
+      "ended": "Ended",
+      "na": "N/A"
+    }
+  },
+  "listingList": {
+    "searchPlaceholder": "Search auctions...",
+    "search": "Search",
+    "browseCategories": "Browse Categories",
+    "filters": "Filters:",
+    "allCategories": "All Categories",
+    "sortEndingSoonest": "Ending Soonest",
+    "sortNewest": "Newest",
+    "sortHighest": "Highest Price",
+    "sortLowest": "Lowest Price",
+    "sortMostBids": "Most Bids",
+    "listings": "listings",
+    "allAuctions": "All Auctions",
+    "loading": "Loading listings...",
+    "error": "Error",
+    "tryAgain": "Try Again",
+    "noOffersYet": "No offers yet",
+    "startedAt": "Started at",
+    "bid": "bid",
+    "bids": "bids",
+    "ended": "Ended",
+    "na": "N/A",
+    "noListingsFound": "No listings found",
+    "tryDifferentSearch": "Try a different search term, category, or remove some filters.",
+    "clearAllFilters": "Clear all filters",
+    "featured": "Featured",
+    "verified": "Verified",
+    "endingSoon": "Ending Soon"
+  },
+  "categories": {
+    "title": "Browse by Category",
+    "subtitle": "Explore our full range of categories and subcategories",
+    "browseAll": "Browse all",
+    "allListings": "All Listings"
+  },
+  "language": {
+    "en": "English",
+    "pt": "Português",
+    "es": "Español",
+    "fr": "Français"
+  }
+}
