@@ -118,7 +118,7 @@ router.post('/create-checkout-session', requireActiveAccount, async (req, res) =
     if (!transactionId) return res.status(400).json({ error: 'transactionId is required' });
 
     const transaction = await Transaction.findById(transactionId)
-      .populate('listing', 'title commissionRate shippingCost shippingOption')
+      .populate('listing', 'title commissionRate shippingCost shippingOption packageSize shippingOriginPostalCode shippingOriginCity shippingOriginCountry')
       .populate('seller', 'firstName lastName email stripeConnectAccountId stripeConnectOnboarded')
       .populate('buyer', '_id');
 
@@ -151,8 +151,18 @@ router.post('/create-checkout-session', requireActiveAccount, async (req, res) =
     // Shipping amount
     const shippingOpt = listing?.shippingOption || 'flat-rate';
     let shippingAmount = 0;
-    if (shippingOpt === 'flat-rate') shippingAmount = listing?.shippingCost ?? 0;
-    // free / local-pickup = 0; calculated = 0 for now (TBD)
+    if (shippingOpt === 'flat-rate') {
+      shippingAmount = listing?.shippingCost ?? 0;
+    } else if (shippingOpt === 'calculated') {
+      if (transaction.shippingAmount == null) {
+        return res.status(400).json({
+          error: 'Shipping not selected',
+          message: 'Please select a shipping method before proceeding to payment.'
+        });
+      }
+      shippingAmount = transaction.shippingAmount;
+    }
+    // free / local-pickup = 0
 
     // BidRoom fee: 2% of item price, charged ON TOP (buyer pays it)
     const bidRoomFee = Math.round(itemAmount * BIDROOMFEE_RATE * 100) / 100;
@@ -186,10 +196,13 @@ router.post('/create-checkout-session', requireActiveAccount, async (req, res) =
     ];
 
     if (shippingCents > 0) {
+      const shippingLabel = transaction.shippingCarrier && transaction.shippingService
+        ? `Shipping – ${transaction.shippingCarrier} ${transaction.shippingService}`
+        : 'Shipping';
       lineItems.push({
         price_data: {
           currency: 'usd',
-          product_data: { name: 'Shipping' },
+          product_data: { name: shippingLabel },
           unit_amount: shippingCents
         },
         quantity: 1

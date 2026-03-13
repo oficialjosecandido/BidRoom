@@ -25,6 +25,10 @@ export interface TransactionListing {
   shippingCost?: number;
   /** flat-rate | calculated | local-pickup | free */
   shippingOption?: string;
+  /** Package size for calculated shipping */
+  packageSize?: 'small' | 'medium' | 'large' | null;
+  /** Origin postal code for calculated shipping */
+  shippingOriginPostalCode?: string | null;
   /** Auction format: highest-bid | best-offer */
   auctionFormat?: 'highest-bid' | 'best-offer';
   /** Whether the listing allowed a private room (affects commission rate) */
@@ -85,6 +89,22 @@ export interface Transaction {
   buyerTotalPaid?: number | null;
   /** Final payout to seller (dollars) */
   sellerPayoutAmount?: number | null;
+  /** Locked shipping amount for calculated shipping (dollars) */
+  shippingAmount?: number | null;
+  /** Carrier name for locked rate */
+  shippingCarrier?: string | null;
+  /** Service level for locked rate */
+  shippingService?: string | null;
+  /** Estimated delivery days */
+  shippingDeliveryDays?: number | null;
+  /** Buyer delivery address */
+  buyerDeliveryAddress?: {
+    street1?: string | null;
+    city?: string | null;
+    state?: string | null;
+    postalCode?: string | null;
+    country?: string | null;
+  } | null;
   /** Whether a dispute has been opened for this transaction */
   disputeOpen?: boolean;
   disputeOpenedAt?: string | null;

@@ -180,11 +180,96 @@
             }
             @if (isBuyer(t)) {
               @if (getEffectiveStatus(t) === 'pending_payment') {
+
+                <!-- Shipping rate panel (calculated shipping only) -->
+                @if (shippingRatesTxId === t._id) {
+                  <div class="shipping-rate-panel">
+                    <div class="shipping-panel-header">
+                      <h4>Select Shipping Method</h4>
+                      <button type="button" class="btn-icon" (click)="closeShippingPanel()" aria-label="Close">×</button>
+                    </div>
+
+                    <div class="form-group">
+                      <label>Street address *</label>
+                      <input type="text" [(ngModel)]="deliveryAddress.street1" placeholder="123 Main St" class="input-sm" />
+                    </div>
+                    <div class="form-row-sm">
+                      <div class="form-group">
+                        <label>City *</label>
+                        <input type="text" [(ngModel)]="deliveryAddress.city" placeholder="City" class="input-sm" />
+                      </div>
+                      <div class="form-group">
+                        <label>State *</label>
+                        <input type="text" [(ngModel)]="deliveryAddress.state" placeholder="CA" class="input-sm" maxlength="2" />
+                      </div>
+                    </div>
+                    <div class="form-row-sm">
+                      <div class="form-group">
+                        <label>Postal code *</label>
+                        <input type="text" [(ngModel)]="deliveryAddress.postalCode" placeholder="90001" class="input-sm" />
+                      </div>
+                      <div class="form-group">
+                        <label>Country</label>
+                        <select [(ngModel)]="deliveryAddress.country" class="input-sm">
+                          <option value="US">US</option>
+                          <option value="CA">Canada</option>
+                          <option value="GB">UK</option>
+                          <option value="AU">Australia</option>
+                          <option value="DE">Germany</option>
+                          <option value="FR">France</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <button type="button" class="btn btn-secondary" (click)="fetchShippingRates(t)" [disabled]="shippingRatesLoading">
+                      {{ shippingRatesLoading ? 'Calculating...' : 'Get shipping rates' }}
+                    </button>
+
+                    @if (shippingRatesError) {
+                      <p class="shipping-rates-error">{{ shippingRatesError }}</p>
+                    }
+
+                    @if (shippingRates.length > 0) {
+                      <div class="shipping-rates-list">
+                        <p class="rates-label">Select a shipping option:</p>
+                        @for (rate of shippingRates; track rate.id) {
+                          <button type="button" class="rate-option" (click)="selectAndLockRate(t, rate)" [disabled]="lockingRateTxId === t._id">
+                            <span class="rate-carrier">{{ rate.carrier }} {{ rate.service }}</span>
+                            <span class="rate-price">{{ formatPrice(rate.rate) }}</span>
+                            @if (rate.deliveryDays) {
+                              <span class="rate-days">Est. {{ rate.deliveryDays }} days</span>
+                            }
+                          </button>
+                        }
+                      </div>
+                    }
+                  </div>
+                }
+
+                <!-- Show locked shipping info before paying -->
+                @if (t.listing.shippingOption === 'calculated' && t.shippingAmount != null && shippingRatesTxId !== t._id) {
+                  <div class="locked-shipping-info">
+                    <span class="locked-label">Shipping:</span>
+                    <span>{{ t.shippingCarrier }} {{ t.shippingService }} — {{ formatPrice(t.shippingAmount) }}</span>
+                    @if (t.shippingDeliveryDays) {
+                      <span class="rate-days"> · Est. {{ t.shippingDeliveryDays }} days</span>
+                    }
+                    <button type="button" class="btn-link" (click)="openShippingPanel(t)">Change</button>
+                  </div>
+                }
+
                 <div class="stripe-pay-section">
-                  <p class="stripe-pay-hint">Pay securely with your credit or debit card via Stripe.</p>
-                  <button type="button" class="btn btn-stripe-pay" (click)="payWithStripe(t)" [disabled]="stripePayingTxId === t._id">
-                    {{ stripePayingTxId === t._id ? 'Redirecting to Stripe...' : 'Pay now' }}
-                  </button>
+                  @if (needsShippingRate(t)) {
+                    <p class="stripe-pay-hint">Select a shipping method before paying.</p>
+                    <button type="button" class="btn btn-secondary" (click)="openShippingPanel(t)">
+                      Choose shipping method
+                    </button>
+                  } @else {
+                    <p class="stripe-pay-hint">Pay securely with your credit or debit card via Stripe.</p>
+                    <button type="button" class="btn btn-stripe-pay" (click)="payWithStripe(t)" [disabled]="stripePayingTxId === t._id">
+                      {{ stripePayingTxId === t._id ? 'Redirecting to Stripe...' : 'Pay now' }}
+                    </button>
+                  }
                 </div>
               }
               @if (getEffectiveStatus(t) === 'awaiting_seller_acceptance') {

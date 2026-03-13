@@ -416,8 +416,13 @@ router.post('/invitation/accept', async (req, res) => {
       return res.status(400).json({ error: 'Already processed', message: 'This invitation has already been accepted or declined.' });
     }
     const now = new Date();
-    if (listing.platinumBidderAcceptanceDeadline && now > new Date(listing.platinumBidderAcceptanceDeadline)) {
-      return res.status(400).json({ error: 'Deadline passed', message: 'The 15 minute window to accept has passed. You have lost your seat in this private room.' });
+    const deadline = listing.platinumBidderAcceptanceDeadline ? new Date(listing.platinumBidderAcceptanceDeadline) : null;
+    if (deadline && now >= deadline) {
+      return res.status(400).json({
+        error: 'Invitation expired',
+        message: 'This invitation has expired. The 15-minute acceptance window has closed.',
+        expiredAt: deadline.toISOString()
+      });
     }
     const invIndex = listing.platinumBidderInvitations.findIndex(inv => inv.invitationToken === token);
     listing.platinumBidderInvitations[invIndex].status = 'accepted';

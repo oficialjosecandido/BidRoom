@@ -462,6 +462,63 @@
         </div>
 }
 
+        @if (listingForm.get('shippingOption')?.value === 'calculated') {
+<div class="calculated-shipping-fields">
+          <p class="field-hint">Carrier rates are calculated automatically at checkout based on the buyer's address and package details you provide here.</p>
+
+          <div class="form-group">
+            <label for="packageSize">Package Size *</label>
+            <select id="packageSize" formControlName="packageSize" [class.error]="getFieldError('packageSize')">
+              <option value="">Select package size</option>
+              <option value="small">Small – up to 1 lb (approx. 8 × 6 × 4 in)</option>
+              <option value="medium">Medium – up to 5 lbs (approx. 12 × 10 × 8 in)</option>
+              <option value="large">Large – up to 20 lbs (approx. 20 × 16 × 12 in)</option>
+            </select>
+            @if (getFieldError('packageSize')) {
+<div class="field-error">{{ getFieldError('packageSize') }}</div>
+}
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="shippingOriginPostalCode">Origin Postal Code *</label>
+              <input
+                type="text"
+                id="shippingOriginPostalCode"
+                formControlName="shippingOriginPostalCode"
+                placeholder="e.g. 90001"
+                [class.error]="getFieldError('shippingOriginPostalCode')"
+              />
+              @if (getFieldError('shippingOriginPostalCode')) {
+<div class="field-error">{{ getFieldError('shippingOriginPostalCode') }}</div>
+}
+            </div>
+
+            <div class="form-group">
+              <label for="shippingOriginCity">Origin City</label>
+              <input
+                type="text"
+                id="shippingOriginCity"
+                formControlName="shippingOriginCity"
+                placeholder="e.g. Los Angeles"
+              />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="shippingOriginCountry">Origin Country</label>
+            <select id="shippingOriginCountry" formControlName="shippingOriginCountry">
+              <option value="US">United States</option>
+              <option value="CA">Canada</option>
+              <option value="GB">United Kingdom</option>
+              <option value="AU">Australia</option>
+              <option value="DE">Germany</option>
+              <option value="FR">France</option>
+            </select>
+          </div>
+        </div>
+}
+
         <div class="form-group">
           <label for="handlingTime">Handling Time *</label>
           <select

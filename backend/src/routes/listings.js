@@ -530,6 +530,10 @@ router.post('/', authenticateToken, requireActiveAccount, async (req, res) => {
       location,
       shippingCost,
       shippingOption,
+      packageSize,
+      shippingOriginPostalCode,
+      shippingOriginCity,
+      shippingOriginCountry,
       handlingTime,
       returnPolicy,
       specifications,
@@ -589,6 +593,15 @@ router.post('/', authenticateToken, requireActiveAccount, async (req, res) => {
     if (shippingOption === 'flat-rate' && (!shippingCost || shippingCost < 0)) {
       return res.status(400).json({ error: 'Shipping cost is required for flat-rate shipping' });
     }
+    // Validate calculated shipping fields
+    if (shippingOption === 'calculated') {
+      if (!packageSize || !['small', 'medium', 'large'].includes(packageSize)) {
+        return res.status(400).json({ error: 'Package size is required for calculated shipping (small, medium, or large)' });
+      }
+      if (!shippingOriginPostalCode) {
+        return res.status(400).json({ error: 'Shipping origin postal code is required for calculated shipping' });
+      }
+    }
 
     // Prepare listing data
     const listingData = {
@@ -611,6 +624,10 @@ router.post('/', authenticateToken, requireActiveAccount, async (req, res) => {
       location: location || undefined,
       shippingCost: shippingCost ? parseFloat(shippingCost) : 0,
       shippingOption,
+      packageSize: shippingOption === 'calculated' ? (packageSize || null) : null,
+      shippingOriginPostalCode: shippingOption === 'calculated' ? (shippingOriginPostalCode || null) : null,
+      shippingOriginCity: shippingOption === 'calculated' ? (shippingOriginCity || null) : null,
+      shippingOriginCountry: shippingOption === 'calculated' ? (shippingOriginCountry || 'US') : null,
       handlingTime: parseInt(handlingTime),
       returnPolicy,
       specifications: specifications || [],

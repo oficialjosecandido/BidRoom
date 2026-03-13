@@ -30,6 +30,7 @@ const transactionsRoutes = require('./routes/transactions');
 const notificationsRoutes = require('./routes/notifications');
 const { router: paymentsRouter, stripeWebhookHandler } = require('./routes/payments');
 const { router: connectRouter, connectWebhookHandler } = require('./routes/connect');
+const shippingRoutes = require('./routes/shipping');
 
 // Import services
 const auctionEndScheduler = require('./services/auctionEndScheduler');
@@ -52,6 +53,7 @@ app.use(helmet());
 // CORS: allow FRONTEND_URL, localhost, and any Azure Static Web Apps origin (*.azurestaticapps.net)
 const allowedOrigins = [
   process.env.FRONTEND_URL || 'http://localhost:4200',
+  'https://icy-glacier-05c442c0f.3.azurestaticapps.net',
   'http://localhost:4200',
   'https://localhost:4200'
 ];
@@ -97,6 +99,7 @@ app.use('/api/transactions', transactionsRoutes);
 app.use('/api/notifications', notificationsRoutes);
 app.use('/api/payments', paymentsRouter);
 app.use('/api/connect', connectRouter);
+app.use('/api/shipping', shippingRoutes);
 
 app.get('/', (req, res) => {
   res.json({

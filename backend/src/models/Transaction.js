@@ -55,6 +55,26 @@ const transactionSchema = new mongoose.Schema({
   buyerTotalPaid: { type: Number, default: null, min: 0 },
   /** Final payout to seller (amount - bidRoomFee - stripeFee, in dollars) */
   sellerPayoutAmount: { type: Number, default: null, min: 0 },
+  /** Locked shipping cost for 'calculated' shipping (in dollars); set before checkout */
+  shippingAmount: { type: Number, default: null, min: 0 },
+  /** Carrier name for locked rate (e.g. 'USPS', 'UPS', 'FedEx') */
+  shippingCarrier: { type: String, trim: true, default: null },
+  /** Service level for locked rate (e.g. 'Priority Mail', 'Ground') */
+  shippingService: { type: String, trim: true, default: null },
+  /** EasyPost rate ID for the locked rate */
+  shippingRateId: { type: String, trim: true, default: null },
+  /** When the shipping rate was calculated/locked */
+  shippingCalculatedAt: { type: Date, default: null },
+  /** Estimated delivery days for the selected rate */
+  shippingDeliveryDays: { type: Number, default: null },
+  /** Buyer delivery address captured for calculated shipping */
+  buyerDeliveryAddress: {
+    street1: { type: String, trim: true, default: null },
+    city: { type: String, trim: true, default: null },
+    state: { type: String, trim: true, default: null },
+    postalCode: { type: String, trim: true, default: null },
+    country: { type: String, trim: true, default: 'US' }
+  },
   /** Seller: optional proof of delivery (e.g. shipping receipt URL) when marking shipped */
   sellerProofOfDeliveryUrl: { type: String, trim: true, default: null },
   /** When seller must ship by (paidAt or payment deadline + listing handling time); used for Phase 2 */

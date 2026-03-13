@@ -143,8 +143,13 @@ export class AuthService {
   }
 
   logout(): Observable<void> {
-    // Clear admin route from localStorage on logout
-    localStorage.removeItem('admin_route');
+    localStorage.clear();
+    sessionStorage.clear();
+    // Clear all cookies for this domain
+    document.cookie.split(';').forEach(cookie => {
+      const name = cookie.split('=')[0].trim();
+      document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+    });
     return from(signOut(this.auth));
   }
 }

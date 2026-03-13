@@ -21,6 +21,7 @@ export class InvitationAcceptComponent implements OnInit {
   action: 'accept' | 'decline' | null = null;
   isLoading = true;
   success = false;
+  expired = false;
   error: string | null = null;
 
   ngOnInit(): void {
@@ -68,8 +69,12 @@ export class InvitationAcceptComponent implements OnInit {
           this.router.navigate(['/private-room/auction', this.listingId]);
         }, 2000);
       },
-      error: (error) => {
-        this.error = error?.error?.message || 'Failed to accept invitation. The invitation may have expired or already been processed.';
+      error: (err) => {
+        const body = err?.error || {};
+        if (body.error === 'Invitation expired') {
+          this.expired = true;
+        }
+        this.error = body.message || 'Failed to accept invitation. The invitation may have expired or already been processed.';
         this.isLoading = false;
       }
     });

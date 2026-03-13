@@ -6,6 +6,7 @@ import Swal from 'sweetalert2';
 import { TransactionsService, Transaction, TransactionStatus } from '../../../shared/services/transactions.service';
 import { ReviewsService } from '../../../shared/services/reviews.service';
 import { StripeConnectService } from '../../../shared/services/stripe-connect.service';
+import { ShippingService, ShippingRate, DeliveryAddress } from '../../../shared/services/shipping.service';
 
 const successToast = Swal.mixin({
   toast: true,
@@ -27,6 +28,7 @@ export class DashboardTransactionsComponent implements OnInit {
   transactionsService = inject(TransactionsService);
   private reviewsService = inject(ReviewsService);
   private stripeConnect = inject(StripeConnectService);
+  private shippingService = inject(ShippingService);
   private route = inject(ActivatedRoute);
 
   transactions: Transaction[] = [];
@@ -62,6 +64,14 @@ export class DashboardTransactionsComponent implements OnInit {
   deliveryProofErrorByTxId: Record<string, string> = {};
   /** Transaction ID currently downloading invoice/receipt PDF */
   invoiceDownloadingTxId: string | null = null;
+  /** Shipping rate flow state */
+  shippingRatesTxId: string | null = null;      // txId for which rate panel is open
+  shippingRates: ShippingRate[] = [];
+  shippingRatesLoading = false;
+  shippingRatesError: string | null = null;
+  lockingRateTxId: string | null = null;
+  /** Delivery address form used for shipping rate calculation */
+  deliveryAddress: DeliveryAddress = { street1: '', city: '', state: '', postalCode: '', country: 'US' };
 
   ngOnInit(): void {
     this.loadTransactions();
@@ -261,6 +271,10 @@ export class DashboardTransactionsComponent implements OnInit {
   /** Pay via Stripe: create checkout session and redirect */
   payWithStripe(t: Transaction): void {
     if (this.stripePayingTxId || t.role !== 'buyer' || this.getEffectiveStatus(t) !== 'pending_payment') return;
+    if (this.needsShippingRate(t)) {
+      this.openShippingPanel(t);
+      return;
+    }
     this.stripePayingTxId = t._id;
     this.stripePaymentError = null;
     this.stripeConnect.createCheckoutSession(t._id).subscribe({
@@ -295,12 +309,107 @@ export class DashboardTransactionsComponent implements OnInit {
     return t.amount * 0.02;
   }
 
-  /** Shipping amount: flat-rate uses listing.shippingCost; free/local = 0; calculated = null (TBD) */
+  /** Shipping amount: uses locked rate if available, falls back to flat-rate / free / null */
   getShippingAmount(t: Transaction): number | null {
+    if (t.shippingAmount != null) return t.shippingAmount;
     const opt = t.listing?.shippingOption || 'flat-rate';
     if (opt === 'free' || opt === 'local-pickup') return 0;
     if (opt === 'flat-rate') return t.listing?.shippingCost ?? 0;
-    return null; // calculated - unknown until checkout
+    return null; // calculated but not yet locked
+  }
+
+  /** True when buyer needs to select a shipping rate before paying */
+  needsShippingRate(t: Transaction): boolean {
+    return (
+      this.isBuyer(t) &&
+      t.listing?.shippingOption === 'calculated' &&
+      t.shippingAmount == null &&
+      this.getEffectiveStatus(t) === 'pending_payment'
+    );
+  }
+
+  /** Toggle the shipping rate panel for a transaction */
+  openShippingPanel(t: Transaction): void {
+    this.shippingRatesTxId = t._id;
+    this.shippingRates = [];
+    this.shippingRatesError = null;
+    // Pre-fill with previously saved address if available
+    if (t.buyerDeliveryAddress?.street1) {
+      this.deliveryAddress = {
+        street1: t.buyerDeliveryAddress.street1 || '',
+        city: t.buyerDeliveryAddress.city || '',
+        state: t.buyerDeliveryAddress.state || '',
+        postalCode: t.buyerDeliveryAddress.postalCode || '',
+        country: t.buyerDeliveryAddress.country || 'US'
+      };
+    } else {
+      this.deliveryAddress = { street1: '', city: '', state: '', postalCode: '', country: 'US' };
+    }
+  }
+
+  closeShippingPanel(): void {
+    this.shippingRatesTxId = null;
+    this.shippingRates = [];
+    this.shippingRatesError = null;
+  }
+
+  /** Fetch carrier rates from the backend */
+  fetchShippingRates(t: Transaction): void {
+    const addr = this.deliveryAddress;
+    if (!addr.street1 || !addr.city || !addr.state || !addr.postalCode) {
+      this.shippingRatesError = 'Please fill in all address fields (street, city, state, postal code).';
+      return;
+    }
+    this.shippingRatesLoading = true;
+    this.shippingRatesError = null;
+    this.shippingRates = [];
+
+    this.shippingService.calculateRates(t._id, addr).subscribe({
+      next: (res) => {
+        this.shippingRates = res.rates;
+        this.shippingRatesLoading = false;
+        if (res.rates.length === 0) {
+          this.shippingRatesError = 'Shipping cannot be calculated for this delivery address. Please update shipping details or try again later.';
+        }
+      },
+      error: (err) => {
+        this.shippingRatesLoading = false;
+        this.shippingRatesError = err?.error?.message || 'Shipping cannot be calculated for this delivery address. Please update shipping details or try again later.';
+      }
+    });
+  }
+
+  /** Lock the selected rate and update the local transaction */
+  selectAndLockRate(t: Transaction, rate: ShippingRate): void {
+    if (this.lockingRateTxId) return;
+    this.lockingRateTxId = t._id;
+    this.shippingRatesError = null;
+
+    this.shippingService.lockRate(t._id, rate, this.deliveryAddress).subscribe({
+      next: (res) => {
+        this.lockingRateTxId = null;
+        this.shippingRatesTxId = null;
+        // Update the local transaction with locked shipping data
+        this.replaceTransaction({
+          ...t,
+          shippingAmount: res.shippingAmount,
+          shippingCarrier: res.carrier,
+          shippingService: res.service,
+          shippingDeliveryDays: res.deliveryDays,
+          buyerDeliveryAddress: { ...this.deliveryAddress }
+        });
+      },
+      error: (err) => {
+        this.lockingRateTxId = null;
+        this.shippingRatesError = err?.error?.message || 'Failed to lock shipping rate. Please try again.';
+      }
+    });
+  }
+
+  formatShippingRate(rate: ShippingRate): string {
+    const price = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(rate.rate);
+    const days = rate.deliveryDays ? ` · Est. ${rate.deliveryDays} days` : '';
+    return `${rate.carrier} ${rate.service} — ${price}${days}`;
   }
 
   /** Stripe processing fee (stored after payment; null if not yet paid) */

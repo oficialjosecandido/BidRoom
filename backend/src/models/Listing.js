@@ -123,6 +123,15 @@ const listingSchema = new mongoose.Schema({
     enum: ['flat-rate', 'calculated', 'local-pickup', 'free'],
     required: true
   },
+  /** Required when shippingOption === 'calculated' */
+  packageSize: {
+    type: String,
+    enum: ['small', 'medium', 'large'],
+    default: null
+  },
+  shippingOriginPostalCode: { type: String, trim: true, default: null },
+  shippingOriginCity: { type: String, trim: true, default: null },
+  shippingOriginCountry: { type: String, trim: true, default: 'US' },
   handlingTime: {
     type: Number,
     required: true,

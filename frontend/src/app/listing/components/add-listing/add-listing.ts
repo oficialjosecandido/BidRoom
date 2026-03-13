@@ -138,6 +138,10 @@ export class AddListing implements OnInit {
       // Step 4: Shipping and Final Review
       shippingOption: ['', Validators.required],
       flatRateShipping: [null],
+      packageSize: [''],
+      shippingOriginPostalCode: [''],
+      shippingOriginCity: [''],
+      shippingOriginCountry: ['US'],
       handlingTime: ['', Validators.required],
       returnPolicy: ['', Validators.required],
       sellerDeclaration: [false, Validators.requiredTrue]
@@ -156,13 +160,26 @@ export class AddListing implements OnInit {
 
     // Conditional validators for shipping option
     this.listingForm.get('shippingOption')?.valueChanges.subscribe(option => {
-      const flatRateControl = this.listingForm.get('flatRateShipping');
+      const flatRateControl      = this.listingForm.get('flatRateShipping');
+      const packageSizeControl   = this.listingForm.get('packageSize');
+      const postalCodeControl    = this.listingForm.get('shippingOriginPostalCode');
+
       if (option === 'flat-rate') {
         flatRateControl?.setValidators([Validators.required, Validators.min(0)]);
+        packageSizeControl?.clearValidators();
+        postalCodeControl?.clearValidators();
+      } else if (option === 'calculated') {
+        flatRateControl?.clearValidators();
+        packageSizeControl?.setValidators([Validators.required]);
+        postalCodeControl?.setValidators([Validators.required]);
       } else {
         flatRateControl?.clearValidators();
+        packageSizeControl?.clearValidators();
+        postalCodeControl?.clearValidators();
       }
       flatRateControl?.updateValueAndValidity();
+      packageSizeControl?.updateValueAndValidity();
+      postalCodeControl?.updateValueAndValidity();
     });
 
     // Watch Private Room toggle for commission calculation
@@ -556,6 +573,10 @@ export class AddListing implements OnInit {
       location: `${formValue.locationCity}, ${formValue.locationRegion}`,
       shippingCost: formValue.flatRateShipping || (formValue.shippingOption === 'free' ? 0 : null),
       shippingOption: formValue.shippingOption,
+      packageSize: formValue.shippingOption === 'calculated' ? formValue.packageSize : null,
+      shippingOriginPostalCode: formValue.shippingOption === 'calculated' ? formValue.shippingOriginPostalCode : null,
+      shippingOriginCity: formValue.shippingOption === 'calculated' ? formValue.shippingOriginCity : null,
+      shippingOriginCountry: formValue.shippingOption === 'calculated' ? (formValue.shippingOriginCountry || 'US') : null,
       handlingTime: formValue.handlingTime,
       returnPolicy: formValue.returnPolicy,
       specifications: formValue.specifications || [],

@@ -1,7 +1,8 @@
-import { HttpInterceptorFn, HttpRequest, HttpHandlerFn } from '@angular/common/http';
+import { HttpInterceptorFn, HttpRequest, HttpHandlerFn, HttpErrorResponse } from '@angular/common/http';
 import { inject } from '@angular/core';
-import { Observable, from } from 'rxjs';
-import { switchMap } from 'rxjs/operators';
+import { Router } from '@angular/router';
+import { Observable, from, throwError } from 'rxjs';
+import { switchMap, catchError } from 'rxjs/operators';
 import { AuthService } from '../services/auth.service';
 
 export const authInterceptor: HttpInterceptorFn = (
@@ -9,6 +10,7 @@ export const authInterceptor: HttpInterceptorFn = (
   next: HttpHandlerFn
 ): Observable<any> => {
   const authService = inject(AuthService);
+  const router = inject(Router);
 
   // Attach Firebase ID token when available
   return from(authService.getAccessToken()).pipe(
@@ -20,7 +22,16 @@ export const authInterceptor: HttpInterceptorFn = (
           }
         });
       }
-      return next(req);
+      return next(req).pipe(
+        catchError((err: HttpErrorResponse) => {
+          if (err.status === 401) {
+            authService.logout().subscribe({
+              complete: () => router.navigate(['/auth/login'])
+            });
+          }
+          return throwError(() => err);
+        })
+      );
     })
   );
 };

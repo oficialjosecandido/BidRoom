@@ -20,7 +20,7 @@
     @if (error && !isLoading) {
 <div class="error-state">
       <div class="error-icon">⚠️</div>
-      <h2>Unable to Process Invitation</h2>
+      <h2>{{ expired ? 'Invitation Expired' : 'Unable to Process Invitation' }}</h2>
       <p class="error-message">{{ error }}</p>
       <button class="action-btn" (click)="goToPrivateRoom()">Go to Listings</button>
     </div>
