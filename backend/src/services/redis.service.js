@@ -12,11 +12,17 @@ class RedisService {
     }
 
     // Connect to Redis - using Azure Cache for Redis or local Redis
+    const port = parseInt(process.env.REDIS_PORT || '6379', 10);
     const redisConfig = {
       host: process.env.REDIS_HOST || 'localhost',
-      port: parseInt(process.env.REDIS_PORT || '6379', 10),
+      port,
       password: process.env.REDIS_PASSWORD || undefined,
+      // Azure Cache for Redis requires TLS on port 6380
+      tls: port === 6380 ? {} : undefined,
       retryStrategy: (times) => {
+        if (process.env.NODE_ENV !== 'production' && times >= 1) {
+          return null; // Stop retrying in dev - avoid reconnection spam when Redis isn't running
+        }
         const delay = Math.min(times * 50, 2000);
         return delay;
       },
@@ -47,17 +53,22 @@ class RedisService {
           reject(error);
         } else {
           console.warn('⚠️  Continuing without Redis (development mode)');
+          this.client.disconnect();
           resolve();
         }
       });
 
       this.client.on('close', () => {
-        console.log('Redis connection closed');
+        if (this.isConnected) {
+          console.log('Redis connection closed');
+        }
         this.isConnected = false;
       });
 
       this.client.on('reconnecting', () => {
-        console.log('Reconnecting to Redis...');
+        if (process.env.NODE_ENV === 'production') {
+          console.log('Reconnecting to Redis...');
+        }
       });
 
       // If already connected, resolve immediately

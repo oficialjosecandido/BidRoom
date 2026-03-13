@@ -1,8 +1,22 @@
 /**
  * Reputation Service: score calculation, trust badges, fraud detection.
- * - Isolated incident: minor penalty, fast recovery
- * - Recurring pattern: higher penalty, affects Private Room eligibility
- * - Recovery: successful transactions improve score over time
+ *
+ * Negative reviews are classified as one of two patterns before a penalty is applied:
+ *
+ * ── Isolated Incident (II) ────────────────────────────────────────────────────
+ *   ALL of the following must be true:
+ *   • ≤ 3 negative ratings within the last 30 transactions
+ *   • No negative ratings in the 60–90-day lookback window
+ *   • Current reputation score ≥ II_MIN_REPUTATION (80 / "4 stars")
+ *   Impact: small score decrease; fast recovery through positive future ratings.
+ *
+ * ── Recurring Pattern (RP) ────────────────────────────────────────────────────
+ *   ANY one of the following is sufficient:
+ *   • ≥ 2 negative ratings within the last 5 transactions
+ *   • ≥ 5 negative ratings within a 90-day window
+ *   • Current reputation score already below II_MIN_REPUTATION
+ *   Impact: larger penalty per negative review; score naturally drops below
+ *   PRIVATE_ROOM_MIN_REPUTATION, restricting access to Private Rooms.
  */
 
 const User = require('../models/User');
@@ -10,16 +24,105 @@ const Review = require('../models/Review');
 const Transaction = require('../models/Transaction');
 const ReviewFlag = require('../models/ReviewFlag');
 
+// ── Score bounds ───────────────────────────────────────────────────────────────
 const REPUTATION_MAX = 100;
 const REPUTATION_MIN = 0;
-const LOW_SCORE_THRESHOLD = 4; // Score <= 4 is "negative"
-const RECURRING_THRESHOLD = 2; // 2+ low reviews in last 10 = recurring
-const PRIVATE_ROOM_MIN_REPUTATION = 60;
+
+// ── Review classification ──────────────────────────────────────────────────────
+const LOW_SCORE_THRESHOLD = 4;       // Review score ≤ 4 counts as negative
+const ISOLATED_MAX_IN_30_TX = 3;     // Max negatives in last 30 tx → Isolated Incident
+const RECURRING_MIN_IN_5_TX = 2;     // ≥ 2 negatives in last 5 tx → Recurring Pattern
+const RECURRING_MIN_IN_90_DAYS = 5;  // ≥ 5 negatives in 90-day window → Recurring Pattern
+const II_MIN_REPUTATION = 80;        // Score must be ≥ 80 ("4 stars") for II classification
+
+// ── Penalties & recovery ───────────────────────────────────────────────────────
+const DISPUTE_LOSS_PENALTY = 25;
+const ISOLATED_LOW_REVIEW_PENALTY = 5;   // Per negative review — Isolated Incident
+const RECURRING_LOW_REVIEW_PENALTY = 20; // Per negative review — Recurring Pattern
+const SUCCESSFUL_TX_RECOVERY = 2;        // Points per successful transaction
+const MAX_RECOVERY = 20;                 // Recovery cap
+
+// ── Access control ─────────────────────────────────────────────────────────────
+const PRIVATE_ROOM_MIN_REPUTATION = 60; // Score must be ≥ 60 for Private Room access
 const PRE_AUTHORIZED_MIN_BALANCE = 100;
-const DISPUTE_LOSS_PENALTY = 25; // Per dispute loss
-const ISOLATED_LOW_REVIEW_PENALTY = 5;
-const RECURRING_LOW_REVIEW_PENALTY = 15;
-const SUCCESSFUL_TX_RECOVERY = 2; // Points per successful transaction (capped)
+
+/**
+ * Classify a user's current negative review pattern.
+ *
+ * Returns:
+ *   classification: 'recurring' | 'isolated' | 'none'
+ *   negatives: { inLast5Tx, inLast30Tx, ninetyDays }
+ */
+async function classifyNegativePattern(userId, currentScore) {
+  const now = new Date();
+  const ninetyDaysAgo = new Date(now - 90 * 24 * 60 * 60 * 1000);
+  const sixtyDaysAgo  = new Date(now - 60 * 24 * 60 * 60 * 1000);
+
+  // Fetch last 5 and last 30 transactions for this user
+  const [last5Tx, last30Tx] = await Promise.all([
+    Transaction.find({ $or: [{ buyer: userId }, { seller: userId }] })
+      .sort({ createdAt: -1 }).limit(5).select('listing').lean(),
+    Transaction.find({ $or: [{ buyer: userId }, { seller: userId }] })
+      .sort({ createdAt: -1 }).limit(30).select('listing').lean()
+  ]);
+
+  const last5ListingIds  = last5Tx.map(t => t.listing);
+  const last30ListingIds = last30Tx.map(t => t.listing);
+
+  const [negativesIn5Tx, negativesIn30Tx, negativesIn90Days, negativesIn60to90Days] =
+    await Promise.all([
+      Review.countDocuments({
+        reviewee: userId,
+        listing: { $in: last5ListingIds },
+        score: { $lte: LOW_SCORE_THRESHOLD }
+      }),
+      Review.countDocuments({
+        reviewee: userId,
+        listing: { $in: last30ListingIds },
+        score: { $lte: LOW_SCORE_THRESHOLD }
+      }),
+      Review.countDocuments({
+        reviewee: userId,
+        score: { $lte: LOW_SCORE_THRESHOLD },
+        createdAt: { $gte: ninetyDaysAgo }
+      }),
+      // 60–90-day window: used to verify no prior negatives for II
+      Review.countDocuments({
+        reviewee: userId,
+        score: { $lte: LOW_SCORE_THRESHOLD },
+        createdAt: { $gte: ninetyDaysAgo, $lt: sixtyDaysAgo }
+      })
+    ]);
+
+  const negatives = { inLast5Tx: negativesIn5Tx, inLast30Tx: negativesIn30Tx, ninetyDays: negativesIn90Days };
+
+  // No negatives at all → nothing to classify
+  if (negativesIn90Days === 0 && negativesIn30Tx === 0) {
+    return { classification: 'none', negatives };
+  }
+
+  // ── Recurring Pattern: any one condition is sufficient ─────────────────────
+  const isRecurring =
+    negativesIn5Tx >= RECURRING_MIN_IN_5_TX ||
+    negativesIn90Days >= RECURRING_MIN_IN_90_DAYS ||
+    currentScore < II_MIN_REPUTATION;
+
+  if (isRecurring) {
+    return { classification: 'recurring', negatives };
+  }
+
+  // ── Isolated Incident: all conditions must hold ────────────────────────────
+  const isIsolated =
+    negativesIn30Tx <= ISOLATED_MAX_IN_30_TX &&
+    negativesIn60to90Days === 0 &&
+    currentScore >= II_MIN_REPUTATION;
+
+  if (isIsolated) {
+    return { classification: 'isolated', negatives };
+  }
+
+  return { classification: 'none', negatives };
+}
 
 /**
  * Recalculate reputation for a user based on reviews, disputes, and successful transactions.
@@ -28,31 +131,25 @@ async function recalculateReputation(userId) {
   const user = await User.findById(userId);
   if (!user) return null;
 
+  const currentScore = user.reputationScore ?? REPUTATION_MAX;
   let score = REPUTATION_MAX;
-  const now = new Date();
-  const sixMonthsAgo = new Date(now.getTime() - 180 * 24 * 60 * 60 * 1000);
 
-  // 1. Dispute losses (fraud / at-fault) - significant penalty
-  const disputeLosses = user.disputeLossCount || 0;
-  score -= disputeLosses * DISPUTE_LOSS_PENALTY;
+  // 1. Dispute losses — significant penalty regardless of pattern
+  score -= (user.disputeLossCount || 0) * DISPUTE_LOSS_PENALTY;
 
-  // 2. Low reviews received (as reviewee) - check isolated vs recurring
-  const lowReviews = await Review.find({
-    reviewee: userId,
-    score: { $lte: LOW_SCORE_THRESHOLD },
-    createdAt: { $gte: sixMonthsAgo }
-  }).lean();
+  // 2. Classify and penalise negative reviews
+  const { classification, negatives } = await classifyNegativePattern(userId, currentScore);
 
-  const lowCount = lowReviews.length;
-  if (lowCount >= RECURRING_THRESHOLD) {
-    score -= RECURRING_LOW_REVIEW_PENALTY * lowCount;
-  } else if (lowCount === 1) {
-    score -= ISOLATED_LOW_REVIEW_PENALTY;
+  if (classification === 'recurring') {
+    // Penalise every negative in the 90-day window
+    score -= negatives.ninetyDays * RECURRING_LOW_REVIEW_PENALTY;
+  } else if (classification === 'isolated') {
+    // Smaller per-review penalty for the negatives in the last 30 transactions
+    score -= negatives.inLast30Tx * ISOLATED_LOW_REVIEW_PENALTY;
   }
 
-  // 3. Recovery from successful transactions
-  const successfulTx = user.successfulTransactionCount || 0;
-  const recovery = Math.min(successfulTx * SUCCESSFUL_TX_RECOVERY, 20);
+  // 3. Recovery from successful transactions (capped)
+  const recovery = Math.min((user.successfulTransactionCount || 0) * SUCCESSFUL_TX_RECOVERY, MAX_RECOVERY);
   score += recovery;
 
   score = Math.max(REPUTATION_MIN, Math.min(REPUTATION_MAX, Math.round(score)));
@@ -81,7 +178,7 @@ async function applyDisputeVerdictImpact(verdict, buyerUserId, sellerUserId) {
 }
 
 /**
- * Increment successful transaction count for both parties (call when transaction completes with both reviews).
+ * Increment successful transaction count for both parties and trigger recovery recalculation.
  */
 async function recordSuccessfulTransaction(buyerUserId, sellerUserId) {
   await User.findByIdAndUpdate(buyerUserId, { $inc: { successfulTransactionCount: 1 } });
@@ -91,7 +188,7 @@ async function recordSuccessfulTransaction(buyerUserId, sellerUserId) {
 }
 
 /**
- * Check for suspicious review patterns and create ReviewFlag if needed.
+ * Check for suspicious review patterns and create ReviewFlag records if warranted.
  */
 async function checkReviewFraud(review) {
   const flags = [];
@@ -112,7 +209,7 @@ async function checkReviewFraud(review) {
     flags.push({ reason: 'extreme_score', metadata: { score: review.score } });
   }
 
-  // Retaliation: check if other party also left low score
+  // Retaliation: check if the other party also left a low score
   const otherRole = review.role === 'as_buyer' ? 'as_seller' : 'as_buyer';
   const otherReview = await Review.findOne({
     listing: review.listing,
@@ -124,12 +221,7 @@ async function checkReviewFraud(review) {
   }
 
   for (const f of flags) {
-    await ReviewFlag.create({
-      review: review._id,
-      reason: f.reason,
-      metadata: f.metadata,
-      status: 'pending'
-    });
+    await ReviewFlag.create({ review: review._id, reason: f.reason, metadata: f.metadata, status: 'pending' });
   }
   return flags;
 }
@@ -148,7 +240,7 @@ async function getTrustBadges(user) {
     badges.push({ id: 'pre_authorized', label: 'Pre-authorized', description: 'Pre-authorized for faster checkout' });
   }
 
-  const reputation = user.reputationScore ?? 100;
+  const reputation = user.reputationScore ?? REPUTATION_MAX;
   if (reputation >= PRIVATE_ROOM_MIN_REPUTATION && (user.disputeLossCount || 0) === 0) {
     badges.push({ id: 'private_room_eligible', label: 'Private Room Eligible', description: 'Eligible for exclusive private auctions' });
   }
@@ -157,16 +249,18 @@ async function getTrustBadges(user) {
 }
 
 /**
- * Check if user is eligible for Private Room (reputation + no recent dispute loss).
+ * Check if user is eligible for Private Room access.
+ * Recurring Pattern users naturally fall below this threshold from the larger penalty.
  */
 function isPrivateRoomEligible(user) {
   if (!user) return false;
-  const score = user.reputationScore ?? 100;
+  const score = user.reputationScore ?? REPUTATION_MAX;
   const disputeLosses = user.disputeLossCount || 0;
   return score >= PRIVATE_ROOM_MIN_REPUTATION && disputeLosses === 0;
 }
 
 module.exports = {
+  classifyNegativePattern,
   recalculateReputation,
   applyDisputeVerdictImpact,
   recordSuccessfulTransaction,
@@ -174,6 +268,8 @@ module.exports = {
   getTrustBadges,
   isPrivateRoomEligible,
   PRIVATE_ROOM_MIN_REPUTATION,
+  II_MIN_REPUTATION,
+  LOW_SCORE_THRESHOLD,
   REPUTATION_MAX,
   REPUTATION_MIN
 };

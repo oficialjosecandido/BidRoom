@@ -40,27 +40,88 @@ export class AddListing implements OnInit {
   uploadedFileUrls: string[] = [];
   previewUrls: (string | ArrayBuffer | null)[] = [];
 
-  // Categories (in real app, fetch from API)
+  // Categories
   categories: Category[] = [
     {
       id: 'electronics',
       name: 'Electronics',
-      subCategories: ['Vintage Cameras', 'Smartphones', 'Laptops', 'Audio Equipment', 'Gaming Consoles', 'Other']
-    },
-    {
-      id: 'art-collectibles',
-      name: 'Art & Collectibles',
-      subCategories: ['Paintings', 'Sculptures', 'Antiques', 'Vintage Items', 'Memorabilia', 'Other']
-    },
-    {
-      id: 'jewelry',
-      name: 'Jewelry',
-      subCategories: ['Rings', 'Necklaces', 'Watches', 'Bracelets', 'Earrings', 'Other']
+      subCategories: [
+        // Computers
+        'Laptops', 'Desktop Computers', 'Computer Components',
+        // Mobile Devices
+        'Smartphones', 'Tablets', 'Mobile Accessories',
+        // Audio
+        'Headphones', 'Speakers', 'Hi Fi Systems', 'Turntables',
+        // Gaming
+        'Gaming Consoles', 'Video Games', 'Gaming Accessories',
+        // Cameras & Photography
+        'Digital Cameras', 'Film Cameras', 'Camera Lenses', 'Camera Accessories',
+        // TV & Video
+        'Televisions', 'Projectors', 'Streaming Devices',
+        // Wearables
+        'Smart Watches', 'Fitness Trackers', 'Wearables Accessories',
+        // Other
+        'Other Electronics'
+      ]
     },
     {
       id: 'home-garden',
       name: 'Home & Garden',
-      subCategories: ['Furniture', 'Decor', 'Kitchen Items', 'Garden Tools', 'Outdoor Equipment', 'Other']
+      subCategories: [
+        // Furniture
+        'Tables', 'Chairs', 'Cabinets', 'Shelves', 'Beds',
+        // Home Decor
+        'Lamps', 'Mirrors', 'Vases', 'Wall Decor', 'Decorative Objects',
+        // Kitchen & Dining
+        'Cookware', 'Tableware', 'Glassware', 'Barware',
+        // Garden & Outdoor
+        'Garden Furniture', 'Garden Tools', 'Outdoor Decor', 'Planters',
+        // Textiles
+        'Rugs', 'Curtains', 'Blankets', 'Cushions',
+        // Other
+        'Lighting', 'Other Home & Garden'
+      ]
+    },
+    {
+      id: 'art',
+      name: 'Art',
+      subCategories: [
+        'Paintings', 'Drawings', 'Prints', 'Photography',
+        'Sculptures', 'Figurines',
+        'Other Art'
+      ]
+    },
+    {
+      id: 'collectibles',
+      name: 'Collectibles',
+      subCategories: [
+        // Stamps
+        'Stamps',
+        // Collectibles
+        'Coins & Banknotes', 'Trading Cards', 'Toys & Models',
+        // Memorabilia
+        'Sports Memorabilia', 'Music Memorabilia', 'Movie Memorabilia',
+        // Other
+        'Vintage Items', 'Other Collectibles'
+      ]
+    },
+    {
+      id: 'jewelry',
+      name: 'Jewelry',
+      subCategories: [
+        // Rings
+        'Engagement Rings', 'Wedding Rings', 'Fashion Rings',
+        // Necklaces
+        'Chains', 'Pendants',
+        // Bracelets
+        'Bangles', 'Charm Bracelets',
+        // Earrings
+        'Stud Earrings', 'Hoop Earrings', 'Drop Earrings',
+        // Watches
+        'Luxury Watches', 'Vintage Watches', 'Smart Watches',
+        // Other
+        'Brooches & Pins', 'Jewelry Sets', 'Loose Gemstones', 'Other Jewelry'
+      ]
     }
   ];
 

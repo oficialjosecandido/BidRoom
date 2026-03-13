@@ -22,10 +22,36 @@
   .hero-subtitle {
     font-size: 20px;
     color: var(--text-gray);
-    margin-bottom: 40px;
+    margin-bottom: 32px;
     line-height: 1.6;
   }
-  
+
+  .hero-search {
+    display: flex;
+    gap: 0;
+    max-width: 600px;
+    margin: 0 auto 28px;
+    border: 2px solid var(--primary-black);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  .hero-search-input {
+    flex: 1;
+    padding: 14px 18px;
+    font-size: 1rem;
+    border: none;
+    outline: none;
+    background: #fff;
+  }
+
+  .hero-search-btn {
+    border-radius: 0;
+    padding: 14px 24px;
+    font-size: 1rem;
+    white-space: nowrap;
+  }
+
   .hero-actions {
     display: flex;
     gap: 16px;
@@ -275,8 +301,19 @@
   background: var(--primary-white);
   
   .categories-header {
-    text-align: center;
     margin-bottom: 48px;
+  }
+
+  .categories-title-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    text-align: left;
+
+    .section-title-accent {
+      margin: 0 0 16px 0;
+    }
   }
   
   .section-title {

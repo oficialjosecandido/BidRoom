@@ -2,113 +2,162 @@
 
 <section class="listing-list-page">
   <div class="container">
-    <div class="page-header">
-      <h1 class="page-title">All Auctions</h1>
-      <p class="page-subtitle">Browse through all active listings</p>
+
+    <!-- Search Bar -->
+    <div class="search-bar-row">
+      <div class="search-input-wrap">
+        <span class="search-icon">🔍</span>
+        <input
+          type="text"
+          class="search-input"
+          placeholder="Search auctions..."
+          [(ngModel)]="searchInput"
+          (keyup.enter)="onSearch()" />
+        @if (searchInput) {
+          <button class="search-clear" (click)="searchInput = ''; clearSearch()">✕</button>
+        }
+      </div>
+      <button class="btn btn-primary search-btn" (click)="onSearch()">Search</button>
+      <button class="btn btn-secondary" (click)="browseCategoriesPage()">Browse Categories</button>
     </div>
 
-    <div class="filters-section">
+    <!-- Active Filters -->
+    @if (searchQuery || selectedCategory || selectedSubCategory) {
+      <div class="active-filters">
+        <span class="filters-label">Filters:</span>
+        @if (searchQuery) {
+          <span class="filter-chip">
+            "{{ searchQuery }}"
+            <button (click)="clearSearch()">✕</button>
+          </span>
+        }
+        @if (selectedCategory) {
+          <span class="filter-chip">
+            {{ activeCategoryLabel }}
+            <button (click)="clearCategory()">✕</button>
+          </span>
+        }
+        @if (selectedSubCategory) {
+          <span class="filter-chip">
+            {{ selectedSubCategory }}
+            <button (click)="clearSubCategory()">✕</button>
+          </span>
+        }
+      </div>
+    }
+
+    <!-- Page Title + Controls -->
+    <div class="list-header">
+      <div class="list-title-wrap">
+        <h1 class="page-title">{{ pageTitle }}</h1>
+        @if (!loading) {
+          <span class="result-count">{{ total || listings.length }} listings</span>
+        }
+      </div>
       <div class="filters-row">
-        <div class="filter-group">
-          <label for="category">Category</label>
-          <select id="category" class="filter-select" [(ngModel)]="selectedCategory" (change)="onCategoryChange()">
-            <option value="">All Categories</option>
-            @for (category of categories; track category) {
-<option [value]="category">{{ category }}</option>
-}
+        <select class="filter-select" [(ngModel)]="selectedCategory" (change)="onCategoryChange()">
+          <option value="">All Categories</option>
+          @for (cat of categories; track cat.id) {
+            <option [value]="cat.id">{{ cat.icon }} {{ cat.name }}</option>
+          }
+        </select>
+
+        @if (selectedCategory && subCategories.length > 0) {
+          <select class="filter-select" [(ngModel)]="selectedSubCategory" (change)="onSubCategoryChange()">
+            <option value="">All {{ activeCategoryLabel }}</option>
+            @for (sub of subCategories; track sub) {
+              <option [value]="sub">{{ sub }}</option>
+            }
           </select>
-        </div>
-        <div class="filter-group">
-          <label for="sort">Sort By</label>
-          <select id="sort" class="filter-select" [(ngModel)]="sortBy" (change)="onSortChange()">
-            <option value="deadline">Ending Soonest</option>
-            <option value="newest">Newest</option>
-            <option value="highest">Highest Price</option>
-            <option value="lowest">Lowest Price</option>
-            <option value="bids">Most Bids</option>
-          </select>
-        </div>
+        }
+
+        <select class="filter-select" [(ngModel)]="sortBy" (change)="onSortChange()">
+          <option value="deadline">Ending Soonest</option>
+          <option value="newest">Newest</option>
+          <option value="highest">Highest Price</option>
+          <option value="lowest">Lowest Price</option>
+          <option value="bids">Most Bids</option>
+        </select>
       </div>
     </div>
 
-    <!-- Loading State -->
+    <!-- Loading -->
     @if (loading) {
-<div class="loading-state">
-      <p>Loading listings...</p>
-    </div>
-}
+      <div class="loading-state">
+        <p>Loading listings...</p>
+      </div>
+    }
 
-    <!-- Error State -->
+    <!-- Error -->
     @if (error && !loading) {
-<div class="error-state">
-      <div class="error-content">
+      <div class="error-state">
         <h3>⚠️ Error</h3>
         <p>{{ error }}</p>
         <button class="btn btn-primary" (click)="loadListings()">Try Again</button>
       </div>
-    </div>
-}
+    }
 
     <!-- Listings Grid -->
     @if (!loading && !error && listings.length > 0) {
-<div class="listings-grid">
-      @for (listing of listings; track listing) {
-<div class="listing-card" (click)="viewListing(listing.slug)">
-        <div class="listing-image-container">
-          <img [src]="listing.images[0] || 'https://via.placeholder.com/400x300?text=No+Image'" [alt]="listing.title" class="listing-image">
-          <div class="listing-badges">
-            @if (listing.isFeatured) {
-<span class="badge badge-featured">⭐ Featured</span>
-}
-            @if (listing.isVerified) {
-<span class="badge badge-verified">✓ Verified</span>
-}
-            @if (listing.endingSoon) {
-<span class="badge badge-ending-soon">⏰ Ending Soon</span>
-}
-          </div>
-        </div>
-        <div class="listing-content">
-          <div class="listing-header">
-            <h3 class="listing-title">{{ listing.title }}</h3>
-            <span class="listing-category">{{ listing.category }}</span>
-          </div>
-          <p class="listing-description">{{ listing.description.substring(0, 100) }}...</p>
-          <div class="listing-meta">
-            <div class="listing-price-info">
-              @if (listing.auctionFormat === 'best-offer' && (listing.currentPrice == null || listing.currentPrice === 0)) {
-              <span class="listing-current-price">No offers yet</span>
-              } @else {
-              <span class="listing-current-price">{{ formatPrice(listing.currentPrice) }}</span>
-              }
-              @if (listing.auctionFormat !== 'best-offer' && listing.currentPrice > listing.startingPrice) {
-<span class="listing-starting-price">
-                Started at {{ formatPrice(listing.startingPrice) }}
-              </span>
-}
+      <div class="listings-grid">
+        @for (listing of listings; track listing._id) {
+          <div class="listing-card" (click)="viewListing(listing.slug)">
+            <div class="listing-image-container">
+              <img
+                [src]="listing.images[0] || 'https://via.placeholder.com/400x300?text=' + listing.subCategory"
+                [alt]="listing.title"
+                class="listing-image" />
+              <div class="listing-badges">
+                @if (listing.isFeatured) {
+                  <span class="badge badge-featured">⭐ Featured</span>
+                }
+                @if (listing.isVerified) {
+                  <span class="badge badge-verified">✓ Verified</span>
+                }
+                @if (listing.endingSoon) {
+                  <span class="badge badge-ending-soon">⏰ Ending Soon</span>
+                }
+              </div>
             </div>
-            <div class="listing-bid-info">
-              <span class="bid-count">{{ listing.bidCount }} {{ listing.bidCount === 1 ? 'bid' : 'bids' }}</span>
-              <span class="time-remaining">⏱️ {{ formatTimeRemaining(listing) }}</span>
+            <div class="listing-content">
+              <div class="listing-header">
+                <h3 class="listing-title">{{ listing.title }}</h3>
+                <span class="listing-subcategory">{{ listing.subCategory }}</span>
+              </div>
+              <p class="listing-description">{{ listing.description.substring(0, 90) }}...</p>
+              <div class="listing-meta">
+                <div class="listing-price-info">
+                  @if (listing.auctionFormat === 'best-offer' && (listing.currentPrice == null || listing.currentPrice === 0)) {
+                    <span class="listing-current-price">No offers yet</span>
+                  } @else {
+                    <span class="listing-current-price">{{ formatPrice(listing.currentPrice) }}</span>
+                  }
+                  @if (listing.auctionFormat !== 'best-offer' && listing.currentPrice > listing.startingPrice) {
+                    <span class="listing-starting-price">Started at {{ formatPrice(listing.startingPrice) }}</span>
+                  }
+                </div>
+                <div class="listing-bid-info">
+                  <span class="bid-count">{{ listing.bidCount }} {{ listing.bidCount === 1 ? 'bid' : 'bids' }}</span>
+                  <span class="time-remaining">⏱️ {{ formatTimeRemaining(listing) }}</span>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
+        }
       </div>
-}
-    </div>
-}
+    }
 
-    <!-- Empty State -->
+    <!-- Empty -->
     @if (!loading && !error && listings.length === 0) {
-<div class="empty-state">
-      <div class="empty-content">
+      <div class="empty-state">
+        <div class="empty-icon">🔍</div>
         <h3>No listings found</h3>
-        <p>Try adjusting your filters or check back later.</p>
+        <p>Try a different search term, category, or remove some filters.</p>
+        <button class="btn btn-primary" (click)="clearCategory(); clearSearch()">Clear all filters</button>
       </div>
-    </div>
-}
+    }
+
   </div>
 </section>
 
 <app-footer></app-footer>
-

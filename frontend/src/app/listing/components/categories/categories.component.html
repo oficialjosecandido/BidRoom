@@ -1,0 +1,42 @@
+<app-header activePage="auctions"></app-header>
+
+<section class="categories-page">
+  <div class="container">
+    <div class="page-header">
+      <h1 class="page-title">Browse Categories</h1>
+      <p class="page-subtitle">Explore every category and subcategory — find exactly what you're looking for</p>
+    </div>
+
+    <div class="categories-list">
+      @for (category of categories; track category.id) {
+        <div class="category-section">
+
+          <div class="category-header" (click)="browseCategory(category.id)">
+            <div class="category-header-left">
+              <span class="category-icon">{{ category.icon }}</span>
+              <div class="category-info">
+                <h2 class="category-name">{{ category.name }}</h2>
+                <p class="category-description">{{ category.description }}</p>
+              </div>
+            </div>
+            <div class="category-header-right">
+              <span class="category-count">{{ category.subCategories.length }} subcategories</span>
+              <span class="browse-arrow">Browse all →</span>
+            </div>
+          </div>
+
+          <div class="subcategories-grid">
+            @for (sub of category.subCategories; track sub) {
+              <button class="subcategory-chip" (click)="browseSubCategory(category.id, sub)">
+                {{ sub }}
+              </button>
+            }
+          </div>
+
+        </div>
+      }
+    </div>
+  </div>
+</section>
+
+<app-footer></app-footer>

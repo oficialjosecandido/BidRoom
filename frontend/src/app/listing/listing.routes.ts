@@ -7,6 +7,10 @@ export const listingRoutes: Routes = [
     pathMatch: 'full'
   },
   {
+    path: 'categories',
+    loadComponent: () => import('./components/categories/categories.component').then(m => m.CategoriesComponent)
+  },
+  {
     path: 'list',
     loadComponent: () => import('./components/listing-list/listing-list.component').then(m => m.ListingListComponent)
   },

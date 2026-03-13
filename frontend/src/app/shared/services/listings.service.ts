@@ -105,6 +105,7 @@ export interface ListingsResponse {
 
 export interface ListingsQueryParams {
   category?: string;
+  subCategory?: string;
   sort?: 'deadline' | 'newest' | 'highest' | 'lowest' | 'bids';
   minPrice?: number;
   maxPrice?: number;

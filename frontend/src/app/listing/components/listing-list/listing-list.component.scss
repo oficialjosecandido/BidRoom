@@ -1,6 +1,152 @@
 .listing-list-page {
-  padding: 40px 0 80px;
+  padding: 32px 0 80px;
   min-height: 60vh;
+
+  // ── Search bar ─────────────────────────────────────────────────────────────
+  .search-bar-row {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+    margin-bottom: 1.25rem;
+  }
+
+  .search-input-wrap {
+    flex: 1;
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+
+  .search-icon {
+    position: absolute;
+    left: 0.9rem;
+    font-size: 1rem;
+    pointer-events: none;
+  }
+
+  .search-input {
+    width: 100%;
+    padding: 0.7rem 2.5rem 0.7rem 2.4rem;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    outline: none;
+    transition: border-color 0.15s;
+
+    &:focus {
+      border-color: #1a1a1a;
+    }
+  }
+
+  .search-clear {
+    position: absolute;
+    right: 0.75rem;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 0.85rem;
+    color: #9ca3af;
+    padding: 0;
+
+    &:hover { color: #374151; }
+  }
+
+  .search-btn {
+    white-space: nowrap;
+  }
+
+  // ── Active filter chips ────────────────────────────────────────────────────
+  .active-filters {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .filters-label {
+    font-size: 0.875rem;
+    color: #6b7280;
+  }
+
+  .filter-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.3rem 0.75rem;
+    background: #f3f4f6;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 500;
+
+    button {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 0.75rem;
+      color: #6b7280;
+      padding: 0;
+      line-height: 1;
+
+      &:hover { color: #111; }
+    }
+  }
+
+  // ── List header ────────────────────────────────────────────────────────────
+  .list-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .list-title-wrap {
+    display: flex;
+    align-items: baseline;
+    gap: 0.75rem;
+  }
+
+  .page-title {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: var(--text-dark);
+    margin: 0;
+  }
+
+  .result-count {
+    font-size: 0.875rem;
+    color: #9ca3af;
+  }
+
+  .filters-row {
+    display: flex;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+  }
+
+  .listing-subcategory {
+    font-size: 0.75rem;
+    color: #6b7280;
+    background: #f3f4f6;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    white-space: nowrap;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 4rem 1rem;
+
+    .empty-icon {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+    }
+
+    h3 { font-size: 1.4rem; margin-bottom: 0.5rem; }
+    p { color: #6b7280; margin-bottom: 1.5rem; }
+  }
 
   .page-header {
     margin-bottom: 40px;

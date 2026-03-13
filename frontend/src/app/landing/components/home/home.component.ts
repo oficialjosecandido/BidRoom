@@ -86,6 +86,25 @@ export class HomeComponent implements OnInit, AfterViewInit {
     this.loadListings();
   }
 
+  searchQuery = '';
+
+  onSearch(): void {
+    const q = this.searchQuery.trim();
+    if (q) {
+      this.router.navigate(['/listing/list'], { queryParams: { search: q } });
+    } else {
+      this.router.navigate(['/listing/list']);
+    }
+  }
+
+  browseCategory(categoryId: string): void {
+    this.router.navigate(['/listing/list'], { queryParams: { category: categoryId } });
+  }
+
+  browseCategoriesPage(): void {
+    this.router.navigate(['/listing/categories']);
+  }
+
   navigateToAuth(): void {
     this.router.navigate(['/auth/signup']);
   }

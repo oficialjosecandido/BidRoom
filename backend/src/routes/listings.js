@@ -15,6 +15,7 @@ router.get('/', async (req, res) => {
   try {
     const {
       category,
+      subCategory,
       sort = 'deadline', // deadline, newest, highest, lowest, bids
       minPrice,
       maxPrice,
@@ -35,6 +36,10 @@ router.get('/', async (req, res) => {
     
     if (category) {
       query.category = category;
+    }
+
+    if (subCategory) {
+      query.subCategory = subCategory;
     }
     
     if (listingType) {

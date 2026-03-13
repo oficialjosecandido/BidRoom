@@ -5,7 +5,7 @@ const Transaction = require('../models/Transaction');
 const User = require('../models/User');
 const { authenticateToken } = require('../middleware/auth');
 const { getReviewScoresForUser, getReviewScoresForUsers } = require('../services/reviewService');
-const { checkReviewFraud, recordSuccessfulTransaction, recalculateReputation, getTrustBadges, isPrivateRoomEligible } = require('../services/reputationService');
+const { checkReviewFraud, recordSuccessfulTransaction, recalculateReputation, getTrustBadges, isPrivateRoomEligible, classifyNegativePattern } = require('../services/reputationService');
 
 const router = express.Router();
 
@@ -21,13 +21,15 @@ router.get('/reputation/:userId', async (req, res) => {
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
-    const [scores, badges] = await Promise.all([
+    const [scores, badges, { classification }] = await Promise.all([
       getReviewScoresForUser(req.params.userId),
-      getTrustBadges(user)
+      getTrustBadges(user),
+      classifyNegativePattern(req.params.userId, user.reputationScore ?? 100)
     ]);
     res.json({
       reputationScore: user.reputationScore ?? 100,
       privateRoomEligible: isPrivateRoomEligible(user),
+      patternClassification: classification, // 'none' | 'isolated' | 'recurring'
       badges,
       ...scores
     });

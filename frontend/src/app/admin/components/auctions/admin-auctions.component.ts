@@ -29,14 +29,10 @@ export class AdminAuctionsComponent implements OnInit {
   categories = [
     { value: 'all', label: 'All Categories' },
     { value: 'electronics', label: 'Electronics' },
-    { value: 'art-collectibles', label: 'Art & Collectibles' },
-    { value: 'jewelry', label: 'Jewelry' },
     { value: 'home-garden', label: 'Home & Garden' },
-    { value: 'watches', label: 'Watches' },
-    { value: 'fashion', label: 'Fashion' },
-    { value: 'sports', label: 'Sports' },
-    { value: 'books', label: 'Books' },
-    { value: 'other', label: 'Other' }
+    { value: 'art', label: 'Art' },
+    { value: 'collectibles', label: 'Collectibles' },
+    { value: 'jewelry', label: 'Jewelry' }
   ];
 
   statuses = [

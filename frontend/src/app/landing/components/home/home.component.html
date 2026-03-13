@@ -6,9 +6,18 @@
     <div class="hero-content">
       <h1 class="hero-title">Find Your True Worth</h1>
       <p class="hero-subtitle">Discover unique items, place winning bids, and own what you love. Join thousands of bidders in our premium auction marketplace.</p>
+      <div class="hero-search">
+        <input
+          type="text"
+          class="hero-search-input"
+          placeholder="Search for laptops, watches, stamps, art..."
+          [(ngModel)]="searchQuery"
+          (keyup.enter)="onSearch()" />
+        <button class="btn btn-primary hero-search-btn" (click)="onSearch()">Search</button>
+      </div>
       <div class="hero-actions">
-        <button class="btn btn-primary btn-large" (click)="navigateToAuth()">Start Bidding Now</button>
-        <button class="btn btn-secondary btn-large" (click)="navigateToAddListing()">List your Item</button>
+        <button class="btn btn-secondary btn-large" (click)="navigateToAuth()">Create Account</button>
+        <button class="btn btn-ghost btn-large" (click)="navigateToAddListing()">List an Item</button>
       </div>
     </div>
   </div>
@@ -112,38 +121,50 @@
 <section id="categories" class="categories">
   <div class="container">
     <div class="categories-header">
-      <h2 class="section-title">Browse by Category</h2>
-      <span class="section-title-accent" aria-hidden="true"></span>
-      <p class="section-subtitle">Find what you love across our curated categories</p>
+      <div class="categories-title-row">
+        <div>
+          <h2 class="section-title">Browse by Category</h2>
+          <span class="section-title-accent" aria-hidden="true"></span>
+          <p class="section-subtitle">Find what you love across our curated categories</p>
+        </div>
+        <button class="btn btn-secondary btn-small" (click)="browseCategoriesPage()">View All Categories →</button>
+      </div>
     </div>
     <div class="categories-grid">
-      <div class="category-card category-card-1">
+      <div class="category-card category-card-1" (click)="browseCategory('electronics')" style="cursor:pointer">
         <div class="category-icon-wrap">
           <span class="category-icon" aria-hidden="true">📱</span>
         </div>
         <h3 class="category-title">Electronics</h3>
-        <p class="category-desc">Latest gadgets and tech</p>
+        <p class="category-desc">Gadgets, cameras and audio</p>
       </div>
-      <div class="category-card category-card-2">
-        <div class="category-icon-wrap">
-          <span class="category-icon" aria-hidden="true">🎨</span>
-        </div>
-        <h3 class="category-title">Art & Collectibles</h3>
-        <p class="category-desc">Unique pieces and rare finds</p>
-      </div>
-      <div class="category-card category-card-3">
-        <div class="category-icon-wrap">
-          <span class="category-icon" aria-hidden="true">💎</span>
-        </div>
-        <h3 class="category-title">Jewelry</h3>
-        <p class="category-desc">Precious metals and gems</p>
-      </div>
-      <div class="category-card category-card-4">
+      <div class="category-card category-card-2" (click)="browseCategory('home-garden')" style="cursor:pointer">
         <div class="category-icon-wrap">
           <span class="category-icon" aria-hidden="true">🏠</span>
         </div>
         <h3 class="category-title">Home & Garden</h3>
-        <p class="category-desc">Furniture and decor</p>
+        <p class="category-desc">Furniture, decor and more</p>
+      </div>
+      <div class="category-card category-card-3" (click)="browseCategory('art')" style="cursor:pointer">
+        <div class="category-icon-wrap">
+          <span class="category-icon" aria-hidden="true">🎨</span>
+        </div>
+        <h3 class="category-title">Art</h3>
+        <p class="category-desc">Paintings, sculptures and prints</p>
+      </div>
+      <div class="category-card category-card-4" (click)="browseCategory('collectibles')" style="cursor:pointer">
+        <div class="category-icon-wrap">
+          <span class="category-icon" aria-hidden="true">📬</span>
+        </div>
+        <h3 class="category-title">Collectibles</h3>
+        <p class="category-desc">Stamps, coins and memorabilia</p>
+      </div>
+      <div class="category-card category-card-4" (click)="browseCategory('jewelry')" style="cursor:pointer">
+        <div class="category-icon-wrap">
+          <span class="category-icon" aria-hidden="true">💎</span>
+        </div>
+        <h3 class="category-title">Jewelry</h3>
+        <p class="category-desc">Rings, watches and gemstones</p>
       </div>
     </div>
   </div>
