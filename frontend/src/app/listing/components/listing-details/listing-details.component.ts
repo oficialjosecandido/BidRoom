@@ -66,6 +66,7 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
   private readonly OFFER_REFRESH_DEBOUNCE_MS = 2000;
   displayedTimeRemaining = '';
   winnerSelectionCountdownDisplay = '';
+  newBidIds = new Set<string>();
 
   // Place Bid modal
   showBidModal = false;
@@ -549,6 +550,14 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
       if (event.listingId === listingId) {
         // Add new bid to the list (prepend since we sort desc), capped to avoid unbounded growth
         this.bids = [event.bid, ...this.bids].slice(0, MAX_DISPLAYED_BIDS);
+        // Flash the new bid
+        const newId = event.bid._id;
+        this.newBidIds = new Set([...this.newBidIds, newId]);
+        setTimeout(() => {
+          this.newBidIds.delete(newId);
+          this.newBidIds = new Set(this.newBidIds);
+          this.cdr.markForCheck();
+        }, 2500);
         
         // Update listing current price and bid count
         if (this.listing && event.currentPrice !== undefined && event.bidCount !== undefined) {
@@ -1008,6 +1017,24 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
 
   /** @deprecated Use formatDate instead. */
   formatBidDate(dateString: string): string { return this.formatDate(dateString); }
+
+  relativeTime(dateString: string): string {
+    const diff = Date.now() - new Date(dateString).getTime();
+    const s = Math.floor(diff / 1000);
+    if (s < 60) return `${s}s ago`;
+    const m = Math.floor(s / 60);
+    if (m < 60) return `${m}m ago`;
+    const h = Math.floor(m / 60);
+    if (h < 24) return `${h}h ago`;
+    return '';
+  }
+
+  bidBarWidth(bid: Bid): number {
+    if (!this.bids.length) return 0;
+    const max = this.bids[0]?.amount ?? 0;
+    if (!max) return 100;
+    return Math.round((bid.amount / max) * 100);
+  }
   /** @deprecated Use formatDate instead. */
   formatOfferDate(dateString: string): string { return this.formatDate(dateString); }
 

@@ -8,6 +8,8 @@ import { FooterComponent } from '../../../shared/components/footer/footer.compon
 import { ListingsService, Listing, ListingsQueryParams } from '../../../shared/services/listings.service';
 import { CATEGORIES, Category } from '../../../shared/config/categories.config';
 
+const PAGE_SIZE = 20;
+
 @Component({
   selector: 'app-listing-list',
   standalone: true,
@@ -22,6 +24,8 @@ export class ListingListComponent implements OnInit {
 
   listings: Listing[] = [];
   total = 0;
+  totalPages = 1;
+  currentPage = 1;
   loading = true;
   error: string | null = null;
 
@@ -29,9 +33,10 @@ export class ListingListComponent implements OnInit {
   selectedCategory = '';
   selectedSubCategory = '';
   searchQuery = '';
-  searchInput = ''; // bound to the input field
+  searchInput = '';
 
   readonly categories: Category[] = CATEGORIES;
+  readonly pageSize = PAGE_SIZE;
 
   get subCategories(): string[] {
     const cat = this.categories.find(c => c.id === this.selectedCategory);
@@ -43,16 +48,15 @@ export class ListingListComponent implements OnInit {
   }
 
   get pageTitle(): string {
-    if (this.searchQuery && this.activeCategoryLabel) {
-      return `"${this.searchQuery}" in ${this.activeCategoryLabel}`;
-    }
+    if (this.searchQuery && this.activeCategoryLabel) return `"${this.searchQuery}" in ${this.activeCategoryLabel}`;
     if (this.searchQuery) return `Results for "${this.searchQuery}"`;
-    if (this.activeCategoryLabel && this.selectedSubCategory) {
-      return `${this.activeCategoryLabel} — ${this.selectedSubCategory}`;
-    }
+    if (this.activeCategoryLabel && this.selectedSubCategory) return `${this.activeCategoryLabel} — ${this.selectedSubCategory}`;
     if (this.activeCategoryLabel) return this.activeCategoryLabel;
     return 'All Auctions';
   }
+
+  get pageFrom(): number { return this.total === 0 ? 0 : (this.currentPage - 1) * this.pageSize + 1; }
+  get pageTo(): number { return Math.min(this.currentPage * this.pageSize, this.total); }
 
   ngOnInit(): void {
     this.route.queryParams.subscribe(params => {
@@ -61,6 +65,7 @@ export class ListingListComponent implements OnInit {
       this.searchQuery = params['search'] || '';
       this.searchInput = this.searchQuery;
       this.sortBy = params['sort'] || 'deadline';
+      this.currentPage = parseInt(params['page'] || '1', 10) || 1;
       this.loadListings();
     });
   }
@@ -72,7 +77,8 @@ export class ListingListComponent implements OnInit {
     const params: ListingsQueryParams = {
       sort: this.sortBy,
       status: 'active',
-      limit: 60
+      limit: PAGE_SIZE,
+      page: this.currentPage
     };
 
     if (this.selectedCategory) params.category = this.selectedCategory;
@@ -83,10 +89,10 @@ export class ListingListComponent implements OnInit {
       next: (response) => {
         this.listings = response.listings;
         this.total = response.total;
+        this.totalPages = response.totalPages || Math.ceil(response.total / PAGE_SIZE);
         this.loading = false;
       },
-      error: (err) => {
-        console.error('Error loading listings:', err);
+      error: () => {
         this.error = 'Failed to load listings. Please try again.';
         this.loading = false;
       }
@@ -99,41 +105,64 @@ export class ListingListComponent implements OnInit {
     if (this.selectedSubCategory) queryParams['subCategory'] = this.selectedSubCategory;
     if (this.searchQuery) queryParams['search'] = this.searchQuery;
     if (this.sortBy !== 'deadline') queryParams['sort'] = this.sortBy;
+    if (this.currentPage > 1) queryParams['page'] = String(this.currentPage);
     this.router.navigate([], { queryParams, replaceUrl: true });
+  }
+
+  goToPage(p: number): void {
+    if (p < 1 || p > this.totalPages || p === this.currentPage) return;
+    this.currentPage = p;
+    this.navigate();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  get visiblePages(): number[] {
+    const pages: number[] = [];
+    const start = Math.max(1, this.currentPage - 2);
+    const end = Math.min(this.totalPages, this.currentPage + 2);
+    for (let i = start; i <= end; i++) pages.push(i);
+    return pages;
   }
 
   onSearch(): void {
     this.searchQuery = this.searchInput.trim();
+    this.currentPage = 1;
     this.navigate();
   }
 
   onCategoryChange(): void {
     this.selectedSubCategory = '';
+    this.currentPage = 1;
     this.navigate();
   }
 
   onSubCategoryChange(): void {
+    this.currentPage = 1;
     this.navigate();
   }
 
   onSortChange(): void {
+    this.currentPage = 1;
     this.navigate();
   }
 
   clearSearch(): void {
     this.searchQuery = '';
     this.searchInput = '';
+    this.currentPage = 1;
     this.navigate();
   }
 
   clearCategory(): void {
     this.selectedCategory = '';
     this.selectedSubCategory = '';
+    this.currentPage = 1;
     this.navigate();
   }
 
   clearSubCategory(): void {
     this.selectedSubCategory = '';
+    this.currentPage = 1;
     this.navigate();
   }
 
@@ -144,6 +173,15 @@ export class ListingListComponent implements OnInit {
 
   browseCategoriesPage(): void {
     this.router.navigate(['/listing/categories']);
+  }
+
+  timerClass(listing: Listing): string {
+    if (!listing.timeRemaining) return '';
+    const { ended, days, hours } = listing.timeRemaining;
+    if (ended) return '';
+    if (days === 0 && hours < 1) return 'timer-urgent';
+    if (days === 0 && hours < 24) return 'timer-soon';
+    return 'timer-ok';
   }
 
   formatPrice(price: number): string {

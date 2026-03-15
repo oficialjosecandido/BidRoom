@@ -247,116 +247,135 @@
 
   .listing-card {
     background: var(--primary-white);
-    border-radius: 12px;
+    border-radius: var(--card-radius, 14px);
     overflow: hidden;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    transition: all 0.3s ease;
+    box-shadow: var(--card-shadow);
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
     cursor: pointer;
+    border: 1px solid rgba(0,0,0,0.05);
+    display: flex;
+    flex-direction: column;
 
     &:hover {
-      transform: translateY(-8px);
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+      transform: translateY(-6px);
+      box-shadow: var(--card-shadow-hover);
+      .listing-image { transform: scale(1.06); }
     }
 
     .listing-image-container {
       position: relative;
       width: 100%;
-      height: 250px;
+      height: 220px;
       overflow: hidden;
+      background: #f0eff5;
 
       .listing-image {
         width: 100%;
         height: 100%;
         object-fit: cover;
-        transition: transform 0.3s ease;
+        transition: transform 0.35s ease;
       }
 
-      &:hover .listing-image {
-        transform: scale(1.1);
+      &::after {
+        content: '';
+        position: absolute;
+        bottom: 0; left: 0; right: 0;
+        height: 70px;
+        background: linear-gradient(to top, rgba(0,0,0,0.4), transparent);
+        pointer-events: none;
+        z-index: 1;
       }
 
       .listing-badges {
         position: absolute;
-        top: 12px;
-        left: 12px;
+        top: 10px;
+        left: 10px;
         display: flex;
         flex-direction: column;
-        gap: 8px;
-        z-index: 2;
+        gap: 6px;
+        z-index: 3;
 
         .badge {
-          padding: 6px 12px;
+          padding: 4px 10px;
           border-radius: 20px;
-          font-size: 12px;
-          font-weight: 600;
+          font-size: 11px;
+          font-weight: 700;
           white-space: nowrap;
-          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+          box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+          letter-spacing: 0.3px;
 
           &.badge-featured {
-            background: linear-gradient(135deg, #FFD700, #FFA500);
-            color: var(--text-dark);
+            background: linear-gradient(135deg, var(--accent-gold), #c8960a);
+            color: white;
           }
 
           &.badge-verified {
             background: var(--accent-purple);
-            color: var(--primary-white);
+            color: white;
           }
 
           &.badge-ending-soon {
-            background: var(--accent-peach);
-            color: var(--primary-white);
+            background: var(--urgency-red, #e53935);
+            color: white;
           }
         }
       }
     }
 
     .listing-content {
-      padding: 20px;
+      padding: 16px 18px 18px;
+      display: flex;
+      flex-direction: column;
+      flex: 1;
 
       .listing-header {
         display: flex;
         justify-content: space-between;
         align-items: flex-start;
-        margin-bottom: 12px;
+        margin-bottom: 8px;
+        gap: 8px;
 
         .listing-title {
-          font-size: 18px;
-          font-weight: 600;
+          font-size: 15px;
+          font-weight: 700;
           color: var(--text-dark);
           margin: 0;
           flex: 1;
-          line-height: 1.4;
+          line-height: 1.35;
         }
 
-        .listing-category {
-          font-size: 12px;
-          color: var(--text-gray);
-          background: var(--light-gray);
-          padding: 4px 8px;
-          border-radius: 4px;
+        .listing-subcategory {
+          font-size: 11px;
+          color: var(--accent-purple);
+          background: var(--light-purple);
+          padding: 3px 8px;
+          border-radius: 20px;
           white-space: nowrap;
-          margin-left: 12px;
+          font-weight: 600;
+          flex-shrink: 0;
         }
       }
 
       .listing-description {
-        font-size: 14px;
+        font-size: 13px;
         color: var(--text-gray);
-        line-height: 1.6;
-        margin-bottom: 16px;
+        line-height: 1.55;
+        margin-bottom: 14px;
+        flex: 1;
       }
 
       .listing-meta {
         .listing-price-info {
           display: flex;
-          flex-direction: column;
-          gap: 4px;
-          margin-bottom: 12px;
+          align-items: baseline;
+          gap: 10px;
+          margin-bottom: 10px;
 
           .listing-current-price {
             font-size: 24px;
-            font-weight: 700;
+            font-weight: 800;
             color: var(--accent-purple);
+            letter-spacing: -0.5px;
           }
 
           .listing-starting-price {
@@ -369,17 +388,19 @@
           display: flex;
           justify-content: space-between;
           align-items: center;
-          font-size: 14px;
+          padding: 7px 10px;
+          background: var(--light-gray);
+          border-radius: 8px;
+          font-size: 13px;
           color: var(--text-gray);
 
-          .bid-count {
-            font-weight: 600;
-          }
+          .bid-count { font-weight: 600; color: var(--text-dark); }
 
           .time-remaining {
             display: flex;
             align-items: center;
             gap: 4px;
+            font-weight: 500;
           }
         }
       }
@@ -401,3 +422,68 @@
   }
 }
 
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 40px;
+  padding-top: 24px;
+  border-top: 1px solid var(--border-gray, #e5e5e5);
+  gap: 16px;
+  flex-wrap: wrap;
+
+  .pagination-info {
+    font-size: 14px;
+    color: var(--text-gray, #666);
+  }
+
+  .pagination-controls {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .page-btn {
+    min-width: 36px;
+    height: 36px;
+    padding: 0 8px;
+    border: 1px solid var(--border-gray, #e0e0e0);
+    border-radius: 8px;
+    background: white;
+    color: var(--text-dark, #333);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+
+    &:hover:not(:disabled) {
+      border-color: var(--accent-purple, #7A4F84);
+      color: var(--accent-purple, #7A4F84);
+      background: rgba(122, 79, 132, 0.06);
+    }
+
+    &.active {
+      background: var(--accent-purple, #7A4F84);
+      border-color: var(--accent-purple, #7A4F84);
+      color: white;
+      font-weight: 600;
+    }
+
+    &:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+    }
+
+    &.page-btn-nav {
+      font-size: 18px;
+      font-weight: 400;
+    }
+  }
+
+  .page-ellipsis {
+    padding: 0 4px;
+    color: var(--text-gray, #999);
+    font-size: 14px;
+  }
+}

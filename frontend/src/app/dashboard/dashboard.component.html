@@ -3,13 +3,15 @@
   <aside class="sidebar" [class.sidebar--collapsed]="sidebarCollapsed">
     <div class="sidebar-header">
       <h1 class="logo" (click)="navigateToLanding()">
-        <span class="logo-full">BidRoom | DEV</span>
+        <span class="logo-full">BidRoom</span>
         <span class="logo-short" aria-hidden="true">BR</span>
       </h1>
-      <app-proposal-notifications></app-proposal-notifications>
-      <button type="button" class="sidebar-toggle" (click)="toggleSidebar()" [attr.aria-label]="sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'" [attr.aria-expanded]="!sidebarCollapsed">
-        <span class="toggle-icon" aria-hidden="true">{{ sidebarCollapsed ? '›' : '‹' }}</span>
-      </button>
+      <div class="sidebar-header-actions">
+        <app-proposal-notifications></app-proposal-notifications>
+        <button type="button" class="sidebar-toggle" (click)="toggleSidebar()" [attr.aria-label]="sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'" [attr.aria-expanded]="!sidebarCollapsed">
+          <span class="toggle-icon" aria-hidden="true">{{ sidebarCollapsed ? '›' : '‹' }}</span>
+        </button>
+      </div>
     </div>
 
     <nav class="sidebar-nav">
@@ -17,26 +19,20 @@
         <span class="nav-icon">🏠</span>
         <span class="nav-text">Home</span>
       </a>
-      <a routerLink="/dashboard/my-account" routerLinkActive="active" class="nav-item" title="My Account">
-        <span class="nav-icon">👤</span>
-        <span class="nav-text">My Account</span>
+
+      <div class="nav-section-label"><span class="nav-text">Activity</span></div>
+
+      <a routerLink="/dashboard/buyer" routerLinkActive="active" class="nav-item" title="Buyer Profile">
+        <span class="nav-icon">🛒</span>
+        <span class="nav-text">Buyer Profile</span>
       </a>
-      <a routerLink="/dashboard/my-listings" routerLinkActive="active" class="nav-item" title="Selling Items">
+      <a routerLink="/dashboard/seller" routerLinkActive="active" class="nav-item" title="Seller Profile">
         <span class="nav-icon">📦</span>
-        <span class="nav-text">Selling Items</span>
+        <span class="nav-text">Seller Profile</span>
       </a>
-      <a routerLink="/dashboard/my-auctions" routerLinkActive="active" class="nav-item" title="My Auctions">
-        <span class="nav-icon">🔨</span>
-        <span class="nav-text">My Auctions</span>
-      </a>
-      <a routerLink="/dashboard/my-bets" routerLinkActive="active" class="nav-item" title="My Bets">
-        <span class="nav-icon">🎯</span>
-        <span class="nav-text">My Bets</span>
-      </a>
-      <a routerLink="/dashboard/transactions" routerLinkActive="active" class="nav-item" title="Transactions">
-        <span class="nav-icon">💳</span>
-        <span class="nav-text">Transactions</span>
-      </a>
+
+      <div class="nav-section-label"><span class="nav-text">Account</span></div>
+
       <a routerLink="/dashboard/notifications" routerLinkActive="active" class="nav-item nav-item-with-badge" title="Notifications">
         <span class="nav-icon">🔔</span>
         <span class="nav-text">Notifications</span>
@@ -44,13 +40,9 @@
           <span class="nav-badge">{{ notificationUnreadCount > 99 ? '99+' : notificationUnreadCount }}</span>
         }
       </a>
-      <a routerLink="/dashboard/disputes" routerLinkActive="active" class="nav-item" title="Disputes">
-        <span class="nav-icon">⚖️</span>
-        <span class="nav-text">Disputes</span>
-      </a>
-      <a routerLink="/dashboard/watchlist" routerLinkActive="active" class="nav-item" title="Watchlist">
-        <span class="nav-icon">👀</span>
-        <span class="nav-text">Watchlist</span>
+      <a routerLink="/dashboard/settings" routerLinkActive="active" class="nav-item" title="Settings">
+        <span class="nav-icon">⚙️</span>
+        <span class="nav-text">Settings</span>
       </a>
     </nav>
 
@@ -67,4 +59,3 @@
     <router-outlet></router-outlet>
   </main>
 </div>
-

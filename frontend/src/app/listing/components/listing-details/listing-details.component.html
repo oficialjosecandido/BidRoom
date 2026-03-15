@@ -395,6 +395,26 @@
             </div>
             }
 
+            @if (bids.length > 0 && !bidsLoading && !bidsError) {
+            <div class="bid-stats-bar">
+              @if (!isAuctionEnded()) {
+                <span class="bid-live-pill"><span class="live-dot"></span> LIVE</span>
+              }
+              <div class="bid-stat">
+                <span class="bid-stat-label">Total bids</span>
+                <span class="bid-stat-value">{{ bids.length }}</span>
+              </div>
+              <div class="bid-stat">
+                <span class="bid-stat-label">Leading bid</span>
+                <span class="bid-stat-value">{{ formatBidAmount(bids[0].amount) }}</span>
+              </div>
+              <div class="bid-stat">
+                <span class="bid-stat-label">Last activity</span>
+                <span class="bid-stat-value">{{ relativeTime(bids[0].createdAt) }}</span>
+              </div>
+            </div>
+            }
+
             @if (bidsLoading) {
             <div class="bids-loading">
               <p>Loading bid history...</p>
@@ -422,7 +442,7 @@
               @if (bids.length > 0) {
               <div class="bids-list">
                 @for (bid of bids; track bid._id; let i = $index) {
-                <div class="bid-item" [class.top-bid]="i === 0" [class.bid-not-eligible]="isOwnListing && isAuctionEnded() && !listing.allowPrivateRoom && !listing.winner && !isPrivateRoomEnded() && !canSelectBidAsWinner(bid)">
+                <div class="bid-item" [class.top-bid]="i === 0" [class.bid-new]="newBidIds.has(bid._id)" [class.bid-not-eligible]="isOwnListing && isAuctionEnded() && !listing.allowPrivateRoom && !listing.winner && !isPrivateRoomEnded() && !canSelectBidAsWinner(bid)">
                   <div class="bid-rank">{{ i + 1 }}</div>
                   <div class="bid-avatar">
                     {{ bid.bidderInitials || 'A' }}
@@ -488,6 +508,9 @@
                         <div class="bid-amount">{{ formatBidAmount(bid.amount) }}</div>
                         <div class="bid-date-time">
                           <span class="bid-date">{{ formatBidDate(bid.createdAt) }}</span>
+                          @if (relativeTime(bid.createdAt)) {
+                            <span class="bid-relative-time">{{ relativeTime(bid.createdAt) }}</span>
+                          }
                           @if (bid.bidType !== 'manual') { <span class="bid-type">{{ bid.bidType }}</span> }
                         </div>
                         @if (isOwnListing && isAuctionEnded() && !listing.allowPrivateRoom && !listing.winner && !isPrivateRoomEnded()) {
@@ -503,6 +526,9 @@
                         </div>
                         }
                       </div>
+                    </div>
+                    <div class="bid-bar-track">
+                      <div class="bid-bar-fill" [style.width.%]="bidBarWidth(bid)"></div>
                     </div>
                   </div>
                 </div>

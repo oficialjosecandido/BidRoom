@@ -2,6 +2,7 @@ const express = require('express');
 const Listing = require('../models/Listing');
 const User = require('../models/User');
 const Bid = require('../models/Bid');
+const Offer = require('../models/Offer');
 const Watchlist = require('../models/Watchlist');
 const { authenticateToken, optionalAuth, requireActiveAccount } = require('../middleware/auth');
 const { handleWinnerSelection, handleAuctionEnd } = require('../services/auctionNotificationService');
@@ -23,9 +24,14 @@ router.get('/', async (req, res) => {
       listingType,
       status = 'active',
       search,
-      limit = 50,
-      skip = 0
+      limit = 20,
+      skip,
+      page
     } = req.query;
+
+    const pageSize = Math.min(parseInt(limit) || 20, 100);
+    const pageNum = Math.max(parseInt(page) || 1, 1);
+    const skipNum = skip !== undefined ? parseInt(skip) : (pageNum - 1) * pageSize;
 
     // Build query
     const query = {};
@@ -93,8 +99,8 @@ router.get('/', async (req, res) => {
     const listings = await Listing.find(query)
       .populate('seller', 'firstName lastName email')
       .sort(sortObj)
-      .limit(parseInt(limit))
-      .skip(parseInt(skip))
+      .limit(pageSize)
+      .skip(skipNum)
       .lean();
 
     // Helper function to generate slug from title
@@ -132,11 +138,14 @@ router.get('/', async (req, res) => {
 
     const total = await Listing.countDocuments(query);
 
+    const totalPages = Math.ceil(total / pageSize);
     res.json({
       listings: listingsWithTimeRemaining,
       total,
-      limit: parseInt(limit),
-      skip: parseInt(skip)
+      limit: pageSize,
+      skip: skipNum,
+      page: pageNum,
+      totalPages
     });
   } catch (error) {
     console.error('Error fetching listings:', error);

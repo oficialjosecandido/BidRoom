@@ -21,6 +21,7 @@ export interface CustomerInfo {
   user: CustomerUser;
   balance: number;
   reviewCount: number;
+  language: string;
   buyerScore: number | null;
   sellerScore: number | null;
   buyerReviewCount: number;
@@ -37,5 +38,9 @@ export class CustomerService {
 
   getCustomer(): Observable<CustomerInfo> {
     return this.http.get<CustomerInfo>(`${this.apiUrl}/profile`);
+  }
+
+  updateLanguage(language: string): Observable<{ language: string }> {
+    return this.http.patch<{ language: string }>(`${this.apiUrl}/language`, { language });
   }
 }

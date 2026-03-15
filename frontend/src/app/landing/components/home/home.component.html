@@ -249,7 +249,7 @@
             </div>
             <div class="listing-bid-info">
               <span class="bid-count">{{ listing.bidCount }} {{ listing.bidCount === 1 ? ('home.liveAuctions.bid' | translate) : ('home.liveAuctions.bids' | translate) }}</span>
-              <span class="time-remaining">⏱️ {{ formatTimeRemaining(listing) }}</span>
+              <span class="time-remaining" [ngClass]="timerClass(listing)">⏱ {{ formatTimeRemaining(listing) }}</span>
             </div>
           </div>
           <div class="listing-footer">

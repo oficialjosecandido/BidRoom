@@ -3,8 +3,8 @@ import { AuthGuard } from './auth/guards/auth.guard';
 
 export const routes: Routes = [
   { path: '', redirectTo: '/landing', pathMatch: 'full' },
-  { 
-    path: 'auth', 
+  {
+    path: 'auth',
     loadChildren: () => import('./auth/auth.module').then(m => m.AuthModule)
   },
   {
@@ -25,38 +25,33 @@ export const routes: Routes = [
         path: 'home',
         loadComponent: () => import('./dashboard/components/home/dashboard-home.component').then(m => m.DashboardHomeComponent)
       },
-      { 
-        path: 'my-account', 
-        loadComponent: () => import('./dashboard/components/my-account/my-account.component').then(m => m.MyAccountComponent)
+      {
+        path: 'buyer',
+        loadComponent: () => import('./dashboard/components/buyer-profile/buyer-profile.component').then(m => m.BuyerProfileComponent)
       },
       {
-        path: 'my-listings',
-        loadComponent: () => import('./dashboard/components/my-auctions/my-auctions.component').then(m => m.MyAuctionsComponent)
-      },
-      {
-        path: 'my-auctions',
-        loadComponent: () => import('./dashboard/components/my-auctions-bidder/my-auctions-bidder.component').then(m => m.MyAuctionsBidderComponent)
-      },
-      {
-        path: 'my-bets',
-        loadComponent: () => import('./dashboard/components/my-bets/my-bets.component').then(m => m.MyBetsComponent)
-      },
-      {
-        path: 'transactions',
-        loadComponent: () => import('./dashboard/components/transactions/dashboard-transactions.component').then(m => m.DashboardTransactionsComponent)
+        path: 'seller',
+        loadComponent: () => import('./dashboard/components/seller-profile/seller-profile.component').then(m => m.SellerProfileComponent)
       },
       {
         path: 'disputes',
         loadComponent: () => import('./dashboard/components/disputes/dashboard-disputes.component').then(m => m.DashboardDisputesComponent)
       },
       {
-        path: 'watchlist',
-        loadComponent: () => import('./dashboard/components/watchlist/dashboard-watchlist.component').then(m => m.DashboardWatchlistComponent)
-      },
-      {
         path: 'notifications',
         loadComponent: () => import('./dashboard/components/notifications/dashboard-notifications.component').then(m => m.DashboardNotificationsComponent)
-      }
+      },
+      {
+        path: 'settings',
+        loadComponent: () => import('./dashboard/components/dashboard-settings/dashboard-settings.component').then(m => m.DashboardSettingsComponent)
+      },
+      // Legacy redirects so old links still work
+      { path: 'my-account', redirectTo: 'settings', pathMatch: 'full' },
+      { path: 'my-bets', redirectTo: 'buyer', pathMatch: 'full' },
+      { path: 'watchlist', redirectTo: 'buyer', pathMatch: 'full' },
+      { path: 'transactions', redirectTo: 'buyer', pathMatch: 'full' },
+      { path: 'my-listings', redirectTo: 'seller', pathMatch: 'full' },
+      { path: 'my-auctions', redirectTo: 'seller', pathMatch: 'full' }
     ]
   },
   {

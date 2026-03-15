@@ -1,0 +1,121 @@
+<div class="settings-page">
+  <div class="page-header">
+    <h1 class="page-title">Settings</h1>
+    <p class="page-subtitle">Manage your account, preferences and payment setup</p>
+  </div>
+
+  <div class="settings-grid">
+    <!-- Profile Info -->
+    <div class="settings-card">
+      <div class="card-header">
+        <span class="card-icon">👤</span>
+        <h2 class="card-title">Profile Information</h2>
+      </div>
+      <div class="card-body">
+        @if (currentUser$ | async; as user) {
+          <div class="info-row">
+            <span class="info-label">Email</span>
+            <span class="info-value">{{ user.email || '—' }}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Display Name</span>
+            <span class="info-value">{{ user.displayName || '—' }}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Email Verified</span>
+            <span class="info-value">
+              <span class="status-badge" [class.verified]="user.emailVerified" [class.unverified]="!user.emailVerified">
+                {{ user.emailVerified ? '✓ Verified' : '✗ Not Verified' }}
+              </span>
+            </span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Buyer Score</span>
+            <span class="info-value score-value">
+              {{ buyerScore !== null ? (buyerScore | number:'1.1-1') + ' / 5' : '—' }}
+              @if (buyerReviewCount > 0) { <span class="review-count">({{ buyerReviewCount }} review{{ buyerReviewCount !== 1 ? 's' : '' }})</span> }
+            </span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Seller Score</span>
+            <span class="info-value score-value">
+              {{ sellerScore !== null ? (sellerScore | number:'1.1-1') + ' / 5' : '—' }}
+              @if (sellerReviewCount > 0) { <span class="review-count">({{ sellerReviewCount }} review{{ sellerReviewCount !== 1 ? 's' : '' }})</span> }
+            </span>
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- Language Preference -->
+    <div class="settings-card">
+      <div class="card-header">
+        <span class="card-icon">🌐</span>
+        <h2 class="card-title">Language Preference</h2>
+      </div>
+      <div class="card-body">
+        <p class="card-desc">Choose the language for your BidRoom experience. Your preference is saved to your account.</p>
+        <div class="lang-options">
+          @for (lang of languages; track lang.code) {
+            <label class="lang-option" [class.selected]="selectedLanguage === lang.code">
+              <input type="radio" name="language" [value]="lang.code" [(ngModel)]="selectedLanguage" />
+              <span class="lang-flag">{{ lang.flag }}</span>
+              <span class="lang-name">{{ lang.label }}</span>
+              @if (selectedLanguage === lang.code) { <span class="lang-check">✓</span> }
+            </label>
+          }
+        </div>
+        <button class="save-btn" (click)="saveLanguage()" [disabled]="langSaving">
+          @if (langSaving) { Saving… }
+          @else if (langSaved) { ✓ Saved! }
+          @else { Save Language }
+        </button>
+      </div>
+    </div>
+
+    <!-- Stripe Connect -->
+    <div class="settings-card settings-card-full">
+      <div class="card-header">
+        <span class="card-icon">💳</span>
+        <h2 class="card-title">Seller Payments (Stripe)</h2>
+      </div>
+      <div class="card-body">
+        @if (connectStatusMessage) {
+          <div class="connect-message">{{ connectStatusMessage }}</div>
+        }
+        @if (connectLoading) {
+          <p class="text-muted">Checking Stripe account status…</p>
+        } @else {
+          <div class="connect-status-row">
+            <span class="info-label">Stripe account status</span>
+            <span class="status-badge" [ngClass]="connectStatusClass">{{ connectStatusLabel }}</span>
+          </div>
+          @if (connectStatus?.onboarded) {
+            <p class="card-desc">Your Stripe account is active. Payouts will be sent to your connected bank account.</p>
+            @if (connectStatus?.chargesEnabled) {
+              <p class="text-success">Charges enabled · Payouts {{ connectStatus?.payoutsEnabled ? 'enabled' : 'pending' }}</p>
+            }
+            <button class="action-btn action-btn-secondary" (click)="startOnboarding()" [disabled]="connectOnboarding">
+              {{ connectOnboarding ? 'Redirecting…' : 'Update Stripe account' }}
+            </button>
+          } @else if (connectStatus?.connected) {
+            <p class="card-desc">Onboarding not yet complete. Please finish setting up to receive payouts.</p>
+            <button class="action-btn" (click)="startOnboarding()" [disabled]="connectOnboarding">
+              {{ connectOnboarding ? 'Redirecting…' : 'Complete Stripe setup' }}
+            </button>
+          } @else {
+            <p class="card-desc">Connect a Stripe account to receive payments from buyers. We'll create one for you — you just need to verify your identity and add bank account details.</p>
+            <ul class="feature-list">
+              <li>No Stripe account required — we create one for you</li>
+              <li>Identity verification + bank account details</li>
+              <li>Payouts sent directly to your bank (2-day schedule)</li>
+            </ul>
+            <button class="action-btn" (click)="startOnboarding()" [disabled]="connectOnboarding">
+              {{ connectOnboarding ? 'Redirecting to Stripe…' : 'Connect Stripe account' }}
+            </button>
+          }
+        }
+      </div>
+    </div>
+  </div>
+</div>

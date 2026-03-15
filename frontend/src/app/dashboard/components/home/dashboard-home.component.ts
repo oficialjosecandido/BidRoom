@@ -77,6 +77,13 @@ export class DashboardHomeComponent implements OnInit {
     return sorted.find(t => t.amount > this.balance) ?? null;
   }
 
+  /** Progress toward next tier (0–100). */
+  getMembershipProgressPercent(): number {
+    const next = this.nextTierToUnlock;
+    if (!next || next.amount <= 0) return 100;
+    return Math.min(100, Math.round((this.balance / next.amount) * 100));
+  }
+
   constructor() {
     this.currentUser$ = this.authService.currentUser$;
   }
@@ -129,12 +136,16 @@ export class DashboardHomeComponent implements OnInit {
     }
   }
 
-  openBalanceModal(): void {
+  openBalanceModal(preselectedAmount?: number): void {
     this.showBalanceModal = true;
-    this.balanceModalAmount = null;
-    this.balanceModalIsCustom = false;
-    this.balanceModalCustomInput = '';
+    this.balanceModalAmount = preselectedAmount ?? null;
+    this.balanceModalIsCustom = preselectedAmount == null;
+    this.balanceModalCustomInput = preselectedAmount != null ? '' : '';
     this.balanceModalError = null;
+  }
+
+  selectTierAndOpenModal(amount: number): void {
+    this.openBalanceModal(amount);
   }
 
   closeBalanceModal(): void {
@@ -229,6 +240,27 @@ export class DashboardHomeComponent implements OnInit {
 
   setRating(r: number): void {
     this.reviewScore = r;
+  }
+
+  getScoreEmoji(score: number): string {
+    if (score <= 2) return '😞';
+    if (score <= 4) return '😐';
+    if (score <= 6) return '🙂';
+    if (score <= 8) return '😊';
+    return '🎉';
+  }
+
+  getScoreLabel(score: number): string {
+    if (score <= 2) return 'Poor';
+    if (score <= 4) return 'Fair';
+    if (score <= 6) return 'Good';
+    if (score <= 8) return 'Great';
+    return 'Excellent!';
+  }
+
+  /** Path to buyer or seller profile (which has transactions tab) based on user's role in the transaction */
+  getTransactionLink(item: { myRole: 'seller' | 'buyer' }): string[] {
+    return ['/dashboard', item.myRole === 'buyer' ? 'buyer' : 'seller'];
   }
 
   submitReview(): void {

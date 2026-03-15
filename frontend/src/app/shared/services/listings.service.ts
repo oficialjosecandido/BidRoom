@@ -101,6 +101,8 @@ export interface ListingsResponse {
   total: number;
   limit: number;
   skip: number;
+  page: number;
+  totalPages: number;
 }
 
 export interface ListingsQueryParams {
@@ -115,6 +117,7 @@ export interface ListingsQueryParams {
   search?: string;
   limit?: number;
   skip?: number;
+  page?: number;
 }
 
 export interface StatsOverview {

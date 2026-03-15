@@ -1,40 +1,51 @@
 <div class="dashboard-home">
   <div class="page-header">
-    <h1 class="page-title">Dashboard</h1>
-    @if (customer?.user) {
-<p class="page-subtitle">
-      Welcome back, {{ customer?.user?.firstName }} {{ customer?.user?.lastName }}
-    </p>
-} @else {
-
-      @if (currentUser$ | async; as user) {
-<p class="page-subtitle">
-        Welcome back, {{ user.displayName || user.email || 'there' }}
-      </p>
-}
-    
-}
-    
+    <div class="page-header-main">
+      <div>
+        <h1 class="page-title">Dashboard</h1>
+        @if (customer?.user) {
+          <p class="page-subtitle">Welcome back, {{ customer?.user?.firstName }} {{ customer?.user?.lastName }}</p>
+        } @else if (currentUser$ | async; as user) {
+          <p class="page-subtitle">Welcome back, {{ user.displayName || user.email || 'there' }}</p>
+        }
+      </div>
+      @if (!isLoading) {
+        <div class="header-actions">
+          <button type="button" class="header-btn header-btn-primary" (click)="openBalanceModal()">
+            <span class="header-btn-icon">💰</span>
+            Add funds
+          </button>
+          <a routerLink="/listing/add" class="header-btn header-btn-secondary">
+            <span class="header-btn-icon">➕</span>
+            Create listing
+          </a>
+          <a routerLink="/dashboard/settings" class="header-btn header-btn-ghost">
+            <span class="header-btn-icon">👤</span>
+            Profile
+          </a>
+        </div>
+      }
+    </div>
   </div>
 
   <!-- Summary cards -->
   <div class="stats-grid">
-    <div class="stat-card stat-active">
+    <a class="stat-card stat-active stat-clickable" routerLink="/dashboard/seller">
       <div class="stat-icon">🔨</div>
       <div class="stat-content">
         <span class="stat-value">{{ activeListings.length }}</span>
         <span class="stat-label">Active listings</span>
       </div>
-      <a routerLink="/dashboard/my-listings" class="stat-link">View all</a>
-    </div>
-    <div class="stat-card stat-ended">
+      <span class="stat-link">View all →</span>
+    </a>
+    <a class="stat-card stat-ended stat-clickable" routerLink="/dashboard/seller">
       <div class="stat-icon">📦</div>
       <div class="stat-content">
         <span class="stat-value">{{ endedListings.length }}</span>
         <span class="stat-label">Ended / unavailable</span>
       </div>
-      <a routerLink="/dashboard/my-listings" class="stat-link">View all</a>
-    </div>
+      <span class="stat-link">View all →</span>
+    </a>
     <div class="stat-card stat-balance">
       <div class="stat-icon">💰</div>
       <div class="stat-content">
@@ -43,93 +54,104 @@
       </div>
       <button type="button" class="stat-action-btn" (click)="openBalanceModal()">Increase balance</button>
     </div>
-    <div class="stat-card stat-buyer-score">
+    <a class="stat-card stat-buyer-score stat-clickable" routerLink="/dashboard/buyer">
       <div class="stat-icon">🛒</div>
       <div class="stat-content">
         <span class="stat-value">{{ buyerScore !== null ? (buyerScore | number:'1.1-1') : '—' }}</span>
         <span class="stat-label">Buyer score</span>
         @if (buyerReviewCount > 0) {
-<span class="stat-meta">({{ buyerReviewCount }} review{{ buyerReviewCount !== 1 ? 's' : '' }})</span>
-}
+          <span class="stat-meta">({{ buyerReviewCount }} review{{ buyerReviewCount !== 1 ? 's' : '' }})</span>
+        } @else if (buyerScore === null) {
+          <span class="stat-meta">No reviews yet</span>
+        }
       </div>
-    </div>
-    <div class="stat-card stat-seller-score">
+      <span class="stat-link">View profile →</span>
+    </a>
+    <a class="stat-card stat-seller-score stat-clickable" routerLink="/dashboard/seller">
       <div class="stat-icon">⭐</div>
       <div class="stat-content">
         <span class="stat-value">{{ sellerScore !== null ? (sellerScore | number:'1.1-1') : '—' }}</span>
         <span class="stat-label">Seller score</span>
         @if (sellerReviewCount > 0) {
-<span class="stat-meta">({{ sellerReviewCount }} review{{ sellerReviewCount !== 1 ? 's' : '' }})</span>
-}
+          <span class="stat-meta">({{ sellerReviewCount }} review{{ sellerReviewCount !== 1 ? 's' : '' }})</span>
+        } @else if (sellerScore === null) {
+          <span class="stat-meta">No reviews yet</span>
+        }
       </div>
-    </div>
+      <span class="stat-link">View profile →</span>
+    </a>
   </div>
 
   <!-- Your membership level (prominent) -->
   @if (!isLoading) {
-<section class="section membership-level-section">
-    <div class="membership-level-card" [class.has-tier]="currentMembershipTier">
-      <div class="membership-level-badge" [attr.data-tier]="currentMembershipTier?.name?.toLowerCase()">
-        <span class="membership-level-label">Your membership</span>
-        @if (currentMembershipTier) {
-<span class="membership-level-name">{{ currentMembershipTier.name }}</span>
-}
-        @if (!currentMembershipTier) {
-<span class="membership-level-name none">—</span>
-}
-        @if (currentMembershipTier) {
-<p class="membership-level-hint">
-          Balance {{ formatPrice(balance) }} · based on your current balance
-        </p>
-}
-        @if (!currentMembershipTier && nextTierToUnlock) {
-<p class="membership-level-hint unlock">
-          Add at least {{ formatPrice(nextTierToUnlock.amount) }} to unlock {{ nextTierToUnlock.name }}.
-        </p>
-}
-        @if (!currentMembershipTier && !nextTierToUnlock) {
-<p class="membership-level-hint unlock">
-          Add funds to your balance to unlock membership tiers.
-        </p>
-}
+    <section class="section membership-level-section">
+      <div class="membership-level-card" [class.has-tier]="currentMembershipTier">
+        <div class="membership-level-badge" [attr.data-tier]="currentMembershipTier?.name?.toLowerCase()">
+          <span class="membership-level-label">Your membership</span>
+          @if (currentMembershipTier) {
+            <span class="membership-level-name">{{ currentMembershipTier.name }}</span>
+          }
+          @if (!currentMembershipTier) {
+            <span class="membership-level-name none">—</span>
+          }
+          @if (currentMembershipTier) {
+            <p class="membership-level-hint">Balance {{ formatPrice(balance) }} · based on your current balance</p>
+          }
+          @if (!currentMembershipTier && nextTierToUnlock) {
+            <p class="membership-level-hint unlock">Add at least {{ formatPrice(nextTierToUnlock.amount) }} to unlock {{ nextTierToUnlock.name }}.</p>
+          }
+          @if (!currentMembershipTier && !nextTierToUnlock) {
+            <p class="membership-level-hint unlock">Add funds to your balance to unlock membership tiers.</p>
+          }
+          @if (nextTierToUnlock && nextTierToUnlock.amount > 0) {
+            <div class="membership-progress">
+              <div class="membership-progress-bar">
+                <div class="membership-progress-fill" [style.width.%]="getMembershipProgressPercent()"></div>
+              </div>
+              <span class="membership-progress-label">{{ formatPrice(balance) }} / {{ formatPrice(nextTierToUnlock.amount) }} to {{ nextTierToUnlock.name }}</span>
+            </div>
+          }
+        </div>
+        <button type="button" class="membership-level-cta" (click)="openBalanceModal()">
+          {{ currentMembershipTier ? 'Increase balance' : 'Add funds' }}
+        </button>
       </div>
-      <button type="button" class="membership-level-cta" (click)="openBalanceModal()">
-        {{ currentMembershipTier ? 'Increase balance' : 'Add funds' }}
-      </button>
-    </div>
-  </section>
-}
+    </section>
+  }
 
   <!-- Membership tiers -->
   @if (!isLoading) {
-<section class="section membership-section">
-    <h2 class="section-title">Membership</h2>
-    <p class="membership-desc">Add funds to your balance to secure your membership tier. Your balance is used to participate in auctions and offers.</p>
-    <div class="membership-tiers">
-      @for (tier of membershipTiers; track tier) {
-<div
-        class="tier-card"
-       
-        [class.current-tier]="currentMembershipTier?.name === tier.name"
-      >
-        <span class="tier-name">{{ tier.name }}</span>
-        <span class="tier-price">{{ formatPrice(tier.amount) }}</span>
-        @if (currentMembershipTier?.name === tier.name) {
-<span class="tier-badge">Current tier</span>
-}
+    <section class="section membership-section">
+      <h2 class="section-title">Membership</h2>
+      <p class="membership-desc">Add funds to your balance to secure your membership tier. Your balance is used to participate in auctions and offers.</p>
+      <div class="membership-tiers">
+        @for (tier of membershipTiers; track tier) {
+          <button type="button" class="tier-card" [class.current-tier]="currentMembershipTier?.name === tier.name" (click)="selectTierAndOpenModal(tier.amount)">
+            <span class="tier-name">{{ tier.name }}</span>
+            <span class="tier-price">{{ formatPrice(tier.amount) }}</span>
+            @if (currentMembershipTier?.name === tier.name) {
+              <span class="tier-badge">Current tier</span>
+            } @else {
+              <span class="tier-add-hint">Add funds</span>
+            }
+          </button>
+        }
       </div>
-}
-    </div>
-  </section>
-}
+    </section>
+  }
 
   <!-- Top-up history -->
   @if (!isLoading) {
 <section class="section topup-history-section">
     <h2 class="section-title">Top-up history</h2>
     @if (topups.length === 0) {
-<p class="section-desc">You haven’t added any funds yet. Use “Increase balance” above to add funds to your account.</p>
-}
+        <div class="topup-empty">
+          <span class="topup-empty-icon">💳</span>
+          <p class="topup-empty-text">You haven't added any funds yet.</p>
+          <p class="topup-empty-hint">Your balance is used to participate in auctions and secure your membership tier.</p>
+          <button type="button" class="topup-empty-cta" (click)="openBalanceModal()">Add funds</button>
+        </div>
+      }
     @if (topups.length > 0) {
 <div class="topup-table-wrap">
       <table class="topup-table">
@@ -177,19 +199,28 @@
       <a routerLink="/dashboard/my-listings" class="section-link">Selling Items</a>
     </div>
     @if (activeListings.length > 0) {
-<div class="listings-preview">
-      @for (listing of activeListings.slice(0, 5); track listing) {
-<div class="listing-card">
-        <a [routerLink]="['/listing', listing.slug]" class="listing-title">{{ listing.title }}</a>
-        <div class="listing-meta">
-          <span class="listing-price">{{ formatPrice(listing.currentPrice) }}</span>
-          <span class="listing-bids">{{ listing.bidCount }} bid(s)</span>
-          <span class="listing-end">Ends {{ formatDate(listing.endDate) }}</span>
-        </div>
+      <div class="listings-preview listings-grid">
+        @for (listing of activeListings.slice(0, 5); track listing) {
+          <a [routerLink]="['/listing', listing.slug]" class="listing-card listing-card-linked">
+            <div class="listing-thumb">
+              @if (listing.images.length) {
+                <img [src]="listing.images[0]" [alt]="listing.title" />
+              } @else {
+                <span class="listing-thumb-placeholder">📦</span>
+              }
+            </div>
+            <div class="listing-body">
+              <span class="listing-title">{{ listing.title }}</span>
+              <div class="listing-meta">
+                <span class="listing-price">{{ formatPrice(listing.currentPrice) }}</span>
+                <span class="listing-bids">{{ listing.bidCount }} bid(s)</span>
+                <span class="listing-end">Ends {{ formatDate(listing.endDate) }}</span>
+              </div>
+            </div>
+          </a>
+        }
       </div>
-}
-    </div>
-}
+    }
     @if (activeListings.length === 0) {
 <div class="empty-preview">
       <p>You have no active listings.</p>
@@ -206,20 +237,29 @@
       <h2 class="section-title">Recently ended</h2>
       <a routerLink="/dashboard/my-listings" class="section-link">Selling Items</a>
     </div>
-    <div class="listings-preview">
+    <div class="listings-preview listings-grid">
       @for (listing of endedListings.slice(0, 3); track listing) {
-<div class="listing-card ended">
-        <a [routerLink]="['/listing', listing.slug]" class="listing-title">{{ listing.title }}</a>
-        <div class="listing-meta">
-          @if (listing.auctionFormat === 'best-offer' && (listing.currentPrice == null || listing.currentPrice === 0)) {
-          <span class="listing-price">No offers yet</span>
-          } @else {
-          <span class="listing-price">{{ formatPrice(listing.currentPrice) }}</span>
-          }
-          <span class="listing-status" [class]="'status-' + listing.status">{{ listing.status }}</span>
-        </div>
-      </div>
-}
+        <a [routerLink]="['/listing', listing.slug]" class="listing-card listing-card-linked ended">
+          <div class="listing-thumb">
+            @if (listing.images.length) {
+              <img [src]="listing.images[0]" [alt]="listing.title" />
+            } @else {
+              <span class="listing-thumb-placeholder">📦</span>
+            }
+          </div>
+          <div class="listing-body">
+            <span class="listing-title">{{ listing.title }}</span>
+            <div class="listing-meta">
+              @if (listing.auctionFormat === 'best-offer' && (listing.currentPrice == null || listing.currentPrice === 0)) {
+                <span class="listing-price">No offers yet</span>
+              } @else {
+                <span class="listing-price">{{ formatPrice(listing.currentPrice) }}</span>
+              }
+              <span class="listing-status" [class]="'status-' + listing.status">{{ listing.status }}</span>
+            </div>
+          </div>
+        </a>
+      }
     </div>
   </section>
 }
@@ -233,59 +273,87 @@
     </div>
     <div class="pending-reviews-list">
       @for (item of pendingReviews; track item) {
-<div class="pending-review-card">
-        <div class="pending-review-info">
-          <span class="pending-listing-title">{{ item.listingTitle }}</span>
-          <span class="pending-other-party">Review {{ item.otherPartyName }} as {{ item.theirRole === 'seller' ? 'seller' : 'buyer' }}</span>
+        <div class="pending-review-card">
+          <div class="pending-review-info">
+            <span class="pending-listing-title">{{ item.listingTitle }}</span>
+            <span class="pending-other-party">
+              Review {{ item.otherPartyName }} as
+              <span class="role-badge" [class.role-buyer]="item.theirRole === 'buyer'" [class.role-seller]="item.theirRole === 'seller'">
+                {{ item.theirRole }}
+              </span>
+            </span>
+          </div>
+          <button type="button" class="btn btn-review" (click)="openReviewModal(item)">
+            Leave review
+          </button>
         </div>
-        <button type="button" class="btn btn-primary btn-small" (click)="openReviewModal(item)">
-          Leave review
-        </button>
-      </div>
-}
+      }
     </div>
   </section>
 }
 
   <!-- Review modal -->
   @if (showReviewModal) {
-<div class="modal-overlay" (click)="closeReviewModal()">
-    @if (reviewTarget) {
-<div class="modal-content review-modal" (click)="$event.stopPropagation()">
-      <div class="modal-header">
-        <h3 class="modal-title">Leave a review</h3>
-        <button type="button" class="modal-close" (click)="closeReviewModal()" aria-label="Close">×</button>
-      </div>
-      <div class="modal-body">
-        <p class="review-target-text">Review <strong>{{ reviewTarget.otherPartyName }}</strong> (as {{ reviewTarget.theirRole }}) for <em>{{ reviewTarget.listingTitle }}</em></p>
-        <fieldset class="review-score-section">
-          <legend class="review-score-label">Score (1–10)</legend>
-          <div class="review-score-buttons">
-            @for (i of [1,2,3,4,5,6,7,8,9,10]; track i) {
-<button type="button" class="score-btn" (click)="setRating(i)" [class.selected]="i === reviewScore">
-              {{ i }}
-            </button>
-}
+    <div class="modal-overlay review-modal-overlay" (click)="closeReviewModal()">
+      @if (reviewTarget) {
+        <div class="modal-content review-modal" (click)="$event.stopPropagation()">
+          <div class="modal-header">
+            <h3 class="modal-title">Leave a review</h3>
+            <button type="button" class="modal-close" (click)="closeReviewModal()" aria-label="Close">×</button>
           </div>
-        </fieldset>
-        <div class="comment-row">
-          <label class="comment-label" for="review-description">Description (optional, private)</label>
-          <textarea id="review-description" class="comment-input" [(ngModel)]="reviewDescription" rows="3" maxlength="2000" placeholder="Your feedback is private and not visible to other users."></textarea>
+          <div class="modal-body">
+            <div class="review-target-card">
+              <span class="review-target-label">You're reviewing</span>
+              <span class="review-target-name">{{ reviewTarget.otherPartyName }}</span>
+              <span class="review-target-detail">as {{ reviewTarget.theirRole }} for {{ reviewTarget.listingTitle }}</span>
+            </div>
+            <a [routerLink]="getTransactionLink(reviewTarget)" [queryParams]="{ tab: 'transactions' }" [fragment]="reviewTarget.transactionId ? 'transaction-' + reviewTarget.transactionId : undefined" class="review-view-transaction-btn" (click)="closeReviewModal()">
+              <span class="btn-icon">🔗</span>
+              View transaction details
+            </a>
+
+            <div class="review-score-section">
+              <label class="review-score-label">How would you rate this transaction?</label>
+              <div class="review-score-buttons">
+                @for (i of [1,2,3,4,5,6,7,8,9,10]; track i) {
+                  <button type="button" class="score-btn" [class.score-1]="i <= 2" [class.score-mid]="i >= 3 && i <= 6" [class.score-high]="i >= 7" (click)="setRating(i)" [class.selected]="i === reviewScore">
+                    <span class="score-num">{{ i }}</span>
+                    <span class="score-emoji">{{ getScoreEmoji(i) }}</span>
+                  </button>
+                }
+              </div>
+              @if (reviewScore > 0) {
+                <div class="review-score-reaction">
+                  <span class="reaction-emoji">{{ getScoreEmoji(reviewScore) }}</span>
+                  <span class="reaction-label">{{ getScoreLabel(reviewScore) }}</span>
+                </div>
+              } @else {
+                <span class="review-score-hint">Tap a number to rate</span>
+              }
+            </div>
+
+            <div class="comment-row">
+              <label class="comment-label" for="review-description">
+                <span class="comment-label-text">Your review</span>
+                <span class="comment-label-badge">Visible to others</span>
+              </label>
+              <textarea id="review-description" class="comment-input" [(ngModel)]="reviewDescription" rows="3" maxlength="2000" placeholder="Share your experience with others..."></textarea>
+            </div>
+
+            @if (reviewError) {
+              <p class="review-error">{{ reviewError }}</p>
+            }
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" (click)="closeReviewModal()">Cancel</button>
+            <button type="button" class="btn btn-primary" (click)="submitReview()" [disabled]="reviewSubmitting">
+              {{ reviewSubmitting ? 'Submitting…' : 'Submit review' }}
+            </button>
+          </div>
         </div>
-        @if (reviewError) {
-<p class="review-error">{{ reviewError }}</p>
-}
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" (click)="closeReviewModal()">Cancel</button>
-        <button type="button" class="btn btn-primary" (click)="submitReview()" [disabled]="reviewSubmitting">
-          {{ reviewSubmitting ? 'Submitting…' : 'Submit review' }}
-        </button>
-      </div>
+      }
     </div>
-}
-  </div>
-}
+  }
 
   <!-- Increase balance modal -->
   @if (showBalanceModal) {
@@ -349,21 +417,17 @@
   </div>
 }
 
-  <!-- Quick links -->
+  <!-- Quick links (secondary) -->
   @if (!isLoading) {
-<div class="quick-links">
-    <a routerLink="/dashboard/my-account" class="quick-link">
-      <span class="quick-icon">👤</span>
-      <span>Profile &amp; settings</span>
-    </a>
-    <a routerLink="/dashboard/my-listings" class="quick-link">
-      <span class="quick-icon">📦</span>
-      <span>Selling items</span>
-    </a>
-    <a routerLink="/listing/add" class="quick-link">
-      <span class="quick-icon">➕</span>
-      <span>Create listing</span>
-    </a>
-  </div>
-}
+    <div class="quick-links">
+      <a routerLink="/dashboard/seller" class="quick-link">
+        <span class="quick-icon">📦</span>
+        <span>Selling items</span>
+      </a>
+      <a routerLink="/dashboard/buyer" class="quick-link">
+        <span class="quick-icon">🛒</span>
+        <span>Buying &amp; watchlist</span>
+      </a>
+    </div>
+  }
 </div>

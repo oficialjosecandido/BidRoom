@@ -76,6 +76,13 @@ export class DashboardTransactionsComponent implements OnInit {
   ngOnInit(): void {
     this.loadTransactions();
 
+    // Scroll to transaction when navigating with fragment (e.g. from review modal)
+    this.route.fragment.subscribe(fragment => {
+      if (fragment?.startsWith('transaction-')) {
+        this.scrollToTransactionAfterLoad(fragment);
+      }
+    });
+
     // Handle return from Stripe Checkout
     this.route.queryParams.subscribe(params => {
       const payment = params['stripe_payment'];
@@ -97,12 +104,35 @@ export class DashboardTransactionsComponent implements OnInit {
       next: (res) => {
         this.transactions = res.transactions || [];
         this.isLoading = false;
+        this.scrollToTransactionFromFragment();
       },
       error: (err) => {
         this.error = err?.error?.message || err?.message || 'Failed to load transactions';
         this.isLoading = false;
       }
     });
+  }
+
+  private scrollToTransactionAfterLoad(fragment: string): void {
+    const scroll = () => {
+      const el = document.getElementById(fragment);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    };
+    if (!this.isLoading && this.transactions.length > 0) {
+      setTimeout(scroll, 100);
+    }
+  }
+
+  private scrollToTransactionFromFragment(): void {
+    const fragment = this.route.snapshot.fragment;
+    if (fragment?.startsWith('transaction-')) {
+      setTimeout(() => {
+        const el = document.getElementById(fragment);
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 150);
+    }
   }
 
   isBuyer(t: Transaction): boolean {

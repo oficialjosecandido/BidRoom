@@ -138,7 +138,7 @@
                 </div>
                 <div class="listing-bid-info">
                   <span class="bid-count">{{ listing.bidCount }} {{ listing.bidCount === 1 ? ('listingList.bid' | translate) : ('listingList.bids' | translate) }}</span>
-                  <span class="time-remaining">⏱️ {{ formatTimeRemaining(listing) }}</span>
+                  <span class="time-remaining" [ngClass]="timerClass(listing)">⏱ {{ formatTimeRemaining(listing) }}</span>
                 </div>
               </div>
             </div>
@@ -154,6 +154,31 @@
         <h3>{{ 'listingList.noListingsFound' | translate }}</h3>
         <p>{{ 'listingList.tryDifferentSearch' | translate }}</p>
         <button class="btn btn-primary" (click)="clearCategory(); clearSearch()">{{ 'listingList.clearAllFilters' | translate }}</button>
+      </div>
+    }
+
+
+    <!-- Pagination -->
+    @if (!loading && !error && totalPages > 1) {
+      <div class="pagination">
+        <div class="pagination-info">
+          {{ pageFrom }}–{{ pageTo }} of {{ total }} {{ 'listingList.listings' | translate }}
+        </div>
+        <div class="pagination-controls">
+          <button class="page-btn page-btn-nav" [disabled]="currentPage === 1" (click)="goToPage(currentPage - 1)">‹</button>
+          @if (visiblePages[0] > 1) {
+            <button class="page-btn" (click)="goToPage(1)">1</button>
+            @if (visiblePages[0] > 2) { <span class="page-ellipsis">…</span> }
+          }
+          @for (p of visiblePages; track p) {
+            <button class="page-btn" [class.active]="p === currentPage" (click)="goToPage(p)">{{ p }}</button>
+          }
+          @if (visiblePages[visiblePages.length - 1] < totalPages) {
+            @if (visiblePages[visiblePages.length - 1] < totalPages - 1) { <span class="page-ellipsis">…</span> }
+            <button class="page-btn" (click)="goToPage(totalPages)">{{ totalPages }}</button>
+          }
+          <button class="page-btn page-btn-nav" [disabled]="currentPage === totalPages" (click)="goToPage(currentPage + 1)">›</button>
+        </div>
       </div>
     }
 

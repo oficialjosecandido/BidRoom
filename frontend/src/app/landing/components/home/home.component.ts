@@ -149,6 +149,15 @@ export class HomeComponent implements OnInit, AfterViewInit {
       .slice(0, 3);
   }
 
+  timerClass(listing: Listing): string {
+    if (!listing.timeRemaining) return '';
+    const { ended, days, hours } = listing.timeRemaining;
+    if (ended) return '';
+    if (days === 0 && hours < 1) return 'timer-urgent';
+    if (days === 0 && hours < 24) return 'timer-soon';
+    return 'timer-ok';
+  }
+
   viewListing(slug: string | undefined): void {
     if (!slug) {
       console.error('Listing slug is undefined');

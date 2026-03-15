@@ -49,6 +49,12 @@ const customerSchema = new mongoose.Schema({
   creditedStripeSessionIds: {
     type: [String],
     default: []
+  },
+  /** Preferred UI language: en, pt, es, fr */
+  language: {
+    type: String,
+    enum: ['en', 'pt', 'es', 'fr'],
+    default: 'en'
   }
 }, {
   timestamps: true,

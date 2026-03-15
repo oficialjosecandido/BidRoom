@@ -75,6 +75,7 @@ router.get('/profile', authenticateToken, async (req, res) => {
       },
       balance: customer.balance ?? 0,
       reviewCount: customer.reviewCount ?? 0,
+      language: customer.language || 'en',
       buyerScore,
       sellerScore,
       buyerReviewCount,
@@ -86,6 +87,26 @@ router.get('/profile', authenticateToken, async (req, res) => {
       error: 'Failed to load customer information',
       message: error.message
     });
+  }
+});
+
+/**
+ * PATCH /api/customers/language
+ * Update the authenticated user's preferred language.
+ */
+router.patch('/language', authenticateToken, async (req, res) => {
+  try {
+    const { uid } = req.user;
+    const { language } = req.body;
+    const allowed = ['en', 'pt', 'es', 'fr'];
+    if (!allowed.includes(language)) {
+      return res.status(400).json({ error: 'Invalid language code' });
+    }
+    await Customer.updateOne({ uid }, { $set: { language } });
+    res.json({ language });
+  } catch (error) {
+    console.error('Error updating language:', error);
+    res.status(500).json({ error: 'Failed to update language' });
   }
 });
 

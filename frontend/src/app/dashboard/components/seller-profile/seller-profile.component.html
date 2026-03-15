@@ -1,0 +1,45 @@
+<div class="profile-page">
+  <div class="profile-header">
+    <div class="profile-header-content">
+      <div class="profile-avatar seller-avatar">📦</div>
+      <div class="profile-info">
+        <h1 class="profile-title">Seller Profile</h1>
+        <p class="profile-subtitle">Your auctions, sales and dispute history</p>
+        @if (sellerScore !== null || sellerReviewCount > 0) {
+          <div class="seller-rating">
+            <span class="rating-stars">★ {{ sellerScore !== null ? (sellerScore | number:'1.1-1') : '—' }}</span>
+            <span class="rating-count">({{ sellerReviewCount }} review{{ sellerReviewCount !== 1 ? 's' : '' }})</span>
+          </div>
+        } @else {
+          <div class="seller-rating no-reviews">
+            <span>No reviews yet</span>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+
+  <div class="tab-bar">
+    <button class="tab-btn" [class.active]="activeTab === 'auctions'" (click)="setTab('auctions')">
+      <span class="tab-icon">🔨</span> My Auctions
+    </button>
+    <button class="tab-btn" [class.active]="activeTab === 'transactions'" (click)="setTab('transactions')">
+      <span class="tab-icon">💳</span> Transactions
+    </button>
+    <button class="tab-btn" [class.active]="activeTab === 'disputes'" (click)="setTab('disputes')">
+      <span class="tab-icon">⚖️</span> Disputes
+    </button>
+  </div>
+
+  <div class="tab-content">
+    @if (activeTab === 'auctions') {
+      <app-my-auctions></app-my-auctions>
+    }
+    @if (activeTab === 'transactions') {
+      <app-dashboard-transactions></app-dashboard-transactions>
+    }
+    @if (activeTab === 'disputes') {
+      <app-dashboard-disputes></app-dashboard-disputes>
+    }
+  </div>
+</div>

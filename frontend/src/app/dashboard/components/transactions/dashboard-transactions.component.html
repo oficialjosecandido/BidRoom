@@ -44,7 +44,7 @@
       }
 
       @for (t of transactions; track t._id) {
-        <div class="transaction-card">
+        <div class="transaction-card" [id]="'transaction-' + t._id">
           <a [routerLink]="getListingUrl(t)" class="card-main">
             <div class="card-col card-col-image">
               <img [src]="getListingImage(t)" [alt]="t.listing.title" />
