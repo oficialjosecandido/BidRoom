@@ -10,6 +10,28 @@ import { CATEGORIES, Category } from '../../../shared/config/categories.config';
 
 const PAGE_SIZE = 20;
 
+export const CONDITION_OPTIONS: { key: string; label: string }[] = [
+  { key: 'new',       label: 'New' },
+  { key: 'like-new',  label: 'Like New' },
+  { key: 'very-good', label: 'Very Good' },
+  { key: 'good',      label: 'Good' },
+  { key: 'fair',      label: 'Fair' },
+  { key: 'for-parts', label: 'For Parts' },
+];
+
+export const SHIPPING_OPTIONS: { key: string; label: string }[] = [
+  { key: 'worldwide',   label: 'Worldwide' },
+  { key: 'regional',    label: 'Regional' },
+  { key: 'local-pickup', label: 'Local Pickup' },
+];
+
+export const LOCATION_OPTIONS: { key: string; label: string }[] = [
+  { key: 'europe',        label: 'Europe' },
+  { key: 'north-america', label: 'North America' },
+  { key: 'asia',          label: 'Asia' },
+  { key: 'other',         label: 'Other' },
+];
+
 @Component({
   selector: 'app-listing-list',
   standalone: true,
@@ -28,6 +50,7 @@ export class ListingListComponent implements OnInit {
   currentPage = 1;
   loading = true;
   error: string | null = null;
+  filtersOpen = false;
 
   sortBy: 'deadline' | 'newest' | 'highest' | 'lowest' | 'bids' = 'deadline';
   selectedCategory = '';
@@ -35,8 +58,18 @@ export class ListingListComponent implements OnInit {
   searchQuery = '';
   searchInput = '';
 
+  // New filters
+  selectedConditions: Set<string> = new Set();
+  selectedShipping: Set<string> = new Set();
+  selectedLocation = '';
+  minPrice = '';
+  maxPrice = '';
+
   readonly categories: Category[] = CATEGORIES;
   readonly pageSize = PAGE_SIZE;
+  readonly conditionOptions = CONDITION_OPTIONS;
+  readonly shippingOptions = SHIPPING_OPTIONS;
+  readonly locationOptions = LOCATION_OPTIONS;
 
   get subCategories(): string[] {
     const cat = this.categories.find(c => c.id === this.selectedCategory);
@@ -58,6 +91,14 @@ export class ListingListComponent implements OnInit {
   get pageFrom(): number { return this.total === 0 ? 0 : (this.currentPage - 1) * this.pageSize + 1; }
   get pageTo(): number { return Math.min(this.currentPage * this.pageSize, this.total); }
 
+  get hasActiveFilters(): boolean {
+    return !!(this.selectedConditions.size || this.selectedShipping.size || this.selectedLocation || this.minPrice || this.maxPrice);
+  }
+
+  get activeFilterCount(): number {
+    return this.selectedConditions.size + this.selectedShipping.size + (this.selectedLocation ? 1 : 0) + (this.minPrice || this.maxPrice ? 1 : 0);
+  }
+
   ngOnInit(): void {
     this.route.queryParams.subscribe(params => {
       this.selectedCategory = params['category'] || '';
@@ -66,6 +107,11 @@ export class ListingListComponent implements OnInit {
       this.searchInput = this.searchQuery;
       this.sortBy = params['sort'] || 'deadline';
       this.currentPage = parseInt(params['page'] || '1', 10) || 1;
+      this.selectedConditions = new Set((params['condition'] || '').split(',').filter(Boolean));
+      this.selectedShipping = new Set((params['shipping'] || '').split(',').filter(Boolean));
+      this.selectedLocation = params['location'] || '';
+      this.minPrice = params['minPrice'] || '';
+      this.maxPrice = params['maxPrice'] || '';
       this.loadListings();
     });
   }
@@ -84,6 +130,11 @@ export class ListingListComponent implements OnInit {
     if (this.selectedCategory) params.category = this.selectedCategory;
     if (this.selectedSubCategory) params.subCategory = this.selectedSubCategory;
     if (this.searchQuery) params.search = this.searchQuery;
+    if (this.selectedConditions.size) params.condition = [...this.selectedConditions].join(',');
+    if (this.selectedShipping.size) params.shipping = [...this.selectedShipping].join(',');
+    if (this.selectedLocation) params.location = this.selectedLocation;
+    if (this.minPrice) params.minPrice = parseFloat(this.minPrice);
+    if (this.maxPrice) params.maxPrice = parseFloat(this.maxPrice);
 
     this.listingsService.getListings(params).subscribe({
       next: (response) => {
@@ -106,6 +157,11 @@ export class ListingListComponent implements OnInit {
     if (this.searchQuery) queryParams['search'] = this.searchQuery;
     if (this.sortBy !== 'deadline') queryParams['sort'] = this.sortBy;
     if (this.currentPage > 1) queryParams['page'] = String(this.currentPage);
+    if (this.selectedConditions.size) queryParams['condition'] = [...this.selectedConditions].join(',');
+    if (this.selectedShipping.size) queryParams['shipping'] = [...this.selectedShipping].join(',');
+    if (this.selectedLocation) queryParams['location'] = this.selectedLocation;
+    if (this.minPrice) queryParams['minPrice'] = this.minPrice;
+    if (this.maxPrice) queryParams['maxPrice'] = this.maxPrice;
     this.router.navigate([], { queryParams, replaceUrl: true });
   }
 
@@ -146,6 +202,38 @@ export class ListingListComponent implements OnInit {
     this.navigate();
   }
 
+  toggleCondition(key: string): void {
+    if (this.selectedConditions.has(key)) {
+      this.selectedConditions.delete(key);
+    } else {
+      this.selectedConditions.add(key);
+    }
+    this.selectedConditions = new Set(this.selectedConditions);
+    this.currentPage = 1;
+    this.navigate();
+  }
+
+  toggleShipping(key: string): void {
+    if (this.selectedShipping.has(key)) {
+      this.selectedShipping.delete(key);
+    } else {
+      this.selectedShipping.add(key);
+    }
+    this.selectedShipping = new Set(this.selectedShipping);
+    this.currentPage = 1;
+    this.navigate();
+  }
+
+  onLocationChange(): void {
+    this.currentPage = 1;
+    this.navigate();
+  }
+
+  onPriceChange(): void {
+    this.currentPage = 1;
+    this.navigate();
+  }
+
   clearSearch(): void {
     this.searchQuery = '';
     this.searchInput = '';
@@ -164,6 +252,28 @@ export class ListingListComponent implements OnInit {
     this.selectedSubCategory = '';
     this.currentPage = 1;
     this.navigate();
+  }
+
+  clearAllFilters(): void {
+    this.selectedConditions = new Set();
+    this.selectedShipping = new Set();
+    this.selectedLocation = '';
+    this.minPrice = '';
+    this.maxPrice = '';
+    this.currentPage = 1;
+    this.navigate();
+  }
+
+  conditionLabel(key: string): string {
+    return this.conditionOptions.find(o => o.key === key)?.label ?? key;
+  }
+
+  shippingLabel(key: string): string {
+    return this.shippingOptions.find(o => o.key === key)?.label ?? key;
+  }
+
+  locationLabel(key: string): string {
+    return this.locationOptions.find(o => o.key === key)?.label ?? key;
   }
 
   viewListing(slug: string | undefined): void {

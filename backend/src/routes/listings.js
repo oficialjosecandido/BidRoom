@@ -24,6 +24,9 @@ router.get('/', async (req, res) => {
       listingType,
       status = 'active',
       search,
+      condition,
+      shipping,
+      location,
       limit = 20,
       skip,
       page
@@ -67,6 +70,49 @@ router.get('/', async (req, res) => {
         { title: { $regex: search, $options: 'i' } },
         { description: { $regex: search, $options: 'i' } }
       ];
+    }
+
+    if (condition) {
+      const conditionMap = {
+        'new': 'New',
+        'like-new': 'Used - Excellent',
+        'very-good': 'Used - Very Good',
+        'good': 'Used - Good',
+        'fair': 'Used - Fair',
+        'for-parts': 'For Parts or Not Working'
+      };
+      const selectedConditions = condition.split(',').map(c => conditionMap[c.trim()]).filter(Boolean);
+      if (selectedConditions.length > 0) {
+        query.condition = { $in: selectedConditions };
+      }
+    }
+
+    if (shipping) {
+      const shippingOptionMap = {
+        'worldwide': ['flat-rate', 'calculated', 'free'],
+        'regional': ['calculated'],
+        'local-pickup': ['local-pickup']
+      };
+      const selectedShipping = shipping.split(',');
+      const shippingOptions = [...new Set(selectedShipping.flatMap(s => shippingOptionMap[s.trim()] || []))];
+      if (shippingOptions.length > 0) {
+        query.shippingOption = { $in: shippingOptions };
+      }
+    }
+
+    if (location) {
+      const EUROPE = ['AL','AT','BA','BE','BG','BY','CH','CY','CZ','DE','DK','EE','ES','FI','FR','GB','GR','HR','HU','IE','IS','IT','LT','LU','LV','MD','ME','MK','MT','NL','NO','PL','PT','RO','RS','SE','SI','SK','UA','XK'];
+      const NORTH_AMERICA = ['CA','MX','US'];
+      const ASIA = ['BD','CN','HK','ID','IN','JP','KH','KR','LA','LK','MM','MY','NP','PH','PK','SG','TH','TW','VN'];
+      if (location === 'europe') {
+        query.shippingOriginCountry = { $in: EUROPE };
+      } else if (location === 'north-america') {
+        query.shippingOriginCountry = { $in: NORTH_AMERICA };
+      } else if (location === 'asia') {
+        query.shippingOriginCountry = { $in: ASIA };
+      } else if (location === 'other') {
+        query.shippingOriginCountry = { $nin: [...EUROPE, ...NORTH_AMERICA, ...ASIA] };
+      }
     }
 
     // Build sort object

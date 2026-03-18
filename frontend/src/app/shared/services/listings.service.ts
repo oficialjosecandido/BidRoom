@@ -115,6 +115,12 @@ export interface ListingsQueryParams {
   listingType?: 'Promoted' | 'Verified' | 'Standard';
   status?: string;
   search?: string;
+  /** Comma-separated condition keys: new, like-new, very-good, good, fair, for-parts */
+  condition?: string;
+  /** Comma-separated shipping types: worldwide, regional, local-pickup */
+  shipping?: string;
+  /** Region: europe, north-america, asia, other */
+  location?: string;
   limit?: number;
   skip?: number;
   page?: number;
