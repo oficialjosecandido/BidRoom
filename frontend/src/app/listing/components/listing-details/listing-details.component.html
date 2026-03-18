@@ -165,7 +165,7 @@
                 <div class="ended-text">
                   <h4>{{ (listing.auctionFormat === 'best-offer' ? 'listingDetails.time.listingEnded' : 'listingDetails.time.auctionEnded') | translate }}</h4>
                   @if (listing.auctionFormat === 'highest-bid' && isOwnListing && getEndedBidCount() === 0) { <p>{{ 'listingDetails.ended.noBidsSeller' | translate }}</p> }
-                  @if (listing.auctionFormat === 'highest-bid' && isOwnListing && getEndedBidCount() > 0 && !listing.winner && !listing.allowPrivateRoom && !canCreatePrivateRoom() && !isPrivateRoomEnded()) { <p>{{ 'listingDetails.ended.selectWinner' | translate }}</p> }
+                  @if (listing.auctionFormat === 'highest-bid' && isOwnListing && getEndedBidCount() > 0 && !listing.winner && !hasPrivateRoom() && !isPrivateRoomEnded()) { <p>{{ 'listingDetails.ended.selectWinner' | translate }}</p> }
                   @if (listing.auctionFormat === 'highest-bid' && isOwnListing && listing.winner) { <p>{{ 'listingDetails.ended.winnerSelected' | translate }}</p> }
                   @if (listing.auctionFormat === 'best-offer' && isOwnListing && !offersLoading && offers.length === 0) { <p>{{ 'listingDetails.ended.noOffersSeller' | translate }}</p> }
                   @if (listing.auctionFormat === 'best-offer' && isOwnListing && offers.length > 0) { <p>{{ getBestOfferClosedMessage() }}</p> }
@@ -234,7 +234,7 @@
               {{ 'listingDetails.actions.createPrivateRoom' | translate }}
             </button>
             }
-            @if (isOwnListing && isAuctionEnded() && !listing.allowPrivateRoom && !hasPrivateRoom() && getEndedBidCount() > 0 && !listing.winner && !canCreatePrivateRoom() && !isPrivateRoomEnded()) {
+            @if (isOwnListing && isAuctionEnded() && !hasPrivateRoom() && getEndedBidCount() > 0 && !listing.winner && !isPrivateRoomEnded()) {
             <button class="btn btn-primary btn-large" (click)="openSelectWinnerModal()">
               {{ 'listingDetails.actions.selectWinner' | translate }}
             </button>
@@ -388,7 +388,7 @@
         @if (activeTab === 'bids' && listing.auctionFormat === 'highest-bid') {
         <div class="tab-content">
           <div class="bid-history">
-            @if (isOwnListing && isAuctionEnded() && !listing.allowPrivateRoom && !listing.winner && bids.length > 0) {
+            @if (isOwnListing && isAuctionEnded() && !hasPrivateRoom() && !listing.winner && bids.length > 0 && !isPrivateRoomEnded()) {
             <div class="bid-history-seller-note">
               <span class="seller-note-icon">ℹ️</span>
               <p>{{ 'listingDetails.bidHistory.sellerNote' | translate }}</p>
@@ -442,7 +442,7 @@
               @if (bids.length > 0) {
               <div class="bids-list">
                 @for (bid of bids; track bid._id; let i = $index) {
-                <div class="bid-item" [class.top-bid]="i === 0" [class.bid-new]="newBidIds.has(bid._id)" [class.bid-not-eligible]="isOwnListing && isAuctionEnded() && !listing.allowPrivateRoom && !listing.winner && !isPrivateRoomEnded() && !canSelectBidAsWinner(bid)">
+                <div class="bid-item" [class.top-bid]="i === 0" [class.bid-new]="newBidIds.has(bid._id)" [class.bid-not-eligible]="isOwnListing && isAuctionEnded() && !hasPrivateRoom() && !listing.winner && !isPrivateRoomEnded() && !canSelectBidAsWinner(bid)">
                   <div class="bid-item-left">
                     <div class="bid-avatar-wrap">
                       <div class="bid-rank">{{ i + 1 }}</div>
@@ -520,7 +520,7 @@
                           }
                           @if (bid.bidType !== 'manual') { <span class="bid-type">{{ bid.bidType }}</span> }
                         </div>
-                        @if (isOwnListing && isAuctionEnded() && !listing.allowPrivateRoom && !listing.winner && !isPrivateRoomEnded()) {
+                        @if (isOwnListing && isAuctionEnded() && !hasPrivateRoom() && !listing.winner && !isPrivateRoomEnded()) {
                         <div class="bid-select-winner-wrap">
                           @if (canSelectBidAsWinner(bid)) {
                           <button type="button" class="btn btn-primary btn-small bid-select-winner-btn" (click)="selectWinner(bid._id)" [disabled]="selectingWinner">
