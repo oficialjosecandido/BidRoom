@@ -146,7 +146,12 @@
     "clearAllFilters": "Limpiar todos los filtros",
     "featured": "Destacado",
     "verified": "Verificado",
-    "endingSoon": "Termina Pronto"
+    "endingSoon": "Termina Pronto",
+    "condition": "Condición",
+    "price": "Precio",
+    "location": "Ubicación",
+    "anyLocation": "Cualquier ubicación",
+    "shipping": "Envío"
   },
   "categories": {
     "title": "Explorar por Categoría",
@@ -208,7 +213,10 @@
       "auctionEndedWinner": "Subasta terminada. Se seleccionó un ganador.",
       "auctionEnded": "Subasta terminada.",
       "listingSold": "Subasta terminada. Artículo vendido.",
-      "listingEnded": "Este anuncio ha terminado."
+      "listingEnded": "Este anuncio ha terminado.",
+      "youWon": "🏆 ¡Ganaste esta subasta!",
+      "youWonDesc": "¡Felicidades! Ve a Transacciones para completar tu compra.",
+      "goToTransactions": "Ir a Transacciones"
     },
     "priceDetails": {
       "startingBid": "Puja Inicial:",

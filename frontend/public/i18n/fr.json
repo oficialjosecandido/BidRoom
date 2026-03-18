@@ -146,7 +146,12 @@
     "clearAllFilters": "Effacer tous les filtres",
     "featured": "En Vedette",
     "verified": "Vérifié",
-    "endingSoon": "Se Termine Bientôt"
+    "endingSoon": "Se Termine Bientôt",
+    "condition": "État",
+    "price": "Prix",
+    "location": "Localisation",
+    "anyLocation": "Toute localisation",
+    "shipping": "Expédition"
   },
   "categories": {
     "title": "Parcourir par Catégorie",
@@ -208,7 +213,10 @@
       "auctionEndedWinner": "Enchère terminée. Un gagnant a été sélectionné.",
       "auctionEnded": "Enchère terminée.",
       "listingSold": "Enchère terminée. Article vendu.",
-      "listingEnded": "Cette annonce est terminée."
+      "listingEnded": "Cette annonce est terminée.",
+      "youWon": "🏆 Vous avez gagné cette enchère !",
+      "youWonDesc": "Félicitations ! Rendez-vous dans Transactions pour finaliser votre achat.",
+      "goToTransactions": "Aller aux Transactions"
     },
     "priceDetails": {
       "startingBid": "Enchère de départ :",

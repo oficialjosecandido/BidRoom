@@ -233,8 +233,21 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
     this.offersService.acceptOffer(offer._id).subscribe({
       next: () => {
         this.offerActionLoadingId = null;
-        // loadListing calls loadOffers internally for best-offer listings
         this.loadListing(this.route.snapshot.paramMap.get('slug') || '');
+        Swal.fire({
+          icon: 'success',
+          title: 'Proposal Accepted!',
+          text: 'The proposal has been accepted. Go to Transactions to manage and complete the sale.',
+          showCancelButton: true,
+          confirmButtonText: 'Go to Transactions',
+          cancelButtonText: 'Stay here',
+          confirmButtonColor: '#7A4F84',
+          reverseButtons: true
+        }).then(result => {
+          if (result.isConfirmed) {
+            this.router.navigate(['/dashboard/seller'], { queryParams: { tab: 'transactions' } });
+          }
+        });
       },
       error: (err) => {
         this.offerActionLoadingId = null;
@@ -862,6 +875,19 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
     this.cdr.detectChanges();
   }
 
+  goToBuyerTransactions(): void {
+    this.router.navigate(['/dashboard/buyer'], { queryParams: { tab: 'transactions' } });
+  }
+
+  /** True when the current authenticated buyer is the chosen winner of this auction. */
+  currentUserIsWinner(): boolean {
+    if (!this.listing?.winner || !this.isAuthenticated || this.isOwnListing) return false;
+    const currentUser = this.authService.getCurrentUser();
+    const winner = this.listing.winner as { email?: string };
+    return !!(currentUser?.email && winner?.email &&
+      currentUser.email.toLowerCase() === winner.email.toLowerCase());
+  }
+
   closeLoginModal(): void {
     this.showLoginModal = false;
   }
@@ -898,6 +924,20 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
         this.closeSelectWinnerModal();
         this.selectingWinner = false;
         this.cdr.detectChanges();
+        Swal.fire({
+          icon: 'success',
+          title: 'Winner Selected!',
+          text: 'The winner has been notified. Go to Transactions to manage and complete the sale.',
+          showCancelButton: true,
+          confirmButtonText: 'Go to Transactions',
+          cancelButtonText: 'Stay here',
+          confirmButtonColor: '#7A4F84',
+          reverseButtons: true
+        }).then(result => {
+          if (result.isConfirmed) {
+            this.router.navigate(['/dashboard/seller'], { queryParams: { tab: 'transactions' } });
+          }
+        });
       },
       error: (err) => {
         this.selectingWinner = false;

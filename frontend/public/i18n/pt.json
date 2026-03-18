@@ -146,7 +146,12 @@
     "clearAllFilters": "Limpar todos os filtros",
     "featured": "Destaque",
     "verified": "Verificado",
-    "endingSoon": "A Terminar Em Breve"
+    "endingSoon": "A Terminar Em Breve",
+    "condition": "Condição",
+    "price": "Preço",
+    "location": "Localização",
+    "anyLocation": "Qualquer localização",
+    "shipping": "Envio"
   },
   "categories": {
     "title": "Navegar por Categoria",
@@ -208,7 +213,10 @@
       "auctionEndedWinner": "Leilão encerrado. Um vencedor foi selecionado.",
       "auctionEnded": "Leilão encerrado.",
       "listingSold": "Leilão encerrado. Item vendido.",
-      "listingEnded": "Este anúncio encerrou."
+      "listingEnded": "Este anúncio encerrou.",
+      "youWon": "🏆 Você ganhou este leilão!",
+      "youWonDesc": "Parabéns! Aceda a Transações para concluir a sua compra.",
+      "goToTransactions": "Ir para Transações"
     },
     "priceDetails": {
       "startingBid": "Lance Inicial:",

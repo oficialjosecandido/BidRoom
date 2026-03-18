@@ -17,7 +17,8 @@
       "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\(d[''''version'''']\\)\")",
       "Bash(find /Users/josecandido/Documents/BidRoom/frontend/node_modules/@ngx-translate/http-loader -name *.d.ts -exec cat {})",
       "Bash(npx tsc:*)",
-      "Bash(/Users/josecandido/Documents/BidRoom/frontend/src/app/dashboard/components/buyer-profile/buyer-profile.component.html:*)"
+      "Bash(/Users/josecandido/Documents/BidRoom/frontend/src/app/dashboard/components/buyer-profile/buyer-profile.component.html:*)",
+      "WebFetch(domain:wirefuture.com)"
     ]
   }
 }

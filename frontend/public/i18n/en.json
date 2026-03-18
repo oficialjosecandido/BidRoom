@@ -146,7 +146,12 @@
     "clearAllFilters": "Clear all filters",
     "featured": "Featured",
     "verified": "Verified",
-    "endingSoon": "Ending Soon"
+    "endingSoon": "Ending Soon",
+    "condition": "Condition",
+    "price": "Price",
+    "location": "Location",
+    "anyLocation": "Any location",
+    "shipping": "Shipping"
   },
   "categories": {
     "title": "Browse by Category",
@@ -208,7 +213,10 @@
       "auctionEndedWinner": "Auction ended. A winner has been selected.",
       "auctionEnded": "Auction ended.",
       "listingSold": "Auction ended. Listing sold.",
-      "listingEnded": "This listing has ended."
+      "listingEnded": "This listing has ended.",
+      "youWon": "🏆 You won this auction!",
+      "youWonDesc": "Congratulations! Head to Transactions to complete your purchase.",
+      "goToTransactions": "Go to Transactions"
     },
     "priceDetails": {
       "startingBid": "Starting Bid:",

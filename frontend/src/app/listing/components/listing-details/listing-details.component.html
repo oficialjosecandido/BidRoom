@@ -224,6 +224,23 @@
               </div>
             </div>
             }
+
+            <!-- Buyer CTA: you won this auction -->
+            @if (isAuctionEnded() && currentUserIsWinner()) {
+            <div class="transaction-cta-banner transaction-cta-winner">
+              <div class="transaction-cta-content">
+                <span class="transaction-cta-icon">🏆</span>
+                <div class="transaction-cta-text">
+                  <h4>{{ 'listingDetails.ended.youWon' | translate }}</h4>
+                  <p>{{ 'listingDetails.ended.youWonDesc' | translate }}</p>
+                </div>
+                <button class="btn btn-primary btn-small" (click)="goToBuyerTransactions()">
+                  {{ 'listingDetails.ended.goToTransactions' | translate }}
+                </button>
+              </div>
+            </div>
+            }
+
             <div class="price-details">
               <div class="price-detail-item">
                 @if (listing.auctionFormat === 'highest-bid') {

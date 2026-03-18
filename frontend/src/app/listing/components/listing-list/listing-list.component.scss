@@ -32,10 +32,7 @@
     font-size: 0.95rem;
     outline: none;
     transition: border-color 0.15s;
-
-    &:focus {
-      border-color: #1a1a1a;
-    }
+    &:focus { border-color: #1a1a1a; }
   }
 
   .search-clear {
@@ -47,13 +44,10 @@
     font-size: 0.85rem;
     color: #9ca3af;
     padding: 0;
-
     &:hover { color: #374151; }
   }
 
-  .search-btn {
-    white-space: nowrap;
-  }
+  .search-btn { white-space: nowrap; }
 
   // ── Active filter chips ────────────────────────────────────────────────────
   .active-filters {
@@ -87,7 +81,6 @@
       color: #6b7280;
       padding: 0;
       line-height: 1;
-
       &:hover { color: #111; }
     }
   }
@@ -120,10 +113,191 @@
     color: #9ca3af;
   }
 
-  .filters-row {
+  .list-controls {
     display: flex;
     gap: 0.6rem;
     flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .filter-select {
+    padding: 0.5rem 0.75rem;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    background: #fff;
+    font-size: 0.875rem;
+    color: #374151;
+    cursor: pointer;
+    outline: none;
+    transition: border-color 0.15s;
+    &:focus { border-color: var(--accent-purple, #7A4F84); }
+  }
+
+  .filter-toggle-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0.5rem 0.9rem;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    background: #fff;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #374151;
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+
+    &:hover {
+      border-color: var(--accent-purple, #7A4F84);
+      color: var(--accent-purple, #7A4F84);
+    }
+
+    .filter-count-badge {
+      background: var(--accent-purple, #7A4F84);
+      color: #fff;
+      font-size: 11px;
+      font-weight: 700;
+      min-width: 18px;
+      height: 18px;
+      border-radius: 9px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 4px;
+    }
+  }
+
+  // ── Two-column body ────────────────────────────────────────────────────────
+  .listing-body {
+    display: flex;
+    gap: 24px;
+    align-items: flex-start;
+  }
+
+  // ── Filter Sidebar ─────────────────────────────────────────────────────────
+  .filter-sidebar {
+    width: 240px;
+    flex-shrink: 0;
+    transition: max-height 0.25s ease, opacity 0.2s ease;
+
+    // Desktop: always visible
+    @media (min-width: 769px) {
+      display: block !important;
+      opacity: 1 !important;
+    }
+
+    // Mobile: hidden until toggled
+    @media (max-width: 768px) {
+      width: 100%;
+      max-height: 0;
+      overflow: hidden;
+      opacity: 0;
+
+      &.filter-sidebar--open {
+        max-height: 1200px;
+        opacity: 1;
+        margin-bottom: 16px;
+      }
+    }
+
+    .sidebar-inner {
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 20px;
+    }
+
+    .sidebar-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+
+      .sidebar-title {
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: #1a1a1a;
+      }
+
+      .clear-all-btn {
+        background: none;
+        border: none;
+        font-size: 0.8rem;
+        color: var(--accent-purple, #7A4F84);
+        cursor: pointer;
+        padding: 0;
+        font-weight: 500;
+        &:hover { text-decoration: underline; }
+      }
+    }
+  }
+
+  .filter-group {
+    margin-bottom: 22px;
+    padding-bottom: 22px;
+    border-bottom: 1px solid #f0f0f0;
+
+    &:last-child {
+      margin-bottom: 0;
+      padding-bottom: 0;
+      border-bottom: none;
+    }
+  }
+
+  .filter-group-title {
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #6b7280;
+    margin: 0 0 12px;
+  }
+
+  .filter-checkbox-label,
+  .filter-radio-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 0;
+    cursor: pointer;
+    font-size: 0.875rem;
+    color: #374151;
+    transition: color 0.12s;
+
+    &:hover { color: #1a1a1a; }
+
+    input { cursor: pointer; accent-color: var(--accent-purple, #7A4F84); }
+  }
+
+  .price-range-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .price-input {
+    flex: 1;
+    min-width: 0;
+    padding: 6px 10px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    outline: none;
+    &:focus { border-color: var(--accent-purple, #7A4F84); }
+    &::-webkit-outer-spin-button,
+    &::-webkit-inner-spin-button { -webkit-appearance: none; }
+  }
+
+  .price-sep {
+    color: #9ca3af;
+    font-size: 0.9rem;
+  }
+
+  // ── Listings Main ──────────────────────────────────────────────────────────
+  .listing-main {
+    flex: 1;
+    min-width: 0;
   }
 
   .listing-subcategory {
@@ -139,110 +313,23 @@
     text-align: center;
     padding: 4rem 1rem;
 
-    .empty-icon {
-      font-size: 3rem;
-      margin-bottom: 1rem;
-    }
-
+    .empty-icon { font-size: 3rem; margin-bottom: 1rem; }
     h3 { font-size: 1.4rem; margin-bottom: 0.5rem; }
     p { color: #6b7280; margin-bottom: 1.5rem; }
   }
 
-  .page-header {
-    margin-bottom: 40px;
-    text-align: center;
-
-    .page-title {
-      font-size: 36px;
-      font-weight: 700;
-      color: var(--text-dark);
-      margin-bottom: 12px;
-    }
-
-    .page-subtitle {
-      font-size: 18px;
-      color: var(--text-gray);
-    }
-  }
-
-  .filters-section {
-    background: var(--primary-white);
-    border-radius: 8px;
-    padding: 24px;
-    margin-bottom: 40px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-
-    .filters-row {
-      display: flex;
-      gap: 24px;
-      flex-wrap: wrap;
-    }
-
-    .filter-group {
-      flex: 1;
-      min-width: 200px;
-
-      label {
-        display: block;
-        font-size: 14px;
-        font-weight: 600;
-        color: var(--text-dark);
-        margin-bottom: 8px;
-      }
-
-      .filter-select {
-        width: 100%;
-        padding: 10px 16px;
-        border: 1px solid var(--border-gray);
-        border-radius: 4px;
-        background: var(--primary-white);
-        font-size: 14px;
-        cursor: pointer;
-        transition: border-color 0.2s ease;
-
-        &:hover {
-          border-color: var(--accent-purple);
-        }
-
-        &:focus {
-          outline: none;
-          border-color: var(--accent-purple);
-          box-shadow: 0 0 0 3px rgba(139, 90, 150, 0.1);
-        }
-      }
-    }
-  }
-
   .loading-state,
-  .error-state,
-  .empty-state {
+  .error-state {
     text-align: center;
     padding: 80px 40px;
-
-    p {
-      font-size: 18px;
-      color: var(--text-gray);
-    }
+    p { font-size: 18px; color: var(--text-gray); }
   }
 
-  .error-state {
-    .error-content {
-      h3 {
-        font-size: 24px;
-        margin-bottom: 16px;
-        color: var(--text-dark);
-      }
-
-      p {
-        margin-bottom: 32px;
-      }
-    }
-  }
-
+  // ── Listings Grid ──────────────────────────────────────────────────────────
   .listings-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 24px;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
   }
 
   .listing-card {
@@ -265,7 +352,7 @@
     .listing-image-container {
       position: relative;
       width: 100%;
-      height: 220px;
+      height: 210px;
       overflow: hidden;
       background: #f0eff5;
 
@@ -304,21 +391,24 @@
           box-shadow: 0 2px 6px rgba(0,0,0,0.25);
           letter-spacing: 0.3px;
 
-          &.badge-featured {
-            background: linear-gradient(135deg, var(--accent-gold), #c8960a);
-            color: white;
-          }
-
-          &.badge-verified {
-            background: var(--accent-purple);
-            color: white;
-          }
-
-          &.badge-ending-soon {
-            background: var(--urgency-red, #e53935);
-            color: white;
-          }
+          &.badge-featured { background: linear-gradient(135deg, var(--accent-gold), #c8960a); color: white; }
+          &.badge-verified { background: var(--accent-purple); color: white; }
+          &.badge-ending-soon { background: var(--urgency-red, #e53935); color: white; }
         }
+      }
+
+      .condition-badge {
+        position: absolute;
+        bottom: 10px;
+        right: 10px;
+        z-index: 3;
+        background: rgba(255,255,255,0.92);
+        color: #374151;
+        font-size: 10px;
+        font-weight: 600;
+        padding: 3px 8px;
+        border-radius: 10px;
+        white-space: nowrap;
       }
     }
 
@@ -372,7 +462,7 @@
           margin-bottom: 10px;
 
           .listing-current-price {
-            font-size: 24px;
+            font-size: 22px;
             font-weight: 800;
             color: var(--accent-purple);
             letter-spacing: -0.5px;
@@ -408,21 +498,30 @@
   }
 }
 
+// ── Mobile layout adjustments ──────────────────────────────────────────────
 @media (max-width: 768px) {
   .listing-list-page {
-    .filters-section {
-      .filters-row {
-        flex-direction: column;
-      }
+    .listing-body {
+      flex-direction: column;
     }
 
     .listings-grid {
       grid-template-columns: 1fr;
     }
+
+    .filter-toggle-btn {
+      display: flex;
+    }
   }
 }
 
+@media (min-width: 769px) {
+  .listing-list-page .filter-toggle-btn {
+    display: none;
+  }
+}
 
+// ── Pagination ─────────────────────────────────────────────────────────────
 .pagination {
   display: flex;
   align-items: center;
@@ -470,15 +569,9 @@
       font-weight: 600;
     }
 
-    &:disabled {
-      opacity: 0.35;
-      cursor: not-allowed;
-    }
+    &:disabled { opacity: 0.35; cursor: not-allowed; }
 
-    &.page-btn-nav {
-      font-size: 18px;
-      font-weight: 400;
-    }
+    &.page-btn-nav { font-size: 18px; font-weight: 400; }
   }
 
   .page-ellipsis {
@@ -487,3 +580,8 @@
     font-size: 14px;
   }
 }
+
+// ── Timer colours ──────────────────────────────────────────────────────────
+.timer-urgent { color: var(--urgency-red, #e53935) !important; font-weight: 700; }
+.timer-soon   { color: #f59e0b !important; font-weight: 600; }
+.timer-ok     { color: var(--text-gray); }

@@ -21,32 +21,38 @@
       <button class="btn btn-secondary" (click)="browseCategoriesPage()">{{ 'listingList.browseCategories' | translate }}</button>
     </div>
 
-    <!-- Active Filters -->
-    @if (searchQuery || selectedCategory || selectedSubCategory) {
+    <!-- Active Filters chips -->
+    @if (searchQuery || selectedCategory || selectedSubCategory || hasActiveFilters) {
       <div class="active-filters">
         <span class="filters-label">{{ 'listingList.filters' | translate }}</span>
         @if (searchQuery) {
-          <span class="filter-chip">
-            "{{ searchQuery }}"
-            <button (click)="clearSearch()">✕</button>
-          </span>
+          <span class="filter-chip">"{{ searchQuery }}"<button (click)="clearSearch()">✕</button></span>
         }
         @if (selectedCategory) {
-          <span class="filter-chip">
-            {{ activeCategoryLabel }}
-            <button (click)="clearCategory()">✕</button>
-          </span>
+          <span class="filter-chip">{{ activeCategoryLabel }}<button (click)="clearCategory()">✕</button></span>
         }
         @if (selectedSubCategory) {
+          <span class="filter-chip">{{ selectedSubCategory }}<button (click)="clearSubCategory()">✕</button></span>
+        }
+        @for (c of selectedConditions; track c) {
+          <span class="filter-chip">{{ conditionLabel(c) }}<button (click)="toggleCondition(c)">✕</button></span>
+        }
+        @for (s of selectedShipping; track s) {
+          <span class="filter-chip">{{ shippingLabel(s) }}<button (click)="toggleShipping(s)">✕</button></span>
+        }
+        @if (selectedLocation) {
+          <span class="filter-chip">{{ locationLabel(selectedLocation) }}<button (click)="selectedLocation = ''; onLocationChange()">✕</button></span>
+        }
+        @if (minPrice || maxPrice) {
           <span class="filter-chip">
-            {{ selectedSubCategory }}
-            <button (click)="clearSubCategory()">✕</button>
+            {{ minPrice ? '$' + minPrice : '' }}{{ minPrice && maxPrice ? ' – ' : '' }}{{ maxPrice ? '$' + maxPrice : '' }}
+            <button (click)="minPrice = ''; maxPrice = ''; onPriceChange()">✕</button>
           </span>
         }
       </div>
     }
 
-    <!-- Page Title + Controls -->
+    <!-- Page Title + Sort Controls -->
     <div class="list-header">
       <div class="list-title-wrap">
         <h1 class="page-title">{{ pageTitle }}</h1>
@@ -54,14 +60,19 @@
           <span class="result-count">{{ total || listings.length }} {{ 'listingList.listings' | translate }}</span>
         }
       </div>
-      <div class="filters-row">
+      <div class="list-controls">
+        <button class="filter-toggle-btn" (click)="filtersOpen = !filtersOpen">
+          <span>⚙ {{ 'listingList.filters' | translate }}</span>
+          @if (activeFilterCount > 0) {
+            <span class="filter-count-badge">{{ activeFilterCount }}</span>
+          }
+        </button>
         <select class="filter-select" [(ngModel)]="selectedCategory" (change)="onCategoryChange()">
           <option value="">{{ 'listingList.allCategories' | translate }}</option>
           @for (cat of categories; track cat.id) {
             <option [value]="cat.id">{{ cat.icon }} {{ cat.name }}</option>
           }
         </select>
-
         @if (selectedCategory && subCategories.length > 0) {
           <select class="filter-select" [(ngModel)]="selectedSubCategory" (change)="onSubCategoryChange()">
             <option value="">All {{ activeCategoryLabel }}</option>
@@ -70,7 +81,6 @@
             }
           </select>
         }
-
         <select class="filter-select" [(ngModel)]="sortBy" (change)="onSortChange()">
           <option value="deadline">{{ 'listingList.sortEndingSoonest' | translate }}</option>
           <option value="newest">{{ 'listingList.sortNewest' | translate }}</option>
@@ -81,106 +91,174 @@
       </div>
     </div>
 
-    <!-- Loading -->
-    @if (loading) {
-      <div class="loading-state">
-        <p>{{ 'listingList.loading' | translate }}</p>
-      </div>
-    }
+    <!-- Body: sidebar + main -->
+    <div class="listing-body">
 
-    <!-- Error -->
-    @if (error && !loading) {
-      <div class="error-state">
-        <h3>⚠️ {{ 'listingList.error' | translate }}</h3>
-        <p>{{ error }}</p>
-        <button class="btn btn-primary" (click)="loadListings()">{{ 'listingList.tryAgain' | translate }}</button>
-      </div>
-    }
+      <!-- Filter Sidebar -->
+      <aside class="filter-sidebar" [class.filter-sidebar--open]="filtersOpen">
+        <div class="sidebar-inner">
+          <div class="sidebar-top">
+            <span class="sidebar-title">{{ 'listingList.filters' | translate }}</span>
+            @if (hasActiveFilters) {
+              <button class="clear-all-btn" (click)="clearAllFilters()">{{ 'listingList.clearAllFilters' | translate }}</button>
+            }
+          </div>
 
-    <!-- Listings Grid -->
-    @if (!loading && !error && listings.length > 0) {
-      <div class="listings-grid">
-        @for (listing of listings; track listing._id) {
-          <div class="listing-card" (click)="viewListing(listing.slug)">
-            <div class="listing-image-container">
-              <img
-                [src]="listing.images[0] || 'https://via.placeholder.com/400x300?text=' + listing.subCategory"
-                [alt]="listing.title"
-                class="listing-image" />
-              <div class="listing-badges">
-                @if (listing.isFeatured) {
-                  <span class="badge badge-featured">⭐ {{ 'listingList.featured' | translate }}</span>
-                }
-                @if (listing.isVerified) {
-                  <span class="badge badge-verified">✓ {{ 'listingList.verified' | translate }}</span>
-                }
-                @if (listing.endingSoon) {
-                  <span class="badge badge-ending-soon">⏰ {{ 'listingList.endingSoon' | translate }}</span>
-                }
-              </div>
+          <!-- Condition -->
+          <div class="filter-group">
+            <h4 class="filter-group-title">{{ 'listingList.condition' | translate }}</h4>
+            @for (opt of conditionOptions; track opt.key) {
+              <label class="filter-checkbox-label">
+                <input type="checkbox" class="filter-checkbox" [checked]="selectedConditions.has(opt.key)" (change)="toggleCondition(opt.key)">
+                <span>{{ opt.label }}</span>
+              </label>
+            }
+          </div>
+
+          <!-- Price Range -->
+          <div class="filter-group">
+            <h4 class="filter-group-title">{{ 'listingList.price' | translate }}</h4>
+            <div class="price-range-row">
+              <input type="number" class="price-input" placeholder="Min $" [(ngModel)]="minPrice" (change)="onPriceChange()" min="0">
+              <span class="price-sep">–</span>
+              <input type="number" class="price-input" placeholder="Max $" [(ngModel)]="maxPrice" (change)="onPriceChange()" min="0">
             </div>
-            <div class="listing-content">
-              <div class="listing-header">
-                <h3 class="listing-title">{{ listing.title }}</h3>
-                <span class="listing-subcategory">{{ listing.subCategory }}</span>
-              </div>
-              <p class="listing-description">{{ listing.description.substring(0, 90) }}...</p>
-              <div class="listing-meta">
-                <div class="listing-price-info">
-                  @if (listing.auctionFormat === 'best-offer' && (listing.currentPrice == null || listing.currentPrice === 0)) {
-                    <span class="listing-current-price">{{ 'listingList.noOffersYet' | translate }}</span>
-                  } @else {
-                    <span class="listing-current-price">{{ formatPrice(listing.currentPrice) }}</span>
-                  }
-                  @if (listing.auctionFormat !== 'best-offer' && listing.currentPrice > listing.startingPrice) {
-                    <span class="listing-starting-price">{{ 'listingList.startedAt' | translate }} {{ formatPrice(listing.startingPrice) }}</span>
+          </div>
+
+          <!-- Location -->
+          <div class="filter-group">
+            <h4 class="filter-group-title">{{ 'listingList.location' | translate }}</h4>
+            <label class="filter-radio-label">
+              <input type="radio" name="location" value="" [(ngModel)]="selectedLocation" (change)="onLocationChange()">
+              <span>{{ 'listingList.anyLocation' | translate }}</span>
+            </label>
+            @for (opt of locationOptions; track opt.key) {
+              <label class="filter-radio-label">
+                <input type="radio" name="location" [value]="opt.key" [(ngModel)]="selectedLocation" (change)="onLocationChange()">
+                <span>{{ opt.label }}</span>
+              </label>
+            }
+          </div>
+
+          <!-- Shipping -->
+          <div class="filter-group">
+            <h4 class="filter-group-title">{{ 'listingList.shipping' | translate }}</h4>
+            @for (opt of shippingOptions; track opt.key) {
+              <label class="filter-checkbox-label">
+                <input type="checkbox" class="filter-checkbox" [checked]="selectedShipping.has(opt.key)" (change)="toggleShipping(opt.key)">
+                <span>{{ opt.label }}</span>
+              </label>
+            }
+          </div>
+        </div>
+      </aside>
+
+      <!-- Listings Main -->
+      <div class="listing-main">
+
+        <!-- Loading -->
+        @if (loading) {
+          <div class="loading-state"><p>{{ 'listingList.loading' | translate }}</p></div>
+        }
+
+        <!-- Error -->
+        @if (error && !loading) {
+          <div class="error-state">
+            <h3>⚠️ {{ 'listingList.error' | translate }}</h3>
+            <p>{{ error }}</p>
+            <button class="btn btn-primary" (click)="loadListings()">{{ 'listingList.tryAgain' | translate }}</button>
+          </div>
+        }
+
+        <!-- Listings Grid -->
+        @if (!loading && !error && listings.length > 0) {
+          <div class="listings-grid">
+            @for (listing of listings; track listing._id) {
+              <div class="listing-card" (click)="viewListing(listing.slug)">
+                <div class="listing-image-container">
+                  <img
+                    [src]="listing.images[0] || 'https://via.placeholder.com/400x300?text=' + listing.subCategory"
+                    [alt]="listing.title"
+                    class="listing-image" />
+                  <div class="listing-badges">
+                    @if (listing.isFeatured) {
+                      <span class="badge badge-featured">⭐ {{ 'listingList.featured' | translate }}</span>
+                    }
+                    @if (listing.isVerified) {
+                      <span class="badge badge-verified">✓ {{ 'listingList.verified' | translate }}</span>
+                    }
+                    @if (listing.endingSoon) {
+                      <span class="badge badge-ending-soon">⏰ {{ 'listingList.endingSoon' | translate }}</span>
+                    }
+                  </div>
+                  @if (listing.condition) {
+                    <span class="condition-badge">{{ listing.condition }}</span>
                   }
                 </div>
-                <div class="listing-bid-info">
-                  <span class="bid-count">{{ listing.bidCount }} {{ listing.bidCount === 1 ? ('listingList.bid' | translate) : ('listingList.bids' | translate) }}</span>
-                  <span class="time-remaining" [ngClass]="timerClass(listing)">⏱ {{ formatTimeRemaining(listing) }}</span>
+                <div class="listing-content">
+                  <div class="listing-header">
+                    <h3 class="listing-title">{{ listing.title }}</h3>
+                    <span class="listing-subcategory">{{ listing.subCategory }}</span>
+                  </div>
+                  <p class="listing-description">{{ listing.description.substring(0, 90) }}...</p>
+                  <div class="listing-meta">
+                    <div class="listing-price-info">
+                      @if (listing.auctionFormat === 'best-offer' && (listing.currentPrice == null || listing.currentPrice === 0)) {
+                        <span class="listing-current-price">{{ 'listingList.noOffersYet' | translate }}</span>
+                      } @else {
+                        <span class="listing-current-price">{{ formatPrice(listing.currentPrice) }}</span>
+                      }
+                      @if (listing.auctionFormat !== 'best-offer' && listing.currentPrice > listing.startingPrice) {
+                        <span class="listing-starting-price">{{ 'listingList.startedAt' | translate }} {{ formatPrice(listing.startingPrice) }}</span>
+                      }
+                    </div>
+                    <div class="listing-bid-info">
+                      <span class="bid-count">{{ listing.bidCount }} {{ listing.bidCount === 1 ? ('listingList.bid' | translate) : ('listingList.bids' | translate) }}</span>
+                      <span class="time-remaining" [ngClass]="timerClass(listing)">⏱ {{ formatTimeRemaining(listing) }}</span>
+                    </div>
+                  </div>
                 </div>
               </div>
+            }
+          </div>
+        }
+
+        <!-- Empty -->
+        @if (!loading && !error && listings.length === 0) {
+          <div class="empty-state">
+            <div class="empty-icon">🔍</div>
+            <h3>{{ 'listingList.noListingsFound' | translate }}</h3>
+            <p>{{ 'listingList.tryDifferentSearch' | translate }}</p>
+            <button class="btn btn-primary" (click)="clearCategory(); clearSearch(); clearAllFilters()">{{ 'listingList.clearAllFilters' | translate }}</button>
+          </div>
+        }
+
+        <!-- Pagination -->
+        @if (!loading && !error && totalPages > 1) {
+          <div class="pagination">
+            <div class="pagination-info">
+              {{ pageFrom }}–{{ pageTo }} of {{ total }} {{ 'listingList.listings' | translate }}
+            </div>
+            <div class="pagination-controls">
+              <button class="page-btn page-btn-nav" [disabled]="currentPage === 1" (click)="goToPage(currentPage - 1)">‹</button>
+              @if (visiblePages[0] > 1) {
+                <button class="page-btn" (click)="goToPage(1)">1</button>
+                @if (visiblePages[0] > 2) { <span class="page-ellipsis">…</span> }
+              }
+              @for (p of visiblePages; track p) {
+                <button class="page-btn" [class.active]="p === currentPage" (click)="goToPage(p)">{{ p }}</button>
+              }
+              @if (visiblePages[visiblePages.length - 1] < totalPages) {
+                @if (visiblePages[visiblePages.length - 1] < totalPages - 1) { <span class="page-ellipsis">…</span> }
+                <button class="page-btn" (click)="goToPage(totalPages)">{{ totalPages }}</button>
+              }
+              <button class="page-btn page-btn-nav" [disabled]="currentPage === totalPages" (click)="goToPage(currentPage + 1)">›</button>
             </div>
           </div>
         }
-      </div>
-    }
 
-    <!-- Empty -->
-    @if (!loading && !error && listings.length === 0) {
-      <div class="empty-state">
-        <div class="empty-icon">🔍</div>
-        <h3>{{ 'listingList.noListingsFound' | translate }}</h3>
-        <p>{{ 'listingList.tryDifferentSearch' | translate }}</p>
-        <button class="btn btn-primary" (click)="clearCategory(); clearSearch()">{{ 'listingList.clearAllFilters' | translate }}</button>
-      </div>
-    }
-
-
-    <!-- Pagination -->
-    @if (!loading && !error && totalPages > 1) {
-      <div class="pagination">
-        <div class="pagination-info">
-          {{ pageFrom }}–{{ pageTo }} of {{ total }} {{ 'listingList.listings' | translate }}
-        </div>
-        <div class="pagination-controls">
-          <button class="page-btn page-btn-nav" [disabled]="currentPage === 1" (click)="goToPage(currentPage - 1)">‹</button>
-          @if (visiblePages[0] > 1) {
-            <button class="page-btn" (click)="goToPage(1)">1</button>
-            @if (visiblePages[0] > 2) { <span class="page-ellipsis">…</span> }
-          }
-          @for (p of visiblePages; track p) {
-            <button class="page-btn" [class.active]="p === currentPage" (click)="goToPage(p)">{{ p }}</button>
-          }
-          @if (visiblePages[visiblePages.length - 1] < totalPages) {
-            @if (visiblePages[visiblePages.length - 1] < totalPages - 1) { <span class="page-ellipsis">…</span> }
-            <button class="page-btn" (click)="goToPage(totalPages)">{{ totalPages }}</button>
-          }
-          <button class="page-btn page-btn-nav" [disabled]="currentPage === totalPages" (click)="goToPage(currentPage + 1)">›</button>
-        </div>
-      </div>
-    }
+      </div><!-- /listing-main -->
+    </div><!-- /listing-body -->
 
   </div>
 </section>

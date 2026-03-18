@@ -318,6 +318,48 @@
           }
         }
 
+        .transaction-cta-banner {
+          margin: 20px 0;
+          padding: 16px 20px;
+          border-radius: 10px;
+          border: 2px solid;
+
+          .transaction-cta-content {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            flex-wrap: wrap;
+
+            .transaction-cta-icon {
+              font-size: 28px;
+              flex-shrink: 0;
+            }
+
+            .transaction-cta-text {
+              flex: 1;
+              min-width: 0;
+
+              h4 {
+                font-size: 15px;
+                font-weight: 700;
+                margin: 0 0 3px;
+              }
+
+              p {
+                font-size: 13px;
+                margin: 0;
+                opacity: 0.85;
+              }
+            }
+          }
+
+          &.transaction-cta-winner {
+            background: linear-gradient(135deg, #fef9c3, #fef3c7);
+            border-color: #f59e0b;
+            color: #78350f;
+          }
+        }
+
         .auction-ended-message,
         .own-listing-message {
           margin-top: 12px;
