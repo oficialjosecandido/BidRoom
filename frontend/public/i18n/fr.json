@@ -181,7 +181,17 @@
       "closed": "Salle privée fermée",
       "closedDescWinner": "La salle privée est terminée.",
       "closedNoWinner": "La vente aux enchères a été fermée car aucun enchérisseur invité n'a accepté l'invitation dans les 15 minutes. Il n'y a pas de gagnant.",
-      "ends60s": "(se termine 60s après la dernière enchère)"
+      "ends60s": "(se termine 60s après la dernière enchère)",
+      "readyTitle": "Salle Privée Activée",
+      "readyDesc": "Vous pouvez inviter 2–5 enchérisseurs dans une salle privée à tout moment pendant l'enchère.",
+      "inviteBidders": "Inviter des Enchérisseurs",
+      "invitedBidders": "Enchérisseurs Invités",
+      "acceptanceDeadline": "Date limite d'acceptation",
+      "startNow": "Démarrer la Salle Maintenant",
+      "startingNow": "Démarrage…",
+      "statusPending": "En attente",
+      "statusAccepted": "Accepté",
+      "statusDeclined": "Refusé"
     },
     "time": {
       "auctionEnds": "Fin de l'enchère",

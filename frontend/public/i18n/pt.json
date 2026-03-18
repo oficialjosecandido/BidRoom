@@ -181,7 +181,17 @@
       "closed": "Sala privada encerrada",
       "closedDescWinner": "A sala privada terminou.",
       "closedNoWinner": "O leilão foi encerrado porque nenhum licitante convidado aceitou o convite em 15 minutos. Não há vencedor.",
-      "ends60s": "(encerra 60s após o último lance)"
+      "ends60s": "(encerra 60s após o último lance)",
+      "readyTitle": "Sala Privada Ativada",
+      "readyDesc": "Você pode convidar 2–5 licitantes para uma sala privada a qualquer momento durante o leilão.",
+      "inviteBidders": "Convidar Licitantes",
+      "invitedBidders": "Licitantes Convidados",
+      "acceptanceDeadline": "Prazo de aceitação",
+      "startNow": "Iniciar Sala Agora",
+      "startingNow": "Iniciando…",
+      "statusPending": "Pendente",
+      "statusAccepted": "Aceito",
+      "statusDeclined": "Recusado"
     },
     "time": {
       "auctionEnds": "Leilão Encerra",

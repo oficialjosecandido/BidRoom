@@ -181,7 +181,17 @@
       "closed": "Sala privada cerrada",
       "closedDescWinner": "La sala privada ha terminado.",
       "closedNoWinner": "La subasta fue cerrada porque ningún postor invitado aceptó la invitación en 15 minutos. No hay ganador.",
-      "ends60s": "(termina 60s después de la última puja)"
+      "ends60s": "(termina 60s después de la última puja)",
+      "readyTitle": "Sala Privada Activada",
+      "readyDesc": "Puedes invitar a 2–5 postores a una sala privada en cualquier momento durante la subasta.",
+      "inviteBidders": "Invitar Postores",
+      "invitedBidders": "Postores Invitados",
+      "acceptanceDeadline": "Plazo de aceptación",
+      "startNow": "Iniciar Sala Ahora",
+      "startingNow": "Iniciando…",
+      "statusPending": "Pendiente",
+      "statusAccepted": "Aceptado",
+      "statusDeclined": "Rechazado"
     },
     "time": {
       "auctionEnds": "Subasta Termina",

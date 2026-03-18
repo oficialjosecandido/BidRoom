@@ -118,6 +118,52 @@
                 </div>
               </div>
             </div>
+            @if (isOwnListing) {
+            <div class="private-room-invitations-panel">
+              <div class="invitations-header">
+                <h4>{{ 'listingDetails.privateRoom.invitedBidders' | translate }}</h4>
+                @if (listing.platinumBidderAcceptanceDeadline) {
+                <span class="invitations-deadline">{{ 'listingDetails.privateRoom.acceptanceDeadline' | translate }}: {{ formatDate(listing.platinumBidderAcceptanceDeadline) }}</span>
+                }
+              </div>
+              @if (listing.platinumBidderStatus && listing.platinumBidderStatus.length > 0) {
+              <ul class="invitations-list">
+                @for (inv of listing.platinumBidderStatus; track inv.bidder._id) {
+                <li class="invitation-item">
+                  <div class="invitation-bidder">
+                    <span class="invitation-avatar">{{ inv.bidder.firstName[0] }}{{ inv.bidder.lastName[0] }}</span>
+                    <span class="invitation-name">{{ inv.bidder.firstName }} {{ inv.bidder.lastName }}</span>
+                  </div>
+                  <span class="invitation-status invitation-status--{{ inv.status }}">
+                    {{ inv.status === 'pending' ? ('listingDetails.privateRoom.statusPending' | translate) : inv.status === 'accepted' ? ('listingDetails.privateRoom.statusAccepted' | translate) : ('listingDetails.privateRoom.statusDeclined' | translate) }}
+                  </span>
+                </li>
+                }
+              </ul>
+              }
+              <div class="invitations-actions">
+                <button class="btn btn-primary" (click)="startPrivateRoomNow()" [disabled]="privateRoomStartNowLoading">
+                  {{ privateRoomStartNowLoading ? ('listingDetails.privateRoom.startingNow' | translate) : ('listingDetails.privateRoom.startNow' | translate) }}
+                </button>
+              </div>
+            </div>
+            }
+            }
+            @if (canInviteToPrivateRoom()) {
+            <div class="private-room-banner private-room-ready">
+              <div class="private-room-content">
+                <span class="private-room-icon">🔒</span>
+                <div class="private-room-text">
+                  <h4>{{ 'listingDetails.privateRoom.readyTitle' | translate }}</h4>
+                  <p>{{ 'listingDetails.privateRoom.readyDesc' | translate }}</p>
+                </div>
+                <div class="private-room-watch">
+                  <button class="btn btn-view-room" (click)="openCreatePrivateRoomModal()">
+                    {{ 'listingDetails.privateRoom.inviteBidders' | translate }}
+                  </button>
+                </div>
+              </div>
+            </div>
             }
             @if (listing.allowPrivateRoom && listing.privateRoomStatus === 'eligible' && listing.status === 'ended') {
             <div class="private-room-banner private-room-eligible">

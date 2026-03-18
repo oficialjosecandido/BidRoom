@@ -181,7 +181,17 @@
       "closed": "Private room closed",
       "closedDescWinner": "The private room has ended.",
       "closedNoWinner": "The auction was closed because no invited bidders accepted the invitation within 15 minutes. There is no winner.",
-      "ends60s": "(ends 60s after last bid)"
+      "ends60s": "(ends 60s after last bid)",
+      "readyTitle": "Private Room Enabled",
+      "readyDesc": "You can invite 2–5 bidders to a private room at any time during the auction.",
+      "inviteBidders": "Invite Bidders",
+      "invitedBidders": "Invited Bidders",
+      "acceptanceDeadline": "Acceptance deadline",
+      "startNow": "Start Room Now",
+      "startingNow": "Starting…",
+      "statusPending": "Pending",
+      "statusAccepted": "Accepted",
+      "statusDeclined": "Declined"
     },
     "time": {
       "auctionEnds": "Auction Ends",

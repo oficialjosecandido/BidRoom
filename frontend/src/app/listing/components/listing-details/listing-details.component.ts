@@ -60,6 +60,7 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
   createPrivateRoomBiddersLoading = false;
   selectedPrivateRoomBidderIds = new Set<string>();
   createPrivateRoomSubmitting = false;
+  privateRoomStartNowLoading = false;
   private socketSubscriptions: Subscription[] = [];
   private countdownInterval: ReturnType<typeof setInterval> | null = null;
   private justEndedRefetched = false;
@@ -469,6 +470,14 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
     if (this.listing.status !== 'ended' || !this.listing.allowPrivateRoom || this.listing.privateRoomStatus !== 'eligible' || (this.getEndedBidCount() ?? 0) === 0) return false;
     if (this.listing.winnerSelectionDeadline && new Date(this.listing.winnerSelectionDeadline) < new Date()) return false;
     return true;
+  }
+
+  /** Seller can invite bidders during an active auction when private room is enabled and no invitations sent yet. */
+  canInviteToPrivateRoom(): boolean {
+    if (!this.listing || !this.isOwnListing || this.listing.auctionFormat !== 'highest-bid') return false;
+    if (!this.listing.allowPrivateRoom || this.listing.status !== 'active') return false;
+    const status = this.listing.privateRoomStatus;
+    return !status || status === 'not-triggered';
   }
 
   getAuctionEndLabel(): string {
@@ -926,6 +935,31 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
     window.open(url, '_blank', 'width=1200,height=800');
   }
 
+  startPrivateRoomNow(): void {
+    if (!this.listing?._id || this.privateRoomStartNowLoading) return;
+    this.privateRoomStartNowLoading = true;
+    this.privateRoomService.startRoomNow(this.listing._id).subscribe({
+      next: (res) => {
+        if (this.listing && res.listing) {
+          const u = res.listing;
+          if (u.status) this.listing.status = u.status as Listing['status'];
+          if (u.privateRoomStatus) this.listing.privateRoomStatus = u.privateRoomStatus as Listing['privateRoomStatus'];
+          if (u.privateRoomEndDate) this.listing.privateRoomEndDate = u.privateRoomEndDate;
+          if (u.endDate) this.listing.endDate = u.endDate;
+        }
+        this.privateRoomStartNowLoading = false;
+        this.startCountdown();
+        this.cdr.detectChanges();
+        this.openPrivateRoom();
+      },
+      error: (err) => {
+        this.privateRoomStartNowLoading = false;
+        this.cdr.detectChanges();
+        Swal.fire({ icon: 'error', title: 'Failed to start room', text: err.error?.message || 'Please try again.', confirmButtonColor: '#7A4F84' });
+      }
+    });
+  }
+
   openCreatePrivateRoomModal(): void {
     this.showCreatePrivateRoomModal = true;
     this.selectedPrivateRoomBidderIds = new Set();
@@ -990,7 +1024,15 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
         this.closeCreatePrivateRoomModal();
         this.createPrivateRoomSubmitting = false;
         this.startCountdown();
-        this.cdr.detectChanges();
+        // Refetch listing to populate platinumBidderStatus with invitation details
+        if (this.listing?.slug) {
+          this.listingsService.getListingBySlug(this.listing.slug).subscribe({
+            next: (updated) => { this.listing = updated; this.cdr.detectChanges(); },
+            error: () => {}
+          });
+        } else {
+          this.cdr.detectChanges();
+        }
       },
       error: (err) => {
         this.createPrivateRoomSubmitting = false;
