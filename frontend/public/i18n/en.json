@@ -71,11 +71,26 @@
       "title": "Browse by Category",
       "subtitle": "Find what you love across our curated categories",
       "viewAll": "View All Categories →",
-      "electronics": { "title": "Electronics", "desc": "Gadgets, cameras and audio" },
-      "homeGarden": { "title": "Home & Garden", "desc": "Furniture, decor and more" },
-      "art": { "title": "Art", "desc": "Paintings, sculptures and prints" },
-      "collectibles": { "title": "Collectibles", "desc": "Stamps, coins and memorabilia" },
-      "jewelry": { "title": "Jewelry", "desc": "Rings, watches and gemstones" }
+      "electronics": {
+        "title": "Electronics",
+        "desc": "Gadgets, cameras and audio"
+      },
+      "homeGarden": {
+        "title": "Home & Garden",
+        "desc": "Furniture, decor and more"
+      },
+      "art": {
+        "title": "Art",
+        "desc": "Paintings, sculptures and prints"
+      },
+      "collectibles": {
+        "title": "Collectibles",
+        "desc": "Stamps, coins and memorabilia"
+      },
+      "jewelry": {
+        "title": "Jewelry",
+        "desc": "Rings, watches and gemstones"
+      }
     },
     "liveAuctions": {
       "title": "Live Auctions",
@@ -144,5 +159,214 @@
     "pt": "Português",
     "es": "Español",
     "fr": "Français"
+  },
+  "listingDetails": {
+    "loading": "Loading listing details...",
+    "backToListings": "← Back to Listings",
+    "currentBid": "Current Bid",
+    "highestOffer": "Highest Offer",
+    "noOffersYet": "No offers yet",
+    "buyNow": "Buy Now",
+    "privateRoom": {
+      "active": "Private Room Active",
+      "activeDesc": "The seller started the private room. Anyone can watch; only invited bidders can place bids. The room ends 60 seconds after the last bid.",
+      "watch": "Watch private room",
+      "anyoneCanWatch": "Anyone can watch",
+      "created": "Private room created",
+      "createdDesc": "Invitees have 15 minutes to accept. The auction will start automatically after the acceptance window.",
+      "view": "View Private Room",
+      "available": "Private room available",
+      "availableDescSeller": "Create your private room and invite 2–5 bidders to continue. You received an email with a link to get started.",
+      "availableDescBuyer": "The seller can create a private room and invite some bidders to continue. You'll be notified if you're invited.",
+      "closed": "Private room closed",
+      "closedDescWinner": "The private room has ended.",
+      "closedNoWinner": "The auction was closed because no invited bidders accepted the invitation within 15 minutes. There is no winner.",
+      "ends60s": "(ends 60s after last bid)"
+    },
+    "time": {
+      "auctionEnds": "Auction Ends",
+      "privateRoomEnds": "Private Room Ends",
+      "auctionEnded": "Auction Ended",
+      "listingEnded": "Listing Ended"
+    },
+    "ended": {
+      "noBidsSeller": "This auction closed with no bids. You can reopen it for another 7 days below.",
+      "selectWinner": "Select a winner below.",
+      "winnerSelected": "Winner has been selected.",
+      "noOffersSeller": "This listing closed with no offers. You can reopen it for another 7 days below.",
+      "noBidsBuyer": "This auction closed with no bids.",
+      "auctionEndedWinner": "Auction ended. A winner has been selected.",
+      "auctionEnded": "Auction ended.",
+      "listingSold": "Auction ended. Listing sold.",
+      "listingEnded": "This listing has ended."
+    },
+    "priceDetails": {
+      "startingBid": "Starting Bid:",
+      "reservePrice": "Reserve Price:",
+      "reserveNote": "(Seller must sell if met)",
+      "minimumOffer": "Minimum Offer:",
+      "autoAcceptsNote": "(Auto-accepts if met)",
+      "bidIncrement": "Bid Increment:"
+    },
+    "actions": {
+      "placeBid": "Place Bid",
+      "placeBidEmail": "Place Bid (Email Required)",
+      "makeOffer": "Make Offer",
+      "addToWatchlist": "Add to Watchlist",
+      "removeFromWatchlist": "Remove from Watchlist",
+      "selectWinner": "Select winner",
+      "reopenForDays": "Reopen for 7 days",
+      "reopening": "Reopening…",
+      "createPrivateRoom": "Create private room",
+      "cantBidOwnListing": "You can't bid on your own listing.",
+      "cantOfferOwnListing": "You can't make an offer on your own listing.",
+      "auctionClosedNoBids": "Auction closed with no bids.",
+      "listingClosedNoOffers": "Listing closed with no offers.",
+      "auctionHasEndedNoBids": "This auction has ended with no bids.",
+      "auctionHasEndedWinner": "This auction has ended. A winner has been selected.",
+      "auctionHasEnded": "This auction has ended.",
+      "sellerHas24hOffer": "Seller has 24h to accept an offer",
+      "sellerHas24hWinner": "Seller has 24h to choose a winner"
+    },
+    "watchlistCount": {
+      "one": "person has this in their watchlist",
+      "many": "people have this in their watchlist"
+    },
+    "info": {
+      "bids": "Bids",
+      "offers": "Offers",
+      "bid": "bid",
+      "bidsPlural": "bids",
+      "offer": "offer",
+      "offersPlural": "offers",
+      "seller": "Seller",
+      "condition": "Condition",
+      "location": "Location",
+      "noReviews": "No reviews yet"
+    },
+    "verification": {
+      "title": "Verified Listing"
+    },
+    "tabs": {
+      "description": "Description",
+      "bidHistory": "Bid History",
+      "offers": "Offers"
+    },
+    "bidHistory": {
+      "loading": "Loading bid history...",
+      "tryAgain": "Try Again",
+      "noBids": "No Bids Yet",
+      "noBidsDesc": "Be the first to place a bid on this item!",
+      "totalBids": "Total bids",
+      "leadingBid": "Leading bid",
+      "lastActivity": "Last activity",
+      "live": "LIVE",
+      "leading": "Leading",
+      "authenticated": "Authenticated",
+      "guestBidder": "Guest Bidder",
+      "verified": "Verified",
+      "deposit": "Deposit",
+      "noBuyerReviews": "No buyer reviews",
+      "winner": "Winner",
+      "sellerNote": "Only bids from registered, verified accounts can be selected as the winning bid. Guest bidders must create an account and verify their email to be eligible.",
+      "selectAsWinner": "Select as winner",
+      "selecting": "Selecting…",
+      "verifiedRequired": "Verified account required",
+      "notifyOutbid": "Email me when I'm outbid on this auction",
+      "anonymous": "Anonymous"
+    },
+    "offerHistory": {
+      "loading": "Loading offers...",
+      "tryAgain": "Try Again",
+      "noOffers": "No Offers Yet",
+      "noOffersDesc": "Be the first to make an offer on this item!",
+      "makeOffer": "Make an offer",
+      "ctaText": "Make an offer on this item. The seller can accept, decline, or counter.",
+      "offerFrom": "Offer from",
+      "yourOffer": "Your offer",
+      "selectedBySeller": "Selected by seller",
+      "offered": "Offered",
+      "sellerLabel": "Seller:",
+      "acceptDeclineNote": "You can accept or decline offers after the listing end date.",
+      "accept": "Accept",
+      "accepting": "Accepting…",
+      "decline": "Decline",
+      "declining": "Declining…",
+      "anonymous": "Anonymous",
+      "verifiedLabel": "✓ Verified"
+    },
+    "shipping": {
+      "title": "Shipping",
+      "free": "Free shipping",
+      "cost": "Shipping cost:",
+      "from": "From:"
+    },
+    "returnPolicy": {
+      "title": "Return policy",
+      "handlingTime": "Handling time:"
+    },
+    "timeline": {
+      "title": "Auction Timeline",
+      "started": "Started:",
+      "ends": "Ends:"
+    },
+    "bidModal": {
+      "title": "Place a bid",
+      "transparency": "So you know exactly where you stand:",
+      "currentBid": "Current bid",
+      "minimumNextBid": "Minimum next bid",
+      "bidIncrement": "Bid increment",
+      "amountLabel": "Your bid amount",
+      "emailLabel": "Your email",
+      "emailHint": "We'll use this to confirm your bid.",
+      "notifyOutbid": "Email me when I'm outbid on this auction",
+      "cancel": "Cancel",
+      "submit": "Place bid",
+      "submitting": "Placing bid…"
+    },
+    "offerModal": {
+      "title": "Make an offer",
+      "transparency": "So you know exactly what you're offering:",
+      "startingCurrent": "Starting / current",
+      "minimumOffer": "Minimum offer",
+      "amountLabel": "Your offer amount",
+      "emailLabel": "Your email",
+      "emailHint": "The seller will use this to respond to your offer.",
+      "belowMinNote": "Your offer is below the seller's minimum price. The seller is not obliged to accept this offer, even if you're the only bidder.",
+      "cancel": "Cancel",
+      "submit": "Send offer",
+      "submitting": "Sending offer…"
+    },
+    "watchlistModal": {
+      "title": "Save to Watchlist",
+      "desc": "Log in or create an account to save this item to your watchlist and see it in your dashboard.",
+      "login": "Log in",
+      "signup": "Create account"
+    },
+    "selectWinnerModal": {
+      "title": "Select winner",
+      "subtitle": "Only bids from registered, verified accounts can be selected. Guest bidders are not eligible.",
+      "loading": "Loading bids…",
+      "noBids": "No bids to display.",
+      "verified": "Verified",
+      "guest": "Guest",
+      "unverified": "Unverified",
+      "selectBtn": "Select as winner",
+      "selecting": "Selecting…",
+      "ineligible": "Verified account required"
+    },
+    "privateRoomModal": {
+      "title": "Create private room",
+      "subtitle": "Choose between 2 and 5 bidders to invite. Only registered bidders can be invited. Invited bidders will receive a link to the private room; others will be notified they were not selected.",
+      "loading": "Loading bidders…",
+      "noBidders": "No bidders to display.",
+      "selected": "Selected:",
+      "minMax": "(min 2, max 5)",
+      "create": "Create room & send invites",
+      "creating": "Creating…",
+      "cannotInvite": "Guest (cannot invite)",
+      "ineligible": "Register to be eligible",
+      "invite": "Invite"
+    }
   }
 }

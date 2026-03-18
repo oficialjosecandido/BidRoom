@@ -5,14 +5,13 @@ import { Subscription } from 'rxjs';
 import { AuthService } from '../auth/services/auth.service';
 import { NotificationService } from '../shared/services/notification.service';
 import { SocketService } from '../shared/services/socket.service';
-import { ProposalNotificationsComponent } from './components/proposal-notifications/proposal-notifications.component';
 
 const STORAGE_KEY = 'bidroom-dashboard-sidebar-collapsed';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, ProposalNotificationsComponent],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss']
 })

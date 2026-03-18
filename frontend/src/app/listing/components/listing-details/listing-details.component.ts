@@ -15,11 +15,12 @@ import { WatchlistService } from '../../../shared/services/watchlist.service';
 import { SocketService } from '../../../shared/services/socket.service';
 import { AuthService } from '../../../auth/services/auth.service';
 import { PrivateRoomService, Bidder } from '../../../private-room/services/private-room.service';
+import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-listing-details',
   standalone: true,
-  imports: [CommonModule, FormsModule, HeaderComponent, FooterComponent],
+  imports: [CommonModule, FormsModule, HeaderComponent, FooterComponent, TranslateModule],
   templateUrl: './listing-details.component.html',
   styleUrls: ['./listing-details.component.scss']
 })

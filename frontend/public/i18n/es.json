@@ -71,11 +71,26 @@
       "title": "Explorar por Categoría",
       "subtitle": "Encuentra lo que amas en nuestras categorías seleccionadas",
       "viewAll": "Ver Todas las Categorías →",
-      "electronics": { "title": "Electrónica", "desc": "Gadgets, cámaras y audio" },
-      "homeGarden": { "title": "Hogar & Jardín", "desc": "Muebles, decoración y más" },
-      "art": { "title": "Arte", "desc": "Pinturas, esculturas y grabados" },
-      "collectibles": { "title": "Coleccionables", "desc": "Sellos, monedas y memorabilia" },
-      "jewelry": { "title": "Joyería", "desc": "Anillos, relojes y piedras preciosas" }
+      "electronics": {
+        "title": "Electrónica",
+        "desc": "Gadgets, cámaras y audio"
+      },
+      "homeGarden": {
+        "title": "Hogar & Jardín",
+        "desc": "Muebles, decoración y más"
+      },
+      "art": {
+        "title": "Arte",
+        "desc": "Pinturas, esculturas y grabados"
+      },
+      "collectibles": {
+        "title": "Coleccionables",
+        "desc": "Sellos, monedas y memorabilia"
+      },
+      "jewelry": {
+        "title": "Joyería",
+        "desc": "Anillos, relojes y piedras preciosas"
+      }
     },
     "liveAuctions": {
       "title": "Subastas en Vivo",
@@ -144,5 +159,214 @@
     "pt": "Português",
     "es": "Español",
     "fr": "Français"
+  },
+  "listingDetails": {
+    "loading": "Cargando detalles del anuncio...",
+    "backToListings": "← Volver a los Anuncios",
+    "currentBid": "Puja Actual",
+    "highestOffer": "Oferta Más Alta",
+    "noOffersYet": "Sin ofertas aún",
+    "buyNow": "Comprar Ahora",
+    "privateRoom": {
+      "active": "Sala Privada Activa",
+      "activeDesc": "El vendedor inició la sala privada. Cualquiera puede observar; solo los postores invitados pueden pujar. La sala termina 60 segundos después de la última puja.",
+      "watch": "Ver sala privada",
+      "anyoneCanWatch": "Cualquiera puede ver",
+      "created": "Sala privada creada",
+      "createdDesc": "Los invitados tienen 15 minutos para aceptar. La subasta comenzará automáticamente después de la ventana de aceptación.",
+      "view": "Ver Sala Privada",
+      "available": "Sala privada disponible",
+      "availableDescSeller": "Crea tu sala privada e invita a 2–5 postores para continuar. Recibiste un correo con un enlace para comenzar.",
+      "availableDescBuyer": "El vendedor puede crear una sala privada e invitar a algunos postores para continuar. Te notificarán si eres invitado.",
+      "closed": "Sala privada cerrada",
+      "closedDescWinner": "La sala privada ha terminado.",
+      "closedNoWinner": "La subasta fue cerrada porque ningún postor invitado aceptó la invitación en 15 minutos. No hay ganador.",
+      "ends60s": "(termina 60s después de la última puja)"
+    },
+    "time": {
+      "auctionEnds": "Subasta Termina",
+      "privateRoomEnds": "Sala Privada Termina",
+      "auctionEnded": "Subasta Terminada",
+      "listingEnded": "Anuncio Terminado"
+    },
+    "ended": {
+      "noBidsSeller": "Esta subasta cerró sin pujas. Puedes reabrirla por otros 7 días abajo.",
+      "selectWinner": "Selecciona un ganador abajo.",
+      "winnerSelected": "El ganador ha sido seleccionado.",
+      "noOffersSeller": "Este anuncio cerró sin ofertas. Puedes reabrirlo por otros 7 días abajo.",
+      "noBidsBuyer": "Esta subasta cerró sin pujas.",
+      "auctionEndedWinner": "Subasta terminada. Se seleccionó un ganador.",
+      "auctionEnded": "Subasta terminada.",
+      "listingSold": "Subasta terminada. Artículo vendido.",
+      "listingEnded": "Este anuncio ha terminado."
+    },
+    "priceDetails": {
+      "startingBid": "Puja Inicial:",
+      "reservePrice": "Precio de Reserva:",
+      "reserveNote": "(El vendedor debe vender si se alcanza)",
+      "minimumOffer": "Oferta Mínima:",
+      "autoAcceptsNote": "(Se acepta automáticamente si se alcanza)",
+      "bidIncrement": "Incremento de Puja:"
+    },
+    "actions": {
+      "placeBid": "Pujar",
+      "placeBidEmail": "Pujar (Correo Requerido)",
+      "makeOffer": "Hacer Oferta",
+      "addToWatchlist": "Agregar a Favoritos",
+      "removeFromWatchlist": "Quitar de Favoritos",
+      "selectWinner": "Seleccionar ganador",
+      "reopenForDays": "Reabrir por 7 días",
+      "reopening": "Reabriendo…",
+      "createPrivateRoom": "Crear sala privada",
+      "cantBidOwnListing": "No puedes pujar en tu propio anuncio.",
+      "cantOfferOwnListing": "No puedes hacer una oferta en tu propio anuncio.",
+      "auctionClosedNoBids": "Subasta cerrada sin pujas.",
+      "listingClosedNoOffers": "Anuncio cerrado sin ofertas.",
+      "auctionHasEndedNoBids": "Esta subasta terminó sin pujas.",
+      "auctionHasEndedWinner": "Esta subasta ha terminado. Se seleccionó un ganador.",
+      "auctionHasEnded": "Esta subasta ha terminado.",
+      "sellerHas24hOffer": "El vendedor tiene 24h para aceptar una oferta",
+      "sellerHas24hWinner": "El vendedor tiene 24h para elegir un ganador"
+    },
+    "watchlistCount": {
+      "one": "persona tiene esto en sus favoritos",
+      "many": "personas tienen esto en sus favoritos"
+    },
+    "info": {
+      "bids": "Pujas",
+      "offers": "Ofertas",
+      "bid": "puja",
+      "bidsPlural": "pujas",
+      "offer": "oferta",
+      "offersPlural": "ofertas",
+      "seller": "Vendedor",
+      "condition": "Condición",
+      "location": "Ubicación",
+      "noReviews": "Sin reseñas aún"
+    },
+    "verification": {
+      "title": "Anuncio Verificado"
+    },
+    "tabs": {
+      "description": "Descripción",
+      "bidHistory": "Historial de Pujas",
+      "offers": "Ofertas"
+    },
+    "bidHistory": {
+      "loading": "Cargando historial de pujas...",
+      "tryAgain": "Intentar de Nuevo",
+      "noBids": "Sin Pujas Aún",
+      "noBidsDesc": "¡Sé el primero en pujar por este artículo!",
+      "totalBids": "Total de pujas",
+      "leadingBid": "Puja líder",
+      "lastActivity": "Última actividad",
+      "live": "EN VIVO",
+      "leading": "Liderando",
+      "authenticated": "Autenticado",
+      "guestBidder": "Visitante",
+      "verified": "Verificado",
+      "deposit": "Depósito",
+      "noBuyerReviews": "Sin reseñas de comprador",
+      "winner": "Ganador",
+      "sellerNote": "Solo las pujas de cuentas registradas y verificadas pueden ser seleccionadas como puja ganadora. Los visitantes deben crear una cuenta y verificar su correo para ser elegibles.",
+      "selectAsWinner": "Seleccionar como ganador",
+      "selecting": "Seleccionando…",
+      "verifiedRequired": "Se requiere cuenta verificada",
+      "notifyOutbid": "Notificarme por correo cuando me superen la puja",
+      "anonymous": "Anónimo"
+    },
+    "offerHistory": {
+      "loading": "Cargando ofertas...",
+      "tryAgain": "Intentar de Nuevo",
+      "noOffers": "Sin Ofertas Aún",
+      "noOffersDesc": "¡Sé el primero en hacer una oferta por este artículo!",
+      "makeOffer": "Hacer una oferta",
+      "ctaText": "Haz una oferta por este artículo. El vendedor puede aceptar, rechazar o contra-ofertar.",
+      "offerFrom": "Oferta de",
+      "yourOffer": "Tu oferta",
+      "selectedBySeller": "Seleccionada por el vendedor",
+      "offered": "Ofrecido",
+      "sellerLabel": "Vendedor:",
+      "acceptDeclineNote": "Puedes aceptar o rechazar ofertas después de la fecha de cierre del anuncio.",
+      "accept": "Aceptar",
+      "accepting": "Aceptando…",
+      "decline": "Rechazar",
+      "declining": "Rechazando…",
+      "anonymous": "Anónimo",
+      "verifiedLabel": "✓ Verificado"
+    },
+    "shipping": {
+      "title": "Envío",
+      "free": "Envío gratis",
+      "cost": "Costo de envío:",
+      "from": "Desde:"
+    },
+    "returnPolicy": {
+      "title": "Política de devolución",
+      "handlingTime": "Tiempo de manejo:"
+    },
+    "timeline": {
+      "title": "Cronología de la Subasta",
+      "started": "Iniciado:",
+      "ends": "Termina:"
+    },
+    "bidModal": {
+      "title": "Hacer una puja",
+      "transparency": "Para que sepas exactamente dónde estás:",
+      "currentBid": "Puja actual",
+      "minimumNextBid": "Próxima puja mínima",
+      "bidIncrement": "Incremento de puja",
+      "amountLabel": "Monto de tu puja",
+      "emailLabel": "Tu correo",
+      "emailHint": "Lo usaremos para confirmar tu puja.",
+      "notifyOutbid": "Notificarme por correo cuando me superen la puja en esta subasta",
+      "cancel": "Cancelar",
+      "submit": "Pujar",
+      "submitting": "Enviando puja…"
+    },
+    "offerModal": {
+      "title": "Hacer una oferta",
+      "transparency": "Para que sepas exactamente lo que estás ofreciendo:",
+      "startingCurrent": "Inicial / actual",
+      "minimumOffer": "Oferta mínima",
+      "amountLabel": "Monto de tu oferta",
+      "emailLabel": "Tu correo",
+      "emailHint": "El vendedor lo usará para responder a tu oferta.",
+      "belowMinNote": "Tu oferta está por debajo del precio mínimo del vendedor. El vendedor no está obligado a aceptar esta oferta, incluso si eres el único postor.",
+      "cancel": "Cancelar",
+      "submit": "Enviar oferta",
+      "submitting": "Enviando oferta…"
+    },
+    "watchlistModal": {
+      "title": "Guardar en Favoritos",
+      "desc": "Inicia sesión o crea una cuenta para guardar este artículo en tus favoritos y verlo en tu panel.",
+      "login": "Iniciar sesión",
+      "signup": "Crear cuenta"
+    },
+    "selectWinnerModal": {
+      "title": "Seleccionar ganador",
+      "subtitle": "Solo las pujas de cuentas registradas y verificadas pueden ser seleccionadas. Los visitantes no son elegibles.",
+      "loading": "Cargando pujas…",
+      "noBids": "No hay pujas para mostrar.",
+      "verified": "Verificado",
+      "guest": "Visitante",
+      "unverified": "No verificado",
+      "selectBtn": "Seleccionar como ganador",
+      "selecting": "Seleccionando…",
+      "ineligible": "Se requiere cuenta verificada"
+    },
+    "privateRoomModal": {
+      "title": "Crear sala privada",
+      "subtitle": "Elige entre 2 y 5 postores para invitar. Solo los postores registrados pueden ser invitados. Los postores invitados recibirán un enlace a la sala privada; los demás serán notificados de que no fueron seleccionados.",
+      "loading": "Cargando postores…",
+      "noBidders": "No hay postores para mostrar.",
+      "selected": "Seleccionados:",
+      "minMax": "(mín 2, máx 5)",
+      "create": "Crear sala y enviar invitaciones",
+      "creating": "Creando…",
+      "cannotInvite": "Visitante (no se puede invitar)",
+      "ineligible": "Regístrate para ser elegible",
+      "invite": "Invitar"
+    }
   }
 }

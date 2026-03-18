@@ -71,11 +71,26 @@
       "title": "Parcourir par Catégorie",
       "subtitle": "Trouvez ce que vous aimez dans nos catégories sélectionnées",
       "viewAll": "Voir Toutes les Catégories →",
-      "electronics": { "title": "Électronique", "desc": "Gadgets, caméras et audio" },
-      "homeGarden": { "title": "Maison & Jardin", "desc": "Meubles, décoration et plus" },
-      "art": { "title": "Art", "desc": "Peintures, sculptures et estampes" },
-      "collectibles": { "title": "Objets de Collection", "desc": "Timbres, pièces et memorabilia" },
-      "jewelry": { "title": "Bijoux", "desc": "Bagues, montres et pierres précieuses" }
+      "electronics": {
+        "title": "Électronique",
+        "desc": "Gadgets, caméras et audio"
+      },
+      "homeGarden": {
+        "title": "Maison & Jardin",
+        "desc": "Meubles, décoration et plus"
+      },
+      "art": {
+        "title": "Art",
+        "desc": "Peintures, sculptures et estampes"
+      },
+      "collectibles": {
+        "title": "Objets de Collection",
+        "desc": "Timbres, pièces et memorabilia"
+      },
+      "jewelry": {
+        "title": "Bijoux",
+        "desc": "Bagues, montres et pierres précieuses"
+      }
     },
     "liveAuctions": {
       "title": "Enchères en Direct",
@@ -144,5 +159,214 @@
     "pt": "Português",
     "es": "Español",
     "fr": "Français"
+  },
+  "listingDetails": {
+    "loading": "Chargement des détails de l'annonce...",
+    "backToListings": "← Retour aux annonces",
+    "currentBid": "Enchère actuelle",
+    "highestOffer": "Offre la plus haute",
+    "noOffersYet": "Aucune offre pour l'instant",
+    "buyNow": "Acheter maintenant",
+    "privateRoom": {
+      "active": "Salle Privée Active",
+      "activeDesc": "Le vendeur a démarré la salle privée. Tout le monde peut regarder ; seuls les enchérisseurs invités peuvent enchérir. La salle se termine 60 secondes après la dernière enchère.",
+      "watch": "Regarder la salle privée",
+      "anyoneCanWatch": "Tout le monde peut regarder",
+      "created": "Salle privée créée",
+      "createdDesc": "Les invités ont 15 minutes pour accepter. La vente aux enchères démarrera automatiquement après la fenêtre d'acceptation.",
+      "view": "Voir la Salle Privée",
+      "available": "Salle privée disponible",
+      "availableDescSeller": "Créez votre salle privée et invitez 2 à 5 enchérisseurs pour continuer. Vous avez reçu un e-mail avec un lien pour commencer.",
+      "availableDescBuyer": "Le vendeur peut créer une salle privée et inviter quelques enchérisseurs pour continuer. Vous serez notifié si vous êtes invité.",
+      "closed": "Salle privée fermée",
+      "closedDescWinner": "La salle privée est terminée.",
+      "closedNoWinner": "La vente aux enchères a été fermée car aucun enchérisseur invité n'a accepté l'invitation dans les 15 minutes. Il n'y a pas de gagnant.",
+      "ends60s": "(se termine 60s après la dernière enchère)"
+    },
+    "time": {
+      "auctionEnds": "Fin de l'enchère",
+      "privateRoomEnds": "Fin de la Salle Privée",
+      "auctionEnded": "Enchère Terminée",
+      "listingEnded": "Annonce Terminée"
+    },
+    "ended": {
+      "noBidsSeller": "Cette enchère s'est terminée sans offre. Vous pouvez la rouvrir pour 7 jours supplémentaires ci-dessous.",
+      "selectWinner": "Sélectionnez un gagnant ci-dessous.",
+      "winnerSelected": "Le gagnant a été sélectionné.",
+      "noOffersSeller": "Cette annonce s'est terminée sans offres. Vous pouvez la rouvrir pour 7 jours supplémentaires ci-dessous.",
+      "noBidsBuyer": "Cette enchère s'est terminée sans offre.",
+      "auctionEndedWinner": "Enchère terminée. Un gagnant a été sélectionné.",
+      "auctionEnded": "Enchère terminée.",
+      "listingSold": "Enchère terminée. Article vendu.",
+      "listingEnded": "Cette annonce est terminée."
+    },
+    "priceDetails": {
+      "startingBid": "Enchère de départ :",
+      "reservePrice": "Prix de réserve :",
+      "reserveNote": "(Le vendeur doit vendre si atteint)",
+      "minimumOffer": "Offre minimum :",
+      "autoAcceptsNote": "(Acceptation automatique si atteint)",
+      "bidIncrement": "Incrément d'enchère :"
+    },
+    "actions": {
+      "placeBid": "Enchérir",
+      "placeBidEmail": "Enchérir (E-mail requis)",
+      "makeOffer": "Faire une Offre",
+      "addToWatchlist": "Ajouter aux favoris",
+      "removeFromWatchlist": "Retirer des favoris",
+      "selectWinner": "Sélectionner le gagnant",
+      "reopenForDays": "Rouvrir pour 7 jours",
+      "reopening": "Réouverture…",
+      "createPrivateRoom": "Créer une salle privée",
+      "cantBidOwnListing": "Vous ne pouvez pas enchérir sur votre propre annonce.",
+      "cantOfferOwnListing": "Vous ne pouvez pas faire d'offre sur votre propre annonce.",
+      "auctionClosedNoBids": "Enchère fermée sans offre.",
+      "listingClosedNoOffers": "Annonce fermée sans offres.",
+      "auctionHasEndedNoBids": "Cette enchère s'est terminée sans offre.",
+      "auctionHasEndedWinner": "Cette enchère est terminée. Un gagnant a été sélectionné.",
+      "auctionHasEnded": "Cette enchère est terminée.",
+      "sellerHas24hOffer": "Le vendeur a 24h pour accepter une offre",
+      "sellerHas24hWinner": "Le vendeur a 24h pour choisir un gagnant"
+    },
+    "watchlistCount": {
+      "one": "personne a ceci dans ses favoris",
+      "many": "personnes ont ceci dans leurs favoris"
+    },
+    "info": {
+      "bids": "Enchères",
+      "offers": "Offres",
+      "bid": "enchère",
+      "bidsPlural": "enchères",
+      "offer": "offre",
+      "offersPlural": "offres",
+      "seller": "Vendeur",
+      "condition": "État",
+      "location": "Localisation",
+      "noReviews": "Aucun avis pour l'instant"
+    },
+    "verification": {
+      "title": "Annonce Vérifiée"
+    },
+    "tabs": {
+      "description": "Description",
+      "bidHistory": "Historique des Enchères",
+      "offers": "Offres"
+    },
+    "bidHistory": {
+      "loading": "Chargement de l'historique des enchères...",
+      "tryAgain": "Réessayer",
+      "noBids": "Aucune Enchère Encore",
+      "noBidsDesc": "Soyez le premier à enchérir sur cet article !",
+      "totalBids": "Total des enchères",
+      "leadingBid": "Enchère en tête",
+      "lastActivity": "Dernière activité",
+      "live": "EN DIRECT",
+      "leading": "En tête",
+      "authenticated": "Authentifié",
+      "guestBidder": "Visiteur",
+      "verified": "Vérifié",
+      "deposit": "Dépôt",
+      "noBuyerReviews": "Aucun avis acheteur",
+      "winner": "Gagnant",
+      "sellerNote": "Seules les enchères de comptes enregistrés et vérifiés peuvent être sélectionnées comme enchère gagnante. Les visiteurs doivent créer un compte et vérifier leur e-mail pour être éligibles.",
+      "selectAsWinner": "Sélectionner comme gagnant",
+      "selecting": "Sélection…",
+      "verifiedRequired": "Compte vérifié requis",
+      "notifyOutbid": "Me notifier par e-mail lorsque je suis surenchéri sur cette enchère",
+      "anonymous": "Anonyme"
+    },
+    "offerHistory": {
+      "loading": "Chargement des offres...",
+      "tryAgain": "Réessayer",
+      "noOffers": "Aucune Offre Encore",
+      "noOffersDesc": "Soyez le premier à faire une offre sur cet article !",
+      "makeOffer": "Faire une offre",
+      "ctaText": "Faites une offre sur cet article. Le vendeur peut accepter, refuser ou contre-proposer.",
+      "offerFrom": "Offre de",
+      "yourOffer": "Votre offre",
+      "selectedBySeller": "Sélectionnée par le vendeur",
+      "offered": "Proposé",
+      "sellerLabel": "Vendeur :",
+      "acceptDeclineNote": "Vous pouvez accepter ou refuser des offres après la date de clôture de l'annonce.",
+      "accept": "Accepter",
+      "accepting": "Acceptation…",
+      "decline": "Refuser",
+      "declining": "Refus…",
+      "anonymous": "Anonyme",
+      "verifiedLabel": "✓ Vérifié"
+    },
+    "shipping": {
+      "title": "Expédition",
+      "free": "Livraison gratuite",
+      "cost": "Frais d'expédition :",
+      "from": "De :"
+    },
+    "returnPolicy": {
+      "title": "Politique de retour",
+      "handlingTime": "Délai de traitement :"
+    },
+    "timeline": {
+      "title": "Calendrier de la Vente",
+      "started": "Commencé :",
+      "ends": "Se termine :"
+    },
+    "bidModal": {
+      "title": "Faire une enchère",
+      "transparency": "Pour que vous sachiez exactement où vous en êtes :",
+      "currentBid": "Enchère actuelle",
+      "minimumNextBid": "Prochaine enchère minimale",
+      "bidIncrement": "Incrément d'enchère",
+      "amountLabel": "Montant de votre enchère",
+      "emailLabel": "Votre e-mail",
+      "emailHint": "Nous l'utiliserons pour confirmer votre enchère.",
+      "notifyOutbid": "Me notifier par e-mail lorsque je suis surenchéri sur cette enchère",
+      "cancel": "Annuler",
+      "submit": "Enchérir",
+      "submitting": "Enchère en cours…"
+    },
+    "offerModal": {
+      "title": "Faire une offre",
+      "transparency": "Pour que vous sachiez exactement ce que vous proposez :",
+      "startingCurrent": "Départ / actuel",
+      "minimumOffer": "Offre minimum",
+      "amountLabel": "Montant de votre offre",
+      "emailLabel": "Votre e-mail",
+      "emailHint": "Le vendeur l'utilisera pour répondre à votre offre.",
+      "belowMinNote": "Votre offre est inférieure au prix minimum du vendeur. Le vendeur n'est pas obligé d'accepter cette offre, même si vous êtes le seul enchérisseur.",
+      "cancel": "Annuler",
+      "submit": "Envoyer l'offre",
+      "submitting": "Envoi de l'offre…"
+    },
+    "watchlistModal": {
+      "title": "Enregistrer dans les favoris",
+      "desc": "Connectez-vous ou créez un compte pour enregistrer cet article dans vos favoris et le voir dans votre tableau de bord.",
+      "login": "Se connecter",
+      "signup": "Créer un compte"
+    },
+    "selectWinnerModal": {
+      "title": "Sélectionner le gagnant",
+      "subtitle": "Seules les enchères de comptes enregistrés et vérifiés peuvent être sélectionnées. Les visiteurs ne sont pas éligibles.",
+      "loading": "Chargement des enchères…",
+      "noBids": "Aucune enchère à afficher.",
+      "verified": "Vérifié",
+      "guest": "Visiteur",
+      "unverified": "Non vérifié",
+      "selectBtn": "Sélectionner comme gagnant",
+      "selecting": "Sélection…",
+      "ineligible": "Compte vérifié requis"
+    },
+    "privateRoomModal": {
+      "title": "Créer une salle privée",
+      "subtitle": "Choisissez entre 2 et 5 enchérisseurs à inviter. Seuls les enchérisseurs enregistrés peuvent être invités. Les enchérisseurs invités recevront un lien vers la salle privée ; les autres seront notifiés qu'ils n'ont pas été sélectionnés.",
+      "loading": "Chargement des enchérisseurs…",
+      "noBidders": "Aucun enchérisseur à afficher.",
+      "selected": "Sélectionnés :",
+      "minMax": "(min 2, max 5)",
+      "create": "Créer la salle et envoyer les invitations",
+      "creating": "Création…",
+      "cannotInvite": "Visiteur (ne peut pas être invité)",
+      "ineligible": "Inscrivez-vous pour être éligible",
+      "invite": "Inviter"
+    }
   }
 }

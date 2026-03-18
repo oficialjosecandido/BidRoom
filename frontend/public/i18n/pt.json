@@ -71,11 +71,26 @@
       "title": "Navegar por Categoria",
       "subtitle": "Encontre o que ama nas nossas categorias selecionadas",
       "viewAll": "Ver Todas as Categorias →",
-      "electronics": { "title": "Eletrónicos", "desc": "Gadgets, câmeras e áudio" },
-      "homeGarden": { "title": "Casa & Jardim", "desc": "Mobiliário, decoração e mais" },
-      "art": { "title": "Arte", "desc": "Pinturas, esculturas e gravuras" },
-      "collectibles": { "title": "Colecionáveis", "desc": "Selos, moedas e memorabília" },
-      "jewelry": { "title": "Joalharia", "desc": "Anéis, relógios e pedras preciosas" }
+      "electronics": {
+        "title": "Eletrónicos",
+        "desc": "Gadgets, câmeras e áudio"
+      },
+      "homeGarden": {
+        "title": "Casa & Jardim",
+        "desc": "Mobiliário, decoração e mais"
+      },
+      "art": {
+        "title": "Arte",
+        "desc": "Pinturas, esculturas e gravuras"
+      },
+      "collectibles": {
+        "title": "Colecionáveis",
+        "desc": "Selos, moedas e memorabília"
+      },
+      "jewelry": {
+        "title": "Joalharia",
+        "desc": "Anéis, relógios e pedras preciosas"
+      }
     },
     "liveAuctions": {
       "title": "Leilões ao Vivo",
@@ -144,5 +159,214 @@
     "pt": "Português",
     "es": "Español",
     "fr": "Français"
+  },
+  "listingDetails": {
+    "loading": "Carregando detalhes do anúncio...",
+    "backToListings": "← Voltar aos Anúncios",
+    "currentBid": "Lance Atual",
+    "highestOffer": "Maior Oferta",
+    "noOffersYet": "Nenhuma oferta ainda",
+    "buyNow": "Comprar Agora",
+    "privateRoom": {
+      "active": "Sala Privada Ativa",
+      "activeDesc": "O vendedor iniciou a sala privada. Qualquer um pode assistir; apenas licitantes convidados podem dar lances. A sala encerra 60 segundos após o último lance.",
+      "watch": "Assistir sala privada",
+      "anyoneCanWatch": "Qualquer um pode assistir",
+      "created": "Sala privada criada",
+      "createdDesc": "Os convidados têm 15 minutos para aceitar. O leilão começará automaticamente após a janela de aceitação.",
+      "view": "Ver Sala Privada",
+      "available": "Sala privada disponível",
+      "availableDescSeller": "Crie sua sala privada e convide 2 a 5 licitantes para continuar. Você recebeu um e-mail com um link para começar.",
+      "availableDescBuyer": "O vendedor pode criar uma sala privada e convidar alguns licitantes para continuar. Você será notificado se for convidado.",
+      "closed": "Sala privada encerrada",
+      "closedDescWinner": "A sala privada terminou.",
+      "closedNoWinner": "O leilão foi encerrado porque nenhum licitante convidado aceitou o convite em 15 minutos. Não há vencedor.",
+      "ends60s": "(encerra 60s após o último lance)"
+    },
+    "time": {
+      "auctionEnds": "Leilão Encerra",
+      "privateRoomEnds": "Sala Privada Encerra",
+      "auctionEnded": "Leilão Encerrado",
+      "listingEnded": "Anúncio Encerrado"
+    },
+    "ended": {
+      "noBidsSeller": "Este leilão encerrou sem lances. Você pode reabri-lo por mais 7 dias abaixo.",
+      "selectWinner": "Selecione um vencedor abaixo.",
+      "winnerSelected": "Vencedor selecionado.",
+      "noOffersSeller": "Este anúncio encerrou sem ofertas. Você pode reabri-lo por mais 7 dias abaixo.",
+      "noBidsBuyer": "Este leilão encerrou sem lances.",
+      "auctionEndedWinner": "Leilão encerrado. Um vencedor foi selecionado.",
+      "auctionEnded": "Leilão encerrado.",
+      "listingSold": "Leilão encerrado. Item vendido.",
+      "listingEnded": "Este anúncio encerrou."
+    },
+    "priceDetails": {
+      "startingBid": "Lance Inicial:",
+      "reservePrice": "Preço de Reserva:",
+      "reserveNote": "(Vendedor deve vender se atingido)",
+      "minimumOffer": "Oferta Mínima:",
+      "autoAcceptsNote": "(Aceita automaticamente se atingido)",
+      "bidIncrement": "Incremento de Lance:"
+    },
+    "actions": {
+      "placeBid": "Dar Lance",
+      "placeBidEmail": "Dar Lance (E-mail Necessário)",
+      "makeOffer": "Fazer Oferta",
+      "addToWatchlist": "Adicionar à Lista de Desejos",
+      "removeFromWatchlist": "Remover da Lista de Desejos",
+      "selectWinner": "Selecionar vencedor",
+      "reopenForDays": "Reabrir por 7 dias",
+      "reopening": "Reabrindo…",
+      "createPrivateRoom": "Criar sala privada",
+      "cantBidOwnListing": "Você não pode dar lance no seu próprio anúncio.",
+      "cantOfferOwnListing": "Você não pode fazer oferta no seu próprio anúncio.",
+      "auctionClosedNoBids": "Leilão encerrado sem lances.",
+      "listingClosedNoOffers": "Anúncio encerrado sem ofertas.",
+      "auctionHasEndedNoBids": "Este leilão encerrou sem lances.",
+      "auctionHasEndedWinner": "Este leilão encerrou. Um vencedor foi selecionado.",
+      "auctionHasEnded": "Este leilão encerrou.",
+      "sellerHas24hOffer": "O vendedor tem 24h para aceitar uma oferta",
+      "sellerHas24hWinner": "O vendedor tem 24h para escolher um vencedor"
+    },
+    "watchlistCount": {
+      "one": "pessoa tem isso na lista de desejos",
+      "many": "pessoas têm isso na lista de desejos"
+    },
+    "info": {
+      "bids": "Lances",
+      "offers": "Ofertas",
+      "bid": "lance",
+      "bidsPlural": "lances",
+      "offer": "oferta",
+      "offersPlural": "ofertas",
+      "seller": "Vendedor",
+      "condition": "Condição",
+      "location": "Localização",
+      "noReviews": "Sem avaliações ainda"
+    },
+    "verification": {
+      "title": "Anúncio Verificado"
+    },
+    "tabs": {
+      "description": "Descrição",
+      "bidHistory": "Histórico de Lances",
+      "offers": "Ofertas"
+    },
+    "bidHistory": {
+      "loading": "Carregando histórico de lances...",
+      "tryAgain": "Tentar Novamente",
+      "noBids": "Nenhum Lance Ainda",
+      "noBidsDesc": "Seja o primeiro a dar um lance neste item!",
+      "totalBids": "Total de lances",
+      "leadingBid": "Lance liderando",
+      "lastActivity": "Última atividade",
+      "live": "AO VIVO",
+      "leading": "Liderando",
+      "authenticated": "Autenticado",
+      "guestBidder": "Visitante",
+      "verified": "Verificado",
+      "deposit": "Depósito",
+      "noBuyerReviews": "Sem avaliações de comprador",
+      "winner": "Vencedor",
+      "sellerNote": "Apenas lances de contas registradas e verificadas podem ser selecionados como lance vencedor. Visitantes devem criar uma conta e verificar o e-mail para serem elegíveis.",
+      "selectAsWinner": "Selecionar como vencedor",
+      "selecting": "Selecionando…",
+      "verifiedRequired": "Conta verificada necessária",
+      "notifyOutbid": "Me notifique por e-mail quando meu lance for superado",
+      "anonymous": "Anônimo"
+    },
+    "offerHistory": {
+      "loading": "Carregando ofertas...",
+      "tryAgain": "Tentar Novamente",
+      "noOffers": "Nenhuma Oferta Ainda",
+      "noOffersDesc": "Seja o primeiro a fazer uma oferta neste item!",
+      "makeOffer": "Fazer uma oferta",
+      "ctaText": "Faça uma oferta neste item. O vendedor pode aceitar, recusar ou contra-propor.",
+      "offerFrom": "Oferta de",
+      "yourOffer": "Sua oferta",
+      "selectedBySeller": "Selecionada pelo vendedor",
+      "offered": "Oferecido",
+      "sellerLabel": "Vendedor:",
+      "acceptDeclineNote": "Você pode aceitar ou recusar ofertas após a data de encerramento do anúncio.",
+      "accept": "Aceitar",
+      "accepting": "Aceitando…",
+      "decline": "Recusar",
+      "declining": "Recusando…",
+      "anonymous": "Anônimo",
+      "verifiedLabel": "✓ Verificado"
+    },
+    "shipping": {
+      "title": "Frete",
+      "free": "Frete grátis",
+      "cost": "Custo do frete:",
+      "from": "De:"
+    },
+    "returnPolicy": {
+      "title": "Política de devolução",
+      "handlingTime": "Tempo de manuseio:"
+    },
+    "timeline": {
+      "title": "Cronograma do Leilão",
+      "started": "Iniciado:",
+      "ends": "Encerra:"
+    },
+    "bidModal": {
+      "title": "Dar um lance",
+      "transparency": "Para que você saiba exatamente onde está:",
+      "currentBid": "Lance atual",
+      "minimumNextBid": "Próximo lance mínimo",
+      "bidIncrement": "Incremento de lance",
+      "amountLabel": "Valor do seu lance",
+      "emailLabel": "Seu e-mail",
+      "emailHint": "Usaremos isso para confirmar seu lance.",
+      "notifyOutbid": "Me notifique por e-mail quando meu lance for superado neste leilão",
+      "cancel": "Cancelar",
+      "submit": "Dar lance",
+      "submitting": "Enviando lance…"
+    },
+    "offerModal": {
+      "title": "Fazer uma oferta",
+      "transparency": "Para que você saiba exatamente o que está oferecendo:",
+      "startingCurrent": "Inicial / atual",
+      "minimumOffer": "Oferta mínima",
+      "amountLabel": "Valor da sua oferta",
+      "emailLabel": "Seu e-mail",
+      "emailHint": "O vendedor usará isso para responder à sua oferta.",
+      "belowMinNote": "Sua oferta está abaixo do preço mínimo do vendedor. O vendedor não é obrigado a aceitar esta oferta, mesmo que você seja o único licitante.",
+      "cancel": "Cancelar",
+      "submit": "Enviar oferta",
+      "submitting": "Enviando oferta…"
+    },
+    "watchlistModal": {
+      "title": "Salvar na Lista de Desejos",
+      "desc": "Faça login ou crie uma conta para salvar este item na sua lista de desejos e vê-lo no seu painel.",
+      "login": "Entrar",
+      "signup": "Criar conta"
+    },
+    "selectWinnerModal": {
+      "title": "Selecionar vencedor",
+      "subtitle": "Apenas lances de contas registradas e verificadas podem ser selecionados. Visitantes não são elegíveis.",
+      "loading": "Carregando lances…",
+      "noBids": "Nenhum lance para exibir.",
+      "verified": "Verificado",
+      "guest": "Visitante",
+      "unverified": "Não verificado",
+      "selectBtn": "Selecionar como vencedor",
+      "selecting": "Selecionando…",
+      "ineligible": "Conta verificada necessária"
+    },
+    "privateRoomModal": {
+      "title": "Criar sala privada",
+      "subtitle": "Escolha entre 2 e 5 licitantes para convidar. Apenas licitantes registrados podem ser convidados. Os licitantes convidados receberão um link para a sala privada; os demais serão notificados que não foram selecionados.",
+      "loading": "Carregando licitantes…",
+      "noBidders": "Nenhum licitante para exibir.",
+      "selected": "Selecionados:",
+      "minMax": "(mín 2, máx 5)",
+      "create": "Criar sala e enviar convites",
+      "creating": "Criando…",
+      "cannotInvite": "Visitante (não pode ser convidado)",
+      "ineligible": "Registre-se para ser elegível",
+      "invite": "Convidar"
+    }
   }
 }
