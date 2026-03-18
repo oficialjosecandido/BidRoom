@@ -7,6 +7,7 @@ import { firstValueFrom } from 'rxjs';
 import Swal from 'sweetalert2';
 import { ListingsService } from '../../../shared/services/listings.service';
 import { API_CONFIG } from '../../../shared/config/api.config';
+import { environment } from '../../../../environments/environment';
 import { HeaderComponent } from '../../../shared/components/header/header.component';
 import { FooterComponent } from '../../../shared/components/footer/footer.component';
 
@@ -134,13 +135,7 @@ export class AddListing implements OnInit {
     'For Parts or Not Working'
   ];
 
-  listingDurations = [
-    { value: '5 minutes', label: '5 Minutes' },
-    { value: '2 hours', label: '2 Hours' },
-    { value: '24 hours', label: '24 Hours' },
-    { value: '3 days', label: '3 Days' },
-    { value: '7 days', label: '7 Days' }
-  ];
+  listingDurations = environment.auctionDurations;
 
   shippingOptions = [
     { value: 'flat-rate', label: 'Flat Rate' },

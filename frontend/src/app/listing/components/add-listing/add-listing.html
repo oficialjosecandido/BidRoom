@@ -301,12 +301,12 @@
           <fieldset>
             <legend>Listing Duration *</legend>
           <div class="radio-group">
-            @for (duration of listingDurations; track duration) {
+            @for (duration of listingDurations; track duration.hours) {
 <label class="radio-option">
               <input
                 type="radio"
                 formControlName="duration"
-                [value]="duration.value"
+                [value]="duration.hours"
               />
               <span>{{ duration.label }}</span>
             </label>
