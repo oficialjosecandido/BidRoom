@@ -1,7 +1,7 @@
 <div class="settings-page">
   <div class="page-header">
-    <h1 class="page-title">Settings</h1>
-    <p class="page-subtitle">Manage your account, preferences and payment setup</p>
+    <h1 class="page-title">{{ 'dashboard.settings.title' | translate }}</h1>
+    <p class="page-subtitle">{{ 'dashboard.settings.subtitle' | translate }}</p>
   </div>
 
   <div class="settings-grid">
@@ -9,38 +9,38 @@
     <div class="settings-card">
       <div class="card-header">
         <span class="card-icon">👤</span>
-        <h2 class="card-title">Profile Information</h2>
+        <h2 class="card-title">{{ 'dashboard.settings.profileInfo' | translate }}</h2>
       </div>
       <div class="card-body">
         @if (currentUser$ | async; as user) {
           <div class="info-row">
-            <span class="info-label">Email</span>
+            <span class="info-label">{{ 'dashboard.settings.email' | translate }}</span>
             <span class="info-value">{{ user.email || '—' }}</span>
           </div>
           <div class="info-row">
-            <span class="info-label">Display Name</span>
+            <span class="info-label">{{ 'dashboard.settings.displayName' | translate }}</span>
             <span class="info-value">{{ user.displayName || '—' }}</span>
           </div>
           <div class="info-row">
-            <span class="info-label">Email Verified</span>
+            <span class="info-label">{{ 'dashboard.settings.emailVerified' | translate }}</span>
             <span class="info-value">
               <span class="status-badge" [class.verified]="user.emailVerified" [class.unverified]="!user.emailVerified">
-                {{ user.emailVerified ? '✓ Verified' : '✗ Not Verified' }}
+                {{ user.emailVerified ? ('dashboard.settings.verified' | translate) : ('dashboard.settings.notVerified' | translate) }}
               </span>
             </span>
           </div>
           <div class="info-row">
-            <span class="info-label">Buyer Score</span>
+            <span class="info-label">{{ 'dashboard.settings.buyerScore' | translate }}</span>
             <span class="info-value score-value">
               {{ buyerScore !== null ? (buyerScore | number:'1.1-1') + ' / 5' : '—' }}
-              @if (buyerReviewCount > 0) { <span class="review-count">({{ buyerReviewCount }} review{{ buyerReviewCount !== 1 ? 's' : '' }})</span> }
+              @if (buyerReviewCount > 0) { <span class="review-count">({{ buyerReviewCount }} {{ buyerReviewCount !== 1 ? ('dashboard.common.reviews' | translate) : ('dashboard.common.review' | translate) }})</span> }
             </span>
           </div>
           <div class="info-row">
-            <span class="info-label">Seller Score</span>
+            <span class="info-label">{{ 'dashboard.settings.sellerScore' | translate }}</span>
             <span class="info-value score-value">
               {{ sellerScore !== null ? (sellerScore | number:'1.1-1') + ' / 5' : '—' }}
-              @if (sellerReviewCount > 0) { <span class="review-count">({{ sellerReviewCount }} review{{ sellerReviewCount !== 1 ? 's' : '' }})</span> }
+              @if (sellerReviewCount > 0) { <span class="review-count">({{ sellerReviewCount }} {{ sellerReviewCount !== 1 ? ('dashboard.common.reviews' | translate) : ('dashboard.common.review' | translate) }})</span> }
             </span>
           </div>
         }
@@ -51,10 +51,10 @@
     <div class="settings-card">
       <div class="card-header">
         <span class="card-icon">🌐</span>
-        <h2 class="card-title">Language Preference</h2>
+        <h2 class="card-title">{{ 'dashboard.settings.languagePreference' | translate }}</h2>
       </div>
       <div class="card-body">
-        <p class="card-desc">Choose the language for your BidRoom experience. Your preference is saved to your account.</p>
+        <p class="card-desc">{{ 'dashboard.settings.languageDesc' | translate }}</p>
         <div class="lang-options">
           @for (lang of languages; track lang.code) {
             <label class="lang-option" [class.selected]="selectedLanguage === lang.code">
@@ -66,9 +66,9 @@
           }
         </div>
         <button class="save-btn" (click)="saveLanguage()" [disabled]="langSaving">
-          @if (langSaving) { Saving… }
-          @else if (langSaved) { ✓ Saved! }
-          @else { Save Language }
+          @if (langSaving) { {{ 'dashboard.settings.saving' | translate }} }
+          @else if (langSaved) { ✓ {{ 'dashboard.settings.saved' | translate }} }
+          @else { {{ 'dashboard.settings.saveLanguage' | translate }} }
         </button>
       </div>
     </div>
@@ -77,41 +77,41 @@
     <div class="settings-card settings-card-full">
       <div class="card-header">
         <span class="card-icon">💳</span>
-        <h2 class="card-title">Seller Payments (Stripe)</h2>
+        <h2 class="card-title">{{ 'dashboard.settings.sellerPayments' | translate }}</h2>
       </div>
       <div class="card-body">
         @if (connectStatusMessage) {
           <div class="connect-message">{{ connectStatusMessage }}</div>
         }
         @if (connectLoading) {
-          <p class="text-muted">Checking Stripe account status…</p>
+          <p class="text-muted">{{ 'dashboard.settings.checkingStripe' | translate }}</p>
         } @else {
           <div class="connect-status-row">
-            <span class="info-label">Stripe account status</span>
+            <span class="info-label">{{ 'dashboard.settings.stripeStatus' | translate }}</span>
             <span class="status-badge" [ngClass]="connectStatusClass">{{ connectStatusLabel }}</span>
           </div>
           @if (connectStatus?.onboarded) {
-            <p class="card-desc">Your Stripe account is active. Payouts will be sent to your connected bank account.</p>
+            <p class="card-desc">{{ 'dashboard.settings.stripeActive' | translate }}</p>
             @if (connectStatus?.chargesEnabled) {
-              <p class="text-success">Charges enabled · Payouts {{ connectStatus?.payoutsEnabled ? 'enabled' : 'pending' }}</p>
+              <p class="text-success">{{ 'dashboard.settings.chargesEnabled' | translate }} · {{ 'dashboard.settings.payouts' | translate }} {{ connectStatus?.payoutsEnabled ? ('dashboard.settings.enabled' | translate) : ('dashboard.settings.pending' | translate) }}</p>
             }
             <button class="action-btn action-btn-secondary" (click)="startOnboarding()" [disabled]="connectOnboarding">
-              {{ connectOnboarding ? 'Redirecting…' : 'Update Stripe account' }}
+              {{ connectOnboarding ? ('dashboard.settings.redirecting' | translate) : ('dashboard.settings.updateStripe' | translate) }}
             </button>
           } @else if (connectStatus?.connected) {
-            <p class="card-desc">Onboarding not yet complete. Please finish setting up to receive payouts.</p>
+            <p class="card-desc">{{ 'dashboard.settings.onboardingIncomplete' | translate }}</p>
             <button class="action-btn" (click)="startOnboarding()" [disabled]="connectOnboarding">
-              {{ connectOnboarding ? 'Redirecting…' : 'Complete Stripe setup' }}
+              {{ connectOnboarding ? ('dashboard.settings.redirecting' | translate) : ('dashboard.settings.completeStripeSetup' | translate) }}
             </button>
           } @else {
-            <p class="card-desc">Connect a Stripe account to receive payments from buyers. We'll create one for you — you just need to verify your identity and add bank account details.</p>
+            <p class="card-desc">{{ 'dashboard.settings.connectStripeDesc' | translate }}</p>
             <ul class="feature-list">
-              <li>No Stripe account required — we create one for you</li>
-              <li>Identity verification + bank account details</li>
-              <li>Payouts sent directly to your bank (2-day schedule)</li>
+              <li>{{ 'dashboard.settings.noStripeRequired' | translate }}</li>
+              <li>{{ 'dashboard.settings.identityVerification' | translate }}</li>
+              <li>{{ 'dashboard.settings.payoutSchedule' | translate }}</li>
             </ul>
             <button class="action-btn" (click)="startOnboarding()" [disabled]="connectOnboarding">
-              {{ connectOnboarding ? 'Redirecting to Stripe…' : 'Connect Stripe account' }}
+              {{ connectOnboarding ? ('dashboard.settings.redirectingToStripe' | translate) : ('dashboard.settings.connectStripe' | translate) }}
             </button>
           }
         }

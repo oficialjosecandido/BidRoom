@@ -1,12 +1,13 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
+import { TranslateModule } from '@ngx-translate/core';
 import { NotificationService, Notification } from '../../../shared/services/notification.service';
 
 @Component({
   selector: 'app-dashboard-notifications',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, TranslateModule],
   templateUrl: './dashboard-notifications.component.html',
   styleUrls: ['./dashboard-notifications.component.scss']
 })

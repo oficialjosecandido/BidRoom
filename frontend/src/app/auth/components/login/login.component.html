@@ -1,9 +1,9 @@
 <div class="login-container">
   <div class="login-card">
-    
+
 
     <!-- Title -->
-    <h2 class="title">Log into your Bidroom account</h2>
+    <h2 class="title">{{ 'auth.login.title' | translate }}</h2>
 
     <!-- Error Message -->
     @if (errorMessage) {
@@ -14,10 +14,10 @@
         @if (errorMessage.includes('No account found') || errorMessage.includes('Incorrect password')) {
 <div class="error-actions">
           @if (errorMessage.includes('No account found')) {
-<button type="button" class="action-link" (click)="navigateToSignup()">Sign up</button>
+<button type="button" class="action-link" (click)="navigateToSignup()">{{ 'auth.login.signUp' | translate }}</button>
 }
           @if (errorMessage.includes('Incorrect password') || errorMessage.includes('Too many failed')) {
-<button type="button" class="action-link" (click)="navigateToForgotPassword()">Reset password</button>
+<button type="button" class="action-link" (click)="navigateToForgotPassword()">{{ 'auth.login.resetPassword' | translate }}</button>
 }
         </div>
 }
@@ -38,25 +38,25 @@
         <path fill="#FBBC05" d="M3.964 10.712c-.18-.54-.282-1.117-.282-1.712 0-.595.102-1.172.282-1.712V4.956H.957C.347 6.175 0 7.55 0 9s.348 2.825.957 4.044l3.007-2.332z"/>
         <path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.956L3.964 7.288C4.672 5.163 6.656 3.58 9 3.58z"/>
       </svg>
-      Continue with Google
+      {{ 'auth.login.continueWithGoogle' | translate }}
     </button>
 
     <!-- Separator -->
     <div class="separator">
-      <span>or</span>
+      <span>{{ 'auth.common.or' | translate }}</span>
     </div>
 
     <!-- Login Form -->
     <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="login-form">
       <!-- Email Field -->
       <div class="form-group">
-        <label for="email">Email *</label>
+        <label for="email">{{ 'auth.common.email' | translate }} *</label>
         <input
           type="email"
           id="email"
           formControlName="email"
           [class.error]="getFieldError('email')"
-          placeholder="Enter your email"
+          [placeholder]="'auth.common.emailPlaceholder' | translate"
           autocomplete="email"
         />
         @if (getFieldError('email')) {
@@ -68,21 +68,21 @@
 
       <!-- Password Field -->
       <div class="form-group">
-        <label for="password">Password *</label>
+        <label for="password">{{ 'auth.common.password' | translate }} *</label>
         <div class="password-input-container">
           <input
             [type]="showPassword ? 'text' : 'password'"
             id="password"
             formControlName="password"
             [class.error]="getFieldError('password')"
-            placeholder="Enter your password"
+            [placeholder]="'auth.login.passwordPlaceholder' | translate"
             autocomplete="current-password"
           />
           <button
             type="button"
             class="password-toggle"
             (click)="togglePasswordVisibility()"
-            [attr.aria-label]="showPassword ? 'Hide password' : 'Show password'"
+            [attr.aria-label]="showPassword ? ('auth.common.hidePassword' | translate) : ('auth.common.showPassword' | translate)"
           >
             <span class="eye-icon" [class.show]="showPassword">👁️</span>
           </button>
@@ -101,22 +101,22 @@
         [disabled]="loginForm.invalid || isLoading"
       >
         @if (!isLoading) {
-<span>Log in</span>
+<span>{{ 'auth.login.logIn' | translate }}</span>
 }
         @if (isLoading) {
-<span>Logging in...</span>
+<span>{{ 'auth.login.loggingIn' | translate }}</span>
 }
       </button>
 
       <!-- Forgot Password Link -->
       <button type="button" class="forgot-password-link" (click)="navigateToForgotPassword()">
-        Reset password
+        {{ 'auth.login.resetPassword' | translate }}
       </button>
     </form>
 
     <!-- Sign Up Button -->
     <button class="signup-btn" (click)="navigateToSignup()">
-      Sign up
+      {{ 'auth.login.signUp' | translate }}
     </button>
   </div>
 </div>

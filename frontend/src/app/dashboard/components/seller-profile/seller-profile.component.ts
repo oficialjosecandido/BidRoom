@@ -1,6 +1,7 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
+import { TranslateModule } from '@ngx-translate/core';
 import { MyAuctionsComponent } from '../my-auctions/my-auctions.component';
 import { DashboardTransactionsComponent } from '../transactions/dashboard-transactions.component';
 import { DashboardDisputesComponent } from '../disputes/dashboard-disputes.component';
@@ -11,7 +12,7 @@ type SellerTab = 'auctions' | 'transactions' | 'disputes';
 @Component({
   selector: 'app-seller-profile',
   standalone: true,
-  imports: [CommonModule, MyAuctionsComponent, DashboardTransactionsComponent, DashboardDisputesComponent],
+  imports: [CommonModule, MyAuctionsComponent, DashboardTransactionsComponent, DashboardDisputesComponent, TranslateModule],
   templateUrl: './seller-profile.component.html',
   styleUrls: ['./seller-profile.component.scss']
 })

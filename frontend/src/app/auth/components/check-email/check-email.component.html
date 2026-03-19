@@ -3,24 +3,24 @@
     <div class="icon-wrapper">
       <span class="icon">✉️</span>
     </div>
-    <h1 class="title">Check your inbox</h1>
+    <h1 class="title">{{ 'auth.checkEmail.title' | translate }}</h1>
     <p class="message">
-      We've sent a confirmation email to
+      {{ 'auth.checkEmail.sentTo' | translate }}
       @if (email) {
 <strong>{{ email }}</strong>
 }
       @if (!email) {
-<span>your email address</span>
+<span>{{ 'auth.checkEmail.yourEmail' | translate }}</span>
 }.
     </p>
     <p class="instructions">
-      Click the link in the email to verify your account. You can then log in and start using BidRoom.
+      {{ 'auth.checkEmail.instructions' | translate }}
     </p>
     <p class="hint">
-      Didn't receive the email? Check your spam folder or wait a few minutes and try again.
+      {{ 'auth.checkEmail.hint' | translate }}
     </p>
     <button type="button" class="login-btn" (click)="goToLogin()">
-      Go to login
+      {{ 'auth.verifyEmail.goToLogin' | translate }}
     </button>
   </div>
 </div>

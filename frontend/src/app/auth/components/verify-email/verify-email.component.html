@@ -1,16 +1,12 @@
 <div class="verify-email-container">
   <div class="verify-email-card">
-    <!-- Header -->
-    <div class="header">
-      <h1 class="logo">.bubble</h1>
-    </div>
 
     <!-- Loading State -->
     @if (isLoading) {
 <div class="loading-state">
       <div class="spinner"></div>
-      <h2 class="title">Verifying your email...</h2>
-      <p class="subtitle">Please wait while we verify your email address.</p>
+      <h2 class="title">{{ 'auth.verifyEmail.verifying' | translate }}</h2>
+      <p class="subtitle">{{ 'auth.verifyEmail.pleaseWait' | translate }}</p>
     </div>
 }
 
@@ -18,9 +14,9 @@
     @if (isVerified && !isLoading) {
 <div class="success-state">
       <div class="success-icon">✓</div>
-      <h2 class="title">Email verified successfully!</h2>
-      <p class="subtitle">Your email address has been verified. You can now log in to your account.</p>
-      <button class="login-btn" (click)="navigateToLogin()">Go to login</button>
+      <h2 class="title">{{ 'auth.verifyEmail.successTitle' | translate }}</h2>
+      <p class="subtitle">{{ 'auth.verifyEmail.successSubtitle' | translate }}</p>
+      <button class="login-btn" (click)="navigateToLogin()">{{ 'auth.verifyEmail.goToLogin' | translate }}</button>
     </div>
 }
 
@@ -28,9 +24,9 @@
     @if (errorMessage && !isLoading) {
 <div class="error-state">
       <div class="error-icon">✗</div>
-      <h2 class="title">Verification failed</h2>
+      <h2 class="title">{{ 'auth.verifyEmail.failedTitle' | translate }}</h2>
       <p class="subtitle">{{ errorMessage }}</p>
-      <button class="login-btn" (click)="navigateToLogin()">Go to login</button>
+      <button class="login-btn" (click)="navigateToLogin()">{{ 'auth.verifyEmail.goToLogin' | translate }}</button>
     </div>
 }
   </div>

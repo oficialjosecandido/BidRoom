@@ -1,13 +1,14 @@
 import { Component, inject } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-forgot-password',
   standalone: true,
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, TranslateModule],
   templateUrl: './forgot-password.component.html',
   styleUrls: ['./forgot-password.component.scss']
 })
@@ -15,6 +16,7 @@ export class ForgotPasswordComponent {
   private fb = inject(FormBuilder);
   private authService = inject(AuthService);
   private router = inject(Router);
+  private translate = inject(TranslateService);
 
   forgotPasswordForm: FormGroup;
   isLoading = false;
@@ -38,11 +40,11 @@ export class ForgotPasswordComponent {
       this.authService.forgotPassword(email).subscribe({
         next: () => {
           this.isLoading = false;
-          this.successMessage = 'If an account with that email exists, a password reset link has been sent to your email address.';
+          this.successMessage = this.translate.instant('auth.forgotPassword.successMessage');
         },
         error: (error) => {
           this.isLoading = false;
-          this.errorMessage = error.error?.message || 'Failed to send reset email. Please try again.';
+          this.errorMessage = error.error?.message || this.translate.instant('auth.forgotPassword.sendFailed');
         }
       });
     }
@@ -56,10 +58,10 @@ export class ForgotPasswordComponent {
     const field = this.forgotPasswordForm.get(fieldName);
     if (field?.errors && field.touched) {
       if (field.errors['required']) {
-        return 'Email is required';
+        return this.translate.instant('auth.errors.emailRequired');
       }
       if (field.errors['email']) {
-        return 'Please enter a valid email address';
+        return this.translate.instant('auth.errors.invalidEmail');
       }
     }
     return '';
