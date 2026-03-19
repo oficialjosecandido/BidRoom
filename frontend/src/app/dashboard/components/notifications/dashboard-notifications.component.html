@@ -1,23 +1,23 @@
 <div class="notifications-container">
   <div class="page-header">
-    <h1>Notifications</h1>
-    <p class="subtitle">Stay updated on proposals, bids, and activity on your listings</p>
+    <h1>{{ 'dashboard.notifications.title' | translate }}</h1>
+    <p class="subtitle">{{ 'dashboard.notifications.subtitle' | translate }}</p>
     @if (unreadCount > 0) {
-      <button type="button" class="mark-all-btn" (click)="markAllAsRead()">Mark all as read</button>
+      <button type="button" class="mark-all-btn" (click)="markAllAsRead()">{{ 'dashboard.notifications.markAllRead' | translate }}</button>
     }
   </div>
 
   @if (loading) {
     <div class="loading-state">
       <div class="spinner"></div>
-      <p>Loading notifications...</p>
+      <p>{{ 'dashboard.notifications.loading' | translate }}</p>
     </div>
   }
 
   @if (error && !loading) {
     <div class="error-state">
       <p class="error-message">{{ error }}</p>
-      <button type="button" class="retry-btn" (click)="load()">Try again</button>
+      <button type="button" class="retry-btn" (click)="load()">{{ 'dashboard.common.tryAgain' | translate }}</button>
     </div>
   }
 
@@ -25,8 +25,8 @@
     @if (notifications.length === 0) {
       <div class="empty-state">
         <span class="empty-icon">🔔</span>
-        <h3>No notifications yet</h3>
-        <p>When you receive proposals, bids, or other activity, they'll appear here.</p>
+        <h3>{{ 'dashboard.notifications.noNotifications' | translate }}</h3>
+        <p>{{ 'dashboard.notifications.noNotificationsDesc' | translate }}</p>
       </div>
     } @else {
       <div class="notifications-list">

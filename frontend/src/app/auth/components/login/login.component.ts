@@ -1,6 +1,7 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 import { AuthService } from '../../services/auth.service';
 import { isAdminEmail } from '../../../shared/config/admin.constants';
@@ -8,7 +9,7 @@ import { isAdminEmail } from '../../../shared/config/admin.constants';
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, TranslateModule],
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.scss']
 })
@@ -17,6 +18,7 @@ export class LoginComponent implements OnInit {
   private authService = inject(AuthService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
+  private translate = inject(TranslateService);
 
   loginForm: FormGroup;
   isLoading = false;
@@ -37,7 +39,7 @@ export class LoginComponent implements OnInit {
     
     // Check if redirected here due to unverified email
     if (this.route.snapshot.queryParams['verifyEmail'] === 'true') {
-      this.errorMessage = 'Please verify your email address before accessing your account. Check your inbox for the verification email.';
+      this.errorMessage = this.translate.instant('auth.login.verifyEmailRequired');
     }
   }
 
@@ -103,10 +105,10 @@ export class LoginComponent implements OnInit {
     const field = this.loginForm.get(fieldName);
     if (field?.errors && field.touched) {
       if (field.errors['required']) {
-        return `${fieldName} is required`;
+        return this.translate.instant('auth.errors.fieldRequired', { field: this.translate.instant('auth.common.' + fieldName) });
       }
       if (field.errors['email']) {
-        return 'Please enter a valid email address';
+        return this.translate.instant('auth.errors.invalidEmail');
       }
     }
     return '';
@@ -114,29 +116,29 @@ export class LoginComponent implements OnInit {
 
   getErrorMessage(error: { code?: string; message?: string }): string {
     const errorCode = error?.code || '';
-    
+
     switch (errorCode) {
       case 'auth/user-not-found':
-        return 'No account found with this email address. Please sign up or check your email.';
+        return this.translate.instant('auth.errors.userNotFound');
       case 'auth/wrong-password':
       case 'auth/invalid-credential':
-        return 'Incorrect password. Please try again or reset your password.';
+        return this.translate.instant('auth.errors.wrongPassword');
       case 'auth/invalid-email':
-        return 'Please enter a valid email address.';
+        return this.translate.instant('auth.errors.invalidEmail');
       case 'auth/user-disabled':
-        return 'This account has been disabled. Please contact support.';
+        return this.translate.instant('auth.errors.userDisabled');
       case 'auth/too-many-requests':
-        return 'Too many failed login attempts. Please try again later or reset your password.';
+        return this.translate.instant('auth.errors.tooManyRequests');
       case 'auth/operation-not-allowed':
-        return 'This operation is not allowed. Please contact support.';
+        return this.translate.instant('auth.errors.operationNotAllowed');
       case 'auth/popup-closed-by-user':
-        return 'Sign-in popup was closed. Please try again.';
+        return this.translate.instant('auth.errors.popupClosed');
       case 'auth/cancelled-popup-request':
-        return 'Only one popup request is allowed at a time. Please try again.';
+        return this.translate.instant('auth.errors.popupCancelled');
       case 'auth/popup-blocked':
-        return 'Popup was blocked by your browser. Please allow popups and try again.';
+        return this.translate.instant('auth.errors.popupBlocked');
       default:
-        return error?.message || 'Login failed. Please try again.';
+        return error?.message || this.translate.instant('auth.errors.loginFailed');
     }
   }
 }

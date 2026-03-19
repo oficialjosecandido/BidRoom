@@ -1,13 +1,14 @@
 import { Component, inject } from '@angular/core';
 
 import { Router } from '@angular/router';
+import { TranslateModule } from '@ngx-translate/core';
 import { HeaderComponent } from '../../../shared/components/header/header.component';
 import { FooterComponent } from '../../../shared/components/footer/footer.component';
 
 @Component({
   selector: 'app-how-it-works',
   standalone: true,
-  imports: [HeaderComponent, FooterComponent],
+  imports: [HeaderComponent, FooterComponent, TranslateModule],
   templateUrl: './how-it-works.component.html',
   styleUrls: ['./how-it-works.component.scss']
 })

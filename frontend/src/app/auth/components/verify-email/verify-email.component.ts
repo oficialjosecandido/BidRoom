@@ -1,12 +1,13 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
+import { TranslateModule } from '@ngx-translate/core';
 
 import { Auth, applyActionCode } from '@angular/fire/auth';
 
 @Component({
   selector: 'app-verify-email',
   standalone: true,
-  imports: [],
+  imports: [TranslateModule],
   templateUrl: './verify-email.component.html',
   styleUrls: ['./verify-email.component.scss']
 })

@@ -2,6 +2,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { TranslateModule } from '@ngx-translate/core';
 import Swal from 'sweetalert2';
 import { AuthService, AppUser } from '../../../auth/services/auth.service';
 import { ListingsService, Listing } from '../../../shared/services/listings.service';
@@ -13,7 +14,7 @@ import { Observable } from 'rxjs';
 @Component({
   selector: 'app-dashboard-home',
   standalone: true,
-  imports: [CommonModule, RouterLink, FormsModule],
+  imports: [CommonModule, RouterLink, FormsModule, TranslateModule],
   templateUrl: './dashboard-home.component.html',
   styleUrls: ['./dashboard-home.component.scss']
 })

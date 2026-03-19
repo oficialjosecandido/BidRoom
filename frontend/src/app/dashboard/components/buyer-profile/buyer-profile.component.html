@@ -3,11 +3,11 @@
     <div class="profile-header-content">
       <div class="profile-avatar buyer-avatar">🛒</div>
       <div class="profile-info">
-        <h1 class="profile-title">Buyer Profile</h1>
+        <h1 class="profile-title">{{ 'dashboard.buyer.title' | translate }}</h1>
         @if (displayName) {
           <p class="profile-name">{{ displayName }}</p>
         }
-        <p class="profile-subtitle">Your bids, watchlist and purchase history</p>
+        <p class="profile-subtitle">{{ 'dashboard.buyer.subtitle' | translate }}</p>
         @if (buyerScore !== null) {
           <div class="rating-row">
             <span class="rating-stars">
@@ -16,10 +16,10 @@
               }
             </span>
             <span class="rating-score">{{ buyerScore!.toFixed(1) }}</span>
-            <span class="rating-count">({{ buyerReviewCount }} review{{ buyerReviewCount === 1 ? '' : 's' }})</span>
+            <span class="rating-count">({{ buyerReviewCount }} {{ buyerReviewCount === 1 ? ('dashboard.common.review' | translate) : ('dashboard.common.reviews' | translate) }})</span>
           </div>
         } @else {
-          <p class="no-rating">No buyer reviews yet</p>
+          <p class="no-rating">{{ 'dashboard.buyer.noReviews' | translate }}</p>
         }
       </div>
     </div>
@@ -27,16 +27,16 @@
 
   <div class="tab-bar">
     <button class="tab-btn" [class.active]="activeTab === 'bets'" (click)="setTab('bets')">
-      <span class="tab-icon">🎯</span> My Bets
+      <span class="tab-icon">🎯</span> {{ 'dashboard.buyer.tabs.bets' | translate }}
     </button>
     <button class="tab-btn" [class.active]="activeTab === 'watchlist'" (click)="setTab('watchlist')">
-      <span class="tab-icon">👁️</span> Watchlist
+      <span class="tab-icon">👁️</span> {{ 'dashboard.buyer.tabs.watchlist' | translate }}
     </button>
     <button class="tab-btn" [class.active]="activeTab === 'transactions'" (click)="setTab('transactions')">
-      <span class="tab-icon">💳</span> Transactions
+      <span class="tab-icon">💳</span> {{ 'dashboard.buyer.tabs.transactions' | translate }}
     </button>
     <button class="tab-btn" [class.active]="activeTab === 'disputes'" (click)="setTab('disputes')">
-      <span class="tab-icon">⚖️</span> Disputes
+      <span class="tab-icon">⚖️</span> {{ 'dashboard.buyer.tabs.disputes' | translate }}
     </button>
   </div>
 

@@ -2,6 +2,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { TranslateModule } from '@ngx-translate/core';
 import Swal from 'sweetalert2';
 import { TransactionsService, Transaction, TransactionStatus } from '../../../shared/services/transactions.service';
 import { ReviewsService } from '../../../shared/services/reviews.service';
@@ -20,7 +21,7 @@ const successToast = Swal.mixin({
 @Component({
   selector: 'app-dashboard-transactions',
   standalone: true,
-  imports: [CommonModule, RouterLink, FormsModule],
+  imports: [CommonModule, RouterLink, FormsModule, TranslateModule],
   templateUrl: './dashboard-transactions.component.html',
   styleUrls: ['./dashboard-transactions.component.scss']
 })

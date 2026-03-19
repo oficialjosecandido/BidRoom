@@ -1,6 +1,7 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
+import { TranslateModule } from '@ngx-translate/core';
 import { MyBetsComponent } from '../my-bets/my-bets.component';
 import { DashboardWatchlistComponent } from '../watchlist/dashboard-watchlist.component';
 import { DashboardTransactionsComponent } from '../transactions/dashboard-transactions.component';
@@ -12,7 +13,7 @@ type BuyerTab = 'bets' | 'watchlist' | 'transactions' | 'disputes';
 @Component({
   selector: 'app-buyer-profile',
   standalone: true,
-  imports: [CommonModule, MyBetsComponent, DashboardWatchlistComponent, DashboardTransactionsComponent, DashboardDisputesComponent],
+  imports: [CommonModule, MyBetsComponent, DashboardWatchlistComponent, DashboardTransactionsComponent, DashboardDisputesComponent, TranslateModule],
   templateUrl: './buyer-profile.component.html',
   styleUrls: ['./buyer-profile.component.scss']
 })

@@ -1,11 +1,12 @@
 import { Component, inject } from '@angular/core';
 
 import { ActivatedRoute, Router } from '@angular/router';
+import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-check-email',
   standalone: true,
-  imports: [],
+  imports: [TranslateModule],
   templateUrl: './check-email.component.html',
   styleUrls: ['./check-email.component.scss']
 })
