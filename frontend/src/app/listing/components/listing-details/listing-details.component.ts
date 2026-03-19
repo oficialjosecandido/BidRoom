@@ -7,7 +7,6 @@ import { finalize, timeout } from 'rxjs/operators';
 import { MAX_DISPLAYED_BIDS, EMAIL_REGEX } from '../../../shared/config/listing.constants';
 import Swal from 'sweetalert2';
 import { HeaderComponent } from '../../../shared/components/header/header.component';
-import { FooterComponent } from '../../../shared/components/footer/footer.component';
 import { ListingsService, Listing } from '../../../shared/services/listings.service';
 import { BidsService, Bid } from '../../../shared/services/bids.service';
 import { OffersService, Offer } from '../../../shared/services/offers.service';
@@ -20,7 +19,7 @@ import { TranslateModule } from '@ngx-translate/core';
 @Component({
   selector: 'app-listing-details',
   standalone: true,
-  imports: [CommonModule, FormsModule, HeaderComponent, FooterComponent, TranslateModule],
+  imports: [CommonModule, FormsModule, HeaderComponent, TranslateModule],
   templateUrl: './listing-details.component.html',
   styleUrls: ['./listing-details.component.scss']
 })

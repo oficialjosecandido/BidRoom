@@ -87,7 +87,7 @@
 </section>
 
 <!-- Ending Soon Banner -->
-@if (getEndingSoonListings().length > 0) {
+@if (enableAuctions && getEndingSoonListings().length > 0) {
 <section class="ending-soon">
   <div class="container">
     <div class="ending-soon-content">
@@ -171,6 +171,7 @@
 </section>
 
 <!-- Auction Listings Core -->
+@if (enableAuctions) {
 <section class="auction-listings">
   <div class="container">
     <div class="listings-header">
@@ -273,5 +274,6 @@
 }
   </div>
 </section>
+}
 
 <app-footer></app-footer>

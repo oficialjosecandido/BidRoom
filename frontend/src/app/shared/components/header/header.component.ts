@@ -5,6 +5,7 @@ import { Observable } from 'rxjs';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { AuthService } from '../../../auth/services/auth.service';
 import { ProposalNotificationsComponent } from '../../../dashboard/components/proposal-notifications/proposal-notifications.component';
+import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-header',
@@ -22,6 +23,8 @@ export class HeaderComponent {
   isAuthenticated$!: Observable<boolean>;
   menuOpen = false;
   langMenuOpen = false;
+
+  readonly enableAuctions = environment.enableAuctions;
 
   readonly languages = [
     { code: 'en', label: 'EN', name: 'English' },

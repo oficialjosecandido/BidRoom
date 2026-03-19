@@ -34,7 +34,9 @@
 
       <div class="nav-wrapper" [class.open]="menuOpen">
         <nav class="main-nav">
-          <a class="nav-link" [class.active]="activePage === 'auctions'" href="#" role="button" (click)="navigateToAuctions(); $event.preventDefault()" (keydown.enter)="navigateToAuctions(); $event.preventDefault()">{{ 'header.nav.auctions' | translate }}</a>
+          @if (enableAuctions) {
+            <a class="nav-link" [class.active]="activePage === 'auctions'" href="#" role="button" (click)="navigateToAuctions(); $event.preventDefault()" (keydown.enter)="navigateToAuctions(); $event.preventDefault()">{{ 'header.nav.auctions' | translate }}</a>
+          }
           <a class="nav-link" [class.active]="activePage === 'categories'" href="#" role="button" (click)="navigateToCategories(); $event.preventDefault()" (keydown.enter)="navigateToCategories(); $event.preventDefault()">{{ 'header.nav.categories' | translate }}</a>
           <a class="nav-link" [class.active]="activePage === 'how-it-works'" href="#" role="button" (click)="navigateToHowItWorks(); $event.preventDefault()" (keydown.enter)="navigateToHowItWorks(); $event.preventDefault()">{{ 'header.nav.howItWorks' | translate }}</a>
           <a class="nav-link" [class.active]="activePage === 'faq'" href="#" role="button" (click)="navigateToFaq(); $event.preventDefault()" (keydown.enter)="navigateToFaq(); $event.preventDefault()">{{ 'header.nav.faq' | translate }}</a>

@@ -136,6 +136,8 @@ export class AddListing implements OnInit {
   ];
 
   listingDurations = environment.auctionDurations;
+  readonly enableAuctions = environment.enableAuctions;
+  readonly enablePrivateRooms = environment.enablePrivateRooms;
 
   shippingOptions = [
     { value: 'flat-rate', label: 'Flat Rate' },
@@ -202,6 +204,11 @@ export class AddListing implements OnInit {
       returnPolicy: ['', Validators.required],
       sellerDeclaration: [false, Validators.requiredTrue]
     });
+
+    // Lock to best-offer if auctions are disabled in this environment
+    if (!this.enableAuctions) {
+      this.listingForm.patchValue({ listingFormat: 'best-offer' });
+    }
 
     // Conditional validators based on listing format
     this.listingForm.get('listingFormat')?.valueChanges.subscribe(format => {

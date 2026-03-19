@@ -6,6 +6,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { HeaderComponent } from '../../../shared/components/header/header.component';
 import { FooterComponent } from '../../../shared/components/footer/footer.component';
 import { ListingsService, Listing, ListingsQueryParams, StatsOverview } from '../../../shared/services/listings.service';
+import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-home',
@@ -18,6 +19,9 @@ export class HomeComponent implements OnInit, AfterViewInit {
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private listingsService = inject(ListingsService);
+
+  readonly enableAuctions = environment.enableAuctions;
+  readonly enablePrivateRooms = environment.enablePrivateRooms;
 
   listings: Listing[] = [];
   loading = true;
