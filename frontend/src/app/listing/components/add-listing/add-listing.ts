@@ -5,6 +5,7 @@ import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import Swal from 'sweetalert2';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { ListingsService } from '../../../shared/services/listings.service';
 import { API_CONFIG } from '../../../shared/config/api.config';
 import { environment } from '../../../../environments/environment';
@@ -20,7 +21,7 @@ interface Category {
 @Component({
   selector: 'app-add-listing',
   standalone: true,
-  imports: [ReactiveFormsModule, HeaderComponent, FooterComponent],
+  imports: [ReactiveFormsModule, TranslateModule, HeaderComponent, FooterComponent],
   templateUrl: './add-listing.html',
   styleUrl: './add-listing.scss',
 })
@@ -29,6 +30,7 @@ export class AddListing implements OnInit {
   private router = inject(Router);
   private listingsService = inject(ListingsService);
   private http = inject(HttpClient);
+  private translate = inject(TranslateService);
 
   listingForm!: FormGroup;
   currentStep = 1;
@@ -127,36 +129,41 @@ export class AddListing implements OnInit {
   ];
 
   itemConditions = [
-    'New',
-    'Used - Excellent',
-    'Used - Very Good',
-    'Used - Good',
-    'Used - Fair',
-    'For Parts or Not Working'
+    { value: 'New', labelKey: 'addListing.conditionNew' },
+    { value: 'Used - Excellent', labelKey: 'addListing.conditionUsedExcellent' },
+    { value: 'Used - Very Good', labelKey: 'addListing.conditionUsedVeryGood' },
+    { value: 'Used - Good', labelKey: 'addListing.conditionUsedGood' },
+    { value: 'Used - Fair', labelKey: 'addListing.conditionUsedFair' },
+    { value: 'For Parts or Not Working', labelKey: 'addListing.conditionForParts' }
   ];
 
-  listingDurations = environment.auctionDurations;
+  listingDurations = environment.auctionDurations.map(d => ({
+    ...d,
+    labelKey: d.hours <= 1/12 ? 'addListing.duration5min' :
+      d.hours <= 1 ? 'addListing.duration1hour' :
+      d.hours <= 7 ? 'addListing.duration7hours' : 'addListing.duration24hours'
+  }));
 
   shippingOptions = [
-    { value: 'flat-rate', label: 'Flat Rate' },
-    { value: 'calculated', label: 'Calculated Shipping' },
-    { value: 'local-pickup', label: 'Local Pickup Only' },
-    { value: 'free', label: 'Free Shipping' }
+    { value: 'flat-rate', labelKey: 'addListing.shippingFlatRate' },
+    { value: 'calculated', labelKey: 'addListing.shippingCalculated' },
+    { value: 'local-pickup', labelKey: 'addListing.shippingLocalPickup' },
+    { value: 'free', labelKey: 'addListing.shippingFree' }
   ];
 
   handlingTimes = [
-    { value: 1, label: '1 Business Day' },
-    { value: 2, label: '2 Business Days' },
-    { value: 3, label: '3 Business Days' },
-    { value: 5, label: '5 Business Days' },
-    { value: 7, label: '7 Business Days' }
+    { value: 1, labelKey: 'addListing.handling1' },
+    { value: 2, labelKey: 'addListing.handling2' },
+    { value: 3, labelKey: 'addListing.handling3' },
+    { value: 5, labelKey: 'addListing.handling5' },
+    { value: 7, labelKey: 'addListing.handling7' }
   ];
 
   returnPolicies = [
-    { value: '30-days', label: '30 Day Returns' },
-    { value: '14-days', label: '14 Day Returns' },
-    { value: 'no-returns', label: 'No Returns Accepted' },
-    { value: 'custom', label: 'Custom Policy' }
+    { value: '30-days', labelKey: 'addListing.return30' },
+    { value: '14-days', labelKey: 'addListing.return14' },
+    { value: 'no-returns', labelKey: 'addListing.returnNo' },
+    { value: 'custom', labelKey: 'addListing.returnCustom' }
   ];
 
   selectedCategory: Category | null = null;
@@ -357,7 +364,7 @@ export class AddListing implements OnInit {
       }
     });
     if (rejected.length > 0) {
-      this.errorMessage = `Invalid file type. Only images (JPEG, PNG, GIF, WebP, BMP) are allowed. Rejected: ${rejected.join(', ')}`;
+      this.errorMessage = this.translate.instant('addListing.errors.invalidFileType', { files: rejected.join(', ') });
     }
     while (this.media.length < this.uploadedFiles.length) {
       this.media.push(this.fb.control(this.uploadedFiles[this.media.length]));
@@ -460,7 +467,7 @@ export class AddListing implements OnInit {
       if (this.currentStep === 2) {
         const description = this.listingForm.get('description');
         if (description?.invalid) {
-          this.errorMessage = 'Please complete all required fields. The description must be at least 50 characters long.';
+          this.errorMessage = this.translate.instant('addListing.errorStep2Description');
           // Clear error message after 5 seconds
           setTimeout(() => this.errorMessage = '', 5000);
         }
@@ -564,16 +571,16 @@ export class AddListing implements OnInit {
         let imageUrls: string[] = [];
         
         if (this.uploadedFiles.length > 0) {
-          this.errorMessage = 'Uploading images...';
+          this.errorMessage = this.translate.instant('addListing.uploadingImages');
           imageUrls = await this.uploadImages();
           
           if (imageUrls.length === 0) {
-            throw new Error('Failed to upload images. Please try again.');
+            throw new Error(this.translate.instant('addListing.errorUploadFailed'));
           }
         }
-        
+
         // Step 2: Create listing with image URLs
-        this.errorMessage = 'Creating listing...';
+        this.errorMessage = this.translate.instant('addListing.creatingListing');
         const formData = this.prepareListingData();
         formData.images = imageUrls;
         
@@ -586,7 +593,7 @@ export class AddListing implements OnInit {
           toast: true,
           position: 'top-end',
           icon: 'success',
-          title: 'Listing created successfully!',
+          title: this.translate.instant('addListing.successMessage'),
           showConfirmButton: false,
           timer: 3000,
           timerProgressBar: true
@@ -604,7 +611,7 @@ export class AddListing implements OnInit {
       });
       
       if (this.uploadedFiles.length < 1) {
-        this.errorMessage = 'Please upload at least 1 image (3 recommended).';
+        this.errorMessage = this.translate.instant('addListing.uploadMinError');
       }
     }
   }
@@ -644,45 +651,45 @@ export class AddListing implements OnInit {
     const control = this.listingForm.get(fieldName);
     if (control && control.invalid && control.touched) {
       if (control.hasError('required')) {
-        return `${this.getFieldLabel(fieldName)} is required`;
+        return this.translate.instant('addListing.errors.required', { field: this.getFieldLabel(fieldName) });
       }
       if (control.hasError('maxLength')) {
-        return `${this.getFieldLabel(fieldName)} is too long`;
+        return this.translate.instant('addListing.errors.tooLong', { field: this.getFieldLabel(fieldName) });
       }
       if (control.hasError('minLength')) {
-        return `${this.getFieldLabel(fieldName)} is too short`;
+        return this.translate.instant('addListing.errors.tooShort', { field: this.getFieldLabel(fieldName) });
       }
       if (control.hasError('min')) {
-        return `Value must be greater than ${control.errors?.['min'].min}`;
+        return this.translate.instant('addListing.errors.minValue', { min: control.errors?.['min'].min });
       }
       if (control.hasError('mustBeHigherThanStartingBid')) {
-        return 'Buy Now price must be higher than Starting Bid';
+        return this.translate.instant('addListing.errors.buyNowTooLow');
       }
       if (control.hasError('mustBeAtLeastStartingBid')) {
-        return 'Reserve price must be at least the starting bid';
+        return this.translate.instant('addListing.errors.reserveTooLow');
       }
     }
     return '';
   }
 
   getFieldLabel(fieldName: string): string {
-    const labels: Record<string, string> = {
-      title: 'Listing Title',
-      category: 'Category',
-      subCategory: 'Sub-Category',
-      listingFormat: 'Listing Format',
-      condition: 'Item Condition',
-      description: 'Description',
-      locationCity: 'City',
-      locationRegion: 'Region/State',
-      duration: 'Listing Duration',
-      startingBid: 'Starting Bid',
-      reservePrice: 'Seller Reserve Price',
-      shippingOption: 'Shipping Option',
-      handlingTime: 'Handling Time',
-      returnPolicy: 'Return Policy'
+    const keyMap: Record<string, string> = {
+      title: 'addListing.listingTitle',
+      category: 'addListing.category',
+      subCategory: 'addListing.subCategory',
+      listingFormat: 'addListing.listingFormat',
+      condition: 'addListing.condition',
+      description: 'addListing.description',
+      locationCity: 'addListing.city',
+      locationRegion: 'addListing.regionState',
+      duration: 'addListing.duration',
+      startingBid: 'addListing.startingBid',
+      reservePrice: 'addListing.reservePrice',
+      shippingOption: 'addListing.shippingOptions',
+      handlingTime: 'addListing.handlingTime',
+      returnPolicy: 'addListing.returnPolicy'
     };
-    return labels[fieldName] || fieldName;
+    return this.translate.instant(keyMap[fieldName] || fieldName);
   }
 
   isStep(step: number): boolean {

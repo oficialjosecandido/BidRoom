@@ -1,13 +1,14 @@
 import { Component, inject } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, AbstractControl } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-signup',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [ReactiveFormsModule, RouterLink, TranslateModule],
   templateUrl: './signup.component.html',
   styleUrls: ['./signup.component.scss']
 })
@@ -15,6 +16,7 @@ export class SignupComponent {
   private fb = inject(FormBuilder);
   private authService = inject(AuthService);
   private router = inject(Router);
+  private translate = inject(TranslateService);
 
   signupForm: FormGroup;
   isLoading = false;
@@ -123,25 +125,25 @@ export class SignupComponent {
     const field = this.signupForm.get(fieldName);
     if (field?.errors && field.touched) {
       if (fieldName === 'acceptTerms' && field.errors['required']) {
-        return 'You must accept the Terms and Conditions';
+        return this.translate.instant('auth.errors.mustAcceptTerms');
       }
       if (field.errors['required']) {
-        return `${fieldName} is required`;
+        return this.translate.instant('auth.errors.fieldRequired', { field: this.translate.instant('auth.signup.' + fieldName) });
       }
       if (field.errors['email']) {
-        return 'Please enter a valid email address';
+        return this.translate.instant('auth.errors.invalidEmail');
       }
       if (field.errors['emailExists']) {
-        return 'This email is already registered';
+        return this.translate.instant('auth.errors.emailExists');
       }
       if (field.errors['minlength']) {
-        return `${fieldName} must be at least ${field.errors['minlength'].requiredLength} characters long`;
+        return this.translate.instant('auth.errors.minLength', { field: this.translate.instant('auth.signup.' + fieldName), min: field.errors['minlength'].requiredLength });
       }
       if (field.errors['strongPassword']) {
-        return 'Password must be at least 12 characters long and contain at least one uppercase letter, one lowercase letter, and one number';
+        return this.translate.instant('auth.errors.weakPassword');
       }
       if (field.errors['passwordMismatch']) {
-        return 'Passwords do not match';
+        return this.translate.instant('auth.errors.passwordMismatch');
       }
     }
     return '';
@@ -149,24 +151,24 @@ export class SignupComponent {
 
   getErrorMessage(error: any): string {
     const errorCode = error?.code || '';
-    
+
     switch (errorCode) {
       case 'auth/email-already-in-use':
-        return 'This email address is already registered. Please log in instead or use a different email.';
+        return this.translate.instant('auth.errors.emailAlreadyInUse');
       case 'auth/invalid-email':
-        return 'Please enter a valid email address.';
+        return this.translate.instant('auth.errors.invalidEmail');
       case 'auth/operation-not-allowed':
-        return 'This operation is not allowed. Please contact support.';
+        return this.translate.instant('auth.errors.operationNotAllowed');
       case 'auth/weak-password':
-        return 'The password is too weak. Please choose a stronger password.';
+        return this.translate.instant('auth.errors.weakPassword');
       case 'auth/popup-closed-by-user':
-        return 'Sign-in popup was closed. Please try again.';
+        return this.translate.instant('auth.errors.popupClosed');
       case 'auth/cancelled-popup-request':
-        return 'Only one popup request is allowed at a time. Please try again.';
+        return this.translate.instant('auth.errors.popupCancelled');
       case 'auth/popup-blocked':
-        return 'Popup was blocked by your browser. Please allow popups and try again.';
+        return this.translate.instant('auth.errors.popupBlocked');
       default:
-        return error?.message || 'Registration failed. Please try again.';
+        return error?.message || this.translate.instant('auth.errors.registrationFailed');
     }
   }
 

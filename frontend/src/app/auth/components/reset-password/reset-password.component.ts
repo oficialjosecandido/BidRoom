@@ -1,13 +1,14 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-reset-password',
   standalone: true,
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, TranslateModule],
   templateUrl: './reset-password.component.html',
   styleUrls: ['./reset-password.component.scss']
 })
@@ -16,6 +17,7 @@ export class ResetPasswordComponent implements OnInit {
   private authService = inject(AuthService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
+  private translate = inject(TranslateService);
 
   resetPasswordForm: FormGroup;
   isLoading = false;
@@ -37,14 +39,14 @@ export class ResetPasswordComponent implements OnInit {
     this.route.queryParams.subscribe(params => {
       this.code = params['oobCode'];
       if (!this.code) {
-        this.errorMessage = 'Invalid or missing reset code.';
+        this.errorMessage = this.translate.instant('auth.resetPassword.invalidCode');
         return;
       }
       // Optionally verify code to pre-validate
       this.authService.verifyPasswordResetCode(this.code).subscribe({
         next: () => { /* code verified successfully */ },
         error: () => {
-          this.errorMessage = 'The reset link is invalid or expired.';
+          this.errorMessage = this.translate.instant('auth.resetPassword.expiredLink');
         }
       });
     });
@@ -97,7 +99,7 @@ export class ResetPasswordComponent implements OnInit {
     const password = this.resetPasswordForm.value.password;
     if (password && !this.isStrongPassword(password)) {
       this.resetPasswordForm.get('password')?.setErrors({ strongPassword: true });
-      this.errorMessage = 'Password must be at least 12 characters long and contain at least one uppercase letter, one lowercase letter, and one number';
+      this.errorMessage = this.translate.instant('auth.errors.weakPassword');
       return;
     }
 
@@ -109,7 +111,7 @@ export class ResetPasswordComponent implements OnInit {
       this.authService.confirmPasswordReset(this.code, password).subscribe({
         next: () => {
           this.isLoading = false;
-          this.successMessage = 'Password reset successfully! You can now log in with your new password.';
+          this.successMessage = this.translate.instant('auth.resetPassword.successMessage');
           // Redirect to login after a delay
           setTimeout(() => {
             this.router.navigate(['/auth/login']);
@@ -117,7 +119,7 @@ export class ResetPasswordComponent implements OnInit {
         },
         error: (error) => {
           this.isLoading = false;
-          this.errorMessage = error?.message || 'Failed to reset password. Please try again.';
+          this.errorMessage = error?.message || this.translate.instant('auth.resetPassword.resetFailed');
         }
       });
     } else {
@@ -125,13 +127,13 @@ export class ResetPasswordComponent implements OnInit {
       if (this.resetPasswordForm.get('password')?.errors) {
         const passwordErrors = this.resetPasswordForm.get('password')?.errors;
         if (passwordErrors?.['strongPassword']) {
-          this.errorMessage = 'Password must be at least 12 characters long and contain at least one uppercase letter, one lowercase letter, and one number';
+          this.errorMessage = this.translate.instant('auth.errors.weakPassword');
         } else if (passwordErrors?.['minlength']) {
-          this.errorMessage = 'Password must be at least 12 characters long';
+          this.errorMessage = this.translate.instant('auth.errors.passwordMinLength');
         }
       }
       if (this.resetPasswordForm.errors?.['passwordMismatch']) {
-        this.errorMessage = 'Passwords do not match';
+        this.errorMessage = this.translate.instant('auth.errors.passwordMismatch');
       }
     }
   }
@@ -181,16 +183,16 @@ export class ResetPasswordComponent implements OnInit {
     const field = this.resetPasswordForm.get(fieldName);
     if (field?.errors && field.touched) {
       if (field.errors['required']) {
-        return `${fieldName} is required`;
+        return this.translate.instant('auth.errors.fieldRequired', { field: this.translate.instant('auth.resetPassword.' + fieldName) });
       }
       if (field.errors['minlength']) {
-        return 'Password must be at least 12 characters long';
+        return this.translate.instant('auth.errors.passwordMinLength');
       }
       if (field.errors['strongPassword']) {
-        return 'Password must be at least 12 characters long and contain at least one uppercase letter, one lowercase letter, and one number';
+        return this.translate.instant('auth.errors.weakPassword');
       }
       if (field.errors['passwordMismatch']) {
-        return 'Passwords do not match';
+        return this.translate.instant('auth.errors.passwordMismatch');
       }
     }
     return '';

@@ -3,8 +3,8 @@
 <!-- Page Header -->
 <section class="page-header">
   <div class="container">
-    <h1>Contact Us</h1>
-    <p>We're here to help! Get in touch with our support team for any questions or concerns.</p>
+    <h1>{{ 'contact.hero.title' | translate }}</h1>
+    <p>{{ 'contact.hero.subtitle' | translate }}</p>
   </div>
 </section>
 
@@ -15,19 +15,19 @@
       <!-- Contact Form -->
       <div class="col-8">
         <div class="contact-form-container">
-          <h2>Send us a Message</h2>
-          <p>Fill out the form below and we'll get back to you as soon as possible.</p>
-          
+          <h2>{{ 'contact.form.heading' | translate }}</h2>
+          <p>{{ 'contact.form.subheading' | translate }}</p>
+
           <form [formGroup]="contactForm" (ngSubmit)="onSubmit()" class="contact-form">
             <div class="form-row">
               <div class="form-group">
-                <label for="name">Full Name *</label>
+                <label for="name">{{ 'contact.form.name' | translate }} *</label>
                 <input
                   type="text"
                   id="name"
                   formControlName="name"
                   [class.error]="getFieldError('name')"
-                  placeholder="Your full name"
+                  [placeholder]="'contact.form.namePlaceholder' | translate"
                 />
                 @if (getFieldError('name')) {
 <div class="field-error">
@@ -35,9 +35,9 @@
                 </div>
 }
               </div>
-              
+
               <div class="form-group">
-                <label for="email">Email Address *</label>
+                <label for="email">{{ 'contact.form.email' | translate }} *</label>
                 <input
                   type="email"
                   id="email"
@@ -52,20 +52,20 @@
 }
               </div>
             </div>
-            
+
             <div class="form-group">
-              <label for="inquiryType">Inquiry Type *</label>
+              <label for="inquiryType">{{ 'contact.form.inquiryType' | translate }} *</label>
               <select
                 id="inquiryType"
                 formControlName="inquiryType"
                 [class.error]="getFieldError('inquiryType')"
               >
-                <option value="general">General Question</option>
-                <option value="technical">Technical Support</option>
-                <option value="billing">Billing & Payments</option>
-                <option value="account">Account Issues</option>
-                <option value="report">Report a Problem</option>
-                <option value="partnership">Partnership Inquiry</option>
+                <option value="general">{{ 'contact.form.inquiryGeneral' | translate }}</option>
+                <option value="technical">{{ 'contact.form.inquiryTechnical' | translate }}</option>
+                <option value="billing">{{ 'contact.form.inquiryBilling' | translate }}</option>
+                <option value="account">{{ 'contact.form.inquiryAccount' | translate }}</option>
+                <option value="report">{{ 'contact.form.inquiryReport' | translate }}</option>
+                <option value="partnership">{{ 'contact.form.inquiryPartnership' | translate }}</option>
               </select>
               @if (getFieldError('inquiryType')) {
 <div class="field-error">
@@ -73,15 +73,15 @@
               </div>
 }
             </div>
-            
+
             <div class="form-group">
-              <label for="subject">Subject *</label>
+              <label for="subject">{{ 'contact.form.subject' | translate }} *</label>
               <input
                 type="text"
                 id="subject"
                 formControlName="subject"
                 [class.error]="getFieldError('subject')"
-                placeholder="Brief description of your inquiry"
+                [placeholder]="'contact.form.subjectPlaceholder' | translate"
               />
               @if (getFieldError('subject')) {
 <div class="field-error">
@@ -89,14 +89,14 @@
               </div>
 }
             </div>
-            
+
             <div class="form-group">
-              <label for="message">Message *</label>
+              <label for="message">{{ 'contact.form.message' | translate }} *</label>
               <textarea
                 id="message"
                 formControlName="message"
                 [class.error]="getFieldError('message')"
-                placeholder="Please provide details about your inquiry..."
+                [placeholder]="'contact.form.messagePlaceholder' | translate"
                 rows="6"
               ></textarea>
               @if (getFieldError('message')) {
@@ -105,20 +105,20 @@
               </div>
 }
             </div>
-            
+
             <button
               type="submit"
               class="btn btn-primary btn-large"
               [disabled]="contactForm.invalid || isSubmitting"
             >
               @if (!isSubmitting) {
-<span>Send Message</span>
+<span>{{ 'contact.form.sendMessage' | translate }}</span>
 }
               @if (isSubmitting) {
-<span>Sending...</span>
+<span>{{ 'contact.form.sending' | translate }}</span>
 }
             </button>
-            
+
             @if (submitMessage) {
 <div class="submit-message">
               {{ submitMessage }}
@@ -127,56 +127,56 @@
           </form>
         </div>
       </div>
-      
+
       <!-- Contact Information -->
       <div class="col-4">
         <div class="contact-info">
-          <h3>Get in Touch</h3>
-          <p>We're here to help with any questions you might have about BidRoom.</p>
-          
+          <h3>{{ 'contact.info.heading' | translate }}</h3>
+          <p>{{ 'contact.info.subheading' | translate }}</p>
+
           <div class="contact-methods">
             <div class="contact-method">
               <div class="contact-icon">📧</div>
               <div class="contact-details">
-                <h4>Email Support</h4>
+                <h4>{{ 'contact.info.emailSupport' | translate }}</h4>
                 <p>support@bidroom.com</p>
-                <small>Response within 24 hours</small>
+                <small>{{ 'contact.info.emailResponse' | translate }}</small>
               </div>
             </div>
-            
+
             <div class="contact-method">
               <div class="contact-icon">💬</div>
               <div class="contact-details">
-                <h4>Live Chat</h4>
-                <p>Available 9 AM - 6 PM EST</p>
-                <small>Monday through Friday</small>
+                <h4>{{ 'contact.info.liveChat' | translate }}</h4>
+                <p>{{ 'contact.info.liveChatHours' | translate }}</p>
+                <small>{{ 'contact.info.liveChatDays' | translate }}</small>
               </div>
             </div>
-            
+
             <div class="contact-method">
               <div class="contact-icon">📞</div>
               <div class="contact-details">
-                <h4>Phone Support</h4>
+                <h4>{{ 'contact.info.phoneSupport' | translate }}</h4>
                 <p>1-800-BIDROOM</p>
-                <small>9 AM - 6 PM EST</small>
+                <small>{{ 'contact.info.phoneSupportHours' | translate }}</small>
               </div>
             </div>
           </div>
-          
+
           <div class="business-hours">
-            <h4>Business Hours</h4>
+            <h4>{{ 'contact.info.businessHours' | translate }}</h4>
             <ul>
-              <li>Monday - Friday: 9:00 AM - 6:00 PM EST</li>
-              <li>Saturday: 10:00 AM - 4:00 PM EST</li>
-              <li>Sunday: Closed</li>
+              <li>{{ 'contact.info.hoursWeekday' | translate }}</li>
+              <li>{{ 'contact.info.hoursSaturday' | translate }}</li>
+              <li>{{ 'contact.info.hoursSunday' | translate }}</li>
             </ul>
           </div>
-          
+
           <div class="emergency-contact">
-            <h4>Urgent Issues</h4>
-            <p>For urgent account or security issues, please call our emergency line:</p>
+            <h4>{{ 'contact.info.urgentIssues' | translate }}</h4>
+            <p>{{ 'contact.info.urgentDesc' | translate }}</p>
             <p><strong>1-800-URGENT-1</strong></p>
-            <small>Available 24/7 for critical issues only</small>
+            <small>{{ 'contact.info.urgentAvailability' | translate }}</small>
           </div>
         </div>
       </div>
@@ -187,29 +187,29 @@
 <!-- FAQ Quick Links -->
 <section class="faq-links">
   <div class="container">
-    <h2 class="section-title">Quick Answers</h2>
-    <p class="section-subtitle">Check our FAQ for instant answers to common questions.</p>
-    
+    <h2 class="section-title">{{ 'contact.faqLinks.title' | translate }}</h2>
+    <p class="section-subtitle">{{ 'contact.faqLinks.subtitle' | translate }}</p>
+
     <div class="row">
       <div class="col-4">
         <div class="faq-link-card">
-          <h3>Account & Billing</h3>
-          <p>Questions about your account, payments, and billing.</p>
-          <a href="/landing/faq#account" class="btn btn-secondary">View FAQ</a>
+          <h3>{{ 'contact.faqLinks.accountBilling' | translate }}</h3>
+          <p>{{ 'contact.faqLinks.accountBillingDesc' | translate }}</p>
+          <a href="/landing/faq#account" class="btn btn-secondary">{{ 'contact.faqLinks.viewFaq' | translate }}</a>
         </div>
       </div>
       <div class="col-4">
         <div class="faq-link-card">
-          <h3>Bidding & Auctions</h3>
-          <p>Learn how to bid, win auctions, and understand the process.</p>
-          <a href="/landing/faq#bidding" class="btn btn-secondary">View FAQ</a>
+          <h3>{{ 'contact.faqLinks.biddingAuctions' | translate }}</h3>
+          <p>{{ 'contact.faqLinks.biddingAuctionsDesc' | translate }}</p>
+          <a href="/landing/faq#bidding" class="btn btn-secondary">{{ 'contact.faqLinks.viewFaq' | translate }}</a>
         </div>
       </div>
       <div class="col-4">
         <div class="faq-link-card">
-          <h3>Technical Support</h3>
-          <p>Help with website issues, mobile app, and technical problems.</p>
-          <a href="/landing/faq#technical" class="btn btn-secondary">View FAQ</a>
+          <h3>{{ 'contact.faqLinks.technicalSupport' | translate }}</h3>
+          <p>{{ 'contact.faqLinks.technicalSupportDesc' | translate }}</p>
+          <a href="/landing/faq#technical" class="btn btn-secondary">{{ 'contact.faqLinks.viewFaq' | translate }}</a>
         </div>
       </div>
     </div>

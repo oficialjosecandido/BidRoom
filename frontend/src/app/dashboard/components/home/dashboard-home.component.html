@@ -2,26 +2,26 @@
   <div class="page-header">
     <div class="page-header-main">
       <div>
-        <h1 class="page-title">Dashboard</h1>
+        <h1 class="page-title">{{ 'dashboard.home.title' | translate }}</h1>
         @if (customer?.user) {
-          <p class="page-subtitle">Welcome back, {{ customer?.user?.firstName }} {{ customer?.user?.lastName }}</p>
+          <p class="page-subtitle">{{ 'dashboard.home.welcomeBack' | translate }}, {{ customer?.user?.firstName }} {{ customer?.user?.lastName }}</p>
         } @else if (currentUser$ | async; as user) {
-          <p class="page-subtitle">Welcome back, {{ user.displayName || user.email || 'there' }}</p>
+          <p class="page-subtitle">{{ 'dashboard.home.welcomeBack' | translate }}, {{ user.displayName || user.email || ('dashboard.home.there' | translate) }}</p>
         }
       </div>
       @if (!isLoading) {
         <div class="header-actions">
           <button type="button" class="header-btn header-btn-primary" (click)="openBalanceModal()">
             <span class="header-btn-icon">💰</span>
-            Add funds
+            {{ 'dashboard.home.addFunds' | translate }}
           </button>
           <a routerLink="/listing/add" class="header-btn header-btn-secondary">
             <span class="header-btn-icon">➕</span>
-            Create listing
+            {{ 'dashboard.home.createListing' | translate }}
           </a>
           <a routerLink="/dashboard/settings" class="header-btn header-btn-ghost">
             <span class="header-btn-icon">👤</span>
-            Profile
+            {{ 'dashboard.home.profile' | translate }}
           </a>
         </div>
       }
@@ -34,51 +34,51 @@
       <div class="stat-icon">🔨</div>
       <div class="stat-content">
         <span class="stat-value">{{ activeListings.length }}</span>
-        <span class="stat-label">Active listings</span>
+        <span class="stat-label">{{ 'dashboard.home.activeListings' | translate }}</span>
       </div>
-      <span class="stat-link">View all →</span>
+      <span class="stat-link">{{ 'dashboard.home.viewAll' | translate }} →</span>
     </a>
     <a class="stat-card stat-ended stat-clickable" routerLink="/dashboard/seller">
       <div class="stat-icon">📦</div>
       <div class="stat-content">
         <span class="stat-value">{{ endedListings.length }}</span>
-        <span class="stat-label">Ended / unavailable</span>
+        <span class="stat-label">{{ 'dashboard.home.endedUnavailable' | translate }}</span>
       </div>
-      <span class="stat-link">View all →</span>
+      <span class="stat-link">{{ 'dashboard.home.viewAll' | translate }} →</span>
     </a>
     <div class="stat-card stat-balance">
       <div class="stat-icon">💰</div>
       <div class="stat-content">
         <span class="stat-value">{{ formatPrice(balance) }}</span>
-        <span class="stat-label">Balance</span>
+        <span class="stat-label">{{ 'dashboard.home.balance' | translate }}</span>
       </div>
-      <button type="button" class="stat-action-btn" (click)="openBalanceModal()">Increase balance</button>
+      <button type="button" class="stat-action-btn" (click)="openBalanceModal()">{{ 'dashboard.home.increaseBalance' | translate }}</button>
     </div>
     <a class="stat-card stat-buyer-score stat-clickable" routerLink="/dashboard/buyer">
       <div class="stat-icon">🛒</div>
       <div class="stat-content">
         <span class="stat-value">{{ buyerScore !== null ? (buyerScore | number:'1.1-1') : '—' }}</span>
-        <span class="stat-label">Buyer score</span>
+        <span class="stat-label">{{ 'dashboard.home.buyerScore' | translate }}</span>
         @if (buyerReviewCount > 0) {
-          <span class="stat-meta">({{ buyerReviewCount }} review{{ buyerReviewCount !== 1 ? 's' : '' }})</span>
+          <span class="stat-meta">({{ buyerReviewCount }} {{ buyerReviewCount !== 1 ? ('dashboard.home.reviews' | translate) : ('dashboard.home.review' | translate) }})</span>
         } @else if (buyerScore === null) {
-          <span class="stat-meta">No reviews yet</span>
+          <span class="stat-meta">{{ 'dashboard.home.noReviewsYet' | translate }}</span>
         }
       </div>
-      <span class="stat-link">View profile →</span>
+      <span class="stat-link">{{ 'dashboard.home.viewProfile' | translate }} →</span>
     </a>
     <a class="stat-card stat-seller-score stat-clickable" routerLink="/dashboard/seller">
       <div class="stat-icon">⭐</div>
       <div class="stat-content">
         <span class="stat-value">{{ sellerScore !== null ? (sellerScore | number:'1.1-1') : '—' }}</span>
-        <span class="stat-label">Seller score</span>
+        <span class="stat-label">{{ 'dashboard.home.sellerScore' | translate }}</span>
         @if (sellerReviewCount > 0) {
-          <span class="stat-meta">({{ sellerReviewCount }} review{{ sellerReviewCount !== 1 ? 's' : '' }})</span>
+          <span class="stat-meta">({{ sellerReviewCount }} {{ sellerReviewCount !== 1 ? ('dashboard.home.reviews' | translate) : ('dashboard.home.review' | translate) }})</span>
         } @else if (sellerScore === null) {
-          <span class="stat-meta">No reviews yet</span>
+          <span class="stat-meta">{{ 'dashboard.home.noReviewsYet' | translate }}</span>
         }
       </div>
-      <span class="stat-link">View profile →</span>
+      <span class="stat-link">{{ 'dashboard.home.viewProfile' | translate }} →</span>
     </a>
   </div>
 
@@ -87,7 +87,7 @@
     <section class="section membership-level-section">
       <div class="membership-level-card" [class.has-tier]="currentMembershipTier">
         <div class="membership-level-badge" [attr.data-tier]="currentMembershipTier?.name?.toLowerCase()">
-          <span class="membership-level-label">Your membership</span>
+          <span class="membership-level-label">{{ 'dashboard.home.yourMembership' | translate }}</span>
           @if (currentMembershipTier) {
             <span class="membership-level-name">{{ currentMembershipTier.name }}</span>
           }
@@ -95,25 +95,25 @@
             <span class="membership-level-name none">—</span>
           }
           @if (currentMembershipTier) {
-            <p class="membership-level-hint">Balance {{ formatPrice(balance) }} · based on your current balance</p>
+            <p class="membership-level-hint">{{ 'dashboard.home.balanceLabel' | translate }} {{ formatPrice(balance) }} · {{ 'dashboard.home.basedOnBalance' | translate }}</p>
           }
           @if (!currentMembershipTier && nextTierToUnlock) {
-            <p class="membership-level-hint unlock">Add at least {{ formatPrice(nextTierToUnlock.amount) }} to unlock {{ nextTierToUnlock.name }}.</p>
+            <p class="membership-level-hint unlock">{{ 'dashboard.home.addAtLeast' | translate }} {{ formatPrice(nextTierToUnlock.amount) }} {{ 'dashboard.home.toUnlock' | translate }} {{ nextTierToUnlock.name }}.</p>
           }
           @if (!currentMembershipTier && !nextTierToUnlock) {
-            <p class="membership-level-hint unlock">Add funds to your balance to unlock membership tiers.</p>
+            <p class="membership-level-hint unlock">{{ 'dashboard.home.addFundsToUnlock' | translate }}</p>
           }
           @if (nextTierToUnlock && nextTierToUnlock.amount > 0) {
             <div class="membership-progress">
               <div class="membership-progress-bar">
                 <div class="membership-progress-fill" [style.width.%]="getMembershipProgressPercent()"></div>
               </div>
-              <span class="membership-progress-label">{{ formatPrice(balance) }} / {{ formatPrice(nextTierToUnlock.amount) }} to {{ nextTierToUnlock.name }}</span>
+              <span class="membership-progress-label">{{ formatPrice(balance) }} / {{ formatPrice(nextTierToUnlock.amount) }} {{ 'dashboard.home.to' | translate }} {{ nextTierToUnlock.name }}</span>
             </div>
           }
         </div>
         <button type="button" class="membership-level-cta" (click)="openBalanceModal()">
-          {{ currentMembershipTier ? 'Increase balance' : 'Add funds' }}
+          {{ currentMembershipTier ? ('dashboard.home.increaseBalance' | translate) : ('dashboard.home.addFunds' | translate) }}
         </button>
       </div>
     </section>
@@ -122,17 +122,17 @@
   <!-- Membership tiers -->
   @if (!isLoading) {
     <section class="section membership-section">
-      <h2 class="section-title">Membership</h2>
-      <p class="membership-desc">Add funds to your balance to secure your membership tier. Your balance is used to participate in auctions and offers.</p>
+      <h2 class="section-title">{{ 'dashboard.home.membership' | translate }}</h2>
+      <p class="membership-desc">{{ 'dashboard.home.membershipDesc' | translate }}</p>
       <div class="membership-tiers">
         @for (tier of membershipTiers; track tier) {
           <button type="button" class="tier-card" [class.current-tier]="currentMembershipTier?.name === tier.name" (click)="selectTierAndOpenModal(tier.amount)">
             <span class="tier-name">{{ tier.name }}</span>
             <span class="tier-price">{{ formatPrice(tier.amount) }}</span>
             @if (currentMembershipTier?.name === tier.name) {
-              <span class="tier-badge">Current tier</span>
+              <span class="tier-badge">{{ 'dashboard.home.currentTier' | translate }}</span>
             } @else {
-              <span class="tier-add-hint">Add funds</span>
+              <span class="tier-add-hint">{{ 'dashboard.home.addFunds' | translate }}</span>
             }
           </button>
         }
@@ -143,13 +143,13 @@
   <!-- Top-up history -->
   @if (!isLoading) {
 <section class="section topup-history-section">
-    <h2 class="section-title">Top-up history</h2>
+    <h2 class="section-title">{{ 'dashboard.home.topUpHistory' | translate }}</h2>
     @if (topups.length === 0) {
         <div class="topup-empty">
           <span class="topup-empty-icon">💳</span>
-          <p class="topup-empty-text">You haven't added any funds yet.</p>
-          <p class="topup-empty-hint">Your balance is used to participate in auctions and secure your membership tier.</p>
-          <button type="button" class="topup-empty-cta" (click)="openBalanceModal()">Add funds</button>
+          <p class="topup-empty-text">{{ 'dashboard.home.noFundsYet' | translate }}</p>
+          <p class="topup-empty-hint">{{ 'dashboard.home.balanceUsage' | translate }}</p>
+          <button type="button" class="topup-empty-cta" (click)="openBalanceModal()">{{ 'dashboard.home.addFunds' | translate }}</button>
         </div>
       }
     @if (topups.length > 0) {
@@ -157,8 +157,8 @@
       <table class="topup-table">
         <thead>
           <tr>
-            <th>Date</th>
-            <th>Amount</th>
+            <th>{{ 'dashboard.home.date' | translate }}</th>
+            <th>{{ 'dashboard.home.amount' | translate }}</th>
           </tr>
         </thead>
         <tbody>
@@ -179,7 +179,7 @@
   @if (isLoading) {
 <div class="loading-state">
     <div class="spinner"></div>
-    <p>Loading your dashboard...</p>
+    <p>{{ 'dashboard.home.loading' | translate }}</p>
   </div>
 }
 
@@ -187,7 +187,7 @@
   @if (error && !isLoading) {
 <div class="error-state">
     <p class="error-message">{{ error }}</p>
-    <button class="retry-btn" (click)="loadMyListings()">Try again</button>
+    <button class="retry-btn" (click)="loadMyListings()">{{ 'dashboard.common.tryAgain' | translate }}</button>
   </div>
 }
 
@@ -195,8 +195,8 @@
   @if (!isLoading && !error) {
 <section class="section">
     <div class="section-header">
-      <h2 class="section-title">Active listings</h2>
-      <a routerLink="/dashboard/my-listings" class="section-link">Selling Items</a>
+      <h2 class="section-title">{{ 'dashboard.home.activeListings' | translate }}</h2>
+      <a routerLink="/dashboard/my-listings" class="section-link">{{ 'dashboard.home.sellingItems' | translate }}</a>
     </div>
     @if (activeListings.length > 0) {
       <div class="listings-preview listings-grid">
@@ -213,8 +213,8 @@
               <span class="listing-title">{{ listing.title }}</span>
               <div class="listing-meta">
                 <span class="listing-price">{{ formatPrice(listing.currentPrice) }}</span>
-                <span class="listing-bids">{{ listing.bidCount }} bid(s)</span>
-                <span class="listing-end">Ends {{ formatDate(listing.endDate) }}</span>
+                <span class="listing-bids">{{ listing.bidCount }} {{ 'dashboard.home.bids' | translate }}</span>
+                <span class="listing-end">{{ 'dashboard.home.ends' | translate }} {{ formatDate(listing.endDate) }}</span>
               </div>
             </div>
           </a>
@@ -223,8 +223,8 @@
     }
     @if (activeListings.length === 0) {
 <div class="empty-preview">
-      <p>You have no active listings.</p>
-      <a routerLink="/listing/add" class="create-link">Create a listing</a>
+      <p>{{ 'dashboard.home.noActiveListings' | translate }}</p>
+      <a routerLink="/listing/add" class="create-link">{{ 'dashboard.home.createListing' | translate }}</a>
     </div>
 }
   </section>
@@ -234,8 +234,8 @@
   @if (!isLoading && !error && endedListings.length > 0) {
 <section class="section">
     <div class="section-header">
-      <h2 class="section-title">Recently ended</h2>
-      <a routerLink="/dashboard/my-listings" class="section-link">Selling Items</a>
+      <h2 class="section-title">{{ 'dashboard.home.recentlyEnded' | translate }}</h2>
+      <a routerLink="/dashboard/my-listings" class="section-link">{{ 'dashboard.home.sellingItems' | translate }}</a>
     </div>
     <div class="listings-preview listings-grid">
       @for (listing of endedListings.slice(0, 3); track listing) {
@@ -251,7 +251,7 @@
             <span class="listing-title">{{ listing.title }}</span>
             <div class="listing-meta">
               @if (listing.auctionFormat === 'best-offer' && (listing.currentPrice == null || listing.currentPrice === 0)) {
-                <span class="listing-price">No offers yet</span>
+                <span class="listing-price">{{ 'dashboard.home.noOffersYet' | translate }}</span>
               } @else {
                 <span class="listing-price">{{ formatPrice(listing.currentPrice) }}</span>
               }
@@ -268,8 +268,8 @@
   @if (!isLoading && pendingReviews.length > 0) {
 <section class="section pending-reviews-section">
     <div class="section-header">
-      <h2 class="section-title">Leave a review</h2>
-      <p class="section-desc">You have completed transactions. Leave a review for the other party.</p>
+      <h2 class="section-title">{{ 'dashboard.home.leaveAReview' | translate }}</h2>
+      <p class="section-desc">{{ 'dashboard.home.leaveReviewDesc' | translate }}</p>
     </div>
     <div class="pending-reviews-list">
       @for (item of pendingReviews; track item) {
@@ -277,14 +277,14 @@
           <div class="pending-review-info">
             <span class="pending-listing-title">{{ item.listingTitle }}</span>
             <span class="pending-other-party">
-              Review {{ item.otherPartyName }} as
+              {{ 'dashboard.home.review' | translate }} {{ item.otherPartyName }} {{ 'dashboard.home.as' | translate }}
               <span class="role-badge" [class.role-buyer]="item.theirRole === 'buyer'" [class.role-seller]="item.theirRole === 'seller'">
                 {{ item.theirRole }}
               </span>
             </span>
           </div>
           <button type="button" class="btn btn-review" (click)="openReviewModal(item)">
-            Leave review
+            {{ 'dashboard.home.leaveReview' | translate }}
           </button>
         </div>
       }
@@ -298,22 +298,22 @@
       @if (reviewTarget) {
         <div class="modal-content review-modal" (click)="$event.stopPropagation()">
           <div class="modal-header">
-            <h3 class="modal-title">Leave a review</h3>
+            <h3 class="modal-title">{{ 'dashboard.home.leaveReview' | translate }}</h3>
             <button type="button" class="modal-close" (click)="closeReviewModal()" aria-label="Close">×</button>
           </div>
           <div class="modal-body">
             <div class="review-target-card">
-              <span class="review-target-label">You're reviewing</span>
+              <span class="review-target-label">{{ 'dashboard.home.youreReviewing' | translate }}</span>
               <span class="review-target-name">{{ reviewTarget.otherPartyName }}</span>
-              <span class="review-target-detail">as {{ reviewTarget.theirRole }} for {{ reviewTarget.listingTitle }}</span>
+              <span class="review-target-detail">{{ 'dashboard.home.as' | translate }} {{ reviewTarget.theirRole }} {{ 'dashboard.home.for' | translate }} {{ reviewTarget.listingTitle }}</span>
             </div>
             <a [routerLink]="getTransactionLink(reviewTarget)" [queryParams]="{ tab: 'transactions' }" [fragment]="reviewTarget.transactionId ? 'transaction-' + reviewTarget.transactionId : undefined" class="review-view-transaction-btn" (click)="closeReviewModal()">
               <span class="btn-icon">🔗</span>
-              View transaction details
+              {{ 'dashboard.home.viewTransactionDetails' | translate }}
             </a>
 
             <div class="review-score-section">
-              <label class="review-score-label">How would you rate this transaction?</label>
+              <label class="review-score-label">{{ 'dashboard.home.howWouldYouRate' | translate }}</label>
               <div class="review-score-buttons">
                 @for (i of [1,2,3,4,5,6,7,8,9,10]; track i) {
                   <button type="button" class="score-btn" [class.score-1]="i <= 2" [class.score-mid]="i >= 3 && i <= 6" [class.score-high]="i >= 7" (click)="setRating(i)" [class.selected]="i === reviewScore">
@@ -328,16 +328,16 @@
                   <span class="reaction-label">{{ getScoreLabel(reviewScore) }}</span>
                 </div>
               } @else {
-                <span class="review-score-hint">Tap a number to rate</span>
+                <span class="review-score-hint">{{ 'dashboard.home.tapToRate' | translate }}</span>
               }
             </div>
 
             <div class="comment-row">
               <label class="comment-label" for="review-description">
-                <span class="comment-label-text">Your review</span>
-                <span class="comment-label-badge">Visible to others</span>
+                <span class="comment-label-text">{{ 'dashboard.home.yourReview' | translate }}</span>
+                <span class="comment-label-badge">{{ 'dashboard.home.visibleToOthers' | translate }}</span>
               </label>
-              <textarea id="review-description" class="comment-input" [(ngModel)]="reviewDescription" rows="3" maxlength="2000" placeholder="Share your experience with others..."></textarea>
+              <textarea id="review-description" class="comment-input" [(ngModel)]="reviewDescription" rows="3" maxlength="2000" [placeholder]="'dashboard.home.shareExperience' | translate"></textarea>
             </div>
 
             @if (reviewError) {
@@ -345,9 +345,9 @@
             }
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" (click)="closeReviewModal()">Cancel</button>
+            <button type="button" class="btn btn-secondary" (click)="closeReviewModal()">{{ 'dashboard.common.cancel' | translate }}</button>
             <button type="button" class="btn btn-primary" (click)="submitReview()" [disabled]="reviewSubmitting">
-              {{ reviewSubmitting ? 'Submitting…' : 'Submit review' }}
+              {{ reviewSubmitting ? ('dashboard.common.submitting' | translate) : ('dashboard.home.submitReview' | translate) }}
             </button>
           </div>
         </div>
@@ -360,18 +360,17 @@
 <div class="modal-overlay" (click)="closeBalanceModal()">
     <div class="modal-content balance-modal" (click)="$event.stopPropagation()">
       <div class="modal-header">
-        <h3 class="modal-title">Increase balance</h3>
+        <h3 class="modal-title">{{ 'dashboard.home.increaseBalance' | translate }}</h3>
         <button type="button" class="modal-close" (click)="closeBalanceModal()" aria-label="Close">×</button>
       </div>
       <div class="modal-body">
-        <p class="balance-modal-desc">Add funds to your balance to secure your membership. You’ll complete payment securely via Stripe.</p>
-        <p class="balance-modal-label">Quick select</p>
+        <p class="balance-modal-desc">{{ 'dashboard.home.balanceModalDesc' | translate }}</p>
+        <p class="balance-modal-label">{{ 'dashboard.home.quickSelect' | translate }}</p>
         <div class="balance-tier-options">
           @for (tier of membershipTiers; track tier) {
 <button
             type="button"
             class="tier-option"
-           
             [class.selected]="!balanceModalIsCustom && balanceModalAmount === tier.amount"
             (click)="selectBalanceTier(tier.amount)"
           >
@@ -381,7 +380,7 @@
 }
         </div>
         <div class="balance-custom-row">
-          <p class="balance-modal-label">Or custom amount</p>
+          <p class="balance-modal-label">{{ 'dashboard.home.orCustomAmount' | translate }}</p>
           <div class="balance-custom-input-wrap">
             <span class="balance-currency">$</span>
             <input
@@ -396,11 +395,11 @@
               inputmode="decimal"
             />
           </div>
-          <span class="balance-custom-hint">Minimum {{ formatPrice(minBalanceAmount) }}</span>
+          <span class="balance-custom-hint">{{ 'dashboard.home.minimum' | translate }} {{ formatPrice(minBalanceAmount) }}</span>
         </div>
         @if (getCheckoutAmount() !== null) {
 <p class="balance-summary">
-          You’ll add <strong>{{ formatPrice(getCheckoutAmount()!) }}</strong> to your balance.
+          {{ 'dashboard.home.youllAdd' | translate }} <strong>{{ formatPrice(getCheckoutAmount()!) }}</strong> {{ 'dashboard.home.toYourBalance' | translate }}.
         </p>
 }
         @if (balanceModalError) {
@@ -408,9 +407,9 @@
 }
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" (click)="closeBalanceModal()">Cancel</button>
+        <button type="button" class="btn btn-secondary" (click)="closeBalanceModal()">{{ 'dashboard.common.cancel' | translate }}</button>
         <button type="button" class="btn btn-primary" (click)="submitBalanceCheckout()" [disabled]="getCheckoutAmount() === null || balanceModalSubmitting">
-          {{ balanceModalSubmitting ? 'Redirecting…' : 'Continue to checkout' }}
+          {{ balanceModalSubmitting ? ('dashboard.home.redirecting' | translate) : ('dashboard.home.continueToCheckout' | translate) }}
         </button>
       </div>
     </div>
@@ -422,11 +421,11 @@
     <div class="quick-links">
       <a routerLink="/dashboard/seller" class="quick-link">
         <span class="quick-icon">📦</span>
-        <span>Selling items</span>
+        <span>{{ 'dashboard.home.sellingItems' | translate }}</span>
       </a>
       <a routerLink="/dashboard/buyer" class="quick-link">
         <span class="quick-icon">🛒</span>
-        <span>Buying &amp; watchlist</span>
+        <span>{{ 'dashboard.home.buyingWatchlist' | translate }}</span>
       </a>
     </div>
   }
