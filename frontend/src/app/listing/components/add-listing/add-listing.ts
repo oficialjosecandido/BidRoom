@@ -210,6 +210,11 @@ export class AddListing implements OnInit {
       sellerDeclaration: [false, Validators.requiredTrue]
     });
 
+    // Lock to best-offer if auctions are disabled in this environment
+    if (!this.enableAuctions) {
+      this.listingForm.patchValue({ listingFormat: 'best-offer' });
+    }
+
     // Conditional validators based on listing format
     this.listingForm.get('listingFormat')?.valueChanges.subscribe(format => {
       this.updateConditionalValidators(format);

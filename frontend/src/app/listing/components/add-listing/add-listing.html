@@ -125,6 +125,7 @@
             <fieldset class="radio-group">
               <legend>{{ 'addListing.listingFormat' | translate }}</legend>
             <div class="radio-group">
+              @if (enableAuctions) {
               <label class="radio-option">
                 <input
                   type="radio"
@@ -133,6 +134,7 @@
                 />
                 <span>{{ 'addListing.formatAuction' | translate }}</span>
               </label>
+              }
               <label class="radio-option">
                 <input
                   type="radio"
@@ -391,7 +393,7 @@
 }
 
         <!-- Private Room is only available for Highest Bid (auction), not Best Offer -->
-        @if (listingForm.get('listingFormat')?.value === 'auction') {
+        @if (enableAuctions && enablePrivateRooms && listingForm.get('listingFormat')?.value === 'auction') {
 <div class="form-group">
           <label class="checkbox-option">
             <input
