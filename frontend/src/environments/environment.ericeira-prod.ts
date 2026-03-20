@@ -19,5 +19,6 @@ export const environment = {
     url: 'https://casa27.com',
     image: 'https://casa27.com/api/public/image.png',
     imageAlt: 'Casa 27',
+    primaryColor: '#1988c5',
   };
   

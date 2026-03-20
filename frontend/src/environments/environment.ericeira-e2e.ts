@@ -20,4 +20,5 @@ export const environment = {
   url: 'https://casa27.com/e2e',
   image: 'https://casa27.com/api/public/image.png',
   imageAlt: 'Casa 27 | E2E',
+  primaryColor: '#1988c5',
 };

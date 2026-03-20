@@ -6,6 +6,7 @@ export const environment = {
     { label: '7 hours',  hours: 7  },
     { label: '24 hours', hours: 24 },
   ],
+  primaryColor: '#8b5a96',
   enableAuctions: true,
   enablePrivateRooms: true,
   enableBestOffers: true,

@@ -10,6 +10,7 @@ export const environment = {
     { label: '7 hours',   hours: 7      },
     { label: '24 hours',  hours: 24     },
   ],
+  primaryColor: '#8b5a96',
   logoUrl: 'https://bidroom-backend-dev.azurewebsites.net/api/public/logo.png',
   faviconUrl: 'https://bidroom-backend-dev.azurewebsites.net/api/public/favicon.ico',
   appleTouchIconUrl: 'https://bidroom-backend-dev.azurewebsites.net/api/public/apple-touch-icon.png',
