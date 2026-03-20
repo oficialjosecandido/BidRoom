@@ -3,10 +3,13 @@
   "version": "0.0.0",
   "scripts": {
     "ng": "ng",
-    "start": "ng serve",
+    "start": "bash scripts/start.sh",
+    "start:ericeira-e2e": "ng serve --configuration=ericeira-e2e",
+    "start:ericeira-prod": "ng serve --configuration=ericeira-prod",
     "build": "ng build",
     "build:ericeira": "ng build --configuration=ericeira",
     "build:ericeira-e2e": "ng build --configuration=ericeira-e2e",
+    "build:ericeira-prod": "ng build --configuration=ericeira-prod",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
     "lint": "ng lint"

@@ -1,6 +1,9 @@
 export const environment = {
     production: true,
     appUrl: 'https://calm-desert-0d6601f10.1.azurestaticapps.net',
+    enableAuctions: false,
+    enablePrivateRooms: false,
+    enableBestOffers: true,
     apiUrl: 'https://bidroom-backend-dev.azurewebsites.net/api',
     auctionDurations: [
       { label: '1 hour', hours: 1 },
