@@ -1,6 +1,9 @@
 export const environment = {
   production: true,
   appUrl: 'https://blue-glacier-0e23ae710.2.azurestaticapps.net/landing',
+  enableAuctions: false,
+  enablePrivateRooms: false,
+  enableBestOffers: true,
   apiUrl: 'https://bidroom-backend-dev.azurewebsites.net/api',
   auctionDurations: [
     { label: '5 minutes', hours: 1 / 12 },
