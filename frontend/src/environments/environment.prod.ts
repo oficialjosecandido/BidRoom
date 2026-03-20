@@ -1,6 +1,14 @@
 export const environment = {
   production: true,
-  title: 'BidRoom',
+  title: 'House 27',
+  description: 'House 27. Compre e venda ao melhor preço',
+  keywords: 'House 27, Compre e venda ao melhor preço',
+  author: 'House 27',
+  creator: 'House 27',
+  publisher: 'House 27',
+  url: 'https://house27.com',
+  image: 'https://house27.com/api/public/image.png',
+  imageAlt: 'House 27',
   auctionDurations: [
     { label: '1 hour',   hours: 1  },
     { label: '7 hours',  hours: 7  },

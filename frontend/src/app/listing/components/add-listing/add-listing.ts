@@ -140,7 +140,7 @@ export class AddListing implements OnInit {
     { value: 'For Parts or Not Working', labelKey: 'addListing.conditionForParts' }
   ];
 
-  listingDurations = environment.auctionDurations.map(d => ({
+  listingDurations = environment.auctionDurations.map((d: { label: string; hours: number }) => ({
     ...d,
     labelKey: d.hours <= 1/12 ? 'addListing.duration5min' :
       d.hours <= 1 ? 'addListing.duration1hour' :

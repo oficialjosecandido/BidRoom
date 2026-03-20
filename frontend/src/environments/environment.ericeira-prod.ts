@@ -10,7 +10,7 @@ export const environment = {
       { label: '7 hours', hours: 7 },
       { label: '24 hours', hours: 24 },
     ],
-    title: 'Casa 27',
+    title: 'House 27',
     description: 'Casa 27. Compre e venda ao melhor preço',
     keywords: 'Casa 27, Compre e venda ao melhor preço',
     author: 'Casa 27',
