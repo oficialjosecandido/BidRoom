@@ -8,7 +8,7 @@ import Swal from 'sweetalert2';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { ListingsService } from '../../../shared/services/listings.service';
 import { API_CONFIG } from '../../../shared/config/api.config';
-import { environment } from '../../../../environments/environment';
+import { environment } from '@env';
 import { HeaderComponent } from '../../../shared/components/header/header.component';
 import { FooterComponent } from '../../../shared/components/footer/footer.component';
 
@@ -137,7 +137,7 @@ export class AddListing implements OnInit {
     { value: 'For Parts or Not Working', labelKey: 'addListing.conditionForParts' }
   ];
 
-  listingDurations = environment.auctionDurations.map(d => ({
+  listingDurations = environment.auctionDurations.map((d: { label: string; hours: number }) => ({
     ...d,
     labelKey: d.hours <= 1/12 ? 'addListing.duration5min' :
       d.hours <= 1 ? 'addListing.duration1hour' :
