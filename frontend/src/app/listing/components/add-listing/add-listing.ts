@@ -32,6 +32,9 @@ export class AddListing implements OnInit {
   private http = inject(HttpClient);
   private translate = inject(TranslateService);
 
+  readonly enableAuctions = environment.enableAuctions ?? true;
+  readonly enablePrivateRooms = environment.enablePrivateRooms ?? true;
+
   listingForm!: FormGroup;
   currentStep = 1;
   totalSteps = 4;

@@ -1,0 +1,23 @@
+export const environment = {
+  production: true,
+  appUrl: 'https://blue-glacier-0e23ae710.2.azurestaticapps.net/landing',
+  enableAuctions: false,
+  enablePrivateRooms: false,
+  enableBestOffers: true,
+  apiUrl: 'https://bidroom-backend-dev.azurewebsites.net/api',
+  auctionDurations: [
+    { label: '5 minutes', hours: 1 / 12 },
+    { label: '1 hour', hours: 1 },
+    { label: '7 hours', hours: 7 },
+    { label: '24 hours', hours: 24 },
+  ],
+  title: 'Casa 27 | E2E',
+  description: 'Casa 27 | E2E. Compre e venda ao melhor preço',
+  keywords: 'Casa 27, E2E, Compre e venda ao melhor preço',
+  author: 'Casa 27',
+  creator: 'Casa 27',
+  publisher: 'Casa 27 | E2E',
+  url: 'https://casa27.com/e2e',
+  image: 'https://casa27.com/api/public/image.png',
+  imageAlt: 'Casa 27 | E2E',
+};
