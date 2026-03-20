@@ -16,6 +16,7 @@ body {
 
 // Sephora-inspired color palette
 :root {
+  --primary-color: #8b5a96; // Default BidRoom purple; overridden by environment at runtime
   --primary-black: #000000;
   --primary-white: #ffffff;
   --accent-purple: #8B5A96;
@@ -82,11 +83,11 @@ h6 {
   min-height: 44px;
   
   &.btn-primary {
-    background: var(--primary-black);
+    background: var(--primary-color, var(--primary-black));
     color: var(--primary-white);
     
     &:hover:not(:disabled) {
-      background: #333333;
+      background: color-mix(in srgb, var(--primary-color, var(--primary-black)) 90%, black);
       transform: translateY(-1px);
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     }
@@ -368,12 +369,12 @@ a {
   border-radius: 8px !important;
 
   &.btn-primary {
-    background: var(--accent-purple) !important;
+    background: var(--primary-color, var(--accent-purple)) !important;
     color: white !important;
 
     &:hover:not(:disabled) {
-      background: var(--accent-purple-hover) !important;
-      box-shadow: 0 6px 20px rgba(139,90,150,0.35) !important;
+      background: color-mix(in srgb, var(--primary-color, var(--accent-purple)) 90%, black) !important;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25) !important;
     }
   }
 

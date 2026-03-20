@@ -1,5 +1,6 @@
-import { Component, signal } from '@angular/core';
+import { Component, HostBinding, signal } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
+import { environment } from '../environments/environment';
 
 @Component({
   selector: 'app-root',
@@ -9,4 +10,6 @@ import { RouterOutlet } from '@angular/router';
 })
 export class App {
   protected readonly title = signal('frontend');
+
+  @HostBinding('style.--primary-color') readonly primaryColor = environment.primaryColor;
 }
