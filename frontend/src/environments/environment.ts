@@ -1,5 +1,6 @@
 export const environment = {
   production: false,
+  title: 'BidRoom',
   enableAuctions: true,
   enablePrivateRooms: true,
   enableBestOffers: true,
@@ -26,13 +27,4 @@ export const environment = {
   whatsappImageUrl: 'https://bidroom-backend-dev.azurewebsites.net/api/public/whatsapp-image.png',
   snapchatImageUrl: 'https://bidroom-backend-dev.azurewebsites.net/api/public/snapchat-image.png',
   vimeoImageUrl: 'https://bidroom-backend-dev.azurewebsites.net/api/public/vimeo-image.png',
-  title: 'Casa 27', 
-  description: 'Casa 27. Compre e venda ao melhor preço',
-  keywords: 'Casa 27, Compre e venda ao melhor preço',
-  author: 'Casa 27',
-  creator: 'Casa 27',
-  publisher: 'Casa 27',
-  url: 'https://casa27.com',
-  image: 'https://casa27.com/api/public/image.png',
-  imageAlt: 'Casa 27',
 };

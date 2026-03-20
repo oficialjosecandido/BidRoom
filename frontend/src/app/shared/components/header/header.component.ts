@@ -18,7 +18,8 @@ export class HeaderComponent {
   private router = inject(Router);
   private authService = inject(AuthService);
   private translate = inject(TranslateService);
-
+  readonly environment = environment;
+  
   @Input() activePage = '';
   isAuthenticated$!: Observable<boolean>;
   menuOpen = false;

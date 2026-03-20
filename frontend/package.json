@@ -5,6 +5,8 @@
     "ng": "ng",
     "start": "ng serve",
     "build": "ng build",
+    "build:ericeira": "ng build --configuration=ericeira",
+    "build:ericeira-e2e": "ng build --configuration=ericeira-e2e",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
     "lint": "ng lint"

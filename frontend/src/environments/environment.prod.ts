@@ -1,5 +1,6 @@
 export const environment = {
   production: true,
+  title: 'BidRoom',
   auctionDurations: [
     { label: '1 hour',   hours: 1  },
     { label: '7 hours',  hours: 7  },
