@@ -25,6 +25,9 @@
     </button>
     <button class="tab-btn" [class.active]="activeTab === 'transactions'" (click)="setTab('transactions')">
       <span class="tab-icon">💳</span> {{ 'dashboard.seller.tabs.transactions' | translate }}
+      @if (pendingTransactions > 0) {
+        <span class="tab-badge">{{ pendingTransactions > 99 ? '99+' : pendingTransactions }}</span>
+      }
     </button>
     <button class="tab-btn" [class.active]="activeTab === 'disputes'" (click)="setTab('disputes')">
       <span class="tab-icon">⚖️</span> {{ 'dashboard.seller.tabs.disputes' | translate }}

@@ -314,7 +314,13 @@ export class DashboardTransactionsComponent implements OnInit {
       },
       error: (err) => {
         this.stripePayingTxId = null;
-        this.stripePaymentError = err?.error?.message || 'Failed to start payment. Please try again.';
+        const apiError = err?.error?.error;
+        if (apiError === 'Seller not ready') {
+          this.stripePaymentError = `Payment unavailable: the seller has not connected their Stripe account yet. ` +
+            `Please contact the seller (${t.seller?.firstName} ${t.seller?.lastName}) or wait for them to complete their payment setup.`;
+        } else {
+          this.stripePaymentError = err?.error?.message || 'Failed to start payment. Please try again.';
+        }
       }
     });
   }

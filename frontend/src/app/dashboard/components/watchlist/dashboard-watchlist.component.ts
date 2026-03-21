@@ -1,13 +1,14 @@
 import { Component, OnInit, inject } from '@angular/core';
-
+import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
+import { TranslateModule } from '@ngx-translate/core';
 import { WatchlistService } from '../../../shared/services/watchlist.service';
 import { Listing } from '../../../shared/services/listings.service';
 
 @Component({
   selector: 'app-dashboard-watchlist',
   standalone: true,
-  imports: [RouterLink],
+  imports: [CommonModule, RouterLink, TranslateModule],
   templateUrl: './dashboard-watchlist.component.html',
   styleUrls: ['./dashboard-watchlist.component.scss']
 })

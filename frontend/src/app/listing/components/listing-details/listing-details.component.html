@@ -59,8 +59,13 @@
         <!-- Details Section -->
         <div class="listing-info">
           <div class="listing-header">
+            <div class="listing-header-top">
+              <span class="sale-type-badge" [class.best-offer]="listing.auctionFormat === 'best-offer'" [class.auction]="listing.auctionFormat === 'highest-bid'">
+                {{ (listing.auctionFormat === 'best-offer' ? 'listingDetails.saleType.bestOffer' : 'listingDetails.saleType.auction') | translate }}
+              </span>
+              <span class="listing-category">{{ listing.category }}</span>
+            </div>
             <h1 class="listing-title">{{ listing.title }}</h1>
-            <span class="listing-category">{{ listing.category }}</span>
           </div>
 
           <!-- Price and Bid Info -->
@@ -197,7 +202,7 @@
               <div class="time-remaining-content" [class.private-room]="getAuctionEndType() === 'private-room'">
                 <span class="time-icon">{{ getAuctionEndType() === 'private-room' ? '🔒' : '⏰' }}</span>
                 <div class="time-text">
-                  <span class="time-label">{{ (getAuctionEndType() === 'private-room' ? 'listingDetails.time.privateRoomEnds' : getAuctionEndType() === 'ended' ? 'listingDetails.time.auctionEnded' : 'listingDetails.time.auctionEnds') | translate }}</span>
+                  <span class="time-label">{{ (getAuctionEndType() === 'private-room' ? 'listingDetails.time.privateRoomEnds' : getAuctionEndType() === 'ended' ? (listing.auctionFormat === 'best-offer' ? 'listingDetails.time.listingEnded' : 'listingDetails.time.auctionEnded') : (listing.auctionFormat === 'best-offer' ? 'listingDetails.time.offerDeadline' : 'listingDetails.time.auctionEnds')) | translate }}</span>
                   <span class="time-value">{{ formatTimeRemaining() }}</span>
                   @if (getAuctionEndType() === 'private-room') { <span class="time-sublabel">{{ 'listingDetails.privateRoom.ends60s' | translate }}</span> }
                 </div>
@@ -692,7 +697,10 @@
                       }
                       @if (canSellerAcceptOrDeclineOffers()) {
                       <div class="offer-action-buttons">
-                        <button type="button" class="btn btn-primary btn-accept" (click)="acceptOffer(offer)" [disabled]="offerActionLoadingId !== null">
+                        @if (!sellerStripeReady) {
+                          <p class="stripe-warning">⚠️ Connect your Stripe account in <a [routerLink]="['/dashboard/settings']">Settings → Payments</a> to accept offers.</p>
+                        }
+                        <button type="button" class="btn btn-primary btn-accept" (click)="acceptOffer(offer)" [disabled]="offerActionLoadingId !== null || !sellerStripeReady">
                           {{ offerActionLoadingId === offer._id ? ('listingDetails.offerHistory.accepting' | translate) : ('listingDetails.offerHistory.accept' | translate) }}
                         </button>
                         <button type="button" class="btn btn-secondary btn-reject" (click)="rejectOffer(offer)" [disabled]="offerActionLoadingId !== null">
@@ -729,7 +737,7 @@
         </div>
         }
         <div class="info-card">
-          <h3>{{ 'listingDetails.timeline.title' | translate }}</h3>
+          <h3>{{ (listing.auctionFormat === 'best-offer' ? 'listingDetails.timeline.listingTitle' : 'listingDetails.timeline.title') | translate }}</h3>
           <p>{{ 'listingDetails.timeline.started' | translate }} {{ listing.startDate | date:'medium' }}</p>
           <p>{{ 'listingDetails.timeline.ends' | translate }} {{ listing.endDate | date:'medium' }}</p>
         </div>

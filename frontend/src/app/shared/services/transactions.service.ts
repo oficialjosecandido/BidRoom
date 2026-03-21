@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { API_CONFIG } from '../config/api.config';
 
 export type TransactionStatus =
@@ -173,6 +174,23 @@ export class TransactionsService {
 
   getMyTransactions(): Observable<TransactionsResponse> {
     return this.http.get<TransactionsResponse>(this.apiUrl);
+  }
+
+  /** Returns counts of active (non-completed/cancelled) transactions per role. */
+  getPendingCounts(): Observable<{ buyer: number; seller: number }> {
+    return this.getMyTransactions().pipe(
+      map(({ transactions }) => {
+        const DONE = new Set(['completed', 'cancelled']);
+        let buyer = 0, seller = 0;
+        for (const t of transactions) {
+          const status = t.transactionStatus ?? t.status ?? '';
+          if (DONE.has(status)) continue;
+          if (t.role === 'buyer') buyer++;
+          else if (t.role === 'seller') seller++;
+        }
+        return { buyer, seller };
+      })
+    );
   }
 
   getTransaction(id: string): Observable<Transaction> {

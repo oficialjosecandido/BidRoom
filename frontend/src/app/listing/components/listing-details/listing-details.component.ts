@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy, ChangeDetectorRef, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { finalize, timeout } from 'rxjs/operators';
 import { MAX_DISPLAYED_BIDS, EMAIL_REGEX } from '../../../shared/config/listing.constants';
@@ -14,12 +14,13 @@ import { WatchlistService } from '../../../shared/services/watchlist.service';
 import { SocketService } from '../../../shared/services/socket.service';
 import { AuthService } from '../../../auth/services/auth.service';
 import { PrivateRoomService, Bidder } from '../../../private-room/services/private-room.service';
+import { StripeConnectService } from '../../../shared/services/stripe-connect.service';
 import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-listing-details',
   standalone: true,
-  imports: [CommonModule, FormsModule, HeaderComponent, TranslateModule],
+  imports: [CommonModule, FormsModule, HeaderComponent, TranslateModule, RouterLink],
   templateUrl: './listing-details.component.html',
   styleUrls: ['./listing-details.component.scss']
 })
@@ -33,6 +34,7 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
   private socketService = inject(SocketService);
   private authService = inject(AuthService);
   private privateRoomService = inject(PrivateRoomService);
+  private stripeConnectService = inject(StripeConnectService);
   private cdr = inject(ChangeDetectorRef);
 
   listing: Listing | null = null;
@@ -85,6 +87,8 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
   offerModalError: string | null = null;
   /** ID of offer being accepted/rejected (for loading state) */
   offerActionLoadingId: string | null = null;
+  /** Whether the current seller has Stripe connected and onboarded */
+  sellerStripeReady = true;
 
   ngOnInit(): void {
     window.scrollTo(0, 0);
@@ -250,7 +254,25 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
       },
       error: (err) => {
         this.offerActionLoadingId = null;
-        this.offersError = err?.error?.message || 'Failed to accept offer.';
+        if (err?.error?.error === 'Stripe not connected') {
+          Swal.fire({
+            icon: 'warning',
+            title: 'Stripe Account Required',
+            html: 'You must connect your Stripe account before accepting offers.<br><br>' +
+              'Go to <strong>Dashboard → Settings → Payments</strong> to complete setup.',
+            showCancelButton: true,
+            confirmButtonText: 'Go to Settings',
+            cancelButtonText: 'Cancel',
+            confirmButtonColor: '#7A4F84',
+            reverseButtons: true
+          }).then(result => {
+            if (result.isConfirmed) {
+              this.router.navigate(['/dashboard/settings']);
+            }
+          });
+        } else {
+          this.offersError = err?.error?.message || 'Failed to accept offer.';
+        }
       }
     });
   }
@@ -871,6 +893,18 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
       this.listing.seller.email &&
       currentUser.email.toLowerCase() === (this.listing.seller as { email?: string }).email?.toLowerCase()
     );
+    if (this.isOwnListing) {
+      this.stripeConnectService.getAccountStatus().subscribe({
+        next: (status) => {
+          this.sellerStripeReady = status.connected && status.onboarded;
+          this.cdr.detectChanges();
+        },
+        error: () => {
+          this.sellerStripeReady = false;
+          this.cdr.detectChanges();
+        }
+      });
+    }
     this.cdr.detectChanges();
   }
 

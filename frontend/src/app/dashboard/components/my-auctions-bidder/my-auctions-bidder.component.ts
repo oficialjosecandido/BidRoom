@@ -1,13 +1,14 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
+import { TranslateModule } from '@ngx-translate/core';
 import { ListingsService, Listing } from '../../../shared/services/listings.service';
 import { BidsService } from '../../../shared/services/bids.service';
 
 @Component({
   selector: 'app-my-auctions-bidder',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, TranslateModule],
   templateUrl: './my-auctions-bidder.component.html',
   styleUrls: ['./my-auctions-bidder.component.scss']
 })

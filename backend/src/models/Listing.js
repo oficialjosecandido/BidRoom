@@ -165,7 +165,7 @@ const listingSchema = new mongoose.Schema({
   // Duration slot (fixed auction lengths)
   durationSlot: {
     type: String,
-    enum: ['5 minutes', '2 hours', '24 hours', '3 days', '7 days'],
+    enum: ['5 minutes', '1 hour', '2 hours', '7 hours', '24 hours', '3 days', '7 days'],
     default: '7 days',
     required: true
   },

@@ -411,6 +411,14 @@ router.patch('/:offerId/accept', authenticateToken, async (req, res) => {
       });
     }
 
+    // Block acceptance if seller has not connected Stripe
+    if (!user.stripeConnectAccountId || !user.stripeConnectOnboarded) {
+      return res.status(400).json({
+        error: 'Stripe not connected',
+        message: 'You must connect your Stripe account before accepting offers. Go to Dashboard → Settings → Payments to complete setup.'
+      });
+    }
+
     // Accept the offer
     offer.status = 'accepted';
     offer.respondedAt = new Date();

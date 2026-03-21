@@ -1,6 +1,7 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
+import { TranslateModule } from '@ngx-translate/core';
 import { ListingsService, Listing } from '../../../shared/services/listings.service';
 
 interface PlatinumBidderStatus {
@@ -22,7 +23,7 @@ interface EnhancedListing extends Listing {
 @Component({
   selector: 'app-my-auctions',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, TranslateModule],
   templateUrl: './my-auctions.component.html',
   styleUrls: ['./my-auctions.component.scss']
 })

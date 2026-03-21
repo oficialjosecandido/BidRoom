@@ -136,11 +136,41 @@
       .listing-header {
         margin-bottom: 24px;
 
+        .listing-header-top {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          margin-bottom: 12px;
+          flex-wrap: wrap;
+        }
+
+        .sale-type-badge {
+          display: inline-block;
+          padding: 6px 14px;
+          border-radius: 8px;
+          font-size: 13px;
+          font-weight: 600;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+
+          &.best-offer {
+            background: linear-gradient(135deg, #2e7d32, #43a047);
+            color: white;
+            box-shadow: 0 2px 6px rgba(46, 125, 50, 0.3);
+          }
+
+          &.auction {
+            background: linear-gradient(135deg, var(--accent-purple), #7b5a96);
+            color: white;
+            box-shadow: 0 2px 6px rgba(123, 90, 150, 0.3);
+          }
+        }
+
         .listing-title {
           font-size: 32px;
           font-weight: 700;
           color: var(--text-dark);
-          margin-bottom: 12px;
+          margin-bottom: 0;
           line-height: 1.3;
         }
 

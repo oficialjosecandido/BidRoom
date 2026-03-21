@@ -1,35 +1,32 @@
 <div class="watchlist-container">
   <div class="page-header">
-    <h1>My Watchlist</h1>
-    <p class="subtitle">Items you've saved. Click through to view or bid.</p>
+    <h1>{{ 'dashboard.watchlist.title' | translate }}</h1>
+    <p class="subtitle">{{ 'dashboard.watchlist.subtitle' | translate }}</p>
   </div>
 
-  <!-- Loading State -->
   @if (isLoading) {
 <div class="loading-state">
     <div class="spinner"></div>
-    <p>Loading your watchlist...</p>
+    <p>{{ 'dashboard.watchlist.loading' | translate }}</p>
   </div>
 }
 
-  <!-- Error State -->
   @if (error && !isLoading) {
 <div class="error-state">
     <div class="error-icon">⚠️</div>
     <p class="error-message">{{ error }}</p>
-    <button type="button" class="retry-btn" (click)="loadWatchlist()">Try Again</button>
+    <button type="button" class="retry-btn" (click)="loadWatchlist()">{{ 'dashboard.common.tryAgain' | translate }}</button>
   </div>
 }
 
-  <!-- Watchlist Grid -->
   @if (!isLoading && !error) {
 <div class="watchlist-grid">
     @if (watchlist.length === 0) {
 <div class="empty-state">
       <div class="empty-icon">👀</div>
-      <h3>No items in your watchlist</h3>
-      <p>When you add items to your watchlist from a listing page, they'll appear here.</p>
-      <a routerLink="/listing/list" class="browse-btn">Browse auctions</a>
+      <h3>{{ 'dashboard.watchlist.emptyTitle' | translate }}</h3>
+      <p>{{ 'dashboard.watchlist.emptyDesc' | translate }}</p>
+      <a routerLink="/listing/list" class="browse-btn">{{ 'dashboard.watchlist.browseAuctions' | translate }}</a>
     </div>
 }
 
@@ -41,7 +38,7 @@
         </div>
         <div class="card-body">
           <h2 class="card-title">{{ listing.title }}</h2>
-          <div class="card-price">@if (listing.auctionFormat === 'best-offer' && (listing.currentPrice == null || listing.currentPrice === 0)) { No offers yet } @else { {{ formatPrice(listing.currentPrice) }} }</div>
+          <div class="card-price">@if (listing.auctionFormat === 'best-offer' && (listing.currentPrice == null || listing.currentPrice === 0)) { {{ 'dashboard.watchlist.noOffersYet' | translate }} } @else { {{ formatPrice(listing.currentPrice) }} }</div>
           @if (listing.status) {
 <div class="card-meta">
             <span class="status-badge" [class.ended]="listing.status === 'ended'">{{ listing.status }}</span>
@@ -55,7 +52,7 @@
         (click)="removeFromWatchlist(listing); $event.stopPropagation()"
         [disabled]="removingId === listing._id"
         title="Remove from watchlist">
-        {{ removingId === listing._id ? '...' : 'Remove' }}
+        {{ removingId === listing._id ? ('dashboard.watchlist.removing' | translate) : ('dashboard.watchlist.remove' | translate) }}
       </button>
     </div>
 }
