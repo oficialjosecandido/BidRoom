@@ -514,11 +514,89 @@ router.patch('/:offerId/reject', authenticateToken, async (req, res) => {
       });
     }
 
+    // Enforce minimum-price rule: seller cannot decline the last qualifying offer
+    const minimumOfferPrice = offer.listing.minimumOfferPrice ?? 0;
+    if (minimumOfferPrice > 0 && offer.amount >= minimumOfferPrice) {
+      const otherQualifyingOffers = await Offer.countDocuments({
+        listing: offer.listing._id,
+        _id: { $ne: offer._id },
+        status: 'pending',
+        amount: { $gte: minimumOfferPrice }
+      });
+      if (otherQualifyingOffers === 0) {
+        return res.status(400).json({
+          error: 'Cannot decline last qualifying offer',
+          message: `This offer meets the minimum price. You must accept at least one offer that meets the minimum.`
+        });
+      }
+    }
+
     offer.status = 'rejected';
     offer.respondedAt = new Date();
     offer.sellerResponse = req.body.message || 'Offer rejected';
 
     await offer.save();
+
+    // If exactly one qualifying offer remains after this rejection → auto-accept it
+    if (minimumOfferPrice > 0) {
+      const remainingQualifying = await Offer.find({
+        listing: offer.listing._id,
+        status: 'pending',
+        amount: { $gte: minimumOfferPrice }
+      }).populate('listing').populate('offerer', 'firstName lastName email');
+
+      if (remainingQualifying.length === 1) {
+        // Check if seller has Stripe before auto-accepting
+        const sellerStripeReady = !!(user.stripeConnectAccountId && user.stripeConnectOnboarded);
+
+        if (!sellerStripeReady) {
+          // Notify seller to connect Stripe; do not auto-accept
+          const { notifySellerStripeRequiredForOffer, emitNewNotificationToUser } = require('../services/notificationService');
+          const io = req.app.get('io');
+          notifySellerStripeRequiredForOffer({
+            listingSlug: offer.listing.slug || null,
+            listingTitle: offer.listing.title || 'Your listing',
+            offerAmount: remainingQualifying[0].amount,
+            sellerUserId: user._id.toString()
+          }).catch(err => console.error('Failed Stripe-required notification:', err));
+          if (io) emitNewNotificationToUser(io, user._id.toString()).catch(() => {});
+          return res.json({ ...offer.toObject(), stripeRequired: true });
+        }
+
+        const autoOffer = remainingQualifying[0];
+        autoOffer.status = 'accepted';
+        autoOffer.respondedAt = new Date();
+        autoOffer.sellerResponse = 'Offer automatically accepted (only qualifying offer remaining)';
+        autoOffer.listing.status = 'ended';
+        autoOffer.listing.currentPrice = autoOffer.amount;
+
+        await Offer.updateMany(
+          { listing: offer.listing._id, _id: { $ne: autoOffer._id }, status: 'pending' },
+          { status: 'rejected', respondedAt: new Date() }
+        );
+
+        await Promise.all([autoOffer.save(), autoOffer.listing.save()]);
+
+        if (autoOffer.offerer) {
+          createTransactionForAcceptedOffer(offer.listing._id.toString(), autoOffer._id.toString())
+            .catch(err => console.error('Transaction create for auto-accepted offer:', err.message));
+        }
+
+        const io = req.app.get('io');
+        if (io) {
+          const listingId = offer.listing._id.toString();
+          const { formatOfferForSocket } = require('../utils/offerFormat');
+          const populated = await Offer.findById(autoOffer._id).populate('offerer', 'firstName lastName email emailVerified').lean();
+          io.to(`listing:${listingId}`).emit('offer-update', {
+            listingId,
+            offer: formatOfferForSocket(populated),
+            listingStatus: 'ended'
+          });
+        }
+
+        return res.json({ ...offer.toObject(), autoAccepted: true });
+      }
+    }
 
     const io = req.app.get('io');
     if (offer.offerer) {

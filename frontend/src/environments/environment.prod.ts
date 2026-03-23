@@ -24,4 +24,8 @@ export const environment = {
     { label: 'No Returns', value: 'no-returns' },
     { label: 'Custom', value: 'custom' },
   ],
+  /** Seller commission rate (0.005 = 0.5%, 0.02 = 2% for private room) */
+  bidroomFeeSellerRate: 0.005,
+  /** Buyer fee rate (0.005 = 0.5%, 0.05 = 5%) */
+  bidroomFeeBuyerRate: 0.005,
 };

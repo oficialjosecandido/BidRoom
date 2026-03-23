@@ -859,14 +859,46 @@ async function handleAuctionEnd(listingId, io = null) {
       const offers = await Offer.find({ listing: listingId, status: 'pending' }).lean();
       const minimumOfferPrice = listing.minimumOfferPrice ?? 0;
 
-      if (offers.length === 1) {
-        const singleOffer = await Offer.findById(offers[0]._id).populate('listing').populate('offerer', 'firstName lastName email');
-        if (singleOffer && singleOffer.amount >= minimumOfferPrice) {
+      const offersAboveMin = offers.filter(o => o.amount >= minimumOfferPrice);
+
+      if (offersAboveMin.length === 1) {
+        // Exactly one qualifying offer — check if seller has Stripe before auto-accepting
+        const sellerId = listing.seller?._id || listing.seller;
+        const sellerUser = sellerId ? await User.findById(sellerId).select('stripeConnectAccountId stripeConnectOnboarded').lean() : null;
+        const sellerStripeReady = !!(sellerUser?.stripeConnectAccountId && sellerUser?.stripeConnectOnboarded);
+
+        if (!sellerStripeReady) {
+          // End listing but do NOT auto-accept; notify seller to connect Stripe
+          await Listing.findByIdAndUpdate(listingId, { $set: { status: 'ended' } }, { runValidators: false });
+          const sellerUserId = sellerId?.toString?.();
+          if (sellerUserId) {
+            const { notifySellerStripeRequiredForOffer, emitNewNotificationToUser } = require('./notificationService');
+            notifySellerStripeRequiredForOffer({
+              listingSlug: listing.slug || null,
+              listingTitle: listing.title || 'Your listing',
+              offerAmount: offersAboveMin[0].amount,
+              sellerUserId
+            }).catch(err => console.error('Failed Stripe-required notification:', err));
+            if (io) emitNewNotificationToUser(io, sellerUserId).catch(() => {});
+          }
+          console.log(`⚠️ Best-offer listing ${listingId} ended with 1 qualifying offer but seller Stripe not connected — cannot auto-accept`);
+          return { listingId, notified: true, bestOfferStripeRequired: true };
+        }
+
+        const singleOffer = await Offer.findById(offersAboveMin[0]._id).populate('listing').populate('offerer', 'firstName lastName email');
+        if (singleOffer) {
           singleOffer.status = 'accepted';
           singleOffer.respondedAt = new Date();
           singleOffer.sellerResponse = 'Offer automatically accepted (met minimum price)';
           singleOffer.listing.status = 'ended';
           singleOffer.listing.currentPrice = singleOffer.amount;
+
+          // Reject any other pending offers
+          await Offer.updateMany(
+            { listing: listingId, _id: { $ne: singleOffer._id }, status: 'pending' },
+            { status: 'rejected', respondedAt: new Date() }
+          );
+
           await Promise.all([singleOffer.save(), singleOffer.listing.save()]);
 
           if (singleOffer.offerer) {
@@ -885,12 +917,12 @@ async function handleAuctionEnd(listingId, io = null) {
             });
           }
 
-          console.log(`✅ Best-offer listing ${listingId} auto-accepted single offer ($${singleOffer.amount} >= minimum $${minimumOfferPrice})`);
+          console.log(`✅ Best-offer listing ${listingId} auto-accepted single qualifying offer ($${singleOffer.amount} >= minimum $${minimumOfferPrice})`);
           return { listingId, notified: true, bestOfferAutoAccepted: true };
         }
       }
 
-      // One offer below minimum, or multiple offers → just end listing; seller accepts/declines manually
+      // No qualifying offers, or multiple qualifying offers → end listing; seller reviews manually
       await Listing.findByIdAndUpdate(listingId, { $set: { status: 'ended' } }, { runValidators: false });
       console.log(`✅ Best-offer listing ${listingId} ended. ${offers.length} offer(s); seller may accept/decline manually.`);
       return { listingId, notified: true, bestOfferEnded: true };

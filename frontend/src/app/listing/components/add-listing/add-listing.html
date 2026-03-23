@@ -202,6 +202,7 @@
 
         <div class="form-group">
           <label for="mediaUpload">{{ 'addListing.mediaUpload' | translate }}</label>
+          <p class="field-hint media-rule">{{ 'addListing.mediaRule' | translate }}</p>
           <div class="file-upload-area" 
                (dragover)="onDragOver($event)" 
                (drop)="onFilesDropped($event)">
@@ -209,7 +210,7 @@
               type="file"
               id="mediaUpload"
               multiple
-              accept="image/jpeg,image/jpg,image/png,image/gif,image/webp,image/bmp"
+              accept="image/jpeg,image/jpg,image/png,image/gif,image/webp,image/bmp,video/mp4,video/webm,video/quicktime"
               (change)="onFileSelected($event)"
               style="display: none;"
             />
@@ -222,6 +223,8 @@
 <div class="file-item">
                 @if (previewUrls[i]) {
 <img [src]="previewUrls[i] || ''" alt="Preview" class="file-preview">
+} @else if (isVideoFile(file)) {
+<div class="file-preview file-preview-video">🎬</div>
 }
                 <div class="file-info">
                   <span>{{ file.name }}</span>
@@ -231,12 +234,17 @@
 }
             </div>
 }
+            @if (!isMediaValid && (listingForm.get('media')?.touched || isStep(4)) && uploadedFiles.length > 0) {
+<div class="field-error">
+              {{ 'addListing.uploadMediaError' | translate }}
+            </div>
+}
             @if (uploadedFiles.length < 1 && (listingForm.get('media')?.touched || isStep(4))) {
 <div class="field-error">
               {{ 'addListing.uploadMinError' | translate }}
             </div>
 }
-            <div class="field-hint">{{ 'addListing.filesUploaded' | translate:{ count: uploadedFiles.length } }}</div>
+            <div class="field-hint">{{ 'addListing.filesUploaded' | translate:{ images: imageCount, videos: videoCount } }}</div>
           </div>
         </div>
 
@@ -445,19 +453,29 @@
         </div>
 
         @if (listingForm.get('shippingOption')?.value === 'flat-rate') {
-<div class="form-group">
-          <label for="flatRateShipping">{{ 'addListing.flatRateCost' | translate }}</label>
-          <div class="input-with-currency">
+<div class="flat-rate-shipping-card">
+          <div class="flat-rate-header">
+            <span class="flat-rate-icon">📦</span>
+            <div>
+              <label for="flatRateShipping">{{ 'addListing.flatRateCost' | translate }}</label>
+              <p class="flat-rate-hint">{{ 'addListing.flatRateHint' | translate }}</p>
+            </div>
+          </div>
+          <div class="input-with-currency flat-rate-input">
             <span class="currency">$</span>
             <input
               type="number"
               id="flatRateShipping"
               formControlName="flatRateShipping"
+              [class.error]="getFieldError('flatRateShipping')"
               placeholder="0.00"
               min="0"
               step="0.01"
             />
           </div>
+          @if (getFieldError('flatRateShipping')) {
+<div class="field-error">{{ getFieldError('flatRateShipping') }}</div>
+}
         </div>
 }
 
@@ -564,6 +582,10 @@
           <div class="fee-item">
             <span>{{ 'addListing.paymentProcessing' | translate }}</span>
             <span>${{ calculateEstimatedFees().paymentProcessing.toFixed(2) }}</span>
+          </div>
+          <div class="fee-item fee-item-buyer">
+            <span>{{ 'addListing.buyerFee' | translate:{ rate: buyerFeeRatePct } }}</span>
+            <span>${{ calculateEstimatedFees().buyerFee.toFixed(2) }}</span>
           </div>
           <div class="fee-total">
             <span>{{ 'addListing.estimatedTotal' | translate }}</span>

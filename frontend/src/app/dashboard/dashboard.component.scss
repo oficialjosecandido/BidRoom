@@ -224,6 +224,10 @@ $sidebar-collapsed-width: 72px;
     background: #c62828;
     border-radius: 10px;
     flex-shrink: 0;
+
+    &.nav-badge--transactions {
+      background: var(--accent-purple, #7a4f84);
+    }
   }
 }
 

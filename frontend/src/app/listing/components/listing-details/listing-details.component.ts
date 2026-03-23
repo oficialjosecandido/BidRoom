@@ -277,6 +277,16 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
     });
   }
 
+  /** True when the seller is allowed to decline this specific offer.
+   *  Seller cannot decline an offer that meets the minimum price if it is the last qualifying pending offer. */
+  canDeclineOffer(offer: Offer): boolean {
+    if (!this.listing || !this.canSellerAcceptOrDeclineOffers()) return false;
+    const min = this.listing.minimumOfferPrice ?? 0;
+    if (min === 0 || offer.amount < min) return true;
+    const pendingAboveMin = this.offers.filter(o => o.status === 'pending' && o.amount >= min);
+    return pendingAboveMin.length > 1;
+  }
+
   rejectOffer(offer: Offer): void {
     if (this.offerActionLoadingId || !this.listing) return;
     this.offerActionLoadingId = offer._id;

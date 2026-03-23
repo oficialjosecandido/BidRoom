@@ -464,6 +464,19 @@ async function notifyAccountReactivated({ userId }) {
   });
 }
 
+/** Seller must connect Stripe before a qualifying offer can be accepted */
+async function notifySellerStripeRequiredForOffer({ listingSlug, listingTitle, offerAmount, sellerUserId }) {
+  const link = '/dashboard/settings';
+  return createNotification({
+    userId: sellerUserId,
+    title: 'Action required: Connect Stripe to accept offer',
+    message: `Your listing "${listingTitle || 'the item'}" has a qualifying offer of $${(offerAmount || 0).toFixed(2)}. Connect your Stripe account in Settings → Payments to accept it.`,
+    type: 'transaction',
+    link,
+    referenceId: listingSlug
+  });
+}
+
 /** Account permanently closed */
 async function notifyAccountClosed({ userId }) {
   return createNotification({
@@ -597,5 +610,6 @@ module.exports = {
   notifyLoginFromNewDevice,
   notifySellerWinnerSelected,
   notifyBuyerAuctionWon,
+  notifySellerStripeRequiredForOffer,
   emitNewNotificationToUser
 };

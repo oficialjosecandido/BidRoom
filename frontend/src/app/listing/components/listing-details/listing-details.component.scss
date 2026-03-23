@@ -1567,12 +1567,35 @@
                 display: flex;
                 gap: 10px;
                 flex-wrap: wrap;
+                align-items: flex-start;
+                flex-direction: column;
+
+                .stripe-warning, .min-price-warning {
+                  font-size: 12px;
+                  color: #b45309;
+                  background: #fffbeb;
+                  border: 1px solid #fde68a;
+                  border-radius: 6px;
+                  padding: 6px 10px;
+                  margin: 0;
+                  width: 100%;
+
+                  a {
+                    color: #7A4F84;
+                    text-decoration: underline;
+                  }
+                }
 
                 .btn-accept {
                   min-width: 100px;
                 }
                 .btn-reject {
                   min-width: 100px;
+
+                  &:disabled {
+                    opacity: 0.45;
+                    cursor: not-allowed;
+                  }
                 }
               }
             }

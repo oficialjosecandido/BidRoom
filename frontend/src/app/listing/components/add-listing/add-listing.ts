@@ -167,7 +167,14 @@ export class AddListing implements OnInit {
   ];
 
   selectedCategory: Category | null = null;
+  /** Seller commission % for display (0.5 or 2 for private room). Base from environment. */
   commissionRate = 0.5;
+
+  /** Buyer fee % for display (from environment) */
+  get buyerFeeRatePct(): number {
+    const rate = (environment as { bidroomFeeBuyerRate?: number }).bidroomFeeBuyerRate;
+    return rate != null ? rate * 100 : 0.5;
+  }
 
   ngOnInit(): void {
     this.initializeForm();
@@ -245,10 +252,12 @@ export class AddListing implements OnInit {
       postalCodeControl?.updateValueAndValidity();
     });
 
-    // Watch Private Room toggle for commission calculation
+    // Watch Private Room toggle for commission calculation. Uses environment bidroomFeeSellerRate.
+    const baseRatePct = ((environment as { bidroomFeeSellerRate?: number }).bidroomFeeSellerRate ?? 0.005) * 100;
     this.listingForm.get('allowPrivateRoom')?.valueChanges.subscribe(enabled => {
-      this.commissionRate = enabled ? 2.0 : 0.5;
+      this.commissionRate = enabled ? 2.0 : baseRatePct;
     });
+    this.commissionRate = this.listingForm.get('allowPrivateRoom')?.value ? 2.0 : baseRatePct;
   }
 
   setupFormSubscriptions(): void {
@@ -347,22 +356,79 @@ export class AddListing implements OnInit {
     'image/bmp'
   ];
 
+  private readonly ALLOWED_VIDEO_TYPES = [
+    'video/mp4',
+    'video/webm',
+    'video/quicktime'
+  ];
+
+  /** Images (max 20 if no video, max 5 if with video) */
+  get imageCount(): number {
+    return this.uploadedFiles.filter(f => this.ALLOWED_IMAGE_TYPES.includes(f.type)).length;
+  }
+
+  /** Videos (max 1, only with 1-5 images) */
+  get videoCount(): number {
+    return this.uploadedFiles.filter(f => this.ALLOWED_VIDEO_TYPES.includes(f.type)).length;
+  }
+
+  isVideoFile(file: File): boolean {
+    return this.ALLOWED_VIDEO_TYPES.includes(file.type);
+  }
+
+  /** Valid: 1-20 images only, OR 1-5 images + 1 video */
+  get isMediaValid(): boolean {
+    const imgs = this.imageCount;
+    const vids = this.videoCount;
+    if (vids === 0) return imgs >= 1 && imgs <= 20;
+    if (vids === 1) return imgs >= 1 && imgs <= 5;
+    return false;
+  }
+
   private addFiles(fileList: FileList | File[]): void {
     this.errorMessage = '';
     const files = Array.from(fileList);
     const rejected: string[] = [];
+    let imgs = this.imageCount;
+    let vids = this.videoCount;
+
     files.forEach(file => {
-      if (this.ALLOWED_IMAGE_TYPES.includes(file.type)) {
+      const isImage = this.ALLOWED_IMAGE_TYPES.includes(file.type);
+      const isVideo = this.ALLOWED_VIDEO_TYPES.includes(file.type);
+
+      if (isImage) {
+        if (vids >= 1 && imgs >= 5) {
+          rejected.push(file.name);
+          return;
+        }
+        if (vids === 0 && imgs >= 20) {
+          rejected.push(file.name);
+          return;
+        }
         this.uploadedFiles.push(file);
+        imgs++;
         const reader = new FileReader();
         reader.onload = (e) => {
           this.previewUrls.push(e.target?.result || null);
         };
         reader.readAsDataURL(file);
+      } else if (isVideo) {
+        if (vids >= 1) {
+          rejected.push(file.name);
+          return;
+        }
+        if (imgs >= 5) {
+          rejected.push(file.name);
+          return;
+        }
+        this.uploadedFiles.push(file);
+        this.previewUrls.push(null);
+        vids++;
       } else {
         rejected.push(file.name);
       }
     });
+
     if (rejected.length > 0) {
       this.errorMessage = this.translate.instant('addListing.errors.invalidFileType', { files: rejected.join(', ') });
     }
@@ -410,24 +476,17 @@ export class AddListing implements OnInit {
       }
     }
     
-    // Special validation for step 2 - check media files
-    // TODO: Re-enable this requirement once file upload is fully implemented
-    // For now, allow proceeding with at least 1 file for testing
     if (step === 2) {
-      if (this.uploadedFiles.length < 1) {
+      if (!this.isMediaValid) {
         return false;
       }
     }
-    
-    // Validate all controls in the step
+
     const allValid = controls.every(controlName => {
       const control = this.listingForm.get(controlName);
-      if (!control) return true; // Skip if control doesn't exist
-      
-      // For media, check the uploaded files count instead
-      // TODO: Change back to >= 3 once file upload is implemented
+      if (!control) return true;
       if (controlName === 'media') {
-        return this.uploadedFiles.length >= 1;
+        return this.isMediaValid;
       }
       
       return control.valid;
@@ -499,33 +558,38 @@ export class AddListing implements OnInit {
     }
   }
 
+  /** Seller commission (BidRoom fee). Uses commissionRate (includes private room 2% when enabled). */
   calculateEstimatedCommission(): number {
     const startingBid = this.listingForm.get('startingBid')?.value || 0;
     const buyNowPrice = this.listingForm.get('buyNowPrice')?.value || 0;
     const minimumAcceptPrice = this.listingForm.get('minimumAcceptPrice')?.value || 0;
-    
-    // Use the highest price as basis for commission calculation
     const priceBasis = Math.max(startingBid, buyNowPrice, minimumAcceptPrice);
-    
-    return priceBasis * (this.commissionRate / 100);
+    const sellerRate = (environment as { bidroomFeeSellerRate?: number }).bidroomFeeSellerRate;
+    const rate = sellerRate != null ? (this.listingForm.get('allowPrivateRoom')?.value ? 0.02 : sellerRate) : (this.commissionRate / 100);
+    return priceBasis * rate;
   }
 
   calculateEstimatedFees(): {
     commission: number;
     paymentProcessing: number;
+    buyerFee: number;
     total: number;
   } {
-    const priceBasis = this.listingForm.get('startingBid')?.value || 
-                      this.listingForm.get('buyNowPrice')?.value || 
+    const priceBasis = this.listingForm.get('startingBid')?.value ||
+                      this.listingForm.get('buyNowPrice')?.value ||
                       this.listingForm.get('minimumAcceptPrice')?.value || 0;
-    
-    const commission = priceBasis * (this.commissionRate / 100);
-    const paymentProcessing = priceBasis * 0.029 + 0.30; // Standard Stripe-like fee
-    const total = commission + paymentProcessing;
-    
+    const envSeller = (environment as { bidroomFeeSellerRate?: number }).bidroomFeeSellerRate;
+    const envBuyer = (environment as { bidroomFeeBuyerRate?: number }).bidroomFeeBuyerRate;
+    const sellerRate = envSeller != null ? (this.listingForm.get('allowPrivateRoom')?.value ? 0.02 : envSeller) : (this.commissionRate / 100);
+    const buyerRate = envBuyer ?? 0.005;
+    const commission = priceBasis * sellerRate;
+    const buyerFee = priceBasis * buyerRate;
+    const paymentProcessing = priceBasis * 0.029 + 0.30; // Stripe-like fee
+    const total = commission + paymentProcessing; // seller total
     return {
       commission,
       paymentProcessing,
+      buyerFee,
       total
     };
   }

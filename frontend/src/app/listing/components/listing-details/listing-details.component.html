@@ -703,7 +703,10 @@
                         <button type="button" class="btn btn-primary btn-accept" (click)="acceptOffer(offer)" [disabled]="offerActionLoadingId !== null || !sellerStripeReady">
                           {{ offerActionLoadingId === offer._id ? ('listingDetails.offerHistory.accepting' | translate) : ('listingDetails.offerHistory.accept' | translate) }}
                         </button>
-                        <button type="button" class="btn btn-secondary btn-reject" (click)="rejectOffer(offer)" [disabled]="offerActionLoadingId !== null">
+                        @if (!canDeclineOffer(offer)) {
+                          <p class="min-price-warning">⚠️ This offer meets the minimum price. You must accept at least one qualifying offer.</p>
+                        }
+                        <button type="button" class="btn btn-secondary btn-reject" (click)="rejectOffer(offer)" [disabled]="offerActionLoadingId !== null || !canDeclineOffer(offer)">
                           {{ offerActionLoadingId === offer._id ? ('listingDetails.offerHistory.declining' | translate) : ('listingDetails.offerHistory.decline' | translate) }}
                         </button>
                       </div>
