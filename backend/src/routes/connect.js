@@ -19,15 +19,63 @@ const router = express.Router();
 
 router.use(authenticateToken);
 
+// Maps ISO 3166-1 alpha-2 country code → default payout currency
+const COUNTRY_CURRENCY = {
+  AT: 'eur', BE: 'eur', CY: 'eur', DE: 'eur', EE: 'eur', ES: 'eur',
+  FI: 'eur', FR: 'eur', GR: 'eur', HR: 'eur', IE: 'eur', IT: 'eur',
+  LT: 'eur', LU: 'eur', LV: 'eur', MT: 'eur', NL: 'eur', PT: 'eur',
+  SI: 'eur', SK: 'eur', GB: 'gbp', US: 'usd', CA: 'cad', AU: 'aud',
+  NZ: 'nzd', CH: 'chf', SE: 'sek', DK: 'dkk', NO: 'nok', PL: 'pln',
+  CZ: 'czk', HU: 'huf', RO: 'ron', BG: 'bgn', MX: 'mxn', BR: 'brl',
+  SG: 'sgd', HK: 'hkd', JP: 'jpy', IN: 'inr', ZA: 'zar'
+};
+
 /**
- * POST /api/connect/onboard
- * Creates (or retrieves) a Stripe Express account for the seller and returns the onboarding URL.
+ * POST /api/connect/submit-onboarding
+ * Creates (or updates) a Stripe Custom account for the seller using their KYC data.
+ * Body: { dobDay, dobMonth, dobYear, addressLine1, addressCity, addressPostal, addressCountry, iban, tosAccepted }
  */
-router.post('/onboard', requireActiveAccount, async (req, res) => {
+router.post('/submit-onboarding', requireActiveAccount, async (req, res) => {
   const stripe = getStripe();
-  if (!stripe) {
-    return res.status(503).json({ error: 'Payments not configured' });
+  if (!stripe) return res.status(503).json({ error: 'Payments not configured' });
+
+  const {
+    dobDay, dobMonth, dobYear,
+    addressLine1, addressCity, addressPostal, addressCountry,
+    iban, tosAccepted
+  } = req.body;
+
+  // Validate required fields
+  if (!dobDay || !dobMonth || !dobYear) {
+    return res.status(400).json({ error: 'Date of birth is required' });
   }
+  if (!addressLine1 || !addressCity || !addressPostal || !addressCountry) {
+    return res.status(400).json({ error: 'Full address is required' });
+  }
+  if (!iban) {
+    return res.status(400).json({ error: 'IBAN is required' });
+  }
+  if (!tosAccepted) {
+    return res.status(400).json({ error: 'You must accept the Terms of Service' });
+  }
+
+  const ibanClean = String(iban).replace(/\s+/g, '').toUpperCase();
+  if (!/^[A-Z]{2}[0-9]{2}[A-Z0-9]{1,30}$/.test(ibanClean) || ibanClean.length < 15) {
+    return res.status(400).json({ error: 'Invalid IBAN format' });
+  }
+
+  const country = String(addressCountry).toUpperCase();
+  const currency = COUNTRY_CURRENCY[country] || 'eur';
+  const dobDayInt = parseInt(dobDay, 10);
+  const dobMonthInt = parseInt(dobMonth, 10);
+  const dobYearInt = parseInt(dobYear, 10);
+  if (!dobDayInt || !dobMonthInt || !dobYearInt || dobYearInt < 1900 || dobYearInt > 2010) {
+    return res.status(400).json({ error: 'Invalid date of birth' });
+  }
+
+  const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.socket?.remoteAddress || '0.0.0.0';
+  const tosTimestamp = Math.floor(Date.now() / 1000);
+
   try {
     const user = await User.findOne({ uid: req.user.uid });
     if (!user) return res.status(404).json({ error: 'User not found' });
@@ -35,29 +83,81 @@ router.post('/onboard', requireActiveAccount, async (req, res) => {
     let accountId = user.stripeConnectAccountId;
 
     if (!accountId) {
+      // Create new Stripe Custom account — seller never visits Stripe
       const account = await stripe.accounts.create({
-        type: 'express',
+        type: 'custom',
+        country,
         email: user.email,
-        capabilities: { card_payments: { requested: true }, transfers: { requested: true } },
+        business_type: 'individual',
+        individual: {
+          first_name: user.firstName,
+          last_name: user.lastName,
+          email: user.email,
+          dob: { day: dobDayInt, month: dobMonthInt, year: dobYearInt },
+          address: {
+            line1: String(addressLine1),
+            city: String(addressCity),
+            postal_code: String(addressPostal),
+            country
+          }
+        },
+        capabilities: {
+          card_payments: { requested: true },
+          transfers: { requested: true }
+        },
+        tos_acceptance: { date: tosTimestamp, ip },
         metadata: { uid: user.uid }
       });
       accountId = account.id;
       user.stripeConnectAccountId = accountId;
       await user.save();
-      console.log(`${LOG_PREFIX} Created Express account ${accountId} for uid=${user.uid?.slice(0, 8)}...`);
+      console.log(`${LOG_PREFIX} Created Custom account ${accountId} for uid=${user.uid?.slice(0, 8)}...`);
+    } else {
+      // Update existing account with fresh KYC details
+      await stripe.accounts.update(accountId, {
+        individual: {
+          dob: { day: dobDayInt, month: dobMonthInt, year: dobYearInt },
+          address: {
+            line1: String(addressLine1),
+            city: String(addressCity),
+            postal_code: String(addressPostal),
+            country
+          }
+        },
+        tos_acceptance: { date: tosTimestamp, ip }
+      });
+      console.log(`${LOG_PREFIX} Updated Custom account ${accountId} for uid=${user.uid?.slice(0, 8)}...`);
     }
 
-    const accountLink = await stripe.accountLinks.create({
-      account: accountId,
-      refresh_url: `${FRONTEND_URL}/dashboard/my-account?stripe_onboard=refresh`,
-      return_url: `${FRONTEND_URL}/dashboard/my-account?stripe_onboard=complete`,
-      type: 'account_onboarding'
+    // Add/replace external bank account (IBAN)
+    await stripe.accounts.createExternalAccount(accountId, {
+      external_account: {
+        object: 'bank_account',
+        country,
+        currency,
+        account_holder_name: `${user.firstName} ${user.lastName}`,
+        account_holder_type: 'individual',
+        account_number: ibanClean,
+        default_for_currency: true
+      }
     });
 
-    res.json({ url: accountLink.url });
+    // Retrieve fresh status to determine if Stripe has already enabled charges
+    const account = await stripe.accounts.retrieve(accountId);
+    const onboarded = !!(account.details_submitted && account.charges_enabled);
+    if (user.stripeConnectOnboarded !== onboarded) {
+      user.stripeConnectOnboarded = onboarded;
+      await user.save();
+    }
+
+    console.log(`${LOG_PREFIX} Onboarding submitted uid=${user.uid?.slice(0, 8)} accountId=${accountId} onboarded=${onboarded}`);
+    res.json({ onboarded, requiresVerification: !onboarded, accountId });
   } catch (err) {
-    console.error(`${LOG_PREFIX} Onboard error:`, err.message);
-    res.status(500).json({ error: 'Failed to create onboarding link', message: err.message });
+    console.error(`${LOG_PREFIX} Submit onboarding error:`, err.message);
+    if (err.type === 'StripeInvalidRequestError') {
+      return res.status(400).json({ error: 'Invalid payment details', message: err.message });
+    }
+    res.status(500).json({ error: 'Failed to set up payout account', message: err.message });
   }
 });
 
@@ -87,12 +187,17 @@ router.get('/account-status', async (req, res) => {
       await user.save();
     }
 
+    // Surface any Stripe verification errors so the frontend can show them
+    const errors = account.requirements?.errors ?? [];
+    const requirementErrors = errors.map(e => e.reason || e.code).filter(Boolean);
+
     res.json({
       connected: true,
       onboarded,
       accountId: user.stripeConnectAccountId,
       chargesEnabled: account.charges_enabled,
-      payoutsEnabled: account.payouts_enabled
+      payoutsEnabled: account.payouts_enabled,
+      requirementErrors: requirementErrors.length ? requirementErrors : undefined
     });
   } catch (err) {
     console.error(`${LOG_PREFIX} Account status error:`, err.message);
@@ -438,9 +543,76 @@ async function handleCheckoutCompleted(session, stripe) {
 
 async function handleAccountUpdated(account) {
   if (!account.metadata?.uid) return;
+  const uid = account.metadata.uid;
   const onboarded = !!(account.details_submitted && account.charges_enabled);
-  await User.updateOne({ uid: account.metadata.uid }, { stripeConnectOnboarded: onboarded });
-  console.log(`${LOG_PREFIX} Account updated uid=${account.metadata.uid?.slice(0, 8)} onboarded=${onboarded}`);
+
+  const user = await User.findOne({ uid }).select('firstName email stripeConnectOnboarded');
+  if (!user) return;
+
+  const wasOnboarded = user.stripeConnectOnboarded;
+  user.stripeConnectOnboarded = onboarded;
+  await user.save();
+
+  console.log(`${LOG_PREFIX} Account updated uid=${uid?.slice(0, 8)} onboarded=${onboarded}`);
+
+  if (!wasOnboarded && onboarded) {
+    // Account just got verified — notify the seller
+    await sendAccountVerifiedEmail(user);
+  } else if (!onboarded) {
+    // Check for verification errors
+    const errors = account.requirements?.errors ?? [];
+    if (errors.length > 0) {
+      await sendAccountVerificationFailedEmail(user, errors);
+    }
+  }
+}
+
+async function sendAccountVerifiedEmail(user) {
+  const subject = 'Your payout account is verified ✓';
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      <div style="background: linear-gradient(135deg, #7A4F84 0%, #9b6ba8 100%); color: white; padding: 24px; text-align: center; border-radius: 8px 8px 0 0;">
+        <h1 style="margin: 0;">Payout account verified!</h1>
+      </div>
+      <div style="background: #f9f9f9; padding: 24px; border-radius: 0 0 8px 8px;">
+        <p>Hi ${user.firstName || 'there'},</p>
+        <p>Great news — your payout account has been verified by Stripe. You can now sell items on BidRoom and receive payments directly to your bank account.</p>
+        <p>No further action is needed. Payouts are processed automatically after each successful transaction.</p>
+        <p>Best regards,<br>The BidRoom Team</p>
+      </div>
+    </div>
+  `;
+  try {
+    await sendEmail(user.email, subject, html);
+    console.log(`${LOG_PREFIX} Sent account verified email to uid=${user.uid?.slice(0, 8)}`);
+  } catch (err) {
+    console.error(`${LOG_PREFIX} Failed to send account verified email:`, err.message);
+  }
+}
+
+async function sendAccountVerificationFailedEmail(user, errors) {
+  const errorList = errors.map(e => `<li>${e.reason || e.code || 'Unknown issue'}</li>`).join('');
+  const subject = 'Action needed: issue with your payout account';
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      <div style="background: linear-gradient(135deg, #c0392b 0%, #e74c3c 100%); color: white; padding: 24px; text-align: center; border-radius: 8px 8px 0 0;">
+        <h1 style="margin: 0;">Action required</h1>
+      </div>
+      <div style="background: #f9f9f9; padding: 24px; border-radius: 0 0 8px 8px;">
+        <p>Hi ${user.firstName || 'there'},</p>
+        <p>There was an issue verifying your payout account. Stripe flagged the following:</p>
+        <ul style="color: #c0392b; margin: 16px 0; padding-left: 20px;">${errorList}</ul>
+        <p>Please log in to BidRoom and update your payout account details to fix these issues.</p>
+        <p>Best regards,<br>The BidRoom Team</p>
+      </div>
+    </div>
+  `;
+  try {
+    await sendEmail(user.email, subject, html);
+    console.log(`${LOG_PREFIX} Sent verification failed email to uid=${user.uid?.slice(0, 8)}`);
+  } catch (err) {
+    console.error(`${LOG_PREFIX} Failed to send verification failed email:`, err.message);
+  }
 }
 
 async function sendPaymentReceivedEmail(transaction) {

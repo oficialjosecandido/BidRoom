@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { AuthService, AppUser } from '../../../auth/services/auth.service';
 import { CustomerService } from '../../../shared/services/customer.service';
-import { StripeConnectService, ConnectAccountStatus } from '../../../shared/services/stripe-connect.service';
+import { StripeConnectService, ConnectAccountStatus, OnboardingFormData } from '../../../shared/services/stripe-connect.service';
 import { Observable } from 'rxjs';
 
 @Component({
@@ -28,8 +28,41 @@ export class DashboardSettingsComponent implements OnInit {
 
   connectStatus: ConnectAccountStatus | null = null;
   connectLoading = false;
-  connectOnboarding = false;
+  connectSubmitting = false;
   connectStatusMessage: string | null = null;
+  connectError: string | null = null;
+  showOnboardingForm = false;
+
+  // Onboarding form fields
+  dobDay: number | null = null;
+  dobMonth: number | null = null;
+  dobYear: number | null = null;
+  addressLine1 = '';
+  addressCity = '';
+  addressPostal = '';
+  addressCountry = 'PT';
+  iban = '';
+  tosAccepted = false;
+
+  readonly countries = [
+    { code: 'AT', label: 'Austria' }, { code: 'BE', label: 'Belgium' },
+    { code: 'BG', label: 'Bulgaria' }, { code: 'HR', label: 'Croatia' },
+    { code: 'CY', label: 'Cyprus' }, { code: 'CZ', label: 'Czech Republic' },
+    { code: 'DK', label: 'Denmark' }, { code: 'EE', label: 'Estonia' },
+    { code: 'FI', label: 'Finland' }, { code: 'FR', label: 'France' },
+    { code: 'DE', label: 'Germany' }, { code: 'GR', label: 'Greece' },
+    { code: 'HU', label: 'Hungary' }, { code: 'IE', label: 'Ireland' },
+    { code: 'IT', label: 'Italy' }, { code: 'LV', label: 'Latvia' },
+    { code: 'LT', label: 'Lithuania' }, { code: 'LU', label: 'Luxembourg' },
+    { code: 'MT', label: 'Malta' }, { code: 'NL', label: 'Netherlands' },
+    { code: 'NO', label: 'Norway' }, { code: 'PL', label: 'Poland' },
+    { code: 'PT', label: 'Portugal' }, { code: 'RO', label: 'Romania' },
+    { code: 'SK', label: 'Slovakia' }, { code: 'SI', label: 'Slovenia' },
+    { code: 'ES', label: 'Spain' }, { code: 'SE', label: 'Sweden' },
+    { code: 'CH', label: 'Switzerland' }, { code: 'GB', label: 'United Kingdom' },
+    { code: 'US', label: 'United States' }, { code: 'CA', label: 'Canada' },
+    { code: 'AU', label: 'Australia' }
+  ];
 
   selectedLanguage = 'en';
   langSaving = false;
@@ -88,11 +121,61 @@ export class DashboardSettingsComponent implements OnInit {
     });
   }
 
-  startOnboarding(): void {
-    this.connectOnboarding = true;
-    this.stripeConnect.startOnboarding().subscribe({
-      next: (res) => { window.location.href = res.url; },
-      error: () => { this.connectOnboarding = false; }
+  openOnboardingForm(): void {
+    this.connectError = null;
+    this.showOnboardingForm = true;
+  }
+
+  cancelOnboardingForm(): void {
+    this.showOnboardingForm = false;
+    this.connectError = null;
+  }
+
+  submitOnboarding(): void {
+    this.connectError = null;
+    if (!this.dobDay || !this.dobMonth || !this.dobYear) {
+      this.connectError = 'Please enter your date of birth.';
+      return;
+    }
+    if (!this.addressLine1 || !this.addressCity || !this.addressPostal || !this.addressCountry) {
+      this.connectError = 'Please fill in your full address.';
+      return;
+    }
+    if (!this.iban.trim()) {
+      this.connectError = 'Please enter your IBAN.';
+      return;
+    }
+    if (!this.tosAccepted) {
+      this.connectError = 'You must accept the Terms of Service.';
+      return;
+    }
+
+    const data: OnboardingFormData = {
+      dobDay: this.dobDay,
+      dobMonth: this.dobMonth,
+      dobYear: this.dobYear,
+      addressLine1: this.addressLine1,
+      addressCity: this.addressCity,
+      addressPostal: this.addressPostal,
+      addressCountry: this.addressCountry,
+      iban: this.iban,
+      tosAccepted: this.tosAccepted
+    };
+
+    this.connectSubmitting = true;
+    this.stripeConnect.submitOnboarding(data).subscribe({
+      next: (res) => {
+        this.connectSubmitting = false;
+        this.showOnboardingForm = false;
+        this.connectStatusMessage = res.onboarded
+          ? 'Your payout account is now active!'
+          : 'Your details have been submitted. Stripe will verify them shortly — this usually takes a few minutes.';
+        this.loadConnectStatus();
+      },
+      error: (err) => {
+        this.connectSubmitting = false;
+        this.connectError = err?.error?.message || err?.error?.error || 'Something went wrong. Please check your details and try again.';
+      }
     });
   }
 
