@@ -503,6 +503,11 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
     return this.listing?.privateRoomStatus === 'active';
   }
 
+  /** True when the authenticated user has an accepted invitation to this listing's private room. */
+  isAcceptedPrivateRoomBidder(): boolean {
+    return this.listing?.currentUserPlatinumStatus?.isPlatinumBidder === true;
+  }
+
   /** True when this listing had a private room that has ended (winner was auto-selected by 60s rule; seller must not choose). */
   isPrivateRoomEnded(): boolean {
     return !!(this.listing?.allowPrivateRoom && this.listing?.privateRoomStatus === 'ended');

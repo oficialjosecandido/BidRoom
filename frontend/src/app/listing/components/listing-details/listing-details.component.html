@@ -99,6 +99,11 @@
                   <p>{{ 'listingDetails.privateRoom.activeDesc' | translate }}</p>
                 </div>
                 <div class="private-room-watch">
+                  @if (isAcceptedPrivateRoomBidder() && !isOwnListing) {
+                  <button class="btn btn-primary" (click)="openBidModal()">
+                    {{ 'listingDetails.actions.placeBid' | translate }}
+                  </button>
+                  }
                   <button class="btn btn-view-room" (click)="openPrivateRoom()" title="Open in new window">
                     {{ 'listingDetails.privateRoom.watch' | translate }}
                   </button>
