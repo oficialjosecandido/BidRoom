@@ -3,6 +3,10 @@ const { authenticateToken } = require('../middleware/auth');
 const User = require('../models/User');
 const { getTrustBadges } = require('../services/reputationService');
 const { getReviewScoresForUser } = require('../services/reviewService');
+const { sendPasswordReset } = require('../services/emailService');
+const admin = require('../config/firebaseAdmin');
+
+const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:4200';
 
 const router = express.Router();
 
@@ -57,6 +61,42 @@ router.get('/customer', authenticateToken, async (req, res) => {
       error: 'Failed to load customer information',
       message: error.message
     });
+  }
+});
+
+/**
+ * POST /api/auth/forgot-password (public)
+ * Generates a Firebase password reset link and sends it via the custom email service.
+ */
+router.post('/forgot-password', async (req, res) => {
+  const { email } = req.body;
+  if (!email || typeof email !== 'string') {
+    return res.status(400).json({ error: 'Email is required' });
+  }
+
+  try {
+    // Generate reset link via Firebase Admin (keeps password stored in Firebase)
+    const firebaseLink = await admin.auth().generatePasswordResetLink(email.toLowerCase().trim());
+
+    // Extract the oobCode and build a link pointing to our own reset page
+    const parsed = new URL(firebaseLink);
+    const oobCode = parsed.searchParams.get('oobCode');
+    const resetUrl = `${FRONTEND_URL}/auth/reset-password?oobCode=${encodeURIComponent(oobCode)}`;
+
+    // Look up first name for personalisation (best-effort)
+    const user = await User.findOne({ email: email.toLowerCase().trim() }).select('firstName').lean();
+
+    await sendPasswordReset(email.toLowerCase().trim(), user?.firstName || 'there', resetUrl);
+
+    console.log(`[Auth] Password reset email sent to ${email}`);
+    res.json({ success: true });
+  } catch (err) {
+    if (err.code === 'auth/user-not-found' || err.code === 'auth/invalid-email') {
+      // Security: don't reveal whether this email is registered
+      return res.json({ success: true });
+    }
+    console.error('[Auth] Forgot password error:', err.message);
+    res.status(500).json({ error: 'Failed to send reset email. Please try again.' });
   }
 });
 
