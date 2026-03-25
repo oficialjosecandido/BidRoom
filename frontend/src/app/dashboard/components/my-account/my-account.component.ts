@@ -29,9 +29,12 @@ export class MyAccountComponent implements OnInit {
   connectStatus: ConnectAccountStatus | null = null;
   connectLoading = false;
   connectSubmitting = false;
+  connectTestActivating = false;
   connectStatusMessage: string | null = null;
   connectError: string | null = null;
   showOnboardingForm = false;
+
+  get isStripeTestMode(): boolean { return this.stripeConnect.isTestMode; }
 
   // Onboarding form fields
   dobDay: number | null = null;
@@ -157,5 +160,20 @@ export class MyAccountComponent implements OnInit {
     if (!this.connectStatus?.connected) return 'connect-not-connected';
     if (this.connectStatus.onboarded) return 'connect-active';
     return 'connect-pending';
+  }
+
+  testActivate(): void {
+    this.connectTestActivating = true;
+    this.stripeConnect.testActivate().subscribe({
+      next: () => {
+        this.connectTestActivating = false;
+        this.connectStatusMessage = 'Test account activated!';
+        this.loadConnectStatus();
+      },
+      error: (err) => {
+        this.connectTestActivating = false;
+        this.connectError = err?.error?.error || 'Test activation failed.';
+      }
+    });
   }
 }

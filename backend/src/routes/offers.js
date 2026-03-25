@@ -412,7 +412,8 @@ router.patch('/:offerId/accept', authenticateToken, async (req, res) => {
     }
 
     // Block acceptance if seller has not connected Stripe
-    if (!user.stripeConnectAccountId || !user.stripeConnectOnboarded) {
+    const isTestMode = process.env.STRIPE_SECRET_KEY?.startsWith('sk_test_');
+    if (!user.stripeConnectAccountId || (!user.stripeConnectOnboarded && !isTestMode)) {
       return res.status(400).json({
         error: 'Stripe not connected',
         message: 'You must connect your Stripe account before accepting offers. Go to Dashboard → Settings → Payments to complete setup.'

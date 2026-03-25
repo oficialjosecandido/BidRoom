@@ -54,4 +54,12 @@ export class StripeConnectService {
   confirmPayment(sessionId: string, transactionId: string): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/confirm-payment`, { sessionId, transactionId });
   }
+
+  testActivate(): Observable<ConnectAccountStatus> {
+    return this.http.post<ConnectAccountStatus>(`${this.apiUrl}/test-activate`, {});
+  }
+
+  get isTestMode(): boolean {
+    return API_CONFIG.getStripePublishableKey().startsWith('pk_test_');
+  }
 }

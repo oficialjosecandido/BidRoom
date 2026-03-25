@@ -865,7 +865,8 @@ async function handleAuctionEnd(listingId, io = null) {
         // Exactly one qualifying offer — check if seller has Stripe before auto-accepting
         const sellerId = listing.seller?._id || listing.seller;
         const sellerUser = sellerId ? await User.findById(sellerId).select('stripeConnectAccountId stripeConnectOnboarded').lean() : null;
-        const sellerStripeReady = !!(sellerUser?.stripeConnectAccountId && sellerUser?.stripeConnectOnboarded);
+        const isTestMode = process.env.STRIPE_SECRET_KEY?.startsWith('sk_test_');
+        const sellerStripeReady = !!(sellerUser?.stripeConnectAccountId && (sellerUser?.stripeConnectOnboarded || isTestMode));
 
         if (!sellerStripeReady) {
           // End listing but do NOT auto-accept; notify seller to connect Stripe

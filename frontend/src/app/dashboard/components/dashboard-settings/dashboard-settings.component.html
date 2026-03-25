@@ -109,7 +109,14 @@
             } @else {
               <p class="card-desc">Your details have been submitted and are being verified by Stripe. This usually takes a few minutes.</p>
             }
-            <button class="action-btn action-btn-secondary" (click)="openOnboardingForm()">Update details</button>
+            <div class="button-row">
+              <button class="action-btn action-btn-secondary" (click)="openOnboardingForm()">Update details</button>
+              @if (isStripeTestMode) {
+                <button class="action-btn action-btn-test" (click)="testActivate()" [disabled]="connectTestActivating">
+                  {{ connectTestActivating ? 'Activating…' : '⚡ Simulate verification' }}
+                </button>
+              }
+            </div>
           } @else {
             <p class="card-desc">To receive payments from buyers, set up your payout account. No Stripe account needed — just fill in your details below.</p>
             <ul class="feature-list">

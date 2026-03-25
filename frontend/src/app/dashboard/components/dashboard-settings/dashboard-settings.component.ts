@@ -29,9 +29,12 @@ export class DashboardSettingsComponent implements OnInit {
   connectStatus: ConnectAccountStatus | null = null;
   connectLoading = false;
   connectSubmitting = false;
+  connectTestActivating = false;
   connectStatusMessage: string | null = null;
   connectError: string | null = null;
   showOnboardingForm = false;
+
+  get isStripeTestMode(): boolean { return this.stripeConnect.isTestMode; }
 
   // Onboarding form fields
   dobDay: number | null = null;
@@ -175,6 +178,21 @@ export class DashboardSettingsComponent implements OnInit {
       error: (err) => {
         this.connectSubmitting = false;
         this.connectError = err?.error?.message || err?.error?.error || 'Something went wrong. Please check your details and try again.';
+      }
+    });
+  }
+
+  testActivate(): void {
+    this.connectTestActivating = true;
+    this.stripeConnect.testActivate().subscribe({
+      next: () => {
+        this.connectTestActivating = false;
+        this.connectStatusMessage = 'Test account activated!';
+        this.loadConnectStatus();
+      },
+      error: (err) => {
+        this.connectTestActivating = false;
+        this.connectError = err?.error?.error || 'Test activation failed.';
       }
     });
   }

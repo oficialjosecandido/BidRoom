@@ -142,9 +142,25 @@ router.post('/submit-onboarding', requireActiveAccount, async (req, res) => {
       }
     });
 
+    // In Stripe test mode, apply magic values so the account verifies synchronously:
+    // - dob.year 1901 is Stripe's documented magic value that sets charges_enabled immediately
+    // - id_number '000000000' bypasses identity verification
+    const isTestMode = process.env.STRIPE_SECRET_KEY?.startsWith('sk_test_');
+    if (isTestMode) {
+      await stripe.accounts.update(accountId, {
+        individual: {
+          dob: { day: 1, month: 1, year: 1901 },
+          id_number: '000000000'
+        }
+      });
+      console.log(`${LOG_PREFIX} Test mode: applied magic DOB + id_number bypass for accountId=${accountId}`);
+    }
+
     // Retrieve fresh status to determine if Stripe has already enabled charges
     const account = await stripe.accounts.retrieve(accountId);
-    const onboarded = !!(account.details_submitted && account.charges_enabled);
+    const onboarded = isTestMode
+      ? !!(account.details_submitted) // in test mode trust details_submitted; charges_enabled may lag
+      : !!(account.details_submitted && account.charges_enabled);
     if (user.stripeConnectOnboarded !== onboarded) {
       user.stripeConnectOnboarded = onboarded;
       await user.save();
@@ -158,6 +174,49 @@ router.post('/submit-onboarding', requireActiveAccount, async (req, res) => {
       return res.status(400).json({ error: 'Invalid payment details', message: err.message });
     }
     res.status(500).json({ error: 'Failed to set up payout account', message: err.message });
+  }
+});
+
+/**
+ * POST /api/connect/test-activate
+ * TEST MODE ONLY — applies Stripe's magic id_number to immediately enable charges on a pending account.
+ * Safe to call on already-verified accounts (no-op).
+ */
+router.post('/test-activate', requireActiveAccount, async (req, res) => {
+  const stripe = getStripe();
+  if (!stripe) return res.status(503).json({ error: 'Payments not configured' });
+
+  const isTestMode = process.env.STRIPE_SECRET_KEY?.startsWith('sk_test_');
+  if (!isTestMode) {
+    return res.status(403).json({ error: 'Only available in test mode' });
+  }
+
+  try {
+    const user = await User.findOne({ uid: req.user.uid });
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    if (!user.stripeConnectAccountId) {
+      return res.status(400).json({ error: 'No Stripe account found. Complete the payout setup form first.' });
+    }
+
+    // Magic DOB 1901-01-01 triggers immediate charges_enabled in Stripe test mode
+    await stripe.accounts.update(user.stripeConnectAccountId, {
+      individual: {
+        dob: { day: 1, month: 1, year: 1901 },
+        id_number: '000000000'
+      }
+    });
+
+    const account = await stripe.accounts.retrieve(user.stripeConnectAccountId);
+    // Trust details_submitted in test mode — charges_enabled can still lag even after magic values
+    const onboarded = !!(account.details_submitted);
+    user.stripeConnectOnboarded = true; // force true in test mode
+    await user.save();
+
+    console.log(`${LOG_PREFIX} Test activate uid=${user.uid?.slice(0, 8)} charges_enabled=${account.charges_enabled} details_submitted=${account.details_submitted}`);
+    res.json({ onboarded: true, chargesEnabled: account.charges_enabled, payoutsEnabled: account.payouts_enabled });
+  } catch (err) {
+    console.error(`${LOG_PREFIX} Test activate error:`, err.message);
+    res.status(500).json({ error: err.message });
   }
 });
 
@@ -180,7 +239,13 @@ router.get('/account-status', async (req, res) => {
 
     // Retrieve fresh status from Stripe to keep local record in sync
     const account = await stripe.accounts.retrieve(user.stripeConnectAccountId);
-    const onboarded = !!(account.details_submitted && account.charges_enabled);
+    const isTestMode = process.env.STRIPE_SECRET_KEY?.startsWith('sk_test_');
+    // In test mode, trust the DB value if it was force-set by test-activate;
+    // only override with Stripe's live value if Stripe actually says charges_enabled.
+    const stripeOnboarded = !!(account.details_submitted && account.charges_enabled);
+    const onboarded = isTestMode
+      ? (user.stripeConnectOnboarded || stripeOnboarded)
+      : stripeOnboarded;
 
     if (onboarded !== user.stripeConnectOnboarded) {
       user.stripeConnectOnboarded = onboarded;
@@ -243,11 +308,24 @@ router.post('/create-checkout-session', requireActiveAccount, async (req, res) =
     }
 
     const seller = transaction.seller;
-    if (!seller.stripeConnectAccountId || !seller.stripeConnectOnboarded) {
+    const isTestMode = process.env.STRIPE_SECRET_KEY?.startsWith('sk_test_');
+    if (!seller.stripeConnectAccountId || (!seller.stripeConnectOnboarded && !isTestMode)) {
       return res.status(400).json({
         error: 'Seller not ready',
         message: 'The seller has not yet connected their Stripe account. Please contact the seller.'
       });
+    }
+
+    // In test mode, check if the Stripe account actually has transfers capability active.
+    // If force-activated via DB only (magic DOB trick), transfers may still be pending on Stripe's side.
+    let sellerAccountCapable = true;
+    if (isTestMode && seller.stripeConnectAccountId) {
+      try {
+        const sellerAccount = await stripe.accounts.retrieve(seller.stripeConnectAccountId);
+        sellerAccountCapable = sellerAccount.capabilities?.transfers === 'active';
+      } catch (_) {
+        sellerAccountCapable = false;
+      }
     }
 
     const itemAmount = transaction.amount; // dollars
@@ -314,19 +392,29 @@ router.post('/create-checkout-session', requireActiveAccount, async (req, res) =
       });
     }
 
+    // Only use transfer_data / application_fee_amount when the seller's Stripe account
+    // actually has the transfers capability active. In test mode with a force-activated DB
+    // account, the capability may still be pending on Stripe's side, which would throw a
+    // "stripe_balance.stripe_transfers feature" error.
+    const paymentIntentData = {
+      metadata: {
+        transactionId: transaction._id.toString(),
+        buyerUid: buyer.uid,
+        sellerAccountId: seller.stripeConnectAccountId
+      }
+    };
+    if (seller.stripeConnectAccountId && sellerAccountCapable) {
+      paymentIntentData.application_fee_amount = bidRoomFeeCents;
+      paymentIntentData.transfer_data = { destination: seller.stripeConnectAccountId };
+    } else if (isTestMode) {
+      console.log(`${LOG_PREFIX} Test mode: skipping transfer_data — seller account not fully capable (transfers not active)`);
+    }
+
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       line_items: lineItems,
       mode: 'payment',
-      payment_intent_data: {
-        application_fee_amount: bidRoomFeeCents,
-        transfer_data: { destination: seller.stripeConnectAccountId },
-        metadata: {
-          transactionId: transaction._id.toString(),
-          buyerUid: buyer.uid,
-          sellerAccountId: seller.stripeConnectAccountId
-        }
-      },
+      payment_intent_data: paymentIntentData,
       success_url: `${FRONTEND_URL}/dashboard/transactions?stripe_payment=success&session_id={CHECKOUT_SESSION_ID}&transaction_id=${transaction._id}`,
       cancel_url: `${FRONTEND_URL}/dashboard/transactions?stripe_payment=cancelled&transaction_id=${transaction._id}`,
       metadata: {

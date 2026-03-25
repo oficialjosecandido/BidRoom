@@ -259,10 +259,24 @@
     color: #666;
     border: 1px solid #ddd;
 
-    &:hover:not(:disabled) {
-      background: #f5f5f5;
-    }
+    &:hover:not(:disabled) { background: #f5f5f5; }
   }
+
+  &.connect-btn-test {
+    background: #1a1a2e;
+    color: #f0c040;
+    border: 1px solid #f0c040;
+    font-size: 12px;
+
+    &:hover:not(:disabled) { background: #2a2a4e; }
+  }
+}
+
+.button-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
 }
 
 .connect-errors {
