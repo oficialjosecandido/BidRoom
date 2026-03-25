@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls /Users/josecandido/Documents/BidRoom/backend/*.env*)",
+      "Bash(ls /Users/josecandido/Documents/BidRoom/backend/.env*)",
+      "Bash(find /Users/josecandido/Documents/BidRoom -name *.yml -o -name *.yaml)"
+    ]
+  }
+}

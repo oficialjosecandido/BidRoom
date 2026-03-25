@@ -796,9 +796,12 @@ async function sendPrivateRoomNotInvitedToBidders(listing, invitedUserIds) {
  * Send platinum bidder invitation emails. Each invitee must accept within 15 min or lose their seat; room starts automatically after that.
  * listing must have platinumBidderInvitations populated with bidder and invitationToken.
  */
-async function sendPlatinumBidderInvitations(listing) {
+async function sendPlatinumBidderInvitations(listing, requestOrigin = null) {
   try {
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:4200';
+    const configured = process.env.FRONTEND_URL;
+    const frontendUrl = (configured && !configured.includes('localhost'))
+      ? configured.replace(/\/$/, '')
+      : (requestOrigin && !requestOrigin.includes('localhost') ? requestOrigin.replace(/\/$/, '') : (configured || 'http://localhost:4200').replace(/\/$/, ''));
     const listingUrl = `${frontendUrl}/private-room/auction/${listing._id}`;
     const endDate = listing.privateRoomEndDate
       ? new Date(listing.privateRoomEndDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })

@@ -6,7 +6,14 @@ const { getReviewScoresForUser } = require('../services/reviewService');
 const { sendPasswordReset } = require('../services/emailService');
 const admin = require('../config/firebaseAdmin');
 
-const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:4200';
+// FRONTEND_URL must be set via environment variable in production (Azure App Service → Configuration).
+// Falls back to localhost for local development ONLY.
+const CONFIGURED_FRONTEND_URL = process.env.FRONTEND_URL;
+if (!CONFIGURED_FRONTEND_URL || CONFIGURED_FRONTEND_URL.includes('localhost')) {
+  if (process.env.NODE_ENV === 'production') {
+    console.warn('[Auth] WARNING: FRONTEND_URL is not set or points to localhost in production. Password reset links will be broken. Set FRONTEND_URL in Azure App Service Configuration.');
+  }
+}
 
 const router = express.Router();
 
@@ -78,10 +85,18 @@ router.post('/forgot-password', async (req, res) => {
     // Generate reset link via Firebase Admin (keeps password stored in Firebase)
     const firebaseLink = await admin.auth().generatePasswordResetLink(email.toLowerCase().trim());
 
-    // Extract the oobCode and build a link pointing to our own reset page
+    // Extract the oobCode and build a link pointing to our own reset page.
+    // Derive the frontend base URL from:
+    // 1. FRONTEND_URL env var (required in production — set in Azure App Service Configuration)
+    // 2. The request's Origin header (the browser that triggered the reset is on the right domain)
+    // 3. Fallback to localhost for local dev
     const parsed = new URL(firebaseLink);
     const oobCode = parsed.searchParams.get('oobCode');
-    const resetUrl = `${FRONTEND_URL}/auth/reset-password?oobCode=${encodeURIComponent(oobCode)}`;
+    const requestOrigin = req.headers['origin'] || req.headers['referer']?.replace(/\/[^/]*$/, '') || null;
+    const frontendBase = (CONFIGURED_FRONTEND_URL && !CONFIGURED_FRONTEND_URL.includes('localhost'))
+      ? CONFIGURED_FRONTEND_URL.replace(/\/$/, '')
+      : (requestOrigin && !requestOrigin.includes('localhost') ? requestOrigin.replace(/\/$/, '') : (CONFIGURED_FRONTEND_URL || 'http://localhost:4200').replace(/\/$/, ''));
+    const resetUrl = `${frontendBase}/auth/reset-password?oobCode=${encodeURIComponent(oobCode)}`;
 
     // Look up first name for personalisation (best-effort)
     const user = await User.findOne({ email: email.toLowerCase().trim() }).select('firstName').lean();

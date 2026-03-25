@@ -10,6 +10,52 @@ const LOG_PREFIX = '[Connect]';
 const BIDROOMFEE_RATE = 0.02; // 2%
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:4200';
 
+/**
+ * Extract the real public client IP from the request.
+ * Azure (and other proxies) may inject X-Forwarded-For with multiple IPs,
+ * or the socket address may be an IPv6-mapped IPv4 (::ffff:x.x.x.x) or
+ * a private/internal IP. Stripe requires a valid public IPv4 for tos_acceptance.
+ */
+function getClientIp(req) {
+  const normalize = (raw) => {
+    if (!raw) return null;
+    const trimmed = raw.trim();
+    // Convert IPv6-mapped IPv4 e.g. "::ffff:1.2.3.4" → "1.2.3.4"
+    if (trimmed.startsWith('::ffff:')) return trimmed.slice(7);
+    return trimmed;
+  };
+
+  const isPublic = (ip) => {
+    if (!ip || ip === '127.0.0.1' || ip === '::1') return false;
+    if (ip.startsWith('10.')) return false;
+    if (ip.startsWith('192.168.')) return false;
+    if (/^172\.(1[6-9]|2[0-9]|3[01])\./.test(ip)) return false;
+    // Must look like an IPv4 address
+    return /^\d{1,3}(\.\d{1,3}){3}$/.test(ip);
+  };
+
+  // Try each IP in X-Forwarded-For (leftmost = real client)
+  const forwarded = req.headers['x-forwarded-for'];
+  if (forwarded) {
+    for (const raw of forwarded.split(',')) {
+      const ip = normalize(raw);
+      if (isPublic(ip)) return ip;
+    }
+  }
+
+  const socketIp = normalize(req.socket?.remoteAddress || req.connection?.remoteAddress);
+  if (isPublic(socketIp)) return socketIp;
+
+  // In test mode fall back to a harmless placeholder so dev/staging still works
+  const isTestMode = process.env.STRIPE_SECRET_KEY?.startsWith('sk_test_');
+  if (isTestMode) {
+    console.warn(`${LOG_PREFIX} Could not determine public client IP — using placeholder for test mode`);
+    return '127.0.0.1'; // Stripe test mode accepts any IP
+  }
+
+  return null;
+}
+
 function getStripe() {
   const key = process.env.STRIPE_SECRET_KEY;
   return key ? new Stripe(key) : null;
@@ -73,7 +119,10 @@ router.post('/submit-onboarding', requireActiveAccount, async (req, res) => {
     return res.status(400).json({ error: 'Invalid date of birth' });
   }
 
-  const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.socket?.remoteAddress || '0.0.0.0';
+  const ip = getClientIp(req);
+  if (!ip) {
+    return res.status(400).json({ error: 'Invalid IP address. Could not determine your public IP address. Please try again or contact support.' });
+  }
   const tosTimestamp = Math.floor(Date.now() / 1000);
 
   try {

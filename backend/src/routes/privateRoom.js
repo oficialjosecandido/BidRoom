@@ -244,7 +244,7 @@ router.post('/listings/:id/platinum-bidders', authenticateToken, requireActiveAc
       .populate('platinumBidderInvitations.bidder', 'email firstName lastName');
     if (!updatedListing) return res.status(500).json({ error: 'Listing not found after update' });
 
-    await sendPlatinumBidderInvitations(updatedListing);
+    await sendPlatinumBidderInvitations(updatedListing, req.headers['origin'] || null);
     await sendPrivateRoomNotInvitedToBidders(updatedListing, validBidderIds);
 
     const io = req.app.get('io');

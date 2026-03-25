@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Subscription } from 'rxjs';
+import { filter, take } from 'rxjs/operators';
 import Swal from 'sweetalert2';
 import { ListingsService, Listing } from '../../../shared/services/listings.service';
 import { BidsService, Bid } from '../../../shared/services/bids.service';
@@ -60,12 +61,22 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.listingId = this.route.snapshot.paramMap.get('id') || '';
-    if (this.listingId) {
-      this.loadListing();
-    }
+
+    // Wait for Firebase auth to initialise before fetching the listing so the
+    // GET /listings/:id request carries the auth token and the backend returns
+    // currentUserPlatinumStatus for the logged-in user.
+    this.authService.authReady$.pipe(
+      filter(ready => !!ready),
+      take(1)
+    ).subscribe(() => {
+      if (this.listingId) {
+        this.loadListing();
+      }
+    });
 
     this.socketSubscriptions.push(
       this.authService.currentUser$.subscribe(user => {
+        const wasAuthenticated = this.isAuthenticated;
         this.isAuthenticated = !!user;
         this.currentUserId = user?.uid || null;
         this.currentUser = user;
@@ -73,7 +84,12 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
           this.isPlatinumBidder = false;
           this.invitationPending = false;
         } else if (this.listing) {
-          this.applyPlatinumStatusFromListing();
+          if (!wasAuthenticated && !this.listing.currentUserPlatinumStatus) {
+            // Listing was loaded without auth; reload to get platinum status
+            this.loadListing();
+          } else {
+            this.applyPlatinumStatusFromListing();
+          }
         }
       })
     );
