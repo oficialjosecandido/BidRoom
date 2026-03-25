@@ -1009,6 +1009,9 @@
     "as": "como",
     "for": "por",
     "score": "Puntuación",
+    "scoreScaleLow": "Bajo",
+    "scoreScaleHigh": "Excelente",
+    "scoreSelected": "Has elegido {{score}} de 10",
     "descriptionOptional": "Descripción (opcional)",
     "reviewPrivate": "Tu reseña es visible para otros"
   },

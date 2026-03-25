@@ -718,6 +718,13 @@ export class DashboardTransactionsComponent implements OnInit {
     this.reviewScore = n;
   }
 
+  /** Visual tier for 1–10 score buttons (matches review modal styling). */
+  scoreTier(i: number): 'low' | 'mid' | 'high' {
+    if (i <= 3) return 'low';
+    if (i <= 7) return 'mid';
+    return 'high';
+  }
+
   submitReview(): void {
     const t = this.reviewModalTransaction;
     if (!t || this.reviewScore < 1 || this.reviewScore > 10) {

@@ -431,11 +431,28 @@
           </p>
           <fieldset class="review-score-section">
             <legend class="review-score-label">{{ 'transactions.score' | translate }} (1–10)</legend>
-            <div class="review-score-buttons">
-              @for (i of [1,2,3,4,5,6,7,8,9,10]; track i) {
-                <button type="button" class="score-btn" (click)="setReviewScore(i)" [class.selected]="i === reviewScore">
-                  {{ i }}
-                </button>
+            <div class="review-score-card">
+              <div class="review-score-scale">
+                <span class="scale-low">{{ 'transactions.scoreScaleLow' | translate }}</span>
+                <span class="scale-high">{{ 'transactions.scoreScaleHigh' | translate }}</span>
+              </div>
+              <div class="review-score-grid" role="group" [attr.aria-label]="'transactions.score' | translate">
+                @for (i of [1,2,3,4,5,6,7,8,9,10]; track i) {
+                  <button
+                    type="button"
+                    class="score-btn"
+                    [class.tier-low]="scoreTier(i) === 'low'"
+                    [class.tier-mid]="scoreTier(i) === 'mid'"
+                    [class.tier-high]="scoreTier(i) === 'high'"
+                    [class.selected]="i === reviewScore"
+                    (click)="setReviewScore(i)"
+                  >
+                    {{ i }}
+                  </button>
+                }
+              </div>
+              @if (reviewScore > 0) {
+                <p class="review-score-picked">{{ 'transactions.scoreSelected' | translate: { score: reviewScore } }}</p>
               }
             </div>
           </fieldset>

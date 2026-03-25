@@ -1009,6 +1009,9 @@
     "as": "as",
     "for": "for",
     "score": "Score",
+    "scoreScaleLow": "Poor",
+    "scoreScaleHigh": "Excellent",
+    "scoreSelected": "You chose {{score}} out of 10",
     "descriptionOptional": "Description (optional)",
     "reviewPrivate": "Your review is visible to others"
   },
