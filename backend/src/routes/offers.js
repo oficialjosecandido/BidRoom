@@ -40,6 +40,7 @@ const {
   sendOfferPlacedEmail,
   sendOfferOutbidEmail
 } = require('../services/auctionNotificationService');
+const { sendEmail } = require('../services/emailService');
 
 // GET /api/offers/listing/:listingId - Get all offers for a listing
 router.get('/listing/:listingId', async (req, res) => {
@@ -469,6 +470,34 @@ router.patch('/:offerId/accept', authenticateToken, async (req, res) => {
           buyerUserId
         }).catch(err => console.error('Failed to create proposal-accepted notification:', err));
         if (io) emitNewNotificationToUser(io, buyerUserId).catch(() => {});
+
+        // Email to buyer
+        const buyerEmail = offer.offerer?.email;
+        if (buyerEmail) {
+          const buyerFirstName = offer.offerer?.firstName || 'there';
+          const amountStr = `$${Number(offer.amount).toFixed(2)}`;
+          const listingTitle = listing.title || 'your item';
+          const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:4200';
+          const txLink = `${frontendUrl}/dashboard/transactions`;
+          const html = `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+              <div style="background: linear-gradient(135deg, #7A4F84 0%, #9b6ba8 100%); color: white; padding: 24px; text-align: center; border-radius: 8px 8px 0 0;">
+                <h1 style="margin: 0;">Your offer was accepted!</h1>
+              </div>
+              <div style="background: #f9f9f9; padding: 24px; border-radius: 0 0 8px 8px;">
+                <p>Hi ${buyerFirstName},</p>
+                <p>Great news! The seller accepted your offer of <strong>${amountStr}</strong> for <strong>${listingTitle}</strong>.</p>
+                <p>A transaction has been created. Please complete payment to proceed.</p>
+                <p style="text-align: center; margin: 24px 0;">
+                  <a href="${txLink}" style="background: #7A4F84; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: bold;">View Transaction</a>
+                </p>
+                <p>Best regards,<br>The BidRoom Team</p>
+              </div>
+            </div>
+          `;
+          sendEmail(buyerEmail, `Your offer on "${listingTitle}" was accepted`, html)
+            .catch(err => console.error('Failed to send offer-accepted email:', err.message));
+        }
       }
     }
     if (io) {

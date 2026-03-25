@@ -4,7 +4,7 @@ const Listing = require('../models/Listing');
 const User = require('../models/User');
 const Review = require('../models/Review');
 const { authenticateToken, requireActiveAccount } = require('../middleware/auth');
-const { sendSellerDisputeOpenedNotification } = require('../services/emailService');
+const { sendSellerDisputeOpenedNotification, sendEmail } = require('../services/emailService');
 const {
   notifyDisputeOpened,
   notifyEvidenceSubmitted,
@@ -452,6 +452,38 @@ router.patch('/:id', requireActiveAccount, async (req, res) => {
           }
           const io = req.app.get('io');
           if (io) emitNewNotificationToUser(io, buyerUserId).catch(() => {});
+
+          // Email to buyer with optional proof-of-shipment link
+          const buyer = await User.findById(buyerUserId).select('email firstName').lean();
+          if (buyer?.email) {
+            const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:4200';
+            const txLink = `${frontendUrl}/dashboard/transactions`;
+            const proofSection = sellerProofOfDeliveryUrl
+              ? `<p style="margin-top: 16px;"><a href="${sellerProofOfDeliveryUrl}" target="_blank" style="color: #7A4F84; font-weight: bold;">View proof of shipment</a></p>`
+              : '';
+            const trackingSection = trackingNumber
+              ? `<p>Tracking: <strong>${trackingCarrier ? trackingCarrier + ' – ' : ''}${trackingNumber}</strong></p>`
+              : '';
+            const html = `
+              <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                <div style="background: linear-gradient(135deg, #7A4F84 0%, #9b6ba8 100%); color: white; padding: 24px; text-align: center; border-radius: 8px 8px 0 0;">
+                  <h1 style="margin: 0;">Your item has been shipped!</h1>
+                </div>
+                <div style="background: #f9f9f9; padding: 24px; border-radius: 0 0 8px 8px;">
+                  <p>Hi ${buyer.firstName || 'there'},</p>
+                  <p>The seller has shipped <strong>${listingTitle}</strong>.</p>
+                  ${trackingSection}
+                  ${proofSection}
+                  <p style="text-align: center; margin: 24px 0;">
+                    <a href="${txLink}" style="background: #7A4F84; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: bold;">View Transaction</a>
+                  </p>
+                  <p>Best regards,<br>The BidRoom Team</p>
+                </div>
+              </div>
+            `;
+            sendEmail(buyer.email, `Your item "${listingTitle}" has been shipped`, html)
+              .catch(err => console.error('Failed to send shipped email to buyer:', err.message));
+          }
         }
       } else if (status === 'cancelled' && ts === 'pending_payment') {
         transaction.transactionStatus = 'cancelled';

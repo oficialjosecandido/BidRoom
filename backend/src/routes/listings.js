@@ -1146,6 +1146,15 @@ router.get('/seller/my-listings', authenticateToken, async (req, res) => {
       watchlistCounts.map((row) => [row._id.toString(), row.count])
     );
 
+    // Highest offer per best-offer listing (regardless of acceptance status)
+    const offerAgg = await Offer.aggregate([
+      { $match: { listing: { $in: listingIds }, status: { $in: ['pending', 'accepted'] } } },
+      { $group: { _id: '$listing', highestOffer: { $max: '$amount' } } }
+    ]);
+    const highestOfferByListing = Object.fromEntries(
+      offerAgg.map((row) => [row._id.toString(), row.highestOffer])
+    );
+
     // Enhance listings with platinum bidder invitation status and watchlist count
     const enhancedListings = listings.map((listing) => {
       const listingObj = listing.toObject ? listing.toObject() : listing;
@@ -1177,7 +1186,8 @@ router.get('/seller/my-listings', authenticateToken, async (req, res) => {
       return {
         ...listingObj,
         platinumBidderStatus,
-        watchlistCount: watchlistByListing[listing._id.toString()] ?? 0
+        watchlistCount: watchlistByListing[listing._id.toString()] ?? 0,
+        highestOfferAmount: highestOfferByListing[listing._id.toString()] ?? null
       };
     });
 

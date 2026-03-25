@@ -464,6 +464,18 @@ async function notifyAccountReactivated({ userId }) {
   });
 }
 
+/** Buyer paid — notify seller */
+async function notifySellerPaymentReceived({ transactionId, listingTitle, buyerName, sellerUserId }) {
+  return createNotification({
+    userId: sellerUserId,
+    title: 'Payment received',
+    message: `${buyerName || 'A buyer'} paid for "${listingTitle || 'your listing'}". Confirm acceptance and prepare to ship.`,
+    type: 'transaction',
+    link: '/dashboard/transactions',
+    referenceId: transactionId
+  });
+}
+
 /** Seller must connect Stripe before a qualifying offer can be accepted */
 async function notifySellerStripeRequiredForOffer({ listingSlug, listingTitle, offerAmount, sellerUserId }) {
   const link = '/dashboard/settings';
@@ -611,5 +623,6 @@ module.exports = {
   notifySellerWinnerSelected,
   notifyBuyerAuctionWon,
   notifySellerStripeRequiredForOffer,
+  notifySellerPaymentReceived,
   emitNewNotificationToUser
 };

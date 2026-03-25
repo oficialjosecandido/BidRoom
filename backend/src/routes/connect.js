@@ -5,6 +5,7 @@ const User = require('../models/User');
 const Transaction = require('../models/Transaction');
 const Listing = require('../models/Listing');
 const { sendEmail } = require('../services/emailService');
+const { notifySellerPaymentReceived, emitNewNotificationToUser } = require('../services/notificationService');
 
 const LOG_PREFIX = '[Connect]';
 const BIDROOMFEE_RATE = 0.02; // 2%
@@ -573,6 +574,20 @@ router.post('/confirm-payment', requireActiveAccount, async (req, res) => {
 
     await sendPaymentReceivedEmail(transaction);
 
+    // In-app notification to seller
+    const sellerMongoId = transaction.seller?._id?.toString?.() || transaction.seller?.toString?.();
+    if (sellerMongoId) {
+      const buyerName = [transaction.buyer?.firstName, transaction.buyer?.lastName].filter(Boolean).join(' ') || 'A buyer';
+      notifySellerPaymentReceived({
+        transactionId,
+        listingTitle: transaction.listing?.title || 'your listing',
+        buyerName,
+        sellerUserId: sellerMongoId
+      }).catch(err => console.error(`${LOG_PREFIX} Failed to create seller payment notification:`, err));
+      const io = req.app.get('io');
+      if (io) emitNewNotificationToUser(io, sellerMongoId).catch(() => {});
+    }
+
     console.log(`${LOG_PREFIX} Payment confirmed transaction=${transactionId} pi=${paymentIntentId}`);
 
     const updated = await Transaction.findById(transactionId)
@@ -615,7 +630,8 @@ function connectWebhookHandler(req, res) {
 
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object;
-    handleCheckoutCompleted(session, stripe).catch(err =>
+    const io = req.app.get('io');
+    handleCheckoutCompleted(session, stripe, io).catch(err =>
       console.error(`${LOG_PREFIX} Webhook handleCheckoutCompleted error:`, err.message)
     );
   }
@@ -630,7 +646,7 @@ function connectWebhookHandler(req, res) {
   res.json({ received: true });
 }
 
-async function handleCheckoutCompleted(session, stripe) {
+async function handleCheckoutCompleted(session, stripe, io) {
   const transactionId = session.metadata?.transactionId;
   if (!transactionId) return;
 
@@ -675,6 +691,20 @@ async function handleCheckoutCompleted(session, stripe) {
   await transaction.save();
 
   await sendPaymentReceivedEmail(transaction);
+
+  // In-app notification to seller
+  const sellerMongoId = transaction.seller?._id?.toString?.() || transaction.seller?.toString?.();
+  if (sellerMongoId) {
+    const buyerName = [transaction.buyer?.firstName, transaction.buyer?.lastName].filter(Boolean).join(' ') || 'A buyer';
+    notifySellerPaymentReceived({
+      transactionId,
+      listingTitle: transaction.listing?.title || 'your listing',
+      buyerName,
+      sellerUserId: sellerMongoId
+    }).catch(err => console.error(`${LOG_PREFIX} Failed to create seller payment notification:`, err));
+    if (io) emitNewNotificationToUser(io, sellerMongoId).catch(() => {});
+  }
+
   console.log(`${LOG_PREFIX} Webhook: transaction ${transactionId} marked awaiting_seller_acceptance`);
 }
 
