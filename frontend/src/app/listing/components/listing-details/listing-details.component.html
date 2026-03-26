@@ -301,6 +301,12 @@
               <p>{{ 'listingDetails.actions.cantBidOwnListing' | translate }}</p>
             </div>
             }
+            @if (showPrivateRoomEligibleCountdown()) {
+            <div class="private-room-eligible-countdown">
+              <span class="countdown-label">{{ 'listingDetails.privateRoom.eligibleCountdownLabel' | translate }}</span>
+              <span class="countdown-timer">{{ formatPrivateRoomEligibleCountdown() }}</span>
+            </div>
+            }
             @if (canCreatePrivateRoom()) {
             <button class="btn btn-primary btn-large" (click)="openCreatePrivateRoomModal()">
               {{ 'listingDetails.actions.createPrivateRoom' | translate }}
@@ -876,6 +882,50 @@
       <button type="button" class="btn btn-primary" (click)="goToLogin()">{{ 'listingDetails.watchlistModal.login' | translate }}</button>
       <button type="button" class="btn btn-secondary" (click)="goToSignup()">{{ 'listingDetails.watchlistModal.signup' | translate }}</button>
     </div>
+  </div>
+</div>
+}
+
+@if (showSelectWinnerModal) {
+<!-- Select winner (seller, manual selection when private room is not enabled) -->
+<div class="modal-overlay" role="button" tabindex="0" (click)="closeSelectWinnerModal()" (keydown.escape)="closeSelectWinnerModal()">
+  <div class="modal-content select-winner-modal" tabindex="0" (click)="$event.stopPropagation()" (keydown.enter)="$event.stopPropagation()" (keydown.space)="$event.stopPropagation()">
+    <button type="button" class="modal-close" aria-label="Close" (click)="closeSelectWinnerModal()">&times;</button>
+    <h3>{{ 'listingDetails.selectWinnerModal.title' | translate }}</h3>
+    <p class="modal-subtitle">{{ 'listingDetails.selectWinnerModal.subtitle' | translate }}</p>
+    @if (bidsLoading) {
+    <div class="modal-loading">{{ 'listingDetails.selectWinnerModal.loading' | translate }}</div>
+    }
+    @if (!bidsLoading && aggregatedBidsForWinnerSelection.length === 0) {
+    <div class="modal-empty">{{ 'listingDetails.selectWinnerModal.noBids' | translate }}</div>
+    }
+    @if (!bidsLoading && aggregatedBidsForWinnerSelection.length > 0) {
+    <ul class="select-winner-list">
+      @for (b of aggregatedBidsForWinnerSelection; track b._id) {
+      <li class="select-winner-item" [class.select-winner-item--ineligible]="!canSelectBidAsWinner(b)">
+        <div class="select-winner-info">
+          <span class="select-winner-bidder">{{ (b.bidderFirstName && b.bidderLastName) ? b.bidderFirstName + ' ' + b.bidderLastName : (b.bidderName || ('listingDetails.bidHistory.anonymous' | translate)) }}</span>
+          <span class="select-winner-amount">{{ formatBidAmount(b.amount) }}</span>
+          <span class="select-winner-badges">
+            @if (b.bidderVerified) { <span class="select-winner-badge verified">{{ 'listingDetails.selectWinnerModal.verified' | translate }}</span> }
+            @if (!b.isAuthenticated) { <span class="select-winner-badge guest">{{ 'listingDetails.selectWinnerModal.guest' | translate }}</span> }
+            @if (b.isAuthenticated && !b.bidderVerified) { <span class="select-winner-badge guest">{{ 'listingDetails.selectWinnerModal.unverified' | translate }}</span> }
+          </span>
+        </div>
+        <div class="select-winner-action">
+          @if (canSelectBidAsWinner(b)) {
+          <button type="button" class="btn btn-primary" (click)="selectWinner(b._id)" [disabled]="selectingWinner">
+            {{ selectingWinner ? ('listingDetails.selectWinnerModal.selecting' | translate) : ('listingDetails.selectWinnerModal.selectBtn' | translate) }}
+          </button>
+          }
+          @if (!canSelectBidAsWinner(b)) {
+          <span class="select-winner-ineligible">{{ 'listingDetails.selectWinnerModal.ineligible' | translate }}</span>
+          }
+        </div>
+      </li>
+      }
+    </ul>
+    }
   </div>
 </div>
 }

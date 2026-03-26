@@ -1,5 +1,5 @@
 import { Component, OnInit, OnDestroy, ChangeDetectorRef, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, Location } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Subscription } from 'rxjs';
@@ -27,6 +27,7 @@ import { TranslateModule } from '@ngx-translate/core';
 export class ListingDetailsComponent implements OnInit, OnDestroy {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
+  private location = inject(Location);
   private listingsService = inject(ListingsService);
   private bidsService = inject(BidsService);
   private offersService = inject(OffersService);
@@ -67,6 +68,8 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
   private justEndedRefetched = false;
   private offerRefreshDebounceTimer: ReturnType<typeof setTimeout> | null = null;
   private readonly OFFER_REFRESH_DEBOUNCE_MS = 2000;
+  /** Ensures /listing/:slug/choose-winner deep link runs once after load. */
+  private chooseWinnerDeepLinkHandled = false;
   displayedTimeRemaining = '';
   winnerSelectionCountdownDisplay = '';
   newBidIds = new Set<string>();
@@ -157,10 +160,12 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
       next: (response) => {
         this.bids = response.bids;
         this.bidsLoading = false;
+        this.handleChooseWinnerDeepLink();
       },
       error: () => {
         this.bidsError = 'Failed to load bid history';
         this.bidsLoading = false;
+        this.handleChooseWinnerDeepLink();
       }
     });
   }
@@ -479,6 +484,24 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
     return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
   }
 
+  /** True when auction ended with private room eligible and seller still has time to create the room. */
+  showPrivateRoomEligibleCountdown(): boolean {
+    if (this.listing?.status !== 'ended') return false;
+    if (this.listing?.privateRoomStatus !== 'eligible') return false;
+    if (!this.listing?.winnerSelectionDeadline) return false;
+    return new Date(this.listing.winnerSelectionDeadline) > new Date();
+  }
+
+  /** Formatted MM:SS countdown for the 15-min private room creation window. */
+  formatPrivateRoomEligibleCountdown(): string {
+    if (!this.listing?.winnerSelectionDeadline) return '00:00';
+    const diff = new Date(this.listing.winnerSelectionDeadline).getTime() - Date.now();
+    const sec = Math.max(0, Math.floor(diff / 1000));
+    const m = Math.floor(sec / 60);
+    const s = sec % 60;
+    return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  }
+
   /** The accepted offer (for best-offer when seller has selected one). */
   get acceptedOffer(): Offer | null {
     return this.offers.find(o => o.status === 'accepted') ?? null;
@@ -487,6 +510,78 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
   /** Only registered, verified bidders can be selected as winner. */
   canSelectBidAsWinner(bid: Bid): boolean {
     return !!(bid.isAuthenticated && bid.bidderVerified);
+  }
+
+  /**
+   * Highest bid per bidder (for seller modal). Backend accepts any bid id for that listing/bidder.
+   */
+  get aggregatedBidsForWinnerSelection(): Bid[] {
+    const byKey = new Map<string, Bid>();
+    for (const bid of this.bids) {
+      const key =
+        bid.bidder?._id?.toString() ||
+        (bid.bidderEmail ? bid.bidderEmail.toLowerCase() : '') ||
+        bid._id;
+      const prev = byKey.get(key);
+      if (!prev || bid.amount > prev.amount) {
+        byKey.set(key, bid);
+      }
+    }
+    return Array.from(byKey.values()).sort((a, b) => b.amount - a.amount);
+  }
+
+  /** Manual winner selection via API is only allowed when private room is not enabled (see backend POST choose-winner). */
+  canSellerSelectWinnerManually(): boolean {
+    if (!this.listing || this.listing.auctionFormat !== 'highest-bid') return false;
+    if (this.listing.status !== 'ended' || this.listing.winner) return false;
+    if (this.listing.allowPrivateRoom) return false;
+    if (this.isPrivateRoomEnded()) return false;
+    return this.getEndedBidCount() > 0;
+  }
+
+  private isChooseWinnerEmailLink(): boolean {
+    return (
+      this.router.url.includes('/choose-winner') ||
+      this.route.snapshot.queryParamMap.get('chooseWinner') === '1'
+    );
+  }
+
+  /**
+   * Handles seller email CTA `/listing/:slug/choose-winner` (and `?chooseWinner=1`).
+   * Replaces URL with `/listing/:slug`, focuses Bid history, opens create-room or select-winner when applicable.
+   */
+  private handleChooseWinnerDeepLink(): void {
+    if (this.chooseWinnerDeepLinkHandled || !this.isChooseWinnerEmailLink() || !this.listing?.slug) {
+      return;
+    }
+    this.chooseWinnerDeepLinkHandled = true;
+
+    if (this.listing.auctionFormat === 'highest-bid') {
+      this.setActiveTab('bids');
+    }
+
+    if (!this.isAuthenticated) {
+      this.router.navigate(['/auth/login'], {
+        queryParams: { returnUrl: `/listing/${this.listing.slug}/choose-winner` }
+      });
+      return;
+    }
+
+    // Update the address bar without re-running the router (avoids remounting this view).
+    this.location.replaceState(`/listing/${this.listing.slug}`);
+
+    if (!this.isOwnListing) {
+      return;
+    }
+
+    if (this.canCreatePrivateRoom()) {
+      this.openCreatePrivateRoomModal();
+      return;
+    }
+
+    if (this.canSellerSelectWinnerManually()) {
+      this.openSelectWinnerModal();
+    }
   }
 
   /** True if this bid is the winning bid. */

@@ -87,14 +87,14 @@ export class InvitationAcceptComponent implements OnInit {
   }
 
   private navigateAfterAccept(): void {
+    // After accepting, send the user to the listing details page
+    const listingUrl = `/listing/${this.listingId}`;
     const user = this.authService.getCurrentUser();
     if (user) {
-      // Already logged in — go straight to the private room
-      this.router.navigate(['/private-room/auction', this.listingId]);
+      this.router.navigate(['/listing', this.listingId]);
     } else {
-      // Not logged in — send to login page, then come back to the private room
       this.router.navigate(['/auth/login'], {
-        queryParams: { returnUrl: this.privateRoomUrl }
+        queryParams: { returnUrl: listingUrl }
       });
     }
   }

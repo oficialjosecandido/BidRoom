@@ -79,6 +79,12 @@ async function sendAuctionClosedNotifications(listing, winnerBidId = null) {
  */
 async function sendChooseWinnerNotification(listing) {
   try {
+    // Manual "choose winner" only applies to auctions without private room; API rejects choose-winner when allowPrivateRoom is set.
+    if (listing.allowPrivateRoom) {
+      console.log(`Skipping choose-winner email for listing ${listing._id} (private room enabled).`);
+      return;
+    }
+
     const seller = await User.findById(listing.seller);
     if (!seller || !seller.email) {
       console.error('Seller not found or has no email for listing:', listing._id);
@@ -802,7 +808,7 @@ async function sendPlatinumBidderInvitations(listing, requestOrigin = null) {
     const frontendUrl = (configured && !configured.includes('localhost'))
       ? configured.replace(/\/$/, '')
       : (requestOrigin && !requestOrigin.includes('localhost') ? requestOrigin.replace(/\/$/, '') : (configured || 'http://localhost:4200').replace(/\/$/, ''));
-    const listingUrl = `${frontendUrl}/private-room/auction/${listing._id}`;
+    const listingUrl = `${frontendUrl}/listing/${listing.slug || listing._id}`;
     const endDate = listing.privateRoomEndDate
       ? new Date(listing.privateRoomEndDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })
       : '';
@@ -813,6 +819,7 @@ async function sendPlatinumBidderInvitations(listing, requestOrigin = null) {
       const user = inv.bidder && inv.bidder._id ? await User.findById(inv.bidder._id) : null;
       if (!user || !user.email || !inv.invitationToken) continue;
       const acceptInvitationUrl = `${frontendUrl}/private-room/invitation/accept?token=${encodeURIComponent(inv.invitationToken)}&listingId=${listing._id}`;
+      const declineInvitationUrl = `${frontendUrl}/private-room/invitation/decline?token=${encodeURIComponent(inv.invitationToken)}&listingId=${listing._id}`;
       const language = getUserLanguage(user);
       const bidderName = `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email?.split('@')[0] || 'Bidder';
       const endDateDisplay = endDate || 'After 15-min acceptance window';
@@ -821,6 +828,7 @@ async function sendPlatinumBidderInvitations(listing, requestOrigin = null) {
         listingTitle: listing.title,
         listingUrl,
         acceptInvitationUrl,
+        declineInvitationUrl,
         currentPrice,
         endDate: endDateDisplay
       });
@@ -947,7 +955,7 @@ async function handleAuctionEnd(listingId, io = null) {
     // If fewer than 2 authenticated bidders, we cannot create a private room → treat as regular auction, auto-select winner.
     if (listing.allowPrivateRoom && hasBids && reserveMet && authenticatedBidderCount >= 2) {
       const deadline = new Date();
-      deadline.setHours(deadline.getHours() + 1);
+      deadline.setMinutes(deadline.getMinutes() + 15);
 
       await Listing.findByIdAndUpdate(listingId, {
         $set: {
@@ -1295,7 +1303,7 @@ async function handlePrivateRoomEnd(listingId, io = null) {
 
     try {
       await sendPrivateRoomEndNotifications(listingForNotify, highestBid);
-      await sendChooseWinnerNotification(listingForNotify);
+      // Winner is already set by private room end; do not send "choose winner" email to seller.
       // Create transaction when there is a winner (authenticated bidder)
       if (highestBid && (highestBid.bidder?._id || highestBid.bidder)) {
         await createTransactionForListing(listingId).catch(err => console.error('Transaction create:', err.message));
@@ -1327,10 +1335,114 @@ async function handlePrivateRoomEnd(listingId, io = null) {
   }
 }
 
+/**
+ * Seller didn't create the private room within 15 min — auto-select highest authenticated bidder as winner.
+ */
+async function handlePrivateRoomEligibleExpired(listingId, io = null) {
+  try {
+    const listing = await Listing.findById(listingId).populate('seller', 'firstName lastName email');
+    if (!listing || listing.privateRoomStatus !== 'eligible') return;
+
+    const highestBid = await Bid.findOne({ listing: listingId, bidder: { $exists: true, $ne: null } })
+      .sort({ amount: -1 })
+      .populate('bidder', 'firstName lastName email')
+      .lean();
+
+    if (highestBid) {
+      const now = new Date();
+      await Listing.findByIdAndUpdate(listingId, {
+        $set: { privateRoomStatus: 'ended', winner: highestBid.bidder._id, winnerBid: highestBid._id, winnerSelectedAt: now, winnerSelectionDeadline: null }
+      }, { runValidators: false });
+
+      const listingForNotify = await Listing.findById(listingId).populate('seller', 'firstName lastName email');
+      if (listingForNotify) {
+        await sendWinnerNotification(listingForNotify, highestBid);
+        await sendAuctionClosedNotifications(listingForNotify, highestBid._id);
+        await createTransactionForListing(listingId).catch(err => console.error('Tx for eligible-expired:', err.message));
+        const { notifySellerWinnerSelected, notifyBuyerAuctionWon, emitNewNotificationToUser } = require('./notificationService');
+        const winnerName = `${highestBid.bidder.firstName} ${highestBid.bidder.lastName}`.trim();
+        const sellerUserId = listingForNotify.seller?._id?.toString?.() || listingForNotify.seller?.toString?.();
+        const buyerUserId = highestBid.bidder?._id?.toString?.() || highestBid.bidder?.toString?.();
+        if (sellerUserId) {
+          notifySellerWinnerSelected({ listingSlug: listingForNotify.slug, listingTitle: listingForNotify.title, winnerName, winningAmount: highestBid.amount, commissionRate: listingForNotify.commissionRate ?? 0.005, shippingCost: listingForNotify.shippingCost ?? 0, shippingOption: listingForNotify.shippingOption ?? 'flat-rate', sellerUserId }).catch(() => {});
+          if (io) emitNewNotificationToUser(io, sellerUserId).catch(() => {});
+        }
+        if (buyerUserId) {
+          notifyBuyerAuctionWon({ listingSlug: listingForNotify.slug, listingTitle: listingForNotify.title, winningAmount: highestBid.amount, buyerUserId }).catch(() => {});
+          if (io) emitNewNotificationToUser(io, buyerUserId).catch(() => {});
+        }
+      }
+      if (io) io.to(`listing:${listingId}`).emit('listing-update', { listingId: listingId.toString(), privateRoomStatus: 'ended', winner: highestBid.bidder._id.toString() });
+      console.log(`✅ Eligible-expired: auto-selected winner for listing ${listingId}`);
+    } else {
+      await Listing.findByIdAndUpdate(listingId, { $set: { privateRoomStatus: 'ended', winnerSelectionDeadline: null } }, { runValidators: false });
+      if (io) io.to(`listing:${listingId}`).emit('listing-update', { listingId: listingId.toString(), privateRoomStatus: 'ended' });
+      console.log(`✅ Eligible-expired: no authenticated bids, listing ${listingId} closed without winner`);
+    }
+  } catch (err) {
+    console.error('Error in handlePrivateRoomEligibleExpired:', err.message);
+    throw err;
+  }
+}
+
+/**
+ * Exactly one bidder accepted the private room invitation — they win without an auction.
+ */
+async function handlePrivateRoomSingleAcceptance(listingId, acceptedInvitation, io = null) {
+  try {
+    const listing = await Listing.findById(listingId).populate('seller', 'firstName lastName email');
+    if (!listing) throw new Error('Listing not found');
+
+    const bidderId = typeof acceptedInvitation.bidder === 'string'
+      ? acceptedInvitation.bidder
+      : acceptedInvitation.bidder?._id || acceptedInvitation.bidder;
+
+    const winnerBid = await Bid.findOne({ listing: listingId, bidder: bidderId })
+      .sort({ amount: -1 })
+      .populate('bidder', 'firstName lastName email')
+      .lean();
+
+    if (!winnerBid || !winnerBid.bidder) {
+      return handlePrivateRoomClosedNoAcceptance(listingId, io);
+    }
+
+    const now = new Date();
+    await Listing.findByIdAndUpdate(listingId, {
+      $set: { status: 'ended', privateRoomStatus: 'ended', winner: winnerBid.bidder._id, winnerBid: winnerBid._id, winnerSelectedAt: now }
+    }, { runValidators: false });
+
+    const listingForNotify = await Listing.findById(listingId).populate('seller', 'firstName lastName email');
+    if (listingForNotify) {
+      await sendWinnerNotification(listingForNotify, winnerBid);
+      await sendAuctionClosedNotifications(listingForNotify, winnerBid._id);
+      await createTransactionForListing(listingId).catch(err => console.error('Tx for single-acceptance:', err.message));
+      const { notifySellerWinnerSelected, notifyBuyerAuctionWon, emitNewNotificationToUser } = require('./notificationService');
+      const winnerName = `${winnerBid.bidder.firstName} ${winnerBid.bidder.lastName}`.trim();
+      const sellerUserId = listingForNotify.seller?._id?.toString?.() || listingForNotify.seller?.toString?.();
+      const buyerUserId = winnerBid.bidder?._id?.toString?.() || winnerBid.bidder?.toString?.();
+      if (sellerUserId) {
+        notifySellerWinnerSelected({ listingSlug: listingForNotify.slug, listingTitle: listingForNotify.title, winnerName, winningAmount: winnerBid.amount, commissionRate: listingForNotify.commissionRate ?? 0.005, shippingCost: listingForNotify.shippingCost ?? 0, shippingOption: listingForNotify.shippingOption ?? 'flat-rate', sellerUserId }).catch(() => {});
+        if (io) emitNewNotificationToUser(io, sellerUserId).catch(() => {});
+      }
+      if (buyerUserId) {
+        notifyBuyerAuctionWon({ listingSlug: listingForNotify.slug, listingTitle: listingForNotify.title, winningAmount: winnerBid.amount, buyerUserId }).catch(() => {});
+        if (io) emitNewNotificationToUser(io, buyerUserId).catch(() => {});
+      }
+    }
+    if (io) io.to(`listing:${listingId}`).emit('listing-update', { listingId: listingId.toString(), status: 'ended', privateRoomStatus: 'ended', winner: winnerBid.bidder._id.toString() });
+    console.log(`✅ Single acceptance: auto-selected winner for listing ${listingId}`);
+  } catch (err) {
+    console.error('Error in handlePrivateRoomSingleAcceptance:', err.message);
+    throw err;
+  }
+}
+
 module.exports = {
   handleAuctionEnd,
   handlePrivateRoomEnd,
   handlePrivateRoomClosedNoAcceptance,
+  handlePrivateRoomEligibleExpired,
+  handlePrivateRoomSingleAcceptance,
   handleSellerLeftPrivateRoom,
   handleWinnerSelection,
   sendAuctionClosedNotifications,

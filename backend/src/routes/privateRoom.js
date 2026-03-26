@@ -172,7 +172,7 @@ router.post('/listings/:id/platinum-bidders', authenticateToken, requireActiveAc
       if (new Date() > new Date(listing.winnerSelectionDeadline)) {
         return res.status(400).json({
           error: 'Deadline passed',
-          message: 'The 1 hour window to create the private room has passed. You can no longer create a private room for this listing.'
+          message: 'The 15-minute window to create the private room has passed. You can no longer create a private room for this listing.'
         });
       }
     }

@@ -228,6 +228,16 @@ router.post('/submit-onboarding', requireActiveAccount, async (req, res) => {
     res.json({ onboarded, requiresVerification: !onboarded, accountId });
   } catch (err) {
     console.error(`${LOG_PREFIX} Submit onboarding error:`, err.message);
+    // Stripe Connect not enabled on the platform account
+    if (
+      err.type === 'StripePermissionError' ||
+      (err.message && err.message.toLowerCase().includes('connect'))
+    ) {
+      return res.status(503).json({
+        error: 'Stripe Connect not configured',
+        message: 'Payout account setup is temporarily unavailable. Our team has been notified. Please try again later or contact support.'
+      });
+    }
     if (err.type === 'StripeInvalidRequestError') {
       return res.status(400).json({ error: 'Invalid payment details', message: err.message });
     }

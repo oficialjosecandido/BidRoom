@@ -4,7 +4,7 @@
  */
 
 const Listing = require('../models/Listing');
-const { handleAuctionEnd, handlePrivateRoomEnd, handlePrivateRoomClosedNoAcceptance } = require('./auctionNotificationService');
+const { handleAuctionEnd, handlePrivateRoomEnd, handlePrivateRoomClosedNoAcceptance, handlePrivateRoomEligibleExpired, handlePrivateRoomSingleAcceptance } = require('./auctionNotificationService');
 
 let checkInterval = null;
 let ioInstance = null;
@@ -16,6 +16,22 @@ async function checkEndedAuctions() {
   try {
     const now = new Date();
     let processed = 0;
+
+    // -1) Listings in 'eligible' state past winnerSelectionDeadline (seller didn't create room in 15 min) → auto-select highest bidder
+    const eligiblePastDeadline = await Listing.find({
+      status: 'ended',
+      privateRoomStatus: 'eligible',
+      winnerSelectionDeadline: { $lte: now }
+    });
+    for (const listing of eligiblePastDeadline) {
+      try {
+        await handlePrivateRoomEligibleExpired(listing._id, ioInstance);
+        processed++;
+        console.log(`✅ Private room eligible expired (auto-selected winner): ${listing._id} - ${listing.title}`);
+      } catch (error) {
+        console.error(`❌ Error processing eligible-expired listing ${listing._id}:`, error.message);
+      }
+    }
 
     // 0) Private rooms in 'invited' state past acceptance deadline → auto-start the room (15 min passed)
     const PRIVATE_ROOM_EXTEND_MS = 60 * 1000;
@@ -34,8 +50,14 @@ async function checkEndedAuctions() {
           await handlePrivateRoomClosedNoAcceptance(listing._id, ioInstance);
           processed++;
           console.log(`✅ Private room closed (no acceptances): ${listing._id} - ${listing.title}`);
+        } else if (acceptedCount === 1) {
+          // Exactly one accepted → they win automatically without an auction
+          const acceptedInvitation = invitations.find(inv => inv.status === 'accepted');
+          await handlePrivateRoomSingleAcceptance(listing._id, acceptedInvitation, ioInstance);
+          processed++;
+          console.log(`✅ Private room single acceptance (auto-winner): ${listing._id} - ${listing.title}`);
         } else {
-          // At least one accepted → auto-start the room (existing behavior)
+          // 2+ accepted → auto-start the room
           const roomEndDate = new Date(now.getTime() + PRIVATE_ROOM_EXTEND_MS);
           await Listing.findByIdAndUpdate(listing._id, {
             $set: {

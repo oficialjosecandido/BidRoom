@@ -507,6 +507,31 @@
           background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
         }
 
+        .private-room-eligible-countdown {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          padding: 10px 16px;
+          margin-bottom: 12px;
+          background: #fef3c7;
+          border: 1px solid #f59e0b;
+          border-radius: 8px;
+          font-size: 14px;
+
+          .countdown-label {
+            color: #92400e;
+            font-weight: 500;
+          }
+
+          .countdown-timer {
+            font-family: monospace;
+            font-size: 18px;
+            font-weight: 700;
+            color: #b45309;
+            min-width: 48px;
+          }
+        }
+
         .private-room-banner.private-room-invited {
           background: linear-gradient(135deg, #0ea5e9 0%, #6366f1 100%);
         }
