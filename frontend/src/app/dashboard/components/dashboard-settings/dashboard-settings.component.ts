@@ -20,6 +20,9 @@ export class DashboardSettingsComponent implements OnInit {
   private translate = inject(TranslateService);
   private stripeConnect = inject(StripeConnectService);
 
+  /** Display scale for buyer/seller review averages (matches 1–10 transaction reviews). */
+  readonly reviewScoreMax = 10;
+
   currentUser$: Observable<AppUser | null>;
   buyerScore: number | null = null;
   sellerScore: number | null = null;

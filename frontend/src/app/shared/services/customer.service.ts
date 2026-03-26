@@ -26,6 +26,7 @@ export interface CustomerInfo {
   sellerScore: number | null;
   buyerReviewCount: number;
   sellerReviewCount: number;
+  stripeConnectOnboarded: boolean;
 }
 
 @Injectable({

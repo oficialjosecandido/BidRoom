@@ -4,6 +4,55 @@
   margin: 0 auto;
 }
 
+.payout-setup-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 20px;
+  margin-bottom: 20px;
+  background: #fff7ed;
+  border: 1px solid #f97316;
+  border-radius: 10px;
+
+  .payout-banner-icon {
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+
+  .payout-banner-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    font-size: 14px;
+
+    strong {
+      color: #9a3412;
+      font-weight: 600;
+    }
+
+    span {
+      color: #7c2d12;
+    }
+  }
+
+  .payout-banner-cta {
+    flex-shrink: 0;
+    padding: 8px 16px;
+    background: #f97316;
+    color: #fff;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 13px;
+    border-radius: 6px;
+    white-space: nowrap;
+
+    &:hover {
+      background: #ea6c0a;
+    }
+  }
+}
+
 .page-header {
   margin-bottom: 28px;
 

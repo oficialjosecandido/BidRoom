@@ -32,14 +32,14 @@
           <div class="info-row">
             <span class="info-label">{{ 'dashboard.settings.buyerScore' | translate }}</span>
             <span class="info-value score-value">
-              {{ buyerScore !== null ? (buyerScore | number:'1.1-1') + ' / 5' : '—' }}
+              {{ buyerScore !== null ? (buyerScore | number:'1.1-1') + ' / ' + reviewScoreMax : '—' }}
               @if (buyerReviewCount > 0) { <span class="review-count">({{ buyerReviewCount }} {{ buyerReviewCount !== 1 ? ('dashboard.common.reviews' | translate) : ('dashboard.common.review' | translate) }})</span> }
             </span>
           </div>
           <div class="info-row">
             <span class="info-label">{{ 'dashboard.settings.sellerScore' | translate }}</span>
             <span class="info-value score-value">
-              {{ sellerScore !== null ? (sellerScore | number:'1.1-1') + ' / 5' : '—' }}
+              {{ sellerScore !== null ? (sellerScore | number:'1.1-1') + ' / ' + reviewScoreMax : '—' }}
               @if (sellerReviewCount > 0) { <span class="review-count">({{ sellerReviewCount }} {{ sellerReviewCount !== 1 ? ('dashboard.common.reviews' | translate) : ('dashboard.common.review' | translate) }})</span> }
             </span>
           </div>

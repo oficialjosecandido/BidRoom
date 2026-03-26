@@ -28,6 +28,20 @@
     </div>
   </div>
 
+  <!-- Payout setup banner -->
+  @if (!isLoading && showPayoutSetupBanner) {
+  <div class="payout-setup-banner">
+    <div class="payout-banner-icon">⚠️</div>
+    <div class="payout-banner-body">
+      <strong>{{ 'dashboard.home.payoutSetupTitle' | translate }}</strong>
+      <span>{{ 'dashboard.home.payoutSetupDesc' | translate }}</span>
+    </div>
+    <a routerLink="/dashboard/settings" class="payout-banner-cta">
+      {{ 'dashboard.home.payoutSetupCta' | translate }}
+    </a>
+  </div>
+  }
+
   <!-- Summary cards -->
   <div class="stats-grid">
     <a class="stat-card stat-active stat-clickable" routerLink="/dashboard/seller">

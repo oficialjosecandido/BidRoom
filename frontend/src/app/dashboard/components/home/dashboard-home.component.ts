@@ -345,6 +345,12 @@ export class DashboardHomeComponent implements OnInit {
     });
   }
 
+  /** True when user has listings but hasn't completed payout setup. */
+  get showPayoutSetupBanner(): boolean {
+    if (this.customer?.stripeConnectOnboarded) return false;
+    return this.activeListings.length > 0 || this.endedListings.length > 0;
+  }
+
   formatDate(dateString: string): string {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
