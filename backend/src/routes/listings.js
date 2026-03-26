@@ -11,6 +11,10 @@ const { logAuctionCreated } = require('../services/bestOfferLogger');
 
 const router = express.Router();
 
+function escapeRegex(str) {
+  return String(str).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 // GET /api/listings - Get all active listings with filtering and sorting
 router.get('/', async (req, res) => {
   try {
@@ -26,7 +30,8 @@ router.get('/', async (req, res) => {
       search,
       condition,
       shipping,
-      location,
+      locationCity,
+      locationCountry,
       limit = 20,
       skip,
       page
@@ -88,31 +93,39 @@ router.get('/', async (req, res) => {
     }
 
     if (shipping) {
-      const shippingOptionMap = {
-        'worldwide': ['flat-rate', 'calculated', 'free'],
-        'regional': ['calculated'],
+      const directOptions = new Set(['flat-rate', 'calculated', 'local-pickup', 'free']);
+      const legacyShippingMap = {
+        worldwide: ['flat-rate', 'calculated', 'free'],
+        regional: ['calculated'],
         'local-pickup': ['local-pickup']
       };
-      const selectedShipping = shipping.split(',');
-      const shippingOptions = [...new Set(selectedShipping.flatMap(s => shippingOptionMap[s.trim()] || []))];
+      const selectedShipping = shipping.split(',').map(s => s.trim()).filter(Boolean);
+      const shippingOptions = [...new Set(selectedShipping.flatMap(s =>
+        (directOptions.has(s) ? [s] : legacyShippingMap[s]) || []
+      ))];
       if (shippingOptions.length > 0) {
         query.shippingOption = { $in: shippingOptions };
       }
     }
 
-    if (location) {
-      const EUROPE = ['AL','AT','BA','BE','BG','BY','CH','CY','CZ','DE','DK','EE','ES','FI','FR','GB','GR','HR','HU','IE','IS','IT','LT','LU','LV','MD','ME','MK','MT','NL','NO','PL','PT','RO','RS','SE','SI','SK','UA','XK'];
-      const NORTH_AMERICA = ['CA','MX','US'];
-      const ASIA = ['BD','CN','HK','ID','IN','JP','KH','KR','LA','LK','MM','MY','NP','PH','PK','SG','TH','TW','VN'];
-      if (location === 'europe') {
-        query.shippingOriginCountry = { $in: EUROPE };
-      } else if (location === 'north-america') {
-        query.shippingOriginCountry = { $in: NORTH_AMERICA };
-      } else if (location === 'asia') {
-        query.shippingOriginCountry = { $in: ASIA };
-      } else if (location === 'other') {
-        query.shippingOriginCountry = { $nin: [...EUROPE, ...NORTH_AMERICA, ...ASIA] };
+    const locationClauses = [];
+    if (locationCity && String(locationCity).trim()) {
+      const esc = escapeRegex(String(locationCity).trim());
+      locationClauses.push({
+        $or: [
+          { locationCity: { $regex: esc, $options: 'i' } },
+          { location: { $regex: esc, $options: 'i' } }
+        ]
+      });
+    }
+    if (locationCountry && String(locationCountry).trim()) {
+      const code = String(locationCountry).trim().toUpperCase();
+      if (/^[A-Z]{2}$/.test(code)) {
+        locationClauses.push({ locationCountry: code });
       }
+    }
+    if (locationClauses.length) {
+      query.$and = [...(query.$and || []), ...locationClauses];
     }
 
     // Build sort object
@@ -133,11 +146,14 @@ router.get('/', async (req, res) => {
       case 'bids':
         sortObj = { bidCount: -1 };
         break;
+      case 'recent-end':
+        sortObj = { endDate: -1 }; // Most recently ended first (closed auctions)
+        break;
       default:
         sortObj = { endDate: 1 };
     }
 
-    // For featured listings, prioritize them
+    // For featured listings, prioritize them (live listings only)
     if (sort === 'deadline') {
       sortObj = { isFeatured: -1, endDate: 1 };
     }
@@ -604,6 +620,8 @@ router.post('/', authenticateToken, requireActiveAccount, async (req, res) => {
       allowPrivateRoom,
       commissionRate,
       location,
+      locationCity,
+      locationCountry,
       shippingCost,
       shippingOption,
       packageSize,
@@ -715,6 +733,11 @@ router.post('/', authenticateToken, requireActiveAccount, async (req, res) => {
       allowPrivateRoom: allowPrivateRoom === true || allowPrivateRoom === 'true',
       commissionRate: commissionRate ? parseFloat(commissionRate) / 100 : undefined, // Convert percentage to decimal
       location: location || undefined,
+      locationCity: locationCity && String(locationCity).trim() ? String(locationCity).trim() : undefined,
+      locationCountry:
+        locationCountry && /^[A-Za-z]{2}$/.test(String(locationCountry).trim())
+          ? String(locationCountry).trim().toUpperCase()
+          : undefined,
       shippingCost: shippingCost ? parseFloat(shippingCost) : 0,
       shippingOption,
       packageSize: shippingOption === 'calculated' ? (packageSize || null) : null,

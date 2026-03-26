@@ -11,6 +11,7 @@ const {
   logSellerAcceptedWinner
 } = require('../services/bestOfferLogger');
 
+const features = require('../config/features');
 const router = express.Router();
 
 // Membership tier thresholds (balance >= amount). Order high to low for tier resolution.
@@ -60,7 +61,7 @@ router.get('/listing/:listingId', async (req, res) => {
       const offerer = offer.offerer;
       const uid = offerer?.uid;
       const balance = uid != null ? balanceByUid[uid] : null;
-      const offererTier = tierFromBalance(balance);
+      const offererTier = features.membershipTiers ? tierFromBalance(balance) : null;
       const offererVerified = !!offerer?.emailVerified;
       const name = offerer
         ? `${offerer.firstName} ${offerer.lastName}`

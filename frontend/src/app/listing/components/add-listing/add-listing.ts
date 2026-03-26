@@ -196,6 +196,7 @@ export class AddListing implements OnInit {
       specifications: this.fb.array([]),
       locationCity: ['', Validators.required],
       locationRegion: ['', Validators.required],
+      locationCountry: ['US', Validators.required],
       
       // Step 3: Pricing and Auction Rules
       duration: ['', Validators.required],
@@ -697,7 +698,9 @@ export class AddListing implements OnInit {
       minimumOfferPrice: formValue.minimumAcceptPrice || null,
       allowPrivateRoom: formValue.allowPrivateRoom,
       commissionRate: this.commissionRate,
-      location: `${formValue.locationCity}, ${formValue.locationRegion}`,
+      locationCity: formValue.locationCity?.trim(),
+      locationCountry: formValue.locationCountry,
+      location: `${formValue.locationCity}, ${formValue.locationRegion}, ${formValue.locationCountry}`,
       shippingCost: formValue.flatRateShipping || (formValue.shippingOption === 'free' ? 0 : null),
       shippingOption: formValue.shippingOption,
       packageSize: formValue.shippingOption === 'calculated' ? formValue.packageSize : null,
@@ -746,6 +749,7 @@ export class AddListing implements OnInit {
       description: 'addListing.description',
       locationCity: 'addListing.city',
       locationRegion: 'addListing.regionState',
+      locationCountry: 'addListing.originCountry',
       duration: 'addListing.duration',
       startingBid: 'addListing.startingBid',
       reservePrice: 'addListing.reservePrice',

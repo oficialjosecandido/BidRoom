@@ -5,7 +5,9 @@
       "Bash(ls /Users/josecandido/Documents/BidRoom/backend/.env*)",
       "Bash(find /Users/josecandido/Documents/BidRoom -name *.yml -o -name *.yaml)",
       "Bash(grep -rn \"trust proxy\\\\|trustProxy\" /Users/josecandido/Documents/BidRoom/backend/src --include=*.js)",
-      "Bash(find /Users/josecandido/Documents/BidRoom/backend/src -name platinumBidderInvitation* -o -name platinum*)"
+      "Bash(find /Users/josecandido/Documents/BidRoom/backend/src -name platinumBidderInvitation* -o -name platinum*)",
+      "Bash(grep -r \"FEATURE_\\\\|featureFlags\\\\|isFeatureEnabled\" /Users/josecandido/Documents/BidRoom/backend/src --include=*.js --include=*.ts)",
+      "Bash(grep -r \"tierFromBalance\\\\|TIER_THRESHOLDS\" /Users/josecandido/Documents/BidRoom --include=*.js --include=*.ts)"
     ]
   }
 }

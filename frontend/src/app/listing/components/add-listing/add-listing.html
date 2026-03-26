@@ -297,6 +297,23 @@
 }
           </div>
         </div>
+
+        <div class="form-group">
+          <label for="locationCountry">{{ 'addListing.originCountry' | translate }}</label>
+          <select id="locationCountry" formControlName="locationCountry" [class.error]="getFieldError('locationCountry')">
+            <option value="US">{{ 'addListing.countryUS' | translate }}</option>
+            <option value="CA">{{ 'addListing.countryCA' | translate }}</option>
+            <option value="GB">{{ 'addListing.countryGB' | translate }}</option>
+            <option value="AU">{{ 'addListing.countryAU' | translate }}</option>
+            <option value="DE">{{ 'addListing.countryDE' | translate }}</option>
+            <option value="FR">{{ 'addListing.countryFR' | translate }}</option>
+          </select>
+          @if (getFieldError('locationCountry')) {
+<div class="field-error">
+              {{ getFieldError('locationCountry') }}
+            </div>
+}
+        </div>
       </div>
 }
 

@@ -22,6 +22,7 @@ export interface ListingUpdateEvent {
   endDate?: string;
   winnerSelectionDeadline?: string;
   winner?: string;
+  platinumBidderAcceptanceDeadline?: string;
 }
 
 export interface ViewerCountUpdateEvent {

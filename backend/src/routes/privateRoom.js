@@ -433,6 +433,26 @@ router.post('/invitation/accept', async (req, res) => {
     const bidder = invitation.bidder;
     const bidderName = bidder ? `${bidder.firstName || ''} ${bidder.lastName || ''}`.trim() : 'A bidder';
     const io = req.app.get('io');
+
+    // If all invitations are now accepted, compress the acceptance deadline to 1 minute
+    const allInvitations = listing.platinumBidderInvitations || [];
+    const pendingAfter = allInvitations.filter(inv => inv.status === 'pending').length;
+    if (pendingAfter === 0 && allInvitations.length > 0) {
+      const acceleratedDeadline = new Date(Date.now() + 60 * 1000);
+      await Listing.findByIdAndUpdate(
+        listingId,
+        { $set: { platinumBidderAcceptanceDeadline: acceleratedDeadline } },
+        { runValidators: false }
+      );
+      if (io) {
+        io.to(`listing:${listingId}`).emit('listing-update', {
+          listingId: listingId.toString(),
+          platinumBidderAcceptanceDeadline: acceleratedDeadline.toISOString(),
+          allAccepted: true
+        });
+      }
+    }
+
     if (sellerUserId) {
       notifyPrivateRoomAccepted({
         listingSlug: listing.slug || null,

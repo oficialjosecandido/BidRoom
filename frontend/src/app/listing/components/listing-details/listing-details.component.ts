@@ -15,6 +15,7 @@ import { SocketService } from '../../../shared/services/socket.service';
 import { AuthService } from '../../../auth/services/auth.service';
 import { PrivateRoomService, Bidder } from '../../../private-room/services/private-room.service';
 import { StripeConnectService } from '../../../shared/services/stripe-connect.service';
+import { FeatureFlagsService } from '../../../shared/services/feature-flags.service';
 import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
@@ -36,6 +37,7 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
   private authService = inject(AuthService);
   private privateRoomService = inject(PrivateRoomService);
   private stripeConnectService = inject(StripeConnectService);
+  featureFlags = inject(FeatureFlagsService);
   private cdr = inject(ChangeDetectorRef);
 
   listing: Listing | null = null;

@@ -31,6 +31,7 @@ const notificationsRoutes = require('./routes/notifications');
 const { router: paymentsRouter, stripeWebhookHandler } = require('./routes/payments');
 const { router: connectRouter, connectWebhookHandler } = require('./routes/connect');
 const shippingRoutes = require('./routes/shipping');
+const configRoutes = require('./routes/config');
 
 // Import services
 const auctionEndScheduler = require('./services/auctionEndScheduler');
@@ -103,6 +104,7 @@ app.use('/api/notifications', notificationsRoutes);
 app.use('/api/payments', paymentsRouter);
 app.use('/api/connect', connectRouter);
 app.use('/api/shipping', shippingRoutes);
+app.use('/api/config', configRoutes);
 
 app.get('/', (req, res) => {
   res.json({

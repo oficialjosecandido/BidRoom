@@ -266,6 +266,10 @@
     "sortMostBids": "Más Pujas",
     "listings": "anuncios",
     "allAuctions": "Todas las Subastas",
+    "auctionStatus": "Estado de la subasta",
+    "activeAuctions": "Subastas activas",
+    "closedAuctions": "Subastas cerradas",
+    "sortRecentlyEnded": "Cerradas recientemente",
     "loading": "Cargando anuncios...",
     "error": "Error",
     "tryAgain": "Intentar de Nuevo",
@@ -285,7 +289,11 @@
     "price": "Precio",
     "location": "Ubicación",
     "anyLocation": "Cualquier ubicación",
-    "shipping": "Envío"
+    "locationCityPlaceholder": "p. ej. ciudad",
+    "anyCountry": "Cualquier país",
+    "shipping": "Envío",
+    "shippingLegacyWorldwide": "Mundial",
+    "shippingLegacyRegional": "Regional"
   },
   "categories": {
     "title": "Explorar por Categoría",
@@ -677,6 +685,7 @@
   "dashboard": {
     "sidebar": {
       "home": "Inicio",
+      "store": "Tienda",
       "activity": "Actividad",
       "buyerProfile": "Perfil del Comprador",
       "sellerProfile": "Perfil del Vendedor",

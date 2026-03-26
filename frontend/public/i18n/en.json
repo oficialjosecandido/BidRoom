@@ -266,6 +266,10 @@
     "sortMostBids": "Most Bids",
     "listings": "listings",
     "allAuctions": "All Auctions",
+    "auctionStatus": "Auction status",
+    "activeAuctions": "Live auctions",
+    "closedAuctions": "Closed auctions",
+    "sortRecentlyEnded": "Recently ended",
     "loading": "Loading listings...",
     "error": "Error",
     "tryAgain": "Try Again",
@@ -285,7 +289,11 @@
     "price": "Price",
     "location": "Location",
     "anyLocation": "Any location",
-    "shipping": "Shipping"
+    "locationCityPlaceholder": "e.g. city name",
+    "anyCountry": "Any country",
+    "shipping": "Shipping",
+    "shippingLegacyWorldwide": "Worldwide",
+    "shippingLegacyRegional": "Regional"
   },
   "categories": {
     "title": "Browse by Category",
@@ -677,6 +685,7 @@
   "dashboard": {
     "sidebar": {
       "home": "Home",
+      "store": "Store",
       "activity": "Activity",
       "buyerProfile": "Buyer Profile",
       "sellerProfile": "Seller Profile",

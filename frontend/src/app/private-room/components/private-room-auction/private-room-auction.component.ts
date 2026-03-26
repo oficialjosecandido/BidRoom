@@ -326,6 +326,10 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
       if (update.privateRoomClosedReason) {
         this.listing.privateRoomClosedReason = update.privateRoomClosedReason;
       }
+      if (update.platinumBidderAcceptanceDeadline) {
+        this.listing.platinumBidderAcceptanceDeadline = update.platinumBidderAcceptanceDeadline;
+        this.startCountdown(); // restart countdown with compressed deadline
+      }
       if (update.privateRoomStatus) {
         this.listing.privateRoomStatus = update.privateRoomStatus;
         if (update.privateRoomStatus === 'ended') {

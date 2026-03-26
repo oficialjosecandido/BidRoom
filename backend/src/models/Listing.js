@@ -113,6 +113,20 @@ const listingSchema = new mongoose.Schema({
     type: String,
     default: null
   },
+  /** Item location (for search/filter); optional on legacy documents */
+  locationCity: {
+    type: String,
+    trim: true,
+    default: null,
+    index: true
+  },
+  locationCountry: {
+    type: String,
+    trim: true,
+    default: null,
+    uppercase: true,
+    index: true
+  },
   shippingCost: {
     type: Number,
     default: 0,

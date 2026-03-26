@@ -266,6 +266,10 @@
     "sortMostBids": "Mais Licitações",
     "listings": "anúncios",
     "allAuctions": "Todos os Leilões",
+    "auctionStatus": "Estado do leilão",
+    "activeAuctions": "Leilões em curso",
+    "closedAuctions": "Leilões encerrados",
+    "sortRecentlyEnded": "Encerrados recentemente",
     "loading": "A carregar anúncios...",
     "error": "Erro",
     "tryAgain": "Tentar Novamente",
@@ -285,7 +289,11 @@
     "price": "Preço",
     "location": "Localização",
     "anyLocation": "Qualquer localização",
-    "shipping": "Envio"
+    "locationCityPlaceholder": "ex.: nome da cidade",
+    "anyCountry": "Qualquer país",
+    "shipping": "Envio",
+    "shippingLegacyWorldwide": "Mundial",
+    "shippingLegacyRegional": "Regional"
   },
   "categories": {
     "title": "Navegar por Categoria",
@@ -677,6 +685,7 @@
   "dashboard": {
     "sidebar": {
       "home": "Início",
+      "store": "Loja",
       "activity": "Atividade",
       "buyerProfile": "Perfil do Comprador",
       "sellerProfile": "Perfil do Vendedor",

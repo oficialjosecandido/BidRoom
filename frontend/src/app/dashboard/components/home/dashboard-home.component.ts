@@ -9,6 +9,7 @@ import { ListingsService, Listing } from '../../../shared/services/listings.serv
 import { CustomerService, CustomerInfo } from '../../../shared/services/customer.service';
 import { PaymentsService, TopupRecord } from '../../../shared/services/payments.service';
 import { ReviewsService, PendingReview } from '../../../shared/services/reviews.service';
+import { FeatureFlagsService } from '../../../shared/services/feature-flags.service';
 import { Observable } from 'rxjs';
 
 @Component({
@@ -24,6 +25,7 @@ export class DashboardHomeComponent implements OnInit {
   private customerService = inject(CustomerService);
   private paymentsService = inject(PaymentsService);
   private reviewsService = inject(ReviewsService);
+  featureFlags = inject(FeatureFlagsService);
   private router = inject(Router);
 
   currentUser$: Observable<AppUser | null>;

@@ -657,10 +657,10 @@
                     <div class="offer-top">
                       <div class="offer-head">
                         <span class="offer-from-label">{{ 'listingDetails.offerHistory.offerFrom' | translate }} <strong>{{ offer.offererName || ('listingDetails.offerHistory.anonymous' | translate) }}</strong></span>
-                        @if (offer.offererVerified || offer.offererTier) {
+                        @if (offer.offererVerified || (featureFlags.flags.membershipTiers && offer.offererTier)) {
                         <span class="offer-bidder-meta">
                           @if (offer.offererVerified) { <span class="offer-verified-badge" title="Verified">{{ 'listingDetails.offerHistory.verifiedLabel' | translate }}</span> }
-                          @if (offer.offererTier) { <span class="offer-tier-badge">{{ offer.offererTier }}</span> }
+                          @if (featureFlags.flags.membershipTiers && offer.offererTier) { <span class="offer-tier-badge">{{ offer.offererTier }}</span> }
                         </span>
                         }
                         @if (isMyOffer(offer)) { <span class="offer-badge-your">{{ 'listingDetails.offerHistory.yourOffer' | translate }}</span> }

@@ -266,6 +266,10 @@
     "sortMostBids": "Plus d'Enchères",
     "listings": "annonces",
     "allAuctions": "Toutes les Enchères",
+    "auctionStatus": "Statut des enchères",
+    "activeAuctions": "Enchères en cours",
+    "closedAuctions": "Enchères terminées",
+    "sortRecentlyEnded": "Terminées récemment",
     "loading": "Chargement des annonces...",
     "error": "Erreur",
     "tryAgain": "Réessayer",
@@ -285,7 +289,11 @@
     "price": "Prix",
     "location": "Localisation",
     "anyLocation": "Toute localisation",
-    "shipping": "Expédition"
+    "locationCityPlaceholder": "ex. nom de la ville",
+    "anyCountry": "Tout pays",
+    "shipping": "Expédition",
+    "shippingLegacyWorldwide": "Mondial",
+    "shippingLegacyRegional": "Régional"
   },
   "categories": {
     "title": "Parcourir par Catégorie",
@@ -677,6 +685,7 @@
   "dashboard": {
     "sidebar": {
       "home": "Accueil",
+      "store": "Boutique",
       "activity": "Activité",
       "buyerProfile": "Profil acheteur",
       "sellerProfile": "Profil vendeur",

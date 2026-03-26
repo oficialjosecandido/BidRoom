@@ -2,7 +2,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { HeaderComponent } from '../../../shared/components/header/header.component';
 import { FooterComponent } from '../../../shared/components/footer/footer.component';
 import { ListingsService, Listing, ListingsQueryParams } from '../../../shared/services/listings.service';
@@ -19,17 +19,22 @@ export const CONDITION_OPTIONS: { key: string; label: string }[] = [
   { key: 'for-parts', label: 'For Parts' },
 ];
 
-export const SHIPPING_OPTIONS: { key: string; label: string }[] = [
-  { key: 'worldwide',   label: 'Worldwide' },
-  { key: 'regional',    label: 'Regional' },
-  { key: 'local-pickup', label: 'Local Pickup' },
+/** Matches add-listing shippingOption values */
+export const SHIPPING_OPTIONS: { key: string; labelKey: string }[] = [
+  { key: 'flat-rate', labelKey: 'addListing.shippingFlatRate' },
+  { key: 'calculated', labelKey: 'addListing.shippingCalculated' },
+  { key: 'local-pickup', labelKey: 'addListing.shippingLocalPickup' },
+  { key: 'free', labelKey: 'addListing.shippingFree' },
 ];
 
-export const LOCATION_OPTIONS: { key: string; label: string }[] = [
-  { key: 'europe',        label: 'Europe' },
-  { key: 'north-america', label: 'North America' },
-  { key: 'asia',          label: 'Asia' },
-  { key: 'other',         label: 'Other' },
+/** Same ISO options as add-listing item country */
+export const LOCATION_COUNTRY_OPTIONS: { code: string; labelKey: string }[] = [
+  { code: 'US', labelKey: 'addListing.countryUS' },
+  { code: 'CA', labelKey: 'addListing.countryCA' },
+  { code: 'GB', labelKey: 'addListing.countryGB' },
+  { code: 'AU', labelKey: 'addListing.countryAU' },
+  { code: 'DE', labelKey: 'addListing.countryDE' },
+  { code: 'FR', labelKey: 'addListing.countryFR' },
 ];
 
 @Component({
@@ -43,6 +48,7 @@ export class ListingListComponent implements OnInit {
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private listingsService = inject(ListingsService);
+  private translate = inject(TranslateService);
 
   listings: Listing[] = [];
   total = 0;
@@ -52,7 +58,9 @@ export class ListingListComponent implements OnInit {
   error: string | null = null;
   filtersOpen = false;
 
-  sortBy: 'deadline' | 'newest' | 'highest' | 'lowest' | 'bids' = 'deadline';
+  sortBy: 'deadline' | 'newest' | 'highest' | 'lowest' | 'bids' | 'recent-end' = 'deadline';
+  /** Browse live listings or closed (ended) auctions */
+  listingStatusFilter: 'active' | 'ended' = 'active';
   selectedCategory = '';
   selectedSubCategory = '';
   searchQuery = '';
@@ -61,7 +69,10 @@ export class ListingListComponent implements OnInit {
   // New filters
   selectedConditions: Set<string> = new Set();
   selectedShipping: Set<string> = new Set();
-  selectedLocation = '';
+  /** Filter: item location (partial text match) */
+  locationCityFilter = '';
+  /** Filter: ISO country code or empty for any */
+  locationCountryFilter = '';
   minPrice = '';
   maxPrice = '';
 
@@ -69,7 +80,7 @@ export class ListingListComponent implements OnInit {
   readonly pageSize = PAGE_SIZE;
   readonly conditionOptions = CONDITION_OPTIONS;
   readonly shippingOptions = SHIPPING_OPTIONS;
-  readonly locationOptions = LOCATION_OPTIONS;
+  readonly countryFilterOptions = LOCATION_COUNTRY_OPTIONS;
 
   get subCategories(): string[] {
     const cat = this.categories.find(c => c.id === this.selectedCategory);
@@ -81,22 +92,44 @@ export class ListingListComponent implements OnInit {
   }
 
   get pageTitle(): string {
-    if (this.searchQuery && this.activeCategoryLabel) return `"${this.searchQuery}" in ${this.activeCategoryLabel}`;
-    if (this.searchQuery) return `Results for "${this.searchQuery}"`;
-    if (this.activeCategoryLabel && this.selectedSubCategory) return `${this.activeCategoryLabel} — ${this.selectedSubCategory}`;
-    if (this.activeCategoryLabel) return this.activeCategoryLabel;
-    return 'All Auctions';
+    let base: string;
+    if (this.searchQuery && this.activeCategoryLabel) base = `"${this.searchQuery}" in ${this.activeCategoryLabel}`;
+    else if (this.searchQuery) base = `Results for "${this.searchQuery}"`;
+    else if (this.activeCategoryLabel && this.selectedSubCategory) base = `${this.activeCategoryLabel} — ${this.selectedSubCategory}`;
+    else if (this.activeCategoryLabel) base = this.activeCategoryLabel;
+    else base = this.translate.instant('listingList.allAuctions');
+    if (this.listingStatusFilter === 'ended') {
+      const closedLabel = this.translate.instant('listingList.closedAuctions');
+      return base === this.translate.instant('listingList.allAuctions')
+        ? closedLabel
+        : `${closedLabel} — ${base}`;
+    }
+    return base;
   }
 
   get pageFrom(): number { return this.total === 0 ? 0 : (this.currentPage - 1) * this.pageSize + 1; }
   get pageTo(): number { return Math.min(this.currentPage * this.pageSize, this.total); }
 
   get hasActiveFilters(): boolean {
-    return !!(this.selectedConditions.size || this.selectedShipping.size || this.selectedLocation || this.minPrice || this.maxPrice);
+    return !!(
+      this.listingStatusFilter === 'ended' ||
+      this.selectedConditions.size ||
+      this.selectedShipping.size ||
+      this.locationCityFilter.trim() ||
+      this.locationCountryFilter ||
+      this.minPrice ||
+      this.maxPrice
+    );
   }
 
   get activeFilterCount(): number {
-    return this.selectedConditions.size + this.selectedShipping.size + (this.selectedLocation ? 1 : 0) + (this.minPrice || this.maxPrice ? 1 : 0);
+    return (
+      (this.listingStatusFilter === 'ended' ? 1 : 0) +
+      this.selectedConditions.size +
+      this.selectedShipping.size +
+      (this.locationCityFilter.trim() || this.locationCountryFilter ? 1 : 0) +
+      (this.minPrice || this.maxPrice ? 1 : 0)
+    );
   }
 
   ngOnInit(): void {
@@ -105,11 +138,20 @@ export class ListingListComponent implements OnInit {
       this.selectedSubCategory = params['subCategory'] || '';
       this.searchQuery = params['search'] || '';
       this.searchInput = this.searchQuery;
-      this.sortBy = params['sort'] || 'deadline';
+      this.listingStatusFilter = params['listingStatus'] === 'ended' ? 'ended' : 'active';
+      let sort = (params['sort'] || 'deadline') as 'deadline' | 'newest' | 'highest' | 'lowest' | 'bids' | 'recent-end';
+      if (this.listingStatusFilter === 'ended' && (sort === 'deadline' || !params['sort'])) {
+        sort = 'recent-end';
+      }
+      if (this.listingStatusFilter === 'active' && sort === 'recent-end') {
+        sort = 'deadline';
+      }
+      this.sortBy = sort;
       this.currentPage = parseInt(params['page'] || '1', 10) || 1;
       this.selectedConditions = new Set((params['condition'] || '').split(',').filter(Boolean));
       this.selectedShipping = new Set((params['shipping'] || '').split(',').filter(Boolean));
-      this.selectedLocation = params['location'] || '';
+      this.locationCityFilter = params['locationCity'] || '';
+      this.locationCountryFilter = params['locationCountry'] || '';
       this.minPrice = params['minPrice'] || '';
       this.maxPrice = params['maxPrice'] || '';
       this.loadListings();
@@ -120,9 +162,14 @@ export class ListingListComponent implements OnInit {
     this.loading = true;
     this.error = null;
 
+    let sort = this.sortBy;
+    if (this.listingStatusFilter === 'ended' && sort === 'deadline') {
+      sort = 'recent-end';
+    }
+
     const params: ListingsQueryParams = {
-      sort: this.sortBy,
-      status: 'active',
+      sort,
+      status: this.listingStatusFilter === 'ended' ? 'ended' : 'active',
       limit: PAGE_SIZE,
       page: this.currentPage
     };
@@ -132,7 +179,8 @@ export class ListingListComponent implements OnInit {
     if (this.searchQuery) params.search = this.searchQuery;
     if (this.selectedConditions.size) params.condition = [...this.selectedConditions].join(',');
     if (this.selectedShipping.size) params.shipping = [...this.selectedShipping].join(',');
-    if (this.selectedLocation) params.location = this.selectedLocation;
+    if (this.locationCityFilter.trim()) params.locationCity = this.locationCityFilter.trim();
+    if (this.locationCountryFilter) params.locationCountry = this.locationCountryFilter;
     if (this.minPrice) params.minPrice = parseFloat(this.minPrice);
     if (this.maxPrice) params.maxPrice = parseFloat(this.maxPrice);
 
@@ -155,11 +203,15 @@ export class ListingListComponent implements OnInit {
     if (this.selectedCategory) queryParams['category'] = this.selectedCategory;
     if (this.selectedSubCategory) queryParams['subCategory'] = this.selectedSubCategory;
     if (this.searchQuery) queryParams['search'] = this.searchQuery;
-    if (this.sortBy !== 'deadline') queryParams['sort'] = this.sortBy;
+    if (this.listingStatusFilter === 'ended') queryParams['listingStatus'] = 'ended';
+    const defaultSort =
+      this.listingStatusFilter === 'ended' ? 'recent-end' : 'deadline';
+    if (this.sortBy !== defaultSort) queryParams['sort'] = this.sortBy;
     if (this.currentPage > 1) queryParams['page'] = String(this.currentPage);
     if (this.selectedConditions.size) queryParams['condition'] = [...this.selectedConditions].join(',');
     if (this.selectedShipping.size) queryParams['shipping'] = [...this.selectedShipping].join(',');
-    if (this.selectedLocation) queryParams['location'] = this.selectedLocation;
+    if (this.locationCityFilter.trim()) queryParams['locationCity'] = this.locationCityFilter.trim();
+    if (this.locationCountryFilter) queryParams['locationCountry'] = this.locationCountryFilter;
     if (this.minPrice) queryParams['minPrice'] = this.minPrice;
     if (this.maxPrice) queryParams['maxPrice'] = this.maxPrice;
     this.router.navigate([], { queryParams, replaceUrl: true });
@@ -202,6 +254,17 @@ export class ListingListComponent implements OnInit {
     this.navigate();
   }
 
+  onListingStatusChange(): void {
+    this.currentPage = 1;
+    if (this.listingStatusFilter === 'ended' && this.sortBy === 'deadline') {
+      this.sortBy = 'recent-end';
+    }
+    if (this.listingStatusFilter === 'active' && this.sortBy === 'recent-end') {
+      this.sortBy = 'deadline';
+    }
+    this.navigate();
+  }
+
   toggleCondition(key: string): void {
     if (this.selectedConditions.has(key)) {
       this.selectedConditions.delete(key);
@@ -224,7 +287,14 @@ export class ListingListComponent implements OnInit {
     this.navigate();
   }
 
-  onLocationChange(): void {
+  onLocationFilterChange(): void {
+    this.currentPage = 1;
+    this.navigate();
+  }
+
+  clearLocationFilters(): void {
+    this.locationCityFilter = '';
+    this.locationCountryFilter = '';
     this.currentPage = 1;
     this.navigate();
   }
@@ -257,9 +327,23 @@ export class ListingListComponent implements OnInit {
   clearAllFilters(): void {
     this.selectedConditions = new Set();
     this.selectedShipping = new Set();
-    this.selectedLocation = '';
+    this.locationCityFilter = '';
+    this.locationCountryFilter = '';
     this.minPrice = '';
     this.maxPrice = '';
+    this.listingStatusFilter = 'active';
+    if (this.sortBy === 'recent-end') {
+      this.sortBy = 'deadline';
+    }
+    this.currentPage = 1;
+    this.navigate();
+  }
+
+  clearListingStatusClosed(): void {
+    this.listingStatusFilter = 'active';
+    if (this.sortBy === 'recent-end') {
+      this.sortBy = 'deadline';
+    }
     this.currentPage = 1;
     this.navigate();
   }
@@ -269,11 +353,25 @@ export class ListingListComponent implements OnInit {
   }
 
   shippingLabel(key: string): string {
-    return this.shippingOptions.find(o => o.key === key)?.label ?? key;
+    const legacy: Record<string, string> = {
+      worldwide: 'listingList.shippingLegacyWorldwide',
+      regional: 'listingList.shippingLegacyRegional',
+    };
+    const opt = this.shippingOptions.find(o => o.key === key);
+    if (opt) return this.translate.instant(opt.labelKey);
+    const leg = legacy[key];
+    return leg ? this.translate.instant(leg) : key;
   }
 
-  locationLabel(key: string): string {
-    return this.locationOptions.find(o => o.key === key)?.label ?? key;
+  locationFilterChipLabel(): string {
+    const parts: string[] = [];
+    const city = this.locationCityFilter.trim();
+    if (city) parts.push(city);
+    if (this.locationCountryFilter) {
+      const opt = this.countryFilterOptions.find(c => c.code === this.locationCountryFilter);
+      parts.push(opt ? this.translate.instant(opt.labelKey) : this.locationCountryFilter);
+    }
+    return parts.join(', ');
   }
 
   viewListing(slug: string | undefined): void {
