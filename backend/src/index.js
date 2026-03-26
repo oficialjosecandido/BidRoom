@@ -48,6 +48,9 @@ const io = new Server(server, {
 
 const PORT = process.env.PORT || 3000;
 
+// Trust the first hop proxy (Azure App Service / load balancer) so req.ip is the real client IP
+app.set('trust proxy', 1);
+
 // Middleware
 app.use(helmet());
 // CORS: allow FRONTEND_URL, localhost, and any Azure Static Web Apps origin (*.azurestaticapps.net)

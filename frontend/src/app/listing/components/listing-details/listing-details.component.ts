@@ -459,7 +459,6 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
     const deadline = new Date(this.listing.winnerSelectionDeadline);
     if (deadline <= new Date()) return false;
     if (this.listing.auctionFormat === 'best-offer') return !this.hasAcceptedOffer();
-    if (this.listing.auctionFormat === 'highest-bid') return !this.listing.winner && !this.hasPrivateRoom();
     return false;
   }
 

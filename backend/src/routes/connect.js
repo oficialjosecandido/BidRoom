@@ -28,11 +28,15 @@ function getClientIp(req) {
 
   const isPublic = (ip) => {
     if (!ip || ip === '127.0.0.1' || ip === '::1') return false;
+    // Private IPv4 ranges
     if (ip.startsWith('10.')) return false;
     if (ip.startsWith('192.168.')) return false;
     if (/^172\.(1[6-9]|2[0-9]|3[01])\./.test(ip)) return false;
-    // Must look like an IPv4 address
-    return /^\d{1,3}(\.\d{1,3}){3}$/.test(ip);
+    // Valid IPv4
+    if (/^\d{1,3}(\.\d{1,3}){3}$/.test(ip)) return true;
+    // Valid IPv6 (non-loopback, non-link-local)
+    if (ip.includes(':') && !ip.startsWith('fe80') && !ip.startsWith('fc') && !ip.startsWith('fd')) return true;
+    return false;
   };
 
   // Try each IP in X-Forwarded-For (leftmost = real client)
@@ -43,6 +47,10 @@ function getClientIp(req) {
       if (isPublic(ip)) return ip;
     }
   }
+
+  // Try Express's req.ip (honours trust proxy setting)
+  const expressIp = normalize(req.ip);
+  if (isPublic(expressIp)) return expressIp;
 
   const socketIp = normalize(req.socket?.remoteAddress || req.connection?.remoteAddress);
   if (isPublic(socketIp)) return socketIp;

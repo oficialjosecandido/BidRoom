@@ -33,7 +33,7 @@ BidRoom is a marketplace where:
 |--------|-------------|
 | **Highest Bid (Auction)** | Time-limited auctions with starting bid, increment, optional reserve, Buy Now, and optional Private Room. |
 | **Best Offer** | Buyers submit offers; seller accepts or rejects. Optional minimum offer for auto-accept. |
-| **Private Rooms** | After main auction ends, seller invites 2–5 bidders to a private room; 60-second rule determines winner. |
+| **Private Rooms** | After main auction ends, seller has **15 minutes** to invite 2–5 bidders (countdown on listing); accept/refuse within 15 minutes; poker-table room UI; **1-minute** start when all accept; then **60-second** rule for bidding. See `docs/PRIVATE-AUCTION-ROOMS.md`. |
 | **Transactions** | Payment window, shipping, proof of delivery, and dispute handling. |
 | **Reviews & Reputation** | Post-transaction ratings (1–10), reputation score, trust badges, Private Room eligibility. |
 | **Membership & Balance** | User balance for participation; top-ups via Stripe; tier presets (Bronze/Silver/Gold/Platinum). |
@@ -162,11 +162,14 @@ npm run build:ericeira-prod
 ### 2. Private Auction Rooms
 
 - **When:** Highest Bid listing, Private Room enabled, main auction ended, reserve met, ≥2 authenticated bidders.
-- **Seller:** Must create room within **1 hour** of auction end; invites 2–5 registered bidders.
-- **Invitees:** Must accept within **15 minutes** or lose seat. If no one accepts → no winner.
-- **Room end:** **60 seconds** after last bid; each new bid resets the countdown.
-- **Winner:** Highest bid when countdown ends; no manual selection.
+- **Seller:** Must create the room and send invitations within **15 minutes** of auction end (**countdown** on the listing page); invites **2–5** registered bidders.
+- **Invitees:** Must **accept or refuse** within **15 minutes** or become ineligible. **Edge case:** Only **two** invitees and **one** does not respond in time → the **other** is selected as **winner** without a bidding phase.
+- **Room access & UI:** Once the room exists, **anyone** can view it; **poker-table** layout with non-responders **greyed out**, accepted **highlighted**; **countdown** until the private auction opens; when **all** have accepted, opening countdown **reduces to 1 minute**.
+- **Bidding:** **60 seconds** after last bid; each new bid resets the countdown (same as existing private-room auction).
+- **Winner:** Highest bid when the 60-second countdown ends (except the two-invitee timeout case above); no manual selection.
 - **Seller leaves:** Room closes immediately; no winner; all notified.
+
+Full detail: [PRIVATE-AUCTION-ROOMS.md](./PRIVATE-AUCTION-ROOMS.md).
 
 ### 3. Transactions & Disputes
 

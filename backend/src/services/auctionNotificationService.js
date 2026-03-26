@@ -984,16 +984,13 @@ async function handleAuctionEnd(listingId, io = null) {
       };
     }
 
-    // Regular auction end (no private room): highest bid wins automatically
-    const highestBid = await Bid.findOne({ listing: listingId })
+    // Regular auction end (no private room): highest authenticated bid always wins
+    const highestBid = await Bid.findOne({ listing: listingId, bidder: { $exists: true, $ne: null } })
       .sort({ amount: -1 })
       .populate('bidder', 'firstName lastName email')
       .lean();
 
-    // Auto-select winner when: has bids, highest bidder is authenticated, reserve met (or no reserve)
-    const canAutoSelect = highestBid && highestBid.bidder && reserveMet;
-
-    if (canAutoSelect) {
+    if (highestBid) {
       const now = new Date();
       await Listing.findByIdAndUpdate(listingId, {
         $set: {
@@ -1061,18 +1058,15 @@ async function handleAuctionEnd(listingId, io = null) {
       };
     }
 
-    // Reserve not met, no bids, or guest highest bidder → seller must choose winner
-    const deadline = new Date();
-    deadline.setHours(deadline.getHours() + 24);
+    // No authenticated bids → end without winner
     await Listing.findByIdAndUpdate(listingId, {
-      $set: { status: 'ended', winnerSelectionDeadline: deadline }
+      $set: { status: 'ended' }
     }, { runValidators: false });
 
     if (io) {
       io.to(`listing:${listingId}`).emit('listing-update', {
         listingId: listingId.toString(),
         status: 'ended',
-        winnerSelectionDeadline: deadline.toISOString(),
         currentPrice: listing.currentPrice,
         bidCount
       });
@@ -1082,14 +1076,9 @@ async function handleAuctionEnd(listingId, io = null) {
       .populate('seller', 'firstName lastName email');
     if (!listingForNotify) throw new Error('Listing not found');
 
-    if (highestBid) {
-      await sendAuctionClosedNotifications(listingForNotify, null); // Don't exclude winner - seller will choose
-      await sendChooseWinnerNotification(listingForNotify);
-    } else {
-      await sendAuctionNotSoldNotification(listingForNotify);
-    }
+    await sendAuctionNotSoldNotification(listingForNotify);
 
-    console.log(`✅ Auction end: choose-winner flow for listing: ${listingId} (reserve not met or guest bidder)`);
+    console.log(`✅ Auction ended without winner for listing: ${listingId} (no authenticated bids)`);
 
     return {
       listingId,

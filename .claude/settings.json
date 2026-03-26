@@ -3,7 +3,8 @@
     "allow": [
       "Bash(ls /Users/josecandido/Documents/BidRoom/backend/*.env*)",
       "Bash(ls /Users/josecandido/Documents/BidRoom/backend/.env*)",
-      "Bash(find /Users/josecandido/Documents/BidRoom -name *.yml -o -name *.yaml)"
+      "Bash(find /Users/josecandido/Documents/BidRoom -name *.yml -o -name *.yaml)",
+      "Bash(grep -rn \"trust proxy\\\\|trustProxy\" /Users/josecandido/Documents/BidRoom/backend/src --include=*.js)"
     ]
   }
 }

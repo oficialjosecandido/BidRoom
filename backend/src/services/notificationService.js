@@ -464,6 +464,18 @@ async function notifyAccountReactivated({ userId }) {
   });
 }
 
+/** Seller accepted payment — notify buyer */
+async function notifyBuyerSellerAccepted({ transactionId, listingTitle, buyerUserId }) {
+  return createNotification({
+    userId: buyerUserId,
+    title: 'Seller accepted your payment',
+    message: `The seller has accepted your payment for "${listingTitle || 'the item'}". They will prepare and ship your order soon.`,
+    type: 'transaction',
+    link: '/dashboard/transactions',
+    referenceId: transactionId
+  });
+}
+
 /** Buyer paid — notify seller */
 async function notifySellerPaymentReceived({ transactionId, listingTitle, buyerName, sellerUserId }) {
   return createNotification({
@@ -624,5 +636,6 @@ module.exports = {
   notifyBuyerAuctionWon,
   notifySellerStripeRequiredForOffer,
   notifySellerPaymentReceived,
+  notifyBuyerSellerAccepted,
   emitNewNotificationToUser
 };

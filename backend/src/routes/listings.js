@@ -459,12 +459,12 @@ router.get('/:id', optionalAuth, async (req, res) => {
     if (isObjectId) {
       listing = await Listing.findById(req.params.id)
         .populate('seller', 'firstName lastName email')
-        .populate('platinumBidderInvitations.bidder', '_id')
+        .populate('platinumBidderInvitations.bidder', '_id firstName lastName')
         .lean();
     } else {
       listing = await Listing.findOne({ slug: req.params.id })
         .populate('seller', 'firstName lastName email')
-        .populate('platinumBidderInvitations.bidder', '_id')
+        .populate('platinumBidderInvitations.bidder', '_id firstName lastName')
         .lean();
     }
 
@@ -486,7 +486,7 @@ router.get('/:id', optionalAuth, async (req, res) => {
         await handleAuctionEnd(listing._id, null);
         listing = await Listing.findOne({ _id: listing._id })
           .populate('seller', 'firstName lastName email')
-          .populate('platinumBidderInvitations.bidder', '_id')
+          .populate('platinumBidderInvitations.bidder', '_id firstName lastName')
           .lean();
       } catch (err) {
         console.error('Lazy finalize auction on fetch:', err.message);
@@ -499,6 +499,22 @@ router.get('/:id', optionalAuth, async (req, res) => {
       timeRemaining,
       endingSoon: timeRemaining.ended ? false : (timeRemaining.days === 0 && timeRemaining.hours <= 24)
     };
+
+    // Include platinum bidder invitation status (name + acceptance) for the poker table view
+    if (listing.platinumBidderInvitations && listing.platinumBidderInvitations.length > 0) {
+      response.platinumBidderStatus = listing.platinumBidderInvitations
+        .filter(inv => inv.bidder)
+        .map(inv => ({
+          bidder: {
+            _id: inv.bidder._id,
+            firstName: inv.bidder.firstName || '',
+            lastName: inv.bidder.lastName || ''
+          },
+          status: inv.status,
+          invitedAt: inv.invitedAt,
+          acceptedAt: inv.acceptedAt || null
+        }));
+    }
 
     // When authenticated, include platinum bidder status for current user (replaces check-platinum endpoint)
     if (req.isAuthenticated && req.user) {

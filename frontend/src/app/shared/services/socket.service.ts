@@ -270,6 +270,21 @@ export class SocketService {
     });
   }
 
+  onInvitationAccepted(): Observable<{ listingId: string; bidderId: string | null; bidderName: string; bidderFirstName: string; bidderLastName: string }> {
+    return new Observable((observer) => {
+      if (!this.socket) {
+        this.connect();
+      }
+      const handler = (data: { listingId: string; bidderId: string | null; bidderName: string; bidderFirstName: string; bidderLastName: string }) => {
+        observer.next(data);
+      };
+      this.socket?.on('invitation-accepted', handler);
+      return () => {
+        this.socket?.off('invitation-accepted', handler);
+      };
+    });
+  }
+
   isConnected(): boolean {
     return this.socket?.connected || false;
   }

@@ -432,6 +432,7 @@ router.post('/invitation/accept', async (req, res) => {
     const sellerUserId = listing.seller?._id?.toString?.() || listing.seller?.toString?.();
     const bidder = invitation.bidder;
     const bidderName = bidder ? `${bidder.firstName || ''} ${bidder.lastName || ''}`.trim() : 'A bidder';
+    const io = req.app.get('io');
     if (sellerUserId) {
       notifyPrivateRoomAccepted({
         listingSlug: listing.slug || null,
@@ -439,8 +440,17 @@ router.post('/invitation/accept', async (req, res) => {
         bidderName,
         sellerUserId
       }).catch(err => console.error('Failed to create private room accepted notification:', err));
-      const io = req.app.get('io');
       if (io) emitNewNotificationToUser(io, sellerUserId).catch(() => {});
+    }
+    // Emit to everyone in the private room so the poker table updates live
+    if (io) {
+      io.to(`listing:${listingId}`).emit('invitation-accepted', {
+        listingId: listingId.toString(),
+        bidderId: bidder?._id?.toString?.() || null,
+        bidderName,
+        bidderFirstName: bidder?.firstName || '',
+        bidderLastName: bidder?.lastName || ''
+      });
     }
     return res.json({ success: true, message: 'Invitation accepted. You can now place bids in the private room.', listingId });
   } catch (error) {

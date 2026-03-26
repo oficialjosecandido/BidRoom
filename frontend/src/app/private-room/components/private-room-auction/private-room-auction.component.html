@@ -165,6 +165,70 @@
           }
         </div>
       </div>
+
+      @if (platinumBidders.length > 0) {
+        <!-- Mobile: bidder cards -->
+        <div class="mobile-layout">
+          <div class="mobile-bidders">
+            <h3 class="bidders-title">Invited Bidders</h3>
+            <div class="bidders-grid">
+              @for (bidder of platinumBidders; track bidder) {
+                <div class="mobile-bidder-card">
+                  <div class="bidder-avatar">
+                    <span class="avatar-initial">{{ getInitial(bidder.name) }}</span>
+                  </div>
+                  <div class="bidder-details">
+                    <div class="bidder-name">{{ bidder.name }}</div>
+                    <div class="bidder-status-badge" [class.status-accepted]="bidder.accepted" [class.status-pending]="!bidder.accepted">
+                      {{ bidder.accepted ? 'Accepted' : 'Invited' }}
+                    </div>
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+
+        <!-- Desktop: poker table (lobby view, no bids yet) -->
+        <div class="desktop-layout">
+          <div class="table-container">
+            <div class="poker-table">
+              <div class="table-center">
+                <div class="center-glow"></div>
+                <div class="current-bid">
+                  <span class="bid-label">Waiting for room to start</span>
+                </div>
+              </div>
+              <div class="bidder-positions">
+                @for (bidder of platinumBidders; track bidder; let i = $index) {
+                  <div class="bidder-seat" [style.top]="getPositionTop(i)" [style.left]="getPositionLeft(i)">
+                    <div class="seat-content" [class.seat-accepted]="bidder.accepted" [class.seat-pending]="!bidder.accepted">
+                      <div class="bidder-avatar">
+                        <div class="avatar-glow"></div>
+                        <span class="avatar-initial">{{ getInitial(bidder.name) }}</span>
+                      </div>
+                      <div class="bidder-info">
+                        <div class="bidder-name">{{ bidder.name }}</div>
+                        <div class="bidder-status-badge" [class.status-accepted]="bidder.accepted" [class.status-pending]="!bidder.accepted">
+                          {{ bidder.accepted ? 'Accepted' : 'Invited' }}
+                        </div>
+                      </div>
+                      <div class="seat-glow"></div>
+                    </div>
+                  </div>
+                }
+                @for (empty of getEmptySeats(); track empty) {
+                  <div class="bidder-seat empty-seat" [style.top]="getPositionTop(empty)" [style.left]="getPositionLeft(empty)">
+                    <div class="seat-content">
+                      <div class="empty-seat-placeholder">Empty Seat</div>
+                    </div>
+                  </div>
+                }
+              </div>
+            </div>
+          </div>
+        </div>
+      }
     </div>
 }
 
@@ -230,13 +294,19 @@
             </div>
             <div class="bidder-details">
               <div class="bidder-name">{{ bidder.name }}</div>
-              <div class="bidder-bid">
-                <span class="currency">$</span>
-                <span class="amount">{{ bidder.latestBid | number:'1.2-2' }}</span>
-              </div>
-              <div class="bidder-count">
-                <span class="count-badge">{{ bidder.bidCount }} {{ bidder.bidCount === 1 ? 'bid' : 'bids' }}</span>
-              </div>
+              @if (bidder.bidCount > 0) {
+                <div class="bidder-bid">
+                  <span class="currency">$</span>
+                  <span class="amount">{{ bidder.latestBid | number:'1.2-2' }}</span>
+                </div>
+                <div class="bidder-count">
+                  <span class="count-badge">{{ bidder.bidCount }} {{ bidder.bidCount === 1 ? 'bid' : 'bids' }}</span>
+                </div>
+              } @else {
+                <div class="bidder-status-badge" [class.status-accepted]="bidder.accepted" [class.status-pending]="!bidder.accepted">
+                  {{ bidder.accepted ? 'Joined' : 'Invited' }}
+                </div>
+              }
             </div>
           </div>
 }
@@ -311,20 +381,26 @@
               [style.top]="getPositionTop(i)"
               [style.left]="getPositionLeft(i)"
             >
-              <div class="seat-content">
+              <div class="seat-content" [class.seat-accepted]="bidder.accepted" [class.seat-pending]="!bidder.accepted">
                 <div class="bidder-avatar">
                   <div class="avatar-glow"></div>
                   <span class="avatar-initial">{{ getInitial(bidder.name) }}</span>
                 </div>
                 <div class="bidder-info">
                   <div class="bidder-name">{{ bidder.name }}</div>
-                  <div class="bidder-bid">
-                    <span class="currency">$</span>
-                    <span class="amount">{{ bidder.latestBid | number:'1.2-2' }}</span>
-                  </div>
-                  <div class="bidder-count">
-                    <span class="count-badge">{{ bidder.bidCount }} {{ bidder.bidCount === 1 ? 'bid' : 'bids' }}</span>
-                  </div>
+                  @if (bidder.bidCount > 0) {
+                    <div class="bidder-bid">
+                      <span class="currency">$</span>
+                      <span class="amount">{{ bidder.latestBid | number:'1.2-2' }}</span>
+                    </div>
+                    <div class="bidder-count">
+                      <span class="count-badge">{{ bidder.bidCount }} {{ bidder.bidCount === 1 ? 'bid' : 'bids' }}</span>
+                    </div>
+                  } @else {
+                    <div class="bidder-status-badge" [class.status-accepted]="bidder.accepted" [class.status-pending]="!bidder.accepted">
+                      {{ bidder.accepted ? 'Joined' : 'Invited' }}
+                    </div>
+                  }
                 </div>
                 <div class="seat-glow"></div>
               </div>

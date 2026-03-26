@@ -17,6 +17,8 @@ interface PlatinumBidderInfo {
   name: string;
   latestBid: number;
   bidCount: number;
+  /** Whether this bidder has accepted the invitation (vs still pending) */
+  accepted: boolean;
 }
 
 @Component({
@@ -172,37 +174,46 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
   }
 
   updatePlatinumBidders(): void {
-    if (!this.listing?.platinumBidders) {
-      this.platinumBidders = [];
-      return;
+    const platinumMap = new Map<string, PlatinumBidderInfo>();
+
+    // Seed all invited bidders (accepted or pending) from invitation status
+    const invitations = this.listing?.platinumBidderStatus || [];
+    for (const inv of invitations) {
+      const bidderId = inv.bidder._id;
+      const name = [inv.bidder.firstName, inv.bidder.lastName].filter(Boolean).join(' ') || 'Invited Bidder';
+      platinumMap.set(bidderId, {
+        id: bidderId,
+        name,
+        latestBid: 0,
+        bidCount: 0,
+        accepted: inv.status === 'accepted'
+      });
     }
 
-    // Get unique platinum bidders with their latest bid info
-    const platinumMap = new Map();
-    
-    this.listing.platinumBidders.forEach((pbId: string | { _id: string }) => {
-      const bidderId = typeof pbId === 'string' ? pbId : pbId._id;
-      // Find latest bid from this bidder
-      const bidderBids = this.bids.filter(b => {
-        if (b.bidder) {
-          return (typeof b.bidder === 'string' ? b.bidder : b.bidder._id) === bidderId;
-        }
-        return false;
-      });
-      
-      if (bidderBids.length > 0) {
-        const latestBid = bidderBids.sort((a, b) => 
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-        )[0];
-        
+    // Overlay actual bid data
+    for (const b of this.bids) {
+      if (!b.bidder) continue;
+      const bidderId = typeof b.bidder === 'string' ? b.bidder : b.bidder._id;
+      const existing = platinumMap.get(bidderId);
+      if (!existing) continue; // only show platinum invitees
+      const bidDate = new Date(b.createdAt).getTime();
+      const existingDate = existing.bidCount > 0
+        ? new Date(this.bids.find(x => {
+            const xId = typeof x.bidder === 'string' ? x.bidder : x.bidder?._id;
+            return xId === bidderId && x.amount === existing.latestBid;
+          })?.createdAt || 0).getTime()
+        : 0;
+      if (bidDate >= existingDate) {
+        const name = b.bidderName || [b.bidderFirstName, b.bidderLastName].filter(Boolean).join(' ') || existing.name;
         platinumMap.set(bidderId, {
-          id: bidderId,
-          name: latestBid.bidderName || latestBid.bidderFirstName + ' ' + latestBid.bidderLastName || 'Unknown',
-          latestBid: latestBid.amount,
-          bidCount: bidderBids.length
+          ...existing,
+          name,
+          latestBid: b.amount > existing.latestBid ? b.amount : existing.latestBid,
+          bidCount: existing.bidCount + 1,
+          accepted: true
         });
       }
-    });
+    }
 
     this.platinumBidders = Array.from(platinumMap.values());
   }
@@ -352,6 +363,22 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
     });
 
     this.socketSubscriptions.push(viewerSub);
+
+    // Update seat status live when a bidder accepts the invitation
+    const acceptSub = this.socketService.onInvitationAccepted().subscribe(event => {
+      if (event.listingId !== this.listingId || !event.bidderId) return;
+      const existing = this.platinumBidders.find(b => b.id === event.bidderId);
+      if (existing) {
+        existing.accepted = true;
+        existing.name = event.bidderName || existing.name;
+      } else {
+        // Bidder not yet in list — add them
+        const name = event.bidderName || [event.bidderFirstName, event.bidderLastName].filter(Boolean).join(' ') || 'Invited Bidder';
+        this.platinumBidders = [...this.platinumBidders, { id: event.bidderId, name, latestBid: 0, bidCount: 0, accepted: true }];
+      }
+    });
+
+    this.socketSubscriptions.push(acceptSub);
   }
 
   getMinBid(): number {

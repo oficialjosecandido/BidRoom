@@ -221,7 +221,6 @@
                 <div class="ended-text">
                   <h4>{{ (listing.auctionFormat === 'best-offer' ? 'listingDetails.time.listingEnded' : 'listingDetails.time.auctionEnded') | translate }}</h4>
                   @if (listing.auctionFormat === 'highest-bid' && isOwnListing && getEndedBidCount() === 0) { <p>{{ 'listingDetails.ended.noBidsSeller' | translate }}</p> }
-                  @if (listing.auctionFormat === 'highest-bid' && isOwnListing && getEndedBidCount() > 0 && !listing.winner && !hasPrivateRoom() && !isPrivateRoomEnded()) { <p>{{ 'listingDetails.ended.selectWinner' | translate }}</p> }
                   @if (listing.auctionFormat === 'highest-bid' && isOwnListing && listing.winner) { <p>{{ 'listingDetails.ended.winnerSelected' | translate }}</p> }
                   @if (listing.auctionFormat === 'best-offer' && isOwnListing && !offersLoading && offers.length === 0) { <p>{{ 'listingDetails.ended.noOffersSeller' | translate }}</p> }
                   @if (listing.auctionFormat === 'best-offer' && isOwnListing && offers.length > 0) { <p>{{ getBestOfferClosedMessage() }}</p> }
@@ -305,11 +304,6 @@
             @if (canCreatePrivateRoom()) {
             <button class="btn btn-primary btn-large" (click)="openCreatePrivateRoomModal()">
               {{ 'listingDetails.actions.createPrivateRoom' | translate }}
-            </button>
-            }
-            @if (isOwnListing && isAuctionEnded() && !hasPrivateRoom() && getEndedBidCount() > 0 && !listing.winner && !isPrivateRoomEnded()) {
-            <button class="btn btn-primary btn-large" (click)="openSelectWinnerModal()">
-              {{ 'listingDetails.actions.selectWinner' | translate }}
             </button>
             }
             @if (canReopenListing()) {
@@ -593,18 +587,6 @@
                           }
                           @if (bid.bidType !== 'manual') { <span class="bid-type">{{ bid.bidType }}</span> }
                         </div>
-                        @if (isOwnListing && isAuctionEnded() && !hasPrivateRoom() && !listing.winner && !isPrivateRoomEnded()) {
-                        <div class="bid-select-winner-wrap">
-                          @if (canSelectBidAsWinner(bid)) {
-                          <button type="button" class="btn btn-primary btn-small bid-select-winner-btn" (click)="selectWinner(bid._id)" [disabled]="selectingWinner">
-                            {{ selectingWinner ? ('listingDetails.bidHistory.selecting' | translate) : ('listingDetails.bidHistory.selectAsWinner' | translate) }}
-                          </button>
-                          }
-                          @if (!canSelectBidAsWinner(bid)) {
-                          <span class="bid-verified-required">{{ 'listingDetails.bidHistory.verifiedRequired' | translate }}</span>
-                          }
-                        </div>
-                        }
                       </div>
                     </div>
                     <div class="bid-bar-track">
@@ -894,45 +876,6 @@
       <button type="button" class="btn btn-primary" (click)="goToLogin()">{{ 'listingDetails.watchlistModal.login' | translate }}</button>
       <button type="button" class="btn btn-secondary" (click)="goToSignup()">{{ 'listingDetails.watchlistModal.signup' | translate }}</button>
     </div>
-  </div>
-</div>
-}
-
-@if (showSelectWinnerModal && !isPrivateRoomEnded()) {
-<!-- Select winner modal (seller, ended auction with bids; not shown when private room ended) -->
-<div class="modal-overlay" role="button" tabindex="0" (click)="closeSelectWinnerModal()" (keydown.escape)="closeSelectWinnerModal()">
-  <div class="modal-content select-winner-modal" tabindex="0" (click)="$event.stopPropagation()" (keydown.enter)="$event.stopPropagation()" (keydown.space)="$event.stopPropagation()">
-    <button type="button" class="modal-close" aria-label="Close" (click)="closeSelectWinnerModal()">&times;</button>
-    <h3>{{ 'listingDetails.selectWinnerModal.title' | translate }}</h3>
-    <p class="modal-subtitle">{{ 'listingDetails.selectWinnerModal.subtitle' | translate }}</p>
-    @if (bidsLoading) { <div class="modal-loading">{{ 'listingDetails.selectWinnerModal.loading' | translate }}</div> }
-    @if (!bidsLoading && bids.length === 0) { <div class="modal-empty">{{ 'listingDetails.selectWinnerModal.noBids' | translate }}</div> }
-    @if (!bidsLoading && bids.length > 0) {
-    <ul class="select-winner-list">
-      @for (bid of bids; track bid._id; let i = $index) {
-      <li class="select-winner-item" [class.select-winner-item--ineligible]="!canSelectBidAsWinner(bid)">
-        <div class="select-winner-info">
-          <span class="select-winner-rank">#{{ i + 1 }}</span>
-          <span class="select-winner-bidder">{{ bid.bidderFirstName && bid.bidderLastName ? bid.bidderFirstName + ' ' + bid.bidderLastName : (bid.bidderName || ('listingDetails.bidHistory.anonymous' | translate)) }}</span>
-          <span class="select-winner-amount">{{ formatBidAmount(bid.amount) }}</span>
-          <span class="select-winner-badges">
-            @if (bid.bidderVerified) { <span class="select-winner-badge verified">{{ 'listingDetails.selectWinnerModal.verified' | translate }}</span> }
-            @if (!bid.isAuthenticated) { <span class="select-winner-badge guest">{{ 'listingDetails.selectWinnerModal.guest' | translate }}</span> }
-            @if (bid.isAuthenticated && !bid.bidderVerified) { <span class="select-winner-badge unverified">{{ 'listingDetails.selectWinnerModal.unverified' | translate }}</span> }
-          </span>
-        </div>
-        <div class="select-winner-action">
-          @if (canSelectBidAsWinner(bid)) {
-          <button type="button" class="btn btn-primary btn-small" (click)="selectWinner(bid._id)" [disabled]="selectingWinner">
-            {{ selectingWinner ? ('listingDetails.selectWinnerModal.selecting' | translate) : ('listingDetails.selectWinnerModal.selectBtn' | translate) }}
-          </button>
-          }
-          @if (!canSelectBidAsWinner(bid)) { <span class="select-winner-ineligible">{{ 'listingDetails.selectWinnerModal.ineligible' | translate }}</span> }
-        </div>
-      </li>
-      }
-    </ul>
-    }
   </div>
 </div>
 }

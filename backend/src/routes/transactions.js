@@ -12,6 +12,7 @@ const {
   notifyTrackingProvided,
   notifyBuyerConfirmedReceipt,
   notifyShippingDeadlineStarted,
+  notifyBuyerSellerAccepted,
   emitNewNotificationToUser
 } = require('../services/notificationService');
 const { suspendBothPartiesForDispute } = require('../services/accountStatusService');
@@ -409,15 +410,15 @@ router.patch('/:id', requireActiveAccount, async (req, res) => {
         transaction.transactionStatus = 'paid';
         transaction.paymentStatus = 'paid';
         transaction.paidAt = transaction.paidAt || new Date();
+        const listing = await Listing.findById(transaction.listing).select('handlingTime title').lean();
+        const listingTitle = listing?.title || 'the item';
         if (!transaction.handlingDeadline) {
-          const listing = await Listing.findById(transaction.listing).select('handlingTime title').lean();
           const days = (listing && listing.handlingTime) ? Math.max(1, listing.handlingTime) : 3;
           const d = new Date();
           d.setDate(d.getDate() + days);
           transaction.handlingDeadline = d;
           const sellerUserId = transaction.seller?.toString?.();
           if (sellerUserId) {
-            const listingTitle = listing?.title || 'the item';
             notifyShippingDeadlineStarted({
               transactionId: transaction._id.toString(),
               listingTitle,
@@ -425,6 +426,40 @@ router.patch('/:id', requireActiveAccount, async (req, res) => {
             }).catch(err => console.error('Failed to create shipping-deadline notification:', err));
             const io = req.app.get('io');
             if (io) emitNewNotificationToUser(io, sellerUserId).catch(() => {});
+          }
+        }
+        // Notify buyer that seller accepted
+        const buyerUserId = transaction.buyer?.toString?.();
+        if (buyerUserId) {
+          notifyBuyerSellerAccepted({
+            transactionId: transaction._id.toString(),
+            listingTitle,
+            buyerUserId
+          }).catch(err => console.error('Failed to create buyer seller-accepted notification:', err));
+          const io = req.app.get('io');
+          if (io) emitNewNotificationToUser(io, buyerUserId).catch(() => {});
+          // Email to buyer
+          const buyer = await User.findById(buyerUserId).select('email firstName').lean();
+          if (buyer?.email) {
+            const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:4200';
+            const txLink = `${frontendUrl}/dashboard/transactions`;
+            const html = `
+              <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                <div style="background: linear-gradient(135deg, #7A4F84 0%, #9b6ba8 100%); color: white; padding: 24px; text-align: center; border-radius: 8px 8px 0 0;">
+                  <h1 style="margin: 0;">Your order has been confirmed!</h1>
+                </div>
+                <div style="background: #f9f9f9; padding: 24px; border-radius: 0 0 8px 8px;">
+                  <p>Hi ${buyer.firstName || 'there'},</p>
+                  <p>The seller has accepted your payment for <strong>${listingTitle}</strong> and will prepare your order for shipment shortly.</p>
+                  <p style="text-align: center; margin: 24px 0;">
+                    <a href="${txLink}" style="background: #7A4F84; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: bold;">View Transaction</a>
+                  </p>
+                  <p>Best regards,<br>The BidRoom Team</p>
+                </div>
+              </div>
+            `;
+            sendEmail(buyer.email, `Your order for "${listingTitle}" has been confirmed`, html)
+              .catch(err => console.error('Failed to send seller-accepted email to buyer:', err.message));
           }
         }
       } else if (status === 'shipped') {
