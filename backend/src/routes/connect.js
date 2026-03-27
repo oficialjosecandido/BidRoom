@@ -232,21 +232,24 @@ router.post('/submit-onboarding', requireActiveAccount, async (req, res) => {
     console.log(`${LOG_PREFIX} Onboarding submitted uid=${user.uid?.slice(0, 8)} accountId=${accountId} onboarded=${onboarded}`);
     res.json({ onboarded, requiresVerification: !onboarded, accountId });
   } catch (err) {
-    console.error(`${LOG_PREFIX} Submit onboarding error:`, err.message);
+    const isTestMode = process.env.STRIPE_SECRET_KEY?.startsWith('sk_test_');
+    console.error(`${LOG_PREFIX} Submit onboarding error type=${err.type} message=${err.message}`);
     // Stripe Connect not enabled on the platform account
-    if (
-      err.type === 'StripePermissionError' ||
-      (err.message && err.message.toLowerCase().includes('connect'))
-    ) {
+    if (err.type === 'StripePermissionError') {
       return res.status(503).json({
         error: 'Stripe Connect not configured',
-        message: 'Payout account setup is temporarily unavailable. Our team has been notified. Please try again later or contact support.'
+        message: 'Payout account setup is temporarily unavailable. Our team has been notified. Please try again later or contact support.',
+        ...(isTestMode && { debug: err.message })
       });
     }
     if (err.type === 'StripeInvalidRequestError') {
       return res.status(400).json({ error: 'Invalid payment details', message: err.message });
     }
-    res.status(500).json({ error: 'Failed to set up payout account', message: err.message });
+    res.status(500).json({
+      error: 'Failed to set up payout account',
+      message: err.message,
+      ...(isTestMode && { debug: `type=${err.type}` })
+    });
   }
 });
 
