@@ -18,6 +18,14 @@ const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:4200';
  * a private/internal IP. Stripe requires a valid public IPv4 for tos_acceptance.
  */
 function getClientIp(req) {
+  const isTestMode = process.env.STRIPE_SECRET_KEY?.startsWith('sk_test_');
+
+  // In test mode Stripe accepts any IP — skip detection entirely to avoid
+  // Azure internal IPs (100.x.x.x CGNAT range) slipping through as "public".
+  if (isTestMode) {
+    return '127.0.0.1';
+  }
+
   const normalize = (raw) => {
     if (!raw) return null;
     const trimmed = raw.trim();
@@ -28,13 +36,17 @@ function getClientIp(req) {
 
   const isPublic = (ip) => {
     if (!ip || ip === '127.0.0.1' || ip === '::1') return false;
-    // Private IPv4 ranges
+    // Private IPv4 ranges (RFC 1918)
     if (ip.startsWith('10.')) return false;
     if (ip.startsWith('192.168.')) return false;
     if (/^172\.(1[6-9]|2[0-9]|3[01])\./.test(ip)) return false;
+    // CGNAT range (RFC 6598) — used by Azure App Service internally (100.64–100.127)
+    if (/^100\.(6[4-9]|[7-9]\d|1[01]\d|12[0-7])\./.test(ip)) return false;
+    // Link-local (169.254.x.x)
+    if (ip.startsWith('169.254.')) return false;
     // Valid IPv4
     if (/^\d{1,3}(\.\d{1,3}){3}$/.test(ip)) return true;
-    // Valid IPv6 (non-loopback, non-link-local)
+    // Valid IPv6 (non-loopback, non-link-local, non-ULA)
     if (ip.includes(':') && !ip.startsWith('fe80') && !ip.startsWith('fc') && !ip.startsWith('fd')) return true;
     return false;
   };
@@ -54,13 +66,6 @@ function getClientIp(req) {
 
   const socketIp = normalize(req.socket?.remoteAddress || req.connection?.remoteAddress);
   if (isPublic(socketIp)) return socketIp;
-
-  // In test mode fall back to a harmless placeholder so dev/staging still works
-  const isTestMode = process.env.STRIPE_SECRET_KEY?.startsWith('sk_test_');
-  if (isTestMode) {
-    console.warn(`${LOG_PREFIX} Could not determine public client IP — using placeholder for test mode`);
-    return '127.0.0.1'; // Stripe test mode accepts any IP
-  }
 
   return null;
 }
