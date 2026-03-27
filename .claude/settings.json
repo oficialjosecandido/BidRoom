@@ -7,7 +7,8 @@
       "Bash(grep -rn \"trust proxy\\\\|trustProxy\" /Users/josecandido/Documents/BidRoom/backend/src --include=*.js)",
       "Bash(find /Users/josecandido/Documents/BidRoom/backend/src -name platinumBidderInvitation* -o -name platinum*)",
       "Bash(grep -r \"FEATURE_\\\\|featureFlags\\\\|isFeatureEnabled\" /Users/josecandido/Documents/BidRoom/backend/src --include=*.js --include=*.ts)",
-      "Bash(grep -r \"tierFromBalance\\\\|TIER_THRESHOLDS\" /Users/josecandido/Documents/BidRoom --include=*.js --include=*.ts)"
+      "Bash(grep -r \"tierFromBalance\\\\|TIER_THRESHOLDS\" /Users/josecandido/Documents/BidRoom --include=*.js --include=*.ts)",
+      "Bash(find /Users/josecandido/Documents/BidRoom/frontend/src -name *.interceptor.ts -o -name *interceptor*)"
     ]
   }
 }

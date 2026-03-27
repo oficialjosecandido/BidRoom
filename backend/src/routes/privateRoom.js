@@ -308,6 +308,7 @@ router.post('/listings/:id/start-now', authenticateToken, async (req, res) => {
 
     await Listing.findByIdAndUpdate(listingId, {
       $set: {
+        status: 'active',
         privateRoomStatus: 'active',
         privateRoomEndDate: roomEndDate,
         privateRoomLastBidTime: now,

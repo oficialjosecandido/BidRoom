@@ -61,6 +61,7 @@ async function checkEndedAuctions() {
           const roomEndDate = new Date(now.getTime() + PRIVATE_ROOM_EXTEND_MS);
           await Listing.findByIdAndUpdate(listing._id, {
             $set: {
+              status: 'active',
               privateRoomStatus: 'active',
               privateRoomEndDate: roomEndDate,
               privateRoomLastBidTime: now,
