@@ -96,7 +96,7 @@ export interface Listing {
   myHighestBid?: number | null;
   /** Set on bidder/my-auctions: when user last bid */
   myLastBidAt?: string | null;
-  /** Set on bidder/my-auctions: user's preference to receive outbid emails */
+  /** Set on bidder/my-auctions: preference for outbid notifications (email + in-app when logged in) */
   notifyWhenOutbid?: boolean;
 }
 

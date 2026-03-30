@@ -52,7 +52,7 @@ const bidSchema = new mongoose.Schema({
     maxlength: 500,
     default: null
   },
-  /** Whether to email this bidder when they are outbid on this listing (default true) */
+  /** Whether to notify this bidder when outbid: email + in-app (registered users). Default true. */
   notifyWhenOutbid: {
     type: Boolean,
     default: true

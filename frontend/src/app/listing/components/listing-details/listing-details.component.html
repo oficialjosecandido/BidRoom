@@ -159,22 +159,6 @@
             </div>
             }
             }
-            @if (canInviteToPrivateRoom()) {
-            <div class="private-room-banner private-room-ready">
-              <div class="private-room-content">
-                <span class="private-room-icon">🔒</span>
-                <div class="private-room-text">
-                  <h4>{{ 'listingDetails.privateRoom.readyTitle' | translate }}</h4>
-                  <p>{{ 'listingDetails.privateRoom.readyDesc' | translate }}</p>
-                </div>
-                <div class="private-room-watch">
-                  <button class="btn btn-view-room" (click)="openCreatePrivateRoomModal()">
-                    {{ 'listingDetails.privateRoom.inviteBidders' | translate }}
-                  </button>
-                </div>
-              </div>
-            </div>
-            }
             @if (listing.allowPrivateRoom && listing.privateRoomStatus === 'eligible' && listing.status === 'ended') {
             <div class="private-room-banner private-room-eligible">
               <div class="private-room-content">

@@ -438,7 +438,7 @@
       "selectAsWinner": "Select as winner",
       "selecting": "Selecting…",
       "verifiedRequired": "Verified account required",
-      "notifyOutbid": "Email me when I'm outbid on this auction",
+      "notifyOutbid": "Notify me when I'm outbid",
       "anonymous": "Anonymous"
     },
     "offerHistory": {
@@ -486,7 +486,7 @@
       "amountLabel": "Your bid amount",
       "emailLabel": "Your email",
       "emailHint": "We'll use this to confirm your bid.",
-      "notifyOutbid": "Email me when I'm outbid on this auction",
+      "notifyOutbid": "Notify me when I'm outbid",
       "cancel": "Cancel",
       "submit": "Place bid",
       "submitting": "Placing bid…"
@@ -820,7 +820,7 @@
       "offer": "Offer",
       "bid": "Bid",
       "winner": "Winner",
-      "emailOutbid": "Email me when I'm outbid",
+      "emailOutbid": "Notify me when I'm outbid",
       "updating": "Updating…",
       "viewListing": "View listing",
       "statusActive": "Active",
@@ -929,7 +929,7 @@
       "myHighestBid": "My highest bid",
       "totalBids": "Total bids",
       "ends": "Ends",
-      "emailOutbid": "Email me when I'm outbid",
+      "emailOutbid": "Notify me when I'm outbid",
       "viewListing": "View Listing"
     },
     "watchlist": {

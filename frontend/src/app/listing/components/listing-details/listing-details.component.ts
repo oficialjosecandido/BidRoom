@@ -617,14 +617,6 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
     return true;
   }
 
-  /** Seller can invite bidders during an active auction when private room is enabled and no invitations sent yet. */
-  canInviteToPrivateRoom(): boolean {
-    if (!this.listing || !this.isOwnListing || this.listing.auctionFormat !== 'highest-bid') return false;
-    if (!this.listing.allowPrivateRoom || this.listing.status !== 'active') return false;
-    const status = this.listing.privateRoomStatus;
-    return !status || status === 'not-triggered';
-  }
-
   getAuctionEndLabel(): string {
     const endType = this.getAuctionEndType();
     switch (endType) {

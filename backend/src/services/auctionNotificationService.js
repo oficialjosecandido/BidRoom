@@ -148,7 +148,8 @@ async function sendAuctionNotSoldNotification(listing) {
 }
 
 /**
- * Send "you've been outbid" notification to a bidder (only if they opted in via notifyWhenOutbid)
+ * Send "you've been outbid" email to a bidder (only if they opted in via notifyWhenOutbid).
+ * In-app notification is created separately in bids.js for registered bidders.
  */
 async function sendOutbidNotification(listing, bidderEmail, bidderName, previousBidAmount, newBidAmount) {
   try {

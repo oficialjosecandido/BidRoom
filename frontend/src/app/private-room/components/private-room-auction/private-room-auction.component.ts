@@ -12,13 +12,15 @@ import { AuthService, AppUser } from '../../../auth/services/auth.service';
 import { PrivateRoomService } from '../../services/private-room.service';
 import { API_CONFIG } from '../../../shared/config/api.config';
 
+type InvitationDisplayStatus = 'pending' | 'accepted' | 'declined';
+
 interface PlatinumBidderInfo {
   id: string;
   name: string;
   latestBid: number;
   bidCount: number;
-  /** Whether this bidder has accepted the invitation (vs still pending) */
-  accepted: boolean;
+  /** RSVP from platinumBidderInvitations */
+  invitationStatus: InvitationDisplayStatus;
 }
 
 @Component({
@@ -181,12 +183,15 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
     for (const inv of invitations) {
       const bidderId = inv.bidder._id;
       const name = [inv.bidder.firstName, inv.bidder.lastName].filter(Boolean).join(' ') || 'Invited Bidder';
+      const st = inv.status;
+      const invitationStatus: InvitationDisplayStatus =
+        st === 'declined' ? 'declined' : st === 'accepted' ? 'accepted' : 'pending';
       platinumMap.set(bidderId, {
         id: bidderId,
         name,
         latestBid: 0,
         bidCount: 0,
-        accepted: inv.status === 'accepted'
+        invitationStatus
       });
     }
 
@@ -209,8 +214,9 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
           ...existing,
           name,
           latestBid: b.amount > existing.latestBid ? b.amount : existing.latestBid,
-          bidCount: existing.bidCount + 1,
-          accepted: true
+          bidCount: existing.bidCount + 1
+          // Keep invitationStatus from platinumBidderStatus only — do not infer from bids:
+          // main-auction bids would wrongly mark invitees as "accepted" before they RSVP.
         });
       }
     }
@@ -227,12 +233,20 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
         if (res.listing && this.listing) {
           this.listing.privateRoomStatus = (res.listing.privateRoomStatus ?? 'active') as Listing['privateRoomStatus'];
           this.listing.privateRoomEndDate = res.listing.privateRoomEndDate ?? undefined;
+          this.listing.endDate = res.listing.endDate ?? this.listing.endDate;
           this.listing.status = (res.listing.status as Listing['status']) ?? this.listing.status;
           this.startCountdown();
+          this.loadListing();
         }
       },
       error: () => {
         this.startNowLoading = false;
+        Swal.fire({
+          icon: 'error',
+          title: 'Could not start',
+          text: 'The room could not be started. It may have already started or ended.',
+          confirmButtonColor: '#7A4F84'
+        });
       }
     });
   }
@@ -342,7 +356,9 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
         }
       }
       if (update.status) this.listing.status = update.status;
-      if (update.endDate) this.listing.endDate = update.endDate;
+      if (update.endDate) {
+        this.listing.endDate = update.endDate;
+      }
       if (update.privateRoomStatus === 'active' || update.privateRoomStatus === 'invited') {
         this.startCountdown();
       }
@@ -373,16 +389,49 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
       if (event.listingId !== this.listingId || !event.bidderId) return;
       const existing = this.platinumBidders.find(b => b.id === event.bidderId);
       if (existing) {
-        existing.accepted = true;
+        existing.invitationStatus = 'accepted';
         existing.name = event.bidderName || existing.name;
       } else {
-        // Bidder not yet in list — add them
         const name = event.bidderName || [event.bidderFirstName, event.bidderLastName].filter(Boolean).join(' ') || 'Invited Bidder';
-        this.platinumBidders = [...this.platinumBidders, { id: event.bidderId, name, latestBid: 0, bidCount: 0, accepted: true }];
+        this.platinumBidders = [...this.platinumBidders, {
+          id: event.bidderId,
+          name,
+          latestBid: 0,
+          bidCount: 0,
+          invitationStatus: 'accepted'
+        }];
+      }
+      if (this.invitationPending) {
+        this.loadListing();
       }
     });
 
     this.socketSubscriptions.push(acceptSub);
+
+    const declineSub = this.socketService.onInvitationDeclined().subscribe(event => {
+      if (event.listingId !== this.listingId || !event.bidderId) return;
+      const existing = this.platinumBidders.find(b => b.id === event.bidderId);
+      if (existing) {
+        existing.invitationStatus = 'declined';
+        this.platinumBidders = [...this.platinumBidders];
+      } else {
+        this.loadListing();
+      }
+    });
+
+    this.socketSubscriptions.push(declineSub);
+  }
+
+  /** Badge label for invitation RSVP */
+  invitationLabel(b: PlatinumBidderInfo): string {
+    switch (b.invitationStatus) {
+      case 'accepted':
+        return 'Accepted';
+      case 'declined':
+        return 'Declined';
+      default:
+        return 'Pending';
+    }
   }
 
   getMinBid(): number {
@@ -417,8 +466,15 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
     return slug ? `/listing/${slug}` : '#';
   }
 
-  /** Seller clicks "Start auction" in center — scroll to Bid History (always visible; .prominent-bid-section is only for bidders). */
+  /**
+   * Seller: during invitation phase, starts the private room immediately (same as listing-details).
+   * When already active, scrolls to bid history.
+   */
   onSellerStartAuction(): void {
+    if (this.listing?.privateRoomStatus === 'invited') {
+      this.startRoomNow();
+      return;
+    }
     if (this.listing?.privateRoomStatus === 'active') {
       document.querySelector('#bid-history-section')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }

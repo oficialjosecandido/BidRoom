@@ -46,7 +46,10 @@
           <div class="stat-icon">⏰</div>
           <div class="stat-content">
             <div class="stat-value countdown-value">{{ formatCountdown() }}</div>
-            <div class="stat-label">Accept within 15 min; room starts automatically</div>
+            <div class="stat-label stat-label--invited" title="Invitees have 15 minutes to accept. The room then starts automatically (or the seller can start it early).">
+              <span class="stat-label-line">15 min acceptance</span>
+              <span class="stat-label-line stat-label-line--sub">Then auto-start</span>
+            </div>
           </div>
         </div>
 }
@@ -160,8 +163,18 @@
         <p>Invitees have <strong>15 minutes</strong> to accept the invitation. The auction will start automatically after the acceptance window.</p>
         <p class="room-invited-sub">Check your email for the accept link if you were invited.</p>
         <div class="room-invited-actions">
+          @if (isSeller) {
+          <button
+            type="button"
+            class="room-invited-btn room-invited-btn-primary"
+            (click)="startRoomNow()"
+            [disabled]="startNowLoading"
+          >
+            {{ startNowLoading ? 'Starting…' : 'Start auction now' }}
+          </button>
+          }
           @if (listing.slug) {
-          <a [href]="getListingPageUrl()" class="room-invited-link" target="_blank" rel="noopener noreferrer">View listing</a>
+          <a [href]="getListingPageUrl()" class="room-invited-link room-invited-link--secondary" target="_blank" rel="noopener noreferrer">View listing</a>
           }
         </div>
       </div>
@@ -179,8 +192,13 @@
                   </div>
                   <div class="bidder-details">
                     <div class="bidder-name">{{ bidder.name }}</div>
-                    <div class="bidder-status-badge" [class.status-accepted]="bidder.accepted" [class.status-pending]="!bidder.accepted">
-                      {{ bidder.accepted ? 'Accepted' : 'Invited' }}
+                    <div
+                      class="bidder-status-badge"
+                      [class.status-accepted]="bidder.invitationStatus === 'accepted'"
+                      [class.status-pending]="bidder.invitationStatus === 'pending'"
+                      [class.status-declined]="bidder.invitationStatus === 'declined'"
+                    >
+                      {{ invitationLabel(bidder) }}
                     </div>
                   </div>
                 </div>
@@ -193,8 +211,16 @@
         <div class="desktop-layout">
           <div class="table-container">
             <div class="poker-table">
-              <div class="table-center">
+              <div class="table-center table-center--invited">
                 <div class="center-glow"></div>
+                @if (isSeller) {
+                <div class="center-seller-action center-seller-action--invited">
+                  <button type="button" class="start-auction-btn" (click)="startRoomNow()" [disabled]="startNowLoading">
+                    {{ startNowLoading ? 'Starting…' : 'Start auction' }}
+                  </button>
+                  <p class="center-seller-hint">Same as waiting for the timer — starts private bidding immediately.</p>
+                </div>
+                }
                 <div class="current-bid">
                   <span class="bid-label">Waiting for room to start</span>
                 </div>
@@ -202,15 +228,25 @@
               <div class="bidder-positions">
                 @for (bidder of platinumBidders; track bidder; let i = $index) {
                   <div class="bidder-seat" [style.top]="getPositionTop(i)" [style.left]="getPositionLeft(i)">
-                    <div class="seat-content" [class.seat-accepted]="bidder.accepted" [class.seat-pending]="!bidder.accepted">
+                    <div
+                      class="seat-content"
+                      [class.seat-accepted]="bidder.invitationStatus === 'accepted'"
+                      [class.seat-pending]="bidder.invitationStatus === 'pending'"
+                      [class.seat-declined]="bidder.invitationStatus === 'declined'"
+                    >
                       <div class="bidder-avatar">
                         <div class="avatar-glow"></div>
                         <span class="avatar-initial">{{ getInitial(bidder.name) }}</span>
                       </div>
                       <div class="bidder-info">
                         <div class="bidder-name">{{ bidder.name }}</div>
-                        <div class="bidder-status-badge" [class.status-accepted]="bidder.accepted" [class.status-pending]="!bidder.accepted">
-                          {{ bidder.accepted ? 'Accepted' : 'Invited' }}
+                        <div
+                          class="bidder-status-badge"
+                          [class.status-accepted]="bidder.invitationStatus === 'accepted'"
+                          [class.status-pending]="bidder.invitationStatus === 'pending'"
+                          [class.status-declined]="bidder.invitationStatus === 'declined'"
+                        >
+                          {{ invitationLabel(bidder) }}
                         </div>
                       </div>
                       <div class="seat-glow"></div>
@@ -303,8 +339,13 @@
                   <span class="count-badge">{{ bidder.bidCount }} {{ bidder.bidCount === 1 ? 'bid' : 'bids' }}</span>
                 </div>
               } @else {
-                <div class="bidder-status-badge" [class.status-accepted]="bidder.accepted" [class.status-pending]="!bidder.accepted">
-                  {{ bidder.accepted ? 'Joined' : 'Invited' }}
+                <div
+                  class="bidder-status-badge"
+                  [class.status-accepted]="bidder.invitationStatus === 'accepted'"
+                  [class.status-pending]="bidder.invitationStatus === 'pending'"
+                  [class.status-declined]="bidder.invitationStatus === 'declined'"
+                >
+                  {{ bidder.invitationStatus === 'pending' ? 'Pending' : invitationLabel(bidder) }}
                 </div>
               }
             </div>
@@ -338,9 +379,9 @@
           <!-- Center of Table: seller has Start auction button; everyone sees current bid + temporary winner -->
           <div class="table-center">
             <div class="center-glow"></div>
-            @if (isSeller && listing && (listing.privateRoomStatus === 'active' || listing.privateRoomStatus === 'eligible')) {
+            @if (isSeller && listing && listing.privateRoomStatus === 'active') {
 <div class="center-seller-action">
-              <button type="button" class="start-auction-btn" (click)="onSellerStartAuction()">Start auction</button>
+              <button type="button" class="start-auction-btn start-auction-btn--secondary" (click)="onSellerStartAuction()">View bid history</button>
             </div>
 }
             @if (listing) {
@@ -381,7 +422,12 @@
               [style.top]="getPositionTop(i)"
               [style.left]="getPositionLeft(i)"
             >
-              <div class="seat-content" [class.seat-accepted]="bidder.accepted" [class.seat-pending]="!bidder.accepted">
+              <div
+                class="seat-content"
+                [class.seat-accepted]="bidder.invitationStatus === 'accepted'"
+                [class.seat-pending]="bidder.invitationStatus === 'pending'"
+                [class.seat-declined]="bidder.invitationStatus === 'declined'"
+              >
                 <div class="bidder-avatar">
                   <div class="avatar-glow"></div>
                   <span class="avatar-initial">{{ getInitial(bidder.name) }}</span>
@@ -397,8 +443,13 @@
                       <span class="count-badge">{{ bidder.bidCount }} {{ bidder.bidCount === 1 ? 'bid' : 'bids' }}</span>
                     </div>
                   } @else {
-                    <div class="bidder-status-badge" [class.status-accepted]="bidder.accepted" [class.status-pending]="!bidder.accepted">
-                      {{ bidder.accepted ? 'Joined' : 'Invited' }}
+                    <div
+                      class="bidder-status-badge"
+                      [class.status-accepted]="bidder.invitationStatus === 'accepted'"
+                      [class.status-pending]="bidder.invitationStatus === 'pending'"
+                      [class.status-declined]="bidder.invitationStatus === 'declined'"
+                    >
+                      {{ invitationLabel(bidder) }}
                     </div>
                   }
                 </div>

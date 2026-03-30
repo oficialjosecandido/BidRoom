@@ -438,7 +438,7 @@
       "selectAsWinner": "Sélectionner comme gagnant",
       "selecting": "Sélection…",
       "verifiedRequired": "Compte vérifié requis",
-      "notifyOutbid": "Me notifier par e-mail lorsque je suis surenchéri sur cette enchère",
+      "notifyOutbid": "M'avertir lorsque je suis surenchéri",
       "anonymous": "Anonyme"
     },
     "offerHistory": {
@@ -486,7 +486,7 @@
       "amountLabel": "Montant de votre enchère",
       "emailLabel": "Votre e-mail",
       "emailHint": "Nous l'utiliserons pour confirmer votre enchère.",
-      "notifyOutbid": "Me notifier par e-mail lorsque je suis surenchéri sur cette enchère",
+      "notifyOutbid": "M'avertir lorsque je suis surenchéri",
       "cancel": "Annuler",
       "submit": "Enchérir",
       "submitting": "Enchère en cours…"
@@ -817,7 +817,7 @@
       "offer": "Offre",
       "bid": "Enchère",
       "winner": "Gagnant",
-      "emailOutbid": "M'envoyer un email quand je suis dépassé",
+      "emailOutbid": "M'avertir lorsque je suis surenchéri",
       "updating": "Mise à jour…",
       "viewListing": "Voir l'annonce",
       "statusActive": "Actif",
@@ -926,7 +926,7 @@
       "myHighestBid": "Ma meilleure enchère",
       "totalBids": "Total des enchères",
       "ends": "Fin",
-      "emailOutbid": "M'envoyer un e-mail si je suis surenchéri",
+      "emailOutbid": "M'avertir lorsque je suis surenchéri",
       "viewListing": "Voir l'annonce"
     },
     "watchlist": {

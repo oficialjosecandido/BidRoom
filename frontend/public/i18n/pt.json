@@ -438,7 +438,7 @@
       "selectAsWinner": "Selecionar como vencedor",
       "selecting": "Selecionando…",
       "verifiedRequired": "Conta verificada necessária",
-      "notifyOutbid": "Me notifique por e-mail quando meu lance for superado",
+      "notifyOutbid": "Notificar-me quando o meu lance for superado",
       "anonymous": "Anônimo"
     },
     "offerHistory": {
@@ -486,7 +486,7 @@
       "amountLabel": "Valor do seu lance",
       "emailLabel": "Seu e-mail",
       "emailHint": "Usaremos isso para confirmar seu lance.",
-      "notifyOutbid": "Me notifique por e-mail quando meu lance for superado neste leilão",
+      "notifyOutbid": "Notificar-me quando o meu lance for superado",
       "cancel": "Cancelar",
       "submit": "Dar lance",
       "submitting": "Enviando lance…"
@@ -820,7 +820,7 @@
       "offer": "Oferta",
       "bid": "Lance",
       "winner": "Vencedor",
-      "emailOutbid": "Enviar e-mail quando for ultrapassado",
+      "emailOutbid": "Notificar-me quando for ultrapassado",
       "updating": "Atualizando…",
       "viewListing": "Ver anúncio",
       "statusActive": "Ativo",
@@ -929,7 +929,7 @@
       "myHighestBid": "Meu maior lance",
       "totalBids": "Total de lances",
       "ends": "Termina",
-      "emailOutbid": "Enviar e-mail quando eu for superado",
+      "emailOutbid": "Notificar-me quando for ultrapassado",
       "viewListing": "Ver Anúncio"
     },
     "watchlist": {

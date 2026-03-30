@@ -5,6 +5,7 @@ const User = require('../models/User');
 const { authenticateToken, optionalAuth, requireActiveAccountIfAuthenticated } = require('../middleware/auth');
 const { sendFirstBidNotification, sendOutbidNotification } = require('../services/auctionNotificationService');
 const { getReviewScoresForUsers } = require('../services/reviewService');
+const { notifyNewBid, notifyBidderOutbid, emitNewNotificationToUser } = require('../services/notificationService');
 
 const router = express.Router();
 
@@ -398,6 +399,8 @@ router.post('/', optionalAuth, requireActiveAccountIfAuthenticated, async (req, 
         });
     }
 
+    const io = req.app.get('io');
+
     // Send outbid notifications to previous high bidder(s) who opted in (non-blocking)
     if (previousHighAmount > 0 && amount > previousHighAmount) {
       const currentBidderId = user ? user._id.toString() : null;
@@ -446,6 +449,18 @@ router.post('/', optionalAuth, requireActiveAccountIfAuthenticated, async (req, 
           previousHighAmount,
           amount
         ).catch(err => console.error('Failed to send outbid notification:', err));
+
+        if (prevBid.bidder && prevBid.bidder._id) {
+          notifyBidderOutbid({
+            listingSlug: listing.slug || null,
+            listingTitle: listing.title || 'Auction',
+            previousBidAmount: previousHighAmount,
+            newBidAmount: amount,
+            bidderUserId: prevBid.bidder._id.toString(),
+            listingId: listingId.toString()
+          }).catch(err => console.error('Failed to create outbid in-app notification:', err));
+          emitNewNotificationToUser(io, prevBid.bidder._id.toString()).catch(() => {});
+        }
       }
     }
 
@@ -467,8 +482,7 @@ router.post('/', optionalAuth, requireActiveAccountIfAuthenticated, async (req, 
       bidderLastName: populatedBid.bidder ? populatedBid.bidder.lastName : null
     };
 
-    // Get Socket.io instance and Redis service from app
-    const io = req.app.get('io');
+    // Get Redis service from app (io already resolved above for outbid / seller notifications)
     const redisService = req.app.get('redisService');
 
     // Cache current bid information in Redis (non-blocking - don't block response if Redis is slow/down)
@@ -513,7 +527,6 @@ router.post('/', optionalAuth, requireActiveAccountIfAuthenticated, async (req, 
     }
 
     // Create in-app notification for the seller (someone bid on their listing)
-    const { notifyNewBid, emitNewNotificationToUser } = require('../services/notificationService');
     const sellerUserId = listing.seller?._id?.toString?.() || listing.seller?.toString?.();
     if (sellerUserId) {
       notifyNewBid({

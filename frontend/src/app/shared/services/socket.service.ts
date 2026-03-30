@@ -64,6 +64,10 @@ export interface OfferUpdateEvent {
 })
 export class SocketService {
   private socket: Socket | null = null;
+  /** Re-joined on every successful connect/reconnect so listing rooms are not lost after disconnect */
+  private joinedListingId: string | null = null;
+  private joinedPrivateRoomViewerId: string | null = null;
+  private joinedUserUid: string | null = null;
 
   private getApiUrl(): string {
     // Try to get from window config (for Azure Static Web Apps)
@@ -94,7 +98,11 @@ export class SocketService {
       return;
     }
 
-    // Get API URL based on environment
+    if (this.socket) {
+      this.socket.connect();
+      return;
+    }
+
     const apiUrl = this.getApiUrl();
 
     this.socket = io(apiUrl, {
@@ -107,6 +115,7 @@ export class SocketService {
 
     this.socket.on('connect', () => {
       console.log('🔌 Connected to Socket.io server');
+      this.flushRoomJoins();
     });
 
     this.socket.on('disconnect', () => {
@@ -118,38 +127,61 @@ export class SocketService {
     });
   }
 
+  /** Re-subscribe to rooms after connect/reconnect (server-side rooms are per-socket). */
+  private flushRoomJoins(): void {
+    if (!this.socket?.connected) return;
+    if (this.joinedListingId) {
+      this.socket.emit('join-listing', this.joinedListingId);
+    }
+    if (this.joinedPrivateRoomViewerId) {
+      this.socket.emit('join-private-room-viewer', this.joinedPrivateRoomViewerId);
+    }
+    if (this.joinedUserUid) {
+      this.socket.emit('join-user', this.joinedUserUid);
+    }
+  }
+
   disconnect(): void {
     if (this.socket) {
       this.socket.disconnect();
       this.socket = null;
     }
+    this.joinedListingId = null;
+    this.joinedPrivateRoomViewerId = null;
+    this.joinedUserUid = null;
   }
 
   joinListing(listingId: string): void {
+    this.joinedListingId = listingId;
     if (!this.socket?.connected) {
       this.connect();
     }
-    
     this.socket?.emit('join-listing', listingId);
     console.log(`👤 Joined listing room: ${listingId}`);
   }
 
   leaveListing(listingId: string): void {
+    if (this.joinedListingId === listingId) {
+      this.joinedListingId = null;
+    }
     this.socket?.emit('leave-listing', listingId);
     console.log(`👤 Left listing room: ${listingId}`);
   }
 
   /** Join user room for real-time notification updates (uid = Firebase/auth uid) */
   joinUser(uid: string): void {
+    if (!uid) return;
+    this.joinedUserUid = uid;
     if (!this.socket?.connected) {
       this.connect();
     }
-    if (uid) {
-      this.socket?.emit('join-user', uid);
-    }
+    this.socket?.emit('join-user', uid);
   }
 
   leaveUser(uid: string): void {
+    if (uid && this.joinedUserUid === uid) {
+      this.joinedUserUid = null;
+    }
     if (uid) {
       this.socket?.emit('leave-user', uid);
     }
@@ -240,15 +272,18 @@ export class SocketService {
   }
 
   joinPrivateRoomViewer(listingId: string): void {
+    this.joinedPrivateRoomViewerId = listingId;
     if (!this.socket?.connected) {
       this.connect();
     }
-    
     this.socket?.emit('join-private-room-viewer', listingId);
     console.log(`👁️ Joined private room viewer: ${listingId}`);
   }
 
   leavePrivateRoomViewer(listingId: string): void {
+    if (this.joinedPrivateRoomViewerId === listingId) {
+      this.joinedPrivateRoomViewerId = null;
+    }
     this.socket?.emit('leave-private-room-viewer', listingId);
     console.log(`👁️ Left private room viewer: ${listingId}`);
   }
@@ -282,6 +317,21 @@ export class SocketService {
       this.socket?.on('invitation-accepted', handler);
       return () => {
         this.socket?.off('invitation-accepted', handler);
+      };
+    });
+  }
+
+  onInvitationDeclined(): Observable<{ listingId: string; bidderId: string | null }> {
+    return new Observable((observer) => {
+      if (!this.socket) {
+        this.connect();
+      }
+      const handler = (data: { listingId: string; bidderId: string | null }) => {
+        observer.next(data);
+      };
+      this.socket?.on('invitation-declined', handler);
+      return () => {
+        this.socket?.off('invitation-declined', handler);
       };
     });
   }

@@ -238,6 +238,8 @@
     }
 
     &.invited-card {
+      min-width: 200px;
+      max-width: min(100%, 260px);
       background: linear-gradient(135deg, rgba(14, 165, 233, 0.3) 0%, rgba(99, 102, 241, 0.2) 100%);
       border-color: rgba(14, 165, 233, 0.5);
       .stat-value {
@@ -255,6 +257,28 @@
       .stat-label {
         color: rgba(255, 255, 255, 0.85);
         font-size: 0.75rem;
+      }
+
+      .stat-label--invited {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.1rem;
+        text-transform: none;
+        letter-spacing: 0.02em;
+        line-height: 1.25;
+
+        .stat-label-line {
+          display: block;
+          font-weight: 600;
+
+          &--sub {
+            font-size: 0.68rem;
+            opacity: 0.88;
+            font-weight: 500;
+            color: rgba(255, 255, 255, 0.75);
+          }
+        }
       }
       &.warning {
         border-color: rgba(255, 193, 7, 0.5);
@@ -474,10 +498,16 @@
 
 .room-invited-state {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
+  gap: 2rem;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
   min-height: 50vh;
-  padding: 2rem;
+  padding: 1.5rem 1rem 2rem;
+  box-sizing: border-box;
 
   .room-invited-card {
     text-align: center;
@@ -597,6 +627,17 @@
     &:hover {
       transform: translateY(-2px);
       box-shadow: 0 6px 20px rgba(14, 165, 233, 0.4);
+    }
+
+    &--secondary {
+      background: rgba(255, 255, 255, 0.08);
+      border: 2px solid rgba(255, 255, 255, 0.28);
+      box-shadow: none;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.12);
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+      }
     }
   }
 }
@@ -1117,6 +1158,33 @@
         text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
       }
 
+      .bidder-status-badge {
+        font-size: 0.7rem;
+        font-weight: 700;
+        padding: 0.25rem 0.65rem;
+        border-radius: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        display: inline-block;
+        margin-top: 0.25rem;
+
+        &.status-accepted {
+          background: rgba(52, 211, 153, 0.25);
+          color: #34d399;
+          border: 1px solid rgba(52, 211, 153, 0.4);
+        }
+        &.status-pending {
+          background: rgba(251, 191, 36, 0.2);
+          color: #fbbf24;
+          border: 1px solid rgba(251, 191, 36, 0.35);
+        }
+        &.status-declined {
+          background: rgba(248, 113, 113, 0.18);
+          color: #fca5a5;
+          border: 1px solid rgba(248, 113, 113, 0.45);
+        }
+      }
+
       .bidder-bid {
         display: flex;
         align-items: baseline;
@@ -1226,13 +1294,39 @@
 
 .table-center {
   position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   text-align: center;
   z-index: 10;
+  width: min(94%, 340px);
+  pointer-events: auto;
+
+  &.table-center--invited {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+  }
 
   .center-seller-action {
     margin-bottom: 0.75rem;
     position: relative;
     z-index: 1;
+
+    &--invited {
+      margin-bottom: 0.35rem;
+      max-width: 280px;
+    }
+  }
+
+  .center-seller-hint {
+    font-size: 0.68rem;
+    line-height: 1.35;
+    color: rgba(255, 255, 255, 0.78);
+    margin: 0;
+    max-width: 260px;
   }
 
   .start-auction-btn {
@@ -1250,6 +1344,24 @@
     &:hover {
       transform: translateY(-2px);
       box-shadow: 0 6px 20px rgba(255, 215, 0, 0.5);
+    }
+
+    &--secondary {
+      background: rgba(255, 255, 255, 0.12);
+      color: #fff;
+      border: 1px solid rgba(255, 255, 255, 0.35);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.18);
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+      }
+    }
+
+    &:disabled {
+      opacity: 0.65;
+      cursor: not-allowed;
+      transform: none;
     }
   }
 
@@ -1627,6 +1739,12 @@
         color: #fbbf24;
         border: 1px solid rgba(251, 191, 36, 0.35);
       }
+
+      &.status-declined {
+        background: rgba(248, 113, 113, 0.18);
+        color: #fca5a5;
+        border: 1px solid rgba(248, 113, 113, 0.45);
+      }
     }
   }
 }
@@ -1640,8 +1758,14 @@
   }
 
   &.seat-pending {
-    opacity: 0.75;
+    opacity: 0.85;
     border-color: rgba(251, 191, 36, 0.4) !important;
+  }
+
+  &.seat-declined {
+    opacity: 0.7;
+    border-color: rgba(248, 113, 113, 0.45) !important;
+    filter: grayscale(0.25);
   }
 }
 

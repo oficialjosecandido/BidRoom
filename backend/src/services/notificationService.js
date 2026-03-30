@@ -7,6 +7,7 @@ const User = require('../models/User');
  * | Notification type           | Link destination                |
  * |----------------------------|---------------------------------|
  * | New bid received           | /listing/:slug?tab=bids        |
+ * | Outbid (auction)          | /listing/:slug?tab=bids        |
  * | New proposal               | /listing/:slug?tab=offers       |
  * | Proposal accepted/declined| /listing/:slug?tab=offers       |
  * | Auction ended (seller)     | /dashboard/transactions         |
@@ -81,6 +82,28 @@ async function notifyNewBid({ listingId, listingSlug, listingTitle, bidAmount, b
     type: 'bid',
     link,
     referenceId: listingId
+  });
+}
+
+/** Auction (highest-bid): previous high bidder was exceeded — in-app notification (email sent separately). */
+async function notifyBidderOutbid({
+  listingSlug,
+  listingTitle,
+  previousBidAmount,
+  newBidAmount,
+  bidderUserId,
+  listingId
+}) {
+  const link = listingSlug ? `/listing/${listingSlug}?tab=bids` : null;
+  const prev = Number(previousBidAmount || 0).toFixed(2);
+  const next = Number(newBidAmount || 0).toFixed(2);
+  return createNotification({
+    userId: bidderUserId,
+    title: "You've been outbid",
+    message: `Your bid of $${prev} on "${listingTitle || 'this auction'}" was exceeded. Current high bid: $${next}.`,
+    type: 'bid',
+    link,
+    referenceId: listingId ? String(listingId) : listingSlug || null
   });
 }
 
@@ -603,6 +626,7 @@ module.exports = {
   createNotification,
   notifyNewProposal,
   notifyNewBid,
+  notifyBidderOutbid,
   notifyOfferPlaced,
   notifyOfferOutbid,
   notifyProposalAccepted,

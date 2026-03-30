@@ -438,7 +438,7 @@
       "selectAsWinner": "Seleccionar como ganador",
       "selecting": "Seleccionando…",
       "verifiedRequired": "Se requiere cuenta verificada",
-      "notifyOutbid": "Notificarme por correo cuando me superen la puja",
+      "notifyOutbid": "Notificarme cuando me superen la puja",
       "anonymous": "Anónimo"
     },
     "offerHistory": {
@@ -486,7 +486,7 @@
       "amountLabel": "Monto de tu puja",
       "emailLabel": "Tu correo",
       "emailHint": "Lo usaremos para confirmar tu puja.",
-      "notifyOutbid": "Notificarme por correo cuando me superen la puja en esta subasta",
+      "notifyOutbid": "Notificarme cuando me superen la puja",
       "cancel": "Cancelar",
       "submit": "Pujar",
       "submitting": "Enviando puja…"
@@ -817,7 +817,7 @@
       "offer": "Oferta",
       "bid": "Puja",
       "winner": "Ganador",
-      "emailOutbid": "Enviar email cuando me superen",
+      "emailOutbid": "Notificarme cuando me superen",
       "updating": "Actualizando…",
       "viewListing": "Ver anuncio",
       "statusActive": "Activo",
@@ -926,7 +926,7 @@
       "myHighestBid": "Mi puja más alta",
       "totalBids": "Total de pujas",
       "ends": "Termina",
-      "emailOutbid": "Enviarme un correo cuando sea superado",
+      "emailOutbid": "Notificarme cuando me superen",
       "viewListing": "Ver Anuncio"
     },
     "watchlist": {
