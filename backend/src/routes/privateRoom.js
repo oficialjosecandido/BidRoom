@@ -401,6 +401,84 @@ router.post('/listings/:id/seller-leave', authenticateToken, async (req, res) =>
   }
 });
 
+// Accept private room invitation in-page (authenticated user; no token required)
+router.post('/listings/:id/accept-invitation', authenticateToken, async (req, res) => {
+  try {
+    const listingId = req.params.id;
+    const listing = await Listing.findById(listingId)
+      .populate('seller', '_id')
+      .populate('platinumBidderInvitations.bidder', '_id firstName lastName');
+    if (!listing) {
+      return res.status(404).json({ error: 'Listing not found' });
+    }
+    if (listing.privateRoomStatus !== 'invited') {
+      return res.status(400).json({ error: 'Room not in invitation phase', message: 'The acceptance window is no longer open.' });
+    }
+
+    const user = await User.findOne({ uid: req.user.uid });
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    const invIndex = (listing.platinumBidderInvitations || []).findIndex(
+      inv => inv.bidder?._id?.toString() === user._id.toString()
+    );
+    if (invIndex === -1) {
+      return res.status(403).json({ error: 'Not invited', message: 'You do not have an invitation to this private room.' });
+    }
+    const invitation = listing.platinumBidderInvitations[invIndex];
+    if (invitation.status !== 'pending') {
+      return res.status(400).json({ error: 'Already processed', message: 'Your invitation has already been accepted or declined.' });
+    }
+    const now = new Date();
+    const deadline = listing.platinumBidderAcceptanceDeadline ? new Date(listing.platinumBidderAcceptanceDeadline) : null;
+    if (deadline && now >= deadline) {
+      return res.status(400).json({ error: 'Invitation expired', message: 'The 15-minute acceptance window has closed.' });
+    }
+
+    listing.platinumBidderInvitations[invIndex].status = 'accepted';
+    listing.platinumBidderInvitations[invIndex].acceptedAt = now;
+    await listing.save();
+
+    const bidder = invitation.bidder;
+    const bidderName = `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email;
+    const sellerUserId = listing.seller?._id?.toString?.() || listing.seller?.toString?.();
+    const io = req.app.get('io');
+
+    // If all invitations are now accepted, compress the acceptance deadline to 1 minute
+    const allInvitations = listing.platinumBidderInvitations || [];
+    const pendingAfter = allInvitations.filter(inv => inv.status === 'pending').length;
+    if (pendingAfter === 0 && allInvitations.length > 0) {
+      const acceleratedDeadline = new Date(Date.now() + 60 * 1000);
+      await Listing.findByIdAndUpdate(listingId, { $set: { platinumBidderAcceptanceDeadline: acceleratedDeadline } }, { runValidators: false });
+      emitToListingAndPrivateRoom(io, listingId, 'listing-update', {
+        listingId: listingId.toString(),
+        platinumBidderAcceptanceDeadline: acceleratedDeadline.toISOString(),
+        allAccepted: true
+      });
+    }
+
+    if (sellerUserId) {
+      notifyPrivateRoomAccepted({
+        listingSlug: listing.slug || null,
+        listingTitle: listing.title || 'your listing',
+        bidderName,
+        sellerUserId
+      }).catch(err => console.error('Failed to create private room accepted notification:', err));
+      if (io) emitNewNotificationToUser(io, sellerUserId).catch(() => {});
+    }
+    emitToListingAndPrivateRoom(io, listingId, 'invitation-accepted', {
+      listingId: listingId.toString(),
+      bidderId: bidder?._id?.toString?.() || user._id.toString(),
+      bidderName,
+      bidderFirstName: user.firstName || '',
+      bidderLastName: user.lastName || ''
+    });
+    return res.json({ success: true, message: 'Invitation accepted. You can now place bids in the private room.', listingId });
+  } catch (error) {
+    console.error('Error accepting invitation in-page:', error);
+    res.status(500).json({ error: 'Failed to accept invitation', message: error.message });
+  }
+});
+
 // Accept private room invitation (link in email; no auth required)
 router.post('/invitation/accept', async (req, res) => {
   try {

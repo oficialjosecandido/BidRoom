@@ -3,7 +3,7 @@ import { CommonModule, Location } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Subscription } from 'rxjs';
-import { finalize, timeout } from 'rxjs/operators';
+import { filter, finalize, take, timeout } from 'rxjs/operators';
 import { MAX_DISPLAYED_BIDS, EMAIL_REGEX } from '../../../shared/config/listing.constants';
 import Swal from 'sweetalert2';
 import { HeaderComponent } from '../../../shared/components/header/header.component';
@@ -556,34 +556,41 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
     if (this.chooseWinnerDeepLinkHandled || !this.isChooseWinnerEmailLink() || !this.listing?.slug) {
       return;
     }
-    this.chooseWinnerDeepLinkHandled = true;
 
-    if (this.listing.auctionFormat === 'highest-bid') {
-      this.setActiveTab('bids');
-    }
+    // Wait until Firebase auth state is confirmed before checking isAuthenticated.
+    // The bids API response often arrives before onAuthStateChanged fires, which
+    // would cause a false redirect to the login page for already-authenticated sellers.
+    this.authService.authReady$.pipe(filter(ready => !!ready), take(1)).subscribe(() => {
+      if (this.chooseWinnerDeepLinkHandled || !this.listing?.slug) return;
+      this.chooseWinnerDeepLinkHandled = true;
 
-    if (!this.isAuthenticated) {
-      this.router.navigate(['/auth/login'], {
-        queryParams: { returnUrl: `/listing/${this.listing.slug}/choose-winner` }
-      });
-      return;
-    }
+      if (this.listing.auctionFormat === 'highest-bid') {
+        this.setActiveTab('bids');
+      }
 
-    // Update the address bar without re-running the router (avoids remounting this view).
-    this.location.replaceState(`/listing/${this.listing.slug}`);
+      if (!this.isAuthenticated) {
+        this.router.navigate(['/auth/login'], {
+          queryParams: { returnUrl: `/listing/${this.listing.slug}/choose-winner` }
+        });
+        return;
+      }
 
-    if (!this.isOwnListing) {
-      return;
-    }
+      // Update the address bar without re-running the router (avoids remounting this view).
+      this.location.replaceState(`/listing/${this.listing.slug}`);
 
-    if (this.canCreatePrivateRoom()) {
-      this.openCreatePrivateRoomModal();
-      return;
-    }
+      if (!this.isOwnListing) {
+        return;
+      }
 
-    if (this.canSellerSelectWinnerManually()) {
-      this.openSelectWinnerModal();
-    }
+      if (this.canCreatePrivateRoom()) {
+        this.openCreatePrivateRoomModal();
+        return;
+      }
+
+      if (this.canSellerSelectWinnerManually()) {
+        this.openSelectWinnerModal();
+      }
+    });
   }
 
   /** True if this bid is the winning bid. */

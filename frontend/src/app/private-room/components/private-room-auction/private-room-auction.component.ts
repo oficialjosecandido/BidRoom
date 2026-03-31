@@ -62,6 +62,7 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
   customBidAmount = '';
   bidInputError: string | null = null;
   startNowLoading = false;
+  acceptingInvitation = false;
 
   ngOnInit(): void {
     this.listingId = this.route.snapshot.paramMap.get('id') || '';
@@ -222,6 +223,27 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
     }
 
     this.platinumBidders = Array.from(platinumMap.values());
+  }
+
+  acceptInvitationInPage(): void {
+    if (!this.listingId || this.acceptingInvitation) return;
+    this.acceptingInvitation = true;
+    this.privateRoomService.acceptInvitationInPage(this.listingId).subscribe({
+      next: () => {
+        this.acceptingInvitation = false;
+        this.invitationPending = false;
+        this.isPlatinumBidder = true;
+      },
+      error: (err) => {
+        this.acceptingInvitation = false;
+        Swal.fire({
+          icon: 'error',
+          title: 'Could not accept',
+          text: err?.error?.message || 'Failed to accept invitation. Please try the email link.',
+          confirmButtonColor: '#7A4F84'
+        });
+      }
+    });
   }
 
   startRoomNow(): void {

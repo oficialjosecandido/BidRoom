@@ -71,6 +71,13 @@ export class PrivateRoomService {
     return this.http.post(`${this.apiUrl}/invitation/decline`, { token, listingId });
   }
 
+  acceptInvitationInPage(listingId: string): Observable<{ success: boolean; message: string; listingId: string }> {
+    return this.http.post<{ success: boolean; message: string; listingId: string }>(
+      `${this.apiUrl}/listings/${listingId}/accept-invitation`,
+      {}
+    );
+  }
+
   startRoomNow(listingId: string): Observable<{ success: boolean; listing: { id: string; status?: string; privateRoomStatus?: string; privateRoomEndDate?: string; endDate?: string } }> {
     return this.http.post<{ success: boolean; listing: { id: string; status?: string; privateRoomStatus?: string; privateRoomEndDate?: string; endDate?: string } }>(
       `${this.apiUrl}/listings/${listingId}/start-now`,

@@ -2552,6 +2552,23 @@
       color: rgba(255, 255, 255, 0.7);
       margin-top: 1rem;
     }
+
+    .accept-invitation-btn {
+      margin-top: 1.25rem;
+      padding: 0.75rem 2rem;
+      background: linear-gradient(135deg, #27ae60, #2ecc71);
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      width: 100%;
+      transition: opacity 0.2s;
+
+      &:hover:not(:disabled) { opacity: 0.88; }
+      &:disabled { opacity: 0.55; cursor: not-allowed; }
+    }
   }
 }
 

@@ -580,7 +580,10 @@
       <div class="notice-card">
         <div class="notice-icon">✉️</div>
         <h3>Accept your invitation</h3>
-        <p>You were invited to this private room. Accept within 15 minutes via the link in your email to place bids — otherwise you'll lose your seat.</p>
+        <p>You were invited to this private room. Accept within 15 minutes to place bids — otherwise you'll lose your seat.</p>
+        <button class="accept-invitation-btn" (click)="acceptInvitationInPage()" [disabled]="acceptingInvitation">
+          @if (acceptingInvitation) { Accepting... } @else { ✓ Accept Invitation }
+        </button>
       </div>
     </div>
 }

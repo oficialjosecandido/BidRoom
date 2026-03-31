@@ -1302,16 +1302,48 @@ async function handlePrivateRoomEnd(listingId, io = null) {
     const listingForNotify = await Listing.findById(listingId).populate('seller', 'firstName lastName email');
     if (!listingForNotify) throw new Error('Listing not found after update');
 
+    // Create transaction first — must not be blocked by notification failures
+    if (highestBid && (highestBid.bidder?._id || highestBid.bidder)) {
+      await createTransactionForListing(listingId).catch(err => console.error('Transaction create:', err.message));
+    }
+
     try {
       await sendPrivateRoomEndNotifications(listingForNotify, highestBid);
-      // Winner is already set by private room end; do not send "choose winner" email to seller.
-      // Create transaction when there is a winner (authenticated bidder)
-      if (highestBid && (highestBid.bidder?._id || highestBid.bidder)) {
-        await createTransactionForListing(listingId).catch(err => console.error('Transaction create:', err.message));
-      }
       console.log(`✅ Private room ended and notifications sent for listing: ${listingId}`);
     } catch (notificationError) {
       console.error('Error sending private room end notifications:', notificationError);
+    }
+
+    // Fire in-app notifications for winner and seller
+    if (highestBid) {
+      const { notifyBuyerAuctionWon, notifySellerWinnerSelected, emitNewNotificationToUser } = require('./notificationService');
+      const winnerName = highestBid.bidder
+        ? `${highestBid.bidder.firstName || ''} ${highestBid.bidder.lastName || ''}`.trim()
+        : (highestBid.bidderEmail || 'Bidder').split('@')[0];
+      const sellerUserId = listingForNotify.seller?._id?.toString?.() || listingForNotify.seller?.toString?.();
+      const buyerUserId = highestBid.bidder?._id?.toString?.() || highestBid.bidder?.toString?.();
+      if (sellerUserId) {
+        notifySellerWinnerSelected({
+          listingSlug: listingForNotify.slug,
+          listingTitle: listingForNotify.title,
+          winnerName,
+          winningAmount: highestBid.amount,
+          commissionRate: listingForNotify.commissionRate ?? 0.005,
+          shippingCost: listingForNotify.shippingCost ?? 0,
+          shippingOption: listingForNotify.shippingOption ?? 'flat-rate',
+          sellerUserId
+        }).catch(err => console.error('Seller winner notification (private room):', err));
+        if (io) emitNewNotificationToUser(io, sellerUserId).catch(() => {});
+      }
+      if (buyerUserId) {
+        notifyBuyerAuctionWon({
+          listingSlug: listingForNotify.slug,
+          listingTitle: listingForNotify.title,
+          winningAmount: highestBid.amount,
+          buyerUserId
+        }).catch(err => console.error('Buyer won notification (private room):', err));
+        if (io) emitNewNotificationToUser(io, buyerUserId).catch(() => {});
+      }
     }
 
     if (io) {
