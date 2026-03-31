@@ -549,15 +549,14 @@ router.get('/:id', optionalAuth, async (req, res) => {
           const invitation = invitations.find(
             inv => inv.bidder && inv.bidder._id.toString() === user._id.toString()
           );
-          if (!invitation) {
+          if (invitation?.status === 'accepted') {
             isPlatinumBidder = true;
-          } else if (invitation.status === 'accepted') {
-            isPlatinumBidder = true;
-          } else if (invitation.status === 'declined') {
+          } else if (!invitation || invitation.status === 'declined') {
             isPlatinumBidder = false;
           } else if (listing.platinumBidderAcceptanceDeadline && new Date() > new Date(listing.platinumBidderAcceptanceDeadline)) {
             isPlatinumBidder = false;
           } else {
+            // invitation exists and is pending — show accept prompt
             invitationPending = true;
           }
         }

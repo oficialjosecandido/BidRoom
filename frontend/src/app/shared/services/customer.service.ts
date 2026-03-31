@@ -11,6 +11,7 @@ export interface CustomerUser {
   lastName: string;
   emailVerified: boolean;
   isActive: boolean;
+  accountStatus?: 'active' | 'suspended' | 'closed';
   hasDeposit?: boolean;
   depositAmount?: number;
   lastLogin?: string;

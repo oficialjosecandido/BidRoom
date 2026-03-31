@@ -1,4 +1,22 @@
 <div class="dashboard-home">
+  @if (customer?.user?.accountStatus === 'suspended') {
+    <div class="account-status-banner account-status-suspended">
+      <span class="status-icon">⚠️</span>
+      <div class="status-body">
+        <strong>Account Suspended</strong>
+        <p>Your account has been temporarily suspended while a dispute is under review. You cannot place bids, create listings, or complete transactions until the dispute is resolved.</p>
+      </div>
+    </div>
+  }
+  @if (customer?.user?.accountStatus === 'closed') {
+    <div class="account-status-banner account-status-closed">
+      <span class="status-icon">🚫</span>
+      <div class="status-body">
+        <strong>Account Closed</strong>
+        <p>Your account has been permanently closed. Please contact support if you believe this is an error.</p>
+      </div>
+    </div>
+  }
   <div class="page-header">
     <div class="page-header-main">
       <div>

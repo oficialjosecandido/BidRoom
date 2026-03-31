@@ -53,7 +53,12 @@ export class AdminService {
 
   issueDisputeRuling(
     transactionId: string,
-    payload: { verdict: 'buyer_refund' | 'seller_payout' | 'partial_refund'; refundAmount?: number; adminNotes?: string }
+    payload: {
+      verdict: 'buyer_refund' | 'seller_payout' | 'partial_refund';
+      refundAmount?: number;
+      adminNotes?: string;
+      accountOutcome?: 'reactivate_both' | 'reactivate_buyer_close_seller' | 'reactivate_seller_close_buyer' | 'close_both';
+    }
   ): Observable<{ success: boolean; transaction: Transaction }> {
     return this.http.post<{ success: boolean; transaction: Transaction }>(`${this.apiUrl}/disputes/${transactionId}/ruling`, payload);
   }

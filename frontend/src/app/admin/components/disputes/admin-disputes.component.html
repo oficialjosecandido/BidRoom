@@ -136,6 +136,15 @@
                   </div>
                 }
                 <div class="form-group">
+                  <label for="account-outcome">Account outcome</label>
+                  <select id="account-outcome" [(ngModel)]="rulingAccountOutcome" class="form-input">
+                    <option value="reactivate_both">Reactivate both accounts</option>
+                    <option value="reactivate_buyer_close_seller">Reactivate buyer — close seller</option>
+                    <option value="reactivate_seller_close_buyer">Reactivate seller — close buyer</option>
+                    <option value="close_both">Close both accounts</option>
+                  </select>
+                </div>
+                <div class="form-group">
                   <label for="admin-notes">Admin notes (internal)</label>
                   <textarea id="admin-notes" [(ngModel)]="rulingAdminNotes" class="form-input" rows="3" placeholder="Optional notes..."></textarea>
                 </div>

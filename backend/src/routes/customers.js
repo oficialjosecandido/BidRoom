@@ -47,8 +47,8 @@ router.get('/profile', authenticateToken, async (req, res) => {
       customer = await Customer.findOne({ uid }).lean();
     }
 
-    // Resolve User by uid for review scores + Stripe Connect status
-    const dbUser = await User.findOne({ uid }).select('_id stripeConnectOnboarded').lean();
+    // Resolve User by uid for review scores, Stripe Connect status, and account status
+    const dbUser = await User.findOne({ uid }).select('_id stripeConnectOnboarded accountStatus').lean();
     let buyerScore = null;
     let sellerScore = null;
     let buyerReviewCount = 0;
@@ -69,7 +69,8 @@ router.get('/profile', authenticateToken, async (req, res) => {
         firstName: customer.firstName,
         lastName: customer.lastName,
         emailVerified: !!emailVerified,
-        isActive: true,
+        isActive: dbUser?.accountStatus !== 'suspended' && dbUser?.accountStatus !== 'closed',
+        accountStatus: dbUser?.accountStatus || 'active',
         lastLogin: customer.lastLogin,
         createdAt: customer.createdAt
       },

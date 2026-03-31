@@ -258,20 +258,18 @@ router.post('/', optionalAuth, requireActiveAccountIfAuthenticated, async (req, 
       const invitation = invitations.find(
         inv => inv.bidder && inv.bidder._id.toString() === user._id.toString()
       );
-      if (invitation) {
-        if (invitation.status !== 'accepted') {
-          const now = new Date();
-          if (listing.platinumBidderAcceptanceDeadline && now > new Date(listing.platinumBidderAcceptanceDeadline)) {
-            return res.status(403).json({
-              error: 'Seat lost',
-              message: 'The 15 minute window to accept the invitation has passed. You can no longer place bids in this private room.'
-            });
-          }
+      if (!invitation || invitation.status !== 'accepted') {
+        const now = new Date();
+        if (invitation && listing.platinumBidderAcceptanceDeadline && now > new Date(listing.platinumBidderAcceptanceDeadline)) {
           return res.status(403).json({
-            error: 'Accept invitation first',
-            message: 'You must accept your private room invitation (link in your email) before you can place bids.'
+            error: 'Seat lost',
+            message: 'The 15 minute window to accept the invitation has passed. You can no longer place bids in this private room.'
           });
         }
+        return res.status(403).json({
+          error: 'Accept invitation first',
+          message: 'You must accept your private room invitation before you can place bids.'
+        });
       }
       // Private room ends 60 seconds after last bid (each bid extends by 60s)
       const PRIVATE_ROOM_EXTEND_MS = 60 * 1000; // 60 seconds

@@ -4,6 +4,35 @@
   margin: 0 auto;
 }
 
+.account-status-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  border-radius: 10px;
+  margin-bottom: 1.25rem;
+  border: 1px solid;
+
+  .status-icon { font-size: 1.5rem; flex-shrink: 0; margin-top: 2px; }
+
+  .status-body {
+    strong { display: block; font-size: 1rem; font-weight: 700; margin-bottom: 0.25rem; }
+    p { margin: 0; font-size: 0.9rem; line-height: 1.5; }
+  }
+
+  &.account-status-suspended {
+    background: #fff8e1;
+    border-color: #f59e0b;
+    color: #92400e;
+  }
+
+  &.account-status-closed {
+    background: #fef2f2;
+    border-color: #ef4444;
+    color: #7f1d1d;
+  }
+}
+
 .payout-setup-banner {
   display: flex;
   align-items: center;

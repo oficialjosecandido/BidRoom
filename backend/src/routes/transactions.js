@@ -532,6 +532,15 @@ router.patch('/:id', requireActiveAccount, async (req, res) => {
       transaction.disputeOpenedBy = isSeller ? 'seller' : 'buyer';
       if (disputeReason != null) transaction.disputeReason = String(disputeReason).trim() || null;
       transaction.transactionStatus = 'under_dispute';
+      // Suspend both parties while dispute is under review
+      const patchBuyerId = transaction.buyer?._id?.toString?.() || transaction.buyer?.toString?.();
+      const patchSellerId = transaction.seller?._id?.toString?.() || transaction.seller?.toString?.();
+      const patchIo = req.app.get('io');
+      if (patchBuyerId && patchSellerId) {
+        suspendBothPartiesForDispute(transaction._id, patchBuyerId, patchSellerId, patchIo).catch(err =>
+          console.error('Failed to suspend accounts for seller-opened dispute:', err)
+        );
+      }
     }
 
     if (isBuyer) {

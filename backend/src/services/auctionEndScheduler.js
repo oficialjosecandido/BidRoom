@@ -4,7 +4,7 @@
  */
 
 const Listing = require('../models/Listing');
-const { handleAuctionEnd, handlePrivateRoomEnd, handlePrivateRoomClosedNoAcceptance, handlePrivateRoomEligibleExpired, handlePrivateRoomSingleAcceptance } = require('./auctionNotificationService');
+const { handleAuctionEnd, handlePrivateRoomEnd, handlePrivateRoomClosedNoAcceptance, handlePrivateRoomEligibleExpired } = require('./auctionNotificationService');
 
 let checkInterval = null;
 let ioInstance = null;
@@ -50,14 +50,8 @@ async function checkEndedAuctions() {
           await handlePrivateRoomClosedNoAcceptance(listing._id, ioInstance);
           processed++;
           console.log(`✅ Private room closed (no acceptances): ${listing._id} - ${listing.title}`);
-        } else if (acceptedCount === 1) {
-          // Exactly one accepted → they win automatically without an auction
-          const acceptedInvitation = invitations.find(inv => inv.status === 'accepted');
-          await handlePrivateRoomSingleAcceptance(listing._id, acceptedInvitation, ioInstance);
-          processed++;
-          console.log(`✅ Private room single acceptance (auto-winner): ${listing._id} - ${listing.title}`);
         } else {
-          // 2+ accepted → auto-start the room
+          // 1+ accepted → auto-start the room (single bidder proceeds normally; wins after 60s with no competition)
           const roomEndDate = new Date(now.getTime() + PRIVATE_ROOM_EXTEND_MS);
           await Listing.findByIdAndUpdate(listing._id, {
             $set: {
@@ -69,7 +63,7 @@ async function checkEndedAuctions() {
             }
           }, { runValidators: false });
           processed++;
-          console.log(`✅ Auto-started private room (15 min passed): ${listing._id} - ${listing.title}`);
+          console.log(`✅ Auto-started private room (${acceptedCount} accepted): ${listing._id} - ${listing.title}`);
           if (ioInstance) {
             ioInstance.to(`listing:${listing._id}`).emit('listing-update', {
               listingId: listing._id.toString(),
