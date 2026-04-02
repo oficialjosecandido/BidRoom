@@ -709,11 +709,11 @@
           @if (listing.shippingOption !== 'free') { <p>{{ 'listingDetails.shipping.cost' | translate }} {{ formatPrice(listing.shippingCost) }}</p> }
           @if (listing.location) { <p>{{ 'listingDetails.shipping.from' | translate }} {{ listing.location }}</p> }
         </div>
-        @if (listing.returnPolicy || listing.handlingTime) {
+        @if (listing.returnPolicy) {
         <div class="info-card">
           <h3>{{ 'listingDetails.returnPolicy.title' | translate }}</h3>
-          @if (listing.returnPolicy) { <p>{{ getReturnPolicyLabel(listing.returnPolicy) }}</p> }
-          @if (listing.handlingTime) { <p>{{ 'listingDetails.returnPolicy.handlingTime' | translate }} {{ getHandlingTimeLabel(listing.handlingTime) }}</p> }
+          <p>{{ getReturnPolicyLabel(listing.returnPolicy) }}</p>
+          <p>{{ 'listingDetails.returnPolicy.handlingTime' | translate }} Ships within 5 business days</p>
         </div>
         }
         <div class="info-card">

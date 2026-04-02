@@ -627,7 +627,6 @@ router.post('/', authenticateToken, requireActiveAccount, async (req, res) => {
       shippingOriginPostalCode,
       shippingOriginCity,
       shippingOriginCountry,
-      handlingTime,
       returnPolicy,
       specifications,
       images = []
@@ -671,9 +670,6 @@ router.post('/', authenticateToken, requireActiveAccount, async (req, res) => {
     }
     if (!shippingOption) {
       return res.status(400).json({ error: 'Shipping option is required' });
-    }
-    if (!handlingTime) {
-      return res.status(400).json({ error: 'Handling time is required' });
     }
     if (!returnPolicy) {
       return res.status(400).json({ error: 'Return policy is required' });
@@ -743,7 +739,7 @@ router.post('/', authenticateToken, requireActiveAccount, async (req, res) => {
       shippingOriginPostalCode: shippingOption === 'calculated' ? (shippingOriginPostalCode || null) : null,
       shippingOriginCity: shippingOption === 'calculated' ? (shippingOriginCity || null) : null,
       shippingOriginCountry: shippingOption === 'calculated' ? (shippingOriginCountry || 'US') : null,
-      handlingTime: parseInt(handlingTime),
+      handlingTime: 5,
       returnPolicy,
       specifications: specifications || [],
       images: Array.isArray(images) && images.length > 0 ? images : ['https://via.placeholder.com/400x300?text=No+Image'], // Temporary placeholder until image upload is implemented

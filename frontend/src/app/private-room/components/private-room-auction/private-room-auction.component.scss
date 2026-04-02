@@ -581,6 +581,14 @@
     opacity: 0.9;
   }
 
+  .room-invited-accept {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+  }
+
   .room-invited-actions {
     display: flex;
     flex-direction: column;

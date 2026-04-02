@@ -411,8 +411,8 @@ router.post('/listings/:id/accept-invitation', authenticateToken, async (req, re
     if (!listing) {
       return res.status(404).json({ error: 'Listing not found' });
     }
-    if (listing.privateRoomStatus !== 'invited') {
-      return res.status(400).json({ error: 'Room not in invitation phase', message: 'The acceptance window is no longer open.' });
+    if (listing.privateRoomStatus === 'ended') {
+      return res.status(400).json({ error: 'Room ended', message: 'The private room has already ended.' });
     }
 
     const user = await User.findOne({ uid: req.user.uid });

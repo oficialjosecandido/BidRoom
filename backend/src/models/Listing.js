@@ -148,9 +148,9 @@ const listingSchema = new mongoose.Schema({
   shippingOriginCountry: { type: String, trim: true, default: 'US' },
   handlingTime: {
     type: Number,
-    required: true,
+    default: 5,
     min: 1,
-    max: 30 // Max 30 business days
+    max: 30
   },
   returnPolicy: {
     type: String,

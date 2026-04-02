@@ -57,15 +57,27 @@
             @if (uploadedFiles.length > 0) {
               <div class="media-grid">
                 @for (file of uploadedFiles; track file; let i = $index) {
-                  <div class="media-thumb" [class.media-thumb-cover]="i === 0">
+                  <div
+                    class="media-thumb"
+                    [class.media-thumb-cover]="i === 0"
+                    [class.media-thumb-dragging]="dragSrcIndex === i"
+                    [class.media-thumb-drag-over]="dragOverIndex === i && dragSrcIndex !== i"
+                    draggable="true"
+                    (dragstart)="onThumbDragStart(i, $event)"
+                    (dragover)="onThumbDragOver(i, $event)"
+                    (dragleave)="onThumbDragLeave()"
+                    (drop)="onThumbDrop(i, $event)"
+                    (dragend)="onThumbDragEnd()"
+                  >
                     @if (i === 0) {
                       <span class="cover-badge">Cover</span>
                     }
                     @if (previewUrls[i]) {
-                      <img [src]="previewUrls[i] || ''" alt="Preview" class="media-thumb-img">
+                      <img [src]="previewUrls[i] || ''" alt="Preview" class="media-thumb-img" draggable="false">
                     } @else if (isVideoFile(file)) {
                       <div class="media-thumb-video">🎬</div>
                     }
+                    <div class="media-thumb-drag-handle" title="Drag to reorder">⠿</div>
                     <button type="button" class="media-thumb-remove" (click)="removeFile(i)" title="Remove">×</button>
                   </div>
                 }
@@ -474,31 +486,24 @@
             </div>
           }
 
-          <div class="form-row">
-            <div class="form-group">
-              <label for="handlingTime">{{ 'addListing.handlingTime' | translate }}</label>
-              <select id="handlingTime" formControlName="handlingTime" [class.error]="getFieldError('handlingTime')">
-                <option value="">{{ 'addListing.selectHandling' | translate }}</option>
-                @for (time of handlingTimes; track time) {
-                  <option [value]="time.value">{{ time.labelKey | translate }}</option>
-                }
-              </select>
-              @if (getFieldError('handlingTime')) {
-                <div class="field-error">{{ getFieldError('handlingTime') }}</div>
-              }
+          <div class="form-group">
+            <div class="handling-time-notice">
+              <span class="handling-time-icon">📦</span>
+              <span>All listings ship within <strong>5 business days</strong> of purchase.</span>
             </div>
-            <div class="form-group">
-              <label for="returnPolicy">{{ 'addListing.returnPolicy' | translate }}</label>
-              <select id="returnPolicy" formControlName="returnPolicy" [class.error]="getFieldError('returnPolicy')">
-                <option value="">{{ 'addListing.selectReturn' | translate }}</option>
-                @for (policy of returnPolicies; track policy) {
-                  <option [value]="policy.value">{{ policy.labelKey | translate }}</option>
-                }
-              </select>
-              @if (getFieldError('returnPolicy')) {
-                <div class="field-error">{{ getFieldError('returnPolicy') }}</div>
+          </div>
+
+          <div class="form-group">
+            <label for="returnPolicy">{{ 'addListing.returnPolicy' | translate }}</label>
+            <select id="returnPolicy" formControlName="returnPolicy" [class.error]="getFieldError('returnPolicy')">
+              <option value="">{{ 'addListing.selectReturn' | translate }}</option>
+              @for (policy of returnPolicies; track policy) {
+                <option [value]="policy.value">{{ policy.labelKey | translate }}</option>
               }
-            </div>
+            </select>
+            @if (getFieldError('returnPolicy')) {
+              <div class="field-error">{{ getFieldError('returnPolicy') }}</div>
+            }
           </div>
         </div>
       </div>

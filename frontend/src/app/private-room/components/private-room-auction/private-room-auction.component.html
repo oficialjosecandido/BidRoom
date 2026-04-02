@@ -161,7 +161,16 @@
           <span class="timer-label">until room starts</span>
         </div>
         <p>Invitees have <strong>15 minutes</strong> to accept the invitation. The auction will start automatically after the acceptance window.</p>
-        <p class="room-invited-sub">Check your email for the accept link if you were invited.</p>
+        @if (isAuthenticated && invitationPending) {
+          <div class="room-invited-accept">
+            <p class="room-invited-sub">You have a pending invitation to this room.</p>
+            <button class="accept-invitation-btn" (click)="acceptInvitationInPage()" [disabled]="acceptingInvitation">
+              @if (acceptingInvitation) { Accepting... } @else { ✓ Accept Invitation }
+            </button>
+          </div>
+        } @else {
+          <p class="room-invited-sub">Check your email for the accept link if you were invited.</p>
+        }
         <div class="room-invited-actions">
           @if (isSeller) {
           <button

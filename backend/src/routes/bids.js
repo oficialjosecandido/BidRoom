@@ -505,22 +505,37 @@ router.post('/', optionalAuth, requireActiveAccountIfAuthenticated, async (req, 
       console.error('Redis cacheListingStats failed (non-fatal):', err?.message)
     );
 
-    // Emit real-time bid update via Socket.io to all clients watching this listing
+    // Emit real-time bid update via Socket.io to all clients watching this listing.
+    // For private room bids, chain both rooms so each connected client receives the
+    // event exactly once even if they have joined both listing:id and private-room:id.
     if (io) {
-      io.to(`listing:${listingId}`).emit('new-bid', {
+      const listingIdStr = listingId.toString();
+      const isPrivateRoom = listing.privateRoomStatus === 'active';
+
+      // Base emitter — always target listing room; add private-room room for private auctions
+      // so the seller (who joins private-room:id) also receives countdown updates.
+      const emitter = isPrivateRoom
+        ? io.to(`listing:${listingIdStr}`).to(`private-room:${listingIdStr}`)
+        : io.to(`listing:${listingIdStr}`);
+
+      emitter.emit('new-bid', {
         bid: formattedBid,
-        listingId: listingId.toString(),
+        listingId: listingIdStr,
         currentPrice: listing.currentPrice,
         bidCount: listing.bidCount,
         updatedAt: new Date().toISOString()
       });
 
-      // Also emit listing update with current price and bid count
-      io.to(`listing:${listingId}`).emit('listing-update', {
-        listingId: listingId.toString(),
+      // Include the extended privateRoomEndDate so all frontends restart their countdown.
+      emitter.emit('listing-update', {
+        listingId: listingIdStr,
         currentPrice: listing.currentPrice,
         bidCount: listing.bidCount,
-        updatedAt: new Date().toISOString()
+        updatedAt: new Date().toISOString(),
+        ...(isPrivateRoom && listing.privateRoomEndDate && {
+          privateRoomEndDate: listing.privateRoomEndDate.toISOString(),
+          endDate: listing.privateRoomEndDate.toISOString()
+        })
       });
     }
 

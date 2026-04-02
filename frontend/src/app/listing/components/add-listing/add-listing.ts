@@ -45,6 +45,10 @@ export class AddListing implements OnInit {
   uploadedFileUrls: string[] = [];
   previewUrls: (string | ArrayBuffer | null)[] = [];
 
+  // Drag-to-reorder state
+  dragSrcIndex: number | null = null;
+  dragOverIndex: number | null = null;
+
   // Categories
   categories: Category[] = [
     {
@@ -135,14 +139,6 @@ export class AddListing implements OnInit {
     { value: 'free', labelKey: 'addListing.shippingFree' }
   ];
 
-  handlingTimes = [
-    { value: 1, labelKey: 'addListing.handling1' },
-    { value: 2, labelKey: 'addListing.handling2' },
-    { value: 3, labelKey: 'addListing.handling3' },
-    { value: 5, labelKey: 'addListing.handling5' },
-    { value: 7, labelKey: 'addListing.handling7' }
-  ];
-
   returnPolicies = [
     { value: '30-days', labelKey: 'addListing.return30' },
     { value: '14-days', labelKey: 'addListing.return14' },
@@ -209,7 +205,6 @@ export class AddListing implements OnInit {
       shippingOriginPostalCode: [''],
       shippingOriginCity: [''],
       shippingOriginCountry: ['US'],
-      handlingTime: ['', Validators.required],
       returnPolicy: ['', Validators.required],
       sellerDeclaration: [false, Validators.requiredTrue]
     });
@@ -415,6 +410,52 @@ export class AddListing implements OnInit {
     }
   }
 
+  // ─── Drag-to-reorder ───────────────────────────────────────────────────────
+
+  onThumbDragStart(index: number, event: DragEvent): void {
+    this.dragSrcIndex = index;
+    event.dataTransfer!.effectAllowed = 'move';
+    event.dataTransfer!.setData('text/plain', String(index));
+  }
+
+  onThumbDragOver(index: number, event: DragEvent): void {
+    event.preventDefault();
+    event.stopPropagation(); // Don't let the outer file-drop zone handle this
+    event.dataTransfer!.dropEffect = 'move';
+    this.dragOverIndex = index;
+  }
+
+  onThumbDragLeave(): void {
+    this.dragOverIndex = null;
+  }
+
+  onThumbDrop(index: number, event: DragEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+
+    const src = this.dragSrcIndex;
+    this.dragSrcIndex = null;
+    this.dragOverIndex = null;
+
+    if (src === null || src === index) return;
+
+    const files = [...this.uploadedFiles];
+    const previews = [...this.previewUrls];
+
+    const [movedFile] = files.splice(src, 1);
+    const [movedPreview] = previews.splice(src, 1);
+    files.splice(index, 0, movedFile);
+    previews.splice(index, 0, movedPreview);
+
+    this.uploadedFiles = files;
+    this.previewUrls = previews;
+  }
+
+  onThumbDragEnd(): void {
+    this.dragSrcIndex = null;
+    this.dragOverIndex = null;
+  }
+
   /** Seller commission (BidRoom fee). */
   calculateEstimatedCommission(): number {
     const startingBid = this.listingForm.get('startingBid')?.value || 0;
@@ -528,7 +569,6 @@ export class AddListing implements OnInit {
       shippingOriginPostalCode: formValue.shippingOption === 'calculated' ? formValue.shippingOriginPostalCode : null,
       shippingOriginCity: formValue.shippingOption === 'calculated' ? formValue.shippingOriginCity : null,
       shippingOriginCountry: formValue.shippingOption === 'calculated' ? (formValue.shippingOriginCountry || 'US') : null,
-      handlingTime: formValue.handlingTime,
       returnPolicy: formValue.returnPolicy,
       specifications: formValue.specifications || [],
       images: this.uploadedFileUrls
@@ -575,7 +615,6 @@ export class AddListing implements OnInit {
       startingBid: 'addListing.startingBid',
       reservePrice: 'addListing.reservePrice',
       shippingOption: 'addListing.shippingOptions',
-      handlingTime: 'addListing.handlingTime',
       returnPolicy: 'addListing.returnPolicy'
     };
     return this.translate.instant(keyMap[fieldName] || fieldName);
