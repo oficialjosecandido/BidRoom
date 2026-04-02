@@ -570,13 +570,16 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
 
       if (!this.isAuthenticated) {
         this.router.navigate(['/auth/login'], {
-          queryParams: { returnUrl: `/listing/${this.listing.slug}/choose-winner` }
+          queryParams: { returnUrl: `/listing/${this.listing.slug}?chooseWinner=1` }
         });
         return;
       }
 
       // Update the address bar without re-running the router (avoids remounting this view).
       this.location.replaceState(`/listing/${this.listing.slug}`);
+
+      // Ensure isOwnListing is up to date now that auth is confirmed.
+      this.updateIsOwnListing();
 
       if (!this.isOwnListing) {
         return;

@@ -92,7 +92,7 @@ async function sendChooseWinnerNotification(listing) {
     }
 
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:4200';
-    const chooseWinnerUrl = `${frontendUrl}/listing/${listing.slug}/choose-winner`;
+    const chooseWinnerUrl = `${frontendUrl}/listing/${listing.slug}?chooseWinner=1`;
     const finalBid = `$${listing.currentPrice.toFixed(2)}`;
     const language = getUserLanguage(seller);
 
