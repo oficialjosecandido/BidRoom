@@ -1,41 +1,54 @@
 /**
  * API Configuration
- * Determines the API URL based on the environment:
- * - Local: http://localhost:3000/api (when running on localhost)
- * - Dev: https://bidroom-backend-dev.azurewebsites.net/api (when running on Azure Static Web Apps)
+ * Determines the API URL and Stripe key based on the environment:
+ * - Local:      http://localhost:3000/api
+ * - Dev/Prod:   set via window.APP_CONFIG injected in index.html
+ *
+ * For Azure Static Web Apps, populate APP_CONFIG in index.html at deploy time
+ * using your CI/CD pipeline (token substitution or a startup script).
+ * Required values:
+ *   window.APP_CONFIG.API_URL               — backend API base URL
+ *   window.APP_CONFIG.STRIPE_PUBLISHABLE_KEY — pk_live_... or pk_test_...
  */
+
+const PROD_HOSTNAME = 'bidroom.com'; // update to the actual production domain
+
 export const API_CONFIG = {
   getApiUrl(): string {
-    // Check for environment variable (set via Azure Static Web App configuration)
-    if (typeof window !== 'undefined' && (window as any).APP_CONFIG?.API_URL) {
-      return (window as any).APP_CONFIG.API_URL;
-    }
-    
-    // Check for process.env (for build-time configuration)
-    const envApiUrl = (window as any).process?.env?.['NG_APP_API_URL'];
-    if (envApiUrl) {
-      return envApiUrl;
-    }
-    
-    // Detect environment based on hostname
+    // Runtime injection (preferred — set per environment in CI/CD)
+    const runtimeUrl = typeof window !== 'undefined' && (window as any).APP_CONFIG?.API_URL;
+    if (runtimeUrl) return runtimeUrl;
+
     const hostname = typeof window !== 'undefined' ? window.location.hostname : 'localhost';
-    
-    // Local development: use local backend
+
     if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '0.0.0.0') {
       return 'http://localhost:3000/api';
     }
-    
-    // Azure Static Web Apps (DEV environment): use Azure dev backend
-    // Any other hostname (including *.azurestaticapps.net) uses the dev backend
+
+    if (hostname === PROD_HOSTNAME || hostname === `www.${PROD_HOSTNAME}`) {
+      return 'https://bidroom-backend.azurewebsites.net/api';
+    }
+
+    // All other hostnames (*.azurestaticapps.net, PR previews, etc.) → dev backend
     return 'https://bidroom-backend-dev.azurewebsites.net/api';
   },
-  
+
   getStripePublishableKey(): string {
-    if (typeof window !== 'undefined' && (window as any).APP_CONFIG?.STRIPE_PUBLISHABLE_KEY) {
-      return (window as any).APP_CONFIG.STRIPE_PUBLISHABLE_KEY;
+    // Runtime injection (preferred — set per environment in CI/CD)
+    const runtimeKey = typeof window !== 'undefined' && (window as any).APP_CONFIG?.STRIPE_PUBLISHABLE_KEY;
+    if (runtimeKey) return runtimeKey;
+
+    const hostname = typeof window !== 'undefined' ? window.location.hostname : 'localhost';
+
+    // Only use the test key for localhost; all deployed environments must inject via APP_CONFIG
+    if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '0.0.0.0') {
+      return 'pk_test_51T98Ps1Me1kcdayq7UjnAMHVW88Blkx2MCBtwMvCL7XLmTBxb59PrSwhxSIJY8qrDiJBpbRY9YwHGPKGSOULrSzk00Mmg5sYh5';
     }
-    // Test key for local development
-    return 'pk_test_51T98Ps1Me1kcdayq7UjnAMHVW88Blkx2MCBtwMvCL7XLmTBxb59PrSwhxSIJY8qrDiJBpbRY9YwHGPKGSOULrSzk00Mmg5sYh5';
+
+    // Non-localhost with no APP_CONFIG injection → log a warning and return empty
+    // This will cause Stripe to fail loudly rather than silently use a test key in production
+    console.warn('[BidRoom] STRIPE_PUBLISHABLE_KEY not configured via APP_CONFIG. Set window.APP_CONFIG.STRIPE_PUBLISHABLE_KEY at deploy time.');
+    return '';
   },
 
   getWebSocketUrl(): string {

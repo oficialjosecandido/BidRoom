@@ -156,6 +156,8 @@ const transactionSchema = new mongoose.Schema({
   disputeAdminVerdict: { type: String, enum: ['buyer_refund', 'seller_payout', 'partial_refund'], default: null },
   /** Refund amount (for buyer_refund or partial_refund) */
   disputeRefundAmount: { type: Number, min: 0, default: null },
+  /** Stripe refund ID returned after issuing a dispute refund via the API */
+  stripeRefundId: { type: String, trim: true, default: null },
   /** When the admin issued the ruling */
   disputeRuledAt: { type: Date, default: null },
   /** Admin notes (internal) */

@@ -4,6 +4,7 @@ const { Server } = require('socket.io');
 const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
+const rateLimit = require('express-rate-limit');
 require('dotenv').config();
 
 // Initialize Firebase Admin
@@ -37,11 +38,25 @@ const configRoutes = require('./routes/config');
 const auctionEndScheduler = require('./services/auctionEndScheduler');
 const { runCleanup: runProofOfPaymentCleanup } = require('./services/proofOfPaymentCleanup');
 
+// CORS: allow FRONTEND_URL, FRONTEND_URL_PROD, localhost, and any Azure Static Web Apps origin
+const allowedOrigins = [
+  process.env.FRONTEND_URL,
+  process.env.FRONTEND_URL_PROD,
+  'http://localhost:4200',
+  'https://localhost:4200'
+].filter(Boolean);
+const isAllowedOrigin = (origin) => {
+  if (!origin) return false;
+  if (allowedOrigins.includes(origin)) return true;
+  if (origin.endsWith('.azurestaticapps.net')) return true;
+  return false;
+};
+
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: process.env.FRONTEND_URL || 'http://localhost:4200',
+    origin: isAllowedOrigin,
     methods: ['GET', 'POST'],
     credentials: true
   }
@@ -54,19 +69,6 @@ app.set('trust proxy', 1);
 
 // Middleware
 app.use(helmet());
-// CORS: allow FRONTEND_URL, localhost, and any Azure Static Web Apps origin (*.azurestaticapps.net)
-const allowedOrigins = [
-  process.env.FRONTEND_URL || 'http://localhost:4200',
-  'https://icy-glacier-05c442c0f.3.azurestaticapps.net',
-  'http://localhost:4200',
-  'https://localhost:4200'
-];
-const isAllowedOrigin = (origin) => {
-  if (!origin) return false;
-  if (allowedOrigins.includes(origin)) return true;
-  if (origin.endsWith('.azurestaticapps.net')) return true;
-  return false;
-};
 app.use(cors({
   origin: (origin, callback) => {
     if (isAllowedOrigin(origin)) {
@@ -88,11 +90,28 @@ app.post('/api/connect/webhook', express.raw({ type: 'application/json' }), conn
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Rate limiters
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many requests', message: 'Too many attempts. Please try again in 15 minutes.' }
+});
+
+const bidOfferLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 30,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many requests', message: 'Too many requests. Please slow down.' }
+});
+
 // Routes
-app.use('/api/auth', authRoutes);
+app.use('/api/auth', authLimiter, authRoutes);
 app.use('/api/listings', listingRoutes);
-app.use('/api/bids', bidRoutes);
-app.use('/api/offers', offerRoutes);
+app.use('/api/bids', bidOfferLimiter, bidRoutes);
+app.use('/api/offers', bidOfferLimiter, offerRoutes);
 app.use('/api/uploads', uploadRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/private-room', privateRoomRoutes);

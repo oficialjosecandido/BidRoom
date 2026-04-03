@@ -104,7 +104,7 @@
                   <span class="badge badge-private-room" title="Private room available for top bidders">🔒 Private</span>
                 }
                 @if (listing.auctionFormat === 'best-offer') {
-                  <span class="badge badge-best-offer">Best Offer</span>
+                  <span class="badge badge-best-offer">{{ 'home.liveAuctions.bestOffer' | translate }}</span>
                 }
               </div>
               <div class="time-badge" [ngClass]="timerClass(listing)">
@@ -152,9 +152,9 @@
       <div class="listings-empty">
         <p class="empty-icon">🔍</p>
         <h3>{{ 'home.liveAuctions.noAuctions' | translate }}</h3>
-        <p>{{ selectedCategory ? ('Try a different category or clear your filter.') : ('home.liveAuctions.checkBack' | translate) }}</p>
+        <p>{{ selectedCategory ? ('home.liveAuctions.tryDifferentCategory' | translate) : ('home.liveAuctions.checkBack' | translate) }}</p>
         @if (selectedCategory) {
-          <button class="btn btn-secondary" (click)="filterCategory('')">Clear Filter</button>
+          <button class="btn btn-secondary" (click)="filterCategory('')">{{ 'home.liveAuctions.clearFilter' | translate }}</button>
         } @else {
           <button class="btn btn-primary" (click)="navigateToAddListing()">{{ 'home.hero.listAnItem' | translate }}</button>
         }

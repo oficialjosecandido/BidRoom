@@ -44,12 +44,18 @@ const {
 const { sendEmail } = require('../services/emailService');
 
 // GET /api/offers/listing/:listingId - Get all offers for a listing
-router.get('/listing/:listingId', async (req, res) => {
+router.get('/listing/:listingId', optionalAuth, async (req, res) => {
   try {
     const offers = await Offer.find({ listing: req.params.listingId })
       .populate('offerer', 'firstName lastName email emailVerified uid')
       .sort({ createdAt: -1 })
       .lean();
+
+    // Determine if the requester is the listing's seller (entitled to see full emails)
+    const listing = await Listing.findById(req.params.listingId).select('seller').lean();
+    const requestingUid = req.user?.uid || null;
+    const sellerUser = listing?.seller ? await User.findById(listing.seller).select('uid').lean() : null;
+    const isSeller = requestingUid && sellerUser && requestingUid === sellerUser.uid;
 
     const uids = [...new Set(offers.map(o => o.offerer?.uid).filter(Boolean))];
     const customers = uids.length
@@ -71,7 +77,9 @@ router.get('/listing/:listingId', async (req, res) => {
         : (offer.offererEmail ? offer.offererEmail.charAt(0).toUpperCase() : 'A');
       return {
         ...offer,
-        offerer: offerer ? { _id: offerer._id, firstName: offerer.firstName, lastName: offerer.lastName, email: offerer.email } : null,
+        // Expose email only to the seller; strip it for everyone else
+        offerer: offerer ? { _id: offerer._id, firstName: offerer.firstName, lastName: offerer.lastName, email: isSeller ? offerer.email : null } : null,
+        offererEmail: isSeller ? (offer.offererEmail || null) : null,
         offererName: name,
         offererInitials: initials,
         offererVerified,

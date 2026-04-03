@@ -2,11 +2,27 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>BidRoom | DEV env</title>
+  <title>BidRoom</title>
   <base href="/">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" type="image/x-icon" href="favicon.ico">
-  <meta name="description" content="BidRoom | DEV v0.2">
+  <meta name="description" content="BidRoom – Live Auctions">
+  <!--
+    APP_CONFIG is injected at runtime via Azure Static Web Apps application settings.
+    To configure for an environment, set these Azure SWA app settings:
+      APP_CONFIG_API_URL            → e.g. https://bidroom-backend.azurewebsites.net/api
+      APP_CONFIG_STRIPE_KEY         → pk_live_... (production) or pk_test_... (dev)
+
+    Azure SWA does not natively support runtime env injection into index.html.
+    Use the azure-static-web-apps build action with output token substitution,
+    OR set these values explicitly per environment in the script block below.
+  -->
+  <script>
+    window.APP_CONFIG = {
+      API_URL: '',
+      STRIPE_PUBLISHABLE_KEY: ''
+    };
+  </script>
 </head>
 <body>
   <app-root></app-root>

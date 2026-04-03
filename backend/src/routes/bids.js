@@ -10,7 +10,7 @@ const { notifyNewBid, notifyBidderOutbid, emitNewNotificationToUser } = require(
 const router = express.Router();
 
 // GET /api/bids/listing/:listingId - Get all bids for a listing
-router.get('/listing/:listingId', async (req, res) => {
+router.get('/listing/:listingId', optionalAuth, async (req, res) => {
   try {
     const { sort = 'desc' } = req.query; // 'desc' for newest first, 'asc' for oldest first
 
@@ -21,14 +21,21 @@ router.get('/listing/:listingId', async (req, res) => {
       .sort({ createdAt: sortOrder })
       .lean();
 
+    // Determine if the requester is the listing's seller (entitled to see full emails)
+    const listing = await Listing.findById(req.params.listingId).select('seller').lean();
+    const requestingUid = req.user?.uid || null;
+    const sellerUser = listing?.seller ? await User.findById(listing.seller).select('uid').lean() : null;
+    const isSeller = requestingUid && sellerUser && requestingUid === sellerUser.uid;
+
     // Get buyer review scores for all bidders (authenticated users only)
     const bidderIds = bids.filter((b) => b.bidder && b.bidder._id).map((b) => b.bidder._id.toString());
     const scoreMap = bidderIds.length > 0 ? await getReviewScoresForUsers(bidderIds) : {};
 
-    // Format bids for frontend
+    // Format bids for frontend — emails only exposed to the seller
     const formattedBids = bids.map(bid => {
       const bidderId = bid.bidder && bid.bidder._id ? bid.bidder._id.toString() : null;
       const scores = bidderId ? scoreMap[bidderId] : null;
+      const fullEmail = bid.bidderEmail || (bid.bidder ? bid.bidder.email : null);
       return {
         ...bid,
         bidderName: bid.bidder
@@ -37,7 +44,7 @@ router.get('/listing/:listingId', async (req, res) => {
         bidderInitials: bid.bidder
           ? `${bid.bidder.firstName.charAt(0)}${bid.bidder.lastName.charAt(0)}`
           : (bid.bidderEmail ? bid.bidderEmail.charAt(0).toUpperCase() : 'A'),
-        bidderEmail: bid.bidderEmail || (bid.bidder ? bid.bidder.email : null),
+        bidderEmail: isSeller ? fullEmail : null,
         isAuthenticated: !!bid.bidder,
         bidderVerified: bid.bidder ? (bid.bidder.emailVerified || false) : false,
         bidderHasDeposit: bid.bidder ? (bid.bidder.hasDeposit || false) : false,

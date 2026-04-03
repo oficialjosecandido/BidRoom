@@ -116,7 +116,10 @@
       "bid": "bid",
       "bids": "bids",
       "ended": "Ended",
-      "na": "N/A"
+      "na": "N/A",
+      "bestOffer": "Best Offer",
+      "clearFilter": "Clear Filter",
+      "tryDifferentCategory": "Try a different category or clear your filter."
     }
   },
   "addListing": {

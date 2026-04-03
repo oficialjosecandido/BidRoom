@@ -116,7 +116,10 @@
       "bid": "licitação",
       "bids": "licitações",
       "ended": "Terminado",
-      "na": "N/D"
+      "na": "N/D",
+      "bestOffer": "Melhor Oferta",
+      "clearFilter": "Limpar Filtro",
+      "tryDifferentCategory": "Tenta uma categoria diferente ou limpa o filtro."
     }
   },
   "addListing": {
