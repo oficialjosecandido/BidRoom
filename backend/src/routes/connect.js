@@ -301,6 +301,9 @@ router.post('/test-activate', requireActiveAccount, async (req, res) => {
  * Returns the seller's Stripe Connect account status.
  */
 router.get('/account-status', async (req, res) => {
+  if (process.env.SKIP_STRIPE_VALIDATION === 'true') {
+    return res.json({ connected: true, onboarded: true, devBypass: true });
+  }
   const stripe = getStripe();
   if (!stripe) {
     return res.json({ connected: false, onboarded: false });
@@ -385,7 +388,8 @@ router.post('/create-checkout-session', requireActiveAccount, async (req, res) =
 
     const seller = transaction.seller;
     const isTestMode = process.env.STRIPE_SECRET_KEY?.startsWith('sk_test_');
-    if (!seller.stripeConnectAccountId || (!seller.stripeConnectOnboarded && !isTestMode)) {
+    const skipValidation = process.env.SKIP_STRIPE_VALIDATION === 'true';
+    if (!skipValidation && (!seller.stripeConnectAccountId || (!seller.stripeConnectOnboarded && !isTestMode))) {
       return res.status(400).json({
         error: 'Seller not ready',
         message: 'The seller has not yet connected their Stripe account. Please contact the seller.'
