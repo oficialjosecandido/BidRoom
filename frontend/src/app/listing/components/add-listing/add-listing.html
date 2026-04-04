@@ -7,17 +7,6 @@
       <p>{{ 'addListing.pageSubtitle' | translate }}</p>
     </div>
 
-    <!-- Pre-validation: Stripe not connected -->
-    @if (!isLoadingCustomer && !isStripeConnected) {
-      <div class="prereq-banner">
-        <div class="prereq-icon">⚠️</div>
-        <div class="prereq-text">
-          <strong>Set up your payout account first</strong>
-          <p>You need to connect a Stripe payout account before you can publish listings. You can still fill in the form, but the Publish button will be locked until you connect.</p>
-        </div>
-        <a routerLink="/dashboard/settings" class="btn btn-prereq">Go to Settings</a>
-      </div>
-    }
 
     <!-- Error Message -->
     @if (errorMessage && !isSubmitting && !isUploadingImages) {
@@ -361,16 +350,13 @@
       }
 
       <!-- ─── Section 6: Shipping & Location ─── -->
-      <div class="listing-section" [class.section-locked]="!isStripeConnected && !isLoadingCustomer">
+      <div class="listing-section">
         <div class="section-header">
           <span class="section-number">{{ listingForm.get('listingFormat')?.value === 'auction' ? '6' : '5' }}</span>
           <div>
             <h2 class="section-title">Shipping &amp; Location</h2>
             <p class="section-subtitle">Tell buyers where the item ships from and how you'll send it.</p>
           </div>
-          @if (!isStripeConnected && !isLoadingCustomer) {
-            <span class="section-lock-badge">Payout account required</span>
-          }
         </div>
         <div class="section-body">
           <!-- Item location -->
@@ -556,20 +542,13 @@
 
         <!-- Publish row -->
         <div class="publish-row">
-          @if (!isStripeConnected && !isLoadingCustomer) {
-            <div class="publish-blocked-msg">
-              Connect your payout account in <a routerLink="/dashboard/settings">Settings</a> to publish.
-            </div>
-          }
           <button
             type="submit"
             class="btn btn-publish"
-            [disabled]="!canPublish || !isStripeConnected"
-            [class.btn-publish-locked]="!isStripeConnected && !isLoadingCustomer"
+            [disabled]="!canPublish"
           >
             @if (isUploadingImages) { Uploading… }
             @else if (isSubmitting) { Publishing… }
-            @else if (!isStripeConnected && !isLoadingCustomer) { Payout account required }
             @else { Publish listing }
           </button>
         </div>
