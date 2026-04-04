@@ -500,13 +500,43 @@ export class AddListing implements OnInit {
   }
 
   async onSubmit(): Promise<void> {
-    if (!this.canPublish) {
-      Object.keys(this.listingForm.controls).forEach(key => {
-        this.listingForm.get(key)?.markAsTouched();
+    if (this.isSubmitting || this.isUploadingImages) return;
+
+    // Mark all fields touched so validation styles appear
+    Object.keys(this.listingForm.controls).forEach(key => {
+      this.listingForm.get(key)?.markAsTouched();
+    });
+
+    if (!this.listingForm.valid || this.uploadedFiles.length < 1 || !this.isMediaValid) {
+      const fieldLabels: Record<string, string> = {
+        title: 'Listing Title',
+        category: 'Category',
+        subCategory: 'Sub-Category',
+        condition: 'Item Condition',
+        description: 'Full Description (min. 50 characters)',
+        startingBid: 'Starting Bid',
+        locationCity: 'City',
+        locationRegion: 'Region / State',
+        duration: 'Listing Duration',
+        shippingOption: 'Shipping Option',
+        returnPolicy: 'Return Policy',
+        sellerDeclaration: 'Seller Declaration checkbox',
+      };
+
+      const missing: string[] = [];
+      if (this.uploadedFiles.length < 1) missing.push('at least 1 photo');
+      Object.keys(fieldLabels).forEach(key => {
+        if (this.listingForm.get(key)?.invalid) missing.push(fieldLabels[key]);
       });
-      if (this.uploadedFiles.length < 1) {
-        this.errorMessage = this.translate.instant('addListing.uploadMinError');
-      }
+
+      this.errorMessage = missing.length > 0
+        ? `Please complete the following before publishing: ${missing.join(', ')}.`
+        : 'Please fix the highlighted errors before publishing.';
+
+      setTimeout(() => {
+        const firstInvalid = document.querySelector('.ng-invalid:not(form):not(ng-component)');
+        firstInvalid?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 50);
       return;
     }
 

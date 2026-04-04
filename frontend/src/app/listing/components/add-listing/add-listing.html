@@ -536,7 +536,7 @@
         @if (!isUploadingImages && isSubmitting) {
           <div class="submit-status">Creating listing…</div>
         }
-        @if (errorMessage && (isSubmitting || isUploadingImages)) {
+        @if (errorMessage) {
           <div class="error-message">{{ errorMessage }}</div>
         }
 
@@ -545,7 +545,7 @@
           <button
             type="submit"
             class="btn btn-publish"
-            [disabled]="!canPublish"
+            [disabled]="isSubmitting || isUploadingImages"
           >
             @if (isUploadingImages) { Uploading… }
             @else if (isSubmitting) { Publishing… }
