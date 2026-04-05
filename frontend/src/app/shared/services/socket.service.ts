@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { io, Socket } from 'socket.io-client';
 import { Observable } from 'rxjs';
+import { API_CONFIG } from '../config/api.config';
 
 export interface NewBidEvent {
   bid: any;
@@ -69,30 +70,6 @@ export class SocketService {
   private joinedPrivateRoomViewerId: string | null = null;
   private joinedUserUid: string | null = null;
 
-  private getApiUrl(): string {
-    // Try to get from window config (for Azure Static Web Apps)
-    if (typeof window !== 'undefined' && (window as any).APP_CONFIG?.API_URL) {
-      const url = (window as any).APP_CONFIG.API_URL;
-      // Remove /api suffix if present for WebSocket connection
-      const baseUrl = url.replace('/api', '');
-      // Ensure we have http/https prefix
-      if (baseUrl.startsWith('http://') || baseUrl.startsWith('https://')) {
-        return baseUrl;
-      }
-      // If no protocol, default to https for production
-      return baseUrl.startsWith('localhost') ? `http://${baseUrl}` : `https://${baseUrl}`;
-    }
-    
-    const hostname = typeof window !== 'undefined' ? window.location.hostname : 'localhost';
-    
-    if (hostname === 'localhost' || hostname === '127.0.0.1') {
-      return 'http://localhost:3000';
-    }
-    
-    // Production default - Azure App Service
-    return 'https://bidroom-backend-dev.azurewebsites.net';
-  }
-
   connect(): void {
     if (this.socket?.connected) {
       return;
@@ -103,9 +80,9 @@ export class SocketService {
       return;
     }
 
-    const apiUrl = this.getApiUrl();
+    const baseUrl = API_CONFIG.getBackendBaseUrl();
 
-    this.socket = io(apiUrl, {
+    this.socket = io(baseUrl, {
       transports: ['websocket', 'polling'],
       reconnection: true,
       reconnectionDelay: 1000,

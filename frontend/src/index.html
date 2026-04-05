@@ -6,16 +6,31 @@
   <base href="/">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" type="image/x-icon" href="favicon.ico">
-  <meta name="description" content="BidRoom – Live Auctions">
-  <!--
-    APP_CONFIG is injected at runtime via Azure Static Web Apps application settings.
-    To configure for an environment, set these Azure SWA app settings:
-      APP_CONFIG_API_URL            → e.g. https://bidroom-backend.azurewebsites.net/api
-      APP_CONFIG_STRIPE_KEY         → pk_live_... (production) or pk_test_... (dev)
+  <meta name="description" content="BidRoom – Live auctions and best-offer marketplace. Buy and sell unique items with confidence.">
 
-    Azure SWA does not natively support runtime env injection into index.html.
-    Use the azure-static-web-apps build action with output token substitution,
-    OR set these values explicitly per environment in the script block below.
+  <!-- Open Graph -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="BidRoom">
+  <meta property="og:title" content="BidRoom – Live Auctions & Best Offer Marketplace">
+  <meta property="og:description" content="Buy and sell unique items through live auctions or best-offer listings. Secure payments, direct payouts.">
+  <meta property="og:url" content="https://bidroom.com/">
+  <meta property="og:image" content="https://bidroom.com/assets/og-image.png">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="BidRoom – Live Auctions & Best Offer Marketplace">
+  <meta name="twitter:description" content="Buy and sell unique items through live auctions or best-offer listings.">
+  <meta name="twitter:image" content="https://bidroom.com/assets/og-image.png">
+
+  <!-- Canonical -->
+  <link rel="canonical" href="https://bidroom.com/">
+  <!--
+    APP_CONFIG overrides Angular’s environment.defaultApiBaseUrl when set (non-empty).
+    Azure Static Web Apps: use build-time substitution or SWA app settings + a small script.
+      API_URL                 → e.g. https://bidroom-backend.azurewebsites.net/api
+      STRIPE_PUBLISHABLE_KEY  → pk_live_... (production) or pk_test_... (staging)
+
+    Leave API_URL empty to use the default from environment.prod.ts / environment.ts.
   -->
   <script>
     window.APP_CONFIG = {

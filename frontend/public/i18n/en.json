@@ -1,5 +1,8 @@
 {
   "header": {
+    "brand": "BidRoom",
+    "envBadgeDev": "Dev",
+    "envBadgeAria": "Development environment",
     "nav": {
       "auctions": "Auctions",
       "categories": "Categories",

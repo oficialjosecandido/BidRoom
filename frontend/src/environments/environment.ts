@@ -1,5 +1,7 @@
 export const environment = {
   production: false,
+  /** When APP_CONFIG.API_URL is not injected, non-localhost builds use this API base */
+  defaultApiBaseUrl: 'https://bidroom-backend-dev.azurewebsites.net/api',
   /** Seller commission rate (0.005 = 0.5%, 0.05 = 5%) */
   bidroomFeeSellerRate: 0.005,
   /** Buyer fee rate (0.005 = 0.5%, 0.05 = 5%) */

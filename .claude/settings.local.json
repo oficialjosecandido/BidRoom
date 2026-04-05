@@ -28,7 +28,9 @@
       "Bash(__NEW_LINE_77a8d5a8df533bcc__ echo:*)",
       "Bash(__NEW_LINE_e1b87c1e3712c757__ grep:*)",
       "Bash(__NEW_LINE_9aca962448b60d38__ find:*)",
-      "Bash(node -e \"const fs = require\\(''fs''\\); try { JSON.parse\\(fs.readFileSync\\(''/Users/josecandido/Documents/BidRoom/frontend/public/i18n/fr.json'', ''utf8''\\)\\); console.log\\(''Valid JSON''\\); } catch\\(e\\) { console.error\\(''Invalid JSON:'', e.message\\); }\")"
+      "Bash(node -e \"const fs = require\\(''fs''\\); try { JSON.parse\\(fs.readFileSync\\(''/Users/josecandido/Documents/BidRoom/frontend/public/i18n/fr.json'', ''utf8''\\)\\); console.log\\(''Valid JSON''\\); } catch\\(e\\) { console.error\\(''Invalid JSON:'', e.message\\); }\")",
+      "Bash(sed -i '' \"s/      console\\\\.log\\('Skipping first bid notification - no email address'\\);//\" /Users/jose/Documents/bidroom/backend/src/services/auctionNotificationService.js)",
+      "Bash(sed -i '' \"s/      console\\\\.log\\('Listing already marked as ended:', listingId\\);//\" /Users/jose/Documents/bidroom/backend/src/services/auctionNotificationService.js)"
     ]
   }
 }

@@ -19,19 +19,20 @@ function getStripe() {
 
 const router = express.Router();
 
-const ADMIN_EMAIL = 'josevcandido@gmail.com';
+const ADMIN_EMAILS = process.env.ADMIN_EMAILS
+  ? process.env.ADMIN_EMAILS.split(',').map(e => e.trim().toLowerCase())
+  : ['josevcandido@gmail.com', 'tomas.cascao123@gmail.com', 'pt.bidnow@gmail.com'];
 
-// Admin middleware - checks if user is the admin
+// Admin middleware - checks if user is an admin
 const requireAdmin = async (req, res, next) => {
   if (!req.user) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
-  
-  // Check if user email matches admin email
-  if (req.user.email?.toLowerCase() !== ADMIN_EMAIL.toLowerCase()) {
+
+  if (!ADMIN_EMAILS.includes(req.user.email?.toLowerCase())) {
     return res.status(403).json({ error: 'Forbidden', message: 'Admin access required' });
   }
-  
+
   next();
 };
 
@@ -70,17 +71,26 @@ router.get('/statistics', authenticateToken, requireAdmin, async (req, res) => {
 // Get all auctions for admin
 router.get('/auctions', authenticateToken, requireAdmin, async (req, res) => {
   try {
-    const auctions = await Listing.find({})
-      .populate('seller', 'firstName lastName email')
-      .sort({ createdAt: -1 })
-      .lean();
+    const page = Math.max(1, parseInt(req.query.page) || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit) || 50));
+    const skip = (page - 1) * limit;
 
-    res.json(auctions);
+    const [auctions, total] = await Promise.all([
+      Listing.find({})
+        .populate('seller', 'firstName lastName email')
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      Listing.countDocuments({})
+    ]);
+
+    res.json({ auctions, total, page, limit, pages: Math.ceil(total / limit) });
   } catch (error) {
     console.error('Error fetching auctions:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to fetch auctions',
-      message: error.message 
+      message: error.message
     });
   }
 });
@@ -489,10 +499,19 @@ router.post('/disputes/:transactionId/ruling', authenticateToken, requireAdmin, 
  */
 router.get('/reviews/flagged', authenticateToken, requireAdmin, async (req, res) => {
   try {
-    const flags = await ReviewFlag.find({ status: 'pending' })
-      .populate('review')
-      .sort({ createdAt: -1 })
-      .lean();
+    const page = Math.max(1, parseInt(req.query.page) || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit) || 50));
+    const skip = (page - 1) * limit;
+
+    const [flags, total] = await Promise.all([
+      ReviewFlag.find({ status: 'pending' })
+        .populate('review')
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      ReviewFlag.countDocuments({ status: 'pending' })
+    ]);
     const withReviewDetails = await Promise.all(
       flags.map(async (f) => {
         const r = f.review;
@@ -505,7 +524,7 @@ router.get('/reviews/flagged', authenticateToken, requireAdmin, async (req, res)
         return { ...f, reviewer, reviewee, listing };
       })
     );
-    res.json({ flags: withReviewDetails });
+    res.json({ flags: withReviewDetails, total, page, limit, pages: Math.ceil(total / limit) });
   } catch (error) {
     console.error('Error fetching flagged reviews:', error);
     res.status(500).json({ error: 'Failed to fetch flagged reviews', message: error.message });

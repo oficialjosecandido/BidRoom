@@ -1,5 +1,7 @@
 export const environment = {
   production: true,
+  /** When APP_CONFIG.API_URL is not injected — set to your production API base */
+  defaultApiBaseUrl: 'https://bidroom-backend.azurewebsites.net/api',
   auctionDurations: [
     { label: '5 minutes', hours: 1 / 12 },
     { label: '1 hour',   hours: 1  },

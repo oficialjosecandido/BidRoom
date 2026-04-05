@@ -2,10 +2,11 @@
 .header {
   background: var(--primary-white);
   border-bottom: 1px solid var(--border-gray);
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.04);
   position: sticky;
   top: 0;
   z-index: 1000;
-  
+
   .header-content {
     display: flex;
     align-items: center;
@@ -14,18 +15,49 @@
     padding: 16px 0;
     gap: 0;
   }
-  
-  .logo h1 {
-    color: var(--accent-purple);
-    font-size: 28px;
-    font-weight: 700;
+
+  .logo .logo-cluster {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
     margin: 0;
     cursor: pointer;
-    transition: color 0.2s ease;
-    
+    transition: opacity 0.2s ease;
+
     &:hover {
-      color: #7A4F84;
+      opacity: 0.92;
     }
+  }
+
+  .logo-wordmark {
+    font-size: 1.65rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1.15;
+    background: linear-gradient(135deg, #5c3566 0%, var(--accent-purple) 42%, #9d7aa8 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  @supports not (background-clip: text) {
+    .logo-wordmark {
+      color: var(--accent-purple);
+    }
+  }
+
+  .env-pill {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 4px 9px;
+    border-radius: 999px;
+    background: linear-gradient(180deg, #f5eef7 0%, #ebe3ef 100%);
+    color: #5c3566;
+    border: 1px solid rgba(107, 61, 117, 0.18);
+    line-height: 1;
   }
 
   .menu-toggle {
@@ -221,8 +253,12 @@
       padding: 14px 0;
     }
 
-    .logo h1 {
-      font-size: 22px;
+    .logo .logo-cluster {
+      gap: 8px;
+    }
+
+    .logo-wordmark {
+      font-size: 1.35rem;
     }
 
     .menu-toggle {
