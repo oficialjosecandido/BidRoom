@@ -28,6 +28,7 @@ export interface CustomerInfo {
   buyerReviewCount: number;
   sellerReviewCount: number;
   stripeConnectOnboarded: boolean;
+  mangoPayOnboarded: boolean;
 }
 
 @Injectable({

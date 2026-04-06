@@ -7,6 +7,7 @@ import Swal from 'sweetalert2';
 import { TransactionsService, Transaction, TransactionStatus } from '../../../shared/services/transactions.service';
 import { ReviewsService } from '../../../shared/services/reviews.service';
 import { StripeConnectService } from '../../../shared/services/stripe-connect.service';
+import { MangopayService } from '../../../shared/services/mangopay.service';
 import { ShippingService, ShippingRate, DeliveryAddress } from '../../../shared/services/shipping.service';
 
 const successToast = Swal.mixin({
@@ -29,6 +30,7 @@ export class DashboardTransactionsComponent implements OnInit {
   transactionsService = inject(TransactionsService);
   private reviewsService = inject(ReviewsService);
   private stripeConnect = inject(StripeConnectService);
+  private mangopay = inject(MangopayService);
   private shippingService = inject(ShippingService);
   private route = inject(ActivatedRoute);
 
@@ -58,6 +60,15 @@ export class DashboardTransactionsComponent implements OnInit {
   /** Transaction ID currently confirming Stripe payment on return */
   stripeConfirmingTxId: string | null = null;
   stripePaymentError: string | null = null;
+  /** MangoPay card payment form state */
+  cardFormTxId: string | null = null;
+  cardNumber = '';
+  cardExpiry = '';
+  cardCvx = '';
+  cardPayError: string | null = null;
+  cardPaySubmitting = false;
+  /** Transaction ID polling MangoPay PayIn after 3DS return */
+  mangoPayConfirmingTxId: string | null = null;
   /** Proof of delivery (seller): uploaded URL and file name per transaction. */
   deliveryProofUploadedUrlByTxId: Record<string, string> = {};
   deliveryProofFileNameByTxId: Record<string, string> = {};
@@ -93,6 +104,16 @@ export class DashboardTransactionsComponent implements OnInit {
       if (payment === 'success' && sessionId && transactionId) {
         this.confirmStripePayment(sessionId, transactionId);
       } else if (payment === 'cancelled') {
+        this.stripePaymentError = 'Payment was cancelled. You can try again anytime.';
+      }
+
+      // Handle return from MangoPay 3DS redirect
+      const mpReturn = params['mangopay_return'];
+      const payInId = params['pay_in_id'];
+      const mpTxId = params['transaction_id'];
+      if (mpReturn === 'success' && payInId && mpTxId) {
+        this.pollMangoPayReturn(payInId, mpTxId);
+      } else if (mpReturn === 'cancel') {
         this.stripePaymentError = 'Payment was cancelled. You can try again anytime.';
       }
     });
@@ -299,7 +320,7 @@ export class DashboardTransactionsComponent implements OnInit {
     }).format(amount);
   }
 
-  /** Pay via Stripe: create checkout session and redirect */
+  /** Pay via Stripe: create checkout session and redirect (legacy — kept for backward compat) */
   payWithStripe(t: Transaction): void {
     if (this.stripePayingTxId || t.role !== 'buyer' || this.getEffectiveStatus(t) !== 'pending_payment') return;
     if (this.needsShippingRate(t)) {
@@ -316,7 +337,7 @@ export class DashboardTransactionsComponent implements OnInit {
         this.stripePayingTxId = null;
         const apiError = err?.error?.error;
         if (apiError === 'Seller not ready') {
-          this.stripePaymentError = `Payment unavailable: the seller has not connected their Stripe account yet. ` +
+          this.stripePaymentError = `Payment unavailable: the seller has not set up their payout account yet. ` +
             `Please contact the seller (${t.seller?.firstName} ${t.seller?.lastName}) or wait for them to complete their payment setup.`;
         } else {
           this.stripePaymentError = err?.error?.message || 'Failed to start payment. Please try again.';
@@ -336,6 +357,99 @@ export class DashboardTransactionsComponent implements OnInit {
       error: (err) => {
         this.stripeConfirmingTxId = null;
         this.stripePaymentError = err?.error?.message || 'Could not confirm payment. Please contact support if funds were charged.';
+      }
+    });
+  }
+
+  // ── MangoPay card payment ────────────────────────────────────────────────────
+
+  /** Open the inline card form for a pending transaction. */
+  openCardForm(t: Transaction): void {
+    if (t.role !== 'buyer' || this.getEffectiveStatus(t) !== 'pending_payment') return;
+    if (this.needsShippingRate(t)) {
+      this.openShippingPanel(t);
+      return;
+    }
+    this.cardFormTxId = t._id;
+    this.cardNumber = '';
+    this.cardExpiry = '';
+    this.cardCvx = '';
+    this.cardPayError = null;
+  }
+
+  closeCardForm(): void {
+    this.cardFormTxId = null;
+    this.cardPayError = null;
+    this.cardPaySubmitting = false;
+  }
+
+  /** Tokenize card via MangoPay.js then trigger PayIn. */
+  async submitCardPayment(t: Transaction): Promise<void> {
+    if (this.cardPaySubmitting) return;
+    this.cardPayError = null;
+
+    const cardNum = this.cardNumber.replace(/\s+/g, '');
+    const expiry = this.cardExpiry.replace(/\s+/g, '');
+    const cvx = this.cardCvx.trim();
+
+    if (!cardNum || cardNum.length < 13) { this.cardPayError = 'Please enter a valid card number.'; return; }
+    if (!expiry || expiry.length < 4) { this.cardPayError = 'Please enter the expiry date (MM/YY).'; return; }
+    if (!cvx) { this.cardPayError = 'Please enter the security code.'; return; }
+
+    this.cardPaySubmitting = true;
+
+    try {
+      // Step 1: get card registration object from backend
+      const reg = await this.mangopay.getCardRegistration(t._id).toPromise();
+      if (!reg) throw new Error('Failed to start card registration.');
+
+      // Step 2: tokenize card via MangoPay.js (card data never touches our server)
+      const expiryFormatted = expiry.replace('/', '');
+      const registrationData = await this.mangopay.tokenizeCard(reg, cardNum, expiryFormatted, cvx);
+
+      // Step 3: send token to backend to create PayIn
+      const returnUrl = `${window.location.origin}/dashboard/transactions?mangopay_return=success&pay_in_id=PAYIN_ID&transaction_id=${t._id}`;
+      const result = await this.mangopay.createPayIn(t._id, registrationData, returnUrl).toPromise();
+      if (!result) throw new Error('Payment failed.');
+
+      if (result.redirectUrl || result.secureModeRedirectURL) {
+        // 3DS required — redirect user to bank authentication
+        window.location.href = result.redirectUrl || result.secureModeRedirectURL!;
+      } else if (result.status === 'SUCCEEDED') {
+        // Payment succeeded without 3DS
+        this.cardPaySubmitting = false;
+        this.closeCardForm();
+        this.loadTransactions();
+        successToast.fire({ title: 'Payment confirmed! The seller has been notified.' });
+      } else {
+        throw new Error('Payment could not be completed. Please try again.');
+      }
+    } catch (err: any) {
+      this.cardPaySubmitting = false;
+      this.cardPayError = err?.error?.message || err?.message || 'Payment failed. Please check your card details and try again.';
+    }
+  }
+
+  /** Poll PayIn status after 3DS redirect return. */
+  pollMangoPayReturn(payInId: string, transactionId: string): void {
+    this.mangoPayConfirmingTxId = transactionId;
+    this.mangopay.pollPayIn(payInId, transactionId).subscribe({
+      next: (res) => {
+        this.mangoPayConfirmingTxId = null;
+        if (res.status === 'SUCCEEDED') {
+          this.loadTransactions();
+          successToast.fire({ title: 'Payment confirmed! The seller has been notified.' });
+        } else if (res.status === 'FAILED') {
+          this.stripePaymentError = `Payment failed: ${res.resultMessage || 'Please try again.'}`;
+        } else {
+          // CREATED — still pending, reload and show message
+          this.stripePaymentError = 'Payment is being processed. Please wait a moment and refresh.';
+          this.loadTransactions();
+        }
+      },
+      error: () => {
+        this.mangoPayConfirmingTxId = null;
+        this.stripePaymentError = 'Could not verify payment status. Please contact support if funds were charged.';
       }
     });
   }

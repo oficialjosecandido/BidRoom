@@ -47,6 +47,15 @@ const transactionSchema = new mongoose.Schema({
   /** Stripe Connect payment fields */
   stripeCheckoutSessionId: { type: String, trim: true, default: null, sparse: true },
   stripePaymentIntentId: { type: String, trim: true, default: null, sparse: true },
+  /** MangoPay payment fields */
+  mangoPayPayInId: { type: String, trim: true, default: null, sparse: true },
+  mangoPayTransferId: { type: String, trim: true, default: null },
+  mangoPayPayoutId: { type: String, trim: true, default: null },
+  mangoPayRefundId: { type: String, trim: true, default: null },
+  /** Escrow state: pending_inspection (48h hold) | released (payout triggered) | refunded */
+  escrowStatus: { type: String, enum: ['pending_inspection', 'released', 'refunded'], default: null },
+  /** When the 48h inspection window expires and payout can be triggered */
+  escrowReleasesAt: { type: Date, default: null },
   /** BidRoom platform fee charged to buyer (2% of amount, in dollars) */
   bidRoomFeeAmount: { type: Number, default: null, min: 0 },
   /** Stripe processing fee deducted from seller payout (retrieved from Stripe BalanceTx, in dollars) */

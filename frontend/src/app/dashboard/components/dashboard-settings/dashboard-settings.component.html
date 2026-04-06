@@ -80,57 +80,37 @@
         <h2 class="card-title">Seller Payout Account</h2>
       </div>
       <div class="card-body">
-        @if (connectStatusMessage) {
-          <div class="connect-message">{{ connectStatusMessage }}</div>
+        @if (statusMessage) {
+          <div class="connect-message">{{ statusMessage }}</div>
         }
-        @if (connectLoading) {
+        @if (statusLoading) {
           <p class="text-muted">Checking payout account status...</p>
         } @else if (!showOnboardingForm) {
           <div class="connect-status-row">
             <span class="info-label">Payout status</span>
-            <span class="status-badge" [ngClass]="connectStatusClass">{{ connectStatusLabel }}</span>
+            <span class="status-badge" [ngClass]="payoutStatusClass">{{ payoutStatusLabel }}</span>
           </div>
-          @if (connectStatus?.onboarded) {
-            <p class="card-desc">Your payout account is active. Buyers can pay you directly — funds will be sent to your registered bank account.</p>
-            @if (connectStatus?.chargesEnabled) {
-              <p class="text-success">Charges enabled · Payouts {{ connectStatus?.payoutsEnabled ? 'enabled' : 'pending' }}</p>
+          @if (sellerStatus?.mangoPayOnboarded) {
+            <p class="card-desc">Your payout account is active. Buyers can pay you — funds are held in escrow for 48 hours after delivery, then transferred to your registered bank account.</p>
+            @if (sellerStatus?.mangoPayKycLevel === 'LIGHT') {
+              <p class="text-muted">Basic verification (up to €2,500 cumulative payouts). Full KYC verification is automatic as volume increases.</p>
             }
             <button class="action-btn action-btn-secondary" (click)="openOnboardingForm()">Update bank account</button>
-          } @else if (connectStatus?.connected) {
-            @if (connectStatus?.requirementErrors?.length) {
-              <div class="connect-errors">
-                <p class="connect-errors-title">Issue with your payout account:</p>
-                <ul>
-                  @for (err of connectStatus!.requirementErrors!; track err) {
-                    <li>{{ err }}</li>
-                  }
-                </ul>
-              </div>
-            } @else {
-              <p class="card-desc">Your details have been submitted and are being verified by Stripe. This usually takes a few minutes.</p>
-            }
-            <div class="button-row">
-              <button class="action-btn action-btn-secondary" (click)="openOnboardingForm()">Update details</button>
-              @if (isStripeTestMode) {
-                <button class="action-btn action-btn-test" (click)="testActivate()" [disabled]="connectTestActivating">
-                  {{ connectTestActivating ? 'Activating…' : '⚡ Simulate verification' }}
-                </button>
-              }
-            </div>
           } @else {
-            <p class="card-desc">To receive payments from buyers, set up your payout account. No Stripe account needed — just fill in your details below.</p>
+            <p class="card-desc">To receive payments from buyers, set up your payout account. Enter your identity and bank details — BidRoom uses MangoPay to process payouts securely.</p>
             <ul class="feature-list">
               <li>Enter your identity and bank details once</li>
-              <li>Stripe processes payouts securely in the background</li>
-              <li>Funds transferred directly to your bank account</li>
+              <li>Funds held in escrow for 48h after the buyer confirms delivery</li>
+              <li>Transferred directly to your IBAN bank account</li>
+              <li>Basic verification up to €2,500; higher limits with full KYC</li>
             </ul>
             <button class="action-btn" (click)="openOnboardingForm()">Set up payout account</button>
           }
         } @else {
           <!-- Onboarding Form -->
           <form class="onboarding-form" (ngSubmit)="submitOnboarding()">
-            @if (connectError) {
-              <div class="form-error-banner">{{ connectError }}</div>
+            @if (statusError) {
+              <div class="form-error-banner">{{ statusError }}</div>
             }
 
             <div class="form-section">
@@ -178,27 +158,33 @@
             </div>
 
             <div class="form-section">
-              <h3 class="form-section-title">Bank account (IBAN)</h3>
+              <h3 class="form-section-title">Bank account</h3>
               <div class="form-field">
                 <label>IBAN</label>
                 <input type="text" [(ngModel)]="iban" name="iban" placeholder="PT50 0035 0552 0001 3600 5312 9" required
                        (input)="iban = $any($event.target).value.toUpperCase()" />
                 <span class="form-hint">Your International Bank Account Number. Spaces are ignored.</span>
               </div>
+              <div class="form-field">
+                <label>BIC / SWIFT <span class="form-optional">(optional)</span></label>
+                <input type="text" [(ngModel)]="bic" name="bic" placeholder="BPIOPTPL" maxlength="11"
+                       (input)="bic = $any($event.target).value.toUpperCase()" />
+                <span class="form-hint">Required for some non-SEPA banks.</span>
+              </div>
             </div>
 
             <div class="form-section">
               <label class="tos-row">
                 <input type="checkbox" [(ngModel)]="tosAccepted" name="tosAccepted" />
-                <span>I authorise BidRoom to submit my information to Stripe for identity verification and payout processing, and I accept the <a href="https://stripe.com/legal/connect-account" target="_blank" rel="noopener">Stripe Connected Account Agreement</a>.</span>
+                <span>I authorise BidRoom to submit my information to MangoPay for identity verification and payout processing, and I accept the <a href="https://www.mangopay.com/terms/end-user-terms-and-conditions/Mangopay_Terms-and-Conditions_EN.pdf" target="_blank" rel="noopener">MangoPay End-User Terms and Conditions</a>.</span>
               </label>
             </div>
 
             <div class="form-actions">
-              <button type="submit" class="action-btn" [disabled]="connectSubmitting">
-                {{ connectSubmitting ? 'Submitting…' : 'Save payout account' }}
+              <button type="submit" class="action-btn" [disabled]="statusSubmitting">
+                {{ statusSubmitting ? 'Submitting…' : 'Save payout account' }}
               </button>
-              <button type="button" class="action-btn action-btn-ghost" (click)="cancelOnboardingForm()" [disabled]="connectSubmitting">Cancel</button>
+              <button type="button" class="action-btn action-btn-ghost" (click)="cancelOnboardingForm()" [disabled]="statusSubmitting">Cancel</button>
             </div>
           </form>
         }

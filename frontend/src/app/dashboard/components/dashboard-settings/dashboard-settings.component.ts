@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { AuthService, AppUser } from '../../../auth/services/auth.service';
 import { CustomerService } from '../../../shared/services/customer.service';
-import { StripeConnectService, ConnectAccountStatus, OnboardingFormData } from '../../../shared/services/stripe-connect.service';
+import { MangopayService, MangoPaySellerStatus, MangoPaySetupData } from '../../../shared/services/mangopay.service';
 import { Observable } from 'rxjs';
 
 @Component({
@@ -18,7 +18,7 @@ export class DashboardSettingsComponent implements OnInit {
   private authService = inject(AuthService);
   private customerService = inject(CustomerService);
   private translate = inject(TranslateService);
-  private stripeConnect = inject(StripeConnectService);
+  private mangopay = inject(MangopayService);
 
   /** Display scale for buyer/seller review averages (matches 1–10 transaction reviews). */
   readonly reviewScoreMax = 10;
@@ -29,15 +29,12 @@ export class DashboardSettingsComponent implements OnInit {
   buyerReviewCount = 0;
   sellerReviewCount = 0;
 
-  connectStatus: ConnectAccountStatus | null = null;
-  connectLoading = false;
-  connectSubmitting = false;
-  connectTestActivating = false;
-  connectStatusMessage: string | null = null;
-  connectError: string | null = null;
+  sellerStatus: MangoPaySellerStatus | null = null;
+  statusLoading = false;
+  statusSubmitting = false;
+  statusMessage: string | null = null;
+  statusError: string | null = null;
   showOnboardingForm = false;
-
-  get isStripeTestMode(): boolean { return this.stripeConnect.isTestMode; }
 
   // Onboarding form fields
   dobDay: number | null = null;
@@ -48,6 +45,7 @@ export class DashboardSettingsComponent implements OnInit {
   addressPostal = '';
   addressCountry = 'PT';
   iban = '';
+  bic = '';
   tosAccepted = false;
 
   readonly countries = [
@@ -65,9 +63,7 @@ export class DashboardSettingsComponent implements OnInit {
     { code: 'PT', label: 'Portugal' }, { code: 'RO', label: 'Romania' },
     { code: 'SK', label: 'Slovakia' }, { code: 'SI', label: 'Slovenia' },
     { code: 'ES', label: 'Spain' }, { code: 'SE', label: 'Sweden' },
-    { code: 'CH', label: 'Switzerland' }, { code: 'GB', label: 'United Kingdom' },
-    { code: 'US', label: 'United States' }, { code: 'CA', label: 'Canada' },
-    { code: 'AU', label: 'Australia' }
+    { code: 'CH', label: 'Switzerland' }, { code: 'GB', label: 'United Kingdom' }
   ];
 
   selectedLanguage = 'en';
@@ -102,7 +98,7 @@ export class DashboardSettingsComponent implements OnInit {
       }
     });
 
-    this.loadConnectStatus();
+    this.loadSellerStatus();
   }
 
   saveLanguage(): void {
@@ -119,44 +115,45 @@ export class DashboardSettingsComponent implements OnInit {
     });
   }
 
-  loadConnectStatus(): void {
-    this.connectLoading = true;
-    this.stripeConnect.getAccountStatus().subscribe({
-      next: (status) => { this.connectStatus = status; this.connectLoading = false; },
-      error: () => { this.connectLoading = false; }
+  loadSellerStatus(): void {
+    this.statusLoading = true;
+    this.mangopay.getSellerStatus().subscribe({
+      next: (s) => { this.sellerStatus = s; this.statusLoading = false; },
+      error: () => { this.statusLoading = false; }
     });
   }
 
   openOnboardingForm(): void {
-    this.connectError = null;
+    this.statusError = null;
     this.showOnboardingForm = true;
   }
 
   cancelOnboardingForm(): void {
     this.showOnboardingForm = false;
-    this.connectError = null;
+    this.statusError = null;
   }
 
   submitOnboarding(): void {
-    this.connectError = null;
+    this.statusError = null;
+
     if (!this.dobDay || !this.dobMonth || !this.dobYear) {
-      this.connectError = 'Please enter your date of birth.';
+      this.statusError = 'Please enter your date of birth.';
       return;
     }
     if (!this.addressLine1 || !this.addressCity || !this.addressPostal || !this.addressCountry) {
-      this.connectError = 'Please fill in your full address.';
+      this.statusError = 'Please fill in your full address.';
       return;
     }
     if (!this.iban.trim()) {
-      this.connectError = 'Please enter your IBAN.';
+      this.statusError = 'Please enter your IBAN.';
       return;
     }
     if (!this.tosAccepted) {
-      this.connectError = 'You must accept the Terms of Service.';
+      this.statusError = 'You must accept the Terms of Service.';
       return;
     }
 
-    const data: OnboardingFormData = {
+    const data: MangoPaySetupData = {
       dobDay: this.dobDay,
       dobMonth: this.dobMonth,
       dobYear: this.dobYear,
@@ -165,50 +162,34 @@ export class DashboardSettingsComponent implements OnInit {
       addressPostal: this.addressPostal,
       addressCountry: this.addressCountry,
       iban: this.iban,
-      tosAccepted: this.tosAccepted
+      bic: this.bic || undefined
     };
 
-    this.connectSubmitting = true;
-    this.stripeConnect.submitOnboarding(data).subscribe({
+    this.statusSubmitting = true;
+    this.mangopay.setupSeller(data).subscribe({
       next: (res) => {
-        this.connectSubmitting = false;
+        this.statusSubmitting = false;
         this.showOnboardingForm = false;
-        this.connectStatusMessage = res.onboarded
+        this.statusMessage = res.mangoPayOnboarded
           ? 'Your payout account is now active!'
-          : 'Your details have been submitted. Stripe will verify them shortly — this usually takes a few minutes.';
-        this.loadConnectStatus();
+          : 'Your bank account has been registered. Funds will be paid out after each transaction.';
+        this.loadSellerStatus();
       },
       error: (err) => {
-        this.connectSubmitting = false;
-        this.connectError = err?.error?.message || err?.error?.error || 'Something went wrong. Please check your details and try again.';
+        this.statusSubmitting = false;
+        this.statusError = err?.error?.message || err?.error?.error || 'Something went wrong. Please check your details and try again.';
       }
     });
   }
 
-  testActivate(): void {
-    this.connectTestActivating = true;
-    this.stripeConnect.testActivate().subscribe({
-      next: () => {
-        this.connectTestActivating = false;
-        this.connectStatusMessage = 'Test account activated!';
-        this.loadConnectStatus();
-      },
-      error: (err) => {
-        this.connectTestActivating = false;
-        this.connectError = err?.error?.error || 'Test activation failed.';
-      }
-    });
+  get payoutStatusLabel(): string {
+    if (!this.sellerStatus?.mangoPayOnboarded) return 'Not set up';
+    const level = this.sellerStatus.mangoPayKycLevel;
+    return level === 'REGULAR' ? 'Active (Verified)' : 'Active (Basic)';
   }
 
-  get connectStatusLabel(): string {
-    if (!this.connectStatus?.connected) return 'Not connected';
-    if (this.connectStatus.onboarded) return 'Active';
-    return 'Pending verification';
-  }
-
-  get connectStatusClass(): string {
-    if (!this.connectStatus?.connected) return 'connect-not-connected';
-    if (this.connectStatus.onboarded) return 'connect-active';
-    return 'connect-pending';
+  get payoutStatusClass(): string {
+    if (!this.sellerStatus?.mangoPayOnboarded) return 'connect-not-connected';
+    return 'connect-active';
   }
 }

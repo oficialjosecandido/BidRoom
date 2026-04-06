@@ -33,10 +33,12 @@ const { router: paymentsRouter, stripeWebhookHandler } = require('./routes/payme
 const { router: connectRouter, connectWebhookHandler } = require('./routes/connect');
 const shippingRoutes = require('./routes/shipping');
 const configRoutes = require('./routes/config');
+const mangoPayRoutes = require('./routes/mangopay');
 
 // Import services
 const auctionEndScheduler = require('./services/auctionEndScheduler');
 const { runCleanup: runProofOfPaymentCleanup } = require('./services/proofOfPaymentCleanup');
+const escrowReleaseScheduler = require('./services/escrowReleaseScheduler');
 
 // CORS: allow FRONTEND_URL, FRONTEND_URL_PROD, localhost, and any Azure Static Web Apps origin
 const allowedOrigins = [
@@ -124,6 +126,7 @@ app.use('/api/payments', paymentsRouter);
 app.use('/api/connect', connectRouter);
 app.use('/api/shipping', shippingRoutes);
 app.use('/api/config', configRoutes);
+app.use('/api/mangopay', mangoPayRoutes);
 
 app.get('/', (req, res) => {
   res.json({
@@ -288,6 +291,10 @@ const startServer = async () => {
       // Start auction end scheduler (checks every 1 minute)
       auctionEndScheduler.startScheduler(1, io);
       console.log(`⏰ Auction end scheduler started`);
+
+      // Start escrow release scheduler (checks every 30 minutes)
+      escrowReleaseScheduler.startScheduler(30);
+      console.log(`🔓 Escrow release scheduler started`);
 
       // Proof-of-payment cleanup: delete files from Azure 30 days after paid (run daily)
       const PROOF_CLEANUP_MS = 24 * 60 * 60 * 1000;

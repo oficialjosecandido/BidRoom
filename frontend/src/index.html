@@ -20,9 +20,13 @@
   <script>
     window.APP_CONFIG = {
       API_URL: '',
-      STRIPE_PUBLISHABLE_KEY: ''
+      STRIPE_PUBLISHABLE_KEY: '',
+      MANGOPAY_CLIENT_ID: '',
+      MANGOPAY_BASE_URL: 'https://api.sandbox.mangopay.com'
     };
   </script>
+  <!-- MangoPay.js — card tokenization (PCI compliant; card data never reaches BidRoom servers) -->
+  <script src="https://api.mangopay.com/public/browser/mangopay-v3.js"></script>
 </head>
 <body>
   <app-root></app-root>

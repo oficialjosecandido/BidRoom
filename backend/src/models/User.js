@@ -93,7 +93,17 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
     index: true
-  }
+  },
+  /** MangoPay Natural User ID */
+  mangoPayUserId: { type: String, default: null, sparse: true, index: true },
+  /** MangoPay Wallet ID (one wallet per seller) */
+  mangoPayWalletId: { type: String, default: null },
+  /** MangoPay Bank Account ID linked to seller IBAN */
+  mangoPayBankAccountId: { type: String, default: null },
+  /** Whether the seller has completed MangoPay onboarding (user + wallet + bank account created) */
+  mangoPayOnboarded: { type: Boolean, default: false, index: true },
+  /** MangoPay KYC status: LIGHT (up to €2500 cumulative) | REGULAR (fully verified) */
+  mangoPayKycLevel: { type: String, enum: ['LIGHT', 'REGULAR'], default: 'LIGHT' }
 }, {
   timestamps: true // Adds createdAt and updatedAt fields
 });

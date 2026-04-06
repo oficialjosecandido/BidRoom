@@ -19,7 +19,7 @@
     </div>
   }
 
-  @if (stripeConfirmingTxId) {
+  @if (stripeConfirmingTxId || mangoPayConfirmingTxId) {
     <div class="stripe-confirming-banner">
       {{ 'transactions.confirmingStripe' | translate }}
     </div>
@@ -264,10 +264,41 @@
                     <button type="button" class="btn btn-secondary" (click)="openShippingPanel(t)">
                       {{ 'transactions.chooseShippingMethod' | translate }}
                     </button>
+                  } @else if (cardFormTxId === t._id) {
+                    <!-- MangoPay inline card form -->
+                    <div class="card-payment-form">
+                      @if (cardPayError) {
+                        <div class="form-error-banner">{{ cardPayError }}</div>
+                      }
+                      <div class="form-field">
+                        <label>Card number</label>
+                        <input type="text" [(ngModel)]="cardNumber" name="cardNumber" placeholder="1234 5678 9012 3456"
+                               maxlength="19" autocomplete="cc-number" inputmode="numeric" />
+                      </div>
+                      <div class="card-form-row">
+                        <div class="form-field">
+                          <label>Expiry (MM/YY)</label>
+                          <input type="text" [(ngModel)]="cardExpiry" name="cardExpiry" placeholder="MM/YY"
+                                 maxlength="5" autocomplete="cc-exp" />
+                        </div>
+                        <div class="form-field">
+                          <label>Security code</label>
+                          <input type="text" [(ngModel)]="cardCvx" name="cardCvx" placeholder="CVV"
+                                 maxlength="4" autocomplete="cc-csc" inputmode="numeric" />
+                        </div>
+                      </div>
+                      <div class="card-form-actions">
+                        <button type="button" class="btn btn-stripe-pay" (click)="submitCardPayment(t)" [disabled]="cardPaySubmitting">
+                          {{ cardPaySubmitting ? 'Processing…' : ('transactions.payNow' | translate) }}
+                        </button>
+                        <button type="button" class="btn-link" (click)="closeCardForm()" [disabled]="cardPaySubmitting">Cancel</button>
+                      </div>
+                      <p class="card-security-note">🔒 Your card details are sent directly to MangoPay and never stored on BidRoom servers.</p>
+                    </div>
                   } @else {
                     <p class="stripe-pay-hint">{{ 'transactions.paySecurelyHint' | translate }}</p>
-                    <button type="button" class="btn btn-stripe-pay" (click)="payWithStripe(t)" [disabled]="stripePayingTxId === t._id">
-                      {{ stripePayingTxId === t._id ? ('transactions.redirectingToStripe' | translate) : ('transactions.payNow' | translate) }}
+                    <button type="button" class="btn btn-stripe-pay" (click)="openCardForm(t)">
+                      {{ 'transactions.payNow' | translate }}
                     </button>
                   }
                 </div>
