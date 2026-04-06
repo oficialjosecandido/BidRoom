@@ -7,9 +7,9 @@ export interface FeatureFlags {
   membershipTiers: boolean;
 }
 
-/** Default flags — all enabled until server responds. */
+/** Defaults until GET /api/config responds — match backend (tiers off unless FEATURE_MEMBERSHIP_TIERS=true). */
 const DEFAULT_FLAGS: FeatureFlags = {
-  membershipTiers: true
+  membershipTiers: false
 };
 
 @Injectable({ providedIn: 'root' })
