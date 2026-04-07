@@ -852,14 +852,13 @@ async function handleAuctionEnd(listingId, io = null) {
       const offersAboveMin = offers.filter(o => o.amount >= minimumOfferPrice);
 
       if (offersAboveMin.length === 1) {
-        // Exactly one qualifying offer — check if seller has Stripe before auto-accepting
+        // Exactly one qualifying offer — check if seller has Airwallex KYC before auto-accepting
         const sellerId = listing.seller?._id || listing.seller;
-        const sellerUser = sellerId ? await User.findById(sellerId).select('stripeConnectAccountId stripeConnectOnboarded').lean() : null;
-        const isTestMode = process.env.STRIPE_SECRET_KEY?.startsWith('sk_test_');
-        const sellerStripeReady = !!(sellerUser?.stripeConnectAccountId && (sellerUser?.stripeConnectOnboarded || isTestMode));
+        const sellerUser = sellerId ? await User.findById(sellerId).select('airwallexAccountId airwallexOnboarded').lean() : null;
+        const sellerPayoutReady = !!(sellerUser?.airwallexAccountId && sellerUser?.airwallexOnboarded);
 
-        if (!sellerStripeReady) {
-          // End listing but do NOT auto-accept; notify seller to connect Stripe
+        if (!sellerPayoutReady) {
+          // End listing but do NOT auto-accept; notify seller to complete KYC
           await Listing.findByIdAndUpdate(listingId, { $set: { status: 'ended' } }, { runValidators: false });
           const sellerUserId = sellerId?.toString?.();
           if (sellerUserId) {
@@ -869,10 +868,10 @@ async function handleAuctionEnd(listingId, io = null) {
               listingTitle: listing.title || 'Your listing',
               offerAmount: offersAboveMin[0].amount,
               sellerUserId
-            }).catch(err => console.error('Failed Stripe-required notification:', err));
+            }).catch(err => console.error('Failed payout-required notification:', err));
             if (io) emitNewNotificationToUser(io, sellerUserId).catch(() => {});
           }
-          return { listingId, notified: true, bestOfferStripeRequired: true };
+          return { listingId, notified: true, payoutAccountRequired: true };
         }
 
         const singleOffer = await Offer.findById(offersAboveMin[0]._id).populate('listing').populate('offerer', 'firstName lastName email');

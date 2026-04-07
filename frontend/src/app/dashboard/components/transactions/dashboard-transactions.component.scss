@@ -1,3 +1,92 @@
+// Wise payment instructions panel
+.wise-instructions-panel {
+  background: #f8faff;
+  border: 1px solid #c7d7f7;
+  border-radius: 10px;
+  padding: 20px;
+  margin-top: 12px;
+}
+
+.wise-intro {
+  font-size: 14px;
+  color: #374151;
+  margin: 0 0 16px;
+}
+
+.wise-loading {
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.wise-details-box {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 12px;
+}
+
+.wise-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 0;
+  font-size: 14px;
+  gap: 12px;
+}
+
+.wise-label {
+  color: #6b7280;
+  flex-shrink: 0;
+}
+
+.wise-value {
+  font-weight: 500;
+  color: #111827;
+  text-align: right;
+  word-break: break-all;
+}
+
+.wise-amount {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1a56db;
+}
+
+.wise-reference {
+  font-family: monospace;
+  font-size: 15px;
+  color: #111827;
+  background: #f3f4f6;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.wise-divider {
+  border-top: 1px solid #e5e7eb;
+  margin: 8px 0;
+}
+
+.wise-breakdown-note {
+  font-size: 12px;
+  color: #6b7280;
+  margin: 0 0 16px;
+}
+
+.wise-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.wise-note {
+  font-size: 12px;
+  color: #6b7280;
+  margin: 0;
+  line-height: 1.5;
+}
+
 // Stripe banners
 .stripe-confirming-banner {
   background: #e8f5e9;

@@ -14,9 +14,9 @@ import { WatchlistService } from '../../../shared/services/watchlist.service';
 import { SocketService } from '../../../shared/services/socket.service';
 import { AuthService } from '../../../auth/services/auth.service';
 import { PrivateRoomService, Bidder } from '../../../private-room/services/private-room.service';
-import { StripeConnectService } from '../../../shared/services/stripe-connect.service';
+import { CustomerService } from '../../../shared/services/customer.service';
 import { FeatureFlagsService } from '../../../shared/services/feature-flags.service';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-listing-details',
@@ -36,9 +36,10 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
   private socketService = inject(SocketService);
   private authService = inject(AuthService);
   private privateRoomService = inject(PrivateRoomService);
-  private stripeConnectService = inject(StripeConnectService);
+  private customerService = inject(CustomerService);
   featureFlags = inject(FeatureFlagsService);
   private cdr = inject(ChangeDetectorRef);
+  private translate = inject(TranslateService);
 
   listing: Listing | null = null;
   loading = true;
@@ -92,7 +93,7 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
   offerModalError: string | null = null;
   /** ID of offer being accepted/rejected (for loading state) */
   offerActionLoadingId: string | null = null;
-  /** Whether the current seller has Stripe connected and onboarded */
+  /** Whether the current seller has Airwallex KYC completed */
   sellerStripeReady = true;
 
   ngOnInit(): void {
@@ -261,12 +262,12 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
       },
       error: (err) => {
         this.offerActionLoadingId = null;
-        if (err?.error?.error === 'Stripe not connected') {
+        if (err?.error?.error === 'Payout account not set up') {
           Swal.fire({
             icon: 'warning',
-            title: 'Stripe Account Required',
-            html: 'You must connect your Stripe account before accepting offers.<br><br>' +
-              'Go to <strong>Dashboard → Settings → Payments</strong> to complete setup.',
+            title: 'Payout Account Required',
+            html: 'You must complete your payout account verification before accepting offers.<br><br>' +
+              'Go to <strong>Dashboard → Settings → Payout Account</strong> to complete setup.',
             showCancelButton: true,
             confirmButtonText: 'Go to Settings',
             cancelButtonText: 'Cancel',
@@ -1007,9 +1008,9 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
       currentUser.email.toLowerCase() === (this.listing.seller as { email?: string }).email?.toLowerCase()
     );
     if (this.isOwnListing) {
-      this.stripeConnectService.getAccountStatus().subscribe({
-        next: (status) => {
-          this.sellerStripeReady = status.connected && status.onboarded;
+      this.customerService.getCustomer().subscribe({
+        next: (info) => {
+          this.sellerStripeReady = info.airwallexOnboarded;
           this.cdr.detectChanges();
         },
         error: () => {
@@ -1228,10 +1229,38 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
     });
   }
 
+  /** Returns the description in the user's current language, falling back to any available language. */
   getFormattedDescription(): string {
-    if (!this.listing?.description) return '';
-    return this.listing.description.replace(/\n/g, '<br>');
+    const descs = this.listing?.descriptions as Record<string, string> | undefined;
+    const lang = (this.translate.currentLang || this.translate.defaultLang || 'en') as string;
+    const FALLBACK_ORDER = ['en', 'pt', 'es', 'fr'];
+
+    let text: string | null = null;
+    let usedLang: string | null = null;
+
+    if (descs && typeof descs === 'object') {
+      // Try exact match first, then fallbacks
+      if (descs[lang]?.trim()) { text = descs[lang]; usedLang = lang; }
+      else {
+        for (const fl of FALLBACK_ORDER) {
+          if (fl !== lang && descs[fl]?.trim()) { text = descs[fl]; usedLang = fl; break; }
+        }
+      }
+    }
+
+    // Fall back to legacy description field
+    if (!text) { text = this.listing?.description || ''; usedLang = null; }
+
+    this._descriptionFallbackLang = (usedLang && usedLang !== lang) ? usedLang : null;
+    return text.replace(/\n/g, '<br>');
   }
+
+  /** Set when the displayed description is in a different language than the user's preference */
+  _descriptionFallbackLang: string | null = null;
+
+  get descriptionFallbackLang(): string | null { return this._descriptionFallbackLang; }
+
+  readonly LANG_LABELS: Record<string, string> = { en: 'English', pt: 'Português', es: 'Español', fr: 'Français' };
 
   /** Format a date string for display in bid/offer history (e.g. "Jan 5, 2025, 02:30 PM"). */
   formatDate(dateString: string): string {

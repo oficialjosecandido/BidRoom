@@ -42,6 +42,47 @@
       "createAccount": "Crear Cuenta",
       "listAnItem": "Listar un Artículo"
     },
+    "heroV2": {
+      "title": "Compra y vende en subasta, de forma sencilla",
+      "subtitle": "Descubre artículos únicos, puja y gana ofertas en tiempo real.",
+      "ctaExplore": "Explorar subastas",
+      "ctaSell": "Vender"
+    },
+    "trust": {
+      "completed": "Más de 10.000 subastas completadas",
+      "secure": "Pagos seguros",
+      "sellers": "Vendedores verificados",
+      "liveListings": "activas ahora"
+    },
+    "endingSoonV2": {
+      "title": "Terminan pronto",
+      "viewAll": "Ver todo →"
+    },
+    "newListings": {
+      "title": "Nuevos anuncios"
+    },
+    "categoriesRow": {
+      "title": "Categorías populares",
+      "fashion": "Moda",
+      "watches": "Relojes",
+      "luxury": "Lujo"
+    },
+    "explore": {
+      "title": "Explorar subastas",
+      "loadingMore": "Cargando más…"
+    },
+    "filterBar": {
+      "all": "Todos"
+    },
+    "loadError": "No pudimos actualizar las subastas. Comprueba tu conexión e inténtalo de nuevo.",
+    "retry": "Reintentar",
+    "empty": {
+      "endingSoon": "Aún no hay subastas que terminen pronto.",
+      "newListings": "Aún no hay anuncios nuevos — sé el primero en vender.",
+      "feed": "No hay subastas en vivo con este filtro.",
+      "browse": "Ver todas las subastas",
+      "listFirst": "Publicar un artículo"
+    },
     "stats": {
       "activeBidders": "Pujadores Activos",
       "totalValueTraded": "Valor Total Negociado",

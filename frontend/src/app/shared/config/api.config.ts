@@ -25,17 +25,9 @@ export const API_CONFIG = {
     return this.getApiUrl().replace(/\/api\/?$/, '');
   },
 
-  getStripePublishableKey(): string {
-    const runtimeKey = typeof window !== 'undefined' && (window as any).APP_CONFIG?.STRIPE_PUBLISHABLE_KEY;
-    if (runtimeKey) return runtimeKey;
-
-    const hostname = typeof window !== 'undefined' ? window.location.hostname : 'localhost';
-
-    if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '0.0.0.0') {
-      return 'pk_test_51T98Ps1Me1kcdayq7UjnAMHVW88Blkx2MCBtwMvCL7XLmTBxb59PrSwhxSIJY8qrDiJBpbRY9YwHGPKGSOULrSzk00Mmg5sYh5';
-    }
-
-    console.warn('[BidRoom] STRIPE_PUBLISHABLE_KEY not configured via APP_CONFIG. Set window.APP_CONFIG.STRIPE_PUBLISHABLE_KEY at deploy time.');
-    return '';
+  /** Airwallex environment: 'demo' or 'production' (read from window.APP_CONFIG at runtime) */
+  getAirwallexEnv(): string {
+    const runtimeEnv = typeof window !== 'undefined' && (window as any).APP_CONFIG?.AIRWALLEX_ENV;
+    return runtimeEnv || 'demo';
   }
 };

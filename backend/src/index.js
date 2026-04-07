@@ -29,14 +29,14 @@ const watchlistRoutes = require('./routes/watchlist');
 const reviewRoutes = require('./routes/reviews');
 const transactionsRoutes = require('./routes/transactions');
 const notificationsRoutes = require('./routes/notifications');
-const { router: paymentsRouter, stripeWebhookHandler } = require('./routes/payments');
-const { router: connectRouter, connectWebhookHandler } = require('./routes/connect');
 const shippingRoutes = require('./routes/shipping');
 const configRoutes = require('./routes/config');
+const airwallexRoutes = require('./routes/airwallex');
 
 // Import services
 const auctionEndScheduler = require('./services/auctionEndScheduler');
 const { runCleanup: runProofOfPaymentCleanup } = require('./services/proofOfPaymentCleanup');
+const escrowExpiryScheduler = require('./services/escrowExpiryScheduler');
 
 // CORS: FRONTEND_URL(s), optional CORS_EXTRA_ORIGINS (comma-separated), localhost, Azure Static Web Apps
 const extraOrigins = (process.env.CORS_EXTRA_ORIGINS || '')
@@ -88,9 +88,11 @@ app.use(cors({
 }));
 app.use(morgan('combined'));
 
-// Stripe webhooks need raw body for signature verification (must be before express.json())
-app.post('/api/payments/webhook', express.raw({ type: 'application/json' }), stripeWebhookHandler);
-app.post('/api/connect/webhook', express.raw({ type: 'application/json' }), connectWebhookHandler);
+// Airwallex webhooks need raw body for signature verification (must be before express.json())
+app.post('/api/airwallex/webhook', express.raw({ type: 'application/json' }), (req, _res, next) => {
+  req.rawBody = req.body;
+  next();
+});
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -141,10 +143,9 @@ app.use('/api/watchlist', watchlistRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/transactions', transactionsRoutes);
 app.use('/api/notifications', notificationsRoutes);
-app.use('/api/payments', paymentsRouter);
-app.use('/api/connect', connectRouter);
 app.use('/api/shipping', shippingRoutes);
 app.use('/api/config', configRoutes);
+app.use('/api/airwallex', airwallexRoutes);
 
 app.get('/', (req, res) => {
   res.json({
@@ -269,6 +270,10 @@ const startServer = async () => {
       // Start auction end scheduler (checks every 1 minute)
       auctionEndScheduler.startScheduler(1, io);
       console.log(`⏰ Auction end scheduler started`);
+
+      // Escrow expiry scheduler: 14-day hold warnings + T+3 escrow releases (checks every 60 min)
+      escrowExpiryScheduler.startScheduler(60, io);
+      console.log(`🔒 Escrow expiry scheduler started`);
 
       // Proof-of-payment cleanup: delete files from Azure 30 days after paid (run daily)
       const PROOF_CLEANUP_MS = 24 * 60 * 60 * 1000;

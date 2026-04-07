@@ -20,6 +20,14 @@ const listingSchema = new mongoose.Schema({
     required: true,
     maxlength: 5000
   },
+  /** Multilingual descriptions keyed by language code (en, pt, es, fr).
+   *  At least one must be provided; description field mirrors the first available. */
+  descriptions: {
+    en: { type: String, maxlength: 5000, default: null },
+    pt: { type: String, maxlength: 5000, default: null },
+    es: { type: String, maxlength: 5000, default: null },
+    fr: { type: String, maxlength: 5000, default: null }
+  },
   category: {
     type: String,
     required: true,

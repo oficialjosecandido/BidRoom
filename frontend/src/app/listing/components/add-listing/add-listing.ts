@@ -1,10 +1,10 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormArray } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import Swal from 'sweetalert2';
-import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { ListingsService } from '../../../shared/services/listings.service';
 import { CustomerService, CustomerInfo } from '../../../shared/services/customer.service';
 import { API_CONFIG } from '../../../shared/config/api.config';
@@ -21,7 +21,7 @@ interface Category {
 @Component({
   selector: 'app-add-listing',
   standalone: true,
-  imports: [ReactiveFormsModule, TranslateModule, HeaderComponent, FooterComponent, RouterLink],
+  imports: [ReactiveFormsModule, TranslatePipe, HeaderComponent, FooterComponent],
   templateUrl: './add-listing.html',
   styleUrl: './add-listing.scss',
 })
@@ -40,6 +40,15 @@ export class AddListing implements OnInit {
   isLoadingCustomer = true;
   isStripeConnected = false;
   customerLoadError = false;
+
+  /** Active language tab in the description section */
+  activeDescLang: 'en' | 'pt' | 'es' | 'fr' = 'en';
+  readonly descLanguages: { code: 'en' | 'pt' | 'es' | 'fr'; label: string; flag: string }[] = [
+    { code: 'en', label: 'English', flag: '🇬🇧' },
+    { code: 'pt', label: 'Português', flag: '🇵🇹' },
+    { code: 'es', label: 'Español', flag: '🇪🇸' },
+    { code: 'fr', label: 'Français', flag: '🇫🇷' }
+  ];
 
   uploadedFiles: File[] = [];
   uploadedFileUrls: string[] = [];
@@ -156,9 +165,20 @@ export class AddListing implements OnInit {
     return rate != null ? rate * 100 : 0.5;
   }
 
+  /** At least one language description has ≥50 chars */
+  get hasValidDescription(): boolean {
+    const descs = this.listingForm.get('descriptions')?.value || {};
+    return Object.values(descs).some((v: any) => v && v.trim().length >= 50);
+  }
+
+  /** Character count for a given language tab */
+  descCharCount(lang: 'en' | 'pt' | 'es' | 'fr'): number {
+    return this.listingForm.get('descriptions')?.get(lang)?.value?.length || 0;
+  }
+
   /** Whether all required fields are valid and media is present */
   get canPublish(): boolean {
-    return this.listingForm.valid && this.isMediaValid && this.uploadedFiles.length >= 1 && !this.isSubmitting && !this.isUploadingImages;
+    return this.listingForm.valid && this.hasValidDescription && this.isMediaValid && this.uploadedFiles.length >= 1 && !this.isSubmitting && !this.isUploadingImages;
   }
 
   ngOnInit(): void {
@@ -170,7 +190,7 @@ export class AddListing implements OnInit {
   loadCustomerInfo(): void {
     this.customerService.getCustomer().subscribe({
       next: (info: CustomerInfo) => {
-        this.isStripeConnected = info.stripeConnectOnboarded;
+        this.isStripeConnected = info.airwallexOnboarded;
         this.isLoadingCustomer = false;
       },
       error: () => {
@@ -187,7 +207,12 @@ export class AddListing implements OnInit {
       subCategory: ['', Validators.required],
       listingFormat: ['auction', Validators.required],
       condition: ['', Validators.required],
-      description: ['', [Validators.required, Validators.minLength(50)]],
+      descriptions: this.fb.group({
+        en: [''],
+        pt: [''],
+        es: [''],
+        fr: ['']
+      }),
       media: this.fb.array([]),
       specifications: this.fb.array([]),
       locationCity: ['', Validators.required],
@@ -507,13 +532,13 @@ export class AddListing implements OnInit {
       this.listingForm.get(key)?.markAsTouched();
     });
 
-    if (!this.listingForm.valid || this.uploadedFiles.length < 1 || !this.isMediaValid) {
+    if (!this.listingForm.valid || !this.hasValidDescription || this.uploadedFiles.length < 1 || !this.isMediaValid) {
       const fieldLabels: Record<string, string> = {
         title: 'Listing Title',
         category: 'Category',
         subCategory: 'Sub-Category',
         condition: 'Item Condition',
-        description: 'Full Description (min. 50 characters)',
+        descriptions: 'Description (min. 50 characters in at least one language)',
         startingBid: 'Starting Bid',
         locationCity: 'City',
         locationRegion: 'Region / State',
@@ -576,9 +601,20 @@ export class AddListing implements OnInit {
 
   prepareListingData(): any {
     const formValue = this.listingForm.value;
+    // Build descriptions map — only include non-empty values
+    const rawDescs = formValue.descriptions || {};
+    const descriptions: Record<string, string> = {};
+    for (const lang of ['en', 'pt', 'es', 'fr'] as const) {
+      if (rawDescs[lang] && rawDescs[lang].trim().length >= 50) {
+        descriptions[lang] = rawDescs[lang].trim();
+      }
+    }
+    // Canonical description: first filled language
+    const description = descriptions['en'] || descriptions['pt'] || descriptions['es'] || descriptions['fr'] || '';
     return {
       title: formValue.title,
-      description: formValue.description,
+      description,
+      descriptions,
       category: formValue.category,
       subCategory: formValue.subCategory,
       condition: formValue.condition,
@@ -637,7 +673,7 @@ export class AddListing implements OnInit {
       subCategory: 'addListing.subCategory',
       listingFormat: 'addListing.listingFormat',
       condition: 'addListing.condition',
-      description: 'addListing.description',
+      descriptions: 'addListing.description',
       locationCity: 'addListing.city',
       locationRegion: 'addListing.regionState',
       locationCountry: 'addListing.originCountry',

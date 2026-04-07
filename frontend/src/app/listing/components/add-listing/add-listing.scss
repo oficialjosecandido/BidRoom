@@ -1,3 +1,33 @@
+// Description language tabs
+.desc-lang-tabs {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+
+.desc-lang-tab {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  border: 1px solid #d1d5db;
+  border-radius: 20px;
+  background: #f9fafb;
+  color: #374151;
+  cursor: pointer;
+  transition: all 0.15s;
+
+  &:hover { border-color: #9ca3af; background: #f3f4f6; }
+  &.active { border-color: var(--accent-purple, #7a4f84); background: #faf5ff; color: var(--accent-purple, #7a4f84); }
+  &.filled { border-color: #22c55e; color: #16a34a; background: #f0fdf4; }
+  &.active.filled { border-color: #22c55e; background: #dcfce7; }
+}
+
+.desc-tab-check { font-size: 11px; font-weight: 700; }
+
 .add-listing-container {
   min-height: 100vh;
   background: var(--light-gray);

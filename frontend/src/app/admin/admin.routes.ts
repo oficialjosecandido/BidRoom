@@ -34,6 +34,6 @@ export const adminRoutes: Routes = [
     loadComponent: () => import('./components/disputes/admin-disputes.component').then(m => m.AdminDisputesComponent),
     canActivate: [AdminGuard],
     data: { title: 'Disputes', icon: '⚖️' }
-  }
+  },
 ];
 

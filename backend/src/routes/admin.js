@@ -1,5 +1,4 @@
 const express = require('express');
-const Stripe = require('stripe');
 const { authenticateToken } = require('../middleware/auth');
 const User = require('../models/User');
 const Listing = require('../models/Listing');
@@ -11,11 +10,6 @@ const { renderEmailTemplate } = require('../services/templateEngine');
 const { notifyDisputeDecisionIssued, emitNewNotificationToUser } = require('../services/notificationService');
 const { applyDisputeAccountOutcome } = require('../services/accountStatusService');
 const { applyDisputeVerdictImpact } = require('../services/reputationService');
-
-function getStripe() {
-  const key = process.env.STRIPE_SECRET_KEY;
-  return key ? new Stripe(key) : null;
-}
 
 const router = express.Router();
 
@@ -411,67 +405,6 @@ router.post('/disputes/:transactionId/ruling', authenticateToken, requireAdmin, 
     applyDisputeVerdictImpact(verdict, buyerUserId, sellerUserId).catch(err =>
       console.error('Dispute verdict reputation impact:', err.message)
     );
-
-    // Issue Stripe refund when verdict favours the buyer
-    if (resolvedRefundAmount > 0 && transaction.stripePaymentIntentId) {
-      try {
-        const stripe = getStripe();
-        if (stripe) {
-          const refund = await stripe.refunds.create({
-            payment_intent: transaction.stripePaymentIntentId,
-            amount: Math.round(resolvedRefundAmount * 100), // cents
-            reason: 'fraudulent',
-            metadata: {
-              transactionId: transaction._id.toString(),
-              verdict,
-              adminNotes: adminNotes || ''
-            }
-          });
-          await Transaction.findByIdAndUpdate(transaction._id, { $set: { stripeRefundId: refund.id } }, { runValidators: false });
-          console.log(`[Admin] Stripe refund issued refundId=${refund.id} amount=${resolvedRefundAmount} transaction=${transaction._id}`);
-        }
-      } catch (refundErr) {
-        // Log but don't fail the ruling — admin can retry the Stripe refund manually
-        console.error(`[Admin] Stripe refund failed transaction=${transaction._id}:`, refundErr.message);
-      }
-    }
-
-    // Send refund emails to buyer and seller
-    if (resolvedRefundAmount > 0) {
-      try {
-        const [buyerUser, sellerUser] = await Promise.all([
-          User.findById(transaction.buyer).select('firstName lastName email').lean(),
-          User.findById(transaction.seller).select('firstName lastName email').lean()
-        ]);
-        const listingForEmail = await Listing.findById(transaction.listing).select('title').lean();
-        const listingTitle = listingForEmail?.title || 'your listing';
-        const refundAmountFormatted = `$${resolvedRefundAmount.toFixed(2)}`;
-
-        if (buyerUser?.email) {
-          const buyerEmail = renderEmailTemplate('disputeRefundBuyer', 'en', {
-            buyerName: `${buyerUser.firstName} ${buyerUser.lastName}`.trim(),
-            listingTitle,
-            refundAmount: refundAmountFormatted
-          });
-          await sendEmail(buyerUser.email, buyerEmail.subject, buyerEmail.html).catch(err =>
-            console.error('[Admin] Failed to send dispute refund buyer email:', err.message)
-          );
-        }
-
-        if (sellerUser?.email) {
-          const sellerEmail = renderEmailTemplate('disputeRefundSeller', 'en', {
-            sellerName: `${sellerUser.firstName} ${sellerUser.lastName}`.trim(),
-            listingTitle,
-            refundAmount: refundAmountFormatted
-          });
-          await sendEmail(sellerUser.email, sellerEmail.subject, sellerEmail.html).catch(err =>
-            console.error('[Admin] Failed to send dispute refund seller email:', err.message)
-          );
-        }
-      } catch (emailErr) {
-        console.error('[Admin] Failed to send dispute refund emails:', emailErr.message);
-      }
-    }
 
     const updated = await Transaction.findById(transaction._id)
       .populate('listing', 'title slug images')

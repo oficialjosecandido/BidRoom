@@ -42,6 +42,47 @@
       "createAccount": "Create Account",
       "listAnItem": "List an Item"
     },
+    "heroV2": {
+      "title": "Buy and sell through auctions, the simple way",
+      "subtitle": "Discover unique items, place bids, and win deals in real time.",
+      "ctaExplore": "Explore auctions",
+      "ctaSell": "Start selling"
+    },
+    "trust": {
+      "completed": "10,000+ auctions completed",
+      "secure": "Secure payments",
+      "sellers": "Verified sellers",
+      "liveListings": "live now"
+    },
+    "endingSoonV2": {
+      "title": "Ending soon",
+      "viewAll": "View all →"
+    },
+    "newListings": {
+      "title": "New listings"
+    },
+    "categoriesRow": {
+      "title": "Popular categories",
+      "fashion": "Fashion",
+      "watches": "Watches",
+      "luxury": "Luxury"
+    },
+    "explore": {
+      "title": "Explore auctions",
+      "loadingMore": "Loading more…"
+    },
+    "filterBar": {
+      "all": "All"
+    },
+    "loadError": "We couldn’t refresh auctions. Check your connection and try again.",
+    "retry": "Retry",
+    "empty": {
+      "endingSoon": "No auctions are ending in this view yet.",
+      "newListings": "No new listings yet — be the first to sell.",
+      "feed": "No live auctions match this filter.",
+      "browse": "Browse all auctions",
+      "listFirst": "List an item"
+    },
     "stats": {
       "activeBidders": "Active Bidders",
       "totalValueTraded": "Total Value Traded",

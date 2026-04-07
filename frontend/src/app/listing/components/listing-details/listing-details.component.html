@@ -438,6 +438,11 @@
 
         @if (activeTab === 'description') {
         <div class="tab-content">
+          @if (descriptionFallbackLang) {
+            <p class="desc-fallback-notice">
+              Description not available in your language — showing in {{ LANG_LABELS[descriptionFallbackLang] || descriptionFallbackLang }}.
+            </p>
+          }
           <div class="description-content" [innerHTML]="getFormattedDescription()"></div>
         </div>
         }

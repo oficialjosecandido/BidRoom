@@ -47,8 +47,8 @@ router.get('/profile', authenticateToken, async (req, res) => {
       customer = await Customer.findOne({ uid }).lean();
     }
 
-    // Resolve User by uid for review scores, Stripe Connect status, and account status
-    const dbUser = await User.findOne({ uid }).select('_id stripeConnectOnboarded accountStatus').lean();
+    // Resolve User by uid for review scores, Airwallex status, and account status
+    const dbUser = await User.findOne({ uid }).select('_id airwallexOnboarded airwallexKycStatus accountStatus').lean();
     let buyerScore = null;
     let sellerScore = null;
     let buyerReviewCount = 0;
@@ -81,7 +81,8 @@ router.get('/profile', authenticateToken, async (req, res) => {
       sellerScore,
       buyerReviewCount,
       sellerReviewCount,
-      stripeConnectOnboarded: !!(dbUser?.stripeConnectOnboarded)
+      airwallexOnboarded: !!(dbUser?.airwallexOnboarded),
+      airwallexKycStatus: dbUser?.airwallexKycStatus || null
     });
   } catch (error) {
     console.error('Error fetching customer profile:', error);

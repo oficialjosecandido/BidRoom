@@ -24,16 +24,11 @@ function formatUsd(amount) {
   return '$' + Number(amount).toFixed(2);
 }
 
-/** BidRoom platform fee: stored on transaction when paid via Stripe, fallback to rate */
+/** BidRoom platform fee: stored on transaction when paid, fallback to rate */
 function getBidRoomFee(transaction) {
   if (transaction.bidRoomFeeAmount != null) return transaction.bidRoomFeeAmount;
   const rate = transaction.listing?.commissionRate ?? BIDROOMFEE_RATE;
   return transaction.amount * rate;
-}
-
-/** Stripe processing fee: stored after payment capture; null if not yet available */
-function getStripeFee(transaction) {
-  return transaction.stripeFeeAmount ?? null;
 }
 
 /**
@@ -66,8 +61,7 @@ function getShippingLabel(transaction) {
 function getSellerPayout(transaction) {
   if (transaction.sellerPayoutAmount != null) return transaction.sellerPayoutAmount;
   const fee = getBidRoomFee(transaction);
-  const stripeFee = getStripeFee(transaction) ?? 0;
-  return transaction.amount - fee - stripeFee;
+  return transaction.amount - fee;
 }
 
 /** Buyer total charged (item + BidRoom fee + shipping) */
@@ -199,7 +193,6 @@ async function buildSellerInvoicePdf(transaction) {
     doc.on('error', reject);
 
     const bidRoomFee   = getBidRoomFee(transaction);
-    const stripeFee    = getStripeFee(transaction);
     const shipping     = getShippingAmount(transaction);
     const sellerPayout = getSellerPayout(transaction);
     const listing      = transaction.listing || {};
@@ -235,8 +228,8 @@ async function buildSellerInvoicePdf(transaction) {
     y = drawSectionTitle(doc, 'Transaction Details', y);
     y = drawKeyValue(doc, 'Transaction ID', String(transaction._id), y);
     y = drawKeyValue(doc, 'Date', formatDate(transaction.paidAt || transaction.updatedAt || transaction.createdAt), y);
-    if (transaction.stripePaymentIntentId) {
-      y = drawKeyValue(doc, 'Payment reference', transaction.stripePaymentIntentId, y);
+    if (transaction.airwallexPaymentIntentId) {
+      y = drawKeyValue(doc, 'Payment reference', transaction.airwallexPaymentIntentId, y);
     }
     y = drawKeyValue(doc, 'Item', listing.title || 'N/A', y);
     y += 10;
@@ -259,11 +252,6 @@ async function buildSellerInvoicePdf(transaction) {
     drawHorizontalLine(doc, y);
     y += 8;
     y = drawBreakdownRow(doc, `BidRoom platform fee (${commissionRate} of sale price)`, `- ${formatUsd(platformFee)}`, y, { valueColor: COLORS.accent });
-    if (stripeFee !== null) {
-      y = drawBreakdownRow(doc, 'Stripe processing fee (~2.9% + $0.30)', `- ${formatUsd(stripeFee)}`, y, { valueColor: COLORS.accent });
-    } else {
-      y = drawBreakdownRow(doc, 'Stripe processing fee', '– see Stripe dashboard', y, { valueColor: COLORS.muted });
-    }
     y += 10;
 
     y = drawTotalRow(doc, 'Final payout to you (seller)', formatUsd(sellerPayout), y, COLORS.sellerGreen);
@@ -343,8 +331,8 @@ async function buildBuyerInvoicePdf(transaction) {
     y = drawSectionTitle(doc, 'Transaction Details', y);
     y = drawKeyValue(doc, 'Transaction ID', String(transaction._id), y);
     y = drawKeyValue(doc, 'Date', formatDate(transaction.paidAt || transaction.updatedAt || transaction.createdAt), y);
-    if (transaction.stripePaymentIntentId) {
-      y = drawKeyValue(doc, 'Payment reference', transaction.stripePaymentIntentId, y);
+    if (transaction.airwallexPaymentIntentId) {
+      y = drawKeyValue(doc, 'Payment reference', transaction.airwallexPaymentIntentId, y);
     }
     y = drawKeyValue(doc, 'Item', listing.title || 'N/A', y);
     y += 10;
@@ -414,7 +402,6 @@ async function generateInvoicePdf(transaction, role) {
 module.exports = {
   generateInvoicePdf,
   getBidRoomFee,
-  getStripeFee,
   getShippingAmount,
   getShippingLabel,
   getSellerPayout,

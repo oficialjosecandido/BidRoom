@@ -6,7 +6,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import Swal from 'sweetalert2';
 import { TransactionsService, Transaction, TransactionStatus } from '../../../shared/services/transactions.service';
 import { ReviewsService } from '../../../shared/services/reviews.service';
-import { StripeConnectService } from '../../../shared/services/stripe-connect.service';
+import { AirwallexService } from '../../../shared/services/airwallex.service';
 import { ShippingService, ShippingRate, DeliveryAddress } from '../../../shared/services/shipping.service';
 
 const successToast = Swal.mixin({
@@ -28,7 +28,7 @@ const successToast = Swal.mixin({
 export class DashboardTransactionsComponent implements OnInit {
   transactionsService = inject(TransactionsService);
   private reviewsService = inject(ReviewsService);
-  private stripeConnect = inject(StripeConnectService);
+  private airwallexService = inject(AirwallexService);
   private shippingService = inject(ShippingService);
   private route = inject(ActivatedRoute);
 
@@ -53,11 +53,14 @@ export class DashboardTransactionsComponent implements OnInit {
   showTrackingFormId: string | null = null;
   trackingNumber = '';
   trackingCarrier = '';
-  /** Transaction ID currently redirecting to Stripe Checkout */
-  stripePayingTxId: string | null = null;
-  /** Transaction ID currently confirming Stripe payment on return */
-  stripeConfirmingTxId: string | null = null;
-  stripePaymentError: string | null = null;
+  /** Transaction ID currently initiating Airwallex payment */
+  airwallexPayingTxId: string | null = null;
+  airwallexPaymentError: string | null = null;
+  /** Transaction ID for which the Airwallex card widget is open */
+  airwallexWidgetTxId: string | null = null;
+  airwallexClientSecret: string | null = null;
+  /** Transaction ID for which buyer is confirming receipt (capture in progress) */
+  confirmingReceiptTxId: string | null = null;
   /** Proof of delivery (seller): uploaded URL and file name per transaction. */
   deliveryProofUploadedUrlByTxId: Record<string, string> = {};
   deliveryProofFileNameByTxId: Record<string, string> = {};
@@ -84,16 +87,12 @@ export class DashboardTransactionsComponent implements OnInit {
       }
     });
 
-    // Handle return from Stripe Checkout
+    // Handle return from Airwallex payment (intentId in query params)
     this.route.queryParams.subscribe(params => {
-      const payment = params['stripe_payment'];
-      const sessionId = params['session_id'];
-      const transactionId = params['transaction_id'];
-
-      if (payment === 'success' && sessionId && transactionId) {
-        this.confirmStripePayment(sessionId, transactionId);
-      } else if (payment === 'cancelled') {
-        this.stripePaymentError = 'Payment was cancelled. You can try again anytime.';
+      const intentId = params['airwallex_intent'];
+      const txId = params['transaction_id'];
+      if (intentId === 'cancelled') {
+        this.airwallexPaymentError = 'Payment was cancelled. You can try again anytime.';
       }
     });
   }
@@ -159,10 +158,10 @@ export class DashboardTransactionsComponent implements OnInit {
     return !!(t.buyerHasReviewedSeller && t.sellerHasReviewedBuyer);
   }
 
-  /** Can mark as completed only when delivered (or paid/shipped) AND both have reviewed */
+  /** Can mark as completed only when delivered AND both parties have reviewed */
   canMarkAsCompleted(t: Transaction): boolean {
     return (
-      ['paid', 'shipped', 'delivered'].includes(this.getEffectiveStatus(t)) &&
+      this.getEffectiveStatus(t) === 'delivered' &&
       this.hasBothReviewed(t)
     );
   }
@@ -170,7 +169,8 @@ export class DashboardTransactionsComponent implements OnInit {
   getStatusLabel(status: TransactionStatus): string {
     const labels: Record<TransactionStatus, string> = {
       pending_payment: 'Pending payment',
-      awaiting_seller_acceptance: 'Awaiting seller acceptance',
+      awaiting_seller_acceptance: 'Awaiting seller confirmation',
+      authorized: 'Payment held',
       paid: 'Paid',
       shipped: 'Shipped',
       delivered: 'Delivered',
@@ -181,18 +181,16 @@ export class DashboardTransactionsComponent implements OnInit {
     return labels[status] || status;
   }
 
-  /** Buying status: Pending Payment | Payment Submitted | Paid | Received | Pending Review | Under Dispute | Completed */
   getBuyingStatusLabel(t: Transaction): string {
     const s = this.getEffectiveStatus(t);
     if (s === 'under_dispute') return 'Under Dispute';
-    if (['delivered', 'completed'].includes(s) && !t.buyerHasReviewedSeller) {
-      return 'Pending Review';
-    }
+    if (['delivered', 'completed'].includes(s) && !t.buyerHasReviewedSeller) return 'Pending Review';
     const map: Record<TransactionStatus, string> = {
       pending_payment: 'Pending Payment',
-      awaiting_seller_acceptance: 'Payment Submitted',
+      awaiting_seller_acceptance: 'Payment sent',
+      authorized: 'Payment Held',
       paid: 'Paid',
-      shipped: 'Paid',
+      shipped: 'Item Sent — Confirm Receipt',
       delivered: 'Received',
       under_dispute: 'Under Dispute',
       completed: 'Completed',
@@ -201,19 +199,17 @@ export class DashboardTransactionsComponent implements OnInit {
     return map[s] || s;
   }
 
-  /** Selling status: Pending Delivery | Pending Acceptance | Payment Received | Sent | Pending Review | Under Dispute | Completed */
   getSellingStatusLabel(t: Transaction): string {
     const s = this.getEffectiveStatus(t);
     if (s === 'under_dispute') return 'Under Dispute';
-    if (['delivered', 'completed'].includes(s) && !t.sellerHasReviewedBuyer) {
-      return 'Pending Review';
-    }
+    if (['delivered', 'completed'].includes(s) && !t.sellerHasReviewedBuyer) return 'Pending Review';
     const map: Record<TransactionStatus, string> = {
-      pending_payment: 'Pending Delivery',
-      awaiting_seller_acceptance: 'Pending Acceptance',
+      pending_payment: 'Awaiting Payment',
+      awaiting_seller_acceptance: 'Confirm payment',
+      authorized: 'Payment Held — Ship Now',
       paid: 'Payment Received',
-      shipped: 'Sent',
-      delivered: 'Sent',
+      shipped: 'Awaiting Buyer Confirmation',
+      delivered: 'Payout Pending',
       under_dispute: 'Under Dispute',
       completed: 'Completed',
       cancelled: 'Cancelled'
@@ -224,14 +220,13 @@ export class DashboardTransactionsComponent implements OnInit {
   getBuyingStatusClass(t: Transaction): string {
     const s = this.getEffectiveStatus(t);
     if (s === 'under_dispute') return 'status-dispute';
-    if (['delivered', 'completed'].includes(s) && !t.buyerHasReviewedSeller) {
-      return 'status-review';
-    }
+    if (['delivered', 'completed'].includes(s) && !t.buyerHasReviewedSeller) return 'status-review';
     const map: Record<TransactionStatus, string> = {
       pending_payment: 'status-pending',
       awaiting_seller_acceptance: 'status-paid',
+      authorized: 'status-authorized',
       paid: 'status-paid',
-      shipped: 'status-paid',
+      shipped: 'status-shipped',
       delivered: 'status-delivered',
       under_dispute: 'status-dispute',
       completed: 'status-completed',
@@ -243,12 +238,11 @@ export class DashboardTransactionsComponent implements OnInit {
   getSellingStatusClass(t: Transaction): string {
     const s = this.getEffectiveStatus(t);
     if (s === 'under_dispute') return 'status-dispute';
-    if (['delivered', 'completed'].includes(s) && !t.sellerHasReviewedBuyer) {
-      return 'status-review';
-    }
+    if (['delivered', 'completed'].includes(s) && !t.sellerHasReviewedBuyer) return 'status-review';
     const map: Record<TransactionStatus, string> = {
       pending_payment: 'status-pending',
       awaiting_seller_acceptance: 'status-pending',
+      authorized: 'status-authorized',
       paid: 'status-paid',
       shipped: 'status-shipped',
       delivered: 'status-shipped',
@@ -263,6 +257,7 @@ export class DashboardTransactionsComponent implements OnInit {
     const classes: Record<TransactionStatus, string> = {
       pending_payment: 'status-pending',
       awaiting_seller_acceptance: 'status-pending',
+      authorized: 'status-authorized',
       paid: 'status-paid',
       shipped: 'status-shipped',
       delivered: 'status-delivered',
@@ -273,21 +268,62 @@ export class DashboardTransactionsComponent implements OnInit {
     return classes[status] || '';
   }
 
-  /** Seller can accept payment when buyer has submitted proof (5-day window) */
-  canSellerAcceptPayment(t: Transaction): boolean {
-    return this.getEffectiveStatus(t) === 'awaiting_seller_acceptance';
+  /** Hours remaining before the 14-day pre-auth hold expires. Null if no hold or already expired. */
+  getHoldHoursRemaining(t: Transaction): number | null {
+    if (!t.intentExpiresAt) return null;
+    const ms = new Date(t.intentExpiresAt).getTime() - Date.now();
+    if (ms <= 0) return 0;
+    return Math.round(ms / (60 * 60 * 1000));
   }
 
-  hasPaymentAcceptanceDeadlinePassed(t: Transaction): boolean {
-    const d = t.paymentAcceptanceDeadline;
-    if (!d) return false;
-    return new Date(d) < new Date();
+  /** True when the hold expiry is within 24 hours — highlight as urgent */
+  isHoldExpiringSoon(t: Transaction): boolean {
+    const h = this.getHoldHoursRemaining(t);
+    return h !== null && h <= 24;
   }
 
-  formatPaymentAcceptanceDeadline(t: Transaction): string {
-    const d = t.paymentAcceptanceDeadline;
-    if (!d) return '';
-    return new Date(d).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' });
+  /**
+   * Buyer confirms receipt ("Got the items").
+   * Triggers Airwallex capture — funds move from hold → seller's account.
+   * Escrow T+3 window begins; seller payout released after 3 days.
+   */
+  confirmReceipt(t: Transaction): void {
+    if (this.confirmingReceiptTxId) return;
+    if (t.role !== 'buyer') return;
+    const s = this.getEffectiveStatus(t);
+    if (!['authorized', 'shipped'].includes(s)) return;
+
+    Swal.fire({
+      icon: 'question',
+      title: 'Confirm you received the item?',
+      html: `By clicking <strong>Confirm</strong>, you release payment to the seller.<br><br>
+             Only do this after you've physically received and inspected the item.
+             Once confirmed, the transaction cannot be reversed without opening a dispute.`,
+      showCancelButton: true,
+      confirmButtonText: 'Yes, I got it',
+      cancelButtonText: 'Not yet',
+      confirmButtonColor: '#7A4F84',
+      reverseButtons: true
+    }).then(result => {
+      if (!result.isConfirmed) return;
+      this.confirmingReceiptTxId = t._id;
+      this.transactionsService.capturePayment(t._id).subscribe({
+        next: () => {
+          this.confirmingReceiptTxId = null;
+          this.loadTransactions();
+          successToast.fire({ title: 'Receipt confirmed! Seller will be paid within 3 days.' });
+        },
+        error: (err) => {
+          this.confirmingReceiptTxId = null;
+          Swal.fire({
+            icon: 'error',
+            title: 'Could not confirm receipt',
+            text: err?.error?.message || 'Please try again or contact support.',
+            confirmButtonColor: '#7A4F84'
+          });
+        }
+      });
+    });
   }
 
   formatPrice(amount: number): string {
@@ -299,51 +335,85 @@ export class DashboardTransactionsComponent implements OnInit {
     }).format(amount);
   }
 
-  /** Pay via Stripe: create checkout session and redirect */
-  payWithStripe(t: Transaction): void {
-    if (this.stripePayingTxId || t.role !== 'buyer' || this.getEffectiveStatus(t) !== 'pending_payment') return;
+  // ── Airwallex payment ─────────────────────────────────────────────────────────
+
+  /** Open Airwallex card checkout for a pending_payment transaction */
+  openAirwallexPayment(t: Transaction): void {
+    if (this.airwallexPayingTxId || t.role !== 'buyer' || this.getEffectiveStatus(t) !== 'pending_payment') return;
     if (this.needsShippingRate(t)) {
       this.openShippingPanel(t);
       return;
     }
-    this.stripePayingTxId = t._id;
-    this.stripePaymentError = null;
-    this.stripeConnect.createCheckoutSession(t._id).subscribe({
+    this.airwallexPayingTxId = t._id;
+    this.airwallexPaymentError = null;
+
+    // Reuse existing intent if already on the transaction
+    if (t.airwallexPaymentIntentId && t.airwallexClientSecret) {
+      this.airwallexPayingTxId = null;
+      this.airwallexWidgetTxId = t._id;
+      this.airwallexClientSecret = t.airwallexClientSecret;
+      return;
+    }
+
+    this.airwallexService.createPaymentIntent(t._id).subscribe({
       next: (res) => {
-        window.location.href = res.url;
+        this.airwallexPayingTxId = null;
+        this.airwallexWidgetTxId = t._id;
+        this.airwallexClientSecret = res.clientSecret;
       },
       error: (err) => {
-        this.stripePayingTxId = null;
+        this.airwallexPayingTxId = null;
         const apiError = err?.error?.error;
         if (apiError === 'Seller not ready') {
-          this.stripePaymentError = `Payment unavailable: the seller has not connected their Stripe account yet. ` +
-            `Please contact the seller (${t.seller?.firstName} ${t.seller?.lastName}) or wait for them to complete their payment setup.`;
+          this.airwallexPaymentError = `Payment unavailable: the seller has not completed their payout account setup yet. Please try again later.`;
         } else {
-          this.stripePaymentError = err?.error?.message || 'Failed to start payment. Please try again.';
+          this.airwallexPaymentError = err?.error?.message || 'Failed to start payment. Please try again.';
         }
       }
     });
   }
 
-  confirmStripePayment(sessionId: string, transactionId: string): void {
-    this.stripeConfirmingTxId = transactionId;
-    this.stripeConnect.confirmPayment(sessionId, transactionId).subscribe({
-      next: (updated) => {
-        this.stripeConfirmingTxId = null;
-        this.replaceTransaction({ ...updated, role: 'buyer' });
-        successToast.fire({ title: 'Payment confirmed! The seller has been notified.' });
-      },
-      error: (err) => {
-        this.stripeConfirmingTxId = null;
-        this.stripePaymentError = err?.error?.message || 'Could not confirm payment. Please contact support if funds were charged.';
-      }
-    });
+  closeAirwallexWidget(): void {
+    this.airwallexWidgetTxId = null;
+    this.airwallexClientSecret = null;
   }
 
   /** Financial breakdown: BidRoom fee (2% of item price) */
   getBidRoomFee(t: Transaction): number {
     if (t.bidRoomFeeAmount != null) return t.bidRoomFeeAmount;
     return t.amount * 0.02;
+  }
+
+  /** Card processing fee row (optional; Airwallex flow may not expose a separate line item) */
+  getStripeFee(_t: Transaction): number | null {
+    return null;
+  }
+
+  canSellerAcceptPayment(t: Transaction): boolean {
+    return this.isSeller(t) && this.getEffectiveStatus(t) === 'awaiting_seller_acceptance';
+  }
+
+  formatPaymentAcceptanceDeadline(t: Transaction): string {
+    const d = t.paymentAcceptanceDeadline;
+    if (!d) return '';
+    return new Date(d).toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' });
+  }
+
+  hasPaymentAcceptanceDeadlinePassed(t: Transaction): boolean {
+    if (!t.paymentAcceptanceDeadline) return false;
+    return new Date(t.paymentAcceptanceDeadline) < new Date();
+  }
+
+  acceptPayment(t: Transaction): void {
+    if (this.updatingId || !this.isSeller(t) || this.getEffectiveStatus(t) !== 'awaiting_seller_acceptance') return;
+    this.updatingId = t._id;
+    this.transactionsService.updateTransaction(t._id, { status: 'accept_payment' }).subscribe({
+      next: (updated) => {
+        this.replaceTransaction(updated);
+        this.updatingId = null;
+      },
+      error: () => (this.updatingId = null)
+    });
   }
 
   /** Shipping amount: uses locked rate if available, falls back to flat-rate / free / null */
@@ -449,16 +519,10 @@ export class DashboardTransactionsComponent implements OnInit {
     return `${rate.carrier} ${rate.service} — ${price}${days}`;
   }
 
-  /** Stripe processing fee (stored after payment; null if not yet paid) */
-  getStripeFee(t: Transaction): number | null {
-    return t.stripeFeeAmount ?? null;
-  }
-
-  /** Seller net payout */
+  /** Seller net payout after BidRoom fee */
   getSellerNet(t: Transaction): number {
     if (t.sellerPayoutAmount != null) return t.sellerPayoutAmount;
-    const stripeFee = this.getStripeFee(t) ?? 0;
-    return t.amount - this.getBidRoomFee(t) - stripeFee;
+    return t.amount - this.getBidRoomFee(t);
   }
 
   /** Buyer total charged (amount + BidRoom fee + shipping) */
@@ -610,20 +674,6 @@ export class DashboardTransactionsComponent implements OnInit {
         input.value = '';
       }
     });
-  }
-
-  acceptPayment(t: Transaction): void {
-    if (this.updatingId || t.role !== 'seller' || this.getEffectiveStatus(t) !== 'awaiting_seller_acceptance') return;
-    this.updatingId = t._id;
-    this.transactionsService
-      .updateTransaction(t._id, { status: 'accept_payment' })
-      .subscribe({
-        next: (updated) => {
-          this.replaceTransaction(updated);
-          this.updatingId = null;
-        },
-        error: () => (this.updatingId = null)
-      });
   }
 
   submitShipped(t: Transaction): void {

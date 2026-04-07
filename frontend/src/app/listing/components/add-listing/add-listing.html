@@ -117,24 +117,47 @@
             <div class="field-hint">{{ listingForm.get('title')?.value?.length || 0 }}/80 characters</div>
           </div>
 
-          <div class="form-group">
-            <label for="description">{{ 'addListing.description' | translate }}</label>
-            <textarea
-              id="description"
-              formControlName="description"
-              [class.error]="getFieldError('description')"
-              [placeholder]="'addListing.descriptionPlaceholder' | translate"
-              rows="8"
-            ></textarea>
-            @if (getFieldError('description')) {
-              <div class="field-error">{{ getFieldError('description') }}</div>
-            }
-            <div class="field-hint">
-              {{ listingForm.get('description')?.value?.length || 0 }} characters
-              @if ((listingForm.get('description')?.value?.length || 0) < 50) {
-                · <span style="color: #e67e22;">minimum 50 required</span>
+          <!-- Description — multilingual tabs -->
+          <div class="form-group" formGroupName="descriptions">
+            <label>{{ 'addListing.description' | translate }}</label>
+            <p class="field-hint" style="margin-bottom:8px">Write your description in one or more languages. At least one language is required (min. 50 characters).</p>
+
+            <!-- Language tabs -->
+            <div class="desc-lang-tabs">
+              @for (lang of descLanguages; track lang.code) {
+                <button
+                  type="button"
+                  class="desc-lang-tab"
+                  [class.active]="activeDescLang === lang.code"
+                  [class.filled]="descCharCount(lang.code) >= 50"
+                  (click)="activeDescLang = lang.code">
+                  {{ lang.flag }} {{ lang.label }}
+                  @if (descCharCount(lang.code) >= 50) { <span class="desc-tab-check">✓</span> }
+                </button>
               }
             </div>
+
+            <!-- One textarea per language, shown/hidden via CSS -->
+            @for (lang of descLanguages; track lang.code) {
+              <div [style.display]="activeDescLang === lang.code ? 'block' : 'none'">
+                <textarea
+                  [id]="'desc-' + lang.code"
+                  [formControlName]="lang.code"
+                  [placeholder]="'addListing.descriptionPlaceholder' | translate"
+                  rows="8"
+                ></textarea>
+                <div class="field-hint">
+                  {{ descCharCount(lang.code) }} characters
+                  @if (descCharCount(lang.code) > 0 && descCharCount(lang.code) < 50) {
+                    · <span style="color: #e67e22;">minimum 50 required</span>
+                  }
+                </div>
+              </div>
+            }
+
+            @if (!hasValidDescription) {
+              <div class="field-error">Please add a description of at least 50 characters in at least one language.</div>
+            }
           </div>
 
           <!-- Key Specifications (optional) -->

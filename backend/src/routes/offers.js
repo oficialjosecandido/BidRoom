@@ -421,12 +421,11 @@ router.patch('/:offerId/accept', authenticateToken, async (req, res) => {
       });
     }
 
-    // Block acceptance if seller has not connected Stripe
-    const isTestMode = process.env.STRIPE_SECRET_KEY?.startsWith('sk_test_');
-    if (!user.stripeConnectAccountId || (!user.stripeConnectOnboarded && !isTestMode)) {
+    // Block acceptance if seller has not completed Airwallex KYC
+    if (!user.airwallexAccountId || !user.airwallexOnboarded) {
       return res.status(400).json({
-        error: 'Stripe not connected',
-        message: 'You must connect your Stripe account before accepting offers. Go to Dashboard → Settings → Payments to complete setup.'
+        error: 'Payout account not set up',
+        message: 'You must complete your payout account setup before accepting offers. Go to Dashboard → Settings → Payout Account to complete verification.'
       });
     }
 
@@ -585,11 +584,11 @@ router.patch('/:offerId/reject', authenticateToken, async (req, res) => {
       }).populate('listing').populate('offerer', 'firstName lastName email');
 
       if (remainingQualifying.length === 1) {
-        // Check if seller has Stripe before auto-accepting
-        const sellerStripeReady = !!(user.stripeConnectAccountId && user.stripeConnectOnboarded);
+        // Check if seller has Airwallex account before auto-accepting
+        const sellerPayoutReady = !!(user.airwallexAccountId && user.airwallexOnboarded);
 
-        if (!sellerStripeReady) {
-          // Notify seller to connect Stripe; do not auto-accept
+        if (!sellerPayoutReady) {
+          // Notify seller to complete KYC; do not auto-accept
           const { notifySellerStripeRequiredForOffer, emitNewNotificationToUser } = require('../services/notificationService');
           const io = req.app.get('io');
           notifySellerStripeRequiredForOffer({
@@ -597,9 +596,9 @@ router.patch('/:offerId/reject', authenticateToken, async (req, res) => {
             listingTitle: offer.listing.title || 'Your listing',
             offerAmount: remainingQualifying[0].amount,
             sellerUserId: user._id.toString()
-          }).catch(err => console.error('Failed Stripe-required notification:', err));
+          }).catch(err => console.error('Failed payout-required notification:', err));
           if (io) emitNewNotificationToUser(io, user._id.toString()).catch(() => {});
-          return res.json({ ...offer.toObject(), stripeRequired: true });
+          return res.json({ ...offer.toObject(), payoutAccountRequired: true });
         }
 
         const autoOffer = remainingQualifying[0];

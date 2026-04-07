@@ -42,6 +42,47 @@
       "createAccount": "Criar Conta",
       "listAnItem": "Listar um Item"
     },
+    "heroV2": {
+      "title": "Compre e venda em leilão, de forma simples",
+      "subtitle": "Descubra artigos únicos, faça lances e encontre oportunidades em tempo real.",
+      "ctaExplore": "Explorar leilões",
+      "ctaSell": "Criar leilão"
+    },
+    "trust": {
+      "completed": "Mais de 10 000 leilões concluídos",
+      "secure": "Pagamentos seguros",
+      "sellers": "Vendedores verificados",
+      "liveListings": "ativos agora"
+    },
+    "endingSoonV2": {
+      "title": "A terminar em breve",
+      "viewAll": "Ver todos →"
+    },
+    "newListings": {
+      "title": "Novos leilões"
+    },
+    "categoriesRow": {
+      "title": "Categorias populares",
+      "fashion": "Moda",
+      "watches": "Relógios",
+      "luxury": "Luxo"
+    },
+    "explore": {
+      "title": "Explorar leilões",
+      "loadingMore": "A carregar mais…"
+    },
+    "filterBar": {
+      "all": "Todos"
+    },
+    "loadError": "Não foi possível atualizar os leilões. Verifique a ligação e tente novamente.",
+    "retry": "Tentar de novo",
+    "empty": {
+      "endingSoon": "Ainda não há leilões a terminar nesta vista.",
+      "newListings": "Ainda não há novos anúncios — seja o primeiro a vender.",
+      "feed": "Não há leilões ao vivo com este filtro.",
+      "browse": "Ver todos os leilões",
+      "listFirst": "Criar anúncio"
+    },
     "stats": {
       "activeBidders": "Licitadores Ativos",
       "totalValueTraded": "Valor Total Transacionado",

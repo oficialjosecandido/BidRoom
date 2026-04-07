@@ -27,7 +27,8 @@ export interface CustomerInfo {
   sellerScore: number | null;
   buyerReviewCount: number;
   sellerReviewCount: number;
-  stripeConnectOnboarded: boolean;
+  airwallexOnboarded: boolean;
+  airwallexKycStatus: 'pending' | 'in_review' | 'approved' | 'failed' | null;
 }
 
 @Injectable({

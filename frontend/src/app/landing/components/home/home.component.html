@@ -1,37 +1,172 @@
 <app-header activePage="home"></app-header>
 
-<!-- Minimal Hero -->
-<section class="hero">
-  <div class="container">
-    <div class="hero-content">
-      <h1 class="hero-title">{{ 'home.hero.title' | translate }}</h1>
-      <p class="hero-tagline">{{ 'home.hero.subtitle' | translate }}</p>
-      <div class="hero-search">
+<!-- Hero: copy + CTAs + image -->
+<section class="hero-split">
+  <div class="container hero-split-inner">
+    <div class="hero-copy">
+      <h1 class="hero-headline">{{ 'home.heroV2.title' | translate }}</h1>
+      <p class="hero-sub">{{ 'home.heroV2.subtitle' | translate }}</p>
+      <div class="hero-cta-row">
+        <button type="button" class="btn btn-hero-primary" (click)="scrollToExplore()">
+          {{ 'home.heroV2.ctaExplore' | translate }}
+        </button>
+        <button type="button" class="btn btn-hero-secondary" (click)="navigateToAddListing()">
+          {{ 'home.heroV2.ctaSell' | translate }}
+        </button>
+      </div>
+      <div class="hero-search hero-search-inline">
         <input
           type="text"
           class="hero-search-input"
           [placeholder]="'home.hero.searchPlaceholder' | translate"
           [(ngModel)]="searchQuery"
           (keyup.enter)="onSearch()" />
-        <button class="btn hero-search-btn" (click)="onSearch()">{{ 'home.hero.search' | translate }}</button>
+        <button type="button" class="btn hero-search-btn" (click)="onSearch()">{{ 'home.hero.search' | translate }}</button>
       </div>
+    </div>
+    <div class="hero-visual" aria-hidden="true">
+      <img
+        [src]="heroImg"
+        alt=""
+        class="hero-photo"
+        width="640"
+        height="480"
+        loading="eager" />
     </div>
   </div>
 </section>
 
-<!-- Filter Bar -->
-<section class="filter-bar">
+<!-- Trust strip -->
+<section class="trust-strip" aria-label="Trust">
+  <div class="container trust-strip-inner">
+    <span class="trust-item">✓ {{ 'home.trust.completed' | translate }}</span>
+    <span class="trust-dot">·</span>
+    <span class="trust-item">🔒 {{ 'home.trust.secure' | translate }}</span>
+    <span class="trust-dot">·</span>
+    <span class="trust-item">★ {{ 'home.trust.sellers' | translate }}</span>
+    @if (stats.activeListings > 0) {
+      <span class="trust-dot">·</span>
+      <span class="trust-item trust-live">{{ stats.activeListings }} {{ 'home.trust.liveListings' | translate }}</span>
+    }
+  </div>
+</section>
+
+@if (loadError) {
+  <div class="home-banner-error container">
+    <p>{{ 'home.loadError' | translate }}</p>
+    <button type="button" class="btn-retry" (click)="retryLoad()">{{ 'home.retry' | translate }}</button>
+  </div>
+}
+
+<!-- Ending soon -->
+<section class="section-block section-ending">
   <div class="container">
-    <div class="filter-bar-inner">
-      <div class="filter-categories">
-        <button class="filter-pill" [class.active]="selectedCategory === ''" (click)="filterCategory('')">{{ 'home.filterBar.all' | translate }}</button>
-        <button class="filter-pill" [class.active]="selectedCategory === 'electronics'" (click)="filterCategory('electronics')">📱 {{ 'home.categories.electronics.title' | translate }}</button>
-        <button class="filter-pill" [class.active]="selectedCategory === 'art'" (click)="filterCategory('art')">🎨 {{ 'home.categories.art.title' | translate }}</button>
-        <button class="filter-pill" [class.active]="selectedCategory === 'jewelry'" (click)="filterCategory('jewelry')">💎 {{ 'home.categories.jewelry.title' | translate }}</button>
-        <button class="filter-pill" [class.active]="selectedCategory === 'collectibles'" (click)="filterCategory('collectibles')">📬 {{ 'home.categories.collectibles.title' | translate }}</button>
-        <button class="filter-pill" [class.active]="selectedCategory === 'home-garden'" (click)="filterCategory('home-garden')">🏠 {{ 'home.categories.homeGarden.title' | translate }}</button>
+    <div class="section-head">
+      <h2 class="section-title">{{ 'home.endingSoonV2.title' | translate }}</h2>
+      <button type="button" class="section-link" (click)="viewAllListings()">{{ 'home.endingSoonV2.viewAll' | translate }}</button>
+    </div>
+    @if (loading) {
+      <div class="horizontal-scroll skeleton-h">
+        @for (i of [1,2,3,4]; track i) {
+          <div class="skeleton-card-mini"><div class="sk-img"></div><div class="sk-line"></div></div>
+        }
       </div>
-      <div class="filter-sort">
+    } @else if (endingSoonListings.length > 0) {
+      <div class="horizontal-scroll">
+        @for (listing of endingSoonListings; track listing._id) {
+          <article class="card-urgent" (click)="viewListing(listing.slug)">
+            <div class="card-urgent-img">
+              <img [src]="imageUrl(listing)" (error)="onListingImageError($event)" [alt]="listing.title" loading="lazy" />
+              <div class="card-urgent-price">{{ formatPrice(listing.currentPrice) }}</div>
+              <div class="time-badge" [ngClass]="timerClass(listing)">⏱ {{ formatTimeRemaining(listing) }}</div>
+            </div>
+            <div class="card-urgent-body">
+              <h3 class="card-urgent-title">{{ listing.title }}</h3>
+              <p class="card-urgent-bids">{{ listing.bidCount }} {{ listing.bidCount === 1 ? ('home.liveAuctions.bid' | translate) : ('home.liveAuctions.bids' | translate) }}</p>
+            </div>
+          </article>
+        }
+      </div>
+    } @else {
+      <div class="section-empty">
+        <p>{{ 'home.empty.endingSoon' | translate }}</p>
+        <button type="button" class="btn-empty-cta" (click)="viewAllListings()">{{ 'home.empty.browse' | translate }}</button>
+      </div>
+    }
+  </div>
+</section>
+
+<!-- New listings -->
+<section class="section-block section-new">
+  <div class="container">
+    <div class="section-head">
+      <h2 class="section-title">{{ 'home.newListings.title' | translate }}</h2>
+      <button type="button" class="section-link" (click)="viewAllListings()">{{ 'home.endingSoonV2.viewAll' | translate }}</button>
+    </div>
+    @if (!loading && newListings.length > 0) {
+      <div class="grid-new">
+        @for (listing of newListings; track listing._id) {
+          <article class="listing-card card-new" (click)="viewListing(listing.slug)">
+            <div class="listing-image-container">
+              <img [src]="imageUrl(listing)" (error)="onListingImageError($event)" [alt]="listing.title" class="listing-image" loading="lazy" />
+              <div class="time-badge" [ngClass]="timerClass(listing)">⏱ {{ formatTimeRemaining(listing) }}</div>
+            </div>
+            <div class="listing-content">
+              <h3 class="listing-title">{{ listing.title }}</h3>
+              <div class="listing-price-row">
+                <span class="listing-current-price">{{ formatPrice(listing.currentPrice) }}</span>
+              </div>
+              <div class="listing-signals">
+                <span class="signal-bids">{{ listing.bidCount }} {{ listing.bidCount === 1 ? ('home.liveAuctions.bid' | translate) : ('home.liveAuctions.bids' | translate) }}</span>
+                @if (listing.sellerScore != null) {
+                  <span class="seller-score">⭐ {{ listing.sellerScore | number:'1.1-1' }}</span>
+                }
+              </div>
+            </div>
+          </article>
+        }
+      </div>
+    } @else if (!loading) {
+      <div class="section-empty">
+        <p>{{ 'home.empty.newListings' | translate }}</p>
+        <button type="button" class="btn-empty-cta" (click)="navigateToAddListing()">{{ 'home.empty.listFirst' | translate }}</button>
+      </div>
+    }
+  </div>
+</section>
+
+<!-- Categories -->
+<section id="categories" class="categories-strip categories-strip-v2">
+  <div class="container">
+    <div class="section-head">
+      <h2 class="section-title strip-heading">{{ 'home.categoriesRow.title' | translate }}</h2>
+      <button type="button" class="section-link" (click)="browseCategoriesPage()">{{ 'home.categories.viewAll' | translate }}</button>
+    </div>
+    <div class="strip-scroll">
+      @for (c of categoryRow; track $index) {
+        <button type="button" class="strip-cat" (click)="browseCategory(c.id)">
+          <span class="strip-icon">{{ c.icon }}</span>
+          <span class="strip-label">{{ c.labelKey | translate }}</span>
+        </button>
+      }
+    </div>
+  </div>
+</section>
+
+<!-- Explore feed -->
+<section id="explore-auctions" class="auction-listings explore-feed">
+  <div class="container">
+    <div class="section-head">
+      <h2 class="section-title">{{ 'home.explore.title' | translate }}</h2>
+      <div class="explore-toolbar">
+        <div class="filter-categories">
+          <button type="button" class="filter-pill" [class.active]="selectedCategory === ''" (click)="filterCategory('')">{{ 'home.filterBar.all' | translate }}</button>
+          <button type="button" class="filter-pill" [class.active]="selectedCategory === 'electronics'" (click)="filterCategory('electronics')">📱 {{ 'home.categories.electronics.title' | translate }}</button>
+          <button type="button" class="filter-pill" [class.active]="selectedCategory === 'jewelry'" (click)="filterCategory('jewelry')">💎 {{ 'home.categories.jewelry.title' | translate }}</button>
+          <button type="button" class="filter-pill" [class.active]="selectedCategory === 'collectibles'" (click)="filterCategory('collectibles')">📬 {{ 'home.categories.collectibles.title' | translate }}</button>
+          <button type="button" class="filter-pill" [class.active]="selectedCategory === 'home-garden'" (click)="filterCategory('home-garden')">🏠 {{ 'home.categories.homeGarden.title' | translate }}</button>
+          <button type="button" class="filter-pill" [class.active]="selectedCategory === 'art'" (click)="filterCategory('art')">🎨 {{ 'home.categories.art.title' | translate }}</button>
+        </div>
         <select class="sort-select" [(ngModel)]="sortBy" (change)="onSortChange()">
           <option value="deadline">{{ 'home.liveAuctions.sortEndingSoonest' | translate }}</option>
           <option value="newest">{{ 'home.liveAuctions.sortNewest' | translate }}</option>
@@ -41,21 +176,8 @@
         </select>
       </div>
     </div>
-  </div>
-</section>
 
-<!-- Live Auction Listings -->
-<section class="auction-listings">
-  <div class="container">
-    <div class="listings-header">
-      <h2 class="section-title">{{ 'home.liveAuctions.title' | translate }}</h2>
-      @if (stats.activeListings > 0) {
-        <span class="live-count">{{ stats.activeListings }} live</span>
-      }
-    </div>
-
-    <!-- Loading -->
-    @if (loading) {
+    @if (loading || feedLoading) {
       <div class="listings-loading">
         <div class="loading-grid">
           @for (i of [1,2,3,4,5,6]; track i) {
@@ -72,51 +194,25 @@
       </div>
     }
 
-    <!-- Error -->
-    @if (error && !loading) {
-      <div class="listings-error">
-        <div class="error-content">
-          <h3>⚠️ {{ 'home.liveAuctions.error' | translate }}</h3>
-          <p>{{ error }}</p>
-          <button class="btn btn-primary" (click)="loadListings()">{{ 'home.liveAuctions.tryAgain' | translate }}</button>
-        </div>
-      </div>
-    }
-
-    <!-- Grid -->
-    @if (!loading && !error && listings.length > 0) {
+    @if (!loading && !feedLoading && feedListings.length > 0) {
       <div class="listings-grid">
-        @for (listing of listings; track listing._id) {
-          <div class="listing-card" (click)="viewListing(listing.slug)">
+        @for (listing of feedListings; track listing._id) {
+          <article class="listing-card" (click)="viewListing(listing.slug)">
             <div class="listing-image-container">
-              <img [src]="listing.images[0] || 'assets/placeholder.png'" [alt]="listing.title" class="listing-image">
+              <img [src]="imageUrl(listing)" (error)="onListingImageError($event)" [alt]="listing.title" class="listing-image" loading="lazy" />
               <div class="listing-badges">
-                @if (listing.isFeatured) {
-                  <span class="badge badge-featured">⭐ {{ 'home.liveAuctions.featured' | translate }}</span>
-                }
-                @if (listing.listingType === 'Verified' || listing.isVerified) {
-                  <span class="badge badge-verified">✓ {{ 'home.liveAuctions.verified' | translate }}</span>
-                }
                 @if (listing.endingSoon) {
                   <span class="badge badge-ending-soon">🔥 {{ 'home.liveAuctions.endingSoon' | translate }}</span>
-                }
-                @if (listing.allowPrivateRoom) {
-                  <span class="badge badge-private-room" title="Private room available for top bidders">🔒 Private</span>
                 }
                 @if (listing.auctionFormat === 'best-offer') {
                   <span class="badge badge-best-offer">{{ 'home.liveAuctions.bestOffer' | translate }}</span>
                 }
               </div>
-              <div class="time-badge" [ngClass]="timerClass(listing)">
-                ⏱ {{ formatTimeRemaining(listing) }}
-              </div>
+              <div class="time-badge" [ngClass]="timerClass(listing)">⏱ {{ formatTimeRemaining(listing) }}</div>
             </div>
             <div class="listing-content">
               <div class="listing-top">
                 <span class="listing-category">{{ listing.category }}</span>
-                @if (listing.allowPrivateRoom && listing.privateRoomStatus === 'active') {
-                  <span class="private-room-live">🔒 Private Room Live</span>
-                }
               </div>
               <h3 class="listing-title">{{ listing.title }}</h3>
               <div class="listing-price-row">
@@ -125,15 +221,9 @@
                 } @else {
                   <span class="listing-current-price">{{ formatPrice(listing.currentPrice) }}</span>
                 }
-                @if (listing.currentPrice > listing.startingPrice) {
-                  <span class="listing-starting-price">{{ 'home.liveAuctions.startedAt' | translate }} {{ formatPrice(listing.startingPrice) }}</span>
-                }
               </div>
               <div class="listing-signals">
                 <span class="signal-bids">{{ listing.bidCount }} {{ listing.bidCount === 1 ? ('home.liveAuctions.bid' | translate) : ('home.liveAuctions.bids' | translate) }}</span>
-                @if (listing.watchlistCount && listing.watchlistCount > 0) {
-                  <span class="signal-watchers">👁 {{ listing.watchlistCount }}</span>
-                }
               </div>
               <div class="listing-seller">
                 <span class="seller-name">{{ listing.seller.firstName }} {{ listing.seller.lastName }}</span>
@@ -142,57 +232,21 @@
                 }
               </div>
             </div>
-          </div>
+          </article>
         }
       </div>
-    }
-
-    <!-- Empty State -->
-    @if (!loading && !error && listings.length === 0) {
-      <div class="listings-empty">
-        <p class="empty-icon">🔍</p>
-        <h3>{{ 'home.liveAuctions.noAuctions' | translate }}</h3>
-        <p>{{ selectedCategory ? ('home.liveAuctions.tryDifferentCategory' | translate) : ('home.liveAuctions.checkBack' | translate) }}</p>
-        @if (selectedCategory) {
-          <button class="btn btn-secondary" (click)="filterCategory('')">{{ 'home.liveAuctions.clearFilter' | translate }}</button>
-        } @else {
-          <button class="btn btn-primary" (click)="navigateToAddListing()">{{ 'home.hero.listAnItem' | translate }}</button>
-        }
+      @if (loadingMore) {
+        <p class="load-more-hint">{{ 'home.explore.loadingMore' | translate }}</p>
+      }
+    } @else if (!loading && !feedLoading) {
+      <div class="section-empty section-empty-feed">
+        <p>{{ 'home.empty.feed' | translate }}</p>
+        <div class="section-empty-actions">
+          <button type="button" class="btn-empty-cta" (click)="navigateToAddListing()">{{ 'home.empty.listFirst' | translate }}</button>
+          <button type="button" class="btn-empty-secondary" (click)="viewAllListings()">{{ 'home.empty.browse' | translate }}</button>
+        </div>
       </div>
     }
-  </div>
-</section>
-
-<!-- Categories Strip -->
-<section id="categories" class="categories-strip">
-  <div class="container">
-    <h3 class="strip-title">{{ 'home.categories.title' | translate }}</h3>
-    <div class="strip-scroll">
-      <button class="strip-cat" (click)="browseCategory('electronics')">
-        <span class="strip-icon">📱</span>
-        <span class="strip-label">{{ 'home.categories.electronics.title' | translate }}</span>
-      </button>
-      <button class="strip-cat" (click)="browseCategory('home-garden')">
-        <span class="strip-icon">🏠</span>
-        <span class="strip-label">{{ 'home.categories.homeGarden.title' | translate }}</span>
-      </button>
-      <button class="strip-cat" (click)="browseCategory('art')">
-        <span class="strip-icon">🎨</span>
-        <span class="strip-label">{{ 'home.categories.art.title' | translate }}</span>
-      </button>
-      <button class="strip-cat" (click)="browseCategory('collectibles')">
-        <span class="strip-icon">📬</span>
-        <span class="strip-label">{{ 'home.categories.collectibles.title' | translate }}</span>
-      </button>
-      <button class="strip-cat" (click)="browseCategory('jewelry')">
-        <span class="strip-icon">💎</span>
-        <span class="strip-label">{{ 'home.categories.jewelry.title' | translate }}</span>
-      </button>
-      <button class="strip-cat" (click)="browseCategoriesPage()">
-        <span class="strip-icon">🔎</span>
-        <span class="strip-label">{{ 'home.categories.viewAll' | translate }}</span>
-      </button>
-    </div>
   </div>
 </section>
 

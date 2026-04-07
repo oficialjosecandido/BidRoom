@@ -606,7 +606,8 @@ router.post('/', authenticateToken, requireActiveAccount, async (req, res) => {
     // Extract and validate required fields
     const {
       title,
-      description,
+      description: descriptionLegacy,
+      descriptions: descriptionsInput,
       category,
       subCategory,
       condition,
@@ -636,6 +637,26 @@ router.post('/', authenticateToken, requireActiveAccount, async (req, res) => {
     if (!title || title.trim().length === 0) {
       return res.status(400).json({ error: 'Title is required' });
     }
+
+    // Build descriptions map and derive canonical description
+    const LANGS = ['en', 'pt', 'es', 'fr'];
+    const descriptions = {};
+    if (descriptionsInput && typeof descriptionsInput === 'object') {
+      for (const lang of LANGS) {
+        const val = descriptionsInput[lang];
+        if (val && typeof val === 'string' && val.trim().length > 0) {
+          descriptions[lang] = val.trim();
+        }
+      }
+    }
+    // Fall back to legacy single description field
+    const firstLang = Object.keys(descriptions)[0];
+    const description = firstLang ? descriptions[firstLang] : (descriptionLegacy || '');
+    // If no multilingual map provided but legacy description is, store it without a language tag
+    if (!firstLang && descriptionLegacy) {
+      // No language specified — keep as plain description only
+    }
+
     if (!description || description.trim().length < 50) {
       return res.status(400).json({ error: 'Description must be at least 50 characters' });
     }
@@ -713,6 +734,7 @@ router.post('/', authenticateToken, requireActiveAccount, async (req, res) => {
     const listingData = {
       title: title.trim(),
       description: description.trim(),
+      descriptions: Object.keys(descriptions).length > 0 ? descriptions : undefined,
       category: category.toLowerCase().replace(/\s+/g, '-'), // Normalize category
       subCategory: subCategory.trim(),
       condition,

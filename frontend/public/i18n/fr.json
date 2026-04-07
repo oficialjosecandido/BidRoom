@@ -42,6 +42,47 @@
       "createAccount": "Créer un Compte",
       "listAnItem": "Mettre un Article en Vente"
     },
+    "heroV2": {
+      "title": "Achetez et vendez aux enchères, simplement",
+      "subtitle": "Découvrez des objets uniques, enchérissez et profitez d’offres en temps réel.",
+      "ctaExplore": "Explorer les enchères",
+      "ctaSell": "Vendre"
+    },
+    "trust": {
+      "completed": "Plus de 10 000 enchères terminées",
+      "secure": "Paiements sécurisés",
+      "sellers": "Vendeurs vérifiés",
+      "liveListings": "en ligne"
+    },
+    "endingSoonV2": {
+      "title": "Se terminent bientôt",
+      "viewAll": "Tout voir →"
+    },
+    "newListings": {
+      "title": "Nouvelles annonces"
+    },
+    "categoriesRow": {
+      "title": "Catégories populaires",
+      "fashion": "Mode",
+      "watches": "Montres",
+      "luxury": "Luxe"
+    },
+    "explore": {
+      "title": "Explorer les enchères",
+      "loadingMore": "Chargement…"
+    },
+    "filterBar": {
+      "all": "Tout"
+    },
+    "loadError": "Impossible d’actualiser les enchères. Vérifiez votre connexion et réessayez.",
+    "retry": "Réessayer",
+    "empty": {
+      "endingSoon": "Aucune enchère ne se termine bientôt pour l’instant.",
+      "newListings": "Pas encore d’annonces — soyez le premier à vendre.",
+      "feed": "Aucune enchère en direct avec ce filtre.",
+      "browse": "Voir toutes les enchères",
+      "listFirst": "Mettre un article en vente"
+    },
     "stats": {
       "activeBidders": "Enchérisseurs Actifs",
       "totalValueTraded": "Valeur Totale Échangée",

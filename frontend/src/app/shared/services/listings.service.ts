@@ -8,6 +8,7 @@ export interface Listing {
   slug: string;
   title: string;
   description: string;
+  descriptions?: { en?: string; pt?: string; es?: string; fr?: string } | null;
   category: string;
   subCategory?: string;
   images: string[];

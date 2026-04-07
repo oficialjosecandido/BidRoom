@@ -7,6 +7,7 @@ import { API_CONFIG } from '../config/api.config';
 export type TransactionStatus =
   | 'pending_payment'
   | 'awaiting_seller_acceptance'
+  | 'authorized'
   | 'paid'
   | 'shipped'
   | 'delivered'
@@ -52,7 +53,7 @@ export interface Transaction {
   amount: number;
   /** Overall state (preferred). Backend may still send legacy `status` for old docs. */
   transactionStatus?: TransactionStatus;
-  paymentStatus?: 'pending' | 'paid';
+  paymentStatus?: 'pending' | 'authorized' | 'paid';
   sendingStatus?: 'pending' | 'shipped' | 'delivered';
   /** @deprecated Use transactionStatus */
   status?: TransactionStatus;
@@ -61,12 +62,8 @@ export interface Transaction {
   trackingNumber: string | null;
   trackingCarrier: string | null;
   notes: string | null;
-  /** Payment window deadline (T+24h); seller adds bank details, buyer pays by this time */
+  /** Payment window deadline (T+24h) */
   paymentDeadline?: string | null;
-  /** Seller bank details for this transaction (buyer uses for transfer) */
-  sellerBankIban?: string | null;
-  sellerBankSwift?: string | null;
-  sellerBankAccountName?: string | null;
   /** Buyer optional proof of payment URL when marking paid */
   buyerProofOfPaymentUrl?: string | null;
   /** Seller optional proof of delivery URL when marking shipped */
@@ -79,13 +76,17 @@ export interface Transaction {
   buyerHasReviewedSeller?: boolean;
   /** Whether seller has reviewed buyer (for this listing) */
   sellerHasReviewedBuyer?: boolean;
-  /** Stripe Connect payment fields */
-  stripeCheckoutSessionId?: string | null;
-  stripePaymentIntentId?: string | null;
-  /** BidRoom platform fee charged to buyer (2% of item price, dollars) */
+  /** Airwallex payment fields */
+  airwallexPaymentIntentId?: string | null;
+  airwallexClientSecret?: string | null;
+  /** When the pre-auth hold was confirmed */
+  authorizedAt?: string | null;
+  /** When the 14-day pre-auth hold expires (buyer must confirm receipt before this) */
+  intentExpiresAt?: string | null;
+  /** When the payment was captured (buyer confirmed receipt) */
+  capturedAt?: string | null;
+  /** BidRoom total platform fee (buyer 2% + seller 2% = 4% of item price, dollars) */
   bidRoomFeeAmount?: number | null;
-  /** Stripe processing fee deducted from seller payout (dollars) */
-  stripeFeeAmount?: number | null;
   /** Total charged to buyer including BidRoom fee and shipping (dollars) */
   buyerTotalPaid?: number | null;
   /** Final payout to seller (dollars) */
@@ -228,6 +229,17 @@ export class TransactionsService {
     return this.http.patch<Transaction>(`${this.apiUrl}/${id}/dispute/counter-evidence`, {
       mediaUrls
     });
+  }
+
+  /**
+   * Buyer confirms receipt ("Got the items") → triggers Airwallex capture.
+   * Funds move from pre-auth hold → seller's account. Escrow T+3 window begins.
+   */
+  capturePayment(transactionId: string): Observable<{ success: boolean; escrowReleasesAt: string }> {
+    return this.http.post<{ success: boolean; escrowReleasesAt: string }>(
+      `${API_CONFIG.getApiUrl()}/airwallex/capture/${transactionId}`,
+      {}
+    );
   }
 
   /** Download invoice (seller) or receipt (buyer) PDF for a completed transaction. */

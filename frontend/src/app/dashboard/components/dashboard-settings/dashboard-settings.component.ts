@@ -1,10 +1,10 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, ElementRef, ViewChild, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { AuthService, AppUser } from '../../../auth/services/auth.service';
 import { CustomerService } from '../../../shared/services/customer.service';
-import { StripeConnectService, ConnectAccountStatus, OnboardingFormData } from '../../../shared/services/stripe-connect.service';
+import { AirwallexService } from '../../../shared/services/airwallex.service';
 import { Observable } from 'rxjs';
 
 @Component({
@@ -14,13 +14,14 @@ import { Observable } from 'rxjs';
   templateUrl: './dashboard-settings.component.html',
   styleUrls: ['./dashboard-settings.component.scss']
 })
-export class DashboardSettingsComponent implements OnInit {
+export class DashboardSettingsComponent implements OnInit, OnDestroy {
   private authService = inject(AuthService);
   private customerService = inject(CustomerService);
   private translate = inject(TranslateService);
-  private stripeConnect = inject(StripeConnectService);
+  private airwallexService = inject(AirwallexService);
 
-  /** Display scale for buyer/seller review averages (matches 1–10 transaction reviews). */
+  @ViewChild('kycContainer', { static: false }) kycContainer!: ElementRef;
+
   readonly reviewScoreMax = 10;
 
   currentUser$: Observable<AppUser | null>;
@@ -29,47 +30,15 @@ export class DashboardSettingsComponent implements OnInit {
   buyerReviewCount = 0;
   sellerReviewCount = 0;
 
-  connectStatus: ConnectAccountStatus | null = null;
-  connectLoading = false;
-  connectSubmitting = false;
-  connectTestActivating = false;
-  connectStatusMessage: string | null = null;
-  connectError: string | null = null;
-  showOnboardingForm = false;
+  // Airwallex KYC state
+  kycStatus: 'pending' | 'in_review' | 'approved' | 'failed' | null = null;
+  kycOnboarded = false;
+  kycLoading = false;
+  kycWidgetOpen = false;
+  kycError: string | null = null;
+  kycStatusMessage: string | null = null;
 
-  get isStripeTestMode(): boolean { return this.stripeConnect.isTestMode; }
-
-  // Onboarding form fields
-  dobDay: number | null = null;
-  dobMonth: number | null = null;
-  dobYear: number | null = null;
-  addressLine1 = '';
-  addressCity = '';
-  addressPostal = '';
-  addressCountry = 'PT';
-  iban = '';
-  tosAccepted = false;
-
-  readonly countries = [
-    { code: 'AT', label: 'Austria' }, { code: 'BE', label: 'Belgium' },
-    { code: 'BG', label: 'Bulgaria' }, { code: 'HR', label: 'Croatia' },
-    { code: 'CY', label: 'Cyprus' }, { code: 'CZ', label: 'Czech Republic' },
-    { code: 'DK', label: 'Denmark' }, { code: 'EE', label: 'Estonia' },
-    { code: 'FI', label: 'Finland' }, { code: 'FR', label: 'France' },
-    { code: 'DE', label: 'Germany' }, { code: 'GR', label: 'Greece' },
-    { code: 'HU', label: 'Hungary' }, { code: 'IE', label: 'Ireland' },
-    { code: 'IT', label: 'Italy' }, { code: 'LV', label: 'Latvia' },
-    { code: 'LT', label: 'Lithuania' }, { code: 'LU', label: 'Luxembourg' },
-    { code: 'MT', label: 'Malta' }, { code: 'NL', label: 'Netherlands' },
-    { code: 'NO', label: 'Norway' }, { code: 'PL', label: 'Poland' },
-    { code: 'PT', label: 'Portugal' }, { code: 'RO', label: 'Romania' },
-    { code: 'SK', label: 'Slovakia' }, { code: 'SI', label: 'Slovenia' },
-    { code: 'ES', label: 'Spain' }, { code: 'SE', label: 'Sweden' },
-    { code: 'CH', label: 'Switzerland' }, { code: 'GB', label: 'United Kingdom' },
-    { code: 'US', label: 'United States' }, { code: 'CA', label: 'Canada' },
-    { code: 'AU', label: 'Australia' }
-  ];
-
+  // Language
   selectedLanguage = 'en';
   langSaving = false;
   langSaved = false;
@@ -80,6 +49,8 @@ export class DashboardSettingsComponent implements OnInit {
     { code: 'es', label: 'Español', flag: '🇪🇸' },
     { code: 'fr', label: 'Français', flag: '🇫🇷' }
   ];
+
+  private kycElement: any = null;
 
   constructor() {
     this.currentUser$ = this.authService.currentUser$;
@@ -94,6 +65,8 @@ export class DashboardSettingsComponent implements OnInit {
         this.sellerScore = info.sellerScore ?? null;
         this.buyerReviewCount = info.buyerReviewCount ?? 0;
         this.sellerReviewCount = info.sellerReviewCount ?? 0;
+        this.kycOnboarded = info.airwallexOnboarded;
+        this.kycStatus = info.airwallexKycStatus;
         if (info.language) {
           this.selectedLanguage = info.language;
           this.translate.use(info.language);
@@ -101,8 +74,10 @@ export class DashboardSettingsComponent implements OnInit {
         }
       }
     });
+  }
 
-    this.loadConnectStatus();
+  ngOnDestroy(): void {
+    this.unmountKyc();
   }
 
   saveLanguage(): void {
@@ -119,96 +94,124 @@ export class DashboardSettingsComponent implements OnInit {
     });
   }
 
-  loadConnectStatus(): void {
-    this.connectLoading = true;
-    this.stripeConnect.getAccountStatus().subscribe({
-      next: (status) => { this.connectStatus = status; this.connectLoading = false; },
-      error: () => { this.connectLoading = false; }
-    });
-  }
+  startKyc(): void {
+    this.kycError = null;
+    this.kycLoading = true;
 
-  openOnboardingForm(): void {
-    this.connectError = null;
-    this.showOnboardingForm = true;
-  }
+    // Step 1: create/fetch connected account
+    this.airwallexService.onboard().subscribe({
+      next: (status) => {
+        this.kycOnboarded = status.onboarded;
+        this.kycStatus = status.kycStatus;
 
-  cancelOnboardingForm(): void {
-    this.showOnboardingForm = false;
-    this.connectError = null;
-  }
+        if (status.onboarded) {
+          this.kycLoading = false;
+          this.kycStatusMessage = 'Your payout account is already active!';
+          return;
+        }
 
-  submitOnboarding(): void {
-    this.connectError = null;
-    if (!this.dobDay || !this.dobMonth || !this.dobYear) {
-      this.connectError = 'Please enter your date of birth.';
-      return;
-    }
-    if (!this.addressLine1 || !this.addressCity || !this.addressPostal || !this.addressCountry) {
-      this.connectError = 'Please fill in your full address.';
-      return;
-    }
-    if (!this.iban.trim()) {
-      this.connectError = 'Please enter your IBAN.';
-      return;
-    }
-    if (!this.tosAccepted) {
-      this.connectError = 'You must accept the Terms of Service.';
-      return;
-    }
-
-    const data: OnboardingFormData = {
-      dobDay: this.dobDay,
-      dobMonth: this.dobMonth,
-      dobYear: this.dobYear,
-      addressLine1: this.addressLine1,
-      addressCity: this.addressCity,
-      addressPostal: this.addressPostal,
-      addressCountry: this.addressCountry,
-      iban: this.iban,
-      tosAccepted: this.tosAccepted
-    };
-
-    this.connectSubmitting = true;
-    this.stripeConnect.submitOnboarding(data).subscribe({
-      next: (res) => {
-        this.connectSubmitting = false;
-        this.showOnboardingForm = false;
-        this.connectStatusMessage = res.onboarded
-          ? 'Your payout account is now active!'
-          : 'Your details have been submitted. Stripe will verify them shortly — this usually takes a few minutes.';
-        this.loadConnectStatus();
+        // Step 2: get KYC token and mount widget
+        this.airwallexService.getKycToken().subscribe({
+          next: (tokenData) => {
+            this.kycLoading = false;
+            if (tokenData.alreadyOnboarded) {
+              this.kycOnboarded = true;
+              this.kycStatus = 'approved';
+              this.kycStatusMessage = 'Your payout account is active.';
+              return;
+            }
+            this.kycWidgetOpen = true;
+            setTimeout(() => this.mountKycWidget(tokenData.token, status.accountId!), 100);
+          },
+          error: (err) => {
+            this.kycLoading = false;
+            this.kycError = err?.error?.message || 'Failed to load KYC. Please try again.';
+          }
+        });
       },
       error: (err) => {
-        this.connectSubmitting = false;
-        this.connectError = err?.error?.message || err?.error?.error || 'Something went wrong. Please check your details and try again.';
+        this.kycLoading = false;
+        this.kycError = err?.error?.message || 'Failed to set up payout account. Please try again.';
       }
     });
   }
 
-  testActivate(): void {
-    this.connectTestActivating = true;
-    this.stripeConnect.testActivate().subscribe({
-      next: () => {
-        this.connectTestActivating = false;
-        this.connectStatusMessage = 'Test account activated!';
-        this.loadConnectStatus();
-      },
-      error: (err) => {
-        this.connectTestActivating = false;
-        this.connectError = err?.error?.error || 'Test activation failed.';
+  private async mountKycWidget(token: string, accountId: string): Promise<void> {
+    try {
+      const airwallexEnv = (window as any).__AIRWALLEX_ENV__ || 'demo';
+
+      // Dynamically load the Airwallex Components SDK if not already loaded
+      if (!(window as any).AirwallexComponentsSDK) {
+        await this.loadScript('https://static.airwallex.com/components/sdk/v1/index.js');
       }
+
+      const sdk = (window as any).AirwallexComponentsSDK;
+      if (!sdk) {
+        this.kycError = 'Payment SDK could not be loaded. Please refresh and try again.';
+        return;
+      }
+
+      await sdk.init({
+        env: airwallexEnv,
+        authCode: token,
+        clientId: accountId,
+        langKey: this.translate.currentLang || 'en'
+      });
+
+      this.kycElement = sdk.createElement('kyc');
+      this.kycElement.mount(this.kycContainer.nativeElement);
+
+      // Listen for completion
+      this.kycContainer.nativeElement.addEventListener('onKycSuccess', () => {
+        this.kycWidgetOpen = false;
+        this.kycStatus = 'in_review';
+        this.kycStatusMessage = 'Your KYC has been submitted and is under review. You\'ll be notified once approved.';
+        this.unmountKyc();
+      });
+    } catch (err: any) {
+      this.kycError = 'Failed to load the KYC widget. Please refresh and try again.';
+      console.error('[Airwallex KYC]', err);
+    }
+  }
+
+  private loadScript(src: string): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const existing = document.querySelector(`script[src="${src}"]`);
+      if (existing) { resolve(); return; }
+      const script = document.createElement('script');
+      script.src = src;
+      script.onload = () => resolve();
+      script.onerror = () => reject(new Error(`Failed to load script: ${src}`));
+      document.head.appendChild(script);
     });
   }
 
-  get connectStatusLabel(): string {
-    if (!this.connectStatus?.connected) return 'Not connected';
-    if (this.connectStatus.onboarded) return 'Active';
-    return 'Pending verification';
+  private unmountKyc(): void {
+    if (this.kycElement) {
+      try { this.kycElement.unmount(); } catch (_) {}
+      this.kycElement = null;
+    }
   }
 
-  get connectStatusClass(): string {
-    if (!this.connectStatus?.connected) return 'connect-not-connected';
-    if (this.connectStatus.onboarded) return 'connect-active';
-    return 'connect-pending';
+  closeKycWidget(): void {
+    this.kycWidgetOpen = false;
+    this.unmountKyc();
+  }
+
+  get kycStatusLabel(): string {
+    if (this.kycOnboarded) return 'Active';
+    switch (this.kycStatus) {
+      case 'in_review': return 'Under review';
+      case 'failed': return 'Verification failed';
+      case 'pending': return 'Not started';
+      default: return 'Not connected';
+    }
+  }
+
+  get kycStatusClass(): string {
+    if (this.kycOnboarded) return 'connect-active';
+    if (this.kycStatus === 'in_review') return 'connect-pending';
+    if (this.kycStatus === 'failed') return 'connect-failed';
+    return 'connect-not-connected';
   }
 }

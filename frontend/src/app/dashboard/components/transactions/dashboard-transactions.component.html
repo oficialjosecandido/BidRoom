@@ -19,16 +19,10 @@
     </div>
   }
 
-  @if (stripeConfirmingTxId) {
-    <div class="stripe-confirming-banner">
-      {{ 'transactions.confirmingStripe' | translate }}
-    </div>
-  }
-
-  @if (stripePaymentError) {
+  @if (airwallexPaymentError) {
     <div class="stripe-error-banner">
-      {{ stripePaymentError }}
-      <button type="button" class="stripe-error-close" (click)="stripePaymentError = null">×</button>
+      {{ airwallexPaymentError }}
+      <button type="button" class="stripe-error-close" (click)="airwallexPaymentError = null">×</button>
     </div>
   }
 
@@ -264,11 +258,17 @@
                     <button type="button" class="btn btn-secondary" (click)="openShippingPanel(t)">
                       {{ 'transactions.chooseShippingMethod' | translate }}
                     </button>
+                  } @else if (airwallexWidgetTxId === t._id && airwallexClientSecret) {
+                    <p class="stripe-pay-hint">Complete your card payment with Airwallex. If you do not see a payment form, refresh the page and try again.</p>
+                    <button type="button" class="btn btn-link" (click)="closeAirwallexWidget()">{{ 'dashboard.common.cancel' | translate }}</button>
                   } @else {
-                    <p class="stripe-pay-hint">{{ 'transactions.paySecurelyHint' | translate }}</p>
-                    <button type="button" class="btn btn-stripe-pay" (click)="payWithStripe(t)" [disabled]="stripePayingTxId === t._id">
-                      {{ stripePayingTxId === t._id ? ('transactions.redirectingToStripe' | translate) : ('transactions.payNow' | translate) }}
+                    <p class="stripe-pay-hint">Pay securely with your card via Airwallex.</p>
+                    <button type="button" class="btn btn-stripe-pay" (click)="openAirwallexPayment(t)">
+                      {{ 'transactions.payNow' | translate }}
                     </button>
+                    @if (airwallexPayingTxId === t._id) {
+                      <p class="wise-loading">{{ 'transactions.calculating' | translate }}…</p>
+                    }
                   }
                 </div>
               }
@@ -277,8 +277,8 @@
                   {{ 'transactions.paymentConfirmedSellerNotified' | translate }}
                 </p>
               }
-              @if (t.stripePaymentIntentId) {
-                <p class="stripe-ref">{{ 'transactions.paymentRef' | translate }}: {{ t.stripePaymentIntentId }}</p>
+              @if (t.airwallexPaymentIntentId) {
+                <p class="stripe-ref">{{ 'transactions.paymentRef' | translate }}: {{ t.airwallexPaymentIntentId }}</p>
               }
               @if (getEffectiveStatus(t) === 'shipped') {
                 <p class="form-hint">{{ 'transactions.itemShippedHowReceived' | translate }}</p>

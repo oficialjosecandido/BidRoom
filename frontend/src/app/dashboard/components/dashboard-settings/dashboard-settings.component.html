@@ -73,134 +73,55 @@
       </div>
     </div>
 
-    <!-- Seller Payout Account -->
+    <!-- Seller Payout Account (Airwallex) -->
     <div class="settings-card settings-card-full">
       <div class="card-header">
         <span class="card-icon">💳</span>
         <h2 class="card-title">Seller Payout Account</h2>
       </div>
       <div class="card-body">
-        @if (connectStatusMessage) {
-          <div class="connect-message">{{ connectStatusMessage }}</div>
+        @if (kycStatusMessage) {
+          <div class="connect-message">{{ kycStatusMessage }}</div>
         }
-        @if (connectLoading) {
-          <p class="text-muted">Checking payout account status...</p>
-        } @else if (!showOnboardingForm) {
+        @if (kycError) {
+          <div class="form-error-banner">{{ kycError }}</div>
+        }
+
+        @if (!kycWidgetOpen) {
           <div class="connect-status-row">
             <span class="info-label">Payout status</span>
-            <span class="status-badge" [ngClass]="connectStatusClass">{{ connectStatusLabel }}</span>
+            <span class="status-badge" [ngClass]="kycStatusClass">{{ kycStatusLabel }}</span>
           </div>
-          @if (connectStatus?.onboarded) {
-            <p class="card-desc">Your payout account is active. Buyers can pay you directly — funds will be sent to your registered bank account.</p>
-            @if (connectStatus?.chargesEnabled) {
-              <p class="text-success">Charges enabled · Payouts {{ connectStatus?.payoutsEnabled ? 'enabled' : 'pending' }}</p>
-            }
-            <button class="action-btn action-btn-secondary" (click)="openOnboardingForm()">Update bank account</button>
-          } @else if (connectStatus?.connected) {
-            @if (connectStatus?.requirementErrors?.length) {
-              <div class="connect-errors">
-                <p class="connect-errors-title">Issue with your payout account:</p>
-                <ul>
-                  @for (err of connectStatus!.requirementErrors!; track err) {
-                    <li>{{ err }}</li>
-                  }
-                </ul>
-              </div>
-            } @else {
-              <p class="card-desc">Your details have been submitted and are being verified by Stripe. This usually takes a few minutes.</p>
-            }
-            <div class="button-row">
-              <button class="action-btn action-btn-secondary" (click)="openOnboardingForm()">Update details</button>
-              @if (isStripeTestMode) {
-                <button class="action-btn action-btn-test" (click)="testActivate()" [disabled]="connectTestActivating">
-                  {{ connectTestActivating ? 'Activating…' : '⚡ Simulate verification' }}
-                </button>
-              }
-            </div>
+
+          @if (kycOnboarded) {
+            <p class="card-desc">Your payout account is verified and active. Buyers can pay you directly — funds will be automatically routed to your registered bank account after delivery is confirmed.</p>
+          } @else if (kycStatus === 'in_review') {
+            <p class="card-desc">Your identity verification is under review. You'll be notified by email once approved — this usually takes 1–2 business days.</p>
+          } @else if (kycStatus === 'failed') {
+            <p class="card-desc">Your identity verification was not approved. Please try again with updated documents.</p>
+            <button class="action-btn" (click)="startKyc()" [disabled]="kycLoading">
+              {{ kycLoading ? 'Loading…' : 'Retry verification' }}
+            </button>
           } @else {
-            <p class="card-desc">To receive payments from buyers, set up your payout account. No Stripe account needed — just fill in your details below.</p>
+            <p class="card-desc">To receive payments from buyers, complete your identity verification. The process takes about 5 minutes and is powered by Airwallex.</p>
             <ul class="feature-list">
-              <li>Enter your identity and bank details once</li>
-              <li>Stripe processes payouts securely in the background</li>
-              <li>Funds transferred directly to your bank account</li>
+              <li>Secure identity verification (KYC)</li>
+              <li>Connect your bank account for automatic payouts</li>
+              <li>Funds released after buyer confirms delivery</li>
             </ul>
-            <button class="action-btn" (click)="openOnboardingForm()">Set up payout account</button>
+            <button class="action-btn" (click)="startKyc()" [disabled]="kycLoading">
+              {{ kycLoading ? 'Loading…' : 'Set up payout account' }}
+            </button>
           }
         } @else {
-          <!-- Onboarding Form -->
-          <form class="onboarding-form" (ngSubmit)="submitOnboarding()">
-            @if (connectError) {
-              <div class="form-error-banner">{{ connectError }}</div>
-            }
-
-            <div class="form-section">
-              <h3 class="form-section-title">Date of birth</h3>
-              <div class="dob-row">
-                <div class="form-field">
-                  <label>Day</label>
-                  <input type="number" [(ngModel)]="dobDay" name="dobDay" min="1" max="31" placeholder="DD" required />
-                </div>
-                <div class="form-field">
-                  <label>Month</label>
-                  <input type="number" [(ngModel)]="dobMonth" name="dobMonth" min="1" max="12" placeholder="MM" required />
-                </div>
-                <div class="form-field form-field-year">
-                  <label>Year</label>
-                  <input type="number" [(ngModel)]="dobYear" name="dobYear" min="1900" max="2010" placeholder="YYYY" required />
-                </div>
-              </div>
+          <!-- Airwallex embedded KYC widget -->
+          <div class="kyc-widget-wrapper">
+            <div class="kyc-widget-header">
+              <span class="kyc-widget-title">Identity Verification</span>
+              <button class="kyc-close-btn" (click)="closeKycWidget()" title="Close">✕</button>
             </div>
-
-            <div class="form-section">
-              <h3 class="form-section-title">Address</h3>
-              <div class="form-field">
-                <label>Street address</label>
-                <input type="text" [(ngModel)]="addressLine1" name="addressLine1" placeholder="123 Main St" required />
-              </div>
-              <div class="form-row-2">
-                <div class="form-field">
-                  <label>City</label>
-                  <input type="text" [(ngModel)]="addressCity" name="addressCity" placeholder="Lisbon" required />
-                </div>
-                <div class="form-field">
-                  <label>Postal code</label>
-                  <input type="text" [(ngModel)]="addressPostal" name="addressPostal" placeholder="1000-001" required />
-                </div>
-              </div>
-              <div class="form-field">
-                <label>Country</label>
-                <select [(ngModel)]="addressCountry" name="addressCountry" required>
-                  @for (c of countries; track c.code) {
-                    <option [value]="c.code">{{ c.label }}</option>
-                  }
-                </select>
-              </div>
-            </div>
-
-            <div class="form-section">
-              <h3 class="form-section-title">Bank account (IBAN)</h3>
-              <div class="form-field">
-                <label>IBAN</label>
-                <input type="text" [(ngModel)]="iban" name="iban" placeholder="PT50 0035 0552 0001 3600 5312 9" required
-                       (input)="iban = $any($event.target).value.toUpperCase()" />
-                <span class="form-hint">Your International Bank Account Number. Spaces are ignored.</span>
-              </div>
-            </div>
-
-            <div class="form-section">
-              <label class="tos-row">
-                <input type="checkbox" [(ngModel)]="tosAccepted" name="tosAccepted" />
-                <span>I authorise BidRoom to submit my information to Stripe for identity verification and payout processing, and I accept the <a href="https://stripe.com/legal/connect-account" target="_blank" rel="noopener">Stripe Connected Account Agreement</a>.</span>
-              </label>
-            </div>
-
-            <div class="form-actions">
-              <button type="submit" class="action-btn" [disabled]="connectSubmitting">
-                {{ connectSubmitting ? 'Submitting…' : 'Save payout account' }}
-              </button>
-              <button type="button" class="action-btn action-btn-ghost" (click)="cancelOnboardingForm()" [disabled]="connectSubmitting">Cancel</button>
-            </div>
-          </form>
+            <div #kycContainer class="kyc-container"></div>
+          </div>
         }
       </div>
     </div>

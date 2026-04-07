@@ -62,5 +62,6 @@ export class AdminService {
   ): Observable<{ success: boolean; transaction: Transaction }> {
     return this.http.post<{ success: boolean; transaction: Transaction }>(`${this.apiUrl}/disputes/${transactionId}/ruling`, payload);
   }
+
 }
 
