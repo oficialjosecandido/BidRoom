@@ -48,6 +48,7 @@ router.get('/profile', authenticateToken, async (req, res) => {
     }
 
     // Resolve User by uid for review scores, Stripe Connect status, and account status
+    const isTestMode = process.env.STRIPE_SECRET_KEY?.startsWith('sk_test_');
     const dbUser = await User.findOne({ uid }).select('_id stripeConnectOnboarded accountStatus').lean();
     let buyerScore = null;
     let sellerScore = null;
@@ -59,7 +60,14 @@ router.get('/profile', authenticateToken, async (req, res) => {
       sellerScore = scores.sellerScore;
       buyerReviewCount = scores.buyerReviewCount;
       sellerReviewCount = scores.sellerReviewCount;
+
+      // In test/dev mode auto-mark as onboarded so manual Stripe setup isn't required
+      if (isTestMode && !dbUser.stripeConnectOnboarded) {
+        await User.updateOne({ uid }, { $set: { stripeConnectOnboarded: true } });
+      }
     }
+
+    const stripeConnectOnboarded = isTestMode ? true : !!(dbUser?.stripeConnectOnboarded);
 
     res.json({
       user: {
@@ -81,7 +89,7 @@ router.get('/profile', authenticateToken, async (req, res) => {
       sellerScore,
       buyerReviewCount,
       sellerReviewCount,
-      stripeConnectOnboarded: !!(dbUser?.stripeConnectOnboarded)
+      stripeConnectOnboarded
     });
   } catch (error) {
     console.error('Error fetching customer profile:', error);

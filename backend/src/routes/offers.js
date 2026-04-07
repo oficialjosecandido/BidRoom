@@ -421,9 +421,9 @@ router.patch('/:offerId/accept', authenticateToken, async (req, res) => {
       });
     }
 
-    // Block acceptance if seller has not connected Stripe
+    // Block acceptance if seller has not connected Stripe (skip check in test/dev mode)
     const isTestMode = process.env.STRIPE_SECRET_KEY?.startsWith('sk_test_');
-    if (!user.stripeConnectAccountId || (!user.stripeConnectOnboarded && !isTestMode)) {
+    if (!isTestMode && (!user.stripeConnectAccountId || !user.stripeConnectOnboarded)) {
       return res.status(400).json({
         error: 'Stripe not connected',
         message: 'You must connect your Stripe account before accepting offers. Go to Dashboard → Settings → Payments to complete setup.'
@@ -585,8 +585,8 @@ router.patch('/:offerId/reject', authenticateToken, async (req, res) => {
       }).populate('listing').populate('offerer', 'firstName lastName email');
 
       if (remainingQualifying.length === 1) {
-        // Check if seller has Stripe before auto-accepting
-        const sellerStripeReady = !!(user.stripeConnectAccountId && user.stripeConnectOnboarded);
+        // Check if seller has Stripe before auto-accepting (skip in test/dev mode)
+        const sellerStripeReady = isTestMode || !!(user.stripeConnectAccountId && user.stripeConnectOnboarded);
 
         if (!sellerStripeReady) {
           // Notify seller to connect Stripe; do not auto-accept
