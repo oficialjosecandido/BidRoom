@@ -384,8 +384,8 @@ export class DashboardTransactionsComponent implements OnInit {
     return t.amount * 0.02;
   }
 
-  /** Card processing fee row (optional; Airwallex flow may not expose a separate line item) */
-  getStripeFee(_t: Transaction): number | null {
+  /** Card processing fee row (not separately exposed with Airwallex) */
+  getProcessingFee(_t: Transaction): number | null {
     return null;
   }
 

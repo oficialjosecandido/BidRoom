@@ -38,7 +38,7 @@ export class AddListing implements OnInit {
   errorMessage = '';
   isUploadingImages = false;
   isLoadingCustomer = true;
-  isStripeConnected = false;
+  isPayoutReady = false;
   customerLoadError = false;
 
   /** Active language tab in the description section */
@@ -190,7 +190,7 @@ export class AddListing implements OnInit {
   loadCustomerInfo(): void {
     this.customerService.getCustomer().subscribe({
       next: (info: CustomerInfo) => {
-        this.isStripeConnected = info.airwallexOnboarded;
+        this.isPayoutReady = info.airwallexOnboarded;
         this.isLoadingCustomer = false;
       },
       error: () => {

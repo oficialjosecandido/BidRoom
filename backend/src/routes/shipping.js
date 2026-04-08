@@ -112,7 +112,7 @@ router.post('/rates', requireActiveAccount, async (req, res) => {
 /**
  * POST /api/shipping/lock-rate
  * Lock the buyer's chosen shipping rate on a transaction before checkout.
- * Once locked, the rate is included in the Stripe Checkout session total.
+ * Once locked, the rate is included in the Airwallex payment total.
  *
  * Body: { transactionId, rateId, carrier, service, rate, deliveryDays, destination }
  * Returns: { success, shippingAmount, carrier, service, deliveryDays }

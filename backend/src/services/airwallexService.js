@@ -59,9 +59,12 @@ async function authHeaders() {
 async function createConnectedAccount({ email, firstName, lastName }) {
   const headers = await authHeaders();
   const res = await axios.post(
-    `${BASE_URL}/api/v1/accounts`,
+    `${BASE_URL}/api/v1/accounts/create`,
     {
-      type: 'MERCHANT',
+      request_id: `acct-${email}-${Date.now()}`,
+      account_details: {
+        business_name: `${firstName} ${lastName}`
+      },
       primary_contact: { email, first_name: firstName, last_name: lastName }
     },
     { headers }

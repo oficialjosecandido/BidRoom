@@ -511,13 +511,13 @@ async function notifySellerPaymentReceived({ transactionId, listingTitle, buyerN
   });
 }
 
-/** Seller must connect Stripe before a qualifying offer can be accepted */
-async function notifySellerStripeRequiredForOffer({ listingSlug, listingTitle, offerAmount, sellerUserId }) {
+/** Seller must complete payout account setup before a qualifying offer can be accepted */
+async function notifySellerPayoutRequiredForOffer({ listingSlug, listingTitle, offerAmount, sellerUserId }) {
   const link = '/dashboard/settings';
   return createNotification({
     userId: sellerUserId,
-    title: 'Action required: Connect Stripe to accept offer',
-    message: `Your listing "${listingTitle || 'the item'}" has a qualifying offer of $${(offerAmount || 0).toFixed(2)}. Connect your Stripe account in Settings → Payments to accept it.`,
+    title: 'Action required: Complete payout setup to accept offer',
+    message: `Your listing "${listingTitle || 'the item'}" has a qualifying offer of $${(offerAmount || 0).toFixed(2)}. Complete your payout account setup in Settings → Payout Account to accept it.`,
     type: 'transaction',
     link,
     referenceId: listingSlug
@@ -658,7 +658,7 @@ module.exports = {
   notifyLoginFromNewDevice,
   notifySellerWinnerSelected,
   notifyBuyerAuctionWon,
-  notifySellerStripeRequiredForOffer,
+  notifySellerPayoutRequiredForOffer,
   notifySellerPaymentReceived,
   notifyBuyerSellerAccepted,
   emitNewNotificationToUser

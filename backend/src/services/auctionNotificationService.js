@@ -862,8 +862,8 @@ async function handleAuctionEnd(listingId, io = null) {
           await Listing.findByIdAndUpdate(listingId, { $set: { status: 'ended' } }, { runValidators: false });
           const sellerUserId = sellerId?.toString?.();
           if (sellerUserId) {
-            const { notifySellerStripeRequiredForOffer, emitNewNotificationToUser } = require('./notificationService');
-            notifySellerStripeRequiredForOffer({
+            const { notifySellerPayoutRequiredForOffer, emitNewNotificationToUser } = require('./notificationService');
+            notifySellerPayoutRequiredForOffer({
               listingSlug: listing.slug || null,
               listingTitle: listing.title || 'Your listing',
               offerAmount: offersAboveMin[0].amount,

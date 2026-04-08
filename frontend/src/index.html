@@ -27,15 +27,13 @@
   <!--
     APP_CONFIG overrides Angular’s environment.defaultApiBaseUrl when set (non-empty).
     Azure Static Web Apps: use build-time substitution or SWA app settings + a small script.
-      API_URL                 → e.g. https://bidroom-backend.azurewebsites.net/api
-      STRIPE_PUBLISHABLE_KEY  → pk_live_... (production) or pk_test_... (staging)
+      API_URL → e.g. https://bidroom-backend.azurewebsites.net/api
 
     Leave API_URL empty to use the default from environment.prod.ts / environment.ts.
   -->
   <script>
     window.APP_CONFIG = {
-      API_URL: '',
-      STRIPE_PUBLISHABLE_KEY: ''
+      API_URL: ‘’
     };
   </script>
 </head>

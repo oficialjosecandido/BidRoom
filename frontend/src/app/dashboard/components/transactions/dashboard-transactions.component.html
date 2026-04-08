@@ -20,9 +20,9 @@
   }
 
   @if (airwallexPaymentError) {
-    <div class="stripe-error-banner">
+    <div class="payment-error-banner">
       {{ airwallexPaymentError }}
-      <button type="button" class="stripe-error-close" (click)="airwallexPaymentError = null">×</button>
+      <button type="button" class="payment-error-close" (click)="airwallexPaymentError = null">×</button>
     </div>
   }
 
@@ -68,10 +68,10 @@
                     <span class="breakdown-label">{{ 'transactions.bidRoomFee' | translate }}</span>
                     <span class="breakdown-value breakdown-value-fee">{{ formatPrice(getBidRoomFee(t)) }}</span>
                   </div>
-                  @if (getStripeFee(t) !== null) {
+                  @if (getProcessingFee(t) !== null) {
                     <div class="breakdown-row breakdown-row-fee">
-                      <span class="breakdown-label">{{ 'transactions.stripeProcessingFee' | translate }}</span>
-                      <span class="breakdown-value breakdown-value-fee">{{ formatPrice(getStripeFee(t)!) }}</span>
+                      <span class="breakdown-label">{{ 'transactions.processingFee' | translate }}</span>
+                      <span class="breakdown-value breakdown-value-fee">{{ formatPrice(getProcessingFee(t)!) }}</span>
                     </div>
                   }
                   <div class="breakdown-row">
@@ -91,9 +91,6 @@
                     <span class="breakdown-total-label">{{ 'transactions.youReceive' | translate }}</span>
                     <span class="breakdown-total-value">{{ formatPrice(getSellerNet(t)) }}</span>
                   </div>
-                  @if (getStripeFee(t) === null && getEffectiveStatus(t) === 'pending_payment') {
-                    <p class="breakdown-note">{{ 'transactions.stripeDeductedNote' | translate }}</p>
-                  }
                 }
                 @if (isBuyer(t)) {
                   <div class="breakdown-total breakdown-total-buyer">
@@ -167,7 +164,7 @@
                   {{ 'transactions.acknowledgeBy' | translate }} {{ formatPaymentAcceptanceDeadline(t) }}{{ hasPaymentAcceptanceDeadlinePassed(t) ? (' (' + ('transactions.deadlinePassed' | translate) + ')') : '' }}
                 </p>
               }
-              <p class="stripe-payment-confirmed">{{ 'transactions.paymentConfirmedStripe' | translate }}</p>
+              <p class="payment-confirmed-note">{{ 'transactions.paymentConfirmed' | translate }}</p>
               <button type="button" class="btn btn-primary" (click)="acceptPayment(t)" [disabled]="updatingId === t._id">
                 {{ updatingId === t._id ? ('transactions.confirming' | translate) : ('transactions.confirmPrepareShip' | translate) }}
               </button>
@@ -252,18 +249,18 @@
                   </div>
                 }
 
-                <div class="stripe-pay-section">
+                <div class="pay-section">
                   @if (needsShippingRate(t)) {
-                    <p class="stripe-pay-hint">{{ 'transactions.selectShippingBeforePaying' | translate }}</p>
+                    <p class="pay-hint">{{ 'transactions.selectShippingBeforePaying' | translate }}</p>
                     <button type="button" class="btn btn-secondary" (click)="openShippingPanel(t)">
                       {{ 'transactions.chooseShippingMethod' | translate }}
                     </button>
                   } @else if (airwallexWidgetTxId === t._id && airwallexClientSecret) {
-                    <p class="stripe-pay-hint">Complete your card payment with Airwallex. If you do not see a payment form, refresh the page and try again.</p>
+                    <p class="pay-hint">Complete your card payment with Airwallex. If you do not see a payment form, refresh the page and try again.</p>
                     <button type="button" class="btn btn-link" (click)="closeAirwallexWidget()">{{ 'dashboard.common.cancel' | translate }}</button>
                   } @else {
-                    <p class="stripe-pay-hint">Pay securely with your card via Airwallex.</p>
-                    <button type="button" class="btn btn-stripe-pay" (click)="openAirwallexPayment(t)">
+                    <p class="pay-hint">Pay securely with your card via Airwallex.</p>
+                    <button type="button" class="btn btn-pay" (click)="openAirwallexPayment(t)">
                       {{ 'transactions.payNow' | translate }}
                     </button>
                     @if (airwallexPayingTxId === t._id) {
@@ -273,12 +270,12 @@
                 </div>
               }
               @if (getEffectiveStatus(t) === 'awaiting_seller_acceptance') {
-                <p class="form-hint stripe-paid-hint">
+                <p class="form-hint paid-hint">
                   {{ 'transactions.paymentConfirmedSellerNotified' | translate }}
                 </p>
               }
               @if (t.airwallexPaymentIntentId) {
-                <p class="stripe-ref">{{ 'transactions.paymentRef' | translate }}: {{ t.airwallexPaymentIntentId }}</p>
+                <p class="payment-ref">{{ 'transactions.paymentRef' | translate }}: {{ t.airwallexPaymentIntentId }}</p>
               }
               @if (getEffectiveStatus(t) === 'shipped') {
                 <p class="form-hint">{{ 'transactions.itemShippedHowReceived' | translate }}</p>

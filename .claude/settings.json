@@ -8,7 +8,20 @@
       "Bash(find /Users/josecandido/Documents/BidRoom/backend/src -name platinumBidderInvitation* -o -name platinum*)",
       "Bash(grep -r \"FEATURE_\\\\|featureFlags\\\\|isFeatureEnabled\" /Users/josecandido/Documents/BidRoom/backend/src --include=*.js --include=*.ts)",
       "Bash(grep -r \"tierFromBalance\\\\|TIER_THRESHOLDS\" /Users/josecandido/Documents/BidRoom --include=*.js --include=*.ts)",
-      "Bash(find /Users/josecandido/Documents/BidRoom/frontend/src -name *.interceptor.ts -o -name *interceptor*)"
+      "Bash(find /Users/josecandido/Documents/BidRoom/frontend/src -name *.interceptor.ts -o -name *interceptor*)",
+      "Bash(sed -i '' 's/\\\\.stripe-error-banner/.payment-error-banner/g' /Users/josecandido/Documents/BidRoom/frontend/src/app/dashboard/components/transactions/dashboard-transactions.component.scss)",
+      "Bash(sed -i '' 's/\\\\.stripe-error-close/.payment-error-close/g' /Users/josecandido/Documents/BidRoom/frontend/src/app/dashboard/components/transactions/dashboard-transactions.component.scss)",
+      "Bash(sed -i '' 's/\\\\.stripe-pay-section/.pay-section/g' /Users/josecandido/Documents/BidRoom/frontend/src/app/dashboard/components/transactions/dashboard-transactions.component.scss)",
+      "Bash(sed -i '' 's/\\\\.stripe-pay-hint/.pay-hint/g' /Users/josecandido/Documents/BidRoom/frontend/src/app/dashboard/components/transactions/dashboard-transactions.component.scss)",
+      "Bash(sed -i '' 's/\\\\.btn-stripe-pay/.btn-pay/g' /Users/josecandido/Documents/BidRoom/frontend/src/app/dashboard/components/transactions/dashboard-transactions.component.scss)",
+      "Bash(sed -i '' s/notifySellerStripeRequiredForOffer/notifySellerPayoutRequiredForOffer/g /Users/josecandido/Documents/BidRoom/backend/src/services/notificationService.js)",
+      "Bash(sed -i '' s/notifySellerStripeRequiredForOffer/notifySellerPayoutRequiredForOffer/g /Users/josecandido/Documents/BidRoom/backend/src/routes/offers.js)",
+      "Bash(sed -i '' s/notifySellerStripeRequiredForOffer/notifySellerPayoutRequiredForOffer/g /Users/josecandido/Documents/BidRoom/backend/src/services/auctionNotificationService.js)",
+      "Bash(sed -i '' 's/class=\"stripe-pay-hint\">Complete your card/class=\"pay-hint\">Complete your card/g' /Users/josecandido/Documents/BidRoom/frontend/src/app/dashboard/components/transactions/dashboard-transactions.component.html)",
+      "Bash(sed -i '' 's/class=\"stripe-ref\"/class=\"payment-ref\"/g' /Users/josecandido/Documents/BidRoom/frontend/src/app/dashboard/components/transactions/dashboard-transactions.component.html)",
+      "Bash(sed -i '' 's/\\\\.stripe-confirming-banner/.confirming-banner/g' /Users/josecandido/Documents/BidRoom/frontend/src/app/dashboard/components/transactions/dashboard-transactions.component.scss)",
+      "Bash(sed -i '' 's/\\\\.stripe-ref/.payment-ref/g' /Users/josecandido/Documents/BidRoom/frontend/src/app/dashboard/components/transactions/dashboard-transactions.component.scss)",
+      "Bash(sed -i '' s/sellerStripeReady/sellerPayoutReady/g /Users/josecandido/Documents/BidRoom/frontend/src/app/listing/components/listing-details/listing-details.component.ts)"
     ]
   }
 }

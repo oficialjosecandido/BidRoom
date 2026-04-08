@@ -88,7 +88,7 @@
 }
 
 // Stripe banners
-.stripe-confirming-banner {
+.confirming-banner {
   background: #e8f5e9;
   color: #2e7d32;
   padding: 14px 20px;
@@ -99,7 +99,7 @@
   text-align: center;
 }
 
-.stripe-error-banner {
+.payment-error-banner {
   background: #fdecea;
   color: #c62828;
   padding: 14px 20px;
@@ -111,7 +111,7 @@
   justify-content: space-between;
   gap: 12px;
 
-  .stripe-error-close {
+  .payment-error-close {
     background: none;
     border: none;
     color: #c62828;
@@ -140,17 +140,17 @@
 }
 
 // Stripe pay section
-.stripe-pay-section {
+.pay-section {
   margin-top: 8px;
 }
 
-.stripe-pay-hint {
+.pay-hint {
   font-size: 13px;
   color: #666;
   margin: 0 0 8px;
 }
 
-.btn-stripe-pay {
+.btn-pay {
   background: #635bff;
   color: white;
   border: none;
@@ -171,12 +171,12 @@
   }
 }
 
-.stripe-paid-hint {
+.paid-hint {
   color: #2e7d32;
   font-weight: 500;
 }
 
-.stripe-payment-confirmed {
+.payment-confirmed-note {
   display: inline-block;
   background: #e8f5e9;
   color: #2e7d32;
@@ -187,7 +187,7 @@
   margin-bottom: 8px;
 }
 
-.stripe-ref {
+.payment-ref {
   font-size: 11px;
   color: #bbb;
   font-family: monospace;

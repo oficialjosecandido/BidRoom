@@ -589,9 +589,9 @@ router.patch('/:offerId/reject', authenticateToken, async (req, res) => {
 
         if (!sellerPayoutReady) {
           // Notify seller to complete KYC; do not auto-accept
-          const { notifySellerStripeRequiredForOffer, emitNewNotificationToUser } = require('../services/notificationService');
+          const { notifySellerPayoutRequiredForOffer, emitNewNotificationToUser } = require('../services/notificationService');
           const io = req.app.get('io');
-          notifySellerStripeRequiredForOffer({
+          notifySellerPayoutRequiredForOffer({
             listingSlug: offer.listing.slug || null,
             listingTitle: offer.listing.title || 'Your listing',
             offerAmount: remainingQualifying[0].amount,

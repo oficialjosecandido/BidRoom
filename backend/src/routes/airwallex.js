@@ -55,7 +55,7 @@ const SELLER_FEE_RATE = 0.02; // 2% deducted from item price
  */
 router.post('/onboard', authenticateToken, async (req, res) => {
   try {
-    const user = await User.findById(req.user.id);
+    const user = await User.findOne({ uid: req.user.uid });
     if (!user) return res.status(404).json({ error: 'User not found' });
 
     if (user.airwallexAccountId) {
@@ -99,7 +99,7 @@ router.post('/onboard', authenticateToken, async (req, res) => {
  */
 router.get('/kyc-token', authenticateToken, async (req, res) => {
   try {
-    const user = await User.findById(req.user.id).select('airwallexAccountId airwallexOnboarded');
+    const user = await User.findOne({ uid: req.user.uid }).select('airwallexAccountId airwallexOnboarded');
     if (!user) return res.status(404).json({ error: 'User not found' });
     if (!user.airwallexAccountId) {
       return res.status(400).json({ error: 'No Airwallex account. Call /onboard first.' });
@@ -139,7 +139,8 @@ router.post('/payment-intent', authenticateToken, async (req, res) => {
       .populate('listing', 'title');
 
     if (!tx) return res.status(404).json({ error: 'Transaction not found' });
-    if (tx.buyer.toString() !== req.user.id) {
+    const reqUser = await User.findOne({ uid: req.user.uid }).select('_id').lean();
+    if (!reqUser || tx.buyer.toString() !== reqUser._id.toString()) {
       return res.status(403).json({ error: 'Only the buyer can initiate payment' });
     }
     if (tx.transactionStatus !== 'pending_payment') {
@@ -216,8 +217,8 @@ router.post('/capture/:transactionId', authenticateToken, async (req, res) => {
       .populate('listing', 'title');
 
     if (!tx) return res.status(404).json({ error: 'Transaction not found' });
-
-    if (tx.buyer._id.toString() !== req.user.id) {
+    const reqUser = await User.findOne({ uid: req.user.uid }).select('_id').lean();
+    if (!reqUser || tx.buyer._id.toString() !== reqUser._id.toString()) {
       return res.status(403).json({ error: 'Only the buyer can confirm receipt' });
     }
 

@@ -679,10 +679,10 @@
                       }
                       @if (canSellerAcceptOrDeclineOffers()) {
                       <div class="offer-action-buttons">
-                        @if (!sellerStripeReady) {
-                          <p class="stripe-warning">⚠️ Connect your Stripe account in <a [routerLink]="['/dashboard/settings']">Settings → Payments</a> to accept offers.</p>
+                        @if (!sellerPayoutReady) {
+                          <p class="payout-warning">⚠️ Complete your payout account setup in <a [routerLink]="['/dashboard/settings']">Settings → Payout Account</a> to accept offers.</p>
                         }
-                        <button type="button" class="btn btn-primary btn-accept" (click)="acceptOffer(offer)" [disabled]="offerActionLoadingId !== null || !sellerStripeReady">
+                        <button type="button" class="btn btn-primary btn-accept" (click)="acceptOffer(offer)" [disabled]="offerActionLoadingId !== null || !sellerPayoutReady">
                           {{ offerActionLoadingId === offer._id ? ('listingDetails.offerHistory.accepting' | translate) : ('listingDetails.offerHistory.accept' | translate) }}
                         </button>
                         @if (!canDeclineOffer(offer)) {

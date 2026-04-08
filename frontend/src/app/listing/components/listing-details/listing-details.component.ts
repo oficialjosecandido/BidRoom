@@ -94,7 +94,7 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
   /** ID of offer being accepted/rejected (for loading state) */
   offerActionLoadingId: string | null = null;
   /** Whether the current seller has Airwallex KYC completed */
-  sellerStripeReady = true;
+  sellerPayoutReady = true;
 
   ngOnInit(): void {
     window.scrollTo(0, 0);
@@ -1010,11 +1010,11 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
     if (this.isOwnListing) {
       this.customerService.getCustomer().subscribe({
         next: (info) => {
-          this.sellerStripeReady = info.airwallexOnboarded;
+          this.sellerPayoutReady = info.airwallexOnboarded;
           this.cdr.detectChanges();
         },
         error: () => {
-          this.sellerStripeReady = false;
+          this.sellerPayoutReady = false;
           this.cdr.detectChanges();
         }
       });
