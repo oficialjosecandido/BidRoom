@@ -34,7 +34,7 @@ BidRoom is a marketplace where:
 | **Highest Bid (Auction)** | Time-limited auctions with starting bid, increment, optional reserve, Buy Now, and optional Private Room. |
 | **Best Offer** | Buyers submit offers; seller accepts or rejects. Optional minimum offer for auto-accept. |
 | **Private Rooms** | After main auction ends, seller has **15 minutes** to invite 2–5 bidders (countdown on listing); accept/refuse within 15 minutes; poker-table room UI; **1-minute** start when all accept; then **60-second** rule for bidding. See `docs/PRIVATE-AUCTION-ROOMS.md`. |
-| **Transactions** | Payment window, shipping, proof of delivery, and dispute handling. |
+| **Transactions** | Payment window, shipping deadline enforcement (5 business days, auto-cancel + Stripe refund), proof of delivery, and dispute handling. |
 | **Reviews & Reputation** | Post-transaction ratings (1–10), reputation score, trust badges, Private Room eligibility. |
 | **Membership & Balance** | User balance for participation; top-ups via Stripe; tier presets (Bronze/Silver/Gold/Platinum). |
 | **Stripe Connect** | Sellers can receive payouts via Stripe Connect. |
@@ -175,10 +175,10 @@ Full detail: [PRIVATE-AUCTION-ROOMS.md](./PRIVATE-AUCTION-ROOMS.md).
 
 | Phase | Status | Rules |
 |-------|--------|-------|
-| **Payment** | `pending_payment` | T+24h window; seller provides bank details; buyer pays and can upload proof. |
-| **Shipping** | - | Seller ships within handling days; adds tracking; marks Sent. |
-| **Receipt** | - | Buyer marks **Received Properly** (complete) or **Received Improperly** (opens dispute). |
-| **Dispute** | `dispute_open` | Both accounts suspended; admin rules (buyer/seller/partial); account outcome (reactivate/close). |
+| **Payment** | `pending_payment` | Buyer pays via Stripe Connect (checkout or direct confirm). |
+| **Shipping (5 business days)** | `awaiting_seller_acceptance` → `paid` | Seller must ship within 5 business days (Mon–Fri UTC). Day 3: midpoint warning email + in-app. Day 5: auto-cancel + full Stripe refund. Buyer can "Remind seller to ship" (24h cooldown). |
+| **Receipt** | `shipped` → `delivered` | Buyer marks **Received Properly** (complete) or **Received Improperly** (opens dispute). |
+| **Dispute** | `under_dispute` | Both accounts suspended; admin rules (buyer/seller/partial); account outcome (reactivate/close). |
 
 ### 4. Reviews & Reputation
 
@@ -220,7 +220,7 @@ Full detail: [PRIVATE-AUCTION-ROOMS.md](./PRIVATE-AUCTION-ROOMS.md).
 | `/api/bids` | Place bids, bid history |
 | `/api/offers` | Create/accept/reject offers |
 | `/api/private-room` | Create room, invite, accept, bid in room |
-| `/api/transactions` | Payment, shipping, disputes |
+| `/api/transactions` | Payment, shipping, disputes, `POST /:id/remind-ship` (buyer reminder) |
 | `/api/customers` | Profile, balance |
 | `/api/payments` | Checkout, top-ups, confirm session |
 | `/api/connect` | Stripe Connect onboarding, payouts |
@@ -283,11 +283,21 @@ frontend/src/
 
 ```
 backend/src/
-├── index.js             # Express app, Socket.io, routes
+├── index.js             # Express app, Socket.io, routes, scheduler bootstrap
 ├── config/              # Database, env
 ├── models/              # Listing, Bid, Offer, User, Transaction, etc.
-├── routes/              # auth, listings, bids, offers, privateRoom, etc.
-├── services/            # redis, azureStorage, invoice, reputation, etc.
+├── routes/              # auth, listings, bids, offers, privateRoom, connect, transactions, etc.
+├── services/
+│   ├── businessDays.js              # UTC business-day calculation (Mon–Fri)
+│   ├── shippingDeadlines.js         # 5-day deadline + 3-day midpoint helpers
+│   ├── shippingDeadlineScheduler.js # Periodic checks: warning + auto-cancel + Stripe refund
+│   ├── auctionEndScheduler.js       # Auction end processing
+│   ├── notificationService.js       # In-app notification creation + Socket.io push
+│   ├── emailService.js              # Transactional emails (Nodemailer)
+│   ├── invoiceService.js            # PDF invoice/receipt generation
+│   ├── reputationService.js         # Reputation score calculation
+│   ├── accountStatusService.js      # Dispute-related account suspension
+│   └── ...                          # redis, azureStorage, etc.
 ├── middleware/          # Auth, validation
 └── email-templates/     # Email templates
 ```
@@ -297,7 +307,7 @@ backend/src/
 - **Listing** – Auction format, duration, reserve, Buy Now, Private Room, shipping, etc.
 - **Bid** – Listing, user, amount, timestamp.
 - **Offer** – Listing, user/email, amount, message, status.
-- **Transaction** – Listing, buyer, seller, status, payment, shipping, dispute.
+- **Transaction** – Listing, buyer, seller, status, payment, shipping (deadline enforcement: `shipByBusinessDeadline`, `shippingMidpointWarningSentAt`, `shippingAutoCancelledAt`, `buyerRemindSellerShipAt`), dispute.
 - **User** – Firebase UID, email, reputation, account status.
 - **Customer** – Balance, Stripe IDs.
 - **Dispute** – Transaction, evidence, admin ruling.

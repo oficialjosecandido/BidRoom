@@ -1078,7 +1078,13 @@
     "scoreScaleHigh": "Excellent",
     "scoreSelected": "You chose {{score}} out of 10",
     "descriptionOptional": "Description (optional)",
-    "reviewPrivate": "Your review is visible to others"
+    "reviewPrivate": "Your review is visible to others",
+    "shippingStatusLabel": "Shipping status",
+    "expectedShipBy": "Expected ship-by (5 business days)",
+    "sellerMustShipBy": "Ship this order by",
+    "remindSellerToShip": "Remind seller to ship",
+    "remindingSeller": "Sending…",
+    "remindSellerCooldown": "You can send another reminder in 24 hours."
   },
   "disputes": {
     "title": "Disputes",

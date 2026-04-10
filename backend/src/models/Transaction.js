@@ -77,11 +77,38 @@ const transactionSchema = new mongoose.Schema({
   },
   /** Seller: optional proof of delivery (e.g. shipping receipt URL) when marking shipped */
   sellerProofOfDeliveryUrl: { type: String, trim: true, default: null },
-  /** When seller must ship by (paidAt or payment deadline + listing handling time); used for Phase 2 */
+  /**
+   * Legacy handling deadline. Now mirrors shipByBusinessDeadline for backward compat.
+   * Set by applyShippingDeadlinesFromPaidAt() when buyer payment is confirmed.
+   */
   handlingDeadline: {
     type: Date,
     default: null
   },
+
+  // ── Shipping Deadline Enforcement (5-business-day rule) ────────────
+  /**
+   * End of the 5th business day (Mon–Fri, UTC) after paidAt.
+   * If the seller hasn't marked "shipped" by this time, the scheduler
+   * auto-cancels the order and issues a full Stripe refund.
+   * Computed by applyShippingDeadlinesFromPaidAt() in shippingDeadlines.js.
+   */
+  shipByBusinessDeadline: { type: Date, default: null },
+  /**
+   * Timestamp when the day-3 midpoint warning was sent to the seller.
+   * Used by the scheduler to avoid sending duplicate warnings (idempotency).
+   */
+  shippingMidpointWarningSentAt: { type: Date, default: null },
+  /**
+   * Last time the buyer used "Remind seller to ship".
+   * The endpoint enforces a 24-hour cooldown between reminders.
+   */
+  buyerRemindSellerShipAt: { type: Date, default: null },
+  /**
+   * Populated by the scheduler when the order is auto-cancelled for
+   * non-shipment. Distinguishes auto-cancels from other cancel reasons.
+   */
+  shippingAutoCancelledAt: { type: Date, default: null },
   /** Overall transaction state */
   transactionStatus: {
     type: String,
@@ -169,5 +196,11 @@ const transactionSchema = new mongoose.Schema({
 transactionSchema.index({ seller: 1, updatedAt: -1 });
 transactionSchema.index({ buyer: 1, updatedAt: -1 });
 transactionSchema.index({ listing: 1 }, { unique: true }); // One transaction per listing
+
+// Covers the scheduler query: status + paidAt + shippingAutoCancelledAt
+transactionSchema.index(
+  { transactionStatus: 1, paidAt: 1, shippingAutoCancelledAt: 1 },
+  { partialFilterExpression: { paidAt: { $type: 'date' } } }
+);
 
 module.exports = mongoose.model('Transaction', transactionSchema);

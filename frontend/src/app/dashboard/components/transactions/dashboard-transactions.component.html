@@ -166,6 +166,9 @@
                 }
               </p>
             }
+            @if (isSeller(t) && ['awaiting_seller_acceptance', 'paid'].includes(getEffectiveStatus(t)) && (t.shipByBusinessDeadline || t.handlingDeadline)) {
+              <p class="form-hint">{{ 'transactions.sellerMustShipBy' | translate }}: {{ formatShipByDeadline(t) }}</p>
+            }
             @if (isSeller(t) && canSellerAcceptPayment(t)) {
               @if (t.paymentAcceptanceDeadline) {
                 <p class="form-hint">
@@ -276,6 +279,27 @@
                 <p class="form-hint stripe-paid-hint">
                   {{ 'transactions.paymentConfirmedSellerNotified' | translate }}
                 </p>
+              }
+              @if (['awaiting_seller_acceptance', 'paid'].includes(getEffectiveStatus(t))) {
+                <div class="buyer-shipping-panel">
+                  <p class="shipping-status-line">
+                    <strong>{{ 'transactions.shippingStatusLabel' | translate }}:</strong> {{ buyerShippingStatusLine(t) }}
+                  </p>
+                  @if (t.shipByBusinessDeadline || t.handlingDeadline) {
+                    <p class="form-hint">{{ 'transactions.expectedShipBy' | translate }}: {{ formatShipByDeadline(t) }}</p>
+                  }
+                  <button
+                    type="button"
+                    class="btn btn-secondary"
+                    (click)="remindSellerToShip(t); $event.stopPropagation()"
+                    [disabled]="!canRemindSellerToShip(t) || remindSellerShipTxId === t._id"
+                  >
+                    {{ remindSellerShipTxId === t._id ? ('transactions.remindingSeller' | translate) : ('transactions.remindSellerToShip' | translate) }}
+                  </button>
+                  @if (isRemindSellerOnCooldown(t)) {
+                    <p class="form-hint">{{ 'transactions.remindSellerCooldown' | translate }}</p>
+                  }
+                </div>
               }
               @if (t.stripePaymentIntentId) {
                 <p class="stripe-ref">{{ 'transactions.paymentRef' | translate }}: {{ t.stripePaymentIntentId }}</p>

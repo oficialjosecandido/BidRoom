@@ -75,6 +75,11 @@ export interface Transaction {
   paymentAcceptanceDeadline?: string | null;
   /** Date by which seller must ship (after paid) */
   handlingDeadline?: string | null;
+  /** End of 5th business day after payment — auto-cancel if not shipped */
+  shipByBusinessDeadline?: string | null;
+  shippingMidpointWarningSentAt?: string | null;
+  buyerRemindSellerShipAt?: string | null;
+  shippingAutoCancelledAt?: string | null;
   /** Whether buyer has reviewed seller (for this listing) */
   buyerHasReviewedSeller?: boolean;
   /** Whether seller has reviewed buyer (for this listing) */
@@ -235,5 +240,10 @@ export class TransactionsService {
     return this.http.get(`${this.apiUrl}/${id}/invoice?role=${role}`, {
       responseType: 'blob'
     });
+  }
+
+  /** Buyer: remind seller to ship (24h cooldown). */
+  remindSellerToShip(id: string): Observable<Transaction> {
+    return this.http.post<Transaction>(`${this.apiUrl}/${id}/remind-ship`, {});
   }
 }

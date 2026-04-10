@@ -388,6 +388,78 @@ async function notifyShippingDeadlineApproaching({ transactionId, listingTitle, 
   });
 }
 
+/**
+ * Day 3 midpoint warning: seller has 2 business days left before auto-cancel.
+ * @param {object} opts
+ * @param {string} opts.transactionId
+ * @param {string} opts.listingTitle   Title of the listing (for user context)
+ * @param {string} opts.sellerUserId   Mongo _id of the seller
+ */
+async function notifySellerShippingFinalTwoDays({ transactionId, listingTitle, sellerUserId }) {
+  return createNotification({
+    userId: sellerUserId,
+    title: 'Ship soon — 2 days left',
+    message: `You have 2 business days left to ship "${listingTitle || 'this order'}" or it will be cancelled and the buyer refunded.`,
+    type: 'shipping',
+    link: `/dashboard/transactions`,
+    referenceId: transactionId
+  });
+}
+
+/**
+ * Buyer triggered "Remind seller to ship" action.
+ * @param {object} opts
+ * @param {string} opts.transactionId
+ * @param {string} opts.listingTitle
+ * @param {string} opts.sellerUserId
+ */
+async function notifySellerBuyerRemindedShip({ transactionId, listingTitle, sellerUserId }) {
+  return createNotification({
+    userId: sellerUserId,
+    title: 'Buyer reminder: please ship',
+    message: `The buyer asked you to ship "${listingTitle || 'their order'}" soon.`,
+    type: 'shipping',
+    link: `/dashboard/transactions`,
+    referenceId: transactionId
+  });
+}
+
+/**
+ * Auto-cancel notification to buyer: order cancelled + refund issued.
+ * @param {object} opts
+ * @param {string} opts.transactionId
+ * @param {string} opts.listingTitle
+ * @param {string} opts.buyerUserId
+ */
+async function notifyBuyerOrderCancelledNoShipment({ transactionId, listingTitle, buyerUserId }) {
+  return createNotification({
+    userId: buyerUserId,
+    title: 'Order cancelled — refund issued',
+    message: `Your order for "${listingTitle || 'the item'}" was cancelled because the seller did not ship in time. You have been refunded in full.`,
+    type: 'shipping',
+    link: `/dashboard/transactions`,
+    referenceId: transactionId
+  });
+}
+
+/**
+ * Auto-cancel notification to seller: failed to ship within deadline.
+ * @param {object} opts
+ * @param {string} opts.transactionId
+ * @param {string} opts.listingTitle
+ * @param {string} opts.sellerUserId
+ */
+async function notifySellerOrderCancelledNoShipment({ transactionId, listingTitle, sellerUserId }) {
+  return createNotification({
+    userId: sellerUserId,
+    title: 'Order cancelled — did not ship in time',
+    message: `The order for "${listingTitle || 'your sale'}" was cancelled automatically because you did not ship within the required timeframe. The buyer has been refunded.`,
+    type: 'shipping',
+    link: `/dashboard/transactions`,
+    referenceId: transactionId
+  });
+}
+
 /** Buyer confirmed receipt - notify seller */
 async function notifyBuyerConfirmedReceipt({ transactionId, listingTitle, buyerName, sellerUserId }) {
   return createNotification({
@@ -646,6 +718,10 @@ module.exports = {
   notifyItemMarkedDelivered,
   notifyShippingDeadlineStarted,
   notifyShippingDeadlineApproaching,
+  notifySellerShippingFinalTwoDays,
+  notifySellerBuyerRemindedShip,
+  notifyBuyerOrderCancelledNoShipment,
+  notifySellerOrderCancelledNoShipment,
   notifyBuyerConfirmedReceipt,
   notifyDisputeOpened,
   notifyEvidenceSubmitted,

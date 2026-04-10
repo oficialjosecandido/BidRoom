@@ -6,6 +6,7 @@ const Transaction = require('../models/Transaction');
 const Listing = require('../models/Listing');
 const { sendEmail } = require('../services/emailService');
 const { notifySellerPaymentReceived, emitNewNotificationToUser } = require('../services/notificationService');
+const { applyShippingDeadlinesFromPaidAt } = require('../services/shippingDeadlines');
 
 const LOG_PREFIX = '[Connect]';
 const BIDROOMFEE_RATE = 0.02; // 2%
@@ -578,12 +579,6 @@ router.post('/confirm-payment', requireActiveAccount, async (req, res) => {
       ? session.payment_intent
       : session.payment_intent?.id;
 
-    // Set handling deadline
-    const listing = await Listing.findById(transaction.listing).select('handlingTime').lean();
-    const days = (listing?.handlingTime) ? Math.max(1, listing.handlingTime) : 3;
-    const handlingDeadline = new Date();
-    handlingDeadline.setDate(handlingDeadline.getDate() + days);
-
     // Seller payout = amount - BidRoom fee - Stripe fee
     const bidRoomFee = transaction.bidRoomFeeAmount ?? (transaction.amount * BIDROOMFEE_RATE);
     const sellerPayout = stripeFeeAmount !== null
@@ -596,7 +591,7 @@ router.post('/confirm-payment', requireActiveAccount, async (req, res) => {
     transaction.transactionStatus = 'awaiting_seller_acceptance';
     transaction.paymentStatus = 'paid';
     transaction.paidAt = new Date();
-    transaction.handlingDeadline = handlingDeadline;
+    applyShippingDeadlinesFromPaidAt(transaction);
     const deadlinePa = new Date();
     deadlinePa.setDate(deadlinePa.getDate() + 5);
     transaction.paymentAcceptanceDeadline = deadlinePa;
@@ -699,10 +694,6 @@ async function handleCheckoutCompleted(session, stripe, io) {
     ? expandedSession.payment_intent
     : expandedSession.payment_intent?.id;
 
-  const days = (transaction.listing?.handlingTime) ? Math.max(1, transaction.listing.handlingTime) : 3;
-  const handlingDeadline = new Date();
-  handlingDeadline.setDate(handlingDeadline.getDate() + days);
-
   const bidRoomFee = transaction.bidRoomFeeAmount ?? (transaction.amount * BIDROOMFEE_RATE);
   const sellerPayout = stripeFeeAmount !== null
     ? transaction.amount - bidRoomFee - stripeFeeAmount
@@ -714,7 +705,7 @@ async function handleCheckoutCompleted(session, stripe, io) {
   transaction.transactionStatus = 'awaiting_seller_acceptance';
   transaction.paymentStatus = 'paid';
   transaction.paidAt = new Date();
-  transaction.handlingDeadline = handlingDeadline;
+  applyShippingDeadlinesFromPaidAt(transaction);
   const deadlinePa = new Date();
   deadlinePa.setDate(deadlinePa.getDate() + 5);
   transaction.paymentAcceptanceDeadline = deadlinePa;

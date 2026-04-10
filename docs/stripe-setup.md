@@ -57,7 +57,7 @@ Webhooks notify the backend when Stripe events occur (payment confirmed, payout 
 1. Go to **Developers → Webhooks → Add endpoint**
 2. Endpoint URL: `https://<your-dev-backend>.azurewebsites.net/api/payments/webhook`
 3. Select events:
-   - `checkout.session.completed`
+   - `checkout.session.completed` (triggers payment confirmation + shipping deadline start)
    - `checkout.session.expired`
    - `payment_intent.payment_failed`
 4. Copy the **Signing secret** (`whsec_...`) → set as `STRIPE_WEBHOOK_SECRET` in your backend env
@@ -115,7 +115,31 @@ The **⚡ Simulate verification** button will not appear in production (it is hi
 
 ---
 
-## 6. Troubleshooting
+## 6. Automatic Refunds (Shipping Deadline Enforcement)
+
+The shipping deadline scheduler (`shippingDeadlineScheduler.js`) issues automatic Stripe refunds when a seller fails to ship within 5 business days.
+
+### How it works
+
+1. The scheduler first attempts a refund with `reverse_transfer: true` and `refund_application_fee: true`. This claws back the seller's payout portion and returns the BidRoom platform fee.
+2. If that fails (e.g. no transfer was created yet, or the connected account has insufficient balance), it falls back to a plain `stripe.refunds.create({ payment_intent })`.
+3. The refund ID is stored in `Transaction.stripeRefundId` for audit.
+
+### Requirements
+
+- `STRIPE_SECRET_KEY` must be set (the scheduler skips refunds if Stripe isn't configured).
+- The `payment_intent` on the transaction must be a valid, captured Stripe PaymentIntent.
+- For `reverse_transfer` to work, the PaymentIntent must have an associated Transfer to a connected account.
+
+### Monitoring refunds
+
+- Check the Stripe Dashboard → **Payments → Refunds** for refund status.
+- Backend logs lines like `[ShippingDeadline] Auto-cancelled tx=<id> refund=<refundId>` on success, or `[ShippingDeadline] Refund failed tx=<id>: <error>` on failure.
+- Failed refunds do **not** cancel the transaction — the scheduler will retry on the next run since the transaction still matches the query criteria.
+
+---
+
+## 7. Troubleshooting
 
 | Error | Cause | Fix |
 |---|---|---|

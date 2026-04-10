@@ -36,6 +36,7 @@ const configRoutes = require('./routes/config');
 
 // Import services
 const auctionEndScheduler = require('./services/auctionEndScheduler');
+const shippingDeadlineScheduler = require('./services/shippingDeadlineScheduler');
 const { runCleanup: runProofOfPaymentCleanup } = require('./services/proofOfPaymentCleanup');
 
 // CORS: FRONTEND_URL(s), optional CORS_EXTRA_ORIGINS (comma-separated), localhost, Azure Static Web Apps
@@ -269,6 +270,9 @@ const startServer = async () => {
       // Start auction end scheduler (checks every 1 minute)
       auctionEndScheduler.startScheduler(1, io);
       console.log(`⏰ Auction end scheduler started`);
+
+      shippingDeadlineScheduler.startScheduler(15, io);
+      console.log(`📦 Shipping deadline scheduler started`);
 
       // Proof-of-payment cleanup: delete files from Azure 30 days after paid (run daily)
       const PROOF_CLEANUP_MS = 24 * 60 * 60 * 1000;

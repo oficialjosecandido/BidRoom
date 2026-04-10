@@ -11,10 +11,11 @@ const {
   notifyItemMarkedShipped,
   notifyTrackingProvided,
   notifyBuyerConfirmedReceipt,
-  notifyShippingDeadlineStarted,
   notifyBuyerSellerAccepted,
+  notifySellerBuyerRemindedShip,
   emitNewNotificationToUser
 } = require('../services/notificationService');
+const { ensureShippingDeadlinesFromPaidAt } = require('../services/shippingDeadlines');
 const { suspendBothPartiesForDispute } = require('../services/accountStatusService');
 const { generateInvoicePdf } = require('../services/invoiceService');
 
@@ -372,6 +373,88 @@ router.patch('/:id/dispute/counter-evidence', async (req, res) => {
   }
 });
 
+/** 24-hour cooldown between buyer "Remind seller to ship" requests. */
+const REMIND_SHIP_COOLDOWN_MS = 24 * 60 * 60 * 1000;
+
+/**
+ * POST /api/transactions/:id/remind-ship
+ *
+ * Allows the buyer to send a push notification nudging the seller to ship.
+ * - Only available while transactionStatus is 'awaiting_seller_acceptance' or 'paid'.
+ * - Rate-limited: returns HTTP 429 with retryAfterMs if called within 24 hours
+ *   of the last reminder.
+ * - Updates buyerRemindSellerShipAt on the transaction and sends an in-app
+ *   notification to the seller via notificationService.
+ */
+router.post('/:id/remind-ship', requireActiveAccount, async (req, res) => {
+  try {
+    const user = await User.findOne({ uid: req.user.uid });
+    if (!user) {
+      return res.status(404).json({ error: 'User not found.' });
+    }
+
+    const transaction = await Transaction.findById(req.params.id)
+      .populate('listing', 'title slug')
+      .populate('seller', '_id uid email firstName');
+
+    if (!transaction) {
+      return res.status(404).json({ error: 'Transaction not found' });
+    }
+
+    const isBuyer = transaction.buyer.toString() === user._id.toString();
+    if (!isBuyer) {
+      return res.status(403).json({ error: 'Only the buyer can send this reminder.' });
+    }
+
+    const ts = transaction.transactionStatus ?? transaction.status;
+    if (!['awaiting_seller_acceptance', 'paid'].includes(ts)) {
+      return res.status(400).json({
+        error: 'Cannot remind',
+        message: 'A reminder is only available before the item is marked as shipped.'
+      });
+    }
+
+    const last = transaction.buyerRemindSellerShipAt ? new Date(transaction.buyerRemindSellerShipAt).getTime() : 0;
+    if (last && Date.now() - last < REMIND_SHIP_COOLDOWN_MS) {
+      return res.status(429).json({
+        error: 'Too soon',
+        message: 'You can remind the seller again after 24 hours.',
+        retryAfterMs: REMIND_SHIP_COOLDOWN_MS - (Date.now() - last)
+      });
+    }
+
+    transaction.buyerRemindSellerShipAt = new Date();
+    await transaction.save();
+
+    const sellerUserId = transaction.seller?._id?.toString?.() || transaction.seller?.toString?.();
+    const listingTitle = transaction.listing?.title || 'your order';
+    if (sellerUserId) {
+      notifySellerBuyerRemindedShip({
+        transactionId: transaction._id.toString(),
+        listingTitle,
+        sellerUserId
+      }).catch(err => console.error('Failed to notify seller remind-ship:', err));
+      const io = req.app.get('io');
+      if (io) emitNewNotificationToUser(io, sellerUserId).catch(() => {});
+    }
+
+    const updated = await Transaction.findById(transaction._id)
+      .populate('listing', 'title slug images status commissionRate shippingCost shippingOption auctionFormat allowPrivateRoom')
+      .populate('seller', 'firstName lastName email')
+      .populate('buyer', 'firstName lastName email')
+      .lean();
+
+    res.json({
+      ...updated,
+      role: 'buyer',
+      ...normalizeTransactionStatus(updated)
+    });
+  } catch (error) {
+    console.error('Error remind-ship:', error);
+    res.status(500).json({ error: 'Failed to send reminder', message: error.message });
+  }
+});
+
 /**
  * PATCH /api/transactions/:id
  * Update transaction status (seller: mark shipped with tracking; buyer: mark delivered)
@@ -410,24 +493,9 @@ router.patch('/:id', requireActiveAccount, async (req, res) => {
         transaction.transactionStatus = 'paid';
         transaction.paymentStatus = 'paid';
         transaction.paidAt = transaction.paidAt || new Date();
-        const listing = await Listing.findById(transaction.listing).select('handlingTime title').lean();
+        ensureShippingDeadlinesFromPaidAt(transaction);
+        const listing = await Listing.findById(transaction.listing).select('title').lean();
         const listingTitle = listing?.title || 'the item';
-        if (!transaction.handlingDeadline) {
-          const days = (listing && listing.handlingTime) ? Math.max(1, listing.handlingTime) : 3;
-          const d = new Date();
-          d.setDate(d.getDate() + days);
-          transaction.handlingDeadline = d;
-          const sellerUserId = transaction.seller?.toString?.();
-          if (sellerUserId) {
-            notifyShippingDeadlineStarted({
-              transactionId: transaction._id.toString(),
-              listingTitle,
-              sellerUserId
-            }).catch(err => console.error('Failed to create shipping-deadline notification:', err));
-            const io = req.app.get('io');
-            if (io) emitNewNotificationToUser(io, sellerUserId).catch(() => {});
-          }
-        }
         // Notify buyer that seller accepted
         const buyerUserId = transaction.buyer?.toString?.();
         if (buyerUserId) {
@@ -463,6 +531,12 @@ router.patch('/:id', requireActiveAccount, async (req, res) => {
           }
         }
       } else if (status === 'shipped') {
+        if (ts !== 'paid') {
+          return res.status(400).json({
+            error: 'Invalid state',
+            message: 'You can only mark the item as shipped after confirming payment from the buyer.'
+          });
+        }
         transaction.transactionStatus = 'shipped';
         transaction.sendingStatus = 'shipped';
         transaction.shippedAt = transaction.shippedAt || new Date();
