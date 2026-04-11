@@ -130,7 +130,9 @@ const requireActiveAccount = async (req, res, next) => {
   try {
     const dbUser = await User.findOne({ uid: req.user.uid }).select('accountStatus').lean();
     if (!dbUser) {
-      return res.status(404).json({ error: 'User not found', message: 'Please complete your profile.' });
+      // No DB record yet — user is authenticated but hasn't been persisted.
+      // They cannot be suspended, so let the route handler proceed (it will create the record).
+      return next();
     }
     const status = dbUser.accountStatus || 'active';
     if (status === 'suspended') {
