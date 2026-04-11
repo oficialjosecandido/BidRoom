@@ -1,6 +1,6 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormArray } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import Swal from 'sweetalert2';
@@ -21,7 +21,7 @@ interface Category {
 @Component({
   selector: 'app-add-listing',
   standalone: true,
-  imports: [ReactiveFormsModule, TranslateModule, HeaderComponent, FooterComponent, RouterLink],
+  imports: [ReactiveFormsModule, TranslateModule, HeaderComponent, FooterComponent],
   templateUrl: './add-listing.html',
   styleUrl: './add-listing.scss',
 })
@@ -366,7 +366,7 @@ export class AddListing implements OnInit {
   private addFiles(fileList: FileList | File[]): void {
     this.errorMessage = '';
     const files = Array.from(fileList);
-    const rejected: string[] = [];
+    const rejected: { name: string; reason: 'type' | 'maxPhotos' | 'maxPhotosWithVideo' | 'videoLimit' }[] = [];
     let imgs = this.imageCount;
     let vids = this.videoCount;
 
@@ -375,25 +375,54 @@ export class AddListing implements OnInit {
       const isVideo = this.ALLOWED_VIDEO_TYPES.includes(file.type);
 
       if (isImage) {
-        if (vids >= 1 && imgs >= 5) { rejected.push(file.name); return; }
-        if (vids === 0 && imgs >= 20) { rejected.push(file.name); return; }
+        if (vids >= 1 && imgs >= 5) {
+          rejected.push({ name: file.name, reason: 'maxPhotosWithVideo' });
+          return;
+        }
+        if (vids === 0 && imgs >= 20) {
+          rejected.push({ name: file.name, reason: 'maxPhotos' });
+          return;
+        }
         this.uploadedFiles.push(file);
         imgs++;
         const reader = new FileReader();
         reader.onload = (e) => { this.previewUrls.push(e.target?.result || null); };
         reader.readAsDataURL(file);
       } else if (isVideo) {
-        if (vids >= 1 || imgs >= 5) { rejected.push(file.name); return; }
+        if (vids >= 1 || imgs >= 5) {
+          rejected.push({ name: file.name, reason: 'videoLimit' });
+          return;
+        }
         this.uploadedFiles.push(file);
         this.previewUrls.push(null);
         vids++;
       } else {
-        rejected.push(file.name);
+        rejected.push({ name: file.name, reason: 'type' });
       }
     });
 
     if (rejected.length > 0) {
-      this.errorMessage = this.translate.instant('addListing.errors.invalidFileType', { files: rejected.join(', ') });
+      const byReason = new Map<typeof rejected[number]['reason'], string[]>();
+      for (const r of rejected) {
+        const list = byReason.get(r.reason) ?? [];
+        list.push(r.name);
+        byReason.set(r.reason, list);
+      }
+      const parts: string[] = [];
+      const joinFiles = (names: string[]) => names.join(', ');
+      if (byReason.has('type')) {
+        parts.push(this.translate.instant('addListing.errors.invalidFileType', { files: joinFiles(byReason.get('type')!) }));
+      }
+      if (byReason.has('maxPhotos')) {
+        parts.push(this.translate.instant('addListing.errors.mediaMaxPhotos', { files: joinFiles(byReason.get('maxPhotos')!) }));
+      }
+      if (byReason.has('maxPhotosWithVideo')) {
+        parts.push(this.translate.instant('addListing.errors.mediaMaxPhotosWithVideo', { files: joinFiles(byReason.get('maxPhotosWithVideo')!) }));
+      }
+      if (byReason.has('videoLimit')) {
+        parts.push(this.translate.instant('addListing.errors.mediaVideoLimit', { files: joinFiles(byReason.get('videoLimit')!) }));
+      }
+      this.errorMessage = parts.join(' ');
     }
     while (this.media.length < this.uploadedFiles.length) {
       this.media.push(this.fb.control(this.uploadedFiles[this.media.length]));

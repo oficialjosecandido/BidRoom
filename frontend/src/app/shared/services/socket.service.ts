@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, NgZone, inject } from '@angular/core';
 import { io, Socket } from 'socket.io-client';
 import { Observable } from 'rxjs';
 import { API_CONFIG } from '../config/api.config';
@@ -65,8 +65,9 @@ export interface OfferUpdateEvent {
 })
 export class SocketService {
   private socket: Socket | null = null;
+  private ngZone = inject(NgZone);
   /** Re-joined on every successful connect/reconnect so listing rooms are not lost after disconnect */
-  private joinedListingId: string | null = null;
+  private joinedListingIds: Set<string> = new Set();
   private joinedPrivateRoomViewerId: string | null = null;
   private joinedUserUid: string | null = null;
 
@@ -82,33 +83,37 @@ export class SocketService {
 
     const baseUrl = API_CONFIG.getBackendBaseUrl();
 
-    this.socket = io(baseUrl, {
-      transports: ['websocket', 'polling'],
-      reconnection: true,
-      reconnectionDelay: 1000,
-      reconnectionAttempts: 5,
-      reconnectionDelayMax: 5000
-    });
+    // Run socket.io setup outside Angular's zone so internal timers/polling
+    // don't trigger unnecessary change detection cycles.
+    this.ngZone.runOutsideAngular(() => {
+      this.socket = io(baseUrl, {
+        transports: ['websocket', 'polling'],
+        reconnection: true,
+        reconnectionDelay: 1000,
+        reconnectionAttempts: 5,
+        reconnectionDelayMax: 5000
+      });
 
-    this.socket.on('connect', () => {
-      console.log('🔌 Connected to Socket.io server');
-      this.flushRoomJoins();
-    });
+      this.socket.on('connect', () => {
+        console.log('🔌 Connected to Socket.io server');
+        this.flushRoomJoins();
+      });
 
-    this.socket.on('disconnect', () => {
-      console.log('🔌 Disconnected from Socket.io server');
-    });
+      this.socket.on('disconnect', () => {
+        console.log('🔌 Disconnected from Socket.io server');
+      });
 
-    this.socket.on('connect_error', (error) => {
-      console.error('❌ Socket.io connection error:', error);
+      this.socket.on('connect_error', (error) => {
+        console.error('❌ Socket.io connection error:', error);
+      });
     });
   }
 
   /** Re-subscribe to rooms after connect/reconnect (server-side rooms are per-socket). */
   private flushRoomJoins(): void {
     if (!this.socket?.connected) return;
-    if (this.joinedListingId) {
-      this.socket.emit('join-listing', this.joinedListingId);
+    for (const id of this.joinedListingIds) {
+      this.socket.emit('join-listing', id);
     }
     if (this.joinedPrivateRoomViewerId) {
       this.socket.emit('join-private-room-viewer', this.joinedPrivateRoomViewerId);
@@ -123,13 +128,13 @@ export class SocketService {
       this.socket.disconnect();
       this.socket = null;
     }
-    this.joinedListingId = null;
+    this.joinedListingIds.clear();
     this.joinedPrivateRoomViewerId = null;
     this.joinedUserUid = null;
   }
 
   joinListing(listingId: string): void {
-    this.joinedListingId = listingId;
+    this.joinedListingIds.add(listingId);
     if (!this.socket?.connected) {
       this.connect();
     }
@@ -137,12 +142,24 @@ export class SocketService {
     console.log(`👤 Joined listing room: ${listingId}`);
   }
 
-  leaveListing(listingId: string): void {
-    if (this.joinedListingId === listingId) {
-      this.joinedListingId = null;
+  /** Join multiple listing rooms at once (e.g. seller dashboard showing several listings). */
+  joinListings(listingIds: string[]): void {
+    for (const id of listingIds) {
+      this.joinListing(id);
     }
+  }
+
+  leaveListing(listingId: string): void {
+    this.joinedListingIds.delete(listingId);
     this.socket?.emit('leave-listing', listingId);
     console.log(`👤 Left listing room: ${listingId}`);
+  }
+
+  /** Leave multiple listing rooms at once. */
+  leaveListings(listingIds: string[]): void {
+    for (const id of listingIds) {
+      this.leaveListing(id);
+    }
   }
 
   /** Join user room for real-time notification updates (uid = Firebase/auth uid) */
@@ -170,7 +187,7 @@ export class SocketService {
       if (!this.socket) {
         this.connect();
       }
-      const handler = () => observer.next();
+      const handler = () => this.ngZone.run(() => observer.next());
       this.socket?.on('new-notification', handler);
       return () => this.socket?.off('new-notification', handler);
     });
@@ -181,16 +198,9 @@ export class SocketService {
       if (!this.socket) {
         this.connect();
       }
-
-      const handler = (data: NewBidEvent) => {
-        observer.next(data);
-      };
-
+      const handler = (data: NewBidEvent) => this.ngZone.run(() => observer.next(data));
       this.socket?.on('new-bid', handler);
-
-      return () => {
-        this.socket?.off('new-bid', handler);
-      };
+      return () => this.socket?.off('new-bid', handler);
     });
   }
 
@@ -199,16 +209,9 @@ export class SocketService {
       if (!this.socket) {
         this.connect();
       }
-
-      const handler = (data: ListingUpdateEvent) => {
-        observer.next(data);
-      };
-
+      const handler = (data: ListingUpdateEvent) => this.ngZone.run(() => observer.next(data));
       this.socket?.on('listing-update', handler);
-
-      return () => {
-        this.socket?.off('listing-update', handler);
-      };
+      return () => this.socket?.off('listing-update', handler);
     });
   }
 
@@ -217,16 +220,9 @@ export class SocketService {
       if (!this.socket) {
         this.connect();
       }
-
-      const handler = (data: NewOfferEvent) => {
-        observer.next(data);
-      };
-
+      const handler = (data: NewOfferEvent) => this.ngZone.run(() => observer.next(data));
       this.socket?.on('new-offer', handler);
-
-      return () => {
-        this.socket?.off('new-offer', handler);
-      };
+      return () => this.socket?.off('new-offer', handler);
     });
   }
 
@@ -235,16 +231,9 @@ export class SocketService {
       if (!this.socket) {
         this.connect();
       }
-
-      const handler = (data: OfferUpdateEvent) => {
-        observer.next(data);
-      };
-
+      const handler = (data: OfferUpdateEvent) => this.ngZone.run(() => observer.next(data));
       this.socket?.on('offer-update', handler);
-
-      return () => {
-        this.socket?.off('offer-update', handler);
-      };
+      return () => this.socket?.off('offer-update', handler);
     });
   }
 
@@ -270,16 +259,9 @@ export class SocketService {
       if (!this.socket) {
         this.connect();
       }
-
-      const handler = (data: ViewerCountUpdateEvent) => {
-        observer.next(data);
-      };
-
+      const handler = (data: ViewerCountUpdateEvent) => this.ngZone.run(() => observer.next(data));
       this.socket?.on('private-room-viewer-count-update', handler);
-
-      return () => {
-        this.socket?.off('private-room-viewer-count-update', handler);
-      };
+      return () => this.socket?.off('private-room-viewer-count-update', handler);
     });
   }
 
@@ -288,13 +270,10 @@ export class SocketService {
       if (!this.socket) {
         this.connect();
       }
-      const handler = (data: { listingId: string; bidderId: string | null; bidderName: string; bidderFirstName: string; bidderLastName: string }) => {
-        observer.next(data);
-      };
+      const handler = (data: { listingId: string; bidderId: string | null; bidderName: string; bidderFirstName: string; bidderLastName: string }) =>
+        this.ngZone.run(() => observer.next(data));
       this.socket?.on('invitation-accepted', handler);
-      return () => {
-        this.socket?.off('invitation-accepted', handler);
-      };
+      return () => this.socket?.off('invitation-accepted', handler);
     });
   }
 
@@ -303,13 +282,10 @@ export class SocketService {
       if (!this.socket) {
         this.connect();
       }
-      const handler = (data: { listingId: string; bidderId: string | null }) => {
-        observer.next(data);
-      };
+      const handler = (data: { listingId: string; bidderId: string | null }) =>
+        this.ngZone.run(() => observer.next(data));
       this.socket?.on('invitation-declined', handler);
-      return () => {
-        this.socket?.off('invitation-declined', handler);
-      };
+      return () => this.socket?.off('invitation-declined', handler);
     });
   }
 

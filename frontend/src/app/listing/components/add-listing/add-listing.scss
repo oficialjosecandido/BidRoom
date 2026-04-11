@@ -371,8 +371,27 @@
     .form-row {
       display: flex;
       gap: 20px;
+      padding-top: 8px;
+      margin-bottom: 22px;
 
-      .form-group { flex: 1; }
+      .form-group {
+        flex: 1;
+        margin-bottom: 0;
+      }
+
+      &--pricing {
+        gap: 28px;
+        align-items: flex-start;
+
+        .form-group > label {
+          min-height: 2.6em;
+          display: flex;
+          flex-wrap: wrap;
+          align-items: center;
+          gap: 6px 8px;
+          line-height: 1.35;
+        }
+      }
     }
 
     .form-group {
@@ -662,14 +681,19 @@
 
       .currency {
         position: absolute;
-        left: 12px;
+        left: 14px;
         color: var(--text-gray);
         font-weight: 600;
+        font-size: 14px;
         z-index: 1;
         pointer-events: none;
       }
 
-      input { padding-left: 28px; }
+      input[type='text'],
+      input[type='number'] {
+        padding-left: 36px;
+        padding-right: 14px;
+      }
     }
 
     // Flat-rate card
@@ -792,7 +816,7 @@
     background: var(--light-gray);
     border-radius: 8px;
     padding: 22px;
-    margin-bottom: 24px;
+    margin-bottom: 32px;
 
     h3 {
       font-size: 17px;
@@ -829,7 +853,9 @@
   }
 
   .declaration-group {
-    margin-bottom: 20px;
+    padding-top: 20px;
+    margin-top: 0;
+    margin-bottom: 24px;
   }
 
   .submit-status {
@@ -920,6 +946,9 @@
       .form-row {
         flex-direction: column;
         gap: 0;
+
+        .form-group { margin-bottom: 18px; }
+        .form-group:last-child { margin-bottom: 0; }
       }
 
       .format-cards {

@@ -507,6 +507,12 @@ export class DashboardTransactionsComponent implements OnInit {
     return date.toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' });
   }
 
+  /** Format the auto-cancellation date for display in the cancellation notice. */
+  formatAutoCancelledAt(t: Transaction): string {
+    if (!t.shippingAutoCancelledAt) return '';
+    return new Date(t.shippingAutoCancelledAt).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' });
+  }
+
   /**
    * Format the ship-by deadline for display.
    * Prefers shipByBusinessDeadline (5 business-day); falls back to legacy handlingDeadline.

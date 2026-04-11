@@ -145,6 +145,24 @@
           </a>
 
           <div class="card-actions">
+
+            <!-- Auto-cancellation notice (non-shipment deadline expired) -->
+            @if (getEffectiveStatus(t) === 'cancelled' && t.shippingAutoCancelledAt) {
+              <div class="cancellation-notice">
+                @if (isBuyer(t)) {
+                  <p class="cancellation-notice-title">{{ 'transactions.autoCancelledBuyerTitle' | translate }}</p>
+                  <p class="cancellation-notice-body">{{ 'transactions.autoCancelledBuyerMessage' | translate:{ date: formatAutoCancelledAt(t) } }}</p>
+                  @if (t.stripeRefundId) {
+                    <p class="cancellation-notice-ref">{{ 'transactions.refundRef' | translate }}: {{ t.stripeRefundId }}</p>
+                  }
+                }
+                @if (isSeller(t)) {
+                  <p class="cancellation-notice-title">{{ 'transactions.autoCancelledSellerTitle' | translate }}</p>
+                  <p class="cancellation-notice-body">{{ 'transactions.autoCancelledSellerMessage' | translate:{ date: formatAutoCancelledAt(t) } }}</p>
+                }
+              </div>
+            }
+
             @if (t.paymentDeadline && getEffectiveStatus(t) === 'pending_payment') {
               <p class="card-deadline">
                 {{ 'transactions.paymentWindowEnds' | translate }}: {{ formatPaymentDeadline(t) }}{{ hasPaymentDeadlinePassed(t) ? (' (' + ('transactions.passed' | translate) + ')') : '' }}

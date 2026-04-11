@@ -256,7 +256,10 @@
       "minValue": "O valor deve ser maior que {{min}}",
       "buyNowTooLow": "O preço de Compra Imediata deve ser maior que o Lance Inicial",
       "reserveTooLow": "O preço de reserva deve ser pelo menos o lance inicial",
-      "invalidFileType": "Tipo de arquivo inválido. Apenas imagens (JPEG, PNG, GIF, WebP, BMP) são permitidas. Rejeitados: {{files}}"
+      "invalidFileType": "Tipo de arquivo inválido. Apenas imagens (JPEG, PNG, GIF, WebP, BMP) são permitidas. Rejeitados: {{files}}",
+      "mediaMaxPhotos": "Pode adicionar no máximo 20 fotos. Remova algumas para adicionar mais. Não adicionadas: {{files}}",
+      "mediaMaxPhotosWithVideo": "Com um vídeo pode adicionar no máximo 5 fotos. Remova fotos ou o vídeo para adicionar mais. Não adicionadas: {{files}}",
+      "mediaVideoLimit": "Só é permitido um vídeo e no máximo 5 fotos com vídeo. Não adicionado: {{files}}"
     }
   },
   "listingList": {
@@ -1078,7 +1081,18 @@
     "scoreScaleHigh": "Excelente",
     "scoreSelected": "Escolheu {{score}} em 10",
     "descriptionOptional": "Descrição (opcional)",
-    "reviewPrivate": "Sua avaliação é visível para outros"
+    "reviewPrivate": "Sua avaliação é visível para outros",
+    "autoCancelledBuyerTitle": "Pedido cancelado — reembolso emitido",
+    "autoCancelledBuyerMessage": "Seu pedido foi cancelado automaticamente em {{date}} porque o vendedor não enviou o item em até 5 dias úteis. Um reembolso completo foi emitido para seu método de pagamento original e pode levar de 5 a 10 dias úteis para aparecer.",
+    "autoCancelledSellerTitle": "Pedido cancelado — não enviado a tempo",
+    "autoCancelledSellerMessage": "Este pedido foi cancelado automaticamente em {{date}} porque o envio não foi confirmado dentro do prazo de 5 dias úteis. O comprador foi reembolsado integralmente.",
+    "refundRef": "Referência do reembolso",
+    "remindSellerToShip": "Lembrar vendedor de enviar",
+    "remindingSeller": "Enviando…",
+    "remindSellerCooldown": "Você pode enviar outro lembrete em 24 horas.",
+    "expectedShipBy": "Envio esperado até (5 dias úteis)",
+    "shippingStatusLabel": "Status do envio",
+    "sellerMustShipBy": "Envie este pedido até"
   },
   "disputes": {
     "title": "Disputas",

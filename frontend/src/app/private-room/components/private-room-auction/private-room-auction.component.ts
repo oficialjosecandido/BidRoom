@@ -54,15 +54,17 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
   currentUser: AppUser | null = null;
   viewerCount = 0;
   private socketSubscriptions: Subscription[] = [];
+  /** Real-time socket subs — tracked separately so re-entering subscribeToUpdates() doesn't stack duplicates. */
+  private rtSubscriptions: Subscription[] = [];
   private countdownInterval: ReturnType<typeof setInterval> | null = null;
-  private resizeHandler: () => void = () => this.checkMobile();
-  isMobile = false;
   isPlacingBid = false;
   /** Custom bid amount (user can type any number >= min); empty = use minimum next bid */
   customBidAmount = '';
   bidInputError: string | null = null;
   startNowLoading = false;
   acceptingInvitation = false;
+  selectedImageIndex = 0;
+  Math = Math;
 
   ngOnInit(): void {
     this.listingId = this.route.snapshot.paramMap.get('id') || '';
@@ -99,22 +101,16 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
       })
     );
 
-    // Detect mobile device
-    this.checkMobile();
-    window.addEventListener('resize', this.resizeHandler);
-  }
-
-  checkMobile(): void {
-    this.isMobile = window.innerWidth < 769;
   }
 
   ngOnDestroy(): void {
     this.socketSubscriptions.forEach(sub => sub.unsubscribe());
+    this.rtSubscriptions.forEach(sub => sub.unsubscribe());
+    this.rtSubscriptions = [];
     if (this.countdownInterval) {
       clearInterval(this.countdownInterval);
       this.countdownInterval = null;
     }
-    window.removeEventListener('resize', this.resizeHandler);
     // Leave private room viewer room
     if (this.listingId) {
       this.socketService.leavePrivateRoomViewer(this.listingId);
@@ -233,6 +229,9 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
         this.acceptingInvitation = false;
         this.invitationPending = false;
         this.isPlatinumBidder = true;
+        // Refresh listing data so the UI reflects the latest room state
+        // (e.g. privateRoomStatus may have changed, or we need accurate platinumBidderStatus)
+        this.loadListing();
       },
       error: (err) => {
         this.acceptingInvitation = false;
@@ -343,10 +342,14 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
   subscribeToUpdates(): void {
     if (!this.listingId) return;
 
+    // Clean up previous RT subs before re-subscribing (loadListing calls this on every refresh)
+    for (const s of this.rtSubscriptions) s.unsubscribe();
+    this.rtSubscriptions = [];
+
     // Join the listing room for socket events
     this.socketService.connect();
     this.socketService.joinListing(this.listingId);
-    
+
     // Join private room viewer room to track viewers
     this.socketService.joinPrivateRoomViewer(this.listingId);
 
@@ -386,7 +389,7 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
       }
     });
 
-    this.socketSubscriptions.push(sub);
+    this.rtSubscriptions.push(sub);
 
     // Subscribe to new bids (filter by listingId)
     const bidSub = this.socketService.onNewBid().subscribe(bidEvent => {
@@ -395,7 +398,7 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
       }
     });
 
-    this.socketSubscriptions.push(bidSub);
+    this.rtSubscriptions.push(bidSub);
 
     // Subscribe to viewer count updates
     const viewerSub = this.socketService.onPrivateRoomViewerCountUpdate().subscribe(event => {
@@ -404,7 +407,7 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
       }
     });
 
-    this.socketSubscriptions.push(viewerSub);
+    this.rtSubscriptions.push(viewerSub);
 
     // Update seat status live when a bidder accepts the invitation
     const acceptSub = this.socketService.onInvitationAccepted().subscribe(event => {
@@ -423,12 +426,15 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
           invitationStatus: 'accepted'
         }];
       }
-      if (this.invitationPending) {
+      // Reload listing for other participants so their view of invitation statuses stays current
+      // (self-acceptance already calls loadListing() in acceptInvitationInPage())
+      const isSelf = event.bidderId === this.currentUserId;
+      if (!isSelf) {
         this.loadListing();
       }
     });
 
-    this.socketSubscriptions.push(acceptSub);
+    this.rtSubscriptions.push(acceptSub);
 
     const declineSub = this.socketService.onInvitationDeclined().subscribe(event => {
       if (event.listingId !== this.listingId || !event.bidderId) return;
@@ -441,7 +447,7 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
       }
     });
 
-    this.socketSubscriptions.push(declineSub);
+    this.rtSubscriptions.push(declineSub);
   }
 
   /** Badge label for invitation RSVP */
@@ -580,50 +586,6 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
       return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
     }
     return name[0].toUpperCase();
-  }
-
-  getPositionTop(index: number): string {
-    // Calculate angle for evenly spaced positions (72 degrees apart for 5 seats)
-    const angle = (index * 72 - 90) * (Math.PI / 180); // Start at top (-90 degrees)
-    
-    // Responsive radius based on screen size
-    const tableRadius = this.isMobile ? 160 : 225; // Half of table width
-    const cardHalfSize = this.isMobile ? 55 : 75; // Half of card width
-    const margin = this.isMobile ? 30 : 50;
-    const radius = tableRadius + margin + cardHalfSize; // Distance from center to seat center
-    const containerSize = this.isMobile ? Math.min(window.innerWidth - 32, 600) : 800; // Account for padding
-    const centerY = containerSize / 2; // Center of bidder-positions container
-    
-    // Calculate position and subtract half card height to center it
-    const y = centerY + Math.sin(angle) * radius - cardHalfSize;
-    return `${y}px`;
-  }
-
-  getPositionLeft(index: number): string {
-    // Calculate angle for evenly spaced positions
-    const angle = (index * 72 - 90) * (Math.PI / 180);
-    
-    // Responsive radius based on screen size
-    const tableRadius = this.isMobile ? 160 : 225;
-    const cardHalfSize = this.isMobile ? 55 : 75;
-    const margin = this.isMobile ? 30 : 50;
-    const radius = tableRadius + margin + cardHalfSize;
-    const containerSize = this.isMobile ? Math.min(window.innerWidth - 32, 600) : 800; // Account for padding
-    const centerX = containerSize / 2;
-    
-    // Calculate position and subtract half card width to center it
-    const x = centerX + Math.cos(angle) * radius - cardHalfSize;
-    return `${x}px`;
-  }
-
-  getEmptySeats(): number[] {
-    const totalSeats = 5;
-    const usedSeats = this.platinumBidders.length;
-    const emptySeatIndices: number[] = [];
-    for (let i = usedSeats; i < totalSeats; i++) {
-      emptySeatIndices.push(i);
-    }
-    return emptySeatIndices;
   }
 
   formatBidTime(dateString: string): string {

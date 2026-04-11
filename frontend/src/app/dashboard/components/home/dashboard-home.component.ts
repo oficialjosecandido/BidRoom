@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -10,7 +10,8 @@ import { CustomerService, CustomerInfo } from '../../../shared/services/customer
 import { PaymentsService, TopupRecord } from '../../../shared/services/payments.service';
 import { ReviewsService, PendingReview } from '../../../shared/services/reviews.service';
 import { FeatureFlagsService } from '../../../shared/services/feature-flags.service';
-import { Observable } from 'rxjs';
+import { SocketService } from '../../../shared/services/socket.service';
+import { Observable, Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-dashboard-home',
@@ -19,14 +20,19 @@ import { Observable } from 'rxjs';
   templateUrl: './dashboard-home.component.html',
   styleUrls: ['./dashboard-home.component.scss']
 })
-export class DashboardHomeComponent implements OnInit {
+export class DashboardHomeComponent implements OnInit, OnDestroy {
   private authService = inject(AuthService);
   private listingsService = inject(ListingsService);
   private customerService = inject(CustomerService);
   private paymentsService = inject(PaymentsService);
   private reviewsService = inject(ReviewsService);
   featureFlags = inject(FeatureFlagsService);
+  private socketService = inject(SocketService);
   private router = inject(Router);
+
+  private socketSubscriptions: Subscription[] = [];
+  private joinedListingIds: string[] = [];
+  private destroyed = false;
 
   currentUser$: Observable<AppUser | null>;
   customer: CustomerInfo | null = null;
@@ -339,12 +345,59 @@ export class DashboardHomeComponent implements OnInit {
           (l) => l.status === 'ended' || l.status === 'cancelled' || (l.status === 'active' && new Date(l.endDate) <= now)
         );
         this.isLoading = false;
+        this.setupRealTimeUpdates(this.activeListings);
       },
       error: (err) => {
         this.error = err?.message || 'Failed to load your listings';
         this.isLoading = false;
       }
     });
+  }
+
+  private setupRealTimeUpdates(activeListings: Listing[]): void {
+    if (this.destroyed) return;
+    // Clean up any previous subscriptions and rooms
+    this.cleanupRealTime();
+
+    const ids = activeListings.map(l => l._id).filter(Boolean) as string[];
+    if (!ids.length) return;
+
+    this.joinedListingIds = ids;
+    this.socketService.connect();
+    this.socketService.joinListings(ids);
+
+    const newBidSub = this.socketService.onNewBid().subscribe((event) => {
+      const listing = this.activeListings.find(l => l._id === event.listingId);
+      if (listing && event.bidCount !== undefined) {
+        listing.bidCount = event.bidCount;
+        if (event.currentPrice !== undefined) listing.currentPrice = event.currentPrice;
+      }
+    });
+    this.socketSubscriptions.push(newBidSub);
+
+    const updateSub = this.socketService.onListingUpdate().subscribe((event) => {
+      const listing = this.activeListings.find(l => l._id === event.listingId);
+      if (listing) {
+        if (event.bidCount !== undefined) listing.bidCount = event.bidCount;
+        if (event.currentPrice !== undefined) listing.currentPrice = event.currentPrice;
+        if (event.status) listing.status = event.status;
+      }
+    });
+    this.socketSubscriptions.push(updateSub);
+  }
+
+  private cleanupRealTime(): void {
+    for (const sub of this.socketSubscriptions) sub.unsubscribe();
+    this.socketSubscriptions = [];
+    if (this.joinedListingIds.length) {
+      this.socketService.leaveListings(this.joinedListingIds);
+      this.joinedListingIds = [];
+    }
+  }
+
+  ngOnDestroy(): void {
+    this.destroyed = true;
+    this.cleanupRealTime();
   }
 
   /** True when user has listings but hasn't completed payout setup. */

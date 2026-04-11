@@ -66,6 +66,8 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
   createPrivateRoomSubmitting = false;
   privateRoomStartNowLoading = false;
   private socketSubscriptions: Subscription[] = [];
+  /** Real-time bid/listing socket subs — tracked separately so they can be cleaned up on re-entry without unsubbing auth subs. */
+  private rtSubscriptions: Subscription[] = [];
   private countdownInterval: ReturnType<typeof setInterval> | null = null;
   private justEndedRefetched = false;
   private offerRefreshDebounceTimer: ReturnType<typeof setTimeout> | null = null;
@@ -655,6 +657,10 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
   }
 
   setupRealTimeUpdates(listingId: string): void {
+    // Clean up any previous real-time subs (e.g. called again after placing a bid)
+    for (const sub of this.rtSubscriptions) sub.unsubscribe();
+    this.rtSubscriptions = [];
+
     // Connect to Socket.io
     this.socketService.connect();
 
@@ -679,7 +685,6 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
         } else {
           this.offers = [merged, ...this.offers];
         }
-        this.cdr.markForCheck();
         scheduleDebouncedRefresh();
       };
 
@@ -688,18 +693,17 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
           mergeOfferIntoList(event.offer as Offer);
         }
       });
-      this.socketSubscriptions.push(newOfferSubscription);
+      this.rtSubscriptions.push(newOfferSubscription);
 
       const offerUpdateSubscription = this.socketService.onOfferUpdate().subscribe((event) => {
         if (event.listingId === listingId && event.offer) {
           mergeOfferIntoList(event.offer as Offer);
           if (event.listingStatus === 'ended' && this.listing) {
             this.listing.status = 'ended';
-            this.cdr.markForCheck();
           }
         }
       });
-      this.socketSubscriptions.push(offerUpdateSubscription);
+      this.rtSubscriptions.push(offerUpdateSubscription);
     }
 
     // Subscribe to new bid events
@@ -707,23 +711,21 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
       if (event.listingId === listingId) {
         // Add new bid to the list (prepend since we sort desc), capped to avoid unbounded growth
         this.bids = [event.bid, ...this.bids].slice(0, MAX_DISPLAYED_BIDS);
-        // Flash the new bid
-        const newId = event.bid._id;
-        this.newBidIds = new Set([...this.newBidIds, newId]);
-        setTimeout(() => {
-          this.newBidIds.delete(newId);
-          this.newBidIds = new Set(this.newBidIds);
-          this.cdr.markForCheck();
-        }, 2500);
-        
         // Update listing current price and bid count
         if (this.listing && event.currentPrice !== undefined && event.bidCount !== undefined) {
           this.listing.currentPrice = event.currentPrice;
           this.listing.bidCount = event.bidCount;
         }
+        // Flash the new bid (NgZone.run() in SocketService ensures change detection fires automatically)
+        const newId = event.bid._id;
+        this.newBidIds = new Set([...this.newBidIds, newId]);
+        setTimeout(() => {
+          this.newBidIds.delete(newId);
+          this.newBidIds = new Set(this.newBidIds);
+        }, 2500);
       }
     });
-    this.socketSubscriptions.push(newBidSubscription);
+    this.rtSubscriptions.push(newBidSubscription);
 
     // Subscribe to listing update events (price, bid count changes, private room updates, auction end)
     const listingUpdateSubscription = this.socketService.onListingUpdate().subscribe((event) => {
@@ -731,12 +733,10 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
         if (event.currentPrice !== undefined) this.listing.currentPrice = event.currentPrice;
         if (event.bidCount !== undefined) this.listing.bidCount = event.bidCount;
 
-        // Update private room end date if provided (e.g., when private room is extended)
         if (event.privateRoomEndDate) {
           this.listing.privateRoomEndDate = event.privateRoomEndDate;
         }
 
-        // Update private room status if provided (e.g., when auction ends with private room eligible)
         if (event.privateRoomStatus) {
           this.listing.privateRoomStatus = event.privateRoomStatus;
         }
@@ -747,12 +747,10 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
           this.loadListing(this.listing.slug);
         }
 
-        // Restart countdown if end date changed
         this.startCountdown();
-        this.cdr.markForCheck();
       }
     });
-    this.socketSubscriptions.push(listingUpdateSubscription);
+    this.rtSubscriptions.push(listingUpdateSubscription);
   }
 
   getMinBid(): number {
@@ -1323,6 +1321,8 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
 
     // Unsubscribe from Socket.io events
     this.socketSubscriptions.forEach(sub => sub.unsubscribe());
+    this.rtSubscriptions.forEach(sub => sub.unsubscribe());
+    this.rtSubscriptions = [];
     
     // Leave listing room and disconnect
     if (this.listing?._id) {

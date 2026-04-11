@@ -87,6 +87,8 @@ export interface Transaction {
   /** Stripe Connect payment fields */
   stripeCheckoutSessionId?: string | null;
   stripePaymentIntentId?: string | null;
+  /** Stripe refund ID (set by auto-cancel scheduler or dispute ruling) */
+  stripeRefundId?: string | null;
   /** BidRoom platform fee charged to buyer (2% of item price, dollars) */
   bidRoomFeeAmount?: number | null;
   /** Stripe processing fee deducted from seller payout (dollars) */

@@ -256,7 +256,10 @@
       "minValue": "Value must be greater than {{min}}",
       "buyNowTooLow": "Buy Now price must be higher than Starting Bid",
       "reserveTooLow": "Reserve price must be at least equal to the starting bid",
-      "invalidFileType": "Invalid file type. Only images (JPEG, PNG, GIF, WebP, BMP) are allowed. Rejected: {{files}}"
+      "invalidFileType": "Invalid file type. Only images (JPEG, PNG, GIF, WebP, BMP) are allowed. Rejected: {{files}}",
+      "mediaMaxPhotos": "You can add at most 20 photos. Remove some to add more. Not added: {{files}}",
+      "mediaMaxPhotosWithVideo": "With a video you can add at most 5 photos. Remove photos or the video to add more. Not added: {{files}}",
+      "mediaVideoLimit": "Only one video is allowed, and at most 5 photos with a video. Not added: {{files}}"
     }
   },
   "listingList": {
@@ -1084,7 +1087,12 @@
     "sellerMustShipBy": "Ship this order by",
     "remindSellerToShip": "Remind seller to ship",
     "remindingSeller": "Sending…",
-    "remindSellerCooldown": "You can send another reminder in 24 hours."
+    "remindSellerCooldown": "You can send another reminder in 24 hours.",
+    "autoCancelledBuyerTitle": "Order cancelled — refund issued",
+    "autoCancelledBuyerMessage": "Your order was automatically cancelled on {{date}} because the seller did not ship within 5 business days. A full refund has been issued to your original payment method and may take 5–10 business days to appear.",
+    "autoCancelledSellerTitle": "Order cancelled — did not ship in time",
+    "autoCancelledSellerMessage": "This order was automatically cancelled on {{date}} because shipment was not confirmed within the required 5-business-day window. The buyer has been refunded in full.",
+    "refundRef": "Refund reference"
   },
   "disputes": {
     "title": "Disputes",

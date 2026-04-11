@@ -253,7 +253,10 @@
       "minValue": "La valeur doit être supérieure à {{min}}",
       "buyNowTooLow": "Le prix Achat Immédiat doit être supérieur à l'Enchère Initiale",
       "reserveTooLow": "Le prix de réserve doit être au moins égal à l'enchère initiale",
-      "invalidFileType": "Type de fichier invalide. Seules les images (JPEG, PNG, GIF, WebP, BMP) sont autorisées. Rejeté : {{files}}"
+      "invalidFileType": "Type de fichier invalide. Seules les images (JPEG, PNG, GIF, WebP, BMP) sont autorisées. Rejeté : {{files}}",
+      "mediaMaxPhotos": "Vous pouvez ajouter au maximum 20 photos. Supprimez-en pour en ajouter d'autres. Non ajoutées : {{files}}",
+      "mediaMaxPhotosWithVideo": "Avec une vidéo, vous pouvez ajouter au maximum 5 photos. Supprimez des photos ou la vidéo pour continuer. Non ajoutées : {{files}}",
+      "mediaVideoLimit": "Une seule vidéo est autorisée, et au maximum 5 photos avec une vidéo. Non ajouté : {{files}}"
     }
   },
   "listingList": {
@@ -1072,7 +1075,18 @@
     "scoreScaleHigh": "Excellent",
     "scoreSelected": "Vous avez choisi {{score}} sur 10",
     "descriptionOptional": "Description (facultatif)",
-    "reviewPrivate": "Votre avis est visible par les autres"
+    "reviewPrivate": "Votre avis est visible par les autres",
+    "autoCancelledBuyerTitle": "Commande annulée — remboursement émis",
+    "autoCancelledBuyerMessage": "Votre commande a été automatiquement annulée le {{date}} car le vendeur n'a pas expédié l'article dans les 5 jours ouvrables. Un remboursement complet a été émis sur votre moyen de paiement original et peut prendre 5 à 10 jours ouvrables pour apparaître.",
+    "autoCancelledSellerTitle": "Commande annulée — non expédiée à temps",
+    "autoCancelledSellerMessage": "Cette commande a été automatiquement annulée le {{date}} car l'expédition n'a pas été confirmée dans le délai de 5 jours ouvrables. L'acheteur a été intégralement remboursé.",
+    "refundRef": "Référence de remboursement",
+    "remindSellerToShip": "Rappeler au vendeur d'expédier",
+    "remindingSeller": "Envoi…",
+    "remindSellerCooldown": "Vous pouvez envoyer un autre rappel dans 24 heures.",
+    "expectedShipBy": "Expédition prévue avant (5 jours ouvrables)",
+    "shippingStatusLabel": "Statut d'expédition",
+    "sellerMustShipBy": "Expédiez cette commande avant le"
   },
   "disputes": {
     "title": "Litiges",
