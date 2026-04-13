@@ -391,11 +391,19 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
 
     this.rtSubscriptions.push(sub);
 
-    // Subscribe to new bids (filter by listingId)
+    // Subscribe to new bids — update in-place immediately from socket data (no HTTP round-trip)
     const bidSub = this.socketService.onNewBid().subscribe(bidEvent => {
-      if (bidEvent.listingId === this.listingId) {
-        this.loadBids();
+      if (bidEvent.listingId !== this.listingId) return;
+      // Prepend the new bid only if not already present (dedup in case of double-emit)
+      if (!this.bids.some(b => b._id === bidEvent.bid._id)) {
+        this.bids = [bidEvent.bid, ...this.bids];
       }
+      // Sync price and bid count from the event (same data the listing-update event carries)
+      if (this.listing) {
+        if (bidEvent.currentPrice !== undefined) this.listing.currentPrice = bidEvent.currentPrice;
+        if (bidEvent.bidCount !== undefined) this.listing.bidCount = bidEvent.bidCount;
+      }
+      this.updatePlatinumBidders();
     });
 
     this.rtSubscriptions.push(bidSub);

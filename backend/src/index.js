@@ -216,7 +216,19 @@ io.on('connection', (socket) => {
     if (uid) socket.leave(`user:${uid}`);
   });
 
-  socket.on('disconnect', () => {});
+  socket.on('disconnect', () => {
+    // Recalculate viewer counts for any rooms this socket was in
+    const rooms = Array.from(socket.rooms);
+    for (const room of rooms) {
+      if (room.startsWith('listing:')) {
+        const listingId = room.slice('listing:'.length);
+        updateViewerCount(io, listingId);
+      } else if (room.startsWith('private-room:')) {
+        const listingId = room.slice('private-room:'.length);
+        updatePrivateRoomViewerCount(io, listingId);
+      }
+    }
+  });
 });
 
 // Helper function to update viewer count for listings
