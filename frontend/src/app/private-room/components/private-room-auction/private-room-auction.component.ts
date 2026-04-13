@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -33,6 +33,7 @@ interface PlatinumBidderInfo {
 export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
+  private cdr = inject(ChangeDetectorRef);
   private listingsService = inject(ListingsService);
   private bidsService = inject(BidsService);
   private socketService = inject(SocketService);
@@ -367,7 +368,7 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
       }
       if (update.platinumBidderAcceptanceDeadline) {
         this.listing.platinumBidderAcceptanceDeadline = update.platinumBidderAcceptanceDeadline;
-        this.startCountdown(); // restart countdown with compressed deadline
+        this.startCountdown();
       }
       if (update.privateRoomStatus) {
         this.listing.privateRoomStatus = update.privateRoomStatus;
@@ -377,16 +378,15 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
             clearInterval(this.countdownInterval);
             this.countdownInterval = null;
           }
-          this.loadBids(); // Refresh bids for final state
+          this.loadBids();
         }
       }
       if (update.status) this.listing.status = update.status;
-      if (update.endDate) {
-        this.listing.endDate = update.endDate;
-      }
+      if (update.endDate) this.listing.endDate = update.endDate;
       if (update.privateRoomStatus === 'active' || update.privateRoomStatus === 'invited') {
         this.startCountdown();
       }
+      this.cdr.detectChanges();
     });
 
     this.rtSubscriptions.push(sub);
@@ -394,16 +394,16 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
     // Subscribe to new bids — update in-place immediately from socket data (no HTTP round-trip)
     const bidSub = this.socketService.onNewBid().subscribe(bidEvent => {
       if (bidEvent.listingId !== this.listingId) return;
-      // Prepend the new bid only if not already present (dedup in case of double-emit)
       if (!this.bids.some(b => b._id === bidEvent.bid._id)) {
         this.bids = [bidEvent.bid, ...this.bids];
       }
-      // Sync price and bid count from the event (same data the listing-update event carries)
       if (this.listing) {
         if (bidEvent.currentPrice !== undefined) this.listing.currentPrice = bidEvent.currentPrice;
         if (bidEvent.bidCount !== undefined) this.listing.bidCount = bidEvent.bidCount;
       }
       this.updatePlatinumBidders();
+      // Force synchronous CD — eventCoalescing:true defers zone-triggered CD
+      this.cdr.detectChanges();
     });
 
     this.rtSubscriptions.push(bidSub);
@@ -412,6 +412,7 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
     const viewerSub = this.socketService.onPrivateRoomViewerCountUpdate().subscribe(event => {
       if (event.listingId === this.listingId) {
         this.viewerCount = event.count;
+        this.cdr.detectChanges();
       }
     });
 

@@ -716,12 +716,16 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
           this.listing.currentPrice = event.currentPrice;
           this.listing.bidCount = event.bidCount;
         }
-        // Flash the new bid (NgZone.run() in SocketService ensures change detection fires automatically)
+        // Flash the new bid
         const newId = event.bid._id;
         this.newBidIds = new Set([...this.newBidIds, newId]);
+        // Force immediate synchronous CD — eventCoalescing:true defers zone-triggered CD
+        // which would leave the template stale until the next animation frame.
+        this.cdr.detectChanges();
         setTimeout(() => {
           this.newBidIds.delete(newId);
           this.newBidIds = new Set(this.newBidIds);
+          this.cdr.detectChanges();
         }, 2500);
       }
     });
@@ -748,6 +752,7 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
         }
 
         this.startCountdown();
+        this.cdr.detectChanges();
       }
     });
     this.rtSubscriptions.push(listingUpdateSubscription);
