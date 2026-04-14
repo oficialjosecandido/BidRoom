@@ -2,7 +2,7 @@ const express = require('express');
 const Bid = require('../models/Bid');
 const Listing = require('../models/Listing');
 const User = require('../models/User');
-const { authenticateToken, optionalAuth, requireActiveAccountIfAuthenticated } = require('../middleware/auth');
+const { authenticateToken, optionalAuth, requireActiveAccountIfAuthenticated, requireNoDisputeRestrictionIfAuthenticated } = require('../middleware/auth');
 const { sendFirstBidNotification, sendOutbidNotification } = require('../services/auctionNotificationService');
 const { getReviewScoresForUsers } = require('../services/reviewService');
 const { notifyNewBid, notifyBidderOutbid, emitNewNotificationToUser } = require('../services/notificationService');
@@ -105,7 +105,7 @@ router.get('/listing/:listingId/stats', async (req, res) => {
 });
 
 // POST /api/bids - Create a new bid (authentication optional, but email required if not authenticated)
-router.post('/', optionalAuth, requireActiveAccountIfAuthenticated, async (req, res) => {
+router.post('/', optionalAuth, requireActiveAccountIfAuthenticated, requireNoDisputeRestrictionIfAuthenticated, async (req, res) => {
   try {
     const { listingId, amount, maxBid, bidType = 'manual', notes, email, notifyWhenOutbid } = req.body;
 

@@ -16,7 +16,7 @@ const {
   emitNewNotificationToUser
 } = require('../services/notificationService');
 const { ensureShippingDeadlinesFromPaidAt } = require('../services/shippingDeadlines');
-const { suspendBothPartiesForDispute } = require('../services/accountStatusService');
+const { restrictBothPartiesForDispute } = require('../services/accountStatusService');
 const { generateInvoicePdf } = require('../services/invoiceService');
 
 const router = express.Router();
@@ -257,13 +257,13 @@ router.post('/:id/open-dispute', async (req, res) => {
     transaction.sendingStatus = 'delivered'; // Item was received (buyer claims not properly)
     await transaction.save();
 
-    // Suspend both buyer and seller accounts while dispute is under review
+    // Restrict both parties from new marketplace actions while dispute is under review
     const buyerUserId = transaction.buyer?._id?.toString?.() || transaction.buyer?.toString?.();
     const sellerUserId = transaction.seller?._id?.toString?.() || transaction.seller?.toString?.();
     const io = req.app.get('io');
     if (buyerUserId && sellerUserId) {
-      suspendBothPartiesForDispute(transaction._id, buyerUserId, sellerUserId, io).catch(err =>
-        console.error('Failed to suspend accounts for dispute:', err)
+      restrictBothPartiesForDispute(transaction._id, buyerUserId, sellerUserId, io).catch(err =>
+        console.error('Failed to restrict accounts for dispute:', err)
       );
     }
 
@@ -606,13 +606,13 @@ router.patch('/:id', requireActiveAccount, async (req, res) => {
       transaction.disputeOpenedBy = isSeller ? 'seller' : 'buyer';
       if (disputeReason != null) transaction.disputeReason = String(disputeReason).trim() || null;
       transaction.transactionStatus = 'under_dispute';
-      // Suspend both parties while dispute is under review
+      // Restrict both parties from new marketplace actions while dispute is under review
       const patchBuyerId = transaction.buyer?._id?.toString?.() || transaction.buyer?.toString?.();
       const patchSellerId = transaction.seller?._id?.toString?.() || transaction.seller?.toString?.();
       const patchIo = req.app.get('io');
       if (patchBuyerId && patchSellerId) {
-        suspendBothPartiesForDispute(transaction._id, patchBuyerId, patchSellerId, patchIo).catch(err =>
-          console.error('Failed to suspend accounts for seller-opened dispute:', err)
+        restrictBothPartiesForDispute(transaction._id, patchBuyerId, patchSellerId, patchIo).catch(err =>
+          console.error('Failed to restrict accounts for seller-opened dispute:', err)
         );
       }
     }

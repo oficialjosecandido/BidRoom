@@ -4,7 +4,7 @@ const User = require('../models/User');
 const Bid = require('../models/Bid');
 const Offer = require('../models/Offer');
 const Watchlist = require('../models/Watchlist');
-const { authenticateToken, optionalAuth, requireActiveAccount } = require('../middleware/auth');
+const { authenticateToken, optionalAuth, requireActiveAccount, requireNoDisputeRestriction } = require('../middleware/auth');
 const { handleWinnerSelection, handleAuctionEnd } = require('../services/auctionNotificationService');
 const { getReviewScoresForUser } = require('../services/reviewService');
 const { logAuctionCreated } = require('../services/bestOfferLogger');
@@ -575,7 +575,7 @@ router.get('/:id', optionalAuth, async (req, res) => {
 });
 
 // POST /api/listings - Create a new listing (requires authentication)
-router.post('/', authenticateToken, requireActiveAccount, async (req, res) => {
+router.post('/', authenticateToken, requireActiveAccount, requireNoDisputeRestriction, async (req, res) => {
   try {
     // Find or create user in database from Firebase UID
     let user = await User.findOne({ uid: req.user.uid });
@@ -826,7 +826,7 @@ router.post('/', authenticateToken, requireActiveAccount, async (req, res) => {
 });
 
 // POST /api/listings/:id/buy-now - Buy now (instantly closes auction)
-router.post('/:id/buy-now', authenticateToken, requireActiveAccount, async (req, res) => {
+router.post('/:id/buy-now', authenticateToken, requireActiveAccount, requireNoDisputeRestriction, async (req, res) => {
   try {
     // Find or create user
     let user = await User.findOne({ uid: req.user.uid });

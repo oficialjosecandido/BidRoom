@@ -3,7 +3,7 @@ const Offer = require('../models/Offer');
 const Listing = require('../models/Listing');
 const User = require('../models/User');
 const Customer = require('../models/Customer');
-const { authenticateToken, optionalAuth, requireActiveAccountIfAuthenticated } = require('../middleware/auth');
+const { authenticateToken, optionalAuth, requireActiveAccountIfAuthenticated, requireNoDisputeRestrictionIfAuthenticated } = require('../middleware/auth');
 const { createTransactionForAcceptedOffer } = require('../services/transactionService');
 const {
   logOfferReceived,
@@ -373,7 +373,7 @@ async function createOffer(req, res) {
 }
 
 // POST /api/offers - Create a new offer (auth optional; guests must provide email)
-router.post('/', optionalAuth, requireActiveAccountIfAuthenticated, (req, res) => {
+router.post('/', optionalAuth, requireActiveAccountIfAuthenticated, requireNoDisputeRestrictionIfAuthenticated, (req, res) => {
   const timeoutId = setTimeout(() => {
     if (!res.headersSent) {
       res.status(504).json({
