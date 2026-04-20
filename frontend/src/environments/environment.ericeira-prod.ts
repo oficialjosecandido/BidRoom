@@ -10,7 +10,7 @@ export const environment = {
       { label: '7 hours', hours: 7 },
       { label: '24 hours', hours: 24 },
     ],
-    title: 'House 27',
+    title: 'BidRoom Portugal',
     description: 'Casa 27. Compre e venda ao melhor preço',
     keywords: 'Casa 27, Compre e venda ao melhor preço',
     author: 'Casa 27',

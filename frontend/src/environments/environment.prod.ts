@@ -1,6 +1,6 @@
 export const environment = {
   production: true,
-  title: 'House 27',
+  title: 'BidRoom Portugal',
   description: 'House 27. Compre e venda ao melhor preço',
   keywords: 'House 27, Compre e venda ao melhor preço',
   author: 'House 27',
