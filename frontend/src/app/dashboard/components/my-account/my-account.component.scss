@@ -226,7 +226,7 @@
 .connect-btn {
   display: inline-block;
   padding: 10px 24px;
-  background: #7A4F84;
+  background: var(--primary-color);
   color: white;
   border: none;
   border-radius: 8px;
@@ -359,7 +359,7 @@
     transition: border-color 0.15s;
     background: white;
 
-    &:focus { border-color: #7A4F84; box-shadow: 0 0 0 3px rgba(122,79,132,0.08); }
+    &:focus { border-color: var(--primary-color); box-shadow: 0 0 0 3px rgba(122,79,132,0.08); }
   }
 }
 
@@ -386,7 +386,7 @@
   line-height: 1.5;
 
   input[type="checkbox"] { margin-top: 2px; flex-shrink: 0; width: 16px; height: 16px; cursor: pointer; }
-  a { color: #7A4F84; text-decoration: underline; }
+  a { color: var(--primary-color); text-decoration: underline; }
 }
 
 .form-actions {

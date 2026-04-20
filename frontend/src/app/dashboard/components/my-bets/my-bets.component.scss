@@ -36,7 +36,7 @@
     width: 40px;
     height: 40px;
     border: 3px solid #e2e8f0;
-    border-top-color: #7A4F84;
+    border-top-color: var(--primary-color);
     border-radius: 50%;
     animation: spin 0.8s linear infinite;
   }
@@ -45,7 +45,7 @@
   .error-message { color: #dc2626; font-size: 15px; }
   .retry-btn {
     padding: 10px 24px;
-    background: #7A4F84;
+    background: var(--primary-color);
     color: white;
     border: none;
     border-radius: 8px;
@@ -72,7 +72,7 @@
   .browse-btn {
     display: inline-block;
     padding: 12px 24px;
-    background: #7A4F84;
+    background: var(--primary-color);
     color: white;
     border-radius: 10px;
     text-decoration: none;
@@ -117,7 +117,7 @@
 }
 
 .expand-icon {
-  color: #7A4F84;
+  color: var(--primary-color);
   font-size: 12px;
   margin-top: 4px;
   flex-shrink: 0;
@@ -132,7 +132,7 @@
     a {
       color: #1a202c;
       text-decoration: none;
-      &:hover { color: #7A4F84; }
+      &:hover { color: var(--primary-color); }
     }
   }
   .meta-row {
@@ -214,7 +214,7 @@
 
   &.status-accepted { background: #d1fae5; border-left: 4px solid #10b981; }
   &.status-rejected { background: #fee2e2; border-left: 4px solid #ef4444; opacity: 0.9; }
-  &.status-pending { border-left: 4px solid #7A4F84; }
+  &.status-pending { border-left: 4px solid var(--primary-color); }
 
   .bet-amount { font-weight: 700; color: #1a202c; }
   .bet-type { color: #64748b; font-size: 12px; }
@@ -239,7 +239,7 @@
     input[type="checkbox"] {
       width: 18px;
       height: 18px;
-      accent-color: #7A4F84;
+      accent-color: var(--primary-color);
     }
   }
   .updating { font-size: 13px; color: #94a3b8; }
@@ -248,7 +248,7 @@
 .view-listing-btn {
   display: inline-block;
   padding: 10px 20px;
-  background: #7A4F84;
+  background: var(--primary-color);
   color: white;
   border-radius: 8px;
   text-decoration: none;

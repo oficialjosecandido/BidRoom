@@ -109,7 +109,7 @@
   }
 
   &.active {
-    background: var(--accent-purple, #7A4F84);
+    background: var(--accent-purple, var(--primary-color));
     color: white;
     font-weight: 600;
     box-shadow: 0 2px 8px rgba(122, 79, 132, 0.3);

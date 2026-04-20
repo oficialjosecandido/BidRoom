@@ -24,7 +24,7 @@
       padding: 8px 16px;
       font-size: 14px;
       font-weight: 500;
-      color: var(--accent-purple, #7A4F84);
+      color: var(--accent-purple, var(--primary-color));
       background: rgba(122, 79, 132, 0.1);
       border: 1px solid rgba(122, 79, 132, 0.3);
       border-radius: 8px;
@@ -51,7 +51,7 @@
       width: 40px;
       height: 40px;
       border: 3px solid rgba(122, 79, 132, 0.2);
-      border-top-color: var(--accent-purple, #7A4F84);
+      border-top-color: var(--accent-purple, var(--primary-color));
       border-radius: 50%;
       animation: spin 0.8s linear infinite;
     }
@@ -60,7 +60,7 @@
       padding: 10px 20px;
       font-size: 14px;
       font-weight: 500;
-      color: var(--accent-purple, #7A4F84);
+      color: var(--accent-purple, var(--primary-color));
       background: transparent;
       border: 1px solid rgba(122, 79, 132, 0.3);
       border-radius: 8px;

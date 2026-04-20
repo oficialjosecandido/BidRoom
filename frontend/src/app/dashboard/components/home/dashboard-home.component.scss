@@ -132,7 +132,7 @@
     }
 
     &.header-btn-primary {
-      background: var(--accent-purple, #7A4F84);
+      background: var(--accent-purple, var(--primary-color));
       color: white;
       box-shadow: 0 2px 8px rgba(122, 79, 132, 0.3);
 
@@ -144,7 +144,7 @@
 
     &.header-btn-secondary {
       background: white;
-      color: var(--accent-purple, #7A4F84);
+      color: var(--accent-purple, var(--primary-color));
       border: 1px solid rgba(122, 79, 132, 0.3);
 
       &:hover {
@@ -272,7 +272,7 @@
 
   .stat-link {
     font-size: 14px;
-    color: var(--accent-purple, #7A4F84);
+    color: var(--accent-purple, var(--primary-color));
     text-decoration: none;
     font-weight: 600;
     margin-top: auto;
@@ -290,7 +290,7 @@
     padding: 10px 16px;
     font-size: 14px;
     font-weight: 600;
-    color: var(--accent-purple, #7A4F84);
+    color: var(--accent-purple, var(--primary-color));
     background: rgba(122, 79, 132, 0.1);
     border: 1px solid rgba(122, 79, 132, 0.25);
     border-radius: 10px;
@@ -323,7 +323,7 @@
     width: 40px;
     height: 40px;
     border: 3px solid rgba(122, 79, 132, 0.15);
-    border-top-color: var(--accent-purple, #7A4F84);
+    border-top-color: var(--accent-purple, var(--primary-color));
     border-radius: 50%;
     animation: spin 0.8s linear infinite;
   }
@@ -335,7 +335,7 @@
 
   .retry-btn {
     padding: 10px 20px;
-    background: var(--accent-purple, #7A4F84);
+    background: var(--accent-purple, var(--primary-color));
     color: var(--primary-white);
     border: none;
     border-radius: 10px;
@@ -398,7 +398,7 @@
 .membership-level-name {
   font-size: 26px;
   font-weight: 700;
-  color: var(--accent-purple, #7A4F84);
+  color: var(--accent-purple, var(--primary-color));
 
   &.none {
     font-size: 20px;
@@ -430,7 +430,7 @@
 
   .membership-progress-fill {
     height: 100%;
-    background: linear-gradient(90deg, var(--accent-purple, #7A4F84), rgba(122, 79, 132, 0.7));
+    background: linear-gradient(90deg, var(--accent-purple, var(--primary-color)), rgba(122, 79, 132, 0.7));
     border-radius: 4px;
     transition: width 0.4s ease;
   }
@@ -446,7 +446,7 @@
   font-size: 15px;
   font-weight: 600;
   color: var(--primary-white);
-  background: var(--accent-purple, #7A4F84);
+  background: var(--accent-purple, var(--primary-color));
   border: none;
   border-radius: 12px;
   cursor: pointer;
@@ -514,7 +514,7 @@
   .tier-price {
     font-size: 18px;
     font-weight: 700;
-    color: var(--accent-purple, #7A4F84);
+    color: var(--accent-purple, var(--primary-color));
   }
 
   .tier-badge {
@@ -524,7 +524,7 @@
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.03em;
-    color: var(--accent-purple, #7A4F84);
+    color: var(--accent-purple, var(--primary-color));
     background: rgba(122, 79, 132, 0.12);
     border-radius: 6px;
     align-self: flex-start;
@@ -538,7 +538,7 @@
   }
 
   &.current-tier {
-    border-color: var(--accent-purple, #7A4F84);
+    border-color: var(--accent-purple, var(--primary-color));
     border-width: 2px;
     box-shadow: 0 4px 16px rgba(122, 79, 132, 0.15);
     background: linear-gradient(180deg, rgba(122, 79, 132, 0.06) 0%, var(--primary-white) 100%);
@@ -546,7 +546,7 @@
 
     &:hover {
       transform: none;
-      border-color: var(--accent-purple, #7A4F84);
+      border-color: var(--accent-purple, var(--primary-color));
       background: linear-gradient(180deg, rgba(122, 79, 132, 0.06) 0%, var(--primary-white) 100%);
     }
   }
@@ -586,7 +586,7 @@
     font-size: 15px;
     font-weight: 600;
     color: var(--primary-white);
-    background: var(--accent-purple, #7A4F84);
+    background: var(--accent-purple, var(--primary-color));
     border: none;
     border-radius: 10px;
     cursor: pointer;
@@ -640,7 +640,7 @@
 
     .topup-amount {
       font-weight: 600;
-      color: var(--accent-purple, #7A4F84);
+      color: var(--accent-purple, var(--primary-color));
     }
   }
 }
@@ -664,7 +664,7 @@
 
   .section-link {
     font-size: 14px;
-    color: var(--accent-purple, #7A4F84);
+    color: var(--accent-purple, var(--primary-color));
     text-decoration: none;
     font-weight: 600;
 
@@ -755,7 +755,7 @@
     overflow: hidden;
 
     .listing-card-linked:hover & {
-      color: var(--accent-purple, #7A4F84);
+      color: var(--accent-purple, var(--primary-color));
     }
   }
 
@@ -802,7 +802,7 @@
     margin-top: 16px;
     padding: 10px 20px;
     color: var(--primary-white);
-    background: var(--accent-purple, #7A4F84);
+    background: var(--accent-purple, var(--primary-color));
     font-weight: 600;
     text-decoration: none;
     border-radius: 10px;
@@ -889,7 +889,7 @@
   font-size: 14px;
   font-weight: 600;
   color: var(--primary-white);
-  background: var(--accent-purple, #7A4F84);
+  background: var(--accent-purple, var(--primary-color));
   border: none;
   border-radius: 10px;
   cursor: pointer;
@@ -1027,7 +1027,7 @@
   font-weight: 600;
   color: var(--primary-white);
   text-decoration: none;
-  background: var(--accent-purple, #7A4F84);
+  background: var(--accent-purple, var(--primary-color));
   border-radius: 12px;
   border: none;
   box-shadow: 0 2px 8px rgba(122, 79, 132, 0.35);
@@ -1209,7 +1209,7 @@
 
     &:focus {
       outline: none;
-      border-color: var(--accent-purple, #7A4F84);
+      border-color: var(--accent-purple, var(--primary-color));
       box-shadow: 0 0 0 3px rgba(122, 79, 132, 0.12);
     }
   }
@@ -1292,7 +1292,7 @@
   }
 
   &.selected {
-    border-color: var(--accent-purple, #7A4F84);
+    border-color: var(--accent-purple, var(--primary-color));
     background: rgba(122, 79, 132, 0.08);
     box-shadow: 0 0 0 1px rgba(122, 79, 132, 0.15);
   }
@@ -1306,7 +1306,7 @@
   .tier-option-price {
     font-size: 15px;
     font-weight: 700;
-    color: var(--accent-purple, #7A4F84);
+    color: var(--accent-purple, var(--primary-color));
   }
 }
 
@@ -1331,7 +1331,7 @@
   transition: border-color 0.2s ease, background 0.2s ease;
 
   &:focus-within {
-    border-color: var(--accent-purple, #7A4F84);
+    border-color: var(--accent-purple, var(--primary-color));
     background: rgba(122, 79, 132, 0.04);
   }
 
@@ -1388,7 +1388,7 @@
   border: 1px solid rgba(122, 79, 132, 0.12);
 
   strong {
-    color: var(--accent-purple, #7A4F84);
+    color: var(--accent-purple, var(--primary-color));
   }
 }
 

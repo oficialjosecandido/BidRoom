@@ -10,7 +10,7 @@ body {
   font-family: 'Helvetica Neue', Arial, sans-serif;
   line-height: 1.6;
   color: #333;
-  background-color: #ffffff;
+  background-color: var(--background-color, #F8FAFC);
   font-size: 14px;
 }
 
@@ -18,10 +18,10 @@ body {
 :root {
   --primary-black: #000000;
   --primary-white: #ffffff;
-  --accent-purple: #8B5A96;
+  --accent-purple: var(--primary-color);
   --accent-gold: #D4AF37;
   --accent-peach: #FFB366;
-  --light-purple: #F3F0F7;
+  --light-purple: var(--background-color);
   --light-gray: #F8F9FA;
   --border-gray: #E0E0E0;
   --text-gray: #666666;
@@ -115,7 +115,7 @@ h6 {
     color: var(--primary-white);
     
     &:hover:not(:disabled) {
-      background: #7A4F84;
+      background: var(--primary-color);
       transform: translateY(-1px);
       box-shadow: 0 4px 12px rgba(139, 90, 150, 0.3);
     }

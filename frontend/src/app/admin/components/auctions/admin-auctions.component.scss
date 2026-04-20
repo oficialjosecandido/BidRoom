@@ -32,7 +32,7 @@
     align-items: center;
     gap: 8px;
     padding: 12px 24px;
-    background: #007bff;
+    background: var(--primary-color);
     color: white;
     border: none;
     border-radius: 8px;
@@ -42,7 +42,7 @@
     transition: all 0.2s ease;
 
     &:hover:not(:disabled) {
-      background: #0056b3;
+      background: var(--primary-color);
       transform: translateY(-1px);
       box-shadow: 0 4px 8px rgba(0, 123, 255, 0.2);
     }
@@ -93,7 +93,7 @@
 
       &:focus {
         outline: none;
-        border-color: #007bff;
+        border-color: var(--primary-color);
         box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
       }
     }
@@ -119,7 +119,7 @@
     width: 48px;
     height: 48px;
     border: 4px solid #e2e8f0;
-    border-top-color: #007bff;
+    border-top-color: var(--primary-color);
     border-radius: 50%;
     animation: spin 1s linear infinite;
   }
@@ -164,7 +164,7 @@
 
   .retry-btn {
     padding: 10px 24px;
-    background: #007bff;
+    background: var(--primary-color);
     color: white;
     border: none;
     border-radius: 8px;
@@ -174,7 +174,7 @@
     transition: background-color 0.2s ease;
 
     &:hover {
-      background: #0056b3;
+      background: var(--primary-color);
     }
   }
 }

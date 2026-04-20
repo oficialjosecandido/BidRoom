@@ -441,7 +441,7 @@
         .private-room-banner {
           margin: 20px 0;
           padding: 20px;
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-color) 100%);
           border-radius: 8px;
           color: white;
 
@@ -486,7 +486,7 @@
 
             .btn-view-room {
               background: white;
-              color: #667eea;
+              color: var(--primary-color);
               border: none;
               padding: 10px 20px;
               border-radius: 6px;
@@ -599,7 +599,7 @@
                   width: 32px;
                   height: 32px;
                   border-radius: 50%;
-                  background: linear-gradient(135deg, #667eea, #764ba2);
+                  background: linear-gradient(135deg, var(--primary-color), var(--primary-color));
                   color: white;
                   font-size: 12px;
                   font-weight: 600;
@@ -650,7 +650,7 @@
         .private-room-message {
           padding: 16px;
           background: rgba(102, 126, 234, 0.1);
-          border-left: 4px solid #667eea;
+          border-left: 4px solid var(--primary-color);
           border-radius: 6px;
           margin-bottom: 16px;
 
@@ -662,7 +662,7 @@
             .btn-link {
               background: none;
               border: none;
-              color: #667eea;
+              color: var(--primary-color);
               text-decoration: underline;
               cursor: pointer;
               font-weight: 600;
@@ -670,7 +670,7 @@
               margin-left: 4px;
 
               &:hover {
-                color: #764ba2;
+                color: var(--primary-color);
               }
             }
           }
@@ -1226,7 +1226,7 @@
 
                         &.badge-buyer-score {
                           background: rgba(14, 165, 233, 0.12);
-                          color: #0284c7;
+                          color: var(--secondary-color);
                           border: 1px solid rgba(14, 165, 233, 0.25);
                         }
 
@@ -1606,7 +1606,7 @@
                   width: 100%;
 
                   a {
-                    color: #7A4F84;
+                    color: var(--primary-color);
                     text-decoration: underline;
                   }
                 }
@@ -1887,7 +1887,7 @@
   .modal-info-value {
     font-size: 15px;
     font-weight: 600;
-    color: var(--accent-purple, #7A4F84);
+    color: var(--accent-purple, var(--primary-color));
   }
 
   .modal-form {
@@ -1913,7 +1913,7 @@
 
     &:focus {
       outline: none;
-      border-color: var(--accent-purple, #7A4F84);
+      border-color: var(--accent-purple, var(--primary-color));
       box-shadow: 0 0 0 2px rgba(122, 79, 132, 0.2);
     }
 
@@ -1942,7 +1942,7 @@
     input[type="checkbox"] {
       width: 18px;
       height: 18px;
-      accent-color: var(--accent-purple, #7A4F84);
+      accent-color: var(--accent-purple, var(--primary-color));
     }
   }
 
@@ -2085,7 +2085,7 @@
 
   .select-winner-amount {
     font-weight: 700;
-    color: var(--accent-purple, #7A4F84);
+    color: var(--accent-purple, var(--primary-color));
     margin-left: auto;
   }
 

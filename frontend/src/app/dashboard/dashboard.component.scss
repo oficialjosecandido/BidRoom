@@ -104,7 +104,7 @@ $sidebar-collapsed-width: 72px;
   flex: 1;
 
   &:hover {
-    color: var(--accent-purple, #7A4F84);
+    color: var(--accent-purple, var(--primary-color));
   }
 }
 
@@ -142,7 +142,7 @@ $sidebar-collapsed-width: 72px;
   background: rgba(122, 79, 132, 0.1);
   border: 1px solid rgba(122, 79, 132, 0.2);
   border-radius: 10px;
-  color: var(--accent-purple, #7A4F84);
+  color: var(--accent-purple, var(--primary-color));
   cursor: pointer;
   transition: background 0.2s ease, border-color 0.2s ease;
 
@@ -187,7 +187,7 @@ $sidebar-collapsed-width: 72px;
 
   &.active {
     background: rgba(122, 79, 132, 0.1);
-    color: var(--accent-purple, #7A4F84);
+    color: var(--accent-purple, var(--primary-color));
     border-color: rgba(122, 79, 132, 0.2);
     font-weight: 600;
   }
@@ -226,7 +226,7 @@ $sidebar-collapsed-width: 72px;
     flex-shrink: 0;
 
     &.nav-badge--transactions {
-      background: var(--accent-purple, #7a4f84);
+      background: var(--accent-purple, var(--primary-color));
     }
   }
 }
