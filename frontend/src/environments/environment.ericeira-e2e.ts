@@ -5,6 +5,7 @@ export const environment = {
   enablePrivateRooms: false,
   enableBestOffers: true,
   apiUrl: 'https://bidroom-backend-dev.azurewebsites.net/api',
+  defaultApiBaseUrl: 'https://bidroom-backend-dev.azurewebsites.net/api',
   auctionDurations: [
     { label: '5 minutes', hours: 1 / 12 },
     { label: '1 hour', hours: 1 },
@@ -21,4 +22,25 @@ export const environment = {
   image: 'https://casa27.com/api/public/image.png',
   imageAlt: 'Casa 27 | E2E',
   primaryColor: '#1988c5',
+  shippingOptions: [
+    { label: 'Flat Rate', value: 'flat-rate' },
+    { label: 'Calculated', value: 'calculated' },
+    { label: 'Local Pickup', value: 'local-pickup' },
+    { label: 'Free', value: 'free' },
+  ],
+  handlingTimes: [
+    { label: '1 day', value: 1 },
+    { label: '2 days', value: 2 },
+    { label: '3 days', value: 3 },
+    { label: '5 days', value: 5 },
+    { label: '7 days', value: 7 },
+  ],
+  returnPolicies: [
+    { label: '30 days', value: '30-days' },
+    { label: '14 days', value: '14-days' },
+    { label: 'No Returns', value: 'no-returns' },
+    { label: 'Custom', value: 'custom' },
+  ],
+  bidroomFeeSellerRate: 0.005,
+  bidroomFeeBuyerRate: 0.005,
 };
