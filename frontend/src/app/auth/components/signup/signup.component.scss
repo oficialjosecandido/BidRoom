@@ -3,7 +3,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-color) 100%);
   padding: 20px;
 }
 
@@ -140,7 +140,7 @@
     .action-link {
       background: none;
       border: none;
-      color: #007bff;
+      color: var(--primary-color);
       cursor: pointer;
       font-size: 14px;
       font-weight: 500;
@@ -149,7 +149,7 @@
       margin: 0;
 
       &:hover {
-        color: #0056b3;
+        color: var(--primary-color);
       }
     }
 
@@ -204,7 +204,7 @@
 
         &:focus {
           outline: none;
-          border-color: #007bff;
+          border-color: var(--primary-color);
           box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
         }
 
@@ -264,7 +264,7 @@
 
       &:focus {
         outline: none;
-        border-color: #007bff;
+        border-color: var(--primary-color);
         box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
       }
 
@@ -300,7 +300,7 @@
         }
 
         .checkbox-text a {
-          color: #667eea;
+          color: var(--primary-color);
           text-decoration: none;
           font-weight: 500;
 
@@ -315,7 +315,7 @@
   .signup-btn {
     width: 100%;
     padding: 12px 24px;
-    background: #007bff;
+    background: var(--primary-color);
     color: white;
     border: none;
     border-radius: 8px;
@@ -326,7 +326,7 @@
     margin-bottom: 20px;
 
     &:hover:not(:disabled) {
-      background: #0056b3;
+      background: var(--primary-color);
     }
 
     &:disabled {
@@ -344,7 +344,7 @@
   button {
     background: none;
     border: none;
-    color: #007bff;
+    color: var(--primary-color);
     cursor: pointer;
     text-decoration: underline;
     font-size: 14px;
@@ -352,7 +352,7 @@
     margin: 0;
 
     &:hover {
-      color: #0056b3;
+      color: var(--primary-color);
     }
   }
 }

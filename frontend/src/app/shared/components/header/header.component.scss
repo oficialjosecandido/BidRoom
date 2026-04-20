@@ -82,8 +82,8 @@
     }
 
     &.open {
-      border-color: var(--accent-purple, #7A4F84);
-      color: var(--accent-purple, #7A4F84);
+      border-color: var(--accent-purple, var(--primary-color));
+      color: var(--accent-purple, var(--primary-color));
     }
 
     .menu-toggle-icon {

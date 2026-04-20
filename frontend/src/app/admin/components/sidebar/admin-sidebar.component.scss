@@ -56,7 +56,7 @@
         }
 
         &.active {
-          background: #007bff;
+          background: var(--primary-color);
           color: #ffffff;
 
           .menu-icon {

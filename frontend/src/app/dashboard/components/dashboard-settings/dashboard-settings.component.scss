@@ -67,7 +67,7 @@
   flex: 1;
 }
 
-.score-value { font-weight: 600; color: var(--accent-purple, #7A4F84); }
+.score-value { font-weight: 600; color: var(--accent-purple, var(--primary-color)); }
 .review-count { font-size: 12px; color: #aaa; margin-left: 6px; font-weight: 400; }
 
 .status-badge {
@@ -107,19 +107,19 @@
 
   .lang-flag { font-size: 22px; }
   .lang-name { font-size: 14px; font-weight: 500; color: #444; flex: 1; }
-  .lang-check { font-size: 14px; color: var(--accent-purple, #7A4F84); font-weight: 700; }
+  .lang-check { font-size: 14px; color: var(--accent-purple, var(--primary-color)); font-weight: 700; }
 
   &:hover { border-color: rgba(122,79,132,0.4); background: rgba(122,79,132,0.03); }
 
   &.selected {
-    border-color: var(--accent-purple, #7A4F84);
+    border-color: var(--accent-purple, var(--primary-color));
     background: rgba(122,79,132,0.06);
   }
 }
 
 .save-btn {
   padding: 10px 24px;
-  background: var(--accent-purple, #7A4F84);
+  background: var(--accent-purple, var(--primary-color));
   color: white;
   border: none;
   border-radius: 8px;
@@ -134,7 +134,7 @@
 
 .action-btn {
   padding: 10px 24px;
-  background: var(--accent-purple, #7A4F84);
+  background: var(--accent-purple, var(--primary-color));
   color: white;
   border: none;
   border-radius: 8px;
@@ -252,7 +252,7 @@
     transition: border-color 0.15s;
     background: white;
 
-    &:focus { border-color: #7A4F84; box-shadow: 0 0 0 3px rgba(122,79,132,0.08); }
+    &:focus { border-color: var(--primary-color); box-shadow: 0 0 0 3px rgba(122,79,132,0.08); }
   }
 }
 
@@ -283,7 +283,7 @@
   line-height: 1.5;
 
   input[type="checkbox"] { margin-top: 2px; flex-shrink: 0; width: 16px; height: 16px; cursor: pointer; }
-  a { color: #7A4F84; text-decoration: underline; }
+  a { color: var(--primary-color); text-decoration: underline; }
 }
 
 .form-actions {
