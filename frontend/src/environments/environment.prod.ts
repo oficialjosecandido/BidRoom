@@ -9,10 +9,22 @@ export const environment = {
   url: 'https://house27.com',
   image: 'https://house27.com/api/public/image.png',
   imageAlt: 'House 27',
-  /** When APP_CONFIG.API_URL is not injected — set to your production API base */
   defaultApiBaseUrl: 'https://bidroom-backend-prod-e9eghtc0aha4e3dw.uksouth-01.azurewebsites.net/api',
+  firebase: {
+    apiKey: 'AIzaSyBb3nk50nwBME8dN5pNhu2W1B7-m35qqHw',
+    authDomain: 'bidroom-47cb5.firebaseapp.com',
+    projectId: 'bidroom-47cb5',
+    storageBucket: 'bidroom-47cb5.firebasestorage.app',
+    messagingSenderId: '16761692806',
+    appId: '1:16761692806:web:b1e10f2a57a040f8556707',
+    measurementId: 'G-4FDFR1ZSRV',
+  },
+  /** Seller fee: 3.5% for auctions & best-offer, 6% for private-room auctions */
+  bidroomFeeSellerRate: 0.035,
+  bidroomFeePrivateRoomRate: 0.06,
+  /** Buyer pays Stripe processing fees only — no additional BidRoom buyer fee */
+  bidroomFeeBuyerRate: 0,
   auctionDurations: [
-    { label: '5 minutes', hours: 1 / 12 },
     { label: '1 hour',   hours: 1  },
     { label: '7 hours',  hours: 7  },
     { label: '24 hours', hours: 24 },
@@ -41,27 +53,34 @@ export const environment = {
   snapchatImageUrl: 'https://bidroom-backend-prod-e9eghtc0aha4e3dw.uksouth-01.azurewebsites.net/api/public/snapchat-image.png',
   vimeoImageUrl: 'https://bidroom-backend-prod-e9eghtc0aha4e3dw.uksouth-01.azurewebsites.net/api/public/vimeo-image.png',
   shippingOptions: [
-    { label: 'Flat Rate', value: 'flat-rate' },
-    { label: 'Calculated', value: 'calculated' },
-    { label: 'Local Pickup', value: 'local-pickup' },
-    { label: 'Free', value: 'free' },
+    { label: 'Flat Rate',      value: 'flat-rate'    },
+    { label: 'Calculated',     value: 'calculated'   },
+    { label: 'Meet in Person', value: 'local-pickup' },
+    { label: 'Free',           value: 'free'         },
   ],
   handlingTimes: [
-    { label: '1 day', value: 1 },
+    { label: '1 day',  value: 1 },
     { label: '2 days', value: 2 },
     { label: '3 days', value: 3 },
     { label: '5 days', value: 5 },
     { label: '7 days', value: 7 },
   ],
   returnPolicies: [
-    { label: '30 days', value: '30-days' },
-    { label: '14 days', value: '14-days' },
+    { label: '30 days',    value: '30-days'    },
+    { label: '14 days',    value: '14-days'    },
     { label: 'No Returns', value: 'no-returns' },
-    { label: 'Custom', value: 'custom' },
+    { label: 'Custom',     value: 'custom'     },
   ],
-  /** Seller fee: 3.5% for auctions & best-offer, 6% for private-room auctions */
-  bidroomFeeSellerRate: 0.035,
-  bidroomFeePrivateRoomRate: 0.06,
-  /** Buyer pays Stripe processing fees only — no additional BidRoom buyer fee */
-  bidroomFeeBuyerRate: 0,
+  featureFlags: {
+    auctions:        true,
+    privateRooms:    true,
+    bestOffers:      true,
+    reviews:         true,
+    membershipTiers: false,
+  },
+  theme: {
+    primaryColor:    '#002366',
+    secondaryColor:  '#00D4FF',
+    backgroundColor: '#F8FAFC',
+  },
 };

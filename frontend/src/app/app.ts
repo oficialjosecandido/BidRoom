@@ -13,7 +13,9 @@ export class App implements OnInit {
   protected readonly title = signal('frontend');
   private translate = inject(TranslateService);
 
-  @HostBinding('style.--primary-color') readonly primaryColor = environment.primaryColor;
+  @HostBinding('style.--primary-color')    readonly primaryColor    = environment.theme.primaryColor;
+  @HostBinding('style.--secondary-color')  readonly secondaryColor  = environment.theme.secondaryColor;
+  @HostBinding('style.--background-color') readonly backgroundColor = environment.theme.backgroundColor;
 
   ngOnInit(): void {
     const saved = localStorage.getItem('lang') || 'en';
