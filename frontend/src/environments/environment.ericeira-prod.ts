@@ -20,7 +20,9 @@ export const environment = {
   url: 'https://casa27.com',
   image: 'https://casa27.com/api/public/image.png',
   imageAlt: 'Casa 27',
-  primaryColor: '#1988c5',
+  primaryColor: '#002366',
+  secondaryColor: '#00D4FF',
+  backgroundColor: '#F8FAFC',
   shippingOptions: [
     { label: 'Flat Rate', value: 'flat-rate' },
     { label: 'Calculated', value: 'calculated' },

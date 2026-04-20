@@ -17,6 +17,8 @@ export const environment = {
     { label: '24 hours',  hours: 24     },
   ],
   primaryColor: '#8b5a96',
+  secondaryColor: '#00D4FF',
+  backgroundColor: '#F8FAFC',
   logoUrl: 'https://bidroom-backend-dev.azurewebsites.net/api/public/logo.png',
   faviconUrl: 'https://bidroom-backend-dev.azurewebsites.net/api/public/favicon.ico',
   appleTouchIconUrl: 'https://bidroom-backend-dev.azurewebsites.net/api/public/apple-touch-icon.png',
