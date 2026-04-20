@@ -1,35 +1,32 @@
 <div class="my-auctions-bidder-container">
   <div class="page-header">
-    <h1>My Auctions</h1>
-    <p class="subtitle">Auctions you've bid on. Track your bids and current prices.</p>
+    <h1>{{ 'dashboard.myAuctionsBidder.title' | translate }}</h1>
+    <p class="subtitle">{{ 'dashboard.myAuctionsBidder.subtitle' | translate }}</p>
   </div>
 
-  <!-- Loading State -->
   @if (isLoading) {
 <div class="loading-state">
     <div class="spinner"></div>
-    <p>Loading your auctions...</p>
+    <p>{{ 'dashboard.myAuctionsBidder.loading' | translate }}</p>
   </div>
 }
 
-  <!-- Error State -->
   @if (error && !isLoading) {
 <div class="error-state">
     <div class="error-icon">⚠️</div>
     <p class="error-message">{{ error }}</p>
-    <button type="button" class="retry-btn" (click)="loadMyAuctions()">Try Again</button>
+    <button type="button" class="retry-btn" (click)="loadMyAuctions()">{{ 'dashboard.common.tryAgain' | translate }}</button>
   </div>
 }
 
-  <!-- Listings List -->
   @if (!isLoading && !error) {
 <div class="listings-list">
     @if (listings.length === 0) {
 <div class="empty-state">
       <div class="empty-icon">🔨</div>
-      <h3>No auctions yet</h3>
-      <p>You haven't placed any bids yet. Browse listings and place your first bid!</p>
-      <a routerLink="/listing/list" class="browse-btn">Browse auctions</a>
+      <h3>{{ 'dashboard.myAuctionsBidder.emptyTitle' | translate }}</h3>
+      <p>{{ 'dashboard.myAuctionsBidder.emptyDesc' | translate }}</p>
+      <a routerLink="/listing/list" class="browse-btn">{{ 'dashboard.myAuctionsBidder.browseAuctions' | translate }}</a>
     </div>
 }
 
@@ -45,9 +42,9 @@
           </span>
         </div>
         <div class="auction-price">
-          <span class="price-label">{{ listing.auctionFormat === 'best-offer' ? 'Highest Offer' : 'Current Price' }}</span>
+          <span class="price-label">{{ listing.auctionFormat === 'best-offer' ? ('dashboard.myAuctionsBidder.highestOffer' | translate) : ('dashboard.myAuctionsBidder.currentPrice' | translate) }}</span>
           @if (listing.auctionFormat === 'best-offer' && (listing.currentPrice == null || listing.currentPrice === 0)) {
-          <span class="price-value">No offers yet</span>
+          <span class="price-value">{{ 'dashboard.myAuctionsBidder.noOffersYet' | translate }}</span>
           } @else {
           <span class="price-value">${{ listing.currentPrice | number:'1.2-2' }}</span>
           }
@@ -56,15 +53,15 @@
 
       <div class="auction-stats">
         <div class="stat-item">
-          <span class="stat-label">My highest bid</span>
+          <span class="stat-label">{{ 'dashboard.myAuctionsBidder.myHighestBid' | translate }}</span>
           <span class="stat-value">{{ listing.myHighestBid != null ? formatPrice(listing.myHighestBid) : '—' }}</span>
         </div>
         <div class="stat-item">
-          <span class="stat-label">Total bids</span>
+          <span class="stat-label">{{ 'dashboard.myAuctionsBidder.totalBids' | translate }}</span>
           <span class="stat-value">{{ listing.bidCount }}</span>
         </div>
         <div class="stat-item">
-          <span class="stat-label">Ends</span>
+          <span class="stat-label">{{ 'dashboard.myAuctionsBidder.ends' | translate }}</span>
           <span class="stat-value">{{ formatDate(listing.endDate) }}</span>
         </div>
       </div>
@@ -78,16 +75,16 @@
             [disabled]="preferenceUpdating[listing._id]"
             (change)="onNotifyWhenOutbidChange(listing, $any($event.target).checked)"
           />
-          <span>Email me when I'm outbid</span>
+          <span>{{ 'dashboard.myAuctionsBidder.emailOutbid' | translate }}</span>
         </label>
         @if (preferenceUpdating[listing._id]) {
-<span class="notify-updating">Updating…</span>
+<span class="notify-updating">{{ 'dashboard.myBets.updating' | translate }}</span>
 }
       </div>
 }
 
       <div class="auction-actions">
-        <a [routerLink]="['/listing', listing.slug]" class="view-btn">View Listing</a>
+        <a [routerLink]="['/listing', listing.slug]" class="view-btn">{{ 'dashboard.myAuctionsBidder.viewListing' | translate }}</a>
       </div>
     </div>
 }

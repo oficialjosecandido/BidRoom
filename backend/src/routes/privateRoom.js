@@ -13,6 +13,14 @@ const { getReviewScoresForUsers } = require('../services/reviewService');
 const router = express.Router();
 const ACCEPTANCE_WINDOW_MS = 15 * 60 * 1000; // 15 minutes to accept; after that the room starts automatically
 
+/** Viewers join `private-room:${id}`; bidding clients also join `listing:${id}`. Emit to both so live updates reach everyone. */
+function emitToListingAndPrivateRoom(io, listingId, event, payload) {
+  if (!io) return;
+  const id = listingId.toString();
+  io.to(`listing:${id}`).emit(event, payload);
+  io.to(`private-room:${id}`).emit(event, payload);
+}
+
 // Get bidders for a listing (for seller to select Platinum Bidders)
 router.get('/listings/:id/bidders', authenticateToken, async (req, res) => {
   try {
@@ -172,7 +180,7 @@ router.post('/listings/:id/platinum-bidders', authenticateToken, requireActiveAc
       if (new Date() > new Date(listing.winnerSelectionDeadline)) {
         return res.status(400).json({
           error: 'Deadline passed',
-          message: 'The 1 hour window to create the private room has passed. You can no longer create a private room for this listing.'
+          message: 'The 15-minute window to create the private room has passed. You can no longer create a private room for this listing.'
         });
       }
     }
@@ -244,7 +252,7 @@ router.post('/listings/:id/platinum-bidders', authenticateToken, requireActiveAc
       .populate('platinumBidderInvitations.bidder', 'email firstName lastName');
     if (!updatedListing) return res.status(500).json({ error: 'Listing not found after update' });
 
-    await sendPlatinumBidderInvitations(updatedListing);
+    await sendPlatinumBidderInvitations(updatedListing, req.headers['origin'] || null);
     await sendPrivateRoomNotInvitedToBidders(updatedListing, validBidderIds);
 
     const io = req.app.get('io');
@@ -308,6 +316,7 @@ router.post('/listings/:id/start-now', authenticateToken, async (req, res) => {
 
     await Listing.findByIdAndUpdate(listingId, {
       $set: {
+        status: 'active',
         privateRoomStatus: 'active',
         privateRoomEndDate: roomEndDate,
         privateRoomLastBidTime: now,
@@ -316,16 +325,15 @@ router.post('/listings/:id/start-now', authenticateToken, async (req, res) => {
     }, { runValidators: false });
 
     const io = req.app.get('io');
-    if (io) {
-      io.to(`listing:${listingId}`).emit('listing-update', {
-        listingId: listingId.toString(),
-        status: 'active',
-        privateRoomStatus: 'active',
-        privateRoomEndDate: roomEndDate.toISOString(),
-        currentPrice: listing.currentPrice,
-        bidCount: listing.bidCount || 0
-      });
-    }
+    emitToListingAndPrivateRoom(io, listingId, 'listing-update', {
+      listingId: listingId.toString(),
+      status: 'active',
+      privateRoomStatus: 'active',
+      privateRoomEndDate: roomEndDate.toISOString(),
+      endDate: roomEndDate.toISOString(),
+      currentPrice: listing.currentPrice,
+      bidCount: listing.bidCount || 0
+    });
 
     const updated = await Listing.findById(listingId).populate('seller', 'firstName lastName email');
     res.json({
@@ -393,6 +401,84 @@ router.post('/listings/:id/seller-leave', authenticateToken, async (req, res) =>
   }
 });
 
+// Accept private room invitation in-page (authenticated user; no token required)
+router.post('/listings/:id/accept-invitation', authenticateToken, async (req, res) => {
+  try {
+    const listingId = req.params.id;
+    const listing = await Listing.findById(listingId)
+      .populate('seller', '_id')
+      .populate('platinumBidderInvitations.bidder', '_id firstName lastName');
+    if (!listing) {
+      return res.status(404).json({ error: 'Listing not found' });
+    }
+    if (listing.privateRoomStatus === 'ended') {
+      return res.status(400).json({ error: 'Room ended', message: 'The private room has already ended.' });
+    }
+
+    const user = await User.findOne({ uid: req.user.uid });
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    const invIndex = (listing.platinumBidderInvitations || []).findIndex(
+      inv => inv.bidder?._id?.toString() === user._id.toString()
+    );
+    if (invIndex === -1) {
+      return res.status(403).json({ error: 'Not invited', message: 'You do not have an invitation to this private room.' });
+    }
+    const invitation = listing.platinumBidderInvitations[invIndex];
+    if (invitation.status !== 'pending') {
+      return res.status(400).json({ error: 'Already processed', message: 'Your invitation has already been accepted or declined.' });
+    }
+    const now = new Date();
+    const deadline = listing.platinumBidderAcceptanceDeadline ? new Date(listing.platinumBidderAcceptanceDeadline) : null;
+    if (deadline && now >= deadline) {
+      return res.status(400).json({ error: 'Invitation expired', message: 'The 15-minute acceptance window has closed.' });
+    }
+
+    listing.platinumBidderInvitations[invIndex].status = 'accepted';
+    listing.platinumBidderInvitations[invIndex].acceptedAt = now;
+    await listing.save();
+
+    const bidder = invitation.bidder;
+    const bidderName = `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email;
+    const sellerUserId = listing.seller?._id?.toString?.() || listing.seller?.toString?.();
+    const io = req.app.get('io');
+
+    // If all invitations are now accepted, compress the acceptance deadline to 1 minute
+    const allInvitations = listing.platinumBidderInvitations || [];
+    const pendingAfter = allInvitations.filter(inv => inv.status === 'pending').length;
+    if (pendingAfter === 0 && allInvitations.length > 0) {
+      const acceleratedDeadline = new Date(Date.now() + 60 * 1000);
+      await Listing.findByIdAndUpdate(listingId, { $set: { platinumBidderAcceptanceDeadline: acceleratedDeadline } }, { runValidators: false });
+      emitToListingAndPrivateRoom(io, listingId, 'listing-update', {
+        listingId: listingId.toString(),
+        platinumBidderAcceptanceDeadline: acceleratedDeadline.toISOString(),
+        allAccepted: true
+      });
+    }
+
+    if (sellerUserId) {
+      notifyPrivateRoomAccepted({
+        listingSlug: listing.slug || null,
+        listingTitle: listing.title || 'your listing',
+        bidderName,
+        sellerUserId
+      }).catch(err => console.error('Failed to create private room accepted notification:', err));
+      if (io) emitNewNotificationToUser(io, sellerUserId).catch(() => {});
+    }
+    emitToListingAndPrivateRoom(io, listingId, 'invitation-accepted', {
+      listingId: listingId.toString(),
+      bidderId: bidder?._id?.toString?.() || user._id.toString(),
+      bidderName,
+      bidderFirstName: user.firstName || '',
+      bidderLastName: user.lastName || ''
+    });
+    return res.json({ success: true, message: 'Invitation accepted. You can now place bids in the private room.', listingId });
+  } catch (error) {
+    console.error('Error accepting invitation in-page:', error);
+    res.status(500).json({ error: 'Failed to accept invitation', message: error.message });
+  }
+});
+
 // Accept private room invitation (link in email; no auth required)
 router.post('/invitation/accept', async (req, res) => {
   try {
@@ -432,6 +518,25 @@ router.post('/invitation/accept', async (req, res) => {
     const sellerUserId = listing.seller?._id?.toString?.() || listing.seller?.toString?.();
     const bidder = invitation.bidder;
     const bidderName = bidder ? `${bidder.firstName || ''} ${bidder.lastName || ''}`.trim() : 'A bidder';
+    const io = req.app.get('io');
+
+    // If all invitations are now accepted, compress the acceptance deadline to 1 minute
+    const allInvitations = listing.platinumBidderInvitations || [];
+    const pendingAfter = allInvitations.filter(inv => inv.status === 'pending').length;
+    if (pendingAfter === 0 && allInvitations.length > 0) {
+      const acceleratedDeadline = new Date(Date.now() + 60 * 1000);
+      await Listing.findByIdAndUpdate(
+        listingId,
+        { $set: { platinumBidderAcceptanceDeadline: acceleratedDeadline } },
+        { runValidators: false }
+      );
+      emitToListingAndPrivateRoom(io, listingId, 'listing-update', {
+        listingId: listingId.toString(),
+        platinumBidderAcceptanceDeadline: acceleratedDeadline.toISOString(),
+        allAccepted: true
+      });
+    }
+
     if (sellerUserId) {
       notifyPrivateRoomAccepted({
         listingSlug: listing.slug || null,
@@ -439,9 +544,16 @@ router.post('/invitation/accept', async (req, res) => {
         bidderName,
         sellerUserId
       }).catch(err => console.error('Failed to create private room accepted notification:', err));
-      const io = req.app.get('io');
       if (io) emitNewNotificationToUser(io, sellerUserId).catch(() => {});
     }
+    // Emit to everyone in the private room so the poker table updates live
+    emitToListingAndPrivateRoom(io, listingId, 'invitation-accepted', {
+      listingId: listingId.toString(),
+      bidderId: bidder?._id?.toString?.() || null,
+      bidderName,
+      bidderFirstName: bidder?.firstName || '',
+      bidderLastName: bidder?.lastName || ''
+    });
     return res.json({ success: true, message: 'Invitation accepted. You can now place bids in the private room.', listingId });
   } catch (error) {
     console.error('Error accepting invitation:', error);
@@ -475,6 +587,13 @@ router.post('/invitation/decline', async (req, res) => {
     listing.platinumBidderInvitations[invIndex].status = 'declined';
     await listing.save();
 
+    const io = req.app.get('io');
+    const declinedBidderId = invitation.bidder?._id?.toString?.() || invitation.bidder?.toString?.() || null;
+    emitToListingAndPrivateRoom(io, listingId, 'invitation-declined', {
+      listingId: listingId.toString(),
+      bidderId: declinedBidderId
+    });
+
     const sellerUserId = listing.seller?._id?.toString?.() || listing.seller?.toString?.();
     const bidder = invitation.bidder;
     const bidderName = bidder ? `${bidder.firstName || ''} ${bidder.lastName || ''}`.trim() : 'A bidder';
@@ -485,7 +604,6 @@ router.post('/invitation/decline', async (req, res) => {
         bidderName,
         sellerUserId
       }).catch(err => console.error('Failed to create private room declined notification:', err));
-      const io = req.app.get('io');
       if (io) emitNewNotificationToUser(io, sellerUserId).catch(() => {});
     }
     return res.json({ success: true, message: 'Invitation declined.', listingId });

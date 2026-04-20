@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+
+# Disallow admin area
+Disallow: /nexus/
+
+# Disallow dashboard (private pages)
+Disallow: /dashboard/
+
+Sitemap: https://bidroom.com/sitemap.xml

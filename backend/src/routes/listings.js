@@ -4,12 +4,16 @@ const User = require('../models/User');
 const Bid = require('../models/Bid');
 const Offer = require('../models/Offer');
 const Watchlist = require('../models/Watchlist');
-const { authenticateToken, optionalAuth, requireActiveAccount } = require('../middleware/auth');
+const { authenticateToken, optionalAuth, requireActiveAccount, requireNoDisputeRestriction } = require('../middleware/auth');
 const { handleWinnerSelection, handleAuctionEnd } = require('../services/auctionNotificationService');
 const { getReviewScoresForUser } = require('../services/reviewService');
 const { logAuctionCreated } = require('../services/bestOfferLogger');
 
 const router = express.Router();
+
+function escapeRegex(str) {
+  return String(str).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
 
 // GET /api/listings - Get all active listings with filtering and sorting
 router.get('/', async (req, res) => {
@@ -26,7 +30,8 @@ router.get('/', async (req, res) => {
       search,
       condition,
       shipping,
-      location,
+      locationCity,
+      locationCountry,
       limit = 20,
       skip,
       page
@@ -88,31 +93,39 @@ router.get('/', async (req, res) => {
     }
 
     if (shipping) {
-      const shippingOptionMap = {
-        'worldwide': ['flat-rate', 'calculated', 'free'],
-        'regional': ['calculated'],
+      const directOptions = new Set(['flat-rate', 'calculated', 'local-pickup', 'free']);
+      const legacyShippingMap = {
+        worldwide: ['flat-rate', 'calculated', 'free'],
+        regional: ['calculated'],
         'local-pickup': ['local-pickup']
       };
-      const selectedShipping = shipping.split(',');
-      const shippingOptions = [...new Set(selectedShipping.flatMap(s => shippingOptionMap[s.trim()] || []))];
+      const selectedShipping = shipping.split(',').map(s => s.trim()).filter(Boolean);
+      const shippingOptions = [...new Set(selectedShipping.flatMap(s =>
+        (directOptions.has(s) ? [s] : legacyShippingMap[s]) || []
+      ))];
       if (shippingOptions.length > 0) {
         query.shippingOption = { $in: shippingOptions };
       }
     }
 
-    if (location) {
-      const EUROPE = ['AL','AT','BA','BE','BG','BY','CH','CY','CZ','DE','DK','EE','ES','FI','FR','GB','GR','HR','HU','IE','IS','IT','LT','LU','LV','MD','ME','MK','MT','NL','NO','PL','PT','RO','RS','SE','SI','SK','UA','XK'];
-      const NORTH_AMERICA = ['CA','MX','US'];
-      const ASIA = ['BD','CN','HK','ID','IN','JP','KH','KR','LA','LK','MM','MY','NP','PH','PK','SG','TH','TW','VN'];
-      if (location === 'europe') {
-        query.shippingOriginCountry = { $in: EUROPE };
-      } else if (location === 'north-america') {
-        query.shippingOriginCountry = { $in: NORTH_AMERICA };
-      } else if (location === 'asia') {
-        query.shippingOriginCountry = { $in: ASIA };
-      } else if (location === 'other') {
-        query.shippingOriginCountry = { $nin: [...EUROPE, ...NORTH_AMERICA, ...ASIA] };
+    const locationClauses = [];
+    if (locationCity && String(locationCity).trim()) {
+      const esc = escapeRegex(String(locationCity).trim());
+      locationClauses.push({
+        $or: [
+          { locationCity: { $regex: esc, $options: 'i' } },
+          { location: { $regex: esc, $options: 'i' } }
+        ]
+      });
+    }
+    if (locationCountry && String(locationCountry).trim()) {
+      const code = String(locationCountry).trim().toUpperCase();
+      if (/^[A-Z]{2}$/.test(code)) {
+        locationClauses.push({ locationCountry: code });
       }
+    }
+    if (locationClauses.length) {
+      query.$and = [...(query.$and || []), ...locationClauses];
     }
 
     // Build sort object
@@ -133,11 +146,14 @@ router.get('/', async (req, res) => {
       case 'bids':
         sortObj = { bidCount: -1 };
         break;
+      case 'recent-end':
+        sortObj = { endDate: -1 }; // Most recently ended first (closed auctions)
+        break;
       default:
         sortObj = { endDate: 1 };
     }
 
-    // For featured listings, prioritize them
+    // For featured listings, prioritize them (live listings only)
     if (sort === 'deadline') {
       sortObj = { isFeatured: -1, endDate: 1 };
     }
@@ -459,12 +475,12 @@ router.get('/:id', optionalAuth, async (req, res) => {
     if (isObjectId) {
       listing = await Listing.findById(req.params.id)
         .populate('seller', 'firstName lastName email')
-        .populate('platinumBidderInvitations.bidder', '_id')
+        .populate('platinumBidderInvitations.bidder', '_id firstName lastName')
         .lean();
     } else {
       listing = await Listing.findOne({ slug: req.params.id })
         .populate('seller', 'firstName lastName email')
-        .populate('platinumBidderInvitations.bidder', '_id')
+        .populate('platinumBidderInvitations.bidder', '_id firstName lastName')
         .lean();
     }
 
@@ -486,7 +502,7 @@ router.get('/:id', optionalAuth, async (req, res) => {
         await handleAuctionEnd(listing._id, null);
         listing = await Listing.findOne({ _id: listing._id })
           .populate('seller', 'firstName lastName email')
-          .populate('platinumBidderInvitations.bidder', '_id')
+          .populate('platinumBidderInvitations.bidder', '_id firstName lastName')
           .lean();
       } catch (err) {
         console.error('Lazy finalize auction on fetch:', err.message);
@@ -499,6 +515,22 @@ router.get('/:id', optionalAuth, async (req, res) => {
       timeRemaining,
       endingSoon: timeRemaining.ended ? false : (timeRemaining.days === 0 && timeRemaining.hours <= 24)
     };
+
+    // Include platinum bidder invitation status (name + acceptance) for the poker table view
+    if (listing.platinumBidderInvitations && listing.platinumBidderInvitations.length > 0) {
+      response.platinumBidderStatus = listing.platinumBidderInvitations
+        .filter(inv => inv.bidder)
+        .map(inv => ({
+          bidder: {
+            _id: inv.bidder._id,
+            firstName: inv.bidder.firstName || '',
+            lastName: inv.bidder.lastName || ''
+          },
+          status: inv.status,
+          invitedAt: inv.invitedAt,
+          acceptedAt: inv.acceptedAt || null
+        }));
+    }
 
     // When authenticated, include platinum bidder status for current user (replaces check-platinum endpoint)
     if (req.isAuthenticated && req.user) {
@@ -517,15 +549,14 @@ router.get('/:id', optionalAuth, async (req, res) => {
           const invitation = invitations.find(
             inv => inv.bidder && inv.bidder._id.toString() === user._id.toString()
           );
-          if (!invitation) {
+          if (invitation?.status === 'accepted') {
             isPlatinumBidder = true;
-          } else if (invitation.status === 'accepted') {
-            isPlatinumBidder = true;
-          } else if (invitation.status === 'declined') {
+          } else if (!invitation || invitation.status === 'declined') {
             isPlatinumBidder = false;
           } else if (listing.platinumBidderAcceptanceDeadline && new Date() > new Date(listing.platinumBidderAcceptanceDeadline)) {
             isPlatinumBidder = false;
           } else {
+            // invitation exists and is pending — show accept prompt
             invitationPending = true;
           }
         }
@@ -544,7 +575,7 @@ router.get('/:id', optionalAuth, async (req, res) => {
 });
 
 // POST /api/listings - Create a new listing (requires authentication)
-router.post('/', authenticateToken, requireActiveAccount, async (req, res) => {
+router.post('/', authenticateToken, requireActiveAccount, requireNoDisputeRestriction, async (req, res) => {
   try {
     // Find or create user in database from Firebase UID
     let user = await User.findOne({ uid: req.user.uid });
@@ -588,13 +619,14 @@ router.post('/', authenticateToken, requireActiveAccount, async (req, res) => {
       allowPrivateRoom,
       commissionRate,
       location,
+      locationCity,
+      locationCountry,
       shippingCost,
       shippingOption,
       packageSize,
       shippingOriginPostalCode,
       shippingOriginCity,
       shippingOriginCountry,
-      handlingTime,
       returnPolicy,
       specifications,
       images = []
@@ -616,14 +648,28 @@ router.post('/', authenticateToken, requireActiveAccount, async (req, res) => {
     if (!condition) {
       return res.status(400).json({ error: 'Item condition is required' });
     }
-    if (!duration) {
+    if (duration === undefined || duration === null || duration === '') {
       return res.status(400).json({ error: 'Listing duration is required' });
+    }
+    // Normalize duration: frontend may send hours (number) or label (string)
+    const validSlots = ['5 minutes', '1 hour', '2 hours', '7 hours', '24 hours', '3 days', '7 days'];
+    let durationSlot = duration;
+    if (typeof duration === 'number') {
+      // Map legacy hours to slot: 5min≈0.083, 1h=1, 2h=2, 7h=7, 24h=24, 3d=72, 7d=168
+      const h = duration;
+      if (h <= 0.1) durationSlot = '5 minutes';
+      else if (h <= 1.5) durationSlot = '1 hour';
+      else if (h <= 4) durationSlot = '2 hours';
+      else if (h <= 15) durationSlot = '7 hours';
+      else if (h <= 48) durationSlot = '24 hours';
+      else if (h <= 120) durationSlot = '3 days';
+      else durationSlot = '7 days';
+    }
+    if (!validSlots.includes(durationSlot)) {
+      return res.status(400).json({ error: 'Invalid duration. Must be one of: ' + validSlots.join(', ') });
     }
     if (!shippingOption) {
       return res.status(400).json({ error: 'Shipping option is required' });
-    }
-    if (!handlingTime) {
-      return res.status(400).json({ error: 'Handling time is required' });
     }
     if (!returnPolicy) {
       return res.status(400).json({ error: 'Return policy is required' });
@@ -671,7 +717,7 @@ router.post('/', authenticateToken, requireActiveAccount, async (req, res) => {
       subCategory: subCategory.trim(),
       condition,
       auctionFormat: (listingFormat === 'best-offer') ? 'best-offer' : 'highest-bid',
-      durationSlot: duration,
+      durationSlot,
       startingPrice: isAuction ? parseFloat(startingPrice) : 0,
       currentPrice: isAuction ? parseFloat(startingPrice) : 0,
       reservePrice: isAuction
@@ -682,13 +728,18 @@ router.post('/', authenticateToken, requireActiveAccount, async (req, res) => {
       allowPrivateRoom: allowPrivateRoom === true || allowPrivateRoom === 'true',
       commissionRate: commissionRate ? parseFloat(commissionRate) / 100 : undefined, // Convert percentage to decimal
       location: location || undefined,
+      locationCity: locationCity && String(locationCity).trim() ? String(locationCity).trim() : undefined,
+      locationCountry:
+        locationCountry && /^[A-Za-z]{2}$/.test(String(locationCountry).trim())
+          ? String(locationCountry).trim().toUpperCase()
+          : undefined,
       shippingCost: shippingCost ? parseFloat(shippingCost) : 0,
       shippingOption,
       packageSize: shippingOption === 'calculated' ? (packageSize || null) : null,
       shippingOriginPostalCode: shippingOption === 'calculated' ? (shippingOriginPostalCode || null) : null,
       shippingOriginCity: shippingOption === 'calculated' ? (shippingOriginCity || null) : null,
       shippingOriginCountry: shippingOption === 'calculated' ? (shippingOriginCountry || 'US') : null,
-      handlingTime: parseInt(handlingTime),
+      handlingTime: 5,
       returnPolicy,
       specifications: specifications || [],
       images: Array.isArray(images) && images.length > 0 ? images : ['https://via.placeholder.com/400x300?text=No+Image'], // Temporary placeholder until image upload is implemented
@@ -699,12 +750,14 @@ router.post('/', authenticateToken, requireActiveAccount, async (req, res) => {
     // Calculate end date based on duration slot
     const durations = {
       '5 minutes': 5 * 60 * 1000,
+      '1 hour': 1 * 60 * 60 * 1000,
       '2 hours': 2 * 60 * 60 * 1000,
+      '7 hours': 7 * 60 * 60 * 1000,
       '24 hours': 24 * 60 * 60 * 1000,
       '3 days': 3 * 24 * 60 * 60 * 1000,
       '7 days': 7 * 24 * 60 * 60 * 1000
     };
-    const durationMs = durations[duration] || durations['7 days'];
+    const durationMs = durations[durationSlot] || durations['7 days'];
     listingData.startDate = new Date();
     listingData.endDate = new Date(listingData.startDate.getTime() + durationMs);
 
@@ -773,7 +826,7 @@ router.post('/', authenticateToken, requireActiveAccount, async (req, res) => {
 });
 
 // POST /api/listings/:id/buy-now - Buy now (instantly closes auction)
-router.post('/:id/buy-now', authenticateToken, requireActiveAccount, async (req, res) => {
+router.post('/:id/buy-now', authenticateToken, requireActiveAccount, requireNoDisputeRestriction, async (req, res) => {
   try {
     // Find or create user
     let user = await User.findOne({ uid: req.user.uid });
@@ -1127,6 +1180,15 @@ router.get('/seller/my-listings', authenticateToken, async (req, res) => {
       watchlistCounts.map((row) => [row._id.toString(), row.count])
     );
 
+    // Highest offer per best-offer listing (regardless of acceptance status)
+    const offerAgg = await Offer.aggregate([
+      { $match: { listing: { $in: listingIds }, status: { $in: ['pending', 'accepted'] } } },
+      { $group: { _id: '$listing', highestOffer: { $max: '$amount' } } }
+    ]);
+    const highestOfferByListing = Object.fromEntries(
+      offerAgg.map((row) => [row._id.toString(), row.highestOffer])
+    );
+
     // Enhance listings with platinum bidder invitation status and watchlist count
     const enhancedListings = listings.map((listing) => {
       const listingObj = listing.toObject ? listing.toObject() : listing;
@@ -1158,7 +1220,8 @@ router.get('/seller/my-listings', authenticateToken, async (req, res) => {
       return {
         ...listingObj,
         platinumBidderStatus,
-        watchlistCount: watchlistByListing[listing._id.toString()] ?? 0
+        watchlistCount: watchlistByListing[listing._id.toString()] ?? 0,
+        highestOfferAmount: highestOfferByListing[listing._id.toString()] ?? null
       };
     });
 

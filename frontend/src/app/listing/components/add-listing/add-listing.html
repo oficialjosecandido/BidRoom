@@ -7,508 +7,383 @@
       <p>{{ 'addListing.pageSubtitle' | translate }}</p>
     </div>
 
-    <!-- Stepper -->
-    <div class="stepper">
-      <div class="stepper-steps">
-        <div 
-          class="step-indicator" 
-          [class.active]="isStep(1)" 
-          [class.completed]="currentStep > 1"
-          (click)="goToStep(1)">
-          <div class="step-number">1</div>
-          <div class="step-label">{{ 'addListing.step1' | translate }}</div>
-        </div>
-        <div class="step-connector" [class.completed]="currentStep > 1"></div>
-        <div 
-          class="step-indicator" 
-          [class.active]="isStep(2)" 
-          [class.completed]="currentStep > 2"
-          (click)="goToStep(2)">
-          <div class="step-number">2</div>
-          <div class="step-label">{{ 'addListing.step2' | translate }}</div>
-        </div>
-        <div class="step-connector" [class.completed]="currentStep > 2"></div>
-        <div 
-          class="step-indicator" 
-          [class.active]="isStep(3)" 
-          [class.completed]="currentStep > 3"
-          (click)="goToStep(3)">
-          <div class="step-number">3</div>
-          <div class="step-label">{{ 'addListing.step3' | translate }}</div>
-        </div>
-        <div class="step-connector" [class.completed]="currentStep > 3"></div>
-        <div 
-          class="step-indicator" 
-          [class.active]="isStep(4)" 
-          [class.completed]="currentStep > 4">
-          <div class="step-number">4</div>
-          <div class="step-label">{{ 'addListing.step4' | translate }}</div>
-        </div>
-      </div>
-    </div>
 
     <!-- Error Message -->
-    @if (errorMessage) {
-<div class="error-message">
-      {{ errorMessage }}
-    </div>
-}
+    @if (errorMessage && !isSubmitting && !isUploadingImages) {
+      <div class="error-message">{{ errorMessage }}</div>
+    }
 
-    <!-- Form -->
     <form [formGroup]="listingForm" (ngSubmit)="onSubmit()" class="listing-form">
-      
-      <!-- Step 1: Item Identity and Format -->
-      @if (isStep(1)) {
-<div class="form-step">
-        <h2>{{ 'addListing.step1Title' | translate }}</h2>
-        
-        <div class="form-group">
-          <label for="title">{{ 'addListing.listingTitle' | translate }}</label>
-          <input
-            type="text"
-            id="title"
-            formControlName="title"
-            [class.error]="getFieldError('title')"
-            [placeholder]="'addListing.titlePlaceholder' | translate"
-            maxlength="80"
-          />
-          @if (getFieldError('title')) {
-<div class="field-error">
-            {{ getFieldError('title') }}
-          </div>
-}
-          <div class="field-hint">{{ 'addListing.charactersCount' | translate:{ count: listingForm.get('title')?.value?.length || 0 } }}</div>
-        </div>
 
-        <div class="form-row">
-          <div class="form-group">
-            <label for="category">{{ 'addListing.category' | translate }}</label>
-            <select
-              id="category"
-              formControlName="category"
-              [class.error]="getFieldError('category')">
-              <option value="">{{ 'addListing.selectCategory' | translate }}</option>
-              @for (cat of categories; track cat) {
-<option [value]="cat.id">{{ 'addListing.categories.' + cat.id | translate }}</option>
-}
-            </select>
-            @if (getFieldError('category')) {
-<div class="field-error">
-              {{ getFieldError('category') }}
-            </div>
-}
-          </div>
-
-          @if (selectedCategory) {
-<div class="form-group">
-            <label for="subCategory">{{ 'addListing.subCategory' | translate }}</label>
-            <select
-              id="subCategory"
-              formControlName="subCategory"
-              [class.error]="getFieldError('subCategory')">
-              <option value="">{{ 'addListing.selectSubCategory' | translate }}</option>
-              @for (subCat of getSelectedSubCategories(); track subCat) {
-<option [value]="subCat">{{ subCat }}</option>
-}
-            </select>
-            @if (getFieldError('subCategory')) {
-<div class="field-error">
-              {{ getFieldError('subCategory') }}
-            </div>
-}
-          </div>
-}
-        </div>
-
-        <div class="form-row">
-          <div class="form-group">
-            <fieldset class="radio-group">
-              <legend>{{ 'addListing.listingFormat' | translate }}</legend>
-            <div class="radio-group">
-              @if (enableAuctions) {
-              <label class="radio-option">
-                <input
-                  type="radio"
-                  formControlName="listingFormat"
-                  value="auction"
-                />
-                <span>{{ 'addListing.formatAuction' | translate }}</span>
-              </label>
-              }
-              <label class="radio-option">
-                <input
-                  type="radio"
-                  formControlName="listingFormat"
-                  value="best-offer"
-                />
-                <span>{{ 'addListing.formatBestOffer' | translate }}</span>
-              </label>
-            </div>
-            @if (getFieldError('listingFormat')) {
-<div class="field-error">
-              {{ getFieldError('listingFormat') }}
-            </div>
-}
-            </fieldset>
-          </div>
-
-          <div class="form-group">
-            <label for="condition">{{ 'addListing.condition' | translate }}</label>
-            <select
-              id="condition"
-              formControlName="condition"
-              [class.error]="getFieldError('condition')">
-              <option value="">{{ 'addListing.selectCondition' | translate }}</option>
-              @for (condition of itemConditions; track condition) {
-<option [value]="condition.value">{{ condition.labelKey | translate }}</option>
-}
-            </select>
-            @if (getFieldError('condition')) {
-<div class="field-error">
-              {{ getFieldError('condition') }}
-            </div>
-}
+      <!-- ─── Section 1: Photos & Media ─── -->
+      <div class="listing-section">
+        <div class="section-header">
+          <span class="section-number">1</span>
+          <div>
+            <h2 class="section-title">Photos &amp; Media</h2>
+            <p class="section-subtitle">Add clear photos from multiple angles. First photo is the cover image.</p>
           </div>
         </div>
-      </div>
-}
-
-      <!-- Step 2: Details and Media -->
-      @if (isStep(2)) {
-<div class="form-step">
-        <h2>{{ 'addListing.step2Title' | translate }}</h2>
-        
-        <div class="form-group">
-          <label for="description">{{ 'addListing.description' | translate }}</label>
-          <textarea
-            id="description"
-            formControlName="description"
-            [class.error]="getFieldError('description')"
-            [placeholder]="'addListing.descriptionPlaceholder' | translate"
-            rows="8"
-          ></textarea>
-          @if (getFieldError('description')) {
-<div class="field-error">
-              {{ getFieldError('description') }}
-            </div>
-}
-          <div class="field-hint" [class.error]="listingForm.get('description')?.invalid && (listingForm.get('description')?.touched || isStep(2))">
-            @if (listingForm.get('description')?.invalid && (listingForm.get('description')?.touched || isStep(2))) {
-<span style="color: #dc3545; font-weight: 600;">
-              ⚠️ {{ 'addListing.minCharsRequired' | translate }}
-            </span>
-}
-            {{ 'addListing.charactersMin' | translate:{ count: listingForm.get('description')?.value?.length || 0 } }}
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label for="mediaUpload">{{ 'addListing.mediaUpload' | translate }}</label>
-          <div class="file-upload-area" 
-               (dragover)="onDragOver($event)" 
+        <div class="section-body">
+          <div class="media-upload-zone"
+               (dragover)="onDragOver($event)"
                (drop)="onFilesDropped($event)">
             <input
               type="file"
               id="mediaUpload"
               multiple
-              accept="image/jpeg,image/jpg,image/png,image/gif,image/webp,image/bmp"
+              accept="image/jpeg,image/jpg,image/png,image/gif,image/webp,image/bmp,video/mp4,video/webm,video/quicktime"
               (change)="onFileSelected($event)"
               style="display: none;"
             />
-            <label for="mediaUpload" class="upload-button">
-              <span>📷 {{ 'addListing.clickToUpload' | translate }}</span>
-            </label>
+            @if (uploadedFiles.length === 0) {
+              <label for="mediaUpload" class="media-upload-empty">
+                <div class="media-upload-icon">📷</div>
+                <div class="media-upload-cta">Click to add photos</div>
+                <div class="media-upload-hint">or drag and drop · JPEG, PNG, GIF, WebP, MP4 · up to 20 photos or 5 photos + 1 video</div>
+              </label>
+            }
             @if (uploadedFiles.length > 0) {
-<div class="uploaded-files">
-              @for (file of uploadedFiles; track file; let i = $index) {
-<div class="file-item">
-                @if (previewUrls[i]) {
-<img [src]="previewUrls[i] || ''" alt="Preview" class="file-preview">
-}
-                <div class="file-info">
-                  <span>{{ file.name }}</span>
-                  <button type="button" (click)="removeFile(i)" class="remove-file-btn">×</button>
-                </div>
+              <div class="media-grid">
+                @for (file of uploadedFiles; track file; let i = $index) {
+                  <div
+                    class="media-thumb"
+                    [class.media-thumb-cover]="i === 0"
+                    [class.media-thumb-dragging]="dragSrcIndex === i"
+                    [class.media-thumb-drag-over]="dragOverIndex === i && dragSrcIndex !== i"
+                    draggable="true"
+                    (dragstart)="onThumbDragStart(i, $event)"
+                    (dragover)="onThumbDragOver(i, $event)"
+                    (dragleave)="onThumbDragLeave()"
+                    (drop)="onThumbDrop(i, $event)"
+                    (dragend)="onThumbDragEnd()"
+                  >
+                    @if (i === 0) {
+                      <span class="cover-badge">Cover</span>
+                    }
+                    @if (previewUrls[i]) {
+                      <img [src]="previewUrls[i] || ''" alt="Preview" class="media-thumb-img" draggable="false">
+                    } @else if (isVideoFile(file)) {
+                      <div class="media-thumb-video">🎬</div>
+                    }
+                    <div class="media-thumb-drag-handle" title="Drag to reorder">⠿</div>
+                    <button type="button" class="media-thumb-remove" (click)="removeFile(i)" title="Remove">×</button>
+                  </div>
+                }
+                <label for="mediaUpload" class="media-thumb media-thumb-add" title="Add more photos">
+                  <span class="media-add-icon">+</span>
+                </label>
               </div>
-}
-            </div>
-}
-            @if (uploadedFiles.length < 1 && (listingForm.get('media')?.touched || isStep(4))) {
-<div class="field-error">
-              {{ 'addListing.uploadMinError' | translate }}
-            </div>
-}
-            <div class="field-hint">{{ 'addListing.filesUploaded' | translate:{ count: uploadedFiles.length } }}</div>
+            }
           </div>
-        </div>
-
-        <div class="form-group">
-          <fieldset>
-            <legend>{{ 'addListing.keySpecs' | translate }}</legend>
-          <div formArrayName="specifications">
-            @for (spec of specifications.controls; track spec; let i = $index) {
-<div [formGroupName]="i" class="spec-row">
-              <input type="text" formControlName="key" [placeholder]="'addListing.specKeyPlaceholder' | translate" class="spec-key">
-              <input type="text" formControlName="value" [placeholder]="'addListing.specValuePlaceholder' | translate" class="spec-value">
-              <button type="button" (click)="removeSpecification(i)" class="remove-btn">{{ 'addListing.remove' | translate }}</button>
-            </div>
-}
-          </div>
-          <button type="button" (click)="addSpecification()" class="add-btn">{{ 'addListing.addSpecification' | translate }}</button>
-          </fieldset>
-        </div>
-
-        <div class="form-row">
-          <div class="form-group">
-            <label for="locationCity">{{ 'addListing.city' | translate }}</label>
-            <input
-              type="text"
-              id="locationCity"
-              formControlName="locationCity"
-              [class.error]="getFieldError('locationCity')"
-              [placeholder]="'addListing.cityPlaceholder' | translate"
-            />
-            @if (getFieldError('locationCity')) {
-<div class="field-error">
-              {{ getFieldError('locationCity') }}
-            </div>
-}
-          </div>
-
-          <div class="form-group">
-            <label for="locationRegion">{{ 'addListing.regionState' | translate }}</label>
-            <input
-              type="text"
-              id="locationRegion"
-              formControlName="locationRegion"
-              [class.error]="getFieldError('locationRegion')"
-              [placeholder]="'addListing.regionPlaceholder' | translate"
-            />
-            @if (getFieldError('locationRegion')) {
-<div class="field-error">
-              {{ getFieldError('locationRegion') }}
-            </div>
-}
+          <div class="media-meta">
+            <span class="media-count">{{ imageCount }} photo{{ imageCount !== 1 ? 's' : '' }}{{ videoCount > 0 ? ' · ' + videoCount + ' video' : '' }}</span>
+            @if (imageCount < 3 && imageCount > 0) {
+              <span class="media-hint-warn">3+ photos recommended for better results</span>
+            }
+            @if (!isMediaValid && uploadedFiles.length > 0) {
+              <span class="media-hint-error">{{ 'addListing.uploadMediaError' | translate }}</span>
+            }
+            @if (uploadedFiles.length < 1 && listingForm.get('media')?.touched) {
+              <span class="media-hint-error">{{ 'addListing.uploadMinError' | translate }}</span>
+            }
           </div>
         </div>
       </div>
-}
 
-      <!-- Step 3: Pricing and Auction Rules -->
-      @if (isStep(3)) {
-<div class="form-step">
-        <h2>{{ 'addListing.step3Title' | translate }}</h2>
-        
-        <div class="form-group">
-          <fieldset>
-            <legend>{{ 'addListing.duration' | translate }}</legend>
-          <div class="radio-group">
-            @for (duration of listingDurations; track duration.hours) {
-<label class="radio-option">
-              <input
-                type="radio"
-                formControlName="duration"
-                [value]="duration.hours"
-              />
-              <span>{{ duration.labelKey | translate }}</span>
-            </label>
-}
-          </div>
-          @if (getFieldError('duration')) {
-<div class="field-error">
-            {{ getFieldError('duration') }}
-          </div>
-}
-          </fieldset>
-        </div>
-
-        @if (listingForm.get('listingFormat')?.value === 'auction') {
-<div>
-          <div class="form-group">
-            <label for="startingBid">{{ 'addListing.startingBid' | translate }}</label>
-            <div class="input-with-currency">
-              <span class="currency">$</span>
-              <input
-                type="number"
-                id="startingBid"
-                formControlName="startingBid"
-                [class.error]="getFieldError('startingBid')"
-                placeholder="0.00"
-                min="0.01"
-                step="0.01"
-                style="padding-left: 25px;"
-              />
-            </div>
-            @if (getFieldError('startingBid')) {
-<div class="field-error">
-              {{ getFieldError('startingBid') }}
-            </div>
-}
-          </div>
-
-          <div class="form-group">
-            <label for="buyNowPrice">{{ 'addListing.buyNowPrice' | translate }}</label>
-            <div class="input-with-currency">
-              <span class="currency">$</span>
-              <input
-                type="number"
-                id="buyNowPrice"
-                formControlName="buyNowPrice"
-                [class.error]="getFieldError('buyNowPrice')"
-                placeholder="0.00"
-                min="0.01"
-                step="0.01"
-                style="padding-left: 25px;"
-              />
-            </div>
-            @if (getFieldError('buyNowPrice')) {
-<div class="field-error">
-              {{ getFieldError('buyNowPrice') }}
-            </div>
-}
-            <div class="field-hint">{{ 'addListing.buyNowHint' | translate }}</div>
+      <!-- ─── Section 2: Basic Info ─── -->
+      <div class="listing-section">
+        <div class="section-header">
+          <span class="section-number">2</span>
+          <div>
+            <h2 class="section-title">Basic Info</h2>
+            <p class="section-subtitle">A clear title and detailed description help buyers find your item.</p>
           </div>
         </div>
-}
-
-        @if (listingForm.get('listingFormat')?.value === 'best-offer') {
-<div>
+        <div class="section-body">
           <div class="form-group">
-            <label for="minimumAcceptPrice">{{ 'addListing.minimumAcceptPrice' | translate }}</label>
-            <div class="input-with-currency">
-              <span class="currency" style=" margin-right: 5px;">$</span>
-              <input
-                type="number"
-                id="minimumAcceptPrice"
-                formControlName="minimumAcceptPrice"
-                placeholder="0.00"
-                min="0.01"
-                step="0.01"
-                style="padding-left: 25px;"
-              />
-            </div>
-            <div class="field-hint">{{ 'addListing.minimumAcceptHint' | translate }}</div>
-          </div>
-        </div>
-}
-
-        <!-- Private Room is only available for Highest Bid (auction), not Best Offer -->
-        @if (enableAuctions && enablePrivateRooms && listingForm.get('listingFormat')?.value === 'auction') {
-<div class="form-group">
-          <label class="checkbox-option">
+            <label for="title">{{ 'addListing.listingTitle' | translate }}</label>
             <input
-              type="checkbox"
-              formControlName="allowPrivateRoom"
+              type="text"
+              id="title"
+              formControlName="title"
+              [class.error]="getFieldError('title')"
+              [placeholder]="'addListing.titlePlaceholder' | translate"
+              maxlength="80"
             />
-            <span style="margin-left: 5px;">{{ 'addListing.enablePrivateRoom' | translate }}</span>
-          </label>
-          <div class="field-hint">
-            {{ 'addListing.privateRoomHint' | translate }}
+            @if (getFieldError('title')) {
+              <div class="field-error">{{ getFieldError('title') }}</div>
+            }
+            <div class="field-hint">{{ listingForm.get('title')?.value?.length || 0 }}/80 characters</div>
           </div>
-          @if (listingForm.get('allowPrivateRoom')?.value) {
-<div class="commission-notice">
-            <strong>{{ 'addListing.commissionPrivateRoom' | translate }}</strong>
+
+          <div class="form-group">
+            <label for="description">{{ 'addListing.description' | translate }}</label>
+            <textarea
+              id="description"
+              formControlName="description"
+              [class.error]="getFieldError('description')"
+              [placeholder]="'addListing.descriptionPlaceholder' | translate"
+              rows="8"
+            ></textarea>
+            @if (getFieldError('description')) {
+              <div class="field-error">{{ getFieldError('description') }}</div>
+            }
+            <div class="field-hint">
+              {{ listingForm.get('description')?.value?.length || 0 }} characters
+              @if ((listingForm.get('description')?.value?.length || 0) < 50) {
+                · <span style="color: #e67e22;">minimum 50 required</span>
+              }
+            </div>
           </div>
-          <div class="field-hint" style="margin-top: 8px;">
-            {{ 'addListing.privateRoomNoAcceptNote' | translate }}
+
+          <!-- Key Specifications (optional) -->
+          <div class="form-group">
+            <fieldset>
+              <legend>{{ 'addListing.keySpecs' | translate }} <span class="optional-badge">optional</span></legend>
+              <div formArrayName="specifications">
+                @for (spec of specifications.controls; track spec; let i = $index) {
+                  <div [formGroupName]="i" class="spec-row">
+                    <input type="text" formControlName="key" [placeholder]="'addListing.specKeyPlaceholder' | translate" class="spec-key">
+                    <input type="text" formControlName="value" [placeholder]="'addListing.specValuePlaceholder' | translate" class="spec-value">
+                    <button type="button" (click)="removeSpecification(i)" class="remove-btn">{{ 'addListing.remove' | translate }}</button>
+                  </div>
+                }
+              </div>
+              <button type="button" (click)="addSpecification()" class="add-btn">+ {{ 'addListing.addSpecification' | translate }}</button>
+            </fieldset>
           </div>
-}
-          @if (!listingForm.get('allowPrivateRoom')?.value) {
-<div class="commission-notice">
-            {{ 'addListing.commissionStandard' | translate }}
-          </div>
-}
         </div>
-}
       </div>
-}
 
-      <!-- Step 4: Shipping and Final Review -->
-      @if (isStep(4)) {
-<div class="form-step">
-        <h2>{{ 'addListing.step4Title' | translate }}</h2>
-        
-        <div class="form-group">
-          <label for="shippingOption">{{ 'addListing.shippingOptions' | translate }}</label>
-          <select
-            id="shippingOption"
-            formControlName="shippingOption"
-            [class.error]="getFieldError('shippingOption')">
-            <option value="">{{ 'addListing.selectShipping' | translate }}</option>
-            @for (option of shippingOptions; track option) {
-<option [value]="option.value">{{ option.labelKey | translate }}</option>
-}
-          </select>
-          @if (getFieldError('shippingOption')) {
-<div class="field-error">
-            {{ getFieldError('shippingOption') }}
-          </div>
-}
-        </div>
-
-        @if (listingForm.get('shippingOption')?.value === 'flat-rate') {
-<div class="form-group">
-          <label for="flatRateShipping">{{ 'addListing.flatRateCost' | translate }}</label>
-          <div class="input-with-currency">
-            <span class="currency">$</span>
-            <input
-              type="number"
-              id="flatRateShipping"
-              formControlName="flatRateShipping"
-              placeholder="0.00"
-              min="0"
-              step="0.01"
-            />
+      <!-- ─── Section 3: Category & Condition ─── -->
+      <div class="listing-section">
+        <div class="section-header">
+          <span class="section-number">3</span>
+          <div>
+            <h2 class="section-title">Category &amp; Condition</h2>
+            <p class="section-subtitle">Help buyers find your item in the right place.</p>
           </div>
         </div>
-}
-
-        @if (listingForm.get('shippingOption')?.value === 'calculated') {
-<div class="calculated-shipping-fields">
-          <p class="field-hint">{{ 'addListing.calculatedHint' | translate }}</p>
-
-          <div class="form-group">
-            <label for="packageSize">{{ 'addListing.packageSize' | translate }}</label>
-            <select id="packageSize" formControlName="packageSize" [class.error]="getFieldError('packageSize')">
-              <option value="">{{ 'addListing.selectPackageSize' | translate }}</option>
-              <option value="small">{{ 'addListing.packageSmall' | translate }}</option>
-              <option value="medium">{{ 'addListing.packageMedium' | translate }}</option>
-              <option value="large">{{ 'addListing.packageLarge' | translate }}</option>
-            </select>
-            @if (getFieldError('packageSize')) {
-<div class="field-error">{{ getFieldError('packageSize') }}</div>
-}
-          </div>
-
+        <div class="section-body">
           <div class="form-row">
             <div class="form-group">
-              <label for="shippingOriginPostalCode">{{ 'addListing.originPostalCode' | translate }}</label>
-              <input
-                type="text"
-                id="shippingOriginPostalCode"
-                formControlName="shippingOriginPostalCode"
-                [placeholder]="'addListing.originPostalPlaceholder' | translate"
-                [class.error]="getFieldError('shippingOriginPostalCode')"
-              />
-              @if (getFieldError('shippingOriginPostalCode')) {
-<div class="field-error">{{ getFieldError('shippingOriginPostalCode') }}</div>
-}
+              <label for="category">{{ 'addListing.category' | translate }}</label>
+              <select id="category" formControlName="category" [class.error]="getFieldError('category')">
+                <option value="">{{ 'addListing.selectCategory' | translate }}</option>
+                @for (cat of categories; track cat) {
+                  <option [value]="cat.id">{{ 'addListing.categories.' + cat.id | translate }}</option>
+                }
+              </select>
+              @if (getFieldError('category')) {
+                <div class="field-error">{{ getFieldError('category') }}</div>
+              }
             </div>
 
+            @if (selectedCategory) {
+              <div class="form-group">
+                <label for="subCategory">{{ 'addListing.subCategory' | translate }}</label>
+                <select id="subCategory" formControlName="subCategory" [class.error]="getFieldError('subCategory')">
+                  <option value="">{{ 'addListing.selectSubCategory' | translate }}</option>
+                  @for (subCat of getSelectedSubCategories(); track subCat) {
+                    <option [value]="subCat">{{ subCat }}</option>
+                  }
+                </select>
+                @if (getFieldError('subCategory')) {
+                  <div class="field-error">{{ getFieldError('subCategory') }}</div>
+                }
+              </div>
+            }
+          </div>
+
+          <div class="form-group">
+            <label for="condition">{{ 'addListing.condition' | translate }}</label>
+            <select id="condition" formControlName="condition" [class.error]="getFieldError('condition')">
+              <option value="">{{ 'addListing.selectCondition' | translate }}</option>
+              @for (condition of itemConditions; track condition) {
+                <option [value]="condition.value">{{ condition.labelKey | translate }}</option>
+              }
+            </select>
+            @if (getFieldError('condition')) {
+              <div class="field-error">{{ getFieldError('condition') }}</div>
+            }
+          </div>
+        </div>
+      </div>
+
+      <!-- ─── Section 4: Pricing & Format ─── -->
+      <div class="listing-section">
+        <div class="section-header">
+          <span class="section-number">4</span>
+          <div>
+            <h2 class="section-title">Pricing &amp; Format</h2>
+            <p class="section-subtitle">Choose how you want to sell and set your prices.</p>
+          </div>
+        </div>
+        <div class="section-body">
+
+          <!-- Format selector -->
+          <div class="form-group">
+            <fieldset class="radio-group-fieldset">
+              <legend>{{ 'addListing.listingFormat' | translate }}</legend>
+              <div class="format-cards">
+                <label class="format-card" [class.selected]="listingForm.get('listingFormat')?.value === 'auction'">
+                  <input type="radio" formControlName="listingFormat" value="auction" />
+                  <div class="format-card-content">
+                    <span class="format-card-icon">🔨</span>
+                    <div>
+                      <strong>{{ 'addListing.formatAuction' | translate }}</strong>
+                      <p>Buyers compete with bids. Highest bid wins.</p>
+                    </div>
+                  </div>
+                </label>
+                <label class="format-card" [class.selected]="listingForm.get('listingFormat')?.value === 'best-offer'">
+                  <input type="radio" formControlName="listingFormat" value="best-offer" />
+                  <div class="format-card-content">
+                    <span class="format-card-icon">🤝</span>
+                    <div>
+                      <strong>{{ 'addListing.formatBestOffer' | translate }}</strong>
+                      <p>Buyers send offers. You choose which to accept.</p>
+                    </div>
+                  </div>
+                </label>
+              </div>
+            </fieldset>
+          </div>
+
+          <!-- Duration (all formats) -->
+          <div class="form-group">
+            <fieldset class="radio-group-fieldset">
+              <legend>{{ 'addListing.duration' | translate }}</legend>
+              <div class="radio-group">
+                @for (duration of listingDurations; track duration.hours) {
+                  <label class="radio-option">
+                    <input type="radio" formControlName="duration" [value]="duration.label" />
+                    <span>{{ duration.labelKey | translate }}</span>
+                  </label>
+                }
+              </div>
+              @if (getFieldError('duration')) {
+                <div class="field-error">{{ getFieldError('duration') }}</div>
+              }
+            </fieldset>
+          </div>
+
+          <!-- Auction prices -->
+          @if (listingForm.get('listingFormat')?.value === 'auction') {
+            <div class="form-row form-row--pricing">
+              <div class="form-group">
+                <label for="startingBid">{{ 'addListing.startingBid' | translate }}</label>
+                <div class="input-with-currency">
+                  <span class="currency">$</span>
+                  <input type="number" id="startingBid" formControlName="startingBid"
+                    [class.error]="getFieldError('startingBid')" placeholder="0.00" min="0.01" step="0.01" />
+                </div>
+                @if (getFieldError('startingBid')) {
+                  <div class="field-error">{{ getFieldError('startingBid') }}</div>
+                }
+              </div>
+              <div class="form-group">
+                <label for="buyNowPrice">{{ 'addListing.buyNowPrice' | translate }} <span class="optional-badge">optional</span></label>
+                <div class="input-with-currency">
+                  <span class="currency">$</span>
+                  <input type="number" id="buyNowPrice" formControlName="buyNowPrice"
+                    [class.error]="getFieldError('buyNowPrice')" placeholder="0.00" min="0.01" step="0.01" />
+                </div>
+                @if (getFieldError('buyNowPrice')) {
+                  <div class="field-error">{{ getFieldError('buyNowPrice') }}</div>
+                }
+                <div class="field-hint">{{ 'addListing.buyNowHint' | translate }}</div>
+              </div>
+            </div>
+          }
+
+          <!-- Best-offer minimum -->
+          @if (listingForm.get('listingFormat')?.value === 'best-offer') {
             <div class="form-group">
-              <label for="shippingOriginCity">{{ 'addListing.originCity' | translate }}</label>
-              <input
-                type="text"
-                id="shippingOriginCity"
-                formControlName="shippingOriginCity"
-                [placeholder]="'addListing.originCityPlaceholder' | translate"
-              />
+              <label for="minimumAcceptPrice">{{ 'addListing.minimumAcceptPrice' | translate }} <span class="optional-badge">optional</span></label>
+              <div class="input-with-currency">
+                <span class="currency">$</span>
+                <input type="number" id="minimumAcceptPrice" formControlName="minimumAcceptPrice"
+                  placeholder="0.00" min="0.01" step="0.01" />
+              </div>
+              <div class="field-hint">{{ 'addListing.minimumAcceptHint' | translate }}</div>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- ─── Section 5: Private Room ─── -->
+      @if (listingForm.get('listingFormat')?.value === 'auction') {
+        <div class="listing-section">
+          <div class="section-header">
+            <span class="section-number">5</span>
+            <div>
+              <h2 class="section-title">Private Room</h2>
+              <p class="section-subtitle">Invite top bidders into an exclusive bidding room after the auction ends.</p>
+            </div>
+          </div>
+          <div class="section-body">
+            <label class="toggle-row">
+              <input type="checkbox" formControlName="allowPrivateRoom" class="toggle-checkbox" />
+              <div class="toggle-track">
+                <div class="toggle-thumb"></div>
+              </div>
+              <div class="toggle-label">
+                <strong>{{ 'addListing.enablePrivateRoom' | translate }}</strong>
+                <span class="field-hint">{{ 'addListing.privateRoomHint' | translate }}</span>
+              </div>
+            </label>
+
+            @if (listingForm.get('allowPrivateRoom')?.value) {
+              <div class="commission-notice commission-notice-private">
+                <strong>{{ 'addListing.commissionPrivateRoom' | translate }}</strong>
+                <p>{{ 'addListing.privateRoomNoAcceptNote' | translate }}</p>
+              </div>
+            } @else {
+              <div class="commission-notice">
+                {{ 'addListing.commissionStandard' | translate }}
+              </div>
+            }
+          </div>
+        </div>
+      }
+
+      <!-- ─── Section 6: Shipping & Location ─── -->
+      <div class="listing-section">
+        <div class="section-header">
+          <span class="section-number">{{ listingForm.get('listingFormat')?.value === 'auction' ? '6' : '5' }}</span>
+          <div>
+            <h2 class="section-title">Shipping &amp; Location</h2>
+            <p class="section-subtitle">Tell buyers where the item ships from and how you'll send it.</p>
+          </div>
+        </div>
+        <div class="section-body">
+          <!-- Item location -->
+          <div class="form-row">
+            <div class="form-group">
+              <label for="locationCity">{{ 'addListing.city' | translate }}</label>
+              <input type="text" id="locationCity" formControlName="locationCity"
+                [class.error]="getFieldError('locationCity')"
+                [placeholder]="'addListing.cityPlaceholder' | translate" />
+              @if (getFieldError('locationCity')) {
+                <div class="field-error">{{ getFieldError('locationCity') }}</div>
+              }
+            </div>
+            <div class="form-group">
+              <label for="locationRegion">{{ 'addListing.regionState' | translate }}</label>
+              <input type="text" id="locationRegion" formControlName="locationRegion"
+                [class.error]="getFieldError('locationRegion')"
+                [placeholder]="'addListing.regionPlaceholder' | translate" />
+              @if (getFieldError('locationRegion')) {
+                <div class="field-error">{{ getFieldError('locationRegion') }}</div>
+              }
             </div>
           </div>
 
           <div class="form-group">
-            <label for="shippingOriginCountry">{{ 'addListing.originCountry' | translate }}</label>
-            <select id="shippingOriginCountry" formControlName="shippingOriginCountry">
+            <label for="locationCountry">{{ 'addListing.originCountry' | translate }}</label>
+            <select id="locationCountry" formControlName="locationCountry">
               <option value="US">{{ 'addListing.countryUS' | translate }}</option>
               <option value="CA">{{ 'addListing.countryCA' | translate }}</option>
               <option value="GB">{{ 'addListing.countryGB' | translate }}</option>
@@ -517,45 +392,110 @@
               <option value="FR">{{ 'addListing.countryFR' | translate }}</option>
             </select>
           </div>
-        </div>
-}
 
-        <div class="form-group">
-          <label for="handlingTime">{{ 'addListing.handlingTime' | translate }}</label>
-          <select
-            id="handlingTime"
-            formControlName="handlingTime"
-            [class.error]="getFieldError('handlingTime')">
-            <option value="">{{ 'addListing.selectHandling' | translate }}</option>
-            @for (time of handlingTimes; track time) {
-<option [value]="time.value">{{ time.labelKey | translate }}</option>
-}
-          </select>
-          @if (getFieldError('handlingTime')) {
-<div class="field-error">
-            {{ getFieldError('handlingTime') }}
+          <!-- Shipping option -->
+          <div class="form-group">
+            <label for="shippingOption">{{ 'addListing.shippingOptions' | translate }}</label>
+            <select id="shippingOption" formControlName="shippingOption" [class.error]="getFieldError('shippingOption')">
+              <option value="">{{ 'addListing.selectShipping' | translate }}</option>
+              @for (option of shippingOptions; track option) {
+                <option [value]="option.value">{{ option.labelKey | translate }}</option>
+              }
+            </select>
+            @if (getFieldError('shippingOption')) {
+              <div class="field-error">{{ getFieldError('shippingOption') }}</div>
+            }
           </div>
-}
-        </div>
 
-        <div class="form-group">
-          <label for="returnPolicy">{{ 'addListing.returnPolicy' | translate }}</label>
-          <select
-            id="returnPolicy"
-            formControlName="returnPolicy"
-            [class.error]="getFieldError('returnPolicy')">
-            <option value="">{{ 'addListing.selectReturn' | translate }}</option>
-            @for (policy of returnPolicies; track policy) {
-<option [value]="policy.value">{{ policy.labelKey | translate }}</option>
-}
-          </select>
-          @if (getFieldError('returnPolicy')) {
-<div class="field-error">
-            {{ getFieldError('returnPolicy') }}
+          @if (listingForm.get('shippingOption')?.value === 'flat-rate') {
+            <div class="flat-rate-shipping-card">
+              <div class="flat-rate-header">
+                <span class="flat-rate-icon">📦</span>
+                <div>
+                  <label for="flatRateShipping">{{ 'addListing.flatRateCost' | translate }}</label>
+                  <p class="flat-rate-hint">{{ 'addListing.flatRateHint' | translate }}</p>
+                </div>
+              </div>
+              <div class="input-with-currency flat-rate-input">
+                <span class="currency">$</span>
+                <input type="number" id="flatRateShipping" formControlName="flatRateShipping"
+                  [class.error]="getFieldError('flatRateShipping')" placeholder="0.00" min="0" step="0.01" />
+              </div>
+              @if (getFieldError('flatRateShipping')) {
+                <div class="field-error">{{ getFieldError('flatRateShipping') }}</div>
+              }
+            </div>
+          }
+
+          @if (listingForm.get('shippingOption')?.value === 'calculated') {
+            <div class="calculated-shipping-fields">
+              <p class="field-hint">{{ 'addListing.calculatedHint' | translate }}</p>
+              <div class="form-group">
+                <label for="packageSize">{{ 'addListing.packageSize' | translate }}</label>
+                <select id="packageSize" formControlName="packageSize" [class.error]="getFieldError('packageSize')">
+                  <option value="">{{ 'addListing.selectPackageSize' | translate }}</option>
+                  <option value="small">{{ 'addListing.packageSmall' | translate }}</option>
+                  <option value="medium">{{ 'addListing.packageMedium' | translate }}</option>
+                  <option value="large">{{ 'addListing.packageLarge' | translate }}</option>
+                </select>
+                @if (getFieldError('packageSize')) {
+                  <div class="field-error">{{ getFieldError('packageSize') }}</div>
+                }
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="shippingOriginPostalCode">{{ 'addListing.originPostalCode' | translate }}</label>
+                  <input type="text" id="shippingOriginPostalCode" formControlName="shippingOriginPostalCode"
+                    [placeholder]="'addListing.originPostalPlaceholder' | translate"
+                    [class.error]="getFieldError('shippingOriginPostalCode')" />
+                  @if (getFieldError('shippingOriginPostalCode')) {
+                    <div class="field-error">{{ getFieldError('shippingOriginPostalCode') }}</div>
+                  }
+                </div>
+                <div class="form-group">
+                  <label for="shippingOriginCity">{{ 'addListing.originCity' | translate }}</label>
+                  <input type="text" id="shippingOriginCity" formControlName="shippingOriginCity"
+                    [placeholder]="'addListing.originCityPlaceholder' | translate" />
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="shippingOriginCountry">{{ 'addListing.originCountry' | translate }}</label>
+                <select id="shippingOriginCountry" formControlName="shippingOriginCountry">
+                  <option value="US">{{ 'addListing.countryUS' | translate }}</option>
+                  <option value="CA">{{ 'addListing.countryCA' | translate }}</option>
+                  <option value="GB">{{ 'addListing.countryGB' | translate }}</option>
+                  <option value="AU">{{ 'addListing.countryAU' | translate }}</option>
+                  <option value="DE">{{ 'addListing.countryDE' | translate }}</option>
+                  <option value="FR">{{ 'addListing.countryFR' | translate }}</option>
+                </select>
+              </div>
+            </div>
+          }
+
+          <div class="form-group">
+            <div class="handling-time-notice">
+              <span class="handling-time-icon">📦</span>
+              <span>All listings ship within <strong>5 business days</strong> of purchase.</span>
+            </div>
           </div>
-}
-        </div>
 
+          <div class="form-group">
+            <label for="returnPolicy">{{ 'addListing.returnPolicy' | translate }}</label>
+            <select id="returnPolicy" formControlName="returnPolicy" [class.error]="getFieldError('returnPolicy')">
+              <option value="">{{ 'addListing.selectReturn' | translate }}</option>
+              @for (policy of returnPolicies; track policy) {
+                <option [value]="policy.value">{{ policy.labelKey | translate }}</option>
+              }
+            </select>
+            @if (getFieldError('returnPolicy')) {
+              <div class="field-error">{{ getFieldError('returnPolicy') }}</div>
+            }
+          </div>
+        </div>
+      </div>
+
+      <!-- ─── Publish Footer ─── -->
+      <div class="publish-footer">
         <!-- Fee Summary -->
         <div class="fee-summary">
           <h3>{{ 'addListing.feeSummary' | translate }}</h3>
@@ -567,72 +507,53 @@
             <span>{{ 'addListing.paymentProcessing' | translate }}</span>
             <span>${{ calculateEstimatedFees().paymentProcessing.toFixed(2) }}</span>
           </div>
+          <div class="fee-item fee-item-buyer">
+            <span>{{ 'addListing.buyerFee' | translate:{ rate: buyerFeeRatePct } }}</span>
+            <span>${{ calculateEstimatedFees().buyerFee.toFixed(2) }}</span>
+          </div>
           <div class="fee-total">
             <span>{{ 'addListing.estimatedTotal' | translate }}</span>
             <span>${{ calculateEstimatedFees().total.toFixed(2) }}</span>
           </div>
-          <div class="fee-note">
-            {{ 'addListing.feeNote' | translate }}
-          </div>
+          <div class="fee-note">{{ 'addListing.feeNote' | translate }}</div>
         </div>
 
         <!-- Seller Declaration -->
-        <div class="form-group">
+        <div class="form-group declaration-group">
           <label class="checkbox-option">
-            <input
-              type="checkbox"
-              formControlName="sellerDeclaration"
-            />
-            <span style="margin-left: 5px;">{{ 'addListing.sellerDeclaration' | translate }}</span>
+            <input type="checkbox" formControlName="sellerDeclaration" />
+            <span>{{ 'addListing.sellerDeclaration' | translate }}</span>
           </label>
           @if (getFieldError('sellerDeclaration')) {
-<div class="field-error">
-            {{ getFieldError('sellerDeclaration') }}
-          </div>
-}
+            <div class="field-error">{{ getFieldError('sellerDeclaration') }}</div>
+          }
+        </div>
+
+        <!-- Submission status messages -->
+        @if (isUploadingImages) {
+          <div class="submit-status">Uploading photos…</div>
+        }
+        @if (!isUploadingImages && isSubmitting) {
+          <div class="submit-status">Creating listing…</div>
+        }
+        @if (errorMessage) {
+          <div class="error-message">{{ errorMessage }}</div>
+        }
+
+        <!-- Publish row -->
+        <div class="publish-row">
+          <button
+            type="submit"
+            class="btn btn-publish"
+            [disabled]="isSubmitting || isUploadingImages"
+          >
+            @if (isUploadingImages) { Uploading… }
+            @else if (isSubmitting) { Publishing… }
+            @else { Publish listing }
+          </button>
         </div>
       </div>
-}
 
-      <!-- Navigation Buttons -->
-      <div class="form-actions">
-        @if (currentStep > 1) {
-<button
-          type="button"
-          class="btn btn-secondary"
-          (click)="previousStep()"
-         >
-          {{ 'addListing.previous' | translate }}
-        </button>
-}
-        <div class="spacer"></div>
-        @if (currentStep < totalSteps) {
-<button
-          type="button"
-          class="btn btn-primary"
-          (click)="nextStep()"
-         >
-          {{ 'addListing.next' | translate }}
-        </button>
-}
-        @if (isStep(totalSteps)) {
-<button
-          type="submit"
-          class="btn btn-primary"
-          [disabled]="isSubmitting || isUploadingImages || !listingForm.valid || uploadedFiles.length < 1"
-         >
-          @if (isUploadingImages) {
-<span>{{ 'addListing.uploadingImages' | translate }}</span>
-}
-          @if (!isUploadingImages && isSubmitting) {
-<span>{{ 'addListing.creatingListing' | translate }}</span>
-}
-          @if (!isUploadingImages && !isSubmitting) {
-<span>{{ 'addListing.listItemNow' | translate }}</span>
-}
-        </button>
-}
-      </div>
     </form>
   </div>
 </div>

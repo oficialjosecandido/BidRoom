@@ -1,0 +1,36 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install @stripe/stripe-js --save)",
+      "Bash(npx ng build --configuration development)",
+      "Bash(node -e \"require\\(''./src/routes/connect''\\); console.log\\(''connect route OK''\\)\")",
+      "Bash(node -e \"require\\(''./src/routes/transactions''\\); console.log\\(''transactions route OK''\\)\")",
+      "Bash(ng build:*)",
+      "Bash(find /Users/josecandido/Documents/BidRoom/frontend/src -type f \\\\\\(-name *.ts -o -name *.js -o -name *.tsx -o -name *.jsx \\\\\\))",
+      "Bash(grep -E \"\\\\.\\(ts|html\\)$\")",
+      "Bash(node src/scripts/seed100Listings.js)",
+      "Bash(redis-cli CONFIG GET requirepass)",
+      "Bash(python3 -c \":*)",
+      "Bash(node -e \":*)",
+      "Bash(npm install:*)",
+      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); build=d[''''projects''''][''''frontend''''][''''architect''''][''''build'''']; print\\(json.dumps\\(build.get\\(''''options'''', {}\\), indent=2\\)\\)\")",
+      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\(d[''''version'''']\\)\")",
+      "Bash(find /Users/josecandido/Documents/BidRoom/frontend/node_modules/@ngx-translate/http-loader -name *.d.ts -exec cat {})",
+      "Bash(npx tsc:*)",
+      "Bash(/Users/josecandido/Documents/BidRoom/frontend/src/app/dashboard/components/buyer-profile/buyer-profile.component.html:*)",
+      "WebFetch(domain:wirefuture.com)",
+      "Bash(wc -l /Users/josecandido/Documents/BidRoom/frontend/public/i18n/*.json)",
+      "Bash(find src:*)",
+      "Bash(__NEW_LINE_9a6d8cce6306981f__ comm:*)",
+      "Bash(__NEW_LINE_ecc29a5f85699c95__ echo:*)",
+      "Read(//Users/josecandido/Documents/BidRoom/**)",
+      "Bash(__NEW_LINE_54c7180a844aa40b__ echo:*)",
+      "Bash(__NEW_LINE_77a8d5a8df533bcc__ echo:*)",
+      "Bash(__NEW_LINE_e1b87c1e3712c757__ grep:*)",
+      "Bash(__NEW_LINE_9aca962448b60d38__ find:*)",
+      "Bash(node -e \"const fs = require\\(''fs''\\); try { JSON.parse\\(fs.readFileSync\\(''/Users/josecandido/Documents/BidRoom/frontend/public/i18n/fr.json'', ''utf8''\\)\\); console.log\\(''Valid JSON''\\); } catch\\(e\\) { console.error\\(''Invalid JSON:'', e.message\\); }\")",
+      "Bash(sed -i '' \"s/      console\\\\.log\\('Skipping first bid notification - no email address'\\);//\" /Users/jose/Documents/bidroom/backend/src/services/auctionNotificationService.js)",
+      "Bash(sed -i '' \"s/      console\\\\.log\\('Listing already marked as ended:', listingId\\);//\" /Users/jose/Documents/bidroom/backend/src/services/auctionNotificationService.js)"
+    ]
+  }
+}

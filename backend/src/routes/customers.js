@@ -47,8 +47,9 @@ router.get('/profile', authenticateToken, async (req, res) => {
       customer = await Customer.findOne({ uid }).lean();
     }
 
-    // Resolve User by uid for review scores (buyer/seller scores are per User)
-    const dbUser = await User.findOne({ uid }).select('_id').lean();
+    // Resolve User by uid for review scores, Stripe Connect status, and account status
+    const isTestMode = process.env.STRIPE_SECRET_KEY?.startsWith('sk_test_');
+    const dbUser = await User.findOne({ uid }).select('_id stripeConnectOnboarded accountStatus').lean();
     let buyerScore = null;
     let sellerScore = null;
     let buyerReviewCount = 0;
@@ -59,7 +60,14 @@ router.get('/profile', authenticateToken, async (req, res) => {
       sellerScore = scores.sellerScore;
       buyerReviewCount = scores.buyerReviewCount;
       sellerReviewCount = scores.sellerReviewCount;
+
+      // In test/dev mode auto-mark as onboarded so manual Stripe setup isn't required
+      if (isTestMode && !dbUser.stripeConnectOnboarded) {
+        await User.updateOne({ uid }, { $set: { stripeConnectOnboarded: true } });
+      }
     }
+
+    const stripeConnectOnboarded = isTestMode ? true : !!(dbUser?.stripeConnectOnboarded);
 
     res.json({
       user: {
@@ -69,7 +77,8 @@ router.get('/profile', authenticateToken, async (req, res) => {
         firstName: customer.firstName,
         lastName: customer.lastName,
         emailVerified: !!emailVerified,
-        isActive: true,
+        isActive: dbUser?.accountStatus !== 'suspended' && dbUser?.accountStatus !== 'closed',
+        accountStatus: dbUser?.accountStatus || 'active',
         lastLogin: customer.lastLogin,
         createdAt: customer.createdAt
       },
@@ -79,7 +88,8 @@ router.get('/profile', authenticateToken, async (req, res) => {
       buyerScore,
       sellerScore,
       buyerReviewCount,
-      sellerReviewCount
+      sellerReviewCount,
+      stripeConnectOnboarded
     });
   } catch (error) {
     console.error('Error fetching customer profile:', error);

@@ -3,9 +3,9 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { Observable } from 'rxjs';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { environment } from '../../../../environments/environment';
 import { AuthService } from '../../../auth/services/auth.service';
 import { ProposalNotificationsComponent } from '../../../dashboard/components/proposal-notifications/proposal-notifications.component';
-import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-header',
@@ -19,7 +19,9 @@ export class HeaderComponent {
   private authService = inject(AuthService);
   private translate = inject(TranslateService);
   readonly environment = environment;
-  
+  /** Shown only in non-production builds (e.g. local / dev deploy) */
+  readonly showEnvBadge = !environment.production;
+
   @Input() activePage = '';
   isAuthenticated$!: Observable<boolean>;
   menuOpen = false;

@@ -32,6 +32,8 @@ export interface Listing {
   listingType: 'Promoted' | 'Verified' | 'Standard';
   condition: string;
   location?: string;
+  locationCity?: string;
+  locationCountry?: string;
   shippingCost: number;
   shippingOption?: string;
   returnPolicy?: string;
@@ -84,6 +86,8 @@ export interface Listing {
   updatedAt: string;
   watchlistCount?: number;
   inWatchlist?: boolean;
+  /** Set on seller/my-listings: highest offer received (pending or accepted) */
+  highestOfferAmount?: number | null;
   /** Seller's average rating as seller (from reviews) */
   sellerScore?: number | null;
   /** Number of reviews the seller has received as seller */
@@ -92,7 +96,7 @@ export interface Listing {
   myHighestBid?: number | null;
   /** Set on bidder/my-auctions: when user last bid */
   myLastBidAt?: string | null;
-  /** Set on bidder/my-auctions: user's preference to receive outbid emails */
+  /** Set on bidder/my-auctions: preference for outbid notifications (email + in-app when logged in) */
   notifyWhenOutbid?: boolean;
 }
 
@@ -108,7 +112,7 @@ export interface ListingsResponse {
 export interface ListingsQueryParams {
   category?: string;
   subCategory?: string;
-  sort?: 'deadline' | 'newest' | 'highest' | 'lowest' | 'bids';
+  sort?: 'deadline' | 'newest' | 'highest' | 'lowest' | 'bids' | 'recent-end';
   minPrice?: number;
   maxPrice?: number;
   minBids?: number;
@@ -117,10 +121,12 @@ export interface ListingsQueryParams {
   search?: string;
   /** Comma-separated condition keys: new, like-new, very-good, good, fair, for-parts */
   condition?: string;
-  /** Comma-separated shipping types: worldwide, regional, local-pickup */
+  /** Comma-separated shipping options: flat-rate, calculated, local-pickup, free (legacy: worldwide, regional) */
   shipping?: string;
-  /** Region: europe, north-america, asia, other */
-  location?: string;
+  /** Item location city (partial match) */
+  locationCity?: string;
+  /** ISO country code (e.g. US, GB) */
+  locationCountry?: string;
   limit?: number;
   skip?: number;
   page?: number;

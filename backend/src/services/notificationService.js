@@ -7,6 +7,7 @@ const User = require('../models/User');
  * | Notification type           | Link destination                |
  * |----------------------------|---------------------------------|
  * | New bid received           | /listing/:slug?tab=bids        |
+ * | Outbid (auction)          | /listing/:slug?tab=bids        |
  * | New proposal               | /listing/:slug?tab=offers       |
  * | Proposal accepted/declined| /listing/:slug?tab=offers       |
  * | Auction ended (seller)     | /dashboard/transactions         |
@@ -81,6 +82,28 @@ async function notifyNewBid({ listingId, listingSlug, listingTitle, bidAmount, b
     type: 'bid',
     link,
     referenceId: listingId
+  });
+}
+
+/** Auction (highest-bid): previous high bidder was exceeded — in-app notification (email sent separately). */
+async function notifyBidderOutbid({
+  listingSlug,
+  listingTitle,
+  previousBidAmount,
+  newBidAmount,
+  bidderUserId,
+  listingId
+}) {
+  const link = listingSlug ? `/listing/${listingSlug}?tab=bids` : null;
+  const prev = Number(previousBidAmount || 0).toFixed(2);
+  const next = Number(newBidAmount || 0).toFixed(2);
+  return createNotification({
+    userId: bidderUserId,
+    title: "You've been outbid",
+    message: `Your bid of $${prev} on "${listingTitle || 'this auction'}" was exceeded. Current high bid: $${next}.`,
+    type: 'bid',
+    link,
+    referenceId: listingId ? String(listingId) : listingSlug || null
   });
 }
 
@@ -365,6 +388,78 @@ async function notifyShippingDeadlineApproaching({ transactionId, listingTitle, 
   });
 }
 
+/**
+ * Day 3 midpoint warning: seller has 2 business days left before auto-cancel.
+ * @param {object} opts
+ * @param {string} opts.transactionId
+ * @param {string} opts.listingTitle   Title of the listing (for user context)
+ * @param {string} opts.sellerUserId   Mongo _id of the seller
+ */
+async function notifySellerShippingFinalTwoDays({ transactionId, listingTitle, sellerUserId }) {
+  return createNotification({
+    userId: sellerUserId,
+    title: 'Ship soon — 2 days left',
+    message: `You have 2 business days left to ship "${listingTitle || 'this order'}" or it will be cancelled and the buyer refunded.`,
+    type: 'shipping',
+    link: `/dashboard/transactions`,
+    referenceId: transactionId
+  });
+}
+
+/**
+ * Buyer triggered "Remind seller to ship" action.
+ * @param {object} opts
+ * @param {string} opts.transactionId
+ * @param {string} opts.listingTitle
+ * @param {string} opts.sellerUserId
+ */
+async function notifySellerBuyerRemindedShip({ transactionId, listingTitle, sellerUserId }) {
+  return createNotification({
+    userId: sellerUserId,
+    title: 'Buyer reminder: please ship',
+    message: `The buyer asked you to ship "${listingTitle || 'their order'}" soon.`,
+    type: 'shipping',
+    link: `/dashboard/transactions`,
+    referenceId: transactionId
+  });
+}
+
+/**
+ * Auto-cancel notification to buyer: order cancelled + refund issued.
+ * @param {object} opts
+ * @param {string} opts.transactionId
+ * @param {string} opts.listingTitle
+ * @param {string} opts.buyerUserId
+ */
+async function notifyBuyerOrderCancelledNoShipment({ transactionId, listingTitle, buyerUserId }) {
+  return createNotification({
+    userId: buyerUserId,
+    title: 'Order cancelled — refund issued',
+    message: `Your order for "${listingTitle || 'the item'}" was cancelled because the seller did not ship in time. You have been refunded in full.`,
+    type: 'shipping',
+    link: `/dashboard/transactions`,
+    referenceId: transactionId
+  });
+}
+
+/**
+ * Auto-cancel notification to seller: failed to ship within deadline.
+ * @param {object} opts
+ * @param {string} opts.transactionId
+ * @param {string} opts.listingTitle
+ * @param {string} opts.sellerUserId
+ */
+async function notifySellerOrderCancelledNoShipment({ transactionId, listingTitle, sellerUserId }) {
+  return createNotification({
+    userId: sellerUserId,
+    title: 'Order cancelled — did not ship in time',
+    message: `The order for "${listingTitle || 'your sale'}" was cancelled automatically because you did not ship within the required timeframe. The buyer has been refunded.`,
+    type: 'shipping',
+    link: `/dashboard/transactions`,
+    referenceId: transactionId
+  });
+}
+
 /** Buyer confirmed receipt - notify seller */
 async function notifyBuyerConfirmedReceipt({ transactionId, listingTitle, buyerName, sellerUserId }) {
   return createNotification({
@@ -461,6 +556,43 @@ async function notifyAccountReactivated({ userId }) {
     type: 'account',
     link: '/dashboard/my-account',
     referenceId: 'reactivation'
+  });
+}
+
+/** Seller accepted payment — notify buyer */
+async function notifyBuyerSellerAccepted({ transactionId, listingTitle, buyerUserId }) {
+  return createNotification({
+    userId: buyerUserId,
+    title: 'Seller accepted your payment',
+    message: `The seller has accepted your payment for "${listingTitle || 'the item'}". They will prepare and ship your order soon.`,
+    type: 'transaction',
+    link: '/dashboard/transactions',
+    referenceId: transactionId
+  });
+}
+
+/** Buyer paid — notify seller */
+async function notifySellerPaymentReceived({ transactionId, listingTitle, buyerName, sellerUserId }) {
+  return createNotification({
+    userId: sellerUserId,
+    title: 'Payment received',
+    message: `${buyerName || 'A buyer'} paid for "${listingTitle || 'your listing'}". Confirm acceptance and prepare to ship.`,
+    type: 'transaction',
+    link: '/dashboard/transactions',
+    referenceId: transactionId
+  });
+}
+
+/** Seller must connect Stripe before a qualifying offer can be accepted */
+async function notifySellerStripeRequiredForOffer({ listingSlug, listingTitle, offerAmount, sellerUserId }) {
+  const link = '/dashboard/settings';
+  return createNotification({
+    userId: sellerUserId,
+    title: 'Action required: Connect Stripe to accept offer',
+    message: `Your listing "${listingTitle || 'the item'}" has a qualifying offer of $${(offerAmount || 0).toFixed(2)}. Connect your Stripe account in Settings → Payments to accept it.`,
+    type: 'transaction',
+    link,
+    referenceId: listingSlug
   });
 }
 
@@ -566,6 +698,7 @@ module.exports = {
   createNotification,
   notifyNewProposal,
   notifyNewBid,
+  notifyBidderOutbid,
   notifyOfferPlaced,
   notifyOfferOutbid,
   notifyProposalAccepted,
@@ -585,6 +718,10 @@ module.exports = {
   notifyItemMarkedDelivered,
   notifyShippingDeadlineStarted,
   notifyShippingDeadlineApproaching,
+  notifySellerShippingFinalTwoDays,
+  notifySellerBuyerRemindedShip,
+  notifyBuyerOrderCancelledNoShipment,
+  notifySellerOrderCancelledNoShipment,
   notifyBuyerConfirmedReceipt,
   notifyDisputeOpened,
   notifyEvidenceSubmitted,
@@ -597,5 +734,8 @@ module.exports = {
   notifyLoginFromNewDevice,
   notifySellerWinnerSelected,
   notifyBuyerAuctionWon,
+  notifySellerStripeRequiredForOffer,
+  notifySellerPaymentReceived,
+  notifyBuyerSellerAccepted,
   emitNewNotificationToUser
 };

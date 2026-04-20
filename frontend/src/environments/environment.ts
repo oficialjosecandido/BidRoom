@@ -4,6 +4,12 @@ export const environment = {
   enableAuctions: true,
   enablePrivateRooms: true,
   enableBestOffers: true,
+  /** When APP_CONFIG.API_URL is not injected, non-localhost builds use this API base */
+  defaultApiBaseUrl: 'https://bidroom-backend-dev.azurewebsites.net/api',
+  /** Seller commission rate (0.005 = 0.5%, 0.05 = 5%) */
+  bidroomFeeSellerRate: 0.005,
+  /** Buyer fee rate (0.005 = 0.5%, 0.05 = 5%) */
+  bidroomFeeBuyerRate: 0.005,
   auctionDurations: [
     { label: '5 minutes', hours: 1 / 12 },
     { label: '1 hour',    hours: 1      },

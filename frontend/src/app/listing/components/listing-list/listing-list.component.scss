@@ -294,6 +294,48 @@
     font-size: 0.9rem;
   }
 
+  .filter-group--location {
+    .location-filter-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+    }
+
+    .location-field {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+
+    .location-field-label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: #9ca3af;
+    }
+
+    .location-input,
+    .location-select {
+      width: 100%;
+      padding: 0.5rem 0.65rem;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      background: #fff;
+      outline: none;
+      transition: border-color 0.15s;
+      &:focus {
+        border-color: var(--accent-purple, #7A4F84);
+      }
+    }
+
+    .location-select {
+      cursor: pointer;
+      appearance: auto;
+    }
+  }
+
   // ── Listings Main ──────────────────────────────────────────────────────────
   .listing-main {
     flex: 1;

@@ -113,6 +113,20 @@ const listingSchema = new mongoose.Schema({
     type: String,
     default: null
   },
+  /** Item location (for search/filter); optional on legacy documents */
+  locationCity: {
+    type: String,
+    trim: true,
+    default: null,
+    index: true
+  },
+  locationCountry: {
+    type: String,
+    trim: true,
+    default: null,
+    uppercase: true,
+    index: true
+  },
   shippingCost: {
     type: Number,
     default: 0,
@@ -134,9 +148,9 @@ const listingSchema = new mongoose.Schema({
   shippingOriginCountry: { type: String, trim: true, default: 'US' },
   handlingTime: {
     type: Number,
-    required: true,
+    default: 5,
     min: 1,
-    max: 30 // Max 30 business days
+    max: 30
   },
   returnPolicy: {
     type: String,
@@ -165,7 +179,7 @@ const listingSchema = new mongoose.Schema({
   // Duration slot (fixed auction lengths)
   durationSlot: {
     type: String,
-    enum: ['5 minutes', '2 hours', '24 hours', '3 days', '7 days'],
+    enum: ['5 minutes', '1 hour', '2 hours', '7 hours', '24 hours', '3 days', '7 days'],
     default: '7 days',
     required: true
   },

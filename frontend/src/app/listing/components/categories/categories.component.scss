@@ -105,6 +105,38 @@
   flex-shrink: 0;
 }
 
+.cat-filter-group--location {
+  grid-column: 1 / -1;
+  max-width: 480px;
+}
+
+.cat-location-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: stretch;
+}
+
+.cat-location-input,
+.cat-location-select {
+  flex: 1;
+  min-width: 120px;
+  padding: 6px 10px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  outline: none;
+  background: #fff;
+  &:focus {
+    border-color: var(--accent-purple, #7A4F84);
+  }
+}
+
+.cat-location-select {
+  cursor: pointer;
+  max-width: 200px;
+}
+
 .cat-filter-actions {
   display: flex;
   align-items: center;

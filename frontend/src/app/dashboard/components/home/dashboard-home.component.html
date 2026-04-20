@@ -1,4 +1,22 @@
 <div class="dashboard-home">
+  @if (customer?.user?.accountStatus === 'suspended') {
+    <div class="account-status-banner account-status-suspended">
+      <span class="status-icon">⚠️</span>
+      <div class="status-body">
+        <strong>Account Suspended</strong>
+        <p>Your account has been temporarily suspended while a dispute is under review. You cannot place bids, create listings, or complete transactions until the dispute is resolved.</p>
+      </div>
+    </div>
+  }
+  @if (customer?.user?.accountStatus === 'closed') {
+    <div class="account-status-banner account-status-closed">
+      <span class="status-icon">🚫</span>
+      <div class="status-body">
+        <strong>Account Closed</strong>
+        <p>Your account has been permanently closed. Please contact support if you believe this is an error.</p>
+      </div>
+    </div>
+  }
   <div class="page-header">
     <div class="page-header-main">
       <div>
@@ -11,10 +29,12 @@
       </div>
       @if (!isLoading) {
         <div class="header-actions">
+          @if (featureFlags.flags.membershipTiers) {
           <button type="button" class="header-btn header-btn-primary" (click)="openBalanceModal()">
             <span class="header-btn-icon">💰</span>
             {{ 'dashboard.home.addFunds' | translate }}
           </button>
+          }
           <a routerLink="/listing/add" class="header-btn header-btn-secondary">
             <span class="header-btn-icon">➕</span>
             {{ 'dashboard.home.createListing' | translate }}
@@ -27,6 +47,20 @@
       }
     </div>
   </div>
+
+  <!-- Payout setup banner -->
+  @if (!isLoading && showPayoutSetupBanner) {
+  <div class="payout-setup-banner">
+    <div class="payout-banner-icon">⚠️</div>
+    <div class="payout-banner-body">
+      <strong>{{ 'dashboard.home.payoutSetupTitle' | translate }}</strong>
+      <span>{{ 'dashboard.home.payoutSetupDesc' | translate }}</span>
+    </div>
+    <a routerLink="/dashboard/settings" class="payout-banner-cta">
+      {{ 'dashboard.home.payoutSetupCta' | translate }}
+    </a>
+  </div>
+  }
 
   <!-- Summary cards -->
   <div class="stats-grid">
@@ -52,7 +86,9 @@
         <span class="stat-value">{{ formatPrice(balance) }}</span>
         <span class="stat-label">{{ 'dashboard.home.balance' | translate }}</span>
       </div>
+      @if (featureFlags.flags.membershipTiers) {
       <button type="button" class="stat-action-btn" (click)="openBalanceModal()">{{ 'dashboard.home.increaseBalance' | translate }}</button>
+      }
     </div>
     <a class="stat-card stat-buyer-score stat-clickable" routerLink="/dashboard/buyer">
       <div class="stat-icon">🛒</div>
@@ -83,7 +119,7 @@
   </div>
 
   <!-- Your membership level (prominent) -->
-  @if (!isLoading) {
+  @if (!isLoading && featureFlags.flags.membershipTiers) {
     <section class="section membership-level-section">
       <div class="membership-level-card" [class.has-tier]="currentMembershipTier">
         <div class="membership-level-badge" [attr.data-tier]="currentMembershipTier?.name?.toLowerCase()">
@@ -120,7 +156,7 @@
   }
 
   <!-- Membership tiers -->
-  @if (!isLoading) {
+  @if (!isLoading && featureFlags.flags.membershipTiers) {
     <section class="section membership-section">
       <h2 class="section-title">{{ 'dashboard.home.membership' | translate }}</h2>
       <p class="membership-desc">{{ 'dashboard.home.membershipDesc' | translate }}</p>
@@ -149,7 +185,9 @@
           <span class="topup-empty-icon">💳</span>
           <p class="topup-empty-text">{{ 'dashboard.home.noFundsYet' | translate }}</p>
           <p class="topup-empty-hint">{{ 'dashboard.home.balanceUsage' | translate }}</p>
+          @if (featureFlags.flags.membershipTiers) {
           <button type="button" class="topup-empty-cta" (click)="openBalanceModal()">{{ 'dashboard.home.addFunds' | translate }}</button>
+          }
         </div>
       }
     @if (topups.length > 0) {
@@ -356,7 +394,7 @@
   }
 
   <!-- Increase balance modal -->
-  @if (showBalanceModal) {
+  @if (showBalanceModal && featureFlags.flags.membershipTiers) {
 <div class="modal-overlay" (click)="closeBalanceModal()">
     <div class="modal-content balance-modal" (click)="$event.stopPropagation()">
       <div class="modal-header">
@@ -365,6 +403,7 @@
       </div>
       <div class="modal-body">
         <p class="balance-modal-desc">{{ 'dashboard.home.balanceModalDesc' | translate }}</p>
+        @if (featureFlags.flags.membershipTiers) {
         <p class="balance-modal-label">{{ 'dashboard.home.quickSelect' | translate }}</p>
         <div class="balance-tier-options">
           @for (tier of membershipTiers; track tier) {
@@ -379,6 +418,7 @@
           </button>
 }
         </div>
+        }
         <div class="balance-custom-row">
           <p class="balance-modal-label">{{ 'dashboard.home.orCustomAmount' | translate }}</p>
           <div class="balance-custom-input-wrap">

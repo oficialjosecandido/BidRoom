@@ -54,7 +54,13 @@ export const CATEGORIES: Category[] = [
     icon: '📬',
     description: 'Stamps, coins and rare finds',
     subCategories: [
-      'Stamps',
+      'Definitive Stamps', 'Commemorative Stamps', 'Airmail Stamps',
+      'Postage Due Stamps', 'Revenue / Fiscal Stamps', 'Official Stamps',
+      'Military Mail', 'Local Issues', 'First Day Covers (FDC)',
+      'Stamp Booklets', 'Collections / Lots',
+      'Classic Stamps (Before 1900)', 'Early 20th Century (1900 to 1945)',
+      'Post War (1945 to 1960)', 'Late 20th Century (1960 to 2000)',
+      'Modern Stamps (2000 to Present)',
       'Coins & Banknotes', 'Trading Cards', 'Toys & Models',
       'Sports Memorabilia', 'Music Memorabilia', 'Movie Memorabilia',
       'Vintage Items', 'Other Collectibles'

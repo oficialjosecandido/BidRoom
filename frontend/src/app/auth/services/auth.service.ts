@@ -1,8 +1,10 @@
 import { Injectable, inject } from '@angular/core';
 import { BehaviorSubject, Observable, from, of, throwError } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
-import { Auth, GoogleAuthProvider, User as FirebaseUser, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithPopup, sendPasswordResetEmail, sendEmailVerification, updateProfile, signOut, getIdToken, confirmPasswordReset, verifyPasswordResetCode } from '@angular/fire/auth';
+import { HttpClient } from '@angular/common/http';
+import { Auth, GoogleAuthProvider, User as FirebaseUser, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithPopup, sendEmailVerification, updateProfile, signOut, getIdToken, confirmPasswordReset, verifyPasswordResetCode } from '@angular/fire/auth';
 import { isAdminEmail } from '../../shared/config/admin.constants';
+import { API_CONFIG } from '../../shared/config/api.config';
 
 export interface AppUser {
   uid: string;
@@ -17,6 +19,8 @@ export interface AppUser {
 })
 export class AuthService {
   private auth = inject(Auth);
+  private http = inject(HttpClient);
+  private apiUrl = API_CONFIG.getApiUrl();
 
   private currentUserSubject = new BehaviorSubject<AppUser | null>(null);
   public currentUser$ = this.currentUserSubject.asObservable();
@@ -114,7 +118,7 @@ export class AuthService {
   }
 
   forgotPassword(email: string): Observable<void> {
-    return from(sendPasswordResetEmail(this.auth, email));
+    return this.http.post<void>(`${this.apiUrl}/auth/forgot-password`, { email });
   }
 
   confirmPasswordReset(code: string, newPassword: string): Observable<void> {

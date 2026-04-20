@@ -1,8 +1,9 @@
-import { Component, OnInit, OnDestroy, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Subscription } from 'rxjs';
+import { filter, take } from 'rxjs/operators';
 import Swal from 'sweetalert2';
 import { ListingsService, Listing } from '../../../shared/services/listings.service';
 import { BidsService, Bid } from '../../../shared/services/bids.service';
@@ -11,11 +12,15 @@ import { AuthService, AppUser } from '../../../auth/services/auth.service';
 import { PrivateRoomService } from '../../services/private-room.service';
 import { API_CONFIG } from '../../../shared/config/api.config';
 
+type InvitationDisplayStatus = 'pending' | 'accepted' | 'declined';
+
 interface PlatinumBidderInfo {
   id: string;
   name: string;
   latestBid: number;
   bidCount: number;
+  /** RSVP from platinumBidderInvitations */
+  invitationStatus: InvitationDisplayStatus;
 }
 
 @Component({
@@ -28,6 +33,7 @@ interface PlatinumBidderInfo {
 export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
+  private cdr = inject(ChangeDetectorRef);
   private listingsService = inject(ListingsService);
   private bidsService = inject(BidsService);
   private socketService = inject(SocketService);
@@ -49,23 +55,36 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
   currentUser: AppUser | null = null;
   viewerCount = 0;
   private socketSubscriptions: Subscription[] = [];
+  /** Real-time socket subs — tracked separately so re-entering subscribeToUpdates() doesn't stack duplicates. */
+  private rtSubscriptions: Subscription[] = [];
   private countdownInterval: ReturnType<typeof setInterval> | null = null;
-  private resizeHandler: () => void = () => this.checkMobile();
-  isMobile = false;
   isPlacingBid = false;
   /** Custom bid amount (user can type any number >= min); empty = use minimum next bid */
   customBidAmount = '';
   bidInputError: string | null = null;
   startNowLoading = false;
+  acceptingInvitation = false;
+  selectedImageIndex = 0;
+  Math = Math;
 
   ngOnInit(): void {
     this.listingId = this.route.snapshot.paramMap.get('id') || '';
-    if (this.listingId) {
-      this.loadListing();
-    }
+
+    // Wait for Firebase auth to initialise before fetching the listing so the
+    // GET /listings/:id request carries the auth token and the backend returns
+    // currentUserPlatinumStatus for the logged-in user.
+    this.authService.authReady$.pipe(
+      filter(ready => !!ready),
+      take(1)
+    ).subscribe(() => {
+      if (this.listingId) {
+        this.loadListing();
+      }
+    });
 
     this.socketSubscriptions.push(
       this.authService.currentUser$.subscribe(user => {
+        const wasAuthenticated = this.isAuthenticated;
         this.isAuthenticated = !!user;
         this.currentUserId = user?.uid || null;
         this.currentUser = user;
@@ -73,27 +92,26 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
           this.isPlatinumBidder = false;
           this.invitationPending = false;
         } else if (this.listing) {
-          this.applyPlatinumStatusFromListing();
+          if (!wasAuthenticated && !this.listing.currentUserPlatinumStatus) {
+            // Listing was loaded without auth; reload to get platinum status
+            this.loadListing();
+          } else {
+            this.applyPlatinumStatusFromListing();
+          }
         }
       })
     );
 
-    // Detect mobile device
-    this.checkMobile();
-    window.addEventListener('resize', this.resizeHandler);
-  }
-
-  checkMobile(): void {
-    this.isMobile = window.innerWidth < 769;
   }
 
   ngOnDestroy(): void {
     this.socketSubscriptions.forEach(sub => sub.unsubscribe());
+    this.rtSubscriptions.forEach(sub => sub.unsubscribe());
+    this.rtSubscriptions = [];
     if (this.countdownInterval) {
       clearInterval(this.countdownInterval);
       this.countdownInterval = null;
     }
-    window.removeEventListener('resize', this.resizeHandler);
     // Leave private room viewer room
     if (this.listingId) {
       this.socketService.leavePrivateRoomViewer(this.listingId);
@@ -156,39 +174,76 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
   }
 
   updatePlatinumBidders(): void {
-    if (!this.listing?.platinumBidders) {
-      this.platinumBidders = [];
-      return;
+    const platinumMap = new Map<string, PlatinumBidderInfo>();
+
+    // Seed all invited bidders (accepted or pending) from invitation status
+    const invitations = this.listing?.platinumBidderStatus || [];
+    for (const inv of invitations) {
+      const bidderId = inv.bidder._id;
+      const name = [inv.bidder.firstName, inv.bidder.lastName].filter(Boolean).join(' ') || 'Invited Bidder';
+      const st = inv.status;
+      const invitationStatus: InvitationDisplayStatus =
+        st === 'declined' ? 'declined' : st === 'accepted' ? 'accepted' : 'pending';
+      platinumMap.set(bidderId, {
+        id: bidderId,
+        name,
+        latestBid: 0,
+        bidCount: 0,
+        invitationStatus
+      });
     }
 
-    // Get unique platinum bidders with their latest bid info
-    const platinumMap = new Map();
-    
-    this.listing.platinumBidders.forEach((pbId: string | { _id: string }) => {
-      const bidderId = typeof pbId === 'string' ? pbId : pbId._id;
-      // Find latest bid from this bidder
-      const bidderBids = this.bids.filter(b => {
-        if (b.bidder) {
-          return (typeof b.bidder === 'string' ? b.bidder : b.bidder._id) === bidderId;
-        }
-        return false;
-      });
-      
-      if (bidderBids.length > 0) {
-        const latestBid = bidderBids.sort((a, b) => 
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-        )[0];
-        
+    // Overlay actual bid data
+    for (const b of this.bids) {
+      if (!b.bidder) continue;
+      const bidderId = typeof b.bidder === 'string' ? b.bidder : b.bidder._id;
+      const existing = platinumMap.get(bidderId);
+      if (!existing) continue; // only show platinum invitees
+      const bidDate = new Date(b.createdAt).getTime();
+      const existingDate = existing.bidCount > 0
+        ? new Date(this.bids.find(x => {
+            const xId = typeof x.bidder === 'string' ? x.bidder : x.bidder?._id;
+            return xId === bidderId && x.amount === existing.latestBid;
+          })?.createdAt || 0).getTime()
+        : 0;
+      if (bidDate >= existingDate) {
+        const name = b.bidderName || [b.bidderFirstName, b.bidderLastName].filter(Boolean).join(' ') || existing.name;
         platinumMap.set(bidderId, {
-          id: bidderId,
-          name: latestBid.bidderName || latestBid.bidderFirstName + ' ' + latestBid.bidderLastName || 'Unknown',
-          latestBid: latestBid.amount,
-          bidCount: bidderBids.length
+          ...existing,
+          name,
+          latestBid: b.amount > existing.latestBid ? b.amount : existing.latestBid,
+          bidCount: existing.bidCount + 1
+          // Keep invitationStatus from platinumBidderStatus only — do not infer from bids:
+          // main-auction bids would wrongly mark invitees as "accepted" before they RSVP.
+        });
+      }
+    }
+
+    this.platinumBidders = Array.from(platinumMap.values());
+  }
+
+  acceptInvitationInPage(): void {
+    if (!this.listingId || this.acceptingInvitation) return;
+    this.acceptingInvitation = true;
+    this.privateRoomService.acceptInvitationInPage(this.listingId).subscribe({
+      next: () => {
+        this.acceptingInvitation = false;
+        this.invitationPending = false;
+        this.isPlatinumBidder = true;
+        // Refresh listing data so the UI reflects the latest room state
+        // (e.g. privateRoomStatus may have changed, or we need accurate platinumBidderStatus)
+        this.loadListing();
+      },
+      error: (err) => {
+        this.acceptingInvitation = false;
+        Swal.fire({
+          icon: 'error',
+          title: 'Could not accept',
+          text: err?.error?.message || 'Failed to accept invitation. Please try the email link.',
+          confirmButtonColor: '#7A4F84'
         });
       }
     });
-
-    this.platinumBidders = Array.from(platinumMap.values());
   }
 
   startRoomNow(): void {
@@ -200,12 +255,20 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
         if (res.listing && this.listing) {
           this.listing.privateRoomStatus = (res.listing.privateRoomStatus ?? 'active') as Listing['privateRoomStatus'];
           this.listing.privateRoomEndDate = res.listing.privateRoomEndDate ?? undefined;
+          this.listing.endDate = res.listing.endDate ?? this.listing.endDate;
           this.listing.status = (res.listing.status as Listing['status']) ?? this.listing.status;
           this.startCountdown();
+          this.loadListing();
         }
       },
       error: () => {
         this.startNowLoading = false;
+        Swal.fire({
+          icon: 'error',
+          title: 'Could not start',
+          text: 'The room could not be started. It may have already started or ended.',
+          confirmButtonColor: '#7A4F84'
+        });
       }
     });
   }
@@ -280,10 +343,14 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
   subscribeToUpdates(): void {
     if (!this.listingId) return;
 
+    // Clean up previous RT subs before re-subscribing (loadListing calls this on every refresh)
+    for (const s of this.rtSubscriptions) s.unsubscribe();
+    this.rtSubscriptions = [];
+
     // Join the listing room for socket events
     this.socketService.connect();
     this.socketService.joinListing(this.listingId);
-    
+
     // Join private room viewer room to track viewers
     this.socketService.joinPrivateRoomViewer(this.listingId);
 
@@ -299,6 +366,10 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
       if (update.privateRoomClosedReason) {
         this.listing.privateRoomClosedReason = update.privateRoomClosedReason;
       }
+      if (update.platinumBidderAcceptanceDeadline) {
+        this.listing.platinumBidderAcceptanceDeadline = update.platinumBidderAcceptanceDeadline;
+        this.startCountdown();
+      }
       if (update.privateRoomStatus) {
         this.listing.privateRoomStatus = update.privateRoomStatus;
         if (update.privateRoomStatus === 'ended') {
@@ -307,7 +378,7 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
             clearInterval(this.countdownInterval);
             this.countdownInterval = null;
           }
-          this.loadBids(); // Refresh bids for final state
+          this.loadBids();
         }
       }
       if (update.status) this.listing.status = update.status;
@@ -315,27 +386,89 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
       if (update.privateRoomStatus === 'active' || update.privateRoomStatus === 'invited') {
         this.startCountdown();
       }
+      this.cdr.detectChanges();
     });
 
-    this.socketSubscriptions.push(sub);
+    this.rtSubscriptions.push(sub);
 
-    // Subscribe to new bids (filter by listingId)
+    // Subscribe to new bids — update in-place immediately from socket data (no HTTP round-trip)
     const bidSub = this.socketService.onNewBid().subscribe(bidEvent => {
-      if (bidEvent.listingId === this.listingId) {
-        this.loadBids();
+      if (bidEvent.listingId !== this.listingId) return;
+      if (!this.bids.some(b => b._id === bidEvent.bid._id)) {
+        this.bids = [bidEvent.bid, ...this.bids];
       }
+      if (this.listing) {
+        if (bidEvent.currentPrice !== undefined) this.listing.currentPrice = bidEvent.currentPrice;
+        if (bidEvent.bidCount !== undefined) this.listing.bidCount = bidEvent.bidCount;
+      }
+      this.updatePlatinumBidders();
+      // Force synchronous CD — eventCoalescing:true defers zone-triggered CD
+      this.cdr.detectChanges();
     });
 
-    this.socketSubscriptions.push(bidSub);
+    this.rtSubscriptions.push(bidSub);
 
     // Subscribe to viewer count updates
     const viewerSub = this.socketService.onPrivateRoomViewerCountUpdate().subscribe(event => {
       if (event.listingId === this.listingId) {
         this.viewerCount = event.count;
+        this.cdr.detectChanges();
       }
     });
 
-    this.socketSubscriptions.push(viewerSub);
+    this.rtSubscriptions.push(viewerSub);
+
+    // Update seat status live when a bidder accepts the invitation
+    const acceptSub = this.socketService.onInvitationAccepted().subscribe(event => {
+      if (event.listingId !== this.listingId || !event.bidderId) return;
+      const existing = this.platinumBidders.find(b => b.id === event.bidderId);
+      if (existing) {
+        existing.invitationStatus = 'accepted';
+        existing.name = event.bidderName || existing.name;
+      } else {
+        const name = event.bidderName || [event.bidderFirstName, event.bidderLastName].filter(Boolean).join(' ') || 'Invited Bidder';
+        this.platinumBidders = [...this.platinumBidders, {
+          id: event.bidderId,
+          name,
+          latestBid: 0,
+          bidCount: 0,
+          invitationStatus: 'accepted'
+        }];
+      }
+      // Reload listing for other participants so their view of invitation statuses stays current
+      // (self-acceptance already calls loadListing() in acceptInvitationInPage())
+      const isSelf = event.bidderId === this.currentUserId;
+      if (!isSelf) {
+        this.loadListing();
+      }
+    });
+
+    this.rtSubscriptions.push(acceptSub);
+
+    const declineSub = this.socketService.onInvitationDeclined().subscribe(event => {
+      if (event.listingId !== this.listingId || !event.bidderId) return;
+      const existing = this.platinumBidders.find(b => b.id === event.bidderId);
+      if (existing) {
+        existing.invitationStatus = 'declined';
+        this.platinumBidders = [...this.platinumBidders];
+      } else {
+        this.loadListing();
+      }
+    });
+
+    this.rtSubscriptions.push(declineSub);
+  }
+
+  /** Badge label for invitation RSVP */
+  invitationLabel(b: PlatinumBidderInfo): string {
+    switch (b.invitationStatus) {
+      case 'accepted':
+        return 'Accepted';
+      case 'declined':
+        return 'Declined';
+      default:
+        return 'Pending';
+    }
   }
 
   getMinBid(): number {
@@ -370,8 +503,15 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
     return slug ? `/listing/${slug}` : '#';
   }
 
-  /** Seller clicks "Start auction" in center — scroll to Bid History (always visible; .prominent-bid-section is only for bidders). */
+  /**
+   * Seller: during invitation phase, starts the private room immediately (same as listing-details).
+   * When already active, scrolls to bid history.
+   */
   onSellerStartAuction(): void {
+    if (this.listing?.privateRoomStatus === 'invited') {
+      this.startRoomNow();
+      return;
+    }
     if (this.listing?.privateRoomStatus === 'active') {
       document.querySelector('#bid-history-section')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
@@ -455,50 +595,6 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
       return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
     }
     return name[0].toUpperCase();
-  }
-
-  getPositionTop(index: number): string {
-    // Calculate angle for evenly spaced positions (72 degrees apart for 5 seats)
-    const angle = (index * 72 - 90) * (Math.PI / 180); // Start at top (-90 degrees)
-    
-    // Responsive radius based on screen size
-    const tableRadius = this.isMobile ? 160 : 225; // Half of table width
-    const cardHalfSize = this.isMobile ? 55 : 75; // Half of card width
-    const margin = this.isMobile ? 30 : 50;
-    const radius = tableRadius + margin + cardHalfSize; // Distance from center to seat center
-    const containerSize = this.isMobile ? Math.min(window.innerWidth - 32, 600) : 800; // Account for padding
-    const centerY = containerSize / 2; // Center of bidder-positions container
-    
-    // Calculate position and subtract half card height to center it
-    const y = centerY + Math.sin(angle) * radius - cardHalfSize;
-    return `${y}px`;
-  }
-
-  getPositionLeft(index: number): string {
-    // Calculate angle for evenly spaced positions
-    const angle = (index * 72 - 90) * (Math.PI / 180);
-    
-    // Responsive radius based on screen size
-    const tableRadius = this.isMobile ? 160 : 225;
-    const cardHalfSize = this.isMobile ? 55 : 75;
-    const margin = this.isMobile ? 30 : 50;
-    const radius = tableRadius + margin + cardHalfSize;
-    const containerSize = this.isMobile ? Math.min(window.innerWidth - 32, 600) : 800; // Account for padding
-    const centerX = containerSize / 2;
-    
-    // Calculate position and subtract half card width to center it
-    const x = centerX + Math.cos(angle) * radius - cardHalfSize;
-    return `${x}px`;
-  }
-
-  getEmptySeats(): number[] {
-    const totalSeats = 5;
-    const usedSeats = this.platinumBidders.length;
-    const emptySeatIndices: number[] = [];
-    for (let i = usedSeats; i < totalSeats; i++) {
-      emptySeatIndices.push(i);
-    }
-    return emptySeatIndices;
   }
 
   formatBidTime(dateString: string): string {

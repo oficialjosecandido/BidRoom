@@ -13,8 +13,20 @@
 
   <div class="container">
     <div class="header-content">
-        <div class="logo">
-        <h1 role="button" tabindex="0" (click)="navigateToHome()" (keydown.enter)="navigateToHome()" (keydown.space)="navigateToHome()">{{ environment.title }}</h1>
+      <div class="logo">
+        <h1
+          class="logo-cluster"
+          role="button"
+          tabindex="0"
+          (click)="navigateToHome()"
+          (keydown.enter)="navigateToHome()"
+          (keydown.space)="navigateToHome()"
+        >
+          <span class="logo-wordmark">{{ 'header.brand' | translate }}</span>
+          @if (showEnvBadge) {
+            <span class="env-pill" [attr.aria-label]="'header.envBadgeAria' | translate">{{ 'header.envBadgeDev' | translate }}</span>
+          }
+        </h1>
       </div>
 
       <button

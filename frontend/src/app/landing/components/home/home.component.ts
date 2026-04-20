@@ -27,6 +27,7 @@ export class HomeComponent implements OnInit, AfterViewInit {
   loading = true;
   error: string | null = null;
   sortBy: 'deadline' | 'newest' | 'highest' | 'lowest' | 'bids' = 'deadline';
+  selectedCategory = '';
   stats: StatsOverview = {
     totalBidders: 0,
     activeListings: 0,
@@ -71,7 +72,8 @@ export class HomeComponent implements OnInit, AfterViewInit {
     const params: ListingsQueryParams = {
       sort: this.sortBy,
       status: 'active',
-      limit: 50
+      limit: 50,
+      ...(this.selectedCategory ? { category: this.selectedCategory } : {})
     };
 
     this.listingsService.getListings(params).subscribe({
@@ -100,6 +102,11 @@ export class HomeComponent implements OnInit, AfterViewInit {
     } else {
       this.router.navigate(['/listing/list']);
     }
+  }
+
+  filterCategory(cat: string): void {
+    this.selectedCategory = cat;
+    this.loadListings();
   }
 
   browseCategory(categoryId: string): void {

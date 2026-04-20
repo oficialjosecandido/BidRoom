@@ -6,6 +6,7 @@ import { MyAuctionsComponent } from '../my-auctions/my-auctions.component';
 import { DashboardTransactionsComponent } from '../transactions/dashboard-transactions.component';
 import { DashboardDisputesComponent } from '../disputes/dashboard-disputes.component';
 import { CustomerService } from '../../../shared/services/customer.service';
+import { TransactionsService } from '../../../shared/services/transactions.service';
 
 type SellerTab = 'auctions' | 'transactions' | 'disputes';
 
@@ -18,11 +19,13 @@ type SellerTab = 'auctions' | 'transactions' | 'disputes';
 })
 export class SellerProfileComponent implements OnInit {
   private customerService = inject(CustomerService);
+  private transactionsService = inject(TransactionsService);
   private route = inject(ActivatedRoute);
 
   activeTab: SellerTab = 'auctions';
   sellerScore: number | null = null;
   sellerReviewCount = 0;
+  pendingTransactions = 0;
 
   ngOnInit(): void {
     this.route.queryParams.subscribe(params => {
@@ -36,6 +39,10 @@ export class SellerProfileComponent implements OnInit {
         this.sellerScore = info.sellerScore ?? null;
         this.sellerReviewCount = info.sellerReviewCount ?? 0;
       }
+    });
+    this.transactionsService.getPendingCounts().subscribe({
+      next: (counts) => this.pendingTransactions = counts.seller,
+      error: () => {}
     });
   }
 

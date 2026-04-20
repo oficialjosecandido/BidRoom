@@ -32,14 +32,14 @@
           <div class="info-row">
             <span class="info-label">{{ 'dashboard.settings.buyerScore' | translate }}</span>
             <span class="info-value score-value">
-              {{ buyerScore !== null ? (buyerScore | number:'1.1-1') + ' / 5' : '—' }}
+              {{ buyerScore !== null ? (buyerScore | number:'1.1-1') + ' / ' + reviewScoreMax : '—' }}
               @if (buyerReviewCount > 0) { <span class="review-count">({{ buyerReviewCount }} {{ buyerReviewCount !== 1 ? ('dashboard.common.reviews' | translate) : ('dashboard.common.review' | translate) }})</span> }
             </span>
           </div>
           <div class="info-row">
             <span class="info-label">{{ 'dashboard.settings.sellerScore' | translate }}</span>
             <span class="info-value score-value">
-              {{ sellerScore !== null ? (sellerScore | number:'1.1-1') + ' / 5' : '—' }}
+              {{ sellerScore !== null ? (sellerScore | number:'1.1-1') + ' / ' + reviewScoreMax : '—' }}
               @if (sellerReviewCount > 0) { <span class="review-count">({{ sellerReviewCount }} {{ sellerReviewCount !== 1 ? ('dashboard.common.reviews' | translate) : ('dashboard.common.review' | translate) }})</span> }
             </span>
           </div>
@@ -73,47 +73,134 @@
       </div>
     </div>
 
-    <!-- Stripe Connect -->
+    <!-- Seller Payout Account -->
     <div class="settings-card settings-card-full">
       <div class="card-header">
         <span class="card-icon">💳</span>
-        <h2 class="card-title">{{ 'dashboard.settings.sellerPayments' | translate }}</h2>
+        <h2 class="card-title">Seller Payout Account</h2>
       </div>
       <div class="card-body">
         @if (connectStatusMessage) {
           <div class="connect-message">{{ connectStatusMessage }}</div>
         }
         @if (connectLoading) {
-          <p class="text-muted">{{ 'dashboard.settings.checkingStripe' | translate }}</p>
-        } @else {
+          <p class="text-muted">Checking payout account status...</p>
+        } @else if (!showOnboardingForm) {
           <div class="connect-status-row">
-            <span class="info-label">{{ 'dashboard.settings.stripeStatus' | translate }}</span>
+            <span class="info-label">Payout status</span>
             <span class="status-badge" [ngClass]="connectStatusClass">{{ connectStatusLabel }}</span>
           </div>
           @if (connectStatus?.onboarded) {
-            <p class="card-desc">{{ 'dashboard.settings.stripeActive' | translate }}</p>
+            <p class="card-desc">Your payout account is active. Buyers can pay you directly — funds will be sent to your registered bank account.</p>
             @if (connectStatus?.chargesEnabled) {
-              <p class="text-success">{{ 'dashboard.settings.chargesEnabled' | translate }} · {{ 'dashboard.settings.payouts' | translate }} {{ connectStatus?.payoutsEnabled ? ('dashboard.settings.enabled' | translate) : ('dashboard.settings.pending' | translate) }}</p>
+              <p class="text-success">Charges enabled · Payouts {{ connectStatus?.payoutsEnabled ? 'enabled' : 'pending' }}</p>
             }
-            <button class="action-btn action-btn-secondary" (click)="startOnboarding()" [disabled]="connectOnboarding">
-              {{ connectOnboarding ? ('dashboard.settings.redirecting' | translate) : ('dashboard.settings.updateStripe' | translate) }}
-            </button>
+            <button class="action-btn action-btn-secondary" (click)="openOnboardingForm()">Update bank account</button>
           } @else if (connectStatus?.connected) {
-            <p class="card-desc">{{ 'dashboard.settings.onboardingIncomplete' | translate }}</p>
-            <button class="action-btn" (click)="startOnboarding()" [disabled]="connectOnboarding">
-              {{ connectOnboarding ? ('dashboard.settings.redirecting' | translate) : ('dashboard.settings.completeStripeSetup' | translate) }}
-            </button>
+            @if (connectStatus?.requirementErrors?.length) {
+              <div class="connect-errors">
+                <p class="connect-errors-title">Issue with your payout account:</p>
+                <ul>
+                  @for (err of connectStatus!.requirementErrors!; track err) {
+                    <li>{{ err }}</li>
+                  }
+                </ul>
+              </div>
+            } @else {
+              <p class="card-desc">Your details have been submitted and are being verified by Stripe. This usually takes a few minutes.</p>
+            }
+            <div class="button-row">
+              <button class="action-btn action-btn-secondary" (click)="openOnboardingForm()">Update details</button>
+              @if (isStripeTestMode) {
+                <button class="action-btn action-btn-test" (click)="testActivate()" [disabled]="connectTestActivating">
+                  {{ connectTestActivating ? 'Activating…' : '⚡ Simulate verification' }}
+                </button>
+              }
+            </div>
           } @else {
-            <p class="card-desc">{{ 'dashboard.settings.connectStripeDesc' | translate }}</p>
+            <p class="card-desc">To receive payments from buyers, set up your payout account. No Stripe account needed — just fill in your details below.</p>
             <ul class="feature-list">
-              <li>{{ 'dashboard.settings.noStripeRequired' | translate }}</li>
-              <li>{{ 'dashboard.settings.identityVerification' | translate }}</li>
-              <li>{{ 'dashboard.settings.payoutSchedule' | translate }}</li>
+              <li>Enter your identity and bank details once</li>
+              <li>Stripe processes payouts securely in the background</li>
+              <li>Funds transferred directly to your bank account</li>
             </ul>
-            <button class="action-btn" (click)="startOnboarding()" [disabled]="connectOnboarding">
-              {{ connectOnboarding ? ('dashboard.settings.redirectingToStripe' | translate) : ('dashboard.settings.connectStripe' | translate) }}
-            </button>
+            <button class="action-btn" (click)="openOnboardingForm()">Set up payout account</button>
           }
+        } @else {
+          <!-- Onboarding Form -->
+          <form class="onboarding-form" (ngSubmit)="submitOnboarding()">
+            @if (connectError) {
+              <div class="form-error-banner">{{ connectError }}</div>
+            }
+
+            <div class="form-section">
+              <h3 class="form-section-title">Date of birth</h3>
+              <div class="dob-row">
+                <div class="form-field">
+                  <label>Day</label>
+                  <input type="number" [(ngModel)]="dobDay" name="dobDay" min="1" max="31" placeholder="DD" required />
+                </div>
+                <div class="form-field">
+                  <label>Month</label>
+                  <input type="number" [(ngModel)]="dobMonth" name="dobMonth" min="1" max="12" placeholder="MM" required />
+                </div>
+                <div class="form-field form-field-year">
+                  <label>Year</label>
+                  <input type="number" [(ngModel)]="dobYear" name="dobYear" min="1900" max="2010" placeholder="YYYY" required />
+                </div>
+              </div>
+            </div>
+
+            <div class="form-section">
+              <h3 class="form-section-title">Address</h3>
+              <div class="form-field">
+                <label>Street address</label>
+                <input type="text" [(ngModel)]="addressLine1" name="addressLine1" placeholder="123 Main St" required />
+              </div>
+              <div class="form-row-2">
+                <div class="form-field">
+                  <label>City</label>
+                  <input type="text" [(ngModel)]="addressCity" name="addressCity" placeholder="Lisbon" required />
+                </div>
+                <div class="form-field">
+                  <label>Postal code</label>
+                  <input type="text" [(ngModel)]="addressPostal" name="addressPostal" placeholder="1000-001" required />
+                </div>
+              </div>
+              <div class="form-field">
+                <label>Country</label>
+                <select [(ngModel)]="addressCountry" name="addressCountry" required>
+                  @for (c of countries; track c.code) {
+                    <option [value]="c.code">{{ c.label }}</option>
+                  }
+                </select>
+              </div>
+            </div>
+
+            <div class="form-section">
+              <h3 class="form-section-title">Bank account (IBAN)</h3>
+              <div class="form-field">
+                <label>IBAN</label>
+                <input type="text" [(ngModel)]="iban" name="iban" placeholder="PT50 0035 0552 0001 3600 5312 9" required
+                       (input)="iban = $any($event.target).value.toUpperCase()" />
+                <span class="form-hint">Your International Bank Account Number. Spaces are ignored.</span>
+              </div>
+            </div>
+
+            <div class="form-section">
+              <label class="tos-row">
+                <input type="checkbox" [(ngModel)]="tosAccepted" name="tosAccepted" />
+                <span>I authorise BidRoom to submit my information to Stripe for identity verification and payout processing, and I accept the <a href="https://stripe.com/legal/connect-account" target="_blank" rel="noopener">Stripe Connected Account Agreement</a>.</span>
+              </label>
+            </div>
+
+            <div class="form-actions">
+              <button type="submit" class="action-btn" [disabled]="connectSubmitting">
+                {{ connectSubmitting ? 'Submitting…' : 'Save payout account' }}
+              </button>
+              <button type="button" class="action-btn action-btn-ghost" (click)="cancelOnboardingForm()" [disabled]="connectSubmitting">Cancel</button>
+            </div>
+          </form>
         }
       </div>
     </div>

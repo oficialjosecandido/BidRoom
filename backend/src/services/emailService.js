@@ -163,37 +163,33 @@ const sendEmailVerification = async (email, firstName, verificationToken) => {
   }
 };
 
-const sendPasswordReset = async (email, firstName, resetToken) => {
-  const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:4200'}/auth/reset-password?token=${resetToken}`;
-  
+const sendPasswordReset = async (email, firstName, resetUrl) => {
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-      <h2 style="color: #333;">Password Reset Request</h2>
-      <p>Hi ${firstName},</p>
-      <p>We received a request to reset your password. Click the link below to reset it:</p>
-      <a href="${resetUrl}" style="display: inline-block; background-color: #dc3545; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px;">Reset Password</a>
-      <p>If the button doesn't work, you can copy and paste this link into your browser:</p>
-      <p style="word-break: break-all; color: #666;">${resetUrl}</p>
-      <p>This link will expire in 1 hour.</p>
-      <p>If you didn't request this password reset, please ignore this email.</p>
-      <p>Best regards,<br>The BidRoom Team</p>
+      <div style="background: linear-gradient(135deg, #7A4F84 0%, #9b6ba8 100%); color: white; padding: 24px; text-align: center; border-radius: 8px 8px 0 0;">
+        <h1 style="margin: 0; font-size: 24px;">Reset your password</h1>
+      </div>
+      <div style="background: #f9f9f9; padding: 24px; border-radius: 0 0 8px 8px;">
+        <p>Hi ${firstName},</p>
+        <p>We received a request to reset your BidRoom password. Click the button below — this link expires in 1 hour.</p>
+        <div style="text-align: center; margin: 28px 0;">
+          <a href="${resetUrl}" style="display: inline-block; background: #7A4F84; color: #ffffff; padding: 14px 32px; text-decoration: none; border-radius: 8px; font-size: 15px; font-weight: 600;">Reset Password</a>
+        </div>
+        <p style="font-size: 13px; color: #666;">If the button doesn't work, copy and paste this link into your browser:</p>
+        <p style="word-break: break-all; color: #888; font-size: 12px;">${resetUrl}</p>
+        <p style="font-size: 13px; color: #999; margin-top: 24px;">If you didn't request a password reset, you can safely ignore this email.</p>
+        <p>Best regards,<br>The BidRoom Team</p>
+      </div>
     </div>
   `;
 
-  // For development, print the password reset link to console
   console.log('\n🔐 PASSWORD RESET LINK:');
   console.log('=====================================');
   console.log(`Email: ${email}`);
   console.log(`Reset URL: ${resetUrl}`);
   console.log('=====================================\n');
 
-  // Still try to send email, but don't fail if it doesn't work
-  try {
-    return await sendEmail(email, 'Reset your BidRoom password', html);
-  } catch (error) {
-    console.log('📧 Email sending failed, but password reset link is available above');
-    return { messageId: 'console-only' };
-  }
+  return await sendEmail(email, 'Reset your BidRoom password', html);
 };
 
 /**

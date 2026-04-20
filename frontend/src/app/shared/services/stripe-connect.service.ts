@@ -9,10 +9,25 @@ export interface ConnectAccountStatus {
   accountId?: string;
   chargesEnabled?: boolean;
   payoutsEnabled?: boolean;
+  requirementErrors?: string[];
 }
 
-export interface ConnectOnboardResponse {
-  url: string;
+export interface OnboardingFormData {
+  dobDay: number;
+  dobMonth: number;
+  dobYear: number;
+  addressLine1: string;
+  addressCity: string;
+  addressPostal: string;
+  addressCountry: string;
+  iban: string;
+  tosAccepted: boolean;
+}
+
+export interface OnboardingSubmitResponse {
+  onboarded: boolean;
+  requiresVerification: boolean;
+  accountId: string;
 }
 
 export interface ConnectCheckoutResponse {
@@ -28,8 +43,8 @@ export class StripeConnectService {
     return this.http.get<ConnectAccountStatus>(`${this.apiUrl}/account-status`);
   }
 
-  startOnboarding(): Observable<ConnectOnboardResponse> {
-    return this.http.post<ConnectOnboardResponse>(`${this.apiUrl}/onboard`, {});
+  submitOnboarding(data: OnboardingFormData): Observable<OnboardingSubmitResponse> {
+    return this.http.post<OnboardingSubmitResponse>(`${this.apiUrl}/submit-onboarding`, data);
   }
 
   createCheckoutSession(transactionId: string): Observable<ConnectCheckoutResponse> {
@@ -38,5 +53,13 @@ export class StripeConnectService {
 
   confirmPayment(sessionId: string, transactionId: string): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/confirm-payment`, { sessionId, transactionId });
+  }
+
+  testActivate(): Observable<ConnectAccountStatus> {
+    return this.http.post<ConnectAccountStatus>(`${this.apiUrl}/test-activate`, {});
+  }
+
+  get isTestMode(): boolean {
+    return API_CONFIG.getStripePublishableKey().startsWith('pk_test_');
   }
 }

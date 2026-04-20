@@ -73,6 +73,8 @@ export class DashboardTransactionsComponent implements OnInit {
   lockingRateTxId: string | null = null;
   /** Delivery address form used for shipping rate calculation */
   deliveryAddress: DeliveryAddress = { street1: '', city: '', state: '', postalCode: '', country: 'US' };
+  /** Transaction ID for which a "Remind seller to ship" request is in flight (loading state). */
+  remindSellerShipTxId: string | null = null;
 
   ngOnInit(): void {
     this.loadTransactions();
@@ -314,7 +316,13 @@ export class DashboardTransactionsComponent implements OnInit {
       },
       error: (err) => {
         this.stripePayingTxId = null;
-        this.stripePaymentError = err?.error?.message || 'Failed to start payment. Please try again.';
+        const apiError = err?.error?.error;
+        if (apiError === 'Seller not ready') {
+          this.stripePaymentError = `Payment unavailable: the seller has not connected their Stripe account yet. ` +
+            `Please contact the seller (${t.seller?.firstName} ${t.seller?.lastName}) or wait for them to complete their payment setup.`;
+        } else {
+          this.stripePaymentError = err?.error?.message || 'Failed to start payment. Please try again.';
+        }
       }
     });
   }
@@ -497,6 +505,80 @@ export class DashboardTransactionsComponent implements OnInit {
     if (!d) return '';
     const date = new Date(d);
     return date.toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' });
+  }
+
+  /** Format the auto-cancellation date for display in the cancellation notice. */
+  formatAutoCancelledAt(t: Transaction): string {
+    if (!t.shippingAutoCancelledAt) return '';
+    return new Date(t.shippingAutoCancelledAt).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' });
+  }
+
+  /**
+   * Format the ship-by deadline for display.
+   * Prefers shipByBusinessDeadline (5 business-day); falls back to legacy handlingDeadline.
+   */
+  formatShipByDeadline(t: Transaction): string {
+    const raw = t.shipByBusinessDeadline || t.handlingDeadline;
+    if (!raw) return '';
+    return new Date(raw).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' });
+  }
+
+  /**
+   * Buyer-facing shipping status label.
+   * - "Not shipped" while awaiting seller acceptance / paid
+   * - "Shipped — [carrier] [tracking]" once marked shipped
+   */
+  buyerShippingStatusLine(t: Transaction): string {
+    const s = this.getEffectiveStatus(t);
+    if (s === 'shipped' || s === 'delivered' || s === 'completed') {
+      if (t.trackingNumber) {
+        const c = t.trackingCarrier ? `${t.trackingCarrier} ` : '';
+        return `Shipped — ${c}${t.trackingNumber}`.trim();
+      }
+      return 'Shipped';
+    }
+    if (['awaiting_seller_acceptance', 'paid'].includes(s)) {
+      return 'Not shipped';
+    }
+    return '—';
+  }
+
+  /** Whether the buyer has already used the "Remind seller" action within the last 24 hours. */
+  isRemindSellerOnCooldown(t: Transaction): boolean {
+    if (!t.buyerRemindSellerShipAt) return false;
+    return Date.now() - new Date(t.buyerRemindSellerShipAt).getTime() < 24 * 60 * 60 * 1000;
+  }
+
+  /** True when the buyer is allowed to send a shipping reminder (correct role + status + not on cooldown). */
+  canRemindSellerToShip(t: Transaction): boolean {
+    if (!this.isBuyer(t)) return false;
+    if (!['awaiting_seller_acceptance', 'paid'].includes(this.getEffectiveStatus(t))) return false;
+    if (this.isRemindSellerOnCooldown(t)) return false;
+    return true;
+  }
+
+  /**
+   * Send a "Remind seller to ship" request. Updates the local transaction
+   * on success, shows a toast, or displays the 24-hour cooldown message on 429.
+   */
+  remindSellerToShip(t: Transaction): void {
+    if (!this.canRemindSellerToShip(t) || this.remindSellerShipTxId) return;
+    this.remindSellerShipTxId = t._id;
+    this.transactionsService.remindSellerToShip(t._id).subscribe({
+      next: (updated) => {
+        this.remindSellerShipTxId = null;
+        this.replaceTransaction(updated);
+        successToast.fire({ title: 'Reminder sent to the seller' });
+      },
+      error: (err) => {
+        this.remindSellerShipTxId = null;
+        const msg =
+          err?.status === 429
+            ? 'You can send another reminder after 24 hours.'
+            : err?.error?.message || 'Could not send reminder.';
+        Swal.fire({ icon: 'info', title: 'Reminder', text: msg, confirmButtonColor: '#7A4F84' });
+      }
+    });
   }
 
   hasPaymentDeadlinePassed(t: Transaction): boolean {
@@ -710,6 +792,13 @@ export class DashboardTransactionsComponent implements OnInit {
 
   setReviewScore(n: number): void {
     this.reviewScore = n;
+  }
+
+  /** Visual tier for 1–10 score buttons (matches review modal styling). */
+  scoreTier(i: number): 'low' | 'mid' | 'high' {
+    if (i <= 3) return 'low';
+    if (i <= 7) return 'mid';
+    return 'high';
   }
 
   submitReview(): void {

@@ -4,6 +4,7 @@ const { Server } = require('socket.io');
 const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
+const rateLimit = require('express-rate-limit');
 require('dotenv').config();
 
 // Initialize Firebase Admin
@@ -31,16 +32,37 @@ const notificationsRoutes = require('./routes/notifications');
 const { router: paymentsRouter, stripeWebhookHandler } = require('./routes/payments');
 const { router: connectRouter, connectWebhookHandler } = require('./routes/connect');
 const shippingRoutes = require('./routes/shipping');
+const configRoutes = require('./routes/config');
 
 // Import services
 const auctionEndScheduler = require('./services/auctionEndScheduler');
+const shippingDeadlineScheduler = require('./services/shippingDeadlineScheduler');
 const { runCleanup: runProofOfPaymentCleanup } = require('./services/proofOfPaymentCleanup');
+
+// CORS: FRONTEND_URL(s), optional CORS_EXTRA_ORIGINS (comma-separated), localhost, Azure Static Web Apps
+const extraOrigins = (process.env.CORS_EXTRA_ORIGINS || '')
+  .split(',')
+  .map((s) => s.trim())
+  .filter(Boolean);
+const allowedOrigins = [
+  process.env.FRONTEND_URL,
+  process.env.FRONTEND_URL_PROD,
+  ...extraOrigins,
+  'http://localhost:4200',
+  'https://localhost:4200'
+].filter(Boolean);
+const isAllowedOrigin = (origin) => {
+  if (!origin) return false;
+  if (allowedOrigins.includes(origin)) return true;
+  if (origin.endsWith('.azurestaticapps.net')) return true;
+  return false;
+};
 
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: process.env.FRONTEND_URL || 'http://localhost:4200',
+    origin: isAllowedOrigin,
     methods: ['GET', 'POST'],
     credentials: true
   }
@@ -48,21 +70,11 @@ const io = new Server(server, {
 
 const PORT = process.env.PORT || 3000;
 
+// Trust the first hop proxy (Azure App Service / load balancer) so req.ip is the real client IP
+app.set('trust proxy', 1);
+
 // Middleware
 app.use(helmet());
-// CORS: allow FRONTEND_URL, localhost, and any Azure Static Web Apps origin (*.azurestaticapps.net)
-const allowedOrigins = [
-  process.env.FRONTEND_URL || 'http://localhost:4200',
-  'https://icy-glacier-05c442c0f.3.azurestaticapps.net',
-  'http://localhost:4200',
-  'https://localhost:4200'
-];
-const isAllowedOrigin = (origin) => {
-  if (!origin) return false;
-  if (allowedOrigins.includes(origin)) return true;
-  if (origin.endsWith('.azurestaticapps.net')) return true;
-  return false;
-};
 app.use(cors({
   origin: (origin, callback) => {
     if (isAllowedOrigin(origin)) {
@@ -84,13 +96,46 @@ app.post('/api/connect/webhook', express.raw({ type: 'application/json' }), conn
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Rate limiters
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many requests', message: 'Too many attempts. Please try again in 15 minutes.' }
+});
+
+const bidOfferLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 30,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many requests', message: 'Too many requests. Please slow down.' }
+});
+
+const generalLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 120,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many requests', message: 'Too many requests. Please slow down.' }
+});
+
+const adminLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 60,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many requests', message: 'Too many requests. Please slow down.' }
+});
+
 // Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/listings', listingRoutes);
-app.use('/api/bids', bidRoutes);
-app.use('/api/offers', offerRoutes);
-app.use('/api/uploads', uploadRoutes);
-app.use('/api/admin', adminRoutes);
+app.use('/api/auth', authLimiter, authRoutes);
+app.use('/api/listings', generalLimiter, listingRoutes);
+app.use('/api/bids', bidOfferLimiter, bidRoutes);
+app.use('/api/offers', bidOfferLimiter, offerRoutes);
+app.use('/api/uploads', generalLimiter, uploadRoutes);
+app.use('/api/admin', adminLimiter, adminRoutes);
 app.use('/api/private-room', privateRoomRoutes);
 app.use('/api/customers', customerRoutes);
 app.use('/api/watchlist', watchlistRoutes);
@@ -100,6 +145,7 @@ app.use('/api/notifications', notificationsRoutes);
 app.use('/api/payments', paymentsRouter);
 app.use('/api/connect', connectRouter);
 app.use('/api/shipping', shippingRoutes);
+app.use('/api/config', configRoutes);
 
 app.get('/', (req, res) => {
   res.json({
@@ -116,25 +162,6 @@ app.get('/health', (req, res) => {
     timestamp: new Date().toISOString()
   });
 });
-
-// Test MongoDB connection endpoint (development only)
-if (process.env.NODE_ENV === 'development') {
-  app.get('/test-db', async (req, res) => {
-    try {
-      const userCount = await User.countDocuments();
-      res.json({
-        message: 'MongoDB connection successful!',
-        userCount: userCount,
-        timestamp: new Date().toISOString()
-      });
-    } catch (error) {
-      res.status(500).json({
-        error: 'Database connection failed',
-        message: error.message
-      });
-    }
-  });
-}
 
 
 // Error handling middleware
@@ -156,60 +183,51 @@ app.use('*', (req, res) => {
 
 // Socket.io connection handling
 io.on('connection', (socket) => {
-  console.log(`🔌 Client connected: ${socket.id}`);
-
   // Join a listing room to receive real-time updates
   socket.on('join-listing', (listingId) => {
     socket.join(`listing:${listingId}`);
-    console.log(`👤 ${socket.id} joined listing room: ${listingId}`);
-    
-    // Update viewer count for this listing
     updateViewerCount(io, listingId);
   });
 
   // Join a private room as a viewer
   socket.on('join-private-room-viewer', (listingId) => {
     socket.join(`private-room:${listingId}`);
-    console.log(`👁️ ${socket.id} joined private room viewer: ${listingId}`);
-    
-    // Update viewer count for private room
     updatePrivateRoomViewerCount(io, listingId);
   });
 
   // Leave a listing room
   socket.on('leave-listing', (listingId) => {
     socket.leave(`listing:${listingId}`);
-    console.log(`👤 ${socket.id} left listing room: ${listingId}`);
-    
-    // Update viewer count
     updateViewerCount(io, listingId);
   });
 
   // Leave a private room viewer
   socket.on('leave-private-room-viewer', (listingId) => {
     socket.leave(`private-room:${listingId}`);
-    console.log(`👁️ ${socket.id} left private room viewer: ${listingId}`);
-    
-    // Update viewer count
     updatePrivateRoomViewerCount(io, listingId);
   });
 
   // Join user room for real-time notification updates (uid = Firebase/auth uid)
   socket.on('join-user', (uid) => {
-    if (uid) {
-      socket.join(`user:${uid}`);
-      console.log(`🔔 ${socket.id} joined user room: ${uid}`);
-    }
+    if (uid) socket.join(`user:${uid}`);
   });
 
   socket.on('leave-user', (uid) => {
-    if (uid) {
-      socket.leave(`user:${uid}`);
-    }
+    if (uid) socket.leave(`user:${uid}`);
   });
 
   socket.on('disconnect', () => {
-    console.log(`🔌 Client disconnected: ${socket.id}`);
+    // Recalculate viewer counts for any rooms this socket was in
+    const rooms = Array.from(socket.rooms);
+    for (const room of rooms) {
+      if (room.startsWith('listing:')) {
+        const listingId = room.slice('listing:'.length);
+        updateViewerCount(io, listingId);
+      } else if (room.startsWith('private-room:')) {
+        const listingId = room.slice('private-room:'.length);
+        updatePrivateRoomViewerCount(io, listingId);
+      }
+    }
   });
 });
 
@@ -264,6 +282,9 @@ const startServer = async () => {
       // Start auction end scheduler (checks every 1 minute)
       auctionEndScheduler.startScheduler(1, io);
       console.log(`⏰ Auction end scheduler started`);
+
+      shippingDeadlineScheduler.startScheduler(15, io);
+      console.log(`📦 Shipping deadline scheduler started`);
 
       // Proof-of-payment cleanup: delete files from Azure 30 days after paid (run daily)
       const PROOF_CLEANUP_MS = 24 * 60 * 60 * 1000;

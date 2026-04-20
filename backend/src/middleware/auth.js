@@ -130,7 +130,9 @@ const requireActiveAccount = async (req, res, next) => {
   try {
     const dbUser = await User.findOne({ uid: req.user.uid }).select('accountStatus').lean();
     if (!dbUser) {
-      return res.status(404).json({ error: 'User not found', message: 'Please complete your profile.' });
+      // No DB record yet — user is authenticated but hasn't been persisted.
+      // They cannot be suspended, so let the route handler proceed (it will create the record).
+      return next();
     }
     const status = dbUser.accountStatus || 'active';
     if (status === 'suspended') {
@@ -161,9 +163,46 @@ const requireActiveAccountIfAuthenticated = async (req, res, next) => {
   return requireActiveAccount(req, res, next);
 };
 
+/**
+ * Block new marketplace actions (bid, list, offer) when the user has an open dispute.
+ * Does NOT block operations on existing transactions.
+ * Use after authenticateToken. Returns 403 if user has any active dispute restrictions.
+ */
+const requireNoDisputeRestriction = async (req, res, next) => {
+  if (!req.user?.uid) return res.status(401).json({ error: 'Unauthorized', message: 'Authentication required.' });
+  try {
+    const dbUser = await User.findOne({ uid: req.user.uid }).select('activeDisputeTransactionIds accountStatus').lean();
+    if (!dbUser) return next(); // No record yet → no restrictions possible
+    if (dbUser.accountStatus === 'closed') {
+      return res.status(403).json({ error: 'Account closed', message: 'Your account has been permanently closed.' });
+    }
+    if (dbUser.activeDisputeTransactionIds && dbUser.activeDisputeTransactionIds.length > 0) {
+      return res.status(403).json({
+        error: 'Action restricted',
+        message: 'You cannot place bids, create listings, or make offers while a dispute is under review. Your existing transactions are unaffected.'
+      });
+    }
+    next();
+  } catch (error) {
+    console.error('requireNoDisputeRestriction error:', error);
+    res.status(500).json({ error: 'Failed to verify account restrictions', message: error.message });
+  }
+};
+
+/**
+ * Same as requireNoDisputeRestriction but only runs when user is authenticated.
+ * Use after optionalAuth for routes that allow both guests and authenticated users.
+ */
+const requireNoDisputeRestrictionIfAuthenticated = async (req, res, next) => {
+  if (!req.user || !req.isAuthenticated) return next();
+  return requireNoDisputeRestriction(req, res, next);
+};
+
 module.exports = {
   authenticateToken,
   optionalAuth,
   requireActiveAccount,
-  requireActiveAccountIfAuthenticated
+  requireActiveAccountIfAuthenticated,
+  requireNoDisputeRestriction,
+  requireNoDisputeRestrictionIfAuthenticated
 };

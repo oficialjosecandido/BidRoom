@@ -17,8 +17,10 @@ export const appConfig: ApplicationConfig = {
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(routes),
     provideHttpClient(withInterceptors([authInterceptor])),
-    provideTranslateService({ defaultLanguage: 'en' }),
-    provideTranslateHttpLoader({ prefix: '/i18n/', suffix: '.json' }),
+    provideTranslateService({
+      defaultLanguage: 'en',
+      loader: provideTranslateHttpLoader({ prefix: '/i18n/', suffix: '.json' })
+    }),
     provideFirebaseApp(() => initializeApp({
       apiKey: "AIzaSyBb3nk50nwBME8dN5pNhu2W1B7-m35qqHw",
       authDomain: "bidroom-47cb5.firebaseapp.com",

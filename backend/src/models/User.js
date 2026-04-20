@@ -93,7 +93,16 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
     index: true
-  }
+  },
+  /**
+   * IDs of transactions with an open dispute that restrict this user from initiating NEW marketplace
+   * actions (bidding, listing, making offers). Existing transactions are NOT affected.
+   * Populated on dispute open; entries removed when each dispute is resolved by admin.
+   */
+  activeDisputeTransactionIds: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Transaction'
+  }]
 }, {
   timestamps: true // Adds createdAt and updatedAt fields
 });

@@ -2,11 +2,42 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>BidRoom | DEV env</title>
+  <title>BidRoom</title>
   <base href="/">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" type="image/x-icon" href="favicon.ico">
-  <meta name="description" content="BidRoom | DEV v0.2">
+  <meta name="description" content="BidRoom – Live auctions and best-offer marketplace. Buy and sell unique items with confidence.">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="BidRoom">
+  <meta property="og:title" content="BidRoom – Live Auctions & Best Offer Marketplace">
+  <meta property="og:description" content="Buy and sell unique items through live auctions or best-offer listings. Secure payments, direct payouts.">
+  <meta property="og:url" content="https://bidroom.com/">
+  <meta property="og:image" content="https://bidroom.com/assets/og-image.png">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="BidRoom – Live Auctions & Best Offer Marketplace">
+  <meta name="twitter:description" content="Buy and sell unique items through live auctions or best-offer listings.">
+  <meta name="twitter:image" content="https://bidroom.com/assets/og-image.png">
+
+  <!-- Canonical -->
+  <link rel="canonical" href="https://bidroom.com/">
+  <!--
+    APP_CONFIG overrides Angular’s environment.defaultApiBaseUrl when set (non-empty).
+    Azure Static Web Apps: use build-time substitution or SWA app settings + a small script.
+      API_URL                 → e.g. https://bidroom-backend.azurewebsites.net/api
+      STRIPE_PUBLISHABLE_KEY  → pk_live_... (production) or pk_test_... (staging)
+
+    Leave API_URL empty to use the default from environment.prod.ts / environment.ts.
+  -->
+  <script>
+    window.APP_CONFIG = {
+      API_URL: '',
+      STRIPE_PUBLISHABLE_KEY: ''
+    };
+  </script>
 </head>
 <body>
   <app-root></app-root>

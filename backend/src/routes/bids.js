@@ -2,14 +2,15 @@ const express = require('express');
 const Bid = require('../models/Bid');
 const Listing = require('../models/Listing');
 const User = require('../models/User');
-const { authenticateToken, optionalAuth, requireActiveAccountIfAuthenticated } = require('../middleware/auth');
+const { authenticateToken, optionalAuth, requireActiveAccountIfAuthenticated, requireNoDisputeRestrictionIfAuthenticated } = require('../middleware/auth');
 const { sendFirstBidNotification, sendOutbidNotification } = require('../services/auctionNotificationService');
 const { getReviewScoresForUsers } = require('../services/reviewService');
+const { notifyNewBid, notifyBidderOutbid, emitNewNotificationToUser } = require('../services/notificationService');
 
 const router = express.Router();
 
 // GET /api/bids/listing/:listingId - Get all bids for a listing
-router.get('/listing/:listingId', async (req, res) => {
+router.get('/listing/:listingId', optionalAuth, async (req, res) => {
   try {
     const { sort = 'desc' } = req.query; // 'desc' for newest first, 'asc' for oldest first
 
@@ -20,14 +21,21 @@ router.get('/listing/:listingId', async (req, res) => {
       .sort({ createdAt: sortOrder })
       .lean();
 
+    // Determine if the requester is the listing's seller (entitled to see full emails)
+    const listing = await Listing.findById(req.params.listingId).select('seller').lean();
+    const requestingUid = req.user?.uid || null;
+    const sellerUser = listing?.seller ? await User.findById(listing.seller).select('uid').lean() : null;
+    const isSeller = requestingUid && sellerUser && requestingUid === sellerUser.uid;
+
     // Get buyer review scores for all bidders (authenticated users only)
     const bidderIds = bids.filter((b) => b.bidder && b.bidder._id).map((b) => b.bidder._id.toString());
     const scoreMap = bidderIds.length > 0 ? await getReviewScoresForUsers(bidderIds) : {};
 
-    // Format bids for frontend
+    // Format bids for frontend — emails only exposed to the seller
     const formattedBids = bids.map(bid => {
       const bidderId = bid.bidder && bid.bidder._id ? bid.bidder._id.toString() : null;
       const scores = bidderId ? scoreMap[bidderId] : null;
+      const fullEmail = bid.bidderEmail || (bid.bidder ? bid.bidder.email : null);
       return {
         ...bid,
         bidderName: bid.bidder
@@ -36,7 +44,7 @@ router.get('/listing/:listingId', async (req, res) => {
         bidderInitials: bid.bidder
           ? `${bid.bidder.firstName.charAt(0)}${bid.bidder.lastName.charAt(0)}`
           : (bid.bidderEmail ? bid.bidderEmail.charAt(0).toUpperCase() : 'A'),
-        bidderEmail: bid.bidderEmail || (bid.bidder ? bid.bidder.email : null),
+        bidderEmail: isSeller ? fullEmail : null,
         isAuthenticated: !!bid.bidder,
         bidderVerified: bid.bidder ? (bid.bidder.emailVerified || false) : false,
         bidderHasDeposit: bid.bidder ? (bid.bidder.hasDeposit || false) : false,
@@ -97,7 +105,7 @@ router.get('/listing/:listingId/stats', async (req, res) => {
 });
 
 // POST /api/bids - Create a new bid (authentication optional, but email required if not authenticated)
-router.post('/', optionalAuth, requireActiveAccountIfAuthenticated, async (req, res) => {
+router.post('/', optionalAuth, requireActiveAccountIfAuthenticated, requireNoDisputeRestrictionIfAuthenticated, async (req, res) => {
   try {
     const { listingId, amount, maxBid, bidType = 'manual', notes, email, notifyWhenOutbid } = req.body;
 
@@ -257,20 +265,18 @@ router.post('/', optionalAuth, requireActiveAccountIfAuthenticated, async (req, 
       const invitation = invitations.find(
         inv => inv.bidder && inv.bidder._id.toString() === user._id.toString()
       );
-      if (invitation) {
-        if (invitation.status !== 'accepted') {
-          const now = new Date();
-          if (listing.platinumBidderAcceptanceDeadline && now > new Date(listing.platinumBidderAcceptanceDeadline)) {
-            return res.status(403).json({
-              error: 'Seat lost',
-              message: 'The 15 minute window to accept the invitation has passed. You can no longer place bids in this private room.'
-            });
-          }
+      if (!invitation || invitation.status !== 'accepted') {
+        const now = new Date();
+        if (invitation && listing.platinumBidderAcceptanceDeadline && now > new Date(listing.platinumBidderAcceptanceDeadline)) {
           return res.status(403).json({
-            error: 'Accept invitation first',
-            message: 'You must accept your private room invitation (link in your email) before you can place bids.'
+            error: 'Seat lost',
+            message: 'The 15 minute window to accept the invitation has passed. You can no longer place bids in this private room.'
           });
         }
+        return res.status(403).json({
+          error: 'Accept invitation first',
+          message: 'You must accept your private room invitation before you can place bids.'
+        });
       }
       // Private room ends 60 seconds after last bid (each bid extends by 60s)
       const PRIVATE_ROOM_EXTEND_MS = 60 * 1000; // 60 seconds
@@ -398,6 +404,8 @@ router.post('/', optionalAuth, requireActiveAccountIfAuthenticated, async (req, 
         });
     }
 
+    const io = req.app.get('io');
+
     // Send outbid notifications to previous high bidder(s) who opted in (non-blocking)
     if (previousHighAmount > 0 && amount > previousHighAmount) {
       const currentBidderId = user ? user._id.toString() : null;
@@ -446,6 +454,18 @@ router.post('/', optionalAuth, requireActiveAccountIfAuthenticated, async (req, 
           previousHighAmount,
           amount
         ).catch(err => console.error('Failed to send outbid notification:', err));
+
+        if (prevBid.bidder && prevBid.bidder._id) {
+          notifyBidderOutbid({
+            listingSlug: listing.slug || null,
+            listingTitle: listing.title || 'Auction',
+            previousBidAmount: previousHighAmount,
+            newBidAmount: amount,
+            bidderUserId: prevBid.bidder._id.toString(),
+            listingId: listingId.toString()
+          }).catch(err => console.error('Failed to create outbid in-app notification:', err));
+          emitNewNotificationToUser(io, prevBid.bidder._id.toString()).catch(() => {});
+        }
       }
     }
 
@@ -467,8 +487,7 @@ router.post('/', optionalAuth, requireActiveAccountIfAuthenticated, async (req, 
       bidderLastName: populatedBid.bidder ? populatedBid.bidder.lastName : null
     };
 
-    // Get Socket.io instance and Redis service from app
-    const io = req.app.get('io');
+    // Get Redis service from app (io already resolved above for outbid / seller notifications)
     const redisService = req.app.get('redisService');
 
     // Cache current bid information in Redis (non-blocking - don't block response if Redis is slow/down)
@@ -493,27 +512,41 @@ router.post('/', optionalAuth, requireActiveAccountIfAuthenticated, async (req, 
       console.error('Redis cacheListingStats failed (non-fatal):', err?.message)
     );
 
-    // Emit real-time bid update via Socket.io to all clients watching this listing
+    // Emit real-time bid update via Socket.io to all clients watching this listing.
+    // For private room bids, chain both rooms so each connected client receives the
+    // event exactly once even if they have joined both listing:id and private-room:id.
     if (io) {
-      io.to(`listing:${listingId}`).emit('new-bid', {
+      const listingIdStr = listingId.toString();
+      const isPrivateRoom = listing.privateRoomStatus === 'active';
+
+      // Base emitter — always target listing room; add private-room room for private auctions
+      // so the seller (who joins private-room:id) also receives countdown updates.
+      const emitter = isPrivateRoom
+        ? io.to(`listing:${listingIdStr}`).to(`private-room:${listingIdStr}`)
+        : io.to(`listing:${listingIdStr}`);
+
+      emitter.emit('new-bid', {
         bid: formattedBid,
-        listingId: listingId.toString(),
+        listingId: listingIdStr,
         currentPrice: listing.currentPrice,
         bidCount: listing.bidCount,
         updatedAt: new Date().toISOString()
       });
 
-      // Also emit listing update with current price and bid count
-      io.to(`listing:${listingId}`).emit('listing-update', {
-        listingId: listingId.toString(),
+      // Include the extended privateRoomEndDate so all frontends restart their countdown.
+      emitter.emit('listing-update', {
+        listingId: listingIdStr,
         currentPrice: listing.currentPrice,
         bidCount: listing.bidCount,
-        updatedAt: new Date().toISOString()
+        updatedAt: new Date().toISOString(),
+        ...(isPrivateRoom && listing.privateRoomEndDate && {
+          privateRoomEndDate: listing.privateRoomEndDate.toISOString(),
+          endDate: listing.privateRoomEndDate.toISOString()
+        })
       });
     }
 
     // Create in-app notification for the seller (someone bid on their listing)
-    const { notifyNewBid, emitNewNotificationToUser } = require('../services/notificationService');
     const sellerUserId = listing.seller?._id?.toString?.() || listing.seller?.toString?.();
     if (sellerUserId) {
       notifyNewBid({

@@ -1,5 +1,4 @@
 import { Component, OnInit, inject } from '@angular/core';
-
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormArray } from '@angular/forms';
 import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
@@ -7,8 +6,9 @@ import { firstValueFrom } from 'rxjs';
 import Swal from 'sweetalert2';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { ListingsService } from '../../../shared/services/listings.service';
+import { CustomerService, CustomerInfo } from '../../../shared/services/customer.service';
 import { API_CONFIG } from '../../../shared/config/api.config';
-import { environment } from '../../../../environments/environment';
+import { environment } from '@env';
 import { HeaderComponent } from '../../../shared/components/header/header.component';
 import { FooterComponent } from '../../../shared/components/footer/footer.component';
 
@@ -29,6 +29,7 @@ export class AddListing implements OnInit {
   private fb = inject(FormBuilder);
   private router = inject(Router);
   private listingsService = inject(ListingsService);
+  private customerService = inject(CustomerService);
   private http = inject(HttpClient);
   private translate = inject(TranslateService);
 
@@ -36,15 +37,20 @@ export class AddListing implements OnInit {
   readonly enablePrivateRooms = environment.enablePrivateRooms ?? true;
 
   listingForm!: FormGroup;
-  currentStep = 1;
-  totalSteps = 4;
   isSubmitting = false;
   errorMessage = '';
   isUploadingImages = false;
-  
+  isLoadingCustomer = true;
+  isStripeConnected = false;
+  customerLoadError = false;
+
   uploadedFiles: File[] = [];
   uploadedFileUrls: string[] = [];
   previewUrls: (string | ArrayBuffer | null)[] = [];
+
+  // Drag-to-reorder state
+  dragSrcIndex: number | null = null;
+  dragOverIndex: number | null = null;
 
   // Categories
   categories: Category[] = [
@@ -52,21 +58,13 @@ export class AddListing implements OnInit {
       id: 'electronics',
       name: 'Electronics',
       subCategories: [
-        // Computers
         'Laptops', 'Desktop Computers', 'Computer Components',
-        // Mobile Devices
         'Smartphones', 'Tablets', 'Mobile Accessories',
-        // Audio
         'Headphones', 'Speakers', 'Hi Fi Systems', 'Turntables',
-        // Gaming
         'Gaming Consoles', 'Video Games', 'Gaming Accessories',
-        // Cameras & Photography
         'Digital Cameras', 'Film Cameras', 'Camera Lenses', 'Camera Accessories',
-        // TV & Video
         'Televisions', 'Projectors', 'Streaming Devices',
-        // Wearables
         'Smart Watches', 'Fitness Trackers', 'Wearables Accessories',
-        // Other
         'Other Electronics'
       ]
     },
@@ -74,17 +72,11 @@ export class AddListing implements OnInit {
       id: 'home-garden',
       name: 'Home & Garden',
       subCategories: [
-        // Furniture
         'Tables', 'Chairs', 'Cabinets', 'Shelves', 'Beds',
-        // Home Decor
         'Lamps', 'Mirrors', 'Vases', 'Wall Decor', 'Decorative Objects',
-        // Kitchen & Dining
         'Cookware', 'Tableware', 'Glassware', 'Barware',
-        // Garden & Outdoor
         'Garden Furniture', 'Garden Tools', 'Outdoor Decor', 'Planters',
-        // Textiles
         'Rugs', 'Curtains', 'Blankets', 'Cushions',
-        // Other
         'Lighting', 'Other Home & Garden'
       ]
     },
@@ -101,13 +93,15 @@ export class AddListing implements OnInit {
       id: 'collectibles',
       name: 'Collectibles',
       subCategories: [
-        // Stamps
-        'Stamps',
-        // Collectibles
+        'Definitive Stamps', 'Commemorative Stamps', 'Airmail Stamps',
+        'Postage Due Stamps', 'Revenue / Fiscal Stamps', 'Official Stamps',
+        'Military Mail', 'Local Issues', 'First Day Covers (FDC)',
+        'Stamp Booklets', 'Collections / Lots',
+        'Classic Stamps (Before 1900)', 'Early 20th Century (1900 to 1945)',
+        'Post War (1945 to 1960)', 'Late 20th Century (1960 to 2000)',
+        'Modern Stamps (2000 to Present)',
         'Coins & Banknotes', 'Trading Cards', 'Toys & Models',
-        // Memorabilia
         'Sports Memorabilia', 'Music Memorabilia', 'Movie Memorabilia',
-        // Other
         'Vintage Items', 'Other Collectibles'
       ]
     },
@@ -115,17 +109,11 @@ export class AddListing implements OnInit {
       id: 'jewelry',
       name: 'Jewelry',
       subCategories: [
-        // Rings
         'Engagement Rings', 'Wedding Rings', 'Fashion Rings',
-        // Necklaces
         'Chains', 'Pendants',
-        // Bracelets
         'Bangles', 'Charm Bracelets',
-        // Earrings
         'Stud Earrings', 'Hoop Earrings', 'Drop Earrings',
-        // Watches
         'Luxury Watches', 'Vintage Watches', 'Smart Watches',
-        // Other
         'Brooches & Pins', 'Jewelry Sets', 'Loose Gemstones', 'Other Jewelry'
       ]
     }
@@ -154,14 +142,6 @@ export class AddListing implements OnInit {
     { value: 'free', labelKey: 'addListing.shippingFree' }
   ];
 
-  handlingTimes = [
-    { value: 1, labelKey: 'addListing.handling1' },
-    { value: 2, labelKey: 'addListing.handling2' },
-    { value: 3, labelKey: 'addListing.handling3' },
-    { value: 5, labelKey: 'addListing.handling5' },
-    { value: 7, labelKey: 'addListing.handling7' }
-  ];
-
   returnPolicies = [
     { value: '30-days', labelKey: 'addListing.return30' },
     { value: '14-days', labelKey: 'addListing.return14' },
@@ -170,45 +150,64 @@ export class AddListing implements OnInit {
   ];
 
   selectedCategory: Category | null = null;
+  /** Seller commission % for display (0.5 or 2 for private room). Base from environment. */
   commissionRate = 0.5;
+
+  /** Buyer fee % for display (from environment) */
+  get buyerFeeRatePct(): number {
+    const rate = (environment as { bidroomFeeBuyerRate?: number }).bidroomFeeBuyerRate;
+    return rate != null ? rate * 100 : 0.5;
+  }
+
+  /** Whether all required fields are valid and media is present */
+  get canPublish(): boolean {
+    return this.listingForm.valid && this.isMediaValid && this.uploadedFiles.length >= 1 && !this.isSubmitting && !this.isUploadingImages;
+  }
 
   ngOnInit(): void {
     this.initializeForm();
     this.setupFormSubscriptions();
+    this.loadCustomerInfo();
+  }
+
+  loadCustomerInfo(): void {
+    this.customerService.getCustomer().subscribe({
+      next: (info: CustomerInfo) => {
+        this.isStripeConnected = info.stripeConnectOnboarded;
+        this.isLoadingCustomer = false;
+      },
+      error: () => {
+        this.isLoadingCustomer = false;
+        this.customerLoadError = true;
+      }
+    });
   }
 
   initializeForm(): void {
     this.listingForm = this.fb.group({
-      // Step 1: Item Identity and Format
       title: ['', [Validators.required, Validators.maxLength(80)]],
       category: ['', Validators.required],
       subCategory: ['', Validators.required],
       listingFormat: ['auction', Validators.required],
       condition: ['', Validators.required],
-      
-      // Step 2: Details and Media
       description: ['', [Validators.required, Validators.minLength(50)]],
       media: this.fb.array([]),
       specifications: this.fb.array([]),
       locationCity: ['', Validators.required],
       locationRegion: ['', Validators.required],
-      
-      // Step 3: Pricing and Auction Rules
+      locationCountry: ['US', Validators.required],
       duration: ['', Validators.required],
       startingBid: [null],
       reservePrice: [null],
       buyNowPrice: [null],
       minimumAcceptPrice: [null],
       allowPrivateRoom: [false, Validators.required],
-      
-      // Step 4: Shipping and Final Review
       shippingOption: ['', Validators.required],
       flatRateShipping: [null],
       packageSize: [''],
       shippingOriginPostalCode: [''],
       shippingOriginCity: [''],
       shippingOriginCountry: ['US'],
-      handlingTime: ['', Validators.required],
       returnPolicy: ['', Validators.required],
       sellerDeclaration: [false, Validators.requiredTrue]
     });
@@ -221,7 +220,6 @@ export class AddListing implements OnInit {
     // Conditional validators based on listing format
     this.listingForm.get('listingFormat')?.valueChanges.subscribe(format => {
       this.updateConditionalValidators(format);
-      // Private Room is only for Highest Bid (auction); clear it when switching to Best Offer
       if (format === 'best-offer') {
         this.listingForm.patchValue({ allowPrivateRoom: false });
         this.commissionRate = 0.5;
@@ -254,13 +252,14 @@ export class AddListing implements OnInit {
     });
 
     // Watch Private Room toggle for commission calculation
+    const baseRatePct = ((environment as { bidroomFeeSellerRate?: number }).bidroomFeeSellerRate ?? 0.005) * 100;
     this.listingForm.get('allowPrivateRoom')?.valueChanges.subscribe(enabled => {
-      this.commissionRate = enabled ? 2.0 : 0.5;
+      this.commissionRate = enabled ? 2.0 : baseRatePct;
     });
+    this.commissionRate = this.listingForm.get('allowPrivateRoom')?.value ? 2.0 : baseRatePct;
   }
 
   setupFormSubscriptions(): void {
-    // Reset subCategory when category changes
     this.listingForm.get('category')?.valueChanges.subscribe(categoryId => {
       this.selectedCategory = this.categories.find(c => c.id === categoryId) || null;
       this.listingForm.patchValue({ subCategory: '' });
@@ -279,8 +278,7 @@ export class AddListing implements OnInit {
       reservePriceControl?.setValue(null);
       buyNowPriceControl?.setValidators([]);
       minimumAcceptPriceControl?.clearValidators();
-      
-      // Buy Now must be higher than Starting Bid
+
       buyNowPriceControl?.valueChanges.subscribe(value => {
         if (value && startingBidControl?.value && value <= startingBidControl.value) {
           buyNowPriceControl.setErrors({ mustBeHigherThanStartingBid: true });
@@ -298,7 +296,6 @@ export class AddListing implements OnInit {
     buyNowPriceControl?.updateValueAndValidity();
     minimumAcceptPriceControl?.updateValueAndValidity();
   }
-
 
   get specifications(): FormArray {
     return this.listingForm.get('specifications') as FormArray;
@@ -347,32 +344,93 @@ export class AddListing implements OnInit {
   }
 
   private readonly ALLOWED_IMAGE_TYPES = [
-    'image/jpeg',
-    'image/jpg',
-    'image/png',
-    'image/gif',
-    'image/webp',
-    'image/bmp'
+    'image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'image/bmp'
   ];
+
+  private readonly ALLOWED_VIDEO_TYPES = [
+    'video/mp4', 'video/webm', 'video/quicktime'
+  ];
+
+  get imageCount(): number {
+    return this.uploadedFiles.filter(f => this.ALLOWED_IMAGE_TYPES.includes(f.type)).length;
+  }
+
+  get videoCount(): number {
+    return this.uploadedFiles.filter(f => this.ALLOWED_VIDEO_TYPES.includes(f.type)).length;
+  }
+
+  isVideoFile(file: File): boolean {
+    return this.ALLOWED_VIDEO_TYPES.includes(file.type);
+  }
+
+  get isMediaValid(): boolean {
+    const imgs = this.imageCount;
+    const vids = this.videoCount;
+    if (vids === 0) return imgs >= 1 && imgs <= 20;
+    if (vids === 1) return imgs >= 1 && imgs <= 5;
+    return false;
+  }
 
   private addFiles(fileList: FileList | File[]): void {
     this.errorMessage = '';
     const files = Array.from(fileList);
-    const rejected: string[] = [];
+    const rejected: { name: string; reason: 'type' | 'maxPhotos' | 'maxPhotosWithVideo' | 'videoLimit' }[] = [];
+    let imgs = this.imageCount;
+    let vids = this.videoCount;
+
     files.forEach(file => {
-      if (this.ALLOWED_IMAGE_TYPES.includes(file.type)) {
+      const isImage = this.ALLOWED_IMAGE_TYPES.includes(file.type);
+      const isVideo = this.ALLOWED_VIDEO_TYPES.includes(file.type);
+
+      if (isImage) {
+        if (vids >= 1 && imgs >= 5) {
+          rejected.push({ name: file.name, reason: 'maxPhotosWithVideo' });
+          return;
+        }
+        if (vids === 0 && imgs >= 20) {
+          rejected.push({ name: file.name, reason: 'maxPhotos' });
+          return;
+        }
         this.uploadedFiles.push(file);
+        imgs++;
         const reader = new FileReader();
-        reader.onload = (e) => {
-          this.previewUrls.push(e.target?.result || null);
-        };
+        reader.onload = (e) => { this.previewUrls.push(e.target?.result || null); };
         reader.readAsDataURL(file);
+      } else if (isVideo) {
+        if (vids >= 1 || imgs >= 5) {
+          rejected.push({ name: file.name, reason: 'videoLimit' });
+          return;
+        }
+        this.uploadedFiles.push(file);
+        this.previewUrls.push(null);
+        vids++;
       } else {
-        rejected.push(file.name);
+        rejected.push({ name: file.name, reason: 'type' });
       }
     });
+
     if (rejected.length > 0) {
-      this.errorMessage = this.translate.instant('addListing.errors.invalidFileType', { files: rejected.join(', ') });
+      const byReason = new Map<typeof rejected[number]['reason'], string[]>();
+      for (const r of rejected) {
+        const list = byReason.get(r.reason) ?? [];
+        list.push(r.name);
+        byReason.set(r.reason, list);
+      }
+      const parts: string[] = [];
+      const joinFiles = (names: string[]) => names.join(', ');
+      if (byReason.has('type')) {
+        parts.push(this.translate.instant('addListing.errors.invalidFileType', { files: joinFiles(byReason.get('type')!) }));
+      }
+      if (byReason.has('maxPhotos')) {
+        parts.push(this.translate.instant('addListing.errors.mediaMaxPhotos', { files: joinFiles(byReason.get('maxPhotos')!) }));
+      }
+      if (byReason.has('maxPhotosWithVideo')) {
+        parts.push(this.translate.instant('addListing.errors.mediaMaxPhotosWithVideo', { files: joinFiles(byReason.get('maxPhotosWithVideo')!) }));
+      }
+      if (byReason.has('videoLimit')) {
+        parts.push(this.translate.instant('addListing.errors.mediaVideoLimit', { files: joinFiles(byReason.get('videoLimit')!) }));
+      }
+      this.errorMessage = parts.join(' ');
     }
     while (this.media.length < this.uploadedFiles.length) {
       this.media.push(this.fb.control(this.uploadedFiles[this.media.length]));
@@ -389,251 +447,179 @@ export class AddListing implements OnInit {
     }
   }
 
+  // ─── Drag-to-reorder ───────────────────────────────────────────────────────
 
-  isStepValid(step: number): boolean {
-    const stepGroups: Record<number, string[]> = {
-      1: ['title', 'category', 'subCategory', 'listingFormat', 'condition'],
-      2: ['description', 'media', 'locationCity', 'locationRegion'],
-      3: ['duration', 'allowPrivateRoom'],
-      4: ['shippingOption', 'handlingTime', 'returnPolicy', 'sellerDeclaration']
-    };
-    
-    const controls = stepGroups[step] || [];
-    
-    if (step === 3) {
-      const format = this.listingForm.get('listingFormat')?.value;
-      if (format === 'auction') {
-        if (!controls.includes('startingBid')) {
-          controls.push('startingBid');
-        }
-      }
-    }
-    
-    if (step === 4) {
-      const shippingOption = this.listingForm.get('shippingOption')?.value;
-      if (shippingOption === 'flat-rate') {
-        if (!controls.includes('flatRateShipping')) {
-          controls.push('flatRateShipping');
-        }
-      }
-    }
-    
-    // Special validation for step 2 - check media files
-    // TODO: Re-enable this requirement once file upload is fully implemented
-    // For now, allow proceeding with at least 1 file for testing
-    if (step === 2) {
-      if (this.uploadedFiles.length < 1) {
-        return false;
-      }
-    }
-    
-    // Validate all controls in the step
-    const allValid = controls.every(controlName => {
-      const control = this.listingForm.get(controlName);
-      if (!control) return true; // Skip if control doesn't exist
-      
-      // For media, check the uploaded files count instead
-      // TODO: Change back to >= 3 once file upload is implemented
-      if (controlName === 'media') {
-        return this.uploadedFiles.length >= 1;
-      }
-      
-      return control.valid;
-    });
-    
-    return allValid;
+  onThumbDragStart(index: number, event: DragEvent): void {
+    this.dragSrcIndex = index;
+    event.dataTransfer!.effectAllowed = 'move';
+    event.dataTransfer!.setData('text/plain', String(index));
   }
 
-  nextStep(): void {
-    if (this.isStepValid(this.currentStep)) {
-      this.errorMessage = '';
-      if (this.currentStep < this.totalSteps) {
-        this.currentStep++;
-      }
-    } else {
-      // Mark all fields as touched to show validation errors
-      const stepGroups: Record<number, string[]> = {
-        1: ['title', 'category', 'subCategory', 'listingFormat', 'condition'],
-        2: ['description', 'media', 'locationCity', 'locationRegion'],
-        3: ['duration', 'startingBid', 'buyNowPrice', 'minimumAcceptPrice', 'allowPrivateRoom'],
-        4: ['shippingOption', 'flatRateShipping', 'handlingTime', 'returnPolicy', 'sellerDeclaration']
-      };
-      
-      const controls = stepGroups[this.currentStep] || [];
-      controls.forEach(controlName => {
-        const control = this.listingForm.get(controlName);
-        if (control) {
-          control.markAsTouched();
-          // For description, also mark as dirty to show error
-          if (controlName === 'description' && control.invalid) {
-            control.markAsDirty();
-          }
-        }
-      });
-      
-      // Show a more visible error message
-      if (this.currentStep === 2) {
-        const description = this.listingForm.get('description');
-        if (description?.invalid) {
-          this.errorMessage = this.translate.instant('addListing.errorStep2Description');
-          // Clear error message after 5 seconds
-          setTimeout(() => this.errorMessage = '', 5000);
-        }
-      }
-    }
+  onThumbDragOver(index: number, event: DragEvent): void {
+    event.preventDefault();
+    event.stopPropagation(); // Don't let the outer file-drop zone handle this
+    event.dataTransfer!.dropEffect = 'move';
+    this.dragOverIndex = index;
   }
 
-  previousStep(): void {
-    if (this.currentStep > 1) {
-      this.currentStep--;
-    }
+  onThumbDragLeave(): void {
+    this.dragOverIndex = null;
   }
 
-  goToStep(step: number): void {
-    // Only allow going to previous steps or next valid step
-    if (step >= 1 && step <= this.totalSteps) {
-      // Check if all previous steps are valid
-      let canGoToStep = true;
-      for (let i = 1; i < step; i++) {
-        if (!this.isStepValid(i)) {
-          canGoToStep = false;
-          break;
-        }
-      }
-      
-      if (canGoToStep || step < this.currentStep) {
-        this.currentStep = step;
-      }
-    }
+  onThumbDrop(index: number, event: DragEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+
+    const src = this.dragSrcIndex;
+    this.dragSrcIndex = null;
+    this.dragOverIndex = null;
+
+    if (src === null || src === index) return;
+
+    const files = [...this.uploadedFiles];
+    const previews = [...this.previewUrls];
+
+    const [movedFile] = files.splice(src, 1);
+    const [movedPreview] = previews.splice(src, 1);
+    files.splice(index, 0, movedFile);
+    previews.splice(index, 0, movedPreview);
+
+    this.uploadedFiles = files;
+    this.previewUrls = previews;
   }
 
+  onThumbDragEnd(): void {
+    this.dragSrcIndex = null;
+    this.dragOverIndex = null;
+  }
+
+  /** Seller commission (BidRoom fee). */
   calculateEstimatedCommission(): number {
     const startingBid = this.listingForm.get('startingBid')?.value || 0;
     const buyNowPrice = this.listingForm.get('buyNowPrice')?.value || 0;
     const minimumAcceptPrice = this.listingForm.get('minimumAcceptPrice')?.value || 0;
-    
-    // Use the highest price as basis for commission calculation
     const priceBasis = Math.max(startingBid, buyNowPrice, minimumAcceptPrice);
-    
-    return priceBasis * (this.commissionRate / 100);
+    const sellerRate = (environment as { bidroomFeeSellerRate?: number }).bidroomFeeSellerRate;
+    const rate = sellerRate != null ? (this.listingForm.get('allowPrivateRoom')?.value ? 0.02 : sellerRate) : (this.commissionRate / 100);
+    return priceBasis * rate;
   }
 
-  calculateEstimatedFees(): {
-    commission: number;
-    paymentProcessing: number;
-    total: number;
-  } {
-    const priceBasis = this.listingForm.get('startingBid')?.value || 
-                      this.listingForm.get('buyNowPrice')?.value || 
+  calculateEstimatedFees(): { commission: number; paymentProcessing: number; buyerFee: number; total: number } {
+    const priceBasis = this.listingForm.get('startingBid')?.value ||
+                      this.listingForm.get('buyNowPrice')?.value ||
                       this.listingForm.get('minimumAcceptPrice')?.value || 0;
-    
-    const commission = priceBasis * (this.commissionRate / 100);
-    const paymentProcessing = priceBasis * 0.029 + 0.30; // Standard Stripe-like fee
-    const total = commission + paymentProcessing;
-    
-    return {
-      commission,
-      paymentProcessing,
-      total
-    };
+    const envSeller = (environment as { bidroomFeeSellerRate?: number }).bidroomFeeSellerRate;
+    const envBuyer = (environment as { bidroomFeeBuyerRate?: number }).bidroomFeeBuyerRate;
+    const sellerRate = envSeller != null ? (this.listingForm.get('allowPrivateRoom')?.value ? 0.02 : envSeller) : (this.commissionRate / 100);
+    const buyerRate = envBuyer ?? 0.005;
+    const commission = priceBasis * sellerRate;
+    const buyerFee = priceBasis * buyerRate;
+    const paymentProcessing = priceBasis * 0.029 + 0.30;
+    return { commission, paymentProcessing, buyerFee, total: commission + paymentProcessing };
   }
 
   async uploadImages(): Promise<string[]> {
-    if (this.uploadedFiles.length === 0) {
-      return [];
-    }
-    
+    if (this.uploadedFiles.length === 0) return [];
     this.isUploadingImages = true;
-    
     try {
       const formData = new FormData();
-      this.uploadedFiles.forEach(file => {
-        formData.append('images', file);
-      });
-
+      this.uploadedFiles.forEach(file => formData.append('images', file));
       const response = await firstValueFrom(
-        this.http.post<{ urls: string[]; count: number }>(
-          `${API_CONFIG.getApiUrl()}/uploads`,
-          formData
-          // Note: Don't set Content-Type header - browser will set it with boundary for multipart/form-data
-        )
+        this.http.post<{ urls: string[]; count: number }>(`${API_CONFIG.getApiUrl()}/uploads`, formData)
       );
-
       this.uploadedFileUrls = response.urls || [];
       this.isUploadingImages = false;
       return this.uploadedFileUrls;
     } catch (error: any) {
       this.isUploadingImages = false;
-      console.error('Error uploading images:', error);
       throw new Error(error.error?.message || 'Failed to upload images. Please try again.');
     }
   }
 
   async onSubmit(): Promise<void> {
-    if (this.listingForm.valid && this.uploadedFiles.length >= 1) {
-      this.isSubmitting = true;
-      this.errorMessage = '';
-      
-      try {
-        // Step 1: Upload images to Azure Blob Storage
-        let imageUrls: string[] = [];
-        
-        if (this.uploadedFiles.length > 0) {
-          this.errorMessage = this.translate.instant('addListing.uploadingImages');
-          imageUrls = await this.uploadImages();
-          
-          if (imageUrls.length === 0) {
-            throw new Error(this.translate.instant('addListing.errorUploadFailed'));
-          }
-        }
+    if (this.isSubmitting || this.isUploadingImages) return;
 
-        // Step 2: Create listing with image URLs
-        this.errorMessage = this.translate.instant('addListing.creatingListing');
-        const formData = this.prepareListingData();
-        formData.images = imageUrls;
-        
-        const listing = await firstValueFrom(
-          this.listingsService.createListing(formData)
-        );
-        
-        this.isSubmitting = false;
-        Swal.fire({
-          toast: true,
-          position: 'top-end',
-          icon: 'success',
-          title: this.translate.instant('addListing.successMessage'),
-          showConfirmButton: false,
-          timer: 3000,
-          timerProgressBar: true
-        });
-        this.router.navigate(['/listing', listing.slug]);
-      } catch (error: any) {
-        this.isSubmitting = false;
-        this.errorMessage = error.message || error.error?.message || 'Failed to create listing. Please try again.';
-        console.error('Error creating listing:', error);
-      }
-    } else {
-      // Mark all fields as touched
-      Object.keys(this.listingForm.controls).forEach(key => {
-        this.listingForm.get(key)?.markAsTouched();
+    // Mark all fields touched so validation styles appear
+    Object.keys(this.listingForm.controls).forEach(key => {
+      this.listingForm.get(key)?.markAsTouched();
+    });
+
+    if (!this.listingForm.valid || this.uploadedFiles.length < 1 || !this.isMediaValid) {
+      const fieldLabels: Record<string, string> = {
+        title: 'Listing Title',
+        category: 'Category',
+        subCategory: 'Sub-Category',
+        condition: 'Item Condition',
+        description: 'Full Description (min. 50 characters)',
+        startingBid: 'Starting Bid',
+        locationCity: 'City',
+        locationRegion: 'Region / State',
+        duration: 'Listing Duration',
+        shippingOption: 'Shipping Option',
+        returnPolicy: 'Return Policy',
+        sellerDeclaration: 'Seller Declaration checkbox',
+      };
+
+      const missing: string[] = [];
+      if (this.uploadedFiles.length < 1) missing.push('at least 1 photo');
+      Object.keys(fieldLabels).forEach(key => {
+        if (this.listingForm.get(key)?.invalid) missing.push(fieldLabels[key]);
       });
-      
-      if (this.uploadedFiles.length < 1) {
-        this.errorMessage = this.translate.instant('addListing.uploadMinError');
+
+      this.errorMessage = missing.length > 0
+        ? `Please complete the following before publishing: ${missing.join(', ')}.`
+        : 'Please fix the highlighted errors before publishing.';
+
+      setTimeout(() => {
+        const firstInvalid = document.querySelector('.ng-invalid:not(form):not(ng-component)');
+        firstInvalid?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 50);
+      return;
+    }
+
+    this.isSubmitting = true;
+    this.errorMessage = '';
+
+    try {
+      this.errorMessage = this.translate.instant('addListing.uploadingImages');
+      const imageUrls = await this.uploadImages();
+      if (imageUrls.length === 0) {
+        throw new Error(this.translate.instant('addListing.errorUploadFailed'));
       }
+
+      this.errorMessage = this.translate.instant('addListing.creatingListing');
+      const formData = this.prepareListingData();
+      formData.images = imageUrls;
+
+      const listing = await firstValueFrom(this.listingsService.createListing(formData));
+
+      this.isSubmitting = false;
+      this.errorMessage = '';
+      Swal.fire({
+        toast: true,
+        position: 'top-end',
+        icon: 'success',
+        title: this.translate.instant('addListing.successMessage'),
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true
+      });
+      this.router.navigate(['/listing', listing.slug]);
+    } catch (error: any) {
+      this.isSubmitting = false;
+      this.errorMessage = error.message || error.error?.message || 'Failed to create listing. Please try again.';
     }
   }
 
   prepareListingData(): any {
     const formValue = this.listingForm.value;
-    
     return {
       title: formValue.title,
       description: formValue.description,
       category: formValue.category,
       subCategory: formValue.subCategory,
       condition: formValue.condition,
-      listingFormat: formValue.listingFormat, // 'auction' or 'best-offer'
+      listingFormat: formValue.listingFormat,
       duration: formValue.duration,
       startingPrice: formValue.startingBid || null,
       reservePrice: formValue.listingFormat === 'auction' ? null : (formValue.reservePrice || null),
@@ -641,17 +627,18 @@ export class AddListing implements OnInit {
       minimumOfferPrice: formValue.minimumAcceptPrice || null,
       allowPrivateRoom: formValue.allowPrivateRoom,
       commissionRate: this.commissionRate,
-      location: `${formValue.locationCity}, ${formValue.locationRegion}`,
+      locationCity: formValue.locationCity?.trim(),
+      locationCountry: formValue.locationCountry,
+      location: `${formValue.locationCity}, ${formValue.locationRegion}, ${formValue.locationCountry}`,
       shippingCost: formValue.flatRateShipping || (formValue.shippingOption === 'free' ? 0 : null),
       shippingOption: formValue.shippingOption,
       packageSize: formValue.shippingOption === 'calculated' ? formValue.packageSize : null,
       shippingOriginPostalCode: formValue.shippingOption === 'calculated' ? formValue.shippingOriginPostalCode : null,
       shippingOriginCity: formValue.shippingOption === 'calculated' ? formValue.shippingOriginCity : null,
       shippingOriginCountry: formValue.shippingOption === 'calculated' ? (formValue.shippingOriginCountry || 'US') : null,
-      handlingTime: formValue.handlingTime,
       returnPolicy: formValue.returnPolicy,
       specifications: formValue.specifications || [],
-      images: this.uploadedFileUrls // Will be populated with uploaded image URLs
+      images: this.uploadedFileUrls
     };
   }
 
@@ -690,17 +677,13 @@ export class AddListing implements OnInit {
       description: 'addListing.description',
       locationCity: 'addListing.city',
       locationRegion: 'addListing.regionState',
+      locationCountry: 'addListing.originCountry',
       duration: 'addListing.duration',
       startingBid: 'addListing.startingBid',
       reservePrice: 'addListing.reservePrice',
       shippingOption: 'addListing.shippingOptions',
-      handlingTime: 'addListing.handlingTime',
       returnPolicy: 'addListing.returnPolicy'
     };
     return this.translate.instant(keyMap[fieldName] || fieldName);
-  }
-
-  isStep(step: number): boolean {
-    return this.currentStep === step;
   }
 }

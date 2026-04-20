@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { API_CONFIG } from '../config/api.config';
 
 export type TransactionStatus =
@@ -74,6 +75,11 @@ export interface Transaction {
   paymentAcceptanceDeadline?: string | null;
   /** Date by which seller must ship (after paid) */
   handlingDeadline?: string | null;
+  /** End of 5th business day after payment — auto-cancel if not shipped */
+  shipByBusinessDeadline?: string | null;
+  shippingMidpointWarningSentAt?: string | null;
+  buyerRemindSellerShipAt?: string | null;
+  shippingAutoCancelledAt?: string | null;
   /** Whether buyer has reviewed seller (for this listing) */
   buyerHasReviewedSeller?: boolean;
   /** Whether seller has reviewed buyer (for this listing) */
@@ -81,6 +87,8 @@ export interface Transaction {
   /** Stripe Connect payment fields */
   stripeCheckoutSessionId?: string | null;
   stripePaymentIntentId?: string | null;
+  /** Stripe refund ID (set by auto-cancel scheduler or dispute ruling) */
+  stripeRefundId?: string | null;
   /** BidRoom platform fee charged to buyer (2% of item price, dollars) */
   bidRoomFeeAmount?: number | null;
   /** Stripe processing fee deducted from seller payout (dollars) */
@@ -175,6 +183,23 @@ export class TransactionsService {
     return this.http.get<TransactionsResponse>(this.apiUrl);
   }
 
+  /** Returns counts of active (non-completed/cancelled) transactions per role. */
+  getPendingCounts(): Observable<{ buyer: number; seller: number }> {
+    return this.getMyTransactions().pipe(
+      map(({ transactions }) => {
+        const DONE = new Set(['completed', 'cancelled']);
+        let buyer = 0, seller = 0;
+        for (const t of transactions) {
+          const status = t.transactionStatus ?? t.status ?? '';
+          if (DONE.has(status)) continue;
+          if (t.role === 'buyer') buyer++;
+          else if (t.role === 'seller') seller++;
+        }
+        return { buyer, seller };
+      })
+    );
+  }
+
   getTransaction(id: string): Observable<Transaction> {
     return this.http.get<Transaction>(`${this.apiUrl}/${id}`);
   }
@@ -217,5 +242,10 @@ export class TransactionsService {
     return this.http.get(`${this.apiUrl}/${id}/invoice?role=${role}`, {
       responseType: 'blob'
     });
+  }
+
+  /** Buyer: remind seller to ship (24h cooldown). */
+  remindSellerToShip(id: string): Observable<Transaction> {
+    return this.http.post<Transaction>(`${this.apiUrl}/${id}/remind-ship`, {});
   }
 }

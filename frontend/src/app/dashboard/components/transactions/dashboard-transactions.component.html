@@ -145,6 +145,24 @@
           </a>
 
           <div class="card-actions">
+
+            <!-- Auto-cancellation notice (non-shipment deadline expired) -->
+            @if (getEffectiveStatus(t) === 'cancelled' && t.shippingAutoCancelledAt) {
+              <div class="cancellation-notice">
+                @if (isBuyer(t)) {
+                  <p class="cancellation-notice-title">{{ 'transactions.autoCancelledBuyerTitle' | translate }}</p>
+                  <p class="cancellation-notice-body">{{ 'transactions.autoCancelledBuyerMessage' | translate:{ date: formatAutoCancelledAt(t) } }}</p>
+                  @if (t.stripeRefundId) {
+                    <p class="cancellation-notice-ref">{{ 'transactions.refundRef' | translate }}: {{ t.stripeRefundId }}</p>
+                  }
+                }
+                @if (isSeller(t)) {
+                  <p class="cancellation-notice-title">{{ 'transactions.autoCancelledSellerTitle' | translate }}</p>
+                  <p class="cancellation-notice-body">{{ 'transactions.autoCancelledSellerMessage' | translate:{ date: formatAutoCancelledAt(t) } }}</p>
+                }
+              </div>
+            }
+
             @if (t.paymentDeadline && getEffectiveStatus(t) === 'pending_payment') {
               <p class="card-deadline">
                 {{ 'transactions.paymentWindowEnds' | translate }}: {{ formatPaymentDeadline(t) }}{{ hasPaymentDeadlinePassed(t) ? (' (' + ('transactions.passed' | translate) + ')') : '' }}
@@ -165,6 +183,9 @@
                   <span> — <a [href]="'mailto:' + t.buyer.email" class="seller-email" (click)="$event.stopPropagation()">{{ t.buyer.email }}</a></span>
                 }
               </p>
+            }
+            @if (isSeller(t) && ['awaiting_seller_acceptance', 'paid'].includes(getEffectiveStatus(t)) && (t.shipByBusinessDeadline || t.handlingDeadline)) {
+              <p class="form-hint">{{ 'transactions.sellerMustShipBy' | translate }}: {{ formatShipByDeadline(t) }}</p>
             }
             @if (isSeller(t) && canSellerAcceptPayment(t)) {
               @if (t.paymentAcceptanceDeadline) {
@@ -276,6 +297,27 @@
                 <p class="form-hint stripe-paid-hint">
                   {{ 'transactions.paymentConfirmedSellerNotified' | translate }}
                 </p>
+              }
+              @if (['awaiting_seller_acceptance', 'paid'].includes(getEffectiveStatus(t))) {
+                <div class="buyer-shipping-panel">
+                  <p class="shipping-status-line">
+                    <strong>{{ 'transactions.shippingStatusLabel' | translate }}:</strong> {{ buyerShippingStatusLine(t) }}
+                  </p>
+                  @if (t.shipByBusinessDeadline || t.handlingDeadline) {
+                    <p class="form-hint">{{ 'transactions.expectedShipBy' | translate }}: {{ formatShipByDeadline(t) }}</p>
+                  }
+                  <button
+                    type="button"
+                    class="btn btn-secondary"
+                    (click)="remindSellerToShip(t); $event.stopPropagation()"
+                    [disabled]="!canRemindSellerToShip(t) || remindSellerShipTxId === t._id"
+                  >
+                    {{ remindSellerShipTxId === t._id ? ('transactions.remindingSeller' | translate) : ('transactions.remindSellerToShip' | translate) }}
+                  </button>
+                  @if (isRemindSellerOnCooldown(t)) {
+                    <p class="form-hint">{{ 'transactions.remindSellerCooldown' | translate }}</p>
+                  }
+                </div>
               }
               @if (t.stripePaymentIntentId) {
                 <p class="stripe-ref">{{ 'transactions.paymentRef' | translate }}: {{ t.stripePaymentIntentId }}</p>
@@ -431,11 +473,28 @@
           </p>
           <fieldset class="review-score-section">
             <legend class="review-score-label">{{ 'transactions.score' | translate }} (1–10)</legend>
-            <div class="review-score-buttons">
-              @for (i of [1,2,3,4,5,6,7,8,9,10]; track i) {
-                <button type="button" class="score-btn" (click)="setReviewScore(i)" [class.selected]="i === reviewScore">
-                  {{ i }}
-                </button>
+            <div class="review-score-card">
+              <div class="review-score-scale">
+                <span class="scale-low">{{ 'transactions.scoreScaleLow' | translate }}</span>
+                <span class="scale-high">{{ 'transactions.scoreScaleHigh' | translate }}</span>
+              </div>
+              <div class="review-score-grid" role="group" [attr.aria-label]="'transactions.score' | translate">
+                @for (i of [1,2,3,4,5,6,7,8,9,10]; track i) {
+                  <button
+                    type="button"
+                    class="score-btn"
+                    [class.tier-low]="scoreTier(i) === 'low'"
+                    [class.tier-mid]="scoreTier(i) === 'mid'"
+                    [class.tier-high]="scoreTier(i) === 'high'"
+                    [class.selected]="i === reviewScore"
+                    (click)="setReviewScore(i)"
+                  >
+                    {{ i }}
+                  </button>
+                }
+              </div>
+              @if (reviewScore > 0) {
+                <p class="review-score-picked">{{ 'transactions.scoreSelected' | translate: { score: reviewScore } }}</p>
               }
             </div>
           </fieldset>

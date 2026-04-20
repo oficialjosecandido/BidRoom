@@ -37,17 +37,21 @@
         </div>
 
         <!-- Location -->
-        <div class="cat-filter-group">
+        <div class="cat-filter-group cat-filter-group--location">
           <span class="cat-filter-label">{{ 'listingList.location' | translate }}</span>
-          <div class="cat-filter-options">
-            @for (opt of locationOptions; track opt.key) {
-              <button
-                class="cat-filter-chip"
-                [class.active]="selectedLocation === opt.key"
-                (click)="selectedLocation = selectedLocation === opt.key ? '' : opt.key">
-                {{ opt.label }}
-              </button>
-            }
+          <div class="cat-location-row">
+            <input
+              type="text"
+              class="cat-location-input"
+              [(ngModel)]="locationCityFilter"
+              [placeholder]="'listingList.locationCityPlaceholder' | translate"
+            />
+            <select class="cat-location-select" [(ngModel)]="locationCountryFilter">
+              <option value="">{{ 'listingList.anyCountry' | translate }}</option>
+              @for (c of countryFilterOptions; track c.code) {
+                <option [value]="c.code">{{ c.labelKey | translate }}</option>
+              }
+            </select>
           </div>
         </div>
 
@@ -57,10 +61,11 @@
           <div class="cat-filter-options">
             @for (opt of shippingOptions; track opt.key) {
               <button
+                type="button"
                 class="cat-filter-chip"
                 [class.active]="selectedShipping.has(opt.key)"
                 (click)="toggleShipping(opt.key)">
-                {{ opt.label }}
+                {{ opt.labelKey | translate }}
               </button>
             }
           </div>
