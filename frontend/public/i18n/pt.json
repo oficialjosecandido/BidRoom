@@ -192,7 +192,7 @@
     "selectShipping": "Selecionar Opção de Envio",
     "shippingFlatRate": "Taxa Fixa",
     "shippingCalculated": "Envio Calculado",
-    "shippingLocalPickup": "Apenas Levantamento Local",
+    "shippingLocalPickup": "Encontro Presencial",
     "shippingFree": "Envio Grátis",
     "flatRateCost": "Custo de Envio Taxa Fixa *",
     "flatRateHint": "Introduza o preço fixo de envio que os compradores pagarão. Use 0 para envio grátis.",

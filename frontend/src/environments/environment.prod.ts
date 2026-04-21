@@ -11,7 +11,7 @@ export const environment = {
   shippingOptions: [
     { label: 'Flat Rate',    value: 'flat-rate'    },
     { label: 'Calculated',   value: 'calculated'   },
-    { label: 'Local Pickup', value: 'local-pickup' },
+    { label: 'Meet in Person', value: 'local-pickup' },
     { label: 'Free',         value: 'free'         },
   ],
   handlingTimes: [

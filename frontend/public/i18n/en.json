@@ -192,7 +192,7 @@
     "selectShipping": "Select a Shipping Option",
     "shippingFlatRate": "Flat Rate",
     "shippingCalculated": "Calculated Shipping",
-    "shippingLocalPickup": "Local Pickup Only",
+    "shippingLocalPickup": "Meet in Person",
     "shippingFree": "Free Shipping",
     "flatRateCost": "Flat Rate Shipping Cost *",
     "flatRateHint": "Enter the fixed shipping price buyers will pay. Use $0 for free shipping.",
