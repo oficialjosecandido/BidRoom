@@ -189,7 +189,7 @@
     "selectShipping": "Sélectionner une Option d'Expédition",
     "shippingFlatRate": "Tarif Fixe",
     "shippingCalculated": "Expédition Calculée",
-    "shippingLocalPickup": "Retrait sur Place Uniquement",
+    "shippingLocalPickup": "Rencontre en Personne",
     "shippingFree": "Expédition Gratuite",
     "flatRateCost": "Coût Expédition Tarif Fixe *",
     "flatRateHint": "Indiquez le prix fixe d'expédition que paieront les acheteurs. Utilisez 0 pour la livraison gratuite.",

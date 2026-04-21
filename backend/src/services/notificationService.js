@@ -617,7 +617,7 @@ async function notifyAccountClosed({ userId }) {
 function formatShippingForPricing(shippingOption, shippingCost = 0) {
   if (!shippingOption) return '—';
   if (shippingOption === 'free') return 'Free';
-  if (shippingOption === 'local-pickup') return 'Local pickup';
+  if (shippingOption === 'local-pickup') return 'Meet in Person';
   if (shippingOption === 'flat-rate') {
     const cost = Number(shippingCost) || 0;
     return cost > 0 ? `$${cost.toFixed(2)}` : 'Free';
