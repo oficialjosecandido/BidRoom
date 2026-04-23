@@ -1,0 +1,214 @@
+<app-header></app-header>
+
+<main class="edit-listing-page">
+  <div class="page-container">
+
+    @if (isLoading) {
+      <div class="loading-state">Loading listing…</div>
+    } @else if (errorMessage && !listing) {
+      <div class="error-banner">{{ errorMessage }}</div>
+    } @else if (listing) {
+
+      <div class="page-header">
+        <h1>Edit Listing</h1>
+        <div class="edit-mode-badge" [class]="'badge-' + editMode">{{ editModeLabel }}</div>
+      </div>
+
+      @if (editMode === 'locked') {
+        <div class="locked-notice">
+          <span class="lock-icon">🔒</span>
+          <div>
+            <strong>Editing is locked</strong>
+            <p>Bids have already been placed on this listing. No changes can be made to protect bidder trust.</p>
+          </div>
+        </div>
+      }
+
+      @if (editMode === 'partial') {
+        <div class="partial-notice">
+          <span class="info-icon">ℹ️</span>
+          <div>
+            <strong>Limited editing</strong>
+            <p>This listing is live with no bids. You can update the description, shipping, condition, and images. Title, category, pricing, and auction settings are locked.</p>
+          </div>
+        </div>
+      }
+
+      @if (errorMessage) {
+        <div class="error-banner">{{ errorMessage }}</div>
+      }
+
+      <form [formGroup]="editForm" (ngSubmit)="onSubmit()" class="edit-form">
+
+        <!-- Critical fields (shown read-only when not in full mode) -->
+        <section class="form-section">
+          <h2>Listing Details</h2>
+
+          <div class="form-group" [class.locked-field]="editMode !== 'full'">
+            <label>Title</label>
+            <input type="text" formControlName="title" [readonly]="editMode !== 'full'" />
+            @if (editMode !== 'full') { <span class="locked-tag">Locked</span> }
+          </div>
+
+          <div class="form-group" [class.locked-field]="editMode !== 'full'">
+            <label>Category</label>
+            <input type="text" formControlName="category" [readonly]="editMode !== 'full'" />
+            @if (editMode !== 'full') { <span class="locked-tag">Locked</span> }
+          </div>
+
+          <div class="form-group" [class.locked-field]="editMode === 'locked'">
+            <label>Condition</label>
+            @if (editMode !== 'locked') {
+              <select formControlName="condition">
+                @for (c of itemConditions; track c) {
+                  <option [value]="c">{{ c }}</option>
+                }
+              </select>
+            } @else {
+              <input type="text" formControlName="condition" readonly />
+              <span class="locked-tag">Locked</span>
+            }
+          </div>
+        </section>
+
+        <!-- Description -->
+        <section class="form-section">
+          <h2>Description</h2>
+          <div class="form-group" [class.locked-field]="editMode === 'locked'">
+            <label>Description <span class="hint">(min 50 characters)</span></label>
+            <textarea formControlName="description" rows="8" [readonly]="editMode === 'locked'"></textarea>
+            @if (editMode === 'locked') { <span class="locked-tag">Locked</span> }
+          </div>
+        </section>
+
+        <!-- Specifications -->
+        <section class="form-section">
+          <h2>Specifications</h2>
+          <div formArrayName="specifications">
+            @for (spec of specifications.controls; track $index; let i = $index) {
+              <div [formGroupName]="i" class="spec-row">
+                <input type="text" formControlName="key"   placeholder="Key"   [readonly]="editMode === 'locked'" />
+                <input type="text" formControlName="value" placeholder="Value" [readonly]="editMode === 'locked'" />
+                @if (editMode !== 'locked') {
+                  <button type="button" class="btn-remove" (click)="removeSpecification(i)">✕</button>
+                }
+              </div>
+            }
+          </div>
+          @if (editMode !== 'locked') {
+            <button type="button" class="btn-secondary btn-sm" (click)="addSpecification()">+ Add specification</button>
+          }
+        </section>
+
+        <!-- Images -->
+        <section class="form-section">
+          <h2>Images</h2>
+
+          @if (existingImageUrls.length > 0) {
+            <div class="image-grid">
+              @for (url of existingImageUrls; track url; let i = $index) {
+                <div class="image-thumb">
+                  <img [src]="url" alt="Listing image {{ i + 1 }}" />
+                  @if (editMode !== 'locked') {
+                    <button type="button" class="remove-img-btn" (click)="removeExistingImage(i)">✕</button>
+                  }
+                </div>
+              }
+            </div>
+          }
+
+          @if (editMode !== 'locked') {
+            <div class="upload-area">
+              <label class="upload-label">
+                <input type="file" accept="image/*" multiple (change)="onFileSelected($event)" />
+                Add more photos
+              </label>
+            </div>
+
+            @if (previewUrls.length > 0) {
+              <div class="image-grid new-images">
+                @for (url of previewUrls; track $index; let i = $index) {
+                  <div class="image-thumb">
+                    <img [src]="url" alt="New image {{ i + 1 }}" />
+                    <button type="button" class="remove-img-btn" (click)="removeNewFile(i)">✕</button>
+                  </div>
+                }
+              </div>
+            }
+          }
+        </section>
+
+        <!-- Location -->
+        <section class="form-section">
+          <h2>Location</h2>
+          <div class="form-row">
+            <div class="form-group" [class.locked-field]="editMode === 'locked'">
+              <label>City</label>
+              <input type="text" formControlName="locationCity" [readonly]="editMode === 'locked'" />
+            </div>
+            <div class="form-group" [class.locked-field]="editMode === 'locked'">
+              <label>Country</label>
+              <input type="text" formControlName="locationCountry" [readonly]="editMode === 'locked'" />
+            </div>
+          </div>
+        </section>
+
+        <!-- Shipping & Returns -->
+        <section class="form-section">
+          <h2>Shipping &amp; Returns</h2>
+
+          <div class="form-group" [class.locked-field]="editMode === 'locked'">
+            <label>Shipping Option</label>
+            @if (editMode !== 'locked') {
+              <select formControlName="shippingOption">
+                @for (opt of shippingOptions; track opt.value) {
+                  <option [value]="opt.value">{{ opt.label }}</option>
+                }
+              </select>
+            } @else {
+              <input type="text" formControlName="shippingOption" readonly />
+              <span class="locked-tag">Locked</span>
+            }
+          </div>
+
+          <div class="form-group" [class.locked-field]="editMode === 'locked'">
+            <label>Shipping Cost (€)</label>
+            <input type="number" formControlName="shippingCost" min="0" [readonly]="editMode === 'locked'" />
+          </div>
+
+          <div class="form-group" [class.locked-field]="editMode === 'locked'">
+            <label>Return Policy</label>
+            @if (editMode !== 'locked') {
+              <select formControlName="returnPolicy">
+                @for (p of returnPolicies; track p.value) {
+                  <option [value]="p.value">{{ p.label }}</option>
+                }
+              </select>
+            } @else {
+              <input type="text" formControlName="returnPolicy" readonly />
+              <span class="locked-tag">Locked</span>
+            }
+          </div>
+
+          <div class="form-group" [class.locked-field]="editMode === 'locked'">
+            <label>Handling Time (days)</label>
+            <input type="number" formControlName="handlingTime" min="1" max="30" [readonly]="editMode === 'locked'" />
+          </div>
+        </section>
+
+        <!-- Submit -->
+        @if (editMode !== 'locked') {
+          <div class="form-actions">
+            <button type="button" class="btn-secondary" [routerLink]="['/listing', listing.slug]">Cancel</button>
+            <button type="submit" class="btn-primary" [disabled]="isSubmitting || isUploadingImages">
+              {{ isSubmitting ? 'Saving…' : 'Save Changes' }}
+            </button>
+          </div>
+        }
+
+      </form>
+    }
+  </div>
+</main>
+
+<app-footer></app-footer>

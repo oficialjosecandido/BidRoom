@@ -102,7 +102,18 @@ const userSchema = new mongoose.Schema({
   activeDisputeTransactionIds: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Transaction'
-  }]
+  }],
+  /** Number of content policy violations (sharing contact info in listings/messages) */
+  contentViolationCount: {
+    type: Number,
+    default: 0,
+    min: 0
+  },
+  /** Temporary restriction end date from content violations; null if not restricted */
+  contentRestrictedUntil: {
+    type: Date,
+    default: null
+  }
 }, {
   timestamps: true // Adds createdAt and updatedAt fields
 });

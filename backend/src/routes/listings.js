@@ -8,6 +8,8 @@ const { authenticateToken, optionalAuth, requireActiveAccount, requireNoDisputeR
 const { handleWinnerSelection, handleAuctionEnd } = require('../services/auctionNotificationService');
 const { getReviewScoresForUser } = require('../services/reviewService');
 const { logAuctionCreated } = require('../services/bestOfferLogger');
+const { scanTexts } = require('../utils/contentFilter');
+const { recordViolation } = require('../services/contentViolationService');
 
 const router = express.Router();
 
@@ -709,6 +711,19 @@ router.post('/', authenticateToken, requireActiveAccount, requireNoDisputeRestri
       }
     }
 
+    // Scan for contact info in user-provided text fields
+    const specTexts = (specifications || []).map(s => `${s.key || ''} ${s.value || ''}`);
+    const contentScan = scanTexts([title, description, ...specTexts]);
+    if (contentScan.found) {
+      const fullUser = await User.findById(user._id);
+      const violation = await recordViolation(fullUser);
+      return res.status(400).json({
+        error: 'Content policy violation',
+        message: violation.message,
+        violationAction: violation.action
+      });
+    }
+
     // Prepare listing data
     const listingData = {
       title: title.trim(),
@@ -822,6 +837,115 @@ router.post('/', authenticateToken, requireActiveAccount, requireNoDisputeRestri
       error: 'Failed to create listing',
       message: error.message
     });
+  }
+});
+
+/**
+ * Fields that may NEVER be changed once a listing is live (active).
+ * Locked regardless of bid count to prevent price manipulation.
+ */
+const CRITICAL_FIELDS = new Set([
+  'title', 'category', 'subCategory', 'startingPrice', 'currentPrice',
+  'auctionFormat', 'durationSlot', 'endDate', 'buyNowPrice',
+  'reservePrice', 'minimumOfferPrice', 'allowPrivateRoom'
+]);
+
+// PATCH /api/listings/:id - Edit a listing (state-based edit locks)
+router.patch('/:id', authenticateToken, requireActiveAccount, async (req, res) => {
+  try {
+    const user = await User.findOne({ uid: req.user.uid });
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    const listing = await Listing.findById(req.params.id);
+    if (!listing) return res.status(404).json({ error: 'Listing not found' });
+
+    if (!listing.seller.equals(user._id)) {
+      return res.status(403).json({ error: 'Forbidden', message: 'You do not own this listing.' });
+    }
+
+    // Determine edit permissions based on auction state
+    const isDraft  = listing.status === 'draft';
+    const isLive   = listing.status === 'active';
+    const hasBids  = listing.bidCount > 0;
+
+    if (isLive && hasBids) {
+      return res.status(403).json({
+        error: 'Listing locked',
+        message: 'This listing cannot be edited because bids have already been placed.'
+      });
+    }
+
+    if (!isDraft && !isLive) {
+      return res.status(400).json({ error: 'Only draft or active listings can be edited.' });
+    }
+
+    // For live listings with no bids, block changes to critical fields
+    const body = req.body;
+    if (isLive && !hasBids) {
+      const attempted = Object.keys(body).filter(k => CRITICAL_FIELDS.has(k));
+      if (attempted.length > 0) {
+        return res.status(400).json({
+          error: 'Field locked',
+          message: `The following fields cannot be changed on a live listing: ${attempted.join(', ')}.`
+        });
+      }
+    }
+
+    // Allowed fields for non-draft edits (excludes all critical fields)
+    const EDITABLE_FIELDS = [
+      'description', 'condition', 'specifications',
+      'location', 'locationCity', 'locationCountry',
+      'shippingOption', 'shippingCost', 'packageSize',
+      'shippingOriginPostalCode', 'shippingOriginCity', 'shippingOriginCountry',
+      'returnPolicy', 'handlingTime', 'images'
+    ];
+
+    const allowedKeys = isDraft ? Object.keys(body) : EDITABLE_FIELDS;
+    const updates = {};
+    for (const key of allowedKeys) {
+      if (key in body) updates[key] = body[key];
+    }
+
+    if (Object.keys(updates).length === 0) {
+      return res.status(400).json({ error: 'No valid fields to update.' });
+    }
+
+    // Scan user-provided text for contact info
+    const textFields = [
+      updates.title || '',
+      updates.description || '',
+      ...((updates.specifications || []).map(s => `${s.key || ''} ${s.value || ''}`))
+    ].filter(Boolean);
+
+    if (textFields.length > 0) {
+      const contentScan = scanTexts(textFields);
+      if (contentScan.found) {
+        const fullUser = await User.findById(user._id);
+        const violation = await recordViolation(fullUser);
+        return res.status(400).json({
+          error: 'Content policy violation',
+          message: violation.message,
+          violationAction: violation.action
+        });
+      }
+    }
+
+    // Apply updates
+    Object.assign(listing, updates);
+    await listing.save();
+
+    const updated = await Listing.findById(listing._id)
+      .populate('seller', 'firstName lastName email')
+      .lean();
+
+    return res.json({ listing: updated, message: 'Listing updated successfully.' });
+  } catch (error) {
+    console.error('Error updating listing:', error);
+    if (error.name === 'ValidationError') {
+      const errors = Object.values(error.errors).map(e => e.message);
+      return res.status(400).json({ error: 'Validation failed', message: errors.join(', ') });
+    }
+    res.status(500).json({ error: 'Failed to update listing', message: error.message });
   }
 });
 

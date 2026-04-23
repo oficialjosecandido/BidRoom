@@ -128,7 +128,7 @@ const requireActiveAccount = async (req, res, next) => {
     return res.status(401).json({ error: 'Unauthorized', message: 'Authentication required.' });
   }
   try {
-    const dbUser = await User.findOne({ uid: req.user.uid }).select('accountStatus').lean();
+    const dbUser = await User.findOne({ uid: req.user.uid }).select('accountStatus contentRestrictedUntil').lean();
     if (!dbUser) {
       // No DB record yet — user is authenticated but hasn't been persisted.
       // They cannot be suspended, so let the route handler proceed (it will create the record).
@@ -138,13 +138,20 @@ const requireActiveAccount = async (req, res, next) => {
     if (status === 'suspended') {
       return res.status(403).json({
         error: 'Account suspended',
-        message: 'Your account has been suspended while a dispute is under review. You cannot create listings, place bids, or complete transactions until the case is resolved.'
+        message: 'Your account has been temporarily restricted while a dispute is under review. You cannot create new listings, place bids, or start new transactions until the case is resolved. Any transactions initiated before the dispute will continue and can be completed as normal.'
       });
     }
     if (status === 'closed') {
       return res.status(403).json({
         error: 'Account closed',
         message: 'Your account has been permanently closed.'
+      });
+    }
+    if (dbUser.contentRestrictedUntil && dbUser.contentRestrictedUntil > new Date()) {
+      const until = dbUser.contentRestrictedUntil.toISOString().slice(0, 10);
+      return res.status(403).json({
+        error: 'Account temporarily restricted',
+        message: `Your account has been temporarily restricted until ${until} due to violations of our contact information policy. You cannot create or edit listings during this period.`
       });
     }
     next();
