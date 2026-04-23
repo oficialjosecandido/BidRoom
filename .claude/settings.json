@@ -1,14 +1,29 @@
 {
   "permissions": {
     "allow": [
-      "Bash(ls /Users/josecandido/Documents/BidRoom/backend/*.env*)",
-      "Bash(ls /Users/josecandido/Documents/BidRoom/backend/.env*)",
-      "Bash(find /Users/josecandido/Documents/BidRoom -name *.yml -o -name *.yaml)",
-      "Bash(grep -rn \"trust proxy\\\\|trustProxy\" /Users/josecandido/Documents/BidRoom/backend/src --include=*.js)",
-      "Bash(find /Users/josecandido/Documents/BidRoom/backend/src -name platinumBidderInvitation* -o -name platinum*)",
-      "Bash(grep -r \"FEATURE_\\\\|featureFlags\\\\|isFeatureEnabled\" /Users/josecandido/Documents/BidRoom/backend/src --include=*.js --include=*.ts)",
-      "Bash(grep -r \"tierFromBalance\\\\|TIER_THRESHOLDS\" /Users/josecandido/Documents/BidRoom --include=*.js --include=*.ts)",
-      "Bash(find /Users/josecandido/Documents/BidRoom/frontend/src -name *.interceptor.ts -o -name *interceptor*)"
+      "Bash(git merge *)",
+      "Bash(git checkout *)",
+      "Bash(git rm *)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(cp /Users/josecandido/Documents/BidRoom/.claude/settings.json.bak /Users/josecandido/Documents/BidRoom/.claude/settings.json)",
+      "Bash(python3 -c *)",
+      "Bash(mv /Users/josecandido/Documents/BidRoom/.claude/settings.json /tmp/claude_settings_bak.json)",
+      "Bash(mv /tmp/claude_settings_bak.json /Users/josecandido/Documents/BidRoom/.claude/settings.json)",
+      "Bash(mv /Users/josecandido/Documents/BidRoom/.claude/settings.json /tmp/claude_settings_bak2.json)",
+      "Bash(mv /tmp/claude_settings_bak2.json /Users/josecandido/Documents/BidRoom/.claude/settings.json)",
+      "Bash(git push *)",
+      "Bash(git commit *)",
+      "Bash(grep -r \"#[0-9a-fA-F]\\\\{3,6\\\\}\" --include=\"*.scss\")",
+      "Bash(grep -rho \"#[0-9a-fA-F]\\\\{3,6\\\\}\" --include=\"*.scss\")",
+      "Bash(sed -i '' 's/\"shippingLocalPickup\": \"Local Pickup Only\"/\"shippingLocalPickup\": \"Meet in Person\"/' frontend/public/i18n/en.json)",
+      "Bash(sed -i '' 's/\"shippingLocalPickup\": \"Apenas Levantamento Local\"/\"shippingLocalPickup\": \"Encontro Presencial\"/' frontend/public/i18n/pt.json)",
+      "Bash(sed -i '' 's/\"shippingLocalPickup\": \"Retrait sur Place Uniquement\"/\"shippingLocalPickup\": \"Rencontre en Personne\"/' frontend/public/i18n/fr.json)",
+      "Bash(sed -i '' 's/\"shippingLocalPickup\": \"Solo Recogida Local\"/\"shippingLocalPickup\": \"Encuentro en Persona\"/' frontend/public/i18n/es.json)",
+      "Bash(sed -i '' \"s/{ label: 'Local Pickup', value: 'local-pickup' }/{ label: 'Meet in Person', value: 'local-pickup' }/\" frontend/src/environments/environment.ts)"
+    ],
+    "additionalDirectories": [
+      "/Users/josecandido/Documents/BidRoom/.claude"
     ]
   }
 }

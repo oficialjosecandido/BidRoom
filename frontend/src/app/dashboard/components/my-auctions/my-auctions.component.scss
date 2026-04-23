@@ -543,5 +543,23 @@
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     }
   }
+
+  .edit-btn {
+    padding: 12px 24px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 14px;
+    transition: all 0.3s ease;
+    background: var(--accent-purple, #002366);
+    color: #fff;
+    border: none;
+
+    &:hover {
+      background: var(--accent-purple-hover, #001a4d);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    }
+  }
 }
 

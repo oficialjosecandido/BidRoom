@@ -38,6 +38,7 @@ export interface Listing {
   shippingOption?: string;
   returnPolicy?: string;
   handlingTime?: number;
+  specifications?: { key: string; value: string }[];
   // New auction mechanics
   auctionFormat: 'highest-bid' | 'best-offer';
   durationSlot: '5 minutes' | '2 hours' | '24 hours' | '3 days' | '7 days';
@@ -208,6 +209,14 @@ export class ListingsService {
     return this.http.post<{ listing: Listing; message: string }>(
       `${this.apiUrl}/${listingId}/reopen`,
       {}
+    );
+  }
+
+  /** Seller edits a listing (state-based field locks enforced by backend) */
+  updateListing(listingId: string, data: Partial<Listing>): Observable<{ listing: Listing; message: string }> {
+    return this.http.patch<{ listing: Listing; message: string }>(
+      `${this.apiUrl}/${listingId}`,
+      data
     );
   }
 }

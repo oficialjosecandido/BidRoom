@@ -167,6 +167,9 @@
 
       <div class="auction-actions">
         <a [routerLink]="['/listing', listing.slug]" class="view-btn">{{ 'dashboard.myAuctions.viewListing' | translate }}</a>
+        @if (listing.status === 'draft' || listing.status === 'active') {
+          <a [routerLink]="['/listing', listing._id, 'edit']" class="edit-btn">Edit</a>
+        }
       </div>
     </div>
 }
