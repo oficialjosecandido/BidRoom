@@ -1,11 +1,13 @@
 const express = require('express');
 const Review = require('../models/Review');
-const Listing = require('../models/Listing');
+const ReviewFlag = require('../models/ReviewFlag');
+const ReviewAppeal = require('../models/ReviewAppeal');
 const Transaction = require('../models/Transaction');
 const User = require('../models/User');
 const { authenticateToken } = require('../middleware/auth');
-const { getReviewScoresForUser, getReviewScoresForUsers } = require('../services/reviewService');
-const { checkReviewFraud, recordSuccessfulTransaction, recalculateReputation, getTrustBadges, isPrivateRoomEligible, classifyNegativePattern } = require('../services/reputationService');
+const { getReviewScoresForUser } = require('../services/reviewService');
+const { checkReviewFraud, recalculateReputation, getTrustBadges, isPrivateRoomEligible, classifyNegativePattern } = require('../services/reputationService');
+const { scanForAbusiveContent } = require('../utils/contentFilter');
 
 const router = express.Router();
 
@@ -56,8 +58,10 @@ router.get('/scores/:userId', async (req, res) => {
   }
 });
 
-/** Transaction statuses where reviews are allowed */
-const REVIEWABLE_STATUSES = ['delivered', 'completed'];
+/** Reviews are only allowed after completion and within 30 days */
+const REVIEWABLE_STATUSES = ['completed'];
+const REVIEW_WINDOW_DAYS = 30;
+const REVIEW_WINDOW_MS = REVIEW_WINDOW_DAYS * 24 * 60 * 60 * 1000;
 
 /**
  * GET /api/reviews/pending
@@ -94,6 +98,10 @@ router.get('/pending', authenticateToken, async (req, res) => {
 
       const otherId = otherParty._id?.toString() || otherParty.toString();
       const roleForReview = amSeller ? 'as_buyer' : 'as_seller'; // I review them as buyer/seller
+      const completedAt = t.completedAt ? new Date(t.completedAt) : (t.updatedAt ? new Date(t.updatedAt) : null);
+      if (!completedAt) continue;
+      const reviewDeadline = new Date(completedAt.getTime() + REVIEW_WINDOW_MS);
+      if (reviewDeadline < new Date()) continue;
 
       const existing = await Review.findOne({
         listing: t.listing._id,
@@ -113,67 +121,15 @@ router.get('/pending', authenticateToken, async (req, res) => {
             otherPartyName: `${otherParty.firstName || ''} ${otherParty.lastName || ''}`.trim() || (amSeller ? 'Buyer' : 'Seller'),
             myRole: amSeller ? 'seller' : 'buyer',
             theirRole: amSeller ? 'buyer' : 'seller',
-            roleForReview
+            roleForReview,
+            completedAt,
+            reviewDeadline
           });
         }
       }
     }
 
-    // Fallback: listings with winner (no transaction yet, e.g. legacy)
-    if (pending.length === 0) {
-      const asSeller = await Listing.find({
-        seller: user._id,
-        winner: { $exists: true, $ne: null }
-      })
-        .select('_id title slug winner')
-        .populate('winner', 'firstName lastName')
-        .lean();
-      const asBuyer = await Listing.find({ winner: user._id })
-        .select('_id title slug seller')
-        .populate('seller', 'firstName lastName')
-        .lean();
-
-      for (const listing of asSeller) {
-        if (!listing.winner || listing.winner._id.toString() === user._id.toString()) continue;
-        const existing = await Review.findOne({
-          listing: listing._id,
-          reviewer: user._id,
-          reviewee: listing.winner._id
-        });
-        if (!existing) {
-          pending.push({
-            listingId: listing._id,
-            listingTitle: listing.title,
-            listingSlug: listing.slug,
-            otherPartyId: listing.winner._id,
-            otherPartyName: `${listing.winner.firstName || ''} ${listing.winner.lastName || ''}`.trim() || 'Buyer',
-            myRole: 'seller',
-            theirRole: 'buyer',
-            roleForReview: 'as_buyer'
-          });
-        }
-      }
-      for (const listing of asBuyer) {
-        if (!listing.seller) continue;
-        const existing = await Review.findOne({
-          listing: listing._id,
-          reviewer: user._id,
-          reviewee: listing.seller._id
-        });
-        if (!existing) {
-          pending.push({
-            listingId: listing._id,
-            listingTitle: listing.title,
-            listingSlug: listing.slug,
-            otherPartyId: listing.seller._id,
-            otherPartyName: `${listing.seller.firstName || ''} ${listing.seller.lastName || ''}`.trim() || 'Seller',
-            myRole: 'buyer',
-            theirRole: 'seller',
-            roleForReview: 'as_seller'
-          });
-        }
-      }
-    }
+    // No listing-only fallback: reviews are strictly transaction-based and completion-gated.
 
     res.json({ pending });
   } catch (error) {
@@ -188,7 +144,7 @@ router.get('/pending', authenticateToken, async (req, res) => {
 /**
  * POST /api/reviews
  * Create a review (after a completed transaction).
- * Body: { listingId, toUserId, role: 'as_buyer' | 'as_seller', score: 1-10, description? }
+ * Body: { listingId, toUserId, role: 'as_buyer' | 'as_seller', score: 1-5, description? }
  */
 router.post('/', authenticateToken, async (req, res) => {
   try {
@@ -208,10 +164,10 @@ router.post('/', authenticateToken, async (req, res) => {
       });
     }
     const scoreNum = parseInt(scoreVal, 10);
-    if (Number.isNaN(scoreNum) || scoreNum < 1 || scoreNum > 10) {
+    if (Number.isNaN(scoreNum) || scoreNum < 1 || scoreNum > 5) {
       return res.status(400).json({
         error: 'Invalid score',
-        message: 'score must be between 1 and 10'
+        message: 'score must be between 1 and 5'
       });
     }
 
@@ -231,12 +187,32 @@ router.post('/', authenticateToken, async (req, res) => {
     if (transaction) {
       sellerId = (transaction.seller && transaction.seller._id ? transaction.seller._id : transaction.seller)?.toString();
       buyerId = (transaction.buyer && transaction.buyer._id ? transaction.buyer._id : transaction.buyer)?.toString();
-      const okStatuses = ['delivered', 'completed'];
+      const okStatuses = ['completed'];
       const ts = transaction.transactionStatus || transaction.status;
+      if (ts === 'cancelled') {
+        return res.status(400).json({
+          error: 'Cancelled transaction',
+          message: 'Reviews are not allowed for cancelled transactions'
+        });
+      }
       if (!okStatuses.includes(ts)) {
         return res.status(400).json({
           error: 'Transaction not reviewable',
-          message: 'The transaction must be delivered or completed before leaving a review'
+          message: 'The transaction must be completed before leaving a review'
+        });
+      }
+      const completedAt = transaction.completedAt ? new Date(transaction.completedAt) : (transaction.updatedAt ? new Date(transaction.updatedAt) : null);
+      if (!completedAt) {
+        return res.status(400).json({
+          error: 'Transaction not reviewable',
+          message: 'Completion date missing. Please contact support.'
+        });
+      }
+      const reviewDeadline = new Date(completedAt.getTime() + REVIEW_WINDOW_MS);
+      if (reviewDeadline < new Date()) {
+        return res.status(400).json({
+          error: 'Review window expired',
+          message: `Reviews can be submitted only within ${REVIEW_WINDOW_DAYS} days of completion`
         });
       }
     } else {
@@ -293,9 +269,23 @@ router.post('/', authenticateToken, async (req, res) => {
       reviewee: toUserId,
       role,
       score: scoreNum,
-      description: description && String(description).trim().slice(0, 2000) || null
+      description: description && String(description).trim().slice(0, 2000) || null,
+      transactionCompletedAt: transaction?.completedAt || null,
+      reviewerIp: req.ip || req.headers['x-forwarded-for']?.toString()?.split(',')?.[0]?.trim() || null,
+      reviewerUserAgent: req.get('user-agent') || null
     });
     await review.save();
+
+    // Automated moderation: profanity/hate speech detection
+    const abuse = scanForAbusiveContent(review.description || '');
+    if (abuse.found) {
+      await ReviewFlag.create({
+        review: review._id,
+        reason: 'profanity_hate_speech',
+        metadata: { categories: abuse.categories, matches: abuse.matches },
+        status: 'pending'
+      });
+    }
 
     // Fraud detection: flag suspicious reviews for admin review
     checkReviewFraud(review).catch(err => console.error('Review fraud check:', err.message));
@@ -303,23 +293,19 @@ router.post('/', authenticateToken, async (req, res) => {
     // Recalculate reputation for reviewee
     recalculateReputation(toUserId).catch(err => console.error('Reputation recalc:', err.message));
 
-    // Auto-complete transaction when both buyer and seller have reviewed
-    const [buyerReviewed, sellerReviewed] = await Promise.all([
-      Review.exists({ listing: listingId, role: 'as_seller' }),
-      Review.exists({ listing: listingId, role: 'as_buyer' })
-    ]);
-    if (buyerReviewed && sellerReviewed) {
-      const tx = await Transaction.findOne({ listing: listingId })
-        .populate('seller', '_id')
-        .populate('buyer', '_id');
-      if (tx && ['paid', 'shipped', 'delivered'].includes(tx.transactionStatus || tx.status || '')) {
-        tx.transactionStatus = 'completed';
-        await tx.save();
-        const buyerId = tx.buyer?._id?.toString?.() || tx.buyer?.toString?.();
-        const sellerId = tx.seller?._id?.toString?.() || tx.seller?.toString?.();
-        if (buyerId && sellerId) {
-          recordSuccessfulTransaction(buyerId, sellerId).catch(err => console.error('Record successful tx:', err.message));
-        }
+    // Automatic threshold protection: suspend low-rated sellers (<3.0 after 20 seller reviews)
+    if (role === 'as_seller') {
+      const sellerStats = await Review.aggregate([
+        { $match: { reviewee: toUserId, role: 'as_seller' } },
+        { $group: { _id: '$reviewee', avg: { $avg: '$score' }, count: { $sum: 1 } } }
+      ]);
+      if (sellerStats[0] && sellerStats[0].count >= 20 && sellerStats[0].avg < 3) {
+        await User.findByIdAndUpdate(toUserId, {
+          $set: {
+            accountStatus: 'suspended',
+            isActive: false
+          }
+        });
       }
     }
 
@@ -338,6 +324,114 @@ router.post('/', authenticateToken, async (req, res) => {
       error: 'Failed to create review',
       message: error.message
     });
+  }
+});
+
+/**
+ * POST /api/reviews/:id/flag
+ * User flagging mechanism for abusive/untrustworthy reviews.
+ * Body: { reason, details? }
+ */
+router.post('/:id/flag', authenticateToken, async (req, res) => {
+  try {
+    const { reason, details } = req.body;
+    const review = await Review.findById(req.params.id).lean();
+    if (!review) return res.status(404).json({ error: 'Review not found' });
+    const user = await User.findOne({ uid: req.user.uid }).select('_id').lean();
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    const normalized = String(reason || '').trim().toLowerCase();
+    const allowed = new Set(['abusive', 'spam', 'fake', 'retaliation', 'other']);
+    const label = allowed.has(normalized) ? normalized : 'other';
+
+    const existing = await ReviewFlag.findOne({
+      review: review._id,
+      reason: 'user_report',
+      'metadata.reportedBy': user._id.toString(),
+      status: 'pending'
+    }).lean();
+    if (existing) {
+      return res.status(409).json({ error: 'Already flagged', message: 'You already flagged this review.' });
+    }
+
+    const flag = await ReviewFlag.create({
+      review: review._id,
+      reason: 'user_report',
+      metadata: {
+        userReason: label,
+        details: details ? String(details).trim().slice(0, 1000) : null,
+        reportedBy: user._id.toString()
+      },
+      status: 'pending'
+    });
+    res.status(201).json({ success: true, flagId: flag._id });
+  } catch (error) {
+    console.error('Error flagging review:', error);
+    res.status(500).json({ error: 'Failed to flag review', message: error.message });
+  }
+});
+
+/**
+ * POST /api/reviews/:id/appeals
+ * Appeal process for sellers/buyers disputing a review.
+ * Body: { reason, details? }
+ */
+router.post('/:id/appeals', authenticateToken, async (req, res) => {
+  try {
+    const { reason, details } = req.body;
+    if (!reason || String(reason).trim().length < 5) {
+      return res.status(400).json({ error: 'Invalid reason', message: 'Appeal reason must be at least 5 characters.' });
+    }
+    const review = await Review.findById(req.params.id).lean();
+    if (!review) return res.status(404).json({ error: 'Review not found' });
+    const user = await User.findOne({ uid: req.user.uid }).select('_id').lean();
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    const isParty =
+      review.reviewer?.toString?.() === user._id.toString() ||
+      review.reviewee?.toString?.() === user._id.toString();
+    if (!isParty) {
+      return res.status(403).json({ error: 'Forbidden', message: 'Only transaction parties can appeal this review.' });
+    }
+
+    const existing = await ReviewAppeal.findOne({
+      review: review._id,
+      appellant: user._id,
+      status: 'pending'
+    }).lean();
+    if (existing) {
+      return res.status(409).json({ error: 'Appeal already open', message: 'You already have a pending appeal for this review.' });
+    }
+
+    const appeal = await ReviewAppeal.create({
+      review: review._id,
+      appellant: user._id,
+      reason: String(reason).trim().slice(0, 500),
+      details: details ? String(details).trim().slice(0, 3000) : null
+    });
+
+    res.status(201).json({ success: true, appealId: appeal._id });
+  } catch (error) {
+    console.error('Error creating review appeal:', error);
+    res.status(500).json({ error: 'Failed to create appeal', message: error.message });
+  }
+});
+
+/**
+ * GET /api/reviews/appeals/mine
+ * List appeals created by the authenticated user.
+ */
+router.get('/appeals/mine', authenticateToken, async (req, res) => {
+  try {
+    const user = await User.findOne({ uid: req.user.uid }).select('_id').lean();
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    const appeals = await ReviewAppeal.find({ appellant: user._id })
+      .sort({ createdAt: -1 })
+      .lean();
+    res.json({ appeals });
+  } catch (error) {
+    console.error('Error fetching my appeals:', error);
+    res.status(500).json({ error: 'Failed to fetch appeals', message: error.message });
   }
 });
 

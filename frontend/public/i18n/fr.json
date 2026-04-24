@@ -1073,7 +1073,7 @@
     "score": "Note",
     "scoreScaleLow": "Faible",
     "scoreScaleHigh": "Excellent",
-    "scoreSelected": "Vous avez choisi {{score}} sur 10",
+    "scoreSelected": "Vous avez choisi {{score}} sur 5",
     "descriptionOptional": "Description (facultatif)",
     "reviewPrivate": "Votre avis est visible par les autres",
     "autoCancelledBuyerTitle": "Commande annulée — remboursement émis",

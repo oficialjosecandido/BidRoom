@@ -122,17 +122,11 @@
               @if (isBuyer(t)) {
                 <p class="card-role">
                   {{ 'transactions.youAreThe' | translate }} <strong>{{ 'transactions.buyer' | translate }}</strong>. {{ 'transactions.seller' | translate }}: {{ t.seller.firstName }} {{ t.seller.lastName }}
-                  @if (t.seller.email) {
-                    <span> — <a [href]="'mailto:' + t.seller.email" class="seller-email">{{ t.seller.email }}</a></span>
-                  }
                 </p>
               }
               @if (isSeller(t)) {
                 <p class="card-role">
                   {{ 'transactions.youAreThe' | translate }} <strong>{{ 'transactions.seller' | translate }}</strong>. {{ 'transactions.buyer' | translate }}: {{ t.buyer.firstName }} {{ t.buyer.lastName }}
-                  @if (t.buyer.email) {
-                    <span> — <a [href]="'mailto:' + t.buyer.email" class="seller-email">{{ t.buyer.email }}</a></span>
-                  }
                 </p>
               }
               @if (t.trackingNumber && getEffectiveStatus(t) !== 'pending_payment') {
@@ -171,17 +165,11 @@
             @if (isBuyer(t)) {
               <p class="card-role">
                 {{ 'transactions.youAreThe' | translate }} <strong>{{ 'transactions.buyer' | translate }}</strong>. {{ 'transactions.seller' | translate }}: {{ t.seller.firstName }} {{ t.seller.lastName }}
-                @if (t.seller.email) {
-                  <span> — <a [href]="'mailto:' + t.seller.email" class="seller-email" (click)="$event.stopPropagation()">{{ t.seller.email }}</a></span>
-                }
               </p>
             }
             @if (isSeller(t)) {
               <p class="card-role">
                 {{ 'transactions.youAreThe' | translate }} <strong>{{ 'transactions.seller' | translate }}</strong>. {{ 'transactions.buyer' | translate }}: {{ t.buyer.firstName }} {{ t.buyer.lastName }}
-                @if (t.buyer.email) {
-                  <span> — <a [href]="'mailto:' + t.buyer.email" class="seller-email" (click)="$event.stopPropagation()">{{ t.buyer.email }}</a></span>
-                }
               </p>
             }
             @if (isSeller(t) && ['awaiting_seller_acceptance', 'paid'].includes(getEffectiveStatus(t)) && (t.shipByBusinessDeadline || t.handlingDeadline)) {
@@ -329,9 +317,9 @@
                 </button>
                 <button type="button" class="btn btn-dispute" (click)="openDisputeModal(t); $event.stopPropagation()" [attr.aria-label]="'Open a dispute for ' + t.listing.title">{{ 'transactions.receivedNotProperly' | translate }}</button>
               }
-              @if (['paid','shipped','delivered'].includes(getEffectiveStatus(t)) && !hasBothReviewed(t)) {
+              @if (['paid','shipped','delivered'].includes(getEffectiveStatus(t))) {
                 <p class="form-hint review-required">
-                  {{ 'transactions.bothMustReview' | translate }}
+                  {{ 'transactions.completeToReview' | translate }}
                 </p>
               }
               @if (isBuyer(t) && t.sellerProofOfDeliveryUrl && ['shipped','delivered','completed'].includes(getEffectiveStatus(t))) {
@@ -472,14 +460,14 @@
             <em>{{ reviewModalTransaction.listing.title }}</em>
           </p>
           <fieldset class="review-score-section">
-            <legend class="review-score-label">{{ 'transactions.score' | translate }} (1–10)</legend>
+            <legend class="review-score-label">{{ 'transactions.score' | translate }} (1–5)</legend>
             <div class="review-score-card">
               <div class="review-score-scale">
                 <span class="scale-low">{{ 'transactions.scoreScaleLow' | translate }}</span>
                 <span class="scale-high">{{ 'transactions.scoreScaleHigh' | translate }}</span>
               </div>
               <div class="review-score-grid" role="group" [attr.aria-label]="'transactions.score' | translate">
-                @for (i of [1,2,3,4,5,6,7,8,9,10]; track i) {
+                @for (i of [1,2,3,4,5]; track i) {
                   <button
                     type="button"
                     class="score-btn"

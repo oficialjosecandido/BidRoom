@@ -48,8 +48,8 @@ router.get('/', async (req, res) => {
       $or: [{ seller: user._id }, { buyer: user._id }]
     })
       .populate('listing', 'title slug images status commissionRate shippingCost shippingOption auctionFormat allowPrivateRoom')
-      .populate('seller', 'firstName lastName email')
-      .populate('buyer', 'firstName lastName email')
+      .populate('seller', 'firstName lastName')
+      .populate('buyer', 'firstName lastName')
       .sort({ updatedAt: -1 })
       .lean();
 
@@ -108,8 +108,8 @@ router.get('/:id/invoice', async (req, res) => {
 
     const transaction = await Transaction.findById(req.params.id)
       .populate('listing', 'title slug images status commissionRate shippingCost shippingOption auctionFormat allowPrivateRoom')
-      .populate('seller', 'firstName lastName email')
-      .populate('buyer', 'firstName lastName email')
+      .populate('seller', 'firstName lastName')
+      .populate('buyer', 'firstName lastName')
       .lean();
 
     if (!transaction) {
@@ -155,8 +155,8 @@ router.get('/:id', async (req, res) => {
 
     const transaction = await Transaction.findById(req.params.id)
       .populate('listing', 'title slug images status commissionRate shippingCost shippingOption auctionFormat allowPrivateRoom')
-      .populate('seller', 'firstName lastName email')
-      .populate('buyer', 'firstName lastName email')
+      .populate('seller', 'firstName lastName')
+      .populate('buyer', 'firstName lastName')
       .lean();
 
     if (!transaction) {
@@ -204,7 +204,7 @@ router.post('/:id/open-dispute', async (req, res) => {
     const transaction = await Transaction.findById(req.params.id)
       .populate('listing', 'title slug')
       .populate('seller', 'firstName lastName email')
-      .populate('buyer', 'firstName lastName email');
+      .populate('buyer', 'firstName lastName');
 
     if (!transaction) {
       return res.status(404).json({ error: 'Transaction not found' });
@@ -291,8 +291,8 @@ router.post('/:id/open-dispute', async (req, res) => {
 
     const updated = await Transaction.findById(transaction._id)
       .populate('listing', 'title slug images status commissionRate shippingCost shippingOption auctionFormat allowPrivateRoom')
-      .populate('seller', 'firstName lastName email')
-      .populate('buyer', 'firstName lastName email')
+      .populate('seller', 'firstName lastName')
+      .populate('buyer', 'firstName lastName')
       .lean();
 
     res.json({
@@ -358,8 +358,8 @@ router.patch('/:id/dispute/counter-evidence', async (req, res) => {
 
     const updated = await Transaction.findById(transaction._id)
       .populate('listing', 'title slug images status commissionRate shippingCost shippingOption auctionFormat allowPrivateRoom')
-      .populate('seller', 'firstName lastName email')
-      .populate('buyer', 'firstName lastName email')
+      .populate('seller', 'firstName lastName')
+      .populate('buyer', 'firstName lastName')
       .lean();
 
     res.json({
@@ -440,8 +440,8 @@ router.post('/:id/remind-ship', requireActiveAccount, async (req, res) => {
 
     const updated = await Transaction.findById(transaction._id)
       .populate('listing', 'title slug images status commissionRate shippingCost shippingOption auctionFormat allowPrivateRoom')
-      .populate('seller', 'firstName lastName email')
-      .populate('buyer', 'firstName lastName email')
+      .populate('seller', 'firstName lastName')
+      .populate('buyer', 'firstName lastName')
       .lean();
 
     res.json({
@@ -637,20 +637,8 @@ router.patch('/:id', requireActiveAccount, async (req, res) => {
           if (io) emitNewNotificationToUser(io, sellerUserId).catch(() => {});
         }
       } else if (status === 'completed' && ['paid', 'shipped', 'delivered'].includes(ts)) {
-        const lid = transaction.listing?.toString?.() || transaction.listing;
-        const [buyerReviewed, sellerReviewed] = lid
-          ? await Promise.all([
-              Review.exists({ listing: lid, role: 'as_seller' }),
-              Review.exists({ listing: lid, role: 'as_buyer' })
-            ])
-          : [false, false];
-        if (!buyerReviewed || !sellerReviewed) {
-          return res.status(400).json({
-            error: 'Reviews required',
-            message: 'Both buyer and seller must leave a review before the transaction can be marked as complete.'
-          });
-        }
         transaction.transactionStatus = 'completed';
+        transaction.completedAt = transaction.completedAt || new Date();
       }
     }
 
@@ -658,8 +646,8 @@ router.patch('/:id', requireActiveAccount, async (req, res) => {
 
     const updated = await Transaction.findById(transaction._id)
       .populate('listing', 'title slug images status commissionRate shippingCost shippingOption auctionFormat allowPrivateRoom')
-      .populate('seller', 'firstName lastName email')
-      .populate('buyer', 'firstName lastName email')
+      .populate('seller', 'firstName lastName')
+      .populate('buyer', 'firstName lastName')
       .lean();
 
     const listingId = (updated.listing && updated.listing._id ? updated.listing._id : updated.listing)?.toString();

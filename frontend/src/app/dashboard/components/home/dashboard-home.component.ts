@@ -252,18 +252,18 @@ export class DashboardHomeComponent implements OnInit, OnDestroy {
   }
 
   getScoreEmoji(score: number): string {
-    if (score <= 2) return '😞';
-    if (score <= 4) return '😐';
-    if (score <= 6) return '🙂';
-    if (score <= 8) return '😊';
+    if (score <= 1) return '😞';
+    if (score <= 2) return '😐';
+    if (score <= 3) return '🙂';
+    if (score <= 4) return '😊';
     return '🎉';
   }
 
   getScoreLabel(score: number): string {
-    if (score <= 2) return 'Poor';
-    if (score <= 4) return 'Fair';
-    if (score <= 6) return 'Good';
-    if (score <= 8) return 'Great';
+    if (score <= 1) return 'Poor';
+    if (score <= 2) return 'Fair';
+    if (score <= 3) return 'Good';
+    if (score <= 4) return 'Great';
     return 'Excellent!';
   }
 
@@ -273,8 +273,8 @@ export class DashboardHomeComponent implements OnInit, OnDestroy {
   }
 
   submitReview(): void {
-    if (!this.reviewTarget || this.reviewScore < 1 || this.reviewScore > 10) {
-      this.reviewError = 'Please select a score from 1 to 10.';
+    if (!this.reviewTarget || this.reviewScore < 1 || this.reviewScore > 5) {
+      this.reviewError = 'Please select a score from 1 to 5.';
       return;
     }
     this.reviewSubmitting = true;
