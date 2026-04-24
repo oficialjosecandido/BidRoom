@@ -353,7 +353,7 @@
             <div class="review-score-section">
               <label class="review-score-label">{{ 'dashboard.home.howWouldYouRate' | translate }}</label>
               <div class="review-score-buttons">
-                @for (i of [1,2,3,4,5,6,7,8,9,10]; track i) {
+                @for (i of [1,2,3,4,5]; track i) {
                   <button type="button" class="score-btn" [class.score-1]="i <= 2" [class.score-mid]="i >= 3 && i <= 6" [class.score-high]="i >= 7" (click)="setRating(i)" [class.selected]="i === reviewScore">
                     <span class="score-num">{{ i }}</span>
                     <span class="score-emoji">{{ getScoreEmoji(i) }}</span>

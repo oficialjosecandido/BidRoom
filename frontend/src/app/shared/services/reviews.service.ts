@@ -8,6 +8,8 @@ export interface PendingReview {
   listingTitle: string;
   listingSlug: string;
   transactionId?: string;
+  completedAt?: string;
+  reviewDeadline?: string;
   otherPartyId: string;
   otherPartyName: string;
   myRole: 'seller' | 'buyer';
@@ -30,7 +32,7 @@ export interface CreateReviewRequest {
   listingId: string;
   toUserId: string;
   role: 'as_buyer' | 'as_seller';
-  score: number;
+  score: number; // 1-5
   description?: string;
   /** @deprecated Use score */
   rating?: number;
@@ -63,5 +65,19 @@ export class ReviewsService {
       description: body.description?.trim() || undefined
     };
     return this.http.post<{ _id: string; score: number; createdAt: string }>(this.apiUrl, payload);
+  }
+
+  flagReview(reviewId: string, reason: string, details?: string): Observable<{ success: boolean; flagId: string }> {
+    return this.http.post<{ success: boolean; flagId: string }>(`${this.apiUrl}/${reviewId}/flag`, {
+      reason,
+      details
+    });
+  }
+
+  appealReview(reviewId: string, reason: string, details?: string): Observable<{ success: boolean; appealId: string }> {
+    return this.http.post<{ success: boolean; appealId: string }>(`${this.apiUrl}/${reviewId}/appeals`, {
+      reason,
+      details
+    });
   }
 }

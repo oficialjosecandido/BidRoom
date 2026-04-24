@@ -6,6 +6,7 @@ const Listing = require('../models/Listing');
 const Transaction = require('../models/Transaction');
 const ReviewFlag = require('../models/ReviewFlag');
 const Review = require('../models/Review');
+const ReviewAppeal = require('../models/ReviewAppeal');
 const { sendEmail } = require('../services/emailService');
 const { renderEmailTemplate } = require('../services/templateEngine');
 const { notifyDisputeDecisionIssued, emitNewNotificationToUser } = require('../services/notificationService');
@@ -380,6 +381,7 @@ router.post('/disputes/:transactionId/ruling', authenticateToken, requireAdmin, 
     transaction.disputeRuledAt = new Date();
     if (adminNotes != null) transaction.disputeAdminNotes = String(adminNotes).trim() || null;
     transaction.transactionStatus = 'completed';
+    transaction.completedAt = transaction.completedAt || new Date();
     transaction.disputeOpen = false;
     await transaction.save();
 
@@ -559,6 +561,80 @@ router.patch('/reviews/flags/:id', authenticateToken, requireAdmin, async (req, 
   } catch (error) {
     console.error('Error resolving review flag:', error);
     res.status(500).json({ error: 'Failed to resolve flag', message: error.message });
+  }
+});
+
+/**
+ * GET /api/admin/reviews/appeals
+ * Admin queue for pending review appeals.
+ */
+router.get('/reviews/appeals', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const page = Math.max(1, parseInt(req.query.page) || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit) || 50));
+    const skip = (page - 1) * limit;
+    const [appeals, total] = await Promise.all([
+      ReviewAppeal.find({ status: 'pending' })
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      ReviewAppeal.countDocuments({ status: 'pending' })
+    ]);
+    const withDetails = await Promise.all(
+      appeals.map(async (a) => {
+        const [review, appellant] = await Promise.all([
+          Review.findById(a.review).lean(),
+          User.findById(a.appellant).select('firstName lastName email').lean()
+        ]);
+        let listing = null;
+        let reviewer = null;
+        let reviewee = null;
+        if (review) {
+          [listing, reviewer, reviewee] = await Promise.all([
+            Listing.findById(review.listing).select('title slug').lean(),
+            User.findById(review.reviewer).select('firstName lastName email').lean(),
+            User.findById(review.reviewee).select('firstName lastName email').lean()
+          ]);
+        }
+        return { ...a, review, appellant, listing, reviewer, reviewee };
+      })
+    );
+    res.json({ appeals: withDetails, total, page, limit, pages: Math.ceil(total / limit) });
+  } catch (error) {
+    console.error('Error fetching review appeals:', error);
+    res.status(500).json({ error: 'Failed to fetch review appeals', message: error.message });
+  }
+});
+
+/**
+ * PATCH /api/admin/reviews/appeals/:id
+ * Resolve an appeal: accepted | rejected.
+ * Body: { status, adminNotes? }
+ */
+router.patch('/reviews/appeals/:id', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const { status, adminNotes } = req.body;
+    if (!status || !['accepted', 'rejected'].includes(status)) {
+      return res.status(400).json({
+        error: 'Invalid status',
+        message: 'status must be accepted or rejected'
+      });
+    }
+    const appeal = await ReviewAppeal.findById(req.params.id);
+    if (!appeal) return res.status(404).json({ error: 'Appeal not found' });
+    if (appeal.status !== 'pending') {
+      return res.status(400).json({ error: 'Already resolved', message: 'This appeal has already been resolved.' });
+    }
+    appeal.status = status;
+    appeal.resolvedAt = new Date();
+    appeal.resolvedBy = req.user?.email || 'admin';
+    if (adminNotes != null) appeal.adminNotes = String(adminNotes).trim() || null;
+    await appeal.save();
+    res.json({ success: true, appeal });
+  } catch (error) {
+    console.error('Error resolving review appeal:', error);
+    res.status(500).json({ error: 'Failed to resolve appeal', message: error.message });
   }
 });
 

@@ -58,6 +58,7 @@ export interface Transaction {
   status?: TransactionStatus;
   paidAt: string | null;
   shippedAt: string | null;
+  completedAt?: string | null;
   trackingNumber: string | null;
   trackingCarrier: string | null;
   notes: string | null;

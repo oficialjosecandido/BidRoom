@@ -29,7 +29,7 @@ const REPUTATION_MAX = 100;
 const REPUTATION_MIN = 0;
 
 // ── Review classification ──────────────────────────────────────────────────────
-const LOW_SCORE_THRESHOLD = 4;       // Review score ≤ 4 counts as negative
+const LOW_SCORE_THRESHOLD = 2;       // Review score ≤ 2 counts as negative (1–5 scale)
 const ISOLATED_MAX_IN_30_TX = 3;     // Max negatives in last 30 tx → Isolated Incident
 const RECURRING_MIN_IN_5_TX = 2;     // ≥ 2 negatives in last 5 tx → Recurring Pattern
 const RECURRING_MIN_IN_90_DAYS = 5;  // ≥ 5 negatives in 90-day window → Recurring Pattern
@@ -204,8 +204,8 @@ async function checkReviewFraud(review) {
     flags.push({ reason: 'rapid_submission', metadata: { minutesSinceCompletion } });
   }
 
-  // Extreme score (1 or 10) with no description
-  if ((review.score === 1 || review.score === 10) && !review.description?.trim()) {
+  // Extreme score (1 or 5) with no description
+  if ((review.score === 1 || review.score === 5) && !review.description?.trim()) {
     flags.push({ reason: 'extreme_score', metadata: { score: review.score } });
   }
 
@@ -218,6 +218,32 @@ async function checkReviewFraud(review) {
   }).lean();
   if (otherReview && otherReview.score <= LOW_SCORE_THRESHOLD && review.score <= LOW_SCORE_THRESHOLD) {
     flags.push({ reason: 'retaliation', metadata: { otherScore: otherReview.score } });
+  }
+
+  // Duplicate pattern: same reviewer→reviewee pair across many listings in short window
+  const pairReviewCount = await Review.countDocuments({
+    reviewer: review.reviewer,
+    reviewee: review.reviewee,
+    createdAt: { $gte: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000) }
+  });
+  if (pairReviewCount >= 4) {
+    flags.push({ reason: 'duplicate_pattern', metadata: { pairReviewCount, windowDays: 90 } });
+  }
+
+  // IP clustering heuristic: multiple positive reviews from same IP to same reviewee recently
+  if (review.reviewerIp) {
+    const clustered = await Review.countDocuments({
+      reviewee: review.reviewee,
+      reviewerIp: review.reviewerIp,
+      score: { $gte: 4 },
+      createdAt: { $gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) }
+    });
+    if (clustered >= 3) {
+      flags.push({
+        reason: 'ip_cluster',
+        metadata: { reviewerIp: review.reviewerIp, clusteredPositiveReviews: clustered, windowDays: 30 }
+      });
+    }
   }
 
   for (const f of flags) {

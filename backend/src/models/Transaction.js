@@ -146,6 +146,11 @@ const transactionSchema = new mongoose.Schema({
     type: Date,
     default: null
   },
+  /** Explicit completion timestamp used for the 30-day review window */
+  completedAt: {
+    type: Date,
+    default: null
+  },
   trackingNumber: {
     type: String,
     trim: true,

@@ -156,17 +156,14 @@ export class DashboardTransactionsComponent implements OnInit {
     return this.getEffectiveStatus(t) === 'completed';
   }
 
-  /** Both buyer and seller have left their reviews; required before marking as completed */
+  /** Both buyer and seller have left their reviews */
   hasBothReviewed(t: Transaction): boolean {
     return !!(t.buyerHasReviewedSeller && t.sellerHasReviewedBuyer);
   }
 
-  /** Can mark as completed only when delivered (or paid/shipped) AND both have reviewed */
+  /** Buyer can mark as completed once item flow reached paid/shipped/delivered */
   canMarkAsCompleted(t: Transaction): boolean {
-    return (
-      ['paid', 'shipped', 'delivered'].includes(this.getEffectiveStatus(t)) &&
-      this.hasBothReviewed(t)
-    );
+    return ['paid', 'shipped', 'delivered'].includes(this.getEffectiveStatus(t));
   }
 
   getStatusLabel(status: TransactionStatus): string {
@@ -187,7 +184,7 @@ export class DashboardTransactionsComponent implements OnInit {
   getBuyingStatusLabel(t: Transaction): string {
     const s = this.getEffectiveStatus(t);
     if (s === 'under_dispute') return 'Under Dispute';
-    if (['delivered', 'completed'].includes(s) && !t.buyerHasReviewedSeller) {
+    if (s === 'completed' && !t.buyerHasReviewedSeller && this.isWithinReviewWindow(t)) {
       return 'Pending Review';
     }
     const map: Record<TransactionStatus, string> = {
@@ -207,7 +204,7 @@ export class DashboardTransactionsComponent implements OnInit {
   getSellingStatusLabel(t: Transaction): string {
     const s = this.getEffectiveStatus(t);
     if (s === 'under_dispute') return 'Under Dispute';
-    if (['delivered', 'completed'].includes(s) && !t.sellerHasReviewedBuyer) {
+    if (s === 'completed' && !t.sellerHasReviewedBuyer && this.isWithinReviewWindow(t)) {
       return 'Pending Review';
     }
     const map: Record<TransactionStatus, string> = {
@@ -226,7 +223,7 @@ export class DashboardTransactionsComponent implements OnInit {
   getBuyingStatusClass(t: Transaction): string {
     const s = this.getEffectiveStatus(t);
     if (s === 'under_dispute') return 'status-dispute';
-    if (['delivered', 'completed'].includes(s) && !t.buyerHasReviewedSeller) {
+    if (s === 'completed' && !t.buyerHasReviewedSeller && this.isWithinReviewWindow(t)) {
       return 'status-review';
     }
     const map: Record<TransactionStatus, string> = {
@@ -245,7 +242,7 @@ export class DashboardTransactionsComponent implements OnInit {
   getSellingStatusClass(t: Transaction): string {
     const s = this.getEffectiveStatus(t);
     if (s === 'under_dispute') return 'status-dispute';
-    if (['delivered', 'completed'].includes(s) && !t.sellerHasReviewedBuyer) {
+    if (s === 'completed' && !t.sellerHasReviewedBuyer && this.isWithinReviewWindow(t)) {
       return 'status-review';
     }
     const map: Record<TransactionStatus, string> = {
@@ -750,10 +747,17 @@ export class DashboardTransactionsComponent implements OnInit {
     });
   }
 
-  /** Whether the current user can leave a review for this transaction (delivered/completed + hasn't reviewed) */
+  private isWithinReviewWindow(t: Transaction): boolean {
+    const completed = t.completedAt || t.updatedAt;
+    if (!completed) return false;
+    return Date.now() - new Date(completed).getTime() <= 30 * 24 * 60 * 60 * 1000;
+  }
+
+  /** Whether the current user can leave a review for this transaction (completed + 30-day window + hasn't reviewed) */
   canLeaveReview(t: Transaction): boolean {
     const s = this.getEffectiveStatus(t);
-    if (!['delivered', 'completed'].includes(s)) return false;
+    if (s !== 'completed') return false;
+    if (!this.isWithinReviewWindow(t)) return false;
     if (this.isBuyer(t) && !t.buyerHasReviewedSeller) return true;
     if (this.isSeller(t) && !t.sellerHasReviewedBuyer) return true;
     return false;
@@ -794,17 +798,17 @@ export class DashboardTransactionsComponent implements OnInit {
     this.reviewScore = n;
   }
 
-  /** Visual tier for 1–10 score buttons (matches review modal styling). */
+  /** Visual tier for 1–5 score buttons (matches review modal styling). */
   scoreTier(i: number): 'low' | 'mid' | 'high' {
-    if (i <= 3) return 'low';
-    if (i <= 7) return 'mid';
+    if (i <= 2) return 'low';
+    if (i <= 4) return 'mid';
     return 'high';
   }
 
   submitReview(): void {
     const t = this.reviewModalTransaction;
-    if (!t || this.reviewScore < 1 || this.reviewScore > 10) {
-      this.reviewError = 'Please select a score from 1 to 10.';
+    if (!t || this.reviewScore < 1 || this.reviewScore > 5) {
+      this.reviewError = 'Please select a score from 1 to 5.';
       return;
     }
     const listingId = (t.listing && (t.listing as { _id?: string })._id ? (t.listing as { _id?: string })._id : t.listing)?.toString();

@@ -11,11 +11,21 @@ const reviewFlagSchema = new mongoose.Schema({
     required: true,
     index: true
   },
-  /** Reason: extreme_score, rapid_submission, retaliation, multiple_low_scores, other */
+  /** Reason: auto and user/admin moderation reasons */
   reason: {
     type: String,
     required: true,
-    enum: ['extreme_score', 'rapid_submission', 'retaliation', 'multiple_low_scores', 'other'],
+    enum: [
+      'extreme_score',
+      'rapid_submission',
+      'retaliation',
+      'multiple_low_scores',
+      'profanity_hate_speech',
+      'duplicate_pattern',
+      'ip_cluster',
+      'user_report',
+      'other'
+    ],
     index: true
   },
   /** Auto-detection metadata (e.g. { score: 1, submittedWithinMinutes: 2 }) */

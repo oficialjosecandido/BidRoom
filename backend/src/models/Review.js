@@ -6,7 +6,7 @@ const mongoose = require('mongoose');
  * reviewee: User being reviewed (the "reviewed" party)
  * role: 'as_buyer' = reviewee is being reviewed as buyer (reviewer was seller)
  *       'as_seller' = reviewee is being reviewed as seller (reviewer was buyer)
- * score: 1-10 (visible to all; used for aggregations)
+ * score: 1-5 (visible to all; used for aggregations)
  * description: optional text (private - never returned to other users)
  */
 const reviewSchema = new mongoose.Schema({
@@ -34,12 +34,12 @@ const reviewSchema = new mongoose.Schema({
     required: true,
     index: true
   },
-  /** Score 1-10 (visible publicly) */
+  /** Score 1-5 (visible publicly) */
   score: {
     type: Number,
     required: true,
     min: 1,
-    max: 10,
+    max: 5,
     index: true
   },
   /** Review description text (private - never exposed to other users) */
@@ -48,6 +48,23 @@ const reviewSchema = new mongoose.Schema({
     maxlength: 2000,
     default: null,
     trim: true
+  },
+  /** Completion date of the reviewed transaction (for 30-day review window audits) */
+  transactionCompletedAt: {
+    type: Date,
+    default: null
+  },
+  /** Metadata used by anti-fraud checks (IP clustering / duplicate detection) */
+  reviewerIp: {
+    type: String,
+    trim: true,
+    default: null
+  },
+  reviewerUserAgent: {
+    type: String,
+    trim: true,
+    maxlength: 500,
+    default: null
   }
 }, {
   timestamps: true,
