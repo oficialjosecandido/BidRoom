@@ -946,8 +946,15 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
       if (!result.isConfirmed) return;
       this.listingsService.buyNow(listing._id).subscribe({
         next: () => {
-          Swal.fire({ icon: 'success', title: 'Purchase successful!', confirmButtonColor: '#7A4F84' });
-          if (listing.slug) this.loadListing(listing.slug);
+          Swal.fire({
+            icon: 'success',
+            title: 'Purchase successful!',
+            text: 'Go to your transactions to complete payment.',
+            confirmButtonText: 'Go to Payment',
+            confirmButtonColor: '#7A4F84'
+          }).then(() => {
+            this.router.navigate(['/dashboard/buyer'], { queryParams: { tab: 'transactions' } });
+          });
         },
         error: (err) => {
           Swal.fire({ icon: 'error', title: 'Purchase failed', text: err.error?.message || 'Failed to complete purchase', confirmButtonColor: '#7A4F84' });

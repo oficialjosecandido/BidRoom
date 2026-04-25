@@ -113,6 +113,29 @@ const userSchema = new mongoose.Schema({
   contentRestrictedUntil: {
     type: Date,
     default: null
+  },
+  /** Known IP addresses seen from this account (last 20, most recent first) */
+  knownIPs: {
+    type: [{ ip: String, lastSeen: Date }],
+    default: []
+  },
+  /** Known device fingerprints seen from this account (last 10) */
+  knownFingerprints: {
+    type: [{ fingerprint: String, lastSeen: Date }],
+    default: []
+  },
+  /** Fraud risk score 0–100; raised by fraud events, decays over time */
+  fraudScore: {
+    type: Number,
+    default: 0,
+    min: 0,
+    max: 100
+  },
+  /** Whether this account is flagged as a fraud suspect requiring admin review */
+  isFraudSuspect: {
+    type: Boolean,
+    default: false,
+    index: true
   }
 }, {
   timestamps: true // Adds createdAt and updatedAt fields

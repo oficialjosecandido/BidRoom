@@ -8,6 +8,7 @@ import { provideTranslateHttpLoader } from '@ngx-translate/http-loader';
 
 import { routes } from './app.routes';
 import { authInterceptor } from './auth/interceptors/auth.interceptor';
+import { fingerprintInterceptor } from './auth/interceptors/fingerprint.interceptor';
 import { AuthService } from './auth/services/auth.service';
 import { AuthGuard } from './auth/guards/auth.guard';
 
@@ -16,7 +17,7 @@ export const appConfig: ApplicationConfig = {
     provideBrowserGlobalErrorListeners(),
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(routes),
-    provideHttpClient(withInterceptors([authInterceptor])),
+    provideHttpClient(withInterceptors([authInterceptor, fingerprintInterceptor])),
     provideTranslateService({
       defaultLanguage: 'en',
       loader: provideTranslateHttpLoader({ prefix: '/i18n/', suffix: '.json' })

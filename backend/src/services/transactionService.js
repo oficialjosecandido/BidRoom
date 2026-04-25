@@ -101,7 +101,50 @@ async function createTransactionForAcceptedOffer(listingId, offerId) {
   }
 }
 
+/**
+ * Create a transaction when a buyer uses Buy Now.
+ * No bid or offer exists; the buyer pays the buyNowPrice directly.
+ * Idempotent: returns existing transaction if one already exists for the listing.
+ * @param {string|ObjectId} listingId
+ * @param {string|ObjectId} buyerUserId
+ */
+async function createTransactionForBuyNow(listingId, buyerUserId) {
+  try {
+    const existing = await Transaction.findOne({ listing: listingId });
+    if (existing) return existing;
+
+    const listing = await Listing.findById(listingId).populate('seller', '_id');
+    if (!listing || !listing.buyNowPrice) return null;
+
+    const paymentDeadline = new Date(Date.now() + PAYMENT_WINDOW_MS);
+
+    const transaction = await Transaction.create({
+      listing: listingId,
+      seller: listing.seller._id || listing.seller,
+      buyer: buyerUserId,
+      winnerBid: null,
+      winnerOffer: null,
+      amount: listing.buyNowPrice,
+      transactionStatus: 'pending_payment',
+      paymentStatus: 'pending',
+      sendingStatus: 'pending',
+      paymentDeadline
+    });
+
+    console.log(`✅ Buy-Now transaction created for listing ${listingId}: ${transaction._id}`);
+    logTransactionCreated(transaction);
+    return transaction;
+  } catch (error) {
+    if (error.code === 11000) {
+      return await Transaction.findOne({ listing: listingId });
+    }
+    console.error('Error creating buy-now transaction for listing:', listingId, error);
+    throw error;
+  }
+}
+
 module.exports = {
   createTransactionForListing,
-  createTransactionForAcceptedOffer
+  createTransactionForAcceptedOffer,
+  createTransactionForBuyNow
 };

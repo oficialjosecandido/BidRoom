@@ -383,6 +383,13 @@ router.post('/create-checkout-session', requireActiveAccount, async (req, res) =
       return res.status(400).json({ error: 'This transaction does not require payment', message: `Status is: ${ts}` });
     }
 
+    if (transaction.paymentDeadline && new Date(transaction.paymentDeadline) < new Date()) {
+      return res.status(400).json({
+        error: 'Payment deadline expired',
+        message: 'The payment window for this transaction has expired. The transaction has been cancelled.'
+      });
+    }
+
     if (transaction.stripeCheckoutSessionId) {
       return res.status(400).json({ error: 'A Stripe checkout session already exists for this transaction' });
     }

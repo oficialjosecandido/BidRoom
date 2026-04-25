@@ -6,11 +6,16 @@ const Review = require('../models/Review');
  * Returns: { [userId]: { buyerScore, buyerReviewCount, sellerScore, sellerReviewCount } }
  * Scores are rounded to 1 decimal; missing users get null scores / 0 counts.
  */
+/** Defensive cap: prevent unbounded $in arrays from upstream callers */
+const MAX_USER_IDS_PER_LOOKUP = 200;
+
 async function getReviewScoresForUsers(userIds) {
   if (!userIds || userIds.length === 0) {
     return {};
   }
-  const ids = [...new Set(userIds.map((id) => id && id.toString()).filter(Boolean))];
+  const ids = [...new Set(userIds.map((id) => id && id.toString()).filter(Boolean))]
+    .filter((id) => mongoose.isValidObjectId(id))
+    .slice(0, MAX_USER_IDS_PER_LOOKUP);
   if (ids.length === 0) return {};
 
   const objectIds = ids.map((id) => new mongoose.Types.ObjectId(id));

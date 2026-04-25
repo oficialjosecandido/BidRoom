@@ -268,7 +268,9 @@
                 }
 
                 <div class="stripe-pay-section">
-                  @if (needsShippingRate(t)) {
+                  @if (hasPaymentDeadlinePassed(t)) {
+                    <p class="deadline-expired-notice">{{ 'transactions.paymentDeadlineExpired' | translate }}</p>
+                  } @else if (needsShippingRate(t)) {
                     <p class="stripe-pay-hint">{{ 'transactions.selectShippingBeforePaying' | translate }}</p>
                     <button type="button" class="btn btn-secondary" (click)="openShippingPanel(t)">
                       {{ 'transactions.chooseShippingMethod' | translate }}

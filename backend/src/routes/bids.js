@@ -6,6 +6,8 @@ const { authenticateToken, optionalAuth, requireActiveAccountIfAuthenticated, re
 const { sendFirstBidNotification, sendOutbidNotification } = require('../services/auctionNotificationService');
 const { getReviewScoresForUsers } = require('../services/reviewService');
 const { notifyNewBid, notifyBidderOutbid, emitNewNotificationToUser } = require('../services/notificationService');
+const { checkBidRateLimit, getClientIp } = require('../middleware/bidRateLimiter');
+const { runFraudChecks, updateUserSignals } = require('../services/fraudDetectionService');
 
 const router = express.Router();
 
@@ -107,6 +109,16 @@ router.get('/listing/:listingId/stats', async (req, res) => {
 // POST /api/bids - Create a new bid (authentication optional, but email required if not authenticated)
 router.post('/', optionalAuth, requireActiveAccountIfAuthenticated, requireNoDisputeRestrictionIfAuthenticated, async (req, res) => {
   try {
+    // ── Per-user rate limit ─────────────────────────────────────────────────
+    const rateCheck = checkBidRateLimit(req);
+    if (!rateCheck.allowed) {
+      return res.status(429).json({
+        error: 'Rate limit exceeded',
+        message: 'You are bidding too fast. Please wait a moment before placing another bid.',
+        resetAt: rateCheck.resetAt
+      });
+    }
+
     const { listingId, amount, maxBid, bidType = 'manual', notes, email, notifyWhenOutbid } = req.body;
 
     if (!listingId || !amount) {
@@ -345,19 +357,60 @@ router.post('/', optionalAuth, requireActiveAccountIfAuthenticated, requireNoDis
     // Previous high bid amount (before this bid) - used to find who to notify as outbid
     const previousHighAmount = listing.currentPrice != null ? listing.currentPrice : (listing.startingPrice || 0);
 
-    // Create the bid
-    const bid = new Bid({
-      listing: listingId,
-      bidder: user ? user._id : null,
-      bidderEmail: bidderEmail || null,
-      amount: amount,
-      maxBid: maxBid || amount,
-      bidType: bidType,
-      notes: notes || null,
-      notifyWhenOutbid: preferNotifyOutbid
-    });
+    // ── Fraud detection ────────────────────────────────────────────────────
+    const bidderIp = getClientIp(req);
+    const deviceFingerprint = req.headers['x-device-fingerprint'] || null;
 
-    await bid.save();
+    if (user) {
+      const fraud = await runFraudChecks({
+        bidderId:    user._id,
+        sellerId:    listing.seller?._id || listing.seller,
+        listingId:   listing._id,
+        ip:          bidderIp,
+        fingerprint: deviceFingerprint
+      });
+      if (fraud.blocked) {
+        return res.status(403).json({ error: 'Bid rejected', message: fraud.reason });
+      }
+
+      // Create the bid with fraud metadata
+      const bid = new Bid({
+        listing: listingId,
+        bidder: user._id,
+        bidderEmail: null,
+        amount,
+        maxBid: maxBid || amount,
+        bidType,
+        notes: notes || null,
+        notifyWhenOutbid: preferNotifyOutbid,
+        ipAddress: bidderIp,
+        deviceFingerprint,
+        fraudFlags: fraud.fraudFlags,
+        isFlagged: fraud.fraudFlags.length > 0
+      });
+      await bid.save();
+
+      // Update known signals after a successful bid
+      updateUserSignals(user._id, bidderIp, deviceFingerprint).catch(() => {});
+
+      // Continue with listing update below using this bid
+      var savedBid = bid;
+    } else {
+      // Guest bid — no fraud checks beyond rate limit; store IP only
+      const bid = new Bid({
+        listing: listingId,
+        bidder: null,
+        bidderEmail: bidderEmail || null,
+        amount,
+        maxBid: maxBid || amount,
+        bidType,
+        notes: notes || null,
+        notifyWhenOutbid: preferNotifyOutbid,
+        ipAddress: bidderIp
+      });
+      await bid.save();
+      var savedBid = bid;
+    }
 
     // Update listing with new current price and bid count
     listing.currentPrice = amount;
@@ -383,7 +436,7 @@ router.post('/', optionalAuth, requireActiveAccountIfAuthenticated, requireNoDis
     await listing.save();
 
     // Populate bid for response
-    const populatedBid = await Bid.findById(bid._id)
+    const populatedBid = await Bid.findById(savedBid._id)
       .populate('bidder', 'firstName lastName email emailVerified hasDeposit')
       .lean();
 

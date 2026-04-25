@@ -56,7 +56,15 @@ const bidSchema = new mongoose.Schema({
   notifyWhenOutbid: {
     type: Boolean,
     default: true
-  }
+  },
+  /** IP address of the bidder at submission time */
+  ipAddress: { type: String, default: null },
+  /** Browser/device fingerprint hash sent by the client */
+  deviceFingerprint: { type: String, default: null },
+  /** Fraud signals attached to this bid (e.g. 'shill_bid_suspected', 'bot_pattern') */
+  fraudFlags: { type: [String], default: [] },
+  /** Whether this bid has been flagged for admin review */
+  isFlagged: { type: Boolean, default: false, index: true }
 }, {
   timestamps: true // Adds createdAt and updatedAt fields
 });

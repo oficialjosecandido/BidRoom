@@ -54,7 +54,11 @@ const reviewSchema = new mongoose.Schema({
     type: Date,
     default: null
   },
-  /** Metadata used by anti-fraud checks (IP clustering / duplicate detection) */
+  /**
+   * HMAC-SHA256 of the reviewer's IP at submission time (not the raw IP).
+   * Stored as a salted hash so the IP-cluster heuristic still works (equality on
+   * deterministic hashes) while keeping the original IP out of the database.
+   */
   reviewerIp: {
     type: String,
     trim: true,

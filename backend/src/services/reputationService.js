@@ -46,6 +46,10 @@ const MAX_RECOVERY = 20;                 // Recovery cap
 const PRIVATE_ROOM_MIN_REPUTATION = 60; // Score must be ≥ 60 for Private Room access
 const PRE_AUTHORIZED_MIN_BALANCE = 100;
 
+// ── Auto-suspension ────────────────────────────────────────────────────────────
+const AUTO_SUSPEND_MIN_REVIEWS = 20;     // Minimum seller reviews before auto-suspend kicks in
+const AUTO_SUSPEND_AVG_THRESHOLD = 3;    // Average score (1–5) below which seller is suspended
+
 /**
  * Classify a user's current negative review pattern.
  *
@@ -189,13 +193,14 @@ async function recordSuccessfulTransaction(buyerUserId, sellerUserId) {
 
 /**
  * Check for suspicious review patterns and create ReviewFlag records if warranted.
+ * All independent heuristic queries run in parallel for low latency.
  */
 async function checkReviewFraud(review) {
   const flags = [];
   const tx = await Transaction.findOne({ listing: review.listing }).lean();
   if (!tx) return flags;
 
-  const completedAt = tx.updatedAt || tx.createdAt;
+  const completedAt = tx.completedAt || tx.updatedAt || tx.createdAt;
   const reviewCreated = review.createdAt || new Date();
   const minutesSinceCompletion = (reviewCreated - completedAt) / (60 * 1000);
 
@@ -209,46 +214,48 @@ async function checkReviewFraud(review) {
     flags.push({ reason: 'extreme_score', metadata: { score: review.score } });
   }
 
-  // Retaliation: check if the other party also left a low score
   const otherRole = review.role === 'as_buyer' ? 'as_seller' : 'as_buyer';
-  const otherReview = await Review.findOne({
-    listing: review.listing,
-    role: otherRole,
-    reviewee: review.reviewer
-  }).lean();
+  const ninetyDaysAgo = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);
+  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+
+  const [otherReview, pairReviewCount, ipClusterCount] = await Promise.all([
+    Review.findOne({ listing: review.listing, role: otherRole, reviewee: review.reviewer }).lean(),
+    Review.countDocuments({
+      reviewer: review.reviewer,
+      reviewee: review.reviewee,
+      createdAt: { $gte: ninetyDaysAgo }
+    }),
+    review.reviewerIp
+      ? Review.countDocuments({
+          reviewee: review.reviewee,
+          reviewerIp: review.reviewerIp,
+          score: { $gte: 4 },
+          createdAt: { $gte: thirtyDaysAgo }
+        })
+      : Promise.resolve(0)
+  ]);
+
   if (otherReview && otherReview.score <= LOW_SCORE_THRESHOLD && review.score <= LOW_SCORE_THRESHOLD) {
     flags.push({ reason: 'retaliation', metadata: { otherScore: otherReview.score } });
   }
-
-  // Duplicate pattern: same reviewer→reviewee pair across many listings in short window
-  const pairReviewCount = await Review.countDocuments({
-    reviewer: review.reviewer,
-    reviewee: review.reviewee,
-    createdAt: { $gte: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000) }
-  });
   if (pairReviewCount >= 4) {
     flags.push({ reason: 'duplicate_pattern', metadata: { pairReviewCount, windowDays: 90 } });
   }
-
-  // IP clustering heuristic: multiple positive reviews from same IP to same reviewee recently
-  if (review.reviewerIp) {
-    const clustered = await Review.countDocuments({
-      reviewee: review.reviewee,
-      reviewerIp: review.reviewerIp,
-      score: { $gte: 4 },
-      createdAt: { $gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) }
+  if (review.reviewerIp && ipClusterCount >= 3) {
+    flags.push({
+      reason: 'ip_cluster',
+      metadata: { reviewerIp: review.reviewerIp, clusteredPositiveReviews: ipClusterCount, windowDays: 30 }
     });
-    if (clustered >= 3) {
-      flags.push({
-        reason: 'ip_cluster',
-        metadata: { reviewerIp: review.reviewerIp, clusteredPositiveReviews: clustered, windowDays: 30 }
-      });
-    }
   }
 
-  for (const f of flags) {
-    await ReviewFlag.create({ review: review._id, reason: f.reason, metadata: f.metadata, status: 'pending' });
-  }
+  if (flags.length === 0) return flags;
+
+  await Promise.all(
+    flags.map(f =>
+      ReviewFlag.create({ review: review._id, reason: f.reason, metadata: f.metadata, status: 'pending' })
+        .catch(err => console.error('ReviewFlag create:', err.message))
+    )
+  );
   return flags;
 }
 
@@ -297,5 +304,7 @@ module.exports = {
   II_MIN_REPUTATION,
   LOW_SCORE_THRESHOLD,
   REPUTATION_MAX,
-  REPUTATION_MIN
+  REPUTATION_MIN,
+  AUTO_SUSPEND_MIN_REVIEWS,
+  AUTO_SUSPEND_AVG_THRESHOLD
 };

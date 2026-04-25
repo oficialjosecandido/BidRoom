@@ -37,6 +37,11 @@ const { sendEmail } = require('./emailService');
 
 const LOG_PREFIX = '[ShippingDeadline]';
 
+// Defensive cap: avoid loading an unbounded number of transactions per tick.
+// At 15-minute intervals this is more than enough headroom for normal volume;
+// any backlog simply rolls over to the next tick.
+const SCHEDULER_BATCH_LIMIT = 200;
+
 function getStripe() {
   const key = process.env.STRIPE_SECRET_KEY;
   return key ? new Stripe(key) : null;
@@ -87,6 +92,8 @@ async function processMidpointWarnings(now, io) {
     paidAt: { $ne: null },
     shippingAutoCancelledAt: null
   })
+    .sort({ paidAt: 1 })
+    .limit(SCHEDULER_BATCH_LIMIT)
     .populate('listing', 'title slug')
     .populate('seller', '_id uid email firstName')
     .lean();
@@ -156,6 +163,8 @@ async function processAutoCancellations(now, stripe, io) {
     shippingAutoCancelledAt: null,
     stripePaymentIntentId: { $ne: null }
   })
+    .sort({ paidAt: 1 })
+    .limit(SCHEDULER_BATCH_LIMIT)
     .populate('listing', 'title slug')
     .populate('seller', '_id uid email firstName')
     .populate('buyer', '_id uid email firstName')
