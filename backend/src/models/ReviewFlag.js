@@ -50,4 +50,15 @@ const reviewFlagSchema = new mongoose.Schema({
 
 reviewFlagSchema.index({ status: 1, createdAt: -1 });
 
+// Prevent the same user from filing multiple pending user_report flags on the same review.
+// Race-safe DB-level guard that complements the application-level check in the route.
+reviewFlagSchema.index(
+  { review: 1, reason: 1, 'metadata.reportedBy': 1 },
+  {
+    unique: true,
+    partialFilterExpression: { reason: 'user_report', status: 'pending' },
+    name: 'unique_pending_user_report_per_reviewer'
+  }
+);
+
 module.exports = mongoose.model('ReviewFlag', reviewFlagSchema);

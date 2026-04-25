@@ -1036,6 +1036,7 @@
     "shippingLower": "shipping",
     "paymentWindowEnds": "Payment window ends",
     "passed": "passed",
+    "paymentDeadlineExpired": "The payment deadline for this transaction has passed. Payment is no longer possible.",
     "youAreThe": "You are the",
     "confirmReceivedHint": "Confirm you received payment before preparing to ship.",
     "acknowledgeBy": "Please acknowledge by",

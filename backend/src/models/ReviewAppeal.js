@@ -45,4 +45,14 @@ const reviewAppealSchema = new mongoose.Schema({
 
 reviewAppealSchema.index({ review: 1, appellant: 1, status: 1 });
 
+// Race-safe guard: at most one pending appeal per (review, appellant).
+reviewAppealSchema.index(
+  { review: 1, appellant: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { status: 'pending' },
+    name: 'unique_pending_appeal_per_appellant'
+  }
+);
+
 module.exports = mongoose.model('ReviewAppeal', reviewAppealSchema);

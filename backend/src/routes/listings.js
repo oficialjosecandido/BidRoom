@@ -10,6 +10,7 @@ const { getReviewScoresForUser } = require('../services/reviewService');
 const { logAuctionCreated } = require('../services/bestOfferLogger');
 const { scanTexts } = require('../utils/contentFilter');
 const { recordViolation } = require('../services/contentViolationService');
+const { createTransactionForBuyNow } = require('../services/transactionService');
 
 const router = express.Router();
 
@@ -605,6 +606,11 @@ router.post('/', authenticateToken, requireActiveAccount, requireNoDisputeRestri
       }
     }
 
+    // Track seller's IP and fingerprint for shill-bid detection
+    const { updateUserSignals: trackSellerSignals } = require('../services/fraudDetectionService');
+    const { getClientIp: getSellerIp } = require('../middleware/bidRateLimiter');
+    trackSellerSignals(user._id, getSellerIp(req), req.headers['x-device-fingerprint'] || null).catch(() => {});
+
     // Extract and validate required fields
     const {
       title,
@@ -949,63 +955,99 @@ router.patch('/:id', authenticateToken, requireActiveAccount, async (req, res) =
   }
 });
 
-// POST /api/listings/:id/buy-now - Buy now (instantly closes auction)
+// POST /api/listings/:id/buy-now - Buy now (instantly closes auction and creates transaction)
 router.post('/:id/buy-now', authenticateToken, requireActiveAccount, requireNoDisputeRestriction, async (req, res) => {
   try {
-    // Find or create user
-    let user = await User.findOne({ uid: req.user.uid });
-    if (!user) {
-      // Parse name from Firebase user
-      const nameParts = req.user.name?.split(' ') || [];
-      const firstName = nameParts[0] || 'User';
-      const lastName = nameParts.slice(1).join(' ') || 'User'; // Use 'User' as default if no lastName
-      
-      user = new User({
-        uid: req.user.uid,
-        email: req.user.email,
-        firstName: firstName,
-        lastName: lastName,
-        isActive: true,
-        emailVerified: req.user.emailVerified || false
-      });
-      await user.save();
-    }
+    const user = await User.findOne({ uid: req.user.uid });
+    if (!user) return res.status(404).json({ error: 'User not found' });
 
-    const listing = await Listing.findById(req.params.id);
-    if (!listing) {
-      return res.status(404).json({ error: 'Listing not found' });
-    }
+    const listing = await Listing.findById(req.params.id).populate('seller', '_id uid firstName lastName');
+    if (!listing) return res.status(404).json({ error: 'Listing not found' });
 
     if (!listing.buyNowPrice) {
       return res.status(400).json({
         error: 'Buy Now not available',
-        message: 'This listing does not have a Buy Now price'
+        message: 'This listing does not have a Buy Now price.'
       });
     }
 
     if (listing.status !== 'active') {
       return res.status(400).json({
         error: 'Listing not active',
-        message: 'This listing is no longer active'
+        message: 'This listing is no longer available.'
       });
     }
 
-    // Close the auction
-    listing.status = 'ended';
-    listing.currentPrice = listing.buyNowPrice;
-    listing.endDate = new Date();
+    // Seller cannot buy their own listing
+    if (listing.seller._id.toString() === user._id.toString()) {
+      return res.status(400).json({
+        error: 'Not allowed',
+        message: 'You cannot buy your own listing.'
+      });
+    }
 
-    await listing.save();
+    const now = new Date();
+
+    // Set winner and close listing atomically
+    await Listing.findByIdAndUpdate(listing._id, {
+      $set: {
+        status: 'ended',
+        currentPrice: listing.buyNowPrice,
+        endDate: now,
+        winner: user._id,
+        winnerSelectedAt: now,
+        winnerBid: null
+      }
+    }, { runValidators: false });
+
+    // Create the payment transaction
+    const transaction = await createTransactionForBuyNow(listing._id, user._id);
+
+    // In-app + email notifications (non-blocking)
+    try {
+      const { notifySellerWinnerSelected, notifyBuyerAuctionWon, emitNewNotificationToUser } = require('../services/notificationService');
+      const io = req.app.get('io');
+      const sellerUserId = listing.seller._id.toString();
+      const buyerUserId = user._id.toString();
+      const buyerName = `${user.firstName} ${user.lastName}`.trim();
+
+      notifySellerWinnerSelected({
+        listingSlug: listing.slug,
+        listingTitle: listing.title,
+        winnerName: buyerName,
+        winningAmount: listing.buyNowPrice,
+        commissionRate: listing.commissionRate ?? 0.005,
+        shippingCost: listing.shippingCost ?? 0,
+        shippingOption: listing.shippingOption ?? 'flat-rate',
+        sellerUserId
+      }).catch(err => console.error('Buy-now seller notification:', err.message));
+
+      notifyBuyerAuctionWon({
+        listingSlug: listing.slug,
+        listingTitle: listing.title,
+        winningAmount: listing.buyNowPrice,
+        shippingCost: listing.shippingCost ?? 0,
+        shippingOption: listing.shippingOption ?? 'flat-rate',
+        buyerUserId
+      }).catch(err => console.error('Buy-now buyer notification:', err.message));
+
+      if (io) {
+        emitNewNotificationToUser(io, sellerUserId).catch(() => {});
+        emitNewNotificationToUser(io, buyerUserId).catch(() => {});
+      }
+    } catch (notifErr) {
+      console.error('Buy-now notification error (non-fatal):', notifErr.message);
+    }
 
     res.json({
       success: true,
-      message: 'Purchase successful',
-      listing: listing,
-      price: listing.buyNowPrice
+      message: 'Purchase successful. Proceed to payment.',
+      price: listing.buyNowPrice,
+      transactionId: transaction?._id || null
     });
   } catch (error) {
     console.error('Error processing buy now:', error);
-    res.status(400).json({
+    res.status(500).json({
       error: 'Failed to process Buy Now',
       message: error.message
     });

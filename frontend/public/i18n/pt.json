@@ -1036,6 +1036,7 @@
     "shippingLower": "frete",
     "paymentWindowEnds": "Prazo de pagamento termina",
     "passed": "expirado",
+    "paymentDeadlineExpired": "O prazo de pagamento desta transação expirou. O pagamento já não é possível.",
     "youAreThe": "Você é o",
     "confirmReceivedHint": "Confirme que recebeu o pagamento antes de preparar o envio.",
     "acknowledgeBy": "Por favor, confirme até",

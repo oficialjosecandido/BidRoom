@@ -129,6 +129,15 @@ const adminLimiter = rateLimit({
   message: { error: 'Too many requests', message: 'Too many requests. Please slow down.' }
 });
 
+// Reviews limiter: stricter than general because writes (review/flag/appeal) are abuse-prone
+const reviewsLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 30,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many requests', message: 'Too many requests. Please slow down.' }
+});
+
 // Routes
 app.use('/api/auth', authLimiter, authRoutes);
 app.use('/api/listings', generalLimiter, listingRoutes);
@@ -139,7 +148,7 @@ app.use('/api/admin', adminLimiter, adminRoutes);
 app.use('/api/private-room', privateRoomRoutes);
 app.use('/api/customers', customerRoutes);
 app.use('/api/watchlist', watchlistRoutes);
-app.use('/api/reviews', reviewRoutes);
+app.use('/api/reviews', reviewsLimiter, reviewRoutes);
 app.use('/api/transactions', transactionsRoutes);
 app.use('/api/notifications', notificationsRoutes);
 app.use('/api/payments', paymentsRouter);

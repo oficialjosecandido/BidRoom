@@ -21,7 +21,16 @@
       "Bash(sed -i '' 's/\"shippingLocalPickup\": \"Retrait sur Place Uniquement\"/\"shippingLocalPickup\": \"Rencontre en Personne\"/' frontend/public/i18n/fr.json)",
       "Bash(sed -i '' 's/\"shippingLocalPickup\": \"Solo Recogida Local\"/\"shippingLocalPickup\": \"Encuentro en Persona\"/' frontend/public/i18n/es.json)",
       "Bash(sed -i '' \"s/{ label: 'Local Pickup', value: 'local-pickup' }/{ label: 'Meet in Person', value: 'local-pickup' }/\" frontend/src/environments/environment.ts)",
-      "Bash(node --check /Users/josecandido/Documents/BidRoom/backend/src/routes/transactions.js)"
+      "Bash(node --check /Users/josecandido/Documents/BidRoom/backend/src/routes/transactions.js)",
+      "Bash(node --check /Users/josecandido/Documents/BidRoom/backend/src/routes/listings.js)",
+      "Bash(node --check /Users/josecandido/Documents/BidRoom/backend/src/services/transactionService.js)",
+      "Bash(node --check /Users/josecandido/Documents/BidRoom/backend/src/routes/connect.js)",
+      "Bash(node --check /Users/josecandido/Documents/BidRoom/backend/src/routes/bids.js)",
+      "Bash(node --check /Users/josecandido/Documents/BidRoom/backend/src/services/fraudDetectionService.js)",
+      "Bash(node --check /Users/josecandido/Documents/BidRoom/backend/src/middleware/bidRateLimiter.js)",
+      "Bash(node --check /Users/josecandido/Documents/BidRoom/backend/src/models/FraudEvent.js)",
+      "Bash(node --check /Users/josecandido/Documents/BidRoom/backend/src/models/Bid.js)",
+      "Bash(node --check /Users/josecandido/Documents/BidRoom/backend/src/models/User.js)"
     ],
     "additionalDirectories": [
       "/Users/josecandido/Documents/BidRoom/.claude"

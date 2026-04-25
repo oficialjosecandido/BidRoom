@@ -68,6 +68,8 @@ function scanForAbusiveContent(text) {
   if (!text || typeof text !== 'string') return { found: false, categories: [], matches: [] };
   const categories = new Set();
   const matches = new Set();
+  // String.prototype.match with /g flag returns an array of matches without
+  // mutating regex state, so no lastIndex reset is needed here.
   const abuseMatches = text.match(ABUSE_RE) || [];
   const hateMatches = text.match(HATE_RE) || [];
   if (abuseMatches.length) {
@@ -78,8 +80,6 @@ function scanForAbusiveContent(text) {
     categories.add('hate_speech');
     hateMatches.forEach((m) => matches.add(m.toLowerCase()));
   }
-  ABUSE_RE.lastIndex = 0;
-  HATE_RE.lastIndex = 0;
   return {
     found: categories.size > 0,
     categories: [...categories],
