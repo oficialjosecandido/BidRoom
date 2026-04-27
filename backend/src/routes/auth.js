@@ -115,4 +115,50 @@ router.post('/forgot-password', async (req, res) => {
   }
 });
 
+const LOGIN_MAX_ATTEMPTS = 5;
+const LOGIN_LOCKOUT_MS = 15 * 60 * 1000; // 15 minutes
+
+/**
+ * POST /api/auth/login-failure (public)
+ * Called by the frontend when Firebase returns a wrong-password / user-not-found error.
+ * Increments the failed-attempt counter for the account and locks it after 5 failures.
+ * Rate-limited at the IP level by express-rate-limit in index.js.
+ */
+router.post('/login-failure', async (req, res) => {
+  const { email } = req.body;
+  if (!email || typeof email !== 'string') {
+    return res.status(400).json({ error: 'Email is required' });
+  }
+
+  try {
+    const user = await User.findOne({ email: email.toLowerCase().trim() })
+      .select('loginFailedAttempts loginLockedUntil');
+    if (!user) {
+      // Security: don't reveal whether this email is registered
+      return res.json({ locked: false });
+    }
+
+    const attempts = (user.loginFailedAttempts || 0) + 1;
+    const locked = attempts >= LOGIN_MAX_ATTEMPTS;
+    await User.updateOne(
+      { _id: user._id },
+      {
+        $set: {
+          loginFailedAttempts: attempts,
+          loginLockedUntil: locked ? new Date(Date.now() + LOGIN_LOCKOUT_MS) : null
+        }
+      }
+    );
+
+    return res.json({
+      locked,
+      attemptsRemaining: Math.max(0, LOGIN_MAX_ATTEMPTS - attempts),
+      retryAfterMs: locked ? LOGIN_LOCKOUT_MS : null
+    });
+  } catch (err) {
+    console.error('[Auth] login-failure error:', err.message);
+    res.status(500).json({ error: 'Internal error' });
+  }
+});
+
 module.exports = router;

@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { BehaviorSubject, Observable, from, of, throwError } from 'rxjs';
-import { map, switchMap } from 'rxjs/operators';
+import { catchError, map, switchMap, tap } from 'rxjs/operators';
 import { HttpClient } from '@angular/common/http';
 import { Auth, GoogleAuthProvider, User as FirebaseUser, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithPopup, sendEmailVerification, updateProfile, signOut, getIdToken, confirmPasswordReset, verifyPasswordResetCode } from '@angular/fire/auth';
 import { isAdminEmail } from '../../shared/config/admin.constants';
@@ -73,16 +73,21 @@ export class AuthService {
   login(email: string, password: string): Observable<AppUser> {
     return from(signInWithEmailAndPassword(this.auth, email, password)).pipe(
       switchMap((cred) => {
-        // Check if email is verified
         if (!cred.user.emailVerified) {
-          // Sign out the user immediately
           return from(signOut(this.auth)).pipe(
-            switchMap(() => {
-              return throwError(() => new Error('Please verify your email address before logging in. Check your inbox for the verification email.'));
-            })
+            switchMap(() => throwError(() => new Error('Please verify your email address before logging in. Check your inbox for the verification email.')))
           );
         }
         return of(this.mapFirebaseUser(cred.user) as AppUser);
+      }),
+      catchError((err) => {
+        // Report failed attempt to backend for brute-force tracking (best-effort, non-blocking)
+        const firebaseFailureCodes = ['auth/wrong-password', 'auth/invalid-credential', 'auth/user-not-found', 'auth/invalid-password'];
+        if (email && firebaseFailureCodes.some(c => err?.code === c)) {
+          this.http.post(`${API_CONFIG.getApiUrl()}/auth/login-failure`, { email })
+            .subscribe({ error: () => {} }); // fire-and-forget
+        }
+        return throwError(() => err);
       })
     );
   }

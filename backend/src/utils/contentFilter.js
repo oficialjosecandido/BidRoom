@@ -87,4 +87,54 @@ function scanForAbusiveContent(text) {
   };
 }
 
-module.exports = { scanForContactInfo, scanTexts, scanForAbusiveContent };
+/**
+ * Prohibited item keyword filter.
+ * Returns the matched category name if the text contains a prohibited keyword,
+ * or null if clean. Matching is case-insensitive and word-boundary aware.
+ *
+ * Covers: illegal firearms/ammo, live animals, controlled substances,
+ * counterfeit goods, human remains/organs, CSAM.
+ */
+const PROHIBITED_PATTERNS = [
+  { category: 'Illegal firearms',     re: /\b(firearm|handgun|pistol|revolver|rifle|shotgun|machine\s*gun|sawed.off|assault\s*weapon|ghost\s*gun|zip\s*gun|full\s*auto|suppressors?|silencers?|bump\s*stock)\b/i },
+  { category: 'Ammunition/explosives',re: /\b(ammunition|ammo|bullet|cartridge|grenade|explosive|detonator|c4|pipe\s*bomb|ied|improvised\s*explosive)\b/i },
+  { category: 'Illegal bladed weapons',re: /\b(switchblade|gravity\s*knife|brass\s*knuckle|knuckle\s*duster|push\s*dagger|throwing\s*star|shuriken|ballistic\s*knife)\b/i },
+  { category: 'Live animals',          re: /\b(live\s+(animal|bird|reptile|fish|snake|turtle|parrot|puppy|kitten|rabbit|hamster|monkey|primate))\b/i },
+  { category: 'Controlled substances', re: /\b(cocaine|heroin|methamphetamine|meth|fentanyl|lsd|ecstasy|mdma|crack|opioid|xanax\s+without|adderall\s+without)\b/i },
+  { category: 'Counterfeit goods',     re: /\b(counterfeit|fake\s+(id|passport|license|currency|money|bill)|replica\s+currency|forged\s+document)\b/i },
+  { category: 'Human remains/organs',  re: /\b(human\s+(organ|kidney|liver|heart|bone|skull|remains|tissue|blood)\s+(for\s+sale|selling))\b/i },
+];
+
+/**
+ * Scans text for prohibited item keywords.
+ * @param {string} text
+ * @returns {{ prohibited: boolean, category: string|null }}
+ */
+function scanForProhibitedContent(text) {
+  if (!text || typeof text !== 'string') return { prohibited: false, category: null };
+  for (const { category, re } of PROHIBITED_PATTERNS) {
+    if (re.test(text)) return { prohibited: true, category };
+  }
+  return { prohibited: false, category: null };
+}
+
+/**
+ * Scans multiple text fields (title + description) for prohibited content.
+ * @param {string[]} texts
+ * @returns {{ prohibited: boolean, category: string|null }}
+ */
+function scanTextsForProhibitedContent(texts) {
+  for (const text of texts) {
+    const result = scanForProhibitedContent(text);
+    if (result.prohibited) return result;
+  }
+  return { prohibited: false, category: null };
+}
+
+module.exports = {
+  scanForContactInfo,
+  scanTexts,
+  scanForAbusiveContent,
+  scanForProhibitedContent,
+  scanTextsForProhibitedContent
+};

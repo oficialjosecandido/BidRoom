@@ -7,6 +7,7 @@
 const User = require('../models/User');
 const AccountStatusAuditLog = require('../models/AccountStatusAuditLog');
 const { notifyAccountSuspended, notifyAccountReactivated, notifyAccountClosed, emitNewNotificationToUser } = require('./notificationService');
+const Listing = require('../models/Listing');
 
 const ACCOUNT_STATUS = { ACTIVE: 'active', SUSPENDED: 'suspended', CLOSED: 'closed' };
 
@@ -38,6 +39,12 @@ async function suspendUser(userId, metadata = {}, io = null) {
 
   await notifyAccountSuspended({ userId }).catch(err => console.error('Notify suspend:', err.message));
   if (io && user.uid) emitNewNotificationToUser(io, userId).catch(() => {});
+
+  // End all active listings for this seller so buyers cannot bid on a suspended account's items
+  Listing.updateMany(
+    { seller: userId, status: 'active' },
+    { $set: { status: 'ended', endDate: new Date() } }
+  ).catch(err => console.error('Failed to end suspended seller listings:', err.message));
 
   return { updated: true };
 }

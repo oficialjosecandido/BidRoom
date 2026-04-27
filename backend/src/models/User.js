@@ -136,7 +136,10 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
     index: true
-  }
+  },
+  /** Brute-force login protection */
+  loginFailedAttempts: { type: Number, default: 0 },
+  loginLockedUntil: { type: Date, default: null }
 }, {
   timestamps: true // Adds createdAt and updatedAt fields
 });
