@@ -5,6 +5,7 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { AuthService, AppUser } from '../../../auth/services/auth.service';
 import { CustomerService } from '../../../shared/services/customer.service';
 import { StripeConnectService, ConnectAccountStatus, OnboardingFormData } from '../../../shared/services/stripe-connect.service';
+import { NotificationPreferencesService, NotificationPreferences, NOTIFICATION_EVENT_KEYS, DEFAULT_CHANNEL_PREF } from '../../../shared/services/notification-preferences.service';
 import { Observable } from 'rxjs';
 
 @Component({
@@ -19,6 +20,7 @@ export class DashboardSettingsComponent implements OnInit {
   private customerService = inject(CustomerService);
   private translate = inject(TranslateService);
   private stripeConnect = inject(StripeConnectService);
+  private notifPrefsService = inject(NotificationPreferencesService);
 
   /** Display scale for buyer/seller review averages (matches 1–10 transaction reviews). */
   readonly reviewScoreMax = 10;
@@ -74,6 +76,13 @@ export class DashboardSettingsComponent implements OnInit {
   langSaving = false;
   langSaved = false;
 
+  readonly notifEventKeys = NOTIFICATION_EVENT_KEYS;
+  notifPrefs: NotificationPreferences | null = null;
+  notifPrefsLoading = false;
+  notifPrefsSaving = false;
+  notifPrefsSaved = false;
+  notifPrefsError: string | null = null;
+
   readonly languages = [
     { code: 'en', label: 'English', flag: '🇬🇧' },
     { code: 'pt', label: 'Português', flag: '🇵🇹' },
@@ -103,6 +112,7 @@ export class DashboardSettingsComponent implements OnInit {
     });
 
     this.loadConnectStatus();
+    this.loadNotifPrefs();
   }
 
   saveLanguage(): void {
@@ -196,6 +206,43 @@ export class DashboardSettingsComponent implements OnInit {
       error: (err) => {
         this.connectTestActivating = false;
         this.connectError = err?.error?.error || 'Test activation failed.';
+      }
+    });
+  }
+
+  loadNotifPrefs(): void {
+    this.notifPrefsLoading = true;
+    this.notifPrefsService.getPreferences().subscribe({
+      next: (prefs) => { this.notifPrefs = prefs; this.notifPrefsLoading = false; },
+      error: () => { this.notifPrefsLoading = false; }
+    });
+  }
+
+  getEventPref(key: string): { email: boolean; push: boolean; inApp: boolean } {
+    if (!this.notifPrefs) return { ...DEFAULT_CHANNEL_PREF };
+    return (this.notifPrefs as any)[key] ?? { ...DEFAULT_CHANNEL_PREF };
+  }
+
+  toggleEventChannel(key: string, channel: 'email' | 'push' | 'inApp'): void {
+    if (!this.notifPrefs) return;
+    const pref = (this.notifPrefs as any)[key] ?? { ...DEFAULT_CHANNEL_PREF };
+    (this.notifPrefs as any)[key] = { ...pref, [channel]: !pref[channel] };
+  }
+
+  saveNotifPrefs(): void {
+    if (!this.notifPrefs) return;
+    this.notifPrefsSaving = true;
+    this.notifPrefsError = null;
+    this.notifPrefsService.updatePreferences(this.notifPrefs).subscribe({
+      next: (saved) => {
+        this.notifPrefs = saved;
+        this.notifPrefsSaving = false;
+        this.notifPrefsSaved = true;
+        setTimeout(() => this.notifPrefsSaved = false, 2500);
+      },
+      error: () => {
+        this.notifPrefsSaving = false;
+        this.notifPrefsError = 'Failed to save preferences. Please try again.';
       }
     });
   }

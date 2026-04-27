@@ -30,7 +30,8 @@
       "Bash(node --check /Users/josecandido/Documents/BidRoom/backend/src/middleware/bidRateLimiter.js)",
       "Bash(node --check /Users/josecandido/Documents/BidRoom/backend/src/models/FraudEvent.js)",
       "Bash(node --check /Users/josecandido/Documents/BidRoom/backend/src/models/Bid.js)",
-      "Bash(node --check /Users/josecandido/Documents/BidRoom/backend/src/models/User.js)"
+      "Bash(node --check /Users/josecandido/Documents/BidRoom/backend/src/models/User.js)",
+      "Bash(node -e ' *)"
     ],
     "additionalDirectories": [
       "/Users/josecandido/Documents/BidRoom/.claude"

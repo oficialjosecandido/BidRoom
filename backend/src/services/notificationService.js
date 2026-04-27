@@ -1,5 +1,44 @@
 const Notification = require('../models/Notification');
 const User = require('../models/User');
+const NotificationPreferences = require('../models/NotificationPreferences');
+
+// In-memory debounce: prevent outbid notification floods in high-activity auctions.
+// Key: "userId:listingId", value: timestamp of last sent notification.
+const _outbidDebounce = new Map();
+const OUTBID_DEBOUNCE_MS = 5 * 60 * 1000; // 5 minutes
+
+/**
+ * Returns true if an outbid notification was already sent for this user+listing within the debounce window.
+ * Side-effect: records the current timestamp so the next call within the window is debounced.
+ */
+function checkAndSetOutbidDebounce(userId, listingId) {
+  const key = `${userId}:${listingId}`;
+  const last = _outbidDebounce.get(key);
+  if (last && Date.now() - last < OUTBID_DEBOUNCE_MS) return true; // debounced
+  _outbidDebounce.set(key, Date.now());
+  return false;
+}
+
+/**
+ * Returns true if the user has not globally unsubscribed from email and has email enabled for the event type.
+ * Defaults to true when no preferences record exists.
+ * @param {string} userId - Mongo User _id
+ * @param {string} eventType - e.g. 'outbid', 'auctionWon', etc.
+ */
+async function shouldSendEmail(userId, eventType) {
+  try {
+    const prefs = await NotificationPreferences.findOne({ user: userId })
+      .select(`globalEmailUnsubscribed ${eventType}`)
+      .lean();
+    if (!prefs) return true;
+    if (prefs.globalEmailUnsubscribed) return false;
+    const eventPrefs = prefs[eventType];
+    if (!eventPrefs) return true;
+    return eventPrefs.email !== false;
+  } catch {
+    return true; // fail-open: don't block notifications on DB error
+  }
+}
 
 /**
  * Notification link (returnUrl) mapping – each notification type navigates to the most relevant page:
@@ -48,10 +87,18 @@ async function emitNewNotificationToUser(io, userMongoId) {
  * @param {string} [options.type='system'] - proposal | bid | auction_ended | transaction | dispute | review | system
  * @param {string} [options.link] - URL to navigate (e.g. /listing/slug?tab=offers)
  * @param {string} [options.referenceId] - Related entity ID for deduplication
+ * @param {string} [options.eventType] - Preference key to check (e.g. 'outbid'). Skips creation if user disabled inApp.
  * @returns {Promise<Notification|null>}
  */
-async function createNotification({ userId, title, message, type = 'system', link = null, referenceId = null }) {
+async function createNotification({ userId, title, message, type = 'system', link = null, referenceId = null, eventType = null }) {
   try {
+    if (eventType) {
+      const prefs = await NotificationPreferences.findOne({ user: userId })
+        .select(`${eventType}`)
+        .lean();
+      if (prefs && prefs[eventType] && prefs[eventType].inApp === false) return null;
+    }
+
     const notification = new Notification({
       user: userId,
       title,
@@ -98,6 +145,7 @@ async function notifyBidderOutbid({
   const prev = Number(previousBidAmount || 0).toFixed(2);
   const next = Number(newBidAmount || 0).toFixed(2);
   return createNotification({
+    eventType: 'outbid',
     userId: bidderUserId,
     title: "You've been outbid",
     message: `Your bid of $${prev} on "${listingTitle || 'this auction'}" was exceeded. Current high bid: $${next}.`,
@@ -696,6 +744,8 @@ async function notifyLoginFromNewDevice({ userId, deviceInfo }) {
 
 module.exports = {
   createNotification,
+  shouldSendEmail,
+  checkAndSetOutbidDebounce,
   notifyNewProposal,
   notifyNewBid,
   notifyBidderOutbid,

@@ -894,7 +894,29 @@
       "payoutSchedule": "Pagamentos em cronograma contínuo",
       "connectStripe": "Conectar com Stripe",
       "redirecting": "Redirecionando...",
-      "redirectingToStripe": "Redirecionando para o Stripe..."
+      "redirectingToStripe": "Redirecionando para o Stripe...",
+      "notifications": {
+        "title": "Preferências de Notificação",
+        "loading": "A carregar preferências...",
+        "globalEmailUnsubscribed": "Cancelar subscrição de todos os e-mails",
+        "event": "Evento",
+        "channelEmail": "E-mail",
+        "channelInApp": "Na App",
+        "save": "Guardar Preferências",
+        "saving": "A guardar...",
+        "saved": "Preferências guardadas",
+        "events": {
+          "outbid": "Ultrapassado numa licitação",
+          "auctionEndingSoon": "Leilão a terminar em breve",
+          "auctionWon": "Leilão ganho",
+          "offerReceived": "Proposta recebida (vendedor)",
+          "offerAccepted": "Proposta aceite (comprador)",
+          "dispatch": "Artigo expedido",
+          "paymentReceived": "Pagamento recebido (vendedor)",
+          "newBid": "Nova licitação no seu anúncio",
+          "disputeUpdate": "Atualização de disputa"
+        }
+      }
     },
     "myAuctions": {
       "title": "Meus Anúncios",

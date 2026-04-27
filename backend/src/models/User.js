@@ -139,7 +139,9 @@ const userSchema = new mongoose.Schema({
   },
   /** Brute-force login protection */
   loginFailedAttempts: { type: Number, default: 0 },
-  loginLockedUntil: { type: Date, default: null }
+  loginLockedUntil: { type: Date, default: null },
+  /** Opaque token used to unsubscribe from all emails without login (generated on first use) */
+  emailUnsubscribeToken: { type: String, default: null, sparse: true, index: true }
 }, {
   timestamps: true // Adds createdAt and updatedAt fields
 });

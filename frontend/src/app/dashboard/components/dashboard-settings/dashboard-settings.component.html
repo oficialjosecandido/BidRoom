@@ -204,5 +204,70 @@
         }
       </div>
     </div>
+    <!-- Notification Preferences -->
+    <div class="settings-card">
+      <div class="card-header">
+        <span class="card-icon">🔔</span>
+        <h2 class="card-title">{{ 'dashboard.settings.notifications.title' | translate }}</h2>
+      </div>
+      <div class="card-body">
+        @if (notifPrefsLoading) {
+          <p class="loading-text">{{ 'dashboard.settings.notifications.loading' | translate }}</p>
+        } @else if (notifPrefs) {
+          <!-- Global email unsubscribe -->
+          <div class="notif-global-row">
+            <label class="toggle-row">
+              <span class="toggle-label">{{ 'dashboard.settings.notifications.globalEmailUnsubscribed' | translate }}</span>
+              <input type="checkbox" [checked]="notifPrefs.globalEmailUnsubscribed"
+                     (change)="notifPrefs!.globalEmailUnsubscribed = !notifPrefs!.globalEmailUnsubscribed" />
+            </label>
+          </div>
+
+          <!-- Per-event preferences table -->
+          <div class="notif-table-wrapper">
+            <table class="notif-table">
+              <thead>
+                <tr>
+                  <th>{{ 'dashboard.settings.notifications.event' | translate }}</th>
+                  <th class="notif-ch">{{ 'dashboard.settings.notifications.channelEmail' | translate }}</th>
+                  <th class="notif-ch">{{ 'dashboard.settings.notifications.channelInApp' | translate }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (key of notifEventKeys; track key) {
+                  <tr>
+                    <td>{{ ('dashboard.settings.notifications.events.' + key) | translate }}</td>
+                    <td class="notif-ch">
+                      <input type="checkbox"
+                             [checked]="getEventPref(key).email"
+                             [disabled]="notifPrefs!.globalEmailUnsubscribed"
+                             (change)="toggleEventChannel(key, 'email')" />
+                    </td>
+                    <td class="notif-ch">
+                      <input type="checkbox"
+                             [checked]="getEventPref(key).inApp"
+                             (change)="toggleEventChannel(key, 'inApp')" />
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+
+          @if (notifPrefsError) {
+            <p class="error-text">{{ notifPrefsError }}</p>
+          }
+
+          <div class="form-actions">
+            <button class="action-btn" (click)="saveNotifPrefs()" [disabled]="notifPrefsSaving">
+              {{ notifPrefsSaving ? ('dashboard.settings.notifications.saving' | translate) : ('dashboard.settings.notifications.save' | translate) }}
+            </button>
+            @if (notifPrefsSaved) {
+              <span class="save-success">{{ 'dashboard.settings.notifications.saved' | translate }}</span>
+            }
+          </div>
+        }
+      </div>
+    </div>
   </div>
 </div>
