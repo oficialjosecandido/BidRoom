@@ -299,6 +299,46 @@
   }
 }
 
+.notif-global-row {
+  margin-bottom: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #eee;
+}
+
+.toggle-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  .toggle-label { font-size: 14px; color: #333; }
+}
+
+.notif-table-wrapper { overflow-x: auto; margin-bottom: 16px; }
+
+.notif-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+
+  th, td {
+    padding: 8px 12px;
+    border-bottom: 1px solid #eee;
+    text-align: left;
+  }
+
+  th { font-weight: 600; color: #555; background: #fafafa; }
+  td.notif-ch, th.notif-ch { text-align: center; width: 80px; }
+}
+
+.save-success {
+  color: var(--success-color, #2e7d32);
+  font-size: 13px;
+  align-self: center;
+}
+
+.loading-text { color: #888; font-size: 14px; }
+.error-text { color: var(--error-color, #c62828); font-size: 13px; margin-bottom: 8px; }
+
 @media (max-width: 768px) {
   .settings-grid { grid-template-columns: 1fr; }
   .settings-card-full { grid-column: 1; }

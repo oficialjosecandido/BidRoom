@@ -894,7 +894,29 @@
       "payoutSchedule": "Payouts on a rolling schedule",
       "connectStripe": "Connect with Stripe",
       "redirecting": "Redirecting...",
-      "redirectingToStripe": "Redirecting to Stripe..."
+      "redirectingToStripe": "Redirecting to Stripe...",
+      "notifications": {
+        "title": "Notification Preferences",
+        "loading": "Loading preferences...",
+        "globalEmailUnsubscribed": "Unsubscribe from all email notifications",
+        "event": "Event",
+        "channelEmail": "Email",
+        "channelInApp": "In-App",
+        "save": "Save Preferences",
+        "saving": "Saving...",
+        "saved": "Preferences saved",
+        "events": {
+          "outbid": "Outbid on an auction",
+          "auctionEndingSoon": "Auction ending soon",
+          "auctionWon": "Auction won",
+          "offerReceived": "Offer received (seller)",
+          "offerAccepted": "Offer accepted (buyer)",
+          "dispatch": "Item dispatched",
+          "paymentReceived": "Payment received (seller)",
+          "newBid": "New bid on your listing",
+          "disputeUpdate": "Dispute update"
+        }
+      }
     },
     "myAuctions": {
       "title": "My Listings",

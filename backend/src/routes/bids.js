@@ -5,7 +5,7 @@ const User = require('../models/User');
 const { authenticateToken, optionalAuth, requireActiveAccountIfAuthenticated, requireNoDisputeRestrictionIfAuthenticated } = require('../middleware/auth');
 const { sendFirstBidNotification, sendOutbidNotification } = require('../services/auctionNotificationService');
 const { getReviewScoresForUsers } = require('../services/reviewService');
-const { notifyNewBid, notifyBidderOutbid, emitNewNotificationToUser } = require('../services/notificationService');
+const { notifyNewBid, notifyBidderOutbid, emitNewNotificationToUser, checkAndSetOutbidDebounce, shouldSendEmail } = require('../services/notificationService');
 const { checkBidRateLimit, getClientIp } = require('../middleware/bidRateLimiter');
 const { runFraudChecks, updateUserSignals } = require('../services/fraudDetectionService');
 
@@ -500,24 +500,37 @@ router.post('/', optionalAuth, requireActiveAccountIfAuthenticated, requireNoDis
         if (latestBidByOutbidder && latestBidByOutbidder.notifyWhenOutbid === false) continue;
 
         notifiedEmails.add(outbidEmail);
-        sendOutbidNotification(
-          listing,
-          outbidEmail,
-          outbidName,
-          previousHighAmount,
-          amount
-        ).catch(err => console.error('Failed to send outbid notification:', err));
 
-        if (prevBid.bidder && prevBid.bidder._id) {
+        const outbidderMongoId = prevBid.bidder?._id?.toString() || null;
+
+        // Rate-limit: skip if already notified for this user+listing within 5 minutes
+        if (outbidderMongoId && checkAndSetOutbidDebounce(outbidderMongoId, listingId.toString())) continue;
+
+        // Email: check user's notification preference before sending
+        const emailAllowed = outbidderMongoId
+          ? await shouldSendEmail(outbidderMongoId, 'outbid')
+          : true; // guest bidders: always send (no prefs stored)
+
+        if (emailAllowed) {
+          sendOutbidNotification(
+            listing,
+            outbidEmail,
+            outbidName,
+            previousHighAmount,
+            amount
+          ).catch(err => console.error('Failed to send outbid notification:', err));
+        }
+
+        if (outbidderMongoId) {
           notifyBidderOutbid({
             listingSlug: listing.slug || null,
             listingTitle: listing.title || 'Auction',
             previousBidAmount: previousHighAmount,
             newBidAmount: amount,
-            bidderUserId: prevBid.bidder._id.toString(),
+            bidderUserId: outbidderMongoId,
             listingId: listingId.toString()
           }).catch(err => console.error('Failed to create outbid in-app notification:', err));
-          emitNewNotificationToUser(io, prevBid.bidder._id.toString()).catch(() => {});
+          emitNewNotificationToUser(io, outbidderMongoId).catch(() => {});
         }
       }
     }

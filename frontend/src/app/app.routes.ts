@@ -62,5 +62,9 @@ export const routes: Routes = [
     path: 'private-room',
     loadChildren: () => import('./private-room/private-room.module').then(m => m.PrivateRoomModule)
   },
+  {
+    path: 'notifications/unsubscribe',
+    loadComponent: () => import('./notifications/unsubscribe.component').then(m => m.UnsubscribeComponent)
+  },
   { path: '**', redirectTo: '/landing' }
 ];
