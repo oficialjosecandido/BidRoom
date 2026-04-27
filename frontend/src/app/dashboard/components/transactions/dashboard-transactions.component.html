@@ -313,11 +313,59 @@
                 <p class="stripe-ref">{{ 'transactions.paymentRef' | translate }}: {{ t.stripePaymentIntentId }}</p>
               }
               @if (getEffectiveStatus(t) === 'shipped') {
-                <p class="form-hint">{{ 'transactions.itemShippedHowReceived' | translate }}</p>
+                @if (t.estimatedDeliveryDate) {
+                  <p class="form-hint delivery-estimate">
+                    {{ 'transactions.estimatedDelivery' | translate }}: <strong>{{ formatEstimatedDelivery(t) }}</strong>
+                  </p>
+                }
+                @if (isEstimatedDeliveryPassed(t)) {
+                  <div class="delivery-overdue-notice">
+                    <p class="delivery-overdue-title">{{ 'transactions.deliveryDueConfirmTitle' | translate }}</p>
+                    <p class="delivery-overdue-body">{{ 'transactions.deliveryDueConfirmBody' | translate }}</p>
+                  </div>
+                } @else {
+                  <p class="form-hint">{{ 'transactions.itemShippedHowReceived' | translate }}</p>
+                }
+                @if (t.autoReleaseAt && !isEstimatedDeliveryPassed(t)) {
+                  <p class="auto-release-notice">
+                    {{ 'transactions.autoReleaseNotice' | translate:{ date: formatAutoReleaseDate(t) } }}
+                  </p>
+                }
+                @if (t.autoReleaseAt && isEstimatedDeliveryPassed(t)) {
+                  @if ((daysUntilAutoRelease(t) ?? 99) > 0) {
+                    <p class="auto-release-warning">
+                      {{ 'transactions.autoReleaseWarning' | translate:{ days: daysUntilAutoRelease(t) } }}
+                    </p>
+                  } @else {
+                    <p class="auto-release-warning">{{ 'transactions.autoReleaseImminent' | translate }}</p>
+                  }
+                }
                 <button type="button" class="btn btn-primary" (click)="markAsDelivered(t)" [disabled]="updatingId === t._id">
                   {{ updatingId === t._id ? ('transactions.updating' | translate) : ('transactions.markAsReceivedProperly' | translate) }}
                 </button>
                 <button type="button" class="btn btn-dispute" (click)="openDisputeModal(t); $event.stopPropagation()" [attr.aria-label]="'Open a dispute for ' + t.listing.title">{{ 'transactions.receivedNotProperly' | translate }}</button>
+              }
+              @if (getEffectiveStatus(t) === 'delivered') {
+                @if (canRequestReturn(t)) {
+                  <div class="return-request-panel">
+                    <p class="form-hint">
+                      {{ 'transactions.returnWindowNotice' | translate:{ days: returnWindowDaysLeft(t) } }}
+                    </p>
+                    <button type="button" class="btn btn-secondary" (click)="openReturnModal(t); $event.stopPropagation()">
+                      {{ 'transactions.requestReturn' | translate }}
+                    </button>
+                  </div>
+                } @else if (t.returnRequestedAt && t.returnStatus) {
+                  <div class="return-status-panel">
+                    <p class="return-status-label">
+                      {{ 'transactions.returnStatus' | translate }}:
+                      <strong>{{ 'transactions.returnStatuses.' + t.returnStatus | translate }}</strong>
+                    </p>
+                    @if (t.returnStatus === 'pending_seller_response' && t.returnSellerDeadline) {
+                      <p class="form-hint">{{ 'transactions.returnSellerDeadline' | translate:{ date: (t.returnSellerDeadline | date:'mediumDate') } }}</p>
+                    }
+                  </div>
+                }
               }
               @if (['paid','shipped','delivered'].includes(getEffectiveStatus(t))) {
                 <p class="form-hint review-required">
@@ -365,6 +413,26 @@
               </button>
               @if (showTrackingFormId === t._id) {
                 <div class="tracking-form">
+                  <div class="form-group">
+                    <label>{{ 'transactions.trackingNumber' | translate }}</label>
+                    <input type="text" [(ngModel)]="trackingNumber" [placeholder]="'transactions.trackingNumberPlaceholder' | translate" class="input-sm" />
+                  </div>
+                  <div class="form-group">
+                    <label>{{ 'transactions.carrier' | translate }}</label>
+                    <select [(ngModel)]="trackingCarrier" class="input-sm">
+                      <option value="">{{ 'transactions.selectCarrier' | translate }}</option>
+                      <option value="USPS">USPS</option>
+                      <option value="UPS">UPS</option>
+                      <option value="FedEx">FedEx</option>
+                      <option value="DHL">DHL</option>
+                      <option value="Other">{{ 'transactions.other' | translate }}</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label>{{ 'transactions.estimatedDeliveryDays' | translate }}</label>
+                    <input type="number" [(ngModel)]="estimatedDeliveryDays" min="1" max="60" [placeholder]="'transactions.estimatedDeliveryDaysPlaceholder' | translate" class="input-sm" />
+                    <span class="form-hint">{{ 'transactions.estimatedDeliveryDaysHint' | translate }}</span>
+                  </div>
                   <button type="button" class="btn btn-primary" (click)="submitShipped(t)" [disabled]="updatingId === t._id">
                     {{ updatingId === t._id ? ('transactions.updating' | translate) : ('transactions.confirmShipped' | translate) }}
                   </button>
@@ -442,6 +510,56 @@
           <button type="button" class="btn btn-secondary" (click)="closeDisputeModal()">{{ 'dashboard.common.cancel' | translate }}</button>
           <button type="button" class="btn btn-primary" (click)="submitDispute()" [disabled]="disputeSubmitting || !canSubmitDispute()">
             {{ disputeSubmitting ? ('disputes.modal.submitting' | translate) : ('disputes.modal.submitDispute' | translate) }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  @if (returnModalTransaction) {
+    <div class="modal-overlay" (click)="closeReturnModal()">
+      <div class="modal-content review-modal dispute-modal" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h3 class="modal-title">{{ 'returns.modal.title' | translate }}</h3>
+          <button type="button" class="modal-close" (click)="closeReturnModal()" aria-label="Close">×</button>
+        </div>
+        <div class="modal-body">
+          <p class="form-hint">{{ 'returns.modal.intro' | translate }}</p>
+          <div class="form-group">
+            <label for="return-reason">{{ 'returns.modal.reason' | translate }} <span class="required">*</span></label>
+            <textarea id="return-reason" [(ngModel)]="returnReason" class="form-input" rows="4" minlength="5" [placeholder]="'returns.modal.reasonPlaceholder' | translate"></textarea>
+          </div>
+          <div class="form-group">
+            <label>{{ 'returns.modal.photos' | translate }} <span class="required">*</span></label>
+            <p class="form-hint">{{ 'returns.modal.photosHint' | translate }}</p>
+            <input
+              type="file"
+              #returnEvidenceInput
+              accept=".jpg,.jpeg,.png,.gif,.webp"
+              (change)="onReturnEvidenceSelected(returnEvidenceInput)"
+              class="file-input-hidden"
+              style="display: none;"
+              multiple
+            />
+            <button type="button" class="btn btn-secondary" (click)="returnEvidenceInput.click()" [disabled]="returnEvidenceUploading">
+              {{ returnEvidenceUploading ? ('returns.modal.uploading' | translate) : ('returns.modal.addPhotos' | translate) }}
+            </button>
+            @if (returnPhotoUrls.length > 0) {
+              <div class="dispute-media-list">
+                @for (url of returnPhotoUrls; track url) {
+                  <span class="dispute-media-item">✓ {{ 'disputes.modal.uploaded' | translate }}</span>
+                }
+              </div>
+            }
+          </div>
+          @if (returnError) {
+            <p class="review-error">{{ returnError }}</p>
+          }
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="closeReturnModal()">{{ 'dashboard.common.cancel' | translate }}</button>
+          <button type="button" class="btn btn-primary" (click)="submitReturn()" [disabled]="returnSubmitting || !canSubmitReturn()">
+            {{ returnSubmitting ? ('returns.modal.submitting' | translate) : ('returns.modal.submit' | translate) }}
           </button>
         </div>
       </div>

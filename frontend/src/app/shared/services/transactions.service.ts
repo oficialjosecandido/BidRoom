@@ -58,6 +58,20 @@ export interface Transaction {
   status?: TransactionStatus;
   paidAt: string | null;
   shippedAt: string | null;
+  /** Estimated delivery date (shippedAt + delivery days) */
+  estimatedDeliveryDate?: string | null;
+  /** When buyer confirmed receipt */
+  deliveredAt?: string | null;
+  /** Cutoff for auto-release if buyer doesn't confirm (estimatedDeliveryDate + 5 days) */
+  autoReleaseAt?: string | null;
+  /** Set when the auto-release scheduler executed (idempotency) */
+  autoReleaseExecutedAt?: string | null;
+  /** Return request fields (Story 6.3) */
+  returnRequestedAt?: string | null;
+  returnReason?: string | null;
+  returnPhotoUrls?: string[];
+  returnStatus?: 'pending_seller_response' | 'accepted_by_seller' | 'rejected_by_seller' | 'platform_mediated' | null;
+  returnSellerDeadline?: string | null;
   completedAt?: string | null;
   trackingNumber: string | null;
   trackingCarrier: string | null;
@@ -211,6 +225,7 @@ export class TransactionsService {
       status?: TransactionStatus | 'accept_payment';
       trackingNumber?: string;
       trackingCarrier?: string;
+      estimatedDeliveryDays?: number;
       sellerBankIban?: string;
       sellerBankSwift?: string;
       sellerBankAccountName?: string;
@@ -221,6 +236,18 @@ export class TransactionsService {
     }
   ): Observable<Transaction> {
     return this.http.patch<Transaction>(`${this.apiUrl}/${id}`, body);
+  }
+
+  /** Upload return evidence (images only, max 30MB). */
+  uploadReturnEvidence(file: File): Observable<{ url: string }> {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.http.post<{ url: string }>(`${this.uploadsUrl}/dispute-evidence`, formData);
+  }
+
+  /** Buyer: request a return within 7 days of delivery confirmation. */
+  requestReturn(id: string, payload: { reason: string; photoUrls: string[] }): Observable<Transaction> {
+    return this.http.post<Transaction>(`${this.apiUrl}/${id}/request-return`, payload);
   }
 
   /** Open a formal dispute (buyer only, status must be shipped). */

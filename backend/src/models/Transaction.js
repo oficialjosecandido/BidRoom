@@ -146,6 +146,28 @@ const transactionSchema = new mongoose.Schema({
     type: Date,
     default: null
   },
+  /** Computed when seller marks shipped: shippedAt + shippingDeliveryDays (or seller-provided days) */
+  estimatedDeliveryDate: { type: Date, default: null },
+  /** When buyer confirmed receipt */
+  deliveredAt: { type: Date, default: null },
+  /**
+   * 5 days after estimatedDeliveryDate (or 14 days after shippedAt if no estimate).
+   * Scheduler auto-completes the transaction if buyer hasn't confirmed by this time.
+   */
+  autoReleaseAt: { type: Date, default: null },
+  /** Set by the scheduler when auto-release executes (idempotency guard). */
+  autoReleaseExecutedAt: { type: Date, default: null },
+  /** Return request (buyer, within 7 days of deliveredAt) */
+  returnRequestedAt: { type: Date, default: null },
+  returnReason: { type: String, trim: true, default: null },
+  returnPhotoUrls: { type: [String], default: [] },
+  returnStatus: {
+    type: String,
+    enum: ['pending_seller_response', 'accepted_by_seller', 'rejected_by_seller', 'platform_mediated'],
+    default: null
+  },
+  /** 48 hours after returnRequestedAt — seller must respond before platform mediates */
+  returnSellerDeadline: { type: Date, default: null },
   /** Explicit completion timestamp used for the 30-day review window */
   completedAt: {
     type: Date,

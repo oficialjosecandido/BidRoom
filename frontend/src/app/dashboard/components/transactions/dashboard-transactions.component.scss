@@ -1,3 +1,65 @@
+// Estimated delivery and auto-release notices
+.delivery-estimate {
+  font-size: 13px;
+  color: #444;
+}
+
+.delivery-overdue-notice {
+  background: #e8f5e9;
+  border: 1px solid #66bb6a;
+  border-left: 4px solid #388e3c;
+  border-radius: 6px;
+  padding: 10px 14px;
+  margin-bottom: 10px;
+
+  .delivery-overdue-title {
+    font-weight: 700;
+    color: #1b5e20;
+    margin: 0 0 4px;
+    font-size: 14px;
+  }
+
+  .delivery-overdue-body {
+    color: #2e7d32;
+    font-size: 13px;
+    margin: 0;
+  }
+}
+
+.auto-release-notice {
+  font-size: 12px;
+  color: #666;
+  margin: 4px 0 8px;
+}
+
+.auto-release-warning {
+  font-size: 13px;
+  color: #e65c00;
+  font-weight: 600;
+  margin: 4px 0 8px;
+}
+
+// Return request panel (delivered state)
+.return-request-panel {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px dashed rgba(0, 0, 0, 0.1);
+}
+
+.return-status-panel {
+  margin-top: 10px;
+  padding: 10px 14px;
+  background: #f3f0f6;
+  border-radius: 6px;
+  border-left: 3px solid #7A4F84;
+
+  .return-status-label {
+    font-size: 13px;
+    color: #444;
+    margin: 0 0 4px;
+  }
+}
+
 // Auto-cancellation notice (shipping deadline expired)
 .cancellation-notice {
   background: #fff3cd;

@@ -1094,7 +1094,45 @@
     "autoCancelledBuyerMessage": "Your order was automatically cancelled on {{date}} because the seller did not ship within 5 business days. A full refund has been issued to your original payment method and may take 5–10 business days to appear.",
     "autoCancelledSellerTitle": "Order cancelled — did not ship in time",
     "autoCancelledSellerMessage": "This order was automatically cancelled on {{date}} because shipment was not confirmed within the required 5-business-day window. The buyer has been refunded in full.",
-    "refundRef": "Refund reference"
+    "refundRef": "Refund reference",
+    "trackingNumber": "Tracking Number",
+    "trackingNumberPlaceholder": "e.g. 9400111899223408553805",
+    "carrier": "Carrier",
+    "selectCarrier": "Select carrier",
+    "other": "Other",
+    "estimatedDeliveryDays": "Estimated delivery time (days)",
+    "estimatedDeliveryDaysPlaceholder": "e.g. 5",
+    "estimatedDeliveryDaysHint": "Helps the buyer know when to expect their item.",
+    "estimatedDelivery": "Estimated delivery",
+    "deliveryDueConfirmTitle": "Your item may have arrived",
+    "deliveryDueConfirmBody": "The estimated delivery date has passed. Please confirm receipt below, or open a dispute if there's an issue.",
+    "autoReleaseNotice": "Payment will auto-release to the seller on {{date}} if delivery is not confirmed.",
+    "autoReleaseWarning": "Payment auto-releases in {{days}} day(s). Confirm receipt or open a dispute now.",
+    "autoReleaseImminent": "Payment is about to auto-release to the seller. Confirm receipt now if you've received the item.",
+    "returnWindowNotice": "You have {{days}} day(s) remaining to request a return.",
+    "requestReturn": "Request a Return",
+    "returnStatus": "Return status",
+    "returnStatuses": {
+      "pending_seller_response": "Awaiting seller response",
+      "accepted_by_seller": "Accepted by seller",
+      "rejected_by_seller": "Rejected by seller",
+      "platform_mediated": "Under platform mediation"
+    },
+    "returnSellerDeadline": "Seller must respond by {{date}}"
+  },
+  "returns": {
+    "modal": {
+      "title": "Request a Return",
+      "intro": "Please describe why you want to return this item and provide at least 1 photo as evidence.",
+      "reason": "Reason for return",
+      "reasonPlaceholder": "Describe the issue with the item (e.g. damaged, not as described...)",
+      "photos": "Photos",
+      "photosHint": "Upload at least 1 clear photo showing the issue.",
+      "addPhotos": "Upload Photos",
+      "uploading": "Uploading...",
+      "submit": "Submit Return Request",
+      "submitting": "Submitting..."
+    }
   },
   "disputes": {
     "title": "Disputes",

@@ -53,6 +53,14 @@ export class DashboardTransactionsComponent implements OnInit {
   showTrackingFormId: string | null = null;
   trackingNumber = '';
   trackingCarrier = '';
+  estimatedDeliveryDays: number | null = null;
+  /** Return request modal */
+  returnModalTransaction: Transaction | null = null;
+  returnReason = '';
+  returnPhotoUrls: string[] = [];
+  returnError: string | null = null;
+  returnSubmitting = false;
+  returnEvidenceUploading = false;
   /** Transaction ID currently redirecting to Stripe Checkout */
   stripePayingTxId: string | null = null;
   /** Transaction ID currently confirming Stripe payment on return */
@@ -612,10 +620,12 @@ export class DashboardTransactionsComponent implements OnInit {
       this.showTrackingFormId = null;
       this.trackingNumber = '';
       this.trackingCarrier = '';
+      this.estimatedDeliveryDays = null;
     } else {
       this.showTrackingFormId = t._id;
       this.trackingNumber = t.trackingNumber || '';
       this.trackingCarrier = t.trackingCarrier || '';
+      this.estimatedDeliveryDays = t.shippingDeliveryDays ?? null;
     }
   }
 
@@ -709,6 +719,7 @@ export class DashboardTransactionsComponent implements OnInit {
         status: 'shipped',
         trackingNumber: this.trackingNumber || undefined,
         trackingCarrier: this.trackingCarrier || undefined,
+        estimatedDeliveryDays: this.estimatedDeliveryDays ?? undefined,
         sellerProofOfDeliveryUrl: proofUrl
       })
       .subscribe({
@@ -718,6 +729,7 @@ export class DashboardTransactionsComponent implements OnInit {
           this.showTrackingFormId = null;
           this.trackingNumber = '';
           this.trackingCarrier = '';
+          this.estimatedDeliveryDays = null;
           delete this.deliveryProofUploadedUrlByTxId[t._id];
           delete this.deliveryProofFileNameByTxId[t._id];
           delete this.deliveryProofErrorByTxId[t._id];
@@ -725,6 +737,122 @@ export class DashboardTransactionsComponent implements OnInit {
         },
         error: () => (this.updatingId = null)
       });
+  }
+
+  /** Format estimatedDeliveryDate for display */
+  formatEstimatedDelivery(t: Transaction): string {
+    if (!t.estimatedDeliveryDate) return '';
+    return new Date(t.estimatedDeliveryDate).toLocaleDateString(undefined, { dateStyle: 'medium' });
+  }
+
+  /** True if today is past the estimated delivery date (buyer should confirm) */
+  isEstimatedDeliveryPassed(t: Transaction): boolean {
+    if (!t.estimatedDeliveryDate) return false;
+    return new Date(t.estimatedDeliveryDate) < new Date();
+  }
+
+  /** Format auto-release date for the buyer countdown notice */
+  formatAutoReleaseDate(t: Transaction): string {
+    if (!t.autoReleaseAt) return '';
+    return new Date(t.autoReleaseAt).toLocaleDateString(undefined, { dateStyle: 'medium' });
+  }
+
+  /** Days remaining before auto-release (negative = overdue) */
+  daysUntilAutoRelease(t: Transaction): number | null {
+    if (!t.autoReleaseAt) return null;
+    const diff = new Date(t.autoReleaseAt).getTime() - Date.now();
+    return Math.ceil(diff / (1000 * 60 * 60 * 24));
+  }
+
+  /** Whether buyer can still request a return (delivered + within 7 days) */
+  canRequestReturn(t: Transaction): boolean {
+    if (!this.isBuyer(t)) return false;
+    if (this.getEffectiveStatus(t) !== 'delivered') return false;
+    if (t.returnRequestedAt) return false; // already submitted
+    if (!t.deliveredAt) return true; // no deliveredAt recorded — allow
+    const deadline = new Date(t.deliveredAt);
+    deadline.setDate(deadline.getDate() + 7);
+    return new Date() <= deadline;
+  }
+
+  /** Days remaining in return window */
+  returnWindowDaysLeft(t: Transaction): number {
+    if (!t.deliveredAt) return 7;
+    const deadline = new Date(t.deliveredAt);
+    deadline.setDate(deadline.getDate() + 7);
+    return Math.max(0, Math.ceil((deadline.getTime() - Date.now()) / (1000 * 60 * 60 * 24)));
+  }
+
+  openReturnModal(t: Transaction): void {
+    if (!this.canRequestReturn(t)) return;
+    this.returnModalTransaction = t;
+    this.returnReason = '';
+    this.returnPhotoUrls = [];
+    this.returnError = null;
+  }
+
+  closeReturnModal(): void {
+    this.returnModalTransaction = null;
+    this.returnReason = '';
+    this.returnPhotoUrls = [];
+    this.returnError = null;
+  }
+
+  onReturnEvidenceSelected(input: HTMLInputElement): void {
+    const files = input.files;
+    if (!files || files.length === 0) return;
+    this.returnError = null;
+    const maxSize = this.transactionsService.proofOfPaymentMaxSize;
+    const allowed = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+    const toUpload: File[] = [];
+    for (let i = 0; i < files.length; i++) {
+      const f = files[i];
+      if (f.size > maxSize) { this.returnError = `File ${f.name} is too large (max 30MB).`; input.value = ''; return; }
+      if (!allowed.includes(f.type)) { this.returnError = `Only images (JPG, PNG, GIF, WebP) are allowed.`; input.value = ''; return; }
+      toUpload.push(f);
+    }
+    if (toUpload.length + this.returnPhotoUrls.length > 10) {
+      this.returnError = 'Maximum 10 photos allowed.'; input.value = ''; return;
+    }
+    this.returnEvidenceUploading = true;
+    let done = 0;
+    toUpload.forEach(file => {
+      this.transactionsService.uploadReturnEvidence(file).subscribe({
+        next: (res) => {
+          this.returnPhotoUrls = [...this.returnPhotoUrls, res.url];
+          done++;
+          if (done === toUpload.length) this.returnEvidenceUploading = false;
+        },
+        error: () => { this.returnError = 'Upload failed.'; this.returnEvidenceUploading = false; }
+      });
+    });
+    input.value = '';
+  }
+
+  canSubmitReturn(): boolean {
+    return this.returnReason.trim().length >= 5 && this.returnPhotoUrls.length >= 1;
+  }
+
+  submitReturn(): void {
+    const t = this.returnModalTransaction;
+    if (!t || this.returnSubmitting || !this.canSubmitReturn()) return;
+    this.returnSubmitting = true;
+    this.returnError = null;
+    this.transactionsService.requestReturn(t._id, {
+      reason: this.returnReason.trim(),
+      photoUrls: this.returnPhotoUrls
+    }).subscribe({
+      next: (updated) => {
+        this.returnSubmitting = false;
+        this.closeReturnModal();
+        this.replaceTransaction({ ...updated, role: 'buyer' });
+        successToast.fire({ title: 'Return request submitted. The seller has 48 hours to respond.' });
+      },
+      error: (err) => {
+        this.returnError = err?.error?.message || 'Failed to submit return request.';
+        this.returnSubmitting = false;
+      }
+    });
   }
 
   /** Download invoice (seller) or receipt (buyer) PDF for completed transactions */
