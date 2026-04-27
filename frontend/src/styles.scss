@@ -16,9 +16,19 @@ body {
 
 // Sephora-inspired color palette
 :root {
+  // Theme defaults — also injected at runtime on <app-root> via HostBinding for
+  // potential per-environment overrides. Defining them here ensures custom
+  // properties that reference them (e.g. --accent-purple below) resolve at the
+  // :root scope, since CSS custom properties are computed per element and
+  // <html>/:root is a parent of <app-root> (so it cannot inherit from it).
+  --primary-color: #002366;
+  --secondary-color: #00D4FF;
+  --background-color: #F8FAFC;
+
   --primary-black: #000000;
   --primary-white: #ffffff;
   --accent-purple: var(--primary-color);
+  --accent-purple-hover: #001a4d;
   --accent-gold: #D4AF37;
   --accent-peach: #FFB366;
   --light-purple: var(--background-color);

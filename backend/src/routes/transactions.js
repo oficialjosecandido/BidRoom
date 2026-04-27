@@ -477,7 +477,7 @@ router.patch('/:id', requireActiveAccount, async (req, res) => {
       return res.status(403).json({ error: 'You do not have access to this transaction' });
     }
 
-    const { status, trackingNumber, trackingCarrier, sellerProofOfDeliveryUrl, disputeOpen, disputeReason } = req.body;
+    const { status, trackingNumber, trackingCarrier, sellerProofOfDeliveryUrl, estimatedDeliveryDays, disputeOpen, disputeReason } = req.body;
     const ts = transaction.transactionStatus ?? transaction.status;
 
     /** When under dispute, lock: no status changes until admin ruling */
@@ -543,6 +543,24 @@ router.patch('/:id', requireActiveAccount, async (req, res) => {
         if (trackingNumber != null) transaction.trackingNumber = trackingNumber;
         if (trackingCarrier != null) transaction.trackingCarrier = trackingCarrier;
         if (sellerProofOfDeliveryUrl != null) transaction.sellerProofOfDeliveryUrl = sellerProofOfDeliveryUrl;
+        // Compute estimated delivery date and auto-release cutoff
+        const shipDate = transaction.shippedAt;
+        const deliveryDays = estimatedDeliveryDays != null
+          ? parseInt(estimatedDeliveryDays, 10)
+          : (transaction.shippingDeliveryDays || null);
+        if (deliveryDays && deliveryDays > 0) {
+          const estDelivery = new Date(shipDate);
+          estDelivery.setDate(estDelivery.getDate() + deliveryDays);
+          transaction.estimatedDeliveryDate = estDelivery;
+          const autoRelease = new Date(estDelivery);
+          autoRelease.setDate(autoRelease.getDate() + 5);
+          transaction.autoReleaseAt = autoRelease;
+        } else {
+          // No delivery estimate: auto-release 14 days after ship date
+          const autoRelease = new Date(shipDate);
+          autoRelease.setDate(autoRelease.getDate() + 14);
+          transaction.autoReleaseAt = autoRelease;
+        }
         const buyerUserId = transaction.buyer?.toString?.();
         if (buyerUserId) {
           const listing = await Listing.findById(transaction.listing).select('title').lean();
@@ -621,6 +639,8 @@ router.patch('/:id', requireActiveAccount, async (req, res) => {
       if (status === 'delivered' && ts === 'shipped') {
         transaction.transactionStatus = 'delivered';
         transaction.sendingStatus = 'delivered';
+        transaction.deliveredAt = transaction.deliveredAt || new Date();
+        transaction.autoReleaseAt = null; // buyer confirmed — auto-release no longer needed
         const sellerUserId = transaction.seller?.toString?.();
         if (sellerUserId) {
           const listing = await Listing.findById(transaction.listing).select('title').lean();
@@ -671,6 +691,136 @@ router.patch('/:id', requireActiveAccount, async (req, res) => {
   } catch (error) {
     console.error('Error updating transaction:', error);
     res.status(500).json({ error: 'Failed to update transaction', message: error.message });
+  }
+});
+
+const RETURN_WINDOW_DAYS = 7;
+
+/**
+ * POST /api/transactions/:id/request-return
+ * Buyer requests a return within 7 days of confirmed delivery.
+ * Body: { reason, photoUrls[] }
+ * Moves to under_dispute + seller has 48h to respond before platform mediates.
+ */
+router.post('/:id/request-return', requireActiveAccount, async (req, res) => {
+  try {
+    const user = await User.findOne({ uid: req.user.uid });
+    if (!user) return res.status(404).json({ error: 'User not found.' });
+
+    const transaction = await Transaction.findById(req.params.id)
+      .populate('listing', 'title slug')
+      .populate('seller', '_id uid firstName email');
+
+    if (!transaction) return res.status(404).json({ error: 'Transaction not found' });
+
+    const isBuyer = transaction.buyer.toString() === user._id.toString();
+    if (!isBuyer) return res.status(403).json({ error: 'Only the buyer can request a return.' });
+
+    const ts = transaction.transactionStatus ?? transaction.status;
+    if (ts !== 'delivered') {
+      return res.status(400).json({
+        error: 'Invalid state',
+        message: 'Returns can only be requested after you confirm receipt of the item.'
+      });
+    }
+
+    if (transaction.returnRequestedAt) {
+      return res.status(400).json({ error: 'A return request has already been submitted for this transaction.' });
+    }
+
+    if (transaction.deliveredAt) {
+      const returnDeadline = new Date(transaction.deliveredAt);
+      returnDeadline.setDate(returnDeadline.getDate() + RETURN_WINDOW_DAYS);
+      if (new Date() > returnDeadline) {
+        return res.status(400).json({
+          error: 'Return window closed',
+          message: `The ${RETURN_WINDOW_DAYS}-day return window has closed.`
+        });
+      }
+    }
+
+    const { reason, photoUrls } = req.body;
+    if (!reason || String(reason).trim().length < 5) {
+      return res.status(400).json({ error: 'Please provide a return reason (at least 5 characters).' });
+    }
+    if (!photoUrls || !Array.isArray(photoUrls) || photoUrls.length < 1) {
+      return res.status(400).json({ error: 'At least 1 photo is required as evidence.' });
+    }
+
+    const now = new Date();
+    transaction.returnRequestedAt = now;
+    transaction.returnReason = String(reason).trim();
+    transaction.returnPhotoUrls = photoUrls.slice(0, 10);
+    transaction.returnStatus = 'pending_seller_response';
+    transaction.returnSellerDeadline = new Date(now.getTime() + 48 * 60 * 60 * 1000);
+    transaction.transactionStatus = 'under_dispute';
+    transaction.disputeOpen = true;
+    transaction.disputeOpenedAt = now;
+    transaction.disputeOpenedBy = 'buyer';
+    transaction.disputeReason = 'return_request';
+    transaction.disputeExplanation = String(reason).trim();
+    transaction.disputeBuyerMediaUrls = photoUrls.slice(0, 10);
+    await transaction.save();
+
+    // Restrict both parties
+    const buyerMongoId = user._id.toString();
+    const sellerMongoId = transaction.seller?._id?.toString?.() || transaction.seller?.toString?.();
+    const io = req.app.get('io');
+    if (buyerMongoId && sellerMongoId) {
+      const { restrictBothPartiesForDispute } = require('../services/accountStatusService');
+      restrictBothPartiesForDispute(transaction._id, buyerMongoId, sellerMongoId, io).catch(err =>
+        console.error('Failed to restrict accounts for return dispute:', err)
+      );
+    }
+
+    const listingTitle = transaction.listing?.title || 'the item';
+    const buyerName = `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'Buyer';
+    if (sellerMongoId) {
+      const { notifyDisputeOpened } = require('../services/notificationService');
+      notifyDisputeOpened({
+        transactionId: transaction._id.toString(),
+        listingTitle,
+        openerName: buyerName,
+        otherPartyUserId: sellerMongoId
+      }).catch(() => {});
+      if (io) {
+        const { emitNewNotificationToUser } = require('../services/notificationService');
+        emitNewNotificationToUser(io, sellerMongoId).catch(() => {});
+      }
+      if (transaction.seller?.email) {
+        const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:4200';
+        const txLink = `${frontendUrl}/dashboard/transactions`;
+        const html = `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <div style="background: linear-gradient(135deg, #7A4F84 0%, #9b6ba8 100%); color: white; padding: 24px; text-align: center; border-radius: 8px 8px 0 0;">
+              <h1 style="margin: 0;">Return request received</h1>
+            </div>
+            <div style="background: #f9f9f9; padding: 24px; border-radius: 0 0 8px 8px;">
+              <p>Hi ${transaction.seller.firstName || 'there'},</p>
+              <p>The buyer has requested a return for <strong>${listingTitle}</strong>.</p>
+              <p><strong>Reason:</strong> ${transaction.returnReason}</p>
+              <p>You have <strong>48 hours</strong> to accept or reject the return request before the platform mediates.</p>
+              <p style="text-align: center; margin: 24px 0;">
+                <a href="${txLink}" style="background: #7A4F84; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: bold;">View Transaction</a>
+              </p>
+              <p>Best regards,<br>The BidRoom Team</p>
+            </div>
+          </div>`;
+        sendEmail(transaction.seller.email, `Return request for "${listingTitle}"`, html)
+          .catch(err => console.error('Failed to send return request email:', err.message));
+      }
+    }
+
+    const updated = await Transaction.findById(transaction._id)
+      .populate('listing', 'title slug images status commissionRate shippingCost shippingOption auctionFormat allowPrivateRoom')
+      .populate('seller', 'firstName lastName')
+      .populate('buyer', 'firstName lastName')
+      .lean();
+
+    res.json({ ...updated, role: 'buyer', ...normalizeTransactionStatus(updated) });
+  } catch (error) {
+    console.error('Error requesting return:', error);
+    res.status(500).json({ error: 'Failed to submit return request', message: error.message });
   }
 });
 

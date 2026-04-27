@@ -1094,7 +1094,45 @@
     "remindSellerCooldown": "Você pode enviar outro lembrete em 24 horas.",
     "expectedShipBy": "Envio esperado até (5 dias úteis)",
     "shippingStatusLabel": "Status do envio",
-    "sellerMustShipBy": "Envie este pedido até"
+    "sellerMustShipBy": "Envie este pedido até",
+    "trackingNumber": "Número de rastreamento",
+    "trackingNumberPlaceholder": "ex: 9400111899223408553805",
+    "carrier": "Transportadora",
+    "selectCarrier": "Selecionar transportadora",
+    "other": "Outro",
+    "estimatedDeliveryDays": "Prazo estimado de entrega (dias)",
+    "estimatedDeliveryDaysPlaceholder": "ex: 5",
+    "estimatedDeliveryDaysHint": "Informa ao comprador quando esperar o item.",
+    "estimatedDelivery": "Entrega estimada",
+    "deliveryDueConfirmTitle": "Seu item pode ter chegado",
+    "deliveryDueConfirmBody": "A data de entrega estimada passou. Confirme o recebimento abaixo ou abra uma disputa se houver algum problema.",
+    "autoReleaseNotice": "O pagamento será liberado automaticamente ao vendedor em {{date}} se a entrega não for confirmada.",
+    "autoReleaseWarning": "O pagamento será liberado automaticamente em {{days}} dia(s). Confirme o recebimento ou abra uma disputa agora.",
+    "autoReleaseImminent": "O pagamento está prestes a ser liberado ao vendedor. Confirme o recebimento agora se você recebeu o item.",
+    "returnWindowNotice": "Você tem {{days}} dia(s) restante(s) para solicitar uma devolução.",
+    "requestReturn": "Solicitar Devolução",
+    "returnStatus": "Status da devolução",
+    "returnStatuses": {
+      "pending_seller_response": "Aguardando resposta do vendedor",
+      "accepted_by_seller": "Aceito pelo vendedor",
+      "rejected_by_seller": "Rejeitado pelo vendedor",
+      "platform_mediated": "Em mediação pela plataforma"
+    },
+    "returnSellerDeadline": "O vendedor deve responder até {{date}}"
+  },
+  "returns": {
+    "modal": {
+      "title": "Solicitar Devolução",
+      "intro": "Descreva o motivo da devolução e envie pelo menos 1 foto como evidência.",
+      "reason": "Motivo da devolução",
+      "reasonPlaceholder": "Descreva o problema com o item (ex: danificado, diferente do anunciado...)",
+      "photos": "Fotos",
+      "photosHint": "Envie pelo menos 1 foto clara mostrando o problema.",
+      "addPhotos": "Enviar Fotos",
+      "uploading": "Enviando...",
+      "submit": "Enviar Solicitação de Devolução",
+      "submitting": "Enviando..."
+    }
   },
   "disputes": {
     "title": "Disputas",
