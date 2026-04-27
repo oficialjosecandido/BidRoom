@@ -4,10 +4,10 @@
     "bidroomFeeBuyerRate": 0.005,
 
     "auctionDurations": [
-      { "label": "1 hour",   "hours": 1  },
-      { "label": "7 hours",  "hours": 7  },
-      { "label": "24 hours", "hours": 24 },
-      { "label": "3 days",   "hours": 72 },
+      { "label": "1 hour",   "hours": 1   },
+      { "label": "7 hours",  "hours": 7   },
+      { "label": "24 hours", "hours": 24  },
+      { "label": "3 days",   "hours": 72  },
       { "label": "7 days",   "hours": 168 }
     ],
 
@@ -96,6 +96,118 @@
         "bestOffers":      true,
         "reviews":         true,
         "membershipTiers": false
+      }
+    }
+  },
+
+  "edgeCases": {
+
+    "authentication": {
+      "loginDuringSuspension": {
+        "status": "implemented",
+        "behaviour": "Firebase blocks the login at the token-exchange level. The backend's requireActiveAccount middleware returns HTTP 403 with a clear message on every subsequent API call. Users see 'Your account has been temporarily restricted' with the reason.",
+        "note": "Firebase itself does not block suspended accounts — only the BidRoom backend middleware enforces this. A suspended user can still obtain a Firebase ID token; the block happens on every API route that uses requireActiveAccount."
+      },
+      "sessionExpiresDuringAuction": {
+        "status": "safe-by-design",
+        "behaviour": "Bids are persisted to the database the moment the server receives them — independently of the client's session state. A session expiry after a bid has been confirmed does not invalidate the bid. The bid remains in the auction. If the session expires before the server acknowledges the request, the bid is not recorded and the user must re-authenticate and re-bid.",
+        "clientGuidance": "The frontend should detect 401 responses mid-auction and prompt the user to re-login without losing their place in the UI."
+      },
+      "bruteForceLogin": {
+        "status": "implemented",
+        "behaviour": "Implemented at the backend level. After 5 consecutive failed login attempts (tracked in the User document via loginFailedAttempts + loginLockedUntil), the account is locked for 15 minutes. Firebase does not handle this — BidRoom enforces it on the /api/auth/login endpoint.",
+        "lockoutDurationMinutes": 15,
+        "maxFailedAttempts": 5
+      }
+    },
+
+    "listings": {
+      "prohibitedItems": {
+        "status": "implemented",
+        "behaviour": "The listing creation and edit endpoints run the title and description through a prohibited-keyword filter (contentFilter.js). Matches trigger an immediate HTTP 400 rejection with a clear category message. Items that pass keyword checks but raise a manual-review flag (e.g. high-value items > $10,000) are placed in a 'pending_review' queue visible to admins.",
+        "autoRejectCategories": [
+          "Illegal firearms and accessories",
+          "Ammunition and explosives",
+          "Live animals",
+          "Controlled substances / drugs",
+          "Counterfeit goods",
+          "Human remains or organs",
+          "Child exploitation material"
+        ],
+        "manualReviewThresholds": {
+          "priceUsd": 10000
+        }
+      },
+      "sellerSuspendedMidAuction": {
+        "status": "implemented",
+        "behaviour": "When a seller is suspended, accountStatusService immediately ends all their active listings (status → 'ended', endReason → 'seller_suspended'). Existing bidders are notified. No new bids can be placed. Any pending transactions are cancelled and buyers refunded."
+      },
+      "duplicateListing": {
+        "status": "implemented",
+        "behaviour": "On listing creation, the backend checks whether the same seller has an active or draft listing with an identical (case-insensitive) title. If found, the request is rejected with HTTP 409 and a message directing the seller to their existing listing."
+      }
+    },
+
+    "bidding": {
+      "simultaneousBids": {
+        "status": "safe-by-design",
+        "behaviour": "MongoDB write operations are atomic at the document level. When two bids arrive at the exact same millisecond, the one that acquires the document lock first is written; the second reads the updated currentPrice and is rejected if it does not exceed it. First received by server wins — no secondary tiebreak is needed.",
+        "tiebreakRule": "first-received-by-server"
+      },
+      "offlineMidBid": {
+        "status": "needs-client-handling",
+        "behaviour": "DECISION NEEDED (@José Cândido). If the user loses connectivity after clicking 'Place Bid' but before the server acknowledges, the bid may or may not have been recorded. The recommended approach is: the frontend retries with the same idempotency key on reconnect (HTTP 409 = already accepted, show success; 4xx = failed, show error). This requires an idempotencyKey field on the Bid model.",
+        "recommendation": "Add idempotencyKey (UUID generated client-side) to bid requests so retries are safe."
+      },
+      "bidPlacedSessionExpiresBefore": {
+        "status": "safe-by-design",
+        "behaviour": "If the server wrote the bid before the session expired, the bid is valid. The user's session state is irrelevant to the bid's persistence. If the HTTP request never completed (timeout), the bid was not recorded."
+      },
+      "shillBidding": {
+        "status": "implemented",
+        "behaviour": "fraudDetectionService.js cross-references the bidder's IP address and device fingerprint against the seller's known signals. High-confidence matches block the bid; medium-confidence matches flag it for admin review and log a FraudEvent."
+      },
+      "botBidding": {
+        "status": "implemented",
+        "behaviour": "bidRateLimiter.js enforces 6 bids/minute for authenticated users, 3/minute for guests. fraudDetectionService.js detects bot patterns (4+ bids in 30 seconds on the same listing). Device fingerprinting identifies returning bots across sessions."
+      },
+      "serverLagOutOfOrderBids": {
+        "status": "safe-by-design",
+        "behaviour": "The bid acceptance check reads currentPrice atomically at write time. Out-of-order arrival does not corrupt state — each bid validates against the latest committed price. A dedicated bid queue is not required at current scale but should be reconsidered above ~500 concurrent auctions."
+      },
+      "zerosBidsAuctionEnd": {
+        "status": "implemented",
+        "behaviour": "The auctionEndScheduler marks the listing as 'ended' with no winner. The seller receives a notification. Auto-relist is not implemented automatically — the seller can manually relist from their dashboard."
+      },
+      "reservePriceNotMet": {
+        "status": "implemented",
+        "behaviour": "If the highest bid at auction end is below the reserve price, the listing ends without a transaction. Both seller (reserve not met, no sale) and all bidders (auction ended, reserve not met) are notified. The seller may choose to: accept the highest bid manually, relist, or cancel."
+      },
+      "suspendedUserSecondaryAccount": {
+        "status": "implemented",
+        "behaviour": "Device fingerprinting and IP tracking are used to detect secondary accounts from suspended users. Bids placed from a known fingerprint or IP associated with a suspended account are flagged as FraudEvents and reviewed. The bid is not automatically blocked to avoid false positives on shared networks."
+      }
+    },
+
+    "offersAndBuyNow": {
+      "buyNowOfferRaceCondition": {
+        "status": "implemented",
+        "behaviour": "The Buy Now route uses a MongoDB findOneAndUpdate with a compound filter { status: 'active', winner: null }. Only one concurrent request can win this atomic write. The losing request receives HTTP 409 'Already purchased'. Any pending offers on the listing are automatically expired.",
+        "privateRoomPenalty": "DECISION NEEDED (@José Cândido). If a seller accepts an offer in a private room but the item was simultaneously purchased via Buy Now, should the seller face a penalty? Proposed: no penalty if the race was genuine (< 5 seconds apart); warn the seller to disable Buy Now when running private room negotiations."
+      },
+      "buyerAcceptsOfferDoesNotPay": {
+        "status": "needs-decision",
+        "behaviour": "DECISION NEEDED (@José Cândido). Currently there is no automated penalty for a buyer who does not pay after an offer is accepted. The payment deadline (T+24h) expires and the transaction is cancelled. Proposed options: (1) no penalty, matching Vinted's current behaviour; (2) record a 'non-payment strike' on the buyer's profile — 3 strikes = temporary ban from placing offers.",
+        "currentBehaviour": "Transaction auto-cancels at paymentDeadline. Seller is notified and can relist."
+      },
+      "offerExpiresDuringCounterProposal": {
+        "status": "needs-decision",
+        "behaviour": "DECISION NEEDED (@José Cândido). If a buyer's offer has an expiry timestamp and the offer expires while a seller counter-proposal is still pending, the proposed behaviour is: the counter-proposal is automatically voided, the original offer is marked expired, and both parties are notified. No automatic penalty.",
+        "recommendation": "Counter-proposals should inherit the original offer's expiry or reset it to +24h from counter, whichever is sooner."
+      },
+      "sellerCounterHigherThanListing": {
+        "status": "implemented",
+        "behaviour": "The counter-proposal endpoint validates that the counter amount does not exceed the listing's buyNowPrice (or startingPrice if no Buy Now). Requests above this ceiling are rejected with HTTP 400."
       }
     }
   }

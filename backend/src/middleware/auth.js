@@ -50,6 +50,22 @@ const authenticateToken = async (req, res, next) => {
       });
     }
 
+    // Brute-force lockout check (application-level, supplements Firebase's own protection)
+    const dbUser = await User.findOne({ uid: decodedToken.uid }).select('loginLockedUntil loginFailedAttempts').lean();
+    if (dbUser?.loginLockedUntil && new Date(dbUser.loginLockedUntil) > new Date()) {
+      const retryAfterMs = new Date(dbUser.loginLockedUntil).getTime() - Date.now();
+      return res.status(403).json({
+        error: 'Account locked',
+        message: 'Too many failed login attempts. Please try again in 15 minutes.',
+        retryAfterMs
+      });
+    }
+    // Clear stale failed-attempt counter on successful auth
+    if (dbUser?.loginFailedAttempts > 0) {
+      User.findOneAndUpdate({ uid: decodedToken.uid }, { $set: { loginFailedAttempts: 0, loginLockedUntil: null } })
+        .catch(() => {});
+    }
+
     next();
   } catch (error) {
     console.error('Auth middleware error:', error);

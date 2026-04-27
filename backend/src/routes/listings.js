@@ -8,7 +8,7 @@ const { authenticateToken, optionalAuth, requireActiveAccount, requireNoDisputeR
 const { handleWinnerSelection, handleAuctionEnd } = require('../services/auctionNotificationService');
 const { getReviewScoresForUser } = require('../services/reviewService');
 const { logAuctionCreated } = require('../services/bestOfferLogger');
-const { scanTexts } = require('../utils/contentFilter');
+const { scanTexts, scanTextsForProhibitedContent } = require('../utils/contentFilter');
 const { recordViolation } = require('../services/contentViolationService');
 const { createTransactionForBuyNow } = require('../services/transactionService');
 
@@ -717,6 +717,30 @@ router.post('/', authenticateToken, requireActiveAccount, requireNoDisputeRestri
       }
     }
 
+    // Prohibited item check — runs before anything else
+    const prohibitedCheck = scanTextsForProhibitedContent([title, description || '']);
+    if (prohibitedCheck.prohibited) {
+      return res.status(400).json({
+        error: 'Prohibited item',
+        message: `This listing contains content that is not permitted on BidRoom (${prohibitedCheck.category}). If you believe this is a mistake, please contact support.`,
+        category: prohibitedCheck.category
+      });
+    }
+
+    // Duplicate listing check — same seller, same title, active or draft
+    const existingListing = await Listing.findOne({
+      seller: user._id,
+      status: { $in: ['active', 'draft'] },
+      title: { $regex: new RegExp(`^${escapeRegex(title.trim())}$`, 'i') }
+    }).select('_id slug').lean();
+    if (existingListing) {
+      return res.status(409).json({
+        error: 'Duplicate listing',
+        message: 'You already have an active or draft listing with this title. Please edit the existing listing or choose a different title.',
+        existingListingId: existingListing._id
+      });
+    }
+
     // Scan for contact info in user-provided text fields
     const specTexts = (specifications || []).map(s => `${s.key || ''} ${s.value || ''}`);
     const contentScan = scanTexts([title, description, ...specTexts]);
@@ -988,17 +1012,28 @@ router.post('/:id/buy-now', authenticateToken, requireActiveAccount, requireNoDi
 
     const now = new Date();
 
-    // Set winner and close listing atomically
-    await Listing.findByIdAndUpdate(listing._id, {
-      $set: {
-        status: 'ended',
-        currentPrice: listing.buyNowPrice,
-        endDate: now,
-        winner: user._id,
-        winnerSelectedAt: now,
-        winnerBid: null
-      }
-    }, { runValidators: false });
+    // Atomic close: condition { status:'active', winner: null } ensures only one
+    // concurrent Buy Now (or simultaneous offer-accept) can win this write.
+    const closed = await Listing.findOneAndUpdate(
+      { _id: listing._id, status: 'active', winner: null },
+      {
+        $set: {
+          status: 'ended',
+          currentPrice: listing.buyNowPrice,
+          endDate: now,
+          winner: user._id,
+          winnerSelectedAt: now,
+          winnerBid: null
+        }
+      },
+      { new: false, runValidators: false }
+    );
+    if (!closed) {
+      return res.status(409).json({
+        error: 'Already purchased',
+        message: 'This item was just purchased by another buyer. Please browse other listings.'
+      });
+    }
 
     // Create the payment transaction
     const transaction = await createTransactionForBuyNow(listing._id, user._id);
