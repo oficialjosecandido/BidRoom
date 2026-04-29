@@ -467,7 +467,7 @@ router.post('/', optionalAuth, requireActiveAccountIfAuthenticated, requireNoDis
       const previousHighBids = await Bid.find({
         listing: listingId,
         amount: previousHighAmount,
-        _id: { $ne: bid._id }
+        _id: { $ne: savedBid._id }
       })
         .populate('bidder', 'firstName lastName email')
         .sort({ createdAt: -1 })
