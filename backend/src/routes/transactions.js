@@ -44,20 +44,28 @@ router.get('/', async (req, res) => {
       return res.status(404).json({ error: 'User not found. Please complete your profile.' });
     }
 
-    const transactions = await Transaction.find({
-      $or: [{ seller: user._id }, { buyer: user._id }]
-    })
-      .populate('listing', 'title slug images status commissionRate shippingCost shippingOption auctionFormat allowPrivateRoom')
-      .populate('seller', 'firstName lastName')
-      .populate('buyer', 'firstName lastName')
-      .sort({ updatedAt: -1 })
-      .lean();
+    const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 50, 1), 100);
+    const page  = Math.max(parseInt(req.query.page, 10) || 1, 1);
+    const skip  = (page - 1) * limit;
+    const filter = { $or: [{ seller: user._id }, { buyer: user._id }] };
+
+    const [transactions, total] = await Promise.all([
+      Transaction.find(filter)
+        .populate('listing', 'title slug images status commissionRate shippingCost shippingOption auctionFormat allowPrivateRoom')
+        .populate('seller', 'firstName lastName')
+        .populate('buyer', 'firstName lastName')
+        .sort({ updatedAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      Transaction.countDocuments(filter)
+    ]);
 
     const listingIds = [...new Set(transactions.map(t => t.listing?._id || t.listing).filter(Boolean))];
     const reviews = listingIds.length > 0
       ? await Review.find({ listing: { $in: listingIds } }).select('listing reviewer reviewee role').lean()
       : [];
-    const buyerReviewedSeller = {}; // listingId -> true if buyer reviewed seller
+    const buyerReviewedSeller = {};
     const sellerReviewedBuyer = {};
     for (const r of reviews) {
       const lid = (r.listing && r.listing._id ? r.listing._id : r.listing)?.toString();
@@ -83,10 +91,10 @@ router.get('/', async (req, res) => {
       };
     });
 
-    res.json({ transactions: withRole });
+    res.json({ transactions: withRole, total, page, limit, pages: Math.ceil(total / limit) });
   } catch (error) {
     console.error('Error fetching transactions:', error);
-    res.status(500).json({ error: 'Failed to fetch transactions', message: error.message });
+    res.status(500).json({ error: 'Failed to fetch transactions' });
   }
 });
 

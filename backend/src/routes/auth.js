@@ -6,6 +6,30 @@ const { getReviewScoresForUser } = require('../services/reviewService');
 const { sendPasswordReset } = require('../services/emailService');
 const admin = require('../config/firebaseAdmin');
 
+// Per-email rate limiting for sensitive auth operations.
+// Keyed by normalised email; entries expire after the window.
+const _emailRateLimits = new Map();
+
+function checkEmailRateLimit(email, maxAttempts, windowMs) {
+  const now = Date.now();
+  const key = email.toLowerCase().trim();
+  let entry = _emailRateLimits.get(key);
+  if (!entry || entry.resetAt <= now) {
+    entry = { count: 0, resetAt: now + windowMs };
+  }
+  entry.count += 1;
+  _emailRateLimits.set(key, entry);
+  return entry.count > maxAttempts; // true = rate limited
+}
+
+// Clean up stale entries every 30 minutes to prevent memory growth.
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, entry] of _emailRateLimits.entries()) {
+    if (entry.resetAt <= now) _emailRateLimits.delete(key);
+  }
+}, 30 * 60 * 1000);
+
 // FRONTEND_URL must be set via environment variable in production (Azure App Service → Configuration).
 // Falls back to localhost for local development ONLY.
 const CONFIGURED_FRONTEND_URL = process.env.FRONTEND_URL;
@@ -81,6 +105,11 @@ router.post('/forgot-password', async (req, res) => {
     return res.status(400).json({ error: 'Email is required' });
   }
 
+  // Max 3 reset requests per email per hour to prevent inbox flooding.
+  if (checkEmailRateLimit(email, 3, 60 * 60 * 1000)) {
+    return res.json({ success: true }); // Silently succeed to avoid enumeration
+  }
+
   try {
     // Generate reset link via Firebase Admin (keeps password stored in Firebase)
     const firebaseLink = await admin.auth().generatePasswordResetLink(email.toLowerCase().trim());
@@ -128,6 +157,11 @@ router.post('/login-failure', async (req, res) => {
   const { email } = req.body;
   if (!email || typeof email !== 'string') {
     return res.status(400).json({ error: 'Email is required' });
+  }
+
+  // Prevent malicious actors from triggering arbitrary lockouts via rapid calls.
+  if (checkEmailRateLimit(email, 20, 15 * 60 * 1000)) {
+    return res.json({ locked: false }); // Silently absorb excess calls
   }
 
   try {

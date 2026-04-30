@@ -144,20 +144,28 @@ router.post('/', optionalAuth, requireActiveAccountIfAuthenticated, requireNoDis
       // Find or create user in database from Firebase UID
       user = await User.findOne({ uid: req.user.uid });
       if (!user) {
-        // Parse name from Firebase user
         const nameParts = req.user.name?.split(' ') || [];
         const firstName = nameParts[0] || 'User';
-        const lastName = nameParts.slice(1).join(' ') || 'User'; // Use 'User' as default if no lastName
-        
-        user = new User({
-          uid: req.user.uid,
-          email: req.user.email,
-          firstName: firstName,
-          lastName: lastName,
-          isActive: true,
-          emailVerified: req.user.emailVerified || false
-        });
-        await user.save();
+        const lastName = nameParts.slice(1).join(' ') || 'User';
+        try {
+          user = new User({
+            uid: req.user.uid,
+            email: req.user.email,
+            firstName,
+            lastName,
+            isActive: true,
+            emailVerified: req.user.emailVerified || false
+          });
+          await user.save();
+        } catch (createErr) {
+          if (createErr.code === 11000) {
+            // Concurrent request already created this user — just fetch it.
+            user = await User.findOne({ uid: req.user.uid });
+            if (!user) throw createErr;
+          } else {
+            throw createErr;
+          }
+        }
       } else {
         // Update email verification status if changed
         if (req.user.emailVerified !== undefined && user.emailVerified !== req.user.emailVerified) {
@@ -292,19 +300,23 @@ router.post('/', optionalAuth, requireActiveAccountIfAuthenticated, requireNoDis
       }
       // Private room ends 60 seconds after last bid (each bid extends by 60s)
       const PRIVATE_ROOM_EXTEND_MS = 60 * 1000; // 60 seconds
+      const PRIVATE_ROOM_MAX_DURATION_MS = 4 * 60 * 60 * 1000; // 4-hour absolute ceiling
 
       // If status is 'eligible' and this is the first bid, activate the room
       if (listing.privateRoomStatus === 'eligible') {
         listing.privateRoomStatus = 'active';
         listing.status = 'active'; // Ensure listing is active
+        if (!listing.privateRoomActivatedAt) listing.privateRoomActivatedAt = now;
         if (!listing.privateRoomEndDate) {
           listing.privateRoomEndDate = new Date(now.getTime() + PRIVATE_ROOM_EXTEND_MS);
         }
       }
 
-      // Extend the deadline to 60 seconds from now with each bid
-      const newEndDate = new Date(now.getTime() + PRIVATE_ROOM_EXTEND_MS);
-      listing.privateRoomEndDate = newEndDate;
+      // Extend by 60 s from now, but never past the 4-hour absolute ceiling.
+      const activatedAt = listing.privateRoomActivatedAt || now;
+      const hardCeiling = new Date(activatedAt.getTime() + PRIVATE_ROOM_MAX_DURATION_MS);
+      const desiredEnd  = new Date(now.getTime() + PRIVATE_ROOM_EXTEND_MS);
+      listing.privateRoomEndDate = desiredEnd < hardCeiling ? desiredEnd : hardCeiling;
       listing.privateRoomLastBidTime = now;
     } else {
       // Main auction logic
