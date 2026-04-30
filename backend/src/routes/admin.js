@@ -1,5 +1,6 @@
 const express = require('express');
 const Stripe = require('stripe');
+const mongoose = require('mongoose');
 const { authenticateToken } = require('../middleware/auth');
 const User = require('../models/User');
 const Listing = require('../models/Listing');
@@ -20,9 +21,23 @@ function getStripe() {
 
 const router = express.Router();
 
-const ADMIN_EMAILS = process.env.ADMIN_EMAILS
-  ? process.env.ADMIN_EMAILS.split(',').map(e => e.trim().toLowerCase())
-  : ['josevcandido@gmail.com', 'tomas.cascao123@gmail.com', 'pt.bidnow@gmail.com'];
+if (!process.env.ADMIN_EMAILS) {
+  // Fail hard in production; warn loudly in development so developers notice immediately.
+  const msg = 'ADMIN_EMAILS environment variable is not set. Admin routes will be disabled.';
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error(msg);
+  }
+  console.error(`\n❌ SECURITY: ${msg}\n`);
+}
+
+const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || '')
+  .split(',')
+  .map(e => e.trim().toLowerCase())
+  .filter(e => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e));
+
+function isValidObjectId(id) {
+  return mongoose.Types.ObjectId.isValid(id);
+}
 
 // Admin middleware - checks if user is an admin
 const requireAdmin = async (req, res, next) => {
@@ -98,6 +113,7 @@ router.get('/auctions', authenticateToken, requireAdmin, async (req, res) => {
 
 // Get single auction by ID for admin
 router.get('/auctions/:id', authenticateToken, requireAdmin, async (req, res) => {
+  if (!isValidObjectId(req.params.id)) return res.status(400).json({ error: 'Invalid listing ID' });
   try {
     const auction = await Listing.findById(req.params.id)
       .populate('seller', 'firstName lastName email')
@@ -120,10 +136,11 @@ router.get('/auctions/:id', authenticateToken, requireAdmin, async (req, res) =>
 
 // Create private auction room for a listing
 router.post('/auctions/:id/private-room', authenticateToken, requireAdmin, async (req, res) => {
+  if (!isValidObjectId(req.params.id)) return res.status(400).json({ error: 'Invalid listing ID' });
   try {
     const listingId = req.params.id;
     const { platinumBidderIds } = req.body;
-    
+
     if (!platinumBidderIds || !Array.isArray(platinumBidderIds) || platinumBidderIds.length === 0) {
       return res.status(400).json({ 
         error: 'Invalid input',
@@ -132,10 +149,14 @@ router.post('/auctions/:id/private-room', authenticateToken, requireAdmin, async
     }
 
     if (platinumBidderIds.length > 5) {
-      return res.status(400).json({ 
+      return res.status(400).json({
         error: 'Invalid input',
-        message: 'You can select a maximum of 5 Platinum Bidders' 
+        message: 'You can select a maximum of 5 Platinum Bidders'
       });
+    }
+
+    if (!platinumBidderIds.every(id => isValidObjectId(id))) {
+      return res.status(400).json({ error: 'Invalid input', message: 'One or more bidder IDs are invalid' });
     }
 
     const listing = await Listing.findById(listingId).populate('seller', 'firstName lastName email');
@@ -307,6 +328,7 @@ router.get('/disputes', authenticateToken, requireAdmin, async (req, res) => {
  * Get full dispute details for a transaction.
  */
 router.get('/disputes/:transactionId', authenticateToken, requireAdmin, async (req, res) => {
+  if (!isValidObjectId(req.params.transactionId)) return res.status(400).json({ error: 'Invalid transaction ID' });
   try {
     const transaction = await Transaction.findById(req.params.transactionId)
       .populate('listing', 'title slug images description')
@@ -539,6 +561,7 @@ router.get('/reviews/flagged', authenticateToken, requireAdmin, async (req, res)
  * Body: { status, adminNotes? }
  */
 router.patch('/reviews/flags/:id', authenticateToken, requireAdmin, async (req, res) => {
+  if (!isValidObjectId(req.params.id)) return res.status(400).json({ error: 'Invalid flag ID' });
   try {
     const { status, adminNotes } = req.body;
     if (!status || !['dismissed', 'confirmed_fake'].includes(status)) {
@@ -613,6 +636,7 @@ router.get('/reviews/appeals', authenticateToken, requireAdmin, async (req, res)
  * Body: { status, adminNotes? }
  */
 router.patch('/reviews/appeals/:id', authenticateToken, requireAdmin, async (req, res) => {
+  if (!isValidObjectId(req.params.id)) return res.status(400).json({ error: 'Invalid appeal ID' });
   try {
     const { status, adminNotes } = req.body;
     if (!status || !['accepted', 'rejected'].includes(status)) {
@@ -640,6 +664,7 @@ router.patch('/reviews/appeals/:id', authenticateToken, requireAdmin, async (req
 
 // Close private room and end auction
 router.post('/auctions/:id/close-private-room', authenticateToken, requireAdmin, async (req, res) => {
+  if (!isValidObjectId(req.params.id)) return res.status(400).json({ error: 'Invalid listing ID' });
   try {
     const listingId = req.params.id;
     

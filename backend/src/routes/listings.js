@@ -74,9 +74,10 @@ router.get('/', async (req, res) => {
     }
     
     if (search) {
+      const escapedSearch = escapeRegex(String(search).trim().slice(0, 200));
       query.$or = [
-        { title: { $regex: search, $options: 'i' } },
-        { description: { $regex: search, $options: 'i' } }
+        { title: { $regex: escapedSearch, $options: 'i' } },
+        { description: { $regex: escapedSearch, $options: 'i' } }
       ];
     }
 

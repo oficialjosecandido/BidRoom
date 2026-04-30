@@ -1,11 +1,20 @@
 const express = require('express');
 const crypto = require('crypto');
+const rateLimit = require('express-rate-limit');
 const Notification = require('../models/Notification');
 const User = require('../models/User');
 const NotificationPreferences = require('../models/NotificationPreferences');
 const { authenticateToken } = require('../middleware/auth');
 
 const router = express.Router();
+
+const unsubscribeLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many requests', message: 'Please try again later.' }
+});
 
 /** GET /api/notifications - List notifications for the current user (newest first) */
 router.get('/', authenticateToken, async (req, res) => {
@@ -190,7 +199,7 @@ router.patch('/preferences', authenticateToken, async (req, res) => {
  * GET /api/notifications/unsubscribe?token=xxx (public)
  * One-click global email unsubscribe without login. Token is generated lazily on first email send.
  */
-router.get('/unsubscribe', async (req, res) => {
+router.get('/unsubscribe', unsubscribeLimiter, async (req, res) => {
   const { token } = req.query;
   if (!token || typeof token !== 'string') {
     return res.status(400).json({ error: 'Invalid unsubscribe link' });

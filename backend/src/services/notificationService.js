@@ -7,6 +7,14 @@ const NotificationPreferences = require('../models/NotificationPreferences');
 const _outbidDebounce = new Map();
 const OUTBID_DEBOUNCE_MS = 5 * 60 * 1000; // 5 minutes
 
+// Purge stale debounce entries every 5 minutes to prevent unbounded memory growth.
+setInterval(() => {
+  const cutoff = Date.now() - OUTBID_DEBOUNCE_MS;
+  for (const [key, ts] of _outbidDebounce.entries()) {
+    if (ts < cutoff) _outbidDebounce.delete(key);
+  }
+}, OUTBID_DEBOUNCE_MS).unref(); // .unref() so this timer doesn't keep the process alive
+
 /**
  * Returns true if an outbid notification was already sent for this user+listing within the debounce window.
  * Side-effect: records the current timestamp so the next call within the window is debounced.
@@ -19,6 +27,11 @@ function checkAndSetOutbidDebounce(userId, listingId) {
   return false;
 }
 
+// Critical event types that are always sent regardless of user preferences.
+const CRITICAL_EMAIL_EVENTS = new Set([
+  'disputeUpdate', 'paymentReceived', 'auctionWon'
+]);
+
 /**
  * Returns true if the user has not globally unsubscribed from email and has email enabled for the event type.
  * Defaults to true when no preferences record exists.
@@ -26,6 +39,9 @@ function checkAndSetOutbidDebounce(userId, listingId) {
  * @param {string} eventType - e.g. 'outbid', 'auctionWon', etc.
  */
 async function shouldSendEmail(userId, eventType) {
+  // Critical events (disputes, payments, auction wins) are always delivered.
+  if (CRITICAL_EMAIL_EVENTS.has(eventType)) return true;
+
   try {
     const prefs = await NotificationPreferences.findOne({ user: userId })
       .select(`globalEmailUnsubscribed ${eventType}`)
