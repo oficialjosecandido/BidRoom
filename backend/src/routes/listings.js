@@ -7,6 +7,7 @@ const Offer = require('../models/Offer');
 const Watchlist = require('../models/Watchlist');
 const { authenticateToken, optionalAuth, requireActiveAccount, requireNoDisputeRestriction } = require('../middleware/auth');
 const { handleWinnerSelection, handleAuctionEnd } = require('../services/auctionNotificationService');
+const { notifyFollowersNewListing } = require('../services/notificationService');
 const { getReviewScoresForUser } = require('../services/reviewService');
 const { logAuctionCreated } = require('../services/bestOfferLogger');
 const { scanTexts, scanTextsForProhibitedContent } = require('../utils/contentFilter');
@@ -935,6 +936,17 @@ router.post('/', authenticateToken, requireActiveAccount, requireNoDisputeRestri
     // Create the listing
     const listing = new Listing(listingData);
     await listing.save();
+
+    // Notify followers non-blockingly (fire-and-forget)
+    setImmediate(() => {
+      notifyFollowersNewListing({
+        sellerId: req.user._id,
+        sellerFirstName: req.user.firstName,
+        listingTitle: listing.title,
+        listingSlug: listingData.slug,
+        io: req.app.get('io')
+      });
+    });
 
     // Populate and return the listing
     const populatedListing = await Listing.findById(listing._id)

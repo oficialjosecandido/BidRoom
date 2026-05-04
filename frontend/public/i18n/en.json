@@ -1078,7 +1078,7 @@
     "paymentMethod": "Payment method",
     "paidAt": "Paid at",
     "shippingInfo": "Shipping Info",
-    "trackingNumber": "Tracking number",
+    "trackingNumber": "Tracking Number",
     "carrier": "Carrier",
     "shippedAt": "Shipped at",
     "deliveredAt": "Delivered at",
@@ -1194,9 +1194,7 @@
     "autoCancelledSellerTitle": "Order cancelled — did not ship in time",
     "autoCancelledSellerMessage": "This order was automatically cancelled on {{date}} because shipment was not confirmed within the required 5-business-day window. The buyer has been refunded in full.",
     "refundRef": "Refund reference",
-    "trackingNumber": "Tracking Number",
     "trackingNumberPlaceholder": "e.g. 9400111899223408553805",
-    "carrier": "Carrier",
     "selectCarrier": "Select carrier",
     "other": "Other",
     "estimatedDeliveryDays": "Estimated delivery time (days)",
@@ -1934,6 +1932,22 @@
       "selectReason": "Please select a reason before submitting.",
       "alreadyReported": "You have already reported this item.",
       "generic": "Something went wrong. Please try again."
-    }
+    },
+    "reportUser": "Report User"
+  },
+  "sellerProfile": {
+    "memberSince": "Member since",
+    "reviews": "reviews",
+    "noReviews": "No reviews yet",
+    "activeListings": "Active Listings",
+    "noActiveListings": "No active listings at the moment.",
+    "bid": "bid",
+    "bids": "bids",
+    "notFound": "This profile could not be found.",
+    "loadError": "Failed to load profile. Please try again.",
+    "follow": "Follow",
+    "following": "Following",
+    "mute": "Mute notifications",
+    "unmute": "Unmute notifications"
   }
 }

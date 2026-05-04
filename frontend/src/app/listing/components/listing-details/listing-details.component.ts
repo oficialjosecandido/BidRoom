@@ -18,6 +18,7 @@ import { StripeConnectService } from '../../../shared/services/stripe-connect.se
 import { FeatureFlagsService } from '../../../shared/services/feature-flags.service';
 import { TranslateModule } from '@ngx-translate/core';
 import { ReportModalComponent } from '../../../shared/components/report-modal/report-modal.component';
+import { FollowService, FollowStatus } from '../../../shared/services/follow.service';
 
 @Component({
   selector: 'app-listing-details',
@@ -39,6 +40,7 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
   private privateRoomService = inject(PrivateRoomService);
   private stripeConnectService = inject(StripeConnectService);
   featureFlags = inject(FeatureFlagsService);
+  private followService = inject(FollowService);
   private cdr = inject(ChangeDetectorRef);
 
   listing: Listing | null = null;
@@ -57,6 +59,9 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
   showLoginModal = false;
   watchlistLoading = false;
   isOwnListing = false;
+  get isSeller(): boolean { return this.isOwnListing; }
+  sellerFollowStatus: FollowStatus = { following: false, muted: false };
+  followLoading = false;
   showSelectWinnerModal = false;
   showReportModal: 'listing' | 'user' | null = null;
   selectingWinner = false;
@@ -137,6 +142,9 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
         this.inWatchlist = !!listing.inWatchlist;
         this.updateIsOwnListing();
         this.loading = false;
+        if (this.isAuthenticated && !this.isOwnListing && listing.seller?._id) {
+          this.loadSellerFollowStatus(listing.seller._id);
+        }
         window.scrollTo(0, 0);
         // Start countdown timer
         this.startCountdown();
@@ -1009,6 +1017,36 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
     if (!this.listing) return;
     const current = this.listing.watchlistCount ?? 0;
     this.listing = { ...this.listing, watchlistCount: Math.max(0, current + delta) };
+  }
+
+  loadSellerFollowStatus(sellerId: string): void {
+    this.followService.getStatus(sellerId).subscribe({
+      next: (status) => { this.sellerFollowStatus = status; },
+      error: () => {}
+    });
+  }
+
+  toggleFollowSeller(): void {
+    const sellerId = (this.listing?.seller as any)?._id;
+    if (!sellerId || this.followLoading) return;
+    this.followLoading = true;
+    const action = this.sellerFollowStatus.following
+      ? this.followService.unfollow(sellerId)
+      : this.followService.follow(sellerId);
+    action.subscribe({
+      next: (status) => { this.sellerFollowStatus = status; this.followLoading = false; },
+      error: () => { this.followLoading = false; }
+    });
+  }
+
+  toggleMuteSeller(): void {
+    const sellerId = (this.listing?.seller as any)?._id;
+    if (!sellerId || this.followLoading) return;
+    this.followLoading = true;
+    this.followService.setMuted(sellerId, !this.sellerFollowStatus.muted).subscribe({
+      next: (status) => { this.sellerFollowStatus = status; this.followLoading = false; },
+      error: () => { this.followLoading = false; }
+    });
   }
 
   updateIsOwnListing(): void {

@@ -367,7 +367,28 @@
               <span class="info-icon">👤</span>
               <div class="info-content">
                 <span class="info-label">{{ 'listingDetails.info.seller' | translate }}</span>
-                <span class="info-value">{{ listing.seller.firstName }} {{ listing.seller.lastName }}</span>
+                <div class="seller-name-row">
+                  <a class="info-value seller-link" [routerLink]="['/seller', listing.seller._id]">{{ listing.seller.firstName }} {{ listing.seller.lastName }}</a>
+                  @if (isAuthenticated && !isSeller) {
+                    <button
+                      class="follow-seller-btn"
+                      [class.following]="sellerFollowStatus.following"
+                      [disabled]="followLoading"
+                      (click)="toggleFollowSeller()"
+                    >
+                      {{ (sellerFollowStatus.following ? 'sellerProfile.following' : 'sellerProfile.follow') | translate }}
+                    </button>
+                    @if (sellerFollowStatus.following) {
+                      <button
+                        class="mute-seller-btn"
+                        [class.muted]="sellerFollowStatus.muted"
+                        [disabled]="followLoading"
+                        (click)="toggleMuteSeller()"
+                        [title]="(sellerFollowStatus.muted ? 'sellerProfile.unmute' : 'sellerProfile.mute') | translate"
+                      >{{ sellerFollowStatus.muted ? '🔕' : '🔔' }}</button>
+                    }
+                  }
+                </div>
                 @if (listing.sellerScore !== null) {
                 <span class="seller-review-score">
                   ★ {{ listing.sellerScore | number:'1.1-1' }} <span class="review-count">({{ listing.sellerReviewCount ?? 0 }} review{{ (listing.sellerReviewCount ?? 0) !== 1 ? 's' : '' }})</span>
