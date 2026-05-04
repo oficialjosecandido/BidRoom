@@ -2,6 +2,7 @@ const express = require('express');
 const multer = require('multer');
 const { authenticateToken, requireActiveAccount } = require('../middleware/auth');
 const azureStorageService = require('../services/azureStorage.service');
+const { scanImages } = require('../services/contentSafetyService');
 
 const router = express.Router();
 
@@ -72,6 +73,20 @@ router.post('/', authenticateToken, requireActiveAccount, upload.array('images',
       originalname: file.originalname,
       mimetype: file.mimetype
     }));
+
+    // Content safety scan — block before reaching Blob Storage
+    try {
+      const scan = await scanImages(files.map(f => f.buffer));
+      if (scan.blocked) {
+        return res.status(400).json({
+          error: 'Content policy violation',
+          message: 'One or more images contain content that violates our policies and cannot be uploaded.'
+        });
+      }
+    } catch (scanErr) {
+      console.error('Content safety scan error (non-blocking):', scanErr.message);
+      // Scan failure is non-fatal — don't block the upload
+    }
 
     // Upload to Azure Blob Storage
     const urls = await azureStorageService.uploadMultipleImages(files);

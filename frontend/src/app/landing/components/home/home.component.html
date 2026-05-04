@@ -1,199 +1,312 @@
-<app-header activePage="home"></app-header>
+<div class="pg" [class.dark]="!isLight" [class.light]="isLight">
+<h2 class="sr-only">BidRoom.pt — leilões premium em Portugal. Disponível em modo claro e escuro, com referências aos azulejos portugueses no modo claro.</h2>
 
-<!-- Minimal Hero -->
+<!-- AZULEJO ACCENT BAR -->
+<div class="azulejo-hero"></div>
+
+<!-- NAV -->
+<nav class="nav">
+  <div class="nav-brand">BidRoom<span>.pt</span></div>
+  <div class="nav-right">
+    <a class="nav-link" routerLink="/listing/list">Leilões</a>
+    <a class="nav-link" routerLink="/landing/how-it-works">Como funciona</a>
+    <a class="nav-link" routerLink="/landing" fragment="private-rooms">Salas Privadas</a>
+
+    <button
+      type="button"
+      class="theme-toggle"
+      (click)="toggleTheme()"
+      title="Alternar modo claro / escuro"
+      [attr.aria-label]="themeLabel">
+      <span class="theme-toggle-track"><span class="theme-toggle-knob"></span></span>
+      <span class="theme-toggle-label">{{ themeLabel }}</span>
+    </button>
+
+    <button type="button" class="nav-cta" routerLink="/auth/login">Entrar</button>
+  </div>
+</nav>
+
+<div class="breadcrumb">
+  <span>Início</span><span class="bc-sep">›</span>
+  <span class="bc-current">Leilões em destaque</span>
+</div>
+
+<!-- HERO -->
 <section class="hero">
-  <div class="container">
-    <div class="hero-content">
-      <h1 class="hero-title">{{ 'home.hero.title' | translate }}</h1>
-      <p class="hero-tagline">{{ 'home.hero.subtitle' | translate }}</p>
-      <div class="hero-search">
-        <input
-          type="text"
-          class="hero-search-input"
-          [placeholder]="'home.hero.searchPlaceholder' | translate"
-          [(ngModel)]="searchQuery"
-          (keyup.enter)="onSearch()" />
-        <button class="btn hero-search-btn" (click)="onSearch()">{{ 'home.hero.search' | translate }}</button>
-      </div>
+  <div class="hero-bg">
+    <!-- Dark mode sardine SVG -->
+    <svg class="dark-only" style="position:absolute;inset:0;width:100%;height:100%" viewBox="0 0 680 440" preserveAspectRatio="xMidYMid slice" role="img">
+      <title>Ilustração decorativa modo escuro — sardinha e azulejos</title>
+      <rect width="680" height="440" fill="#0C0C0A"/>
+      <rect x="0" y="190" width="680" height="250" fill="#0B1E2B" opacity="0.45"/>
+      <path d="M0,270 Q80,254 180,270 Q280,286 380,270 Q480,254 580,270 Q630,277 680,266" fill="none" stroke="#1A3A50" stroke-width="1" opacity="0.5"/>
+      <path d="M0,292 Q100,278 200,294 Q300,310 400,292 Q500,274 600,294 Q645,300 680,288" fill="none" stroke="#152F45" stroke-width="0.7" opacity="0.35"/>
+      <rect x="0" y="330" width="680" height="110" fill="#0A1A27" opacity="0.35"/>
+      <g transform="translate(378,208) rotate(-14)">
+        <path d="M94,0 L118,-16 L122,0 L118,16 Z" fill="#1A5070" opacity="0.9"/>
+        <ellipse cx="38" cy="0" rx="88" ry="21" fill="#1D5F82"/>
+        <ellipse cx="28" cy="6" rx="68" ry="11" fill="#C8D8B0" opacity="0.28"/>
+        <path d="M-10,-21 Q18,-38 48,-23 L48,-21 Q18,-34 -10,-21 Z" fill="#1A5070" opacity="0.8"/>
+        <path d="M4,8 Q18,20 9,28 Q-4,20 4,8 Z" fill="#1A5070" opacity="0.65"/>
+        <circle cx="-40" cy="-2" r="6" fill="#0B1E2B"/>
+        <circle cx="-40" cy="-2" r="4" fill="#1A3A50"/>
+        <circle cx="-40" cy="-2" r="2.5" fill="#C9A84C" opacity="0.4"/>
+        <circle cx="-38" cy="-3.5" r="1.2" fill="#E8D08A" opacity="0.65"/>
+        <path d="M-60,2 Q-56,-2 -50,0" fill="none" stroke="#0B1E2B" stroke-width="1"/>
+        <path d="M-48,-5 Q0,-9 78,-1" fill="none" stroke="#C9A84C" stroke-width="1" opacity="0.18"/>
+      </g>
+      <g transform="translate(458,272) rotate(9) scale(0.55)" opacity="0.35">
+        <ellipse cx="38" cy="0" rx="88" ry="21" fill="#1D5F82"/>
+        <path d="M94,0 L118,-16 L122,0 L118,16 Z" fill="#1A5070"/>
+        <path d="M-10,-21 Q18,-38 48,-23 L48,-21 Q18,-34 -10,-21 Z" fill="#1A5070"/>
+        <circle cx="-40" cy="-2" r="5" fill="#0B1E2B"/>
+        <circle cx="-40" cy="-2" r="3.5" fill="#1A3A50"/>
+      </g>
+      <g transform="translate(542,18)" opacity="0.09">
+        <rect width="110" height="110" fill="none" stroke="#C9A84C" stroke-width="0.5"/>
+        <rect x="10" y="10" width="90" height="90" fill="none" stroke="#C9A84C" stroke-width="0.3"/>
+        <path d="M10,10 L100,100 M100,10 L10,100" fill="none" stroke="#C9A84C" stroke-width="0.3"/>
+        <circle cx="55" cy="55" r="26" fill="none" stroke="#C9A84C" stroke-width="0.4"/>
+        <rect x="28" y="28" width="54" height="54" fill="none" stroke="#C9A84C" stroke-width="0.3" transform="rotate(45,55,55)"/>
+      </g>
+    </svg>
+
+    <!-- Light mode azulejo watermark -->
+    <svg class="hero-azulejo-bg" style="position:absolute;inset:0;width:100%;height:100%" viewBox="0 0 680 440" preserveAspectRatio="xMidYMid slice" role="img">
+      <title>Fundo decorativo de azulejos — modo claro</title>
+      <!-- tiled azulejo pattern in the background -->
+      <defs>
+        <pattern id="landingHeroAz" x="0" y="0" width="80" height="80" patternUnits="userSpaceOnUse">
+          <rect width="80" height="80" fill="none" stroke="#1B3F6E" stroke-width="0.8"/>
+          <rect x="6" y="6" width="68" height="68" fill="none" stroke="#1B3F6E" stroke-width="0.4"/>
+          <circle cx="40" cy="40" r="22" fill="none" stroke="#2A7B9A" stroke-width="0.6"/>
+          <path d="M6,6 L74,74 M74,6 L6,74" fill="none" stroke="#1B3F6E" stroke-width="0.3"/>
+          <rect x="24" y="24" width="32" height="32" fill="none" stroke="#1B3F6E" stroke-width="0.35" transform="rotate(45,40,40)"/>
+          <circle cx="40" cy="40" r="6" fill="#2A7B9A" opacity="0.3"/>
+          <circle cx="6" cy="6" r="3" fill="#1B3F6E" opacity="0.25"/>
+          <circle cx="74" cy="6" r="3" fill="#1B3F6E" opacity="0.25"/>
+          <circle cx="6" cy="74" r="3" fill="#1B3F6E" opacity="0.25"/>
+          <circle cx="74" cy="74" r="3" fill="#1B3F6E" opacity="0.25"/>
+        </pattern>
+      </defs>
+      <rect width="680" height="440" fill="url(#landingHeroAz)"/>
+    </svg>
+  </div>
+
+  <div class="hero-content">
+    <div class="hero-eyebrow">
+      <div class="hero-eyebrow-line"></div>
+      <div class="hero-eyebrow-text">Portugal · Lançamento 2026</div>
     </div>
+    <div class="hero-title">Leilões de<br>alto valor,<br><em>feitos bem.</em></div>
+    <div class="hero-subtitle">A primeira plataforma portuguesa de leilões premium com salas privadas em tempo real, reputação verificada e pagamentos seguros.</div>
+    <div class="hero-actions">
+      <button type="button" class="btn-primary" routerLink="/listing/list">Explorar leilões</button>
+      <button type="button" class="btn-ghost" routerLink="/landing/how-it-works">Como funciona</button>
+    </div>
+  </div>
+
+  <div class="hero-live-badge">
+    <div class="live-dot"></div>
+    <span class="live-text">Ao vivo agora</span>
+    <span class="live-price">€12.400</span>
   </div>
 </section>
 
-<!-- Filter Bar -->
-<section class="filter-bar">
-  <div class="container">
-    <div class="filter-bar-inner">
-      <div class="filter-categories">
-        <button class="filter-pill" [class.active]="selectedCategory === ''" (click)="filterCategory('')">{{ 'home.filterBar.all' | translate }}</button>
-        <button class="filter-pill" [class.active]="selectedCategory === 'electronics'" (click)="filterCategory('electronics')">📱 {{ 'home.categories.electronics.title' | translate }}</button>
-        <button class="filter-pill" [class.active]="selectedCategory === 'art'" (click)="filterCategory('art')">🎨 {{ 'home.categories.art.title' | translate }}</button>
-        <button class="filter-pill" [class.active]="selectedCategory === 'jewelry'" (click)="filterCategory('jewelry')">💎 {{ 'home.categories.jewelry.title' | translate }}</button>
-        <button class="filter-pill" [class.active]="selectedCategory === 'collectibles'" (click)="filterCategory('collectibles')">📬 {{ 'home.categories.collectibles.title' | translate }}</button>
-        <button class="filter-pill" [class.active]="selectedCategory === 'home-garden'" (click)="filterCategory('home-garden')">🏠 {{ 'home.categories.homeGarden.title' | translate }}</button>
-      </div>
-      <div class="filter-sort">
-        <select class="sort-select" [(ngModel)]="sortBy" (change)="onSortChange()">
-          <option value="deadline">{{ 'home.liveAuctions.sortEndingSoonest' | translate }}</option>
-          <option value="newest">{{ 'home.liveAuctions.sortNewest' | translate }}</option>
-          <option value="highest">{{ 'home.liveAuctions.sortHighest' | translate }}</option>
-          <option value="lowest">{{ 'home.liveAuctions.sortLowest' | translate }}</option>
-          <option value="bids">{{ 'home.liveAuctions.sortMostBids' | translate }}</option>
-        </select>
-      </div>
-    </div>
+<!-- STATS BAND -->
+<div class="azulejo-band">
+  <div class="stat-item"><div class="stat-num">340+</div><div class="stat-label">Leilões activos</div></div>
+  <div class="stat-div"></div>
+  <div class="stat-item"><div class="stat-num">€2.1M</div><div class="stat-label">Volume transaccionado</div></div>
+  <div class="stat-div"></div>
+  <div class="stat-item"><div class="stat-num">98%</div><div class="stat-label">Satisfação compradores</div></div>
+  <div class="stat-div"></div>
+  <div class="stat-item"><div class="stat-num">4.8s</div><div class="stat-label">Tempo médio de lance</div></div>
+  <div class="stat-div"></div>
+  <!-- Azulejo tile showcase in the band -->
+  <div class="band-tiles">
+    <svg width="40" height="40" viewBox="0 0 40 40" role="img"><title>Azulejo 1</title><rect width="40" height="40" fill="#1B3F6E"/><rect x="3" y="3" width="34" height="34" fill="none" stroke="#E8D08A" stroke-width="0.5" opacity="0.5"/><circle cx="20" cy="20" r="11" fill="none" stroke="#3AB5C8" stroke-width="0.8" opacity="0.7"/><path d="M3,3 L37,37 M37,3 L3,37" fill="none" stroke="#E8D08A" stroke-width="0.3" opacity="0.3"/><rect x="13" y="13" width="14" height="14" fill="none" stroke="#3AB5C8" stroke-width="0.5" opacity="0.5" transform="rotate(45,20,20)"/><circle cx="20" cy="20" r="3" fill="#E8D08A" opacity="0.4"/></svg>
+    <svg width="40" height="40" viewBox="0 0 40 40" role="img"><title>Azulejo 2</title><rect width="40" height="40" fill="#2A7B9A"/><rect x="3" y="3" width="34" height="34" fill="none" stroke="#fff" stroke-width="0.4" opacity="0.3"/><path d="M20,4 Q28,12 36,20 Q28,28 20,36 Q12,28 4,20 Q12,12 20,4 Z" fill="none" stroke="#E8F8FF" stroke-width="0.7" opacity="0.5"/><circle cx="20" cy="20" r="5" fill="#E8D08A" opacity="0.35"/></svg>
+    <svg width="40" height="40" viewBox="0 0 40 40" role="img"><title>Azulejo 3</title><rect width="40" height="40" fill="#F8F4EE"/><rect x="3" y="3" width="34" height="34" fill="none" stroke="#1B3F6E" stroke-width="0.6" opacity="0.5"/><circle cx="20" cy="20" r="12" fill="none" stroke="#1B3F6E" stroke-width="0.8" opacity="0.5"/><path d="M3,3 L37,37 M37,3 L3,37" fill="none" stroke="#2A7B9A" stroke-width="0.4" opacity="0.4"/><rect x="14" y="14" width="12" height="12" fill="none" stroke="#1B3F6E" stroke-width="0.5" opacity="0.4" transform="rotate(45,20,20)"/><circle cx="20" cy="20" r="3" fill="#2A7B9A" opacity="0.4"/></svg>
+    <svg width="40" height="40" viewBox="0 0 40 40" role="img"><title>Azulejo 4</title><rect width="40" height="40" fill="#7E57C2"/><circle cx="20" cy="20" r="13" fill="none" stroke="#E8D08A" stroke-width="0.6" opacity="0.4"/><path d="M20,4 L36,20 L20,36 L4,20 Z" fill="none" stroke="#E8D08A" stroke-width="0.5" opacity="0.35"/><circle cx="20" cy="20" r="4" fill="#E8D08A" opacity="0.3"/></svg>
   </div>
-</section>
+</div>
 
-<!-- Live Auction Listings -->
-<section class="auction-listings">
-  <div class="container">
-    <div class="listings-header">
-      <h2 class="section-title">{{ 'home.liveAuctions.title' | translate }}</h2>
-      @if (stats.activeListings > 0) {
-        <span class="live-count">{{ stats.activeListings }} live</span>
-      }
-    </div>
-
-    <!-- Loading -->
-    @if (loading) {
-      <div class="listings-loading">
-        <div class="loading-grid">
-          @for (i of [1,2,3,4,5,6]; track i) {
-            <div class="skeleton-card">
-              <div class="skeleton-image"></div>
-              <div class="skeleton-body">
-                <div class="skeleton-line skeleton-line-title"></div>
-                <div class="skeleton-line skeleton-line-price"></div>
-                <div class="skeleton-line skeleton-line-short"></div>
-              </div>
-            </div>
-          }
+<!-- LISTINGS -->
+<section class="section">
+  <div class="section-eyebrow">Em destaque</div>
+  <div class="section-title">Leilões em curso</div>
+  <div class="listings-grid">
+    <div class="listing-card">
+      <div class="listing-img">
+        <svg width="80" height="80" viewBox="0 0 80 80" role="img"><title>Relógio de luxo</title><circle cx="40" cy="40" r="26" fill="#1A1A18" stroke="#C9A84C" stroke-width="0.7" opacity="0.5"/><circle cx="40" cy="40" r="18" fill="none" stroke="#2A2A28" stroke-width="0.4"/><line x1="40" y1="24" x2="40" y2="40" stroke="#E8D08A" stroke-width="1.4" stroke-linecap="round"/><line x1="40" y1="40" x2="51" y2="40" stroke="#C9A84C" stroke-width="1" stroke-linecap="round"/><circle cx="40" cy="40" r="2" fill="#C9A84C"/></svg>
+        <div class="l-badge live">Ao vivo</div>
+      </div>
+      <div class="listing-body">
+        <div class="listing-title">Patek Philippe Ref. 5711</div>
+        <div class="listing-meta">Relógios · Genebra, 2019</div>
+        <div class="listing-footer">
+          <div><div class="listing-price-lbl">Lance actual</div><div class="listing-price">€58.200</div></div>
+          <div class="listing-timer">02:14:38</div>
         </div>
       </div>
-    }
-
-    <!-- Error -->
-    @if (error && !loading) {
-      <div class="listings-error">
-        <div class="error-content">
-          <h3>⚠️ {{ 'home.liveAuctions.error' | translate }}</h3>
-          <p>{{ error }}</p>
-          <button class="btn btn-primary" (click)="loadListings()">{{ 'home.liveAuctions.tryAgain' | translate }}</button>
+    </div>
+    <div class="listing-card">
+      <div class="listing-img">
+        <svg width="70" height="85" viewBox="0 0 70 85" role="img"><title>Garrafa de vinho</title><rect x="24" y="7" width="22" height="8" rx="2" fill="#2A1A0A" stroke="#3A2A1A" stroke-width="0.5"/><rect x="18" y="15" width="34" height="60" rx="5" fill="#1A3A1A" stroke="#2A4A2A" stroke-width="0.7"/><rect x="22" y="30" width="26" height="20" rx="2" fill="none" stroke="#C9A84C" stroke-width="0.5" opacity="0.5"/></svg>
+        <div class="l-badge priv">Sala Privada</div>
+      </div>
+      <div class="listing-body">
+        <div class="listing-title">Barca Velha 1985 — Magnum</div>
+        <div class="listing-meta">Vinhos · Douro, Portugal</div>
+        <div class="listing-footer">
+          <div><div class="listing-price-lbl">Lance actual</div><div class="listing-price">€4.800</div></div>
+          <div class="listing-timer">00:47:12</div>
         </div>
       </div>
-    }
-
-    <!-- Grid -->
-    @if (!loading && !error && listings.length > 0) {
-      <div class="listings-grid">
-        @for (listing of listings; track listing._id) {
-          <div class="listing-card" (click)="viewListing(listing.slug)">
-            <div class="listing-image-container">
-              <img [src]="listing.images[0] || 'assets/placeholder.png'" [alt]="listing.title" class="listing-image">
-              <div class="listing-badges">
-                @if (listing.isFeatured) {
-                  <span class="badge badge-featured">⭐ {{ 'home.liveAuctions.featured' | translate }}</span>
-                }
-                @if (listing.listingType === 'Verified' || listing.isVerified) {
-                  <span class="badge badge-verified">✓ {{ 'home.liveAuctions.verified' | translate }}</span>
-                }
-                @if (listing.endingSoon) {
-                  <span class="badge badge-ending-soon">🔥 {{ 'home.liveAuctions.endingSoon' | translate }}</span>
-                }
-                @if (listing.allowPrivateRoom) {
-                  <span class="badge badge-private-room" title="Private room available for top bidders">🔒 Private</span>
-                }
-                @if (listing.auctionFormat === 'best-offer') {
-                  <span class="badge badge-best-offer">{{ 'home.liveAuctions.bestOffer' | translate }}</span>
-                }
-              </div>
-              <div class="time-badge" [ngClass]="timerClass(listing)">
-                ⏱ {{ formatTimeRemaining(listing) }}
-              </div>
-            </div>
-            <div class="listing-content">
-              <div class="listing-top">
-                <span class="listing-category">{{ listing.category }}</span>
-                @if (listing.allowPrivateRoom && listing.privateRoomStatus === 'active') {
-                  <span class="private-room-live">🔒 Private Room Live</span>
-                }
-              </div>
-              <h3 class="listing-title">{{ listing.title }}</h3>
-              <div class="listing-price-row">
-                @if (listing.auctionFormat === 'best-offer' && (listing.currentPrice == null || listing.currentPrice === 0)) {
-                  <span class="listing-current-price no-offers">{{ 'home.endingSoon.noOffersYet' | translate }}</span>
-                } @else {
-                  <span class="listing-current-price">{{ formatPrice(listing.currentPrice) }}</span>
-                }
-                @if (listing.currentPrice > listing.startingPrice) {
-                  <span class="listing-starting-price">{{ 'home.liveAuctions.startedAt' | translate }} {{ formatPrice(listing.startingPrice) }}</span>
-                }
-              </div>
-              <div class="listing-signals">
-                <span class="signal-bids">{{ listing.bidCount }} {{ listing.bidCount === 1 ? ('home.liveAuctions.bid' | translate) : ('home.liveAuctions.bids' | translate) }}</span>
-                @if (listing.watchlistCount && listing.watchlistCount > 0) {
-                  <span class="signal-watchers">👁 {{ listing.watchlistCount }}</span>
-                }
-              </div>
-              <div class="listing-seller">
-                <span class="seller-name">{{ listing.seller.firstName }} {{ listing.seller.lastName }}</span>
-                @if (listing.sellerScore != null) {
-                  <span class="seller-score">⭐ {{ listing.sellerScore | number:'1.1-1' }}</span>
-                }
-              </div>
-            </div>
-          </div>
-        }
+    </div>
+    <div class="listing-card">
+      <div class="listing-img">
+        <svg width="85" height="80" viewBox="0 0 85 80" role="img"><title>Câmara fotográfica</title><rect x="10" y="22" width="65" height="42" rx="4" fill="#1A1E22" stroke="#2A2E32" stroke-width="0.9"/><rect x="24" y="14" width="22" height="12" rx="3" fill="#151820" stroke="#252830" stroke-width="0.7"/><circle cx="42" cy="43" r="14" fill="#111518" stroke="#C9A84C" stroke-width="0.7" opacity="0.45"/><circle cx="42" cy="43" r="9" fill="#0E1215"/><circle cx="42" cy="43" r="5" fill="#1A1E22"/></svg>
+        <div class="l-badge offer">Melhor Oferta</div>
       </div>
-    }
-
-    <!-- Empty State -->
-    @if (!loading && !error && listings.length === 0) {
-      <div class="listings-empty">
-        <p class="empty-icon">🔍</p>
-        <h3>{{ 'home.liveAuctions.noAuctions' | translate }}</h3>
-        <p>{{ selectedCategory ? ('home.liveAuctions.tryDifferentCategory' | translate) : ('home.liveAuctions.checkBack' | translate) }}</p>
-        @if (selectedCategory) {
-          <button class="btn btn-secondary" (click)="filterCategory('')">{{ 'home.liveAuctions.clearFilter' | translate }}</button>
-        } @else {
-          <button class="btn btn-primary" (click)="navigateToAddListing()">{{ 'home.hero.listAnItem' | translate }}</button>
-        }
+      <div class="listing-body">
+        <div class="listing-title">Leica M6 TTL — 0.85x</div>
+        <div class="listing-meta">Fotografia · Lisboa, 2001</div>
+        <div class="listing-footer">
+          <div><div class="listing-price-lbl">Preço mínimo</div><div class="listing-price">€2.100</div></div>
+          <div class="listing-timer">3 ofertas</div>
+        </div>
       </div>
-    }
-  </div>
-</section>
-
-<!-- Categories Strip -->
-<section id="categories" class="categories-strip">
-  <div class="container">
-    <h3 class="strip-title">{{ 'home.categories.title' | translate }}</h3>
-    <div class="strip-scroll">
-      <button class="strip-cat" (click)="browseCategory('electronics')">
-        <span class="strip-icon">📱</span>
-        <span class="strip-label">{{ 'home.categories.electronics.title' | translate }}</span>
-      </button>
-      <button class="strip-cat" (click)="browseCategory('home-garden')">
-        <span class="strip-icon">🏠</span>
-        <span class="strip-label">{{ 'home.categories.homeGarden.title' | translate }}</span>
-      </button>
-      <button class="strip-cat" (click)="browseCategory('art')">
-        <span class="strip-icon">🎨</span>
-        <span class="strip-label">{{ 'home.categories.art.title' | translate }}</span>
-      </button>
-      <button class="strip-cat" (click)="browseCategory('collectibles')">
-        <span class="strip-icon">📬</span>
-        <span class="strip-label">{{ 'home.categories.collectibles.title' | translate }}</span>
-      </button>
-      <button class="strip-cat" (click)="browseCategory('jewelry')">
-        <span class="strip-icon">💎</span>
-        <span class="strip-label">{{ 'home.categories.jewelry.title' | translate }}</span>
-      </button>
-      <button class="strip-cat" (click)="browseCategoriesPage()">
-        <span class="strip-icon">🔎</span>
-        <span class="strip-label">{{ 'home.categories.viewAll' | translate }}</span>
-      </button>
     </div>
   </div>
 </section>
 
-<app-footer></app-footer>
+<!-- AZULEJO SHOWCASE (light mode only) -->
+<div class="azulejo-section">
+  <div class="azulejo-section-title">Inspiração portuguesa · Azulejos do século XVI</div>
+  <div class="tile-showcase">
+    <!-- 8 decorative azulejo tiles -->
+    <svg width="72" height="72" viewBox="0 0 72 72" role="img"><title>Azulejo padrão floral índigo</title><rect width="72" height="72" fill="#1B3F6E"/><rect x="4" y="4" width="64" height="64" fill="none" stroke="#E8D08A" stroke-width="0.6" opacity="0.5"/><circle cx="36" cy="36" r="22" fill="none" stroke="#3AB5C8" stroke-width="1" opacity="0.7"/><path d="M36,14 Q50,22 58,36 Q50,50 36,58 Q22,50 14,36 Q22,22 36,14Z" fill="none" stroke="#3AB5C8" stroke-width="0.7" opacity="0.5"/><path d="M36,4 L68,36 L36,68 L4,36 Z" fill="none" stroke="#E8D08A" stroke-width="0.5" opacity="0.3"/><circle cx="36" cy="36" r="8" fill="none" stroke="#3AB5C8" stroke-width="0.8" opacity="0.6"/><circle cx="36" cy="36" r="3" fill="#E8D08A" opacity="0.5"/><circle cx="4" cy="4" r="4" fill="#3AB5C8" opacity="0.4"/><circle cx="68" cy="4" r="4" fill="#3AB5C8" opacity="0.4"/><circle cx="4" cy="68" r="4" fill="#3AB5C8" opacity="0.4"/><circle cx="68" cy="68" r="4" fill="#3AB5C8" opacity="0.4"/></svg>
+    <svg width="72" height="72" viewBox="0 0 72 72" role="img"><title>Azulejo padrão geométrico turquesa</title><rect width="72" height="72" fill="#2A7B9A"/><rect x="4" y="4" width="64" height="64" fill="none" stroke="#fff" stroke-width="0.4" opacity="0.3"/><path d="M36,8 Q54,18 64,36 Q54,54 36,64 Q18,54 8,36 Q18,18 36,8Z" fill="none" stroke="#E8F8FF" stroke-width="0.9" opacity="0.55"/><rect x="20" y="20" width="32" height="32" fill="none" stroke="#E8F8FF" stroke-width="0.6" opacity="0.4" transform="rotate(45,36,36)"/><circle cx="36" cy="36" r="7" fill="#E8D08A" opacity="0.35"/><circle cx="36" cy="36" r="3" fill="#fff" opacity="0.3"/></svg>
+    <svg width="72" height="72" viewBox="0 0 72 72" role="img"><title>Azulejo padrão claro com bordado</title><rect width="72" height="72" fill="#F8F4EE"/><rect x="3" y="3" width="66" height="66" fill="none" stroke="#1B3F6E" stroke-width="0.8" opacity="0.6"/><rect x="10" y="10" width="52" height="52" fill="none" stroke="#1B3F6E" stroke-width="0.4" opacity="0.3"/><circle cx="36" cy="36" r="18" fill="none" stroke="#1B3F6E" stroke-width="0.8" opacity="0.5"/><path d="M3,3 L69,69 M69,3 L3,69" fill="none" stroke="#2A7B9A" stroke-width="0.4" opacity="0.3"/><rect x="22" y="22" width="28" height="28" fill="none" stroke="#1B3F6E" stroke-width="0.5" opacity="0.4" transform="rotate(45,36,36)"/><circle cx="36" cy="36" r="5" fill="#2A7B9A" opacity="0.35"/><circle cx="3" cy="3" r="3" fill="#1B3F6E" opacity="0.3"/><circle cx="69" cy="3" r="3" fill="#1B3F6E" opacity="0.3"/><circle cx="3" cy="69" r="3" fill="#1B3F6E" opacity="0.3"/><circle cx="69" cy="69" r="3" fill="#1B3F6E" opacity="0.3"/></svg>
+    <svg width="72" height="72" viewBox="0 0 72 72" role="img"><title>Azulejo padrão roxo imperial</title><rect width="72" height="72" fill="#7E57C2"/><rect x="4" y="4" width="64" height="64" fill="none" stroke="#E8D08A" stroke-width="0.5" opacity="0.45"/><circle cx="36" cy="36" r="22" fill="none" stroke="#E8D08A" stroke-width="0.6" opacity="0.4"/><path d="M36,4 L68,36 L36,68 L4,36 Z" fill="none" stroke="#E8D08A" stroke-width="0.5" opacity="0.35"/><circle cx="36" cy="36" r="8" fill="none" stroke="#E8D08A" stroke-width="0.6" opacity="0.35"/><circle cx="36" cy="36" r="3" fill="#E8D08A" opacity="0.4"/></svg>
+    <svg width="72" height="72" viewBox="0 0 72 72" role="img"><title>Azulejo padrão náutico azul escuro</title><rect width="72" height="72" fill="#1B3F6E"/><circle cx="36" cy="36" r="28" fill="none" stroke="#3AB5C8" stroke-width="0.7" opacity="0.5"/><circle cx="36" cy="36" r="18" fill="none" stroke="#3AB5C8" stroke-width="0.5" opacity="0.35"/><circle cx="36" cy="36" r="8" fill="#3AB5C8" opacity="0.2"/><path d="M8,36 L64,36 M36,8 L36,64" fill="none" stroke="#E8D08A" stroke-width="0.4" opacity="0.3"/><circle cx="36" cy="36" r="3" fill="#E8D08A" opacity="0.5"/><circle cx="8" cy="36" r="3" fill="#3AB5C8" opacity="0.4"/><circle cx="64" cy="36" r="3" fill="#3AB5C8" opacity="0.4"/><circle cx="36" cy="8" r="3" fill="#3AB5C8" opacity="0.4"/><circle cx="36" cy="64" r="3" fill="#3AB5C8" opacity="0.4"/></svg>
+    <svg width="72" height="72" viewBox="0 0 72 72" role="img"><title>Azulejo padrão coral e branco</title><rect width="72" height="72" fill="#F8F4EE"/><path d="M36,8 Q52,18 60,36 Q52,54 36,64 Q20,54 12,36 Q20,18 36,8Z" fill="#E8964A" opacity="0.2"/><rect x="4" y="4" width="64" height="64" fill="none" stroke="#E8964A" stroke-width="0.7" opacity="0.5"/><circle cx="36" cy="36" r="16" fill="none" stroke="#E8964A" stroke-width="0.8" opacity="0.5"/><path d="M4,4 L68,68 M68,4 L4,68" fill="none" stroke="#E8964A" stroke-width="0.35" opacity="0.35"/><circle cx="36" cy="36" r="5" fill="#E8964A" opacity="0.4"/></svg>
+    <svg width="72" height="72" viewBox="0 0 72 72" role="img"><title>Azulejo padrão verde mar</title><rect width="72" height="72" fill="#1B3F6E"/><path d="M4,36 Q18,18 36,4 Q54,18 68,36 Q54,54 36,68 Q18,54 4,36Z" fill="none" stroke="#27AE60" stroke-width="0.8" opacity="0.55"/><circle cx="36" cy="36" r="14" fill="none" stroke="#27AE60" stroke-width="0.6" opacity="0.45"/><rect x="24" y="24" width="24" height="24" fill="none" stroke="#E8D08A" stroke-width="0.5" opacity="0.3" transform="rotate(45,36,36)"/><circle cx="36" cy="36" r="4" fill="#27AE60" opacity="0.35"/></svg>
+    <svg width="72" height="72" viewBox="0 0 72 72" role="img"><title>Azulejo padrão lilás delicado</title><rect width="72" height="72" fill="#F8F4EE"/><rect x="4" y="4" width="64" height="64" fill="none" stroke="#7E57C2" stroke-width="0.6" opacity="0.45"/><circle cx="36" cy="36" r="20" fill="none" stroke="#7E57C2" stroke-width="0.7" opacity="0.5"/><path d="M36,8 L68,36 L36,68 L4,36 Z" fill="none" stroke="#7E57C2" stroke-width="0.45" opacity="0.35"/><circle cx="36" cy="36" r="7" fill="#D4A0C8" opacity="0.35"/><circle cx="36" cy="36" r="2.5" fill="#7E57C2" opacity="0.4"/></svg>
+  </div>
+</div>
+
+<!-- PRIVATE ROOMS -->
+<section class="private-section" id="private-rooms">
+  <div class="private-inner">
+    <div>
+      <div class="private-tag">Funcionalidade exclusiva</div>
+      <div class="private-title">Salas de Leilão<br>Privadas</div>
+      <div class="private-body">Quando o leilão público termina, os melhores licitadores são convidados para uma sala exclusiva. Uma corrida final de 60 segundos. O mais alto vence automaticamente.</div>
+      <div>
+        <div class="pf"><div class="pf-dot"></div><div class="pf-text">O vendedor convida 2 a 5 licitadores registados</div></div>
+        <div class="pf"><div class="pf-dot"></div><div class="pf-text">15 minutos para aceitar ou recusar o convite</div></div>
+        <div class="pf"><div class="pf-dot"></div><div class="pf-text">Cada lance reinicia o contador de 60 segundos</div></div>
+        <div class="pf"><div class="pf-dot"></div><div class="pf-text">Vencedor determinado automaticamente</div></div>
+      </div>
+    </div>
+    <div class="room-vis">
+      <div class="room-vis-label">Sala Privada · Ao Vivo</div>
+      <div class="room-timer">{{ privateTimerDisplay }}</div>
+      <div class="room-sub">Sala fecha em</div>
+      <div class="seats-row">
+        <div class="seat on"><div class="seat-av">JC</div><div class="seat-nm">jose_c</div></div>
+        <div class="seat on"><div class="seat-av">PM</div><div class="seat-nm">p.miller</div></div>
+        <div class="seat"><div class="seat-av">AK</div><div class="seat-nm">a.kowal</div></div>
+        <div class="seat on"><div class="seat-av">SW</div><div class="seat-nm">s.white</div></div>
+        <div class="seat"><div class="seat-av">RL</div><div class="seat-nm">r.lopes</div></div>
+      </div>
+      <div class="room-bid-row">
+        <div class="room-bid-lbl">Lance mais alto</div>
+        <div class="room-bid-price">€58.200</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TRUST -->
+<section class="trust-section">
+  <div class="section-eyebrow">Confiança e segurança</div>
+  <div class="section-title">Construído para durar</div>
+  <div class="trust-grid">
+    <div class="trust-card">
+      <div class="trust-icon"><svg width="14" height="14" viewBox="0 0 14 14" role="img"><title>escudo</title><path d="M7 1L1.5 3.5v4C1.5 10.5 4 13 7 13.5c3-.5 5.5-3 5.5-6v-4L7 1z" fill="none" stroke="#C9A84C" stroke-width="0.9"/></svg></div>
+      <div class="trust-title">Reputação verificada</div>
+      <div class="trust-body">Pontuação 0–100 baseada em avaliações, disputas e histórico. Acesso a Salas Privadas requer pontuação ≥60.</div>
+    </div>
+    <div class="trust-card">
+      <div class="trust-icon"><svg width="14" height="14" viewBox="0 0 14 14" role="img"><title>pagamento</title><rect x="1" y="3" width="12" height="8" rx="1.5" fill="none" stroke="#C9A84C" stroke-width="0.9"/><line x1="1" y1="6" x2="13" y2="6" stroke="#C9A84C" stroke-width="0.8"/></svg></div>
+      <div class="trust-title">Pagamentos EasyPay</div>
+      <div class="trust-body">Multibanco, MB WAY, cartão. Transferência SEPA directa para o IBAN do vendedor.</div>
+    </div>
+    <div class="trust-card">
+      <div class="trust-icon"><svg width="14" height="14" viewBox="0 0 14 14" role="img"><title>disputa</title><circle cx="7" cy="7" r="5.5" fill="none" stroke="#C9A84C" stroke-width="0.9"/><line x1="7" y1="4.5" x2="7" y2="7.5" stroke="#C9A84C" stroke-width="1" stroke-linecap="round"/><circle cx="7" cy="9.5" r="0.7" fill="#C9A84C"/></svg></div>
+      <div class="trust-title">Disputas resolvidas</div>
+      <div class="trust-body">Moderação humana em caso de problema. Suspensão automática de ambas as contas durante a resolução.</div>
+    </div>
+    <div class="trust-card">
+      <div class="trust-icon"><svg width="14" height="14" viewBox="0 0 14 14" role="img"><title>relógio</title><circle cx="7" cy="7" r="5.5" fill="none" stroke="#C9A84C" stroke-width="0.9"/><line x1="7" y1="4" x2="7" y2="7" stroke="#C9A84C" stroke-width="1" stroke-linecap="round"/><line x1="7" y1="7" x2="9.5" y2="8.5" stroke="#C9A84C" stroke-width="0.9" stroke-linecap="round"/></svg></div>
+      <div class="trust-title">Envio em 5 dias úteis</div>
+      <div class="trust-body">Alerta automático no dia 3. Reembolso automático no dia 5 se não houver envio.</div>
+    </div>
+    <div class="trust-card">
+      <div class="trust-icon"><svg width="14" height="14" viewBox="0 0 14 14" role="img"><title>moderação</title><rect x="1" y="2" width="12" height="10" rx="1.5" fill="none" stroke="#C9A84C" stroke-width="0.9"/><line x1="3.5" y1="5.5" x2="10.5" y2="5.5" stroke="#C9A84C" stroke-width="0.7"/><line x1="3.5" y1="8" x2="7.5" y2="8" stroke="#C9A84C" stroke-width="0.7"/></svg></div>
+      <div class="trust-title">Moderação por IA</div>
+      <div class="trust-body">Azure AI analisa texto e imagens. Artigos proibidos e conteúdo impróprio bloqueados automaticamente.</div>
+    </div>
+    <div class="trust-card">
+      <div class="trust-icon"><svg width="14" height="14" viewBox="0 0 14 14" role="img"><title>idioma</title><circle cx="7" cy="7" r="5.5" fill="none" stroke="#C9A84C" stroke-width="0.9"/><ellipse cx="7" cy="7" rx="2.5" ry="5.5" fill="none" stroke="#C9A84C" stroke-width="0.6"/><line x1="1.5" y1="7" x2="12.5" y2="7" stroke="#C9A84C" stroke-width="0.6"/></svg></div>
+      <div class="trust-title">Português e Inglês</div>
+      <div class="trust-body">Plataforma completamente bilingue, adaptada ao mercado português com suporte integral em PT e EN.</div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="footer-top">
+    <div>
+      <div class="footer-brand">BidRoom.pt</div>
+      <div class="footer-tagline">O mercado de leilões premium de Portugal</div>
+    </div>
+    <div class="footer-cols">
+      <div>
+        <div class="footer-col-title">Plataforma</div>
+        <a class="footer-link" routerLink="/listing/list">Leilões activos</a>
+        <a class="footer-link" routerLink="/listing/list">Melhor Oferta</a>
+        <a class="footer-link" routerLink="/landing" fragment="private-rooms">Salas Privadas</a>
+        <a class="footer-link" routerLink="/landing/how-it-works">Como funciona</a>
+      </div>
+      <div>
+        <div class="footer-col-title">Conta</div>
+        <a class="footer-link" routerLink="/auth/login">Entrar</a>
+        <a class="footer-link" routerLink="/auth/signup">Registar</a>
+        <a class="footer-link" routerLink="/dashboard/home">Painel</a>
+        <a class="footer-link" routerLink="/dashboard/buyer">Reputação</a>
+      </div>
+      <div>
+        <div class="footer-col-title">Legal</div>
+        <a class="footer-link" routerLink="/landing/terms-conditions">Termos de uso</a>
+        <a class="footer-link" routerLink="/landing/privacy-policy">Privacidade</a>
+        <a class="footer-link" routerLink="/landing/privacy-policy">Cookies</a>
+        <a class="footer-link" routerLink="/landing/contact">Contacto</a>
+      </div>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <div class="footer-copy">© 2026 BidRoom · Todos os direitos reservados · Lisboa, Portugal</div>
+    <div class="footer-badges">
+      <div class="f-badge">RGPD</div>
+      <div class="f-badge">SSL</div>
+      <div class="f-badge">EasyPay</div>
+    </div>
+  </div>
+</footer>
+</div>

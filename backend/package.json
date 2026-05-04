@@ -20,6 +20,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@azure-rest/ai-content-safety": "^1.0.1",
+    "@azure/core-auth": "^1.10.1",
     "@azure/storage-blob": "^12.29.1",
     "bcryptjs": "^3.0.2",
     "cors": "^2.8.5",

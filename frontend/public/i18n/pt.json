@@ -1828,5 +1828,35 @@
       "address": "Departamento Jurídico BidRoom, 123 Auction Street, Commerce City, CC 12345",
       "phoneLabel": "Telefone:"
     }
+  },
+  "report": {
+    "titleListing": "Denunciar Anúncio",
+    "titleUser": "Denunciar Utilizador",
+    "subtitle": "Ajuda-nos a perceber o que está errado. Vamos analisar a denúncia e tomar medidas se necessário.",
+    "reportListing": "Denunciar Anúncio",
+    "reportSeller": "Denunciar Vendedor",
+    "reasons": {
+      "fraud_scam": "Fraude ou Burla",
+      "offensive_content": "Conteúdo Ofensivo",
+      "prohibited_item": "Item Proibido",
+      "spam": "Spam",
+      "off_platform_transaction": "Tentativa de Transação Fora da Plataforma",
+      "other": "Outro"
+    },
+    "descriptionLabel": "Detalhes adicionais (opcional)",
+    "descriptionPlaceholder": "Descreve o problema...",
+    "submit": "Enviar Denúncia",
+    "submitting": "A enviar...",
+    "cancel": "Cancelar",
+    "success": {
+      "title": "Denúncia Enviada",
+      "message": "Obrigado. A tua denúncia foi recebida e a nossa equipa irá analisá-la brevemente.",
+      "close": "Fechar"
+    },
+    "errors": {
+      "selectReason": "Por favor seleciona um motivo antes de enviar.",
+      "alreadyReported": "Já denunciaste este item.",
+      "generic": "Ocorreu um erro. Por favor tenta novamente."
+    }
   }
 }

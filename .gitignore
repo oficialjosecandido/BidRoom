@@ -44,6 +44,8 @@ npm-cache/
 
 # Yarn Integrity file
 .yarn-integrity
+backend/yarn.lock
+frontend/yarn.lock
 
 # dotenv environment variables file
 .env

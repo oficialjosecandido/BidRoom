@@ -8,6 +8,7 @@ const Transaction = require('../models/Transaction');
 const ReviewFlag = require('../models/ReviewFlag');
 const Review = require('../models/Review');
 const ReviewAppeal = require('../models/ReviewAppeal');
+const Report = require('../models/Report');
 const { sendEmail } = require('../services/emailService');
 const { renderEmailTemplate } = require('../services/templateEngine');
 const { notifyDisputeDecisionIssued, emitNewNotificationToUser } = require('../services/notificationService');
@@ -756,6 +757,56 @@ router.post('/auctions/:id/close-private-room', authenticateToken, requireAdmin,
       error: 'Failed to close private room and end auction',
       message: error.message 
     });
+  }
+});
+
+// GET /api/admin/reports — list reports (filterable by status, reportType)
+router.get('/reports', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const { status, reportType, page = 1, limit = 50 } = req.query;
+    const filter = {};
+    if (status) filter.status = status;
+    if (reportType) filter.reportType = reportType;
+
+    const reports = await Report.find(filter)
+      .sort({ createdAt: -1 })
+      .skip((Number(page) - 1) * Number(limit))
+      .limit(Number(limit))
+      .populate('reportedBy', 'firstName lastName email')
+      .lean();
+
+    const total = await Report.countDocuments(filter);
+
+    return res.json({ reports, total });
+  } catch (err) {
+    console.error('GET /api/admin/reports error:', err);
+    return res.status(500).json({ error: 'Failed to fetch reports.' });
+  }
+});
+
+// PATCH /api/admin/reports/:id — update report status
+router.patch('/reports/:id', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const { status, adminNotes } = req.body;
+    const VALID_STATUSES = ['pending', 'reviewed', 'resolved', 'dismissed'];
+    if (!VALID_STATUSES.includes(status)) {
+      return res.status(400).json({ error: 'Invalid status.' });
+    }
+
+    const update = { status };
+    if (adminNotes !== undefined) update.adminNotes = adminNotes;
+    if (status === 'resolved' || status === 'dismissed') {
+      update.resolvedBy = req.user._id;
+      update.resolvedAt = new Date();
+    }
+
+    const report = await Report.findByIdAndUpdate(req.params.id, update, { new: true });
+    if (!report) return res.status(404).json({ error: 'Report not found.' });
+
+    return res.json({ report });
+  } catch (err) {
+    console.error('PATCH /api/admin/reports error:', err);
+    return res.status(500).json({ error: 'Failed to update report.' });
   }
 });
 

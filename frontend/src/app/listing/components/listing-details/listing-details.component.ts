@@ -17,11 +17,12 @@ import { PrivateRoomService, Bidder } from '../../../private-room/services/priva
 import { StripeConnectService } from '../../../shared/services/stripe-connect.service';
 import { FeatureFlagsService } from '../../../shared/services/feature-flags.service';
 import { TranslateModule } from '@ngx-translate/core';
+import { ReportModalComponent } from '../../../shared/components/report-modal/report-modal.component';
 
 @Component({
   selector: 'app-listing-details',
   standalone: true,
-  imports: [CommonModule, FormsModule, HeaderComponent, TranslateModule, RouterLink],
+  imports: [CommonModule, FormsModule, HeaderComponent, TranslateModule, RouterLink, ReportModalComponent],
   templateUrl: './listing-details.component.html',
   styleUrls: ['./listing-details.component.scss']
 })
@@ -57,6 +58,7 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
   watchlistLoading = false;
   isOwnListing = false;
   showSelectWinnerModal = false;
+  showReportModal: 'listing' | 'user' | null = null;
   selectingWinner = false;
   reopenLoading = false;
   showCreatePrivateRoomModal = false;
