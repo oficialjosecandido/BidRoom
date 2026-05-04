@@ -1174,7 +1174,37 @@
       "declinedBadge": "✗ Recusado",
       "acceptedAt": "Aceito",
       "invitedAt": "Convidado",
-      "viewListing": "Ver Anúncio"
+      "viewListing": "Ver Anúncio",
+      "relist": {
+        "title": "Relistar Leilão",
+        "subtitle": "Ajuste as suas configurações e reliste o artigo para lhe dar outra oportunidade.",
+        "suggestionsLabel": "Sugestões inteligentes",
+        "relistBtn": "Relistar",
+        "alreadyRelisted": "Relistado",
+        "autoRelistBadge": "Auto-relistar",
+        "autoRelistBadgeTitle": "Este anúncio será relistado automaticamente se terminar sem venda",
+        "relistCount": "Relistar #{{count}}",
+        "unsoldReasons": {
+          "no_bids": "Terminou sem lances",
+          "reserve_not_met": "Preço de reserva não atingido",
+          "non_payment": "Comprador não concluiu o pagamento"
+        },
+        "suggestions": {
+          "lower10Price": "Baixar preço inicial 10%",
+          "lower10Reserve": "Baixar reserva 10%",
+          "removeReserve": "Remover preço de reserva",
+          "extend7Days": "Definir duração para 7 dias"
+        },
+        "form": {
+          "startingPrice": "Preço inicial ($)",
+          "reservePrice": "Preço de reserva (opcional, 0 = sem reserva)",
+          "duration": "Duração",
+          "autoRelist": "Relistar automaticamente se não vender",
+          "autoRelistHint": "Relista automaticamente até 3 vezes se o leilão terminar sem venda.",
+          "submit": "Relistar Agora",
+          "submitting": "A relistar…"
+        }
+      }
     },
     "myAuctionsBidder": {
       "title": "Meus Leilões",

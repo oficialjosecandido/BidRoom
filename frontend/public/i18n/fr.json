@@ -941,7 +941,37 @@
       "declinedBadge": "✗ Refusé",
       "acceptedAt": "Accepté",
       "invitedAt": "Invité",
-      "viewListing": "Voir l'annonce"
+      "viewListing": "Voir l'annonce",
+      "relist": {
+        "title": "Remettre en vente",
+        "subtitle": "Ajustez vos paramètres et remettez l'article en vente pour lui donner une nouvelle chance.",
+        "suggestionsLabel": "Suggestions intelligentes",
+        "relistBtn": "Remettre en vente",
+        "alreadyRelisted": "Remis en vente",
+        "autoRelistBadge": "Remise auto",
+        "autoRelistBadgeTitle": "Cette annonce sera automatiquement remise en vente si elle se termine sans vente",
+        "relistCount": "Remise en vente #{{count}}",
+        "unsoldReasons": {
+          "no_bids": "Terminé sans enchères",
+          "reserve_not_met": "Prix de réserve non atteint",
+          "non_payment": "L'acheteur n'a pas finalisé le paiement"
+        },
+        "suggestions": {
+          "lower10Price": "Baisser le prix de départ de 10%",
+          "lower10Reserve": "Baisser la réserve de 10%",
+          "removeReserve": "Supprimer le prix de réserve",
+          "extend7Days": "Fixer la durée à 7 jours"
+        },
+        "form": {
+          "startingPrice": "Prix de départ ($)",
+          "reservePrice": "Prix de réserve (optionnel, 0 = aucun)",
+          "duration": "Durée",
+          "autoRelist": "Remettre en vente automatiquement si invendu",
+          "autoRelistHint": "Remet automatiquement en vente jusqu'à 3 fois si l'enchère se termine sans acheteur.",
+          "submit": "Remettre en vente",
+          "submitting": "Remise en cours…"
+        }
+      }
     },
     "myAuctionsBidder": {
       "title": "Mes Enchères",

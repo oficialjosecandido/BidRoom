@@ -941,7 +941,37 @@
       "declinedBadge": "✗ Rechazado",
       "acceptedAt": "Aceptado",
       "invitedAt": "Invitado",
-      "viewListing": "Ver Anuncio"
+      "viewListing": "Ver Anuncio",
+      "relist": {
+        "title": "Relistar Subasta",
+        "subtitle": "Ajusta la configuración y relista el artículo para darle otra oportunidad.",
+        "suggestionsLabel": "Sugerencias inteligentes",
+        "relistBtn": "Relistar",
+        "alreadyRelisted": "Relistado",
+        "autoRelistBadge": "Auto-relistar",
+        "autoRelistBadgeTitle": "Este anuncio se relistará automáticamente si termina sin venta",
+        "relistCount": "Relistar #{{count}}",
+        "unsoldReasons": {
+          "no_bids": "Terminó sin pujas",
+          "reserve_not_met": "Precio de reserva no alcanzado",
+          "non_payment": "El comprador no completó el pago"
+        },
+        "suggestions": {
+          "lower10Price": "Bajar precio inicial un 10%",
+          "lower10Reserve": "Bajar reserva un 10%",
+          "removeReserve": "Eliminar precio de reserva",
+          "extend7Days": "Establecer duración a 7 días"
+        },
+        "form": {
+          "startingPrice": "Precio inicial ($)",
+          "reservePrice": "Precio de reserva (opcional, 0 = sin reserva)",
+          "duration": "Duración",
+          "autoRelist": "Relistar automáticamente si no se vende",
+          "autoRelistHint": "Relista automáticamente hasta 3 veces si la subasta termina sin venta.",
+          "submit": "Relistar ahora",
+          "submitting": "Relistando…"
+        }
+      }
     },
     "myAuctionsBidder": {
       "title": "Mis Subastas",

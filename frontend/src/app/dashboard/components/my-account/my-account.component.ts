@@ -5,6 +5,7 @@ import { ActivatedRoute } from '@angular/router';
 import { AuthService, AppUser } from '../../../auth/services/auth.service';
 import { CustomerService } from '../../../shared/services/customer.service';
 import { StripeConnectService, ConnectAccountStatus, OnboardingFormData } from '../../../shared/services/stripe-connect.service';
+import { KycService, KycStatus, KycStatusResponse } from '../../../shared/services/kyc.service';
 import { Observable } from 'rxjs';
 
 @Component({
@@ -18,9 +19,15 @@ export class MyAccountComponent implements OnInit {
   private authService = inject(AuthService);
   private customerService = inject(CustomerService);
   private stripeConnect = inject(StripeConnectService);
+  private kycService = inject(KycService);
   private route = inject(ActivatedRoute);
 
   currentUser$: Observable<AppUser | null>;
+
+  kycStatusData: KycStatusResponse | null = null;
+  kycLoading = false;
+  kycReturnBanner = false;
+
   buyerScore: number | null = null;
   sellerScore: number | null = null;
   buyerReviewCount = 0;
@@ -82,6 +89,41 @@ export class MyAccountComponent implements OnInit {
     });
 
     this.loadConnectStatus();
+    this.loadKycStatus();
+
+    this.route.queryParams.subscribe(params => {
+      if (params['kyc_return'] === '1') {
+        this.kycReturnBanner = true;
+      }
+    });
+  }
+
+  loadKycStatus(): void {
+    this.kycLoading = true;
+    this.kycService.fetchStatus().subscribe({
+      next: (data) => { this.kycStatusData = data; this.kycLoading = false; },
+      error: () => { this.kycLoading = false; }
+    });
+  }
+
+  startKycVerification(): void {
+    this.kycService.startVerification();
+  }
+
+  get kycStatusLabel(): string {
+    const s: KycStatus = this.kycStatusData?.kycStatus ?? 'none';
+    const map: Record<KycStatus, string> = {
+      none: 'Not verified',
+      pending: 'Pending review',
+      approved: 'Verified',
+      rejected: 'Not approved'
+    };
+    return map[s];
+  }
+
+  get kycStatusClass(): string {
+    const s: KycStatus = this.kycStatusData?.kycStatus ?? 'none';
+    return `kyc-${s}`;
   }
 
   loadConnectStatus(): void {

@@ -8,6 +8,7 @@ import Swal from 'sweetalert2';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { ListingsService } from '../../../shared/services/listings.service';
 import { CustomerService, CustomerInfo } from '../../../shared/services/customer.service';
+import { KycService, KYC_THRESHOLD } from '../../../shared/services/kyc.service';
 import { API_CONFIG } from '../../../shared/config/api.config';
 import { environment } from '@env';
 import { HeaderComponent } from '../../../shared/components/header/header.component';
@@ -33,6 +34,7 @@ export class AddListing implements OnInit, OnDestroy {
   private customerService = inject(CustomerService);
   private http = inject(HttpClient);
   private translate = inject(TranslateService);
+  private kycService = inject(KycService);
 
   readonly enableAuctions = environment.enableAuctions ?? true;
   readonly enablePrivateRooms = environment.enablePrivateRooms ?? true;
@@ -823,6 +825,16 @@ export class AddListing implements OnInit, OnDestroy {
       return;
     }
 
+    // Pre-flight KYC check for high-value listings
+    const price = parseFloat(this.listingForm.get('startingBid')?.value || '0');
+    if (price >= KYC_THRESHOLD) {
+      const status = await firstValueFrom(this.kycService.fetchStatus()).catch(() => null);
+      if (status?.kycStatus !== 'approved') {
+        this.kycService.openKycGate(status?.kycStatus ?? 'none');
+        return;
+      }
+    }
+
     this.isSubmitting = true;
     this.errorMessage = '';
 
@@ -854,6 +866,10 @@ export class AddListing implements OnInit, OnDestroy {
       firstValueFrom(this.listingsService.deleteListingDraft()).catch(() => {});
     } catch (error: any) {
       this.isSubmitting = false;
+      if (error?.error?.error === 'kyc_required') {
+        this.kycService.openKycGate(error.error.kycStatus || 'none');
+        return;
+      }
       this.errorMessage = error.message || error.error?.message || 'Failed to create listing. Please try again.';
     }
   }

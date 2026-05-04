@@ -16,6 +16,7 @@ import { AuthService } from '../../../auth/services/auth.service';
 import { PrivateRoomService, Bidder } from '../../../private-room/services/private-room.service';
 import { StripeConnectService } from '../../../shared/services/stripe-connect.service';
 import { FeatureFlagsService } from '../../../shared/services/feature-flags.service';
+import { KycService } from '../../../shared/services/kyc.service';
 import { TranslateModule } from '@ngx-translate/core';
 import { ReportModalComponent } from '../../../shared/components/report-modal/report-modal.component';
 import { FollowService, FollowStatus } from '../../../shared/services/follow.service';
@@ -40,6 +41,7 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
   private privateRoomService = inject(PrivateRoomService);
   private stripeConnectService = inject(StripeConnectService);
   featureFlags = inject(FeatureFlagsService);
+  private kycService = inject(KycService);
   private followService = inject(FollowService);
   private cdr = inject(ChangeDetectorRef);
 
@@ -844,6 +846,11 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
         });
       },
       error: (err) => {
+        if (err?.error?.error === 'kyc_required') {
+          this.closeBidModal();
+          this.kycService.openKycGate(err.error.kycStatus || 'none');
+          return;
+        }
         const msg = err?.error?.message || err?.message || 'Failed to place bid. Please try again.';
         this.bidModalError = msg;
         this.cdr.markForCheck();

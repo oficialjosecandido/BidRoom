@@ -1174,7 +1174,37 @@
       "declinedBadge": "✗ Declined",
       "acceptedAt": "Accepted",
       "invitedAt": "Invited",
-      "viewListing": "View Listing"
+      "viewListing": "View Listing",
+      "relist": {
+        "title": "Relist Auction",
+        "subtitle": "Adjust your settings and relist the item to give it another chance.",
+        "suggestionsLabel": "Smart suggestions",
+        "relistBtn": "Relist",
+        "alreadyRelisted": "Relisted",
+        "autoRelistBadge": "Auto-relist",
+        "autoRelistBadgeTitle": "This listing will auto-relist if it ends unsold",
+        "relistCount": "Relist #{{count}}",
+        "unsoldReasons": {
+          "no_bids": "Ended with no bids",
+          "reserve_not_met": "Reserve price not met",
+          "non_payment": "Buyer did not complete payment"
+        },
+        "suggestions": {
+          "lower10Price": "Lower starting price by 10%",
+          "lower10Reserve": "Lower reserve by 10%",
+          "removeReserve": "Remove reserve price",
+          "extend7Days": "Set duration to 7 days"
+        },
+        "form": {
+          "startingPrice": "Starting Price ($)",
+          "reservePrice": "Reserve Price (optional, 0 = none)",
+          "duration": "Duration",
+          "autoRelist": "Auto-relist if unsold again",
+          "autoRelistHint": "Automatically relist up to 3 times if the auction ends without a sale.",
+          "submit": "Relist Now",
+          "submitting": "Relisting…"
+        }
+      }
     },
     "myAuctionsBidder": {
       "title": "My Auctions",

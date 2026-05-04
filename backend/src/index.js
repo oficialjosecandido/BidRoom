@@ -39,6 +39,7 @@ const reportRoutes = require('./routes/reports');
 const userRoutes = require('./routes/users');
 const followRoutes = require('./routes/follows');
 const damageClaimsRoutes = require('./routes/damageClaims');
+const { router: kycRoutes, kycWebhookHandler } = require('./routes/kyc');
 
 // Import services
 const auctionEndScheduler = require('./services/auctionEndScheduler');
@@ -100,6 +101,7 @@ app.use(morgan('combined'));
 // Stripe webhooks need raw body for signature verification (must be before express.json())
 app.post('/api/payments/webhook', express.raw({ type: 'application/json' }), stripeWebhookHandler);
 app.post('/api/connect/webhook', express.raw({ type: 'application/json' }), connectWebhookHandler);
+app.post('/api/kyc/webhook', express.raw({ type: 'application/json' }), kycWebhookHandler);
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -167,6 +169,7 @@ app.use('/api/reports', generalLimiter, reportRoutes);
 app.use('/api/users', generalLimiter, userRoutes);
 app.use('/api/follows', generalLimiter, followRoutes);
 app.use('/api/damage-claims', generalLimiter, damageClaimsRoutes);
+app.use('/api/kyc', generalLimiter, kycRoutes);
 
 app.get('/', (req, res) => {
   res.json({
