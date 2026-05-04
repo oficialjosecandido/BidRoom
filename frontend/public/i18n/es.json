@@ -243,6 +243,12 @@
       "jewelry": "Joyería"
     },
     "successMessage": "¡Anuncio creado exitosamente!",
+    "draftRestored": "Se restauró tu borrador guardado.",
+    "draftAutoSaveInfo": "Tu progreso se guarda automáticamente mientras editas (y al añadir fotos).",
+    "saveDraft": "Guardar borrador",
+    "draftSaving": "Guardando borrador…",
+    "draftSaved": "Borrador guardado",
+    "draftError": "No se pudo guardar el borrador. Comprueba la conexión e inténtalo de nuevo.",
     "errorUploadFailed": "Error al subir imágenes. Inténtalo de nuevo.",
     "errorStep2Description": "Por favor completa todos los campos. La descripción debe tener al menos 50 caracteres.",
     "reservePrice": "Precio de Reserva",

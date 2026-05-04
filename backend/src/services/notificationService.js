@@ -526,12 +526,15 @@ async function notifySellerOrderCancelledNoShipment({ transactionId, listingTitl
 
 /** Buyer confirmed receipt - notify seller */
 async function notifyBuyerConfirmedReceipt({ transactionId, listingTitle, buyerName, sellerUserId }) {
+  const link = transactionId
+    ? `/dashboard/seller?tab=transactions#transaction-${transactionId}`
+    : '/dashboard/seller?tab=transactions';
   return createNotification({
     userId: sellerUserId,
     title: 'Buyer confirmed receipt',
     message: `${buyerName || 'The buyer'} confirmed receipt of "${listingTitle || 'the item'}".`,
     type: 'shipping',
-    link: `/dashboard/transactions`,
+    link,
     referenceId: transactionId
   });
 }
@@ -637,12 +640,15 @@ async function notifyBuyerSellerAccepted({ transactionId, listingTitle, buyerUse
 
 /** Buyer paid — notify seller */
 async function notifySellerPaymentReceived({ transactionId, listingTitle, buyerName, sellerUserId }) {
+  const link = transactionId
+    ? `/dashboard/seller?tab=transactions#transaction-${transactionId}`
+    : '/dashboard/seller?tab=transactions';
   return createNotification({
     userId: sellerUserId,
     title: 'Payment received',
     message: `${buyerName || 'A buyer'} paid for "${listingTitle || 'your listing'}". Confirm acceptance and prepare to ship.`,
     type: 'transaction',
-    link: '/dashboard/transactions',
+    link,
     referenceId: transactionId
   });
 }

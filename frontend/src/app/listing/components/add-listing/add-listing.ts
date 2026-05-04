@@ -1,8 +1,9 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormArray } from '@angular/forms';
 import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
-import { firstValueFrom } from 'rxjs';
+import { firstValueFrom, from, merge, Subject, Subscription } from 'rxjs';
+import { debounceTime, filter, switchMap, tap } from 'rxjs/operators';
 import Swal from 'sweetalert2';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { ListingsService } from '../../../shared/services/listings.service';
@@ -25,7 +26,7 @@ interface Category {
   templateUrl: './add-listing.html',
   styleUrl: './add-listing.scss',
 })
-export class AddListing implements OnInit {
+export class AddListing implements OnInit, OnDestroy {
   private fb = inject(FormBuilder);
   private router = inject(Router);
   private listingsService = inject(ListingsService);
@@ -51,6 +52,15 @@ export class AddListing implements OnInit {
   // Drag-to-reorder state
   dragSrcIndex: number | null = null;
   dragOverIndex: number | null = null;
+
+  /** Autosave draft */
+  private readonly mediaChange$ = new Subject<void>();
+  private draftAutosaveSub?: Subscription;
+  private restoringDraft = false;
+  /** Maps stable file fingerprint → uploaded image URL (avoids re-uploading on each autosave). */
+  private readonly urlByFileKey = new Map<string, string>();
+  draftSaveStatus: 'idle' | 'saving' | 'saved' | 'error' = 'idle';
+  draftSaveError = '';
 
   // Categories
   categories: Category[] = [
@@ -167,7 +177,14 @@ export class AddListing implements OnInit {
   ngOnInit(): void {
     this.initializeForm();
     this.setupFormSubscriptions();
+    void this.loadDraftFromServer();
+    this.setupDraftAutosave();
     this.loadCustomerInfo();
+  }
+
+  ngOnDestroy(): void {
+    this.draftAutosaveSub?.unsubscribe();
+    this.mediaChange$.complete();
   }
 
   loadCustomerInfo(): void {
@@ -264,6 +281,224 @@ export class AddListing implements OnInit {
       this.selectedCategory = this.categories.find(c => c.id === categoryId) || null;
       this.listingForm.patchValue({ subCategory: '' });
     });
+  }
+
+  private fileKey(file: File): string {
+    return `${file.name}:${file.size}:${file.lastModified}`;
+  }
+
+  private notifyMediaChanged(): void {
+    this.mediaChange$.next();
+  }
+
+  private setupDraftAutosave(): void {
+    this.draftAutosaveSub = merge(this.listingForm.valueChanges, this.mediaChange$).pipe(
+      tap(() => {
+        if (this.draftSaveStatus === 'saved') this.draftSaveStatus = 'idle';
+      }),
+      debounceTime(2800),
+      filter(() => !this.restoringDraft && !this.isSubmitting && !this.isUploadingImages),
+      switchMap(() => from(this.persistDraft({ manual: false })))
+    ).subscribe({
+      error: () => {
+        this.draftSaveStatus = 'error';
+        this.draftSaveError = this.translate.instant('addListing.draftError');
+      }
+    });
+  }
+
+  private hasDraftableContent(): boolean {
+    const v = this.listingForm.getRawValue() as Record<string, unknown>;
+    const text = (s: unknown) => (typeof s === 'string' ? s.trim() : '');
+    if (text(v['title'])) return true;
+    if (text(v['description'])) return true;
+    if (text(v['category'])) return true;
+    if (text(v['subCategory'])) return true;
+    if (v['startingBid'] != null && v['startingBid'] !== '') return true;
+    if (v['minimumAcceptPrice'] != null && v['minimumAcceptPrice'] !== '') return true;
+    if (this.uploadedFiles.length > 0) return true;
+    if ([...this.urlByFileKey.values()].length > 0) return true;
+    return false;
+  }
+
+  private buildDraftPayload(): Record<string, unknown> {
+    const formValue = this.listingForm.getRawValue();
+    const imageUrls = this.buildOrderedImageUrlList();
+    return { ...formValue, imageUrls };
+  }
+
+  /** Ordered URLs for image files only (videos are not stored in draft). */
+  private buildOrderedImageUrlList(): string[] {
+    const urls: string[] = [];
+    for (const file of this.uploadedFiles) {
+      if (this.ALLOWED_IMAGE_TYPES.includes(file.type)) {
+        const u = this.urlByFileKey.get(this.fileKey(file));
+        if (u) urls.push(u);
+      }
+    }
+    return urls;
+  }
+
+  private async uploadPendingImagesForDraft(): Promise<void> {
+    const pending = this.uploadedFiles.filter(
+      f => this.ALLOWED_IMAGE_TYPES.includes(f.type) && !this.urlByFileKey.has(this.fileKey(f))
+    );
+    if (pending.length === 0) return;
+
+    const chunkSize = 10;
+    for (let i = 0; i < pending.length; i += chunkSize) {
+      const chunk = pending.slice(i, i + chunkSize);
+      const formData = new FormData();
+      chunk.forEach(file => formData.append('images', file));
+      const response = await firstValueFrom(
+        this.http.post<{ urls: string[] }>(`${API_CONFIG.getApiUrl()}/uploads`, formData)
+      );
+      const urls = response.urls || [];
+      chunk.forEach((file, idx) => {
+        const url = urls[idx];
+        if (url) this.urlByFileKey.set(this.fileKey(file), url);
+      });
+    }
+  }
+
+  private async persistDraft(opts: { manual: boolean }): Promise<void> {
+    if (!this.hasDraftableContent()) {
+      if (opts.manual) {
+        this.draftSaveStatus = 'idle';
+        this.draftSaveError = '';
+      }
+      return;
+    }
+    this.draftSaveStatus = 'saving';
+    this.draftSaveError = '';
+    const pendingUpload = this.uploadedFiles.some(
+      f => this.ALLOWED_IMAGE_TYPES.includes(f.type) && !this.urlByFileKey.has(this.fileKey(f))
+    );
+    if (pendingUpload) this.isUploadingImages = true;
+    try {
+      await this.uploadPendingImagesForDraft();
+      const payload = this.buildDraftPayload();
+      await firstValueFrom(this.listingsService.saveListingDraft(payload));
+      this.draftSaveStatus = 'saved';
+      if (opts.manual) {
+        void Swal.fire({
+          toast: true,
+          position: 'top-end',
+          icon: 'success',
+          title: this.translate.instant('addListing.draftSaved'),
+          showConfirmButton: false,
+          timer: 2200,
+          timerProgressBar: true
+        });
+      }
+    } catch (e: unknown) {
+      const status = (e as { status?: number })?.status;
+      if (status === 401) {
+        this.draftSaveStatus = 'idle';
+        return;
+      }
+      this.draftSaveStatus = 'error';
+      this.draftSaveError = this.translate.instant('addListing.draftError');
+      if (opts.manual) {
+        this.errorMessage = this.draftSaveError;
+      }
+    } finally {
+      if (pendingUpload) this.isUploadingImages = false;
+    }
+  }
+
+  async saveDraftManually(): Promise<void> {
+    if (this.isSubmitting || this.isUploadingImages) return;
+    await this.persistDraft({ manual: true });
+  }
+
+  private async loadDraftFromServer(): Promise<void> {
+    try {
+      const res = await firstValueFrom(this.listingsService.getListingDraft());
+      const draft = res?.draft;
+      if (!draft?.payload || typeof draft.payload !== 'object') return;
+
+      this.restoringDraft = true;
+      const p = draft.payload as Record<string, unknown>;
+
+      const patch: Record<string, unknown> = {};
+      const keys = [
+        'title', 'category', 'subCategory', 'listingFormat', 'condition', 'description',
+        'locationCity', 'locationRegion', 'locationCountry', 'duration', 'startingBid',
+        'reservePrice', 'buyNowPrice', 'minimumAcceptPrice', 'allowPrivateRoom',
+        'shippingOption', 'flatRateShipping', 'packageSize', 'shippingOriginPostalCode',
+        'shippingOriginCity', 'shippingOriginCountry', 'returnPolicy', 'sellerDeclaration'
+      ];
+      for (const k of keys) {
+        if (k in p && p[k] !== undefined) patch[k] = p[k];
+      }
+      this.listingForm.patchValue(patch, { emitEvent: false });
+
+      const catId = patch['category'] as string;
+      this.selectedCategory = catId ? this.categories.find(c => c.id === catId) || null : null;
+
+      const specs = p['specifications'];
+      if (Array.isArray(specs)) {
+        while (this.specifications.length) this.specifications.removeAt(0);
+        for (const row of specs) {
+          const r = row as { key?: string; value?: string };
+          this.specifications.push(
+            this.fb.group({
+              key: [r.key || '', Validators.required],
+              value: [r.value || '', Validators.required]
+            })
+          );
+        }
+      }
+
+      const format = (patch['listingFormat'] as string) || this.listingForm.get('listingFormat')?.value;
+      this.updateConditionalValidators(format || 'auction');
+
+      const urls = p['imageUrls'];
+      if (Array.isArray(urls) && urls.length > 0) {
+        await this.hydrateMediaFromUrls(urls.filter((u): u is string => typeof u === 'string' && u.length > 0));
+      }
+
+      this.restoringDraft = false;
+      void Swal.fire({
+        toast: true,
+        position: 'top-end',
+        icon: 'info',
+        title: this.translate.instant('addListing.draftRestored'),
+        showConfirmButton: false,
+        timer: 3500,
+        timerProgressBar: true
+      });
+    } catch (e: unknown) {
+      if ((e as { status?: number })?.status === 401) {
+        this.restoringDraft = false;
+        return;
+      }
+      this.restoringDraft = false;
+    }
+  }
+
+  private async hydrateMediaFromUrls(urls: string[]): Promise<void> {
+    this.uploadedFiles = [];
+    this.previewUrls = [];
+    while (this.media.length) this.media.removeAt(0);
+
+    for (let i = 0; i < urls.length; i++) {
+      const url = urls[i];
+      try {
+        const res = await fetch(url, { mode: 'cors' });
+        if (!res.ok) continue;
+        const blob = await res.blob();
+        const ext = blob.type?.split('/')[1] || 'jpg';
+        const file = new File([blob], `draft-${i}.${ext}`, { type: blob.type || 'image/jpeg' });
+        this.urlByFileKey.set(this.fileKey(file), url);
+        this.uploadedFiles.push(file);
+        this.previewUrls.push(URL.createObjectURL(blob));
+        this.media.push(this.fb.control(file));
+      } catch {
+        /* skip broken image */
+      }
+    }
   }
 
   updateConditionalValidators(format: string): void {
@@ -374,6 +609,7 @@ export class AddListing implements OnInit {
   private addFiles(fileList: FileList | File[]): void {
     this.errorMessage = '';
     const files = Array.from(fileList);
+    const countBefore = this.uploadedFiles.length;
     const rejected: { name: string; reason: 'type' | 'maxPhotos' | 'maxPhotosWithVideo' | 'videoLimit' }[] = [];
     let imgs = this.imageCount;
     let vids = this.videoCount;
@@ -409,6 +645,10 @@ export class AddListing implements OnInit {
       }
     });
 
+    if (this.uploadedFiles.length > countBefore) {
+      this.notifyMediaChanged();
+    }
+
     if (rejected.length > 0) {
       const byReason = new Map<typeof rejected[number]['reason'], string[]>();
       for (const r of rejected) {
@@ -439,11 +679,16 @@ export class AddListing implements OnInit {
 
   removeFile(index: number): void {
     if (index >= 0 && index < this.uploadedFiles.length) {
+      const prev = this.previewUrls[index];
+      if (typeof prev === 'string' && prev.startsWith('blob:')) {
+        URL.revokeObjectURL(prev);
+      }
       this.uploadedFiles.splice(index, 1);
       this.previewUrls.splice(index, 1);
       if (this.media.length > index) {
         this.media.removeAt(index);
       }
+      this.notifyMediaChanged();
     }
   }
 
@@ -486,6 +731,7 @@ export class AddListing implements OnInit {
 
     this.uploadedFiles = files;
     this.previewUrls = previews;
+    this.notifyMediaChanged();
   }
 
   onThumbDragEnd(): void {
@@ -605,6 +851,7 @@ export class AddListing implements OnInit {
         timerProgressBar: true
       });
       this.router.navigate(['/listing', listing.slug]);
+      firstValueFrom(this.listingsService.deleteListingDraft()).catch(() => {});
     } catch (error: any) {
       this.isSubmitting = false;
       this.errorMessage = error.message || error.error?.message || 'Failed to create listing. Please try again.';

@@ -246,6 +246,12 @@
       "jewelry": "Jewelry"
     },
     "successMessage": "Listing created successfully!",
+    "draftRestored": "Your saved draft was restored.",
+    "draftAutoSaveInfo": "Your progress is saved automatically while you edit (and when you add photos).",
+    "saveDraft": "Save as draft",
+    "draftSaving": "Saving draft…",
+    "draftSaved": "Draft saved",
+    "draftError": "Could not save draft. Check your connection and try again.",
     "errorUploadFailed": "Failed to upload images. Please try again.",
     "errorStep2Description": "Please complete all required fields. Description must be at least 50 characters.",
     "reservePrice": "Reserve Price",

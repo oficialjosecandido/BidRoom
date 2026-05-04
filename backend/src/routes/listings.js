@@ -1,5 +1,6 @@
 const express = require('express');
 const Listing = require('../models/Listing');
+const ListingDraft = require('../models/ListingDraft');
 const User = require('../models/User');
 const Bid = require('../models/Bid');
 const Offer = require('../models/Offer');
@@ -466,6 +467,60 @@ router.get('/stats/overview', async (req, res) => {
       error: 'Failed to fetch stats',
       message: error.message
     });
+  }
+});
+
+// ─── Listing drafts (in-progress add-listing), one per seller ───────────────
+// Must be registered BEFORE `/:id` so paths are not captured as ids.
+
+router.get('/drafts/current', authenticateToken, async (req, res) => {
+  try {
+    const user = await User.findOne({ uid: req.user.uid });
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    const doc = await ListingDraft.findOne({ seller: user._id }).lean();
+    if (!doc) return res.json({ draft: null });
+    return res.json({
+      draft: {
+        payload: doc.payload || {},
+        updatedAt: doc.updatedAt
+      }
+    });
+  } catch (error) {
+    console.error('Error loading listing draft:', error);
+    res.status(500).json({ error: 'Failed to load draft', message: error.message });
+  }
+});
+
+router.put('/drafts/current', authenticateToken, requireActiveAccount, async (req, res) => {
+  try {
+    const user = await User.findOne({ uid: req.user.uid });
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    const body = req.body && typeof req.body === 'object' ? req.body : {};
+    const payload = body.payload != null ? body.payload : body;
+    if (payload == null || typeof payload !== 'object') {
+      return res.status(400).json({ error: 'Invalid payload', message: 'Expected a JSON object.' });
+    }
+    const doc = await ListingDraft.findOneAndUpdate(
+      { seller: user._id },
+      { seller: user._id, payload },
+      { upsert: true, new: true, setDefaultsOnInsert: true }
+    ).lean();
+    return res.json({ ok: true, updatedAt: doc.updatedAt });
+  } catch (error) {
+    console.error('Error saving listing draft:', error);
+    res.status(500).json({ error: 'Failed to save draft', message: error.message });
+  }
+});
+
+router.delete('/drafts/current', authenticateToken, async (req, res) => {
+  try {
+    const user = await User.findOne({ uid: req.user.uid });
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    await ListingDraft.deleteOne({ seller: user._id });
+    return res.status(204).send();
+  } catch (error) {
+    console.error('Error deleting listing draft:', error);
+    res.status(500).json({ error: 'Failed to delete draft', message: error.message });
   }
 });
 
