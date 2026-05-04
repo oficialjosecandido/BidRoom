@@ -27,6 +27,99 @@
       "system": "Match system"
     }
   },
+  "landing": {
+    "nav": {
+      "language": "Choose language",
+      "auctions": "Auctions",
+      "howItWorks": "How it works",
+      "privateRooms": "Private rooms",
+      "signIn": "Sign in"
+    },
+    "home": {
+      "skipHeading": "BidRoom.pt — premium auctions in Portugal. Available in light and dark mode, with Portuguese tile motifs in light mode.",
+      "breadcrumb": { "home": "Home", "featured": "Featured auctions" },
+      "theme": {
+        "toggleTitle": "Switch light / dark mode",
+        "light": "Light mode",
+        "dark": "Dark mode"
+      },
+      "hero": {
+        "svgDarkTitle": "Decorative illustration — dark mode sardine and tiles",
+        "svgLightTitle": "Decorative tile background — light mode",
+        "eyebrow": "Portugal · Launch 2026",
+        "title1": "High-value",
+        "title2": "auctions,",
+        "titleEm": "done right.",
+        "subtitle": "The first Portuguese premium auction platform with real-time private rooms, verified reputation, and secure payments.",
+        "ctaExplore": "Explore auctions",
+        "ctaHow": "How it works",
+        "liveNow": "Live now"
+      },
+      "stats": {
+        "activeAuctions": "Active auctions",
+        "volume": "Transaction volume",
+        "satisfaction": "Buyer satisfaction",
+        "bidTime": "Average bid time"
+      },
+      "section": { "featured": "Featured", "ongoing": "Live auctions" },
+      "badges": { "live": "Live", "privateRoom": "Private room", "bestOffer": "Best offer" },
+      "listing": {
+        "currentBid": "Current bid",
+        "minPrice": "Minimum price",
+        "offersCount": "3 offers"
+      },
+      "listing1": { "title": "Patek Philippe Ref. 5711", "meta": "Watches · Geneva, 2019" },
+      "listing2": { "title": "Barca Velha 1985 — Magnum", "meta": "Wine · Douro, Portugal" },
+      "listing3": { "title": "Leica M6 TTL — 0.85x", "meta": "Photography · Lisbon, 2001" },
+      "azulejoSection": "Portuguese inspiration · 16th-century tiles",
+      "private": {
+        "tag": "Exclusive feature",
+        "title1": "Private",
+        "title2": "auction rooms",
+        "body": "When the public auction ends, top bidders are invited to an exclusive room. A final 60-second race. Highest bid wins automatically.",
+        "b1": "The seller invites 2–5 registered bidders",
+        "b2": "15 minutes to accept or decline the invite",
+        "b3": "Each bid resets the 60-second timer",
+        "b4": "Winner determined automatically",
+        "visLabel": "Private room · Live",
+        "visSub": "Room closes in",
+        "highestBid": "Highest bid"
+      },
+      "trust": {
+        "eyebrow": "Trust & security",
+        "title": "Built to last",
+        "c1t": "Verified reputation",
+        "c1b": "0–100 score from reviews, disputes, and history. Private rooms require a score of 60 or higher.",
+        "c2t": "EasyPay payments",
+        "c2b": "Multibanco, MB WAY, card. SEPA transfer directly to the seller’s IBAN.",
+        "c3t": "Disputes resolved",
+        "c3b": "Human moderation when issues arise. Both accounts suspended automatically during resolution.",
+        "c4t": "Ship within 5 business days",
+        "c4b": "Automatic alert on day 3. Automatic refund on day 5 if not shipped.",
+        "c5t": "AI moderation",
+        "c5b": "Azure AI reviews text and images. Prohibited items and inappropriate content blocked automatically.",
+        "c6t": "Portuguese & English",
+        "c6b": "Fully bilingual platform for the Portuguese market with full PT and EN support."
+      },
+      "footer": {
+        "tagline": "Portugal’s premium auction marketplace",
+        "platform": "Platform",
+        "account": "Account",
+        "legal": "Legal",
+        "activeAuctions": "Active auctions",
+        "bestOffer": "Best offer",
+        "signIn": "Sign in",
+        "register": "Register",
+        "dashboard": "Dashboard",
+        "reputation": "Reputation",
+        "terms": "Terms of use",
+        "privacy": "Privacy",
+        "cookies": "Cookies",
+        "contact": "Contact",
+        "copyright": "© 2026 BidRoom · All rights reserved · Lisbon, Portugal"
+      }
+    }
+  },
   "footer": {
     "tagline": "Your premier auction marketplace for unique finds and valuable treasures.",
     "quickLinks": "Quick Links",
@@ -1950,8 +2043,24 @@
   },
   "sellerProfile": {
     "memberSince": "Member since",
+    "lastActive": "Active",
+    "lastActiveNow": "just now",
+    "lastActiveUnknown": "unknown",
     "reviews": "reviews",
     "noReviews": "No reviews yet",
+    "noReviewsYet": "No reviews to show.",
+    "reviewsError": "Failed to load reviews.",
+    "allReviews": "All",
+    "asSeller": "As Seller",
+    "asBuyer": "As Buyer",
+    "sortBy": "Sort:",
+    "sortRecent": "Recent",
+    "sortHighest": "Highest",
+    "sortLowest": "Lowest",
+    "auto": "Auto",
+    "sold": "Items Sold",
+    "bought": "Items Bought",
+    "followers": "Followers",
     "activeListings": "Active Listings",
     "noActiveListings": "No active listings at the moment.",
     "bid": "bid",

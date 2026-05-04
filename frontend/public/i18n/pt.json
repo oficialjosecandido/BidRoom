@@ -27,6 +27,99 @@
       "system": "Seguir o sistema"
     }
   },
+  "landing": {
+    "nav": {
+      "language": "Escolher idioma",
+      "auctions": "Leilões",
+      "howItWorks": "Como funciona",
+      "privateRooms": "Salas privadas",
+      "signIn": "Entrar"
+    },
+    "home": {
+      "skipHeading": "BidRoom.pt — leilões premium em Portugal. Disponível em modo claro e escuro, com referências aos azulejos portugueses no modo claro.",
+      "breadcrumb": { "home": "Início", "featured": "Leilões em destaque" },
+      "theme": {
+        "toggleTitle": "Alternar modo claro / escuro",
+        "light": "Modo claro",
+        "dark": "Modo escuro"
+      },
+      "hero": {
+        "svgDarkTitle": "Ilustração decorativa modo escuro — sardinha e azulejos",
+        "svgLightTitle": "Fundo decorativo de azulejos — modo claro",
+        "eyebrow": "Portugal · Lançamento 2026",
+        "title1": "Leilões de",
+        "title2": "alto valor,",
+        "titleEm": "feitos bem.",
+        "subtitle": "A primeira plataforma portuguesa de leilões premium com salas privadas em tempo real, reputação verificada e pagamentos seguros.",
+        "ctaExplore": "Explorar leilões",
+        "ctaHow": "Como funciona",
+        "liveNow": "Ao vivo agora"
+      },
+      "stats": {
+        "activeAuctions": "Leilões activos",
+        "volume": "Volume transaccionado",
+        "satisfaction": "Satisfação compradores",
+        "bidTime": "Tempo médio de lance"
+      },
+      "section": { "featured": "Em destaque", "ongoing": "Leilões em curso" },
+      "badges": { "live": "Ao vivo", "privateRoom": "Sala privada", "bestOffer": "Melhor oferta" },
+      "listing": {
+        "currentBid": "Lance actual",
+        "minPrice": "Preço mínimo",
+        "offersCount": "3 ofertas"
+      },
+      "listing1": { "title": "Patek Philippe Ref. 5711", "meta": "Relógios · Genebra, 2019" },
+      "listing2": { "title": "Barca Velha 1985 — Magnum", "meta": "Vinhos · Douro, Portugal" },
+      "listing3": { "title": "Leica M6 TTL — 0.85x", "meta": "Fotografia · Lisboa, 2001" },
+      "azulejoSection": "Inspiração portuguesa · Azulejos do século XVI",
+      "private": {
+        "tag": "Funcionalidade exclusiva",
+        "title1": "Salas de Leilão",
+        "title2": "Privadas",
+        "body": "Quando o leilão público termina, os melhores licitadores são convidados para uma sala exclusiva. Uma corrida final de 60 segundos. O mais alto vence automaticamente.",
+        "b1": "O vendedor convida 2 a 5 licitadores registados",
+        "b2": "15 minutos para aceitar ou recusar o convite",
+        "b3": "Cada lance reinicia o contador de 60 segundos",
+        "b4": "Vencedor determinado automaticamente",
+        "visLabel": "Sala privada · Ao vivo",
+        "visSub": "Sala fecha em",
+        "highestBid": "Lance mais alto"
+      },
+      "trust": {
+        "eyebrow": "Confiança e segurança",
+        "title": "Construído para durar",
+        "c1t": "Reputação verificada",
+        "c1b": "Pontuação 0–100 baseada em avaliações, disputas e histórico. Acesso a Salas Privadas requer pontuação ≥60.",
+        "c2t": "Pagamentos EasyPay",
+        "c2b": "Multibanco, MB WAY, cartão. Transferência SEPA directa para o IBAN do vendedor.",
+        "c3t": "Disputas resolvidas",
+        "c3b": "Moderação humana em caso de problema. Suspensão automática de ambas as contas durante a resolução.",
+        "c4t": "Envio em 5 dias úteis",
+        "c4b": "Alerta automático no dia 3. Reembolso automático no dia 5 se não houver envio.",
+        "c5t": "Moderação por IA",
+        "c5b": "Azure AI analisa texto e imagens. Artigos proibidos e conteúdo impróprio bloqueados automaticamente.",
+        "c6t": "Português e Inglês",
+        "c6b": "Plataforma completamente bilingue, adaptada ao mercado português com suporte integral em PT e EN."
+      },
+      "footer": {
+        "tagline": "O mercado de leilões premium de Portugal",
+        "platform": "Plataforma",
+        "account": "Conta",
+        "legal": "Legal",
+        "activeAuctions": "Leilões activos",
+        "bestOffer": "Melhor oferta",
+        "signIn": "Entrar",
+        "register": "Registar",
+        "dashboard": "Painel",
+        "reputation": "Reputação",
+        "terms": "Termos de uso",
+        "privacy": "Privacidade",
+        "cookies": "Cookies",
+        "contact": "Contacto",
+        "copyright": "© 2026 BidRoom · Todos os direitos reservados · Lisboa, Portugal"
+      }
+    }
+  },
   "footer": {
     "tagline": "O seu marketplace de leilões premium para descobertas únicas e tesouros valiosos.",
     "quickLinks": "Links Rápidos",
@@ -1950,8 +2043,24 @@
   },
   "sellerProfile": {
     "memberSince": "Membro desde",
+    "lastActive": "Ativo",
+    "lastActiveNow": "agora mesmo",
+    "lastActiveUnknown": "desconhecido",
     "reviews": "avaliações",
     "noReviews": "Sem avaliações ainda",
+    "noReviewsYet": "Sem avaliações para mostrar.",
+    "reviewsError": "Não foi possível carregar as avaliações.",
+    "allReviews": "Todas",
+    "asSeller": "Como Vendedor",
+    "asBuyer": "Como Comprador",
+    "sortBy": "Ordenar:",
+    "sortRecent": "Recentes",
+    "sortHighest": "Mais alta",
+    "sortLowest": "Mais baixa",
+    "auto": "Auto",
+    "sold": "Itens Vendidos",
+    "bought": "Itens Comprados",
+    "followers": "Seguidores",
     "activeListings": "Leilões Ativos",
     "noActiveListings": "Sem leilões ativos de momento.",
     "bid": "lance",

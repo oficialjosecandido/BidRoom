@@ -27,6 +27,11 @@
       "system": "Como el sistema"
     }
   },
+  "landing": {
+    "nav": {
+      "language": "Elegir idioma"
+    }
+  },
   "footer": {
     "tagline": "Tu marketplace de subastas premium para hallazgos únicos y tesoros valiosos.",
     "quickLinks": "Enlaces Rápidos",

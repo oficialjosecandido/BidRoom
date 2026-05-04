@@ -1,22 +1,28 @@
-import { Component, OnInit, OnDestroy, AfterViewInit, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { Router, ActivatedRoute, RouterLink } from '@angular/router';
-import { TranslateModule } from '@ngx-translate/core';
-import { HeaderComponent } from '../../../shared/components/header/header.component';
-import { FooterComponent } from '../../../shared/components/footer/footer.component';
+import { Component, OnInit, OnDestroy, inject } from '@angular/core';
+import { RouterLink } from '@angular/router';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { ListingsService, Listing, ListingsQueryParams, StatsOverview } from '../../../shared/services/listings.service';
 import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [RouterLink],
+  imports: [RouterLink, TranslateModule],
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.scss']
 })
 export class HomeComponent implements OnInit, OnDestroy {
+  private translate = inject(TranslateService);
+
   isLight = false;
+  langMenuOpen = false;
+  readonly languages = [
+    { code: 'en', label: 'EN', name: 'English' },
+    { code: 'pt', label: 'PT', name: 'Português' },
+    { code: 'es', label: 'ES', name: 'Español' },
+    { code: 'fr', label: 'FR', name: 'Français' }
+  ];
+
   private pvtSeconds = 47;
   private timerId: ReturnType<typeof setInterval> | null = null;
 
@@ -44,7 +50,17 @@ export class HomeComponent implements OnInit, OnDestroy {
     return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
   }
 
+  get currentLang(): string {
+    return this.translate.currentLang || 'en';
+  }
+
+  get currentLangLabel(): string {
+    return this.languages.find((l) => l.code === this.currentLang)?.label ?? 'EN';
+  }
+
   ngOnInit(): void {
+    const saved = localStorage.getItem('lang') || 'pt';
+    this.translate.use(saved);
     this.timerId = setInterval(() => {
       this.pvtSeconds = Math.max(0, this.pvtSeconds - 1);
     }, 1000);
@@ -58,5 +74,15 @@ export class HomeComponent implements OnInit, OnDestroy {
 
   toggleTheme(): void {
     this.isLight = !this.isLight;
+  }
+
+  toggleLangMenu(): void {
+    this.langMenuOpen = !this.langMenuOpen;
+  }
+
+  switchLanguage(code: string): void {
+    this.translate.use(code);
+    localStorage.setItem('lang', code);
+    this.langMenuOpen = false;
   }
 }

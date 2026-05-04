@@ -27,6 +27,11 @@
       "system": "Comme le système"
     }
   },
+  "landing": {
+    "nav": {
+      "language": "Choisir la langue"
+    }
+  },
   "footer": {
     "tagline": "Votre marketplace d'enchères premium pour des trouvailles uniques et des trésors de valeur.",
     "quickLinks": "Liens Rapides",
