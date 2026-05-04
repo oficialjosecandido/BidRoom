@@ -1,0 +1,181 @@
+<div class="analytics-wrap">
+  <div class="analytics-toolbar card">
+    <div class="toolbar-row">
+      <div class="field-group presets">
+        <span class="field-label">{{ 'dashboard.seller.analytics.range' | translate }}</span>
+        <div class="segmented">
+          <button type="button" class="seg-btn" [class.active]="preset === '7d'" (click)="setPreset('7d')">
+            {{ 'dashboard.seller.analytics.last7d' | translate }}
+          </button>
+          <button type="button" class="seg-btn" [class.active]="preset === '30d'" (click)="setPreset('30d')">
+            {{ 'dashboard.seller.analytics.last30d' | translate }}
+          </button>
+          <button type="button" class="seg-btn" [class.active]="preset === 'custom'" (click)="setPreset('custom')">
+            {{ 'dashboard.seller.analytics.custom' | translate }}
+          </button>
+        </div>
+      </div>
+
+      @if (preset === 'custom') {
+        <div class="custom-dates">
+          <label class="mini-field">
+            <span>{{ 'dashboard.seller.analytics.from' | translate }}</span>
+            <input type="date" [(ngModel)]="customFrom" name="from" />
+          </label>
+          <label class="mini-field">
+            <span>{{ 'dashboard.seller.analytics.toOptional' | translate }}</span>
+            <input type="date" [(ngModel)]="customTo" name="to" />
+          </label>
+        </div>
+      }
+    </div>
+
+    <div class="toolbar-row filters-row">
+      <label class="field-group">
+        <span class="field-label">{{ 'dashboard.seller.analytics.filterCategory' | translate }}</span>
+        <select class="control" [(ngModel)]="categoryFilter" name="cat">
+          <option value="">{{ 'dashboard.seller.analytics.allCategories' | translate }}</option>
+          <option value="electronics">{{ 'listing.categories.electronics' | translate }}</option>
+          <option value="home-garden">{{ 'listing.categories.home-garden' | translate }}</option>
+          <option value="art">{{ 'listing.categories.art' | translate }}</option>
+          <option value="collectibles">{{ 'listing.categories.collectibles' | translate }}</option>
+          <option value="jewelry">{{ 'listing.categories.jewelry' | translate }}</option>
+        </select>
+      </label>
+
+      <label class="field-group grow">
+        <span class="field-label">{{ 'dashboard.seller.analytics.filterListing' | translate }}</span>
+        <select class="control" [(ngModel)]="listingFilter" name="lid">
+          <option value="">{{ 'dashboard.seller.analytics.allListings' | translate }}</option>
+          @for (opt of listingOptions; track opt.id) {
+            <option [value]="opt.id">{{ opt.title }}</option>
+          }
+        </select>
+      </label>
+
+      <button type="button" class="apply-btn" (click)="applyFilters()">
+        {{ 'dashboard.seller.analytics.apply' | translate }}
+      </button>
+    </div>
+  </div>
+
+  @if (loading && !data) {
+    <div class="state-block">
+      <div class="spinner"></div>
+      <span>{{ 'dashboard.common.loading' | translate }}</span>
+    </div>
+  }
+
+  @if (error && !data) {
+    <div class="state-block error">
+      <span>{{ ('dashboard.seller.analytics.' + error) | translate }}</span>
+      <button type="button" class="retry" (click)="reload()">{{ 'dashboard.common.tryAgain' | translate }}</button>
+    </div>
+  }
+
+  @if (data) {
+    @if (loading) {
+      <div class="updating-chip">{{ 'dashboard.seller.analytics.updating' | translate }}</div>
+    }
+
+    @if (error) {
+      <div class="soft-error">{{ ('dashboard.seller.analytics.' + error) | translate }}</div>
+    }
+
+    <p class="range-hint">
+      {{ data.range.from | date: 'mediumDate' }} — {{ data.range.to | date: 'mediumDate' }}
+    </p>
+
+    <div class="kpi-grid">
+      <article class="kpi card">
+        <h3>{{ 'dashboard.seller.analytics.views' | translate }}</h3>
+        <p class="kpi-num">{{ data.overview.totalViews }}</p>
+        <p class="kpi-note">{{ 'dashboard.seller.analytics.viewsHint' | translate }}</p>
+      </article>
+      <article class="kpi card">
+        <h3>{{ 'dashboard.seller.analytics.bidsOffers' | translate }}</h3>
+        <p class="kpi-num">{{ data.overview.totalBidsAndOffers }}</p>
+        <p class="kpi-note">{{ 'dashboard.seller.analytics.bidsOffersHint' | translate }}</p>
+      </article>
+      <article class="kpi card">
+        <h3>{{ 'dashboard.seller.analytics.salesPeriod' | translate }}</h3>
+        <p class="kpi-num">{{ data.overview.salesInRange }}</p>
+        <p class="kpi-note">{{ 'dashboard.seller.analytics.salesPeriodHint' | translate }}</p>
+      </article>
+      <article class="kpi card">
+        <h3>{{ 'dashboard.seller.analytics.followers' | translate }}</h3>
+        <p class="kpi-num">{{ data.overview.followersTotal }}</p>
+        <p class="kpi-note">
+          {{
+            'dashboard.seller.analytics.followersHint'
+              | translate: { n: data.overview.followersNewInRange }
+          }}
+        </p>
+      </article>
+    </div>
+
+    <section class="card counts-section">
+      <h2>{{ 'dashboard.seller.analytics.inventory' | translate }}</h2>
+      <div class="counts-row">
+        <div><strong>{{ data.listingCounts.active }}</strong> {{ 'dashboard.seller.analytics.countActive' | translate }}</div>
+        <div><strong>{{ data.listingCounts.ended }}</strong> {{ 'dashboard.seller.analytics.countEnded' | translate }}</div>
+        <div><strong>{{ data.listingCounts.sold }}</strong> {{ 'dashboard.seller.analytics.countSoldEver' | translate }}</div>
+        <div><strong>{{ data.listingCounts.cancelled }}</strong> {{ 'dashboard.seller.analytics.countCancelled' | translate }}</div>
+      </div>
+      <div class="conversion-row">
+        <strong>{{ 'dashboard.seller.analytics.conversionTitle' | translate }}</strong>
+        @if (data.overview.conversionPercent !== null) {
+          <span class="conversion-val">{{ data.overview.conversionPercent }}%</span>
+          <span class="conversion-def">{{ 'dashboard.seller.analytics.conversionDefinition' | translate }}</span>
+        } @else {
+          <span class="muted">{{ 'dashboard.seller.analytics.conversionDash' | translate }}</span>
+        }
+      </div>
+    </section>
+
+    <section class="card table-card">
+      <div class="table-head">
+        <h2>{{ 'dashboard.seller.analytics.perListing' | translate }}</h2>
+      </div>
+      @if (data.listings.length === 0) {
+        <p class="muted empty-table">{{ 'dashboard.seller.analytics.noListings' | translate }}</p>
+      } @else {
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>{{ 'dashboard.seller.analytics.colListing' | translate }}</th>
+                <th>{{ 'dashboard.seller.analytics.colStatus' | translate }}</th>
+                <th>{{ 'dashboard.seller.analytics.colViews' | translate }}</th>
+                <th>{{ 'dashboard.seller.analytics.colBids' | translate }}</th>
+                <th>{{ 'dashboard.seller.analytics.colSold' | translate }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (row of data.listings; track row.listingId) {
+                <tr>
+                  <td class="title-cell">
+                    <a [routerLink]="['/listing', row.slug]" class="listing-link">{{ row.title }}</a>
+                  </td>
+                  <td><span class="pill">{{ statusLabel(row) | translate }}</span></td>
+                  <td>{{ row.viewsInRange }}</td>
+                  <td>{{ row.bidEventsInRange }} <span class="sub-muted">({{ row.cumulativeBidCount }})</span></td>
+                  <td>
+                    @if (row.soldListing) {
+                      <span class="yes">{{ 'dashboard.seller.analytics.yes' | translate }}</span>
+                      @if (row.saleActivityInRange) {
+                        <span class="dot-in-range">{{ 'dashboard.seller.analytics.saleThisPeriod' | translate }}</span>
+                      }
+                    } @else {
+                      <span class="muted">—</span>
+                    }
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </section>
+  }
+</div>

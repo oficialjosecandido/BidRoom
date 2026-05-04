@@ -299,6 +299,25 @@ const listingSchema = new mongoose.Schema({
   winnerSelectionDeadline: {
     type: Date,
     default: null // Set to 24 hours after auction ends
+  },
+  // Relist tracking
+  autoRelist: {
+    type: Boolean,
+    default: false
+  },
+  relistCount: {
+    type: Number,
+    default: 0,
+    min: 0
+  },
+  relistOf: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Listing',
+    default: null
+  },
+  relistedAt: {
+    type: Date,
+    default: null
   }
 }, {
   timestamps: true // Adds createdAt and updatedAt fields
