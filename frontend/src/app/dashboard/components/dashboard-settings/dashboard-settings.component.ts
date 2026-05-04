@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { AuthService, AppUser } from '../../../auth/services/auth.service';
 import { CustomerService, SellerCompliance } from '../../../shared/services/customer.service';
+import { ThemePreference, ThemeService } from '../../../shared/services/theme.service';
 import { StripeConnectService, ConnectAccountStatus, OnboardingFormData } from '../../../shared/services/stripe-connect.service';
 import { NotificationPreferencesService, NotificationPreferences, NOTIFICATION_EVENT_KEYS, DEFAULT_CHANNEL_PREF } from '../../../shared/services/notification-preferences.service';
 import { Observable } from 'rxjs';
@@ -19,6 +20,7 @@ export class DashboardSettingsComponent implements OnInit {
   private authService = inject(AuthService);
   private customerService = inject(CustomerService);
   private translate = inject(TranslateService);
+  readonly theme = inject(ThemeService);
   private stripeConnect = inject(StripeConnectService);
   private notifPrefsService = inject(NotificationPreferencesService);
 
@@ -104,6 +106,12 @@ export class DashboardSettingsComponent implements OnInit {
   notifPrefsSaving = false;
   notifPrefsSaved = false;
   notifPrefsError: string | null = null;
+
+  readonly themeChoices: { id: ThemePreference; labelKey: string }[] = [
+    { id: 'light', labelKey: 'dashboard.settings.appearance.light' },
+    { id: 'dark', labelKey: 'dashboard.settings.appearance.dark' },
+    { id: 'system', labelKey: 'dashboard.settings.appearance.system' }
+  ];
 
   readonly languages = [
     { code: 'en', label: 'English', flag: '🇬🇧' },

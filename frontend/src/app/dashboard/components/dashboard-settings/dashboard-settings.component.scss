@@ -339,6 +339,37 @@
 .loading-text { color: #888; font-size: 14px; }
 .error-text { color: var(--error-color, #c62828); font-size: 13px; margin-bottom: 8px; }
 
+.appearance-options {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.appearance-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1px solid var(--border-gray, #e0e0e0);
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: border-color 0.2s ease, background 0.2s ease;
+
+  input {
+    accent-color: var(--accent-purple, #6b4d7a);
+  }
+
+  &:hover {
+    border-color: var(--accent-purple, #6b4d7a);
+  }
+
+  &.selected {
+    border-color: var(--accent-purple, #6b4d7a);
+    background: rgba(139, 90, 150, 0.08);
+  }
+}
+
 .dsa-classification {
   margin-bottom: 20px;
 }

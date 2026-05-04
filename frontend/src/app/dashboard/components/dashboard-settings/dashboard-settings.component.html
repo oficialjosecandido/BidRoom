@@ -186,6 +186,25 @@
       </div>
     </div>
 
+    <!-- Appearance (theme) -->
+    <div class="settings-card">
+      <div class="card-header">
+        <span class="card-icon">🌓</span>
+        <h2 class="card-title">{{ 'dashboard.settings.appearance.title' | translate }}</h2>
+      </div>
+      <div class="card-body">
+        <p class="card-desc">{{ 'dashboard.settings.appearance.subtitle' | translate }}</p>
+        <div class="appearance-options">
+          @for (opt of themeChoices; track opt.id) {
+            <label class="appearance-option" [class.selected]="theme.preference() === opt.id">
+              <input type="radio" name="appearanceTheme" [value]="opt.id" [checked]="theme.preference() === opt.id" (change)="theme.setPreference(opt.id)" />
+              <span>{{ opt.labelKey | translate }}</span>
+            </label>
+          }
+        </div>
+      </div>
+    </div>
+
     <!-- Seller Payout Account -->
     <div class="settings-card settings-card-full">
       <div class="card-header">

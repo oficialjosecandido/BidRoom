@@ -30,6 +30,17 @@
       STRIPE_PUBLISHABLE_KEY: 'pk_live_51TI5X806hw2O8NlNQNn7MGeAFmj5tk19yVupsK0wprzCVMwHiJOSPcGeKd4MuyaoYj9Fyz43qia3RbZNI7Y46JGM0030VYlipc'
     };
   </script>
+  <!-- Early theme (matches ThemeService): reduces flash before Angular boot -->
+  <script>
+    (function () {
+      try {
+        var p = localStorage.getItem('bidroom-theme-preference') || 'system';
+        var r = p === 'light' ? 'light' : p === 'dark' ? 'dark' : (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        document.documentElement.setAttribute('data-theme', r);
+        document.documentElement.style.setProperty('color-scheme', r);
+      } catch (e) {}
+    })();
+  </script>
 </head>
 <body>
   <app-root></app-root>

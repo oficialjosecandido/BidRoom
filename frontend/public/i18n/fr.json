@@ -19,6 +19,12 @@
     "menu": {
       "open": "Ouvrir le menu",
       "close": "Fermer le menu"
+    },
+    "theme": {
+      "button": "Thème",
+      "light": "Clair",
+      "dark": "Sombre",
+      "system": "Comme le système"
     }
   },
   "footer": {
@@ -874,6 +880,13 @@
       "sellerScore": "Score vendeur",
       "languagePreference": "Préférence de langue",
       "languageDesc": "Choisissez la langue pour votre expérience BidRoom.",
+      "appearance": {
+        "title": "Apparence",
+        "subtitle": "Clair, sombre ou comme l’appareil. Une fois connecté, votre choix est enregistré sur le compte et appliqué sur vos autres appareils.",
+        "light": "Clair",
+        "dark": "Sombre",
+        "system": "Comme le système"
+      },
       "saveLanguage": "Enregistrer la langue",
       "saving": "Enregistrement...",
       "saved": "Enregistré",
