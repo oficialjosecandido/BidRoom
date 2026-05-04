@@ -18,6 +18,27 @@ export interface CustomerUser {
   createdAt?: string;
 }
 
+/** DSA / trader identity (from User); null if user record not linked yet */
+export interface SellerCompliance {
+  sellerClassification: 'private' | 'professional';
+  professionalVerificationStatus: 'none' | 'pending' | 'verified' | 'rejected';
+  professionalLegalName?: string | null;
+  professionalTradeName?: string | null;
+  professionalAddressLine1?: string | null;
+  professionalAddressLine2?: string | null;
+  professionalCity?: string | null;
+  professionalRegion?: string | null;
+  professionalPostalCode?: string | null;
+  professionalCountry?: string | null;
+  professionalContactPhone?: string | null;
+  professionalContactEmail?: string | null;
+  professionalVatId?: string | null;
+  professionalSubmittedAt?: string | null;
+  professionalVerifiedAt?: string | null;
+  professionalVerifiedByEmail?: string | null;
+  professionalRejectionNote?: string | null;
+}
+
 export interface CustomerInfo {
   user: CustomerUser;
   balance: number;
@@ -28,6 +49,8 @@ export interface CustomerInfo {
   buyerReviewCount: number;
   sellerReviewCount: number;
   stripeConnectOnboarded: boolean;
+  /** Present when linked User exists (DSA seller classification). */
+  sellerCompliance?: SellerCompliance | null;
 }
 
 @Injectable({
@@ -44,5 +67,19 @@ export class CustomerService {
 
   updateLanguage(language: string): Observable<{ language: string }> {
     return this.http.patch<{ language: string }>(`${this.apiUrl}/language`, { language });
+  }
+
+  updateSellerCompliance(payload: Record<string, unknown>): Observable<{
+    sellerClassification: string;
+    professionalVerificationStatus: string;
+    professionalSubmittedAt?: string | null;
+    message: string;
+  }> {
+    return this.http.patch<{
+      sellerClassification: string;
+      professionalVerificationStatus: string;
+      professionalSubmittedAt?: string | null;
+      message: string;
+    }>(`${this.apiUrl}/seller-compliance`, payload);
   }
 }

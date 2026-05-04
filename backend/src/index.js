@@ -1,6 +1,8 @@
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
+const { createAdapter } = require('@socket.io/redis-adapter');
+const Redis = require('ioredis');
 const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
@@ -284,7 +286,41 @@ const startServer = async () => {
 
     // Connect to Redis
     await redisService.connect();
-    
+
+    // Attach socket.io Redis adapter so events are broadcast across all server instances.
+    // Uses two dedicated pub/sub clients (required by the adapter API).
+    // Fail-open: if the adapter setup throws, socket.io continues in single-instance mode.
+    if (process.env.REDIS_HOST) {
+      try {
+        const redisPort = parseInt(process.env.REDIS_PORT || '6379', 10);
+        const redisOpts = {
+          host: process.env.REDIS_HOST,
+          port: redisPort,
+          password: process.env.REDIS_PASSWORD || undefined,
+          tls: redisPort === 6380 ? {} : undefined,
+          lazyConnect: false
+        };
+        const pubClient = new Redis(redisOpts);
+        const subClient = pubClient.duplicate();
+        await Promise.all([
+          new Promise((res, rej) => {
+            pubClient.once('ready', res);
+            pubClient.once('error', rej);
+          }),
+          new Promise((res, rej) => {
+            subClient.once('ready', res);
+            subClient.once('error', rej);
+          })
+        ]);
+        io.adapter(createAdapter(pubClient, subClient));
+        console.log('🔌 Socket.io Redis adapter attached (multi-instance support enabled)');
+      } catch (adapterErr) {
+        console.warn('⚠️  Socket.io Redis adapter failed — running in single-instance mode:', adapterErr.message);
+      }
+    } else {
+      console.log('ℹ️  REDIS_HOST not set — socket.io running in single-instance mode');
+    }
+
     // Start the server
     server.listen(PORT, () => {
       console.log(`🚀 Server is running on port ${PORT}`);

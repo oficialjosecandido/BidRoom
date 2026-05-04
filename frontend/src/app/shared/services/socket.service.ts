@@ -187,9 +187,11 @@ export class SocketService {
       if (!this.socket) {
         this.connect();
       }
+      const socket = this.socket;
+      if (!socket) return () => {};
       const handler = () => this.ngZone.run(() => observer.next());
-      this.socket?.on('new-notification', handler);
-      return () => this.socket?.off('new-notification', handler);
+      socket.on('new-notification', handler);
+      return () => socket.off('new-notification', handler);
     });
   }
 
@@ -198,9 +200,11 @@ export class SocketService {
       if (!this.socket) {
         this.connect();
       }
+      const socket = this.socket;
+      if (!socket) return () => {};
       const handler = (data: NewBidEvent) => this.ngZone.run(() => observer.next(data));
-      this.socket?.on('new-bid', handler);
-      return () => this.socket?.off('new-bid', handler);
+      socket.on('new-bid', handler);
+      return () => socket.off('new-bid', handler);
     });
   }
 
@@ -209,9 +213,11 @@ export class SocketService {
       if (!this.socket) {
         this.connect();
       }
+      const socket = this.socket;
+      if (!socket) return () => {};
       const handler = (data: ListingUpdateEvent) => this.ngZone.run(() => observer.next(data));
-      this.socket?.on('listing-update', handler);
-      return () => this.socket?.off('listing-update', handler);
+      socket.on('listing-update', handler);
+      return () => socket.off('listing-update', handler);
     });
   }
 
@@ -220,9 +226,11 @@ export class SocketService {
       if (!this.socket) {
         this.connect();
       }
+      const socket = this.socket;
+      if (!socket) return () => {};
       const handler = (data: NewOfferEvent) => this.ngZone.run(() => observer.next(data));
-      this.socket?.on('new-offer', handler);
-      return () => this.socket?.off('new-offer', handler);
+      socket.on('new-offer', handler);
+      return () => socket.off('new-offer', handler);
     });
   }
 
@@ -231,9 +239,11 @@ export class SocketService {
       if (!this.socket) {
         this.connect();
       }
+      const socket = this.socket;
+      if (!socket) return () => {};
       const handler = (data: OfferUpdateEvent) => this.ngZone.run(() => observer.next(data));
-      this.socket?.on('offer-update', handler);
-      return () => this.socket?.off('offer-update', handler);
+      socket.on('offer-update', handler);
+      return () => socket.off('offer-update', handler);
     });
   }
 
@@ -259,9 +269,11 @@ export class SocketService {
       if (!this.socket) {
         this.connect();
       }
+      const socket = this.socket;
+      if (!socket) return () => {};
       const handler = (data: ViewerCountUpdateEvent) => this.ngZone.run(() => observer.next(data));
-      this.socket?.on('private-room-viewer-count-update', handler);
-      return () => this.socket?.off('private-room-viewer-count-update', handler);
+      socket.on('private-room-viewer-count-update', handler);
+      return () => socket.off('private-room-viewer-count-update', handler);
     });
   }
 
@@ -270,10 +282,12 @@ export class SocketService {
       if (!this.socket) {
         this.connect();
       }
+      const socket = this.socket;
+      if (!socket) return () => {};
       const handler = (data: { listingId: string; bidderId: string | null; bidderName: string; bidderFirstName: string; bidderLastName: string }) =>
         this.ngZone.run(() => observer.next(data));
-      this.socket?.on('invitation-accepted', handler);
-      return () => this.socket?.off('invitation-accepted', handler);
+      socket.on('invitation-accepted', handler);
+      return () => socket.off('invitation-accepted', handler);
     });
   }
 
@@ -282,10 +296,12 @@ export class SocketService {
       if (!this.socket) {
         this.connect();
       }
+      const socket = this.socket;
+      if (!socket) return () => {};
       const handler = (data: { listingId: string; bidderId: string | null }) =>
         this.ngZone.run(() => observer.next(data));
-      this.socket?.on('invitation-declined', handler);
-      return () => this.socket?.off('invitation-declined', handler);
+      socket.on('invitation-declined', handler);
+      return () => socket.off('invitation-declined', handler);
     });
   }
 
