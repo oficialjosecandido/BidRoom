@@ -12,6 +12,32 @@
     <a class="nav-link" routerLink="/landing/how-it-works">Como funciona</a>
     <a class="nav-link" routerLink="/landing" fragment="private-rooms">Salas Privadas</a>
 
+    <div class="lang-switcher">
+      <button
+        type="button"
+        class="lang-btn"
+        (click)="toggleLangMenu(); $event.stopPropagation()"
+        [attr.aria-expanded]="langMenuOpen"
+        aria-haspopup="listbox"
+        [attr.aria-label]="'landing.nav.language' | translate"
+      >
+        {{ currentLangLabel }} <span class="lang-chevron" aria-hidden="true">▾</span>
+      </button>
+      @if (langMenuOpen) {
+        <div class="lang-dropdown" role="listbox">
+          @for (lang of languages; track lang.code) {
+            <button
+              type="button"
+              role="option"
+              class="lang-option"
+              [class.active]="lang.code === currentLang"
+              (click)="switchLanguage(lang.code)"
+            >{{ lang.name }}</button>
+          }
+        </div>
+      }
+    </div>
+
     <button
       type="button"
       class="theme-toggle"

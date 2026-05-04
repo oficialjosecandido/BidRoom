@@ -34,7 +34,8 @@
       "Bash(grep -E \"\\\\.js$\")",
       "Bash(grep -n \"class=\\\\\"auction-info\\\\\"\\\\|</div>$\\\\|</app-listing-details>\" /Users/jose/Documents/bidroom/frontend/src/app/listing/components/listing-details/listing-details.component.html)",
       "Bash(node --check /Users/jose/Documents/bidroom/backend/src/models/Follow.js)",
-      "Bash(node --check /Users/jose/Documents/bidroom/backend/src/routes/follows.js)"
+      "Bash(node --check /Users/jose/Documents/bidroom/backend/src/routes/follows.js)",
+      "Bash(node --check /Users/jose/Documents/bidroom/backend/src/routes/users.js)"
     ]
   }
 }
