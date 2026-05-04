@@ -7,6 +7,25 @@
       <p>{{ 'addListing.pageSubtitle' | translate }}</p>
     </div>
 
+    <div class="draft-bar">
+      <span class="draft-hint">{{ 'addListing.draftAutoSaveInfo' | translate }}</span>
+      <span class="draft-status" [class.draft-status-error]="draftSaveStatus === 'error'">
+        @if (draftSaveStatus === 'saving') {
+          {{ 'addListing.draftSaving' | translate }}
+        } @else if (draftSaveStatus === 'saved') {
+          {{ 'addListing.draftSaved' | translate }}
+        } @else if (draftSaveStatus === 'error') {
+          {{ draftSaveError || ('addListing.draftError' | translate) }}
+        }
+      </span>
+      <button
+        type="button"
+        class="btn btn-draft"
+        (click)="saveDraftManually()"
+        [disabled]="isSubmitting || isUploadingImages">
+        {{ 'addListing.saveDraft' | translate }}
+      </button>
+    </div>
 
     <!-- Error Message -->
     @if (errorMessage && !isSubmitting && !isUploadingImages) {

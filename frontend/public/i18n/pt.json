@@ -246,6 +246,12 @@
       "jewelry": "Joalharia"
     },
     "successMessage": "Anúncio criado com sucesso!",
+    "draftRestored": "O seu rascunho guardado foi restaurado.",
+    "draftAutoSaveInfo": "O progresso é guardado automaticamente enquanto edita (e ao adicionar fotos).",
+    "saveDraft": "Guardar rascunho",
+    "draftSaving": "A guardar rascunho…",
+    "draftSaved": "Rascunho guardado",
+    "draftError": "Não foi possível guardar o rascunho. Verifique a ligação e tente novamente.",
     "errorUploadFailed": "Falha ao carregar imagens. Tente novamente.",
     "errorStep2Description": "Por favor, complete todos os campos obrigatórios. A descrição deve ter pelo menos 50 caracteres.",
     "reservePrice": "Preço de Reserva",

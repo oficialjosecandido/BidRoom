@@ -243,6 +243,12 @@
       "jewelry": "Bijouterie"
     },
     "successMessage": "Annonce créée avec succès !",
+    "draftRestored": "Votre brouillon enregistré a été restauré.",
+    "draftAutoSaveInfo": "Votre progression est enregistrée automatiquement pendant la saisie (et lors de l’ajout de photos).",
+    "saveDraft": "Enregistrer le brouillon",
+    "draftSaving": "Enregistrement du brouillon…",
+    "draftSaved": "Brouillon enregistré",
+    "draftError": "Impossible d’enregistrer le brouillon. Vérifiez la connexion et réessayez.",
     "errorUploadFailed": "Échec du téléchargement des images. Veuillez réessayer.",
     "errorStep2Description": "Veuillez compléter tous les champs obligatoires. La description doit comporter au moins 50 caractères.",
     "reservePrice": "Prix de Réserve",

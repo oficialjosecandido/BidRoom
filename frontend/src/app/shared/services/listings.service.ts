@@ -178,6 +178,21 @@ export class ListingsService {
     return this.http.post<Listing>(this.apiUrl, listingData);
   }
 
+  /** In-progress add-listing snapshot for the current seller (or null). */
+  getListingDraft(): Observable<{ draft: { payload: Record<string, unknown>; updatedAt: string } | null }> {
+    return this.http.get<{ draft: { payload: Record<string, unknown>; updatedAt: string } | null }>(
+      `${this.apiUrl}/drafts/current`
+    );
+  }
+
+  saveListingDraft(payload: Record<string, unknown>): Observable<{ ok: boolean; updatedAt: string }> {
+    return this.http.put<{ ok: boolean; updatedAt: string }>(`${this.apiUrl}/drafts/current`, { payload });
+  }
+
+  deleteListingDraft(): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/drafts/current`);
+  }
+
   buyNow(listingId: string): Observable<any> {
     return this.http.post(`${this.apiUrl}/${listingId}/buy-now`, {});
   }
