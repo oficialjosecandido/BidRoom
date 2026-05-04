@@ -1171,6 +1171,46 @@
   }
 }
 
+.review-tags-section {
+  margin-bottom: 1rem;
+
+  .review-tags-label {
+    display: block;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-gray, #718096);
+    margin-bottom: 0.5rem;
+  }
+
+  .review-tags-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+
+  .review-tag-pill {
+    background: var(--surface-alt, #f0f4f8);
+    border: 1.5px solid var(--border, #e2e8f0);
+    border-radius: 20px;
+    padding: 0.3rem 0.75rem;
+    font-size: 12px;
+    cursor: pointer;
+    color: var(--text-gray, #4a5568);
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+
+    &.selected {
+      background: var(--primary-color, #8b5a96);
+      border-color: var(--primary-color, #8b5a96);
+      color: #fff;
+    }
+
+    &:hover:not(.selected) {
+      border-color: var(--primary-color, #8b5a96);
+      color: var(--primary-color, #8b5a96);
+    }
+  }
+}
+
 .comment-row {
   .comment-label {
     display: flex;

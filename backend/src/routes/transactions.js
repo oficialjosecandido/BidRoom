@@ -13,6 +13,7 @@ const {
   notifyBuyerConfirmedReceipt,
   notifyBuyerSellerAccepted,
   notifySellerBuyerRemindedShip,
+  notifyReviewPrompt,
   emitNewNotificationToUser
 } = require('../services/notificationService');
 const { ensureShippingDeadlinesFromPaidAt } = require('../services/shippingDeadlines');
@@ -667,6 +668,15 @@ router.patch('/:id', requireActiveAccount, async (req, res) => {
       } else if (status === 'completed' && ['paid', 'shipped', 'delivered'].includes(ts)) {
         transaction.transactionStatus = 'completed';
         transaction.completedAt = transaction.completedAt || new Date();
+        // Prompt both parties to leave a review
+        const io = req.app.get('io');
+        notifyReviewPrompt({
+          buyerId: transaction.buyer,
+          sellerId: transaction.seller,
+          listingTitle: transaction.listing?.title,
+          transactionId: transaction._id?.toString(),
+          io
+        }).catch(err => console.error('Failed to send review prompt notification:', err));
       }
     }
 

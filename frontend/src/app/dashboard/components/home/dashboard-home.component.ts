@@ -8,7 +8,7 @@ import { AuthService, AppUser } from '../../../auth/services/auth.service';
 import { ListingsService, Listing } from '../../../shared/services/listings.service';
 import { CustomerService, CustomerInfo } from '../../../shared/services/customer.service';
 import { PaymentsService, TopupRecord } from '../../../shared/services/payments.service';
-import { ReviewsService, PendingReview } from '../../../shared/services/reviews.service';
+import { ReviewsService, PendingReview, ReviewTag } from '../../../shared/services/reviews.service';
 import { FeatureFlagsService } from '../../../shared/services/feature-flags.service';
 import { SocketService } from '../../../shared/services/socket.service';
 import { Observable, Subscription } from 'rxjs';
@@ -53,8 +53,22 @@ export class DashboardHomeComponent implements OnInit, OnDestroy {
   reviewTarget: PendingReview | null = null;
   reviewScore = 0;
   reviewDescription = '';
+  reviewTags: ReviewTag[] = [];
   reviewSubmitting = false;
   reviewError: string | null = null;
+
+  readonly TAGS_AS_SELLER: ReviewTag[] = [
+    'fast_shipping', 'item_as_described', 'great_packaging', 'good_communication',
+    'slow_shipping', 'not_as_described', 'poor_communication'
+  ];
+  readonly TAGS_AS_BUYER: ReviewTag[] = [
+    'fast_payment', 'smooth_transaction', 'trustworthy', 'good_communication',
+    'slow_payment', 'poor_communication'
+  ];
+
+  get availableTags(): ReviewTag[] {
+    return this.reviewTarget?.roleForReview === 'as_buyer' ? this.TAGS_AS_BUYER : this.TAGS_AS_SELLER;
+  }
 
   showBalanceModal = false;
   balanceModalAmount: number | null = null;
@@ -235,6 +249,7 @@ export class DashboardHomeComponent implements OnInit, OnDestroy {
     this.reviewTarget = item;
     this.reviewScore = 0;
     this.reviewDescription = '';
+    this.reviewTags = [];
     this.reviewError = null;
     this.showReviewModal = true;
   }
@@ -244,7 +259,21 @@ export class DashboardHomeComponent implements OnInit, OnDestroy {
     this.reviewTarget = null;
     this.reviewScore = 0;
     this.reviewDescription = '';
+    this.reviewTags = [];
     this.reviewError = null;
+  }
+
+  toggleReviewTag(tag: ReviewTag): void {
+    const idx = this.reviewTags.indexOf(tag);
+    if (idx >= 0) {
+      this.reviewTags.splice(idx, 1);
+    } else if (this.reviewTags.length < 5) {
+      this.reviewTags.push(tag);
+    }
+  }
+
+  isTagSelected(tag: ReviewTag): boolean {
+    return this.reviewTags.includes(tag);
   }
 
   setRating(r: number): void {
@@ -284,7 +313,8 @@ export class DashboardHomeComponent implements OnInit, OnDestroy {
       toUserId: this.reviewTarget.otherPartyId,
       role: this.reviewTarget.roleForReview,
       score: this.reviewScore,
-      description: this.reviewDescription.trim() || undefined
+      description: this.reviewDescription.trim() || undefined,
+      tags: this.reviewTags.length > 0 ? [...this.reviewTags] : undefined
     }).subscribe({
       next: () => {
         this.reviewSubmitting = false;

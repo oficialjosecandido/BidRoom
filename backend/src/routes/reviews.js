@@ -110,9 +110,15 @@ router.get('/scores/:userId', async (req, res) => {
 });
 
 /** Reviews are only allowed after completion and within 30 days */
-const REVIEWABLE_STATUSES = ['completed'];
+const REVIEWABLE_STATUSES = ['completed', 'cancelled'];
 const REVIEW_WINDOW_DAYS = 30;
 const REVIEW_WINDOW_MS = REVIEW_WINDOW_DAYS * 24 * 60 * 60 * 1000;
+
+const ALLOWED_TAGS = [
+  'fast_payment', 'fast_shipping', 'item_as_described', 'great_packaging',
+  'good_communication', 'smooth_transaction', 'trustworthy',
+  'slow_payment', 'slow_shipping', 'not_as_described', 'poor_communication'
+];
 
 /**
  * GET /api/reviews/pending
@@ -237,7 +243,7 @@ async function maybeAutoSuspendSeller(sellerId, io) {
  */
 router.post('/', authenticateToken, async (req, res) => {
   try {
-    const { listingId, toUserId, role, score, rating, description } = req.body;
+    const { listingId, toUserId, role, score, rating, description, tags } = req.body;
     const scoreVal = score != null ? score : rating; // support legacy 'rating' param
 
     if (!listingId || !toUserId || !role || scoreVal == null) {
@@ -345,6 +351,10 @@ router.post('/', authenticateToken, async (req, res) => {
       });
     }
 
+    const sanitizedTags = Array.isArray(tags)
+      ? tags.filter(t => ALLOWED_TAGS.includes(t)).slice(0, 5)
+      : [];
+
     const review = new Review({
       listing: listingId,
       reviewer: user._id,
@@ -352,6 +362,7 @@ router.post('/', authenticateToken, async (req, res) => {
       role,
       score: scoreNum,
       description: (description && String(description).trim().slice(0, 2000)) || null,
+      tags: sanitizedTags,
       transactionCompletedAt: completedAt,
       reviewerIp: hashReviewerIp(req.ip),
       reviewerUserAgent: (req.get('user-agent') || '').slice(0, 500) || null
