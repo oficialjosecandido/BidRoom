@@ -220,6 +220,61 @@
 
     <div class="account-card">
       <div class="card-header">
+        <h2 class="card-title">Identity Verification</h2>
+      </div>
+
+      <div class="card-body">
+        @if (kycReturnBanner) {
+          <div class="kyc-return-banner">
+            Your verification has been submitted. We'll update your status once the review is complete — this usually takes a few minutes.
+          </div>
+        }
+
+        @if (kycLoading) {
+          <p class="connect-loading">Checking verification status…</p>
+        } @else {
+          <div class="connect-status-row">
+            <span class="connect-label">Verification status:</span>
+            <span class="kyc-badge" [ngClass]="kycStatusClass">{{ kycStatusLabel }}</span>
+          </div>
+
+          @if (kycStatusData?.kycStatus === 'approved') {
+            <p class="connect-desc">
+              Your identity has been verified. You can bid on and list items above $5,000.
+            </p>
+            @if (kycStatusData?.kycVerifiedAt) {
+              <p class="kyc-detail">Verified on {{ kycStatusData!.kycVerifiedAt | date:'mediumDate' }}</p>
+            }
+          } @else if (kycStatusData?.kycStatus === 'pending') {
+            <p class="connect-desc">
+              Your identity verification is in progress. This usually takes a few minutes. You will be notified once it's complete.
+            </p>
+          } @else if (kycStatusData?.kycStatus === 'rejected') {
+            <p class="connect-desc">
+              Your previous verification was not approved.
+              @if (kycStatusData?.kycRejectionReason) {
+                Reason: <em>{{ kycStatusData!.kycRejectionReason }}</em>.
+              }
+              Please try again with a valid government-issued photo ID and a clear selfie.
+            </p>
+            <button type="button" class="connect-btn" (click)="startKycVerification()">Try Again</button>
+          } @else {
+            <p class="connect-desc">
+              Transactions of <strong>$5,000 or more</strong> require identity verification to comply with anti-money laundering (AML) regulations.
+            </p>
+            <ul class="connect-features">
+              <li>Government-issued photo ID (passport, driver's licence, or national ID)</li>
+              <li>A selfie with liveness check</li>
+              <li>Handled securely by Stripe Identity — your data is not stored on BidRoom</li>
+            </ul>
+            <button type="button" class="connect-btn" (click)="startKycVerification()">Start Verification</button>
+          }
+        }
+      </div>
+    </div>
+
+    <div class="account-card">
+      <div class="card-header">
         <h2 class="card-title">Account Settings</h2>
       </div>
 

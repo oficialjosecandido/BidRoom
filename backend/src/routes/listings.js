@@ -1074,6 +1074,20 @@ router.post('/', authenticateToken, requireActiveAccount, requireNoDisputeRestri
     // Note: Image upload will be handled separately. For now, allow empty images array.
     // Frontend should upload images first, then send URLs in the images array.
 
+    // KYC check for high-value listings
+    const KYC_THRESHOLD = 5000;
+    const listingPrice = parseFloat(startingPrice) || 0;
+    if (listingPrice >= KYC_THRESHOLD) {
+      const kycStatus = user.kycStatus || 'none';
+      if (kycStatus !== 'approved') {
+        return res.status(403).json({
+          error: 'kyc_required',
+          message: 'Identity verification is required to list items valued at $5,000 or more.',
+          kycStatus
+        });
+      }
+    }
+
     // Validate format-specific fields
     const isAuction = listingFormat === 'highest-bid' || listingFormat === 'auction';
     if (isAuction) {

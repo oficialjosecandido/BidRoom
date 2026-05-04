@@ -42,7 +42,8 @@
       "Bash(node --check /Users/jose/Documents/bidroom/backend/src/services/privateRoomPaymentService.js)",
       "Bash(node --check /Users/jose/Documents/bidroom/backend/src/services/auctionEndScheduler.js)",
       "Bash(node --check /Users/jose/Documents/bidroom/backend/src/services/transactionService.js)",
-      "Bash(node --check /Users/jose/Documents/bidroom/backend/src/routes/listings.js)"
+      "Bash(node --check /Users/jose/Documents/bidroom/backend/src/routes/listings.js)",
+      "Bash(grep -n \"getUser\\\\|currentUser\\\\|user\\\\$\\\\|isLoggedIn\" /Users/jose/Documents/bidroom/frontend/src/app/auth/services/auth.service.ts)"
     ]
   }
 }

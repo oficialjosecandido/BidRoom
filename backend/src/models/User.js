@@ -180,7 +180,18 @@ const userSchema = new mongoose.Schema({
   professionalSubmittedAt: { type: Date, default: null },
   professionalVerifiedAt: { type: Date, default: null },
   professionalVerifiedByEmail: { type: String, trim: true, default: null },
-  professionalRejectionNote: { type: String, trim: true, maxlength: 1000, default: null }
+  professionalRejectionNote: { type: String, trim: true, maxlength: 1000, default: null },
+  // Identity verification (KYC) for high-value transactions
+  kycStatus: {
+    type: String,
+    enum: ['none', 'pending', 'approved', 'rejected'],
+    default: 'none',
+    index: true
+  },
+  kycVerifiedAt: { type: Date, default: null },
+  kycStripeSessionId: { type: String, default: null },
+  kycRejectionReason: { type: String, default: null },
+  kycSubmittedAt: { type: Date, default: null }
 }, {
   timestamps: true // Adds createdAt and updatedAt fields
 });

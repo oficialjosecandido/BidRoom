@@ -220,6 +220,27 @@ router.post('/', optionalAuth, requireActiveAccountIfAuthenticated, requireNoDis
       }
     }
 
+    // KYC check for high-value bids
+    const KYC_THRESHOLD = 5000;
+    const bidAmount = parseFloat(amount);
+    if (bidAmount >= KYC_THRESHOLD) {
+      if (!user) {
+        return res.status(403).json({
+          error: 'kyc_required',
+          message: 'You must be logged in and identity-verified to bid on items valued at $5,000 or more.',
+          kycStatus: 'none'
+        });
+      }
+      const kycStatus = user.kycStatus || 'none';
+      if (kycStatus !== 'approved') {
+        return res.status(403).json({
+          error: 'kyc_required',
+          message: 'Identity verification is required to bid on items valued at $5,000 or more.',
+          kycStatus
+        });
+      }
+    }
+
     // Check auction format
     if (listing.auctionFormat === 'best-offer') {
       return res.status(400).json({
