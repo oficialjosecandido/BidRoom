@@ -19,6 +19,35 @@ function escapeRegex(str) {
   return String(str).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
+/** Populated seller fields for public listing APIs (DSA trader transparency). */
+const SELLER_DSA_PUBLIC_SELECT =
+  'firstName lastName email uid sellerClassification professionalVerificationStatus ' +
+  'professionalLegalName professionalTradeName professionalAddressLine1 professionalAddressLine2 ' +
+  'professionalCity professionalRegion professionalPostalCode professionalCountry professionalContactPhone ' +
+  'professionalContactEmail professionalVatId';
+
+/** Strip professional PII until admin verification (buyers still see classification + status). */
+function sanitizeSellerForPublic(seller) {
+  if (!seller || typeof seller !== 'object') return seller;
+  const out = { ...seller };
+  const cls = out.sellerClassification || 'private';
+  const st = out.professionalVerificationStatus || 'none';
+  if (cls !== 'professional' || st !== 'verified') {
+    delete out.professionalLegalName;
+    delete out.professionalTradeName;
+    delete out.professionalAddressLine1;
+    delete out.professionalAddressLine2;
+    delete out.professionalCity;
+    delete out.professionalRegion;
+    delete out.professionalPostalCode;
+    delete out.professionalCountry;
+    delete out.professionalContactPhone;
+    delete out.professionalContactEmail;
+    delete out.professionalVatId;
+  }
+  return out;
+}
+
 // GET /api/listings - Get all active listings with filtering and sorting
 router.get('/', async (req, res) => {
   try {
@@ -164,7 +193,7 @@ router.get('/', async (req, res) => {
     }
 
     const listings = await Listing.find(query)
-      .populate('seller', 'firstName lastName email')
+      .populate('seller', SELLER_DSA_PUBLIC_SELECT)
       .sort(sortObj)
       .limit(pageSize)
       .skip(skipNum)
@@ -198,6 +227,7 @@ router.get('/', async (req, res) => {
       const timeRemaining = new Listing(listing).getTimeRemaining();
       return {
         ...listing,
+        seller: sanitizeSellerForPublic(listing.seller),
         timeRemaining,
         endingSoon: timeRemaining.ended ? false : (timeRemaining.days === 0 && timeRemaining.hours <= 24)
       };
@@ -237,7 +267,7 @@ function generateSlug(title) {
 router.get('/slug/:slug', optionalAuth, async (req, res) => {
   try {
     let listing = await Listing.findOne({ slug: req.params.slug })
-      .populate('seller', 'firstName lastName email')
+      .populate('seller', SELLER_DSA_PUBLIC_SELECT)
       .lean();
 
     // If not found by slug, try to find listings without slugs and generate them
@@ -246,7 +276,7 @@ router.get('/slug/:slug', optionalAuth, async (req, res) => {
       // Try to find all listings without slugs
       const listingsWithoutSlugs = await Listing.find({ 
         slug: { $exists: false } 
-      }).populate('seller', 'firstName lastName email').lean();
+      }).populate('seller', SELLER_DSA_PUBLIC_SELECT).lean();
 
       // Generate slugs for listings that don't have them
       for (const listItem of listingsWithoutSlugs) {
@@ -296,7 +326,7 @@ router.get('/slug/:slug', optionalAuth, async (req, res) => {
             { slug: '' }
           ]
         })
-          .populate('seller', 'firstName lastName email')
+          .populate('seller', SELLER_DSA_PUBLIC_SELECT)
           .lean();
 
         if (potentialListing) {
@@ -323,7 +353,7 @@ router.get('/slug/:slug', optionalAuth, async (req, res) => {
       const isObjectId = /^[0-9a-fA-F]{24}$/.test(req.params.slug);
       if (isObjectId) {
         listing = await Listing.findById(req.params.slug)
-          .populate('seller', 'firstName lastName email')
+          .populate('seller', SELLER_DSA_PUBLIC_SELECT)
           .lean();
       }
     }
@@ -347,7 +377,7 @@ router.get('/slug/:slug', optionalAuth, async (req, res) => {
       try {
         await handleAuctionEnd(listing._id, null);
         listing = await Listing.findOne({ _id: listing._id })
-          .populate('seller', 'firstName lastName email')
+          .populate('seller', SELLER_DSA_PUBLIC_SELECT)
           .lean();
       } catch (err) {
         console.error('Lazy finalize auction on fetch:', err.message);
@@ -396,6 +426,7 @@ router.get('/slug/:slug', optionalAuth, async (req, res) => {
 
     res.json({
       ...listing,
+      seller: sanitizeSellerForPublic(listing.seller),
       status: listing.status,
       allowPrivateRoom: listing.allowPrivateRoom,
       privateRoomStatus: listing.privateRoomStatus,
@@ -533,12 +564,12 @@ router.get('/:id', optionalAuth, async (req, res) => {
     let listing;
     if (isObjectId) {
       listing = await Listing.findById(req.params.id)
-        .populate('seller', 'firstName lastName email')
+        .populate('seller', SELLER_DSA_PUBLIC_SELECT)
         .populate('platinumBidderInvitations.bidder', '_id firstName lastName')
         .lean();
     } else {
       listing = await Listing.findOne({ slug: req.params.id })
-        .populate('seller', 'firstName lastName email')
+        .populate('seller', SELLER_DSA_PUBLIC_SELECT)
         .populate('platinumBidderInvitations.bidder', '_id firstName lastName')
         .lean();
     }
@@ -560,7 +591,7 @@ router.get('/:id', optionalAuth, async (req, res) => {
       try {
         await handleAuctionEnd(listing._id, null);
         listing = await Listing.findOne({ _id: listing._id })
-          .populate('seller', 'firstName lastName email')
+          .populate('seller', SELLER_DSA_PUBLIC_SELECT)
           .populate('platinumBidderInvitations.bidder', '_id firstName lastName')
           .lean();
       } catch (err) {
@@ -622,7 +653,9 @@ router.get('/:id', optionalAuth, async (req, res) => {
         response.currentUserPlatinumStatus = { isPlatinumBidder, invitationPending };
       }
     }
-    
+
+    response.seller = sanitizeSellerForPublic(response.seller);
+
     res.json(response);
   } catch (error) {
     console.error('Error fetching listing:', error);
@@ -666,6 +699,18 @@ router.post('/', authenticateToken, requireActiveAccount, requireNoDisputeRestri
     const { updateUserSignals: trackSellerSignals } = require('../services/fraudDetectionService');
     const { getClientIp: getSellerIp } = require('../middleware/bidRateLimiter');
     trackSellerSignals(user._id, getSellerIp(req), req.headers['x-device-fingerprint'] || null).catch(() => {});
+
+    const sellerClass = user.sellerClassification || 'private';
+    if (sellerClass === 'professional') {
+      const vs = user.professionalVerificationStatus || 'none';
+      if (vs !== 'verified') {
+        return res.status(403).json({
+          error: 'Trader verification required',
+          message:
+            'Professional sellers must submit trader identity details and be verified by the platform before publishing listings. Complete this under Dashboard → Settings (Seller / DSA).'
+        });
+      }
+    }
 
     // Extract and validate required fields
     const {
@@ -893,7 +938,7 @@ router.post('/', authenticateToken, requireActiveAccount, requireNoDisputeRestri
 
     // Populate and return the listing
     const populatedListing = await Listing.findById(listing._id)
-      .populate('seller', 'firstName lastName email')
+      .populate('seller', SELLER_DSA_PUBLIC_SELECT)
       .lean();
 
     if (populatedListing.auctionFormat === 'best-offer') {
@@ -904,6 +949,7 @@ router.post('/', authenticateToken, requireActiveAccount, requireNoDisputeRestri
 
     res.status(201).json({
       ...populatedListing,
+      seller: sanitizeSellerForPublic(populatedListing.seller),
       timeRemaining,
       endingSoon: timeRemaining.ended ? false : (timeRemaining.days === 0 && timeRemaining.hours <= 24)
     });
@@ -1021,7 +1067,7 @@ router.patch('/:id', authenticateToken, requireActiveAccount, async (req, res) =
     await listing.save();
 
     const updated = await Listing.findById(listing._id)
-      .populate('seller', 'firstName lastName email')
+      .populate('seller', SELLER_DSA_PUBLIC_SELECT)
       .lean();
 
     return res.json({ listing: updated, message: 'Listing updated successfully.' });
@@ -1041,7 +1087,7 @@ router.post('/:id/buy-now', authenticateToken, requireActiveAccount, requireNoDi
     const user = await User.findOne({ uid: req.user.uid });
     if (!user) return res.status(404).json({ error: 'User not found' });
 
-    const listing = await Listing.findById(req.params.id).populate('seller', '_id uid firstName lastName');
+    const listing = await Listing.findById(req.params.id).populate('seller', SELLER_DSA_PUBLIC_SELECT);
     if (!listing) return res.status(404).json({ error: 'Listing not found' });
 
     if (!listing.buyNowPrice) {
@@ -1148,7 +1194,7 @@ router.post('/:id/buy-now', authenticateToken, requireActiveAccount, requireNoDi
 // POST /api/listings/:id/choose-winner - Seller chooses a winner
 router.post('/:id/choose-winner', authenticateToken, requireActiveAccount, async (req, res) => {
   try {
-    const listing = await Listing.findById(req.params.id).populate('seller', 'uid email');
+    const listing = await Listing.findById(req.params.id).populate('seller', SELLER_DSA_PUBLIC_SELECT);
 
     if (!listing) {
       return res.status(404).json({
@@ -1229,7 +1275,7 @@ router.post('/:id/choose-winner', authenticateToken, requireActiveAccount, async
 
     // Reload listing to get updated data
     const updatedListing = await Listing.findById(listing._id)
-      .populate('seller', 'firstName lastName email')
+      .populate('seller', SELLER_DSA_PUBLIC_SELECT)
       .populate('winner', 'firstName lastName email')
       .populate('winnerBid')
       .lean();
@@ -1250,7 +1296,7 @@ router.post('/:id/choose-winner', authenticateToken, requireActiveAccount, async
 // POST /api/listings/:id/reopen - Seller reopens an ended auction with no bids (extends by 7 days)
 router.post('/:id/reopen', authenticateToken, requireActiveAccount, async (req, res) => {
   try {
-    const listing = await Listing.findById(req.params.id).populate('seller', 'uid');
+    const listing = await Listing.findById(req.params.id).populate('seller', SELLER_DSA_PUBLIC_SELECT);
 
     if (!listing) {
       return res.status(404).json({
@@ -1300,7 +1346,7 @@ router.post('/:id/reopen', authenticateToken, requireActiveAccount, async (req, 
     });
 
     const updatedListing = await Listing.findById(listing._id)
-      .populate('seller', 'firstName lastName email')
+      .populate('seller', SELLER_DSA_PUBLIC_SELECT)
       .lean();
 
     res.json({
@@ -1319,7 +1365,7 @@ router.post('/:id/reopen', authenticateToken, requireActiveAccount, async (req, 
 // GET /api/listings/:id/bids - Get all bids for a listing (for seller to choose winner)
 router.get('/:id/bids', authenticateToken, async (req, res) => {
   try {
-    const listing = await Listing.findById(req.params.id).populate('seller', 'uid');
+    const listing = await Listing.findById(req.params.id).populate('seller', SELLER_DSA_PUBLIC_SELECT);
 
     if (!listing) {
       return res.status(404).json({
@@ -1514,7 +1560,7 @@ router.get('/bidder/my-auctions', authenticateToken, async (req, res) => {
     }
 
     const listings = await Listing.find({ _id: { $in: listingIds } })
-      .populate('seller', 'firstName lastName')
+      .populate('seller', SELLER_DSA_PUBLIC_SELECT)
       .sort({ endDate: -1 })
       .lean();
 
@@ -1543,6 +1589,7 @@ router.get('/bidder/my-auctions', authenticateToken, async (req, res) => {
       const latest = latestBidByListing[id];
       return {
         ...listing,
+        seller: sanitizeSellerForPublic(listing.seller),
         myHighestBid: myBid?.amount ?? null,
         myLastBidAt: myBid?.createdAt ?? null,
         notifyWhenOutbid: latest?.notifyWhenOutbid ?? true
@@ -1600,7 +1647,7 @@ router.get('/bidder/my-bets', authenticateToken, async (req, res) => {
     }
 
     const listings = await Listing.find({ _id: { $in: listingIds } })
-      .populate('seller', 'firstName lastName')
+      .populate('seller', SELLER_DSA_PUBLIC_SELECT)
       .sort({ endDate: -1 })
       .lean();
 
@@ -1616,6 +1663,7 @@ router.get('/bidder/my-bets', authenticateToken, async (req, res) => {
         (listing.auctionFormat === 'best-offer' && bets.some(x => x.type === 'offer' && x.status === 'accepted'));
       return {
         ...listing,
+        seller: sanitizeSellerForPublic(listing.seller),
         type: entry.type,
         bets,
         myHighestBid: myHighest,

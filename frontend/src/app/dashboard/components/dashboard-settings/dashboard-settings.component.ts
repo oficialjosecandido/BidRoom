@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { AuthService, AppUser } from '../../../auth/services/auth.service';
-import { CustomerService } from '../../../shared/services/customer.service';
+import { CustomerService, SellerCompliance } from '../../../shared/services/customer.service';
 import { StripeConnectService, ConnectAccountStatus, OnboardingFormData } from '../../../shared/services/stripe-connect.service';
 import { NotificationPreferencesService, NotificationPreferences, NOTIFICATION_EVENT_KEYS, DEFAULT_CHANNEL_PREF } from '../../../shared/services/notification-preferences.service';
 import { Observable } from 'rxjs';
@@ -76,6 +76,28 @@ export class DashboardSettingsComponent implements OnInit {
   langSaving = false;
   langSaved = false;
 
+  /** DSA seller / trader compliance (from User via profile API). */
+  sellerComplianceAvailable = false;
+  sellerClassification: 'private' | 'professional' = 'private';
+  professionalLegalName = '';
+  professionalTradeName = '';
+  professionalAddressLine1 = '';
+  professionalAddressLine2 = '';
+  professionalCity = '';
+  professionalRegion = '';
+  professionalPostalCode = '';
+  professionalCountry = 'PT';
+  professionalContactPhone = '';
+  professionalContactEmail = '';
+  professionalVatId = '';
+  professionalVerificationStatus: SellerCompliance['professionalVerificationStatus'] = 'none';
+  professionalSubmittedAt: string | null = null;
+  professionalVerifiedAt: string | null = null;
+  professionalRejectionNote: string | null = null;
+  dsaSaving = false;
+  dsaError: string | null = null;
+  dsaSaved = false;
+
   readonly notifEventKeys = NOTIFICATION_EVENT_KEYS;
   notifPrefs: NotificationPreferences | null = null;
   notifPrefsLoading = false;
@@ -108,6 +130,7 @@ export class DashboardSettingsComponent implements OnInit {
           this.translate.use(info.language);
           localStorage.setItem('lang', info.language);
         }
+        this.applySellerComplianceFromProfile(info.sellerCompliance ?? null);
       }
     });
 
@@ -257,5 +280,106 @@ export class DashboardSettingsComponent implements OnInit {
     if (!this.connectStatus?.connected) return 'connect-not-connected';
     if (this.connectStatus.onboarded) return 'connect-active';
     return 'connect-pending';
+  }
+
+  applySellerComplianceFromProfile(c: SellerCompliance | null): void {
+    if (!c) {
+      this.sellerComplianceAvailable = false;
+      this.sellerClassification = 'private';
+      this.professionalVerificationStatus = 'none';
+      this.professionalSubmittedAt = null;
+      this.professionalVerifiedAt = null;
+      this.professionalRejectionNote = null;
+      return;
+    }
+    this.sellerComplianceAvailable = true;
+    this.sellerClassification = c.sellerClassification === 'professional' ? 'professional' : 'private';
+    this.professionalLegalName = c.professionalLegalName ?? '';
+    this.professionalTradeName = c.professionalTradeName ?? '';
+    this.professionalAddressLine1 = c.professionalAddressLine1 ?? '';
+    this.professionalAddressLine2 = c.professionalAddressLine2 ?? '';
+    this.professionalCity = c.professionalCity ?? '';
+    this.professionalRegion = c.professionalRegion ?? '';
+    this.professionalPostalCode = c.professionalPostalCode ?? '';
+    this.professionalCountry = (c.professionalCountry ?? 'PT').toUpperCase().slice(0, 2) || 'PT';
+    this.professionalContactPhone = c.professionalContactPhone ?? '';
+    this.professionalContactEmail = c.professionalContactEmail ?? '';
+    this.professionalVatId = c.professionalVatId ?? '';
+    this.professionalVerificationStatus = c.professionalVerificationStatus ?? 'none';
+    this.professionalSubmittedAt = c.professionalSubmittedAt ?? null;
+    this.professionalVerifiedAt = c.professionalVerifiedAt ?? null;
+    this.professionalRejectionNote = c.professionalRejectionNote ?? null;
+  }
+
+  reloadSellerCompliance(): void {
+    this.customerService.getCustomer().subscribe({
+      next: (info) => this.applySellerComplianceFromProfile(info.sellerCompliance ?? null)
+    });
+  }
+
+  saveSellerCompliance(): void {
+    this.dsaError = null;
+    if (!this.sellerComplianceAvailable) {
+      this.dsaError = this.translate.instant('dashboard.settings.dsa.unavailable');
+      return;
+    }
+    const payload: {
+      sellerClassification: 'private' | 'professional';
+      professionalLegalName?: string;
+      professionalTradeName?: string;
+      professionalAddressLine1?: string;
+      professionalAddressLine2?: string;
+      professionalCity?: string;
+      professionalRegion?: string;
+      professionalPostalCode?: string;
+      professionalCountry?: string;
+      professionalContactPhone?: string;
+      professionalContactEmail?: string;
+      professionalVatId?: string;
+    } = { sellerClassification: this.sellerClassification };
+    if (this.sellerClassification === 'professional') {
+      const legal = this.professionalLegalName.trim();
+      const line1 = this.professionalAddressLine1.trim();
+      const city = this.professionalCity.trim();
+      const region = this.professionalRegion.trim();
+      const postal = this.professionalPostalCode.trim();
+      const country = this.professionalCountry.trim().toUpperCase();
+      const phone = this.professionalContactPhone.trim();
+      const email = this.professionalContactEmail.trim();
+      const vat = this.professionalVatId.trim();
+      if (!legal || !line1 || !city || !region || !postal || !country || !phone || !email || !vat) {
+        this.dsaError = this.translate.instant('dashboard.settings.dsa.validationRequired');
+        return;
+      }
+      if (!/^[A-Z]{2}$/.test(country)) {
+        this.dsaError = this.translate.instant('dashboard.settings.dsa.invalidCountry');
+        return;
+      }
+      payload.professionalLegalName = legal;
+      payload.professionalTradeName = this.professionalTradeName.trim() || '';
+      payload.professionalAddressLine1 = line1;
+      payload.professionalAddressLine2 = this.professionalAddressLine2.trim() || '';
+      payload.professionalCity = city;
+      payload.professionalRegion = region;
+      payload.professionalPostalCode = postal;
+      payload.professionalCountry = country;
+      payload.professionalContactPhone = phone;
+      payload.professionalContactEmail = email;
+      payload.professionalVatId = vat;
+    }
+    this.dsaSaving = true;
+    this.customerService.updateSellerCompliance(payload).subscribe({
+      next: () => {
+        this.dsaSaving = false;
+        this.dsaSaved = true;
+        setTimeout(() => (this.dsaSaved = false), 3000);
+        this.reloadSellerCompliance();
+      },
+      error: (err) => {
+        this.dsaSaving = false;
+        this.dsaError =
+          err?.error?.message || err?.error?.error || this.translate.instant('dashboard.settings.dsa.saveFailed');
+      }
+    });
   }
 }

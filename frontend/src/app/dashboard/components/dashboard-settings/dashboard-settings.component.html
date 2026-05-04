@@ -47,6 +47,119 @@
       </div>
     </div>
 
+    <!-- DSA seller classification -->
+    <div class="settings-card settings-card-full">
+      <div class="card-header">
+        <span class="card-icon">⚖️</span>
+        <h2 class="card-title">{{ 'dashboard.settings.dsa.title' | translate }}</h2>
+      </div>
+      <div class="card-body">
+        <p class="card-desc">{{ 'dashboard.settings.dsa.subtitle' | translate }}</p>
+        @if (!sellerComplianceAvailable) {
+          <p class="text-muted">{{ 'dashboard.settings.dsa.unavailable' | translate }}</p>
+        } @else {
+          <div class="dsa-classification">
+            <h3 class="form-section-title">{{ 'dashboard.settings.dsa.classificationLabel' | translate }}</h3>
+            <label class="dsa-radio">
+              <input type="radio" name="sellerClass" value="private" [(ngModel)]="sellerClassification" />
+              {{ 'dashboard.settings.dsa.private' | translate }}
+            </label>
+            <label class="dsa-radio">
+              <input type="radio" name="sellerClass" value="professional" [(ngModel)]="sellerClassification" />
+              {{ 'dashboard.settings.dsa.professional' | translate }}
+            </label>
+          </div>
+
+          @if (sellerClassification === 'professional') {
+            <div class="dsa-status-row">
+              <span class="info-label">{{ 'dashboard.settings.dsa.verificationLabel' | translate }}</span>
+              <span class="status-badge dsa-ver-badge" [ngClass]="'dsa-ver-' + professionalVerificationStatus">
+                {{ ('dashboard.settings.dsa.status.' + professionalVerificationStatus) | translate }}
+              </span>
+            </div>
+            @if (professionalRejectionNote) {
+              <p class="dsa-rejection"><strong>{{ 'dashboard.settings.dsa.rejectionNote' | translate }}:</strong> {{ professionalRejectionNote }}</p>
+            }
+            @if (professionalVerificationStatus === 'pending') {
+              <p class="dsa-hint">{{ 'dashboard.settings.dsa.pendingHint' | translate }}</p>
+            }
+            @if (professionalVerificationStatus === 'verified') {
+              <p class="dsa-hint">{{ 'dashboard.settings.dsa.verifiedHint' | translate }}</p>
+            }
+            @if (professionalVerificationStatus === 'rejected') {
+              <p class="dsa-hint">{{ 'dashboard.settings.dsa.rejectedHint' | translate }}</p>
+            }
+            @if (professionalSubmittedAt) {
+              <p class="dsa-meta">{{ 'dashboard.settings.dsa.submittedAt' | translate }}: {{ professionalSubmittedAt | date:'medium' }}</p>
+            }
+            @if (professionalVerifiedAt) {
+              <p class="dsa-meta">{{ 'dashboard.settings.dsa.verifiedAt' | translate }}: {{ professionalVerifiedAt | date:'medium' }}</p>
+            }
+
+            <h3 class="form-section-title dsa-trader-heading">{{ 'dashboard.settings.dsa.traderSection' | translate }}</h3>
+            <div class="dsa-form-grid">
+              <div class="form-field">
+                <label>{{ 'dashboard.settings.dsa.legalName' | translate }}</label>
+                <input type="text" [(ngModel)]="professionalLegalName" name="profLegal" />
+              </div>
+              <div class="form-field">
+                <label>{{ 'dashboard.settings.dsa.tradeName' | translate }}</label>
+                <input type="text" [(ngModel)]="professionalTradeName" name="profTrade" />
+              </div>
+              <div class="form-field dsa-span-2">
+                <label>{{ 'dashboard.settings.dsa.addressLine1' | translate }}</label>
+                <input type="text" [(ngModel)]="professionalAddressLine1" name="profAddr1" />
+              </div>
+              <div class="form-field dsa-span-2">
+                <label>{{ 'dashboard.settings.dsa.addressLine2' | translate }}</label>
+                <input type="text" [(ngModel)]="professionalAddressLine2" name="profAddr2" />
+              </div>
+              <div class="form-field">
+                <label>{{ 'dashboard.settings.dsa.city' | translate }}</label>
+                <input type="text" [(ngModel)]="professionalCity" name="profCity" />
+              </div>
+              <div class="form-field">
+                <label>{{ 'dashboard.settings.dsa.region' | translate }}</label>
+                <input type="text" [(ngModel)]="professionalRegion" name="profRegion" />
+              </div>
+              <div class="form-field">
+                <label>{{ 'dashboard.settings.dsa.postalCode' | translate }}</label>
+                <input type="text" [(ngModel)]="professionalPostalCode" name="profPostal" />
+              </div>
+              <div class="form-field">
+                <label>{{ 'dashboard.settings.dsa.country' | translate }}</label>
+                <input type="text" [(ngModel)]="professionalCountry" name="profCountry" maxlength="2" class="dsa-country-input" />
+              </div>
+              <div class="form-field">
+                <label>{{ 'dashboard.settings.dsa.contactPhone' | translate }}</label>
+                <input type="text" [(ngModel)]="professionalContactPhone" name="profPhone" />
+              </div>
+              <div class="form-field">
+                <label>{{ 'dashboard.settings.dsa.contactEmail' | translate }}</label>
+                <input type="email" [(ngModel)]="professionalContactEmail" name="profEmail" />
+              </div>
+              <div class="form-field dsa-span-2">
+                <label>{{ 'dashboard.settings.dsa.vatId' | translate }}</label>
+                <input type="text" [(ngModel)]="professionalVatId" name="profVat" />
+              </div>
+            </div>
+          }
+
+          @if (dsaError) {
+            <div class="form-error-banner">{{ dsaError }}</div>
+          }
+          <div class="form-actions dsa-actions">
+            <button type="button" class="action-btn" (click)="saveSellerCompliance()" [disabled]="dsaSaving">
+              {{ dsaSaving ? ('dashboard.settings.dsa.saving' | translate) : ('dashboard.settings.dsa.save' | translate) }}
+            </button>
+            @if (dsaSaved) {
+              <span class="save-success">✓ {{ 'dashboard.settings.dsa.saved' | translate }}</span>
+            }
+          </div>
+        }
+      </div>
+    </div>
+
     <!-- Language Preference -->
     <div class="settings-card">
       <div class="card-header">

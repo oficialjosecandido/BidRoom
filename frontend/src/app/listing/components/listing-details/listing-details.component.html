@@ -398,6 +398,57 @@
             }
           </div>
 
+          @if (listing.seller) {
+          <div class="listing-dsa-section">
+            <div class="listing-dsa-badges">
+              <span class="dsa-badge" [class.dsa-badge-pro]="listing.seller.sellerClassification === 'professional'">
+                {{ (listing.seller.sellerClassification === 'professional' ? 'listingDetails.dsa.professionalSeller' : 'listingDetails.dsa.privateSeller') | translate }}
+              </span>
+              @if (listing.seller.sellerClassification === 'professional') {
+                <span class="dsa-badge dsa-badge-status" [ngClass]="'dsa-ver-' + (listing.seller.professionalVerificationStatus || 'none')">
+                  {{ ('listingDetails.dsa.status.' + (listing.seller.professionalVerificationStatus || 'none')) | translate }}
+                </span>
+              }
+            </div>
+            @if (listing.seller.sellerClassification === 'professional') {
+            <div class="listing-dsa-notice">
+              <p class="listing-dsa-notice-title">{{ 'listingDetails.dsa.consumerNoticeTitle' | translate }}</p>
+              <p class="listing-dsa-notice-body">{{ 'listingDetails.dsa.consumerNoticeBody' | translate }}</p>
+            </div>
+            }
+            @if (listing.seller.sellerClassification === 'professional' && listing.seller.professionalVerificationStatus === 'verified') {
+            <div class="listing-dsa-trader">
+              <h4 class="listing-dsa-trader-title">{{ 'listingDetails.dsa.traderSectionTitle' | translate }}</h4>
+              @if (listing.seller.professionalLegalName) {
+              <p><span class="listing-dsa-k">{{ 'listingDetails.dsa.legalName' | translate }}</span> {{ listing.seller.professionalLegalName }}</p>
+              }
+              @if (listing.seller.professionalTradeName) {
+              <p><span class="listing-dsa-k">{{ 'listingDetails.dsa.tradeName' | translate }}</span> {{ listing.seller.professionalTradeName }}</p>
+              }
+              @if (listing.seller.professionalVatId) {
+              <p><span class="listing-dsa-k">{{ 'listingDetails.dsa.vatId' | translate }}</span> {{ listing.seller.professionalVatId }}</p>
+              }
+              @if (sellerVerifiedAddressLines().length) {
+              <p class="listing-dsa-address">
+                <span class="listing-dsa-k">{{ 'listingDetails.dsa.address' | translate }}</span><br />
+                @for (line of sellerVerifiedAddressLines(); track $index) {
+                <span class="listing-dsa-address-line">{{ line }}</span><br />
+                }
+              </p>
+              }
+              @if (listing.seller.professionalContactPhone || listing.seller.professionalContactEmail) {
+              <p>
+                <span class="listing-dsa-k">{{ 'listingDetails.dsa.contact' | translate }}</span>
+                @if (listing.seller.professionalContactPhone) { <span>{{ listing.seller.professionalContactPhone }}</span> }
+                @if (listing.seller.professionalContactPhone && listing.seller.professionalContactEmail) { <span> · </span> }
+                @if (listing.seller.professionalContactEmail) { <span>{{ listing.seller.professionalContactEmail }}</span> }
+              </p>
+              }
+            </div>
+            }
+          </div>
+          }
+
           <!-- Report links -->
           @if (isAuthenticated && !isOwnListing) {
           <div class="report-links">

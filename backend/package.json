@@ -23,6 +23,7 @@
     "@azure-rest/ai-content-safety": "^1.0.1",
     "@azure/core-auth": "^1.10.1",
     "@azure/storage-blob": "^12.29.1",
+    "@socket.io/redis-adapter": "^8.3.0",
     "bcryptjs": "^3.0.2",
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",

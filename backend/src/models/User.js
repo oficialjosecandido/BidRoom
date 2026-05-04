@@ -141,7 +141,40 @@ const userSchema = new mongoose.Schema({
   loginFailedAttempts: { type: Number, default: 0 },
   loginLockedUntil: { type: Date, default: null },
   /** Opaque token used to unsubscribe from all emails without login (generated on first use) */
-  emailUnsubscribeToken: { type: String, default: null, sparse: true, index: true }
+  emailUnsubscribeToken: { type: String, default: null, sparse: true, index: true },
+
+  // ─── DSA / trader transparency (seller classification) ───────────────────
+  /** `private` = non-trader; `professional` = trader — extra identity fields required */
+  sellerClassification: {
+    type: String,
+    enum: ['private', 'professional'],
+    default: 'private',
+    index: true
+  },
+  /** Admin verification of professional trader details */
+  professionalVerificationStatus: {
+    type: String,
+    enum: ['none', 'pending', 'verified', 'rejected'],
+    default: 'none',
+    index: true
+  },
+  professionalLegalName: { type: String, trim: true, maxlength: 300, default: null },
+  professionalTradeName: { type: String, trim: true, maxlength: 300, default: null },
+  professionalAddressLine1: { type: String, trim: true, maxlength: 300, default: null },
+  professionalAddressLine2: { type: String, trim: true, maxlength: 300, default: null },
+  professionalCity: { type: String, trim: true, maxlength: 120, default: null },
+  professionalRegion: { type: String, trim: true, maxlength: 120, default: null },
+  professionalPostalCode: { type: String, trim: true, maxlength: 32, default: null },
+  professionalCountry: { type: String, trim: true, maxlength: 2, uppercase: true, default: null },
+  professionalContactPhone: { type: String, trim: true, maxlength: 40, default: null },
+  /** Business contact email shown to buyers (may match account email) */
+  professionalContactEmail: { type: String, trim: true, maxlength: 254, lowercase: true, default: null },
+  /** VAT / tax identification number */
+  professionalVatId: { type: String, trim: true, maxlength: 64, default: null },
+  professionalSubmittedAt: { type: Date, default: null },
+  professionalVerifiedAt: { type: Date, default: null },
+  professionalVerifiedByEmail: { type: String, trim: true, default: null },
+  professionalRejectionNote: { type: String, trim: true, maxlength: 1000, default: null }
 }, {
   timestamps: true // Adds createdAt and updatedAt fields
 });

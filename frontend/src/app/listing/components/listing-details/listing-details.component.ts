@@ -710,26 +710,30 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
 
     // Subscribe to new bid events
     const newBidSubscription = this.socketService.onNewBid().subscribe((event) => {
-      if (event.listingId === listingId) {
-        // Add new bid to the list (prepend since we sort desc), capped to avoid unbounded growth
+      if (event.listingId !== listingId) return;
+      // Add new bid to the list (prepend since we sort desc), capped to avoid unbounded growth
+      const bidStr = String(event.bid?._id ?? '');
+      const alreadyPresent = bidStr && this.bids.some(b => String(b._id) === bidStr);
+      if (!alreadyPresent) {
         this.bids = [event.bid, ...this.bids].slice(0, MAX_DISPLAYED_BIDS);
-        // Update listing current price and bid count
-        if (this.listing && event.currentPrice !== undefined && event.bidCount !== undefined) {
-          this.listing.currentPrice = event.currentPrice;
-          this.listing.bidCount = event.bidCount;
-        }
-        // Flash the new bid
-        const newId = event.bid._id;
-        this.newBidIds = new Set([...this.newBidIds, newId]);
-        // Force immediate synchronous CD — eventCoalescing:true defers zone-triggered CD
-        // which would leave the template stale until the next animation frame.
-        this.cdr.detectChanges();
-        setTimeout(() => {
-          this.newBidIds.delete(newId);
-          this.newBidIds = new Set(this.newBidIds);
-          this.cdr.detectChanges();
-        }, 2500);
       }
+      // Update listing current price and bid count
+      if (this.listing && event.currentPrice !== undefined && event.bidCount !== undefined) {
+        this.listing.currentPrice = event.currentPrice;
+        this.listing.bidCount = event.bidCount;
+      }
+      // Flash the new bid
+      const newId = event.bid._id;
+      this.newBidIds = new Set([...this.newBidIds, newId]);
+      // Force immediate synchronous CD — eventCoalescing:true defers zone-triggered CD
+      // which would leave the template stale until the next animation frame.
+      this.cdr.markForCheck();
+      this.cdr.detectChanges();
+      setTimeout(() => {
+        this.newBidIds.delete(newId);
+        this.newBidIds = new Set(this.newBidIds);
+        this.cdr.detectChanges();
+      }, 2500);
     });
     this.rtSubscriptions.push(newBidSubscription);
 
@@ -1008,29 +1012,57 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
   }
 
   updateIsOwnListing(): void {
-    if (!this.listing?.seller?.email) {
+    const currentUser = this.authService.getCurrentUser();
+    if (!this.listing?.seller || !currentUser) {
       this.isOwnListing = false;
+      this.sellerStripeReady = false;
+      this.cdr.detectChanges();
       return;
     }
-    const currentUser = this.authService.getCurrentUser();
-    this.isOwnListing = !!(
-      currentUser?.email &&
-      this.listing.seller.email &&
-      currentUser.email.toLowerCase() === (this.listing.seller as { email?: string }).email?.toLowerCase()
-    );
-    if (this.isOwnListing) {
-      this.stripeConnectService.getAccountStatus().subscribe({
-        next: (status) => {
-          this.sellerStripeReady = status.connected && status.onboarded;
-          this.cdr.detectChanges();
-        },
-        error: () => {
-          this.sellerStripeReady = false;
-          this.cdr.detectChanges();
-        }
-      });
+    const seller = this.listing.seller as { uid?: string; email?: string };
+    if (seller.uid && currentUser.uid && seller.uid === currentUser.uid) {
+      this.isOwnListing = true;
+    } else if (
+      currentUser.email &&
+      seller.email &&
+      currentUser.email.toLowerCase() === seller.email.toLowerCase()
+    ) {
+      this.isOwnListing = true;
+    } else {
+      this.isOwnListing = false;
     }
+    if (!this.isOwnListing) {
+      this.sellerStripeReady = false;
+      this.cdr.detectChanges();
+      return;
+    }
+    this.stripeConnectService.getAccountStatus().subscribe({
+      next: (status) => {
+        this.sellerStripeReady = status.connected && status.onboarded;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.sellerStripeReady = false;
+        this.cdr.detectChanges();
+      }
+    });
     this.cdr.detectChanges();
+  }
+
+  /** Verified professional trader address lines for public display (API already sanitizes). */
+  sellerVerifiedAddressLines(): string[] {
+    const s = this.listing?.seller;
+    if (!s || s.sellerClassification !== 'professional' || s.professionalVerificationStatus !== 'verified') {
+      return [];
+    }
+    const parts: string[] = [];
+    if (s.professionalAddressLine1?.trim()) parts.push(s.professionalAddressLine1.trim());
+    if (s.professionalAddressLine2?.trim()) parts.push(s.professionalAddressLine2.trim());
+    const cityLine = [s.professionalPostalCode, s.professionalCity].filter((x) => x && String(x).trim()).join(' ');
+    if (cityLine) parts.push(cityLine);
+    const regionCountry = [s.professionalRegion, s.professionalCountry].filter((x) => x && String(x).trim()).join(', ');
+    if (regionCountry) parts.push(regionCountry);
+    return parts;
   }
 
   goToBuyerTransactions(): void {

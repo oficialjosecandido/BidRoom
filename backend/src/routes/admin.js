@@ -9,11 +9,13 @@ const ReviewFlag = require('../models/ReviewFlag');
 const Review = require('../models/Review');
 const ReviewAppeal = require('../models/ReviewAppeal');
 const Report = require('../models/Report');
+const ModerationAuditLog = require('../models/ModerationAuditLog');
 const { sendEmail } = require('../services/emailService');
 const { renderEmailTemplate } = require('../services/templateEngine');
 const { notifyDisputeDecisionIssued, emitNewNotificationToUser } = require('../services/notificationService');
 const { applyDisputeAccountOutcome } = require('../services/accountStatusService');
 const { applyDisputeVerdictImpact } = require('../services/reputationService');
+const { appendModerationAudit } = require('../services/moderationAuditService');
 
 function getStripe() {
   const key = process.env.STRIPE_SECRET_KEY;
@@ -807,6 +809,82 @@ router.patch('/reports/:id', authenticateToken, requireAdmin, async (req, res) =
   } catch (err) {
     console.error('PATCH /api/admin/reports error:', err);
     return res.status(500).json({ error: 'Failed to update report.' });
+  }
+});
+
+/**
+ * GET /api/admin/moderation-audit — DSA traceability (internal / lawful authority support)
+ * Query: subjectUserId (optional), actionType (optional), limit (default 100, max 500)
+ */
+router.get('/moderation-audit', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const q = {};
+    if (req.query.subjectUserId && isValidObjectId(req.query.subjectUserId)) {
+      q.subjectUserId = req.query.subjectUserId;
+    }
+    if (req.query.actionType && String(req.query.actionType).length < 80) {
+      q.actionType = String(req.query.actionType).trim();
+    }
+    const limit = Math.min(500, Math.max(1, parseInt(req.query.limit, 10) || 100));
+    const entries = await ModerationAuditLog.find(q)
+      .sort({ createdAt: -1 })
+      .limit(limit)
+      .lean();
+    return res.json({ entries, total: entries.length });
+  } catch (err) {
+    console.error('GET /api/admin/moderation-audit error:', err);
+    return res.status(500).json({ error: 'Failed to fetch moderation audit log.' });
+  }
+});
+
+/**
+ * POST /api/admin/seller-verifications/:userId
+ * DSA: verify or reject professional (trader) identity submitted by the seller.
+ * Body: { status: "verified" | "rejected", note?: string } (note used when rejected)
+ */
+router.post('/seller-verifications/:userId', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    if (!isValidObjectId(req.params.userId)) {
+      return res.status(400).json({ error: 'Invalid user id' });
+    }
+    const { status, note } = req.body || {};
+    if (!['verified', 'rejected'].includes(status)) {
+      return res.status(400).json({ error: 'Invalid status', message: 'status must be "verified" or "rejected".' });
+    }
+    const user = await User.findById(req.params.userId);
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    if (user.sellerClassification !== 'professional') {
+      return res.status(400).json({ error: 'Not a professional seller', message: 'This user is not registered as a professional (trader) seller.' });
+    }
+
+    if (status === 'verified') {
+      user.professionalVerificationStatus = 'verified';
+      user.professionalVerifiedAt = new Date();
+      user.professionalVerifiedByEmail = (req.user.email || '').trim() || null;
+      user.professionalRejectionNote = null;
+    } else {
+      user.professionalVerificationStatus = 'rejected';
+      user.professionalVerifiedAt = null;
+      user.professionalVerifiedByEmail = null;
+      user.professionalRejectionNote = note != null ? String(note).trim().slice(0, 1000) : null;
+    }
+    await user.save();
+
+    await appendModerationAudit({
+      subjectUserId: user._id,
+      actionType: 'seller_professional_verification',
+      performedByEmail: req.user.email || null,
+      metadata: { decision: status, rejectionNote: user.professionalRejectionNote }
+    });
+
+    return res.json({
+      professionalVerificationStatus: user.professionalVerificationStatus,
+      professionalVerifiedAt: user.professionalVerifiedAt,
+      message: status === 'verified' ? 'Seller trader identity marked as verified.' : 'Seller trader identity rejected.'
+    });
+  } catch (err) {
+    console.error('POST /api/admin/seller-verifications error:', err);
+    return res.status(500).json({ error: 'Failed to update seller verification.' });
   }
 });
 

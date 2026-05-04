@@ -1,4 +1,5 @@
 const User = require('../models/User');
+const { appendModerationAudit } = require('./moderationAuditService');
 
 /**
  * Records a content violation for a user and escalates penalties.
@@ -44,6 +45,11 @@ async function recordViolation(user) {
   }
 
   await user.save();
+  await appendModerationAudit({
+    subjectUserId: user._id,
+    actionType: 'content_violation',
+    metadata: { action, violationCount: count, restrictedUntil: restrictedUntil || null }
+  });
   return { action, message, restrictedUntil };
 }
 
