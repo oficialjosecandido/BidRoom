@@ -370,6 +370,20 @@
               }
             </div>
 
+            <div class="review-tags-section">
+              <label class="review-tags-label">{{ 'dashboard.home.reviewTagsLabel' | translate }}</label>
+              <div class="review-tags-list">
+                @for (tag of availableTags; track tag) {
+                  <button
+                    type="button"
+                    class="review-tag-pill"
+                    [class.selected]="isTagSelected(tag)"
+                    (click)="toggleReviewTag(tag)"
+                  >{{ ('dashboard.home.reviewTags.' + tag) | translate }}</button>
+                }
+              </div>
+            </div>
+
             <div class="comment-row">
               <label class="comment-label" for="review-description">
                 <span class="comment-label-text">{{ 'dashboard.home.yourReview' | translate }}</span>

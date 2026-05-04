@@ -28,12 +28,18 @@ export interface ReviewScores {
   sellerReviewCount: number;
 }
 
+export type ReviewTag =
+  | 'fast_payment' | 'fast_shipping' | 'item_as_described' | 'great_packaging'
+  | 'good_communication' | 'smooth_transaction' | 'trustworthy'
+  | 'slow_payment' | 'slow_shipping' | 'not_as_described' | 'poor_communication';
+
 export interface CreateReviewRequest {
   listingId: string;
   toUserId: string;
   role: 'as_buyer' | 'as_seller';
   score: number; // 1-5
   description?: string;
+  tags?: ReviewTag[];
   /** @deprecated Use score */
   rating?: number;
   /** @deprecated Use description */
@@ -57,13 +63,14 @@ export class ReviewsService {
   }
 
   createReview(body: CreateReviewRequest): Observable<{ _id: string; score: number; createdAt: string }> {
-    const payload = {
+    const payload: Record<string, unknown> = {
       listingId: body.listingId,
       toUserId: body.toUserId,
       role: body.role,
       score: body.score,
       description: body.description?.trim() || undefined
     };
+    if (body.tags && body.tags.length > 0) payload['tags'] = body.tags;
     return this.http.post<{ _id: string; score: number; createdAt: string }>(this.apiUrl, payload);
   }
 

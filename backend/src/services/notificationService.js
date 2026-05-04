@@ -758,6 +758,28 @@ async function notifyLoginFromNewDevice({ userId, deviceInfo }) {
   });
 }
 
+/**
+ * Notify both buyer and seller to leave a review after a transaction reaches a terminal state.
+ * @param {{ buyerId, sellerId, listingTitle, transactionId, io }}
+ */
+async function notifyReviewPrompt({ buyerId, sellerId, listingTitle, transactionId, io }) {
+  const title = 'Leave a review';
+  const message = `How was your experience with "${listingTitle || 'this transaction'}"? Leave a review to help the community.`;
+  const link = '/dashboard/home';
+
+  await Promise.allSettled([
+    createNotification({ userId: buyerId, title, message, type: 'review', link, referenceId: transactionId }),
+    createNotification({ userId: sellerId, title, message, type: 'review', link, referenceId: transactionId })
+  ]);
+
+  if (io) {
+    await Promise.allSettled([
+      emitNewNotificationToUser(io, buyerId),
+      emitNewNotificationToUser(io, sellerId)
+    ]);
+  }
+}
+
 module.exports = {
   createNotification,
   shouldSendEmail,
@@ -803,5 +825,6 @@ module.exports = {
   notifySellerStripeRequiredForOffer,
   notifySellerPaymentReceived,
   notifyBuyerSellerAccepted,
+  notifyReviewPrompt,
   emitNewNotificationToUser
 };
