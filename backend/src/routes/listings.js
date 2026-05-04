@@ -1374,6 +1374,58 @@ router.post('/:id/reopen', authenticateToken, requireActiveAccount, async (req, 
   }
 });
 
+/**
+ * POST /api/listings/:id/relist
+ * One-click relist after a non-payment (no-second-bidder) scenario.
+ * Clears winner/bid state and reactivates the listing for another 7 days.
+ * Only the seller can do this; listing must be ended with non_payment_no_second_bidder reason.
+ */
+router.post('/:id/relist', authenticateToken, requireActiveAccount, async (req, res) => {
+  try {
+    const listing = await Listing.findById(req.params.id);
+    if (!listing) return res.status(404).json({ error: 'Listing not found' });
+
+    const user = await User.findOne({ uid: req.user.uid });
+    if (!user || String(listing.seller) !== String(user._id)) {
+      return res.status(403).json({ error: 'Only the seller can relist this item' });
+    }
+
+    if (listing.status !== 'ended') {
+      return res.status(400).json({ error: 'Only ended listings can be relisted' });
+    }
+
+    if (listing.privateRoomClosedReason !== 'non_payment_no_second_bidder') {
+      return res.status(400).json({
+        error: 'This listing cannot be relisted via this endpoint',
+        message: 'Only listings ended due to non-payment with no second bidder qualify for one-click relist'
+      });
+    }
+
+    const newEndDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+
+    await Listing.findByIdAndUpdate(listing._id, {
+      $set: {
+        status: 'active',
+        endDate: newEndDate,
+        winner: null,
+        winnerBid: null,
+        winnerSelectedAt: null,
+        winnerSelectionDeadline: null,
+        privateRoomStatus: null,
+        privateRoomClosedReason: null,
+        privateRoomEndDate: null,
+        allowPrivateRoom: false // relist as standard auction
+      }
+    }, { runValidators: false });
+
+    const updated = await Listing.findById(listing._id).populate('seller', SELLER_DSA_PUBLIC_SELECT).lean();
+    return res.json({ message: 'Item relisted for 7 days', listing: updated });
+  } catch (err) {
+    console.error('POST /listings/:id/relist error:', err);
+    return res.status(500).json({ error: 'Failed to relist item' });
+  }
+});
+
 // GET /api/listings/:id/bids - Get all bids for a listing (for seller to choose winner)
 router.get('/:id/bids', authenticateToken, async (req, res) => {
   try {

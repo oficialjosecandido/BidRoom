@@ -1321,7 +1321,35 @@
       "rejected_by_seller": "Rejected by seller",
       "platform_mediated": "Under platform mediation"
     },
-    "returnSellerDeadline": "Seller must respond by {{date}}"
+    "returnSellerDeadline": "Seller must respond by {{date}}",
+    "reportDamage": "Report Damage",
+    "damageClaimLabel": "Damage claim",
+    "damageClaimWindowNotice": "Item arrived damaged? You have {{hours}}h remaining to report it.",
+    "damageStatuses": {
+      "pending_review": "Under Review",
+      "approved_refund": "Refund Approved",
+      "packaging_rejected": "Claim Rejected",
+      "carrier_claim_filed": "Carrier Claim Filed",
+      "resolved": "Resolved",
+      "closed": "Closed"
+    },
+    "payIn": "Pay in:",
+    "paymentExpired": "Expired",
+    "secondChance": "Second chance",
+    "nonPaymentNoSecondBidder": "This order was cancelled due to non-payment and there is no second bidder. You can relist the item to start a new auction.",
+    "relistItem": "Relist Item",
+    "damageClaim": {
+      "title": "Report Item Damaged in Transit",
+      "subtitle": "Submit photos of the damage and original packaging. Claims must be opened within 48 hours of delivery.",
+      "damagePhotos": "Photos of the damage",
+      "damagePhotosHint": "Show clearly visible damage to the item (up to 5 photos).",
+      "packagingPhotos": "Photos of the packaging",
+      "packagingPhotosHint": "Show the outer box/envelope as received — all sides if possible (up to 5 photos).",
+      "description": "Description of the damage (optional)",
+      "descriptionPlaceholder": "Describe what was damaged and how it was packed…",
+      "policyNotice": "Claims may be rejected if the item was insufficiently packaged by the seller. BidRoom will review packaging compliance before processing any refund.",
+      "submit": "Submit Damage Report"
+    }
   },
   "returns": {
     "modal": {

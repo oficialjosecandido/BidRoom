@@ -119,6 +119,21 @@
                   {{ 'transactions.paymentWindowEnds' | translate }}: {{ formatPaymentDeadline(t) }}{{ hasPaymentDeadlinePassed(t) ? (' (' + ('transactions.passed' | translate) + ')') : '' }}
                 </p>
               }
+              @if (showPrivateRoomCountdown(t)) {
+                <div class="pr-payment-countdown" [class.urgent]="isPaymentDeadlineUrgent(t)">
+                  @if (isSecondChanceBuyer(t)) {
+                    <span class="second-chance-badge">{{ 'transactions.secondChance' | translate }}</span>
+                  }
+                  <span class="countdown-label">{{ 'transactions.payIn' | translate }}</span>
+                  <span class="countdown-value">{{ paymentDeadlineCountdown(t) | translate }}</span>
+                </div>
+              }
+              @if (canRelist(t)) {
+                <div class="pr-relist-notice">
+                  <p class="pr-relist-text">{{ 'transactions.nonPaymentNoSecondBidder' | translate }}</p>
+                  <button type="button" class="pr-relist-btn" (click)="relistItem(t)">{{ 'transactions.relistItem' | translate }}</button>
+                </div>
+              }
               @if (isBuyer(t)) {
                 <p class="card-role">
                   {{ 'transactions.youAreThe' | translate }} <strong>{{ 'transactions.buyer' | translate }}</strong>. {{ 'transactions.seller' | translate }}: {{ t.seller.firstName }} {{ t.seller.lastName }}
@@ -346,6 +361,24 @@
                 <button type="button" class="btn btn-dispute" (click)="openDisputeModal(t); $event.stopPropagation()" [attr.aria-label]="'Open a dispute for ' + t.listing.title">{{ 'transactions.receivedNotProperly' | translate }}</button>
               }
               @if (getEffectiveStatus(t) === 'delivered') {
+                @if (canOpenDamageClaim(t)) {
+                  <div class="damage-claim-panel">
+                    <p class="form-hint">
+                      {{ 'transactions.damageClaimWindowNotice' | translate:{ hours: damageClaimHoursLeft(t) } }}
+                    </p>
+                    <button type="button" class="btn btn-damage" (click)="openDamageClaimModal(t); $event.stopPropagation()">
+                      {{ 'transactions.reportDamage' | translate }}
+                    </button>
+                  </div>
+                }
+                @if (existingClaimsByTxId[t._id]) {
+                  <div class="damage-claim-status">
+                    <span class="damage-status-badge damage-status-{{ existingClaimsByTxId[t._id]!.status }}">
+                      {{ 'transactions.damageStatuses.' + existingClaimsByTxId[t._id]!.status | translate }}
+                    </span>
+                    <span class="damage-status-label">{{ 'transactions.damageClaimLabel' | translate }}</span>
+                  </div>
+                }
                 @if (canRequestReturn(t)) {
                   <div class="return-request-panel">
                     <p class="form-hint">
@@ -510,6 +543,89 @@
           <button type="button" class="btn btn-secondary" (click)="closeDisputeModal()">{{ 'dashboard.common.cancel' | translate }}</button>
           <button type="button" class="btn btn-primary" (click)="submitDispute()" [disabled]="disputeSubmitting || !canSubmitDispute()">
             {{ disputeSubmitting ? ('disputes.modal.submitting' | translate) : ('disputes.modal.submitDispute' | translate) }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- ── Damage claim modal ── -->
+  @if (damageClaimTransaction) {
+    <div class="modal-overlay" (click)="closeDamageClaimModal()">
+      <div class="modal-content dispute-modal" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h3 class="modal-title">{{ 'transactions.damageClaim.title' | translate }}</h3>
+          <button type="button" class="modal-close" (click)="closeDamageClaimModal()" aria-label="Close">×</button>
+        </div>
+
+        <p class="modal-subtitle">{{ 'transactions.damageClaim.subtitle' | translate }}</p>
+
+        <!-- Damage photos -->
+        <div class="form-group">
+          <label class="form-label">{{ 'transactions.damageClaim.damagePhotos' | translate }} <span class="required">*</span></label>
+          <p class="form-hint">{{ 'transactions.damageClaim.damagePhotosHint' | translate }}</p>
+          <div class="photo-upload-row">
+            @for (url of damagePhotoUrls; track url) {
+              <div class="photo-thumb">
+                <img [src]="url" alt="Damage photo" />
+                <button type="button" class="photo-remove" (click)="removeDamagePhoto(url, 'damage')">×</button>
+              </div>
+            }
+            @if (damagePhotoUrls.length < 5) {
+              <label class="photo-add-btn" [class.uploading]="damagePhotoUploading">
+                @if (damagePhotoUploading) { <span class="upload-spinner"></span> }
+                @else { <span>+</span> }
+                <input type="file" accept=".jpg,.jpeg,.png,.webp" (change)="uploadDamagePhoto($event, 'damage')" style="display:none" />
+              </label>
+            }
+          </div>
+        </div>
+
+        <!-- Packaging photos -->
+        <div class="form-group">
+          <label class="form-label">{{ 'transactions.damageClaim.packagingPhotos' | translate }} <span class="required">*</span></label>
+          <p class="form-hint">{{ 'transactions.damageClaim.packagingPhotosHint' | translate }}</p>
+          <div class="photo-upload-row">
+            @for (url of packagingPhotoUrls; track url) {
+              <div class="photo-thumb">
+                <img [src]="url" alt="Packaging photo" />
+                <button type="button" class="photo-remove" (click)="removeDamagePhoto(url, 'packaging')">×</button>
+              </div>
+            }
+            @if (packagingPhotoUrls.length < 5) {
+              <label class="photo-add-btn" [class.uploading]="packagingPhotoUploading">
+                @if (packagingPhotoUploading) { <span class="upload-spinner"></span> }
+                @else { <span>+</span> }
+                <input type="file" accept=".jpg,.jpeg,.png,.webp" (change)="uploadDamagePhoto($event, 'packaging')" style="display:none" />
+              </label>
+            }
+          </div>
+        </div>
+
+        <!-- Description -->
+        <div class="form-group">
+          <label class="form-label">{{ 'transactions.damageClaim.description' | translate }}</label>
+          <textarea class="form-textarea" rows="4" [(ngModel)]="damageDescription" maxlength="3000"
+            [placeholder]="'transactions.damageClaim.descriptionPlaceholder' | translate"></textarea>
+        </div>
+
+        <!-- Policy notice -->
+        <div class="damage-policy-notice">
+          <p>{{ 'transactions.damageClaim.policyNotice' | translate }}</p>
+        </div>
+
+        @if (damageClaimError) {
+          <p class="form-error">{{ damageClaimError }}</p>
+        }
+
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" (click)="closeDamageClaimModal()" [disabled]="damageClaimSubmitting">
+            {{ 'common.cancel' | translate }}
+          </button>
+          <button type="button" class="btn btn-damage" (click)="submitDamageClaim()"
+            [disabled]="damageClaimSubmitting || damagePhotoUrls.length < 1 || packagingPhotoUrls.length < 1">
+            @if (damageClaimSubmitting) { {{ 'common.submitting' | translate }} }
+            @else { {{ 'transactions.damageClaim.submit' | translate }} }
           </button>
         </div>
       </div>

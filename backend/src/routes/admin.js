@@ -12,7 +12,8 @@ const Report = require('../models/Report');
 const ModerationAuditLog = require('../models/ModerationAuditLog');
 const { sendEmail } = require('../services/emailService');
 const { renderEmailTemplate } = require('../services/templateEngine');
-const { notifyDisputeDecisionIssued, emitNewNotificationToUser } = require('../services/notificationService');
+const { notifyDisputeDecisionIssued, notifyDamageClaimResolved, emitNewNotificationToUser } = require('../services/notificationService');
+const DamageClaim = require('../models/DamageClaim');
 const { applyDisputeAccountOutcome } = require('../services/accountStatusService');
 const { applyDisputeVerdictImpact } = require('../services/reputationService');
 const { appendModerationAudit } = require('../services/moderationAuditService');
@@ -885,6 +886,150 @@ router.post('/seller-verifications/:userId', authenticateToken, requireAdmin, as
   } catch (err) {
     console.error('POST /api/admin/seller-verifications error:', err);
     return res.status(500).json({ error: 'Failed to update seller verification.' });
+  }
+});
+
+// ── Damage Claims ─────────────────────────────────────────────────────────────
+
+/**
+ * GET /api/admin/damage-claims
+ * List all damage claims, most recent first.
+ * Query: status (optional filter), page (default 1)
+ */
+router.get('/damage-claims', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const PAGE_SIZE = 20;
+    const page = Math.max(1, parseInt(req.query.page) || 1);
+    const filter = {};
+    if (req.query.status) filter.status = req.query.status;
+
+    const [claims, total] = await Promise.all([
+      DamageClaim.find(filter)
+        .populate('buyer', 'firstName lastName email')
+        .populate('seller', 'firstName lastName email')
+        .populate('listing', 'title slug category')
+        .populate('transaction', 'amount shippingRateId deliveredAt')
+        .sort({ createdAt: -1 })
+        .skip((page - 1) * PAGE_SIZE)
+        .limit(PAGE_SIZE)
+        .lean(),
+      DamageClaim.countDocuments(filter)
+    ]);
+
+    return res.json({ claims, total, page, pages: Math.ceil(total / PAGE_SIZE) });
+  } catch (err) {
+    console.error('GET /api/admin/damage-claims error:', err);
+    return res.status(500).json({ error: 'Failed to load damage claims.' });
+  }
+});
+
+/**
+ * GET /api/admin/damage-claims/:id
+ * Get a single damage claim with full detail.
+ */
+router.get('/damage-claims/:id', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    if (!isValidObjectId(req.params.id)) return res.status(400).json({ error: 'Invalid ID.' });
+
+    const claim = await DamageClaim.findById(req.params.id)
+      .populate('buyer', 'firstName lastName email')
+      .populate('seller', 'firstName lastName email')
+      .populate('listing', 'title slug category images')
+      .populate('transaction', 'amount buyerTotalPaid shippingRateId deliveredAt shippingCarrier trackingNumber')
+      .lean();
+
+    if (!claim) return res.status(404).json({ error: 'Claim not found.' });
+    return res.json({ claim });
+  } catch (err) {
+    console.error('GET /api/admin/damage-claims/:id error:', err);
+    return res.status(500).json({ error: 'Failed to load claim.' });
+  }
+});
+
+/**
+ * PATCH /api/admin/damage-claims/:id
+ * Update a damage claim (status, packaging compliance, notes, carrier claim, refund amounts).
+ * Body (all optional):
+ *   status, packagingCompliant, adminNotes, carrierClaimReference,
+ *   carrierClaimFiledAt, refundAmount, sellerCompensationAmount
+ */
+router.patch('/damage-claims/:id', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    if (!isValidObjectId(req.params.id)) return res.status(400).json({ error: 'Invalid ID.' });
+
+    const VALID_STATUSES = [
+      'pending_review', 'approved_refund', 'packaging_rejected',
+      'carrier_claim_filed', 'resolved', 'closed'
+    ];
+
+    const {
+      status, packagingCompliant, adminNotes, carrierClaimReference,
+      carrierClaimFiledAt, refundAmount, sellerCompensationAmount
+    } = req.body;
+
+    const claim = await DamageClaim.findById(req.params.id)
+      .populate('listing', 'title')
+      .populate('transaction', '_id');
+
+    if (!claim) return res.status(404).json({ error: 'Claim not found.' });
+
+    if (status !== undefined) {
+      if (!VALID_STATUSES.includes(status)) {
+        return res.status(400).json({ error: `Invalid status. Must be one of: ${VALID_STATUSES.join(', ')}` });
+      }
+      claim.status = status;
+      if (status === 'carrier_claim_filed' && carrierClaimReference) {
+        claim.carrierClaimFiledAt = carrierClaimFiledAt ? new Date(carrierClaimFiledAt) : new Date();
+      }
+      if (status === 'approved_refund' || status === 'resolved') {
+        if (!claim.refundedAt && refundAmount !== undefined) claim.refundedAt = new Date();
+      }
+      if (status === 'resolved') {
+        claim.resolvedAt = claim.resolvedAt ?? new Date();
+        if (sellerCompensationAmount !== undefined && !claim.sellerCompensatedAt) {
+          claim.sellerCompensatedAt = new Date();
+        }
+      }
+    }
+
+    if (packagingCompliant !== undefined) claim.packagingCompliant = packagingCompliant;
+    if (adminNotes !== undefined) claim.adminNotes = adminNotes;
+    if (carrierClaimReference !== undefined) claim.carrierClaimReference = carrierClaimReference;
+    if (carrierClaimFiledAt !== undefined) claim.carrierClaimFiledAt = new Date(carrierClaimFiledAt);
+    if (refundAmount !== undefined) claim.refundAmount = refundAmount;
+    if (sellerCompensationAmount !== undefined) claim.sellerCompensationAmount = sellerCompensationAmount;
+
+    await claim.save();
+
+    // Notify buyer if claim moved to a resolved/decision state
+    const notifyStatuses = ['approved_refund', 'packaging_rejected', 'resolved', 'closed'];
+    if (status && notifyStatuses.includes(status)) {
+      const io = req.app.get('io');
+      setImmediate(async () => {
+        try {
+          await notifyDamageClaimResolved({
+            buyerId: claim.buyer,
+            listingTitle: claim.listing?.title,
+            status: claim.status,
+            transactionId: claim.transaction?._id ?? claim.transaction,
+            io
+          });
+        } catch (e) {
+          console.error('notifyDamageClaimResolved error:', e.message);
+        }
+      });
+    }
+
+    const updated = await DamageClaim.findById(claim._id)
+      .populate('buyer', 'firstName lastName email')
+      .populate('seller', 'firstName lastName email')
+      .populate('listing', 'title slug category')
+      .lean();
+
+    return res.json({ claim: updated });
+  } catch (err) {
+    console.error('PATCH /api/admin/damage-claims/:id error:', err);
+    return res.status(500).json({ error: 'Failed to update claim.' });
   }
 });
 

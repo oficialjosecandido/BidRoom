@@ -140,6 +140,13 @@ export interface Transaction {
   disputeRefundAmount?: number | null;
   disputeRuledAt?: string | null;
   disputeAdminNotes?: string | null;
+  /** True when transaction originated from a private room (48h payment window, non-payment enforcement) */
+  isPrivateRoom?: boolean;
+  /** Why this transaction was cancelled */
+  cancellationReason?: 'non_payment' | 'seller_cancelled' | 'auto_cancelled_no_shipment' | 'other' | null;
+  /** Original buyer ID when a second-chance bidder was assigned */
+  originalBuyerId?: string | null;
+  secondChanceAssignedAt?: string | null;
   createdAt: string;
   updatedAt: string;
   role?: 'seller' | 'buyer';
@@ -147,6 +154,37 @@ export interface Transaction {
 
 export interface TransactionsResponse {
   transactions: Transaction[];
+}
+
+export type DamageClaimStatus =
+  | 'pending_review'
+  | 'approved_refund'
+  | 'packaging_rejected'
+  | 'carrier_claim_filed'
+  | 'resolved'
+  | 'closed';
+
+export interface DamageClaim {
+  _id: string;
+  transaction: string;
+  buyer: string;
+  seller: string;
+  listing: { _id: string; title: string; slug: string; category: string } | null;
+  shippingType: 'platform_label' | 'external_shipping';
+  status: DamageClaimStatus;
+  damagePhotoUrls: string[];
+  packagingPhotoUrls: string[];
+  description: string | null;
+  packagingCompliant: boolean | null;
+  carrierClaimReference: string | null;
+  carrierClaimFiledAt: string | null;
+  refundAmount: number | null;
+  refundedAt: string | null;
+  sellerCompensationAmount: number | null;
+  sellerCompensatedAt: string | null;
+  resolvedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
 }
 
 const PROOF_MAX_SIZE = 30 * 1024 * 1024; // 30MB
@@ -275,5 +313,38 @@ export class TransactionsService {
   /** Buyer: remind seller to ship (24h cooldown). */
   remindSellerToShip(id: string): Observable<Transaction> {
     return this.http.post<Transaction>(`${this.apiUrl}/${id}/remind-ship`, {});
+  }
+
+  /** Seller: one-click relist after non-payment (uses listing id, not transaction id). */
+  relistListing(listingId: string): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(
+      `${API_CONFIG.getApiUrl()}/listings/${listingId}/relist`, {}
+    );
+  }
+
+  // ── Damage Claims ──────────────────────────────────────────────────────────
+
+  private damageClaimsUrl = `${API_CONFIG.getApiUrl()}/damage-claims`;
+
+  /** Open a damage-in-transit claim (buyer only, within 48h of delivery). */
+  openDamageClaim(payload: {
+    transactionId: string;
+    damagePhotoUrls: string[];
+    packagingPhotoUrls: string[];
+    description?: string;
+  }): Observable<{ claim: DamageClaim }> {
+    return this.http.post<{ claim: DamageClaim }>(this.damageClaimsUrl, payload);
+  }
+
+  /** Get the damage claim for a transaction (buyer or seller). */
+  getDamageClaimByTransaction(transactionId: string): Observable<{ claim: DamageClaim }> {
+    return this.http.get<{ claim: DamageClaim }>(`${this.damageClaimsUrl}/transaction/${transactionId}`);
+  }
+
+  /** Upload a damage evidence photo (reuses dispute-evidence endpoint). Returns blob URL. */
+  uploadDamagePhoto(file: File): Observable<{ url: string }> {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.http.post<{ url: string }>(`${this.uploadsUrl}/dispute-evidence`, formData);
   }
 }

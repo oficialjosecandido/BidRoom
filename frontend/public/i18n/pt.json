@@ -1321,7 +1321,35 @@
       "rejected_by_seller": "Rejeitado pelo vendedor",
       "platform_mediated": "Em mediação pela plataforma"
     },
-    "returnSellerDeadline": "O vendedor deve responder até {{date}}"
+    "returnSellerDeadline": "O vendedor deve responder até {{date}}",
+    "reportDamage": "Reportar Dano",
+    "damageClaimLabel": "Reclamação de dano",
+    "damageClaimWindowNotice": "Item chegou danificado? Tem {{hours}}h para o reportar.",
+    "damageStatuses": {
+      "pending_review": "Em análise",
+      "approved_refund": "Reembolso aprovado",
+      "packaging_rejected": "Reclamação rejeitada",
+      "carrier_claim_filed": "Reclamação junto ao transportador",
+      "resolved": "Resolvido",
+      "closed": "Fechado"
+    },
+    "payIn": "Pagar em:",
+    "paymentExpired": "Expirado",
+    "secondChance": "Segunda oportunidade",
+    "nonPaymentNoSecondBidder": "Esta encomenda foi cancelada por falta de pagamento e não há segundo licitante. Pode relistar o artigo para iniciar um novo leilão.",
+    "relistItem": "Relistar Artigo",
+    "damageClaim": {
+      "title": "Reportar Dano na Entrega",
+      "subtitle": "Submeta fotos do dano e da embalagem original. As reclamações devem ser abertas até 48 horas após a entrega.",
+      "damagePhotos": "Fotos do dano",
+      "damagePhotosHint": "Mostre claramente o dano no item (até 5 fotos).",
+      "packagingPhotos": "Fotos da embalagem",
+      "packagingPhotosHint": "Mostre a caixa/envelope exterior conforme recebido — todos os lados se possível (até 5 fotos).",
+      "description": "Descrição do dano (opcional)",
+      "descriptionPlaceholder": "Descreva o que foi danificado e como estava embalado…",
+      "policyNotice": "As reclamações podem ser rejeitadas se o item tiver sido embalado de forma insuficiente pelo vendedor. A BidRoom irá analisar o cumprimento das normas de embalagem antes de processar qualquer reembolso.",
+      "submit": "Submeter Relatório de Dano"
+    }
   },
   "returns": {
     "modal": {

@@ -1111,7 +1111,12 @@
     "remindSellerCooldown": "Puedes enviar otro recordatorio en 24 horas.",
     "expectedShipBy": "Envío esperado antes de (5 días hábiles)",
     "shippingStatusLabel": "Estado del envío",
-    "sellerMustShipBy": "Envía este pedido antes de"
+    "sellerMustShipBy": "Envía este pedido antes de",
+    "payIn": "Pagar en:",
+    "paymentExpired": "Expirado",
+    "secondChance": "Segunda oportunidad",
+    "nonPaymentNoSecondBidder": "Este pedido fue cancelado por falta de pago y no hay segundo postor. Puedes relistar el artículo para iniciar una nueva subasta.",
+    "relistItem": "Relistar Artículo"
   },
   "disputes": {
     "title": "Disputas",
