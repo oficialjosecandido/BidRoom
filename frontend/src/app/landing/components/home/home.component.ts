@@ -1,7 +1,7 @@
-import { Component, OnInit, AfterViewInit, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, AfterViewInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router, ActivatedRoute } from '@angular/router';
+import { Router, ActivatedRoute, RouterLink } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { HeaderComponent } from '../../../shared/components/header/header.component';
 import { FooterComponent } from '../../../shared/components/footer/footer.component';
@@ -11,14 +11,14 @@ import { environment } from '../../../../environments/environment';
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslateModule, HeaderComponent, FooterComponent],
+  imports: [RouterLink],
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.scss']
 })
-export class HomeComponent implements OnInit, AfterViewInit {
-  private router = inject(Router);
-  private route = inject(ActivatedRoute);
-  private listingsService = inject(ListingsService);
+export class HomeComponent implements OnInit, OnDestroy {
+  isLight = false;
+  private pvtSeconds = 47;
+  private timerId: ReturnType<typeof setInterval> | null = null;
 
   readonly enableAuctions = environment.enableAuctions;
   readonly enablePrivateRooms = environment.enablePrivateRooms;
@@ -34,146 +34,29 @@ export class HomeComponent implements OnInit, AfterViewInit {
     totalValueTraded: 0
   };
 
+  get themeLabel(): string {
+    return this.isLight ? 'Modo claro' : 'Modo escuro';
+  }
+
+  get privateTimerDisplay(): string {
+    const m = Math.floor(this.pvtSeconds / 60);
+    const s = this.pvtSeconds % 60;
+    return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  }
+
   ngOnInit(): void {
-    this.loadStats();
-    this.loadListings();
+    this.timerId = setInterval(() => {
+      this.pvtSeconds = Math.max(0, this.pvtSeconds - 1);
+    }, 1000);
   }
 
-  ngAfterViewInit(): void {
-    // Handle fragment navigation (e.g., #categories)
-    this.route.fragment.subscribe(fragment => {
-      if (fragment === 'categories') {
-        setTimeout(() => {
-          const element = document.getElementById('categories');
-          if (element) {
-            element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-          }
-        }, 100);
-      }
-    });
-  }
-
-  loadStats(): void {
-    this.listingsService.getStats().subscribe({
-      next: (stats) => {
-        this.stats = stats;
-      },
-      error: (err) => {
-        console.error('Error loading stats:', err);
-        // Use default values on error
-      }
-    });
-  }
-
-  loadListings(): void {
-    this.loading = true;
-    this.error = null;
-
-    const params: ListingsQueryParams = {
-      sort: this.sortBy,
-      status: 'active',
-      limit: 50,
-      ...(this.selectedCategory ? { category: this.selectedCategory } : {})
-    };
-
-    this.listingsService.getListings(params).subscribe({
-      next: (response) => {
-        this.listings = response.listings;
-        this.loading = false;
-      },
-      error: (err) => {
-        console.error('Error loading listings:', err);
-        this.error = 'Failed to load listings. Please try again later.';
-        this.loading = false;
-      }
-    });
-  }
-
-  onSortChange(): void {
-    this.loadListings();
-  }
-
-  searchQuery = '';
-
-  onSearch(): void {
-    const q = this.searchQuery.trim();
-    if (q) {
-      this.router.navigate(['/listing/list'], { queryParams: { search: q } });
-    } else {
-      this.router.navigate(['/listing/list']);
+  ngOnDestroy(): void {
+    if (this.timerId !== null) {
+      clearInterval(this.timerId);
     }
   }
 
-  filterCategory(cat: string): void {
-    this.selectedCategory = cat;
-    this.loadListings();
-  }
-
-  browseCategory(categoryId: string): void {
-    this.router.navigate(['/listing/list'], { queryParams: { category: categoryId } });
-  }
-
-  browseCategoriesPage(): void {
-    this.router.navigate(['/listing/categories']);
-  }
-
-  navigateToAuth(): void {
-    this.router.navigate(['/auth/signup']);
-  }
-
-  navigateToLogin(): void {
-    this.router.navigate(['/auth/login']);
-  }
-
-  navigateToAddListing(): void {
-    this.router.navigate(['/listing/add']);
-  }
-
-  formatPrice(price: number): string {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 2
-    }).format(price);
-  }
-
-  formatTimeRemaining(listing: Listing): string {
-    if (!listing.timeRemaining) return 'N/A';
-    
-    const { ended, days, hours, minutes } = listing.timeRemaining;
-    
-    if (ended) return 'Ended';
-    
-    if (days > 0) {
-      return `${days}d ${hours}h`;
-    } else if (hours > 0) {
-      return `${hours}h ${minutes}m`;
-    } else {
-      return `${minutes}m`;
-    }
-  }
-
-  getEndingSoonListings(): Listing[] {
-    return this.listings
-      .filter(listing => listing.endingSoon && listing.status === 'active')
-      .slice(0, 3);
-  }
-
-  timerClass(listing: Listing): string {
-    if (!listing.timeRemaining) return '';
-    const { ended, days, hours } = listing.timeRemaining;
-    if (ended) return '';
-    if (days === 0 && hours < 1) return 'timer-urgent';
-    if (days === 0 && hours < 24) return 'timer-soon';
-    return 'timer-ok';
-  }
-
-  viewListing(slug: string | undefined): void {
-    if (!slug) {
-      console.error('Listing slug is undefined');
-      return;
-    }
-    this.router.navigate(['/listing', slug]);
+  toggleTheme(): void {
+    this.isLight = !this.isLight;
   }
 }

@@ -1,0 +1,63 @@
+<div class="modal-backdrop" (click)="close()"></div>
+
+<div class="modal-panel" role="dialog" aria-modal="true">
+  <button class="modal-close" (click)="close()" aria-label="Close">✕</button>
+
+  @if (submitted()) {
+    <div class="modal-success">
+      <div class="success-icon">✓</div>
+      <h2>{{ 'report.success.title' | translate }}</h2>
+      <p>{{ 'report.success.message' | translate }}</p>
+      <button class="btn btn-primary" (click)="close()">{{ 'report.success.close' | translate }}</button>
+    </div>
+  } @else {
+    <h2 class="modal-title">
+      {{ (reportType === 'listing' ? 'report.titleListing' : 'report.titleUser') | translate }}
+      @if (targetName) { <span class="target-name">{{ targetName }}</span> }
+    </h2>
+
+    <p class="modal-subtitle">{{ 'report.subtitle' | translate }}</p>
+
+    <div class="reasons-list">
+      @for (reason of reasons; track reason) {
+        <button
+          class="reason-btn"
+          [class.selected]="selectedReason() === reason"
+          (click)="selectReason(reason)"
+          type="button"
+        >
+          <span class="reason-radio"></span>
+          {{ ('report.reasons.' + reason) | translate }}
+        </button>
+      }
+    </div>
+
+    @if (selectedReason() === 'other') {
+      <div class="description-field">
+        <label>{{ 'report.descriptionLabel' | translate }}</label>
+        <textarea
+          [ngModel]="description()"
+          (ngModelChange)="description.set($event)"
+          [placeholder]="'report.descriptionPlaceholder' | translate"
+          maxlength="1000"
+          rows="4"
+        ></textarea>
+        <span class="char-count">{{ description().length }}/1000</span>
+      </div>
+    }
+
+    @if (error()) {
+      <p class="form-error">{{ error() | translate }}</p>
+    }
+
+    <div class="modal-actions">
+      <button class="btn btn-secondary" (click)="close()" [disabled]="submitting()">
+        {{ 'report.cancel' | translate }}
+      </button>
+      <button class="btn btn-danger" (click)="submit()" [disabled]="submitting() || !selectedReason()">
+        @if (submitting()) { {{ 'report.submitting' | translate }} }
+        @else { {{ 'report.submit' | translate }} }
+      </button>
+    </div>
+  }
+</div>

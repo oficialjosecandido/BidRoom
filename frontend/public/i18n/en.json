@@ -1828,5 +1828,35 @@
       "address": "BidRoom Legal Department, 123 Auction Street, Commerce City, CC 12345",
       "phoneLabel": "Phone:"
     }
+  },
+  "report": {
+    "titleListing": "Report Listing",
+    "titleUser": "Report User",
+    "subtitle": "Help us understand what's wrong. We'll review your report and take action if needed.",
+    "reportListing": "Report Listing",
+    "reportSeller": "Report Seller",
+    "reasons": {
+      "fraud_scam": "Fraud or Scam",
+      "offensive_content": "Offensive Content",
+      "prohibited_item": "Prohibited Item",
+      "spam": "Spam",
+      "off_platform_transaction": "Attempting Off-Platform Transaction",
+      "other": "Other"
+    },
+    "descriptionLabel": "Additional details (optional)",
+    "descriptionPlaceholder": "Please describe the issue...",
+    "submit": "Submit Report",
+    "submitting": "Submitting...",
+    "cancel": "Cancel",
+    "success": {
+      "title": "Report Submitted",
+      "message": "Thank you. Your report has been received and our team will review it shortly.",
+      "close": "Close"
+    },
+    "errors": {
+      "selectReason": "Please select a reason before submitting.",
+      "alreadyReported": "You have already reported this item.",
+      "generic": "Something went wrong. Please try again."
+    }
   }
 }

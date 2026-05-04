@@ -398,6 +398,15 @@
             }
           </div>
 
+          <!-- Report links -->
+          @if (isAuthenticated && !isOwnListing) {
+          <div class="report-links">
+            <button class="report-link" (click)="showReportModal = 'listing'">{{ 'report.reportListing' | translate }}</button>
+            <span class="report-sep">·</span>
+            <button class="report-link" (click)="showReportModal = 'user'">{{ 'report.reportSeller' | translate }}</button>
+          </div>
+          }
+
           <!-- Verification Info -->
           @if (listing.isVerified && listing.verificationDetails) {
           <div class="verification-section">
@@ -958,4 +967,13 @@
     }
   </div>
 </div>
+
+@if (showReportModal && listing) {
+  <app-report-modal
+    [reportType]="showReportModal === 'listing' ? 'listing' : 'user'"
+    [targetId]="showReportModal === 'listing' ? listing._id : listing.seller._id"
+    [targetName]="showReportModal === 'listing' ? listing.title : (listing.seller.firstName + ' ' + listing.seller.lastName)"
+    (closed)="showReportModal = null"
+  ></app-report-modal>
+}
 }

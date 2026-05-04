@@ -33,6 +33,7 @@ const { router: paymentsRouter, stripeWebhookHandler } = require('./routes/payme
 const { router: connectRouter, connectWebhookHandler } = require('./routes/connect');
 const shippingRoutes = require('./routes/shipping');
 const configRoutes = require('./routes/config');
+const reportRoutes = require('./routes/reports');
 
 // Import services
 const auctionEndScheduler = require('./services/auctionEndScheduler');
@@ -156,6 +157,7 @@ app.use('/api/payments', paymentsRouter);
 app.use('/api/connect', connectRouter);
 app.use('/api/shipping', shippingRoutes);
 app.use('/api/config', configRoutes);
+app.use('/api/reports', generalLimiter, reportRoutes);
 
 app.get('/', (req, res) => {
   res.json({
