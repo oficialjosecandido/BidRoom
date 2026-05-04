@@ -1,0 +1,113 @@
+<app-header></app-header>
+
+<main class="profile-page">
+
+  @if (loading) {
+    <div class="profile-loading">
+      <div class="spinner"></div>
+    </div>
+  }
+
+  @if (!loading && error) {
+    <div class="profile-error">
+      <p>{{ error | translate }}</p>
+    </div>
+  }
+
+  @if (!loading && !error && profile) {
+    <div class="profile-container">
+
+      <!-- Header card -->
+      <div class="profile-header-card">
+        <div class="profile-avatar">
+          <span>{{ profile.firstName.charAt(0).toUpperCase() }}</span>
+        </div>
+        <div class="profile-info">
+          <h1 class="profile-name">{{ displayName() }}</h1>
+          <p class="profile-meta">{{ 'sellerProfile.memberSince' | translate }} {{ memberSinceYear() }}</p>
+
+          @if (profile.sellerScore !== null) {
+            <div class="profile-score">
+              <span class="score-stars">★</span>
+              <span class="score-value">{{ profile.sellerScore | number:'1.1-1' }}</span>
+              <span class="score-count">({{ profile.sellerReviewCount }} {{ 'sellerProfile.reviews' | translate }})</span>
+            </div>
+          } @else {
+            <p class="no-reviews">{{ 'sellerProfile.noReviews' | translate }}</p>
+          }
+        </div>
+
+        @if (isAuthenticated && !isSelf) {
+          <div class="profile-actions">
+            <button
+              class="follow-btn"
+              [class.following]="followStatus.following"
+              [disabled]="followLoading"
+              (click)="toggleFollow()"
+            >
+              {{ (followStatus.following ? 'sellerProfile.following' : 'sellerProfile.follow') | translate }}
+            </button>
+
+            @if (followStatus.following) {
+              <button
+                class="mute-btn"
+                [class.muted]="followStatus.muted"
+                [disabled]="followLoading"
+                (click)="toggleMute()"
+                [title]="(followStatus.muted ? 'sellerProfile.unmute' : 'sellerProfile.mute') | translate"
+              >
+                {{ followStatus.muted ? '🔕' : '🔔' }}
+              </button>
+            }
+
+            <button class="report-btn" (click)="showReportModal = true">
+              {{ 'report.reportUser' | translate }}
+            </button>
+          </div>
+        }
+      </div>
+
+      <!-- Active listings -->
+      <section class="profile-listings-section">
+        <h2 class="section-title">{{ 'sellerProfile.activeListings' | translate }}</h2>
+
+        @if (profile.activeListings.length === 0) {
+          <p class="no-listings">{{ 'sellerProfile.noActiveListings' | translate }}</p>
+        } @else {
+          <div class="listings-grid">
+            @for (listing of profile.activeListings; track listing._id) {
+              <a class="listing-card" [routerLink]="['/listing', listing.slug]">
+                <div class="card-image">
+                  @if (listing.images.length) {
+                    <img [src]="listing.images[0]" [alt]="listing.title" loading="lazy" />
+                  } @else {
+                    <div class="card-image-placeholder">📦</div>
+                  }
+                </div>
+                <div class="card-body">
+                  <p class="card-title">{{ listing.title }}</p>
+                  <p class="card-price">{{ formatPrice(listing.currentPrice || listing.startingPrice) }}</p>
+                  <div class="card-meta">
+                    <span>{{ listing.bidCount }} {{ listing.bidCount === 1 ? ('sellerProfile.bid' | translate) : ('sellerProfile.bids' | translate) }}</span>
+                    <span class="card-timer">{{ timeRemaining(listing.endDate) }}</span>
+                  </div>
+                </div>
+              </a>
+            }
+          </div>
+        }
+      </section>
+
+    </div>
+  }
+
+</main>
+
+@if (showReportModal && profile) {
+  <app-report-modal
+    reportType="user"
+    [targetId]="profile._id"
+    [targetName]="displayName()"
+    (closed)="showReportModal = false"
+  ></app-report-modal>
+}

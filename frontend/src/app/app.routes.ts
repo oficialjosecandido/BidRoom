@@ -63,6 +63,10 @@ export const routes: Routes = [
     loadChildren: () => import('./private-room/private-room.module').then(m => m.PrivateRoomModule)
   },
   {
+    path: 'seller/:id',
+    loadComponent: () => import('./profile/seller-public-profile.component').then(m => m.SellerPublicProfileComponent)
+  },
+  {
     path: 'notifications/unsubscribe',
     loadComponent: () => import('./notifications/unsubscribe.component').then(m => m.UnsubscribeComponent)
   },

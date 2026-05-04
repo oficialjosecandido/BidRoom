@@ -1,6 +1,7 @@
 const Notification = require('../models/Notification');
 const User = require('../models/User');
 const NotificationPreferences = require('../models/NotificationPreferences');
+const Follow = require('../models/Follow');
 
 // In-memory debounce: prevent outbid notification floods in high-activity auctions.
 // Key: "userId:listingId", value: timestamp of last sent notification.
@@ -786,6 +787,38 @@ async function notifyReviewPrompt({ buyerId, sellerId, listingTitle, transaction
   }
 }
 
+async function notifyFollowersNewListing({ sellerId, sellerFirstName, listingTitle, listingSlug, io }) {
+  try {
+    const followers = await Follow.find({ following: sellerId, muted: false }).lean();
+    if (!followers.length) return;
+
+    const title = sellerFirstName
+      ? `${sellerFirstName} published a new listing`
+      : 'New listing from a seller you follow';
+    const message = listingTitle || 'Check it out now';
+    const link = listingSlug ? `/listing/${listingSlug}` : '/';
+
+    await Promise.allSettled(
+      followers.map(async (f) => {
+        await createNotification({
+          userId: f.follower,
+          title,
+          message,
+          type: 'follow',
+          link,
+          referenceId: sellerId,
+          eventType: 'new_listing_from_followed_seller'
+        });
+        if (io) {
+          await emitNewNotificationToUser(io, f.follower);
+        }
+      })
+    );
+  } catch (err) {
+    console.error('notifyFollowersNewListing error:', err.message);
+  }
+}
+
 module.exports = {
   createNotification,
   shouldSendEmail,
@@ -832,5 +865,6 @@ module.exports = {
   notifySellerPaymentReceived,
   notifyBuyerSellerAccepted,
   notifyReviewPrompt,
+  notifyFollowersNewListing,
   emitNewNotificationToUser
 };

@@ -36,6 +36,8 @@ const { router: connectRouter, connectWebhookHandler } = require('./routes/conne
 const shippingRoutes = require('./routes/shipping');
 const configRoutes = require('./routes/config');
 const reportRoutes = require('./routes/reports');
+const userRoutes = require('./routes/users');
+const followRoutes = require('./routes/follows');
 
 // Import services
 const auctionEndScheduler = require('./services/auctionEndScheduler');
@@ -161,6 +163,8 @@ app.use('/api/connect', connectRouter);
 app.use('/api/shipping', shippingRoutes);
 app.use('/api/config', configRoutes);
 app.use('/api/reports', generalLimiter, reportRoutes);
+app.use('/api/users', generalLimiter, userRoutes);
+app.use('/api/follows', generalLimiter, followRoutes);
 
 app.get('/', (req, res) => {
   res.json({

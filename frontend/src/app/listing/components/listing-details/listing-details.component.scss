@@ -743,6 +743,55 @@
               color: var(--text-dark);
             }
 
+            a.seller-link {
+              text-decoration: none;
+              color: var(--primary-color);
+
+              &:hover { text-decoration: underline; }
+            }
+
+            .seller-name-row {
+              display: flex;
+              align-items: center;
+              gap: 8px;
+              flex-wrap: wrap;
+            }
+
+            .follow-seller-btn {
+              background: var(--primary-color, #7a4f84);
+              border: 1px solid var(--primary-color, #7a4f84);
+              border-radius: 5px;
+              padding: 3px 10px;
+              font-size: 12px;
+              font-weight: 600;
+              color: #fff;
+              cursor: pointer;
+              transition: opacity 0.15s;
+              white-space: nowrap;
+
+              &.following {
+                background: none;
+                color: var(--primary-color, #7a4f84);
+              }
+
+              &:hover { opacity: 0.8; }
+              &:disabled { opacity: 0.5; cursor: default; }
+            }
+
+            .mute-seller-btn {
+              background: none;
+              border: 1px solid var(--border-color, #ddd);
+              border-radius: 5px;
+              padding: 2px 7px;
+              font-size: 13px;
+              cursor: pointer;
+              line-height: 1.4;
+              transition: border-color 0.15s;
+
+              &:hover { border-color: var(--primary-color, #7a4f84); }
+              &:disabled { opacity: 0.5; cursor: default; }
+            }
+
             .seller-review-score {
               display: block;
               margin-top: 4px;

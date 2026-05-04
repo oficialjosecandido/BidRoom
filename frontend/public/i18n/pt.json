@@ -1194,9 +1194,7 @@
     "expectedShipBy": "Envio esperado até (5 dias úteis)",
     "shippingStatusLabel": "Status do envio",
     "sellerMustShipBy": "Envie este pedido até",
-    "trackingNumber": "Número de rastreamento",
     "trackingNumberPlaceholder": "ex: 9400111899223408553805",
-    "carrier": "Transportadora",
     "selectCarrier": "Selecionar transportadora",
     "other": "Outro",
     "estimatedDeliveryDays": "Prazo estimado de entrega (dias)",
@@ -1934,6 +1932,22 @@
       "selectReason": "Por favor seleciona um motivo antes de enviar.",
       "alreadyReported": "Já denunciaste este item.",
       "generic": "Ocorreu um erro. Por favor tenta novamente."
-    }
+    },
+    "reportUser": "Reportar Utilizador"
+  },
+  "sellerProfile": {
+    "memberSince": "Membro desde",
+    "reviews": "avaliações",
+    "noReviews": "Sem avaliações ainda",
+    "activeListings": "Leilões Ativos",
+    "noActiveListings": "Sem leilões ativos de momento.",
+    "bid": "lance",
+    "bids": "lances",
+    "notFound": "Este perfil não foi encontrado.",
+    "loadError": "Não foi possível carregar o perfil. Por favor tente novamente.",
+    "follow": "Seguir",
+    "following": "A seguir",
+    "mute": "Silenciar notificações",
+    "unmute": "Ativar notificações"
   }
 }
