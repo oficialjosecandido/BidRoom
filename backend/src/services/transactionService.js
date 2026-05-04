@@ -4,13 +4,16 @@ const Bid = require('../models/Bid');
 const Offer = require('../models/Offer');
 const { logTransactionCreated } = require('./bestOfferLogger');
 
-const PAYMENT_WINDOW_MS = 24 * 60 * 60 * 1000; // T+24h
+const PAYMENT_WINDOW_MS = 24 * 60 * 60 * 1000;        // T+24h (regular auctions)
+const PR_PAYMENT_WINDOW_MS = 48 * 60 * 60 * 1000;     // T+48h (private rooms, per spec)
 
 /**
  * Create a transaction for a listing that has a winner set (auction flow).
  * Idempotent: does nothing if listing has no winner or a transaction already exists.
+ * @param {string|ObjectId} listingId
+ * @param {{ privateRoom?: boolean }} [opts]
  */
-async function createTransactionForListing(listingId) {
+async function createTransactionForListing(listingId, opts = {}) {
   try {
     const listing = await Listing.findById(listingId)
       .populate('seller', '_id')
@@ -29,7 +32,9 @@ async function createTransactionForListing(listingId) {
 
     const buyerId = listing.winner._id || listing.winner;
     const sellerId = listing.seller._id || listing.seller;
-    const paymentDeadline = new Date(Date.now() + PAYMENT_WINDOW_MS);
+    const isPrivateRoom = opts.privateRoom ?? listing.allowPrivateRoom ?? false;
+    const windowMs = isPrivateRoom ? PR_PAYMENT_WINDOW_MS : PAYMENT_WINDOW_MS;
+    const paymentDeadline = new Date(Date.now() + windowMs);
 
     const transaction = await Transaction.create({
       listing: listingId,
@@ -41,7 +46,8 @@ async function createTransactionForListing(listingId) {
       transactionStatus: 'pending_payment',
       paymentStatus: 'pending',
       sendingStatus: 'pending',
-      paymentDeadline
+      paymentDeadline,
+      isPrivateRoom
     });
 
     console.log(`✅ Transaction created for listing ${listingId}: ${transaction._id}`);

@@ -38,6 +38,7 @@ const configRoutes = require('./routes/config');
 const reportRoutes = require('./routes/reports');
 const userRoutes = require('./routes/users');
 const followRoutes = require('./routes/follows');
+const damageClaimsRoutes = require('./routes/damageClaims');
 
 // Import services
 const auctionEndScheduler = require('./services/auctionEndScheduler');
@@ -165,6 +166,7 @@ app.use('/api/config', configRoutes);
 app.use('/api/reports', generalLimiter, reportRoutes);
 app.use('/api/users', generalLimiter, userRoutes);
 app.use('/api/follows', generalLimiter, followRoutes);
+app.use('/api/damage-claims', generalLimiter, damageClaimsRoutes);
 
 app.get('/', (req, res) => {
   res.json({

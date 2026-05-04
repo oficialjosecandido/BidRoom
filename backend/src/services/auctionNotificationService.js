@@ -1271,8 +1271,9 @@ async function handlePrivateRoomEnd(listingId, io = null) {
     if (!listingForNotify) throw new Error('Listing not found after update');
 
     // Create transaction first — must not be blocked by notification failures
+    // Private-room winners get a 48h payment window
     if (highestBid && (highestBid.bidder?._id || highestBid.bidder)) {
-      await createTransactionForListing(listingId).catch(err => console.error('Transaction create:', err.message));
+      await createTransactionForListing(listingId, { privateRoom: true }).catch(err => console.error('Transaction create:', err.message));
     }
 
     try {
@@ -1358,7 +1359,7 @@ async function handlePrivateRoomEligibleExpired(listingId, io = null) {
       if (listingForNotify) {
         await sendWinnerNotification(listingForNotify, highestBid);
         await sendAuctionClosedNotifications(listingForNotify, highestBid._id);
-        await createTransactionForListing(listingId).catch(err => console.error('Tx for eligible-expired:', err.message));
+        await createTransactionForListing(listingId, { privateRoom: true }).catch(err => console.error('Tx for eligible-expired:', err.message));
         const { notifySellerWinnerSelected, notifyBuyerAuctionWon, emitNewNotificationToUser } = require('./notificationService');
         const winnerName = `${highestBid.bidder.firstName} ${highestBid.bidder.lastName}`.trim();
         const sellerUserId = listingForNotify.seller?._id?.toString?.() || listingForNotify.seller?.toString?.();
@@ -1413,7 +1414,7 @@ async function handlePrivateRoomSingleAcceptance(listingId, acceptedInvitation, 
     if (listingForNotify) {
       await sendWinnerNotification(listingForNotify, winnerBid);
       await sendAuctionClosedNotifications(listingForNotify, winnerBid._id);
-      await createTransactionForListing(listingId).catch(err => console.error('Tx for single-acceptance:', err.message));
+      await createTransactionForListing(listingId, { privateRoom: true }).catch(err => console.error('Tx for single-acceptance:', err.message));
       const { notifySellerWinnerSelected, notifyBuyerAuctionWon, emitNewNotificationToUser } = require('./notificationService');
       const winnerName = `${winnerBid.bidder.firstName} ${winnerBid.bidder.lastName}`.trim();
       const sellerUserId = listingForNotify.seller?._id?.toString?.() || listingForNotify.seller?.toString?.();

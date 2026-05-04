@@ -787,6 +787,116 @@ async function notifyReviewPrompt({ buyerId, sellerId, listingTitle, transaction
   }
 }
 
+/** Private-room payment deadline approaching — warn buyer 1h before expiry */
+async function notifyBuyerPaymentDeadlineWarning({ buyerId, listingTitle, listingSlug, deadlineAt }) {
+  const link = `/dashboard/buyer?tab=transactions`;
+  return createNotification({
+    userId: buyerId,
+    title: 'Payment deadline approaching',
+    message: `You have less than 1 hour to complete payment for "${listingTitle || 'the item'}". Failure to pay will result in a reputation penalty.`,
+    type: 'transaction',
+    link,
+    eventType: 'payment_deadline_warning'
+  });
+}
+
+/** Buyer failed to pay in 48h — notify buyer of penalty */
+async function notifyBuyerNonPayment({ buyerId, listingTitle, penaltyPoints, nonPaymentCount, io }) {
+  const link = `/dashboard/buyer?tab=transactions`;
+  const warningLevel = nonPaymentCount >= 3 ? 'ban' : nonPaymentCount === 2 ? 'final_warning' : 'warning';
+  const messages = {
+    warning: `Your payment window for "${listingTitle || 'the item'}" expired. A reputation penalty of ${penaltyPoints} points has been applied.`,
+    final_warning: `Payment expired for "${listingTitle || 'the item'}". This is your 2nd non-payment. One more will result in a permanent account ban.`,
+    ban: `Payment expired for "${listingTitle || 'the item'}". This is your 3rd non-payment. Your account has been suspended.`
+  };
+  await createNotification({
+    userId: buyerId,
+    title: 'Payment deadline expired',
+    message: messages[warningLevel],
+    type: 'account',
+    link,
+    eventType: 'non_payment_penalty'
+  });
+  if (io) await emitNewNotificationToUser(io, buyerId);
+}
+
+/** Seller notified that buyer failed to pay — second chance bidder being offered */
+async function notifySellerBuyerNonPayment({ sellerId, listingTitle, listingSlug, hasSecondBidder, io }) {
+  const link = `/listing/${listingSlug}`;
+  const message = hasSecondBidder
+    ? `The winning bidder for "${listingTitle}" did not pay. We've automatically offered the item to the next highest bidder.`
+    : `The winning bidder for "${listingTitle}" did not pay and there is no second bidder. You can relist the item or cancel.`;
+  await createNotification({
+    userId: sellerId,
+    title: 'Buyer did not pay',
+    message,
+    type: 'transaction',
+    link,
+    eventType: 'buyer_non_payment'
+  });
+  if (io) await emitNewNotificationToUser(io, sellerId);
+}
+
+/** Second-chance bidder notified of their opportunity */
+async function notifySecondBidderSecondChance({ buyerId, listingTitle, listingSlug, paymentDeadlineHours, io }) {
+  const link = `/dashboard/buyer?tab=transactions`;
+  await createNotification({
+    userId: buyerId,
+    title: 'Second chance to buy!',
+    message: `The winner for "${listingTitle}" did not pay. As the next highest bidder, you have ${paymentDeadlineHours}h to complete payment.`,
+    type: 'transaction',
+    link,
+    eventType: 'second_chance_offer'
+  });
+  if (io) await emitNewNotificationToUser(io, buyerId);
+}
+
+/** Damage claim opened — notify seller */
+async function notifyDamageClaimOpened({ sellerId, buyerName, listingTitle, shippingType, transactionId, io }) {
+  const link = `/dashboard/buyer?tab=transactions#transaction-${transactionId}`;
+  const isExternal = shippingType === 'external_shipping';
+  const title = isExternal
+    ? 'Damage claim opened — your responsibility'
+    : 'Buyer reported item damaged in transit';
+  const message = isExternal
+    ? `${buyerName || 'A buyer'} reported "${listingTitle || 'an item'}" damaged. As the shipper, you must file the carrier claim and resolve this.`
+    : `${buyerName || 'A buyer'} reported "${listingTitle || 'an item'}" arrived damaged. BidRoom will handle the carrier claim.`;
+
+  await createNotification({
+    userId: sellerId,
+    title,
+    message,
+    type: 'dispute',
+    link,
+    referenceId: transactionId,
+    eventType: 'damage_claim_opened'
+  });
+
+  if (io) await emitNewNotificationToUser(io, sellerId);
+}
+
+/** Damage claim resolved — notify buyer */
+async function notifyDamageClaimResolved({ buyerId, listingTitle, status, transactionId, io }) {
+  const link = `/dashboard/buyer?tab=transactions#transaction-${transactionId}`;
+  const approved = status === 'approved_refund' || status === 'resolved';
+  const title = approved ? 'Damage claim approved' : 'Damage claim update';
+  const message = approved
+    ? `Your damage claim for "${listingTitle || 'the item'}" has been approved. A refund will be processed.`
+    : `Your damage claim for "${listingTitle || 'the item'}" has been reviewed. Please check your transactions for details.`;
+
+  await createNotification({
+    userId: buyerId,
+    title,
+    message,
+    type: 'dispute',
+    link,
+    referenceId: transactionId,
+    eventType: 'damage_claim_resolved'
+  });
+
+  if (io) await emitNewNotificationToUser(io, buyerId);
+}
+
 async function notifyFollowersNewListing({ sellerId, sellerFirstName, listingTitle, listingSlug, io }) {
   try {
     const followers = await Follow.find({ following: sellerId, muted: false }).lean();
@@ -865,6 +975,12 @@ module.exports = {
   notifySellerPaymentReceived,
   notifyBuyerSellerAccepted,
   notifyReviewPrompt,
+  notifyBuyerPaymentDeadlineWarning,
+  notifyBuyerNonPayment,
+  notifySellerBuyerNonPayment,
+  notifySecondBidderSecondChance,
+  notifyDamageClaimOpened,
+  notifyDamageClaimResolved,
   notifyFollowersNewListing,
   emitNewNotificationToUser
 };

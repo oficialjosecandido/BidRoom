@@ -5,6 +5,7 @@
 
 const Listing = require('../models/Listing');
 const { handleAuctionEnd, handlePrivateRoomEnd, handlePrivateRoomClosedNoAcceptance, handlePrivateRoomEligibleExpired } = require('./auctionNotificationService');
+const { processPrivateRoomNonPayments, sendPaymentDeadlineWarnings } = require('./privateRoomPaymentService');
 
 let checkInterval = null;
 let ioInstance = null;
@@ -114,6 +115,14 @@ async function checkEndedAuctions() {
         console.error(`❌ Error closing private room ${listing._id}:`, error.message);
       }
     }
+
+    // 3) Private-room payment warnings (1h before deadline) and non-payment enforcement
+    await sendPaymentDeadlineWarnings(ioInstance).catch(err =>
+      console.error('❌ Payment deadline warnings error:', err.message)
+    );
+    await processPrivateRoomNonPayments(ioInstance).catch(err =>
+      console.error('❌ Non-payment processing error:', err.message)
+    );
 
     if (invitedPastDeadline.length > 0 || endedAuctions.length > 0 || endedPrivateRooms.length > 0) {
       console.log(`🔍 Processed ${processed} (auto-started / ended auction(s) / private room(s))`);

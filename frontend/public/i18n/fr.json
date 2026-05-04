@@ -1110,7 +1110,12 @@
     "remindSellerCooldown": "Vous pouvez envoyer un autre rappel dans 24 heures.",
     "expectedShipBy": "Expédition prévue avant (5 jours ouvrables)",
     "shippingStatusLabel": "Statut d'expédition",
-    "sellerMustShipBy": "Expédiez cette commande avant le"
+    "sellerMustShipBy": "Expédiez cette commande avant le",
+    "payIn": "Payer dans :",
+    "paymentExpired": "Expiré",
+    "secondChance": "Seconde chance",
+    "nonPaymentNoSecondBidder": "Cette commande a été annulée pour défaut de paiement et il n'y a pas de second enchérisseur. Vous pouvez relister l'article pour démarrer une nouvelle vente.",
+    "relistItem": "Relister l'article"
   },
   "disputes": {
     "title": "Litiges",

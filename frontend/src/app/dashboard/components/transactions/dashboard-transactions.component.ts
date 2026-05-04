@@ -4,7 +4,7 @@ import { RouterLink, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import Swal from 'sweetalert2';
-import { TransactionsService, Transaction, TransactionStatus } from '../../../shared/services/transactions.service';
+import { TransactionsService, Transaction, TransactionStatus, DamageClaim } from '../../../shared/services/transactions.service';
 import { ReviewsService } from '../../../shared/services/reviews.service';
 import { StripeConnectService } from '../../../shared/services/stripe-connect.service';
 import { ShippingService, ShippingRate, DeliveryAddress } from '../../../shared/services/shipping.service';
@@ -83,6 +83,20 @@ export class DashboardTransactionsComponent implements OnInit {
   deliveryAddress: DeliveryAddress = { street1: '', city: '', state: '', postalCode: '', country: 'US' };
   /** Transaction ID for which a "Remind seller to ship" request is in flight (loading state). */
   remindSellerShipTxId: string | null = null;
+  /** Damage claim modal */
+  damageClaimTransaction: Transaction | null = null;
+  damagePhotoUrls: string[] = [];
+  packagingPhotoUrls: string[] = [];
+  damageDescription = '';
+  damageClaimError: string | null = null;
+  damageClaimSubmitting = false;
+  damagePhotoUploading = false;
+  packagingPhotoUploading = false;
+  /** Existing claims keyed by transactionId (loaded lazily on reveal) */
+  existingClaimsByTxId: Record<string, DamageClaim | null> = {};
+
+  /** Claim window: 48 hours in ms */
+  private readonly CLAIM_WINDOW_MS = 48 * 60 * 60 * 1000;
 
   ngOnInit(): void {
     this.loadTransactions();
@@ -789,6 +803,158 @@ export class DashboardTransactionsComponent implements OnInit {
     this.returnReason = '';
     this.returnPhotoUrls = [];
     this.returnError = null;
+  }
+
+  /** Format remaining time until payment deadline as "XXh XXm" or "expired" */
+  paymentDeadlineCountdown(t: Transaction): string {
+    if (!t.paymentDeadline) return '';
+    const diff = new Date(t.paymentDeadline).getTime() - Date.now();
+    if (diff <= 0) return 'transactions.paymentExpired';
+    const hrs = Math.floor(diff / 3600000);
+    const mins = Math.floor((diff % 3600000) / 60000);
+    if (hrs > 0) return `${hrs}h ${mins}m`;
+    return `${mins}m`;
+  }
+
+  /** Whether the private-room payment countdown should be shown (buyer, pending, isPrivateRoom) */
+  showPrivateRoomCountdown(t: Transaction): boolean {
+    return !!(
+      this.isBuyer(t) &&
+      t.isPrivateRoom &&
+      this.getEffectiveStatus(t) === 'pending_payment' &&
+      t.paymentDeadline
+    );
+  }
+
+  /** True when deadline has passed or less than 1 hour remains */
+  isPaymentDeadlineUrgent(t: Transaction): boolean {
+    if (!t.paymentDeadline) return false;
+    return new Date(t.paymentDeadline).getTime() - Date.now() < 3600000;
+  }
+
+  /** True if buyer received a second-chance offer (originally someone else was the winner) */
+  isSecondChanceBuyer(t: Transaction): boolean {
+    return !!(t.isPrivateRoom && t.secondChanceAssignedAt);
+  }
+
+  relistItem(t: Transaction): void {
+    if (!t.listing?.slug) return;
+    const listingId = t.listing._id;
+    this.transactionsService.relistListing(listingId).subscribe({
+      next: () => {
+        successToast.fire({ title: 'Item relisted for 7 days!' });
+        this.loadTransactions();
+      },
+      error: (err) => {
+        Swal.fire({ icon: 'error', title: 'Relist failed', text: err?.error?.message || 'Could not relist the item.' });
+      }
+    });
+  }
+
+  /** Whether the seller can relist (listing ended due to non_payment_no_second_bidder) */
+  canRelist(t: Transaction): boolean {
+    if (!this.isSeller(t)) return false;
+    if (this.getEffectiveStatus(t) !== 'cancelled') return false;
+    return t.cancellationReason === 'non_payment';
+  }
+
+  /** Whether buyer can open a damage claim (delivered + within 48h + no existing claim) */
+  canOpenDamageClaim(t: Transaction): boolean {
+    if (!this.isBuyer(t)) return false;
+    if (this.getEffectiveStatus(t) !== 'delivered') return false;
+    if (!t.deliveredAt) return false;
+    const elapsed = Date.now() - new Date(t.deliveredAt).getTime();
+    if (elapsed > this.CLAIM_WINDOW_MS) return false;
+    // Hide if we already know a claim exists
+    if (this.existingClaimsByTxId[t._id] !== undefined) return false;
+    return true;
+  }
+
+  /** Hours remaining in the 48h damage claim window */
+  damageClaimHoursLeft(t: Transaction): number {
+    if (!t.deliveredAt) return 0;
+    const elapsed = Date.now() - new Date(t.deliveredAt).getTime();
+    return Math.max(0, Math.ceil((this.CLAIM_WINDOW_MS - elapsed) / 3600000));
+  }
+
+  openDamageClaimModal(t: Transaction): void {
+    if (!this.canOpenDamageClaim(t)) return;
+    this.damageClaimTransaction = t;
+    this.damagePhotoUrls = [];
+    this.packagingPhotoUrls = [];
+    this.damageDescription = '';
+    this.damageClaimError = null;
+  }
+
+  closeDamageClaimModal(): void {
+    this.damageClaimTransaction = null;
+  }
+
+  async uploadDamagePhoto(event: Event, type: 'damage' | 'packaging'): Promise<void> {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+    input.value = '';
+
+    if (type === 'damage') this.damagePhotoUploading = true;
+    else this.packagingPhotoUploading = true;
+
+    this.transactionsService.uploadDamagePhoto(file).subscribe({
+      next: ({ url }) => {
+        if (type === 'damage') {
+          this.damagePhotoUrls = [...this.damagePhotoUrls, url];
+          this.damagePhotoUploading = false;
+        } else {
+          this.packagingPhotoUrls = [...this.packagingPhotoUrls, url];
+          this.packagingPhotoUploading = false;
+        }
+      },
+      error: () => {
+        this.damageClaimError = 'Failed to upload photo. Please try again.';
+        if (type === 'damage') this.damagePhotoUploading = false;
+        else this.packagingPhotoUploading = false;
+      }
+    });
+  }
+
+  removeDamagePhoto(url: string, type: 'damage' | 'packaging'): void {
+    if (type === 'damage') this.damagePhotoUrls = this.damagePhotoUrls.filter(u => u !== url);
+    else this.packagingPhotoUrls = this.packagingPhotoUrls.filter(u => u !== url);
+  }
+
+  submitDamageClaim(): void {
+    const t = this.damageClaimTransaction;
+    if (!t || this.damageClaimSubmitting) return;
+
+    if (this.damagePhotoUrls.length < 1) {
+      this.damageClaimError = 'Please upload at least one photo of the damage.';
+      return;
+    }
+    if (this.packagingPhotoUrls.length < 1) {
+      this.damageClaimError = 'Please upload at least one photo of the packaging.';
+      return;
+    }
+
+    this.damageClaimSubmitting = true;
+    this.damageClaimError = null;
+
+    this.transactionsService.openDamageClaim({
+      transactionId: t._id,
+      damagePhotoUrls: this.damagePhotoUrls,
+      packagingPhotoUrls: this.packagingPhotoUrls,
+      description: this.damageDescription.trim() || undefined
+    }).subscribe({
+      next: ({ claim }) => {
+        this.existingClaimsByTxId[t._id] = claim;
+        this.damageClaimSubmitting = false;
+        this.damageClaimTransaction = null;
+        successToast.fire({ title: 'Damage claim submitted. We\'ll review it shortly.' });
+      },
+      error: (err) => {
+        this.damageClaimError = err?.error?.message || err?.error?.error || 'Failed to submit claim. Please try again.';
+        this.damageClaimSubmitting = false;
+      }
+    });
   }
 
   closeReturnModal(): void {

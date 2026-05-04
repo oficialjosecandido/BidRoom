@@ -37,6 +37,7 @@ const II_MIN_REPUTATION = 80;        // Score must be ≥ 80 ("4 stars") for II 
 
 // ── Penalties & recovery ───────────────────────────────────────────────────────
 const DISPUTE_LOSS_PENALTY = 25;
+const NON_PAYMENT_PENALTY = 10;          // Per missed private-room payment deadline
 const ISOLATED_LOW_REVIEW_PENALTY = 5;   // Per negative review — Isolated Incident
 const RECURRING_LOW_REVIEW_PENALTY = 20; // Per negative review — Recurring Pattern
 const SUCCESSFUL_TX_RECOVERY = 2;        // Points per successful transaction
@@ -140,6 +141,9 @@ async function recalculateReputation(userId) {
 
   // 1. Dispute losses — significant penalty regardless of pattern
   score -= (user.disputeLossCount || 0) * DISPUTE_LOSS_PENALTY;
+
+  // 1b. Non-payment events (private-room payment deadline missed)
+  score -= (user.nonPaymentCount || 0) * NON_PAYMENT_PENALTY;
 
   // 2. Classify and penalise negative reviews
   const { classification, negatives } = await classifyNegativePattern(userId, currentScore);

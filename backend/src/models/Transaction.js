@@ -188,6 +188,24 @@ const transactionSchema = new mongoose.Schema({
     trim: true,
     default: null
   },
+  /** True when this transaction originated from a private room (affects payment window and non-payment rules) */
+  isPrivateRoom: { type: Boolean, default: false, index: true },
+  /** Why this transaction was cancelled (non_payment | seller_cancelled | auto_cancelled_no_shipment | ...) */
+  cancellationReason: {
+    type: String,
+    enum: ['non_payment', 'seller_cancelled', 'auto_cancelled_no_shipment', 'other'],
+    default: null
+  },
+  /** When a private-room winner fails to pay, the transaction is re-assigned to this buyer. Stores the original buyer's _id. */
+  originalBuyerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
+  /** When the buyer was re-assigned to a second-chance bidder */
+  secondChanceAssignedAt: { type: Date, default: null },
+  /** Whether a non-payment scheduler run has already processed this transaction (idempotency guard) */
+  nonPaymentProcessedAt: { type: Date, default: null },
+  /** Whether a warning notification has been sent to the buyer approaching the payment deadline */
+  paymentDeadlineWarningSentAt: { type: Date, default: null },
+  /** Whether a no-second-bidder notification was sent to the seller */
+  noSecondBidderNotifiedAt: { type: Date, default: null },
   /** Whether a dispute has been opened for this transaction (visible to both parties) */
   disputeOpen: {
     type: Boolean,

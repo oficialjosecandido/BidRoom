@@ -70,6 +70,12 @@ const userSchema = new mongoose.Schema({
     default: 0,
     min: 0
   },
+  /** Count of private-room payment windows missed (used for repeat-offender enforcement) */
+  nonPaymentCount: {
+    type: Number,
+    default: 0,
+    min: 0
+  },
   /** Count of completed transactions (successful, no dispute loss) */
   successfulTransactionCount: {
     type: Number,
