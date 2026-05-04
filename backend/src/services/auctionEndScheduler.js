@@ -6,6 +6,7 @@
 const Listing = require('../models/Listing');
 const { handleAuctionEnd, handlePrivateRoomEnd, handlePrivateRoomClosedNoAcceptance, handlePrivateRoomEligibleExpired } = require('./auctionNotificationService');
 const { processPrivateRoomNonPayments, sendPaymentDeadlineWarnings } = require('./privateRoomPaymentService');
+const { processAutoRelists } = require('./autoRelistService');
 
 let checkInterval = null;
 let ioInstance = null;
@@ -122,6 +123,9 @@ async function checkEndedAuctions() {
     );
     await processPrivateRoomNonPayments(ioInstance).catch(err =>
       console.error('❌ Non-payment processing error:', err.message)
+    );
+    await processAutoRelists(ioInstance).catch(err =>
+      console.error('❌ Auto-relist processing error:', err.message)
     );
 
     if (invitedPastDeadline.length > 0 || endedAuctions.length > 0 || endedPrivateRooms.length > 0) {

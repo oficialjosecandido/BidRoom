@@ -315,9 +315,9 @@ export class TransactionsService {
     return this.http.post<Transaction>(`${this.apiUrl}/${id}/remind-ship`, {});
   }
 
-  /** Seller: one-click relist after non-payment (uses listing id, not transaction id). */
-  relistListing(listingId: string): Observable<{ message: string }> {
-    return this.http.post<{ message: string }>(
+  /** Seller: quick relist after non-payment (uses listing id, not transaction id). */
+  relistListing(listingId: string): Observable<{ message: string; listing?: { slug: string; _id: string } }> {
+    return this.http.post<{ message: string; listing?: { slug: string; _id: string } }>(
       `${API_CONFIG.getApiUrl()}/listings/${listingId}/relist`, {}
     );
   }

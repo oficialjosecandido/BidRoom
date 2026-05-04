@@ -89,6 +89,13 @@ export interface Listing {
   winnerBid?: string;
   winnerSelectedAt?: string;
   winnerSelectionDeadline?: string;
+  // Relist tracking
+  autoRelist?: boolean;
+  relistCount?: number;
+  relistOf?: string | null;
+  relistedAt?: string | null;
+  /** Whether this listing ended unsold (no winner, status ended) */
+  privateRoomClosedReason?: string | null;
   timeRemaining?: {
     ended: boolean;
     days: number;
@@ -153,6 +160,51 @@ export interface StatsOverview {
   totalValueTraded: number;
 }
 
+export interface SellerAnalyticsListingRow {
+  listingId: string;
+  title: string;
+  slug: string;
+  status: string;
+  category: string;
+  auctionFormat: string;
+  cumulativeBidCount: number;
+  viewsInRange: number;
+  bidEventsInRange: number;
+  soldListing: boolean;
+  saleActivityInRange: boolean;
+}
+
+export interface SellerAnalyticsResponse {
+  preset: string;
+  range: { from: string; to: string };
+  filters: { category: string | null; listingId: string | null };
+  overview: {
+    totalViews: number;
+    totalBidsAndOffers: number;
+    salesInRange: number;
+    listingsCount: number;
+    followersTotal: number;
+    followersNewInRange: number;
+    conversionPercent: number | null;
+  };
+  listingCounts: {
+    active: number;
+    ended: number;
+    cancelled: number;
+    sold: number;
+    totalPublished: number;
+  };
+  listings: SellerAnalyticsListingRow[];
+}
+
+export interface SellerAnalyticsQueryParams {
+  preset?: '7d' | '30d' | 'custom';
+  from?: string;
+  to?: string;
+  category?: string;
+  listingId?: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -215,6 +267,16 @@ export class ListingsService {
     return this.http.get<ListingsResponse>(`${this.apiUrl}/seller/my-listings`);
   }
 
+  getSellerAnalytics(params: SellerAnalyticsQueryParams): Observable<SellerAnalyticsResponse> {
+    let httpParams = new HttpParams();
+    if (params.preset) httpParams = httpParams.set('preset', params.preset);
+    if (params.from) httpParams = httpParams.set('from', params.from);
+    if (params.to) httpParams = httpParams.set('to', params.to);
+    if (params.category) httpParams = httpParams.set('category', params.category);
+    if (params.listingId) httpParams = httpParams.set('listingId', params.listingId);
+    return this.http.get<SellerAnalyticsResponse>(`${this.apiUrl}/seller/analytics`, { params: httpParams });
+  }
+
   /** Listings where the current user has placed at least one bid (bidder view) */
   getBidderAuctions(): Observable<ListingsResponse> {
     return this.http.get<ListingsResponse>(`${this.apiUrl}/bidder/my-auctions`);
@@ -246,6 +308,17 @@ export class ListingsService {
     return this.http.patch<{ listing: Listing; message: string }>(
       `${this.apiUrl}/${listingId}`,
       data
+    );
+  }
+
+  /** Relist an unsold ended listing (creates a new listing). Seller may override price/duration. */
+  relistListing(
+    listingId: string,
+    body: { startingPrice?: number; reservePrice?: number | null; durationSlot?: string; autoRelist?: boolean }
+  ): Observable<{ message: string; listing: Listing }> {
+    return this.http.post<{ message: string; listing: Listing }>(
+      `${this.apiUrl}/${listingId}/relist`,
+      body
     );
   }
 }

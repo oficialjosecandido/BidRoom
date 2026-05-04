@@ -1,9 +1,13 @@
 const express = require('express');
+const mongoose = require('mongoose');
 const Listing = require('../models/Listing');
 const ListingDraft = require('../models/ListingDraft');
+const ListingPageView = require('../models/ListingPageView');
 const User = require('../models/User');
 const Bid = require('../models/Bid');
 const Offer = require('../models/Offer');
+const Transaction = require('../models/Transaction');
+const Follow = require('../models/Follow');
 const Watchlist = require('../models/Watchlist');
 const { authenticateToken, optionalAuth, requireActiveAccount, requireNoDisputeRestriction } = require('../middleware/auth');
 const { handleWinnerSelection, handleAuctionEnd } = require('../services/auctionNotificationService');
@@ -47,6 +51,28 @@ function sanitizeSellerForPublic(seller) {
     delete out.professionalVatId;
   }
   return out;
+}
+
+function queueListingDetailView(req, listingLean) {
+  setImmediate(async () => {
+    try {
+      if (!listingLean || listingLean.status === 'draft') return;
+      const sellerId = listingLean.seller && (listingLean.seller._id || listingLean.seller);
+      if (!sellerId) return;
+      if (req.user?.uid) {
+        let viewer = await User.findOne({ uid: req.user.uid }).select('_id').lean();
+        if (!viewer && req.user.email) {
+          viewer = await User.findOne({ email: String(req.user.email).toLowerCase().trim() })
+            .select('_id')
+            .lean();
+        }
+        if (viewer && String(viewer._id) === String(sellerId)) return;
+      }
+      await ListingPageView.create({ listing: listingLean._id, seller: sellerId });
+    } catch (_) {
+      // Listing views are non-critical
+    }
+  });
 }
 
 // GET /api/listings - Get all active listings with filtering and sorting
@@ -425,6 +451,8 @@ router.get('/slug/:slug', optionalAuth, async (req, res) => {
       sellerReviewCount = scores.sellerReviewCount;
     }
 
+    queueListingDetailView(req, listing);
+
     res.json({
       ...listing,
       seller: sanitizeSellerForPublic(listing.seller),
@@ -556,6 +584,263 @@ router.delete('/drafts/current', authenticateToken, async (req, res) => {
   }
 });
 
+// GET /api/listings/seller/analytics — seller performance (must be registered before `/:id`)
+router.get('/seller/analytics', authenticateToken, async (req, res) => {
+  try {
+    let user = await User.findOne({ uid: req.user.uid });
+    if (!user && req.user.email) {
+      user = await User.findOne({ email: String(req.user.email).toLowerCase().trim() });
+    }
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const presetRaw = String(req.query.preset || '30d').toLowerCase();
+    const now = new Date();
+    let fromDate;
+    let toDate = new Date(now);
+
+    if (presetRaw === '7d') {
+      fromDate = new Date(now);
+      fromDate.setDate(fromDate.getDate() - 7);
+    } else if (presetRaw === '30d') {
+      fromDate = new Date(now);
+      fromDate.setDate(fromDate.getDate() - 30);
+    } else if (presetRaw === 'custom') {
+      const rawFrom = req.query.from ? new Date(String(req.query.from)) : null;
+      const rawTo = req.query.to ? new Date(String(req.query.to)) : null;
+      if (!rawFrom || Number.isNaN(rawFrom.getTime())) {
+        return res.status(400).json({ error: 'Custom range requires valid `from` (ISO date).' });
+      }
+      fromDate = rawFrom;
+      toDate =
+        rawTo && !Number.isNaN(rawTo.getTime())
+          ? rawTo
+          : now;
+    } else {
+      return res.status(400).json({
+        error: 'Invalid preset',
+        validPresets: ['7d', '30d', 'custom']
+      });
+    }
+
+    if (toDate > now) {
+      toDate = now;
+    }
+    if (fromDate > toDate) {
+      return res.status(400).json({ error: '`from` must be before `to`' });
+    }
+
+    const maxMs = 366 * 24 * 60 * 60 * 1000;
+    if (toDate.getTime() - fromDate.getTime() > maxMs) {
+      return res.status(400).json({ error: 'Date range cannot exceed one year.' });
+    }
+
+    const ALLOWED_CAT = ['electronics', 'home-garden', 'art', 'collectibles', 'jewelry'];
+    const categoryRaw = req.query.category ? String(req.query.category).trim() : '';
+    const listingIdRaw = req.query.listingId ? String(req.query.listingId).trim() : '';
+
+    const listingMatch = {
+      seller: user._id,
+      status: { $ne: 'draft' }
+    };
+    if (categoryRaw && ALLOWED_CAT.includes(categoryRaw)) {
+      listingMatch.category = categoryRaw;
+    }
+    if (listingIdRaw) {
+      if (!mongoose.Types.ObjectId.isValid(listingIdRaw)) {
+        return res.status(400).json({ error: 'Invalid listingId' });
+      }
+      listingMatch._id = new mongoose.Types.ObjectId(listingIdRaw);
+    }
+
+    if (listingIdRaw) {
+      const ownedOne = await Listing.findOne(listingMatch).select('_id').lean();
+      if (!ownedOne) {
+        return res.status(404).json({ error: 'Listing not found' });
+      }
+    }
+
+    const listingDocs = await Listing.find(listingMatch)
+      .select('_id title slug status category auctionFormat bidCount')
+      .sort({ createdAt: -1 })
+      .lean();
+    const listingIds = listingDocs.map((l) => l._id);
+
+    const followersTotalPromise = Follow.countDocuments({ following: user._id });
+    const followersNewPromise = Follow.countDocuments({
+      following: user._id,
+      createdAt: { $gte: fromDate, $lte: toDate }
+    });
+
+    if (listingIds.length === 0) {
+      const [followersTotal, followersNew] = await Promise.all([followersTotalPromise, followersNewPromise]);
+      return res.json({
+        preset: presetRaw,
+        range: { from: fromDate.toISOString(), to: toDate.toISOString() },
+        filters: { category: categoryRaw || null, listingId: listingIdRaw || null },
+        overview: {
+          totalViews: 0,
+          totalBidsAndOffers: 0,
+          salesInRange: 0,
+          listingsCount: 0,
+          followersTotal,
+          followersNewInRange: followersNew,
+          conversionPercent: null
+        },
+        listingCounts: { active: 0, ended: 0, cancelled: 0, sold: 0, totalPublished: 0 },
+        listings: []
+      });
+    }
+
+    const [followersTotal, followersNew, statusBuckets, viewsAgg, bidAgg, offerAgg, soldEverIds] =
+      await Promise.all([
+        followersTotalPromise,
+        followersNewPromise,
+        Listing.aggregate([
+          { $match: listingMatch },
+          {
+            $group: {
+              _id: '$status',
+              c: { $sum: 1 }
+            }
+          }
+        ]),
+        ListingPageView.aggregate([
+          {
+            $match: {
+              seller: user._id,
+              listing: { $in: listingIds },
+              createdAt: { $gte: fromDate, $lte: toDate }
+            }
+          },
+          { $group: { _id: '$listing', n: { $sum: 1 } } }
+        ]),
+        Bid.aggregate([
+          {
+            $match: {
+              listing: { $in: listingIds },
+              createdAt: { $gte: fromDate, $lte: toDate }
+            }
+          },
+          { $group: { _id: '$listing', n: { $sum: 1 } } }
+        ]),
+        Offer.aggregate([
+          {
+            $match: {
+              listing: { $in: listingIds },
+              createdAt: { $gte: fromDate, $lte: toDate }
+            }
+          },
+          { $group: { _id: '$listing', n: { $sum: 1 } } }
+        ]),
+        Transaction.distinct('listing', {
+          seller: user._id,
+          listing: { $in: listingIds },
+          transactionStatus: { $ne: 'cancelled' }
+        })
+      ]);
+
+    const viewByListing = Object.fromEntries(viewsAgg.map((row) => [row._id.toString(), row.n]));
+    const bidByListing = Object.fromEntries(bidAgg.map((row) => [row._id.toString(), row.n]));
+    const offerByListing = Object.fromEntries(offerAgg.map((row) => [row._id.toString(), row.n]));
+
+    const soldSetEver = new Set(soldEverIds.map((id) => id.toString()));
+
+    const soldPeriodIds = await Transaction.distinct('listing', {
+      seller: user._id,
+      listing: { $in: listingIds },
+      transactionStatus: { $ne: 'cancelled' },
+      $or: [
+        {
+          completedAt: { $gte: fromDate, $lte: toDate }
+        },
+        {
+          paidAt: { $gte: fromDate, $lte: toDate }
+        }
+      ]
+    });
+    const salesInRangeCount = soldPeriodIds.length;
+
+    let active = 0;
+    let ended = 0;
+    let cancelled = 0;
+    for (const row of statusBuckets) {
+      if (row._id === 'active') active = row.c;
+      else if (row._id === 'ended') ended = row.c;
+      else if (row._id === 'cancelled') cancelled = row.c;
+    }
+
+    const totalPublished = listingDocs.length;
+
+    let soldListed = 0;
+    let totalViews = 0;
+    let totalBetting = 0;
+
+    const soldPeriodSet = new Set(soldPeriodIds.map((id) => id.toString()));
+
+    const rows = listingDocs.map((l) => {
+      const id = l._id.toString();
+      const views = viewByListing[id] ?? 0;
+      const bids = bidByListing[id] ?? 0;
+      const offers = offerByListing[id] ?? 0;
+      const bidEvents = bids + offers;
+      const isSold = soldSetEver.has(id);
+      if (isSold) soldListed += 1;
+      totalViews += views;
+      totalBetting += bidEvents;
+
+      return {
+        listingId: id,
+        title: l.title,
+        slug: l.slug,
+        status: l.status,
+        category: l.category,
+        auctionFormat: l.auctionFormat,
+        cumulativeBidCount: l.bidCount ?? 0,
+        viewsInRange: views,
+        bidEventsInRange: bidEvents,
+        soldListing: isSold,
+        saleActivityInRange: soldPeriodSet.has(id)
+      };
+    });
+
+    const conversionPercent =
+      totalPublished > 0
+        ? Math.round((salesInRangeCount / totalPublished) * 1000) / 10
+        : null;
+
+    return res.json({
+      preset: presetRaw,
+      range: { from: fromDate.toISOString(), to: toDate.toISOString() },
+      filters: { category: categoryRaw || null, listingId: listingIdRaw || null },
+      overview: {
+        totalViews,
+        totalBidsAndOffers: totalBetting,
+        salesInRange: salesInRangeCount,
+        listingsCount: totalPublished,
+        followersTotal,
+        followersNewInRange: followersNew,
+        conversionPercent
+      },
+      listingCounts: {
+        active,
+        ended,
+        cancelled,
+        sold: soldListed,
+        totalPublished
+      },
+      listings: rows
+    });
+  } catch (error) {
+    console.error('Error fetching seller analytics:', error);
+    res.status(500).json({
+      error: 'Failed to fetch analytics',
+      message: error.message
+    });
+  }
+});
+
 // GET /api/listings/:id - Get a single listing by ID (for backward compatibility)
 router.get('/:id', optionalAuth, async (req, res) => {
   try {
@@ -656,6 +941,8 @@ router.get('/:id', optionalAuth, async (req, res) => {
     }
 
     response.seller = sanitizeSellerForPublic(response.seller);
+
+    queueListingDetailView(req, listing);
 
     res.json(response);
   } catch (error) {
@@ -1376,10 +1663,20 @@ router.post('/:id/reopen', authenticateToken, requireActiveAccount, async (req, 
 
 /**
  * POST /api/listings/:id/relist
- * One-click relist after a non-payment (no-second-bidder) scenario.
- * Clears winner/bid state and reactivates the listing for another 7 days.
- * Only the seller can do this; listing must be ended with non_payment_no_second_bidder reason.
+ * One-click relist for any unsold auction (no bids, reserve not met, or non-payment).
+ * Creates a NEW listing preserving title/description/images; seller can override price/duration.
+ * Body (all optional): { startingPrice, reservePrice, durationSlot, autoRelist }
  */
+const RELIST_DURATION_MS = {
+  '5 minutes': 5 * 60 * 1000,
+  '1 hour': 60 * 60 * 1000,
+  '2 hours': 2 * 60 * 60 * 1000,
+  '7 hours': 7 * 60 * 60 * 1000,
+  '24 hours': 24 * 60 * 60 * 1000,
+  '3 days': 3 * 24 * 60 * 60 * 1000,
+  '7 days': 7 * 24 * 60 * 60 * 1000,
+};
+
 router.post('/:id/relist', authenticateToken, requireActiveAccount, async (req, res) => {
   try {
     const listing = await Listing.findById(req.params.id);
@@ -1394,35 +1691,92 @@ router.post('/:id/relist', authenticateToken, requireActiveAccount, async (req, 
       return res.status(400).json({ error: 'Only ended listings can be relisted' });
     }
 
-    if (listing.privateRoomClosedReason !== 'non_payment_no_second_bidder') {
-      return res.status(400).json({
-        error: 'This listing cannot be relisted via this endpoint',
-        message: 'Only listings ended due to non-payment with no second bidder qualify for one-click relist'
-      });
+    if (listing.winner) {
+      return res.status(400).json({ error: 'Cannot relist a successfully sold listing' });
     }
 
-    const newEndDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+    if (listing.relistedAt) {
+      return res.status(409).json({ error: 'This listing has already been relisted', message: 'Each ended listing can only be relisted once' });
+    }
 
-    await Listing.findByIdAndUpdate(listing._id, {
-      $set: {
-        status: 'active',
-        endDate: newEndDate,
-        winner: null,
-        winnerBid: null,
-        winnerSelectedAt: null,
-        winnerSelectionDeadline: null,
-        privateRoomStatus: null,
-        privateRoomClosedReason: null,
-        privateRoomEndDate: null,
-        allowPrivateRoom: false // relist as standard auction
-      }
-    }, { runValidators: false });
+    const { startingPrice, reservePrice, durationSlot, autoRelist } = req.body;
 
-    const updated = await Listing.findById(listing._id).populate('seller', SELLER_DSA_PUBLIC_SELECT).lean();
-    return res.json({ message: 'Item relisted for 7 days', listing: updated });
+    const newStartingPrice = startingPrice != null ? parseFloat(startingPrice) : listing.startingPrice;
+    if (isNaN(newStartingPrice) || newStartingPrice < 0) {
+      return res.status(400).json({ error: 'Invalid starting price' });
+    }
+
+    const newReservePrice = reservePrice != null
+      ? (parseFloat(reservePrice) > 0 ? parseFloat(reservePrice) : null)
+      : listing.reservePrice;
+
+    const newDurationSlot = durationSlot || listing.durationSlot || '7 days';
+    const durationMs = RELIST_DURATION_MS[newDurationSlot] || RELIST_DURATION_MS['7 days'];
+    const newEndDate = new Date(Date.now() + durationMs);
+
+    // Generate unique slug (append random suffix until unique)
+    const baseSlug = generateSlug(listing.title);
+    let slug = baseSlug;
+    while (await Listing.exists({ slug })) {
+      slug = `${baseSlug}-${Math.random().toString(36).slice(2, 6)}`;
+    }
+
+    const newListing = new Listing({
+      title: listing.title,
+      description: listing.description,
+      category: listing.category,
+      subCategory: listing.subCategory,
+      images: listing.images,
+      slug,
+      startingPrice: newStartingPrice,
+      currentPrice: newStartingPrice,
+      reservePrice: newReservePrice,
+      bidIncrement: listing.bidIncrement,
+      auctionFormat: listing.auctionFormat,
+      durationSlot: newDurationSlot,
+      condition: listing.condition,
+      location: listing.location,
+      locationCity: listing.locationCity,
+      locationCountry: listing.locationCountry,
+      shippingOption: listing.shippingOption,
+      shippingCost: listing.shippingCost,
+      packageSize: listing.packageSize,
+      shippingOriginPostalCode: listing.shippingOriginPostalCode,
+      shippingOriginCity: listing.shippingOriginCity,
+      shippingOriginCountry: listing.shippingOriginCountry,
+      handlingTime: listing.handlingTime,
+      returnPolicy: listing.returnPolicy,
+      specifications: listing.specifications,
+      minimumOfferPrice: listing.minimumOfferPrice,
+      seller: listing.seller,
+      status: 'active',
+      startDate: new Date(),
+      endDate: newEndDate,
+      autoRelist: autoRelist === true,
+      relistCount: (listing.relistCount || 0) + 1,
+      relistOf: listing._id,
+    });
+
+    await newListing.save();
+
+    // Mark source as relisted so it cannot be relisted again
+    await Listing.updateOne({ _id: listing._id }, { $set: { relistedAt: new Date() } });
+
+    setImmediate(() => {
+      notifyFollowersNewListing({
+        sellerId: user._id,
+        sellerFirstName: user.firstName,
+        listingTitle: newListing.title,
+        listingSlug: slug,
+        io: req.app.get('io')
+      }).catch(() => {});
+    });
+
+    const populated = await Listing.findById(newListing._id).populate('seller', SELLER_DSA_PUBLIC_SELECT).lean();
+    return res.status(201).json({ message: 'Listing relisted successfully', listing: populated });
   } catch (err) {
     console.error('POST /listings/:id/relist error:', err);
-    return res.status(500).json({ error: 'Failed to relist item' });
+    return res.status(500).json({ error: 'Failed to relist listing' });
   }
 });
 
