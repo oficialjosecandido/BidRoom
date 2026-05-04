@@ -19,6 +19,12 @@
     "menu": {
       "open": "Open menu",
       "close": "Close menu"
+    },
+    "theme": {
+      "button": "Theme",
+      "light": "Light",
+      "dark": "Dark",
+      "system": "Match system"
     }
   },
   "footer": {
@@ -912,6 +918,13 @@
       "sellerScore": "Seller Score",
       "languagePreference": "Language Preference",
       "languageDesc": "Choose the language for your BidRoom experience.",
+      "appearance": {
+        "title": "Appearance",
+        "subtitle": "Light, dark, or match your device. When you are signed in, your choice is saved to your account and applies on other devices.",
+        "light": "Light",
+        "dark": "Dark",
+        "system": "Match system"
+      },
       "saveLanguage": "Save Language",
       "saving": "Saving...",
       "saved": "Saved",

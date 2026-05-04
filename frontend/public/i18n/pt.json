@@ -19,6 +19,12 @@
     "menu": {
       "open": "Abrir menu",
       "close": "Fechar menu"
+    },
+    "theme": {
+      "button": "Tema",
+      "light": "Claro",
+      "dark": "Escuro",
+      "system": "Seguir o sistema"
     }
   },
   "footer": {
@@ -912,6 +918,13 @@
       "sellerScore": "Pontuação como Vendedor",
       "languagePreference": "Preferência de Idioma",
       "languageDesc": "Escolha o idioma para sua experiência no BidRoom.",
+      "appearance": {
+        "title": "Aparência",
+        "subtitle": "Claro, escuro ou igual ao dispositivo. Com sessão iniciada, a escolha fica na sua conta e sincroniza entre dispositivos.",
+        "light": "Claro",
+        "dark": "Escuro",
+        "system": "Seguir o sistema"
+      },
       "saveLanguage": "Salvar Idioma",
       "saving": "Salvando...",
       "saved": "Salvo",

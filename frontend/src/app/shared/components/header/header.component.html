@@ -71,6 +71,32 @@
             }
           </div>
 
+          <div class="theme-switcher">
+            <button
+              type="button"
+              class="theme-btn"
+              (click)="toggleThemeMenu()"
+              [attr.aria-expanded]="themeMenuOpen"
+              [attr.aria-label]="'header.theme.button' | translate"
+            >
+              <span class="theme-btn-icon" aria-hidden="true">{{ themeGlyph() }}</span>
+              <span class="theme-chevron" aria-hidden="true">▾</span>
+            </button>
+            @if (themeMenuOpen) {
+              <div class="theme-dropdown" role="menu">
+                @for (opt of themeOptions; track opt.id) {
+                  <button
+                    type="button"
+                    role="menuitem"
+                    class="theme-option"
+                    [class.active]="theme.preference() === opt.id"
+                    (click)="selectTheme(opt.id)"
+                  >{{ opt.labelKey | translate }}</button>
+                }
+              </div>
+            }
+          </div>
+
           @if (isAuthenticated$ | async) {
             <div class="header-notification-wrap">
               <app-proposal-notifications></app-proposal-notifications>

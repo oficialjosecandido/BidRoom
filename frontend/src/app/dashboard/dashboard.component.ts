@@ -7,6 +7,7 @@ import { AuthService } from '../auth/services/auth.service';
 import { NotificationService } from '../shared/services/notification.service';
 import { TransactionsService } from '../shared/services/transactions.service';
 import { SocketService } from '../shared/services/socket.service';
+import { ThemePreference, ThemeService } from '../shared/services/theme.service';
 
 const STORAGE_KEY = 'bidroom-dashboard-sidebar-collapsed';
 
@@ -23,6 +24,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
   private notificationService = inject(NotificationService);
   private transactionsService = inject(TransactionsService);
   private socketService = inject(SocketService);
+  readonly theme = inject(ThemeService);
+
+  readonly themeChoices: { id: ThemePreference; icon: string }[] = [
+    { id: 'light', icon: '☀️' },
+    { id: 'dark', icon: '🌙' },
+    { id: 'system', icon: '💻' }
+  ];
 
   sidebarCollapsed = false;
   notificationUnreadCount = 0;

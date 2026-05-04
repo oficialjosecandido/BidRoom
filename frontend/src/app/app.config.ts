@@ -1,4 +1,4 @@
-import { ApplicationConfig, provideBrowserGlobalErrorListeners, provideZoneChangeDetection } from '@angular/core';
+import { APP_INITIALIZER, ApplicationConfig, provideBrowserGlobalErrorListeners, provideZoneChangeDetection } from '@angular/core';
 import { provideRouter, withInMemoryScrolling } from '@angular/router';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { provideFirebaseApp, initializeApp } from '@angular/fire/app';
@@ -11,6 +11,13 @@ import { authInterceptor } from './auth/interceptors/auth.interceptor';
 import { fingerprintInterceptor } from './auth/interceptors/fingerprint.interceptor';
 import { AuthService } from './auth/services/auth.service';
 import { AuthGuard } from './auth/guards/auth.guard';
+import { ThemeService } from './shared/services/theme.service';
+
+function initThemeFactory(theme: ThemeService) {
+  return () => {
+    theme.initFromStorageSync();
+  };
+}
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -33,6 +40,12 @@ export const appConfig: ApplicationConfig = {
     })),
     provideAuth(() => getAuth()),
     AuthService,
-    AuthGuard
+    AuthGuard,
+    {
+      provide: APP_INITIALIZER,
+      useFactory: initThemeFactory,
+      deps: [ThemeService],
+      multi: true
+    }
   ]
 };

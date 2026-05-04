@@ -120,7 +120,8 @@ router.get('/profile', authenticateToken, async (req, res) => {
       buyerReviewCount,
       sellerReviewCount,
       stripeConnectOnboarded,
-      sellerCompliance
+      sellerCompliance,
+      theme: customer.theme && ['light', 'dark', 'system'].includes(customer.theme) ? customer.theme : null
     });
   } catch (error) {
     console.error('Error fetching customer profile:', error);
@@ -266,6 +267,25 @@ router.patch('/seller-compliance', authenticateToken, requireActiveAccount, asyn
   } catch (error) {
     console.error('Error updating seller compliance:', error);
     res.status(500).json({ error: 'Failed to update seller compliance', message: error.message });
+  }
+});
+
+/**
+ * PATCH /api/customers/theme
+ * Persist UI theme preference (light / dark / system) for cross-device sync.
+ */
+router.patch('/theme', authenticateToken, async (req, res) => {
+  try {
+    const { uid } = req.user;
+    const { theme } = req.body || {};
+    if (!['light', 'dark', 'system'].includes(theme)) {
+      return res.status(400).json({ error: 'Invalid theme', message: 'theme must be "light", "dark", or "system".' });
+    }
+    await Customer.updateOne({ uid }, { $set: { theme } });
+    res.json({ theme });
+  } catch (error) {
+    console.error('Error updating customer theme:', error);
+    res.status(500).json({ error: 'Failed to update theme', message: error.message });
   }
 });
 

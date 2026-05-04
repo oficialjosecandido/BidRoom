@@ -268,9 +268,10 @@ export class SellerPublicProfileComponent implements OnInit {
     const sc = this.profile?.sellerReviewCount ?? 0;
     const bc = this.profile?.buyerReviewCount ?? 0;
     if (!ss && !bs) return null;
-    if (!bs) return ss;
-    if (!ss) return bs;
-    const weighted = (ss * sc + bs * bc) / (sc + bc);
+    // if (!bs) return ss;
+    // if (!ss) return bs;
+    // const weighted = (ss * sc + bs * bc) / (sc + bc);
+    const weighted = (ss ?? 0) * (sc ?? 0) + (bs ?? 0) * (bc ?? 0);
     return Math.round(weighted * 10) / 10;
   }
 }

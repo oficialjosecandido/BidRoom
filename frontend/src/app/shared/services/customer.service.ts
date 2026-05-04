@@ -1,7 +1,9 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { tap } from 'rxjs/operators';
 import { API_CONFIG } from '../config/api.config';
+import { ThemePreference, ThemeService } from './theme.service';
 
 export interface CustomerUser {
   _id: string;
@@ -51,6 +53,8 @@ export interface CustomerInfo {
   stripeConnectOnboarded: boolean;
   /** Present when linked User exists (DSA seller classification). */
   sellerCompliance?: SellerCompliance | null;
+  /** UI theme from Customer; null if never saved server-side. */
+  theme?: ThemePreference | null;
 }
 
 @Injectable({
@@ -58,11 +62,14 @@ export interface CustomerInfo {
 })
 export class CustomerService {
   private http = inject(HttpClient);
+  private themeService = inject(ThemeService);
 
   private apiUrl = `${API_CONFIG.getApiUrl()}/customers`;
 
   getCustomer(): Observable<CustomerInfo> {
-    return this.http.get<CustomerInfo>(`${this.apiUrl}/profile`);
+    return this.http.get<CustomerInfo>(`${this.apiUrl}/profile`).pipe(
+      tap((info) => this.themeService.mergeFromServerIfPresent(info.theme))
+    );
   }
 
   updateLanguage(language: string): Observable<{ language: string }> {
