@@ -49,6 +49,10 @@ export const routes: Routes = [
         path: 'following',
         loadComponent: () => import('./dashboard/components/following/dashboard-following.component').then(m => m.DashboardFollowingComponent)
       },
+      {
+        path: 'analytics',
+        loadComponent: () => import('./dashboard/components/seller-analytics/seller-analytics.component').then(m => m.SellerAnalyticsComponent)
+      },
       // Legacy redirects so old links still work
       { path: 'my-account', redirectTo: 'settings', pathMatch: 'full' },
       { path: 'my-bets', redirectTo: 'buyer', pathMatch: 'full' },

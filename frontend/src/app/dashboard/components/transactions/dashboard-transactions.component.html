@@ -399,8 +399,18 @@
                     }
                   </div>
                 }
+                <div class="mark-complete-panel">
+                  <p class="form-hint">{{ 'transactions.completeToReview' | translate }}</p>
+                  <button
+                    type="button"
+                    class="btn btn-complete"
+                    (click)="markAsCompleted(t); $event.stopPropagation()"
+                    [disabled]="updatingId === t._id">
+                    {{ updatingId === t._id ? ('transactions.updating' | translate) : ('transactions.markAsCompleted' | translate) }}
+                  </button>
+                </div>
               }
-              @if (['paid','shipped','delivered'].includes(getEffectiveStatus(t))) {
+              @if (['paid', 'shipped'].includes(getEffectiveStatus(t))) {
                 <p class="form-hint review-required">
                   {{ 'transactions.completeToReview' | translate }}
                 </p>

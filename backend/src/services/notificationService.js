@@ -262,7 +262,7 @@ async function notifyListingRemoved({ listingSlug, listingTitle, sellerUserId })
     title: 'Listing removed',
     message: `"${listingTitle || 'Your listing'}" was removed due to a policy violation.`,
     type: 'listing',
-    link: '/dashboard/my-listings',
+    link: '/dashboard/seller',
     referenceId: listingSlug
   });
 }
@@ -386,144 +386,144 @@ async function notifySellerLeftPrivateRoomBuyers({ listingSlug, listingTitle, bi
 
 /** Room cancelled by seller - notify bidders */
 async function notifyRoomCancelled({ listingSlug, listingTitle, bidderUserId }) {
+  const link = listingSlug ? `/listing/${listingSlug}` : '/dashboard/buyer';
   return createNotification({
     userId: bidderUserId,
     title: 'Private room cancelled',
     message: `The private room for "${listingTitle || 'the auction'}" was cancelled by the seller.`,
     type: 'private_room',
-    link: '/dashboard/my-auctions',
+    link,
     referenceId: listingSlug
   });
 }
 
 /** Item marked as shipped - notify buyer */
 async function notifyItemMarkedShipped({ transactionId, listingTitle, buyerUserId }) {
+  const link = transactionId
+    ? `/dashboard/buyer?tab=transactions#transaction-${transactionId}`
+    : '/dashboard/buyer?tab=transactions';
   return createNotification({
     userId: buyerUserId,
     title: 'Item shipped',
     message: `"${listingTitle || 'Your item'}" has been marked as shipped.`,
     type: 'shipping',
-    link: `/dashboard/transactions`,
+    link,
     referenceId: transactionId
   });
 }
 
 /** Tracking number provided - notify buyer */
 async function notifyTrackingProvided({ transactionId, listingTitle, buyerUserId }) {
+  const link = transactionId
+    ? `/dashboard/buyer?tab=transactions#transaction-${transactionId}`
+    : '/dashboard/buyer?tab=transactions';
   return createNotification({
     userId: buyerUserId,
     title: 'Tracking number added',
     message: `A tracking number was added for "${listingTitle || 'your item'}".`,
     type: 'shipping',
-    link: `/dashboard/transactions`,
+    link,
     referenceId: transactionId
   });
 }
 
 /** Item marked as delivered - notify buyer */
 async function notifyItemMarkedDelivered({ transactionId, listingTitle, buyerUserId }) {
+  const link = transactionId
+    ? `/dashboard/buyer?tab=transactions#transaction-${transactionId}`
+    : '/dashboard/buyer?tab=transactions';
   return createNotification({
     userId: buyerUserId,
     title: 'Item delivered',
     message: `"${listingTitle || 'Your item'}" has been marked as delivered.`,
     type: 'shipping',
-    link: `/dashboard/transactions`,
+    link,
     referenceId: transactionId
   });
 }
 
 /** Shipping deadline started - notify seller */
 async function notifyShippingDeadlineStarted({ transactionId, listingTitle, sellerUserId }) {
+  const link = transactionId
+    ? `/dashboard/seller?tab=transactions#transaction-${transactionId}`
+    : '/dashboard/seller?tab=transactions';
   return createNotification({
     userId: sellerUserId,
     title: 'Shipping deadline started',
     message: `Ship "${listingTitle || 'the item'}" by the handling deadline.`,
     type: 'shipping',
-    link: `/dashboard/transactions`,
+    link,
     referenceId: transactionId
   });
 }
 
 /** Shipping deadline approaching - notify seller */
 async function notifyShippingDeadlineApproaching({ transactionId, listingTitle, sellerUserId }) {
+  const link = transactionId
+    ? `/dashboard/seller?tab=transactions#transaction-${transactionId}`
+    : '/dashboard/seller?tab=transactions';
   return createNotification({
     userId: sellerUserId,
     title: 'Shipping deadline soon',
     message: `The shipping deadline for "${listingTitle || 'the item'}" is approaching.`,
     type: 'shipping',
-    link: `/dashboard/transactions`,
+    link,
     referenceId: transactionId
   });
 }
 
-/**
- * Day 3 midpoint warning: seller has 2 business days left before auto-cancel.
- * @param {object} opts
- * @param {string} opts.transactionId
- * @param {string} opts.listingTitle   Title of the listing (for user context)
- * @param {string} opts.sellerUserId   Mongo _id of the seller
- */
 async function notifySellerShippingFinalTwoDays({ transactionId, listingTitle, sellerUserId }) {
+  const link = transactionId
+    ? `/dashboard/seller?tab=transactions#transaction-${transactionId}`
+    : '/dashboard/seller?tab=transactions';
   return createNotification({
     userId: sellerUserId,
     title: 'Ship soon — 2 days left',
     message: `You have 2 business days left to ship "${listingTitle || 'this order'}" or it will be cancelled and the buyer refunded.`,
     type: 'shipping',
-    link: `/dashboard/transactions`,
+    link,
     referenceId: transactionId
   });
 }
 
-/**
- * Buyer triggered "Remind seller to ship" action.
- * @param {object} opts
- * @param {string} opts.transactionId
- * @param {string} opts.listingTitle
- * @param {string} opts.sellerUserId
- */
 async function notifySellerBuyerRemindedShip({ transactionId, listingTitle, sellerUserId }) {
+  const link = transactionId
+    ? `/dashboard/seller?tab=transactions#transaction-${transactionId}`
+    : '/dashboard/seller?tab=transactions';
   return createNotification({
     userId: sellerUserId,
     title: 'Buyer reminder: please ship',
     message: `The buyer asked you to ship "${listingTitle || 'their order'}" soon.`,
     type: 'shipping',
-    link: `/dashboard/transactions`,
+    link,
     referenceId: transactionId
   });
 }
 
-/**
- * Auto-cancel notification to buyer: order cancelled + refund issued.
- * @param {object} opts
- * @param {string} opts.transactionId
- * @param {string} opts.listingTitle
- * @param {string} opts.buyerUserId
- */
 async function notifyBuyerOrderCancelledNoShipment({ transactionId, listingTitle, buyerUserId }) {
+  const link = transactionId
+    ? `/dashboard/buyer?tab=transactions#transaction-${transactionId}`
+    : '/dashboard/buyer?tab=transactions';
   return createNotification({
     userId: buyerUserId,
     title: 'Order cancelled — refund issued',
     message: `Your order for "${listingTitle || 'the item'}" was cancelled because the seller did not ship in time. You have been refunded in full.`,
     type: 'shipping',
-    link: `/dashboard/transactions`,
+    link,
     referenceId: transactionId
   });
 }
 
-/**
- * Auto-cancel notification to seller: failed to ship within deadline.
- * @param {object} opts
- * @param {string} opts.transactionId
- * @param {string} opts.listingTitle
- * @param {string} opts.sellerUserId
- */
 async function notifySellerOrderCancelledNoShipment({ transactionId, listingTitle, sellerUserId }) {
+  const link = transactionId
+    ? `/dashboard/seller?tab=transactions#transaction-${transactionId}`
+    : '/dashboard/seller?tab=transactions';
   return createNotification({
     userId: sellerUserId,
     title: 'Order cancelled — did not ship in time',
     message: `The order for "${listingTitle || 'your sale'}" was cancelled automatically because you did not ship within the required timeframe. The buyer has been refunded.`,
     type: 'shipping',
-    link: `/dashboard/transactions`,
+    link,
     referenceId: transactionId
   });
 }
@@ -632,12 +632,15 @@ async function notifyAccountReactivated({ userId }) {
 
 /** Seller accepted payment — notify buyer */
 async function notifyBuyerSellerAccepted({ transactionId, listingTitle, buyerUserId }) {
+  const link = transactionId
+    ? `/dashboard/buyer?tab=transactions#transaction-${transactionId}`
+    : '/dashboard/buyer?tab=transactions';
   return createNotification({
     userId: buyerUserId,
     title: 'Seller accepted your payment',
     message: `The seller has accepted your payment for "${listingTitle || 'the item'}". They will prepare and ship your order soon.`,
     type: 'transaction',
-    link: '/dashboard/transactions',
+    link,
     referenceId: transactionId
   });
 }
@@ -711,7 +714,7 @@ async function notifySellerWinnerSelected({
   shippingOption = 'flat-rate',
   sellerUserId
 }) {
-  const link = '/dashboard/transactions';
+  const link = '/dashboard/seller?tab=transactions';
   const amount = Number(winningAmount) || 0;
   const bidRoomFee = amount * (Number(commissionRate) || 0);
   const shippingDisplay = formatShippingForPricing(shippingOption, shippingCost);
@@ -738,7 +741,7 @@ async function notifyBuyerAuctionWon({
   shippingOption = 'flat-rate',
   buyerUserId
 }) {
-  const link = '/dashboard/transactions';
+  const link = '/dashboard/buyer?tab=transactions';
   const amount = Number(winningAmount) || 0;
   const shippingDisplay = formatShippingForPricing(shippingOption, shippingCost);
 
@@ -856,7 +859,9 @@ async function notifySecondBidderSecondChance({ buyerId, listingTitle, listingSl
 
 /** Damage claim opened — notify seller */
 async function notifyDamageClaimOpened({ sellerId, buyerName, listingTitle, shippingType, transactionId, io }) {
-  const link = `/dashboard/buyer?tab=transactions#transaction-${transactionId}`;
+  const link = transactionId
+    ? `/dashboard/seller?tab=transactions#transaction-${transactionId}`
+    : '/dashboard/seller?tab=transactions';
   const isExternal = shippingType === 'external_shipping';
   const title = isExternal
     ? 'Damage claim opened — your responsibility'

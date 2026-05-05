@@ -1009,6 +1009,7 @@
         "disputes": "Disputes"
       },
       "analytics": {
+      "title": "Analytics",
       "range": "Time range",
       "last7d": "Last 7 days",
       "last30d": "Last 30 days",
@@ -1366,7 +1367,8 @@
     "markAsReceivedProperly": "Mark as Received Properly",
     "receivedNotProperly": "Received Not Properly / Open Dispute",
     "bothMustReview": "Both parties must leave a review to complete this transaction.",
-    "completeToReview": "Mark the transaction as completed to unlock reviews (available for 30 days).",
+    "completeToReview": "Satisfied with your purchase? Mark it as completed to unlock reviews.",
+    "markAsCompleted": "Mark as Completed",
     "viewProofOfDelivery": "View Proof of Delivery",
     "view": "View",
     "remove": "Remove",

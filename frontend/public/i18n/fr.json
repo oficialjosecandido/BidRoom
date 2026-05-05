@@ -1132,6 +1132,8 @@
     "markAsReceivedProperly": "Marquer comme reçu correctement",
     "receivedNotProperly": "Reçu incorrectement / Ouvrir un litige",
     "bothMustReview": "Les deux parties doivent laisser un avis pour finaliser cette transaction.",
+    "completeToReview": "Satisfait de votre achat ? Marquez-le comme terminé pour débloquer les avis.",
+    "markAsCompleted": "Marquer comme terminé",
     "viewProofOfDelivery": "Voir la preuve de livraison",
     "view": "Voir",
     "remove": "Supprimer",
