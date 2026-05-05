@@ -2,6 +2,9 @@ const Notification = require('../models/Notification');
 const User = require('../models/User');
 const NotificationPreferences = require('../models/NotificationPreferences');
 const Follow = require('../models/Follow');
+const CategoryFollow = require('../models/CategoryFollow');
+const Watchlist = require('../models/Watchlist');
+const Listing = require('../models/Listing');
 
 // In-memory debounce: prevent outbid notification floods in high-activity auctions.
 // Key: "userId:listingId", value: timestamp of last sent notification.
@@ -897,6 +900,117 @@ async function notifyDamageClaimResolved({ buyerId, listingTitle, status, transa
   if (io) await emitNewNotificationToUser(io, buyerId);
 }
 
+async function notifyCategoryFollowersNewListing({ category, listingTitle, listingSlug, sellerUserId, io }) {
+  try {
+    if (!category) return;
+    const followers = await CategoryFollow.find({ category: category.toLowerCase() }).lean();
+    if (!followers.length) return;
+
+    const title = 'New listing in a category you follow';
+    const message = listingTitle || 'Check it out now';
+    const link = listingSlug ? `/listing/${listingSlug}` : '/listing/list';
+
+    await Promise.allSettled(
+      followers.map(async (f) => {
+        if (sellerUserId && f.user.toString() === sellerUserId.toString()) return;
+        await createNotification({
+          userId: f.user,
+          title,
+          message,
+          type: 'follow',
+          link,
+          referenceId: listingSlug || null,
+          eventType: 'new_listing_in_followed_category'
+        });
+        if (io) await emitNewNotificationToUser(io, f.user.toString());
+      })
+    );
+  } catch (err) {
+    console.error('notifyCategoryFollowersNewListing error:', err.message);
+  }
+}
+
+async function notifySimilarItemWatchers({ category, startingPrice, listingTitle, listingSlug, newListingId, sellerUserId, io }) {
+  try {
+    if (!category) return;
+
+    // Find listings in the same category within ±50% price range
+    const minPrice = startingPrice * 0.5;
+    const maxPrice = startingPrice * 1.5;
+    const similarListings = await Listing.find({
+      _id: { $ne: newListingId },
+      category: category.toLowerCase(),
+      startingPrice: { $gte: minPrice, $lte: maxPrice },
+      status: { $in: ['active', 'ended'] }
+    }).select('_id').lean();
+
+    if (!similarListings.length) return;
+    const similarIds = similarListings.map(l => l._id);
+
+    // Find users who have any of those similar listings in their watchlist
+    const watchlistEntries = await Watchlist.find({ listing: { $in: similarIds } })
+      .select('user listing')
+      .lean();
+
+    // Deduplicate by user
+    const notifiedUsers = new Set();
+    await Promise.allSettled(
+      watchlistEntries.map(async (entry) => {
+        const uid = entry.user.toString();
+        if (notifiedUsers.has(uid)) return;
+        if (sellerUserId && uid === sellerUserId.toString()) return;
+        notifiedUsers.add(uid);
+
+        await createNotification({
+          userId: entry.user,
+          title: 'Similar item to one you\'re watching',
+          message: listingTitle || 'A similar item just went live',
+          type: 'watchlist',
+          link: listingSlug ? `/listing/${listingSlug}` : '/',
+          referenceId: listingSlug || null,
+          eventType: 'similar_item_available'
+        });
+        if (io) await emitNewNotificationToUser(io, uid);
+      })
+    );
+  } catch (err) {
+    console.error('notifySimilarItemWatchers error:', err.message);
+  }
+}
+
+async function notifyWatchlistersAuctionEnding({ listingId, listingTitle, listingSlug, io }) {
+  try {
+    const refId = `ending-soon:${listingId}`;
+    const watchers = await Watchlist.find({ listing: listingId }).select('user').lean();
+    if (!watchers.length) return;
+
+    await Promise.allSettled(
+      watchers.map(async (w) => {
+        // Deduplicate: skip if we already sent this ending-soon notification
+        const existing = await Notification.findOne({
+          user: w.user,
+          referenceId: refId,
+          issuedAt: { $gte: new Date(Date.now() - 2 * 60 * 60 * 1000) }
+        }).lean();
+        if (existing) return;
+
+        await createNotification({
+          userId: w.user,
+          title: 'Auction ending soon',
+          message: listingTitle || 'An item in your watchlist is ending in less than an hour',
+          type: 'watchlist',
+          link: listingSlug ? `/listing/${listingSlug}` : '/',
+          referenceId: refId,
+          eventType: 'watchlist_auction_ending'
+        });
+        if (io) await emitNewNotificationToUser(io, w.user.toString());
+      })
+    );
+  } catch (err) {
+    console.error('notifyWatchlistersAuctionEnding error:', err.message);
+  }
+}
+
 async function notifyFollowersNewListing({ sellerId, sellerFirstName, listingTitle, listingSlug, io }) {
   try {
     const followers = await Follow.find({ following: sellerId, muted: false }).lean();
@@ -982,5 +1096,8 @@ module.exports = {
   notifyDamageClaimOpened,
   notifyDamageClaimResolved,
   notifyFollowersNewListing,
+  notifyCategoryFollowersNewListing,
+  notifySimilarItemWatchers,
+  notifyWatchlistersAuctionEnding,
   emitNewNotificationToUser
 };

@@ -29,4 +29,8 @@ export class FollowService {
   setMuted(sellerId: string, muted: boolean): Observable<FollowStatus> {
     return this.http.patch<FollowStatus>(`${this.apiUrl}/${sellerId}/mute`, { muted });
   }
+
+  getFollowing(): Observable<{ following: { _id: string; firstName: string; lastName: string; muted: boolean }[] }> {
+    return this.http.get<{ following: { _id: string; firstName: string; lastName: string; muted: boolean }[] }>(`${this.apiUrl}/following`);
+  }
 }

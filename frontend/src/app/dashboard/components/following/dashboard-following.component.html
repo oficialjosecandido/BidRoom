@@ -1,0 +1,89 @@
+<div class="following-container">
+  <div class="page-header">
+    <h1>{{ 'dashboard.following.title' | translate }}</h1>
+    <p class="subtitle">{{ 'dashboard.following.subtitle' | translate }}</p>
+  </div>
+
+  @if (isLoading) {
+    <div class="loading-state">
+      <div class="spinner"></div>
+      <p>{{ 'dashboard.following.loading' | translate }}</p>
+    </div>
+  } @else {
+    <div class="following-sections">
+
+      <!-- Followed Sellers -->
+      <div class="following-section">
+        <h2 class="section-title">{{ 'dashboard.following.sellers' | translate }}</h2>
+
+        @if (sellers.length === 0) {
+          <div class="empty-state">
+            <div class="empty-icon">👤</div>
+            <p>{{ 'dashboard.following.noSellers' | translate }}</p>
+            <a routerLink="/listing/list" class="browse-btn">{{ 'dashboard.following.browseSellers' | translate }}</a>
+          </div>
+        } @else {
+          <div class="seller-list">
+            @for (seller of sellers; track seller._id) {
+              <div class="seller-row">
+                <a [routerLink]="['/seller', seller._id]" class="seller-name">
+                  {{ sellerDisplayName(seller) }}
+                </a>
+                @if (seller.muted) {
+                  <span class="muted-badge">{{ 'dashboard.following.muted' | translate }}</span>
+                }
+                <div class="seller-actions">
+                  <button
+                    type="button"
+                    class="action-btn mute-btn"
+                    [disabled]="togglingMute === seller._id"
+                    (click)="toggleMute(seller)">
+                    {{ seller.muted ? ('dashboard.following.unmute' | translate) : ('dashboard.following.mute' | translate) }}
+                  </button>
+                  <button
+                    type="button"
+                    class="action-btn unfollow-btn"
+                    [disabled]="unfollowingSeller === seller._id"
+                    (click)="unfollowSeller(seller)">
+                    {{ 'dashboard.following.unfollow' | translate }}
+                  </button>
+                </div>
+              </div>
+            }
+          </div>
+        }
+      </div>
+
+      <!-- Followed Categories -->
+      <div class="following-section">
+        <h2 class="section-title">{{ 'dashboard.following.categories' | translate }}</h2>
+
+        @if (categories.length === 0) {
+          <div class="empty-state">
+            <div class="empty-icon">🏷️</div>
+            <p>{{ 'dashboard.following.noCategories' | translate }}</p>
+            <a routerLink="/listing/categories" class="browse-btn">{{ 'dashboard.following.browseCategories' | translate }}</a>
+          </div>
+        } @else {
+          <div class="category-list">
+            @for (cat of categories; track cat) {
+              <div class="category-row">
+                <a [routerLink]="['/listing/list']" [queryParams]="{ category: cat }" class="category-name">
+                  {{ formatCategoryName(cat) }}
+                </a>
+                <button
+                  type="button"
+                  class="action-btn unfollow-btn"
+                  [disabled]="unfollowingCategory === cat"
+                  (click)="unfollowCategory(cat)">
+                  {{ 'dashboard.following.unfollow' | translate }}
+                </button>
+              </div>
+            }
+          </div>
+        }
+      </div>
+
+    </div>
+  }
+</div>

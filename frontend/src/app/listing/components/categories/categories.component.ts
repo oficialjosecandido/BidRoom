@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -7,6 +7,8 @@ import { HeaderComponent } from '../../../shared/components/header/header.compon
 import { FooterComponent } from '../../../shared/components/footer/footer.component';
 import { CATEGORIES, Category } from '../../../shared/config/categories.config';
 import { CONDITION_OPTIONS, SHIPPING_OPTIONS, LOCATION_COUNTRY_OPTIONS } from '../listing-list/listing-list.component';
+import { CategoryFollowService } from '../../../shared/services/category-follow.service';
+import { AuthService } from '../../../auth/services/auth.service';
 
 @Component({
   selector: 'app-categories',
@@ -15,8 +17,11 @@ import { CONDITION_OPTIONS, SHIPPING_OPTIONS, LOCATION_COUNTRY_OPTIONS } from '.
   templateUrl: './categories.component.html',
   styleUrl: './categories.component.scss'
 })
-export class CategoriesComponent {
+export class CategoriesComponent implements OnInit {
   private router = inject(Router);
+  private categoryFollowService = inject(CategoryFollowService);
+  private authService = inject(AuthService);
+
   categories: Category[] = CATEGORIES;
 
   readonly conditionOptions = CONDITION_OPTIONS;
@@ -29,6 +34,51 @@ export class CategoriesComponent {
   locationCountryFilter = '';
   minPrice = '';
   maxPrice = '';
+
+  followedCategories = new Set<string>();
+  followTogglingCategory: string | null = null;
+  isLoggedIn = false;
+
+  ngOnInit(): void {
+    this.authService.currentUser$.subscribe(user => {
+      this.isLoggedIn = !!user;
+      if (user) this.loadFollowedCategories();
+    });
+  }
+
+  loadFollowedCategories(): void {
+    this.categoryFollowService.getFollowedCategories().subscribe({
+      next: (res) => { this.followedCategories = new Set(res.categories); },
+      error: () => {}
+    });
+  }
+
+  toggleFollowCategory(event: Event, categoryId: string): void {
+    event.stopPropagation();
+    if (!this.isLoggedIn) {
+      this.router.navigate(['/login']);
+      return;
+    }
+    if (this.followTogglingCategory) return;
+    this.followTogglingCategory = categoryId;
+    const isFollowing = this.followedCategories.has(categoryId);
+    const action$ = isFollowing
+      ? this.categoryFollowService.unfollow(categoryId)
+      : this.categoryFollowService.follow(categoryId);
+
+    action$.subscribe({
+      next: (res) => {
+        if (res.following) {
+          this.followedCategories.add(categoryId);
+        } else {
+          this.followedCategories.delete(categoryId);
+        }
+        this.followedCategories = new Set(this.followedCategories);
+        this.followTogglingCategory = null;
+      },
+      error: () => { this.followTogglingCategory = null; }
+    });
+  }
 
   get hasActiveFilters(): boolean {
     return !!(

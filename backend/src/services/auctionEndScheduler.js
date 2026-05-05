@@ -7,6 +7,7 @@ const Listing = require('../models/Listing');
 const { handleAuctionEnd, handlePrivateRoomEnd, handlePrivateRoomClosedNoAcceptance, handlePrivateRoomEligibleExpired } = require('./auctionNotificationService');
 const { processPrivateRoomNonPayments, sendPaymentDeadlineWarnings } = require('./privateRoomPaymentService');
 const { processAutoRelists } = require('./autoRelistService');
+const { notifyWatchlistersAuctionEnding } = require('./notificationService');
 
 let checkInterval = null;
 let ioInstance = null;
@@ -127,6 +128,23 @@ async function checkEndedAuctions() {
     await processAutoRelists(ioInstance).catch(err =>
       console.error('❌ Auto-relist processing error:', err.message)
     );
+
+    // 4) Watchlist ending-soon alerts: active listings ending in < 1h
+    const soonCutoff = new Date(now.getTime() + 60 * 60 * 1000);
+    const endingSoonListings = await Listing.find({
+      status: 'active',
+      endDate: { $gt: now, $lte: soonCutoff },
+      privateRoomStatus: { $nin: ['active', 'invited'] }
+    }).select('_id title slug').lean();
+
+    for (const listing of endingSoonListings) {
+      notifyWatchlistersAuctionEnding({
+        listingId: listing._id,
+        listingTitle: listing.title,
+        listingSlug: listing.slug,
+        io: ioInstance
+      }).catch(err => console.error(`❌ Watchlist ending-soon error for ${listing._id}:`, err.message));
+    }
 
     if (invitedPastDeadline.length > 0 || endedAuctions.length > 0 || endedPrivateRooms.length > 0) {
       console.log(`🔍 Processed ${processed} (auto-started / ended auction(s) / private room(s))`);

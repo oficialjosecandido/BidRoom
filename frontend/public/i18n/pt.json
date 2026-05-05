@@ -413,7 +413,10 @@
     "title": "Navegar por Categoria",
     "subtitle": "Explore todas as nossas categorias e subcategorias",
     "browseAll": "Ver todos",
-    "allListings": "Todos os Anúncios"
+    "allListings": "Todos os Anúncios",
+    "follow": "Seguir",
+    "following": "A seguir",
+    "unfollow": "Deixar de seguir"
   },
   "language": {
     "en": "English",
@@ -821,10 +824,26 @@
       "activity": "Atividade",
       "buyerProfile": "Perfil do Comprador",
       "sellerProfile": "Perfil do Vendedor",
+      "following": "A seguir",
       "account": "Conta",
       "notifications": "Notificações",
       "settings": "Configurações",
       "logout": "Sair"
+    },
+    "following": {
+      "title": "A seguir",
+      "subtitle": "Gere os vendedores e categorias que segues",
+      "loading": "A carregar…",
+      "sellers": "Vendedores",
+      "categories": "Categorias",
+      "noSellers": "Ainda não segues nenhum vendedor.",
+      "noCategories": "Ainda não segues nenhuma categoria.",
+      "browseSellers": "Ver anúncios",
+      "browseCategories": "Ver categorias",
+      "mute": "Silenciar",
+      "unmute": "Ativar",
+      "unfollow": "Deixar de seguir",
+      "muted": "Silenciado"
     },
     "common": {
       "loading": "Carregando...",

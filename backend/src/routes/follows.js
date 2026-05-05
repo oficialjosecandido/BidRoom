@@ -1,6 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const Follow = require('../models/Follow');
+const User = require('../models/User');
 const { authenticateToken, requireActiveAccount } = require('../middleware/auth');
 
 const router = express.Router();
@@ -105,6 +106,30 @@ router.get('/status/:sellerId', authenticateToken, async (req, res) => {
   } catch (error) {
     console.error('Error getting follow status:', error);
     res.status(500).json({ error: 'Failed to get follow status' });
+  }
+});
+
+// GET /api/follows/following — list all sellers the current user follows
+router.get('/following', authenticateToken, async (req, res) => {
+  try {
+    const user = await User.findOne({ uid: req.user.uid }).select('_id').lean();
+    if (!user) return res.json({ following: [] });
+
+    const entries = await Follow.find({ follower: user._id })
+      .populate('following', 'firstName lastName _id')
+      .lean();
+
+    const following = entries.map(e => ({
+      _id: e.following._id,
+      firstName: e.following.firstName,
+      lastName: e.following.lastName,
+      muted: e.muted
+    }));
+
+    res.json({ following });
+  } catch (err) {
+    console.error('Error fetching following list:', err);
+    res.status(500).json({ error: 'Failed to fetch following list' });
   }
 });
 
