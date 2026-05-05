@@ -59,7 +59,7 @@ export interface Listing {
   allowPrivateRoom: boolean;
   commissionRate: number;
   privateRoomStatus?: 'not-triggered' | 'eligible' | 'invited' | 'active' | 'ended';
-  privateRoomClosedReason?: 'no_acceptances' | 'seller_left' | 'time_expired';
+  privateRoomClosedReason?: 'no_acceptances' | 'seller_left' | 'time_expired' | 'non_payment_no_second_bidder' | null;
   privateRoomEndDate?: string;
   privateRoomLastBidTime?: string;
   platinumBidders?: string[] | { _id: string; firstName: string; lastName: string; email: string }[];
@@ -94,8 +94,6 @@ export interface Listing {
   relistCount?: number;
   relistOf?: string | null;
   relistedAt?: string | null;
-  /** Whether this listing ended unsold (no winner, status ended) */
-  privateRoomClosedReason?: string | null;
   timeRemaining?: {
     ended: boolean;
     days: number;

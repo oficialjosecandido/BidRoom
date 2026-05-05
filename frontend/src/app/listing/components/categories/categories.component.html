@@ -87,8 +87,8 @@
       @for (category of categories; track category.id) {
         <div class="category-section">
 
-          <div class="category-header" (click)="browseCategory(category.id)">
-            <div class="category-header-left">
+          <div class="category-header">
+            <div class="category-header-left" (click)="browseCategory(category.id)">
               <span class="category-icon">{{ category.icon }}</span>
               <div class="category-info">
                 <h2 class="category-name">{{ category.name }}</h2>
@@ -96,8 +96,17 @@
               </div>
             </div>
             <div class="category-header-right">
+              <button
+                type="button"
+                class="cat-follow-btn"
+                [class.cat-follow-btn--following]="followedCategories.has(category.id)"
+                [disabled]="followTogglingCategory === category.id"
+                (click)="toggleFollowCategory($event, category.id)"
+                [attr.title]="followedCategories.has(category.id) ? ('categories.unfollow' | translate) : ('categories.follow' | translate)">
+                {{ followedCategories.has(category.id) ? ('categories.following' | translate) : ('categories.follow' | translate) }}
+              </button>
               <span class="category-count">{{ category.subCategories.length }} subcategories</span>
-              <span class="browse-arrow">{{ 'categories.browseAll' | translate }} →</span>
+              <span class="browse-arrow" (click)="browseCategory(category.id)">{{ 'categories.browseAll' | translate }} →</span>
             </div>
           </div>
 

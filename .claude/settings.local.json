@@ -43,7 +43,13 @@
       "Bash(node --check /Users/jose/Documents/bidroom/backend/src/services/auctionEndScheduler.js)",
       "Bash(node --check /Users/jose/Documents/bidroom/backend/src/services/transactionService.js)",
       "Bash(node --check /Users/jose/Documents/bidroom/backend/src/routes/listings.js)",
-      "Bash(grep -n \"getUser\\\\|currentUser\\\\|user\\\\$\\\\|isLoggedIn\" /Users/jose/Documents/bidroom/frontend/src/app/auth/services/auth.service.ts)"
+      "Bash(grep -n \"getUser\\\\|currentUser\\\\|user\\\\$\\\\|isLoggedIn\" /Users/jose/Documents/bidroom/frontend/src/app/auth/services/auth.service.ts)",
+      "Bash(sed -n '1235,1260p' /Users/jose/Documents/bidroom/backend/src/routes/listings.js)",
+      "Bash(sed -n '1775,1800p' /Users/jose/Documents/bidroom/backend/src/routes/listings.js)",
+      "Bash(sed -n '412,440p' /Users/jose/Documents/bidroom/frontend/public/i18n/en.json)",
+      "Bash(sed -n '818,835p' /Users/jose/Documents/bidroom/frontend/public/i18n/en.json)",
+      "Bash(sed -n '412,418p' /Users/jose/Documents/bidroom/frontend/public/i18n/es.json)",
+      "Bash(sed -n '818,830p' /Users/jose/Documents/bidroom/frontend/public/i18n/es.json)"
     ]
   }
 }

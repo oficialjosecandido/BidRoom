@@ -11,7 +11,7 @@ const Follow = require('../models/Follow');
 const Watchlist = require('../models/Watchlist');
 const { authenticateToken, optionalAuth, requireActiveAccount, requireNoDisputeRestriction } = require('../middleware/auth');
 const { handleWinnerSelection, handleAuctionEnd } = require('../services/auctionNotificationService');
-const { notifyFollowersNewListing } = require('../services/notificationService');
+const { notifyFollowersNewListing, notifyCategoryFollowersNewListing, notifySimilarItemWatchers } = require('../services/notificationService');
 const { getReviewScoresForUser } = require('../services/reviewService');
 const { logAuctionCreated } = require('../services/bestOfferLogger');
 const { scanTexts, scanTextsForProhibitedContent } = require('../utils/contentFilter');
@@ -1238,14 +1238,31 @@ router.post('/', authenticateToken, requireActiveAccount, requireNoDisputeRestri
     const listing = new Listing(listingData);
     await listing.save();
 
-    // Notify followers non-blockingly (fire-and-forget)
+    // Notify followers / category followers / similar-item watchers (fire-and-forget)
     setImmediate(() => {
+      const io = req.app.get('io');
       notifyFollowersNewListing({
         sellerId: req.user._id,
         sellerFirstName: req.user.firstName,
         listingTitle: listing.title,
         listingSlug: listingData.slug,
-        io: req.app.get('io')
+        io
+      });
+      notifyCategoryFollowersNewListing({
+        category: listingData.category,
+        listingTitle: listing.title,
+        listingSlug: listingData.slug,
+        sellerUserId: req.user._id,
+        io
+      });
+      notifySimilarItemWatchers({
+        category: listingData.category,
+        startingPrice: listing.startingPrice,
+        listingTitle: listing.title,
+        listingSlug: listingData.slug,
+        newListingId: listing._id,
+        sellerUserId: req.user._id,
+        io
       });
     });
 
@@ -1777,13 +1794,30 @@ router.post('/:id/relist', authenticateToken, requireActiveAccount, async (req, 
     await Listing.updateOne({ _id: listing._id }, { $set: { relistedAt: new Date() } });
 
     setImmediate(() => {
+      const io = req.app.get('io');
       notifyFollowersNewListing({
         sellerId: user._id,
         sellerFirstName: user.firstName,
         listingTitle: newListing.title,
         listingSlug: slug,
-        io: req.app.get('io')
+        io
       }).catch(() => {});
+      notifyCategoryFollowersNewListing({
+        category: newListing.category,
+        listingTitle: newListing.title,
+        listingSlug: slug,
+        sellerUserId: user._id,
+        io
+      });
+      notifySimilarItemWatchers({
+        category: newListing.category,
+        startingPrice: newListing.startingPrice,
+        listingTitle: newListing.title,
+        listingSlug: slug,
+        newListingId: newListing._id,
+        sellerUserId: user._id,
+        io
+      });
     });
 
     const populated = await Listing.findById(newListing._id).populate('seller', SELLER_DSA_PUBLIC_SELECT).lean();

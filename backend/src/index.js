@@ -38,6 +38,7 @@ const configRoutes = require('./routes/config');
 const reportRoutes = require('./routes/reports');
 const userRoutes = require('./routes/users');
 const followRoutes = require('./routes/follows');
+const categoryFollowRoutes = require('./routes/category-follows');
 const damageClaimsRoutes = require('./routes/damageClaims');
 const { router: kycRoutes, kycWebhookHandler } = require('./routes/kyc');
 
@@ -168,6 +169,7 @@ app.use('/api/config', configRoutes);
 app.use('/api/reports', generalLimiter, reportRoutes);
 app.use('/api/users', generalLimiter, userRoutes);
 app.use('/api/follows', generalLimiter, followRoutes);
+app.use('/api/category-follows', generalLimiter, categoryFollowRoutes);
 app.use('/api/damage-claims', generalLimiter, damageClaimsRoutes);
 app.use('/api/kyc', generalLimiter, kycRoutes);
 

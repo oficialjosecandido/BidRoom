@@ -413,7 +413,10 @@
     "title": "Browse by Category",
     "subtitle": "Explore our full range of categories and subcategories",
     "browseAll": "Browse all",
-    "allListings": "All Listings"
+    "allListings": "All Listings",
+    "follow": "Follow",
+    "following": "Following",
+    "unfollow": "Unfollow"
   },
   "language": {
     "en": "English",
@@ -821,10 +824,26 @@
       "activity": "Activity",
       "buyerProfile": "Buyer Profile",
       "sellerProfile": "Seller Profile",
+      "following": "Following",
       "account": "Account",
       "notifications": "Notifications",
       "settings": "Settings",
       "logout": "Logout"
+    },
+    "following": {
+      "title": "Following",
+      "subtitle": "Manage the sellers and categories you follow",
+      "loading": "Loading…",
+      "sellers": "Sellers",
+      "categories": "Categories",
+      "noSellers": "You're not following any sellers yet.",
+      "noCategories": "You're not following any categories yet.",
+      "browseSellers": "Browse listings",
+      "browseCategories": "Browse categories",
+      "mute": "Mute",
+      "unmute": "Unmute",
+      "unfollow": "Unfollow",
+      "muted": "Muted"
     },
     "common": {
       "loading": "Loading...",
