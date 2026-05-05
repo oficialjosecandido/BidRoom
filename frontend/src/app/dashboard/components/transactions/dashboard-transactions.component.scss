@@ -93,6 +93,15 @@
   }
 }
 
+.mark-complete-panel {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px dashed rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
 // Auto-cancellation notice (shipping deadline expired)
 .cancellation-notice {
   background: #fff3cd;
@@ -348,7 +357,19 @@
 }
 
 .transaction-card {
+  /** Always light chrome; override global dark-theme body text (--text-dark is light there). */
   background: white;
+  color: #1e293b;
+  /* Global `h*` rules use var(--text-dark) (light in dark theme). Inherit base for this white card. */
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    color: inherit;
+  }
+
   border-radius: 12px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   overflow: hidden;
@@ -648,6 +669,14 @@
     padding: 20px;
     border-left: 1px solid #e2e8f0;
 
+    /** Many panels use `.form-hint` without being inside `.tracking-form`; avoid inheriting light theme body color. */
+    .form-hint {
+      font-size: 13px;
+      color: #4b5563;
+      margin: 0 0 4px 0;
+      line-height: 1.45;
+    }
+
     .card-deadline {
       font-size: 13px;
       color: #4a5568;
@@ -694,6 +723,16 @@
       background: #fee2e2;
       color: #b91c1c;
       border: 1px solid #fca5a5;
+    }
+
+    &.btn-complete {
+      background: #d1fae5;
+      color: #065f46;
+      border: 1px solid #6ee7b7;
+
+      &:hover:not(:disabled) {
+        background: #a7f3d0;
+      }
     }
 
     &:disabled {

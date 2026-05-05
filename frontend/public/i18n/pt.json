@@ -1009,6 +1009,7 @@
         "disputes": "Disputas"
       },
       "analytics": {
+      "title": "Análises",
       "range": "Período",
       "last7d": "Últimos 7 dias",
       "last30d": "Últimos 30 dias",
@@ -1366,7 +1367,8 @@
     "markAsReceivedProperly": "Marcar como Recebido Corretamente",
     "receivedNotProperly": "Recebido Incorretamente / Abrir Disputa",
     "bothMustReview": "Ambas as partes devem deixar uma avaliação para concluir esta transação.",
-    "completeToReview": "Marque a transação como concluída para desbloquear avaliações (disponíveis por 30 dias).",
+    "completeToReview": "Satisfeito com a sua compra? Marque como concluída para desbloquear avaliações.",
+    "markAsCompleted": "Marcar como Concluída",
     "viewProofOfDelivery": "Ver Prova de Entrega",
     "view": "Ver",
     "remove": "Remover",

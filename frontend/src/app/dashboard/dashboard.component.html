@@ -40,6 +40,11 @@
         }
       </a>
 
+      <a routerLink="/dashboard/analytics" routerLinkActive="active" class="nav-item" [attr.title]="'dashboard.seller.analytics.title' | translate">
+        <span class="nav-icon">📊</span>
+        <span class="nav-text">{{ 'dashboard.seller.analytics.title' | translate }}</span>
+      </a>
+
       <a routerLink="/dashboard/following" routerLinkActive="active" class="nav-item" [attr.title]="'dashboard.sidebar.following' | translate">
         <span class="nav-icon">❤️</span>
         <span class="nav-text">{{ 'dashboard.sidebar.following' | translate }}</span>
