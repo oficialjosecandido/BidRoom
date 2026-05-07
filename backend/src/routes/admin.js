@@ -83,7 +83,7 @@ router.get('/statistics', authenticateToken, requireAdmin, async (req, res) => {
     console.error('Error fetching admin statistics:', error);
     res.status(500).json({ 
       error: 'Failed to fetch statistics',
-      message: error.message 
+      message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error' 
     });
   }
 });
@@ -110,7 +110,7 @@ router.get('/auctions', authenticateToken, requireAdmin, async (req, res) => {
     console.error('Error fetching auctions:', error);
     res.status(500).json({
       error: 'Failed to fetch auctions',
-      message: error.message
+      message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
     });
   }
 });
@@ -133,7 +133,7 @@ router.get('/auctions/:id', authenticateToken, requireAdmin, async (req, res) =>
     console.error('Error fetching auction:', error);
     res.status(500).json({ 
       error: 'Failed to fetch auction',
-      message: error.message 
+      message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error' 
     });
   }
 });
@@ -284,7 +284,7 @@ router.post('/auctions/:id/private-room', authenticateToken, requireAdmin, async
     console.error('Error creating private room:', error);
     res.status(500).json({ 
       error: 'Failed to create private room',
-      message: error.message 
+      message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error' 
     });
   }
 });
@@ -322,7 +322,7 @@ router.get('/disputes', authenticateToken, requireAdmin, async (req, res) => {
     console.error('Error fetching disputes:', error);
     res.status(500).json({
       error: 'Failed to fetch disputes',
-      message: error.message
+      message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
     });
   }
 });
@@ -352,7 +352,7 @@ router.get('/disputes/:transactionId', authenticateToken, requireAdmin, async (r
     console.error('Error fetching dispute:', error);
     res.status(500).json({
       error: 'Failed to fetch dispute',
-      message: error.message
+      message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
     });
   }
 });
@@ -516,7 +516,7 @@ router.post('/disputes/:transactionId/ruling', authenticateToken, requireAdmin, 
     console.error('Error issuing dispute ruling:', error);
     res.status(500).json({
       error: 'Failed to issue ruling',
-      message: error.message
+      message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
     });
   }
 });
@@ -555,7 +555,7 @@ router.get('/reviews/flagged', authenticateToken, requireAdmin, async (req, res)
     res.json({ flags: withReviewDetails, total, page, limit, pages: Math.ceil(total / limit) });
   } catch (error) {
     console.error('Error fetching flagged reviews:', error);
-    res.status(500).json({ error: 'Failed to fetch flagged reviews', message: error.message });
+    res.status(500).json({ error: 'Failed to fetch flagged reviews', message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error' });
   }
 });
 
@@ -587,7 +587,7 @@ router.patch('/reviews/flags/:id', authenticateToken, requireAdmin, async (req, 
     res.json({ success: true, flag });
   } catch (error) {
     console.error('Error resolving review flag:', error);
-    res.status(500).json({ error: 'Failed to resolve flag', message: error.message });
+    res.status(500).json({ error: 'Failed to resolve flag', message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error' });
   }
 });
 
@@ -630,7 +630,7 @@ router.get('/reviews/appeals', authenticateToken, requireAdmin, async (req, res)
     res.json({ appeals: withDetails, total, page, limit, pages: Math.ceil(total / limit) });
   } catch (error) {
     console.error('Error fetching review appeals:', error);
-    res.status(500).json({ error: 'Failed to fetch review appeals', message: error.message });
+    res.status(500).json({ error: 'Failed to fetch review appeals', message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error' });
   }
 });
 
@@ -662,7 +662,7 @@ router.patch('/reviews/appeals/:id', authenticateToken, requireAdmin, async (req
     res.json({ success: true, appeal });
   } catch (error) {
     console.error('Error resolving review appeal:', error);
-    res.status(500).json({ error: 'Failed to resolve appeal', message: error.message });
+    res.status(500).json({ error: 'Failed to resolve appeal', message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error' });
   }
 });
 
@@ -758,7 +758,7 @@ router.post('/auctions/:id/close-private-room', authenticateToken, requireAdmin,
     console.error('Error closing private room and ending auction:', error);
     res.status(500).json({ 
       error: 'Failed to close private room and end auction',
-      message: error.message 
+      message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error' 
     });
   }
 });

@@ -275,7 +275,7 @@ router.get('/', async (req, res) => {
     console.error('Error fetching listings:', error);
     res.status(500).json({
       error: 'Failed to fetch listings',
-      message: error.message
+      message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
     });
   }
 });
@@ -471,7 +471,7 @@ router.get('/slug/:slug', optionalAuth, async (req, res) => {
     console.error('Error fetching listing:', error);
     res.status(500).json({
       error: 'Failed to fetch listing',
-      message: error.message
+      message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
     });
   }
 });
@@ -525,7 +525,7 @@ router.get('/stats/overview', async (req, res) => {
     console.error('Error fetching stats:', error);
     res.status(500).json({
       error: 'Failed to fetch stats',
-      message: error.message
+      message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
     });
   }
 });
@@ -547,7 +547,7 @@ router.get('/drafts/current', authenticateToken, async (req, res) => {
     });
   } catch (error) {
     console.error('Error loading listing draft:', error);
-    res.status(500).json({ error: 'Failed to load draft', message: error.message });
+    res.status(500).json({ error: 'Failed to load draft', message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error' });
   }
 });
 
@@ -568,7 +568,7 @@ router.put('/drafts/current', authenticateToken, requireActiveAccount, async (re
     return res.json({ ok: true, updatedAt: doc.updatedAt });
   } catch (error) {
     console.error('Error saving listing draft:', error);
-    res.status(500).json({ error: 'Failed to save draft', message: error.message });
+    res.status(500).json({ error: 'Failed to save draft', message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error' });
   }
 });
 
@@ -580,7 +580,7 @@ router.delete('/drafts/current', authenticateToken, async (req, res) => {
     return res.status(204).send();
   } catch (error) {
     console.error('Error deleting listing draft:', error);
-    res.status(500).json({ error: 'Failed to delete draft', message: error.message });
+    res.status(500).json({ error: 'Failed to delete draft', message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error' });
   }
 });
 
@@ -836,7 +836,7 @@ router.get('/seller/analytics', authenticateToken, async (req, res) => {
     console.error('Error fetching seller analytics:', error);
     res.status(500).json({
       error: 'Failed to fetch analytics',
-      message: error.message
+      message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
     });
   }
 });
@@ -949,7 +949,7 @@ router.get('/:id', optionalAuth, async (req, res) => {
     console.error('Error fetching listing:', error);
     res.status(500).json({
       error: 'Failed to fetch listing',
-      message: error.message
+      message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
     });
   }
 });
@@ -1297,7 +1297,7 @@ router.post('/', authenticateToken, requireActiveAccount, requireNoDisputeRestri
 
     res.status(400).json({
       error: 'Failed to create listing',
-      message: error.message
+      message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
     });
   }
 });
@@ -1407,7 +1407,7 @@ router.patch('/:id', authenticateToken, requireActiveAccount, async (req, res) =
       const errors = Object.values(error.errors).map(e => e.message);
       return res.status(400).json({ error: 'Validation failed', message: errors.join(', ') });
     }
-    res.status(500).json({ error: 'Failed to update listing', message: error.message });
+    res.status(500).json({ error: 'Failed to update listing', message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error' });
   }
 });
 
@@ -1516,7 +1516,7 @@ router.post('/:id/buy-now', authenticateToken, requireActiveAccount, requireNoDi
     console.error('Error processing buy now:', error);
     res.status(500).json({
       error: 'Failed to process Buy Now',
-      message: error.message
+      message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
     });
   }
 });
@@ -1618,7 +1618,7 @@ router.post('/:id/choose-winner', authenticateToken, requireActiveAccount, async
     console.error('Error choosing winner:', error);
     res.status(400).json({
       error: 'Failed to choose winner',
-      message: error.message
+      message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
     });
   }
 });
@@ -1687,7 +1687,7 @@ router.post('/:id/reopen', authenticateToken, requireActiveAccount, async (req, 
     console.error('Error reopening listing:', error);
     res.status(400).json({
       error: 'Failed to reopen auction',
-      message: error.message
+      message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
     });
   }
 });
@@ -1882,7 +1882,7 @@ router.get('/:id/bids', authenticateToken, async (req, res) => {
     console.error('Error fetching bids for winner selection:', error);
     res.status(500).json({
       error: 'Failed to fetch bids',
-      message: error.message
+      message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
     });
   }
 });
@@ -2002,7 +2002,7 @@ router.get('/seller/my-listings', authenticateToken, async (req, res) => {
     console.error('Error fetching seller listings:', error);
     res.status(500).json({
       error: 'Failed to fetch listings',
-      message: error.message
+      message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
     });
   }
 });
@@ -2067,7 +2067,7 @@ router.get('/bidder/my-auctions', authenticateToken, async (req, res) => {
     console.error('Error fetching bidder auctions:', error);
     res.status(500).json({
       error: 'Failed to fetch your auctions',
-      message: error.message
+      message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
     });
   }
 });
@@ -2143,7 +2143,7 @@ router.get('/bidder/my-bets', authenticateToken, async (req, res) => {
     console.error('Error fetching bidder bets:', error);
     res.status(500).json({
       error: 'Failed to fetch your bets',
-      message: error.message
+      message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
     });
   }
 });

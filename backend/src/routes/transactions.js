@@ -17,7 +17,7 @@ const {
   emitNewNotificationToUser
 } = require('../services/notificationService');
 const { ensureShippingDeadlinesFromPaidAt } = require('../services/shippingDeadlines');
-const { restrictBothPartiesForDispute } = require('../services/accountStatusService');
+const { restrictBothPartiesForDispute, checkAndApplyPendingSuspensions } = require('../services/accountStatusService');
 const { generateInvoicePdf } = require('../services/invoiceService');
 
 const router = express.Router();
@@ -147,7 +147,7 @@ router.get('/:id/invoice', async (req, res) => {
     res.send(pdfBuffer);
   } catch (error) {
     console.error('Error generating invoice:', error);
-    res.status(500).json({ error: 'Failed to generate invoice', message: error.message });
+    res.status(500).json({ error: 'Failed to generate invoice', message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error' });
   }
 });
 
@@ -194,7 +194,7 @@ router.get('/:id', async (req, res) => {
     });
   } catch (error) {
     console.error('Error fetching transaction:', error);
-    res.status(500).json({ error: 'Failed to fetch transaction', message: error.message });
+    res.status(500).json({ error: 'Failed to fetch transaction', message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error' });
   }
 });
 
@@ -311,7 +311,7 @@ router.post('/:id/open-dispute', async (req, res) => {
     });
   } catch (error) {
     console.error('Error opening dispute:', error);
-    res.status(500).json({ error: 'Failed to open dispute', message: error.message });
+    res.status(500).json({ error: 'Failed to open dispute', message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error' });
   }
 });
 
@@ -378,7 +378,7 @@ router.patch('/:id/dispute/counter-evidence', async (req, res) => {
     });
   } catch (error) {
     console.error('Error updating counter-evidence:', error);
-    res.status(500).json({ error: 'Failed to update counter-evidence', message: error.message });
+    res.status(500).json({ error: 'Failed to update counter-evidence', message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error' });
   }
 });
 
@@ -460,7 +460,7 @@ router.post('/:id/remind-ship', requireActiveAccount, async (req, res) => {
     });
   } catch (error) {
     console.error('Error remind-ship:', error);
-    res.status(500).json({ error: 'Failed to send reminder', message: error.message });
+    res.status(500).json({ error: 'Failed to send reminder', message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error' });
   }
 });
 
@@ -538,6 +538,13 @@ router.patch('/:id', requireActiveAccount, async (req, res) => {
             sendEmail(buyer.email, `Your order for "${listingTitle}" has been confirmed`, html)
               .catch(err => console.error('Failed to send seller-accepted email to buyer:', err.message));
           }
+          // Payment accepted: apply any deferred suspensions (listing auction has ended at this point).
+          const io = req.app.get('io');
+          checkAndApplyPendingSuspensions(
+            transaction.buyer?.toString(),
+            transaction.seller?.toString(),
+            io
+          ).catch(err => console.error('[AccountStatus] checkAndApplyPendingSuspensions error:', err.message));
         }
       } else if (status === 'shipped') {
         if (ts !== 'paid') {
@@ -677,6 +684,12 @@ router.patch('/:id', requireActiveAccount, async (req, res) => {
           transactionId: transaction._id?.toString(),
           io
         }).catch(err => console.error('Failed to send review prompt notification:', err));
+        // Apply any deferred suspensions now that the transaction is concluded.
+        checkAndApplyPendingSuspensions(
+          transaction.buyer?.toString(),
+          transaction.seller?.toString(),
+          io
+        ).catch(err => console.error('[AccountStatus] checkAndApplyPendingSuspensions error:', err.message));
       }
     }
 
@@ -708,7 +721,7 @@ router.patch('/:id', requireActiveAccount, async (req, res) => {
     });
   } catch (error) {
     console.error('Error updating transaction:', error);
-    res.status(500).json({ error: 'Failed to update transaction', message: error.message });
+    res.status(500).json({ error: 'Failed to update transaction', message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error' });
   }
 });
 
@@ -838,7 +851,7 @@ router.post('/:id/request-return', requireActiveAccount, async (req, res) => {
     res.json({ ...updated, role: 'buyer', ...normalizeTransactionStatus(updated) });
   } catch (error) {
     console.error('Error requesting return:', error);
-    res.status(500).json({ error: 'Failed to submit return request', message: error.message });
+    res.status(500).json({ error: 'Failed to submit return request', message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error' });
   }
 });
 

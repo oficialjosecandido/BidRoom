@@ -132,7 +132,7 @@ router.get('/listings/:id/bidders', authenticateToken, async (req, res) => {
     console.error('Error fetching bidders:', error);
     res.status(500).json({ 
       error: 'Failed to fetch bidders',
-      message: error.message 
+      message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error' 
     });
   }
 });
@@ -283,7 +283,7 @@ router.post('/listings/:id/platinum-bidders', authenticateToken, requireActiveAc
     console.error('Error selecting Platinum Bidders:', error);
     res.status(500).json({
       error: 'Failed to select Platinum Bidders',
-      message: error.message
+      message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
     });
   }
 });
@@ -351,7 +351,7 @@ router.post('/listings/:id/start-now', authenticateToken, async (req, res) => {
     console.error('Error starting private room:', error);
     res.status(500).json({
       error: 'Failed to start room',
-      message: error.message
+      message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
     });
   }
 });
@@ -396,7 +396,7 @@ router.post('/listings/:id/seller-leave', authenticateToken, async (req, res) =>
     console.error('Error in seller-leave:', error);
     res.status(500).json({
       error: 'Failed to leave private room',
-      message: error.message
+      message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
     });
   }
 });
@@ -475,7 +475,7 @@ router.post('/listings/:id/accept-invitation', authenticateToken, async (req, re
     return res.json({ success: true, message: 'Invitation accepted. You can now place bids in the private room.', listingId });
   } catch (error) {
     console.error('Error accepting invitation in-page:', error);
-    res.status(500).json({ error: 'Failed to accept invitation', message: error.message });
+    res.status(500).json({ error: 'Failed to accept invitation', message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error' });
   }
 });
 
@@ -557,7 +557,7 @@ router.post('/invitation/accept', async (req, res) => {
     return res.json({ success: true, message: 'Invitation accepted. You can now place bids in the private room.', listingId });
   } catch (error) {
     console.error('Error accepting invitation:', error);
-    res.status(500).json({ error: 'Failed to accept invitation', message: error.message });
+    res.status(500).json({ error: 'Failed to accept invitation', message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error' });
   }
 });
 
@@ -609,7 +609,7 @@ router.post('/invitation/decline', async (req, res) => {
     return res.json({ success: true, message: 'Invitation declined.', listingId });
   } catch (error) {
     console.error('Error declining invitation:', error);
-    res.status(500).json({ error: 'Failed to decline invitation', message: error.message });
+    res.status(500).json({ error: 'Failed to decline invitation', message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error' });
   }
 });
 

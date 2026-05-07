@@ -99,7 +99,7 @@ router.post('/', authenticateToken, requireActiveAccount, upload.array('images',
     console.error('Error uploading images:', error);
     res.status(500).json({
       error: 'Failed to upload images',
-      message: error.message
+      message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
     });
   }
 });
@@ -139,7 +139,7 @@ router.post('/proof-of-payment', authenticateToken, (req, res, next) => {
     console.error('Error uploading proof of payment:', error);
     res.status(500).json({
       error: 'Failed to upload file',
-      message: error.message
+      message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
     });
   }
 });
@@ -197,7 +197,7 @@ router.post('/dispute-evidence', authenticateToken, (req, res, next) => {
     console.error('Error uploading dispute evidence:', error);
     res.status(500).json({
       error: 'Upload failed',
-      message: error.message
+      message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
     });
   }
 });
@@ -232,7 +232,7 @@ router.post('/proof-of-delivery', authenticateToken, (req, res, next) => {
     res.json({ url });
   } catch (error) {
     console.error('Error uploading proof of delivery:', error);
-    res.status(500).json({ error: 'Failed to upload file', message: error.message });
+    res.status(500).json({ error: 'Failed to upload file', message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error' });
   }
 });
 
@@ -262,7 +262,7 @@ router.delete('/', authenticateToken, async (req, res) => {
     console.error('Error deleting images:', error);
     res.status(500).json({
       error: 'Failed to delete images',
-      message: error.message
+      message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
     });
   }
 });

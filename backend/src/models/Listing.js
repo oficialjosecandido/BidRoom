@@ -210,6 +210,11 @@ const listingSchema = new mongoose.Schema({
     type: Date,
     default: null
   },
+  /** Timestamp when the private room received its first bid (used to enforce the 4-hour hard ceiling). */
+  privateRoomActivatedAt: {
+    type: Date,
+    default: null
+  },
   privateRoomLastBidTime: {
     type: Date,
     default: null

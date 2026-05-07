@@ -90,7 +90,7 @@ router.get('/customer', authenticateToken, async (req, res) => {
     console.error('Error fetching customer:', error);
     res.status(500).json({
       error: 'Failed to load customer information',
-      message: error.message
+      message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
     });
   }
 });

@@ -95,7 +95,7 @@ router.get('/listing/:listingId', optionalAuth, async (req, res) => {
     console.error('Error fetching offers:', error);
     res.status(500).json({
       error: 'Failed to fetch offers',
-      message: error.message
+      message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
     });
   }
 });
@@ -531,7 +531,7 @@ router.patch('/:offerId/accept', authenticateToken, async (req, res) => {
     console.error('Error accepting offer:', error);
     res.status(400).json({
       error: 'Failed to accept offer',
-      message: error.message
+      message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
     });
   }
 });
@@ -666,7 +666,7 @@ router.patch('/:offerId/reject', authenticateToken, async (req, res) => {
     console.error('Error rejecting offer:', error);
     res.status(400).json({
       error: 'Failed to reject offer',
-      message: error.message
+      message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
     });
   }
 });
