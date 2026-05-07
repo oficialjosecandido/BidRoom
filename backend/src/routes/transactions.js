@@ -539,7 +539,6 @@ router.patch('/:id', requireActiveAccount, async (req, res) => {
               .catch(err => console.error('Failed to send seller-accepted email to buyer:', err.message));
           }
           // Payment accepted: apply any deferred suspensions (listing auction has ended at this point).
-          const io = req.app.get('io');
           checkAndApplyPendingSuspensions(
             transaction.buyer?.toString(),
             transaction.seller?.toString(),
