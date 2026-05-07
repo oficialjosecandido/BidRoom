@@ -127,7 +127,7 @@ router.get('/profile', authenticateToken, async (req, res) => {
     console.error('Error fetching customer profile:', error);
     res.status(500).json({
       error: 'Failed to load customer information',
-      message: error.message
+      message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
     });
   }
 });
@@ -266,7 +266,7 @@ router.patch('/seller-compliance', authenticateToken, requireActiveAccount, asyn
     });
   } catch (error) {
     console.error('Error updating seller compliance:', error);
-    res.status(500).json({ error: 'Failed to update seller compliance', message: error.message });
+    res.status(500).json({ error: 'Failed to update seller compliance', message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error' });
   }
 });
 
@@ -285,7 +285,7 @@ router.patch('/theme', authenticateToken, async (req, res) => {
     res.json({ theme });
   } catch (error) {
     console.error('Error updating customer theme:', error);
-    res.status(500).json({ error: 'Failed to update theme', message: error.message });
+    res.status(500).json({ error: 'Failed to update theme', message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error' });
   }
 });
 

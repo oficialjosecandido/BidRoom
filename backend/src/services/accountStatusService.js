@@ -8,14 +8,35 @@ const User = require('../models/User');
 const AccountStatusAuditLog = require('../models/AccountStatusAuditLog');
 const { notifyAccountSuspended, notifyAccountReactivated, notifyAccountClosed, emitNewNotificationToUser } = require('./notificationService');
 const Listing = require('../models/Listing');
+const Transaction = require('../models/Transaction');
 
 const ACCOUNT_STATUS = { ACTIVE: 'active', SUSPENDED: 'suspended', CLOSED: 'closed' };
 
+const TERMINAL_TRANSACTION_STATUSES = ['completed', 'cancelled', 'refunded'];
+
+/**
+ * Returns true if the user has any active auction listings (as seller) or open transactions (as buyer/seller).
+ * Used to decide whether a suspension should be deferred.
+ */
+async function hasActiveContext(userId) {
+  const [activeListing, activeTransaction] = await Promise.all([
+    Listing.findOne({ seller: userId, status: 'active' }).select('_id').lean(),
+    Transaction.findOne({
+      $or: [{ buyer: userId }, { seller: userId }],
+      transactionStatus: { $nin: TERMINAL_TRANSACTION_STATUSES }
+    }).select('_id').lean()
+  ]);
+  return !!(activeListing || activeTransaction);
+}
+
 /**
  * Suspend a user (e.g. when dispute opens).
+ * If the user has an active auction or open transaction, the suspension is deferred:
+ * `suspensionPending` is set and the actual status change happens after the auction/payment ends.
  * @param {string} userId - Mongo User _id
  * @param {object} metadata - { reason, transactionId, triggeredBy }
  * @param {object} io - Socket.io instance (optional)
+ * @returns {{ updated: boolean, deferred?: boolean, reason?: string }}
  */
 async function suspendUser(userId, metadata = {}, io = null) {
   const user = await User.findById(userId);
@@ -23,9 +44,26 @@ async function suspendUser(userId, metadata = {}, io = null) {
   if (user.accountStatus === ACCOUNT_STATUS.SUSPENDED) return { updated: false, reason: 'already_suspended' };
   if (user.accountStatus === ACCOUNT_STATUS.CLOSED) return { updated: false, reason: 'account_closed' };
 
+  // Defer if the user is mid-auction or mid-transaction so we don't disrupt ongoing activity.
+  const active = await hasActiveContext(userId);
+  if (active) {
+    await User.updateOne({ _id: userId }, {
+      $set: {
+        suspensionPending: true,
+        suspensionPendingReason: metadata.reason || 'dispute_opened',
+        suspensionPendingAt: new Date()
+      }
+    });
+    console.log(`[AccountStatus] Suspension deferred for user ${userId} (active auction/transaction). Reason: ${metadata.reason}`);
+    return { updated: false, deferred: true };
+  }
+
   const previousStatus = user.accountStatus || ACCOUNT_STATUS.ACTIVE;
   user.accountStatus = ACCOUNT_STATUS.SUSPENDED;
   user.isActive = false;
+  user.suspensionPending = false;
+  user.suspensionPendingReason = null;
+  user.suspensionPendingAt = null;
   await user.save();
 
   await AccountStatusAuditLog.create({
@@ -232,6 +270,36 @@ async function applyDisputeAccountOutcome(accountOutcome, buyerUserId, sellerUse
   }
 }
 
+/**
+ * Apply a pending suspension to a single user now that their auction/transaction has concluded.
+ * No-op if the user has no pending suspension or already has a non-active status.
+ */
+async function applyPendingSuspension(userId, io = null) {
+  const user = await User.findById(userId).select('accountStatus suspensionPending suspensionPendingReason uid').lean();
+  if (!user || !user.suspensionPending) return;
+  if (user.accountStatus !== ACCOUNT_STATUS.ACTIVE) {
+    // Already suspended/closed — just clear the pending flag.
+    await User.updateOne({ _id: userId }, { $set: { suspensionPending: false, suspensionPendingReason: null, suspensionPendingAt: null } });
+    return;
+  }
+
+  const metadata = { reason: user.suspensionPendingReason || 'deferred_suspension', triggeredBy: 'system' };
+  // suspendUser will now see no active context (auction/transaction just ended) and proceed.
+  await suspendUser(userId, metadata, io);
+  console.log(`[AccountStatus] Deferred suspension applied to user ${userId}.`);
+}
+
+/**
+ * Called after a transaction reaches a terminal state (paid / completed / cancelled).
+ * Checks both parties for pending suspensions and applies them if they no longer have other active contexts.
+ */
+async function checkAndApplyPendingSuspensions(buyerUserId, sellerUserId, io = null) {
+  const checks = [buyerUserId, sellerUserId].filter(Boolean);
+  await Promise.all(checks.map(uid => applyPendingSuspension(uid, io).catch(err =>
+    console.error(`[AccountStatus] Failed to apply pending suspension for ${uid}:`, err.message)
+  )));
+}
+
 module.exports = {
   ACCOUNT_STATUS,
   suspendUser,
@@ -241,5 +309,7 @@ module.exports = {
   restrictUserForDispute,
   unrestrictUserForDispute,
   restrictBothPartiesForDispute,
-  applyDisputeAccountOutcome
+  applyDisputeAccountOutcome,
+  checkAndApplyPendingSuspensions,
+  applyPendingSuspension
 };

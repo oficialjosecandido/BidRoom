@@ -148,6 +148,13 @@ const userSchema = new mongoose.Schema({
   loginLockedUntil: { type: Date, default: null },
   /** Opaque token used to unsubscribe from all emails without login (generated on first use) */
   emailUnsubscribeToken: { type: String, default: null, sparse: true, index: true },
+  /**
+   * Deferred suspension: set when a suspension is triggered while the user has an active auction or
+   * transaction. The actual account suspension is applied after the auction/payment concludes.
+   */
+  suspensionPending: { type: Boolean, default: false, index: true },
+  suspensionPendingReason: { type: String, default: null },
+  suspensionPendingAt: { type: Date, default: null },
 
   // ─── DSA / trader transparency (seller classification) ───────────────────
   /** `private` = non-trader; `professional` = trader — extra identity fields required */

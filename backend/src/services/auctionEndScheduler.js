@@ -5,6 +5,7 @@
 
 const Listing = require('../models/Listing');
 const { handleAuctionEnd, handlePrivateRoomEnd, handlePrivateRoomClosedNoAcceptance, handlePrivateRoomEligibleExpired } = require('./auctionNotificationService');
+const { checkAndApplyPendingSuspensions } = require('./accountStatusService');
 const { processPrivateRoomNonPayments, sendPaymentDeadlineWarnings } = require('./privateRoomPaymentService');
 const { processAutoRelists } = require('./autoRelistService');
 const { notifyWatchlistersAuctionEnding } = require('./notificationService');
@@ -96,6 +97,13 @@ async function checkEndedAuctions() {
         await handleAuctionEnd(listing._id, ioInstance);
         processed++;
         console.log(`✅ Processed ended auction: ${listing._id} - ${listing.title}`);
+        // Auction is now closed — if the seller had a pending suspension, apply it now.
+        // (Buyer suspensions are deferred further until payment via the transaction route.)
+        const sellerId = listing.seller?._id?.toString() || listing.seller?.toString();
+        if (sellerId) {
+          checkAndApplyPendingSuspensions(null, sellerId, ioInstance)
+            .catch(err => console.error(`❌ Pending suspension check failed for seller ${sellerId}:`, err.message));
+        }
       } catch (error) {
         console.error(`❌ Error processing auction ${listing._id}:`, error.message);
       }

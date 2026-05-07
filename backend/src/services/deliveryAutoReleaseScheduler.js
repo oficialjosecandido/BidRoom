@@ -18,6 +18,7 @@
 const Transaction = require('../models/Transaction');
 const { emitNewNotificationToUser, createNotification } = require('./notificationService');
 const { sendEmail } = require('./emailService');
+const { checkAndApplyPendingSuspensions } = require('./accountStatusService');
 
 const LOG_PREFIX = '[DeliveryRelease]';
 const BATCH_LIMIT = 200;
@@ -148,6 +149,10 @@ async function processAutoReleases(io) {
         }
         if (io) emitNewNotificationToUser(io, sellerId).catch(() => {});
       }
+
+      // Transaction is now terminal — apply any pending suspensions for either party.
+      checkAndApplyPendingSuspensions(buyerId, sellerId, io)
+        .catch(err => console.error(`${LOG_PREFIX} Pending suspension check failed tx=${tx._id}:`, err.message));
 
       console.log(`${LOG_PREFIX} Auto-released tx=${tx._id}`);
     } catch (e) {

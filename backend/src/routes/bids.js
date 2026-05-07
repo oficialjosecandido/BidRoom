@@ -65,7 +65,7 @@ router.get('/listing/:listingId', optionalAuth, async (req, res) => {
     console.error('Error fetching bids:', error);
     res.status(500).json({
       error: 'Failed to fetch bids',
-      message: error.message
+      message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
     });
   }
 });
@@ -101,7 +101,7 @@ router.get('/listing/:listingId/stats', async (req, res) => {
     console.error('Error fetching bid stats:', error);
     res.status(500).json({
       error: 'Failed to fetch bid statistics',
-      message: error.message
+      message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
     });
   }
 });
@@ -664,7 +664,7 @@ router.post('/', optionalAuth, requireActiveAccountIfAuthenticated, requireNoDis
     console.error('Error creating bid:', error);
     res.status(400).json({
       error: 'Failed to create bid',
-      message: error.message
+      message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
     });
   }
 });
@@ -712,7 +712,7 @@ router.patch('/preference', authenticateToken, async (req, res) => {
     console.error('Error updating bid preference:', error);
     res.status(500).json({
       error: 'Failed to update preference',
-      message: error.message
+      message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
     });
   }
 });

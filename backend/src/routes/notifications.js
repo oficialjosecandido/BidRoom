@@ -56,7 +56,7 @@ router.get('/', authenticateToken, async (req, res) => {
     console.error('Error fetching notifications:', error);
     res.status(500).json({
       error: 'Failed to fetch notifications',
-      message: error.message
+      message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
     });
   }
 });
@@ -79,7 +79,7 @@ router.get('/unread-count', authenticateToken, async (req, res) => {
     console.error('Error fetching unread count:', error);
     res.status(500).json({
       error: 'Failed to fetch unread count',
-      message: error.message
+      message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
     });
   }
 });
@@ -102,7 +102,7 @@ router.patch('/read-all', authenticateToken, async (req, res) => {
     console.error('Error marking all notifications as read:', error);
     res.status(500).json({
       error: 'Failed to mark notifications as read',
-      message: error.message
+      message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
     });
   }
 });
@@ -130,7 +130,7 @@ router.patch('/:id/read', authenticateToken, async (req, res) => {
     console.error('Error marking notification as read:', error);
     res.status(500).json({
       error: 'Failed to mark notification as read',
-      message: error.message
+      message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
     });
   }
 });

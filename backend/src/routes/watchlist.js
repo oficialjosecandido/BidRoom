@@ -52,7 +52,7 @@ router.post('/', async (req, res) => {
       return res.json({ success: true, message: 'Already in watchlist', inWatchlist: true });
     }
     console.error('Error adding to watchlist:', error);
-    res.status(500).json({ error: 'Failed to add to watchlist', message: error.message });
+    res.status(500).json({ error: 'Failed to add to watchlist', message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error' });
   }
 });
 
@@ -72,7 +72,7 @@ router.delete('/:listingId', async (req, res) => {
     res.json({ success: true, message: 'Removed from watchlist', inWatchlist: false });
   } catch (error) {
     console.error('Error removing from watchlist:', error);
-    res.status(500).json({ error: 'Failed to remove from watchlist', message: error.message });
+    res.status(500).json({ error: 'Failed to remove from watchlist', message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error' });
   }
 });
 
@@ -102,7 +102,7 @@ router.get('/', async (req, res) => {
     res.json({ watchlist: listings, total: listings.length });
   } catch (error) {
     console.error('Error fetching watchlist:', error);
-    res.status(500).json({ error: 'Failed to fetch watchlist', message: error.message });
+    res.status(500).json({ error: 'Failed to fetch watchlist', message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error' });
   }
 });
 
