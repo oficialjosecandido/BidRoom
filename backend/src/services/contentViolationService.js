@@ -1,5 +1,6 @@
 const User = require('../models/User');
 const { appendModerationAudit } = require('./moderationAuditService');
+const { suspendUser } = require('./accountStatusService');
 
 /**
  * Records a content violation for a user and escalates penalties.
@@ -40,7 +41,6 @@ async function recordViolation(user) {
     message = 'Your account has been temporarily restricted for 7 days. This is your last warning before a permanent suspension.';
   } else {
     action = 'suspended';
-    user.accountStatus = 'suspended';
     message = 'Your account has been permanently suspended due to repeated violations of our contact information policy.';
   }
 
@@ -50,6 +50,15 @@ async function recordViolation(user) {
     actionType: 'content_violation',
     metadata: { action, violationCount: count, restrictedUntil: restrictedUntil || null }
   });
+
+  // Route 5th+ violation through suspendUser so deferral logic applies if user has an active auction
+  if (action === 'suspended') {
+    await suspendUser(user._id.toString(), {
+      reason: 'content_violation_5th_plus',
+      triggeredBy: 'system'
+    }).catch(err => console.error('Content violation suspend error:', err.message));
+  }
+
   return { action, message, restrictedUntil };
 }
 

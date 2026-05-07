@@ -1,61 +1,280 @@
 <div class="admin-layout">
   <app-admin-sidebar></app-admin-sidebar>
-  
+
   <div class="admin-content">
     <div class="admin-dashboard">
-      <div class="dashboard-header">
-        <h1 class="dashboard-title">Admin Dashboard</h1>
-        <button class="refresh-btn" (click)="refreshStatistics()" [disabled]="isLoading">
-          <span class="refresh-icon">🔄</span>
-          Refresh
+      <header class="dashboard-intro">
+        <div>
+          <p class="nexus-badge">BidRoom Nexus</p>
+          <h1 class="dashboard-title">Admin overview</h1>
+          <p class="dashboard-subtitle">Live platform totals and inventory distribution.</p>
+        </div>
+        <button class="refresh-btn" type="button" (click)="refreshDashboard()" [disabled]="isLoading">
+          <span class="refresh-icon" aria-hidden="true">&#10227;</span>
+          Refresh data
         </button>
-      </div>
+      </header>
 
-  <!-- Loading State -->
-  @if (isLoading) {
-<div class="loading-state">
-    <div class="spinner"></div>
-    <p>Loading statistics...</p>
-  </div>
-}
+      @if (isLoading) {
+        <div class="loading-state">
+          <div class="spinner"></div>
+          <p>Loading dashboard…</p>
+        </div>
+      }
 
-  <!-- Error State -->
-  @if (error && !isLoading) {
-<div class="error-state">
-    <div class="error-icon">⚠️</div>
-    <p class="error-message">{{ error }}</p>
-    <button class="retry-btn" (click)="refreshStatistics()">Try Again</button>
-  </div>
-}
+      @if (error && !isLoading) {
+        <div class="error-state">
+          <div class="error-icon" aria-hidden="true">&#9888;</div>
+          <p class="error-message">{{ error }}</p>
+          <button type="button" class="retry-btn" (click)="refreshDashboard()">Try again</button>
+        </div>
+      }
 
-  <!-- Statistics Cards -->
-  @if (statistics && !isLoading) {
-<div class="statistics-grid">
-    <div class="stat-card">
-      <div class="stat-icon users-icon">👥</div>
-      <div class="stat-content">
-        <h3 class="stat-label">Registered Users</h3>
-        <p class="stat-value">{{ statistics.totalUsers | number }}</p>
-      </div>
+      @if (statistics && !isLoading) {
+        <section class="kpi-row">
+          <article class="stat-card stat-card-users">
+            <div class="stat-icon" aria-hidden="true">&#128101;</div>
+            <div class="stat-copy">
+              <h2 class="stat-label">Registered users</h2>
+              <p class="stat-value">{{ statistics.totalUsers | number }}</p>
+              <p class="stat-hint">Active accounts</p>
+            </div>
+          </article>
+
+          <article class="stat-card stat-card-published">
+            <div class="stat-icon" aria-hidden="true">&#128230;</div>
+            <div class="stat-copy">
+              <h2 class="stat-label">Published listings</h2>
+              <p class="stat-value">{{ statistics.totalAuctions | number }}</p>
+              <p class="stat-hint">Active, ended &amp; cancelled (excl. draft)</p>
+            </div>
+          </article>
+
+          <article class="stat-card stat-card-live">
+            <div class="stat-icon" aria-hidden="true">&#9889;</div>
+            <div class="stat-copy">
+              <h2 class="stat-label">Live auctions</h2>
+              <p class="stat-value">{{ statistics.activeAuctions | number }}</p>
+              <p class="stat-hint">Status active &amp; end date not passed</p>
+            </div>
+          </article>
+        </section>
+
+        <section class="nexus-panel tables-row">
+          <div class="snapshot-panel-head">
+            <h2 class="nexus-panel-title">Platform snapshot</h2>
+            <p class="snapshot-panel-sub">
+              Activity and revenue by period (all times UTC). The current window may be partial (through now);
+              the previous window is the full equivalent range where applicable. The first value column includes
+              <strong>percent change vs the previous column</strong>.
+            </p>
+
+            <div class="comparison-pills" role="tablist" aria-label="Comparison period">
+              @for (m of comparisonModes; track m) {
+                <button
+                  type="button"
+                  class="comparison-pill"
+                  [class.active]="comparisonMode === m"
+                  [disabled]="snapshotLoading"
+                  role="tab"
+                  [attr.aria-selected]="comparisonMode === m"
+                  (click)="selectComparison(m)"
+                >
+                  {{ comparisonModeLabel(m) }}
+                </button>
+              }
+            </div>
+
+            @if (snapshotError) {
+              <div class="snapshot-error" role="alert">
+                {{ snapshotError }}
+              </div>
+            }
+          </div>
+
+          <div class="snapshot-platform-grid">
+            <div class="table-scroll snapshot-compare-scroll">
+              <table class="nexus-data-table snapshot-compare-table">
+                <caption>
+                  @if (snapshotComparison) {
+                    Operational metrics —
+                    {{ snapshotComparison.current.label }}
+                    vs
+                    {{ snapshotComparison.previous.label }}
+                  } @else {
+                    Operational metrics
+                  }
+                </caption>
+                <thead>
+                  <tr>
+                    <th scope="col">Metric</th>
+                    <th scope="col" class="num">{{ snapshotComparison?.current?.label ?? '—' }}</th>
+                    <th scope="col" class="num">{{ snapshotComparison?.previous?.label ?? '—' }}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @if (snapshotLoading) {
+                    <tr>
+                      <td colspan="3" class="snapshot-loading-cell">
+                        <div class="inline-spinner-wrap">
+                          <div class="spinner snapshot-inline-spinner"></div>
+                          <span>Updating…</span>
+                        </div>
+                      </td>
+                    </tr>
+                  } @else if (snapshotComparison) {
+                    <tr>
+                      <th scope="row">Active accounts</th>
+                      <td class="num snapshot-period-cell">
+                        <div class="snapshot-cell-stack">
+                          <span class="snapshot-primary">{{
+                            snapshotComparison.current.activeAccounts | number
+                          }}</span>
+                          <span
+                            [class]="snapshotDelta('activeAccounts').css"
+                            [attr.title]="snapshotDelta('activeAccounts').srLabel"
+                          >
+                            {{ snapshotDelta('activeAccounts').text }}
+                          </span>
+                        </div>
+                      </td>
+                      <td class="num">{{ snapshotComparison.previous.activeAccounts | number }}</td>
+                    </tr>
+                    <tr>
+                      <th scope="row">New registrations</th>
+                      <td class="num snapshot-period-cell">
+                        <div class="snapshot-cell-stack">
+                          <span class="snapshot-primary">{{
+                            snapshotComparison.current.newRegistrations | number
+                          }}</span>
+                          <span
+                            [class]="snapshotDelta('newRegistrations').css"
+                            [attr.title]="snapshotDelta('newRegistrations').srLabel"
+                          >
+                            {{ snapshotDelta('newRegistrations').text }}
+                          </span>
+                        </div>
+                      </td>
+                      <td class="num">{{ snapshotComparison.previous.newRegistrations | number }}</td>
+                    </tr>
+                    <tr>
+                      <th scope="row">Bids</th>
+                      <td class="num snapshot-period-cell">
+                        <div class="snapshot-cell-stack">
+                          <span class="snapshot-primary">{{ snapshotComparison.current.bids | number }}</span>
+                          <span
+                            [class]="snapshotDelta('bids').css"
+                            [attr.title]="snapshotDelta('bids').srLabel"
+                          >
+                            {{ snapshotDelta('bids').text }}
+                          </span>
+                        </div>
+                      </td>
+                      <td class="num">{{ snapshotComparison.previous.bids | number }}</td>
+                    </tr>
+                    <tr>
+                      <th scope="row">Paid transactions</th>
+                      <td class="num snapshot-period-cell">
+                        <div class="snapshot-cell-stack">
+                          <span class="snapshot-primary">{{
+                            snapshotComparison.current.paidTransactions | number
+                          }}</span>
+                          <span
+                            [class]="snapshotDelta('paidTransactions').css"
+                            [attr.title]="snapshotDelta('paidTransactions').srLabel"
+                          >
+                            {{ snapshotDelta('paidTransactions').text }}
+                          </span>
+                        </div>
+                      </td>
+                      <td class="num">{{ snapshotComparison.previous.paidTransactions | number }}</td>
+                    </tr>
+                    <tr>
+                      <th scope="row">Paid sales volume</th>
+                      <td class="num snapshot-period-cell">
+                        <div class="snapshot-cell-stack">
+                          <span class="snapshot-primary">{{
+                            snapshotComparison.current.transactionAmountTotal
+                              | currency: 'USD' : 'symbol' : '1.2-2'
+                          }}</span>
+                          <span
+                            [class]="snapshotDelta('transactionAmountTotal').css"
+                            [attr.title]="snapshotDelta('transactionAmountTotal').srLabel"
+                          >
+                            {{ snapshotDelta('transactionAmountTotal').text }}
+                          </span>
+                        </div>
+                      </td>
+                      <td class="num">
+                        {{
+                          snapshotComparison.previous.transactionAmountTotal
+                            | currency: 'USD' : 'symbol' : '1.2-2'
+                        }}
+                      </td>
+                    </tr>
+                    <tr>
+                      <th scope="row">BidRoom fees</th>
+                      <td class="num snapshot-period-cell">
+                        <div class="snapshot-cell-stack">
+                          <span class="snapshot-primary">{{
+                            snapshotComparison.current.bidRoomFeesTotal | currency: 'USD' : 'symbol' : '1.2-2'
+                          }}</span>
+                          <span
+                            [class]="snapshotDelta('bidRoomFeesTotal').css"
+                            [attr.title]="snapshotDelta('bidRoomFeesTotal').srLabel"
+                          >
+                            {{ snapshotDelta('bidRoomFeesTotal').text }}
+                          </span>
+                        </div>
+                      </td>
+                      <td class="num">
+                        {{
+                          snapshotComparison.previous.bidRoomFeesTotal | currency: 'USD' : 'symbol' : '1.2-2'
+                        }}
+                      </td>
+                    </tr>
+                  } @else {
+                    <tr>
+                      <td colspan="3" class="snapshot-loading-cell muted">Snapshot unavailable.</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+              <p class="snapshot-footnote">
+                <strong>Active accounts:</strong>
+                Users with <code>isActive: true</code> whose account was created on or before the end of each
+                column's interval (reflects today's activation flag, not a perfect historical replay).
+                <strong>Paid metrics</strong> include only transactions with
+                <code>paymentStatus: paid</code> and <code>paidAt</code> falling in the interval.
+              </p>
+            </div>
+
+            <div class="table-scroll">
+              <table class="nexus-data-table">
+                <caption>Listings by status</caption>
+                <thead>
+                  <tr>
+                    <th scope="col">Status</th>
+                    <th scope="col" class="num">Count</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (row of listingStatusRows(); track row.key) {
+                    <tr>
+                      <td>{{ row.label }}</td>
+                      <td class="num">{{ row.count | number }}</td>
+                    </tr>
+                  }
+                  <tr class="snapshot-total-row">
+                    <td><strong>Sum (check)</strong></td>
+                    <td class="num"><strong>{{ statistics.totalListingsAllStatuses | number }}</strong></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+      }
     </div>
-
-    <div class="stat-card">
-      <div class="stat-icon auctions-icon">🔨</div>
-      <div class="stat-content">
-        <h3 class="stat-label">Total Auctions</h3>
-        <p class="stat-value">{{ statistics.totalAuctions | number }}</p>
-      </div>
-    </div>
-
-    <div class="stat-card">
-      <div class="stat-icon active-icon">⚡</div>
-      <div class="stat-content">
-        <h3 class="stat-label">Active Auctions</h3>
-        <p class="stat-value">{{ statistics.activeAuctions | number }}</p>
-      </div>
-    </div>
-  </div>
-}
   </div>
 </div>
-

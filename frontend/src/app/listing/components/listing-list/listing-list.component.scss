@@ -436,6 +436,8 @@
           &.badge-featured { background: linear-gradient(135deg, var(--accent-gold), #c8960a); color: white; }
           &.badge-verified { background: var(--accent-purple); color: white; }
           &.badge-ending-soon { background: var(--urgency-red, #e53935); color: white; }
+          &.badge-bundle { background: #fff3e0; color: #e65100; border: 1px solid #ffcc80; }
+          &.badge-multi { background: #e3f2fd; color: #1565c0; border: 1px solid #90caf9; }
         }
       }
 

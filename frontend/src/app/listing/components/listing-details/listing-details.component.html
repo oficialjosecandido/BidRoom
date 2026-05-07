@@ -63,6 +63,12 @@
               <span class="sale-type-badge" [class.best-offer]="listing.auctionFormat === 'best-offer'" [class.auction]="listing.auctionFormat === 'highest-bid'">
                 {{ (listing.auctionFormat === 'best-offer' ? 'listingDetails.saleType.bestOffer' : 'listingDetails.saleType.auction') | translate }}
               </span>
+              @if (listing.itemMode === 'bundle') {
+                <span class="item-mode-badge item-mode-badge--bundle">🗂️ {{ 'listingDetails.itemMode.bundle' | translate }}</span>
+              }
+              @if (listing.itemMode === 'multi_quantity') {
+                <span class="item-mode-badge item-mode-badge--multi">×{{ listing.quantity }} {{ 'listingDetails.itemMode.units' | translate }}</span>
+              }
               <span class="listing-category">{{ listing.category }}</span>
             </div>
             <h1 class="listing-title">{{ listing.title }}</h1>
@@ -520,6 +526,29 @@
         @if (activeTab === 'description') {
         <div class="tab-content">
           <div class="description-content" [innerHTML]="getFormattedDescription()"></div>
+
+          @if (listing.itemMode === 'multi_quantity') {
+            <div class="bundle-info bundle-info--multi">
+              <h4 class="bundle-info-title">{{ 'listingDetails.itemMode.multiQtyLabel' | translate }}</h4>
+              <p class="bundle-info-qty">{{ listing.quantity }} {{ 'listingDetails.itemMode.identicalUnits' | translate }}</p>
+            </div>
+          }
+
+          @if (listing.itemMode === 'bundle' && listing.bundleItems && listing.bundleItems.length > 0) {
+            <div class="bundle-info">
+              <h4 class="bundle-info-title">{{ 'listingDetails.itemMode.bundleContents' | translate }}</h4>
+              <ul class="bundle-item-list">
+                @for (item of listing.bundleItems; track $index) {
+                  <li class="bundle-item">
+                    <span class="bundle-item-name">{{ item.title }}</span>
+                    @if (item.description) {
+                      <span class="bundle-item-desc">{{ item.description }}</span>
+                    }
+                  </li>
+                }
+              </ul>
+            </div>
+          }
         </div>
         }
 
@@ -1039,6 +1068,7 @@
     }
   </div>
 </div>
+}
 
 @if (showReportModal && listing) {
   <app-report-modal
@@ -1047,5 +1077,4 @@
     [targetName]="showReportModal === 'listing' ? listing.title : (listing.seller.firstName + ' ' + listing.seller.lastName)"
     (closed)="showReportModal = null"
   ></app-report-modal>
-}
 }

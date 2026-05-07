@@ -118,6 +118,9 @@ export interface Listing {
   myLastBidAt?: string | null;
   /** Set on bidder/my-auctions: preference for outbid notifications (email + in-app when logged in) */
   notifyWhenOutbid?: boolean;
+  itemMode?: 'single' | 'bundle' | 'multi_quantity';
+  quantity?: number;
+  bundleItems?: { title: string; description?: string }[];
 }
 
 export interface ListingsResponse {

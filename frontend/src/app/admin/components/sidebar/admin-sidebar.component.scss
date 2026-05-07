@@ -15,12 +15,26 @@
     padding: 24px 20px;
     border-bottom: 1px solid #2d3748;
 
+    .sidebar-brand {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
     .sidebar-title {
-      font-size: 24px;
-      font-weight: 700;
+      font-size: 22px;
+      font-weight: 800;
       color: #ffffff;
       margin: 0;
-      letter-spacing: -0.5px;
+      letter-spacing: -0.03em;
+    }
+
+    .sidebar-tagline {
+      margin: 0;
+      font-size: 12px;
+      font-weight: 500;
+      color: rgba(226, 232, 240, 0.72);
+      letter-spacing: 0.03em;
     }
   }
 

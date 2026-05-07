@@ -166,6 +166,28 @@
           }
         }
 
+        .item-mode-badge {
+          display: inline-block;
+          padding: 5px 12px;
+          border-radius: 8px;
+          font-size: 12px;
+          font-weight: 600;
+          text-transform: uppercase;
+          letter-spacing: 0.4px;
+
+          &--bundle {
+            background: #fff3e0;
+            color: #e65100;
+            border: 1px solid #ffcc80;
+          }
+
+          &--multi {
+            background: #e3f2fd;
+            color: #1565c0;
+            border: 1px solid #90caf9;
+          }
+        }
+
         .listing-title {
           font-size: 32px;
           font-weight: 700;
@@ -1075,6 +1097,61 @@
           line-height: 1.8;
           color: var(--text-dark);
           white-space: pre-wrap;
+        }
+
+        .bundle-info {
+          margin-top: 24px;
+          padding: 20px;
+          background: var(--light-gray);
+          border-radius: 10px;
+          border-left: 4px solid #e65100;
+
+          &--multi {
+            border-left-color: #1565c0;
+          }
+
+          .bundle-info-title {
+            font-size: 15px;
+            font-weight: 700;
+            margin: 0 0 10px;
+            color: var(--text-dark);
+          }
+
+          .bundle-info-qty {
+            font-size: 15px;
+            color: var(--text-gray);
+            margin: 0;
+          }
+
+          .bundle-item-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+          }
+
+          .bundle-item {
+            display: flex;
+            flex-direction: column;
+            padding: 10px 14px;
+            background: var(--primary-white);
+            border-radius: 6px;
+            border: 1px solid var(--border-gray);
+
+            .bundle-item-name {
+              font-weight: 600;
+              font-size: 14px;
+              color: var(--text-dark);
+            }
+
+            .bundle-item-desc {
+              font-size: 13px;
+              color: var(--text-gray);
+              margin-top: 2px;
+            }
+          }
         }
       }
 

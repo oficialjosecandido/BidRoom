@@ -10,6 +10,7 @@ const Review = require('../models/Review');
 const ReviewAppeal = require('../models/ReviewAppeal');
 const Report = require('../models/Report');
 const ModerationAuditLog = require('../models/ModerationAuditLog');
+const Bid = require('../models/Bid');
 const { sendEmail } = require('../services/emailService');
 const { renderEmailTemplate } = require('../services/templateEngine');
 const { notifyDisputeDecisionIssued, notifyDamageClaimResolved, emitNewNotificationToUser } = require('../services/notificationService');
@@ -43,6 +44,142 @@ function isValidObjectId(id) {
   return mongoose.Types.ObjectId.isValid(id);
 }
 
+function utcStartOfCalendarDay(d) {
+  return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), 0, 0, 0, 0));
+}
+
+function utcEndOfCalendarDay(d) {
+  return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), 23, 59, 59, 999));
+}
+
+function utcEndOfMonth(year, monthIndex) {
+  return new Date(Date.UTC(year, monthIndex + 1, 0, 23, 59, 59, 999));
+}
+
+/** Monday 00:00 UTC of the ISO week containing `d` */
+function utcMondayOfWeekContaining(d) {
+  const t = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
+  const dow = t.getUTCDay();
+  const delta = dow === 0 ? -6 : 1 - dow;
+  t.setUTCDate(t.getUTCDate() + delta);
+  t.setUTCHours(0, 0, 0, 0);
+  return t;
+}
+
+const SNAPSHOT_COMPARISON_MODES = new Set([
+  'today_vs_yesterday',
+  'week_vs_week',
+  'month_vs_month',
+  'year_vs_year'
+]);
+
+/**
+ * @returns {{ comparison: string, current: {label,from,to}, previous: {label,from,to} } | null}
+ */
+function resolveSnapshotComparisonWindows(mode, now) {
+  if (mode === 'today_vs_yesterday') {
+    const todayStart = utcStartOfCalendarDay(now);
+    const yesterdayStart = new Date(todayStart);
+    yesterdayStart.setUTCDate(yesterdayStart.getUTCDate() - 1);
+    const yesterdayEnd = utcEndOfCalendarDay(yesterdayStart);
+    return {
+      comparison: mode,
+      current: { label: 'Today (UTC → now)', from: todayStart, to: now },
+      previous: { label: 'Yesterday (UTC, full day)', from: yesterdayStart, to: yesterdayEnd }
+    };
+  }
+
+  if (mode === 'week_vs_week') {
+    const thisMonday = utcMondayOfWeekContaining(now);
+    const prevMonday = new Date(thisMonday);
+    prevMonday.setUTCDate(prevMonday.getUTCDate() - 7);
+    const prevSundayEnd = new Date(thisMonday);
+    prevSundayEnd.setUTCMilliseconds(-1);
+    return {
+      comparison: mode,
+      current: { label: 'This week (UTC → now)', from: thisMonday, to: now },
+      previous: {
+        label: 'Last week (UTC, full)',
+        from: prevMonday,
+        to: prevSundayEnd
+      }
+    };
+  }
+
+  if (mode === 'month_vs_month') {
+    const y = now.getUTCFullYear();
+    const mo = now.getUTCMonth();
+    const curFrom = new Date(Date.UTC(y, mo, 1));
+    const prevMonth = mo === 0 ? 11 : mo - 1;
+    const prevYear = mo === 0 ? y - 1 : y;
+    const prevFrom = new Date(Date.UTC(prevYear, prevMonth, 1));
+    const prevTo = utcEndOfMonth(prevYear, prevMonth);
+    return {
+      comparison: mode,
+      current: { label: 'This month (UTC → now)', from: curFrom, to: now },
+      previous: {
+        label: 'Last month (UTC, full)',
+        from: prevFrom,
+        to: prevTo
+      }
+    };
+  }
+
+  if (mode === 'year_vs_year') {
+    const y = now.getUTCFullYear();
+    const curFrom = new Date(Date.UTC(y, 0, 1));
+    const prevFrom = new Date(Date.UTC(y - 1, 0, 1));
+    const prevTo = utcEndOfMonth(y - 1, 11);
+    return {
+      comparison: mode,
+      current: { label: `${y} year to date (UTC → now)`, from: curFrom, to: now },
+      previous: {
+        label: `${y - 1} full year (UTC)`,
+        from: prevFrom,
+        to: prevTo
+      }
+    };
+  }
+
+  return null;
+}
+
+async function snapshotMetricsForWindow(from, to) {
+  const timeRange = { $gte: from, $lte: to };
+  const paidMatch = {
+    paymentStatus: 'paid',
+    paidAt: { ...timeRange, $exists: true, $ne: null }
+  };
+
+  const [activeAccounts, newRegistrations, bids, txnAggRows] = await Promise.all([
+    User.countDocuments({ isActive: true, createdAt: { $lte: to } }),
+    User.countDocuments({ createdAt: timeRange }),
+    Bid.countDocuments({ createdAt: timeRange }),
+    Transaction.aggregate([
+      { $match: paidMatch },
+      {
+        $group: {
+          _id: null,
+          paidTransactions: { $sum: 1 },
+          transactionAmountTotal: { $sum: { $ifNull: ['$amount', 0] } },
+          bidRoomFeesTotal: { $sum: { $ifNull: ['$bidRoomFeeAmount', 0] } }
+        }
+      }
+    ])
+  ]);
+
+  const row = txnAggRows[0] || {};
+  return {
+    activeAccounts,
+    newRegistrations,
+    bids,
+    paidTransactions: Math.round(Number(row.paidTransactions) || 0),
+    transactionAmountTotal:
+      Math.round((Number(row.transactionAmountTotal) || 0) * 100) / 100,
+    bidRoomFeesTotal: Math.round((Number(row.bidRoomFeesTotal) || 0) * 100) / 100
+  };
+}
+
 // Admin middleware - checks if user is an admin
 const requireAdmin = async (req, res, next) => {
   if (!req.user) {
@@ -59,31 +196,104 @@ const requireAdmin = async (req, res, next) => {
 // Get platform statistics
 router.get('/statistics', authenticateToken, requireAdmin, async (req, res) => {
   try {
-    // Get total registered users (excluding soft-deleted or inactive if needed)
-    const totalUsers = await User.countDocuments({ isActive: true });
-
-    // Get total auctions (all statuses except draft)
-    const totalAuctions = await Listing.countDocuments({ 
-      status: { $in: ['active', 'ended', 'cancelled'] } 
-    });
-
-    // Get active auctions (status = 'active' and endDate > now)
     const now = new Date();
-    const activeAuctions = await Listing.countDocuments({
-      status: 'active',
-      endDate: { $gt: now }
-    });
+
+    const [
+      totalUsers,
+      listingsByStatusRows,
+      liveActiveAuctions,
+      totalAuctionsListed,
+      openDisputes,
+      totalTransactions
+    ] = await Promise.all([
+      User.countDocuments({ isActive: true }),
+      Listing.aggregate([{ $group: { _id: '$status', n: { $sum: 1 } } }]),
+      Listing.countDocuments({
+        status: 'active',
+        endDate: { $gt: now }
+      }),
+      Listing.countDocuments({
+        status: { $in: ['active', 'ended', 'cancelled'] }
+      }),
+      Transaction.countDocuments({ disputeOpen: true }),
+      Transaction.countDocuments({})
+    ]);
+
+    const listingsByStatus = {};
+    for (const row of listingsByStatusRows) {
+      if (row._id != null) {
+        listingsByStatus[row._id] = row.n;
+      }
+    }
+
+    const totalAuctionsDraftsIncluded = listingsByStatusRows.reduce((sum, row) => sum + (row.n || 0), 0);
 
     res.json({
       totalUsers,
-      totalAuctions,
-      activeAuctions
+      /** Published listings (excluding draft): matches legacy "totalAuctions" meaning */
+      totalAuctions: totalAuctionsListed,
+      /** Listings currently in `active` with endDate in the future */
+      activeAuctions: liveActiveAuctions,
+      /** All listing documents by status label */
+      listingsByStatus,
+      totalListingsAllStatuses: totalAuctionsDraftsIncluded,
+      openDisputes,
+      totalTransactions
     });
   } catch (error) {
     console.error('Error fetching admin statistics:', error);
     res.status(500).json({ 
       error: 'Failed to fetch statistics',
       message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error' 
+    });
+  }
+});
+
+/**
+ * GET /admin/platform-snapshot-comparison
+ * Compare current vs previous period (UTC).
+ * Query: comparison=today_vs_yesterday | week_vs_week | month_vs_month | year_vs_year (default today_vs_yesterday)
+ */
+router.get('/platform-snapshot-comparison', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const raw = String(req.query.comparison || 'today_vs_yesterday').toLowerCase();
+    if (!SNAPSHOT_COMPARISON_MODES.has(raw)) {
+      return res.status(400).json({
+        error: 'Invalid comparison',
+        message: `Use one of: ${[...SNAPSHOT_COMPARISON_MODES].join(', ')}`
+      });
+    }
+
+    const bounds = resolveSnapshotComparisonWindows(raw, new Date());
+    if (!bounds) {
+      return res.status(400).json({ error: 'Invalid comparison' });
+    }
+
+    const [current, previous] = await Promise.all([
+      snapshotMetricsForWindow(bounds.current.from, bounds.current.to),
+      snapshotMetricsForWindow(bounds.previous.from, bounds.previous.to)
+    ]);
+
+    function packSide(boundsSide, metrics) {
+      return {
+        label: boundsSide.label,
+        from: boundsSide.from.toISOString(),
+        to: boundsSide.to.toISOString(),
+        ...metrics
+      };
+    }
+
+    res.json({
+      comparison: raw,
+      current: packSide(bounds.current, current),
+      previous: packSide(bounds.previous, previous),
+      currency: 'USD'
+    });
+  } catch (error) {
+    console.error('Error fetching platform snapshot comparison:', error);
+    res.status(500).json({
+      error: 'Failed to fetch platform snapshot comparison',
+      message: error.message
     });
   }
 });
@@ -95,17 +305,37 @@ router.get('/auctions', authenticateToken, requireAdmin, async (req, res) => {
     const limit = Math.min(100, Math.max(1, parseInt(req.query.limit) || 50));
     const skip = (page - 1) * limit;
 
+    const filter = {};
+    const cat = req.query.category && String(req.query.category).trim();
+    const stat = req.query.status && String(req.query.status).trim();
+    const allowedCat = ['electronics', 'home-garden', 'art', 'collectibles', 'jewelry'];
+    if (cat && cat !== 'all' && allowedCat.includes(cat)) {
+      filter.category = cat;
+    }
+    if (stat && stat !== 'all') {
+      const allowedStat = ['active', 'ended', 'cancelled', 'draft'];
+      if (allowedStat.includes(stat)) {
+        filter.status = stat;
+      }
+    }
+
     const [auctions, total] = await Promise.all([
-      Listing.find({})
+      Listing.find(filter)
         .populate('seller', 'firstName lastName email')
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)
         .lean(),
-      Listing.countDocuments({})
+      Listing.countDocuments(filter)
     ]);
 
-    res.json({ auctions, total, page, limit, pages: Math.ceil(total / limit) });
+    res.json({
+      auctions,
+      total,
+      page,
+      limit,
+      pages: Math.max(1, Math.ceil(total / limit))
+    });
   } catch (error) {
     console.error('Error fetching auctions:', error);
     res.status(500).json({
@@ -286,6 +516,80 @@ router.post('/auctions/:id/private-room', authenticateToken, requireAdmin, async
       error: 'Failed to create private room',
       message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error' 
     });
+  }
+});
+
+/**
+ * GET /api/admin/customers
+ * List all users with pagination and optional search by name/email.
+ */
+router.get('/customers', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const page  = Math.max(1, parseInt(req.query.page) || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit) || 25));
+    const skip  = (page - 1) * limit;
+
+    const filter = {};
+    const q = req.query.q ? String(req.query.q).trim() : '';
+    if (q) {
+      const re = new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+      filter.$or = [{ email: re }, { firstName: re }, { lastName: re }];
+    }
+    const status = req.query.status ? String(req.query.status).trim() : '';
+    if (status && ['active', 'suspended', 'closed'].includes(status)) {
+      filter.accountStatus = status;
+    }
+
+    const [users, total] = await Promise.all([
+      User.find(filter)
+        .select('firstName lastName email accountStatus emailVerified reputationScore createdAt lastLogin sellerClassification')
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      User.countDocuments(filter)
+    ]);
+
+    res.json({ customers: users, total, page, limit, pages: Math.max(1, Math.ceil(total / limit)) });
+  } catch (error) {
+    console.error('Error fetching customers:', error);
+    res.status(500).json({ error: 'Failed to fetch customers', message: error.message });
+  }
+});
+
+/**
+ * GET /api/admin/transactions
+ * List all transactions with pagination and optional status filter.
+ */
+router.get('/transactions', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const page  = Math.max(1, parseInt(req.query.page) || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit) || 25));
+    const skip  = (page - 1) * limit;
+
+    const filter = {};
+    const status = req.query.status ? String(req.query.status).trim() : '';
+    const allowed = ['pending_payment', 'awaiting_seller_acceptance', 'paid', 'shipped', 'delivered', 'under_dispute', 'completed', 'cancelled'];
+    if (status && allowed.includes(status)) {
+      filter.transactionStatus = status;
+    }
+
+    const [transactions, total] = await Promise.all([
+      Transaction.find(filter)
+        .populate('seller', 'firstName lastName email')
+        .populate('buyer',  'firstName lastName email')
+        .populate('listing', 'title images')
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      Transaction.countDocuments(filter)
+    ]);
+
+    res.json({ transactions, total, page, limit, pages: Math.max(1, Math.ceil(total / limit)) });
+  } catch (error) {
+    console.error('Error fetching transactions:', error);
+    res.status(500).json({ error: 'Failed to fetch transactions', message: error.message });
   }
 });
 

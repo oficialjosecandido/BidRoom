@@ -238,6 +238,12 @@
                     @if (listing.endingSoon) {
                       <span class="badge badge-ending-soon">⏰ {{ 'listingList.endingSoon' | translate }}</span>
                     }
+                    @if (listing.itemMode === 'bundle') {
+                      <span class="badge badge-bundle">🗂️ {{ 'listingList.bundle' | translate }}</span>
+                    }
+                    @if (listing.itemMode === 'multi_quantity') {
+                      <span class="badge badge-multi">×{{ listing.quantity }}</span>
+                    }
                   </div>
                   @if (listing.condition) {
                     <span class="condition-badge">{{ listing.condition }}</span>

@@ -208,10 +208,13 @@ export class AddListing implements OnInit, OnDestroy {
       category: ['', Validators.required],
       subCategory: ['', Validators.required],
       listingFormat: ['auction', Validators.required],
+      itemMode: ['single', Validators.required],
+      quantity: [null],
       condition: ['', Validators.required],
       description: ['', [Validators.required, Validators.minLength(50)]],
       media: this.fb.array([]),
       specifications: this.fb.array([]),
+      bundleItems: this.fb.array([]),
       locationCity: ['', Validators.required],
       locationRegion: ['', Validators.required],
       locationCountry: ['US', Validators.required],
@@ -245,6 +248,21 @@ export class AddListing implements OnInit, OnDestroy {
       }
     });
     this.updateConditionalValidators(this.listingForm.get('listingFormat')?.value || 'auction');
+
+    // itemMode validators
+    this.listingForm.get('itemMode')?.valueChanges.subscribe(mode => {
+      const qtyControl = this.listingForm.get('quantity');
+      if (mode === 'multi_quantity') {
+        qtyControl?.setValidators([Validators.required, Validators.min(2), Validators.max(999)]);
+      } else {
+        qtyControl?.clearValidators();
+        qtyControl?.setValue(null);
+      }
+      qtyControl?.updateValueAndValidity();
+      if (mode !== 'bundle') {
+        while (this.bundleItems.length) this.bundleItems.removeAt(0);
+      }
+    });
 
     // Conditional validators for shipping option
     this.listingForm.get('shippingOption')?.valueChanges.subscribe(option => {
@@ -425,7 +443,7 @@ export class AddListing implements OnInit, OnDestroy {
 
       const patch: Record<string, unknown> = {};
       const keys = [
-        'title', 'category', 'subCategory', 'listingFormat', 'condition', 'description',
+        'title', 'category', 'subCategory', 'listingFormat', 'itemMode', 'quantity', 'condition', 'description',
         'locationCity', 'locationRegion', 'locationCountry', 'duration', 'startingBid',
         'reservePrice', 'buyNowPrice', 'minimumAcceptPrice', 'allowPrivateRoom',
         'shippingOption', 'flatRateShipping', 'packageSize', 'shippingOriginPostalCode',
@@ -450,6 +468,18 @@ export class AddListing implements OnInit, OnDestroy {
               value: [r.value || '', Validators.required]
             })
           );
+        }
+      }
+
+      const bundleItemsData = p['bundleItems'];
+      if (Array.isArray(bundleItemsData)) {
+        while (this.bundleItems.length) this.bundleItems.removeAt(0);
+        for (const item of bundleItemsData) {
+          const it = item as { title?: string; description?: string };
+          this.bundleItems.push(this.fb.group({
+            title: [it.title || '', [Validators.required, Validators.maxLength(100)]],
+            description: [it.description || '', Validators.maxLength(500)]
+          }));
         }
       }
 
@@ -540,6 +570,21 @@ export class AddListing implements OnInit, OnDestroy {
 
   get media(): FormArray {
     return this.listingForm.get('media') as FormArray;
+  }
+
+  get bundleItems(): FormArray {
+    return this.listingForm.get('bundleItems') as FormArray;
+  }
+
+  addBundleItem(): void {
+    this.bundleItems.push(this.fb.group({
+      title: ['', [Validators.required, Validators.maxLength(100)]],
+      description: ['', Validators.maxLength(500)]
+    }));
+  }
+
+  removeBundleItem(index: number): void {
+    this.bundleItems.removeAt(index);
   }
 
   getSelectedSubCategories(): string[] {
@@ -901,6 +946,9 @@ export class AddListing implements OnInit, OnDestroy {
       shippingOriginCountry: formValue.shippingOption === 'calculated' ? (formValue.shippingOriginCountry || 'US') : null,
       returnPolicy: formValue.returnPolicy,
       specifications: formValue.specifications || [],
+      itemMode: formValue.itemMode || 'single',
+      quantity: formValue.itemMode === 'multi_quantity' ? (formValue.quantity || 2) : 1,
+      bundleItems: formValue.itemMode === 'bundle' ? (formValue.bundleItems || []) : [],
       images: this.uploadedFileUrls
     };
   }

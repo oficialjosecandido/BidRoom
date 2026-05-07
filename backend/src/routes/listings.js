@@ -1026,7 +1026,10 @@ router.post('/', authenticateToken, requireActiveAccount, requireNoDisputeRestri
       shippingOriginCountry,
       returnPolicy,
       specifications,
-      images = []
+      images = [],
+      itemMode,
+      quantity,
+      bundleItems
     } = req.body;
 
     // Validate required fields
@@ -1190,9 +1193,14 @@ router.post('/', authenticateToken, requireActiveAccount, requireNoDisputeRestri
       handlingTime: 5,
       returnPolicy,
       specifications: specifications || [],
-      images: Array.isArray(images) && images.length > 0 ? images : ['https://via.placeholder.com/400x300?text=No+Image'], // Temporary placeholder until image upload is implemented
+      images: Array.isArray(images) && images.length > 0 ? images : ['https://via.placeholder.com/400x300?text=No+Image'],
+      itemMode: ['bundle', 'multi_quantity'].includes(itemMode) ? itemMode : 'single',
+      quantity: itemMode === 'multi_quantity' ? Math.max(1, Math.min(999, parseInt(quantity) || 1)) : 1,
+      bundleItems: itemMode === 'bundle' && Array.isArray(bundleItems)
+        ? bundleItems.slice(0, 50).map(b => ({ title: String(b.title || '').trim().slice(0, 100), description: String(b.description || '').trim().slice(0, 500) })).filter(b => b.title)
+        : [],
       seller: user._id,
-      status: 'active' // Create as active listing
+      status: 'active'
     };
 
     // Calculate end date based on duration slot
@@ -1779,6 +1787,9 @@ router.post('/:id/relist', authenticateToken, requireActiveAccount, async (req, 
       returnPolicy: listing.returnPolicy,
       specifications: listing.specifications,
       minimumOfferPrice: listing.minimumOfferPrice,
+      itemMode: listing.itemMode || 'single',
+      quantity: listing.quantity || 1,
+      bundleItems: listing.bundleItems || [],
       seller: listing.seller,
       status: 'active',
       startDate: new Date(),
