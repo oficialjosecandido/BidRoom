@@ -4,8 +4,13 @@
   <div class="admin-content">
     <div class="auction-details">
       <div class="header-section">
-        <button class="back-btn" (click)="goBack()">← Back to Auctions</button>
-        <h1 class="page-title">Auction Details</h1>
+        <button type="button" class="back-btn" (click)="goBack()">← Back to auctions</button>
+        @if (auction) {
+          <h1 class="page-title">{{ auction.title }}</h1>
+          <p class="page-lead">Nexus listing · Format {{ auction.auctionFormat }}</p>
+        } @else {
+          <h1 class="page-title">Auction details</h1>
+        }
       </div>
 
       <!-- Loading State -->
@@ -40,68 +45,77 @@
           </div>
 }
 
-          <div class="info-grid">
-            <div class="info-item">
-              <span class="info-label">Title:</span>
-              <span class="info-value">{{ auction.title }}</span>
-            </div>
-            <div class="info-item">
-              <span class="info-label">Auction Type:</span>
-              <span class="info-value">{{ getAuctionTypeLabel(auction.auctionFormat) }}</span>
-            </div>
-            <div class="info-item">
-              <span class="info-label">Category:</span>
-              <span class="info-value">{{ auction.category }}@if (auction.subCategory) {
-<span> - {{ auction.subCategory }}</span>
-}</span>
-            </div>
-            <div class="info-item">
-              <span class="info-label">Status:</span>
-              <span class="info-value status-badge" [ngClass]="'status-' + auction.status">{{ auction.status }}</span>
-            </div>
-            <div class="info-item">
-              <span class="info-label">Starting Price:</span>
-              <span class="info-value">${{ auction.startingPrice | number:'1.2-2' }}</span>
-            </div>
-            <div class="info-item">
-              <span class="info-label">{{ auction.auctionFormat === 'best-offer' ? 'Highest Offer:' : 'Current Price:' }}</span>
-              @if (auction.auctionFormat === 'best-offer' && (auction.currentPrice == null || auction.currentPrice === 0)) {
-              <span class="info-value price-highlight">No offers yet</span>
-              } @else {
-              <span class="info-value price-highlight">${{ auction.currentPrice | number:'1.2-2' }}</span>
+          <table class="nexus-kv-table auction-kv-table">
+            <tbody>
+              <tr>
+                <th scope="row">Title</th>
+                <td>{{ auction.title }}</td>
+              </tr>
+              <tr>
+                <th scope="row">Auction type</th>
+                <td>{{ getAuctionTypeLabel(auction.auctionFormat) }}</td>
+              </tr>
+              <tr>
+                <th scope="row">Category</th>
+                <td>
+                  {{ auction.category }}
+                  @if (auction.subCategory) {
+                    <span class="subcat">· {{ auction.subCategory }}</span>
+                  }
+                </td>
+              </tr>
+              <tr>
+                <th scope="row">Status</th>
+                <td>
+                  <span class="status-badge" [ngClass]="'status-' + auction.status">{{ auction.status }}</span>
+                </td>
+              </tr>
+              <tr>
+                <th scope="row">Starting price</th>
+                <td>{{ auction.startingPrice | currency: 'USD' : 'symbol' : '1.2-2' }}</td>
+              </tr>
+              <tr>
+                <th scope="row">{{ auction.auctionFormat === 'best-offer' ? 'Highest offer' : 'Current price' }}</th>
+                <td>
+                  @if (auction.auctionFormat === 'best-offer' && (auction.currentPrice == null || auction.currentPrice === 0)) {
+                    <span class="price-highlight">No offers yet</span>
+                  } @else {
+                    <span class="price-highlight">{{ auction.currentPrice | currency: 'USD' : 'symbol' : '1.2-2' }}</span>
+                  }
+                </td>
+              </tr>
+              @if (auction.reservePrice) {
+                <tr>
+                  <th scope="row">Reserve price</th>
+                  <td>{{ auction.reservePrice | currency: 'USD' : 'symbol' : '1.2-2' }}</td>
+                </tr>
               }
-            </div>
-            @if (auction.reservePrice) {
-<div class="info-item">
-              <span class="info-label">Reserve Price:</span>
-              <span class="info-value">${{ auction.reservePrice | number:'1.2-2' }}</span>
-            </div>
-}
-            @if (auction.buyNowPrice) {
-<div class="info-item">
-              <span class="info-label">Buy Now Price:</span>
-              <span class="info-value">${{ auction.buyNowPrice | number:'1.2-2' }}</span>
-            </div>
-}
-            <div class="info-item">
-              <span class="info-label">Total Bids:</span>
-              <span class="info-value">{{ auction.bidCount }}</span>
-            </div>
-            <div class="info-item">
-              <span class="info-label">Start Date:</span>
-              <span class="info-value">{{ formatDate(auction.startDate) }}</span>
-            </div>
-            <div class="info-item">
-              <span class="info-label">End Date:</span>
-              <span class="info-value">{{ formatDate(auction.endDate) }}</span>
-            </div>
-            @if (auction.privateRoomStatus) {
-<div class="info-item">
-              <span class="info-label">Private Room Status:</span>
-              <span class="info-value">{{ auction.privateRoomStatus }}</span>
-            </div>
-}
-          </div>
+              @if (auction.buyNowPrice) {
+                <tr>
+                  <th scope="row">Buy now</th>
+                  <td>{{ auction.buyNowPrice | currency: 'USD' : 'symbol' : '1.2-2' }}</td>
+                </tr>
+              }
+              <tr>
+                <th scope="row">Total bids</th>
+                <td>{{ auction.bidCount }}</td>
+              </tr>
+              <tr>
+                <th scope="row">Start date</th>
+                <td>{{ formatDate(auction.startDate) }}</td>
+              </tr>
+              <tr>
+                <th scope="row">End date</th>
+                <td>{{ formatDate(auction.endDate) }}</td>
+              </tr>
+              @if (auction.privateRoomStatus) {
+                <tr>
+                  <th scope="row">Private room</th>
+                  <td>{{ auction.privateRoomStatus }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
 
           <div class="description-section">
             <h3 class="section-title">Description</h3>
@@ -112,69 +126,75 @@
         <!-- Seller Info Card -->
         <div class="info-card">
           <h2 class="card-title">Seller Information</h2>
-          <div class="info-grid">
-            <div class="info-item">
-              <span class="info-label">Name:</span>
-              <span class="info-value">{{ auction.seller.firstName }} {{ auction.seller.lastName }}</span>
-            </div>
-            <div class="info-item">
-              <span class="info-label">Email:</span>
-              <span class="info-value">{{ auction.seller.email }}</span>
-            </div>
-          </div>
+          <table class="nexus-kv-table">
+            <tbody>
+              <tr>
+                <th scope="row">Name</th>
+                <td>{{ auction.seller.firstName }} {{ auction.seller.lastName }}</td>
+              </tr>
+              <tr>
+                <th scope="row">Email</th>
+                <td>{{ auction.seller.email }}</td>
+              </tr>
+            </tbody>
+          </table>
         </div>
 
         <!-- Bidders Card -->
         <div class="info-card">
-          <div class="card-header">
-            <h2 class="card-title">Bidders ({{ bidders.length }})</h2>
-          </div>
+          <h2 class="card-title">Bidders</h2>
 
           @if (bidders.length > 0) {
-<div class="bidders-list">
-            @for (bidder of bidders; track bidder) {
-<div class="bidder-item">
-              <div class="bidder-main-info">
-                <h3 class="bidder-name">{{ getBidderName(bidder) }}</h3>
-                <p class="bidder-email">{{ bidder.email }}</p>
-              </div>
-              <div class="bidder-stats">
-                <div class="bidder-stat">
-                  <span class="stat-label">Bids:</span>
-                  <span class="stat-value">{{ bidder.bidCount }}</span>
-                </div>
-                <div class="bidder-stat">
-                  <span class="stat-label">Highest Bid:</span>
-                  <span class="stat-value">${{ bidder.highestBid | number:'1.2-2' }}</span>
-                </div>
-              </div>
-              <div class="bidder-badges">
-                @if (bidder.isAuthenticated) {
-<span class="badge authenticated">Authenticated</span>
-}
-                @if (!bidder.isAuthenticated) {
-<span class="badge unauthenticated">Guest</span>
-}
-                @if (bidder.emailVerified) {
-<span class="badge verified">Verified</span>
-}
-                @if (bidder.hasDeposit) {
-<span class="badge deposit">Deposit</span>
-}
-                @if (isPlatinumBidder(bidder._id)) {
-<span class="badge platinum">Platinum</span>
-}
-              </div>
+            <div class="table-scroll">
+              <table class="nexus-data-table bidders-admin-table">
+                <caption>All bidders on this listing · {{ bidders.length }} total</caption>
+                <thead>
+                  <tr>
+                    <th scope="col">Name</th>
+                    <th scope="col">Email</th>
+                    <th scope="col" class="num">Bids</th>
+                    <th scope="col" class="num">High bid</th>
+                    <th scope="col">Flags</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (bidder of bidders; track bidderTrackKey(bidder)) {
+                    <tr>
+                      <td class="bidder-name-cell">{{ getBidderName(bidder) }}</td>
+                      <td>{{ bidder.email }}</td>
+                      <td class="num">{{ bidder.bidCount }}</td>
+                      <td class="num">{{ bidder.highestBid | currency: 'USD' : 'symbol' : '1.2-2' }}</td>
+                      <td class="badge-cell">
+                        <div class="badge-row">
+                          @if (bidder.isAuthenticated) {
+                            <span class="badge authenticated">Auth</span>
+                          }
+                          @if (!bidder.isAuthenticated) {
+                            <span class="badge unauthenticated">Guest</span>
+                          }
+                          @if (bidder.emailVerified) {
+                            <span class="badge verified">Verified</span>
+                          }
+                          @if (bidder.hasDeposit) {
+                            <span class="badge deposit">Deposit</span>
+                          }
+                          @if (isPlatinumBidder(bidder._id)) {
+                            <span class="badge platinum">Platinum</span>
+                          }
+                        </div>
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
             </div>
-}
-          </div>
-}
+          }
 
           @if (bidders.length === 0) {
-<div class="empty-state">
-            <p>No bidders yet</p>
-          </div>
-}
+            <div class="empty-state">
+              <p>No bidders yet</p>
+            </div>
+          }
         </div>
 
         <!-- Actions Card -->

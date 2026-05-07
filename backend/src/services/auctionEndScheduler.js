@@ -4,6 +4,7 @@
  */
 
 const Listing = require('../models/Listing');
+const Bid = require('../models/Bid');
 const { handleAuctionEnd, handlePrivateRoomEnd, handlePrivateRoomClosedNoAcceptance, handlePrivateRoomEligibleExpired } = require('./auctionNotificationService');
 const { checkAndApplyPendingSuspensions } = require('./accountStatusService');
 const { processPrivateRoomNonPayments, sendPaymentDeadlineWarnings } = require('./privateRoomPaymentService');
@@ -94,16 +95,15 @@ async function checkEndedAuctions() {
 
     for (const listing of endedAuctions) {
       try {
+        // Collect bidders before ending so we can check them for pending suspensions after
+        const bidderIds = await Bid.distinct('bidder', { listing: listing._id });
         await handleAuctionEnd(listing._id, ioInstance);
         processed++;
         console.log(`✅ Processed ended auction: ${listing._id} - ${listing.title}`);
-        // Auction is now closed — if the seller had a pending suspension, apply it now.
-        // (Buyer suspensions are deferred further until payment via the transaction route.)
-        const sellerId = listing.seller?._id?.toString() || listing.seller?.toString();
-        if (sellerId) {
-          checkAndApplyPendingSuspensions(null, sellerId, ioInstance)
-            .catch(err => console.error(`❌ Pending suspension check failed for seller ${sellerId}:`, err.message));
-        }
+        // After auction ends, apply any deferred suspensions for participants who have no other active auctions
+        const sellerId = listing.seller?._id || listing.seller;
+        checkAndApplyPendingSuspensions([sellerId, ...bidderIds], ioInstance)
+          .catch(err => console.error(`❌ Pending suspension check error for listing ${listing._id}:`, err.message));
       } catch (error) {
         console.error(`❌ Error processing auction ${listing._id}:`, error.message);
       }
@@ -118,9 +118,13 @@ async function checkEndedAuctions() {
 
     for (const listing of endedPrivateRooms) {
       try {
+        const bidderIds = await Bid.distinct('bidder', { listing: listing._id });
         await handlePrivateRoomEnd(listing._id, ioInstance);
         processed++;
         console.log(`✅ Closed private room (time expired): ${listing._id} - ${listing.title}`);
+        const sellerId = listing.seller?._id || listing.seller;
+        checkAndApplyPendingSuspensions([sellerId, ...bidderIds], ioInstance)
+          .catch(err => console.error(`❌ Pending suspension check error for private room ${listing._id}:`, err.message));
       } catch (error) {
         console.error(`❌ Error closing private room ${listing._id}:`, error.message);
       }

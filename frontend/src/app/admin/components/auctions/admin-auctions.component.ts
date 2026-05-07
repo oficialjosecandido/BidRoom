@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { AdminService } from '../../services/admin.service';
 import { AdminSidebarComponent } from '../sidebar/admin-sidebar.component';
-import { ListingsService, Listing } from '../../../shared/services/listings.service';
+import { Listing } from '../../../shared/services/listings.service';
 
 @Component({
   selector: 'app-admin-auctions',
@@ -15,19 +15,21 @@ import { ListingsService, Listing } from '../../../shared/services/listings.serv
 })
 export class AdminAuctionsComponent implements OnInit {
   private adminService = inject(AdminService);
-  private listingsService = inject(ListingsService);
 
   auctions: Listing[] = [];
-  filteredAuctions: Listing[] = [];
   isLoading = false;
   error: string | null = null;
 
-  // Filters
+  page = 1;
+  readonly pageSize = 25;
+  total = 0;
+  totalPages = 0;
+
   selectedCategory = 'all';
   selectedStatus = 'all';
 
   categories = [
-    { value: 'all', label: 'All Categories' },
+    { value: 'all', label: 'All categories' },
     { value: 'electronics', label: 'Electronics' },
     { value: 'home-garden', label: 'Home & Garden' },
     { value: 'art', label: 'Art' },
@@ -36,12 +38,20 @@ export class AdminAuctionsComponent implements OnInit {
   ];
 
   statuses = [
-    { value: 'all', label: 'All Status' },
+    { value: 'all', label: 'All statuses' },
     { value: 'active', label: 'Active' },
     { value: 'ended', label: 'Ended' },
     { value: 'cancelled', label: 'Cancelled' },
     { value: 'draft', label: 'Draft' }
   ];
+
+  private readonly categoryLabelMap: Record<string, string> = {
+    electronics: 'Electronics',
+    'home-garden': 'Home & Garden',
+    art: 'Art',
+    collectibles: 'Collectibles',
+    jewelry: 'Jewelry'
+  };
 
   ngOnInit(): void {
     this.loadAuctions();
@@ -51,49 +61,58 @@ export class AdminAuctionsComponent implements OnInit {
     this.isLoading = true;
     this.error = null;
 
-    this.adminService.getAuctions().subscribe({
-      next: (auctions) => {
-        this.auctions = auctions;
-        this.applyFilters();
-        this.isLoading = false;
-      },
-      error: (error) => {
-        this.error = error?.message || 'Failed to load auctions';
-        this.isLoading = false;
-      }
-    });
+    this.adminService
+      .getAuctions({
+        page: this.page,
+        limit: this.pageSize,
+        category: this.selectedCategory,
+        status: this.selectedStatus
+      })
+      .subscribe({
+        next: (res) => {
+          this.auctions = res.auctions ?? [];
+          this.total = res.total ?? 0;
+          this.totalPages = Math.max(1, res.pages ?? 1);
+          this.page = Math.max(1, Math.min(res.page ?? 1, this.totalPages));
+          this.isLoading = false;
+        },
+        error: (err) => {
+          this.error = err?.error?.message || err?.message || 'Failed to load auctions';
+          this.isLoading = false;
+        }
+      });
   }
 
-  applyFilters(): void {
-    this.filteredAuctions = this.auctions.filter(auction => {
-      const categoryMatch = this.selectedCategory === 'all' || auction.category === this.selectedCategory;
-      const statusMatch = this.selectedStatus === 'all' || auction.status === this.selectedStatus;
-      return categoryMatch && statusMatch;
-    });
+  filterChanged(): void {
+    this.page = 1;
+    this.loadAuctions();
   }
 
-  onCategoryChange(): void {
-    this.applyFilters();
+  goToPage(delta: number): void {
+    const next = Math.min(Math.max(1, this.page + delta), Math.max(this.totalPages, 1));
+    if (next === this.page) return;
+    this.page = next;
+    this.loadAuctions();
   }
 
-  onStatusChange(): void {
-    this.applyFilters();
+  categoryLabel(cat: string | undefined): string {
+    if (!cat) return '—';
+    return this.categoryLabelMap[cat] ?? cat.replace(/-/g, ' ');
   }
-
 
   getStatusClass(status: string): string {
     const statusClasses: Record<string, string> = {
-      'active': 'status-active',
-      'ended': 'status-ended',
-      'cancelled': 'status-cancelled',
-      'draft': 'status-draft'
+      active: 'status-active',
+      ended: 'status-ended',
+      cancelled: 'status-cancelled',
+      draft: 'status-draft'
     };
     return statusClasses[status] || '';
   }
 
   formatDate(dateString: string): string {
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
+    return date.toLocaleString(undefined, {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
@@ -101,5 +120,8 @@ export class AdminAuctionsComponent implements OnInit {
       minute: '2-digit'
     });
   }
-}
 
+  bidCount(auction: Listing): number {
+    return auction.bidCount ?? 0;
+  }
+}

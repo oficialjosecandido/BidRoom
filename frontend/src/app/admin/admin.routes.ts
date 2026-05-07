@@ -19,15 +19,13 @@ export const adminRoutes: Routes = [
   },
   {
     path: 'customers',
-    loadComponent: () => import('./components/placeholders/placeholder.component').then(m => m.PlaceholderComponent),
-    canActivate: [AdminGuard],
-    data: { title: 'Customers', icon: '👥' }
+    loadComponent: () => import('./components/customers/admin-customers.component').then(m => m.AdminCustomersComponent),
+    canActivate: [AdminGuard]
   },
   {
     path: 'transactions',
-    loadComponent: () => import('./components/placeholders/placeholder.component').then(m => m.PlaceholderComponent),
-    canActivate: [AdminGuard],
-    data: { title: 'Transactions', icon: '💳' }
+    loadComponent: () => import('./components/transactions/admin-transactions.component').then(m => m.AdminTransactionsComponent),
+    canActivate: [AdminGuard]
   },
   {
     path: 'disputes',

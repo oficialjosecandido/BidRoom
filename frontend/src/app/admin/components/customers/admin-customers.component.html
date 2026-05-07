@@ -1,0 +1,142 @@
+<div class="admin-layout">
+  <app-admin-sidebar />
+
+  <div class="admin-content">
+    <div class="admin-customers">
+
+      <header class="page-header">
+        <div>
+          <p class="nexus-crumb">Nexus · Customers</p>
+          <h1 class="page-title">Customers</h1>
+          <p class="page-lead">All registered users. Search by name or email, filter by account status.</p>
+        </div>
+      </header>
+
+      <div class="filters-bar">
+        <div class="filter-group filter-group--wide">
+          <label for="search">Search</label>
+          <div class="search-wrap">
+            <svg class="search-icon" aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            <input
+              id="search"
+              class="filter-input"
+              type="text"
+              placeholder="Name or email…"
+              [(ngModel)]="searchQuery"
+              (keyup.enter)="filterChanged()"
+            />
+          </div>
+        </div>
+
+        <div class="filter-group">
+          <label for="status">Status</label>
+          <select id="status" class="filter-select" [(ngModel)]="selectedStatus" (change)="filterChanged()">
+            @for (s of statuses; track s.value) {
+              <option [value]="s.value">{{ s.label }}</option>
+            }
+          </select>
+        </div>
+
+        <button class="search-btn" type="button" (click)="filterChanged()">Search</button>
+
+        <span class="results-count">
+          <strong>{{ total }}</strong> customer{{ total === 1 ? '' : 's' }}
+        </span>
+      </div>
+
+      @if (isLoading) {
+        <div class="loading-state">
+          <div class="spinner"></div>
+          <p>Loading customers…</p>
+        </div>
+      } @else if (error) {
+        <div class="error-state">
+          <p class="error-message">{{ error }}</p>
+          <button class="retry-btn" type="button" (click)="load()">Retry</button>
+        </div>
+      } @else if (customers.length === 0) {
+        <div class="table-shell">
+          <div class="empty-state">
+            <div class="empty-icon" aria-hidden="true">
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            </div>
+            <p class="empty-message">No customers found</p>
+            <p class="empty-description">Try adjusting your search or filter.</p>
+          </div>
+        </div>
+      } @else {
+        <div class="table-shell">
+          <div class="table-scroll">
+            <table class="nexus-data-table">
+              <thead>
+                <tr>
+                  <th scope="col">Customer</th>
+                  <th scope="col">Email</th>
+                  <th scope="col">Status</th>
+                  <th scope="col">Verified</th>
+                  <th scope="col" class="num">Score</th>
+                  <th scope="col">Type</th>
+                  <th scope="col">Joined</th>
+                  <th scope="col">Last login</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (c of customers; track c._id) {
+                  <tr>
+                    <td class="customer-cell">
+                      <div class="customer-avatar" [class]="avatarColor(c)">{{ initials(c) }}</div>
+                      <span class="customer-name">{{ c.firstName }} {{ c.lastName }}</span>
+                    </td>
+                    <td class="email-cell">{{ c.email }}</td>
+                    <td>
+                      <span class="status-badge" [class]="getStatusClass(c.accountStatus)">
+                        <span class="status-dot" aria-hidden="true"></span>
+                        {{ statusLabel(c.accountStatus) }}
+                      </span>
+                    </td>
+                    <td>
+                      @if (c.emailVerified) {
+                        <span class="verified-chip verified-yes">
+                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                          Verified
+                        </span>
+                      } @else {
+                        <span class="verified-chip verified-no">
+                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                          Unverified
+                        </span>
+                      }
+                    </td>
+                    <td class="num">
+                      <span class="rep-chip" [class]="repScoreClass(c.reputationScore)">{{ c.reputationScore }}</span>
+                    </td>
+                    <td>
+                      @if (c.sellerClassification === 'professional') {
+                        <span class="type-chip type-pro">Pro</span>
+                      } @else {
+                        <span class="type-chip type-private">Private</span>
+                      }
+                    </td>
+                    <td class="date-cell">{{ formatDate(c.createdAt) }}</td>
+                    <td class="date-cell muted">{{ formatDate(c.lastLogin) }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+
+          @if (totalPages > 1) {
+            <div class="nexus-pagination">
+              <span class="nexus-pagination-meta">
+                {{ total }} customer{{ total === 1 ? '' : 's' }} &middot; Page {{ page }} of {{ totalPages }}
+              </span>
+              <button type="button" [disabled]="page <= 1" (click)="goToPage(-1)">&#8592; Prev</button>
+              <button type="button" [disabled]="page >= totalPages" (click)="goToPage(1)">Next &#8594;</button>
+            </div>
+          }
+        </div>
+      }
+
+    </div>
+  </div>
+</div>

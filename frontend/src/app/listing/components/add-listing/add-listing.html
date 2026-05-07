@@ -172,6 +172,74 @@
               <button type="button" (click)="addSpecification()" class="add-btn">+ {{ 'addListing.addSpecification' | translate }}</button>
             </fieldset>
           </div>
+
+          <!-- Item Type -->
+          <div class="form-group">
+            <fieldset class="radio-group-fieldset">
+              <legend>{{ 'addListing.itemType' | translate }}</legend>
+              <div class="format-cards">
+                <label class="format-card" [class.selected]="listingForm.get('itemMode')?.value === 'single'">
+                  <input type="radio" formControlName="itemMode" value="single" />
+                  <div class="format-card-content">
+                    <span class="format-card-icon">📦</span>
+                    <div>
+                      <strong>{{ 'addListing.itemTypeSingle' | translate }}</strong>
+                      <p>{{ 'addListing.itemTypeSingleHint' | translate }}</p>
+                    </div>
+                  </div>
+                </label>
+                <label class="format-card" [class.selected]="listingForm.get('itemMode')?.value === 'bundle'">
+                  <input type="radio" formControlName="itemMode" value="bundle" />
+                  <div class="format-card-content">
+                    <span class="format-card-icon">🗂️</span>
+                    <div>
+                      <strong>{{ 'addListing.itemTypeBundle' | translate }}</strong>
+                      <p>{{ 'addListing.itemTypeBundleHint' | translate }}</p>
+                    </div>
+                  </div>
+                </label>
+                <label class="format-card" [class.selected]="listingForm.get('itemMode')?.value === 'multi_quantity'">
+                  <input type="radio" formControlName="itemMode" value="multi_quantity" />
+                  <div class="format-card-content">
+                    <span class="format-card-icon">📚</span>
+                    <div>
+                      <strong>{{ 'addListing.itemTypeMultiQty' | translate }}</strong>
+                      <p>{{ 'addListing.itemTypeMultiQtyHint' | translate }}</p>
+                    </div>
+                  </div>
+                </label>
+              </div>
+            </fieldset>
+          </div>
+
+          <!-- Quantity (multi_quantity only) -->
+          @if (listingForm.get('itemMode')?.value === 'multi_quantity') {
+            <div class="form-group">
+              <label for="quantity">{{ 'addListing.quantity' | translate }}</label>
+              <input type="number" id="quantity" formControlName="quantity" min="2" max="999" placeholder="e.g. 5" />
+              <div class="field-hint">{{ 'addListing.quantityHint' | translate }}</div>
+            </div>
+          }
+
+          <!-- Bundle Items (bundle only) -->
+          @if (listingForm.get('itemMode')?.value === 'bundle') {
+            <div class="form-group">
+              <fieldset>
+                <legend>{{ 'addListing.bundleItems' | translate }}</legend>
+                <div formArrayName="bundleItems">
+                  @for (item of bundleItems.controls; track item; let i = $index) {
+                    <div [formGroupName]="i" class="bundle-item-row">
+                      <input type="text" formControlName="title" [placeholder]="'addListing.bundleItemTitle' | translate" class="bundle-item-title" maxlength="100" />
+                      <input type="text" formControlName="description" [placeholder]="'addListing.bundleItemDesc' | translate" class="bundle-item-desc" maxlength="500" />
+                      <button type="button" (click)="removeBundleItem(i)" class="remove-btn">{{ 'addListing.remove' | translate }}</button>
+                    </div>
+                  }
+                </div>
+                <button type="button" (click)="addBundleItem()" class="add-btn">+ {{ 'addListing.addBundleItem' | translate }}</button>
+                <div class="field-hint">{{ 'addListing.bundleItemsHint' | translate }}</div>
+              </fieldset>
+            </div>
+          }
         </div>
       </div>
 

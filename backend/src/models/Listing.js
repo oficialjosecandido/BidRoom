@@ -169,6 +169,23 @@ const listingSchema = new mongoose.Schema({
       trim: true
     }
   }],
+  // Multi-item / bundle support
+  itemMode: {
+    type: String,
+    enum: ['single', 'bundle', 'multi_quantity'],
+    default: 'single',
+    index: true
+  },
+  quantity: {
+    type: Number,
+    default: 1,
+    min: 1,
+    max: 999
+  },
+  bundleItems: [{
+    title: { type: String, trim: true, maxlength: 100 },
+    description: { type: String, trim: true, maxlength: 500 }
+  }],
   // Auction format and mechanics
   auctionFormat: {
     type: String,

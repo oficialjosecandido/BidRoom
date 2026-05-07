@@ -1,123 +1,134 @@
 <div class="admin-layout">
   <app-admin-sidebar></app-admin-sidebar>
-  
+
   <div class="admin-content">
     <div class="admin-auctions">
-      
+      <header class="auctions-header">
+        <div>
+          <p class="nexus-crumb">Nexus</p>
+          <h1 class="page-title">Auctions</h1>
+          <p class="page-lead">Paginated catalogue with server-side filters (newest first).</p>
+        </div>
+      </header>
 
-      <!-- Filters -->
-      <div class="filters-section">
+      <section class="filters-section">
         <div class="filter-group">
-          <label for="category-filter">Category:</label>
-          <select id="category-filter" [(ngModel)]="selectedCategory" (change)="onCategoryChange()" class="filter-select">
-            @for (category of categories; track category) {
-<option [value]="category.value">
-              {{ category.label }}
-            </option>
-}
+          <label for="category-filter">Category</label>
+          <select id="category-filter" [(ngModel)]="selectedCategory" (ngModelChange)="filterChanged()" class="filter-select">
+            @for (category of categories; track category.value) {
+              <option [value]="category.value">{{ category.label }}</option>
+            }
           </select>
         </div>
 
         <div class="filter-group">
-          <label for="status-filter">Status:</label>
-          <select id="status-filter" [(ngModel)]="selectedStatus" (change)="onStatusChange()" class="filter-select">
-            @for (status of statuses; track status) {
-<option [value]="status.value">
-              {{ status.label }}
-            </option>
-}
+          <label for="status-filter">Status</label>
+          <select id="status-filter" [(ngModel)]="selectedStatus" (ngModelChange)="filterChanged()" class="filter-select">
+            @for (status of statuses; track status.value) {
+              <option [value]="status.value">{{ status.label }}</option>
+            }
           </select>
         </div>
 
-        <div class="results-count">
-          Showing {{ filteredAuctions.length }} of {{ auctions.length }} auctions
-        </div>
-      </div>
+        <p class="results-count">
+          <strong>{{ auctions.length }}</strong> on this page · <strong>{{ total | number }}</strong> total
+        </p>
+      </section>
 
-      <!-- Loading State -->
       @if (isLoading) {
-<div class="loading-state">
-        <div class="spinner"></div>
-        <p>Loading auctions...</p>
-      </div>
-}
-
-      <!-- Error State -->
-      @if (error && !isLoading) {
-<div class="error-state">
-        <div class="error-icon">⚠️</div>
-        <p class="error-message">{{ error }}</p>
-        <button class="retry-btn" (click)="loadAuctions()">Try Again</button>
-      </div>
-}
-
-      <!-- Auctions Table -->
-      @if (!isLoading && !error) {
-<div class="table-container">
-        @if (filteredAuctions.length > 0) {
-<table class="auctions-table">
-          <thead>
-            <tr>
-              <th>Title</th>
-              <th>Category</th>
-              <th>Seller</th>
-              <th>Current Price</th>
-              <th>Bids</th>
-              <th>Status</th>
-              <th>End Date</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (auction of filteredAuctions; track auction) {
-<tr>
-              <td class="title-cell">
-                <div class="title-content">
-                  @if (auction.images && auction.images.length > 0) {
-<img 
-                       [src]="auction.images[0]" 
-                       [alt]="auction.title"
-                       class="auction-thumbnail">
-}
-                  <span class="title-text">{{ auction.title }}</span>
-                </div>
-              </td>
-              <td class="category-cell">{{ auction.category }}</td>
-              <td class="seller-cell">
-                {{ auction.seller.firstName }} {{ auction.seller.lastName }}
-              </td>
-              <td class="price-cell">@if (auction.auctionFormat === 'best-offer' && (auction.currentPrice == null || auction.currentPrice === 0)) { No offers yet } @else { ${{ auction.currentPrice | number:'1.2-2' }} }</td>
-              <td class="bids-cell">{{ auction.bidCount }}</td>
-              <td class="status-cell">
-                <span class="status-badge" [ngClass]="getStatusClass(auction.status)">
-                  {{ auction.status }}
-                </span>
-              </td>
-              <td class="date-cell">{{ formatDate(auction.endDate) }}</td>
-              <td class="actions-cell">
-                <button class="action-btn view-action" 
-                        [routerLink]="['/nexus/auctions', auction._id]"
-                        title="View Details">
-                  👁️
-                </button>
-              </td>
-            </tr>
-}
-          </tbody>
-        </table>
-}
-
-        <!-- Empty State -->
-        @if (filteredAuctions.length === 0 && !isLoading) {
-<div class="empty-state">
-          <div class="empty-icon">📋</div>
-          <p class="empty-message">No auctions found</p>
-          <p class="empty-description">Try adjusting your filters</p>
+        <div class="loading-state">
+          <div class="spinner"></div>
+          <p>Loading auctions…</p>
         </div>
-}
-      </div>
-}
+      }
+
+      @if (error && !isLoading) {
+        <div class="error-state">
+          <div class="error-icon" aria-hidden="true">⚠️</div>
+          <p class="error-message">{{ error }}</p>
+          <button type="button" class="retry-btn" (click)="loadAuctions()">Try again</button>
+        </div>
+      }
+
+      @if (!isLoading && !error) {
+        <div class="table-shell">
+          @if (auctions.length > 0) {
+            <div class="table-scroll">
+              <table class="nexus-data-table auctions-row-table">
+                <caption>
+                  Listings sorted by creation date · Page {{ page }} / {{ totalPages }}
+                </caption>
+                <thead>
+                  <tr>
+                    <th scope="col">Listing</th>
+                    <th scope="col">Category</th>
+                    <th scope="col">Seller</th>
+                    <th scope="col" class="num">Price</th>
+                    <th scope="col" class="num">Bids</th>
+                    <th scope="col">Status</th>
+                    <th scope="col">Ends</th>
+                    <th scope="col"><span class="sr-only">Actions</span></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (auction of auctions; track auction._id) {
+                    <tr>
+                      <td class="title-cell">
+                        <div class="title-content">
+                          @if (auction.images && auction.images.length > 0) {
+                            <img
+                              [src]="auction.images[0]"
+                              [alt]=""
+                              role="presentation"
+                              class="auction-thumbnail">
+                          }
+                          <span class="title-text">{{ auction.title }}</span>
+                        </div>
+                      </td>
+                      <td class="muted-cell">{{ categoryLabel(auction.category) }}</td>
+                      <td>{{ auction.seller.firstName }} {{ auction.seller.lastName }}</td>
+                      <td class="num price-cell">
+                        @if (auction.auctionFormat === 'best-offer' && (auction.currentPrice == null || auction.currentPrice === 0)) {
+                          —
+                        } @else {
+                          {{ auction.currentPrice | currency: 'USD' : 'symbol' : '1.2-2' }}
+                        }
+                      </td>
+                      <td class="num bids-cell">{{ bidCount(auction) }}</td>
+                      <td class="tag-cell">
+                        <span class="status-badge" [ngClass]="getStatusClass(auction.status)">{{ auction.status }}</span>
+                      </td>
+                      <td class="date-cell">{{ formatDate(auction.endDate) }}</td>
+                      <td class="actions-cell">
+                        <a
+                          class="action-link"
+                          [routerLink]="['/nexus/auctions', auction._id]"
+                          title="View details">View</a>
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          }
+
+          @if (totalPages > 1 && auctions.length > 0) {
+            <div class="nexus-pagination">
+              <span class="nexus-pagination-meta">Page {{ page }} of {{ totalPages }}</span>
+              <button type="button" [disabled]="page <= 1" (click)="goToPage(-1)">Previous</button>
+              <button type="button" [disabled]="page >= totalPages" (click)="goToPage(1)">Next</button>
+            </div>
+          }
+
+          @if (auctions.length === 0) {
+            <div class="empty-state">
+              <div class="empty-icon" aria-hidden="true">📋</div>
+              <p class="empty-message">No auctions match these filters</p>
+              <p class="empty-description">Try widening category or status, or go back a page.</p>
+            </div>
+          }
+        </div>
+      }
     </div>
   </div>
 </div>
-

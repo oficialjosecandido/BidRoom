@@ -1,6 +1,7 @@
 export const environment = {
   production: true,
-  defaultApiBaseUrl: 'https://bidroom-backend-dev.azurewebsites.net/api',
+  defaultApiBaseUrl: 'http://localhost:3000',
+  // defaultApiBaseUrl: 'https://bidroom-backend-dev.azurewebsites.net/api',
   bidroomFeeSellerRate: 0.005,
   bidroomFeeBuyerRate: 0.005,
   auctionDurations: [

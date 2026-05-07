@@ -1,0 +1,181 @@
+/* Shared Nexus shell + data tables — import from admin component SCSS via @use. */
+$nexus-sidebar-width: 260px;
+$nexus-page-bg: #f1f5f9;
+$nexus-panel-border: rgba(15, 23, 42, 0.08);
+
+.admin-layout {
+  display: flex;
+  min-height: 100vh;
+  background: $nexus-page-bg;
+  color: #0f172a;
+}
+
+.admin-content {
+  flex: 1;
+  margin-left: $nexus-sidebar-width;
+  min-height: 100vh;
+  box-sizing: border-box;
+}
+
+@media (max-width: 768px) {
+  .admin-content {
+    margin-left: 0;
+  }
+}
+
+.nexus-panel {
+  background: #fff;
+  border-radius: 12px;
+  border: 1px solid $nexus-panel-border;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+  padding: 22px 24px;
+  margin-bottom: 24px;
+
+  &-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0 0 16px;
+    letter-spacing: 0.02em;
+  }
+}
+
+.table-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin: 0 -4px;
+  padding: 0 4px;
+}
+
+table.nexus-data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  line-height: 1.4;
+
+  caption {
+    text-align: left;
+    font-size: 13px;
+    font-weight: 600;
+    color: #64748b;
+    padding-bottom: 10px;
+  }
+
+  thead {
+    background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+    border-bottom: 2px solid #e2e8f0;
+
+    th {
+      padding: 12px 14px;
+      text-align: left;
+      font-size: 11px;
+      font-weight: 700;
+      color: #475569;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      white-space: nowrap;
+    }
+
+    th.num {
+      text-align: right;
+    }
+  }
+
+  tbody {
+    tr {
+      border-bottom: 1px solid #f1f5f9;
+
+      &:last-child {
+        border-bottom: none;
+      }
+
+      &:hover td {
+        background: #fafbfc;
+      }
+    }
+
+    td {
+      padding: 14px;
+      color: #1e293b;
+      vertical-align: middle;
+
+      &.num {
+        text-align: right;
+        font-variant-numeric: tabular-nums;
+      }
+    }
+  }
+}
+
+table.nexus-kv-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+
+  th[scope='row'],
+  td:first-child:not([colspan]) {
+    padding: 10px 14px 10px 0;
+    width: 36%;
+    max-width: 220px;
+    font-weight: 500;
+    color: #64748b;
+    text-align: left;
+    vertical-align: top;
+    border-bottom: 1px solid #f1f5f9;
+  }
+
+  td {
+    padding: 10px 0;
+    color: #0f172a;
+    vertical-align: top;
+    border-bottom: 1px solid #f1f5f9;
+    word-break: break-word;
+
+    &.value-strong {
+      font-weight: 600;
+    }
+  }
+
+  tbody tr:last-child th,
+  tbody tr:last-child td {
+    border-bottom: none;
+  }
+}
+
+.nexus-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 16px;
+  border-top: 1px solid #f1f5f9;
+  background: #fafbfc;
+  flex-wrap: wrap;
+
+  &-meta {
+    font-size: 13px;
+    color: #64748b;
+    margin-right: auto;
+  }
+
+  button {
+    padding: 8px 16px;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    background: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    color: #334155;
+    cursor: pointer;
+
+    &:hover:not(:disabled) {
+      border-color: var(--primary-color);
+      color: var(--primary-color);
+    }
+
+    &:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+  }
+}
