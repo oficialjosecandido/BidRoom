@@ -430,10 +430,19 @@ export class DashboardHomeComponent implements OnInit, OnDestroy {
     this.cleanupRealTime();
   }
 
-  /** True when user has listings but hasn't completed payout setup. */
+  /** True when the user hasn't completed payout setup.
+   *  Show to anyone without a connected account — buyers who become sellers need it too.
+   *  Can be dismissed for the session via the banner's close button. */
+  payoutBannerDismissed = false;
+
   get showPayoutSetupBanner(): boolean {
-    if (this.customer?.stripeConnectOnboarded) return false;
-    return this.activeListings.length > 0 || this.endedListings.length > 0;
+    if (this.payoutBannerDismissed) return false;
+    if (this.isLoading) return false;
+    return !this.customer?.stripeConnectOnboarded;
+  }
+
+  dismissPayoutBanner(): void {
+    this.payoutBannerDismissed = true;
   }
 
   formatDate(dateString: string): string {

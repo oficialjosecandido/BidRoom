@@ -192,6 +192,32 @@ const userSchema = new mongoose.Schema({
   kycRejectionReason: { type: String, default: null },
   kycSubmittedAt: { type: Date, default: null },
 
+  // ─── DSA Article 29 compliance monitoring ────────────────────────────────
+  /** When the platform first issued a DSA threshold-exceeded warning to this seller */
+  dsaWarningIssuedAt: { type: Date, default: null, index: true },
+  /** When the seller acknowledged the warning via the dashboard banner */
+  dsaWarningAcknowledgedAt: { type: Date, default: null },
+  /** Seller's declared response: stay private or switch to professional */
+  dsaWarningResponse: {
+    type: String,
+    enum: ['remain_private', 'switch_professional', null],
+    default: null
+  },
+  /** Flagged internally when seller exceeds thresholds and refuses to switch after grace period */
+  suspectedProfessional: { type: Boolean, default: false, index: true },
+  /** Whether listing creation is restricted pending DSA compliance resolution */
+  dsaListingRestricted: { type: Boolean, default: false, index: true },
+
+  /** Public profile slug derived from firstName+lastName, used in profile URLs (/seller/:slug) */
+  slug: {
+    type: String,
+    unique: true,
+    sparse: true,
+    index: true,
+    lowercase: true,
+    trim: true
+  },
+
   // ─── Deferred suspension ─────────────────────────────────────────────────
   /** True when a suspension has been queued but not yet applied (user has active auction) */
   suspensionPending: { type: Boolean, default: false, index: true },
@@ -207,6 +233,43 @@ const userSchema = new mongoose.Schema({
 
 // Indexes are automatically created for unique fields
 
+/**
+ * Generate a base slug from firstName + lastName.
+ * Strips diacritics, lowercases, removes non-alphanumeric chars.
+ */
+function buildSlugBase(firstName, lastName) {
+  return ((firstName || '') + (lastName || ''))
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, '') || 'user';
+}
+
+/**
+ * Return a unique slug for a new user. Appends a counter if the base slug is taken.
+ * Must be called before saving the document.
+ */
+async function generateUniqueSlug(base, excludeId = null) {
+  let candidate = base;
+  let i = 2;
+  const query = excludeId ? { slug: candidate, _id: { $ne: excludeId } } : { slug: candidate };
+  while (await User.exists({ ...query, slug: candidate })) {
+    candidate = `${base}${i++}`;
+  }
+  return candidate;
+}
+
+userSchema.pre('save', async function (next) {
+  if (!this.slug && this.firstName && this.lastName) {
+    const base = buildSlugBase(this.firstName, this.lastName);
+    this.slug = await generateUniqueSlug(base, this._id);
+  }
+  next();
+});
+
 const User = mongoose.model('User', userSchema);
+
+User.buildSlugBase = buildSlugBase;
+User.generateUniqueSlug = generateUniqueSlug;
 
 module.exports = User;

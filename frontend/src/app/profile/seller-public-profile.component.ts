@@ -21,6 +21,7 @@ export interface PublicReview {
 
 interface PublicProfile {
   _id: string;
+  slug: string | null;
   firstName: string;
   lastName: string;
   memberSince: string;

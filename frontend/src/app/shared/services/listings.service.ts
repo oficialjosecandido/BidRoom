@@ -21,6 +21,7 @@ export interface Listing {
   endDate: string;
   seller: {
     _id: string;
+    slug?: string | null;
     firstName: string;
     lastName: string;
     email: string;

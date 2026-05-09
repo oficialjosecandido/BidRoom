@@ -49,7 +49,10 @@
       "Bash(sed -n '412,440p' /Users/jose/Documents/bidroom/frontend/public/i18n/en.json)",
       "Bash(sed -n '818,835p' /Users/jose/Documents/bidroom/frontend/public/i18n/en.json)",
       "Bash(sed -n '412,418p' /Users/jose/Documents/bidroom/frontend/public/i18n/es.json)",
-      "Bash(sed -n '818,830p' /Users/jose/Documents/bidroom/frontend/public/i18n/es.json)"
+      "Bash(sed -n '818,830p' /Users/jose/Documents/bidroom/frontend/public/i18n/es.json)",
+      "WebFetch(domain:docs.stripe.com)",
+      "Bash(grep -E \"\\\\.\\(ts|tsx|js|jsx|py\\)$\")",
+      "Bash(xargs ls -la)"
     ]
   }
 }

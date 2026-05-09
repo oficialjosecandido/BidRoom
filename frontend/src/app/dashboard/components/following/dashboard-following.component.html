@@ -26,7 +26,7 @@
           <div class="seller-list">
             @for (seller of sellers; track seller._id) {
               <div class="seller-row">
-                <a [routerLink]="['/seller', seller._id]" class="seller-name">
+                <a [routerLink]="['/seller', seller.slug || seller._id]" class="seller-name">
                   {{ sellerDisplayName(seller) }}
                 </a>
                 @if (seller.muted) {

@@ -374,7 +374,7 @@
               <div class="info-content">
                 <span class="info-label">{{ 'listingDetails.info.seller' | translate }}</span>
                 <div class="seller-name-row">
-                  <a class="info-value seller-link" [routerLink]="['/seller', listing.seller._id]">{{ listing.seller.firstName }} {{ listing.seller.lastName }}</a>
+                  <a class="info-value seller-link" [routerLink]="['/seller', listing.seller.slug || listing.seller._id]">{{ listing.seller.firstName }} {{ listing.seller.lastName }}</a>
                   @if (isAuthenticated && !isSeller) {
                     <button
                       class="follow-seller-btn"
