@@ -116,11 +116,12 @@ router.get('/following', authenticateToken, async (req, res) => {
     if (!user) return res.json({ following: [] });
 
     const entries = await Follow.find({ follower: user._id })
-      .populate('following', 'firstName lastName _id')
+      .populate('following', 'firstName lastName slug _id')
       .lean();
 
     const following = entries.map(e => ({
       _id: e.following._id,
+      slug: e.following.slug || null,
       firstName: e.following.firstName,
       lastName: e.following.lastName,
       muted: e.muted

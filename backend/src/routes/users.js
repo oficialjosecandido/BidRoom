@@ -9,7 +9,15 @@ const Follow = require('../models/Follow');
 const router = express.Router();
 
 function isValidObjectId(v) {
-  return mongoose.Types.ObjectId.isValid(v);
+  return mongoose.Types.ObjectId.isValid(v) && /^[a-f\d]{24}$/i.test(v);
+}
+
+/** Resolve a route param that can be a 24-char ObjectId OR a slug. Returns the User lean doc or null. */
+async function resolveUser(idOrSlug, select) {
+  if (isValidObjectId(idOrSlug)) {
+    return User.findById(idOrSlug).select(select).lean();
+  }
+  return User.findOne({ slug: idOrSlug }).select(select).lean();
 }
 
 /**
@@ -19,19 +27,14 @@ function isValidObjectId(v) {
 router.get('/:id/profile', async (req, res) => {
   try {
     const { id } = req.params;
-    if (!isValidObjectId(id)) {
-      return res.status(400).json({ error: 'Invalid user id.' });
-    }
 
-    const user = await User.findById(id)
-      .select('firstName lastName createdAt isActive lastLogin')
-      .lean();
+    const user = await resolveUser(id, 'firstName lastName slug createdAt isActive lastLogin');
 
     if (!user || !user.isActive) {
       return res.status(404).json({ error: 'User not found.' });
     }
 
-    const oid = new mongoose.Types.ObjectId(id);
+    const oid = new mongoose.Types.ObjectId(user._id);
 
     const [sellerAgg, buyerAgg, soldCount, boughtCount, followersCount, activeListings] =
       await Promise.all([
@@ -46,7 +49,7 @@ router.get('/:id/profile', async (req, res) => {
         Transaction.countDocuments({ seller: oid, status: 'completed' }),
         Transaction.countDocuments({ buyer: oid, status: 'completed' }),
         Follow.countDocuments({ following: oid }),
-        Listing.find({ seller: id, status: 'active' })
+        Listing.find({ seller: user._id, status: 'active' })
           .select('_id slug title images currentPrice startingPrice bidCount endDate auctionFormat')
           .sort({ endDate: 1 })
           .limit(20)
@@ -60,6 +63,7 @@ router.get('/:id/profile', async (req, res) => {
 
     return res.json({
       _id: user._id,
+      slug: user.slug || null,
       firstName: user.firstName,
       lastName: user.lastName,
       memberSince: user.createdAt,
@@ -92,15 +96,17 @@ router.get('/:id/profile', async (req, res) => {
 router.get('/:id/reviews', async (req, res) => {
   try {
     const { id } = req.params;
-    if (!isValidObjectId(id)) {
-      return res.status(400).json({ error: 'Invalid user id.' });
+
+    const user = await resolveUser(id, '_id');
+    if (!user) {
+      return res.status(404).json({ error: 'User not found.' });
     }
 
     const PAGE_SIZE = 10;
     const page = Math.max(1, parseInt(req.query.page) || 1);
     const skip = (page - 1) * PAGE_SIZE;
 
-    const match = { reviewee: new mongoose.Types.ObjectId(id) };
+    const match = { reviewee: new mongoose.Types.ObjectId(user._id) };
     if (req.query.role === 'as_seller' || req.query.role === 'as_buyer') {
       match.role = req.query.role;
     }

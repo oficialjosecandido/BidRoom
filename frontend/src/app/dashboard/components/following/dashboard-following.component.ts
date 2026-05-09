@@ -7,6 +7,7 @@ import { CategoryFollowService } from '../../../shared/services/category-follow.
 
 interface FollowedSeller {
   _id: string;
+  slug?: string | null;
   firstName: string;
   lastName: string;
   muted: boolean;

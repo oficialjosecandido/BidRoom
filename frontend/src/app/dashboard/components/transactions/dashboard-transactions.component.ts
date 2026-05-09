@@ -361,10 +361,10 @@ export class DashboardTransactionsComponent implements OnInit {
     });
   }
 
-  /** Financial breakdown: BidRoom fee (2% of item price) */
+  /** Financial breakdown: BidRoom fee (4% of item price, charged to seller) */
   getBidRoomFee(t: Transaction): number {
     if (t.bidRoomFeeAmount != null) return t.bidRoomFeeAmount;
-    return t.amount * 0.02;
+    return t.amount * 0.04;
   }
 
   /** Shipping amount: uses locked rate if available, falls back to flat-rate / free / null */

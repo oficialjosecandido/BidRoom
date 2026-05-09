@@ -540,8 +540,7 @@ router.patch('/:id', requireActiveAccount, async (req, res) => {
           }
           // Payment accepted: apply any deferred suspensions (listing auction has ended at this point).
           checkAndApplyPendingSuspensions(
-            transaction.buyer?.toString(),
-            transaction.seller?.toString(),
+            [transaction.buyer?.toString(), transaction.seller?.toString()].filter(Boolean),
             io
           ).catch(err => console.error('[AccountStatus] checkAndApplyPendingSuspensions error:', err.message));
         }
@@ -685,8 +684,7 @@ router.patch('/:id', requireActiveAccount, async (req, res) => {
         }).catch(err => console.error('Failed to send review prompt notification:', err));
         // Apply any deferred suspensions now that the transaction is concluded.
         checkAndApplyPendingSuspensions(
-          transaction.buyer?.toString(),
-          transaction.seller?.toString(),
+          [transaction.buyer?.toString(), transaction.seller?.toString()].filter(Boolean),
           io
         ).catch(err => console.error('[AccountStatus] checkAndApplyPendingSuspensions error:', err.message));
       }
@@ -712,8 +710,10 @@ router.patch('/:id', requireActiveAccount, async (req, res) => {
       sellerHasReviewedBuyer = !!s;
     }
 
+    const role = updated.seller?._id?.toString() === user._id.toString() ? 'seller' : 'buyer';
     res.json({
       ...updated,
+      role,
       buyerHasReviewedSeller,
       sellerHasReviewedBuyer,
       ...normalizeTransactionStatus(updated)

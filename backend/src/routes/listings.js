@@ -26,7 +26,7 @@ function escapeRegex(str) {
 
 /** Populated seller fields for public listing APIs (DSA trader transparency). */
 const SELLER_DSA_PUBLIC_SELECT =
-  'firstName lastName email uid sellerClassification professionalVerificationStatus ' +
+  'firstName lastName slug email uid sellerClassification professionalVerificationStatus ' +
   'professionalLegalName professionalTradeName professionalAddressLine1 professionalAddressLine2 ' +
   'professionalCity professionalRegion professionalPostalCode professionalCountry professionalContactPhone ' +
   'professionalContactEmail professionalVatId';

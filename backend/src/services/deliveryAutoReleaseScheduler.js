@@ -151,7 +151,7 @@ async function processAutoReleases(io) {
       }
 
       // Transaction is now terminal — apply any pending suspensions for either party.
-      checkAndApplyPendingSuspensions(buyerId, sellerId, io)
+      checkAndApplyPendingSuspensions([buyerId, sellerId].filter(Boolean), io)
         .catch(err => console.error(`${LOG_PREFIX} Pending suspension check failed tx=${tx._id}:`, err.message));
 
       console.log(`${LOG_PREFIX} Auto-released tx=${tx._id}`);

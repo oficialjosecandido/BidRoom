@@ -9,7 +9,7 @@ const { notifySellerPaymentReceived, emitNewNotificationToUser } = require('../s
 const { applyShippingDeadlinesFromPaidAt } = require('../services/shippingDeadlines');
 
 const LOG_PREFIX = '[Connect]';
-const BIDROOMFEE_RATE = 0.02; // 2%
+const BIDROOMFEE_RATE = 0.04; // 4% — charged to seller via transfer_data.amount
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:4200';
 
 /**
@@ -435,17 +435,24 @@ router.post('/create-checkout-session', requireActiveAccount, async (req, res) =
     }
     // free / local-pickup = 0
 
-    // BidRoom fee: 2% of item price, charged ON TOP (buyer pays it)
-    const bidRoomFee = Math.round(itemAmount * BIDROOMFEE_RATE * 100) / 100;
-
-    // Buyer total
-    const buyerTotal = itemAmount + bidRoomFee + shippingAmount;
-
-    // Stripe amounts in cents
-    const itemCents = Math.round(itemAmount * 100);
-    const bidRoomFeeCents = Math.round(bidRoomFee * 100);
+    // === Fee model ===
+    // BidRoom fee: 4% of item price — deducted from SELLER payout (not added to buyer total)
+    // Stripe processing fee: ~2.9% + $0.30 — passed through to BUYER as "Processing fee" line item
+    const itemCents    = Math.round(itemAmount * 100);
     const shippingCents = Math.round(shippingAmount * 100);
-    const buyerTotalCents = itemCents + bidRoomFeeCents + shippingCents;
+
+    const bidRoomFeeCents = Math.round(itemCents * BIDROOMFEE_RATE);
+
+    // Estimate Stripe's processing fee on the item+shipping subtotal.
+    // Actual fee will differ slightly (Stripe charges on the final total including this estimate),
+    // but the error is a few cents at most and is absorbed by the platform.
+    const stripeFeeEstimateCents = Math.round((itemCents + shippingCents) * 0.029) + 30;
+
+    // Buyer total: item + shipping + Stripe fee estimate
+    const buyerTotalCents = itemCents + shippingCents + stripeFeeEstimateCents;
+
+    // Seller receives: item - 4% BidRoom fee + shipping
+    const sellerTransferCents = itemCents - bidRoomFeeCents + shippingCents;
 
     const lineItems = [
       {
@@ -459,8 +466,8 @@ router.post('/create-checkout-session', requireActiveAccount, async (req, res) =
       {
         price_data: {
           currency: 'usd',
-          product_data: { name: 'BidRoom platform fee (2%)' },
-          unit_amount: bidRoomFeeCents
+          product_data: { name: 'Processing fee' },
+          unit_amount: stripeFeeEstimateCents
         },
         quantity: 1
       }
@@ -480,10 +487,10 @@ router.post('/create-checkout-session', requireActiveAccount, async (req, res) =
       });
     }
 
-    // Only use transfer_data / application_fee_amount when the seller's Stripe account
-    // actually has the transfers capability active. In test mode with a force-activated DB
-    // account, the capability may still be pending on Stripe's side, which would throw a
-    // "stripe_balance.stripe_transfers feature" error.
+    // payment_intent_data: use explicit transfer_data.amount so the seller receives
+    // exactly item*(1-0.04)+shipping, regardless of the Stripe fee estimate rounding.
+    // In test mode, if the account doesn't have transfers capability active yet, skip
+    // transfer_data to avoid a "stripe_balance.stripe_transfers feature" error.
     const paymentIntentData = {
       metadata: {
         transactionId: transaction._id.toString(),
@@ -492,8 +499,10 @@ router.post('/create-checkout-session', requireActiveAccount, async (req, res) =
       }
     };
     if (seller.stripeConnectAccountId && sellerAccountCapable) {
-      paymentIntentData.application_fee_amount = bidRoomFeeCents;
-      paymentIntentData.transfer_data = { destination: seller.stripeConnectAccountId };
+      paymentIntentData.transfer_data = {
+        destination: seller.stripeConnectAccountId,
+        amount: sellerTransferCents   // explicit: seller gets item*0.96 + shipping
+      };
     } else if (isTestMode) {
       console.log(`${LOG_PREFIX} Test mode: skipping transfer_data — seller account not fully capable (transfers not active)`);
     }
@@ -511,10 +520,11 @@ router.post('/create-checkout-session', requireActiveAccount, async (req, res) =
       }
     });
 
-    // Store session ID on transaction
+    // Store fee breakdown on transaction before save
     transaction.stripeCheckoutSessionId = session.id;
-    transaction.bidRoomFeeAmount = bidRoomFee;
-    transaction.buyerTotalPaid = buyerTotal;
+    transaction.bidRoomFeeAmount  = bidRoomFeeCents  / 100;   // 4% from seller
+    transaction.sellerPayoutAmount = sellerTransferCents / 100; // item*0.96 + shipping
+    transaction.buyerTotalPaid    = buyerTotalCents   / 100;   // item + stripe_est + shipping
     await transaction.save();
 
     console.log(`${LOG_PREFIX} Checkout session created session_id=${session.id} transaction=${transaction._id} amount=$${buyerTotal}`);
@@ -578,7 +588,8 @@ router.post('/confirm-payment', requireActiveAccount, async (req, res) => {
       return res.status(403).json({ error: 'Forbidden', message: 'Session does not belong to you.' });
     }
 
-    // Extract Stripe processing fee from balance transaction
+    // Extract the actual Stripe processing fee for transparency (recorded but doesn't change seller payout —
+    // buyer already covered it via the "Processing fee" line item at checkout creation time).
     const balanceTx = session.payment_intent?.latest_charge?.balance_transaction;
     const stripeFeeAmount = balanceTx ? balanceTx.fee / 100 : null;
 
@@ -586,11 +597,9 @@ router.post('/confirm-payment', requireActiveAccount, async (req, res) => {
       ? session.payment_intent
       : session.payment_intent?.id;
 
-    // Seller payout = amount - BidRoom fee - Stripe fee
-    const bidRoomFee = transaction.bidRoomFeeAmount ?? (transaction.amount * BIDROOMFEE_RATE);
-    const sellerPayout = stripeFeeAmount !== null
-      ? transaction.amount - bidRoomFee - stripeFeeAmount
-      : transaction.amount - bidRoomFee;
+    // Seller payout was calculated and stored at checkout-session creation time.
+    // Fall back to item*(1-rate) in case the transaction was created before this deploy.
+    const sellerPayout = transaction.sellerPayoutAmount ?? (transaction.amount * (1 - BIDROOMFEE_RATE));
 
     transaction.stripePaymentIntentId = paymentIntentId;
     transaction.stripeFeeAmount = stripeFeeAmount;
@@ -701,10 +710,8 @@ async function handleCheckoutCompleted(session, stripe, io) {
     ? expandedSession.payment_intent
     : expandedSession.payment_intent?.id;
 
-  const bidRoomFee = transaction.bidRoomFeeAmount ?? (transaction.amount * BIDROOMFEE_RATE);
-  const sellerPayout = stripeFeeAmount !== null
-    ? transaction.amount - bidRoomFee - stripeFeeAmount
-    : transaction.amount - bidRoomFee;
+  // Seller payout was set at checkout creation; fall back for old transactions.
+  const sellerPayout = transaction.sellerPayoutAmount ?? (transaction.amount * (1 - BIDROOMFEE_RATE));
 
   transaction.stripePaymentIntentId = paymentIntentId;
   transaction.stripeFeeAmount = stripeFeeAmount;
@@ -826,7 +833,7 @@ async function sendPaymentReceivedEmail(transaction) {
         <p>Hi ${seller.firstName || 'Seller'},</p>
         <p><strong>${buyerName}</strong> has paid for your listing <strong>${listing?.title || 'your item'}</strong>.</p>
         <p>Please confirm you are ready to ship and mark the item as shipped once dispatched.</p>
-        <p>Your payout of <strong>$${(transaction.sellerPayoutAmount ?? transaction.amount).toFixed(2)}</strong> will be sent to your Stripe account after shipping is confirmed.</p>
+        <p>Your payout of <strong>$${(transaction.sellerPayoutAmount ?? (transaction.amount * (1 - BIDROOMFEE_RATE))).toFixed(2)}</strong> (sale price minus the 4% BidRoom platform fee) will be transferred to your bank account after the transaction is completed.</p>
         <p>Best regards,<br>The BidRoom Team</p>
       </div>
     </div>
