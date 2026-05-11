@@ -41,6 +41,14 @@ export interface SellerCompliance {
   professionalRejectionNote?: string | null;
 }
 
+export interface DsaWarningInfo {
+  warningIssuedAt: string | null;
+  acknowledgedAt: string | null;
+  response: 'remain_private' | 'switch_professional' | null;
+  suspectedProfessional: boolean;
+  listingRestricted: boolean;
+}
+
 export interface CustomerInfo {
   user: CustomerUser;
   balance: number;
@@ -53,6 +61,8 @@ export interface CustomerInfo {
   stripeConnectOnboarded: boolean;
   /** Present when linked User exists (DSA seller classification). */
   sellerCompliance?: SellerCompliance | null;
+  /** DSA Article 29 threshold warning state. Null if no warning has been issued. */
+  dsaWarning?: DsaWarningInfo | null;
   /** UI theme from Customer; null if never saved server-side. */
   theme?: ThemePreference | null;
 }
@@ -74,6 +84,10 @@ export class CustomerService {
 
   updateLanguage(language: string): Observable<{ language: string }> {
     return this.http.patch<{ language: string }>(`${this.apiUrl}/language`, { language });
+  }
+
+  respondToDsaWarning(response: 'remain_private' | 'switch_professional'): Observable<{ ok: boolean; response: string }> {
+    return this.http.post<{ ok: boolean; response: string }>(`${this.apiUrl}/dsa-warning-response`, { response });
   }
 
   updateSellerCompliance(payload: Record<string, unknown>): Observable<{

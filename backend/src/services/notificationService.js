@@ -1048,6 +1048,42 @@ async function notifyFollowersNewListing({ sellerId, sellerFirstName, listingTit
   }
 }
 
+/**
+ * Notify a private seller that their activity has exceeded DSA Article 29 thresholds.
+ * Sends in-app notification. Email is handled separately by the scheduler (needs volume/count context).
+ */
+async function notifyDsaWarning({ userId, annualSalesEur, annualTransactionCount, io }) {
+  const salesFormatted = annualSalesEur != null ? `€${Math.round(annualSalesEur).toLocaleString()}` : null;
+  const parts = [];
+  if (salesFormatted) parts.push(`${salesFormatted} in sales`);
+  if (annualTransactionCount != null) parts.push(`${annualTransactionCount} transactions`);
+  const context = parts.length ? ` (${parts.join(', ')} this year)` : '';
+
+  return createNotification({
+    userId,
+    type: 'account',
+    title: 'Seller status review required',
+    message: `Your selling activity${context} may qualify as professional selling under EU DSA regulations. Please confirm your seller status in your dashboard.`,
+    link: '/dashboard/home',
+    io
+  });
+}
+
+/**
+ * Notify a seller that their account has been internally flagged as suspected_professional
+ * after ignoring the initial DSA warning beyond the grace period.
+ */
+async function notifyDsaSuspectedProfessional({ userId, io }) {
+  return createNotification({
+    userId,
+    type: 'account',
+    title: 'Seller account flagged for review',
+    message: 'Your account has been flagged for platform review. Your selling activity exceeds thresholds for private sellers under EU DSA regulations. Action is required to continue selling.',
+    link: '/dashboard/home',
+    io
+  });
+}
+
 module.exports = {
   createNotification,
   shouldSendEmail,
@@ -1104,5 +1140,7 @@ module.exports = {
   notifyCategoryFollowersNewListing,
   notifySimilarItemWatchers,
   notifyWatchlistersAuctionEnding,
-  emitNewNotificationToUser
+  emitNewNotificationToUser,
+  notifyDsaWarning,
+  notifyDsaSuspectedProfessional
 };

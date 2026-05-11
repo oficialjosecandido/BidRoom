@@ -6,7 +6,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import Swal from 'sweetalert2';
 import { AuthService, AppUser } from '../../../auth/services/auth.service';
 import { ListingsService, Listing } from '../../../shared/services/listings.service';
-import { CustomerService, CustomerInfo } from '../../../shared/services/customer.service';
+import { CustomerService, CustomerInfo, DsaWarningInfo } from '../../../shared/services/customer.service';
 import { PaymentsService, TopupRecord } from '../../../shared/services/payments.service';
 import { ReviewsService, PendingReview, ReviewTag } from '../../../shared/services/reviews.service';
 import { FeatureFlagsService } from '../../../shared/services/feature-flags.service';
@@ -439,6 +439,43 @@ export class DashboardHomeComponent implements OnInit, OnDestroy {
     if (this.payoutBannerDismissed) return false;
     if (this.isLoading) return false;
     return !this.customer?.stripeConnectOnboarded;
+  }
+
+  // ─── DSA Warning Banner ──────────────────────────────────────────────────
+  dsaWarningDismissed = false;
+  dsaWarningResponding = false;
+
+  get dsaWarning(): DsaWarningInfo | null {
+    return this.customer?.dsaWarning ?? null;
+  }
+
+  get showDsaWarningBanner(): boolean {
+    if (this.dsaWarningDismissed || this.isLoading) return false;
+    const w = this.dsaWarning;
+    if (!w?.warningIssuedAt) return false;
+    return !w.acknowledgedAt;
+  }
+
+  respondDsaWarning(response: 'remain_private' | 'switch_professional'): void {
+    if (this.dsaWarningResponding) return;
+    this.dsaWarningResponding = true;
+    this.customerService.respondToDsaWarning(response).subscribe({
+      next: () => {
+        this.dsaWarningResponding = false;
+        this.dsaWarningDismissed = true;
+        if (response === 'switch_professional') {
+          this.router.navigate(['/dashboard/settings']);
+        }
+      },
+      error: () => {
+        this.dsaWarningResponding = false;
+        this.dsaWarningDismissed = true;
+      }
+    });
+  }
+
+  dismissDsaWarning(): void {
+    this.dsaWarningDismissed = true;
   }
 
   dismissPayoutBanner(): void {

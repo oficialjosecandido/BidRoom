@@ -988,6 +988,13 @@ router.post('/', authenticateToken, requireActiveAccount, requireNoDisputeRestri
     const { getClientIp: getSellerIp } = require('../middleware/bidRateLimiter');
     trackSellerSignals(user._id, getSellerIp(req), req.headers['x-device-fingerprint'] || null).catch(() => {});
 
+    if (user.dsaListingRestricted) {
+      return res.status(403).json({
+        error: 'Listing creation restricted',
+        message: 'Your account has been restricted from creating new listings pending DSA compliance review. Please visit your dashboard to confirm your seller status.'
+      });
+    }
+
     const sellerClass = user.sellerClassification || 'private';
     if (sellerClass === 'professional') {
       const vs = user.professionalVerificationStatus || 'none';
