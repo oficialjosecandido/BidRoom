@@ -52,7 +52,8 @@
       "Bash(sed -n '818,830p' /Users/jose/Documents/bidroom/frontend/public/i18n/es.json)",
       "WebFetch(domain:docs.stripe.com)",
       "Bash(grep -E \"\\\\.\\(ts|tsx|js|jsx|py\\)$\")",
-      "Bash(xargs ls -la)"
+      "Bash(xargs ls -la)",
+      "Bash(node -e \"const s = require\\('/Users/jose/Documents/bidroom/backend/node_modules/stripe'\\); console.log\\(s.PACKAGE_VERSION || require\\('/Users/jose/Documents/bidroom/backend/node_modules/stripe/package.json'\\).version\\)\")"
     ]
   }
 }

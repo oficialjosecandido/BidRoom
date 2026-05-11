@@ -650,21 +650,37 @@ router.post('/confirm-payment', requireActiveAccount, async (req, res) => {
  */
 function connectWebhookHandler(req, res) {
   const sig = req.headers['stripe-signature'];
-  const webhookSecret = process.env.STRIPE_CONNECT_WEBHOOK_SECRET;
   const stripe = getStripe();
 
   if (!stripe) return res.status(503).send('Stripe not configured');
-  if (!webhookSecret) {
-    console.warn(`${LOG_PREFIX} STRIPE_CONNECT_WEBHOOK_SECRET not set — skipping signature verification`);
+
+  // Stripe API v2 requires two separate webhook destinations:
+  //   STRIPE_CONNECT_WEBHOOK_SECRET       → "Your account" scope (checkout.session.completed)
+  //   STRIPE_CONNECT_ACCOUNT_WEBHOOK_SECRET → "Connected accounts" scope (account.updated)
+  // Both point to this same endpoint. We try each secret until one validates.
+  const secrets = [
+    process.env.STRIPE_CONNECT_WEBHOOK_SECRET,
+    process.env.STRIPE_CONNECT_ACCOUNT_WEBHOOK_SECRET
+  ].filter(Boolean);
+
+  if (secrets.length === 0) {
+    console.warn(`${LOG_PREFIX} No webhook secrets configured — skipping signature verification`);
     return res.json({ received: true });
   }
 
   let event;
-  try {
-    event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret);
-  } catch (err) {
-    console.error(`${LOG_PREFIX} Webhook signature verification failed:`, err.message);
-    return res.status(400).send(`Webhook Error: ${err.message}`);
+  for (const secret of secrets) {
+    try {
+      event = stripe.webhooks.constructEvent(req.body, sig, secret);
+      break;
+    } catch (_) {
+      // try next secret
+    }
+  }
+
+  if (!event) {
+    console.error(`${LOG_PREFIX} Webhook signature verification failed against all configured secrets`);
+    return res.status(400).send('Webhook Error: signature verification failed');
   }
 
   console.log(`${LOG_PREFIX} Webhook received type=${event.type} id=${event.id}`);
