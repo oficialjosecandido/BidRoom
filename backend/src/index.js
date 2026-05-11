@@ -47,6 +47,7 @@ const auctionEndScheduler = require('./services/auctionEndScheduler');
 const shippingDeadlineScheduler = require('./services/shippingDeadlineScheduler');
 const deliveryAutoReleaseScheduler = require('./services/deliveryAutoReleaseScheduler');
 const reviewAutoGenerateScheduler = require('./services/reviewAutoGenerateScheduler');
+const dsaComplianceScheduler = require('./services/dsaComplianceScheduler');
 const { runCleanup: runProofOfPaymentCleanup } = require('./services/proofOfPaymentCleanup');
 
 // CORS: FRONTEND_URL(s), optional CORS_EXTRA_ORIGINS (comma-separated), localhost, Azure Static Web Apps
@@ -351,6 +352,9 @@ const startServer = async () => {
 
       reviewAutoGenerateScheduler.startReviewAutoGenerateScheduler(6, io);
       console.log(`⭐ Review auto-generate scheduler started`);
+
+      dsaComplianceScheduler.startDsaComplianceScheduler(24, io);
+      console.log(`⚖️  DSA compliance scheduler started`);
 
       // Proof-of-payment cleanup: delete files from Azure 30 days after paid (run daily)
       const PROOF_CLEANUP_MS = 24 * 60 * 60 * 1000;

@@ -48,6 +48,32 @@
     </div>
   </div>
 
+  <!-- DSA compliance warning banner -->
+  @if (!isLoading && showDsaWarningBanner) {
+  <div class="dsa-warning-banner">
+    <div class="dsa-banner-icon">
+      <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M3 6l9-4 9 4v6c0 5.25-3.75 9.75-9 11-5.25-1.25-9-5.75-9-11V6z" />
+      </svg>
+    </div>
+    <div class="dsa-banner-body">
+      <strong>EU seller status review required</strong>
+      <span>Your selling activity this year may qualify as professional selling under EU DSA regulations (Article 29). You must confirm your seller status — professional sellers must display company information to buyers.</span>
+    </div>
+    <div class="dsa-banner-actions">
+      <button type="button" class="dsa-btn-pro" [disabled]="dsaWarningResponding" (click)="respondDsaWarning('switch_professional')">
+        Switch to professional
+      </button>
+      <button type="button" class="dsa-btn-private" [disabled]="dsaWarningResponding" (click)="respondDsaWarning('remain_private')">
+        Remain private
+      </button>
+      <button type="button" class="dsa-btn-dismiss" (click)="dismissDsaWarning()" aria-label="Dismiss for now">
+        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+      </button>
+    </div>
+  </div>
+  }
+
   <!-- Payout setup banner -->
   @if (!isLoading && showPayoutSetupBanner) {
   <div class="payout-setup-banner">

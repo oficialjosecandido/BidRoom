@@ -5,6 +5,7 @@ const User = require('../models/User');
 const { getReviewScoresForUser } = require('../services/reviewService');
 const { appendModerationAudit } = require('../services/moderationAuditService');
 const { getClientIp } = require('../middleware/bidRateLimiter');
+const { emitNewNotificationToUser } = require('../services/notificationService');
 
 const router = express.Router();
 
@@ -56,7 +57,8 @@ router.get('/profile', authenticateToken, async (req, res) => {
       'professionalLegalName professionalTradeName professionalAddressLine1 professionalAddressLine2 ' +
       'professionalCity professionalRegion professionalPostalCode professionalCountry professionalContactPhone ' +
       'professionalContactEmail professionalVatId professionalSubmittedAt professionalVerifiedAt ' +
-      'professionalVerifiedByEmail professionalRejectionNote'
+      'professionalVerifiedByEmail professionalRejectionNote ' +
+      'dsaWarningIssuedAt dsaWarningAcknowledgedAt dsaWarningResponse suspectedProfessional dsaListingRestricted'
     ).lean();
     let buyerScore = null;
     let sellerScore = null;
@@ -121,6 +123,13 @@ router.get('/profile', authenticateToken, async (req, res) => {
       sellerReviewCount,
       stripeConnectOnboarded,
       sellerCompliance,
+      dsaWarning: dbUser ? {
+        warningIssuedAt: dbUser.dsaWarningIssuedAt || null,
+        acknowledgedAt: dbUser.dsaWarningAcknowledgedAt || null,
+        response: dbUser.dsaWarningResponse || null,
+        suspectedProfessional: !!dbUser.suspectedProfessional,
+        listingRestricted: !!dbUser.dsaListingRestricted
+      } : null,
       theme: customer.theme && ['light', 'dark', 'system'].includes(customer.theme) ? customer.theme : null
     });
   } catch (error) {
@@ -302,6 +311,48 @@ router.patch('/language', authenticateToken, async (req, res) => {
   } catch (error) {
     console.error('Error updating language:', error);
     res.status(500).json({ error: 'Failed to update language' });
+  }
+});
+
+/**
+ * POST /api/customers/dsa-warning-response
+ * Seller acknowledges the DSA threshold warning and declares their status:
+ *   - 'remain_private'       : stays private but is flagged internally as suspected_professional
+ *   - 'switch_professional'  : intends to submit trader details (verification handled via seller-compliance)
+ */
+router.post('/dsa-warning-response', authenticateToken, async (req, res) => {
+  try {
+    const { response } = req.body;
+    if (!['remain_private', 'switch_professional'].includes(response)) {
+      return res.status(400).json({ error: 'Invalid response. Use "remain_private" or "switch_professional".' });
+    }
+
+    const user = await User.findOne({ uid: req.user.uid }).select(
+      '_id dsaWarningIssuedAt dsaWarningAcknowledgedAt'
+    );
+    if (!user) return res.status(404).json({ error: 'User not found.' });
+    if (!user.dsaWarningIssuedAt) {
+      return res.status(400).json({ error: 'No active DSA warning for this account.' });
+    }
+
+    const now = new Date();
+    const update = {
+      dsaWarningAcknowledgedAt: now,
+      dsaWarningResponse: response
+    };
+    if (response === 'remain_private') {
+      update.suspectedProfessional = true;
+    } else {
+      // User intends to switch — clear suspected flag (they will submit trader details separately)
+      update.suspectedProfessional = false;
+      update.dsaListingRestricted = false;
+    }
+
+    await User.updateOne({ _id: user._id }, { $set: update });
+    return res.json({ ok: true, response });
+  } catch (err) {
+    console.error('POST /dsa-warning-response error:', err);
+    res.status(500).json({ error: 'Failed to record DSA warning response.' });
   }
 });
 
