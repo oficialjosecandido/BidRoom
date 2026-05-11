@@ -4,8 +4,8 @@ export const environment = {
   enableAuctions: false,
   enablePrivateRooms: false,
   enableBestOffers: true,
-  apiUrl: 'https://bidroom-backend-dev.azurewebsites.net/api',
-  defaultApiBaseUrl: 'https://bidroom-backend-dev.azurewebsites.net/api',
+  apiUrl: 'https://bidroom-backend-prod-e9eghtc0aha4e3dw.uksouth-01.azurewebsites.net/api',
+  defaultApiBaseUrl: 'https://bidroom-backend-prod-e9eghtc0aha4e3dw.uksouth-01.azurewebsites.net/api',
   auctionDurations: [
     { label: '1 hour', hours: 1 },
     { label: '7 hours', hours: 7 },
