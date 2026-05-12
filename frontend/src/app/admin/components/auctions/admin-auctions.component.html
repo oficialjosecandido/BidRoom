@@ -62,6 +62,8 @@
                   <tr>
                     <th scope="col">Listing</th>
                     <th scope="col">Category</th>
+                    <th scope="col">Auction type</th>
+                    <th scope="col">Private room</th>
                     <th scope="col">Seller</th>
                     <th scope="col" class="num">Price</th>
                     <th scope="col" class="num">Bids</th>
@@ -86,6 +88,19 @@
                         </div>
                       </td>
                       <td class="muted-cell">{{ categoryLabel(auction.category) }}</td>
+                      <td class="format-cell">{{ auctionFormatLabel(auction) }}</td>
+                      <td class="private-room-cell">
+                        @if (privateRoomApplies(auction)) {
+                          <span
+                            class="private-room-badge"
+                            [class.private-room-yes]="auction.allowPrivateRoom"
+                            [class.private-room-no]="!auction.allowPrivateRoom">
+                            {{ auction.allowPrivateRoom ? 'Yes' : 'No' }}
+                          </span>
+                        } @else {
+                          <span class="private-room-na">—</span>
+                        }
+                      </td>
                       <td>{{ auction.seller.firstName }} {{ auction.seller.lastName }}</td>
                       <td class="num price-cell">
                         @if (auction.auctionFormat === 'best-offer' && (auction.currentPrice == null || auction.currentPrice === 0)) {

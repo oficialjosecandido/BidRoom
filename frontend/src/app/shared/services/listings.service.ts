@@ -151,6 +151,7 @@ export interface ListingsQueryParams {
   locationCity?: string;
   /** ISO country code (e.g. US, GB) */
   locationCountry?: string;
+  isFeatured?: boolean;
   limit?: number;
   skip?: number;
   page?: number;

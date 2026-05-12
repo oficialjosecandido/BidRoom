@@ -1,6 +1,7 @@
 import { Component, OnDestroy, OnInit, AfterViewInit, inject, ElementRef, ViewChild, HostListener } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslateService } from '@ngx-translate/core';
+import { ListingsService, Listing } from '../../../shared/services/listings.service';
 
 @Component({
   selector: 'app-home',
@@ -11,6 +12,7 @@ import { TranslateService } from '@ngx-translate/core';
 })
 export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
   private translate = inject(TranslateService);
+  private listingsService = inject(ListingsService);
 
   @ViewChild('carouselWrap') carouselWrap!: ElementRef<HTMLElement>;
   @ViewChild('carouselTrack') carouselTrack!: ElementRef<HTMLElement>;
@@ -19,23 +21,24 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
   carouselCurrent = 0;
   carouselTransform = 'translateX(0)';
 
-  heroBid = '€ 8.400';
-  heroTimer = '4:23:07';
+  featuredListings: Listing[] = [];
+  activeListings: Listing[] = [];
+
+  // private room visualizer
   rvBid = '€ 12.800';
   rvTimer = '00:42';
   rvActiveIdx = 0;
 
-  readonly CARDS = 5;
-
-  private readonly hbids = ['€ 8.400', '€ 8.750', '€ 9.100', '€ 9.600'];
   private readonly rbids = ['€ 12.800', '€ 13.200', '€ 13.600', '€ 14.200', '€ 14.900'];
-  private hi = 0;
-  private hs = 15787;
   private ri = 0;
   private rs = 42;
   private timers: ReturnType<typeof setInterval>[] = [];
   private autoTimer: ReturnType<typeof setInterval> | null = null;
   private touchStartX = 0;
+
+  get CARDS(): number {
+    return this.featuredListings.length || 1;
+  }
 
   get currentLang(): string {
     return this.translate.currentLang || 'pt';
@@ -51,19 +54,10 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
     const pref = localStorage.getItem('bidroom-theme-preference') || 'dark';
     this.isLight = pref === 'light';
 
-    this.timers.push(setInterval(() => {
-      this.hi = (this.hi + 1) % this.hbids.length;
-      this.heroBid = this.hbids[this.hi];
-    }, 3500));
+    this.loadFeaturedListings();
+    this.loadActiveListings();
 
-    this.timers.push(setInterval(() => {
-      if (this.hs > 0) this.hs--;
-      const h = Math.floor(this.hs / 3600);
-      const m = Math.floor((this.hs % 3600) / 60);
-      const s = this.hs % 60;
-      this.heroTimer = `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
-    }, 1000));
-
+    // private room timer animation
     this.timers.push(setInterval(() => {
       this.rvActiveIdx = (this.rvActiveIdx + 1) % 5;
     }, 2000));
@@ -95,6 +89,31 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
     this.updateCarouselTransform();
   }
 
+  private loadFeaturedListings(): void {
+    this.listingsService.getListings({ status: 'active', isFeatured: true, limit: 5, sort: 'deadline' }).subscribe({
+      next: res => {
+        this.featuredListings = res.listings;
+        // If no featured listings, fall back to first 5 active
+        if (this.featuredListings.length === 0) {
+          this.listingsService.getListings({ status: 'active', limit: 5, sort: 'deadline' }).subscribe({
+            next: r => {
+              this.featuredListings = r.listings;
+              setTimeout(() => { this.carouselCurrent = 0; this.updateCarouselTransform(); }, 0);
+            }
+          });
+        } else {
+          setTimeout(() => { this.carouselCurrent = 0; this.updateCarouselTransform(); }, 0);
+        }
+      }
+    });
+  }
+
+  private loadActiveListings(): void {
+    this.listingsService.getListings({ status: 'active', limit: 3, sort: 'deadline' }).subscribe({
+      next: res => { this.activeListings = res.listings; }
+    });
+  }
+
   toggleTheme(): void {
     this.isLight = !this.isLight;
     localStorage.setItem('bidroom-theme-preference', this.isLight ? 'light' : 'dark');
@@ -107,6 +126,7 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   goTo(idx: number, skipAuto = false): void {
+    if (this.featuredListings.length === 0) return;
     this.carouselCurrent = ((idx % this.CARDS) + this.CARDS) % this.CARDS;
     this.updateCarouselTransform();
     if (!skipAuto) this.resetCarouselAuto();
@@ -119,6 +139,49 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
   onCarouselTouchEnd(e: TouchEvent): void {
     const dx = e.changedTouches[0].clientX - this.touchStartX;
     if (Math.abs(dx) > 40) this.goTo(this.carouselCurrent + (dx < 0 ? 1 : -1));
+  }
+
+  /** Price to display for a listing (currentPrice, startingPrice, or minimumOfferPrice). */
+  listingPrice(l: Listing): string {
+    const p = l.currentPrice || l.startingPrice || l.minimumOfferPrice || 0;
+    return `€ ${p.toLocaleString('pt-PT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+  }
+
+  /** Time remaining label for a listing. */
+  timeRemaining(l: Listing): string {
+    if (l.auctionFormat === 'best-offer') {
+      return `${l.bidCount || 0} ofertas`;
+    }
+    const end = new Date(l.endDate).getTime();
+    const now = Date.now();
+    const diff = end - now;
+    if (diff <= 0) return 'Terminado';
+    const h = Math.floor(diff / 3600000);
+    const m = Math.floor((diff % 3600000) / 60000);
+    const s = Math.floor((diff % 60000) / 1000);
+    if (h >= 24) {
+      const d = Math.floor(h / 24);
+      return `${d}d ${h % 24}h`;
+    }
+    if (h >= 1) return `${h}h ${m}m`;
+    return `${m}:${String(s).padStart(2, '0')}`;
+  }
+
+  /** Badge label for a listing card. */
+  listingBadge(l: Listing): string {
+    if (l.auctionFormat === 'best-offer') return 'Melhor oferta';
+    if (l.allowPrivateRoom) return 'Sala Privada';
+    return 'Ao vivo';
+  }
+
+  /** True if badge should use "live" (gold) style. */
+  isLiveBadge(l: Listing): boolean {
+    return l.auctionFormat !== 'best-offer' && !l.allowPrivateRoom;
+  }
+
+  /** Primary image for a listing. */
+  listingImage(l: Listing): string {
+    return l.images?.[0] || '';
   }
 
   private updateCarouselTransform(): void {
@@ -135,8 +198,10 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private startCarouselAuto(): void {
     this.autoTimer = setInterval(() => {
-      this.carouselCurrent = (this.carouselCurrent + 1) % this.CARDS;
-      this.updateCarouselTransform();
+      if (this.featuredListings.length > 1) {
+        this.carouselCurrent = (this.carouselCurrent + 1) % this.CARDS;
+        this.updateCarouselTransform();
+      }
     }, 4000);
   }
 

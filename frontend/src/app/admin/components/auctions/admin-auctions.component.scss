@@ -131,6 +131,42 @@ table.auctions-row-table {
     white-space: nowrap;
   }
 
+  .format-cell {
+    font-size: 13px;
+    font-weight: 600;
+    color: #334155;
+    white-space: nowrap;
+  }
+
+  .private-room-cell {
+    white-space: nowrap;
+  }
+
+  .private-room-badge {
+    display: inline-flex;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+
+    &.private-room-yes {
+      background: #ede9fe;
+      color: #5b21b6;
+    }
+
+    &.private-room-no {
+      background: #f1f5f9;
+      color: #64748b;
+    }
+  }
+
+  .private-room-na {
+    color: #94a3b8;
+    font-size: 14px;
+  }
+
   .price-cell {
     font-weight: 600;
   }

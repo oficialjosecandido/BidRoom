@@ -204,7 +204,8 @@ router.get('/statistics', authenticateToken, requireAdmin, async (req, res) => {
       liveActiveAuctions,
       totalAuctionsListed,
       openDisputes,
-      totalTransactions
+      totalTransactions,
+      listingSegmentAgg
     ] = await Promise.all([
       User.countDocuments({ isActive: true }),
       Listing.aggregate([{ $group: { _id: '$status', n: { $sum: 1 } } }]),
@@ -216,7 +217,34 @@ router.get('/statistics', authenticateToken, requireAdmin, async (req, res) => {
         status: { $in: ['active', 'ended', 'cancelled'] }
       }),
       Transaction.countDocuments({ disputeOpen: true }),
-      Transaction.countDocuments({})
+      Transaction.countDocuments({}),
+      Listing.aggregate([
+        {
+          $project: {
+            segment: {
+              $switch: {
+                branches: [
+                  {
+                    case: { $eq: [{ $ifNull: ['$auctionFormat', 'highest-bid'] }, 'best-offer'] },
+                    then: 'bestOffer'
+                  },
+                  {
+                    case: {
+                      $and: [
+                        { $eq: [{ $ifNull: ['$auctionFormat', 'highest-bid'] }, 'highest-bid'] },
+                        { $eq: ['$allowPrivateRoom', true] }
+                      ]
+                    },
+                    then: 'highestBidPrivateRoom'
+                  }
+                ],
+                default: 'highestBid'
+              }
+            }
+          }
+        },
+        { $group: { _id: '$segment', n: { $sum: 1 } } }
+      ])
     ]);
 
     const listingsByStatus = {};
@@ -228,6 +256,18 @@ router.get('/statistics', authenticateToken, requireAdmin, async (req, res) => {
 
     const totalAuctionsDraftsIncluded = listingsByStatusRows.reduce((sum, row) => sum + (row.n || 0), 0);
 
+    const listingsByAuctionSegment = {
+      bestOffer: 0,
+      highestBid: 0,
+      highestBidPrivateRoom: 0
+    };
+    for (const row of listingSegmentAgg) {
+      const k = row._id;
+      if (k === 'bestOffer' || k === 'highestBid' || k === 'highestBidPrivateRoom') {
+        listingsByAuctionSegment[k] = row.n || 0;
+      }
+    }
+
     res.json({
       totalUsers,
       /** Published listings (excluding draft): matches legacy "totalAuctions" meaning */
@@ -236,6 +276,8 @@ router.get('/statistics', authenticateToken, requireAdmin, async (req, res) => {
       activeAuctions: liveActiveAuctions,
       /** All listing documents by status label */
       listingsByStatus,
+      /** Inventory by auction format (all statuses; sums to totalListingsAllStatuses) */
+      listingsByAuctionSegment,
       totalListingsAllStatuses: totalAuctionsDraftsIncluded,
       openDisputes,
       totalTransactions

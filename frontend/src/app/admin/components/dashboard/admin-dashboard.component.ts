@@ -71,6 +71,11 @@ export class AdminDashboardComponent implements OnInit {
         this.statistics = {
           ...stats,
           listingsByStatus: stats.listingsByStatus ?? {},
+          listingsByAuctionSegment: stats.listingsByAuctionSegment ?? {
+            bestOffer: 0,
+            highestBid: 0,
+            highestBidPrivateRoom: 0
+          },
           totalListingsAllStatuses:
             stats.totalListingsAllStatuses ?? this.sumStatuses(stats.listingsByStatus),
           openDisputes: stats.openDisputes ?? 0,
@@ -196,6 +201,31 @@ export class AdminDashboardComponent implements OnInit {
       label: this.statusLabel(key),
       count: m[key] ?? 0
     }));
+  }
+
+  listingAuctionRows(): { key: string; label: string; hint?: string; count: number }[] {
+    const seg = this.statistics?.listingsByAuctionSegment;
+    return [
+      { key: 'best-offer', label: 'Best offer', count: seg?.bestOffer ?? 0 },
+      {
+        key: 'highest-bid',
+        label: 'Highest bid',
+        hint: 'Standard (no private room)',
+        count: seg?.highestBid ?? 0
+      },
+      {
+        key: 'highest-bid-private',
+        label: 'Highest bid',
+        hint: 'Private room enabled',
+        count: seg?.highestBidPrivateRoom ?? 0
+      }
+    ];
+  }
+
+  auctionInventoryTotal(): number {
+    const seg = this.statistics?.listingsByAuctionSegment;
+    if (!seg) return 0;
+    return (seg.bestOffer ?? 0) + (seg.highestBid ?? 0) + (seg.highestBidPrivateRoom ?? 0);
   }
 
   private sumStatuses(by?: Record<string, number>): number {

@@ -21,125 +21,48 @@
   <div class="hero-bg"></div>
 
   <!-- carousel -->
-  <div class="carousel-wrap" #carouselWrap
-    (touchstart)="onCarouselTouchStart($event)"
-    (touchend)="onCarouselTouchEnd($event)">
-    <div class="carousel-track" #carouselTrack [style.transform]="carouselTransform">
-
-      <div class="hc" [class.active]="carouselCurrent === 0" (click)="goTo(0)">
-        <div class="hc-img">
-          <span class="hc-img-emoji">⌚</span>
-          <div class="hc-live"><span class="hc-dot"></span>Ao vivo</div>
-        </div>
-        <div class="hc-body">
-          <div class="hc-cat">Relógios · Vintage</div>
-          <div class="hc-title">Rolex Submariner 5512 · 1967 · Box &amp; Papers</div>
-          <div class="hc-row">
-            <div>
-              <div class="hc-bid-l">Lance actual</div>
-              <div class="hc-bid">{{ heroBid }}</div>
+  @if (featuredListings.length > 0) {
+    <div class="carousel-wrap" #carouselWrap
+      (touchstart)="onCarouselTouchStart($event)"
+      (touchend)="onCarouselTouchEnd($event)">
+      <div class="carousel-track" #carouselTrack [style.transform]="carouselTransform">
+        @for (listing of featuredListings; track listing._id; let i = $index) {
+          <div class="hc" [class.active]="carouselCurrent === i" (click)="goTo(i)">
+            <div class="hc-img" [style.background]="listingImage(listing) ? 'none' : ''">
+              @if (listingImage(listing)) {
+                <img [src]="listingImage(listing)" [alt]="listing.title" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0" />
+              } @else {
+                <span class="hc-img-emoji">🏷</span>
+              }
+              <div class="hc-live" [style]="isLiveBadge(listing) ? '' : 'background:rgba(9,9,9,.7);border-color:rgba(240,237,232,.15);color:var(--sub)'">
+                @if (isLiveBadge(listing)) { <span class="hc-dot"></span> }
+                {{ listingBadge(listing) }}
+              </div>
             </div>
-            <div class="hc-time">
-              <div class="hc-time-l">Termina em</div>
-              <div class="hc-time-v">{{ heroTimer }}</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="hc" [class.active]="carouselCurrent === 1" (click)="goTo(1)">
-        <div class="hc-img" style="background:linear-gradient(135deg,#1a1510 0%,#111 100%)">
-          <span class="hc-img-emoji">🎨</span>
-          <div class="hc-live"><span class="hc-dot"></span>Ao vivo</div>
-        </div>
-        <div class="hc-body">
-          <div class="hc-cat">Arte · Modernismo Português</div>
-          <div class="hc-title">Vieira da Silva · Composição, 1958 · Óleo sobre tela</div>
-          <div class="hc-row">
-            <div>
-              <div class="hc-bid-l">Lance actual</div>
-              <div class="hc-bid">€ 24.000</div>
-            </div>
-            <div class="hc-time">
-              <div class="hc-time-l">Termina em</div>
-              <div class="hc-time-v">1d 6h</div>
+            <div class="hc-body">
+              <div class="hc-cat">{{ listing.category }}{{ listing.locationCity ? ' · ' + listing.locationCity : '' }}</div>
+              <div class="hc-title">{{ listing.title }}</div>
+              <div class="hc-row">
+                <div>
+                  <div class="hc-bid-l">{{ listing.auctionFormat === 'best-offer' ? 'Oferta mais alta' : 'Lance actual' }}</div>
+                  <div class="hc-bid">{{ listingPrice(listing) }}</div>
+                </div>
+                <div class="hc-time">
+                  <div class="hc-time-l">{{ listing.auctionFormat === 'best-offer' ? 'Ofertas' : 'Termina em' }}</div>
+                  <div class="hc-time-v">{{ timeRemaining(listing) }}</div>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
+        }
       </div>
-
-      <div class="hc" [class.active]="carouselCurrent === 2" (click)="goTo(2)">
-        <div class="hc-img" style="background:linear-gradient(135deg,#0f1318 0%,#111 100%)">
-          <span class="hc-img-emoji">🏎</span>
-          <div class="hc-live" style="background:rgba(9,9,9,.7);border-color:rgba(240,237,232,.15);color:var(--sub)">Melhor oferta</div>
-        </div>
-        <div class="hc-body">
-          <div class="hc-cat">Automóveis · Clássicos</div>
-          <div class="hc-title">Ferrari 308 GTB · 1977 · 48.000 km · Doc. completa</div>
-          <div class="hc-row">
-            <div>
-              <div class="hc-bid-l">Oferta mais alta</div>
-              <div class="hc-bid">€ 58.000</div>
-            </div>
-            <div class="hc-time">
-              <div class="hc-time-l">Ofertas</div>
-              <div class="hc-time-v">5 ofertas</div>
-            </div>
-          </div>
-        </div>
+      <div class="carousel-dots">
+        @for (listing of featuredListings; track listing._id; let i = $index) {
+          <div class="cdot" [class.active]="carouselCurrent === i" (click)="goTo(i)"></div>
+        }
       </div>
-
-      <div class="hc" [class.active]="carouselCurrent === 3" (click)="goTo(3)">
-        <div class="hc-img" style="background:linear-gradient(135deg,#16100a 0%,#111 100%)">
-          <span class="hc-img-emoji">🏺</span>
-          <div class="hc-live"><span class="hc-dot"></span>Ao vivo</div>
-        </div>
-        <div class="hc-body">
-          <div class="hc-cat">Antiguidades · Arte Sacra</div>
-          <div class="hc-title">Talha dourada barroca · Séc. XVIII · Portugal</div>
-          <div class="hc-row">
-            <div>
-              <div class="hc-bid-l">Lance actual</div>
-              <div class="hc-bid">€ 5.700</div>
-            </div>
-            <div class="hc-time">
-              <div class="hc-time-l">Termina em</div>
-              <div class="hc-time-v">2h 14m</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="hc" [class.active]="carouselCurrent === 4" (click)="goTo(4)">
-        <div class="hc-img" style="background:linear-gradient(135deg,#0d1510 0%,#111 100%)">
-          <span class="hc-img-emoji">💎</span>
-          <div class="hc-live"><span class="hc-dot"></span>Ao vivo</div>
-        </div>
-        <div class="hc-body">
-          <div class="hc-cat">Joalharia · Alta joalharia</div>
-          <div class="hc-title">Cartier Panthère · Ouro 18k · Esmeraldas e diamantes</div>
-          <div class="hc-row">
-            <div>
-              <div class="hc-bid-l">Lance actual</div>
-              <div class="hc-bid">€ 14.200</div>
-            </div>
-            <div class="hc-time">
-              <div class="hc-time-l">Termina em</div>
-              <div class="hc-time-v">3h 51m</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
     </div>
-    <div class="carousel-dots">
-      <div class="cdot" [class.active]="carouselCurrent === 0" (click)="goTo(0)"></div>
-      <div class="cdot" [class.active]="carouselCurrent === 1" (click)="goTo(1)"></div>
-      <div class="cdot" [class.active]="carouselCurrent === 2" (click)="goTo(2)"></div>
-      <div class="cdot" [class.active]="carouselCurrent === 3" (click)="goTo(3)"></div>
-      <div class="cdot" [class.active]="carouselCurrent === 4" (click)="goTo(4)"></div>
-    </div>
-  </div>
+  }
 
   <div class="hero-text">
     <div class="hero-tag"><span class="hc-dot"></span>Portugal · Leilões premium</div>
@@ -198,52 +121,43 @@
       </a>
     </div>
 
-    <div class="grid">
-      <div class="lc">
-        <div class="lc-thumb-wrap">
-          <span class="lc-thumb">⌚</span>
-          <span class="lc-pill pill-live">Ao vivo</span>
-        </div>
-        <div class="lc-body">
-          <div class="lc-cat">Relógios · Vintage</div>
-          <div class="lc-title">Rolex Submariner 5512 · 1967<br>Box &amp; Papers originais</div>
-          <div class="lc-foot">
-            <div><div class="lc-pl">Lance actual</div><div class="lc-price g">€ 8.400</div></div>
-            <div><div class="lc-ml">Termina em</div><div class="lc-mv">4h 23m</div></div>
-          </div>
-        </div>
+    @if (activeListings.length > 0) {
+      <div class="grid">
+        @for (listing of activeListings; track listing._id) {
+          <a [routerLink]="['/listing', listing.slug]" class="lc" style="display:block;text-decoration:none">
+            <div class="lc-thumb-wrap">
+              @if (listingImage(listing)) {
+                <img [src]="listingImage(listing)" [alt]="listing.title" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0" />
+              } @else {
+                <span class="lc-thumb">🏷</span>
+              }
+              <span class="lc-pill" [class.pill-live]="isLiveBadge(listing)" [class.pill-offer]="!isLiveBadge(listing)">
+                {{ listingBadge(listing) }}
+              </span>
+            </div>
+            <div class="lc-body">
+              <div class="lc-cat">{{ listing.category }}{{ listing.subCategory ? ' · ' + listing.subCategory : '' }}</div>
+              <div class="lc-title">{{ listing.title }}</div>
+              <div class="lc-foot">
+                <div>
+                  <div class="lc-pl">{{ listing.auctionFormat === 'best-offer' ? 'Oferta mais alta' : 'Lance actual' }}</div>
+                  <div class="lc-price" [class.g]="listing.auctionFormat !== 'best-offer'">{{ listingPrice(listing) }}</div>
+                </div>
+                <div>
+                  <div class="lc-ml">{{ listing.auctionFormat === 'best-offer' ? 'Ofertas' : 'Termina em' }}</div>
+                  <div class="lc-mv">{{ timeRemaining(listing) }}</div>
+                </div>
+              </div>
+            </div>
+          </a>
+        }
       </div>
-
-      <div class="lc">
-        <div class="lc-thumb-wrap">
-          <span class="lc-thumb">🎨</span>
-          <span class="lc-pill pill-live">Ao vivo</span>
-        </div>
-        <div class="lc-body">
-          <div class="lc-cat">Arte · Modernismo Português</div>
-          <div class="lc-title">Vieira da Silva · Composição, 1958<br>Óleo sobre tela · 60×80 cm</div>
-          <div class="lc-foot">
-            <div><div class="lc-pl">Lance actual</div><div class="lc-price g">€ 24.000</div></div>
-            <div><div class="lc-ml">Termina em</div><div class="lc-mv">1d 6h</div></div>
-          </div>
-        </div>
+    } @else {
+      <div style="text-align:center;padding:64px 0;color:var(--sub);font-size:14px">
+        Sem leilões activos de momento.
+        <br><a routerLink="/listing/list" style="color:var(--gold);margin-top:8px;display:inline-block">Ver todos os leilões →</a>
       </div>
-
-      <div class="lc">
-        <div class="lc-thumb-wrap">
-          <span class="lc-thumb">🏎</span>
-          <span class="lc-pill pill-offer">Melhor oferta</span>
-        </div>
-        <div class="lc-body">
-          <div class="lc-cat">Automóveis · Clássicos</div>
-          <div class="lc-title">Ferrari 308 GTB · 1977<br>48.000 km · Documentação completa</div>
-          <div class="lc-foot">
-            <div><div class="lc-pl">Oferta mais alta</div><div class="lc-price">€ 58.000</div></div>
-            <div><div class="lc-ml">Ofertas</div><div class="lc-mv">5 ofertas</div></div>
-          </div>
-        </div>
-      </div>
-    </div>
+    }
   </div>
 </section>
 

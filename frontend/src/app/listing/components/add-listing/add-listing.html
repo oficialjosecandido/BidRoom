@@ -362,7 +362,7 @@
               <div class="form-group">
                 <label for="startingBid">{{ 'addListing.startingBid' | translate }}</label>
                 <div class="input-with-currency">
-                  <span class="currency">$</span>
+                  <span class="currency">€</span>
                   <input type="number" id="startingBid" formControlName="startingBid"
                     [class.error]="getFieldError('startingBid')" placeholder="0.00" min="0.01" step="0.01" />
                 </div>
@@ -373,7 +373,7 @@
               <div class="form-group">
                 <label for="buyNowPrice">{{ 'addListing.buyNowPrice' | translate }} <span class="optional-badge">optional</span></label>
                 <div class="input-with-currency">
-                  <span class="currency">$</span>
+                  <span class="currency">€</span>
                   <input type="number" id="buyNowPrice" formControlName="buyNowPrice"
                     [class.error]="getFieldError('buyNowPrice')" placeholder="0.00" min="0.01" step="0.01" />
                 </div>
@@ -390,7 +390,7 @@
             <div class="form-group">
               <label for="minimumAcceptPrice">{{ 'addListing.minimumAcceptPrice' | translate }} <span class="optional-badge">optional</span></label>
               <div class="input-with-currency">
-                <span class="currency">$</span>
+                <span class="currency">€</span>
                 <input type="number" id="minimumAcceptPrice" formControlName="minimumAcceptPrice"
                   placeholder="0.00" min="0.01" step="0.01" />
               </div>
@@ -504,7 +504,7 @@
                 </div>
               </div>
               <div class="input-with-currency flat-rate-input">
-                <span class="currency">$</span>
+                <span class="currency">€</span>
                 <input type="number" id="flatRateShipping" formControlName="flatRateShipping"
                   [class.error]="getFieldError('flatRateShipping')" placeholder="0.00" min="0" step="0.01" />
               </div>
@@ -589,7 +589,7 @@
           <p class="fee-summary-subtitle">{{ 'addListing.feeForecastSubtitle' | translate }}</p>
           <div class="fee-item fee-item-seller-fee">
             <span>{{ 'addListing.sellerBidroomFee' | translate:{ rate: sellerFeeRateDisplay } }}</span>
-            <span>${{ estimatedSellerFeeAmount().toFixed(2) }}</span>
+            <span>€{{ estimatedSellerFeeAmount().toFixed(2) }}</span>
           </div>
           <div class="fee-note">{{ 'addListing.feeNote' | translate }}</div>
         </div>
