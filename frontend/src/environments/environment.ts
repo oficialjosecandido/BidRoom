@@ -6,10 +6,11 @@ export const environment = {
   enableBestOffers: true,
   /** When APP_CONFIG.API_URL is not injected, non-localhost builds use this API base */
   defaultApiBaseUrl: 'https://bidroom-backend-prod-e9eghtc0aha4e3dw.uksouth-01.azurewebsites.net/api',
-  /** Seller commission rate (0.005 = 0.5%, 0.05 = 5%) */
-  bidroomFeeSellerRate: 0.005,
-  /** Buyer fee rate (0.005 = 0.5%, 0.05 = 5%) */
-  bidroomFeeBuyerRate: 0.005,
+  /** Seller fee: 3.5% for auctions & best-offer, 6% for private-room auctions */
+  bidroomFeeSellerRate: 0.035,
+  bidroomFeePrivateRoomRate: 0.06,
+  /** Buyer pays Stripe processing fees only — no additional BidRoom buyer fee */
+  bidroomFeeBuyerRate: 0,
   auctionDurations: [
     { label: '5 minutes', hours: 1 / 12 },
     { label: '1 hour',    hours: 1      },

@@ -63,6 +63,9 @@ npm-cache/
 ehthumbs.db
 Thumbs.db
 
+# Claude Code local config
+.claude/
+
 # Angular specific
 frontend/dist/
 frontend/.angular/
