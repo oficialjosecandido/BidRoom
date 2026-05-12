@@ -238,7 +238,7 @@
     "commission": "Commission ({{rate}} %) :",
     "paymentProcessing": "Traitement Paiement (~2,9 % + 0,30 €) :",
     "buyerFee": "Frais Stripe (payés par l'acheteur) (~2,9 % + 0,30 €) :",
-    "estimatedTotal": "Frais Totaux Estimés :",
+    "estimatedTotal": "Frais Totaux Estimés (vendeur) :",
     "feeNote": "* L'acheteur paie les frais de traitement Stripe. Les frais vendeur sont déduits du paiement.",
     "sellerDeclaration": "Je confirme être le propriétaire légal de cet article et accepter les Conditions Générales et la structure de commission de Bidroom. *",
     "previous": "← Précédent",

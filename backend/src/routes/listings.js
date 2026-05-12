@@ -1498,7 +1498,7 @@ router.post('/:id/buy-now', authenticateToken, requireActiveAccount, requireNoDi
         listingTitle: listing.title,
         winnerName: buyerName,
         winningAmount: listing.buyNowPrice,
-        commissionRate: listing.commissionRate ?? 0.005,
+        commissionRate: listing.commissionRate ?? 0.035,
         shippingCost: listing.shippingCost ?? 0,
         shippingOption: listing.shippingOption ?? 'flat-rate',
         sellerUserId

@@ -343,7 +343,7 @@
     "commission": "Commission ({{rate}}%):",
     "paymentProcessing": "Payment Processing (~2.9% + $0.30):",
     "buyerFee": "Stripe payment fee (paid by buyer) (~2.9% + €0.30):",
-    "estimatedTotal": "Estimated Total Fees:",
+    "estimatedTotal": "Estimated Total Seller Fees:",
     "feeNote": "* Buyer pays Stripe processing fees. Seller fees are deducted from the payout.",
     "sellerDeclaration": "I confirm that I am the legal owner of this item and agree to the Terms & Conditions and commission structure of Bidroom. *",
     "previous": "← Previous",
