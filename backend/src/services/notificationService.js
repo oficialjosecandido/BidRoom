@@ -709,7 +709,7 @@ async function notifySellerWinnerSelected({
   listingTitle,
   winnerName,
   winningAmount,
-  commissionRate = 0.005,
+  commissionRate = 0.035,
   shippingCost = 0,
   shippingOption = 'flat-rate',
   sellerUserId

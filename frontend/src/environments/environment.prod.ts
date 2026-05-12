@@ -2,8 +2,11 @@ export const environment = {
   production: true,
   defaultApiBaseUrl: 'http://localhost:3000',
   // defaultApiBaseUrl: 'https://bidroom-backend-dev.azurewebsites.net/api',
-  bidroomFeeSellerRate: 0.005,
-  bidroomFeeBuyerRate: 0.005,
+  /** Seller fee: 3.5% for auctions & best-offer, 6% for private-room auctions */
+  bidroomFeeSellerRate: 0.035,
+  bidroomFeePrivateRoomRate: 0.06,
+  /** Buyer pays Stripe processing fees only — no additional BidRoom buyer fee */
+  bidroomFeeBuyerRate: 0,
   auctionDurations: [
     { label: '5 minutes', hours: 1 / 12 },
     { label: '1 hour',   hours: 1  },

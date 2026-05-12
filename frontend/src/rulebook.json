@@ -2,20 +2,23 @@
   "payments": {
     "provider": "stripe-connect",
     "chargeModel": "destination-charges",
-    "bidroomFeeSellerRate": 0.04,
+    "bidroomFeeSellerRate": 0.035,
+    "bidroomFeePrivateRoomRate": 0.06,
     "bidroomFeeBuyerRate": 0,
     "stripeFeePassedToBuyer": true,
     "notes": [
-      "BidRoom charges sellers a 4% platform fee on each completed transaction (application_fee_amount on the Stripe charge).",
-      "Stripe's processing fee (~2.9% + $0.30 per transaction) is passed through to the buyer on top of the sale price.",
-      "Payment flow: buyer pays full amount (sale price + Stripe fee) → BidRoom platform account → BidRoom deducts 4% → remaining net is transferred to seller's connected Stripe account.",
-      "Sellers must onboard via Stripe Connect (Express or Standard) before they can receive payouts.",
+      "BidRoom charges sellers a 3.5% platform fee on standard auctions and best-offer listings.",
+      "BidRoom charges sellers a 6.0% platform fee on auctions with Private Room enabled.",
+      "Stripe's processing fee (~2.9% + €0.30 per transaction) is paid by the buyer on top of the sale price — BidRoom does not add any additional buyer fee.",
+      "Payment flow: buyer pays full amount (sale price + Stripe fee) → BidRoom platform account → BidRoom deducts seller fee → remaining net is transferred to seller's connected Stripe account.",
+      "Sellers must onboard via Stripe Connect before they can receive payouts.",
       "Payouts are held until the transaction reaches 'delivered' status and the auto-release window passes (see autoReleaseAfterDeliveryDays)."
     ]
   },
 
   "defaults": {
-    "bidroomFeeSellerRate": 0.04,
+    "bidroomFeeSellerRate": 0.035,
+    "bidroomFeePrivateRoomRate": 0.06,
     "bidroomFeeBuyerRate": 0,
 
     "auctionDurations": [

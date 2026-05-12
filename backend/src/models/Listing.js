@@ -213,7 +213,7 @@ const listingSchema = new mongoose.Schema({
   },
   commissionRate: {
     type: Number,
-    default: 0.005, // 0.5% default
+    default: 0.035, // 3.5% default
     min: 0,
     max: 1
   },
@@ -467,9 +467,9 @@ listingSchema.pre('save', async function(next) {
 
   // Calculate commission rate based on Private Room setting
   if (this.auctionFormat === 'highest-bid') {
-    this.commissionRate = this.allowPrivateRoom ? 0.02 : 0.005; // 2.0% or 0.5%
+    this.commissionRate = this.allowPrivateRoom ? 0.06 : 0.035; // 6.0% or 3.5%
   } else if (this.auctionFormat === 'best-offer') {
-    this.commissionRate = 0.005; // Always 0.5% for Best Offer
+    this.commissionRate = 0.035; // 3.5% for Best Offer
   }
 
   // Check if renewal is required (for listings >7 days)

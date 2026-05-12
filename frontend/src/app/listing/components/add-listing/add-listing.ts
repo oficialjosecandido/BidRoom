@@ -159,13 +159,13 @@ export class AddListing implements OnInit, OnDestroy {
   ];
 
   selectedCategory: Category | null = null;
-  /** Seller commission % for display (0.5 or 2 for private room). Base from environment. */
-  commissionRate = 0.5;
+  /** Seller commission % for display (3.5 standard, 6.0 for private room). Base from environment. */
+  commissionRate = 3.5;
 
   /** Buyer fee % for display (from environment) */
   get buyerFeeRatePct(): number {
     const rate = (environment as { bidroomFeeBuyerRate?: number }).bidroomFeeBuyerRate;
-    return rate != null ? rate * 100 : 0.5;
+    return rate != null ? rate * 100 : 0;
   }
 
   /** Whether all required fields are valid and media is present */
@@ -283,9 +283,9 @@ export class AddListing implements OnInit, OnDestroy {
     // Watch Private Room toggle for commission calculation
     const baseRatePct = ((environment as { bidroomFeeSellerRate?: number }).bidroomFeeSellerRate ?? 0.005) * 100;
     this.listingForm.get('allowPrivateRoom')?.valueChanges.subscribe(enabled => {
-      this.commissionRate = enabled ? 2.0 : baseRatePct;
+      this.commissionRate = enabled ? 6.0 : baseRatePct;
     });
-    this.commissionRate = this.listingForm.get('allowPrivateRoom')?.value ? 2.0 : baseRatePct;
+    this.commissionRate = this.listingForm.get('allowPrivateRoom')?.value ? 6.0 : baseRatePct;
   }
 
   setupFormSubscriptions(): void {
@@ -785,7 +785,7 @@ export class AddListing implements OnInit, OnDestroy {
     const minimumAcceptPrice = this.listingForm.get('minimumAcceptPrice')?.value || 0;
     const priceBasis = Math.max(startingBid, buyNowPrice, minimumAcceptPrice);
     const sellerRate = (environment as { bidroomFeeSellerRate?: number }).bidroomFeeSellerRate;
-    const rate = sellerRate != null ? (this.listingForm.get('allowPrivateRoom')?.value ? 0.02 : sellerRate) : (this.commissionRate / 100);
+    const rate = sellerRate != null ? (this.listingForm.get('allowPrivateRoom')?.value ? 0.06 : sellerRate) : (this.commissionRate / 100);
     return priceBasis * rate;
   }
 
@@ -795,8 +795,8 @@ export class AddListing implements OnInit, OnDestroy {
                       this.listingForm.get('minimumAcceptPrice')?.value || 0;
     const envSeller = (environment as { bidroomFeeSellerRate?: number }).bidroomFeeSellerRate;
     const envBuyer = (environment as { bidroomFeeBuyerRate?: number }).bidroomFeeBuyerRate;
-    const sellerRate = envSeller != null ? (this.listingForm.get('allowPrivateRoom')?.value ? 0.02 : envSeller) : (this.commissionRate / 100);
-    const buyerRate = envBuyer ?? 0.005;
+    const sellerRate = envSeller != null ? (this.listingForm.get('allowPrivateRoom')?.value ? 0.06 : envSeller) : (this.commissionRate / 100);
+    const buyerRate = envBuyer ?? 0;
     const commission = priceBasis * sellerRate;
     const buyerFee = priceBasis * buyerRate;
     const paymentProcessing = priceBasis * 0.029 + 0.30;

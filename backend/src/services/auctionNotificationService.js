@@ -1004,7 +1004,7 @@ async function handleAuctionEnd(listingId, io = null) {
           listingTitle: listingForNotify.title,
           winnerName,
           winningAmount: highestBid.amount,
-          commissionRate: listingForNotify.commissionRate ?? 0.005,
+          commissionRate: listingForNotify.commissionRate ?? 0.035,
           shippingCost: listingForNotify.shippingCost ?? 0,
           shippingOption: listingForNotify.shippingOption ?? 'flat-rate',
           sellerUserId
@@ -1121,7 +1121,7 @@ async function handleWinnerSelection(listingId, winnerBidId, io = null) {
         listingTitle: listing.title,
         winnerName,
         winningAmount: winnerBid.amount,
-        commissionRate: listing.commissionRate ?? 0.005,
+        commissionRate: listing.commissionRate ?? 0.035,
         shippingCost: listing.shippingCost ?? 0,
         shippingOption: listing.shippingOption ?? 'flat-rate',
         sellerUserId
@@ -1296,7 +1296,7 @@ async function handlePrivateRoomEnd(listingId, io = null) {
           listingTitle: listingForNotify.title,
           winnerName,
           winningAmount: highestBid.amount,
-          commissionRate: listingForNotify.commissionRate ?? 0.005,
+          commissionRate: listingForNotify.commissionRate ?? 0.035,
           shippingCost: listingForNotify.shippingCost ?? 0,
           shippingOption: listingForNotify.shippingOption ?? 'flat-rate',
           sellerUserId
@@ -1365,7 +1365,7 @@ async function handlePrivateRoomEligibleExpired(listingId, io = null) {
         const sellerUserId = listingForNotify.seller?._id?.toString?.() || listingForNotify.seller?.toString?.();
         const buyerUserId = highestBid.bidder?._id?.toString?.() || highestBid.bidder?.toString?.();
         if (sellerUserId) {
-          notifySellerWinnerSelected({ listingSlug: listingForNotify.slug, listingTitle: listingForNotify.title, winnerName, winningAmount: highestBid.amount, commissionRate: listingForNotify.commissionRate ?? 0.005, shippingCost: listingForNotify.shippingCost ?? 0, shippingOption: listingForNotify.shippingOption ?? 'flat-rate', sellerUserId }).catch(() => {});
+          notifySellerWinnerSelected({ listingSlug: listingForNotify.slug, listingTitle: listingForNotify.title, winnerName, winningAmount: highestBid.amount, commissionRate: listingForNotify.commissionRate ?? 0.035, shippingCost: listingForNotify.shippingCost ?? 0, shippingOption: listingForNotify.shippingOption ?? 'flat-rate', sellerUserId }).catch(() => {});
           if (io) emitNewNotificationToUser(io, sellerUserId).catch(() => {});
         }
         if (buyerUserId) {
@@ -1420,7 +1420,7 @@ async function handlePrivateRoomSingleAcceptance(listingId, acceptedInvitation, 
       const sellerUserId = listingForNotify.seller?._id?.toString?.() || listingForNotify.seller?.toString?.();
       const buyerUserId = winnerBid.bidder?._id?.toString?.() || winnerBid.bidder?.toString?.();
       if (sellerUserId) {
-        notifySellerWinnerSelected({ listingSlug: listingForNotify.slug, listingTitle: listingForNotify.title, winnerName, winningAmount: winnerBid.amount, commissionRate: listingForNotify.commissionRate ?? 0.005, shippingCost: listingForNotify.shippingCost ?? 0, shippingOption: listingForNotify.shippingOption ?? 'flat-rate', sellerUserId }).catch(() => {});
+        notifySellerWinnerSelected({ listingSlug: listingForNotify.slug, listingTitle: listingForNotify.title, winnerName, winningAmount: winnerBid.amount, commissionRate: listingForNotify.commissionRate ?? 0.035, shippingCost: listingForNotify.shippingCost ?? 0, shippingOption: listingForNotify.shippingOption ?? 'flat-rate', sellerUserId }).catch(() => {});
         if (io) emitNewNotificationToUser(io, sellerUserId).catch(() => {});
       }
       if (buyerUserId) {
