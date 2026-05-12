@@ -586,21 +586,10 @@
         <!-- Fee Summary -->
         <div class="fee-summary">
           <h3>{{ 'addListing.feeSummary' | translate }}</h3>
-          <div class="fee-item">
-            <span>{{ 'addListing.commission' | translate:{ rate: commissionRate } }}</span>
-            <span>${{ calculateEstimatedCommission().toFixed(2) }}</span>
-          </div>
-          <div class="fee-item">
-            <span>{{ 'addListing.paymentProcessing' | translate }}</span>
-            <span>${{ calculateEstimatedFees().paymentProcessing.toFixed(2) }}</span>
-          </div>
-          <div class="fee-item fee-item-buyer">
-            <span>{{ 'addListing.buyerFee' | translate:{ rate: buyerFeeRatePct } }}</span>
-            <span>${{ calculateEstimatedFees().buyerFee.toFixed(2) }}</span>
-          </div>
-          <div class="fee-total">
-            <span>{{ 'addListing.estimatedTotal' | translate }}</span>
-            <span>${{ calculateEstimatedFees().total.toFixed(2) }}</span>
+          <p class="fee-summary-subtitle">{{ 'addListing.feeForecastSubtitle' | translate }}</p>
+          <div class="fee-item fee-item-seller-fee">
+            <span>{{ 'addListing.sellerBidroomFee' | translate:{ rate: sellerFeeRateDisplay } }}</span>
+            <span>${{ estimatedSellerFeeAmount().toFixed(2) }}</span>
           </div>
           <div class="fee-note">{{ 'addListing.feeNote' | translate }}</div>
         </div>

@@ -53,6 +53,10 @@ frontend/yarn.lock
 # IDE files
 .vscode/
 .idea/
+
+# Claude
+claude/
+.claude/
 *.swp
 *.swo
 

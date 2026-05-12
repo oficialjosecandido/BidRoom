@@ -906,12 +906,19 @@
     background: var(--light-gray);
     border-radius: 8px;
     padding: 22px;
-    margin-bottom: 32px;
+    margin-bottom: 48px;
 
     h3 {
       font-size: 17px;
-      margin-bottom: 14px;
+      margin-bottom: 8px;
       color: var(--text-dark);
+    }
+
+    .fee-summary-subtitle {
+      font-size: 13px;
+      line-height: 1.45;
+      color: var(--text-gray);
+      margin: 0 0 16px;
     }
 
     .fee-item {
@@ -921,6 +928,13 @@
       border-bottom: 1px solid var(--border-gray);
       color: var(--text-dark);
       font-size: 14px;
+    }
+
+    .fee-item-seller-fee {
+      border-bottom: none;
+      padding-top: 4px;
+      font-size: 15px;
+      font-weight: 600;
     }
 
     .fee-total {
@@ -943,8 +957,8 @@
   }
 
   .declaration-group {
-    padding-top: 20px;
-    margin-top: 0;
+    padding-top: 0;
+    margin-top: 32px;
     margin-bottom: 24px;
   }
 

@@ -162,14 +162,6 @@ export class AddListing implements OnInit, OnDestroy {
   ];
 
   selectedCategory: Category | null = null;
-  /** Seller commission % for display (3.5 standard, 6.0 for private room). Base from environment. */
-  commissionRate = 3.5;
-
-  /** Buyer fee % for display (from environment) */
-  get buyerFeeRatePct(): number {
-    const rate = (environment as { bidroomFeeBuyerRate?: number }).bidroomFeeBuyerRate;
-    return rate != null ? rate * 100 : 0;
-  }
 
   /** Whether all required fields are valid and media is present */
   get canPublish(): boolean {
@@ -244,7 +236,6 @@ export class AddListing implements OnInit, OnDestroy {
       this.updateConditionalValidators(format);
       if (format === 'best-offer') {
         this.listingForm.patchValue({ allowPrivateRoom: false });
-        this.commissionRate = 0.5;
       }
     });
     this.updateConditionalValidators(this.listingForm.get('listingFormat')?.value || 'auction');
@@ -288,12 +279,6 @@ export class AddListing implements OnInit, OnDestroy {
       postalCodeControl?.updateValueAndValidity();
     });
 
-    // Watch Private Room toggle for commission calculation
-    const baseRatePct = ((environment as { bidroomFeeSellerRate?: number }).bidroomFeeSellerRate ?? 0.005) * 100;
-    this.listingForm.get('allowPrivateRoom')?.valueChanges.subscribe(enabled => {
-      this.commissionRate = enabled ? 6.0 : baseRatePct;
-    });
-    this.commissionRate = this.listingForm.get('allowPrivateRoom')?.value ? 6.0 : baseRatePct;
   }
 
   setupFormSubscriptions(): void {
@@ -786,29 +771,42 @@ export class AddListing implements OnInit, OnDestroy {
     this.dragOverIndex = null;
   }
 
-  /** Seller commission (BidRoom fee). */
-  calculateEstimatedCommission(): number {
-    const startingBid = this.listingForm.get('startingBid')?.value || 0;
-    const buyNowPrice = this.listingForm.get('buyNowPrice')?.value || 0;
-    const minimumAcceptPrice = this.listingForm.get('minimumAcceptPrice')?.value || 0;
-    const priceBasis = Math.max(startingBid, buyNowPrice, minimumAcceptPrice);
-    const sellerRate = (environment as { bidroomFeeSellerRate?: number }).bidroomFeeSellerRate;
-    const rate = sellerRate != null ? (this.listingForm.get('allowPrivateRoom')?.value ? 0.06 : sellerRate) : (this.commissionRate / 100);
-    return priceBasis * rate;
+  /** Price used for the fee forecast: minimum accepted price when set, else starting bid / buy now. */
+  getFeeForecastPriceBasis(): number {
+    const n = (name: string): number => {
+      const raw = this.listingForm.get(name)?.value;
+      const v = typeof raw === 'number' ? raw : parseFloat(String(raw ?? ''));
+      return Number.isFinite(v) && v > 0 ? v : 0;
+    };
+    const map = n('minimumAcceptPrice');
+    if (map > 0) return map;
+    return Math.max(n('startingBid'), n('buyNowPrice'));
   }
 
-  calculateEstimatedFees(): { commission: number; paymentProcessing: number; buyerFee: number; total: number } {
-    const priceBasis = this.listingForm.get('startingBid')?.value ||
-                      this.listingForm.get('buyNowPrice')?.value ||
-                      this.listingForm.get('minimumAcceptPrice')?.value || 0;
-    const envSeller = (environment as { bidroomFeeSellerRate?: number }).bidroomFeeSellerRate;
-    const envBuyer = (environment as { bidroomFeeBuyerRate?: number }).bidroomFeeBuyerRate;
-    const sellerRate = envSeller != null ? (this.listingForm.get('allowPrivateRoom')?.value ? 0.06 : envSeller) : (this.commissionRate / 100);
-    const buyerRate = envBuyer ?? 0;
-    const commission = priceBasis * sellerRate;
-    const buyerFee = priceBasis * buyerRate;
-    const paymentProcessing = priceBasis * 0.029 + 0.30;
-    return { commission, paymentProcessing, buyerFee, total: commission + paymentProcessing };
+  /** Decimal rate for the single Bidroom seller fee (3.5% standard, 6% private-room auction). */
+  sellerFeeRateDecimal(): number {
+    const env = environment as { bidroomFeeSellerRate?: number; bidroomFeePrivateRoomRate?: number };
+    const base = env.bidroomFeeSellerRate ?? 0.035;
+    const privateRate = env.bidroomFeePrivateRoomRate ?? 0.06;
+    const format = this.listingForm.get('listingFormat')?.value;
+    const privateRoom = !!this.listingForm.get('allowPrivateRoom')?.value;
+    if (format === 'auction' && privateRoom) return privateRate;
+    return base;
+  }
+
+  get sellerFeeRatePct(): number {
+    return this.sellerFeeRateDecimal() * 100;
+  }
+
+  /** Display string for seller fee % (e.g. 3.5 or 6). */
+  get sellerFeeRateDisplay(): string {
+    const r = this.sellerFeeRatePct;
+    return Number.isInteger(r) ? String(r) : r.toFixed(1);
+  }
+
+  /** Estimated Bidroom seller fee for the forecast price basis. */
+  estimatedSellerFeeAmount(): number {
+    return this.getFeeForecastPriceBasis() * this.sellerFeeRateDecimal();
   }
 
   async uploadImages(): Promise<string[]> {
@@ -934,7 +932,7 @@ export class AddListing implements OnInit, OnDestroy {
       buyNowPrice: formValue.buyNowPrice || null,
       minimumOfferPrice: formValue.minimumAcceptPrice || null,
       allowPrivateRoom: formValue.allowPrivateRoom,
-      commissionRate: this.commissionRate,
+      commissionRate: this.sellerFeeRatePct,
       locationCity: formValue.locationCity?.trim(),
       locationCountry: formValue.locationCountry,
       location: `${formValue.locationCity}, ${formValue.locationRegion}, ${formValue.locationCountry}`,

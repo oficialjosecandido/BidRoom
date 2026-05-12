@@ -62,10 +62,15 @@ const allowedOrigins = [
   'http://localhost:4200',
   'https://localhost:4200'
 ].filter(Boolean);
+/** Local Angular / Vite dev servers (any port). */
+const isLocalDevOrigin = (origin) =>
+  /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(origin || '');
+
 const isAllowedOrigin = (origin) => {
   if (!origin) return false;
   if (allowedOrigins.includes(origin)) return true;
   if (origin.endsWith('.azurestaticapps.net')) return true;
+  if (isLocalDevOrigin(origin)) return true;
   return false;
 };
 
@@ -73,7 +78,12 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: isAllowedOrigin,
+    origin: (origin, callback) => {
+      if (!origin) {
+        return callback(null, true);
+      }
+      return callback(null, isAllowedOrigin(origin));
+    },
     methods: ['GET', 'POST'],
     credentials: true
   }
@@ -88,11 +98,16 @@ app.set('trust proxy', 1);
 app.use(helmet());
 app.use(cors({
   origin: (origin, callback) => {
-    if (isAllowedOrigin(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error(`CORS: origin not allowed — ${origin}`));
+    // Non-browser clients send no Origin; allow (actual browsers always send Origin on cross-site requests).
+    if (!origin) {
+      return callback(null, true);
     }
+    if (isAllowedOrigin(origin)) {
+      return callback(null, true);
+    }
+    console.warn('[CORS] blocked origin:', origin);
+    // Do not pass Error — that skips CORS headers and the browser reports a misleading preflight failure.
+    return callback(null, false);
   },
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Device-Fingerprint'],
