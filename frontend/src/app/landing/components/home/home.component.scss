@@ -293,6 +293,7 @@ nav {
   background: var(--s2);
   display: flex; align-items: center; justify-content: center;
   position: relative; font-size: 80px;
+  min-height: 0;
 }
 .lc-thumb { transition: transform .5s cubic-bezier(.25,.46,.45,.94); opacity: .1; user-select: none; line-height: 1; }
 .lc-pill {

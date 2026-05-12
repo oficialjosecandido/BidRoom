@@ -771,7 +771,7 @@ export class AddListing implements OnInit, OnDestroy {
     this.dragOverIndex = null;
   }
 
-  /** Price used for the fee forecast: minimum accepted price when set, else starting bid / buy now. */
+  /** Price used for the fee forecast: minimum accepted price when set, else starting bid (auction) or buy now (best-offer). */
   getFeeForecastPriceBasis(): number {
     const n = (name: string): number => {
       const raw = this.listingForm.get(name)?.value;
@@ -780,7 +780,9 @@ export class AddListing implements OnInit, OnDestroy {
     };
     const map = n('minimumAcceptPrice');
     if (map > 0) return map;
-    return Math.max(n('startingBid'), n('buyNowPrice'));
+    const format = this.listingForm.get('listingFormat')?.value;
+    if (format === 'auction') return n('startingBid');
+    return n('buyNowPrice') || n('startingBid');
   }
 
   /** Decimal rate for the single Bidroom seller fee (3.5% standard, 6% private-room auction). */

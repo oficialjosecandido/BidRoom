@@ -86,6 +86,7 @@ router.get('/', async (req, res) => {
       maxPrice,
       minBids,
       listingType,
+      isFeatured,
       status = 'active',
       search,
       condition,
@@ -119,7 +120,11 @@ router.get('/', async (req, res) => {
     if (listingType) {
       query.listingType = listingType;
     }
-    
+
+    if (isFeatured === 'true') {
+      query.isFeatured = true;
+    }
+
     if (minPrice || maxPrice) {
       query.currentPrice = {};
       if (minPrice) query.currentPrice.$gte = parseFloat(minPrice);

@@ -6,7 +6,6 @@ import { Subscription } from 'rxjs';
 import { filter, finalize, take, timeout } from 'rxjs/operators';
 import { MAX_DISPLAYED_BIDS, EMAIL_REGEX } from '../../../shared/config/listing.constants';
 import Swal from 'sweetalert2';
-import { HeaderComponent } from '../../../shared/components/header/header.component';
 import { ListingsService, Listing } from '../../../shared/services/listings.service';
 import { BidsService, Bid } from '../../../shared/services/bids.service';
 import { OffersService, Offer } from '../../../shared/services/offers.service';
@@ -24,7 +23,7 @@ import { FollowService, FollowStatus } from '../../../shared/services/follow.ser
 @Component({
   selector: 'app-listing-details',
   standalone: true,
-  imports: [CommonModule, FormsModule, HeaderComponent, TranslateModule, RouterLink, ReportModalComponent],
+  imports: [CommonModule, FormsModule, TranslateModule, RouterLink, ReportModalComponent],
   templateUrl: './listing-details.component.html',
   styleUrls: ['./listing-details.component.scss']
 })
@@ -44,6 +43,8 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
   private kycService = inject(KycService);
   private followService = inject(FollowService);
   private cdr = inject(ChangeDetectorRef);
+
+  isLight = false;
 
   listing: Listing | null = null;
   loading = true;
@@ -108,6 +109,7 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     window.scrollTo(0, 0);
+    this.isLight = (localStorage.getItem('bidroom-theme-preference') || 'dark') === 'light';
     const slug = this.route.snapshot.paramMap.get('slug');
     if (slug) {
       this.loadListing(slug);
@@ -328,13 +330,13 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
     this.activeImageIndex = index;
   }
 
+  toggleTheme(): void {
+    this.isLight = !this.isLight;
+    localStorage.setItem('bidroom-theme-preference', this.isLight ? 'light' : 'dark');
+  }
+
   formatPrice(price: number): string {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 2
-    }).format(price);
+    return `€ ${price.toLocaleString('pt-PT', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
   }
 
   startCountdown(): void {
@@ -1320,6 +1322,11 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
   getFormattedDescription(): string {
     if (!this.listing?.description) return '';
     return this.listing.description.replace(/\n/g, '<br>');
+  }
+
+  getDescriptionByline(): string {
+    const d = this.listing?.description || '';
+    return d.length > 180 ? d.slice(0, 180).trimEnd() + '…' : d;
   }
 
   /** Format a date string for display in bid/offer history (e.g. "Jan 5, 2025, 02:30 PM"). */

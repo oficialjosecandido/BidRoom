@@ -124,4 +124,15 @@ export class AdminAuctionsComponent implements OnInit {
   bidCount(auction: Listing): number {
     return auction.bidCount ?? 0;
   }
+
+  /** Highest-bid auctions can enable private room; best-offer never does. */
+  privateRoomApplies(auction: Listing): boolean {
+    return (auction.auctionFormat ?? 'highest-bid') === 'highest-bid';
+  }
+
+  auctionFormatLabel(auction: Listing): string {
+    const fmt = auction.auctionFormat ?? 'highest-bid';
+    if (fmt === 'best-offer') return 'Best offer';
+    return 'Highest bid';
+  }
 }

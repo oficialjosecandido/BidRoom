@@ -5,12 +5,20 @@ import { API_CONFIG } from '../../shared/config/api.config';
 import { Listing } from '../../shared/services/listings.service';
 import { Transaction } from '../../shared/services/transactions.service';
 
+export interface AdminListingsByAuctionSegment {
+  bestOffer: number;
+  highestBid: number;
+  highestBidPrivateRoom: number;
+}
+
 export interface AdminStatistics {
   totalUsers: number;
   /** Published listings only (active, ended, cancelled) */
   totalAuctions: number;
   activeAuctions: number;
   listingsByStatus: Record<string, number>;
+  /** Counts by auction format (all statuses; should sum to totalListingsAllStatuses) */
+  listingsByAuctionSegment?: AdminListingsByAuctionSegment;
   totalListingsAllStatuses: number;
   openDisputes: number;
   totalTransactions: number;
@@ -71,6 +79,32 @@ export interface AdminTransactionsQueryParams {
   page?: number;
   limit?: number;
   status?: string;
+}
+
+export interface AdminReport {
+  _id: string;
+  reportType: 'listing' | 'user';
+  targetId: string;
+  reportedBy: { _id: string; firstName: string; lastName: string; email: string };
+  reason: 'fraud_scam' | 'offensive_content' | 'prohibited_item' | 'spam' | 'off_platform_transaction' | 'other';
+  description: string | null;
+  status: 'pending' | 'reviewed' | 'resolved' | 'dismissed';
+  adminNotes: string | null;
+  resolvedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AdminReportsResponse {
+  reports: AdminReport[];
+  total: number;
+}
+
+export interface AdminReportsQueryParams {
+  page?: number;
+  limit?: number;
+  status?: string;
+  reportType?: string;
 }
 
 export type AdminSnapshotComparisonMode =
@@ -198,5 +232,18 @@ export class AdminService {
       `${this.apiUrl}/disputes/${transactionId}/ruling`,
       payload
     );
+  }
+
+  getReports(params?: AdminReportsQueryParams): Observable<AdminReportsResponse> {
+    let httpParams = new HttpParams();
+    if (params?.page != null) httpParams = httpParams.set('page', String(params.page));
+    if (params?.limit != null) httpParams = httpParams.set('limit', String(params.limit));
+    if (params?.status && params.status !== 'all') httpParams = httpParams.set('status', params.status);
+    if (params?.reportType && params.reportType !== 'all') httpParams = httpParams.set('reportType', params.reportType);
+    return this.http.get<AdminReportsResponse>(`${this.apiUrl}/reports`, { params: httpParams });
+  }
+
+  updateReport(id: string, payload: { status: string; adminNotes?: string }): Observable<{ report: AdminReport }> {
+    return this.http.patch<{ report: AdminReport }>(`${this.apiUrl}/reports/${id}`, payload);
   }
 }
