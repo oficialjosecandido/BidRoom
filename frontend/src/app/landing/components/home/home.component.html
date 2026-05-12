@@ -1,338 +1,365 @@
-<div class="pg" [class.dark]="!isLight" [class.light]="isLight">
-<h2 class="sr-only">BidRoom.pt — leilões premium em Portugal. Disponível em modo claro e escuro, com referências aos azulejos portugueses no modo claro.</h2>
-
-<!-- AZULEJO ACCENT BAR -->
-<div class="azulejo-hero"></div>
+<div class="pg" [class.light]="isLight">
 
 <!-- NAV -->
-<nav class="nav">
-  <div class="nav-brand">BidRoom<span>.pt</span></div>
-  <div class="nav-right">
-    <a class="nav-link" routerLink="/listing/list">Leilões</a>
-    <a class="nav-link" routerLink="/landing/how-it-works">Como funciona</a>
-    <a class="nav-link" routerLink="/landing" fragment="private-rooms">Salas Privadas</a>
-
-    <div class="lang-switcher">
-      <button
-        type="button"
-        class="lang-btn"
-        (click)="toggleLangMenu(); $event.stopPropagation()"
-        [attr.aria-expanded]="langMenuOpen"
-        aria-haspopup="listbox"
-        [attr.aria-label]="'landing.nav.language' | translate"
-      >
-        {{ currentLangLabel }} <span class="lang-chevron" aria-hidden="true">▾</span>
-      </button>
-      @if (langMenuOpen) {
-        <div class="lang-dropdown" role="listbox">
-          @for (lang of languages; track lang.code) {
-            <button
-              type="button"
-              role="option"
-              class="lang-option"
-              [class.active]="lang.code === currentLang"
-              (click)="switchLanguage(lang.code)"
-            >{{ lang.name }}</button>
-          }
-        </div>
-      }
-    </div>
-
-    <button
-      type="button"
-      class="theme-toggle"
-      (click)="toggleTheme()"
-      title="Alternar modo claro / escuro"
-      [attr.aria-label]="themeLabel">
-      <span class="theme-toggle-track"><span class="theme-toggle-knob"></span></span>
-      <span class="theme-toggle-label">{{ themeLabel }}</span>
-    </button>
-
-    <button type="button" class="nav-cta" routerLink="/auth/login">Entrar</button>
+<nav>
+  <div class="brand">BidRoom<em>.pt</em></div>
+  <div class="nav-c">
+    <a href="#leiloes" class="nl">Leilões</a>
+    <a href="#salas" class="nl">Salas Privadas</a>
+    <a href="#como" class="nl">Como funciona</a>
+  </div>
+  <div class="nav-r">
+    <button class="btn-th" (click)="toggleTheme()">{{ isLight ? '☽' : '☀' }}</button>
+    <button class="btn-lang" (click)="toggleLang()">{{ toggleLangLabel }}</button>
+    <a routerLink="/auth/login" class="btn-in">Entrar</a>
+    <a routerLink="/auth/signup" class="btn-go">Começar</a>
   </div>
 </nav>
 
-<div class="breadcrumb">
-  <span>Início</span><span class="bc-sep">›</span>
-  <span class="bc-current">Leilões em destaque</span>
-</div>
-
 <!-- HERO -->
 <section class="hero">
-  <div class="hero-bg">
-    <!-- Dark mode sardine SVG -->
-    <svg class="dark-only" style="position:absolute;inset:0;width:100%;height:100%" viewBox="0 0 680 440" preserveAspectRatio="xMidYMid slice" role="img">
-      <title>Ilustração decorativa modo escuro — sardinha e azulejos</title>
-      <rect width="680" height="440" fill="#0C0C0A"/>
-      <rect x="0" y="190" width="680" height="250" fill="#0B1E2B" opacity="0.45"/>
-      <path d="M0,270 Q80,254 180,270 Q280,286 380,270 Q480,254 580,270 Q630,277 680,266" fill="none" stroke="#1A3A50" stroke-width="1" opacity="0.5"/>
-      <path d="M0,292 Q100,278 200,294 Q300,310 400,292 Q500,274 600,294 Q645,300 680,288" fill="none" stroke="#152F45" stroke-width="0.7" opacity="0.35"/>
-      <rect x="0" y="330" width="680" height="110" fill="#0A1A27" opacity="0.35"/>
-      <g transform="translate(378,208) rotate(-14)">
-        <path d="M94,0 L118,-16 L122,0 L118,16 Z" fill="#1A5070" opacity="0.9"/>
-        <ellipse cx="38" cy="0" rx="88" ry="21" fill="#1D5F82"/>
-        <ellipse cx="28" cy="6" rx="68" ry="11" fill="#C8D8B0" opacity="0.28"/>
-        <path d="M-10,-21 Q18,-38 48,-23 L48,-21 Q18,-34 -10,-21 Z" fill="#1A5070" opacity="0.8"/>
-        <path d="M4,8 Q18,20 9,28 Q-4,20 4,8 Z" fill="#1A5070" opacity="0.65"/>
-        <circle cx="-40" cy="-2" r="6" fill="#0B1E2B"/>
-        <circle cx="-40" cy="-2" r="4" fill="#1A3A50"/>
-        <circle cx="-40" cy="-2" r="2.5" fill="#C9A84C" opacity="0.4"/>
-        <circle cx="-38" cy="-3.5" r="1.2" fill="#E8D08A" opacity="0.65"/>
-        <path d="M-60,2 Q-56,-2 -50,0" fill="none" stroke="#0B1E2B" stroke-width="1"/>
-        <path d="M-48,-5 Q0,-9 78,-1" fill="none" stroke="#C9A84C" stroke-width="1" opacity="0.18"/>
-      </g>
-      <g transform="translate(458,272) rotate(9) scale(0.55)" opacity="0.35">
-        <ellipse cx="38" cy="0" rx="88" ry="21" fill="#1D5F82"/>
-        <path d="M94,0 L118,-16 L122,0 L118,16 Z" fill="#1A5070"/>
-        <path d="M-10,-21 Q18,-38 48,-23 L48,-21 Q18,-34 -10,-21 Z" fill="#1A5070"/>
-        <circle cx="-40" cy="-2" r="5" fill="#0B1E2B"/>
-        <circle cx="-40" cy="-2" r="3.5" fill="#1A3A50"/>
-      </g>
-      <g transform="translate(542,18)" opacity="0.09">
-        <rect width="110" height="110" fill="none" stroke="#C9A84C" stroke-width="0.5"/>
-        <rect x="10" y="10" width="90" height="90" fill="none" stroke="#C9A84C" stroke-width="0.3"/>
-        <path d="M10,10 L100,100 M100,10 L10,100" fill="none" stroke="#C9A84C" stroke-width="0.3"/>
-        <circle cx="55" cy="55" r="26" fill="none" stroke="#C9A84C" stroke-width="0.4"/>
-        <rect x="28" y="28" width="54" height="54" fill="none" stroke="#C9A84C" stroke-width="0.3" transform="rotate(45,55,55)"/>
-      </g>
-    </svg>
+  <div class="hero-bg"></div>
 
-    <!-- Light mode azulejo watermark -->
-    <svg class="hero-azulejo-bg" style="position:absolute;inset:0;width:100%;height:100%" viewBox="0 0 680 440" preserveAspectRatio="xMidYMid slice" role="img">
-      <title>Fundo decorativo de azulejos — modo claro</title>
-      <!-- tiled azulejo pattern in the background -->
-      <defs>
-        <pattern id="landingHeroAz" x="0" y="0" width="80" height="80" patternUnits="userSpaceOnUse">
-          <rect width="80" height="80" fill="none" stroke="#1B3F6E" stroke-width="0.8"/>
-          <rect x="6" y="6" width="68" height="68" fill="none" stroke="#1B3F6E" stroke-width="0.4"/>
-          <circle cx="40" cy="40" r="22" fill="none" stroke="#2A7B9A" stroke-width="0.6"/>
-          <path d="M6,6 L74,74 M74,6 L6,74" fill="none" stroke="#1B3F6E" stroke-width="0.3"/>
-          <rect x="24" y="24" width="32" height="32" fill="none" stroke="#1B3F6E" stroke-width="0.35" transform="rotate(45,40,40)"/>
-          <circle cx="40" cy="40" r="6" fill="#2A7B9A" opacity="0.3"/>
-          <circle cx="6" cy="6" r="3" fill="#1B3F6E" opacity="0.25"/>
-          <circle cx="74" cy="6" r="3" fill="#1B3F6E" opacity="0.25"/>
-          <circle cx="6" cy="74" r="3" fill="#1B3F6E" opacity="0.25"/>
-          <circle cx="74" cy="74" r="3" fill="#1B3F6E" opacity="0.25"/>
-        </pattern>
-      </defs>
-      <rect width="680" height="440" fill="url(#landingHeroAz)"/>
-    </svg>
+  <!-- carousel -->
+  <div class="carousel-wrap" #carouselWrap
+    (touchstart)="onCarouselTouchStart($event)"
+    (touchend)="onCarouselTouchEnd($event)">
+    <div class="carousel-track" #carouselTrack [style.transform]="carouselTransform">
+
+      <div class="hc" [class.active]="carouselCurrent === 0" (click)="goTo(0)">
+        <div class="hc-img">
+          <span class="hc-img-emoji">⌚</span>
+          <div class="hc-live"><span class="hc-dot"></span>Ao vivo</div>
+        </div>
+        <div class="hc-body">
+          <div class="hc-cat">Relógios · Vintage</div>
+          <div class="hc-title">Rolex Submariner 5512 · 1967 · Box &amp; Papers</div>
+          <div class="hc-row">
+            <div>
+              <div class="hc-bid-l">Lance actual</div>
+              <div class="hc-bid">{{ heroBid }}</div>
+            </div>
+            <div class="hc-time">
+              <div class="hc-time-l">Termina em</div>
+              <div class="hc-time-v">{{ heroTimer }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="hc" [class.active]="carouselCurrent === 1" (click)="goTo(1)">
+        <div class="hc-img" style="background:linear-gradient(135deg,#1a1510 0%,#111 100%)">
+          <span class="hc-img-emoji">🎨</span>
+          <div class="hc-live"><span class="hc-dot"></span>Ao vivo</div>
+        </div>
+        <div class="hc-body">
+          <div class="hc-cat">Arte · Modernismo Português</div>
+          <div class="hc-title">Vieira da Silva · Composição, 1958 · Óleo sobre tela</div>
+          <div class="hc-row">
+            <div>
+              <div class="hc-bid-l">Lance actual</div>
+              <div class="hc-bid">€ 24.000</div>
+            </div>
+            <div class="hc-time">
+              <div class="hc-time-l">Termina em</div>
+              <div class="hc-time-v">1d 6h</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="hc" [class.active]="carouselCurrent === 2" (click)="goTo(2)">
+        <div class="hc-img" style="background:linear-gradient(135deg,#0f1318 0%,#111 100%)">
+          <span class="hc-img-emoji">🏎</span>
+          <div class="hc-live" style="background:rgba(9,9,9,.7);border-color:rgba(240,237,232,.15);color:var(--sub)">Melhor oferta</div>
+        </div>
+        <div class="hc-body">
+          <div class="hc-cat">Automóveis · Clássicos</div>
+          <div class="hc-title">Ferrari 308 GTB · 1977 · 48.000 km · Doc. completa</div>
+          <div class="hc-row">
+            <div>
+              <div class="hc-bid-l">Oferta mais alta</div>
+              <div class="hc-bid">€ 58.000</div>
+            </div>
+            <div class="hc-time">
+              <div class="hc-time-l">Ofertas</div>
+              <div class="hc-time-v">5 ofertas</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="hc" [class.active]="carouselCurrent === 3" (click)="goTo(3)">
+        <div class="hc-img" style="background:linear-gradient(135deg,#16100a 0%,#111 100%)">
+          <span class="hc-img-emoji">🏺</span>
+          <div class="hc-live"><span class="hc-dot"></span>Ao vivo</div>
+        </div>
+        <div class="hc-body">
+          <div class="hc-cat">Antiguidades · Arte Sacra</div>
+          <div class="hc-title">Talha dourada barroca · Séc. XVIII · Portugal</div>
+          <div class="hc-row">
+            <div>
+              <div class="hc-bid-l">Lance actual</div>
+              <div class="hc-bid">€ 5.700</div>
+            </div>
+            <div class="hc-time">
+              <div class="hc-time-l">Termina em</div>
+              <div class="hc-time-v">2h 14m</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="hc" [class.active]="carouselCurrent === 4" (click)="goTo(4)">
+        <div class="hc-img" style="background:linear-gradient(135deg,#0d1510 0%,#111 100%)">
+          <span class="hc-img-emoji">💎</span>
+          <div class="hc-live"><span class="hc-dot"></span>Ao vivo</div>
+        </div>
+        <div class="hc-body">
+          <div class="hc-cat">Joalharia · Alta joalharia</div>
+          <div class="hc-title">Cartier Panthère · Ouro 18k · Esmeraldas e diamantes</div>
+          <div class="hc-row">
+            <div>
+              <div class="hc-bid-l">Lance actual</div>
+              <div class="hc-bid">€ 14.200</div>
+            </div>
+            <div class="hc-time">
+              <div class="hc-time-l">Termina em</div>
+              <div class="hc-time-v">3h 51m</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+    <div class="carousel-dots">
+      <div class="cdot" [class.active]="carouselCurrent === 0" (click)="goTo(0)"></div>
+      <div class="cdot" [class.active]="carouselCurrent === 1" (click)="goTo(1)"></div>
+      <div class="cdot" [class.active]="carouselCurrent === 2" (click)="goTo(2)"></div>
+      <div class="cdot" [class.active]="carouselCurrent === 3" (click)="goTo(3)"></div>
+      <div class="cdot" [class.active]="carouselCurrent === 4" (click)="goTo(4)"></div>
+    </div>
   </div>
 
-  <div class="hero-content">
-    <div class="hero-eyebrow">
-      <div class="hero-eyebrow-line"></div>
-      <div class="hero-eyebrow-text">Portugal · Lançamento 2026</div>
-    </div>
-    <div class="hero-title">Leilões de<br>alto valor,<br><em>feitos bem.</em></div>
-    <div class="hero-subtitle">A primeira plataforma portuguesa de leilões premium com salas privadas em tempo real, reputação verificada e pagamentos seguros.</div>
-    <div class="hero-actions">
-      <button type="button" class="btn-primary" routerLink="/listing/list">Explorar leilões</button>
-      <button type="button" class="btn-ghost" routerLink="/landing/how-it-works">Como funciona</button>
+  <div class="hero-text">
+    <div class="hero-tag"><span class="hc-dot"></span>Portugal · Leilões premium</div>
+    <h1 class="hero-title">Compre o<br><strong>extraordinário.</strong></h1>
+    <p class="hero-sub">Leilões em tempo real para relógios, arte e peças únicas.</p>
+    <div class="hero-cta">
+      <a routerLink="/listing/list" class="btn-hp">Explorar leilões</a>
+      <a href="#como" class="btn-hg">Como funciona</a>
     </div>
   </div>
 
-  <div class="hero-live-badge">
-    <div class="live-dot"></div>
-    <span class="live-text">Ao vivo agora</span>
-    <span class="live-price">€12.400</span>
+  <div class="scroll-hint">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+      <path d="M12 5v14M5 12l7 7 7-7"/>
+    </svg>
   </div>
 </section>
 
-<!-- STATS BAND -->
-<div class="azulejo-band">
-  <div class="stat-item"><div class="stat-num">340+</div><div class="stat-label">Leilões activos</div></div>
-  <div class="stat-div"></div>
-  <div class="stat-item"><div class="stat-num">€2.1M</div><div class="stat-label">Volume transaccionado</div></div>
-  <div class="stat-div"></div>
-  <div class="stat-item"><div class="stat-num">98%</div><div class="stat-label">Satisfação compradores</div></div>
-  <div class="stat-div"></div>
-  <div class="stat-item"><div class="stat-num">4.8s</div><div class="stat-label">Tempo médio de lance</div></div>
-  <div class="stat-div"></div>
-  <!-- Azulejo tile showcase in the band -->
-  <div class="band-tiles">
-    <svg width="40" height="40" viewBox="0 0 40 40" role="img"><title>Azulejo 1</title><rect width="40" height="40" fill="#1B3F6E"/><rect x="3" y="3" width="34" height="34" fill="none" stroke="#E8D08A" stroke-width="0.5" opacity="0.5"/><circle cx="20" cy="20" r="11" fill="none" stroke="#3AB5C8" stroke-width="0.8" opacity="0.7"/><path d="M3,3 L37,37 M37,3 L3,37" fill="none" stroke="#E8D08A" stroke-width="0.3" opacity="0.3"/><rect x="13" y="13" width="14" height="14" fill="none" stroke="#3AB5C8" stroke-width="0.5" opacity="0.5" transform="rotate(45,20,20)"/><circle cx="20" cy="20" r="3" fill="#E8D08A" opacity="0.4"/></svg>
-    <svg width="40" height="40" viewBox="0 0 40 40" role="img"><title>Azulejo 2</title><rect width="40" height="40" fill="#2A7B9A"/><rect x="3" y="3" width="34" height="34" fill="none" stroke="#fff" stroke-width="0.4" opacity="0.3"/><path d="M20,4 Q28,12 36,20 Q28,28 20,36 Q12,28 4,20 Q12,12 20,4 Z" fill="none" stroke="#E8F8FF" stroke-width="0.7" opacity="0.5"/><circle cx="20" cy="20" r="5" fill="#E8D08A" opacity="0.35"/></svg>
-    <svg width="40" height="40" viewBox="0 0 40 40" role="img"><title>Azulejo 3</title><rect width="40" height="40" fill="#F8F4EE"/><rect x="3" y="3" width="34" height="34" fill="none" stroke="#1B3F6E" stroke-width="0.6" opacity="0.5"/><circle cx="20" cy="20" r="12" fill="none" stroke="#1B3F6E" stroke-width="0.8" opacity="0.5"/><path d="M3,3 L37,37 M37,3 L3,37" fill="none" stroke="#2A7B9A" stroke-width="0.4" opacity="0.4"/><rect x="14" y="14" width="12" height="12" fill="none" stroke="#1B3F6E" stroke-width="0.5" opacity="0.4" transform="rotate(45,20,20)"/><circle cx="20" cy="20" r="3" fill="#2A7B9A" opacity="0.4"/></svg>
-    <svg width="40" height="40" viewBox="0 0 40 40" role="img"><title>Azulejo 4</title><rect width="40" height="40" fill="#7E57C2"/><circle cx="20" cy="20" r="13" fill="none" stroke="#E8D08A" stroke-width="0.6" opacity="0.4"/><path d="M20,4 L36,20 L20,36 L4,20 Z" fill="none" stroke="#E8D08A" stroke-width="0.5" opacity="0.35"/><circle cx="20" cy="20" r="4" fill="#E8D08A" opacity="0.3"/></svg>
+<!-- NUMBERS -->
+<div class="numbers">
+  <div class="wrap">
+    <div class="numbers-inner">
+      <div class="num">
+        <span class="num-val">4.200+</span>
+        <span class="num-label">Leilões realizados</span>
+      </div>
+      <div class="num">
+        <span class="num-val">€ 2.8M</span>
+        <span class="num-label">Transacionado</span>
+      </div>
+      <div class="num">
+        <span class="num-val">98%</span>
+        <span class="num-label">Conclusão</span>
+      </div>
+      <div class="num">
+        <span class="num-val">0%</span>
+        <span class="num-label">Comissão para compradores</span>
+      </div>
+    </div>
   </div>
 </div>
 
 <!-- LISTINGS -->
-<section class="section">
-  <div class="section-eyebrow">Em destaque</div>
-  <div class="section-title">Leilões em curso</div>
-  <div class="listings-grid">
-    <div class="listing-card">
-      <div class="listing-img">
-        <svg width="80" height="80" viewBox="0 0 80 80" role="img"><title>Relógio de luxo</title><circle cx="40" cy="40" r="26" fill="#1A1A18" stroke="#C9A84C" stroke-width="0.7" opacity="0.5"/><circle cx="40" cy="40" r="18" fill="none" stroke="#2A2A28" stroke-width="0.4"/><line x1="40" y1="24" x2="40" y2="40" stroke="#E8D08A" stroke-width="1.4" stroke-linecap="round"/><line x1="40" y1="40" x2="51" y2="40" stroke="#C9A84C" stroke-width="1" stroke-linecap="round"/><circle cx="40" cy="40" r="2" fill="#C9A84C"/></svg>
-        <div class="l-badge live">Ao vivo</div>
+<section id="leiloes" class="listings-section">
+  <div class="wrap">
+    <div class="sh">
+      <div class="sh-left">
+        <div class="sec-eye"><span class="eye-dot"></span>Ao vivo agora</div>
+        <h2 class="sec-title"><strong>Leilões</strong> activos</h2>
       </div>
-      <div class="listing-body">
-        <div class="listing-title">Patek Philippe Ref. 5711</div>
-        <div class="listing-meta">Relógios · Genebra, 2019</div>
-        <div class="listing-footer">
-          <div><div class="listing-price-lbl">Lance actual</div><div class="listing-price">€58.200</div></div>
-          <div class="listing-timer">02:14:38</div>
+      <a routerLink="/listing/list" class="see-all">
+        Ver todos
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M1 6h10M7 2l4 4-4 4"/>
+        </svg>
+      </a>
+    </div>
+
+    <div class="grid">
+      <div class="lc">
+        <div class="lc-thumb-wrap">
+          <span class="lc-thumb">⌚</span>
+          <span class="lc-pill pill-live">Ao vivo</span>
+        </div>
+        <div class="lc-body">
+          <div class="lc-cat">Relógios · Vintage</div>
+          <div class="lc-title">Rolex Submariner 5512 · 1967<br>Box &amp; Papers originais</div>
+          <div class="lc-foot">
+            <div><div class="lc-pl">Lance actual</div><div class="lc-price g">€ 8.400</div></div>
+            <div><div class="lc-ml">Termina em</div><div class="lc-mv">4h 23m</div></div>
+          </div>
         </div>
       </div>
-    </div>
-    <div class="listing-card">
-      <div class="listing-img">
-        <svg width="70" height="85" viewBox="0 0 70 85" role="img"><title>Garrafa de vinho</title><rect x="24" y="7" width="22" height="8" rx="2" fill="#2A1A0A" stroke="#3A2A1A" stroke-width="0.5"/><rect x="18" y="15" width="34" height="60" rx="5" fill="#1A3A1A" stroke="#2A4A2A" stroke-width="0.7"/><rect x="22" y="30" width="26" height="20" rx="2" fill="none" stroke="#C9A84C" stroke-width="0.5" opacity="0.5"/></svg>
-        <div class="l-badge priv">Sala Privada</div>
-      </div>
-      <div class="listing-body">
-        <div class="listing-title">Barca Velha 1985 — Magnum</div>
-        <div class="listing-meta">Vinhos · Douro, Portugal</div>
-        <div class="listing-footer">
-          <div><div class="listing-price-lbl">Lance actual</div><div class="listing-price">€4.800</div></div>
-          <div class="listing-timer">00:47:12</div>
+
+      <div class="lc">
+        <div class="lc-thumb-wrap">
+          <span class="lc-thumb">🎨</span>
+          <span class="lc-pill pill-live">Ao vivo</span>
+        </div>
+        <div class="lc-body">
+          <div class="lc-cat">Arte · Modernismo Português</div>
+          <div class="lc-title">Vieira da Silva · Composição, 1958<br>Óleo sobre tela · 60×80 cm</div>
+          <div class="lc-foot">
+            <div><div class="lc-pl">Lance actual</div><div class="lc-price g">€ 24.000</div></div>
+            <div><div class="lc-ml">Termina em</div><div class="lc-mv">1d 6h</div></div>
+          </div>
         </div>
       </div>
-    </div>
-    <div class="listing-card">
-      <div class="listing-img">
-        <svg width="85" height="80" viewBox="0 0 85 80" role="img"><title>Câmara fotográfica</title><rect x="10" y="22" width="65" height="42" rx="4" fill="#1A1E22" stroke="#2A2E32" stroke-width="0.9"/><rect x="24" y="14" width="22" height="12" rx="3" fill="#151820" stroke="#252830" stroke-width="0.7"/><circle cx="42" cy="43" r="14" fill="#111518" stroke="#C9A84C" stroke-width="0.7" opacity="0.45"/><circle cx="42" cy="43" r="9" fill="#0E1215"/><circle cx="42" cy="43" r="5" fill="#1A1E22"/></svg>
-        <div class="l-badge offer">Melhor Oferta</div>
-      </div>
-      <div class="listing-body">
-        <div class="listing-title">Leica M6 TTL — 0.85x</div>
-        <div class="listing-meta">Fotografia · Lisboa, 2001</div>
-        <div class="listing-footer">
-          <div><div class="listing-price-lbl">Preço mínimo</div><div class="listing-price">€2.100</div></div>
-          <div class="listing-timer">3 ofertas</div>
+
+      <div class="lc">
+        <div class="lc-thumb-wrap">
+          <span class="lc-thumb">🏎</span>
+          <span class="lc-pill pill-offer">Melhor oferta</span>
+        </div>
+        <div class="lc-body">
+          <div class="lc-cat">Automóveis · Clássicos</div>
+          <div class="lc-title">Ferrari 308 GTB · 1977<br>48.000 km · Documentação completa</div>
+          <div class="lc-foot">
+            <div><div class="lc-pl">Oferta mais alta</div><div class="lc-price">€ 58.000</div></div>
+            <div><div class="lc-ml">Ofertas</div><div class="lc-mv">5 ofertas</div></div>
+          </div>
         </div>
       </div>
     </div>
   </div>
 </section>
-
-<!-- AZULEJO SHOWCASE (light mode only) -->
-<div class="azulejo-section">
-  <div class="azulejo-section-title">Inspiração portuguesa · Azulejos do século XVI</div>
-  <div class="tile-showcase">
-    <!-- 8 decorative azulejo tiles -->
-    <svg width="72" height="72" viewBox="0 0 72 72" role="img"><title>Azulejo padrão floral índigo</title><rect width="72" height="72" fill="#1B3F6E"/><rect x="4" y="4" width="64" height="64" fill="none" stroke="#E8D08A" stroke-width="0.6" opacity="0.5"/><circle cx="36" cy="36" r="22" fill="none" stroke="#3AB5C8" stroke-width="1" opacity="0.7"/><path d="M36,14 Q50,22 58,36 Q50,50 36,58 Q22,50 14,36 Q22,22 36,14Z" fill="none" stroke="#3AB5C8" stroke-width="0.7" opacity="0.5"/><path d="M36,4 L68,36 L36,68 L4,36 Z" fill="none" stroke="#E8D08A" stroke-width="0.5" opacity="0.3"/><circle cx="36" cy="36" r="8" fill="none" stroke="#3AB5C8" stroke-width="0.8" opacity="0.6"/><circle cx="36" cy="36" r="3" fill="#E8D08A" opacity="0.5"/><circle cx="4" cy="4" r="4" fill="#3AB5C8" opacity="0.4"/><circle cx="68" cy="4" r="4" fill="#3AB5C8" opacity="0.4"/><circle cx="4" cy="68" r="4" fill="#3AB5C8" opacity="0.4"/><circle cx="68" cy="68" r="4" fill="#3AB5C8" opacity="0.4"/></svg>
-    <svg width="72" height="72" viewBox="0 0 72 72" role="img"><title>Azulejo padrão geométrico turquesa</title><rect width="72" height="72" fill="#2A7B9A"/><rect x="4" y="4" width="64" height="64" fill="none" stroke="#fff" stroke-width="0.4" opacity="0.3"/><path d="M36,8 Q54,18 64,36 Q54,54 36,64 Q18,54 8,36 Q18,18 36,8Z" fill="none" stroke="#E8F8FF" stroke-width="0.9" opacity="0.55"/><rect x="20" y="20" width="32" height="32" fill="none" stroke="#E8F8FF" stroke-width="0.6" opacity="0.4" transform="rotate(45,36,36)"/><circle cx="36" cy="36" r="7" fill="#E8D08A" opacity="0.35"/><circle cx="36" cy="36" r="3" fill="#fff" opacity="0.3"/></svg>
-    <svg width="72" height="72" viewBox="0 0 72 72" role="img"><title>Azulejo padrão claro com bordado</title><rect width="72" height="72" fill="#F8F4EE"/><rect x="3" y="3" width="66" height="66" fill="none" stroke="#1B3F6E" stroke-width="0.8" opacity="0.6"/><rect x="10" y="10" width="52" height="52" fill="none" stroke="#1B3F6E" stroke-width="0.4" opacity="0.3"/><circle cx="36" cy="36" r="18" fill="none" stroke="#1B3F6E" stroke-width="0.8" opacity="0.5"/><path d="M3,3 L69,69 M69,3 L3,69" fill="none" stroke="#2A7B9A" stroke-width="0.4" opacity="0.3"/><rect x="22" y="22" width="28" height="28" fill="none" stroke="#1B3F6E" stroke-width="0.5" opacity="0.4" transform="rotate(45,36,36)"/><circle cx="36" cy="36" r="5" fill="#2A7B9A" opacity="0.35"/><circle cx="3" cy="3" r="3" fill="#1B3F6E" opacity="0.3"/><circle cx="69" cy="3" r="3" fill="#1B3F6E" opacity="0.3"/><circle cx="3" cy="69" r="3" fill="#1B3F6E" opacity="0.3"/><circle cx="69" cy="69" r="3" fill="#1B3F6E" opacity="0.3"/></svg>
-    <svg width="72" height="72" viewBox="0 0 72 72" role="img"><title>Azulejo padrão roxo imperial</title><rect width="72" height="72" fill="#7E57C2"/><rect x="4" y="4" width="64" height="64" fill="none" stroke="#E8D08A" stroke-width="0.5" opacity="0.45"/><circle cx="36" cy="36" r="22" fill="none" stroke="#E8D08A" stroke-width="0.6" opacity="0.4"/><path d="M36,4 L68,36 L36,68 L4,36 Z" fill="none" stroke="#E8D08A" stroke-width="0.5" opacity="0.35"/><circle cx="36" cy="36" r="8" fill="none" stroke="#E8D08A" stroke-width="0.6" opacity="0.35"/><circle cx="36" cy="36" r="3" fill="#E8D08A" opacity="0.4"/></svg>
-    <svg width="72" height="72" viewBox="0 0 72 72" role="img"><title>Azulejo padrão náutico azul escuro</title><rect width="72" height="72" fill="#1B3F6E"/><circle cx="36" cy="36" r="28" fill="none" stroke="#3AB5C8" stroke-width="0.7" opacity="0.5"/><circle cx="36" cy="36" r="18" fill="none" stroke="#3AB5C8" stroke-width="0.5" opacity="0.35"/><circle cx="36" cy="36" r="8" fill="#3AB5C8" opacity="0.2"/><path d="M8,36 L64,36 M36,8 L36,64" fill="none" stroke="#E8D08A" stroke-width="0.4" opacity="0.3"/><circle cx="36" cy="36" r="3" fill="#E8D08A" opacity="0.5"/><circle cx="8" cy="36" r="3" fill="#3AB5C8" opacity="0.4"/><circle cx="64" cy="36" r="3" fill="#3AB5C8" opacity="0.4"/><circle cx="36" cy="8" r="3" fill="#3AB5C8" opacity="0.4"/><circle cx="36" cy="64" r="3" fill="#3AB5C8" opacity="0.4"/></svg>
-    <svg width="72" height="72" viewBox="0 0 72 72" role="img"><title>Azulejo padrão coral e branco</title><rect width="72" height="72" fill="#F8F4EE"/><path d="M36,8 Q52,18 60,36 Q52,54 36,64 Q20,54 12,36 Q20,18 36,8Z" fill="#E8964A" opacity="0.2"/><rect x="4" y="4" width="64" height="64" fill="none" stroke="#E8964A" stroke-width="0.7" opacity="0.5"/><circle cx="36" cy="36" r="16" fill="none" stroke="#E8964A" stroke-width="0.8" opacity="0.5"/><path d="M4,4 L68,68 M68,4 L4,68" fill="none" stroke="#E8964A" stroke-width="0.35" opacity="0.35"/><circle cx="36" cy="36" r="5" fill="#E8964A" opacity="0.4"/></svg>
-    <svg width="72" height="72" viewBox="0 0 72 72" role="img"><title>Azulejo padrão verde mar</title><rect width="72" height="72" fill="#1B3F6E"/><path d="M4,36 Q18,18 36,4 Q54,18 68,36 Q54,54 36,68 Q18,54 4,36Z" fill="none" stroke="#27AE60" stroke-width="0.8" opacity="0.55"/><circle cx="36" cy="36" r="14" fill="none" stroke="#27AE60" stroke-width="0.6" opacity="0.45"/><rect x="24" y="24" width="24" height="24" fill="none" stroke="#E8D08A" stroke-width="0.5" opacity="0.3" transform="rotate(45,36,36)"/><circle cx="36" cy="36" r="4" fill="#27AE60" opacity="0.35"/></svg>
-    <svg width="72" height="72" viewBox="0 0 72 72" role="img"><title>Azulejo padrão lilás delicado</title><rect width="72" height="72" fill="#F8F4EE"/><rect x="4" y="4" width="64" height="64" fill="none" stroke="#7E57C2" stroke-width="0.6" opacity="0.45"/><circle cx="36" cy="36" r="20" fill="none" stroke="#7E57C2" stroke-width="0.7" opacity="0.5"/><path d="M36,8 L68,36 L36,68 L4,36 Z" fill="none" stroke="#7E57C2" stroke-width="0.45" opacity="0.35"/><circle cx="36" cy="36" r="7" fill="#D4A0C8" opacity="0.35"/><circle cx="36" cy="36" r="2.5" fill="#7E57C2" opacity="0.4"/></svg>
-  </div>
-</div>
 
 <!-- PRIVATE ROOMS -->
-<section class="private-section" id="private-rooms">
-  <div class="private-inner">
-    <div>
-      <div class="private-tag">Funcionalidade exclusiva</div>
-      <div class="private-title">Salas de Leilão<br>Privadas</div>
-      <div class="private-body">Quando o leilão público termina, os melhores licitadores são convidados para uma sala exclusiva. Uma corrida final de 60 segundos. O mais alto vence automaticamente.</div>
-      <div>
-        <div class="pf"><div class="pf-dot"></div><div class="pf-text">O vendedor convida 2 a 5 licitadores registados</div></div>
-        <div class="pf"><div class="pf-dot"></div><div class="pf-text">15 minutos para aceitar ou recusar o convite</div></div>
-        <div class="pf"><div class="pf-dot"></div><div class="pf-text">Cada lance reinicia o contador de 60 segundos</div></div>
-        <div class="pf"><div class="pf-dot"></div><div class="pf-text">Vencedor determinado automaticamente</div></div>
+<section id="salas" class="feature">
+  <div class="wrap">
+    <div class="feature-eye">Salas Privadas</div>
+    <h2 class="feature-title">Exclusividade<br><strong>por convite.</strong></h2>
+    <p class="feature-sub">Após o leilão público, os melhores licitantes são convidados para uma sala privada. Só os escolhidos entram.</p>
+
+    <div class="rv-wrap">
+      <div class="rv">
+        <div class="rv-ring"></div>
+        <div class="rv-c">
+          <span class="rv-cl">Lance actual</span>
+          <span class="rv-cb">{{ rvBid }}</span>
+          <span class="rv-ct">{{ rvTimer }}</span>
+        </div>
+        <div class="rv-b" [class.on]="rvActiveIdx === 0">MS</div>
+        <div class="rv-b" [class.on]="rvActiveIdx === 1">JF</div>
+        <div class="rv-b" [class.on]="rvActiveIdx === 2">RC</div>
+        <div class="rv-b" [class.on]="rvActiveIdx === 3">AP</div>
+        <div class="rv-b" [class.on]="rvActiveIdx === 4">LT</div>
       </div>
     </div>
-    <div class="room-vis">
-      <div class="room-vis-label">Sala Privada · Ao Vivo</div>
-      <div class="room-timer">{{ privateTimerDisplay }}</div>
-      <div class="room-sub">Sala fecha em</div>
-      <div class="seats-row">
-        <div class="seat on"><div class="seat-av">JC</div><div class="seat-nm">jose_c</div></div>
-        <div class="seat on"><div class="seat-av">PM</div><div class="seat-nm">p.miller</div></div>
-        <div class="seat"><div class="seat-av">AK</div><div class="seat-nm">a.kowal</div></div>
-        <div class="seat on"><div class="seat-av">SW</div><div class="seat-nm">s.white</div></div>
-        <div class="seat"><div class="seat-av">RL</div><div class="seat-nm">r.lopes</div></div>
+
+    <div class="feat-bullets">
+      <div class="fb"><span class="fb-val">2–5</span><span class="fb-label">Licitantes convidados</span></div>
+      <div class="fb"><span class="fb-val">60s</span><span class="fb-label">Por lance</span></div>
+      <div class="fb"><span class="fb-val">Auto</span><span class="fb-label">Vencedor automático</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section id="como" class="pillars">
+  <div class="wrap">
+    <div style="text-align:center;margin-bottom:56px">
+      <div class="sec-eye" style="justify-content:center">Como funciona</div>
+      <h2 class="sec-title" style="text-align:center"><strong>Simples</strong> de ponta a ponta.</h2>
+    </div>
+    <div class="pillars-grid">
+      <div class="pillar">
+        <span class="pillar-num">01</span>
+        <div class="pillar-title">Publique</div>
+        <p class="pillar-desc">Leilão ou melhor oferta. Sem taxas de publicação. Pronto em minutos.</p>
       </div>
-      <div class="room-bid-row">
-        <div class="room-bid-lbl">Lance mais alto</div>
-        <div class="room-bid-price">€58.200</div>
+      <div class="pillar">
+        <span class="pillar-num">02</span>
+        <div class="pillar-title">Concorra</div>
+        <p class="pillar-desc">Licitações em tempo real. Ofertas privadas. O sistema decide automaticamente.</p>
+      </div>
+      <div class="pillar">
+        <span class="pillar-num">03</span>
+        <div class="pillar-title">Receba com segurança</div>
+        <p class="pillar-desc">Pagamento em custódia. Fundos só libertados após confirmação de recepção.</p>
       </div>
     </div>
   </div>
 </section>
 
-<!-- TRUST -->
-<section class="trust-section">
-  <div class="section-eyebrow">Confiança e segurança</div>
-  <div class="section-title">Construído para durar</div>
-  <div class="trust-grid">
-    <div class="trust-card">
-      <div class="trust-icon"><svg width="14" height="14" viewBox="0 0 14 14" role="img"><title>escudo</title><path d="M7 1L1.5 3.5v4C1.5 10.5 4 13 7 13.5c3-.5 5.5-3 5.5-6v-4L7 1z" fill="none" stroke="#C9A84C" stroke-width="0.9"/></svg></div>
-      <div class="trust-title">Reputação verificada</div>
-      <div class="trust-body">Pontuação 0–100 baseada em avaliações, disputas e histórico. Acesso a Salas Privadas requer pontuação ≥60.</div>
+<!-- CTA -->
+<section class="cta">
+  <div class="wrap">
+    <h2 class="cta-title">O próximo leilão<br><strong>é o seu.</strong></h2>
+    <p class="cta-sub">Registe-se gratuitamente. Comece a licitar hoje.</p>
+    <div class="hero-cta">
+      <a routerLink="/auth/signup" class="btn-hp" style="font-size:15px;padding:14px 32px">Criar conta gratuita</a>
+      <a routerLink="/listing/list" class="btn-hg" style="font-size:15px;padding:14px 24px">Explorar leilões</a>
     </div>
-    <div class="trust-card">
-      <div class="trust-icon"><svg width="14" height="14" viewBox="0 0 14 14" role="img"><title>pagamento</title><rect x="1" y="3" width="12" height="8" rx="1.5" fill="none" stroke="#C9A84C" stroke-width="0.9"/><line x1="1" y1="6" x2="13" y2="6" stroke="#C9A84C" stroke-width="0.8"/></svg></div>
-      <div class="trust-title">Pagamentos EasyPay</div>
-      <div class="trust-body">Multibanco, MB WAY, cartão. Transferência SEPA directa para o IBAN do vendedor.</div>
-    </div>
-    <div class="trust-card">
-      <div class="trust-icon"><svg width="14" height="14" viewBox="0 0 14 14" role="img"><title>disputa</title><circle cx="7" cy="7" r="5.5" fill="none" stroke="#C9A84C" stroke-width="0.9"/><line x1="7" y1="4.5" x2="7" y2="7.5" stroke="#C9A84C" stroke-width="1" stroke-linecap="round"/><circle cx="7" cy="9.5" r="0.7" fill="#C9A84C"/></svg></div>
-      <div class="trust-title">Disputas resolvidas</div>
-      <div class="trust-body">Moderação humana em caso de problema. Suspensão automática de ambas as contas durante a resolução.</div>
-    </div>
-    <div class="trust-card">
-      <div class="trust-icon"><svg width="14" height="14" viewBox="0 0 14 14" role="img"><title>relógio</title><circle cx="7" cy="7" r="5.5" fill="none" stroke="#C9A84C" stroke-width="0.9"/><line x1="7" y1="4" x2="7" y2="7" stroke="#C9A84C" stroke-width="1" stroke-linecap="round"/><line x1="7" y1="7" x2="9.5" y2="8.5" stroke="#C9A84C" stroke-width="0.9" stroke-linecap="round"/></svg></div>
-      <div class="trust-title">Envio em 5 dias úteis</div>
-      <div class="trust-body">Alerta automático no dia 3. Reembolso automático no dia 5 se não houver envio.</div>
-    </div>
-    <div class="trust-card">
-      <div class="trust-icon"><svg width="14" height="14" viewBox="0 0 14 14" role="img"><title>moderação</title><rect x="1" y="2" width="12" height="10" rx="1.5" fill="none" stroke="#C9A84C" stroke-width="0.9"/><line x1="3.5" y1="5.5" x2="10.5" y2="5.5" stroke="#C9A84C" stroke-width="0.7"/><line x1="3.5" y1="8" x2="7.5" y2="8" stroke="#C9A84C" stroke-width="0.7"/></svg></div>
-      <div class="trust-title">Moderação por IA</div>
-      <div class="trust-body">Azure AI analisa texto e imagens. Artigos proibidos e conteúdo impróprio bloqueados automaticamente.</div>
-    </div>
-    <div class="trust-card">
-      <div class="trust-icon"><svg width="14" height="14" viewBox="0 0 14 14" role="img"><title>idioma</title><circle cx="7" cy="7" r="5.5" fill="none" stroke="#C9A84C" stroke-width="0.9"/><ellipse cx="7" cy="7" rx="2.5" ry="5.5" fill="none" stroke="#C9A84C" stroke-width="0.6"/><line x1="1.5" y1="7" x2="12.5" y2="7" stroke="#C9A84C" stroke-width="0.6"/></svg></div>
-      <div class="trust-title">Português e Inglês</div>
-      <div class="trust-body">Plataforma completamente bilingue, adaptada ao mercado português com suporte integral em PT e EN.</div>
-    </div>
+    <p class="cta-note">Já tem conta? <a routerLink="/auth/login">Entrar</a></p>
   </div>
 </section>
 
 <!-- FOOTER -->
-<footer class="footer">
-  <div class="footer-top">
-    <div>
-      <div class="footer-brand">BidRoom.pt</div>
-      <div class="footer-tagline">O mercado de leilões premium de Portugal</div>
+<footer>
+  <div class="wrap" style="width:100%">
+    <div class="ft-brand">BidRoom<em>.pt</em></div>
+    <p class="ft-tagline">O marketplace de leilões premium de Portugal.</p>
+    <div class="ft-divider"></div>
+    <div class="ft-cols">
+      <div>
+        <div class="ft-col-title">Plataforma</div>
+        <a routerLink="/landing/how-it-works" class="ft-col-link">Como funciona</a>
+        <a href="#salas" class="ft-col-link">Salas Privadas</a>
+        <a routerLink="/listing/list" class="ft-col-link">Leilões activos</a>
+        <a routerLink="/listing/list" class="ft-col-link">Categorias</a>
+      </div>
+      <div>
+        <div class="ft-col-title">Compradores</div>
+        <a routerLink="/auth/signup" class="ft-col-link">Criar conta</a>
+        <a routerLink="/landing/how-it-works" class="ft-col-link">Guia do comprador</a>
+        <a routerLink="/landing/how-it-works" class="ft-col-link">Pagamento seguro</a>
+        <a routerLink="/landing/contact" class="ft-col-link">Disputas</a>
+      </div>
+      <div>
+        <div class="ft-col-title">Vendedores</div>
+        <a routerLink="/listing/add" class="ft-col-link">Publicar anúncio</a>
+        <a routerLink="/landing/how-it-works" class="ft-col-link">Guia do vendedor</a>
+        <a routerLink="/landing/how-it-works" class="ft-col-link">Comissões</a>
+        <a routerLink="/dashboard/home" class="ft-col-link">Payouts</a>
+      </div>
+      <div>
+        <div class="ft-col-title">Legal</div>
+        <a routerLink="/landing/terms-conditions" class="ft-col-link">Termos de utilização</a>
+        <a routerLink="/landing/privacy-policy" class="ft-col-link">Política de privacidade</a>
+        <a routerLink="/landing/privacy-policy" class="ft-col-link">Cookies</a>
+        <a routerLink="/landing/contact" class="ft-col-link">Contacto</a>
+      </div>
     </div>
-    <div class="footer-cols">
-      <div>
-        <div class="footer-col-title">Plataforma</div>
-        <a class="footer-link" routerLink="/listing/list">Leilões activos</a>
-        <a class="footer-link" routerLink="/listing/list">Melhor Oferta</a>
-        <a class="footer-link" routerLink="/landing" fragment="private-rooms">Salas Privadas</a>
-        <a class="footer-link" routerLink="/landing/how-it-works">Como funciona</a>
-      </div>
-      <div>
-        <div class="footer-col-title">Conta</div>
-        <a class="footer-link" routerLink="/auth/login">Entrar</a>
-        <a class="footer-link" routerLink="/auth/signup">Registar</a>
-        <a class="footer-link" routerLink="/dashboard/home">Painel</a>
-        <a class="footer-link" routerLink="/dashboard/buyer">Reputação</a>
-      </div>
-      <div>
-        <div class="footer-col-title">Legal</div>
-        <a class="footer-link" routerLink="/landing/terms-conditions">Termos de uso</a>
-        <a class="footer-link" routerLink="/landing/privacy-policy">Privacidade</a>
-        <a class="footer-link" routerLink="/landing/privacy-policy">Cookies</a>
-        <a class="footer-link" routerLink="/landing/contact">Contacto</a>
-      </div>
-    </div>
-  </div>
-  <div class="footer-bottom">
-    <div class="footer-copy">© 2026 BidRoom · Todos os direitos reservados · Lisboa, Portugal</div>
-    <div class="footer-badges">
-      <div class="f-badge">RGPD</div>
-      <div class="f-badge">SSL</div>
-      <div class="f-badge">EasyPay</div>
+    <div class="ft-divider"></div>
+    <div class="ft-bottom">
+      <span class="ft-copy">© 2026 BidRoom.pt · Todos os direitos reservados</span>
+      <span class="ft-copy">Feito em Portugal 🇵🇹</span>
     </div>
   </div>
 </footer>
+
 </div>

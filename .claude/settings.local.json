@@ -53,7 +53,9 @@
       "WebFetch(domain:docs.stripe.com)",
       "Bash(grep -E \"\\\\.\\(ts|tsx|js|jsx|py\\)$\")",
       "Bash(xargs ls -la)",
-      "Bash(node -e \"const s = require\\('/Users/jose/Documents/bidroom/backend/node_modules/stripe'\\); console.log\\(s.PACKAGE_VERSION || require\\('/Users/jose/Documents/bidroom/backend/node_modules/stripe/package.json'\\).version\\)\")"
+      "Bash(node -e \"const s = require\\('/Users/jose/Documents/bidroom/backend/node_modules/stripe'\\); console.log\\(s.PACKAGE_VERSION || require\\('/Users/jose/Documents/bidroom/backend/node_modules/stripe/package.json'\\).version\\)\")",
+      "Bash(find /Users/jose -name \"*.html\" -newer /Users/jose/Documents/bidroom/frontend/src/app/landing/components/home/home.component.html 2>/dev/null | grep -v node_modules | grep -v \".angular\" | head -20)",
+      "Read(//Users/jose/**)"
     ]
   }
 }
