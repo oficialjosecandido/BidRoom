@@ -14,7 +14,7 @@ export const API_CONFIG = {
     const hostname = typeof window !== 'undefined' ? window.location.hostname : 'localhost';
 
     if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '0.0.0.0') {
-      return 'http://localhost:3000/api';
+      return 'https://bidroom-backend-dev.azurewebsites.net/api';
     }
 
     return environment.defaultApiBaseUrl;
