@@ -193,88 +193,7 @@ async function createOffer(req, res) {
     }
 
     // Offers below minimum are allowed; seller is not obliged to accept (buyer sees indication in UI)
-
-    // Check if offerer already has a pending offer (by user id or guest email)
-    const existingQuery = { listing: listingId, status: 'pending' };
-    if (user) {
-      existingQuery.offerer = user._id;
-    } else {
-      existingQuery.offerer = null;
-      existingQuery.offererEmail = offererEmail;
-    }
-    const existingOffer = await Offer.findOne(existingQuery);
-
-    if (existingOffer) {
-      existingOffer.amount = amount;
-      existingOffer.message = message || null;
-      await existingOffer.save();
-
-      const populatedOffer = await Offer.findById(existingOffer._id)
-        .populate('offerer', 'firstName lastName email emailVerified')
-        .lean();
-      const name = populatedOffer.offerer
-        ? `${populatedOffer.offerer.firstName} ${populatedOffer.offerer.lastName}`
-        : (populatedOffer.offererEmail ? populatedOffer.offererEmail.split('@')[0] : 'Anonymous');
-      const initials = populatedOffer.offerer
-        ? `${populatedOffer.offerer.firstName.charAt(0)}${populatedOffer.offerer.lastName.charAt(0)}`
-        : (populatedOffer.offererEmail ? populatedOffer.offererEmail.charAt(0).toUpperCase() : 'A');
-
-      const bidderDetails = populatedOffer.offerer
-        ? { id: populatedOffer.offerer._id, email: populatedOffer.offerer.email, name: `${populatedOffer.offerer.firstName || ''} ${populatedOffer.offerer.lastName || ''}`.trim() }
-        : { guestEmail: populatedOffer.offererEmail };
-      logOfferReceived(populatedOffer, bidderDetails);
-
-      const io = req.app.get('io');
-      const confirmEmail = populatedOffer.offerer?.email || populatedOffer.offererEmail;
-      const confirmUserId = populatedOffer.offerer?._id?.toString?.();
-      if (confirmUserId) {
-        notifyOfferPlaced({ listingSlug: listing.slug, listingTitle: listing.title, offerAmount: amount, offererUserId: confirmUserId })
-          .catch(err => console.error('Failed offer confirmation notification:', err));
-        if (io) emitNewNotificationToUser(io, confirmUserId).catch(() => {});
-      }
-      if (confirmEmail) {
-        sendOfferPlacedEmail(listing, confirmEmail, name, amount).catch(err => console.error('Failed offer confirmation email:', err));
-      }
-      const otherOffers = await Offer.find({ listing: listingId, status: 'pending', _id: { $ne: existingOffer._id } })
-        .populate('offerer', 'firstName lastName email')
-        .lean();
-      const prevHigh = otherOffers.length ? Math.max(...otherOffers.map(o => o.amount)) : 0;
-      if (amount > prevHigh && prevHigh > 0) {
-        const notified = new Set();
-        for (const o of otherOffers.filter(x => x.amount === prevHigh)) {
-          const e = o.offerer?.email?.toLowerCase() || o.offererEmail?.toLowerCase();
-          const u = o.offerer?._id?.toString?.();
-          if (!e || notified.has(e) || e === (confirmEmail || '').toLowerCase()) continue;
-          notified.add(e);
-          if (u) {
-            notifyOfferOutbid({ listingSlug: listing.slug, listingTitle: listing.title, previousOffer: prevHigh, newOffer: amount, offererUserId: u })
-              .catch(err => console.error('Failed offer outbid notification:', err));
-            if (io) emitNewNotificationToUser(io, u).catch(() => {});
-          }
-          sendOfferOutbidEmail(listing, e, o.offerer ? `${o.offerer.firstName} ${o.offerer.lastName}` : o.offererEmail?.split('@')[0], prevHigh, amount)
-            .catch(err => console.error('Failed offer outbid email:', err));
-        }
-      }
-      if (io) {
-        io.to(`listing:${listingId}`).emit('new-offer', {
-          listingId,
-          offer: formatOfferForSocket(populatedOffer)
-        });
-      }
-      return res.json({
-        ...populatedOffer,
-        offererName: name,
-        offererInitials: initials
-      });
-    }
-
-    // Defensive: must have either authenticated user or guest email (when no existing offer)
-    if (!user && !offererEmail) {
-      return res.status(400).json({
-        error: 'Identification required',
-        message: 'Please log in or provide your email address to make an offer.'
-      });
-    }
+    // Each submission always creates a new offer — buyers may place multiple offers.
 
     // Create new offer
     const offer = new Offer({
@@ -326,7 +245,11 @@ async function createOffer(req, res) {
     if (confirmEmail) {
       sendOfferPlacedEmail(listing, confirmEmail, name, amount).catch(err => console.error('Failed offer confirmation email:', err));
     }
-    const otherOffers = await Offer.find({ listing: listingId, status: 'pending', _id: { $ne: offer._id } })
+    // Fetch other buyers' pending offers (exclude same buyer to avoid self-outbid notifications)
+    const otherBuyerFilter = user
+      ? { offerer: { $ne: user._id } }
+      : { offererEmail: { $ne: offererEmail } };
+    const otherOffers = await Offer.find({ listing: listingId, status: 'pending', _id: { $ne: offer._id }, ...otherBuyerFilter })
       .populate('offerer', 'firstName lastName email')
       .lean();
     const prevHigh = otherOffers.length ? Math.max(...otherOffers.map(o => o.amount)) : 0;

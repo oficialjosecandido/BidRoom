@@ -595,7 +595,15 @@
       "subtitle": "Si el vendedor acepta, te comprometes a comprar a ese precio. Puedes retirar la oferta mientras siga pendiente.",
       "figuresHint": "La mínima es la cantidad más baja que el vendedor valorará. La más alta es la mejor oferta hasta ahora: puedes igualarla o superarla, o quedarte en el mínimo.",
       "highestOffer": "Oferta más alta",
-      "valueLabel": "Importe (€)"
+      "valueLabel": "Importe (€)",
+      "yourOfferPreview": "Estás ofreciendo:",
+      "successTitle": "Oferta enviada",
+      "successText": "Tu oferta de <strong>{{amount}}</strong> se ha enviado. El vendedor la revisará—puedes cancelar mientras esté pendiente.",
+      "successTextAccepted": "Tu oferta de <strong>{{amount}}</strong> fue aceptada por el vendedor. Completa la compra en Transacciones.",
+      "successConfirm": "Entendido",
+      "errorTitle": "No se pudo enviar la oferta",
+      "errorText": "Error al enviar la oferta. Inténtalo de nuevo.",
+      "errorConfirm": "OK"
     },
     "watchlistModal": {
       "title": "Guardar en Favoritos",

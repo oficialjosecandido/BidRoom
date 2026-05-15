@@ -595,7 +595,15 @@
       "subtitle": "Si le vendeur accepte, vous vous engagez à acheter à ce prix. Vous pouvez retirer votre offre tant qu'elle est en attente.",
       "figuresHint": "Le minimum est le montant le plus bas que le vendeur examinera. Le plus haut est la meilleure offre actuelle : vous pouvez l'égaler, la dépasser ou rester au minimum.",
       "highestOffer": "Offre la plus haute",
-      "valueLabel": "Montant (€)"
+      "valueLabel": "Montant (€)",
+      "yourOfferPreview": "Vous proposez :",
+      "successTitle": "Offre envoyée",
+      "successText": "Votre offre de <strong>{{amount}}</strong> a été envoyée. Le vendeur l'examinera—vous pouvez l'annuler tant qu'elle est en attente.",
+      "successTextAccepted": "Votre offre de <strong>{{amount}}</strong> a été acceptée par le vendeur. Finalisez l'achat dans Transactions.",
+      "successConfirm": "Compris",
+      "errorTitle": "Impossible d'envoyer l'offre",
+      "errorText": "Échec de l'envoi de l'offre. Veuillez réessayer.",
+      "errorConfirm": "OK"
     },
     "watchlistModal": {
       "title": "Enregistrer dans les favoris",
