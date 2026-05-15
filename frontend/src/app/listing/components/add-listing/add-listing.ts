@@ -11,8 +11,6 @@ import { CustomerService, CustomerInfo } from '../../../shared/services/customer
 import { KycService, KYC_THRESHOLD } from '../../../shared/services/kyc.service';
 import { API_CONFIG } from '../../../shared/config/api.config';
 import { environment } from '@env';
-import { HeaderComponent } from '../../../shared/components/header/header.component';
-import { FooterComponent } from '../../../shared/components/footer/footer.component';
 
 interface Category {
   id: string;
@@ -23,7 +21,7 @@ interface Category {
 @Component({
   selector: 'app-add-listing',
   standalone: true,
-  imports: [ReactiveFormsModule, TranslateModule, HeaderComponent, FooterComponent],
+  imports: [ReactiveFormsModule, TranslateModule],
   templateUrl: './add-listing.html',
   styleUrl: './add-listing.scss',
 })
@@ -48,20 +46,75 @@ export class AddListing implements OnInit, OnDestroy {
   uploadedFileUrls: string[] = [];
   previewUrls: (string | ArrayBuffer | null)[] = [];
 
-  // Drag-to-reorder state
   dragSrcIndex: number | null = null;
   dragOverIndex: number | null = null;
 
-  /** Autosave draft */
   private readonly mediaChange$ = new Subject<void>();
   private draftAutosaveSub?: Subscription;
   private restoringDraft = false;
-  /** Maps stable file fingerprint → uploaded image URL (avoids re-uploading on each autosave). */
   private readonly urlByFileKey = new Map<string, string>();
   draftSaveStatus: 'idle' | 'saving' | 'saved' | 'error' = 'idle';
   draftSaveError = '';
 
-  // Categories
+  // ─── Step management ────────────────────────────────────────────────────────
+  currentStep = 1;
+  readonly totalSteps = 6;
+  isLight = false;
+
+  readonly steps = [
+    { n: 1, titleKey: 'addListing.step1Title', subKey: 'addListing.step1' },
+    { n: 2, titleKey: 'addListing.step2Title', subKey: 'addListing.step2' },
+    { n: 3, titleKey: 'addListing.step3Title', subKey: 'addListing.step3' },
+    { n: 4, titleKey: 'addListing.step4Title', subKey: 'addListing.step4' },
+    { n: 5, titleKey: 'addListing.step5Title', subKey: 'addListing.step5' },
+    { n: 6, titleKey: 'addListing.step6Title', subKey: 'addListing.step6' },
+  ];
+
+  toggleTheme(): void { this.isLight = !this.isLight; }
+  goStep(n: number): void { if (n >= 1 && n <= this.totalSteps) this.currentStep = n; }
+  nextStep(): void { this.goStep(this.currentStep + 1); }
+  prevStep(): void { this.goStep(this.currentStep - 1); }
+  navigateToDashboard(): void { void this.router.navigate(['/dashboard/home']); }
+  navigateBack(): void { void this.router.navigate(['/listing/list']); }
+
+  // ─── Preview sidebar ─────────────────────────────────────────────────────────
+  get previewTitle(): string { return this.listingForm?.get('title')?.value || ''; }
+  get previewCategory(): string { return this.listingForm?.get('category')?.value || ''; }
+  get previewFormat(): string { return this.listingForm?.get('listingFormat')?.value || 'auction'; }
+
+  get previewPrice(): string {
+    const fmt = this.previewFormat;
+    const v = fmt === 'auction'
+      ? this.listingForm?.get('startingBid')?.value
+      : this.listingForm?.get('minimumAcceptPrice')?.value;
+    return v ? `€${parseFloat(v).toFixed(2)}` : '—';
+  }
+
+  get previewPriceLabel(): string {
+    return this.previewFormat === 'auction'
+      ? this.translate.instant('addListing.startingBid')
+      : this.translate.instant('addListing.minimumAcceptPrice');
+  }
+
+  get previewDuration(): string {
+    return this.listingForm?.get('duration')?.value || '—';
+  }
+
+  get checklist(): Record<string, boolean> {
+    const fmt = this.previewFormat;
+    return {
+      format: true,
+      title: (this.listingForm?.get('title')?.value?.length ?? 0) >= 3,
+      category: !!this.listingForm?.get('category')?.value,
+      condition: !!this.listingForm?.get('condition')?.value,
+      description: (this.listingForm?.get('description')?.value?.length ?? 0) >= 50,
+      photos: this.uploadedFiles.length >= 1,
+      price: fmt === 'best-offer' || parseFloat(this.listingForm?.get('startingBid')?.value || '0') > 0,
+      shipping: !!this.listingForm?.get('shippingOption')?.value,
+    };
+  }
+
+  // ─── Categories ──────────────────────────────────────────────────────────────
   categories: Category[] = [
     {
       id: 'electronics',
@@ -137,30 +190,37 @@ export class AddListing implements OnInit, OnDestroy {
     { value: 'For Parts or Not Working', labelKey: 'addListing.conditionForParts' }
   ];
 
-  listingDurations = environment.auctionDurations.map((d: { label: string; hours: number }) => ({
-    ...d,
-    labelKey: d.hours <= 1/12 ? 'addListing.duration5min' :
-      d.hours <= 1 ? 'addListing.duration1hour' :
-      d.hours <= 7 ? 'addListing.duration7hours' : 'addListing.duration24hours'
-  }));
+  listingDurations = [
+    { label: '1 day',   hours: 24  },
+    { label: '3 days',  hours: 72  },
+    { label: '7 days',  hours: 168 },
+    { label: '10 days', hours: 240 },
+    { label: '15 days', hours: 360 },
+  ];
+
+  offerDurations = [
+    { label: '3 days',  hours: 72  },
+    { label: '7 days',  hours: 168 },
+    { label: '15 days', hours: 360 },
+    { label: '30 days', hours: 720 },
+  ];
 
   shippingOptions = [
-    { value: 'flat-rate', labelKey: 'addListing.shippingFlatRate' },
-    { value: 'calculated', labelKey: 'addListing.shippingCalculated' },
+    { value: 'flat-rate',    labelKey: 'addListing.shippingFlatRate' },
+    { value: 'free',         labelKey: 'addListing.shippingFree' },
+    { value: 'calculated',   labelKey: 'addListing.shippingCalculated' },
     { value: 'local-pickup', labelKey: 'addListing.shippingLocalPickup' },
-    { value: 'free', labelKey: 'addListing.shippingFree' }
   ];
 
   returnPolicies = [
-    { value: '30-days', labelKey: 'addListing.return30' },
-    { value: '14-days', labelKey: 'addListing.return14' },
+    { value: '30-days',    labelKey: 'addListing.return30' },
+    { value: '14-days',    labelKey: 'addListing.return14' },
+    { value: '7-days',     labelKey: 'addListing.return7' },
     { value: 'no-returns', labelKey: 'addListing.returnNo' },
-    { value: 'custom', labelKey: 'addListing.returnCustom' }
   ];
 
   selectedCategory: Category | null = null;
 
-  /** Whether all required fields are valid and media is present */
   get canPublish(): boolean {
     return this.listingForm.valid && this.isMediaValid && this.uploadedFiles.length >= 1 && !this.isSubmitting && !this.isUploadingImages;
   }
@@ -196,7 +256,7 @@ export class AddListing implements OnInit, OnDestroy {
       title: ['', [Validators.required, Validators.maxLength(80)]],
       category: ['', Validators.required],
       subCategory: ['', Validators.required],
-      listingFormat: ['auction', Validators.required],
+      listingFormat: ['best-offer', Validators.required],
       itemMode: ['single', Validators.required],
       quantity: [null],
       condition: ['', Validators.required],
@@ -206,8 +266,8 @@ export class AddListing implements OnInit, OnDestroy {
       bundleItems: this.fb.array([]),
       locationCity: ['', Validators.required],
       locationRegion: ['', Validators.required],
-      locationCountry: ['US', Validators.required],
-      duration: ['', Validators.required],
+      locationCountry: ['PT', Validators.required],
+      duration: ['7 days', Validators.required],
       startingBid: [null],
       reservePrice: [null],
       buyNowPrice: [null],
@@ -218,21 +278,19 @@ export class AddListing implements OnInit, OnDestroy {
       packageSize: [''],
       shippingOriginPostalCode: [''],
       shippingOriginCity: [''],
-      shippingOriginCountry: ['US'],
-      returnPolicy: ['', Validators.required],
+      shippingOriginCountry: ['PT'],
+      returnPolicy: ['14-days', Validators.required],
       sellerDeclaration: [false, Validators.requiredTrue]
     });
 
-    // Conditional validators based on listing format
     this.listingForm.get('listingFormat')?.valueChanges.subscribe(format => {
       this.updateConditionalValidators(format);
       if (format === 'best-offer') {
         this.listingForm.patchValue({ allowPrivateRoom: false });
       }
     });
-    this.updateConditionalValidators(this.listingForm.get('listingFormat')?.value || 'auction');
+    this.updateConditionalValidators(this.listingForm.get('listingFormat')?.value || 'best-offer');
 
-    // itemMode validators
     this.listingForm.get('itemMode')?.valueChanges.subscribe(mode => {
       const qtyControl = this.listingForm.get('quantity');
       if (mode === 'multi_quantity') {
@@ -247,11 +305,10 @@ export class AddListing implements OnInit, OnDestroy {
       }
     });
 
-    // Conditional validators for shipping option
     this.listingForm.get('shippingOption')?.valueChanges.subscribe(option => {
-      const flatRateControl      = this.listingForm.get('flatRateShipping');
-      const packageSizeControl   = this.listingForm.get('packageSize');
-      const postalCodeControl    = this.listingForm.get('shippingOriginPostalCode');
+      const flatRateControl    = this.listingForm.get('flatRateShipping');
+      const packageSizeControl = this.listingForm.get('packageSize');
+      const postalCodeControl  = this.listingForm.get('shippingOriginPostalCode');
 
       if (option === 'flat-rate') {
         flatRateControl?.setValidators([Validators.required, Validators.min(0)]);
@@ -270,7 +327,6 @@ export class AddListing implements OnInit, OnDestroy {
       packageSizeControl?.updateValueAndValidity();
       postalCodeControl?.updateValueAndValidity();
     });
-
   }
 
   setupFormSubscriptions(): void {
@@ -324,7 +380,6 @@ export class AddListing implements OnInit, OnDestroy {
     return { ...formValue, imageUrls };
   }
 
-  /** Ordered URLs for image files only (videos are not stored in draft). */
   private buildOrderedImageUrlList(): string[] {
     const urls: string[] = [];
     for (const file of this.uploadedFiles) {
@@ -360,10 +415,7 @@ export class AddListing implements OnInit, OnDestroy {
 
   private async persistDraft(opts: { manual: boolean }): Promise<void> {
     if (!this.hasDraftableContent()) {
-      if (opts.manual) {
-        this.draftSaveStatus = 'idle';
-        this.draftSaveError = '';
-      }
+      if (opts.manual) { this.draftSaveStatus = 'idle'; this.draftSaveError = ''; }
       return;
     }
     this.draftSaveStatus = 'saving';
@@ -379,26 +431,17 @@ export class AddListing implements OnInit, OnDestroy {
       this.draftSaveStatus = 'saved';
       if (opts.manual) {
         void Swal.fire({
-          toast: true,
-          position: 'top-end',
-          icon: 'success',
+          toast: true, position: 'top-end', icon: 'success',
           title: this.translate.instant('addListing.draftSaved'),
-          showConfirmButton: false,
-          timer: 2200,
-          timerProgressBar: true
+          showConfirmButton: false, timer: 2200, timerProgressBar: true
         });
       }
     } catch (e: unknown) {
       const status = (e as { status?: number })?.status;
-      if (status === 401) {
-        this.draftSaveStatus = 'idle';
-        return;
-      }
+      if (status === 401) { this.draftSaveStatus = 'idle'; return; }
       this.draftSaveStatus = 'error';
       this.draftSaveError = this.translate.instant('addListing.draftError');
-      if (opts.manual) {
-        this.errorMessage = this.draftSaveError;
-      }
+      if (opts.manual) this.errorMessage = this.draftSaveError;
     } finally {
       if (pendingUpload) this.isUploadingImages = false;
     }
@@ -439,12 +482,10 @@ export class AddListing implements OnInit, OnDestroy {
         while (this.specifications.length) this.specifications.removeAt(0);
         for (const row of specs) {
           const r = row as { key?: string; value?: string };
-          this.specifications.push(
-            this.fb.group({
-              key: [r.key || '', Validators.required],
-              value: [r.value || '', Validators.required]
-            })
-          );
+          this.specifications.push(this.fb.group({
+            key: [r.key || '', Validators.required],
+            value: [r.value || '', Validators.required]
+          }));
         }
       }
 
@@ -461,7 +502,7 @@ export class AddListing implements OnInit, OnDestroy {
       }
 
       const format = (patch['listingFormat'] as string) || this.listingForm.get('listingFormat')?.value;
-      this.updateConditionalValidators(format || 'auction');
+      this.updateConditionalValidators(format || 'best-offer');
 
       const urls = p['imageUrls'];
       if (Array.isArray(urls) && urls.length > 0) {
@@ -470,19 +511,12 @@ export class AddListing implements OnInit, OnDestroy {
 
       this.restoringDraft = false;
       void Swal.fire({
-        toast: true,
-        position: 'top-end',
-        icon: 'info',
+        toast: true, position: 'top-end', icon: 'info',
         title: this.translate.instant('addListing.draftRestored'),
-        showConfirmButton: false,
-        timer: 3500,
-        timerProgressBar: true
+        showConfirmButton: false, timer: 3500, timerProgressBar: true
       });
     } catch (e: unknown) {
-      if ((e as { status?: number })?.status === 401) {
-        this.restoringDraft = false;
-        return;
-      }
+      if ((e as { status?: number })?.status === 401) { this.restoringDraft = false; return; }
       this.restoringDraft = false;
     }
   }
@@ -511,9 +545,9 @@ export class AddListing implements OnInit, OnDestroy {
   }
 
   updateConditionalValidators(format: string): void {
-    const startingBidControl = this.listingForm.get('startingBid');
-    const reservePriceControl = this.listingForm.get('reservePrice');
-    const buyNowPriceControl = this.listingForm.get('buyNowPrice');
+    const startingBidControl        = this.listingForm.get('startingBid');
+    const reservePriceControl       = this.listingForm.get('reservePrice');
+    const buyNowPriceControl        = this.listingForm.get('buyNowPrice');
     const minimumAcceptPriceControl = this.listingForm.get('minimumAcceptPrice');
 
     if (format === 'auction') {
@@ -541,17 +575,9 @@ export class AddListing implements OnInit, OnDestroy {
     minimumAcceptPriceControl?.updateValueAndValidity();
   }
 
-  get specifications(): FormArray {
-    return this.listingForm.get('specifications') as FormArray;
-  }
-
-  get media(): FormArray {
-    return this.listingForm.get('media') as FormArray;
-  }
-
-  get bundleItems(): FormArray {
-    return this.listingForm.get('bundleItems') as FormArray;
-  }
+  get specifications(): FormArray { return this.listingForm.get('specifications') as FormArray; }
+  get media(): FormArray { return this.listingForm.get('media') as FormArray; }
+  get bundleItems(): FormArray { return this.listingForm.get('bundleItems') as FormArray; }
 
   addBundleItem(): void {
     this.bundleItems.push(this.fb.group({
@@ -560,25 +586,18 @@ export class AddListing implements OnInit, OnDestroy {
     }));
   }
 
-  removeBundleItem(index: number): void {
-    this.bundleItems.removeAt(index);
-  }
+  removeBundleItem(index: number): void { this.bundleItems.removeAt(index); }
 
-  getSelectedSubCategories(): string[] {
-    return this.selectedCategory?.subCategories || [];
-  }
+  getSelectedSubCategories(): string[] { return this.selectedCategory?.subCategories || []; }
 
   addSpecification(): void {
-    const specGroup = this.fb.group({
+    this.specifications.push(this.fb.group({
       key: ['', Validators.required],
       value: ['', Validators.required]
-    });
-    this.specifications.push(specGroup);
+    }));
   }
 
-  removeSpecification(index: number): void {
-    this.specifications.removeAt(index);
-  }
+  removeSpecification(index: number): void { this.specifications.removeAt(index); }
 
   onFileSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
@@ -592,9 +611,7 @@ export class AddListing implements OnInit, OnDestroy {
     event.preventDefault();
     event.stopPropagation();
     const files = event.dataTransfer?.files;
-    if (files && files.length > 0) {
-      this.addFiles(files);
-    }
+    if (files && files.length > 0) this.addFiles(files);
   }
 
   onDragOver(event: DragEvent): void {
@@ -610,17 +627,9 @@ export class AddListing implements OnInit, OnDestroy {
     'video/mp4', 'video/webm', 'video/quicktime'
   ];
 
-  get imageCount(): number {
-    return this.uploadedFiles.filter(f => this.ALLOWED_IMAGE_TYPES.includes(f.type)).length;
-  }
-
-  get videoCount(): number {
-    return this.uploadedFiles.filter(f => this.ALLOWED_VIDEO_TYPES.includes(f.type)).length;
-  }
-
-  isVideoFile(file: File): boolean {
-    return this.ALLOWED_VIDEO_TYPES.includes(file.type);
-  }
+  get imageCount(): number { return this.uploadedFiles.filter(f => this.ALLOWED_IMAGE_TYPES.includes(f.type)).length; }
+  get videoCount(): number { return this.uploadedFiles.filter(f => this.ALLOWED_VIDEO_TYPES.includes(f.type)).length; }
+  isVideoFile(file: File): boolean { return this.ALLOWED_VIDEO_TYPES.includes(file.type); }
 
   get isMediaValid(): boolean {
     const imgs = this.imageCount;
@@ -643,24 +652,15 @@ export class AddListing implements OnInit, OnDestroy {
       const isVideo = this.ALLOWED_VIDEO_TYPES.includes(file.type);
 
       if (isImage) {
-        if (vids >= 1 && imgs >= 5) {
-          rejected.push({ name: file.name, reason: 'maxPhotosWithVideo' });
-          return;
-        }
-        if (vids === 0 && imgs >= 20) {
-          rejected.push({ name: file.name, reason: 'maxPhotos' });
-          return;
-        }
+        if (vids >= 1 && imgs >= 5) { rejected.push({ name: file.name, reason: 'maxPhotosWithVideo' }); return; }
+        if (vids === 0 && imgs >= 20) { rejected.push({ name: file.name, reason: 'maxPhotos' }); return; }
         this.uploadedFiles.push(file);
         imgs++;
         const reader = new FileReader();
         reader.onload = (e) => { this.previewUrls.push(e.target?.result || null); };
         reader.readAsDataURL(file);
       } else if (isVideo) {
-        if (vids >= 1 || imgs >= 5) {
-          rejected.push({ name: file.name, reason: 'videoLimit' });
-          return;
-        }
+        if (vids >= 1 || imgs >= 5) { rejected.push({ name: file.name, reason: 'videoLimit' }); return; }
         this.uploadedFiles.push(file);
         this.previewUrls.push(null);
         vids++;
@@ -669,9 +669,7 @@ export class AddListing implements OnInit, OnDestroy {
       }
     });
 
-    if (this.uploadedFiles.length > countBefore) {
-      this.notifyMediaChanged();
-    }
+    if (this.uploadedFiles.length > countBefore) this.notifyMediaChanged();
 
     if (rejected.length > 0) {
       const byReason = new Map<typeof rejected[number]['reason'], string[]>();
@@ -682,18 +680,10 @@ export class AddListing implements OnInit, OnDestroy {
       }
       const parts: string[] = [];
       const joinFiles = (names: string[]) => names.join(', ');
-      if (byReason.has('type')) {
-        parts.push(this.translate.instant('addListing.errors.invalidFileType', { files: joinFiles(byReason.get('type')!) }));
-      }
-      if (byReason.has('maxPhotos')) {
-        parts.push(this.translate.instant('addListing.errors.mediaMaxPhotos', { files: joinFiles(byReason.get('maxPhotos')!) }));
-      }
-      if (byReason.has('maxPhotosWithVideo')) {
-        parts.push(this.translate.instant('addListing.errors.mediaMaxPhotosWithVideo', { files: joinFiles(byReason.get('maxPhotosWithVideo')!) }));
-      }
-      if (byReason.has('videoLimit')) {
-        parts.push(this.translate.instant('addListing.errors.mediaVideoLimit', { files: joinFiles(byReason.get('videoLimit')!) }));
-      }
+      if (byReason.has('type')) parts.push(this.translate.instant('addListing.errors.invalidFileType', { files: joinFiles(byReason.get('type')!) }));
+      if (byReason.has('maxPhotos')) parts.push(this.translate.instant('addListing.errors.mediaMaxPhotos', { files: joinFiles(byReason.get('maxPhotos')!) }));
+      if (byReason.has('maxPhotosWithVideo')) parts.push(this.translate.instant('addListing.errors.mediaMaxPhotosWithVideo', { files: joinFiles(byReason.get('maxPhotosWithVideo')!) }));
+      if (byReason.has('videoLimit')) parts.push(this.translate.instant('addListing.errors.mediaVideoLimit', { files: joinFiles(byReason.get('videoLimit')!) }));
       this.errorMessage = parts.join(' ');
     }
     while (this.media.length < this.uploadedFiles.length) {
@@ -704,19 +694,13 @@ export class AddListing implements OnInit, OnDestroy {
   removeFile(index: number): void {
     if (index >= 0 && index < this.uploadedFiles.length) {
       const prev = this.previewUrls[index];
-      if (typeof prev === 'string' && prev.startsWith('blob:')) {
-        URL.revokeObjectURL(prev);
-      }
+      if (typeof prev === 'string' && prev.startsWith('blob:')) URL.revokeObjectURL(prev);
       this.uploadedFiles.splice(index, 1);
       this.previewUrls.splice(index, 1);
-      if (this.media.length > index) {
-        this.media.removeAt(index);
-      }
+      if (this.media.length > index) this.media.removeAt(index);
       this.notifyMediaChanged();
     }
   }
-
-  // ─── Drag-to-reorder ───────────────────────────────────────────────────────
 
   onThumbDragStart(index: number, event: DragEvent): void {
     this.dragSrcIndex = index;
@@ -726,44 +710,33 @@ export class AddListing implements OnInit, OnDestroy {
 
   onThumbDragOver(index: number, event: DragEvent): void {
     event.preventDefault();
-    event.stopPropagation(); // Don't let the outer file-drop zone handle this
+    event.stopPropagation();
     event.dataTransfer!.dropEffect = 'move';
     this.dragOverIndex = index;
   }
 
-  onThumbDragLeave(): void {
-    this.dragOverIndex = null;
-  }
+  onThumbDragLeave(): void { this.dragOverIndex = null; }
 
   onThumbDrop(index: number, event: DragEvent): void {
     event.preventDefault();
     event.stopPropagation();
-
     const src = this.dragSrcIndex;
     this.dragSrcIndex = null;
     this.dragOverIndex = null;
-
     if (src === null || src === index) return;
-
     const files = [...this.uploadedFiles];
     const previews = [...this.previewUrls];
-
     const [movedFile] = files.splice(src, 1);
     const [movedPreview] = previews.splice(src, 1);
     files.splice(index, 0, movedFile);
     previews.splice(index, 0, movedPreview);
-
     this.uploadedFiles = files;
     this.previewUrls = previews;
     this.notifyMediaChanged();
   }
 
-  onThumbDragEnd(): void {
-    this.dragSrcIndex = null;
-    this.dragOverIndex = null;
-  }
+  onThumbDragEnd(): void { this.dragSrcIndex = null; this.dragOverIndex = null; }
 
-  /** Price used for the fee forecast: minimum accepted price when set, else starting bid (auction) or buy now (best-offer). */
   getFeeForecastPriceBasis(): number {
     const n = (name: string): number => {
       const raw = this.listingForm.get(name)?.value;
@@ -777,7 +750,6 @@ export class AddListing implements OnInit, OnDestroy {
     return n('buyNowPrice') || n('startingBid');
   }
 
-  /** Decimal rate for the single Bidroom seller fee (3.5% standard, 6% private-room auction). */
   sellerFeeRateDecimal(): number {
     const env = environment as { bidroomFeeSellerRate?: number; bidroomFeePrivateRoomRate?: number };
     const base = env.bidroomFeeSellerRate ?? 0.035;
@@ -788,17 +760,12 @@ export class AddListing implements OnInit, OnDestroy {
     return base;
   }
 
-  get sellerFeeRatePct(): number {
-    return this.sellerFeeRateDecimal() * 100;
-  }
-
-  /** Display string for seller fee % (e.g. 3.5 or 6). */
+  get sellerFeeRatePct(): number { return this.sellerFeeRateDecimal() * 100; }
   get sellerFeeRateDisplay(): string {
     const r = this.sellerFeeRatePct;
     return Number.isInteger(r) ? String(r) : r.toFixed(1);
   }
 
-  /** Estimated Bidroom seller fee for the forecast price basis. */
   estimatedSellerFeeAmount(): number {
     return this.getFeeForecastPriceBasis() * this.sellerFeeRateDecimal();
   }
@@ -824,7 +791,6 @@ export class AddListing implements OnInit, OnDestroy {
   async onSubmit(): Promise<void> {
     if (this.isSubmitting || this.isUploadingImages) return;
 
-    // Mark all fields touched so validation styles appear
     Object.keys(this.listingForm.controls).forEach(key => {
       this.listingForm.get(key)?.markAsTouched();
     });
@@ -844,25 +810,17 @@ export class AddListing implements OnInit, OnDestroy {
         returnPolicy: 'Return Policy',
         sellerDeclaration: 'Seller Declaration checkbox',
       };
-
       const missing: string[] = [];
       if (this.uploadedFiles.length < 1) missing.push('at least 1 photo');
       Object.keys(fieldLabels).forEach(key => {
         if (this.listingForm.get(key)?.invalid) missing.push(fieldLabels[key]);
       });
-
       this.errorMessage = missing.length > 0
         ? `Please complete the following before publishing: ${missing.join(', ')}.`
         : 'Please fix the highlighted errors before publishing.';
-
-      setTimeout(() => {
-        const firstInvalid = document.querySelector('.ng-invalid:not(form):not(ng-component)');
-        firstInvalid?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }, 50);
       return;
     }
 
-    // Pre-flight KYC check for high-value listings
     const price = parseFloat(this.listingForm.get('startingBid')?.value || '0');
     if (price >= KYC_THRESHOLD) {
       const status = await firstValueFrom(this.kycService.fetchStatus()).catch(() => null);
@@ -878,9 +836,7 @@ export class AddListing implements OnInit, OnDestroy {
     try {
       this.errorMessage = this.translate.instant('addListing.uploadingImages');
       const imageUrls = await this.uploadImages();
-      if (imageUrls.length === 0) {
-        throw new Error(this.translate.instant('addListing.errorUploadFailed'));
-      }
+      if (imageUrls.length === 0) throw new Error(this.translate.instant('addListing.errorUploadFailed'));
 
       this.errorMessage = this.translate.instant('addListing.creatingListing');
       const formData = this.prepareListingData();
@@ -891,13 +847,9 @@ export class AddListing implements OnInit, OnDestroy {
       this.isSubmitting = false;
       this.errorMessage = '';
       Swal.fire({
-        toast: true,
-        position: 'top-end',
-        icon: 'success',
+        toast: true, position: 'top-end', icon: 'success',
         title: this.translate.instant('addListing.successMessage'),
-        showConfirmButton: false,
-        timer: 3000,
-        timerProgressBar: true
+        showConfirmButton: false, timer: 3000, timerProgressBar: true
       });
       this.router.navigate(['/listing', listing.slug]);
       firstValueFrom(this.listingsService.deleteListingDraft()).catch(() => {});
@@ -935,7 +887,7 @@ export class AddListing implements OnInit, OnDestroy {
       packageSize: formValue.shippingOption === 'calculated' ? formValue.packageSize : null,
       shippingOriginPostalCode: formValue.shippingOption === 'calculated' ? formValue.shippingOriginPostalCode : null,
       shippingOriginCity: formValue.shippingOption === 'calculated' ? formValue.shippingOriginCity : null,
-      shippingOriginCountry: formValue.shippingOption === 'calculated' ? (formValue.shippingOriginCountry || 'US') : null,
+      shippingOriginCountry: formValue.shippingOption === 'calculated' ? (formValue.shippingOriginCountry || 'PT') : null,
       returnPolicy: formValue.returnPolicy,
       specifications: formValue.specifications || [],
       itemMode: formValue.itemMode || 'single',
@@ -962,9 +914,6 @@ export class AddListing implements OnInit, OnDestroy {
       }
       if (control.hasError('mustBeHigherThanStartingBid')) {
         return this.translate.instant('addListing.errors.buyNowTooLow');
-      }
-      if (control.hasError('mustBeAtLeastStartingBid')) {
-        return this.translate.instant('addListing.errors.reserveTooLow');
       }
     }
     return '';

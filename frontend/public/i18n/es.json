@@ -272,7 +272,63 @@
       "mediaMaxPhotos": "Puedes añadir como máximo 20 fotos. Elimina algunas para añadir más. No añadidas: {{files}}",
       "mediaMaxPhotosWithVideo": "Con un vídeo puedes añadir como máximo 5 fotos. Elimina fotos o el vídeo para añadir más. No añadidas: {{files}}",
       "mediaVideoLimit": "Solo se permite un vídeo y como máximo 5 fotos con vídeo. No añadido: {{files}}"
-    }
+    },
+    "steps": {
+      "label": "Pasos"
+    },
+    "step5Title": "Envío",
+    "step5": "Método y origen",
+    "step6Title": "Publicar",
+    "step6": "Revisión final",
+    "step1.section": "Elige el formato del anuncio",
+    "step2.section": "Información del artículo",
+    "step3.section": "Fotos del artículo",
+    "step4.auction.section": "Precios de la subasta",
+    "step4.offer.section": "Precios de la mejor oferta",
+    "step5.section": "Método de envío",
+    "step5.location": "Ubicación",
+    "step6.section": "Revisión y publicación",
+    "optional": "opcional",
+    "offerDeadline": "Plazo de ofertas",
+    "offerDeadlineHint": "Más tiempo significa más compradores viendo tu anuncio y más propuestas.",
+    "startingBidHint": "El valor mínimo para la primera puja. Una puja inicial competitiva atrae más licitadores.",
+    "reserveHint": "La subasta solo vincula al ganador si se alcanza este valor.",
+    "durationHint": "Los artículos raros o premium tienden a generar más pujas con 7–10 días.",
+    "formatBestOfferDesc": "Los compradores envían propuestas y tú eliges cuál aceptar. Define un precio mínimo — tienes total libertad para rechazar cualquier oferta por debajo de ese valor.",
+    "formatAuctionDesc": "Los compradores pujan en tiempo real y compiten por tu artículo. Defines la duración y la puja inicial. El ganador se determina automáticamente.",
+    "drop": {
+      "title": "Arrastra las fotos aquí",
+      "sub": "o haz clic para seleccionar · JPEG, PNG, WebP · máx. 20 fotos"
+    },
+    "mediaHint": "La primera foto será la imagen principal del anuncio.",
+    "mediaCover": "Principal",
+    "photosLabel": "fotos",
+    "preview": {
+      "label": "Vista previa",
+      "titlePlaceholder": "El título aparece aquí"
+    },
+    "ck": {
+      "format": "Formato seleccionado",
+      "title": "Título completado",
+      "category": "Categoría elegida",
+      "condition": "Condición definida",
+      "desc": "Descripción ≥ 50 chars",
+      "photos": "Al menos 1 foto",
+      "price": "Precio definido",
+      "shipping": "Envío configurado"
+    },
+    "stepOf": "Paso {{step}} de {{total}}",
+    "kycNotice": "Para artículos con valor ≥ €5.000 se requiere verificación de identidad (KYC) antes de publicar.",
+    "stripeRequired": "Configura los pagos primero",
+    "stripeRequiredText": "Para recibir el pago de tus ventas necesitas configurar tu cuenta de pagos.",
+    "nav": {
+      "dashboard": "Dashboard"
+    },
+    "return7": "7 días",
+    "feeBuyer": "Tarifa Stripe",
+    "feeBuyerNote": "Pagado por el comprador",
+    "feeReceive": "Recibirás aproximadamente",
+    "specHint": "Ej: Material — Oro 18k · Dimensiones — 36mm · Referencia — 5512"
   },
   "listingList": {
     "searchPlaceholder": "Buscar subastas...",
@@ -483,13 +539,19 @@
       "decline": "Rechazar",
       "declining": "Rechazando…",
       "anonymous": "Anónimo",
-      "verifiedLabel": "✓ Verificado"
+      "verifiedLabel": "✓ Verificado",
+      "statusAccepted": "Aceptada por el vendedor",
+      "statusDeclined": "Rechazada",
+      "statusExpired": "Caducada",
+      "stripeWarningPrefix": "⚠️ Conecta Stripe en",
+      "stripeSettingsLink": "Configuración → Pagos"
     },
     "shipping": {
       "title": "Envío",
       "free": "Envío gratis",
       "cost": "Costo de envío:",
-      "from": "Desde:"
+      "from": "Desde:",
+      "workingDays": "días hábiles"
     },
     "returnPolicy": {
       "title": "Política de devolución",
@@ -513,7 +575,10 @@
       "notifyOutbid": "Notificarme cuando me superen la puja",
       "cancel": "Cancelar",
       "submit": "Pujar",
-      "submitting": "Enviando puja…"
+      "submitting": "Enviando puja…",
+      "subtitle": "Vinculante si ganas. Síguelo en tiempo real.",
+      "minBid": "Puja mínima",
+      "valueLabel": "Importe (€)"
     },
     "offerModal": {
       "title": "Hacer una oferta",
@@ -526,7 +591,11 @@
       "belowMinNote": "Tu oferta está por debajo del precio mínimo del vendedor. El vendedor no está obligado a aceptar esta oferta, incluso si eres el único postor.",
       "cancel": "Cancelar",
       "submit": "Enviar oferta",
-      "submitting": "Enviando oferta…"
+      "submitting": "Enviando oferta…",
+      "subtitle": "Si el vendedor acepta, te comprometes a comprar a ese precio. Puedes retirar la oferta mientras siga pendiente.",
+      "figuresHint": "La mínima es la cantidad más baja que el vendedor valorará. La más alta es la mejor oferta hasta ahora: puedes igualarla o superarla, o quedarte en el mínimo.",
+      "highestOffer": "Oferta más alta",
+      "valueLabel": "Importe (€)"
     },
     "watchlistModal": {
       "title": "Guardar en Favoritos",
@@ -557,8 +626,71 @@
       "creating": "Creando…",
       "cannotInvite": "Visitante (no se puede invitar)",
       "ineligible": "Regístrate para ser elegible",
-      "invite": "Invitar"
-    }
+      "invite": "Invitar",
+      "maxBid": "Puja máx:",
+      "bids": "puja(s)",
+      "notEligible": "No elegible",
+      "selectedCount": "seleccionados (mín. 2, máx. 5)",
+      "bidderFallback": "Pujador"
+    },
+    "nav": {
+      "back": "Subastas",
+      "dashboard": "Panel",
+      "signIn": "Iniciar sesión"
+    },
+    "formatPill": {
+      "auction": "Subasta en vivo",
+      "privateRoom": "Sala Privada"
+    },
+    "sidebar": {
+      "watching": "observando",
+      "congratsWon": "¡Enhorabuena! Has ganado esta subasta.",
+      "winnerWasSelected": "Se seleccionó un ganador.",
+      "viewTransaction": "Ver transacción →",
+      "privateRoomActiveDesc": "Puja exclusiva en curso.",
+      "privateRoomClosedWinner": "Ganador seleccionado. Precio final:",
+      "bidPrivateRoom": "Pujar en sala privada",
+      "watchPrivateRoomSpectator": "Ver sala privada (espectador)",
+      "watchRoomWaiting": "Ver sala (esperando inicio)",
+      "ownListingNote": "Este es tu anuncio.",
+      "reopenNoBids": "Sin pujas. Puedes reabrir 7 días más.",
+      "reopenNoOffers": "Sin ofertas. Puedes reabrir 7 días más.",
+      "inWatchlist": "En lista de seguimiento",
+      "minimumOffer": "Oferta mínima",
+      "minimumOfferDesc": "Las ofertas por debajo de este importe pueden ser rechazadas automáticamente.",
+      "minimumBid": "Próxima puja mínima",
+      "bidIncrement": "Incremento:",
+      "reviews": "valoraciones",
+      "following": "✓ Siguiendo",
+      "follow": "+ Seguir",
+      "eligibleCountdown": "Sala privada:",
+      "remaining": "restantes",
+      "winnerSelectionCountdownOffer": "24h para aceptar oferta",
+      "winnerSelectionCountdownWinner": "24h para seleccionar ganador",
+      "invitedRoomHeader": "Invitados a la sala",
+      "buyNow": "Comprar ya ·"
+    },
+    "payment": {
+      "title": "Pago",
+      "protected": "Protegido por Stripe",
+      "escrow": "Fondos retenidos hasta confirmación de recepción"
+    },
+    "report": {
+      "listing": "Reportar anuncio",
+      "seller": "Reportar vendedor"
+    },
+    "bidsTab": {
+      "emptyActive": "Sin pujas aún. Sé el primero en pujar.",
+      "notEligible": "No elegible – cuenta sin verificar",
+      "winnerChip": "🏆 Ganador"
+    },
+    "loginModal": {
+      "title": "Cuenta requerida",
+      "subtitle": "Debes estar autenticado para añadir a la lista de seguimiento.",
+      "createAccount": "Crear cuenta",
+      "signIn": "Iniciar sesión"
+    },
+    "cancel": "Cancelar"
   },
   "auth": {
     "common": {

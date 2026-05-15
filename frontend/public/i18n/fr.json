@@ -272,7 +272,63 @@
       "mediaMaxPhotos": "Vous pouvez ajouter au maximum 20 photos. Supprimez-en pour en ajouter d'autres. Non ajoutées : {{files}}",
       "mediaMaxPhotosWithVideo": "Avec une vidéo, vous pouvez ajouter au maximum 5 photos. Supprimez des photos ou la vidéo pour continuer. Non ajoutées : {{files}}",
       "mediaVideoLimit": "Une seule vidéo est autorisée, et au maximum 5 photos avec une vidéo. Non ajouté : {{files}}"
-    }
+    },
+    "steps": {
+      "label": "Étapes"
+    },
+    "step5Title": "Expédition",
+    "step5": "Méthode et origine",
+    "step6Title": "Publier",
+    "step6": "Révision finale",
+    "step1.section": "Choisissez le format de l'annonce",
+    "step2.section": "Informations sur l'article",
+    "step3.section": "Photos de l'article",
+    "step4.auction.section": "Prix de la vente aux enchères",
+    "step4.offer.section": "Prix de la meilleure offre",
+    "step5.section": "Méthode d'expédition",
+    "step5.location": "Localisation",
+    "step6.section": "Révision et publication",
+    "optional": "facultatif",
+    "offerDeadline": "Délai des offres",
+    "offerDeadlineHint": "Plus de temps signifie plus d'acheteurs qui voient votre annonce.",
+    "startingBidHint": "La valeur minimale pour la première mise. Une mise de départ compétitive attire plus d'enchérisseurs.",
+    "reserveHint": "L'enchère ne lie le gagnant que si cette valeur est atteinte.",
+    "durationHint": "Les articles rares ou premium ont tendance à générer plus d'enchères avec 7–10 jours.",
+    "formatBestOfferDesc": "Les acheteurs soumettent des offres et vous choisissez celle que vous préférez. Définissez un prix minimum — vous avez toute liberté de refuser toute offre en dessous de cette valeur.",
+    "formatAuctionDesc": "Les acheteurs enchérissent en temps réel et se disputent votre article. Vous définissez la durée et la mise de départ. Le gagnant est déterminé automatiquement.",
+    "drop": {
+      "title": "Faites glisser les photos ici",
+      "sub": "ou cliquez pour sélectionner · JPEG, PNG, WebP · max. 20 photos"
+    },
+    "mediaHint": "La première photo sera l'image principale de l'annonce.",
+    "mediaCover": "Principale",
+    "photosLabel": "photos",
+    "preview": {
+      "label": "Aperçu",
+      "titlePlaceholder": "Le titre apparaît ici"
+    },
+    "ck": {
+      "format": "Format sélectionné",
+      "title": "Titre rempli",
+      "category": "Catégorie choisie",
+      "condition": "Condition définie",
+      "desc": "Description ≥ 50 chars",
+      "photos": "Au moins 1 photo",
+      "price": "Prix défini",
+      "shipping": "Expédition configurée"
+    },
+    "stepOf": "Étape {{step}} sur {{total}}",
+    "kycNotice": "Pour les articles d'une valeur ≥ 5 000 €, une vérification d'identité (KYC) est requise avant la publication.",
+    "stripeRequired": "Configurez les paiements d'abord",
+    "stripeRequiredText": "Pour recevoir le paiement de vos ventes, vous devez configurer votre compte de paiement.",
+    "nav": {
+      "dashboard": "Tableau de bord"
+    },
+    "return7": "7 jours",
+    "feeBuyer": "Frais Stripe",
+    "feeBuyerNote": "Payé par l'acheteur",
+    "feeReceive": "Vous recevrez approximativement",
+    "specHint": "Ex : Matériau — Or 18k · Dimensions — 36mm · Référence — 5512"
   },
   "listingList": {
     "searchPlaceholder": "Rechercher des enchères...",
@@ -483,13 +539,19 @@
       "decline": "Refuser",
       "declining": "Refus…",
       "anonymous": "Anonyme",
-      "verifiedLabel": "✓ Vérifié"
+      "verifiedLabel": "✓ Vérifié",
+      "statusAccepted": "Acceptée par le vendeur",
+      "statusDeclined": "Refusée",
+      "statusExpired": "Expirée",
+      "stripeWarningPrefix": "Connectez Stripe dans",
+      "stripeSettingsLink": "Paramètres → Paiements"
     },
     "shipping": {
       "title": "Expédition",
       "free": "Livraison gratuite",
       "cost": "Frais d'expédition :",
-      "from": "De :"
+      "from": "De :",
+      "workingDays": "jours ouvrables"
     },
     "returnPolicy": {
       "title": "Politique de retour",
@@ -513,7 +575,10 @@
       "notifyOutbid": "M'avertir lorsque je suis surenchéri",
       "cancel": "Annuler",
       "submit": "Enchérir",
-      "submitting": "Enchère en cours…"
+      "submitting": "Enchère en cours…",
+      "subtitle": "Contraignant si vous gagnez. Suivez en temps réel.",
+      "minBid": "Mise minimale",
+      "valueLabel": "Montant (€)"
     },
     "offerModal": {
       "title": "Faire une offre",
@@ -526,7 +591,11 @@
       "belowMinNote": "Votre offre est inférieure au prix minimum du vendeur. Le vendeur n'est pas obligé d'accepter cette offre, même si vous êtes le seul enchérisseur.",
       "cancel": "Annuler",
       "submit": "Envoyer l'offre",
-      "submitting": "Envoi de l'offre…"
+      "submitting": "Envoi de l'offre…",
+      "subtitle": "Si le vendeur accepte, vous vous engagez à acheter à ce prix. Vous pouvez retirer votre offre tant qu'elle est en attente.",
+      "figuresHint": "Le minimum est le montant le plus bas que le vendeur examinera. Le plus haut est la meilleure offre actuelle : vous pouvez l'égaler, la dépasser ou rester au minimum.",
+      "highestOffer": "Offre la plus haute",
+      "valueLabel": "Montant (€)"
     },
     "watchlistModal": {
       "title": "Enregistrer dans les favoris",
@@ -557,8 +626,71 @@
       "creating": "Création…",
       "cannotInvite": "Visiteur (ne peut pas être invité)",
       "ineligible": "Inscrivez-vous pour être éligible",
-      "invite": "Inviter"
-    }
+      "invite": "Inviter",
+      "maxBid": "Mise max :",
+      "bids": "offre(s)",
+      "notEligible": "Non éligible",
+      "selectedCount": "sélectionnés (min. 2, max. 5)",
+      "bidderFallback": "Enchérisseur"
+    },
+    "nav": {
+      "back": "Enchères",
+      "dashboard": "Tableau de bord",
+      "signIn": "Se connecter"
+    },
+    "formatPill": {
+      "auction": "Enchère en direct",
+      "privateRoom": "Salle Privée"
+    },
+    "sidebar": {
+      "watching": "observent",
+      "congratsWon": "Félicitations ! Vous avez remporté cette enchère.",
+      "winnerWasSelected": "Un gagnant a été sélectionné.",
+      "viewTransaction": "Voir la transaction →",
+      "privateRoomActiveDesc": "Enchère exclusive en cours.",
+      "privateRoomClosedWinner": "Gagnant sélectionné. Prix final :",
+      "bidPrivateRoom": "Enchérir en salle privée",
+      "watchPrivateRoomSpectator": "Voir salle privée (spectateur)",
+      "watchRoomWaiting": "Voir salle (en attente)",
+      "ownListingNote": "C'est votre annonce.",
+      "reopenNoBids": "Pas de mises. Vous pouvez rouvrir 7 jours supplémentaires.",
+      "reopenNoOffers": "Pas de propositions. Vous pouvez rouvrir 7 jours supplémentaires.",
+      "inWatchlist": "Dans la liste de suivi",
+      "minimumOffer": "Offre minimale",
+      "minimumOfferDesc": "Les offres en dessous de ce montant peuvent être automatiquement refusées.",
+      "minimumBid": "Prochaine mise minimale",
+      "bidIncrement": "Incrément :",
+      "reviews": "avis",
+      "following": "✓ Abonné",
+      "follow": "+ Suivre",
+      "eligibleCountdown": "Salle privée :",
+      "remaining": "restantes",
+      "winnerSelectionCountdownOffer": "24h pour accepter l'offre",
+      "winnerSelectionCountdownWinner": "24h pour sélectionner le gagnant",
+      "invitedRoomHeader": "Invités à la salle",
+      "buyNow": "Acheter ·"
+    },
+    "payment": {
+      "title": "Paiement",
+      "protected": "Protégé par Stripe",
+      "escrow": "Fonds retenus jusqu'à confirmation de réception"
+    },
+    "report": {
+      "listing": "Signaler l'annonce",
+      "seller": "Signaler le vendeur"
+    },
+    "bidsTab": {
+      "emptyActive": "Pas de mises encore. Soyez le premier à enchérir.",
+      "notEligible": "Non éligible – compte non vérifié",
+      "winnerChip": "🏆 Gagnant"
+    },
+    "loginModal": {
+      "title": "Compte requis",
+      "subtitle": "Vous devez être connecté pour ajouter à la liste de suivi.",
+      "createAccount": "Créer un compte",
+      "signIn": "Se connecter"
+    },
+    "cancel": "Annuler"
   },
   "auth": {
     "common": {

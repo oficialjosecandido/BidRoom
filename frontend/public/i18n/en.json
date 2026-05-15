@@ -37,7 +37,10 @@
     },
     "home": {
       "skipHeading": "BidRoom.pt — premium auctions in Portugal. Available in light and dark mode, with Portuguese tile motifs in light mode.",
-      "breadcrumb": { "home": "Home", "featured": "Featured auctions" },
+      "breadcrumb": {
+        "home": "Home",
+        "featured": "Featured auctions"
+      },
       "theme": {
         "toggleTitle": "Switch light / dark mode",
         "light": "Light mode",
@@ -61,16 +64,32 @@
         "satisfaction": "Buyer satisfaction",
         "bidTime": "Average bid time"
       },
-      "section": { "featured": "Featured", "ongoing": "Live auctions" },
-      "badges": { "live": "Live", "privateRoom": "Private room", "bestOffer": "Best offer" },
+      "section": {
+        "featured": "Featured",
+        "ongoing": "Live auctions"
+      },
+      "badges": {
+        "live": "Live",
+        "privateRoom": "Private room",
+        "bestOffer": "Best offer"
+      },
       "listing": {
         "currentBid": "Current bid",
         "minPrice": "Minimum price",
         "offersCount": "3 offers"
       },
-      "listing1": { "title": "Patek Philippe Ref. 5711", "meta": "Watches · Geneva, 2019" },
-      "listing2": { "title": "Barca Velha 1985 — Magnum", "meta": "Wine · Douro, Portugal" },
-      "listing3": { "title": "Leica M6 TTL — 0.85x", "meta": "Photography · Lisbon, 2001" },
+      "listing1": {
+        "title": "Patek Philippe Ref. 5711",
+        "meta": "Watches · Geneva, 2019"
+      },
+      "listing2": {
+        "title": "Barca Velha 1985 — Magnum",
+        "meta": "Wine · Douro, Portugal"
+      },
+      "listing3": {
+        "title": "Leica M6 TTL — 0.85x",
+        "meta": "Photography · Lisbon, 2001"
+      },
       "azulejoSection": "Portuguese inspiration · 16th-century tiles",
       "private": {
         "tag": "Exclusive feature",
@@ -377,7 +396,63 @@
       "mediaMaxPhotos": "You can add at most 20 photos. Remove some to add more. Not added: {{files}}",
       "mediaMaxPhotosWithVideo": "With a video you can add at most 5 photos. Remove photos or the video to add more. Not added: {{files}}",
       "mediaVideoLimit": "Only one video is allowed, and at most 5 photos with a video. Not added: {{files}}"
-    }
+    },
+    "steps": {
+      "label": "Steps"
+    },
+    "step5Title": "Shipping",
+    "step5": "Method and origin",
+    "step6Title": "Publish",
+    "step6": "Final review",
+    "step1.section": "Choose listing format",
+    "step2.section": "Item information",
+    "step3.section": "Item photos",
+    "step4.auction.section": "Auction pricing",
+    "step4.offer.section": "Best offer pricing",
+    "step5.section": "Shipping method",
+    "step5.location": "Location",
+    "step6.section": "Review and publish",
+    "optional": "optional",
+    "offerDeadline": "Offer deadline",
+    "offerDeadlineHint": "More time means more buyers seeing your listing and more offers to receive.",
+    "startingBidHint": "The minimum value for the first bid. A competitive starting bid attracts more bidders.",
+    "reserveHint": "The auction only binds the winner if this value is reached.",
+    "durationHint": "Rare or premium items tend to attract more bids over 7–10 days.",
+    "formatBestOfferDesc": "Buyers submit offers and you choose which to accept. Set a minimum price — you have full freedom to decline any offer below that value.",
+    "formatAuctionDesc": "Buyers bid in real time and compete for your item. You set the duration and the starting bid. The winner is determined automatically.",
+    "drop": {
+      "title": "Drag photos here",
+      "sub": "or click to select · JPEG, PNG, WebP · max. 20 photos"
+    },
+    "mediaHint": "The first photo will be the main listing image.",
+    "mediaCover": "Cover",
+    "photosLabel": "photos",
+    "preview": {
+      "label": "Preview",
+      "titlePlaceholder": "Title appears here"
+    },
+    "ck": {
+      "format": "Format selected",
+      "title": "Title filled",
+      "category": "Category chosen",
+      "condition": "Condition set",
+      "desc": "Description ≥ 50 chars",
+      "photos": "At least 1 photo",
+      "price": "Price defined",
+      "shipping": "Shipping configured"
+    },
+    "stepOf": "Step {{step}} of {{total}}",
+    "kycNotice": "For items valued ≥ €5,000, identity verification (KYC) is required before publishing.",
+    "stripeRequired": "Set up payments first",
+    "stripeRequiredText": "To receive payment for your sales you need to configure your payment account.",
+    "nav": {
+      "dashboard": "Dashboard"
+    },
+    "return7": "7 days",
+    "feeBuyer": "Stripe fee",
+    "feeBuyerNote": "Paid by buyer",
+    "feeReceive": "You will receive approximately",
+    "specHint": "E.g.: Material — 18k Gold · Dimensions — 36mm · Reference — 5512"
   },
   "listingList": {
     "searchPlaceholder": "Search auctions...",
@@ -614,13 +689,19 @@
       "decline": "Decline",
       "declining": "Declining…",
       "anonymous": "Anonymous",
-      "verifiedLabel": "✓ Verified"
+      "verifiedLabel": "✓ Verified",
+      "statusAccepted": "Accepted by seller",
+      "statusDeclined": "Declined",
+      "statusExpired": "Expired",
+      "stripeWarningPrefix": "⚠️ Connect Stripe in",
+      "stripeSettingsLink": "Settings → Payments"
     },
     "shipping": {
       "title": "Shipping",
       "free": "Free shipping",
       "cost": "Shipping cost:",
-      "from": "From:"
+      "from": "From:",
+      "workingDays": "working days"
     },
     "returnPolicy": {
       "title": "Return policy",
@@ -644,7 +725,10 @@
       "notifyOutbid": "Notify me when I'm outbid",
       "cancel": "Cancel",
       "submit": "Place bid",
-      "submitting": "Placing bid…"
+      "submitting": "Placing bid…",
+      "subtitle": "Binding if you win. Follow in real time.",
+      "minBid": "Minimum bid",
+      "valueLabel": "Amount (€)"
     },
     "offerModal": {
       "title": "Make an offer",
@@ -657,7 +741,11 @@
       "belowMinNote": "Your offer is below the seller's minimum price. The seller is not obliged to accept this offer, even if you're the only bidder.",
       "cancel": "Cancel",
       "submit": "Send offer",
-      "submitting": "Sending offer…"
+      "submitting": "Sending offer…",
+      "subtitle": "If the seller accepts, you agree to buy at that price. You can withdraw your offer while it is still pending.",
+      "figuresHint": "Minimum is the lowest amount the seller will consider. Highest is the best offer so far—you can match or exceed it, or stay at the minimum.",
+      "highestOffer": "Highest offer",
+      "valueLabel": "Amount (€)"
     },
     "watchlistModal": {
       "title": "Save to Watchlist",
@@ -688,8 +776,71 @@
       "creating": "Creating…",
       "cannotInvite": "Guest (cannot invite)",
       "ineligible": "Register to be eligible",
-      "invite": "Invite"
-    }
+      "invite": "Invite",
+      "maxBid": "Max bid:",
+      "bids": "bid(s)",
+      "notEligible": "Not eligible",
+      "selectedCount": "selected (min. 2, max. 5)",
+      "bidderFallback": "Bidder"
+    },
+    "nav": {
+      "back": "Auctions",
+      "dashboard": "Dashboard",
+      "signIn": "Sign In"
+    },
+    "formatPill": {
+      "auction": "Live Auction",
+      "privateRoom": "Private Room"
+    },
+    "sidebar": {
+      "watching": "watching",
+      "congratsWon": "Congratulations! You won this auction.",
+      "winnerWasSelected": "A winner was selected.",
+      "viewTransaction": "View transaction →",
+      "privateRoomActiveDesc": "Exclusive bidding in progress.",
+      "privateRoomClosedWinner": "Winner selected. Final price:",
+      "bidPrivateRoom": "Bid in private room",
+      "watchPrivateRoomSpectator": "View private room (spectator)",
+      "watchRoomWaiting": "View room (awaiting start)",
+      "ownListingNote": "This is your listing.",
+      "reopenNoBids": "No bids. You can reopen for another 7 days.",
+      "reopenNoOffers": "No offers. You can reopen for another 7 days.",
+      "inWatchlist": "In watchlist",
+      "minimumOffer": "Minimum Offer",
+      "minimumOfferDesc": "Offers below this amount may be automatically declined.",
+      "minimumBid": "Next Minimum Bid",
+      "bidIncrement": "Increment:",
+      "reviews": "reviews",
+      "following": "✓ Following",
+      "follow": "+ Follow",
+      "eligibleCountdown": "Private room:",
+      "remaining": "remaining",
+      "winnerSelectionCountdownOffer": "24h to accept offer",
+      "winnerSelectionCountdownWinner": "24h to select winner",
+      "invitedRoomHeader": "Room invitees",
+      "buyNow": "Buy now ·"
+    },
+    "payment": {
+      "title": "Payment",
+      "protected": "Protected by Stripe",
+      "escrow": "Funds held until receipt confirmed"
+    },
+    "report": {
+      "listing": "Report listing",
+      "seller": "Report seller"
+    },
+    "bidsTab": {
+      "emptyActive": "No bids yet. Be the first to bid.",
+      "notEligible": "Not eligible – unverified account",
+      "winnerChip": "🏆 Winner"
+    },
+    "loginModal": {
+      "title": "Account required",
+      "subtitle": "You need to be signed in to add to the watchlist.",
+      "createAccount": "Create account",
+      "signIn": "Sign in"
+    },
+    "cancel": "Cancel"
   },
   "auth": {
     "common": {
@@ -1029,50 +1180,50 @@
         "disputes": "Disputes"
       },
       "analytics": {
-      "title": "Analytics",
-      "range": "Time range",
-      "last7d": "Last 7 days",
-      "last30d": "Last 30 days",
-      "custom": "Custom",
-      "from": "From",
-      "toOptional": "To (optional)",
-      "filterCategory": "Category",
-      "filterListing": "Listing",
-      "allCategories": "All categories",
-      "allListings": "All listings",
-      "apply": "Apply filters",
-      "views": "Page views",
-      "viewsHint": "Detail page loads in this range for your filtered listings.",
-      "bidsOffers": "Bid & offer actions",
-      "bidsOffersHint": "Count of bids and offers placed in this range.",
-      "salesPeriod": "Sales activity",
-      "salesPeriodHint": "Distinct listings where a buyer paid or completed checkout in this range.",
-      "followers": "Followers",
-      "followersHint": "{{n}} new in this period",
-      "inventory": "Listings breakdown",
-      "countActive": "active",
-      "countEnded": "ended",
-      "countSoldEver": "sold (ever)",
-      "countCancelled": "cancelled",
-      "conversionTitle": "Conversion rate",
-      "conversionDefinition": "sales with payment or completion in this range divided by filtered published listings.",
-      "conversionDash": "Not enough listings to compute.",
-      "perListing": "Per listing performance",
-      "colListing": "Listing",
-      "colStatus": "Status",
-      "colViews": "Views (range)",
-      "colBids": "Bid events (lifetime)",
-      "colSold": "Sold",
-      "yes": "Yes",
-      "saleThisPeriod": "Payment/completion this period",
-      "noListings": "No published listings match these filters.",
-      "loadFailed": "Could not load analytics. Try again.",
-      "analyticsCustomFromRequired": "Choose a start date for the custom range.",
-      "updating": "Updating…",
-      "statusActive": "Active",
-      "statusEnded": "Ended",
-      "statusCancelled": "Cancelled",
-      "statusDraft": "Draft"
+        "title": "Analytics",
+        "range": "Time range",
+        "last7d": "Last 7 days",
+        "last30d": "Last 30 days",
+        "custom": "Custom",
+        "from": "From",
+        "toOptional": "To (optional)",
+        "filterCategory": "Category",
+        "filterListing": "Listing",
+        "allCategories": "All categories",
+        "allListings": "All listings",
+        "apply": "Apply filters",
+        "views": "Page views",
+        "viewsHint": "Detail page loads in this range for your filtered listings.",
+        "bidsOffers": "Bid & offer actions",
+        "bidsOffersHint": "Count of bids and offers placed in this range.",
+        "salesPeriod": "Sales activity",
+        "salesPeriodHint": "Distinct listings where a buyer paid or completed checkout in this range.",
+        "followers": "Followers",
+        "followersHint": "{{n}} new in this period",
+        "inventory": "Listings breakdown",
+        "countActive": "active",
+        "countEnded": "ended",
+        "countSoldEver": "sold (ever)",
+        "countCancelled": "cancelled",
+        "conversionTitle": "Conversion rate",
+        "conversionDefinition": "sales with payment or completion in this range divided by filtered published listings.",
+        "conversionDash": "Not enough listings to compute.",
+        "perListing": "Per listing performance",
+        "colListing": "Listing",
+        "colStatus": "Status",
+        "colViews": "Views (range)",
+        "colBids": "Bid events (lifetime)",
+        "colSold": "Sold",
+        "yes": "Yes",
+        "saleThisPeriod": "Payment/completion this period",
+        "noListings": "No published listings match these filters.",
+        "loadFailed": "Could not load analytics. Try again.",
+        "analyticsCustomFromRequired": "Choose a start date for the custom range.",
+        "updating": "Updating…",
+        "statusActive": "Active",
+        "statusEnded": "Ended",
+        "statusCancelled": "Cancelled",
+        "statusDraft": "Draft"
       }
     },
     "notifications": {

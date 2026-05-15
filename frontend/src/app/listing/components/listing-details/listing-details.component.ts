@@ -868,7 +868,9 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
 
   openOfferModal(): void {
     if (!this.listing) return;
-    this.offerAmount = '';
+    const min = this.listing.minimumOfferPrice ?? this.listing.startingPrice;
+    this.offerAmount =
+      min != null && min > 0 ? this.formatPrice(min) : '';
     this.offerEmail = '';
     this.offerModalError = null;
     this.showOfferModal = true;
@@ -891,6 +893,16 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
     if (min == null) return false;
     const amount = this.getOfferAmountNumber();
     return amount > 0 && amount < min;
+  }
+
+  /** Guest must provide a valid email; amount must parse to a positive number. */
+  canSubmitOffer(): boolean {
+    if (this.getOfferAmountNumber() <= 0) return false;
+    if (!this.isAuthenticated) {
+      const trimmed = (this.offerEmail || '').trim();
+      if (!trimmed || !EMAIL_REGEX.test(trimmed)) return false;
+    }
+    return true;
   }
 
   submitOffer(): void {
