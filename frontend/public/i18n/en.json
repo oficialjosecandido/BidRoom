@@ -745,7 +745,15 @@
       "subtitle": "If the seller accepts, you agree to buy at that price. You can withdraw your offer while it is still pending.",
       "figuresHint": "Minimum is the lowest amount the seller will consider. Highest is the best offer so far—you can match or exceed it, or stay at the minimum.",
       "highestOffer": "Highest offer",
-      "valueLabel": "Amount (€)"
+      "valueLabel": "Amount (€)",
+      "yourOfferPreview": "You are offering:",
+      "successTitle": "Offer sent",
+      "successText": "Your offer of <strong>{{amount}}</strong> was submitted. The seller will review it—you can cancel while it is still pending.",
+      "successTextAccepted": "Your offer of <strong>{{amount}}</strong> was accepted by the seller. Complete the purchase in Transactions.",
+      "successConfirm": "Got it",
+      "errorTitle": "Could not send offer",
+      "errorText": "Failed to place offer. Please try again.",
+      "errorConfirm": "OK"
     },
     "watchlistModal": {
       "title": "Save to Watchlist",

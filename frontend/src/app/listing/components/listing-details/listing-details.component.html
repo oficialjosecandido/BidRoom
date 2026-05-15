@@ -531,8 +531,6 @@
 </div><!-- /page -->
 }<!-- /listing loaded -->
 
-</div><!-- /pg -->
-
 <!-- ─── MODALS ─── -->
 
 @if (showBidModal) {
@@ -579,43 +577,53 @@
 
 @if (showOfferModal) {
 <div class="overlay open" (click)="closeOfferModal()">
-  <div class="sheet" (click)="$event.stopPropagation()">
+  <div class="sheet sheet-offer" (click)="$event.stopPropagation()">
     <div class="sh-handle"></div>
     <div class="sh-body">
       <div class="sh-title">{{ 'listingDetails.offerModal.title' | translate }}</div>
-      <p class="sh-sub">{{ 'listingDetails.offerModal.subtitle' | translate }}</p>
-      <div class="chips">
-        <div class="chip-box">
-          <div class="cb-l">{{ 'listingDetails.offerModal.highestOffer' | translate }}</div>
-          <div class="cb-v">{{ getHighestOfferAmount() > 0 ? formatPrice(getHighestOfferAmount()) : '—' }}</div>
+      <p class="offer-sub">{{ 'listingDetails.offerModal.subtitle' | translate }}</p>
+      <div class="offer-stats">
+        <div class="offer-stat" [class.offer-stat--lead]="getHighestOfferAmount() > 0">
+          <span class="offer-stat-l">{{ 'listingDetails.offerModal.highestOffer' | translate }}</span>
+          <span class="offer-stat-v">{{ getHighestOfferAmount() > 0 ? formatPrice(getHighestOfferAmount()) : '—' }}</span>
         </div>
         @if (listing?.minimumOfferPrice) {
-          <div class="chip-box">
-            <div class="cb-l">{{ 'listingDetails.offerModal.minimumOffer' | translate }}</div>
-            <div class="cb-v">{{ formatPrice(listing!.minimumOfferPrice!) }}</div>
+          <div class="offer-stat">
+            <span class="offer-stat-l">{{ 'listingDetails.offerModal.minimumOffer' | translate }}</span>
+            <span class="offer-stat-v">{{ formatPrice(listing!.minimumOfferPrice!) }}</span>
           </div>
         }
       </div>
-      <p class="sh-figures-hint">{{ 'listingDetails.offerModal.figuresHint' | translate }}</p>
-      <label class="f-label" for="offer-amount">{{ 'listingDetails.offerModal.valueLabel' | translate }}</label>
-      <input class="f-input" id="offer-amount" type="text" inputmode="decimal"
-        [placeholder]="formatPrice(+(listing?.minimumOfferPrice ?? listing?.startingPrice ?? 0))"
-        [(ngModel)]="offerAmount" autocomplete="off" />
+      <div class="offer-amount-block">
+        <label class="offer-amount-l" for="offer-amount">{{ 'listingDetails.offerModal.valueLabel' | translate }}</label>
+        <div class="offer-amount-row">
+          <span class="offer-currency" aria-hidden="true">€</span>
+          <input class="offer-amount-input" id="offer-amount" type="text" inputmode="decimal"
+            [placeholder]="'' + (listing?.minimumOfferPrice ?? listing?.startingPrice ?? 0)"
+            [(ngModel)]="offerAmount" autocomplete="off" />
+        </div>
+        @if (getOfferAmountNumber() > 0) {
+          <p class="offer-preview">{{ 'listingDetails.offerModal.yourOfferPreview' | translate }} <strong>{{ formatPrice(getOfferAmountNumber()) }}</strong></p>
+        }
+      </div>
       @if (!isAuthenticated) {
         <label class="f-label" for="offer-email">{{ 'listingDetails.offerModal.emailLabel' | translate }}</label>
-        <input class="f-input" id="offer-email" type="email" placeholder="you@example.com" [(ngModel)]="offerEmail" autocomplete="email" />
+        <input class="f-input f-input-sm" id="offer-email" type="email" placeholder="you@example.com" [(ngModel)]="offerEmail" autocomplete="email" />
         <p class="f-hint">{{ 'listingDetails.offerModal.emailHint' | translate }}</p>
       }
       @if (isOfferBelowMinimum()) {
         <div class="below-min">{{ 'listingDetails.offerModal.belowMinNote' | translate }}</div>
       }
       @if (offerModalError) { <p class="sh-error">{{ offerModalError }}</p> }
-      <div class="sh-acts">
-        <button class="btn-sh-cancel" (click)="closeOfferModal()">{{ 'listingDetails.cancel' | translate }}</button>
-        <button class="btn-sh-submit" (click)="submitOffer()" [disabled]="offerSubmitting || !canSubmitOffer()">
-          {{ offerSubmitting ? ('listingDetails.offerModal.submitting' | translate) : ('listingDetails.offerModal.submit' | translate) }}
-        </button>
-      </div>
+      <button type="button" class="btn-offer-submit"
+        (click)="submitOffer()"
+        [class.btn-offer-submit--ready]="canSubmitOffer() && !offerSubmitting"
+        [disabled]="offerSubmitting || !canSubmitOffer()">
+        {{ offerSubmitting ? ('listingDetails.offerModal.submitting' | translate) : ('listingDetails.offerModal.submit' | translate) }}
+      </button>
+      <button type="button" class="btn-offer-cancel" (click)="closeOfferModal()">
+        {{ 'listingDetails.cancel' | translate }}
+      </button>
     </div>
   </div>
 </div>
@@ -690,3 +698,5 @@
     (closed)="showReportModal = null"
   ></app-report-modal>
 }
+
+</div><!-- /pg -->

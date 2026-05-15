@@ -16,7 +16,7 @@ import { PrivateRoomService, Bidder } from '../../../private-room/services/priva
 import { StripeConnectService } from '../../../shared/services/stripe-connect.service';
 import { FeatureFlagsService } from '../../../shared/services/feature-flags.service';
 import { KycService } from '../../../shared/services/kyc.service';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { ReportModalComponent } from '../../../shared/components/report-modal/report-modal.component';
 import { FollowService, FollowStatus } from '../../../shared/services/follow.service';
 
@@ -43,6 +43,7 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
   private kycService = inject(KycService);
   private followService = inject(FollowService);
   private cdr = inject(ChangeDetectorRef);
+  private translate = inject(TranslateService);
 
   isLight = false;
 
@@ -869,8 +870,7 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
   openOfferModal(): void {
     if (!this.listing) return;
     const min = this.listing.minimumOfferPrice ?? this.listing.startingPrice;
-    this.offerAmount =
-      min != null && min > 0 ? this.formatPrice(min) : '';
+    this.offerAmount = min != null && min > 0 ? String(min) : '';
     this.offerEmail = '';
     this.offerModalError = null;
     this.showOfferModal = true;
@@ -933,36 +933,47 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
       amount
     };
     if (!this.isAuthenticated && email) offerData.email = email;
-    this.offersService.createOffer(offerData).subscribe({
-      next: (created) => {
+    this.offersService.createOffer(offerData).pipe(
+      finalize(() => {
         this.offerSubmitting = false;
+        this.cdr.markForCheck();
+      })
+    ).subscribe({
+      next: (created) => {
         this.closeOfferModal();
         if (this.listing?._id) this.loadOffers(this.listing._id);
         const wasAccepted = created?.status === 'accepted';
         if (wasAccepted && this.listing?.slug) {
           this.loadListing(this.listing.slug);
         }
-        Swal.fire({
-          toast: true,
-          position: 'top-end',
-          icon: 'success',
-          title: wasAccepted ? 'Offer accepted!' : 'Offer sent successfully!',
-          showConfirmButton: false,
-          timer: 3000,
-          timerProgressBar: true
-        });
+        this.showOfferSuccessAlert(amount, wasAccepted);
       },
       error: (err) => {
-        this.offerSubmitting = false;
-        const msg = err.error?.message || 'Failed to place offer. Please try again.';
+        const msg = err.error?.message || this.translate.instant('listingDetails.offerModal.errorText');
         this.offerModalError = msg;
-        Swal.fire({
+        this.cdr.markForCheck();
+        void Swal.fire({
           icon: 'error',
-          title: 'Offer failed',
+          title: this.translate.instant('listingDetails.offerModal.errorTitle'),
           text: msg,
-          confirmButtonColor: '#7A4F84'
+          confirmButtonText: this.translate.instant('listingDetails.offerModal.errorConfirm'),
+          confirmButtonColor: '#C9A84C'
         });
       }
+    });
+  }
+
+  private showOfferSuccessAlert(amount: number, wasAccepted: boolean): void {
+    const textKey = wasAccepted
+      ? 'listingDetails.offerModal.successTextAccepted'
+      : 'listingDetails.offerModal.successText';
+    void Swal.fire({
+      icon: 'success',
+      title: this.translate.instant('listingDetails.offerModal.successTitle'),
+      html: this.translate.instant(textKey, { amount: this.formatPrice(amount) }),
+      confirmButtonText: this.translate.instant('listingDetails.offerModal.successConfirm'),
+      confirmButtonColor: '#C9A84C',
+      allowOutsideClick: false
     });
   }
 

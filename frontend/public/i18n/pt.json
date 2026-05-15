@@ -745,7 +745,15 @@
       "subtitle": "Se o vendedor aceitar, fica comprometido a comprar a esse preço. Pode retirar a oferta enquanto estiver pendente.",
       "figuresHint": "O mínimo é o valor mais baixo que o vendedor considera. O mais alto é a melhor oferta até agora—pode igualar ou ultrapassar, ou manter-se no mínimo.",
       "highestOffer": "Oferta mais alta",
-      "valueLabel": "Valor (€)"
+      "valueLabel": "Valor (€)",
+      "yourOfferPreview": "Está a oferecer:",
+      "successTitle": "Oferta enviada",
+      "successText": "A sua oferta de <strong>{{amount}}</strong> foi enviada. O vendedor irá analisá-la—pode cancelar enquanto estiver pendente.",
+      "successTextAccepted": "A sua oferta de <strong>{{amount}}</strong> foi aceite pelo vendedor. Conclua a compra em Transações.",
+      "successConfirm": "Entendido",
+      "errorTitle": "Não foi possível enviar a oferta",
+      "errorText": "Falha ao enviar a oferta. Tente novamente.",
+      "errorConfirm": "OK"
     },
     "watchlistModal": {
       "title": "Salvar na Lista de Desejos",
