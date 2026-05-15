@@ -37,7 +37,10 @@
     },
     "home": {
       "skipHeading": "BidRoom.pt — leilões premium em Portugal. Disponível em modo claro e escuro, com referências aos azulejos portugueses no modo claro.",
-      "breadcrumb": { "home": "Início", "featured": "Leilões em destaque" },
+      "breadcrumb": {
+        "home": "Início",
+        "featured": "Leilões em destaque"
+      },
       "theme": {
         "toggleTitle": "Alternar modo claro / escuro",
         "light": "Modo claro",
@@ -61,16 +64,32 @@
         "satisfaction": "Satisfação compradores",
         "bidTime": "Tempo médio de lance"
       },
-      "section": { "featured": "Em destaque", "ongoing": "Leilões em curso" },
-      "badges": { "live": "Ao vivo", "privateRoom": "Sala privada", "bestOffer": "Melhor oferta" },
+      "section": {
+        "featured": "Em destaque",
+        "ongoing": "Leilões em curso"
+      },
+      "badges": {
+        "live": "Ao vivo",
+        "privateRoom": "Sala privada",
+        "bestOffer": "Melhor oferta"
+      },
       "listing": {
         "currentBid": "Lance actual",
         "minPrice": "Preço mínimo",
         "offersCount": "3 ofertas"
       },
-      "listing1": { "title": "Patek Philippe Ref. 5711", "meta": "Relógios · Genebra, 2019" },
-      "listing2": { "title": "Barca Velha 1985 — Magnum", "meta": "Vinhos · Douro, Portugal" },
-      "listing3": { "title": "Leica M6 TTL — 0.85x", "meta": "Fotografia · Lisboa, 2001" },
+      "listing1": {
+        "title": "Patek Philippe Ref. 5711",
+        "meta": "Relógios · Genebra, 2019"
+      },
+      "listing2": {
+        "title": "Barca Velha 1985 — Magnum",
+        "meta": "Vinhos · Douro, Portugal"
+      },
+      "listing3": {
+        "title": "Leica M6 TTL — 0.85x",
+        "meta": "Fotografia · Lisboa, 2001"
+      },
       "azulejoSection": "Inspiração portuguesa · Azulejos do século XVI",
       "private": {
         "tag": "Funcionalidade exclusiva",
@@ -377,7 +396,63 @@
       "mediaMaxPhotos": "Pode adicionar no máximo 20 fotos. Remova algumas para adicionar mais. Não adicionadas: {{files}}",
       "mediaMaxPhotosWithVideo": "Com um vídeo pode adicionar no máximo 5 fotos. Remova fotos ou o vídeo para adicionar mais. Não adicionadas: {{files}}",
       "mediaVideoLimit": "Só é permitido um vídeo e no máximo 5 fotos com vídeo. Não adicionado: {{files}}"
-    }
+    },
+    "steps": {
+      "label": "Passos"
+    },
+    "step5Title": "Envio",
+    "step5": "Método e origem",
+    "step6Title": "Publicar",
+    "step6": "Revisão final",
+    "step1.section": "Escolha o formato do anúncio",
+    "step2.section": "Informação do artigo",
+    "step3.section": "Fotos do artigo",
+    "step4.auction.section": "Preços do leilão",
+    "step4.offer.section": "Preços da melhor oferta",
+    "step5.section": "Método de envio",
+    "step5.location": "Localização",
+    "step6.section": "Revisão e publicação",
+    "optional": "opcional",
+    "offerDeadline": "Prazo para ofertas",
+    "offerDeadlineHint": "Mais tempo significa mais compradores a ver o seu anúncio e mais propostas a receber.",
+    "startingBidHint": "O valor mínimo para o primeiro lance. Um lance inicial competitivo atrai mais licitantes.",
+    "reserveHint": "O leilão só vincula o vencedor se este valor for atingido.",
+    "durationHint": "Artigos raros ou premium tendem a gerar mais lances com 7–10 dias.",
+    "formatBestOfferDesc": "Os compradores submetem propostas e você escolhe a que prefere. Defina um preço mínimo — tem total liberdade para recusar qualquer oferta abaixo desse valor.",
+    "formatAuctionDesc": "Compradores fazem lances em tempo real e competem pelo seu artigo. Você define a duração e o lance inicial. O vencedor é apurado automaticamente.",
+    "drop": {
+      "title": "Arraste as fotos para aqui",
+      "sub": "ou clique para selecionar · JPEG, PNG, WebP · máx. 20 fotos"
+    },
+    "mediaHint": "A primeira foto será a imagem principal do anúncio.",
+    "mediaCover": "Principal",
+    "photosLabel": "fotos",
+    "preview": {
+      "label": "Pré-visualização",
+      "titlePlaceholder": "O título aparece aqui"
+    },
+    "ck": {
+      "format": "Formato selecionado",
+      "title": "Título preenchido",
+      "category": "Categoria escolhida",
+      "condition": "Condição definida",
+      "desc": "Descrição ≥ 50 chars",
+      "photos": "Pelo menos 1 foto",
+      "price": "Preço definido",
+      "shipping": "Envio configurado"
+    },
+    "stepOf": "Passo {{step}} de {{total}}",
+    "kycNotice": "Para artigos com valor ≥ €5.000 é necessária verificação de identidade (KYC) antes de publicar.",
+    "stripeRequired": "Configure os pagamentos primeiro",
+    "stripeRequiredText": "Para receber o pagamento das suas vendas precisa de configurar a sua conta de pagamentos.",
+    "nav": {
+      "dashboard": "Dashboard"
+    },
+    "return7": "7 dias",
+    "feeBuyer": "Taxa Stripe",
+    "feeBuyerNote": "Pago pelo comprador",
+    "feeReceive": "Receberá aproximadamente",
+    "specHint": "Ex: Material — Ouro 18k · Dimensões — 36mm · Referência — 5512"
   },
   "listingList": {
     "searchPlaceholder": "Pesquisar leilões...",
@@ -614,13 +689,19 @@
       "decline": "Recusar",
       "declining": "Recusando…",
       "anonymous": "Anônimo",
-      "verifiedLabel": "✓ Verificado"
+      "verifiedLabel": "✓ Verificado",
+      "statusAccepted": "Aceite pelo vendedor",
+      "statusDeclined": "Recusada",
+      "statusExpired": "Expirada",
+      "stripeWarningPrefix": "⚠️ Ligue o Stripe em",
+      "stripeSettingsLink": "Definições → Pagamentos"
     },
     "shipping": {
       "title": "Frete",
       "free": "Frete grátis",
       "cost": "Custo do frete:",
-      "from": "De:"
+      "from": "De:",
+      "workingDays": "dias úteis"
     },
     "returnPolicy": {
       "title": "Política de devolução",
@@ -644,7 +725,10 @@
       "notifyOutbid": "Notificar-me quando o meu lance for superado",
       "cancel": "Cancelar",
       "submit": "Dar lance",
-      "submitting": "Enviando lance…"
+      "submitting": "Enviando lance…",
+      "subtitle": "Vinculativo se ganhar. Pode acompanhar em tempo real.",
+      "minBid": "Lance mínimo",
+      "valueLabel": "Valor (€)"
     },
     "offerModal": {
       "title": "Fazer uma oferta",
@@ -657,7 +741,11 @@
       "belowMinNote": "Sua oferta está abaixo do preço mínimo do vendedor. O vendedor não é obrigado a aceitar esta oferta, mesmo que você seja o único licitante.",
       "cancel": "Cancelar",
       "submit": "Enviar oferta",
-      "submitting": "Enviando oferta…"
+      "submitting": "Enviando oferta…",
+      "subtitle": "Se o vendedor aceitar, fica comprometido a comprar a esse preço. Pode retirar a oferta enquanto estiver pendente.",
+      "figuresHint": "O mínimo é o valor mais baixo que o vendedor considera. O mais alto é a melhor oferta até agora—pode igualar ou ultrapassar, ou manter-se no mínimo.",
+      "highestOffer": "Oferta mais alta",
+      "valueLabel": "Valor (€)"
     },
     "watchlistModal": {
       "title": "Salvar na Lista de Desejos",
@@ -688,8 +776,71 @@
       "creating": "Criando…",
       "cannotInvite": "Visitante (não pode ser convidado)",
       "ineligible": "Registre-se para ser elegível",
-      "invite": "Convidar"
-    }
+      "invite": "Convidar",
+      "maxBid": "Lance máx:",
+      "bids": "lance(s)",
+      "notEligible": "Não elegível",
+      "selectedCount": "selecionados (mín. 2, máx. 5)",
+      "bidderFallback": "Licitante"
+    },
+    "nav": {
+      "back": "Leilões",
+      "dashboard": "Dashboard",
+      "signIn": "Entrar"
+    },
+    "formatPill": {
+      "auction": "Leilão ao vivo",
+      "privateRoom": "Sala Privada"
+    },
+    "sidebar": {
+      "watching": "a observar",
+      "congratsWon": "Parabéns! Ganhou este leilão.",
+      "winnerWasSelected": "O vencedor foi selecionado.",
+      "viewTransaction": "Ver transação →",
+      "privateRoomActiveDesc": "Licitação exclusiva em curso.",
+      "privateRoomClosedWinner": "Vencedor selecionado. Preço final:",
+      "bidPrivateRoom": "Licitar na sala privada",
+      "watchPrivateRoomSpectator": "Ver sala privada (espectador)",
+      "watchRoomWaiting": "Ver sala (aguarda início)",
+      "ownListingNote": "Este é o seu anúncio.",
+      "reopenNoBids": "Sem lances. Pode reabrir por mais 7 dias.",
+      "reopenNoOffers": "Sem ofertas. Pode reabrir por mais 7 dias.",
+      "inWatchlist": "Na watchlist",
+      "minimumOffer": "Oferta mínima",
+      "minimumOfferDesc": "Ofertas abaixo deste valor podem ser recusadas automaticamente.",
+      "minimumBid": "Lance mínimo seguinte",
+      "bidIncrement": "Incremento:",
+      "reviews": "avaliações",
+      "following": "✓ A seguir",
+      "follow": "+ Seguir",
+      "eligibleCountdown": "Sala privada:",
+      "remaining": "restantes",
+      "winnerSelectionCountdownOffer": "24h para aceitar oferta",
+      "winnerSelectionCountdownWinner": "24h para selecionar vencedor",
+      "invitedRoomHeader": "Convidados para a sala",
+      "buyNow": "Comprar já ·"
+    },
+    "payment": {
+      "title": "Pagamento",
+      "protected": "Protegido por Stripe",
+      "escrow": "Fundos retidos até confirmação de recepção"
+    },
+    "report": {
+      "listing": "Reportar anúncio",
+      "seller": "Reportar vendedor"
+    },
+    "bidsTab": {
+      "emptyActive": "Sem lances ainda. Seja o primeiro a licitar.",
+      "notEligible": "Não elegível – conta não verificada",
+      "winnerChip": "🏆 Vencedor"
+    },
+    "loginModal": {
+      "title": "Conta necessária",
+      "subtitle": "Precisa de estar autenticado para adicionar à watchlist.",
+      "createAccount": "Criar conta",
+      "signIn": "Entrar"
+    },
+    "cancel": "Cancelar"
   },
   "auth": {
     "common": {
@@ -1029,26 +1180,26 @@
         "disputes": "Disputas"
       },
       "analytics": {
-      "title": "Análises",
-      "range": "Período",
-      "last7d": "Últimos 7 dias",
-      "last30d": "Últimos 30 dias",
-      "custom": "Personalizado",
-      "from": "De",
-      "toOptional": "Até (opcional)",
-      "filterCategory": "Categoria",
-      "filterListing": "Anúncio",
-      "allCategories": "Todas as categorias",
-      "allListings": "Todos os anúncios",
-      "apply": "Aplicar filtros",
-      "views": "Visitas à página",
-      "viewsHint": "Carregamentos da página do anúncio neste período (anúncios filtrados).",
-      "bidsOffers": "Lances e ofertas",
-      "bidsOffersHint": "Número de lances e ofertas registados neste período.",
-      "salesPeriod": "Atividade de venda",
-      "salesPeriodHint": "Anúncios distintos em que o comprador pagou ou concluiu o checkout neste período.",
-      "followers": "Seguidores",
-      "followersHint": "{{n}} novos neste período",
+        "title": "Análises",
+        "range": "Período",
+        "last7d": "Últimos 7 dias",
+        "last30d": "Últimos 30 dias",
+        "custom": "Personalizado",
+        "from": "De",
+        "toOptional": "Até (opcional)",
+        "filterCategory": "Categoria",
+        "filterListing": "Anúncio",
+        "allCategories": "Todas as categorias",
+        "allListings": "Todos os anúncios",
+        "apply": "Aplicar filtros",
+        "views": "Visitas à página",
+        "viewsHint": "Carregamentos da página do anúncio neste período (anúncios filtrados).",
+        "bidsOffers": "Lances e ofertas",
+        "bidsOffersHint": "Número de lances e ofertas registados neste período.",
+        "salesPeriod": "Atividade de venda",
+        "salesPeriodHint": "Anúncios distintos em que o comprador pagou ou concluiu o checkout neste período.",
+        "followers": "Seguidores",
+        "followersHint": "{{n}} novos neste período",
         "inventory": "Estado dos anúncios",
         "countActive": "ativos",
         "countEnded": "terminados",

@@ -1088,6 +1088,13 @@ nav {
   margin-bottom: 22px;
   line-height: 1.5;
 }
+.sh-figures-hint {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--sub);
+  line-height: 1.45;
+  margin: -8px 0 18px;
+}
 .chips {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -1137,7 +1144,11 @@ nav {
   transition: border-color .15s;
   margin-bottom: 8px;
   &:focus { border-color: var(--gold); }
-  &::placeholder { color: var(--dim); font-size: 20px; }
+  &::placeholder {
+    color: var(--dim);
+    font-size: 20px;
+    opacity: 0.55;
+  }
 }
 .f-hint {
   font-size: 12px;
