@@ -37,6 +37,28 @@ export class MyBetsComponent implements OnInit {
   error: string | null = null;
   expandedIds = new Set<string>();
   preferenceUpdating: Record<string, boolean> = {};
+  bidFilter: 'all' | 'winning' | 'outbid' | 'ended' = 'all';
+
+  get filteredListings(): EnhancedListing[] {
+    if (this.bidFilter === 'all') return this.listings;
+    return this.listings.filter(l => {
+      if (this.bidFilter === 'winning') return l.isWinner === true;
+      if (this.bidFilter === 'ended') return l.status === 'ended' || l.status === 'cancelled';
+      if (this.bidFilter === 'outbid') return l.status === 'active' && !l.isWinner;
+      return true;
+    });
+  }
+
+  getBidCardClass(listing: EnhancedListing): string {
+    if (listing.isWinner) return 'winning';
+    if (listing.status === 'ended' || listing.status === 'cancelled') return 'ended';
+    if (listing.status === 'active') return 'outbid';
+    return '';
+  }
+
+  getInitials(title: string): string {
+    return title.split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase();
+  }
 
   ngOnInit(): void {
     this.loadMyBets();

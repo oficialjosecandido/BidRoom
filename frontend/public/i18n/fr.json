@@ -850,12 +850,20 @@
     "sidebar": {
       "home": "Accueil",
       "store": "Boutique",
+      "main": "Principal",
       "activity": "Activité",
+      "listings": "Annonces",
+      "account": "Compte",
+      "buyer": "Acheteur",
+      "seller": "Vendeur",
+      "transactions": "Transactions",
+      "notifications": "Notifications",
+      "myBids": "Mes Enchères",
+      "watchlist": "Liste de suivi",
+      "following": "Abonnements",
+      "myListings": "Mes Annonces",
       "buyerProfile": "Profil acheteur",
       "sellerProfile": "Profil vendeur",
-      "following": "Abonnements",
-      "account": "Compte",
-      "notifications": "Notifications",
       "settings": "Paramètres",
       "logout": "Déconnexion"
     },
@@ -965,7 +973,16 @@
       "toYourBalance": "à votre solde",
       "redirecting": "Redirection...",
       "continueToCheckout": "Continuer vers le paiement",
-      "buyingWatchlist": "Achats et liste de suivi"
+      "buyingWatchlist": "Achats et liste de suivi",
+      "subtitle": "Voici le résumé de votre compte",
+      "myListingsTitle": "Mes annonces",
+      "live": "Actif",
+      "pendingReviews": "Évaluations en attente",
+      "greeting": {
+        "morning": "Bonjour",
+        "afternoon": "Bon après-midi",
+        "evening": "Bonsoir"
+      }
     },
     "buyer": {
       "title": "Profil acheteur",
@@ -1040,6 +1057,9 @@
       "notVerified": "Non vérifié",
       "buyerScore": "Score acheteur",
       "sellerScore": "Score vendeur",
+      "reputation": "Réputation",
+      "overallScore": "Score global",
+      "noReviews": "Aucun avis pour l'instant",
       "languagePreference": "Préférence de langue",
       "languageDesc": "Choisissez la langue pour votre expérience BidRoom.",
       "appearance": {
@@ -1161,6 +1181,29 @@
   "transactions": {
     "title": "Transactions",
     "subtitle": "Consultez et gérez vos achats et ventes.",
+    "filterAll": "Toutes",
+    "filterPendingPayment": "Paiement en attente",
+    "filterShipping": "En transit",
+    "filterDelivered": "Livrées",
+    "filterCompleted": "Terminées",
+    "filterDisputed": "Litiges",
+    "drawer": {
+      "details": "Détails",
+      "amount": "Montant",
+      "status": "Statut",
+      "role": "Rôle",
+      "deadline": "Délai",
+      "counterpart": "Contrepartie",
+      "seller": "Vendeur",
+      "buyer": "Acheteur",
+      "sellerRep": "Réputation"
+    },
+    "tp": {
+      "payment": "Paiement",
+      "shipping": "Expédition",
+      "delivery": "Livraison",
+      "done": "Terminé"
+    },
     "seller": "Vendeur",
     "buyer": "Acheteur",
     "loading": "Chargement des transactions...",
@@ -1978,5 +2021,28 @@
       "address": "Département juridique BidRoom, 123 Rue des Enchères, Commerce City, CC 12345",
       "phoneLabel": "Téléphone :"
     }
+  },
+  "myBids": {
+    "filterAll": "Tous",
+    "filterWinning": "En tête",
+    "filterOutbid": "Surenchéri",
+    "filterEnded": "Terminé",
+    "myBest": "Ma meilleure offre",
+    "currentPrice": "Actuel",
+    "bids": "Enchères",
+    "ends": "Se termine",
+    "bidHistory": "Historique des enchères",
+    "bidAgain": "Enchérir à nouveau",
+    "viewListing": "Voir l'annonce",
+    "notifOn": "Notifier si surenchéri",
+    "notifOff": "Notifications désactivées",
+    "typeOffer": "Offre",
+    "typeLive": "En direct",
+    "statusActive": "Actif",
+    "statusEnded": "Terminé"
+  },
+  "watchlist": {
+    "typeLive": "En direct",
+    "ended": "Terminé"
   }
 }

@@ -2,7 +2,7 @@ import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import Swal from 'sweetalert2';
 import { AuthService, AppUser } from '../../../auth/services/auth.service';
 import { ListingsService, Listing } from '../../../shared/services/listings.service';
@@ -11,7 +11,25 @@ import { PaymentsService, TopupRecord } from '../../../shared/services/payments.
 import { ReviewsService, PendingReview, ReviewTag } from '../../../shared/services/reviews.service';
 import { FeatureFlagsService } from '../../../shared/services/feature-flags.service';
 import { SocketService } from '../../../shared/services/socket.service';
+import { TransactionsService } from '../../../shared/services/transactions.service';
 import { Observable, Subscription } from 'rxjs';
+
+interface BidderListing extends Listing {
+  type?: string;
+  bets?: Array<{ _id: string; amount: number; createdAt: string; type: string; status: string }>;
+  notifyWhenOutbid?: boolean;
+  isWinner?: boolean;
+  myHighestBid?: number | null;
+}
+
+interface HomeStatCard {
+  key: string;
+  label: string;
+  value: string;
+  sub: string;
+  valueTone: '' | 'gold' | 'green' | 'amber';
+  subUp?: boolean;
+}
 
 @Component({
   selector: 'app-dashboard-home',
@@ -29,6 +47,8 @@ export class DashboardHomeComponent implements OnInit, OnDestroy {
   featureFlags = inject(FeatureFlagsService);
   private socketService = inject(SocketService);
   private router = inject(Router);
+  private translate = inject(TranslateService);
+  private transactionsService = inject(TransactionsService);
 
   private socketSubscriptions: Subscription[] = [];
   private joinedListingIds: string[] = [];
@@ -38,7 +58,10 @@ export class DashboardHomeComponent implements OnInit, OnDestroy {
   customer: CustomerInfo | null = null;
   activeListings: Listing[] = [];
   endedListings: Listing[] = [];
+  bidderListings: BidderListing[] = [];
   pendingReviews: PendingReview[] = [];
+  pendingBuyerTransactions = 0;
+  pendingSellerTransactions = 0;
   isLoading = true;
   error: string | null = null;
 
@@ -114,9 +137,187 @@ export class DashboardHomeComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.loadCustomer();
     this.loadMyListings();
+    this.loadBidderListings();
+    this.loadPendingTransactionCounts();
     this.loadPendingReviews();
     this.loadTopups();
     this.checkPaymentReturn();
+  }
+
+  loadBidderListings(): void {
+    this.listingsService.getBidderBets().subscribe({
+      next: (res) => {
+        this.bidderListings = (res.listings || []) as BidderListing[];
+      },
+      error: () => {
+        this.bidderListings = [];
+      }
+    });
+  }
+
+  loadPendingTransactionCounts(): void {
+    this.transactionsService.getPendingCounts().subscribe({
+      next: (counts) => {
+        this.pendingBuyerTransactions = counts.buyer;
+        this.pendingSellerTransactions = counts.seller;
+      }
+    });
+  }
+
+  get activeBidderListings(): BidderListing[] {
+    return this.bidderListings.filter((l) => l.status === 'active');
+  }
+
+  get pendingOffersCount(): number {
+    return this.bidderListings.filter((l) => {
+      if (l.auctionFormat !== 'best-offer' || l.status !== 'active') return false;
+      return (l.bets || []).some((b) => b.status === 'pending');
+    }).length;
+  }
+
+  private scoreToPercent(score: number | null | undefined): number | null {
+    return score != null ? Math.round((score / 5) * 100) : null;
+  }
+
+  get statCards(): HomeStatCard[] {
+    const cards: HomeStatCard[] = [];
+
+    const bids = this.activeBidderListings.length;
+    if (bids > 0) {
+      cards.push({
+        key: 'activeBids',
+        label: this.translate.instant('dashboard.home.statActiveBids'),
+        value: String(bids),
+        sub: this.translate.instant('dashboard.home.statAcrossAuctions', { count: bids }),
+        valueTone: ''
+      });
+    }
+
+    const offers = this.pendingOffersCount;
+    if (offers > 0) {
+      cards.push({
+        key: 'pendingOffers',
+        label: this.translate.instant('dashboard.home.statPendingOffers'),
+        value: String(offers),
+        sub: this.translate.instant('dashboard.home.statAwaitingSeller'),
+        valueTone: ''
+      });
+    }
+
+    if (this.pendingBuyerTransactions > 0) {
+      cards.push({
+        key: 'pendingTxBuyer',
+        label: this.translate.instant('dashboard.home.statPendingTx'),
+        value: String(this.pendingBuyerTransactions),
+        sub: this.translate.instant('dashboard.home.statActionNeeded'),
+        valueTone: 'amber'
+      });
+    }
+
+    const live = this.activeListings.length;
+    if (live > 0) {
+      cards.push({
+        key: 'activeListings',
+        label: this.translate.instant('dashboard.home.statActiveListings'),
+        value: String(live),
+        sub: this.translate.instant('dashboard.home.live'),
+        valueTone: 'green'
+      });
+    }
+
+    if (this.pendingSellerTransactions > 0) {
+      cards.push({
+        key: 'pendingTxSeller',
+        label: this.translate.instant('dashboard.home.statPendingTx'),
+        value: String(this.pendingSellerTransactions),
+        sub: this.translate.instant('dashboard.home.statActionNeeded'),
+        valueTone: 'amber'
+      });
+    }
+
+    const buyerRep = this.scoreToPercent(this.buyerScore);
+    if (buyerRep != null) {
+      cards.push({
+        key: 'reputationBuyer',
+        label: this.translate.instant('dashboard.home.statReputation'),
+        value: String(buyerRep),
+        sub: this.translate.instant('dashboard.home.statOutOf100'),
+        valueTone: 'green'
+      });
+    }
+
+    const sellerRep = this.scoreToPercent(this.sellerScore);
+    if (sellerRep != null && sellerRep !== buyerRep) {
+      cards.push({
+        key: 'reputationSeller',
+        label: this.translate.instant('dashboard.home.statReputation'),
+        value: String(sellerRep),
+        sub: this.translate.instant('dashboard.home.statOutOf100'),
+        valueTone: 'green'
+      });
+    }
+
+    return cards;
+  }
+
+  get statsGridColumns(): string {
+    const n = this.statCards.length;
+    if (n <= 1) return '1fr';
+    if (n === 2) return 'repeat(2, 1fr)';
+    if (n === 3) return 'repeat(3, 1fr)';
+    return 'repeat(4, 1fr)';
+  }
+
+  isListingWinning(listing: BidderListing): boolean {
+    return listing.isWinner === true;
+  }
+
+  isListingOutbid(listing: BidderListing): boolean {
+    return listing.status === 'active' && !listing.isWinner;
+  }
+
+  getBidStatusKey(listing: BidderListing): string {
+    if (listing.isWinner) return 'dashboard.home.statusWinning';
+    if (listing.status === 'active') return 'dashboard.home.statusOutbid';
+    return 'dashboard.home.statusEnded';
+  }
+
+  getBidStatusClass(listing: BidderListing): string {
+    if (listing.isWinner) return 'status-live';
+    if (listing.status === 'active') return 'status-pending';
+    return 'status-ended';
+  }
+
+  getTimeRemaining(endDate: string): string {
+    const ms = new Date(endDate).getTime() - Date.now();
+    if (ms <= 0) return this.translate.instant('dashboard.home.ended');
+    const h = Math.floor(ms / 3600000);
+    const m = Math.floor((ms % 3600000) / 60000);
+    if (h >= 24) {
+      const d = Math.floor(h / 24);
+      return this.translate.instant('dashboard.home.endsInDays', { days: d });
+    }
+    return this.translate.instant('dashboard.home.endsInHours', { hours: h, minutes: m });
+  }
+
+  getFormatLabel(listing: Listing): string {
+    return listing.auctionFormat === 'best-offer'
+      ? this.translate.instant('dashboard.home.formatBestOffer')
+      : this.translate.instant('dashboard.home.formatAuction');
+  }
+
+  getListingThumb(listing: Listing): string | null {
+    return listing.images?.[0] || null;
+  }
+
+  getListingEmoji(listing: Listing): string {
+    const c = (listing.category || '').toLowerCase();
+    if (c.includes('watch') || c.includes('relóg')) return '⌚';
+    if (c.includes('art') || c.includes('arte')) return '🎨';
+    if (c.includes('jewel') || c.includes('jóia')) return '💎';
+    if (c.includes('photo') || c.includes('câmara')) return '📷';
+    if (c.includes('car') || c.includes('auto')) return '🏎';
+    return '📦';
   }
 
   loadTopups(): void {
@@ -482,6 +683,18 @@ export class DashboardHomeComponent implements OnInit, OnDestroy {
     this.payoutBannerDismissed = true;
   }
 
+  getGreeting(): string {
+    const h = new Date().getHours();
+    if (h < 12) return this.translate.instant('dashboard.home.greeting.morning');
+    if (h < 18) return this.translate.instant('dashboard.home.greeting.afternoon');
+    return this.translate.instant('dashboard.home.greeting.evening');
+  }
+
+  get firstName(): string {
+    if (this.customer?.user?.firstName) return this.customer.user.firstName;
+    return '';
+  }
+
   formatDate(dateString: string): string {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -493,6 +706,6 @@ export class DashboardHomeComponent implements OnInit, OnDestroy {
   }
 
   formatPrice(value: number): string {
-    return '$' + value.toFixed(2);
+    return `€ ${value.toLocaleString('pt-PT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
   }
 }

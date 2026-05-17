@@ -19,11 +19,13 @@ import { KycService } from '../../../shared/services/kyc.service';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { ReportModalComponent } from '../../../shared/components/report-modal/report-modal.component';
 import { FollowService, FollowStatus } from '../../../shared/services/follow.service';
+import { ThemeService } from '../../../shared/services/theme.service';
+import { HeaderComponent } from '../../../shared/components/header/header.component';
 
 @Component({
   selector: 'app-listing-details',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslateModule, RouterLink, ReportModalComponent],
+  imports: [CommonModule, FormsModule, TranslateModule, RouterLink, ReportModalComponent, HeaderComponent],
   templateUrl: './listing-details.component.html',
   styleUrls: ['./listing-details.component.scss']
 })
@@ -44,8 +46,11 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
   private followService = inject(FollowService);
   private cdr = inject(ChangeDetectorRef);
   private translate = inject(TranslateService);
+  private themeService = inject(ThemeService);
 
-  isLight = false;
+  get isLight(): boolean {
+    return this.themeService.resolveEffective(this.themeService.preference()) === 'light';
+  }
 
   listing: Listing | null = null;
   loading = true;
@@ -110,7 +115,6 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     window.scrollTo(0, 0);
-    this.isLight = (localStorage.getItem('bidroom-theme-preference') || 'dark') === 'light';
     const slug = this.route.snapshot.paramMap.get('slug');
     if (slug) {
       this.loadListing(slug);
@@ -331,10 +335,6 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
     this.activeImageIndex = index;
   }
 
-  toggleTheme(): void {
-    this.isLight = !this.isLight;
-    localStorage.setItem('bidroom-theme-preference', this.isLight ? 'light' : 'dark');
-  }
 
   formatPrice(price: number): string {
     return `€ ${price.toLocaleString('pt-PT', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
@@ -1340,11 +1340,6 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
         Swal.fire({ icon: 'error', title: 'Failed to create private room', text: err.error?.message || err.error?.error || 'Please try again.', confirmButtonColor: '#7A4F84' });
       }
     });
-  }
-
-  getFormattedDescription(): string {
-    if (!this.listing?.description) return '';
-    return this.listing.description.replace(/\n/g, '<br>');
   }
 
   getDescriptionByline(): string {

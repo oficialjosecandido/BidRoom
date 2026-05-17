@@ -1,95 +1,109 @@
 <div class="dashboard-container">
-  <!-- Sidebar Navigation -->
-  <aside class="sidebar" [class.sidebar--collapsed]="sidebarCollapsed">
-    <div class="sidebar-header">
-      <h1 class="logo" (click)="navigateToLanding()">
-        <span class="logo-full">BidRoom</span>
-        <span class="logo-short" aria-hidden="true">BR</span>
-      </h1>
-      <div class="sidebar-header-actions">
-        <button type="button" class="sidebar-toggle" (click)="toggleSidebar()" [attr.aria-label]="sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'" [attr.aria-expanded]="!sidebarCollapsed">
-          <span class="toggle-icon" aria-hidden="true">{{ sidebarCollapsed ? '›' : '‹' }}</span>
-        </button>
-      </div>
-    </div>
 
-    <nav class="sidebar-nav">
-      <a routerLink="/dashboard/home" routerLinkActive="active" class="nav-item" [attr.title]="'dashboard.sidebar.home' | translate">
-        <span class="nav-icon">🏠</span>
-        <span class="nav-text">{{ 'dashboard.sidebar.home' | translate }}</span>
-      </a>
-      <a routerLink="/landing" class="nav-item" [attr.title]="'dashboard.sidebar.store' | translate">
-        <span class="nav-icon">🛍️</span>
-        <span class="nav-text">{{ 'dashboard.sidebar.store' | translate }}</span>
-      </a>
-
-      <div class="nav-section-label"><span class="nav-text">{{ 'dashboard.sidebar.activity' | translate }}</span></div>
-
-      <a routerLink="/dashboard/buyer" routerLinkActive="active" class="nav-item nav-item-with-badge" [attr.title]="'dashboard.sidebar.buyerProfile' | translate">
-        <span class="nav-icon">🛒</span>
-        <span class="nav-text">{{ 'dashboard.sidebar.buyerProfile' | translate }}</span>
-        @if (pendingBuyerTransactions > 0) {
-          <span class="nav-badge nav-badge--transactions">{{ pendingBuyerTransactions > 99 ? '99+' : pendingBuyerTransactions }}</span>
-        }
-      </a>
-      <a routerLink="/dashboard/seller" routerLinkActive="active" class="nav-item nav-item-with-badge" [attr.title]="'dashboard.sidebar.sellerProfile' | translate">
-        <span class="nav-icon">📦</span>
-        <span class="nav-text">{{ 'dashboard.sidebar.sellerProfile' | translate }}</span>
-        @if (pendingSellerTransactions > 0) {
-          <span class="nav-badge nav-badge--transactions">{{ pendingSellerTransactions > 99 ? '99+' : pendingSellerTransactions }}</span>
-        }
-      </a>
-
-      <a routerLink="/dashboard/analytics" routerLinkActive="active" class="nav-item" [attr.title]="'dashboard.seller.analytics.title' | translate">
-        <span class="nav-icon">📊</span>
-        <span class="nav-text">{{ 'dashboard.seller.analytics.title' | translate }}</span>
-      </a>
-
-      <a routerLink="/dashboard/following" routerLinkActive="active" class="nav-item" [attr.title]="'dashboard.sidebar.following' | translate">
-        <span class="nav-icon">❤️</span>
-        <span class="nav-text">{{ 'dashboard.sidebar.following' | translate }}</span>
-      </a>
-
-      <div class="nav-section-label"><span class="nav-text">{{ 'dashboard.sidebar.account' | translate }}</span></div>
-
-      <a routerLink="/dashboard/notifications" routerLinkActive="active" class="nav-item nav-item-with-badge" [attr.title]="'dashboard.sidebar.notifications' | translate">
-        <span class="nav-icon">🔔</span>
-        <span class="nav-text">{{ 'dashboard.sidebar.notifications' | translate }}</span>
+  <nav class="dash-nav">
+    <a class="brand" (click)="navigateToLanding()" (keydown.enter)="navigateToLanding()" tabindex="0" role="button">
+      BidRoom<em>.pt</em>
+    </a>
+    <div class="nav-r">
+      <button type="button" class="btn-th" (click)="cycleTheme()" [attr.aria-label]="'Theme'">{{ themeGlyph }}</button>
+      <button type="button" class="btn-lang" (click)="toggleLang()">{{ langLabel }}</button>
+      <a routerLink="/dashboard/notifications" class="notif-btn" [attr.aria-label]="'dashboard.sidebar.notifications' | translate">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" width="15" height="15" aria-hidden="true">
+          <path d="M8 2a5 5 0 00-5 5v3l-1 1h12l-1-1V7a5 5 0 00-5-5z"/>
+          <path d="M6.5 13.5a1.5 1.5 0 003 0"/>
+        </svg>
         @if (notificationUnreadCount > 0) {
-          <span class="nav-badge">{{ notificationUnreadCount > 99 ? '99+' : notificationUnreadCount }}</span>
+          <span class="notif-badge">{{ notificationUnreadCount > 9 ? '9+' : notificationUnreadCount }}</span>
         }
       </a>
-      <a routerLink="/dashboard/settings" routerLinkActive="active" class="nav-item" title="Settings">
-        <span class="nav-icon">⚙️</span>
-        <span class="nav-text">Settings</span>
-      </a>
-    </nav>
+      <div class="avatar" (click)="navigateToLanding()" role="button" tabindex="0">{{ userInitials }}</div>
+    </div>
+  </nav>
 
-    <div class="sidebar-footer">
-      <div class="sidebar-theme" [attr.aria-label]="'dashboard.settings.appearance.title' | translate">
-        <span class="sidebar-theme-label">{{ 'dashboard.settings.appearance.title' | translate }}</span>
-        <div class="sidebar-theme-btns">
-          @for (c of themeChoices; track c.id) {
-            <button
-              type="button"
-              class="sidebar-theme-btn"
-              [class.active]="theme.preference() === c.id"
-              [attr.aria-pressed]="theme.preference() === c.id"
-              [attr.aria-label]="('dashboard.settings.appearance.' + c.id) | translate"
-              (click)="theme.setPreference(c.id)"
-            >{{ c.icon }}</button>
-          }
+  <div class="shell">
+
+    <aside class="sidebar">
+
+      <div class="nav-section nav-section--first">{{ 'dashboard.sidebar.main' | translate }}</div>
+
+
+      <a routerLink="/dashboard/home" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}" class="nav-item">
+        <span class="nav-ico">⊞</span>
+        <span>{{ 'dashboard.sidebar.home' | translate }}</span>
+      </a>
+
+      <a routerLink="/dashboard/buyer" routerLinkActive="active" class="nav-item" [queryParams]="{ tab: 'transactions' }">
+        <span class="nav-ico">↔</span>
+        <span>{{ 'dashboard.sidebar.transactions' | translate }}</span>
+        @if (pendingTransactions > 0) {
+          <span class="nav-badge">{{ pendingTransactions > 9 ? '9+' : pendingTransactions }}</span>
+        }
+      </a>
+
+      <a routerLink="/dashboard/notifications" routerLinkActive="active" class="nav-item">
+        <span class="nav-ico">🔔</span>
+        <span>{{ 'dashboard.sidebar.notifications' | translate }}</span>
+        @if (notificationUnreadCount > 0) {
+          <span class="nav-badge">{{ notificationUnreadCount > 9 ? '9+' : notificationUnreadCount }}</span>
+        }
+      </a>
+
+      <div class="nav-section">{{ 'dashboard.sidebar.activity' | translate }}</div>
+
+      <a routerLink="/dashboard/buyer" routerLinkActive="active" class="nav-item" [queryParams]="{ tab: 'bets' }">
+        <span class="nav-ico">🔨</span>
+        <span>{{ 'dashboard.sidebar.myBids' | translate }}</span>
+      </a>
+
+      <a routerLink="/dashboard/buyer" routerLinkActive="active" class="nav-item" [queryParams]="{ tab: 'watchlist' }">
+        <span class="nav-ico">♡</span>
+        <span>{{ 'dashboard.sidebar.watchlist' | translate }}</span>
+      </a>
+
+      <a routerLink="/dashboard/following" routerLinkActive="active" class="nav-item">
+        <span class="nav-ico">👤</span>
+        <span>{{ 'dashboard.sidebar.following' | translate }}</span>
+      </a>
+
+      <div class="nav-section">{{ 'dashboard.sidebar.listings' | translate }}</div>
+
+      <a routerLink="/dashboard/seller" routerLinkActive="active" class="nav-item">
+        <span class="nav-ico">📋</span>
+        <span>{{ 'dashboard.sidebar.myListings' | translate }}</span>
+      </a>
+
+      <a routerLink="/dashboard/analytics" routerLinkActive="active" class="nav-item">
+        <span class="nav-ico">📈</span>
+        <span>{{ 'dashboard.seller.analytics.title' | translate }}</span>
+      </a>
+
+      <div class="nav-section">{{ 'dashboard.sidebar.account' | translate }}</div>
+
+      <a routerLink="/dashboard/settings" routerLinkActive="active" class="nav-item">
+        <span class="nav-ico">⚙</span>
+        <span>{{ 'dashboard.sidebar.settings' | translate }}</span>
+      </a>
+
+      <div class="sidebar-footer">
+        <div class="user-row">
+          <div class="user-av">{{ userInitials }}</div>
+          <div class="user-meta">
+            <div class="user-name">{{ userName }}</div>
+          </div>
+          <button type="button" class="logout-btn" (click)="logout()" [attr.title]="'dashboard.sidebar.logout' | translate">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" width="14" height="14" aria-hidden="true">
+              <path d="M6 3H3a1 1 0 00-1 1v8a1 1 0 001 1h3M10 11l3-3-3-3M13 8H6"/>
+            </svg>
+          </button>
         </div>
       </div>
-      <button type="button" class="logout-btn" (click)="logout()" [attr.title]="'dashboard.sidebar.logout' | translate">
-        <span class="nav-icon">🚪</span>
-        <span class="nav-text">{{ 'dashboard.sidebar.logout' | translate }}</span>
-      </button>
-    </div>
-  </aside>
 
-  <!-- Main Content Area -->
-  <main class="dashboard-main" [class.dashboard-main--collapsed]="sidebarCollapsed">
-    <router-outlet></router-outlet>
-  </main>
+    </aside>
+
+    <main class="main">
+      <router-outlet></router-outlet>
+    </main>
+
+  </div>
+
 </div>

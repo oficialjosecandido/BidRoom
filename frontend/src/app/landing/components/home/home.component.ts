@@ -2,22 +2,28 @@ import { Component, OnDestroy, OnInit, AfterViewInit, inject, ElementRef, ViewCh
 import { RouterLink } from '@angular/router';
 import { TranslateService } from '@ngx-translate/core';
 import { ListingsService, Listing } from '../../../shared/services/listings.service';
+import { ThemeService } from '../../../shared/services/theme.service';
+import { HeaderComponent } from '../../../shared/components/header/header.component';
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [RouterLink],
+  imports: [RouterLink, HeaderComponent],
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.scss']
 })
 export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
   private translate = inject(TranslateService);
   private listingsService = inject(ListingsService);
+  private themeService = inject(ThemeService);
 
   @ViewChild('carouselWrap') carouselWrap!: ElementRef<HTMLElement>;
   @ViewChild('carouselTrack') carouselTrack!: ElementRef<HTMLElement>;
 
-  isLight = false;
+  get isLight(): boolean {
+    return this.themeService.resolveEffective(this.themeService.preference()) === 'light';
+  }
+
   carouselCurrent = 0;
   carouselTransform = 'translateX(0)';
 
@@ -51,8 +57,6 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
   ngOnInit(): void {
     const saved = localStorage.getItem('lang') || 'pt';
     this.translate.use(saved);
-    const pref = localStorage.getItem('bidroom-theme-preference') || 'dark';
-    this.isLight = pref === 'light';
 
     this.loadFeaturedListings();
     this.loadActiveListings();
@@ -114,16 +118,6 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
-  toggleTheme(): void {
-    this.isLight = !this.isLight;
-    localStorage.setItem('bidroom-theme-preference', this.isLight ? 'light' : 'dark');
-  }
-
-  toggleLang(): void {
-    const next = this.currentLang === 'pt' ? 'en' : 'pt';
-    this.translate.use(next);
-    localStorage.setItem('lang', next);
-  }
 
   goTo(idx: number, skipAuto = false): void {
     if (this.featuredListings.length === 0) return;

@@ -6,6 +6,7 @@
     "nav": {
       "auctions": "Leilões",
       "categories": "Categorias",
+      "privateRooms": "Salas Privadas",
       "howItWorks": "Como Funciona",
       "faq": "FAQ",
       "contact": "Contacto"
@@ -14,7 +15,13 @@
       "listYourItem": "Listar Item",
       "myAccount": "Minha Conta",
       "signIn": "Entrar",
-      "startBidding": "Começar a Licitar"
+      "startBidding": "Começar",
+      "publish": "Publicar",
+      "notifications": "Notificações"
+    },
+    "search": {
+      "placeholder": "Procurar leilões, artigos, vendedores…",
+      "open": "Pesquisar"
     },
     "menu": {
       "open": "Abrir menu",
@@ -1000,12 +1007,20 @@
     "sidebar": {
       "home": "Início",
       "store": "Loja",
+      "main": "Principal",
       "activity": "Atividade",
+      "listings": "Anúncios",
+      "account": "Conta",
+      "buyer": "Comprador",
+      "seller": "Vendedor",
+      "transactions": "Transações",
+      "notifications": "Notificações",
+      "myBids": "As Minhas Licitações",
+      "watchlist": "Watchlist",
+      "following": "A seguir",
+      "myListings": "Os Meus Anúncios",
       "buyerProfile": "Perfil do Comprador",
       "sellerProfile": "Perfil do Vendedor",
-      "following": "A seguir",
-      "account": "Conta",
-      "notifications": "Notificações",
       "settings": "Configurações",
       "logout": "Sair"
     },
@@ -1132,7 +1147,42 @@
       "toYourBalance": "ao seu saldo",
       "redirecting": "Redirecionando...",
       "continueToCheckout": "Continuar para o Checkout",
-      "buyingWatchlist": "Compras e Lista de Favoritos"
+      "buyingWatchlist": "Compras e Lista de Favoritos",
+      "subtitle": "Aqui está o resumo da sua conta",
+      "myListingsTitle": "Os meus anúncios",
+      "live": "Ativo",
+      "pendingReviews": "Avaliações pendentes",
+      "greeting": {
+        "morning": "Bom dia",
+        "afternoon": "Boa tarde",
+        "evening": "Boa noite"
+      },
+      "statActiveBids": "Lances activos",
+      "statAcrossAuctions": "em {{count}} leilões",
+      "statPendingOffers": "Ofertas pendentes",
+      "statAwaitingSeller": "à espera do vendedor",
+      "statPendingTx": "Transacções pendentes",
+      "statActionNeeded": "ação necessária",
+      "statReputation": "Reputação",
+      "statOutOf100": "em 100",
+      "statActiveListings": "Anúncios activos",
+      "sectionActiveBids": "Lances activos",
+      "yourBid": "O seu lance",
+      "formatAuction": "Leilão",
+      "formatBestOffer": "Melhor oferta",
+      "statusWinning": "A ganhar",
+      "statusOutbid": "Superado",
+      "statusEnded": "Terminado",
+      "ended": "Terminado",
+      "endsInDays": "Termina em {{days}} dias",
+      "endsInHours": "Termina em {{hours}}h {{minutes}}m",
+      "reviewPendingFrom": "Avalie a transacção com {{name}} · {{role}}",
+      "roleSeller": "Vendedor",
+      "roleBuyer": "Comprador",
+      "reviewBtn": "Avaliar"
+    },
+    "role": {
+      "toggleLabel": "Modo comprador ou vendedor"
     },
     "buyer": {
       "title": "Perfil do Comprador",
@@ -1254,6 +1304,9 @@
       "notVerified": "Não Verificado",
       "buyerScore": "Pontuação como Comprador",
       "sellerScore": "Pontuação como Vendedor",
+      "reputation": "Reputação",
+      "overallScore": "Pontuação global",
+      "noReviews": "Ainda sem avaliações",
       "languagePreference": "Preferência de Idioma",
       "languageDesc": "Escolha o idioma para sua experiência no BidRoom.",
       "appearance": {
@@ -1436,6 +1489,29 @@
   "transactions": {
     "title": "Transações",
     "subtitle": "Veja e gerencie suas compras e vendas.",
+    "filterAll": "Todas",
+    "filterPendingPayment": "Pagamento pendente",
+    "filterShipping": "Em trânsito",
+    "filterDelivered": "Entregues",
+    "filterCompleted": "Concluídas",
+    "filterDisputed": "Disputas",
+    "drawer": {
+      "details": "Detalhes",
+      "amount": "Valor",
+      "status": "Estado",
+      "role": "Papel",
+      "deadline": "Prazo",
+      "counterpart": "Contraparte",
+      "seller": "Vendedor",
+      "buyer": "Comprador",
+      "sellerRep": "Reputação"
+    },
+    "tp": {
+      "payment": "Pagamento",
+      "shipping": "Envio",
+      "delivery": "Entrega",
+      "done": "Concluído"
+    },
     "seller": "Vendedor",
     "buyer": "Comprador",
     "loading": "Carregando transações...",
@@ -2375,5 +2451,28 @@
     "following": "A seguir",
     "mute": "Silenciar notificações",
     "unmute": "Ativar notificações"
+  },
+  "myBids": {
+    "filterAll": "Todos",
+    "filterWinning": "A ganhar",
+    "filterOutbid": "Superado",
+    "filterEnded": "Terminado",
+    "myBest": "O meu melhor",
+    "currentPrice": "Atual",
+    "bids": "Lances",
+    "ends": "Termina",
+    "bidHistory": "Histórico de lances",
+    "bidAgain": "Licitar de novo",
+    "viewListing": "Ver leilão",
+    "notifOn": "Notificar se superado",
+    "notifOff": "Notificações desligadas",
+    "typeOffer": "Oferta",
+    "typeLive": "Leilão",
+    "statusActive": "Ativo",
+    "statusEnded": "Terminado"
+  },
+  "watchlist": {
+    "typeLive": "Leilão",
+    "ended": "Terminado"
   }
 }

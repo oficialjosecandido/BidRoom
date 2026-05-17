@@ -1,7 +1,18 @@
 <div class="transactions-container">
   <div class="page-header">
-    <h1>{{ 'transactions.title' | translate }}</h1>
-    <p class="subtitle">{{ 'transactions.subtitle' | translate }}</p>
+    <div>
+      <h1 class="page-title">{{ 'transactions.title' | translate }}</h1>
+      <p class="page-sub">{{ 'transactions.subtitle' | translate }}</p>
+    </div>
+  </div>
+
+  <div class="tx-filters">
+    <button type="button" class="tx-filter" [class.active]="txFilter === 'all'" (click)="txFilter = 'all'">{{ 'transactions.filterAll' | translate }}</button>
+    <button type="button" class="tx-filter" [class.active]="txFilter === 'pending_payment'" (click)="txFilter = 'pending_payment'">{{ 'transactions.filterPendingPayment' | translate }}</button>
+    <button type="button" class="tx-filter" [class.active]="txFilter === 'shipping'" (click)="txFilter = 'shipping'">{{ 'transactions.filterShipping' | translate }}</button>
+    <button type="button" class="tx-filter" [class.active]="txFilter === 'delivered'" (click)="txFilter = 'delivered'">{{ 'transactions.filterDelivered' | translate }}</button>
+    <button type="button" class="tx-filter" [class.active]="txFilter === 'completed'" (click)="txFilter = 'completed'">{{ 'transactions.filterCompleted' | translate }}</button>
+    <button type="button" class="tx-filter" [class.active]="txFilter === 'disputed'" (click)="txFilter = 'disputed'">{{ 'transactions.filterDisputed' | translate }}</button>
   </div>
 
   @if (isLoading) {
@@ -43,7 +54,7 @@
         </div>
       }
 
-      @for (t of transactions; track t._id) {
+      @for (t of filteredTransactions; track t._id) {
         <div class="transaction-card" [id]="'transaction-' + t._id">
           <a [routerLink]="getListingUrl(t)" class="card-main">
             <div class="card-col card-col-image">
@@ -746,6 +757,130 @@
             {{ reviewSubmitting ? ('dashboard.common.submitting' | translate) : ('dashboard.home.submitReview' | translate) }}
           </button>
         </div>
+      </div>
+    </div>
+  }
+
+  <!-- ── Transaction detail drawer ── -->
+  @if (drawerTx) {
+    <div class="drawer-overlay" (click)="closeDrawer()"></div>
+    <div class="drawer">
+      <div class="drawer-header">
+        <div>
+          <div class="drawer-title">{{ drawerTx.listing.title }}</div>
+          <div class="drawer-sub">
+            {{ isBuyer(drawerTx) ? ('transactions.buying' | translate) : ('transactions.selling' | translate) }}
+            @if (drawerTx.createdAt) { · {{ drawerTx.createdAt | date:'mediumDate' }} }
+          </div>
+        </div>
+        <button type="button" class="drawer-close" (click)="closeDrawer()">✕</button>
+      </div>
+      <div class="drawer-body">
+
+        <!-- Progress steps -->
+        <div class="tx-progress">
+          @for (step of [
+            {n:1, key:'transactions.tp.payment'},
+            {n:2, key:'transactions.tp.shipping'},
+            {n:3, key:'transactions.tp.delivery'},
+            {n:4, key:'transactions.tp.done'}
+          ]; track step.n) {
+            <div class="tp-step"
+                 [class.done]="getDrawerProgressStep(drawerTx) > step.n"
+                 [class.active]="getDrawerProgressStep(drawerTx) === step.n">
+              <div class="tp-dot">{{ getDrawerProgressStep(drawerTx) > step.n ? '✓' : step.n }}</div>
+              <div class="tp-label">{{ step.key | translate }}</div>
+            </div>
+          }
+        </div>
+
+        <!-- Details section -->
+        <div class="drawer-section">
+          <div class="drawer-section-title">{{ 'transactions.drawer.details' | translate }}</div>
+          <div class="drawer-row">
+            <span class="dr-label">{{ 'transactions.drawer.amount' | translate }}</span>
+            <span class="dr-val gold">{{ formatPrice(drawerTx.amount) }}</span>
+          </div>
+          <div class="drawer-row">
+            <span class="dr-label">{{ 'transactions.drawer.status' | translate }}</span>
+            <span class="dr-val">{{ getSimpleStatusLabel(drawerTx) }}</span>
+          </div>
+          <div class="drawer-row">
+            <span class="dr-label">{{ 'transactions.drawer.role' | translate }}</span>
+            <span class="dr-val">{{ isBuyer(drawerTx) ? ('transactions.buyer' | translate) : ('transactions.seller' | translate) }}</span>
+          </div>
+          @if (drawerTx.trackingNumber) {
+            <div class="drawer-row">
+              <span class="dr-label">{{ 'transactions.trackingNumber' | translate }}</span>
+              <span class="dr-val mono">{{ drawerTx.trackingCarrier ? drawerTx.trackingCarrier + ': ' : '' }}{{ drawerTx.trackingNumber }}</span>
+            </div>
+          }
+        </div>
+
+        <!-- Counterpart section -->
+        <div class="drawer-section">
+          <div class="drawer-section-title">{{ 'transactions.drawer.counterpart' | translate }}</div>
+          @if (isBuyer(drawerTx)) {
+            <div class="drawer-row">
+              <span class="dr-label">{{ 'transactions.seller' | translate }}</span>
+              <span class="dr-val">{{ drawerTx.seller.firstName }} {{ drawerTx.seller.lastName }}</span>
+            </div>
+          }
+          @if (isSeller(drawerTx)) {
+            <div class="drawer-row">
+              <span class="dr-label">{{ 'transactions.buyer' | translate }}</span>
+              <span class="dr-val">{{ drawerTx.buyer.firstName }} {{ drawerTx.buyer.lastName }}</span>
+            </div>
+          }
+        </div>
+
+        <!-- Financial breakdown -->
+        <div class="drawer-section">
+          <div class="drawer-section-title">{{ 'transactions.financialBreakdown' | translate }}</div>
+          <div class="drawer-row">
+            <span class="dr-label">{{ getSalePriceLabel(drawerTx) }}</span>
+            <span class="dr-val mono">{{ formatPrice(drawerTx.amount) }}</span>
+          </div>
+          <div class="drawer-row">
+            <span class="dr-label">{{ 'transactions.bidRoomFee' | translate }}</span>
+            <span class="dr-val mono">{{ formatPrice(getBidRoomFee(drawerTx)) }}</span>
+          </div>
+          @if (isSeller(drawerTx)) {
+            <div class="drawer-row">
+              <span class="dr-label">{{ 'transactions.youReceive' | translate }}</span>
+              <span class="dr-val gold">{{ formatPrice(getSellerNet(drawerTx)) }}</span>
+            </div>
+          }
+          @if (isBuyer(drawerTx) && getBuyerTotal(drawerTx) !== null) {
+            <div class="drawer-row">
+              <span class="dr-label">{{ 'transactions.totalCharged' | translate }}</span>
+              <span class="dr-val gold">{{ formatPrice(getBuyerTotal(drawerTx)!) }}</span>
+            </div>
+          }
+        </div>
+
+        <!-- Actions -->
+        <div class="drawer-actions">
+          @if (isBuyer(drawerTx) && getEffectiveStatus(drawerTx) === 'pending_payment' && !hasPaymentDeadlinePassed(drawerTx)) {
+            <button type="button" class="btn-drawer-primary" (click)="payWithStripe(drawerTx); closeDrawer()">{{ 'transactions.payNow' | translate }}</button>
+          }
+          @if (isBuyer(drawerTx) && ['awaiting_seller_acceptance','paid'].includes(getEffectiveStatus(drawerTx))) {
+            <button type="button" class="btn-drawer-ghost" (click)="remindSellerToShip(drawerTx)" [disabled]="!canRemindSellerToShip(drawerTx)">{{ 'transactions.remindSellerToShip' | translate }}</button>
+          }
+          @if (isBuyer(drawerTx) && getEffectiveStatus(drawerTx) === 'shipped') {
+            <button type="button" class="btn-drawer-primary green" (click)="markAsDelivered(drawerTx); closeDrawer()" [disabled]="updatingId === drawerTx._id">{{ 'transactions.markAsReceivedProperly' | translate }}</button>
+            <button type="button" class="btn-drawer-danger" (click)="openDisputeModal(drawerTx); closeDrawer()">{{ 'transactions.receivedNotProperly' | translate }}</button>
+          }
+          @if (isBuyer(drawerTx) && getEffectiveStatus(drawerTx) === 'delivered') {
+            <button type="button" class="btn-drawer-primary" (click)="markAsCompleted(drawerTx); closeDrawer()" [disabled]="updatingId === drawerTx._id">{{ 'transactions.markAsCompleted' | translate }}</button>
+          }
+          @if (isDone(drawerTx)) {
+            <button type="button" class="btn-drawer-ghost" (click)="downloadInvoice(drawerTx); closeDrawer()" [disabled]="invoiceDownloadingTxId === drawerTx._id">
+              {{ isSeller(drawerTx) ? ('transactions.downloadInvoice' | translate) : ('transactions.downloadReceipt' | translate) }}
+            </button>
+          }
+        </div>
+
       </div>
     </div>
   }

@@ -104,6 +104,25 @@ export class DashboardNotificationsComponent implements OnInit {
     return icons[type] || '📢';
   }
 
+  getIconClass(type: string): string {
+    const map: Record<string, string> = {
+      bid: 'nico-bid',
+      auction_ended: 'nico-bid',
+      proposal: 'nico-offer',
+      private_room: 'nico-offer',
+      transaction: 'nico-tx',
+      shipping: 'nico-tx',
+      review: 'nico-tx',
+      dispute: 'nico-err',
+      account: 'nico-system',
+      security: 'nico-system',
+      listing: 'nico-system',
+      watchlist: 'nico-system',
+      system: 'nico-system'
+    };
+    return map[type] || 'nico-system';
+  }
+
   formatDate(dateString: string): string {
     const d = new Date(dateString);
     return d.toLocaleDateString('en-US', {

@@ -1,116 +1,111 @@
-<!-- Header -->
-<header class="header">
-  <!-- Backdrop when mobile menu is open (tap to close) -->
-  <div
-    class="menu-backdrop"
-    [class.visible]="menuOpen"
-    (click)="closeMenu()"
-    (keydown.escape)="closeMenu()"
-    role="button"
-    tabindex="0"
-    aria-label="Close menu"
-  ></div>
+<nav class="nav">
 
-  <div class="container">
-    <div class="header-content">
-      <div class="logo">
-        <h1
-          class="logo-cluster"
-          role="button"
-          tabindex="0"
-          (click)="navigateToHome()"
-          (keydown.enter)="navigateToHome()"
-          (keydown.space)="navigateToHome()"
-        >
-          <span class="logo-wordmark">{{ 'header.brand' | translate }}</span>
-          @if (showEnvBadge) {
-            <span class="env-pill" [attr.aria-label]="'header.envBadgeAria' | translate">{{ 'header.envBadgeDev' | translate }}</span>
-          }
-        </h1>
-      </div>
+  <!-- Brand -->
+  <div class="brand" (click)="navigateToHome()" (keydown.enter)="navigateToHome()" tabindex="0" role="button" aria-label="BidRoom">
+    BidRoom<em>.pt</em>
+  </div>
 
-      <button
-        type="button"
-        class="menu-toggle"
-        (click)="toggleMenu()"
-        [attr.aria-expanded]="menuOpen"
-        [class.open]="menuOpen"
-        [attr.aria-label]="menuOpen ? ('header.menu.close' | translate) : ('header.menu.open' | translate)"
-      >
-        <span class="menu-toggle-icon" [class.open]="menuOpen">
-          <span class="bar"></span>
-          <span class="bar"></span>
-          <span class="bar"></span>
-        </span>
+  <!-- Centre nav links -->
+  <div class="nav-links">
+    <button class="nl" [class.active]="activePage === 'auctions'" (click)="navigateToAuctions()">
+      {{ 'header.nav.auctions' | translate }}
+    </button>
+    <button class="nl" (click)="navigateToPrivateRooms()">
+      {{ 'header.nav.privateRooms' | translate }}
+    </button>
+    @if (!(isAuthenticated$ | async)) {
+      <button class="nl" [class.active]="activePage === 'how-it-works'" (click)="navigateToHowItWorks()">
+        {{ 'header.nav.howItWorks' | translate }}
       </button>
+    }
+  </div>
 
-      <div class="nav-wrapper" [class.open]="menuOpen">
-        <nav class="main-nav">
-          @if (enableAuctions) {
-            <a class="nav-link" [class.active]="activePage === 'auctions'" href="#" role="button" (click)="navigateToAuctions(); $event.preventDefault()" (keydown.enter)="navigateToAuctions(); $event.preventDefault()">{{ 'header.nav.auctions' | translate }}</a>
-          }
-          <a class="nav-link" [class.active]="activePage === 'categories'" href="#" role="button" (click)="navigateToCategories(); $event.preventDefault()" (keydown.enter)="navigateToCategories(); $event.preventDefault()">{{ 'header.nav.categories' | translate }}</a>
-          <a class="nav-link" [class.active]="activePage === 'how-it-works'" href="#" role="button" (click)="navigateToHowItWorks(); $event.preventDefault()" (keydown.enter)="navigateToHowItWorks(); $event.preventDefault()">{{ 'header.nav.howItWorks' | translate }}</a>
-          <a class="nav-link" [class.active]="activePage === 'faq'" href="#" role="button" (click)="navigateToFaq(); $event.preventDefault()" (keydown.enter)="navigateToFaq(); $event.preventDefault()">{{ 'header.nav.faq' | translate }}</a>
-        </nav>
+  <!-- Right cluster -->
+  <div class="nav-r">
 
-        <div class="header-actions">
-          <!-- Language Switcher -->
-          <div class="lang-switcher">
-            <button class="lang-btn" (click)="toggleLangMenu()" [attr.aria-expanded]="langMenuOpen">
-              {{ currentLangLabel }} <span class="lang-chevron">▾</span>
-            </button>
-            @if (langMenuOpen) {
-              <div class="lang-dropdown">
-                @for (lang of languages; track lang.code) {
-                  <button
-                    class="lang-option"
-                    [class.active]="lang.code === currentLang"
-                    (click)="switchLanguage(lang.code)"
-                  >{{ lang.name }}</button>
-                }
-              </div>
-            }
-          </div>
+    <!-- Lang toggle PT | EN -->
+    <div class="lang-tog">
+      <button class="lt" [class.on]="currentLang === 'pt'" (click)="switchLanguage('pt')">PT</button>
+      <button class="lt" [class.on]="currentLang === 'en'" (click)="switchLanguage('en')">EN</button>
+    </div>
 
-          <div class="theme-switcher">
-            <button
-              type="button"
-              class="theme-btn"
-              (click)="toggleThemeMenu()"
-              [attr.aria-expanded]="themeMenuOpen"
-              [attr.aria-label]="'header.theme.button' | translate"
-            >
-              <span class="theme-btn-icon" aria-hidden="true">{{ themeGlyph() }}</span>
-              <span class="theme-chevron" aria-hidden="true">▾</span>
-            </button>
-            @if (themeMenuOpen) {
-              <div class="theme-dropdown" role="menu">
-                @for (opt of themeOptions; track opt.id) {
-                  <button
-                    type="button"
-                    role="menuitem"
-                    class="theme-option"
-                    [class.active]="theme.preference() === opt.id"
-                    (click)="selectTheme(opt.id)"
-                  >{{ opt.labelKey | translate }}</button>
-                }
-              </div>
-            }
-          </div>
+    <!-- Inline search bar -->
+    <div class="search-bar" [class.open]="searchOpen">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" width="14" height="14" aria-hidden="true">
+        <circle cx="6.5" cy="6.5" r="5"/><path d="M10.5 10.5l3 3"/>
+      </svg>
+      <input #searchInput
+        placeholder="{{ 'header.search.placeholder' | translate }}"
+        (keydown.enter)="doSearch(searchInput)"
+        (keydown.escape)="closeSearch()">
+      <button class="search-clear" (click)="closeSearch()" aria-label="Fechar">×</button>
+    </div>
 
-          @if (isAuthenticated$ | async) {
-            <div class="header-notification-wrap">
-              <app-proposal-notifications></app-proposal-notifications>
-            </div>
-            <button class="btn btn-secondary" (click)="navigateToAddListing()">{{ 'header.actions.listYourItem' | translate }}</button>
-            <button class="btn btn-primary" (click)="navigateToDashboard()">{{ 'header.actions.myAccount' | translate }}</button>
-          } @else {
-            <button class="btn btn-secondary" (click)="navigateToLogin()">{{ 'header.actions.signIn' | translate }}</button>
-            <button class="btn btn-primary" (click)="navigateToAuth()">{{ 'header.actions.startBidding' | translate }}</button>
-          }
-        </div>
+    <!-- Search icon (shown when search is closed) -->
+    @if (!searchOpen) {
+      <button class="icon-btn" (click)="openSearch()" aria-label="{{ 'header.search.open' | translate }}">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" width="15" height="15" aria-hidden="true">
+          <circle cx="6.5" cy="6.5" r="5"/><path d="M10.5 10.5l3 3"/>
+        </svg>
+      </button>
+    }
+
+    @if (isAuthenticated$ | async) {
+      <!-- Authenticated -->
+      <button class="btn-publish" (click)="navigateToAddListing()">
+        <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+          <path d="M6.5 1v11M1 6.5h11"/>
+        </svg>
+        {{ 'header.actions.publish' | translate }}
+      </button>
+      <a routerLink="/dashboard/notifications" class="icon-btn bell-btn" aria-label="{{ 'header.actions.notifications' | translate }}">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" width="15" height="15" aria-hidden="true">
+          <path d="M8 2a5 5 0 00-5 5v3l-1 1h12l-1-1V7a5 5 0 00-5-5z"/>
+          <path d="M6.5 13.5a1.5 1.5 0 003 0"/>
+        </svg>
+        @if (notifCount > 0) {
+          <div class="notif-dot"></div>
+        }
+      </a>
+      <div class="avatar" (click)="navigateToDashboard()" (keydown.enter)="navigateToDashboard()" tabindex="0" role="button" aria-label="Dashboard">
+        {{ userInitials }}
       </div>
+    } @else {
+      <!-- Visitor -->
+      <button class="btn-signin" (click)="navigateToLogin()">{{ 'header.actions.signIn' | translate }}</button>
+      <button class="btn-start" (click)="navigateToAuth()">{{ 'header.actions.startBidding' | translate }}</button>
+    }
+
+    <!-- Mobile hamburger -->
+    <button class="menu-toggle" type="button" (click)="toggleMenu()"
+      [attr.aria-expanded]="menuOpen"
+      [attr.aria-label]="menuOpen ? 'Fechar menu' : 'Abrir menu'">
+      <span class="bar"></span>
+      <span class="bar"></span>
+      <span class="bar"></span>
+    </button>
+
+  </div>
+</nav>
+
+<!-- Mobile menu -->
+@if (menuOpen) {
+  <div class="mobile-menu" role="dialog" aria-modal="true">
+    <button class="nm" (click)="navigateToAuctions()">{{ 'header.nav.auctions' | translate }}</button>
+    <button class="nm" (click)="navigateToPrivateRooms()">{{ 'header.nav.privateRooms' | translate }}</button>
+    <button class="nm" (click)="navigateToHowItWorks()">{{ 'header.nav.howItWorks' | translate }}</button>
+    <div class="nm-divider"></div>
+    @if (isAuthenticated$ | async) {
+      <button class="nm" (click)="navigateToAddListing()">+ {{ 'header.actions.publish' | translate }}</button>
+      <button class="nm" (click)="navigateToDashboard()">Dashboard</button>
+    } @else {
+      <button class="nm-action nm-action--secondary" (click)="navigateToLogin()">{{ 'header.actions.signIn' | translate }}</button>
+      <button class="nm-action nm-action--primary" (click)="navigateToAuth()">{{ 'header.actions.startBidding' | translate }}</button>
+    }
+    <div class="nm-lang">
+      <button class="lt" [class.on]="currentLang === 'pt'" (click)="switchLanguage('pt'); closeMenu()">PT</button>
+      <button class="lt" [class.on]="currentLang === 'en'" (click)="switchLanguage('en'); closeMenu()">EN</button>
     </div>
   </div>
-</header>
+  <div class="mobile-backdrop" (click)="closeMenu()" aria-hidden="true"></div>
+}

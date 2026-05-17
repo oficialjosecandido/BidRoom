@@ -6,6 +6,7 @@
     "nav": {
       "auctions": "Auctions",
       "categories": "Categories",
+      "privateRooms": "Private Rooms",
       "howItWorks": "How It Works",
       "faq": "FAQ",
       "contact": "Contact"
@@ -14,7 +15,13 @@
       "listYourItem": "List Your Item",
       "myAccount": "My Account",
       "signIn": "Sign In",
-      "startBidding": "Start Bidding"
+      "startBidding": "Start Bidding",
+      "publish": "Publish",
+      "notifications": "Notifications"
+    },
+    "search": {
+      "placeholder": "Search auctions, items, sellers…",
+      "open": "Search"
     },
     "menu": {
       "open": "Open menu",
@@ -1000,12 +1007,20 @@
     "sidebar": {
       "home": "Home",
       "store": "Store",
+      "main": "Main",
       "activity": "Activity",
+      "listings": "Listings",
+      "account": "Account",
+      "buyer": "Buyer",
+      "seller": "Seller",
+      "transactions": "Transactions",
+      "notifications": "Notifications",
+      "myBids": "My Bids",
+      "watchlist": "Watchlist",
+      "following": "Following",
+      "myListings": "My Listings",
       "buyerProfile": "Buyer Profile",
       "sellerProfile": "Seller Profile",
-      "following": "Following",
-      "account": "Account",
-      "notifications": "Notifications",
       "settings": "Settings",
       "logout": "Logout"
     },
@@ -1132,7 +1147,42 @@
       "toYourBalance": "to your balance",
       "redirecting": "Redirecting...",
       "continueToCheckout": "Continue to Checkout",
-      "buyingWatchlist": "Buying & Watchlist"
+      "buyingWatchlist": "Buying & Watchlist",
+      "subtitle": "Here's your account summary",
+      "myListingsTitle": "My listings",
+      "live": "Live",
+      "pendingReviews": "Pending reviews",
+      "greeting": {
+        "morning": "Good morning",
+        "afternoon": "Good afternoon",
+        "evening": "Good evening"
+      },
+      "statActiveBids": "Active bids",
+      "statAcrossAuctions": "across {{count}} auctions",
+      "statPendingOffers": "Pending offers",
+      "statAwaitingSeller": "awaiting seller",
+      "statPendingTx": "Pending transactions",
+      "statActionNeeded": "action needed",
+      "statReputation": "Reputation",
+      "statOutOf100": "out of 100",
+      "statActiveListings": "Active listings",
+      "sectionActiveBids": "Active bids",
+      "yourBid": "Your bid",
+      "formatAuction": "Auction",
+      "formatBestOffer": "Best offer",
+      "statusWinning": "Winning",
+      "statusOutbid": "Outbid",
+      "statusEnded": "Ended",
+      "ended": "Ended",
+      "endsInDays": "Ends in {{days}} days",
+      "endsInHours": "Ends in {{hours}}h {{minutes}}m",
+      "reviewPendingFrom": "Rate your transaction with {{name}} · {{role}}",
+      "roleSeller": "Seller",
+      "roleBuyer": "Buyer",
+      "reviewBtn": "Review"
+    },
+    "role": {
+      "toggleLabel": "Buyer or seller mode"
     },
     "buyer": {
       "title": "Buyer Profile",
@@ -1254,6 +1304,9 @@
       "notVerified": "Not Verified",
       "buyerScore": "Buyer Score",
       "sellerScore": "Seller Score",
+      "reputation": "Reputation",
+      "overallScore": "Overall score",
+      "noReviews": "No reviews yet",
       "languagePreference": "Language Preference",
       "languageDesc": "Choose the language for your BidRoom experience.",
       "appearance": {
@@ -1436,6 +1489,29 @@
   "transactions": {
     "title": "Transactions",
     "subtitle": "View and manage your purchases and sales.",
+    "filterAll": "All",
+    "filterPendingPayment": "Pending payment",
+    "filterShipping": "In transit",
+    "filterDelivered": "Delivered",
+    "filterCompleted": "Completed",
+    "filterDisputed": "Disputed",
+  "drawer": {
+    "details": "Details",
+    "amount": "Amount",
+    "status": "Status",
+    "role": "Role",
+    "deadline": "Deadline",
+    "counterpart": "Counterpart",
+    "seller": "Seller",
+    "buyer": "Buyer",
+    "sellerRep": "Reputation"
+  },
+  "tp": {
+    "payment": "Payment",
+    "shipping": "Shipping",
+    "delivery": "Delivery",
+    "done": "Done"
+  },
     "seller": "Seller",
     "buyer": "Buyer",
     "loading": "Loading transactions...",
@@ -2375,5 +2451,28 @@
     "following": "Following",
     "mute": "Mute notifications",
     "unmute": "Unmute notifications"
+  },
+  "myBids": {
+    "filterAll": "All",
+    "filterWinning": "Winning",
+    "filterOutbid": "Outbid",
+    "filterEnded": "Ended",
+    "myBest": "My best",
+    "currentPrice": "Current",
+    "bids": "Bids",
+    "ends": "Ends",
+    "bidHistory": "Bid history",
+    "bidAgain": "Bid again",
+    "viewListing": "View listing",
+    "notifOn": "Notify on outbid",
+    "notifOff": "Notifications off",
+    "typeOffer": "Offer",
+    "typeLive": "Live",
+    "statusActive": "Active",
+    "statusEnded": "Ended"
+  },
+  "watchlist": {
+    "typeLive": "Live",
+    "ended": "Ended"
   }
 }

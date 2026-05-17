@@ -6,6 +6,7 @@ import { provideAuth, getAuth } from '@angular/fire/auth';
 import { provideTranslateService } from '@ngx-translate/core';
 import { provideTranslateHttpLoader } from '@ngx-translate/http-loader';
 
+import { environment } from '../environments/environment';
 import { routes } from './app.routes';
 import { authInterceptor } from './auth/interceptors/auth.interceptor';
 import { fingerprintInterceptor } from './auth/interceptors/fingerprint.interceptor';
@@ -29,15 +30,7 @@ export const appConfig: ApplicationConfig = {
       defaultLanguage: 'en',
       loader: provideTranslateHttpLoader({ prefix: '/i18n/', suffix: '.json' })
     }),
-    provideFirebaseApp(() => initializeApp({
-      apiKey: "AIzaSyBb3nk50nwBME8dN5pNhu2W1B7-m35qqHw",
-      authDomain: "bidroom-47cb5.firebaseapp.com",
-      projectId: "bidroom-47cb5",
-      storageBucket: "bidroom-47cb5.firebasestorage.app",
-      messagingSenderId: "16761692806",
-      appId: "1:16761692806:web:b1e10f2a57a040f8556707",
-      measurementId: "G-4FDFR1ZSRV"
-    })),
+    provideFirebaseApp(() => initializeApp(environment.firebase)),
     provideAuth(() => getAuth()),
     AuthService,
     AuthGuard,
