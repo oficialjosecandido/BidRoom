@@ -1,21 +1,12 @@
-import { Component, inject } from '@angular/core';
-
-import { Router } from '@angular/router';
+import { Component } from '@angular/core';
 import { TranslateModule } from '@ngx-translate/core';
-import { HeaderComponent } from '../../../shared/components/header/header.component';
-import { FooterComponent } from '../../../shared/components/footer/footer.component';
+import { LegalLayoutComponent } from '../legal/legal-layout.component';
 
 @Component({
   selector: 'app-terms-conditions',
   standalone: true,
-  imports: [HeaderComponent, FooterComponent, TranslateModule],
+  imports: [LegalLayoutComponent, TranslateModule],
   templateUrl: './terms-conditions.component.html',
-  styleUrls: ['./terms-conditions.component.scss']
+  styleUrls: ['../legal/_legal-content.scss']
 })
-export class TermsConditionsComponent {
-  private router = inject(Router);
-
-  navigateToHome(): void {
-    this.router.navigate(['/landing']);
-  }
-}
+export class TermsConditionsComponent {}

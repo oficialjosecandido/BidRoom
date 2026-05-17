@@ -22,6 +22,10 @@ export const landingRoutes: Routes = [
     loadComponent: () => import('./components/privacy-policy/privacy-policy.component').then(m => m.PrivacyPolicyComponent)
   },
   {
+    path: 'cookies',
+    loadComponent: () => import('./components/cookies-policy/cookies-policy.component').then(m => m.CookiesPolicyComponent)
+  },
+  {
     path: 'terms-conditions',
     loadComponent: () => import('./components/terms-conditions/terms-conditions.component').then(m => m.TermsConditionsComponent)
   }

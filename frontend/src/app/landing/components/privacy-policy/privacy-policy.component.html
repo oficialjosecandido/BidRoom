@@ -1,181 +1,89 @@
-<app-header activePage="privacy"></app-header>
+<app-legal-layout activeTab="privacy">
+  <div class="page-wrap">
+    <div class="legal-header">
+      <div class="legal-eyebrow">{{ 'legal.privacy.eyebrow' | translate }}</div>
+      <h1 class="legal-title">{{ 'legal.privacy.title' | translate }}</h1>
+      <div class="legal-updated">{{ 'legal.privacy.updated' | translate }}</div>
+    </div>
 
-<!-- Page Header -->
-<section class="page-header">
-  <div class="container">
-    <h1>{{ 'privacy.hero.title' | translate }}</h1>
-    <p>{{ 'privacy.hero.subtitle' | translate }}</p>
-    <p class="last-updated">{{ 'privacy.hero.lastUpdated' | translate }}</p>
-  </div>
-</section>
-
-<!-- Privacy Policy Content -->
-<section class="privacy-content">
-  <div class="container">
-    <div class="content-wrapper">
-
-      <!-- Introduction -->
-      <div class="policy-section">
-        <h2>{{ 'privacy.s1.title' | translate }}</h2>
-        <p>{{ 'privacy.s1.p1' | translate }}</p>
-        <p>{{ 'privacy.s1.p2' | translate }}</p>
+    <div class="legal-body">
+      <div class="info-box">
+        <strong>{{ 'legal.privacy.dpoLabel' | translate }}</strong>
+        {{ 'legal.privacy.dpoVal' | translate }}
       </div>
 
-      <!-- Information We Collect -->
-      <div class="policy-section">
-        <h2>{{ 'privacy.s2.title' | translate }}</h2>
+      <h2>{{ 'legal.privacy.h1' | translate }}</h2>
+      <table class="legal-table">
+        <thead>
+          <tr>
+            <th>{{ 'legal.privacy.th1' | translate }}</th>
+            <th>{{ 'legal.privacy.th2' | translate }}</th>
+            <th>{{ 'legal.privacy.th3' | translate }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>{{ 'legal.privacy.cat1' | translate }}</strong></td>
+            <td>{{ 'legal.privacy.dat1' | translate }}</td>
+            <td>{{ 'legal.privacy.fin1' | translate }}</td>
+          </tr>
+          <tr>
+            <td><strong>{{ 'legal.privacy.cat2' | translate }}</strong></td>
+            <td>{{ 'legal.privacy.dat2' | translate }}</td>
+            <td>{{ 'legal.privacy.fin2' | translate }}</td>
+          </tr>
+          <tr>
+            <td><strong>{{ 'legal.privacy.cat3' | translate }}</strong></td>
+            <td>{{ 'legal.privacy.dat3' | translate }}</td>
+            <td>{{ 'legal.privacy.fin3' | translate }}</td>
+          </tr>
+          <tr>
+            <td><strong>{{ 'legal.privacy.cat4' | translate }}</strong></td>
+            <td>{{ 'legal.privacy.dat4' | translate }}</td>
+            <td>{{ 'legal.privacy.fin4' | translate }}</td>
+          </tr>
+          <tr>
+            <td><strong>{{ 'legal.privacy.cat5' | translate }}</strong></td>
+            <td>{{ 'legal.privacy.dat5' | translate }}</td>
+            <td>{{ 'legal.privacy.fin5' | translate }}</td>
+          </tr>
+        </tbody>
+      </table>
 
-        <h3>{{ 'privacy.s2.s1.title' | translate }}</h3>
-        <p>{{ 'privacy.s2.s1.intro' | translate }}</p>
-        <ul>
-          <li>{{ 'privacy.s2.s1.li1' | translate }}</li>
-          <li>{{ 'privacy.s2.s1.li2' | translate }}</li>
-          <li>{{ 'privacy.s2.s1.li3' | translate }}</li>
-          <li>{{ 'privacy.s2.s1.li4' | translate }}</li>
-          <li>{{ 'privacy.s2.s1.li5' | translate }}</li>
-        </ul>
+      <h2>{{ 'legal.privacy.h2' | translate }}</h2>
+      <ul>
+        <li [innerHTML]="'legal.privacy.h2li1' | translate"></li>
+        <li [innerHTML]="'legal.privacy.h2li2' | translate"></li>
+        <li [innerHTML]="'legal.privacy.h2li3' | translate"></li>
+        <li [innerHTML]="'legal.privacy.h2li4' | translate"></li>
+      </ul>
 
-        <h3>{{ 'privacy.s2.s2.title' | translate }}</h3>
-        <p>{{ 'privacy.s2.s2.intro' | translate }}</p>
-        <ul>
-          <li>{{ 'privacy.s2.s2.li1' | translate }}</li>
-          <li>{{ 'privacy.s2.s2.li2' | translate }}</li>
-          <li>{{ 'privacy.s2.s2.li3' | translate }}</li>
-          <li>{{ 'privacy.s2.s2.li4' | translate }}</li>
-        </ul>
-      </div>
+      <h2>{{ 'legal.privacy.h3' | translate }}</h2>
+      <ul>
+        <li [innerHTML]="'legal.privacy.h3li1' | translate"></li>
+        <li [innerHTML]="'legal.privacy.h3li2' | translate"></li>
+        <li [innerHTML]="'legal.privacy.h3li3' | translate"></li>
+        <li [innerHTML]="'legal.privacy.h3li4' | translate"></li>
+      </ul>
+      <p>{{ 'legal.privacy.h3p1' | translate }}</p>
 
-      <!-- How We Use Information -->
-      <div class="policy-section">
-        <h2>{{ 'privacy.s3.title' | translate }}</h2>
-        <p>{{ 'privacy.s3.intro' | translate }}</p>
-        <ul>
-          <li>{{ 'privacy.s3.li1' | translate }}</li>
-          <li>{{ 'privacy.s3.li2' | translate }}</li>
-          <li>{{ 'privacy.s3.li3' | translate }}</li>
-          <li>{{ 'privacy.s3.li4' | translate }}</li>
-          <li>{{ 'privacy.s3.li5' | translate }}</li>
-          <li>{{ 'privacy.s3.li6' | translate }}</li>
-          <li>{{ 'privacy.s3.li7' | translate }}</li>
-          <li>{{ 'privacy.s3.li8' | translate }}</li>
-        </ul>
-      </div>
+      <h2>{{ 'legal.privacy.h4' | translate }}</h2>
+      <p>{{ 'legal.privacy.h4p1' | translate }}</p>
+      <ul>
+        <li [innerHTML]="'legal.privacy.h4li1' | translate"></li>
+        <li [innerHTML]="'legal.privacy.h4li2' | translate"></li>
+        <li [innerHTML]="'legal.privacy.h4li3' | translate"></li>
+        <li [innerHTML]="'legal.privacy.h4li4' | translate"></li>
+        <li [innerHTML]="'legal.privacy.h4li5' | translate"></li>
+        <li [innerHTML]="'legal.privacy.h4li6' | translate"></li>
+      </ul>
+      <p [innerHTML]="'legal.privacy.h4p2' | translate"></p>
 
-      <!-- Information Sharing -->
-      <div class="policy-section">
-        <h2>{{ 'privacy.s4.title' | translate }}</h2>
-        <p>{{ 'privacy.s4.intro' | translate }}</p>
+      <h2>{{ 'legal.privacy.h5' | translate }}</h2>
+      <p>{{ 'legal.privacy.h5p1' | translate }}</p>
 
-        <h3>{{ 'privacy.s4.s1.title' | translate }}</h3>
-        <p>{{ 'privacy.s4.s1.intro' | translate }}</p>
-        <ul>
-          <li>{{ 'privacy.s4.s1.li1' | translate }}</li>
-          <li>{{ 'privacy.s4.s1.li2' | translate }}</li>
-          <li>{{ 'privacy.s4.s1.li3' | translate }}</li>
-          <li>{{ 'privacy.s4.s1.li4' | translate }}</li>
-        </ul>
-
-        <h3>{{ 'privacy.s4.s2.title' | translate }}</h3>
-        <p>{{ 'privacy.s4.s2.intro' | translate }}</p>
-        <ul>
-          <li>{{ 'privacy.s4.s2.li1' | translate }}</li>
-          <li>{{ 'privacy.s4.s2.li2' | translate }}</li>
-          <li>{{ 'privacy.s4.s2.li3' | translate }}</li>
-          <li>{{ 'privacy.s4.s2.li4' | translate }}</li>
-        </ul>
-
-        <h3>{{ 'privacy.s4.s3.title' | translate }}</h3>
-        <p>{{ 'privacy.s4.s3.p' | translate }}</p>
-      </div>
-
-      <!-- Data Security -->
-      <div class="policy-section">
-        <h2>{{ 'privacy.s5.title' | translate }}</h2>
-        <p>{{ 'privacy.s5.intro' | translate }}</p>
-        <ul>
-          <li>{{ 'privacy.s5.li1' | translate }}</li>
-          <li>{{ 'privacy.s5.li2' | translate }}</li>
-          <li>{{ 'privacy.s5.li3' | translate }}</li>
-          <li>{{ 'privacy.s5.li4' | translate }}</li>
-        </ul>
-        <p>{{ 'privacy.s5.note' | translate }}</p>
-      </div>
-
-      <!-- Your Rights -->
-      <div class="policy-section">
-        <h2>{{ 'privacy.s6.title' | translate }}</h2>
-        <p>{{ 'privacy.s6.intro' | translate }}</p>
-        <ul>
-          <li><strong>{{ 'privacy.s6.li1.label' | translate }}</strong> {{ 'privacy.s6.li1.text' | translate }}</li>
-          <li><strong>{{ 'privacy.s6.li2.label' | translate }}</strong> {{ 'privacy.s6.li2.text' | translate }}</li>
-          <li><strong>{{ 'privacy.s6.li3.label' | translate }}</strong> {{ 'privacy.s6.li3.text' | translate }}</li>
-          <li><strong>{{ 'privacy.s6.li4.label' | translate }}</strong> {{ 'privacy.s6.li4.text' | translate }}</li>
-          <li><strong>{{ 'privacy.s6.li5.label' | translate }}</strong> {{ 'privacy.s6.li5.text' | translate }}</li>
-        </ul>
-        <p>{{ 'privacy.s6.note' | translate }}</p>
-      </div>
-
-      <!-- Cookies -->
-      <div class="policy-section">
-        <h2>{{ 'privacy.s7.title' | translate }}</h2>
-        <p>{{ 'privacy.s7.intro' | translate }}</p>
-        <ul>
-          <li>{{ 'privacy.s7.li1' | translate }}</li>
-          <li>{{ 'privacy.s7.li2' | translate }}</li>
-          <li>{{ 'privacy.s7.li3' | translate }}</li>
-          <li>{{ 'privacy.s7.li4' | translate }}</li>
-        </ul>
-        <p>{{ 'privacy.s7.note' | translate }}</p>
-      </div>
-
-      <!-- Data Retention -->
-      <div class="policy-section">
-        <h2>{{ 'privacy.s8.title' | translate }}</h2>
-        <p>{{ 'privacy.s8.intro' | translate }}</p>
-        <ul>
-          <li>{{ 'privacy.s8.li1' | translate }}</li>
-          <li>{{ 'privacy.s8.li2' | translate }}</li>
-          <li>{{ 'privacy.s8.li3' | translate }}</li>
-        </ul>
-      </div>
-
-      <!-- International Transfers -->
-      <div class="policy-section">
-        <h2>{{ 'privacy.s9.title' | translate }}</h2>
-        <p>{{ 'privacy.s9.p' | translate }}</p>
-      </div>
-
-      <!-- Children's Privacy -->
-      <div class="policy-section">
-        <h2>{{ 'privacy.s10.title' | translate }}</h2>
-        <p>{{ 'privacy.s10.p' | translate }}</p>
-      </div>
-
-      <!-- Changes to Policy -->
-      <div class="policy-section">
-        <h2>{{ 'privacy.s11.title' | translate }}</h2>
-        <p>{{ 'privacy.s11.intro' | translate }}</p>
-        <ul>
-          <li>{{ 'privacy.s11.li1' | translate }}</li>
-          <li>{{ 'privacy.s11.li2' | translate }}</li>
-          <li>{{ 'privacy.s11.li3' | translate }}</li>
-        </ul>
-        <p>{{ 'privacy.s11.note' | translate }}</p>
-      </div>
-
-      <!-- Contact Information -->
-      <div class="policy-section">
-        <h2>{{ 'privacy.s12.title' | translate }}</h2>
-        <p>{{ 'privacy.s12.intro' | translate }}</p>
-        <div class="contact-info">
-          <p><strong>{{ 'privacy.s12.emailLabel' | translate }}</strong> privacy@bidroom.com</p>
-          <p><strong>{{ 'privacy.s12.addressLabel' | translate }}</strong> {{ 'privacy.s12.address' | translate }}</p>
-          <p><strong>{{ 'privacy.s12.phoneLabel' | translate }}</strong> 1-800-BIDROOM</p>
-        </div>
-      </div>
-
+      <h2>{{ 'legal.privacy.h6' | translate }}</h2>
+      <p>{{ 'legal.privacy.h6p1' | translate }}</p>
     </div>
   </div>
-</section>
-
-<app-footer></app-footer>
+</app-legal-layout>
