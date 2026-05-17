@@ -1,0 +1,31 @@
+<div class="legal-page">
+  <nav class="legal-nav">
+    <a class="nav-link-back" routerLink="/landing">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+        <path d="M9 2L4 7l5 5"/>
+      </svg>
+      <span class="brand">BidRoom<em>.pt</em></span>
+    </a>
+    <div class="nav-r">
+      <button type="button" class="btn-th" (click)="cycleTheme()" [attr.aria-label]="'legal.themeToggle' | translate">{{ themeGlyph }}</button>
+      <div class="lang-tog">
+        <button type="button" class="lt" [class.on]="currentLang === 'pt'" (click)="switchLanguage('pt')">PT</button>
+        <button type="button" class="lt" [class.on]="currentLang === 'en'" (click)="switchLanguage('en')">EN</button>
+      </div>
+    </div>
+  </nav>
+
+  <div class="legal-tabs">
+    <a routerLink="/landing/terms-conditions" routerLinkActive="active" class="ltab">{{ 'legal.tabs.terms' | translate }}</a>
+    <a routerLink="/landing/privacy-policy" routerLinkActive="active" class="ltab">{{ 'legal.tabs.privacy' | translate }}</a>
+    <a routerLink="/landing/cookies" routerLinkActive="active" class="ltab">{{ 'legal.tabs.cookies' | translate }}</a>
+    <a routerLink="/landing/contact" routerLinkActive="active" class="ltab">{{ 'legal.tabs.contact' | translate }}</a>
+  </div>
+
+  <ng-content />
+
+  <footer class="legal-footer">
+    <div class="f-brand">BidRoom<em>.pt</em></div>
+    <div class="f-copy">{{ 'legal.footer.copy' | translate }}</div>
+  </footer>
+</div>

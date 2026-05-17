@@ -1,219 +1,118 @@
-<app-header activePage="contact"></app-header>
+<app-legal-layout activeTab="contact">
+  <div class="page-wrap">
+    <div class="legal-header">
+      <div class="legal-eyebrow">{{ 'legal.contact.eyebrow' | translate }}</div>
+      <h1 class="legal-title">{{ 'legal.contact.title' | translate }}</h1>
+      <div class="legal-updated">{{ 'legal.contact.response' | translate }}</div>
+    </div>
 
-<!-- Page Header -->
-<section class="page-header">
-  <div class="container">
-    <h1>{{ 'contact.hero.title' | translate }}</h1>
-    <p>{{ 'contact.hero.subtitle' | translate }}</p>
-  </div>
-</section>
+    @if (submitMessage) {
+      <p class="form-success" role="status">{{ submitMessage }}</p>
+    }
 
-<!-- Contact Section -->
-<section class="contact-section">
-  <div class="container">
-    <div class="row">
-      <!-- Contact Form -->
-      <div class="col-8">
-        <div class="contact-form-container">
-          <h2>{{ 'contact.form.heading' | translate }}</h2>
-          <p>{{ 'contact.form.subheading' | translate }}</p>
-
-          <form [formGroup]="contactForm" (ngSubmit)="onSubmit()" class="contact-form">
-            <div class="form-row">
-              <div class="form-group">
-                <label for="name">{{ 'contact.form.name' | translate }} *</label>
-                <input
-                  type="text"
-                  id="name"
-                  formControlName="name"
-                  [class.error]="getFieldError('name')"
-                  [placeholder]="'contact.form.namePlaceholder' | translate"
-                />
-                @if (getFieldError('name')) {
-<div class="field-error">
-                  {{ getFieldError('name') }}
-                </div>
-}
-              </div>
-
-              <div class="form-group">
-                <label for="email">{{ 'contact.form.email' | translate }} *</label>
-                <input
-                  type="email"
-                  id="email"
-                  formControlName="email"
-                  [class.error]="getFieldError('email')"
-                  placeholder="your.email@example.com"
-                />
-                @if (getFieldError('email')) {
-<div class="field-error">
-                  {{ getFieldError('email') }}
-                </div>
-}
-              </div>
-            </div>
-
-            <div class="form-group">
-              <label for="inquiryType">{{ 'contact.form.inquiryType' | translate }} *</label>
-              <select
-                id="inquiryType"
-                formControlName="inquiryType"
-                [class.error]="getFieldError('inquiryType')"
-              >
-                <option value="general">{{ 'contact.form.inquiryGeneral' | translate }}</option>
-                <option value="technical">{{ 'contact.form.inquiryTechnical' | translate }}</option>
-                <option value="billing">{{ 'contact.form.inquiryBilling' | translate }}</option>
-                <option value="account">{{ 'contact.form.inquiryAccount' | translate }}</option>
-                <option value="report">{{ 'contact.form.inquiryReport' | translate }}</option>
-                <option value="partnership">{{ 'contact.form.inquiryPartnership' | translate }}</option>
-              </select>
-              @if (getFieldError('inquiryType')) {
-<div class="field-error">
-                {{ getFieldError('inquiryType') }}
-              </div>
-}
-            </div>
-
-            <div class="form-group">
-              <label for="subject">{{ 'contact.form.subject' | translate }} *</label>
-              <input
-                type="text"
-                id="subject"
-                formControlName="subject"
-                [class.error]="getFieldError('subject')"
-                [placeholder]="'contact.form.subjectPlaceholder' | translate"
-              />
-              @if (getFieldError('subject')) {
-<div class="field-error">
-                {{ getFieldError('subject') }}
-              </div>
-}
-            </div>
-
-            <div class="form-group">
-              <label for="message">{{ 'contact.form.message' | translate }} *</label>
-              <textarea
-                id="message"
-                formControlName="message"
-                [class.error]="getFieldError('message')"
-                [placeholder]="'contact.form.messagePlaceholder' | translate"
-                rows="6"
-              ></textarea>
-              @if (getFieldError('message')) {
-<div class="field-error">
-                {{ getFieldError('message') }}
-              </div>
-}
-            </div>
-
-            <button
-              type="submit"
-              class="btn btn-primary btn-large"
-              [disabled]="contactForm.invalid || isSubmitting"
-            >
-              @if (!isSubmitting) {
-<span>{{ 'contact.form.sendMessage' | translate }}</span>
-}
-              @if (isSubmitting) {
-<span>{{ 'contact.form.sending' | translate }}</span>
-}
-            </button>
-
-            @if (submitMessage) {
-<div class="submit-message">
-              {{ submitMessage }}
-            </div>
-}
-          </form>
+    <div class="contact-grid">
+      <form [formGroup]="contactForm" (ngSubmit)="onSubmit()" class="contact-form">
+        <div class="form-field">
+          <label class="form-label" for="contact-name">{{ 'legal.contact.name' | translate }}</label>
+          <input id="contact-name" class="form-input" type="text" formControlName="name" [placeholder]="'legal.contact.namePlaceholder' | translate" />
+          @if (getFieldError('name')) {
+            <p class="form-error">{{ getFieldError('name') }}</p>
+          }
         </div>
-      </div>
 
-      <!-- Contact Information -->
-      <div class="col-4">
-        <div class="contact-info">
-          <h3>{{ 'contact.info.heading' | translate }}</h3>
-          <p>{{ 'contact.info.subheading' | translate }}</p>
+        <div class="form-field">
+          <label class="form-label" for="contact-email">{{ 'legal.contact.email' | translate }}</label>
+          <input id="contact-email" class="form-input" type="email" formControlName="email" [placeholder]="'legal.contact.emailPlaceholder' | translate" />
+          @if (getFieldError('email')) {
+            <p class="form-error">{{ getFieldError('email') }}</p>
+          }
+        </div>
 
-          <div class="contact-methods">
-            <div class="contact-method">
-              <div class="contact-icon">📧</div>
-              <div class="contact-details">
-                <h4>{{ 'contact.info.emailSupport' | translate }}</h4>
-                <p>support@bidroom.com</p>
-                <small>{{ 'contact.info.emailResponse' | translate }}</small>
-              </div>
-            </div>
+        <div class="form-field">
+          <label class="form-label" for="contact-subject">{{ 'legal.contact.subject' | translate }}</label>
+          <select id="contact-subject" class="form-select" formControlName="subject">
+            <option value="auction">{{ 'legal.contact.sub1' | translate }}</option>
+            <option value="transaction">{{ 'legal.contact.sub2' | translate }}</option>
+            <option value="account">{{ 'legal.contact.sub3' | translate }}</option>
+            <option value="report">{{ 'legal.contact.sub4' | translate }}</option>
+            <option value="legal">{{ 'legal.contact.sub5' | translate }}</option>
+            <option value="press">{{ 'legal.contact.sub6' | translate }}</option>
+            <option value="other">{{ 'legal.contact.sub7' | translate }}</option>
+          </select>
+          @if (getFieldError('subject')) {
+            <p class="form-error">{{ getFieldError('subject') }}</p>
+          }
+        </div>
 
-            <div class="contact-method">
-              <div class="contact-icon">💬</div>
-              <div class="contact-details">
-                <h4>{{ 'contact.info.liveChat' | translate }}</h4>
-                <p>{{ 'contact.info.liveChatHours' | translate }}</p>
-                <small>{{ 'contact.info.liveChatDays' | translate }}</small>
-              </div>
-            </div>
+        <div class="form-field">
+          <label class="form-label" for="contact-message">{{ 'legal.contact.message' | translate }}</label>
+          <textarea id="contact-message" class="form-textarea" formControlName="message" [placeholder]="'legal.contact.messagePlaceholder' | translate"></textarea>
+          @if (getFieldError('message')) {
+            <p class="form-error">{{ getFieldError('message') }}</p>
+          }
+        </div>
 
-            <div class="contact-method">
-              <div class="contact-icon">📞</div>
-              <div class="contact-details">
-                <h4>{{ 'contact.info.phoneSupport' | translate }}</h4>
-                <p>1-800-BIDROOM</p>
-                <small>{{ 'contact.info.phoneSupportHours' | translate }}</small>
-              </div>
+        <button type="submit" class="btn-submit" [disabled]="isSubmitting">
+          {{ isSubmitting ? ('legal.contact.sending' | translate) : ('legal.contact.submit' | translate) }}
+        </button>
+      </form>
+
+      <div class="contact-info">
+        <div class="contact-info-card">
+          <div class="cic-row">
+            <span class="cic-ico">📧</span>
+            <div>
+              <div class="cic-label">{{ 'legal.contact.general' | translate }}</div>
+              <div class="cic-val"><a href="mailto:hello@bidroom.pt">hello@bidroom.pt</a></div>
             </div>
           </div>
-
-          <div class="business-hours">
-            <h4>{{ 'contact.info.businessHours' | translate }}</h4>
-            <ul>
-              <li>{{ 'contact.info.hoursWeekday' | translate }}</li>
-              <li>{{ 'contact.info.hoursSaturday' | translate }}</li>
-              <li>{{ 'contact.info.hoursSunday' | translate }}</li>
-            </ul>
+          <div class="cic-row">
+            <span class="cic-ico">⚖️</span>
+            <div>
+              <div class="cic-label">{{ 'legal.contact.legalLabel' | translate }}</div>
+              <div class="cic-val"><a href="mailto:legal@bidroom.pt">legal@bidroom.pt</a></div>
+            </div>
           </div>
+          <div class="cic-row">
+            <span class="cic-ico">🏢</span>
+            <div>
+              <div class="cic-label">{{ 'legal.contact.address' | translate }}</div>
+              <div class="cic-val">{{ 'legal.contact.company' | translate }}</div>
+              <div class="cic-sub">{{ 'legal.contact.addressLine' | translate }}</div>
+            </div>
+          </div>
+          <div class="cic-row">
+            <span class="cic-ico">🕐</span>
+            <div>
+              <div class="cic-label">{{ 'legal.contact.hours' | translate }}</div>
+              <div class="cic-val">{{ 'legal.contact.hoursVal' | translate }}</div>
+            </div>
+          </div>
+        </div>
 
-          <div class="emergency-contact">
-            <h4>{{ 'contact.info.urgentIssues' | translate }}</h4>
-            <p>{{ 'contact.info.urgentDesc' | translate }}</p>
-            <p><strong>1-800-URGENT-1</strong></p>
-            <small>{{ 'contact.info.urgentAvailability' | translate }}</small>
+        <div class="reclamacoes-card">
+          <div class="rc-label">{{ 'legal.contact.reclamacoesLabel' | translate }}</div>
+          <div class="rc-title">{{ 'legal.contact.reclamacoesTitle' | translate }}</div>
+          <div class="rc-desc">{{ 'legal.contact.reclamacoesDesc' | translate }}</div>
+          <a href="https://www.livroreclamacoes.pt" target="_blank" rel="noopener noreferrer" class="btn-reclamacoes">
+            📋 {{ 'legal.contact.reclamacoesBtn' | translate }}
+          </a>
+        </div>
+
+        <div class="contact-info-card contact-info-card--spaced">
+          <div class="cic-row">
+            <span class="cic-ico">🏛️</span>
+            <div>
+              <div class="cic-label">{{ 'legal.contact.ralLabel' | translate }}</div>
+              <div class="cic-val">CNIACC</div>
+              <div class="cic-sub">
+                <a href="https://www.cniacc.pt" target="_blank" rel="noopener noreferrer">cniacc.pt</a>
+                · {{ 'legal.contact.ralSub' | translate }}
+              </div>
+            </div>
           </div>
         </div>
       </div>
     </div>
   </div>
-</section>
-
-<!-- FAQ Quick Links -->
-<section class="faq-links">
-  <div class="container">
-    <h2 class="section-title">{{ 'contact.faqLinks.title' | translate }}</h2>
-    <p class="section-subtitle">{{ 'contact.faqLinks.subtitle' | translate }}</p>
-
-    <div class="row">
-      <div class="col-4">
-        <div class="faq-link-card">
-          <h3>{{ 'contact.faqLinks.accountBilling' | translate }}</h3>
-          <p>{{ 'contact.faqLinks.accountBillingDesc' | translate }}</p>
-          <a href="/landing/faq#account" class="btn btn-secondary">{{ 'contact.faqLinks.viewFaq' | translate }}</a>
-        </div>
-      </div>
-      <div class="col-4">
-        <div class="faq-link-card">
-          <h3>{{ 'contact.faqLinks.biddingAuctions' | translate }}</h3>
-          <p>{{ 'contact.faqLinks.biddingAuctionsDesc' | translate }}</p>
-          <a href="/landing/faq#bidding" class="btn btn-secondary">{{ 'contact.faqLinks.viewFaq' | translate }}</a>
-        </div>
-      </div>
-      <div class="col-4">
-        <div class="faq-link-card">
-          <h3>{{ 'contact.faqLinks.technicalSupport' | translate }}</h3>
-          <p>{{ 'contact.faqLinks.technicalSupportDesc' | translate }}</p>
-          <a href="/landing/faq#technical" class="btn btn-secondary">{{ 'contact.faqLinks.viewFaq' | translate }}</a>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<app-footer></app-footer>
+</app-legal-layout>

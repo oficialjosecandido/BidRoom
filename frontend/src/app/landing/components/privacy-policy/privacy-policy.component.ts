@@ -1,21 +1,12 @@
-import { Component, inject } from '@angular/core';
-
-import { Router } from '@angular/router';
+import { Component } from '@angular/core';
 import { TranslateModule } from '@ngx-translate/core';
-import { HeaderComponent } from '../../../shared/components/header/header.component';
-import { FooterComponent } from '../../../shared/components/footer/footer.component';
+import { LegalLayoutComponent } from '../legal/legal-layout.component';
 
 @Component({
   selector: 'app-privacy-policy',
   standalone: true,
-  imports: [HeaderComponent, FooterComponent, TranslateModule],
+  imports: [LegalLayoutComponent, TranslateModule],
   templateUrl: './privacy-policy.component.html',
-  styleUrls: ['./privacy-policy.component.scss']
+  styleUrls: ['../legal/_legal-content.scss']
 })
-export class PrivacyPolicyComponent {
-  private router = inject(Router);
-
-  navigateToHome(): void {
-    this.router.navigate(['/landing']);
-  }
-}
+export class PrivacyPolicyComponent {}
