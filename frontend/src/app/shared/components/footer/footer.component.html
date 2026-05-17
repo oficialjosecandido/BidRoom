@@ -1,37 +1,53 @@
-<!-- Footer -->
 <footer class="footer">
-  <div class="container">
-    <div class="row">
-      <div class="col-3">
-        <h4>BidRoom</h4>
-        <p>{{ 'footer.tagline' | translate }}</p>
+  <div class="ft-wrap">
+    <div class="ft-brand">BidRoom<em>.pt</em></div>
+    <p class="ft-tagline">O marketplace de leilões premium de Portugal.</p>
+    <div class="ft-divider"></div>
+    <div class="ft-cols">
+      <div>
+        <div class="ft-col-title">Plataforma</div>
+        <a routerLink="/landing/how-it-works" class="ft-col-link">Como funciona</a>
+        <a routerLink="/listing/list" class="ft-col-link">Leilões activos</a>
+        <a routerLink="/listing/list" class="ft-col-link">Categorias</a>
+        <a routerLink="/landing/contact" class="ft-col-link">Contacto</a>
       </div>
-      <div class="col-3">
-        <h4>{{ 'footer.quickLinks' | translate }}</h4>
-        <ul>
-          <li><a href="#" role="button" (click)="navigateToHowItWorks(); $event.preventDefault()" (keydown.enter)="navigateToHowItWorks(); $event.preventDefault()">{{ 'footer.howItWorks' | translate }}</a></li>
-          <li><a href="#" role="button" (click)="navigateToContact(); $event.preventDefault()" (keydown.enter)="navigateToContact(); $event.preventDefault()">{{ 'footer.contact' | translate }}</a></li>
-          <li><a href="#" role="button" (click)="navigateToFaq(); $event.preventDefault()" (keydown.enter)="navigateToFaq(); $event.preventDefault()">{{ 'footer.faq' | translate }}</a></li>
-        </ul>
+      <div>
+        <div class="ft-col-title">Compradores</div>
+        <a routerLink="/auth/signup" class="ft-col-link">Criar conta</a>
+        <a routerLink="/landing/how-it-works" class="ft-col-link">Guia do comprador</a>
+        <a routerLink="/landing/how-it-works" class="ft-col-link">Pagamento seguro</a>
+        <a routerLink="/landing/contact" class="ft-col-link">Disputas</a>
       </div>
-      <div class="col-3">
-        <h4>{{ 'footer.legal' | translate }}</h4>
-        <ul>
-          <li><a href="#" role="button" (click)="navigateToPrivacyPolicy(); $event.preventDefault()" (keydown.enter)="navigateToPrivacyPolicy(); $event.preventDefault()">{{ 'footer.privacyPolicy' | translate }}</a></li>
-          <li><a href="#" role="button" (click)="navigateToTermsConditions(); $event.preventDefault()" (keydown.enter)="navigateToTermsConditions(); $event.preventDefault()">{{ 'footer.termsConditions' | translate }}</a></li>
-        </ul>
+      <div>
+        <div class="ft-col-title">Vendedores</div>
+        <a routerLink="/listing/add" class="ft-col-link">Publicar anúncio</a>
+        <a routerLink="/landing/how-it-works" class="ft-col-link">Guia do vendedor</a>
+        <a routerLink="/landing/how-it-works" class="ft-col-link">Comissões</a>
+        <a routerLink="/dashboard/home" class="ft-col-link">Payouts</a>
       </div>
-      <div class="col-3">
-        <h4>{{ 'footer.connect' | translate }}</h4>
-        <div class="social-links">
-          <a href="#">Facebook</a>
-          <a href="#">Twitter</a>
-          <a href="#">Instagram</a>
-        </div>
+      <div>
+        <div class="ft-col-title">Legal</div>
+        <a routerLink="/landing/terms-conditions" class="ft-col-link">Termos de utilização</a>
+        <a routerLink="/landing/privacy-policy" class="ft-col-link">Política de privacidade</a>
+        <a routerLink="/landing/privacy-policy" class="ft-col-link">Cookies</a>
+        <a href="https://www.livroreclamacoes.pt" target="_blank" rel="noopener noreferrer" class="ft-col-link ft-ral-link">Livro de Reclamações</a>
+        <a href="https://www.consumidor.gov.pt" target="_blank" rel="noopener noreferrer" class="ft-col-link">RAL</a>
       </div>
     </div>
-    <div class="footer-bottom">
-      <p>{{ 'footer.copyright' | translate }}</p>
+    <div class="ft-divider" style="margin-bottom:0"></div>
+  </div>
+  <div class="ft-legal-bar">
+    <div class="ft-wrap">
+      <div class="ft-legal-inner">
+        <span class="ft-copy">© 2026 BidRoom.pt · Todos os direitos reservados · Feito em Portugal 🇵🇹</span>
+        <div class="ft-legal-links">
+          <a routerLink="/landing/terms-conditions" class="ft-legal-link">Termos</a>
+          <a routerLink="/landing/privacy-policy" class="ft-legal-link">Privacidade</a>
+          <a routerLink="/landing/privacy-policy" class="ft-legal-link">Cookies</a>
+          <a href="https://www.livroreclamacoes.pt" target="_blank" rel="noopener noreferrer" class="ft-legal-link ft-ral-link">Livro de Reclamações</a>
+          <a href="https://www.consumidor.gov.pt" target="_blank" rel="noopener noreferrer" class="ft-legal-link">RAL</a>
+        </div>
+      </div>
     </div>
   </div>
 </footer>

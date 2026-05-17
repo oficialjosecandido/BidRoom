@@ -1,6 +1,15 @@
 export const environment = {
   production: true,
-  defaultApiBaseUrl: 'https://bidroom-backend-dev.azurewebsites.net',
+  defaultApiBaseUrl: 'https://bidroom-backend-dev.azurewebsites.net', // TODO: update to prod backend URL when available
+  firebase: {
+    apiKey: 'AIzaSyBb3nk50nwBME8dN5pNhu2W1B7-m35qqHw',
+    authDomain: 'bidroom-47cb5.firebaseapp.com',
+    projectId: 'bidroom-47cb5',
+    storageBucket: 'bidroom-47cb5.firebasestorage.app',
+    messagingSenderId: '16761692806',
+    appId: '1:16761692806:web:b1e10f2a57a040f8556707',
+    measurementId: 'G-4FDFR1ZSRV',
+  },
   // defaultApiBaseUrl: 'https://bidroom-backend-dev.azurewebsites.net/api',
   /** Seller fee: 3.5% for auctions & best-offer, 6% for private-room auctions */
   bidroomFeeSellerRate: 0.035,

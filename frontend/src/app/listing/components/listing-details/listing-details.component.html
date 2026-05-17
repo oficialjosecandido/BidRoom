@@ -1,20 +1,6 @@
 <div class="pg" [class.light]="isLight">
 
-<!-- NAV -->
-<nav>
-  <a class="back" (click)="goBack()" style="cursor:pointer">
-    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M10 3L5 8l5 5"/></svg>
-    <span class="brand">BidRoom<em>.pt</em></span>
-  </a>
-  <div class="nav-r">
-    <button class="btn-th" (click)="toggleTheme()">{{ isLight ? '☽' : '☀' }}</button>
-    @if (!isAuthenticated) {
-      <a routerLink="/auth/login" class="btn-go">{{ 'listingDetails.nav.signIn' | translate }}</a>
-    } @else {
-      <a routerLink="/dashboard/home" class="btn-go">{{ 'listingDetails.nav.dashboard' | translate }}</a>
-    }
-  </div>
-</nav>
+<app-header></app-header>
 
 <!-- LOADING -->
 @if (loading) {
@@ -108,7 +94,7 @@
     <!-- DESCRIPTION TAB -->
     @if (activeTab === 'description') {
       <div class="tab-panel">
-        <div class="desc-p" [innerHTML]="getFormattedDescription()"></div>
+        <div class="desc-p">{{ listing.description }}</div>
 
         @if (listing.itemMode === 'multi_quantity') {
           <div class="spec-note">{{ listing.quantity }} {{ 'listingDetails.itemMode.identicalUnits' | translate }}</div>

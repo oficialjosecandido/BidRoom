@@ -1,16 +1,12 @@
 import { Component, OnInit, OnDestroy, inject } from '@angular/core';
-
 import { Router, RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { Subscription } from 'rxjs';
 import { AuthService } from '../auth/services/auth.service';
 import { NotificationService } from '../shared/services/notification.service';
 import { TransactionsService } from '../shared/services/transactions.service';
 import { SocketService } from '../shared/services/socket.service';
-import { ThemePreference, ThemeService } from '../shared/services/theme.service';
-
-const STORAGE_KEY = 'bidroom-dashboard-sidebar-collapsed';
-
+import { ThemeService } from '../shared/services/theme.service';
 @Component({
   selector: 'app-dashboard',
   standalone: true,
@@ -24,26 +20,42 @@ export class DashboardComponent implements OnInit, OnDestroy {
   private notificationService = inject(NotificationService);
   private transactionsService = inject(TransactionsService);
   private socketService = inject(SocketService);
+  private translate = inject(TranslateService);
   readonly theme = inject(ThemeService);
 
-  readonly themeChoices: { id: ThemePreference; icon: string }[] = [
-    { id: 'light', icon: '☀️' },
-    { id: 'dark', icon: '🌙' },
-    { id: 'system', icon: '💻' }
-  ];
-
-  sidebarCollapsed = false;
   notificationUnreadCount = 0;
   pendingBuyerTransactions = 0;
   pendingSellerTransactions = 0;
+  userName = '';
+  userInitials = '';
+
   private refreshInterval: ReturnType<typeof setInterval> | null = null;
   private subs = new Subscription();
 
   constructor() {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored !== null) {
-      this.sidebarCollapsed = stored === 'true';
-    }
+    const saved = localStorage.getItem('lang') || 'pt';
+    this.translate.use(saved);
+  }
+
+  get themeGlyph(): string {
+    return this.theme.resolveEffective(this.theme.preference()) === 'dark' ? '☾' : '☀';
+  }
+
+  get langLabel(): string {
+    const lang = this.translate.currentLang || 'pt';
+    return lang === 'pt' ? 'EN' : 'PT';
+  }
+
+  cycleTheme(): void {
+    const eff = this.theme.resolveEffective(this.theme.preference());
+    this.theme.setPreference(eff === 'dark' ? 'light' : 'dark');
+  }
+
+  toggleLang(): void {
+    const current = this.translate.currentLang || 'pt';
+    const next = current === 'pt' ? 'en' : 'pt';
+    this.translate.use(next);
+    localStorage.setItem('lang', next);
   }
 
   ngOnInit(): void {
@@ -54,11 +66,23 @@ export class DashboardComponent implements OnInit, OnDestroy {
       this.loadPendingTransactionCounts();
     }, 60000);
 
-    // Join user room and listen for real-time notification updates
     this.subs.add(
       this.authService.currentUser$.subscribe((user) => {
         if (user?.uid) {
           this.socketService.joinUser(user.uid);
+        }
+        if (user?.displayName) {
+          this.userName = user.displayName;
+          this.userInitials = user.displayName
+            .split(' ').slice(0, 2)
+            .map((w: string) => w[0])
+            .join('').toUpperCase();
+        } else if (user?.email) {
+          this.userName = user.email.split('@')[0];
+          this.userInitials = this.userName[0].toUpperCase();
+        } else {
+          this.userName = '';
+          this.userInitials = 'U';
         }
       })
     );
@@ -69,9 +93,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.subs.unsubscribe();
-    if (this.refreshInterval) {
-      clearInterval(this.refreshInterval);
-    }
+    if (this.refreshInterval) clearInterval(this.refreshInterval);
   }
 
   private loadNotificationCount(): void {
@@ -89,9 +111,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
     });
   }
 
-  toggleSidebar(): void {
-    this.sidebarCollapsed = !this.sidebarCollapsed;
-    localStorage.setItem(STORAGE_KEY, String(this.sidebarCollapsed));
+  get pendingTransactions(): number {
+    return this.pendingBuyerTransactions + this.pendingSellerTransactions;
   }
 
   navigateToLanding(): void {
@@ -100,10 +121,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   logout(): void {
     this.authService.logout().subscribe({
-      next: () => {
-        this.router.navigate(['/landing']);
-      }
+      next: () => this.router.navigate(['/landing'])
     });
   }
 }
-

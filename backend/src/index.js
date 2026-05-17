@@ -172,16 +172,16 @@ app.use('/api/bids', bidOfferLimiter, bidRoutes);
 app.use('/api/offers', bidOfferLimiter, offerRoutes);
 app.use('/api/uploads', generalLimiter, uploadRoutes);
 app.use('/api/admin', adminLimiter, adminRoutes);
-app.use('/api/private-room', privateRoomRoutes);
-app.use('/api/customers', customerRoutes);
-app.use('/api/watchlist', watchlistRoutes);
+app.use('/api/private-room', bidOfferLimiter, privateRoomRoutes);
+app.use('/api/customers', generalLimiter, customerRoutes);
+app.use('/api/watchlist', generalLimiter, watchlistRoutes);
 app.use('/api/reviews', reviewsLimiter, reviewRoutes);
-app.use('/api/transactions', transactionsRoutes);
-app.use('/api/notifications', notificationsRoutes);
-app.use('/api/payments', paymentsRouter);
-app.use('/api/connect', connectRouter);
-app.use('/api/shipping', shippingRoutes);
-app.use('/api/config', configRoutes);
+app.use('/api/transactions', generalLimiter, transactionsRoutes);
+app.use('/api/notifications', generalLimiter, notificationsRoutes);
+app.use('/api/payments', generalLimiter, paymentsRouter);
+app.use('/api/connect', generalLimiter, connectRouter);
+app.use('/api/shipping', generalLimiter, shippingRoutes);
+app.use('/api/config', generalLimiter, configRoutes);
 app.use('/api/reports', generalLimiter, reportRoutes);
 app.use('/api/users', generalLimiter, userRoutes);
 app.use('/api/follows', generalLimiter, followRoutes);
@@ -223,39 +223,46 @@ app.use('*', (req, res) => {
   });
 });
 
+const OBJECT_ID_RE = /^[a-f\d]{24}$/i;
+const SAFE_UID_RE  = /^[a-zA-Z0-9_-]{1,128}$/;
+
 // Socket.io connection handling
 io.on('connection', (socket) => {
   // Join a listing room to receive real-time updates
   socket.on('join-listing', (listingId) => {
+    if (!OBJECT_ID_RE.test(listingId)) return;
     socket.join(`listing:${listingId}`);
     updateViewerCount(io, listingId);
   });
 
   // Join a private room as a viewer
   socket.on('join-private-room-viewer', (listingId) => {
+    if (!OBJECT_ID_RE.test(listingId)) return;
     socket.join(`private-room:${listingId}`);
     updatePrivateRoomViewerCount(io, listingId);
   });
 
   // Leave a listing room
   socket.on('leave-listing', (listingId) => {
+    if (!OBJECT_ID_RE.test(listingId)) return;
     socket.leave(`listing:${listingId}`);
     updateViewerCount(io, listingId);
   });
 
   // Leave a private room viewer
   socket.on('leave-private-room-viewer', (listingId) => {
+    if (!OBJECT_ID_RE.test(listingId)) return;
     socket.leave(`private-room:${listingId}`);
     updatePrivateRoomViewerCount(io, listingId);
   });
 
   // Join user room for real-time notification updates (uid = Firebase/auth uid)
   socket.on('join-user', (uid) => {
-    if (uid) socket.join(`user:${uid}`);
+    if (uid && SAFE_UID_RE.test(uid)) socket.join(`user:${uid}`);
   });
 
   socket.on('leave-user', (uid) => {
-    if (uid) socket.leave(`user:${uid}`);
+    if (uid && SAFE_UID_RE.test(uid)) socket.leave(`user:${uid}`);
   });
 
   socket.on('disconnect', () => {

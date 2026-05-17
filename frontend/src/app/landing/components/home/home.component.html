@@ -1,20 +1,6 @@
 <div class="pg" [class.light]="isLight">
 
-<!-- NAV -->
-<nav>
-  <div class="brand">BidRoom<em>.pt</em></div>
-  <div class="nav-c">
-    <a href="#leiloes" class="nl">Leilões</a>
-    <a href="#salas" class="nl">Salas Privadas</a>
-    <a href="#como" class="nl">Como funciona</a>
-  </div>
-  <div class="nav-r">
-    <button class="btn-th" (click)="toggleTheme()">{{ isLight ? '☽' : '☀' }}</button>
-    <button class="btn-lang" (click)="toggleLang()">{{ toggleLangLabel }}</button>
-    <a routerLink="/auth/login" class="btn-in">Entrar</a>
-    <a routerLink="/auth/signup" class="btn-go">Começar</a>
-  </div>
-</nav>
+<app-header activePage="auctions"></app-header>
 
 <!-- HERO -->
 <section class="hero">

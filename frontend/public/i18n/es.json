@@ -850,12 +850,20 @@
     "sidebar": {
       "home": "Inicio",
       "store": "Tienda",
+      "main": "Principal",
       "activity": "Actividad",
+      "listings": "Anuncios",
+      "account": "Cuenta",
+      "buyer": "Comprador",
+      "seller": "Vendedor",
+      "transactions": "Transacciones",
+      "notifications": "Notificaciones",
+      "myBids": "Mis Pujas",
+      "watchlist": "Lista de seguimiento",
+      "following": "Siguiendo",
+      "myListings": "Mis Anuncios",
       "buyerProfile": "Perfil del Comprador",
       "sellerProfile": "Perfil del Vendedor",
-      "following": "Siguiendo",
-      "account": "Cuenta",
-      "notifications": "Notificaciones",
       "settings": "Ajustes",
       "logout": "Cerrar sesión"
     },
@@ -965,7 +973,16 @@
       "toYourBalance": "a tu saldo",
       "redirecting": "Redirigiendo...",
       "continueToCheckout": "Continuar al Pago",
-      "buyingWatchlist": "Compras y Lista de Seguimiento"
+      "buyingWatchlist": "Compras y Lista de Seguimiento",
+      "subtitle": "Aquí está el resumen de tu cuenta",
+      "myListingsTitle": "Mis anuncios",
+      "live": "Activo",
+      "pendingReviews": "Valoraciones pendientes",
+      "greeting": {
+        "morning": "Buenos días",
+        "afternoon": "Buenas tardes",
+        "evening": "Buenas noches"
+      }
     },
     "buyer": {
       "title": "Perfil del Comprador",
@@ -1040,6 +1057,9 @@
       "notVerified": "No Verificado",
       "buyerScore": "Puntuación como Comprador",
       "sellerScore": "Puntuación como Vendedor",
+      "reputation": "Reputación",
+      "overallScore": "Puntuación global",
+      "noReviews": "Sin reseñas aún",
       "languagePreference": "Preferencia de Idioma",
       "languageDesc": "Elige el idioma para tu experiencia en BidRoom.",
       "appearance": {
@@ -1161,6 +1181,29 @@
   "transactions": {
     "title": "Transacciones",
     "subtitle": "Ve y gestiona tus compras y ventas.",
+    "filterAll": "Todas",
+    "filterPendingPayment": "Pago pendiente",
+    "filterShipping": "En tránsito",
+    "filterDelivered": "Entregadas",
+    "filterCompleted": "Completadas",
+    "filterDisputed": "Disputadas",
+    "drawer": {
+      "details": "Detalles",
+      "amount": "Importe",
+      "status": "Estado",
+      "role": "Rol",
+      "deadline": "Plazo",
+      "counterpart": "Contraparte",
+      "seller": "Vendedor",
+      "buyer": "Comprador",
+      "sellerRep": "Reputación"
+    },
+    "tp": {
+      "payment": "Pago",
+      "shipping": "Envío",
+      "delivery": "Entrega",
+      "done": "Hecho"
+    },
     "seller": "Vendedor",
     "buyer": "Comprador",
     "loading": "Cargando transacciones...",
@@ -1978,5 +2021,28 @@
       "address": "Departamento Legal BidRoom, 123 Auction Street, Commerce City, CC 12345",
       "phoneLabel": "Teléfono:"
     }
+  },
+  "myBids": {
+    "filterAll": "Todos",
+    "filterWinning": "Ganando",
+    "filterOutbid": "Superado",
+    "filterEnded": "Finalizado",
+    "myBest": "Mi mejor oferta",
+    "currentPrice": "Actual",
+    "bids": "Pujas",
+    "ends": "Termina",
+    "bidHistory": "Historial de pujas",
+    "bidAgain": "Pujar de nuevo",
+    "viewListing": "Ver subasta",
+    "notifOn": "Notificar si superado",
+    "notifOff": "Notificaciones desactivadas",
+    "typeOffer": "Oferta",
+    "typeLive": "En vivo",
+    "statusActive": "Activo",
+    "statusEnded": "Finalizado"
+  },
+  "watchlist": {
+    "typeLive": "En vivo",
+    "ended": "Finalizado"
   }
 }

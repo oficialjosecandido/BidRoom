@@ -1,100 +1,98 @@
-import { Component, Input, computed, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
-import { Observable } from 'rxjs';
+import { Component, Input, OnInit, OnDestroy, inject } from '@angular/core';
+import { AsyncPipe } from '@angular/common';
+import { Router, RouterLink } from '@angular/router';
+import { Observable, Subscription } from 'rxjs';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
-import { environment } from '@env';
 import { AuthService } from '../../../auth/services/auth.service';
-import { ProposalNotificationsComponent } from '../../../dashboard/components/proposal-notifications/proposal-notifications.component';
-import { ThemePreference, ThemeService } from '../../services/theme.service';
+import { NotificationService } from '../../services/notification.service';
+import { ThemeService } from '../../services/theme.service';
 
 @Component({
   selector: 'app-header',
   standalone: true,
-  imports: [CommonModule, TranslateModule, ProposalNotificationsComponent],
+  imports: [AsyncPipe, RouterLink, TranslateModule],
   templateUrl: './header.component.html',
   styleUrls: ['./header.component.scss']
 })
-export class HeaderComponent {
+export class HeaderComponent implements OnInit, OnDestroy {
   private router = inject(Router);
   private authService = inject(AuthService);
+  private notificationService = inject(NotificationService);
   private translate = inject(TranslateService);
   readonly theme = inject(ThemeService);
 
-  /** Shown only in non-production builds (e.g. local / dev deploy) */
-  readonly showEnvBadge = !environment.production;
-
   @Input() activePage = '';
+
   isAuthenticated$!: Observable<boolean>;
   menuOpen = false;
-  langMenuOpen = false;
-  themeMenuOpen = false;
+  searchOpen = false;
+  notifCount = 0;
+  userInitials = '';
 
-  readonly themeGlyph = computed(() => {
-    switch (this.theme.preference()) {
-      case 'dark':
-        return '🌙';
-      case 'light':
-        return '☀️';
-      default:
-        return '💻';
-    }
-  });
-
-  readonly themeOptions: { id: ThemePreference; labelKey: string }[] = [
-    { id: 'light', labelKey: 'header.theme.light' },
-    { id: 'dark', labelKey: 'header.theme.dark' },
-    { id: 'system', labelKey: 'header.theme.system' }
-  ];
-
-  readonly languages = [
-    { code: 'en', label: 'EN', name: 'English' },
-    { code: 'pt', label: 'PT', name: 'Português' },
-    { code: 'es', label: 'ES', name: 'Español' },
-    { code: 'fr', label: 'FR', name: 'Français' }
-  ];
+  private subs = new Subscription();
 
   constructor() {
     this.isAuthenticated$ = this.authService.isAuthenticated();
-    const saved = localStorage.getItem('lang') || 'en';
+    const saved = localStorage.getItem('lang') || 'pt';
     this.translate.use(saved);
   }
 
-  get currentLang(): string {
-    return this.translate.currentLang || 'en';
+  ngOnInit(): void {
+    this.subs.add(
+      this.authService.currentUser$.subscribe(user => {
+        if (user?.displayName) {
+          this.userInitials = user.displayName
+            .split(' ').slice(0, 2)
+            .map((w: string) => w[0])
+            .join('').toUpperCase();
+        } else if (user?.email) {
+          this.userInitials = user.email[0].toUpperCase();
+        } else {
+          this.userInitials = '';
+        }
+        if (user) {
+          this.notificationService.getUnreadCount().subscribe({
+            next: r => { this.notifCount = r.unreadCount; }
+          });
+        } else {
+          this.notifCount = 0;
+        }
+      })
+    );
   }
 
-  get currentLangLabel(): string {
-    return this.languages.find(l => l.code === this.currentLang)?.label ?? 'EN';
+  ngOnDestroy(): void {
+    this.subs.unsubscribe();
+  }
+
+  get currentLang(): string {
+    return this.translate.currentLang || 'pt';
   }
 
   switchLanguage(code: string): void {
     this.translate.use(code);
     localStorage.setItem('lang', code);
-    this.langMenuOpen = false;
   }
 
-  toggleLangMenu(): void {
-    this.langMenuOpen = !this.langMenuOpen;
-    if (this.langMenuOpen) this.themeMenuOpen = false;
+  openSearch(): void {
+    this.searchOpen = true;
+    setTimeout(() => {
+      const input = document.querySelector('.nav .search-bar input') as HTMLInputElement | null;
+      input?.focus();
+    }, 280);
   }
 
-  closeLangMenu(): void {
-    this.langMenuOpen = false;
+  closeSearch(): void {
+    this.searchOpen = false;
   }
 
-  toggleThemeMenu(): void {
-    this.themeMenuOpen = !this.themeMenuOpen;
-    if (this.themeMenuOpen) this.langMenuOpen = false;
-  }
-
-  closeThemeMenu(): void {
-    this.themeMenuOpen = false;
-  }
-
-  selectTheme(p: ThemePreference): void {
-    this.theme.setPreference(p);
-    this.themeMenuOpen = false;
+  doSearch(input: HTMLInputElement): void {
+    const q = input.value.trim();
+    if (q) {
+      this.router.navigate(['/listing/list'], { queryParams: { q } });
+      this.closeSearch();
+      this.closeMenu();
+    }
   }
 
   toggleMenu(): void {
@@ -103,18 +101,6 @@ export class HeaderComponent {
 
   closeMenu(): void {
     this.menuOpen = false;
-    this.themeMenuOpen = false;
-    this.langMenuOpen = false;
-  }
-
-  navigateToAuth(): void {
-    this.closeMenu();
-    this.router.navigate(['/auth/signup']);
-  }
-
-  navigateToLogin(): void {
-    this.closeMenu();
-    this.router.navigate(['/auth/login']);
   }
 
   navigateToHome(): void {
@@ -122,29 +108,19 @@ export class HeaderComponent {
     this.router.navigate(['/landing']);
   }
 
+  navigateToAuctions(): void {
+    this.closeMenu();
+    this.router.navigate(['/listing/list']);
+  }
+
+  navigateToPrivateRooms(): void {
+    this.closeMenu();
+    this.router.navigate(['/landing'], { fragment: 'salas' });
+  }
+
   navigateToHowItWorks(): void {
     this.closeMenu();
     this.router.navigate(['/landing/how-it-works']);
-  }
-
-  navigateToContact(): void {
-    this.closeMenu();
-    this.router.navigate(['/landing/contact']);
-  }
-
-  navigateToFaq(): void {
-    this.closeMenu();
-    this.router.navigate(['/landing/faq']);
-  }
-
-  navigateToAuctions(): void {
-    this.closeMenu();
-    this.router.navigate(['/landing']);
-  }
-
-  navigateToCategories(): void {
-    this.closeMenu();
-    this.router.navigate(['/landing'], { fragment: 'categories' });
   }
 
   navigateToAddListing(): void {
@@ -155,5 +131,15 @@ export class HeaderComponent {
   navigateToDashboard(): void {
     this.closeMenu();
     this.router.navigate(['/dashboard']);
+  }
+
+  navigateToLogin(): void {
+    this.closeMenu();
+    this.router.navigate(['/auth/login']);
+  }
+
+  navigateToAuth(): void {
+    this.closeMenu();
+    this.router.navigate(['/auth/signup']);
   }
 }

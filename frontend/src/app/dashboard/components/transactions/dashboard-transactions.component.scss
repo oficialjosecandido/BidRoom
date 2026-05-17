@@ -1,3 +1,138 @@
+/* ── Page header ── */
+.page-title {
+  font-size: 22px; font-weight: 500; letter-spacing: -0.02em;
+  color: var(--text, #333); margin: 0 0 3px;
+}
+.page-sub { font-size: 13.5px; font-weight: 300; color: var(--sub, #666); margin: 0 0 20px; }
+
+/* ── Filter pills ── */
+.tx-filters {
+  display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap;
+}
+.tx-filter {
+  padding: 6px 14px; border-radius: 100px;
+  font-size: 12.5px; font-weight: 400; font-family: inherit;
+  background: var(--s1, #f5f5f7); border: 1px solid var(--line, rgba(0,0,0,.08));
+  color: var(--sub, #666); cursor: pointer;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+
+  &:hover { color: var(--text, #333); border-color: var(--dim, #ccc); }
+  &.active { background: var(--gb, rgba(201,168,76,.08)); border-color: var(--gl, rgba(201,168,76,.2)); color: var(--gold, #c9a84c); font-weight: 500; }
+}
+
+/* ── Transaction drawer ── */
+.drawer-overlay {
+  position: fixed; inset: 0; z-index: 200;
+  background: rgba(0,0,0,.55); backdrop-filter: blur(4px);
+  animation: fadeIn .2s ease;
+}
+
+.drawer {
+  position: fixed; right: 0; top: 0; bottom: 0; z-index: 201;
+  width: min(480px, 90vw);
+  background: var(--s1, #fff);
+  border-left: 1px solid var(--line, rgba(0,0,0,.08));
+  overflow-y: auto;
+  animation: slideIn .28s cubic-bezier(.32,.72,0,1);
+}
+
+.drawer-header {
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid var(--line, rgba(0,0,0,.08));
+  display: flex; align-items: flex-start; justify-content: space-between;
+  position: sticky; top: 0;
+  background: var(--s1, #fff); z-index: 1;
+}
+.drawer-title { font-size: 15px; font-weight: 500; color: var(--text, #333); margin-bottom: 3px; }
+.drawer-sub { font-size: 12.5px; font-weight: 300; color: var(--sub, #666); }
+.drawer-close {
+  width: 28px; height: 28px; border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; color: var(--sub, #999);
+  cursor: pointer; border: none; background: transparent; font-family: inherit;
+  transition: color 0.15s, background 0.15s;
+  &:hover { color: var(--text, #333); background: var(--s2, #f0f0f0); }
+}
+
+.drawer-body { padding: 20px 24px; }
+.drawer-section { margin-bottom: 20px; }
+.drawer-section-title {
+  font-size: 10.5px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--sub, #888); margin-bottom: 12px;
+}
+.drawer-row {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  padding: 10px 0; border-bottom: 1px solid var(--line, rgba(0,0,0,.06)); gap: 12px;
+  &:last-child { border-bottom: none; }
+}
+.dr-label { font-size: 13px; font-weight: 300; color: var(--sub, #888); }
+.dr-val {
+  font-size: 13.5px; font-weight: 400; color: var(--text, #333); text-align: right;
+  &.mono { font-family: 'DM Mono', monospace; }
+  &.gold { color: var(--gold, #c9a84c); font-family: 'DM Mono', monospace; }
+  &.green { color: var(--green, #4a9b6f); }
+}
+
+/* Progress steps */
+.tx-progress { display: flex; align-items: center; margin-bottom: 24px; }
+.tp-step {
+  flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px;
+  position: relative;
+
+  &::before {
+    content: ''; position: absolute;
+    left: calc(-50%); right: calc(50%);
+    top: 11px; height: 1px; background: var(--line, rgba(0,0,0,.08));
+  }
+  &:first-child::before { display: none; }
+  &.done::before { background: var(--green, #4a9b6f); }
+  &.active::before { background: var(--gold, #c9a84c); }
+}
+.tp-dot {
+  width: 22px; height: 22px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 700;
+  background: var(--s2, #f0f0f0); border: 1px solid var(--line, rgba(0,0,0,.08));
+  color: var(--sub, #888); position: relative; z-index: 1; flex-shrink: 0;
+
+  .tp-step.done & { background: var(--gb2, rgba(74,155,111,.1)); border-color: var(--gl2, rgba(74,155,111,.2)); color: var(--green, #4a9b6f); }
+  .tp-step.active & { background: var(--gold, #c9a84c); border-color: var(--gold, #c9a84c); color: #0a0a0a; }
+}
+.tp-label { font-size: 10px; font-weight: 400; color: var(--sub, #888); text-align: center; }
+.tp-step.active .tp-label, .tp-step.done .tp-label { color: var(--text, #333); }
+
+/* Drawer action buttons */
+.drawer-actions { display: flex; flex-direction: column; gap: 8px; padding-top: 4px; }
+.btn-drawer-primary {
+  width: 100%; padding: 13px; border-radius: 100px;
+  font-size: 13.5px; font-weight: 600; font-family: inherit;
+  background: var(--gold, #c9a84c); color: #0a0a0a;
+  border: none; cursor: pointer; transition: opacity 0.15s;
+  &:hover { opacity: 0.87; }
+  &:disabled { opacity: 0.5; cursor: not-allowed; }
+  &.green { background: var(--green, #4a9b6f); color: #fff; }
+}
+.btn-drawer-ghost {
+  width: 100%; padding: 12px; border-radius: 100px;
+  font-size: 13px; font-weight: 400; font-family: inherit;
+  color: var(--sub, #666); border: 1px solid var(--line, rgba(0,0,0,.08));
+  background: transparent; cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+  &:hover { color: var(--text, #333); border-color: var(--dim, #ccc); }
+  &:disabled { opacity: 0.5; cursor: not-allowed; }
+}
+.btn-drawer-danger {
+  width: 100%; padding: 12px; border-radius: 100px;
+  font-size: 13px; font-weight: 400; font-family: inherit;
+  color: var(--red, #c25a5a); border: 1px solid rgba(194,90,90,.2);
+  background: transparent; cursor: pointer;
+  transition: background 0.15s;
+  &:hover { background: var(--rb, rgba(194,90,90,.08)); }
+}
+
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
+
 // Estimated delivery and auto-release notices
 .delivery-estimate {
   font-size: 13px;

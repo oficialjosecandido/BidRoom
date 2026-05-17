@@ -98,6 +98,63 @@ export class DashboardTransactionsComponent implements OnInit {
   /** Claim window: 48 hours in ms */
   private readonly CLAIM_WINDOW_MS = 48 * 60 * 60 * 1000;
 
+  /** Filter pills */
+  txFilter: 'all' | 'pending_payment' | 'shipping' | 'delivered' | 'completed' | 'disputed' = 'all';
+
+  /** Slide-in drawer */
+  drawerTx: Transaction | null = null;
+
+  get filteredTransactions(): Transaction[] {
+    if (this.txFilter === 'all') return this.transactions;
+    return this.transactions.filter(t => {
+      const s = this.getEffectiveStatus(t);
+      switch (this.txFilter) {
+        case 'pending_payment': return s === 'pending_payment';
+        case 'shipping': return s === 'awaiting_seller_acceptance' || s === 'paid' || s === 'shipped';
+        case 'delivered': return s === 'delivered';
+        case 'completed': return s === 'completed' || s === 'cancelled';
+        case 'disputed': return s === 'under_dispute' || t.disputeOpen;
+        default: return true;
+      }
+    });
+  }
+
+  openDrawer(t: Transaction): void { this.drawerTx = t; }
+  closeDrawer(): void { this.drawerTx = null; }
+
+  getDrawerProgressStep(t: Transaction): number {
+    const s = this.getEffectiveStatus(t);
+    if (s === 'completed' || s === 'cancelled') return 4;
+    if (s === 'delivered') return 3;
+    if (s === 'shipped' || s === 'paid' || s === 'awaiting_seller_acceptance') return 2;
+    return 1;
+  }
+
+  getTxStatusBadgeClass(t: Transaction): string {
+    const s = this.getEffectiveStatus(t);
+    if (t.disputeOpen || s === 'under_dispute') return 'tbs-dispute';
+    if (s === 'pending_payment') return 'tbs-payment';
+    if (s === 'awaiting_seller_acceptance' || s === 'paid' || s === 'shipped') return 'tbs-shipping';
+    if (s === 'delivered') return 'tbs-delivered';
+    if (s === 'completed' || s === 'cancelled') return 'tbs-completed';
+    return 'tbs-completed';
+  }
+
+  getSimpleStatusLabel(t: Transaction): string {
+    const s = this.getEffectiveStatus(t);
+    if (t.disputeOpen || s === 'under_dispute') return 'Dispute';
+    const map: Partial<Record<TransactionStatus, string>> = {
+      pending_payment: 'Pending payment',
+      awaiting_seller_acceptance: 'In transit',
+      paid: 'In transit',
+      shipped: 'In transit',
+      delivered: 'Delivered',
+      completed: 'Completed',
+      cancelled: 'Cancelled'
+    };
+    return map[s] ?? s;
+  }
+
   ngOnInit(): void {
     this.loadTransactions();
 
