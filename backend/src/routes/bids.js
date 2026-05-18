@@ -2,14 +2,17 @@ const express = require('express');
 const Bid = require('../models/Bid');
 const Listing = require('../models/Listing');
 const User = require('../models/User');
-const { authenticateToken, optionalAuth, requireActiveAccountIfAuthenticated } = require('../middleware/auth');
+const { authenticateToken, optionalAuth, requireActiveAccountIfAuthenticated, requireNoDisputeRestrictionIfAuthenticated } = require('../middleware/auth');
 const { sendFirstBidNotification, sendOutbidNotification } = require('../services/auctionNotificationService');
 const { getReviewScoresForUsers } = require('../services/reviewService');
+const { notifyNewBid, notifyBidderOutbid, emitNewNotificationToUser, checkAndSetOutbidDebounce, shouldSendEmail } = require('../services/notificationService');
+const { checkBidRateLimit, getClientIp } = require('../middleware/bidRateLimiter');
+const { runFraudChecks, updateUserSignals } = require('../services/fraudDetectionService');
 
 const router = express.Router();
 
 // GET /api/bids/listing/:listingId - Get all bids for a listing
-router.get('/listing/:listingId', async (req, res) => {
+router.get('/listing/:listingId', optionalAuth, async (req, res) => {
   try {
     const { sort = 'desc' } = req.query; // 'desc' for newest first, 'asc' for oldest first
 
@@ -20,14 +23,21 @@ router.get('/listing/:listingId', async (req, res) => {
       .sort({ createdAt: sortOrder })
       .lean();
 
+    // Determine if the requester is the listing's seller (entitled to see full emails)
+    const listing = await Listing.findById(req.params.listingId).select('seller').lean();
+    const requestingUid = req.user?.uid || null;
+    const sellerUser = listing?.seller ? await User.findById(listing.seller).select('uid').lean() : null;
+    const isSeller = requestingUid && sellerUser && requestingUid === sellerUser.uid;
+
     // Get buyer review scores for all bidders (authenticated users only)
     const bidderIds = bids.filter((b) => b.bidder && b.bidder._id).map((b) => b.bidder._id.toString());
     const scoreMap = bidderIds.length > 0 ? await getReviewScoresForUsers(bidderIds) : {};
 
-    // Format bids for frontend
+    // Format bids for frontend — emails only exposed to the seller
     const formattedBids = bids.map(bid => {
       const bidderId = bid.bidder && bid.bidder._id ? bid.bidder._id.toString() : null;
       const scores = bidderId ? scoreMap[bidderId] : null;
+      const fullEmail = bid.bidderEmail || (bid.bidder ? bid.bidder.email : null);
       return {
         ...bid,
         bidderName: bid.bidder
@@ -36,7 +46,7 @@ router.get('/listing/:listingId', async (req, res) => {
         bidderInitials: bid.bidder
           ? `${bid.bidder.firstName.charAt(0)}${bid.bidder.lastName.charAt(0)}`
           : (bid.bidderEmail ? bid.bidderEmail.charAt(0).toUpperCase() : 'A'),
-        bidderEmail: bid.bidderEmail || (bid.bidder ? bid.bidder.email : null),
+        bidderEmail: isSeller ? fullEmail : null,
         isAuthenticated: !!bid.bidder,
         bidderVerified: bid.bidder ? (bid.bidder.emailVerified || false) : false,
         bidderHasDeposit: bid.bidder ? (bid.bidder.hasDeposit || false) : false,
@@ -55,7 +65,7 @@ router.get('/listing/:listingId', async (req, res) => {
     console.error('Error fetching bids:', error);
     res.status(500).json({
       error: 'Failed to fetch bids',
-      message: error.message
+      message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
     });
   }
 });
@@ -91,14 +101,24 @@ router.get('/listing/:listingId/stats', async (req, res) => {
     console.error('Error fetching bid stats:', error);
     res.status(500).json({
       error: 'Failed to fetch bid statistics',
-      message: error.message
+      message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
     });
   }
 });
 
 // POST /api/bids - Create a new bid (authentication optional, but email required if not authenticated)
-router.post('/', optionalAuth, requireActiveAccountIfAuthenticated, async (req, res) => {
+router.post('/', optionalAuth, requireActiveAccountIfAuthenticated, requireNoDisputeRestrictionIfAuthenticated, async (req, res) => {
   try {
+    // ── Per-user rate limit ─────────────────────────────────────────────────
+    const rateCheck = checkBidRateLimit(req);
+    if (!rateCheck.allowed) {
+      return res.status(429).json({
+        error: 'Rate limit exceeded',
+        message: 'You are bidding too fast. Please wait a moment before placing another bid.',
+        resetAt: rateCheck.resetAt
+      });
+    }
+
     const { listingId, amount, maxBid, bidType = 'manual', notes, email, notifyWhenOutbid } = req.body;
 
     if (!listingId || !amount) {
@@ -124,20 +144,28 @@ router.post('/', optionalAuth, requireActiveAccountIfAuthenticated, async (req, 
       // Find or create user in database from Firebase UID
       user = await User.findOne({ uid: req.user.uid });
       if (!user) {
-        // Parse name from Firebase user
         const nameParts = req.user.name?.split(' ') || [];
         const firstName = nameParts[0] || 'User';
-        const lastName = nameParts.slice(1).join(' ') || 'User'; // Use 'User' as default if no lastName
-        
-        user = new User({
-          uid: req.user.uid,
-          email: req.user.email,
-          firstName: firstName,
-          lastName: lastName,
-          isActive: true,
-          emailVerified: req.user.emailVerified || false
-        });
-        await user.save();
+        const lastName = nameParts.slice(1).join(' ') || 'User';
+        try {
+          user = new User({
+            uid: req.user.uid,
+            email: req.user.email,
+            firstName,
+            lastName,
+            isActive: true,
+            emailVerified: req.user.emailVerified || false
+          });
+          await user.save();
+        } catch (createErr) {
+          if (createErr.code === 11000) {
+            // Concurrent request already created this user — just fetch it.
+            user = await User.findOne({ uid: req.user.uid });
+            if (!user) throw createErr;
+          } else {
+            throw createErr;
+          }
+        }
       } else {
         // Update email verification status if changed
         if (req.user.emailVerified !== undefined && user.emailVerified !== req.user.emailVerified) {
@@ -188,6 +216,27 @@ router.post('/', optionalAuth, requireActiveAccountIfAuthenticated, async (req, 
         return res.status(403).json({
           error: 'Cannot bid on your own listing',
           message: 'The email you entered is the seller\'s email for this item. You cannot bid on your own listing. Use a different email to place a bid as a guest, or log in with another account.'
+        });
+      }
+    }
+
+    // KYC check for high-value bids
+    const KYC_THRESHOLD = 5000;
+    const bidAmount = parseFloat(amount);
+    if (bidAmount >= KYC_THRESHOLD) {
+      if (!user) {
+        return res.status(403).json({
+          error: 'kyc_required',
+          message: 'You must be logged in and identity-verified to bid on items valued at $5,000 or more.',
+          kycStatus: 'none'
+        });
+      }
+      const kycStatus = user.kycStatus || 'none';
+      if (kycStatus !== 'approved') {
+        return res.status(403).json({
+          error: 'kyc_required',
+          message: 'Identity verification is required to bid on items valued at $5,000 or more.',
+          kycStatus
         });
       }
     }
@@ -257,36 +306,38 @@ router.post('/', optionalAuth, requireActiveAccountIfAuthenticated, async (req, 
       const invitation = invitations.find(
         inv => inv.bidder && inv.bidder._id.toString() === user._id.toString()
       );
-      if (invitation) {
-        if (invitation.status !== 'accepted') {
-          const now = new Date();
-          if (listing.platinumBidderAcceptanceDeadline && now > new Date(listing.platinumBidderAcceptanceDeadline)) {
-            return res.status(403).json({
-              error: 'Seat lost',
-              message: 'The 15 minute window to accept the invitation has passed. You can no longer place bids in this private room.'
-            });
-          }
+      if (!invitation || invitation.status !== 'accepted') {
+        const now = new Date();
+        if (invitation && listing.platinumBidderAcceptanceDeadline && now > new Date(listing.platinumBidderAcceptanceDeadline)) {
           return res.status(403).json({
-            error: 'Accept invitation first',
-            message: 'You must accept your private room invitation (link in your email) before you can place bids.'
+            error: 'Seat lost',
+            message: 'The 15 minute window to accept the invitation has passed. You can no longer place bids in this private room.'
           });
         }
+        return res.status(403).json({
+          error: 'Accept invitation first',
+          message: 'You must accept your private room invitation before you can place bids.'
+        });
       }
       // Private room ends 60 seconds after last bid (each bid extends by 60s)
       const PRIVATE_ROOM_EXTEND_MS = 60 * 1000; // 60 seconds
+      const PRIVATE_ROOM_MAX_DURATION_MS = 4 * 60 * 60 * 1000; // 4-hour absolute ceiling
 
       // If status is 'eligible' and this is the first bid, activate the room
       if (listing.privateRoomStatus === 'eligible') {
         listing.privateRoomStatus = 'active';
         listing.status = 'active'; // Ensure listing is active
+        if (!listing.privateRoomActivatedAt) listing.privateRoomActivatedAt = now;
         if (!listing.privateRoomEndDate) {
           listing.privateRoomEndDate = new Date(now.getTime() + PRIVATE_ROOM_EXTEND_MS);
         }
       }
 
-      // Extend the deadline to 60 seconds from now with each bid
-      const newEndDate = new Date(now.getTime() + PRIVATE_ROOM_EXTEND_MS);
-      listing.privateRoomEndDate = newEndDate;
+      // Extend by 60 s from now, but never past the 4-hour absolute ceiling.
+      const activatedAt = listing.privateRoomActivatedAt || now;
+      const hardCeiling = new Date(activatedAt.getTime() + PRIVATE_ROOM_MAX_DURATION_MS);
+      const desiredEnd  = new Date(now.getTime() + PRIVATE_ROOM_EXTEND_MS);
+      listing.privateRoomEndDate = desiredEnd < hardCeiling ? desiredEnd : hardCeiling;
       listing.privateRoomLastBidTime = now;
     } else {
       // Main auction logic
@@ -339,19 +390,60 @@ router.post('/', optionalAuth, requireActiveAccountIfAuthenticated, async (req, 
     // Previous high bid amount (before this bid) - used to find who to notify as outbid
     const previousHighAmount = listing.currentPrice != null ? listing.currentPrice : (listing.startingPrice || 0);
 
-    // Create the bid
-    const bid = new Bid({
-      listing: listingId,
-      bidder: user ? user._id : null,
-      bidderEmail: bidderEmail || null,
-      amount: amount,
-      maxBid: maxBid || amount,
-      bidType: bidType,
-      notes: notes || null,
-      notifyWhenOutbid: preferNotifyOutbid
-    });
+    // ── Fraud detection ────────────────────────────────────────────────────
+    const bidderIp = getClientIp(req);
+    const deviceFingerprint = req.headers['x-device-fingerprint'] || null;
 
-    await bid.save();
+    if (user) {
+      const fraud = await runFraudChecks({
+        bidderId:    user._id,
+        sellerId:    listing.seller?._id || listing.seller,
+        listingId:   listing._id,
+        ip:          bidderIp,
+        fingerprint: deviceFingerprint
+      });
+      if (fraud.blocked) {
+        return res.status(403).json({ error: 'Bid rejected', message: fraud.reason });
+      }
+
+      // Create the bid with fraud metadata
+      const bid = new Bid({
+        listing: listingId,
+        bidder: user._id,
+        bidderEmail: null,
+        amount,
+        maxBid: maxBid || amount,
+        bidType,
+        notes: notes || null,
+        notifyWhenOutbid: preferNotifyOutbid,
+        ipAddress: bidderIp,
+        deviceFingerprint,
+        fraudFlags: fraud.fraudFlags,
+        isFlagged: fraud.fraudFlags.length > 0
+      });
+      await bid.save();
+
+      // Update known signals after a successful bid
+      updateUserSignals(user._id, bidderIp, deviceFingerprint).catch(() => {});
+
+      // Continue with listing update below using this bid
+      var savedBid = bid;
+    } else {
+      // Guest bid — no fraud checks beyond rate limit; store IP only
+      const bid = new Bid({
+        listing: listingId,
+        bidder: null,
+        bidderEmail: bidderEmail || null,
+        amount,
+        maxBid: maxBid || amount,
+        bidType,
+        notes: notes || null,
+        notifyWhenOutbid: preferNotifyOutbid,
+        ipAddress: bidderIp
+      });
+      await bid.save();
+      var savedBid = bid;
+    }
 
     // Update listing with new current price and bid count
     listing.currentPrice = amount;
@@ -377,7 +469,7 @@ router.post('/', optionalAuth, requireActiveAccountIfAuthenticated, async (req, 
     await listing.save();
 
     // Populate bid for response
-    const populatedBid = await Bid.findById(bid._id)
+    const populatedBid = await Bid.findById(savedBid._id)
       .populate('bidder', 'firstName lastName email emailVerified hasDeposit')
       .lean();
 
@@ -398,6 +490,8 @@ router.post('/', optionalAuth, requireActiveAccountIfAuthenticated, async (req, 
         });
     }
 
+    const io = req.app.get('io');
+
     // Send outbid notifications to previous high bidder(s) who opted in (non-blocking)
     if (previousHighAmount > 0 && amount > previousHighAmount) {
       const currentBidderId = user ? user._id.toString() : null;
@@ -406,7 +500,7 @@ router.post('/', optionalAuth, requireActiveAccountIfAuthenticated, async (req, 
       const previousHighBids = await Bid.find({
         listing: listingId,
         amount: previousHighAmount,
-        _id: { $ne: bid._id }
+        _id: { $ne: savedBid._id }
       })
         .populate('bidder', 'firstName lastName email')
         .sort({ createdAt: -1 })
@@ -439,13 +533,38 @@ router.post('/', optionalAuth, requireActiveAccountIfAuthenticated, async (req, 
         if (latestBidByOutbidder && latestBidByOutbidder.notifyWhenOutbid === false) continue;
 
         notifiedEmails.add(outbidEmail);
-        sendOutbidNotification(
-          listing,
-          outbidEmail,
-          outbidName,
-          previousHighAmount,
-          amount
-        ).catch(err => console.error('Failed to send outbid notification:', err));
+
+        const outbidderMongoId = prevBid.bidder?._id?.toString() || null;
+
+        // Rate-limit: skip if already notified for this user+listing within 5 minutes
+        if (outbidderMongoId && checkAndSetOutbidDebounce(outbidderMongoId, listingId.toString())) continue;
+
+        // Email: check user's notification preference before sending
+        const emailAllowed = outbidderMongoId
+          ? await shouldSendEmail(outbidderMongoId, 'outbid')
+          : true; // guest bidders: always send (no prefs stored)
+
+        if (emailAllowed) {
+          sendOutbidNotification(
+            listing,
+            outbidEmail,
+            outbidName,
+            previousHighAmount,
+            amount
+          ).catch(err => console.error('Failed to send outbid notification:', err));
+        }
+
+        if (outbidderMongoId) {
+          notifyBidderOutbid({
+            listingSlug: listing.slug || null,
+            listingTitle: listing.title || 'Auction',
+            previousBidAmount: previousHighAmount,
+            newBidAmount: amount,
+            bidderUserId: outbidderMongoId,
+            listingId: listingId.toString()
+          }).catch(err => console.error('Failed to create outbid in-app notification:', err));
+          emitNewNotificationToUser(io, outbidderMongoId).catch(() => {});
+        }
       }
     }
 
@@ -467,8 +586,7 @@ router.post('/', optionalAuth, requireActiveAccountIfAuthenticated, async (req, 
       bidderLastName: populatedBid.bidder ? populatedBid.bidder.lastName : null
     };
 
-    // Get Socket.io instance and Redis service from app
-    const io = req.app.get('io');
+    // Get Redis service from app (io already resolved above for outbid / seller notifications)
     const redisService = req.app.get('redisService');
 
     // Cache current bid information in Redis (non-blocking - don't block response if Redis is slow/down)
@@ -493,27 +611,41 @@ router.post('/', optionalAuth, requireActiveAccountIfAuthenticated, async (req, 
       console.error('Redis cacheListingStats failed (non-fatal):', err?.message)
     );
 
-    // Emit real-time bid update via Socket.io to all clients watching this listing
+    // Emit real-time bid update via Socket.io to all clients watching this listing.
+    // For private room bids, chain both rooms so each connected client receives the
+    // event exactly once even if they have joined both listing:id and private-room:id.
     if (io) {
-      io.to(`listing:${listingId}`).emit('new-bid', {
+      const listingIdStr = listingId.toString();
+      const isPrivateRoom = listing.privateRoomStatus === 'active';
+
+      // Base emitter — always target listing room; add private-room room for private auctions
+      // so the seller (who joins private-room:id) also receives countdown updates.
+      const emitter = isPrivateRoom
+        ? io.to(`listing:${listingIdStr}`).to(`private-room:${listingIdStr}`)
+        : io.to(`listing:${listingIdStr}`);
+
+      emitter.emit('new-bid', {
         bid: formattedBid,
-        listingId: listingId.toString(),
+        listingId: listingIdStr,
         currentPrice: listing.currentPrice,
         bidCount: listing.bidCount,
         updatedAt: new Date().toISOString()
       });
 
-      // Also emit listing update with current price and bid count
-      io.to(`listing:${listingId}`).emit('listing-update', {
-        listingId: listingId.toString(),
+      // Include the extended privateRoomEndDate so all frontends restart their countdown.
+      emitter.emit('listing-update', {
+        listingId: listingIdStr,
         currentPrice: listing.currentPrice,
         bidCount: listing.bidCount,
-        updatedAt: new Date().toISOString()
+        updatedAt: new Date().toISOString(),
+        ...(isPrivateRoom && listing.privateRoomEndDate && {
+          privateRoomEndDate: listing.privateRoomEndDate.toISOString(),
+          endDate: listing.privateRoomEndDate.toISOString()
+        })
       });
     }
 
     // Create in-app notification for the seller (someone bid on their listing)
-    const { notifyNewBid, emitNewNotificationToUser } = require('../services/notificationService');
     const sellerUserId = listing.seller?._id?.toString?.() || listing.seller?.toString?.();
     if (sellerUserId) {
       notifyNewBid({
@@ -532,7 +664,7 @@ router.post('/', optionalAuth, requireActiveAccountIfAuthenticated, async (req, 
     console.error('Error creating bid:', error);
     res.status(400).json({
       error: 'Failed to create bid',
-      message: error.message
+      message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
     });
   }
 });
@@ -580,7 +712,7 @@ router.patch('/preference', authenticateToken, async (req, res) => {
     console.error('Error updating bid preference:', error);
     res.status(500).json({
       error: 'Failed to update preference',
-      message: error.message
+      message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
     });
   }
 });

@@ -1,172 +1,206 @@
-import { Component, OnInit, AfterViewInit, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { Router, ActivatedRoute } from '@angular/router';
-import { TranslateModule } from '@ngx-translate/core';
+import { Component, OnDestroy, OnInit, AfterViewInit, inject, ElementRef, ViewChild, HostListener } from '@angular/core';
+import { RouterLink } from '@angular/router';
+import { TranslateService } from '@ngx-translate/core';
+import { ListingsService, Listing } from '../../../shared/services/listings.service';
+import { ThemeService } from '../../../shared/services/theme.service';
 import { HeaderComponent } from '../../../shared/components/header/header.component';
-import { FooterComponent } from '../../../shared/components/footer/footer.component';
-import { ListingsService, Listing, ListingsQueryParams, StatsOverview } from '../../../shared/services/listings.service';
-import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslateModule, HeaderComponent, FooterComponent],
+  imports: [RouterLink, HeaderComponent],
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.scss']
 })
-export class HomeComponent implements OnInit, AfterViewInit {
-  private router = inject(Router);
-  private route = inject(ActivatedRoute);
+export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
+  private translate = inject(TranslateService);
   private listingsService = inject(ListingsService);
+  private themeService = inject(ThemeService);
 
-  readonly enableAuctions = environment.enableAuctions;
-  readonly enablePrivateRooms = environment.enablePrivateRooms;
+  @ViewChild('carouselWrap') carouselWrap!: ElementRef<HTMLElement>;
+  @ViewChild('carouselTrack') carouselTrack!: ElementRef<HTMLElement>;
 
-  listings: Listing[] = [];
-  loading = true;
-  error: string | null = null;
-  sortBy: 'deadline' | 'newest' | 'highest' | 'lowest' | 'bids' = 'deadline';
-  stats: StatsOverview = {
-    totalBidders: 0,
-    activeListings: 0,
-    totalValueTraded: 0
-  };
+  get isLight(): boolean {
+    return this.themeService.resolveEffective(this.themeService.preference()) === 'light';
+  }
+
+  carouselCurrent = 0;
+  carouselTransform = 'translateX(0)';
+
+  featuredListings: Listing[] = [];
+  activeListings: Listing[] = [];
+
+  // private room visualizer
+  rvBid = '€ 12.800';
+  rvTimer = '00:42';
+  rvActiveIdx = 0;
+
+  private readonly rbids = ['€ 12.800', '€ 13.200', '€ 13.600', '€ 14.200', '€ 14.900'];
+  private ri = 0;
+  private rs = 42;
+  private timers: ReturnType<typeof setInterval>[] = [];
+  private autoTimer: ReturnType<typeof setInterval> | null = null;
+  private touchStartX = 0;
+
+  get CARDS(): number {
+    return this.featuredListings.length || 1;
+  }
+
+  get currentLang(): string {
+    return this.translate.currentLang || 'pt';
+  }
+
+  get toggleLangLabel(): string {
+    return this.currentLang === 'pt' ? 'EN' : 'PT';
+  }
 
   ngOnInit(): void {
-    this.loadStats();
-    this.loadListings();
+    const saved = localStorage.getItem('lang') || 'pt';
+    this.translate.use(saved);
+
+    this.loadFeaturedListings();
+    this.loadActiveListings();
+
+    // private room timer animation
+    this.timers.push(setInterval(() => {
+      this.rvActiveIdx = (this.rvActiveIdx + 1) % 5;
+    }, 2000));
+
+    this.timers.push(setInterval(() => {
+      this.rs = this.rs > 0 ? this.rs - 1 : 58;
+      const mm = String(Math.floor(this.rs / 60)).padStart(2, '0');
+      const ss = String(this.rs % 60).padStart(2, '0');
+      this.rvTimer = `${mm}:${ss}`;
+      if (this.rs % 14 === 0) {
+        this.ri = (this.ri + 1) % this.rbids.length;
+        this.rvBid = this.rbids[this.ri];
+      }
+    }, 1000));
   }
 
   ngAfterViewInit(): void {
-    // Handle fragment navigation (e.g., #categories)
-    this.route.fragment.subscribe(fragment => {
-      if (fragment === 'categories') {
-        setTimeout(() => {
-          const element = document.getElementById('categories');
-          if (element) {
-            element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-          }
-        }, 100);
+    setTimeout(() => this.updateCarouselTransform(), 0);
+    this.startCarouselAuto();
+  }
+
+  ngOnDestroy(): void {
+    this.timers.forEach(t => clearInterval(t));
+    if (this.autoTimer) clearInterval(this.autoTimer);
+  }
+
+  @HostListener('window:resize')
+  onResize(): void {
+    this.updateCarouselTransform();
+  }
+
+  private loadFeaturedListings(): void {
+    this.listingsService.getListings({ status: 'active', isFeatured: true, limit: 5, sort: 'deadline' }).subscribe({
+      next: res => {
+        this.featuredListings = res.listings;
+        // If no featured listings, fall back to first 5 active
+        if (this.featuredListings.length === 0) {
+          this.listingsService.getListings({ status: 'active', limit: 5, sort: 'deadline' }).subscribe({
+            next: r => {
+              this.featuredListings = r.listings;
+              setTimeout(() => { this.carouselCurrent = 0; this.updateCarouselTransform(); }, 0);
+            }
+          });
+        } else {
+          setTimeout(() => { this.carouselCurrent = 0; this.updateCarouselTransform(); }, 0);
+        }
       }
     });
   }
 
-  loadStats(): void {
-    this.listingsService.getStats().subscribe({
-      next: (stats) => {
-        this.stats = stats;
-      },
-      error: (err) => {
-        console.error('Error loading stats:', err);
-        // Use default values on error
-      }
+  private loadActiveListings(): void {
+    this.listingsService.getListings({ status: 'active', limit: 3, sort: 'deadline' }).subscribe({
+      next: res => { this.activeListings = res.listings; }
     });
   }
 
-  loadListings(): void {
-    this.loading = true;
-    this.error = null;
 
-    const params: ListingsQueryParams = {
-      sort: this.sortBy,
-      status: 'active',
-      limit: 50
-    };
+  goTo(idx: number, skipAuto = false): void {
+    if (this.featuredListings.length === 0) return;
+    this.carouselCurrent = ((idx % this.CARDS) + this.CARDS) % this.CARDS;
+    this.updateCarouselTransform();
+    if (!skipAuto) this.resetCarouselAuto();
+  }
 
-    this.listingsService.getListings(params).subscribe({
-      next: (response) => {
-        this.listings = response.listings;
-        this.loading = false;
-      },
-      error: (err) => {
-        console.error('Error loading listings:', err);
-        this.error = 'Failed to load listings. Please try again later.';
-        this.loading = false;
+  onCarouselTouchStart(e: TouchEvent): void {
+    this.touchStartX = e.touches[0].clientX;
+  }
+
+  onCarouselTouchEnd(e: TouchEvent): void {
+    const dx = e.changedTouches[0].clientX - this.touchStartX;
+    if (Math.abs(dx) > 40) this.goTo(this.carouselCurrent + (dx < 0 ? 1 : -1));
+  }
+
+  /** Price to display for a listing (currentPrice, startingPrice, or minimumOfferPrice). */
+  listingPrice(l: Listing): string {
+    const p = l.currentPrice || l.startingPrice || l.minimumOfferPrice || 0;
+    return `€ ${p.toLocaleString('pt-PT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+  }
+
+  /** Time remaining label for a listing. */
+  timeRemaining(l: Listing): string {
+    if (l.auctionFormat === 'best-offer') {
+      return `${l.bidCount || 0} ofertas`;
+    }
+    const end = new Date(l.endDate).getTime();
+    const now = Date.now();
+    const diff = end - now;
+    if (diff <= 0) return 'Terminado';
+    const h = Math.floor(diff / 3600000);
+    const m = Math.floor((diff % 3600000) / 60000);
+    const s = Math.floor((diff % 60000) / 1000);
+    if (h >= 24) {
+      const d = Math.floor(h / 24);
+      return `${d}d ${h % 24}h`;
+    }
+    if (h >= 1) return `${h}h ${m}m`;
+    return `${m}:${String(s).padStart(2, '0')}`;
+  }
+
+  /** Badge label for a listing card. */
+  listingBadge(l: Listing): string {
+    if (l.auctionFormat === 'best-offer') return 'Melhor oferta';
+    if (l.allowPrivateRoom) return 'Sala Privada';
+    return 'Ao vivo';
+  }
+
+  /** True if badge should use "live" (gold) style. */
+  isLiveBadge(l: Listing): boolean {
+    return l.auctionFormat !== 'best-offer' && !l.allowPrivateRoom;
+  }
+
+  /** Primary image for a listing. */
+  listingImage(l: Listing): string {
+    return l.images?.[0] || '';
+  }
+
+  private updateCarouselTransform(): void {
+    const wrap = this.carouselWrap?.nativeElement;
+    const track = this.carouselTrack?.nativeElement;
+    if (!wrap || !track) return;
+    const card = track.querySelector('.hc') as HTMLElement | null;
+    if (!card) return;
+    const cardW = card.offsetWidth + 16;
+    const wrapW = wrap.offsetWidth;
+    const offset = this.carouselCurrent * cardW - (wrapW / 2 - cardW / 2);
+    this.carouselTransform = `translateX(${-offset}px)`;
+  }
+
+  private startCarouselAuto(): void {
+    this.autoTimer = setInterval(() => {
+      if (this.featuredListings.length > 1) {
+        this.carouselCurrent = (this.carouselCurrent + 1) % this.CARDS;
+        this.updateCarouselTransform();
       }
-    });
+    }, 4000);
   }
 
-  onSortChange(): void {
-    this.loadListings();
-  }
-
-  searchQuery = '';
-
-  onSearch(): void {
-    const q = this.searchQuery.trim();
-    if (q) {
-      this.router.navigate(['/listing/list'], { queryParams: { search: q } });
-    } else {
-      this.router.navigate(['/listing/list']);
-    }
-  }
-
-  browseCategory(categoryId: string): void {
-    this.router.navigate(['/listing/list'], { queryParams: { category: categoryId } });
-  }
-
-  browseCategoriesPage(): void {
-    this.router.navigate(['/listing/categories']);
-  }
-
-  navigateToAuth(): void {
-    this.router.navigate(['/auth/signup']);
-  }
-
-  navigateToLogin(): void {
-    this.router.navigate(['/auth/login']);
-  }
-
-  navigateToAddListing(): void {
-    this.router.navigate(['/listing/add']);
-  }
-
-  formatPrice(price: number): string {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 2
-    }).format(price);
-  }
-
-  formatTimeRemaining(listing: Listing): string {
-    if (!listing.timeRemaining) return 'N/A';
-    
-    const { ended, days, hours, minutes } = listing.timeRemaining;
-    
-    if (ended) return 'Ended';
-    
-    if (days > 0) {
-      return `${days}d ${hours}h`;
-    } else if (hours > 0) {
-      return `${hours}h ${minutes}m`;
-    } else {
-      return `${minutes}m`;
-    }
-  }
-
-  getEndingSoonListings(): Listing[] {
-    return this.listings
-      .filter(listing => listing.endingSoon && listing.status === 'active')
-      .slice(0, 3);
-  }
-
-  timerClass(listing: Listing): string {
-    if (!listing.timeRemaining) return '';
-    const { ended, days, hours } = listing.timeRemaining;
-    if (ended) return '';
-    if (days === 0 && hours < 1) return 'timer-urgent';
-    if (days === 0 && hours < 24) return 'timer-soon';
-    return 'timer-ok';
-  }
-
-  viewListing(slug: string | undefined): void {
-    if (!slug) {
-      console.error('Listing slug is undefined');
-      return;
-    }
-    this.router.navigate(['/listing', slug]);
+  private resetCarouselAuto(): void {
+    if (this.autoTimer) clearInterval(this.autoTimer);
+    this.startCarouselAuto();
   }
 }

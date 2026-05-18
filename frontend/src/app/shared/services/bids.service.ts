@@ -53,7 +53,7 @@ export interface CreateBidRequest {
   bidType?: 'manual' | 'proxy' | 'auto';
   notes?: string;
   email?: string; // Required for unauthenticated users
-  /** Whether to receive email when outbid on this listing (default true) */
+  /** Whether to receive email and in-app notifications when outbid (default true) */
   notifyWhenOutbid?: boolean;
 }
 

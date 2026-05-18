@@ -1,12 +1,11 @@
 import { Component, OnInit, OnDestroy, ChangeDetectorRef, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, Location } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Subscription } from 'rxjs';
-import { finalize, timeout } from 'rxjs/operators';
+import { filter, finalize, take, timeout } from 'rxjs/operators';
 import { MAX_DISPLAYED_BIDS, EMAIL_REGEX } from '../../../shared/config/listing.constants';
 import Swal from 'sweetalert2';
-import { HeaderComponent } from '../../../shared/components/header/header.component';
 import { ListingsService, Listing } from '../../../shared/services/listings.service';
 import { BidsService, Bid } from '../../../shared/services/bids.service';
 import { OffersService, Offer } from '../../../shared/services/offers.service';
@@ -14,18 +13,26 @@ import { WatchlistService } from '../../../shared/services/watchlist.service';
 import { SocketService } from '../../../shared/services/socket.service';
 import { AuthService } from '../../../auth/services/auth.service';
 import { PrivateRoomService, Bidder } from '../../../private-room/services/private-room.service';
-import { TranslateModule } from '@ngx-translate/core';
+import { StripeConnectService } from '../../../shared/services/stripe-connect.service';
+import { FeatureFlagsService } from '../../../shared/services/feature-flags.service';
+import { KycService } from '../../../shared/services/kyc.service';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { ReportModalComponent } from '../../../shared/components/report-modal/report-modal.component';
+import { FollowService, FollowStatus } from '../../../shared/services/follow.service';
+import { ThemeService } from '../../../shared/services/theme.service';
+import { HeaderComponent } from '../../../shared/components/header/header.component';
 
 @Component({
   selector: 'app-listing-details',
   standalone: true,
-  imports: [CommonModule, FormsModule, HeaderComponent, TranslateModule],
+  imports: [CommonModule, FormsModule, TranslateModule, RouterLink, ReportModalComponent, HeaderComponent],
   templateUrl: './listing-details.component.html',
   styleUrls: ['./listing-details.component.scss']
 })
 export class ListingDetailsComponent implements OnInit, OnDestroy {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
+  private location = inject(Location);
   private listingsService = inject(ListingsService);
   private bidsService = inject(BidsService);
   private offersService = inject(OffersService);
@@ -33,7 +40,17 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
   private socketService = inject(SocketService);
   private authService = inject(AuthService);
   private privateRoomService = inject(PrivateRoomService);
+  private stripeConnectService = inject(StripeConnectService);
+  featureFlags = inject(FeatureFlagsService);
+  private kycService = inject(KycService);
+  private followService = inject(FollowService);
   private cdr = inject(ChangeDetectorRef);
+  private translate = inject(TranslateService);
+  private themeService = inject(ThemeService);
+
+  get isLight(): boolean {
+    return this.themeService.resolveEffective(this.themeService.preference()) === 'light';
+  }
 
   listing: Listing | null = null;
   loading = true;
@@ -51,7 +68,11 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
   showLoginModal = false;
   watchlistLoading = false;
   isOwnListing = false;
+  get isSeller(): boolean { return this.isOwnListing; }
+  sellerFollowStatus: FollowStatus = { following: false, muted: false };
+  followLoading = false;
   showSelectWinnerModal = false;
+  showReportModal: 'listing' | 'user' | null = null;
   selectingWinner = false;
   reopenLoading = false;
   showCreatePrivateRoomModal = false;
@@ -61,10 +82,14 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
   createPrivateRoomSubmitting = false;
   privateRoomStartNowLoading = false;
   private socketSubscriptions: Subscription[] = [];
+  /** Real-time bid/listing socket subs — tracked separately so they can be cleaned up on re-entry without unsubbing auth subs. */
+  private rtSubscriptions: Subscription[] = [];
   private countdownInterval: ReturnType<typeof setInterval> | null = null;
   private justEndedRefetched = false;
   private offerRefreshDebounceTimer: ReturnType<typeof setTimeout> | null = null;
   private readonly OFFER_REFRESH_DEBOUNCE_MS = 2000;
+  /** Ensures /listing/:slug/choose-winner deep link runs once after load. */
+  private chooseWinnerDeepLinkHandled = false;
   displayedTimeRemaining = '';
   winnerSelectionCountdownDisplay = '';
   newBidIds = new Set<string>();
@@ -85,6 +110,8 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
   offerModalError: string | null = null;
   /** ID of offer being accepted/rejected (for loading state) */
   offerActionLoadingId: string | null = null;
+  /** Whether the current seller has Stripe connected and onboarded */
+  sellerStripeReady = true;
 
   ngOnInit(): void {
     window.scrollTo(0, 0);
@@ -124,6 +151,9 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
         this.inWatchlist = !!listing.inWatchlist;
         this.updateIsOwnListing();
         this.loading = false;
+        if (this.isAuthenticated && !this.isOwnListing && listing.seller?._id) {
+          this.loadSellerFollowStatus(listing.seller._id);
+        }
         window.scrollTo(0, 0);
         // Start countdown timer
         this.startCountdown();
@@ -153,10 +183,12 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
       next: (response) => {
         this.bids = response.bids;
         this.bidsLoading = false;
+        this.handleChooseWinnerDeepLink();
       },
       error: () => {
         this.bidsError = 'Failed to load bid history';
         this.bidsLoading = false;
+        this.handleChooseWinnerDeepLink();
       }
     });
   }
@@ -250,9 +282,37 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
       },
       error: (err) => {
         this.offerActionLoadingId = null;
-        this.offersError = err?.error?.message || 'Failed to accept offer.';
+        if (err?.error?.error === 'Stripe not connected') {
+          Swal.fire({
+            icon: 'warning',
+            title: 'Stripe Account Required',
+            html: 'You must connect your Stripe account before accepting offers.<br><br>' +
+              'Go to <strong>Dashboard → Settings → Payments</strong> to complete setup.',
+            showCancelButton: true,
+            confirmButtonText: 'Go to Settings',
+            cancelButtonText: 'Cancel',
+            confirmButtonColor: '#7A4F84',
+            reverseButtons: true
+          }).then(result => {
+            if (result.isConfirmed) {
+              this.router.navigate(['/dashboard/settings']);
+            }
+          });
+        } else {
+          this.offersError = err?.error?.message || 'Failed to accept offer.';
+        }
       }
     });
+  }
+
+  /** True when the seller is allowed to decline this specific offer.
+   *  Seller cannot decline an offer that meets the minimum price if it is the last qualifying pending offer. */
+  canDeclineOffer(offer: Offer): boolean {
+    if (!this.listing || !this.canSellerAcceptOrDeclineOffers()) return false;
+    const min = this.listing.minimumOfferPrice ?? 0;
+    if (min === 0 || offer.amount < min) return true;
+    const pendingAboveMin = this.offers.filter(o => o.status === 'pending' && o.amount >= min);
+    return pendingAboveMin.length > 1;
   }
 
   rejectOffer(offer: Offer): void {
@@ -275,13 +335,9 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
     this.activeImageIndex = index;
   }
 
+
   formatPrice(price: number): string {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 2
-    }).format(price);
+    return `€ ${price.toLocaleString('pt-PT', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
   }
 
   startCountdown(): void {
@@ -427,7 +483,6 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
     const deadline = new Date(this.listing.winnerSelectionDeadline);
     if (deadline <= new Date()) return false;
     if (this.listing.auctionFormat === 'best-offer') return !this.hasAcceptedOffer();
-    if (this.listing.auctionFormat === 'highest-bid') return !this.listing.winner && !this.hasPrivateRoom();
     return false;
   }
 
@@ -448,6 +503,24 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
     return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
   }
 
+  /** True when auction ended with private room eligible and seller still has time to create the room. */
+  showPrivateRoomEligibleCountdown(): boolean {
+    if (this.listing?.status !== 'ended') return false;
+    if (this.listing?.privateRoomStatus !== 'eligible') return false;
+    if (!this.listing?.winnerSelectionDeadline) return false;
+    return new Date(this.listing.winnerSelectionDeadline) > new Date();
+  }
+
+  /** Formatted MM:SS countdown for the 15-min private room creation window. */
+  formatPrivateRoomEligibleCountdown(): string {
+    if (!this.listing?.winnerSelectionDeadline) return '00:00';
+    const diff = new Date(this.listing.winnerSelectionDeadline).getTime() - Date.now();
+    const sec = Math.max(0, Math.floor(diff / 1000));
+    const m = Math.floor(sec / 60);
+    const s = sec % 60;
+    return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  }
+
   /** The accepted offer (for best-offer when seller has selected one). */
   get acceptedOffer(): Offer | null {
     return this.offers.find(o => o.status === 'accepted') ?? null;
@@ -456,6 +529,88 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
   /** Only registered, verified bidders can be selected as winner. */
   canSelectBidAsWinner(bid: Bid): boolean {
     return !!(bid.isAuthenticated && bid.bidderVerified);
+  }
+
+  /**
+   * Highest bid per bidder (for seller modal). Backend accepts any bid id for that listing/bidder.
+   */
+  get aggregatedBidsForWinnerSelection(): Bid[] {
+    const byKey = new Map<string, Bid>();
+    for (const bid of this.bids) {
+      const key =
+        bid.bidder?._id?.toString() ||
+        (bid.bidderEmail ? bid.bidderEmail.toLowerCase() : '') ||
+        bid._id;
+      const prev = byKey.get(key);
+      if (!prev || bid.amount > prev.amount) {
+        byKey.set(key, bid);
+      }
+    }
+    return Array.from(byKey.values()).sort((a, b) => b.amount - a.amount);
+  }
+
+  /** Manual winner selection via API is only allowed when private room is not enabled (see backend POST choose-winner). */
+  canSellerSelectWinnerManually(): boolean {
+    if (!this.listing || this.listing.auctionFormat !== 'highest-bid') return false;
+    if (this.listing.status !== 'ended' || this.listing.winner) return false;
+    if (this.listing.allowPrivateRoom) return false;
+    if (this.isPrivateRoomEnded()) return false;
+    return this.getEndedBidCount() > 0;
+  }
+
+  private isChooseWinnerEmailLink(): boolean {
+    return (
+      this.router.url.includes('/choose-winner') ||
+      this.route.snapshot.queryParamMap.get('chooseWinner') === '1'
+    );
+  }
+
+  /**
+   * Handles seller email CTA `/listing/:slug/choose-winner` (and `?chooseWinner=1`).
+   * Replaces URL with `/listing/:slug`, focuses Bid history, opens create-room or select-winner when applicable.
+   */
+  private handleChooseWinnerDeepLink(): void {
+    if (this.chooseWinnerDeepLinkHandled || !this.isChooseWinnerEmailLink() || !this.listing?.slug) {
+      return;
+    }
+
+    // Wait until Firebase auth state is confirmed before checking isAuthenticated.
+    // The bids API response often arrives before onAuthStateChanged fires, which
+    // would cause a false redirect to the login page for already-authenticated sellers.
+    this.authService.authReady$.pipe(filter(ready => !!ready), take(1)).subscribe(() => {
+      if (this.chooseWinnerDeepLinkHandled || !this.listing?.slug) return;
+      this.chooseWinnerDeepLinkHandled = true;
+
+      if (this.listing.auctionFormat === 'highest-bid') {
+        this.setActiveTab('bids');
+      }
+
+      if (!this.isAuthenticated) {
+        this.router.navigate(['/auth/login'], {
+          queryParams: { returnUrl: `/listing/${this.listing.slug}?chooseWinner=1` }
+        });
+        return;
+      }
+
+      // Update the address bar without re-running the router (avoids remounting this view).
+      this.location.replaceState(`/listing/${this.listing.slug}`);
+
+      // Ensure isOwnListing is up to date now that auth is confirmed.
+      this.updateIsOwnListing();
+
+      if (!this.isOwnListing) {
+        return;
+      }
+
+      if (this.canCreatePrivateRoom()) {
+        this.openCreatePrivateRoomModal();
+        return;
+      }
+
+      if (this.canSellerSelectWinnerManually()) {
+        this.openSelectWinnerModal();
+      }
+    });
   }
 
   /** True if this bid is the winning bid. */
@@ -471,6 +626,11 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
     return this.listing?.privateRoomStatus === 'active';
   }
 
+  /** True when the authenticated user has an accepted invitation to this listing's private room. */
+  isAcceptedPrivateRoomBidder(): boolean {
+    return this.listing?.currentUserPlatinumStatus?.isPlatinumBidder === true;
+  }
+
   /** True when this listing had a private room that has ended (winner was auto-selected by 60s rule; seller must not choose). */
   isPrivateRoomEnded(): boolean {
     return !!(this.listing?.allowPrivateRoom && this.listing?.privateRoomStatus === 'ended');
@@ -482,14 +642,6 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
     if (this.listing.status !== 'ended' || !this.listing.allowPrivateRoom || this.listing.privateRoomStatus !== 'eligible' || (this.getEndedBidCount() ?? 0) === 0) return false;
     if (this.listing.winnerSelectionDeadline && new Date(this.listing.winnerSelectionDeadline) < new Date()) return false;
     return true;
-  }
-
-  /** Seller can invite bidders during an active auction when private room is enabled and no invitations sent yet. */
-  canInviteToPrivateRoom(): boolean {
-    if (!this.listing || !this.isOwnListing || this.listing.auctionFormat !== 'highest-bid') return false;
-    if (!this.listing.allowPrivateRoom || this.listing.status !== 'active') return false;
-    const status = this.listing.privateRoomStatus;
-    return !status || status === 'not-triggered';
   }
 
   getAuctionEndLabel(): string {
@@ -520,6 +672,10 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
   }
 
   setupRealTimeUpdates(listingId: string): void {
+    // Clean up any previous real-time subs (e.g. called again after placing a bid)
+    for (const sub of this.rtSubscriptions) sub.unsubscribe();
+    this.rtSubscriptions = [];
+
     // Connect to Socket.io
     this.socketService.connect();
 
@@ -544,7 +700,6 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
         } else {
           this.offers = [merged, ...this.offers];
         }
-        this.cdr.markForCheck();
         scheduleDebouncedRefresh();
       };
 
@@ -553,42 +708,47 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
           mergeOfferIntoList(event.offer as Offer);
         }
       });
-      this.socketSubscriptions.push(newOfferSubscription);
+      this.rtSubscriptions.push(newOfferSubscription);
 
       const offerUpdateSubscription = this.socketService.onOfferUpdate().subscribe((event) => {
         if (event.listingId === listingId && event.offer) {
           mergeOfferIntoList(event.offer as Offer);
           if (event.listingStatus === 'ended' && this.listing) {
             this.listing.status = 'ended';
-            this.cdr.markForCheck();
           }
         }
       });
-      this.socketSubscriptions.push(offerUpdateSubscription);
+      this.rtSubscriptions.push(offerUpdateSubscription);
     }
 
     // Subscribe to new bid events
     const newBidSubscription = this.socketService.onNewBid().subscribe((event) => {
-      if (event.listingId === listingId) {
-        // Add new bid to the list (prepend since we sort desc), capped to avoid unbounded growth
+      if (event.listingId !== listingId) return;
+      // Add new bid to the list (prepend since we sort desc), capped to avoid unbounded growth
+      const bidStr = String(event.bid?._id ?? '');
+      const alreadyPresent = bidStr && this.bids.some(b => String(b._id) === bidStr);
+      if (!alreadyPresent) {
         this.bids = [event.bid, ...this.bids].slice(0, MAX_DISPLAYED_BIDS);
-        // Flash the new bid
-        const newId = event.bid._id;
-        this.newBidIds = new Set([...this.newBidIds, newId]);
-        setTimeout(() => {
-          this.newBidIds.delete(newId);
-          this.newBidIds = new Set(this.newBidIds);
-          this.cdr.markForCheck();
-        }, 2500);
-        
-        // Update listing current price and bid count
-        if (this.listing && event.currentPrice !== undefined && event.bidCount !== undefined) {
-          this.listing.currentPrice = event.currentPrice;
-          this.listing.bidCount = event.bidCount;
-        }
       }
+      // Update listing current price and bid count
+      if (this.listing && event.currentPrice !== undefined && event.bidCount !== undefined) {
+        this.listing.currentPrice = event.currentPrice;
+        this.listing.bidCount = event.bidCount;
+      }
+      // Flash the new bid
+      const newId = event.bid._id;
+      this.newBidIds = new Set([...this.newBidIds, newId]);
+      // Force immediate synchronous CD — eventCoalescing:true defers zone-triggered CD
+      // which would leave the template stale until the next animation frame.
+      this.cdr.markForCheck();
+      this.cdr.detectChanges();
+      setTimeout(() => {
+        this.newBidIds.delete(newId);
+        this.newBidIds = new Set(this.newBidIds);
+        this.cdr.detectChanges();
+      }, 2500);
     });
-    this.socketSubscriptions.push(newBidSubscription);
+    this.rtSubscriptions.push(newBidSubscription);
 
     // Subscribe to listing update events (price, bid count changes, private room updates, auction end)
     const listingUpdateSubscription = this.socketService.onListingUpdate().subscribe((event) => {
@@ -596,12 +756,10 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
         if (event.currentPrice !== undefined) this.listing.currentPrice = event.currentPrice;
         if (event.bidCount !== undefined) this.listing.bidCount = event.bidCount;
 
-        // Update private room end date if provided (e.g., when private room is extended)
         if (event.privateRoomEndDate) {
           this.listing.privateRoomEndDate = event.privateRoomEndDate;
         }
 
-        // Update private room status if provided (e.g., when auction ends with private room eligible)
         if (event.privateRoomStatus) {
           this.listing.privateRoomStatus = event.privateRoomStatus;
         }
@@ -612,12 +770,11 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
           this.loadListing(this.listing.slug);
         }
 
-        // Restart countdown if end date changed
         this.startCountdown();
-        this.cdr.markForCheck();
+        this.cdr.detectChanges();
       }
     });
-    this.socketSubscriptions.push(listingUpdateSubscription);
+    this.rtSubscriptions.push(listingUpdateSubscription);
   }
 
   getMinBid(): number {
@@ -692,6 +849,11 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
         });
       },
       error: (err) => {
+        if (err?.error?.error === 'kyc_required') {
+          this.closeBidModal();
+          this.kycService.openKycGate(err.error.kycStatus || 'none');
+          return;
+        }
         const msg = err?.error?.message || err?.message || 'Failed to place bid. Please try again.';
         this.bidModalError = msg;
         this.cdr.markForCheck();
@@ -707,7 +869,8 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
 
   openOfferModal(): void {
     if (!this.listing) return;
-    this.offerAmount = '';
+    const min = this.listing.minimumOfferPrice ?? this.listing.startingPrice;
+    this.offerAmount = min != null && min > 0 ? String(min) : '';
     this.offerEmail = '';
     this.offerModalError = null;
     this.showOfferModal = true;
@@ -730,6 +893,16 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
     if (min == null) return false;
     const amount = this.getOfferAmountNumber();
     return amount > 0 && amount < min;
+  }
+
+  /** Guest must provide a valid email; amount must parse to a positive number. */
+  canSubmitOffer(): boolean {
+    if (this.getOfferAmountNumber() <= 0) return false;
+    if (!this.isAuthenticated) {
+      const trimmed = (this.offerEmail || '').trim();
+      if (!trimmed || !EMAIL_REGEX.test(trimmed)) return false;
+    }
+    return true;
   }
 
   submitOffer(): void {
@@ -760,36 +933,47 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
       amount
     };
     if (!this.isAuthenticated && email) offerData.email = email;
-    this.offersService.createOffer(offerData).subscribe({
-      next: (created) => {
+    this.offersService.createOffer(offerData).pipe(
+      finalize(() => {
         this.offerSubmitting = false;
+        this.cdr.markForCheck();
+      })
+    ).subscribe({
+      next: (created) => {
         this.closeOfferModal();
         if (this.listing?._id) this.loadOffers(this.listing._id);
         const wasAccepted = created?.status === 'accepted';
         if (wasAccepted && this.listing?.slug) {
           this.loadListing(this.listing.slug);
         }
-        Swal.fire({
-          toast: true,
-          position: 'top-end',
-          icon: 'success',
-          title: wasAccepted ? 'Offer accepted!' : 'Offer sent successfully!',
-          showConfirmButton: false,
-          timer: 3000,
-          timerProgressBar: true
-        });
+        this.showOfferSuccessAlert(amount, wasAccepted);
       },
       error: (err) => {
-        this.offerSubmitting = false;
-        const msg = err.error?.message || 'Failed to place offer. Please try again.';
+        const msg = err.error?.message || this.translate.instant('listingDetails.offerModal.errorText');
         this.offerModalError = msg;
-        Swal.fire({
+        this.cdr.markForCheck();
+        void Swal.fire({
           icon: 'error',
-          title: 'Offer failed',
+          title: this.translate.instant('listingDetails.offerModal.errorTitle'),
           text: msg,
-          confirmButtonColor: '#7A4F84'
+          confirmButtonText: this.translate.instant('listingDetails.offerModal.errorConfirm'),
+          confirmButtonColor: '#C9A84C'
         });
       }
+    });
+  }
+
+  private showOfferSuccessAlert(amount: number, wasAccepted: boolean): void {
+    const textKey = wasAccepted
+      ? 'listingDetails.offerModal.successTextAccepted'
+      : 'listingDetails.offerModal.successText';
+    void Swal.fire({
+      icon: 'success',
+      title: this.translate.instant('listingDetails.offerModal.successTitle'),
+      html: this.translate.instant(textKey, { amount: this.formatPrice(amount) }),
+      confirmButtonText: this.translate.instant('listingDetails.offerModal.successConfirm'),
+      confirmButtonColor: '#C9A84C',
+      allowOutsideClick: false
     });
   }
 
@@ -808,8 +992,15 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
       if (!result.isConfirmed) return;
       this.listingsService.buyNow(listing._id).subscribe({
         next: () => {
-          Swal.fire({ icon: 'success', title: 'Purchase successful!', confirmButtonColor: '#7A4F84' });
-          if (listing.slug) this.loadListing(listing.slug);
+          Swal.fire({
+            icon: 'success',
+            title: 'Purchase successful!',
+            text: 'Go to your transactions to complete payment.',
+            confirmButtonText: 'Go to Payment',
+            confirmButtonColor: '#7A4F84'
+          }).then(() => {
+            this.router.navigate(['/dashboard/buyer'], { queryParams: { tab: 'transactions' } });
+          });
         },
         error: (err) => {
           Swal.fire({ icon: 'error', title: 'Purchase failed', text: err.error?.message || 'Failed to complete purchase', confirmButtonColor: '#7A4F84' });
@@ -860,18 +1051,88 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
     this.listing = { ...this.listing, watchlistCount: Math.max(0, current + delta) };
   }
 
+  loadSellerFollowStatus(sellerId: string): void {
+    this.followService.getStatus(sellerId).subscribe({
+      next: (status) => { this.sellerFollowStatus = status; },
+      error: () => {}
+    });
+  }
+
+  toggleFollowSeller(): void {
+    const sellerId = (this.listing?.seller as any)?._id;
+    if (!sellerId || this.followLoading) return;
+    this.followLoading = true;
+    const action = this.sellerFollowStatus.following
+      ? this.followService.unfollow(sellerId)
+      : this.followService.follow(sellerId);
+    action.subscribe({
+      next: (status) => { this.sellerFollowStatus = status; this.followLoading = false; },
+      error: () => { this.followLoading = false; }
+    });
+  }
+
+  toggleMuteSeller(): void {
+    const sellerId = (this.listing?.seller as any)?._id;
+    if (!sellerId || this.followLoading) return;
+    this.followLoading = true;
+    this.followService.setMuted(sellerId, !this.sellerFollowStatus.muted).subscribe({
+      next: (status) => { this.sellerFollowStatus = status; this.followLoading = false; },
+      error: () => { this.followLoading = false; }
+    });
+  }
+
   updateIsOwnListing(): void {
-    if (!this.listing?.seller?.email) {
+    const currentUser = this.authService.getCurrentUser();
+    if (!this.listing?.seller || !currentUser) {
       this.isOwnListing = false;
+      this.sellerStripeReady = false;
+      this.cdr.detectChanges();
       return;
     }
-    const currentUser = this.authService.getCurrentUser();
-    this.isOwnListing = !!(
-      currentUser?.email &&
-      this.listing.seller.email &&
-      currentUser.email.toLowerCase() === (this.listing.seller as { email?: string }).email?.toLowerCase()
-    );
+    const seller = this.listing.seller as { uid?: string; email?: string };
+    if (seller.uid && currentUser.uid && seller.uid === currentUser.uid) {
+      this.isOwnListing = true;
+    } else if (
+      currentUser.email &&
+      seller.email &&
+      currentUser.email.toLowerCase() === seller.email.toLowerCase()
+    ) {
+      this.isOwnListing = true;
+    } else {
+      this.isOwnListing = false;
+    }
+    if (!this.isOwnListing) {
+      this.sellerStripeReady = false;
+      this.cdr.detectChanges();
+      return;
+    }
+    this.stripeConnectService.getAccountStatus().subscribe({
+      next: (status) => {
+        this.sellerStripeReady = status.connected && status.onboarded;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.sellerStripeReady = false;
+        this.cdr.detectChanges();
+      }
+    });
     this.cdr.detectChanges();
+  }
+
+  /** Verified professional trader address lines for public display (API already sanitizes). */
+  sellerVerifiedAddressLines(): string[] {
+    const s = this.listing?.seller;
+    if (!s || s.sellerClassification !== 'professional' || s.professionalVerificationStatus !== 'verified') {
+      return [];
+    }
+    const parts: string[] = [];
+    if (s.professionalAddressLine1?.trim()) parts.push(s.professionalAddressLine1.trim());
+    if (s.professionalAddressLine2?.trim()) parts.push(s.professionalAddressLine2.trim());
+    const cityLine = [s.professionalPostalCode, s.professionalCity].filter((x) => x && String(x).trim()).join(' ');
+    if (cityLine) parts.push(cityLine);
+    const regionCountry = [s.professionalRegion, s.professionalCountry].filter((x) => x && String(x).trim()).join(', ');
+    if (regionCountry) parts.push(regionCountry);
+    return parts;
   }
 
   goToBuyerTransactions(): void {
@@ -1081,9 +1342,9 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
     });
   }
 
-  getFormattedDescription(): string {
-    if (!this.listing?.description) return '';
-    return this.listing.description.replace(/\n/g, '<br>');
+  getDescriptionByline(): string {
+    const d = this.listing?.description || '';
+    return d.length > 180 ? d.slice(0, 180).trimEnd() + '…' : d;
   }
 
   /** Format a date string for display in bid/offer history (e.g. "Jan 5, 2025, 02:30 PM"). */
@@ -1176,6 +1437,8 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
 
     // Unsubscribe from Socket.io events
     this.socketSubscriptions.forEach(sub => sub.unsubscribe());
+    this.rtSubscriptions.forEach(sub => sub.unsubscribe());
+    this.rtSubscriptions = [];
     
     // Leave listing room and disconnect
     if (this.listing?._id) {

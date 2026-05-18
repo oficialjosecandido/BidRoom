@@ -1,56 +1,41 @@
 /**
  * API Configuration
- * Determines the API URL based on the environment:
- * - Local: http://localhost:3000/api (when running on localhost)
- * - Dev: https://bidroom-backend-dev.azurewebsites.net/api (when running on Azure Static Web Apps)
+ * - Local:      http://localhost:3000/api
+ * - Deployed:   Prefer window.APP_CONFIG.API_URL (set in index.html / CI)
+ * - Fallback:   environment.defaultApiBaseUrl (dev vs prod from Angular fileReplacements)
  */
+import { environment } from '@env';
+
 export const API_CONFIG = {
   getApiUrl(): string {
-    // Check for environment variable (set via Azure Static Web App configuration)
-    if (typeof window !== 'undefined' && (window as any).APP_CONFIG?.API_URL) {
-      return (window as any).APP_CONFIG.API_URL;
-    }
-    
-    // Check for process.env (for build-time configuration)
-    const envApiUrl = (window as any).process?.env?.['NG_APP_API_URL'];
-    if (envApiUrl) {
-      return envApiUrl;
-    }
-    
-    // Detect environment based on hostname
+    const runtimeUrl = typeof window !== 'undefined' && (window as any).APP_CONFIG?.API_URL;
+    if (runtimeUrl) return runtimeUrl;
+
     const hostname = typeof window !== 'undefined' ? window.location.hostname : 'localhost';
-    
-    // Local development: use local backend
+
     if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '0.0.0.0') {
-      return 'http://localhost:3000/api';
+      return 'https://bidroom-backend-dev.azurewebsites.net/api';
     }
-    
-    // Azure Static Web Apps (DEV environment): use Azure dev backend
-    // Any other hostname (including *.azurestaticapps.net) uses the dev backend
-    return 'https://bidroom-backend-dev.azurewebsites.net/api';
-  },
-  
-  getStripePublishableKey(): string {
-    if (typeof window !== 'undefined' && (window as any).APP_CONFIG?.STRIPE_PUBLISHABLE_KEY) {
-      return (window as any).APP_CONFIG.STRIPE_PUBLISHABLE_KEY;
-    }
-    // Test key for local development
-    return 'pk_test_51T98Ps1Me1kcdayq7UjnAMHVW88Blkx2MCBtwMvCL7XLmTBxb59PrSwhxSIJY8qrDiJBpbRY9YwHGPKGSOULrSzk00Mmg5sYh5';
+
+    return environment.defaultApiBaseUrl;
   },
 
-  getWebSocketUrl(): string {
-    const apiUrl = this.getApiUrl();
-    // Remove /api suffix if present
-    const baseUrl = apiUrl.replace('/api', '');
-    
-    // Convert http to ws or https to wss
-    if (baseUrl.startsWith('https://')) {
-      return baseUrl.replace('https://', 'wss://');
-    } else if (baseUrl.startsWith('http://')) {
-      return baseUrl.replace('http://', 'ws://');
+  /** Origin of the backend (no /api) — for Socket.IO */
+  getBackendBaseUrl(): string {
+    return this.getApiUrl().replace(/\/api\/?$/, '');
+  },
+
+  getStripePublishableKey(): string {
+    const runtimeKey = typeof window !== 'undefined' && (window as any).APP_CONFIG?.STRIPE_PUBLISHABLE_KEY;
+    if (runtimeKey) return runtimeKey;
+
+    const hostname = typeof window !== 'undefined' ? window.location.hostname : 'localhost';
+
+    if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '0.0.0.0') {
+      return 'pk_test_51T98Ps1Me1kcdayq7UjnAMHVW88Blkx2MCBtwMvCL7XLmTBxb59PrSwhxSIJY8qrDiJBpbRY9YwHGPKGSOULrSzk00Mmg5sYh5';
     }
-    
-    return baseUrl;
+
+    console.warn('[BidRoom] STRIPE_PUBLISHABLE_KEY not configured via APP_CONFIG. Set window.APP_CONFIG.STRIPE_PUBLISHABLE_KEY at deploy time.');
+    return '';
   }
 };
-

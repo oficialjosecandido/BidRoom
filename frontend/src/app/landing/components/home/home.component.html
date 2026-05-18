@@ -1,279 +1,265 @@
-<app-header activePage="home"></app-header>
+<div class="pg" [class.light]="isLight">
 
-<!-- Hero Section -->
+<app-header activePage="auctions"></app-header>
+
+<!-- HERO -->
 <section class="hero">
-  <div class="container">
-    <div class="hero-content">
-      <h1 class="hero-title">{{ 'home.hero.title' | translate }}</h1>
-      <p class="hero-subtitle">{{ 'home.hero.subtitle' | translate }}</p>
-      <div class="hero-search">
-        <input
-          type="text"
-          class="hero-search-input"
-          [placeholder]="'home.hero.searchPlaceholder' | translate"
-          [(ngModel)]="searchQuery"
-          (keyup.enter)="onSearch()" />
-        <button class="btn btn-primary hero-search-btn" (click)="onSearch()">{{ 'home.hero.search' | translate }}</button>
-      </div>
-      <div class="hero-actions">
-        <button class="btn btn-secondary btn-large" (click)="navigateToAuth()">{{ 'home.hero.createAccount' | translate }}</button>
-        <button class="btn btn-ghost btn-large" (click)="navigateToAddListing()">{{ 'home.hero.listAnItem' | translate }}</button>
-      </div>
-    </div>
-  </div>
-</section>
+  <div class="hero-bg"></div>
 
-<!-- Stats Section -->
-<section class="stats">
-  <div class="container">
-    <div class="row">
-      <div class="col-4">
-        <div class="stat-item">
-          <h3>{{ stats.totalBidders | number }}</h3>
-          <p>{{ 'home.stats.activeBidders' | translate }}</p>
-        </div>
-      </div>
-      <div class="col-4">
-        <div class="stat-item">
-          <h3>${{ (stats.totalValueTraded / 1000) | number:'1.1-1' }}K</h3>
-          <p>{{ 'home.stats.totalValueTraded' | translate }}</p>
-        </div>
-      </div>
-      <div class="col-4">
-        <div class="stat-item">
-          <h3>{{ stats.activeListings | number }}</h3>
-          <p>{{ 'home.stats.listingsLiveNow' | translate }}</p>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- Visual Onboarding -->
-<section class="onboarding">
-  <div class="container">
-    <div class="onboarding-header">
-      <h2 class="section-title">{{ 'home.howItWorks.title' | translate }}</h2>
-      <span class="section-title-accent" aria-hidden="true"></span>
-      <p class="section-subtitle">{{ 'home.howItWorks.subtitle' | translate }}</p>
-    </div>
-    <div class="steps-row">
-      <div class="step-card step-card-1">
-        <span class="step-number" aria-hidden="true">1</span>
-        <div class="step-icon-wrap">
-          <span class="step-icon" aria-hidden="true">🔍</span>
-        </div>
-        <h3 class="step-title">{{ 'home.howItWorks.step1.title' | translate }}</h3>
-        <p class="step-desc">{{ 'home.howItWorks.step1.desc' | translate }}</p>
-      </div>
-      <div class="step-card step-card-2">
-        <span class="step-number" aria-hidden="true">2</span>
-        <div class="step-icon-wrap">
-          <span class="step-icon" aria-hidden="true">💰</span>
-        </div>
-        <h3 class="step-title">{{ 'home.howItWorks.step2.title' | translate }}</h3>
-        <p class="step-desc">{{ 'home.howItWorks.step2.desc' | translate }}</p>
-      </div>
-      <div class="step-card step-card-3">
-        <span class="step-number" aria-hidden="true">3</span>
-        <div class="step-icon-wrap">
-          <span class="step-icon" aria-hidden="true">🏆</span>
-        </div>
-        <h3 class="step-title">{{ 'home.howItWorks.step3.title' | translate }}</h3>
-        <p class="step-desc">{{ 'home.howItWorks.step3.desc' | translate }}</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- Ending Soon Banner -->
-@if (enableAuctions && getEndingSoonListings().length > 0) {
-<section class="ending-soon">
-  <div class="container">
-    <div class="ending-soon-content">
-      <div class="ending-soon-text">
-        <h2>⏰ {{ 'home.endingSoon.title' | translate }}</h2>
-        <p>{{ 'home.endingSoon.subtitle' | translate }}</p>
-      </div>
-      <button class="btn btn-urgent" (click)="sortBy = 'deadline'; onSortChange()">{{ 'home.endingSoon.viewEndingSoon' | translate }}</button>
-    </div>
-    <div class="ending-soon-listings">
-      <div class="row">
-        @for (listing of getEndingSoonListings(); track listing) {
-<div class="col-4">
-          <div class="ending-soon-card" (click)="viewListing(listing.slug)">
-            <img [src]="listing.images[0] || 'https://via.placeholder.com/300x200?text=No+Image'" [alt]="listing.title" class="ending-soon-image">
-            <div class="ending-soon-card-content">
-              <h4>{{ listing.title }}</h4>
-              <p class="ending-soon-price">@if (listing.auctionFormat === 'best-offer' && (listing.currentPrice == null || listing.currentPrice === 0)) { {{ 'home.endingSoon.noOffersYet' | translate }} } @else { {{ formatPrice(listing.currentPrice) }} }</p>
-              <p class="ending-soon-time">⏱️ {{ formatTimeRemaining(listing) }} {{ 'home.endingSoon.left' | translate }}</p>
+  <!-- carousel -->
+  @if (featuredListings.length > 0) {
+    <div class="carousel-wrap" #carouselWrap
+      (touchstart)="onCarouselTouchStart($event)"
+      (touchend)="onCarouselTouchEnd($event)">
+      <div class="carousel-track" #carouselTrack [style.transform]="carouselTransform">
+        @for (listing of featuredListings; track listing._id; let i = $index) {
+          <div class="hc" [class.active]="carouselCurrent === i" (click)="goTo(i)">
+            <div class="hc-img" [style.background]="listingImage(listing) ? 'none' : ''">
+              @if (listingImage(listing)) {
+                <img [src]="listingImage(listing)" [alt]="listing.title" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0" />
+              } @else {
+                <span class="hc-img-emoji">🏷</span>
+              }
+              <div class="hc-live" [style]="isLiveBadge(listing) ? '' : 'background:rgba(9,9,9,.7);border-color:rgba(240,237,232,.15);color:var(--sub)'">
+                @if (isLiveBadge(listing)) { <span class="hc-dot"></span> }
+                {{ listingBadge(listing) }}
+              </div>
+            </div>
+            <div class="hc-body">
+              <div class="hc-cat">{{ listing.category }}{{ listing.locationCity ? ' · ' + listing.locationCity : '' }}</div>
+              <div class="hc-title">{{ listing.title }}</div>
+              <div class="hc-row">
+                <div>
+                  <div class="hc-bid-l">{{ listing.auctionFormat === 'best-offer' ? 'Oferta mais alta' : 'Lance actual' }}</div>
+                  <div class="hc-bid">{{ listingPrice(listing) }}</div>
+                </div>
+                <div class="hc-time">
+                  <div class="hc-time-l">{{ listing.auctionFormat === 'best-offer' ? 'Ofertas' : 'Termina em' }}</div>
+                  <div class="hc-time-v">{{ timeRemaining(listing) }}</div>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-}
+        }
       </div>
+      <div class="carousel-dots">
+        @for (listing of featuredListings; track listing._id; let i = $index) {
+          <div class="cdot" [class.active]="carouselCurrent === i" (click)="goTo(i)"></div>
+        }
+      </div>
+    </div>
+  }
+
+  <div class="hero-text">
+    <div class="hero-tag"><span class="hc-dot"></span>Portugal · Leilões premium</div>
+    <h1 class="hero-title">Compre o<br><strong>extraordinário.</strong></h1>
+    <p class="hero-sub">Leilões em tempo real para relógios, arte e peças únicas.</p>
+    <div class="hero-cta">
+      <a routerLink="/listing/list" class="btn-hp">Explorar leilões</a>
+      <a href="#como" class="btn-hg">Como funciona</a>
     </div>
   </div>
-</section>
-}
 
-<!-- Categories Section -->
-<section id="categories" class="categories">
-  <div class="container">
-    <div class="categories-header">
-      <div class="categories-title-row">
-        <div>
-          <h2 class="section-title">{{ 'home.categories.title' | translate }}</h2>
-          <span class="section-title-accent" aria-hidden="true"></span>
-          <p class="section-subtitle">{{ 'home.categories.subtitle' | translate }}</p>
-        </div>
-        <button class="btn btn-secondary btn-small" (click)="browseCategoriesPage()">{{ 'home.categories.viewAll' | translate }}</button>
-      </div>
-    </div>
-    <div class="categories-grid">
-      <div class="category-card category-card-1" (click)="browseCategory('electronics')" style="cursor:pointer">
-        <div class="category-icon-wrap">
-          <span class="category-icon" aria-hidden="true">📱</span>
-        </div>
-        <h3 class="category-title">{{ 'home.categories.electronics.title' | translate }}</h3>
-        <p class="category-desc">{{ 'home.categories.electronics.desc' | translate }}</p>
-      </div>
-      <div class="category-card category-card-2" (click)="browseCategory('home-garden')" style="cursor:pointer">
-        <div class="category-icon-wrap">
-          <span class="category-icon" aria-hidden="true">🏠</span>
-        </div>
-        <h3 class="category-title">{{ 'home.categories.homeGarden.title' | translate }}</h3>
-        <p class="category-desc">{{ 'home.categories.homeGarden.desc' | translate }}</p>
-      </div>
-      <div class="category-card category-card-3" (click)="browseCategory('art')" style="cursor:pointer">
-        <div class="category-icon-wrap">
-          <span class="category-icon" aria-hidden="true">🎨</span>
-        </div>
-        <h3 class="category-title">{{ 'home.categories.art.title' | translate }}</h3>
-        <p class="category-desc">{{ 'home.categories.art.desc' | translate }}</p>
-      </div>
-      <div class="category-card category-card-4" (click)="browseCategory('collectibles')" style="cursor:pointer">
-        <div class="category-icon-wrap">
-          <span class="category-icon" aria-hidden="true">📬</span>
-        </div>
-        <h3 class="category-title">{{ 'home.categories.collectibles.title' | translate }}</h3>
-        <p class="category-desc">{{ 'home.categories.collectibles.desc' | translate }}</p>
-      </div>
-      <div class="category-card category-card-4" (click)="browseCategory('jewelry')" style="cursor:pointer">
-        <div class="category-icon-wrap">
-          <span class="category-icon" aria-hidden="true">💎</span>
-        </div>
-        <h3 class="category-title">{{ 'home.categories.jewelry.title' | translate }}</h3>
-        <p class="category-desc">{{ 'home.categories.jewelry.desc' | translate }}</p>
-      </div>
-    </div>
+  <div class="scroll-hint">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+      <path d="M12 5v14M5 12l7 7 7-7"/>
+    </svg>
   </div>
 </section>
 
-<!-- Auction Listings Core -->
-@if (enableAuctions) {
-<section class="auction-listings">
-  <div class="container">
-    <div class="listings-header">
-      <h2 class="section-title">{{ 'home.liveAuctions.title' | translate }}</h2>
-      <div class="listings-controls">
-        <div class="sort-options">
-          <select class="sort-select" [(ngModel)]="sortBy" (change)="onSortChange()">
-            <option value="deadline">{{ 'home.liveAuctions.sortEndingSoonest' | translate }}</option>
-            <option value="newest">{{ 'home.liveAuctions.sortNewest' | translate }}</option>
-            <option value="highest">{{ 'home.liveAuctions.sortHighest' | translate }}</option>
-            <option value="lowest">{{ 'home.liveAuctions.sortLowest' | translate }}</option>
-            <option value="bids">{{ 'home.liveAuctions.sortMostBids' | translate }}</option>
-          </select>
-        </div>
-        <div class="filter-options">
-          <button class="btn btn-secondary btn-small">{{ 'home.liveAuctions.filters' | translate }}</button>
-        </div>
+<!-- NUMBERS -->
+<div class="numbers">
+  <div class="wrap">
+    <div class="numbers-inner">
+      <div class="num">
+        <span class="num-val">4.200+</span>
+        <span class="num-label">Leilões realizados</span>
+      </div>
+      <div class="num">
+        <span class="num-val">€ 2.8M</span>
+        <span class="num-label">Transacionado</span>
+      </div>
+      <div class="num">
+        <span class="num-val">98%</span>
+        <span class="num-label">Conclusão</span>
+      </div>
+      <div class="num">
+        <span class="num-val">0%</span>
+        <span class="num-label">Comissão para compradores</span>
       </div>
     </div>
+  </div>
+</div>
 
-    <!-- Loading State -->
-    @if (loading) {
-<div class="listings-loading">
-      <p>{{ 'home.liveAuctions.loading' | translate }}</p>
-    </div>
-}
-
-    <!-- Error State -->
-    @if (error && !loading) {
-<div class="listings-error">
-      <div class="error-content">
-        <h3>⚠️ {{ 'home.liveAuctions.error' | translate }}</h3>
-        <p>{{ error }}</p>
-        <button class="btn btn-primary" (click)="loadListings()">{{ 'home.liveAuctions.tryAgain' | translate }}</button>
+<!-- LISTINGS -->
+<section id="leiloes" class="listings-section">
+  <div class="wrap">
+    <div class="sh">
+      <div class="sh-left">
+        <div class="sec-eye"><span class="eye-dot"></span>Ao vivo agora</div>
+        <h2 class="sec-title"><strong>Leilões</strong> activos</h2>
       </div>
+      <a routerLink="/listing/list" class="see-all">
+        Ver todos
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M1 6h10M7 2l4 4-4 4"/>
+        </svg>
+      </a>
     </div>
-}
 
-    <!-- Listings Grid -->
-    @if (!loading && !error && listings.length > 0) {
-<div class="listings-grid">
-      @for (listing of listings; track listing) {
-<div class="listing-card" (click)="viewListing(listing.slug)">
-        <div class="listing-image-container">
-          <img [src]="listing.images[0] || 'https://via.placeholder.com/400x300?text=No+Image'" [alt]="listing.title" class="listing-image">
-          <div class="listing-badges">
-            @if (listing.isFeatured) {
-<span class="badge badge-featured">⭐ {{ 'home.liveAuctions.featured' | translate }}</span>
-}
-            @if (listing.isVerified) {
-<span class="badge badge-verified">✓ {{ 'home.liveAuctions.verified' | translate }}</span>
-}
-            @if (listing.endingSoon) {
-<span class="badge badge-ending-soon">⏰ {{ 'home.liveAuctions.endingSoon' | translate }}</span>
-}
-          </div>
-          <div class="listing-overlay">
-            <button class="btn btn-primary btn-small" (click)="viewListing(listing.slug); $event.stopPropagation()">{{ 'home.liveAuctions.viewDetails' | translate }}</button>
-            <button class="btn-icon" [title]="'home.liveAuctions.addToWatchlist' | translate">👁️</button>
-          </div>
-        </div>
-        <div class="listing-content">
-          <div class="listing-header">
-            <h3 class="listing-title">{{ listing.title }}</h3>
-            <span class="listing-category">{{ listing.category }}</span>
-          </div>
-          <p class="listing-description">{{ listing.description.substring(0, 100) }}...</p>
-          <div class="listing-meta">
-            <div class="listing-price-info">
-              <span class="listing-current-price">{{ formatPrice(listing.currentPrice) }}</span>
-              @if (listing.currentPrice > listing.startingPrice) {
-<span class="listing-starting-price">
-                {{ 'home.liveAuctions.startedAt' | translate }} {{ formatPrice(listing.startingPrice) }}
+    @if (activeListings.length > 0) {
+      <div class="grid">
+        @for (listing of activeListings; track listing._id) {
+          <a [routerLink]="['/listing', listing.slug]" class="lc" style="display:block;text-decoration:none">
+            <div class="lc-thumb-wrap">
+              @if (listingImage(listing)) {
+                <img [src]="listingImage(listing)" [alt]="listing.title" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0" />
+              } @else {
+                <span class="lc-thumb">🏷</span>
+              }
+              <span class="lc-pill" [class.pill-live]="isLiveBadge(listing)" [class.pill-offer]="!isLiveBadge(listing)">
+                {{ listingBadge(listing) }}
               </span>
-}
             </div>
-            <div class="listing-bid-info">
-              <span class="bid-count">{{ listing.bidCount }} {{ listing.bidCount === 1 ? ('home.liveAuctions.bid' | translate) : ('home.liveAuctions.bids' | translate) }}</span>
-              <span class="time-remaining" [ngClass]="timerClass(listing)">⏱ {{ formatTimeRemaining(listing) }}</span>
+            <div class="lc-body">
+              <div class="lc-cat">{{ listing.category }}{{ listing.subCategory ? ' · ' + listing.subCategory : '' }}</div>
+              <div class="lc-title">{{ listing.title }}</div>
+              <div class="lc-foot">
+                <div>
+                  <div class="lc-pl">{{ listing.auctionFormat === 'best-offer' ? 'Oferta mais alta' : 'Lance actual' }}</div>
+                  <div class="lc-price" [class.g]="listing.auctionFormat !== 'best-offer'">{{ listingPrice(listing) }}</div>
+                </div>
+                <div>
+                  <div class="lc-ml">{{ listing.auctionFormat === 'best-offer' ? 'Ofertas' : 'Termina em' }}</div>
+                  <div class="lc-mv">{{ timeRemaining(listing) }}</div>
+                </div>
+              </div>
             </div>
-          </div>
-          <div class="listing-footer">
-            <button class="btn btn-primary btn-full" (click)="viewListing(listing.slug); $event.stopPropagation()">{{ 'home.liveAuctions.placeBid' | translate }}</button>
-          </div>
-        </div>
+          </a>
+        }
       </div>
-}
-    </div>
-}
-
-    <!-- Empty State -->
-    @if (!loading && !error && listings.length === 0) {
-<div class="listings-placeholder">
-      <div class="placeholder-content">
-        <h3>{{ 'home.liveAuctions.noAuctions' | translate }}</h3>
-        <p>{{ 'home.liveAuctions.checkBack' | translate }}</p>
-        <button class="btn btn-primary" (click)="navigateToAuth()">{{ 'home.liveAuctions.getNotified' | translate }}</button>
+    } @else {
+      <div style="text-align:center;padding:64px 0;color:var(--sub);font-size:14px">
+        Sem leilões activos de momento.
+        <br><a routerLink="/listing/list" style="color:var(--gold);margin-top:8px;display:inline-block">Ver todos os leilões →</a>
       </div>
-    </div>
-}
+    }
   </div>
 </section>
-}
 
-<app-footer></app-footer>
+<!-- PRIVATE ROOMS -->
+<section id="salas" class="feature">
+  <div class="wrap">
+    <div class="feature-eye">Salas Privadas</div>
+    <h2 class="feature-title">Exclusividade<br><strong>por convite.</strong></h2>
+    <p class="feature-sub">Após o leilão público, os melhores licitantes são convidados para uma sala privada. Só os escolhidos entram.</p>
+
+    <div class="rv-wrap">
+      <div class="rv">
+        <div class="rv-ring"></div>
+        <div class="rv-c">
+          <span class="rv-cl">Lance actual</span>
+          <span class="rv-cb">{{ rvBid }}</span>
+          <span class="rv-ct">{{ rvTimer }}</span>
+        </div>
+        <div class="rv-b" [class.on]="rvActiveIdx === 0">MS</div>
+        <div class="rv-b" [class.on]="rvActiveIdx === 1">JF</div>
+        <div class="rv-b" [class.on]="rvActiveIdx === 2">RC</div>
+        <div class="rv-b" [class.on]="rvActiveIdx === 3">AP</div>
+        <div class="rv-b" [class.on]="rvActiveIdx === 4">LT</div>
+      </div>
+    </div>
+
+    <div class="feat-bullets">
+      <div class="fb"><span class="fb-val">2–5</span><span class="fb-label">Licitantes convidados</span></div>
+      <div class="fb"><span class="fb-val">60s</span><span class="fb-label">Por lance</span></div>
+      <div class="fb"><span class="fb-val">Auto</span><span class="fb-label">Vencedor automático</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section id="como" class="pillars">
+  <div class="wrap">
+    <div style="text-align:center;margin-bottom:56px">
+      <div class="sec-eye" style="justify-content:center">Como funciona</div>
+      <h2 class="sec-title" style="text-align:center"><strong>Simples</strong> de ponta a ponta.</h2>
+    </div>
+    <div class="pillars-grid">
+      <div class="pillar">
+        <span class="pillar-num">01</span>
+        <div class="pillar-title">Publique</div>
+        <p class="pillar-desc">Leilão ou melhor oferta. Sem taxas de publicação. Pronto em minutos.</p>
+      </div>
+      <div class="pillar">
+        <span class="pillar-num">02</span>
+        <div class="pillar-title">Concorra</div>
+        <p class="pillar-desc">Licitações em tempo real. Ofertas privadas. O sistema decide automaticamente.</p>
+      </div>
+      <div class="pillar">
+        <span class="pillar-num">03</span>
+        <div class="pillar-title">Receba com segurança</div>
+        <p class="pillar-desc">Pagamento em custódia. Fundos só libertados após confirmação de recepção.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta">
+  <div class="wrap">
+    <h2 class="cta-title">O próximo leilão<br><strong>é o seu.</strong></h2>
+    <p class="cta-sub">Registe-se gratuitamente. Comece a licitar hoje.</p>
+    <div class="hero-cta">
+      <a routerLink="/auth/signup" class="btn-hp" style="font-size:15px;padding:14px 32px">Criar conta gratuita</a>
+      <a routerLink="/listing/list" class="btn-hg" style="font-size:15px;padding:14px 24px">Explorar leilões</a>
+    </div>
+    <p class="cta-note">Já tem conta? <a routerLink="/auth/login">Entrar</a></p>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="wrap" style="width:100%">
+    <div class="ft-brand">BidRoom<em>.pt</em></div>
+    <p class="ft-tagline">O marketplace de leilões premium de Portugal.</p>
+    <div class="ft-divider"></div>
+    <div class="ft-cols">
+      <div>
+        <div class="ft-col-title">Plataforma</div>
+        <a routerLink="/landing/how-it-works" class="ft-col-link">Como funciona</a>
+        <a href="#salas" class="ft-col-link">Salas Privadas</a>
+        <a routerLink="/listing/list" class="ft-col-link">Leilões activos</a>
+        <a routerLink="/listing/list" class="ft-col-link">Categorias</a>
+      </div>
+      <div>
+        <div class="ft-col-title">Compradores</div>
+        <a routerLink="/auth/signup" class="ft-col-link">Criar conta</a>
+        <a routerLink="/landing/how-it-works" class="ft-col-link">Guia do comprador</a>
+        <a routerLink="/landing/how-it-works" class="ft-col-link">Pagamento seguro</a>
+        <a routerLink="/landing/contact" class="ft-col-link">Disputas</a>
+      </div>
+      <div>
+        <div class="ft-col-title">Vendedores</div>
+        <a routerLink="/listing/add" class="ft-col-link">Publicar anúncio</a>
+        <a routerLink="/landing/how-it-works" class="ft-col-link">Guia do vendedor</a>
+        <a routerLink="/landing/how-it-works" class="ft-col-link">Comissões</a>
+        <a routerLink="/dashboard/home" class="ft-col-link">Payouts</a>
+      </div>
+      <div>
+        <div class="ft-col-title">Legal</div>
+        <a routerLink="/landing/terms-conditions" class="ft-col-link">Termos de utilização</a>
+        <a routerLink="/landing/privacy-policy" class="ft-col-link">Política de privacidade</a>
+        <a routerLink="/landing/cookies" class="ft-col-link">Cookies</a>
+        <a routerLink="/landing/contact" class="ft-col-link">Contacto</a>
+      </div>
+    </div>
+    <div class="ft-divider"></div>
+    <div class="ft-bottom">
+      <span class="ft-copy">© 2026 BidRoom.pt · Todos os direitos reservados</span>
+      <span class="ft-copy">Feito em Portugal 🇵🇹</span>
+    </div>
+  </div>
+</footer>
+
+</div>

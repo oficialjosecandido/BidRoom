@@ -4,6 +4,51 @@
     <p class="page-subtitle">{{ 'dashboard.settings.subtitle' | translate }}</p>
   </div>
 
+  <!-- Reputation section -->
+  <div class="settings-section">
+    <h2 class="section-title">{{ 'dashboard.settings.reputation' | translate }}</h2>
+    <div class="rep-grid">
+      <div class="settings-card rep-card">
+        <div class="settings-card-title">{{ 'dashboard.settings.buyerScore' | translate }}</div>
+        @if (buyerScore !== null) {
+          <div class="rep-score">
+            <div class="rep-number" [style.color]="'var(--gold)'">{{ (buyerScore * 10) | number:'1.0-0' }}</div>
+            <div class="rep-bar-wrap">
+              <div class="rep-bar-track">
+                <div class="rep-bar-fill" [style.width.%]="buyerScore * 10"></div>
+              </div>
+              <div class="rep-labels">
+                <span class="rep-label-text">{{ 'dashboard.settings.overallScore' | translate }}</span>
+                <span class="rep-label-text">{{ buyerScore | number:'1.1-1' }} / {{ reviewScoreMax }} · {{ buyerReviewCount }} {{ 'dashboard.common.reviews' | translate }}</span>
+              </div>
+            </div>
+          </div>
+        } @else {
+          <p class="rep-empty">{{ 'dashboard.settings.noReviews' | translate }}</p>
+        }
+      </div>
+      <div class="settings-card rep-card">
+        <div class="settings-card-title">{{ 'dashboard.settings.sellerScore' | translate }}</div>
+        @if (sellerScore !== null) {
+          <div class="rep-score">
+            <div class="rep-number" [style.color]="'var(--green)'">{{ (sellerScore * 10) | number:'1.0-0' }}</div>
+            <div class="rep-bar-wrap">
+              <div class="rep-bar-track">
+                <div class="rep-bar-fill" [style.width.%]="sellerScore * 10" style="background:var(--green)"></div>
+              </div>
+              <div class="rep-labels">
+                <span class="rep-label-text">{{ 'dashboard.settings.overallScore' | translate }}</span>
+                <span class="rep-label-text">{{ sellerScore | number:'1.1-1' }} / {{ reviewScoreMax }} · {{ sellerReviewCount }} {{ 'dashboard.common.reviews' | translate }}</span>
+              </div>
+            </div>
+          </div>
+        } @else {
+          <p class="rep-empty">{{ 'dashboard.settings.noReviews' | translate }}</p>
+        }
+      </div>
+    </div>
+  </div>
+
   <div class="settings-grid">
     <!-- Profile Info -->
     <div class="settings-card">
@@ -32,16 +77,129 @@
           <div class="info-row">
             <span class="info-label">{{ 'dashboard.settings.buyerScore' | translate }}</span>
             <span class="info-value score-value">
-              {{ buyerScore !== null ? (buyerScore | number:'1.1-1') + ' / 5' : '—' }}
+              {{ buyerScore !== null ? (buyerScore | number:'1.1-1') + ' / ' + reviewScoreMax : '—' }}
               @if (buyerReviewCount > 0) { <span class="review-count">({{ buyerReviewCount }} {{ buyerReviewCount !== 1 ? ('dashboard.common.reviews' | translate) : ('dashboard.common.review' | translate) }})</span> }
             </span>
           </div>
           <div class="info-row">
             <span class="info-label">{{ 'dashboard.settings.sellerScore' | translate }}</span>
             <span class="info-value score-value">
-              {{ sellerScore !== null ? (sellerScore | number:'1.1-1') + ' / 5' : '—' }}
+              {{ sellerScore !== null ? (sellerScore | number:'1.1-1') + ' / ' + reviewScoreMax : '—' }}
               @if (sellerReviewCount > 0) { <span class="review-count">({{ sellerReviewCount }} {{ sellerReviewCount !== 1 ? ('dashboard.common.reviews' | translate) : ('dashboard.common.review' | translate) }})</span> }
             </span>
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- DSA seller classification -->
+    <div class="settings-card settings-card-full">
+      <div class="card-header">
+        <span class="card-icon">⚖️</span>
+        <h2 class="card-title">{{ 'dashboard.settings.dsa.title' | translate }}</h2>
+      </div>
+      <div class="card-body">
+        <p class="card-desc">{{ 'dashboard.settings.dsa.subtitle' | translate }}</p>
+        @if (!sellerComplianceAvailable) {
+          <p class="text-muted">{{ 'dashboard.settings.dsa.unavailable' | translate }}</p>
+        } @else {
+          <div class="dsa-classification">
+            <h3 class="form-section-title">{{ 'dashboard.settings.dsa.classificationLabel' | translate }}</h3>
+            <label class="dsa-radio">
+              <input type="radio" name="sellerClass" value="private" [(ngModel)]="sellerClassification" />
+              {{ 'dashboard.settings.dsa.private' | translate }}
+            </label>
+            <label class="dsa-radio">
+              <input type="radio" name="sellerClass" value="professional" [(ngModel)]="sellerClassification" />
+              {{ 'dashboard.settings.dsa.professional' | translate }}
+            </label>
+          </div>
+
+          @if (sellerClassification === 'professional') {
+            <div class="dsa-status-row">
+              <span class="info-label">{{ 'dashboard.settings.dsa.verificationLabel' | translate }}</span>
+              <span class="status-badge dsa-ver-badge" [ngClass]="'dsa-ver-' + professionalVerificationStatus">
+                {{ ('dashboard.settings.dsa.status.' + professionalVerificationStatus) | translate }}
+              </span>
+            </div>
+            @if (professionalRejectionNote) {
+              <p class="dsa-rejection"><strong>{{ 'dashboard.settings.dsa.rejectionNote' | translate }}:</strong> {{ professionalRejectionNote }}</p>
+            }
+            @if (professionalVerificationStatus === 'pending') {
+              <p class="dsa-hint">{{ 'dashboard.settings.dsa.pendingHint' | translate }}</p>
+            }
+            @if (professionalVerificationStatus === 'verified') {
+              <p class="dsa-hint">{{ 'dashboard.settings.dsa.verifiedHint' | translate }}</p>
+            }
+            @if (professionalVerificationStatus === 'rejected') {
+              <p class="dsa-hint">{{ 'dashboard.settings.dsa.rejectedHint' | translate }}</p>
+            }
+            @if (professionalSubmittedAt) {
+              <p class="dsa-meta">{{ 'dashboard.settings.dsa.submittedAt' | translate }}: {{ professionalSubmittedAt | date:'medium' }}</p>
+            }
+            @if (professionalVerifiedAt) {
+              <p class="dsa-meta">{{ 'dashboard.settings.dsa.verifiedAt' | translate }}: {{ professionalVerifiedAt | date:'medium' }}</p>
+            }
+
+            <h3 class="form-section-title dsa-trader-heading">{{ 'dashboard.settings.dsa.traderSection' | translate }}</h3>
+            <div class="dsa-form-grid">
+              <div class="form-field">
+                <label>{{ 'dashboard.settings.dsa.legalName' | translate }}</label>
+                <input type="text" [(ngModel)]="professionalLegalName" name="profLegal" />
+              </div>
+              <div class="form-field">
+                <label>{{ 'dashboard.settings.dsa.tradeName' | translate }}</label>
+                <input type="text" [(ngModel)]="professionalTradeName" name="profTrade" />
+              </div>
+              <div class="form-field dsa-span-2">
+                <label>{{ 'dashboard.settings.dsa.addressLine1' | translate }}</label>
+                <input type="text" [(ngModel)]="professionalAddressLine1" name="profAddr1" />
+              </div>
+              <div class="form-field dsa-span-2">
+                <label>{{ 'dashboard.settings.dsa.addressLine2' | translate }}</label>
+                <input type="text" [(ngModel)]="professionalAddressLine2" name="profAddr2" />
+              </div>
+              <div class="form-field">
+                <label>{{ 'dashboard.settings.dsa.city' | translate }}</label>
+                <input type="text" [(ngModel)]="professionalCity" name="profCity" />
+              </div>
+              <div class="form-field">
+                <label>{{ 'dashboard.settings.dsa.region' | translate }}</label>
+                <input type="text" [(ngModel)]="professionalRegion" name="profRegion" />
+              </div>
+              <div class="form-field">
+                <label>{{ 'dashboard.settings.dsa.postalCode' | translate }}</label>
+                <input type="text" [(ngModel)]="professionalPostalCode" name="profPostal" />
+              </div>
+              <div class="form-field">
+                <label>{{ 'dashboard.settings.dsa.country' | translate }}</label>
+                <input type="text" [(ngModel)]="professionalCountry" name="profCountry" maxlength="2" class="dsa-country-input" />
+              </div>
+              <div class="form-field">
+                <label>{{ 'dashboard.settings.dsa.contactPhone' | translate }}</label>
+                <input type="text" [(ngModel)]="professionalContactPhone" name="profPhone" />
+              </div>
+              <div class="form-field">
+                <label>{{ 'dashboard.settings.dsa.contactEmail' | translate }}</label>
+                <input type="email" [(ngModel)]="professionalContactEmail" name="profEmail" />
+              </div>
+              <div class="form-field dsa-span-2">
+                <label>{{ 'dashboard.settings.dsa.vatId' | translate }}</label>
+                <input type="text" [(ngModel)]="professionalVatId" name="profVat" />
+              </div>
+            </div>
+          }
+
+          @if (dsaError) {
+            <div class="form-error-banner">{{ dsaError }}</div>
+          }
+          <div class="form-actions dsa-actions">
+            <button type="button" class="action-btn" (click)="saveSellerCompliance()" [disabled]="dsaSaving">
+              {{ dsaSaving ? ('dashboard.settings.dsa.saving' | translate) : ('dashboard.settings.dsa.save' | translate) }}
+            </button>
+            @if (dsaSaved) {
+              <span class="save-success">✓ {{ 'dashboard.settings.dsa.saved' | translate }}</span>
+            }
           </div>
         }
       </div>
@@ -73,47 +231,218 @@
       </div>
     </div>
 
-    <!-- Stripe Connect -->
+    <!-- Appearance (theme) -->
+    <div class="settings-card">
+      <div class="card-header">
+        <span class="card-icon">🌓</span>
+        <h2 class="card-title">{{ 'dashboard.settings.appearance.title' | translate }}</h2>
+      </div>
+      <div class="card-body">
+        <p class="card-desc">{{ 'dashboard.settings.appearance.subtitle' | translate }}</p>
+        <div class="appearance-options">
+          @for (opt of themeChoices; track opt.id) {
+            <label class="appearance-option" [class.selected]="theme.preference() === opt.id">
+              <input type="radio" name="appearanceTheme" [value]="opt.id" [checked]="theme.preference() === opt.id" (change)="theme.setPreference(opt.id)" />
+              <span>{{ opt.labelKey | translate }}</span>
+            </label>
+          }
+        </div>
+      </div>
+    </div>
+
+    <!-- Seller Payout Account -->
     <div class="settings-card settings-card-full">
       <div class="card-header">
         <span class="card-icon">💳</span>
-        <h2 class="card-title">{{ 'dashboard.settings.sellerPayments' | translate }}</h2>
+        <h2 class="card-title">Seller Payout Account</h2>
       </div>
       <div class="card-body">
         @if (connectStatusMessage) {
           <div class="connect-message">{{ connectStatusMessage }}</div>
         }
         @if (connectLoading) {
-          <p class="text-muted">{{ 'dashboard.settings.checkingStripe' | translate }}</p>
-        } @else {
+          <p class="text-muted">Checking payout account status...</p>
+        } @else if (!showOnboardingForm) {
           <div class="connect-status-row">
-            <span class="info-label">{{ 'dashboard.settings.stripeStatus' | translate }}</span>
+            <span class="info-label">Payout status</span>
             <span class="status-badge" [ngClass]="connectStatusClass">{{ connectStatusLabel }}</span>
           </div>
           @if (connectStatus?.onboarded) {
-            <p class="card-desc">{{ 'dashboard.settings.stripeActive' | translate }}</p>
+            <p class="card-desc">Your payout account is active. Buyers can pay you directly — funds will be sent to your registered bank account.</p>
             @if (connectStatus?.chargesEnabled) {
-              <p class="text-success">{{ 'dashboard.settings.chargesEnabled' | translate }} · {{ 'dashboard.settings.payouts' | translate }} {{ connectStatus?.payoutsEnabled ? ('dashboard.settings.enabled' | translate) : ('dashboard.settings.pending' | translate) }}</p>
+              <p class="text-success">Charges enabled · Payouts {{ connectStatus?.payoutsEnabled ? 'enabled' : 'pending' }}</p>
             }
-            <button class="action-btn action-btn-secondary" (click)="startOnboarding()" [disabled]="connectOnboarding">
-              {{ connectOnboarding ? ('dashboard.settings.redirecting' | translate) : ('dashboard.settings.updateStripe' | translate) }}
-            </button>
+            <button class="action-btn action-btn-secondary" (click)="openOnboardingForm()">Update bank account</button>
           } @else if (connectStatus?.connected) {
-            <p class="card-desc">{{ 'dashboard.settings.onboardingIncomplete' | translate }}</p>
-            <button class="action-btn" (click)="startOnboarding()" [disabled]="connectOnboarding">
-              {{ connectOnboarding ? ('dashboard.settings.redirecting' | translate) : ('dashboard.settings.completeStripeSetup' | translate) }}
-            </button>
+            @if (connectStatus?.requirementErrors?.length) {
+              <div class="connect-errors">
+                <p class="connect-errors-title">Issue with your payout account:</p>
+                <ul>
+                  @for (err of connectStatus!.requirementErrors!; track err) {
+                    <li>{{ err }}</li>
+                  }
+                </ul>
+              </div>
+            } @else {
+              <p class="card-desc">Your details have been submitted and are being verified by Stripe. This usually takes a few minutes.</p>
+            }
+            <div class="button-row">
+              <button class="action-btn action-btn-secondary" (click)="openOnboardingForm()">Update details</button>
+              @if (isStripeTestMode) {
+                <button class="action-btn action-btn-test" (click)="testActivate()" [disabled]="connectTestActivating">
+                  {{ connectTestActivating ? 'Activating…' : '⚡ Simulate verification' }}
+                </button>
+              }
+            </div>
           } @else {
-            <p class="card-desc">{{ 'dashboard.settings.connectStripeDesc' | translate }}</p>
+            <p class="card-desc">To receive payments from buyers, set up your payout account. No Stripe account needed — just fill in your details below.</p>
             <ul class="feature-list">
-              <li>{{ 'dashboard.settings.noStripeRequired' | translate }}</li>
-              <li>{{ 'dashboard.settings.identityVerification' | translate }}</li>
-              <li>{{ 'dashboard.settings.payoutSchedule' | translate }}</li>
+              <li>Enter your identity and bank details once</li>
+              <li>Stripe processes payouts securely in the background</li>
+              <li>Funds transferred directly to your bank account</li>
             </ul>
-            <button class="action-btn" (click)="startOnboarding()" [disabled]="connectOnboarding">
-              {{ connectOnboarding ? ('dashboard.settings.redirectingToStripe' | translate) : ('dashboard.settings.connectStripe' | translate) }}
-            </button>
+            <button class="action-btn" (click)="openOnboardingForm()">Set up payout account</button>
           }
+        } @else {
+          <!-- Onboarding Form -->
+          <form class="onboarding-form" (ngSubmit)="submitOnboarding()">
+            @if (connectError) {
+              <div class="form-error-banner">{{ connectError }}</div>
+            }
+
+            <div class="form-section">
+              <h3 class="form-section-title">Date of birth</h3>
+              <div class="dob-row">
+                <div class="form-field">
+                  <label>Day</label>
+                  <input type="number" [(ngModel)]="dobDay" name="dobDay" min="1" max="31" placeholder="DD" required />
+                </div>
+                <div class="form-field">
+                  <label>Month</label>
+                  <input type="number" [(ngModel)]="dobMonth" name="dobMonth" min="1" max="12" placeholder="MM" required />
+                </div>
+                <div class="form-field form-field-year">
+                  <label>Year</label>
+                  <input type="number" [(ngModel)]="dobYear" name="dobYear" min="1900" max="2010" placeholder="YYYY" required />
+                </div>
+              </div>
+            </div>
+
+            <div class="form-section">
+              <h3 class="form-section-title">Address</h3>
+              <div class="form-field">
+                <label>Street address</label>
+                <input type="text" [(ngModel)]="addressLine1" name="addressLine1" placeholder="123 Main St" required />
+              </div>
+              <div class="form-row-2">
+                <div class="form-field">
+                  <label>City</label>
+                  <input type="text" [(ngModel)]="addressCity" name="addressCity" placeholder="Lisbon" required />
+                </div>
+                <div class="form-field">
+                  <label>Postal code</label>
+                  <input type="text" [(ngModel)]="addressPostal" name="addressPostal" placeholder="1000-001" required />
+                </div>
+              </div>
+              <div class="form-field">
+                <label>Country</label>
+                <select [(ngModel)]="addressCountry" name="addressCountry" required>
+                  @for (c of countries; track c.code) {
+                    <option [value]="c.code">{{ c.label }}</option>
+                  }
+                </select>
+              </div>
+            </div>
+
+            <div class="form-section">
+              <h3 class="form-section-title">Bank account (IBAN)</h3>
+              <div class="form-field">
+                <label>IBAN</label>
+                <input type="text" [(ngModel)]="iban" name="iban" placeholder="PT50 0035 0552 0001 3600 5312 9" required
+                       (input)="iban = $any($event.target).value.toUpperCase()" />
+                <span class="form-hint">Your International Bank Account Number. Spaces are ignored.</span>
+              </div>
+            </div>
+
+            <div class="form-section">
+              <label class="tos-row">
+                <input type="checkbox" [(ngModel)]="tosAccepted" name="tosAccepted" />
+                <span>I authorise BidRoom to submit my information to Stripe for identity verification and payout processing, and I accept the <a href="https://stripe.com/legal/connect-account" target="_blank" rel="noopener">Stripe Connected Account Agreement</a>.</span>
+              </label>
+            </div>
+
+            <div class="form-actions">
+              <button type="submit" class="action-btn" [disabled]="connectSubmitting">
+                {{ connectSubmitting ? 'Submitting…' : 'Save payout account' }}
+              </button>
+              <button type="button" class="action-btn action-btn-ghost" (click)="cancelOnboardingForm()" [disabled]="connectSubmitting">Cancel</button>
+            </div>
+          </form>
+        }
+      </div>
+    </div>
+    <!-- Notification Preferences -->
+    <div class="settings-card">
+      <div class="card-header">
+        <span class="card-icon">🔔</span>
+        <h2 class="card-title">{{ 'dashboard.settings.notifications.title' | translate }}</h2>
+      </div>
+      <div class="card-body">
+        @if (notifPrefsLoading) {
+          <p class="loading-text">{{ 'dashboard.settings.notifications.loading' | translate }}</p>
+        } @else if (notifPrefs) {
+          <!-- Global email unsubscribe -->
+          <div class="notif-global-row">
+            <label class="toggle-row">
+              <span class="toggle-label">{{ 'dashboard.settings.notifications.globalEmailUnsubscribed' | translate }}</span>
+              <input type="checkbox" [checked]="notifPrefs.globalEmailUnsubscribed"
+                     (change)="notifPrefs!.globalEmailUnsubscribed = !notifPrefs!.globalEmailUnsubscribed" />
+            </label>
+          </div>
+
+          <!-- Per-event preferences table -->
+          <div class="notif-table-wrapper">
+            <table class="notif-table">
+              <thead>
+                <tr>
+                  <th>{{ 'dashboard.settings.notifications.event' | translate }}</th>
+                  <th class="notif-ch">{{ 'dashboard.settings.notifications.channelEmail' | translate }}</th>
+                  <th class="notif-ch">{{ 'dashboard.settings.notifications.channelInApp' | translate }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (key of notifEventKeys; track key) {
+                  <tr>
+                    <td>{{ ('dashboard.settings.notifications.events.' + key) | translate }}</td>
+                    <td class="notif-ch">
+                      <input type="checkbox"
+                             [checked]="getEventPref(key).email"
+                             [disabled]="notifPrefs!.globalEmailUnsubscribed"
+                             (change)="toggleEventChannel(key, 'email')" />
+                    </td>
+                    <td class="notif-ch">
+                      <input type="checkbox"
+                             [checked]="getEventPref(key).inApp"
+                             (change)="toggleEventChannel(key, 'inApp')" />
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+
+          @if (notifPrefsError) {
+            <p class="error-text">{{ notifPrefsError }}</p>
+          }
+
+          <div class="form-actions">
+            <button class="action-btn" (click)="saveNotifPrefs()" [disabled]="notifPrefsSaving">
+              {{ notifPrefsSaving ? ('dashboard.settings.notifications.saving' | translate) : ('dashboard.settings.notifications.save' | translate) }}
+            </button>
+            @if (notifPrefsSaved) {
+              <span class="save-success">{{ 'dashboard.settings.notifications.saved' | translate }}</span>
+            }
+          </div>
         }
       </div>
     </div>

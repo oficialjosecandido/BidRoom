@@ -5,7 +5,7 @@ function ensureDbName(uri) {
   const lastSegment = uri.split('/').pop() || '';
   const hasDbName = lastSegment.trim() && !lastSegment.includes('?');
   if (!hasDbName) {
-    const dbName = process.env.NODE_ENV === 'production' ? 'bidroom_prod' : 'bidroom_dev';
+    const dbName = process.env.NODE_ENV === 'production' ? 'bidroom_prod' : 'bidroom-dev';
     return uri.replace(/\/?$/, '/') + dbName;
   }
   return uri;

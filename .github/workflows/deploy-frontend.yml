@@ -41,7 +41,7 @@ jobs:
           npm run build
         env:
           # Set API URL for production build
-          API_URL: https://bidroom-backend-dev.azurewebsites.net/api
+          API_URL: https://bidroom-backend-prod-e9eghtc0aha4e3dw.uksouth-01.azurewebsites.net/api
 
       - name: Verify build output
         run: |

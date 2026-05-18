@@ -1,200 +1,113 @@
-<app-header activePage="terms"></app-header>
+<app-legal-layout activeTab="terms">
+  <div class="page-wrap">
+    <div class="legal-header">
+      <div class="legal-eyebrow">{{ 'legal.terms.eyebrow' | translate }}</div>
+      <h1 class="legal-title">{{ 'legal.terms.title' | translate }}</h1>
+      <div class="legal-updated">{{ 'legal.terms.updated' | translate }}</div>
+    </div>
 
-<!-- Page Header -->
-<section class="page-header">
-  <div class="container">
-    <h1>{{ 'terms.hero.title' | translate }}</h1>
-    <p>{{ 'terms.hero.subtitle' | translate }}</p>
-    <p class="last-updated">{{ 'terms.hero.lastUpdated' | translate }}</p>
-  </div>
-</section>
-
-<!-- Terms Content -->
-<section class="terms-content">
-  <div class="container">
-    <div class="content-wrapper">
-
-      <!-- 1. Acceptance of Terms -->
-      <div class="terms-section">
-        <h2>{{ 'terms.s1.title' | translate }}</h2>
-        <p>{{ 'terms.s1.p1' | translate }}</p>
-        <p>{{ 'terms.s1.p2' | translate }}</p>
+    <div class="legal-body">
+      <div class="legal-highlight">
+        <p [innerHTML]="'legal.terms.intro' | translate"></p>
       </div>
 
-      <!-- 2. Service Description -->
-      <div class="terms-section">
-        <h2>{{ 'terms.s2.title' | translate }}</h2>
-        <p>{{ 'terms.s2.intro' | translate }}</p>
-        <ul>
-          <li>{{ 'terms.s2.li1' | translate }}</li>
-          <li>{{ 'terms.s2.li2' | translate }}</li>
-          <li>{{ 'terms.s2.li3' | translate }}</li>
-          <li>{{ 'terms.s2.li4' | translate }}</li>
-        </ul>
-        <p>{{ 'terms.s2.note' | translate }}</p>
-      </div>
+      <h2>{{ 'legal.terms.h1' | translate }}</h2>
+      <p [innerHTML]="'legal.terms.h1p1' | translate"></p>
 
-      <!-- 3. User Accounts -->
-      <div class="terms-section">
-        <h2>{{ 'terms.s3.title' | translate }}</h2>
+      <h2>{{ 'legal.terms.h2' | translate }}</h2>
+      <p>{{ 'legal.terms.h2p1' | translate }}</p>
 
-        <h3>{{ 'terms.s3.s1.title' | translate }}</h3>
-        <p>{{ 'terms.s3.s1.intro' | translate }}</p>
-        <ul>
-          <li>{{ 'terms.s3.s1.li1' | translate }}</li>
-          <li>{{ 'terms.s3.s1.li2' | translate }}</li>
-          <li>{{ 'terms.s3.s1.li3' | translate }}</li>
-          <li>{{ 'terms.s3.s1.li4' | translate }}</li>
-        </ul>
+      <h2>{{ 'legal.terms.h3' | translate }}</h2>
+      <p>{{ 'legal.terms.h3p1' | translate }}</p>
+      <ul>
+        <li [innerHTML]="'legal.terms.h3li1' | translate"></li>
+        <li [innerHTML]="'legal.terms.h3li2' | translate"></li>
+      </ul>
+      <p [innerHTML]="'legal.terms.h3p2' | translate"></p>
 
-        <h3>{{ 'terms.s3.s2.title' | translate }}</h3>
-        <p>{{ 'terms.s3.s2.p' | translate }}</p>
+      <h2>{{ 'legal.terms.h4' | translate }}</h2>
+      <p>{{ 'legal.terms.h4p1' | translate }}</p>
+      <table class="legal-table">
+        <thead>
+          <tr>
+            <th>{{ 'legal.terms.th1' | translate }}</th>
+            <th>{{ 'legal.terms.th2' | translate }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>{{ 'legal.terms.fmt1' | translate }}</strong></td>
+            <td>3,5%</td>
+          </tr>
+          <tr>
+            <td><strong>{{ 'legal.terms.fmt2' | translate }}</strong></td>
+            <td>6%</td>
+          </tr>
+          <tr>
+            <td><strong>{{ 'legal.terms.fmt3' | translate }}</strong></td>
+            <td>3,5%</td>
+          </tr>
+        </tbody>
+      </table>
+      <p>{{ 'legal.terms.h4p2' | translate }}</p>
 
-        <h3>{{ 'terms.s3.s3.title' | translate }}</h3>
-        <p>{{ 'terms.s3.s3.p' | translate }}</p>
-      </div>
+      <h2>{{ 'legal.terms.h5' | translate }}</h2>
+      <ul>
+        <li>{{ 'legal.terms.h5li1' | translate }}</li>
+        <li>{{ 'legal.terms.h5li2' | translate }}</li>
+        <li [innerHTML]="'legal.terms.h5li3' | translate"></li>
+        <li>{{ 'legal.terms.h5li4' | translate }}</li>
+        <li>{{ 'legal.terms.h5li5' | translate }}</li>
+      </ul>
 
-      <!-- 4. Bidding and Auctions -->
-      <div class="terms-section">
-        <h2>{{ 'terms.s4.title' | translate }}</h2>
+      <h2>{{ 'legal.terms.h6' | translate }}</h2>
+      <ul>
+        <li>{{ 'legal.terms.h6li1' | translate }}</li>
+        <li [innerHTML]="'legal.terms.h6li2' | translate"></li>
+        <li>{{ 'legal.terms.h6li3' | translate }}</li>
+      </ul>
 
-        <h3>{{ 'terms.s4.s1.title' | translate }}</h3>
-        <p>{{ 'terms.s4.s1.intro' | translate }}</p>
-        <ul>
-          <li>{{ 'terms.s4.s1.li1' | translate }}</li>
-          <li>{{ 'terms.s4.s1.li2' | translate }}</li>
-          <li>{{ 'terms.s4.s1.li3' | translate }}</li>
-          <li>{{ 'terms.s4.s1.li4' | translate }}</li>
-        </ul>
+      <h2>{{ 'legal.terms.h7' | translate }}</h2>
+      <p [innerHTML]="'legal.terms.h7p1' | translate"></p>
 
-        <h3>{{ 'terms.s4.s2.title' | translate }}</h3>
-        <ul>
-          <li>{{ 'terms.s4.s2.li1' | translate }}</li>
-          <li>{{ 'terms.s4.s2.li2' | translate }}</li>
-          <li>{{ 'terms.s4.s2.li3' | translate }}</li>
-          <li>{{ 'terms.s4.s2.li4' | translate }}</li>
-        </ul>
+      <h2>{{ 'legal.terms.h8' | translate }}</h2>
+      <p [innerHTML]="'legal.terms.h8p1' | translate"></p>
 
-        <h3>{{ 'terms.s4.s3.title' | translate }}</h3>
-        <p>{{ 'terms.s4.s3.p' | translate }}</p>
-      </div>
+      <h2>{{ 'legal.terms.h9' | translate }}</h2>
+      <p>{{ 'legal.terms.h9p1' | translate }}</p>
+      <ul>
+        <li [innerHTML]="'legal.terms.h9li1' | translate"></li>
+        <li [innerHTML]="'legal.terms.h9li2' | translate"></li>
+        <li [innerHTML]="'legal.terms.h9li3' | translate"></li>
+      </ul>
+      <p [innerHTML]="'legal.terms.h9p2' | translate"></p>
 
-      <!-- 5. Seller Responsibilities -->
-      <div class="terms-section">
-        <h2>{{ 'terms.s5.title' | translate }}</h2>
-        <p>{{ 'terms.s5.intro' | translate }}</p>
-        <ul>
-          <li>{{ 'terms.s5.li1' | translate }}</li>
-          <li>{{ 'terms.s5.li2' | translate }}</li>
-          <li>{{ 'terms.s5.li3' | translate }}</li>
-          <li>{{ 'terms.s5.li4' | translate }}</li>
-          <li>{{ 'terms.s5.li5' | translate }}</li>
-          <li>{{ 'terms.s5.li6' | translate }}</li>
-        </ul>
-      </div>
+      <h2>{{ 'legal.terms.h10' | translate }}</h2>
+      <p [innerHTML]="'legal.terms.h10p1' | translate"></p>
 
-      <!-- 6. Prohibited Activities -->
-      <div class="terms-section">
-        <h2>{{ 'terms.s6.title' | translate }}</h2>
-        <p>{{ 'terms.s6.intro' | translate }}</p>
-        <ul>
-          <li>{{ 'terms.s6.li1' | translate }}</li>
-          <li>{{ 'terms.s6.li2' | translate }}</li>
-          <li>{{ 'terms.s6.li3' | translate }}</li>
-          <li>{{ 'terms.s6.li4' | translate }}</li>
-          <li>{{ 'terms.s6.li5' | translate }}</li>
-          <li>{{ 'terms.s6.li6' | translate }}</li>
-          <li>{{ 'terms.s6.li7' | translate }}</li>
-          <li>{{ 'terms.s6.li8' | translate }}</li>
-        </ul>
-      </div>
+      <h2>{{ 'legal.terms.h11' | translate }}</h2>
+      <p [innerHTML]="'legal.terms.h11p1' | translate"></p>
+      <ul>
+        <li>{{ 'legal.terms.h11li1' | translate }}</li>
+        <li>{{ 'legal.terms.h11li2' | translate }}</li>
+        <li>{{ 'legal.terms.h11li3' | translate }}</li>
+      </ul>
+      <p [innerHTML]="'legal.terms.h11p2' | translate"></p>
 
-      <!-- 7. Fees and Payments -->
-      <div class="terms-section">
-        <h2>{{ 'terms.s7.title' | translate }}</h2>
+      <h2>{{ 'legal.terms.h12' | translate }}</h2>
+      <p [innerHTML]="'legal.terms.h12p1' | translate"></p>
 
-        <h3>{{ 'terms.s7.s1.title' | translate }}</h3>
-        <p>{{ 'terms.s7.s1.intro' | translate }}</p>
-        <ul>
-          <li>{{ 'terms.s7.s1.li1' | translate }}</li>
-          <li>{{ 'terms.s7.s1.li2' | translate }}</li>
-          <li>{{ 'terms.s7.s1.li3' | translate }}</li>
-        </ul>
+      <h2>{{ 'legal.terms.h13' | translate }}</h2>
+      <p>{{ 'legal.terms.h13p1' | translate }}</p>
 
-        <h3>{{ 'terms.s7.s2.title' | translate }}</h3>
-        <p>{{ 'terms.s7.s2.p' | translate }}</p>
+      <h2>{{ 'legal.terms.h14' | translate }}</h2>
+      <p>{{ 'legal.terms.h14p1' | translate }}</p>
 
-        <h3>{{ 'terms.s7.s3.title' | translate }}</h3>
-        <p>{{ 'terms.s7.s3.p' | translate }}</p>
-      </div>
+      <h2>{{ 'legal.terms.h15' | translate }}</h2>
+      <p>{{ 'legal.terms.h15p1' | translate }}</p>
 
-      <!-- 8. Intellectual Property -->
-      <div class="terms-section">
-        <h2>{{ 'terms.s8.title' | translate }}</h2>
-        <p>{{ 'terms.s8.p1' | translate }}</p>
-        <p>{{ 'terms.s8.p2' | translate }}</p>
-      </div>
-
-      <!-- 9. Disclaimers -->
-      <div class="terms-section">
-        <h2>{{ 'terms.s9.title' | translate }}</h2>
-        <p>{{ 'terms.s9.p1' | translate }}</p>
-        <p>{{ 'terms.s9.p2' | translate }}</p>
-      </div>
-
-      <!-- 10. Limitation of Liability -->
-      <div class="terms-section">
-        <h2>{{ 'terms.s10.title' | translate }}</h2>
-        <p>{{ 'terms.s10.p1' | translate }}</p>
-        <p>{{ 'terms.s10.p2' | translate }}</p>
-      </div>
-
-      <!-- 11. Indemnification -->
-      <div class="terms-section">
-        <h2>{{ 'terms.s11.title' | translate }}</h2>
-        <p>{{ 'terms.s11.intro' | translate }}</p>
-        <ul>
-          <li>{{ 'terms.s11.li1' | translate }}</li>
-          <li>{{ 'terms.s11.li2' | translate }}</li>
-          <li>{{ 'terms.s11.li3' | translate }}</li>
-          <li>{{ 'terms.s11.li4' | translate }}</li>
-        </ul>
-      </div>
-
-      <!-- 12. Termination -->
-      <div class="terms-section">
-        <h2>{{ 'terms.s12.title' | translate }}</h2>
-        <p>{{ 'terms.s12.p1' | translate }}</p>
-        <p>{{ 'terms.s12.p2' | translate }}</p>
-      </div>
-
-      <!-- 13. Governing Law -->
-      <div class="terms-section">
-        <h2>{{ 'terms.s13.title' | translate }}</h2>
-        <p>{{ 'terms.s13.p1' | translate }}</p>
-        <p>{{ 'terms.s13.p2' | translate }}</p>
-      </div>
-
-      <!-- 14. Changes to Terms -->
-      <div class="terms-section">
-        <h2>{{ 'terms.s14.title' | translate }}</h2>
-        <p>{{ 'terms.s14.p1' | translate }}</p>
-        <p>{{ 'terms.s14.p2' | translate }}</p>
-      </div>
-
-      <!-- 15. Contact Information -->
-      <div class="terms-section">
-        <h2>{{ 'terms.s15.title' | translate }}</h2>
-        <p>{{ 'terms.s15.intro' | translate }}</p>
-        <div class="contact-info">
-          <p><strong>{{ 'terms.s15.emailLabel' | translate }}</strong> legal@bidroom.com</p>
-          <p><strong>{{ 'terms.s15.addressLabel' | translate }}</strong> {{ 'terms.s15.address' | translate }}</p>
-          <p><strong>{{ 'terms.s15.phoneLabel' | translate }}</strong> 1-800-BIDROOM</p>
-        </div>
-      </div>
-
+      <h2>{{ 'legal.terms.h16' | translate }}</h2>
+      <p>{{ 'legal.terms.h16p1' | translate }}</p>
     </div>
   </div>
-</section>
-
-<app-footer></app-footer>
+</app-legal-layout>

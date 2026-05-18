@@ -1,6 +1,7 @@
-import { Injectable } from '@angular/core';
+import { Injectable, NgZone, inject } from '@angular/core';
 import { io, Socket } from 'socket.io-client';
 import { Observable } from 'rxjs';
+import { API_CONFIG } from '../config/api.config';
 
 export interface NewBidEvent {
   bid: any;
@@ -22,6 +23,7 @@ export interface ListingUpdateEvent {
   endDate?: string;
   winnerSelectionDeadline?: string;
   winner?: string;
+  platinumBidderAcceptanceDeadline?: string;
 }
 
 export interface ViewerCountUpdateEvent {
@@ -63,58 +65,62 @@ export interface OfferUpdateEvent {
 })
 export class SocketService {
   private socket: Socket | null = null;
-
-  private getApiUrl(): string {
-    // Try to get from window config (for Azure Static Web Apps)
-    if (typeof window !== 'undefined' && (window as any).APP_CONFIG?.API_URL) {
-      const url = (window as any).APP_CONFIG.API_URL;
-      // Remove /api suffix if present for WebSocket connection
-      const baseUrl = url.replace('/api', '');
-      // Ensure we have http/https prefix
-      if (baseUrl.startsWith('http://') || baseUrl.startsWith('https://')) {
-        return baseUrl;
-      }
-      // If no protocol, default to https for production
-      return baseUrl.startsWith('localhost') ? `http://${baseUrl}` : `https://${baseUrl}`;
-    }
-    
-    const hostname = typeof window !== 'undefined' ? window.location.hostname : 'localhost';
-    
-    if (hostname === 'localhost' || hostname === '127.0.0.1') {
-      return 'http://localhost:3000';
-    }
-    
-    // Production default - Azure App Service
-    return 'https://bidroom-backend-dev.azurewebsites.net';
-  }
+  private ngZone = inject(NgZone);
+  /** Re-joined on every successful connect/reconnect so listing rooms are not lost after disconnect */
+  private joinedListingIds: Set<string> = new Set();
+  private joinedPrivateRoomViewerId: string | null = null;
+  private joinedUserUid: string | null = null;
 
   connect(): void {
     if (this.socket?.connected) {
       return;
     }
 
-    // Get API URL based on environment
-    const apiUrl = this.getApiUrl();
+    if (this.socket) {
+      this.socket.connect();
+      return;
+    }
 
-    this.socket = io(apiUrl, {
-      transports: ['websocket', 'polling'],
-      reconnection: true,
-      reconnectionDelay: 1000,
-      reconnectionAttempts: 5,
-      reconnectionDelayMax: 5000
-    });
+    const baseUrl = API_CONFIG.getBackendBaseUrl();
 
-    this.socket.on('connect', () => {
-      console.log('🔌 Connected to Socket.io server');
-    });
+    // Run socket.io setup outside Angular's zone so internal timers/polling
+    // don't trigger unnecessary change detection cycles.
+    this.ngZone.runOutsideAngular(() => {
+      this.socket = io(baseUrl, {
+        transports: ['websocket', 'polling'],
+        reconnection: true,
+        reconnectionDelay: 1000,
+        reconnectionAttempts: 5,
+        reconnectionDelayMax: 5000
+      });
 
-    this.socket.on('disconnect', () => {
-      console.log('🔌 Disconnected from Socket.io server');
-    });
+      this.socket.on('connect', () => {
+        console.log('🔌 Connected to Socket.io server');
+        this.flushRoomJoins();
+      });
 
-    this.socket.on('connect_error', (error) => {
-      console.error('❌ Socket.io connection error:', error);
+      this.socket.on('disconnect', () => {
+        console.log('🔌 Disconnected from Socket.io server');
+      });
+
+      this.socket.on('connect_error', (error) => {
+        console.error('❌ Socket.io connection error:', error);
+      });
     });
+  }
+
+  /** Re-subscribe to rooms after connect/reconnect (server-side rooms are per-socket). */
+  private flushRoomJoins(): void {
+    if (!this.socket?.connected) return;
+    for (const id of this.joinedListingIds) {
+      this.socket.emit('join-listing', id);
+    }
+    if (this.joinedPrivateRoomViewerId) {
+      this.socket.emit('join-private-room-viewer', this.joinedPrivateRoomViewerId);
+    }
+    if (this.joinedUserUid) {
+      this.socket.emit('join-user', this.joinedUserUid);
+    }
   }
 
   disconnect(): void {
@@ -122,33 +128,54 @@ export class SocketService {
       this.socket.disconnect();
       this.socket = null;
     }
+    this.joinedListingIds.clear();
+    this.joinedPrivateRoomViewerId = null;
+    this.joinedUserUid = null;
   }
 
   joinListing(listingId: string): void {
+    this.joinedListingIds.add(listingId);
     if (!this.socket?.connected) {
       this.connect();
     }
-    
     this.socket?.emit('join-listing', listingId);
     console.log(`👤 Joined listing room: ${listingId}`);
   }
 
+  /** Join multiple listing rooms at once (e.g. seller dashboard showing several listings). */
+  joinListings(listingIds: string[]): void {
+    for (const id of listingIds) {
+      this.joinListing(id);
+    }
+  }
+
   leaveListing(listingId: string): void {
+    this.joinedListingIds.delete(listingId);
     this.socket?.emit('leave-listing', listingId);
     console.log(`👤 Left listing room: ${listingId}`);
   }
 
-  /** Join user room for real-time notification updates (uid = Firebase/auth uid) */
-  joinUser(uid: string): void {
-    if (!this.socket?.connected) {
-      this.connect();
-    }
-    if (uid) {
-      this.socket?.emit('join-user', uid);
+  /** Leave multiple listing rooms at once. */
+  leaveListings(listingIds: string[]): void {
+    for (const id of listingIds) {
+      this.leaveListing(id);
     }
   }
 
+  /** Join user room for real-time notification updates (uid = Firebase/auth uid) */
+  joinUser(uid: string): void {
+    if (!uid) return;
+    this.joinedUserUid = uid;
+    if (!this.socket?.connected) {
+      this.connect();
+    }
+    this.socket?.emit('join-user', uid);
+  }
+
   leaveUser(uid: string): void {
+    if (uid && this.joinedUserUid === uid) {
+      this.joinedUserUid = null;
+    }
     if (uid) {
       this.socket?.emit('leave-user', uid);
     }
@@ -160,9 +187,11 @@ export class SocketService {
       if (!this.socket) {
         this.connect();
       }
-      const handler = () => observer.next();
-      this.socket?.on('new-notification', handler);
-      return () => this.socket?.off('new-notification', handler);
+      const socket = this.socket;
+      if (!socket) return () => {};
+      const handler = () => this.ngZone.run(() => observer.next());
+      socket.on('new-notification', handler);
+      return () => socket.off('new-notification', handler);
     });
   }
 
@@ -171,16 +200,11 @@ export class SocketService {
       if (!this.socket) {
         this.connect();
       }
-
-      const handler = (data: NewBidEvent) => {
-        observer.next(data);
-      };
-
-      this.socket?.on('new-bid', handler);
-
-      return () => {
-        this.socket?.off('new-bid', handler);
-      };
+      const socket = this.socket;
+      if (!socket) return () => {};
+      const handler = (data: NewBidEvent) => this.ngZone.run(() => observer.next(data));
+      socket.on('new-bid', handler);
+      return () => socket.off('new-bid', handler);
     });
   }
 
@@ -189,16 +213,11 @@ export class SocketService {
       if (!this.socket) {
         this.connect();
       }
-
-      const handler = (data: ListingUpdateEvent) => {
-        observer.next(data);
-      };
-
-      this.socket?.on('listing-update', handler);
-
-      return () => {
-        this.socket?.off('listing-update', handler);
-      };
+      const socket = this.socket;
+      if (!socket) return () => {};
+      const handler = (data: ListingUpdateEvent) => this.ngZone.run(() => observer.next(data));
+      socket.on('listing-update', handler);
+      return () => socket.off('listing-update', handler);
     });
   }
 
@@ -207,16 +226,11 @@ export class SocketService {
       if (!this.socket) {
         this.connect();
       }
-
-      const handler = (data: NewOfferEvent) => {
-        observer.next(data);
-      };
-
-      this.socket?.on('new-offer', handler);
-
-      return () => {
-        this.socket?.off('new-offer', handler);
-      };
+      const socket = this.socket;
+      if (!socket) return () => {};
+      const handler = (data: NewOfferEvent) => this.ngZone.run(() => observer.next(data));
+      socket.on('new-offer', handler);
+      return () => socket.off('new-offer', handler);
     });
   }
 
@@ -225,29 +239,27 @@ export class SocketService {
       if (!this.socket) {
         this.connect();
       }
-
-      const handler = (data: OfferUpdateEvent) => {
-        observer.next(data);
-      };
-
-      this.socket?.on('offer-update', handler);
-
-      return () => {
-        this.socket?.off('offer-update', handler);
-      };
+      const socket = this.socket;
+      if (!socket) return () => {};
+      const handler = (data: OfferUpdateEvent) => this.ngZone.run(() => observer.next(data));
+      socket.on('offer-update', handler);
+      return () => socket.off('offer-update', handler);
     });
   }
 
   joinPrivateRoomViewer(listingId: string): void {
+    this.joinedPrivateRoomViewerId = listingId;
     if (!this.socket?.connected) {
       this.connect();
     }
-    
     this.socket?.emit('join-private-room-viewer', listingId);
     console.log(`👁️ Joined private room viewer: ${listingId}`);
   }
 
   leavePrivateRoomViewer(listingId: string): void {
+    if (this.joinedPrivateRoomViewerId === listingId) {
+      this.joinedPrivateRoomViewerId = null;
+    }
     this.socket?.emit('leave-private-room-viewer', listingId);
     console.log(`👁️ Left private room viewer: ${listingId}`);
   }
@@ -257,16 +269,39 @@ export class SocketService {
       if (!this.socket) {
         this.connect();
       }
+      const socket = this.socket;
+      if (!socket) return () => {};
+      const handler = (data: ViewerCountUpdateEvent) => this.ngZone.run(() => observer.next(data));
+      socket.on('private-room-viewer-count-update', handler);
+      return () => socket.off('private-room-viewer-count-update', handler);
+    });
+  }
 
-      const handler = (data: ViewerCountUpdateEvent) => {
-        observer.next(data);
-      };
+  onInvitationAccepted(): Observable<{ listingId: string; bidderId: string | null; bidderName: string; bidderFirstName: string; bidderLastName: string }> {
+    return new Observable((observer) => {
+      if (!this.socket) {
+        this.connect();
+      }
+      const socket = this.socket;
+      if (!socket) return () => {};
+      const handler = (data: { listingId: string; bidderId: string | null; bidderName: string; bidderFirstName: string; bidderLastName: string }) =>
+        this.ngZone.run(() => observer.next(data));
+      socket.on('invitation-accepted', handler);
+      return () => socket.off('invitation-accepted', handler);
+    });
+  }
 
-      this.socket?.on('private-room-viewer-count-update', handler);
-
-      return () => {
-        this.socket?.off('private-room-viewer-count-update', handler);
-      };
+  onInvitationDeclined(): Observable<{ listingId: string; bidderId: string | null }> {
+    return new Observable((observer) => {
+      if (!this.socket) {
+        this.connect();
+      }
+      const socket = this.socket;
+      if (!socket) return () => {};
+      const handler = (data: { listingId: string; bidderId: string | null }) =>
+        this.ngZone.run(() => observer.next(data));
+      socket.on('invitation-declined', handler);
+      return () => socket.off('invitation-declined', handler);
     });
   }
 

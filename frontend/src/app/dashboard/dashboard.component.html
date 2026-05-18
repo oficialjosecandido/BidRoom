@@ -1,60 +1,109 @@
 <div class="dashboard-container">
-  <!-- Sidebar Navigation -->
-  <aside class="sidebar" [class.sidebar--collapsed]="sidebarCollapsed">
-    <div class="sidebar-header">
-      <h1 class="logo" (click)="navigateToLanding()">
-        <span class="logo-full">BidRoom</span>
-        <span class="logo-short" aria-hidden="true">BR</span>
-      </h1>
-      <div class="sidebar-header-actions">
-        <button type="button" class="sidebar-toggle" (click)="toggleSidebar()" [attr.aria-label]="sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'" [attr.aria-expanded]="!sidebarCollapsed">
-          <span class="toggle-icon" aria-hidden="true">{{ sidebarCollapsed ? '›' : '‹' }}</span>
-        </button>
-      </div>
-    </div>
 
-    <nav class="sidebar-nav">
-      <a routerLink="/dashboard/home" routerLinkActive="active" class="nav-item" title="Home">
-        <span class="nav-icon">🏠</span>
-        <span class="nav-text">Home</span>
-      </a>
-
-      <div class="nav-section-label"><span class="nav-text">Activity</span></div>
-
-      <a routerLink="/dashboard/buyer" routerLinkActive="active" class="nav-item" title="Buyer Profile">
-        <span class="nav-icon">🛒</span>
-        <span class="nav-text">Buyer Profile</span>
-      </a>
-      <a routerLink="/dashboard/seller" routerLinkActive="active" class="nav-item" title="Seller Profile">
-        <span class="nav-icon">📦</span>
-        <span class="nav-text">Seller Profile</span>
-      </a>
-
-      <div class="nav-section-label"><span class="nav-text">Account</span></div>
-
-      <a routerLink="/dashboard/notifications" routerLinkActive="active" class="nav-item nav-item-with-badge" title="Notifications">
-        <span class="nav-icon">🔔</span>
-        <span class="nav-text">Notifications</span>
+  <nav class="dash-nav">
+    <a class="brand" (click)="navigateToLanding()" (keydown.enter)="navigateToLanding()" tabindex="0" role="button">
+      BidRoom<em>.pt</em>
+    </a>
+    <div class="nav-r">
+      <button type="button" class="btn-th" (click)="cycleTheme()" [attr.aria-label]="'Theme'">{{ themeGlyph }}</button>
+      <button type="button" class="btn-lang" (click)="toggleLang()">{{ langLabel }}</button>
+      <a routerLink="/dashboard/notifications" class="notif-btn" [attr.aria-label]="'dashboard.sidebar.notifications' | translate">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" width="15" height="15" aria-hidden="true">
+          <path d="M8 2a5 5 0 00-5 5v3l-1 1h12l-1-1V7a5 5 0 00-5-5z"/>
+          <path d="M6.5 13.5a1.5 1.5 0 003 0"/>
+        </svg>
         @if (notificationUnreadCount > 0) {
-          <span class="nav-badge">{{ notificationUnreadCount > 99 ? '99+' : notificationUnreadCount }}</span>
+          <span class="notif-badge">{{ notificationUnreadCount > 9 ? '9+' : notificationUnreadCount }}</span>
         }
       </a>
-      <a routerLink="/dashboard/settings" routerLinkActive="active" class="nav-item" title="Settings">
-        <span class="nav-icon">⚙️</span>
-        <span class="nav-text">Settings</span>
-      </a>
-    </nav>
-
-    <div class="sidebar-footer">
-      <button type="button" class="logout-btn" (click)="logout()" title="Logout">
-        <span class="nav-icon">🚪</span>
-        <span class="nav-text">Logout</span>
-      </button>
+      <div class="avatar" (click)="navigateToLanding()" role="button" tabindex="0">{{ userInitials }}</div>
     </div>
-  </aside>
+  </nav>
 
-  <!-- Main Content Area -->
-  <main class="dashboard-main" [class.dashboard-main--collapsed]="sidebarCollapsed">
-    <router-outlet></router-outlet>
-  </main>
+  <div class="shell">
+
+    <aside class="sidebar">
+
+      <div class="nav-section nav-section--first">{{ 'dashboard.sidebar.main' | translate }}</div>
+
+
+      <a routerLink="/dashboard/home" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}" class="nav-item">
+        <span class="nav-ico">⊞</span>
+        <span>{{ 'dashboard.sidebar.home' | translate }}</span>
+      </a>
+
+      <a routerLink="/dashboard/buyer" routerLinkActive="active" class="nav-item" [queryParams]="{ tab: 'transactions' }">
+        <span class="nav-ico">↔</span>
+        <span>{{ 'dashboard.sidebar.transactions' | translate }}</span>
+        @if (pendingTransactions > 0) {
+          <span class="nav-badge">{{ pendingTransactions > 9 ? '9+' : pendingTransactions }}</span>
+        }
+      </a>
+
+      <a routerLink="/dashboard/notifications" routerLinkActive="active" class="nav-item">
+        <span class="nav-ico">🔔</span>
+        <span>{{ 'dashboard.sidebar.notifications' | translate }}</span>
+        @if (notificationUnreadCount > 0) {
+          <span class="nav-badge">{{ notificationUnreadCount > 9 ? '9+' : notificationUnreadCount }}</span>
+        }
+      </a>
+
+      <div class="nav-section">{{ 'dashboard.sidebar.activity' | translate }}</div>
+
+      <a routerLink="/dashboard/buyer" routerLinkActive="active" class="nav-item" [queryParams]="{ tab: 'bets' }">
+        <span class="nav-ico">🔨</span>
+        <span>{{ 'dashboard.sidebar.myBids' | translate }}</span>
+      </a>
+
+      <a routerLink="/dashboard/buyer" routerLinkActive="active" class="nav-item" [queryParams]="{ tab: 'watchlist' }">
+        <span class="nav-ico">♡</span>
+        <span>{{ 'dashboard.sidebar.watchlist' | translate }}</span>
+      </a>
+
+      <a routerLink="/dashboard/following" routerLinkActive="active" class="nav-item">
+        <span class="nav-ico">👤</span>
+        <span>{{ 'dashboard.sidebar.following' | translate }}</span>
+      </a>
+
+      <div class="nav-section">{{ 'dashboard.sidebar.listings' | translate }}</div>
+
+      <a routerLink="/dashboard/seller" routerLinkActive="active" class="nav-item">
+        <span class="nav-ico">📋</span>
+        <span>{{ 'dashboard.sidebar.myListings' | translate }}</span>
+      </a>
+
+      <a routerLink="/dashboard/analytics" routerLinkActive="active" class="nav-item">
+        <span class="nav-ico">📈</span>
+        <span>{{ 'dashboard.seller.analytics.title' | translate }}</span>
+      </a>
+
+      <div class="nav-section">{{ 'dashboard.sidebar.account' | translate }}</div>
+
+      <a routerLink="/dashboard/settings" routerLinkActive="active" class="nav-item">
+        <span class="nav-ico">⚙</span>
+        <span>{{ 'dashboard.sidebar.settings' | translate }}</span>
+      </a>
+
+      <div class="sidebar-footer">
+        <div class="user-row">
+          <div class="user-av">{{ userInitials }}</div>
+          <div class="user-meta">
+            <div class="user-name">{{ userName }}</div>
+          </div>
+          <button type="button" class="logout-btn" (click)="logout()" [attr.title]="'dashboard.sidebar.logout' | translate">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" width="14" height="14" aria-hidden="true">
+              <path d="M6 3H3a1 1 0 00-1 1v8a1 1 0 001 1h3M10 11l3-3-3-3M13 8H6"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+    </aside>
+
+    <main class="main">
+      <router-outlet></router-outlet>
+    </main>
+
+  </div>
+
 </div>

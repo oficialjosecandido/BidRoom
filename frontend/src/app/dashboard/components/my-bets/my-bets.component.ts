@@ -1,6 +1,7 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { ListingsService, Listing } from '../../../shared/services/listings.service';
 import { BidsService } from '../../../shared/services/bids.service';
 
@@ -22,19 +23,42 @@ interface EnhancedListing extends Listing {
 @Component({
   selector: 'app-my-bets',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, TranslateModule],
   templateUrl: './my-bets.component.html',
   styleUrls: ['./my-bets.component.scss']
 })
 export class MyBetsComponent implements OnInit {
   private listingsService = inject(ListingsService);
   private bidsService = inject(BidsService);
+  private translate = inject(TranslateService);
 
   listings: EnhancedListing[] = [];
   isLoading = true;
   error: string | null = null;
   expandedIds = new Set<string>();
   preferenceUpdating: Record<string, boolean> = {};
+  bidFilter: 'all' | 'winning' | 'outbid' | 'ended' = 'all';
+
+  get filteredListings(): EnhancedListing[] {
+    if (this.bidFilter === 'all') return this.listings;
+    return this.listings.filter(l => {
+      if (this.bidFilter === 'winning') return l.isWinner === true;
+      if (this.bidFilter === 'ended') return l.status === 'ended' || l.status === 'cancelled';
+      if (this.bidFilter === 'outbid') return l.status === 'active' && !l.isWinner;
+      return true;
+    });
+  }
+
+  getBidCardClass(listing: EnhancedListing): string {
+    if (listing.isWinner) return 'winning';
+    if (listing.status === 'ended' || listing.status === 'cancelled') return 'ended';
+    if (listing.status === 'active') return 'outbid';
+    return '';
+  }
+
+  getInitials(title: string): string {
+    return title.split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase();
+  }
 
   ngOnInit(): void {
     this.loadMyBets();
@@ -122,5 +146,11 @@ export class MyBetsComponent implements OnInit {
 
   canShowNotifyToggle(listing: EnhancedListing): boolean {
     return !listing.isWinner && listing.status === 'active' && (listing.type === 'bid' || listing.type === 'mixed');
+  }
+
+  getStatusLabel(status: string): string {
+    const key = `dashboard.myBets.status${status.charAt(0).toUpperCase() + status.slice(1)}`;
+    const translated = this.translate.instant(key);
+    return translated !== key ? translated : status;
   }
 }

@@ -34,7 +34,7 @@
     width: 48px;
     height: 48px;
     border: 4px solid #e2e8f0;
-    border-top-color: #007bff;
+    border-top-color: var(--primary-color);
     border-radius: 50%;
     animation: spin 1s linear infinite;
   }
@@ -50,7 +50,7 @@
 
   .retry-btn {
     padding: 10px 24px;
-    background: #007bff;
+    background: var(--primary-color);
     color: white;
     border: none;
     border-radius: 8px;
@@ -89,7 +89,7 @@
   .create-btn {
     display: inline-block;
     padding: 12px 24px;
-    background: #007bff;
+    background: var(--primary-color);
     color: white;
     text-decoration: none;
     border-radius: 8px;
@@ -141,7 +141,7 @@
         transition: color 0.2s ease;
 
         &:hover {
-          color: #667eea;
+          color: var(--primary-color);
         }
       }
     }
@@ -199,7 +199,7 @@
       display: block;
       font-size: 28px;
       font-weight: 700;
-      color: #667eea;
+      color: var(--primary-color);
       line-height: 1;
     }
   }
@@ -304,7 +304,7 @@
       align-items: center;
       gap: 8px;
       padding: 10px 20px;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-color) 100%);
       color: white;
       text-decoration: none;
       border-radius: 8px;
@@ -444,7 +444,7 @@
     width: 48px;
     height: 48px;
     border-radius: 50%;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-color) 100%);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -519,11 +519,108 @@
   }
 }
 
+// ── Badge row ────────────────────────────────────────────────────────────────
+
+.badge-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  margin-top: 4px;
+}
+
+.auto-relist-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  color: #059669;
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.relist-count-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(99, 102, 241, 0.1);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  color: #4f46e5;
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+.relisted-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #f3f4f6;
+  border: 1px solid #d1d5db;
+  color: #6b7280;
+  font-size: 0.72rem;
+  font-weight: 500;
+}
+
+// ── Unsold notice ─────────────────────────────────────────────────────────────
+
+.unsold-notice {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  margin: 12px 0 0;
+  font-size: 0.85rem;
+  font-weight: 500;
+
+  &.unsold-no_bids {
+    background: rgba(234, 179, 8, 0.1);
+    border: 1px solid rgba(234, 179, 8, 0.3);
+    color: #92400e;
+  }
+  &.unsold-reserve_not_met {
+    background: rgba(99, 102, 241, 0.08);
+    border: 1px solid rgba(99, 102, 241, 0.25);
+    color: #4338ca;
+  }
+  &.unsold-non_payment {
+    background: rgba(239, 68, 68, 0.08);
+    border: 1px solid rgba(239, 68, 68, 0.25);
+    color: #b91c1c;
+  }
+}
+
+// ── Relist button ─────────────────────────────────────────────────────────────
+
 .auction-actions {
   display: flex;
   gap: 12px;
   padding-top: 20px;
   border-top: 2px solid #f7fafc;
+
+  .relist-btn {
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: #fff;
+    border: none;
+
+    &:hover {
+      background: linear-gradient(135deg, #059669 0%, #047857 100%);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+    }
+  }
 
   .view-btn {
     padding: 12px 24px;
@@ -543,5 +640,290 @@
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     }
   }
+
+  .edit-btn {
+    padding: 12px 24px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 14px;
+    transition: all 0.3s ease;
+    background: var(--accent-purple, #002366);
+    color: #fff;
+    border: none;
+
+    &:hover {
+      background: var(--accent-purple-hover, #001a4d);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    }
+  }
 }
 
+
+// ── Relist modal ──────────────────────────────────────────────────────────────
+
+.relist-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 16px;
+}
+
+.relist-modal {
+  background: #fff;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 480px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+  max-height: 90vh;
+  overflow: hidden;
+}
+
+.relist-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid #f0f0f0;
+
+  h2 {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #1a202c;
+  }
+
+  .modal-close {
+    background: none;
+    border: none;
+    font-size: 1.4rem;
+    cursor: pointer;
+    color: #9ca3af;
+    padding: 0 4px;
+    line-height: 1;
+    &:hover { color: #1a202c; }
+  }
+}
+
+.relist-modal-body {
+  padding: 20px 24px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.relist-listing-name {
+  margin: 0;
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: #374151;
+  background: #f9fafb;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+.relist-subtitle {
+  margin: 0;
+  font-size: 0.84rem;
+  color: #6b7280;
+}
+
+.suggestions-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.suggestions-label {
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.suggestions-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.suggestion-chip {
+  padding: 6px 12px;
+  border-radius: 20px;
+  border: 1px solid #6366f1;
+  background: rgba(99, 102, 241, 0.06);
+  color: #4f46e5;
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+
+  &:hover {
+    background: #6366f1;
+    color: #fff;
+  }
+}
+
+.relist-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.form-label {
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.price-input-wrap {
+  display: flex;
+  align-items: center;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #fff;
+
+  &:focus-within {
+    border-color: #6366f1;
+    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.15);
+  }
+}
+
+.price-prefix {
+  padding: 0 10px;
+  background: #f9fafb;
+  color: #6b7280;
+  font-weight: 600;
+  border-right: 1px solid #d1d5db;
+  font-size: 0.9rem;
+}
+
+.form-input {
+  width: 100%;
+  padding: 9px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  color: #1a202c;
+  outline: none;
+  transition: border-color 0.15s;
+
+  &:focus {
+    border-color: #6366f1;
+    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.15);
+  }
+
+  &.price-input {
+    border: none;
+    outline: none;
+    box-shadow: none;
+    flex: 1;
+    &:focus { box-shadow: none; }
+  }
+}
+
+.form-group-toggle {
+  padding: 12px;
+  background: #f9fafb;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  gap: 6px;
+}
+
+.toggle-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+}
+
+.toggle-checkbox {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: #6366f1;
+}
+
+.toggle-text {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.toggle-hint {
+  margin: 0;
+  font-size: 0.78rem;
+  color: #9ca3af;
+  padding-left: 26px;
+}
+
+.relist-error {
+  color: #dc2626;
+  font-size: 0.83rem;
+  margin: 0;
+  padding: 8px 12px;
+  background: rgba(239, 68, 68, 0.07);
+  border-radius: 6px;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.relist-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 16px 24px;
+  border-top: 1px solid #f0f0f0;
+
+  .cancel-btn {
+    padding: 10px 20px;
+    border-radius: 8px;
+    border: 1px solid #d1d5db;
+    background: #fff;
+    color: #374151;
+    font-size: 0.88rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.15s;
+    &:hover { background: #f9fafb; }
+  }
+
+  .submit-relist-btn {
+    padding: 10px 24px;
+    border-radius: 8px;
+    border: none;
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: #fff;
+    font-size: 0.88rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.15s, transform 0.15s;
+
+    &:hover:not(:disabled) {
+      opacity: 0.9;
+      transform: translateY(-1px);
+    }
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+  }
+}

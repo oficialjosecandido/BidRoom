@@ -4,7 +4,12 @@
  */
 
 const Listing = require('../models/Listing');
-const { handleAuctionEnd, handlePrivateRoomEnd, handlePrivateRoomClosedNoAcceptance } = require('./auctionNotificationService');
+const Bid = require('../models/Bid');
+const { handleAuctionEnd, handlePrivateRoomEnd, handlePrivateRoomClosedNoAcceptance, handlePrivateRoomEligibleExpired } = require('./auctionNotificationService');
+const { checkAndApplyPendingSuspensions } = require('./accountStatusService');
+const { processPrivateRoomNonPayments, sendPaymentDeadlineWarnings } = require('./privateRoomPaymentService');
+const { processAutoRelists } = require('./autoRelistService');
+const { notifyWatchlistersAuctionEnding } = require('./notificationService');
 
 let checkInterval = null;
 let ioInstance = null;
@@ -16,6 +21,22 @@ async function checkEndedAuctions() {
   try {
     const now = new Date();
     let processed = 0;
+
+    // -1) Listings in 'eligible' state past winnerSelectionDeadline (seller didn't create room in 15 min) → auto-select highest bidder
+    const eligiblePastDeadline = await Listing.find({
+      status: 'ended',
+      privateRoomStatus: 'eligible',
+      winnerSelectionDeadline: { $lte: now }
+    });
+    for (const listing of eligiblePastDeadline) {
+      try {
+        await handlePrivateRoomEligibleExpired(listing._id, ioInstance);
+        processed++;
+        console.log(`✅ Private room eligible expired (auto-selected winner): ${listing._id} - ${listing.title}`);
+      } catch (error) {
+        console.error(`❌ Error processing eligible-expired listing ${listing._id}:`, error.message);
+      }
+    }
 
     // 0) Private rooms in 'invited' state past acceptance deadline → auto-start the room (15 min passed)
     const PRIVATE_ROOM_EXTEND_MS = 60 * 1000;
@@ -35,10 +56,11 @@ async function checkEndedAuctions() {
           processed++;
           console.log(`✅ Private room closed (no acceptances): ${listing._id} - ${listing.title}`);
         } else {
-          // At least one accepted → auto-start the room (existing behavior)
+          // 1+ accepted → auto-start the room (single bidder proceeds normally; wins after 60s with no competition)
           const roomEndDate = new Date(now.getTime() + PRIVATE_ROOM_EXTEND_MS);
           await Listing.findByIdAndUpdate(listing._id, {
             $set: {
+              status: 'active',
               privateRoomStatus: 'active',
               privateRoomEndDate: roomEndDate,
               privateRoomLastBidTime: now,
@@ -46,7 +68,7 @@ async function checkEndedAuctions() {
             }
           }, { runValidators: false });
           processed++;
-          console.log(`✅ Auto-started private room (15 min passed): ${listing._id} - ${listing.title}`);
+          console.log(`✅ Auto-started private room (${acceptedCount} accepted): ${listing._id} - ${listing.title}`);
           if (ioInstance) {
             ioInstance.to(`listing:${listing._id}`).emit('listing-update', {
               listingId: listing._id.toString(),
@@ -73,9 +95,15 @@ async function checkEndedAuctions() {
 
     for (const listing of endedAuctions) {
       try {
+        // Collect bidders before ending so we can check them for pending suspensions after
+        const bidderIds = await Bid.distinct('bidder', { listing: listing._id });
         await handleAuctionEnd(listing._id, ioInstance);
         processed++;
         console.log(`✅ Processed ended auction: ${listing._id} - ${listing.title}`);
+        // After auction ends, apply any deferred suspensions for participants who have no other active auctions
+        const sellerId = listing.seller?._id || listing.seller;
+        checkAndApplyPendingSuspensions([sellerId, ...bidderIds], ioInstance)
+          .catch(err => console.error(`❌ Pending suspension check error for listing ${listing._id}:`, err.message));
       } catch (error) {
         console.error(`❌ Error processing auction ${listing._id}:`, error.message);
       }
@@ -90,12 +118,44 @@ async function checkEndedAuctions() {
 
     for (const listing of endedPrivateRooms) {
       try {
+        const bidderIds = await Bid.distinct('bidder', { listing: listing._id });
         await handlePrivateRoomEnd(listing._id, ioInstance);
         processed++;
         console.log(`✅ Closed private room (time expired): ${listing._id} - ${listing.title}`);
+        const sellerId = listing.seller?._id || listing.seller;
+        checkAndApplyPendingSuspensions([sellerId, ...bidderIds], ioInstance)
+          .catch(err => console.error(`❌ Pending suspension check error for private room ${listing._id}:`, err.message));
       } catch (error) {
         console.error(`❌ Error closing private room ${listing._id}:`, error.message);
       }
+    }
+
+    // 3) Private-room payment warnings (1h before deadline) and non-payment enforcement
+    await sendPaymentDeadlineWarnings(ioInstance).catch(err =>
+      console.error('❌ Payment deadline warnings error:', err.message)
+    );
+    await processPrivateRoomNonPayments(ioInstance).catch(err =>
+      console.error('❌ Non-payment processing error:', err.message)
+    );
+    await processAutoRelists(ioInstance).catch(err =>
+      console.error('❌ Auto-relist processing error:', err.message)
+    );
+
+    // 4) Watchlist ending-soon alerts: active listings ending in < 1h
+    const soonCutoff = new Date(now.getTime() + 60 * 60 * 1000);
+    const endingSoonListings = await Listing.find({
+      status: 'active',
+      endDate: { $gt: now, $lte: soonCutoff },
+      privateRoomStatus: { $nin: ['active', 'invited'] }
+    }).select('_id title slug').lean();
+
+    for (const listing of endingSoonListings) {
+      notifyWatchlistersAuctionEnding({
+        listingId: listing._id,
+        listingTitle: listing.title,
+        listingSlug: listing.slug,
+        io: ioInstance
+      }).catch(err => console.error(`❌ Watchlist ending-soon error for ${listing._id}:`, err.message));
     }
 
     if (invitedPastDeadline.length > 0 || endedAuctions.length > 0 || endedPrivateRooms.length > 0) {

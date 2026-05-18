@@ -2,6 +2,7 @@ const express = require('express');
 const multer = require('multer');
 const { authenticateToken, requireActiveAccount } = require('../middleware/auth');
 const azureStorageService = require('../services/azureStorage.service');
+const { scanImages } = require('../services/contentSafetyService');
 
 const router = express.Router();
 
@@ -73,18 +74,34 @@ router.post('/', authenticateToken, requireActiveAccount, upload.array('images',
       mimetype: file.mimetype
     }));
 
-    // Upload to Azure Blob Storage
-    const urls = await azureStorageService.uploadMultipleImages(files);
+    // Content safety scan — block before reaching Blob Storage
+    try {
+      const scan = await scanImages(files.map(f => f.buffer));
+      if (scan.blocked) {
+        return res.status(400).json({
+          error: 'Content policy violation',
+          message: 'One or more images contain content that violates our policies and cannot be uploaded.'
+        });
+      }
+    } catch (scanErr) {
+      console.error('Content safety scan error (non-blocking):', scanErr.message);
+      // Scan failure is non-fatal — don't block the upload
+    }
+
+    // Upload to Azure Blob Storage — returns [{ url, blobName }]
+    const uploadResults = await azureStorageService.uploadMultipleImages(files);
+    const urls = uploadResults.map(r => r.url);
 
     res.json({
-      urls: urls,
+      urls,
+      images: uploadResults,
       count: urls.length
     });
   } catch (error) {
     console.error('Error uploading images:', error);
     res.status(500).json({
       error: 'Failed to upload images',
-      message: error.message
+      message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
     });
   }
 });
@@ -124,7 +141,7 @@ router.post('/proof-of-payment', authenticateToken, (req, res, next) => {
     console.error('Error uploading proof of payment:', error);
     res.status(500).json({
       error: 'Failed to upload file',
-      message: error.message
+      message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
     });
   }
 });
@@ -182,7 +199,7 @@ router.post('/dispute-evidence', authenticateToken, (req, res, next) => {
     console.error('Error uploading dispute evidence:', error);
     res.status(500).json({
       error: 'Upload failed',
-      message: error.message
+      message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
     });
   }
 });
@@ -217,7 +234,7 @@ router.post('/proof-of-delivery', authenticateToken, (req, res, next) => {
     res.json({ url });
   } catch (error) {
     console.error('Error uploading proof of delivery:', error);
-    res.status(500).json({ error: 'Failed to upload file', message: error.message });
+    res.status(500).json({ error: 'Failed to upload file', message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error' });
   }
 });
 
@@ -247,7 +264,7 @@ router.delete('/', authenticateToken, async (req, res) => {
     console.error('Error deleting images:', error);
     res.status(500).json({
       error: 'Failed to delete images',
-      message: error.message
+      message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
     });
   }
 });

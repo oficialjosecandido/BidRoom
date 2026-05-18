@@ -1,10 +1,13 @@
 <nav class="admin-sidebar">
   <div class="sidebar-header">
-    <h2 class="sidebar-title">Nexus</h2>
+    <div class="sidebar-brand">
+      <h2 class="sidebar-title">Nexus</h2>
+      <p class="sidebar-tagline">BidRoom admin</p>
+    </div>
   </div>
   
   <ul class="sidebar-menu">
-    @for (item of sidebarItems; track item) {
+    @for (item of sidebarItems; track item.route) {
 <li class="menu-item">
       <button 
         class="menu-link" 

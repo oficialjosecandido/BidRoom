@@ -22,6 +22,7 @@ export class AdminDisputesComponent implements OnInit {
   rulingVerdict: 'buyer_refund' | 'seller_payout' | 'partial_refund' = 'buyer_refund';
   rulingRefundAmount = 0;
   rulingAdminNotes = '';
+  rulingAccountOutcome: 'reactivate_both' | 'reactivate_buyer_close_seller' | 'reactivate_seller_close_buyer' | 'close_both' = 'reactivate_both';
   rulingSubmitting = false;
   rulingError: string | null = null;
 
@@ -61,6 +62,7 @@ export class AdminDisputesComponent implements OnInit {
         this.rulingVerdict = 'buyer_refund';
         this.rulingRefundAmount = d.amount ?? 0;
         this.rulingAdminNotes = '';
+        this.rulingAccountOutcome = 'reactivate_both';
       },
       error: (err) => {
         this.rulingError = err?.error?.message || 'Failed to load dispute';
@@ -96,9 +98,15 @@ export class AdminDisputesComponent implements OnInit {
   submitRuling(): void {
     const d = this.selectedDispute;
     if (!d || this.rulingSubmitting) return;
-    const payload: { verdict: 'buyer_refund' | 'seller_payout' | 'partial_refund'; refundAmount?: number; adminNotes?: string } = {
+    const payload: {
+      verdict: 'buyer_refund' | 'seller_payout' | 'partial_refund';
+      refundAmount?: number;
+      adminNotes?: string;
+      accountOutcome?: 'reactivate_both' | 'reactivate_buyer_close_seller' | 'reactivate_seller_close_buyer' | 'close_both';
+    } = {
       verdict: this.rulingVerdict,
-      adminNotes: this.rulingAdminNotes.trim() || undefined
+      adminNotes: this.rulingAdminNotes.trim() || undefined,
+      accountOutcome: this.rulingAccountOutcome
     };
     if (this.rulingVerdict === 'partial_refund') {
       payload.refundAmount = this.rulingRefundAmount;

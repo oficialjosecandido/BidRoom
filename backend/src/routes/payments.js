@@ -5,6 +5,7 @@ const Customer = require('../models/Customer');
 const Topup = require('../models/Topup');
 const { sendEmail } = require('../services/emailService');
 
+const features = require('../config/features');
 const LOG_PREFIX = '[Payments]';
 
 /** Lazy Stripe client so the server can start even when STRIPE_SECRET_KEY is not set. */
@@ -26,6 +27,9 @@ const MAX_AMOUNT_DOLLARS = 50000;
  * Returns: { url: string } - Stripe Checkout URL
  */
 router.post('/create-checkout-session', authenticateToken, requireActiveAccount, async (req, res) => {
+  if (!features.membershipTiers) {
+    return res.status(403).json({ error: 'Feature disabled', message: 'Balance top-ups are not available.' });
+  }
   try {
     if (!process.env.STRIPE_SECRET_KEY) {
       return res.status(503).json({

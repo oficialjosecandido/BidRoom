@@ -1,5 +1,64 @@
 const Notification = require('../models/Notification');
 const User = require('../models/User');
+const NotificationPreferences = require('../models/NotificationPreferences');
+const Follow = require('../models/Follow');
+const CategoryFollow = require('../models/CategoryFollow');
+const Watchlist = require('../models/Watchlist');
+const Listing = require('../models/Listing');
+
+// In-memory debounce: prevent outbid notification floods in high-activity auctions.
+// Key: "userId:listingId", value: timestamp of last sent notification.
+const _outbidDebounce = new Map();
+const OUTBID_DEBOUNCE_MS = 5 * 60 * 1000; // 5 minutes
+
+// Purge stale debounce entries every 5 minutes to prevent unbounded memory growth.
+setInterval(() => {
+  const cutoff = Date.now() - OUTBID_DEBOUNCE_MS;
+  for (const [key, ts] of _outbidDebounce.entries()) {
+    if (ts < cutoff) _outbidDebounce.delete(key);
+  }
+}, OUTBID_DEBOUNCE_MS).unref(); // .unref() so this timer doesn't keep the process alive
+
+/**
+ * Returns true if an outbid notification was already sent for this user+listing within the debounce window.
+ * Side-effect: records the current timestamp so the next call within the window is debounced.
+ */
+function checkAndSetOutbidDebounce(userId, listingId) {
+  const key = `${userId}:${listingId}`;
+  const last = _outbidDebounce.get(key);
+  if (last && Date.now() - last < OUTBID_DEBOUNCE_MS) return true; // debounced
+  _outbidDebounce.set(key, Date.now());
+  return false;
+}
+
+// Critical event types that are always sent regardless of user preferences.
+const CRITICAL_EMAIL_EVENTS = new Set([
+  'disputeUpdate', 'paymentReceived', 'auctionWon'
+]);
+
+/**
+ * Returns true if the user has not globally unsubscribed from email and has email enabled for the event type.
+ * Defaults to true when no preferences record exists.
+ * @param {string} userId - Mongo User _id
+ * @param {string} eventType - e.g. 'outbid', 'auctionWon', etc.
+ */
+async function shouldSendEmail(userId, eventType) {
+  // Critical events (disputes, payments, auction wins) are always delivered.
+  if (CRITICAL_EMAIL_EVENTS.has(eventType)) return true;
+
+  try {
+    const prefs = await NotificationPreferences.findOne({ user: userId })
+      .select(`globalEmailUnsubscribed ${eventType}`)
+      .lean();
+    if (!prefs) return true;
+    if (prefs.globalEmailUnsubscribed) return false;
+    const eventPrefs = prefs[eventType];
+    if (!eventPrefs) return true;
+    return eventPrefs.email !== false;
+  } catch {
+    return true; // fail-open: don't block notifications on DB error
+  }
+}
 
 /**
  * Notification link (returnUrl) mapping – each notification type navigates to the most relevant page:
@@ -7,6 +66,7 @@ const User = require('../models/User');
  * | Notification type           | Link destination                |
  * |----------------------------|---------------------------------|
  * | New bid received           | /listing/:slug?tab=bids        |
+ * | Outbid (auction)          | /listing/:slug?tab=bids        |
  * | New proposal               | /listing/:slug?tab=offers       |
  * | Proposal accepted/declined| /listing/:slug?tab=offers       |
  * | Auction ended (seller)     | /dashboard/transactions         |
@@ -47,10 +107,18 @@ async function emitNewNotificationToUser(io, userMongoId) {
  * @param {string} [options.type='system'] - proposal | bid | auction_ended | transaction | dispute | review | system
  * @param {string} [options.link] - URL to navigate (e.g. /listing/slug?tab=offers)
  * @param {string} [options.referenceId] - Related entity ID for deduplication
+ * @param {string} [options.eventType] - Preference key to check (e.g. 'outbid'). Skips creation if user disabled inApp.
  * @returns {Promise<Notification|null>}
  */
-async function createNotification({ userId, title, message, type = 'system', link = null, referenceId = null }) {
+async function createNotification({ userId, title, message, type = 'system', link = null, referenceId = null, eventType = null }) {
   try {
+    if (eventType) {
+      const prefs = await NotificationPreferences.findOne({ user: userId })
+        .select(`${eventType}`)
+        .lean();
+      if (prefs && prefs[eventType] && prefs[eventType].inApp === false) return null;
+    }
+
     const notification = new Notification({
       user: userId,
       title,
@@ -81,6 +149,29 @@ async function notifyNewBid({ listingId, listingSlug, listingTitle, bidAmount, b
     type: 'bid',
     link,
     referenceId: listingId
+  });
+}
+
+/** Auction (highest-bid): previous high bidder was exceeded — in-app notification (email sent separately). */
+async function notifyBidderOutbid({
+  listingSlug,
+  listingTitle,
+  previousBidAmount,
+  newBidAmount,
+  bidderUserId,
+  listingId
+}) {
+  const link = listingSlug ? `/listing/${listingSlug}?tab=bids` : null;
+  const prev = Number(previousBidAmount || 0).toFixed(2);
+  const next = Number(newBidAmount || 0).toFixed(2);
+  return createNotification({
+    eventType: 'outbid',
+    userId: bidderUserId,
+    title: "You've been outbid",
+    message: `Your bid of $${prev} on "${listingTitle || 'this auction'}" was exceeded. Current high bid: $${next}.`,
+    type: 'bid',
+    link,
+    referenceId: listingId ? String(listingId) : listingSlug || null
   });
 }
 
@@ -171,7 +262,7 @@ async function notifyListingRemoved({ listingSlug, listingTitle, sellerUserId })
     title: 'Listing removed',
     message: `"${listingTitle || 'Your listing'}" was removed due to a policy violation.`,
     type: 'listing',
-    link: '/dashboard/my-listings',
+    link: '/dashboard/seller',
     referenceId: listingSlug
   });
 }
@@ -295,84 +386,159 @@ async function notifySellerLeftPrivateRoomBuyers({ listingSlug, listingTitle, bi
 
 /** Room cancelled by seller - notify bidders */
 async function notifyRoomCancelled({ listingSlug, listingTitle, bidderUserId }) {
+  const link = listingSlug ? `/listing/${listingSlug}` : '/dashboard/buyer';
   return createNotification({
     userId: bidderUserId,
     title: 'Private room cancelled',
     message: `The private room for "${listingTitle || 'the auction'}" was cancelled by the seller.`,
     type: 'private_room',
-    link: '/dashboard/my-auctions',
+    link,
     referenceId: listingSlug
   });
 }
 
 /** Item marked as shipped - notify buyer */
 async function notifyItemMarkedShipped({ transactionId, listingTitle, buyerUserId }) {
+  const link = transactionId
+    ? `/dashboard/buyer?tab=transactions#transaction-${transactionId}`
+    : '/dashboard/buyer?tab=transactions';
   return createNotification({
     userId: buyerUserId,
     title: 'Item shipped',
     message: `"${listingTitle || 'Your item'}" has been marked as shipped.`,
     type: 'shipping',
-    link: `/dashboard/transactions`,
+    link,
     referenceId: transactionId
   });
 }
 
 /** Tracking number provided - notify buyer */
 async function notifyTrackingProvided({ transactionId, listingTitle, buyerUserId }) {
+  const link = transactionId
+    ? `/dashboard/buyer?tab=transactions#transaction-${transactionId}`
+    : '/dashboard/buyer?tab=transactions';
   return createNotification({
     userId: buyerUserId,
     title: 'Tracking number added',
     message: `A tracking number was added for "${listingTitle || 'your item'}".`,
     type: 'shipping',
-    link: `/dashboard/transactions`,
+    link,
     referenceId: transactionId
   });
 }
 
 /** Item marked as delivered - notify buyer */
 async function notifyItemMarkedDelivered({ transactionId, listingTitle, buyerUserId }) {
+  const link = transactionId
+    ? `/dashboard/buyer?tab=transactions#transaction-${transactionId}`
+    : '/dashboard/buyer?tab=transactions';
   return createNotification({
     userId: buyerUserId,
     title: 'Item delivered',
     message: `"${listingTitle || 'Your item'}" has been marked as delivered.`,
     type: 'shipping',
-    link: `/dashboard/transactions`,
+    link,
     referenceId: transactionId
   });
 }
 
 /** Shipping deadline started - notify seller */
 async function notifyShippingDeadlineStarted({ transactionId, listingTitle, sellerUserId }) {
+  const link = transactionId
+    ? `/dashboard/seller?tab=transactions#transaction-${transactionId}`
+    : '/dashboard/seller?tab=transactions';
   return createNotification({
     userId: sellerUserId,
     title: 'Shipping deadline started',
     message: `Ship "${listingTitle || 'the item'}" by the handling deadline.`,
     type: 'shipping',
-    link: `/dashboard/transactions`,
+    link,
     referenceId: transactionId
   });
 }
 
 /** Shipping deadline approaching - notify seller */
 async function notifyShippingDeadlineApproaching({ transactionId, listingTitle, sellerUserId }) {
+  const link = transactionId
+    ? `/dashboard/seller?tab=transactions#transaction-${transactionId}`
+    : '/dashboard/seller?tab=transactions';
   return createNotification({
     userId: sellerUserId,
     title: 'Shipping deadline soon',
     message: `The shipping deadline for "${listingTitle || 'the item'}" is approaching.`,
     type: 'shipping',
-    link: `/dashboard/transactions`,
+    link,
+    referenceId: transactionId
+  });
+}
+
+async function notifySellerShippingFinalTwoDays({ transactionId, listingTitle, sellerUserId }) {
+  const link = transactionId
+    ? `/dashboard/seller?tab=transactions#transaction-${transactionId}`
+    : '/dashboard/seller?tab=transactions';
+  return createNotification({
+    userId: sellerUserId,
+    title: 'Ship soon — 2 days left',
+    message: `You have 2 business days left to ship "${listingTitle || 'this order'}" or it will be cancelled and the buyer refunded.`,
+    type: 'shipping',
+    link,
+    referenceId: transactionId
+  });
+}
+
+async function notifySellerBuyerRemindedShip({ transactionId, listingTitle, sellerUserId }) {
+  const link = transactionId
+    ? `/dashboard/seller?tab=transactions#transaction-${transactionId}`
+    : '/dashboard/seller?tab=transactions';
+  return createNotification({
+    userId: sellerUserId,
+    title: 'Buyer reminder: please ship',
+    message: `The buyer asked you to ship "${listingTitle || 'their order'}" soon.`,
+    type: 'shipping',
+    link,
+    referenceId: transactionId
+  });
+}
+
+async function notifyBuyerOrderCancelledNoShipment({ transactionId, listingTitle, buyerUserId }) {
+  const link = transactionId
+    ? `/dashboard/buyer?tab=transactions#transaction-${transactionId}`
+    : '/dashboard/buyer?tab=transactions';
+  return createNotification({
+    userId: buyerUserId,
+    title: 'Order cancelled — refund issued',
+    message: `Your order for "${listingTitle || 'the item'}" was cancelled because the seller did not ship in time. You have been refunded in full.`,
+    type: 'shipping',
+    link,
+    referenceId: transactionId
+  });
+}
+
+async function notifySellerOrderCancelledNoShipment({ transactionId, listingTitle, sellerUserId }) {
+  const link = transactionId
+    ? `/dashboard/seller?tab=transactions#transaction-${transactionId}`
+    : '/dashboard/seller?tab=transactions';
+  return createNotification({
+    userId: sellerUserId,
+    title: 'Order cancelled — did not ship in time',
+    message: `The order for "${listingTitle || 'your sale'}" was cancelled automatically because you did not ship within the required timeframe. The buyer has been refunded.`,
+    type: 'shipping',
+    link,
     referenceId: transactionId
   });
 }
 
 /** Buyer confirmed receipt - notify seller */
 async function notifyBuyerConfirmedReceipt({ transactionId, listingTitle, buyerName, sellerUserId }) {
+  const link = transactionId
+    ? `/dashboard/seller?tab=transactions#transaction-${transactionId}`
+    : '/dashboard/seller?tab=transactions';
   return createNotification({
     userId: sellerUserId,
     title: 'Buyer confirmed receipt',
     message: `${buyerName || 'The buyer'} confirmed receipt of "${listingTitle || 'the item'}".`,
     type: 'shipping',
-    link: `/dashboard/transactions`,
+    link,
     referenceId: transactionId
   });
 }
@@ -464,6 +630,49 @@ async function notifyAccountReactivated({ userId }) {
   });
 }
 
+/** Seller accepted payment — notify buyer */
+async function notifyBuyerSellerAccepted({ transactionId, listingTitle, buyerUserId }) {
+  const link = transactionId
+    ? `/dashboard/buyer?tab=transactions#transaction-${transactionId}`
+    : '/dashboard/buyer?tab=transactions';
+  return createNotification({
+    userId: buyerUserId,
+    title: 'Seller accepted your payment',
+    message: `The seller has accepted your payment for "${listingTitle || 'the item'}". They will prepare and ship your order soon.`,
+    type: 'transaction',
+    link,
+    referenceId: transactionId
+  });
+}
+
+/** Buyer paid — notify seller */
+async function notifySellerPaymentReceived({ transactionId, listingTitle, buyerName, sellerUserId }) {
+  const link = transactionId
+    ? `/dashboard/seller?tab=transactions#transaction-${transactionId}`
+    : '/dashboard/seller?tab=transactions';
+  return createNotification({
+    userId: sellerUserId,
+    title: 'Payment received',
+    message: `${buyerName || 'A buyer'} paid for "${listingTitle || 'your listing'}". Confirm acceptance and prepare to ship.`,
+    type: 'transaction',
+    link,
+    referenceId: transactionId
+  });
+}
+
+/** Seller must connect Stripe before a qualifying offer can be accepted */
+async function notifySellerStripeRequiredForOffer({ listingSlug, listingTitle, offerAmount, sellerUserId }) {
+  const link = '/dashboard/settings';
+  return createNotification({
+    userId: sellerUserId,
+    title: 'Action required: Connect Stripe to accept offer',
+    message: `Your listing "${listingTitle || 'the item'}" has a qualifying offer of $${(offerAmount || 0).toFixed(2)}. Connect your Stripe account in Settings → Payments to accept it.`,
+    type: 'transaction',
+    link,
+    referenceId: listingSlug
+  });
+}
+
 /** Account permanently closed */
 async function notifyAccountClosed({ userId }) {
   return createNotification({
@@ -485,7 +694,7 @@ async function notifyAccountClosed({ userId }) {
 function formatShippingForPricing(shippingOption, shippingCost = 0) {
   if (!shippingOption) return '—';
   if (shippingOption === 'free') return 'Free';
-  if (shippingOption === 'local-pickup') return 'Local pickup';
+  if (shippingOption === 'local-pickup') return 'Meet in Person';
   if (shippingOption === 'flat-rate') {
     const cost = Number(shippingCost) || 0;
     return cost > 0 ? `$${cost.toFixed(2)}` : 'Free';
@@ -500,12 +709,12 @@ async function notifySellerWinnerSelected({
   listingTitle,
   winnerName,
   winningAmount,
-  commissionRate = 0.005,
+  commissionRate = 0.035,
   shippingCost = 0,
   shippingOption = 'flat-rate',
   sellerUserId
 }) {
-  const link = '/dashboard/transactions';
+  const link = '/dashboard/seller?tab=transactions';
   const amount = Number(winningAmount) || 0;
   const bidRoomFee = amount * (Number(commissionRate) || 0);
   const shippingDisplay = formatShippingForPricing(shippingOption, shippingCost);
@@ -532,7 +741,7 @@ async function notifyBuyerAuctionWon({
   shippingOption = 'flat-rate',
   buyerUserId
 }) {
-  const link = '/dashboard/transactions';
+  const link = '/dashboard/buyer?tab=transactions';
   const amount = Number(winningAmount) || 0;
   const shippingDisplay = formatShippingForPricing(shippingOption, shippingCost);
 
@@ -562,10 +771,326 @@ async function notifyLoginFromNewDevice({ userId, deviceInfo }) {
   });
 }
 
+/**
+ * Notify both buyer and seller to leave a review after a transaction reaches a terminal state.
+ * @param {{ buyerId, sellerId, listingTitle, transactionId, io }}
+ */
+async function notifyReviewPrompt({ buyerId, sellerId, listingTitle, transactionId, io }) {
+  const title = 'Leave a review';
+  const message = `How was your experience with "${listingTitle || 'this transaction'}"? Leave a review to help the community.`;
+  const link = '/dashboard/home';
+
+  await Promise.allSettled([
+    createNotification({ userId: buyerId, title, message, type: 'review', link, referenceId: transactionId }),
+    createNotification({ userId: sellerId, title, message, type: 'review', link, referenceId: transactionId })
+  ]);
+
+  if (io) {
+    await Promise.allSettled([
+      emitNewNotificationToUser(io, buyerId),
+      emitNewNotificationToUser(io, sellerId)
+    ]);
+  }
+}
+
+/** Private-room payment deadline approaching — warn buyer 1h before expiry */
+async function notifyBuyerPaymentDeadlineWarning({ buyerId, listingTitle, listingSlug, deadlineAt }) {
+  const link = `/dashboard/buyer?tab=transactions`;
+  return createNotification({
+    userId: buyerId,
+    title: 'Payment deadline approaching',
+    message: `You have less than 1 hour to complete payment for "${listingTitle || 'the item'}". Failure to pay will result in a reputation penalty.`,
+    type: 'transaction',
+    link,
+    eventType: 'payment_deadline_warning'
+  });
+}
+
+/** Buyer failed to pay in 48h — notify buyer of penalty */
+async function notifyBuyerNonPayment({ buyerId, listingTitle, penaltyPoints, nonPaymentCount, io }) {
+  const link = `/dashboard/buyer?tab=transactions`;
+  const warningLevel = nonPaymentCount >= 3 ? 'ban' : nonPaymentCount === 2 ? 'final_warning' : 'warning';
+  const messages = {
+    warning: `Your payment window for "${listingTitle || 'the item'}" expired. A reputation penalty of ${penaltyPoints} points has been applied.`,
+    final_warning: `Payment expired for "${listingTitle || 'the item'}". This is your 2nd non-payment. One more will result in a permanent account ban.`,
+    ban: `Payment expired for "${listingTitle || 'the item'}". This is your 3rd non-payment. Your account has been suspended.`
+  };
+  await createNotification({
+    userId: buyerId,
+    title: 'Payment deadline expired',
+    message: messages[warningLevel],
+    type: 'account',
+    link,
+    eventType: 'non_payment_penalty'
+  });
+  if (io) await emitNewNotificationToUser(io, buyerId);
+}
+
+/** Seller notified that buyer failed to pay — second chance bidder being offered */
+async function notifySellerBuyerNonPayment({ sellerId, listingTitle, listingSlug, hasSecondBidder, io }) {
+  const link = `/listing/${listingSlug}`;
+  const message = hasSecondBidder
+    ? `The winning bidder for "${listingTitle}" did not pay. We've automatically offered the item to the next highest bidder.`
+    : `The winning bidder for "${listingTitle}" did not pay and there is no second bidder. You can relist the item or cancel.`;
+  await createNotification({
+    userId: sellerId,
+    title: 'Buyer did not pay',
+    message,
+    type: 'transaction',
+    link,
+    eventType: 'buyer_non_payment'
+  });
+  if (io) await emitNewNotificationToUser(io, sellerId);
+}
+
+/** Second-chance bidder notified of their opportunity */
+async function notifySecondBidderSecondChance({ buyerId, listingTitle, listingSlug, paymentDeadlineHours, io }) {
+  const link = `/dashboard/buyer?tab=transactions`;
+  await createNotification({
+    userId: buyerId,
+    title: 'Second chance to buy!',
+    message: `The winner for "${listingTitle}" did not pay. As the next highest bidder, you have ${paymentDeadlineHours}h to complete payment.`,
+    type: 'transaction',
+    link,
+    eventType: 'second_chance_offer'
+  });
+  if (io) await emitNewNotificationToUser(io, buyerId);
+}
+
+/** Damage claim opened — notify seller */
+async function notifyDamageClaimOpened({ sellerId, buyerName, listingTitle, shippingType, transactionId, io }) {
+  const link = transactionId
+    ? `/dashboard/seller?tab=transactions#transaction-${transactionId}`
+    : '/dashboard/seller?tab=transactions';
+  const isExternal = shippingType === 'external_shipping';
+  const title = isExternal
+    ? 'Damage claim opened — your responsibility'
+    : 'Buyer reported item damaged in transit';
+  const message = isExternal
+    ? `${buyerName || 'A buyer'} reported "${listingTitle || 'an item'}" damaged. As the shipper, you must file the carrier claim and resolve this.`
+    : `${buyerName || 'A buyer'} reported "${listingTitle || 'an item'}" arrived damaged. BidRoom will handle the carrier claim.`;
+
+  await createNotification({
+    userId: sellerId,
+    title,
+    message,
+    type: 'dispute',
+    link,
+    referenceId: transactionId,
+    eventType: 'damage_claim_opened'
+  });
+
+  if (io) await emitNewNotificationToUser(io, sellerId);
+}
+
+/** Damage claim resolved — notify buyer */
+async function notifyDamageClaimResolved({ buyerId, listingTitle, status, transactionId, io }) {
+  const link = `/dashboard/buyer?tab=transactions#transaction-${transactionId}`;
+  const approved = status === 'approved_refund' || status === 'resolved';
+  const title = approved ? 'Damage claim approved' : 'Damage claim update';
+  const message = approved
+    ? `Your damage claim for "${listingTitle || 'the item'}" has been approved. A refund will be processed.`
+    : `Your damage claim for "${listingTitle || 'the item'}" has been reviewed. Please check your transactions for details.`;
+
+  await createNotification({
+    userId: buyerId,
+    title,
+    message,
+    type: 'dispute',
+    link,
+    referenceId: transactionId,
+    eventType: 'damage_claim_resolved'
+  });
+
+  if (io) await emitNewNotificationToUser(io, buyerId);
+}
+
+async function notifyCategoryFollowersNewListing({ category, listingTitle, listingSlug, sellerUserId, io }) {
+  try {
+    if (!category) return;
+    const followers = await CategoryFollow.find({ category: category.toLowerCase() }).lean();
+    if (!followers.length) return;
+
+    const title = 'New listing in a category you follow';
+    const message = listingTitle || 'Check it out now';
+    const link = listingSlug ? `/listing/${listingSlug}` : '/listing/list';
+
+    await Promise.allSettled(
+      followers.map(async (f) => {
+        if (sellerUserId && f.user.toString() === sellerUserId.toString()) return;
+        await createNotification({
+          userId: f.user,
+          title,
+          message,
+          type: 'follow',
+          link,
+          referenceId: listingSlug || null,
+          eventType: 'new_listing_in_followed_category'
+        });
+        if (io) await emitNewNotificationToUser(io, f.user.toString());
+      })
+    );
+  } catch (err) {
+    console.error('notifyCategoryFollowersNewListing error:', err.message);
+  }
+}
+
+async function notifySimilarItemWatchers({ category, startingPrice, listingTitle, listingSlug, newListingId, sellerUserId, io }) {
+  try {
+    if (!category) return;
+
+    // Find listings in the same category within ±50% price range
+    const minPrice = startingPrice * 0.5;
+    const maxPrice = startingPrice * 1.5;
+    const similarListings = await Listing.find({
+      _id: { $ne: newListingId },
+      category: category.toLowerCase(),
+      startingPrice: { $gte: minPrice, $lte: maxPrice },
+      status: { $in: ['active', 'ended'] }
+    }).select('_id').lean();
+
+    if (!similarListings.length) return;
+    const similarIds = similarListings.map(l => l._id);
+
+    // Find users who have any of those similar listings in their watchlist
+    const watchlistEntries = await Watchlist.find({ listing: { $in: similarIds } })
+      .select('user listing')
+      .lean();
+
+    // Deduplicate by user
+    const notifiedUsers = new Set();
+    await Promise.allSettled(
+      watchlistEntries.map(async (entry) => {
+        const uid = entry.user.toString();
+        if (notifiedUsers.has(uid)) return;
+        if (sellerUserId && uid === sellerUserId.toString()) return;
+        notifiedUsers.add(uid);
+
+        await createNotification({
+          userId: entry.user,
+          title: 'Similar item to one you\'re watching',
+          message: listingTitle || 'A similar item just went live',
+          type: 'watchlist',
+          link: listingSlug ? `/listing/${listingSlug}` : '/',
+          referenceId: listingSlug || null,
+          eventType: 'similar_item_available'
+        });
+        if (io) await emitNewNotificationToUser(io, uid);
+      })
+    );
+  } catch (err) {
+    console.error('notifySimilarItemWatchers error:', err.message);
+  }
+}
+
+async function notifyWatchlistersAuctionEnding({ listingId, listingTitle, listingSlug, io }) {
+  try {
+    const refId = `ending-soon:${listingId}`;
+    const watchers = await Watchlist.find({ listing: listingId }).select('user').lean();
+    if (!watchers.length) return;
+
+    await Promise.allSettled(
+      watchers.map(async (w) => {
+        // Deduplicate: skip if we already sent this ending-soon notification
+        const existing = await Notification.findOne({
+          user: w.user,
+          referenceId: refId,
+          issuedAt: { $gte: new Date(Date.now() - 2 * 60 * 60 * 1000) }
+        }).lean();
+        if (existing) return;
+
+        await createNotification({
+          userId: w.user,
+          title: 'Auction ending soon',
+          message: listingTitle || 'An item in your watchlist is ending in less than an hour',
+          type: 'watchlist',
+          link: listingSlug ? `/listing/${listingSlug}` : '/',
+          referenceId: refId,
+          eventType: 'watchlist_auction_ending'
+        });
+        if (io) await emitNewNotificationToUser(io, w.user.toString());
+      })
+    );
+  } catch (err) {
+    console.error('notifyWatchlistersAuctionEnding error:', err.message);
+  }
+}
+
+async function notifyFollowersNewListing({ sellerId, sellerFirstName, listingTitle, listingSlug, io }) {
+  try {
+    const followers = await Follow.find({ following: sellerId, muted: false }).lean();
+    if (!followers.length) return;
+
+    const title = sellerFirstName
+      ? `${sellerFirstName} published a new listing`
+      : 'New listing from a seller you follow';
+    const message = listingTitle || 'Check it out now';
+    const link = listingSlug ? `/listing/${listingSlug}` : '/';
+
+    await Promise.allSettled(
+      followers.map(async (f) => {
+        await createNotification({
+          userId: f.follower,
+          title,
+          message,
+          type: 'follow',
+          link,
+          referenceId: sellerId,
+          eventType: 'new_listing_from_followed_seller'
+        });
+        if (io) {
+          await emitNewNotificationToUser(io, f.follower);
+        }
+      })
+    );
+  } catch (err) {
+    console.error('notifyFollowersNewListing error:', err.message);
+  }
+}
+
+/**
+ * Notify a private seller that their activity has exceeded DSA Article 29 thresholds.
+ * Sends in-app notification. Email is handled separately by the scheduler (needs volume/count context).
+ */
+async function notifyDsaWarning({ userId, annualSalesEur, annualTransactionCount, io }) {
+  const salesFormatted = annualSalesEur != null ? `€${Math.round(annualSalesEur).toLocaleString()}` : null;
+  const parts = [];
+  if (salesFormatted) parts.push(`${salesFormatted} in sales`);
+  if (annualTransactionCount != null) parts.push(`${annualTransactionCount} transactions`);
+  const context = parts.length ? ` (${parts.join(', ')} this year)` : '';
+
+  return createNotification({
+    userId,
+    type: 'account',
+    title: 'Seller status review required',
+    message: `Your selling activity${context} may qualify as professional selling under EU DSA regulations. Please confirm your seller status in your dashboard.`,
+    link: '/dashboard/home',
+    io
+  });
+}
+
+/**
+ * Notify a seller that their account has been internally flagged as suspected_professional
+ * after ignoring the initial DSA warning beyond the grace period.
+ */
+async function notifyDsaSuspectedProfessional({ userId, io }) {
+  return createNotification({
+    userId,
+    type: 'account',
+    title: 'Seller account flagged for review',
+    message: 'Your account has been flagged for platform review. Your selling activity exceeds thresholds for private sellers under EU DSA regulations. Action is required to continue selling.',
+    link: '/dashboard/home',
+    io
+  });
+}
+
 module.exports = {
   createNotification,
+  shouldSendEmail,
+  checkAndSetOutbidDebounce,
   notifyNewProposal,
   notifyNewBid,
+  notifyBidderOutbid,
   notifyOfferPlaced,
   notifyOfferOutbid,
   notifyProposalAccepted,
@@ -585,6 +1110,10 @@ module.exports = {
   notifyItemMarkedDelivered,
   notifyShippingDeadlineStarted,
   notifyShippingDeadlineApproaching,
+  notifySellerShippingFinalTwoDays,
+  notifySellerBuyerRemindedShip,
+  notifyBuyerOrderCancelledNoShipment,
+  notifySellerOrderCancelledNoShipment,
   notifyBuyerConfirmedReceipt,
   notifyDisputeOpened,
   notifyEvidenceSubmitted,
@@ -597,5 +1126,21 @@ module.exports = {
   notifyLoginFromNewDevice,
   notifySellerWinnerSelected,
   notifyBuyerAuctionWon,
-  emitNewNotificationToUser
+  notifySellerStripeRequiredForOffer,
+  notifySellerPaymentReceived,
+  notifyBuyerSellerAccepted,
+  notifyReviewPrompt,
+  notifyBuyerPaymentDeadlineWarning,
+  notifyBuyerNonPayment,
+  notifySellerBuyerNonPayment,
+  notifySecondBidderSecondChance,
+  notifyDamageClaimOpened,
+  notifyDamageClaimResolved,
+  notifyFollowersNewListing,
+  notifyCategoryFollowersNewListing,
+  notifySimilarItemWatchers,
+  notifyWatchlistersAuctionEnding,
+  emitNewNotificationToUser,
+  notifyDsaWarning,
+  notifyDsaSuspectedProfessional
 };

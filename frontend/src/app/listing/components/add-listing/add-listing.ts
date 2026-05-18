@@ -1,16 +1,16 @@
-import { Component, OnInit, inject } from '@angular/core';
-
+import { Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormArray } from '@angular/forms';
 import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
-import { firstValueFrom } from 'rxjs';
+import { firstValueFrom, from, merge, Subject, Subscription } from 'rxjs';
+import { debounceTime, filter, switchMap, tap } from 'rxjs/operators';
 import Swal from 'sweetalert2';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { ListingsService } from '../../../shared/services/listings.service';
+import { CustomerService, CustomerInfo } from '../../../shared/services/customer.service';
+import { KycService, KYC_THRESHOLD } from '../../../shared/services/kyc.service';
 import { API_CONFIG } from '../../../shared/config/api.config';
-import { environment } from '../../../../environments/environment';
-import { HeaderComponent } from '../../../shared/components/header/header.component';
-import { FooterComponent } from '../../../shared/components/footer/footer.component';
+import { environment } from '@env';
 
 interface Category {
   id: string;
@@ -21,52 +21,112 @@ interface Category {
 @Component({
   selector: 'app-add-listing',
   standalone: true,
-  imports: [ReactiveFormsModule, TranslateModule, HeaderComponent, FooterComponent],
+  imports: [ReactiveFormsModule, TranslateModule],
   templateUrl: './add-listing.html',
   styleUrl: './add-listing.scss',
 })
-export class AddListing implements OnInit {
+export class AddListing implements OnInit, OnDestroy {
   private fb = inject(FormBuilder);
   private router = inject(Router);
   private listingsService = inject(ListingsService);
+  private customerService = inject(CustomerService);
   private http = inject(HttpClient);
   private translate = inject(TranslateService);
-
-  readonly enableAuctions = environment.enableAuctions ?? true;
-  readonly enablePrivateRooms = environment.enablePrivateRooms ?? true;
+  private kycService = inject(KycService);
 
   listingForm!: FormGroup;
-  currentStep = 1;
-  totalSteps = 4;
   isSubmitting = false;
   errorMessage = '';
   isUploadingImages = false;
-  
+  isLoadingCustomer = true;
+  isStripeConnected = false;
+  customerLoadError = false;
+
   uploadedFiles: File[] = [];
   uploadedFileUrls: string[] = [];
   previewUrls: (string | ArrayBuffer | null)[] = [];
 
-  // Categories
+  dragSrcIndex: number | null = null;
+  dragOverIndex: number | null = null;
+
+  private readonly mediaChange$ = new Subject<void>();
+  private draftAutosaveSub?: Subscription;
+  private restoringDraft = false;
+  private readonly urlByFileKey = new Map<string, string>();
+  draftSaveStatus: 'idle' | 'saving' | 'saved' | 'error' = 'idle';
+  draftSaveError = '';
+
+  // ─── Step management ────────────────────────────────────────────────────────
+  currentStep = 1;
+  readonly totalSteps = 6;
+  isLight = false;
+
+  readonly steps = [
+    { n: 1, titleKey: 'addListing.step1Title', subKey: 'addListing.step1' },
+    { n: 2, titleKey: 'addListing.step2Title', subKey: 'addListing.step2' },
+    { n: 3, titleKey: 'addListing.step3Title', subKey: 'addListing.step3' },
+    { n: 4, titleKey: 'addListing.step4Title', subKey: 'addListing.step4' },
+    { n: 5, titleKey: 'addListing.step5Title', subKey: 'addListing.step5' },
+    { n: 6, titleKey: 'addListing.step6Title', subKey: 'addListing.step6' },
+  ];
+
+  toggleTheme(): void { this.isLight = !this.isLight; }
+  goStep(n: number): void { if (n >= 1 && n <= this.totalSteps) this.currentStep = n; }
+  nextStep(): void { this.goStep(this.currentStep + 1); }
+  prevStep(): void { this.goStep(this.currentStep - 1); }
+  navigateToDashboard(): void { void this.router.navigate(['/dashboard/home']); }
+  navigateBack(): void { void this.router.navigate(['/listing/list']); }
+
+  // ─── Preview sidebar ─────────────────────────────────────────────────────────
+  get previewTitle(): string { return this.listingForm?.get('title')?.value || ''; }
+  get previewCategory(): string { return this.listingForm?.get('category')?.value || ''; }
+  get previewFormat(): string { return this.listingForm?.get('listingFormat')?.value || 'auction'; }
+
+  get previewPrice(): string {
+    const fmt = this.previewFormat;
+    const v = fmt === 'auction'
+      ? this.listingForm?.get('startingBid')?.value
+      : this.listingForm?.get('minimumAcceptPrice')?.value;
+    return v ? `€${parseFloat(v).toFixed(2)}` : '—';
+  }
+
+  get previewPriceLabel(): string {
+    return this.previewFormat === 'auction'
+      ? this.translate.instant('addListing.startingBid')
+      : this.translate.instant('addListing.minimumAcceptPrice');
+  }
+
+  get previewDuration(): string {
+    return this.listingForm?.get('duration')?.value || '—';
+  }
+
+  get checklist(): Record<string, boolean> {
+    const fmt = this.previewFormat;
+    return {
+      format: true,
+      title: (this.listingForm?.get('title')?.value?.length ?? 0) >= 3,
+      category: !!this.listingForm?.get('category')?.value,
+      condition: !!this.listingForm?.get('condition')?.value,
+      description: (this.listingForm?.get('description')?.value?.length ?? 0) >= 50,
+      photos: this.uploadedFiles.length >= 1,
+      price: fmt === 'best-offer' || parseFloat(this.listingForm?.get('startingBid')?.value || '0') > 0,
+      shipping: !!this.listingForm?.get('shippingOption')?.value,
+    };
+  }
+
+  // ─── Categories ──────────────────────────────────────────────────────────────
   categories: Category[] = [
     {
       id: 'electronics',
       name: 'Electronics',
       subCategories: [
-        // Computers
         'Laptops', 'Desktop Computers', 'Computer Components',
-        // Mobile Devices
         'Smartphones', 'Tablets', 'Mobile Accessories',
-        // Audio
         'Headphones', 'Speakers', 'Hi Fi Systems', 'Turntables',
-        // Gaming
         'Gaming Consoles', 'Video Games', 'Gaming Accessories',
-        // Cameras & Photography
         'Digital Cameras', 'Film Cameras', 'Camera Lenses', 'Camera Accessories',
-        // TV & Video
         'Televisions', 'Projectors', 'Streaming Devices',
-        // Wearables
         'Smart Watches', 'Fitness Trackers', 'Wearables Accessories',
-        // Other
         'Other Electronics'
       ]
     },
@@ -74,17 +134,11 @@ export class AddListing implements OnInit {
       id: 'home-garden',
       name: 'Home & Garden',
       subCategories: [
-        // Furniture
         'Tables', 'Chairs', 'Cabinets', 'Shelves', 'Beds',
-        // Home Decor
         'Lamps', 'Mirrors', 'Vases', 'Wall Decor', 'Decorative Objects',
-        // Kitchen & Dining
         'Cookware', 'Tableware', 'Glassware', 'Barware',
-        // Garden & Outdoor
         'Garden Furniture', 'Garden Tools', 'Outdoor Decor', 'Planters',
-        // Textiles
         'Rugs', 'Curtains', 'Blankets', 'Cushions',
-        // Other
         'Lighting', 'Other Home & Garden'
       ]
     },
@@ -101,13 +155,15 @@ export class AddListing implements OnInit {
       id: 'collectibles',
       name: 'Collectibles',
       subCategories: [
-        // Stamps
-        'Stamps',
-        // Collectibles
+        'Definitive Stamps', 'Commemorative Stamps', 'Airmail Stamps',
+        'Postage Due Stamps', 'Revenue / Fiscal Stamps', 'Official Stamps',
+        'Military Mail', 'Local Issues', 'First Day Covers (FDC)',
+        'Stamp Booklets', 'Collections / Lots',
+        'Classic Stamps (Before 1900)', 'Early 20th Century (1900 to 1945)',
+        'Post War (1945 to 1960)', 'Late 20th Century (1960 to 2000)',
+        'Modern Stamps (2000 to Present)',
         'Coins & Banknotes', 'Trading Cards', 'Toys & Models',
-        // Memorabilia
         'Sports Memorabilia', 'Music Memorabilia', 'Movie Memorabilia',
-        // Other
         'Vintage Items', 'Other Collectibles'
       ]
     },
@@ -115,17 +171,11 @@ export class AddListing implements OnInit {
       id: 'jewelry',
       name: 'Jewelry',
       subCategories: [
-        // Rings
         'Engagement Rings', 'Wedding Rings', 'Fashion Rings',
-        // Necklaces
         'Chains', 'Pendants',
-        // Bracelets
         'Bangles', 'Charm Bracelets',
-        // Earrings
         'Stud Earrings', 'Hoop Earrings', 'Drop Earrings',
-        // Watches
         'Luxury Watches', 'Vintage Watches', 'Smart Watches',
-        // Other
         'Brooches & Pins', 'Jewelry Sets', 'Loose Gemstones', 'Other Jewelry'
       ]
     }
@@ -140,100 +190,125 @@ export class AddListing implements OnInit {
     { value: 'For Parts or Not Working', labelKey: 'addListing.conditionForParts' }
   ];
 
-  listingDurations = environment.auctionDurations.map(d => ({
-    ...d,
-    labelKey: d.hours <= 1/12 ? 'addListing.duration5min' :
-      d.hours <= 1 ? 'addListing.duration1hour' :
-      d.hours <= 7 ? 'addListing.duration7hours' : 'addListing.duration24hours'
-  }));
-
-  shippingOptions = [
-    { value: 'flat-rate', labelKey: 'addListing.shippingFlatRate' },
-    { value: 'calculated', labelKey: 'addListing.shippingCalculated' },
-    { value: 'local-pickup', labelKey: 'addListing.shippingLocalPickup' },
-    { value: 'free', labelKey: 'addListing.shippingFree' }
+  listingDurations = [
+    { label: '1 day',   hours: 24  },
+    { label: '3 days',  hours: 72  },
+    { label: '7 days',  hours: 168 },
+    { label: '10 days', hours: 240 },
+    { label: '15 days', hours: 360 },
   ];
 
-  handlingTimes = [
-    { value: 1, labelKey: 'addListing.handling1' },
-    { value: 2, labelKey: 'addListing.handling2' },
-    { value: 3, labelKey: 'addListing.handling3' },
-    { value: 5, labelKey: 'addListing.handling5' },
-    { value: 7, labelKey: 'addListing.handling7' }
+  offerDurations = [
+    { label: '3 days',  hours: 72  },
+    { label: '7 days',  hours: 168 },
+    { label: '15 days', hours: 360 },
+    { label: '30 days', hours: 720 },
+  ];
+
+  shippingOptions = [
+    { value: 'flat-rate',    labelKey: 'addListing.shippingFlatRate' },
+    { value: 'free',         labelKey: 'addListing.shippingFree' },
+    { value: 'calculated',   labelKey: 'addListing.shippingCalculated' },
+    { value: 'local-pickup', labelKey: 'addListing.shippingLocalPickup' },
   ];
 
   returnPolicies = [
-    { value: '30-days', labelKey: 'addListing.return30' },
-    { value: '14-days', labelKey: 'addListing.return14' },
+    { value: '30-days',    labelKey: 'addListing.return30' },
+    { value: '14-days',    labelKey: 'addListing.return14' },
+    { value: '7-days',     labelKey: 'addListing.return7' },
     { value: 'no-returns', labelKey: 'addListing.returnNo' },
-    { value: 'custom', labelKey: 'addListing.returnCustom' }
   ];
 
   selectedCategory: Category | null = null;
-  commissionRate = 0.5;
+
+  get canPublish(): boolean {
+    return this.listingForm.valid && this.isMediaValid && this.uploadedFiles.length >= 1 && !this.isSubmitting && !this.isUploadingImages;
+  }
 
   ngOnInit(): void {
     this.initializeForm();
     this.setupFormSubscriptions();
+    void this.loadDraftFromServer();
+    this.setupDraftAutosave();
+    this.loadCustomerInfo();
+  }
+
+  ngOnDestroy(): void {
+    this.draftAutosaveSub?.unsubscribe();
+    this.mediaChange$.complete();
+  }
+
+  loadCustomerInfo(): void {
+    this.customerService.getCustomer().subscribe({
+      next: (info: CustomerInfo) => {
+        this.isStripeConnected = info.stripeConnectOnboarded;
+        this.isLoadingCustomer = false;
+      },
+      error: () => {
+        this.isLoadingCustomer = false;
+        this.customerLoadError = true;
+      }
+    });
   }
 
   initializeForm(): void {
     this.listingForm = this.fb.group({
-      // Step 1: Item Identity and Format
       title: ['', [Validators.required, Validators.maxLength(80)]],
       category: ['', Validators.required],
       subCategory: ['', Validators.required],
-      listingFormat: ['auction', Validators.required],
+      listingFormat: ['best-offer', Validators.required],
+      itemMode: ['single', Validators.required],
+      quantity: [null],
       condition: ['', Validators.required],
-      
-      // Step 2: Details and Media
       description: ['', [Validators.required, Validators.minLength(50)]],
       media: this.fb.array([]),
       specifications: this.fb.array([]),
+      bundleItems: this.fb.array([]),
       locationCity: ['', Validators.required],
       locationRegion: ['', Validators.required],
-      
-      // Step 3: Pricing and Auction Rules
-      duration: ['', Validators.required],
+      locationCountry: ['PT', Validators.required],
+      duration: ['7 days', Validators.required],
       startingBid: [null],
       reservePrice: [null],
       buyNowPrice: [null],
       minimumAcceptPrice: [null],
       allowPrivateRoom: [false, Validators.required],
-      
-      // Step 4: Shipping and Final Review
       shippingOption: ['', Validators.required],
       flatRateShipping: [null],
       packageSize: [''],
       shippingOriginPostalCode: [''],
       shippingOriginCity: [''],
-      shippingOriginCountry: ['US'],
-      handlingTime: ['', Validators.required],
-      returnPolicy: ['', Validators.required],
+      shippingOriginCountry: ['PT'],
+      returnPolicy: ['14-days', Validators.required],
       sellerDeclaration: [false, Validators.requiredTrue]
     });
 
-    // Lock to best-offer if auctions are disabled in this environment
-    if (!this.enableAuctions) {
-      this.listingForm.patchValue({ listingFormat: 'best-offer' });
-    }
-
-    // Conditional validators based on listing format
     this.listingForm.get('listingFormat')?.valueChanges.subscribe(format => {
       this.updateConditionalValidators(format);
-      // Private Room is only for Highest Bid (auction); clear it when switching to Best Offer
       if (format === 'best-offer') {
         this.listingForm.patchValue({ allowPrivateRoom: false });
-        this.commissionRate = 0.5;
       }
     });
-    this.updateConditionalValidators(this.listingForm.get('listingFormat')?.value || 'auction');
+    this.updateConditionalValidators(this.listingForm.get('listingFormat')?.value || 'best-offer');
 
-    // Conditional validators for shipping option
+    this.listingForm.get('itemMode')?.valueChanges.subscribe(mode => {
+      const qtyControl = this.listingForm.get('quantity');
+      if (mode === 'multi_quantity') {
+        qtyControl?.setValidators([Validators.required, Validators.min(2), Validators.max(999)]);
+      } else {
+        qtyControl?.clearValidators();
+        qtyControl?.setValue(null);
+      }
+      qtyControl?.updateValueAndValidity();
+      if (mode !== 'bundle') {
+        while (this.bundleItems.length) this.bundleItems.removeAt(0);
+      }
+    });
+
     this.listingForm.get('shippingOption')?.valueChanges.subscribe(option => {
-      const flatRateControl      = this.listingForm.get('flatRateShipping');
-      const packageSizeControl   = this.listingForm.get('packageSize');
-      const postalCodeControl    = this.listingForm.get('shippingOriginPostalCode');
+      const flatRateControl    = this.listingForm.get('flatRateShipping');
+      const packageSizeControl = this.listingForm.get('packageSize');
+      const postalCodeControl  = this.listingForm.get('shippingOriginPostalCode');
 
       if (option === 'flat-rate') {
         flatRateControl?.setValidators([Validators.required, Validators.min(0)]);
@@ -252,25 +327,227 @@ export class AddListing implements OnInit {
       packageSizeControl?.updateValueAndValidity();
       postalCodeControl?.updateValueAndValidity();
     });
-
-    // Watch Private Room toggle for commission calculation
-    this.listingForm.get('allowPrivateRoom')?.valueChanges.subscribe(enabled => {
-      this.commissionRate = enabled ? 2.0 : 0.5;
-    });
   }
 
   setupFormSubscriptions(): void {
-    // Reset subCategory when category changes
     this.listingForm.get('category')?.valueChanges.subscribe(categoryId => {
       this.selectedCategory = this.categories.find(c => c.id === categoryId) || null;
       this.listingForm.patchValue({ subCategory: '' });
     });
   }
 
+  private fileKey(file: File): string {
+    return `${file.name}:${file.size}:${file.lastModified}`;
+  }
+
+  private notifyMediaChanged(): void {
+    this.mediaChange$.next();
+  }
+
+  private setupDraftAutosave(): void {
+    this.draftAutosaveSub = merge(this.listingForm.valueChanges, this.mediaChange$).pipe(
+      tap(() => {
+        if (this.draftSaveStatus === 'saved') this.draftSaveStatus = 'idle';
+      }),
+      debounceTime(2800),
+      filter(() => !this.restoringDraft && !this.isSubmitting && !this.isUploadingImages),
+      switchMap(() => from(this.persistDraft({ manual: false })))
+    ).subscribe({
+      error: () => {
+        this.draftSaveStatus = 'error';
+        this.draftSaveError = this.translate.instant('addListing.draftError');
+      }
+    });
+  }
+
+  private hasDraftableContent(): boolean {
+    const v = this.listingForm.getRawValue() as Record<string, unknown>;
+    const text = (s: unknown) => (typeof s === 'string' ? s.trim() : '');
+    if (text(v['title'])) return true;
+    if (text(v['description'])) return true;
+    if (text(v['category'])) return true;
+    if (text(v['subCategory'])) return true;
+    if (v['startingBid'] != null && v['startingBid'] !== '') return true;
+    if (v['minimumAcceptPrice'] != null && v['minimumAcceptPrice'] !== '') return true;
+    if (this.uploadedFiles.length > 0) return true;
+    if ([...this.urlByFileKey.values()].length > 0) return true;
+    return false;
+  }
+
+  private buildDraftPayload(): Record<string, unknown> {
+    const formValue = this.listingForm.getRawValue();
+    const imageUrls = this.buildOrderedImageUrlList();
+    return { ...formValue, imageUrls };
+  }
+
+  private buildOrderedImageUrlList(): string[] {
+    const urls: string[] = [];
+    for (const file of this.uploadedFiles) {
+      if (this.ALLOWED_IMAGE_TYPES.includes(file.type)) {
+        const u = this.urlByFileKey.get(this.fileKey(file));
+        if (u) urls.push(u);
+      }
+    }
+    return urls;
+  }
+
+  private async uploadPendingImagesForDraft(): Promise<void> {
+    const pending = this.uploadedFiles.filter(
+      f => this.ALLOWED_IMAGE_TYPES.includes(f.type) && !this.urlByFileKey.has(this.fileKey(f))
+    );
+    if (pending.length === 0) return;
+
+    const chunkSize = 10;
+    for (let i = 0; i < pending.length; i += chunkSize) {
+      const chunk = pending.slice(i, i + chunkSize);
+      const formData = new FormData();
+      chunk.forEach(file => formData.append('images', file));
+      const response = await firstValueFrom(
+        this.http.post<{ urls: string[] }>(`${API_CONFIG.getApiUrl()}/uploads`, formData)
+      );
+      const urls = response.urls || [];
+      chunk.forEach((file, idx) => {
+        const url = urls[idx];
+        if (url) this.urlByFileKey.set(this.fileKey(file), url);
+      });
+    }
+  }
+
+  private async persistDraft(opts: { manual: boolean }): Promise<void> {
+    if (!this.hasDraftableContent()) {
+      if (opts.manual) { this.draftSaveStatus = 'idle'; this.draftSaveError = ''; }
+      return;
+    }
+    this.draftSaveStatus = 'saving';
+    this.draftSaveError = '';
+    const pendingUpload = this.uploadedFiles.some(
+      f => this.ALLOWED_IMAGE_TYPES.includes(f.type) && !this.urlByFileKey.has(this.fileKey(f))
+    );
+    if (pendingUpload) this.isUploadingImages = true;
+    try {
+      await this.uploadPendingImagesForDraft();
+      const payload = this.buildDraftPayload();
+      await firstValueFrom(this.listingsService.saveListingDraft(payload));
+      this.draftSaveStatus = 'saved';
+      if (opts.manual) {
+        void Swal.fire({
+          toast: true, position: 'top-end', icon: 'success',
+          title: this.translate.instant('addListing.draftSaved'),
+          showConfirmButton: false, timer: 2200, timerProgressBar: true
+        });
+      }
+    } catch (e: unknown) {
+      const status = (e as { status?: number })?.status;
+      if (status === 401) { this.draftSaveStatus = 'idle'; return; }
+      this.draftSaveStatus = 'error';
+      this.draftSaveError = this.translate.instant('addListing.draftError');
+      if (opts.manual) this.errorMessage = this.draftSaveError;
+    } finally {
+      if (pendingUpload) this.isUploadingImages = false;
+    }
+  }
+
+  async saveDraftManually(): Promise<void> {
+    if (this.isSubmitting || this.isUploadingImages) return;
+    await this.persistDraft({ manual: true });
+  }
+
+  private async loadDraftFromServer(): Promise<void> {
+    try {
+      const res = await firstValueFrom(this.listingsService.getListingDraft());
+      const draft = res?.draft;
+      if (!draft?.payload || typeof draft.payload !== 'object') return;
+
+      this.restoringDraft = true;
+      const p = draft.payload as Record<string, unknown>;
+
+      const patch: Record<string, unknown> = {};
+      const keys = [
+        'title', 'category', 'subCategory', 'listingFormat', 'itemMode', 'quantity', 'condition', 'description',
+        'locationCity', 'locationRegion', 'locationCountry', 'duration', 'startingBid',
+        'reservePrice', 'buyNowPrice', 'minimumAcceptPrice', 'allowPrivateRoom',
+        'shippingOption', 'flatRateShipping', 'packageSize', 'shippingOriginPostalCode',
+        'shippingOriginCity', 'shippingOriginCountry', 'returnPolicy', 'sellerDeclaration'
+      ];
+      for (const k of keys) {
+        if (k in p && p[k] !== undefined) patch[k] = p[k];
+      }
+      this.listingForm.patchValue(patch, { emitEvent: false });
+
+      const catId = patch['category'] as string;
+      this.selectedCategory = catId ? this.categories.find(c => c.id === catId) || null : null;
+
+      const specs = p['specifications'];
+      if (Array.isArray(specs)) {
+        while (this.specifications.length) this.specifications.removeAt(0);
+        for (const row of specs) {
+          const r = row as { key?: string; value?: string };
+          this.specifications.push(this.fb.group({
+            key: [r.key || '', Validators.required],
+            value: [r.value || '', Validators.required]
+          }));
+        }
+      }
+
+      const bundleItemsData = p['bundleItems'];
+      if (Array.isArray(bundleItemsData)) {
+        while (this.bundleItems.length) this.bundleItems.removeAt(0);
+        for (const item of bundleItemsData) {
+          const it = item as { title?: string; description?: string };
+          this.bundleItems.push(this.fb.group({
+            title: [it.title || '', [Validators.required, Validators.maxLength(100)]],
+            description: [it.description || '', Validators.maxLength(500)]
+          }));
+        }
+      }
+
+      const format = (patch['listingFormat'] as string) || this.listingForm.get('listingFormat')?.value;
+      this.updateConditionalValidators(format || 'best-offer');
+
+      const urls = p['imageUrls'];
+      if (Array.isArray(urls) && urls.length > 0) {
+        await this.hydrateMediaFromUrls(urls.filter((u): u is string => typeof u === 'string' && u.length > 0));
+      }
+
+      this.restoringDraft = false;
+      void Swal.fire({
+        toast: true, position: 'top-end', icon: 'info',
+        title: this.translate.instant('addListing.draftRestored'),
+        showConfirmButton: false, timer: 3500, timerProgressBar: true
+      });
+    } catch (e: unknown) {
+      if ((e as { status?: number })?.status === 401) { this.restoringDraft = false; return; }
+      this.restoringDraft = false;
+    }
+  }
+
+  private async hydrateMediaFromUrls(urls: string[]): Promise<void> {
+    this.uploadedFiles = [];
+    this.previewUrls = [];
+    while (this.media.length) this.media.removeAt(0);
+
+    for (let i = 0; i < urls.length; i++) {
+      const url = urls[i];
+      try {
+        const res = await fetch(url, { mode: 'cors' });
+        if (!res.ok) continue;
+        const blob = await res.blob();
+        const ext = blob.type?.split('/')[1] || 'jpg';
+        const file = new File([blob], `draft-${i}.${ext}`, { type: blob.type || 'image/jpeg' });
+        this.urlByFileKey.set(this.fileKey(file), url);
+        this.uploadedFiles.push(file);
+        this.previewUrls.push(URL.createObjectURL(blob));
+        this.media.push(this.fb.control(file));
+      } catch {
+        /* skip broken image */
+      }
+    }
+  }
+
   updateConditionalValidators(format: string): void {
-    const startingBidControl = this.listingForm.get('startingBid');
-    const reservePriceControl = this.listingForm.get('reservePrice');
-    const buyNowPriceControl = this.listingForm.get('buyNowPrice');
+    const startingBidControl        = this.listingForm.get('startingBid');
+    const reservePriceControl       = this.listingForm.get('reservePrice');
+    const buyNowPriceControl        = this.listingForm.get('buyNowPrice');
     const minimumAcceptPriceControl = this.listingForm.get('minimumAcceptPrice');
 
     if (format === 'auction') {
@@ -279,8 +556,7 @@ export class AddListing implements OnInit {
       reservePriceControl?.setValue(null);
       buyNowPriceControl?.setValidators([]);
       minimumAcceptPriceControl?.clearValidators();
-      
-      // Buy Now must be higher than Starting Bid
+
       buyNowPriceControl?.valueChanges.subscribe(value => {
         if (value && startingBidControl?.value && value <= startingBidControl.value) {
           buyNowPriceControl.setErrors({ mustBeHigherThanStartingBid: true });
@@ -299,30 +575,29 @@ export class AddListing implements OnInit {
     minimumAcceptPriceControl?.updateValueAndValidity();
   }
 
+  get specifications(): FormArray { return this.listingForm.get('specifications') as FormArray; }
+  get media(): FormArray { return this.listingForm.get('media') as FormArray; }
+  get bundleItems(): FormArray { return this.listingForm.get('bundleItems') as FormArray; }
 
-  get specifications(): FormArray {
-    return this.listingForm.get('specifications') as FormArray;
+  addBundleItem(): void {
+    this.bundleItems.push(this.fb.group({
+      title: ['', [Validators.required, Validators.maxLength(100)]],
+      description: ['', Validators.maxLength(500)]
+    }));
   }
 
-  get media(): FormArray {
-    return this.listingForm.get('media') as FormArray;
-  }
+  removeBundleItem(index: number): void { this.bundleItems.removeAt(index); }
 
-  getSelectedSubCategories(): string[] {
-    return this.selectedCategory?.subCategories || [];
-  }
+  getSelectedSubCategories(): string[] { return this.selectedCategory?.subCategories || []; }
 
   addSpecification(): void {
-    const specGroup = this.fb.group({
+    this.specifications.push(this.fb.group({
       key: ['', Validators.required],
       value: ['', Validators.required]
-    });
-    this.specifications.push(specGroup);
+    }));
   }
 
-  removeSpecification(index: number): void {
-    this.specifications.removeAt(index);
-  }
+  removeSpecification(index: number): void { this.specifications.removeAt(index); }
 
   onFileSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
@@ -336,9 +611,7 @@ export class AddListing implements OnInit {
     event.preventDefault();
     event.stopPropagation();
     const files = event.dataTransfer?.files;
-    if (files && files.length > 0) {
-      this.addFiles(files);
-    }
+    if (files && files.length > 0) this.addFiles(files);
   }
 
   onDragOver(event: DragEvent): void {
@@ -347,32 +620,71 @@ export class AddListing implements OnInit {
   }
 
   private readonly ALLOWED_IMAGE_TYPES = [
-    'image/jpeg',
-    'image/jpg',
-    'image/png',
-    'image/gif',
-    'image/webp',
-    'image/bmp'
+    'image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'image/bmp'
   ];
+
+  private readonly ALLOWED_VIDEO_TYPES = [
+    'video/mp4', 'video/webm', 'video/quicktime'
+  ];
+
+  get imageCount(): number { return this.uploadedFiles.filter(f => this.ALLOWED_IMAGE_TYPES.includes(f.type)).length; }
+  get videoCount(): number { return this.uploadedFiles.filter(f => this.ALLOWED_VIDEO_TYPES.includes(f.type)).length; }
+  isVideoFile(file: File): boolean { return this.ALLOWED_VIDEO_TYPES.includes(file.type); }
+
+  get isMediaValid(): boolean {
+    const imgs = this.imageCount;
+    const vids = this.videoCount;
+    if (vids === 0) return imgs >= 1 && imgs <= 20;
+    if (vids === 1) return imgs >= 1 && imgs <= 5;
+    return false;
+  }
 
   private addFiles(fileList: FileList | File[]): void {
     this.errorMessage = '';
     const files = Array.from(fileList);
-    const rejected: string[] = [];
+    const countBefore = this.uploadedFiles.length;
+    const rejected: { name: string; reason: 'type' | 'maxPhotos' | 'maxPhotosWithVideo' | 'videoLimit' }[] = [];
+    let imgs = this.imageCount;
+    let vids = this.videoCount;
+
     files.forEach(file => {
-      if (this.ALLOWED_IMAGE_TYPES.includes(file.type)) {
+      const isImage = this.ALLOWED_IMAGE_TYPES.includes(file.type);
+      const isVideo = this.ALLOWED_VIDEO_TYPES.includes(file.type);
+
+      if (isImage) {
+        if (vids >= 1 && imgs >= 5) { rejected.push({ name: file.name, reason: 'maxPhotosWithVideo' }); return; }
+        if (vids === 0 && imgs >= 20) { rejected.push({ name: file.name, reason: 'maxPhotos' }); return; }
         this.uploadedFiles.push(file);
+        imgs++;
         const reader = new FileReader();
-        reader.onload = (e) => {
-          this.previewUrls.push(e.target?.result || null);
-        };
+        reader.onload = (e) => { this.previewUrls.push(e.target?.result || null); };
         reader.readAsDataURL(file);
+      } else if (isVideo) {
+        if (vids >= 1 || imgs >= 5) { rejected.push({ name: file.name, reason: 'videoLimit' }); return; }
+        this.uploadedFiles.push(file);
+        this.previewUrls.push(null);
+        vids++;
       } else {
-        rejected.push(file.name);
+        rejected.push({ name: file.name, reason: 'type' });
       }
     });
+
+    if (this.uploadedFiles.length > countBefore) this.notifyMediaChanged();
+
     if (rejected.length > 0) {
-      this.errorMessage = this.translate.instant('addListing.errors.invalidFileType', { files: rejected.join(', ') });
+      const byReason = new Map<typeof rejected[number]['reason'], string[]>();
+      for (const r of rejected) {
+        const list = byReason.get(r.reason) ?? [];
+        list.push(r.name);
+        byReason.set(r.reason, list);
+      }
+      const parts: string[] = [];
+      const joinFiles = (names: string[]) => names.join(', ');
+      if (byReason.has('type')) parts.push(this.translate.instant('addListing.errors.invalidFileType', { files: joinFiles(byReason.get('type')!) }));
+      if (byReason.has('maxPhotos')) parts.push(this.translate.instant('addListing.errors.mediaMaxPhotos', { files: joinFiles(byReason.get('maxPhotos')!) }));
+      if (byReason.has('maxPhotosWithVideo')) parts.push(this.translate.instant('addListing.errors.mediaMaxPhotosWithVideo', { files: joinFiles(byReason.get('maxPhotosWithVideo')!) }));
+      if (byReason.has('videoLimit')) parts.push(this.translate.instant('addListing.errors.mediaVideoLimit', { files: joinFiles(byReason.get('videoLimit')!) }));
+      this.errorMessage = parts.join(' ');
     }
     while (this.media.length < this.uploadedFiles.length) {
       this.media.push(this.fb.control(this.uploadedFiles[this.media.length]));
@@ -381,277 +693,207 @@ export class AddListing implements OnInit {
 
   removeFile(index: number): void {
     if (index >= 0 && index < this.uploadedFiles.length) {
+      const prev = this.previewUrls[index];
+      if (typeof prev === 'string' && prev.startsWith('blob:')) URL.revokeObjectURL(prev);
       this.uploadedFiles.splice(index, 1);
       this.previewUrls.splice(index, 1);
-      if (this.media.length > index) {
-        this.media.removeAt(index);
-      }
+      if (this.media.length > index) this.media.removeAt(index);
+      this.notifyMediaChanged();
     }
   }
 
+  onThumbDragStart(index: number, event: DragEvent): void {
+    this.dragSrcIndex = index;
+    event.dataTransfer!.effectAllowed = 'move';
+    event.dataTransfer!.setData('text/plain', String(index));
+  }
 
-  isStepValid(step: number): boolean {
-    const stepGroups: Record<number, string[]> = {
-      1: ['title', 'category', 'subCategory', 'listingFormat', 'condition'],
-      2: ['description', 'media', 'locationCity', 'locationRegion'],
-      3: ['duration', 'allowPrivateRoom'],
-      4: ['shippingOption', 'handlingTime', 'returnPolicy', 'sellerDeclaration']
+  onThumbDragOver(index: number, event: DragEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+    event.dataTransfer!.dropEffect = 'move';
+    this.dragOverIndex = index;
+  }
+
+  onThumbDragLeave(): void { this.dragOverIndex = null; }
+
+  onThumbDrop(index: number, event: DragEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+    const src = this.dragSrcIndex;
+    this.dragSrcIndex = null;
+    this.dragOverIndex = null;
+    if (src === null || src === index) return;
+    const files = [...this.uploadedFiles];
+    const previews = [...this.previewUrls];
+    const [movedFile] = files.splice(src, 1);
+    const [movedPreview] = previews.splice(src, 1);
+    files.splice(index, 0, movedFile);
+    previews.splice(index, 0, movedPreview);
+    this.uploadedFiles = files;
+    this.previewUrls = previews;
+    this.notifyMediaChanged();
+  }
+
+  onThumbDragEnd(): void { this.dragSrcIndex = null; this.dragOverIndex = null; }
+
+  getFeeForecastPriceBasis(): number {
+    const n = (name: string): number => {
+      const raw = this.listingForm.get(name)?.value;
+      const v = typeof raw === 'number' ? raw : parseFloat(String(raw ?? ''));
+      return Number.isFinite(v) && v > 0 ? v : 0;
     };
-    
-    const controls = stepGroups[step] || [];
-    
-    if (step === 3) {
-      const format = this.listingForm.get('listingFormat')?.value;
-      if (format === 'auction') {
-        if (!controls.includes('startingBid')) {
-          controls.push('startingBid');
-        }
-      }
-    }
-    
-    if (step === 4) {
-      const shippingOption = this.listingForm.get('shippingOption')?.value;
-      if (shippingOption === 'flat-rate') {
-        if (!controls.includes('flatRateShipping')) {
-          controls.push('flatRateShipping');
-        }
-      }
-    }
-    
-    // Special validation for step 2 - check media files
-    // TODO: Re-enable this requirement once file upload is fully implemented
-    // For now, allow proceeding with at least 1 file for testing
-    if (step === 2) {
-      if (this.uploadedFiles.length < 1) {
-        return false;
-      }
-    }
-    
-    // Validate all controls in the step
-    const allValid = controls.every(controlName => {
-      const control = this.listingForm.get(controlName);
-      if (!control) return true; // Skip if control doesn't exist
-      
-      // For media, check the uploaded files count instead
-      // TODO: Change back to >= 3 once file upload is implemented
-      if (controlName === 'media') {
-        return this.uploadedFiles.length >= 1;
-      }
-      
-      return control.valid;
-    });
-    
-    return allValid;
+    const map = n('minimumAcceptPrice');
+    if (map > 0) return map;
+    const format = this.listingForm.get('listingFormat')?.value;
+    if (format === 'auction') return n('startingBid');
+    return n('buyNowPrice') || n('startingBid');
   }
 
-  nextStep(): void {
-    if (this.isStepValid(this.currentStep)) {
-      this.errorMessage = '';
-      if (this.currentStep < this.totalSteps) {
-        this.currentStep++;
-      }
-    } else {
-      // Mark all fields as touched to show validation errors
-      const stepGroups: Record<number, string[]> = {
-        1: ['title', 'category', 'subCategory', 'listingFormat', 'condition'],
-        2: ['description', 'media', 'locationCity', 'locationRegion'],
-        3: ['duration', 'startingBid', 'buyNowPrice', 'minimumAcceptPrice', 'allowPrivateRoom'],
-        4: ['shippingOption', 'flatRateShipping', 'handlingTime', 'returnPolicy', 'sellerDeclaration']
-      };
-      
-      const controls = stepGroups[this.currentStep] || [];
-      controls.forEach(controlName => {
-        const control = this.listingForm.get(controlName);
-        if (control) {
-          control.markAsTouched();
-          // For description, also mark as dirty to show error
-          if (controlName === 'description' && control.invalid) {
-            control.markAsDirty();
-          }
-        }
-      });
-      
-      // Show a more visible error message
-      if (this.currentStep === 2) {
-        const description = this.listingForm.get('description');
-        if (description?.invalid) {
-          this.errorMessage = this.translate.instant('addListing.errorStep2Description');
-          // Clear error message after 5 seconds
-          setTimeout(() => this.errorMessage = '', 5000);
-        }
-      }
-    }
+  sellerFeeRateDecimal(): number {
+    const env = environment as { bidroomFeeSellerRate?: number; bidroomFeePrivateRoomRate?: number };
+    const base = env.bidroomFeeSellerRate ?? 0.035;
+    const privateRate = env.bidroomFeePrivateRoomRate ?? 0.06;
+    const format = this.listingForm.get('listingFormat')?.value;
+    const privateRoom = !!this.listingForm.get('allowPrivateRoom')?.value;
+    if (format === 'auction' && privateRoom) return privateRate;
+    return base;
   }
 
-  previousStep(): void {
-    if (this.currentStep > 1) {
-      this.currentStep--;
-    }
+  get sellerFeeRatePct(): number { return this.sellerFeeRateDecimal() * 100; }
+  get sellerFeeRateDisplay(): string {
+    const r = this.sellerFeeRatePct;
+    return Number.isInteger(r) ? String(r) : r.toFixed(1);
   }
 
-  goToStep(step: number): void {
-    // Only allow going to previous steps or next valid step
-    if (step >= 1 && step <= this.totalSteps) {
-      // Check if all previous steps are valid
-      let canGoToStep = true;
-      for (let i = 1; i < step; i++) {
-        if (!this.isStepValid(i)) {
-          canGoToStep = false;
-          break;
-        }
-      }
-      
-      if (canGoToStep || step < this.currentStep) {
-        this.currentStep = step;
-      }
-    }
-  }
-
-  calculateEstimatedCommission(): number {
-    const startingBid = this.listingForm.get('startingBid')?.value || 0;
-    const buyNowPrice = this.listingForm.get('buyNowPrice')?.value || 0;
-    const minimumAcceptPrice = this.listingForm.get('minimumAcceptPrice')?.value || 0;
-    
-    // Use the highest price as basis for commission calculation
-    const priceBasis = Math.max(startingBid, buyNowPrice, minimumAcceptPrice);
-    
-    return priceBasis * (this.commissionRate / 100);
-  }
-
-  calculateEstimatedFees(): {
-    commission: number;
-    paymentProcessing: number;
-    total: number;
-  } {
-    const priceBasis = this.listingForm.get('startingBid')?.value || 
-                      this.listingForm.get('buyNowPrice')?.value || 
-                      this.listingForm.get('minimumAcceptPrice')?.value || 0;
-    
-    const commission = priceBasis * (this.commissionRate / 100);
-    const paymentProcessing = priceBasis * 0.029 + 0.30; // Standard Stripe-like fee
-    const total = commission + paymentProcessing;
-    
-    return {
-      commission,
-      paymentProcessing,
-      total
-    };
+  estimatedSellerFeeAmount(): number {
+    return this.getFeeForecastPriceBasis() * this.sellerFeeRateDecimal();
   }
 
   async uploadImages(): Promise<string[]> {
-    if (this.uploadedFiles.length === 0) {
-      return [];
-    }
-    
+    if (this.uploadedFiles.length === 0) return [];
     this.isUploadingImages = true;
-    
     try {
       const formData = new FormData();
-      this.uploadedFiles.forEach(file => {
-        formData.append('images', file);
-      });
-
+      this.uploadedFiles.forEach(file => formData.append('images', file));
       const response = await firstValueFrom(
-        this.http.post<{ urls: string[]; count: number }>(
-          `${API_CONFIG.getApiUrl()}/uploads`,
-          formData
-          // Note: Don't set Content-Type header - browser will set it with boundary for multipart/form-data
-        )
+        this.http.post<{ urls: string[]; count: number }>(`${API_CONFIG.getApiUrl()}/uploads`, formData)
       );
-
       this.uploadedFileUrls = response.urls || [];
       this.isUploadingImages = false;
       return this.uploadedFileUrls;
     } catch (error: any) {
       this.isUploadingImages = false;
-      console.error('Error uploading images:', error);
       throw new Error(error.error?.message || 'Failed to upload images. Please try again.');
     }
   }
 
   async onSubmit(): Promise<void> {
-    if (this.listingForm.valid && this.uploadedFiles.length >= 1) {
-      this.isSubmitting = true;
-      this.errorMessage = '';
-      
-      try {
-        // Step 1: Upload images to Azure Blob Storage
-        let imageUrls: string[] = [];
-        
-        if (this.uploadedFiles.length > 0) {
-          this.errorMessage = this.translate.instant('addListing.uploadingImages');
-          imageUrls = await this.uploadImages();
-          
-          if (imageUrls.length === 0) {
-            throw new Error(this.translate.instant('addListing.errorUploadFailed'));
-          }
-        }
+    if (this.isSubmitting || this.isUploadingImages) return;
 
-        // Step 2: Create listing with image URLs
-        this.errorMessage = this.translate.instant('addListing.creatingListing');
-        const formData = this.prepareListingData();
-        formData.images = imageUrls;
-        
-        const listing = await firstValueFrom(
-          this.listingsService.createListing(formData)
-        );
-        
-        this.isSubmitting = false;
-        Swal.fire({
-          toast: true,
-          position: 'top-end',
-          icon: 'success',
-          title: this.translate.instant('addListing.successMessage'),
-          showConfirmButton: false,
-          timer: 3000,
-          timerProgressBar: true
-        });
-        this.router.navigate(['/listing', listing.slug]);
-      } catch (error: any) {
-        this.isSubmitting = false;
-        this.errorMessage = error.message || error.error?.message || 'Failed to create listing. Please try again.';
-        console.error('Error creating listing:', error);
-      }
-    } else {
-      // Mark all fields as touched
-      Object.keys(this.listingForm.controls).forEach(key => {
-        this.listingForm.get(key)?.markAsTouched();
+    Object.keys(this.listingForm.controls).forEach(key => {
+      this.listingForm.get(key)?.markAsTouched();
+    });
+
+    if (!this.listingForm.valid || this.uploadedFiles.length < 1 || !this.isMediaValid) {
+      const fieldLabels: Record<string, string> = {
+        title: 'Listing Title',
+        category: 'Category',
+        subCategory: 'Sub-Category',
+        condition: 'Item Condition',
+        description: 'Full Description (min. 50 characters)',
+        startingBid: 'Starting Bid',
+        locationCity: 'City',
+        locationRegion: 'Region / State',
+        duration: 'Listing Duration',
+        shippingOption: 'Shipping Option',
+        returnPolicy: 'Return Policy',
+        sellerDeclaration: 'Seller Declaration checkbox',
+      };
+      const missing: string[] = [];
+      if (this.uploadedFiles.length < 1) missing.push('at least 1 photo');
+      Object.keys(fieldLabels).forEach(key => {
+        if (this.listingForm.get(key)?.invalid) missing.push(fieldLabels[key]);
       });
-      
-      if (this.uploadedFiles.length < 1) {
-        this.errorMessage = this.translate.instant('addListing.uploadMinError');
+      this.errorMessage = missing.length > 0
+        ? `Please complete the following before publishing: ${missing.join(', ')}.`
+        : 'Please fix the highlighted errors before publishing.';
+      return;
+    }
+
+    const price = parseFloat(this.listingForm.get('startingBid')?.value || '0');
+    if (price >= KYC_THRESHOLD) {
+      const status = await firstValueFrom(this.kycService.fetchStatus()).catch(() => null);
+      if (status?.kycStatus !== 'approved') {
+        this.kycService.openKycGate(status?.kycStatus ?? 'none');
+        return;
       }
+    }
+
+    this.isSubmitting = true;
+    this.errorMessage = '';
+
+    try {
+      this.errorMessage = this.translate.instant('addListing.uploadingImages');
+      const imageUrls = await this.uploadImages();
+      if (imageUrls.length === 0) throw new Error(this.translate.instant('addListing.errorUploadFailed'));
+
+      this.errorMessage = this.translate.instant('addListing.creatingListing');
+      const formData = this.prepareListingData();
+      formData.images = imageUrls;
+
+      const listing = await firstValueFrom(this.listingsService.createListing(formData));
+
+      this.isSubmitting = false;
+      this.errorMessage = '';
+      Swal.fire({
+        toast: true, position: 'top-end', icon: 'success',
+        title: this.translate.instant('addListing.successMessage'),
+        showConfirmButton: false, timer: 3000, timerProgressBar: true
+      });
+      this.router.navigate(['/listing', listing.slug]);
+      firstValueFrom(this.listingsService.deleteListingDraft()).catch(() => {});
+    } catch (error: any) {
+      this.isSubmitting = false;
+      if (error?.error?.error === 'kyc_required') {
+        this.kycService.openKycGate(error.error.kycStatus || 'none');
+        return;
+      }
+      this.errorMessage = error.message || error.error?.message || 'Failed to create listing. Please try again.';
     }
   }
 
   prepareListingData(): any {
     const formValue = this.listingForm.value;
-    
     return {
       title: formValue.title,
       description: formValue.description,
       category: formValue.category,
       subCategory: formValue.subCategory,
       condition: formValue.condition,
-      listingFormat: formValue.listingFormat, // 'auction' or 'best-offer'
+      listingFormat: formValue.listingFormat,
       duration: formValue.duration,
       startingPrice: formValue.startingBid || null,
       reservePrice: formValue.listingFormat === 'auction' ? null : (formValue.reservePrice || null),
       buyNowPrice: formValue.buyNowPrice || null,
       minimumOfferPrice: formValue.minimumAcceptPrice || null,
       allowPrivateRoom: formValue.allowPrivateRoom,
-      commissionRate: this.commissionRate,
-      location: `${formValue.locationCity}, ${formValue.locationRegion}`,
+      commissionRate: this.sellerFeeRatePct,
+      locationCity: formValue.locationCity?.trim(),
+      locationCountry: formValue.locationCountry,
+      location: `${formValue.locationCity}, ${formValue.locationRegion}, ${formValue.locationCountry}`,
       shippingCost: formValue.flatRateShipping || (formValue.shippingOption === 'free' ? 0 : null),
       shippingOption: formValue.shippingOption,
       packageSize: formValue.shippingOption === 'calculated' ? formValue.packageSize : null,
       shippingOriginPostalCode: formValue.shippingOption === 'calculated' ? formValue.shippingOriginPostalCode : null,
       shippingOriginCity: formValue.shippingOption === 'calculated' ? formValue.shippingOriginCity : null,
-      shippingOriginCountry: formValue.shippingOption === 'calculated' ? (formValue.shippingOriginCountry || 'US') : null,
-      handlingTime: formValue.handlingTime,
+      shippingOriginCountry: formValue.shippingOption === 'calculated' ? (formValue.shippingOriginCountry || 'PT') : null,
       returnPolicy: formValue.returnPolicy,
       specifications: formValue.specifications || [],
-      images: this.uploadedFileUrls // Will be populated with uploaded image URLs
+      itemMode: formValue.itemMode || 'single',
+      quantity: formValue.itemMode === 'multi_quantity' ? (formValue.quantity || 2) : 1,
+      bundleItems: formValue.itemMode === 'bundle' ? (formValue.bundleItems || []) : [],
+      images: this.uploadedFileUrls
     };
   }
 
@@ -673,9 +915,6 @@ export class AddListing implements OnInit {
       if (control.hasError('mustBeHigherThanStartingBid')) {
         return this.translate.instant('addListing.errors.buyNowTooLow');
       }
-      if (control.hasError('mustBeAtLeastStartingBid')) {
-        return this.translate.instant('addListing.errors.reserveTooLow');
-      }
     }
     return '';
   }
@@ -690,17 +929,13 @@ export class AddListing implements OnInit {
       description: 'addListing.description',
       locationCity: 'addListing.city',
       locationRegion: 'addListing.regionState',
+      locationCountry: 'addListing.originCountry',
       duration: 'addListing.duration',
       startingBid: 'addListing.startingBid',
       reservePrice: 'addListing.reservePrice',
       shippingOption: 'addListing.shippingOptions',
-      handlingTime: 'addListing.handlingTime',
       returnPolicy: 'addListing.returnPolicy'
     };
     return this.translate.instant(keyMap[fieldName] || fieldName);
-  }
-
-  isStep(step: number): boolean {
-    return this.currentStep === step;
   }
 }

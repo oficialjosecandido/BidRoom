@@ -193,6 +193,10 @@ export class AdminAuctionDetailsComponent implements OnInit {
     });
   }
 
+  bidderTrackKey(bidder: Bidder): string {
+    return bidder._id != null ? String(bidder._id) : bidder.email;
+  }
+
   goBack(): void {
     this.router.navigate(['/nexus/auctions']);
   }

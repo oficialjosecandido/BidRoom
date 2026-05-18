@@ -1,15 +1,35 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import Swal from 'sweetalert2';
 import { AuthService, AppUser } from '../../../auth/services/auth.service';
 import { ListingsService, Listing } from '../../../shared/services/listings.service';
-import { CustomerService, CustomerInfo } from '../../../shared/services/customer.service';
+import { CustomerService, CustomerInfo, DsaWarningInfo } from '../../../shared/services/customer.service';
 import { PaymentsService, TopupRecord } from '../../../shared/services/payments.service';
-import { ReviewsService, PendingReview } from '../../../shared/services/reviews.service';
-import { Observable } from 'rxjs';
+import { ReviewsService, PendingReview, ReviewTag } from '../../../shared/services/reviews.service';
+import { FeatureFlagsService } from '../../../shared/services/feature-flags.service';
+import { SocketService } from '../../../shared/services/socket.service';
+import { TransactionsService } from '../../../shared/services/transactions.service';
+import { Observable, Subscription } from 'rxjs';
+
+interface BidderListing extends Listing {
+  type?: string;
+  bets?: Array<{ _id: string; amount: number; createdAt: string; type: string; status: string }>;
+  notifyWhenOutbid?: boolean;
+  isWinner?: boolean;
+  myHighestBid?: number | null;
+}
+
+interface HomeStatCard {
+  key: string;
+  label: string;
+  value: string;
+  sub: string;
+  valueTone: '' | 'gold' | 'green' | 'amber';
+  subUp?: boolean;
+}
 
 @Component({
   selector: 'app-dashboard-home',
@@ -18,19 +38,30 @@ import { Observable } from 'rxjs';
   templateUrl: './dashboard-home.component.html',
   styleUrls: ['./dashboard-home.component.scss']
 })
-export class DashboardHomeComponent implements OnInit {
+export class DashboardHomeComponent implements OnInit, OnDestroy {
   private authService = inject(AuthService);
   private listingsService = inject(ListingsService);
   private customerService = inject(CustomerService);
   private paymentsService = inject(PaymentsService);
   private reviewsService = inject(ReviewsService);
+  featureFlags = inject(FeatureFlagsService);
+  private socketService = inject(SocketService);
   private router = inject(Router);
+  private translate = inject(TranslateService);
+  private transactionsService = inject(TransactionsService);
+
+  private socketSubscriptions: Subscription[] = [];
+  private joinedListingIds: string[] = [];
+  private destroyed = false;
 
   currentUser$: Observable<AppUser | null>;
   customer: CustomerInfo | null = null;
   activeListings: Listing[] = [];
   endedListings: Listing[] = [];
+  bidderListings: BidderListing[] = [];
   pendingReviews: PendingReview[] = [];
+  pendingBuyerTransactions = 0;
+  pendingSellerTransactions = 0;
   isLoading = true;
   error: string | null = null;
 
@@ -45,8 +76,22 @@ export class DashboardHomeComponent implements OnInit {
   reviewTarget: PendingReview | null = null;
   reviewScore = 0;
   reviewDescription = '';
+  reviewTags: ReviewTag[] = [];
   reviewSubmitting = false;
   reviewError: string | null = null;
+
+  readonly TAGS_AS_SELLER: ReviewTag[] = [
+    'fast_shipping', 'item_as_described', 'great_packaging', 'good_communication',
+    'slow_shipping', 'not_as_described', 'poor_communication'
+  ];
+  readonly TAGS_AS_BUYER: ReviewTag[] = [
+    'fast_payment', 'smooth_transaction', 'trustworthy', 'good_communication',
+    'slow_payment', 'poor_communication'
+  ];
+
+  get availableTags(): ReviewTag[] {
+    return this.reviewTarget?.roleForReview === 'as_buyer' ? this.TAGS_AS_BUYER : this.TAGS_AS_SELLER;
+  }
 
   showBalanceModal = false;
   balanceModalAmount: number | null = null;
@@ -92,9 +137,187 @@ export class DashboardHomeComponent implements OnInit {
   ngOnInit(): void {
     this.loadCustomer();
     this.loadMyListings();
+    this.loadBidderListings();
+    this.loadPendingTransactionCounts();
     this.loadPendingReviews();
     this.loadTopups();
     this.checkPaymentReturn();
+  }
+
+  loadBidderListings(): void {
+    this.listingsService.getBidderBets().subscribe({
+      next: (res) => {
+        this.bidderListings = (res.listings || []) as BidderListing[];
+      },
+      error: () => {
+        this.bidderListings = [];
+      }
+    });
+  }
+
+  loadPendingTransactionCounts(): void {
+    this.transactionsService.getPendingCounts().subscribe({
+      next: (counts) => {
+        this.pendingBuyerTransactions = counts.buyer;
+        this.pendingSellerTransactions = counts.seller;
+      }
+    });
+  }
+
+  get activeBidderListings(): BidderListing[] {
+    return this.bidderListings.filter((l) => l.status === 'active');
+  }
+
+  get pendingOffersCount(): number {
+    return this.bidderListings.filter((l) => {
+      if (l.auctionFormat !== 'best-offer' || l.status !== 'active') return false;
+      return (l.bets || []).some((b) => b.status === 'pending');
+    }).length;
+  }
+
+  private scoreToPercent(score: number | null | undefined): number | null {
+    return score != null ? Math.round((score / 5) * 100) : null;
+  }
+
+  get statCards(): HomeStatCard[] {
+    const cards: HomeStatCard[] = [];
+
+    const bids = this.activeBidderListings.length;
+    if (bids > 0) {
+      cards.push({
+        key: 'activeBids',
+        label: this.translate.instant('dashboard.home.statActiveBids'),
+        value: String(bids),
+        sub: this.translate.instant('dashboard.home.statAcrossAuctions', { count: bids }),
+        valueTone: ''
+      });
+    }
+
+    const offers = this.pendingOffersCount;
+    if (offers > 0) {
+      cards.push({
+        key: 'pendingOffers',
+        label: this.translate.instant('dashboard.home.statPendingOffers'),
+        value: String(offers),
+        sub: this.translate.instant('dashboard.home.statAwaitingSeller'),
+        valueTone: ''
+      });
+    }
+
+    if (this.pendingBuyerTransactions > 0) {
+      cards.push({
+        key: 'pendingTxBuyer',
+        label: this.translate.instant('dashboard.home.statPendingTx'),
+        value: String(this.pendingBuyerTransactions),
+        sub: this.translate.instant('dashboard.home.statActionNeeded'),
+        valueTone: 'amber'
+      });
+    }
+
+    const live = this.activeListings.length;
+    if (live > 0) {
+      cards.push({
+        key: 'activeListings',
+        label: this.translate.instant('dashboard.home.statActiveListings'),
+        value: String(live),
+        sub: this.translate.instant('dashboard.home.live'),
+        valueTone: 'green'
+      });
+    }
+
+    if (this.pendingSellerTransactions > 0) {
+      cards.push({
+        key: 'pendingTxSeller',
+        label: this.translate.instant('dashboard.home.statPendingTx'),
+        value: String(this.pendingSellerTransactions),
+        sub: this.translate.instant('dashboard.home.statActionNeeded'),
+        valueTone: 'amber'
+      });
+    }
+
+    const buyerRep = this.scoreToPercent(this.buyerScore);
+    if (buyerRep != null) {
+      cards.push({
+        key: 'reputationBuyer',
+        label: this.translate.instant('dashboard.home.statReputation'),
+        value: String(buyerRep),
+        sub: this.translate.instant('dashboard.home.statOutOf100'),
+        valueTone: 'green'
+      });
+    }
+
+    const sellerRep = this.scoreToPercent(this.sellerScore);
+    if (sellerRep != null && sellerRep !== buyerRep) {
+      cards.push({
+        key: 'reputationSeller',
+        label: this.translate.instant('dashboard.home.statReputation'),
+        value: String(sellerRep),
+        sub: this.translate.instant('dashboard.home.statOutOf100'),
+        valueTone: 'green'
+      });
+    }
+
+    return cards;
+  }
+
+  get statsGridColumns(): string {
+    const n = this.statCards.length;
+    if (n <= 1) return '1fr';
+    if (n === 2) return 'repeat(2, 1fr)';
+    if (n === 3) return 'repeat(3, 1fr)';
+    return 'repeat(4, 1fr)';
+  }
+
+  isListingWinning(listing: BidderListing): boolean {
+    return listing.isWinner === true;
+  }
+
+  isListingOutbid(listing: BidderListing): boolean {
+    return listing.status === 'active' && !listing.isWinner;
+  }
+
+  getBidStatusKey(listing: BidderListing): string {
+    if (listing.isWinner) return 'dashboard.home.statusWinning';
+    if (listing.status === 'active') return 'dashboard.home.statusOutbid';
+    return 'dashboard.home.statusEnded';
+  }
+
+  getBidStatusClass(listing: BidderListing): string {
+    if (listing.isWinner) return 'status-live';
+    if (listing.status === 'active') return 'status-pending';
+    return 'status-ended';
+  }
+
+  getTimeRemaining(endDate: string): string {
+    const ms = new Date(endDate).getTime() - Date.now();
+    if (ms <= 0) return this.translate.instant('dashboard.home.ended');
+    const h = Math.floor(ms / 3600000);
+    const m = Math.floor((ms % 3600000) / 60000);
+    if (h >= 24) {
+      const d = Math.floor(h / 24);
+      return this.translate.instant('dashboard.home.endsInDays', { days: d });
+    }
+    return this.translate.instant('dashboard.home.endsInHours', { hours: h, minutes: m });
+  }
+
+  getFormatLabel(listing: Listing): string {
+    return listing.auctionFormat === 'best-offer'
+      ? this.translate.instant('dashboard.home.formatBestOffer')
+      : this.translate.instant('dashboard.home.formatAuction');
+  }
+
+  getListingThumb(listing: Listing): string | null {
+    return listing.images?.[0] || null;
+  }
+
+  getListingEmoji(listing: Listing): string {
+    const c = (listing.category || '').toLowerCase();
+    if (c.includes('watch') || c.includes('relóg')) return '⌚';
+    if (c.includes('art') || c.includes('arte')) return '🎨';
+    if (c.includes('jewel') || c.includes('jóia')) return '💎';
+    if (c.includes('photo') || c.includes('câmara')) return '📷';
+    if (c.includes('car') || c.includes('auto')) return '🏎';
+    return '📦';
   }
 
   loadTopups(): void {
@@ -227,6 +450,7 @@ export class DashboardHomeComponent implements OnInit {
     this.reviewTarget = item;
     this.reviewScore = 0;
     this.reviewDescription = '';
+    this.reviewTags = [];
     this.reviewError = null;
     this.showReviewModal = true;
   }
@@ -236,7 +460,21 @@ export class DashboardHomeComponent implements OnInit {
     this.reviewTarget = null;
     this.reviewScore = 0;
     this.reviewDescription = '';
+    this.reviewTags = [];
     this.reviewError = null;
+  }
+
+  toggleReviewTag(tag: ReviewTag): void {
+    const idx = this.reviewTags.indexOf(tag);
+    if (idx >= 0) {
+      this.reviewTags.splice(idx, 1);
+    } else if (this.reviewTags.length < 5) {
+      this.reviewTags.push(tag);
+    }
+  }
+
+  isTagSelected(tag: ReviewTag): boolean {
+    return this.reviewTags.includes(tag);
   }
 
   setRating(r: number): void {
@@ -244,18 +482,18 @@ export class DashboardHomeComponent implements OnInit {
   }
 
   getScoreEmoji(score: number): string {
-    if (score <= 2) return '😞';
-    if (score <= 4) return '😐';
-    if (score <= 6) return '🙂';
-    if (score <= 8) return '😊';
+    if (score <= 1) return '😞';
+    if (score <= 2) return '😐';
+    if (score <= 3) return '🙂';
+    if (score <= 4) return '😊';
     return '🎉';
   }
 
   getScoreLabel(score: number): string {
-    if (score <= 2) return 'Poor';
-    if (score <= 4) return 'Fair';
-    if (score <= 6) return 'Good';
-    if (score <= 8) return 'Great';
+    if (score <= 1) return 'Poor';
+    if (score <= 2) return 'Fair';
+    if (score <= 3) return 'Good';
+    if (score <= 4) return 'Great';
     return 'Excellent!';
   }
 
@@ -265,8 +503,8 @@ export class DashboardHomeComponent implements OnInit {
   }
 
   submitReview(): void {
-    if (!this.reviewTarget || this.reviewScore < 1 || this.reviewScore > 10) {
-      this.reviewError = 'Please select a score from 1 to 10.';
+    if (!this.reviewTarget || this.reviewScore < 1 || this.reviewScore > 5) {
+      this.reviewError = 'Please select a score from 1 to 5.';
       return;
     }
     this.reviewSubmitting = true;
@@ -276,7 +514,8 @@ export class DashboardHomeComponent implements OnInit {
       toUserId: this.reviewTarget.otherPartyId,
       role: this.reviewTarget.roleForReview,
       score: this.reviewScore,
-      description: this.reviewDescription.trim() || undefined
+      description: this.reviewDescription.trim() || undefined,
+      tags: this.reviewTags.length > 0 ? [...this.reviewTags] : undefined
     }).subscribe({
       next: () => {
         this.reviewSubmitting = false;
@@ -337,12 +576,123 @@ export class DashboardHomeComponent implements OnInit {
           (l) => l.status === 'ended' || l.status === 'cancelled' || (l.status === 'active' && new Date(l.endDate) <= now)
         );
         this.isLoading = false;
+        this.setupRealTimeUpdates(this.activeListings);
       },
       error: (err) => {
         this.error = err?.message || 'Failed to load your listings';
         this.isLoading = false;
       }
     });
+  }
+
+  private setupRealTimeUpdates(activeListings: Listing[]): void {
+    if (this.destroyed) return;
+    // Clean up any previous subscriptions and rooms
+    this.cleanupRealTime();
+
+    const ids = activeListings.map(l => l._id).filter(Boolean) as string[];
+    if (!ids.length) return;
+
+    this.joinedListingIds = ids;
+    this.socketService.connect();
+    this.socketService.joinListings(ids);
+
+    const newBidSub = this.socketService.onNewBid().subscribe((event) => {
+      const listing = this.activeListings.find(l => l._id === event.listingId);
+      if (listing && event.bidCount !== undefined) {
+        listing.bidCount = event.bidCount;
+        if (event.currentPrice !== undefined) listing.currentPrice = event.currentPrice;
+      }
+    });
+    this.socketSubscriptions.push(newBidSub);
+
+    const updateSub = this.socketService.onListingUpdate().subscribe((event) => {
+      const listing = this.activeListings.find(l => l._id === event.listingId);
+      if (listing) {
+        if (event.bidCount !== undefined) listing.bidCount = event.bidCount;
+        if (event.currentPrice !== undefined) listing.currentPrice = event.currentPrice;
+        if (event.status) listing.status = event.status;
+      }
+    });
+    this.socketSubscriptions.push(updateSub);
+  }
+
+  private cleanupRealTime(): void {
+    for (const sub of this.socketSubscriptions) sub.unsubscribe();
+    this.socketSubscriptions = [];
+    if (this.joinedListingIds.length) {
+      this.socketService.leaveListings(this.joinedListingIds);
+      this.joinedListingIds = [];
+    }
+  }
+
+  ngOnDestroy(): void {
+    this.destroyed = true;
+    this.cleanupRealTime();
+  }
+
+  /** True when the user hasn't completed payout setup.
+   *  Show to anyone without a connected account — buyers who become sellers need it too.
+   *  Can be dismissed for the session via the banner's close button. */
+  payoutBannerDismissed = false;
+
+  get showPayoutSetupBanner(): boolean {
+    if (this.payoutBannerDismissed) return false;
+    if (this.isLoading) return false;
+    return !this.customer?.stripeConnectOnboarded;
+  }
+
+  // ─── DSA Warning Banner ──────────────────────────────────────────────────
+  dsaWarningDismissed = false;
+  dsaWarningResponding = false;
+
+  get dsaWarning(): DsaWarningInfo | null {
+    return this.customer?.dsaWarning ?? null;
+  }
+
+  get showDsaWarningBanner(): boolean {
+    if (this.dsaWarningDismissed || this.isLoading) return false;
+    const w = this.dsaWarning;
+    if (!w?.warningIssuedAt) return false;
+    return !w.acknowledgedAt;
+  }
+
+  respondDsaWarning(response: 'remain_private' | 'switch_professional'): void {
+    if (this.dsaWarningResponding) return;
+    this.dsaWarningResponding = true;
+    this.customerService.respondToDsaWarning(response).subscribe({
+      next: () => {
+        this.dsaWarningResponding = false;
+        this.dsaWarningDismissed = true;
+        if (response === 'switch_professional') {
+          this.router.navigate(['/dashboard/settings']);
+        }
+      },
+      error: () => {
+        this.dsaWarningResponding = false;
+        this.dsaWarningDismissed = true;
+      }
+    });
+  }
+
+  dismissDsaWarning(): void {
+    this.dsaWarningDismissed = true;
+  }
+
+  dismissPayoutBanner(): void {
+    this.payoutBannerDismissed = true;
+  }
+
+  getGreeting(): string {
+    const h = new Date().getHours();
+    if (h < 12) return this.translate.instant('dashboard.home.greeting.morning');
+    if (h < 18) return this.translate.instant('dashboard.home.greeting.afternoon');
+    return this.translate.instant('dashboard.home.greeting.evening');
+  }
+
+  get firstName(): string {
+    if (this.customer?.user?.firstName) return this.customer.user.firstName;
+    return '';
   }
 
   formatDate(dateString: string): string {
@@ -356,6 +706,6 @@ export class DashboardHomeComponent implements OnInit {
   }
 
   formatPrice(value: number): string {
-    return '$' + value.toFixed(2);
+    return `€ ${value.toLocaleString('pt-PT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
   }
 }

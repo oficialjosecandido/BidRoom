@@ -4,17 +4,20 @@ const Listing = require('../models/Listing');
 const User = require('../models/User');
 const Review = require('../models/Review');
 const { authenticateToken, requireActiveAccount } = require('../middleware/auth');
-const { sendSellerDisputeOpenedNotification } = require('../services/emailService');
+const { sendSellerDisputeOpenedNotification, sendEmail } = require('../services/emailService');
 const {
   notifyDisputeOpened,
   notifyEvidenceSubmitted,
   notifyItemMarkedShipped,
   notifyTrackingProvided,
   notifyBuyerConfirmedReceipt,
-  notifyShippingDeadlineStarted,
+  notifyBuyerSellerAccepted,
+  notifySellerBuyerRemindedShip,
+  notifyReviewPrompt,
   emitNewNotificationToUser
 } = require('../services/notificationService');
-const { suspendBothPartiesForDispute } = require('../services/accountStatusService');
+const { ensureShippingDeadlinesFromPaidAt } = require('../services/shippingDeadlines');
+const { restrictBothPartiesForDispute, checkAndApplyPendingSuspensions } = require('../services/accountStatusService');
 const { generateInvoicePdf } = require('../services/invoiceService');
 
 const router = express.Router();
@@ -42,20 +45,28 @@ router.get('/', async (req, res) => {
       return res.status(404).json({ error: 'User not found. Please complete your profile.' });
     }
 
-    const transactions = await Transaction.find({
-      $or: [{ seller: user._id }, { buyer: user._id }]
-    })
-      .populate('listing', 'title slug images status commissionRate shippingCost shippingOption auctionFormat allowPrivateRoom')
-      .populate('seller', 'firstName lastName email')
-      .populate('buyer', 'firstName lastName email')
-      .sort({ updatedAt: -1 })
-      .lean();
+    const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 50, 1), 100);
+    const page  = Math.max(parseInt(req.query.page, 10) || 1, 1);
+    const skip  = (page - 1) * limit;
+    const filter = { $or: [{ seller: user._id }, { buyer: user._id }] };
+
+    const [transactions, total] = await Promise.all([
+      Transaction.find(filter)
+        .populate('listing', 'title slug images status commissionRate shippingCost shippingOption auctionFormat allowPrivateRoom')
+        .populate('seller', 'firstName lastName')
+        .populate('buyer', 'firstName lastName')
+        .sort({ updatedAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      Transaction.countDocuments(filter)
+    ]);
 
     const listingIds = [...new Set(transactions.map(t => t.listing?._id || t.listing).filter(Boolean))];
     const reviews = listingIds.length > 0
       ? await Review.find({ listing: { $in: listingIds } }).select('listing reviewer reviewee role').lean()
       : [];
-    const buyerReviewedSeller = {}; // listingId -> true if buyer reviewed seller
+    const buyerReviewedSeller = {};
     const sellerReviewedBuyer = {};
     for (const r of reviews) {
       const lid = (r.listing && r.listing._id ? r.listing._id : r.listing)?.toString();
@@ -81,10 +92,10 @@ router.get('/', async (req, res) => {
       };
     });
 
-    res.json({ transactions: withRole });
+    res.json({ transactions: withRole, total, page, limit, pages: Math.ceil(total / limit) });
   } catch (error) {
     console.error('Error fetching transactions:', error);
-    res.status(500).json({ error: 'Failed to fetch transactions', message: error.message });
+    res.status(500).json({ error: 'Failed to fetch transactions' });
   }
 });
 
@@ -106,8 +117,8 @@ router.get('/:id/invoice', async (req, res) => {
 
     const transaction = await Transaction.findById(req.params.id)
       .populate('listing', 'title slug images status commissionRate shippingCost shippingOption auctionFormat allowPrivateRoom')
-      .populate('seller', 'firstName lastName email')
-      .populate('buyer', 'firstName lastName email')
+      .populate('seller', 'firstName lastName')
+      .populate('buyer', 'firstName lastName')
       .lean();
 
     if (!transaction) {
@@ -136,7 +147,7 @@ router.get('/:id/invoice', async (req, res) => {
     res.send(pdfBuffer);
   } catch (error) {
     console.error('Error generating invoice:', error);
-    res.status(500).json({ error: 'Failed to generate invoice', message: error.message });
+    res.status(500).json({ error: 'Failed to generate invoice', message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error' });
   }
 });
 
@@ -153,8 +164,8 @@ router.get('/:id', async (req, res) => {
 
     const transaction = await Transaction.findById(req.params.id)
       .populate('listing', 'title slug images status commissionRate shippingCost shippingOption auctionFormat allowPrivateRoom')
-      .populate('seller', 'firstName lastName email')
-      .populate('buyer', 'firstName lastName email')
+      .populate('seller', 'firstName lastName')
+      .populate('buyer', 'firstName lastName')
       .lean();
 
     if (!transaction) {
@@ -183,7 +194,7 @@ router.get('/:id', async (req, res) => {
     });
   } catch (error) {
     console.error('Error fetching transaction:', error);
-    res.status(500).json({ error: 'Failed to fetch transaction', message: error.message });
+    res.status(500).json({ error: 'Failed to fetch transaction', message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error' });
   }
 });
 
@@ -202,7 +213,7 @@ router.post('/:id/open-dispute', async (req, res) => {
     const transaction = await Transaction.findById(req.params.id)
       .populate('listing', 'title slug')
       .populate('seller', 'firstName lastName email')
-      .populate('buyer', 'firstName lastName email');
+      .populate('buyer', 'firstName lastName');
 
     if (!transaction) {
       return res.status(404).json({ error: 'Transaction not found' });
@@ -255,13 +266,13 @@ router.post('/:id/open-dispute', async (req, res) => {
     transaction.sendingStatus = 'delivered'; // Item was received (buyer claims not properly)
     await transaction.save();
 
-    // Suspend both buyer and seller accounts while dispute is under review
+    // Restrict both parties from new marketplace actions while dispute is under review
     const buyerUserId = transaction.buyer?._id?.toString?.() || transaction.buyer?.toString?.();
     const sellerUserId = transaction.seller?._id?.toString?.() || transaction.seller?.toString?.();
     const io = req.app.get('io');
     if (buyerUserId && sellerUserId) {
-      suspendBothPartiesForDispute(transaction._id, buyerUserId, sellerUserId, io).catch(err =>
-        console.error('Failed to suspend accounts for dispute:', err)
+      restrictBothPartiesForDispute(transaction._id, buyerUserId, sellerUserId, io).catch(err =>
+        console.error('Failed to restrict accounts for dispute:', err)
       );
     }
 
@@ -289,8 +300,8 @@ router.post('/:id/open-dispute', async (req, res) => {
 
     const updated = await Transaction.findById(transaction._id)
       .populate('listing', 'title slug images status commissionRate shippingCost shippingOption auctionFormat allowPrivateRoom')
-      .populate('seller', 'firstName lastName email')
-      .populate('buyer', 'firstName lastName email')
+      .populate('seller', 'firstName lastName')
+      .populate('buyer', 'firstName lastName')
       .lean();
 
     res.json({
@@ -300,7 +311,7 @@ router.post('/:id/open-dispute', async (req, res) => {
     });
   } catch (error) {
     console.error('Error opening dispute:', error);
-    res.status(500).json({ error: 'Failed to open dispute', message: error.message });
+    res.status(500).json({ error: 'Failed to open dispute', message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error' });
   }
 });
 
@@ -356,8 +367,8 @@ router.patch('/:id/dispute/counter-evidence', async (req, res) => {
 
     const updated = await Transaction.findById(transaction._id)
       .populate('listing', 'title slug images status commissionRate shippingCost shippingOption auctionFormat allowPrivateRoom')
-      .populate('seller', 'firstName lastName email')
-      .populate('buyer', 'firstName lastName email')
+      .populate('seller', 'firstName lastName')
+      .populate('buyer', 'firstName lastName')
       .lean();
 
     res.json({
@@ -367,7 +378,89 @@ router.patch('/:id/dispute/counter-evidence', async (req, res) => {
     });
   } catch (error) {
     console.error('Error updating counter-evidence:', error);
-    res.status(500).json({ error: 'Failed to update counter-evidence', message: error.message });
+    res.status(500).json({ error: 'Failed to update counter-evidence', message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error' });
+  }
+});
+
+/** 24-hour cooldown between buyer "Remind seller to ship" requests. */
+const REMIND_SHIP_COOLDOWN_MS = 24 * 60 * 60 * 1000;
+
+/**
+ * POST /api/transactions/:id/remind-ship
+ *
+ * Allows the buyer to send a push notification nudging the seller to ship.
+ * - Only available while transactionStatus is 'awaiting_seller_acceptance' or 'paid'.
+ * - Rate-limited: returns HTTP 429 with retryAfterMs if called within 24 hours
+ *   of the last reminder.
+ * - Updates buyerRemindSellerShipAt on the transaction and sends an in-app
+ *   notification to the seller via notificationService.
+ */
+router.post('/:id/remind-ship', requireActiveAccount, async (req, res) => {
+  try {
+    const user = await User.findOne({ uid: req.user.uid });
+    if (!user) {
+      return res.status(404).json({ error: 'User not found.' });
+    }
+
+    const transaction = await Transaction.findById(req.params.id)
+      .populate('listing', 'title slug')
+      .populate('seller', '_id uid email firstName');
+
+    if (!transaction) {
+      return res.status(404).json({ error: 'Transaction not found' });
+    }
+
+    const isBuyer = transaction.buyer.toString() === user._id.toString();
+    if (!isBuyer) {
+      return res.status(403).json({ error: 'Only the buyer can send this reminder.' });
+    }
+
+    const ts = transaction.transactionStatus ?? transaction.status;
+    if (!['awaiting_seller_acceptance', 'paid'].includes(ts)) {
+      return res.status(400).json({
+        error: 'Cannot remind',
+        message: 'A reminder is only available before the item is marked as shipped.'
+      });
+    }
+
+    const last = transaction.buyerRemindSellerShipAt ? new Date(transaction.buyerRemindSellerShipAt).getTime() : 0;
+    if (last && Date.now() - last < REMIND_SHIP_COOLDOWN_MS) {
+      return res.status(429).json({
+        error: 'Too soon',
+        message: 'You can remind the seller again after 24 hours.',
+        retryAfterMs: REMIND_SHIP_COOLDOWN_MS - (Date.now() - last)
+      });
+    }
+
+    transaction.buyerRemindSellerShipAt = new Date();
+    await transaction.save();
+
+    const sellerUserId = transaction.seller?._id?.toString?.() || transaction.seller?.toString?.();
+    const listingTitle = transaction.listing?.title || 'your order';
+    if (sellerUserId) {
+      notifySellerBuyerRemindedShip({
+        transactionId: transaction._id.toString(),
+        listingTitle,
+        sellerUserId
+      }).catch(err => console.error('Failed to notify seller remind-ship:', err));
+      const io = req.app.get('io');
+      if (io) emitNewNotificationToUser(io, sellerUserId).catch(() => {});
+    }
+
+    const updated = await Transaction.findById(transaction._id)
+      .populate('listing', 'title slug images status commissionRate shippingCost shippingOption auctionFormat allowPrivateRoom')
+      .populate('seller', 'firstName lastName')
+      .populate('buyer', 'firstName lastName')
+      .lean();
+
+    res.json({
+      ...updated,
+      role: 'buyer',
+      ...normalizeTransactionStatus(updated)
+    });
+  } catch (error) {
+    console.error('Error remind-ship:', error);
+    res.status(500).json({ error: 'Failed to send reminder', message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error' });
   }
 });
 
@@ -393,7 +486,7 @@ router.patch('/:id', requireActiveAccount, async (req, res) => {
       return res.status(403).json({ error: 'You do not have access to this transaction' });
     }
 
-    const { status, trackingNumber, trackingCarrier, sellerProofOfDeliveryUrl, disputeOpen, disputeReason } = req.body;
+    const { status, trackingNumber, trackingCarrier, sellerProofOfDeliveryUrl, estimatedDeliveryDays, disputeOpen, disputeReason } = req.body;
     const ts = transaction.transactionStatus ?? transaction.status;
 
     /** When under dispute, lock: no status changes until admin ruling */
@@ -409,31 +502,79 @@ router.patch('/:id', requireActiveAccount, async (req, res) => {
         transaction.transactionStatus = 'paid';
         transaction.paymentStatus = 'paid';
         transaction.paidAt = transaction.paidAt || new Date();
-        if (!transaction.handlingDeadline) {
-          const listing = await Listing.findById(transaction.listing).select('handlingTime title').lean();
-          const days = (listing && listing.handlingTime) ? Math.max(1, listing.handlingTime) : 3;
-          const d = new Date();
-          d.setDate(d.getDate() + days);
-          transaction.handlingDeadline = d;
-          const sellerUserId = transaction.seller?.toString?.();
-          if (sellerUserId) {
-            const listingTitle = listing?.title || 'the item';
-            notifyShippingDeadlineStarted({
-              transactionId: transaction._id.toString(),
-              listingTitle,
-              sellerUserId
-            }).catch(err => console.error('Failed to create shipping-deadline notification:', err));
-            const io = req.app.get('io');
-            if (io) emitNewNotificationToUser(io, sellerUserId).catch(() => {});
+        ensureShippingDeadlinesFromPaidAt(transaction);
+        const listing = await Listing.findById(transaction.listing).select('title').lean();
+        const listingTitle = listing?.title || 'the item';
+        // Notify buyer that seller accepted
+        const buyerUserId = transaction.buyer?.toString?.();
+        if (buyerUserId) {
+          notifyBuyerSellerAccepted({
+            transactionId: transaction._id.toString(),
+            listingTitle,
+            buyerUserId
+          }).catch(err => console.error('Failed to create buyer seller-accepted notification:', err));
+          const io = req.app.get('io');
+          if (io) emitNewNotificationToUser(io, buyerUserId).catch(() => {});
+          // Email to buyer
+          const buyer = await User.findById(buyerUserId).select('email firstName').lean();
+          if (buyer?.email) {
+            const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:4200';
+            const txLink = `${frontendUrl}/dashboard/transactions`;
+            const html = `
+              <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                <div style="background: linear-gradient(135deg, #7A4F84 0%, #9b6ba8 100%); color: white; padding: 24px; text-align: center; border-radius: 8px 8px 0 0;">
+                  <h1 style="margin: 0;">Your order has been confirmed!</h1>
+                </div>
+                <div style="background: #f9f9f9; padding: 24px; border-radius: 0 0 8px 8px;">
+                  <p>Hi ${buyer.firstName || 'there'},</p>
+                  <p>The seller has accepted your payment for <strong>${listingTitle}</strong> and will prepare your order for shipment shortly.</p>
+                  <p style="text-align: center; margin: 24px 0;">
+                    <a href="${txLink}" style="background: #7A4F84; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: bold;">View Transaction</a>
+                  </p>
+                  <p>Best regards,<br>The BidRoom Team</p>
+                </div>
+              </div>
+            `;
+            sendEmail(buyer.email, `Your order for "${listingTitle}" has been confirmed`, html)
+              .catch(err => console.error('Failed to send seller-accepted email to buyer:', err.message));
           }
+          // Payment accepted: apply any deferred suspensions (listing auction has ended at this point).
+          checkAndApplyPendingSuspensions(
+            [transaction.buyer?.toString(), transaction.seller?.toString()].filter(Boolean),
+            io
+          ).catch(err => console.error('[AccountStatus] checkAndApplyPendingSuspensions error:', err.message));
         }
       } else if (status === 'shipped') {
+        if (ts !== 'paid') {
+          return res.status(400).json({
+            error: 'Invalid state',
+            message: 'You can only mark the item as shipped after confirming payment from the buyer.'
+          });
+        }
         transaction.transactionStatus = 'shipped';
         transaction.sendingStatus = 'shipped';
         transaction.shippedAt = transaction.shippedAt || new Date();
         if (trackingNumber != null) transaction.trackingNumber = trackingNumber;
         if (trackingCarrier != null) transaction.trackingCarrier = trackingCarrier;
         if (sellerProofOfDeliveryUrl != null) transaction.sellerProofOfDeliveryUrl = sellerProofOfDeliveryUrl;
+        // Compute estimated delivery date and auto-release cutoff
+        const shipDate = transaction.shippedAt;
+        const deliveryDays = estimatedDeliveryDays != null
+          ? parseInt(estimatedDeliveryDays, 10)
+          : (transaction.shippingDeliveryDays || null);
+        if (deliveryDays && deliveryDays > 0) {
+          const estDelivery = new Date(shipDate);
+          estDelivery.setDate(estDelivery.getDate() + deliveryDays);
+          transaction.estimatedDeliveryDate = estDelivery;
+          const autoRelease = new Date(estDelivery);
+          autoRelease.setDate(autoRelease.getDate() + 5);
+          transaction.autoReleaseAt = autoRelease;
+        } else {
+          // No delivery estimate: auto-release 14 days after ship date
+          const autoRelease = new Date(shipDate);
+          autoRelease.setDate(autoRelease.getDate() + 14);
+          transaction.autoReleaseAt = autoRelease;
+        }
         const buyerUserId = transaction.buyer?.toString?.();
         if (buyerUserId) {
           const listing = await Listing.findById(transaction.listing).select('title').lean();
@@ -452,6 +593,38 @@ router.patch('/:id', requireActiveAccount, async (req, res) => {
           }
           const io = req.app.get('io');
           if (io) emitNewNotificationToUser(io, buyerUserId).catch(() => {});
+
+          // Email to buyer with optional proof-of-shipment link
+          const buyer = await User.findById(buyerUserId).select('email firstName').lean();
+          if (buyer?.email) {
+            const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:4200';
+            const txLink = `${frontendUrl}/dashboard/transactions`;
+            const proofSection = sellerProofOfDeliveryUrl
+              ? `<p style="margin-top: 16px;"><a href="${sellerProofOfDeliveryUrl}" target="_blank" style="color: #7A4F84; font-weight: bold;">View proof of shipment</a></p>`
+              : '';
+            const trackingSection = trackingNumber
+              ? `<p>Tracking: <strong>${trackingCarrier ? trackingCarrier + ' – ' : ''}${trackingNumber}</strong></p>`
+              : '';
+            const html = `
+              <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                <div style="background: linear-gradient(135deg, #7A4F84 0%, #9b6ba8 100%); color: white; padding: 24px; text-align: center; border-radius: 8px 8px 0 0;">
+                  <h1 style="margin: 0;">Your item has been shipped!</h1>
+                </div>
+                <div style="background: #f9f9f9; padding: 24px; border-radius: 0 0 8px 8px;">
+                  <p>Hi ${buyer.firstName || 'there'},</p>
+                  <p>The seller has shipped <strong>${listingTitle}</strong>.</p>
+                  ${trackingSection}
+                  ${proofSection}
+                  <p style="text-align: center; margin: 24px 0;">
+                    <a href="${txLink}" style="background: #7A4F84; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: bold;">View Transaction</a>
+                  </p>
+                  <p>Best regards,<br>The BidRoom Team</p>
+                </div>
+              </div>
+            `;
+            sendEmail(buyer.email, `Your item "${listingTitle}" has been shipped`, html)
+              .catch(err => console.error('Failed to send shipped email to buyer:', err.message));
+          }
         }
       } else if (status === 'cancelled' && ts === 'pending_payment') {
         transaction.transactionStatus = 'cancelled';
@@ -465,12 +638,23 @@ router.patch('/:id', requireActiveAccount, async (req, res) => {
       transaction.disputeOpenedBy = isSeller ? 'seller' : 'buyer';
       if (disputeReason != null) transaction.disputeReason = String(disputeReason).trim() || null;
       transaction.transactionStatus = 'under_dispute';
+      // Restrict both parties from new marketplace actions while dispute is under review
+      const patchBuyerId = transaction.buyer?._id?.toString?.() || transaction.buyer?.toString?.();
+      const patchSellerId = transaction.seller?._id?.toString?.() || transaction.seller?.toString?.();
+      const patchIo = req.app.get('io');
+      if (patchBuyerId && patchSellerId) {
+        restrictBothPartiesForDispute(transaction._id, patchBuyerId, patchSellerId, patchIo).catch(err =>
+          console.error('Failed to restrict accounts for seller-opened dispute:', err)
+        );
+      }
     }
 
     if (isBuyer) {
       if (status === 'delivered' && ts === 'shipped') {
         transaction.transactionStatus = 'delivered';
         transaction.sendingStatus = 'delivered';
+        transaction.deliveredAt = transaction.deliveredAt || new Date();
+        transaction.autoReleaseAt = null; // buyer confirmed — auto-release no longer needed
         const sellerUserId = transaction.seller?.toString?.();
         if (sellerUserId) {
           const listing = await Listing.findById(transaction.listing).select('title').lean();
@@ -487,20 +671,22 @@ router.patch('/:id', requireActiveAccount, async (req, res) => {
           if (io) emitNewNotificationToUser(io, sellerUserId).catch(() => {});
         }
       } else if (status === 'completed' && ['paid', 'shipped', 'delivered'].includes(ts)) {
-        const lid = transaction.listing?.toString?.() || transaction.listing;
-        const [buyerReviewed, sellerReviewed] = lid
-          ? await Promise.all([
-              Review.exists({ listing: lid, role: 'as_seller' }),
-              Review.exists({ listing: lid, role: 'as_buyer' })
-            ])
-          : [false, false];
-        if (!buyerReviewed || !sellerReviewed) {
-          return res.status(400).json({
-            error: 'Reviews required',
-            message: 'Both buyer and seller must leave a review before the transaction can be marked as complete.'
-          });
-        }
         transaction.transactionStatus = 'completed';
+        transaction.completedAt = transaction.completedAt || new Date();
+        // Prompt both parties to leave a review
+        const io = req.app.get('io');
+        notifyReviewPrompt({
+          buyerId: transaction.buyer,
+          sellerId: transaction.seller,
+          listingTitle: transaction.listing?.title,
+          transactionId: transaction._id?.toString(),
+          io
+        }).catch(err => console.error('Failed to send review prompt notification:', err));
+        // Apply any deferred suspensions now that the transaction is concluded.
+        checkAndApplyPendingSuspensions(
+          [transaction.buyer?.toString(), transaction.seller?.toString()].filter(Boolean),
+          io
+        ).catch(err => console.error('[AccountStatus] checkAndApplyPendingSuspensions error:', err.message));
       }
     }
 
@@ -508,8 +694,8 @@ router.patch('/:id', requireActiveAccount, async (req, res) => {
 
     const updated = await Transaction.findById(transaction._id)
       .populate('listing', 'title slug images status commissionRate shippingCost shippingOption auctionFormat allowPrivateRoom')
-      .populate('seller', 'firstName lastName email')
-      .populate('buyer', 'firstName lastName email')
+      .populate('seller', 'firstName lastName')
+      .populate('buyer', 'firstName lastName')
       .lean();
 
     const listingId = (updated.listing && updated.listing._id ? updated.listing._id : updated.listing)?.toString();
@@ -524,15 +710,147 @@ router.patch('/:id', requireActiveAccount, async (req, res) => {
       sellerHasReviewedBuyer = !!s;
     }
 
+    const role = updated.seller?._id?.toString() === user._id.toString() ? 'seller' : 'buyer';
     res.json({
       ...updated,
+      role,
       buyerHasReviewedSeller,
       sellerHasReviewedBuyer,
       ...normalizeTransactionStatus(updated)
     });
   } catch (error) {
     console.error('Error updating transaction:', error);
-    res.status(500).json({ error: 'Failed to update transaction', message: error.message });
+    res.status(500).json({ error: 'Failed to update transaction', message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error' });
+  }
+});
+
+const RETURN_WINDOW_DAYS = 7;
+
+/**
+ * POST /api/transactions/:id/request-return
+ * Buyer requests a return within 7 days of confirmed delivery.
+ * Body: { reason, photoUrls[] }
+ * Moves to under_dispute + seller has 48h to respond before platform mediates.
+ */
+router.post('/:id/request-return', requireActiveAccount, async (req, res) => {
+  try {
+    const user = await User.findOne({ uid: req.user.uid });
+    if (!user) return res.status(404).json({ error: 'User not found.' });
+
+    const transaction = await Transaction.findById(req.params.id)
+      .populate('listing', 'title slug')
+      .populate('seller', '_id uid firstName email');
+
+    if (!transaction) return res.status(404).json({ error: 'Transaction not found' });
+
+    const isBuyer = transaction.buyer.toString() === user._id.toString();
+    if (!isBuyer) return res.status(403).json({ error: 'Only the buyer can request a return.' });
+
+    const ts = transaction.transactionStatus ?? transaction.status;
+    if (ts !== 'delivered') {
+      return res.status(400).json({
+        error: 'Invalid state',
+        message: 'Returns can only be requested after you confirm receipt of the item.'
+      });
+    }
+
+    if (transaction.returnRequestedAt) {
+      return res.status(400).json({ error: 'A return request has already been submitted for this transaction.' });
+    }
+
+    if (transaction.deliveredAt) {
+      const returnDeadline = new Date(transaction.deliveredAt);
+      returnDeadline.setDate(returnDeadline.getDate() + RETURN_WINDOW_DAYS);
+      if (new Date() > returnDeadline) {
+        return res.status(400).json({
+          error: 'Return window closed',
+          message: `The ${RETURN_WINDOW_DAYS}-day return window has closed.`
+        });
+      }
+    }
+
+    const { reason, photoUrls } = req.body;
+    if (!reason || String(reason).trim().length < 5) {
+      return res.status(400).json({ error: 'Please provide a return reason (at least 5 characters).' });
+    }
+    if (!photoUrls || !Array.isArray(photoUrls) || photoUrls.length < 1) {
+      return res.status(400).json({ error: 'At least 1 photo is required as evidence.' });
+    }
+
+    const now = new Date();
+    transaction.returnRequestedAt = now;
+    transaction.returnReason = String(reason).trim();
+    transaction.returnPhotoUrls = photoUrls.slice(0, 10);
+    transaction.returnStatus = 'pending_seller_response';
+    transaction.returnSellerDeadline = new Date(now.getTime() + 48 * 60 * 60 * 1000);
+    transaction.transactionStatus = 'under_dispute';
+    transaction.disputeOpen = true;
+    transaction.disputeOpenedAt = now;
+    transaction.disputeOpenedBy = 'buyer';
+    transaction.disputeReason = 'return_request';
+    transaction.disputeExplanation = String(reason).trim();
+    transaction.disputeBuyerMediaUrls = photoUrls.slice(0, 10);
+    await transaction.save();
+
+    // Restrict both parties
+    const buyerMongoId = user._id.toString();
+    const sellerMongoId = transaction.seller?._id?.toString?.() || transaction.seller?.toString?.();
+    const io = req.app.get('io');
+    if (buyerMongoId && sellerMongoId) {
+      const { restrictBothPartiesForDispute } = require('../services/accountStatusService');
+      restrictBothPartiesForDispute(transaction._id, buyerMongoId, sellerMongoId, io).catch(err =>
+        console.error('Failed to restrict accounts for return dispute:', err)
+      );
+    }
+
+    const listingTitle = transaction.listing?.title || 'the item';
+    const buyerName = `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'Buyer';
+    if (sellerMongoId) {
+      const { notifyDisputeOpened } = require('../services/notificationService');
+      notifyDisputeOpened({
+        transactionId: transaction._id.toString(),
+        listingTitle,
+        openerName: buyerName,
+        otherPartyUserId: sellerMongoId
+      }).catch(() => {});
+      if (io) {
+        const { emitNewNotificationToUser } = require('../services/notificationService');
+        emitNewNotificationToUser(io, sellerMongoId).catch(() => {});
+      }
+      if (transaction.seller?.email) {
+        const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:4200';
+        const txLink = `${frontendUrl}/dashboard/transactions`;
+        const html = `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <div style="background: linear-gradient(135deg, #7A4F84 0%, #9b6ba8 100%); color: white; padding: 24px; text-align: center; border-radius: 8px 8px 0 0;">
+              <h1 style="margin: 0;">Return request received</h1>
+            </div>
+            <div style="background: #f9f9f9; padding: 24px; border-radius: 0 0 8px 8px;">
+              <p>Hi ${transaction.seller.firstName || 'there'},</p>
+              <p>The buyer has requested a return for <strong>${listingTitle}</strong>.</p>
+              <p><strong>Reason:</strong> ${transaction.returnReason}</p>
+              <p>You have <strong>48 hours</strong> to accept or reject the return request before the platform mediates.</p>
+              <p style="text-align: center; margin: 24px 0;">
+                <a href="${txLink}" style="background: #7A4F84; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: bold;">View Transaction</a>
+              </p>
+              <p>Best regards,<br>The BidRoom Team</p>
+            </div>
+          </div>`;
+        sendEmail(transaction.seller.email, `Return request for "${listingTitle}"`, html)
+          .catch(err => console.error('Failed to send return request email:', err.message));
+      }
+    }
+
+    const updated = await Transaction.findById(transaction._id)
+      .populate('listing', 'title slug images status commissionRate shippingCost shippingOption auctionFormat allowPrivateRoom')
+      .populate('seller', 'firstName lastName')
+      .populate('buyer', 'firstName lastName')
+      .lean();
+
+    res.json({ ...updated, role: 'buyer', ...normalizeTransactionStatus(updated) });
+  } catch (error) {
+    console.error('Error requesting return:', error);
+    res.status(500).json({ error: 'Failed to submit return request', message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error' });
   }
 });
 

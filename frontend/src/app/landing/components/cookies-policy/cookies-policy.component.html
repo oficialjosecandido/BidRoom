@@ -1,0 +1,117 @@
+<app-legal-layout activeTab="cookies">
+  <div class="page-wrap">
+    <div class="legal-header">
+      <div class="legal-eyebrow">{{ 'legal.cookies.eyebrow' | translate }}</div>
+      <h1 class="legal-title">{{ 'legal.cookies.title' | translate }}</h1>
+      <div class="legal-updated">{{ 'legal.cookies.updated' | translate }}</div>
+    </div>
+
+    <div class="legal-body">
+      <p>{{ 'legal.cookies.intro' | translate }}</p>
+
+      <h2>{{ 'legal.cookies.h1' | translate }}</h2>
+      <p style="margin-bottom:20px">{{ 'legal.cookies.h1p1' | translate }}</p>
+
+      <div class="cookie-group">
+        <div class="cg-header">
+          <div>
+            <div class="cg-title">{{ 'legal.cookies.necessary.title' | translate }}</div>
+            <div class="cg-desc">{{ 'legal.cookies.necessary.desc' | translate }}</div>
+          </div>
+          <span class="cg-required">{{ 'legal.cookies.required' | translate }}</span>
+        </div>
+      </div>
+
+      <div class="cookie-group">
+        <div class="cg-header">
+          <div>
+            <div class="cg-title">{{ 'legal.cookies.functional.title' | translate }}</div>
+            <div class="cg-desc">{{ 'legal.cookies.functional.desc' | translate }}</div>
+          </div>
+          <label class="tog">
+            <input type="checkbox" [checked]="prefs.functional()" (change)="prefs.functional.set($any($event.target).checked)" />
+            <span class="tog-sl"></span>
+          </label>
+        </div>
+      </div>
+
+      <div class="cookie-group">
+        <div class="cg-header">
+          <div>
+            <div class="cg-title">{{ 'legal.cookies.analytics.title' | translate }}</div>
+            <div class="cg-desc">{{ 'legal.cookies.analytics.desc' | translate }}</div>
+          </div>
+          <label class="tog">
+            <input type="checkbox" [checked]="prefs.analytics()" (change)="prefs.analytics.set($any($event.target).checked)" />
+            <span class="tog-sl"></span>
+          </label>
+        </div>
+      </div>
+
+      <div class="cookie-group">
+        <div class="cg-header">
+          <div>
+            <div class="cg-title">{{ 'legal.cookies.marketing.title' | translate }}</div>
+            <div class="cg-desc">{{ 'legal.cookies.marketing.desc' | translate }}</div>
+          </div>
+          <label class="tog">
+            <input type="checkbox" [checked]="prefs.marketing()" (change)="prefs.marketing.set($any($event.target).checked)" />
+            <span class="tog-sl"></span>
+          </label>
+        </div>
+      </div>
+
+      @if (saved) {
+        <div class="form-success">{{ savedMessage }}</div>
+      }
+
+      <button type="button" class="btn-submit btn-submit--rounded" (click)="savePreferences()">
+        {{ 'legal.cookies.save' | translate }}
+      </button>
+
+      <h2>{{ 'legal.cookies.h2' | translate }}</h2>
+      <table class="legal-table">
+        <thead>
+          <tr>
+            <th>Cookie</th>
+            <th>{{ 'legal.cookies.th1' | translate }}</th>
+            <th>{{ 'legal.cookies.th2' | translate }}</th>
+            <th>{{ 'legal.cookies.th3' | translate }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>__session</code></td>
+            <td>{{ 'legal.cookies.row1.cat' | translate }}</td>
+            <td>{{ 'legal.cookies.row1.dur' | translate }}</td>
+            <td>{{ 'legal.cookies.row1.purpose' | translate }}</td>
+          </tr>
+          <tr>
+            <td><code>theme</code></td>
+            <td>{{ 'legal.cookies.row2.cat' | translate }}</td>
+            <td>{{ 'legal.cookies.row2.dur' | translate }}</td>
+            <td>{{ 'legal.cookies.row2.purpose' | translate }}</td>
+          </tr>
+          <tr>
+            <td><code>lang</code></td>
+            <td>{{ 'legal.cookies.row3.cat' | translate }}</td>
+            <td>{{ 'legal.cookies.row3.dur' | translate }}</td>
+            <td>{{ 'legal.cookies.row3.purpose' | translate }}</td>
+          </tr>
+          <tr>
+            <td><code>_stripe_sid</code></td>
+            <td>{{ 'legal.cookies.row4.cat' | translate }}</td>
+            <td>{{ 'legal.cookies.row4.dur' | translate }}</td>
+            <td>{{ 'legal.cookies.row4.purpose' | translate }}</td>
+          </tr>
+          <tr>
+            <td><code>_ga</code></td>
+            <td>{{ 'legal.cookies.row5.cat' | translate }}</td>
+            <td>{{ 'legal.cookies.row5.dur' | translate }}</td>
+            <td>{{ 'legal.cookies.row5.purpose' | translate }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</app-legal-layout>

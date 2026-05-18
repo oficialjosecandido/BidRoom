@@ -39,7 +39,7 @@ export class ResetPasswordComponent implements OnInit {
     this.route.queryParams.subscribe(params => {
       this.code = params['oobCode'];
       if (!this.code) {
-        this.errorMessage = this.translate.instant('auth.resetPassword.invalidCode');
+        this.errorMessage = this.translate.instant('auth.resetPassword.errorInvalidCode');
         return;
       }
       // Optionally verify code to pre-validate
@@ -112,14 +112,13 @@ export class ResetPasswordComponent implements OnInit {
         next: () => {
           this.isLoading = false;
           this.successMessage = this.translate.instant('auth.resetPassword.successMessage');
-          // Redirect to login after a delay
           setTimeout(() => {
             this.router.navigate(['/auth/login']);
-          }, 3000);
+          }, 2000);
         },
         error: (error) => {
           this.isLoading = false;
-          this.errorMessage = error?.message || this.translate.instant('auth.resetPassword.resetFailed');
+          this.errorMessage = error?.message || this.translate.instant('auth.resetPassword.errorGeneral');
         }
       });
     } else {

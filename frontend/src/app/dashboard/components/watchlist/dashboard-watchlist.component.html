@@ -1,64 +1,84 @@
-<div class="watchlist-container">
-  <div class="page-header">
-    <h1>My Watchlist</h1>
-    <p class="subtitle">Items you've saved. Click through to view or bid.</p>
+<div class="wl-wrap">
+  <div class="wl-head">
+    <h1 class="wl-title">{{ 'dashboard.watchlist.title' | translate }}</h1>
+    <p class="wl-sub">{{ 'dashboard.watchlist.subtitle' | translate }}</p>
   </div>
 
-  <!-- Loading State -->
   @if (isLoading) {
-<div class="loading-state">
-    <div class="spinner"></div>
-    <p>Loading your watchlist...</p>
-  </div>
-}
+    <div class="wl-loading">
+      <div class="wl-spinner"></div>
+      <span>{{ 'dashboard.watchlist.loading' | translate }}</span>
+    </div>
+  }
 
-  <!-- Error State -->
   @if (error && !isLoading) {
-<div class="error-state">
-    <div class="error-icon">⚠️</div>
-    <p class="error-message">{{ error }}</p>
-    <button type="button" class="retry-btn" (click)="loadWatchlist()">Try Again</button>
-  </div>
-}
+    <div class="wl-error">
+      <span class="wl-error-icon">!</span>
+      <p>{{ error }}</p>
+      <button type="button" class="wl-retry" (click)="loadWatchlist()">{{ 'dashboard.common.tryAgain' | translate }}</button>
+    </div>
+  }
 
-  <!-- Watchlist Grid -->
   @if (!isLoading && !error) {
-<div class="watchlist-grid">
     @if (watchlist.length === 0) {
-<div class="empty-state">
-      <div class="empty-icon">👀</div>
-      <h3>No items in your watchlist</h3>
-      <p>When you add items to your watchlist from a listing page, they'll appear here.</p>
-      <a routerLink="/listing/list" class="browse-btn">Browse auctions</a>
-    </div>
-}
-
-    @for (listing of watchlist; track listing) {
-<div class="watchlist-card">
-      <a [routerLink]="['/listing', listing.slug]" class="card-link">
-        <div class="card-image">
-          <img [src]="getImage(listing)" [alt]="listing.title" />
-        </div>
-        <div class="card-body">
-          <h2 class="card-title">{{ listing.title }}</h2>
-          <div class="card-price">@if (listing.auctionFormat === 'best-offer' && (listing.currentPrice == null || listing.currentPrice === 0)) { No offers yet } @else { {{ formatPrice(listing.currentPrice) }} }</div>
-          @if (listing.status) {
-<div class="card-meta">
-            <span class="status-badge" [class.ended]="listing.status === 'ended'">{{ listing.status }}</span>
+      <div class="wl-empty">
+        <div class="wl-empty-icon">&#128064;</div>
+        <h3>{{ 'dashboard.watchlist.emptyTitle' | translate }}</h3>
+        <p>{{ 'dashboard.watchlist.emptyDesc' | translate }}</p>
+        <a routerLink="/listing/list" class="wl-browse">{{ 'dashboard.watchlist.browseAuctions' | translate }}</a>
+      </div>
+    } @else {
+      <div class="wl-grid">
+        @for (listing of watchlist; track listing._id) {
+          <div class="wl-card">
+            <a [routerLink]="['/listing', listing.slug]" class="wl-img-wrap">
+              @if (listing.images[0]) {
+                <img class="wl-img" [src]="listing.images[0]" [alt]="listing.title" />
+              } @else {
+                <div class="wl-img-ph">{{ listing.title[0] }}</div>
+              }
+              @if (listing.auctionFormat === 'best-offer') {
+                <span class="wl-pill wlp-offer">{{ 'myBids.typeOffer' | translate }}</span>
+              } @else {
+                <span class="wl-pill wlp-live">{{ 'watchlist.typeLive' | translate }}</span>
+              }
+            </a>
+            <button
+              type="button"
+              class="wl-remove"
+              [disabled]="removingId === listing._id"
+              (click)="removeFromWatchlist(listing)"
+              [title]="'dashboard.watchlist.remove' | translate">
+              &#10005;
+            </button>
+            <div class="wl-body">
+              <a [routerLink]="['/listing', listing.slug]" class="wl-item-title">{{ listing.title }}</a>
+            </div>
+            <div class="wl-foot">
+              <span class="wl-price">
+                @if (listing.auctionFormat === 'best-offer' && (listing.currentPrice == null || listing.currentPrice === 0)) {
+                  {{ 'dashboard.watchlist.noOffersYet' | translate }}
+                } @else {
+                  {{ formatPrice(listing.currentPrice) }}
+                }
+              </span>
+              @if (listing.status === 'active' && listing.timeRemaining && !listing.timeRemaining.ended) {
+                <span class="wl-time">
+                  @if (listing.timeRemaining.days > 0) {
+                    {{ listing.timeRemaining.days }}d
+                  } @else if (listing.timeRemaining.hours > 0) {
+                    {{ listing.timeRemaining.hours }}h
+                  } @else {
+                    {{ listing.timeRemaining.minutes }}m
+                  }
+                </span>
+              } @else if (listing.status === 'ended') {
+                <span class="wl-time ended">{{ 'watchlist.ended' | translate }}</span>
+              }
+            </div>
           </div>
-}
-        </div>
-      </a>
-      <button
-        type="button"
-        class="remove-btn"
-        (click)="removeFromWatchlist(listing); $event.stopPropagation()"
-        [disabled]="removingId === listing._id"
-        title="Remove from watchlist">
-        {{ removingId === listing._id ? '...' : 'Remove' }}
-      </button>
-    </div>
-}
-  </div>
-}
+        }
+      </div>
+    }
+  }
 </div>

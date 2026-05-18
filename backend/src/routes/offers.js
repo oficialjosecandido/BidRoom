@@ -3,7 +3,7 @@ const Offer = require('../models/Offer');
 const Listing = require('../models/Listing');
 const User = require('../models/User');
 const Customer = require('../models/Customer');
-const { authenticateToken, optionalAuth, requireActiveAccountIfAuthenticated } = require('../middleware/auth');
+const { authenticateToken, optionalAuth, requireActiveAccountIfAuthenticated, requireNoDisputeRestrictionIfAuthenticated } = require('../middleware/auth');
 const { createTransactionForAcceptedOffer } = require('../services/transactionService');
 const {
   logOfferReceived,
@@ -11,6 +11,7 @@ const {
   logSellerAcceptedWinner
 } = require('../services/bestOfferLogger');
 
+const features = require('../config/features');
 const router = express.Router();
 
 // Membership tier thresholds (balance >= amount). Order high to low for tier resolution.
@@ -40,14 +41,21 @@ const {
   sendOfferPlacedEmail,
   sendOfferOutbidEmail
 } = require('../services/auctionNotificationService');
+const { sendEmail } = require('../services/emailService');
 
 // GET /api/offers/listing/:listingId - Get all offers for a listing
-router.get('/listing/:listingId', async (req, res) => {
+router.get('/listing/:listingId', optionalAuth, async (req, res) => {
   try {
     const offers = await Offer.find({ listing: req.params.listingId })
       .populate('offerer', 'firstName lastName email emailVerified uid')
       .sort({ createdAt: -1 })
       .lean();
+
+    // Determine if the requester is the listing's seller (entitled to see full emails)
+    const listing = await Listing.findById(req.params.listingId).select('seller').lean();
+    const requestingUid = req.user?.uid || null;
+    const sellerUser = listing?.seller ? await User.findById(listing.seller).select('uid').lean() : null;
+    const isSeller = requestingUid && sellerUser && requestingUid === sellerUser.uid;
 
     const uids = [...new Set(offers.map(o => o.offerer?.uid).filter(Boolean))];
     const customers = uids.length
@@ -59,7 +67,7 @@ router.get('/listing/:listingId', async (req, res) => {
       const offerer = offer.offerer;
       const uid = offerer?.uid;
       const balance = uid != null ? balanceByUid[uid] : null;
-      const offererTier = tierFromBalance(balance);
+      const offererTier = features.membershipTiers ? tierFromBalance(balance) : null;
       const offererVerified = !!offerer?.emailVerified;
       const name = offerer
         ? `${offerer.firstName} ${offerer.lastName}`
@@ -69,7 +77,9 @@ router.get('/listing/:listingId', async (req, res) => {
         : (offer.offererEmail ? offer.offererEmail.charAt(0).toUpperCase() : 'A');
       return {
         ...offer,
-        offerer: offerer ? { _id: offerer._id, firstName: offerer.firstName, lastName: offerer.lastName, email: offerer.email } : null,
+        // Expose email only to the seller; strip it for everyone else
+        offerer: offerer ? { _id: offerer._id, firstName: offerer.firstName, lastName: offerer.lastName, email: isSeller ? offerer.email : null } : null,
+        offererEmail: isSeller ? (offer.offererEmail || null) : null,
         offererName: name,
         offererInitials: initials,
         offererVerified,
@@ -85,7 +95,7 @@ router.get('/listing/:listingId', async (req, res) => {
     console.error('Error fetching offers:', error);
     res.status(500).json({
       error: 'Failed to fetch offers',
-      message: error.message
+      message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
     });
   }
 });
@@ -183,88 +193,7 @@ async function createOffer(req, res) {
     }
 
     // Offers below minimum are allowed; seller is not obliged to accept (buyer sees indication in UI)
-
-    // Check if offerer already has a pending offer (by user id or guest email)
-    const existingQuery = { listing: listingId, status: 'pending' };
-    if (user) {
-      existingQuery.offerer = user._id;
-    } else {
-      existingQuery.offerer = null;
-      existingQuery.offererEmail = offererEmail;
-    }
-    const existingOffer = await Offer.findOne(existingQuery);
-
-    if (existingOffer) {
-      existingOffer.amount = amount;
-      existingOffer.message = message || null;
-      await existingOffer.save();
-
-      const populatedOffer = await Offer.findById(existingOffer._id)
-        .populate('offerer', 'firstName lastName email emailVerified')
-        .lean();
-      const name = populatedOffer.offerer
-        ? `${populatedOffer.offerer.firstName} ${populatedOffer.offerer.lastName}`
-        : (populatedOffer.offererEmail ? populatedOffer.offererEmail.split('@')[0] : 'Anonymous');
-      const initials = populatedOffer.offerer
-        ? `${populatedOffer.offerer.firstName.charAt(0)}${populatedOffer.offerer.lastName.charAt(0)}`
-        : (populatedOffer.offererEmail ? populatedOffer.offererEmail.charAt(0).toUpperCase() : 'A');
-
-      const bidderDetails = populatedOffer.offerer
-        ? { id: populatedOffer.offerer._id, email: populatedOffer.offerer.email, name: `${populatedOffer.offerer.firstName || ''} ${populatedOffer.offerer.lastName || ''}`.trim() }
-        : { guestEmail: populatedOffer.offererEmail };
-      logOfferReceived(populatedOffer, bidderDetails);
-
-      const io = req.app.get('io');
-      const confirmEmail = populatedOffer.offerer?.email || populatedOffer.offererEmail;
-      const confirmUserId = populatedOffer.offerer?._id?.toString?.();
-      if (confirmUserId) {
-        notifyOfferPlaced({ listingSlug: listing.slug, listingTitle: listing.title, offerAmount: amount, offererUserId: confirmUserId })
-          .catch(err => console.error('Failed offer confirmation notification:', err));
-        if (io) emitNewNotificationToUser(io, confirmUserId).catch(() => {});
-      }
-      if (confirmEmail) {
-        sendOfferPlacedEmail(listing, confirmEmail, name, amount).catch(err => console.error('Failed offer confirmation email:', err));
-      }
-      const otherOffers = await Offer.find({ listing: listingId, status: 'pending', _id: { $ne: existingOffer._id } })
-        .populate('offerer', 'firstName lastName email')
-        .lean();
-      const prevHigh = otherOffers.length ? Math.max(...otherOffers.map(o => o.amount)) : 0;
-      if (amount > prevHigh && prevHigh > 0) {
-        const notified = new Set();
-        for (const o of otherOffers.filter(x => x.amount === prevHigh)) {
-          const e = o.offerer?.email?.toLowerCase() || o.offererEmail?.toLowerCase();
-          const u = o.offerer?._id?.toString?.();
-          if (!e || notified.has(e) || e === (confirmEmail || '').toLowerCase()) continue;
-          notified.add(e);
-          if (u) {
-            notifyOfferOutbid({ listingSlug: listing.slug, listingTitle: listing.title, previousOffer: prevHigh, newOffer: amount, offererUserId: u })
-              .catch(err => console.error('Failed offer outbid notification:', err));
-            if (io) emitNewNotificationToUser(io, u).catch(() => {});
-          }
-          sendOfferOutbidEmail(listing, e, o.offerer ? `${o.offerer.firstName} ${o.offerer.lastName}` : o.offererEmail?.split('@')[0], prevHigh, amount)
-            .catch(err => console.error('Failed offer outbid email:', err));
-        }
-      }
-      if (io) {
-        io.to(`listing:${listingId}`).emit('new-offer', {
-          listingId,
-          offer: formatOfferForSocket(populatedOffer)
-        });
-      }
-      return res.json({
-        ...populatedOffer,
-        offererName: name,
-        offererInitials: initials
-      });
-    }
-
-    // Defensive: must have either authenticated user or guest email (when no existing offer)
-    if (!user && !offererEmail) {
-      return res.status(400).json({
-        error: 'Identification required',
-        message: 'Please log in or provide your email address to make an offer.'
-      });
-    }
+    // Each submission always creates a new offer — buyers may place multiple offers.
 
     // Create new offer
     const offer = new Offer({
@@ -316,7 +245,11 @@ async function createOffer(req, res) {
     if (confirmEmail) {
       sendOfferPlacedEmail(listing, confirmEmail, name, amount).catch(err => console.error('Failed offer confirmation email:', err));
     }
-    const otherOffers = await Offer.find({ listing: listingId, status: 'pending', _id: { $ne: offer._id } })
+    // Fetch other buyers' pending offers (exclude same buyer to avoid self-outbid notifications)
+    const otherBuyerFilter = user
+      ? { offerer: { $ne: user._id } }
+      : { offererEmail: { $ne: offererEmail } };
+    const otherOffers = await Offer.find({ listing: listingId, status: 'pending', _id: { $ne: offer._id }, ...otherBuyerFilter })
       .populate('offerer', 'firstName lastName email')
       .lean();
     const prevHigh = otherOffers.length ? Math.max(...otherOffers.map(o => o.amount)) : 0;
@@ -363,7 +296,7 @@ async function createOffer(req, res) {
 }
 
 // POST /api/offers - Create a new offer (auth optional; guests must provide email)
-router.post('/', optionalAuth, requireActiveAccountIfAuthenticated, (req, res) => {
+router.post('/', optionalAuth, requireActiveAccountIfAuthenticated, requireNoDisputeRestrictionIfAuthenticated, (req, res) => {
   const timeoutId = setTimeout(() => {
     if (!res.headersSent) {
       res.status(504).json({
@@ -408,6 +341,15 @@ router.patch('/:offerId/accept', authenticateToken, async (req, res) => {
       return res.status(400).json({
         error: 'Invalid offer status',
         message: 'Only pending offers can be accepted'
+      });
+    }
+
+    // Block acceptance if seller has not connected Stripe (skip check in test/dev mode)
+    const isTestMode = process.env.STRIPE_SECRET_KEY?.startsWith('sk_test_');
+    if (!isTestMode && (!user.stripeConnectAccountId || !user.stripeConnectOnboarded)) {
+      return res.status(400).json({
+        error: 'Stripe not connected',
+        message: 'You must connect your Stripe account before accepting offers. Go to Dashboard → Settings → Payments to complete setup.'
       });
     }
 
@@ -460,6 +402,34 @@ router.patch('/:offerId/accept', authenticateToken, async (req, res) => {
           buyerUserId
         }).catch(err => console.error('Failed to create proposal-accepted notification:', err));
         if (io) emitNewNotificationToUser(io, buyerUserId).catch(() => {});
+
+        // Email to buyer
+        const buyerEmail = offer.offerer?.email;
+        if (buyerEmail) {
+          const buyerFirstName = offer.offerer?.firstName || 'there';
+          const amountStr = `$${Number(offer.amount).toFixed(2)}`;
+          const listingTitle = listing.title || 'your item';
+          const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:4200';
+          const txLink = `${frontendUrl}/dashboard/transactions`;
+          const html = `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+              <div style="background: linear-gradient(135deg, #7A4F84 0%, #9b6ba8 100%); color: white; padding: 24px; text-align: center; border-radius: 8px 8px 0 0;">
+                <h1 style="margin: 0;">Your offer was accepted!</h1>
+              </div>
+              <div style="background: #f9f9f9; padding: 24px; border-radius: 0 0 8px 8px;">
+                <p>Hi ${buyerFirstName},</p>
+                <p>Great news! The seller accepted your offer of <strong>${amountStr}</strong> for <strong>${listingTitle}</strong>.</p>
+                <p>A transaction has been created. Please complete payment to proceed.</p>
+                <p style="text-align: center; margin: 24px 0;">
+                  <a href="${txLink}" style="background: #7A4F84; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: bold;">View Transaction</a>
+                </p>
+                <p>Best regards,<br>The BidRoom Team</p>
+              </div>
+            </div>
+          `;
+          sendEmail(buyerEmail, `Your offer on "${listingTitle}" was accepted`, html)
+            .catch(err => console.error('Failed to send offer-accepted email:', err.message));
+        }
       }
     }
     if (io) {
@@ -484,7 +454,7 @@ router.patch('/:offerId/accept', authenticateToken, async (req, res) => {
     console.error('Error accepting offer:', error);
     res.status(400).json({
       error: 'Failed to accept offer',
-      message: error.message
+      message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
     });
   }
 });
@@ -506,11 +476,89 @@ router.patch('/:offerId/reject', authenticateToken, async (req, res) => {
       });
     }
 
+    // Enforce minimum-price rule: seller cannot decline the last qualifying offer
+    const minimumOfferPrice = offer.listing.minimumOfferPrice ?? 0;
+    if (minimumOfferPrice > 0 && offer.amount >= minimumOfferPrice) {
+      const otherQualifyingOffers = await Offer.countDocuments({
+        listing: offer.listing._id,
+        _id: { $ne: offer._id },
+        status: 'pending',
+        amount: { $gte: minimumOfferPrice }
+      });
+      if (otherQualifyingOffers === 0) {
+        return res.status(400).json({
+          error: 'Cannot decline last qualifying offer',
+          message: `This offer meets the minimum price. You must accept at least one offer that meets the minimum.`
+        });
+      }
+    }
+
     offer.status = 'rejected';
     offer.respondedAt = new Date();
     offer.sellerResponse = req.body.message || 'Offer rejected';
 
     await offer.save();
+
+    // If exactly one qualifying offer remains after this rejection → auto-accept it
+    if (minimumOfferPrice > 0) {
+      const remainingQualifying = await Offer.find({
+        listing: offer.listing._id,
+        status: 'pending',
+        amount: { $gte: minimumOfferPrice }
+      }).populate('listing').populate('offerer', 'firstName lastName email');
+
+      if (remainingQualifying.length === 1) {
+        // Check if seller has Stripe before auto-accepting (skip in test/dev mode)
+        const sellerStripeReady = isTestMode || !!(user.stripeConnectAccountId && user.stripeConnectOnboarded);
+
+        if (!sellerStripeReady) {
+          // Notify seller to connect Stripe; do not auto-accept
+          const { notifySellerStripeRequiredForOffer, emitNewNotificationToUser } = require('../services/notificationService');
+          const io = req.app.get('io');
+          notifySellerStripeRequiredForOffer({
+            listingSlug: offer.listing.slug || null,
+            listingTitle: offer.listing.title || 'Your listing',
+            offerAmount: remainingQualifying[0].amount,
+            sellerUserId: user._id.toString()
+          }).catch(err => console.error('Failed Stripe-required notification:', err));
+          if (io) emitNewNotificationToUser(io, user._id.toString()).catch(() => {});
+          return res.json({ ...offer.toObject(), stripeRequired: true });
+        }
+
+        const autoOffer = remainingQualifying[0];
+        autoOffer.status = 'accepted';
+        autoOffer.respondedAt = new Date();
+        autoOffer.sellerResponse = 'Offer automatically accepted (only qualifying offer remaining)';
+        autoOffer.listing.status = 'ended';
+        autoOffer.listing.currentPrice = autoOffer.amount;
+
+        await Offer.updateMany(
+          { listing: offer.listing._id, _id: { $ne: autoOffer._id }, status: 'pending' },
+          { status: 'rejected', respondedAt: new Date() }
+        );
+
+        await Promise.all([autoOffer.save(), autoOffer.listing.save()]);
+
+        if (autoOffer.offerer) {
+          createTransactionForAcceptedOffer(offer.listing._id.toString(), autoOffer._id.toString())
+            .catch(err => console.error('Transaction create for auto-accepted offer:', err.message));
+        }
+
+        const io = req.app.get('io');
+        if (io) {
+          const listingId = offer.listing._id.toString();
+          const { formatOfferForSocket } = require('../utils/offerFormat');
+          const populated = await Offer.findById(autoOffer._id).populate('offerer', 'firstName lastName email emailVerified').lean();
+          io.to(`listing:${listingId}`).emit('offer-update', {
+            listingId,
+            offer: formatOfferForSocket(populated),
+            listingStatus: 'ended'
+          });
+        }
+
+        return res.json({ ...offer.toObject(), autoAccepted: true });
+      }
+    }
 
     const io = req.app.get('io');
     if (offer.offerer) {
@@ -541,7 +589,7 @@ router.patch('/:offerId/reject', authenticateToken, async (req, res) => {
     console.error('Error rejecting offer:', error);
     res.status(400).json({
       error: 'Failed to reject offer',
-      message: error.message
+      message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
     });
   }
 });

@@ -4,7 +4,7 @@ import { RouterLink, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import Swal from 'sweetalert2';
-import { TransactionsService, Transaction, TransactionStatus } from '../../../shared/services/transactions.service';
+import { TransactionsService, Transaction, TransactionStatus, DamageClaim } from '../../../shared/services/transactions.service';
 import { ReviewsService } from '../../../shared/services/reviews.service';
 import { StripeConnectService } from '../../../shared/services/stripe-connect.service';
 import { ShippingService, ShippingRate, DeliveryAddress } from '../../../shared/services/shipping.service';
@@ -53,6 +53,14 @@ export class DashboardTransactionsComponent implements OnInit {
   showTrackingFormId: string | null = null;
   trackingNumber = '';
   trackingCarrier = '';
+  estimatedDeliveryDays: number | null = null;
+  /** Return request modal */
+  returnModalTransaction: Transaction | null = null;
+  returnReason = '';
+  returnPhotoUrls: string[] = [];
+  returnError: string | null = null;
+  returnSubmitting = false;
+  returnEvidenceUploading = false;
   /** Transaction ID currently redirecting to Stripe Checkout */
   stripePayingTxId: string | null = null;
   /** Transaction ID currently confirming Stripe payment on return */
@@ -73,6 +81,79 @@ export class DashboardTransactionsComponent implements OnInit {
   lockingRateTxId: string | null = null;
   /** Delivery address form used for shipping rate calculation */
   deliveryAddress: DeliveryAddress = { street1: '', city: '', state: '', postalCode: '', country: 'US' };
+  /** Transaction ID for which a "Remind seller to ship" request is in flight (loading state). */
+  remindSellerShipTxId: string | null = null;
+  /** Damage claim modal */
+  damageClaimTransaction: Transaction | null = null;
+  damagePhotoUrls: string[] = [];
+  packagingPhotoUrls: string[] = [];
+  damageDescription = '';
+  damageClaimError: string | null = null;
+  damageClaimSubmitting = false;
+  damagePhotoUploading = false;
+  packagingPhotoUploading = false;
+  /** Existing claims keyed by transactionId (loaded lazily on reveal) */
+  existingClaimsByTxId: Record<string, DamageClaim | null> = {};
+
+  /** Claim window: 48 hours in ms */
+  private readonly CLAIM_WINDOW_MS = 48 * 60 * 60 * 1000;
+
+  /** Filter pills */
+  txFilter: 'all' | 'pending_payment' | 'shipping' | 'delivered' | 'completed' | 'disputed' = 'all';
+
+  /** Slide-in drawer */
+  drawerTx: Transaction | null = null;
+
+  get filteredTransactions(): Transaction[] {
+    if (this.txFilter === 'all') return this.transactions;
+    return this.transactions.filter(t => {
+      const s = this.getEffectiveStatus(t);
+      switch (this.txFilter) {
+        case 'pending_payment': return s === 'pending_payment';
+        case 'shipping': return s === 'awaiting_seller_acceptance' || s === 'paid' || s === 'shipped';
+        case 'delivered': return s === 'delivered';
+        case 'completed': return s === 'completed' || s === 'cancelled';
+        case 'disputed': return s === 'under_dispute' || t.disputeOpen;
+        default: return true;
+      }
+    });
+  }
+
+  openDrawer(t: Transaction): void { this.drawerTx = t; }
+  closeDrawer(): void { this.drawerTx = null; }
+
+  getDrawerProgressStep(t: Transaction): number {
+    const s = this.getEffectiveStatus(t);
+    if (s === 'completed' || s === 'cancelled') return 4;
+    if (s === 'delivered') return 3;
+    if (s === 'shipped' || s === 'paid' || s === 'awaiting_seller_acceptance') return 2;
+    return 1;
+  }
+
+  getTxStatusBadgeClass(t: Transaction): string {
+    const s = this.getEffectiveStatus(t);
+    if (t.disputeOpen || s === 'under_dispute') return 'tbs-dispute';
+    if (s === 'pending_payment') return 'tbs-payment';
+    if (s === 'awaiting_seller_acceptance' || s === 'paid' || s === 'shipped') return 'tbs-shipping';
+    if (s === 'delivered') return 'tbs-delivered';
+    if (s === 'completed' || s === 'cancelled') return 'tbs-completed';
+    return 'tbs-completed';
+  }
+
+  getSimpleStatusLabel(t: Transaction): string {
+    const s = this.getEffectiveStatus(t);
+    if (t.disputeOpen || s === 'under_dispute') return 'Dispute';
+    const map: Partial<Record<TransactionStatus, string>> = {
+      pending_payment: 'Pending payment',
+      awaiting_seller_acceptance: 'In transit',
+      paid: 'In transit',
+      shipped: 'In transit',
+      delivered: 'Delivered',
+      completed: 'Completed',
+      cancelled: 'Cancelled'
+    };
+    return map[s] ?? s;
+  }
 
   ngOnInit(): void {
     this.loadTransactions();
@@ -154,17 +235,14 @@ export class DashboardTransactionsComponent implements OnInit {
     return this.getEffectiveStatus(t) === 'completed';
   }
 
-  /** Both buyer and seller have left their reviews; required before marking as completed */
+  /** Both buyer and seller have left their reviews */
   hasBothReviewed(t: Transaction): boolean {
     return !!(t.buyerHasReviewedSeller && t.sellerHasReviewedBuyer);
   }
 
-  /** Can mark as completed only when delivered (or paid/shipped) AND both have reviewed */
+  /** Buyer can mark as completed once item flow reached paid/shipped/delivered */
   canMarkAsCompleted(t: Transaction): boolean {
-    return (
-      ['paid', 'shipped', 'delivered'].includes(this.getEffectiveStatus(t)) &&
-      this.hasBothReviewed(t)
-    );
+    return ['paid', 'shipped', 'delivered'].includes(this.getEffectiveStatus(t));
   }
 
   getStatusLabel(status: TransactionStatus): string {
@@ -185,7 +263,7 @@ export class DashboardTransactionsComponent implements OnInit {
   getBuyingStatusLabel(t: Transaction): string {
     const s = this.getEffectiveStatus(t);
     if (s === 'under_dispute') return 'Under Dispute';
-    if (['delivered', 'completed'].includes(s) && !t.buyerHasReviewedSeller) {
+    if (s === 'completed' && !t.buyerHasReviewedSeller && this.isWithinReviewWindow(t)) {
       return 'Pending Review';
     }
     const map: Record<TransactionStatus, string> = {
@@ -205,7 +283,7 @@ export class DashboardTransactionsComponent implements OnInit {
   getSellingStatusLabel(t: Transaction): string {
     const s = this.getEffectiveStatus(t);
     if (s === 'under_dispute') return 'Under Dispute';
-    if (['delivered', 'completed'].includes(s) && !t.sellerHasReviewedBuyer) {
+    if (s === 'completed' && !t.sellerHasReviewedBuyer && this.isWithinReviewWindow(t)) {
       return 'Pending Review';
     }
     const map: Record<TransactionStatus, string> = {
@@ -224,7 +302,7 @@ export class DashboardTransactionsComponent implements OnInit {
   getBuyingStatusClass(t: Transaction): string {
     const s = this.getEffectiveStatus(t);
     if (s === 'under_dispute') return 'status-dispute';
-    if (['delivered', 'completed'].includes(s) && !t.buyerHasReviewedSeller) {
+    if (s === 'completed' && !t.buyerHasReviewedSeller && this.isWithinReviewWindow(t)) {
       return 'status-review';
     }
     const map: Record<TransactionStatus, string> = {
@@ -243,7 +321,7 @@ export class DashboardTransactionsComponent implements OnInit {
   getSellingStatusClass(t: Transaction): string {
     const s = this.getEffectiveStatus(t);
     if (s === 'under_dispute') return 'status-dispute';
-    if (['delivered', 'completed'].includes(s) && !t.sellerHasReviewedBuyer) {
+    if (s === 'completed' && !t.sellerHasReviewedBuyer && this.isWithinReviewWindow(t)) {
       return 'status-review';
     }
     const map: Record<TransactionStatus, string> = {
@@ -314,7 +392,13 @@ export class DashboardTransactionsComponent implements OnInit {
       },
       error: (err) => {
         this.stripePayingTxId = null;
-        this.stripePaymentError = err?.error?.message || 'Failed to start payment. Please try again.';
+        const apiError = err?.error?.error;
+        if (apiError === 'Seller not ready') {
+          this.stripePaymentError = `Payment unavailable: the seller has not connected their Stripe account yet. ` +
+            `Please contact the seller (${t.seller?.firstName} ${t.seller?.lastName}) or wait for them to complete their payment setup.`;
+        } else {
+          this.stripePaymentError = err?.error?.message || 'Failed to start payment. Please try again.';
+        }
       }
     });
   }
@@ -334,10 +418,10 @@ export class DashboardTransactionsComponent implements OnInit {
     });
   }
 
-  /** Financial breakdown: BidRoom fee (2% of item price) */
+  /** Financial breakdown: BidRoom fee (4% of item price, charged to seller) */
   getBidRoomFee(t: Transaction): number {
     if (t.bidRoomFeeAmount != null) return t.bidRoomFeeAmount;
-    return t.amount * 0.02;
+    return t.amount * 0.04;
   }
 
   /** Shipping amount: uses locked rate if available, falls back to flat-rate / free / null */
@@ -499,6 +583,80 @@ export class DashboardTransactionsComponent implements OnInit {
     return date.toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' });
   }
 
+  /** Format the auto-cancellation date for display in the cancellation notice. */
+  formatAutoCancelledAt(t: Transaction): string {
+    if (!t.shippingAutoCancelledAt) return '';
+    return new Date(t.shippingAutoCancelledAt).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' });
+  }
+
+  /**
+   * Format the ship-by deadline for display.
+   * Prefers shipByBusinessDeadline (5 business-day); falls back to legacy handlingDeadline.
+   */
+  formatShipByDeadline(t: Transaction): string {
+    const raw = t.shipByBusinessDeadline || t.handlingDeadline;
+    if (!raw) return '';
+    return new Date(raw).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' });
+  }
+
+  /**
+   * Buyer-facing shipping status label.
+   * - "Not shipped" while awaiting seller acceptance / paid
+   * - "Shipped — [carrier] [tracking]" once marked shipped
+   */
+  buyerShippingStatusLine(t: Transaction): string {
+    const s = this.getEffectiveStatus(t);
+    if (s === 'shipped' || s === 'delivered' || s === 'completed') {
+      if (t.trackingNumber) {
+        const c = t.trackingCarrier ? `${t.trackingCarrier} ` : '';
+        return `Shipped — ${c}${t.trackingNumber}`.trim();
+      }
+      return 'Shipped';
+    }
+    if (['awaiting_seller_acceptance', 'paid'].includes(s)) {
+      return 'Not shipped';
+    }
+    return '—';
+  }
+
+  /** Whether the buyer has already used the "Remind seller" action within the last 24 hours. */
+  isRemindSellerOnCooldown(t: Transaction): boolean {
+    if (!t.buyerRemindSellerShipAt) return false;
+    return Date.now() - new Date(t.buyerRemindSellerShipAt).getTime() < 24 * 60 * 60 * 1000;
+  }
+
+  /** True when the buyer is allowed to send a shipping reminder (correct role + status + not on cooldown). */
+  canRemindSellerToShip(t: Transaction): boolean {
+    if (!this.isBuyer(t)) return false;
+    if (!['awaiting_seller_acceptance', 'paid'].includes(this.getEffectiveStatus(t))) return false;
+    if (this.isRemindSellerOnCooldown(t)) return false;
+    return true;
+  }
+
+  /**
+   * Send a "Remind seller to ship" request. Updates the local transaction
+   * on success, shows a toast, or displays the 24-hour cooldown message on 429.
+   */
+  remindSellerToShip(t: Transaction): void {
+    if (!this.canRemindSellerToShip(t) || this.remindSellerShipTxId) return;
+    this.remindSellerShipTxId = t._id;
+    this.transactionsService.remindSellerToShip(t._id).subscribe({
+      next: (updated) => {
+        this.remindSellerShipTxId = null;
+        this.replaceTransaction(updated);
+        successToast.fire({ title: 'Reminder sent to the seller' });
+      },
+      error: (err) => {
+        this.remindSellerShipTxId = null;
+        const msg =
+          err?.status === 429
+            ? 'You can send another reminder after 24 hours.'
+            : err?.error?.message || 'Could not send reminder.';
+        Swal.fire({ icon: 'info', title: 'Reminder', text: msg, confirmButtonColor: '#7A4F84' });
+      }
+    });
+  }
+
   hasPaymentDeadlinePassed(t: Transaction): boolean {
     if (!t.paymentDeadline) return false;
     return new Date(t.paymentDeadline) < new Date();
@@ -533,10 +691,12 @@ export class DashboardTransactionsComponent implements OnInit {
       this.showTrackingFormId = null;
       this.trackingNumber = '';
       this.trackingCarrier = '';
+      this.estimatedDeliveryDays = null;
     } else {
       this.showTrackingFormId = t._id;
       this.trackingNumber = t.trackingNumber || '';
       this.trackingCarrier = t.trackingCarrier || '';
+      this.estimatedDeliveryDays = t.shippingDeliveryDays ?? null;
     }
   }
 
@@ -630,6 +790,7 @@ export class DashboardTransactionsComponent implements OnInit {
         status: 'shipped',
         trackingNumber: this.trackingNumber || undefined,
         trackingCarrier: this.trackingCarrier || undefined,
+        estimatedDeliveryDays: this.estimatedDeliveryDays ?? undefined,
         sellerProofOfDeliveryUrl: proofUrl
       })
       .subscribe({
@@ -639,6 +800,7 @@ export class DashboardTransactionsComponent implements OnInit {
           this.showTrackingFormId = null;
           this.trackingNumber = '';
           this.trackingCarrier = '';
+          this.estimatedDeliveryDays = null;
           delete this.deliveryProofUploadedUrlByTxId[t._id];
           delete this.deliveryProofFileNameByTxId[t._id];
           delete this.deliveryProofErrorByTxId[t._id];
@@ -646,6 +808,274 @@ export class DashboardTransactionsComponent implements OnInit {
         },
         error: () => (this.updatingId = null)
       });
+  }
+
+  /** Format estimatedDeliveryDate for display */
+  formatEstimatedDelivery(t: Transaction): string {
+    if (!t.estimatedDeliveryDate) return '';
+    return new Date(t.estimatedDeliveryDate).toLocaleDateString(undefined, { dateStyle: 'medium' });
+  }
+
+  /** True if today is past the estimated delivery date (buyer should confirm) */
+  isEstimatedDeliveryPassed(t: Transaction): boolean {
+    if (!t.estimatedDeliveryDate) return false;
+    return new Date(t.estimatedDeliveryDate) < new Date();
+  }
+
+  /** Format auto-release date for the buyer countdown notice */
+  formatAutoReleaseDate(t: Transaction): string {
+    if (!t.autoReleaseAt) return '';
+    return new Date(t.autoReleaseAt).toLocaleDateString(undefined, { dateStyle: 'medium' });
+  }
+
+  /** Days remaining before auto-release (negative = overdue) */
+  daysUntilAutoRelease(t: Transaction): number | null {
+    if (!t.autoReleaseAt) return null;
+    const diff = new Date(t.autoReleaseAt).getTime() - Date.now();
+    return Math.ceil(diff / (1000 * 60 * 60 * 24));
+  }
+
+  /** Whether buyer can still request a return (delivered + within 7 days) */
+  canRequestReturn(t: Transaction): boolean {
+    if (!this.isBuyer(t)) return false;
+    if (this.getEffectiveStatus(t) !== 'delivered') return false;
+    if (t.returnRequestedAt) return false; // already submitted
+    if (!t.deliveredAt) return true; // no deliveredAt recorded — allow
+    const deadline = new Date(t.deliveredAt);
+    deadline.setDate(deadline.getDate() + 7);
+    return new Date() <= deadline;
+  }
+
+  /** Days remaining in return window */
+  returnWindowDaysLeft(t: Transaction): number {
+    if (!t.deliveredAt) return 7;
+    const deadline = new Date(t.deliveredAt);
+    deadline.setDate(deadline.getDate() + 7);
+    return Math.max(0, Math.ceil((deadline.getTime() - Date.now()) / (1000 * 60 * 60 * 24)));
+  }
+
+  openReturnModal(t: Transaction): void {
+    if (!this.canRequestReturn(t)) return;
+    this.returnModalTransaction = t;
+    this.returnReason = '';
+    this.returnPhotoUrls = [];
+    this.returnError = null;
+  }
+
+  /** Format remaining time until payment deadline as "XXh XXm" or "expired" */
+  paymentDeadlineCountdown(t: Transaction): string {
+    if (!t.paymentDeadline) return '';
+    const diff = new Date(t.paymentDeadline).getTime() - Date.now();
+    if (diff <= 0) return 'transactions.paymentExpired';
+    const hrs = Math.floor(diff / 3600000);
+    const mins = Math.floor((diff % 3600000) / 60000);
+    if (hrs > 0) return `${hrs}h ${mins}m`;
+    return `${mins}m`;
+  }
+
+  /** Whether the private-room payment countdown should be shown (buyer, pending, isPrivateRoom) */
+  showPrivateRoomCountdown(t: Transaction): boolean {
+    return !!(
+      this.isBuyer(t) &&
+      t.isPrivateRoom &&
+      this.getEffectiveStatus(t) === 'pending_payment' &&
+      t.paymentDeadline
+    );
+  }
+
+  /** True when deadline has passed or less than 1 hour remains */
+  isPaymentDeadlineUrgent(t: Transaction): boolean {
+    if (!t.paymentDeadline) return false;
+    return new Date(t.paymentDeadline).getTime() - Date.now() < 3600000;
+  }
+
+  /** True if buyer received a second-chance offer (originally someone else was the winner) */
+  isSecondChanceBuyer(t: Transaction): boolean {
+    return !!(t.isPrivateRoom && t.secondChanceAssignedAt);
+  }
+
+  relistItem(t: Transaction): void {
+    if (!t.listing?.slug) return;
+    const listingId = t.listing._id;
+    this.transactionsService.relistListing(listingId).subscribe({
+      next: () => {
+        successToast.fire({ title: 'Item relisted for 7 days!' });
+        this.loadTransactions();
+      },
+      error: (err) => {
+        Swal.fire({ icon: 'error', title: 'Relist failed', text: err?.error?.message || 'Could not relist the item.' });
+      }
+    });
+  }
+
+  /** Whether the seller can relist (listing ended due to non_payment_no_second_bidder) */
+  canRelist(t: Transaction): boolean {
+    if (!this.isSeller(t)) return false;
+    if (this.getEffectiveStatus(t) !== 'cancelled') return false;
+    return t.cancellationReason === 'non_payment';
+  }
+
+  /** Whether buyer can open a damage claim (delivered + within 48h + no existing claim) */
+  canOpenDamageClaim(t: Transaction): boolean {
+    if (!this.isBuyer(t)) return false;
+    if (this.getEffectiveStatus(t) !== 'delivered') return false;
+    if (!t.deliveredAt) return false;
+    const elapsed = Date.now() - new Date(t.deliveredAt).getTime();
+    if (elapsed > this.CLAIM_WINDOW_MS) return false;
+    // Hide if we already know a claim exists
+    if (this.existingClaimsByTxId[t._id] !== undefined) return false;
+    return true;
+  }
+
+  /** Hours remaining in the 48h damage claim window */
+  damageClaimHoursLeft(t: Transaction): number {
+    if (!t.deliveredAt) return 0;
+    const elapsed = Date.now() - new Date(t.deliveredAt).getTime();
+    return Math.max(0, Math.ceil((this.CLAIM_WINDOW_MS - elapsed) / 3600000));
+  }
+
+  openDamageClaimModal(t: Transaction): void {
+    if (!this.canOpenDamageClaim(t)) return;
+    this.damageClaimTransaction = t;
+    this.damagePhotoUrls = [];
+    this.packagingPhotoUrls = [];
+    this.damageDescription = '';
+    this.damageClaimError = null;
+  }
+
+  closeDamageClaimModal(): void {
+    this.damageClaimTransaction = null;
+  }
+
+  async uploadDamagePhoto(event: Event, type: 'damage' | 'packaging'): Promise<void> {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+    input.value = '';
+
+    if (type === 'damage') this.damagePhotoUploading = true;
+    else this.packagingPhotoUploading = true;
+
+    this.transactionsService.uploadDamagePhoto(file).subscribe({
+      next: ({ url }) => {
+        if (type === 'damage') {
+          this.damagePhotoUrls = [...this.damagePhotoUrls, url];
+          this.damagePhotoUploading = false;
+        } else {
+          this.packagingPhotoUrls = [...this.packagingPhotoUrls, url];
+          this.packagingPhotoUploading = false;
+        }
+      },
+      error: () => {
+        this.damageClaimError = 'Failed to upload photo. Please try again.';
+        if (type === 'damage') this.damagePhotoUploading = false;
+        else this.packagingPhotoUploading = false;
+      }
+    });
+  }
+
+  removeDamagePhoto(url: string, type: 'damage' | 'packaging'): void {
+    if (type === 'damage') this.damagePhotoUrls = this.damagePhotoUrls.filter(u => u !== url);
+    else this.packagingPhotoUrls = this.packagingPhotoUrls.filter(u => u !== url);
+  }
+
+  submitDamageClaim(): void {
+    const t = this.damageClaimTransaction;
+    if (!t || this.damageClaimSubmitting) return;
+
+    if (this.damagePhotoUrls.length < 1) {
+      this.damageClaimError = 'Please upload at least one photo of the damage.';
+      return;
+    }
+    if (this.packagingPhotoUrls.length < 1) {
+      this.damageClaimError = 'Please upload at least one photo of the packaging.';
+      return;
+    }
+
+    this.damageClaimSubmitting = true;
+    this.damageClaimError = null;
+
+    this.transactionsService.openDamageClaim({
+      transactionId: t._id,
+      damagePhotoUrls: this.damagePhotoUrls,
+      packagingPhotoUrls: this.packagingPhotoUrls,
+      description: this.damageDescription.trim() || undefined
+    }).subscribe({
+      next: ({ claim }) => {
+        this.existingClaimsByTxId[t._id] = claim;
+        this.damageClaimSubmitting = false;
+        this.damageClaimTransaction = null;
+        successToast.fire({ title: 'Damage claim submitted. We\'ll review it shortly.' });
+      },
+      error: (err) => {
+        this.damageClaimError = err?.error?.message || err?.error?.error || 'Failed to submit claim. Please try again.';
+        this.damageClaimSubmitting = false;
+      }
+    });
+  }
+
+  closeReturnModal(): void {
+    this.returnModalTransaction = null;
+    this.returnReason = '';
+    this.returnPhotoUrls = [];
+    this.returnError = null;
+  }
+
+  onReturnEvidenceSelected(input: HTMLInputElement): void {
+    const files = input.files;
+    if (!files || files.length === 0) return;
+    this.returnError = null;
+    const maxSize = this.transactionsService.proofOfPaymentMaxSize;
+    const allowed = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+    const toUpload: File[] = [];
+    for (let i = 0; i < files.length; i++) {
+      const f = files[i];
+      if (f.size > maxSize) { this.returnError = `File ${f.name} is too large (max 30MB).`; input.value = ''; return; }
+      if (!allowed.includes(f.type)) { this.returnError = `Only images (JPG, PNG, GIF, WebP) are allowed.`; input.value = ''; return; }
+      toUpload.push(f);
+    }
+    if (toUpload.length + this.returnPhotoUrls.length > 10) {
+      this.returnError = 'Maximum 10 photos allowed.'; input.value = ''; return;
+    }
+    this.returnEvidenceUploading = true;
+    let done = 0;
+    toUpload.forEach(file => {
+      this.transactionsService.uploadReturnEvidence(file).subscribe({
+        next: (res) => {
+          this.returnPhotoUrls = [...this.returnPhotoUrls, res.url];
+          done++;
+          if (done === toUpload.length) this.returnEvidenceUploading = false;
+        },
+        error: () => { this.returnError = 'Upload failed.'; this.returnEvidenceUploading = false; }
+      });
+    });
+    input.value = '';
+  }
+
+  canSubmitReturn(): boolean {
+    return this.returnReason.trim().length >= 5 && this.returnPhotoUrls.length >= 1;
+  }
+
+  submitReturn(): void {
+    const t = this.returnModalTransaction;
+    if (!t || this.returnSubmitting || !this.canSubmitReturn()) return;
+    this.returnSubmitting = true;
+    this.returnError = null;
+    this.transactionsService.requestReturn(t._id, {
+      reason: this.returnReason.trim(),
+      photoUrls: this.returnPhotoUrls
+    }).subscribe({
+      next: (updated) => {
+        this.returnSubmitting = false;
+        this.closeReturnModal();
+        this.replaceTransaction({ ...updated, role: 'buyer' });
+        successToast.fire({ title: 'Return request submitted. The seller has 48 hours to respond.' });
+      },
+      error: (err) => {
+        this.returnError = err?.error?.message || 'Failed to submit return request.';
+        this.returnSubmitting = false;
+      }
+    });
   }
 
   /** Download invoice (seller) or receipt (buyer) PDF for completed transactions */
@@ -668,10 +1098,17 @@ export class DashboardTransactionsComponent implements OnInit {
     });
   }
 
-  /** Whether the current user can leave a review for this transaction (delivered/completed + hasn't reviewed) */
+  private isWithinReviewWindow(t: Transaction): boolean {
+    const completed = t.completedAt || t.updatedAt;
+    if (!completed) return false;
+    return Date.now() - new Date(completed).getTime() <= 30 * 24 * 60 * 60 * 1000;
+  }
+
+  /** Whether the current user can leave a review for this transaction (completed + 30-day window + hasn't reviewed) */
   canLeaveReview(t: Transaction): boolean {
     const s = this.getEffectiveStatus(t);
-    if (!['delivered', 'completed'].includes(s)) return false;
+    if (s !== 'completed') return false;
+    if (!this.isWithinReviewWindow(t)) return false;
     if (this.isBuyer(t) && !t.buyerHasReviewedSeller) return true;
     if (this.isSeller(t) && !t.sellerHasReviewedBuyer) return true;
     return false;
@@ -712,10 +1149,17 @@ export class DashboardTransactionsComponent implements OnInit {
     this.reviewScore = n;
   }
 
+  /** Visual tier for 1–5 score buttons (matches review modal styling). */
+  scoreTier(i: number): 'low' | 'mid' | 'high' {
+    if (i <= 2) return 'low';
+    if (i <= 4) return 'mid';
+    return 'high';
+  }
+
   submitReview(): void {
     const t = this.reviewModalTransaction;
-    if (!t || this.reviewScore < 1 || this.reviewScore > 10) {
-      this.reviewError = 'Please select a score from 1 to 10.';
+    if (!t || this.reviewScore < 1 || this.reviewScore > 5) {
+      this.reviewError = 'Please select a score from 1 to 5.';
       return;
     }
     const listingId = (t.listing && (t.listing as { _id?: string })._id ? (t.listing as { _id?: string })._id : t.listing)?.toString();

@@ -1,0 +1,296 @@
+@use '../../styles/nexus-shared';
+
+.admin-transactions {
+  padding: 28px 32px 48px;
+  max-width: 1480px;
+  margin: 0 auto;
+}
+
+// ── Header ──────────────────────────────────────────────────────────────────
+
+.page-header {
+  margin-bottom: 24px;
+
+  .nexus-crumb {
+    margin: 0 0 4px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--primary-color);
+  }
+
+  .page-title {
+    font-size: 28px;
+    font-weight: 800;
+    margin: 0 0 6px;
+    color: #0f172a;
+    letter-spacing: -0.02em;
+  }
+
+  .page-lead {
+    margin: 0;
+    font-size: 14px;
+    color: #64748b;
+  }
+}
+
+// ── Filters ──────────────────────────────────────────────────────────────────
+
+.filters-bar {
+  display: flex;
+  align-items: flex-end;
+  gap: 14px;
+  padding: 18px 20px;
+  background: #fff;
+  border-radius: 12px;
+  margin-bottom: 20px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+  flex-wrap: wrap;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+
+  label {
+    font-size: 11px;
+    font-weight: 700;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+}
+
+.filter-select {
+  height: 40px;
+  padding: 0 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 14px;
+  background: #f8fafc;
+  color: #0f172a;
+  min-width: 200px;
+  transition: border-color 0.15s, box-shadow 0.15s;
+
+  &:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(0, 35, 102, 0.1);
+    background: #fff;
+  }
+}
+
+.results-count {
+  margin-left: auto;
+  align-self: flex-end;
+  padding-bottom: 10px;
+  font-size: 13px;
+  color: #64748b;
+
+  strong {
+    color: #0f172a;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+// ── Table shell ───────────────────────────────────────────────────────────────
+
+.table-shell {
+  background: #fff;
+  border-radius: 14px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  overflow: hidden;
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.05);
+}
+
+// ── Listing cell ──────────────────────────────────────────────────────────────
+
+.listing-cell {
+  max-width: 260px;
+
+  .listing-title {
+    display: block;
+    font-weight: 600;
+    color: #0f172a;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+// ── Person cell ───────────────────────────────────────────────────────────────
+
+.person-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+  color: #475569;
+  font-size: 13px;
+}
+
+.person-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  flex-shrink: 0;
+  letter-spacing: 0.02em;
+
+  &.av-blue   { background: #dbeafe; color: #1e40af; }
+  &.av-purple { background: #ede9fe; color: #6d28d9; }
+  &.av-teal   { background: #ccfbf1; color: #0f766e; }
+  &.av-amber  { background: #fef3c7; color: #92400e; }
+  &.av-rose   { background: #ffe4e6; color: #9f1239; }
+}
+
+// ── Price ─────────────────────────────────────────────────────────────────────
+
+.price-cell {
+  font-weight: 700;
+  color: #0f172a;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+// ── Status badge ──────────────────────────────────────────────────────────────
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px 4px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+
+  .status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  &.status-pending {
+    background: #fef9c3;
+    color: #854d0e;
+    .status-dot { background: #ca8a04; }
+  }
+  &.status-paid {
+    background: #dcfce7;
+    color: #166534;
+    .status-dot { background: #16a34a; }
+  }
+  &.status-shipped {
+    background: #dbeafe;
+    color: #1e40af;
+    .status-dot { background: #3b82f6; }
+  }
+  &.status-delivered {
+    background: #ccfbf1;
+    color: #0f766e;
+    .status-dot { background: #0d9488; }
+  }
+  &.status-dispute {
+    background: #fee2e2;
+    color: #991b1b;
+    .status-dot { background: #ef4444; }
+  }
+  &.status-completed {
+    background: #ccfbf1;
+    color: #0f766e;
+    .status-dot { background: #0d9488; }
+  }
+  &.status-cancelled {
+    background: #f1f5f9;
+    color: #475569;
+    .status-dot { background: #94a3b8; }
+  }
+}
+
+// ── Date ─────────────────────────────────────────────────────────────────────
+
+.date-cell {
+  font-size: 13px;
+  color: #64748b;
+  white-space: nowrap;
+}
+
+// ── States ────────────────────────────────────────────────────────────────────
+
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 72px 20px;
+  gap: 14px;
+
+  .spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid #e2e8f0;
+    border-top-color: var(--primary-color);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+
+  p { color: #64748b; margin: 0; font-size: 14px; }
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 64px;
+  gap: 12px;
+  background: #fff;
+  border-radius: 14px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+
+  .error-message { color: #dc2626; font-weight: 500; margin: 0; text-align: center; }
+
+  .retry-btn {
+    padding: 9px 20px;
+    background: var(--primary-color);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    &:hover { opacity: 0.9; }
+  }
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 64px 24px;
+  gap: 10px;
+
+  .empty-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: #f1f5f9;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #94a3b8;
+    margin-bottom: 4px;
+  }
+
+  .empty-message    { font-weight: 700; color: #334155; margin: 0; font-size: 15px; }
+  .empty-description { margin: 0; font-size: 14px; color: #94a3b8; }
+}

@@ -1,132 +1,254 @@
-.admin-layout {
-  display: flex;
-  min-height: 100vh;
-  background: #f5f7fa;
-}
-
-.admin-content {
-  flex: 1;
-  margin-left: 260px;
-  min-height: 100vh;
-}
+@use '../../styles/nexus-shared';
 
 .admin-auctions {
-  padding: 32px;
+  padding: 28px 32px 48px;
+  max-width: 1480px;
+  margin: 0 auto;
 }
 
 .auctions-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 24px;
+  margin-bottom: 22px;
 
-  .page-title {
-    font-size: 32px;
+  .nexus-crumb {
+    margin: 0 0 4px;
+    font-size: 11px;
     font-weight: 700;
-    color: #1a202c;
-    margin: 0;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--primary-color);
   }
 
-  .create-room-btn {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 12px 24px;
-    background: #007bff;
-    color: white;
-    border: none;
-    border-radius: 8px;
-    font-size: 15px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s ease;
+  .page-title {
+    font-size: 28px;
+    font-weight: 800;
+    margin: 0 0 6px;
+    color: #0f172a;
+    letter-spacing: -0.02em;
+  }
 
-    &:hover:not(:disabled) {
-      background: #0056b3;
-      transform: translateY(-1px);
-      box-shadow: 0 4px 8px rgba(0, 123, 255, 0.2);
-    }
-
-    &:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-
-    .btn-icon {
-      font-size: 18px;
-    }
+  .page-lead {
+    margin: 0;
+    font-size: 14px;
+    color: #64748b;
+    max-width: 560px;
+    line-height: 1.5;
   }
 }
 
 .filters-section {
   display: flex;
-  align-items: center;
-  gap: 24px;
-  padding: 20px;
-  background: white;
-  border-radius: 8px;
-  margin-bottom: 24px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  align-items: flex-end;
+  gap: 20px;
+  padding: 18px 20px;
+  background: #fff;
+  border-radius: 12px;
+  margin-bottom: 22px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
   flex-wrap: wrap;
 
   .filter-group {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 6px;
 
     label {
-      font-size: 13px;
-      font-weight: 500;
-      color: #4a5568;
+      font-size: 12px;
+      font-weight: 600;
+      color: #475569;
     }
 
     .filter-select {
-      padding: 8px 12px;
+      padding: 10px 12px;
       border: 1px solid #e2e8f0;
-      border-radius: 6px;
+      border-radius: 8px;
       font-size: 14px;
-      background: white;
-      color: #1a202c;
-      cursor: pointer;
-      transition: border-color 0.2s ease;
-      min-width: 180px;
+      background: #fff;
+      color: #0f172a;
+      min-width: 200px;
 
       &:focus {
         outline: none;
-        border-color: #007bff;
-        box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(0, 35, 102, 0.12);
       }
     }
   }
 
   .results-count {
     margin-left: auto;
+    margin-bottom: 2px;
     font-size: 14px;
-    color: #718096;
-    font-weight: 500;
+    color: #64748b;
+
+    strong {
+      color: #0f172a;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+    }
   }
+}
+
+.table-shell {
+  background: #fff;
+  border-radius: 14px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  overflow: hidden;
+}
+
+table.auctions-row-table {
+  thead th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+  }
+
+  .title-cell {
+    min-width: 200px;
+
+    .title-content {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .auction-thumbnail {
+      width: 48px;
+      height: 48px;
+      object-fit: cover;
+      border-radius: 10px;
+      border: 1px solid #e2e8f0;
+      flex-shrink: 0;
+    }
+
+    .title-text {
+      font-weight: 600;
+      color: #0f172a;
+    }
+  }
+
+  .muted-cell {
+    color: #64748b;
+    white-space: nowrap;
+  }
+
+  .format-cell {
+    font-size: 13px;
+    font-weight: 600;
+    color: #334155;
+    white-space: nowrap;
+  }
+
+  .private-room-cell {
+    white-space: nowrap;
+  }
+
+  .private-room-badge {
+    display: inline-flex;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+
+    &.private-room-yes {
+      background: #ede9fe;
+      color: #5b21b6;
+    }
+
+    &.private-room-no {
+      background: #f1f5f9;
+      color: #64748b;
+    }
+  }
+
+  .private-room-na {
+    color: #94a3b8;
+    font-size: 14px;
+  }
+
+  .price-cell {
+    font-weight: 600;
+  }
+
+  .date-cell {
+    color: #64748b;
+    font-size: 13px;
+    white-space: nowrap;
+  }
+
+  .status-badge {
+    display: inline-flex;
+    padding: 5px 10px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+
+    &.status-active {
+      background: #ccfbf1;
+      color: #0f766e;
+    }
+
+    &.status-ended {
+      background: #fde68a;
+      color: #92400e;
+    }
+
+    &.status-cancelled {
+      background: #e2e8f0;
+      color: #334155;
+    }
+
+    &.status-draft {
+      background: #fbcfe8;
+      color: #9d174d;
+    }
+  }
+
+  .action-link {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--primary-color);
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 .loading-state {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  padding: 80px 20px;
-  gap: 16px;
+  padding: 64px 20px;
+  gap: 14px;
 
   .spinner {
-    width: 48px;
-    height: 48px;
-    border: 4px solid #e2e8f0;
-    border-top-color: #007bff;
+    width: 46px;
+    height: 46px;
+    border: 3px solid #e2e8f0;
+    border-top-color: var(--primary-color);
     border-radius: 50%;
     animation: spin 1s linear infinite;
   }
 
   p {
     color: #64748b;
-    font-size: 16px;
     margin: 0;
   }
 }
@@ -141,265 +263,59 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  padding: 80px 20px;
-  gap: 16px;
-  background: white;
+  padding: 64px;
+  gap: 12px;
+  background: #fff;
   border-radius: 12px;
-  border: 2px solid #fee;
-  max-width: 500px;
-  margin: 0 auto;
-
-  .error-icon {
-    font-size: 48px;
-  }
 
   .error-message {
     color: #c53030;
-    font-size: 16px;
     font-weight: 500;
-    text-align: center;
     margin: 0;
+    text-align: center;
   }
 
   .retry-btn {
-    padding: 10px 24px;
-    background: #007bff;
-    color: white;
+    padding: 10px 20px;
+    background: var(--primary-color);
+    color: #fff;
     border: none;
     border-radius: 8px;
-    font-size: 14px;
-    font-weight: 500;
+    font-weight: 600;
     cursor: pointer;
-    transition: background-color 0.2s ease;
 
     &:hover {
-      background: #0056b3;
-    }
-  }
-}
-
-.table-container {
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
-}
-
-.auctions-table {
-  width: 100%;
-  border-collapse: collapse;
-
-  thead {
-    background: #f7fafc;
-    border-bottom: 2px solid #e2e8f0;
-
-    th {
-      padding: 16px;
-      text-align: left;
-      font-size: 13px;
-      font-weight: 600;
-      color: #4a5568;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-  }
-
-  tbody {
-    tr {
-      border-bottom: 1px solid #e2e8f0;
-      transition: background-color 0.15s ease;
-
-      &:hover {
-        background: #f7fafc;
-      }
-
-      &:last-child {
-        border-bottom: none;
-      }
-    }
-
-    td {
-      padding: 16px;
-      font-size: 14px;
-      color: #2d3748;
-    }
-  }
-
-  .title-cell {
-    .title-content {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-
-      .auction-thumbnail {
-        width: 50px;
-        height: 50px;
-        object-fit: cover;
-        border-radius: 6px;
-        border: 1px solid #e2e8f0;
-      }
-
-      .title-text {
-        font-weight: 500;
-        color: #1a202c;
-      }
-    }
-  }
-
-  .category-cell {
-    text-transform: capitalize;
-    color: #718096;
-  }
-
-  .seller-cell {
-    color: #4a5568;
-  }
-
-  .price-cell {
-    font-weight: 600;
-    color: #1a202c;
-  }
-
-  .bids-cell {
-    text-align: center;
-    color: #718096;
-  }
-
-  .status-cell {
-    .status-badge {
-      display: inline-block;
-      padding: 4px 12px;
-      border-radius: 12px;
-      font-size: 12px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-
-      &.status-active {
-        background: #c6f6d5;
-        color: #22543d;
-      }
-
-      &.status-ended {
-        background: #fed7d7;
-        color: #742a2a;
-      }
-
-      &.status-cancelled {
-        background: #e2e8f0;
-        color: #2d3748;
-      }
-
-      &.status-draft {
-        background: #feebc8;
-        color: #744210;
-      }
-    }
-  }
-
-  .date-cell {
-    color: #718096;
-    font-size: 13px;
-  }
-
-  .actions-cell {
-    .action-btn {
-      background: none;
-      border: none;
-      font-size: 18px;
-      cursor: pointer;
-      padding: 4px 8px;
-      border-radius: 4px;
-      transition: background-color 0.2s ease;
-      text-decoration: none;
-      display: inline-block;
-
-      &:hover {
-        background: #e2e8f0;
-      }
-
-      &.view-action {
-        &:hover {
-          background: #bee3f8;
-        }
-      }
+      opacity: 0.93;
     }
   }
 }
 
 .empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 80px 20px;
-  gap: 16px;
-
-  .empty-icon {
-    font-size: 64px;
-    opacity: 0.5;
-  }
+  text-align: center;
+  padding: 56px 24px;
 
   .empty-message {
-    font-size: 18px;
-    font-weight: 600;
-    color: #4a5568;
-    margin: 0;
+    font-weight: 700;
+    color: #334155;
+    margin: 0 0 6px;
   }
 
   .empty-description {
-    font-size: 14px;
-    color: #718096;
     margin: 0;
+    font-size: 14px;
+    color: #94a3b8;
   }
 }
 
-// Responsive design
 @media (max-width: 768px) {
-  .admin-content {
-    margin-left: 0;
-  }
-
   .admin-auctions {
-    padding: 20px;
-  }
-
-  .auctions-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 16px;
-
-    .create-room-btn {
-      width: 100%;
-      justify-content: center;
-    }
+    padding: 20px 16px;
   }
 
   .filters-section {
-    flex-direction: column;
-    align-items: stretch;
-
-    .filter-group {
-      width: 100%;
-
-      .filter-select {
-        width: 100%;
-      }
-    }
-
     .results-count {
+      width: 100%;
       margin-left: 0;
-      text-align: center;
     }
-  }
-
-  .table-container {
-    overflow-x: auto;
-  }
-
-  .auctions-table {
-    min-width: 800px;
   }
 }
-

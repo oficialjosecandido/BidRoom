@@ -1,8 +1,12 @@
 {
   "header": {
+    "brand": "BidRoom",
+    "envBadgeDev": "Dev",
+    "envBadgeAria": "Development environment",
     "nav": {
       "auctions": "Auctions",
       "categories": "Categories",
+      "privateRooms": "Private Rooms",
       "howItWorks": "How It Works",
       "faq": "FAQ",
       "contact": "Contact"
@@ -11,11 +15,135 @@
       "listYourItem": "List Your Item",
       "myAccount": "My Account",
       "signIn": "Sign In",
-      "startBidding": "Start Bidding"
+      "startBidding": "Start Bidding",
+      "publish": "Publish",
+      "notifications": "Notifications"
+    },
+    "search": {
+      "placeholder": "Search auctions, items, sellers…",
+      "open": "Search"
     },
     "menu": {
       "open": "Open menu",
       "close": "Close menu"
+    },
+    "theme": {
+      "button": "Theme",
+      "light": "Light",
+      "dark": "Dark",
+      "system": "Match system"
+    }
+  },
+  "landing": {
+    "nav": {
+      "language": "Choose language",
+      "auctions": "Auctions",
+      "howItWorks": "How it works",
+      "privateRooms": "Private rooms",
+      "signIn": "Sign in"
+    },
+    "home": {
+      "skipHeading": "BidRoom.pt — premium auctions in Portugal. Available in light and dark mode, with Portuguese tile motifs in light mode.",
+      "breadcrumb": {
+        "home": "Home",
+        "featured": "Featured auctions"
+      },
+      "theme": {
+        "toggleTitle": "Switch light / dark mode",
+        "light": "Light mode",
+        "dark": "Dark mode"
+      },
+      "hero": {
+        "svgDarkTitle": "Decorative illustration — dark mode sardine and tiles",
+        "svgLightTitle": "Decorative tile background — light mode",
+        "eyebrow": "Portugal · Launch 2026",
+        "title1": "High-value",
+        "title2": "auctions,",
+        "titleEm": "done right.",
+        "subtitle": "The first Portuguese premium auction platform with real-time private rooms, verified reputation, and secure payments.",
+        "ctaExplore": "Explore auctions",
+        "ctaHow": "How it works",
+        "liveNow": "Live now"
+      },
+      "stats": {
+        "activeAuctions": "Active auctions",
+        "volume": "Transaction volume",
+        "satisfaction": "Buyer satisfaction",
+        "bidTime": "Average bid time"
+      },
+      "section": {
+        "featured": "Featured",
+        "ongoing": "Live auctions"
+      },
+      "badges": {
+        "live": "Live",
+        "privateRoom": "Private room",
+        "bestOffer": "Best offer"
+      },
+      "listing": {
+        "currentBid": "Current bid",
+        "minPrice": "Minimum price",
+        "offersCount": "3 offers"
+      },
+      "listing1": {
+        "title": "Patek Philippe Ref. 5711",
+        "meta": "Watches · Geneva, 2019"
+      },
+      "listing2": {
+        "title": "Barca Velha 1985 — Magnum",
+        "meta": "Wine · Douro, Portugal"
+      },
+      "listing3": {
+        "title": "Leica M6 TTL — 0.85x",
+        "meta": "Photography · Lisbon, 2001"
+      },
+      "azulejoSection": "Portuguese inspiration · 16th-century tiles",
+      "private": {
+        "tag": "Exclusive feature",
+        "title1": "Private",
+        "title2": "auction rooms",
+        "body": "When the public auction ends, top bidders are invited to an exclusive room. A final 60-second race. Highest bid wins automatically.",
+        "b1": "The seller invites 2–5 registered bidders",
+        "b2": "15 minutes to accept or decline the invite",
+        "b3": "Each bid resets the 60-second timer",
+        "b4": "Winner determined automatically",
+        "visLabel": "Private room · Live",
+        "visSub": "Room closes in",
+        "highestBid": "Highest bid"
+      },
+      "trust": {
+        "eyebrow": "Trust & security",
+        "title": "Built to last",
+        "c1t": "Verified reputation",
+        "c1b": "0–100 score from reviews, disputes, and history. Private rooms require a score of 60 or higher.",
+        "c2t": "EasyPay payments",
+        "c2b": "Multibanco, MB WAY, card. SEPA transfer directly to the seller’s IBAN.",
+        "c3t": "Disputes resolved",
+        "c3b": "Human moderation when issues arise. Both accounts suspended automatically during resolution.",
+        "c4t": "Ship within 5 business days",
+        "c4b": "Automatic alert on day 3. Automatic refund on day 5 if not shipped.",
+        "c5t": "AI moderation",
+        "c5b": "Azure AI reviews text and images. Prohibited items and inappropriate content blocked automatically.",
+        "c6t": "Portuguese & English",
+        "c6b": "Fully bilingual platform for the Portuguese market with full PT and EN support."
+      },
+      "footer": {
+        "tagline": "Portugal’s premium auction marketplace",
+        "platform": "Platform",
+        "account": "Account",
+        "legal": "Legal",
+        "activeAuctions": "Active auctions",
+        "bestOffer": "Best offer",
+        "signIn": "Sign in",
+        "register": "Register",
+        "dashboard": "Dashboard",
+        "reputation": "Reputation",
+        "terms": "Terms of use",
+        "privacy": "Privacy",
+        "cookies": "Cookies",
+        "contact": "Contact",
+        "copyright": "© 2026 BidRoom · All rights reserved · Lisbon, Portugal"
+      }
     }
   },
   "footer": {
@@ -116,30 +244,33 @@
       "bid": "bid",
       "bids": "bids",
       "ended": "Ended",
-      "na": "N/A"
+      "na": "N/A",
+      "bestOffer": "Best Offer",
+      "clearFilter": "Clear Filter",
+      "tryDifferentCategory": "Try a different category or clear your filter."
     }
   },
   "addListing": {
     "pageTitle": "List Your Item",
-    "pageSubtitle": "Follow the steps below to create your listing",
+    "pageSubtitle": "Follow the steps to create your listing",
     "step1": "Item Identity",
     "step2": "Details & Media",
     "step3": "Pricing & Rules",
     "step4": "Shipping & Review",
-    "step1Title": "Step 1: Item Identity and Format",
-    "step2Title": "Step 2: Details and Media",
-    "step3Title": "Step 3: Pricing and Auction Rules",
-    "step4Title": "Step 4: Shipping and Final Review",
+    "step1Title": "Step 1: Item Identity & Format",
+    "step2Title": "Step 2: Details & Media",
+    "step3Title": "Step 3: Pricing & Auction Rules",
+    "step4Title": "Step 4: Shipping & Final Review",
     "listingTitle": "Listing Title *",
     "titlePlaceholder": "Enter a descriptive title (max 80 characters)",
     "charactersCount": "{{count}}/80 characters",
     "category": "Category *",
-    "selectCategory": "Select Category",
+    "selectCategory": "Select a Category",
     "subCategory": "Sub-Category *",
-    "selectSubCategory": "Select Sub-Category",
+    "selectSubCategory": "Select a Sub-Category",
     "listingFormat": "Listing Format *",
     "formatAuction": "Auction (Highest Bid Wins)",
-    "formatBestOffer": "Best Offer (Seller Chooses Offer)",
+    "formatBestOffer": "Best Offer (Seller Chooses)",
     "condition": "Item Condition *",
     "selectCondition": "Select Condition",
     "conditionNew": "New",
@@ -149,18 +280,34 @@
     "conditionUsedFair": "Used - Fair",
     "conditionForParts": "For Parts or Not Working",
     "description": "Full Description *",
-    "descriptionPlaceholder": "Describe your item in detail, including its history, any defects, and all included components...",
+    "descriptionPlaceholder": "Describe your item in detail, its history, defects, and included components...",
     "minCharsRequired": "Minimum 50 characters required.",
     "charactersMin": "{{count}} characters (minimum 50 required)",
-    "mediaUpload": "Media Upload * (Minimum 3 photos)",
+    "mediaUpload": "Media Upload *",
+    "mediaRule": "1–20 images, or 1–5 images + 1 video.",
     "clickToUpload": "Click to upload or drag files here",
-    "uploadMinError": "Please upload at least 1 image (3 recommended)",
-    "filesUploaded": "{{count}}/3+ files uploaded (minimum 1 for testing)",
+    "uploadMinError": "Add at least 1 image.",
+    "uploadMediaError": "Use 1–20 images only, or 1–5 images with 1 video.",
+    "filesUploaded": "{{images}} image(s), {{videos}} video(s)",
     "keySpecs": "Key Specifications (Optional)",
-    "specKeyPlaceholder": "Specification (e.g., Model, Brand)",
+    "specKeyPlaceholder": "Specification (e.g. Model, Brand)",
     "specValuePlaceholder": "Value",
     "remove": "Remove",
     "addSpecification": "+ Add Specification",
+    "itemType": "Item Type",
+    "itemTypeSingle": "Single Item",
+    "itemTypeSingleHint": "One individual item",
+    "itemTypeBundle": "Bundle / Lot",
+    "itemTypeBundleHint": "A fixed group of items sold together",
+    "itemTypeMultiQty": "Multi-Quantity",
+    "itemTypeMultiQtyHint": "Same item, multiple units",
+    "quantity": "Quantity",
+    "quantityHint": "Number of identical units included (minimum 2)",
+    "bundleItems": "Bundle Contents",
+    "bundleItemTitle": "Item name",
+    "bundleItemDesc": "Brief description (optional)",
+    "addBundleItem": "Add Item to Bundle",
+    "bundleItemsHint": "List each item included in this lot",
     "city": "City *",
     "cityPlaceholder": "City",
     "regionState": "Region/State *",
@@ -174,25 +321,26 @@
     "buyNowPrice": "Buy Now Price (Optional)",
     "buyNowHint": "Must be higher than Starting Bid. Allows instant purchase.",
     "minimumAcceptPrice": "Minimum Accept Price (Optional)",
-    "minimumAcceptHint": "Price threshold where you must accept a qualifying offer",
-    "enablePrivateRoom": "Enable Private Room Feature",
-    "privateRoomHint": "Important: Enabling Private Room increases your commission rate from 0.5% to 2.0%. You must commit to this choice.",
-    "commissionPrivateRoom": "Commission Rate: 2.0% (Private Room enabled)",
-    "privateRoomNoAcceptNote": "Note: If no invited bidders accept the private room invitation within 15 minutes, the auction will be closed without a winner.",
-    "commissionStandard": "Commission Rate: 0.5% (Standard)",
+    "minimumAcceptHint": "Price threshold at which you must accept a qualifying offer",
+    "enablePrivateRoom": "Enable Private Room",
+    "privateRoomHint": "Important: Enabling Private Room increases your commission from 3.5% to 6.0%. You must commit to this choice.",
+    "commissionPrivateRoom": "Commission Rate: 6.0% (Private Room enabled)",
+    "privateRoomNoAcceptNote": "Note: If no invited bidder accepts within 15 minutes, the auction will close without a winner.",
+    "commissionStandard": "Commission Rate: 3.5% (Standard)",
     "shippingOptions": "Shipping Options *",
-    "selectShipping": "Select Shipping Option",
+    "selectShipping": "Select a Shipping Option",
     "shippingFlatRate": "Flat Rate",
     "shippingCalculated": "Calculated Shipping",
-    "shippingLocalPickup": "Local Pickup Only",
+    "shippingLocalPickup": "Meet in Person",
     "shippingFree": "Free Shipping",
     "flatRateCost": "Flat Rate Shipping Cost *",
-    "calculatedHint": "Carrier rates are calculated automatically at checkout based on the buyer's address and package details you provide here.",
+    "flatRateHint": "Enter the fixed shipping price buyers will pay. Use $0 for free shipping.",
+    "calculatedHint": "Rates are automatically calculated at checkout based on buyer address and package details.",
     "packageSize": "Package Size *",
     "selectPackageSize": "Select package size",
-    "packageSmall": "Small – up to 1 lb (approx. 8 × 6 × 4 in)",
-    "packageMedium": "Medium – up to 5 lbs (approx. 12 × 10 × 8 in)",
-    "packageLarge": "Large – up to 20 lbs (approx. 20 × 16 × 12 in)",
+    "packageSmall": "Small – up to 0.5 kg (approx. 20 × 15 × 10 cm)",
+    "packageMedium": "Medium – up to 2.3 kg (approx. 30 × 25 × 20 cm)",
+    "packageLarge": "Large – up to 9 kg (approx. 51 × 41 × 30 cm)",
     "originPostalCode": "Origin Postal Code *",
     "originPostalPlaceholder": "e.g. 90001",
     "originCity": "Origin City",
@@ -212,29 +360,106 @@
     "handling5": "5 Business Days",
     "handling7": "7 Business Days",
     "returnPolicy": "Return Policy *",
-    "selectReturn": "Select Return Policy",
-    "return30": "30 Day Returns",
-    "return14": "14 Day Returns",
+    "selectReturn": "Select a Return Policy",
+    "return30": "30-Day Returns",
+    "return14": "14-Day Returns",
     "returnNo": "No Returns Accepted",
     "returnCustom": "Custom Policy",
-    "feeSummary": "Fee Summary",
-    "commission": "Commission ({{rate}}%):",
-    "paymentProcessing": "Payment Processing (~2.9% + $0.30):",
-    "estimatedTotal": "Estimated Total Fees:",
-    "feeNote": "* Final fees may vary based on final sale price",
-    "sellerDeclaration": "I confirm that I am the legal owner of this item and agree to Bidroom's Terms & Conditions and commission structure. *",
+    "feeSummary": "Estimated seller fee (forecast)",
+    "feeForecastSubtitle": "This is an estimate if the item sells at your minimum accepted price. If you have not set one yet, we use your starting bid or Buy It Now price instead.",
+    "sellerBidroomFee": "Bidroom seller fee ({{rate}}%):",
+    "feeNote": "Stripe payment processing is paid by the buyer at checkout. Your Bidroom fee is deducted from your payout.",
+    "sellerDeclaration": "I confirm that I am the legal owner of this item and agree to the Terms & Conditions and commission structure of Bidroom. *",
     "previous": "← Previous",
     "next": "Next →",
     "listItemNow": "List Item Now",
-    "uploadingImages": "Uploading Images...",
-    "creatingListing": "Creating Listing...",
+    "uploadingImages": "Uploading images...",
+    "creatingListing": "Creating listing...",
     "categories": {
       "electronics": "Electronics",
       "home-garden": "Home & Garden",
       "art": "Art",
       "collectibles": "Collectibles",
       "jewelry": "Jewelry"
-    }
+    },
+    "successMessage": "Listing created successfully!",
+    "draftRestored": "Your saved draft was restored.",
+    "draftAutoSaveInfo": "Your progress is saved automatically while you edit (and when you add photos).",
+    "saveDraft": "Save as draft",
+    "draftSaving": "Saving draft…",
+    "draftSaved": "Draft saved",
+    "draftError": "Could not save draft. Check your connection and try again.",
+    "errorUploadFailed": "Failed to upload images. Please try again.",
+    "errorStep2Description": "Please complete all required fields. Description must be at least 50 characters.",
+    "reservePrice": "Reserve Price",
+    "errors": {
+      "required": "{{field}} is required",
+      "tooLong": "{{field}} is too long",
+      "tooShort": "{{field}} is too short",
+      "minValue": "Value must be greater than {{min}}",
+      "buyNowTooLow": "Buy Now price must be higher than Starting Bid",
+      "reserveTooLow": "Reserve price must be at least equal to the starting bid",
+      "invalidFileType": "Invalid file type. Only images (JPEG, PNG, GIF, WebP, BMP) are allowed. Rejected: {{files}}",
+      "mediaMaxPhotos": "You can add at most 20 photos. Remove some to add more. Not added: {{files}}",
+      "mediaMaxPhotosWithVideo": "With a video you can add at most 5 photos. Remove photos or the video to add more. Not added: {{files}}",
+      "mediaVideoLimit": "Only one video is allowed, and at most 5 photos with a video. Not added: {{files}}"
+    },
+    "steps": {
+      "label": "Steps"
+    },
+    "step5Title": "Shipping",
+    "step5": "Method and origin",
+    "step6Title": "Publish",
+    "step6": "Final review",
+    "step1.section": "Choose listing format",
+    "step2.section": "Item information",
+    "step3.section": "Item photos",
+    "step4.auction.section": "Auction pricing",
+    "step4.offer.section": "Best offer pricing",
+    "step5.section": "Shipping method",
+    "step5.location": "Location",
+    "step6.section": "Review and publish",
+    "optional": "optional",
+    "offerDeadline": "Offer deadline",
+    "offerDeadlineHint": "More time means more buyers seeing your listing and more offers to receive.",
+    "startingBidHint": "The minimum value for the first bid. A competitive starting bid attracts more bidders.",
+    "reserveHint": "The auction only binds the winner if this value is reached.",
+    "durationHint": "Rare or premium items tend to attract more bids over 7–10 days.",
+    "formatBestOfferDesc": "Buyers submit offers and you choose which to accept. Set a minimum price — you have full freedom to decline any offer below that value.",
+    "formatAuctionDesc": "Buyers bid in real time and compete for your item. You set the duration and the starting bid. The winner is determined automatically.",
+    "drop": {
+      "title": "Drag photos here",
+      "sub": "or click to select · JPEG, PNG, WebP · max. 20 photos"
+    },
+    "mediaHint": "The first photo will be the main listing image.",
+    "mediaCover": "Cover",
+    "photosLabel": "photos",
+    "preview": {
+      "label": "Preview",
+      "titlePlaceholder": "Title appears here"
+    },
+    "ck": {
+      "format": "Format selected",
+      "title": "Title filled",
+      "category": "Category chosen",
+      "condition": "Condition set",
+      "desc": "Description ≥ 50 chars",
+      "photos": "At least 1 photo",
+      "price": "Price defined",
+      "shipping": "Shipping configured"
+    },
+    "stepOf": "Step {{step}} of {{total}}",
+    "kycNotice": "For items valued ≥ €5,000, identity verification (KYC) is required before publishing.",
+    "stripeRequired": "Set up payments first",
+    "stripeRequiredText": "To receive payment for your sales you need to configure your payment account.",
+    "nav": {
+      "dashboard": "Dashboard"
+    },
+    "return7": "7 days",
+    "feeBuyer": "Stripe fee",
+    "feeBuyerNote": "Paid by buyer",
+    "feeReceive": "You will receive approximately",
+    "specHint": "E.g.: Material — 18k Gold · Dimensions — 36mm · Reference — 5512"
   },
   "listingList": {
     "searchPlaceholder": "Search auctions...",
@@ -249,6 +474,10 @@
     "sortMostBids": "Most Bids",
     "listings": "listings",
     "allAuctions": "All Auctions",
+    "auctionStatus": "Auction status",
+    "activeAuctions": "Live auctions",
+    "closedAuctions": "Closed auctions",
+    "sortRecentlyEnded": "Recently ended",
     "loading": "Loading listings...",
     "error": "Error",
     "tryAgain": "Try Again",
@@ -264,17 +493,25 @@
     "featured": "Featured",
     "verified": "Verified",
     "endingSoon": "Ending Soon",
+    "bundle": "Bundle",
     "condition": "Condition",
     "price": "Price",
     "location": "Location",
     "anyLocation": "Any location",
-    "shipping": "Shipping"
+    "locationCityPlaceholder": "e.g. city name",
+    "anyCountry": "Any country",
+    "shipping": "Shipping",
+    "shippingLegacyWorldwide": "Worldwide",
+    "shippingLegacyRegional": "Regional"
   },
   "categories": {
     "title": "Browse by Category",
     "subtitle": "Explore our full range of categories and subcategories",
     "browseAll": "Browse all",
-    "allListings": "All Listings"
+    "allListings": "All Listings",
+    "follow": "Follow",
+    "following": "Following",
+    "unfollow": "Unfollow"
   },
   "language": {
     "en": "English",
@@ -283,6 +520,17 @@
     "fr": "Français"
   },
   "listingDetails": {
+    "saleType": {
+      "bestOffer": "Best Offer",
+      "auction": "Auction"
+    },
+    "itemMode": {
+      "bundle": "Bundle",
+      "units": "units",
+      "multiQtyLabel": "Multi-Quantity Lot",
+      "identicalUnits": "identical units included",
+      "bundleContents": "What's Included"
+    },
     "loading": "Loading listing details...",
     "backToListings": "← Back to Listings",
     "currentBid": "Current Bid",
@@ -298,6 +546,7 @@
       "createdDesc": "Invitees have 15 minutes to accept. The auction will start automatically after the acceptance window.",
       "view": "View Private Room",
       "available": "Private room available",
+      "eligibleCountdownLabel": "Time left to create private room:",
       "availableDescSeller": "Create your private room and invite 2–5 bidders to continue. You received an email with a link to get started.",
       "availableDescBuyer": "The seller can create a private room and invite some bidders to continue. You'll be notified if you're invited.",
       "closed": "Private room closed",
@@ -317,6 +566,7 @@
     },
     "time": {
       "auctionEnds": "Auction Ends",
+      "offerDeadline": "Offer Deadline",
       "privateRoomEnds": "Private Room Ends",
       "auctionEnded": "Auction Ended",
       "listingEnded": "Listing Ended"
@@ -379,6 +629,24 @@
       "location": "Location",
       "noReviews": "No reviews yet"
     },
+    "dsa": {
+      "privateSeller": "Private seller",
+      "professionalSeller": "Professional seller",
+      "consumerNoticeTitle": "Buying from a business",
+      "consumerNoticeBody": "This seller is acting in a professional capacity. Depending on applicable law, you may have statutory rights when buying at a distance from a trader (for example regarding information, withdrawal, and remedies).",
+      "traderSectionTitle": "Trader information",
+      "legalName": "Legal name:",
+      "tradeName": "Trade name:",
+      "vatId": "VAT number:",
+      "address": "Registered address:",
+      "contact": "Business contact:",
+      "status": {
+        "none": "Trader details not submitted",
+        "pending": "Verification pending",
+        "verified": "Verified professional seller",
+        "rejected": "Verification not accepted"
+      }
+    },
     "verification": {
       "title": "Verified Listing"
     },
@@ -407,7 +675,7 @@
       "selectAsWinner": "Select as winner",
       "selecting": "Selecting…",
       "verifiedRequired": "Verified account required",
-      "notifyOutbid": "Email me when I'm outbid on this auction",
+      "notifyOutbid": "Notify me when I'm outbid",
       "anonymous": "Anonymous"
     },
     "offerHistory": {
@@ -416,7 +684,7 @@
       "noOffers": "No Offers Yet",
       "noOffersDesc": "Be the first to make an offer on this item!",
       "makeOffer": "Make an offer",
-      "ctaText": "Make an offer on this item. The seller can accept, decline, or counter.",
+      "ctaText": "Rules: Submit your offer before the deadline. The seller may accept or not. If one or more offers meet or exceed the minimum, the seller must sell. Below the minimum, the seller is not obliged to sell.",
       "offerFrom": "Offer from",
       "yourOffer": "Your offer",
       "selectedBySeller": "Selected by seller",
@@ -428,13 +696,19 @@
       "decline": "Decline",
       "declining": "Declining…",
       "anonymous": "Anonymous",
-      "verifiedLabel": "✓ Verified"
+      "verifiedLabel": "✓ Verified",
+      "statusAccepted": "Accepted by seller",
+      "statusDeclined": "Declined",
+      "statusExpired": "Expired",
+      "stripeWarningPrefix": "⚠️ Connect Stripe in",
+      "stripeSettingsLink": "Settings → Payments"
     },
     "shipping": {
       "title": "Shipping",
       "free": "Free shipping",
       "cost": "Shipping cost:",
-      "from": "From:"
+      "from": "From:",
+      "workingDays": "working days"
     },
     "returnPolicy": {
       "title": "Return policy",
@@ -442,6 +716,7 @@
     },
     "timeline": {
       "title": "Auction Timeline",
+      "listingTitle": "Listing Timeline",
       "started": "Started:",
       "ends": "Ends:"
     },
@@ -454,10 +729,13 @@
       "amountLabel": "Your bid amount",
       "emailLabel": "Your email",
       "emailHint": "We'll use this to confirm your bid.",
-      "notifyOutbid": "Email me when I'm outbid on this auction",
+      "notifyOutbid": "Notify me when I'm outbid",
       "cancel": "Cancel",
       "submit": "Place bid",
-      "submitting": "Placing bid…"
+      "submitting": "Placing bid…",
+      "subtitle": "Binding if you win. Follow in real time.",
+      "minBid": "Minimum bid",
+      "valueLabel": "Amount (€)"
     },
     "offerModal": {
       "title": "Make an offer",
@@ -470,7 +748,19 @@
       "belowMinNote": "Your offer is below the seller's minimum price. The seller is not obliged to accept this offer, even if you're the only bidder.",
       "cancel": "Cancel",
       "submit": "Send offer",
-      "submitting": "Sending offer…"
+      "submitting": "Sending offer…",
+      "subtitle": "If the seller accepts, you agree to buy at that price. You can withdraw your offer while it is still pending.",
+      "figuresHint": "Minimum is the lowest amount the seller will consider. Highest is the best offer so far—you can match or exceed it, or stay at the minimum.",
+      "highestOffer": "Highest offer",
+      "valueLabel": "Amount (€)",
+      "yourOfferPreview": "You are offering:",
+      "successTitle": "Offer sent",
+      "successText": "Your offer of <strong>{{amount}}</strong> was submitted. The seller will review it—you can cancel while it is still pending.",
+      "successTextAccepted": "Your offer of <strong>{{amount}}</strong> was accepted by the seller. Complete the purchase in Transactions.",
+      "successConfirm": "Got it",
+      "errorTitle": "Could not send offer",
+      "errorText": "Failed to place offer. Please try again.",
+      "errorConfirm": "OK"
     },
     "watchlistModal": {
       "title": "Save to Watchlist",
@@ -501,10 +791,81 @@
       "creating": "Creating…",
       "cannotInvite": "Guest (cannot invite)",
       "ineligible": "Register to be eligible",
-      "invite": "Invite"
-    }
+      "invite": "Invite",
+      "maxBid": "Max bid:",
+      "bids": "bid(s)",
+      "notEligible": "Not eligible",
+      "selectedCount": "selected (min. 2, max. 5)",
+      "bidderFallback": "Bidder"
+    },
+    "nav": {
+      "back": "Auctions",
+      "dashboard": "Dashboard",
+      "signIn": "Sign In"
+    },
+    "formatPill": {
+      "auction": "Live Auction",
+      "privateRoom": "Private Room"
+    },
+    "sidebar": {
+      "watching": "watching",
+      "congratsWon": "Congratulations! You won this auction.",
+      "winnerWasSelected": "A winner was selected.",
+      "viewTransaction": "View transaction →",
+      "privateRoomActiveDesc": "Exclusive bidding in progress.",
+      "privateRoomClosedWinner": "Winner selected. Final price:",
+      "bidPrivateRoom": "Bid in private room",
+      "watchPrivateRoomSpectator": "View private room (spectator)",
+      "watchRoomWaiting": "View room (awaiting start)",
+      "ownListingNote": "This is your listing.",
+      "reopenNoBids": "No bids. You can reopen for another 7 days.",
+      "reopenNoOffers": "No offers. You can reopen for another 7 days.",
+      "inWatchlist": "In watchlist",
+      "minimumOffer": "Minimum Offer",
+      "minimumOfferDesc": "Offers below this amount may be automatically declined.",
+      "minimumBid": "Next Minimum Bid",
+      "bidIncrement": "Increment:",
+      "reviews": "reviews",
+      "following": "✓ Following",
+      "follow": "+ Follow",
+      "eligibleCountdown": "Private room:",
+      "remaining": "remaining",
+      "winnerSelectionCountdownOffer": "24h to accept offer",
+      "winnerSelectionCountdownWinner": "24h to select winner",
+      "invitedRoomHeader": "Room invitees",
+      "buyNow": "Buy now ·"
+    },
+    "payment": {
+      "title": "Payment",
+      "protected": "Protected by Stripe",
+      "escrow": "Funds held until receipt confirmed"
+    },
+    "report": {
+      "listing": "Report listing",
+      "seller": "Report seller"
+    },
+    "bidsTab": {
+      "emptyActive": "No bids yet. Be the first to bid.",
+      "notEligible": "Not eligible – unverified account",
+      "winnerChip": "🏆 Winner"
+    },
+    "loginModal": {
+      "title": "Account required",
+      "subtitle": "You need to be signed in to add to the watchlist.",
+      "createAccount": "Create account",
+      "signIn": "Sign in"
+    },
+    "cancel": "Cancel"
   },
   "auth": {
+    "common": {
+      "or": "or",
+      "email": "Email",
+      "emailPlaceholder": "your.email@example.com",
+      "password": "Password",
+      "showPassword": "Show password",
+      "hidePassword": "Hide password"
+    },
     "login": {
       "title": "Sign In",
       "subtitle": "Welcome back! Sign in to your account.",
@@ -517,6 +878,9 @@
       "forgotPassword": "Forgot password?",
       "signIn": "Sign In",
       "signingIn": "Signing in...",
+      "logIn": "Sign In",
+      "loggingIn": "Signing in...",
+      "resetPassword": "Forgot password?",
       "noAccount": "Don't have an account?",
       "signUp": "Sign up",
       "verifyEmailRequired": "Please verify your email before signing in. Check your inbox for a verification link."
@@ -526,6 +890,8 @@
       "subtitle": "Join BidRoom and start bidding today.",
       "continueWithGoogle": "Continue with Google",
       "orDivider": "or",
+      "firstName": "First Name",
+      "lastName": "Last Name",
       "firstNameLabel": "First Name",
       "firstNamePlaceholder": "Your first name",
       "lastNameLabel": "Last Name",
@@ -534,12 +900,18 @@
       "emailPlaceholder": "your.email@example.com",
       "passwordLabel": "Password",
       "passwordPlaceholder": "Create a strong password",
+      "confirmPassword": "Confirm Password",
       "confirmPasswordLabel": "Confirm Password",
       "confirmPasswordPlaceholder": "Repeat your password",
+      "createPasswordPlaceholder": "Create a strong password",
       "termsAgreement": "I agree to the",
       "termsLink": "Terms & Conditions",
+      "iAccept": "I accept the",
+      "termsAndConditions": "Terms & Conditions",
+      "mustAcceptTerms": "You must accept the Terms & Conditions.",
       "createAccount": "Create Account",
       "creatingAccount": "Creating account...",
+      "signUp": "Create Account",
       "alreadyHaveAccount": "Already have an account?",
       "signIn": "Sign in"
     },
@@ -550,26 +922,39 @@
       "emailPlaceholder": "your.email@example.com",
       "sendResetLink": "Send Reset Link",
       "sending": "Sending...",
+      "rememberPassword": "Remember your password?",
       "backToLogin": "Back to Sign In",
       "successMessage": "Password reset email sent. Check your inbox.",
-      "errorMessage": "Failed to send reset email. Please try again."
+      "errorMessage": "Failed to send reset email. Please try again.",
+      "sendFailed": "Failed to send reset email. Please try again."
     },
     "resetPassword": {
       "title": "Reset Password",
       "subtitle": "Enter your new password below.",
+      "password": "New password",
+      "confirmPassword": "Confirm new password",
+      "newPassword": "New Password",
+      "confirmNewPassword": "Confirm New Password",
       "newPasswordLabel": "New Password",
       "newPasswordPlaceholder": "Enter new password",
       "confirmPasswordLabel": "Confirm New Password",
       "confirmPasswordPlaceholder": "Repeat new password",
+      "confirmNewPasswordPlaceholder": "Repeat new password",
+      "passwordMust": "Password must have:",
+      "reqMinLength": "At least 12 characters",
+      "reqUppercase": "One uppercase letter",
+      "reqLowercase": "One lowercase letter",
+      "reqNumber": "One number",
       "requirements": "Password requirements:",
-      "req1": "At least 8 characters",
+      "req1": "At least 12 characters",
       "req2": "One uppercase letter",
       "req3": "One number",
       "resetButton": "Reset Password",
       "resetting": "Resetting...",
       "backToLogin": "Back to Sign In",
-      "successMessage": "Password reset successfully. You can now sign in.",
-      "errorInvalidCode": "Invalid or expired reset link. Please request a new one.",
+      "successMessage": "Password reset successfully. Redirecting to sign in…",
+      "expiredLink": "This reset link is invalid or has expired. Please request a new one.",
+      "errorInvalidCode": "Invalid reset link. Please use the link from your email or request a new password reset.",
       "errorMismatch": "Passwords do not match.",
       "errorGeneral": "Failed to reset password. Please try again."
     },
@@ -588,6 +973,20 @@
       "goToLogin": "Go to Sign In"
     },
     "errors": {
+      "fieldRequired": "{{field}} is required.",
+      "minLength": "{{field}} must be at least {{min}} characters.",
+      "mustAcceptTerms": "You must accept the Terms & Conditions.",
+      "emailExists": "This email is already registered.",
+      "passwordMismatch": "Passwords do not match.",
+      "emailAlreadyInUse": "An account with this email already exists.",
+      "registrationFailed": "Registration failed. Please try again.",
+      "loginFailed": "Sign in failed. Please try again.",
+      "userDisabled": "This account has been disabled.",
+      "operationNotAllowed": "This operation is not allowed.",
+      "popupClosed": "Sign-in was cancelled.",
+      "popupCancelled": "Sign-in was cancelled.",
+      "popupBlocked": "Pop-up was blocked. Please allow pop-ups for this site.",
+      "passwordMinLength": "Password does not meet the minimum length.",
       "userNotFound": "No account found with this email.",
       "wrongPassword": "Incorrect password. Please try again.",
       "emailInUse": "An account with this email already exists.",
@@ -605,13 +1004,49 @@
     }
   },
   "dashboard": {
+    "sidebar": {
+      "home": "Home",
+      "store": "Store",
+      "main": "Main",
+      "activity": "Activity",
+      "listings": "Listings",
+      "account": "Account",
+      "buyer": "Buyer",
+      "seller": "Seller",
+      "transactions": "Transactions",
+      "notifications": "Notifications",
+      "myBids": "My Bids",
+      "watchlist": "Watchlist",
+      "following": "Following",
+      "myListings": "My Listings",
+      "buyerProfile": "Buyer Profile",
+      "sellerProfile": "Seller Profile",
+      "settings": "Settings",
+      "logout": "Logout"
+    },
+    "following": {
+      "title": "Following",
+      "subtitle": "Manage the sellers and categories you follow",
+      "loading": "Loading…",
+      "sellers": "Sellers",
+      "categories": "Categories",
+      "noSellers": "You're not following any sellers yet.",
+      "noCategories": "You're not following any categories yet.",
+      "browseSellers": "Browse listings",
+      "browseCategories": "Browse categories",
+      "mute": "Mute",
+      "unmute": "Unmute",
+      "unfollow": "Unfollow",
+      "muted": "Muted"
+    },
     "common": {
       "loading": "Loading...",
       "tryAgain": "Try again",
       "cancel": "Cancel",
       "save": "Save",
       "review": "Review",
-      "reviews": "Reviews"
+      "reviews": "Reviews",
+      "submitting": "Submitting..."
     },
     "home": {
       "title": "Dashboard",
@@ -619,6 +1054,9 @@
       "addListing": "Add Listing",
       "viewListings": "View Listings",
       "activeListings": "Active Listings",
+      "payoutSetupTitle": "Payout account not set up",
+      "payoutSetupDesc": "You won't be able to receive funds from sales until you set up your payout account.",
+      "payoutSetupCta": "Set up payouts →",
       "endedListings": "Ended / Unavailable",
       "balance": "Balance",
       "buyerScore": "Buyer Score",
@@ -646,7 +1084,105 @@
       "topUp": "Top Up",
       "withdraw": "Withdraw",
       "balanceNote": "Balance is used to place bids and complete purchases.",
-      "noScore": "—"
+      "noScore": "—",
+      "there": "there",
+      "addFunds": "Add Funds",
+      "createListing": "Create Listing",
+      "profile": "Profile",
+      "endedUnavailable": "Ended / Unavailable",
+      "increaseBalance": "Increase Balance",
+      "reviews": "reviews",
+      "review": "review",
+      "noReviewsYet": "No reviews yet",
+      "viewProfile": "View Profile",
+      "yourMembership": "Your Membership",
+      "balanceLabel": "Balance:",
+      "basedOnBalance": "based on balance",
+      "addAtLeast": "Add at least",
+      "toUnlock": "to unlock",
+      "addFundsToUnlock": "Add funds to unlock a membership tier.",
+      "to": "to",
+      "membershipDesc": "Your membership tier is determined by your total balance added.",
+      "currentTier": "Current Tier",
+      "noFundsYet": "No funds added yet.",
+      "balanceUsage": "Your balance is used to place bids and complete purchases.",
+      "loading": "Loading...",
+      "sellingItems": "My Listings",
+      "bids": "bids",
+      "ends": "Ends",
+      "recentlyEnded": "Recently Ended",
+      "noOffersYet": "No offers yet",
+      "leaveAReview": "Leave a Review",
+      "leaveReviewDesc": "Rate your recent transactions to help the community.",
+      "as": "as",
+      "leaveReview": "Leave Review",
+      "youreReviewing": "You're reviewing",
+      "for": "for",
+      "viewTransactionDetails": "View Transaction Details",
+      "howWouldYouRate": "How would you rate your experience?",
+      "tapToRate": "Tap a score to rate",
+      "yourReview": "Your Review",
+      "visibleToOthers": "Visible to others",
+      "shareExperience": "Share your experience...",
+      "submitReview": "Submit Review",
+      "reviewTagsLabel": "What stood out? (optional, pick up to 5)",
+      "reviewTags": {
+        "fast_payment": "Fast payment",
+        "fast_shipping": "Fast shipping",
+        "item_as_described": "Item as described",
+        "great_packaging": "Great packaging",
+        "good_communication": "Good communication",
+        "smooth_transaction": "Smooth transaction",
+        "trustworthy": "Trustworthy",
+        "slow_payment": "Slow payment",
+        "slow_shipping": "Slow shipping",
+        "not_as_described": "Not as described",
+        "poor_communication": "Poor communication"
+      },
+      "balanceModalDesc": "Add funds to your balance to place bids and complete purchases.",
+      "quickSelect": "Quick select",
+      "orCustomAmount": "Or enter a custom amount",
+      "minimum": "Minimum:",
+      "youllAdd": "You'll add",
+      "toYourBalance": "to your balance",
+      "redirecting": "Redirecting...",
+      "continueToCheckout": "Continue to Checkout",
+      "buyingWatchlist": "Buying & Watchlist",
+      "subtitle": "Here's your account summary",
+      "myListingsTitle": "My listings",
+      "live": "Live",
+      "pendingReviews": "Pending reviews",
+      "greeting": {
+        "morning": "Good morning",
+        "afternoon": "Good afternoon",
+        "evening": "Good evening"
+      },
+      "statActiveBids": "Active bids",
+      "statAcrossAuctions": "across {{count}} auctions",
+      "statPendingOffers": "Pending offers",
+      "statAwaitingSeller": "awaiting seller",
+      "statPendingTx": "Pending transactions",
+      "statActionNeeded": "action needed",
+      "statReputation": "Reputation",
+      "statOutOf100": "out of 100",
+      "statActiveListings": "Active listings",
+      "sectionActiveBids": "Active bids",
+      "yourBid": "Your bid",
+      "formatAuction": "Auction",
+      "formatBestOffer": "Best offer",
+      "statusWinning": "Winning",
+      "statusOutbid": "Outbid",
+      "statusEnded": "Ended",
+      "ended": "Ended",
+      "endsInDays": "Ends in {{days}} days",
+      "endsInHours": "Ends in {{hours}}h {{minutes}}m",
+      "reviewPendingFrom": "Rate your transaction with {{name}} · {{role}}",
+      "roleSeller": "Seller",
+      "roleBuyer": "Buyer",
+      "reviewBtn": "Review"
+    },
+    "role": {
+      "toggleLabel": "Buyer or seller mode"
     },
     "buyer": {
       "title": "Buyer Profile",
@@ -655,7 +1191,38 @@
       "tabWatchlist": "Watchlist",
       "tabTransactions": "Transactions",
       "tabDisputes": "Disputes",
-      "noReviews": "No reviews yet."
+      "noReviews": "No reviews yet.",
+      "tabs": {
+        "bets": "My Bets",
+        "watchlist": "Watchlist",
+        "transactions": "Transactions",
+        "disputes": "Disputes"
+      }
+    },
+    "myBets": {
+      "title": "My Bets",
+      "subtitle": "All your bids and offers in one place. Expand any listing to see your bet history.",
+      "loading": "Loading your bets...",
+      "tryAgain": "Try Again",
+      "emptyTitle": "No bets yet",
+      "emptyDesc": "You haven't placed any bids or offers yet. Browse listings and place your first bet!",
+      "browseListings": "Browse listings",
+      "myBest": "My best",
+      "bet": "bet",
+      "bets": "bets",
+      "yourBets": "Your bets",
+      "offer": "Offer",
+      "bid": "Bid",
+      "winner": "Winner",
+      "emailOutbid": "Notify me when I'm outbid",
+      "updating": "Updating…",
+      "viewListing": "View listing",
+      "statusActive": "Active",
+      "statusEnded": "Ended",
+      "statusCancelled": "Cancelled",
+      "statusPending": "Pending",
+      "statusAccepted": "Accepted",
+      "statusRejected": "Rejected"
     },
     "seller": {
       "title": "Seller Profile",
@@ -663,7 +1230,59 @@
       "tabAuctions": "My Auctions",
       "tabTransactions": "Transactions",
       "tabDisputes": "Disputes",
-      "noReviews": "No reviews yet."
+      "noReviews": "No reviews yet.",
+      "tabs": {
+        "auctions": "My Auctions",
+        "analytics": "Analytics",
+        "transactions": "Transactions",
+        "disputes": "Disputes"
+      },
+      "analytics": {
+        "title": "Analytics",
+        "range": "Time range",
+        "last7d": "Last 7 days",
+        "last30d": "Last 30 days",
+        "custom": "Custom",
+        "from": "From",
+        "toOptional": "To (optional)",
+        "filterCategory": "Category",
+        "filterListing": "Listing",
+        "allCategories": "All categories",
+        "allListings": "All listings",
+        "apply": "Apply filters",
+        "views": "Page views",
+        "viewsHint": "Detail page loads in this range for your filtered listings.",
+        "bidsOffers": "Bid & offer actions",
+        "bidsOffersHint": "Count of bids and offers placed in this range.",
+        "salesPeriod": "Sales activity",
+        "salesPeriodHint": "Distinct listings where a buyer paid or completed checkout in this range.",
+        "followers": "Followers",
+        "followersHint": "{{n}} new in this period",
+        "inventory": "Listings breakdown",
+        "countActive": "active",
+        "countEnded": "ended",
+        "countSoldEver": "sold (ever)",
+        "countCancelled": "cancelled",
+        "conversionTitle": "Conversion rate",
+        "conversionDefinition": "sales with payment or completion in this range divided by filtered published listings.",
+        "conversionDash": "Not enough listings to compute.",
+        "perListing": "Per listing performance",
+        "colListing": "Listing",
+        "colStatus": "Status",
+        "colViews": "Views (range)",
+        "colBids": "Bid events (lifetime)",
+        "colSold": "Sold",
+        "yes": "Yes",
+        "saleThisPeriod": "Payment/completion this period",
+        "noListings": "No published listings match these filters.",
+        "loadFailed": "Could not load analytics. Try again.",
+        "analyticsCustomFromRequired": "Choose a start date for the custom range.",
+        "updating": "Updating…",
+        "statusActive": "Active",
+        "statusEnded": "Ended",
+        "statusCancelled": "Cancelled",
+        "statusDraft": "Draft"
+      }
     },
     "notifications": {
       "title": "Notifications",
@@ -671,7 +1290,8 @@
       "markAllRead": "Mark all as read",
       "noNotifications": "No notifications yet.",
       "noNotificationsDesc": "You're all caught up! We'll notify you when something happens.",
-      "errorLoading": "Failed to load notifications."
+      "errorLoading": "Failed to load notifications.",
+      "loading": "Loading notifications..."
     },
     "settings": {
       "title": "Settings",
@@ -684,11 +1304,60 @@
       "notVerified": "Not Verified",
       "buyerScore": "Buyer Score",
       "sellerScore": "Seller Score",
+      "reputation": "Reputation",
+      "overallScore": "Overall score",
+      "noReviews": "No reviews yet",
       "languagePreference": "Language Preference",
       "languageDesc": "Choose the language for your BidRoom experience.",
+      "appearance": {
+        "title": "Appearance",
+        "subtitle": "Light, dark, or match your device. When you are signed in, your choice is saved to your account and applies on other devices.",
+        "light": "Light",
+        "dark": "Dark",
+        "system": "Match system"
+      },
       "saveLanguage": "Save Language",
       "saving": "Saving...",
       "saved": "Saved",
+      "dsa": {
+        "title": "Seller classification (DSA)",
+        "subtitle": "Tell buyers whether you sell as an individual or as a trader. Professional sellers must provide trader details; the platform verifies them before they appear publicly on listings.",
+        "unavailable": "Seller compliance is not available for your account yet. Try again later or contact support.",
+        "classificationLabel": "I sell as",
+        "private": "Private individual (non-trader)",
+        "professional": "Professional / business seller",
+        "verificationLabel": "Verification status",
+        "status": {
+          "none": "Not submitted",
+          "pending": "Pending review",
+          "verified": "Verified",
+          "rejected": "Rejected"
+        },
+        "rejectionNote": "Note from review",
+        "submittedAt": "Last submitted",
+        "verifiedAt": "Verified at",
+        "traderSection": "Trader details",
+        "legalName": "Legal name",
+        "tradeName": "Trade name (optional)",
+        "addressLine1": "Address line 1",
+        "addressLine2": "Address line 2 (optional)",
+        "city": "City",
+        "region": "Region / state",
+        "postalCode": "Postal code",
+        "country": "Country (ISO-2)",
+        "contactPhone": "Business phone",
+        "contactEmail": "Business email",
+        "vatId": "VAT / tax ID",
+        "save": "Save seller information",
+        "saving": "Saving...",
+        "saved": "Saved",
+        "validationRequired": "Please fill in all required trader fields.",
+        "invalidCountry": "Country must be a 2-letter code (e.g. PT, ES).",
+        "saveFailed": "Could not save. Please check your details and try again.",
+        "pendingHint": "Your details are being reviewed. You cannot publish as a professional seller until verified — see listing creation for requirements.",
+        "verifiedHint": "Your verified trader details are shown to buyers on your listings.",
+        "rejectedHint": "Update your details and save again to request a new review."
+      },
       "sellerPayments": "Seller Payments",
       "checkingStripe": "Checking Stripe status...",
       "stripeStatus": "Stripe Status",
@@ -706,12 +1375,143 @@
       "payoutSchedule": "Payouts on a rolling schedule",
       "connectStripe": "Connect with Stripe",
       "redirecting": "Redirecting...",
-      "redirectingToStripe": "Redirecting to Stripe..."
+      "redirectingToStripe": "Redirecting to Stripe...",
+      "notifications": {
+        "title": "Notification Preferences",
+        "loading": "Loading preferences...",
+        "globalEmailUnsubscribed": "Unsubscribe from all email notifications",
+        "event": "Event",
+        "channelEmail": "Email",
+        "channelInApp": "In-App",
+        "save": "Save Preferences",
+        "saving": "Saving...",
+        "saved": "Preferences saved",
+        "events": {
+          "outbid": "Outbid on an auction",
+          "auctionEndingSoon": "Auction ending soon",
+          "auctionWon": "Auction won",
+          "offerReceived": "Offer received (seller)",
+          "offerAccepted": "Offer accepted (buyer)",
+          "dispatch": "Item dispatched",
+          "paymentReceived": "Payment received (seller)",
+          "newBid": "New bid on your listing",
+          "disputeUpdate": "Dispute update"
+        }
+      }
+    },
+    "myAuctions": {
+      "title": "My Listings",
+      "subtitle": "Manage your listings as a seller and track platinum bidder invitations",
+      "loading": "Loading your listings...",
+      "emptyTitle": "No Listings Yet",
+      "emptyDesc": "You haven't created any listings yet. Start by creating your first listing!",
+      "createFirst": "Create Your First Listing",
+      "highestOffer": "Highest Offer",
+      "currentPrice": "Current Price",
+      "noOffersYet": "No offers yet",
+      "bids": "Bids",
+      "watchlist": "Watchlist",
+      "started": "Started",
+      "privateRoom": "Private Auction Room",
+      "privateRoomActive": "Active",
+      "privateRoomAwaiting": "Awaiting Acceptance",
+      "privateRoomEnded": "Ended",
+      "goToPrivateRoom": "Go to Private Room",
+      "platinumBidders": "Platinum Bidders",
+      "accepted": "Accepted",
+      "pendingStatus": "Pending",
+      "declined": "Declined",
+      "acceptedBadge": "✓ Accepted",
+      "pendingBadge": "⏳ Pending",
+      "declinedBadge": "✗ Declined",
+      "acceptedAt": "Accepted",
+      "invitedAt": "Invited",
+      "viewListing": "View Listing",
+      "relist": {
+        "title": "Relist Auction",
+        "subtitle": "Adjust your settings and relist the item to give it another chance.",
+        "suggestionsLabel": "Smart suggestions",
+        "relistBtn": "Relist",
+        "alreadyRelisted": "Relisted",
+        "autoRelistBadge": "Auto-relist",
+        "autoRelistBadgeTitle": "This listing will auto-relist if it ends unsold",
+        "relistCount": "Relist #{{count}}",
+        "unsoldReasons": {
+          "no_bids": "Ended with no bids",
+          "reserve_not_met": "Reserve price not met",
+          "non_payment": "Buyer did not complete payment"
+        },
+        "suggestions": {
+          "lower10Price": "Lower starting price by 10%",
+          "lower10Reserve": "Lower reserve by 10%",
+          "removeReserve": "Remove reserve price",
+          "extend7Days": "Set duration to 7 days"
+        },
+        "form": {
+          "startingPrice": "Starting Price ($)",
+          "reservePrice": "Reserve Price (optional, 0 = none)",
+          "duration": "Duration",
+          "autoRelist": "Auto-relist if unsold again",
+          "autoRelistHint": "Automatically relist up to 3 times if the auction ends without a sale.",
+          "submit": "Relist Now",
+          "submitting": "Relisting…"
+        }
+      }
+    },
+    "myAuctionsBidder": {
+      "title": "My Auctions",
+      "subtitle": "Auctions you've bid on. Track your bids and current prices.",
+      "loading": "Loading your auctions...",
+      "emptyTitle": "No auctions yet",
+      "emptyDesc": "You haven't placed any bids yet. Browse listings and place your first bid!",
+      "browseAuctions": "Browse auctions",
+      "highestOffer": "Highest Offer",
+      "currentPrice": "Current Price",
+      "noOffersYet": "No offers yet",
+      "myHighestBid": "My highest bid",
+      "totalBids": "Total bids",
+      "ends": "Ends",
+      "emailOutbid": "Notify me when I'm outbid",
+      "viewListing": "View Listing"
+    },
+    "watchlist": {
+      "title": "My Watchlist",
+      "subtitle": "Items you've saved. Click through to view or bid.",
+      "loading": "Loading your watchlist...",
+      "emptyTitle": "No items in your watchlist",
+      "emptyDesc": "When you add items to your watchlist from a listing page, they'll appear here.",
+      "browseAuctions": "Browse auctions",
+      "noOffersYet": "No offers yet",
+      "remove": "Remove",
+      "removing": "..."
     }
   },
   "transactions": {
     "title": "Transactions",
     "subtitle": "View and manage your purchases and sales.",
+    "filterAll": "All",
+    "filterPendingPayment": "Pending payment",
+    "filterShipping": "In transit",
+    "filterDelivered": "Delivered",
+    "filterCompleted": "Completed",
+    "filterDisputed": "Disputed",
+    "drawer": {
+      "details": "Details",
+      "amount": "Amount",
+      "status": "Status",
+      "role": "Role",
+      "deadline": "Deadline",
+      "counterpart": "Counterpart",
+      "seller": "Seller",
+      "buyer": "Buyer",
+      "sellerRep": "Reputation"
+    },
+    "tp": {
+      "payment": "Payment",
+      "shipping": "Shipping",
+      "delivery": "Delivery",
+      "done": "Done"
+    },
     "seller": "Seller",
     "buyer": "Buyer",
     "loading": "Loading transactions...",
@@ -735,7 +1535,7 @@
     "paymentMethod": "Payment method",
     "paidAt": "Paid at",
     "shippingInfo": "Shipping Info",
-    "trackingNumber": "Tracking number",
+    "trackingNumber": "Tracking Number",
     "carrier": "Carrier",
     "shippedAt": "Shipped at",
     "deliveredAt": "Delivered at",
@@ -773,7 +1573,149 @@
     "awaitingDelivery": "Awaiting delivery",
     "completed_desc": "Transaction complete",
     "youBuyer": "You (Buyer)",
-    "youSeller": "You (Seller)"
+    "youSeller": "You (Seller)",
+    "confirmingStripe": "Confirming your Stripe payment...",
+    "noTransactions": "No transactions yet",
+    "noTransactionsDesc": "Completed transactions will appear here.",
+    "buying": "Buying",
+    "selling": "Selling",
+    "disputeOpen": "Dispute Open",
+    "financialBreakdown": "Financial Breakdown",
+    "bidRoomFee": "BidRoom Fee",
+    "stripeProcessingFee": "Stripe Processing Fee",
+    "shipping": "Shipping",
+    "freeShipping": "Free",
+    "calculatedSeparately": "Calculated separately",
+    "youReceive": "You receive",
+    "stripeDeductedNote": "Stripe fee will be deducted from your payout.",
+    "totalCharged": "Total charged",
+    "shippingLower": "shipping",
+    "paymentWindowEnds": "Payment window ends",
+    "passed": "passed",
+    "paymentDeadlineExpired": "The payment deadline for this transaction has passed. Payment is no longer possible.",
+    "youAreThe": "You are the",
+    "confirmReceivedHint": "Confirm you received payment before preparing to ship.",
+    "acknowledgeBy": "Please acknowledge by",
+    "deadlinePassed": "deadline passed",
+    "paymentConfirmedStripe": "Payment confirmed via Stripe.",
+    "confirmPrepareShip": "Confirm & Prepare to Ship",
+    "selectShippingMethod": "Select Shipping Method",
+    "streetAddress": "Street Address",
+    "city": "City",
+    "state": "State",
+    "postalCode": "Postal Code",
+    "country": "Country",
+    "calculating": "Calculating...",
+    "getShippingRates": "Get Shipping Rates",
+    "selectShippingOption": "Select a shipping option:",
+    "est": "Est.",
+    "days": "days",
+    "change": "Change",
+    "selectShippingBeforePaying": "Please select a shipping method before paying.",
+    "chooseShippingMethod": "Choose Shipping Method",
+    "paySecurelyHint": "Pay securely via Stripe.",
+    "redirectingToStripe": "Redirecting to Stripe...",
+    "paymentConfirmedSellerNotified": "Payment confirmed! The seller has been notified.",
+    "paymentRef": "Payment reference",
+    "itemShippedHowReceived": "Item shipped — how was it received?",
+    "updating": "Updating...",
+    "markAsReceivedProperly": "Mark as Received Properly",
+    "receivedNotProperly": "Received Not Properly / Open Dispute",
+    "bothMustReview": "Both parties must leave a review to complete this transaction.",
+    "completeToReview": "Satisfied with your purchase? Mark it as completed to unlock reviews.",
+    "markAsCompleted": "Mark as Completed",
+    "viewProofOfDelivery": "View Proof of Delivery",
+    "view": "View",
+    "remove": "Remove",
+    "markAsShipped": "Mark as Shipped",
+    "confirmShipped": "Confirm Shipped",
+    "downloading": "Downloading...",
+    "downloadInvoice": "Download Invoice",
+    "downloadReceipt": "Download Receipt",
+    "review": "Review",
+    "as": "as",
+    "for": "for",
+    "score": "Score",
+    "scoreScaleLow": "Poor",
+    "scoreScaleHigh": "Excellent",
+    "scoreSelected": "You chose {{score}} out of 5",
+    "descriptionOptional": "Description (optional)",
+    "reviewPrivate": "Your review is visible to others",
+    "shippingStatusLabel": "Shipping status",
+    "expectedShipBy": "Expected ship-by (5 business days)",
+    "sellerMustShipBy": "Ship this order by",
+    "remindSellerToShip": "Remind seller to ship",
+    "remindingSeller": "Sending…",
+    "remindSellerCooldown": "You can send another reminder in 24 hours.",
+    "autoCancelledBuyerTitle": "Order cancelled — refund issued",
+    "autoCancelledBuyerMessage": "Your order was automatically cancelled on {{date}} because the seller did not ship within 5 business days. A full refund has been issued to your original payment method and may take 5–10 business days to appear.",
+    "autoCancelledSellerTitle": "Order cancelled — did not ship in time",
+    "autoCancelledSellerMessage": "This order was automatically cancelled on {{date}} because shipment was not confirmed within the required 5-business-day window. The buyer has been refunded in full.",
+    "refundRef": "Refund reference",
+    "trackingNumberPlaceholder": "e.g. 9400111899223408553805",
+    "selectCarrier": "Select carrier",
+    "other": "Other",
+    "estimatedDeliveryDays": "Estimated delivery time (days)",
+    "estimatedDeliveryDaysPlaceholder": "e.g. 5",
+    "estimatedDeliveryDaysHint": "Helps the buyer know when to expect their item.",
+    "estimatedDelivery": "Estimated delivery",
+    "deliveryDueConfirmTitle": "Your item may have arrived",
+    "deliveryDueConfirmBody": "The estimated delivery date has passed. Please confirm receipt below, or open a dispute if there's an issue.",
+    "autoReleaseNotice": "Payment will auto-release to the seller on {{date}} if delivery is not confirmed.",
+    "autoReleaseWarning": "Payment auto-releases in {{days}} day(s). Confirm receipt or open a dispute now.",
+    "autoReleaseImminent": "Payment is about to auto-release to the seller. Confirm receipt now if you've received the item.",
+    "returnWindowNotice": "You have {{days}} day(s) remaining to request a return.",
+    "requestReturn": "Request a Return",
+    "returnStatus": "Return status",
+    "returnStatuses": {
+      "pending_seller_response": "Awaiting seller response",
+      "accepted_by_seller": "Accepted by seller",
+      "rejected_by_seller": "Rejected by seller",
+      "platform_mediated": "Under platform mediation"
+    },
+    "returnSellerDeadline": "Seller must respond by {{date}}",
+    "reportDamage": "Report Damage",
+    "damageClaimLabel": "Damage claim",
+    "damageClaimWindowNotice": "Item arrived damaged? You have {{hours}}h remaining to report it.",
+    "damageStatuses": {
+      "pending_review": "Under Review",
+      "approved_refund": "Refund Approved",
+      "packaging_rejected": "Claim Rejected",
+      "carrier_claim_filed": "Carrier Claim Filed",
+      "resolved": "Resolved",
+      "closed": "Closed"
+    },
+    "payIn": "Pay in:",
+    "paymentExpired": "Expired",
+    "secondChance": "Second chance",
+    "nonPaymentNoSecondBidder": "This order was cancelled due to non-payment and there is no second bidder. You can relist the item to start a new auction.",
+    "relistItem": "Relist Item",
+    "damageClaim": {
+      "title": "Report Item Damaged in Transit",
+      "subtitle": "Submit photos of the damage and original packaging. Claims must be opened within 48 hours of delivery.",
+      "damagePhotos": "Photos of the damage",
+      "damagePhotosHint": "Show clearly visible damage to the item (up to 5 photos).",
+      "packagingPhotos": "Photos of the packaging",
+      "packagingPhotosHint": "Show the outer box/envelope as received — all sides if possible (up to 5 photos).",
+      "description": "Description of the damage (optional)",
+      "descriptionPlaceholder": "Describe what was damaged and how it was packed…",
+      "policyNotice": "Claims may be rejected if the item was insufficiently packaged by the seller. BidRoom will review packaging compliance before processing any refund.",
+      "submit": "Submit Damage Report"
+    }
+  },
+  "returns": {
+    "modal": {
+      "title": "Request a Return",
+      "intro": "Please describe why you want to return this item and provide at least 1 photo as evidence.",
+      "reason": "Reason for return",
+      "reasonPlaceholder": "Describe the issue with the item (e.g. damaged, not as described...)",
+      "photos": "Photos",
+      "photosHint": "Upload at least 1 clear photo showing the issue.",
+      "addPhotos": "Upload Photos",
+      "uploading": "Uploading...",
+      "submit": "Submit Return Request",
+      "submitting": "Submitting..."
+    }
   },
   "disputes": {
     "title": "Disputes",
@@ -819,7 +1761,10 @@
       "uploading": "Uploading...",
       "uploaded": "Uploaded",
       "submitting": "Submitting...",
-      "submitDispute": "Submit Dispute"
+      "submitDispute": "Submit Dispute",
+      "evidenceRequired": "Evidence is required to open a dispute.",
+      "evidence": "Evidence",
+      "evidenceHint": "Upload photos or video as evidence for your dispute."
     }
   },
   "howItWorks": {
@@ -1061,29 +2006,98 @@
       }
     },
     "items": {
-      "account1": { "q": "How do I create an account?", "a": "Creating an account is free and easy! Click the \"Start Bidding\" button on our homepage, fill out the registration form with your email and password, and verify your email address. You'll be ready to start bidding in minutes." },
-      "account2": { "q": "Is it free to create an account?", "a": "Yes, creating an account on BidRoom is completely free. You only pay when you win an auction and need to complete your purchase." },
-      "account3": { "q": "What payment methods do you accept?", "a": "We accept all major credit cards (Visa, MasterCard, American Express), PayPal, and bank transfers. All payments are processed securely through our encrypted payment system." },
-      "account4": { "q": "How do I update my payment information?", "a": "You can update your payment information at any time by going to your account settings. Click on \"Payment Methods\" and add or update your preferred payment options." },
-      "account5": { "q": "Can I cancel my account?", "a": "Yes, you can deactivate your account at any time through your account settings. Please note that you cannot cancel active bids or ongoing auctions." },
-      "bidding1": { "q": "How does the bidding system work?", "a": "Our proxy bidding system allows you to set your maximum bid amount. We automatically bid on your behalf up to that amount, ensuring you only pay the minimum needed to win." },
-      "bidding2": { "q": "Can I cancel a bid?", "a": "You can cancel a bid within 1 hour of placement, as long as the auction hasn't ended. After that, bids are final and cannot be cancelled." },
-      "bidding3": { "q": "How do I know if I won an auction?", "a": "You'll receive an email notification immediately when you win an auction. You can also check your account dashboard for all your winning bids." },
-      "bidding4": { "q": "What happens if I don't pay for a won auction?", "a": "If you don't complete payment within 48 hours of winning, the auction will be offered to the next highest bidder. Repeated non-payment may result in account suspension." },
-      "bidding5": { "q": "Can I bid on multiple items at once?", "a": "Yes, you can bid on as many items as you want simultaneously. Just make sure you have sufficient funds to cover all potential wins." },
-      "bidding6": { "q": "How do I track my bids?", "a": "You can track all your bids in your account dashboard. You'll see active bids, winning bids, and bid history all in one place." },
-      "technical1": { "q": "The website is loading slowly. What should I do?", "a": "Try refreshing your browser or clearing your cache. If the problem persists, check your internet connection or try using a different browser." },
-      "technical2": { "q": "I can't log into my account. Help!", "a": "First, make sure you're using the correct email and password. If you've forgotten your password, use the \"Forgot Password\" link on the login page." },
-      "technical3": { "q": "Do you have a mobile app?", "a": "Yes! Our mobile app is available for both iOS and Android devices. You can download it from the App Store or Google Play Store." },
-      "technical4": { "q": "Why am I not receiving email notifications?", "a": "Check your spam folder first. If notifications are still missing, go to your account settings and verify your email preferences are enabled." },
-      "technical5": { "q": "Can I use BidRoom on my tablet?", "a": "Absolutely! BidRoom is fully responsive and works great on tablets, smartphones, and desktop computers." },
-      "shipping1": { "q": "How is shipping handled?", "a": "Shipping is handled by individual sellers. Each listing will show shipping costs and estimated delivery times. Most sellers ship within 1-3 business days." },
-      "shipping2": { "q": "Can I return an item if I'm not satisfied?", "a": "Return policies vary by seller. Check the individual listing for return information. BidRoom also offers buyer protection for eligible purchases." },
-      "shipping3": { "q": "Do you ship internationally?", "a": "International shipping depends on the individual seller. Check each listing for shipping options to your country." },
-      "shipping4": { "q": "How do I track my shipment?", "a": "Once your item ships, you'll receive a tracking number via email. You can use this to track your package on the carrier's website." },
-      "security1": { "q": "Is my personal information secure?", "a": "Yes, we use industry-standard encryption to protect your personal and payment information. We never share your data with third parties without your consent." },
-      "security2": { "q": "What is buyer protection?", "a": "Our buyer protection program covers eligible purchases against fraud, misrepresentation, and non-delivery. Check our terms for full details." },
-      "security3": { "q": "How do I report a suspicious listing?", "a": "If you see a suspicious listing, click the \"Report\" button on the item page or contact our support team immediately." }
+      "account1": {
+        "q": "How do I create an account?",
+        "a": "Creating an account is free and easy! Click the \"Start Bidding\" button on our homepage, fill out the registration form with your email and password, and verify your email address. You'll be ready to start bidding in minutes."
+      },
+      "account2": {
+        "q": "Is it free to create an account?",
+        "a": "Yes, creating an account on BidRoom is completely free. You only pay when you win an auction and need to complete your purchase."
+      },
+      "account3": {
+        "q": "What payment methods do you accept?",
+        "a": "We accept all major credit cards (Visa, MasterCard, American Express), PayPal, and bank transfers. All payments are processed securely through our encrypted payment system."
+      },
+      "account4": {
+        "q": "How do I update my payment information?",
+        "a": "You can update your payment information at any time by going to your account settings. Click on \"Payment Methods\" and add or update your preferred payment options."
+      },
+      "account5": {
+        "q": "Can I cancel my account?",
+        "a": "Yes, you can deactivate your account at any time through your account settings. Please note that you cannot cancel active bids or ongoing auctions."
+      },
+      "bidding1": {
+        "q": "How does the bidding system work?",
+        "a": "Our proxy bidding system allows you to set your maximum bid amount. We automatically bid on your behalf up to that amount, ensuring you only pay the minimum needed to win."
+      },
+      "bidding2": {
+        "q": "Can I cancel a bid?",
+        "a": "You can cancel a bid within 1 hour of placement, as long as the auction hasn't ended. After that, bids are final and cannot be cancelled."
+      },
+      "bidding3": {
+        "q": "How do I know if I won an auction?",
+        "a": "You'll receive an email notification immediately when you win an auction. You can also check your account dashboard for all your winning bids."
+      },
+      "bidding4": {
+        "q": "What happens if I don't pay for a won auction?",
+        "a": "If you don't complete payment within 48 hours of winning, the auction will be offered to the next highest bidder. Repeated non-payment may result in account suspension."
+      },
+      "bidding5": {
+        "q": "Can I bid on multiple items at once?",
+        "a": "Yes, you can bid on as many items as you want simultaneously. Just make sure you have sufficient funds to cover all potential wins."
+      },
+      "bidding6": {
+        "q": "How do I track my bids?",
+        "a": "You can track all your bids in your account dashboard. You'll see active bids, winning bids, and bid history all in one place."
+      },
+      "technical1": {
+        "q": "The website is loading slowly. What should I do?",
+        "a": "Try refreshing your browser or clearing your cache. If the problem persists, check your internet connection or try using a different browser."
+      },
+      "technical2": {
+        "q": "I can't log into my account. Help!",
+        "a": "First, make sure you're using the correct email and password. If you've forgotten your password, use the \"Forgot Password\" link on the login page."
+      },
+      "technical3": {
+        "q": "Do you have a mobile app?",
+        "a": "Yes! Our mobile app is available for both iOS and Android devices. You can download it from the App Store or Google Play Store."
+      },
+      "technical4": {
+        "q": "Why am I not receiving email notifications?",
+        "a": "Check your spam folder first. If notifications are still missing, go to your account settings and verify your email preferences are enabled."
+      },
+      "technical5": {
+        "q": "Can I use BidRoom on my tablet?",
+        "a": "Absolutely! BidRoom is fully responsive and works great on tablets, smartphones, and desktop computers."
+      },
+      "shipping1": {
+        "q": "How is shipping handled?",
+        "a": "Shipping is handled by individual sellers. Each listing will show shipping costs and estimated delivery times. Most sellers ship within 1-3 business days."
+      },
+      "shipping2": {
+        "q": "Can I return an item if I'm not satisfied?",
+        "a": "Return policies vary by seller. Check the individual listing for return information. BidRoom also offers buyer protection for eligible purchases."
+      },
+      "shipping3": {
+        "q": "Do you ship internationally?",
+        "a": "International shipping depends on the individual seller. Check each listing for shipping options to your country."
+      },
+      "shipping4": {
+        "q": "How do I track my shipment?",
+        "a": "Once your item ships, you'll receive a tracking number via email. You can use this to track your package on the carrier's website."
+      },
+      "security1": {
+        "q": "Is my personal information secure?",
+        "a": "Yes, we use industry-standard encryption to protect your personal and payment information. We never share your data with third parties without your consent."
+      },
+      "security2": {
+        "q": "What is buyer protection?",
+        "a": "Our buyer protection program covers eligible purchases against fraud, misrepresentation, and non-delivery. Check our terms for full details."
+      },
+      "security3": {
+        "q": "How do I report a suspicious listing?",
+        "a": "If you see a suspicious listing, click the \"Report\" button on the item page or contact our support team immediately."
+      }
     }
   },
   "privacy": {
@@ -1092,28 +2106,141 @@
       "subtitle": "Your privacy is important to us. This policy explains how we collect, use, and protect your information.",
       "lastUpdated": "Last updated: December 2024"
     },
-    "s1": { "title": "1. Introduction", "p1": "BidRoom (\"we,\" \"our,\" or \"us\") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our auction marketplace platform.", "p2": "By using our service, you agree to the collection and use of information in accordance with this policy." },
+    "s1": {
+      "title": "1. Introduction",
+      "p1": "BidRoom (\"we,\" \"our,\" or \"us\") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our auction marketplace platform.",
+      "p2": "By using our service, you agree to the collection and use of information in accordance with this policy."
+    },
     "s2": {
       "title": "2. Information We Collect",
-      "s1": { "title": "2.1 Personal Information", "intro": "We collect information you provide directly to us, such as:", "li1": "Name and contact information (email address, phone number)", "li2": "Account credentials (username, password)", "li3": "Payment information (credit card details, billing address)", "li4": "Profile information and preferences", "li5": "Communications with us (support requests, feedback)" },
-      "s2": { "title": "2.2 Usage Information", "intro": "We automatically collect certain information about your use of our service:", "li1": "Device information (IP address, browser type, operating system)", "li2": "Usage data (pages visited, time spent, features used)", "li3": "Bidding activity and auction participation", "li4": "Cookies and similar tracking technologies" }
+      "s1": {
+        "title": "2.1 Personal Information",
+        "intro": "We collect information you provide directly to us, such as:",
+        "li1": "Name and contact information (email address, phone number)",
+        "li2": "Account credentials (username, password)",
+        "li3": "Payment information (credit card details, billing address)",
+        "li4": "Profile information and preferences",
+        "li5": "Communications with us (support requests, feedback)"
+      },
+      "s2": {
+        "title": "2.2 Usage Information",
+        "intro": "We automatically collect certain information about your use of our service:",
+        "li1": "Device information (IP address, browser type, operating system)",
+        "li2": "Usage data (pages visited, time spent, features used)",
+        "li3": "Bidding activity and auction participation",
+        "li4": "Cookies and similar tracking technologies"
+      }
     },
-    "s3": { "title": "3. How We Use Your Information", "intro": "We use the information we collect to:", "li1": "Provide, maintain, and improve our services", "li2": "Process transactions and manage your account", "li3": "Facilitate auctions and bidding processes", "li4": "Send you important updates and notifications", "li5": "Provide customer support", "li6": "Detect and prevent fraud and abuse", "li7": "Comply with legal obligations", "li8": "Analyze usage patterns to improve user experience" },
+    "s3": {
+      "title": "3. How We Use Your Information",
+      "intro": "We use the information we collect to:",
+      "li1": "Provide, maintain, and improve our services",
+      "li2": "Process transactions and manage your account",
+      "li3": "Facilitate auctions and bidding processes",
+      "li4": "Send you important updates and notifications",
+      "li5": "Provide customer support",
+      "li6": "Detect and prevent fraud and abuse",
+      "li7": "Comply with legal obligations",
+      "li8": "Analyze usage patterns to improve user experience"
+    },
     "s4": {
       "title": "4. Information Sharing and Disclosure",
       "intro": "We do not sell, trade, or rent your personal information to third parties. We may share your information in the following circumstances:",
-      "s1": { "title": "4.1 Service Providers", "intro": "We may share information with trusted third-party service providers who assist us in operating our platform, such as:", "li1": "Payment processors", "li2": "Email service providers", "li3": "Analytics services", "li4": "Customer support tools" },
-      "s2": { "title": "4.2 Legal Requirements", "intro": "We may disclose information when required by law or to:", "li1": "Comply with legal processes or government requests", "li2": "Protect our rights, property, or safety", "li3": "Protect the rights, property, or safety of our users", "li4": "Investigate potential violations of our terms" },
-      "s3": { "title": "4.3 Business Transfers", "p": "In the event of a merger, acquisition, or sale of assets, your information may be transferred as part of the transaction." }
+      "s1": {
+        "title": "4.1 Service Providers",
+        "intro": "We may share information with trusted third-party service providers who assist us in operating our platform, such as:",
+        "li1": "Payment processors",
+        "li2": "Email service providers",
+        "li3": "Analytics services",
+        "li4": "Customer support tools"
+      },
+      "s2": {
+        "title": "4.2 Legal Requirements",
+        "intro": "We may disclose information when required by law or to:",
+        "li1": "Comply with legal processes or government requests",
+        "li2": "Protect our rights, property, or safety",
+        "li3": "Protect the rights, property, or safety of our users",
+        "li4": "Investigate potential violations of our terms"
+      },
+      "s3": {
+        "title": "4.3 Business Transfers",
+        "p": "In the event of a merger, acquisition, or sale of assets, your information may be transferred as part of the transaction."
+      }
     },
-    "s5": { "title": "5. Data Security", "intro": "We implement appropriate technical and organizational measures to protect your personal information against unauthorized access, alteration, disclosure, or destruction. These measures include:", "li1": "Encryption of sensitive data in transit and at rest", "li2": "Regular security assessments and updates", "li3": "Access controls and authentication systems", "li4": "Employee training on data protection", "note": "However, no method of transmission over the internet or electronic storage is 100% secure, and we cannot guarantee absolute security." },
-    "s6": { "title": "6. Your Rights and Choices", "intro": "You have certain rights regarding your personal information:", "li1": { "label": "Access:", "text": "Request access to your personal information" }, "li2": { "label": "Correction:", "text": "Request correction of inaccurate information" }, "li3": { "label": "Deletion:", "text": "Request deletion of your personal information" }, "li4": { "label": "Portability:", "text": "Request a copy of your data in a portable format" }, "li5": { "label": "Opt-out:", "text": "Unsubscribe from marketing communications" }, "note": "To exercise these rights, please contact us using the information provided in the \"Contact Us\" section." },
-    "s7": { "title": "7. Cookies and Tracking Technologies", "intro": "We use cookies and similar technologies to enhance your experience on our platform. Cookies are small text files stored on your device that help us:", "li1": "Remember your preferences and settings", "li2": "Analyze how you use our service", "li3": "Provide personalized content and advertisements", "li4": "Improve our platform's functionality", "note": "You can control cookie settings through your browser preferences, but disabling cookies may affect the functionality of our service." },
-    "s8": { "title": "8. Data Retention", "intro": "We retain your personal information for as long as necessary to provide our services and fulfill the purposes outlined in this Privacy Policy. We may retain certain information for longer periods to:", "li1": "Comply with legal obligations", "li2": "Resolve disputes and enforce agreements", "li3": "Prevent fraud and abuse" },
-    "s9": { "title": "9. International Data Transfers", "p": "Your information may be transferred to and processed in countries other than your own. We ensure that such transfers comply with applicable data protection laws and implement appropriate safeguards to protect your information." },
-    "s10": { "title": "10. Children's Privacy", "p": "Our service is not intended for children under 13 years of age. We do not knowingly collect personal information from children under 13. If we become aware that we have collected personal information from a child under 13, we will take steps to delete such information." },
-    "s11": { "title": "11. Changes to This Privacy Policy", "intro": "We may update this Privacy Policy from time to time. We will notify you of any material changes by:", "li1": "Posting the updated policy on our website", "li2": "Sending you an email notification", "li3": "Displaying a notice on our platform", "note": "Your continued use of our service after any changes constitutes acceptance of the updated Privacy Policy." },
-    "s12": { "title": "12. Contact Us", "intro": "If you have any questions about this Privacy Policy or our data practices, please contact us:", "emailLabel": "Email:", "addressLabel": "Address:", "address": "BidRoom Privacy Team, 123 Auction Street, Commerce City, CC 12345", "phoneLabel": "Phone:" }
+    "s5": {
+      "title": "5. Data Security",
+      "intro": "We implement appropriate technical and organizational measures to protect your personal information against unauthorized access, alteration, disclosure, or destruction. These measures include:",
+      "li1": "Encryption of sensitive data in transit and at rest",
+      "li2": "Regular security assessments and updates",
+      "li3": "Access controls and authentication systems",
+      "li4": "Employee training on data protection",
+      "note": "However, no method of transmission over the internet or electronic storage is 100% secure, and we cannot guarantee absolute security."
+    },
+    "s6": {
+      "title": "6. Your Rights and Choices",
+      "intro": "You have certain rights regarding your personal information:",
+      "li1": {
+        "label": "Access:",
+        "text": "Request access to your personal information"
+      },
+      "li2": {
+        "label": "Correction:",
+        "text": "Request correction of inaccurate information"
+      },
+      "li3": {
+        "label": "Deletion:",
+        "text": "Request deletion of your personal information"
+      },
+      "li4": {
+        "label": "Portability:",
+        "text": "Request a copy of your data in a portable format"
+      },
+      "li5": {
+        "label": "Opt-out:",
+        "text": "Unsubscribe from marketing communications"
+      },
+      "note": "To exercise these rights, please contact us using the information provided in the \"Contact Us\" section."
+    },
+    "s7": {
+      "title": "7. Cookies and Tracking Technologies",
+      "intro": "We use cookies and similar technologies to enhance your experience on our platform. Cookies are small text files stored on your device that help us:",
+      "li1": "Remember your preferences and settings",
+      "li2": "Analyze how you use our service",
+      "li3": "Provide personalized content and advertisements",
+      "li4": "Improve our platform's functionality",
+      "note": "You can control cookie settings through your browser preferences, but disabling cookies may affect the functionality of our service."
+    },
+    "s8": {
+      "title": "8. Data Retention",
+      "intro": "We retain your personal information for as long as necessary to provide our services and fulfill the purposes outlined in this Privacy Policy. We may retain certain information for longer periods to:",
+      "li1": "Comply with legal obligations",
+      "li2": "Resolve disputes and enforce agreements",
+      "li3": "Prevent fraud and abuse"
+    },
+    "s9": {
+      "title": "9. International Data Transfers",
+      "p": "Your information may be transferred to and processed in countries other than your own. We ensure that such transfers comply with applicable data protection laws and implement appropriate safeguards to protect your information."
+    },
+    "s10": {
+      "title": "10. Children's Privacy",
+      "p": "Our service is not intended for children under 13 years of age. We do not knowingly collect personal information from children under 13. If we become aware that we have collected personal information from a child under 13, we will take steps to delete such information."
+    },
+    "s11": {
+      "title": "11. Changes to This Privacy Policy",
+      "intro": "We may update this Privacy Policy from time to time. We will notify you of any material changes by:",
+      "li1": "Posting the updated policy on our website",
+      "li2": "Sending you an email notification",
+      "li3": "Displaying a notice on our platform",
+      "note": "Your continued use of our service after any changes constitutes acceptance of the updated Privacy Policy."
+    },
+    "s12": {
+      "title": "12. Contact Us",
+      "intro": "If you have any questions about this Privacy Policy or our data practices, please contact us:",
+      "emailLabel": "Email:",
+      "addressLabel": "Address:",
+      "address": "BidRoom Privacy Team, 123 Auction Street, Commerce City, CC 12345",
+      "phoneLabel": "Phone:"
+    }
   },
   "terms": {
     "hero": {
@@ -1121,50 +2248,462 @@
       "subtitle": "Please read these terms carefully before using our auction marketplace platform.",
       "lastUpdated": "Last updated: December 2024"
     },
-    "s1": { "title": "1. Acceptance of Terms", "p1": "By accessing and using BidRoom (\"the Service\"), you accept and agree to be bound by the terms and provision of this agreement. If you do not agree to abide by the above, please do not use this service.", "p2": "These Terms and Conditions (\"Terms\") govern your use of our auction marketplace platform operated by BidRoom (\"us\", \"we\", or \"our\")." },
-    "s2": { "title": "2. Service Description", "intro": "BidRoom is an online auction marketplace that allows users to:", "li1": "List items for auction", "li2": "Participate in auctions by placing bids", "li3": "Purchase items through the auction process", "li4": "Interact with other users in a secure environment", "note": "We reserve the right to modify, suspend, or discontinue the Service at any time without notice." },
+    "s1": {
+      "title": "1. Acceptance of Terms",
+      "p1": "By accessing and using BidRoom (\"the Service\"), you accept and agree to be bound by the terms and provision of this agreement. If you do not agree to abide by the above, please do not use this service.",
+      "p2": "These Terms and Conditions (\"Terms\") govern your use of our auction marketplace platform operated by BidRoom (\"us\", \"we\", or \"our\")."
+    },
+    "s2": {
+      "title": "2. Service Description",
+      "intro": "BidRoom is an online auction marketplace that allows users to:",
+      "li1": "List items for auction",
+      "li2": "Participate in auctions by placing bids",
+      "li3": "Purchase items through the auction process",
+      "li4": "Interact with other users in a secure environment",
+      "note": "We reserve the right to modify, suspend, or discontinue the Service at any time without notice."
+    },
     "s3": {
       "title": "3. User Accounts",
-      "s1": { "title": "3.1 Account Creation", "intro": "To use our Service, you must create an account by providing accurate and complete information. You are responsible for:", "li1": "Maintaining the confidentiality of your account credentials", "li2": "All activities that occur under your account", "li3": "Notifying us immediately of any unauthorized use", "li4": "Ensuring your account information remains current and accurate" },
-      "s2": { "title": "3.2 Account Eligibility", "p": "You must be at least 18 years old to create an account and use our Service. By creating an account, you represent and warrant that you meet this age requirement." },
-      "s3": { "title": "3.3 Account Suspension", "p": "We reserve the right to suspend or terminate accounts that violate these Terms or engage in fraudulent or illegal activities." }
+      "s1": {
+        "title": "3.1 Account Creation",
+        "intro": "To use our Service, you must create an account by providing accurate and complete information. You are responsible for:",
+        "li1": "Maintaining the confidentiality of your account credentials",
+        "li2": "All activities that occur under your account",
+        "li3": "Notifying us immediately of any unauthorized use",
+        "li4": "Ensuring your account information remains current and accurate"
+      },
+      "s2": {
+        "title": "3.2 Account Eligibility",
+        "p": "You must be at least 18 years old to create an account and use our Service. By creating an account, you represent and warrant that you meet this age requirement."
+      },
+      "s3": {
+        "title": "3.3 Account Suspension",
+        "p": "We reserve the right to suspend or terminate accounts that violate these Terms or engage in fraudulent or illegal activities."
+      }
     },
     "s4": {
       "title": "4. Bidding and Auctions",
-      "s1": { "title": "4.1 Bidding Process", "intro": "When participating in auctions:", "li1": "All bids are final and cannot be withdrawn once placed", "li2": "You must have sufficient funds to cover your maximum bid", "li3": "We use a proxy bidding system that automatically bids on your behalf", "li4": "Winning bidders are obligated to complete the purchase" },
-      "s2": { "title": "4.2 Auction Rules", "li1": "Auctions have specific start and end times", "li2": "Bids must meet minimum increments", "li3": "Reserve prices may apply to certain auctions", "li4": "We reserve the right to cancel auctions at our discretion" },
-      "s3": { "title": "4.3 Payment Obligations", "p": "Winning bidders must complete payment within 48 hours of auction close. Failure to pay may result in account suspension and the item being offered to the next highest bidder." }
+      "s1": {
+        "title": "4.1 Bidding Process",
+        "intro": "When participating in auctions:",
+        "li1": "All bids are final and cannot be withdrawn once placed",
+        "li2": "You must have sufficient funds to cover your maximum bid",
+        "li3": "We use a proxy bidding system that automatically bids on your behalf",
+        "li4": "Winning bidders are obligated to complete the purchase"
+      },
+      "s2": {
+        "title": "4.2 Auction Rules",
+        "li1": "Auctions have specific start and end times",
+        "li2": "Bids must meet minimum increments",
+        "li3": "Reserve prices may apply to certain auctions",
+        "li4": "We reserve the right to cancel auctions at our discretion"
+      },
+      "s3": {
+        "title": "4.3 Payment Obligations",
+        "p": "Winning bidders must complete payment within 48 hours of auction close. Failure to pay may result in account suspension and the item being offered to the next highest bidder."
+      }
     },
-    "s5": { "title": "5. Seller Responsibilities", "intro": "If you list items for auction, you agree to:", "li1": "Provide accurate and complete item descriptions", "li2": "Include clear, high-quality photographs", "li3": "Set appropriate starting prices and reserve prices", "li4": "Ship items promptly after receiving payment", "li5": "Respond to buyer inquiries in a timely manner", "li6": "Comply with all applicable laws and regulations" },
-    "s6": { "title": "6. Prohibited Activities", "intro": "You agree not to:", "li1": "Use the Service for any illegal or unauthorized purpose", "li2": "Interfere with or disrupt the Service or servers", "li3": "Attempt to gain unauthorized access to any part of the Service", "li4": "Create multiple accounts to circumvent restrictions", "li5": "Engage in shill bidding or other fraudulent practices", "li6": "List prohibited items (weapons, illegal substances, etc.)", "li7": "Violate any applicable laws or regulations", "li8": "Harass, abuse, or harm other users" },
+    "s5": {
+      "title": "5. Seller Responsibilities",
+      "intro": "If you list items for auction, you agree to:",
+      "li1": "Provide accurate and complete item descriptions",
+      "li2": "Include clear, high-quality photographs",
+      "li3": "Set appropriate starting prices and reserve prices",
+      "li4": "Ship items promptly after receiving payment",
+      "li5": "Respond to buyer inquiries in a timely manner",
+      "li6": "Comply with all applicable laws and regulations"
+    },
+    "s6": {
+      "title": "6. Prohibited Activities",
+      "intro": "You agree not to:",
+      "li1": "Use the Service for any illegal or unauthorized purpose",
+      "li2": "Interfere with or disrupt the Service or servers",
+      "li3": "Attempt to gain unauthorized access to any part of the Service",
+      "li4": "Create multiple accounts to circumvent restrictions",
+      "li5": "Engage in shill bidding or other fraudulent practices",
+      "li6": "List prohibited items (weapons, illegal substances, etc.)",
+      "li7": "Violate any applicable laws or regulations",
+      "li8": "Harass, abuse, or harm other users"
+    },
     "s7": {
       "title": "7. Fees and Payments",
-      "s1": { "title": "7.1 Service Fees", "intro": "We may charge fees for certain services, including:", "li1": "Listing fees for auction items", "li2": "Transaction fees for completed sales", "li3": "Premium features and services" },
-      "s2": { "title": "7.2 Payment Processing", "p": "All payments are processed securely through our payment partners. We accept major credit cards and other approved payment methods." },
-      "s3": { "title": "7.3 Refunds", "p": "Refund policies vary by transaction type and are subject to our discretion and applicable laws." }
+      "s1": {
+        "title": "7.1 Service Fees",
+        "intro": "We may charge fees for certain services, including:",
+        "li1": "Listing fees for auction items",
+        "li2": "Transaction fees for completed sales",
+        "li3": "Premium features and services"
+      },
+      "s2": {
+        "title": "7.2 Payment Processing",
+        "p": "All payments are processed securely through our payment partners. We accept major credit cards and other approved payment methods."
+      },
+      "s3": {
+        "title": "7.3 Refunds",
+        "p": "Refund policies vary by transaction type and are subject to our discretion and applicable laws."
+      }
     },
-    "s8": { "title": "8. Intellectual Property", "p1": "The Service and its original content, features, and functionality are owned by BidRoom and are protected by international copyright, trademark, patent, trade secret, and other intellectual property laws.", "p2": "You may not reproduce, distribute, modify, or create derivative works of our content without express written permission." },
-    "s9": { "title": "9. Disclaimers", "p1": "THE SERVICE IS PROVIDED \"AS IS\" AND \"AS AVAILABLE\" WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NON-INFRINGEMENT.", "p2": "We do not guarantee that the Service will be uninterrupted, secure, or error-free, or that any defects will be corrected." },
-    "s10": { "title": "10. Limitation of Liability", "p1": "TO THE MAXIMUM EXTENT PERMITTED BY LAW, BIDROOM SHALL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES, INCLUDING WITHOUT LIMITATION, LOSS OF PROFITS, DATA, USE, GOODWILL, OR OTHER INTANGIBLE LOSSES.", "p2": "Our total liability to you for any damages arising from or related to these Terms or the Service shall not exceed the amount you paid us in the 12 months preceding the claim." },
-    "s11": { "title": "11. Indemnification", "intro": "You agree to defend, indemnify, and hold harmless BidRoom and its officers, directors, employees, and agents from and against any claims, damages, obligations, losses, liabilities, costs, or debt, and expenses (including attorney's fees) arising from:", "li1": "Your use of the Service", "li2": "Your violation of these Terms", "li3": "Your violation of any third-party rights", "li4": "Any content you submit, post, or transmit through the Service" },
-    "s12": { "title": "12. Termination", "p1": "We may terminate or suspend your account and access to the Service immediately, without prior notice or liability, for any reason whatsoever, including without limitation if you breach the Terms.", "p2": "Upon termination, your right to use the Service will cease immediately. All provisions of the Terms which by their nature should survive termination shall survive termination." },
-    "s13": { "title": "13. Governing Law", "p1": "These Terms shall be interpreted and governed by the laws of the State of Delaware, without regard to its conflict of law provisions.", "p2": "Any disputes arising from these Terms or your use of the Service shall be resolved in the courts of Delaware." },
-    "s14": { "title": "14. Changes to Terms", "p1": "We reserve the right to modify or replace these Terms at any time. If a revision is material, we will try to provide at least 30 days notice prior to any new terms taking effect.", "p2": "Your continued use of the Service after any such changes constitutes your acceptance of the new Terms." },
-    "s15": { "title": "15. Contact Information", "intro": "If you have any questions about these Terms and Conditions, please contact us:", "emailLabel": "Email:", "addressLabel": "Address:", "address": "BidRoom Legal Department, 123 Auction Street, Commerce City, CC 12345", "phoneLabel": "Phone:" }
+    "s8": {
+      "title": "8. Intellectual Property",
+      "p1": "The Service and its original content, features, and functionality are owned by BidRoom and are protected by international copyright, trademark, patent, trade secret, and other intellectual property laws.",
+      "p2": "You may not reproduce, distribute, modify, or create derivative works of our content without express written permission."
+    },
+    "s9": {
+      "title": "9. Disclaimers",
+      "p1": "THE SERVICE IS PROVIDED \"AS IS\" AND \"AS AVAILABLE\" WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NON-INFRINGEMENT.",
+      "p2": "We do not guarantee that the Service will be uninterrupted, secure, or error-free, or that any defects will be corrected."
+    },
+    "s10": {
+      "title": "10. Limitation of Liability",
+      "p1": "TO THE MAXIMUM EXTENT PERMITTED BY LAW, BIDROOM SHALL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES, INCLUDING WITHOUT LIMITATION, LOSS OF PROFITS, DATA, USE, GOODWILL, OR OTHER INTANGIBLE LOSSES.",
+      "p2": "Our total liability to you for any damages arising from or related to these Terms or the Service shall not exceed the amount you paid us in the 12 months preceding the claim."
+    },
+    "s11": {
+      "title": "11. Indemnification",
+      "intro": "You agree to defend, indemnify, and hold harmless BidRoom and its officers, directors, employees, and agents from and against any claims, damages, obligations, losses, liabilities, costs, or debt, and expenses (including attorney's fees) arising from:",
+      "li1": "Your use of the Service",
+      "li2": "Your violation of these Terms",
+      "li3": "Your violation of any third-party rights",
+      "li4": "Any content you submit, post, or transmit through the Service"
+    },
+    "s12": {
+      "title": "12. Termination",
+      "p1": "We may terminate or suspend your account and access to the Service immediately, without prior notice or liability, for any reason whatsoever, including without limitation if you breach the Terms.",
+      "p2": "Upon termination, your right to use the Service will cease immediately. All provisions of the Terms which by their nature should survive termination shall survive termination."
+    },
+    "s13": {
+      "title": "13. Governing Law",
+      "p1": "These Terms shall be interpreted and governed by the laws of the State of Delaware, without regard to its conflict of law provisions.",
+      "p2": "Any disputes arising from these Terms or your use of the Service shall be resolved in the courts of Delaware."
+    },
+    "s14": {
+      "title": "14. Changes to Terms",
+      "p1": "We reserve the right to modify or replace these Terms at any time. If a revision is material, we will try to provide at least 30 days notice prior to any new terms taking effect.",
+      "p2": "Your continued use of the Service after any such changes constitutes your acceptance of the new Terms."
+    },
+    "s15": {
+      "title": "15. Contact Information",
+      "intro": "If you have any questions about these Terms and Conditions, please contact us:",
+      "emailLabel": "Email:",
+      "addressLabel": "Address:",
+      "address": "BidRoom Legal Department, 123 Auction Street, Commerce City, CC 12345",
+      "phoneLabel": "Phone:"
+    }
   },
-  "addListing": {
-    "successMessage": "Listing created successfully!",
-    "errorUploadFailed": "Failed to upload images. Please try again.",
-    "errorStep2Description": "Please complete all required fields. The description must be at least 50 characters long.",
-    "reservePrice": "Reserve Price",
+  "report": {
+    "titleListing": "Report Listing",
+    "titleUser": "Report User",
+    "subtitle": "Help us understand what's wrong. We'll review your report and take action if needed.",
+    "reportListing": "Report Listing",
+    "reportSeller": "Report Seller",
+    "reasons": {
+      "fraud_scam": "Fraud or Scam",
+      "offensive_content": "Offensive Content",
+      "prohibited_item": "Prohibited Item",
+      "spam": "Spam",
+      "off_platform_transaction": "Attempting Off-Platform Transaction",
+      "other": "Other"
+    },
+    "descriptionLabel": "Additional details (optional)",
+    "descriptionPlaceholder": "Please describe the issue...",
+    "submit": "Submit Report",
+    "submitting": "Submitting...",
+    "cancel": "Cancel",
+    "success": {
+      "title": "Report Submitted",
+      "message": "Thank you. Your report has been received and our team will review it shortly.",
+      "close": "Close"
+    },
     "errors": {
-      "required": "{{field}} is required",
-      "tooLong": "{{field}} is too long",
-      "tooShort": "{{field}} is too short",
-      "minValue": "Value must be greater than {{min}}",
-      "buyNowTooLow": "Buy Now price must be higher than Starting Bid",
-      "reserveTooLow": "Reserve price must be at least the starting bid",
-      "invalidFileType": "Invalid file type. Only images (JPEG, PNG, GIF, WebP, BMP) are allowed. Rejected: {{files}}"
+      "selectReason": "Please select a reason before submitting.",
+      "alreadyReported": "You have already reported this item.",
+      "generic": "Something went wrong. Please try again."
+    },
+    "reportUser": "Report User"
+  },
+  "sellerProfile": {
+    "memberSince": "Member since",
+    "lastActive": "Active",
+    "lastActiveNow": "just now",
+    "lastActiveUnknown": "unknown",
+    "reviews": "reviews",
+    "noReviews": "No reviews yet",
+    "noReviewsYet": "No reviews to show.",
+    "reviewsError": "Failed to load reviews.",
+    "allReviews": "All",
+    "asSeller": "As Seller",
+    "asBuyer": "As Buyer",
+    "sortBy": "Sort:",
+    "sortRecent": "Recent",
+    "sortHighest": "Highest",
+    "sortLowest": "Lowest",
+    "auto": "Auto",
+    "sold": "Items Sold",
+    "bought": "Items Bought",
+    "followers": "Followers",
+    "activeListings": "Active Listings",
+    "noActiveListings": "No active listings at the moment.",
+    "bid": "bid",
+    "bids": "bids",
+    "notFound": "This profile could not be found.",
+    "loadError": "Failed to load profile. Please try again.",
+    "follow": "Follow",
+    "following": "Following",
+    "mute": "Mute notifications",
+    "unmute": "Unmute notifications"
+  },
+  "myBids": {
+    "filterAll": "All",
+    "filterWinning": "Winning",
+    "filterOutbid": "Outbid",
+    "filterEnded": "Ended",
+    "myBest": "My best",
+    "currentPrice": "Current",
+    "bids": "Bids",
+    "ends": "Ends",
+    "bidHistory": "Bid history",
+    "bidAgain": "Bid again",
+    "viewListing": "View listing",
+    "notifOn": "Notify on outbid",
+    "notifOff": "Notifications off",
+    "typeOffer": "Offer",
+    "typeLive": "Live",
+    "statusActive": "Active",
+    "statusEnded": "Ended"
+  },
+  "watchlist": {
+    "typeLive": "Live",
+    "ended": "Ended"
+  },
+  "legal": {
+    "themeToggle": "Toggle theme",
+    "tabs": {
+      "terms": "Terms of Use",
+      "privacy": "Privacy Policy",
+      "cookies": "Cookies",
+      "contact": "Contact"
+    },
+    "footer": {
+      "copy": "© 2025 BidRoom.pt · BidRoom Unipessoal Lda · VAT 123 456 789"
+    },
+    "terms": {
+      "eyebrow": "Terms of Use",
+      "title": "General terms and conditions of platform use",
+      "updated": "Last updated: 1 May 2025",
+      "intro": "By using BidRoom.pt, you accept these Terms of Use. Please read them carefully. If you have questions, contact us at <a href=\"mailto:legal@bidroom.pt\">legal@bidroom.pt</a>.",
+      "h1": "1. Who we are",
+      "h1p1": "BidRoom.pt is an online auction marketplace operated by <strong>BidRoom Unipessoal Lda</strong>, based in Lisbon, Portugal, registered with the Lisbon Commercial Registry. BidRoom acts as a technology intermediary between buyers and sellers and is not a contracting party in transactions on the platform.",
+      "h2": "2. Eligibility",
+      "h2p1": "To use the platform, you must be at least 18 years old and have legal capacity to enter into contracts. By creating an account, you declare that you meet these requirements.",
+      "h3": "3. The platform",
+      "h3p1": "BidRoom offers two listing formats:",
+      "h3li1": "<strong>Auction (Highest Bid):</strong> buyers place real-time bids. The highest bid at the end of the period wins automatically, provided any reserve price (if set) is met.",
+      "h3li2": "<strong>Best Offer:</strong> buyers submit offers. The seller chooses their preferred offer before the deadline. The seller is not obliged to accept any offer below the minimum price set.",
+      "h3p2": "BidRoom may also offer <strong>Private Rooms</strong>, an optional feature where the seller invites selected bidders to an additional round after the public auction ends.",
+      "h4": "4. Fees and payments",
+      "h4p1": "BidRoom charges the seller a commission on the final value of each completed transaction:",
+      "th1": "Format",
+      "th2": "Commission (seller)",
+      "fmt1": "Auction (without Private Room)",
+      "fmt2": "Auction (with Private Room)",
+      "fmt3": "Best Offer",
+      "h4p2": "Stripe processing fees are borne by the buyer, added to the final transaction amount. Payments are processed by Stripe and funds are held until the buyer confirms receipt.",
+      "h5": "5. Seller obligations",
+      "h5li1": "The seller declares they are the legitimate owner of the listed item.",
+      "h5li2": "The description and photographs must be true and complete.",
+      "h5li3": "The seller has <strong>5 business days</strong> to ship the item after payment confirmation.",
+      "h5li4": "Failure to meet the shipping deadline results in automatic cancellation and a refund to the buyer.",
+      "h5li5": "Prohibited items include: live animals, controlled substances, weapons, and any item illegal under Portuguese or EU law.",
+      "h6": "6. Buyer obligations",
+      "h6li1": "Bids and offers are binding. By placing a bid or submitting an offer, the buyer commits to pay if they win.",
+      "h6li2": "Payment must be made within <strong>24 hours</strong> of the auction closing.",
+      "h6li3": "The buyer must confirm receipt of the item within the stipulated period.",
+      "h7": "7. Right of withdrawal and returns",
+      "h7p1": "BidRoom is a peer-to-peer (C2C) auction platform. In online auctions between private individuals, the right of withdrawal under Decree-Law No. 24/2014 does not apply. When one party is a professional seller (business or trader), the consumer buyer has <strong>14 days</strong> to exercise the right of withdrawal without giving a reason, under applicable law. Returns are handled directly between buyer and seller, with BidRoom mediation in case of dispute.",
+      "h8": "8. Identity verification (KYC)",
+      "h8p1": "For transactions of <strong>€5,000</strong> or more, BidRoom requires user identity verification (Know Your Customer — KYC) before allowing listing publication or auction participation. This requirement stems from anti-money laundering and counter-terrorist financing obligations (Law No. 83/2017). The user must provide valid identification. Refusal to complete KYC prevents use of features subject to this threshold.",
+      "h9": "9. Account suspension and closure",
+      "h9p1": "BidRoom may suspend or close an account in the following circumstances:",
+      "h9li1": "<strong>Automatic suspension</strong> — whenever a dispute is opened, both accounts involved are automatically suspended until resolution.",
+      "h9li2": "<strong>Administrative suspension</strong> — in case of suspected fraud, breach of these Terms, or activity that puts other users at risk.",
+      "h9li3": "<strong>Permanent closure</strong> — in case of serious or repeated violations, or at the user's own request.",
+      "h9p2": "Suspended users are notified by email and may challenge the decision via <a href=\"mailto:legal@bidroom.pt\">legal@bidroom.pt</a>. Transactions in progress at the time of suspension are handled case by case by BidRoom.",
+      "h10": "10. Disputes between users",
+      "h10p1": "In case of dispute between buyer and seller, BidRoom provides an internal mediation mechanism. Both accounts are automatically suspended during the dispute period. BidRoom's decision is binding within the platform. For unresolved disputes, users may refer to the <strong>Portuguese Centre for Consumer Conflict Arbitration (CNIACC)</strong> at <a href=\"https://www.cniacc.pt\" target=\"_blank\" rel=\"noopener\">cniacc.pt</a>.",
+      "h11": "11. Reputation system and automated decisions",
+      "h11p1": "BidRoom operates a reputation system scored from 0 to 100, calculated <strong>automatically</strong> based on reviews received, completed transactions, and disputes. This system has concrete effects for users:",
+      "h11li1": "Score ≥ 60 and zero dispute losses — eligibility for Private Rooms",
+      "h11li2": "Suspicious review patterns — automatic fraud detection",
+      "h11li3": "Very low score — may result in restricted functionality",
+      "h11p2": "Under GDPR Article 22, you have the right not to be subject solely to automated decisions that produce significant effects. To challenge an automated reputation decision, contact <a href=\"mailto:legal@bidroom.pt\">legal@bidroom.pt</a>.",
+      "h12": "12. Minors",
+      "h12p1": "BidRoom.pt is intended exclusively for users aged <strong>18 or over</strong>. We do not knowingly collect personal data from anyone under 18. If we learn that a minor has created an account, we will close it immediately and delete associated data. Parents or guardians who suspect a minor has created a BidRoom account should contact us at <a href=\"mailto:legal@bidroom.pt\">legal@bidroom.pt</a>.",
+      "h13": "13. Intellectual property",
+      "h13p1": "All content on BidRoom.pt — including design, code, brand, and text — is owned by BidRoom Unipessoal Lda. Users may not reproduce, distribute, or create derivative works without express written authorisation.",
+      "h14": "14. Limitation of liability",
+      "h14p1": "BidRoom acts as a technology intermediary and is not responsible for the quality, authenticity, or legality of listed items. BidRoom's maximum liability to any user, in any circumstance, is limited to commission fees paid in the last 12 months. This limitation does not affect consumers' mandatory rights under Portuguese and EU law.",
+      "h15": "15. Applicable law and jurisdiction",
+      "h15p1": "These Terms are governed by Portuguese law. In case of dispute, the parties agree to submit to the courts of Lisbon, without prejudice to consumers' rights under applicable EU legislation.",
+      "h16": "16. Changes to the Terms",
+      "h16p1": "BidRoom reserves the right to change these Terms at any time, with at least 15 days' notice to registered users. Continued use of the platform after that period implies acceptance of the changes."
+    },
+    "privacy": {
+      "eyebrow": "Privacy Policy",
+      "title": "How we process your personal data",
+      "updated": "Last updated: 1 May 2025 · GDPR compliant",
+      "dpoLabel": "Data controller:",
+      "dpoVal": " BidRoom Unipessoal Lda · legal@bidroom.pt",
+      "h1": "1. What data we collect",
+      "th1": "Category",
+      "th2": "Data",
+      "th3": "Purpose",
+      "cat1": "Account",
+      "dat1": "Name, email, password (hash)",
+      "fin1": "Authentication and account management",
+      "cat2": "Payment",
+      "dat2": "IBAN (encrypted), Stripe Connect data",
+      "fin2": "Payment processing and payouts",
+      "cat3": "Activity",
+      "dat3": "Bids, offers, auctions, transactions",
+      "fin3": "Platform operation and reputation",
+      "cat4": "Technical",
+      "dat4": "IP, cookies, access logs",
+      "fin4": "Security and service improvement",
+      "cat5": "Communication",
+      "dat5": "Messages between users",
+      "fin5": "Support and dispute resolution",
+      "h2": "2. Legal basis for processing (GDPR)",
+      "h2li1": "<strong>Contract performance</strong> — data necessary to provide the service (account, payments, transactions)",
+      "h2li2": "<strong>Legitimate interest</strong> — platform security, fraud prevention, reputation",
+      "h2li3": "<strong>Consent</strong> — marketing communications (can be withdrawn at any time)",
+      "h2li4": "<strong>Legal obligation</strong> — compliance with tax and regulatory obligations",
+      "h3": "3. Who we share your data with",
+      "h3li1": "<strong>Stripe</strong> — payment processing (subject to Stripe's privacy policy)",
+      "h3li2": "<strong>Firebase / Google</strong> — authentication (subject to Google's privacy policy)",
+      "h3li3": "<strong>Microsoft Azure</strong> — hosting and content moderation",
+      "h3li4": "<strong>Competent authorities</strong> — when required by law",
+      "h3p1": "We do not sell or transfer your personal data to third parties for marketing purposes.",
+      "h4": "4. Your rights (GDPR)",
+      "h4p1": "Under the GDPR, you have the following rights:",
+      "h4li1": "<strong>Access</strong> — request a copy of your personal data",
+      "h4li2": "<strong>Rectification</strong> — correct inaccurate or incomplete data",
+      "h4li3": "<strong>Erasure</strong> — request deletion of your data (\"right to be forgotten\")",
+      "h4li4": "<strong>Portability</strong> — receive your data in a structured format",
+      "h4li5": "<strong>Objection</strong> — object to processing based on legitimate interest",
+      "h4li6": "<strong>Restriction</strong> — request suspension of processing in certain circumstances",
+      "h4p2": "To exercise any of these rights, contact <a href=\"mailto:legal@bidroom.pt\">legal@bidroom.pt</a>. We respond within 30 days. You also have the right to lodge a complaint with the <strong>CNPD</strong> (Portuguese Data Protection Authority) at <a href=\"https://www.cnpd.pt\" target=\"_blank\" rel=\"noopener\">cnpd.pt</a>.",
+      "h5": "5. Automated decisions (GDPR Art. 22)",
+      "h5p1": "BidRoom uses automated processing to calculate each user's reputation score (0–100). This calculation may produce significant effects, including eligibility for Private Rooms and feature restrictions. You have the right to:",
+      "h5li1": "Request human intervention in reviewing the automated decision",
+      "h5li2": "Express your point of view",
+      "h5li3": "Challenge the decision via <a href=\"mailto:legal@bidroom.pt\">legal@bidroom.pt</a>",
+      "h6": "6. Minors",
+      "h6p1": "BidRoom.pt is intended exclusively for users aged 18 or over. We do not knowingly collect personal data from anyone under 18. If we detect that a minor has created an account, we will immediately delete all associated data. Parents or guardians who suspect a minor's account should contact <a href=\"mailto:legal@bidroom.pt\">legal@bidroom.pt</a>.",
+      "h7": "7. Data retention",
+      "h7p1": "Account data is kept while the account is active. After account deletion, data is erased within 90 days, except data we must retain by law (e.g. tax data, kept for 10 years under Portuguese tax law).",
+      "h8": "8. International transfers",
+      "h8p1": "Your data may be processed outside the EU by our subprocessors (Stripe, Google). These transfers are made on the basis of Standard Contractual Clauses approved by the European Commission, ensuring a level of protection equivalent to that required by the GDPR."
+    },
+    "cookies": {
+      "eyebrow": "Cookie Policy",
+      "title": "How we use cookies and similar technologies",
+      "updated": "Last updated: 1 May 2025",
+      "intro": "A cookie is a small text file stored on your device when you visit a website. We use cookies so the platform works correctly and to improve your experience.",
+      "h1": "Your preferences",
+      "h1p1": "You can manage your cookie preferences below. Strictly necessary cookies cannot be disabled — they are essential for the platform to function.",
+      "necessary": {
+        "title": "Strictly necessary",
+        "desc": "Authentication, security, session preferences. Cannot be disabled."
+      },
+      "functional": {
+        "title": "Functional",
+        "desc": "Language, theme (dark/light), interface preferences. Improve your experience."
+      },
+      "analytics": {
+        "title": "Analytics",
+        "desc": "Help us understand how users use the platform, in anonymised form."
+      },
+      "marketing": {
+        "title": "Marketing",
+        "desc": "Allow relevant content to be shown. BidRoom does not sell data to advertisers."
+      },
+      "required": "Required",
+      "save": "Save preferences",
+      "saved": "Preferences saved.",
+      "h2": "Detailed cookie list",
+      "th1": "Category",
+      "th2": "Duration",
+      "th3": "Purpose",
+      "row1": {
+        "cat": "Necessary",
+        "dur": "Session",
+        "purpose": "Firebase authentication"
+      },
+      "row2": {
+        "cat": "Functional",
+        "dur": "1 year",
+        "purpose": "Theme preference"
+      },
+      "row3": {
+        "cat": "Functional",
+        "dur": "1 year",
+        "purpose": "Language preference"
+      },
+      "row4": {
+        "cat": "Necessary",
+        "dur": "30 min",
+        "purpose": "Stripe payment processing"
+      },
+      "row5": {
+        "cat": "Analytics",
+        "dur": "2 years",
+        "purpose": "Google Analytics (anonymised)"
+      }
+    },
+    "contact": {
+      "eyebrow": "Contact",
+      "title": "How can we help?",
+      "response": "We respond within 1–2 business days",
+      "name": "Full name",
+      "email": "Email",
+      "subject": "Subject",
+      "message": "Message",
+      "namePlaceholder": "John Smith",
+      "emailPlaceholder": "john@email.com",
+      "messagePlaceholder": "Describe your question in detail...",
+      "submit": "Send message",
+      "sending": "Sending…",
+      "success": "Message sent. We will reply shortly.",
+      "errorRequired": "The {{field}} field is required.",
+      "errorEmail": "Please enter a valid email.",
+      "errorMinLength": "Minimum {{min}} characters.",
+      "sub1": "Question about an auction",
+      "sub2": "Problem with a transaction",
+      "sub3": "Account and payments",
+      "sub4": "Report a user or listing",
+      "sub5": "Legal / GDPR question",
+      "sub6": "Press and partnerships",
+      "sub7": "Other",
+      "general": "General",
+      "legalLabel": "Legal / GDPR",
+      "address": "Address",
+      "company": "BidRoom Unipessoal Lda",
+      "addressLine": "Rua Exemplo, 123 · 1000-001 Lisbon",
+      "hours": "Support hours",
+      "hoursVal": "Mon–Fri · 9am–6pm (Lisbon)",
+      "reclamacoesLabel": "Complaints Book",
+      "reclamacoesTitle": "Unhappy with our service?",
+      "reclamacoesDesc": "You can submit a formal complaint through the Electronic Complaints Book at livroreclamacoes.pt. Complaints are answered within 15 business days.",
+      "reclamacoesBtn": "Access the Complaints Book",
+      "ralLabel": "Alternative Dispute Resolution",
+      "ralSub": "For disputes not resolved by the platform"
+    },
+    "banner": {
+      "title": "We use cookies",
+      "text": "We use essential cookies for the platform to function and, with your consent, analytics cookies to improve your experience.",
+      "learnMore": "Learn more",
+      "reject": "Reject non-essential",
+      "accept": "Accept all"
     }
   }
 }

@@ -3,6 +3,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { API_CONFIG } from '../../../shared/config/api.config';
+import { AuthService } from '../../../auth/services/auth.service';
 
 @Component({
   selector: 'app-invitation-accept',
@@ -15,6 +16,7 @@ export class InvitationAcceptComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private http = inject(HttpClient);
+  authService = inject(AuthService);
 
   token = '';
   listingId = '';
@@ -28,7 +30,7 @@ export class InvitationAcceptComponent implements OnInit {
     this.route.queryParams.subscribe(params => {
       this.token = params['token'] || '';
       this.listingId = params['listingId'] || '';
-      
+
       // Determine action from route path
       const url = this.router.url;
       if (url.includes('/invitation/accept')) {
@@ -53,9 +55,13 @@ export class InvitationAcceptComponent implements OnInit {
     });
   }
 
+  private get privateRoomUrl(): string {
+    return `/private-room/auction/${this.listingId}`;
+  }
+
   acceptInvitation(): void {
     const apiUrl = `${API_CONFIG.getApiUrl()}/private-room/invitation/accept`;
-    
+
     this.http.post(apiUrl, {
       token: this.token,
       listingId: this.listingId
@@ -63,10 +69,10 @@ export class InvitationAcceptComponent implements OnInit {
       next: () => {
         this.success = true;
         this.isLoading = false;
-        
-        // Redirect to private room after 2 seconds
+
+        // Wait briefly so the user sees the success message, then navigate
         setTimeout(() => {
-          this.router.navigate(['/private-room/auction', this.listingId]);
+          this.navigateAfterAccept();
         }, 2000);
       },
       error: (err) => {
@@ -80,9 +86,20 @@ export class InvitationAcceptComponent implements OnInit {
     });
   }
 
+  private navigateAfterAccept(): void {
+    const user = this.authService.getCurrentUser();
+    if (user) {
+      this.router.navigate(['/private-room/auction', this.listingId]);
+    } else {
+      this.router.navigate(['/auth/login'], {
+        queryParams: { returnUrl: this.privateRoomUrl }
+      });
+    }
+  }
+
   declineInvitation(): void {
     const apiUrl = `${API_CONFIG.getApiUrl()}/private-room/invitation/decline`;
-    
+
     this.http.post(apiUrl, {
       token: this.token,
       listingId: this.listingId
@@ -90,7 +107,6 @@ export class InvitationAcceptComponent implements OnInit {
       next: () => {
         this.success = true;
         this.isLoading = false;
-        // Could redirect to listing page or dashboard
         setTimeout(() => {
           this.router.navigate(['/listing/list']);
         }, 2000);
@@ -104,10 +120,9 @@ export class InvitationAcceptComponent implements OnInit {
 
   goToPrivateRoom(): void {
     if (this.listingId) {
-      this.router.navigate(['/private-room/auction', this.listingId]);
+      this.navigateAfterAccept();
     } else {
       this.router.navigate(['/listing/list']);
     }
   }
 }
-

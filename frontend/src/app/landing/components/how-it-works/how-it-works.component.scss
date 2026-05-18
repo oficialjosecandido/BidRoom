@@ -122,7 +122,7 @@
         box-shadow: 0 10px 40px rgba(102, 126, 234, 0.2);
         
         &.auth-visual {
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-color) 100%);
         }
         
         &.listing-visual {

@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { imageSchema } = require('../shared/schemas/imageSchema');
 
 const listingSchema = new mongoose.Schema({
   title: {
@@ -33,6 +34,15 @@ const listingSchema = new mongoose.Schema({
   },
   images: {
     type: [String],
+    default: []
+  },
+  /**
+   * Structured image metadata for RGPD-compliant purge tracking.
+   * Progressively populated: new listings get it at creation time;
+   * existing listings are backfilled by the daily purge scheduler.
+   */
+  imageManifest: {
+    type: [imageSchema],
     default: []
   },
   startingPrice: {
@@ -113,6 +123,20 @@ const listingSchema = new mongoose.Schema({
     type: String,
     default: null
   },
+  /** Item location (for search/filter); optional on legacy documents */
+  locationCity: {
+    type: String,
+    trim: true,
+    default: null,
+    index: true
+  },
+  locationCountry: {
+    type: String,
+    trim: true,
+    default: null,
+    uppercase: true,
+    index: true
+  },
   shippingCost: {
     type: Number,
     default: 0,
@@ -134,9 +158,9 @@ const listingSchema = new mongoose.Schema({
   shippingOriginCountry: { type: String, trim: true, default: 'US' },
   handlingTime: {
     type: Number,
-    required: true,
+    default: 5,
     min: 1,
-    max: 30 // Max 30 business days
+    max: 30
   },
   returnPolicy: {
     type: String,
@@ -155,6 +179,23 @@ const listingSchema = new mongoose.Schema({
       trim: true
     }
   }],
+  // Multi-item / bundle support
+  itemMode: {
+    type: String,
+    enum: ['single', 'bundle', 'multi_quantity'],
+    default: 'single',
+    index: true
+  },
+  quantity: {
+    type: Number,
+    default: 1,
+    min: 1,
+    max: 999
+  },
+  bundleItems: [{
+    title: { type: String, trim: true, maxlength: 100 },
+    description: { type: String, trim: true, maxlength: 500 }
+  }],
   // Auction format and mechanics
   auctionFormat: {
     type: String,
@@ -165,7 +206,7 @@ const listingSchema = new mongoose.Schema({
   // Duration slot (fixed auction lengths)
   durationSlot: {
     type: String,
-    enum: ['5 minutes', '2 hours', '24 hours', '3 days', '7 days'],
+    enum: ['5 minutes', '1 hour', '2 hours', '7 hours', '24 hours', '3 days', '7 days'],
     default: '7 days',
     required: true
   },
@@ -182,7 +223,7 @@ const listingSchema = new mongoose.Schema({
   },
   commissionRate: {
     type: Number,
-    default: 0.005, // 0.5% default
+    default: 0.035, // 3.5% default
     min: 0,
     max: 1
   },
@@ -193,6 +234,11 @@ const listingSchema = new mongoose.Schema({
     default: 'not-triggered'
   },
   privateRoomEndDate: {
+    type: Date,
+    default: null
+  },
+  /** Timestamp when the private room received its first bid (used to enforce the 4-hour hard ceiling). */
+  privateRoomActivatedAt: {
     type: Date,
     default: null
   },
@@ -285,6 +331,25 @@ const listingSchema = new mongoose.Schema({
   winnerSelectionDeadline: {
     type: Date,
     default: null // Set to 24 hours after auction ends
+  },
+  // Relist tracking
+  autoRelist: {
+    type: Boolean,
+    default: false
+  },
+  relistCount: {
+    type: Number,
+    default: 0,
+    min: 0
+  },
+  relistOf: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Listing',
+    default: null
+  },
+  relistedAt: {
+    type: Date,
+    default: null
   }
 }, {
   timestamps: true // Adds createdAt and updatedAt fields
@@ -305,6 +370,9 @@ listingSchema.index({ status: 1, endDate: 1 }); // For active listings sorted by
 listingSchema.index({ category: 1, status: 1 });
 listingSchema.index({ isFeatured: -1, createdAt: -1 }); // For featured listings
 listingSchema.index({ currentPrice: 1, bidCount: 1 }); // For sorting
+// Purge scheduler indexes
+listingSchema.index({ 'imageManifest.purgeAfter': 1, 'imageManifest.purged': 1 });
+listingSchema.index({ status: 1, 'imageManifest.0': 1 }); // Find ended/cancelled with empty manifests
 
 // Virtual for checking if auction is ending soon (within 24 hours)
 listingSchema.virtual('endingSoon').get(function() {
@@ -412,9 +480,9 @@ listingSchema.pre('save', async function(next) {
 
   // Calculate commission rate based on Private Room setting
   if (this.auctionFormat === 'highest-bid') {
-    this.commissionRate = this.allowPrivateRoom ? 0.02 : 0.005; // 2.0% or 0.5%
+    this.commissionRate = this.allowPrivateRoom ? 0.06 : 0.035; // 6.0% or 3.5%
   } else if (this.auctionFormat === 'best-offer') {
-    this.commissionRate = 0.005; // Always 0.5% for Best Offer
+    this.commissionRate = 0.035; // 3.5% for Best Offer
   }
 
   // Check if renewal is required (for listings >7 days)

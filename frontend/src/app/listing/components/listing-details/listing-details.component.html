@@ -1,866 +1,614 @@
-<app-header activePage="auctions"></app-header>
+<div class="pg" [class.light]="isLight">
 
-<div class="listing-details-page">
-  <div class="container">
-    @if (loading) {
-      <div class="loading-state">
-        <p>{{ 'listingDetails.loading' | translate }}</p>
-      </div>
-    }
+<app-header></app-header>
 
-    @if (error && !loading) {
-      <div class="error-state">
-        <div class="error-content">
-          <h2>⚠️ {{ error }}</h2>
-          <button class="btn btn-primary" (click)="goBack()">{{ 'listingDetails.backToListings' | translate }}</button>
-        </div>
-      </div>
-    }
+<!-- LOADING -->
+@if (loading) {
+  <div class="page-state"><div class="spinner"></div></div>
+}
 
-    @if (listing && !loading && !error) {
-    <div class="listing-details">
-      <!-- Back Button -->
-      <button class="btn-back" (click)="goBack()">{{ 'listingDetails.backToListings' | translate }}</button>
-
-      <!-- Main Content -->
-      <div class="listing-main">
-        <!-- Images Section -->
-        <div class="listing-images">
-          <div class="main-image-container">
-            <img
-              [src]="listing.images[activeImageIndex] || listing.images[0] || 'https://via.placeholder.com/800x600?text=No+Image'"
-              [alt]="listing.title"
-              class="main-image">
-            <div class="listing-badges">
-              @if (listing.isFeatured) { <span class="badge badge-featured">⭐ Featured</span> }
-              @if (listing.isVerified) { <span class="badge badge-verified">✓ Verified</span> }
-              @if (listing.endingSoon && !isAuctionEnded()) { <span class="badge badge-ending-soon">⏰ Ending Soon</span> }
-            </div>
-          </div>
-
-          @if (listing.images.length > 1) {
-          <div class="thumbnail-images">
-            @for (image of listing.images; track $index) {
-            <div
-              class="thumbnail"
-              [class.active]="$index === activeImageIndex"
-              role="button"
-              tabindex="0"
-              (click)="setActiveImage($index)"
-              (keydown.enter)="setActiveImage($index)"
-              (keydown.space)="setActiveImage($index)">
-              <img [src]="image" [alt]="listing.title + ' thumbnail ' + ($index + 1)">
-            </div>
-            }
-          </div>
-          }
-        </div>
-
-        <!-- Details Section -->
-        <div class="listing-info">
-          <div class="listing-header">
-            <h1 class="listing-title">{{ listing.title }}</h1>
-            <span class="listing-category">{{ listing.category }}</span>
-          </div>
-
-          <!-- Price and Bid Info -->
-          <div class="price-section">
-            <div class="current-price">
-              @if (listing.auctionFormat === 'highest-bid') { <span class="price-label">{{ 'listingDetails.currentBid' | translate }}</span> }
-              @if (listing.auctionFormat === 'best-offer') { <span class="price-label">{{ 'listingDetails.highestOffer' | translate }}</span> }
-              @if (listing.auctionFormat === 'best-offer' && getHighestOfferAmount() === 0) {
-                <span class="price-amount price-placeholder">{{ 'listingDetails.noOffersYet' | translate }}</span>
-              } @else {
-                <span class="price-amount">{{ listing.auctionFormat === 'best-offer' ? formatPrice(getHighestOfferAmount()) : formatPrice(listing.currentPrice) }}</span>
-              }
-            </div>
-
-            @if (listing.buyNowPrice && listing.auctionFormat === 'highest-bid' && !isAuctionEnded() && !hasPrivateRoom()) {
-            <div class="buy-now-section">
-              <div class="buy-now-content">
-                <span class="buy-now-label">{{ 'listingDetails.buyNow' | translate }}</span>
-                <span class="buy-now-price">{{ formatPrice(listing.buyNowPrice) }}</span>
-                <button class="btn btn-urgent btn-small" (click)="buyNow()">{{ 'listingDetails.buyNow' | translate }}</button>
-              </div>
-            </div>
-            }
-
-            @if (listing.privateRoomStatus === 'active') {
-            <div class="private-room-banner">
-              <div class="private-room-content">
-                <span class="private-room-icon">🔒</span>
-                <div class="private-room-text">
-                  <h4>{{ 'listingDetails.privateRoom.active' | translate }}</h4>
-                  <p>{{ 'listingDetails.privateRoom.activeDesc' | translate }}</p>
-                </div>
-                <div class="private-room-watch">
-                  <button class="btn btn-view-room" (click)="openPrivateRoom()" title="Open in new window">
-                    {{ 'listingDetails.privateRoom.watch' | translate }}
-                  </button>
-                  <span class="watch-hint">{{ 'listingDetails.privateRoom.anyoneCanWatch' | translate }}</span>
-                </div>
-              </div>
-            </div>
-            }
-            @if (listing.allowPrivateRoom && listing.privateRoomStatus === 'invited') {
-            <div class="private-room-banner private-room-invited">
-              <div class="private-room-content">
-                <span class="private-room-icon">🔒</span>
-                <div class="private-room-text">
-                  <h4>{{ 'listingDetails.privateRoom.created' | translate }}</h4>
-                  <p>{{ 'listingDetails.privateRoom.createdDesc' | translate }}</p>
-                </div>
-                <div class="private-room-watch">
-                  <button class="btn btn-view-room" (click)="openPrivateRoom()" title="Open in new window">
-                    {{ 'listingDetails.privateRoom.view' | translate }}
-                  </button>
-                  <span class="watch-hint">{{ 'listingDetails.privateRoom.anyoneCanWatch' | translate }}</span>
-                </div>
-              </div>
-            </div>
-            @if (isOwnListing) {
-            <div class="private-room-invitations-panel">
-              <div class="invitations-header">
-                <h4>{{ 'listingDetails.privateRoom.invitedBidders' | translate }}</h4>
-                @if (listing.platinumBidderAcceptanceDeadline) {
-                <span class="invitations-deadline">{{ 'listingDetails.privateRoom.acceptanceDeadline' | translate }}: {{ formatDate(listing.platinumBidderAcceptanceDeadline) }}</span>
-                }
-              </div>
-              @if (listing.platinumBidderStatus && listing.platinumBidderStatus.length > 0) {
-              <ul class="invitations-list">
-                @for (inv of listing.platinumBidderStatus; track inv.bidder._id) {
-                <li class="invitation-item">
-                  <div class="invitation-bidder">
-                    <span class="invitation-avatar">{{ inv.bidder.firstName[0] }}{{ inv.bidder.lastName[0] }}</span>
-                    <span class="invitation-name">{{ inv.bidder.firstName }} {{ inv.bidder.lastName }}</span>
-                  </div>
-                  <span class="invitation-status invitation-status--{{ inv.status }}">
-                    {{ inv.status === 'pending' ? ('listingDetails.privateRoom.statusPending' | translate) : inv.status === 'accepted' ? ('listingDetails.privateRoom.statusAccepted' | translate) : ('listingDetails.privateRoom.statusDeclined' | translate) }}
-                  </span>
-                </li>
-                }
-              </ul>
-              }
-              <div class="invitations-actions">
-                <button class="btn btn-primary" (click)="startPrivateRoomNow()" [disabled]="privateRoomStartNowLoading">
-                  {{ privateRoomStartNowLoading ? ('listingDetails.privateRoom.startingNow' | translate) : ('listingDetails.privateRoom.startNow' | translate) }}
-                </button>
-              </div>
-            </div>
-            }
-            }
-            @if (canInviteToPrivateRoom()) {
-            <div class="private-room-banner private-room-ready">
-              <div class="private-room-content">
-                <span class="private-room-icon">🔒</span>
-                <div class="private-room-text">
-                  <h4>{{ 'listingDetails.privateRoom.readyTitle' | translate }}</h4>
-                  <p>{{ 'listingDetails.privateRoom.readyDesc' | translate }}</p>
-                </div>
-                <div class="private-room-watch">
-                  <button class="btn btn-view-room" (click)="openCreatePrivateRoomModal()">
-                    {{ 'listingDetails.privateRoom.inviteBidders' | translate }}
-                  </button>
-                </div>
-              </div>
-            </div>
-            }
-            @if (listing.allowPrivateRoom && listing.privateRoomStatus === 'eligible' && listing.status === 'ended') {
-            <div class="private-room-banner private-room-eligible">
-              <div class="private-room-content">
-                <span class="private-room-icon">🔒</span>
-                <div class="private-room-text">
-                  <h4>{{ 'listingDetails.privateRoom.available' | translate }}</h4>
-                  @if (isOwnListing) { <p>{{ 'listingDetails.privateRoom.availableDescSeller' | translate }}</p> }
-                  @if (!isOwnListing) { <p>{{ 'listingDetails.privateRoom.availableDescBuyer' | translate }}</p> }
-                </div>
-              </div>
-            </div>
-            }
-            @if (listing.allowPrivateRoom && listing.privateRoomStatus === 'ended') {
-            <div class="private-room-banner private-room-ended">
-              <div class="private-room-content">
-                <span class="private-room-icon">🔒</span>
-                <div class="private-room-text">
-                  <h4>{{ 'listingDetails.privateRoom.closed' | translate }}</h4>
-                  @if (listing.winner) {
-                    <p>{{ 'listingDetails.privateRoom.closedDescWinner' | translate }} Final price: <strong>{{ formatPrice(listing.currentPrice) }}</strong>.</p>
-                  } @else {
-                    <p>{{ 'listingDetails.privateRoom.closedNoWinner' | translate }}</p>
-                  }
-                </div>
-              </div>
-            </div>
-            }
-            @if (!isAuctionEnded() && listing.timeRemaining && !listing.timeRemaining.ended) {
-            <div class="time-remaining-display">
-              <div class="time-remaining-content" [class.private-room]="getAuctionEndType() === 'private-room'">
-                <span class="time-icon">{{ getAuctionEndType() === 'private-room' ? '🔒' : '⏰' }}</span>
-                <div class="time-text">
-                  <span class="time-label">{{ (getAuctionEndType() === 'private-room' ? 'listingDetails.time.privateRoomEnds' : getAuctionEndType() === 'ended' ? 'listingDetails.time.auctionEnded' : 'listingDetails.time.auctionEnds') | translate }}</span>
-                  <span class="time-value">{{ formatTimeRemaining() }}</span>
-                  @if (getAuctionEndType() === 'private-room') { <span class="time-sublabel">{{ 'listingDetails.privateRoom.ends60s' | translate }}</span> }
-                </div>
-              </div>
-            </div>
-            }
-            @if (isAuctionEnded() && !hasPrivateRoom() && !(listing.allowPrivateRoom && listing.privateRoomStatus === 'eligible') && !(listing.allowPrivateRoom && listing.privateRoomStatus === 'invited')) {
-            <div class="auction-ended-banner">
-              <div class="auction-ended-content">
-                <span class="ended-icon">🏁</span>
-                <div class="ended-text">
-                  <h4>{{ (listing.auctionFormat === 'best-offer' ? 'listingDetails.time.listingEnded' : 'listingDetails.time.auctionEnded') | translate }}</h4>
-                  @if (listing.auctionFormat === 'highest-bid' && isOwnListing && getEndedBidCount() === 0) { <p>{{ 'listingDetails.ended.noBidsSeller' | translate }}</p> }
-                  @if (listing.auctionFormat === 'highest-bid' && isOwnListing && getEndedBidCount() > 0 && !listing.winner && !hasPrivateRoom() && !isPrivateRoomEnded()) { <p>{{ 'listingDetails.ended.selectWinner' | translate }}</p> }
-                  @if (listing.auctionFormat === 'highest-bid' && isOwnListing && listing.winner) { <p>{{ 'listingDetails.ended.winnerSelected' | translate }}</p> }
-                  @if (listing.auctionFormat === 'best-offer' && isOwnListing && !offersLoading && offers.length === 0) { <p>{{ 'listingDetails.ended.noOffersSeller' | translate }}</p> }
-                  @if (listing.auctionFormat === 'best-offer' && isOwnListing && offers.length > 0) { <p>{{ getBestOfferClosedMessage() }}</p> }
-                  @if (listing.auctionFormat === 'highest-bid' && !isOwnListing && getEndedBidCount() === 0) { <p>{{ 'listingDetails.ended.noBidsBuyer' | translate }}</p> }
-                  @if (listing.auctionFormat === 'highest-bid' && !isOwnListing && getEndedBidCount() > 0 && listing.winner) { <p>{{ 'listingDetails.ended.auctionEndedWinner' | translate }}</p> }
-                  @if (listing.auctionFormat === 'highest-bid' && !isOwnListing && getEndedBidCount() > 0 && !listing.winner) { <p>{{ 'listingDetails.ended.auctionEnded' | translate }}</p> }
-                  @if (listing.auctionFormat === 'best-offer' && !isOwnListing && hasAcceptedOffer()) { <p>{{ 'listingDetails.ended.listingSold' | translate }}</p> }
-                  @if (listing.auctionFormat === 'best-offer' && !isOwnListing && !hasAcceptedOffer()) { <p>{{ 'listingDetails.ended.listingEnded' | translate }}</p> }
-                </div>
-              </div>
-            </div>
-            }
-
-            <!-- Buyer CTA: you won this auction -->
-            @if (isAuctionEnded() && currentUserIsWinner()) {
-            <div class="transaction-cta-banner transaction-cta-winner">
-              <div class="transaction-cta-content">
-                <span class="transaction-cta-icon">🏆</span>
-                <div class="transaction-cta-text">
-                  <h4>{{ 'listingDetails.ended.youWon' | translate }}</h4>
-                  <p>{{ 'listingDetails.ended.youWonDesc' | translate }}</p>
-                </div>
-                <button class="btn btn-primary btn-small" (click)="goToBuyerTransactions()">
-                  {{ 'listingDetails.ended.goToTransactions' | translate }}
-                </button>
-              </div>
-            </div>
-            }
-
-            <div class="price-details">
-              <div class="price-detail-item">
-                @if (listing.auctionFormat === 'highest-bid') {
-                <span class="detail-label">{{ 'listingDetails.priceDetails.startingBid' | translate }}</span>
-                <span class="detail-value">{{ formatPrice(listing.startingPrice) }}</span>
-                }
-              </div>
-              @if (listing.reservePrice && listing.auctionFormat === 'highest-bid') {
-              <div class="price-detail-item">
-                <span class="detail-label">{{ 'listingDetails.priceDetails.reservePrice' | translate }}</span>
-                <span class="detail-value">{{ formatPrice(listing.reservePrice) }}</span>
-                <span class="reserve-note">{{ 'listingDetails.priceDetails.reserveNote' | translate }}</span>
-              </div>
-              }
-              @if (listing.minimumOfferPrice && listing.auctionFormat === 'best-offer') {
-              <div class="price-detail-item">
-                <span class="detail-label">{{ 'listingDetails.priceDetails.minimumOffer' | translate }}</span>
-                <span class="detail-value">{{ formatPrice(listing.minimumOfferPrice) }}</span>
-                <span class="reserve-note">{{ 'listingDetails.priceDetails.autoAcceptsNote' | translate }}</span>
-              </div>
-              }
-              @if (listing.auctionFormat === 'highest-bid') {
-              <div class="price-detail-item">
-                <span class="detail-label">{{ 'listingDetails.priceDetails.bidIncrement' | translate }}</span>
-                <span class="detail-value">{{ formatPrice(listing.bidIncrement) }}</span>
-              </div>
-              }
-              <!-- <div class="price-detail-item">
-                <span class="detail-label">Duration:</span>
-                <span class="detail-value">{{ listing.durationSlot }}</span>
-              </div>
-              <div class="price-detail-item">
-                <span class="detail-label">Commission:</span>
-                <span class="detail-value">{{ (listing.commissionRate * 100).toFixed(1) }}%</span>
-                <span class="commission-note" *ngIf="listing.allowPrivateRoom && listing.auctionFormat === 'highest-bid'">(Private Room enabled)</span>
-              </div> -->
-            </div>
-          </div>
-
-          <!-- Action Buttons -->
-          <div class="action-buttons">
-            @if (listing.auctionFormat === 'highest-bid' && !isAuctionEnded() && !hasPrivateRoom() && !isOwnListing) {
-            <button class="btn btn-primary btn-large" (click)="openBidModal()">
-              {{ isAuthenticated ? ('listingDetails.actions.placeBid' | translate) : ('listingDetails.actions.placeBidEmail' | translate) }}
-            </button>
-            }
-            @if (isOwnListing && listing.auctionFormat === 'highest-bid' && !hasPrivateRoom() && !isAuctionEnded()) {
-            <div class="own-listing-message">
-              <p>{{ 'listingDetails.actions.cantBidOwnListing' | translate }}</p>
-            </div>
-            }
-            @if (canCreatePrivateRoom()) {
-            <button class="btn btn-primary btn-large" (click)="openCreatePrivateRoomModal()">
-              {{ 'listingDetails.actions.createPrivateRoom' | translate }}
-            </button>
-            }
-            @if (isOwnListing && isAuctionEnded() && !hasPrivateRoom() && getEndedBidCount() > 0 && !listing.winner && !isPrivateRoomEnded()) {
-            <button class="btn btn-primary btn-large" (click)="openSelectWinnerModal()">
-              {{ 'listingDetails.actions.selectWinner' | translate }}
-            </button>
-            }
-            @if (canReopenListing()) {
-            <div class="auction-ended-message">
-              @if (listing.auctionFormat === 'highest-bid') { <p>{{ 'listingDetails.actions.auctionClosedNoBids' | translate }}</p> }
-              @if (listing.auctionFormat === 'best-offer') { <p>{{ 'listingDetails.actions.listingClosedNoOffers' | translate }}</p> }
-              <button type="button" class="btn btn-primary btn-large reopen-btn" (click)="reopenAuction()" [disabled]="reopenLoading">
-                {{ reopenLoading ? ('listingDetails.actions.reopening' | translate) : ('listingDetails.actions.reopenForDays' | translate) }}
-              </button>
-            </div>
-            }
-            @if (isOwnListing && listing.auctionFormat === 'best-offer' && isAuctionEnded() && !hasPrivateRoom() && offers.length > 0) {
-            <div class="auction-ended-message">
-              <p>{{ getBestOfferClosedMessage() }}</p>
-            </div>
-            }
-            @if (!isOwnListing && isAuctionEnded() && !hasPrivateRoom()) {
-            <div class="auction-ended-message">
-              @if (listing.auctionFormat === 'highest-bid' && getEndedBidCount() === 0) { <p>{{ 'listingDetails.actions.auctionHasEndedNoBids' | translate }}</p> }
-              @if (listing.auctionFormat === 'highest-bid' && getEndedBidCount() > 0 && listing.winner) { <p>{{ 'listingDetails.actions.auctionHasEndedWinner' | translate }}</p> }
-              @if (listing.auctionFormat === 'highest-bid' && getEndedBidCount() > 0 && !listing.winner) { <p>{{ 'listingDetails.actions.auctionHasEnded' | translate }}</p> }
-              @if (listing.auctionFormat === 'best-offer' && hasAcceptedOffer()) { <p>{{ 'listingDetails.ended.listingSold' | translate }}</p> }
-              @if (listing.auctionFormat === 'best-offer' && !hasAcceptedOffer()) { <p>{{ 'listingDetails.ended.listingEnded' | translate }}</p> }
-            </div>
-            }
-            @if (listing.auctionFormat === 'best-offer' && !hasPrivateRoom() && !isOwnListing && isBestOfferActive()) {
-            <button class="btn btn-primary btn-large" (click)="openOfferModal()">
-              {{ 'listingDetails.actions.makeOffer' | translate }}
-            </button>
-            }
-            @if (showWinnerSelectionCountdown()) {
-            <div class="winner-selection-countdown">
-              <div class="countdown-content">
-                <span class="countdown-icon">⏱️</span>
-                <div class="countdown-text">
-                  <strong>{{ (listing.auctionFormat === 'best-offer' ? 'listingDetails.actions.sellerHas24hOffer' : 'listingDetails.actions.sellerHas24hWinner') | translate }}</strong>
-                  <span class="countdown-value">{{ winnerSelectionCountdownDisplay }}</span>
-                </div>
-              </div>
-            </div>
-            }
-            @if (isOwnListing && listing.auctionFormat === 'best-offer' && !hasPrivateRoom()) {
-            <div class="own-listing-message">
-              <p>{{ 'listingDetails.actions.cantOfferOwnListing' | translate }}</p>
-            </div>
-            }
-            @if (!hasPrivateRoom() && !isOwnListing && !listing.winner) {
-            <button class="btn btn-secondary btn-large" (click)="addToWatchlist()" [disabled]="watchlistLoading">
-              @if (watchlistLoading) { <span>...</span> }
-              @if (!watchlistLoading && inWatchlist) { <span>{{ 'listingDetails.actions.removeFromWatchlist' | translate }}</span> }
-              @if (!watchlistLoading && !inWatchlist) { <span>{{ 'listingDetails.actions.addToWatchlist' | translate }}</span> }
-            </button>
-            }
-          </div>
-          @if ((listing.watchlistCount ?? 0) > 0) {
-          <p class="watchlist-count">
-            {{ listing.watchlistCount }} {{ listing.watchlistCount === 1 ? ('listingDetails.watchlistCount.one' | translate) : ('listingDetails.watchlistCount.many' | translate) }}
-          </p>
-          }
-
-          <!-- Auction Info -->
-          <div class="auction-info">
-            <div class="info-item">
-              <span class="info-icon">👥</span>
-              <div class="info-content">
-                <span class="info-label">{{ (listing.auctionFormat === 'highest-bid' ? 'listingDetails.info.bids' : 'listingDetails.info.offers') | translate }}</span>
-                <span class="info-value">{{ getOfferOrBidCount() }} {{ getOfferOrBidCount() === 1 ? ((listing.auctionFormat === 'highest-bid' ? 'listingDetails.info.bid' : 'listingDetails.info.offer') | translate) : ((listing.auctionFormat === 'highest-bid' ? 'listingDetails.info.bidsPlural' : 'listingDetails.info.offersPlural') | translate) }}</span>
-              </div>
-            </div>
-            <div class="info-item">
-              <span class="info-icon">👤</span>
-              <div class="info-content">
-                <span class="info-label">{{ 'listingDetails.info.seller' | translate }}</span>
-                <span class="info-value">{{ listing.seller.firstName }} {{ listing.seller.lastName }}</span>
-                @if (listing.sellerScore !== null) {
-                <span class="seller-review-score">
-                  ★ {{ listing.sellerScore | number:'1.1-1' }} <span class="review-count">({{ listing.sellerReviewCount ?? 0 }} review{{ (listing.sellerReviewCount ?? 0) !== 1 ? 's' : '' }})</span>
-                </span>
-                }
-                @if (listing.sellerScore === null && (listing.sellerReviewCount ?? 0) === 0) {
-                <span class="seller-review-score no-reviews">
-                  {{ 'listingDetails.info.noReviews' | translate }}
-                </span>
-                }
-              </div>
-            </div>
-            <div class="info-item">
-              <span class="info-icon">🏷️</span>
-              <div class="info-content">
-                <span class="info-label">{{ 'listingDetails.info.condition' | translate }}</span>
-                <span class="info-value">{{ listing.condition }}</span>
-              </div>
-            </div>
-            @if (listing.location) {
-            <div class="info-item">
-              <span class="info-icon">📍</span>
-              <div class="info-content">
-                <span class="info-label">{{ 'listingDetails.info.location' | translate }}</span>
-                <span class="info-value">{{ listing.location }}</span>
-              </div>
-            </div>
-            }
-          </div>
-
-          <!-- Verification Info -->
-          @if (listing.isVerified && listing.verificationDetails) {
-          <div class="verification-section">
-            <div class="verification-badge">
-              <span class="verify-icon">✓</span>
-              <div class="verification-content">
-                <h4>{{ 'listingDetails.verification.title' | translate }}</h4>
-                <p>{{ listing.verificationDetails }}</p>
-              </div>
-            </div>
-          </div>
-          }
-
-
-        </div>
-      </div>
-
-      <!-- Tabs Section -->
-      <div class="tabs-section">
-        <div class="tabs-header">
-          <button
-            class="tab-button"
-            [class.active]="activeTab === 'description'"
-            (click)="setActiveTab('description')">
-            {{ 'listingDetails.tabs.description' | translate }}
-          </button>
-          @if (listing.auctionFormat === 'highest-bid') {
-          <button class="tab-button" [class.active]="activeTab === 'bids'" (click)="setActiveTab('bids')">
-            {{ 'listingDetails.tabs.bidHistory' | translate }} ({{ bids.length }})
-          </button>
-          }
-          @if (listing.auctionFormat === 'best-offer') {
-          <button class="tab-button" [class.active]="activeTab === 'offers'" (click)="setActiveTab('offers')">
-            {{ 'listingDetails.tabs.offers' | translate }} ({{ offers.length }})
-          </button>
-          }
-        </div>
-
-        @if (activeTab === 'description') {
-        <div class="tab-content">
-          <div class="description-content" [innerHTML]="getFormattedDescription()"></div>
-        </div>
-        }
-
-        @if (activeTab === 'bids' && listing.auctionFormat === 'highest-bid') {
-        <div class="tab-content">
-          <div class="bid-history">
-            @if (isOwnListing && isAuctionEnded() && !hasPrivateRoom() && !listing.winner && bids.length > 0 && !isPrivateRoomEnded()) {
-            <div class="bid-history-seller-note">
-              <span class="seller-note-icon">ℹ️</span>
-              <p>{{ 'listingDetails.bidHistory.sellerNote' | translate }}</p>
-            </div>
-            }
-
-            @if (bids.length > 0 && !bidsLoading && !bidsError) {
-            <div class="bid-stats-bar">
-              @if (!isAuctionEnded()) {
-                <span class="bid-live-pill"><span class="live-dot"></span> {{ 'listingDetails.bidHistory.live' | translate }}</span>
-              }
-              <div class="bid-stat bid-stat-total">
-                <span class="bid-stat-value">{{ bids.length }}</span>
-                <span class="bid-stat-label">{{ 'listingDetails.bidHistory.totalBids' | translate }}</span>
-              </div>
-              <div class="bid-stat bid-stat-leading">
-                <span class="bid-stat-value">{{ formatBidAmount(bids[0].amount) }}</span>
-                <span class="bid-stat-label">{{ 'listingDetails.bidHistory.leadingBid' | translate }}</span>
-              </div>
-              <div class="bid-stat bid-stat-activity">
-                <span class="bid-stat-value">{{ relativeTime(bids[0].createdAt) }}</span>
-                <span class="bid-stat-label">{{ 'listingDetails.bidHistory.lastActivity' | translate }}</span>
-              </div>
-            </div>
-            }
-
-            @if (bidsLoading) {
-            <div class="bids-loading">
-              <p>{{ 'listingDetails.bidHistory.loading' | translate }}</p>
-            </div>
-            }
-
-            @if (bidsError && !bidsLoading) {
-            <div class="bids-error">
-              <p>{{ bidsError }}</p>
-              <button class="btn btn-secondary" (click)="listing && loadBids(listing._id)">{{ 'listingDetails.bidHistory.tryAgain' | translate }}</button>
-            </div>
-            }
-
-            @if (!bidsLoading && !bidsError) {
-            <div>
-              @if (bids.length === 0) {
-              <div class="no-bids">
-                <div class="no-bids-content">
-                  <span class="no-bids-icon">💰</span>
-                  <h3>{{ 'listingDetails.bidHistory.noBids' | translate }}</h3>
-                  <p>{{ 'listingDetails.bidHistory.noBidsDesc' | translate }}</p>
-                </div>
-              </div>
-              }
-              @if (bids.length > 0) {
-              <div class="bids-list">
-                @for (bid of bids; track bid._id; let i = $index) {
-                <div class="bid-item" [class.top-bid]="i === 0" [class.bid-new]="newBidIds.has(bid._id)" [class.bid-not-eligible]="isOwnListing && isAuctionEnded() && !hasPrivateRoom() && !listing.winner && !isPrivateRoomEnded() && !canSelectBidAsWinner(bid)">
-                  <div class="bid-item-left">
-                    <div class="bid-avatar-wrap">
-                      <div class="bid-rank">{{ i + 1 }}</div>
-                      <div class="bid-avatar">
-                        {{ bid.bidderInitials || '?' }}
-                      </div>
-                    </div>
-                    @if (i === 0 && !isAuctionEnded()) {
-                      <span class="bid-leading-tag">{{ 'listingDetails.bidHistory.leading' | translate }}</span>
-                    }
-                  </div>
-                  <div class="bid-info">
-                    <div class="bid-header">
-                      <div class="bid-bidder">
-                        <div class="bidder-main-info">
-                          <span class="bidder-name">
-                            @if (bid.bidderFirstName && bid.bidderLastName) {
-                            <span>{{ bid.bidderFirstName }} {{ bid.bidderLastName }}</span>
-                            }
-                            @if (!bid.bidderFirstName || !bid.bidderLastName) {
-                            <span>{{ bid.bidderName || ('listingDetails.bidHistory.anonymous' | translate) }}</span>
-                            }
-                          </span>
-                          <div class="bidder-badges">
-                            @if (bid.isAuthenticated) {
-                            <span class="badge badge-authenticated">
-                              <span class="badge-icon">✓</span>
-                              {{ 'listingDetails.bidHistory.authenticated' | translate }}
-                            </span>
-                            }
-                            @if (!bid.isAuthenticated) {
-                            <span class="badge badge-unauthenticated">
-                              <span class="badge-icon">⚠</span>
-                              {{ 'listingDetails.bidHistory.guestBidder' | translate }}
-                            </span>
-                            }
-                            @if (bid.bidderVerified) {
-                            <span class="badge badge-verified">
-                              <span class="badge-icon">✓</span>
-                              {{ 'listingDetails.bidHistory.verified' | translate }}
-                            </span>
-                            }
-                            @if (bid.bidderHasDeposit) {
-                            <span class="badge badge-deposit">
-                              <span class="badge-icon">$</span>
-                              {{ 'listingDetails.bidHistory.deposit' | translate }}
-                            </span>
-                            }
-                            @if (bid.isAuthenticated) {
-                            <span class="badge badge-buyer-score">
-                              <span class="badge-icon">🛒</span>
-                              @if (bid.buyerScore !== null || (bid.buyerReviewCount ?? 0) > 0) {
-                              <span>Buyer ★ {{ bid.buyerScore !== null ? (bid.buyerScore | number:'1.1-1') : '—' }} ({{ bid.buyerReviewCount ?? 0 }} review{{ (bid.buyerReviewCount ?? 0) !== 1 ? 's' : '' }})</span>
-                              }
-                              @if (bid.buyerScore === null && (bid.buyerReviewCount ?? 0) === 0) {
-                              <span>{{ 'listingDetails.bidHistory.noBuyerReviews' | translate }}</span>
-                              }
-                            </span>
-                            }
-                            @if (isWinnerBid(bid)) {
-                            <span class="badge badge-winner">
-                              <span class="badge-icon">🏆</span>
-                              {{ 'listingDetails.bidHistory.winner' | translate }}
-                            </span>
-                            }
-                          </div>
-                        </div>
-                      </div>
-                      <div class="bid-amount-container">
-                        <div class="bid-amount">{{ formatBidAmount(bid.amount) }}</div>
-                        <div class="bid-date-time">
-                          <span class="bid-date">{{ formatBidDate(bid.createdAt) }}</span>
-                          @if (relativeTime(bid.createdAt)) {
-                            <span class="bid-relative-time">{{ relativeTime(bid.createdAt) }}</span>
-                          }
-                          @if (bid.bidType !== 'manual') { <span class="bid-type">{{ bid.bidType }}</span> }
-                        </div>
-                        @if (isOwnListing && isAuctionEnded() && !hasPrivateRoom() && !listing.winner && !isPrivateRoomEnded()) {
-                        <div class="bid-select-winner-wrap">
-                          @if (canSelectBidAsWinner(bid)) {
-                          <button type="button" class="btn btn-primary btn-small bid-select-winner-btn" (click)="selectWinner(bid._id)" [disabled]="selectingWinner">
-                            {{ selectingWinner ? ('listingDetails.bidHistory.selecting' | translate) : ('listingDetails.bidHistory.selectAsWinner' | translate) }}
-                          </button>
-                          }
-                          @if (!canSelectBidAsWinner(bid)) {
-                          <span class="bid-verified-required">{{ 'listingDetails.bidHistory.verifiedRequired' | translate }}</span>
-                          }
-                        </div>
-                        }
-                      </div>
-                    </div>
-                    <div class="bid-bar-track">
-                      <div class="bid-bar-fill" [style.width.%]="bidBarWidth(bid)"></div>
-                    </div>
-                  </div>
-                </div>
-                }
-              </div>
-              }
-            </div>
-            }
-          </div>
-        </div>
-        }
-
-        @if (activeTab === 'offers' && listing.auctionFormat === 'best-offer') {
-        <div class="tab-content">
-          <div class="offer-history">
-            @if (!isOwnListing && isBestOfferActive()) {
-            <div class="offers-cta">
-              <p class="offers-cta-text">{{ 'listingDetails.offerHistory.ctaText' | translate }}</p>
-              <button type="button" class="btn btn-primary" (click)="openOfferModal()">
-                {{ 'listingDetails.offerHistory.makeOffer' | translate }}
-              </button>
-            </div>
-            }
-
-            @if (offersLoading) {
-            <div class="offers-loading">
-              <p>{{ 'listingDetails.offerHistory.loading' | translate }}</p>
-            </div>
-            }
-
-            @if (offersError && !offersLoading) {
-            <div class="offers-error">
-              <p>{{ offersError }}</p>
-              <button class="btn btn-secondary" (click)="listing && loadOffers(listing._id)">{{ 'listingDetails.offerHistory.tryAgain' | translate }}</button>
-            </div>
-            }
-
-            @if (!offersLoading && !offersError) {
-            <div>
-              @if (offers.length === 0) {
-              <div class="no-offers">
-                <div class="no-offers-content">
-                  <span class="no-offers-icon">💰</span>
-                  <h3>{{ 'listingDetails.offerHistory.noOffers' | translate }}</h3>
-                  <p>{{ 'listingDetails.offerHistory.noOffersDesc' | translate }}</p>
-                  @if (!isOwnListing && isBestOfferActive()) { <button type="button" class="btn btn-primary" (click)="openOfferModal()">{{ 'listingDetails.offerHistory.makeOffer' | translate }}</button> }
-                </div>
-              </div>
-              }
-              @if (offers.length > 0) {
-              <div class="offers-list">
-                @for (offer of sortedOffers; track offer._id) {
-                <div class="offer-item" [class.accepted]="offer.status === 'accepted'" [class.rejected]="offer.status === 'rejected'" [class.pending]="offer.status === 'pending'">
-                  <div class="offer-avatar">
-                    {{ offer.offererInitials || 'A' }}
-                  </div>
-                  <div class="offer-body">
-                    <div class="offer-top">
-                      <div class="offer-head">
-                        <span class="offer-from-label">{{ 'listingDetails.offerHistory.offerFrom' | translate }} <strong>{{ offer.offererName || ('listingDetails.offerHistory.anonymous' | translate) }}</strong></span>
-                        @if (offer.offererVerified || offer.offererTier) {
-                        <span class="offer-bidder-meta">
-                          @if (offer.offererVerified) { <span class="offer-verified-badge" title="Verified">{{ 'listingDetails.offerHistory.verifiedLabel' | translate }}</span> }
-                          @if (offer.offererTier) { <span class="offer-tier-badge">{{ offer.offererTier }}</span> }
-                        </span>
-                        }
-                        @if (isMyOffer(offer)) { <span class="offer-badge-your">{{ 'listingDetails.offerHistory.yourOffer' | translate }}</span> }
-                        @if (offer.status === 'accepted') { <span class="offer-badge-selected">{{ 'listingDetails.offerHistory.selectedBySeller' | translate }}</span> }
-                        @if (offer.status !== 'pending') {
-                        <span class="offer-status-pill" [class.accepted]="offer.status === 'accepted'" [class.rejected]="offer.status === 'rejected'" [class.expired]="offer.status === 'expired'">
-                          {{ formatOfferStatus(offer.status) }}
-                        </span>
-                        }
-                      </div>
-                      <div class="offer-amount">{{ formatBidAmount(offer.amount) }}</div>
-                    </div>
-                    <div class="offer-meta">
-                      <span class="offer-date">{{ 'listingDetails.offerHistory.offered' | translate }} {{ formatOfferDate(offer.createdAt) }}</span>
-                      @if (getOfferResponseLine(offer)) {
-                      <span class="offer-responded">· {{ getOfferResponseLine(offer) }}</span>
-                      }
-                    </div>
-                    @if (offer.message) { <p class="offer-message">{{ offer.message }}</p> }
-                    @if (offer.sellerResponse && offer.status !== 'pending') {
-                    <p class="seller-response"><strong>{{ 'listingDetails.offerHistory.sellerLabel' | translate }}</strong> {{ offer.sellerResponse }}</p>
-                    }
-                    @if (isOwnListing && offer.status === 'pending') {
-                    <div class="offer-actions">
-                      @if (!canSellerAcceptOrDeclineOffers()) {
-                      <p class="offer-actions-note">{{ 'listingDetails.offerHistory.acceptDeclineNote' | translate }}</p>
-                      }
-                      @if (canSellerAcceptOrDeclineOffers()) {
-                      <div class="offer-action-buttons">
-                        <button type="button" class="btn btn-primary btn-accept" (click)="acceptOffer(offer)" [disabled]="offerActionLoadingId !== null">
-                          {{ offerActionLoadingId === offer._id ? ('listingDetails.offerHistory.accepting' | translate) : ('listingDetails.offerHistory.accept' | translate) }}
-                        </button>
-                        <button type="button" class="btn btn-secondary btn-reject" (click)="rejectOffer(offer)" [disabled]="offerActionLoadingId !== null">
-                          {{ offerActionLoadingId === offer._id ? ('listingDetails.offerHistory.declining' | translate) : ('listingDetails.offerHistory.decline' | translate) }}
-                        </button>
-                      </div>
-                      }
-                    </div>
-                    }
-                  </div>
-                </div>
-                }
-              </div>
-              }
-            </div>
-            }
-          </div>
-        </div>
-        }
-
-      <!-- Additional Info -->
-      <div class="additional-info" style="margin-top: 10px;">
-        <div class="info-card">
-          <h3>{{ 'listingDetails.shipping.title' | translate }}</h3>
-          @if (listing.shippingOption === 'free') { <p>{{ 'listingDetails.shipping.free' | translate }}</p> }
-          @if (listing.shippingOption !== 'free') { <p>{{ 'listingDetails.shipping.cost' | translate }} {{ formatPrice(listing.shippingCost) }}</p> }
-          @if (listing.location) { <p>{{ 'listingDetails.shipping.from' | translate }} {{ listing.location }}</p> }
-        </div>
-        @if (listing.returnPolicy || listing.handlingTime) {
-        <div class="info-card">
-          <h3>{{ 'listingDetails.returnPolicy.title' | translate }}</h3>
-          @if (listing.returnPolicy) { <p>{{ getReturnPolicyLabel(listing.returnPolicy) }}</p> }
-          @if (listing.handlingTime) { <p>{{ 'listingDetails.returnPolicy.handlingTime' | translate }} {{ getHandlingTimeLabel(listing.handlingTime) }}</p> }
-        </div>
-        }
-        <div class="info-card">
-          <h3>{{ 'listingDetails.timeline.title' | translate }}</h3>
-          <p>{{ 'listingDetails.timeline.started' | translate }} {{ listing.startDate | date:'medium' }}</p>
-          <p>{{ 'listingDetails.timeline.ends' | translate }} {{ listing.endDate | date:'medium' }}</p>
-        </div>
-      </div>
-    </div>
-    </div>
-  }
+<!-- ERROR -->
+@if (error && !loading) {
+  <div class="page-state page-error">
+    <p>{{ error }}</p>
+    <button class="btn-retry" (click)="goBack()">{{ 'listingDetails.backToListings' | translate }}</button>
   </div>
+}
+
+@if (listing && !loading && !error) {
+
+<!-- BREADCRUMB -->
+<div class="bc">
+  <a routerLink="/listing/list">{{ 'listingDetails.nav.back' | translate }}</a>
+  <span>›</span>
+  <a [routerLink]="['/listing/list']" [queryParams]="{category: listing.category}">{{ listing.category }}</a>
+  <span>›</span>
+  <strong>{{ listing.title }}</strong>
 </div>
 
-@if (showBidModal) {
-<!-- Place Bid modal -->
-<div class="modal-overlay" role="button" tabindex="0" (click)="closeBidModal()" (keydown.escape)="closeBidModal()">
-  <div class="modal-content place-bid-offer-modal" tabindex="0" (click)="$event.stopPropagation()" (keydown.enter)="$event.stopPropagation()" (keydown.space)="$event.stopPropagation()">
-    <button type="button" class="modal-close" aria-label="Close" (click)="closeBidModal()">&times;</button>
-    <h3 class="modal-title">{{ 'listingDetails.bidModal.title' | translate }}</h3>
-    <p class="modal-transparency">{{ 'listingDetails.bidModal.transparency' | translate }}</p>
-    <div class="modal-info-box">
-      <div class="modal-info-row">
-        <span class="modal-info-label">{{ 'listingDetails.bidModal.currentBid' | translate }}</span>
-        <span class="modal-info-value">{{ formatPrice(listing?.currentPrice || listing?.startingPrice || 0) }}</span>
+<!-- PAGE -->
+<div class="page">
+
+  <!-- LEFT -->
+  <div class="left">
+
+    <!-- GALLERY -->
+    <div class="gallery">
+      <div class="main-img">
+        @if (listing.images[activeImageIndex]) {
+          <img [src]="listing.images[activeImageIndex]" [alt]="listing.title" class="main-img-photo" />
+        } @else {
+          <span class="main-img-em">🏷</span>
+        }
+        <div class="format-pill">
+          @if (listing.auctionFormat === 'best-offer') { {{ 'listingDetails.saleType.bestOffer' | translate }} }
+          @else if (listing.allowPrivateRoom && listing.privateRoomStatus === 'active') { {{ 'listingDetails.formatPill.privateRoom' | translate }} }
+          @else { {{ 'listingDetails.formatPill.auction' | translate }} }
+        </div>
+        @if (!isOwnListing) {
+          <button class="wishlist-btn" (click)="addToWatchlist()" [disabled]="watchlistLoading"
+            [title]="inWatchlist ? ('listingDetails.actions.removeFromWatchlist' | translate) : ('listingDetails.actions.addToWatchlist' | translate)">
+            {{ inWatchlist ? '♥' : '♡' }}
+          </button>
+        }
       </div>
-      <div class="modal-info-row">
-        <span class="modal-info-label">{{ 'listingDetails.bidModal.minimumNextBid' | translate }}</span>
-        <span class="modal-info-value">{{ formatPrice(getMinBid()) }}</span>
-      </div>
-      @if (listing?.bidIncrement) {
-      <div class="modal-info-row">
-        <span class="modal-info-label">{{ 'listingDetails.bidModal.bidIncrement' | translate }}</span>
-        <span class="modal-info-value">{{ formatPrice(listing?.bidIncrement ?? 0) }}</span>
-      </div>
+      @if (listing.images.length > 1) {
+        <div class="thumbs">
+          @for (img of listing.images; track $index; let i = $index) {
+            <div class="thumb" [class.on]="i === activeImageIndex" (click)="setActiveImage(i)">
+              <img [src]="img" [alt]="listing.title" />
+            </div>
+          }
+        </div>
       }
     </div>
-    <div class="modal-form">
-      <label class="modal-label" for="bid-amount">{{ 'listingDetails.bidModal.amountLabel' | translate }}</label>
-      <input
-        id="bid-amount"
-        type="text"
-        class="modal-input"
-        [(ngModel)]="bidAmount"
-        placeholder="{{ formatPrice(getMinBid()) }}"
-        inputmode="decimal"
-        autocomplete="off"
-      />
-      @if (!isAuthenticated) {
-      <div class="modal-email-section">
-        <label class="modal-label" for="bid-email">{{ 'listingDetails.bidModal.emailLabel' | translate }}</label>
-        <input
-          id="bid-email"
-          type="email"
-          class="modal-input"
-          [(ngModel)]="bidEmail"
-          placeholder="you@example.com"
-          autocomplete="email"
-        />
-        <p class="modal-hint">{{ 'listingDetails.bidModal.emailHint' | translate }}</p>
+
+    <!-- INFO -->
+    <div class="info">
+      <div class="info-cat">
+        {{ listing.category }}
+        @if (listing.subCategory) { · {{ listing.subCategory }} }
+        @if (listing.locationCity) { · {{ listing.locationCity }} }
       </div>
+      <h1 class="info-title">{{ listing.title }}</h1>
+      @if (listing.description) {
+        <p class="info-byline">{{ getDescriptionByline() }}</p>
       }
-      <div class="modal-notify-toggle">
+    </div>
+
+    <!-- TABS -->
+    <div class="tabs">
+      <button class="tab" [class.on]="activeTab === 'description'" (click)="setActiveTab('description')">{{ 'listingDetails.tabs.description' | translate }}</button>
+      @if (listing.auctionFormat === 'highest-bid') {
+        <button class="tab" [class.on]="activeTab === 'bids'" (click)="setActiveTab('bids')">
+          {{ 'listingDetails.info.bids' | translate }} <span class="tab-c">{{ bids.length }}</span>
+        </button>
+      }
+      @if (listing.auctionFormat === 'best-offer') {
+        <button class="tab" [class.on]="activeTab === 'offers'" (click)="setActiveTab('offers')">
+          {{ 'listingDetails.tabs.offers' | translate }} <span class="tab-c">{{ offers.length }}</span>
+        </button>
+      }
+    </div>
+
+    <!-- DESCRIPTION TAB -->
+    @if (activeTab === 'description') {
+      <div class="tab-panel">
+        <div class="desc-p">{{ listing.description }}</div>
+
+        @if (listing.itemMode === 'multi_quantity') {
+          <div class="spec-note">{{ listing.quantity }} {{ 'listingDetails.itemMode.identicalUnits' | translate }}</div>
+        }
+        @if (listing.itemMode === 'bundle' && listing.bundleItems?.length) {
+          <div class="spec-note">
+            <strong>{{ 'listingDetails.itemMode.bundleContents' | translate }}:</strong>
+            <ul>
+              @for (item of listing.bundleItems!; track item.title) {
+                <li>{{ item.title }}@if (item.description) { – {{ item.description }} }</li>
+              }
+            </ul>
+          </div>
+        }
+
+        @if (listing.specifications && listing.specifications.length > 0) {
+          <div class="specs">
+            @for (spec of listing.specifications; track spec.key) {
+              <div class="sp"><span class="sp-k">{{ spec.key }}</span><span class="sp-v">{{ spec.value }}</span></div>
+            }
+          </div>
+        }
+
+        <!-- DSA seller info -->
+        @if (listing.seller) {
+          <div class="dsa-block">
+            <span class="dsa-badge" [class.dsa-pro]="listing.seller.sellerClassification === 'professional'">
+              {{ listing.seller.sellerClassification === 'professional' ? ('listingDetails.dsa.professionalSeller' | translate) : ('listingDetails.dsa.privateSeller' | translate) }}
+            </span>
+            @if (listing.seller.sellerClassification === 'professional') {
+              <span class="dsa-badge dsa-status" [ngClass]="'dsa-' + (listing.seller.professionalVerificationStatus || 'none')">
+                {{ listing.seller.professionalVerificationStatus === 'verified' ? ('listingDetails.dsa.status.verified' | translate) : listing.seller.professionalVerificationStatus === 'pending' ? ('listingDetails.dsa.status.pending' | translate) : ('listingDetails.dsa.status.none' | translate) }}
+              </span>
+            }
+            @if (listing.seller.sellerClassification === 'professional' && listing.seller.professionalVerificationStatus === 'verified') {
+              <div class="dsa-trader">
+                @if (listing.seller.professionalLegalName) { <p><span class="dsa-k">{{ 'listingDetails.dsa.legalName' | translate }}</span> {{ listing.seller.professionalLegalName }}</p> }
+                @if (listing.seller.professionalVatId) { <p><span class="dsa-k">{{ 'listingDetails.dsa.vatId' | translate }}</span> {{ listing.seller.professionalVatId }}</p> }
+                @if (sellerVerifiedAddressLines().length) {
+                  <p><span class="dsa-k">{{ 'listingDetails.dsa.address' | translate }}</span>
+                    @for (line of sellerVerifiedAddressLines(); track $index) { {{ line }} }
+                  </p>
+                }
+              </div>
+            }
+          </div>
+        }
+      </div>
+    }
+
+    <!-- BIDS TAB -->
+    @if (activeTab === 'bids' && listing.auctionFormat === 'highest-bid') {
+      <div class="tab-panel">
+        @if (isOwnListing && isAuctionEnded() && !hasPrivateRoom() && !listing.winner && bids.length > 0 && !isPrivateRoomEnded()) {
+          <div class="info-note">{{ 'listingDetails.ended.selectWinner' | translate }}</div>
+        }
+        @if (bidsLoading) { <p class="tab-loading">{{ 'listingDetails.bidHistory.loading' | translate }}</p> }
+        @if (bidsError && !bidsLoading) {
+          <p class="tab-error">{{ bidsError }}</p>
+          <button class="btn-retry" (click)="loadBids(listing._id)">{{ 'listingDetails.bidHistory.tryAgain' | translate }}</button>
+        }
+        @if (!bidsLoading && !bidsError) {
+          @if (bids.length === 0) {
+            <div class="tab-empty">{{ 'listingDetails.bidsTab.emptyActive' | translate }}</div>
+          } @else {
+            <div class="bids-list">
+              @for (bid of bids; track bid._id; let i = $index) {
+                <div class="bid-row"
+                  [class.bid-top]="i === 0"
+                  [class.bid-new]="newBidIds.has(bid._id)"
+                  [class.bid-ineligible]="isOwnListing && isAuctionEnded() && !hasPrivateRoom() && !listing.winner && !isPrivateRoomEnded() && !canSelectBidAsWinner(bid)">
+                  <div class="bid-av">{{ bid.bidderInitials || '?' }}</div>
+                  <div class="bid-body">
+                    <div class="bid-name-row">
+                      <span class="bid-name">
+                        @if (bid.bidderFirstName && bid.bidderLastName) { {{ bid.bidderFirstName }} {{ bid.bidderLastName }} }
+                        @else { {{ bid.bidderName || ('listingDetails.bidHistory.anonymous' | translate) }} }
+                      </span>
+                      @if (bid.isAuthenticated) { <span class="chip c-ver">{{ 'listingDetails.bidHistory.verified' | translate }}</span> }
+                      @else { <span class="chip c-sub">{{ 'listingDetails.bidHistory.guestBidder' | translate }}</span> }
+                      @if (isWinnerBid(bid)) { <span class="chip c-win">{{ 'listingDetails.bidsTab.winnerChip' | translate }}</span> }
+                    </div>
+                    <div class="bid-time">{{ relativeTime(bid.createdAt) || formatDate(bid.createdAt) }}</div>
+                    @if (isOwnListing && isAuctionEnded() && !hasPrivateRoom() && !listing.winner && !isPrivateRoomEnded()) {
+                      @if (canSelectBidAsWinner(bid)) {
+                        <button class="btn-acc btn-sm" (click)="selectWinner(bid._id)" [disabled]="selectingWinner">
+                          {{ selectingWinner ? ('listingDetails.bidHistory.selecting' | translate) : ('listingDetails.bidHistory.selectAsWinner' | translate) }}
+                        </button>
+                      } @else {
+                        <span class="ineligible-note">{{ 'listingDetails.bidsTab.notEligible' | translate }}</span>
+                      }
+                    }
+                  </div>
+                  <div class="bid-amt">{{ formatPrice(bid.amount) }}</div>
+                </div>
+              }
+            </div>
+          }
+        }
+      </div>
+    }
+
+    <!-- OFFERS TAB -->
+    @if (activeTab === 'offers' && listing.auctionFormat === 'best-offer') {
+      <div class="tab-panel">
+        @if (offersLoading) { <p class="tab-loading">{{ 'listingDetails.offerHistory.loading' | translate }}</p> }
+        @if (offersError && !offersLoading) {
+          <p class="tab-error">{{ offersError }}</p>
+          <button class="btn-retry" (click)="loadOffers(listing._id)">{{ 'listingDetails.offerHistory.tryAgain' | translate }}</button>
+        }
+        @if (!offersLoading && !offersError) {
+          @if (offers.length === 0) {
+            <div class="tab-empty">
+              {{ 'listingDetails.offerHistory.noOffers' | translate }}.
+              @if (!isOwnListing && isBestOfferActive()) {
+                <button class="btn-link" (click)="openOfferModal()">{{ 'listingDetails.offerHistory.makeOffer' | translate }} →</button>
+              }
+            </div>
+          } @else {
+            <p class="offers-note">{{ offers.length }} {{ offers.length !== 1 ? ('listingDetails.info.offersPlural' | translate) : ('listingDetails.info.offer' | translate) }}</p>
+            <div class="offers-list">
+              @for (offer of sortedOffers; track offer._id) {
+                <div class="offer-item"
+                  [class.accepted]="offer.status === 'accepted'"
+                  [class.declined]="offer.status === 'rejected'">
+                  <div class="av">{{ offer.offererInitials || 'A' }}</div>
+                  <div class="om">
+                    <div class="on-row">
+                      <span class="oname">{{ offer.offererName || ('listingDetails.offerHistory.anonymous' | translate) }}</span>
+                      @if (offer.offererVerified) { <span class="chip c-ver">{{ 'listingDetails.offerHistory.verifiedLabel' | translate }}</span> }
+                      @if (isMyOffer(offer)) { <span class="chip c-you">{{ 'listingDetails.offerHistory.yourOffer' | translate }}</span> }
+                      @if (offer.status === 'accepted') { <span class="chip c-acc">{{ 'listingDetails.offerHistory.statusAccepted' | translate }}</span> }
+                      @if (offer.status === 'rejected') { <span class="chip c-dec">{{ 'listingDetails.offerHistory.statusDeclined' | translate }}</span> }
+                      @if (offer.status === 'expired') { <span class="chip c-sub">{{ 'listingDetails.offerHistory.statusExpired' | translate }}</span> }
+                    </div>
+                    @if (offer.message) { <div class="omsg">"{{ offer.message }}"</div> }
+                    @if (isOwnListing && offer.status === 'pending') {
+                      @if (!canSellerAcceptOrDeclineOffers()) {
+                        <p class="offer-note">{{ 'listingDetails.offerHistory.acceptDeclineNote' | translate }}</p>
+                      } @else {
+                        <div class="o-acts">
+                          @if (!sellerStripeReady) {
+                            <p class="stripe-warn">{{ 'listingDetails.offerHistory.stripeWarningPrefix' | translate }} <a routerLink="/dashboard/settings">{{ 'listingDetails.offerHistory.stripeSettingsLink' | translate }}</a>.</p>
+                          }
+                          <button class="btn-acc" (click)="acceptOffer(offer)" [disabled]="offerActionLoadingId !== null || !sellerStripeReady">
+                            {{ offerActionLoadingId === offer._id ? ('listingDetails.offerHistory.accepting' | translate) : ('listingDetails.offerHistory.accept' | translate) }}
+                          </button>
+                          <button class="btn-dec" (click)="rejectOffer(offer)" [disabled]="offerActionLoadingId !== null || !canDeclineOffer(offer)">
+                            {{ offerActionLoadingId === offer._id ? ('listingDetails.offerHistory.declining' | translate) : ('listingDetails.offerHistory.decline' | translate) }}
+                          </button>
+                        </div>
+                      }
+                    }
+                  </div>
+                  <div class="or">
+                    <div class="o-amt">{{ formatPrice(offer.amount) }}</div>
+                    <div class="o-time">{{ relativeTime(offer.createdAt) || formatDate(offer.createdAt) }}</div>
+                  </div>
+                </div>
+              }
+            </div>
+          }
+        }
+      </div>
+    }
+
+  </div><!-- /left -->
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+
+    <!-- PRICE -->
+    <div class="price-section">
+      <div class="price-label">
+        {{ listing.auctionFormat === 'best-offer' ? ('listingDetails.highestOffer' | translate) : ('listingDetails.currentBid' | translate) }}
+      </div>
+      <div class="price-big">
+        @if (listing.auctionFormat === 'best-offer') {
+          @if (getHighestOfferAmount() === 0) { <span class="price-empty">{{ 'listingDetails.noOffersYet' | translate }}</span> }
+          @else { {{ formatPrice(getHighestOfferAmount()) }} }
+        } @else {
+          {{ formatPrice(listing.currentPrice || listing.startingPrice) }}
+        }
+      </div>
+      <div class="price-meta">
+        {{ getOfferOrBidCount() }}
+        {{ listing.auctionFormat === 'best-offer'
+          ? (getOfferOrBidCount() !== 1 ? ('listingDetails.info.offersPlural' | translate) : ('listingDetails.info.offer' | translate))
+          : (getOfferOrBidCount() !== 1 ? ('listingDetails.info.bidsPlural' | translate) : ('listingDetails.info.bid' | translate)) }}
+        @if ((listing.watchlistCount ?? 0) > 0) { · {{ listing.watchlistCount }} {{ 'listingDetails.sidebar.watching' | translate }} }
+      </div>
+    </div>
+
+    <!-- STATUS BANNERS -->
+    @if (listing.privateRoomStatus === 'active') {
+      <div class="status-banner banner-room">
+        <span>🔒</span>
+        <div>
+          <strong>{{ 'listingDetails.privateRoom.active' | translate }}</strong>
+          <p>{{ 'listingDetails.sidebar.privateRoomActiveDesc' | translate }}</p>
+        </div>
+      </div>
+    }
+    @if (listing.allowPrivateRoom && listing.privateRoomStatus === 'eligible' && listing.status === 'ended') {
+      <div class="status-banner banner-eligible">
+        <span>🔒</span>
+        <div>
+          <strong>{{ 'listingDetails.privateRoom.available' | translate }}</strong>
+          @if (isOwnListing) { <p>{{ 'listingDetails.privateRoom.availableDescSeller' | translate }}</p> }
+          @else { <p>{{ 'listingDetails.privateRoom.availableDescBuyer' | translate }}</p> }
+        </div>
+      </div>
+    }
+    @if (listing.allowPrivateRoom && listing.privateRoomStatus === 'ended') {
+      <div class="status-banner banner-ended">
+        <span>🔒</span>
+        <div>
+          <strong>{{ 'listingDetails.privateRoom.closed' | translate }}</strong>
+          @if (listing.winner) { <p>{{ 'listingDetails.sidebar.privateRoomClosedWinner' | translate }} <strong>{{ formatPrice(listing.currentPrice) }}</strong>.</p> }
+          @else { <p>{{ 'listingDetails.privateRoom.closedNoWinner' | translate }}</p> }
+        </div>
+      </div>
+    }
+    @if (isAuctionEnded() && !hasPrivateRoom() && !(listing.allowPrivateRoom && (listing.privateRoomStatus === 'eligible' || listing.privateRoomStatus === 'invited'))) {
+      <div class="status-banner banner-ended">
+        <span>🏁</span>
+        <div>
+          <strong>{{ 'listingDetails.time.auctionEnded' | translate }}</strong>
+          @if (currentUserIsWinner()) { <p>{{ 'listingDetails.sidebar.congratsWon' | translate }}</p> }
+          @else if (listing.winner && !isOwnListing) { <p>{{ 'listingDetails.sidebar.winnerWasSelected' | translate }}</p> }
+          @else if (isOwnListing && listing.winner) { <p>{{ 'listingDetails.ended.winnerSelected' | translate }}</p> }
+        </div>
+      </div>
+    }
+    @if (currentUserIsWinner()) {
+      <button class="btn-offer btn-winner" (click)="goToBuyerTransactions()">{{ 'listingDetails.sidebar.viewTransaction' | translate }}</button>
+    }
+
+    <!-- PRIVATE ROOM – INVITED STATUS (seller view) -->
+    @if (isOwnListing && listing.allowPrivateRoom && listing.privateRoomStatus === 'invited' && listing.platinumBidderStatus?.length) {
+      <div class="invitations-panel">
+        <div class="inv-header">
+          <strong>{{ 'listingDetails.sidebar.invitedRoomHeader' | translate }}</strong>
+          @if (listing.platinumBidderAcceptanceDeadline) {
+            <span class="inv-deadline">{{ 'listingDetails.privateRoom.acceptanceDeadline' | translate }}: {{ formatDate(listing.platinumBidderAcceptanceDeadline) }}</span>
+          }
+        </div>
+        <ul class="inv-list">
+          @for (inv of listing.platinumBidderStatus!; track inv.bidder._id) {
+            <li class="inv-item">
+              <span class="inv-av">{{ inv.bidder.firstName[0] }}{{ inv.bidder.lastName[0] }}</span>
+              <span class="inv-name">{{ inv.bidder.firstName }} {{ inv.bidder.lastName }}</span>
+              <span class="inv-status inv-{{ inv.status }}">
+                {{ inv.status === 'pending' ? ('listingDetails.privateRoom.statusPending' | translate) : inv.status === 'accepted' ? ('listingDetails.privateRoom.statusAccepted' | translate) : ('listingDetails.privateRoom.statusDeclined' | translate) }}
+              </span>
+            </li>
+          }
+        </ul>
+        <button class="btn-offer" (click)="startPrivateRoomNow()" [disabled]="privateRoomStartNowLoading">
+          {{ privateRoomStartNowLoading ? ('listingDetails.privateRoom.startingNow' | translate) : ('listingDetails.privateRoom.startNow' | translate) }}
+        </button>
+      </div>
+    }
+
+    <!-- DEADLINE -->
+    <div class="deadline">
+      <span class="dl-l">{{ isAuctionEnded() ? ('listingDetails.time.auctionEnded' | translate) : getAuctionEndLabel() }}</span>
+      <span class="dl-v">{{ isAuctionEnded() ? '–' : formatTimeRemaining() }}</span>
+    </div>
+
+    <!-- COUNTDOWN ALERTS -->
+    @if (showPrivateRoomEligibleCountdown()) {
+      <div class="countdown-alert">⏱ {{ 'listingDetails.sidebar.eligibleCountdown' | translate }} {{ formatPrivateRoomEligibleCountdown() }} {{ 'listingDetails.sidebar.remaining' | translate }}</div>
+    }
+    @if (showWinnerSelectionCountdown()) {
+      <div class="countdown-alert">⏱ {{ listing.auctionFormat === 'best-offer' ? ('listingDetails.sidebar.winnerSelectionCountdownOffer' | translate) : ('listingDetails.sidebar.winnerSelectionCountdownWinner' | translate) }}: {{ winnerSelectionCountdownDisplay }}</div>
+    }
+
+    <!-- BUY NOW -->
+    @if (listing.buyNowPrice && listing.auctionFormat === 'highest-bid' && !isAuctionEnded() && !hasPrivateRoom() && !isOwnListing) {
+      <button class="btn-offer btn-buynow" (click)="buyNow()">{{ 'listingDetails.sidebar.buyNow' | translate }} {{ formatPrice(listing.buyNowPrice) }}</button>
+    }
+
+    <!-- PRIMARY CTA -->
+    @if (listing.auctionFormat === 'highest-bid' && !isAuctionEnded() && !hasPrivateRoom() && !isOwnListing) {
+      <button class="btn-offer" (click)="openBidModal()">{{ 'listingDetails.actions.placeBid' | translate }}</button>
+    }
+    @if (listing.auctionFormat === 'best-offer' && !hasPrivateRoom() && !isOwnListing && isBestOfferActive()) {
+      <button class="btn-offer" (click)="openOfferModal()">{{ 'listingDetails.actions.makeOffer' | translate }}</button>
+    }
+    @if (isAcceptedPrivateRoomBidder() && !isOwnListing && listing.privateRoomStatus === 'active') {
+      <button class="btn-offer" (click)="openBidModal()">{{ 'listingDetails.sidebar.bidPrivateRoom' | translate }}</button>
+      <button class="btn-watch" (click)="openPrivateRoom()">{{ 'listingDetails.privateRoom.watch' | translate }}</button>
+    }
+    @if (listing.privateRoomStatus === 'active' && !isAcceptedPrivateRoomBidder()) {
+      <button class="btn-watch" (click)="openPrivateRoom()">{{ 'listingDetails.sidebar.watchPrivateRoomSpectator' | translate }}</button>
+    }
+    @if (listing.allowPrivateRoom && listing.privateRoomStatus === 'invited' && !isOwnListing) {
+      <button class="btn-watch" (click)="openPrivateRoom()">{{ 'listingDetails.sidebar.watchRoomWaiting' | translate }}</button>
+    }
+    @if (canCreatePrivateRoom()) {
+      <button class="btn-offer" (click)="openCreatePrivateRoomModal()">{{ 'listingDetails.actions.createPrivateRoom' | translate }}</button>
+    }
+    @if (isOwnListing && !isAuctionEnded()) {
+      <div class="own-note">{{ 'listingDetails.sidebar.ownListingNote' | translate }}</div>
+    }
+    @if (canReopenListing()) {
+      <div class="own-note">
+        {{ listing.auctionFormat === 'highest-bid' ? ('listingDetails.sidebar.reopenNoBids' | translate) : ('listingDetails.sidebar.reopenNoOffers' | translate) }}
+      </div>
+      <button class="btn-offer" (click)="reopenAuction()" [disabled]="reopenLoading">
+        {{ reopenLoading ? ('listingDetails.actions.reopening' | translate) : ('listingDetails.actions.reopenForDays' | translate) }}
+      </button>
+    }
+
+    <!-- WATCHLIST -->
+    @if (!isOwnListing && !listing.winner) {
+      <button class="btn-watch" (click)="addToWatchlist()" [disabled]="watchlistLoading">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M7 12.5S1.5 9 1.5 4.5a2.5 2.5 0 015 0 2.5 2.5 0 015 0C11.5 9 7 12.5 7 12.5z"/></svg>
+        {{ inWatchlist ? ('listingDetails.sidebar.inWatchlist' | translate) : ('listingDetails.actions.addToWatchlist' | translate) }}
+      </button>
+      @if ((listing.watchlistCount ?? 0) > 0) {
+        <p class="sidebar-note">{{ listing.watchlistCount }} {{ 'listingDetails.sidebar.watching' | translate }}</p>
+      }
+    }
+
+    <!-- MIN OFFER / MIN BID -->
+    @if (listing.auctionFormat === 'best-offer' && listing.minimumOfferPrice) {
+      <div class="min-box">
+        <div class="mb-l">{{ 'listingDetails.sidebar.minimumOffer' | translate }}</div>
+        <div class="mb-v">{{ formatPrice(listing.minimumOfferPrice) }}</div>
+        <div class="mb-d">{{ 'listingDetails.sidebar.minimumOfferDesc' | translate }}</div>
+      </div>
+    }
+    @if (listing.auctionFormat === 'highest-bid' && !isAuctionEnded() && listing.startingPrice) {
+      <div class="min-box">
+        <div class="mb-l">{{ 'listingDetails.sidebar.minimumBid' | translate }}</div>
+        <div class="mb-v">{{ formatPrice(getMinBid()) }}</div>
+        <div class="mb-d">{{ 'listingDetails.sidebar.bidIncrement' | translate }} {{ formatPrice(listing.bidIncrement) }}</div>
+      </div>
+    }
+
+    <div class="sep"></div>
+
+    <!-- SELLER -->
+    <div class="seller-label">{{ 'listingDetails.info.seller' | translate }}</div>
+    <div class="seller-row">
+      <div class="s-av">{{ listing.seller.firstName[0] || '?' }}{{ listing.seller.lastName[0] || '' }}</div>
+      <div>
+        <a class="s-name" [routerLink]="['/seller', listing.seller.slug || listing.seller._id]">
+          {{ listing.seller.firstName }} {{ listing.seller.lastName }}
+        </a>
+        @if (listing.locationCity) { <div class="s-since">{{ listing.locationCity }}</div> }
+      </div>
+    </div>
+
+    @if (listing.sellerScore !== null) {
+      <div class="s-rating">
+        <span class="stars">★★★★★</span>
+        <span class="rv">{{ listing.sellerScore | number:'1.1-1' }}</span>
+        <span> · {{ listing.sellerReviewCount ?? 0 }} {{ 'listingDetails.sidebar.reviews' | translate }}</span>
+      </div>
+    }
+    @if (listing.sellerScore === null && (listing.sellerReviewCount ?? 0) === 0) {
+      <div class="s-rating">{{ 'listingDetails.info.noReviews' | translate }}</div>
+    }
+
+    @if (isAuthenticated && !isOwnListing) {
+      <button class="btn-follow" [class.following]="sellerFollowStatus.following" [disabled]="followLoading" (click)="toggleFollowSeller()">
+        {{ sellerFollowStatus.following ? ('listingDetails.sidebar.following' | translate) : ('listingDetails.sidebar.follow' | translate) }}
+      </button>
+    }
+
+    <div class="sep"></div>
+
+    <!-- INFO ROWS -->
+    <div class="info-rows">
+      <div class="ir">
+        <span class="ir-ico">🔒</span>
+        <div>
+          <div class="ir-k">{{ 'listingDetails.payment.title' | translate }}</div>
+          <div class="ir-v">{{ 'listingDetails.payment.protected' | translate }}</div>
+          <div class="ir-s">{{ 'listingDetails.payment.escrow' | translate }}</div>
+        </div>
+      </div>
+      <div class="ir">
+        <span class="ir-ico">📦</span>
+        <div>
+          <div class="ir-k">{{ 'listingDetails.shipping.title' | translate }}</div>
+          @if (listing.shippingOption === 'free') {
+            <div class="ir-v">{{ 'listingDetails.shipping.free' | translate }}</div>
+          } @else {
+            <div class="ir-v">{{ formatPrice(listing.shippingCost) }}</div>
+          }
+          @if (listing.handlingTime) { <div class="ir-s">{{ listing.handlingTime }} {{ 'listingDetails.shipping.workingDays' | translate }}</div> }
+        </div>
+      </div>
+      @if (listing.returnPolicy) {
+        <div class="ir">
+          <span class="ir-ico">↩</span>
+          <div>
+            <div class="ir-k">{{ 'listingDetails.returnPolicy.title' | translate }}</div>
+            <div class="ir-v">{{ getReturnPolicyLabel(listing.returnPolicy) }}</div>
+          </div>
+        </div>
+      }
+    </div>
+
+    <!-- REPORT ROW -->
+    @if (isAuthenticated && !isOwnListing) {
+      <div class="report-row">
+        <button class="report-link" (click)="showReportModal = 'listing'">{{ 'listingDetails.report.listing' | translate }}</button>
+        <span>·</span>
+        <button class="report-link" (click)="showReportModal = 'user'">{{ 'listingDetails.report.seller' | translate }}</button>
+      </div>
+    }
+
+  </div><!-- /sidebar -->
+
+</div><!-- /page -->
+}<!-- /listing loaded -->
+
+<!-- ─── MODALS ─── -->
+
+@if (showBidModal) {
+<div class="overlay open" (click)="closeBidModal()">
+  <div class="sheet" (click)="$event.stopPropagation()">
+    <div class="sh-handle"></div>
+    <div class="sh-body">
+      <div class="sh-title">{{ 'listingDetails.bidModal.title' | translate }}</div>
+      <p class="sh-sub">{{ 'listingDetails.bidModal.subtitle' | translate }}</p>
+      <div class="chips">
+        <div class="chip-box">
+          <div class="cb-l">{{ 'listingDetails.bidModal.currentBid' | translate }}</div>
+          <div class="cb-v">{{ formatPrice(listing?.currentPrice || listing?.startingPrice || 0) }}</div>
+        </div>
+        <div class="chip-box">
+          <div class="cb-l">{{ 'listingDetails.bidModal.minBid' | translate }}</div>
+          <div class="cb-v">{{ formatPrice(getMinBid()) }}</div>
+        </div>
+      </div>
+      <label class="f-label" for="bid-amount">{{ 'listingDetails.bidModal.valueLabel' | translate }}</label>
+      <input class="f-input" id="bid-amount" type="text" inputmode="decimal" [placeholder]="formatPrice(getMinBid())" [(ngModel)]="bidAmount" autocomplete="off" />
+      @if (!isAuthenticated) {
+        <label class="f-label" for="bid-email">{{ 'listingDetails.bidModal.emailLabel' | translate }}</label>
+        <input class="f-input" id="bid-email" type="email" placeholder="you@example.com" [(ngModel)]="bidEmail" autocomplete="email" />
+        <p class="f-hint">{{ 'listingDetails.bidModal.emailHint' | translate }}</p>
+      }
+      <div class="notify-row">
         <label class="toggle-label">
-          <input type="checkbox" [(ngModel)]="bidNotifyWhenOutbid" name="bidNotifyWhenOutbid" />
+          <input type="checkbox" [(ngModel)]="bidNotifyWhenOutbid" />
           <span>{{ 'listingDetails.bidModal.notifyOutbid' | translate }}</span>
         </label>
       </div>
-      @if (bidModalError) { <p class="modal-error">{{ bidModalError }}</p> }
-    </div>
-    <div class="modal-actions">
-      <button type="button" class="btn btn-secondary" (click)="closeBidModal()">{{ 'listingDetails.bidModal.cancel' | translate }}</button>
-      <button type="button" class="btn btn-primary" (click)="submitBid()" [disabled]="bidSubmitting">
-        {{ bidSubmitting ? ('listingDetails.bidModal.submitting' | translate) : ('listingDetails.bidModal.submit' | translate) }}
-      </button>
+      @if (bidModalError) { <p class="sh-error">{{ bidModalError }}</p> }
+      <div class="sh-acts">
+        <button class="btn-sh-cancel" (click)="closeBidModal()">{{ 'listingDetails.cancel' | translate }}</button>
+        <button class="btn-sh-submit" (click)="submitBid()" [disabled]="bidSubmitting">
+          {{ bidSubmitting ? ('listingDetails.bidModal.submitting' | translate) : ('listingDetails.bidModal.submit' | translate) }}
+        </button>
+      </div>
     </div>
   </div>
 </div>
 }
 
 @if (showOfferModal) {
-<!-- Make Offer modal -->
-<div class="modal-overlay" role="button" tabindex="0" (click)="closeOfferModal()" (keydown.escape)="closeOfferModal()">
-  <div class="modal-content place-bid-offer-modal" tabindex="0" (click)="$event.stopPropagation()" (keydown.enter)="$event.stopPropagation()" (keydown.space)="$event.stopPropagation()">
-    <button type="button" class="modal-close" aria-label="Close" (click)="closeOfferModal()">&times;</button>
-    <h3 class="modal-title">{{ 'listingDetails.offerModal.title' | translate }}</h3>
-    <p class="modal-transparency">{{ 'listingDetails.offerModal.transparency' | translate }}</p>
-    <div class="modal-info-box">
-      <div class="modal-info-row">
-        <span class="modal-info-label">{{ 'listingDetails.offerModal.startingCurrent' | translate }}</span>
-        <span class="modal-info-value">{{ formatPrice(listing?.startingPrice || listing?.currentPrice || 0) }}</span>
+<div class="overlay open" (click)="closeOfferModal()">
+  <div class="sheet sheet-offer" (click)="$event.stopPropagation()">
+    <div class="sh-handle"></div>
+    <div class="sh-body">
+      <div class="sh-title">{{ 'listingDetails.offerModal.title' | translate }}</div>
+      <p class="offer-sub">{{ 'listingDetails.offerModal.subtitle' | translate }}</p>
+      <div class="offer-stats">
+        <div class="offer-stat" [class.offer-stat--lead]="getHighestOfferAmount() > 0">
+          <span class="offer-stat-l">{{ 'listingDetails.offerModal.highestOffer' | translate }}</span>
+          <span class="offer-stat-v">{{ getHighestOfferAmount() > 0 ? formatPrice(getHighestOfferAmount()) : '—' }}</span>
+        </div>
+        @if (listing?.minimumOfferPrice) {
+          <div class="offer-stat">
+            <span class="offer-stat-l">{{ 'listingDetails.offerModal.minimumOffer' | translate }}</span>
+            <span class="offer-stat-v">{{ formatPrice(listing!.minimumOfferPrice!) }}</span>
+          </div>
+        }
       </div>
-      @if (listing?.minimumOfferPrice) {
-      <div class="modal-info-row">
-        <span class="modal-info-label">{{ 'listingDetails.offerModal.minimumOffer' | translate }}</span>
-        <span class="modal-info-value">{{ formatPrice(+(listing?.minimumOfferPrice ?? 0)) }}</span>
+      <div class="offer-amount-block">
+        <label class="offer-amount-l" for="offer-amount">{{ 'listingDetails.offerModal.valueLabel' | translate }}</label>
+        <div class="offer-amount-row">
+          <span class="offer-currency" aria-hidden="true">€</span>
+          <input class="offer-amount-input" id="offer-amount" type="text" inputmode="decimal"
+            [placeholder]="'' + (listing?.minimumOfferPrice ?? listing?.startingPrice ?? 0)"
+            [(ngModel)]="offerAmount" autocomplete="off" />
+        </div>
+        @if (getOfferAmountNumber() > 0) {
+          <p class="offer-preview">{{ 'listingDetails.offerModal.yourOfferPreview' | translate }} <strong>{{ formatPrice(getOfferAmountNumber()) }}</strong></p>
+        }
       </div>
-      }
-    </div>
-    <div class="modal-form">
-      <label class="modal-label" for="offer-amount">{{ 'listingDetails.offerModal.amountLabel' | translate }}</label>
-      <input
-        id="offer-amount"
-        type="text"
-        class="modal-input"
-        [(ngModel)]="offerAmount"
-        [placeholder]="formatPrice(+(listing?.minimumOfferPrice ?? listing?.startingPrice ?? 0))"
-        inputmode="decimal"
-        autocomplete="off"
-      />
       @if (!isAuthenticated) {
-      <div class="modal-email-section">
-        <label class="modal-label" for="offer-email">{{ 'listingDetails.offerModal.emailLabel' | translate }}</label>
-        <input
-          id="offer-email"
-          type="email"
-          class="modal-input"
-          [(ngModel)]="offerEmail"
-          placeholder="you@example.com"
-          autocomplete="email"
-        />
-        <p class="modal-hint">{{ 'listingDetails.offerModal.emailHint' | translate }}</p>
-      </div>
+        <label class="f-label" for="offer-email">{{ 'listingDetails.offerModal.emailLabel' | translate }}</label>
+        <input class="f-input f-input-sm" id="offer-email" type="email" placeholder="you@example.com" [(ngModel)]="offerEmail" autocomplete="email" />
+        <p class="f-hint">{{ 'listingDetails.offerModal.emailHint' | translate }}</p>
       }
       @if (isOfferBelowMinimum()) {
-      <p class="modal-notice modal-notice-below-min">
-        {{ 'listingDetails.offerModal.belowMinNote' | translate }}
-      </p>
+        <div class="below-min">{{ 'listingDetails.offerModal.belowMinNote' | translate }}</div>
       }
-      @if (offerModalError) { <p class="modal-error">{{ offerModalError }}</p> }
-    </div>
-    <div class="modal-actions">
-      <button type="button" class="btn btn-secondary" (click)="closeOfferModal()">{{ 'listingDetails.offerModal.cancel' | translate }}</button>
-      <button type="button" class="btn btn-primary" (click)="submitOffer()" [disabled]="offerSubmitting">
+      @if (offerModalError) { <p class="sh-error">{{ offerModalError }}</p> }
+      <button type="button" class="btn-offer-submit"
+        (click)="submitOffer()"
+        [class.btn-offer-submit--ready]="canSubmitOffer() && !offerSubmitting"
+        [disabled]="offerSubmitting || !canSubmitOffer()">
         {{ offerSubmitting ? ('listingDetails.offerModal.submitting' | translate) : ('listingDetails.offerModal.submit' | translate) }}
+      </button>
+      <button type="button" class="btn-offer-cancel" (click)="closeOfferModal()">
+        {{ 'listingDetails.cancel' | translate }}
       </button>
     </div>
   </div>
@@ -868,101 +616,73 @@
 }
 
 @if (showLoginModal) {
-<!-- Login / Signup modal for watchlist (non-authenticated users) -->
-<div class="modal-overlay" role="button" tabindex="0" (click)="closeLoginModal()" (keydown.escape)="closeLoginModal()">
-  <div class="modal-content watchlist-login-modal" tabindex="0" (click)="$event.stopPropagation()" (keydown.enter)="$event.stopPropagation()" (keydown.space)="$event.stopPropagation()">
-    <button type="button" class="modal-close" aria-label="Close" (click)="closeLoginModal()">&times;</button>
-    <h3>{{ 'listingDetails.watchlistModal.title' | translate }}</h3>
-    <p>{{ 'listingDetails.watchlistModal.desc' | translate }}</p>
-    <div class="modal-actions">
-      <button type="button" class="btn btn-primary" (click)="goToLogin()">{{ 'listingDetails.watchlistModal.login' | translate }}</button>
-      <button type="button" class="btn btn-secondary" (click)="goToSignup()">{{ 'listingDetails.watchlistModal.signup' | translate }}</button>
+<div class="overlay open" (click)="closeLoginModal()">
+  <div class="sheet" (click)="$event.stopPropagation()">
+    <div class="sh-handle"></div>
+    <div class="sh-body">
+      <div class="sh-title">{{ 'listingDetails.loginModal.title' | translate }}</div>
+      <p class="sh-sub">{{ 'listingDetails.loginModal.subtitle' | translate }}</p>
+      <div class="sh-acts">
+        <button class="btn-sh-cancel" (click)="goToSignup()">{{ 'listingDetails.loginModal.createAccount' | translate }}</button>
+        <button class="btn-sh-submit" (click)="goToLogin()">{{ 'listingDetails.loginModal.signIn' | translate }}</button>
+      </div>
     </div>
-  </div>
-</div>
-}
-
-@if (showSelectWinnerModal && !isPrivateRoomEnded()) {
-<!-- Select winner modal (seller, ended auction with bids; not shown when private room ended) -->
-<div class="modal-overlay" role="button" tabindex="0" (click)="closeSelectWinnerModal()" (keydown.escape)="closeSelectWinnerModal()">
-  <div class="modal-content select-winner-modal" tabindex="0" (click)="$event.stopPropagation()" (keydown.enter)="$event.stopPropagation()" (keydown.space)="$event.stopPropagation()">
-    <button type="button" class="modal-close" aria-label="Close" (click)="closeSelectWinnerModal()">&times;</button>
-    <h3>{{ 'listingDetails.selectWinnerModal.title' | translate }}</h3>
-    <p class="modal-subtitle">{{ 'listingDetails.selectWinnerModal.subtitle' | translate }}</p>
-    @if (bidsLoading) { <div class="modal-loading">{{ 'listingDetails.selectWinnerModal.loading' | translate }}</div> }
-    @if (!bidsLoading && bids.length === 0) { <div class="modal-empty">{{ 'listingDetails.selectWinnerModal.noBids' | translate }}</div> }
-    @if (!bidsLoading && bids.length > 0) {
-    <ul class="select-winner-list">
-      @for (bid of bids; track bid._id; let i = $index) {
-      <li class="select-winner-item" [class.select-winner-item--ineligible]="!canSelectBidAsWinner(bid)">
-        <div class="select-winner-info">
-          <span class="select-winner-rank">#{{ i + 1 }}</span>
-          <span class="select-winner-bidder">{{ bid.bidderFirstName && bid.bidderLastName ? bid.bidderFirstName + ' ' + bid.bidderLastName : (bid.bidderName || ('listingDetails.bidHistory.anonymous' | translate)) }}</span>
-          <span class="select-winner-amount">{{ formatBidAmount(bid.amount) }}</span>
-          <span class="select-winner-badges">
-            @if (bid.bidderVerified) { <span class="select-winner-badge verified">{{ 'listingDetails.selectWinnerModal.verified' | translate }}</span> }
-            @if (!bid.isAuthenticated) { <span class="select-winner-badge guest">{{ 'listingDetails.selectWinnerModal.guest' | translate }}</span> }
-            @if (bid.isAuthenticated && !bid.bidderVerified) { <span class="select-winner-badge unverified">{{ 'listingDetails.selectWinnerModal.unverified' | translate }}</span> }
-          </span>
-        </div>
-        <div class="select-winner-action">
-          @if (canSelectBidAsWinner(bid)) {
-          <button type="button" class="btn btn-primary btn-small" (click)="selectWinner(bid._id)" [disabled]="selectingWinner">
-            {{ selectingWinner ? ('listingDetails.selectWinnerModal.selecting' | translate) : ('listingDetails.selectWinnerModal.selectBtn' | translate) }}
-          </button>
-          }
-          @if (!canSelectBidAsWinner(bid)) { <span class="select-winner-ineligible">{{ 'listingDetails.selectWinnerModal.ineligible' | translate }}</span> }
-        </div>
-      </li>
-      }
-    </ul>
-    }
   </div>
 </div>
 }
 
 @if (showCreatePrivateRoomModal) {
-<!-- Create private room modal (seller, ended + private room eligible) -->
-<div class="modal-overlay" role="button" tabindex="0" (click)="closeCreatePrivateRoomModal()" (keydown.escape)="closeCreatePrivateRoomModal()">
-  <div class="modal-content select-winner-modal create-private-room-modal" tabindex="0" (click)="$event.stopPropagation()" (keydown.enter)="$event.stopPropagation()" (keydown.space)="$event.stopPropagation()">
-    <button type="button" class="modal-close" aria-label="Close" (click)="closeCreatePrivateRoomModal()">&times;</button>
-    <h3>{{ 'listingDetails.privateRoomModal.title' | translate }}</h3>
-    <p class="modal-subtitle">{{ 'listingDetails.privateRoomModal.subtitle' | translate }}</p>
-    @if (createPrivateRoomBiddersLoading) { <div class="modal-loading">{{ 'listingDetails.privateRoomModal.loading' | translate }}</div> }
-    @if (!createPrivateRoomBiddersLoading && createPrivateRoomBidders.length === 0) { <div class="modal-empty">{{ 'listingDetails.privateRoomModal.noBidders' | translate }}</div> }
-    @if (!createPrivateRoomBiddersLoading && createPrivateRoomBidders.length > 0) {
-    <ul class="select-winner-list">
-      @for (b of createPrivateRoomBidders; track b.email) {
-      <li class="select-winner-item" [class.select-winner-item--ineligible]="!b.isAuthenticated">
-        <div class="select-winner-info">
-          <span class="select-winner-bidder">{{ (b.firstName && b.lastName) ? b.firstName + ' ' + b.lastName : (b.email || 'Bidder') }}</span>
-          <span class="select-winner-amount">High: {{ b.highestBid | number:'1.2-2' }} · {{ b.bidCount }} bid(s)</span>
-          <span class="select-winner-badges">
-            @if (b.emailVerified) { <span class="select-winner-badge verified">{{ 'listingDetails.selectWinnerModal.verified' | translate }}</span> }
-            @if (!b.isAuthenticated) { <span class="select-winner-badge guest">{{ 'listingDetails.privateRoomModal.cannotInvite' | translate }}</span> }
-          </span>
-        </div>
-        <div class="select-winner-action">
-          @if (b.isAuthenticated && b._id) {
-          <label class="checkbox-label">
-            <input type="checkbox" [checked]="isPrivateRoomBidderSelected(b)" (change)="togglePrivateRoomBidder(b)">
-            {{ 'listingDetails.privateRoomModal.invite' | translate }}
-          </label>
-          }
-          @if (!b.isAuthenticated) { <span class="select-winner-ineligible">{{ 'listingDetails.privateRoomModal.ineligible' | translate }}</span> }
-        </div>
-      </li>
+<div class="overlay open" (click)="closeCreatePrivateRoomModal()">
+  <div class="sheet sheet-lg" (click)="$event.stopPropagation()">
+    <div class="sh-handle"></div>
+    <div class="sh-body">
+      <div class="sh-title">{{ 'listingDetails.privateRoomModal.title' | translate }}</div>
+      <p class="sh-sub">{{ 'listingDetails.privateRoomModal.subtitle' | translate }}</p>
+      @if (createPrivateRoomBiddersLoading) { <p class="tab-loading">{{ 'listingDetails.privateRoomModal.loading' | translate }}</p> }
+      @if (!createPrivateRoomBiddersLoading && createPrivateRoomBidders.length === 0) {
+        <p class="tab-empty">{{ 'listingDetails.privateRoomModal.noBidders' | translate }}</p>
       }
-    </ul>
-    }
-    @if (!createPrivateRoomBiddersLoading && createPrivateRoomBidders.length > 0) {
-    <div class="modal-actions create-private-room-actions">
-      <span class="selection-count">{{ 'listingDetails.privateRoomModal.selected' | translate }} {{ selectedPrivateRoomBidderIds.size }} {{ 'listingDetails.privateRoomModal.minMax' | translate }}</span>
-      <button type="button" class="btn btn-primary" (click)="submitCreatePrivateRoom()" [disabled]="createPrivateRoomSubmitting || selectedPrivateRoomBidderIds.size < 2">
-        {{ createPrivateRoomSubmitting ? ('listingDetails.privateRoomModal.creating' | translate) : ('listingDetails.privateRoomModal.create' | translate) }}
-      </button>
+      @if (!createPrivateRoomBiddersLoading && createPrivateRoomBidders.length > 0) {
+        <ul class="sel-list">
+          @for (b of createPrivateRoomBidders; track b.email) {
+            <li class="sel-item" [class.sel-ineligible]="!b.isAuthenticated">
+              <div class="sel-info">
+                <span class="sel-name">{{ (b.firstName && b.lastName) ? b.firstName + ' ' + b.lastName : (b.email || ('listingDetails.privateRoomModal.bidderFallback' | translate)) }}</span>
+                <span class="sel-meta">{{ 'listingDetails.privateRoomModal.maxBid' | translate }} {{ b.highestBid | number:'1.2-2' }} · {{ b.bidCount }} {{ 'listingDetails.privateRoomModal.bids' | translate }}</span>
+              </div>
+              @if (b.isAuthenticated && b._id) {
+                <label class="toggle-label">
+                  <input type="checkbox" [checked]="isPrivateRoomBidderSelected(b)" (change)="togglePrivateRoomBidder(b)" />
+                  <span>{{ 'listingDetails.privateRoomModal.invite' | translate }}</span>
+                </label>
+              } @else {
+                <span class="ineligible-note">{{ 'listingDetails.privateRoomModal.notEligible' | translate }}</span>
+              }
+            </li>
+          }
+        </ul>
+        <div class="sel-footer">
+          <span>{{ selectedPrivateRoomBidderIds.size }} {{ 'listingDetails.privateRoomModal.selectedCount' | translate }}</span>
+          <div class="sh-acts">
+            <button class="btn-sh-cancel" (click)="closeCreatePrivateRoomModal()">{{ 'listingDetails.cancel' | translate }}</button>
+            <button class="btn-sh-submit" (click)="submitCreatePrivateRoom()" [disabled]="createPrivateRoomSubmitting || selectedPrivateRoomBidderIds.size < 2">
+              {{ createPrivateRoomSubmitting ? ('listingDetails.privateRoomModal.creating' | translate) : ('listingDetails.privateRoomModal.create' | translate) }}
+            </button>
+          </div>
+        </div>
+      }
     </div>
-    }
   </div>
 </div>
 }
+
+@if (showReportModal && listing) {
+  <app-report-modal
+    [reportType]="showReportModal === 'listing' ? 'listing' : 'user'"
+    [targetId]="showReportModal === 'listing' ? listing._id : listing.seller._id"
+    [targetName]="showReportModal === 'listing' ? listing.title : (listing.seller.firstName + ' ' + listing.seller.lastName)"
+    (closed)="showReportModal = null"
+  ></app-report-modal>
+}
+
+</div><!-- /pg -->

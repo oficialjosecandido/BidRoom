@@ -7,6 +7,7 @@ import { DashboardWatchlistComponent } from '../watchlist/dashboard-watchlist.co
 import { DashboardTransactionsComponent } from '../transactions/dashboard-transactions.component';
 import { DashboardDisputesComponent } from '../disputes/dashboard-disputes.component';
 import { CustomerService, CustomerInfo } from '../../../shared/services/customer.service';
+import { TransactionsService } from '../../../shared/services/transactions.service';
 
 type BuyerTab = 'bets' | 'watchlist' | 'transactions' | 'disputes';
 
@@ -19,10 +20,12 @@ type BuyerTab = 'bets' | 'watchlist' | 'transactions' | 'disputes';
 })
 export class BuyerProfileComponent implements OnInit {
   private customerService = inject(CustomerService);
+  private transactionsService = inject(TransactionsService);
   private route = inject(ActivatedRoute);
 
   activeTab: BuyerTab = 'bets';
   customerInfo: CustomerInfo | null = null;
+  pendingTransactions = 0;
 
   ngOnInit(): void {
     this.route.queryParams.subscribe(params => {
@@ -33,6 +36,10 @@ export class BuyerProfileComponent implements OnInit {
     });
     this.customerService.getCustomer().subscribe({
       next: (info) => this.customerInfo = info,
+      error: () => {}
+    });
+    this.transactionsService.getPendingCounts().subscribe({
+      next: (counts) => this.pendingTransactions = counts.buyer,
       error: () => {}
     });
   }

@@ -1,7 +1,18 @@
 <div class="transactions-container">
   <div class="page-header">
-    <h1>{{ 'transactions.title' | translate }}</h1>
-    <p class="subtitle">{{ 'transactions.subtitle' | translate }}</p>
+    <div>
+      <h1 class="page-title">{{ 'transactions.title' | translate }}</h1>
+      <p class="page-sub">{{ 'transactions.subtitle' | translate }}</p>
+    </div>
+  </div>
+
+  <div class="tx-filters">
+    <button type="button" class="tx-filter" [class.active]="txFilter === 'all'" (click)="txFilter = 'all'">{{ 'transactions.filterAll' | translate }}</button>
+    <button type="button" class="tx-filter" [class.active]="txFilter === 'pending_payment'" (click)="txFilter = 'pending_payment'">{{ 'transactions.filterPendingPayment' | translate }}</button>
+    <button type="button" class="tx-filter" [class.active]="txFilter === 'shipping'" (click)="txFilter = 'shipping'">{{ 'transactions.filterShipping' | translate }}</button>
+    <button type="button" class="tx-filter" [class.active]="txFilter === 'delivered'" (click)="txFilter = 'delivered'">{{ 'transactions.filterDelivered' | translate }}</button>
+    <button type="button" class="tx-filter" [class.active]="txFilter === 'completed'" (click)="txFilter = 'completed'">{{ 'transactions.filterCompleted' | translate }}</button>
+    <button type="button" class="tx-filter" [class.active]="txFilter === 'disputed'" (click)="txFilter = 'disputed'">{{ 'transactions.filterDisputed' | translate }}</button>
   </div>
 
   @if (isLoading) {
@@ -43,7 +54,7 @@
         </div>
       }
 
-      @for (t of transactions; track t._id) {
+      @for (t of filteredTransactions; track t._id) {
         <div class="transaction-card" [id]="'transaction-' + t._id">
           <a [routerLink]="getListingUrl(t)" class="card-main">
             <div class="card-col card-col-image">
@@ -119,20 +130,29 @@
                   {{ 'transactions.paymentWindowEnds' | translate }}: {{ formatPaymentDeadline(t) }}{{ hasPaymentDeadlinePassed(t) ? (' (' + ('transactions.passed' | translate) + ')') : '' }}
                 </p>
               }
+              @if (showPrivateRoomCountdown(t)) {
+                <div class="pr-payment-countdown" [class.urgent]="isPaymentDeadlineUrgent(t)">
+                  @if (isSecondChanceBuyer(t)) {
+                    <span class="second-chance-badge">{{ 'transactions.secondChance' | translate }}</span>
+                  }
+                  <span class="countdown-label">{{ 'transactions.payIn' | translate }}</span>
+                  <span class="countdown-value">{{ paymentDeadlineCountdown(t) | translate }}</span>
+                </div>
+              }
+              @if (canRelist(t)) {
+                <div class="pr-relist-notice">
+                  <p class="pr-relist-text">{{ 'transactions.nonPaymentNoSecondBidder' | translate }}</p>
+                  <button type="button" class="pr-relist-btn" (click)="relistItem(t)">{{ 'transactions.relistItem' | translate }}</button>
+                </div>
+              }
               @if (isBuyer(t)) {
                 <p class="card-role">
                   {{ 'transactions.youAreThe' | translate }} <strong>{{ 'transactions.buyer' | translate }}</strong>. {{ 'transactions.seller' | translate }}: {{ t.seller.firstName }} {{ t.seller.lastName }}
-                  @if (t.seller.email) {
-                    <span> — <a [href]="'mailto:' + t.seller.email" class="seller-email">{{ t.seller.email }}</a></span>
-                  }
                 </p>
               }
               @if (isSeller(t)) {
                 <p class="card-role">
                   {{ 'transactions.youAreThe' | translate }} <strong>{{ 'transactions.seller' | translate }}</strong>. {{ 'transactions.buyer' | translate }}: {{ t.buyer.firstName }} {{ t.buyer.lastName }}
-                  @if (t.buyer.email) {
-                    <span> — <a [href]="'mailto:' + t.buyer.email" class="seller-email">{{ t.buyer.email }}</a></span>
-                  }
                 </p>
               }
               @if (t.trackingNumber && getEffectiveStatus(t) !== 'pending_payment') {
@@ -145,6 +165,24 @@
           </a>
 
           <div class="card-actions">
+
+            <!-- Auto-cancellation notice (non-shipment deadline expired) -->
+            @if (getEffectiveStatus(t) === 'cancelled' && t.shippingAutoCancelledAt) {
+              <div class="cancellation-notice">
+                @if (isBuyer(t)) {
+                  <p class="cancellation-notice-title">{{ 'transactions.autoCancelledBuyerTitle' | translate }}</p>
+                  <p class="cancellation-notice-body">{{ 'transactions.autoCancelledBuyerMessage' | translate:{ date: formatAutoCancelledAt(t) } }}</p>
+                  @if (t.stripeRefundId) {
+                    <p class="cancellation-notice-ref">{{ 'transactions.refundRef' | translate }}: {{ t.stripeRefundId }}</p>
+                  }
+                }
+                @if (isSeller(t)) {
+                  <p class="cancellation-notice-title">{{ 'transactions.autoCancelledSellerTitle' | translate }}</p>
+                  <p class="cancellation-notice-body">{{ 'transactions.autoCancelledSellerMessage' | translate:{ date: formatAutoCancelledAt(t) } }}</p>
+                }
+              </div>
+            }
+
             @if (t.paymentDeadline && getEffectiveStatus(t) === 'pending_payment') {
               <p class="card-deadline">
                 {{ 'transactions.paymentWindowEnds' | translate }}: {{ formatPaymentDeadline(t) }}{{ hasPaymentDeadlinePassed(t) ? (' (' + ('transactions.passed' | translate) + ')') : '' }}
@@ -153,18 +191,15 @@
             @if (isBuyer(t)) {
               <p class="card-role">
                 {{ 'transactions.youAreThe' | translate }} <strong>{{ 'transactions.buyer' | translate }}</strong>. {{ 'transactions.seller' | translate }}: {{ t.seller.firstName }} {{ t.seller.lastName }}
-                @if (t.seller.email) {
-                  <span> — <a [href]="'mailto:' + t.seller.email" class="seller-email" (click)="$event.stopPropagation()">{{ t.seller.email }}</a></span>
-                }
               </p>
             }
             @if (isSeller(t)) {
               <p class="card-role">
                 {{ 'transactions.youAreThe' | translate }} <strong>{{ 'transactions.seller' | translate }}</strong>. {{ 'transactions.buyer' | translate }}: {{ t.buyer.firstName }} {{ t.buyer.lastName }}
-                @if (t.buyer.email) {
-                  <span> — <a [href]="'mailto:' + t.buyer.email" class="seller-email" (click)="$event.stopPropagation()">{{ t.buyer.email }}</a></span>
-                }
               </p>
+            }
+            @if (isSeller(t) && ['awaiting_seller_acceptance', 'paid'].includes(getEffectiveStatus(t)) && (t.shipByBusinessDeadline || t.handlingDeadline)) {
+              <p class="form-hint">{{ 'transactions.sellerMustShipBy' | translate }}: {{ formatShipByDeadline(t) }}</p>
             }
             @if (isSeller(t) && canSellerAcceptPayment(t)) {
               @if (t.paymentAcceptanceDeadline) {
@@ -259,7 +294,9 @@
                 }
 
                 <div class="stripe-pay-section">
-                  @if (needsShippingRate(t)) {
+                  @if (hasPaymentDeadlinePassed(t)) {
+                    <p class="deadline-expired-notice">{{ 'transactions.paymentDeadlineExpired' | translate }}</p>
+                  } @else if (needsShippingRate(t)) {
                     <p class="stripe-pay-hint">{{ 'transactions.selectShippingBeforePaying' | translate }}</p>
                     <button type="button" class="btn btn-secondary" (click)="openShippingPanel(t)">
                       {{ 'transactions.chooseShippingMethod' | translate }}
@@ -277,19 +314,116 @@
                   {{ 'transactions.paymentConfirmedSellerNotified' | translate }}
                 </p>
               }
+              @if (['awaiting_seller_acceptance', 'paid'].includes(getEffectiveStatus(t))) {
+                <div class="buyer-shipping-panel">
+                  <p class="shipping-status-line">
+                    <strong>{{ 'transactions.shippingStatusLabel' | translate }}:</strong> {{ buyerShippingStatusLine(t) }}
+                  </p>
+                  @if (t.shipByBusinessDeadline || t.handlingDeadline) {
+                    <p class="form-hint">{{ 'transactions.expectedShipBy' | translate }}: {{ formatShipByDeadline(t) }}</p>
+                  }
+                  <button
+                    type="button"
+                    class="btn btn-secondary"
+                    (click)="remindSellerToShip(t); $event.stopPropagation()"
+                    [disabled]="!canRemindSellerToShip(t) || remindSellerShipTxId === t._id"
+                  >
+                    {{ remindSellerShipTxId === t._id ? ('transactions.remindingSeller' | translate) : ('transactions.remindSellerToShip' | translate) }}
+                  </button>
+                  @if (isRemindSellerOnCooldown(t)) {
+                    <p class="form-hint">{{ 'transactions.remindSellerCooldown' | translate }}</p>
+                  }
+                </div>
+              }
               @if (t.stripePaymentIntentId) {
                 <p class="stripe-ref">{{ 'transactions.paymentRef' | translate }}: {{ t.stripePaymentIntentId }}</p>
               }
               @if (getEffectiveStatus(t) === 'shipped') {
-                <p class="form-hint">{{ 'transactions.itemShippedHowReceived' | translate }}</p>
+                @if (t.estimatedDeliveryDate) {
+                  <p class="form-hint delivery-estimate">
+                    {{ 'transactions.estimatedDelivery' | translate }}: <strong>{{ formatEstimatedDelivery(t) }}</strong>
+                  </p>
+                }
+                @if (isEstimatedDeliveryPassed(t)) {
+                  <div class="delivery-overdue-notice">
+                    <p class="delivery-overdue-title">{{ 'transactions.deliveryDueConfirmTitle' | translate }}</p>
+                    <p class="delivery-overdue-body">{{ 'transactions.deliveryDueConfirmBody' | translate }}</p>
+                  </div>
+                } @else {
+                  <p class="form-hint">{{ 'transactions.itemShippedHowReceived' | translate }}</p>
+                }
+                @if (t.autoReleaseAt && !isEstimatedDeliveryPassed(t)) {
+                  <p class="auto-release-notice">
+                    {{ 'transactions.autoReleaseNotice' | translate:{ date: formatAutoReleaseDate(t) } }}
+                  </p>
+                }
+                @if (t.autoReleaseAt && isEstimatedDeliveryPassed(t)) {
+                  @if ((daysUntilAutoRelease(t) ?? 99) > 0) {
+                    <p class="auto-release-warning">
+                      {{ 'transactions.autoReleaseWarning' | translate:{ days: daysUntilAutoRelease(t) } }}
+                    </p>
+                  } @else {
+                    <p class="auto-release-warning">{{ 'transactions.autoReleaseImminent' | translate }}</p>
+                  }
+                }
                 <button type="button" class="btn btn-primary" (click)="markAsDelivered(t)" [disabled]="updatingId === t._id">
                   {{ updatingId === t._id ? ('transactions.updating' | translate) : ('transactions.markAsReceivedProperly' | translate) }}
                 </button>
                 <button type="button" class="btn btn-dispute" (click)="openDisputeModal(t); $event.stopPropagation()" [attr.aria-label]="'Open a dispute for ' + t.listing.title">{{ 'transactions.receivedNotProperly' | translate }}</button>
               }
-              @if (['paid','shipped','delivered'].includes(getEffectiveStatus(t)) && !hasBothReviewed(t)) {
+              @if (getEffectiveStatus(t) === 'delivered') {
+                @if (canOpenDamageClaim(t)) {
+                  <div class="damage-claim-panel">
+                    <p class="form-hint">
+                      {{ 'transactions.damageClaimWindowNotice' | translate:{ hours: damageClaimHoursLeft(t) } }}
+                    </p>
+                    <button type="button" class="btn btn-damage" (click)="openDamageClaimModal(t); $event.stopPropagation()">
+                      {{ 'transactions.reportDamage' | translate }}
+                    </button>
+                  </div>
+                }
+                @if (existingClaimsByTxId[t._id]) {
+                  <div class="damage-claim-status">
+                    <span class="damage-status-badge damage-status-{{ existingClaimsByTxId[t._id]!.status }}">
+                      {{ 'transactions.damageStatuses.' + existingClaimsByTxId[t._id]!.status | translate }}
+                    </span>
+                    <span class="damage-status-label">{{ 'transactions.damageClaimLabel' | translate }}</span>
+                  </div>
+                }
+                @if (canRequestReturn(t)) {
+                  <div class="return-request-panel">
+                    <p class="form-hint">
+                      {{ 'transactions.returnWindowNotice' | translate:{ days: returnWindowDaysLeft(t) } }}
+                    </p>
+                    <button type="button" class="btn btn-secondary" (click)="openReturnModal(t); $event.stopPropagation()">
+                      {{ 'transactions.requestReturn' | translate }}
+                    </button>
+                  </div>
+                } @else if (t.returnRequestedAt && t.returnStatus) {
+                  <div class="return-status-panel">
+                    <p class="return-status-label">
+                      {{ 'transactions.returnStatus' | translate }}:
+                      <strong>{{ 'transactions.returnStatuses.' + t.returnStatus | translate }}</strong>
+                    </p>
+                    @if (t.returnStatus === 'pending_seller_response' && t.returnSellerDeadline) {
+                      <p class="form-hint">{{ 'transactions.returnSellerDeadline' | translate:{ date: (t.returnSellerDeadline | date:'mediumDate') } }}</p>
+                    }
+                  </div>
+                }
+                <div class="mark-complete-panel">
+                  <p class="form-hint">{{ 'transactions.completeToReview' | translate }}</p>
+                  <button
+                    type="button"
+                    class="btn btn-complete"
+                    (click)="markAsCompleted(t); $event.stopPropagation()"
+                    [disabled]="updatingId === t._id">
+                    {{ updatingId === t._id ? ('transactions.updating' | translate) : ('transactions.markAsCompleted' | translate) }}
+                  </button>
+                </div>
+              }
+              @if (['paid', 'shipped'].includes(getEffectiveStatus(t))) {
                 <p class="form-hint review-required">
-                  {{ 'transactions.bothMustReview' | translate }}
+                  {{ 'transactions.completeToReview' | translate }}
                 </p>
               }
               @if (isBuyer(t) && t.sellerProofOfDeliveryUrl && ['shipped','delivered','completed'].includes(getEffectiveStatus(t))) {
@@ -333,6 +467,26 @@
               </button>
               @if (showTrackingFormId === t._id) {
                 <div class="tracking-form">
+                  <div class="form-group">
+                    <label>{{ 'transactions.trackingNumber' | translate }}</label>
+                    <input type="text" [(ngModel)]="trackingNumber" [placeholder]="'transactions.trackingNumberPlaceholder' | translate" class="input-sm" />
+                  </div>
+                  <div class="form-group">
+                    <label>{{ 'transactions.carrier' | translate }}</label>
+                    <select [(ngModel)]="trackingCarrier" class="input-sm">
+                      <option value="">{{ 'transactions.selectCarrier' | translate }}</option>
+                      <option value="USPS">USPS</option>
+                      <option value="UPS">UPS</option>
+                      <option value="FedEx">FedEx</option>
+                      <option value="DHL">DHL</option>
+                      <option value="Other">{{ 'transactions.other' | translate }}</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label>{{ 'transactions.estimatedDeliveryDays' | translate }}</label>
+                    <input type="number" [(ngModel)]="estimatedDeliveryDays" min="1" max="60" [placeholder]="'transactions.estimatedDeliveryDaysPlaceholder' | translate" class="input-sm" />
+                    <span class="form-hint">{{ 'transactions.estimatedDeliveryDaysHint' | translate }}</span>
+                  </div>
                   <button type="button" class="btn btn-primary" (click)="submitShipped(t)" [disabled]="updatingId === t._id">
                     {{ updatingId === t._id ? ('transactions.updating' | translate) : ('transactions.confirmShipped' | translate) }}
                   </button>
@@ -416,6 +570,139 @@
     </div>
   }
 
+  <!-- ── Damage claim modal ── -->
+  @if (damageClaimTransaction) {
+    <div class="modal-overlay" (click)="closeDamageClaimModal()">
+      <div class="modal-content dispute-modal" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h3 class="modal-title">{{ 'transactions.damageClaim.title' | translate }}</h3>
+          <button type="button" class="modal-close" (click)="closeDamageClaimModal()" aria-label="Close">×</button>
+        </div>
+
+        <p class="modal-subtitle">{{ 'transactions.damageClaim.subtitle' | translate }}</p>
+
+        <!-- Damage photos -->
+        <div class="form-group">
+          <label class="form-label">{{ 'transactions.damageClaim.damagePhotos' | translate }} <span class="required">*</span></label>
+          <p class="form-hint">{{ 'transactions.damageClaim.damagePhotosHint' | translate }}</p>
+          <div class="photo-upload-row">
+            @for (url of damagePhotoUrls; track url) {
+              <div class="photo-thumb">
+                <img [src]="url" alt="Damage photo" />
+                <button type="button" class="photo-remove" (click)="removeDamagePhoto(url, 'damage')">×</button>
+              </div>
+            }
+            @if (damagePhotoUrls.length < 5) {
+              <label class="photo-add-btn" [class.uploading]="damagePhotoUploading">
+                @if (damagePhotoUploading) { <span class="upload-spinner"></span> }
+                @else { <span>+</span> }
+                <input type="file" accept=".jpg,.jpeg,.png,.webp" (change)="uploadDamagePhoto($event, 'damage')" style="display:none" />
+              </label>
+            }
+          </div>
+        </div>
+
+        <!-- Packaging photos -->
+        <div class="form-group">
+          <label class="form-label">{{ 'transactions.damageClaim.packagingPhotos' | translate }} <span class="required">*</span></label>
+          <p class="form-hint">{{ 'transactions.damageClaim.packagingPhotosHint' | translate }}</p>
+          <div class="photo-upload-row">
+            @for (url of packagingPhotoUrls; track url) {
+              <div class="photo-thumb">
+                <img [src]="url" alt="Packaging photo" />
+                <button type="button" class="photo-remove" (click)="removeDamagePhoto(url, 'packaging')">×</button>
+              </div>
+            }
+            @if (packagingPhotoUrls.length < 5) {
+              <label class="photo-add-btn" [class.uploading]="packagingPhotoUploading">
+                @if (packagingPhotoUploading) { <span class="upload-spinner"></span> }
+                @else { <span>+</span> }
+                <input type="file" accept=".jpg,.jpeg,.png,.webp" (change)="uploadDamagePhoto($event, 'packaging')" style="display:none" />
+              </label>
+            }
+          </div>
+        </div>
+
+        <!-- Description -->
+        <div class="form-group">
+          <label class="form-label">{{ 'transactions.damageClaim.description' | translate }}</label>
+          <textarea class="form-textarea" rows="4" [(ngModel)]="damageDescription" maxlength="3000"
+            [placeholder]="'transactions.damageClaim.descriptionPlaceholder' | translate"></textarea>
+        </div>
+
+        <!-- Policy notice -->
+        <div class="damage-policy-notice">
+          <p>{{ 'transactions.damageClaim.policyNotice' | translate }}</p>
+        </div>
+
+        @if (damageClaimError) {
+          <p class="form-error">{{ damageClaimError }}</p>
+        }
+
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" (click)="closeDamageClaimModal()" [disabled]="damageClaimSubmitting">
+            {{ 'common.cancel' | translate }}
+          </button>
+          <button type="button" class="btn btn-damage" (click)="submitDamageClaim()"
+            [disabled]="damageClaimSubmitting || damagePhotoUrls.length < 1 || packagingPhotoUrls.length < 1">
+            @if (damageClaimSubmitting) { {{ 'common.submitting' | translate }} }
+            @else { {{ 'transactions.damageClaim.submit' | translate }} }
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  @if (returnModalTransaction) {
+    <div class="modal-overlay" (click)="closeReturnModal()">
+      <div class="modal-content review-modal dispute-modal" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h3 class="modal-title">{{ 'returns.modal.title' | translate }}</h3>
+          <button type="button" class="modal-close" (click)="closeReturnModal()" aria-label="Close">×</button>
+        </div>
+        <div class="modal-body">
+          <p class="form-hint">{{ 'returns.modal.intro' | translate }}</p>
+          <div class="form-group">
+            <label for="return-reason">{{ 'returns.modal.reason' | translate }} <span class="required">*</span></label>
+            <textarea id="return-reason" [(ngModel)]="returnReason" class="form-input" rows="4" minlength="5" [placeholder]="'returns.modal.reasonPlaceholder' | translate"></textarea>
+          </div>
+          <div class="form-group">
+            <label>{{ 'returns.modal.photos' | translate }} <span class="required">*</span></label>
+            <p class="form-hint">{{ 'returns.modal.photosHint' | translate }}</p>
+            <input
+              type="file"
+              #returnEvidenceInput
+              accept=".jpg,.jpeg,.png,.gif,.webp"
+              (change)="onReturnEvidenceSelected(returnEvidenceInput)"
+              class="file-input-hidden"
+              style="display: none;"
+              multiple
+            />
+            <button type="button" class="btn btn-secondary" (click)="returnEvidenceInput.click()" [disabled]="returnEvidenceUploading">
+              {{ returnEvidenceUploading ? ('returns.modal.uploading' | translate) : ('returns.modal.addPhotos' | translate) }}
+            </button>
+            @if (returnPhotoUrls.length > 0) {
+              <div class="dispute-media-list">
+                @for (url of returnPhotoUrls; track url) {
+                  <span class="dispute-media-item">✓ {{ 'disputes.modal.uploaded' | translate }}</span>
+                }
+              </div>
+            }
+          </div>
+          @if (returnError) {
+            <p class="review-error">{{ returnError }}</p>
+          }
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="closeReturnModal()">{{ 'dashboard.common.cancel' | translate }}</button>
+          <button type="button" class="btn btn-primary" (click)="submitReturn()" [disabled]="returnSubmitting || !canSubmitReturn()">
+            {{ returnSubmitting ? ('returns.modal.submitting' | translate) : ('returns.modal.submit' | translate) }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
   @if (reviewModalTransaction) {
     <div class="modal-overlay" (click)="closeReviewModal()">
       <div class="modal-content review-modal" (click)="$event.stopPropagation()">
@@ -430,12 +717,29 @@
             <em>{{ reviewModalTransaction.listing.title }}</em>
           </p>
           <fieldset class="review-score-section">
-            <legend class="review-score-label">{{ 'transactions.score' | translate }} (1–10)</legend>
-            <div class="review-score-buttons">
-              @for (i of [1,2,3,4,5,6,7,8,9,10]; track i) {
-                <button type="button" class="score-btn" (click)="setReviewScore(i)" [class.selected]="i === reviewScore">
-                  {{ i }}
-                </button>
+            <legend class="review-score-label">{{ 'transactions.score' | translate }} (1–5)</legend>
+            <div class="review-score-card">
+              <div class="review-score-scale">
+                <span class="scale-low">{{ 'transactions.scoreScaleLow' | translate }}</span>
+                <span class="scale-high">{{ 'transactions.scoreScaleHigh' | translate }}</span>
+              </div>
+              <div class="review-score-grid" role="group" [attr.aria-label]="'transactions.score' | translate">
+                @for (i of [1,2,3,4,5]; track i) {
+                  <button
+                    type="button"
+                    class="score-btn"
+                    [class.tier-low]="scoreTier(i) === 'low'"
+                    [class.tier-mid]="scoreTier(i) === 'mid'"
+                    [class.tier-high]="scoreTier(i) === 'high'"
+                    [class.selected]="i === reviewScore"
+                    (click)="setReviewScore(i)"
+                  >
+                    {{ i }}
+                  </button>
+                }
+              </div>
+              @if (reviewScore > 0) {
+                <p class="review-score-picked">{{ 'transactions.scoreSelected' | translate: { score: reviewScore } }}</p>
               }
             </div>
           </fieldset>
@@ -453,6 +757,130 @@
             {{ reviewSubmitting ? ('dashboard.common.submitting' | translate) : ('dashboard.home.submitReview' | translate) }}
           </button>
         </div>
+      </div>
+    </div>
+  }
+
+  <!-- ── Transaction detail drawer ── -->
+  @if (drawerTx) {
+    <div class="drawer-overlay" (click)="closeDrawer()"></div>
+    <div class="drawer">
+      <div class="drawer-header">
+        <div>
+          <div class="drawer-title">{{ drawerTx.listing.title }}</div>
+          <div class="drawer-sub">
+            {{ isBuyer(drawerTx) ? ('transactions.buying' | translate) : ('transactions.selling' | translate) }}
+            @if (drawerTx.createdAt) { · {{ drawerTx.createdAt | date:'mediumDate' }} }
+          </div>
+        </div>
+        <button type="button" class="drawer-close" (click)="closeDrawer()">✕</button>
+      </div>
+      <div class="drawer-body">
+
+        <!-- Progress steps -->
+        <div class="tx-progress">
+          @for (step of [
+            {n:1, key:'transactions.tp.payment'},
+            {n:2, key:'transactions.tp.shipping'},
+            {n:3, key:'transactions.tp.delivery'},
+            {n:4, key:'transactions.tp.done'}
+          ]; track step.n) {
+            <div class="tp-step"
+                 [class.done]="getDrawerProgressStep(drawerTx) > step.n"
+                 [class.active]="getDrawerProgressStep(drawerTx) === step.n">
+              <div class="tp-dot">{{ getDrawerProgressStep(drawerTx) > step.n ? '✓' : step.n }}</div>
+              <div class="tp-label">{{ step.key | translate }}</div>
+            </div>
+          }
+        </div>
+
+        <!-- Details section -->
+        <div class="drawer-section">
+          <div class="drawer-section-title">{{ 'transactions.drawer.details' | translate }}</div>
+          <div class="drawer-row">
+            <span class="dr-label">{{ 'transactions.drawer.amount' | translate }}</span>
+            <span class="dr-val gold">{{ formatPrice(drawerTx.amount) }}</span>
+          </div>
+          <div class="drawer-row">
+            <span class="dr-label">{{ 'transactions.drawer.status' | translate }}</span>
+            <span class="dr-val">{{ getSimpleStatusLabel(drawerTx) }}</span>
+          </div>
+          <div class="drawer-row">
+            <span class="dr-label">{{ 'transactions.drawer.role' | translate }}</span>
+            <span class="dr-val">{{ isBuyer(drawerTx) ? ('transactions.buyer' | translate) : ('transactions.seller' | translate) }}</span>
+          </div>
+          @if (drawerTx.trackingNumber) {
+            <div class="drawer-row">
+              <span class="dr-label">{{ 'transactions.trackingNumber' | translate }}</span>
+              <span class="dr-val mono">{{ drawerTx.trackingCarrier ? drawerTx.trackingCarrier + ': ' : '' }}{{ drawerTx.trackingNumber }}</span>
+            </div>
+          }
+        </div>
+
+        <!-- Counterpart section -->
+        <div class="drawer-section">
+          <div class="drawer-section-title">{{ 'transactions.drawer.counterpart' | translate }}</div>
+          @if (isBuyer(drawerTx)) {
+            <div class="drawer-row">
+              <span class="dr-label">{{ 'transactions.seller' | translate }}</span>
+              <span class="dr-val">{{ drawerTx.seller.firstName }} {{ drawerTx.seller.lastName }}</span>
+            </div>
+          }
+          @if (isSeller(drawerTx)) {
+            <div class="drawer-row">
+              <span class="dr-label">{{ 'transactions.buyer' | translate }}</span>
+              <span class="dr-val">{{ drawerTx.buyer.firstName }} {{ drawerTx.buyer.lastName }}</span>
+            </div>
+          }
+        </div>
+
+        <!-- Financial breakdown -->
+        <div class="drawer-section">
+          <div class="drawer-section-title">{{ 'transactions.financialBreakdown' | translate }}</div>
+          <div class="drawer-row">
+            <span class="dr-label">{{ getSalePriceLabel(drawerTx) }}</span>
+            <span class="dr-val mono">{{ formatPrice(drawerTx.amount) }}</span>
+          </div>
+          <div class="drawer-row">
+            <span class="dr-label">{{ 'transactions.bidRoomFee' | translate }}</span>
+            <span class="dr-val mono">{{ formatPrice(getBidRoomFee(drawerTx)) }}</span>
+          </div>
+          @if (isSeller(drawerTx)) {
+            <div class="drawer-row">
+              <span class="dr-label">{{ 'transactions.youReceive' | translate }}</span>
+              <span class="dr-val gold">{{ formatPrice(getSellerNet(drawerTx)) }}</span>
+            </div>
+          }
+          @if (isBuyer(drawerTx) && getBuyerTotal(drawerTx) !== null) {
+            <div class="drawer-row">
+              <span class="dr-label">{{ 'transactions.totalCharged' | translate }}</span>
+              <span class="dr-val gold">{{ formatPrice(getBuyerTotal(drawerTx)!) }}</span>
+            </div>
+          }
+        </div>
+
+        <!-- Actions -->
+        <div class="drawer-actions">
+          @if (isBuyer(drawerTx) && getEffectiveStatus(drawerTx) === 'pending_payment' && !hasPaymentDeadlinePassed(drawerTx)) {
+            <button type="button" class="btn-drawer-primary" (click)="payWithStripe(drawerTx); closeDrawer()">{{ 'transactions.payNow' | translate }}</button>
+          }
+          @if (isBuyer(drawerTx) && ['awaiting_seller_acceptance','paid'].includes(getEffectiveStatus(drawerTx))) {
+            <button type="button" class="btn-drawer-ghost" (click)="remindSellerToShip(drawerTx)" [disabled]="!canRemindSellerToShip(drawerTx)">{{ 'transactions.remindSellerToShip' | translate }}</button>
+          }
+          @if (isBuyer(drawerTx) && getEffectiveStatus(drawerTx) === 'shipped') {
+            <button type="button" class="btn-drawer-primary green" (click)="markAsDelivered(drawerTx); closeDrawer()" [disabled]="updatingId === drawerTx._id">{{ 'transactions.markAsReceivedProperly' | translate }}</button>
+            <button type="button" class="btn-drawer-danger" (click)="openDisputeModal(drawerTx); closeDrawer()">{{ 'transactions.receivedNotProperly' | translate }}</button>
+          }
+          @if (isBuyer(drawerTx) && getEffectiveStatus(drawerTx) === 'delivered') {
+            <button type="button" class="btn-drawer-primary" (click)="markAsCompleted(drawerTx); closeDrawer()" [disabled]="updatingId === drawerTx._id">{{ 'transactions.markAsCompleted' | translate }}</button>
+          }
+          @if (isDone(drawerTx)) {
+            <button type="button" class="btn-drawer-ghost" (click)="downloadInvoice(drawerTx); closeDrawer()" [disabled]="invoiceDownloadingTxId === drawerTx._id">
+              {{ isSeller(drawerTx) ? ('transactions.downloadInvoice' | translate) : ('transactions.downloadReceipt' | translate) }}
+            </button>
+          }
+        </div>
+
       </div>
     </div>
   }

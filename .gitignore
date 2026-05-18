@@ -44,6 +44,8 @@ npm-cache/
 
 # Yarn Integrity file
 .yarn-integrity
+backend/yarn.lock
+frontend/yarn.lock
 
 # dotenv environment variables file
 .env
@@ -51,6 +53,10 @@ npm-cache/
 # IDE files
 .vscode/
 .idea/
+
+# Claude
+claude/
+.claude/
 *.swp
 *.swo
 
@@ -62,6 +68,9 @@ npm-cache/
 .Trashes
 ehthumbs.db
 Thumbs.db
+
+# Claude Code local config
+.claude/
 
 # Angular specific
 frontend/dist/

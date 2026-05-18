@@ -77,11 +77,38 @@ const transactionSchema = new mongoose.Schema({
   },
   /** Seller: optional proof of delivery (e.g. shipping receipt URL) when marking shipped */
   sellerProofOfDeliveryUrl: { type: String, trim: true, default: null },
-  /** When seller must ship by (paidAt or payment deadline + listing handling time); used for Phase 2 */
+  /**
+   * Legacy handling deadline. Now mirrors shipByBusinessDeadline for backward compat.
+   * Set by applyShippingDeadlinesFromPaidAt() when buyer payment is confirmed.
+   */
   handlingDeadline: {
     type: Date,
     default: null
   },
+
+  // ── Shipping Deadline Enforcement (5-business-day rule) ────────────
+  /**
+   * End of the 5th business day (Mon–Fri, UTC) after paidAt.
+   * If the seller hasn't marked "shipped" by this time, the scheduler
+   * auto-cancels the order and issues a full Stripe refund.
+   * Computed by applyShippingDeadlinesFromPaidAt() in shippingDeadlines.js.
+   */
+  shipByBusinessDeadline: { type: Date, default: null },
+  /**
+   * Timestamp when the day-3 midpoint warning was sent to the seller.
+   * Used by the scheduler to avoid sending duplicate warnings (idempotency).
+   */
+  shippingMidpointWarningSentAt: { type: Date, default: null },
+  /**
+   * Last time the buyer used "Remind seller to ship".
+   * The endpoint enforces a 24-hour cooldown between reminders.
+   */
+  buyerRemindSellerShipAt: { type: Date, default: null },
+  /**
+   * Populated by the scheduler when the order is auto-cancelled for
+   * non-shipment. Distinguishes auto-cancels from other cancel reasons.
+   */
+  shippingAutoCancelledAt: { type: Date, default: null },
   /** Overall transaction state */
   transactionStatus: {
     type: String,
@@ -119,6 +146,33 @@ const transactionSchema = new mongoose.Schema({
     type: Date,
     default: null
   },
+  /** Computed when seller marks shipped: shippedAt + shippingDeliveryDays (or seller-provided days) */
+  estimatedDeliveryDate: { type: Date, default: null },
+  /** When buyer confirmed receipt */
+  deliveredAt: { type: Date, default: null },
+  /**
+   * 5 days after estimatedDeliveryDate (or 14 days after shippedAt if no estimate).
+   * Scheduler auto-completes the transaction if buyer hasn't confirmed by this time.
+   */
+  autoReleaseAt: { type: Date, default: null },
+  /** Set by the scheduler when auto-release executes (idempotency guard). */
+  autoReleaseExecutedAt: { type: Date, default: null },
+  /** Return request (buyer, within 7 days of deliveredAt) */
+  returnRequestedAt: { type: Date, default: null },
+  returnReason: { type: String, trim: true, default: null },
+  returnPhotoUrls: { type: [String], default: [] },
+  returnStatus: {
+    type: String,
+    enum: ['pending_seller_response', 'accepted_by_seller', 'rejected_by_seller', 'platform_mediated'],
+    default: null
+  },
+  /** 48 hours after returnRequestedAt — seller must respond before platform mediates */
+  returnSellerDeadline: { type: Date, default: null },
+  /** Explicit completion timestamp used for the 30-day review window */
+  completedAt: {
+    type: Date,
+    default: null
+  },
   trackingNumber: {
     type: String,
     trim: true,
@@ -134,6 +188,24 @@ const transactionSchema = new mongoose.Schema({
     trim: true,
     default: null
   },
+  /** True when this transaction originated from a private room (affects payment window and non-payment rules) */
+  isPrivateRoom: { type: Boolean, default: false, index: true },
+  /** Why this transaction was cancelled (non_payment | seller_cancelled | auto_cancelled_no_shipment | ...) */
+  cancellationReason: {
+    type: String,
+    enum: ['non_payment', 'seller_cancelled', 'auto_cancelled_no_shipment', 'other'],
+    default: null
+  },
+  /** When a private-room winner fails to pay, the transaction is re-assigned to this buyer. Stores the original buyer's _id. */
+  originalBuyerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
+  /** When the buyer was re-assigned to a second-chance bidder */
+  secondChanceAssignedAt: { type: Date, default: null },
+  /** Whether a non-payment scheduler run has already processed this transaction (idempotency guard) */
+  nonPaymentProcessedAt: { type: Date, default: null },
+  /** Whether a warning notification has been sent to the buyer approaching the payment deadline */
+  paymentDeadlineWarningSentAt: { type: Date, default: null },
+  /** Whether a no-second-bidder notification was sent to the seller */
+  noSecondBidderNotifiedAt: { type: Date, default: null },
   /** Whether a dispute has been opened for this transaction (visible to both parties) */
   disputeOpen: {
     type: Boolean,
@@ -156,6 +228,8 @@ const transactionSchema = new mongoose.Schema({
   disputeAdminVerdict: { type: String, enum: ['buyer_refund', 'seller_payout', 'partial_refund'], default: null },
   /** Refund amount (for buyer_refund or partial_refund) */
   disputeRefundAmount: { type: Number, min: 0, default: null },
+  /** Stripe refund ID returned after issuing a dispute refund via the API */
+  stripeRefundId: { type: String, trim: true, default: null },
   /** When the admin issued the ruling */
   disputeRuledAt: { type: Date, default: null },
   /** Admin notes (internal) */
@@ -167,5 +241,11 @@ const transactionSchema = new mongoose.Schema({
 transactionSchema.index({ seller: 1, updatedAt: -1 });
 transactionSchema.index({ buyer: 1, updatedAt: -1 });
 transactionSchema.index({ listing: 1 }, { unique: true }); // One transaction per listing
+
+// Covers the scheduler query: status + paidAt + shippingAutoCancelledAt
+transactionSchema.index(
+  { transactionStatus: 1, paidAt: 1, shippingAutoCancelledAt: 1 },
+  { partialFilterExpression: { paidAt: { $type: 'date' } } }
+);
 
 module.exports = mongoose.model('Transaction', transactionSchema);

@@ -1,0 +1,183 @@
+<div class="admin-layout">
+  <app-admin-sidebar></app-admin-sidebar>
+
+  <div class="admin-content">
+    <div class="admin-reports">
+      <header class="page-header">
+        <h1 class="page-title">Reports</h1>
+        <p class="page-subtitle">User and listing reports submitted by the community.</p>
+      </header>
+
+      <div class="filters-bar">
+        <div class="filter-group">
+          <label for="filter-status">Status</label>
+          <select id="filter-status" [(ngModel)]="filterStatus" (ngModelChange)="applyFilter()" class="filter-select">
+            @for (s of STATUS_OPTIONS; track s) {
+              <option [value]="s">{{ s === 'all' ? 'All statuses' : statusLabel(s) }}</option>
+            }
+          </select>
+        </div>
+        <div class="filter-group">
+          <label for="filter-type">Type</label>
+          <select id="filter-type" [(ngModel)]="filterType" (ngModelChange)="applyFilter()" class="filter-select">
+            @for (t of TYPE_OPTIONS; track t) {
+              <option [value]="t">{{ t === 'all' ? 'All types' : (t | titlecase) }}</option>
+            }
+          </select>
+        </div>
+        <span class="total-label">{{ total }} report{{ total !== 1 ? 's' : '' }}</span>
+      </div>
+
+      @if (isLoading) {
+        <div class="loading-state">
+          <div class="spinner"></div>
+          <p>Loading reports…</p>
+        </div>
+      }
+
+      @if (error && !isLoading) {
+        <div class="error-state">
+          <div class="error-icon" aria-hidden="true">&#9888;</div>
+          <p class="error-message">{{ error }}</p>
+          <button type="button" class="retry-btn" (click)="load()">Try again</button>
+        </div>
+      }
+
+      @if (!isLoading && !error) {
+        @if (reports.length === 0) {
+          <div class="empty-state">
+            <div class="empty-icon" aria-hidden="true">🚩</div>
+            <p class="empty-message">No reports found</p>
+            <p class="empty-description">No reports match the current filters.</p>
+          </div>
+        } @else {
+          <div class="panel-table">
+            <div class="table-scroll">
+              <table class="nexus-data-table">
+                <caption>Community reports</caption>
+                <thead>
+                  <tr>
+                    <th scope="col">Type</th>
+                    <th scope="col">Reason</th>
+                    <th scope="col">Reported by</th>
+                    <th scope="col">Target ID</th>
+                    <th scope="col">Status</th>
+                    <th scope="col">Date</th>
+                    <th scope="col"><span class="sr-only">Actions</span></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (r of reports; track r._id) {
+                    <tr>
+                      <td>
+                        <span class="type-badge" [class.type-listing]="r.reportType === 'listing'" [class.type-user]="r.reportType === 'user'">
+                          {{ r.reportType === 'listing' ? '📋 Listing' : '👤 User' }}
+                        </span>
+                      </td>
+                      <td>{{ reasonLabel(r.reason) }}</td>
+                      <td class="muted-col">
+                        {{ r.reportedBy.firstName }} {{ r.reportedBy.lastName }}<br/>
+                        <span class="email-small">{{ r.reportedBy.email }}</span>
+                      </td>
+                      <td class="mono-id">{{ r.targetId }}</td>
+                      <td>
+                        <span class="status-badge" [class]="'status-' + r.status">{{ statusLabel(r.status) }}</span>
+                      </td>
+                      <td class="date-cell">{{ formatDate(r.createdAt) }}</td>
+                      <td>
+                        <button type="button" class="action-btn view-action" (click)="selectReport(r)">Review</button>
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </div>
+        }
+      }
+
+      @if (selectedReport) {
+        <div class="modal-overlay" (click)="closeDetail()">
+          <div class="modal-content report-detail-modal" (click)="$event.stopPropagation()">
+            <div class="modal-header">
+              <h3 class="modal-title">Report detail</h3>
+              <button type="button" class="modal-close" (click)="closeDetail()" aria-label="Close">×</button>
+            </div>
+            <div class="modal-body">
+              <section class="detail-section">
+                <h4>Report info</h4>
+                <table class="nexus-kv-table">
+                  <tbody>
+                    <tr>
+                      <th scope="row">Type</th>
+                      <td>{{ selectedReport.reportType === 'listing' ? 'Listing' : 'User' }}</td>
+                    </tr>
+                    <tr>
+                      <th scope="row">Target ID</th>
+                      <td class="mono-id">{{ selectedReport.targetId }}</td>
+                    </tr>
+                    <tr>
+                      <th scope="row">Reported by</th>
+                      <td>
+                        {{ selectedReport.reportedBy.firstName }} {{ selectedReport.reportedBy.lastName }}<br/>
+                        <span class="muted-inline">{{ selectedReport.reportedBy.email }}</span>
+                      </td>
+                    </tr>
+                    <tr>
+                      <th scope="row">Reason</th>
+                      <td>{{ reasonLabel(selectedReport.reason) }}</td>
+                    </tr>
+                    @if (selectedReport.description) {
+                      <tr>
+                        <th scope="row">Description</th>
+                        <td>
+                          <p class="explanation-text">{{ selectedReport.description }}</p>
+                        </td>
+                      </tr>
+                    }
+                    <tr>
+                      <th scope="row">Submitted</th>
+                      <td>{{ formatDate(selectedReport.createdAt) }}</td>
+                    </tr>
+                    @if (selectedReport.resolvedAt) {
+                      <tr>
+                        <th scope="row">Resolved at</th>
+                        <td>{{ formatDate(selectedReport.resolvedAt) }}</td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </section>
+
+              <section class="ruling-section">
+                <h4>Update status</h4>
+                <div class="form-group">
+                  <label for="edit-status">Status</label>
+                  <select id="edit-status" [(ngModel)]="editStatus" class="form-input">
+                    <option value="pending">Pending</option>
+                    <option value="reviewed">Reviewed</option>
+                    <option value="resolved">Resolved</option>
+                    <option value="dismissed">Dismissed</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="edit-notes">Admin notes (internal)</label>
+                  <textarea id="edit-notes" [(ngModel)]="editNotes" class="form-input" rows="3" placeholder="Optional notes…"></textarea>
+                </div>
+                @if (saveError) {
+                  <p class="ruling-error">{{ saveError }}</p>
+                }
+              </section>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" (click)="closeDetail()">Cancel</button>
+              <button type="button" class="btn btn-primary" (click)="saveUpdate()" [disabled]="saving">
+                {{ saving ? 'Saving…' : 'Save' }}
+              </button>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+</div>

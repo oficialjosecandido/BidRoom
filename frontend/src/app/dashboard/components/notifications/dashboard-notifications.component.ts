@@ -40,15 +40,22 @@ export class DashboardNotificationsComponent implements OnInit {
     });
   }
 
-  /** Get navigation URL (auction_ended always → transactions; fallback for missing links) */
+  /** Get navigation URL — prefer the stored link; fall back to sensible defaults by type */
   private getNotificationUrl(notification: Notification): string | null {
-    if (notification.type === 'auction_ended') return '/dashboard/transactions';
+    if (notification.link) return notification.link;
     const fallbacks: Record<string, string> = {
-      shipping: '/dashboard/transactions',
+      auction_ended: '/dashboard/buyer?tab=transactions',
+      shipping: '/dashboard/buyer?tab=transactions',
+      transaction: '/dashboard/buyer?tab=transactions',
       dispute: '/dashboard/disputes',
-      transaction: '/dashboard/transactions'
+      listing: '/dashboard/seller',
+      follow: '/dashboard/following',
+      watchlist: '/dashboard/buyer?tab=watchlist',
+      private_room: '/dashboard/buyer',
+      account: '/dashboard/settings',
+      security: '/dashboard/settings'
     };
-    return notification.link || fallbacks[notification.type] || null;
+    return fallbacks[notification.type] || null;
   }
 
   openNotification(notification: Notification): void {
@@ -95,6 +102,25 @@ export class DashboardNotificationsComponent implements OnInit {
       system: '📢'
     };
     return icons[type] || '📢';
+  }
+
+  getIconClass(type: string): string {
+    const map: Record<string, string> = {
+      bid: 'nico-bid',
+      auction_ended: 'nico-bid',
+      proposal: 'nico-offer',
+      private_room: 'nico-offer',
+      transaction: 'nico-tx',
+      shipping: 'nico-tx',
+      review: 'nico-tx',
+      dispute: 'nico-err',
+      account: 'nico-system',
+      security: 'nico-system',
+      listing: 'nico-system',
+      watchlist: 'nico-system',
+      system: 'nico-system'
+    };
+    return map[type] || 'nico-system';
   }
 
   formatDate(dateString: string): string {

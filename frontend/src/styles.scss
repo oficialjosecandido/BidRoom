@@ -9,24 +9,31 @@
 body {
   font-family: 'Helvetica Neue', Arial, sans-serif;
   line-height: 1.6;
-  color: #333;
-  background-color: #ffffff;
+  color: var(--text-dark, #333);
+  background-color: var(--background-color, #F8FAFC);
   font-size: 14px;
 }
 
 // Sephora-inspired color palette
 :root {
-  --primary-color: #8b5a96; // Default BidRoom purple; overridden by environment at runtime
+  // Theme defaults on :html so body and all routes (including modals) inherit.
+  // Dark values are overridden in :root[data-theme="dark"] (ThemeService).
+  --primary-color: #002366;
+  --secondary-color: #00D4FF;
+  --background-color: #F8FAFC;
+
   --primary-black: #000000;
   --primary-white: #ffffff;
-  --accent-purple: #8B5A96;
+  --accent-purple: var(--primary-color);
+  --accent-purple-hover: #001a4d;
   --accent-gold: #D4AF37;
   --accent-peach: #FFB366;
-  --light-purple: #F3F0F7;
+  --light-purple: var(--background-color);
   --light-gray: #F8F9FA;
   --border-gray: #E0E0E0;
   --text-gray: #666666;
   --text-dark: #333333;
+  --text-primary: #333333;
   --hover-gray: #F5F5F5;
 }
 
@@ -116,7 +123,7 @@ h6 {
     color: var(--primary-white);
     
     &:hover:not(:disabled) {
-      background: #7A4F84;
+      background: var(--primary-color);
       transform: translateY(-1px);
       box-shadow: 0 4px 12px rgba(139, 90, 150, 0.3);
     }
@@ -413,4 +420,66 @@ a {
 .badge-ending-soon {
   background: var(--urgency-red) !important;
   animation: pulse-text 1.4s ease-in-out infinite;
+}
+
+// =============================================================================
+// Dark theme (html[data-theme="dark"] set by ThemeService)
+// =============================================================================
+:root[data-theme='dark'] {
+  color-scheme: dark;
+
+  --primary-color: #7eb8ff;
+  --secondary-color: #22d3ee;
+  --background-color: #0f172a;
+
+  --primary-black: #e2e8f0;
+  --primary-white: #1e293b;
+
+  --accent-purple: #93c5fd;
+  --accent-purple-hover: #bfdbfe;
+  --accent-gold: #d4af37;
+  --accent-peach: #fb923c;
+  --light-purple: #1e293b;
+  --light-gray: #334155;
+  --border-gray: #475569;
+  --text-gray: #94a3b8;
+  --text-dark: #f1f5f9;
+  --text-primary: #f1f5f9;
+  --hover-gray: #3d5166;
+
+  --urgency-red: #f87171;
+  --urgency-amber: #fbbf24;
+  --urgency-green: #4ade80;
+  --live-green: #4ade80;
+
+  --card-shadow: 0 4px 24px rgba(0, 0, 0, 0.45);
+  --card-shadow-hover: 0 12px 40px rgba(0, 0, 0, 0.55);
+  --shadow-input-focus: 0 0 0 3px rgba(147, 197, 253, 0.25);
+}
+
+:root[data-theme='dark'] .swal2-popup {
+  background: #1e293b !important;
+  color: #f1f5f9 !important;
+  border: 1px solid #475569 !important;
+}
+
+:root[data-theme='dark'] .swal2-title,
+:root[data-theme='dark'] .swal2-html-container {
+  color: #f1f5f9 !important;
+}
+
+:root[data-theme='dark'] .swal2-styled.swal2-confirm {
+  background: var(--accent-purple, #93c5fd) !important;
+  color: #0f172a !important;
+}
+
+:root[data-theme='dark'] .swal2-styled.swal2-cancel {
+  background: #334155 !important;
+  color: #e2e8f0 !important;
+}
+
+:root[data-theme='dark'] .swal2-toast {
+  background: #1e293b !important;
+  color: #f1f5f9 !important;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5) !important;
 }

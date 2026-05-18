@@ -52,11 +52,19 @@ const bidSchema = new mongoose.Schema({
     maxlength: 500,
     default: null
   },
-  /** Whether to email this bidder when they are outbid on this listing (default true) */
+  /** Whether to notify this bidder when outbid: email + in-app (registered users). Default true. */
   notifyWhenOutbid: {
     type: Boolean,
     default: true
-  }
+  },
+  /** IP address of the bidder at submission time */
+  ipAddress: { type: String, default: null },
+  /** Browser/device fingerprint hash sent by the client */
+  deviceFingerprint: { type: String, default: null },
+  /** Fraud signals attached to this bid (e.g. 'shill_bid_suspected', 'bot_pattern') */
+  fraudFlags: { type: [String], default: [] },
+  /** Whether this bid has been flagged for admin review */
+  isFlagged: { type: Boolean, default: false, index: true }
 }, {
   timestamps: true // Adds createdAt and updatedAt fields
 });

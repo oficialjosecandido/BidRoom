@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { AuthGuard } from './auth/guards/auth.guard';
+import { AdminGuard } from './admin/guards/admin.guard';
 
 export const routes: Routes = [
   { path: '', redirectTo: '/landing', pathMatch: 'full' },
@@ -45,6 +46,14 @@ export const routes: Routes = [
         path: 'settings',
         loadComponent: () => import('./dashboard/components/dashboard-settings/dashboard-settings.component').then(m => m.DashboardSettingsComponent)
       },
+      {
+        path: 'following',
+        loadComponent: () => import('./dashboard/components/following/dashboard-following.component').then(m => m.DashboardFollowingComponent)
+      },
+      {
+        path: 'analytics',
+        loadComponent: () => import('./dashboard/components/seller-analytics/seller-analytics.component').then(m => m.SellerAnalyticsComponent)
+      },
       // Legacy redirects so old links still work
       { path: 'my-account', redirectTo: 'settings', pathMatch: 'full' },
       { path: 'my-bets', redirectTo: 'buyer', pathMatch: 'full' },
@@ -56,11 +65,20 @@ export const routes: Routes = [
   },
   {
     path: 'nexus',
+    canActivate: [AdminGuard],
     loadChildren: () => import('./admin/admin.module').then(m => m.AdminModule)
   },
   {
     path: 'private-room',
     loadChildren: () => import('./private-room/private-room.module').then(m => m.PrivateRoomModule)
+  },
+  {
+    path: 'seller/:id',
+    loadComponent: () => import('./profile/seller-public-profile.component').then(m => m.SellerPublicProfileComponent)
+  },
+  {
+    path: 'notifications/unsubscribe',
+    loadComponent: () => import('./notifications/unsubscribe.component').then(m => m.UnsubscribeComponent)
   },
   { path: '**', redirectTo: '/landing' }
 ];

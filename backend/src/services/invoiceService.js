@@ -2,7 +2,7 @@ const PDFDocument = require('pdfkit');
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-const BIDROOMFEE_RATE = 0.02; // 2%
+const BIDROOMFEE_RATE = 0.035; // 3.5%
 const MARGIN = 50;
 const CONTENT_WIDTH = 495; // A4 width 595 − 2 × 50
 

@@ -22,7 +22,7 @@ const notificationSchema = new mongoose.Schema({
   type: {
     type: String,
     required: true,
-    enum: ['proposal', 'bid', 'auction_ended', 'transaction', 'dispute', 'review', 'listing', 'watchlist', 'private_room', 'shipping', 'account', 'security', 'system'],
+    enum: ['proposal', 'bid', 'auction_ended', 'transaction', 'dispute', 'review', 'listing', 'watchlist', 'follow', 'private_room', 'shipping', 'account', 'security', 'system'],
     default: 'system',
     index: true
   },

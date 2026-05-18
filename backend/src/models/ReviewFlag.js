@@ -11,11 +11,21 @@ const reviewFlagSchema = new mongoose.Schema({
     required: true,
     index: true
   },
-  /** Reason: extreme_score, rapid_submission, retaliation, multiple_low_scores, other */
+  /** Reason: auto and user/admin moderation reasons */
   reason: {
     type: String,
     required: true,
-    enum: ['extreme_score', 'rapid_submission', 'retaliation', 'multiple_low_scores', 'other'],
+    enum: [
+      'extreme_score',
+      'rapid_submission',
+      'retaliation',
+      'multiple_low_scores',
+      'profanity_hate_speech',
+      'duplicate_pattern',
+      'ip_cluster',
+      'user_report',
+      'other'
+    ],
     index: true
   },
   /** Auto-detection metadata (e.g. { score: 1, submittedWithinMinutes: 2 }) */
@@ -39,5 +49,16 @@ const reviewFlagSchema = new mongoose.Schema({
 });
 
 reviewFlagSchema.index({ status: 1, createdAt: -1 });
+
+// Prevent the same user from filing multiple pending user_report flags on the same review.
+// Race-safe DB-level guard that complements the application-level check in the route.
+reviewFlagSchema.index(
+  { review: 1, reason: 1, 'metadata.reportedBy': 1 },
+  {
+    unique: true,
+    partialFilterExpression: { reason: 'user_report', status: 'pending' },
+    name: 'unique_pending_user_report_per_reviewer'
+  }
+);
 
 module.exports = mongoose.model('ReviewFlag', reviewFlagSchema);

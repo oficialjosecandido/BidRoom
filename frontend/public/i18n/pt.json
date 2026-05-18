@@ -1,8 +1,12 @@
 {
   "header": {
+    "brand": "BidRoom",
+    "envBadgeDev": "Dev",
+    "envBadgeAria": "Ambiente de desenvolvimento",
     "nav": {
       "auctions": "Leilões",
       "categories": "Categorias",
+      "privateRooms": "Salas Privadas",
       "howItWorks": "Como Funciona",
       "faq": "FAQ",
       "contact": "Contacto"
@@ -11,11 +15,135 @@
       "listYourItem": "Listar Item",
       "myAccount": "Minha Conta",
       "signIn": "Entrar",
-      "startBidding": "Começar a Licitar"
+      "startBidding": "Começar",
+      "publish": "Publicar",
+      "notifications": "Notificações"
+    },
+    "search": {
+      "placeholder": "Procurar leilões, artigos, vendedores…",
+      "open": "Pesquisar"
     },
     "menu": {
       "open": "Abrir menu",
       "close": "Fechar menu"
+    },
+    "theme": {
+      "button": "Tema",
+      "light": "Claro",
+      "dark": "Escuro",
+      "system": "Seguir o sistema"
+    }
+  },
+  "landing": {
+    "nav": {
+      "language": "Escolher idioma",
+      "auctions": "Leilões",
+      "howItWorks": "Como funciona",
+      "privateRooms": "Salas privadas",
+      "signIn": "Entrar"
+    },
+    "home": {
+      "skipHeading": "BidRoom.pt — leilões premium em Portugal. Disponível em modo claro e escuro, com referências aos azulejos portugueses no modo claro.",
+      "breadcrumb": {
+        "home": "Início",
+        "featured": "Leilões em destaque"
+      },
+      "theme": {
+        "toggleTitle": "Alternar modo claro / escuro",
+        "light": "Modo claro",
+        "dark": "Modo escuro"
+      },
+      "hero": {
+        "svgDarkTitle": "Ilustração decorativa modo escuro — sardinha e azulejos",
+        "svgLightTitle": "Fundo decorativo de azulejos — modo claro",
+        "eyebrow": "Portugal · Lançamento 2026",
+        "title1": "Leilões de",
+        "title2": "alto valor,",
+        "titleEm": "feitos bem.",
+        "subtitle": "A primeira plataforma portuguesa de leilões premium com salas privadas em tempo real, reputação verificada e pagamentos seguros.",
+        "ctaExplore": "Explorar leilões",
+        "ctaHow": "Como funciona",
+        "liveNow": "Ao vivo agora"
+      },
+      "stats": {
+        "activeAuctions": "Leilões activos",
+        "volume": "Volume transaccionado",
+        "satisfaction": "Satisfação compradores",
+        "bidTime": "Tempo médio de lance"
+      },
+      "section": {
+        "featured": "Em destaque",
+        "ongoing": "Leilões em curso"
+      },
+      "badges": {
+        "live": "Ao vivo",
+        "privateRoom": "Sala privada",
+        "bestOffer": "Melhor oferta"
+      },
+      "listing": {
+        "currentBid": "Lance actual",
+        "minPrice": "Preço mínimo",
+        "offersCount": "3 ofertas"
+      },
+      "listing1": {
+        "title": "Patek Philippe Ref. 5711",
+        "meta": "Relógios · Genebra, 2019"
+      },
+      "listing2": {
+        "title": "Barca Velha 1985 — Magnum",
+        "meta": "Vinhos · Douro, Portugal"
+      },
+      "listing3": {
+        "title": "Leica M6 TTL — 0.85x",
+        "meta": "Fotografia · Lisboa, 2001"
+      },
+      "azulejoSection": "Inspiração portuguesa · Azulejos do século XVI",
+      "private": {
+        "tag": "Funcionalidade exclusiva",
+        "title1": "Salas de Leilão",
+        "title2": "Privadas",
+        "body": "Quando o leilão público termina, os melhores licitadores são convidados para uma sala exclusiva. Uma corrida final de 60 segundos. O mais alto vence automaticamente.",
+        "b1": "O vendedor convida 2 a 5 licitadores registados",
+        "b2": "15 minutos para aceitar ou recusar o convite",
+        "b3": "Cada lance reinicia o contador de 60 segundos",
+        "b4": "Vencedor determinado automaticamente",
+        "visLabel": "Sala privada · Ao vivo",
+        "visSub": "Sala fecha em",
+        "highestBid": "Lance mais alto"
+      },
+      "trust": {
+        "eyebrow": "Confiança e segurança",
+        "title": "Construído para durar",
+        "c1t": "Reputação verificada",
+        "c1b": "Pontuação 0–100 baseada em avaliações, disputas e histórico. Acesso a Salas Privadas requer pontuação ≥60.",
+        "c2t": "Pagamentos EasyPay",
+        "c2b": "Multibanco, MB WAY, cartão. Transferência SEPA directa para o IBAN do vendedor.",
+        "c3t": "Disputas resolvidas",
+        "c3b": "Moderação humana em caso de problema. Suspensão automática de ambas as contas durante a resolução.",
+        "c4t": "Envio em 5 dias úteis",
+        "c4b": "Alerta automático no dia 3. Reembolso automático no dia 5 se não houver envio.",
+        "c5t": "Moderação por IA",
+        "c5b": "Azure AI analisa texto e imagens. Artigos proibidos e conteúdo impróprio bloqueados automaticamente.",
+        "c6t": "Português e Inglês",
+        "c6b": "Plataforma completamente bilingue, adaptada ao mercado português com suporte integral em PT e EN."
+      },
+      "footer": {
+        "tagline": "O mercado de leilões premium de Portugal",
+        "platform": "Plataforma",
+        "account": "Conta",
+        "legal": "Legal",
+        "activeAuctions": "Leilões activos",
+        "bestOffer": "Melhor oferta",
+        "signIn": "Entrar",
+        "register": "Registar",
+        "dashboard": "Painel",
+        "reputation": "Reputação",
+        "terms": "Termos de uso",
+        "privacy": "Privacidade",
+        "cookies": "Cookies",
+        "contact": "Contacto",
+        "copyright": "© 2026 BidRoom · Todos os direitos reservados · Lisboa, Portugal"
+      }
     }
   },
   "footer": {
@@ -116,7 +244,10 @@
       "bid": "licitação",
       "bids": "licitações",
       "ended": "Terminado",
-      "na": "N/D"
+      "na": "N/D",
+      "bestOffer": "Melhor Oferta",
+      "clearFilter": "Limpar Filtro",
+      "tryDifferentCategory": "Tenta uma categoria diferente ou limpa o filtro."
     }
   },
   "addListing": {
@@ -152,15 +283,31 @@
     "descriptionPlaceholder": "Descreva o seu item em detalhe, incluindo histórico, defeitos e componentes incluídos...",
     "minCharsRequired": "Mínimo de 50 caracteres obrigatório.",
     "charactersMin": "{{count}} caracteres (mínimo 50 obrigatório)",
-    "mediaUpload": "Upload de Media * (Mínimo 3 fotos)",
+    "mediaUpload": "Upload de Media *",
+    "mediaRule": "1–20 imagens, ou 1–5 imagens + 1 vídeo.",
     "clickToUpload": "Clique para enviar ou arraste os ficheiros aqui",
-    "uploadMinError": "Por favor carregue pelo menos 1 imagem (3 recomendadas)",
-    "filesUploaded": "{{count}}/3+ ficheiros carregados (mínimo 1 para teste)",
+    "uploadMinError": "Adicione pelo menos 1 imagem.",
+    "uploadMediaError": "Use 1–20 imagens apenas, ou 1–5 imagens com 1 vídeo.",
+    "filesUploaded": "{{images}} imagem(ns), {{videos}} vídeo(s)",
     "keySpecs": "Especificações Principais (Opcional)",
     "specKeyPlaceholder": "Especificação (ex: Modelo, Marca)",
     "specValuePlaceholder": "Valor",
     "remove": "Remover",
     "addSpecification": "+ Adicionar Especificação",
+    "itemType": "Tipo de Item",
+    "itemTypeSingle": "Item Individual",
+    "itemTypeSingleHint": "Um único item",
+    "itemTypeBundle": "Lote / Conjunto",
+    "itemTypeBundleHint": "Um grupo fixo de itens vendidos juntos",
+    "itemTypeMultiQty": "Multi-Quantidade",
+    "itemTypeMultiQtyHint": "Mesmo item, várias unidades",
+    "quantity": "Quantidade",
+    "quantityHint": "Número de unidades idênticas incluídas (mínimo 2)",
+    "bundleItems": "Conteúdo do Lote",
+    "bundleItemTitle": "Nome do item",
+    "bundleItemDesc": "Breve descrição (opcional)",
+    "addBundleItem": "Adicionar Item ao Lote",
+    "bundleItemsHint": "Liste cada item incluído neste lote",
     "city": "Cidade *",
     "cityPlaceholder": "Cidade",
     "regionState": "Região/Estado *",
@@ -176,17 +323,18 @@
     "minimumAcceptPrice": "Preço Mínimo de Aceitação (Opcional)",
     "minimumAcceptHint": "Preço limite em que deve aceitar uma oferta qualificada",
     "enablePrivateRoom": "Ativar Sala Privada",
-    "privateRoomHint": "Importante: Ativar Sala Privada aumenta a sua taxa de comissão de 0,5% para 2,0%. Deve comprometer-se com esta escolha.",
-    "commissionPrivateRoom": "Taxa de Comissão: 2,0% (Sala Privada ativada)",
+    "privateRoomHint": "Importante: Ativar Sala Privada aumenta a sua taxa de comissão de 3,5% para 6,0%. Deve comprometer-se com esta escolha.",
+    "commissionPrivateRoom": "Taxa de Comissão: 6,0% (Sala Privada ativada)",
     "privateRoomNoAcceptNote": "Nota: Se nenhum licitador convidado aceitar o convite da sala privada em 15 minutos, o leilão será encerrado sem vencedor.",
-    "commissionStandard": "Taxa de Comissão: 0,5% (Padrão)",
+    "commissionStandard": "Taxa de Comissão: 3,5% (Padrão)",
     "shippingOptions": "Opções de Envio *",
     "selectShipping": "Selecionar Opção de Envio",
     "shippingFlatRate": "Taxa Fixa",
     "shippingCalculated": "Envio Calculado",
-    "shippingLocalPickup": "Apenas Levantamento Local",
+    "shippingLocalPickup": "Encontro Presencial",
     "shippingFree": "Envio Grátis",
     "flatRateCost": "Custo de Envio Taxa Fixa *",
+    "flatRateHint": "Introduza o preço fixo de envio que os compradores pagarão. Use 0 para envio grátis.",
     "calculatedHint": "As taxas da transportadora são calculadas automaticamente no checkout com base no endereço do comprador e nos detalhes da embalagem que fornecer.",
     "packageSize": "Tamanho da Embalagem *",
     "selectPackageSize": "Selecionar tamanho da embalagem",
@@ -217,11 +365,10 @@
     "return14": "Devoluções em 14 Dias",
     "returnNo": "Sem Devoluções",
     "returnCustom": "Política Personalizada",
-    "feeSummary": "Resumo de Taxas",
-    "commission": "Comissão ({{rate}}%):",
-    "paymentProcessing": "Processamento de Pagamento (~2,9% + 0,30€):",
-    "estimatedTotal": "Taxas Totais Estimadas:",
-    "feeNote": "* As taxas finais podem variar consoante o preço de venda final",
+    "feeSummary": "Taxa estimada do vendedor (previsão)",
+    "feeForecastSubtitle": "É uma estimativa caso o artigo venda pelo seu preço mínimo aceite. Se ainda não definiu um, usamos o lance inicial ou o preço Compre já.",
+    "sellerBidroomFee": "Taxa Bidroom para o vendedor ({{rate}}%):",
+    "feeNote": "O processamento de pagamentos Stripe é pago pelo comprador no checkout. A sua taxa Bidroom é deduzida do pagamento.",
     "sellerDeclaration": "Confirmo que sou o proprietário legal deste item e concordo com os Termos e Condições do Bidroom e com a estrutura de comissões. *",
     "previous": "← Anterior",
     "next": "Seguinte →",
@@ -234,7 +381,85 @@
       "art": "Arte",
       "collectibles": "Colecionáveis",
       "jewelry": "Joalharia"
-    }
+    },
+    "successMessage": "Anúncio criado com sucesso!",
+    "draftRestored": "O seu rascunho guardado foi restaurado.",
+    "draftAutoSaveInfo": "O progresso é guardado automaticamente enquanto edita (e ao adicionar fotos).",
+    "saveDraft": "Guardar rascunho",
+    "draftSaving": "A guardar rascunho…",
+    "draftSaved": "Rascunho guardado",
+    "draftError": "Não foi possível guardar o rascunho. Verifique a ligação e tente novamente.",
+    "errorUploadFailed": "Falha ao carregar imagens. Tente novamente.",
+    "errorStep2Description": "Por favor, complete todos os campos obrigatórios. A descrição deve ter pelo menos 50 caracteres.",
+    "reservePrice": "Preço de Reserva",
+    "errors": {
+      "required": "{{field}} é obrigatório",
+      "tooLong": "{{field}} é muito longo",
+      "tooShort": "{{field}} é muito curto",
+      "minValue": "O valor deve ser maior que {{min}}",
+      "buyNowTooLow": "O preço de Compra Imediata deve ser maior que o Lance Inicial",
+      "reserveTooLow": "O preço de reserva deve ser pelo menos o lance inicial",
+      "invalidFileType": "Tipo de arquivo inválido. Apenas imagens (JPEG, PNG, GIF, WebP, BMP) são permitidas. Rejeitados: {{files}}",
+      "mediaMaxPhotos": "Pode adicionar no máximo 20 fotos. Remova algumas para adicionar mais. Não adicionadas: {{files}}",
+      "mediaMaxPhotosWithVideo": "Com um vídeo pode adicionar no máximo 5 fotos. Remova fotos ou o vídeo para adicionar mais. Não adicionadas: {{files}}",
+      "mediaVideoLimit": "Só é permitido um vídeo e no máximo 5 fotos com vídeo. Não adicionado: {{files}}"
+    },
+    "steps": {
+      "label": "Passos"
+    },
+    "step5Title": "Envio",
+    "step5": "Método e origem",
+    "step6Title": "Publicar",
+    "step6": "Revisão final",
+    "step1.section": "Escolha o formato do anúncio",
+    "step2.section": "Informação do artigo",
+    "step3.section": "Fotos do artigo",
+    "step4.auction.section": "Preços do leilão",
+    "step4.offer.section": "Preços da melhor oferta",
+    "step5.section": "Método de envio",
+    "step5.location": "Localização",
+    "step6.section": "Revisão e publicação",
+    "optional": "opcional",
+    "offerDeadline": "Prazo para ofertas",
+    "offerDeadlineHint": "Mais tempo significa mais compradores a ver o seu anúncio e mais propostas a receber.",
+    "startingBidHint": "O valor mínimo para o primeiro lance. Um lance inicial competitivo atrai mais licitantes.",
+    "reserveHint": "O leilão só vincula o vencedor se este valor for atingido.",
+    "durationHint": "Artigos raros ou premium tendem a gerar mais lances com 7–10 dias.",
+    "formatBestOfferDesc": "Os compradores submetem propostas e você escolhe a que prefere. Defina um preço mínimo — tem total liberdade para recusar qualquer oferta abaixo desse valor.",
+    "formatAuctionDesc": "Compradores fazem lances em tempo real e competem pelo seu artigo. Você define a duração e o lance inicial. O vencedor é apurado automaticamente.",
+    "drop": {
+      "title": "Arraste as fotos para aqui",
+      "sub": "ou clique para selecionar · JPEG, PNG, WebP · máx. 20 fotos"
+    },
+    "mediaHint": "A primeira foto será a imagem principal do anúncio.",
+    "mediaCover": "Principal",
+    "photosLabel": "fotos",
+    "preview": {
+      "label": "Pré-visualização",
+      "titlePlaceholder": "O título aparece aqui"
+    },
+    "ck": {
+      "format": "Formato selecionado",
+      "title": "Título preenchido",
+      "category": "Categoria escolhida",
+      "condition": "Condição definida",
+      "desc": "Descrição ≥ 50 chars",
+      "photos": "Pelo menos 1 foto",
+      "price": "Preço definido",
+      "shipping": "Envio configurado"
+    },
+    "stepOf": "Passo {{step}} de {{total}}",
+    "kycNotice": "Para artigos com valor ≥ €5.000 é necessária verificação de identidade (KYC) antes de publicar.",
+    "stripeRequired": "Configure os pagamentos primeiro",
+    "stripeRequiredText": "Para receber o pagamento das suas vendas precisa de configurar a sua conta de pagamentos.",
+    "nav": {
+      "dashboard": "Dashboard"
+    },
+    "return7": "7 dias",
+    "feeBuyer": "Taxa Stripe",
+    "feeBuyerNote": "Pago pelo comprador",
+    "feeReceive": "Receberá aproximadamente",
+    "specHint": "Ex: Material — Ouro 18k · Dimensões — 36mm · Referência — 5512"
   },
   "listingList": {
     "searchPlaceholder": "Pesquisar leilões...",
@@ -249,6 +474,10 @@
     "sortMostBids": "Mais Licitações",
     "listings": "anúncios",
     "allAuctions": "Todos os Leilões",
+    "auctionStatus": "Estado do leilão",
+    "activeAuctions": "Leilões em curso",
+    "closedAuctions": "Leilões encerrados",
+    "sortRecentlyEnded": "Encerrados recentemente",
     "loading": "A carregar anúncios...",
     "error": "Erro",
     "tryAgain": "Tentar Novamente",
@@ -264,17 +493,25 @@
     "featured": "Destaque",
     "verified": "Verificado",
     "endingSoon": "A Terminar Em Breve",
+    "bundle": "Lote",
     "condition": "Condição",
     "price": "Preço",
     "location": "Localização",
     "anyLocation": "Qualquer localização",
-    "shipping": "Envio"
+    "locationCityPlaceholder": "ex.: nome da cidade",
+    "anyCountry": "Qualquer país",
+    "shipping": "Envio",
+    "shippingLegacyWorldwide": "Mundial",
+    "shippingLegacyRegional": "Regional"
   },
   "categories": {
     "title": "Navegar por Categoria",
     "subtitle": "Explore todas as nossas categorias e subcategorias",
     "browseAll": "Ver todos",
-    "allListings": "Todos os Anúncios"
+    "allListings": "Todos os Anúncios",
+    "follow": "Seguir",
+    "following": "A seguir",
+    "unfollow": "Deixar de seguir"
   },
   "language": {
     "en": "English",
@@ -283,6 +520,17 @@
     "fr": "Français"
   },
   "listingDetails": {
+    "saleType": {
+      "bestOffer": "Melhor Oferta",
+      "auction": "Leilão"
+    },
+    "itemMode": {
+      "bundle": "Lote",
+      "units": "unidades",
+      "multiQtyLabel": "Lote Multi-Quantidade",
+      "identicalUnits": "unidades idênticas incluídas",
+      "bundleContents": "O Que Está Incluído"
+    },
     "loading": "Carregando detalhes do anúncio...",
     "backToListings": "← Voltar aos Anúncios",
     "currentBid": "Lance Atual",
@@ -298,6 +546,7 @@
       "createdDesc": "Os convidados têm 15 minutos para aceitar. O leilão começará automaticamente após a janela de aceitação.",
       "view": "Ver Sala Privada",
       "available": "Sala privada disponível",
+      "eligibleCountdownLabel": "Tempo restante para criar sala privada:",
       "availableDescSeller": "Crie sua sala privada e convide 2 a 5 licitantes para continuar. Você recebeu um e-mail com um link para começar.",
       "availableDescBuyer": "O vendedor pode criar uma sala privada e convidar alguns licitantes para continuar. Você será notificado se for convidado.",
       "closed": "Sala privada encerrada",
@@ -317,6 +566,7 @@
     },
     "time": {
       "auctionEnds": "Leilão Encerra",
+      "offerDeadline": "Prazo para Ofertas",
       "privateRoomEnds": "Sala Privada Encerra",
       "auctionEnded": "Leilão Encerrado",
       "listingEnded": "Anúncio Encerrado"
@@ -379,6 +629,24 @@
       "location": "Localização",
       "noReviews": "Sem avaliações ainda"
     },
+    "dsa": {
+      "privateSeller": "Vendedor particular",
+      "professionalSeller": "Vendedor profissional",
+      "consumerNoticeTitle": "Comprar a uma empresa",
+      "consumerNoticeBody": "Este vendedor age em nome profissional. Consoante a lei aplicável, pode ter direitos de consumidor nas compras à distância com comerciantes (por exemplo, informação, desistência e vias de recurso).",
+      "traderSectionTitle": "Informação do comerciante",
+      "legalName": "Denominação social:",
+      "tradeName": "Nome comercial:",
+      "vatId": "Número de IVA:",
+      "address": "Sede registada:",
+      "contact": "Contacto comercial:",
+      "status": {
+        "none": "Dados de comerciante não enviados",
+        "pending": "Verificação pendente",
+        "verified": "Vendedor profissional verificado",
+        "rejected": "Verificação não aceite"
+      }
+    },
     "verification": {
       "title": "Anúncio Verificado"
     },
@@ -407,7 +675,7 @@
       "selectAsWinner": "Selecionar como vencedor",
       "selecting": "Selecionando…",
       "verifiedRequired": "Conta verificada necessária",
-      "notifyOutbid": "Me notifique por e-mail quando meu lance for superado",
+      "notifyOutbid": "Notificar-me quando o meu lance for superado",
       "anonymous": "Anônimo"
     },
     "offerHistory": {
@@ -416,7 +684,7 @@
       "noOffers": "Nenhuma Oferta Ainda",
       "noOffersDesc": "Seja o primeiro a fazer uma oferta neste item!",
       "makeOffer": "Fazer uma oferta",
-      "ctaText": "Faça uma oferta neste item. O vendedor pode aceitar, recusar ou contra-propor.",
+      "ctaText": "Regras: Envie sua oferta antes do prazo. O vendedor pode aceitar ou não. Se houver uma ou mais ofertas iguais ou acima do mínimo, o vendedor é obrigado a vender. Abaixo do mínimo, não é obrigado a vender.",
       "offerFrom": "Oferta de",
       "yourOffer": "Sua oferta",
       "selectedBySeller": "Selecionada pelo vendedor",
@@ -428,13 +696,19 @@
       "decline": "Recusar",
       "declining": "Recusando…",
       "anonymous": "Anônimo",
-      "verifiedLabel": "✓ Verificado"
+      "verifiedLabel": "✓ Verificado",
+      "statusAccepted": "Aceite pelo vendedor",
+      "statusDeclined": "Recusada",
+      "statusExpired": "Expirada",
+      "stripeWarningPrefix": "⚠️ Ligue o Stripe em",
+      "stripeSettingsLink": "Definições → Pagamentos"
     },
     "shipping": {
       "title": "Frete",
       "free": "Frete grátis",
       "cost": "Custo do frete:",
-      "from": "De:"
+      "from": "De:",
+      "workingDays": "dias úteis"
     },
     "returnPolicy": {
       "title": "Política de devolução",
@@ -442,6 +716,7 @@
     },
     "timeline": {
       "title": "Cronograma do Leilão",
+      "listingTitle": "Cronograma do Anúncio",
       "started": "Iniciado:",
       "ends": "Encerra:"
     },
@@ -454,10 +729,13 @@
       "amountLabel": "Valor do seu lance",
       "emailLabel": "Seu e-mail",
       "emailHint": "Usaremos isso para confirmar seu lance.",
-      "notifyOutbid": "Me notifique por e-mail quando meu lance for superado neste leilão",
+      "notifyOutbid": "Notificar-me quando o meu lance for superado",
       "cancel": "Cancelar",
       "submit": "Dar lance",
-      "submitting": "Enviando lance…"
+      "submitting": "Enviando lance…",
+      "subtitle": "Vinculativo se ganhar. Pode acompanhar em tempo real.",
+      "minBid": "Lance mínimo",
+      "valueLabel": "Valor (€)"
     },
     "offerModal": {
       "title": "Fazer uma oferta",
@@ -470,7 +748,19 @@
       "belowMinNote": "Sua oferta está abaixo do preço mínimo do vendedor. O vendedor não é obrigado a aceitar esta oferta, mesmo que você seja o único licitante.",
       "cancel": "Cancelar",
       "submit": "Enviar oferta",
-      "submitting": "Enviando oferta…"
+      "submitting": "Enviando oferta…",
+      "subtitle": "Se o vendedor aceitar, fica comprometido a comprar a esse preço. Pode retirar a oferta enquanto estiver pendente.",
+      "figuresHint": "O mínimo é o valor mais baixo que o vendedor considera. O mais alto é a melhor oferta até agora—pode igualar ou ultrapassar, ou manter-se no mínimo.",
+      "highestOffer": "Oferta mais alta",
+      "valueLabel": "Valor (€)",
+      "yourOfferPreview": "Está a oferecer:",
+      "successTitle": "Oferta enviada",
+      "successText": "A sua oferta de <strong>{{amount}}</strong> foi enviada. O vendedor irá analisá-la—pode cancelar enquanto estiver pendente.",
+      "successTextAccepted": "A sua oferta de <strong>{{amount}}</strong> foi aceite pelo vendedor. Conclua a compra em Transações.",
+      "successConfirm": "Entendido",
+      "errorTitle": "Não foi possível enviar a oferta",
+      "errorText": "Falha ao enviar a oferta. Tente novamente.",
+      "errorConfirm": "OK"
     },
     "watchlistModal": {
       "title": "Salvar na Lista de Desejos",
@@ -501,10 +791,81 @@
       "creating": "Criando…",
       "cannotInvite": "Visitante (não pode ser convidado)",
       "ineligible": "Registre-se para ser elegível",
-      "invite": "Convidar"
-    }
+      "invite": "Convidar",
+      "maxBid": "Lance máx:",
+      "bids": "lance(s)",
+      "notEligible": "Não elegível",
+      "selectedCount": "selecionados (mín. 2, máx. 5)",
+      "bidderFallback": "Licitante"
+    },
+    "nav": {
+      "back": "Leilões",
+      "dashboard": "Dashboard",
+      "signIn": "Entrar"
+    },
+    "formatPill": {
+      "auction": "Leilão ao vivo",
+      "privateRoom": "Sala Privada"
+    },
+    "sidebar": {
+      "watching": "a observar",
+      "congratsWon": "Parabéns! Ganhou este leilão.",
+      "winnerWasSelected": "O vencedor foi selecionado.",
+      "viewTransaction": "Ver transação →",
+      "privateRoomActiveDesc": "Licitação exclusiva em curso.",
+      "privateRoomClosedWinner": "Vencedor selecionado. Preço final:",
+      "bidPrivateRoom": "Licitar na sala privada",
+      "watchPrivateRoomSpectator": "Ver sala privada (espectador)",
+      "watchRoomWaiting": "Ver sala (aguarda início)",
+      "ownListingNote": "Este é o seu anúncio.",
+      "reopenNoBids": "Sem lances. Pode reabrir por mais 7 dias.",
+      "reopenNoOffers": "Sem ofertas. Pode reabrir por mais 7 dias.",
+      "inWatchlist": "Na watchlist",
+      "minimumOffer": "Oferta mínima",
+      "minimumOfferDesc": "Ofertas abaixo deste valor podem ser recusadas automaticamente.",
+      "minimumBid": "Lance mínimo seguinte",
+      "bidIncrement": "Incremento:",
+      "reviews": "avaliações",
+      "following": "✓ A seguir",
+      "follow": "+ Seguir",
+      "eligibleCountdown": "Sala privada:",
+      "remaining": "restantes",
+      "winnerSelectionCountdownOffer": "24h para aceitar oferta",
+      "winnerSelectionCountdownWinner": "24h para selecionar vencedor",
+      "invitedRoomHeader": "Convidados para a sala",
+      "buyNow": "Comprar já ·"
+    },
+    "payment": {
+      "title": "Pagamento",
+      "protected": "Protegido por Stripe",
+      "escrow": "Fundos retidos até confirmação de recepção"
+    },
+    "report": {
+      "listing": "Reportar anúncio",
+      "seller": "Reportar vendedor"
+    },
+    "bidsTab": {
+      "emptyActive": "Sem lances ainda. Seja o primeiro a licitar.",
+      "notEligible": "Não elegível – conta não verificada",
+      "winnerChip": "🏆 Vencedor"
+    },
+    "loginModal": {
+      "title": "Conta necessária",
+      "subtitle": "Precisa de estar autenticado para adicionar à watchlist.",
+      "createAccount": "Criar conta",
+      "signIn": "Entrar"
+    },
+    "cancel": "Cancelar"
   },
   "auth": {
+    "common": {
+      "or": "ou",
+      "email": "E-mail",
+      "emailPlaceholder": "seu.email@exemplo.com",
+      "password": "Senha",
+      "showPassword": "Mostrar senha",
+      "hidePassword": "Ocultar senha"
+    },
     "login": {
       "title": "Entrar",
       "subtitle": "Bem-vindo de volta! Entre na sua conta.",
@@ -517,6 +878,9 @@
       "forgotPassword": "Esqueceu a senha?",
       "signIn": "Entrar",
       "signingIn": "Entrando...",
+      "logIn": "Entrar",
+      "loggingIn": "Entrando...",
+      "resetPassword": "Esqueceu a senha?",
       "noAccount": "Não tem uma conta?",
       "signUp": "Cadastre-se",
       "verifyEmailRequired": "Por favor, verifique seu e-mail antes de entrar. Verifique sua caixa de entrada para um link de verificação."
@@ -526,6 +890,8 @@
       "subtitle": "Junte-se ao BidRoom e comece a dar lances hoje.",
       "continueWithGoogle": "Continuar com Google",
       "orDivider": "ou",
+      "firstName": "Nome",
+      "lastName": "Sobrenome",
       "firstNameLabel": "Nome",
       "firstNamePlaceholder": "Seu nome",
       "lastNameLabel": "Sobrenome",
@@ -534,12 +900,18 @@
       "emailPlaceholder": "seu.email@exemplo.com",
       "passwordLabel": "Senha",
       "passwordPlaceholder": "Crie uma senha forte",
+      "confirmPassword": "Confirmar senha",
       "confirmPasswordLabel": "Confirmar Senha",
       "confirmPasswordPlaceholder": "Repita sua senha",
+      "createPasswordPlaceholder": "Crie uma senha forte",
       "termsAgreement": "Concordo com os",
       "termsLink": "Termos e Condições",
+      "iAccept": "Aceito os",
+      "termsAndConditions": "Termos e Condições",
+      "mustAcceptTerms": "Deve aceitar os Termos e Condições.",
       "createAccount": "Criar Conta",
       "creatingAccount": "Criando conta...",
+      "signUp": "Criar conta",
       "alreadyHaveAccount": "Já tem uma conta?",
       "signIn": "Entrar"
     },
@@ -550,26 +922,39 @@
       "emailPlaceholder": "seu.email@exemplo.com",
       "sendResetLink": "Enviar Link de Redefinição",
       "sending": "Enviando...",
+      "rememberPassword": "Lembra-se da senha?",
       "backToLogin": "Voltar para Entrar",
       "successMessage": "E-mail de redefinição de senha enviado. Verifique sua caixa de entrada.",
-      "errorMessage": "Falha ao enviar e-mail de redefinição. Tente novamente."
+      "errorMessage": "Falha ao enviar e-mail de redefinição. Tente novamente.",
+      "sendFailed": "Falha ao enviar e-mail de redefinição. Tente novamente."
     },
     "resetPassword": {
       "title": "Redefinir Senha",
       "subtitle": "Digite sua nova senha abaixo.",
+      "password": "Nova senha",
+      "confirmPassword": "Confirmar nova senha",
+      "newPassword": "Nova senha",
+      "confirmNewPassword": "Confirmar nova senha",
       "newPasswordLabel": "Nova Senha",
       "newPasswordPlaceholder": "Digite a nova senha",
       "confirmPasswordLabel": "Confirmar Nova Senha",
       "confirmPasswordPlaceholder": "Repita a nova senha",
+      "confirmNewPasswordPlaceholder": "Repita a nova senha",
+      "passwordMust": "A senha deve ter:",
+      "reqMinLength": "Pelo menos 12 caracteres",
+      "reqUppercase": "Uma letra maiúscula",
+      "reqLowercase": "Uma letra minúscula",
+      "reqNumber": "Um número",
       "requirements": "Requisitos da senha:",
-      "req1": "Pelo menos 8 caracteres",
+      "req1": "Pelo menos 12 caracteres",
       "req2": "Uma letra maiúscula",
       "req3": "Um número",
       "resetButton": "Redefinir Senha",
       "resetting": "Redefinindo...",
       "backToLogin": "Voltar para Entrar",
-      "successMessage": "Senha redefinida com sucesso. Agora você pode entrar.",
-      "errorInvalidCode": "Link de redefinição inválido ou expirado. Solicite um novo.",
+      "successMessage": "Senha redefinida com sucesso. A redirecionar para iniciar sessão…",
+      "expiredLink": "Este link de redefinição é inválido ou expirou. Solicite um novo.",
+      "errorInvalidCode": "Link de redefinição inválido. Use o link do e-mail ou solicite uma nova redefinição.",
       "errorMismatch": "As senhas não coincidem.",
       "errorGeneral": "Falha ao redefinir senha. Tente novamente."
     },
@@ -588,6 +973,20 @@
       "goToLogin": "Ir para Entrar"
     },
     "errors": {
+      "fieldRequired": "{{field}} é obrigatório.",
+      "minLength": "{{field}} deve ter pelo menos {{min}} caracteres.",
+      "mustAcceptTerms": "Deve aceitar os Termos e Condições.",
+      "emailExists": "Este e-mail já está registado.",
+      "passwordMismatch": "As senhas não coincidem.",
+      "emailAlreadyInUse": "Já existe uma conta com este e-mail.",
+      "registrationFailed": "Falha no registo. Tente novamente.",
+      "loginFailed": "Falha ao entrar. Tente novamente.",
+      "userDisabled": "Esta conta foi desativada.",
+      "operationNotAllowed": "Esta operação não é permitida.",
+      "popupClosed": "Início de sessão cancelado.",
+      "popupCancelled": "Início de sessão cancelado.",
+      "popupBlocked": "O pop-up foi bloqueado. Permita pop-ups para este site.",
+      "passwordMinLength": "A senha não cumpre o comprimento mínimo.",
       "userNotFound": "Nenhuma conta encontrada com este e-mail.",
       "wrongPassword": "Senha incorreta. Tente novamente.",
       "emailInUse": "Já existe uma conta com este e-mail.",
@@ -605,13 +1004,49 @@
     }
   },
   "dashboard": {
+    "sidebar": {
+      "home": "Início",
+      "store": "Loja",
+      "main": "Principal",
+      "activity": "Atividade",
+      "listings": "Anúncios",
+      "account": "Conta",
+      "buyer": "Comprador",
+      "seller": "Vendedor",
+      "transactions": "Transações",
+      "notifications": "Notificações",
+      "myBids": "As Minhas Licitações",
+      "watchlist": "Watchlist",
+      "following": "A seguir",
+      "myListings": "Os Meus Anúncios",
+      "buyerProfile": "Perfil do Comprador",
+      "sellerProfile": "Perfil do Vendedor",
+      "settings": "Configurações",
+      "logout": "Sair"
+    },
+    "following": {
+      "title": "A seguir",
+      "subtitle": "Gere os vendedores e categorias que segues",
+      "loading": "A carregar…",
+      "sellers": "Vendedores",
+      "categories": "Categorias",
+      "noSellers": "Ainda não segues nenhum vendedor.",
+      "noCategories": "Ainda não segues nenhuma categoria.",
+      "browseSellers": "Ver anúncios",
+      "browseCategories": "Ver categorias",
+      "mute": "Silenciar",
+      "unmute": "Ativar",
+      "unfollow": "Deixar de seguir",
+      "muted": "Silenciado"
+    },
     "common": {
       "loading": "Carregando...",
       "tryAgain": "Tentar novamente",
       "cancel": "Cancelar",
       "save": "Salvar",
       "review": "Avaliação",
-      "reviews": "Avaliações"
+      "reviews": "Avaliações",
+      "submitting": "Enviando..."
     },
     "home": {
       "title": "Painel",
@@ -619,6 +1054,9 @@
       "addListing": "Adicionar Anúncio",
       "viewListings": "Ver Anúncios",
       "activeListings": "Anúncios Ativos",
+      "payoutSetupTitle": "Conta de pagamentos não configurada",
+      "payoutSetupDesc": "Não poderá receber fundos de vendas até configurar a sua conta de pagamentos.",
+      "payoutSetupCta": "Configurar pagamentos →",
       "endedListings": "Encerrados / Indisponíveis",
       "balance": "Saldo",
       "buyerScore": "Pontuação como Comprador",
@@ -646,7 +1084,105 @@
       "topUp": "Recarregar",
       "withdraw": "Sacar",
       "balanceNote": "O saldo é usado para dar lances e concluir compras.",
-      "noScore": "—"
+      "noScore": "—",
+      "there": "lá",
+      "addFunds": "Adicionar Fundos",
+      "createListing": "Criar Anúncio",
+      "profile": "Perfil",
+      "endedUnavailable": "Encerrado / Indisponível",
+      "increaseBalance": "Aumentar Saldo",
+      "reviews": "avaliações",
+      "review": "avaliação",
+      "noReviewsYet": "Sem avaliações ainda",
+      "viewProfile": "Ver Perfil",
+      "yourMembership": "Sua Assinatura",
+      "balanceLabel": "Saldo:",
+      "basedOnBalance": "com base no saldo",
+      "addAtLeast": "Adicione pelo menos",
+      "toUnlock": "para desbloquear",
+      "addFundsToUnlock": "Adicione fundos para desbloquear um nível de assinatura.",
+      "to": "para",
+      "membershipDesc": "Seu nível de assinatura é determinado pelo total de fundos adicionados.",
+      "currentTier": "Nível Atual",
+      "noFundsYet": "Nenhum fundo adicionado ainda.",
+      "balanceUsage": "Seu saldo é usado para dar lances e concluir compras.",
+      "loading": "Carregando...",
+      "sellingItems": "Meus Anúncios",
+      "bids": "lances",
+      "ends": "Termina",
+      "recentlyEnded": "Recentemente encerrado",
+      "noOffersYet": "Nenhuma oferta ainda",
+      "leaveAReview": "Deixar Avaliação",
+      "leaveReviewDesc": "Avalie suas transações recentes para ajudar a comunidade.",
+      "as": "como",
+      "leaveReview": "Deixar Avaliação",
+      "youreReviewing": "Você está avaliando",
+      "for": "por",
+      "viewTransactionDetails": "Ver Detalhes da Transação",
+      "howWouldYouRate": "Como você avaliaria sua experiência?",
+      "tapToRate": "Toque para avaliar",
+      "yourReview": "A tua avaliação",
+      "visibleToOthers": "Visível para outros",
+      "shareExperience": "Partilha a tua experiência...",
+      "submitReview": "Enviar Avaliação",
+      "reviewTagsLabel": "O que se destacou? (opcional, até 5)",
+      "reviewTags": {
+        "fast_payment": "Pagamento rápido",
+        "fast_shipping": "Envio rápido",
+        "item_as_described": "Item conforme descrito",
+        "great_packaging": "Embalagem cuidada",
+        "good_communication": "Boa comunicação",
+        "smooth_transaction": "Transação sem problemas",
+        "trustworthy": "De confiança",
+        "slow_payment": "Pagamento lento",
+        "slow_shipping": "Envio lento",
+        "not_as_described": "Não conforme descrito",
+        "poor_communication": "Má comunicação"
+      },
+      "balanceModalDesc": "Adicione fundos ao seu saldo para dar lances e concluir compras.",
+      "quickSelect": "Seleção rápida",
+      "orCustomAmount": "Ou insira um valor personalizado",
+      "minimum": "Mínimo:",
+      "youllAdd": "Você adicionará",
+      "toYourBalance": "ao seu saldo",
+      "redirecting": "Redirecionando...",
+      "continueToCheckout": "Continuar para o Checkout",
+      "buyingWatchlist": "Compras e Lista de Favoritos",
+      "subtitle": "Aqui está o resumo da sua conta",
+      "myListingsTitle": "Os meus anúncios",
+      "live": "Ativo",
+      "pendingReviews": "Avaliações pendentes",
+      "greeting": {
+        "morning": "Bom dia",
+        "afternoon": "Boa tarde",
+        "evening": "Boa noite"
+      },
+      "statActiveBids": "Lances activos",
+      "statAcrossAuctions": "em {{count}} leilões",
+      "statPendingOffers": "Ofertas pendentes",
+      "statAwaitingSeller": "à espera do vendedor",
+      "statPendingTx": "Transacções pendentes",
+      "statActionNeeded": "ação necessária",
+      "statReputation": "Reputação",
+      "statOutOf100": "em 100",
+      "statActiveListings": "Anúncios activos",
+      "sectionActiveBids": "Lances activos",
+      "yourBid": "O seu lance",
+      "formatAuction": "Leilão",
+      "formatBestOffer": "Melhor oferta",
+      "statusWinning": "A ganhar",
+      "statusOutbid": "Superado",
+      "statusEnded": "Terminado",
+      "ended": "Terminado",
+      "endsInDays": "Termina em {{days}} dias",
+      "endsInHours": "Termina em {{hours}}h {{minutes}}m",
+      "reviewPendingFrom": "Avalie a transacção com {{name}} · {{role}}",
+      "roleSeller": "Vendedor",
+      "roleBuyer": "Comprador",
+      "reviewBtn": "Avaliar"
+    },
+    "role": {
+      "toggleLabel": "Modo comprador ou vendedor"
     },
     "buyer": {
       "title": "Perfil do Comprador",
@@ -655,7 +1191,38 @@
       "tabWatchlist": "Favoritos",
       "tabTransactions": "Transações",
       "tabDisputes": "Disputas",
-      "noReviews": "Sem avaliações ainda."
+      "noReviews": "Sem avaliações ainda.",
+      "tabs": {
+        "bets": "Meus Lances",
+        "watchlist": "Favoritos",
+        "transactions": "Transações",
+        "disputes": "Disputas"
+      }
+    },
+    "myBets": {
+      "title": "Meus Lances",
+      "subtitle": "Todos os seus lances e ofertas em um só lugar. Expanda um anúncio para ver o histórico.",
+      "loading": "Carregando seus lances...",
+      "tryAgain": "Tentar Novamente",
+      "emptyTitle": "Nenhum lance ainda",
+      "emptyDesc": "Você ainda não fez nenhum lance ou oferta. Navegue pelos anúncios e faça seu primeiro lance!",
+      "browseListings": "Ver anúncios",
+      "myBest": "Meu melhor",
+      "bet": "lance",
+      "bets": "lances",
+      "yourBets": "Seus lances",
+      "offer": "Oferta",
+      "bid": "Lance",
+      "winner": "Vencedor",
+      "emailOutbid": "Notificar-me quando for ultrapassado",
+      "updating": "Atualizando…",
+      "viewListing": "Ver anúncio",
+      "statusActive": "Ativo",
+      "statusEnded": "Encerrado",
+      "statusCancelled": "Cancelado",
+      "statusPending": "Pendente",
+      "statusAccepted": "Aceite",
+      "statusRejected": "Recusado"
     },
     "seller": {
       "title": "Perfil do Vendedor",
@@ -663,7 +1230,59 @@
       "tabAuctions": "Meus Leilões",
       "tabTransactions": "Transações",
       "tabDisputes": "Disputas",
-      "noReviews": "Sem avaliações ainda."
+      "noReviews": "Sem avaliações ainda.",
+      "tabs": {
+        "auctions": "Meus Anúncios",
+        "analytics": "Análises",
+        "transactions": "Transações",
+        "disputes": "Disputas"
+      },
+      "analytics": {
+        "title": "Análises",
+        "range": "Período",
+        "last7d": "Últimos 7 dias",
+        "last30d": "Últimos 30 dias",
+        "custom": "Personalizado",
+        "from": "De",
+        "toOptional": "Até (opcional)",
+        "filterCategory": "Categoria",
+        "filterListing": "Anúncio",
+        "allCategories": "Todas as categorias",
+        "allListings": "Todos os anúncios",
+        "apply": "Aplicar filtros",
+        "views": "Visitas à página",
+        "viewsHint": "Carregamentos da página do anúncio neste período (anúncios filtrados).",
+        "bidsOffers": "Lances e ofertas",
+        "bidsOffersHint": "Número de lances e ofertas registados neste período.",
+        "salesPeriod": "Atividade de venda",
+        "salesPeriodHint": "Anúncios distintos em que o comprador pagou ou concluiu o checkout neste período.",
+        "followers": "Seguidores",
+        "followersHint": "{{n}} novos neste período",
+        "inventory": "Estado dos anúncios",
+        "countActive": "ativos",
+        "countEnded": "terminados",
+        "countSoldEver": "vendidos (histórico)",
+        "countCancelled": "cancelados",
+        "conversionTitle": "Taxa de conversão",
+        "conversionDefinition": "vendas com pagamento ou conclusão neste período dividido pelos anúncios filtrados publicados.",
+        "conversionDash": "Sem anúncios suficientes para calcular.",
+        "perListing": "Desempenho por anúncio",
+        "colListing": "Anúncio",
+        "colStatus": "Estado",
+        "colViews": "Visitas (período)",
+        "colBids": "Ações de lances (historial)",
+        "colSold": "Vendido",
+        "yes": "Sim",
+        "saleThisPeriod": "Pagamento/conclusão neste período",
+        "noListings": "Nenhum anúncio corresponde a estes filtros.",
+        "loadFailed": "Não foi possível carregar as análises. Tente novamente.",
+        "analyticsCustomFromRequired": "Escolha a data de início para o período personalizado.",
+        "updating": "A atualizar…",
+        "statusActive": "Activo",
+        "statusEnded": "Terminado",
+        "statusCancelled": "Cancelado",
+        "statusDraft": "Rascunho"
+      }
     },
     "notifications": {
       "title": "Notificações",
@@ -671,7 +1290,8 @@
       "markAllRead": "Marcar todas como lidas",
       "noNotifications": "Sem notificações ainda.",
       "noNotificationsDesc": "Você está em dia! Vamos notificá-lo quando algo acontecer.",
-      "errorLoading": "Falha ao carregar notificações."
+      "errorLoading": "Falha ao carregar notificações.",
+      "loading": "Carregando notificações..."
     },
     "settings": {
       "title": "Configurações",
@@ -684,11 +1304,60 @@
       "notVerified": "Não Verificado",
       "buyerScore": "Pontuação como Comprador",
       "sellerScore": "Pontuação como Vendedor",
+      "reputation": "Reputação",
+      "overallScore": "Pontuação global",
+      "noReviews": "Ainda sem avaliações",
       "languagePreference": "Preferência de Idioma",
       "languageDesc": "Escolha o idioma para sua experiência no BidRoom.",
+      "appearance": {
+        "title": "Aparência",
+        "subtitle": "Claro, escuro ou igual ao dispositivo. Com sessão iniciada, a escolha fica na sua conta e sincroniza entre dispositivos.",
+        "light": "Claro",
+        "dark": "Escuro",
+        "system": "Seguir o sistema"
+      },
       "saveLanguage": "Salvar Idioma",
       "saving": "Salvando...",
       "saved": "Salvo",
+      "dsa": {
+        "title": "Classificação do vendedor (DSA)",
+        "subtitle": "Indique se vende como particular ou como comerciante. Vendedores profissionais devem indicar dados do comerciante; a plataforma verifica-os antes de os mostrar publicamente nos anúncios.",
+        "unavailable": "A conformidade de vendedor ainda não está disponível para a sua conta. Tente mais tarde ou contacte o apoio.",
+        "classificationLabel": "Vendo como",
+        "private": "Particular (não comerciante)",
+        "professional": "Profissional / empresa",
+        "verificationLabel": "Estado de verificação",
+        "status": {
+          "none": "Não enviado",
+          "pending": "Em análise",
+          "verified": "Verificado",
+          "rejected": "Rejeitado"
+        },
+        "rejectionNote": "Nota da análise",
+        "submittedAt": "Último envio",
+        "verifiedAt": "Verificado em",
+        "traderSection": "Dados do comerciante",
+        "legalName": "Denominação social",
+        "tradeName": "Nome comercial (opcional)",
+        "addressLine1": "Morada linha 1",
+        "addressLine2": "Morada linha 2 (opcional)",
+        "city": "Localidade",
+        "region": "Região / distrito",
+        "postalCode": "Código postal",
+        "country": "País (ISO-2)",
+        "contactPhone": "Telefone comercial",
+        "contactEmail": "E-mail comercial",
+        "vatId": "NIF / IVA",
+        "save": "Guardar informação de vendedor",
+        "saving": "A guardar...",
+        "saved": "Guardado",
+        "validationRequired": "Preencha todos os campos obrigatórios do comerciante.",
+        "invalidCountry": "O país deve ser um código de 2 letras (ex.: PT, ES).",
+        "saveFailed": "Não foi possível guardar. Verifique os dados e tente novamente.",
+        "pendingHint": "Os seus dados estão em análise. Não pode publicar como vendedor profissional até ser verificado — veja os requisitos ao criar anúncio.",
+        "verifiedHint": "Os dados verificados do comerciante são mostrados aos compradores nos seus anúncios.",
+        "rejectedHint": "Atualize os dados e guarde novamente para solicitar nova análise."
+      },
       "sellerPayments": "Pagamentos do Vendedor",
       "checkingStripe": "Verificando status do Stripe...",
       "stripeStatus": "Status do Stripe",
@@ -706,12 +1375,143 @@
       "payoutSchedule": "Pagamentos em cronograma contínuo",
       "connectStripe": "Conectar com Stripe",
       "redirecting": "Redirecionando...",
-      "redirectingToStripe": "Redirecionando para o Stripe..."
+      "redirectingToStripe": "Redirecionando para o Stripe...",
+      "notifications": {
+        "title": "Preferências de Notificação",
+        "loading": "A carregar preferências...",
+        "globalEmailUnsubscribed": "Cancelar subscrição de todos os e-mails",
+        "event": "Evento",
+        "channelEmail": "E-mail",
+        "channelInApp": "Na App",
+        "save": "Guardar Preferências",
+        "saving": "A guardar...",
+        "saved": "Preferências guardadas",
+        "events": {
+          "outbid": "Ultrapassado numa licitação",
+          "auctionEndingSoon": "Leilão a terminar em breve",
+          "auctionWon": "Leilão ganho",
+          "offerReceived": "Proposta recebida (vendedor)",
+          "offerAccepted": "Proposta aceite (comprador)",
+          "dispatch": "Artigo expedido",
+          "paymentReceived": "Pagamento recebido (vendedor)",
+          "newBid": "Nova licitação no seu anúncio",
+          "disputeUpdate": "Atualização de disputa"
+        }
+      }
+    },
+    "myAuctions": {
+      "title": "Meus Anúncios",
+      "subtitle": "Gerencie seus anúncios como vendedor e acompanhe os convites de licitantes platina",
+      "loading": "Carregando seus anúncios...",
+      "emptyTitle": "Nenhum anúncio ainda",
+      "emptyDesc": "Você ainda não criou nenhum anúncio. Comece criando seu primeiro anúncio!",
+      "createFirst": "Criar Meu Primeiro Anúncio",
+      "highestOffer": "Maior Oferta",
+      "currentPrice": "Preço Atual",
+      "noOffersYet": "Nenhuma oferta ainda",
+      "bids": "Lances",
+      "watchlist": "Favoritos",
+      "started": "Iniciado",
+      "privateRoom": "Sala de Leilão Privada",
+      "privateRoomActive": "Ativa",
+      "privateRoomAwaiting": "Aguardando Aceitação",
+      "privateRoomEnded": "Encerrada",
+      "goToPrivateRoom": "Ir para a Sala Privada",
+      "platinumBidders": "Licitantes Platina",
+      "accepted": "Aceito",
+      "pendingStatus": "Pendente",
+      "declined": "Recusado",
+      "acceptedBadge": "✓ Aceito",
+      "pendingBadge": "⏳ Pendente",
+      "declinedBadge": "✗ Recusado",
+      "acceptedAt": "Aceito",
+      "invitedAt": "Convidado",
+      "viewListing": "Ver Anúncio",
+      "relist": {
+        "title": "Relistar Leilão",
+        "subtitle": "Ajuste as suas configurações e reliste o artigo para lhe dar outra oportunidade.",
+        "suggestionsLabel": "Sugestões inteligentes",
+        "relistBtn": "Relistar",
+        "alreadyRelisted": "Relistado",
+        "autoRelistBadge": "Auto-relistar",
+        "autoRelistBadgeTitle": "Este anúncio será relistado automaticamente se terminar sem venda",
+        "relistCount": "Relistar #{{count}}",
+        "unsoldReasons": {
+          "no_bids": "Terminou sem lances",
+          "reserve_not_met": "Preço de reserva não atingido",
+          "non_payment": "Comprador não concluiu o pagamento"
+        },
+        "suggestions": {
+          "lower10Price": "Baixar preço inicial 10%",
+          "lower10Reserve": "Baixar reserva 10%",
+          "removeReserve": "Remover preço de reserva",
+          "extend7Days": "Definir duração para 7 dias"
+        },
+        "form": {
+          "startingPrice": "Preço inicial ($)",
+          "reservePrice": "Preço de reserva (opcional, 0 = sem reserva)",
+          "duration": "Duração",
+          "autoRelist": "Relistar automaticamente se não vender",
+          "autoRelistHint": "Relista automaticamente até 3 vezes se o leilão terminar sem venda.",
+          "submit": "Relistar Agora",
+          "submitting": "A relistar…"
+        }
+      }
+    },
+    "myAuctionsBidder": {
+      "title": "Meus Leilões",
+      "subtitle": "Leilões nos quais você deu lances. Acompanhe seus lances e preços atuais.",
+      "loading": "Carregando seus leilões...",
+      "emptyTitle": "Nenhum leilão ainda",
+      "emptyDesc": "Você ainda não deu nenhum lance. Navegue pelos anúncios e dê seu primeiro lance!",
+      "browseAuctions": "Ver leilões",
+      "highestOffer": "Maior Oferta",
+      "currentPrice": "Preço Atual",
+      "noOffersYet": "Nenhuma oferta ainda",
+      "myHighestBid": "Meu maior lance",
+      "totalBids": "Total de lances",
+      "ends": "Termina",
+      "emailOutbid": "Notificar-me quando for ultrapassado",
+      "viewListing": "Ver Anúncio"
+    },
+    "watchlist": {
+      "title": "Minha Lista de Favoritos",
+      "subtitle": "Itens que você salvou. Clique para ver ou dar lances.",
+      "loading": "Carregando sua lista de favoritos...",
+      "emptyTitle": "Nenhum item na sua lista de favoritos",
+      "emptyDesc": "Quando você adicionar itens à sua lista de favoritos em uma página de anúncio, eles aparecerão aqui.",
+      "browseAuctions": "Ver leilões",
+      "noOffersYet": "Nenhuma oferta ainda",
+      "remove": "Remover",
+      "removing": "..."
     }
   },
   "transactions": {
     "title": "Transações",
     "subtitle": "Veja e gerencie suas compras e vendas.",
+    "filterAll": "Todas",
+    "filterPendingPayment": "Pagamento pendente",
+    "filterShipping": "Em trânsito",
+    "filterDelivered": "Entregues",
+    "filterCompleted": "Concluídas",
+    "filterDisputed": "Disputas",
+    "drawer": {
+      "details": "Detalhes",
+      "amount": "Valor",
+      "status": "Estado",
+      "role": "Papel",
+      "deadline": "Prazo",
+      "counterpart": "Contraparte",
+      "seller": "Vendedor",
+      "buyer": "Comprador",
+      "sellerRep": "Reputação"
+    },
+    "tp": {
+      "payment": "Pagamento",
+      "shipping": "Envio",
+      "delivery": "Entrega",
+      "done": "Concluído"
+    },
     "seller": "Vendedor",
     "buyer": "Comprador",
     "loading": "Carregando transações...",
@@ -773,7 +1573,149 @@
     "awaitingDelivery": "Aguardando entrega",
     "completed_desc": "Transação concluída",
     "youBuyer": "Você (Comprador)",
-    "youSeller": "Você (Vendedor)"
+    "youSeller": "Você (Vendedor)",
+    "confirmingStripe": "Confirmando seu pagamento via Stripe...",
+    "noTransactions": "Nenhuma transação ainda",
+    "noTransactionsDesc": "As transações concluídas aparecerão aqui.",
+    "buying": "Comprando",
+    "selling": "Vendendo",
+    "disputeOpen": "Disputa Aberta",
+    "financialBreakdown": "Detalhamento Financeiro",
+    "bidRoomFee": "Taxa BidRoom",
+    "stripeProcessingFee": "Taxa de Processamento Stripe",
+    "shipping": "Frete",
+    "freeShipping": "Grátis",
+    "calculatedSeparately": "Calculado separadamente",
+    "youReceive": "Você recebe",
+    "stripeDeductedNote": "A taxa do Stripe será deduzida do seu pagamento.",
+    "totalCharged": "Total cobrado",
+    "shippingLower": "frete",
+    "paymentWindowEnds": "Prazo de pagamento termina",
+    "passed": "expirado",
+    "paymentDeadlineExpired": "O prazo de pagamento desta transação expirou. O pagamento já não é possível.",
+    "youAreThe": "Você é o",
+    "confirmReceivedHint": "Confirme que recebeu o pagamento antes de preparar o envio.",
+    "acknowledgeBy": "Por favor, confirme até",
+    "deadlinePassed": "prazo expirado",
+    "paymentConfirmedStripe": "Pagamento confirmado via Stripe.",
+    "confirmPrepareShip": "Confirmar e Preparar Envio",
+    "selectShippingMethod": "Selecionar Método de Envio",
+    "streetAddress": "Endereço",
+    "city": "Cidade",
+    "state": "Estado",
+    "postalCode": "CEP",
+    "country": "País",
+    "calculating": "Calculando...",
+    "getShippingRates": "Obter Taxas de Envio",
+    "selectShippingOption": "Selecione uma opção de envio:",
+    "est": "Est.",
+    "days": "dias",
+    "change": "Alterar",
+    "selectShippingBeforePaying": "Selecione um método de envio antes de pagar.",
+    "chooseShippingMethod": "Escolher Método de Envio",
+    "paySecurelyHint": "Pague com segurança via Stripe.",
+    "redirectingToStripe": "Redirecionando para o Stripe...",
+    "paymentConfirmedSellerNotified": "Pagamento confirmado! O vendedor foi notificado.",
+    "paymentRef": "Referência de pagamento",
+    "itemShippedHowReceived": "Item enviado — como foi recebido?",
+    "updating": "Atualizando...",
+    "markAsReceivedProperly": "Marcar como Recebido Corretamente",
+    "receivedNotProperly": "Recebido Incorretamente / Abrir Disputa",
+    "bothMustReview": "Ambas as partes devem deixar uma avaliação para concluir esta transação.",
+    "completeToReview": "Satisfeito com a sua compra? Marque como concluída para desbloquear avaliações.",
+    "markAsCompleted": "Marcar como Concluída",
+    "viewProofOfDelivery": "Ver Prova de Entrega",
+    "view": "Ver",
+    "remove": "Remover",
+    "markAsShipped": "Marcar como Enviado",
+    "confirmShipped": "Confirmar Envio",
+    "downloading": "Baixando...",
+    "downloadInvoice": "Baixar Fatura",
+    "downloadReceipt": "Baixar Recibo",
+    "review": "Avaliar",
+    "as": "como",
+    "for": "por",
+    "score": "Pontuação",
+    "scoreScaleLow": "Fraco",
+    "scoreScaleHigh": "Excelente",
+    "scoreSelected": "Escolheu {{score}} em 5",
+    "descriptionOptional": "Descrição (opcional)",
+    "reviewPrivate": "Sua avaliação é visível para outros",
+    "autoCancelledBuyerTitle": "Pedido cancelado — reembolso emitido",
+    "autoCancelledBuyerMessage": "Seu pedido foi cancelado automaticamente em {{date}} porque o vendedor não enviou o item em até 5 dias úteis. Um reembolso completo foi emitido para seu método de pagamento original e pode levar de 5 a 10 dias úteis para aparecer.",
+    "autoCancelledSellerTitle": "Pedido cancelado — não enviado a tempo",
+    "autoCancelledSellerMessage": "Este pedido foi cancelado automaticamente em {{date}} porque o envio não foi confirmado dentro do prazo de 5 dias úteis. O comprador foi reembolsado integralmente.",
+    "refundRef": "Referência do reembolso",
+    "remindSellerToShip": "Lembrar vendedor de enviar",
+    "remindingSeller": "Enviando…",
+    "remindSellerCooldown": "Você pode enviar outro lembrete em 24 horas.",
+    "expectedShipBy": "Envio esperado até (5 dias úteis)",
+    "shippingStatusLabel": "Status do envio",
+    "sellerMustShipBy": "Envie este pedido até",
+    "trackingNumberPlaceholder": "ex: 9400111899223408553805",
+    "selectCarrier": "Selecionar transportadora",
+    "other": "Outro",
+    "estimatedDeliveryDays": "Prazo estimado de entrega (dias)",
+    "estimatedDeliveryDaysPlaceholder": "ex: 5",
+    "estimatedDeliveryDaysHint": "Informa ao comprador quando esperar o item.",
+    "estimatedDelivery": "Entrega estimada",
+    "deliveryDueConfirmTitle": "Seu item pode ter chegado",
+    "deliveryDueConfirmBody": "A data de entrega estimada passou. Confirme o recebimento abaixo ou abra uma disputa se houver algum problema.",
+    "autoReleaseNotice": "O pagamento será liberado automaticamente ao vendedor em {{date}} se a entrega não for confirmada.",
+    "autoReleaseWarning": "O pagamento será liberado automaticamente em {{days}} dia(s). Confirme o recebimento ou abra uma disputa agora.",
+    "autoReleaseImminent": "O pagamento está prestes a ser liberado ao vendedor. Confirme o recebimento agora se você recebeu o item.",
+    "returnWindowNotice": "Você tem {{days}} dia(s) restante(s) para solicitar uma devolução.",
+    "requestReturn": "Solicitar Devolução",
+    "returnStatus": "Status da devolução",
+    "returnStatuses": {
+      "pending_seller_response": "Aguardando resposta do vendedor",
+      "accepted_by_seller": "Aceito pelo vendedor",
+      "rejected_by_seller": "Rejeitado pelo vendedor",
+      "platform_mediated": "Em mediação pela plataforma"
+    },
+    "returnSellerDeadline": "O vendedor deve responder até {{date}}",
+    "reportDamage": "Reportar Dano",
+    "damageClaimLabel": "Reclamação de dano",
+    "damageClaimWindowNotice": "Item chegou danificado? Tem {{hours}}h para o reportar.",
+    "damageStatuses": {
+      "pending_review": "Em análise",
+      "approved_refund": "Reembolso aprovado",
+      "packaging_rejected": "Reclamação rejeitada",
+      "carrier_claim_filed": "Reclamação junto ao transportador",
+      "resolved": "Resolvido",
+      "closed": "Fechado"
+    },
+    "payIn": "Pagar em:",
+    "paymentExpired": "Expirado",
+    "secondChance": "Segunda oportunidade",
+    "nonPaymentNoSecondBidder": "Esta encomenda foi cancelada por falta de pagamento e não há segundo licitante. Pode relistar o artigo para iniciar um novo leilão.",
+    "relistItem": "Relistar Artigo",
+    "damageClaim": {
+      "title": "Reportar Dano na Entrega",
+      "subtitle": "Submeta fotos do dano e da embalagem original. As reclamações devem ser abertas até 48 horas após a entrega.",
+      "damagePhotos": "Fotos do dano",
+      "damagePhotosHint": "Mostre claramente o dano no item (até 5 fotos).",
+      "packagingPhotos": "Fotos da embalagem",
+      "packagingPhotosHint": "Mostre a caixa/envelope exterior conforme recebido — todos os lados se possível (até 5 fotos).",
+      "description": "Descrição do dano (opcional)",
+      "descriptionPlaceholder": "Descreva o que foi danificado e como estava embalado…",
+      "policyNotice": "As reclamações podem ser rejeitadas se o item tiver sido embalado de forma insuficiente pelo vendedor. A BidRoom irá analisar o cumprimento das normas de embalagem antes de processar qualquer reembolso.",
+      "submit": "Submeter Relatório de Dano"
+    }
+  },
+  "returns": {
+    "modal": {
+      "title": "Solicitar Devolução",
+      "intro": "Descreva o motivo da devolução e envie pelo menos 1 foto como evidência.",
+      "reason": "Motivo da devolução",
+      "reasonPlaceholder": "Descreva o problema com o item (ex: danificado, diferente do anunciado...)",
+      "photos": "Fotos",
+      "photosHint": "Envie pelo menos 1 foto clara mostrando o problema.",
+      "addPhotos": "Enviar Fotos",
+      "uploading": "Enviando...",
+      "submit": "Enviar Solicitação de Devolução",
+      "submitting": "Enviando..."
+    }
   },
   "disputes": {
     "title": "Disputas",
@@ -819,149 +1761,949 @@
       "uploading": "Enviando...",
       "uploaded": "Enviado",
       "submitting": "Enviando...",
-      "submitDispute": "Enviar Disputa"
+      "submitDispute": "Enviar Disputa",
+      "evidenceRequired": "É necessário fornecer evidências para abrir uma disputa.",
+      "evidence": "Evidências",
+      "evidenceHint": "Envie fotos ou vídeo como prova para sua disputa."
     }
   },
   "howItWorks": {
-    "hero": { "title": "Como o BidRoom Funciona", "subtitle": "Tudo o que você precisa saber para comprar e vender no BidRoom." },
+    "hero": {
+      "title": "Como o BidRoom Funciona",
+      "subtitle": "Tudo o que você precisa saber para comprar e vender no BidRoom."
+    },
     "auth": {
-      "title": "Crie Sua Conta", "subtitle": "Cadastre-se gratuitamente e verifique sua identidade para começar a comprar e vender.", "visualTitle": "Login Seguro",
-      "step1": { "title": "Registrar", "desc": "Crie uma conta gratuita com seu e-mail ou Google.", "li1": "Preencha seu nome e e-mail", "li2": "Escolha uma senha segura", "li3": "Concorde com nossos Termos e Condições" },
-      "step2": { "title": "Verificar E-mail", "desc": "Clique no link que enviamos para sua caixa de entrada para ativar sua conta.", "li1": "Verifique sua caixa de entrada", "li2": "Clique no link de confirmação", "li3": "Sua conta está ativa" },
-      "step3": { "title": "Completar Perfil", "desc": "Adicione seus dados de pagamento e preferências de envio.", "li1": "Conecte um método de pagamento", "li2": "Defina suas preferências de envio", "li3": "Comece a dar lances ou anunciar" }
+      "title": "Crie Sua Conta",
+      "subtitle": "Cadastre-se gratuitamente e verifique sua identidade para começar a comprar e vender.",
+      "visualTitle": "Login Seguro",
+      "step1": {
+        "title": "Registrar",
+        "desc": "Crie uma conta gratuita com seu e-mail ou Google.",
+        "li1": "Preencha seu nome e e-mail",
+        "li2": "Escolha uma senha segura",
+        "li3": "Concorde com nossos Termos e Condições"
+      },
+      "step2": {
+        "title": "Verificar E-mail",
+        "desc": "Clique no link que enviamos para sua caixa de entrada para ativar sua conta.",
+        "li1": "Verifique sua caixa de entrada",
+        "li2": "Clique no link de confirmação",
+        "li3": "Sua conta está ativa"
+      },
+      "step3": {
+        "title": "Completar Perfil",
+        "desc": "Adicione seus dados de pagamento e preferências de envio.",
+        "li1": "Conecte um método de pagamento",
+        "li2": "Defina suas preferências de envio",
+        "li3": "Comece a dar lances ou anunciar"
+      }
     },
     "listing": {
-      "title": "Anuncie Seus Itens", "subtitle": "Vender no BidRoom é fácil — descreva seu item, defina seu preço e publique.", "visualTitle": "Anúncio de Item",
-      "step1": { "title": "Escolha Categoria e Formato", "desc": "Selecione a categoria certa e decida entre leilão ou melhor oferta.", "li1": "Selecione a categoria do item", "li2": "Escolha Leilão (Maior Lance) ou Melhor Oferta", "li3": "Indique a condição do item", "li4": "Defina o formato do anúncio" },
-      "step2": { "title": "Adicione Fotos e Descrição", "desc": "Envie fotos claras e escreva uma descrição detalhada para atrair compradores.", "li1": "Envie pelo menos 3 fotos de alta qualidade", "li2": "Escreva uma descrição detalhada e precisa", "li3": "Adicione especificações importantes", "li4": "Insira a localização do item" },
-      "step3": { "title": "Defina Preço e Duração", "desc": "Defina seu lance inicial ou oferta mínima e escolha por quanto tempo o anúncio fica ativo.", "li1": "Defina um lance inicial ou preço mínimo", "li2": "Opcionalmente, habilite a Sala Privada", "li3": "Escolha a duração do anúncio", "li4": "Revise a estrutura de comissão" },
-      "step4": { "title": "Configure o Envio", "desc": "Defina suas opções de envio e prazo de manuseio.", "li1": "Escolha frete fixo, calculado ou grátis", "li2": "Defina seu prazo de manuseio", "li3": "Defina sua política de devolução", "li4": "Revise as taxas e envie" }
+      "title": "Anuncie Seus Itens",
+      "subtitle": "Vender no BidRoom é fácil — descreva seu item, defina seu preço e publique.",
+      "visualTitle": "Anúncio de Item",
+      "step1": {
+        "title": "Escolha Categoria e Formato",
+        "desc": "Selecione a categoria certa e decida entre leilão ou melhor oferta.",
+        "li1": "Selecione a categoria do item",
+        "li2": "Escolha Leilão (Maior Lance) ou Melhor Oferta",
+        "li3": "Indique a condição do item",
+        "li4": "Defina o formato do anúncio"
+      },
+      "step2": {
+        "title": "Adicione Fotos e Descrição",
+        "desc": "Envie fotos claras e escreva uma descrição detalhada para atrair compradores.",
+        "li1": "Envie pelo menos 3 fotos de alta qualidade",
+        "li2": "Escreva uma descrição detalhada e precisa",
+        "li3": "Adicione especificações importantes",
+        "li4": "Insira a localização do item"
+      },
+      "step3": {
+        "title": "Defina Preço e Duração",
+        "desc": "Defina seu lance inicial ou oferta mínima e escolha por quanto tempo o anúncio fica ativo.",
+        "li1": "Defina um lance inicial ou preço mínimo",
+        "li2": "Opcionalmente, habilite a Sala Privada",
+        "li3": "Escolha a duração do anúncio",
+        "li4": "Revise a estrutura de comissão"
+      },
+      "step4": {
+        "title": "Configure o Envio",
+        "desc": "Defina suas opções de envio e prazo de manuseio.",
+        "li1": "Escolha frete fixo, calculado ou grátis",
+        "li2": "Defina seu prazo de manuseio",
+        "li3": "Defina sua política de devolução",
+        "li4": "Revise as taxas e envie"
+      }
     },
     "privateRoom": {
-      "title": "A Sala de Leilão Privada", "subtitle": "Nossa exclusiva Sala Privada permite que vendedores convidem compradores selecionados para um leilão exclusivo e por tempo limitado.", "visualTitle": "Sala de Leilão Privada",
-      "step1": { "title": "Leilão Começa", "desc": "Quando o anúncio fica ativo, os lances são abertos a todos os usuários registrados.", "li1": "Todos os usuários registrados podem dar lances", "li2": "Histórico de lances visível a todos", "li3": "Vendedor pode monitorar a atividade", "li4": "Sala Privada é opcional na criação do anúncio" },
-      "step2": { "title": "Vendedor Cria a Sala Privada", "desc": "A qualquer momento durante o leilão, o vendedor pode convidar 2 a 5 licitantes para uma sala privada.", "li1": "Vendedor seleciona de 2 a 5 licitantes", "li2": "Convidados têm 15 minutos para aceitar", "li3": "Não convidados são notificados", "li4": "Se ninguém aceitar em 15 min, o leilão encerra sem vencedor" },
-      "step3": { "title": "Lances Privados Começam", "desc": "Assim que os convidados aceitam, a sala de leilão privada é aberta.", "li1": "Apenas licitantes convidados podem dar lances", "li2": "Qualquer pessoa pode assistir", "li3": "Os lances devem respeitar o incremento", "li4": "A sala fica aberta enquanto houver lances" },
-      "step4": { "title": "Contagem Regressiva da Sala", "desc": "A sala fecha 60 segundos após o último lance.", "li1": "Contagem de 60 segundos após cada lance", "li2": "Novos lances reiniciam a contagem", "li3": "Todos os espectadores veem o cronômetro ao vivo", "li4": "O maior lance quando o cronômetro chega a zero vence" },
-      "step5": { "title": "Vencedor e Pagamento", "desc": "O maior licitante vence e o pagamento é processado automaticamente.", "li1": "Vencedor é notificado imediatamente", "li2": "Pagamento é capturado do saldo do vencedor", "li3": "Vendedor recebe após confirmação de entrega", "li4": "Ambas as partes podem deixar avaliações" }
+      "title": "A Sala de Leilão Privada",
+      "subtitle": "Nossa exclusiva Sala Privada permite que vendedores convidem compradores selecionados para um leilão exclusivo e por tempo limitado.",
+      "visualTitle": "Sala de Leilão Privada",
+      "step1": {
+        "title": "Leilão Começa",
+        "desc": "Quando o anúncio fica ativo, os lances são abertos a todos os usuários registrados.",
+        "li1": "Todos os usuários registrados podem dar lances",
+        "li2": "Histórico de lances visível a todos",
+        "li3": "Vendedor pode monitorar a atividade",
+        "li4": "Sala Privada é opcional na criação do anúncio"
+      },
+      "step2": {
+        "title": "Vendedor Cria a Sala Privada",
+        "desc": "A qualquer momento durante o leilão, o vendedor pode convidar 2 a 5 licitantes para uma sala privada.",
+        "li1": "Vendedor seleciona de 2 a 5 licitantes",
+        "li2": "Convidados têm 15 minutos para aceitar",
+        "li3": "Não convidados são notificados",
+        "li4": "Se ninguém aceitar em 15 min, o leilão encerra sem vencedor"
+      },
+      "step3": {
+        "title": "Lances Privados Começam",
+        "desc": "Assim que os convidados aceitam, a sala de leilão privada é aberta.",
+        "li1": "Apenas licitantes convidados podem dar lances",
+        "li2": "Qualquer pessoa pode assistir",
+        "li3": "Os lances devem respeitar o incremento",
+        "li4": "A sala fica aberta enquanto houver lances"
+      },
+      "step4": {
+        "title": "Contagem Regressiva da Sala",
+        "desc": "A sala fecha 60 segundos após o último lance.",
+        "li1": "Contagem de 60 segundos após cada lance",
+        "li2": "Novos lances reiniciam a contagem",
+        "li3": "Todos os espectadores veem o cronômetro ao vivo",
+        "li4": "O maior lance quando o cronômetro chega a zero vence"
+      },
+      "step5": {
+        "title": "Vencedor e Pagamento",
+        "desc": "O maior licitante vence e o pagamento é processado automaticamente.",
+        "li1": "Vencedor é notificado imediatamente",
+        "li2": "Pagamento é capturado do saldo do vencedor",
+        "li3": "Vendedor recebe após confirmação de entrega",
+        "li4": "Ambas as partes podem deixar avaliações"
+      }
     },
-    "cta": { "title": "Pronto para Começar?", "subtitle": "Junte-se ao BidRoom hoje e descubra uma forma mais inteligente de comprar e vender.", "button": "Criar Conta Grátis" }
+    "cta": {
+      "title": "Pronto para Começar?",
+      "subtitle": "Junte-se ao BidRoom hoje e descubra uma forma mais inteligente de comprar e vender.",
+      "button": "Criar Conta Grátis"
+    }
   },
   "contact": {
-    "hero": { "title": "Contato", "subtitle": "Estamos aqui para ajudar. Entre em contato com nossa equipe de suporte." },
+    "hero": {
+      "title": "Contato",
+      "subtitle": "Estamos aqui para ajudar. Entre em contato com nossa equipe de suporte."
+    },
     "form": {
-      "heading": "Envie-nos uma Mensagem", "subheading": "Preencha o formulário e entraremos em contato o mais rápido possível.",
-      "name": "Nome", "namePlaceholder": "Seu nome completo", "email": "E-mail",
-      "inquiryType": "Tipo de Consulta", "inquiryGeneral": "Consulta Geral", "inquiryTechnical": "Suporte Técnico", "inquiryBilling": "Faturamento", "inquiryAccount": "Conta", "inquiryReport": "Reportar Anúncio", "inquiryPartnership": "Parceria",
-      "subject": "Assunto", "subjectPlaceholder": "Breve resumo da sua mensagem",
-      "message": "Mensagem", "messagePlaceholder": "Descreva seu problema ou pergunta em detalhes...",
-      "sendMessage": "Enviar Mensagem", "sending": "Enviando...",
+      "heading": "Envie-nos uma Mensagem",
+      "subheading": "Preencha o formulário e entraremos em contato o mais rápido possível.",
+      "name": "Nome",
+      "namePlaceholder": "Seu nome completo",
+      "email": "E-mail",
+      "inquiryType": "Tipo de Consulta",
+      "inquiryGeneral": "Consulta Geral",
+      "inquiryTechnical": "Suporte Técnico",
+      "inquiryBilling": "Faturamento",
+      "inquiryAccount": "Conta",
+      "inquiryReport": "Reportar Anúncio",
+      "inquiryPartnership": "Parceria",
+      "subject": "Assunto",
+      "subjectPlaceholder": "Breve resumo da sua mensagem",
+      "message": "Mensagem",
+      "messagePlaceholder": "Descreva seu problema ou pergunta em detalhes...",
+      "sendMessage": "Enviar Mensagem",
+      "sending": "Enviando...",
       "successMessage": "Sua mensagem foi enviada. Entraremos em contato em até 24 horas.",
-      "errors": { "nameRequired": "Nome é obrigatório.", "emailRequired": "E-mail é obrigatório.", "emailInvalid": "Digite um e-mail válido.", "inquiryRequired": "Selecione um tipo de consulta.", "subjectRequired": "Assunto é obrigatório.", "messageRequired": "Mensagem é obrigatória.", "messageTooShort": "A mensagem deve ter pelo menos 20 caracteres." }
+      "errors": {
+        "nameRequired": "Nome é obrigatório.",
+        "emailRequired": "E-mail é obrigatório.",
+        "emailInvalid": "Digite um e-mail válido.",
+        "inquiryRequired": "Selecione um tipo de consulta.",
+        "subjectRequired": "Assunto é obrigatório.",
+        "messageRequired": "Mensagem é obrigatória.",
+        "messageTooShort": "A mensagem deve ter pelo menos 20 caracteres."
+      }
     },
     "info": {
-      "heading": "Entre em Contato", "subheading": "Escolha o método de contato que funciona melhor para você.",
-      "emailSupport": "Suporte por E-mail", "emailResponse": "Resposta em até 24 horas",
-      "liveChat": "Chat ao Vivo", "liveChatHours": "Seg–Sex, 9h–18h EST", "liveChatDays": "Apenas horário comercial",
-      "phoneSupport": "Suporte por Telefone", "phoneSupportHours": "Seg–Sex, 9h–17h EST",
-      "businessHours": "Horário Comercial", "hoursWeekday": "Segunda–Sexta: 9h – 18h EST", "hoursSaturday": "Sábado: 10h – 16h EST", "hoursSunday": "Domingo: Fechado",
-      "urgentIssues": "Questões Urgentes", "urgentDesc": "Para assuntos urgentes, ligue para nossa linha prioritária:", "urgentAvailability": "Disponível 24/7 para problemas críticos"
+      "heading": "Entre em Contato",
+      "subheading": "Escolha o método de contato que funciona melhor para você.",
+      "emailSupport": "Suporte por E-mail",
+      "emailResponse": "Resposta em até 24 horas",
+      "liveChat": "Chat ao Vivo",
+      "liveChatHours": "Seg–Sex, 9h–18h EST",
+      "liveChatDays": "Apenas horário comercial",
+      "phoneSupport": "Suporte por Telefone",
+      "phoneSupportHours": "Seg–Sex, 9h–17h EST",
+      "businessHours": "Horário Comercial",
+      "hoursWeekday": "Segunda–Sexta: 9h – 18h EST",
+      "hoursSaturday": "Sábado: 10h – 16h EST",
+      "hoursSunday": "Domingo: Fechado",
+      "urgentIssues": "Questões Urgentes",
+      "urgentDesc": "Para assuntos urgentes, ligue para nossa linha prioritária:",
+      "urgentAvailability": "Disponível 24/7 para problemas críticos"
     },
     "faqLinks": {
-      "title": "Consulte Nosso FAQ", "subtitle": "Encontre respostas rápidas para perguntas comuns.",
-      "accountBilling": "Conta e Faturamento", "accountBillingDesc": "Perguntas sobre pagamentos, faturas e gestão de conta.",
-      "biddingAuctions": "Lances e Leilões", "biddingAuctionsDesc": "Como funcionam os lances, regras dos leilões e dicas para vencer.",
-      "technicalSupport": "Suporte Técnico", "technicalSupportDesc": "Solução de problemas, questões de navegador e ajuda com o app.",
+      "title": "Consulte Nosso FAQ",
+      "subtitle": "Encontre respostas rápidas para perguntas comuns.",
+      "accountBilling": "Conta e Faturamento",
+      "accountBillingDesc": "Perguntas sobre pagamentos, faturas e gestão de conta.",
+      "biddingAuctions": "Lances e Leilões",
+      "biddingAuctionsDesc": "Como funcionam os lances, regras dos leilões e dicas para vencer.",
+      "technicalSupport": "Suporte Técnico",
+      "technicalSupportDesc": "Solução de problemas, questões de navegador e ajuda com o app.",
       "viewFaq": "Ver FAQ →"
     }
   },
   "faq": {
-    "hero": { "title": "Perguntas Frequentes", "subtitle": "Encontre respostas para perguntas comuns sobre o BidRoom e nosso processo de leilão." },
-    "search": { "placeholder": "Pesquisar FAQs...", "questionsFound": "pergunta(s) encontrada(s)", "noResults": "Nenhuma pergunta encontrada", "noResultsDesc": "Tente ajustar seus termos de pesquisa ou navegue por todas as categorias.", "clearFilters": "Limpar Filtros" },
-    "categories": { "all": "Todas as Categorias", "account": "Conta e Faturamento", "bidding": "Lances e Leilões", "technical": "Suporte Técnico", "shipping": "Envio e Devoluções", "security": "Segurança e Confiança" },
+    "hero": {
+      "title": "Perguntas Frequentes",
+      "subtitle": "Encontre respostas para perguntas comuns sobre o BidRoom e nosso processo de leilão."
+    },
+    "search": {
+      "placeholder": "Pesquisar FAQs...",
+      "questionsFound": "pergunta(s) encontrada(s)",
+      "noResults": "Nenhuma pergunta encontrada",
+      "noResultsDesc": "Tente ajustar seus termos de pesquisa ou navegue por todas as categorias.",
+      "clearFilters": "Limpar Filtros"
+    },
+    "categories": {
+      "all": "Todas as Categorias",
+      "account": "Conta e Faturamento",
+      "bidding": "Lances e Leilões",
+      "technical": "Suporte Técnico",
+      "shipping": "Envio e Devoluções",
+      "security": "Segurança e Confiança"
+    },
     "help": {
-      "title": "Ainda Precisa de Ajuda?", "subtitle": "Não encontrou o que procura? Estamos aqui para ajudar!",
-      "email": { "title": "Suporte por E-mail", "desc": "Envie-nos uma mensagem detalhada e responderemos em até 24 horas.", "btn": "Contate-nos" },
-      "chat": { "title": "Chat ao Vivo", "desc": "Converse com nossa equipe de suporte em tempo real durante o horário comercial.", "btn": "Iniciar Chat" },
-      "phone": { "title": "Suporte por Telefone", "desc": "Ligue diretamente para assistência imediata com questões urgentes.", "btn": "Ligar Agora" }
+      "title": "Ainda Precisa de Ajuda?",
+      "subtitle": "Não encontrou o que procura? Estamos aqui para ajudar!",
+      "email": {
+        "title": "Suporte por E-mail",
+        "desc": "Envie-nos uma mensagem detalhada e responderemos em até 24 horas.",
+        "btn": "Contate-nos"
+      },
+      "chat": {
+        "title": "Chat ao Vivo",
+        "desc": "Converse com nossa equipe de suporte em tempo real durante o horário comercial.",
+        "btn": "Iniciar Chat"
+      },
+      "phone": {
+        "title": "Suporte por Telefone",
+        "desc": "Ligue diretamente para assistência imediata com questões urgentes.",
+        "btn": "Ligar Agora"
+      }
     },
     "topics": {
       "title": "Tópicos Populares",
-      "gettingStarted": { "title": "Primeiros Passos", "li1": "Como criar uma conta", "li2": "Como funcionam os lances", "li3": "Métodos de pagamento" },
-      "accountManagement": { "title": "Gestão de Conta", "li1": "Atualizar informações da conta", "li2": "Problemas com senha", "li3": "Cancelamento de conta" }
+      "gettingStarted": {
+        "title": "Primeiros Passos",
+        "li1": "Como criar uma conta",
+        "li2": "Como funcionam os lances",
+        "li3": "Métodos de pagamento"
+      },
+      "accountManagement": {
+        "title": "Gestão de Conta",
+        "li1": "Atualizar informações da conta",
+        "li2": "Problemas com senha",
+        "li3": "Cancelamento de conta"
+      }
     },
     "items": {
-      "account1": { "q": "Como crio uma conta?", "a": "Criar uma conta é grátis e fácil! Clique no botão \"Começar a Dar Lances\" em nossa página inicial, preencha o formulário de cadastro com seu e-mail e senha, e verifique seu endereço de e-mail. Você estará pronto para dar lances em minutos." },
-      "account2": { "q": "É gratuito criar uma conta?", "a": "Sim, criar uma conta no BidRoom é completamente gratuito. Você só paga quando vence um leilão e precisa concluir sua compra." },
-      "account3": { "q": "Quais métodos de pagamento vocês aceitam?", "a": "Aceitamos todos os principais cartões de crédito (Visa, MasterCard, American Express), PayPal e transferências bancárias. Todos os pagamentos são processados com segurança." },
-      "account4": { "q": "Como atualizo minhas informações de pagamento?", "a": "Você pode atualizar suas informações de pagamento a qualquer momento nas configurações da conta. Clique em \"Métodos de Pagamento\" e adicione ou atualize suas opções." },
-      "account5": { "q": "Posso cancelar minha conta?", "a": "Sim, você pode desativar sua conta a qualquer momento nas configurações. Observe que você não pode cancelar lances ativos ou leilões em andamento." },
-      "bidding1": { "q": "Como funciona o sistema de lances?", "a": "Nosso sistema de lance por proxy permite que você defina seu valor máximo de lance. Damos lances automaticamente em seu nome até esse valor, garantindo que você pague o mínimo necessário para vencer." },
-      "bidding2": { "q": "Posso cancelar um lance?", "a": "Você pode cancelar um lance dentro de 1 hora após fazê-lo, desde que o leilão não tenha encerrado. Após isso, os lances são definitivos." },
-      "bidding3": { "q": "Como sei se ganhei um leilão?", "a": "Você receberá uma notificação por e-mail imediatamente quando vencer um leilão. Também pode verificar seu painel de controle." },
-      "bidding4": { "q": "O que acontece se eu não pagar por um leilão ganho?", "a": "Se você não concluir o pagamento em 48 horas após vencer, o leilão será oferecido ao próximo maior licitante. Não-pagamento repetido pode resultar na suspensão da conta." },
-      "bidding5": { "q": "Posso dar lances em vários itens ao mesmo tempo?", "a": "Sim, você pode dar lances em quantos itens quiser simultaneamente. Certifique-se de ter fundos suficientes para cobrir todas as vitórias potenciais." },
-      "bidding6": { "q": "Como acompanho meus lances?", "a": "Você pode acompanhar todos os seus lances no painel da conta. Verá lances ativos, lances vencedores e histórico de lances em um só lugar." },
-      "technical1": { "q": "O site está carregando lentamente. O que devo fazer?", "a": "Tente atualizar o navegador ou limpar o cache. Se o problema persistir, verifique sua conexão à internet ou tente usar outro navegador." },
-      "technical2": { "q": "Não consigo entrar na minha conta. Ajuda!", "a": "Certifique-se de usar o e-mail e a senha corretos. Se esqueceu a senha, use o link \"Esqueceu a senha\" na página de login." },
-      "technical3": { "q": "Vocês têm um aplicativo móvel?", "a": "Sim! Nosso aplicativo está disponível para iOS e Android. Você pode baixá-lo na App Store ou Google Play." },
-      "technical4": { "q": "Por que não estou recebendo notificações por e-mail?", "a": "Verifique sua pasta de spam primeiro. Se as notificações ainda estiverem ausentes, vá às configurações da conta e verifique se as preferências de e-mail estão habilitadas." },
-      "technical5": { "q": "Posso usar o BidRoom no meu tablet?", "a": "Com certeza! O BidRoom é totalmente responsivo e funciona ótimo em tablets, smartphones e computadores." },
-      "shipping1": { "q": "Como o envio é tratado?", "a": "O envio é gerenciado pelos vendedores individuais. Cada anúncio mostrará os custos de envio e prazos estimados de entrega." },
-      "shipping2": { "q": "Posso devolver um item se não estiver satisfeito?", "a": "As políticas de devolução variam por vendedor. Verifique o anúncio individual para informações de devolução. O BidRoom também oferece proteção ao comprador para compras elegíveis." },
-      "shipping3": { "q": "Vocês enviam internacionalmente?", "a": "O envio internacional depende do vendedor individual. Verifique cada anúncio para opções de envio para seu país." },
-      "shipping4": { "q": "Como rastreio meu envio?", "a": "Após o envio do item, você receberá um número de rastreamento por e-mail. Use-o para rastrear seu pacote no site da transportadora." },
-      "security1": { "q": "Minhas informações pessoais estão seguras?", "a": "Sim, usamos criptografia padrão do setor para proteger suas informações pessoais e de pagamento. Nunca compartilhamos seus dados com terceiros sem seu consentimento." },
-      "security2": { "q": "O que é proteção ao comprador?", "a": "Nosso programa de proteção ao comprador cobre compras elegíveis contra fraude, deturpação e não entrega. Verifique nossos termos para detalhes completos." },
-      "security3": { "q": "Como reporto um anúncio suspeito?", "a": "Se você vir um anúncio suspeito, clique no botão \"Reportar\" na página do item ou entre em contato com nossa equipe de suporte imediatamente." }
+      "account1": {
+        "q": "Como crio uma conta?",
+        "a": "Criar uma conta é grátis e fácil! Clique no botão \"Começar a Dar Lances\" em nossa página inicial, preencha o formulário de cadastro com seu e-mail e senha, e verifique seu endereço de e-mail. Você estará pronto para dar lances em minutos."
+      },
+      "account2": {
+        "q": "É gratuito criar uma conta?",
+        "a": "Sim, criar uma conta no BidRoom é completamente gratuito. Você só paga quando vence um leilão e precisa concluir sua compra."
+      },
+      "account3": {
+        "q": "Quais métodos de pagamento vocês aceitam?",
+        "a": "Aceitamos todos os principais cartões de crédito (Visa, MasterCard, American Express), PayPal e transferências bancárias. Todos os pagamentos são processados com segurança."
+      },
+      "account4": {
+        "q": "Como atualizo minhas informações de pagamento?",
+        "a": "Você pode atualizar suas informações de pagamento a qualquer momento nas configurações da conta. Clique em \"Métodos de Pagamento\" e adicione ou atualize suas opções."
+      },
+      "account5": {
+        "q": "Posso cancelar minha conta?",
+        "a": "Sim, você pode desativar sua conta a qualquer momento nas configurações. Observe que você não pode cancelar lances ativos ou leilões em andamento."
+      },
+      "bidding1": {
+        "q": "Como funciona o sistema de lances?",
+        "a": "Nosso sistema de lance por proxy permite que você defina seu valor máximo de lance. Damos lances automaticamente em seu nome até esse valor, garantindo que você pague o mínimo necessário para vencer."
+      },
+      "bidding2": {
+        "q": "Posso cancelar um lance?",
+        "a": "Você pode cancelar um lance dentro de 1 hora após fazê-lo, desde que o leilão não tenha encerrado. Após isso, os lances são definitivos."
+      },
+      "bidding3": {
+        "q": "Como sei se ganhei um leilão?",
+        "a": "Você receberá uma notificação por e-mail imediatamente quando vencer um leilão. Também pode verificar seu painel de controle."
+      },
+      "bidding4": {
+        "q": "O que acontece se eu não pagar por um leilão ganho?",
+        "a": "Se você não concluir o pagamento em 48 horas após vencer, o leilão será oferecido ao próximo maior licitante. Não-pagamento repetido pode resultar na suspensão da conta."
+      },
+      "bidding5": {
+        "q": "Posso dar lances em vários itens ao mesmo tempo?",
+        "a": "Sim, você pode dar lances em quantos itens quiser simultaneamente. Certifique-se de ter fundos suficientes para cobrir todas as vitórias potenciais."
+      },
+      "bidding6": {
+        "q": "Como acompanho meus lances?",
+        "a": "Você pode acompanhar todos os seus lances no painel da conta. Verá lances ativos, lances vencedores e histórico de lances em um só lugar."
+      },
+      "technical1": {
+        "q": "O site está carregando lentamente. O que devo fazer?",
+        "a": "Tente atualizar o navegador ou limpar o cache. Se o problema persistir, verifique sua conexão à internet ou tente usar outro navegador."
+      },
+      "technical2": {
+        "q": "Não consigo entrar na minha conta. Ajuda!",
+        "a": "Certifique-se de usar o e-mail e a senha corretos. Se esqueceu a senha, use o link \"Esqueceu a senha\" na página de login."
+      },
+      "technical3": {
+        "q": "Vocês têm um aplicativo móvel?",
+        "a": "Sim! Nosso aplicativo está disponível para iOS e Android. Você pode baixá-lo na App Store ou Google Play."
+      },
+      "technical4": {
+        "q": "Por que não estou recebendo notificações por e-mail?",
+        "a": "Verifique sua pasta de spam primeiro. Se as notificações ainda estiverem ausentes, vá às configurações da conta e verifique se as preferências de e-mail estão habilitadas."
+      },
+      "technical5": {
+        "q": "Posso usar o BidRoom no meu tablet?",
+        "a": "Com certeza! O BidRoom é totalmente responsivo e funciona ótimo em tablets, smartphones e computadores."
+      },
+      "shipping1": {
+        "q": "Como o envio é tratado?",
+        "a": "O envio é gerenciado pelos vendedores individuais. Cada anúncio mostrará os custos de envio e prazos estimados de entrega."
+      },
+      "shipping2": {
+        "q": "Posso devolver um item se não estiver satisfeito?",
+        "a": "As políticas de devolução variam por vendedor. Verifique o anúncio individual para informações de devolução. O BidRoom também oferece proteção ao comprador para compras elegíveis."
+      },
+      "shipping3": {
+        "q": "Vocês enviam internacionalmente?",
+        "a": "O envio internacional depende do vendedor individual. Verifique cada anúncio para opções de envio para seu país."
+      },
+      "shipping4": {
+        "q": "Como rastreio meu envio?",
+        "a": "Após o envio do item, você receberá um número de rastreamento por e-mail. Use-o para rastrear seu pacote no site da transportadora."
+      },
+      "security1": {
+        "q": "Minhas informações pessoais estão seguras?",
+        "a": "Sim, usamos criptografia padrão do setor para proteger suas informações pessoais e de pagamento. Nunca compartilhamos seus dados com terceiros sem seu consentimento."
+      },
+      "security2": {
+        "q": "O que é proteção ao comprador?",
+        "a": "Nosso programa de proteção ao comprador cobre compras elegíveis contra fraude, deturpação e não entrega. Verifique nossos termos para detalhes completos."
+      },
+      "security3": {
+        "q": "Como reporto um anúncio suspeito?",
+        "a": "Se você vir um anúncio suspeito, clique no botão \"Reportar\" na página do item ou entre em contato com nossa equipe de suporte imediatamente."
+      }
     }
   },
   "privacy": {
-    "hero": { "title": "Política de Privacidade", "subtitle": "Sua privacidade é importante para nós. Esta política explica como coletamos, usamos e protegemos suas informações.", "lastUpdated": "Última atualização: dezembro de 2024" },
-    "s1": { "title": "1. Introdução", "p1": "O BidRoom (\"nós\", \"nosso\" ou \"nos\") está comprometido em proteger sua privacidade. Esta Política de Privacidade explica como coletamos, usamos, divulgamos e protegemos suas informações quando você usa nossa plataforma de marketplace de leilões.", "p2": "Ao usar nosso serviço, você concorda com a coleta e uso de informações de acordo com esta política." },
-    "s2": { "title": "2. Informações que Coletamos", "s1": { "title": "2.1 Informações Pessoais", "intro": "Coletamos informações que você nos fornece diretamente, como:", "li1": "Nome e informações de contato (endereço de e-mail, número de telefone)", "li2": "Credenciais de conta (nome de usuário, senha)", "li3": "Informações de pagamento (detalhes do cartão de crédito, endereço de cobrança)", "li4": "Informações e preferências do perfil", "li5": "Comunicações conosco (solicitações de suporte, feedback)" }, "s2": { "title": "2.2 Informações de Uso", "intro": "Coletamos automaticamente certas informações sobre o uso do nosso serviço:", "li1": "Informações do dispositivo (endereço IP, tipo de navegador, sistema operacional)", "li2": "Dados de uso (páginas visitadas, tempo gasto, recursos utilizados)", "li3": "Atividade de lances e participação em leilões", "li4": "Cookies e tecnologias de rastreamento similares" } },
-    "s3": { "title": "3. Como Usamos Suas Informações", "intro": "Usamos as informações que coletamos para:", "li1": "Fornecer, manter e melhorar nossos serviços", "li2": "Processar transações e gerenciar sua conta", "li3": "Facilitar leilões e processos de lances", "li4": "Enviar atualizações e notificações importantes", "li5": "Fornecer suporte ao cliente", "li6": "Detectar e prevenir fraudes e abusos", "li7": "Cumprir obrigações legais", "li8": "Analisar padrões de uso para melhorar a experiência do usuário" },
-    "s4": { "title": "4. Compartilhamento e Divulgação de Informações", "intro": "Não vendemos, negociamos ou alugamos suas informações pessoais a terceiros. Podemos compartilhar suas informações nas seguintes circunstâncias:", "s1": { "title": "4.1 Prestadores de Serviços", "intro": "Podemos compartilhar informações com prestadores de serviços terceirizados confiáveis, como:", "li1": "Processadores de pagamento", "li2": "Provedores de serviço de e-mail", "li3": "Serviços de análise", "li4": "Ferramentas de suporte ao cliente" }, "s2": { "title": "4.2 Requisitos Legais", "intro": "Podemos divulgar informações quando exigido por lei ou para:", "li1": "Cumprir processos legais ou solicitações governamentais", "li2": "Proteger nossos direitos, propriedade ou segurança", "li3": "Proteger os direitos, propriedade ou segurança de nossos usuários", "li4": "Investigar possíveis violações de nossos termos" }, "s3": { "title": "4.3 Transferências Comerciais", "p": "Em caso de fusão, aquisição ou venda de ativos, suas informações podem ser transferidas como parte da transação." } },
-    "s5": { "title": "5. Segurança dos Dados", "intro": "Implementamos medidas técnicas e organizacionais adequadas para proteger suas informações pessoais. Essas medidas incluem:", "li1": "Criptografia de dados sensíveis em trânsito e em repouso", "li2": "Avaliações e atualizações regulares de segurança", "li3": "Controles de acesso e sistemas de autenticação", "li4": "Treinamento de funcionários em proteção de dados", "note": "No entanto, nenhum método de transmissão pela internet é 100% seguro e não podemos garantir segurança absoluta." },
-    "s6": { "title": "6. Seus Direitos e Escolhas", "intro": "Você tem certos direitos em relação às suas informações pessoais:", "li1": { "label": "Acesso:", "text": "Solicitar acesso às suas informações pessoais" }, "li2": { "label": "Correção:", "text": "Solicitar correção de informações imprecisas" }, "li3": { "label": "Exclusão:", "text": "Solicitar exclusão de suas informações pessoais" }, "li4": { "label": "Portabilidade:", "text": "Solicitar uma cópia dos seus dados em formato portátil" }, "li5": { "label": "Cancelamento:", "text": "Cancelar a inscrição em comunicações de marketing" }, "note": "Para exercer esses direitos, entre em contato conosco usando as informações fornecidas na seção \"Contate-nos\"." },
-    "s7": { "title": "7. Cookies e Tecnologias de Rastreamento", "intro": "Usamos cookies e tecnologias similares para melhorar sua experiência em nossa plataforma. Cookies nos ajudam a:", "li1": "Lembrar suas preferências e configurações", "li2": "Analisar como você usa nosso serviço", "li3": "Fornecer conteúdo e anúncios personalizados", "li4": "Melhorar a funcionalidade de nossa plataforma", "note": "Você pode controlar as configurações de cookies pelas preferências do navegador, mas desabilitar cookies pode afetar a funcionalidade do serviço." },
-    "s8": { "title": "8. Retenção de Dados", "intro": "Retemos suas informações pessoais pelo tempo necessário para fornecer nossos serviços. Podemos reter certas informações por períodos mais longos para:", "li1": "Cumprir obrigações legais", "li2": "Resolver disputas e fazer cumprir acordos", "li3": "Prevenir fraudes e abusos" },
-    "s9": { "title": "9. Transferências Internacionais de Dados", "p": "Suas informações podem ser transferidas e processadas em países diferentes do seu. Garantimos que tais transferências cumpram as leis de proteção de dados aplicáveis." },
-    "s10": { "title": "10. Privacidade de Crianças", "p": "Nosso serviço não é destinado a crianças menores de 13 anos. Não coletamos conscientemente informações pessoais de crianças menores de 13 anos." },
-    "s11": { "title": "11. Alterações nesta Política de Privacidade", "intro": "Podemos atualizar esta Política de Privacidade periodicamente. Notificaremos sobre alterações materiais:", "li1": "Publicando a política atualizada em nosso site", "li2": "Enviando uma notificação por e-mail", "li3": "Exibindo um aviso em nossa plataforma", "note": "O uso continuado do serviço após qualquer alteração constitui aceitação da Política de Privacidade atualizada." },
-    "s12": { "title": "12. Contate-nos", "intro": "Se tiver dúvidas sobre esta Política de Privacidade, entre em contato:", "emailLabel": "E-mail:", "addressLabel": "Endereço:", "address": "Equipe de Privacidade BidRoom, 123 Auction Street, Commerce City, CC 12345", "phoneLabel": "Telefone:" }
+    "hero": {
+      "title": "Política de Privacidade",
+      "subtitle": "Sua privacidade é importante para nós. Esta política explica como coletamos, usamos e protegemos suas informações.",
+      "lastUpdated": "Última atualização: dezembro de 2024"
+    },
+    "s1": {
+      "title": "1. Introdução",
+      "p1": "O BidRoom (\"nós\", \"nosso\" ou \"nos\") está comprometido em proteger sua privacidade. Esta Política de Privacidade explica como coletamos, usamos, divulgamos e protegemos suas informações quando você usa nossa plataforma de marketplace de leilões.",
+      "p2": "Ao usar nosso serviço, você concorda com a coleta e uso de informações de acordo com esta política."
+    },
+    "s2": {
+      "title": "2. Informações que Coletamos",
+      "s1": {
+        "title": "2.1 Informações Pessoais",
+        "intro": "Coletamos informações que você nos fornece diretamente, como:",
+        "li1": "Nome e informações de contato (endereço de e-mail, número de telefone)",
+        "li2": "Credenciais de conta (nome de usuário, senha)",
+        "li3": "Informações de pagamento (detalhes do cartão de crédito, endereço de cobrança)",
+        "li4": "Informações e preferências do perfil",
+        "li5": "Comunicações conosco (solicitações de suporte, feedback)"
+      },
+      "s2": {
+        "title": "2.2 Informações de Uso",
+        "intro": "Coletamos automaticamente certas informações sobre o uso do nosso serviço:",
+        "li1": "Informações do dispositivo (endereço IP, tipo de navegador, sistema operacional)",
+        "li2": "Dados de uso (páginas visitadas, tempo gasto, recursos utilizados)",
+        "li3": "Atividade de lances e participação em leilões",
+        "li4": "Cookies e tecnologias de rastreamento similares"
+      }
+    },
+    "s3": {
+      "title": "3. Como Usamos Suas Informações",
+      "intro": "Usamos as informações que coletamos para:",
+      "li1": "Fornecer, manter e melhorar nossos serviços",
+      "li2": "Processar transações e gerenciar sua conta",
+      "li3": "Facilitar leilões e processos de lances",
+      "li4": "Enviar atualizações e notificações importantes",
+      "li5": "Fornecer suporte ao cliente",
+      "li6": "Detectar e prevenir fraudes e abusos",
+      "li7": "Cumprir obrigações legais",
+      "li8": "Analisar padrões de uso para melhorar a experiência do usuário"
+    },
+    "s4": {
+      "title": "4. Compartilhamento e Divulgação de Informações",
+      "intro": "Não vendemos, negociamos ou alugamos suas informações pessoais a terceiros. Podemos compartilhar suas informações nas seguintes circunstâncias:",
+      "s1": {
+        "title": "4.1 Prestadores de Serviços",
+        "intro": "Podemos compartilhar informações com prestadores de serviços terceirizados confiáveis, como:",
+        "li1": "Processadores de pagamento",
+        "li2": "Provedores de serviço de e-mail",
+        "li3": "Serviços de análise",
+        "li4": "Ferramentas de suporte ao cliente"
+      },
+      "s2": {
+        "title": "4.2 Requisitos Legais",
+        "intro": "Podemos divulgar informações quando exigido por lei ou para:",
+        "li1": "Cumprir processos legais ou solicitações governamentais",
+        "li2": "Proteger nossos direitos, propriedade ou segurança",
+        "li3": "Proteger os direitos, propriedade ou segurança de nossos usuários",
+        "li4": "Investigar possíveis violações de nossos termos"
+      },
+      "s3": {
+        "title": "4.3 Transferências Comerciais",
+        "p": "Em caso de fusão, aquisição ou venda de ativos, suas informações podem ser transferidas como parte da transação."
+      }
+    },
+    "s5": {
+      "title": "5. Segurança dos Dados",
+      "intro": "Implementamos medidas técnicas e organizacionais adequadas para proteger suas informações pessoais. Essas medidas incluem:",
+      "li1": "Criptografia de dados sensíveis em trânsito e em repouso",
+      "li2": "Avaliações e atualizações regulares de segurança",
+      "li3": "Controles de acesso e sistemas de autenticação",
+      "li4": "Treinamento de funcionários em proteção de dados",
+      "note": "No entanto, nenhum método de transmissão pela internet é 100% seguro e não podemos garantir segurança absoluta."
+    },
+    "s6": {
+      "title": "6. Seus Direitos e Escolhas",
+      "intro": "Você tem certos direitos em relação às suas informações pessoais:",
+      "li1": {
+        "label": "Acesso:",
+        "text": "Solicitar acesso às suas informações pessoais"
+      },
+      "li2": {
+        "label": "Correção:",
+        "text": "Solicitar correção de informações imprecisas"
+      },
+      "li3": {
+        "label": "Exclusão:",
+        "text": "Solicitar exclusão de suas informações pessoais"
+      },
+      "li4": {
+        "label": "Portabilidade:",
+        "text": "Solicitar uma cópia dos seus dados em formato portátil"
+      },
+      "li5": {
+        "label": "Cancelamento:",
+        "text": "Cancelar a inscrição em comunicações de marketing"
+      },
+      "note": "Para exercer esses direitos, entre em contato conosco usando as informações fornecidas na seção \"Contate-nos\"."
+    },
+    "s7": {
+      "title": "7. Cookies e Tecnologias de Rastreamento",
+      "intro": "Usamos cookies e tecnologias similares para melhorar sua experiência em nossa plataforma. Cookies nos ajudam a:",
+      "li1": "Lembrar suas preferências e configurações",
+      "li2": "Analisar como você usa nosso serviço",
+      "li3": "Fornecer conteúdo e anúncios personalizados",
+      "li4": "Melhorar a funcionalidade de nossa plataforma",
+      "note": "Você pode controlar as configurações de cookies pelas preferências do navegador, mas desabilitar cookies pode afetar a funcionalidade do serviço."
+    },
+    "s8": {
+      "title": "8. Retenção de Dados",
+      "intro": "Retemos suas informações pessoais pelo tempo necessário para fornecer nossos serviços. Podemos reter certas informações por períodos mais longos para:",
+      "li1": "Cumprir obrigações legais",
+      "li2": "Resolver disputas e fazer cumprir acordos",
+      "li3": "Prevenir fraudes e abusos"
+    },
+    "s9": {
+      "title": "9. Transferências Internacionais de Dados",
+      "p": "Suas informações podem ser transferidas e processadas em países diferentes do seu. Garantimos que tais transferências cumpram as leis de proteção de dados aplicáveis."
+    },
+    "s10": {
+      "title": "10. Privacidade de Crianças",
+      "p": "Nosso serviço não é destinado a crianças menores de 13 anos. Não coletamos conscientemente informações pessoais de crianças menores de 13 anos."
+    },
+    "s11": {
+      "title": "11. Alterações nesta Política de Privacidade",
+      "intro": "Podemos atualizar esta Política de Privacidade periodicamente. Notificaremos sobre alterações materiais:",
+      "li1": "Publicando a política atualizada em nosso site",
+      "li2": "Enviando uma notificação por e-mail",
+      "li3": "Exibindo um aviso em nossa plataforma",
+      "note": "O uso continuado do serviço após qualquer alteração constitui aceitação da Política de Privacidade atualizada."
+    },
+    "s12": {
+      "title": "12. Contate-nos",
+      "intro": "Se tiver dúvidas sobre esta Política de Privacidade, entre em contato:",
+      "emailLabel": "E-mail:",
+      "addressLabel": "Endereço:",
+      "address": "Equipe de Privacidade BidRoom, 123 Auction Street, Commerce City, CC 12345",
+      "phoneLabel": "Telefone:"
+    }
   },
   "terms": {
-    "hero": { "title": "Termos e Condições", "subtitle": "Leia estes termos com atenção antes de usar nossa plataforma.", "lastUpdated": "Última atualização: dezembro de 2024" },
-    "s1": { "title": "1. Aceitação dos Termos", "p1": "Ao acessar e usar o BidRoom (\"o Serviço\"), você aceita e concorda em ser vinculado pelos termos deste contrato.", "p2": "Estes Termos e Condições (\"Termos\") regem o uso de nossa plataforma de marketplace de leilões operada pelo BidRoom." },
-    "s2": { "title": "2. Descrição do Serviço", "intro": "O BidRoom é um marketplace de leilões online que permite aos usuários:", "li1": "Listar itens para leilão", "li2": "Participar de leilões dando lances", "li3": "Comprar itens pelo processo de leilão", "li4": "Interagir com outros usuários em um ambiente seguro", "note": "Reservamo-nos o direito de modificar, suspender ou descontinuar o Serviço a qualquer momento sem aviso prévio." },
-    "s3": { "title": "3. Contas de Usuário", "s1": { "title": "3.1 Criação de Conta", "intro": "Para usar nosso Serviço, você deve criar uma conta fornecendo informações precisas. Você é responsável por:", "li1": "Manter a confidencialidade de suas credenciais", "li2": "Todas as atividades que ocorrem sob sua conta", "li3": "Notificar-nos imediatamente sobre qualquer uso não autorizado", "li4": "Garantir que as informações da conta permaneçam atualizadas" }, "s2": { "title": "3.2 Elegibilidade da Conta", "p": "Você deve ter pelo menos 18 anos para criar uma conta. Ao criar uma conta, você declara que atende a este requisito." }, "s3": { "title": "3.3 Suspensão de Conta", "p": "Reservamo-nos o direito de suspender ou encerrar contas que violem estes Termos ou se envolvam em atividades fraudulentas ou ilegais." } },
-    "s4": { "title": "4. Lances e Leilões", "s1": { "title": "4.1 Processo de Lance", "intro": "Ao participar de leilões:", "li1": "Todos os lances são definitivos e não podem ser retirados", "li2": "Você deve ter fundos suficientes para cobrir seu lance máximo", "li3": "Usamos um sistema de lance por proxy", "li4": "Os licitantes vencedores são obrigados a concluir a compra" }, "s2": { "title": "4.2 Regras dos Leilões", "li1": "Os leilões têm horários específicos de início e término", "li2": "Os lances devem respeitar incrementos mínimos", "li3": "Preços de reserva podem se aplicar a certos leilões", "li4": "Reservamo-nos o direito de cancelar leilões a nosso critério" }, "s3": { "title": "4.3 Obrigações de Pagamento", "p": "Os licitantes vencedores devem concluir o pagamento em 48 horas após o encerramento do leilão. O não-pagamento pode resultar em suspensão da conta." } },
-    "s5": { "title": "5. Responsabilidades do Vendedor", "intro": "Se você listar itens para leilão, concorda em:", "li1": "Fornecer descrições precisas e completas", "li2": "Incluir fotos claras e de alta qualidade", "li3": "Definir preços iniciais e de reserva adequados", "li4": "Enviar os itens prontamente após receber o pagamento", "li5": "Responder às consultas dos compradores em tempo hábil", "li6": "Cumprir todas as leis e regulamentações aplicáveis" },
-    "s6": { "title": "6. Atividades Proibidas", "intro": "Você concorda em não:", "li1": "Usar o Serviço para fins ilegais ou não autorizados", "li2": "Interferir ou perturbar o Serviço ou servidores", "li3": "Tentar acesso não autorizado a qualquer parte do Serviço", "li4": "Criar múltiplas contas para contornar restrições", "li5": "Participar de lances fictícios ou outras práticas fraudulentas", "li6": "Listar itens proibidos (armas, substâncias ilegais, etc.)", "li7": "Violar quaisquer leis ou regulamentações aplicáveis", "li8": "Assediar, abusar ou prejudicar outros usuários" },
-    "s7": { "title": "7. Taxas e Pagamentos", "s1": { "title": "7.1 Taxas de Serviço", "intro": "Podemos cobrar taxas por certos serviços, incluindo:", "li1": "Taxas de listagem para itens de leilão", "li2": "Taxas de transação para vendas concluídas", "li3": "Recursos e serviços premium" }, "s2": { "title": "7.2 Processamento de Pagamento", "p": "Todos os pagamentos são processados com segurança pelos nossos parceiros de pagamento." }, "s3": { "title": "7.3 Reembolsos", "p": "As políticas de reembolso variam por tipo de transação e estão sujeitas ao nosso critério e às leis aplicáveis." } },
-    "s8": { "title": "8. Propriedade Intelectual", "p1": "O Serviço e seu conteúdo original são de propriedade do BidRoom e protegidos por leis de propriedade intelectual.", "p2": "Você não pode reproduzir, distribuir, modificar ou criar obras derivadas do nosso conteúdo sem permissão expressa por escrito." },
-    "s9": { "title": "9. Isenções de Responsabilidade", "p1": "O SERVIÇO É FORNECIDO \"COMO ESTÁ\" E \"CONFORME DISPONÍVEL\" SEM GARANTIAS DE QUALQUER TIPO.", "p2": "Não garantimos que o Serviço será ininterrupto, seguro ou livre de erros." },
-    "s10": { "title": "10. Limitação de Responsabilidade", "p1": "NA MÁXIMA EXTENSÃO PERMITIDA POR LEI, O BIDROOM NÃO SERÁ RESPONSÁVEL POR DANOS INDIRETOS, INCIDENTAIS, ESPECIAIS, CONSEQUENTES OU PUNITIVOS.", "p2": "Nossa responsabilidade total para com você não excederá o valor que nos pagou nos 12 meses anteriores à reclamação." },
-    "s11": { "title": "11. Indenização", "intro": "Você concorda em defender, indenizar e isentar o BidRoom e seus funcionários de quaisquer reclamações decorrentes de:", "li1": "Seu uso do Serviço", "li2": "Sua violação destes Termos", "li3": "Sua violação de direitos de terceiros", "li4": "Qualquer conteúdo que você submeta através do Serviço" },
-    "s12": { "title": "12. Rescisão", "p1": "Podemos encerrar ou suspender sua conta imediatamente, sem aviso prévio, por qualquer motivo.", "p2": "Após a rescisão, seu direito de usar o Serviço cessará imediatamente." },
-    "s13": { "title": "13. Lei Aplicável", "p1": "Estes Termos serão interpretados e regidos pelas leis do Estado de Delaware.", "p2": "Qualquer disputa decorrente destes Termos será resolvida nos tribunais de Delaware." },
-    "s14": { "title": "14. Alterações nos Termos", "p1": "Reservamo-nos o direito de modificar ou substituir estes Termos a qualquer momento.", "p2": "O uso continuado do Serviço após tais alterações constitui aceitação dos novos Termos." },
-    "s15": { "title": "15. Informações de Contato", "intro": "Se tiver dúvidas sobre estes Termos, entre em contato:", "emailLabel": "E-mail:", "addressLabel": "Endereço:", "address": "Departamento Jurídico BidRoom, 123 Auction Street, Commerce City, CC 12345", "phoneLabel": "Telefone:" }
+    "hero": {
+      "title": "Termos e Condições",
+      "subtitle": "Leia estes termos com atenção antes de usar nossa plataforma.",
+      "lastUpdated": "Última atualização: dezembro de 2024"
+    },
+    "s1": {
+      "title": "1. Aceitação dos Termos",
+      "p1": "Ao acessar e usar o BidRoom (\"o Serviço\"), você aceita e concorda em ser vinculado pelos termos deste contrato.",
+      "p2": "Estes Termos e Condições (\"Termos\") regem o uso de nossa plataforma de marketplace de leilões operada pelo BidRoom."
+    },
+    "s2": {
+      "title": "2. Descrição do Serviço",
+      "intro": "O BidRoom é um marketplace de leilões online que permite aos usuários:",
+      "li1": "Listar itens para leilão",
+      "li2": "Participar de leilões dando lances",
+      "li3": "Comprar itens pelo processo de leilão",
+      "li4": "Interagir com outros usuários em um ambiente seguro",
+      "note": "Reservamo-nos o direito de modificar, suspender ou descontinuar o Serviço a qualquer momento sem aviso prévio."
+    },
+    "s3": {
+      "title": "3. Contas de Usuário",
+      "s1": {
+        "title": "3.1 Criação de Conta",
+        "intro": "Para usar nosso Serviço, você deve criar uma conta fornecendo informações precisas. Você é responsável por:",
+        "li1": "Manter a confidencialidade de suas credenciais",
+        "li2": "Todas as atividades que ocorrem sob sua conta",
+        "li3": "Notificar-nos imediatamente sobre qualquer uso não autorizado",
+        "li4": "Garantir que as informações da conta permaneçam atualizadas"
+      },
+      "s2": {
+        "title": "3.2 Elegibilidade da Conta",
+        "p": "Você deve ter pelo menos 18 anos para criar uma conta. Ao criar uma conta, você declara que atende a este requisito."
+      },
+      "s3": {
+        "title": "3.3 Suspensão de Conta",
+        "p": "Reservamo-nos o direito de suspender ou encerrar contas que violem estes Termos ou se envolvam em atividades fraudulentas ou ilegais."
+      }
+    },
+    "s4": {
+      "title": "4. Lances e Leilões",
+      "s1": {
+        "title": "4.1 Processo de Lance",
+        "intro": "Ao participar de leilões:",
+        "li1": "Todos os lances são definitivos e não podem ser retirados",
+        "li2": "Você deve ter fundos suficientes para cobrir seu lance máximo",
+        "li3": "Usamos um sistema de lance por proxy",
+        "li4": "Os licitantes vencedores são obrigados a concluir a compra"
+      },
+      "s2": {
+        "title": "4.2 Regras dos Leilões",
+        "li1": "Os leilões têm horários específicos de início e término",
+        "li2": "Os lances devem respeitar incrementos mínimos",
+        "li3": "Preços de reserva podem se aplicar a certos leilões",
+        "li4": "Reservamo-nos o direito de cancelar leilões a nosso critério"
+      },
+      "s3": {
+        "title": "4.3 Obrigações de Pagamento",
+        "p": "Os licitantes vencedores devem concluir o pagamento em 48 horas após o encerramento do leilão. O não-pagamento pode resultar em suspensão da conta."
+      }
+    },
+    "s5": {
+      "title": "5. Responsabilidades do Vendedor",
+      "intro": "Se você listar itens para leilão, concorda em:",
+      "li1": "Fornecer descrições precisas e completas",
+      "li2": "Incluir fotos claras e de alta qualidade",
+      "li3": "Definir preços iniciais e de reserva adequados",
+      "li4": "Enviar os itens prontamente após receber o pagamento",
+      "li5": "Responder às consultas dos compradores em tempo hábil",
+      "li6": "Cumprir todas as leis e regulamentações aplicáveis"
+    },
+    "s6": {
+      "title": "6. Atividades Proibidas",
+      "intro": "Você concorda em não:",
+      "li1": "Usar o Serviço para fins ilegais ou não autorizados",
+      "li2": "Interferir ou perturbar o Serviço ou servidores",
+      "li3": "Tentar acesso não autorizado a qualquer parte do Serviço",
+      "li4": "Criar múltiplas contas para contornar restrições",
+      "li5": "Participar de lances fictícios ou outras práticas fraudulentas",
+      "li6": "Listar itens proibidos (armas, substâncias ilegais, etc.)",
+      "li7": "Violar quaisquer leis ou regulamentações aplicáveis",
+      "li8": "Assediar, abusar ou prejudicar outros usuários"
+    },
+    "s7": {
+      "title": "7. Taxas e Pagamentos",
+      "s1": {
+        "title": "7.1 Taxas de Serviço",
+        "intro": "Podemos cobrar taxas por certos serviços, incluindo:",
+        "li1": "Taxas de listagem para itens de leilão",
+        "li2": "Taxas de transação para vendas concluídas",
+        "li3": "Recursos e serviços premium"
+      },
+      "s2": {
+        "title": "7.2 Processamento de Pagamento",
+        "p": "Todos os pagamentos são processados com segurança pelos nossos parceiros de pagamento."
+      },
+      "s3": {
+        "title": "7.3 Reembolsos",
+        "p": "As políticas de reembolso variam por tipo de transação e estão sujeitas ao nosso critério e às leis aplicáveis."
+      }
+    },
+    "s8": {
+      "title": "8. Propriedade Intelectual",
+      "p1": "O Serviço e seu conteúdo original são de propriedade do BidRoom e protegidos por leis de propriedade intelectual.",
+      "p2": "Você não pode reproduzir, distribuir, modificar ou criar obras derivadas do nosso conteúdo sem permissão expressa por escrito."
+    },
+    "s9": {
+      "title": "9. Isenções de Responsabilidade",
+      "p1": "O SERVIÇO É FORNECIDO \"COMO ESTÁ\" E \"CONFORME DISPONÍVEL\" SEM GARANTIAS DE QUALQUER TIPO.",
+      "p2": "Não garantimos que o Serviço será ininterrupto, seguro ou livre de erros."
+    },
+    "s10": {
+      "title": "10. Limitação de Responsabilidade",
+      "p1": "NA MÁXIMA EXTENSÃO PERMITIDA POR LEI, O BIDROOM NÃO SERÁ RESPONSÁVEL POR DANOS INDIRETOS, INCIDENTAIS, ESPECIAIS, CONSEQUENTES OU PUNITIVOS.",
+      "p2": "Nossa responsabilidade total para com você não excederá o valor que nos pagou nos 12 meses anteriores à reclamação."
+    },
+    "s11": {
+      "title": "11. Indenização",
+      "intro": "Você concorda em defender, indenizar e isentar o BidRoom e seus funcionários de quaisquer reclamações decorrentes de:",
+      "li1": "Seu uso do Serviço",
+      "li2": "Sua violação destes Termos",
+      "li3": "Sua violação de direitos de terceiros",
+      "li4": "Qualquer conteúdo que você submeta através do Serviço"
+    },
+    "s12": {
+      "title": "12. Rescisão",
+      "p1": "Podemos encerrar ou suspender sua conta imediatamente, sem aviso prévio, por qualquer motivo.",
+      "p2": "Após a rescisão, seu direito de usar o Serviço cessará imediatamente."
+    },
+    "s13": {
+      "title": "13. Lei Aplicável",
+      "p1": "Estes Termos serão interpretados e regidos pelas leis do Estado de Delaware.",
+      "p2": "Qualquer disputa decorrente destes Termos será resolvida nos tribunais de Delaware."
+    },
+    "s14": {
+      "title": "14. Alterações nos Termos",
+      "p1": "Reservamo-nos o direito de modificar ou substituir estes Termos a qualquer momento.",
+      "p2": "O uso continuado do Serviço após tais alterações constitui aceitação dos novos Termos."
+    },
+    "s15": {
+      "title": "15. Informações de Contato",
+      "intro": "Se tiver dúvidas sobre estes Termos, entre em contato:",
+      "emailLabel": "E-mail:",
+      "addressLabel": "Endereço:",
+      "address": "Departamento Jurídico BidRoom, 123 Auction Street, Commerce City, CC 12345",
+      "phoneLabel": "Telefone:"
+    }
   },
-  "addListing": {
-    "successMessage": "Anúncio criado com sucesso!",
-    "errorUploadFailed": "Falha ao carregar imagens. Tente novamente.",
-    "errorStep2Description": "Por favor, complete todos os campos obrigatórios. A descrição deve ter pelo menos 50 caracteres.",
-    "reservePrice": "Preço de Reserva",
+  "report": {
+    "titleListing": "Denunciar Anúncio",
+    "titleUser": "Denunciar Utilizador",
+    "subtitle": "Ajuda-nos a perceber o que está errado. Vamos analisar a denúncia e tomar medidas se necessário.",
+    "reportListing": "Denunciar Anúncio",
+    "reportSeller": "Denunciar Vendedor",
+    "reasons": {
+      "fraud_scam": "Fraude ou Burla",
+      "offensive_content": "Conteúdo Ofensivo",
+      "prohibited_item": "Item Proibido",
+      "spam": "Spam",
+      "off_platform_transaction": "Tentativa de Transação Fora da Plataforma",
+      "other": "Outro"
+    },
+    "descriptionLabel": "Detalhes adicionais (opcional)",
+    "descriptionPlaceholder": "Descreve o problema...",
+    "submit": "Enviar Denúncia",
+    "submitting": "A enviar...",
+    "cancel": "Cancelar",
+    "success": {
+      "title": "Denúncia Enviada",
+      "message": "Obrigado. A tua denúncia foi recebida e a nossa equipa irá analisá-la brevemente.",
+      "close": "Fechar"
+    },
     "errors": {
-      "required": "{{field}} é obrigatório",
-      "tooLong": "{{field}} é muito longo",
-      "tooShort": "{{field}} é muito curto",
-      "minValue": "O valor deve ser maior que {{min}}",
-      "buyNowTooLow": "O preço de Compra Imediata deve ser maior que o Lance Inicial",
-      "reserveTooLow": "O preço de reserva deve ser pelo menos o lance inicial",
-      "invalidFileType": "Tipo de arquivo inválido. Apenas imagens (JPEG, PNG, GIF, WebP, BMP) são permitidas. Rejeitados: {{files}}"
+      "selectReason": "Por favor seleciona um motivo antes de enviar.",
+      "alreadyReported": "Já denunciaste este item.",
+      "generic": "Ocorreu um erro. Por favor tenta novamente."
+    },
+    "reportUser": "Reportar Utilizador"
+  },
+  "sellerProfile": {
+    "memberSince": "Membro desde",
+    "lastActive": "Ativo",
+    "lastActiveNow": "agora mesmo",
+    "lastActiveUnknown": "desconhecido",
+    "reviews": "avaliações",
+    "noReviews": "Sem avaliações ainda",
+    "noReviewsYet": "Sem avaliações para mostrar.",
+    "reviewsError": "Não foi possível carregar as avaliações.",
+    "allReviews": "Todas",
+    "asSeller": "Como Vendedor",
+    "asBuyer": "Como Comprador",
+    "sortBy": "Ordenar:",
+    "sortRecent": "Recentes",
+    "sortHighest": "Mais alta",
+    "sortLowest": "Mais baixa",
+    "auto": "Auto",
+    "sold": "Itens Vendidos",
+    "bought": "Itens Comprados",
+    "followers": "Seguidores",
+    "activeListings": "Leilões Ativos",
+    "noActiveListings": "Sem leilões ativos de momento.",
+    "bid": "lance",
+    "bids": "lances",
+    "notFound": "Este perfil não foi encontrado.",
+    "loadError": "Não foi possível carregar o perfil. Por favor tente novamente.",
+    "follow": "Seguir",
+    "following": "A seguir",
+    "mute": "Silenciar notificações",
+    "unmute": "Ativar notificações"
+  },
+  "myBids": {
+    "filterAll": "Todos",
+    "filterWinning": "A ganhar",
+    "filterOutbid": "Superado",
+    "filterEnded": "Terminado",
+    "myBest": "O meu melhor",
+    "currentPrice": "Atual",
+    "bids": "Lances",
+    "ends": "Termina",
+    "bidHistory": "Histórico de lances",
+    "bidAgain": "Licitar de novo",
+    "viewListing": "Ver leilão",
+    "notifOn": "Notificar se superado",
+    "notifOff": "Notificações desligadas",
+    "typeOffer": "Oferta",
+    "typeLive": "Leilão",
+    "statusActive": "Ativo",
+    "statusEnded": "Terminado"
+  },
+  "watchlist": {
+    "typeLive": "Leilão",
+    "ended": "Terminado"
+  },
+  "legal": {
+    "themeToggle": "Alternar tema",
+    "tabs": {
+      "terms": "Termos de Utilização",
+      "privacy": "Política de Privacidade",
+      "cookies": "Cookies",
+      "contact": "Contacto"
+    },
+    "footer": {
+      "copy": "© 2025 BidRoom.pt · BidRoom Unipessoal Lda · NIF 123 456 789"
+    },
+    "terms": {
+      "eyebrow": "Termos de Utilização",
+      "title": "Condições gerais de utilização da plataforma",
+      "updated": "Última actualização: 1 de Maio de 2025",
+      "intro": "Ao utilizar o BidRoom.pt, o utilizador aceita os presentes Termos de Utilização. Leia-os com atenção. Em caso de dúvida, contacte-nos em <a href=\"mailto:legal@bidroom.pt\">legal@bidroom.pt</a>.",
+      "h1": "1. Quem somos",
+      "h1p1": "O BidRoom.pt é um marketplace de leilões online operado pela <strong>BidRoom Unipessoal Lda</strong>, com sede em Lisboa, Portugal, registada na Conservatória do Registo Comercial de Lisboa. O BidRoom actua como intermediário tecnológico entre compradores e vendedores, não sendo parte contratante nas transacções realizadas na plataforma.",
+      "h2": "2. Elegibilidade",
+      "h2p1": "Para utilizar a plataforma, o utilizador deve ter pelo menos 18 anos de idade e capacidade legal para celebrar contratos. Ao criar uma conta, o utilizador declara cumprir estes requisitos.",
+      "h3": "3. A plataforma",
+      "h3p1": "O BidRoom disponibiliza dois formatos de listagem:",
+      "h3li1": "<strong>Leilão (Highest Bid):</strong> compradores fazem lances em tempo real. O lance mais alto no final do período vence automaticamente, desde que o preço de reserva (se definido) seja atingido.",
+      "h3li2": "<strong>Melhor Oferta (Best Offer):</strong> compradores submetem propostas. O vendedor escolhe a que prefere antes do prazo. O vendedor não é obrigado a aceitar qualquer oferta abaixo do preço mínimo definido.",
+      "h3p2": "O BidRoom pode ainda oferecer <strong>Salas Privadas</strong>, uma funcionalidade opcional disponível em leilões, onde o vendedor convida licitantes seleccionados para uma ronda adicional após o encerramento do leilão público.",
+      "h4": "4. Comissões e pagamentos",
+      "h4p1": "O BidRoom cobra uma comissão ao vendedor sobre o valor final de cada transacção concluída:",
+      "th1": "Formato",
+      "th2": "Comissão (vendedor)",
+      "fmt1": "Leilão (sem Sala Privada)",
+      "fmt2": "Leilão (com Sala Privada)",
+      "fmt3": "Melhor Oferta",
+      "h4p2": "As taxas de processamento Stripe são suportadas pelo comprador, acrescidas ao valor final da transacção. Os pagamentos são processados pela Stripe e os fundos são retidos até confirmação de recepção pelo comprador.",
+      "h5": "5. Obrigações do vendedor",
+      "h5li1": "O vendedor declara ser o legítimo proprietário do artigo listado.",
+      "h5li2": "A descrição e as fotografias devem ser verdadeiras e completas.",
+      "h5li3": "O vendedor tem <strong>5 dias úteis</strong> para enviar o artigo após confirmação do pagamento.",
+      "h5li4": "O incumprimento do prazo de envio resulta em cancelamento automático e reembolso ao comprador.",
+      "h5li5": "Artigos proibidos incluem: animais vivos, substâncias controladas, armas, e qualquer item ilegal na legislação portuguesa ou europeia.",
+      "h6": "6. Obrigações do comprador",
+      "h6li1": "Os lances e ofertas são vinculativos. Ao fazer um lance ou submeter uma oferta, o comprador compromete-se a efectuar o pagamento caso seja o vencedor.",
+      "h6li2": "O pagamento deve ser efectuado no prazo de <strong>24 horas</strong> após o encerramento do leilão.",
+      "h6li3": "O comprador deve confirmar a recepção do artigo dentro do prazo estipulado.",
+      "h7": "7. Direito de arrependimento e devoluções",
+      "h7p1": "O BidRoom é uma plataforma de leilões entre particulares (C2C). Nos leilões online entre particulares, o direito de arrependimento previsto no Decreto-Lei n.º 24/2014 não é aplicável. Quando um dos intervenientes for um vendedor profissional (empresa ou comerciante), o comprador consumidor dispõe de um prazo de <strong>14 dias</strong> para exercer o direito de arrependimento, sem necessidade de indicar o motivo, nos termos da legislação aplicável. As devoluções são tratadas directamente entre comprador e vendedor, com mediação do BidRoom em caso de litígio.",
+      "h8": "8. Verificação de identidade (KYC)",
+      "h8p1": "Para transacções com valor igual ou superior a <strong>€ 5.000</strong>, o BidRoom exige a verificação de identidade do utilizador (Know Your Customer — KYC) antes de permitir a publicação do anúncio ou a participação no leilão. Este requisito decorre das obrigações legais de prevenção do branqueamento de capitais e financiamento do terrorismo (Lei n.º 83/2017). O utilizador deve fornecer documento de identificação válido. A recusa em completar o processo KYC impede a utilização das funcionalidades sujeitas a este limiar.",
+      "h9": "9. Suspensão e encerramento de conta",
+      "h9p1": "O BidRoom pode suspender ou encerrar uma conta nas seguintes circunstâncias:",
+      "h9li1": "<strong>Suspensão automática</strong> — sempre que uma disputa é aberta, ambas as contas envolvidas são suspensas automaticamente até resolução.",
+      "h9li2": "<strong>Suspensão administrativa</strong> — em caso de suspeita de fraude, violação dos presentes Termos ou actividade que ponha em risco outros utilizadores.",
+      "h9li3": "<strong>Encerramento permanente</strong> — em caso de violações graves ou reincidentes, ou a pedido do próprio utilizador.",
+      "h9p2": "O utilizador suspenso é notificado por email e pode contestar a decisão através de <a href=\"mailto:legal@bidroom.pt\">legal@bidroom.pt</a>. As transacções em curso no momento da suspensão são geridas caso a caso pelo BidRoom.",
+      "h10": "10. Disputas entre utilizadores",
+      "h10p1": "Em caso de litígio entre comprador e vendedor, o BidRoom disponibiliza um mecanismo de mediação interno. Ambas as contas são suspensas automaticamente durante o período de disputa. A decisão do BidRoom é vinculativa no âmbito da plataforma. Para litígios não resolvidos, o utilizador pode recorrer ao <strong>Centro Nacional de Informação e Arbitragem de Conflitos de Consumo (CNIACC)</strong> em <a href=\"https://www.cniacc.pt\" target=\"_blank\" rel=\"noopener\">cniacc.pt</a>.",
+      "h11": "11. Sistema de reputação e decisões automatizadas",
+      "h11p1": "O BidRoom opera um sistema de reputação com pontuação de 0 a 100, calculado <strong>automaticamente</strong> com base em avaliações recebidas, transacções concluídas e disputas. Este sistema produz efeitos concretos para o utilizador:",
+      "h11li1": "Pontuação ≥ 60 e zero perdas em disputas — elegibilidade para Salas Privadas",
+      "h11li2": "Padrões de avaliação suspeitos — detecção automática de fraude",
+      "h11li3": "Pontuação muito baixa — pode resultar em restrição de funcionalidades",
+      "h11p2": "Nos termos do artigo 22.º do RGPD, o utilizador tem o direito de não ficar sujeito exclusivamente a decisões automatizadas que produzam efeitos significativos. Para contestar uma decisão automatizada do sistema de reputação, contacte <a href=\"mailto:legal@bidroom.pt\">legal@bidroom.pt</a>.",
+      "h12": "12. Menores de idade",
+      "h12p1": "A plataforma BidRoom.pt é destinada exclusivamente a utilizadores com <strong>18 anos ou mais</strong>. Não recolhemos deliberadamente dados pessoais de menores de 18 anos. Se tomarmos conhecimento de que um menor criou uma conta, procederemos ao encerramento imediato da mesma e à eliminação dos dados associados. Se for pai, mãe ou tutor e suspeitar que um menor criou uma conta no BidRoom, contacte-nos em <a href=\"mailto:legal@bidroom.pt\">legal@bidroom.pt</a>.",
+      "h13": "13. Propriedade intelectual",
+      "h13p1": "Todo o conteúdo da plataforma BidRoom.pt — incluindo design, código, marca e textos — é propriedade da BidRoom Unipessoal Lda. O utilizador não pode reproduzir, distribuir ou criar trabalhos derivados sem autorização expressa por escrito.",
+      "h14": "14. Limitação de responsabilidade",
+      "h14p1": "O BidRoom actua como intermediário tecnológico e não é responsável pela qualidade, autenticidade ou legalidade dos artigos listados. A responsabilidade máxima do BidRoom perante qualquer utilizador, em qualquer circunstância, é limitada ao valor das comissões pagas nos últimos 12 meses. Esta limitação não afecta os direitos imperativos dos consumidores ao abrigo da legislação portuguesa e europeia.",
+      "h15": "15. Lei aplicável e foro",
+      "h15p1": "Os presentes Termos são regidos pela lei portuguesa. Em caso de litígio, as partes acordam submeter-se à competência dos tribunais da comarca de Lisboa, sem prejuízo dos direitos dos consumidores ao abrigo da legislação europeia aplicável.",
+      "h16": "16. Alterações aos Termos",
+      "h16p1": "O BidRoom reserva-se o direito de alterar estes Termos a qualquer momento, com aviso prévio de pelo menos 15 dias aos utilizadores registados. A utilização continuada da plataforma após esse prazo implica a aceitação das alterações."
+    },
+    "privacy": {
+      "eyebrow": "Política de Privacidade",
+      "title": "Como tratamos os seus dados pessoais",
+      "updated": "Última actualização: 1 de Maio de 2025 · Em conformidade com o RGPD",
+      "dpoLabel": "Responsável pelo tratamento:",
+      "dpoVal": " BidRoom Unipessoal Lda · legal@bidroom.pt",
+      "h1": "1. Que dados recolhemos",
+      "th1": "Categoria",
+      "th2": "Dados",
+      "th3": "Finalidade",
+      "cat1": "Conta",
+      "dat1": "Nome, email, palavra-passe (hash)",
+      "fin1": "Autenticação e gestão de conta",
+      "cat2": "Pagamento",
+      "dat2": "IBAN (encriptado), dados Stripe Connect",
+      "fin2": "Processamento de pagamentos e payouts",
+      "cat3": "Actividade",
+      "dat3": "Lances, ofertas, leilões, transacções",
+      "fin3": "Funcionamento da plataforma e reputação",
+      "cat4": "Técnicos",
+      "dat4": "IP, cookies, logs de acesso",
+      "fin4": "Segurança e melhoria do serviço",
+      "cat5": "Comunicação",
+      "dat5": "Mensagens entre utilizadores",
+      "fin5": "Suporte e resolução de disputas",
+      "h2": "2. Base legal do tratamento (RGPD)",
+      "h2li1": "<strong>Execução de contrato</strong> — dados necessários para prestar o serviço (conta, pagamentos, transacções)",
+      "h2li2": "<strong>Interesse legítimo</strong> — segurança da plataforma, prevenção de fraude, reputação",
+      "h2li3": "<strong>Consentimento</strong> — comunicações de marketing (pode retirar a qualquer momento)",
+      "h2li4": "<strong>Obrigação legal</strong> — cumprimento de obrigações fiscais e regulatórias",
+      "h3": "3. Com quem partilhamos os seus dados",
+      "h3li1": "<strong>Stripe</strong> — processamento de pagamentos (sujeito à política de privacidade da Stripe)",
+      "h3li2": "<strong>Firebase / Google</strong> — autenticação (sujeito à política de privacidade do Google)",
+      "h3li3": "<strong>Microsoft Azure</strong> — alojamento e moderação de conteúdo",
+      "h3li4": "<strong>Autoridades competentes</strong> — quando exigido por lei",
+      "h3p1": "Não vendemos nem cedemos os seus dados pessoais a terceiros para fins de marketing.",
+      "h4": "4. Os seus direitos (RGPD)",
+      "h4p1": "Ao abrigo do RGPD, tem os seguintes direitos:",
+      "h4li1": "<strong>Acesso</strong> — solicitar uma cópia dos seus dados pessoais",
+      "h4li2": "<strong>Rectificação</strong> — corrigir dados incorrectos ou incompletos",
+      "h4li3": "<strong>Apagamento</strong> — solicitar a eliminação dos seus dados (\"direito a ser esquecido\")",
+      "h4li4": "<strong>Portabilidade</strong> — receber os seus dados num formato estruturado",
+      "h4li5": "<strong>Oposição</strong> — opor-se ao tratamento com base em interesse legítimo",
+      "h4li6": "<strong>Limitação</strong> — solicitar a suspensão do tratamento em determinadas circunstâncias",
+      "h4p2": "Para exercer qualquer destes direitos, contacte <a href=\"mailto:legal@bidroom.pt\">legal@bidroom.pt</a>. Respondemos no prazo de 30 dias. Tem também o direito de apresentar reclamação à <strong>CNPD</strong> (Comissão Nacional de Protecção de Dados) em <a href=\"https://www.cnpd.pt\" target=\"_blank\" rel=\"noopener\">cnpd.pt</a>.",
+      "h5": "5. Decisões automatizadas (Art. 22.º RGPD)",
+      "h5p1": "O BidRoom utiliza processamento automatizado para calcular a pontuação de reputação de cada utilizador (0–100). Este cálculo pode produzir efeitos significativos, nomeadamente a elegibilidade ou não para Salas Privadas e restrições de funcionalidades. O utilizador tem o direito de:",
+      "h5li1": "Solicitar intervenção humana na revisão da decisão automatizada",
+      "h5li2": "Expressar o seu ponto de vista",
+      "h5li3": "Contestar a decisão através de <a href=\"mailto:legal@bidroom.pt\">legal@bidroom.pt</a>",
+      "h6": "6. Menores de idade",
+      "h6p1": "O BidRoom.pt é destinado exclusivamente a utilizadores com 18 anos ou mais. Não recolhemos deliberadamente dados pessoais de menores de 18 anos. Se detectarmos que um menor criou uma conta, eliminaremos imediatamente todos os dados associados. Pais ou tutores que suspeitem da existência de uma conta de menor devem contactar <a href=\"mailto:legal@bidroom.pt\">legal@bidroom.pt</a>.",
+      "h7": "7. Retenção de dados",
+      "h7p1": "Os dados de conta são mantidos enquanto a conta estiver activa. Após eliminação da conta, os dados são apagados no prazo de 90 dias, excepto os que devemos manter por obrigação legal (ex: dados fiscais, mantidos por 10 anos nos termos da lei fiscal portuguesa).",
+      "h8": "8. Transferências internacionais",
+      "h8p1": "Os seus dados podem ser processados fora da UE pelos nossos subprocessadores (Stripe, Google). Estas transferências são efectuadas com base em Cláusulas Contratuais Padrão aprovadas pela Comissão Europeia, garantindo um nível de protecção equivalente ao exigido pelo RGPD."
+    },
+    "cookies": {
+      "eyebrow": "Política de Cookies",
+      "title": "Como utilizamos cookies e tecnologias semelhantes",
+      "updated": "Última actualização: 1 de Maio de 2025",
+      "intro": "Um cookie é um pequeno ficheiro de texto que é guardado no seu dispositivo quando visita um website. Utilizamos cookies para que a plataforma funcione correctamente e para melhorar a sua experiência.",
+      "h1": "As suas preferências",
+      "h1p1": "Pode gerir as suas preferências de cookies abaixo. Os cookies estritamente necessários não podem ser desactivados — são indispensáveis para o funcionamento da plataforma.",
+      "necessary": {
+        "title": "Estritamente necessários",
+        "desc": "Autenticação, segurança, preferências de sessão. Não podem ser desactivados."
+      },
+      "functional": {
+        "title": "Funcionais",
+        "desc": "Idioma, tema (escuro/claro), preferências de interface. Melhoram a sua experiência."
+      },
+      "analytics": {
+        "title": "Analíticos",
+        "desc": "Ajudam-nos a perceber como os utilizadores usam a plataforma, de forma anonimizada."
+      },
+      "marketing": {
+        "title": "Marketing",
+        "desc": "Permitem mostrar conteúdo relevante. O BidRoom não vende dados a anunciantes."
+      },
+      "required": "Obrigatório",
+      "save": "Guardar preferências",
+      "saved": "Preferências guardadas.",
+      "h2": "Lista detalhada de cookies",
+      "th1": "Categoria",
+      "th2": "Duração",
+      "th3": "Finalidade",
+      "row1": {
+        "cat": "Necessário",
+        "dur": "Sessão",
+        "purpose": "Autenticação Firebase"
+      },
+      "row2": {
+        "cat": "Funcional",
+        "dur": "1 ano",
+        "purpose": "Preferência de tema"
+      },
+      "row3": {
+        "cat": "Funcional",
+        "dur": "1 ano",
+        "purpose": "Preferência de idioma"
+      },
+      "row4": {
+        "cat": "Necessário",
+        "dur": "30 min",
+        "purpose": "Processamento de pagamentos Stripe"
+      },
+      "row5": {
+        "cat": "Analítico",
+        "dur": "2 anos",
+        "purpose": "Google Analytics (anonimizado)"
+      }
+    },
+    "contact": {
+      "eyebrow": "Contacto",
+      "title": "Como podemos ajudar?",
+      "response": "Respondemos em 1–2 dias úteis",
+      "name": "Nome completo",
+      "email": "Email",
+      "subject": "Assunto",
+      "message": "Mensagem",
+      "namePlaceholder": "José Candido",
+      "emailPlaceholder": "jose@email.com",
+      "messagePlaceholder": "Descreva a sua questão em detalhe...",
+      "submit": "Enviar mensagem",
+      "sending": "A enviar…",
+      "success": "Mensagem enviada. Responderemos em breve.",
+      "errorRequired": "O campo {{field}} é obrigatório.",
+      "errorEmail": "Introduza um email válido.",
+      "errorMinLength": "Mínimo de {{min}} caracteres.",
+      "sub1": "Questão sobre um leilão",
+      "sub2": "Problema com uma transacção",
+      "sub3": "Conta e pagamentos",
+      "sub4": "Reportar um utilizador ou anúncio",
+      "sub5": "Questão legal / RGPD",
+      "sub6": "Imprensa e parcerias",
+      "sub7": "Outro",
+      "general": "Geral",
+      "legalLabel": "Legal / RGPD",
+      "address": "Morada",
+      "company": "BidRoom Unipessoal Lda",
+      "addressLine": "Rua Exemplo, 123 · 1000-001 Lisboa",
+      "hours": "Horário de suporte",
+      "hoursVal": "Seg–Sex · 9h–18h (Lisboa)",
+      "reclamacoesLabel": "Livro de Reclamações",
+      "reclamacoesTitle": "Insatisfeito com o nosso serviço?",
+      "reclamacoesDesc": "Pode apresentar uma reclamação formal através do Livro de Reclamações Electrónico, disponível em livroreclamacoes.pt. As reclamações são respondidas no prazo de 15 dias úteis.",
+      "reclamacoesBtn": "Aceder ao Livro de Reclamações",
+      "ralLabel": "Resolução Alternativa de Litígios",
+      "ralSub": "Para litígios não resolvidos pela plataforma"
+    },
+    "banner": {
+      "title": "Utilizamos cookies",
+      "text": "Usamos cookies essenciais para o funcionamento da plataforma e, com o seu consentimento, cookies analíticos para melhorar a experiência.",
+      "learnMore": "Saber mais",
+      "reject": "Rejeitar não essenciais",
+      "accept": "Aceitar todos"
     }
   }
 }

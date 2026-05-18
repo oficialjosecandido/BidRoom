@@ -25,6 +25,9 @@
     @if (searchQuery || selectedCategory || selectedSubCategory || hasActiveFilters) {
       <div class="active-filters">
         <span class="filters-label">{{ 'listingList.filters' | translate }}</span>
+        @if (listingStatusFilter === 'ended') {
+          <span class="filter-chip">{{ 'listingList.closedAuctions' | translate }}<button type="button" (click)="clearListingStatusClosed()">✕</button></span>
+        }
         @if (searchQuery) {
           <span class="filter-chip">"{{ searchQuery }}"<button (click)="clearSearch()">✕</button></span>
         }
@@ -40,8 +43,8 @@
         @for (s of selectedShipping; track s) {
           <span class="filter-chip">{{ shippingLabel(s) }}<button (click)="toggleShipping(s)">✕</button></span>
         }
-        @if (selectedLocation) {
-          <span class="filter-chip">{{ locationLabel(selectedLocation) }}<button (click)="selectedLocation = ''; onLocationChange()">✕</button></span>
+        @if (locationCityFilter.trim() || locationCountryFilter) {
+          <span class="filter-chip">{{ locationFilterChipLabel() }}<button type="button" (click)="clearLocationFilters()">✕</button></span>
         }
         @if (minPrice || maxPrice) {
           <span class="filter-chip">
@@ -67,6 +70,10 @@
             <span class="filter-count-badge">{{ activeFilterCount }}</span>
           }
         </button>
+        <select class="filter-select" [(ngModel)]="listingStatusFilter" (change)="onListingStatusChange()">
+          <option value="active">{{ 'listingList.activeAuctions' | translate }}</option>
+          <option value="ended">{{ 'listingList.closedAuctions' | translate }}</option>
+        </select>
         <select class="filter-select" [(ngModel)]="selectedCategory" (change)="onCategoryChange()">
           <option value="">{{ 'listingList.allCategories' | translate }}</option>
           @for (cat of categories; track cat.id) {
@@ -81,6 +88,7 @@
             }
           </select>
         }
+        @if (listingStatusFilter === 'active') {
         <select class="filter-select" [(ngModel)]="sortBy" (change)="onSortChange()">
           <option value="deadline">{{ 'listingList.sortEndingSoonest' | translate }}</option>
           <option value="newest">{{ 'listingList.sortNewest' | translate }}</option>
@@ -88,6 +96,15 @@
           <option value="lowest">{{ 'listingList.sortLowest' | translate }}</option>
           <option value="bids">{{ 'listingList.sortMostBids' | translate }}</option>
         </select>
+        } @else {
+        <select class="filter-select" [(ngModel)]="sortBy" (change)="onSortChange()">
+          <option value="recent-end">{{ 'listingList.sortRecentlyEnded' | translate }}</option>
+          <option value="newest">{{ 'listingList.sortNewest' | translate }}</option>
+          <option value="highest">{{ 'listingList.sortHighest' | translate }}</option>
+          <option value="lowest">{{ 'listingList.sortLowest' | translate }}</option>
+          <option value="bids">{{ 'listingList.sortMostBids' | translate }}</option>
+        </select>
+        }
       </div>
     </div>
 
@@ -102,6 +119,19 @@
             @if (hasActiveFilters) {
               <button class="clear-all-btn" (click)="clearAllFilters()">{{ 'listingList.clearAllFilters' | translate }}</button>
             }
+          </div>
+
+          <!-- Auction status (live vs closed) -->
+          <div class="filter-group">
+            <h4 class="filter-group-title">{{ 'listingList.auctionStatus' | translate }}</h4>
+            <label class="filter-radio-label">
+              <input type="radio" name="listingStatus" value="active" [(ngModel)]="listingStatusFilter" (change)="onListingStatusChange()">
+              <span>{{ 'listingList.activeAuctions' | translate }}</span>
+            </label>
+            <label class="filter-radio-label">
+              <input type="radio" name="listingStatus" value="ended" [(ngModel)]="listingStatusFilter" (change)="onListingStatusChange()">
+              <span>{{ 'listingList.closedAuctions' | translate }}</span>
+            </label>
           </div>
 
           <!-- Condition -->
@@ -125,28 +155,46 @@
             </div>
           </div>
 
-          <!-- Location -->
-          <div class="filter-group">
+          <!-- Location (city + country) -->
+          <div class="filter-group filter-group--location">
             <h4 class="filter-group-title">{{ 'listingList.location' | translate }}</h4>
-            <label class="filter-radio-label">
-              <input type="radio" name="location" value="" [(ngModel)]="selectedLocation" (change)="onLocationChange()">
-              <span>{{ 'listingList.anyLocation' | translate }}</span>
-            </label>
-            @for (opt of locationOptions; track opt.key) {
-              <label class="filter-radio-label">
-                <input type="radio" name="location" [value]="opt.key" [(ngModel)]="selectedLocation" (change)="onLocationChange()">
-                <span>{{ opt.label }}</span>
-              </label>
-            }
+            <div class="location-filter-stack">
+              <div class="location-field">
+                <label class="location-field-label" for="filter-location-city">{{ 'addListing.city' | translate }}</label>
+                <input
+                  id="filter-location-city"
+                  type="text"
+                  class="location-input"
+                  [(ngModel)]="locationCityFilter"
+                  (change)="onLocationFilterChange()"
+                  [placeholder]="'listingList.locationCityPlaceholder' | translate"
+                  autocomplete="address-level2"
+                />
+              </div>
+              <div class="location-field">
+                <label class="location-field-label" for="filter-location-country">{{ 'addListing.originCountry' | translate }}</label>
+                <select
+                  id="filter-location-country"
+                  class="location-select"
+                  [(ngModel)]="locationCountryFilter"
+                  (change)="onLocationFilterChange()"
+                >
+                  <option value="">{{ 'listingList.anyCountry' | translate }}</option>
+                  @for (c of countryFilterOptions; track c.code) {
+                    <option [value]="c.code">{{ c.labelKey | translate }}</option>
+                  }
+                </select>
+              </div>
+            </div>
           </div>
 
-          <!-- Shipping -->
+          <!-- Shipping (same options as add listing) -->
           <div class="filter-group">
             <h4 class="filter-group-title">{{ 'listingList.shipping' | translate }}</h4>
             @for (opt of shippingOptions; track opt.key) {
               <label class="filter-checkbox-label">
                 <input type="checkbox" class="filter-checkbox" [checked]="selectedShipping.has(opt.key)" (change)="toggleShipping(opt.key)">
-                <span>{{ opt.label }}</span>
+                <span>{{ opt.labelKey | translate }}</span>
               </label>
             }
           </div>
@@ -189,6 +237,12 @@
                     }
                     @if (listing.endingSoon) {
                       <span class="badge badge-ending-soon">⏰ {{ 'listingList.endingSoon' | translate }}</span>
+                    }
+                    @if (listing.itemMode === 'bundle') {
+                      <span class="badge badge-bundle">🗂️ {{ 'listingList.bundle' | translate }}</span>
+                    }
+                    @if (listing.itemMode === 'multi_quantity') {
+                      <span class="badge badge-multi">×{{ listing.quantity }}</span>
                     }
                   </div>
                   @if (listing.condition) {

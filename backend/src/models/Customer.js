@@ -55,6 +55,12 @@ const customerSchema = new mongoose.Schema({
     type: String,
     enum: ['en', 'pt', 'es', 'fr'],
     default: 'en'
+  },
+  /** UI theme: light, dark, or follow OS (system). Synced across devices when set while logged in. */
+  theme: {
+    type: String,
+    enum: ['light', 'dark', 'system'],
+    required: false
   }
 }, {
   timestamps: true,

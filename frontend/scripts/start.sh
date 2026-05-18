@@ -7,13 +7,9 @@ case "$BRANCH" in
     echo "📌 Branch: ericeira-e2e → using ericeira-e2e environment"
     exec ng serve --configuration=ericeira-e2e "$@"
     ;;
-  ericeira-prod)
-    echo "📌 Branch: ericeira-prod → using ericeira-prod environment"
+  ericeira-prod|ericeira)
+    echo "📌 Branch: $BRANCH → using ericeira-prod environment"
     exec ng serve --configuration=ericeira-prod "$@"
-    ;;
-  ericeira)
-    echo "📌 Branch: ericeira → using ericeira environment"
-    exec ng serve --configuration=ericeira "$@"
     ;;
   *)
     echo "📌 Branch: $BRANCH → using default environment"

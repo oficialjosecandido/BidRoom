@@ -21,9 +21,24 @@ export interface Listing {
   endDate: string;
   seller: {
     _id: string;
+    slug?: string | null;
     firstName: string;
     lastName: string;
     email: string;
+    uid?: string;
+    sellerClassification?: 'private' | 'professional';
+    professionalVerificationStatus?: 'none' | 'pending' | 'verified' | 'rejected';
+    professionalLegalName?: string | null;
+    professionalTradeName?: string | null;
+    professionalAddressLine1?: string | null;
+    professionalAddressLine2?: string | null;
+    professionalCity?: string | null;
+    professionalRegion?: string | null;
+    professionalPostalCode?: string | null;
+    professionalCountry?: string | null;
+    professionalContactPhone?: string | null;
+    professionalContactEmail?: string | null;
+    professionalVatId?: string | null;
   };
   status: 'draft' | 'active' | 'ended' | 'cancelled';
   isFeatured: boolean;
@@ -32,17 +47,20 @@ export interface Listing {
   listingType: 'Promoted' | 'Verified' | 'Standard';
   condition: string;
   location?: string;
+  locationCity?: string;
+  locationCountry?: string;
   shippingCost: number;
   shippingOption?: string;
   returnPolicy?: string;
   handlingTime?: number;
+  specifications?: { key: string; value: string }[];
   // New auction mechanics
   auctionFormat: 'highest-bid' | 'best-offer';
   durationSlot: '5 minutes' | '2 hours' | '24 hours' | '3 days' | '7 days';
   allowPrivateRoom: boolean;
   commissionRate: number;
   privateRoomStatus?: 'not-triggered' | 'eligible' | 'invited' | 'active' | 'ended';
-  privateRoomClosedReason?: 'no_acceptances' | 'seller_left' | 'time_expired';
+  privateRoomClosedReason?: 'no_acceptances' | 'seller_left' | 'time_expired' | 'non_payment_no_second_bidder' | null;
   privateRoomEndDate?: string;
   privateRoomLastBidTime?: string;
   platinumBidders?: string[] | { _id: string; firstName: string; lastName: string; email: string }[];
@@ -72,6 +90,11 @@ export interface Listing {
   winnerBid?: string;
   winnerSelectedAt?: string;
   winnerSelectionDeadline?: string;
+  // Relist tracking
+  autoRelist?: boolean;
+  relistCount?: number;
+  relistOf?: string | null;
+  relistedAt?: string | null;
   timeRemaining?: {
     ended: boolean;
     days: number;
@@ -84,6 +107,8 @@ export interface Listing {
   updatedAt: string;
   watchlistCount?: number;
   inWatchlist?: boolean;
+  /** Set on seller/my-listings: highest offer received (pending or accepted) */
+  highestOfferAmount?: number | null;
   /** Seller's average rating as seller (from reviews) */
   sellerScore?: number | null;
   /** Number of reviews the seller has received as seller */
@@ -92,8 +117,11 @@ export interface Listing {
   myHighestBid?: number | null;
   /** Set on bidder/my-auctions: when user last bid */
   myLastBidAt?: string | null;
-  /** Set on bidder/my-auctions: user's preference to receive outbid emails */
+  /** Set on bidder/my-auctions: preference for outbid notifications (email + in-app when logged in) */
   notifyWhenOutbid?: boolean;
+  itemMode?: 'single' | 'bundle' | 'multi_quantity';
+  quantity?: number;
+  bundleItems?: { title: string; description?: string }[];
 }
 
 export interface ListingsResponse {
@@ -108,7 +136,7 @@ export interface ListingsResponse {
 export interface ListingsQueryParams {
   category?: string;
   subCategory?: string;
-  sort?: 'deadline' | 'newest' | 'highest' | 'lowest' | 'bids';
+  sort?: 'deadline' | 'newest' | 'highest' | 'lowest' | 'bids' | 'recent-end';
   minPrice?: number;
   maxPrice?: number;
   minBids?: number;
@@ -117,10 +145,13 @@ export interface ListingsQueryParams {
   search?: string;
   /** Comma-separated condition keys: new, like-new, very-good, good, fair, for-parts */
   condition?: string;
-  /** Comma-separated shipping types: worldwide, regional, local-pickup */
+  /** Comma-separated shipping options: flat-rate, calculated, local-pickup, free (legacy: worldwide, regional) */
   shipping?: string;
-  /** Region: europe, north-america, asia, other */
-  location?: string;
+  /** Item location city (partial match) */
+  locationCity?: string;
+  /** ISO country code (e.g. US, GB) */
+  locationCountry?: string;
+  isFeatured?: boolean;
   limit?: number;
   skip?: number;
   page?: number;
@@ -130,6 +161,51 @@ export interface StatsOverview {
   totalBidders: number;
   activeListings: number;
   totalValueTraded: number;
+}
+
+export interface SellerAnalyticsListingRow {
+  listingId: string;
+  title: string;
+  slug: string;
+  status: string;
+  category: string;
+  auctionFormat: string;
+  cumulativeBidCount: number;
+  viewsInRange: number;
+  bidEventsInRange: number;
+  soldListing: boolean;
+  saleActivityInRange: boolean;
+}
+
+export interface SellerAnalyticsResponse {
+  preset: string;
+  range: { from: string; to: string };
+  filters: { category: string | null; listingId: string | null };
+  overview: {
+    totalViews: number;
+    totalBidsAndOffers: number;
+    salesInRange: number;
+    listingsCount: number;
+    followersTotal: number;
+    followersNewInRange: number;
+    conversionPercent: number | null;
+  };
+  listingCounts: {
+    active: number;
+    ended: number;
+    cancelled: number;
+    sold: number;
+    totalPublished: number;
+  };
+  listings: SellerAnalyticsListingRow[];
+}
+
+export interface SellerAnalyticsQueryParams {
+  preset?: '7d' | '30d' | 'custom';
+  from?: string;
+  to?: string;
+  category?: string;
+  listingId?: string;
 }
 
 @Injectable({
@@ -171,12 +247,37 @@ export class ListingsService {
     return this.http.post<Listing>(this.apiUrl, listingData);
   }
 
+  /** In-progress add-listing snapshot for the current seller (or null). */
+  getListingDraft(): Observable<{ draft: { payload: Record<string, unknown>; updatedAt: string } | null }> {
+    return this.http.get<{ draft: { payload: Record<string, unknown>; updatedAt: string } | null }>(
+      `${this.apiUrl}/drafts/current`
+    );
+  }
+
+  saveListingDraft(payload: Record<string, unknown>): Observable<{ ok: boolean; updatedAt: string }> {
+    return this.http.put<{ ok: boolean; updatedAt: string }>(`${this.apiUrl}/drafts/current`, { payload });
+  }
+
+  deleteListingDraft(): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/drafts/current`);
+  }
+
   buyNow(listingId: string): Observable<any> {
     return this.http.post(`${this.apiUrl}/${listingId}/buy-now`, {});
   }
 
   getMyListings(): Observable<ListingsResponse> {
     return this.http.get<ListingsResponse>(`${this.apiUrl}/seller/my-listings`);
+  }
+
+  getSellerAnalytics(params: SellerAnalyticsQueryParams): Observable<SellerAnalyticsResponse> {
+    let httpParams = new HttpParams();
+    if (params.preset) httpParams = httpParams.set('preset', params.preset);
+    if (params.from) httpParams = httpParams.set('from', params.from);
+    if (params.to) httpParams = httpParams.set('to', params.to);
+    if (params.category) httpParams = httpParams.set('category', params.category);
+    if (params.listingId) httpParams = httpParams.set('listingId', params.listingId);
+    return this.http.get<SellerAnalyticsResponse>(`${this.apiUrl}/seller/analytics`, { params: httpParams });
   }
 
   /** Listings where the current user has placed at least one bid (bidder view) */
@@ -202,6 +303,25 @@ export class ListingsService {
     return this.http.post<{ listing: Listing; message: string }>(
       `${this.apiUrl}/${listingId}/reopen`,
       {}
+    );
+  }
+
+  /** Seller edits a listing (state-based field locks enforced by backend) */
+  updateListing(listingId: string, data: Partial<Listing>): Observable<{ listing: Listing; message: string }> {
+    return this.http.patch<{ listing: Listing; message: string }>(
+      `${this.apiUrl}/${listingId}`,
+      data
+    );
+  }
+
+  /** Relist an unsold ended listing (creates a new listing). Seller may override price/duration. */
+  relistListing(
+    listingId: string,
+    body: { startingPrice?: number; reservePrice?: number | null; durationSlot?: string; autoRelist?: boolean }
+  ): Observable<{ message: string; listing: Listing }> {
+    return this.http.post<{ message: string; listing: Listing }>(
+      `${this.apiUrl}/${listingId}/relist`,
+      body
     );
   }
 }

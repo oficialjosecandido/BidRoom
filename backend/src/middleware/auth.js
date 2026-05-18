@@ -50,6 +50,22 @@ const authenticateToken = async (req, res, next) => {
       });
     }
 
+    // Brute-force lockout check (application-level, supplements Firebase's own protection)
+    const dbUser = await User.findOne({ uid: decodedToken.uid }).select('loginLockedUntil loginFailedAttempts').lean();
+    if (dbUser?.loginLockedUntil && new Date(dbUser.loginLockedUntil) > new Date()) {
+      const retryAfterMs = new Date(dbUser.loginLockedUntil).getTime() - Date.now();
+      return res.status(403).json({
+        error: 'Account locked',
+        message: 'Too many failed login attempts. Please try again in 15 minutes.',
+        retryAfterMs
+      });
+    }
+    // Clear stale failed-attempt counter on successful auth
+    if (dbUser?.loginFailedAttempts > 0) {
+      User.findOneAndUpdate({ uid: decodedToken.uid }, { $set: { loginFailedAttempts: 0, loginLockedUntil: null } })
+        .catch(() => {});
+    }
+
     next();
   } catch (error) {
     console.error('Auth middleware error:', error);
@@ -128,21 +144,30 @@ const requireActiveAccount = async (req, res, next) => {
     return res.status(401).json({ error: 'Unauthorized', message: 'Authentication required.' });
   }
   try {
-    const dbUser = await User.findOne({ uid: req.user.uid }).select('accountStatus').lean();
+    const dbUser = await User.findOne({ uid: req.user.uid }).select('accountStatus contentRestrictedUntil').lean();
     if (!dbUser) {
-      return res.status(404).json({ error: 'User not found', message: 'Please complete your profile.' });
+      // No DB record yet — user is authenticated but hasn't been persisted.
+      // They cannot be suspended, so let the route handler proceed (it will create the record).
+      return next();
     }
     const status = dbUser.accountStatus || 'active';
     if (status === 'suspended') {
       return res.status(403).json({
         error: 'Account suspended',
-        message: 'Your account has been suspended while a dispute is under review. You cannot create listings, place bids, or complete transactions until the case is resolved.'
+        message: 'Your account has been temporarily restricted while a dispute is under review. You cannot create new listings, place bids, or start new transactions until the case is resolved. Any transactions initiated before the dispute will continue and can be completed as normal.'
       });
     }
     if (status === 'closed') {
       return res.status(403).json({
         error: 'Account closed',
         message: 'Your account has been permanently closed.'
+      });
+    }
+    if (dbUser.contentRestrictedUntil && dbUser.contentRestrictedUntil > new Date()) {
+      const until = dbUser.contentRestrictedUntil.toISOString().slice(0, 10);
+      return res.status(403).json({
+        error: 'Account temporarily restricted',
+        message: `Your account has been temporarily restricted until ${until} due to violations of our contact information policy. You cannot create or edit listings during this period.`
       });
     }
     next();
@@ -161,9 +186,46 @@ const requireActiveAccountIfAuthenticated = async (req, res, next) => {
   return requireActiveAccount(req, res, next);
 };
 
+/**
+ * Block new marketplace actions (bid, list, offer) when the user has an open dispute.
+ * Does NOT block operations on existing transactions.
+ * Use after authenticateToken. Returns 403 if user has any active dispute restrictions.
+ */
+const requireNoDisputeRestriction = async (req, res, next) => {
+  if (!req.user?.uid) return res.status(401).json({ error: 'Unauthorized', message: 'Authentication required.' });
+  try {
+    const dbUser = await User.findOne({ uid: req.user.uid }).select('activeDisputeTransactionIds accountStatus').lean();
+    if (!dbUser) return next(); // No record yet → no restrictions possible
+    if (dbUser.accountStatus === 'closed') {
+      return res.status(403).json({ error: 'Account closed', message: 'Your account has been permanently closed.' });
+    }
+    if (dbUser.activeDisputeTransactionIds && dbUser.activeDisputeTransactionIds.length > 0) {
+      return res.status(403).json({
+        error: 'Action restricted',
+        message: 'You cannot place bids, create listings, or make offers while a dispute is under review. Your existing transactions are unaffected.'
+      });
+    }
+    next();
+  } catch (error) {
+    console.error('requireNoDisputeRestriction error:', error);
+    res.status(500).json({ error: 'Failed to verify account restrictions', message: error.message });
+  }
+};
+
+/**
+ * Same as requireNoDisputeRestriction but only runs when user is authenticated.
+ * Use after optionalAuth for routes that allow both guests and authenticated users.
+ */
+const requireNoDisputeRestrictionIfAuthenticated = async (req, res, next) => {
+  if (!req.user || !req.isAuthenticated) return next();
+  return requireNoDisputeRestriction(req, res, next);
+};
+
 module.exports = {
   authenticateToken,
   optionalAuth,
   requireActiveAccount,
-  requireActiveAccountIfAuthenticated
+  requireActiveAccountIfAuthenticated,
+  requireNoDisputeRestriction,
+  requireNoDisputeRestrictionIfAuthenticated
 };

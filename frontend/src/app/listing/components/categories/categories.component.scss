@@ -69,13 +69,13 @@
   white-space: nowrap;
 
   &:hover {
-    border-color: var(--accent-purple, #7A4F84);
-    color: var(--accent-purple, #7A4F84);
+    border-color: var(--accent-purple, var(--primary-color));
+    color: var(--accent-purple, var(--primary-color));
   }
 
   &.active {
-    background: var(--accent-purple, #7A4F84);
-    border-color: var(--accent-purple, #7A4F84);
+    background: var(--accent-purple, var(--primary-color));
+    border-color: var(--accent-purple, var(--primary-color));
     color: #fff;
   }
 }
@@ -94,7 +94,7 @@
   border-radius: 8px;
   font-size: 0.8rem;
   outline: none;
-  &:focus { border-color: var(--accent-purple, #7A4F84); }
+  &:focus { border-color: var(--accent-purple, var(--primary-color)); }
   &::-webkit-outer-spin-button,
   &::-webkit-inner-spin-button { -webkit-appearance: none; }
 }
@@ -103,6 +103,38 @@
   color: #9ca3af;
   font-size: 0.9rem;
   flex-shrink: 0;
+}
+
+.cat-filter-group--location {
+  grid-column: 1 / -1;
+  max-width: 480px;
+}
+
+.cat-location-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: stretch;
+}
+
+.cat-location-input,
+.cat-location-select {
+  flex: 1;
+  min-width: 120px;
+  padding: 6px 10px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  outline: none;
+  background: #fff;
+  &:focus {
+    border-color: var(--accent-purple, var(--primary-color));
+  }
+}
+
+.cat-location-select {
+  cursor: pointer;
+  max-width: 200px;
 }
 
 .cat-filter-actions {
@@ -118,7 +150,7 @@
   background: none;
   border: none;
   font-size: 0.85rem;
-  color: var(--accent-purple, #7A4F84);
+  color: var(--accent-purple, var(--primary-color));
   cursor: pointer;
   font-weight: 500;
   padding: 0;
@@ -204,6 +236,40 @@
   font-weight: 500;
   color: #6b7280;
   transition: color 0.15s;
+  cursor: pointer;
+}
+
+.cat-follow-btn {
+  display: inline-block;
+  padding: 5px 14px;
+  border-radius: 16px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1.5px solid var(--primary-color);
+  background: transparent;
+  color: var(--primary-color);
+  transition: background 0.15s, color 0.15s;
+
+  &:hover:not(:disabled) {
+    background: var(--primary-color);
+    color: white;
+  }
+
+  &--following {
+    background: var(--primary-color);
+    color: white;
+
+    &:hover:not(:disabled) {
+      background: #6a3f74;
+      border-color: #6a3f74;
+    }
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
 }
 
 .subcategories-grid {

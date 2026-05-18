@@ -10,12 +10,20 @@
 
 $primary-black: #000000;
 $primary-white: #ffffff;
-$accent-purple: #8B5A96;
-$accent-purple-hover: #7A4F84;
+// Brand colors — values come from environment.theme via CSS vars injected by app.ts
+// Use var(--primary-color), var(--secondary-color), var(--background-color) in components
+$color-primary:          #002366;  // Deep Navy
+$color-primary-hover:    #001a4d;  // Darker Navy (hover state)
+$color-secondary:        #00D4FF;  // Electric Cyan
+$color-secondary-hover:  #00b8db;  // Darker Cyan (hover state)
+$color-background:       #F8FAFC;  // Cool Slate
+// Keep legacy aliases so existing SCSS doesn't break
+$accent-purple:          $color-primary;
+$accent-purple-hover:    $color-primary-hover;
 $accent-gold: #D4AF37;
 $accent-peach: #FFB366;
 $accent-peach-hover: #FF9F4D;
-$light-purple: #F3F0F7;
+$light-purple: $color-background;
 $light-gray: #F8F9FA;
 $border-gray: #E0E0E0;
 $text-gray: #666666;
@@ -28,19 +36,23 @@ $color-error: #dc3545;
 $color-warning: #f59e0b;
 
 // CSS Custom Properties (for web components / Angular)
+// --primary-color, --secondary-color, --background-color are injected by app.ts from environment.theme
 :root {
   --primary-black: #{$primary-black};
   --primary-white: #{$primary-white};
-  --accent-purple: #{$accent-purple};
-  --accent-purple-hover: #{$accent-purple-hover};
+  // Brand aliases that reference the injected theme variables
+  --accent-purple:       var(--primary-color, #{$color-primary});
+  --accent-purple-hover: var(--primary-color, #{$color-primary-hover});
+  --color-secondary:     var(--secondary-color, #{$color-secondary});
+  --light-purple:        var(--background-color, #{$color-background});
   --accent-gold: #{$accent-gold};
   --accent-peach: #{$accent-peach};
   --accent-peach-hover: #{$accent-peach-hover};
-  --light-purple: #{$light-purple};
   --light-gray: #{$light-gray};
   --border-gray: #{$border-gray};
   --text-gray: #{$text-gray};
   --text-dark: #{$text-dark};
+  --text-primary: #{$text-dark};
   --hover-gray: #{$hover-gray};
   --color-success: #{$color-success};
   --color-error: #{$color-error};
