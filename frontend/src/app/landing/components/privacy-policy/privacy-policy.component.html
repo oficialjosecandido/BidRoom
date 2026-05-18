@@ -81,9 +81,20 @@
 
       <h2>{{ 'legal.privacy.h5' | translate }}</h2>
       <p>{{ 'legal.privacy.h5p1' | translate }}</p>
+      <ul>
+        <li [innerHTML]="'legal.privacy.h5li1' | translate"></li>
+        <li>{{ 'legal.privacy.h5li2' | translate }}</li>
+        <li [innerHTML]="'legal.privacy.h5li3' | translate"></li>
+      </ul>
 
       <h2>{{ 'legal.privacy.h6' | translate }}</h2>
-      <p>{{ 'legal.privacy.h6p1' | translate }}</p>
+      <p [innerHTML]="'legal.privacy.h6p1' | translate"></p>
+
+      <h2>{{ 'legal.privacy.h7' | translate }}</h2>
+      <p>{{ 'legal.privacy.h7p1' | translate }}</p>
+
+      <h2>{{ 'legal.privacy.h8' | translate }}</h2>
+      <p>{{ 'legal.privacy.h8p1' | translate }}</p>
     </div>
   </div>
 </app-legal-layout>

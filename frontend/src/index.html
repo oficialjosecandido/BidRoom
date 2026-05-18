@@ -24,10 +24,19 @@
 
   <!-- Canonical -->
   <link rel="canonical" href="https://bidroom.com/">
+  <!--
+    APP_CONFIG overrides Angular’s environment.defaultApiBaseUrl when set (non-empty).
+    Azure Static Web Apps: use build-time substitution or SWA app settings + a small script.
+      API_URL                 → e.g. https://bidroom-backend.azurewebsites.net/api
+      STRIPE_PUBLISHABLE_KEY  → pk_live_... (production) or pk_test_... (staging)
+
+    Leave API_URL empty to use the default from environment.prod.ts / environment.ts.
+  -->
   <script>
     window.APP_CONFIG = {
-      API_URL: '',
-      STRIPE_PUBLISHABLE_KEY: 'pk_live_51TI5X806hw2O8NlNQNn7MGeAFmj5tk19yVupsK0wprzCVMwHiJOSPcGeKd4MuyaoYj9Fyz43qia3RbZNI7Y46JGM0030VYlipc'
+      // API_URL: 'https://bidroom-backend-dev.azurewebsites.net/api',
+      API_URL: 'http://localhost:3000/api',
+      STRIPE_PUBLISHABLE_KEY: 'pk_test_51TI5X806hw2O8NlNioZFt34bFn38uQPhm4hayUKZtrPf41BWH4xxdjiox9gNlMpSSHdUfCYtAM5FNX1UF3KyhNuP00Vqz8RtvH'
     };
   </script>
   <!-- Early theme (matches ThemeService): reduces flash before Angular boot -->

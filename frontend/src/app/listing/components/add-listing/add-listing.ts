@@ -34,9 +34,6 @@ export class AddListing implements OnInit, OnDestroy {
   private translate = inject(TranslateService);
   private kycService = inject(KycService);
 
-  readonly enableAuctions = environment.enableAuctions ?? true;
-  readonly enablePrivateRooms = environment.enablePrivateRooms ?? true;
-
   listingForm!: FormGroup;
   isSubmitting = false;
   errorMessage = '';
@@ -285,12 +282,6 @@ export class AddListing implements OnInit, OnDestroy {
       returnPolicy: ['14-days', Validators.required],
       sellerDeclaration: [false, Validators.requiredTrue]
     });
-
-    // Lock to best-offer if auctions are disabled in this environment
-    if (!this.enableAuctions) {
-      this.listingForm.patchValue({ listingFormat: 'best-offer' });
-    }
-
 
     this.listingForm.get('listingFormat')?.valueChanges.subscribe(format => {
       this.updateConditionalValidators(format);

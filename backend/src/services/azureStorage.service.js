@@ -116,7 +116,7 @@ class AzureStorageService {
    * @param {Buffer} buffer - File buffer
    * @param {string} originalFilename - Original filename
    * @param {string} mimetype - MIME type
-   * @returns {Promise<string>} - Public URL of uploaded blob
+   * @returns {Promise<{url: string, blobName: string}>} - Public URL and blob name
    */
   async uploadImage(buffer, originalFilename, mimetype) {
     if (!this.containerClient) {
@@ -126,16 +126,14 @@ class AzureStorageService {
     const blobName = this.generateBlobName(originalFilename, mimetype);
     const blockBlobClient = this.containerClient.getBlockBlobClient(blobName);
 
-    // Upload the buffer
     await blockBlobClient.upload(buffer, buffer.length, {
       blobHTTPHeaders: {
         blobContentType: mimetype,
-        blobCacheControl: 'public, max-age=31536000' // Cache for 1 year
+        blobCacheControl: 'public, max-age=31536000'
       }
     });
 
-    // Return public URL
-    return blockBlobClient.url;
+    return { url: blockBlobClient.url, blobName };
   }
 
   /**
@@ -189,7 +187,7 @@ class AzureStorageService {
   /**
    * Upload multiple images
    * @param {Array} files - Array of file objects with { buffer, originalname, mimetype }
-   * @returns {Promise<string[]>} - Array of public URLs
+   * @returns {Promise<Array<{url: string, blobName: string}>>}
    */
   async uploadMultipleImages(files) {
     if (!Array.isArray(files) || files.length === 0) {
@@ -207,7 +205,8 @@ class AzureStorageService {
   }
 
   /**
-   * Delete an image from Azure Blob Storage
+   * Delete an image from Azure Blob Storage by its full URL.
+   * Correctly handles path-prefixed blobs (e.g. dispute-evidence/uuid.jpg).
    * @param {string} blobUrl - Full URL of the blob
    * @returns {Promise<void>}
    */
@@ -217,15 +216,35 @@ class AzureStorageService {
     }
 
     try {
-      // Extract blob name from URL
-      const urlParts = blobUrl.split('/');
-      const blobName = urlParts[urlParts.length - 1].split('?')[0]; // Remove query params if any
-      
+      const parsed = new URL(blobUrl);
+      const parts = parsed.pathname.split('/');
+      // pathname: /container-name/rest-of-blob-path
+      const blobName = parts.slice(2).join('/').split('?')[0];
+      if (!blobName) return;
       const blockBlobClient = this.containerClient.getBlockBlobClient(blobName);
       await blockBlobClient.delete();
     } catch (error) {
       console.error('Error deleting blob:', error);
-      // Don't throw - deletion failures shouldn't break the flow
+    }
+  }
+
+  /**
+   * Delete a blob directly by its name (path within container).
+   * Use this when you already have the blobName from imageManifest.
+   * @param {string} blobName - Path within container (e.g. "uuid.jpg" or "dispute-evidence/uuid.jpg")
+   * @returns {Promise<void>}
+   */
+  async deleteBlobByName(blobName) {
+    if (!this.containerClient) {
+      throw new Error('Azure Storage is not configured.');
+    }
+    if (!blobName) return;
+
+    try {
+      const blockBlobClient = this.containerClient.getBlockBlobClient(blobName);
+      await blockBlobClient.deleteIfExists();
+    } catch (error) {
+      console.error(`Error deleting blob "${blobName}":`, error);
     }
   }
 
@@ -240,7 +259,7 @@ class AzureStorageService {
     }
 
     const deletePromises = blobUrls.map(url => this.deleteImage(url));
-    await Promise.allSettled(deletePromises); // Use allSettled to continue even if some fail
+    await Promise.allSettled(deletePromises);
   }
 }
 

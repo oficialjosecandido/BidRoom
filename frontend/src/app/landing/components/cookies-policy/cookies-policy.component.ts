@@ -16,7 +16,7 @@ export class CookiesPolicyComponent {
   saved = false;
 
   savePreferences(): void {
-    this.prefs.save();
+    this.prefs.applyConsentFromToggles();
     this.saved = true;
     setTimeout(() => { this.saved = false; }, 3000);
   }

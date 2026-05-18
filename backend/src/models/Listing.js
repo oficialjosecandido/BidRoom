@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { imageSchema } = require('../shared/schemas/imageSchema');
 
 const listingSchema = new mongoose.Schema({
   title: {
@@ -33,6 +34,15 @@ const listingSchema = new mongoose.Schema({
   },
   images: {
     type: [String],
+    default: []
+  },
+  /**
+   * Structured image metadata for RGPD-compliant purge tracking.
+   * Progressively populated: new listings get it at creation time;
+   * existing listings are backfilled by the daily purge scheduler.
+   */
+  imageManifest: {
+    type: [imageSchema],
     default: []
   },
   startingPrice: {
@@ -360,6 +370,9 @@ listingSchema.index({ status: 1, endDate: 1 }); // For active listings sorted by
 listingSchema.index({ category: 1, status: 1 });
 listingSchema.index({ isFeatured: -1, createdAt: -1 }); // For featured listings
 listingSchema.index({ currentPrice: 1, bidCount: 1 }); // For sorting
+// Purge scheduler indexes
+listingSchema.index({ 'imageManifest.purgeAfter': 1, 'imageManifest.purged': 1 });
+listingSchema.index({ status: 1, 'imageManifest.0': 1 }); // Find ended/cancelled with empty manifests
 
 // Virtual for checking if auction is ending soon (within 24 hours)
 listingSchema.virtual('endingSoon').get(function() {

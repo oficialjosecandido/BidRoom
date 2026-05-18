@@ -3,7 +3,6 @@ import { AsyncPipe } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { Observable, Subscription } from 'rxjs';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
-import { environment } from '../../../../environments/environment';
 import { AuthService } from '../../../auth/services/auth.service';
 import { NotificationService } from '../../services/notification.service';
 import { ThemeService } from '../../services/theme.service';
@@ -20,13 +19,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
   private authService = inject(AuthService);
   private notificationService = inject(NotificationService);
   private translate = inject(TranslateService);
-  readonly environment = environment;
   readonly theme = inject(ThemeService);
-
-
-  /** Shown only in non-production builds (e.g. local / dev deploy) */
-  readonly showEnvBadge = !environment.production;
-
 
   @Input() activePage = '';
 

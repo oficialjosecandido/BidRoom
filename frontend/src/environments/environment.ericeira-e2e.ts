@@ -45,4 +45,20 @@ export const environment = {
   ],
   bidroomFeeSellerRate: 0.005,
   bidroomFeeBuyerRate: 0.005,
+  firebase: {
+    apiKey: 'AIzaSyBb3nk50nwBME8dN5pNhu2W1B7-m35qqHw',
+    authDomain: 'bidroom-47cb5.firebaseapp.com',
+    projectId: 'bidroom-47cb5',
+    storageBucket: 'bidroom-47cb5.firebasestorage.app',
+    messagingSenderId: '16761692806',
+    appId: '1:16761692806:web:b1e10f2a57a040f8556707',
+    measurementId: 'G-4FDFR1ZSRV',
+  },
+  featureFlags: {
+    auctions: false,
+    privateRooms: false,
+    bestOffers: true,
+    reviews: true,
+    membershipTiers: false,
+  },
 };
