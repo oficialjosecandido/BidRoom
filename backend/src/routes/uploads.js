@@ -88,11 +88,13 @@ router.post('/', authenticateToken, requireActiveAccount, upload.array('images',
       // Scan failure is non-fatal — don't block the upload
     }
 
-    // Upload to Azure Blob Storage
-    const urls = await azureStorageService.uploadMultipleImages(files);
+    // Upload to Azure Blob Storage — returns [{ url, blobName }]
+    const uploadResults = await azureStorageService.uploadMultipleImages(files);
+    const urls = uploadResults.map(r => r.url);
 
     res.json({
-      urls: urls,
+      urls,
+      images: uploadResults,
       count: urls.length
     });
   } catch (error) {

@@ -274,7 +274,7 @@
 
         @if (getAuthenticatedBidders().length > 0) {
 <div class="bidders-selection-list">
-          @for (bidder of getAuthenticatedBidders(); track bidder) {
+          @for (bidder of getAuthenticatedBidders(); track bidderTrackKey(bidder)) {
 <div 
             
             class="bidder-selection-item"

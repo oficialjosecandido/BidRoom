@@ -11,6 +11,7 @@ const { notifyAccountSuspended, notifyAccountReactivated, notifyAccountClosed, e
 const Listing = require('../models/Listing');
 const Transaction = require('../models/Transaction');
 const Bid = require('../models/Bid');
+const { purgeUserImagesOnClosure } = require('./imagePurgeService');
 
 const ACCOUNT_STATUS = { ACTIVE: 'active', SUSPENDED: 'suspended', CLOSED: 'closed' };
 
@@ -165,6 +166,9 @@ async function closeUser(userId, metadata = {}, io = null) {
 
   await notifyAccountClosed({ userId }).catch(err => console.error('Notify closed:', err.message));
   if (io && user.uid) emitNewNotificationToUser(io, userId).catch(() => {});
+
+  // RGPD Art. 17 — purge images immediately on account closure (fiscal-protected images are preserved)
+  purgeUserImagesOnClosure(userId).catch(err => console.error('Image purge on closure failed:', err.message));
 
   return { updated: true };
 }

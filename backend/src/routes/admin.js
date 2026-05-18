@@ -18,6 +18,7 @@ const DamageClaim = require('../models/DamageClaim');
 const { applyDisputeAccountOutcome } = require('../services/accountStatusService');
 const { applyDisputeVerdictImpact } = require('../services/reputationService');
 const { appendModerationAudit } = require('../services/moderationAuditService');
+const { runImagePurge } = require('../services/imagePurgeScheduler');
 
 function getStripe() {
   const key = process.env.STRIPE_SECRET_KEY;
@@ -1376,6 +1377,20 @@ router.patch('/damage-claims/:id', authenticateToken, requireAdmin, async (req, 
   } catch (err) {
     console.error('PATCH /api/admin/damage-claims/:id error:', err);
     return res.status(500).json({ error: 'Failed to update claim.' });
+  }
+});
+
+/**
+ * POST /api/admin/maintenance/image-purge
+ * Manually trigger the RGPD image purge job (admin only).
+ */
+router.post('/maintenance/image-purge', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const result = await runImagePurge();
+    return res.json({ success: true, result });
+  } catch (err) {
+    console.error('POST /api/admin/maintenance/image-purge error:', err);
+    return res.status(500).json({ error: 'Image purge failed', message: err.message });
   }
 });
 

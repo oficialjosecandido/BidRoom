@@ -1,10 +1,11 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { TranslateService } from '@ngx-translate/core';
+import { CookieBannerComponent } from './shared/components/cookie-banner/cookie-banner.component';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet],
+  imports: [RouterOutlet, CookieBannerComponent],
   templateUrl: './app.html',
   styleUrl: './app.scss'
 })

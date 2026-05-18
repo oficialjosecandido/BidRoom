@@ -49,6 +49,7 @@ const deliveryAutoReleaseScheduler = require('./services/deliveryAutoReleaseSche
 const reviewAutoGenerateScheduler = require('./services/reviewAutoGenerateScheduler');
 const dsaComplianceScheduler = require('./services/dsaComplianceScheduler');
 const { runCleanup: runProofOfPaymentCleanup } = require('./services/proofOfPaymentCleanup');
+const { runImagePurge } = require('./services/imagePurgeScheduler');
 
 // CORS: FRONTEND_URL(s), optional CORS_EXTRA_ORIGINS (comma-separated), localhost, Azure Static Web Apps
 const extraOrigins = (process.env.CORS_EXTRA_ORIGINS || '')
@@ -378,10 +379,16 @@ const startServer = async () => {
       dsaComplianceScheduler.startDsaComplianceScheduler(24, io);
       console.log(`⚖️  DSA compliance scheduler started`);
 
+      const DAILY_MS = 24 * 60 * 60 * 1000;
+
       // Proof-of-payment cleanup: delete files from Azure 30 days after paid (run daily)
-      const PROOF_CLEANUP_MS = 24 * 60 * 60 * 1000;
       setTimeout(() => runProofOfPaymentCleanup().catch(e => console.error('Proof-of-payment cleanup:', e.message)), 60000);
-      setInterval(() => runProofOfPaymentCleanup().catch(e => console.error('Proof-of-payment cleanup:', e.message)), PROOF_CLEANUP_MS);
+      setInterval(() => runProofOfPaymentCleanup().catch(e => console.error('Proof-of-payment cleanup:', e.message)), DAILY_MS);
+
+      // RGPD image purge: delete listing images past their retention period (run daily at startup + every 24h)
+      setTimeout(() => runImagePurge().catch(e => console.error('Image purge error:', e.message)), 5 * 60 * 1000);
+      setInterval(() => runImagePurge().catch(e => console.error('Image purge error:', e.message)), DAILY_MS);
+      console.log(`🧹 Image purge scheduler started`);
     });
   } catch (error) {
     console.error('❌ Failed to start server:', error.message);
