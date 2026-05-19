@@ -16,6 +16,7 @@ const { getReviewScoresForUser } = require('../services/reviewService');
 const { logAuctionCreated } = require('../services/bestOfferLogger');
 const { scanTexts, scanTextsForProhibitedContent, scanForAbusiveContent } = require('../utils/contentFilter');
 const { appendModerationAudit } = require('../services/moderationAuditService');
+const { scanListingText } = require('../services/contentSafetyService');
 const { recordViolation } = require('../services/contentViolationService');
 const { createTransactionForBuyNow } = require('../services/transactionService');
 
@@ -1146,6 +1147,19 @@ router.post('/', authenticateToken, requireActiveAccount, requireNoDisputeRestri
       });
     }
 
+    // Azure AI Content Safety text scan (blocklist + AI categories — complementary to local regex)
+    try {
+      const aiScan = await scanListingText(title, description || '');
+      if (aiScan.blocked) {
+        return res.status(400).json({
+          error: 'Content policy violation',
+          message: `Your listing was rejected: ${aiScan.reason}. If you believe this is a mistake, please contact support.`
+        });
+      }
+    } catch (aiErr) {
+      console.error('Azure Content Safety text scan error (non-blocking):', aiErr.message);
+    }
+
     // Abusive language check on title + description
     const abuseCheck = scanForAbusiveContent(`${title} ${description || ''}`);
     if (abuseCheck.found) {
@@ -1432,6 +1446,18 @@ router.patch('/:id', authenticateToken, requireActiveAccount, async (req, res) =
           message: violation.message,
           violationAction: violation.action
         });
+      }
+
+      try {
+        const aiScanUpdate = await scanListingText(updates.title || '', updates.description || '');
+        if (aiScanUpdate.blocked) {
+          return res.status(400).json({
+            error: 'Content policy violation',
+            message: `Your listing was rejected: ${aiScanUpdate.reason}. If you believe this is a mistake, please contact support.`
+          });
+        }
+      } catch (aiErr) {
+        console.error('Azure Content Safety text scan error (non-blocking):', aiErr.message);
       }
 
       const abuseCheckUpdate = scanForAbusiveContent(textFields.join(' '));

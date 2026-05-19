@@ -4,7 +4,7 @@
 <nav>
   <button class="back" (click)="navigateBack()">
     <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M10 3L5 8l5 5"/></svg>
-    <span class="brand">BidRoom<em>.pt</em></span>
+    <span class="brand"><app-bidroom-logo [height]="28" /></span>
   </button>
   <div class="draft-status-nav">
     @if (draftSaveStatus === 'saving') {

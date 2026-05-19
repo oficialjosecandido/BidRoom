@@ -7,10 +7,11 @@ import { NotificationService } from '../shared/services/notification.service';
 import { TransactionsService } from '../shared/services/transactions.service';
 import { SocketService } from '../shared/services/socket.service';
 import { ThemeService } from '../shared/services/theme.service';
+import { BidroomLogoComponent } from '../shared/components/bidroom-logo/bidroom-logo.component';
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, TranslateModule],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, TranslateModule, BidroomLogoComponent],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss']
 })

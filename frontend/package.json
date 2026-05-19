@@ -7,7 +7,11 @@
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
-    "lint": "ng lint"
+    "lint": "ng lint",
+    "start:ericeira": "ng serve --configuration ericeira",
+    "start:ericeira-e2e": "ng serve --configuration ericeira-e2e",
+    "build:ericeira": "ng build --configuration ericeira",
+    "build:ericeira-prod": "ng build --configuration ericeira-prod"
   },
   "prettier": {
     "printWidth": 100,

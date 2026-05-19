@@ -11,6 +11,7 @@ import { CustomerService, CustomerInfo } from '../../../shared/services/customer
 import { KycService, KYC_THRESHOLD } from '../../../shared/services/kyc.service';
 import { API_CONFIG } from '../../../shared/config/api.config';
 import { environment } from '@env';
+import { BidroomLogoComponent } from '../../../shared/components/bidroom-logo/bidroom-logo.component';
 
 interface Category {
   id: string;
@@ -21,7 +22,7 @@ interface Category {
 @Component({
   selector: 'app-add-listing',
   standalone: true,
-  imports: [ReactiveFormsModule, TranslateModule],
+  imports: [ReactiveFormsModule, TranslateModule, BidroomLogoComponent],
   templateUrl: './add-listing.html',
   styleUrl: './add-listing.scss',
 })

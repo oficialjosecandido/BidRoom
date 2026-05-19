@@ -6,11 +6,12 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { AuthService } from '../../../auth/services/auth.service';
 import { NotificationService } from '../../services/notification.service';
 import { ThemeService } from '../../services/theme.service';
+import { BidroomLogoComponent } from '../bidroom-logo/bidroom-logo.component';
 
 @Component({
   selector: 'app-header',
   standalone: true,
-  imports: [AsyncPipe, RouterLink, TranslateModule],
+  imports: [AsyncPipe, RouterLink, TranslateModule, BidroomLogoComponent],
   templateUrl: './header.component.html',
   styleUrls: ['./header.component.scss']
 })

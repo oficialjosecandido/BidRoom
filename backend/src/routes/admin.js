@@ -19,6 +19,7 @@ const { applyDisputeAccountOutcome } = require('../services/accountStatusService
 const { applyDisputeVerdictImpact } = require('../services/reputationService');
 const { appendModerationAudit } = require('../services/moderationAuditService');
 const { runImagePurge } = require('../services/imagePurgeScheduler');
+const { getBlocklistItems, addBlocklistItem, removeBlocklistItem, ensureBlocklistExists } = require('../services/contentSafetyService');
 
 function getStripe() {
   const key = process.env.STRIPE_SECRET_KEY;
@@ -1391,6 +1392,56 @@ router.post('/maintenance/image-purge', authenticateToken, requireAdmin, async (
   } catch (err) {
     console.error('POST /api/admin/maintenance/image-purge error:', err);
     return res.status(500).json({ error: 'Image purge failed', message: err.message });
+  }
+});
+
+/**
+ * GET /api/admin/moderation/blocklist
+ * List all terms in the Azure Content Safety prohibited blocklist.
+ */
+router.get('/moderation/blocklist', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const items = await getBlocklistItems();
+    return res.json({ items });
+  } catch (err) {
+    console.error('GET /api/admin/moderation/blocklist error:', err);
+    return res.status(500).json({ error: 'Failed to fetch blocklist', message: err.message });
+  }
+});
+
+/**
+ * POST /api/admin/moderation/blocklist
+ * Add a term to the Azure Content Safety prohibited blocklist.
+ * Body: { text: string }
+ */
+router.post('/moderation/blocklist', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const { text } = req.body;
+    if (!text || typeof text !== 'string' || !text.trim()) {
+      return res.status(400).json({ error: 'text is required' });
+    }
+    await ensureBlocklistExists();
+    const item = await addBlocklistItem(text.trim());
+    console.log(`[admin] blocklist term added by ${req.user?.email}: "${text.trim()}"`);
+    return res.json({ success: true, item });
+  } catch (err) {
+    console.error('POST /api/admin/moderation/blocklist error:', err);
+    return res.status(500).json({ error: 'Failed to add term', message: err.message });
+  }
+});
+
+/**
+ * DELETE /api/admin/moderation/blocklist/:itemId
+ * Remove a term from the Azure Content Safety prohibited blocklist.
+ */
+router.delete('/moderation/blocklist/:itemId', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    await removeBlocklistItem(req.params.itemId);
+    console.log(`[admin] blocklist term removed by ${req.user?.email}: itemId=${req.params.itemId}`);
+    return res.json({ success: true });
+  } catch (err) {
+    console.error('DELETE /api/admin/moderation/blocklist error:', err);
+    return res.status(500).json({ error: 'Failed to remove term', message: err.message });
   }
 });
 

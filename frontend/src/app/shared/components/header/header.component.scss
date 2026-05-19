@@ -49,21 +49,12 @@
 
 /* ── Brand ── */
 .brand {
-  font-size: 16px;
-  font-weight: 600;
-  letter-spacing: .01em;
   flex-shrink: 0;
   cursor: pointer;
-  color: var(--text);
   user-select: none;
   transition: opacity .15s;
 
-  &:hover { opacity: .8; }
-
-  em {
-    color: var(--gold);
-    font-style: normal;
-  }
+  &:hover { opacity: .85; }
 }
 
 /* ── Centre links ── */

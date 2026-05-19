@@ -1,11 +1,15 @@
 const ContentSafetyClient = require('@azure-rest/ai-content-safety').default;
 const { AzureKeyCredential } = require('@azure/core-auth');
 
-// Severity thresholds (0–6 scale, even numbers only: 0, 2, 4, 6)
-// Block: severity >= 4 on Sexual or Violence
-// Flag for review: severity >= 2 on Sexual or Violence
+// Image severity thresholds (0–6 scale, even numbers only)
 const BLOCK_THRESHOLD = 4;
 const FLAG_THRESHOLD = 2;
+
+// Text severity thresholds — stricter than images
+// Sexual >= 2 catches adult services listings; Violence >= 2 catches weapons/threats
+const TEXT_THRESHOLDS = { Violence: 2, Sexual: 2, Hate: 2, SelfHarm: 2 };
+
+const BLOCKLIST_NAME = 'bidroom-prohibited';
 
 let client = null;
 
@@ -75,4 +79,98 @@ async function scanImages(buffers) {
   return { allSafe: !anyFlagged, anyFlagged, blocked: false, results };
 }
 
-module.exports = { scanImage, scanImages };
+/**
+ * Scan listing text (title + description) for policy violations using Azure AI Content Safety.
+ * Checks AI categories (Violence, Sexual, Hate, SelfHarm) and the bidroom-prohibited blocklist.
+ * Gracefully skips if Azure Content Safety is not configured.
+ *
+ * @param {string} title
+ * @param {string} description
+ * @returns {Promise<{ blocked: boolean, reason: string|null, skipped: boolean }>}
+ */
+async function scanListingText(title, description) {
+  const c = getClient();
+  if (!c) return { blocked: false, reason: null, skipped: true };
+
+  const text = `${title || ''}. ${description || ''}`.slice(0, 10000);
+
+  const response = await c.path('/text:analyze').post({
+    body: {
+      text,
+      categories: ['Violence', 'Sexual', 'Hate', 'SelfHarm'],
+      blocklistNames: [BLOCKLIST_NAME],
+      haltOnBlocklistHit: true,
+      outputType: 'FourSeverityLevels'
+    }
+  });
+
+  if (response.status !== '200') {
+    throw new Error(`Azure Content Safety text error: ${response.status}`);
+  }
+
+  const body = response.body;
+
+  if (body.blocklistsMatch?.length > 0) {
+    const term = body.blocklistsMatch[0].blocklistItemText;
+    return { blocked: true, reason: `Prohibited item: "${term}"`, skipped: false };
+  }
+
+  for (const cat of (body.categoriesAnalysis || [])) {
+    const threshold = TEXT_THRESHOLDS[cat.category] ?? 4;
+    if (cat.severity >= threshold) {
+      return { blocked: true, reason: `Content flagged: ${cat.category} (severity ${cat.severity})`, skipped: false };
+    }
+  }
+
+  return { blocked: false, reason: null, skipped: false };
+}
+
+/**
+ * Blocklist management helpers (used by admin endpoints).
+ */
+async function getBlocklistItems() {
+  const c = getClient();
+  if (!c) return [];
+  const response = await c.path('/text/blocklists/{blocklistName}/blocklistItems', BLOCKLIST_NAME).get();
+  if (response.status !== '200') throw new Error(`Azure blocklist get error: ${response.status}`);
+  return response.body.value || [];
+}
+
+async function addBlocklistItem(text) {
+  const c = getClient();
+  if (!c) throw new Error('Azure Content Safety not configured');
+  const response = await c.path('/text/blocklists/{blocklistName}/blocklistItems:add', BLOCKLIST_NAME).post({
+    body: { blocklistItems: [{ text: text.trim().slice(0, 128) }] }
+  });
+  if (response.status !== '200') throw new Error(`Azure blocklist add error: ${response.status}`);
+  return response.body.addedOrUpdatedItems?.[0] || null;
+}
+
+async function removeBlocklistItem(itemId) {
+  const c = getClient();
+  if (!c) throw new Error('Azure Content Safety not configured');
+  const response = await c.path('/text/blocklists/{blocklistName}/blocklistItems:remove', BLOCKLIST_NAME).post({
+    body: { blocklistItemIds: [itemId] }
+  });
+  if (response.status !== '204') throw new Error(`Azure blocklist remove error: ${response.status}`);
+}
+
+async function ensureBlocklistExists() {
+  const c = getClient();
+  if (!c) return;
+  await c.path('/text/blocklists/{blocklistName}', BLOCKLIST_NAME).patch({
+    contentType: 'application/merge-patch+json',
+    body: { description: 'BidRoom prohibited listing terms' }
+  });
+}
+
+module.exports = {
+  scanImage,
+  scanImages,
+  scanListingText,
+  getBlocklistItems,
+  addBlocklistItem,
+  removeBlocklistItem,
+  ensureBlocklistExists,
+  BLOCKLIST_NAME
+};

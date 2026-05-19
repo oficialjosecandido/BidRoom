@@ -66,6 +66,69 @@
               "optimization": false,
               "extractLicenses": false,
               "sourceMap": true
+            },
+            "ericeira": {
+              "fileReplacements": [
+                {
+                  "replace": "src/environments/environment.ts",
+                  "with": "src/environments/environment.ericeira.ts"
+                }
+              ],
+              "budgets": [
+                {
+                  "type": "initial",
+                  "maximumWarning": "500MB",
+                  "maximumError": "1000MB"
+                },
+                {
+                  "type": "anyComponentStyle",
+                  "maximumWarning": "400MB",
+                  "maximumError": "400MB"
+                }
+              ],
+              "outputHashing": "all"
+            },
+            "ericeira-prod": {
+              "fileReplacements": [
+                {
+                  "replace": "src/environments/environment.ts",
+                  "with": "src/environments/environment.ericeira-prod.ts"
+                }
+              ],
+              "budgets": [
+                {
+                  "type": "initial",
+                  "maximumWarning": "500MB",
+                  "maximumError": "1000MB"
+                },
+                {
+                  "type": "anyComponentStyle",
+                  "maximumWarning": "400MB",
+                  "maximumError": "400MB"
+                }
+              ],
+              "outputHashing": "all"
+            },
+            "ericeira-e2e": {
+              "fileReplacements": [
+                {
+                  "replace": "src/environments/environment.ts",
+                  "with": "src/environments/environment.ericeira-e2e.ts"
+                }
+              ],
+              "budgets": [
+                {
+                  "type": "initial",
+                  "maximumWarning": "500MB",
+                  "maximumError": "1000MB"
+                },
+                {
+                  "type": "anyComponentStyle",
+                  "maximumWarning": "400MB",
+                  "maximumError": "400MB"
+                }
+              ],
+              "outputHashing": "all"
             }
           },
           "defaultConfiguration": "production"
@@ -78,6 +141,15 @@
             },
             "development": {
               "buildTarget": "frontend:build:development"
+            },
+            "ericeira": {
+              "buildTarget": "frontend:build:ericeira"
+            },
+            "ericeira-prod": {
+              "buildTarget": "frontend:build:ericeira-prod"
+            },
+            "ericeira-e2e": {
+              "buildTarget": "frontend:build:ericeira-e2e"
             }
           },
           "defaultConfiguration": "development"
