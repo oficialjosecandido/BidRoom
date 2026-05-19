@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { FollowService } from '../../../shared/services/follow.service';
-import { CategoryFollowService } from '../../../shared/services/category-follow.service';
+import { CategoryFollowService, FollowedCategory } from '../../../shared/services/category-follow.service';
 
 interface FollowedSeller {
   _id: string;
@@ -25,9 +25,10 @@ export class DashboardFollowingComponent implements OnInit {
   private categoryFollowService = inject(CategoryFollowService);
 
   sellers: FollowedSeller[] = [];
-  categories: string[] = [];
+  categories: FollowedCategory[] = [];
   isLoading = true;
   togglingMute: string | null = null;
+  togglingMuteCategory: string | null = null;
   unfollowingSeller: string | null = null;
   unfollowingCategory: string | null = null;
 
@@ -53,6 +54,7 @@ export class DashboardFollowingComponent implements OnInit {
       next: (res) => { this.categories = res.categories; categoriesLoaded = true; done(); },
       error: () => { categoriesLoaded = true; done(); }
     });
+
   }
 
   sellerDisplayName(seller: FollowedSeller): string {
@@ -83,12 +85,24 @@ export class DashboardFollowingComponent implements OnInit {
     });
   }
 
+  toggleMuteCategory(cat: FollowedCategory): void {
+    if (this.togglingMuteCategory) return;
+    this.togglingMuteCategory = cat.category;
+    this.categoryFollowService.setMuted(cat.category, !cat.muted).subscribe({
+      next: (res) => {
+        cat.muted = res.muted ?? !cat.muted;
+        this.togglingMuteCategory = null;
+      },
+      error: () => { this.togglingMuteCategory = null; }
+    });
+  }
+
   unfollowCategory(category: string): void {
     if (this.unfollowingCategory) return;
     this.unfollowingCategory = category;
     this.categoryFollowService.unfollow(category).subscribe({
       next: () => {
-        this.categories = this.categories.filter(c => c !== category);
+        this.categories = this.categories.filter(c => c.category !== category);
         this.unfollowingCategory = null;
       },
       error: () => { this.unfollowingCategory = null; }

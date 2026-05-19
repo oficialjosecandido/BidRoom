@@ -48,7 +48,7 @@ export class CategoriesComponent implements OnInit {
 
   loadFollowedCategories(): void {
     this.categoryFollowService.getFollowedCategories().subscribe({
-      next: (res) => { this.followedCategories = new Set(res.categories); },
+      next: (res) => { this.followedCategories = new Set(res.categories.map(c => c.category)); },
       error: () => {}
     });
   }

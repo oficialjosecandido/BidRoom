@@ -6,6 +6,12 @@ import { API_CONFIG } from '../config/api.config';
 export interface CategoryFollowStatus {
   following: boolean;
   category: string;
+  muted?: boolean;
+}
+
+export interface FollowedCategory {
+  category: string;
+  muted: boolean;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -25,7 +31,11 @@ export class CategoryFollowService {
     return this.http.delete<CategoryFollowStatus>(`${this.apiUrl}/${encodeURIComponent(category)}`);
   }
 
-  getFollowedCategories(): Observable<{ categories: string[] }> {
-    return this.http.get<{ categories: string[] }>(this.apiUrl);
+  getFollowedCategories(): Observable<{ categories: FollowedCategory[] }> {
+    return this.http.get<{ categories: FollowedCategory[] }>(this.apiUrl);
+  }
+
+  setMuted(category: string, muted: boolean): Observable<CategoryFollowStatus> {
+    return this.http.patch<CategoryFollowStatus>(`${this.apiUrl}/${encodeURIComponent(category)}/mute`, { muted });
   }
 }

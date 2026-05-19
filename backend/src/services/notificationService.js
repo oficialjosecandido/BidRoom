@@ -908,7 +908,7 @@ async function notifyDamageClaimResolved({ buyerId, listingTitle, status, transa
 async function notifyCategoryFollowersNewListing({ category, listingTitle, listingSlug, sellerUserId, io }) {
   try {
     if (!category) return;
-    const followers = await CategoryFollow.find({ category: category.toLowerCase() }).lean();
+    const followers = await CategoryFollow.find({ category: category.toLowerCase(), muted: { $ne: true } }).lean();
     if (!followers.length) return;
 
     const title = 'New listing in a category you follow';

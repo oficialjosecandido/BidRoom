@@ -70,20 +70,35 @@
           <a routerLink="/listing/categories" class="fl-browse">{{ 'dashboard.following.browseCategories' | translate }}</a>
         </div>
       } @else {
-        <div class="cat-chips">
-          @for (cat of categories; track cat) {
-            <div class="cat-chip">
-              <a [routerLink]="['/listing/list']" [queryParams]="{ category: cat }" class="cat-chip-name">
-                {{ formatCategoryName(cat) }}
-              </a>
-              <button
-                type="button"
-                class="cat-chip-remove"
-                [disabled]="unfollowingCategory === cat"
-                (click)="unfollowCategory(cat)"
-                title="Unfollow">
-                &#10005;
-              </button>
+        <div class="following-grid">
+          @for (cat of categories; track cat.category) {
+            <div class="seller-row" [class.muted]="cat.muted">
+              <div class="seller-av cat-av">{{ formatCategoryName(cat.category)[0] }}</div>
+              <div class="seller-info">
+                <a [routerLink]="['/listing/list']" [queryParams]="{ category: cat.category }" class="seller-name">
+                  {{ formatCategoryName(cat.category) }}
+                </a>
+                @if (cat.muted) {
+                  <span class="seller-muted-tag">{{ 'dashboard.following.muted' | translate }}</span>
+                }
+              </div>
+              <div class="seller-actions">
+                <button
+                  type="button"
+                  class="btn-mute"
+                  [class.muted]="cat.muted"
+                  [disabled]="togglingMuteCategory === cat.category"
+                  (click)="toggleMuteCategory(cat)">
+                  {{ cat.muted ? ('dashboard.following.unmute' | translate) : ('dashboard.following.mute' | translate) }}
+                </button>
+                <button
+                  type="button"
+                  class="btn-unfollow"
+                  [disabled]="unfollowingCategory === cat.category"
+                  (click)="unfollowCategory(cat.category)">
+                  {{ 'dashboard.following.unfollow' | translate }}
+                </button>
+              </div>
             </div>
           }
         </div>

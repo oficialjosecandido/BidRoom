@@ -63,11 +63,37 @@ router.get('/', authenticateToken, async (req, res) => {
     const user = await User.findOne({ uid: req.user.uid }).select('_id').lean();
     if (!user) return res.json({ categories: [] });
 
-    const entries = await CategoryFollow.find({ user: user._id }).select('category').lean();
-    res.json({ categories: entries.map(e => e.category) });
+    const entries = await CategoryFollow.find({ user: user._id }).select('category muted').lean();
+    res.json({ categories: entries.map(e => ({ category: e.category, muted: e.muted })) });
   } catch (err) {
     console.error('Error fetching followed categories:', err);
     res.status(500).json({ error: 'Failed to fetch followed categories' });
+  }
+});
+
+// PATCH /api/category-follows/:category/mute — toggle mute for a followed category
+router.patch('/:category/mute', authenticateToken, async (req, res) => {
+  try {
+    const user = await User.findOne({ uid: req.user.uid }).select('_id').lean();
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    const { muted } = req.body;
+    if (typeof muted !== 'boolean') {
+      return res.status(400).json({ error: 'muted must be a boolean' });
+    }
+
+    const category = req.params.category.trim().toLowerCase();
+    const entry = await CategoryFollow.findOneAndUpdate(
+      { user: user._id, category },
+      { muted },
+      { new: true }
+    );
+
+    if (!entry) return res.status(404).json({ error: 'Category not followed' });
+    res.json({ following: true, category, muted: entry.muted });
+  } catch (err) {
+    console.error('Error updating category mute:', err);
+    res.status(500).json({ error: 'Failed to update notification preference' });
   }
 });
 
