@@ -61,7 +61,9 @@
       "Bash(grep -n 'currency.*\\\\$\\\\|\\\\$.*currency\\\\|>\\\\$<' /Users/jose/Documents/bidroom/frontend/src/app/listing/components/add-listing/add-listing.html)",
       "Bash(node -e \"require\\('./src/utils/contentFilter'\\); console.log\\('contentFilter OK'\\)\")",
       "Bash(node -e \"require\\('./src/services/contentViolationService'\\); console.log\\('contentViolationService OK'\\)\")",
-      "Bash(node -e ' *)"
+      "Bash(node -e ' *)",
+      "Bash(node -e \"require\\('/Users/josecandido/Documents/BidRoom/backend/src/routes/uploads.js'\\); console.log\\('uploads.js OK'\\)\")",
+      "Bash(node -e \"require\\('/Users/josecandido/Documents/BidRoom/backend/src/services/contentViolationService.js'\\); console.log\\('contentViolationService OK'\\)\")"
     ]
   }
 }

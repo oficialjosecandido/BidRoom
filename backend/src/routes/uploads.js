@@ -3,6 +3,9 @@ const multer = require('multer');
 const { authenticateToken, requireActiveAccount } = require('../middleware/auth');
 const azureStorageService = require('../services/azureStorage.service');
 const { scanImages } = require('../services/contentSafetyService');
+const { recordViolation } = require('../services/contentViolationService');
+const { appendModerationAudit } = require('../services/moderationAuditService');
+const User = require('../models/User');
 
 const router = express.Router();
 
@@ -77,15 +80,44 @@ router.post('/', authenticateToken, requireActiveAccount, upload.array('images',
     // Content safety scan — block before reaching Blob Storage
     try {
       const scan = await scanImages(files.map(f => f.buffer));
+
       if (scan.blocked) {
+        // Log to audit trail and apply escalation penalty
+        const userId = req.user?._id || req.user?.id;
+        if (userId) {
+          const fullUser = await User.findById(userId);
+          if (fullUser) {
+            // Fire-and-forget: escalation is a side effect, not a blocker
+            recordViolation(fullUser, 'inappropriate_image').catch(err =>
+              console.error('recordViolation (image) error:', err.message)
+            );
+          }
+          appendModerationAudit({
+            subjectUserId: userId,
+            actionType: 'image_upload_blocked',
+            metadata: { fileCount: files.length, categories: scan.results?.map(r => r.categories) }
+          }).catch(() => {});
+        }
         return res.status(400).json({
           error: 'Content policy violation',
           message: 'One or more images contain content that violates our policies and cannot be uploaded.'
         });
       }
+
+      // Borderline (flagged): allow upload but queue for admin review
+      if (scan.anyFlagged) {
+        const userId = req.user?._id || req.user?.id;
+        if (userId) {
+          appendModerationAudit({
+            subjectUserId: userId,
+            actionType: 'image_upload_flagged',
+            metadata: { fileCount: files.length, categories: scan.results?.map(r => r.categories) }
+          }).catch(() => {});
+        }
+      }
     } catch (scanErr) {
       console.error('Content safety scan error (non-blocking):', scanErr.message);
-      // Scan failure is non-fatal — don't block the upload
+      // Scan failure is non-fatal — availability is preserved; monitoring should alert on repeated errors
     }
 
     // Upload to Azure Blob Storage — returns [{ url, blobName }]

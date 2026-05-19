@@ -16,6 +16,13 @@ const VIOLATION_MESSAGES = {
     3: 'Your account has been temporarily restricted for 3 days due to repeated use of offensive or abusive language.',
     4: 'Your account has been temporarily restricted for 7 days. This is your last warning before a permanent suspension.',
     5: 'Your account has been permanently suspended due to repeated use of offensive or abusive language.'
+  },
+  inappropriate_image: {
+    1: 'Your image was blocked: it contains content (nudity, sexual material, or graphic violence) that violates our platform policies. This is your first warning.',
+    2: 'Another image upload was blocked for containing inappropriate content. This is your final warning. Further violations will result in a temporary account restriction.',
+    3: 'Your account has been temporarily restricted for 3 days due to repeated attempts to upload inappropriate images.',
+    4: 'Your account has been temporarily restricted for 7 days. This is your last warning before a permanent suspension.',
+    5: 'Your account has been permanently suspended due to repeated uploads of inappropriate content.'
   }
 };
 
