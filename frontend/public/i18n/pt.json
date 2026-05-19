@@ -1769,121 +1769,308 @@
   },
   "howItWorks": {
     "hero": {
-      "title": "Como o BidRoom Funciona",
-      "subtitle": "Tudo o que você precisa saber para comprar e vender no BidRoom."
+      "eye": "Como funciona",
+      "title": "Transparência total,",
+      "title2": "de ponta a ponta.",
+      "sub": "Explicamos exactamente o que acontece em cada passo — para compradores, para vendedores, e para todos os que participam nas Salas Privadas.",
+      "ctaBuyer": "Sou comprador",
+      "ctaSeller": "Sou vendedor"
     },
-    "auth": {
-      "title": "Crie Sua Conta",
-      "subtitle": "Cadastre-se gratuitamente e verifique sua identidade para começar a comprar e vender.",
-      "visualTitle": "Login Seguro",
+    "tabs": {
+      "buyer": "Comprador",
+      "seller": "Vendedor",
+      "private": "Salas Privadas",
+      "payments": "Pagamento & Segurança"
+    },
+    "buyer": {
+      "s1": {
+        "eye": "Formatos de leilão",
+        "title": "Dois formatos,",
+        "title2": "uma plataforma.",
+        "intro": "No BidRoom pode comprar através de leilão em tempo real ou submeter a sua melhor oferta. Em ambos os casos, os fundos são protegidos até confirmar que recebeu o artigo em boas condições."
+      },
+      "auction": {
+        "title": "Leilão (Highest Bid)",
+        "desc": "Lance em tempo real contra outros compradores. O lance mais alto quando o tempo acaba vence automaticamente. Pode definir um lance máximo e deixar o sistema licitar por si.",
+        "commission": "0% de comissão para o comprador",
+        "f1": "Duração definida pelo vendedor — 1 a 15 dias",
+        "f2": "Pode existir preço de reserva — só vincula se for atingido",
+        "f3": "Preço de venda opcional — compre imediatamente sem esperar",
+        "f4": "Após o leilão pode haver uma Sala Privada exclusiva"
+      },
+      "offer": {
+        "title": "Melhor Oferta (Best Offer)",
+        "desc": "Submeta a sua proposta antes do prazo. O vendedor escolhe a que prefere. Pode adicionar uma mensagem à sua oferta. Só pode ter uma oferta activa por anúncio.",
+        "commission": "0% de comissão para o comprador",
+        "f1": "Nomes dos outros compradores são visíveis",
+        "f2": "Pode incluir mensagem com a sua oferta",
+        "f3": "Preço de venda: se fizer match, o artigo é seu imediatamente",
+        "f4": "O vendedor não é obrigado a vender abaixo do preço mínimo"
+      },
+      "s2": {
+        "eye": "Passo a passo",
+        "title": "Como comprar",
+        "title2": "no BidRoom",
+        "intro": "Do registo à entrega, explicamos cada momento do processo — incluindo o que acontece se algo correr mal."
+      },
       "step1": {
-        "title": "Registrar",
-        "desc": "Crie uma conta gratuita com seu e-mail ou Google.",
-        "li1": "Preencha seu nome e e-mail",
-        "li2": "Escolha uma senha segura",
-        "li3": "Concorde com nossos Termos e Condições"
+        "title": "Crie a sua conta — é gratuito",
+        "desc": "Registe-se com email ou Google. Não há custos de adesão nem taxas mensais. A conta é gratuita para compradores."
       },
       "step2": {
-        "title": "Verificar E-mail",
-        "desc": "Clique no link que enviamos para sua caixa de entrada para ativar sua conta.",
-        "li1": "Verifique sua caixa de entrada",
-        "li2": "Clique no link de confirmação",
-        "li3": "Sua conta está ativa"
+        "title": "Explore e filtre por categoria",
+        "desc": "Navegue por categorias — relógios, arte, automóveis, joalharia, antiguidades e mais. Adicione anúncios à watchlist para acompanhar sem licitar."
       },
       "step3": {
-        "title": "Completar Perfil",
-        "desc": "Adicione seus dados de pagamento e preferências de envio.",
-        "li1": "Conecte um método de pagamento",
-        "li2": "Defina suas preferências de envio",
-        "li3": "Comece a dar lances ou anunciar"
-      }
-    },
-    "listing": {
-      "title": "Anuncie Seus Itens",
-      "subtitle": "Vender no BidRoom é fácil — descreva seu item, defina seu preço e publique.",
-      "visualTitle": "Anúncio de Item",
-      "step1": {
-        "title": "Escolha Categoria e Formato",
-        "desc": "Selecione a categoria certa e decida entre leilão ou melhor oferta.",
-        "li1": "Selecione a categoria do item",
-        "li2": "Escolha Leilão (Maior Lance) ou Melhor Oferta",
-        "li3": "Indique a condição do item",
-        "li4": "Defina o formato do anúncio"
-      },
-      "step2": {
-        "title": "Adicione Fotos e Descrição",
-        "desc": "Envie fotos claras e escreva uma descrição detalhada para atrair compradores.",
-        "li1": "Envie pelo menos 3 fotos de alta qualidade",
-        "li2": "Escreva uma descrição detalhada e precisa",
-        "li3": "Adicione especificações importantes",
-        "li4": "Insira a localização do item"
-      },
-      "step3": {
-        "title": "Defina Preço e Duração",
-        "desc": "Defina seu lance inicial ou oferta mínima e escolha por quanto tempo o anúncio fica ativo.",
-        "li1": "Defina um lance inicial ou preço mínimo",
-        "li2": "Opcionalmente, habilite a Sala Privada",
-        "li3": "Escolha a duração do anúncio",
-        "li4": "Revise a estrutura de comissão"
+        "title": "Lance ou faça uma oferta",
+        "desc": "<strong>Leilão:</strong> cada lance tem de superar o anterior pelo incremento definido. Se for superado, recebe uma notificação imediata.<br><strong>Melhor oferta:</strong> submeta o valor que considera justo, com ou sem mensagem.",
+        "noteTitle": "Lances são vinculativos.",
+        "note": "Ao fazer um lance ou submeter uma oferta, compromete-se a efectuar o pagamento se for o vencedor. Lances não podem ser cancelados após a sua colocação."
       },
       "step4": {
-        "title": "Configure o Envio",
-        "desc": "Defina suas opções de envio e prazo de manuseio.",
-        "li1": "Escolha frete fixo, calculado ou grátis",
-        "li2": "Defina seu prazo de manuseio",
-        "li3": "Defina sua política de devolução",
-        "li4": "Revise as taxas e envie"
-      }
-    },
-    "privateRoom": {
-      "title": "A Sala de Leilão Privada",
-      "subtitle": "Nossa exclusiva Sala Privada permite que vendedores convidem compradores selecionados para um leilão exclusivo e por tempo limitado.",
-      "visualTitle": "Sala de Leilão Privada",
-      "step1": {
-        "title": "Leilão Começa",
-        "desc": "Quando o anúncio fica ativo, os lances são abertos a todos os usuários registrados.",
-        "li1": "Todos os usuários registrados podem dar lances",
-        "li2": "Histórico de lances visível a todos",
-        "li3": "Vendedor pode monitorar a atividade",
-        "li4": "Sala Privada é opcional na criação do anúncio"
-      },
-      "step2": {
-        "title": "Vendedor Cria a Sala Privada",
-        "desc": "A qualquer momento durante o leilão, o vendedor pode convidar 2 a 5 licitantes para uma sala privada.",
-        "li1": "Vendedor seleciona de 2 a 5 licitantes",
-        "li2": "Convidados têm 15 minutos para aceitar",
-        "li3": "Não convidados são notificados",
-        "li4": "Se ninguém aceitar em 15 min, o leilão encerra sem vencedor"
-      },
-      "step3": {
-        "title": "Lances Privados Começam",
-        "desc": "Assim que os convidados aceitam, a sala de leilão privada é aberta.",
-        "li1": "Apenas licitantes convidados podem dar lances",
-        "li2": "Qualquer pessoa pode assistir",
-        "li3": "Os lances devem respeitar o incremento",
-        "li4": "A sala fica aberta enquanto houver lances"
-      },
-      "step4": {
-        "title": "Contagem Regressiva da Sala",
-        "desc": "A sala fecha 60 segundos após o último lance.",
-        "li1": "Contagem de 60 segundos após cada lance",
-        "li2": "Novos lances reiniciam a contagem",
-        "li3": "Todos os espectadores veem o cronômetro ao vivo",
-        "li4": "O maior lance quando o cronômetro chega a zero vence"
+        "title": "Se ganhar — pague em 24 horas",
+        "desc": "Quando o leilão fecha e o seu lance é o vencedor, tem <strong>24 horas</strong> para efectuar o pagamento via Stripe. Receberá um email e notificação na plataforma.",
+        "noteTitle": "Os fundos ficam em custódia.",
+        "note": "O pagamento não vai directamente para o vendedor — fica retido pelo BidRoom até confirmar que recebeu o artigo em boas condições."
       },
       "step5": {
-        "title": "Vencedor e Pagamento",
-        "desc": "O maior licitante vence e o pagamento é processado automaticamente.",
-        "li1": "Vencedor é notificado imediatamente",
-        "li2": "Pagamento é capturado do saldo do vencedor",
-        "li3": "Vendedor recebe após confirmação de entrega",
-        "li4": "Ambas as partes podem deixar avaliações"
+        "title": "Aguarde o envio — o vendedor tem 5 dias úteis",
+        "desc": "O vendedor tem <strong>5 dias úteis</strong> (segunda a sexta) para enviar o artigo após confirmação do pagamento. Se não enviar dentro do prazo, a transacção é cancelada automaticamente e receberá o reembolso completo.",
+        "noteTitle": "Protecção automática.",
+        "note": "Não precisa de fazer nada se o vendedor não enviar. O sistema cancela e reembolsa automaticamente ao fim de 5 dias úteis."
+      },
+      "step6": {
+        "title": "Confirme a recepção",
+        "desc": "Quando receber o artigo, confirme na plataforma: <strong>Recebido em boas condições</strong> — a transacção é concluída e o vendedor recebe o pagamento. <strong>Recebido com problemas</strong> — abre uma disputa; os fundos ficam retidos.",
+        "noteTitle": "48 horas para reclamações de danos.",
+        "note": "Se o artigo chegou danificado em trânsito, tem 48 horas após confirmar a entrega para abrir uma reclamação de danos, com fotos do artigo e da embalagem."
+      },
+      "step7": {
+        "title": "Avalie o vendedor",
+        "desc": "Após a transacção concluída, pode avaliar o vendedor numa escala de 1 a 10. As descrições das avaliações são <strong>privadas</strong> — só o vendedor as vê."
+      },
+      "faq": {
+        "q0": "Posso cancelar um lance depois de o fazer?",
+        "a0": "Não. Todos os lances e ofertas são <strong>vinculativos</strong> desde o momento em que são colocados. Lance apenas se tiver a certeza de que pode e quer pagar o valor indicado.",
+        "q1": "O que acontece se o vendedor não enviar o artigo?",
+        "a1": "Se o vendedor não enviar dentro de <strong>5 dias úteis</strong>, a transacção é cancelada automaticamente e receberá o reembolso completo na sua forma de pagamento original.",
+        "q2": "Tenho direito de arrependimento?",
+        "a2": "O BidRoom é maioritariamente uma plataforma C2C (particulares). Em leilões online entre particulares, o direito de arrependimento geralmente não se aplica. Se o vendedor for um profissional, os seus direitos são diferentes — verifique nos Termos de Utilização.",
+        "q3": "Como funciona o preço de reserva?",
+        "a3": "Alguns vendedores definem um <strong>preço de reserva mínimo</strong> que não é mostrado publicamente. Se o lance mais alto no final não atingir esse valor, o vendedor não é obrigado a vender. Verá uma indicação «Reserva atingida» quando o limite for ultrapassado.",
+        "q4": "Quanto pago de comissão?",
+        "a4": "<strong>O comprador não paga comissão ao BidRoom.</strong> Paga apenas o valor do artigo mais a taxa de processamento da Stripe (~2,9% + €0,30 por transacção), que é acrescentada ao total no checkout."
+      }
+    },
+    "seller": {
+      "s1": {
+        "eye": "Comissões",
+        "title": "Só paga se vender.",
+        "title2": "Sem taxas de listagem.",
+        "intro": "Publicar um anúncio no BidRoom é completamente gratuito. A comissão só é cobrada quando a transacção é concluída com sucesso — e é deduzida automaticamente antes do payout."
+      },
+      "comm": {
+        "th1": "Formato",
+        "th2": "Comissão do vendedor",
+        "th3": "Exemplo (artigo de € 1.000)",
+        "r1": "Leilão (sem Sala Privada)",
+        "ex1": "Recebe € 965",
+        "r2": "Leilão (com Sala Privada)",
+        "ex2": "Recebe € 940 — mas fecha em média 32% mais alto",
+        "r3": "Melhor Oferta",
+        "ex3": "Recebe € 965",
+        "note": "A taxa de processamento Stripe (~2,9% + €0,30) é suportada pelo comprador e acrescentada ao valor final no checkout. O payout é transferido para a sua conta bancária via Stripe Connect após a confirmação de recepção pelo comprador."
+      },
+      "s2": {
+        "eye": "Passo a passo",
+        "title": "Como vender",
+        "title2": "no BidRoom",
+        "intro": "Da publicação ao payout, o processo é directo. Nunca paga adiantado e recebe sempre após confirmação da entrega."
+      },
+      "step1": {
+        "title": "Configure os pagamentos uma vez",
+        "desc": "Antes de publicar o primeiro anúncio, configure a sua conta de pagamentos via Stripe Connect no Dashboard → Definições → Pagamentos. Precisará de dados de identidade e IBAN. Este processo é feito uma vez e nunca precisa de ser repetido."
+      },
+      "step2": {
+        "title": "Crie o anúncio em 6 passos",
+        "desc": "O wizard de publicação guia-o por: formato (leilão ou melhor oferta), detalhes, fotos (até 20), preço, envio e localização, e revisão final. Pode guardar como rascunho a qualquer momento.",
+        "noteTitle": "KYC para artigos ≥ € 5.000.",
+        "note": "Para publicar ou licitar em artigos com valor igual ou superior a € 5.000, é necessária verificação de identidade nos termos da legislação anti-branqueamento."
+      },
+      "step3": {
+        "title": "Aguarde o encerramento",
+        "desc": "<strong>Leilão:</strong> o vencedor é apurado automaticamente quando o tempo acaba. Não precisa de fazer nada.<br><strong>Melhor oferta:</strong> recebe notificação de cada proposta. Pode aceitar ou recusar até ao prazo. Ao aceitar uma oferta, as restantes fecham automaticamente."
+      },
+      "step4": {
+        "title": "O comprador paga — tem 24 horas",
+        "desc": "O comprador tem <strong>24 horas</strong> para efectuar o pagamento. Se não pagar dentro do prazo, a transacção é cancelada e o artigo pode voltar a ser publicado."
+      },
+      "step5": {
+        "title": "Envie em 5 dias úteis",
+        "desc": "Após confirmação do pagamento, tem <strong>5 dias úteis</strong> (segunda a sexta, UTC) para enviar o artigo. Receberá um aviso ao 3.º dia. Se não enviar até ao 5.º dia, a transacção é cancelada automaticamente e o comprador é reembolsado.",
+        "noteTitle": "Dias úteis = seg a sex, UTC.",
+        "note": "Fins de semana e feriados não contam. O prazo é calculado automaticamente pelo sistema a partir da confirmação do pagamento."
+      },
+      "step6": {
+        "title": "Recebe o payout automaticamente",
+        "desc": "Quando o comprador confirma que recebeu o artigo em boas condições, os fundos são libertados automaticamente e transferidos para a sua conta bancária via Stripe Connect (tipicamente 1–2 dias úteis bancários).",
+        "noteTitle": "Se não houver confirmação do comprador.",
+        "note": "Se o comprador não confirmar a recepção dentro do prazo, o sistema liberta os fundos automaticamente (auto-release). Não precisa de contactar o suporte."
+      },
+      "faq": {
+        "q0": "Quando recebo o pagamento?",
+        "a0": "Os fundos são libertados quando o comprador confirma a recepção. Depois disso, a transferência via Stripe Connect demora tipicamente <strong>1–2 dias úteis bancários</strong>.",
+        "q1": "Posso definir um preço mínimo no formato Melhor Oferta?",
+        "a1": "Sim, e é mesmo <strong>obrigatório</strong> definir um preço mínimo nos anúncios de Melhor Oferta. Não é obrigado a aceitar nenhuma oferta abaixo desse valor — tem controlo total sobre o que aceita.",
+        "q2": "O que acontece se o comprador abrir uma disputa?",
+        "a2": "Quando uma disputa é aberta, ambas as contas são restringidas e os fundos ficam retidos. A equipa BidRoom analisa as evidências de ambas as partes. Se não for possível chegar a acordo, o caso é encaminhado para o CNIACC.",
+        "q3": "Posso cancelar um anúncio após publicação?",
+        "a3": "Pode cancelar um anúncio sem lances ou ofertas antes do prazo. Após existirem lances ou ofertas, o cancelamento pode implicar penalização de reputação. Nunca pode cancelar após o leilão ter terminado com um vencedor apurado.",
+        "q4": "Que artigos não posso listar?",
+        "a4": "Estão proibidos: animais vivos, substâncias controladas, armas, e qualquer artigo ilegal em Portugal. O BidRoom usa moderação automática (Azure AI Content Safety) para detectar e bloquear estas listagens antes de serem publicadas."
+      }
+    },
+    "private": {
+      "eye": "Salas Privadas",
+      "title": "Exclusividade",
+      "title2": "por convite.",
+      "intro": "Uma Sala Privada é uma ronda de licitação exclusiva que acontece após o leilão público — apenas para os licitantes convidados pelo vendedor. Os nossos dados mostram que leilões com Sala Privada fecham em média 32% acima do valor inicial.",
+      "timerLabel": "Por lance",
+      "stat1": "Licitantes convidados",
+      "stat2": "Por lance",
+      "stat3": "Vencedor automático",
+      "s2": {
+        "eye": "Como funciona passo a passo",
+        "title": "O processo completo"
+      },
+      "step1": {
+        "title": "Elegibilidade — quem pode ter Sala Privada?",
+        "desc": "A Sala Privada só é possível em leilões do tipo Highest Bid com a opção activada pelo vendedor. Para ser accionada, é necessário que: o leilão tenha terminado, a reserva (se existir) tenha sido atingida, e existam pelo menos <strong>2 licitantes autenticados e registados</strong>."
+      },
+      "step2": {
+        "title": "Vendedor convida — janela de 15 minutos",
+        "desc": "Após o leilão fechar, o vendedor tem <strong>15 minutos</strong> para criar a sala e convidar entre 2 e 5 dos licitantes. Um countdown visível na página do anúncio mostra o tempo restante."
+      },
+      "step3": {
+        "title": "Convidados aceitam ou recusam — 15 minutos",
+        "desc": "Cada convidado recebe um email e notificação e tem <strong>15 minutos</strong> para aceitar ou recusar. Quem não responder dentro do prazo fica inelegível. <strong>Excepção:</strong> se foram convidados exactamente 2 licitantes e um não responde, o outro é seleccionado automaticamente como vencedor.",
+        "noteTitle": "Quando todos aceitam.",
+        "note": "Assim que todos os convidados aceitam, o countdown de abertura desce para <strong>1 minuto</strong>. A sala abre e os lances começam."
+      },
+      "step4": {
+        "title": "Licitação — regra dos 60 segundos",
+        "desc": "Dentro da sala, apenas os convidados aceites podem licitar. Qualquer novo lance <strong>reinicia o timer para 60 segundos</strong>. A sala fecha quando passam 60 segundos sem nenhum lance novo. O licitante com o lance mais alto no momento do encerramento vence automaticamente."
+      },
+      "step5": {
+        "title": "Vencedor automático — transparência total",
+        "desc": "O sistema determina o vencedor automaticamente com base no lance mais alto. O vendedor não tem qualquer intervenção nesta decisão.",
+        "noteTitle": "Se o vendedor abandonar a sala.",
+        "note": "Se o vendedor sair da sala durante a ronda, a sala fecha imediatamente sem vencedor e todos os participantes são notificados. Esta acção é registada no sistema."
+      },
+      "vis": {
+        "title": "Quem pode ver a sala?",
+        "text": "Qualquer utilizador pode ver a sala em modo de observador. Os convidados que ainda não responderam aparecem em cinzento; os que aceitaram aparecem destacados."
+      },
+      "commission": {
+        "title": "Comissão com Sala Privada",
+        "text": "A comissão do vendedor sobe de 3,5% para <strong>6%</strong> quando a Sala Privada está activa. Esta diferença reflecte o valor acrescentado — os leilões com Sala Privada fecham significativamente mais alto."
+      },
+      "eligible": {
+        "title": "Elegibilidade para ser convidado",
+        "text": "Para ser elegível como convidado de uma Sala Privada, o comprador precisa de uma reputação ≥ 60 e zero disputas perdidas. Contas guest ou não verificadas não são elegíveis."
+      },
+      "audit": {
+        "title": "Auditoria completa",
+        "text": "Todas as acções numa Sala Privada são registadas no sistema de auditoria interno — convites, aceitações, lances, e encerramento. Disponível para revisão em caso de disputa."
+      }
+    },
+    "payments": {
+      "eye": "Pagamento & Segurança",
+      "title": "O seu dinheiro,",
+      "title2": "sempre protegido.",
+      "intro": "Explicamos exactamente como os fundos fluem entre comprador, BidRoom e vendedor — sem surpresas nem letra pequena.",
+      "escrow": {
+        "title": "Custódia de fundos",
+        "text": "O pagamento do comprador fica retido pelo BidRoom (via Stripe) até o comprador confirmar que recebeu o artigo em boas condições. O vendedor só recebe após essa confirmação."
+      },
+      "stripe": {
+        "title": "Processado pela Stripe",
+        "text": "Todos os pagamentos são processados pela Stripe, líder mundial em pagamentos online. O BidRoom nunca armazena dados de cartão. A Stripe está em conformidade com PCI DSS nível 1."
+      },
+      "refund": {
+        "title": "Reembolso automático",
+        "text": "Se o vendedor não enviar dentro de 5 dias úteis, o reembolso é processado automaticamente. Não precisa de pedir — o sistema trata de tudo."
+      },
+      "payout": {
+        "title": "Payout via Stripe Connect",
+        "text": "Os vendedores recebem directamente na conta bancária via Stripe Connect. O BidRoom deduz a comissão automaticamente antes do payout — o vendedor recebe o valor líquido."
+      },
+      "tl": {
+        "eye": "Fluxo de uma transacção",
+        "title": "Da vitória",
+        "title2": "ao payout",
+        "p1": {
+          "phase": "Pagamento",
+          "deadline": "24 horas",
+          "title": "Comprador paga",
+          "desc": "O comprador tem <strong>24 horas</strong> após o encerramento para efectuar o pagamento. Os fundos ficam retidos na custódia Stripe do BidRoom. Se não pagar, a transacção é cancelada."
+        },
+        "p2": {
+          "phase": "Envio",
+          "deadline": "5 dias úteis",
+          "title": "Vendedor envia",
+          "desc": "O vendedor tem <strong>5 dias úteis</strong> para enviar. Ao 3.º dia recebe um aviso. Ao 5.º dia, se não enviou, o sistema cancela automaticamente e reembolsa o comprador."
+        },
+        "p3": {
+          "phase": "Entrega",
+          "deadline": "Estimada",
+          "title": "Comprador confirma",
+          "desc": "O comprador confirma: artigo em boas condições → fundos libertados; artigo com problemas → disputa aberta. Se não confirmar dentro do prazo → <strong>auto-release</strong> automático."
+        },
+        "p4": {
+          "phase": "Disputa",
+          "deadline": "Opcional",
+          "title": "Mediação BidRoom → CNIACC",
+          "desc": "Ambas as contas são restringidas. O BidRoom tenta facilitar um acordo em <strong>7 dias úteis</strong>. Se não houver acordo, o caso é encaminhado para o CNIACC. Os fundos ficam retidos até resolução final."
+        },
+        "p5": {
+          "phase": "Payout",
+          "deadline": "1–2 dias úteis",
+          "title": "Vendedor recebe",
+          "desc": "Comissão deduzida automaticamente. Valor líquido transferido via Stripe Connect para a conta bancária do vendedor em <strong>1–2 dias úteis bancários</strong>."
+        }
+      },
+      "faq": {
+        "q0": "O BidRoom armazena os dados do meu cartão?",
+        "a0": "Não. Os dados de cartão são geridos exclusivamente pela Stripe, que está em conformidade com PCI DSS nível 1. O BidRoom nunca tem acesso nem armazena números de cartão.",
+        "q1": "Quando é que o vendedor recebe o meu pagamento?",
+        "a1": "O vendedor <strong>não recebe o pagamento imediatamente</strong>. Os fundos ficam retidos pelo BidRoom até confirmar que recebeu o artigo em boas condições. Só então são libertados. Esta custódia protege-o de fraudes.",
+        "q2": "Posso pagar com MB Way ou Multibanco?",
+        "a2": "Sim. O BidRoom suporta todos os métodos de pagamento disponíveis via Stripe no mercado português — incluindo cartões Visa/Mastercard, MB Way, Multibanco (referência) e Apple/Google Pay.",
+        "q3": "O que é o sistema de reputação?",
+        "a3": "Cada utilizador tem uma pontuação de reputação de 0 a 100, calculada automaticamente com base em avaliações recebidas, transacções concluídas e disputas. Uma pontuação ≥ 60 sem disputas perdidas é necessária para ser elegível para Salas Privadas."
+      }
+    },
+    "faq": {
+      "eye": "Perguntas frequentes",
+      "buyer": {
+        "title": "Comprador",
+        "title2": "— as suas dúvidas"
+      },
+      "seller": {
+        "title": "Vendedor",
+        "title2": "— as suas dúvidas"
+      },
+      "payments": {
+        "title": "Pagamento & Segurança"
       }
     },
     "cta": {
-      "title": "Pronto para Começar?",
-      "subtitle": "Junte-se ao BidRoom hoje e descubra uma forma mais inteligente de comprar e vender.",
-      "button": "Criar Conta Grátis"
+      "title": "Pronto para começar?",
+      "title2": "É gratuito.",
+      "sub": "Crie a sua conta em menos de 2 minutos. Sem taxas de adesão, sem surpresas.",
+      "btn1": "Criar conta gratuita",
+      "btn2": "Ver leilões activos"
     }
   },
   "contact": {

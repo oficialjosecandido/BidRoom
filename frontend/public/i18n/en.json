@@ -1769,121 +1769,308 @@
   },
   "howItWorks": {
     "hero": {
-      "title": "How BidRoom Works",
-      "subtitle": "Everything you need to know to buy and sell on BidRoom."
+      "eye": "How it works",
+      "title": "Full transparency,",
+      "title2": "end to end.",
+      "sub": "We explain exactly what happens at every step — for buyers, for sellers, and for everyone taking part in Private Rooms.",
+      "ctaBuyer": "I'm a buyer",
+      "ctaSeller": "I'm a seller"
     },
-    "auth": {
-      "title": "Create Your Account",
-      "subtitle": "Sign up for free and verify your identity to start buying and selling.",
-      "visualTitle": "Secure Sign-In",
+    "tabs": {
+      "buyer": "Buyer",
+      "seller": "Seller",
+      "private": "Private Rooms",
+      "payments": "Payment & Security"
+    },
+    "buyer": {
+      "s1": {
+        "eye": "Auction formats",
+        "title": "Two formats,",
+        "title2": "one platform.",
+        "intro": "On BidRoom you can buy through a live auction or submit your best offer. In both cases, your funds are protected until you confirm you received the item in good condition."
+      },
+      "auction": {
+        "title": "Highest Bid (Auction)",
+        "desc": "Bid in real time against other buyers. The highest bid when time runs out wins automatically. You can set a maximum bid and let the system bid for you.",
+        "commission": "0% buyer commission",
+        "f1": "Duration set by the seller — 1 to 15 days",
+        "f2": "Reserve price may apply — only binding if reached",
+        "f3": "Optional buy-now price — purchase immediately without waiting",
+        "f4": "After the auction a Private Room may follow"
+      },
+      "offer": {
+        "title": "Best Offer",
+        "desc": "Submit your proposal before the deadline. The seller chooses their preferred offer. You can add a message to your offer. You can only have one active offer per listing.",
+        "commission": "0% buyer commission",
+        "f1": "Other buyers' names are visible",
+        "f2": "You can include a message with your offer",
+        "f3": "Buy-now price: if matched, the item is yours immediately",
+        "f4": "The seller is not obliged to sell below the minimum price"
+      },
+      "s2": {
+        "eye": "Step by step",
+        "title": "How to buy",
+        "title2": "on BidRoom",
+        "intro": "From registration to delivery, we explain every moment of the process — including what happens if something goes wrong."
+      },
       "step1": {
-        "title": "Register",
-        "desc": "Create a free account with your email or Google.",
-        "li1": "Fill in your name and email",
-        "li2": "Choose a secure password",
-        "li3": "Agree to our Terms & Conditions"
+        "title": "Create your account — it's free",
+        "desc": "Sign up with email or Google. No membership costs or monthly fees. The account is free for buyers."
       },
       "step2": {
-        "title": "Verify Your Email",
-        "desc": "Click the link we send to your inbox to activate your account.",
-        "li1": "Check your inbox for a verification email",
-        "li2": "Click the confirmation link",
-        "li3": "Your account is now active"
+        "title": "Browse and filter by category",
+        "desc": "Browse categories — watches, art, cars, jewellery, antiques and more. Add listings to your watchlist to follow without bidding."
       },
       "step3": {
-        "title": "Complete Your Profile",
-        "desc": "Add your payment details and shipping preferences.",
-        "li1": "Connect a payment method",
-        "li2": "Set your shipping preferences",
-        "li3": "Start bidding or listing"
-      }
-    },
-    "listing": {
-      "title": "List Your Items",
-      "subtitle": "Selling on BidRoom is easy — describe your item, set your price, and go live.",
-      "visualTitle": "Item Listing",
-      "step1": {
-        "title": "Choose Category & Format",
-        "desc": "Pick the right category and decide between an auction or best-offer listing.",
-        "li1": "Select the item category",
-        "li2": "Choose Auction (Highest Bid) or Best Offer",
-        "li3": "Indicate the item condition",
-        "li4": "Set the listing format"
-      },
-      "step2": {
-        "title": "Add Photos & Description",
-        "desc": "Upload clear photos and write a detailed description to attract buyers.",
-        "li1": "Upload at least 3 high-quality photos",
-        "li2": "Write a detailed, accurate description",
-        "li3": "Add key specifications",
-        "li4": "Enter your item location"
-      },
-      "step3": {
-        "title": "Set Pricing & Duration",
-        "desc": "Set your starting bid or minimum offer and choose how long the listing runs.",
-        "li1": "Set a starting bid or minimum price",
-        "li2": "Optionally enable the Private Room feature",
-        "li3": "Choose listing duration",
-        "li4": "Review the commission structure"
+        "title": "Bid or make an offer",
+        "desc": "<strong>Auction:</strong> each bid must beat the previous one by the set increment. If outbid, you receive an immediate notification.<br><strong>Best offer:</strong> submit the amount you consider fair, with or without a message.",
+        "noteTitle": "Bids are binding.",
+        "note": "By placing a bid or submitting an offer, you commit to making the payment if you win. Bids cannot be cancelled after placement."
       },
       "step4": {
-        "title": "Configure Shipping",
-        "desc": "Set your shipping options and handling time so buyers know what to expect.",
-        "li1": "Choose flat-rate, calculated, or free shipping",
-        "li2": "Set your handling time",
-        "li3": "Define your return policy",
-        "li4": "Review fees and submit"
-      }
-    },
-    "privateRoom": {
-      "title": "The Private Auction Room",
-      "subtitle": "Our unique Private Room feature lets sellers invite select bidders to an exclusive, time-limited auction.",
-      "visualTitle": "Private Auction Room",
-      "step1": {
-        "title": "Auction Starts",
-        "desc": "When the listing goes live, bidding is open to all registered users.",
-        "li1": "All registered users can place bids",
-        "li2": "Bid history is visible to everyone",
-        "li3": "Seller can monitor bid activity",
-        "li4": "Private Room is optional at listing creation"
-      },
-      "step2": {
-        "title": "Seller Creates Private Room",
-        "desc": "At any time during the auction, the seller can invite 2–5 bidders to a private room.",
-        "li1": "Seller selects 2 to 5 bidders to invite",
-        "li2": "Invitees have 15 minutes to accept",
-        "li3": "Non-invitees are notified they were not selected",
-        "li4": "If no one accepts within 15 min, auction closes without a winner"
-      },
-      "step3": {
-        "title": "Private Bidding Begins",
-        "desc": "Once invitees accept, the private auction room opens for exclusive bidding.",
-        "li1": "Only invited bidders can place bids",
-        "li2": "Anyone can watch the live bidding",
-        "li3": "Bids must meet the increment",
-        "li4": "The room stays open as long as bidding is active"
-      },
-      "step4": {
-        "title": "Room Countdown",
-        "desc": "The room closes 60 seconds after the last bid — creating urgency.",
-        "li1": "60-second countdown after each bid",
-        "li2": "New bids reset the countdown",
-        "li3": "All watchers see the live timer",
-        "li4": "Highest bid when timer reaches zero wins"
+        "title": "If you win — pay within 24 hours",
+        "desc": "When the auction closes and your bid is the winner, you have <strong>24 hours</strong> to make the payment via Stripe. You will receive an email and platform notification.",
+        "noteTitle": "Funds are held in escrow.",
+        "note": "Payment does not go directly to the seller — it is held by BidRoom until you confirm you received the item in good condition."
       },
       "step5": {
-        "title": "Winner & Payment",
-        "desc": "The highest bidder wins and payment is processed automatically.",
-        "li1": "Winner is notified immediately",
-        "li2": "Payment is captured from the winner's balance",
-        "li3": "Seller receives payout after delivery confirmation",
-        "li4": "Both parties can leave reviews"
+        "title": "Wait for shipping — the seller has 5 business days",
+        "desc": "The seller has <strong>5 business days</strong> (Monday to Friday) to ship the item after payment confirmation. If they do not ship within the deadline, the transaction is automatically cancelled and you receive a full refund.",
+        "noteTitle": "Automatic protection.",
+        "note": "You don't need to do anything if the seller doesn't ship. The system automatically cancels and refunds after 5 business days."
+      },
+      "step6": {
+        "title": "Confirm receipt",
+        "desc": "When you receive the item, confirm on the platform: <strong>Received in good condition</strong> — the transaction is completed and the seller receives payment. <strong>Received with issues</strong> — a dispute is opened; funds remain held.",
+        "noteTitle": "48 hours for damage claims.",
+        "note": "If the item arrived damaged in transit, you have 48 hours after confirming delivery to open a damage claim, with photos of the item and packaging."
+      },
+      "step7": {
+        "title": "Rate the seller",
+        "desc": "After the transaction is completed, you can rate the seller on a scale of 1 to 10. Review descriptions are <strong>private</strong> — only the seller sees them."
+      },
+      "faq": {
+        "q0": "Can I cancel a bid after placing it?",
+        "a0": "No. All bids and offers are <strong>binding</strong> from the moment they are placed. Only bid if you are sure you can and want to pay the indicated amount.",
+        "q1": "What happens if the seller doesn't ship the item?",
+        "a1": "If the seller doesn't ship within <strong>5 business days</strong>, the transaction is automatically cancelled and you will receive a full refund to your original payment method.",
+        "q2": "Do I have a right of withdrawal?",
+        "a2": "BidRoom is primarily a C2C (private individuals) platform. In online auctions between private individuals, the right of withdrawal generally does not apply. If the seller is a professional, your rights are different — check the Terms of Use.",
+        "q3": "How does the reserve price work?",
+        "a3": "Some sellers set a <strong>minimum reserve price</strong> that is not shown publicly. If the highest bid at the end does not reach that amount, the seller is not obliged to sell. You will see a \"Reserve met\" indicator when the threshold is exceeded.",
+        "q4": "How much commission do I pay?",
+        "a4": "<strong>Buyers pay no commission to BidRoom.</strong> You only pay the item price plus the Stripe processing fee (~2.9% + €0.30 per transaction), which is added to the total at checkout."
+      }
+    },
+    "seller": {
+      "s1": {
+        "eye": "Commissions",
+        "title": "You only pay when you sell.",
+        "title2": "No listing fees.",
+        "intro": "Listing an item on BidRoom is completely free. Commission is only charged when a transaction is successfully completed — and it is deducted automatically before payout."
+      },
+      "comm": {
+        "th1": "Format",
+        "th2": "Seller commission",
+        "th3": "Example (€1,000 item)",
+        "r1": "Auction (no Private Room)",
+        "ex1": "You receive €965",
+        "r2": "Auction (with Private Room)",
+        "ex2": "You receive €940 — but closes on average 32% higher",
+        "r3": "Best Offer",
+        "ex3": "You receive €965",
+        "note": "The Stripe processing fee (~2.9% + €0.30) is borne by the buyer and added to the final amount at checkout. Payout is transferred to your bank account via Stripe Connect after the buyer confirms receipt."
+      },
+      "s2": {
+        "eye": "Step by step",
+        "title": "How to sell",
+        "title2": "on BidRoom",
+        "intro": "From listing to payout, the process is straightforward. You never pay upfront and always receive payment after delivery is confirmed."
+      },
+      "step1": {
+        "title": "Set up payments once",
+        "desc": "Before publishing your first listing, set up your payment account via Stripe Connect in Dashboard → Settings → Payments. You will need identity details and IBAN. This is done once and never needs to be repeated."
+      },
+      "step2": {
+        "title": "Create the listing in 6 steps",
+        "desc": "The publishing wizard guides you through: format (auction or best offer), details, photos (up to 20), price, shipping and location, and final review. You can save as a draft at any time.",
+        "noteTitle": "KYC for items ≥ €5,000.",
+        "note": "To list or bid on items with a value equal to or greater than €5,000, identity verification is required under anti-money laundering legislation."
+      },
+      "step3": {
+        "title": "Wait for the close",
+        "desc": "<strong>Auction:</strong> the winner is determined automatically when time runs out. You don't need to do anything.<br><strong>Best offer:</strong> you receive a notification for each proposal. You can accept or decline until the deadline. When you accept an offer, the remaining ones close automatically."
+      },
+      "step4": {
+        "title": "The buyer pays — they have 24 hours",
+        "desc": "The buyer has <strong>24 hours</strong> to make the payment. If they don't pay within the deadline, the transaction is cancelled and the item can be relisted."
+      },
+      "step5": {
+        "title": "Ship within 5 business days",
+        "desc": "After payment confirmation, you have <strong>5 business days</strong> (Monday to Friday, UTC) to ship the item. You will receive a warning on day 3. If you haven't shipped by day 5, the transaction is automatically cancelled and the buyer is refunded.",
+        "noteTitle": "Business days = Mon–Fri, UTC.",
+        "note": "Weekends and holidays do not count. The deadline is calculated automatically by the system from payment confirmation."
+      },
+      "step6": {
+        "title": "Receive your payout automatically",
+        "desc": "When the buyer confirms they received the item in good condition, the funds are automatically released and transferred to your bank account via Stripe Connect (typically 1–2 banking business days).",
+        "noteTitle": "If the buyer doesn't confirm receipt.",
+        "note": "If the buyer does not confirm receipt within the deadline, the system releases the funds automatically (auto-release). You do not need to contact support."
+      },
+      "faq": {
+        "q0": "When do I receive payment?",
+        "a0": "Funds are released when the buyer confirms receipt. After that, the Stripe Connect transfer typically takes <strong>1–2 banking business days</strong>.",
+        "q1": "Can I set a minimum price in the Best Offer format?",
+        "a1": "Yes, and it is actually <strong>mandatory</strong> to set a minimum price for Best Offer listings. You are not obliged to accept any offer below that amount — you have full control over what you accept.",
+        "q2": "What happens if the buyer opens a dispute?",
+        "a2": "When a dispute is opened, both accounts are restricted and funds are held. The BidRoom team reviews the evidence from both parties. If no agreement can be reached, the case is referred to the CNIACC.",
+        "q3": "Can I cancel a listing after publishing?",
+        "a3": "You can cancel a listing with no bids or offers before the deadline. Once there are bids or offers, cancellation may result in a reputation penalty. You can never cancel after the auction has ended with a winner determined.",
+        "q4": "What items can I not list?",
+        "a4": "Prohibited: live animals, controlled substances, weapons, and any item illegal in Portugal. BidRoom uses automatic moderation (Azure AI Content Safety) to detect and block these listings before they go live."
+      }
+    },
+    "private": {
+      "eye": "Private Rooms",
+      "title": "Exclusivity",
+      "title2": "by invitation.",
+      "intro": "A Private Room is an exclusive bidding round that takes place after the public auction — only for bidders invited by the seller. Our data shows that auctions with a Private Room close on average 32% above the starting price.",
+      "timerLabel": "Per bid",
+      "stat1": "Invited bidders",
+      "stat2": "Per bid",
+      "stat3": "Automatic winner",
+      "s2": {
+        "eye": "How it works step by step",
+        "title": "The complete process"
+      },
+      "step1": {
+        "title": "Eligibility — who can have a Private Room?",
+        "desc": "A Private Room is only possible in Highest Bid auctions with the option activated by the seller. For it to be triggered, the auction must have ended, the reserve (if any) must have been met, and there must be at least <strong>2 authenticated and registered bidders</strong>."
+      },
+      "step2": {
+        "title": "Seller invites — 15-minute window",
+        "desc": "After the auction closes, the seller has <strong>15 minutes</strong> to create the room and invite between 2 and 5 of the bidders. A visible countdown on the listing page shows the remaining time."
+      },
+      "step3": {
+        "title": "Guests accept or decline — 15 minutes",
+        "desc": "Each guest receives an email and notification and has <strong>15 minutes</strong> to accept or decline. Those who don't respond within the deadline become ineligible. <strong>Exception:</strong> if exactly 2 bidders were invited and one doesn't respond, the other is automatically selected as winner.",
+        "noteTitle": "When everyone accepts.",
+        "note": "As soon as all guests accept, the opening countdown drops to <strong>1 minute</strong>. The room opens and bidding begins."
+      },
+      "step4": {
+        "title": "Bidding — the 60-second rule",
+        "desc": "Inside the room, only accepted guests can bid. Any new bid <strong>resets the timer to 60 seconds</strong>. The room closes when 60 seconds pass with no new bid. The bidder with the highest bid at the time of closing wins automatically."
+      },
+      "step5": {
+        "title": "Automatic winner — full transparency",
+        "desc": "The system determines the winner automatically based on the highest bid. The seller has no involvement in this decision.",
+        "noteTitle": "If the seller abandons the room.",
+        "note": "If the seller leaves the room during the round, the room closes immediately with no winner and all participants are notified. This action is logged in the system."
+      },
+      "vis": {
+        "title": "Who can see the room?",
+        "text": "Any user can view the room in observer mode. Guests who have not yet responded appear in grey; those who have accepted appear highlighted."
+      },
+      "commission": {
+        "title": "Commission with Private Room",
+        "text": "The seller commission rises from 3.5% to <strong>6%</strong> when the Private Room is active. This difference reflects the added value — auctions with a Private Room close significantly higher."
+      },
+      "eligible": {
+        "title": "Eligibility to be invited",
+        "text": "To be eligible as a Private Room guest, the buyer needs a reputation score ≥ 60 and zero lost disputes. Guest or unverified accounts are not eligible."
+      },
+      "audit": {
+        "title": "Full audit trail",
+        "text": "All actions in a Private Room are logged in the internal audit system — invitations, acceptances, bids, and closing. Available for review in case of dispute."
+      }
+    },
+    "payments": {
+      "eye": "Payment & Security",
+      "title": "Your money,",
+      "title2": "always protected.",
+      "intro": "We explain exactly how funds flow between buyer, BidRoom and seller — no surprises, no small print.",
+      "escrow": {
+        "title": "Funds in escrow",
+        "text": "The buyer's payment is held by BidRoom (via Stripe) until the buyer confirms they received the item in good condition. The seller only receives payment after that confirmation."
+      },
+      "stripe": {
+        "title": "Powered by Stripe",
+        "text": "All payments are processed by Stripe, the world leader in online payments. BidRoom never stores card data. Stripe is PCI DSS Level 1 compliant."
+      },
+      "refund": {
+        "title": "Automatic refund",
+        "text": "If the seller doesn't ship within 5 business days, the refund is processed automatically. You don't need to request it — the system handles everything."
+      },
+      "payout": {
+        "title": "Payout via Stripe Connect",
+        "text": "Sellers receive payment directly to their bank account via Stripe Connect. BidRoom deducts the commission automatically before payout — the seller receives the net amount."
+      },
+      "tl": {
+        "eye": "Transaction flow",
+        "title": "From winning",
+        "title2": "to payout",
+        "p1": {
+          "phase": "Payment",
+          "deadline": "24 hours",
+          "title": "Buyer pays",
+          "desc": "The buyer has <strong>24 hours</strong> after closing to make payment. Funds are held in BidRoom's Stripe escrow. If they don't pay, the transaction is cancelled."
+        },
+        "p2": {
+          "phase": "Shipping",
+          "deadline": "5 business days",
+          "title": "Seller ships",
+          "desc": "The seller has <strong>5 business days</strong> to ship. On day 3 they receive a warning. On day 5, if not shipped, the system automatically cancels and refunds the buyer."
+        },
+        "p3": {
+          "phase": "Delivery",
+          "deadline": "Estimated",
+          "title": "Buyer confirms",
+          "desc": "The buyer confirms: item in good condition → funds released; item with issues → dispute opened. If they don't confirm within the deadline → automatic <strong>auto-release</strong>."
+        },
+        "p4": {
+          "phase": "Dispute",
+          "deadline": "Optional",
+          "title": "BidRoom mediation → CNIACC",
+          "desc": "Both accounts are restricted. BidRoom attempts to facilitate an agreement within <strong>7 business days</strong>. If no agreement, the case is referred to CNIACC. Funds remain held until final resolution."
+        },
+        "p5": {
+          "phase": "Payout",
+          "deadline": "1–2 business days",
+          "title": "Seller receives",
+          "desc": "Commission deducted automatically. Net amount transferred via Stripe Connect to the seller's bank account within <strong>1–2 banking business days</strong>."
+        }
+      },
+      "faq": {
+        "q0": "Does BidRoom store my card details?",
+        "a0": "No. Card data is managed exclusively by Stripe, which is PCI DSS Level 1 compliant. BidRoom never has access to or stores card numbers.",
+        "q1": "When does the seller receive my payment?",
+        "a1": "The seller <strong>does not receive payment immediately</strong>. Funds are held by BidRoom until you confirm you received the item in good condition. Only then are they released. This escrow protects you from fraud.",
+        "q2": "Can I pay with MB Way or Multibanco?",
+        "a2": "Yes. BidRoom supports all payment methods available via Stripe in the Portuguese market — including Visa/Mastercard cards, MB Way, Multibanco (reference) and Apple/Google Pay.",
+        "q3": "What is the reputation system?",
+        "a3": "Each user has a reputation score from 0 to 100, calculated automatically based on received reviews, completed transactions and disputes. A score ≥ 60 with no lost disputes is required to be eligible for Private Rooms."
+      }
+    },
+    "faq": {
+      "eye": "Frequently asked questions",
+      "buyer": {
+        "title": "Buyer",
+        "title2": "— your questions"
+      },
+      "seller": {
+        "title": "Seller",
+        "title2": "— your questions"
+      },
+      "payments": {
+        "title": "Payment & Security"
       }
     },
     "cta": {
-      "title": "Ready to Start?",
-      "subtitle": "Join BidRoom today and discover a smarter way to buy and sell.",
-      "button": "Create Free Account"
+      "title": "Ready to get started?",
+      "title2": "It's free.",
+      "sub": "Create your account in under 2 minutes. No membership fees, no surprises.",
+      "btn1": "Create free account",
+      "btn2": "Browse live auctions"
     }
   },
   "contact": {
