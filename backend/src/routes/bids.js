@@ -8,6 +8,7 @@ const { getReviewScoresForUsers } = require('../services/reviewService');
 const { notifyNewBid, notifyBidderOutbid, emitNewNotificationToUser, checkAndSetOutbidDebounce, shouldSendEmail } = require('../services/notificationService');
 const { checkBidRateLimit, getClientIp } = require('../middleware/bidRateLimiter');
 const { runFraudChecks, updateUserSignals } = require('../services/fraudDetectionService');
+const Block = require('../models/Block');
 
 const router = express.Router();
 
@@ -216,6 +217,17 @@ router.post('/', optionalAuth, requireActiveAccountIfAuthenticated, requireNoDis
         return res.status(403).json({
           error: 'Cannot bid on your own listing',
           message: 'The email you entered is the seller\'s email for this item. You cannot bid on your own listing. Use a different email to place a bid as a guest, or log in with another account.'
+        });
+      }
+    }
+
+    // Block check — reject if the seller has blocked this bidder
+    if (user && listing.seller?._id) {
+      const isBlocked = await Block.exists({ blocker: listing.seller._id, blocked: user._id });
+      if (isBlocked) {
+        return res.status(403).json({
+          error: 'Blocked',
+          message: 'You are not allowed to place bids on this listing.'
         });
       }
     }

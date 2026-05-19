@@ -68,7 +68,10 @@
       "Bash(python3)",
       "Bash(node -e \"require\\('/Users/josecandido/Documents/BidRoom/backend/src/services/contentSafetyService.js'\\); console.log\\('contentSafetyService OK'\\)\")",
       "Bash(node -e \"require\\('/Users/josecandido/Documents/BidRoom/backend/src/routes/admin.js'\\); console.log\\('admin.js OK'\\)\")",
-      "Bash(node -e \"require\\('/Users/josecandido/Documents/BidRoom/backend/src/routes/listings.js'\\); console.log\\('listings.js OK'\\)\")"
+      "Bash(node -e \"require\\('/Users/josecandido/Documents/BidRoom/backend/src/routes/listings.js'\\); console.log\\('listings.js OK'\\)\")",
+      "Bash(node -e \"require\\('/Users/josecandido/Documents/BidRoom/backend/src/routes/blocks.js'\\); console.log\\('blocks.js OK'\\)\")",
+      "Bash(node -e \"require\\('/Users/josecandido/Documents/BidRoom/backend/src/routes/bids.js'\\); console.log\\('bids.js OK'\\)\")",
+      "Bash(node -e \"require\\('/Users/josecandido/Documents/BidRoom/backend/src/routes/offers.js'\\); console.log\\('offers.js OK'\\)\")"
     ]
   }
 }

@@ -833,7 +833,9 @@
       "winnerSelectionCountdownOffer": "24h to accept offer",
       "winnerSelectionCountdownWinner": "24h to select winner",
       "invitedRoomHeader": "Room invitees",
-      "buyNow": "Buy now ·"
+      "buyNow": "Buy now ·",
+      "block": "Block seller",
+      "unblock": "Unblock seller"
     },
     "payment": {
       "title": "Payment",
@@ -1037,7 +1039,10 @@
       "mute": "Mute",
       "unmute": "Unmute",
       "unfollow": "Unfollow",
-      "muted": "Muted"
+      "muted": "Muted",
+      "blockedUsers": "Blocked users",
+      "noBlocked": "You haven't blocked anyone.",
+      "unblockBtn": "Unblock"
     },
     "common": {
       "loading": "Loading...",

@@ -899,6 +899,26 @@ nav {
   &:disabled { opacity: .4; cursor: not-allowed; }
 }
 
+.btn-block {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 10px;
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--sub);
+  border: 1px solid var(--line);
+  border-radius: 100px;
+  background: none;
+  cursor: pointer;
+  font-family: inherit;
+  transition: color .15s, border-color .15s;
+  &:hover { color: var(--red); border-color: rgba(194,90,90,.3); }
+  &.blocked { color: var(--red); border-color: rgba(194,90,90,.3); }
+  &:disabled { opacity: .4; cursor: not-allowed; }
+}
+
 /* info rows */
 .info-rows { margin-top: 4px; }
 .ir {

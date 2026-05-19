@@ -833,7 +833,9 @@
       "winnerSelectionCountdownOffer": "24h para aceitar oferta",
       "winnerSelectionCountdownWinner": "24h para selecionar vencedor",
       "invitedRoomHeader": "Convidados para a sala",
-      "buyNow": "Comprar já ·"
+      "buyNow": "Comprar já ·",
+      "block": "Bloquear vendedor",
+      "unblock": "Desbloquear vendedor"
     },
     "payment": {
       "title": "Pagamento",
@@ -1037,7 +1039,10 @@
       "mute": "Silenciar",
       "unmute": "Ativar",
       "unfollow": "Deixar de seguir",
-      "muted": "Silenciado"
+      "muted": "Silenciado",
+      "blockedUsers": "Utilizadores bloqueados",
+      "noBlocked": "Não bloqueou nenhum utilizador.",
+      "unblockBtn": "Desbloquear"
     },
     "common": {
       "loading": "Carregando...",

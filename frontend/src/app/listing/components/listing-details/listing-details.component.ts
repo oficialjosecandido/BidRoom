@@ -19,6 +19,7 @@ import { KycService } from '../../../shared/services/kyc.service';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { ReportModalComponent } from '../../../shared/components/report-modal/report-modal.component';
 import { FollowService, FollowStatus } from '../../../shared/services/follow.service';
+import { BlockService } from '../../../shared/services/block.service';
 import { ThemeService } from '../../../shared/services/theme.service';
 import { HeaderComponent } from '../../../shared/components/header/header.component';
 
@@ -44,6 +45,7 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
   featureFlags = inject(FeatureFlagsService);
   private kycService = inject(KycService);
   private followService = inject(FollowService);
+  private blockService = inject(BlockService);
   private cdr = inject(ChangeDetectorRef);
   private translate = inject(TranslateService);
   private themeService = inject(ThemeService);
@@ -71,6 +73,8 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
   get isSeller(): boolean { return this.isOwnListing; }
   sellerFollowStatus: FollowStatus = { following: false, muted: false };
   followLoading = false;
+  sellerBlocked = false;
+  blockLoading = false;
   showSelectWinnerModal = false;
   showReportModal: 'listing' | 'user' | null = null;
   selectingWinner = false;
@@ -153,6 +157,7 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
         this.loading = false;
         if (this.isAuthenticated && !this.isOwnListing && listing.seller?._id) {
           this.loadSellerFollowStatus(listing.seller._id);
+          this.loadSellerBlockStatus(listing.seller._id);
         }
         window.scrollTo(0, 0);
         // Start countdown timer
@@ -1078,6 +1083,26 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
     this.followService.setMuted(sellerId, !this.sellerFollowStatus.muted).subscribe({
       next: (status) => { this.sellerFollowStatus = status; this.followLoading = false; },
       error: () => { this.followLoading = false; }
+    });
+  }
+
+  loadSellerBlockStatus(sellerId: string): void {
+    this.blockService.getStatus(sellerId).subscribe({
+      next: (status) => { this.sellerBlocked = status.blocked; },
+      error: () => {}
+    });
+  }
+
+  toggleBlockSeller(): void {
+    const sellerId = (this.listing?.seller as any)?._id;
+    if (!sellerId || this.blockLoading) return;
+    this.blockLoading = true;
+    const action = this.sellerBlocked
+      ? this.blockService.unblock(sellerId)
+      : this.blockService.block(sellerId);
+    action.subscribe({
+      next: (status) => { this.sellerBlocked = status.blocked; this.blockLoading = false; },
+      error: () => { this.blockLoading = false; }
     });
   }
 

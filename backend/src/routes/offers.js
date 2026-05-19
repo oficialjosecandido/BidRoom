@@ -11,6 +11,7 @@ const {
   logSellerAcceptedWinner
 } = require('../services/bestOfferLogger');
 
+const Block = require('../models/Block');
 const { scanForAbusiveContent } = require('../utils/contentFilter');
 const { recordViolation } = require('../services/contentViolationService');
 const { appendModerationAudit } = require('../services/moderationAuditService');
@@ -177,6 +178,17 @@ async function createOffer(req, res) {
         error: 'Cannot offer on your own listing',
         message: 'You cannot make an offer on your own listing.'
       });
+    }
+
+    // Block check — reject if the seller has blocked this user
+    if (user && listing.seller?._id) {
+      const isBlocked = await Block.exists({ blocker: listing.seller._id, blocked: user._id });
+      if (isBlocked) {
+        return res.status(403).json({
+          error: 'Blocked',
+          message: 'You are not allowed to make offers on this listing.'
+        });
+      }
     }
 
     // Verify it's a Best Offer listing

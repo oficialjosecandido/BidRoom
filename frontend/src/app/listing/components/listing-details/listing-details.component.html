@@ -466,6 +466,9 @@
       <button class="btn-follow" [class.following]="sellerFollowStatus.following" [disabled]="followLoading" (click)="toggleFollowSeller()">
         {{ sellerFollowStatus.following ? ('listingDetails.sidebar.following' | translate) : ('listingDetails.sidebar.follow' | translate) }}
       </button>
+      <button class="btn-block" [class.blocked]="sellerBlocked" [disabled]="blockLoading" (click)="toggleBlockSeller()">
+        {{ sellerBlocked ? ('listingDetails.sidebar.unblock' | translate) : ('listingDetails.sidebar.block' | translate) }}
+      </button>
     }
 
     <div class="sep"></div>

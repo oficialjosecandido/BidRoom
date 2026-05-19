@@ -14,6 +14,7 @@ const { handleWinnerSelection, handleAuctionEnd } = require('../services/auction
 const { notifyFollowersNewListing, notifyCategoryFollowersNewListing, notifySimilarItemWatchers } = require('../services/notificationService');
 const { getReviewScoresForUser } = require('../services/reviewService');
 const { logAuctionCreated } = require('../services/bestOfferLogger');
+const Block = require('../models/Block');
 const { scanTexts, scanTextsForProhibitedContent, scanForAbusiveContent } = require('../utils/contentFilter');
 const { appendModerationAudit } = require('../services/moderationAuditService');
 const { scanListingText } = require('../services/contentSafetyService');
@@ -78,7 +79,7 @@ function queueListingDetailView(req, listingLean) {
 }
 
 // GET /api/listings - Get all active listings with filtering and sorting
-router.get('/', async (req, res) => {
+router.get('/', optionalAuth, async (req, res) => {
   try {
     const {
       category,
@@ -224,6 +225,24 @@ router.get('/', async (req, res) => {
     // For featured listings, prioritize them (live listings only)
     if (sort === 'deadline') {
       sortObj = { isFeatured: -1, endDate: 1 };
+    }
+
+    // Block filter — hide listings from sellers I have blocked or who have blocked me
+    if (req.user?.uid) {
+      const viewer = await User.findOne({ uid: req.user.uid }).select('_id').lean();
+      if (viewer) {
+        const [blockedBySelf, blockedByOthers] = await Promise.all([
+          Block.find({ blocker: viewer._id }).distinct('blocked'),
+          Block.find({ blocked: viewer._id }).distinct('blocker')
+        ]);
+        const hiddenSellers = [...new Set([
+          ...blockedBySelf.map(id => id.toString()),
+          ...blockedByOthers.map(id => id.toString())
+        ])];
+        if (hiddenSellers.length > 0) {
+          query.seller = { $nin: hiddenSellers };
+        }
+      }
     }
 
     const listings = await Listing.find(query)

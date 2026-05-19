@@ -4,6 +4,7 @@ import { RouterLink } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { FollowService } from '../../../shared/services/follow.service';
 import { CategoryFollowService, FollowedCategory } from '../../../shared/services/category-follow.service';
+import { BlockService, BlockedUser } from '../../../shared/services/block.service';
 
 interface FollowedSeller {
   _id: string;
@@ -23,14 +24,17 @@ interface FollowedSeller {
 export class DashboardFollowingComponent implements OnInit {
   private followService = inject(FollowService);
   private categoryFollowService = inject(CategoryFollowService);
+  private blockService = inject(BlockService);
 
   sellers: FollowedSeller[] = [];
   categories: FollowedCategory[] = [];
+  blockedUsers: BlockedUser[] = [];
   isLoading = true;
   togglingMute: string | null = null;
   togglingMuteCategory: string | null = null;
   unfollowingSeller: string | null = null;
   unfollowingCategory: string | null = null;
+  unblockingUser: string | null = null;
 
   ngOnInit(): void {
     this.loadAll();
@@ -40,9 +44,10 @@ export class DashboardFollowingComponent implements OnInit {
     this.isLoading = true;
     let sellersLoaded = false;
     let categoriesLoaded = false;
+    let blockedLoaded = false;
 
     const done = () => {
-      if (sellersLoaded && categoriesLoaded) this.isLoading = false;
+      if (sellersLoaded && categoriesLoaded && blockedLoaded) this.isLoading = false;
     };
 
     this.followService.getFollowing().subscribe({
@@ -55,6 +60,26 @@ export class DashboardFollowingComponent implements OnInit {
       error: () => { categoriesLoaded = true; done(); }
     });
 
+    this.blockService.getBlocked().subscribe({
+      next: (res) => { this.blockedUsers = res.blocked; blockedLoaded = true; done(); },
+      error: () => { blockedLoaded = true; done(); }
+    });
+  }
+
+  blockedUserDisplayName(user: BlockedUser): string {
+    return `${user.firstName} ${user.lastName}`.trim() || 'User';
+  }
+
+  unblockUser(userId: string): void {
+    if (this.unblockingUser) return;
+    this.unblockingUser = userId;
+    this.blockService.unblock(userId).subscribe({
+      next: () => {
+        this.blockedUsers = this.blockedUsers.filter(u => u._id !== userId);
+        this.unblockingUser = null;
+      },
+      error: () => { this.unblockingUser = null; }
+    });
   }
 
   sellerDisplayName(seller: FollowedSeller): string {
