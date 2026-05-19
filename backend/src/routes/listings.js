@@ -14,7 +14,8 @@ const { handleWinnerSelection, handleAuctionEnd } = require('../services/auction
 const { notifyFollowersNewListing, notifyCategoryFollowersNewListing, notifySimilarItemWatchers } = require('../services/notificationService');
 const { getReviewScoresForUser } = require('../services/reviewService');
 const { logAuctionCreated } = require('../services/bestOfferLogger');
-const { scanTexts, scanTextsForProhibitedContent } = require('../utils/contentFilter');
+const { scanTexts, scanTextsForProhibitedContent, scanForAbusiveContent } = require('../utils/contentFilter');
+const { appendModerationAudit } = require('../services/moderationAuditService');
 const { recordViolation } = require('../services/contentViolationService');
 const { createTransactionForBuyNow } = require('../services/transactionService');
 
@@ -1145,6 +1146,28 @@ router.post('/', authenticateToken, requireActiveAccount, requireNoDisputeRestri
       });
     }
 
+    // Abusive language check on title + description
+    const abuseCheck = scanForAbusiveContent(`${title} ${description || ''}`);
+    if (abuseCheck.found) {
+      if (abuseCheck.severity === 'high') {
+        const fullUserForAbuse = await User.findById(user._id);
+        const violation = await recordViolation(fullUserForAbuse, 'offensive_language');
+        return res.status(400).json({ error: 'Content policy violation', message: violation.message, violationAction: violation.action });
+      }
+      if (abuseCheck.severity === 'medium') {
+        return res.status(400).json({
+          error: 'Content policy violation',
+          message: 'Your listing contains offensive or abusive language that is not allowed on BidRoom. Please revise your content before submitting.'
+        });
+      }
+      // low: allow through but log for admin review (fire-and-forget)
+      appendModerationAudit({
+        subjectUserId: user._id,
+        actionType: 'abusive_content_flagged',
+        metadata: { context: 'listing_create', severity: 'low', categories: abuseCheck.categories, matches: abuseCheck.matches, title }
+      }).catch(() => {});
+    }
+
     // Duplicate listing check — same seller, same title, active or draft
     const existingListing = await Listing.findOne({
       seller: user._id,
@@ -1409,6 +1432,26 @@ router.patch('/:id', authenticateToken, requireActiveAccount, async (req, res) =
           message: violation.message,
           violationAction: violation.action
         });
+      }
+
+      const abuseCheckUpdate = scanForAbusiveContent(textFields.join(' '));
+      if (abuseCheckUpdate.found) {
+        if (abuseCheckUpdate.severity === 'high') {
+          const fullUser = await User.findById(user._id);
+          const violation = await recordViolation(fullUser, 'offensive_language');
+          return res.status(400).json({ error: 'Content policy violation', message: violation.message, violationAction: violation.action });
+        }
+        if (abuseCheckUpdate.severity === 'medium') {
+          return res.status(400).json({
+            error: 'Content policy violation',
+            message: 'Your listing contains offensive or abusive language that is not allowed on BidRoom. Please revise your content before saving.'
+          });
+        }
+        appendModerationAudit({
+          subjectUserId: user._id,
+          actionType: 'abusive_content_flagged',
+          metadata: { context: 'listing_update', severity: 'low', categories: abuseCheckUpdate.categories, matches: abuseCheckUpdate.matches, listingId: listing._id }
+        }).catch(() => {});
       }
     }
 

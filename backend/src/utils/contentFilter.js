@@ -55,36 +55,91 @@ function scanTexts(texts) {
   return { found: allTypes.size > 0, types: [...allTypes] };
 }
 
-const ABUSE_RE = /\b(fuck|shit|bitch|asshole|bastard|cunt|nigger|faggot|slut|whore|retard|idiot)\b/gi;
-const HATE_RE = /\b(kill all|go back to your country|white power|heil hitler|gas the|race traitor|subhuman)\b/gi;
+// EN + PT profanity (derivatives via \w* where applicable, explicit forms elsewhere)
+const ABUSE_RE = /\b(fuck\w*|shit\w*|bitch\w*|asshole|bastard|cunt|nigger\w*|faggot|slut\w*|whore|retard|puta|putas|filho\s*da\s*puta|fdp|caralho|merda|porra|viado|bicha|corno)\b/gi;
+
+// EN + PT hate speech
+const HATE_RE = /\b(kill\s+all|go\s+back\s+to\s+your\s+country|white\s+power|heil\s+hitler|gas\s+the|race\s+traitor|subhuman|morte\s+a\s+todos\s+os|poder\s+branco|vai\s+para\s+o\s+teu\s+pa[ií]s)\b/gi;
 
 /**
- * Basic profanity / hate-speech scan for moderation triage.
- * This is intentionally conservative and is used only for flagging, not auto-deletion.
+ * Normalize text for abusive-content scanning:
+ * collapses leet-speak substitutions, removes repeated non-alpha chars,
+ * and lowercases. Applied before regex matching to catch obfuscated slurs.
  * @param {string} text
- * @returns {{ found: boolean, categories: string[], matches: string[] }}
+ * @returns {string}
+ */
+function normalizeText(text) {
+  if (!text || typeof text !== 'string') return '';
+  return text
+    .toLowerCase()
+    .replace(/0/g, 'o')
+    .replace(/3/g, 'e')
+    .replace(/4/g, 'a')
+    .replace(/@/g, 'a')
+    .replace(/1/g, 'i')
+    .replace(/!/g, 'i')
+    .replace(/\$/g, 's')
+    .replace(/5/g, 's')
+    .replace(/7/g, 't')
+    .replace(/\+/g, 't')
+    .replace(/\|/g, 'i')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+/**
+ * Score severity of an abusive-content result.
+ * - 'low'    : profanity only, 1–2 matches
+ * - 'medium' : profanity 3+ matches, OR 1 hate-speech match
+ * - 'high'   : 2+ hate-speech matches, OR both profanity and hate-speech
+ * @param {{ categories: string[], matches: string[] }} result
+ * @returns {'low'|'medium'|'high'|null}
+ */
+function getAbuseSeverity(result) {
+  if (!result.found) return null;
+  const hasHate = result.categories.includes('hate_speech');
+  const hasProfanity = result.categories.includes('profanity');
+  const matchCount = result.matches.length;
+
+  if (hasHate && matchCount >= 2) return 'high';
+  if (hasHate && hasProfanity) return 'high';
+  if (hasHate) return 'medium';
+  if (hasProfanity && matchCount >= 3) return 'medium';
+  return 'low';
+}
+
+/**
+ * Scan text for profanity and hate speech, with leet-speak normalization.
+ * Severity is included in the result so callers can apply tiered actions.
+ * @param {string} text
+ * @returns {{ found: boolean, categories: string[], matches: string[], severity: 'low'|'medium'|'high'|null }}
  */
 function scanForAbusiveContent(text) {
-  if (!text || typeof text !== 'string') return { found: false, categories: [], matches: [] };
+  const normalized = normalizeText(text);
+  if (!normalized) return { found: false, categories: [], matches: [], severity: null };
+
   const categories = new Set();
   const matches = new Set();
-  // String.prototype.match with /g flag returns an array of matches without
-  // mutating regex state, so no lastIndex reset is needed here.
-  const abuseMatches = text.match(ABUSE_RE) || [];
-  const hateMatches = text.match(HATE_RE) || [];
+
+  const abuseMatches = normalized.match(ABUSE_RE) || [];
+  const hateMatches = normalized.match(HATE_RE) || [];
+
   if (abuseMatches.length) {
     categories.add('profanity');
-    abuseMatches.forEach((m) => matches.add(m.toLowerCase()));
+    abuseMatches.forEach((m) => matches.add(m));
   }
   if (hateMatches.length) {
     categories.add('hate_speech');
-    hateMatches.forEach((m) => matches.add(m.toLowerCase()));
+    hateMatches.forEach((m) => matches.add(m));
   }
-  return {
+
+  const result = {
     found: categories.size > 0,
     categories: [...categories],
     matches: [...matches]
   };
+  result.severity = getAbuseSeverity(result);
+  return result;
 }
 
 /**
@@ -135,6 +190,8 @@ module.exports = {
   scanForContactInfo,
   scanTexts,
   scanForAbusiveContent,
+  normalizeText,
+  getAbuseSeverity,
   scanForProhibitedContent,
   scanTextsForProhibitedContent
 };

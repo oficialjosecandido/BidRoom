@@ -58,7 +58,10 @@
       "Read(//Users/jose/**)",
       "Bash(grep -n \"\\\\$\\\\|currency\\\\|€\\\\|estimatedSeller\\\\|feeForecast\\\\|sellerFee\" /Users/jose/Documents/bidroom/frontend/src/app/listing/components/add-listing/add-listing.html)",
       "Bash(grep -n '\"\\\\$\\\\|currency.*\\\\$\\\\|\\\\$.*currency' /Users/jose/Documents/bidroom/frontend/src/app/listing/components/add-listing/add-listing.html)",
-      "Bash(grep -n 'currency.*\\\\$\\\\|\\\\$.*currency\\\\|>\\\\$<' /Users/jose/Documents/bidroom/frontend/src/app/listing/components/add-listing/add-listing.html)"
+      "Bash(grep -n 'currency.*\\\\$\\\\|\\\\$.*currency\\\\|>\\\\$<' /Users/jose/Documents/bidroom/frontend/src/app/listing/components/add-listing/add-listing.html)",
+      "Bash(node -e \"require\\('./src/utils/contentFilter'\\); console.log\\('contentFilter OK'\\)\")",
+      "Bash(node -e \"require\\('./src/services/contentViolationService'\\); console.log\\('contentViolationService OK'\\)\")",
+      "Bash(node -e ' *)"
     ]
   }
 }

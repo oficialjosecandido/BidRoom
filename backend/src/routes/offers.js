@@ -11,6 +11,9 @@ const {
   logSellerAcceptedWinner
 } = require('../services/bestOfferLogger');
 
+const { scanForAbusiveContent } = require('../utils/contentFilter');
+const { recordViolation } = require('../services/contentViolationService');
+const { appendModerationAudit } = require('../services/moderationAuditService');
 const features = require('../config/features');
 const router = express.Router();
 
@@ -194,6 +197,29 @@ async function createOffer(req, res) {
 
     // Offers below minimum are allowed; seller is not obliged to accept (buyer sees indication in UI)
     // Each submission always creates a new offer — buyers may place multiple offers.
+
+    // Abusive language check on offer message (authenticated users only)
+    if (user && message && typeof message === 'string' && message.trim()) {
+      const abuseCheck = scanForAbusiveContent(message);
+      if (abuseCheck.found) {
+        if (abuseCheck.severity === 'high') {
+          const violation = await recordViolation(user, 'offensive_language');
+          return res.status(400).json({ error: 'Content policy violation', message: violation.message, violationAction: violation.action });
+        }
+        if (abuseCheck.severity === 'medium') {
+          return res.status(400).json({
+            error: 'Content policy violation',
+            message: 'Your message contains offensive or abusive language. Please revise it before submitting your offer.'
+          });
+        }
+        // low: log for review, allow through
+        appendModerationAudit({
+          subjectUserId: user._id,
+          actionType: 'abusive_content_flagged',
+          metadata: { context: 'offer_message', severity: 'low', categories: abuseCheck.categories, matches: abuseCheck.matches, listingId }
+        }).catch(() => {});
+      }
+    }
 
     // Create new offer
     const offer = new Offer({
