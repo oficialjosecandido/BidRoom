@@ -19,6 +19,7 @@ export class DashboardNotificationsComponent implements OnInit {
   unreadCount = 0;
   loading = true;
   error: string | null = null;
+  markingAll = false;
 
   ngOnInit(): void {
     this.load();
@@ -32,6 +33,7 @@ export class DashboardNotificationsComponent implements OnInit {
         this.notifications = res.notifications || [];
         this.unreadCount = res.unreadCount ?? 0;
         this.loading = false;
+        this.notificationService.refreshUnreadCount();
       },
       error: () => {
         this.error = 'Failed to load notifications';
@@ -47,13 +49,15 @@ export class DashboardNotificationsComponent implements OnInit {
       auction_ended: '/dashboard/buyer?tab=transactions',
       shipping: '/dashboard/buyer?tab=transactions',
       transaction: '/dashboard/buyer?tab=transactions',
+      bid: '/dashboard/buyer?tab=bets',
       dispute: '/dashboard/disputes',
       listing: '/dashboard/seller',
       follow: '/dashboard/following',
       watchlist: '/dashboard/buyer?tab=watchlist',
       private_room: '/dashboard/buyer',
       account: '/dashboard/settings',
-      security: '/dashboard/settings'
+      security: '/dashboard/settings',
+      review: '/dashboard/buyer?tab=transactions'
     };
     return fallbacks[notification.type] || null;
   }
@@ -73,7 +77,8 @@ export class DashboardNotificationsComponent implements OnInit {
   }
 
   markAllAsRead(): void {
-    if (this.unreadCount === 0) return;
+    if (this.unreadCount === 0 || this.markingAll) return;
+    this.markingAll = true;
     this.notificationService.markAllAsRead().subscribe({
       next: () => {
         this.notifications.forEach(n => {
@@ -81,6 +86,10 @@ export class DashboardNotificationsComponent implements OnInit {
           n.readAt = new Date().toISOString();
         });
         this.unreadCount = 0;
+        this.markingAll = false;
+      },
+      error: () => {
+        this.markingAll = false;
       }
     });
   }

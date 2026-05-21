@@ -1,5 +1,5 @@
 import { Component, OnDestroy, OnInit, AfterViewInit, inject, ElementRef, ViewChild, HostListener } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { TranslateService } from '@ngx-translate/core';
 import { ListingsService, Listing } from '../../../shared/services/listings.service';
 import { ThemeService } from '../../../shared/services/theme.service';
@@ -17,6 +17,7 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
   private translate = inject(TranslateService);
   private listingsService = inject(ListingsService);
   private themeService = inject(ThemeService);
+  private router = inject(Router);
 
   @ViewChild('carouselWrap') carouselWrap!: ElementRef<HTMLElement>;
   @ViewChild('carouselTrack') carouselTrack!: ElementRef<HTMLElement>;
@@ -125,6 +126,14 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
     this.carouselCurrent = ((idx % this.CARDS) + this.CARDS) % this.CARDS;
     this.updateCarouselTransform();
     if (!skipAuto) this.resetCarouselAuto();
+  }
+
+  onCardClick(idx: number, listing: Listing): void {
+    if (this.carouselCurrent === idx) {
+      void this.router.navigate(['/listing', listing.slug]);
+    } else {
+      this.goTo(idx);
+    }
   }
 
   onCarouselTouchStart(e: TouchEvent): void {

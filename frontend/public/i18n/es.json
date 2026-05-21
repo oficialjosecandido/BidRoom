@@ -1181,6 +1181,9 @@
   "transactions": {
     "title": "Transacciones",
     "subtitle": "Ve y gestiona tus compras y ventas.",
+    "unreadNotifications": "{{count}} notificación(es) sin leer",
+    "markAllNotificationsRead": "Marcar todas como leídas",
+    "viewAllNotifications": "Abrir centro de notificaciones",
     "filterAll": "Todas",
     "filterPendingPayment": "Pago pendiente",
     "filterShipping": "En tránsito",

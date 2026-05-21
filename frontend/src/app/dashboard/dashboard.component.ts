@@ -63,10 +63,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    this.loadNotificationCount();
+    this.notificationService.refreshUnreadCount();
     this.loadPendingTransactionCounts();
     this.refreshInterval = setInterval(() => {
-      this.loadNotificationCount();
       this.loadPendingTransactionCounts();
     }, 60000);
 
@@ -91,19 +90,18 @@ export class DashboardComponent implements OnInit, OnDestroy {
       })
     );
     this.subs.add(
-      this.socketService.onNewNotification().subscribe(() => this.loadNotificationCount())
+      this.notificationService.unreadCount$.subscribe((count) => {
+        this.notificationUnreadCount = count;
+      })
+    );
+    this.subs.add(
+      this.socketService.onNewNotification().subscribe(() => this.notificationService.refreshUnreadCount())
     );
   }
 
   ngOnDestroy(): void {
     this.subs.unsubscribe();
     if (this.refreshInterval) clearInterval(this.refreshInterval);
-  }
-
-  private loadNotificationCount(): void {
-    this.notificationService.getUnreadCount().subscribe({
-      next: (res) => { this.notificationUnreadCount = res.unreadCount; }
-    });
   }
 
   private loadPendingTransactionCounts(): void {

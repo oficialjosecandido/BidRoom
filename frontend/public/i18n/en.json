@@ -1494,6 +1494,9 @@
   "transactions": {
     "title": "Transactions",
     "subtitle": "View and manage your purchases and sales.",
+    "unreadNotifications": "{{count}} unread notification(s)",
+    "markAllNotificationsRead": "Mark all as read",
+    "viewAllNotifications": "Open notification center",
     "filterAll": "All",
     "filterPendingPayment": "Pending payment",
     "filterShipping": "In transit",

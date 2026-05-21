@@ -40,6 +40,11 @@ export class HeaderComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.subs.add(
+      this.notificationService.unreadCount$.subscribe((count) => {
+        this.notifCount = count;
+      })
+    );
+    this.subs.add(
       this.authService.currentUser$.subscribe(user => {
         if (user?.displayName) {
           this.userInitials = user.displayName
@@ -52,9 +57,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
           this.userInitials = '';
         }
         if (user) {
-          this.notificationService.getUnreadCount().subscribe({
-            next: r => { this.notifCount = r.unreadCount; }
-          });
+          this.notificationService.refreshUnreadCount();
         } else {
           this.notifCount = 0;
         }

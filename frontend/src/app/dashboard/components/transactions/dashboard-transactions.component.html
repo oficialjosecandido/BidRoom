@@ -1,9 +1,18 @@
 <div class="transactions-container">
   <div class="page-header">
-    <div>
+    <div class="page-header-text">
       <h1 class="page-title">{{ 'transactions.title' | translate }}</h1>
       <p class="page-sub">{{ 'transactions.subtitle' | translate }}</p>
     </div>
+    @if (unreadTxNotifCount > 0) {
+      <div class="tx-notif-actions">
+        <span class="tx-notif-count">{{ 'transactions.unreadNotifications' | translate:{ count: unreadTxNotifCount } }}</span>
+        <button type="button" class="btn-mark-all-notifs" (click)="markAllTransactionNotificationsRead()" [disabled]="markingAllTxNotifs">
+          {{ 'transactions.markAllNotificationsRead' | translate }}
+        </button>
+        <a routerLink="/dashboard/notifications" class="tx-notif-link">{{ 'transactions.viewAllNotifications' | translate }}</a>
+      </div>
+    }
   </div>
 
   <div class="tx-filters">

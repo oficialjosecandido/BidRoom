@@ -13,7 +13,7 @@
       (touchend)="onCarouselTouchEnd($event)">
       <div class="carousel-track" #carouselTrack [style.transform]="carouselTransform">
         @for (listing of featuredListings; track listing._id; let i = $index) {
-          <div class="hc" [class.active]="carouselCurrent === i" (click)="goTo(i)">
+          <div class="hc" [class.active]="carouselCurrent === i" (click)="onCardClick(i, listing)">
             <div class="hc-img" [style.background]="listingImage(listing) ? 'none' : ''">
               @if (listingImage(listing)) {
                 <img [src]="listingImage(listing)" [alt]="listing.title" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0" />
