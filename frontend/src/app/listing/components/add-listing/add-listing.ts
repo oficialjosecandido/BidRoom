@@ -529,19 +529,15 @@ export class AddListing implements OnInit, OnDestroy {
 
     for (let i = 0; i < urls.length; i++) {
       const url = urls[i];
-      try {
-        const res = await fetch(url, { mode: 'cors' });
-        if (!res.ok) continue;
-        const blob = await res.blob();
-        const ext = blob.type?.split('/')[1] || 'jpg';
-        const file = new File([blob], `draft-${i}.${ext}`, { type: blob.type || 'image/jpeg' });
-        this.urlByFileKey.set(this.fileKey(file), url);
-        this.uploadedFiles.push(file);
-        this.previewUrls.push(URL.createObjectURL(blob));
-        this.media.push(this.fb.control(file));
-      } catch {
-        /* skip broken image */
-      }
+      // Use a 0-byte placeholder so the existing indexed structure (uploadedFiles[i] ↔
+      // previewUrls[i]) is maintained without any cross-origin fetch.  The URL is
+      // pre-registered in urlByFileKey, so neither draft-save nor final-submit will
+      // try to re-upload this image.
+      const placeholder = new File([], `restored-${i}.jpg`, { type: 'image/jpeg' });
+      this.urlByFileKey.set(this.fileKey(placeholder), url);
+      this.uploadedFiles.push(placeholder);
+      this.previewUrls.push(url);
+      this.media.push(this.fb.control(placeholder));
     }
   }
 
@@ -775,12 +771,25 @@ export class AddListing implements OnInit, OnDestroy {
     if (this.uploadedFiles.length === 0) return [];
     this.isUploadingImages = true;
     try {
-      const formData = new FormData();
-      this.uploadedFiles.forEach(file => formData.append('images', file));
-      const response = await firstValueFrom(
-        this.http.post<{ urls: string[]; count: number }>(`${API_CONFIG.getApiUrl()}/uploads`, formData)
+      // Only upload files that don't already have a server URL (new additions that
+      // were not yet draft-saved, or files that are not 0-byte restored placeholders).
+      const filesToUpload = this.uploadedFiles.filter(
+        f => this.ALLOWED_IMAGE_TYPES.includes(f.type)
+          && f.size > 0
+          && !this.urlByFileKey.has(this.fileKey(f))
       );
-      this.uploadedFileUrls = response.urls || [];
+      if (filesToUpload.length > 0) {
+        const formData = new FormData();
+        filesToUpload.forEach(file => formData.append('images', file));
+        const response = await firstValueFrom(
+          this.http.post<{ urls: string[]; count: number }>(`${API_CONFIG.getApiUrl()}/uploads`, formData)
+        );
+        const urls = response.urls || [];
+        filesToUpload.forEach((file, idx) => {
+          if (urls[idx]) this.urlByFileKey.set(this.fileKey(file), urls[idx]);
+        });
+      }
+      this.uploadedFileUrls = this.buildOrderedImageUrlList();
       this.isUploadingImages = false;
       return this.uploadedFileUrls;
     } catch (error: any) {

@@ -1,4 +1,4 @@
-<div class="dashboard-container">
+<div class="dashboard-container" [attr.data-theme]="effectiveTheme()">
 
   <nav class="dash-nav">
     <a class="brand" (click)="navigateToLanding()" (keydown.enter)="navigateToLanding()" tabindex="0" role="button">

@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, computed, inject } from '@angular/core';
 import { Router, RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { Subscription } from 'rxjs';
@@ -23,6 +23,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
   private socketService = inject(SocketService);
   private translate = inject(TranslateService);
   readonly theme = inject(ThemeService);
+  readonly effectiveTheme = computed(() =>
+    this.theme.resolveEffective(this.theme.preference())
+  );
 
   notificationUnreadCount = 0;
   pendingBuyerTransactions = 0;

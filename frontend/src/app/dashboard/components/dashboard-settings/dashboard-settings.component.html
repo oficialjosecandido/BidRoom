@@ -241,8 +241,8 @@
         <p class="card-desc">{{ 'dashboard.settings.appearance.subtitle' | translate }}</p>
         <div class="appearance-options">
           @for (opt of themeChoices; track opt.id) {
-            <label class="appearance-option" [class.selected]="theme.preference() === opt.id">
-              <input type="radio" name="appearanceTheme" [value]="opt.id" [checked]="theme.preference() === opt.id" (change)="theme.setPreference(opt.id)" />
+            <label class="appearance-option" [class.selected]="theme.preference() === opt.id" (click)="theme.setPreference(opt.id)">
+              <input type="radio" name="appearanceTheme" [value]="opt.id" [checked]="theme.preference() === opt.id" tabindex="-1" />
               <span>{{ opt.labelKey | translate }}</span>
             </label>
           }
