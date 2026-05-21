@@ -197,10 +197,38 @@
   color: var(--dim, #aaa);
 }
 
+.notif-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.notif-mark-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  border: 1px solid var(--line, rgba(0,0,0,.08));
+  background: transparent;
+  color: var(--sub, #999);
+  cursor: pointer;
+  flex-shrink: 0;
+  opacity: 0;
+  transition: opacity .15s, color .15s, border-color .15s, background .15s;
+  font-family: inherit;
+
+  &:hover { color: var(--green, #4a9b6f); border-color: var(--gl2, rgba(74,155,111,.3)); background: var(--gb2, rgba(74,155,111,.08)); }
+  &:disabled { opacity: .4; cursor: not-allowed; }
+
+  .notif-item:hover & { opacity: 1; }
+}
+
 .notif-unread-dot {
   width: 7px; height: 7px;
   border-radius: 50%;
   background: var(--gold, #c9a84c);
   flex-shrink: 0;
-  margin-top: 5px;
 }

@@ -1293,6 +1293,7 @@
       "title": "Notificações",
       "subtitle": "Fique por dentro da sua atividade de leilão.",
       "markAllRead": "Marcar todas como lidas",
+      "markRead": "Marcar como lida",
       "noNotifications": "Sem notificações ainda.",
       "noNotificationsDesc": "Você está em dia! Vamos notificá-lo quando algo acontecer.",
       "errorLoading": "Falha ao carregar notificações.",

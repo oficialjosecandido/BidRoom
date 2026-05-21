@@ -1,6 +1,7 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
+import { Subscription } from 'rxjs';
 import { TranslateModule } from '@ngx-translate/core';
 import { NotificationService, Notification } from '../../../shared/services/notification.service';
 
@@ -11,7 +12,7 @@ import { NotificationService, Notification } from '../../../shared/services/noti
   templateUrl: './dashboard-notifications.component.html',
   styleUrls: ['./dashboard-notifications.component.scss']
 })
-export class DashboardNotificationsComponent implements OnInit {
+export class DashboardNotificationsComponent implements OnInit, OnDestroy {
   private notificationService = inject(NotificationService);
   private router = inject(Router);
 
@@ -20,9 +21,28 @@ export class DashboardNotificationsComponent implements OnInit {
   loading = true;
   error: string | null = null;
   markingAll = false;
+  markingSingle: string | null = null;
+
+  private subs = new Subscription();
 
   ngOnInit(): void {
     this.load();
+
+    // Stay in sync with the global unread count (updated by socket events and
+    // other components). If new notifications arrive while this page is open,
+    // reload the list so the button and dots reflect reality.
+    this.subs.add(
+      this.notificationService.unreadCount$.subscribe(count => {
+        if (count !== this.unreadCount) {
+          this.unreadCount = count;
+          if (count > 0) this.load();
+        }
+      })
+    );
+  }
+
+  ngOnDestroy(): void {
+    this.subs.unsubscribe();
   }
 
   load(): void {
@@ -31,7 +51,7 @@ export class DashboardNotificationsComponent implements OnInit {
     this.notificationService.getNotifications({ limit: 100 }).subscribe({
       next: (res) => {
         this.notifications = res.notifications || [];
-        this.unreadCount = res.unreadCount ?? 0;
+        this.unreadCount = res.unreadCount ?? this.notifications.filter(n => n.status === 'unread').length;
         this.loading = false;
         this.notificationService.refreshUnreadCount();
       },
@@ -39,6 +59,21 @@ export class DashboardNotificationsComponent implements OnInit {
         this.error = 'Failed to load notifications';
         this.loading = false;
       }
+    });
+  }
+
+  markSingleRead(event: Event, notification: Notification): void {
+    event.stopPropagation();
+    if (this.markingSingle || notification.status === 'read') return;
+    this.markingSingle = notification._id;
+    this.notificationService.markAsRead(notification._id).subscribe({
+      next: () => {
+        notification.status = 'read';
+        notification.readAt = new Date().toISOString();
+        this.unreadCount = Math.max(0, this.unreadCount - 1);
+        this.markingSingle = null;
+      },
+      error: () => { this.markingSingle = null; }
     });
   }
 

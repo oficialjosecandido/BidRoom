@@ -1293,6 +1293,7 @@
       "title": "Notifications",
       "subtitle": "Stay up to date with your auction activity.",
       "markAllRead": "Mark all as read",
+      "markRead": "Mark as read",
       "noNotifications": "No notifications yet.",
       "noNotificationsDesc": "You're all caught up! We'll notify you when something happens.",
       "errorLoading": "Failed to load notifications.",
