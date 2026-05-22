@@ -43,6 +43,14 @@ jobs:
           # Set API URL for production build
           API_URL: https://bidroom-backend-dev.azurewebsites.net/api
 
+      - name: Patch API_URL in built index.html
+        run: |
+          API_URL="${API_URL:-https://bidroom-backend-dev.azurewebsites.net/api}"
+          INDEX="frontend/dist/frontend/browser/index.html"
+          # Replace localhost proxy URL with deployed backend (SWA cannot proxy /api to App Service)
+          sed -i "s|API_URL: '/api'|API_URL: '${API_URL}'|" "$INDEX"
+          grep -o "API_URL: '[^']*'" "$INDEX" || true
+
       - name: Verify build output
         run: |
           echo "Build output location:"

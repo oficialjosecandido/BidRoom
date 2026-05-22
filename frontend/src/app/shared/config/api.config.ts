@@ -1,38 +1,69 @@
 /**
  * API Configuration
- * - Local:      http://localhost:3000/api
- * - Deployed:   Prefer window.APP_CONFIG.API_URL (set in index.html / CI)
- * - Fallback:   environment.defaultApiBaseUrl (dev vs prod from Angular fileReplacements)
+ * - Local (ng serve):  /api via proxy.conf.json → backend (avoids CORS)
+ * - Deployed (SWA):    full backend URL — same-origin /api only serves index.html
+ * - Override:          window.APP_CONFIG.API_URL (absolute URL on deploy)
  */
 import { environment } from '@env';
+
+function normalizeApiUrl(url: string): string {
+  const trimmed = url.replace(/\/$/, '');
+  return trimmed.endsWith('/api') ? trimmed : `${trimmed}/api`;
+}
+
+function isLocalHost(hostname: string): boolean {
+  return hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '0.0.0.0';
+}
+
+function apiUrlFromEnvironment(): string {
+  const base = environment.defaultApiBaseUrl.replace(/\/$/, '');
+  return base.endsWith('/api') ? base : `${base}/api`;
+}
 
 export const API_CONFIG = {
   getApiUrl(): string {
     const hostname = typeof window !== 'undefined' ? window.location.hostname : 'localhost';
-    const isLocal =
-      hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '0.0.0.0';
+    const isLocal = isLocalHost(hostname);
+    const runtimeUrl =
+      typeof window !== 'undefined' ? (window as { APP_CONFIG?: { API_URL?: string } }).APP_CONFIG?.API_URL : undefined;
 
-    // ng serve + proxy.conf.json: same-origin /api (avoids CORS)
     if (isLocal) {
+      // ng serve + proxy.conf.json; allow absolute override for direct backend testing
+      if (runtimeUrl && (runtimeUrl.startsWith('http://') || runtimeUrl.startsWith('https://'))) {
+        return normalizeApiUrl(runtimeUrl);
+      }
       return '/api';
     }
 
-    const runtimeUrl = typeof window !== 'undefined' && (window as any).APP_CONFIG?.API_URL;
-    if (runtimeUrl) {
-      return runtimeUrl.endsWith('/api') ? runtimeUrl : `${runtimeUrl.replace(/\/$/, '')}/api`;
+    // Azure Static Web Apps (and similar): never use same-origin /api — SPA fallback returns HTML
+    if (runtimeUrl && (runtimeUrl.startsWith('http://') || runtimeUrl.startsWith('https://'))) {
+      return normalizeApiUrl(runtimeUrl);
     }
 
-    const base = environment.defaultApiBaseUrl.replace(/\/$/, '');
-    return base.endsWith('/api') ? base : `${base}/api`;
+    return apiUrlFromEnvironment();
   },
 
   /** Origin of the backend (no /api) — for Socket.IO */
   getBackendBaseUrl(): string {
-    const api = this.getApiUrl();
-    if (api.startsWith('/')) {
-      return typeof window !== 'undefined' ? window.location.origin : 'http://localhost:4200';
+    const cfg =
+      typeof window !== 'undefined'
+        ? (window as { APP_CONFIG?: { BACKEND_ORIGIN?: string } }).APP_CONFIG
+        : undefined;
+    if (cfg?.BACKEND_ORIGIN) {
+      return cfg.BACKEND_ORIGIN.replace(/\/$/, '');
     }
-    return api.replace(/\/api\/?$/, '');
+
+    const api = this.getApiUrl();
+    if (api.startsWith('http://') || api.startsWith('https://')) {
+      return api.replace(/\/api\/?$/, '');
+    }
+
+    // localhost + /api proxy
+    if (typeof window !== 'undefined' && isLocalHost(window.location.hostname)) {
+      return window.location.origin;
+    }
+
+    return environment.defaultApiBaseUrl.replace(/\/$/, '').replace(/\/api\/?$/, '');
   },
 
   getStripePublishableKey(): string {

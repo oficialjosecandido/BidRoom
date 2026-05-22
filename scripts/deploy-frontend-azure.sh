@@ -65,6 +65,14 @@ fi
 
 print_status "Build completed successfully"
 
+# Patch index.html so Azure SWA calls the backend (not same-origin /api → SPA HTML)
+INDEX_HTML="$BUILD_DIR/index.html"
+if [ -f "$INDEX_HTML" ]; then
+    sed -i.bak "s|API_URL: '/api'|API_URL: '${BACKEND_URL}/api'|" "$INDEX_HTML"
+    rm -f "$INDEX_HTML.bak"
+    print_status "Patched APP_CONFIG.API_URL → ${BACKEND_URL}/api"
+fi
+
 # Step 3: Display deployment information
 echo ""
 echo "═══════════════════════════════════════════════════════════════"
