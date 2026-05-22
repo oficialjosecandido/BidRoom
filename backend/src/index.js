@@ -98,9 +98,8 @@ app.set('trust proxy', 1);
 
 // Middleware
 app.use(helmet());
-app.use(cors({
+const corsOptions = {
   origin: (origin, callback) => {
-    // Non-browser clients send no Origin; allow (actual browsers always send Origin on cross-site requests).
     if (!origin) {
       return callback(null, true);
     }
@@ -108,13 +107,15 @@ app.use(cors({
       return callback(null, true);
     }
     console.warn('[CORS] blocked origin:', origin);
-    // Do not pass Error — that skips CORS headers and the browser reports a misleading preflight failure.
     return callback(null, false);
   },
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Device-Fingerprint'],
   credentials: true
-}));
+};
+app.use(cors(corsOptions));
+/** Explicit preflight so OPTIONS always returns CORS headers (some Azure/proxy setups miss this). */
+app.options('*', cors(corsOptions));
 app.use(morgan('combined'));
 
 // Stripe webhooks need raw body for signature verification (must be before express.json())

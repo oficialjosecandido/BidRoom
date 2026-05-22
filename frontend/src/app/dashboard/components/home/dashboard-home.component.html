@@ -3,8 +3,8 @@
     <div class="account-status-banner account-status-suspended">
       <span class="status-icon">⚠️</span>
       <div class="status-body">
-        <strong>Account Temporarily Restricted</strong>
-        <p>Your account has been temporarily restricted while a dispute is under review. You cannot create new listings, place bids, or start new transactions until the case is resolved. Any transactions initiated before the dispute will continue and can be completed as normal (e.g. payment, shipping, delivery).</p>
+        <strong>{{ 'dashboard.home.accountSuspendedTitle' | translate }}</strong>
+        <p>{{ 'dashboard.home.accountSuspendedBody' | translate }}</p>
       </div>
     </div>
   }
@@ -12,8 +12,8 @@
     <div class="account-status-banner account-status-closed">
       <span class="status-icon">🚫</span>
       <div class="status-body">
-        <strong>Account Closed</strong>
-        <p>Your account has been permanently closed. Please contact support if you believe this is an error.</p>
+        <strong>{{ 'dashboard.home.accountClosedTitle' | translate }}</strong>
+        <p>{{ 'dashboard.home.accountClosedBody' | translate }}</p>
       </div>
     </div>
   }
@@ -38,17 +38,17 @@
       </svg>
     </div>
     <div class="dsa-banner-body">
-      <strong>EU seller status review required</strong>
-      <span>Your selling activity this year may qualify as professional selling under EU DSA regulations (Article 29). You must confirm your seller status — professional sellers must display company information to buyers.</span>
+      <strong>{{ 'dashboard.home.dsaTitle' | translate }}</strong>
+      <span>{{ 'dashboard.home.dsaBody' | translate }}</span>
     </div>
     <div class="dsa-banner-actions">
       <button type="button" class="dsa-btn-pro" [disabled]="dsaWarningResponding" (click)="respondDsaWarning('switch_professional')">
-        Switch to professional
+        {{ 'dashboard.home.dsaSwitchPro' | translate }}
       </button>
       <button type="button" class="dsa-btn-private" [disabled]="dsaWarningResponding" (click)="respondDsaWarning('remain_private')">
-        Remain private
+        {{ 'dashboard.home.dsaRemainPrivate' | translate }}
       </button>
-      <button type="button" class="dsa-btn-dismiss" (click)="dismissDsaWarning()" aria-label="Dismiss for now">
+      <button type="button" class="dsa-btn-dismiss" (click)="dismissDsaWarning()" [attr.aria-label]="'dashboard.home.dsaDismiss' | translate">
         <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
       </button>
     </div>
@@ -64,14 +64,14 @@
       </svg>
     </div>
     <div class="payout-banner-body">
-      <strong>Set up payouts to sell on BidRoom</strong>
-      <span>Connect your bank account via Stripe so you can receive payments when your auctions end. Buyers won't be able to pay you until this is complete.</span>
+      <strong>{{ 'dashboard.home.payoutBannerTitle' | translate }}</strong>
+      <span>{{ 'dashboard.home.payoutBannerBody' | translate }}</span>
     </div>
     <div class="payout-banner-actions">
       <a routerLink="/dashboard/settings" class="payout-banner-cta">
-        Set up payouts
+        {{ 'dashboard.home.payoutBannerCta' | translate }}
       </a>
-      <button type="button" class="payout-banner-dismiss" (click)="dismissPayoutBanner()" aria-label="Dismiss">
+      <button type="button" class="payout-banner-dismiss" (click)="dismissPayoutBanner()" [attr.aria-label]="'dashboard.home.payoutBannerDismiss' | translate">
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
           <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
         </svg>

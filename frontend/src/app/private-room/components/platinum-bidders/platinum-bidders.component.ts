@@ -2,12 +2,13 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { PrivateRoomService, Bidder } from '../../services/private-room.service';
 
 @Component({
   selector: 'app-platinum-bidders',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, TranslateModule],
   templateUrl: './platinum-bidders.component.html',
   styleUrls: ['./platinum-bidders.component.scss']
 })
@@ -15,6 +16,7 @@ export class PlatinumBiddersComponent implements OnInit {
   private route = inject(ActivatedRoute);
   router = inject(Router);
   private privateRoomService = inject(PrivateRoomService);
+  private translate = inject(TranslateService);
 
   listingId = '';
   bidders: Bidder[] = [];
@@ -48,7 +50,7 @@ export class PlatinumBiddersComponent implements OnInit {
         this.isLoading = false;
       },
       error: (error) => {
-        this.error = error?.message || 'Failed to load bidders';
+        this.error = error?.message || this.translate.instant('listing.platinumBidders.errorLoading');
         this.isLoading = false;
       }
     });
@@ -66,7 +68,7 @@ export class PlatinumBiddersComponent implements OnInit {
       this.selectedBidderIds.splice(index, 1);
     } else {
       if (this.selectedBidderIds.length >= 5) {
-        alert('You can select a maximum of 5 Platinum Bidders');
+        alert(this.translate.instant('listing.platinumBidders.maxAlert'));
         return;
       }
       this.selectedBidderIds.push(bidderId);
@@ -98,7 +100,7 @@ export class PlatinumBiddersComponent implements OnInit {
         }, 1000);
       },
       error: (error) => {
-        this.error = error?.message || 'Failed to save selection';
+        this.error = error?.message || this.translate.instant('listing.platinumBidders.errorSaving');
         this.isSaving = false;
       }
     });

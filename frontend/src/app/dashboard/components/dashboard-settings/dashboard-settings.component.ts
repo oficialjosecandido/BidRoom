@@ -215,13 +215,13 @@ export class DashboardSettingsComponent implements OnInit {
         this.connectSubmitting = false;
         this.showOnboardingForm = false;
         this.connectStatusMessage = res.onboarded
-          ? 'Your payout account is now active!'
-          : 'Your details have been submitted. Stripe will verify them shortly — this usually takes a few minutes.';
+          ? this.translate.instant('dashboard.settings.payoutNowActive')
+          : this.translate.instant('dashboard.settings.detailsSubmitted');
         this.loadConnectStatus();
       },
       error: (err) => {
         this.connectSubmitting = false;
-        this.connectError = err?.error?.message || err?.error?.error || 'Something went wrong. Please check your details and try again.';
+        this.connectError = err?.error?.message || err?.error?.error || this.translate.instant('dashboard.settings.connectError');
       }
     });
   }
@@ -231,12 +231,12 @@ export class DashboardSettingsComponent implements OnInit {
     this.stripeConnect.testActivate().subscribe({
       next: () => {
         this.connectTestActivating = false;
-        this.connectStatusMessage = 'Test account activated!';
+        this.connectStatusMessage = this.translate.instant('dashboard.settings.testActivated');
         this.loadConnectStatus();
       },
       error: (err) => {
         this.connectTestActivating = false;
-        this.connectError = err?.error?.error || 'Test activation failed.';
+        this.connectError = err?.error?.error || this.translate.instant('dashboard.settings.testActivationFailed');
       }
     });
   }
@@ -273,15 +273,15 @@ export class DashboardSettingsComponent implements OnInit {
       },
       error: () => {
         this.notifPrefsSaving = false;
-        this.notifPrefsError = 'Failed to save preferences. Please try again.';
+        this.notifPrefsError = this.translate.instant('dashboard.settings.savePrefsError');
       }
     });
   }
 
   get connectStatusLabel(): string {
-    if (!this.connectStatus?.connected) return 'Not connected';
-    if (this.connectStatus.onboarded) return 'Active';
-    return 'Pending verification';
+    if (!this.connectStatus?.connected) return this.translate.instant('dashboard.settings.connectNotConnected');
+    if (this.connectStatus.onboarded) return this.translate.instant('dashboard.settings.connectActive');
+    return this.translate.instant('dashboard.settings.connectPending');
   }
 
   get connectStatusClass(): string {

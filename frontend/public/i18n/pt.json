@@ -21,7 +21,8 @@
     },
     "search": {
       "placeholder": "Procurar leilões, artigos, vendedores…",
-      "open": "Pesquisar"
+      "open": "Pesquisar",
+      "close": "Fechar pesquisa"
     },
     "menu": {
       "open": "Abrir menu",
@@ -56,11 +57,14 @@
       "hero": {
         "svgDarkTitle": "Ilustração decorativa modo escuro — sardinha e azulejos",
         "svgLightTitle": "Fundo decorativo de azulejos — modo claro",
-        "eyebrow": "Portugal · Lançamento 2026",
+        "eyebrow": "Portugal · Leilões premium",
         "title1": "Leilões de",
         "title2": "alto valor,",
         "titleEm": "feitos bem.",
+        "titleLine1": "Compre o",
+        "titleLine2": "extraordinário.",
         "subtitle": "A primeira plataforma portuguesa de leilões premium com salas privadas em tempo real, reputação verificada e pagamentos seguros.",
+        "subtitleAlt": "Leilões em tempo real para relógios, arte e peças únicas.",
         "ctaExplore": "Explorar leilões",
         "ctaHow": "Como funciona",
         "liveNow": "Ao vivo agora"
@@ -69,11 +73,19 @@
         "activeAuctions": "Leilões activos",
         "volume": "Volume transaccionado",
         "satisfaction": "Satisfação compradores",
-        "bidTime": "Tempo médio de lance"
+        "bidTime": "Tempo médio de lance",
+        "auctionsHeld": "Leilões realizados",
+        "transacted": "Transacionado",
+        "completion": "Conclusão",
+        "buyerFee": "Comissão para compradores"
       },
       "section": {
         "featured": "Em destaque",
-        "ongoing": "Leilões em curso"
+        "ongoing": "Leilões activos",
+        "liveNow": "Ao vivo agora",
+        "viewAll": "Ver todos",
+        "noActive": "Sem leilões activos de momento.",
+        "viewAllArrow": "Ver todos os leilões →"
       },
       "badges": {
         "live": "Ao vivo",
@@ -83,7 +95,10 @@
       "listing": {
         "currentBid": "Lance actual",
         "minPrice": "Preço mínimo",
-        "offersCount": "3 ofertas"
+        "offersCount": "3 ofertas",
+        "highestOffer": "Oferta mais alta",
+        "offers": "Ofertas",
+        "endsIn": "Termina em"
       },
       "listing1": {
         "title": "Patek Philippe Ref. 5711",
@@ -100,16 +115,46 @@
       "azulejoSection": "Inspiração portuguesa · Azulejos do século XVI",
       "private": {
         "tag": "Funcionalidade exclusiva",
+        "eyebrow": "Salas Privadas",
         "title1": "Salas de Leilão",
         "title2": "Privadas",
+        "titleLine1": "Exclusividade",
+        "titleLine2": "por convite.",
         "body": "Quando o leilão público termina, os melhores licitadores são convidados para uma sala exclusiva. Uma corrida final de 60 segundos. O mais alto vence automaticamente.",
+        "bodyAlt": "Após o leilão público, os melhores licitantes são convidados para uma sala privada. Só os escolhidos entram.",
         "b1": "O vendedor convida 2 a 5 licitadores registados",
         "b2": "15 minutos para aceitar ou recusar o convite",
         "b3": "Cada lance reinicia o contador de 60 segundos",
         "b4": "Vencedor determinado automaticamente",
         "visLabel": "Sala privada · Ao vivo",
         "visSub": "Sala fecha em",
-        "highestBid": "Lance mais alto"
+        "highestBid": "Lance mais alto",
+        "bidLabel": "Lance actual",
+        "stat1Label": "Licitantes convidados",
+        "stat2Val": "60s",
+        "stat2Label": "Por lance",
+        "stat3Val": "Auto",
+        "stat3Label": "Vencedor automático"
+      },
+      "how": {
+        "eyebrow": "Como funciona",
+        "titleLine1": "Simples",
+        "titleLine2": "de ponta a ponta.",
+        "step1Title": "Publique",
+        "step1Desc": "Leilão ou melhor oferta. Sem taxas de publicação. Pronto em minutos.",
+        "step2Title": "Concorra",
+        "step2Desc": "Licitações em tempo real. Ofertas privadas. O sistema decide automaticamente.",
+        "step3Title": "Receba com segurança",
+        "step3Desc": "Pagamento em custódia. Fundos só libertados após confirmação de recepção."
+      },
+      "cta": {
+        "titleLine1": "O próximo leilão",
+        "titleLine2": "é o seu.",
+        "sub": "Registe-se gratuitamente. Comece a licitar hoje.",
+        "createAccount": "Criar conta gratuita",
+        "explore": "Explorar leilões",
+        "alreadyHave": "Já tem conta?",
+        "signIn": "Entrar"
       },
       "trust": {
         "eyebrow": "Confiança e segurança",
@@ -128,7 +173,7 @@
         "c6b": "Plataforma completamente bilingue, adaptada ao mercado português com suporte integral em PT e EN."
       },
       "footer": {
-        "tagline": "O mercado de leilões premium de Portugal",
+        "tagline": "O marketplace de leilões premium de Portugal.",
         "platform": "Plataforma",
         "account": "Conta",
         "legal": "Legal",
@@ -138,25 +183,62 @@
         "register": "Registar",
         "dashboard": "Painel",
         "reputation": "Reputação",
-        "terms": "Termos de uso",
+        "terms": "Termos de utilização",
         "privacy": "Privacidade",
         "cookies": "Cookies",
         "contact": "Contacto",
-        "copyright": "© 2026 BidRoom · Todos os direitos reservados · Lisboa, Portugal"
+        "copyright": "© 2026 BidRoom · Todos os direitos reservados · Lisboa, Portugal",
+        "howItWorks": "Como funciona",
+        "privateRooms": "Salas Privadas",
+        "categories": "Categorias",
+        "buyers": "Compradores",
+        "createAccount": "Criar conta",
+        "buyerGuide": "Guia do comprador",
+        "securePayment": "Pagamento seguro",
+        "disputes": "Disputas",
+        "sellers": "Vendedores",
+        "publishListing": "Publicar anúncio",
+        "sellerGuide": "Guia do vendedor",
+        "commissions": "Comissões",
+        "payouts": "Payouts",
+        "privacyPolicy": "Política de privacidade",
+        "termsShort": "Termos",
+        "privacyShort": "Privacidade",
+        "allRights": "© 2026 BidRoom.pt · Todos os direitos reservados",
+        "madeIn": "Feito em Portugal 🇵🇹"
       }
     }
   },
   "footer": {
-    "tagline": "O seu marketplace de leilões premium para descobertas únicas e tesouros valiosos.",
+    "tagline": "O marketplace de leilões premium de Portugal.",
     "quickLinks": "Links Rápidos",
-    "howItWorks": "Como Funciona",
+    "howItWorks": "Como funciona",
     "contact": "Contacto",
     "faq": "FAQ",
     "legal": "Legal",
-    "privacyPolicy": "Política de Privacidade",
+    "privacyPolicy": "Política de privacidade",
     "termsConditions": "Termos e Condições",
     "connect": "Redes Sociais",
-    "copyright": "© 2024 BidRoom. Todos os direitos reservados."
+    "copyright": "© 2026 BidRoom.pt · Todos os direitos reservados · Feito em Portugal 🇵🇹",
+    "platform": "Plataforma",
+    "buyers": "Compradores",
+    "sellers": "Vendedores",
+    "activeAuctions": "Leilões activos",
+    "categories": "Categorias",
+    "createAccount": "Criar conta",
+    "buyerGuide": "Guia do comprador",
+    "securePayment": "Pagamento seguro",
+    "disputes": "Disputas",
+    "publishListing": "Publicar anúncio",
+    "sellerGuide": "Guia do vendedor",
+    "commissions": "Comissões",
+    "payouts": "Payouts",
+    "terms": "Termos de utilização",
+    "termsShort": "Termos",
+    "privacyShort": "Privacidade",
+    "cookies": "Cookies",
+    "complaintsBook": "Livro de Reclamações",
+    "ral": "RAL"
   },
   "home": {
     "hero": {
@@ -780,6 +862,15 @@
       "selecting": "Selecionando…",
       "ineligible": "Conta verificada necessária"
     },
+    "platinumBidders": {
+      "title": "Seleccionar Licitantes Platina",
+      "subtitle": "Seleccione até 5 licitantes para convidar para a Sala Privada. Estes licitantes poderão continuar a licitar após o leilão principal terminar.",
+      "backBtn": "Voltar ao Painel",
+      "loading": "A carregar licitantes...",
+      "maxAlert": "Pode seleccionar no máximo 5 Licitantes Platina.",
+      "errorLoading": "Falha ao carregar licitantes.",
+      "errorSaving": "Falha ao guardar selecção."
+    },
     "privateRoomModal": {
       "title": "Criar sala privada",
       "subtitle": "Escolha entre 2 e 5 licitantes para convidar. Apenas licitantes registrados podem ser convidados. Os licitantes convidados receberão um link para a sala privada; os demais serão notificados que não foram selecionados.",
@@ -965,7 +1056,9 @@
       "successTitle": "E-mail Verificado!",
       "successDesc": "Seu e-mail foi verificado. Agora você pode entrar.",
       "errorTitle": "Falha na Verificação",
-      "goToLogin": "Ir para Entrar"
+      "goToLogin": "Ir para Entrar",
+      "invalidCode": "Código de verificação inválido ou em falta.",
+      "failedGeneric": "Falha na verificação do e-mail."
     },
     "checkEmail": {
       "title": "Verifique Seu E-mail",
@@ -1184,7 +1277,94 @@
       "reviewPendingFrom": "Avalie a transacção com {{name}} · {{role}}",
       "roleSeller": "Vendedor",
       "roleBuyer": "Comprador",
-      "reviewBtn": "Avaliar"
+      "reviewBtn": "Avaliar",
+      "accountSuspendedTitle": "Conta Temporariamente Restringida",
+      "accountSuspendedBody": "A sua conta foi temporariamente restringida enquanto uma disputa está em análise. Não pode criar novos anúncios, fazer lances ou iniciar novas transacções até o caso ser resolvido. Transacções iniciadas antes da disputa continuarão normalmente (ex. pagamento, envio, entrega).",
+      "accountClosedTitle": "Conta Encerrada",
+      "accountClosedBody": "A sua conta foi permanentemente encerrada. Contacte o suporte se acredita que isto é um erro.",
+      "dsaTitle": "Revisão do estatuto de vendedor UE necessária",
+      "dsaBody": "A sua actividade de venda este ano pode qualificar como venda profissional ao abrigo do Regulamento dos Serviços Digitais da UE (Artigo 29.º). Deve confirmar o seu estatuto de vendedor — vendedores profissionais devem exibir informação da empresa aos compradores.",
+      "dsaSwitchPro": "Mudar para profissional",
+      "dsaRemainPrivate": "Manter privado",
+      "dsaDismiss": "Dispensar por agora",
+      "payoutBannerTitle": "Configure os pagamentos para vender no BidRoom",
+      "payoutBannerBody": "Ligue a sua conta bancária via Stripe para receber pagamentos quando os seus leilões terminarem. Os compradores não poderão pagar até que isto esteja completo.",
+      "payoutBannerCta": "Configurar pagamentos",
+      "payoutBannerDismiss": "Dispensar",
+      "checkoutError": "Falha ao iniciar o pagamento. Tente novamente."
+    },
+    "myAccount": {
+      "title": "A Minha Conta",
+      "subtitle": "Gira as configurações da sua conta e informações de perfil",
+      "profileInfo": "Informação de Perfil",
+      "notProvided": "Não fornecido",
+      "profilePhoto": "Foto de perfil",
+      "userId": "ID de utilizador",
+      "reviewScores": "Pontuações de Avaliação",
+      "reviewSingular": "avaliação",
+      "reviewPlural": "avaliações",
+      "scoresNote": "As pontuações baseiam-se em avaliações de outros utilizadores após transacções concluídas.",
+      "payoutAccount": "Conta de Pagamentos ao Vendedor",
+      "checkingPayout": "A verificar estado da conta de pagamentos...",
+      "payoutStatus": "Estado dos pagamentos:",
+      "payoutActive": "A sua conta de pagamentos está activa. Os compradores podem pagar-lhe directamente — os fundos serão enviados para a sua conta bancária registada.",
+      "chargesEnabled": "Cobranças activas",
+      "enabled": "activo",
+      "pending": "pendente",
+      "updateBank": "Actualizar conta bancária",
+      "requirementIssue": "Há um problema com os detalhes da sua conta de pagamentos:",
+      "requirementHint": "Actualize os seus dados para resolver estes problemas.",
+      "verifyingDetails": "Os seus detalhes foram submetidos e estão a ser verificados pelo Stripe. Normalmente demora alguns minutos.",
+      "updateDetails": "Actualizar dados",
+      "simulateVerification": "⚡ Simular verificação",
+      "activating": "A activar…",
+      "setupDesc": "Para receber pagamentos de compradores, configure a sua conta de pagamentos. Não precisa de conta Stripe — basta preencher os seus dados abaixo.",
+      "feature1": "Introduza os seus dados de identidade e bancários uma vez",
+      "feature2": "O Stripe processa os pagamentos em segurança em segundo plano",
+      "feature3": "Fundos transferidos directamente para a sua conta bancária",
+      "setupBtn": "Configurar conta de pagamentos",
+      "dobTitle": "Data de nascimento",
+      "dobDay": "Dia",
+      "dobMonth": "Mês",
+      "dobYear": "Ano",
+      "addressTitle": "Morada",
+      "streetAddress": "Rua",
+      "city": "Cidade",
+      "postalCode": "Código postal",
+      "country": "País",
+      "bankTitle": "Conta bancária (IBAN)",
+      "ibanLabel": "IBAN",
+      "ibanHint": "O seu Número Internacional de Conta Bancária. Os espaços são ignorados.",
+      "tosText": "Autorizo o BidRoom a submeter as minhas informações ao Stripe para verificação de identidade e processamento de pagamentos, e aceito o",
+      "tosLink": "Acordo de Conta Conectada Stripe",
+      "submitBtn": "Guardar conta de pagamentos",
+      "submitting": "A submeter…",
+      "cancelBtn": "Cancelar",
+      "identityTitle": "Verificação de Identidade",
+      "checkingVerification": "A verificar estado da verificação…",
+      "verificationStatus": "Estado da verificação:",
+      "kycReturnBanner": "A sua verificação foi submetida. Actualizaremos o seu estado assim que a análise estiver concluída — normalmente demora alguns minutos.",
+      "kycApproved": "A sua identidade foi verificada. Pode licitar e anunciar artigos acima de $5.000.",
+      "kycVerifiedOn": "Verificado em",
+      "kycPending": "A verificação da sua identidade está em curso. Normalmente demora alguns minutos. Será notificado quando estiver concluída.",
+      "kycRejectedBase": "A sua verificação anterior não foi aprovada.",
+      "kycRejectedReason": "Motivo:",
+      "kycRejectedTryAgain": "Tente novamente com um documento de identidade com foto válido e uma selfie clara.",
+      "kycTryAgain": "Tentar de novo",
+      "kycAmlDesc": "Transacções de $5.000 ou mais requerem verificação de identidade para cumprir os regulamentos de prevenção de branqueamento de capitais (AML).",
+      "kycDoc1": "Documento de identificação com foto emitido pelo governo (passaporte, carta de condução ou cartão de cidadão)",
+      "kycDoc2": "Uma selfie com verificação de vivacidade",
+      "kycDoc3": "Processado em segurança pelo Stripe Identity — os seus dados não são armazenados no BidRoom",
+      "kycStart": "Iniciar Verificação",
+      "accountSettings": "Configurações da Conta",
+      "comingSoon": "Mais configurações de conta estarão disponíveis aqui em breve.",
+      "connectLoading": "A verificar estado da ligação...",
+      "connectError": "Algo correu mal. Verifique os seus dados e tente novamente.",
+      "payoutNowActive": "A sua conta de pagamentos está agora ativa!",
+      "detailsSubmitted": "Os seus dados foram submetidos. A Stripe irá verificá-los em breve — normalmente demora alguns minutos.",
+      "connectNotConnected": "Não ligado",
+      "connectActive": "Ativo",
+      "connectPending": "Verificação pendente"
     },
     "role": {
       "toggleLabel": "Modo comprador ou vendedor"
@@ -1208,6 +1388,7 @@
       "title": "Meus Lances",
       "subtitle": "Todos os seus lances e ofertas em um só lugar. Expanda um anúncio para ver o histórico.",
       "loading": "Carregando seus lances...",
+      "errorLoading": "Falha ao carregar os seus lances.",
       "tryAgain": "Tentar Novamente",
       "emptyTitle": "Nenhum lance ainda",
       "emptyDesc": "Você ainda não fez nenhum lance ou oferta. Navegue pelos anúncios e faça seu primeiro lance!",
@@ -1403,12 +1584,24 @@
           "newBid": "Nova licitação no seu anúncio",
           "disputeUpdate": "Atualização de disputa"
         }
-      }
+      },
+      "savePrefsError": "Falha ao guardar preferências. Tente novamente.",
+      "connectError": "Algo correu mal. Verifique os seus dados e tente novamente.",
+      "payoutNowActive": "A sua conta de pagamentos está agora ativa!",
+      "detailsSubmitted": "Os seus dados foram submetidos. A Stripe irá verificá-los em breve — normalmente demora alguns minutos.",
+      "testActivated": "Conta de teste ativada!",
+      "testActivationFailed": "Falha na ativação de teste.",
+      "connectNotConnected": "Não ligado",
+      "connectActive": "Ativo",
+      "connectPending": "Verificação pendente"
     },
     "myAuctions": {
       "title": "Meus Anúncios",
       "subtitle": "Gerencie seus anúncios como vendedor e acompanhe os convites de licitantes platina",
       "loading": "Carregando seus anúncios...",
+      "errorLoading": "Falha ao carregar os seus anúncios.",
+      "relistSuccess": "Anúncio reanunciado com sucesso!",
+      "relistError": "Falha ao reanunciar o anúncio.",
       "emptyTitle": "Nenhum anúncio ainda",
       "emptyDesc": "Você ainda não criou nenhum anúncio. Comece criando seu primeiro anúncio!",
       "createFirst": "Criar Meu Primeiro Anúncio",
@@ -1478,12 +1671,14 @@
       "totalBids": "Total de lances",
       "ends": "Termina",
       "emailOutbid": "Notificar-me quando for ultrapassado",
-      "viewListing": "Ver Anúncio"
+      "viewListing": "Ver Anúncio",
+      "errorLoading": "Falha ao carregar os seus leilões."
     },
     "watchlist": {
       "title": "Minha Lista de Favoritos",
       "subtitle": "Itens que você salvou. Clique para ver ou dar lances.",
       "loading": "Carregando sua lista de favoritos...",
+      "errorLoading": "Falha ao carregar a sua lista de favoritos.",
       "emptyTitle": "Nenhum item na sua lista de favoritos",
       "emptyDesc": "Quando você adicionar itens à sua lista de favoritos em uma página de anúncio, eles aparecerão aqui.",
       "browseAuctions": "Ver leilões",
@@ -1710,7 +1905,13 @@
       "descriptionPlaceholder": "Descreva o que foi danificado e como estava embalado…",
       "policyNotice": "As reclamações podem ser rejeitadas se o item tiver sido embalado de forma insuficiente pelo vendedor. A BidRoom irá analisar o cumprimento das normas de embalagem antes de processar qualquer reembolso.",
       "submit": "Submeter Relatório de Dano"
-    }
+    },
+    "stripePaymentError": "Falha ao iniciar o pagamento. Tente novamente.",
+    "shippingRatesError": "Falha ao bloquear o método de envio. Tente novamente.",
+    "damageClaimUploadError": "Falha ao carregar a foto. Tente novamente.",
+    "damageClaimSubmitError": "Falha ao submeter a reclamação. Tente novamente.",
+    "returnError": "Falha ao submeter o pedido de devolução.",
+    "disputeError": "Falha ao submeter a disputa."
   },
   "returns": {
     "modal": {
@@ -1729,6 +1930,8 @@
   "disputes": {
     "title": "Disputas",
     "subtitle": "Gerencie suas disputas abertas e elegíveis.",
+    "errorLoading": "Falha ao carregar disputas.",
+    "submitError": "Falha ao submeter disputa.",
     "openNewDispute": "Abrir Nova Disputa",
     "eligibleToOpen": "Elegível para Abrir uma Disputa",
     "eligibleDesc": "Estas transações são elegíveis para disputa. Você pode abrir uma disputa se tiver um problema com o item recebido.",

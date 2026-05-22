@@ -71,7 +71,8 @@
       "Bash(node -e \"require\\('/Users/josecandido/Documents/BidRoom/backend/src/routes/listings.js'\\); console.log\\('listings.js OK'\\)\")",
       "Bash(node -e \"require\\('/Users/josecandido/Documents/BidRoom/backend/src/routes/blocks.js'\\); console.log\\('blocks.js OK'\\)\")",
       "Bash(node -e \"require\\('/Users/josecandido/Documents/BidRoom/backend/src/routes/bids.js'\\); console.log\\('bids.js OK'\\)\")",
-      "Bash(node -e \"require\\('/Users/josecandido/Documents/BidRoom/backend/src/routes/offers.js'\\); console.log\\('offers.js OK'\\)\")"
+      "Bash(node -e \"require\\('/Users/josecandido/Documents/BidRoom/backend/src/routes/offers.js'\\); console.log\\('offers.js OK'\\)\")",
+      "Bash(grep -v \"translate\\\\|getFieldError\\\\|this\\\\.error\\\\s*$\")"
     ]
   }
 }

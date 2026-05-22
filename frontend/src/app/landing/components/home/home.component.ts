@@ -1,6 +1,6 @@
 import { Component, OnDestroy, OnInit, AfterViewInit, inject, ElementRef, ViewChild, HostListener } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
-import { TranslateService } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { ListingsService, Listing } from '../../../shared/services/listings.service';
 import { ThemeService } from '../../../shared/services/theme.service';
 import { HeaderComponent } from '../../../shared/components/header/header.component';
@@ -9,7 +9,7 @@ import { BidroomLogoComponent } from '../../../shared/components/bidroom-logo/bi
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [RouterLink, HeaderComponent, BidroomLogoComponent],
+  imports: [RouterLink, TranslateModule, HeaderComponent, BidroomLogoComponent],
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.scss']
 })

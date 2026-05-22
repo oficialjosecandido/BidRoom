@@ -21,7 +21,8 @@
     },
     "search": {
       "placeholder": "Search auctions, items, sellers…",
-      "open": "Search"
+      "open": "Search",
+      "close": "Close search"
     },
     "menu": {
       "open": "Open menu",
@@ -56,11 +57,14 @@
       "hero": {
         "svgDarkTitle": "Decorative illustration — dark mode sardine and tiles",
         "svgLightTitle": "Decorative tile background — light mode",
-        "eyebrow": "Portugal · Launch 2026",
+        "eyebrow": "Portugal · Premium auctions",
         "title1": "High-value",
         "title2": "auctions,",
         "titleEm": "done right.",
+        "titleLine1": "Buy the",
+        "titleLine2": "extraordinary.",
         "subtitle": "The first Portuguese premium auction platform with real-time private rooms, verified reputation, and secure payments.",
+        "subtitleAlt": "Real-time auctions for watches, art, and unique pieces.",
         "ctaExplore": "Explore auctions",
         "ctaHow": "How it works",
         "liveNow": "Live now"
@@ -69,11 +73,19 @@
         "activeAuctions": "Active auctions",
         "volume": "Transaction volume",
         "satisfaction": "Buyer satisfaction",
-        "bidTime": "Average bid time"
+        "bidTime": "Average bid time",
+        "auctionsHeld": "Auctions held",
+        "transacted": "Transacted",
+        "completion": "Completion",
+        "buyerFee": "Buyer commission"
       },
       "section": {
         "featured": "Featured",
-        "ongoing": "Live auctions"
+        "ongoing": "Active auctions",
+        "liveNow": "Live now",
+        "viewAll": "View all",
+        "noActive": "No active auctions at the moment.",
+        "viewAllArrow": "View all auctions →"
       },
       "badges": {
         "live": "Live",
@@ -83,7 +95,10 @@
       "listing": {
         "currentBid": "Current bid",
         "minPrice": "Minimum price",
-        "offersCount": "3 offers"
+        "offersCount": "3 offers",
+        "highestOffer": "Highest offer",
+        "offers": "Offers",
+        "endsIn": "Ends in"
       },
       "listing1": {
         "title": "Patek Philippe Ref. 5711",
@@ -100,16 +115,46 @@
       "azulejoSection": "Portuguese inspiration · 16th-century tiles",
       "private": {
         "tag": "Exclusive feature",
+        "eyebrow": "Private Rooms",
         "title1": "Private",
         "title2": "auction rooms",
+        "titleLine1": "Exclusivity",
+        "titleLine2": "by invitation.",
         "body": "When the public auction ends, top bidders are invited to an exclusive room. A final 60-second race. Highest bid wins automatically.",
+        "bodyAlt": "After the public auction, the best bidders are invited to a private room. Only the chosen ones enter.",
         "b1": "The seller invites 2–5 registered bidders",
         "b2": "15 minutes to accept or decline the invite",
         "b3": "Each bid resets the 60-second timer",
         "b4": "Winner determined automatically",
         "visLabel": "Private room · Live",
         "visSub": "Room closes in",
-        "highestBid": "Highest bid"
+        "highestBid": "Highest bid",
+        "bidLabel": "Current bid",
+        "stat1Label": "Invited bidders",
+        "stat2Val": "60s",
+        "stat2Label": "Per bid",
+        "stat3Val": "Auto",
+        "stat3Label": "Automatic winner"
+      },
+      "how": {
+        "eyebrow": "How it works",
+        "titleLine1": "Simple",
+        "titleLine2": "from end to end.",
+        "step1Title": "Publish",
+        "step1Desc": "Auction or best offer. No listing fees. Ready in minutes.",
+        "step2Title": "Compete",
+        "step2Desc": "Real-time bidding. Private offers. The system decides automatically.",
+        "step3Title": "Receive securely",
+        "step3Desc": "Escrow payment. Funds released only after receipt confirmation."
+      },
+      "cta": {
+        "titleLine1": "The next auction",
+        "titleLine2": "is yours.",
+        "sub": "Register for free. Start bidding today.",
+        "createAccount": "Create free account",
+        "explore": "Explore auctions",
+        "alreadyHave": "Already have an account?",
+        "signIn": "Sign in"
       },
       "trust": {
         "eyebrow": "Trust & security",
@@ -142,21 +187,58 @@
         "privacy": "Privacy",
         "cookies": "Cookies",
         "contact": "Contact",
-        "copyright": "© 2026 BidRoom · All rights reserved · Lisbon, Portugal"
+        "copyright": "© 2026 BidRoom · All rights reserved · Lisbon, Portugal",
+        "howItWorks": "How it works",
+        "privateRooms": "Private Rooms",
+        "categories": "Categories",
+        "buyers": "Buyers",
+        "createAccount": "Create account",
+        "buyerGuide": "Buyer’s guide",
+        "securePayment": "Secure payment",
+        "disputes": "Disputes",
+        "sellers": "Sellers",
+        "publishListing": "Publish listing",
+        "sellerGuide": "Seller’s guide",
+        "commissions": "Commissions",
+        "payouts": "Payouts",
+        "privacyPolicy": "Privacy policy",
+        "termsShort": "Terms",
+        "privacyShort": "Privacy",
+        "allRights": "© 2026 BidRoom.pt · All rights reserved",
+        "madeIn": "Made in Portugal 🇵🇹"
       }
     }
   },
   "footer": {
-    "tagline": "Your premier auction marketplace for unique finds and valuable treasures.",
+    "tagline": "Portugal's premier auction marketplace.",
     "quickLinks": "Quick Links",
-    "howItWorks": "How It Works",
+    "howItWorks": "How it works",
     "contact": "Contact",
     "faq": "FAQ",
     "legal": "Legal",
-    "privacyPolicy": "Privacy Policy",
+    "privacyPolicy": "Privacy policy",
     "termsConditions": "Terms & Conditions",
     "connect": "Connect",
-    "copyright": "© 2024 BidRoom. All rights reserved."
+    "copyright": "© 2026 BidRoom.pt · All rights reserved · Made in Portugal 🇵🇹",
+    "platform": "Platform",
+    "buyers": "Buyers",
+    "sellers": "Sellers",
+    "activeAuctions": "Active auctions",
+    "categories": "Categories",
+    "createAccount": "Create account",
+    "buyerGuide": "Buyer's guide",
+    "securePayment": "Secure payment",
+    "disputes": "Disputes",
+    "publishListing": "Publish listing",
+    "sellerGuide": "Seller's guide",
+    "commissions": "Commissions",
+    "payouts": "Payouts",
+    "terms": "Terms of use",
+    "termsShort": "Terms",
+    "privacyShort": "Privacy",
+    "cookies": "Cookies",
+    "complaintsBook": "Complaints book",
+    "ral": "Consumer dispute resolution"
   },
   "home": {
     "hero": {
@@ -780,6 +862,15 @@
       "selecting": "Selecting…",
       "ineligible": "Verified account required"
     },
+    "platinumBidders": {
+      "title": "Select Platinum Bidders",
+      "subtitle": "Select up to 5 bidders to invite to the Private Room. These bidders will be able to continue bidding after the main auction ends.",
+      "backBtn": "Back to Dashboard",
+      "loading": "Loading bidders...",
+      "maxAlert": "You can select a maximum of 5 Platinum Bidders.",
+      "errorLoading": "Failed to load bidders.",
+      "errorSaving": "Failed to save selection."
+    },
     "privateRoomModal": {
       "title": "Create private room",
       "subtitle": "Choose between 2 and 5 bidders to invite. Only registered bidders can be invited. Invited bidders will receive a link to the private room; others will be notified they were not selected.",
@@ -965,7 +1056,9 @@
       "successTitle": "Email Verified!",
       "successDesc": "Your email has been verified. You can now sign in.",
       "errorTitle": "Verification Failed",
-      "goToLogin": "Go to Sign In"
+      "goToLogin": "Go to Sign In",
+      "invalidCode": "Invalid or missing verification code.",
+      "failedGeneric": "Email verification failed."
     },
     "checkEmail": {
       "title": "Check Your Email",
@@ -1184,7 +1277,94 @@
       "reviewPendingFrom": "Rate your transaction with {{name}} · {{role}}",
       "roleSeller": "Seller",
       "roleBuyer": "Buyer",
-      "reviewBtn": "Review"
+      "reviewBtn": "Review",
+      "accountSuspendedTitle": "Account Temporarily Restricted",
+      "accountSuspendedBody": "Your account has been temporarily restricted while a dispute is under review. You cannot create new listings, place bids, or start new transactions until the case is resolved. Any transactions initiated before the dispute will continue and can be completed as normal (e.g. payment, shipping, delivery).",
+      "accountClosedTitle": "Account Closed",
+      "accountClosedBody": "Your account has been permanently closed. Please contact support if you believe this is an error.",
+      "dsaTitle": "EU seller status review required",
+      "dsaBody": "Your selling activity this year may qualify as professional selling under EU DSA regulations (Article 29). You must confirm your seller status — professional sellers must display company information to buyers.",
+      "dsaSwitchPro": "Switch to professional",
+      "dsaRemainPrivate": "Remain private",
+      "dsaDismiss": "Dismiss for now",
+      "payoutBannerTitle": "Set up payouts to sell on BidRoom",
+      "payoutBannerBody": "Connect your bank account via Stripe so you can receive payments when your auctions end. Buyers won't be able to pay you until this is complete.",
+      "payoutBannerCta": "Set up payouts",
+      "payoutBannerDismiss": "Dismiss",
+      "checkoutError": "Failed to start checkout. Try again."
+    },
+    "myAccount": {
+      "title": "My Account",
+      "subtitle": "Manage your account settings and profile information",
+      "profileInfo": "Profile Information",
+      "notProvided": "Not provided",
+      "profilePhoto": "Profile photo",
+      "userId": "User ID",
+      "reviewScores": "Review Scores",
+      "reviewSingular": "review",
+      "reviewPlural": "reviews",
+      "scoresNote": "Scores are based on reviews from other users after completed transactions.",
+      "payoutAccount": "Seller Payout Account",
+      "checkingPayout": "Checking payout account status...",
+      "payoutStatus": "Payout status:",
+      "payoutActive": "Your payout account is active. Buyers can pay you directly — funds will be sent to your registered bank account.",
+      "chargesEnabled": "Charges enabled",
+      "enabled": "enabled",
+      "pending": "pending",
+      "updateBank": "Update bank account",
+      "requirementIssue": "There's an issue with your payout account details:",
+      "requirementHint": "Please update your details to fix these issues.",
+      "verifyingDetails": "Your details have been submitted and are being verified by Stripe. This usually takes a few minutes.",
+      "updateDetails": "Update details",
+      "simulateVerification": "⚡ Simulate verification",
+      "activating": "Activating…",
+      "setupDesc": "To receive payments from buyers, set up your payout account. No Stripe account needed — just fill in your details below.",
+      "feature1": "Enter your identity and bank details once",
+      "feature2": "Stripe processes payouts securely in the background",
+      "feature3": "Funds transferred directly to your bank account",
+      "setupBtn": "Set up payout account",
+      "dobTitle": "Date of birth",
+      "dobDay": "Day",
+      "dobMonth": "Month",
+      "dobYear": "Year",
+      "addressTitle": "Address",
+      "streetAddress": "Street address",
+      "city": "City",
+      "postalCode": "Postal code",
+      "country": "Country",
+      "bankTitle": "Bank account (IBAN)",
+      "ibanLabel": "IBAN",
+      "ibanHint": "Your International Bank Account Number. Spaces are ignored.",
+      "tosText": "I authorise BidRoom to submit my information to Stripe for identity verification and payout processing, and I accept the",
+      "tosLink": "Stripe Connected Account Agreement",
+      "submitBtn": "Save payout account",
+      "submitting": "Submitting…",
+      "cancelBtn": "Cancel",
+      "identityTitle": "Identity Verification",
+      "checkingVerification": "Checking verification status…",
+      "verificationStatus": "Verification status:",
+      "kycReturnBanner": "Your verification has been submitted. We'll update your status once the review is complete — this usually takes a few minutes.",
+      "kycApproved": "Your identity has been verified. You can bid on and list items above $5,000.",
+      "kycVerifiedOn": "Verified on",
+      "kycPending": "Your identity verification is in progress. This usually takes a few minutes. You will be notified once it's complete.",
+      "kycRejectedBase": "Your previous verification was not approved.",
+      "kycRejectedReason": "Reason:",
+      "kycRejectedTryAgain": "Please try again with a valid government-issued photo ID and a clear selfie.",
+      "kycTryAgain": "Try Again",
+      "kycAmlDesc": "Transactions of $5,000 or more require identity verification to comply with anti-money laundering (AML) regulations.",
+      "kycDoc1": "Government-issued photo ID (passport, driver's licence, or national ID)",
+      "kycDoc2": "A selfie with liveness check",
+      "kycDoc3": "Handled securely by Stripe Identity — your data is not stored on BidRoom",
+      "kycStart": "Start Verification",
+      "accountSettings": "Account Settings",
+      "comingSoon": "More account settings will be available here soon.",
+      "connectLoading": "Checking connection status...",
+      "connectError": "Something went wrong. Please check your details and try again.",
+      "payoutNowActive": "Your payout account is now active!",
+      "detailsSubmitted": "Your details have been submitted. Stripe will verify them shortly — this usually takes a few minutes.",
+      "connectNotConnected": "Not connected",
+      "connectActive": "Active",
+      "connectPending": "Pending verification"
     },
     "role": {
       "toggleLabel": "Buyer or seller mode"
@@ -1208,6 +1388,7 @@
       "title": "My Bets",
       "subtitle": "All your bids and offers in one place. Expand any listing to see your bet history.",
       "loading": "Loading your bets...",
+      "errorLoading": "Failed to load your bets.",
       "tryAgain": "Try Again",
       "emptyTitle": "No bets yet",
       "emptyDesc": "You haven't placed any bids or offers yet. Browse listings and place your first bet!",
@@ -1403,12 +1584,24 @@
           "newBid": "New bid on your listing",
           "disputeUpdate": "Dispute update"
         }
-      }
+      },
+      "savePrefsError": "Failed to save preferences. Please try again.",
+      "connectError": "Something went wrong. Please check your details and try again.",
+      "payoutNowActive": "Your payout account is now active!",
+      "detailsSubmitted": "Your details have been submitted. Stripe will verify them shortly — this usually takes a few minutes.",
+      "testActivated": "Test account activated!",
+      "testActivationFailed": "Test activation failed.",
+      "connectNotConnected": "Not connected",
+      "connectActive": "Active",
+      "connectPending": "Pending verification"
     },
     "myAuctions": {
       "title": "My Listings",
       "subtitle": "Manage your listings as a seller and track platinum bidder invitations",
       "loading": "Loading your listings...",
+      "errorLoading": "Failed to load your listings.",
+      "relistSuccess": "Listing relisted successfully!",
+      "relistError": "Failed to relist listing.",
       "emptyTitle": "No Listings Yet",
       "emptyDesc": "You haven't created any listings yet. Start by creating your first listing!",
       "createFirst": "Create Your First Listing",
@@ -1478,12 +1671,14 @@
       "totalBids": "Total bids",
       "ends": "Ends",
       "emailOutbid": "Notify me when I'm outbid",
-      "viewListing": "View Listing"
+      "viewListing": "View Listing",
+      "errorLoading": "Failed to load your auctions."
     },
     "watchlist": {
       "title": "My Watchlist",
       "subtitle": "Items you've saved. Click through to view or bid.",
       "loading": "Loading your watchlist...",
+      "errorLoading": "Failed to load your watchlist.",
       "emptyTitle": "No items in your watchlist",
       "emptyDesc": "When you add items to your watchlist from a listing page, they'll appear here.",
       "browseAuctions": "Browse auctions",
@@ -1710,7 +1905,13 @@
       "descriptionPlaceholder": "Describe what was damaged and how it was packed…",
       "policyNotice": "Claims may be rejected if the item was insufficiently packaged by the seller. BidRoom will review packaging compliance before processing any refund.",
       "submit": "Submit Damage Report"
-    }
+    },
+    "stripePaymentError": "Failed to start payment. Please try again.",
+    "shippingRatesError": "Failed to lock shipping rate. Please try again.",
+    "damageClaimUploadError": "Failed to upload photo. Please try again.",
+    "damageClaimSubmitError": "Failed to submit claim. Please try again.",
+    "returnError": "Failed to submit return request.",
+    "disputeError": "Failed to submit dispute."
   },
   "returns": {
     "modal": {
@@ -1729,6 +1930,8 @@
   "disputes": {
     "title": "Disputes",
     "subtitle": "Manage your open and eligible disputes.",
+    "errorLoading": "Failed to load disputes.",
+    "submitError": "Failed to submit dispute.",
     "openNewDispute": "Open New Dispute",
     "eligibleToOpen": "Eligible to Open a Dispute",
     "eligibleDesc": "These transactions are eligible for a dispute. You can open a dispute if you have an issue with the item received.",

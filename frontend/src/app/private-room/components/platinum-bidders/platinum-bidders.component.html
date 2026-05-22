@@ -1,19 +1,17 @@
 <div class="platinum-bidders-container">
   <div class="header-section">
     <button class="back-btn" (click)="navigateToDashboard()">
-      ← Back to Dashboard
+      ← {{ 'listing.platinumBidders.backBtn' | translate }}
     </button>
-    <h1 class="page-title">Select Platinum Bidders</h1>
-    <p class="page-description">
-      Select up to 5 bidders to invite to the Private Room. These bidders will be able to continue bidding after the main auction ends.
-    </p>
+    <h1 class="page-title">{{ 'listing.platinumBidders.title' | translate }}</h1>
+    <p class="page-description">{{ 'listing.platinumBidders.subtitle' | translate }}</p>
   </div>
 
   <!-- Loading State -->
   @if (isLoading) {
 <div class="loading-state">
     <div class="spinner"></div>
-    <p>Loading bidders...</p>
+    <p>{{ 'listing.platinumBidders.loading' | translate }}</p>
   </div>
 }
 

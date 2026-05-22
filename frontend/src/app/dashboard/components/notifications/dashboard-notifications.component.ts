@@ -2,7 +2,7 @@ import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { NotificationService, Notification } from '../../../shared/services/notification.service';
 
 @Component({
@@ -15,6 +15,7 @@ import { NotificationService, Notification } from '../../../shared/services/noti
 export class DashboardNotificationsComponent implements OnInit, OnDestroy {
   private notificationService = inject(NotificationService);
   private router = inject(Router);
+  private translate = inject(TranslateService);
 
   notifications: Notification[] = [];
   unreadCount = 0;
@@ -56,7 +57,7 @@ export class DashboardNotificationsComponent implements OnInit, OnDestroy {
         this.notificationService.refreshUnreadCount();
       },
       error: () => {
-        this.error = 'Failed to load notifications';
+        this.error = this.translate.instant('dashboard.notifications.errorLoading');
         this.loading = false;
       }
     });

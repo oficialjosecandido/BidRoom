@@ -2,6 +2,7 @@
   display: inline-flex;
   align-items: center;
   line-height: 0;
+  flex-shrink: 0;
   --logo-gold: #c9a84c;
   --logo-text: #f0ede8;
   --logo-ghost-opacity: 0.25;
@@ -10,14 +11,23 @@
 :host-context(html[data-theme='light']) {
   --logo-gold: #8c6b1e;
   --logo-text: #1d1d1f;
-  --logo-ghost-opacity: 0.25;
+  --logo-ghost-opacity: 0.22;
 }
 
 .bidroom-logo {
+  display: block;
+  height: 100%;
   width: auto;
-  height: inherit;
   flex-shrink: 0;
-  font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+.bidroom-logo[data-variant='horizontal'][data-compact='true'] {
+  aspect-ratio: 168 / 40;
+  min-width: 140px;
+}
+
+.bidroom-logo[data-variant='horizontal']:not([data-compact]) {
+  aspect-ratio: 220 / 56;
 }
 
 .arc-ghost {
@@ -41,12 +51,14 @@
 
 .pt-suffix {
   fill: var(--logo-gold);
-  font-family: 'DM Mono', ui-monospace, monospace;
 }
 
-/* Static dash lengths per variant */
-.bidroom-logo[data-variant='horizontal'] .arc-fill {
+.bidroom-logo[data-variant='horizontal'] .arc-fill:not(.arc-fill--compact) {
   stroke-dasharray: 230 84;
+}
+
+.bidroom-logo[data-variant='horizontal'] .arc-fill--compact {
+  stroke-dasharray: 73 28;
 }
 
 .bidroom-logo[data-variant='vertical'] .arc-fill {
@@ -60,6 +72,11 @@
 @keyframes bidroom-arc-fill-h {
   from { stroke-dasharray: 0 314; }
   to { stroke-dasharray: 230 84; }
+}
+
+@keyframes bidroom-arc-fill-h-compact {
+  from { stroke-dasharray: 0 101; }
+  to { stroke-dasharray: 73 28; }
 }
 
 @keyframes bidroom-arc-fill-v {
@@ -82,8 +99,12 @@
   50% { opacity: 0.5; }
 }
 
-.bidroom-logo--animated[data-variant='horizontal'] .arc-fill {
+.bidroom-logo--animated[data-variant='horizontal']:not(.bidroom-logo--compact) .arc-fill {
   animation: bidroom-arc-fill-h 1.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.bidroom-logo--animated.bidroom-logo--compact[data-variant='horizontal'] .arc-fill {
+  animation: bidroom-arc-fill-h-compact 1.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
 .bidroom-logo--animated[data-variant='vertical'] .arc-fill {

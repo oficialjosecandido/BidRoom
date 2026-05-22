@@ -2,7 +2,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import Swal from 'sweetalert2';
 import { TransactionsService, Transaction, TransactionStatus, DamageClaim } from '../../../shared/services/transactions.service';
 import {
@@ -36,6 +36,7 @@ export class DashboardTransactionsComponent implements OnInit {
   private stripeConnect = inject(StripeConnectService);
   private shippingService = inject(ShippingService);
   private route = inject(ActivatedRoute);
+  private translate = inject(TranslateService);
 
   transactions: Transaction[] = [];
   isLoading = true;
@@ -222,7 +223,7 @@ export class DashboardTransactionsComponent implements OnInit {
         this.scrollToTransactionFromFragment();
       },
       error: (err) => {
-        this.error = err?.error?.message || err?.message || 'Failed to load transactions';
+        this.error = err?.error?.message || err?.message || this.translate.instant('transactions.errorLoading');
         this.isLoading = false;
       }
     });
@@ -430,7 +431,7 @@ export class DashboardTransactionsComponent implements OnInit {
           this.stripePaymentError = `Payment unavailable: the seller has not connected their Stripe account yet. ` +
             `Please contact the seller (${t.seller?.firstName} ${t.seller?.lastName}) or wait for them to complete their payment setup.`;
         } else {
-          this.stripePaymentError = err?.error?.message || 'Failed to start payment. Please try again.';
+          this.stripePaymentError = err?.error?.message || this.translate.instant('transactions.stripePaymentError');
         }
       }
     });
@@ -549,7 +550,7 @@ export class DashboardTransactionsComponent implements OnInit {
       },
       error: (err) => {
         this.lockingRateTxId = null;
-        this.shippingRatesError = err?.error?.message || 'Failed to lock shipping rate. Please try again.';
+        this.shippingRatesError = err?.error?.message || this.translate.instant('transactions.shippingRatesError');
       }
     });
   }
@@ -1000,7 +1001,7 @@ export class DashboardTransactionsComponent implements OnInit {
         }
       },
       error: () => {
-        this.damageClaimError = 'Failed to upload photo. Please try again.';
+        this.damageClaimError = this.translate.instant('transactions.damageClaimUploadError');
         if (type === 'damage') this.damagePhotoUploading = false;
         else this.packagingPhotoUploading = false;
       }
@@ -1041,7 +1042,7 @@ export class DashboardTransactionsComponent implements OnInit {
         successToast.fire({ title: 'Damage claim submitted. We\'ll review it shortly.' });
       },
       error: (err) => {
-        this.damageClaimError = err?.error?.message || err?.error?.error || 'Failed to submit claim. Please try again.';
+        this.damageClaimError = err?.error?.message || err?.error?.error || this.translate.instant('transactions.damageClaimSubmitError');
         this.damageClaimSubmitting = false;
       }
     });
@@ -1105,7 +1106,7 @@ export class DashboardTransactionsComponent implements OnInit {
         successToast.fire({ title: 'Return request submitted. The seller has 48 hours to respond.' });
       },
       error: (err) => {
-        this.returnError = err?.error?.message || 'Failed to submit return request.';
+        this.returnError = err?.error?.message || this.translate.instant('transactions.returnError');
         this.returnSubmitting = false;
       }
     });
@@ -1219,7 +1220,7 @@ export class DashboardTransactionsComponent implements OnInit {
         },
         error: (err) => {
           this.reviewSubmitting = false;
-          this.reviewError = err?.error?.message || 'Failed to submit review.';
+          this.reviewError = err?.error?.message || this.translate.instant('transactions.reviewError');
         }
       });
   }
@@ -1314,7 +1315,7 @@ export class DashboardTransactionsComponent implements OnInit {
           this.loadTransactions();
         },
         error: (err) => {
-          this.disputeError = err?.error?.message || 'Failed to submit dispute.';
+          this.disputeError = err?.error?.message || this.translate.instant('transactions.disputeError');
           this.disputeSubmitting = false;
         }
       });

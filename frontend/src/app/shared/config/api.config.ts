@@ -8,21 +8,31 @@ import { environment } from '@env';
 
 export const API_CONFIG = {
   getApiUrl(): string {
-    const runtimeUrl = typeof window !== 'undefined' && (window as any).APP_CONFIG?.API_URL;
-    if (runtimeUrl) return runtimeUrl;
-
     const hostname = typeof window !== 'undefined' ? window.location.hostname : 'localhost';
+    const isLocal =
+      hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '0.0.0.0';
 
-    if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '0.0.0.0') {
-      return 'https://bidroom-backend-dev.azurewebsites.net/api';
+    // ng serve + proxy.conf.json: same-origin /api (avoids CORS)
+    if (isLocal) {
+      return '/api';
     }
 
-    return environment.defaultApiBaseUrl;
+    const runtimeUrl = typeof window !== 'undefined' && (window as any).APP_CONFIG?.API_URL;
+    if (runtimeUrl) {
+      return runtimeUrl.endsWith('/api') ? runtimeUrl : `${runtimeUrl.replace(/\/$/, '')}/api`;
+    }
+
+    const base = environment.defaultApiBaseUrl.replace(/\/$/, '');
+    return base.endsWith('/api') ? base : `${base}/api`;
   },
 
   /** Origin of the backend (no /api) — for Socket.IO */
   getBackendBaseUrl(): string {
-    return this.getApiUrl().replace(/\/api\/?$/, '');
+    const api = this.getApiUrl();
+    if (api.startsWith('/')) {
+      return typeof window !== 'undefined' ? window.location.origin : 'http://localhost:4200';
+    }
+    return api.replace(/\/api\/?$/, '');
   },
 
   getStripePublishableKey(): string {

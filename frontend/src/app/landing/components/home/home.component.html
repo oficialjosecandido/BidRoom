@@ -30,11 +30,11 @@
               <div class="hc-title">{{ listing.title }}</div>
               <div class="hc-row">
                 <div>
-                  <div class="hc-bid-l">{{ listing.auctionFormat === 'best-offer' ? 'Oferta mais alta' : 'Lance actual' }}</div>
+                  <div class="hc-bid-l">{{ listing.auctionFormat === 'best-offer' ? ('landing.home.listing.highestOffer' | translate) : ('landing.home.listing.currentBid' | translate) }}</div>
                   <div class="hc-bid">{{ listingPrice(listing) }}</div>
                 </div>
                 <div class="hc-time">
-                  <div class="hc-time-l">{{ listing.auctionFormat === 'best-offer' ? 'Ofertas' : 'Termina em' }}</div>
+                  <div class="hc-time-l">{{ listing.auctionFormat === 'best-offer' ? ('landing.home.listing.offers' | translate) : ('landing.home.listing.endsIn' | translate) }}</div>
                   <div class="hc-time-v">{{ timeRemaining(listing) }}</div>
                 </div>
               </div>
@@ -51,12 +51,12 @@
   }
 
   <div class="hero-text">
-    <div class="hero-tag"><span class="hc-dot"></span>Portugal · Leilões premium</div>
-    <h1 class="hero-title">Compre o<br><strong>extraordinário.</strong></h1>
-    <p class="hero-sub">Leilões em tempo real para relógios, arte e peças únicas.</p>
+    <div class="hero-tag"><span class="hc-dot"></span>{{ 'landing.home.hero.eyebrow' | translate }}</div>
+    <h1 class="hero-title">{{ 'landing.home.hero.titleLine1' | translate }}<br><strong>{{ 'landing.home.hero.titleLine2' | translate }}</strong></h1>
+    <p class="hero-sub">{{ 'landing.home.hero.subtitleAlt' | translate }}</p>
     <div class="hero-cta">
-      <a routerLink="/listing/list" class="btn-hp">Explorar leilões</a>
-      <a href="#como" class="btn-hg">Como funciona</a>
+      <a routerLink="/listing/list" class="btn-hp">{{ 'landing.home.hero.ctaExplore' | translate }}</a>
+      <a href="#como" class="btn-hg">{{ 'landing.home.hero.ctaHow' | translate }}</a>
     </div>
   </div>
 
@@ -73,19 +73,19 @@
     <div class="numbers-inner">
       <div class="num">
         <span class="num-val">4.200+</span>
-        <span class="num-label">Leilões realizados</span>
+        <span class="num-label">{{ 'landing.home.stats.auctionsHeld' | translate }}</span>
       </div>
       <div class="num">
         <span class="num-val">€ 2.8M</span>
-        <span class="num-label">Transacionado</span>
+        <span class="num-label">{{ 'landing.home.stats.transacted' | translate }}</span>
       </div>
       <div class="num">
         <span class="num-val">98%</span>
-        <span class="num-label">Conclusão</span>
+        <span class="num-label">{{ 'landing.home.stats.completion' | translate }}</span>
       </div>
       <div class="num">
         <span class="num-val">0%</span>
-        <span class="num-label">Comissão para compradores</span>
+        <span class="num-label">{{ 'landing.home.stats.buyerFee' | translate }}</span>
       </div>
     </div>
   </div>
@@ -96,11 +96,11 @@
   <div class="wrap">
     <div class="sh">
       <div class="sh-left">
-        <div class="sec-eye"><span class="eye-dot"></span>Ao vivo agora</div>
-        <h2 class="sec-title"><strong>Leilões</strong> activos</h2>
+        <div class="sec-eye"><span class="eye-dot"></span>{{ 'landing.home.section.liveNow' | translate }}</div>
+        <h2 class="sec-title"><strong>{{ 'landing.home.section.ongoing' | translate }}</strong></h2>
       </div>
       <a routerLink="/listing/list" class="see-all">
-        Ver todos
+        {{ 'landing.home.section.viewAll' | translate }}
         <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5">
           <path d="M1 6h10M7 2l4 4-4 4"/>
         </svg>
@@ -126,11 +126,11 @@
               <div class="lc-title">{{ listing.title }}</div>
               <div class="lc-foot">
                 <div>
-                  <div class="lc-pl">{{ listing.auctionFormat === 'best-offer' ? 'Oferta mais alta' : 'Lance actual' }}</div>
+                  <div class="lc-pl">{{ listing.auctionFormat === 'best-offer' ? ('landing.home.listing.highestOffer' | translate) : ('landing.home.listing.currentBid' | translate) }}</div>
                   <div class="lc-price" [class.g]="listing.auctionFormat !== 'best-offer'">{{ listingPrice(listing) }}</div>
                 </div>
                 <div>
-                  <div class="lc-ml">{{ listing.auctionFormat === 'best-offer' ? 'Ofertas' : 'Termina em' }}</div>
+                  <div class="lc-ml">{{ listing.auctionFormat === 'best-offer' ? ('landing.home.listing.offers' | translate) : ('landing.home.listing.endsIn' | translate) }}</div>
                   <div class="lc-mv">{{ timeRemaining(listing) }}</div>
                 </div>
               </div>
@@ -140,8 +140,8 @@
       </div>
     } @else {
       <div style="text-align:center;padding:64px 0;color:var(--sub);font-size:14px">
-        Sem leilões activos de momento.
-        <br><a routerLink="/listing/list" style="color:var(--gold);margin-top:8px;display:inline-block">Ver todos os leilões →</a>
+        {{ 'landing.home.section.noActive' | translate }}
+        <br><a routerLink="/listing/list" style="color:var(--gold);margin-top:8px;display:inline-block">{{ 'landing.home.section.viewAllArrow' | translate }}</a>
       </div>
     }
   </div>
@@ -150,15 +150,15 @@
 <!-- PRIVATE ROOMS -->
 <section id="salas" class="feature">
   <div class="wrap">
-    <div class="feature-eye">Salas Privadas</div>
-    <h2 class="feature-title">Exclusividade<br><strong>por convite.</strong></h2>
-    <p class="feature-sub">Após o leilão público, os melhores licitantes são convidados para uma sala privada. Só os escolhidos entram.</p>
+    <div class="feature-eye">{{ 'landing.home.private.eyebrow' | translate }}</div>
+    <h2 class="feature-title">{{ 'landing.home.private.titleLine1' | translate }}<br><strong>{{ 'landing.home.private.titleLine2' | translate }}</strong></h2>
+    <p class="feature-sub">{{ 'landing.home.private.bodyAlt' | translate }}</p>
 
     <div class="rv-wrap">
       <div class="rv">
         <div class="rv-ring"></div>
         <div class="rv-c">
-          <span class="rv-cl">Lance actual</span>
+          <span class="rv-cl">{{ 'landing.home.private.bidLabel' | translate }}</span>
           <span class="rv-cb">{{ rvBid }}</span>
           <span class="rv-ct">{{ rvTimer }}</span>
         </div>
@@ -171,9 +171,9 @@
     </div>
 
     <div class="feat-bullets">
-      <div class="fb"><span class="fb-val">2–5</span><span class="fb-label">Licitantes convidados</span></div>
-      <div class="fb"><span class="fb-val">60s</span><span class="fb-label">Por lance</span></div>
-      <div class="fb"><span class="fb-val">Auto</span><span class="fb-label">Vencedor automático</span></div>
+      <div class="fb"><span class="fb-val">2–5</span><span class="fb-label">{{ 'landing.home.private.stat1Label' | translate }}</span></div>
+      <div class="fb"><span class="fb-val">{{ 'landing.home.private.stat2Val' | translate }}</span><span class="fb-label">{{ 'landing.home.private.stat2Label' | translate }}</span></div>
+      <div class="fb"><span class="fb-val">{{ 'landing.home.private.stat3Val' | translate }}</span><span class="fb-label">{{ 'landing.home.private.stat3Label' | translate }}</span></div>
     </div>
   </div>
 </section>
@@ -182,24 +182,24 @@
 <section id="como" class="pillars">
   <div class="wrap">
     <div style="text-align:center;margin-bottom:56px">
-      <div class="sec-eye" style="justify-content:center">Como funciona</div>
-      <h2 class="sec-title" style="text-align:center"><strong>Simples</strong> de ponta a ponta.</h2>
+      <div class="sec-eye" style="justify-content:center">{{ 'landing.home.how.eyebrow' | translate }}</div>
+      <h2 class="sec-title" style="text-align:center"><strong>{{ 'landing.home.how.titleLine1' | translate }}</strong> {{ 'landing.home.how.titleLine2' | translate }}</h2>
     </div>
     <div class="pillars-grid">
       <div class="pillar">
         <span class="pillar-num">01</span>
-        <div class="pillar-title">Publique</div>
-        <p class="pillar-desc">Leilão ou melhor oferta. Sem taxas de publicação. Pronto em minutos.</p>
+        <div class="pillar-title">{{ 'landing.home.how.step1Title' | translate }}</div>
+        <p class="pillar-desc">{{ 'landing.home.how.step1Desc' | translate }}</p>
       </div>
       <div class="pillar">
         <span class="pillar-num">02</span>
-        <div class="pillar-title">Concorra</div>
-        <p class="pillar-desc">Licitações em tempo real. Ofertas privadas. O sistema decide automaticamente.</p>
+        <div class="pillar-title">{{ 'landing.home.how.step2Title' | translate }}</div>
+        <p class="pillar-desc">{{ 'landing.home.how.step2Desc' | translate }}</p>
       </div>
       <div class="pillar">
         <span class="pillar-num">03</span>
-        <div class="pillar-title">Receba com segurança</div>
-        <p class="pillar-desc">Pagamento em custódia. Fundos só libertados após confirmação de recepção.</p>
+        <div class="pillar-title">{{ 'landing.home.how.step3Title' | translate }}</div>
+        <p class="pillar-desc">{{ 'landing.home.how.step3Desc' | translate }}</p>
       </div>
     </div>
   </div>
@@ -208,13 +208,13 @@
 <!-- CTA -->
 <section class="cta">
   <div class="wrap">
-    <h2 class="cta-title">O próximo leilão<br><strong>é o seu.</strong></h2>
-    <p class="cta-sub">Registe-se gratuitamente. Comece a licitar hoje.</p>
+    <h2 class="cta-title">{{ 'landing.home.cta.titleLine1' | translate }}<br><strong>{{ 'landing.home.cta.titleLine2' | translate }}</strong></h2>
+    <p class="cta-sub">{{ 'landing.home.cta.sub' | translate }}</p>
     <div class="hero-cta">
-      <a routerLink="/auth/signup" class="btn-hp" style="font-size:15px;padding:14px 32px">Criar conta gratuita</a>
-      <a routerLink="/listing/list" class="btn-hg" style="font-size:15px;padding:14px 24px">Explorar leilões</a>
+      <a routerLink="/auth/signup" class="btn-hp" style="font-size:15px;padding:14px 32px">{{ 'landing.home.cta.createAccount' | translate }}</a>
+      <a routerLink="/listing/list" class="btn-hg" style="font-size:15px;padding:14px 24px">{{ 'landing.home.cta.explore' | translate }}</a>
     </div>
-    <p class="cta-note">Já tem conta? <a routerLink="/auth/login">Entrar</a></p>
+    <p class="cta-note">{{ 'landing.home.cta.alreadyHave' | translate }} <a routerLink="/auth/login">{{ 'landing.home.cta.signIn' | translate }}</a></p>
   </div>
 </section>
 
@@ -222,42 +222,42 @@
 <footer>
   <div class="wrap" style="width:100%">
     <div class="ft-brand"><app-bidroom-logo [height]="36" /></div>
-    <p class="ft-tagline">O marketplace de leilões premium de Portugal.</p>
+    <p class="ft-tagline">{{ 'landing.home.footer.tagline' | translate }}</p>
     <div class="ft-divider"></div>
     <div class="ft-cols">
       <div>
-        <div class="ft-col-title">Plataforma</div>
-        <a routerLink="/landing/how-it-works" class="ft-col-link">Como funciona</a>
-        <a href="#salas" class="ft-col-link">Salas Privadas</a>
-        <a routerLink="/listing/list" class="ft-col-link">Leilões activos</a>
-        <a routerLink="/listing/list" class="ft-col-link">Categorias</a>
+        <div class="ft-col-title">{{ 'landing.home.footer.platform' | translate }}</div>
+        <a routerLink="/landing/how-it-works" class="ft-col-link">{{ 'landing.home.footer.howItWorks' | translate }}</a>
+        <a href="#salas" class="ft-col-link">{{ 'landing.home.footer.privateRooms' | translate }}</a>
+        <a routerLink="/listing/list" class="ft-col-link">{{ 'landing.home.footer.activeAuctions' | translate }}</a>
+        <a routerLink="/listing/list" class="ft-col-link">{{ 'landing.home.footer.categories' | translate }}</a>
       </div>
       <div>
-        <div class="ft-col-title">Compradores</div>
-        <a routerLink="/auth/signup" class="ft-col-link">Criar conta</a>
-        <a routerLink="/landing/how-it-works" class="ft-col-link">Guia do comprador</a>
-        <a routerLink="/landing/how-it-works" class="ft-col-link">Pagamento seguro</a>
-        <a routerLink="/landing/contact" class="ft-col-link">Disputas</a>
+        <div class="ft-col-title">{{ 'landing.home.footer.buyers' | translate }}</div>
+        <a routerLink="/auth/signup" class="ft-col-link">{{ 'landing.home.footer.createAccount' | translate }}</a>
+        <a routerLink="/landing/how-it-works" class="ft-col-link">{{ 'landing.home.footer.buyerGuide' | translate }}</a>
+        <a routerLink="/landing/how-it-works" class="ft-col-link">{{ 'landing.home.footer.securePayment' | translate }}</a>
+        <a routerLink="/landing/contact" class="ft-col-link">{{ 'landing.home.footer.disputes' | translate }}</a>
       </div>
       <div>
-        <div class="ft-col-title">Vendedores</div>
-        <a routerLink="/listing/add" class="ft-col-link">Publicar anúncio</a>
-        <a routerLink="/landing/how-it-works" class="ft-col-link">Guia do vendedor</a>
-        <a routerLink="/landing/how-it-works" class="ft-col-link">Comissões</a>
-        <a routerLink="/dashboard/home" class="ft-col-link">Payouts</a>
+        <div class="ft-col-title">{{ 'landing.home.footer.sellers' | translate }}</div>
+        <a routerLink="/listing/add" class="ft-col-link">{{ 'landing.home.footer.publishListing' | translate }}</a>
+        <a routerLink="/landing/how-it-works" class="ft-col-link">{{ 'landing.home.footer.sellerGuide' | translate }}</a>
+        <a routerLink="/landing/how-it-works" class="ft-col-link">{{ 'landing.home.footer.commissions' | translate }}</a>
+        <a routerLink="/dashboard/home" class="ft-col-link">{{ 'landing.home.footer.payouts' | translate }}</a>
       </div>
       <div>
-        <div class="ft-col-title">Legal</div>
-        <a routerLink="/landing/terms-conditions" class="ft-col-link">Termos de utilização</a>
-        <a routerLink="/landing/privacy-policy" class="ft-col-link">Política de privacidade</a>
-        <a routerLink="/landing/cookies" class="ft-col-link">Cookies</a>
-        <a routerLink="/landing/contact" class="ft-col-link">Contacto</a>
+        <div class="ft-col-title">{{ 'landing.home.footer.legal' | translate }}</div>
+        <a routerLink="/landing/terms-conditions" class="ft-col-link">{{ 'landing.home.footer.terms' | translate }}</a>
+        <a routerLink="/landing/privacy-policy" class="ft-col-link">{{ 'landing.home.footer.privacyPolicy' | translate }}</a>
+        <a routerLink="/landing/cookies" class="ft-col-link">{{ 'landing.home.footer.cookies' | translate }}</a>
+        <a routerLink="/landing/contact" class="ft-col-link">{{ 'landing.home.footer.contact' | translate }}</a>
       </div>
     </div>
     <div class="ft-divider"></div>
     <div class="ft-bottom">
-      <span class="ft-copy">© 2026 BidRoom.pt · Todos os direitos reservados</span>
-      <span class="ft-copy">Feito em Portugal 🇵🇹</span>
+      <span class="ft-copy">{{ 'landing.home.footer.allRights' | translate }}</span>
+      <span class="ft-copy">{{ 'landing.home.footer.madeIn' | translate }}</span>
     </div>
   </div>
 </footer>

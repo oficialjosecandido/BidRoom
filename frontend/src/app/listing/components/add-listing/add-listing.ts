@@ -869,7 +869,8 @@ export class AddListing implements OnInit, OnDestroy {
         this.kycService.openKycGate(error.error.kycStatus || 'none');
         return;
       }
-      this.errorMessage = error.message || error.error?.message || 'Failed to create listing. Please try again.';
+      const apiErr = error?.error?.error || error?.error?.message;
+      this.errorMessage = apiErr || error.message || 'Failed to create listing. Please try again.';
     }
   }
 

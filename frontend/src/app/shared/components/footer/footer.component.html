@@ -3,37 +3,37 @@
     <div class="ft-brand">
       <app-bidroom-logo [height]="36" />
     </div>
-    <p class="ft-tagline">O marketplace de leilões premium de Portugal.</p>
+    <p class="ft-tagline">{{ 'footer.tagline' | translate }}</p>
     <div class="ft-divider"></div>
     <div class="ft-cols">
       <div>
-        <div class="ft-col-title">Plataforma</div>
-        <a routerLink="/landing/how-it-works" class="ft-col-link">Como funciona</a>
-        <a routerLink="/listing/list" class="ft-col-link">Leilões activos</a>
-        <a routerLink="/listing/list" class="ft-col-link">Categorias</a>
-        <a routerLink="/landing/contact" class="ft-col-link">Contacto</a>
+        <div class="ft-col-title">{{ 'footer.platform' | translate }}</div>
+        <a routerLink="/landing/how-it-works" class="ft-col-link">{{ 'footer.howItWorks' | translate }}</a>
+        <a routerLink="/listing/list" class="ft-col-link">{{ 'footer.activeAuctions' | translate }}</a>
+        <a routerLink="/listing/list" class="ft-col-link">{{ 'footer.categories' | translate }}</a>
+        <a routerLink="/landing/contact" class="ft-col-link">{{ 'footer.contact' | translate }}</a>
       </div>
       <div>
-        <div class="ft-col-title">Compradores</div>
-        <a routerLink="/auth/signup" class="ft-col-link">Criar conta</a>
-        <a routerLink="/landing/how-it-works" class="ft-col-link">Guia do comprador</a>
-        <a routerLink="/landing/how-it-works" class="ft-col-link">Pagamento seguro</a>
-        <a routerLink="/landing/contact" class="ft-col-link">Disputas</a>
+        <div class="ft-col-title">{{ 'footer.buyers' | translate }}</div>
+        <a routerLink="/auth/signup" class="ft-col-link">{{ 'footer.createAccount' | translate }}</a>
+        <a routerLink="/landing/how-it-works" class="ft-col-link">{{ 'footer.buyerGuide' | translate }}</a>
+        <a routerLink="/landing/how-it-works" class="ft-col-link">{{ 'footer.securePayment' | translate }}</a>
+        <a routerLink="/landing/contact" class="ft-col-link">{{ 'footer.disputes' | translate }}</a>
       </div>
       <div>
-        <div class="ft-col-title">Vendedores</div>
-        <a routerLink="/listing/add" class="ft-col-link">Publicar anúncio</a>
-        <a routerLink="/landing/how-it-works" class="ft-col-link">Guia do vendedor</a>
-        <a routerLink="/landing/how-it-works" class="ft-col-link">Comissões</a>
-        <a routerLink="/dashboard/home" class="ft-col-link">Payouts</a>
+        <div class="ft-col-title">{{ 'footer.sellers' | translate }}</div>
+        <a routerLink="/listing/add" class="ft-col-link">{{ 'footer.publishListing' | translate }}</a>
+        <a routerLink="/landing/how-it-works" class="ft-col-link">{{ 'footer.sellerGuide' | translate }}</a>
+        <a routerLink="/landing/how-it-works" class="ft-col-link">{{ 'footer.commissions' | translate }}</a>
+        <a routerLink="/dashboard/home" class="ft-col-link">{{ 'footer.payouts' | translate }}</a>
       </div>
       <div>
-        <div class="ft-col-title">Legal</div>
-        <a routerLink="/landing/terms-conditions" class="ft-col-link">Termos de utilização</a>
-        <a routerLink="/landing/privacy-policy" class="ft-col-link">Política de privacidade</a>
-        <a routerLink="/landing/cookies" class="ft-col-link">Cookies</a>
-        <a href="https://www.livroreclamacoes.pt" target="_blank" rel="noopener noreferrer" class="ft-col-link ft-ral-link">Livro de Reclamações</a>
-        <a href="https://www.consumidor.gov.pt" target="_blank" rel="noopener noreferrer" class="ft-col-link">RAL</a>
+        <div class="ft-col-title">{{ 'footer.legal' | translate }}</div>
+        <a routerLink="/landing/terms-conditions" class="ft-col-link">{{ 'footer.terms' | translate }}</a>
+        <a routerLink="/landing/privacy-policy" class="ft-col-link">{{ 'footer.privacyPolicy' | translate }}</a>
+        <a routerLink="/landing/cookies" class="ft-col-link">{{ 'footer.cookies' | translate }}</a>
+        <a href="https://www.livroreclamacoes.pt" target="_blank" rel="noopener noreferrer" class="ft-col-link ft-ral-link">{{ 'footer.complaintsBook' | translate }}</a>
+        <a href="https://www.consumidor.gov.pt" target="_blank" rel="noopener noreferrer" class="ft-col-link">{{ 'footer.ral' | translate }}</a>
       </div>
     </div>
     <div class="ft-divider" style="margin-bottom:0"></div>
@@ -41,13 +41,13 @@
   <div class="ft-legal-bar">
     <div class="ft-wrap">
       <div class="ft-legal-inner">
-        <span class="ft-copy">© 2026 BidRoom.pt · Todos os direitos reservados · Feito em Portugal 🇵🇹</span>
+        <span class="ft-copy">{{ 'footer.copyright' | translate }}</span>
         <div class="ft-legal-links">
-          <a routerLink="/landing/terms-conditions" class="ft-legal-link">Termos</a>
-          <a routerLink="/landing/privacy-policy" class="ft-legal-link">Privacidade</a>
-          <a routerLink="/landing/cookies" class="ft-legal-link">Cookies</a>
-          <a href="https://www.livroreclamacoes.pt" target="_blank" rel="noopener noreferrer" class="ft-legal-link ft-ral-link">Livro de Reclamações</a>
-          <a href="https://www.consumidor.gov.pt" target="_blank" rel="noopener noreferrer" class="ft-legal-link">RAL</a>
+          <a routerLink="/landing/terms-conditions" class="ft-legal-link">{{ 'footer.termsShort' | translate }}</a>
+          <a routerLink="/landing/privacy-policy" class="ft-legal-link">{{ 'footer.privacyShort' | translate }}</a>
+          <a routerLink="/landing/cookies" class="ft-legal-link">{{ 'footer.cookies' | translate }}</a>
+          <a href="https://www.livroreclamacoes.pt" target="_blank" rel="noopener noreferrer" class="ft-legal-link ft-ral-link">{{ 'footer.complaintsBook' | translate }}</a>
+          <a href="https://www.consumidor.gov.pt" target="_blank" rel="noopener noreferrer" class="ft-legal-link">{{ 'footer.ral' | translate }}</a>
         </div>
       </div>
     </div>

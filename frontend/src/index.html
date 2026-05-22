@@ -35,7 +35,9 @@
   -->
   <script>
     window.APP_CONFIG = {
-      API_URL: 'https://bidroom-backend-dev.azurewebsites.net/api',
+      /** Same-origin via proxy.conf.json (ng serve) — avoids CORS from localhost:4200 */
+      API_URL: '/api',
+      // API_URL: 'https://bidroom-backend-dev.azurewebsites.net/api',
       // API_URL: 'http://localhost:3000/api',
       STRIPE_PUBLISHABLE_KEY: 'pk_test_51TI5X806hw2O8NlNioZFt34bFn38uQPhm4hayUKZtrPf41BWH4xxdjiox9gNlMpSSHdUfCYtAM5FNX1UF3KyhNuP00Vqz8RtvH'
     };

@@ -433,7 +433,7 @@ export class DashboardHomeComponent implements OnInit, OnDestroy {
       },
       error: (err) => {
         this.balanceModalSubmitting = false;
-        this.balanceModalError = err?.error?.message || 'Failed to start checkout. Try again.';
+        this.balanceModalError = err?.error?.message || this.translate.instant('dashboard.home.checkoutError');
       }
     });
   }
@@ -534,7 +534,7 @@ export class DashboardHomeComponent implements OnInit, OnDestroy {
       },
       error: (err) => {
         this.reviewSubmitting = false;
-        this.reviewError = err?.error?.message || 'Failed to submit review.';
+        this.reviewError = err?.error?.message || this.translate.instant('dashboard.home.reviewError');
       }
     });
   }
@@ -579,7 +579,7 @@ export class DashboardHomeComponent implements OnInit, OnDestroy {
         this.setupRealTimeUpdates(this.activeListings);
       },
       error: (err) => {
-        this.error = err?.message || 'Failed to load your listings';
+        this.error = err?.message || this.translate.instant('dashboard.home.errorLoading');
         this.isLoading = false;
       }
     });

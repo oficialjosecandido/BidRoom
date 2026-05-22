@@ -1,0 +1,15 @@
+{
+  "/api": {
+    "target": "https://bidroom-backend-dev.azurewebsites.net",
+    "secure": true,
+    "changeOrigin": true,
+    "logLevel": "warn"
+  },
+  "/socket.io": {
+    "target": "https://bidroom-backend-dev.azurewebsites.net",
+    "secure": true,
+    "changeOrigin": true,
+    "ws": true,
+    "logLevel": "warn"
+  }
+}

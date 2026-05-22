@@ -214,7 +214,9 @@ export interface SellerAnalyticsQueryParams {
 export class ListingsService {
   private http = inject(HttpClient);
 
-  private apiUrl = `${API_CONFIG.getApiUrl()}/listings`;
+  private get apiUrl(): string {
+    return `${API_CONFIG.getApiUrl()}/listings`;
+  }
 
   getListings(params?: ListingsQueryParams): Observable<ListingsResponse> {
     let httpParams = new HttpParams();

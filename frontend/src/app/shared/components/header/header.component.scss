@@ -33,7 +33,7 @@
   position: sticky;
   top: 0;
   z-index: 100;
-  height: 52px;
+  height: 56px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -49,12 +49,39 @@
 
 /* ── Brand ── */
 .brand {
+  display: flex;
+  align-items: center;
   flex-shrink: 0;
   cursor: pointer;
   user-select: none;
   transition: opacity .15s;
+  margin-right: 4px;
 
   &:hover { opacity: .85; }
+}
+
+/* ── Theme toggle ── */
+.btn-th {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  background: var(--s1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  line-height: 1;
+  color: var(--sub);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: color .15s, border-color .15s, background .15s;
+
+  &:hover {
+    color: var(--text);
+    border-color: var(--dim);
+    background: var(--s2);
+  }
 }
 
 /* ── Centre links ── */
@@ -307,7 +334,7 @@
 /* ── Mobile menu drawer ── */
 .mobile-menu {
   position: fixed;
-  top: 52px;
+  top: 56px;
   left: 0;
   right: 0;
   background: var(--s1);
@@ -372,7 +399,22 @@
 
 .nm-lang {
   display: flex;
+  flex-direction: column;
+  gap: 10px;
   margin-top: 12px;
+
+  .nm-theme {
+    width: 100%;
+    padding: 10px 14px;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    background: var(--s1);
+    font-size: 13px;
+    color: var(--text);
+    cursor: pointer;
+    font-family: inherit;
+    text-align: left;
+  }
 
   .lang-tog {
     width: 100%;
@@ -389,7 +431,7 @@
 .mobile-backdrop {
   position: fixed;
   inset: 0;
-  top: 52px;
+  top: 56px;
   background: rgba(0,0,0,.4);
   z-index: 98;
 }
