@@ -119,6 +119,14 @@
                           class="action-link"
                           [routerLink]="['/nexus/auctions', auction._id]"
                           title="View details">View</a>
+                        <button
+                          type="button"
+                          class="action-delete"
+                          [disabled]="deletingId === auction._id"
+                          (click)="deleteListing(auction, $event)"
+                          title="Delete listing">
+                          {{ deletingId === auction._id ? '…' : 'Delete' }}
+                        </button>
                       </td>
                     </tr>
                   }

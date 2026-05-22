@@ -207,6 +207,13 @@ table.auctions-row-table {
     }
   }
 
+  .actions-cell {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    white-space: nowrap;
+  }
+
   .action-link {
     font-size: 13px;
     font-weight: 600;
@@ -215,6 +222,26 @@ table.auctions-row-table {
 
     &:hover {
       text-decoration: underline;
+    }
+  }
+
+  .action-delete {
+    font-size: 13px;
+    font-weight: 600;
+    color: #dc2626;
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    line-height: inherit;
+
+    &:hover:not(:disabled) {
+      text-decoration: underline;
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
     }
   }
 }

@@ -246,4 +246,8 @@ export class AdminService {
   updateReport(id: string, payload: { status: string; adminNotes?: string }): Observable<{ report: AdminReport }> {
     return this.http.patch<{ report: AdminReport }>(`${this.apiUrl}/reports/${id}`, payload);
   }
+
+  deleteListing(id: string): Observable<{ ok: boolean; deletedId: string }> {
+    return this.http.delete<{ ok: boolean; deletedId: string }>(`${this.apiUrl}/auctions/${id}`);
+  }
 }

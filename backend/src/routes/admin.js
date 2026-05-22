@@ -20,6 +20,7 @@ const { applyDisputeVerdictImpact } = require('../services/reputationService');
 const { appendModerationAudit } = require('../services/moderationAuditService');
 const { runImagePurge } = require('../services/imagePurgeScheduler');
 const { getBlocklistItems, addBlocklistItem, removeBlocklistItem, ensureBlocklistExists } = require('../services/contentSafetyService');
+const azureStorageService = require('../services/azureStorage.service');
 
 function getStripe() {
   const key = process.env.STRIPE_SECRET_KEY;
@@ -408,6 +409,50 @@ router.get('/auctions/:id', authenticateToken, requireAdmin, async (req, res) =>
     res.status(500).json({ 
       error: 'Failed to fetch auction',
       message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error' 
+    });
+  }
+});
+
+// Hard-delete a listing (admin only)
+router.delete('/auctions/:id', authenticateToken, requireAdmin, async (req, res) => {
+  if (!isValidObjectId(req.params.id)) return res.status(400).json({ error: 'Invalid listing ID' });
+  try {
+    const listing = await Listing.findById(req.params.id).populate('seller', '_id firstName lastName email').lean();
+    if (!listing) return res.status(404).json({ error: 'Listing not found' });
+
+    // Block deletion if there is an active or paid transaction to avoid data integrity issues
+    const activeTransaction = await Transaction.findOne({
+      listing: listing._id,
+      transactionStatus: { $in: ['awaiting_payment', 'paid', 'shipped', 'delivered'] }
+    }).lean();
+    if (activeTransaction) {
+      return res.status(409).json({
+        error: 'Cannot delete',
+        message: 'This listing has an active transaction. Resolve or cancel the transaction first.'
+      });
+    }
+
+    // Delete in parallel: bids + images (best effort) + listing document
+    await Promise.all([
+      Bid.deleteMany({ listing: listing._id }),
+      azureStorageService.deleteMultipleImages(Array.isArray(listing.images) ? listing.images : []).catch(() => {}),
+      Listing.findByIdAndDelete(listing._id)
+    ]);
+
+    await appendModerationAudit({
+      action: 'admin_listing_deleted',
+      subjectUserId: listing.seller?._id ?? listing.seller,
+      targetType: 'listing',
+      targetId: listing._id,
+      details: { title: listing.title, status: listing.status }
+    });
+
+    return res.json({ ok: true, deletedId: listing._id });
+  } catch (error) {
+    console.error('Error deleting listing:', error);
+    res.status(500).json({
+      error: 'Failed to delete listing',
+      message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
     });
   }
 });
