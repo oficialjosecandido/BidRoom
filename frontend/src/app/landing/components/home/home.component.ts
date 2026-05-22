@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit, AfterViewInit, inject, ElementRef, ViewChild, HostListener } from '@angular/core';
+import { Component, OnDestroy, OnInit, AfterViewInit, inject, ElementRef, ViewChild, HostListener, computed } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { ListingsService, Listing } from '../../../shared/services/listings.service';
@@ -16,15 +16,13 @@ import { BidroomLogoComponent } from '../../../shared/components/bidroom-logo/bi
 export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
   private translate = inject(TranslateService);
   private listingsService = inject(ListingsService);
-  private themeService = inject(ThemeService);
+  readonly themeService = inject(ThemeService);
   private router = inject(Router);
 
   @ViewChild('carouselWrap') carouselWrap!: ElementRef<HTMLElement>;
   @ViewChild('carouselTrack') carouselTrack!: ElementRef<HTMLElement>;
 
-  get isLight(): boolean {
-    return this.themeService.resolveEffective(this.themeService.preference()) === 'light';
-  }
+  readonly isLight = computed(() => this.themeService.effective() === 'light');
 
   carouselCurrent = 0;
   carouselTransform = 'translateX(0)';

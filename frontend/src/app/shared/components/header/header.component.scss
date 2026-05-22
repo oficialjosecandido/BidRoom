@@ -14,7 +14,7 @@
   display: block;
 }
 
-:host-context([data-theme='light']) {
+:host-context(html[data-theme='light']) {
   --gold:  #8C6B1E;
   --gl:    rgba(140,107,30,.20);
   --gb:    rgba(140,107,30,.06);

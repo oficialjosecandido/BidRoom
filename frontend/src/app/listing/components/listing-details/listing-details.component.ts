@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, ChangeDetectorRef, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef, inject, computed } from '@angular/core';
 import { CommonModule, Location } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -48,11 +48,9 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
   private blockService = inject(BlockService);
   private cdr = inject(ChangeDetectorRef);
   private translate = inject(TranslateService);
-  private themeService = inject(ThemeService);
+  readonly themeService = inject(ThemeService);
 
-  get isLight(): boolean {
-    return this.themeService.resolveEffective(this.themeService.preference()) === 'light';
-  }
+  readonly isLight = computed(() => this.themeService.effective() === 'light');
 
   listing: Listing | null = null;
   loading = true;
@@ -769,6 +767,10 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
           this.listing.privateRoomStatus = event.privateRoomStatus;
         }
 
+        if (event.platinumBidderAcceptanceDeadline) {
+          this.listing.platinumBidderAcceptanceDeadline = event.platinumBidderAcceptanceDeadline;
+        }
+
         if (event.status) this.listing.status = event.status;
         if (event.winnerSelectionDeadline) this.listing.winnerSelectionDeadline = event.winnerSelectionDeadline;
         if (event.winner && this.listing?.slug) {
@@ -969,13 +971,14 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
   }
 
   private showOfferSuccessAlert(amount: number, wasAccepted: boolean): void {
-    const textKey = wasAccepted
-      ? 'listingDetails.offerModal.successTextAccepted'
-      : 'listingDetails.offerModal.successText';
     void Swal.fire({
       icon: 'success',
       title: this.translate.instant('listingDetails.offerModal.successTitle'),
-      html: this.translate.instant(textKey, { amount: this.formatPrice(amount) }),
+      text: wasAccepted
+        ? this.translate.instant('listingDetails.offerModal.successTextAccepted', {
+            amount: this.formatPrice(amount)
+          })
+        : this.translate.instant('listingDetails.offerModal.successText'),
       confirmButtonText: this.translate.instant('listingDetails.offerModal.successConfirm'),
       confirmButtonColor: '#C9A84C',
       allowOutsideClick: false

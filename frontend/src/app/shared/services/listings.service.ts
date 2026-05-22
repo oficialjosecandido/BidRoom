@@ -147,10 +147,15 @@ export interface ListingsQueryParams {
   condition?: string;
   /** Comma-separated shipping options: flat-rate, calculated, local-pickup, free (legacy: worldwide, regional) */
   shipping?: string;
-  /** Item location city (partial match) */
+  /** Partial match on listing.location (e.g. "Lisboa, Portugal") */
+  location?: string;
+  /** @deprecated Use location — kept for legacy URLs */
   locationCity?: string;
-  /** ISO country code (e.g. US, GB) */
+  /** @deprecated Use location */
   locationCountry?: string;
+  auctionFormat?: 'highest-bid' | 'best-offer';
+  allowPrivateRoom?: boolean;
+  endingSoon?: boolean;
   isFeatured?: boolean;
   limit?: number;
   skip?: number;
@@ -245,8 +250,8 @@ export class ListingsService {
     return this.http.get<StatsOverview>(`${this.apiUrl}/stats/overview`);
   }
 
-  createListing(listingData: Partial<Listing>): Observable<Listing> {
-    return this.http.post<Listing>(this.apiUrl, listingData);
+  createListing(listingData: Partial<Listing>): Observable<Listing & { contentWarning?: { severity: string; message: string } }> {
+    return this.http.post<Listing & { contentWarning?: { severity: string; message: string } }>(this.apiUrl, listingData);
   }
 
   /** In-progress add-listing snapshot for the current seller (or null). */
@@ -309,8 +314,8 @@ export class ListingsService {
   }
 
   /** Seller edits a listing (state-based field locks enforced by backend) */
-  updateListing(listingId: string, data: Partial<Listing>): Observable<{ listing: Listing; message: string }> {
-    return this.http.patch<{ listing: Listing; message: string }>(
+  updateListing(listingId: string, data: Partial<Listing>): Observable<{ listing: Listing; message: string; contentWarning?: { severity: string; message: string } }> {
+    return this.http.patch<{ listing: Listing; message: string; contentWarning?: { severity: string; message: string } }>(
       `${this.apiUrl}/${listingId}`,
       data
     );

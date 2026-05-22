@@ -6,7 +6,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { HeaderComponent } from '../../../shared/components/header/header.component';
 import { FooterComponent } from '../../../shared/components/footer/footer.component';
 import { CATEGORIES, Category } from '../../../shared/config/categories.config';
-import { CONDITION_OPTIONS, SHIPPING_OPTIONS, LOCATION_COUNTRY_OPTIONS } from '../listing-list/listing-list.component';
+import { CONDITION_OPTIONS, SHIPPING_OPTIONS } from '../listing-list/listing-list.component';
 import { CategoryFollowService } from '../../../shared/services/category-follow.service';
 import { AuthService } from '../../../auth/services/auth.service';
 
@@ -26,12 +26,10 @@ export class CategoriesComponent implements OnInit {
 
   readonly conditionOptions = CONDITION_OPTIONS;
   readonly shippingOptions = SHIPPING_OPTIONS;
-  readonly countryFilterOptions = LOCATION_COUNTRY_OPTIONS;
 
   selectedConditions: Set<string> = new Set();
   selectedShipping: Set<string> = new Set();
-  locationCityFilter = '';
-  locationCountryFilter = '';
+  locationFilter = '';
   minPrice = '';
   maxPrice = '';
 
@@ -84,8 +82,7 @@ export class CategoriesComponent implements OnInit {
     return !!(
       this.selectedConditions.size ||
       this.selectedShipping.size ||
-      this.locationCityFilter.trim() ||
-      this.locationCountryFilter ||
+      this.locationFilter.trim() ||
       this.minPrice ||
       this.maxPrice
     );
@@ -95,8 +92,7 @@ export class CategoriesComponent implements OnInit {
     const params: Record<string, string> = {};
     if (this.selectedConditions.size) params['condition'] = [...this.selectedConditions].join(',');
     if (this.selectedShipping.size) params['shipping'] = [...this.selectedShipping].join(',');
-    if (this.locationCityFilter.trim()) params['locationCity'] = this.locationCityFilter.trim();
-    if (this.locationCountryFilter) params['locationCountry'] = this.locationCountryFilter;
+    if (this.locationFilter.trim()) params['location'] = this.locationFilter.trim();
     if (this.minPrice) params['minPrice'] = this.minPrice;
     if (this.maxPrice) params['maxPrice'] = this.maxPrice;
     return params;
@@ -123,8 +119,7 @@ export class CategoriesComponent implements OnInit {
   clearFilters(): void {
     this.selectedConditions = new Set();
     this.selectedShipping = new Set();
-    this.locationCityFilter = '';
-    this.locationCountryFilter = '';
+    this.locationFilter = '';
     this.minPrice = '';
     this.maxPrice = '';
   }

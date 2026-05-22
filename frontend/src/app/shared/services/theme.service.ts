@@ -1,4 +1,4 @@
-import { Injectable, inject, signal } from '@angular/core';
+import { Injectable, inject, signal, computed } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { AuthService } from '../../auth/services/auth.service';
 import { API_CONFIG } from '../config/api.config';
@@ -22,6 +22,12 @@ export class ThemeService {
   /** User choice: light, dark, or match OS. */
   readonly preference = signal<ThemePreference>('system');
 
+  /** Resolved theme applied to the DOM (light or dark). */
+  readonly effective = computed(() => this.resolveEffective(this.preference()));
+
+  /** Apply server profile theme only once per session (avoid resetting user choice on every API call). */
+  private profileThemeMerged = false;
+
   /** Runs before first render via APP_INITIALIZER. */
   initFromStorageSync(): void {
     if (typeof window === 'undefined' || typeof localStorage === 'undefined') return;
@@ -32,6 +38,8 @@ export class ThemeService {
 
   /** When profile loads, server value wins for logged-in users (cross-device). */
   mergeFromServerIfPresent(theme: string | null | undefined): void {
+    if (this.profileThemeMerged) return;
+    this.profileThemeMerged = true;
     if (theme === 'light' || theme === 'dark' || theme === 'system') {
       this.applyPreference(theme, { persistLocal: true, patchServer: false });
     }

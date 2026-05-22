@@ -23,9 +23,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   private socketService = inject(SocketService);
   private translate = inject(TranslateService);
   readonly theme = inject(ThemeService);
-  readonly effectiveTheme = computed(() =>
-    this.theme.resolveEffective(this.theme.preference())
-  );
+  readonly effectiveTheme = this.theme.effective;
 
   notificationUnreadCount = 0;
   pendingBuyerTransactions = 0;

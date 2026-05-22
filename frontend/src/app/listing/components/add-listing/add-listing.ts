@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit, inject } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject, computed } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormArray } from '@angular/forms';
 import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
@@ -12,6 +12,7 @@ import { KycService, KYC_THRESHOLD } from '../../../shared/services/kyc.service'
 import { API_CONFIG } from '../../../shared/config/api.config';
 import { environment } from '@env';
 import { BidroomLogoComponent } from '../../../shared/components/bidroom-logo/bidroom-logo.component';
+import { ThemeService } from '../../../shared/services/theme.service';
 
 interface Category {
   id: string;
@@ -34,6 +35,7 @@ export class AddListing implements OnInit, OnDestroy {
   private http = inject(HttpClient);
   private translate = inject(TranslateService);
   private kycService = inject(KycService);
+  private themeService = inject(ThemeService);
 
   listingForm!: FormGroup;
   isSubmitting = false;
@@ -60,7 +62,7 @@ export class AddListing implements OnInit, OnDestroy {
   // ─── Step management ────────────────────────────────────────────────────────
   currentStep = 1;
   readonly totalSteps = 6;
-  isLight = false;
+  readonly isLight = computed(() => this.themeService.effective() === 'light');
 
   readonly steps = [
     { n: 1, titleKey: 'addListing.step1Title', subKey: 'addListing.step1' },
@@ -71,7 +73,10 @@ export class AddListing implements OnInit, OnDestroy {
     { n: 6, titleKey: 'addListing.step6Title', subKey: 'addListing.step6' },
   ];
 
-  toggleTheme(): void { this.isLight = !this.isLight; }
+  toggleTheme(): void {
+    const eff = this.themeService.effective();
+    this.themeService.setPreference(eff === 'dark' ? 'light' : 'dark');
+  }
   goStep(n: number): void { if (n >= 1 && n <= this.totalSteps) this.currentStep = n; }
   nextStep(): void { this.goStep(this.currentStep + 1); }
   prevStep(): void { this.goStep(this.currentStep - 1); }
@@ -113,6 +118,34 @@ export class AddListing implements OnInit, OnDestroy {
       price: fmt === 'best-offer' || parseFloat(this.listingForm?.get('startingBid')?.value || '0') > 0,
       shipping: !!this.listingForm?.get('shippingOption')?.value,
     };
+  }
+
+  readonly checklistMeta: { key: string; labelKey: string }[] = [
+    { key: 'format', labelKey: 'addListing.ck.format' },
+    { key: 'title', labelKey: 'addListing.ck.title' },
+    { key: 'category', labelKey: 'addListing.ck.category' },
+    { key: 'condition', labelKey: 'addListing.ck.condition' },
+    { key: 'description', labelKey: 'addListing.ck.desc' },
+    { key: 'photos', labelKey: 'addListing.ck.photos' },
+    { key: 'price', labelKey: 'addListing.ck.price' },
+    { key: 'shipping', labelKey: 'addListing.ck.shipping' },
+  ];
+
+  get checklistDoneCount(): number {
+    const c = this.checklist;
+    return this.checklistMeta.filter((item) => c[item.key]).length;
+  }
+
+  get checklistProgressPct(): number {
+    return Math.round((this.checklistDoneCount / this.checklistMeta.length) * 100);
+  }
+
+  get previewCategoryLabel(): string {
+    const id = this.previewCategory;
+    if (!id) return '';
+    const key = `addListing.categories.${id}`;
+    const t = this.translate.instant(key);
+    return t !== key ? t : (this.categories.find((c) => c.id === id)?.name ?? id);
   }
 
   // ─── Categories ──────────────────────────────────────────────────────────────
@@ -856,13 +889,24 @@ export class AddListing implements OnInit, OnDestroy {
 
       this.isSubmitting = false;
       this.errorMessage = '';
-      Swal.fire({
-        toast: true, position: 'top-end', icon: 'success',
-        title: this.translate.instant('addListing.successMessage'),
-        showConfirmButton: false, timer: 3000, timerProgressBar: true
-      });
-      this.router.navigate(['/listing', listing.slug]);
       firstValueFrom(this.listingsService.deleteListingDraft()).catch(() => {});
+
+      if (listing.contentWarning) {
+        await Swal.fire({
+          icon: 'warning',
+          title: 'Content notice',
+          text: listing.contentWarning.message,
+          confirmButtonText: 'View listing',
+          confirmButtonColor: '#2563eb'
+        });
+      } else {
+        Swal.fire({
+          toast: true, position: 'top-end', icon: 'success',
+          title: this.translate.instant('addListing.successMessage'),
+          showConfirmButton: false, timer: 3000, timerProgressBar: true
+        });
+      }
+      this.router.navigate(['/listing', listing.slug]);
     } catch (error: any) {
       this.isSubmitting = false;
       if (error?.error?.error === 'kyc_required') {

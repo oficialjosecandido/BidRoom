@@ -208,9 +208,19 @@ export class EditListing implements OnInit {
         payload.subCategory = raw.subCategory;
       }
 
-      await firstValueFrom(this.listingsService.updateListing(this.listing!._id, payload));
+      const result = await firstValueFrom(this.listingsService.updateListing(this.listing!._id, payload));
 
-      Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Listing updated', showConfirmButton: false, timer: 2500 });
+      if (result.contentWarning) {
+        await Swal.fire({
+          icon: 'warning',
+          title: 'Content notice',
+          text: result.contentWarning.message,
+          confirmButtonText: 'View listing',
+          confirmButtonColor: '#2563eb'
+        });
+      } else {
+        Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Listing updated', showConfirmButton: false, timer: 2500 });
+      }
       this.router.navigate(['/listing', this.listing!.slug]);
     } catch (err: any) {
       this.errorMessage = err.error?.message || err.message || 'Failed to update listing.';

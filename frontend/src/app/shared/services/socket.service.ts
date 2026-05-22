@@ -195,6 +195,21 @@ export class SocketService {
     });
   }
 
+  /** Fired when the current user receives a private room invitation (time-sensitive prompt) */
+  onPrivateRoomInvitation(): Observable<{ listingId: string; listingTitle: string }> {
+    return new Observable((observer) => {
+      if (!this.socket) {
+        this.connect();
+      }
+      const socket = this.socket;
+      if (!socket) return () => {};
+      const handler = (data: { listingId: string; listingTitle: string }) =>
+        this.ngZone.run(() => observer.next(data));
+      socket.on('private-room-invitation', handler);
+      return () => socket.off('private-room-invitation', handler);
+    });
+  }
+
   onNewBid(): Observable<NewBidEvent> {
     return new Observable<NewBidEvent>((observer) => {
       if (!this.socket) {

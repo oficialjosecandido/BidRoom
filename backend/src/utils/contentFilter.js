@@ -56,15 +56,15 @@ function scanTexts(texts) {
 }
 
 // EN + PT profanity (derivatives via \w* where applicable, explicit forms elsewhere)
-const ABUSE_RE = /\b(fuck\w*|shit\w*|bitch\w*|asshole|bastard|cunt|nigger\w*|faggot|slut\w*|whore|retard|puta|putas|filho\s*da\s*puta|fdp|caralho|merda|porra|viado|bicha|corno)\b/gi;
+const ABUSE_RE = /\b(fuck\w*|shit\w*|bitch\w*|asshole|bastard|cunt|nigger\w*|faggot|slut\w*|whore|retard|motherfuck\w*|bullshit\w*|jackass\w*|asshat|dickhead\w*|dipshit\w*|douchebag\w*|son\s*of\s*a\s*bitch|puta|putas|filho\s*da\s*puta|filha\s*da\s*puta|fdp|caralho|merda|porra|viado|bicha|corno|foda\b|fodas\w*|vai\s*se\s*foder|vai\s*[aà]\s*merda|puta\s*merda|puta\s*que\s*pariu|arrombad\w+|babaca\w*|buceta|piroca|desgraçad\w+|canalha|seu\s*lixo)\b/gi;
 
 // EN + PT hate speech
-const HATE_RE = /\b(kill\s+all|go\s+back\s+to\s+your\s+country|white\s+power|heil\s+hitler|gas\s+the|race\s+traitor|subhuman|morte\s+a\s+todos\s+os|poder\s+branco|vai\s+para\s+o\s+teu\s+pa[ií]s)\b/gi;
+const HATE_RE = /\b(kill\s+all|go\s+back\s+to\s+your\s+country|white\s+power|heil\s+hitler|gas\s+the|race\s+traitor|subhuman|morte\s+a\s+todos\s+os|poder\s+branco|vai\s+para\s+o\s+teu\s+pa[ií]s|vai\s+para\s+o\s+seu\s+pa[ií]s)\b/gi;
 
 /**
  * Normalize text for abusive-content scanning:
- * collapses leet-speak substitutions, removes repeated non-alpha chars,
- * and lowercases. Applied before regex matching to catch obfuscated slurs.
+ * collapses leet-speak substitutions, removes char separators and repeated
+ * chars (3+), and lowercases. Applied before regex matching to catch obfuscated slurs.
  * @param {string} text
  * @returns {string}
  */
@@ -83,6 +83,11 @@ function normalizeText(text) {
     .replace(/7/g, 't')
     .replace(/\+/g, 't')
     .replace(/\|/g, 'i')
+    .replace(/ph/g, 'f')
+    // Remove deliberate separators inserted between letters (f.u.c.k → fuck)
+    .replace(/([a-z])[\.\-_·*]+(?=[a-z])/g, '$1')
+    // Collapse 3+ identical consecutive chars to 1 (fuuuck → fuck, shiiiit → shit)
+    .replace(/(.)\1{2,}/g, '$1')
     .replace(/\s+/g, ' ')
     .trim();
 }

@@ -9,7 +9,9 @@ const router = express.Router();
 // POST /api/follows/:sellerId — follow a seller
 router.post('/:sellerId', authenticateToken, requireActiveAccount, async (req, res) => {
   try {
-    const followerId = req.user._id;
+    const currentUser = await User.findOne({ uid: req.user.uid }).select('_id').lean();
+    if (!currentUser) return res.status(404).json({ error: 'User not found' });
+    const followerId = currentUser._id;
     const { sellerId } = req.params;
 
     if (!mongoose.Types.ObjectId.isValid(sellerId)) {
@@ -39,7 +41,9 @@ router.post('/:sellerId', authenticateToken, requireActiveAccount, async (req, r
 // DELETE /api/follows/:sellerId — unfollow a seller
 router.delete('/:sellerId', authenticateToken, requireActiveAccount, async (req, res) => {
   try {
-    const followerId = req.user._id;
+    const currentUser = await User.findOne({ uid: req.user.uid }).select('_id').lean();
+    if (!currentUser) return res.status(404).json({ error: 'User not found' });
+    const followerId = currentUser._id;
     const { sellerId } = req.params;
 
     if (!mongoose.Types.ObjectId.isValid(sellerId)) {
@@ -57,7 +61,9 @@ router.delete('/:sellerId', authenticateToken, requireActiveAccount, async (req,
 // PATCH /api/follows/:sellerId/mute — toggle mute for a followed seller
 router.patch('/:sellerId/mute', authenticateToken, requireActiveAccount, async (req, res) => {
   try {
-    const followerId = req.user._id;
+    const currentUser = await User.findOne({ uid: req.user.uid }).select('_id').lean();
+    if (!currentUser) return res.status(404).json({ error: 'User not found' });
+    const followerId = currentUser._id;
     const { sellerId } = req.params;
     const { muted } = req.body;
 
@@ -89,7 +95,9 @@ router.patch('/:sellerId/mute', authenticateToken, requireActiveAccount, async (
 // GET /api/follows/status/:sellerId — check follow status
 router.get('/status/:sellerId', authenticateToken, async (req, res) => {
   try {
-    const followerId = req.user._id;
+    const currentUser = await User.findOne({ uid: req.user.uid }).select('_id').lean();
+    if (!currentUser) return res.json({ following: false, muted: false });
+    const followerId = currentUser._id;
     const { sellerId } = req.params;
 
     if (!mongoose.Types.ObjectId.isValid(sellerId)) {

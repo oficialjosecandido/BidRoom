@@ -1,4 +1,4 @@
-<div class="pg" [class.light]="isLight">
+<div class="pg" [class.light]="isLight()">
 
 <app-header></app-header>
 
@@ -400,6 +400,7 @@
     }
     @if (isOwnListing && !isAuctionEnded()) {
       <div class="own-note">{{ 'listingDetails.sidebar.ownListingNote' | translate }}</div>
+      <button class="btn-watch" [routerLink]="['/listing', listing._id, 'edit']">{{ 'listingDetails.actions.editListing' | translate }}</button>
     }
     @if (canReopenListing()) {
       <div class="own-note">

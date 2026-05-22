@@ -94,8 +94,12 @@ router.get('/', optionalAuth, async (req, res) => {
       search,
       condition,
       shipping,
+      location,
       locationCity,
       locationCountry,
+      auctionFormat,
+      allowPrivateRoom,
+      endingSoon,
       limit = 20,
       skip,
       page
@@ -178,23 +182,43 @@ router.get('/', optionalAuth, async (req, res) => {
     }
 
     const locationClauses = [];
-    if (locationCity && String(locationCity).trim()) {
-      const esc = escapeRegex(String(locationCity).trim());
-      locationClauses.push({
-        $or: [
-          { locationCity: { $regex: esc, $options: 'i' } },
-          { location: { $regex: esc, $options: 'i' } }
-        ]
-      });
-    }
-    if (locationCountry && String(locationCountry).trim()) {
-      const code = String(locationCountry).trim().toUpperCase();
-      if (/^[A-Z]{2}$/.test(code)) {
-        locationClauses.push({ locationCountry: code });
+    if (location && String(location).trim()) {
+      const esc = escapeRegex(String(location).trim().slice(0, 200));
+      locationClauses.push({ location: { $regex: esc, $options: 'i' } });
+    } else {
+      if (locationCity && String(locationCity).trim()) {
+        const esc = escapeRegex(String(locationCity).trim());
+        locationClauses.push({
+          $or: [
+            { locationCity: { $regex: esc, $options: 'i' } },
+            { location: { $regex: esc, $options: 'i' } }
+          ]
+        });
+      }
+      if (locationCountry && String(locationCountry).trim()) {
+        const code = String(locationCountry).trim().toUpperCase();
+        if (/^[A-Z]{2}$/.test(code)) {
+          locationClauses.push({ locationCountry: code });
+        }
       }
     }
     if (locationClauses.length) {
       query.$and = [...(query.$and || []), ...locationClauses];
+    }
+
+    if (auctionFormat === 'highest-bid' || auctionFormat === 'best-offer') {
+      query.auctionFormat = auctionFormat;
+    }
+
+    if (allowPrivateRoom === 'true') {
+      query.allowPrivateRoom = true;
+    }
+
+    if (endingSoon === 'true') {
+      const now = new Date();
+      const in24h = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+      query.status = 'active';
+      query.endDate = { $gte: now, $lte: in24h };
     }
 
     // Build sort object
@@ -982,6 +1006,7 @@ router.get('/:id', optionalAuth, async (req, res) => {
 
 // POST /api/listings - Create a new listing (requires authentication)
 router.post('/', authenticateToken, requireActiveAccount, requireNoDisputeRestriction, async (req, res) => {
+  let listingContentWarning = null; // set when low-severity language is detected
   try {
     // Find or create user in database from Firebase UID
     let user = await User.findOne({ uid: req.user.uid });
@@ -1185,15 +1210,29 @@ router.post('/', authenticateToken, requireActiveAccount, requireNoDisputeRestri
       if (abuseCheck.severity === 'high') {
         const fullUserForAbuse = await User.findById(user._id);
         const violation = await recordViolation(fullUserForAbuse, 'offensive_language');
+        appendModerationAudit({
+          subjectUserId: user._id,
+          actionType: 'abusive_content_flagged',
+          metadata: { context: 'listing_create', severity: 'high', categories: abuseCheck.categories, matches: abuseCheck.matches, title }
+        }).catch(() => {});
         return res.status(400).json({ error: 'Content policy violation', message: violation.message, violationAction: violation.action });
       }
       if (abuseCheck.severity === 'medium') {
-        return res.status(400).json({
-          error: 'Content policy violation',
-          message: 'Your listing contains offensive or abusive language that is not allowed on BidRoom. Please revise your content before submitting.'
-        });
+        // Record the violation so repeat medium offenders escalate through the ladder
+        const fullUserForAbuse = await User.findById(user._id);
+        const violation = await recordViolation(fullUserForAbuse, 'offensive_language');
+        appendModerationAudit({
+          subjectUserId: user._id,
+          actionType: 'abusive_content_flagged',
+          metadata: { context: 'listing_create', severity: 'medium', categories: abuseCheck.categories, matches: abuseCheck.matches, title }
+        }).catch(() => {});
+        return res.status(400).json({ error: 'Content policy violation', message: violation.message, violationAction: violation.action });
       }
-      // low: allow through but log for admin review (fire-and-forget)
+      // low: allow through but warn the user and log for admin review
+      listingContentWarning = {
+        severity: 'low',
+        message: 'Your listing was published, but it contains mild language that may be reviewed by our moderation team. Please keep your listings professional.'
+      };
       appendModerationAudit({
         subjectUserId: user._id,
         actionType: 'abusive_content_flagged',
@@ -1357,7 +1396,8 @@ router.post('/', authenticateToken, requireActiveAccount, requireNoDisputeRestri
       ...populatedListing,
       seller: sanitizeSellerForPublic(populatedListing.seller),
       timeRemaining,
-      endingSoon: timeRemaining.ended ? false : (timeRemaining.days === 0 && timeRemaining.hours <= 24)
+      endingSoon: timeRemaining.ended ? false : (timeRemaining.days === 0 && timeRemaining.hours <= 24),
+      ...(listingContentWarning && { contentWarning: listingContentWarning })
     });
   } catch (error) {
     console.error('Error creating listing:', error);
@@ -1390,6 +1430,7 @@ const CRITICAL_FIELDS = new Set([
 
 // PATCH /api/listings/:id - Edit a listing (state-based edit locks)
 router.patch('/:id', authenticateToken, requireActiveAccount, async (req, res) => {
+  let listingContentWarning = null; // set when low-severity language is detected
   try {
     const user = await User.findOne({ uid: req.user.uid });
     if (!user) return res.status(404).json({ error: 'User not found' });
@@ -1484,14 +1525,28 @@ router.patch('/:id', authenticateToken, requireActiveAccount, async (req, res) =
         if (abuseCheckUpdate.severity === 'high') {
           const fullUser = await User.findById(user._id);
           const violation = await recordViolation(fullUser, 'offensive_language');
+          appendModerationAudit({
+            subjectUserId: user._id,
+            actionType: 'abusive_content_flagged',
+            metadata: { context: 'listing_update', severity: 'high', categories: abuseCheckUpdate.categories, matches: abuseCheckUpdate.matches, listingId: listing._id }
+          }).catch(() => {});
           return res.status(400).json({ error: 'Content policy violation', message: violation.message, violationAction: violation.action });
         }
         if (abuseCheckUpdate.severity === 'medium') {
-          return res.status(400).json({
-            error: 'Content policy violation',
-            message: 'Your listing contains offensive or abusive language that is not allowed on BidRoom. Please revise your content before saving.'
-          });
+          const fullUser = await User.findById(user._id);
+          const violation = await recordViolation(fullUser, 'offensive_language');
+          appendModerationAudit({
+            subjectUserId: user._id,
+            actionType: 'abusive_content_flagged',
+            metadata: { context: 'listing_update', severity: 'medium', categories: abuseCheckUpdate.categories, matches: abuseCheckUpdate.matches, listingId: listing._id }
+          }).catch(() => {});
+          return res.status(400).json({ error: 'Content policy violation', message: violation.message, violationAction: violation.action });
         }
+        // low: allow through but warn the user and log for admin review
+        listingContentWarning = {
+          severity: 'low',
+          message: 'Your listing was saved, but it contains mild language that may be reviewed by our moderation team. Please keep your listings professional.'
+        };
         appendModerationAudit({
           subjectUserId: user._id,
           actionType: 'abusive_content_flagged',
@@ -1508,7 +1563,11 @@ router.patch('/:id', authenticateToken, requireActiveAccount, async (req, res) =
       .populate('seller', SELLER_DSA_PUBLIC_SELECT)
       .lean();
 
-    return res.json({ listing: updated, message: 'Listing updated successfully.' });
+    return res.json({
+      listing: updated,
+      message: 'Listing updated successfully.',
+      ...(listingContentWarning && { contentWarning: listingContentWarning })
+    });
   } catch (error) {
     console.error('Error updating listing:', error);
     if (error.name === 'ValidationError') {

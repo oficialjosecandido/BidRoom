@@ -99,6 +99,27 @@ async function emitNewNotificationToUser(io, userMongoId) {
 }
 
 /**
+ * Emit 'new-notification' and 'private-room-invitation' to the invited bidder's personal socket room.
+ * Single DB lookup for both events.
+ * @param {object} io - Socket.io instance
+ * @param {string} userMongoId - Mongo User _id
+ * @param {{ listingId: string, listingTitle: string }} payload
+ */
+async function emitPrivateRoomInvitationToUser(io, userMongoId, { listingId, listingTitle }) {
+  if (!io || !userMongoId) return;
+  try {
+    const user = await User.findById(userMongoId).select('uid').lean();
+    if (user?.uid) {
+      const room = `user:${user.uid}`;
+      io.to(room).emit('new-notification');
+      io.to(room).emit('private-room-invitation', { listingId, listingTitle });
+    }
+  } catch (err) {
+    console.error('Failed to emit private-room-invitation:', err);
+  }
+}
+
+/**
  * Create a notification for a user.
  * @param {Object} options
  * @param {string} options.userId - Mongo User _id
@@ -1088,6 +1109,7 @@ module.exports = {
   createNotification,
   shouldSendEmail,
   checkAndSetOutbidDebounce,
+  emitPrivateRoomInvitationToUser,
   notifyNewProposal,
   notifyNewBid,
   notifyBidderOutbid,
