@@ -72,7 +72,11 @@
       "Bash(node -e \"require\\('/Users/josecandido/Documents/BidRoom/backend/src/routes/blocks.js'\\); console.log\\('blocks.js OK'\\)\")",
       "Bash(node -e \"require\\('/Users/josecandido/Documents/BidRoom/backend/src/routes/bids.js'\\); console.log\\('bids.js OK'\\)\")",
       "Bash(node -e \"require\\('/Users/josecandido/Documents/BidRoom/backend/src/routes/offers.js'\\); console.log\\('offers.js OK'\\)\")",
-      "Bash(grep -v \"translate\\\\|getFieldError\\\\|this\\\\.error\\\\s*$\")"
+      "Bash(grep -v \"translate\\\\|getFieldError\\\\|this\\\\.error\\\\s*$\")",
+      "Bash(grep -v \"^$\")",
+      "Bash(node -e \"require\\('@tensorflow/tfjs-node'\\); console.log\\('tfjs-node ok'\\)\")",
+      "Bash(node -e \"require\\('nsfwjs'\\); console.log\\('nsfwjs ok'\\)\")",
+      "Bash(npm --version)"
     ]
   }
 }

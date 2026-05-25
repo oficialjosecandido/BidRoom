@@ -82,20 +82,21 @@ router.post('/', authenticateToken, requireActiveAccount, upload.array('images',
       const scan = await scanImages(files.map(f => f.buffer));
 
       if (scan.blocked) {
-        // Log to audit trail and apply escalation penalty
-        const userId = req.user?._id || req.user?.id;
-        if (userId) {
-          const fullUser = await User.findById(userId);
-          if (fullUser) {
-            // Fire-and-forget: escalation is a side effect, not a blocker
-            recordViolation(fullUser, 'inappropriate_image').catch(err =>
-              console.error('recordViolation (image) error:', err.message)
-            );
-          }
+        // Resolve the MongoDB user from the Firebase uid carried by the auth token
+        const currentUser = await User.findOne({ uid: req.user.uid }).select('_id contentViolationCount contentRestrictedUntil');
+        if (currentUser) {
+          // Escalating penalty: warning → temp restriction → suspension
+          recordViolation(currentUser, 'inappropriate_image').catch(err =>
+            console.error('recordViolation (image) error:', err.message)
+          );
           appendModerationAudit({
-            subjectUserId: userId,
+            subjectUserId: currentUser._id,
             actionType: 'image_upload_blocked',
-            metadata: { fileCount: files.length, categories: scan.results?.map(r => r.categories) }
+            metadata: {
+              fileCount: files.length,
+              categories: scan.results?.map(r => r.categories),
+              provider: scan.results?.[0]?.provider || 'azure'
+            }
           }).catch(() => {});
         }
         return res.status(400).json({
@@ -106,12 +107,16 @@ router.post('/', authenticateToken, requireActiveAccount, upload.array('images',
 
       // Borderline (flagged): allow upload but queue for admin review
       if (scan.anyFlagged) {
-        const userId = req.user?._id || req.user?.id;
-        if (userId) {
+        const currentUser = await User.findOne({ uid: req.user.uid }).select('_id').lean();
+        if (currentUser) {
           appendModerationAudit({
-            subjectUserId: userId,
+            subjectUserId: currentUser._id,
             actionType: 'image_upload_flagged',
-            metadata: { fileCount: files.length, categories: scan.results?.map(r => r.categories) }
+            metadata: {
+              fileCount: files.length,
+              categories: scan.results?.map(r => r.categories),
+              provider: scan.results?.[0]?.provider || 'azure'
+            }
           }).catch(() => {});
         }
       }

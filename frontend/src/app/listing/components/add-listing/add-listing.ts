@@ -858,7 +858,10 @@ export class AddListing implements OnInit, OnDestroy {
       return this.uploadedFileUrls;
     } catch (error: any) {
       this.isUploadingImages = false;
-      throw new Error(error.error?.message || 'Failed to upload images. Please try again.');
+      const isContentViolation = error?.error?.error === 'Content policy violation';
+      const msg = error?.error?.message || error?.message || 'Failed to upload images. Please try again.';
+      const enriched = Object.assign(new Error(msg), { isContentViolation });
+      throw enriched;
     }
   }
 
@@ -929,6 +932,24 @@ export class AddListing implements OnInit, OnDestroy {
       this.router.navigate(['/listing', listing.slug]);
     } catch (error: any) {
       this.isSubmitting = false;
+
+      // Image blocked by content moderation — show a prominent modal
+      if (error?.isContentViolation) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Image Not Allowed',
+          html: `<p>${error.message}</p>
+                 <p style="font-size:0.82em;margin-top:0.75em;color:#6b7280">
+                   Remove or replace the flagged image(s) and try again.
+                   Repeated violations may lead to account restrictions.
+                 </p>`,
+          confirmButtonText: 'OK',
+          confirmButtonColor: '#dc2626'
+        });
+        this.errorMessage = '';
+        return;
+      }
+
       if (error?.error?.error === 'kyc_required') {
         this.kycService.openKycGate(error.error.kycStatus || 'none');
         return;
