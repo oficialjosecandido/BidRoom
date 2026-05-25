@@ -271,7 +271,16 @@
       "invalidFileType": "Tipo de archivo no válido. Solo se permiten imágenes (JPEG, PNG, GIF, WebP, BMP). Rechazados: {{files}}",
       "mediaMaxPhotos": "Puedes añadir como máximo 20 fotos. Elimina algunas para añadir más. No añadidas: {{files}}",
       "mediaMaxPhotosWithVideo": "Con un vídeo puedes añadir como máximo 5 fotos. Elimina fotos o el vídeo para añadir más. No añadidas: {{files}}",
-      "mediaVideoLimit": "Solo se permite un vídeo y como máximo 5 fotos con vídeo. No añadido: {{files}}"
+      "mediaVideoLimit": "Solo se permite un vídeo y como máximo 5 fotos con vídeo. No añadido: {{files}}",
+      "tooShortMin": "{{field}} debe tener al menos {{min}} caracteres",
+      "publishIncomplete": "Completa lo siguiente antes de publicar: {{fields}}.",
+      "publishFix": "Corrige los errores señalados antes de publicar.",
+      "stepBlocked": "Corrige los errores en este paso antes de continuar.",
+      "atLeastOnePhoto": "al menos 1 foto",
+      "step4Pricing": "Define el precio y la duración del anuncio.",
+      "step5Shipping": "Configura el envío y la ubicación.",
+      "step6Declaration": "Confirma la declaración del vendedor para publicar.",
+      "specificationsIncomplete": "especificaciones incompletas"
     },
     "steps": {
       "label": "Pasos"
@@ -303,6 +312,8 @@
     "mediaHint": "La primera foto será la imagen principal del anuncio.",
     "mediaCover": "Principal",
     "photosLabel": "fotos",
+    "photoSingular": "foto",
+    "descriptionMinChars": "mín. 50 caracteres",
     "preview": {
       "label": "Vista previa",
       "hint": "Cómo aparece su anuncio en la búsqueda",

@@ -271,7 +271,16 @@
       "invalidFileType": "Type de fichier invalide. Seules les images (JPEG, PNG, GIF, WebP, BMP) sont autorisées. Rejeté : {{files}}",
       "mediaMaxPhotos": "Vous pouvez ajouter au maximum 20 photos. Supprimez-en pour en ajouter d'autres. Non ajoutées : {{files}}",
       "mediaMaxPhotosWithVideo": "Avec une vidéo, vous pouvez ajouter au maximum 5 photos. Supprimez des photos ou la vidéo pour continuer. Non ajoutées : {{files}}",
-      "mediaVideoLimit": "Une seule vidéo est autorisée, et au maximum 5 photos avec une vidéo. Non ajouté : {{files}}"
+      "mediaVideoLimit": "Une seule vidéo est autorisée, et au maximum 5 photos avec une vidéo. Non ajouté : {{files}}",
+      "tooShortMin": "{{field}} doit comporter au moins {{min}} caractères",
+      "publishIncomplete": "Complétez les éléments suivants avant de publier : {{fields}}.",
+      "publishFix": "Corrigez les erreurs indiquées avant de publier.",
+      "stepBlocked": "Corrigez les erreurs à cette étape avant de continuer.",
+      "atLeastOnePhoto": "au moins 1 photo",
+      "step4Pricing": "Définissez le prix et la durée de l'annonce.",
+      "step5Shipping": "Configurez l'expédition et la localisation.",
+      "step6Declaration": "Confirmez la déclaration du vendeur pour publier.",
+      "specificationsIncomplete": "spécifications incomplètes"
     },
     "steps": {
       "label": "Étapes"
@@ -303,6 +312,8 @@
     "mediaHint": "La première photo sera l'image principale de l'annonce.",
     "mediaCover": "Principale",
     "photosLabel": "photos",
+    "photoSingular": "photo",
+    "descriptionMinChars": "min. 50 caractères",
     "preview": {
       "label": "Aperçu",
       "hint": "Comment votre annonce apparaît dans la recherche",

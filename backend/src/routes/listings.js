@@ -1110,10 +1110,10 @@ router.post('/', authenticateToken, requireActiveAccount, requireNoDisputeRestri
       return res.status(400).json({ error: 'Listing duration is required' });
     }
     // Normalize duration: frontend may send hours (number) or label (string)
-    const validSlots = ['5 minutes', '1 hour', '2 hours', '7 hours', '24 hours', '3 days', '7 days'];
+    const validSlots = ['5 minutes', '1 hour', '2 hours', '7 hours', '24 hours', '3 days', '7 days', '10 days', '15 days'];
     let durationSlot = duration;
     if (typeof duration === 'number') {
-      // Map legacy hours to slot: 5min≈0.083, 1h=1, 2h=2, 7h=7, 24h=24, 3d=72, 7d=168
+      // Map legacy hours to slot: 5min≈0.083, 1h=1, 2h=2, 7h=7, 24h=24, 3d=72, 7d=168, 10d=240, 15d=360
       const h = duration;
       if (h <= 0.1) durationSlot = '5 minutes';
       else if (h <= 1.5) durationSlot = '1 hour';
@@ -1121,7 +1121,9 @@ router.post('/', authenticateToken, requireActiveAccount, requireNoDisputeRestri
       else if (h <= 15) durationSlot = '7 hours';
       else if (h <= 48) durationSlot = '24 hours';
       else if (h <= 120) durationSlot = '3 days';
-      else durationSlot = '7 days';
+      else if (h <= 192) durationSlot = '7 days';
+      else if (h <= 300) durationSlot = '10 days';
+      else durationSlot = '15 days';
     }
     if (!validSlots.includes(durationSlot)) {
       return res.status(400).json({ error: 'Invalid duration. Must be one of: ' + validSlots.join(', ') });
@@ -1318,7 +1320,9 @@ router.post('/', authenticateToken, requireActiveAccount, requireNoDisputeRestri
       '7 hours': 7 * 60 * 60 * 1000,
       '24 hours': 24 * 60 * 60 * 1000,
       '3 days': 3 * 24 * 60 * 60 * 1000,
-      '7 days': 7 * 24 * 60 * 60 * 1000
+      '7 days': 7 * 24 * 60 * 60 * 1000,
+      '10 days': 10 * 24 * 60 * 60 * 1000,
+      '15 days': 15 * 24 * 60 * 60 * 1000
     };
     const durationMs = durations[durationSlot] || durations['7 days'];
     listingData.startDate = new Date();

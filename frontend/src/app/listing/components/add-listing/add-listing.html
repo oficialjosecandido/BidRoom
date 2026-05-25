@@ -178,7 +178,11 @@
           <textarea class="field-textarea" formControlName="description" maxlength="3000"
             [placeholder]="'addListing.descriptionPlaceholder' | translate"></textarea>
           @if (getFieldError('description')) { <div class="field-err">{{ getFieldError('description') }}</div> }
-          <div class="char-count"><span>{{ listingForm.get('description')?.value?.length || 0 }}</span>/3000</div>
+          <div class="char-count"
+               [class.char-count--warn]="(listingForm.get('description')?.value?.length || 0) < 50">
+            <span>{{ listingForm.get('description')?.value?.length || 0 }}</span>/3000
+            <span class="char-min"> · {{ 'addListing.descriptionMinChars' | translate }}</span>
+          </div>
         </div>
       </div>
 
@@ -514,7 +518,10 @@
           </div>
           <div class="review-row">
             <span class="review-label">{{ 'addListing.step3Title' | translate }}</span>
-            <span class="review-val">{{ uploadedFiles.length }} {{ 'addListing.photosLabel' | translate }}</span>
+            <span class="review-val">
+              {{ uploadedFiles.length }}
+              {{ (uploadedFiles.length === 1 ? 'addListing.photoSingular' : 'addListing.photosLabel') | translate }}
+            </span>
           </div>
         </div>
 

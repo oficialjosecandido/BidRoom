@@ -433,6 +433,20 @@ nav {
   color: var(--dim);
   text-align: right;
   margin-top: 4px;
+
+  .char-min {
+    font-family: var(--sans);
+    font-size: 10px;
+    letter-spacing: 0.02em;
+  }
+
+  &--warn {
+    color: var(--err);
+
+    .char-min {
+      color: var(--err);
+    }
+  }
 }
 
 // ─── Format selector ──────────────────────────────────────────────────────────

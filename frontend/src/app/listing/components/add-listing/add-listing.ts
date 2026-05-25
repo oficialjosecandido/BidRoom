@@ -77,9 +77,37 @@ export class AddListing implements OnInit, OnDestroy {
     const eff = this.themeService.effective();
     this.themeService.setPreference(eff === 'dark' ? 'light' : 'dark');
   }
-  goStep(n: number): void { if (n >= 1 && n <= this.totalSteps) this.currentStep = n; }
-  nextStep(): void { this.goStep(this.currentStep + 1); }
-  prevStep(): void { this.goStep(this.currentStep - 1); }
+  goStep(n: number): void {
+    if (n < 1 || n > this.totalSteps) return;
+    if (n <= this.currentStep) {
+      this.currentStep = n;
+      this.errorMessage = '';
+      return;
+    }
+    for (let s = this.currentStep; s < n; s++) {
+      if (!this.validateStep(s)) {
+        this.currentStep = s;
+        return;
+      }
+    }
+    this.errorMessage = '';
+    this.currentStep = n;
+  }
+
+  nextStep(): void {
+    if (this.currentStep >= this.totalSteps) return;
+    if (this.validateStep(this.currentStep)) {
+      this.errorMessage = '';
+      this.currentStep = this.currentStep + 1;
+    }
+  }
+
+  prevStep(): void {
+    if (this.currentStep > 1) {
+      this.errorMessage = '';
+      this.currentStep = this.currentStep - 1;
+    }
+  }
   navigateToDashboard(): void { void this.router.navigate(['/dashboard/home']); }
   navigateBack(): void { void this.router.navigate(['/listing/list']); }
 
@@ -108,15 +136,18 @@ export class AddListing implements OnInit, OnDestroy {
 
   get checklist(): Record<string, boolean> {
     const fmt = this.previewFormat;
+    const titleCtrl = this.listingForm?.get('title');
+    const descCtrl = this.listingForm?.get('description');
+    const shippingOk = this.isStepValid(5, false);
     return {
       format: true,
-      title: (this.listingForm?.get('title')?.value?.length ?? 0) >= 3,
-      category: !!this.listingForm?.get('category')?.value,
-      condition: !!this.listingForm?.get('condition')?.value,
-      description: (this.listingForm?.get('description')?.value?.length ?? 0) >= 50,
-      photos: this.uploadedFiles.length >= 1,
-      price: fmt === 'best-offer' || parseFloat(this.listingForm?.get('startingBid')?.value || '0') > 0,
-      shipping: !!this.listingForm?.get('shippingOption')?.value,
+      title: !!titleCtrl?.valid,
+      category: !!this.listingForm?.get('category')?.valid && !!this.listingForm?.get('subCategory')?.valid,
+      condition: !!this.listingForm?.get('condition')?.valid,
+      description: !!descCtrl?.valid,
+      photos: this.uploadedFiles.length >= 1 && this.isMediaValid,
+      price: fmt === 'best-offer' ? true : !!this.listingForm?.get('startingBid')?.valid,
+      shipping: shippingOk,
     };
   }
 
@@ -225,11 +256,11 @@ export class AddListing implements OnInit, OnDestroy {
   ];
 
   listingDurations = [
-    { label: '1 day',   hours: 24  },
-    { label: '3 days',  hours: 72  },
-    { label: '7 days',  hours: 168 },
-    { label: '10 days', hours: 240 },
-    { label: '15 days', hours: 360 },
+    { label: '24 hours', hours: 24  },
+    { label: '3 days',   hours: 72  },
+    { label: '7 days',   hours: 168 },
+    { label: '10 days',  hours: 240 },
+    { label: '15 days',  hours: 360 },
   ];
 
   offerDurations = [
@@ -839,28 +870,17 @@ export class AddListing implements OnInit, OnDestroy {
     });
 
     if (!this.listingForm.valid || this.uploadedFiles.length < 1 || !this.isMediaValid) {
-      const fieldLabels: Record<string, string> = {
-        title: 'Listing Title',
-        category: 'Category',
-        subCategory: 'Sub-Category',
-        condition: 'Item Condition',
-        description: 'Full Description (min. 50 characters)',
-        startingBid: 'Starting Bid',
-        locationCity: 'City',
-        locationRegion: 'Region / State',
-        duration: 'Listing Duration',
-        shippingOption: 'Shipping Option',
-        returnPolicy: 'Return Policy',
-        sellerDeclaration: 'Seller Declaration checkbox',
-      };
-      const missing: string[] = [];
-      if (this.uploadedFiles.length < 1) missing.push('at least 1 photo');
-      Object.keys(fieldLabels).forEach(key => {
-        if (this.listingForm.get(key)?.invalid) missing.push(fieldLabels[key]);
+      Object.keys(this.listingForm.controls).forEach(key => {
+        this.listingForm.get(key)?.markAsTouched();
       });
-      this.errorMessage = missing.length > 0
-        ? `Please complete the following before publishing: ${missing.join(', ')}.`
-        : 'Please fix the highlighted errors before publishing.';
+      this.specifications.controls.forEach(c => c.markAllAsTouched());
+      this.bundleItems.controls.forEach(c => c.markAllAsTouched());
+      const firstInvalid = this.findFirstInvalidStep();
+      if (firstInvalid) {
+        this.currentStep = firstInvalid;
+        this.validateStep(firstInvalid);
+      }
+      this.errorMessage = this.buildPublishValidationMessage();
       return;
     }
 
@@ -952,17 +972,130 @@ export class AddListing implements OnInit, OnDestroy {
     };
   }
 
+  private getStepFields(step: number): string[] {
+    switch (step) {
+      case 1:
+        return ['listingFormat'];
+      case 2:
+        return ['title', 'category', 'subCategory', 'condition', 'description'];
+      case 3:
+        return [];
+      case 4:
+        return this.listingForm.get('listingFormat')?.value === 'auction'
+          ? ['startingBid', 'duration']
+          : ['duration'];
+      case 5: {
+        const fields = ['shippingOption', 'locationCity', 'locationRegion', 'returnPolicy'];
+        const opt = this.listingForm.get('shippingOption')?.value;
+        if (opt === 'flat-rate') fields.push('flatRateShipping');
+        if (opt === 'calculated') fields.push('packageSize', 'shippingOriginPostalCode');
+        return fields;
+      }
+      case 6:
+        return ['sellerDeclaration'];
+      default:
+        return [];
+    }
+  }
+
+  private isStepValid(step: number, markTouched: boolean): boolean {
+    if (step === 3) {
+      if (markTouched) { /* media has no form controls */ }
+      return this.uploadedFiles.length >= 1 && this.isMediaValid;
+    }
+
+    const fields = this.getStepFields(step);
+    if (markTouched) {
+      fields.forEach(f => this.listingForm.get(f)?.markAsTouched());
+      if (step === 2) {
+        this.specifications.controls.forEach(c => c.markAllAsTouched());
+      }
+    }
+
+    if (fields.some(f => this.listingForm.get(f)?.invalid)) return false;
+    if (step === 2 && this.specifications.length > 0 && this.specifications.invalid) return false;
+    return true;
+  }
+
+  validateStep(step: number): boolean {
+    if (this.isStepValid(step, true)) {
+      return true;
+    }
+    this.errorMessage = this.getStepValidationMessage(step);
+    return false;
+  }
+
+  private getStepValidationMessage(step: number): string {
+    switch (step) {
+      case 2:
+        return this.translate.instant('addListing.errorStep2Description');
+      case 3:
+        return this.uploadedFiles.length < 1
+          ? this.translate.instant('addListing.errors.atLeastOnePhoto')
+          : this.translate.instant('addListing.uploadMediaError');
+      case 4:
+        return this.translate.instant('addListing.errors.step4Pricing');
+      case 5:
+        return this.translate.instant('addListing.errors.step5Shipping');
+      case 6:
+        return this.translate.instant('addListing.errors.step6Declaration');
+      default:
+        return this.translate.instant('addListing.errors.stepBlocked');
+    }
+  }
+
+  private findFirstInvalidStep(): number | null {
+    for (let s = 1; s <= this.totalSteps; s++) {
+      if (!this.isStepValid(s, false)) return s;
+    }
+    return null;
+  }
+
+  private buildPublishValidationMessage(): string {
+    const missing = this.collectInvalidFieldLabels();
+    if (missing.length > 0) {
+      return this.translate.instant('addListing.errors.publishIncomplete', { fields: missing.join(', ') });
+    }
+    return this.translate.instant('addListing.errors.publishFix');
+  }
+
+  private collectInvalidFieldLabels(): string[] {
+    const keys = [
+      'title', 'category', 'subCategory', 'condition', 'description',
+      'startingBid', 'duration', 'shippingOption', 'flatRateShipping',
+      'packageSize', 'shippingOriginPostalCode',
+      'locationCity', 'locationRegion', 'returnPolicy', 'sellerDeclaration',
+    ];
+    const missing: string[] = [];
+    if (this.uploadedFiles.length < 1 || !this.isMediaValid) {
+      missing.push(this.translate.instant('addListing.errors.atLeastOnePhoto'));
+    }
+    keys.forEach(key => {
+      if (this.listingForm.get(key)?.invalid) {
+        missing.push(this.getFieldLabel(key));
+      }
+    });
+    if (this.specifications.length > 0 && this.specifications.invalid) {
+      missing.push(this.translate.instant('addListing.errors.specificationsIncomplete'));
+    }
+    return missing;
+  }
+
   getFieldError(fieldName: string): string {
     const control = this.listingForm.get(fieldName);
-    if (control && control.invalid && control.touched) {
+    if (control && control.invalid && (control.touched || control.dirty)) {
       if (control.hasError('required')) {
         return this.translate.instant('addListing.errors.required', { field: this.getFieldLabel(fieldName) });
       }
       if (control.hasError('maxLength')) {
         return this.translate.instant('addListing.errors.tooLong', { field: this.getFieldLabel(fieldName) });
       }
-      if (control.hasError('minLength')) {
-        return this.translate.instant('addListing.errors.tooShort', { field: this.getFieldLabel(fieldName) });
+      if (control.hasError('minlength') || control.hasError('minLength')) {
+        const min = control.errors?.['minlength']?.requiredLength ?? control.errors?.['minLength']?.requiredLength ?? 50;
+        return this.translate.instant('addListing.errors.tooShortMin', {
+          field: this.getFieldLabel(fieldName),
+          min,
+        });
       }
       if (control.hasError('min')) {
         return this.translate.instant('addListing.errors.minValue', { min: control.errors?.['min'].min });
@@ -989,7 +1122,11 @@ export class AddListing implements OnInit, OnDestroy {
       startingBid: 'addListing.startingBid',
       reservePrice: 'addListing.reservePrice',
       shippingOption: 'addListing.shippingOptions',
-      returnPolicy: 'addListing.returnPolicy'
+      returnPolicy: 'addListing.returnPolicy',
+      sellerDeclaration: 'addListing.sellerDeclaration',
+      flatRateShipping: 'addListing.flatRateCost',
+      packageSize: 'addListing.packageSize',
+      shippingOriginPostalCode: 'addListing.originPostalCode',
     };
     return this.translate.instant(keyMap[fieldName] || fieldName);
   }

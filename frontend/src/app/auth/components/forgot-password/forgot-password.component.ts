@@ -1,14 +1,16 @@
-import { Component, inject } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 import { AuthService } from '../../services/auth.service';
+import { ThemeService } from '../../../shared/services/theme.service';
+import { BidroomLogoComponent } from '../../../shared/components/bidroom-logo/bidroom-logo.component';
 
 @Component({
   selector: 'app-forgot-password',
   standalone: true,
-  imports: [ReactiveFormsModule, TranslateModule],
+  imports: [ReactiveFormsModule, TranslateModule, RouterLink, BidroomLogoComponent],
   templateUrl: './forgot-password.component.html',
   styleUrls: ['./forgot-password.component.scss']
 })
@@ -17,6 +19,9 @@ export class ForgotPasswordComponent {
   private authService = inject(AuthService);
   private router = inject(Router);
   private translate = inject(TranslateService);
+  private themeService = inject(ThemeService);
+
+  readonly isLight = computed(() => this.themeService.effective() === 'light');
 
   forgotPasswordForm: FormGroup;
   isLoading = false;

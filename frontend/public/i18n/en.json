@@ -484,7 +484,16 @@
       "invalidFileType": "Invalid file type. Only images (JPEG, PNG, GIF, WebP, BMP) are allowed. Rejected: {{files}}",
       "mediaMaxPhotos": "You can add at most 20 photos. Remove some to add more. Not added: {{files}}",
       "mediaMaxPhotosWithVideo": "With a video you can add at most 5 photos. Remove photos or the video to add more. Not added: {{files}}",
-      "mediaVideoLimit": "Only one video is allowed, and at most 5 photos with a video. Not added: {{files}}"
+      "mediaVideoLimit": "Only one video is allowed, and at most 5 photos with a video. Not added: {{files}}",
+      "tooShortMin": "{{field}} must be at least {{min}} characters",
+      "publishIncomplete": "Complete the following before publishing: {{fields}}.",
+      "publishFix": "Fix the highlighted errors before publishing.",
+      "stepBlocked": "Fix the errors on this step before continuing.",
+      "atLeastOnePhoto": "at least 1 photo",
+      "step4Pricing": "Set the listing price and duration.",
+      "step5Shipping": "Configure shipping and location.",
+      "step6Declaration": "Confirm the seller declaration to publish.",
+      "specificationsIncomplete": "incomplete specifications"
     },
     "steps": {
       "label": "Steps"
@@ -516,6 +525,8 @@
     "mediaHint": "The first photo will be the main listing image.",
     "mediaCover": "Cover",
     "photosLabel": "photos",
+    "photoSingular": "photo",
+    "descriptionMinChars": "min. 50 characters",
     "preview": {
       "label": "Preview",
       "hint": "How your listing appears in search",
