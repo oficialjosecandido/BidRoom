@@ -266,10 +266,13 @@
             @if (bidInputError) {
               <p class="pr-bid-cta__error">{{ bidInputError }}</p>
             }
-            <button class="pr-btn pr-btn--gold pr-btn--lg" (click)="placeBid()" [disabled]="isPlacingBid">
+            <button class="pr-btn pr-btn--gold pr-btn--lg" (click)="placeBid()" [disabled]="isPlacingBid || !isBiddingOpen">
               @if (isPlacingBid) { Placing… } @else { Place Bid ${{ (customBidAmount ? +customBidAmount : getMinBid()) | number:'1.2-2' }} }
             </button>
             <p class="pr-bid-cta__hint">Min increment: ${{ listing.bidIncrement || 1 | number:'1.2-2' }}&nbsp;&middot;&nbsp;Each bid extends by 60s</p>
+            @if (countdown <= 0 && listing.privateRoomStatus === 'active') {
+              <p class="pr-bid-cta__expired">{{ 'privateRoomAuction.expired.bodyConfirming' | translate }}</p>
+            }
           </div>
         }
 

@@ -3261,5 +3261,27 @@
       "reject": "Reject non-essential",
       "accept": "Accept all"
     }
+  },
+  "privateRoomAuction": {
+    "expired": {
+      "titleEnded": "Private room ended",
+      "titleStarted": "Private auction started",
+      "titleClosed": "Private room closed",
+      "bodyWinner": "Congratulations — you won with the highest bid of <strong>{{amount}}</strong>. Check your email and go to Transactions to complete payment within 48 hours.",
+      "bodySellerWithWinner": "The session is over. <strong>{{name}}</strong> won with <strong>{{amount}}</strong>. You will receive next-step instructions by email.",
+      "bodySellerNoWinner": "The session ended with no winning bid. You can relist the item from My Auctions.",
+      "bodyParticipantWithWinner": "The session is over. <strong>{{name}}</strong> won with <strong>{{amount}}</strong>. You will be notified by email if you were selected.",
+      "bodyParticipantNoWinner": "The session is over. There was no winning bid. Thank you for participating.",
+      "bodySpectatorWithWinner": "The private auction has ended. The winning bid was <strong>{{amount}}</strong>.",
+      "bodySpectatorNoWinner": "The private auction has ended with no winning bid.",
+      "bodyNoAccept": "No invited bidders accepted in time. The auction closed without a winner.",
+      "bodySellerLeft": "The seller left the room. The auction closed without a winner.",
+      "bodyStartedPlatinum": "The acceptance window has ended. Bidding is now open — place your bid before the timer runs out.",
+      "bodyStartedOther": "The private auction has started. You can watch live; only invited bidders can place bids.",
+      "bodyConfirming": "Time is up. We are confirming the final results — this page will update automatically.",
+      "confirm": "Got it",
+      "viewListing": "View listing",
+      "viewTransactions": "Go to transactions"
+    }
   }
 }

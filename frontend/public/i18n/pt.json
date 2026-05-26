@@ -3261,5 +3261,27 @@
       "reject": "Rejeitar não essenciais",
       "accept": "Aceitar todos"
     }
+  },
+  "privateRoomAuction": {
+    "expired": {
+      "titleEnded": "Sala privada terminada",
+      "titleStarted": "Leilão privado iniciado",
+      "titleClosed": "Sala privada encerrada",
+      "bodyWinner": "Parabéns — ganhou com a licitação mais alta de <strong>{{amount}}</strong>. Consulte o email e vá a Transações para concluir o pagamento em 48 horas.",
+      "bodySellerWithWinner": "A sessão terminou. <strong>{{name}}</strong> ganhou com <strong>{{amount}}</strong>. Receberá os próximos passos por email.",
+      "bodySellerNoWinner": "A sessão terminou sem licitação vencedora. Pode voltar a publicar o artigo em Os meus leilões.",
+      "bodyParticipantWithWinner": "A sessão terminou. <strong>{{name}}</strong> ganhou com <strong>{{amount}}</strong>. Será notificado por email se foi selecionado.",
+      "bodyParticipantNoWinner": "A sessão terminou. Não houve licitação vencedora. Obrigado por participar.",
+      "bodySpectatorWithWinner": "O leilão privado terminou. A licitação vencedora foi <strong>{{amount}}</strong>.",
+      "bodySpectatorNoWinner": "O leilão privado terminou sem licitação vencedora.",
+      "bodyNoAccept": "Nenhum licitador convidado aceitou a tempo. O leilão encerrou sem vencedor.",
+      "bodySellerLeft": "O vendedor saiu da sala. O leilão encerrou sem vencedor.",
+      "bodyStartedPlatinum": "O prazo de aceitação terminou. As licitações estão abertas — licite antes do temporizador acabar.",
+      "bodyStartedOther": "O leilão privado começou. Pode assistir em direto; só licitadores convidados podem licitar.",
+      "bodyConfirming": "O tempo acabou. Estamos a confirmar os resultados finais — esta página atualiza automaticamente.",
+      "confirm": "Entendido",
+      "viewListing": "Ver anúncio",
+      "viewTransactions": "Ir para transações"
+    }
   }
 }

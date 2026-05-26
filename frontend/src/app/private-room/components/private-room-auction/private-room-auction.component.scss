@@ -733,6 +733,14 @@ $radius-lg:      20px;
     text-align: center;
   }
 
+  &__expired {
+    font-size: 0.8rem;
+    color: $gold;
+    margin: 0;
+    text-align: center;
+    line-height: 1.45;
+  }
+
   &__hint {
     font-size: 0.7rem;
     color: $text-muted;
