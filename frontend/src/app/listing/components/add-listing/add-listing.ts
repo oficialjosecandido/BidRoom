@@ -179,6 +179,34 @@ export class AddListing implements OnInit, OnDestroy {
     return t !== key ? t : (this.categories.find((c) => c.id === id)?.name ?? id);
   }
 
+  getSubCategoryLabel(sub: string): string {
+    const key = `addListing.subcategories.${sub}`;
+    const t = this.translate.instant(key);
+    return t !== key ? t : sub;
+  }
+
+  get reviewCategoryLabel(): string {
+    const catId = this.listingForm?.get('category')?.value;
+    if (!catId) return '—';
+    const catKey = `addListing.categories.${catId}`;
+    const catLabel = this.translate.instant(catKey);
+    return catLabel !== catKey ? catLabel : catId;
+  }
+
+  get reviewConditionLabel(): string {
+    const val = this.listingForm?.get('condition')?.value;
+    if (!val) return '—';
+    const cond = this.itemConditions.find(c => c.value === val);
+    return cond ? this.translate.instant(cond.labelKey) : val;
+  }
+
+  get reviewShippingLabel(): string {
+    const val = this.listingForm?.get('shippingOption')?.value;
+    if (!val) return '—';
+    const opt = this.shippingOptions.find(o => o.value === val);
+    return opt ? this.translate.instant(opt.labelKey) : val;
+  }
+
   // ─── Categories ──────────────────────────────────────────────────────────────
   categories: Category[] = [
     {

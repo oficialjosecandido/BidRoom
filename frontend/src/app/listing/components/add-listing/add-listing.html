@@ -152,7 +152,7 @@
               <select class="field-select" formControlName="subCategory">
                 <option value="">{{ 'addListing.selectSubCategory' | translate }}</option>
                 @for (sub of getSelectedSubCategories(); track sub) {
-                  <option [value]="sub">{{ sub }}</option>
+                  <option [value]="sub">{{ getSubCategoryLabel(sub) }}</option>
                 }
               </select>
               @if (getFieldError('subCategory')) { <div class="field-err">{{ getFieldError('subCategory') }}</div> }
@@ -496,11 +496,11 @@
           </div>
           <div class="review-row">
             <span class="review-label">{{ 'addListing.category' | translate }}</span>
-            <span class="review-val">{{ listingForm.get('category')?.value || '—' }}</span>
+            <span class="review-val">{{ reviewCategoryLabel }}</span>
           </div>
           <div class="review-row">
             <span class="review-label">{{ 'addListing.condition' | translate }}</span>
-            <span class="review-val">{{ listingForm.get('condition')?.value || '—' }}</span>
+            <span class="review-val">{{ reviewConditionLabel }}</span>
           </div>
           @if (listingForm.get('listingFormat')?.value === 'auction') {
             <div class="review-row">
@@ -514,7 +514,7 @@
           </div>
           <div class="review-row">
             <span class="review-label">{{ 'addListing.shippingOptions' | translate }}</span>
-            <span class="review-val">{{ listingForm.get('shippingOption')?.value || '—' }}</span>
+            <span class="review-val">{{ reviewShippingLabel }}</span>
           </div>
           <div class="review-row">
             <span class="review-label">{{ 'addListing.step3Title' | translate }}</span>
