@@ -389,7 +389,12 @@
       <button class="btn-offer" (click)="openBidModal()">{{ 'listingDetails.sidebar.bidPrivateRoom' | translate }}</button>
       <button class="btn-watch" (click)="openPrivateRoom()">{{ 'listingDetails.privateRoom.watch' | translate }}</button>
     }
-    @if (listing.privateRoomStatus === 'active' && !isAcceptedPrivateRoomBidder()) {
+    <!-- Seller: show a dedicated "Access Private Room" CTA when the room is live -->
+    @if (isOwnListing && listing.privateRoomStatus === 'active') {
+      <button class="btn-offer" (click)="openPrivateRoom()">{{ 'listingDetails.sidebar.accessPrivateRoomSeller' | translate }}</button>
+    }
+    <!-- Spectator (not the seller, not an accepted bidder): watch-only -->
+    @if (listing.privateRoomStatus === 'active' && !isAcceptedPrivateRoomBidder() && !isOwnListing) {
       <button class="btn-watch" (click)="openPrivateRoom()">{{ 'listingDetails.sidebar.watchPrivateRoomSpectator' | translate }}</button>
     }
     @if (listing.allowPrivateRoom && listing.privateRoomStatus === 'invited' && !isOwnListing) {

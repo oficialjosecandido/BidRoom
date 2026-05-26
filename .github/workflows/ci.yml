@@ -43,28 +43,11 @@ jobs:
           cd backend
           npm ci
 
-      - name: Check for tests
-        id: check-tests
-        run: |
-          cd backend
-          if [ -f "package.json" ] && grep -q '"test"' package.json; then
-            echo "has_tests=true" >> $GITHUB_OUTPUT
-          else
-            echo "has_tests=false" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Run tests
-        if: steps.check-tests.outputs.has_tests == 'true'
+      - name: Run smoke tests
         timeout-minutes: 5
         run: |
           cd backend
-          npm test
-        continue-on-error: true
-
-      - name: Skip tests
-        if: steps.check-tests.outputs.has_tests == 'false'
-        run: |
-          echo "✅ No tests configured - skipping"
+          npm run test:ci
 
   frontend-test:
     name: Frontend Tests
@@ -88,32 +71,9 @@ jobs:
           cd frontend
           npm ci
 
-      - name: Build frontend
+      - name: Build frontend (acts as the smoke test until karma is set up)
         timeout-minutes: 10
         run: |
           cd frontend
           npm run build
-
-      - name: Check for tests
-        id: check-tests
-        run: |
-          cd frontend
-          if [ -f "package.json" ] && grep -q '"test"' package.json; then
-            echo "has_tests=true" >> $GITHUB_OUTPUT
-          else
-            echo "has_tests=false" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Run tests
-        if: steps.check-tests.outputs.has_tests == 'true'
-        timeout-minutes: 5
-        run: |
-          cd frontend
-          npm test -- --watch=false --browsers=ChromeHeadless
-        continue-on-error: true
-
-      - name: Skip tests
-        if: steps.check-tests.outputs.has_tests == 'false'
-        run: |
-          echo "✅ No tests configured - skipping"
 

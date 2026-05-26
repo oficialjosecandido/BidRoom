@@ -3,11 +3,14 @@ const http = require('http');
 const { Server } = require('socket.io');
 const { createAdapter } = require('@socket.io/redis-adapter');
 const Redis = require('ioredis');
+const crypto = require('crypto');
 const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
-const rateLimit = require('express-rate-limit');
 require('dotenv').config();
+
+const logger = require('./utils/logger');
+const { createLimiter } = require('./middleware/rateLimiters');
 
 // Initialize Firebase Admin
 require('./config/firebaseAdmin');
@@ -52,27 +55,52 @@ const dsaComplianceScheduler = require('./services/dsaComplianceScheduler');
 const { runCleanup: runProofOfPaymentCleanup } = require('./services/proofOfPaymentCleanup');
 const { runImagePurge } = require('./services/imagePurgeScheduler');
 
-// CORS: FRONTEND_URL(s), optional CORS_EXTRA_ORIGINS (comma-separated), localhost, Azure Static Web Apps
+// CORS allowlist.
+//   - FRONTEND_URL / FRONTEND_URL_PROD: primary domains.
+//   - CORS_EXTRA_ORIGINS: comma-separated list of extra exact origins (e.g. preview deploys).
+//   - CORS_ALLOWED_SUBDOMAINS: comma-separated list of subdomain suffixes ("*.azurestaticapps.net")
+//     scoped to the BidRoom apps. Empty by default — never accept ANY *.azurestaticapps.net.
+//   - In NODE_ENV !== 'production' we also accept any localhost/127.0.0.1 origin (any port) so
+//     local Angular/Vite dev servers work without extra configuration.
 const extraOrigins = (process.env.CORS_EXTRA_ORIGINS || '')
   .split(',')
-  .map((s) => s.trim())
+  .map((s) => s.trim().toLowerCase())
   .filter(Boolean);
+
+const allowedSubdomainSuffixes = (process.env.CORS_ALLOWED_SUBDOMAINS || '')
+  .split(',')
+  .map((s) => s.trim().toLowerCase())
+  .filter(Boolean);
+
 const allowedOrigins = [
   process.env.FRONTEND_URL,
   process.env.FRONTEND_URL_PROD,
   ...extraOrigins,
   'http://localhost:4200',
   'https://localhost:4200'
-].filter(Boolean);
-/** Local Angular / Vite dev servers (any port). */
+]
+  .filter(Boolean)
+  .map((o) => o.toLowerCase().replace(/\/$/, ''));
+
+/** Local Angular / Vite dev servers (any port). Only accepted outside production. */
 const isLocalDevOrigin = (origin) =>
   /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(origin || '');
 
 const isAllowedOrigin = (origin) => {
   if (!origin) return false;
-  if (allowedOrigins.includes(origin)) return true;
-  if (origin.endsWith('.azurestaticapps.net')) return true;
-  if (isLocalDevOrigin(origin)) return true;
+  const normalized = origin.toLowerCase().replace(/\/$/, '');
+  if (allowedOrigins.includes(normalized)) return true;
+  if (allowedSubdomainSuffixes.length > 0) {
+    try {
+      const host = new URL(normalized).hostname;
+      if (allowedSubdomainSuffixes.some((suffix) => host === suffix || host.endsWith(`.${suffix}`))) {
+        return true;
+      }
+    } catch (_) {
+      // Malformed origin — reject.
+    }
+  }
+  if (process.env.NODE_ENV !== 'production' && isLocalDevOrigin(normalized)) return true;
   return false;
 };
 
@@ -96,8 +124,50 @@ const PORT = process.env.PORT || 3000;
 // Trust the first hop proxy (Azure App Service / load balancer) so req.ip is the real client IP
 app.set('trust proxy', 1);
 
-// Middleware
-app.use(helmet());
+// ─── Security headers ───────────────────────────────────────────────────────
+// The API is consumed exclusively from the Angular SPA, so we can ship a strict
+// CSP that only allows the integrations we actually use (Stripe + Google OAuth)
+// without breaking the Express JSON responses themselves.
+app.use(
+  helmet({
+    crossOriginEmbedderPolicy: false,
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
+    contentSecurityPolicy: {
+      useDefaults: true,
+      directives: {
+        defaultSrc: ["'self'"],
+        baseUri: ["'self'"],
+        objectSrc: ["'none'"],
+        frameAncestors: ["'self'"],
+        connectSrc: [
+          "'self'",
+          'https://api.stripe.com',
+          'https://*.stripe.com',
+          'https://identitytoolkit.googleapis.com',
+          'https://securetoken.googleapis.com',
+          'wss:',
+        ],
+        imgSrc: ["'self'", 'data:', 'blob:', 'https:'],
+        scriptSrc: ["'self'", 'https://js.stripe.com', 'https://checkout.stripe.com'],
+        frameSrc: ["'self'", 'https://js.stripe.com', 'https://hooks.stripe.com', 'https://checkout.stripe.com'],
+        styleSrc: ["'self'", "'unsafe-inline'"],
+        upgradeInsecureRequests: process.env.NODE_ENV === 'production' ? [] : null,
+      },
+    },
+  })
+);
+
+// Attach a stable request id so logs (and Application Insights) can correlate.
+app.use((req, res, next) => {
+  const incoming = req.headers['x-request-id'];
+  const requestId = typeof incoming === 'string' && incoming.length <= 64
+    ? incoming
+    : crypto.randomUUID();
+  req.id = requestId;
+  res.setHeader('X-Request-Id', requestId);
+  next();
+});
+
 const corsOptions = {
   origin: (origin, callback) => {
     if (!origin) {
@@ -106,17 +176,30 @@ const corsOptions = {
     if (isAllowedOrigin(origin)) {
       return callback(null, true);
     }
-    console.warn('[CORS] blocked origin:', origin);
+    logger.warn('CORS blocked origin', { origin });
     return callback(null, false);
   },
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Device-Fingerprint'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Device-Fingerprint', 'X-Request-Id'],
+  exposedHeaders: ['X-Request-Id'],
   credentials: true
 };
 app.use(cors(corsOptions));
 /** Explicit preflight so OPTIONS always returns CORS headers (some Azure/proxy setups miss this). */
 app.options('*', cors(corsOptions));
-app.use(morgan('combined'));
+
+// HTTP access logs.
+// - Production: feed morgan into the structured logger so every request becomes a JSON line.
+// - Other: human-readable dev format.
+if (process.env.NODE_ENV === 'production') {
+  app.use(
+    morgan('combined', {
+      stream: { write: (line) => logger.info(line.trim(), { kind: 'access' }) },
+    })
+  );
+} else {
+  app.use(morgan('dev'));
+}
 
 // Stripe webhooks need raw body for signature verification (must be before express.json())
 app.post('/api/payments/webhook', express.raw({ type: 'application/json' }), stripeWebhookHandler);
@@ -126,46 +209,34 @@ app.post('/api/kyc/webhook', express.raw({ type: 'application/json' }), kycWebho
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Rate limiters
-const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
+// Rate limiters — backed by Redis when REDIS_HOST is set (the only correct
+// option once we run behind a horizontal scaler), in-memory otherwise.
+const authLimiter = createLimiter({
+  name: 'auth',
+  windowMs: 15 * 60 * 1000,
   max: 20,
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: { error: 'Too many requests', message: 'Too many attempts. Please try again in 15 minutes.' }
+  message: 'Too many attempts. Please try again in 15 minutes.',
 });
-
-const bidOfferLimiter = rateLimit({
-  windowMs: 60 * 1000, // 1 minute
+const bidOfferLimiter = createLimiter({
+  name: 'bid-offer',
+  windowMs: 60 * 1000,
   max: 30,
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: { error: 'Too many requests', message: 'Too many requests. Please slow down.' }
 });
-
-const generalLimiter = rateLimit({
-  windowMs: 60 * 1000, // 1 minute
+const generalLimiter = createLimiter({
+  name: 'general',
+  windowMs: 60 * 1000,
   max: 120,
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: { error: 'Too many requests', message: 'Too many requests. Please slow down.' }
 });
-
-const adminLimiter = rateLimit({
-  windowMs: 60 * 1000, // 1 minute
+const adminLimiter = createLimiter({
+  name: 'admin',
+  windowMs: 60 * 1000,
   max: 60,
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: { error: 'Too many requests', message: 'Too many requests. Please slow down.' }
 });
-
 // Reviews limiter: stricter than general because writes (review/flag/appeal) are abuse-prone
-const reviewsLimiter = rateLimit({
-  windowMs: 60 * 1000, // 1 minute
+const reviewsLimiter = createLimiter({
+  name: 'reviews',
+  windowMs: 60 * 1000,
   max: 30,
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: { error: 'Too many requests', message: 'Too many requests. Please slow down.' }
 });
 
 // Routes
@@ -201,6 +272,47 @@ app.get('/', (req, res) => {
   });
 });
 
+// ─── Health checks ──────────────────────────────────────────────────────────
+// /healthz : cheap liveness probe (does the event loop respond?). No external IO.
+// /readyz  : real readiness probe (DB + Redis). Used by Azure App Service / K8s
+//             to take an instance out of rotation when a dependency is down.
+app.get('/healthz', (req, res) => {
+  res.status(200).json({ status: 'ok', uptime: process.uptime() });
+});
+
+app.get('/readyz', async (req, res) => {
+  // Lazy-load to avoid circular imports at boot time.
+  const mongoose = require('mongoose');
+
+  const checks = { mongo: 'unknown', redis: 'unknown' };
+  const mongoState = mongoose.connection?.readyState;
+  // 1 = connected, 2 = connecting (treat as not-ready), 0/3 = disconnected/closing.
+  checks.mongo = mongoState === 1 ? 'ok' : 'down';
+
+  try {
+    if (process.env.REDIS_HOST && redisService?.client) {
+      const pong = await Promise.race([
+        redisService.client.ping(),
+        new Promise((_, rej) => setTimeout(() => rej(new Error('redis ping timeout')), 1500)),
+      ]);
+      checks.redis = pong === 'PONG' ? 'ok' : 'down';
+    } else {
+      checks.redis = 'disabled';
+    }
+  } catch (err) {
+    checks.redis = 'down';
+  }
+
+  const ok = checks.mongo === 'ok' && checks.redis !== 'down';
+  res.status(ok ? 200 : 503).json({
+    status: ok ? 'ok' : 'degraded',
+    uptime: process.uptime(),
+    timestamp: new Date().toISOString(),
+    checks,
+  });
+});
+
+// Backwards compatibility — existing deploy probes still hit /health.
 app.get('/health', (req, res) => {
   res.json({
     status: 'OK',
@@ -209,21 +321,30 @@ app.get('/health', (req, res) => {
   });
 });
 
-
-// Error handling middleware
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({
-    error: 'Something went wrong!',
-    message: process.env.NODE_ENV === 'development' ? err.message : 'Internal server error'
+// ─── 404 handler (must come before the error handler) ──────────────────────
+app.use((req, res, next) => {
+  res.status(404).json({
+    error: 'Route not found',
+    path: req.originalUrl,
+    requestId: req.id,
   });
 });
 
-// 404 handler
-app.use('*', (req, res) => {
-  res.status(404).json({
-    error: 'Route not found',
-    path: req.originalUrl
+// ─── Centralised error handler ─────────────────────────────────────────────
+// eslint-disable-next-line no-unused-vars
+app.use((err, req, res, next) => {
+  logger.error('Unhandled error', {
+    requestId: req.id,
+    method: req.method,
+    path: req.originalUrl,
+    error: err.message,
+    stack: err.stack,
+  });
+  const status = err.status && Number.isInteger(err.status) ? err.status : 500;
+  res.status(status).json({
+    error: status === 500 ? 'Internal server error' : err.message || 'Request failed',
+    message: process.env.NODE_ENV === 'development' ? err.message : undefined,
+    requestId: req.id,
   });
 });
 
@@ -311,18 +432,18 @@ app.set('redisService', redisService);
 // Start server and connect to database
 const startServer = async () => {
   try {
-    // Connect to MongoDB
+    // Connect to MongoDB (with internal retry/backoff — see config/database.js).
     await connectDB();
 
-    // Drop legacy unique index on platinumBidderInvitations.invitationToken (no longer used)
+    // Drop legacy unique index on platinumBidderInvitations.invitationToken (no longer used).
     try {
       await Listing.collection.dropIndex('platinumBidderInvitations.invitationToken_1');
-      console.log('🗑️ Dropped legacy index platinumBidderInvitations.invitationToken_1');
+      logger.info('Dropped legacy index platinumBidderInvitations.invitationToken_1');
     } catch (e) {
-      if (e.code !== 27) console.warn('Index drop (optional):', e.message);
+      if (e.code !== 27) logger.warn('Index drop (optional)', { error: e.message });
     }
 
-    // Connect to Redis
+    // Connect to Redis (cache/state). Failures here are surfaced but not fatal.
     await redisService.connect();
 
     // Attach socket.io Redis adapter so events are broadcast across all server instances.
@@ -351,53 +472,62 @@ const startServer = async () => {
           })
         ]);
         io.adapter(createAdapter(pubClient, subClient));
-        console.log('🔌 Socket.io Redis adapter attached (multi-instance support enabled)');
+        logger.info('Socket.io Redis adapter attached (multi-instance support enabled)');
       } catch (adapterErr) {
-        console.warn('⚠️  Socket.io Redis adapter failed — running in single-instance mode:', adapterErr.message);
+        logger.warn('Socket.io Redis adapter failed — running in single-instance mode', { error: adapterErr.message });
       }
     } else {
-      console.log('ℹ️  REDIS_HOST not set — socket.io running in single-instance mode');
+      logger.info('REDIS_HOST not set — socket.io running in single-instance mode');
     }
 
     // Start the server
     server.listen(PORT, () => {
-      console.log(`🚀 Server is running on port ${PORT}`);
-      console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
-      console.log(`🌐 API URL: http://localhost:${PORT}`);
-      console.log(`🔌 Socket.io server is ready`);
-      
-      // Start auction end scheduler (checks every 1 minute)
+      logger.info('Server started', {
+        port: PORT,
+        env: process.env.NODE_ENV || 'development',
+        url: `http://localhost:${PORT}`,
+      });
+
       auctionEndScheduler.startScheduler(1, io);
-      console.log(`⏰ Auction end scheduler started`);
-
       shippingDeadlineScheduler.startScheduler(15, io);
-      console.log(`📦 Shipping deadline scheduler started`);
-
       deliveryAutoReleaseScheduler.startDeliveryAutoReleaseScheduler(15, io);
-      console.log(`🚚 Delivery auto-release scheduler started`);
-
       reviewAutoGenerateScheduler.startReviewAutoGenerateScheduler(6, io);
-      console.log(`⭐ Review auto-generate scheduler started`);
-
       dsaComplianceScheduler.startDsaComplianceScheduler(24, io);
-      console.log(`⚖️  DSA compliance scheduler started`);
+      logger.info('Schedulers started', {
+        auctionEnd: '1m',
+        shipping: '15m',
+        delivery: '15m',
+        reviews: '6h',
+        dsa: '24h',
+      });
 
       const DAILY_MS = 24 * 60 * 60 * 1000;
 
       // Proof-of-payment cleanup: delete files from Azure 30 days after paid (run daily)
-      setTimeout(() => runProofOfPaymentCleanup().catch(e => console.error('Proof-of-payment cleanup:', e.message)), 60000);
-      setInterval(() => runProofOfPaymentCleanup().catch(e => console.error('Proof-of-payment cleanup:', e.message)), DAILY_MS);
+      setTimeout(() => runProofOfPaymentCleanup().catch((e) => logger.error('Proof-of-payment cleanup failed', { error: e.message })), 60000);
+      setInterval(() => runProofOfPaymentCleanup().catch((e) => logger.error('Proof-of-payment cleanup failed', { error: e.message })), DAILY_MS);
 
       // RGPD image purge: delete listing images past their retention period (run daily at startup + every 24h)
-      setTimeout(() => runImagePurge().catch(e => console.error('Image purge error:', e.message)), 5 * 60 * 1000);
-      setInterval(() => runImagePurge().catch(e => console.error('Image purge error:', e.message)), DAILY_MS);
-      console.log(`🧹 Image purge scheduler started`);
+      setTimeout(() => runImagePurge().catch((e) => logger.error('Image purge failed', { error: e.message })), 5 * 60 * 1000);
+      setInterval(() => runImagePurge().catch((e) => logger.error('Image purge failed', { error: e.message })), DAILY_MS);
+      logger.info('Image purge scheduler started');
     });
   } catch (error) {
-    console.error('❌ Failed to start server:', error.message);
+    logger.error('Failed to start server', { error: error.message, stack: error.stack });
     process.exit(1);
   }
 };
+
+// Surface — but don't crash on — unexpected errors.
+process.on('unhandledRejection', (reason) => {
+  logger.error('Unhandled promise rejection', {
+    reason: reason instanceof Error ? reason.message : String(reason),
+    stack: reason instanceof Error ? reason.stack : undefined,
+  });
+});
+process.on('uncaughtException', (err) => {
+  logger.error('Uncaught exception', { error: err.message, stack: err.stack });
+});
 
 startServer();
 

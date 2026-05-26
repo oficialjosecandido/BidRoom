@@ -1063,10 +1063,11 @@ nav {
 }
 
 /* ── SHEET / OVERLAY ────────────────────────── */
+/* z-index 1000 — sits above the cookie banner (999) but below SweetAlert2 (≥10000) */
 .overlay {
   position: fixed;
   inset: 0;
-  z-index: 200;
+  z-index: 1000;
   background: rgba(0,0,0,.65);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);

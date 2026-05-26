@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const dns = require('dns');
+const logger = require('../utils/logger');
 
 function ensureDbName(uri) {
   const lastSegment = uri.split('/').pop() || '';
@@ -19,110 +20,151 @@ function srvUriToStandardUri(srvUri) {
   const match = srvUri.match(/^mongodb\+srv:\/\/([^@]+)@([^/]+)(\/[^?]*)?(\?.*)?$/);
   if (!match) return null;
   const [, auth, host, path = '/', existingQs = ''] = match;
-  const pathPart = (path === '/' || path === '') ? '/' : path;
+  const pathPart = path === '/' || path === '' ? '/' : path;
   const opts = 'authSource=admin&directConnection=true';
   const sep = pathPart.includes('?') || existingQs ? '&' : '?';
   return `mongodb://${auth}@${host}:27017${pathPart}${existingQs}${sep}${opts}`;
 }
 
 const CONNECT_TIMEOUT_MS = 15000;
+const MAX_BOOT_ATTEMPTS = parseInt(process.env.MONGO_BOOT_ATTEMPTS || '5', 10);
+const BOOT_BACKOFF_BASE_MS = 2000;
+const BOOT_BACKOFF_MAX_MS = 30000;
 
-const connectDB = async () => {
-  let mongoURI = process.env.MONGO_URI;
-  if (!mongoURI) {
-    console.error('❌ MONGO_URI environment variable is not set');
-    process.exit(1);
-  }
-  mongoURI = ensureDbName(mongoURI);
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
-  const tryConnect = async (uri, timeoutMs = CONNECT_TIMEOUT_MS) => {
-    return mongoose.connect(uri, { serverSelectionTimeoutMS: timeoutMs });
-  };
+function isSrvDnsError(err) {
+  return /ENODATA|querySrv|getaddrinfo|ETIMEOUT/.test(err && err.message ? err.message : '');
+}
 
+async function tryConnect(uri, timeoutMs = CONNECT_TIMEOUT_MS) {
+  return mongoose.connect(uri, { serverSelectionTimeoutMS: timeoutMs });
+}
+
+/**
+ * Attempt the smart cascade of URIs we already know about:
+ *   1) The configured MONGO_URI (SRV or standard).
+ *   2) Same URI through Google DNS (if SRV).
+ *   3) MONGO_URI_STANDARD if provided.
+ *   4) Derived standard form from the SRV URI as last resort.
+ */
+async function connectOnce(primaryUri) {
   try {
-    const conn = await tryConnect(mongoURI);
-    console.log(`🍃 MongoDB Connected: ${conn.connection.host}`);
-    console.log(`📊 Database: ${conn.connection.name}`);
+    const conn = await tryConnect(primaryUri);
+    return conn;
   } catch (error) {
-    const isSrvDnsError = /ENODATA|querySrv|getaddrinfo/.test(error.message);
-    const isSrvUri = mongoURI.startsWith('mongodb+srv://');
-    let connected = false;
+    const srv = primaryUri.startsWith('mongodb+srv://');
+    const dnsError = isSrvDnsError(error);
 
-    // 1) SRV failed: retry with Google DNS (often fixes "worked yesterday" when ISP DNS is flaky)
-    if (isSrvDnsError && isSrvUri) {
+    if (dnsError && srv) {
       const defaultServers = dns.getServers();
-      dns.setServers(['8.8.8.8', '8.8.4.4']);
-      console.log('⚠️  SRV DNS failed, retrying with Google DNS (8.8.8.8)...');
       try {
-        const conn = await tryConnect(mongoURI);
-        console.log(`🍃 MongoDB Connected: ${conn.connection.host}`);
-        console.log(`📊 Database: ${conn.connection.name}`);
-        connected = true;
+        dns.setServers(['8.8.8.8', '8.8.4.4']);
+        logger.warn('SRV DNS failed, retrying with Google DNS (8.8.8.8)');
+        const conn = await tryConnect(primaryUri);
+        return conn;
       } catch (retryErr) {
-        if (!/ENODATA|querySrv|getaddrinfo/.test(retryErr.message)) {
-          console.error('❌ Database connection failed:', retryErr.message);
-          process.exit(1);
-        }
+        if (!isSrvDnsError(retryErr)) throw retryErr;
       } finally {
         if (defaultServers.length) dns.setServers(defaultServers);
       }
+
+      const standardUri = process.env.MONGO_URI_STANDARD;
+      if (standardUri) {
+        logger.warn('Trying MONGO_URI_STANDARD');
+        const conn = await tryConnect(ensureDbName(standardUri));
+        return conn;
+      }
+
+      const fallback = srvUriToStandardUri(primaryUri);
+      if (fallback) {
+        logger.warn('Trying standard format (host:27017)');
+        const conn = await tryConnect(fallback);
+        return conn;
+      }
     }
 
-    if (!connected) {
-      const standardUri = process.env.MONGO_URI_STANDARD;
-      if (isSrvDnsError && standardUri) {
-        console.log('⚠️  Trying MONGO_URI_STANDARD...');
+    throw error;
+  }
+}
+
+/**
+ * Connect to MongoDB with bounded exponential backoff.
+ *
+ * Why retry at boot time:
+ *   - Azure App Service often boots before Azure Cosmos / Atlas is reachable from
+ *     the freshly assigned IP.
+ *   - Network glitches at deploy time shouldn't kill the whole instance — the
+ *     orchestrator will then mark the slot as unhealthy and bounce us, costing
+ *     downtime. A few retries are cheaper.
+ *
+ * After exhausting MAX_BOOT_ATTEMPTS we still throw, letting the caller
+ * (src/index.js) log and exit with code 1 so the platform restarts the process.
+ */
+const connectDB = async () => {
+  const rawUri = process.env.MONGO_URI;
+  if (!rawUri) {
+    logger.error('MONGO_URI environment variable is not set');
+    throw new Error('MONGO_URI environment variable is not set');
+  }
+  const mongoURI = ensureDbName(rawUri);
+
+  let lastError;
+  for (let attempt = 1; attempt <= MAX_BOOT_ATTEMPTS; attempt += 1) {
+    try {
+      const conn = await connectOnce(mongoURI);
+      logger.info('MongoDB connected', {
+        host: conn.connection.host,
+        database: conn.connection.name,
+        attempt,
+      });
+
+      mongoose.connection.on('error', (err) => {
+        logger.error('MongoDB connection error', { error: err.message });
+      });
+      mongoose.connection.on('disconnected', () => {
+        logger.warn('MongoDB disconnected');
+      });
+      // Mongoose 8 auto-reconnects internally, but log when it succeeds again.
+      mongoose.connection.on('reconnected', () => {
+        logger.info('MongoDB reconnected');
+      });
+
+      process.on('SIGINT', async () => {
         try {
-          const conn = await tryConnect(ensureDbName(standardUri));
-          console.log(`🍃 MongoDB Connected: ${conn.connection.host}`);
-          console.log(`📊 Database: ${conn.connection.name}`);
-          connected = true;
-        } catch (err2) {
-          console.error('❌ Database connection failed (standard URI):', err2.message);
-          process.exit(1);
+          await mongoose.connection.close();
+          logger.info('MongoDB connection closed (SIGINT)');
+        } finally {
+          process.exit(0);
         }
-      }
-      if (!connected && isSrvDnsError && isSrvUri) {
-        const fallback = srvUriToStandardUri(ensureDbName(process.env.MONGO_URI));
-        if (fallback) {
-          console.log('⚠️  Trying standard format (host:27017, 15s timeout)...');
-          try {
-            const conn = await tryConnect(fallback);
-            console.log(`🍃 MongoDB Connected: ${conn.connection.host}`);
-            console.log(`📊 Database: ${conn.connection.name}`);
-            connected = true;
-          } catch (err2) {
-            console.error('❌ Database connection failed:', err2.message);
-            console.error('💡 Get the "Standard connection string" from Atlas (Connect → Drivers) and set MONGO_URI_STANDARD in .env');
-            process.exit(1);
-          }
-        }
-      }
-      if (!connected) {
-        console.error('❌ Database connection failed:', error.message);
-        if (isSrvDnsError) {
-          console.error('💡 Get the "Standard connection string" from Atlas and set MONGO_URI_STANDARD in .env');
-        }
-        process.exit(1);
+      });
+
+      return mongoose.connection;
+    } catch (err) {
+      lastError = err;
+      const backoff = Math.min(BOOT_BACKOFF_MAX_MS, BOOT_BACKOFF_BASE_MS * 2 ** (attempt - 1));
+      logger.warn('MongoDB connection attempt failed', {
+        attempt,
+        of: MAX_BOOT_ATTEMPTS,
+        error: err.message,
+        nextRetryMs: attempt === MAX_BOOT_ATTEMPTS ? null : backoff,
+      });
+      if (attempt < MAX_BOOT_ATTEMPTS) {
+        await sleep(backoff);
       }
     }
   }
 
-  mongoose.connection.on('error', (err) => {
-    console.error('❌ MongoDB connection error:', err);
+  logger.error('MongoDB connection failed after all retries', {
+    attempts: MAX_BOOT_ATTEMPTS,
+    error: lastError && lastError.message,
   });
-
-  mongoose.connection.on('disconnected', () => {
-    console.log('⚠️  MongoDB disconnected');
-  });
-
-  process.on('SIGINT', async () => {
-    await mongoose.connection.close();
-    console.log('🔌 MongoDB connection closed through app termination');
-    process.exit(0);
-  });
-
-  return mongoose.connection;
+  if (lastError && isSrvDnsError(lastError)) {
+    logger.error('Tip: set MONGO_URI_STANDARD with the Atlas "Standard connection string"');
+  }
+  throw lastError || new Error('MongoDB connection failed');
 };
 
 module.exports = connectDB;

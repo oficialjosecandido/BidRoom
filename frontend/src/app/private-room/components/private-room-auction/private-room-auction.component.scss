@@ -983,6 +983,40 @@ $radius-lg:      20px;
     color: $text-muted;
     flex-shrink: 0;
   }
+
+  // ── Seller row ────────────────────────────────────────────
+  &--seller {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    margin-bottom: 0.25rem;
+    padding-bottom: 0.6rem;
+  }
+
+  &__avatar--seller {
+    background: linear-gradient(135deg, #7A4F84 0%, #5a3464 100%);
+    box-shadow: 0 0 0 2px rgba(201, 168, 76, 0.35);
+  }
+
+  &__role-badge {
+    display: inline-block;
+    font-size: 0.55rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: $gold-light;
+    background: rgba(201, 168, 76, 0.12);
+    border: 1px solid rgba(201, 168, 76, 0.25);
+    border-radius: 4px;
+    padding: 1px 5px;
+    width: fit-content;
+  }
+
+  &__you {
+    font-style: normal;
+    font-size: 0.7rem;
+    font-weight: 400;
+    color: $text-muted;
+    margin-left: 3px;
+  }
 }
 
 // ═══════════════════════════════════════════════════════════════════════════

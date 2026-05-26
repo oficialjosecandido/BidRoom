@@ -21,6 +21,7 @@ const { appendModerationAudit } = require('../services/moderationAuditService');
 const { runImagePurge } = require('../services/imagePurgeScheduler');
 const { getBlocklistItems, addBlocklistItem, removeBlocklistItem, ensureBlocklistExists } = require('../services/contentSafetyService');
 const azureStorageService = require('../services/azureStorage.service');
+const { requireAdmin, ADMIN_EMAILS } = require('../utils/roles');
 
 function getStripe() {
   const key = process.env.STRIPE_SECRET_KEY;
@@ -28,20 +29,6 @@ function getStripe() {
 }
 
 const router = express.Router();
-
-if (!process.env.ADMIN_EMAILS) {
-  // Fail hard in production; warn loudly in development so developers notice immediately.
-  const msg = 'ADMIN_EMAILS environment variable is not set. Admin routes will be disabled.';
-  if (process.env.NODE_ENV === 'production') {
-    throw new Error(msg);
-  }
-  console.error(`\n❌ SECURITY: ${msg}\n`);
-}
-
-const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || '')
-  .split(',')
-  .map(e => e.trim().toLowerCase())
-  .filter(e => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e));
 
 function isValidObjectId(id) {
   return mongoose.Types.ObjectId.isValid(id);
@@ -182,19 +169,6 @@ async function snapshotMetricsForWindow(from, to) {
     bidRoomFeesTotal: Math.round((Number(row.bidRoomFeesTotal) || 0) * 100) / 100
   };
 }
-
-// Admin middleware - checks if user is an admin
-const requireAdmin = async (req, res, next) => {
-  if (!req.user) {
-    return res.status(401).json({ error: 'Unauthorized' });
-  }
-
-  if (!ADMIN_EMAILS.includes(req.user.email?.toLowerCase())) {
-    return res.status(403).json({ error: 'Forbidden', message: 'Admin access required' });
-  }
-
-  next();
-};
 
 // Get platform statistics
 router.get('/statistics', authenticateToken, requireAdmin, async (req, res) => {

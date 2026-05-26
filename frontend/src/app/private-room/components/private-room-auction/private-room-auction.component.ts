@@ -487,6 +487,13 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
     return !!sellerEmail && !!userEmail && sellerEmail === userEmail;
   }
 
+  /** Display name of the listing seller (for the participants panel). */
+  get sellerDisplayName(): string {
+    if (!this.listing?.seller) return 'Seller';
+    const s = this.listing.seller as { firstName?: string; lastName?: string };
+    return [s.firstName, s.lastName].filter(Boolean).join(' ') || 'Seller';
+  }
+
   /** Temporary winner = bidder with the highest bid (by amount). */
   getTemporaryWinner(): { name: string; amount: number } | null {
     if (!this.bids.length) return null;

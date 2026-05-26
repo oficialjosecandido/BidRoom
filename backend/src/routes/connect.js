@@ -527,7 +527,7 @@ router.post('/create-checkout-session', requireActiveAccount, async (req, res) =
     transaction.buyerTotalPaid    = buyerTotalCents   / 100;   // item + stripe_est + shipping
     await transaction.save();
 
-    console.log(`${LOG_PREFIX} Checkout session created session_id=${session.id} transaction=${transaction._id} amount=$${buyerTotal}`);
+    console.log(`${LOG_PREFIX} Checkout session created session_id=${session.id} transaction=${transaction._id} amount=$${(buyerTotalCents / 100).toFixed(2)}`);
     res.json({ url: session.url });
   } catch (err) {
     console.error(`${LOG_PREFIX} Create checkout session error:`, err.message);

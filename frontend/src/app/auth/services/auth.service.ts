@@ -3,8 +3,8 @@ import { BehaviorSubject, Observable, from, of, throwError } from 'rxjs';
 import { catchError, map, switchMap, tap } from 'rxjs/operators';
 import { HttpClient } from '@angular/common/http';
 import { Auth, GoogleAuthProvider, User as FirebaseUser, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithPopup, sendEmailVerification, updateProfile, signOut, getIdToken, confirmPasswordReset, verifyPasswordResetCode } from '@angular/fire/auth';
-import { isAdminEmail } from '../../shared/config/admin.constants';
 import { API_CONFIG } from '../../shared/config/api.config';
+import { UserRolesService } from '../../shared/services/user-roles.service';
 
 export interface AppUser {
   uid: string;
@@ -20,6 +20,7 @@ export interface AppUser {
 export class AuthService {
   private auth = inject(Auth);
   private http = inject(HttpClient);
+  private userRoles = inject(UserRolesService);
   private apiUrl = API_CONFIG.getApiUrl();
 
   private currentUserSubject = new BehaviorSubject<AppUser | null>(null);
@@ -35,27 +36,33 @@ export class AuthService {
         // User is logged in but email is not verified - sign them out
         await signOut(this.auth);
         this.currentUserSubject.next(null);
+        this.userRoles.invalidate();
         this.authReadySubject.next(true);
         return;
       }
       const mapped = this.mapFirebaseUser(fbUser);
       this.currentUserSubject.next(mapped);
       this.authReadySubject.next(true);
-      
-      // If user is admin and there's a saved admin route, redirect there
-      // This handles page refresh scenario
-      if (mapped && isAdminEmail(mapped.email)) {
-        const adminRoute = localStorage.getItem('admin_route');
-        if (adminRoute) {
-          const currentPath = window.location.pathname;
-          // Redirect if we're on auth pages or landing page, but not if already on admin route
-          if ((currentPath.startsWith('/auth') || currentPath === '/landing' || currentPath === '/') && !currentPath.startsWith('/nexus')) {
-            setTimeout(() => {
-              window.location.href = adminRoute;
-            }, 100);
-          }
-        }
+
+      if (!mapped) {
+        this.userRoles.invalidate();
+        return;
       }
+
+      // Refresh role flags for the new user, then route admins to a saved
+      // /nexus route (handles page-refresh scenario for support staff).
+      this.userRoles.invalidate();
+      this.userRoles.load().subscribe((roles) => {
+        if (!roles.isAdmin) return;
+        const adminRoute = localStorage.getItem('admin_route');
+        if (!adminRoute) return;
+        const currentPath = window.location.pathname;
+        if ((currentPath.startsWith('/auth') || currentPath === '/landing' || currentPath === '/') && !currentPath.startsWith('/nexus')) {
+          setTimeout(() => {
+            window.location.href = adminRoute;
+          }, 100);
+        }
+      });
     });
   }
 
@@ -159,6 +166,7 @@ export class AuthService {
       const name = cookie.split('=')[0].trim();
       document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
     });
+    this.userRoles.invalidate();
     return from(signOut(this.auth));
   }
 }

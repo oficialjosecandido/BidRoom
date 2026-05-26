@@ -111,7 +111,7 @@ router.get('/listing/:listingId/stats', async (req, res) => {
 router.post('/', optionalAuth, requireActiveAccountIfAuthenticated, requireNoDisputeRestrictionIfAuthenticated, async (req, res) => {
   try {
     // ── Per-user rate limit ─────────────────────────────────────────────────
-    const rateCheck = checkBidRateLimit(req);
+    const rateCheck = await checkBidRateLimit(req);
     if (!rateCheck.allowed) {
       return res.status(429).json({
         error: 'Rate limit exceeded',

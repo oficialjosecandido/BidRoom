@@ -38,18 +38,45 @@ jobs:
       - name: Build Angular app
         run: |
           cd frontend
-          npm run build
+          # dev branch → development config (shows test durations, non-production flags)
+          # main branch → production config (hides test-only features)
+          if [ "${{ github.ref_name }}" = "dev" ]; then
+            npx ng build --configuration=development
+          else
+            npm run build
+          fi
         env:
           # Set API URL for production build
-          API_URL: https://bidroom-backend-dev.azurewebsites.net/api
+          API_URL: ${{ vars.API_URL || 'https://bidroom-backend-dev.azurewebsites.net/api' }}
 
-      - name: Patch API_URL in built index.html
+      - name: Patch runtime config in built index.html
+        env:
+          API_URL: ${{ vars.API_URL || 'https://bidroom-backend-dev.azurewebsites.net/api' }}
+          STRIPE_PUBLISHABLE_KEY: ${{ secrets.STRIPE_PUBLISHABLE_KEY }}
         run: |
-          API_URL="${API_URL:-https://bidroom-backend-dev.azurewebsites.net/api}"
+          set -euo pipefail
           INDEX="frontend/dist/frontend/browser/index.html"
-          # Replace localhost proxy URL with deployed backend (SWA cannot proxy /api to App Service)
+          if [ ! -f "$INDEX" ]; then
+            echo "❌ Built index.html not found at $INDEX"
+            exit 1
+          fi
+
+          # Replace API_URL placeholder (default in index.html is '/api')
           sed -i "s|API_URL: '/api'|API_URL: '${API_URL}'|" "$INDEX"
-          grep -o "API_URL: '[^']*'" "$INDEX" || true
+
+          # Replace Stripe publishable key. Fails the build if the secret was not set,
+          # otherwise we would silently ship the dev/test key to production users.
+          if [ -z "${STRIPE_PUBLISHABLE_KEY:-}" ]; then
+            echo "❌ STRIPE_PUBLISHABLE_KEY secret is not set in GitHub Actions. Refusing to deploy with the test key embedded in index.html."
+            exit 1
+          fi
+          # Use a delimiter unlikely to appear inside the key; awk avoids sed escaping headaches.
+          awk -v k="$STRIPE_PUBLISHABLE_KEY" '
+            { gsub(/STRIPE_PUBLISHABLE_KEY: '\''[^'\'']*'\''/, "STRIPE_PUBLISHABLE_KEY: '\''" k "'\''"); print }
+          ' "$INDEX" > "$INDEX.tmp" && mv "$INDEX.tmp" "$INDEX"
+
+          echo "✅ Patched runtime config:"
+          grep -oE "(API_URL|STRIPE_PUBLISHABLE_KEY): '[^']*'" "$INDEX" | sed -E "s/(STRIPE_PUBLISHABLE_KEY: ')([^']{8}).*$/\1\2…(redacted)/"
 
       - name: Verify build output
         run: |

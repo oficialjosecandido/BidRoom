@@ -283,8 +283,14 @@ export class AddListing implements OnInit, OnDestroy {
     { value: 'For Parts or Not Working', labelKey: 'addListing.conditionForParts' }
   ];
 
+  // Short durations (5 min, 1 h, 2 h) are only shown in non-production builds
+  // so testers can create quick listings for private-room testing.
   listingDurations = [
-    { label: '5 minutes', hours: 1 / 12 },
+    ...(!environment.production ? [
+      { label: '5 minutes', hours: 1 / 12 },
+      { label: '1 hour',    hours: 1      },
+      { label: '2 hours',   hours: 2      },
+    ] : []),
     { label: '24 hours', hours: 24  },
     { label: '3 days',   hours: 72  },
     { label: '7 days',   hours: 168 },
@@ -717,6 +723,9 @@ export class AddListing implements OnInit, OnDestroy {
     'video/mp4', 'video/webm', 'video/quicktime'
   ];
 
+  /** Maximum allowed video file size: 15 MB */
+  private readonly MAX_VIDEO_SIZE_BYTES = 15 * 1024 * 1024;
+
   get imageCount(): number { return this.uploadedFiles.filter(f => this.ALLOWED_IMAGE_TYPES.includes(f.type)).length; }
   get videoCount(): number { return this.uploadedFiles.filter(f => this.ALLOWED_VIDEO_TYPES.includes(f.type)).length; }
   isVideoFile(file: File): boolean { return this.ALLOWED_VIDEO_TYPES.includes(file.type); }
@@ -733,7 +742,7 @@ export class AddListing implements OnInit, OnDestroy {
     this.errorMessage = '';
     const files = Array.from(fileList);
     const countBefore = this.uploadedFiles.length;
-    const rejected: { name: string; reason: 'type' | 'maxPhotos' | 'maxPhotosWithVideo' | 'videoLimit' }[] = [];
+    const rejected: { name: string; reason: 'type' | 'maxPhotos' | 'maxPhotosWithVideo' | 'videoLimit' | 'videoSize' }[] = [];
     let imgs = this.imageCount;
     let vids = this.videoCount;
 
@@ -751,6 +760,8 @@ export class AddListing implements OnInit, OnDestroy {
         reader.readAsDataURL(file);
       } else if (isVideo) {
         if (vids >= 1 || imgs >= 5) { rejected.push({ name: file.name, reason: 'videoLimit' }); return; }
+        // Enforce 100 MB size limit before the file is accepted
+        if (file.size > this.MAX_VIDEO_SIZE_BYTES) { rejected.push({ name: file.name, reason: 'videoSize' }); return; }
         this.uploadedFiles.push(file);
         this.previewUrls.push(null);
         vids++;
@@ -774,6 +785,7 @@ export class AddListing implements OnInit, OnDestroy {
       if (byReason.has('maxPhotos')) parts.push(this.translate.instant('addListing.errors.mediaMaxPhotos', { files: joinFiles(byReason.get('maxPhotos')!) }));
       if (byReason.has('maxPhotosWithVideo')) parts.push(this.translate.instant('addListing.errors.mediaMaxPhotosWithVideo', { files: joinFiles(byReason.get('maxPhotosWithVideo')!) }));
       if (byReason.has('videoLimit')) parts.push(this.translate.instant('addListing.errors.mediaVideoLimit', { files: joinFiles(byReason.get('videoLimit')!) }));
+      if (byReason.has('videoSize')) parts.push(this.translate.instant('addListing.errors.mediaVideoSize', { files: joinFiles(byReason.get('videoSize')!) }));
       this.errorMessage = parts.join(' ');
     }
     while (this.media.length < this.uploadedFiles.length) {

@@ -1,89 +1,75 @@
 import { Injectable, inject } from '@angular/core';
-import { CanActivate, Router, ActivatedRouteSnapshot, RouterStateSnapshot } from '@angular/router';
-import { Observable, of, from } from 'rxjs';
+import {
+  CanActivate,
+  Router,
+  ActivatedRouteSnapshot,
+  RouterStateSnapshot,
+} from '@angular/router';
+import { Observable, from, of } from 'rxjs';
 import { catchError, switchMap } from 'rxjs/operators';
 import { Auth } from '@angular/fire/auth';
-import { isAdminEmail } from '../../shared/config/admin.constants';
+import { UserRolesService } from '../../shared/services/user-roles.service';
 
 const ADMIN_ROUTE_KEY = 'admin_route';
 
-@Injectable({
-  providedIn: 'root'
-})
+@Injectable({ providedIn: 'root' })
 export class AdminGuard implements CanActivate {
   private router = inject(Router);
   private auth = inject(Auth);
+  private userRoles = inject(UserRolesService);
 
   canActivate(
-    route: ActivatedRouteSnapshot,
+    _route: ActivatedRouteSnapshot,
     state: RouterStateSnapshot
   ): Observable<boolean> {
-    // Save admin route to localStorage
     localStorage.setItem(ADMIN_ROUTE_KEY, state.url);
 
-    // Check Firebase directly first (fast path)
-    const fbUser = this.auth.currentUser;
-    if (fbUser && fbUser.emailVerified && isAdminEmail(fbUser.email)) {
-      return of(true);
-    }
-
-    // If no user in Firebase yet, check if we have a saved admin route
-    // This means user was previously on admin page, so wait for auth to restore
-    const savedRoute = localStorage.getItem(ADMIN_ROUTE_KEY);
-    if (!savedRoute || !savedRoute.startsWith('/nexus')) {
-      // Not an admin route, proceed with normal check
-      this.handleUnauthorized(state);
-      return of(false);
-    }
-
-    // Wait for Firebase to restore session (user was on admin page before refresh)
-    return from(
-      new Promise<void>((resolve) => {
-        if (this.auth.currentUser !== null) {
-          resolve();
-          return;
-        }
-
-        const unsubscribe = this.auth.onAuthStateChanged(() => {
-          unsubscribe();
-          resolve();
-        });
-
-        setTimeout(() => {
-          unsubscribe();
-          resolve();
-        }, 3000);
-      })
-    ).pipe(
+    return this.waitForAuth().pipe(
       switchMap(() => {
         const fbUser = this.auth.currentUser;
         if (!fbUser || !fbUser.emailVerified) {
           this.handleUnauthorized(state);
           return of(false);
         }
-
-        if (!isAdminEmail(fbUser.email)) {
-          localStorage.removeItem(ADMIN_ROUTE_KEY);
-          this.router.navigate(['/landing']);
-          return of(false);
-        }
-
-        return of(true);
+        return this.userRoles.load().pipe(
+          switchMap((roles) => {
+            if (roles.isAdmin) return of(true);
+            localStorage.removeItem(ADMIN_ROUTE_KEY);
+            this.router.navigate(['/landing']);
+            return of(false);
+          })
+        );
       }),
       catchError(() => {
-        const fbUser = this.auth.currentUser;
-        if (fbUser && fbUser.emailVerified && isAdminEmail(fbUser.email)) {
-          return of(true);
-        }
         this.handleUnauthorized(state);
         return of(false);
       })
     );
   }
 
+  /**
+   * Resolves once Firebase has restored the cached auth session (page refresh
+   * scenario) or after a short timeout if it never fires.
+   */
+  private waitForAuth(): Observable<void> {
+    if (this.auth.currentUser !== null) return of(void 0);
+    return from(
+      new Promise<void>((resolve) => {
+        const unsubscribe = this.auth.onAuthStateChanged(() => {
+          unsubscribe();
+          resolve();
+        });
+        setTimeout(() => {
+          unsubscribe();
+          resolve();
+        }, 3000);
+      })
+    );
+  }
+
   private handleUnauthorized(state: RouterStateSnapshot): void {
-    this.router.navigate(['/auth/login'], { 
-      queryParams: { returnUrl: state.url } 
+    this.router.navigate(['/auth/login'], {
+      queryParams: { returnUrl: state.url },
     });
   }
 
@@ -95,4 +81,3 @@ export class AdminGuard implements CanActivate {
     localStorage.removeItem(ADMIN_ROUTE_KEY);
   }
 }
-

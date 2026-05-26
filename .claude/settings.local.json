@@ -76,7 +76,8 @@
       "Bash(grep -v \"^$\")",
       "Bash(node -e \"require\\('@tensorflow/tfjs-node'\\); console.log\\('tfjs-node ok'\\)\")",
       "Bash(node -e \"require\\('nsfwjs'\\); console.log\\('nsfwjs ok'\\)\")",
-      "Bash(npm --version)"
+      "Bash(npm --version)",
+      "Bash(sort -t: -k3 -rn)"
     ]
   }
 }
