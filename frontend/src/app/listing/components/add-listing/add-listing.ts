@@ -1,5 +1,5 @@
 import { Component, OnDestroy, OnInit, inject, computed } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormArray } from '@angular/forms';
+import { AbstractControl, FormBuilder, FormGroup, ValidationErrors, ValidatorFn, Validators, ReactiveFormsModule, FormArray } from '@angular/forms';
 import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom, from, merge, Subject, Subscription } from 'rxjs';
@@ -18,6 +18,25 @@ interface Category {
   id: string;
   name: string;
   subCategories: string[];
+}
+
+/** Cross-field validator: buyNowPrice, when filled, must exceed startingBid. */
+function buyNowAboveStartingBid(): ValidatorFn {
+  return (group: AbstractControl): ValidationErrors | null => {
+    const buyNow   = group.get('buyNowPrice')?.value;
+    const starting = group.get('startingBid')?.value;
+    if (buyNow !== null && buyNow !== '' && Number(buyNow) > 0 &&
+        starting !== null && starting !== '' && Number(buyNow) <= Number(starting)) {
+      group.get('buyNowPrice')?.setErrors({ mustBeHigherThanStartingBid: true });
+    } else {
+      const ctrl = group.get('buyNowPrice');
+      if (ctrl?.hasError('mustBeHigherThanStartingBid')) {
+        const { mustBeHigherThanStartingBid: _, ...rest } = ctrl.errors ?? {};
+        ctrl.setErrors(Object.keys(rest).length ? rest : null);
+      }
+    }
+    return null; // errors live on the child control, not the group
+  };
 }
 
 @Component({
@@ -381,7 +400,7 @@ export class AddListing implements OnInit, OnDestroy {
       shippingOriginCountry: ['PT'],
       returnPolicy: ['14-days', Validators.required],
       sellerDeclaration: [false, Validators.requiredTrue]
-    });
+    }, { validators: buyNowAboveStartingBid() });
 
     this.listingForm.get('listingFormat')?.valueChanges.subscribe(format => {
       this.updateConditionalValidators(format);
@@ -650,14 +669,8 @@ export class AddListing implements OnInit, OnDestroy {
       startingBidControl?.setValidators([Validators.required, Validators.min(0.01)]);
       reservePriceControl?.clearValidators();
       reservePriceControl?.setValue(null);
-      buyNowPriceControl?.setValidators([]);
+      buyNowPriceControl?.setValidators([Validators.min(0.01)]);
       minimumAcceptPriceControl?.clearValidators();
-
-      buyNowPriceControl?.valueChanges.subscribe(value => {
-        if (value && startingBidControl?.value && value <= startingBidControl.value) {
-          buyNowPriceControl.setErrors({ mustBeHigherThanStartingBid: true });
-        }
-      });
     } else if (format === 'best-offer') {
       startingBidControl?.clearValidators();
       reservePriceControl?.clearValidators();
