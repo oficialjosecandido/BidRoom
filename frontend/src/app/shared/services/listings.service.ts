@@ -40,7 +40,8 @@ export interface Listing {
     professionalContactEmail?: string | null;
     professionalVatId?: string | null;
   };
-  status: 'draft' | 'active' | 'ended' | 'cancelled';
+  status: 'draft' | 'active' | 'pending_review' | 'ended' | 'cancelled';
+  moderationWarning?: { severity: 'low' | 'medium' | 'high'; message: string; flaggedAt: string };
   isFeatured: boolean;
   isVerified: boolean;
   verificationDetails?: string;

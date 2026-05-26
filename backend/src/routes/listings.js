@@ -442,6 +442,19 @@ router.get('/slug/:slug', optionalAuth, async (req, res) => {
       });
     }
 
+    // Pending-review guard: only the seller can view their own listing while it's under moderation
+    if (listing.status === 'pending_review') {
+      let viewerIsOwner = false;
+      if (req.user) {
+        const viewer = await User.findOne({ uid: req.user.uid }).select('_id').lean();
+        const sellerId = listing.seller?._id || listing.seller;
+        viewerIsOwner = viewer && String(viewer._id) === String(sellerId);
+      }
+      if (!viewerIsOwner) {
+        return res.status(404).json({ error: 'Listing not found' });
+      }
+    }
+
     // Lazy finalize: if auction has ended by time but scheduler hasn't run yet, process it now
     // (ensures normal auctions auto-select highest bidder so seller never sees "Select winner")
     const now = new Date();
@@ -916,6 +929,19 @@ router.get('/:id', optionalAuth, async (req, res) => {
       });
     }
 
+    // Pending-review guard: only the seller can view their own listing while it's under moderation
+    if (listing.status === 'pending_review') {
+      let viewerIsOwner = false;
+      if (req.user) {
+        const viewer = await User.findOne({ uid: req.user.uid }).select('_id').lean();
+        const sellerId = listing.seller?._id || listing.seller;
+        viewerIsOwner = viewer && String(viewer._id) === String(sellerId);
+      }
+      if (!viewerIsOwner) {
+        return res.status(404).json({ error: 'Listing not found' });
+      }
+    }
+
     // Lazy finalize: if auction has ended by time but scheduler hasn't run yet, process it now
     const now = new Date();
     if (
@@ -1230,10 +1256,10 @@ router.post('/', authenticateToken, requireActiveAccount, requireNoDisputeRestri
         }).catch(() => {});
         return res.status(400).json({ error: 'Content policy violation', message: violation.message, violationAction: violation.action });
       }
-      // low: allow through but warn the user and log for admin review
+      // low: hold for moderation review — listing is NOT published until approved
       listingContentWarning = {
         severity: 'low',
-        message: 'Your listing was published, but it contains mild language that may be reviewed by our moderation team. Please keep your listings professional.'
+        message: 'Your listing is currently under review because it contains mild language. It will not be visible to buyers until our moderation team approves it. Please keep your listings professional.'
       };
       appendModerationAudit({
         subjectUserId: user._id,
@@ -1245,7 +1271,7 @@ router.post('/', authenticateToken, requireActiveAccount, requireNoDisputeRestri
     // Duplicate listing check — same seller, same title, active or draft
     const existingListing = await Listing.findOne({
       seller: user._id,
-      status: { $in: ['active', 'draft'] },
+      status: { $in: ['active', 'draft', 'pending_review'] },
       title: { $regex: new RegExp(`^${escapeRegex(title.trim())}$`, 'i') }
     }).select('_id slug').lean();
     if (existingListing) {
@@ -1309,7 +1335,14 @@ router.post('/', authenticateToken, requireActiveAccount, requireNoDisputeRestri
         ? bundleItems.slice(0, 50).map(b => ({ title: String(b.title || '').trim().slice(0, 100), description: String(b.description || '').trim().slice(0, 500) })).filter(b => b.title)
         : [],
       seller: user._id,
-      status: 'active'
+      status: listingContentWarning ? 'pending_review' : 'active',
+      ...(listingContentWarning && {
+        moderationWarning: {
+          severity: listingContentWarning.severity,
+          message: listingContentWarning.message,
+          flaggedAt: new Date()
+        }
+      })
     };
 
     // Calculate end date based on duration slot

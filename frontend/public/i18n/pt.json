@@ -562,6 +562,9 @@
       "Other Jewelry": "Outra Joalharia"
     },
     "successMessage": "Anúncio criado com sucesso!",
+    "moderationTitle": "Anúncio em revisão",
+    "moderationBody": "O seu anúncio foi submetido mas está a ser revisto pela nossa equipa de moderação porque contém linguagem inadequada. Não será visível para outros utilizadores enquanto não for aprovado. Pode consultá-lo no seu painel.",
+    "moderationCta": "Ver o meu anúncio",
     "draftRestored": "O seu rascunho guardado foi restaurado.",
     "draftAutoSaveInfo": "O progresso é guardado automaticamente enquanto edita (e ao adicionar fotos).",
     "saveDraft": "Guardar rascunho",
@@ -757,6 +760,10 @@
     "fr": "Français"
   },
   "listingDetails": {
+    "moderationBanner": {
+      "title": "Este anúncio está em revisão",
+      "body": "O seu anúncio ainda não é visível para outros utilizadores. A nossa equipa de moderação irá revê-lo brevemente. Se aprovado, ficará ativo automaticamente."
+    },
     "saleType": {
       "bestOffer": "Melhor Oferta",
       "auction": "Leilão"

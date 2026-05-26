@@ -971,19 +971,21 @@ export class AddListing implements OnInit, OnDestroy {
       if (listing.contentWarning) {
         await Swal.fire({
           icon: 'warning',
-          title: 'Content notice',
-          text: listing.contentWarning.message,
-          confirmButtonText: 'View listing',
+          title: this.translate.instant('addListing.moderationTitle'),
+          html: `<p>${this.translate.instant('addListing.moderationBody')}</p>`,
+          confirmButtonText: this.translate.instant('addListing.moderationCta'),
           confirmButtonColor: '#2563eb'
         });
+        // Navigate to the listing — it is visible to the seller but not to the public
+        this.router.navigate(['/listing', listing.slug]);
       } else {
         Swal.fire({
           toast: true, position: 'top-end', icon: 'success',
           title: this.translate.instant('addListing.successMessage'),
           showConfirmButton: false, timer: 3000, timerProgressBar: true
         });
+        this.router.navigate(['/listing', listing.slug]);
       }
-      this.router.navigate(['/listing', listing.slug]);
     } catch (error: any) {
       this.isSubmitting = false;
 

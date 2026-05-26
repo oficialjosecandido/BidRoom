@@ -88,9 +88,15 @@ const listingSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['draft', 'active', 'ended', 'cancelled'],
+    enum: ['draft', 'active', 'pending_review', 'ended', 'cancelled'],
     default: 'active',
     index: true
+  },
+  /** Set when the listing is held for moderation review before going live. */
+  moderationWarning: {
+    severity: { type: String, enum: ['low', 'medium', 'high'] },
+    message:  { type: String },
+    flaggedAt: { type: Date }
   },
   // Trust and Promotion features
   isFeatured: {

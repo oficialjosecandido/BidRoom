@@ -26,6 +26,17 @@
   <strong>{{ listing.title }}</strong>
 </div>
 
+<!-- PENDING REVIEW BANNER (seller only) -->
+@if (isOwnListing && listing.status === 'pending_review') {
+  <div class="moderation-banner">
+    <span class="moderation-banner__icon">🔍</span>
+    <div class="moderation-banner__text">
+      <strong>{{ 'listingDetails.moderationBanner.title' | translate }}</strong>
+      <span>{{ 'listingDetails.moderationBanner.body' | translate }}</span>
+    </div>
+  </div>
+}
+
 <!-- PAGE -->
 <div class="page">
 

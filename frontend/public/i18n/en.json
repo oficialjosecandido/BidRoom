@@ -562,6 +562,9 @@
       "Other Jewelry": "Other Jewelry"
     },
     "successMessage": "Listing created successfully!",
+    "moderationTitle": "Listing under review",
+    "moderationBody": "Your listing has been submitted but is currently under review by our moderation team because it contains mild language. It will not be visible to other users until it is approved. You can view it in your dashboard.",
+    "moderationCta": "View my listing",
     "draftRestored": "Your saved draft was restored.",
     "draftAutoSaveInfo": "Your progress is saved automatically while you edit (and when you add photos).",
     "saveDraft": "Save as draft",
@@ -757,6 +760,10 @@
     "fr": "Français"
   },
   "listingDetails": {
+    "moderationBanner": {
+      "title": "This listing is under review",
+      "body": "Your listing is not visible to other users yet. Our moderation team will review it shortly. If approved, it will go live automatically."
+    },
     "saleType": {
       "bestOffer": "Best Offer",
       "auction": "Auction"

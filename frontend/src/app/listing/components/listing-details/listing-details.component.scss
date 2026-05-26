@@ -136,6 +136,29 @@ nav {
   strong { font-size: 11.5px; font-weight: 500; color: var(--text); }
 }
 
+/* ── MODERATION BANNER ─────────────────────── */
+.moderation-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 14px 24px;
+  background: #fffbeb;
+  border-bottom: 1px solid #fcd34d;
+  color: #92400e;
+
+  &__icon { font-size: 20px; flex-shrink: 0; line-height: 1.4; }
+
+  &__text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    font-size: 13px;
+
+    strong { font-weight: 600; color: #78350f; }
+    span   { color: #92400e; }
+  }
+}
+
 /* ── PAGE GRID ──────────────────────────────── */
 .page {
   display: grid;
