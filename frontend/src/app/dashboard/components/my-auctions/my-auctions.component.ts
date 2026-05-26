@@ -62,7 +62,7 @@ export class MyAuctionsComponent implements OnInit, OnDestroy {
   relistSubmitting = false;
   relistError: string | null = null;
 
-  readonly durationOptions: DurationSlot[] = ['24 hours', '3 days', '7 days'];
+  readonly durationOptions: DurationSlot[] = ['5 minutes', '24 hours', '3 days', '7 days'];
 
   private socketSubscriptions: Subscription[] = [];
   private joinedListingIds: string[] = [];

@@ -284,6 +284,7 @@ export class AddListing implements OnInit, OnDestroy {
   ];
 
   listingDurations = [
+    { label: '5 minutes', hours: 1 / 12 },
     { label: '24 hours', hours: 24  },
     { label: '3 days',   hours: 72  },
     { label: '7 days',   hours: 168 },
