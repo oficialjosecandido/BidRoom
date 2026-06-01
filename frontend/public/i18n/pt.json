@@ -2150,7 +2150,10 @@
       "title2": "de ponta a ponta.",
       "sub": "Explicamos exactamente o que acontece em cada passo — para compradores, para vendedores, e para todos os que participam nas Salas Privadas.",
       "ctaBuyer": "Sou comprador",
-      "ctaSeller": "Sou vendedor"
+      "ctaSeller": "Sou vendedor",
+      "stat1": "Formatos de leilão",
+      "stat2": "Comissão standard",
+      "stat3": "Sala Privada"
     },
     "tabs": {
       "buyer": "Comprador",
@@ -2304,6 +2307,21 @@
         "a3": "Pode cancelar um anúncio sem lances ou ofertas antes do prazo. Após existirem lances ou ofertas, o cancelamento pode implicar penalização de reputação. Nunca pode cancelar após o leilão ter terminado com um vencedor apurado.",
         "q4": "Que artigos não posso listar?",
         "a4": "Estão proibidos: animais vivos, substâncias controladas, armas, e qualquer artigo ilegal em Portugal. O BidRoom usa moderação automática (Azure AI Content Safety) para detectar e bloquear estas listagens antes de serem publicadas."
+      },
+      "card": {
+        "noListingFee": "Sem taxa de listagem",
+        "noCancellation": "Sem taxa de cancelamento"
+      },
+      "card2": {
+        "badge": "Com Sala Privada",
+        "f2": "Ronda exclusiva pós-leilão",
+        "f3": "Até 5 licitantes convidados",
+        "f4": "Vencedor automático garantido"
+      },
+      "tip": {
+        "tag": "Tip para vendedores",
+        "title": "Activa a Sala Privada para maximizar o valor de venda",
+        "desc": "Leilões com Sala Privada fecham em média 30% acima do último lance público. O comprador que perde o leilão principal muitas vezes está disposto a pagar mais numa ronda exclusiva — a Sala Privada captura esse valor para ti."
       }
     },
     "private": {
@@ -2358,6 +2376,26 @@
       "audit": {
         "title": "Auditoria completa",
         "text": "Todas as acções numa Sala Privada são registadas no sistema de auditoria interno — convites, aceitações, lances, e encerramento. Disponível para revisão em caso de disputa."
+      },
+      "demo": {
+        "header": "Sala Privada – demonstração ao vivo",
+        "status": "ACTIVA",
+        "itemName": "Rolex Submariner 5513 – 1972",
+        "itemSub": "Leilão encerrado · Sala Privada em curso",
+        "bidLabel": "Lance actual",
+        "seatsLabel": "Platinum Bidders na sala",
+        "timerLabel": "Tempo restante",
+        "extendNote": "Cada lance estende 60 segundos"
+      },
+      "faq": {
+        "q0": "Posso recusar um convite para a Sala Privada?",
+        "a0": "Sim. Podes recusar ou ignorar o convite dentro dos 15 minutos. Se ficarem menos de 2 convidados activos, a sala pode encerrar ou o último convidado aceite pode vencer automaticamente.",
+        "q1": "O que acontece se só um convidado aceitar?",
+        "a1": "Se apenas 1 convidado aceitar e os restantes não responderem no prazo, esse convidado vence automaticamente pelo valor do seu lance original. A sala não pode existir com apenas um participante activo.",
+        "q2": "Posso ver quem mais está na sala?",
+        "a2": "Vês quantos participantes estão na sala e o seu estado, mas não os seus nomes durante a ronda. Após o encerramento, o vencedor é anunciado.",
+        "q3": "Tenho de licitar se aceitar o convite?",
+        "a3": "Não és obrigado a licitar, mas ao aceitar o convite és parte da sala. Podes entrar e não licitar — nesse caso outro participante vence se superar o teu lance original."
       }
     },
     "payments": {
@@ -2425,6 +2463,62 @@
         "a2": "Sim. O BidRoom suporta todos os métodos de pagamento disponíveis via Stripe no mercado português — incluindo cartões Visa/Mastercard, MB Way, Multibanco (referência) e Apple/Google Pay.",
         "q3": "O que é o sistema de reputação?",
         "a3": "Cada utilizador tem uma pontuação de reputação de 0 a 100, calculada automaticamente com base em avaliações recebidas, transacções concluídas e disputas. Uma pontuação ≥ 60 sem disputas perdidas é necessária para ser elegível para Salas Privadas."
+      },
+      "flow": {
+        "s1": {
+          "title": "Leilão ganho",
+          "sub": "Comprador vence"
+        },
+        "s2": {
+          "title": "Pagamento",
+          "sub": "Checkout seguro"
+        },
+        "s3": {
+          "title": "Envio",
+          "sub": "5 dias úteis"
+        },
+        "s4": {
+          "title": "Entrega",
+          "sub": "Comprador confirma"
+        },
+        "s5": {
+          "title": "Payout",
+          "sub": "IBAN do vendedor"
+        }
+      },
+      "table": {
+        "col1": "Descrição",
+        "col2": "Valor",
+        "r1": {
+          "label": "Cartão de crédito / débito",
+          "sub": "Visa, Mastercard, cartões europeus",
+          "val": "Incluído"
+        },
+        "r2": {
+          "label": "Transferência bancária",
+          "sub": "SEPA, referência Multibanco",
+          "val": "Incluído"
+        },
+        "r3": {
+          "label": "Payout ao vendedor",
+          "sub": "Transferência SEPA para IBAN registado",
+          "val": "Gratuito"
+        },
+        "r4": {
+          "label": "Período de escrow",
+          "sub": "Fundos retidos até confirmação de entrega",
+          "val": "Automático"
+        },
+        "r5": {
+          "label": "Reembolso em cancelamento",
+          "sub": "Envio não realizado em 5 dias úteis",
+          "val": "Total"
+        },
+        "r6": {
+          "label": "Protecção de disputa",
+          "sub": "Mediação BidRoom – CNIACC – Tribunal",
+          "val": "Incluído"
+        }
       }
     },
     "faq": {
@@ -2439,6 +2533,9 @@
       },
       "payments": {
         "title": "Pagamento & Segurança"
+      },
+      "private": {
+        "title": "Perguntas frequentes – Sala Privada"
       }
     },
     "cta": {
@@ -2446,7 +2543,8 @@
       "title2": "É gratuito.",
       "sub": "Crie a sua conta em menos de 2 minutos. Sem taxas de adesão, sem surpresas.",
       "btn1": "Criar conta gratuita",
-      "btn2": "Ver leilões activos"
+      "btn2": "Ver leilões activos",
+      "eye": "Pronto para começar?"
     }
   },
   "contact": {
@@ -3053,7 +3151,7 @@
       "eyebrow": "Termos de Utilização",
       "title": "Condições gerais de utilização da plataforma",
       "updated": "Última actualização: 1 de Maio de 2025",
-      "intro": "Ao utilizar o BidRoom.pt, o utilizador aceita os presentes Termos de Utilização. Leia-os com atenção. Em caso de dúvida, contacte-nos em <a href=\"mailto:legal@bidroom.pt\">legal@bidroom.pt</a>.",
+      "intro": "Ao utilizar o BidRoom.pt, o utilizador aceita os presentes Termos de Utilização. Leia-os com atenção. Em caso de dúvida, contacte-nos em <a href=\"mailto:contact@bidroom.pt\">contact@bidroom.pt</a>.",
       "h1": "1. Quem somos",
       "h1p1": "O BidRoom.pt é um marketplace de leilões online operado pela <strong>BidRoom Unipessoal Lda</strong>, com sede em Lisboa, Portugal, registada na Conservatória do Registo Comercial de Lisboa. O BidRoom actua como intermediário tecnológico entre compradores e vendedores, não sendo parte contratante nas transacções realizadas na plataforma.",
       "h2": "2. Elegibilidade",
@@ -3090,7 +3188,7 @@
       "h9li1": "<strong>Suspensão automática</strong> — sempre que uma disputa é aberta, ambas as contas envolvidas são suspensas automaticamente até resolução.",
       "h9li2": "<strong>Suspensão administrativa</strong> — em caso de suspeita de fraude, violação dos presentes Termos ou actividade que ponha em risco outros utilizadores.",
       "h9li3": "<strong>Encerramento permanente</strong> — em caso de violações graves ou reincidentes, ou a pedido do próprio utilizador.",
-      "h9p2": "O utilizador suspenso é notificado por email e pode contestar a decisão através de <a href=\"mailto:legal@bidroom.pt\">legal@bidroom.pt</a>. As transacções em curso no momento da suspensão são geridas caso a caso pelo BidRoom.",
+      "h9p2": "O utilizador suspenso é notificado por email e pode contestar a decisão através de <a href=\"mailto:contact@bidroom.pt\">contact@bidroom.pt</a>. As transacções em curso no momento da suspensão são geridas caso a caso pelo BidRoom.",
       "h10": "10. Disputas entre utilizadores",
       "h10p1": "Em caso de litígio entre comprador e vendedor, o BidRoom disponibiliza um mecanismo de mediação interno. Ambas as contas são suspensas automaticamente durante o período de disputa. A decisão do BidRoom é vinculativa no âmbito da plataforma. Para litígios não resolvidos, o utilizador pode recorrer ao <strong>Centro Nacional de Informação e Arbitragem de Conflitos de Consumo (CNIACC)</strong> em <a href=\"https://www.cniacc.pt\" target=\"_blank\" rel=\"noopener\">cniacc.pt</a>.",
       "h11": "11. Sistema de reputação e decisões automatizadas",
@@ -3098,9 +3196,9 @@
       "h11li1": "Pontuação ≥ 60 e zero perdas em disputas — elegibilidade para Salas Privadas",
       "h11li2": "Padrões de avaliação suspeitos — detecção automática de fraude",
       "h11li3": "Pontuação muito baixa — pode resultar em restrição de funcionalidades",
-      "h11p2": "Nos termos do artigo 22.º do RGPD, o utilizador tem o direito de não ficar sujeito exclusivamente a decisões automatizadas que produzam efeitos significativos. Para contestar uma decisão automatizada do sistema de reputação, contacte <a href=\"mailto:legal@bidroom.pt\">legal@bidroom.pt</a>.",
+      "h11p2": "Nos termos do artigo 22.º do RGPD, o utilizador tem o direito de não ficar sujeito exclusivamente a decisões automatizadas que produzam efeitos significativos. Para contestar uma decisão automatizada do sistema de reputação, contacte <a href=\"mailto:contact@bidroom.pt\">contact@bidroom.pt</a>.",
       "h12": "12. Menores de idade",
-      "h12p1": "A plataforma BidRoom.pt é destinada exclusivamente a utilizadores com <strong>18 anos ou mais</strong>. Não recolhemos deliberadamente dados pessoais de menores de 18 anos. Se tomarmos conhecimento de que um menor criou uma conta, procederemos ao encerramento imediato da mesma e à eliminação dos dados associados. Se for pai, mãe ou tutor e suspeitar que um menor criou uma conta no BidRoom, contacte-nos em <a href=\"mailto:legal@bidroom.pt\">legal@bidroom.pt</a>.",
+      "h12p1": "A plataforma BidRoom.pt é destinada exclusivamente a utilizadores com <strong>18 anos ou mais</strong>. Não recolhemos deliberadamente dados pessoais de menores de 18 anos. Se tomarmos conhecimento de que um menor criou uma conta, procederemos ao encerramento imediato da mesma e à eliminação dos dados associados. Se for pai, mãe ou tutor e suspeitar que um menor criou uma conta no BidRoom, contacte-nos em <a href=\"mailto:contact@bidroom.pt\">contact@bidroom.pt</a>.",
       "h13": "13. Propriedade intelectual",
       "h13p1": "Todo o conteúdo da plataforma BidRoom.pt — incluindo design, código, marca e textos — é propriedade da BidRoom Unipessoal Lda. O utilizador não pode reproduzir, distribuir ou criar trabalhos derivados sem autorização expressa por escrito.",
       "h14": "14. Limitação de responsabilidade",
@@ -3115,7 +3213,7 @@
       "title": "Como tratamos os seus dados pessoais",
       "updated": "Última actualização: 1 de Maio de 2025 · Em conformidade com o RGPD",
       "dpoLabel": "Responsável pelo tratamento:",
-      "dpoVal": " BidRoom Unipessoal Lda · legal@bidroom.pt",
+      "dpoVal": " BidRoom Unipessoal Lda · contact@bidroom.pt",
       "h1": "1. Que dados recolhemos",
       "th1": "Categoria",
       "th2": "Dados",
@@ -3154,14 +3252,14 @@
       "h4li4": "<strong>Portabilidade</strong> — receber os seus dados num formato estruturado",
       "h4li5": "<strong>Oposição</strong> — opor-se ao tratamento com base em interesse legítimo",
       "h4li6": "<strong>Limitação</strong> — solicitar a suspensão do tratamento em determinadas circunstâncias",
-      "h4p2": "Para exercer qualquer destes direitos, contacte <a href=\"mailto:legal@bidroom.pt\">legal@bidroom.pt</a>. Respondemos no prazo de 30 dias. Tem também o direito de apresentar reclamação à <strong>CNPD</strong> (Comissão Nacional de Protecção de Dados) em <a href=\"https://www.cnpd.pt\" target=\"_blank\" rel=\"noopener\">cnpd.pt</a>.",
+      "h4p2": "Para exercer qualquer destes direitos, contacte <a href=\"mailto:contact@bidroom.pt\">contact@bidroom.pt</a>. Respondemos no prazo de 30 dias. Tem também o direito de apresentar reclamação à <strong>CNPD</strong> (Comissão Nacional de Protecção de Dados) em <a href=\"https://www.cnpd.pt\" target=\"_blank\" rel=\"noopener\">cnpd.pt</a>.",
       "h5": "5. Decisões automatizadas (Art. 22.º RGPD)",
       "h5p1": "O BidRoom utiliza processamento automatizado para calcular a pontuação de reputação de cada utilizador (0–100). Este cálculo pode produzir efeitos significativos, nomeadamente a elegibilidade ou não para Salas Privadas e restrições de funcionalidades. O utilizador tem o direito de:",
       "h5li1": "Solicitar intervenção humana na revisão da decisão automatizada",
       "h5li2": "Expressar o seu ponto de vista",
-      "h5li3": "Contestar a decisão através de <a href=\"mailto:legal@bidroom.pt\">legal@bidroom.pt</a>",
+      "h5li3": "Contestar a decisão através de <a href=\"mailto:contact@bidroom.pt\">contact@bidroom.pt</a>",
       "h6": "6. Menores de idade",
-      "h6p1": "O BidRoom.pt é destinado exclusivamente a utilizadores com 18 anos ou mais. Não recolhemos deliberadamente dados pessoais de menores de 18 anos. Se detectarmos que um menor criou uma conta, eliminaremos imediatamente todos os dados associados. Pais ou tutores que suspeitem da existência de uma conta de menor devem contactar <a href=\"mailto:legal@bidroom.pt\">legal@bidroom.pt</a>.",
+      "h6p1": "O BidRoom.pt é destinado exclusivamente a utilizadores com 18 anos ou mais. Não recolhemos deliberadamente dados pessoais de menores de 18 anos. Se detectarmos que um menor criou uma conta, eliminaremos imediatamente todos os dados associados. Pais ou tutores que suspeitem da existência de uma conta de menor devem contactar <a href=\"mailto:contact@bidroom.pt\">contact@bidroom.pt</a>.",
       "h7": "7. Retenção de dados",
       "h7p1": "Os dados de conta são mantidos enquanto a conta estiver activa. Após eliminação da conta, os dados são apagados no prazo de 90 dias, excepto os que devemos manter por obrigação legal (ex: dados fiscais, mantidos por 10 anos nos termos da lei fiscal portuguesa).",
       "h8": "8. Transferências internacionais",

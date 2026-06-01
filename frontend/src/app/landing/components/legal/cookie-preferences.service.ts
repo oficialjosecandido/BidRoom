@@ -23,12 +23,12 @@ export class CookiePreferencesService {
 
   hasConsent(): boolean {
     if (typeof localStorage === 'undefined') return true;
-    return !!localStorage.getItem(CONSENT_KEY);
+    return !!localStorage.getItem(CONSENT_KEY) || !!this.readCookie(CONSENT_KEY);
   }
 
   get consentLevel(): CookieConsentLevel | null {
-    if (typeof localStorage === 'undefined') return null;
-    const v = localStorage.getItem(CONSENT_KEY);
+    const v = (typeof localStorage !== 'undefined' && localStorage.getItem(CONSENT_KEY))
+      || this.readCookie(CONSENT_KEY);
     return v === 'all' || v === 'essential' ? v : null;
   }
 
@@ -48,6 +48,11 @@ export class CookiePreferencesService {
 
   load(): void {
     if (typeof localStorage === 'undefined') return;
+    // Restore from cookie if localStorage was cleared
+    const cookieLevel = this.readCookie(CONSENT_KEY);
+    if (cookieLevel && !localStorage.getItem(CONSENT_KEY)) {
+      localStorage.setItem(CONSENT_KEY, cookieLevel);
+    }
     const level = localStorage.getItem(CONSENT_KEY);
     if (level === 'all') {
       this.functional.set(true);
@@ -93,6 +98,20 @@ export class CookiePreferencesService {
     if (typeof localStorage !== 'undefined') {
       localStorage.setItem(CONSENT_KEY, level);
     }
+    // Also write a long-lived cookie (1 year) so the choice survives localStorage clears
+    this.writeCookie(CONSENT_KEY, level, 365);
     this.save();
+  }
+
+  private writeCookie(name: string, value: string, days: number): void {
+    if (typeof document === 'undefined') return;
+    const maxAge = days * 24 * 60 * 60;
+    document.cookie = `${name}=${value}; max-age=${maxAge}; path=/; SameSite=Lax`;
+  }
+
+  private readCookie(name: string): string | null {
+    if (typeof document === 'undefined') return null;
+    const match = document.cookie.match(new RegExp(`(?:^|; )${name}=([^;]*)`));
+    return match ? decodeURIComponent(match[1]) : null;
   }
 }

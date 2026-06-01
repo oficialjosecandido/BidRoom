@@ -46,7 +46,7 @@ const sendEmail = async (to, subject, html, maxRetries = 3, retryDelay = 1000) =
       const transporter = createTransporter();
       
       const mailOptions = {
-        from: process.env.EMAIL_FROM || 'noreply@bidroom.com',
+        from: process.env.EMAIL_FROM || 'contact@bidroom.pt',
         to,
         subject,
         html

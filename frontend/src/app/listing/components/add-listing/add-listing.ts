@@ -573,6 +573,14 @@ export class AddListing implements OnInit, OnDestroy {
 
   private async loadDraftFromServer(): Promise<void> {
     try {
+      // If the previous session published a listing, the draft was (or should be) deleted.
+      // Clear the local invalidation flag and purge the server draft to be safe.
+      if (localStorage.getItem('bidroom_draft_published')) {
+        localStorage.removeItem('bidroom_draft_published');
+        firstValueFrom(this.listingsService.deleteListingDraft()).catch(() => {});
+        return;
+      }
+
       const res = await firstValueFrom(this.listingsService.getListingDraft());
       const draft = res?.draft;
       if (!draft?.payload || typeof draft.payload !== 'object') return;
@@ -966,7 +974,11 @@ export class AddListing implements OnInit, OnDestroy {
 
       this.isSubmitting = false;
       this.errorMessage = '';
-      firstValueFrom(this.listingsService.deleteListingDraft()).catch(() => {});
+      // Mark draft as published locally before deleting — guards against a failed DELETE
+      // leaving a stale draft that would be restored on the next "new listing" visit.
+      localStorage.setItem('bidroom_draft_published', '1');
+      await firstValueFrom(this.listingsService.deleteListingDraft()).catch(() => {});
+      localStorage.removeItem('bidroom_draft_published'); // clean up if delete succeeded
 
       if (listing.contentWarning) {
         await Swal.fire({
