@@ -1,7 +1,7 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { ListingsService, Listing } from '../../../shared/services/listings.service';
 import { BidsService } from '../../../shared/services/bids.service';
 
@@ -15,6 +15,7 @@ import { BidsService } from '../../../shared/services/bids.service';
 export class MyAuctionsBidderComponent implements OnInit {
   private listingsService = inject(ListingsService);
   private bidsService = inject(BidsService);
+  private translate = inject(TranslateService);
 
   listings: Listing[] = [];
   isLoading = true;
@@ -35,7 +36,7 @@ export class MyAuctionsBidderComponent implements OnInit {
         this.isLoading = false;
       },
       error: (err) => {
-        this.error = err?.error?.message || err?.message || 'Failed to load your auctions';
+        this.error = err?.error?.message || err?.message || this.translate.instant('dashboard.myAuctionsBidder.errorLoading');
         this.isLoading = false;
       }
     });

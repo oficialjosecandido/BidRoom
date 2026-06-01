@@ -19,6 +19,9 @@ const { applyDisputeAccountOutcome } = require('../services/accountStatusService
 const { applyDisputeVerdictImpact } = require('../services/reputationService');
 const { appendModerationAudit } = require('../services/moderationAuditService');
 const { runImagePurge } = require('../services/imagePurgeScheduler');
+const { getBlocklistItems, addBlocklistItem, removeBlocklistItem, ensureBlocklistExists } = require('../services/contentSafetyService');
+const azureStorageService = require('../services/azureStorage.service');
+const { requireAdmin, ADMIN_EMAILS } = require('../utils/roles');
 
 function getStripe() {
   const key = process.env.STRIPE_SECRET_KEY;
@@ -26,20 +29,6 @@ function getStripe() {
 }
 
 const router = express.Router();
-
-if (!process.env.ADMIN_EMAILS) {
-  // Fail hard in production; warn loudly in development so developers notice immediately.
-  const msg = 'ADMIN_EMAILS environment variable is not set. Admin routes will be disabled.';
-  if (process.env.NODE_ENV === 'production') {
-    throw new Error(msg);
-  }
-  console.error(`\n❌ SECURITY: ${msg}\n`);
-}
-
-const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || '')
-  .split(',')
-  .map(e => e.trim().toLowerCase())
-  .filter(e => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e));
 
 function isValidObjectId(id) {
   return mongoose.Types.ObjectId.isValid(id);
@@ -180,19 +169,6 @@ async function snapshotMetricsForWindow(from, to) {
     bidRoomFeesTotal: Math.round((Number(row.bidRoomFeesTotal) || 0) * 100) / 100
   };
 }
-
-// Admin middleware - checks if user is an admin
-const requireAdmin = async (req, res, next) => {
-  if (!req.user) {
-    return res.status(401).json({ error: 'Unauthorized' });
-  }
-
-  if (!ADMIN_EMAILS.includes(req.user.email?.toLowerCase())) {
-    return res.status(403).json({ error: 'Forbidden', message: 'Admin access required' });
-  }
-
-  next();
-};
 
 // Get platform statistics
 router.get('/statistics', authenticateToken, requireAdmin, async (req, res) => {
@@ -407,6 +383,50 @@ router.get('/auctions/:id', authenticateToken, requireAdmin, async (req, res) =>
     res.status(500).json({ 
       error: 'Failed to fetch auction',
       message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error' 
+    });
+  }
+});
+
+// Hard-delete a listing (admin only)
+router.delete('/auctions/:id', authenticateToken, requireAdmin, async (req, res) => {
+  if (!isValidObjectId(req.params.id)) return res.status(400).json({ error: 'Invalid listing ID' });
+  try {
+    const listing = await Listing.findById(req.params.id).populate('seller', '_id firstName lastName email').lean();
+    if (!listing) return res.status(404).json({ error: 'Listing not found' });
+
+    // Block deletion if there is an active or paid transaction to avoid data integrity issues
+    const activeTransaction = await Transaction.findOne({
+      listing: listing._id,
+      transactionStatus: { $in: ['awaiting_payment', 'paid', 'shipped', 'delivered'] }
+    }).lean();
+    if (activeTransaction) {
+      return res.status(409).json({
+        error: 'Cannot delete',
+        message: 'This listing has an active transaction. Resolve or cancel the transaction first.'
+      });
+    }
+
+    // Delete in parallel: bids + images (best effort) + listing document
+    await Promise.all([
+      Bid.deleteMany({ listing: listing._id }),
+      azureStorageService.deleteMultipleImages(Array.isArray(listing.images) ? listing.images : []).catch(() => {}),
+      Listing.findByIdAndDelete(listing._id)
+    ]);
+
+    await appendModerationAudit({
+      action: 'admin_listing_deleted',
+      subjectUserId: listing.seller?._id ?? listing.seller,
+      targetType: 'listing',
+      targetId: listing._id,
+      details: { title: listing.title, status: listing.status }
+    });
+
+    return res.json({ ok: true, deletedId: listing._id });
+  } catch (error) {
+    console.error('Error deleting listing:', error);
+    res.status(500).json({
+      error: 'Failed to delete listing',
+      message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
     });
   }
 });
@@ -1391,6 +1411,56 @@ router.post('/maintenance/image-purge', authenticateToken, requireAdmin, async (
   } catch (err) {
     console.error('POST /api/admin/maintenance/image-purge error:', err);
     return res.status(500).json({ error: 'Image purge failed', message: err.message });
+  }
+});
+
+/**
+ * GET /api/admin/moderation/blocklist
+ * List all terms in the Azure Content Safety prohibited blocklist.
+ */
+router.get('/moderation/blocklist', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const items = await getBlocklistItems();
+    return res.json({ items });
+  } catch (err) {
+    console.error('GET /api/admin/moderation/blocklist error:', err);
+    return res.status(500).json({ error: 'Failed to fetch blocklist', message: err.message });
+  }
+});
+
+/**
+ * POST /api/admin/moderation/blocklist
+ * Add a term to the Azure Content Safety prohibited blocklist.
+ * Body: { text: string }
+ */
+router.post('/moderation/blocklist', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const { text } = req.body;
+    if (!text || typeof text !== 'string' || !text.trim()) {
+      return res.status(400).json({ error: 'text is required' });
+    }
+    await ensureBlocklistExists();
+    const item = await addBlocklistItem(text.trim());
+    console.log(`[admin] blocklist term added by ${req.user?.email}: "${text.trim()}"`);
+    return res.json({ success: true, item });
+  } catch (err) {
+    console.error('POST /api/admin/moderation/blocklist error:', err);
+    return res.status(500).json({ error: 'Failed to add term', message: err.message });
+  }
+});
+
+/**
+ * DELETE /api/admin/moderation/blocklist/:itemId
+ * Remove a term from the Azure Content Safety prohibited blocklist.
+ */
+router.delete('/moderation/blocklist/:itemId', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    await removeBlocklistItem(req.params.itemId);
+    console.log(`[admin] blocklist term removed by ${req.user?.email}: itemId=${req.params.itemId}`);
+    return res.json({ success: true });
+  } catch (err) {
+    console.error('DELETE /api/admin/moderation/blocklist error:', err);
+    return res.status(500).json({ error: 'Failed to remove term', message: err.message });
   }
 });
 

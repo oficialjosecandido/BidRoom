@@ -6,8 +6,19 @@
       <div class="header-section">
         <button type="button" class="back-btn" (click)="goBack()">← Back to auctions</button>
         @if (auction) {
-          <h1 class="page-title">{{ auction.title }}</h1>
-          <p class="page-lead">Nexus listing · Format {{ auction.auctionFormat }}</p>
+          <div class="header-row">
+            <div>
+              <h1 class="page-title">{{ auction.title }}</h1>
+              <p class="page-lead">Nexus listing · Format {{ auction.auctionFormat }}</p>
+            </div>
+            <button
+              type="button"
+              class="delete-listing-btn"
+              [disabled]="isDeleting"
+              (click)="deleteListing()">
+              {{ isDeleting ? 'Deleting…' : 'Delete listing' }}
+            </button>
+          </div>
         } @else {
           <h1 class="page-title">Auction details</h1>
         }

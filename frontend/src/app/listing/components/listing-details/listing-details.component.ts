@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, ChangeDetectorRef, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef, inject, computed } from '@angular/core';
 import { CommonModule, Location } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -19,6 +19,7 @@ import { KycService } from '../../../shared/services/kyc.service';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { ReportModalComponent } from '../../../shared/components/report-modal/report-modal.component';
 import { FollowService, FollowStatus } from '../../../shared/services/follow.service';
+import { BlockService } from '../../../shared/services/block.service';
 import { ThemeService } from '../../../shared/services/theme.service';
 import { HeaderComponent } from '../../../shared/components/header/header.component';
 
@@ -44,13 +45,12 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
   featureFlags = inject(FeatureFlagsService);
   private kycService = inject(KycService);
   private followService = inject(FollowService);
+  private blockService = inject(BlockService);
   private cdr = inject(ChangeDetectorRef);
   private translate = inject(TranslateService);
-  private themeService = inject(ThemeService);
+  readonly themeService = inject(ThemeService);
 
-  get isLight(): boolean {
-    return this.themeService.resolveEffective(this.themeService.preference()) === 'light';
-  }
+  readonly isLight = computed(() => this.themeService.effective() === 'light');
 
   listing: Listing | null = null;
   loading = true;
@@ -71,6 +71,8 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
   get isSeller(): boolean { return this.isOwnListing; }
   sellerFollowStatus: FollowStatus = { following: false, muted: false };
   followLoading = false;
+  sellerBlocked = false;
+  blockLoading = false;
   showSelectWinnerModal = false;
   showReportModal: 'listing' | 'user' | null = null;
   selectingWinner = false;
@@ -153,6 +155,7 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
         this.loading = false;
         if (this.isAuthenticated && !this.isOwnListing && listing.seller?._id) {
           this.loadSellerFollowStatus(listing.seller._id);
+          this.loadSellerBlockStatus(listing.seller._id);
         }
         window.scrollTo(0, 0);
         // Start countdown timer
@@ -764,6 +767,10 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
           this.listing.privateRoomStatus = event.privateRoomStatus;
         }
 
+        if (event.platinumBidderAcceptanceDeadline) {
+          this.listing.platinumBidderAcceptanceDeadline = event.platinumBidderAcceptanceDeadline;
+        }
+
         if (event.status) this.listing.status = event.status;
         if (event.winnerSelectionDeadline) this.listing.winnerSelectionDeadline = event.winnerSelectionDeadline;
         if (event.winner && this.listing?.slug) {
@@ -964,13 +971,14 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
   }
 
   private showOfferSuccessAlert(amount: number, wasAccepted: boolean): void {
-    const textKey = wasAccepted
-      ? 'listingDetails.offerModal.successTextAccepted'
-      : 'listingDetails.offerModal.successText';
     void Swal.fire({
       icon: 'success',
       title: this.translate.instant('listingDetails.offerModal.successTitle'),
-      html: this.translate.instant(textKey, { amount: this.formatPrice(amount) }),
+      text: wasAccepted
+        ? this.translate.instant('listingDetails.offerModal.successTextAccepted', {
+            amount: this.formatPrice(amount)
+          })
+        : this.translate.instant('listingDetails.offerModal.successText'),
       confirmButtonText: this.translate.instant('listingDetails.offerModal.successConfirm'),
       confirmButtonColor: '#C9A84C',
       allowOutsideClick: false
@@ -1078,6 +1086,26 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
     this.followService.setMuted(sellerId, !this.sellerFollowStatus.muted).subscribe({
       next: (status) => { this.sellerFollowStatus = status; this.followLoading = false; },
       error: () => { this.followLoading = false; }
+    });
+  }
+
+  loadSellerBlockStatus(sellerId: string): void {
+    this.blockService.getStatus(sellerId).subscribe({
+      next: (status) => { this.sellerBlocked = status.blocked; },
+      error: () => {}
+    });
+  }
+
+  toggleBlockSeller(): void {
+    const sellerId = (this.listing?.seller as any)?._id;
+    if (!sellerId || this.blockLoading) return;
+    this.blockLoading = true;
+    const action = this.sellerBlocked
+      ? this.blockService.unblock(sellerId)
+      : this.blockService.block(sellerId);
+    action.subscribe({
+      next: (status) => { this.sellerBlocked = status.blocked; this.blockLoading = false; },
+      error: () => { this.blockLoading = false; }
     });
   }
 

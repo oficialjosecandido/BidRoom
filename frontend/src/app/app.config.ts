@@ -27,7 +27,8 @@ export const appConfig: ApplicationConfig = {
     provideRouter(routes, withInMemoryScrolling({ anchorScrolling: 'enabled' })),
     provideHttpClient(withInterceptors([authInterceptor, fingerprintInterceptor])),
     provideTranslateService({
-      defaultLanguage: 'en',
+      fallbackLang: 'en',
+      lang: typeof localStorage !== 'undefined' ? (localStorage.getItem('lang') || 'pt') : 'pt',
       loader: provideTranslateHttpLoader({ prefix: '/i18n/', suffix: '.json' })
     }),
     provideFirebaseApp(() => initializeApp(environment.firebase)),

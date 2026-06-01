@@ -195,6 +195,13 @@
   &:disabled { opacity: .4; cursor: not-allowed; }
 }
 
+.blocked-row { opacity: .85; }
+
+.blocked-av {
+  background: var(--rb);
+  color: var(--red);
+}
+
 /* category chips */
 .cat-chips {
   display: flex;

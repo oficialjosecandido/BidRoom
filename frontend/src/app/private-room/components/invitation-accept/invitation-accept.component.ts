@@ -125,4 +125,8 @@ export class InvitationAcceptComponent implements OnInit {
       this.router.navigate(['/listing/list']);
     }
   }
+
+  goToListings(): void {
+    this.router.navigate(['/listing/list']);
+  }
 }

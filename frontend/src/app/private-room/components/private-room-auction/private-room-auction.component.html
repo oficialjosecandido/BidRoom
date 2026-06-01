@@ -266,10 +266,13 @@
             @if (bidInputError) {
               <p class="pr-bid-cta__error">{{ bidInputError }}</p>
             }
-            <button class="pr-btn pr-btn--gold pr-btn--lg" (click)="placeBid()" [disabled]="isPlacingBid">
+            <button class="pr-btn pr-btn--gold pr-btn--lg" (click)="placeBid()" [disabled]="isPlacingBid || !isBiddingOpen">
               @if (isPlacingBid) { Placing… } @else { Place Bid ${{ (customBidAmount ? +customBidAmount : getMinBid()) | number:'1.2-2' }} }
             </button>
             <p class="pr-bid-cta__hint">Min increment: ${{ listing.bidIncrement || 1 | number:'1.2-2' }}&nbsp;&middot;&nbsp;Each bid extends by 60s</p>
+            @if (countdown <= 0 && listing.privateRoomStatus === 'active') {
+              <p class="pr-bid-cta__expired">{{ 'privateRoomAuction.expired.bodyConfirming' | translate }}</p>
+            }
           </div>
         }
 
@@ -288,7 +291,7 @@
           </div>
         }
 
-        @if (isAuthenticated && !isPlatinumBidder && !invitationPending && listing.privateRoomStatus === 'active') {
+        @if (isAuthenticated && !isPlatinumBidder && !isSeller && !invitationPending && listing.privateRoomStatus === 'active') {
           <div class="pr-viewer-notice">
             <p>You're watching this room. Only invited bidders can place bids.</p>
           </div>
@@ -335,6 +338,21 @@
           <div class="pr-participants">
             <h3 class="pr-participants__title">Participants ({{ platinumBidders.length }})</h3>
             <div class="pr-participants__list">
+              <!-- Seller row — always at the top -->
+              @if (listing.seller) {
+                <div class="pr-participant pr-participant--seller">
+                  <div class="pr-participant__avatar pr-participant__avatar--seller">
+                    <span>{{ getInitial(sellerDisplayName) }}</span>
+                  </div>
+                  <div class="pr-participant__info">
+                    <span class="pr-participant__name">
+                      {{ sellerDisplayName }}
+                      @if (isSeller) { <em class="pr-participant__you">(You)</em> }
+                    </span>
+                    <span class="pr-participant__role-badge">Seller</span>
+                  </div>
+                </div>
+              }
               @for (bidder of platinumBidders; track bidder) {
                 <div class="pr-participant" [class.pr-participant--accepted]="bidder.invitationStatus === 'accepted'">
                   <div class="pr-participant__avatar"><span>{{ getInitial(bidder.name) }}</span></div>

@@ -6,7 +6,7 @@ const Listing = require('../models/Listing');
 const Bid = require('../models/Bid');
 const User = require('../models/User');
 const { sendPlatinumBidderInvitations, sendPrivateRoomNotInvitedToBidders, handleSellerLeftPrivateRoom } = require('../services/auctionNotificationService');
-const { notifyPrivateRoomInvitation, notifyPrivateRoomAccepted, notifyPrivateRoomDeclined, emitNewNotificationToUser } = require('../services/notificationService');
+const { notifyPrivateRoomInvitation, notifyPrivateRoomAccepted, notifyPrivateRoomDeclined, emitNewNotificationToUser, emitPrivateRoomInvitationToUser } = require('../services/notificationService');
 const { isPrivateRoomEligible } = require('../services/reputationService');
 const { getReviewScoresForUsers } = require('../services/reviewService');
 
@@ -258,12 +258,25 @@ router.post('/listings/:id/platinum-bidders', authenticateToken, requireActiveAc
     const io = req.app.get('io');
     const listingSlug = updatedListing.slug || null;
     const listingTitle = updatedListing.title || 'an auction';
+
+    // Notify all users on the listing page that the private room status changed to 'invited'
+    emitToListingAndPrivateRoom(io, listingId, 'listing-update', {
+      listingId: listingId.toString(),
+      privateRoomStatus: 'invited',
+      platinumBidderAcceptanceDeadline: updatedListing.platinumBidderAcceptanceDeadline?.toISOString() || null
+    });
+
     for (const bidderId of validBidderIds) {
       const bidderUserId = bidderId.toString?.() || bidderId;
       notifyPrivateRoomInvitation({ listingId, listingSlug, listingTitle, bidderUserId }).catch(err =>
         console.error('Failed to create private room invitation notification:', err)
       );
-      if (io) emitNewNotificationToUser(io, bidderUserId).catch(() => {});
+      if (io) {
+        emitPrivateRoomInvitationToUser(io, bidderUserId, {
+          listingId: listingId.toString(),
+          listingTitle
+        }).catch(() => {});
+      }
     }
 
     res.json({

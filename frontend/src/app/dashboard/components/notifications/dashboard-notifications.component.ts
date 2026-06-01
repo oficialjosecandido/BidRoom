@@ -1,7 +1,8 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
-import { TranslateModule } from '@ngx-translate/core';
+import { Subscription } from 'rxjs';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { NotificationService, Notification } from '../../../shared/services/notification.service';
 
 @Component({
@@ -11,17 +12,38 @@ import { NotificationService, Notification } from '../../../shared/services/noti
   templateUrl: './dashboard-notifications.component.html',
   styleUrls: ['./dashboard-notifications.component.scss']
 })
-export class DashboardNotificationsComponent implements OnInit {
+export class DashboardNotificationsComponent implements OnInit, OnDestroy {
   private notificationService = inject(NotificationService);
   private router = inject(Router);
+  private translate = inject(TranslateService);
 
   notifications: Notification[] = [];
   unreadCount = 0;
   loading = true;
   error: string | null = null;
+  markingAll = false;
+  markingSingle: string | null = null;
+
+  private subs = new Subscription();
 
   ngOnInit(): void {
     this.load();
+
+    // Stay in sync with the global unread count (updated by socket events and
+    // other components). If new notifications arrive while this page is open,
+    // reload the list so the button and dots reflect reality.
+    this.subs.add(
+      this.notificationService.unreadCount$.subscribe(count => {
+        if (count !== this.unreadCount) {
+          this.unreadCount = count;
+          if (count > 0) this.load();
+        }
+      })
+    );
+  }
+
+  ngOnDestroy(): void {
+    this.subs.unsubscribe();
   }
 
   load(): void {
@@ -30,13 +52,29 @@ export class DashboardNotificationsComponent implements OnInit {
     this.notificationService.getNotifications({ limit: 100 }).subscribe({
       next: (res) => {
         this.notifications = res.notifications || [];
-        this.unreadCount = res.unreadCount ?? 0;
+        this.unreadCount = res.unreadCount ?? this.notifications.filter(n => n.status === 'unread').length;
         this.loading = false;
+        this.notificationService.refreshUnreadCount();
       },
       error: () => {
-        this.error = 'Failed to load notifications';
+        this.error = this.translate.instant('dashboard.notifications.errorLoading');
         this.loading = false;
       }
+    });
+  }
+
+  markSingleRead(event: Event, notification: Notification): void {
+    event.stopPropagation();
+    if (this.markingSingle || notification.status === 'read') return;
+    this.markingSingle = notification._id;
+    this.notificationService.markAsRead(notification._id).subscribe({
+      next: () => {
+        notification.status = 'read';
+        notification.readAt = new Date().toISOString();
+        this.unreadCount = Math.max(0, this.unreadCount - 1);
+        this.markingSingle = null;
+      },
+      error: () => { this.markingSingle = null; }
     });
   }
 
@@ -47,13 +85,15 @@ export class DashboardNotificationsComponent implements OnInit {
       auction_ended: '/dashboard/buyer?tab=transactions',
       shipping: '/dashboard/buyer?tab=transactions',
       transaction: '/dashboard/buyer?tab=transactions',
+      bid: '/dashboard/buyer?tab=bets',
       dispute: '/dashboard/disputes',
       listing: '/dashboard/seller',
       follow: '/dashboard/following',
       watchlist: '/dashboard/buyer?tab=watchlist',
       private_room: '/dashboard/buyer',
       account: '/dashboard/settings',
-      security: '/dashboard/settings'
+      security: '/dashboard/settings',
+      review: '/dashboard/buyer?tab=transactions'
     };
     return fallbacks[notification.type] || null;
   }
@@ -73,7 +113,8 @@ export class DashboardNotificationsComponent implements OnInit {
   }
 
   markAllAsRead(): void {
-    if (this.unreadCount === 0) return;
+    if (this.unreadCount === 0 || this.markingAll) return;
+    this.markingAll = true;
     this.notificationService.markAllAsRead().subscribe({
       next: () => {
         this.notifications.forEach(n => {
@@ -81,6 +122,10 @@ export class DashboardNotificationsComponent implements OnInit {
           n.readAt = new Date().toISOString();
         });
         this.unreadCount = 0;
+        this.markingAll = false;
+      },
+      error: () => {
+        this.markingAll = false;
       }
     });
   }

@@ -1,195 +1,188 @@
-<div class="signup-container">
-  <div class="signup-card">
+<div class="auth-pg" [class.light]="isLight()">
+  <nav class="auth-nav">
+    <a routerLink="/" class="auth-brand" aria-label="BidRoom">
+      <app-bidroom-logo [height]="28" />
+    </a>
+  </nav>
 
-    <!-- Title -->
-    <h2 class="title">{{ 'auth.signup.title' | translate }}</h2>
+  <div class="auth-shell">
+    <div class="auth-card auth-card--wide">
+      <header class="auth-card-head">
+        <h1 class="auth-title">{{ 'auth.signup.title' | translate }}</h1>
+        <p class="auth-subtitle">{{ 'auth.signup.subtitle' | translate }}</p>
+      </header>
 
-    <!-- Error Message -->
-    @if (errorMessage) {
-<div class="error-message" [class.email-exists]="signupForm.get('email')?.errors?.['emailExists']">
-      <div class="error-icon">⚠️</div>
-      <div class="error-content">
-        <p class="error-text">{{ errorMessage }}</p>
-        @if (errorMessage.includes('already registered')) {
-<div class="error-actions">
-          <button type="button" class="action-link" (click)="navigateToLogin()">{{ 'auth.login.logIn' | translate }}</button>
-          <span class="action-separator">{{ 'auth.common.or' | translate }}</span>
-          <button type="button" class="action-link" (click)="navigateToForgotPassword()">{{ 'auth.login.resetPassword' | translate }}</button>
-        </div>
-}
-      </div>
-    </div>
-}
-
-    <!-- Google Signup Button (requires Terms accepted - see checkbox in form below) -->
-    <button
-      type="button"
-      class="google-btn"
-      (click)="loginWithGoogle()"
-      [disabled]="isLoading || !signupForm.get('acceptTerms')?.value"
-    >
-      <svg class="google-icon" width="18" height="18" viewBox="0 0 18 18">
-        <path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z"/>
-        <path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z"/>
-        <path fill="#FBBC05" d="M3.964 10.712c-.18-.54-.282-1.117-.282-1.712 0-.595.102-1.172.282-1.712V4.956H.957C.347 6.175 0 7.55 0 9s.348 2.825.957 4.044l3.007-2.332z"/>
-        <path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.956L3.964 7.288C4.672 5.163 6.656 3.58 9 3.58z"/>
-      </svg>
-      {{ 'auth.login.continueWithGoogle' | translate }}
-    </button>
-
-    <!-- Separator -->
-    <div class="separator">
-      <span>{{ 'auth.common.or' | translate }}</span>
-    </div>
-
-    <!-- Signup Form -->
-    <form [formGroup]="signupForm" (ngSubmit)="onSubmit()" class="signup-form">
-      <!-- Name Fields -->
-      <div class="name-row">
-        <div class="form-group">
-          <label for="firstName">{{ 'auth.signup.firstName' | translate }} *</label>
-          <input
-            type="text"
-            id="firstName"
-            formControlName="firstName"
-            [class.error]="getFieldError('firstName')"
-            [placeholder]="'auth.signup.firstNamePlaceholder' | translate"
-            autocomplete="given-name"
-          />
-          @if (getFieldError('firstName')) {
-<div class="field-error">
-            {{ getFieldError('firstName') }}
+      @if (errorMessage) {
+        <div class="auth-error">
+          <div class="auth-error-body">
+            <p class="auth-error-text">{{ errorMessage }}</p>
+            @if (errorMessage.includes('already registered')) {
+              <div class="auth-error-actions">
+                <button type="button" class="auth-action-link" (click)="navigateToLogin()">
+                  {{ 'auth.login.logIn' | translate }}
+                </button>
+                <button type="button" class="auth-action-link" (click)="navigateToForgotPassword()">
+                  {{ 'auth.login.resetPassword' | translate }}
+                </button>
+              </div>
+            }
           </div>
-}
         </div>
+      }
 
-        <div class="form-group">
-          <label for="lastName">{{ 'auth.signup.lastName' | translate }} *</label>
-          <input
-            type="text"
-            id="lastName"
-            formControlName="lastName"
-            [class.error]="getFieldError('lastName')"
-            [placeholder]="'auth.signup.lastNamePlaceholder' | translate"
-            autocomplete="family-name"
-          />
-          @if (getFieldError('lastName')) {
-<div class="field-error">
-            {{ getFieldError('lastName') }}
-          </div>
-}
-        </div>
-      </div>
-
-      <!-- Email Field -->
-      <div class="form-group">
-        <label for="email">{{ 'auth.common.email' | translate }} *</label>
-        <input
-          type="email"
-          id="email"
-          formControlName="email"
-          [class.error]="getFieldError('email')"
-          [placeholder]="'auth.common.emailPlaceholder' | translate"
-          autocomplete="email"
-        />
-        @if (getFieldError('email')) {
-<div class="field-error">
-          {{ getFieldError('email') }}
-        </div>
-}
-      </div>
-
-      <!-- Password Fields -->
-      <div class="form-group">
-        <label for="password">{{ 'auth.common.password' | translate }} *</label>
-        <div class="password-input-container">
-          <input
-            [type]="showPassword ? 'text' : 'password'"
-            id="password"
-            formControlName="password"
-            [class.error]="getFieldError('password')"
-            [placeholder]="'auth.signup.createPasswordPlaceholder' | translate"
-            autocomplete="new-password"
-          />
-          <button
-            type="button"
-            class="password-toggle"
-            (click)="togglePasswordVisibility()"
-            [attr.aria-label]="showPassword ? ('auth.common.hidePassword' | translate) : ('auth.common.showPassword' | translate)"
-          >
-            <span class="eye-icon" [class.show]="showPassword">👁️</span>
-          </button>
-        </div>
-        @if (getFieldError('password')) {
-<div class="field-error">
-          {{ getFieldError('password') }}
-        </div>
-}
-      </div>
-
-      <div class="form-group">
-        <label for="confirmPassword">{{ 'auth.signup.confirmPassword' | translate }} *</label>
-        <div class="password-input-container">
-          <input
-            [type]="showConfirmPassword ? 'text' : 'password'"
-            id="confirmPassword"
-            formControlName="confirmPassword"
-            [class.error]="getFieldError('confirmPassword')"
-            [placeholder]="'auth.signup.confirmPasswordPlaceholder' | translate"
-            autocomplete="new-password"
-          />
-          <button
-            type="button"
-            class="password-toggle"
-            (click)="toggleConfirmPasswordVisibility()"
-            [attr.aria-label]="showConfirmPassword ? ('auth.common.hidePassword' | translate) : ('auth.common.showPassword' | translate)"
-          >
-            <span class="eye-icon" [class.show]="showConfirmPassword">👁️</span>
-          </button>
-        </div>
-        @if (getFieldError('confirmPassword')) {
-<div class="field-error">
-          {{ getFieldError('confirmPassword') }}
-        </div>
-}
-      </div>
-
-      <!-- Terms and Conditions (required to create an account) -->
-      <div class="form-group terms-group">
-        <label class="checkbox-label">
-          <input
-            type="checkbox"
-            formControlName="acceptTerms"
-            id="acceptTerms"
-          />
-          <span class="checkbox-text">{{ 'auth.signup.iAccept' | translate }} <a routerLink="/landing/terms-conditions" target="_blank" rel="noopener noreferrer">{{ 'auth.signup.termsAndConditions' | translate }}</a></span>
-        </label>
-        @if (signupForm.get('acceptTerms')?.invalid && signupForm.get('acceptTerms')?.touched) {
-<div class="field-error">
-          {{ 'auth.signup.mustAcceptTerms' | translate }}
-        </div>
-}
-      </div>
-
-      <!-- Signup Button -->
       <button
-        type="submit"
-        class="signup-btn"
-        [disabled]="signupForm.invalid || isLoading"
+        type="button"
+        class="auth-google-btn"
+        (click)="loginWithGoogle()"
+        [disabled]="isLoading || !signupForm.get('acceptTerms')?.value"
       >
-        @if (!isLoading) {
-<span>{{ 'auth.signup.signUp' | translate }}</span>
-}
-        @if (isLoading) {
-<span>{{ 'auth.signup.creatingAccount' | translate }}</span>
-}
+        <svg class="auth-google-icon" width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">
+          <path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z"/>
+          <path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z"/>
+          <path fill="#FBBC05" d="M3.964 10.712c-.18-.54-.282-1.117-.282-1.712 0-.595.102-1.172.282-1.712V4.956H.957C.347 6.175 0 7.55 0 9s.348 2.825.957 4.044l3.007-2.332z"/>
+          <path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.956L3.964 7.288C4.672 5.163 6.656 3.58 9 3.58z"/>
+        </svg>
+        {{ 'auth.login.continueWithGoogle' | translate }}
       </button>
-    </form>
 
-    <!-- Login Link -->
-    <div class="login-link">
-      {{ 'auth.signup.alreadyHaveAccount' | translate }}
-      <button type="button" (click)="navigateToLogin()">{{ 'auth.login.logIn' | translate }}</button>
+      <div class="auth-separator">
+        <span>{{ 'auth.common.or' | translate }}</span>
+      </div>
+
+      <form [formGroup]="signupForm" (ngSubmit)="onSubmit()" class="auth-form">
+        <div class="auth-name-row">
+          <div class="auth-field">
+            <label for="firstName">{{ 'auth.signup.firstName' | translate }}</label>
+            <input
+              type="text"
+              id="firstName"
+              formControlName="firstName"
+              [class.error]="getFieldError('firstName')"
+              [placeholder]="'auth.signup.firstNamePlaceholder' | translate"
+              autocomplete="given-name"
+            />
+            @if (getFieldError('firstName')) {
+              <div class="auth-field-error">{{ getFieldError('firstName') }}</div>
+            }
+          </div>
+          <div class="auth-field">
+            <label for="lastName">{{ 'auth.signup.lastName' | translate }}</label>
+            <input
+              type="text"
+              id="lastName"
+              formControlName="lastName"
+              [class.error]="getFieldError('lastName')"
+              [placeholder]="'auth.signup.lastNamePlaceholder' | translate"
+              autocomplete="family-name"
+            />
+            @if (getFieldError('lastName')) {
+              <div class="auth-field-error">{{ getFieldError('lastName') }}</div>
+            }
+          </div>
+        </div>
+
+        <div class="auth-field">
+          <label for="email">{{ 'auth.common.email' | translate }}</label>
+          <input
+            type="email"
+            id="email"
+            formControlName="email"
+            [class.error]="getFieldError('email')"
+            [placeholder]="'auth.common.emailPlaceholder' | translate"
+            autocomplete="email"
+          />
+          @if (getFieldError('email')) {
+            <div class="auth-field-error">{{ getFieldError('email') }}</div>
+          }
+        </div>
+
+        <div class="auth-field">
+          <label for="password">{{ 'auth.common.password' | translate }}</label>
+          <div class="auth-password-wrap">
+            <input
+              [type]="showPassword ? 'text' : 'password'"
+              id="password"
+              formControlName="password"
+              [class.error]="getFieldError('password')"
+              [placeholder]="'auth.signup.createPasswordPlaceholder' | translate"
+              autocomplete="new-password"
+            />
+            <button type="button" class="auth-password-toggle" (click)="togglePasswordVisibility()"
+              [attr.aria-label]="showPassword ? ('auth.common.hidePassword' | translate) : ('auth.common.showPassword' | translate)">
+              @if (showPassword) {
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <path d="M3 3l18 18M10.5 10.7a3 3 0 0 0 4.1 4.1M7.1 7.1C5.2 8.4 3.8 10.2 3 12c1.5 3 5.5 7 9 7 1.2 0 2.3-.3 3.3-.8M14.5 14.5c-.9.5-2 .8-3.1.8-3 0-7-4-9-7 .6-1.2 1.6-2.4 2.9-3.4"/>
+                </svg>
+              } @else {
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/>
+                </svg>
+              }
+            </button>
+          </div>
+          @if (getFieldError('password')) {
+            <div class="auth-field-error">{{ getFieldError('password') }}</div>
+          }
+        </div>
+
+        <div class="auth-field">
+          <label for="confirmPassword">{{ 'auth.signup.confirmPassword' | translate }}</label>
+          <div class="auth-password-wrap">
+            <input
+              [type]="showConfirmPassword ? 'text' : 'password'"
+              id="confirmPassword"
+              formControlName="confirmPassword"
+              [class.error]="getFieldError('confirmPassword')"
+              [placeholder]="'auth.signup.confirmPasswordPlaceholder' | translate"
+              autocomplete="new-password"
+            />
+            <button type="button" class="auth-password-toggle" (click)="toggleConfirmPasswordVisibility()"
+              [attr.aria-label]="showConfirmPassword ? ('auth.common.hidePassword' | translate) : ('auth.common.showPassword' | translate)">
+              @if (showConfirmPassword) {
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <path d="M3 3l18 18M10.5 10.7a3 3 0 0 0 4.1 4.1M7.1 7.1C5.2 8.4 3.8 10.2 3 12c1.5 3 5.5 7 9 7 1.2 0 2.3-.3 3.3-.8M14.5 14.5c-.9.5-2 .8-3.1.8-3 0-7-4-9-7 .6-1.2 1.6-2.4 2.9-3.4"/>
+                </svg>
+              } @else {
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/>
+                </svg>
+              }
+            </button>
+          </div>
+          @if (getFieldError('confirmPassword')) {
+            <div class="auth-field-error">{{ getFieldError('confirmPassword') }}</div>
+          }
+        </div>
+
+        <div class="auth-terms">
+          <label class="auth-checkbox-label" for="acceptTerms">
+            <input type="checkbox" formControlName="acceptTerms" id="acceptTerms" />
+            <span>{{ 'auth.signup.iAccept' | translate }}
+              <a routerLink="/landing/terms-conditions" target="_blank" rel="noopener noreferrer">
+                {{ 'auth.signup.termsAndConditions' | translate }}
+              </a>
+            </span>
+          </label>
+          @if (signupForm.get('acceptTerms')?.invalid && signupForm.get('acceptTerms')?.touched) {
+            <div class="auth-field-error">{{ 'auth.signup.mustAcceptTerms' | translate }}</div>
+          }
+        </div>
+
+        <button type="submit" class="auth-submit" [disabled]="signupForm.invalid || isLoading">
+          @if (!isLoading) {
+            <span>{{ 'auth.signup.signUp' | translate }}</span>
+          } @else {
+            <span>{{ 'auth.signup.creatingAccount' | translate }}</span>
+          }
+        </button>
+      </form>
+
+      <footer class="auth-card-foot">
+        <span>{{ 'auth.signup.alreadyHaveAccount' | translate }}</span>
+        <button type="button" class="auth-foot-link" (click)="navigateToLogin()">
+          {{ 'auth.login.logIn' | translate }}
+        </button>
+      </footer>
     </div>
   </div>
 </div>

@@ -10,6 +10,7 @@ import { BidsService, Bid } from '../../../shared/services/bids.service';
 import { SocketService } from '../../../shared/services/socket.service';
 import { AuthService, AppUser } from '../../../auth/services/auth.service';
 import { PrivateRoomService } from '../../services/private-room.service';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { API_CONFIG } from '../../../shared/config/api.config';
 
 type InvitationDisplayStatus = 'pending' | 'accepted' | 'declined';
@@ -26,7 +27,7 @@ interface PlatinumBidderInfo {
 @Component({
   selector: 'app-private-room-auction',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, TranslateModule],
   templateUrl: './private-room-auction.component.html',
   styleUrls: ['./private-room-auction.component.scss']
 })
@@ -39,6 +40,7 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
   private socketService = inject(SocketService);
   private authService = inject(AuthService);
   private privateRoomService = inject(PrivateRoomService);
+  private translate = inject(TranslateService);
 
   listingId = '';
   listing: Listing | null = null;
@@ -58,6 +60,11 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
   /** Real-time socket subs — tracked separately so re-entering subscribeToUpdates() doesn't stack duplicates. */
   private rtSubscriptions: Subscription[] = [];
   private countdownInterval: ReturnType<typeof setInterval> | null = null;
+  private expiryPollTimer: ReturnType<typeof setTimeout> | null = null;
+  /** Avoid showing the session-end modal more than once per page visit. */
+  private sessionEndModalShown = false;
+  /** Status when the local countdown first hit zero (before backend catches up). */
+  private expiredAtStatus: 'active' | 'invited' | null = null;
   isPlacingBid = false;
   /** Custom bid amount (user can type any number >= min); empty = use minimum next bid */
   customBidAmount = '';
@@ -111,6 +118,10 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
     if (this.countdownInterval) {
       clearInterval(this.countdownInterval);
       this.countdownInterval = null;
+    }
+    if (this.expiryPollTimer) {
+      clearTimeout(this.expiryPollTimer);
+      this.expiryPollTimer = null;
     }
     // Leave private room viewer room
     if (this.listingId) {
@@ -321,13 +332,269 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
 
     const now = new Date();
     const remaining = Math.max(0, Math.floor((endDate.getTime() - now.getTime()) / 1000));
+    const wasPositive = this.countdown > 0;
     this.countdown = remaining;
+
+    if (wasPositive && remaining === 0) {
+      this.onLocalCountdownReachedZero();
+    }
 
     if (remaining === 0 && this.countdownInterval) {
       clearInterval(this.countdownInterval);
       this.countdownInterval = null;
-      // Listing-update socket event will deliver privateRoomStatus 'ended' when backend processes it
     }
+  }
+
+  /** True while the active bidding window is open (blocks bid UI after expiry). */
+  get isBiddingOpen(): boolean {
+    return (
+      this.listing?.privateRoomStatus === 'active' &&
+      this.countdown > 0 &&
+      !this.sessionEndModalShown
+    );
+  }
+
+  private onLocalCountdownReachedZero(): void {
+    if (!this.listing || this.sessionEndModalShown) return;
+    const status = this.listing.privateRoomStatus;
+    if (status !== 'active' && status !== 'invited') return;
+
+    this.expiredAtStatus = status;
+    this.refreshListingAfterExpiry(0);
+  }
+
+  private refreshListingAfterExpiry(attempt: number): void {
+    if (!this.listingId) return;
+
+    this.listingsService.getListingById(this.listingId).subscribe({
+      next: (listing) => {
+        this.listing = listing;
+        this.applyPlatinumStatusFromListing();
+        this.loadBids();
+        this.startCountdown();
+        this.cdr.detectChanges();
+
+        if (this.tryPresentSessionEndModal(listing)) {
+          return;
+        }
+
+        // Backend scheduler may take up to ~1 minute; poll until state settles.
+        if (attempt < 15) {
+          if (this.expiryPollTimer) clearTimeout(this.expiryPollTimer);
+          this.expiryPollTimer = setTimeout(
+            () => this.refreshListingAfterExpiry(attempt + 1),
+            5000
+          );
+        } else if (this.listing) {
+          this.presentSessionEndModal(this.listing, true);
+        }
+      },
+      error: () => {
+        if (this.listing) {
+          this.presentSessionEndModal(this.listing, true);
+        }
+      }
+    });
+  }
+
+  /** Returns true when the modal was shown (or already shown). */
+  private tryPresentSessionEndModal(listing: Listing): boolean {
+    if (this.sessionEndModalShown) return true;
+
+    const phase = this.expiredAtStatus;
+    if (phase === 'active') {
+      if (listing.privateRoomStatus === 'ended') {
+        this.presentSessionEndModal(listing);
+        return true;
+      }
+      return false;
+    }
+    if (phase === 'invited') {
+      if (listing.privateRoomStatus === 'ended' || listing.privateRoomStatus === 'active') {
+        this.presentSessionEndModal(listing);
+        return true;
+      }
+      return false;
+    }
+
+    if (listing.privateRoomStatus === 'ended') {
+      this.presentSessionEndModal(listing);
+      return true;
+    }
+    return false;
+  }
+
+  private presentSessionEndModal(listing: Listing, confirming = false): void {
+    if (this.sessionEndModalShown) return;
+    this.sessionEndModalShown = true;
+    const phaseAtExpiry = this.expiredAtStatus;
+    this.expiredAtStatus = null;
+
+    const content = this.buildSessionEndModalContent(listing, confirming, phaseAtExpiry);
+    const listingUrl = this.getListingPageUrl();
+
+    Swal.fire({
+      icon: content.icon,
+      title: content.title,
+      html: content.html,
+      confirmButtonText: content.confirmText,
+      confirmButtonColor: '#c9a84c',
+      showCancelButton: content.showViewListing,
+      cancelButtonText: this.translate.instant('privateRoomAuction.expired.viewListing'),
+      cancelButtonColor: '#6b7280',
+      allowOutsideClick: false,
+      allowEscapeKey: true,
+      customClass: {
+        popup: 'pr-expiry-modal',
+        confirmButton: 'pr-expiry-modal__confirm',
+      },
+    }).then((result) => {
+      if (result.isConfirmed && content.navigateToTransactions) {
+        this.router.navigate(['/dashboard/transactions']);
+        return;
+      }
+      if (result.dismiss === Swal.DismissReason.cancel && content.showViewListing && listingUrl !== '#') {
+        window.open(listingUrl, '_blank', 'noopener,noreferrer');
+      }
+    });
+  }
+
+  private buildSessionEndModalContent(
+    listing: Listing,
+    confirming: boolean,
+    phaseAtExpiry: 'active' | 'invited' | null = null
+  ): {
+    icon: 'info' | 'success' | 'warning';
+    title: string;
+    html: string;
+    confirmText: string;
+    showViewListing: boolean;
+    navigateToTransactions: boolean;
+  } {
+    const t = (key: string, params?: Record<string, string>) =>
+      this.translate.instant(`privateRoomAuction.expired.${key}`, params);
+
+    const winner = this.getTemporaryWinner();
+    const amount = winner ? `$${winner.amount.toFixed(2)}` : '';
+    const name = winner?.name ?? '';
+    const params = { amount, name };
+
+    if (confirming) {
+      return {
+        icon: 'info',
+        title: t('titleEnded'),
+        html: t('bodyConfirming'),
+        confirmText: t('confirm'),
+        showViewListing: listing.slug != null,
+        navigateToTransactions: false,
+      };
+    }
+
+    if (listing.privateRoomStatus === 'active' && phaseAtExpiry === 'invited') {
+      return {
+        icon: 'success',
+        title: t('titleStarted'),
+        html: this.isPlatinumBidder ? t('bodyStartedPlatinum') : t('bodyStartedOther'),
+        confirmText: t('confirm'),
+        showViewListing: false,
+        navigateToTransactions: false,
+      };
+    }
+
+    if (listing.privateRoomClosedReason === 'no_acceptances') {
+      return {
+        icon: 'warning',
+        title: t('titleClosed'),
+        html: t('bodyNoAccept'),
+        confirmText: t('confirm'),
+        showViewListing: listing.slug != null,
+        navigateToTransactions: false,
+      };
+    }
+
+    if (listing.privateRoomClosedReason === 'seller_left') {
+      return {
+        icon: 'warning',
+        title: t('titleClosed'),
+        html: t('bodySellerLeft'),
+        confirmText: t('confirm'),
+        showViewListing: listing.slug != null,
+        navigateToTransactions: false,
+      };
+    }
+
+    if (this.isCurrentUserWinner(listing)) {
+      return {
+        icon: 'success',
+        title: t('titleEnded'),
+        html: t('bodyWinner', params),
+        confirmText: t('viewTransactions'),
+        showViewListing: true,
+        navigateToTransactions: true,
+      };
+    }
+
+    if (this.isSeller) {
+      return {
+        icon: 'info',
+        title: t('titleEnded'),
+        html: winner ? t('bodySellerWithWinner', params) : t('bodySellerNoWinner'),
+        confirmText: t('confirm'),
+        showViewListing: listing.slug != null,
+        navigateToTransactions: false,
+      };
+    }
+
+    if (this.isPlatinumBidder) {
+      return {
+        icon: 'info',
+        title: t('titleEnded'),
+        html: winner ? t('bodyParticipantWithWinner', params) : t('bodyParticipantNoWinner'),
+        confirmText: t('confirm'),
+        showViewListing: listing.slug != null,
+        navigateToTransactions: false,
+      };
+    }
+
+    return {
+      icon: 'info',
+      title: t('titleEnded'),
+      html: winner ? t('bodySpectatorWithWinner', params) : t('bodySpectatorNoWinner'),
+      confirmText: t('confirm'),
+      showViewListing: listing.slug != null,
+      navigateToTransactions: false,
+    };
+  }
+
+  private isCurrentUserWinner(listing: Listing): boolean {
+    const email = this.currentUser?.email?.toLowerCase();
+    if (!email) return false;
+    if (listing.winner?.email && listing.winner.email.toLowerCase() === email) {
+      return true;
+    }
+    const top = this.getTemporaryWinner();
+    if (!top || !this.currentUser?.email) return false;
+    const topBid = this.bids.find(b => b.amount === top.amount);
+    if (topBid?.bidderEmail && topBid.bidderEmail.toLowerCase() === email) return true;
+    return false;
+  }
+
+  private onPrivateRoomEndedFromServer(): void {
+    if (!this.listing) return;
+    this.countdown = 0;
+    if (this.countdownInterval) {
+      clearInterval(this.countdownInterval);
+      this.countdownInterval = null;
+    }
+    if (this.expiryPollTimer) {
+      clearTimeout(this.expiryPollTimer);
+      this.expiryPollTimer = null;
+    }
+    this.loadBids();
+    if (!this.sessionEndModalShown) {
+      this.presentSessionEndModal(this.listing);
+    }
+    this.cdr.detectChanges();
   }
 
   formatCountdown(): string {
@@ -371,14 +638,10 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
         this.startCountdown();
       }
       if (update.privateRoomStatus) {
+        const prevStatus = this.listing.privateRoomStatus;
         this.listing.privateRoomStatus = update.privateRoomStatus;
-        if (update.privateRoomStatus === 'ended') {
-          this.countdown = 0;
-          if (this.countdownInterval) {
-            clearInterval(this.countdownInterval);
-            this.countdownInterval = null;
-          }
-          this.loadBids();
+        if (update.privateRoomStatus === 'ended' && prevStatus !== 'ended') {
+          this.onPrivateRoomEndedFromServer();
         }
       }
       if (update.status) this.listing.status = update.status;
@@ -487,6 +750,13 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
     return !!sellerEmail && !!userEmail && sellerEmail === userEmail;
   }
 
+  /** Display name of the listing seller (for the participants panel). */
+  get sellerDisplayName(): string {
+    if (!this.listing?.seller) return 'Seller';
+    const s = this.listing.seller as { firstName?: string; lastName?: string };
+    return [s.firstName, s.lastName].filter(Boolean).join(' ') || 'Seller';
+  }
+
   /** Temporary winner = bidder with the highest bid (by amount). */
   getTemporaryWinner(): { name: string; amount: number } | null {
     if (!this.bids.length) return null;
@@ -520,7 +790,7 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
   placeBid(): void {
     if (!this.listing || this.isPlacingBid) return;
 
-    const canBid = this.isPlatinumBidder && this.listing.privateRoomStatus === 'active';
+    const canBid = this.isPlatinumBidder && this.isBiddingOpen;
 
     if (!canBid) {
       Swal.fire({
@@ -528,7 +798,9 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
         title: 'Cannot place bid',
         text: !this.isPlatinumBidder
           ? 'Only invited bidders (by the seller) can place bids. You can watch the room.'
-          : 'Bidding is not currently available. The Private Room may have ended or is not yet active.',
+          : this.countdown <= 0
+            ? this.translate.instant('privateRoomAuction.expired.bodyConfirming')
+            : 'Bidding is not currently available. The Private Room may have ended or is not yet active.',
         confirmButtonColor: '#7A4F84'
       });
       return;

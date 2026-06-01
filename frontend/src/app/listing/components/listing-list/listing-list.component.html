@@ -1,319 +1,414 @@
 <app-header activePage="auctions"></app-header>
 
 <section class="listing-list-page">
-  <div class="container">
+  <nav class="breadcrumb" aria-label="Breadcrumb">
+    <a routerLink="/" class="bc-link">{{ 'listingList.breadcrumbHome' | translate }}</a>
+    <span class="bc-sep">›</span>
+    <span class="bc-current">{{ 'listingList.breadcrumbSearch' | translate }}</span>
+  </nav>
 
-    <!-- Search Bar -->
-    <div class="search-bar-row">
+  <div class="search-bar-wrap">
+    <div class="search-row">
       <div class="search-input-wrap">
-        <span class="search-icon">🔍</span>
+        <svg class="search-icon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+        </svg>
         <input
           type="text"
           class="search-input"
           [placeholder]="'listingList.searchPlaceholder' | translate"
           [(ngModel)]="searchInput"
-          (keyup.enter)="onSearch()" />
+          (keyup.enter)="onSearch()"
+          [attr.aria-label]="'listingList.search' | translate" />
         @if (searchInput) {
-          <button class="search-clear" (click)="searchInput = ''; clearSearch()">✕</button>
+          <button type="button" class="search-clear" (click)="searchInput = ''; clearSearch()" aria-label="Clear">×</button>
         }
       </div>
-      <button class="btn btn-primary search-btn" (click)="onSearch()">{{ 'listingList.search' | translate }}</button>
-      <button class="btn btn-secondary" (click)="browseCategoriesPage()">{{ 'listingList.browseCategories' | translate }}</button>
+      <button type="button" class="btn-search" (click)="onSearch()">{{ 'listingList.search' | translate }}</button>
     </div>
 
-    <!-- Active Filters chips -->
     @if (searchQuery || selectedCategory || selectedSubCategory || hasActiveFilters) {
       <div class="active-filters">
-        <span class="filters-label">{{ 'listingList.filters' | translate }}</span>
-        @if (listingStatusFilter === 'ended') {
-          <span class="filter-chip">{{ 'listingList.closedAuctions' | translate }}<button type="button" (click)="clearListingStatusClosed()">✕</button></span>
-        }
+        <span class="af-label">{{ 'listingList.activeFilters' | translate }}</span>
         @if (searchQuery) {
-          <span class="filter-chip">"{{ searchQuery }}"<button (click)="clearSearch()">✕</button></span>
+          <button type="button" class="filter-tag" (click)="clearSearch()">
+            {{ searchQuery }}<span class="filter-tag-x">×</span>
+          </button>
         }
         @if (selectedCategory) {
-          <span class="filter-chip">{{ activeCategoryLabel }}<button (click)="clearCategory()">✕</button></span>
+          <button type="button" class="filter-tag" (click)="clearCategory()">
+            {{ activeCategoryLabel }}<span class="filter-tag-x">×</span>
+          </button>
         }
         @if (selectedSubCategory) {
-          <span class="filter-chip">{{ selectedSubCategory }}<button (click)="clearSubCategory()">✕</button></span>
+          <button type="button" class="filter-tag" (click)="clearSubCategory()">
+            {{ selectedSubCategory }}<span class="filter-tag-x">×</span>
+          </button>
+        }
+        @if (formatFilter !== 'all') {
+          <button type="button" class="filter-tag" (click)="setFormatFilter('all')">
+            {{ formatFilterLabel() }}<span class="filter-tag-x">×</span>
+          </button>
+        }
+        @for (s of activeStatusLabels(); track s) {
+          <button type="button" class="filter-tag" (click)="removeStatusFilter(s.key)">
+            {{ s.label }}<span class="filter-tag-x">×</span>
+          </button>
+        }
+        @if (listingStatusFilter === 'ended') {
+          <button type="button" class="filter-tag" (click)="clearListingStatusClosed()">
+            {{ 'listingList.closedAuctions' | translate }}<span class="filter-tag-x">×</span>
+          </button>
         }
         @for (c of selectedConditions; track c) {
-          <span class="filter-chip">{{ conditionLabel(c) }}<button (click)="toggleCondition(c)">✕</button></span>
+          <button type="button" class="filter-tag" (click)="toggleCondition(c)">
+            {{ conditionLabel(c) }}<span class="filter-tag-x">×</span>
+          </button>
         }
-        @for (s of selectedShipping; track s) {
-          <span class="filter-chip">{{ shippingLabel(s) }}<button (click)="toggleShipping(s)">✕</button></span>
-        }
-        @if (locationCityFilter.trim() || locationCountryFilter) {
-          <span class="filter-chip">{{ locationFilterChipLabel() }}<button type="button" (click)="clearLocationFilters()">✕</button></span>
+        @if (locationFilter.trim()) {
+          <button type="button" class="filter-tag" (click)="clearLocationFilters()">
+            {{ locationFilter.trim() }}<span class="filter-tag-x">×</span>
+          </button>
         }
         @if (minPrice || maxPrice) {
-          <span class="filter-chip">
-            {{ minPrice ? '$' + minPrice : '' }}{{ minPrice && maxPrice ? ' – ' : '' }}{{ maxPrice ? '$' + maxPrice : '' }}
-            <button (click)="minPrice = ''; maxPrice = ''; onPriceChange()">✕</button>
-          </span>
+          <button type="button" class="filter-tag" (click)="minPrice = ''; maxPrice = ''; onPriceChange()">
+            {{ priceChipLabel() }}<span class="filter-tag-x">×</span>
+          </button>
         }
+        <button type="button" class="clear-all" (click)="clearAllFilters()">{{ 'listingList.clearAllFilters' | translate }}</button>
       </div>
     }
+  </div>
 
-    <!-- Page Title + Sort Controls -->
-    <div class="list-header">
-      <div class="list-title-wrap">
-        <h1 class="page-title">{{ pageTitle }}</h1>
-        @if (!loading) {
-          <span class="result-count">{{ total || listings.length }} {{ 'listingList.listings' | translate }}</span>
+  <div class="page-layout">
+    <aside class="sidebar" [class.sidebar--open]="filtersOpen" aria-label="Search filters">
+      <div class="sidebar-header">
+        <span class="sidebar-title">{{ 'listingList.filtersTitle' | translate }}</span>
+        @if (hasActiveFilters || selectedCategory) {
+          <button type="button" class="sidebar-reset" (click)="clearAllFilters(); clearCategory()">
+            {{ 'listingList.filtersClear' | translate }}
+          </button>
         }
       </div>
-      <div class="list-controls">
-        <button class="filter-toggle-btn" (click)="filtersOpen = !filtersOpen">
-          <span>⚙ {{ 'listingList.filters' | translate }}</span>
-          @if (activeFilterCount > 0) {
-            <span class="filter-count-badge">{{ activeFilterCount }}</span>
-          }
+
+      <div class="filter-group">
+        <button type="button" class="filter-group-header" (click)="toggleFilterGroup('category')">
+          <span class="filter-group-title">{{ 'listingList.category' | translate }}</span>
+          <span class="filter-group-toggle" [class.open]="!collapsedGroups['category']">▼</span>
         </button>
-        <select class="filter-select" [(ngModel)]="listingStatusFilter" (change)="onListingStatusChange()">
-          <option value="active">{{ 'listingList.activeAuctions' | translate }}</option>
-          <option value="ended">{{ 'listingList.closedAuctions' | translate }}</option>
-        </select>
-        <select class="filter-select" [(ngModel)]="selectedCategory" (change)="onCategoryChange()">
-          <option value="">{{ 'listingList.allCategories' | translate }}</option>
-          @for (cat of categories; track cat.id) {
-            <option [value]="cat.id">{{ cat.icon }} {{ cat.name }}</option>
-          }
-        </select>
-        @if (selectedCategory && subCategories.length > 0) {
-          <select class="filter-select" [(ngModel)]="selectedSubCategory" (change)="onSubCategoryChange()">
-            <option value="">All {{ activeCategoryLabel }}</option>
-            @for (sub of subCategories; track sub) {
-              <option [value]="sub">{{ sub }}</option>
-            }
-          </select>
-        }
-        @if (listingStatusFilter === 'active') {
-        <select class="filter-select" [(ngModel)]="sortBy" (change)="onSortChange()">
-          <option value="deadline">{{ 'listingList.sortEndingSoonest' | translate }}</option>
-          <option value="newest">{{ 'listingList.sortNewest' | translate }}</option>
-          <option value="highest">{{ 'listingList.sortHighest' | translate }}</option>
-          <option value="lowest">{{ 'listingList.sortLowest' | translate }}</option>
-          <option value="bids">{{ 'listingList.sortMostBids' | translate }}</option>
-        </select>
-        } @else {
-        <select class="filter-select" [(ngModel)]="sortBy" (change)="onSortChange()">
-          <option value="recent-end">{{ 'listingList.sortRecentlyEnded' | translate }}</option>
-          <option value="newest">{{ 'listingList.sortNewest' | translate }}</option>
-          <option value="highest">{{ 'listingList.sortHighest' | translate }}</option>
-          <option value="lowest">{{ 'listingList.sortLowest' | translate }}</option>
-          <option value="bids">{{ 'listingList.sortMostBids' | translate }}</option>
-        </select>
+        @if (!collapsedGroups['category']) {
+          <div class="filter-group-body">
+            <div class="cat-pills">
+              <button
+                type="button"
+                class="cat-pill"
+                [class.active]="!selectedCategory"
+                (click)="selectCategory('')">
+                <span>{{ 'listingList.allCategories' | translate }}</span>
+              </button>
+              @for (cat of categories; track cat.id) {
+                <div class="cat-group" [class.cat-group--expanded]="isCategoryExpanded(cat.id)">
+                  <div class="cat-pill-row">
+                    @if (categoryHasSubcategories(cat)) {
+                      <button
+                        type="button"
+                        class="cat-expand"
+                        [attr.aria-expanded]="isCategoryExpanded(cat.id)"
+                        [attr.aria-label]="'listingList.expandCategory' | translate"
+                        (click)="toggleCategoryExpand(cat.id, $event)">
+                        <span class="cat-expand-icon" [class.open]="isCategoryExpanded(cat.id)">▶</span>
+                      </button>
+                    } @else {
+                      <span class="cat-expand-spacer" aria-hidden="true"></span>
+                    }
+                    <button
+                      type="button"
+                      class="cat-pill"
+                      [class.active]="selectedCategory === cat.id && !selectedSubCategory"
+                      (click)="selectCategory(cat.id)">
+                      <span>{{ cat.icon }} {{ categoryLabelKey(cat.id) | translate }}</span>
+                    </button>
+                  </div>
+                  @if (isCategoryExpanded(cat.id) && categoryHasSubcategories(cat)) {
+                    <div class="subcat-pills">
+                      @for (sub of cat.subCategories; track sub) {
+                        <button
+                          type="button"
+                          class="cat-pill cat-pill--sub"
+                          [class.active]="selectedCategory === cat.id && selectedSubCategory === sub"
+                          (click)="selectSubCategory(sub, cat.id)">
+                          <span>{{ sub }}</span>
+                        </button>
+                      }
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+          </div>
         }
       </div>
-    </div>
 
-    <!-- Body: sidebar + main -->
-    <div class="listing-body">
-
-      <!-- Filter Sidebar -->
-      <aside class="filter-sidebar" [class.filter-sidebar--open]="filtersOpen">
-        <div class="sidebar-inner">
-          <div class="sidebar-top">
-            <span class="sidebar-title">{{ 'listingList.filters' | translate }}</span>
-            @if (hasActiveFilters) {
-              <button class="clear-all-btn" (click)="clearAllFilters()">{{ 'listingList.clearAllFilters' | translate }}</button>
-            }
-          </div>
-
-          <!-- Auction status (live vs closed) -->
-          <div class="filter-group">
-            <h4 class="filter-group-title">{{ 'listingList.auctionStatus' | translate }}</h4>
-            <label class="filter-radio-label">
-              <input type="radio" name="listingStatus" value="active" [(ngModel)]="listingStatusFilter" (change)="onListingStatusChange()">
-              <span>{{ 'listingList.activeAuctions' | translate }}</span>
-            </label>
-            <label class="filter-radio-label">
-              <input type="radio" name="listingStatus" value="ended" [(ngModel)]="listingStatusFilter" (change)="onListingStatusChange()">
-              <span>{{ 'listingList.closedAuctions' | translate }}</span>
-            </label>
-          </div>
-
-          <!-- Condition -->
-          <div class="filter-group">
-            <h4 class="filter-group-title">{{ 'listingList.condition' | translate }}</h4>
-            @for (opt of conditionOptions; track opt.key) {
-              <label class="filter-checkbox-label">
-                <input type="checkbox" class="filter-checkbox" [checked]="selectedConditions.has(opt.key)" (change)="toggleCondition(opt.key)">
-                <span>{{ opt.label }}</span>
-              </label>
-            }
-          </div>
-
-          <!-- Price Range -->
-          <div class="filter-group">
-            <h4 class="filter-group-title">{{ 'listingList.price' | translate }}</h4>
-            <div class="price-range-row">
-              <input type="number" class="price-input" placeholder="Min $" [(ngModel)]="minPrice" (change)="onPriceChange()" min="0">
-              <span class="price-sep">–</span>
-              <input type="number" class="price-input" placeholder="Max $" [(ngModel)]="maxPrice" (change)="onPriceChange()" min="0">
+      <div class="filter-group">
+        <button type="button" class="filter-group-header" (click)="toggleFilterGroup('format')">
+          <span class="filter-group-title">{{ 'listingList.format' | translate }}</span>
+          <span class="filter-group-toggle" [class.open]="!collapsedGroups['format']">▼</span>
+        </button>
+        @if (!collapsedGroups['format']) {
+          <div class="filter-group-body">
+            <div class="fmt-row">
+              <button type="button" class="fmt-pill" [class.active]="formatFilter === 'all'" (click)="setFormatFilter('all')">
+                {{ 'listingList.formatAll' | translate }}
+              </button>
+              <button type="button" class="fmt-pill" [class.active]="formatFilter === 'auction'" (click)="setFormatFilter('auction')">
+                {{ 'listingList.formatAuction' | translate }}
+              </button>
+              <button type="button" class="fmt-pill" [class.active]="formatFilter === 'offer'" (click)="setFormatFilter('offer')">
+                {{ 'listingList.formatBestOffer' | translate }}
+              </button>
             </div>
           </div>
+        }
+      </div>
 
-          <!-- Location (city + country) -->
-          <div class="filter-group filter-group--location">
-            <h4 class="filter-group-title">{{ 'listingList.location' | translate }}</h4>
-            <div class="location-filter-stack">
-              <div class="location-field">
-                <label class="location-field-label" for="filter-location-city">{{ 'addListing.city' | translate }}</label>
-                <input
-                  id="filter-location-city"
-                  type="text"
-                  class="location-input"
-                  [(ngModel)]="locationCityFilter"
-                  (change)="onLocationFilterChange()"
-                  [placeholder]="'listingList.locationCityPlaceholder' | translate"
-                  autocomplete="address-level2"
-                />
-              </div>
-              <div class="location-field">
-                <label class="location-field-label" for="filter-location-country">{{ 'addListing.originCountry' | translate }}</label>
-                <select
-                  id="filter-location-country"
-                  class="location-select"
-                  [(ngModel)]="locationCountryFilter"
-                  (change)="onLocationFilterChange()"
-                >
-                  <option value="">{{ 'listingList.anyCountry' | translate }}</option>
-                  @for (c of countryFilterOptions; track c.code) {
-                    <option [value]="c.code">{{ c.labelKey | translate }}</option>
-                  }
-                </select>
-              </div>
+      <div class="filter-group">
+        <button type="button" class="filter-group-header" (click)="toggleFilterGroup('status')">
+          <span class="filter-group-title">{{ 'listingList.status' | translate }}</span>
+          <span class="filter-group-toggle" [class.open]="!collapsedGroups['status']">▼</span>
+        </button>
+        @if (!collapsedGroups['status']) {
+          <div class="filter-group-body">
+            <div class="status-grid">
+              <button type="button" class="status-pill" [class.active]="statusLive" (click)="toggleStatusLive()">
+                {{ 'listingList.statusLive' | translate }}
+              </button>
+              <button type="button" class="status-pill" [class.active]="statusEnding" (click)="toggleStatusEnding()">
+                {{ 'listingList.statusEnding' | translate }}
+              </button>
+              <button type="button" class="status-pill" [class.active]="statusPrivate" (click)="toggleStatusPrivate()">
+                {{ 'listingList.statusPrivate' | translate }}
+              </button>
+              <button type="button" class="status-pill" [class.active]="listingStatusFilter === 'ended'" (click)="toggleStatusClosed()">
+                {{ 'listingList.closedAuctions' | translate }}
+              </button>
             </div>
           </div>
+        }
+      </div>
 
-          <!-- Shipping (same options as add listing) -->
-          <div class="filter-group">
-            <h4 class="filter-group-title">{{ 'listingList.shipping' | translate }}</h4>
-            @for (opt of shippingOptions; track opt.key) {
-              <label class="filter-checkbox-label">
-                <input type="checkbox" class="filter-checkbox" [checked]="selectedShipping.has(opt.key)" (change)="toggleShipping(opt.key)">
-                <span>{{ opt.labelKey | translate }}</span>
-              </label>
+      <div class="filter-group">
+        <button type="button" class="filter-group-header" (click)="toggleFilterGroup('price')">
+          <span class="filter-group-title">{{ 'listingList.priceEuro' | translate }}</span>
+          <span class="filter-group-toggle" [class.open]="!collapsedGroups['price']">▼</span>
+        </button>
+        @if (!collapsedGroups['price']) {
+          <div class="filter-group-body">
+            <div class="price-inputs">
+              <div class="price-field">
+                <span class="price-prefix">€</span>
+                <input type="number" class="price-input" [placeholder]="'listingList.priceMin' | translate" [(ngModel)]="minPrice" (change)="onPriceChange()" min="0" />
+              </div>
+              <div class="price-field">
+                <span class="price-prefix">€</span>
+                <input type="number" class="price-input" [placeholder]="'listingList.priceMax' | translate" [(ngModel)]="maxPrice" (change)="onPriceChange()" min="0" />
+              </div>
+            </div>
+            <div class="price-presets">
+              @for (preset of pricePresets; track preset.labelKey) {
+                <button type="button" class="price-preset" [class.active]="activePricePreset === preset.id" (click)="applyPricePreset(preset)">
+                  {{ preset.labelKey | translate }}
+                </button>
+              }
+            </div>
+          </div>
+        }
+      </div>
+
+      <div class="filter-group">
+        <button type="button" class="filter-group-header" (click)="toggleFilterGroup('condition')">
+          <span class="filter-group-title">{{ 'listingList.condition' | translate }}</span>
+          <span class="filter-group-toggle" [class.open]="!collapsedGroups['condition']">▼</span>
+        </button>
+        @if (!collapsedGroups['condition']) {
+          <div class="filter-group-body">
+            <div class="check-list">
+              @for (opt of conditionOptions; track opt.key) {
+                <label class="check-item">
+                  <span
+                    class="check-box"
+                    [class.checked]="selectedConditions.has(opt.key)"
+                    (click)="toggleCondition(opt.key)"
+                    role="checkbox"
+                    [attr.aria-checked]="selectedConditions.has(opt.key)"></span>
+                  <span class="check-label">{{ opt.labelKey | translate }}</span>
+                </label>
+              }
+            </div>
+          </div>
+        }
+      </div>
+
+      <div class="filter-group filter-group--last">
+        <button type="button" class="filter-group-header" (click)="toggleFilterGroup('location')">
+          <span class="filter-group-title">{{ 'listingList.location' | translate }}</span>
+          <span class="filter-group-toggle" [class.open]="!collapsedGroups['location']">▼</span>
+        </button>
+        @if (!collapsedGroups['location']) {
+          <div class="filter-group-body">
+            <input
+              type="text"
+              class="location-input"
+              [(ngModel)]="locationFilter"
+              (change)="onLocationFilterChange()"
+              [placeholder]="'listingList.locationPlaceholder' | translate"
+              [attr.aria-label]="'listingList.location' | translate" />
+          </div>
+        }
+      </div>
+
+      <button type="button" class="sidebar-mobile-close" (click)="filtersOpen = false">{{ 'listingList.applyFilters' | translate }}</button>
+    </aside>
+
+    <div class="results-wrapper">
+      <div class="results-bar" role="toolbar">
+        <div class="results-count">
+          @if (!loading) {
+            @if (total === 1) {
+              {{ 'listingList.resultsCountOne' | translate: { count: total, query: searchQuery || ('listingList.allAuctions' | translate) } }}
+            } @else {
+              {{ 'listingList.resultsCountMany' | translate: { count: total, query: searchQuery || ('listingList.allAuctions' | translate) } }}
             }
+          } @else {
+            {{ 'listingList.loading' | translate }}
+          }
+        </div>
+        <div class="bar-right">
+          <button type="button" class="filter-toggle-mobile" (click)="filtersOpen = !filtersOpen">
+            {{ 'listingList.filtersTitle' | translate }}
+            @if (activeFilterCount > 0) {
+              <span class="filter-count-badge">{{ activeFilterCount }}</span>
+            }
+          </button>
+          <div class="sort-wrap">
+            <select class="sort-select" [(ngModel)]="sortBy" (change)="onSortChange()" [attr.aria-label]="'listingList.sortLabel' | translate">
+              @if (listingStatusFilter === 'active') {
+                <option value="deadline">{{ 'listingList.sortEndingSoonest' | translate }}</option>
+                <option value="newest">{{ 'listingList.sortNewest' | translate }}</option>
+                <option value="highest">{{ 'listingList.sortHighest' | translate }}</option>
+                <option value="lowest">{{ 'listingList.sortLowest' | translate }}</option>
+                <option value="bids">{{ 'listingList.sortMostBids' | translate }}</option>
+              } @else {
+                <option value="recent-end">{{ 'listingList.sortRecentlyEnded' | translate }}</option>
+                <option value="newest">{{ 'listingList.sortNewest' | translate }}</option>
+                <option value="highest">{{ 'listingList.sortHighest' | translate }}</option>
+                <option value="lowest">{{ 'listingList.sortLowest' | translate }}</option>
+                <option value="bids">{{ 'listingList.sortMostBids' | translate }}</option>
+              }
+            </select>
+            <span class="sort-arrow" aria-hidden="true">▼</span>
+          </div>
+          <div class="view-btns" role="group">
+            <button type="button" class="view-btn" [class.active]="viewMode === 'grid'" (click)="setViewMode('grid')" [attr.aria-label]="'listingList.viewGrid' | translate">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+            </button>
+            <button type="button" class="view-btn" [class.active]="viewMode === 'list'" (click)="setViewMode('list')" [attr.aria-label]="'listingList.viewList' | translate">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="3" y="5" width="18" height="3" rx="1"/><rect x="3" y="11" width="18" height="3" rx="1"/><rect x="3" y="17" width="18" height="3" rx="1"/></svg>
+            </button>
           </div>
         </div>
-      </aside>
+      </div>
 
-      <!-- Listings Main -->
-      <div class="listing-main">
-
-        <!-- Loading -->
+      <div class="results-content">
         @if (loading) {
           <div class="loading-state"><p>{{ 'listingList.loading' | translate }}</p></div>
         }
 
-        <!-- Error -->
         @if (error && !loading) {
           <div class="error-state">
-            <h3>⚠️ {{ 'listingList.error' | translate }}</h3>
+            <h3>{{ 'listingList.error' | translate }}</h3>
             <p>{{ error }}</p>
-            <button class="btn btn-primary" (click)="loadListings()">{{ 'listingList.tryAgain' | translate }}</button>
+            <button type="button" class="btn-search" (click)="loadListings()">{{ 'listingList.tryAgain' | translate }}</button>
           </div>
         }
 
-        <!-- Listings Grid -->
         @if (!loading && !error && listings.length > 0) {
-          <div class="listings-grid">
+          <div class="listings-grid" [class.view-list]="viewMode === 'list'">
             @for (listing of listings; track listing._id) {
-              <div class="listing-card" (click)="viewListing(listing.slug)">
-                <div class="listing-image-container">
+              <article class="lcard" [class.view-list]="viewMode === 'list'" tabindex="0" (click)="viewListing(listing.slug)" (keyup.enter)="viewListing(listing.slug)">
+                <div class="lcard-img">
                   <img
-                    [src]="listing.images[0] || 'https://via.placeholder.com/400x300?text=' + listing.subCategory"
+                    [src]="listing.images[0] || 'https://via.placeholder.com/400x300?text=' + (listing.subCategory || 'Item')"
                     [alt]="listing.title"
-                    class="listing-image" />
-                  <div class="listing-badges">
-                    @if (listing.isFeatured) {
-                      <span class="badge badge-featured">⭐ {{ 'listingList.featured' | translate }}</span>
-                    }
-                    @if (listing.isVerified) {
-                      <span class="badge badge-verified">✓ {{ 'listingList.verified' | translate }}</span>
-                    }
-                    @if (listing.endingSoon) {
-                      <span class="badge badge-ending-soon">⏰ {{ 'listingList.endingSoon' | translate }}</span>
-                    }
-                    @if (listing.itemMode === 'bundle') {
-                      <span class="badge badge-bundle">🗂️ {{ 'listingList.bundle' | translate }}</span>
-                    }
-                    @if (listing.itemMode === 'multi_quantity') {
-                      <span class="badge badge-multi">×{{ listing.quantity }}</span>
+                    loading="lazy" />
+                  <div class="lcard-badges">
+                    @for (badge of listingBadges(listing); track badge.type) {
+                      <span class="lbadge" [class]="badge.class">{{ badge.label }}</span>
                     }
                   </div>
-                  @if (listing.condition) {
-                    <span class="condition-badge">{{ listing.condition }}</span>
-                  }
+                  <button
+                    type="button"
+                    class="lcard-fav"
+                    [class.saved]="isInWatchlist(listing._id)"
+                    (click)="toggleWatchlist($event, listing)"
+                    [attr.aria-label]="isInWatchlist(listing._id) ? ('listingList.removeWatchlist' | translate) : ('listingList.addWatchlist' | translate)">
+                    {{ isInWatchlist(listing._id) ? '♥' : '♡' }}
+                  </button>
                 </div>
-                <div class="listing-content">
-                  <div class="listing-header">
-                    <h3 class="listing-title">{{ listing.title }}</h3>
-                    <span class="listing-subcategory">{{ listing.subCategory }}</span>
-                  </div>
-                  <p class="listing-description">{{ listing.description.substring(0, 90) }}...</p>
-                  <div class="listing-meta">
-                    <div class="listing-price-info">
-                      @if (listing.auctionFormat === 'best-offer' && (listing.currentPrice == null || listing.currentPrice === 0)) {
-                        <span class="listing-current-price">{{ 'listingList.noOffersYet' | translate }}</span>
-                      } @else {
-                        <span class="listing-current-price">{{ formatPrice(listing.currentPrice) }}</span>
-                      }
-                      @if (listing.auctionFormat !== 'best-offer' && listing.currentPrice > listing.startingPrice) {
-                        <span class="listing-starting-price">{{ 'listingList.startedAt' | translate }} {{ formatPrice(listing.startingPrice) }}</span>
-                      }
+                <div class="lcard-body">
+                  <div class="lcard-title">{{ listing.title }}</div>
+                  <div class="lcard-meta">{{ listingMetaLine(listing) }}</div>
+                  <div class="lcard-foot">
+                    <div class="price-block">
+                      <div class="price-lbl">{{ priceLabel(listing) }}</div>
+                      <div class="price-val">
+                        @if (listing.auctionFormat === 'best-offer' && (listing.currentPrice == null || listing.currentPrice === 0)) {
+                          {{ 'listingList.noOffersYet' | translate }}
+                        } @else {
+                          {{ formatPrice(listing.currentPrice) }}
+                        }
+                      </div>
                     </div>
-                    <div class="listing-bid-info">
-                      <span class="bid-count">{{ listing.bidCount }} {{ listing.bidCount === 1 ? ('listingList.bid' | translate) : ('listingList.bids' | translate) }}</span>
-                      <span class="time-remaining" [ngClass]="timerClass(listing)">⏱ {{ formatTimeRemaining(listing) }}</span>
+                    <div class="timer-block">
+                      <div class="timer-val" [class.ending]="isEndingTimer(listing)">{{ formatTimeRemaining(listing) }}</div>
+                      <div class="bids-count">{{ bidCountLabel(listing) }}</div>
                     </div>
                   </div>
                 </div>
-              </div>
+              </article>
             }
           </div>
         }
 
-        <!-- Empty -->
         @if (!loading && !error && listings.length === 0) {
-          <div class="empty-state">
-            <div class="empty-icon">🔍</div>
-            <h3>{{ 'listingList.noListingsFound' | translate }}</h3>
-            <p>{{ 'listingList.tryDifferentSearch' | translate }}</p>
-            <button class="btn btn-primary" (click)="clearCategory(); clearSearch(); clearAllFilters()">{{ 'listingList.clearAllFilters' | translate }}</button>
+          <div class="no-results show">
+            <div class="no-results-icon">🔍</div>
+            <div class="no-results-title">{{ 'listingList.noListingsFound' | translate }}</div>
+            <div class="no-results-sub">{{ 'listingList.tryDifferentSearch' | translate }}</div>
+            <button type="button" class="btn-search" (click)="clearCategory(); clearSearch(); clearAllFilters()">
+              {{ 'listingList.clearAllFilters' | translate }}
+            </button>
           </div>
         }
 
-        <!-- Pagination -->
         @if (!loading && !error && totalPages > 1) {
-          <div class="pagination">
-            <div class="pagination-info">
-              {{ pageFrom }}–{{ pageTo }} of {{ total }} {{ 'listingList.listings' | translate }}
-            </div>
-            <div class="pagination-controls">
-              <button class="page-btn page-btn-nav" [disabled]="currentPage === 1" (click)="goToPage(currentPage - 1)">‹</button>
-              @if (visiblePages[0] > 1) {
-                <button class="page-btn" (click)="goToPage(1)">1</button>
-                @if (visiblePages[0] > 2) { <span class="page-ellipsis">…</span> }
-              }
-              @for (p of visiblePages; track p) {
-                <button class="page-btn" [class.active]="p === currentPage" (click)="goToPage(p)">{{ p }}</button>
-              }
-              @if (visiblePages[visiblePages.length - 1] < totalPages) {
-                @if (visiblePages[visiblePages.length - 1] < totalPages - 1) { <span class="page-ellipsis">…</span> }
-                <button class="page-btn" (click)="goToPage(totalPages)">{{ totalPages }}</button>
-              }
-              <button class="page-btn page-btn-nav" [disabled]="currentPage === totalPages" (click)="goToPage(currentPage + 1)">›</button>
-            </div>
-          </div>
+          <nav class="pagination" aria-label="Pagination">
+            <button type="button" class="page-btn" [disabled]="currentPage === 1" (click)="goToPage(currentPage - 1)" aria-label="Previous">‹</button>
+            @if (visiblePages[0] > 1) {
+              <button type="button" class="page-btn" (click)="goToPage(1)">1</button>
+              @if (visiblePages[0] > 2) { <span class="page-dots">…</span> }
+            }
+            @for (p of visiblePages; track p) {
+              <button type="button" class="page-btn" [class.active]="p === currentPage" (click)="goToPage(p)">{{ p }}</button>
+            }
+            @if (visiblePages[visiblePages.length - 1] < totalPages) {
+              @if (visiblePages[visiblePages.length - 1] < totalPages - 1) { <span class="page-dots">…</span> }
+              <button type="button" class="page-btn" (click)="goToPage(totalPages)">{{ totalPages }}</button>
+            }
+            <button type="button" class="page-btn" [disabled]="currentPage === totalPages" (click)="goToPage(currentPage + 1)" aria-label="Next">›</button>
+          </nav>
         }
-
-      </div><!-- /listing-main -->
-    </div><!-- /listing-body -->
-
+      </div>
+    </div>
   </div>
 </section>
 

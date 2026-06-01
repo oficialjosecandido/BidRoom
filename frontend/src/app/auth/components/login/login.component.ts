@@ -1,24 +1,30 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, computed, inject } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
-import { Router, ActivatedRoute } from '@angular/router';
+import { Router, ActivatedRoute, RouterLink } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 import { AuthService } from '../../services/auth.service';
-import { isAdminEmail } from '../../../shared/config/admin.constants';
+import { UserRolesService } from '../../../shared/services/user-roles.service';
+import { ThemeService } from '../../../shared/services/theme.service';
+import { BidroomLogoComponent } from '../../../shared/components/bidroom-logo/bidroom-logo.component';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [ReactiveFormsModule, TranslateModule],
+  imports: [ReactiveFormsModule, TranslateModule, RouterLink, BidroomLogoComponent],
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.scss']
 })
 export class LoginComponent implements OnInit {
   private fb = inject(FormBuilder);
   private authService = inject(AuthService);
+  private userRoles = inject(UserRolesService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private translate = inject(TranslateService);
+  private themeService = inject(ThemeService);
+
+  readonly isLight = computed(() => this.themeService.effective() === 'light');
 
   loginForm: FormGroup;
   isLoading = false;
@@ -49,15 +55,9 @@ export class LoginComponent implements OnInit {
       this.errorMessage = '';
 
       this.authService.login(this.loginForm.value.email, this.loginForm.value.password).subscribe({
-        next: (user) => {
+        next: () => {
           this.isLoading = false;
-          // Check if user is admin and has a saved admin route
-          const adminRoute = localStorage.getItem('admin_route');
-          if (isAdminEmail(user.email) && adminRoute) {
-            this.router.navigate([adminRoute]);
-          } else {
-            this.router.navigate([this.returnUrl]);
-          }
+          this.routeAfterLogin();
         },
         error: (error) => {
           this.isLoading = false;
@@ -72,20 +72,30 @@ export class LoginComponent implements OnInit {
     this.isLoading = true;
     this.errorMessage = '';
     this.authService.loginWithGoogle().subscribe({
-      next: (user) => {
+      next: () => {
         this.isLoading = false;
-        // Check if user is admin and has a saved admin route
-        const adminRoute = localStorage.getItem('admin_route');
-        if (user.email?.toLowerCase() === 'josevcandido@gmail.com' && adminRoute) {
-          this.router.navigate([adminRoute]);
-        } else {
-          this.router.navigate([this.returnUrl]);
-        }
+        this.routeAfterLogin();
       },
-        error: (error) => {
-          this.isLoading = false;
-          this.errorMessage = this.getErrorMessage(error);
-        }
+      error: (error) => {
+        this.isLoading = false;
+        this.errorMessage = this.getErrorMessage(error);
+      }
+    });
+  }
+
+  /**
+   * After a successful sign-in, ask the backend whether the user is an admin
+   * (the email allow-list lives server-side and is not exposed to the bundle).
+   * Admins with a previously-saved /nexus route are bounced back to it.
+   */
+  private routeAfterLogin(): void {
+    this.userRoles.load().subscribe((roles) => {
+      const adminRoute = localStorage.getItem('admin_route');
+      if (roles.isAdmin && adminRoute) {
+        this.router.navigate([adminRoute]);
+      } else {
+        this.router.navigate([this.returnUrl]);
+      }
     });
   }
 

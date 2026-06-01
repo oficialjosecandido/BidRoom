@@ -1,4 +1,5 @@
 /* BidRoom App Styles - Inspired by Sephora */
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=DM+Mono:wght@400;500&display=swap');
 
 * {
   margin: 0;
@@ -420,6 +421,13 @@ a {
 .badge-ending-soon {
   background: var(--urgency-red) !important;
   animation: pulse-text 1.4s ease-in-out infinite;
+}
+
+// =============================================================================
+// Light theme (explicit — ensures vars reset after dark mode)
+// =============================================================================
+:root[data-theme='light'] {
+  color-scheme: light;
 }
 
 // =============================================================================

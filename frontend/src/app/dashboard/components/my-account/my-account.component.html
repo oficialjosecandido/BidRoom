@@ -1,47 +1,47 @@
 <div class="my-account-container">
   <div class="page-header">
-    <h1 class="page-title">My Account</h1>
-    <p class="page-subtitle">Manage your account settings and profile information</p>
+    <h1 class="page-title">{{ 'dashboard.myAccount.title' | translate }}</h1>
+    <p class="page-subtitle">{{ 'dashboard.myAccount.subtitle' | translate }}</p>
   </div>
 
   <div class="account-content">
     <div class="account-card">
       <div class="card-header">
-        <h2 class="card-title">Profile Information</h2>
+        <h2 class="card-title">{{ 'dashboard.myAccount.profileInfo' | translate }}</h2>
       </div>
 
       @if (currentUser$ | async; as user) {
 <div class="card-body">
         <div class="info-row">
-          <div class="info-label">Email</div>
-          <div class="info-value">{{ user.email || 'Not provided' }}</div>
+          <div class="info-label">{{ 'dashboard.settings.email' | translate }}</div>
+          <div class="info-value">{{ user.email || ('dashboard.myAccount.notProvided' | translate) }}</div>
         </div>
 
         <div class="info-row">
-          <div class="info-label">Display Name</div>
-          <div class="info-value">{{ user.displayName || 'Not provided' }}</div>
+          <div class="info-label">{{ 'dashboard.settings.displayName' | translate }}</div>
+          <div class="info-value">{{ user.displayName || ('dashboard.myAccount.notProvided' | translate) }}</div>
         </div>
 
         <div class="info-row">
-          <div class="info-label">Email Verified</div>
+          <div class="info-label">{{ 'dashboard.settings.emailVerified' | translate }}</div>
           <div class="info-value">
             <span class="badge" [class.verified]="user.emailVerified" [class.unverified]="!user.emailVerified">
-              {{ user.emailVerified ? 'Verified' : 'Not Verified' }}
+              {{ user.emailVerified ? ('dashboard.settings.verified' | translate) : ('dashboard.settings.notVerified' | translate) }}
             </span>
           </div>
         </div>
 
         @if (user.photoURL) {
 <div class="info-row">
-          <div class="info-label">Profile Photo</div>
+          <div class="info-label">{{ 'dashboard.myAccount.profilePhoto' | translate }}</div>
           <div class="info-value">
-            <img [src]="user.photoURL" alt="Profile photo" class="profile-photo" />
+            <img [src]="user.photoURL" [alt]="'dashboard.myAccount.profilePhoto' | translate" class="profile-photo" />
           </div>
         </div>
 }
 
         <div class="info-row">
-          <div class="info-label">User ID</div>
+          <div class="info-label">{{ 'dashboard.myAccount.userId' | translate }}</div>
           <div class="info-value">
             <code class="uid">{{ user.uid }}</code>
           </div>
@@ -52,31 +52,31 @@
 
     <div class="account-card">
       <div class="card-header">
-        <h2 class="card-title">Review Scores</h2>
+        <h2 class="card-title">{{ 'dashboard.myAccount.reviewScores' | translate }}</h2>
       </div>
 
       <div class="card-body reviews-scores">
         <div class="score-row">
-          <span class="score-label">Buyer score</span>
+          <span class="score-label">{{ 'dashboard.settings.buyerScore' | translate }}</span>
           <span class="score-value">{{ buyerScore !== null ? (buyerScore | number:'1.1-1') : '—' }}</span>
           @if (buyerReviewCount > 0) {
-<span class="score-count">({{ buyerReviewCount }} review{{ buyerReviewCount !== 1 ? 's' : '' }})</span>
+<span class="score-count">({{ buyerReviewCount }} {{ buyerReviewCount !== 1 ? ('dashboard.myAccount.reviewPlural' | translate) : ('dashboard.myAccount.reviewSingular' | translate) }})</span>
 }
         </div>
         <div class="score-row">
-          <span class="score-label">Seller score</span>
+          <span class="score-label">{{ 'dashboard.settings.sellerScore' | translate }}</span>
           <span class="score-value">{{ sellerScore !== null ? (sellerScore | number:'1.1-1') : '—' }}</span>
           @if (sellerReviewCount > 0) {
-<span class="score-count">({{ sellerReviewCount }} review{{ sellerReviewCount !== 1 ? 's' : '' }})</span>
+<span class="score-count">({{ sellerReviewCount }} {{ sellerReviewCount !== 1 ? ('dashboard.myAccount.reviewPlural' | translate) : ('dashboard.myAccount.reviewSingular' | translate) }})</span>
 }
         </div>
-        <p class="score-note">Scores are based on reviews from other users after completed transactions.</p>
+        <p class="score-note">{{ 'dashboard.myAccount.scoresNote' | translate }}</p>
       </div>
     </div>
 
     <div class="account-card">
       <div class="card-header">
-        <h2 class="card-title">Seller Payout Account</h2>
+        <h2 class="card-title">{{ 'dashboard.myAccount.payoutAccount' | translate }}</h2>
       </div>
 
       <div class="card-body">
@@ -85,103 +85,96 @@
         }
 
         @if (connectLoading) {
-          <p class="connect-loading">Checking payout account status...</p>
+          <p class="connect-loading">{{ 'dashboard.myAccount.checkingPayout' | translate }}</p>
         } @else if (!showOnboardingForm) {
           <div class="connect-status-row">
-            <span class="connect-label">Payout status:</span>
+            <span class="connect-label">{{ 'dashboard.myAccount.payoutStatus' | translate }}</span>
             <span class="connect-badge" [ngClass]="connectStatusClass">{{ connectStatusLabel }}</span>
           </div>
 
           @if (connectStatus?.onboarded) {
-            <p class="connect-desc">
-              Your payout account is active. Buyers can pay you directly — funds will be sent to your registered bank account.
-            </p>
+            <p class="connect-desc">{{ 'dashboard.myAccount.payoutActive' | translate }}</p>
             @if (connectStatus?.chargesEnabled) {
-              <p class="connect-detail">Charges enabled &nbsp;·&nbsp; Payouts {{ connectStatus?.payoutsEnabled ? 'enabled' : 'pending' }}</p>
+              <p class="connect-detail">{{ 'dashboard.myAccount.chargesEnabled' | translate }} &nbsp;·&nbsp; {{ 'dashboard.settings.payouts' | translate }} {{ connectStatus?.payoutsEnabled ? ('dashboard.myAccount.enabled' | translate) : ('dashboard.myAccount.pending' | translate) }}</p>
             }
             <button type="button" class="connect-btn connect-btn-secondary" (click)="openOnboardingForm()">
-              Update bank account
+              {{ 'dashboard.myAccount.updateBank' | translate }}
             </button>
           } @else if (connectStatus?.connected) {
             @if (connectStatus?.requirementErrors?.length) {
               <div class="connect-errors">
-                <p class="connect-errors-title">There's an issue with your payout account details:</p>
+                <p class="connect-errors-title">{{ 'dashboard.myAccount.requirementIssue' | translate }}</p>
                 <ul>
                   @for (err of connectStatus!.requirementErrors!; track err) {
                     <li>{{ err }}</li>
                   }
                 </ul>
-                <p class="connect-errors-hint">Please update your details to fix these issues.</p>
+                <p class="connect-errors-hint">{{ 'dashboard.myAccount.requirementHint' | translate }}</p>
               </div>
             } @else {
-              <p class="connect-desc">
-                Your details have been submitted and are being verified by Stripe. This usually takes a few minutes.
-              </p>
+              <p class="connect-desc">{{ 'dashboard.myAccount.verifyingDetails' | translate }}</p>
             }
             <div class="button-row">
-              <button type="button" class="connect-btn connect-btn-secondary" (click)="openOnboardingForm()">Update details</button>
+              <button type="button" class="connect-btn connect-btn-secondary" (click)="openOnboardingForm()">{{ 'dashboard.myAccount.updateDetails' | translate }}</button>
               @if (isStripeTestMode) {
                 <button type="button" class="connect-btn connect-btn-test" (click)="testActivate()" [disabled]="connectTestActivating">
-                  {{ connectTestActivating ? 'Activating…' : '⚡ Simulate verification' }}
+                  {{ connectTestActivating ? ('dashboard.myAccount.activating' | translate) : ('dashboard.myAccount.simulateVerification' | translate) }}
                 </button>
               }
             </div>
           } @else {
-            <p class="connect-desc">
-              To receive payments from buyers, set up your payout account. No Stripe account needed — just fill in your details below.
-            </p>
+            <p class="connect-desc">{{ 'dashboard.myAccount.setupDesc' | translate }}</p>
             <ul class="connect-features">
-              <li>Enter your identity and bank details once</li>
-              <li>Stripe processes payouts securely in the background</li>
-              <li>Funds transferred directly to your bank account</li>
+              <li>{{ 'dashboard.myAccount.feature1' | translate }}</li>
+              <li>{{ 'dashboard.myAccount.feature2' | translate }}</li>
+              <li>{{ 'dashboard.myAccount.feature3' | translate }}</li>
             </ul>
             <button type="button" class="connect-btn" (click)="openOnboardingForm()">
-              Set up payout account
+              {{ 'dashboard.myAccount.setupBtn' | translate }}
             </button>
           }
         } @else {
-          <!-- Onboarding Form -->
           <form class="onboarding-form" (ngSubmit)="submitOnboarding()">
             @if (connectError) {
               <div class="form-error-banner">{{ connectError }}</div>
             }
 
             <div class="form-section">
-              <h3 class="form-section-title">Date of birth</h3>
+              <h3 class="form-section-title">{{ 'dashboard.myAccount.dobTitle' | translate }}</h3>
               <div class="dob-row">
                 <div class="form-field">
-                  <label>Day</label>
+                  <label>{{ 'dashboard.myAccount.dobDay' | translate }}</label>
                   <input type="number" [(ngModel)]="dobDay" name="dobDay" min="1" max="31" placeholder="DD" required />
                 </div>
                 <div class="form-field">
-                  <label>Month</label>
+                  <label>{{ 'dashboard.myAccount.dobMonth' | translate }}</label>
                   <input type="number" [(ngModel)]="dobMonth" name="dobMonth" min="1" max="12" placeholder="MM" required />
                 </div>
                 <div class="form-field form-field-year">
-                  <label>Year</label>
+                  <label>{{ 'dashboard.myAccount.dobYear' | translate }}</label>
                   <input type="number" [(ngModel)]="dobYear" name="dobYear" min="1900" max="2010" placeholder="YYYY" required />
                 </div>
               </div>
             </div>
 
             <div class="form-section">
-              <h3 class="form-section-title">Address</h3>
+              <h3 class="form-section-title">{{ 'dashboard.myAccount.addressTitle' | translate }}</h3>
               <div class="form-field">
-                <label>Street address</label>
+                <label>{{ 'dashboard.myAccount.streetAddress' | translate }}</label>
                 <input type="text" [(ngModel)]="addressLine1" name="addressLine1" placeholder="123 Main St" required />
               </div>
               <div class="dob-row">
                 <div class="form-field">
-                  <label>City</label>
+                  <label>{{ 'dashboard.myAccount.city' | translate }}</label>
                   <input type="text" [(ngModel)]="addressCity" name="addressCity" placeholder="Lisbon" required />
                 </div>
                 <div class="form-field">
-                  <label>Postal code</label>
+                  <label>{{ 'dashboard.myAccount.postalCode' | translate }}</label>
                   <input type="text" [(ngModel)]="addressPostal" name="addressPostal" placeholder="1000-001" required />
                 </div>
               </div>
               <div class="form-field">
-                <label>Country</label>
+                <label>{{ 'dashboard.myAccount.country' | translate }}</label>
                 <select [(ngModel)]="addressCountry" name="addressCountry" required>
                   @for (c of countries; track c.code) {
                     <option [value]="c.code">{{ c.label }}</option>
@@ -191,27 +184,27 @@
             </div>
 
             <div class="form-section">
-              <h3 class="form-section-title">Bank account (IBAN)</h3>
+              <h3 class="form-section-title">{{ 'dashboard.myAccount.bankTitle' | translate }}</h3>
               <div class="form-field">
-                <label>IBAN</label>
+                <label>{{ 'dashboard.myAccount.ibanLabel' | translate }}</label>
                 <input type="text" [(ngModel)]="iban" name="iban" placeholder="PT50 0035 0552 0001 3600 5312 9" required
                        (input)="iban = $any($event.target).value.toUpperCase()" />
-                <span class="form-hint">Your International Bank Account Number. Spaces are ignored.</span>
+                <span class="form-hint">{{ 'dashboard.myAccount.ibanHint' | translate }}</span>
               </div>
             </div>
 
             <div class="form-section">
               <label class="tos-row">
                 <input type="checkbox" [(ngModel)]="tosAccepted" name="tosAccepted" />
-                <span>I authorise BidRoom to submit my information to Stripe for identity verification and payout processing, and I accept the <a href="https://stripe.com/legal/connect-account" target="_blank" rel="noopener">Stripe Connected Account Agreement</a>.</span>
+                <span>{{ 'dashboard.myAccount.tosText' | translate }} <a href="https://stripe.com/legal/connect-account" target="_blank" rel="noopener">{{ 'dashboard.myAccount.tosLink' | translate }}</a>.</span>
               </label>
             </div>
 
             <div class="form-actions">
               <button type="submit" class="connect-btn" [disabled]="connectSubmitting">
-                {{ connectSubmitting ? 'Submitting…' : 'Save payout account' }}
+                {{ connectSubmitting ? ('dashboard.myAccount.submitting' | translate) : ('dashboard.myAccount.submitBtn' | translate) }}
               </button>
-              <button type="button" class="connect-btn connect-btn-ghost" (click)="cancelOnboardingForm()" [disabled]="connectSubmitting">Cancel</button>
+              <button type="button" class="connect-btn connect-btn-ghost" (click)="cancelOnboardingForm()" [disabled]="connectSubmitting">{{ 'dashboard.myAccount.cancelBtn' | translate }}</button>
             </div>
           </form>
         }
@@ -220,54 +213,46 @@
 
     <div class="account-card">
       <div class="card-header">
-        <h2 class="card-title">Identity Verification</h2>
+        <h2 class="card-title">{{ 'dashboard.myAccount.identityTitle' | translate }}</h2>
       </div>
 
       <div class="card-body">
         @if (kycReturnBanner) {
-          <div class="kyc-return-banner">
-            Your verification has been submitted. We'll update your status once the review is complete — this usually takes a few minutes.
-          </div>
+          <div class="kyc-return-banner">{{ 'dashboard.myAccount.kycReturnBanner' | translate }}</div>
         }
 
         @if (kycLoading) {
-          <p class="connect-loading">Checking verification status…</p>
+          <p class="connect-loading">{{ 'dashboard.myAccount.checkingVerification' | translate }}</p>
         } @else {
           <div class="connect-status-row">
-            <span class="connect-label">Verification status:</span>
+            <span class="connect-label">{{ 'dashboard.myAccount.verificationStatus' | translate }}</span>
             <span class="kyc-badge" [ngClass]="kycStatusClass">{{ kycStatusLabel }}</span>
           </div>
 
           @if (kycStatusData?.kycStatus === 'approved') {
-            <p class="connect-desc">
-              Your identity has been verified. You can bid on and list items above $5,000.
-            </p>
+            <p class="connect-desc">{{ 'dashboard.myAccount.kycApproved' | translate }}</p>
             @if (kycStatusData?.kycVerifiedAt) {
-              <p class="kyc-detail">Verified on {{ kycStatusData!.kycVerifiedAt | date:'mediumDate' }}</p>
+              <p class="kyc-detail">{{ 'dashboard.myAccount.kycVerifiedOn' | translate }} {{ kycStatusData!.kycVerifiedAt | date:'mediumDate' }}</p>
             }
           } @else if (kycStatusData?.kycStatus === 'pending') {
-            <p class="connect-desc">
-              Your identity verification is in progress. This usually takes a few minutes. You will be notified once it's complete.
-            </p>
+            <p class="connect-desc">{{ 'dashboard.myAccount.kycPending' | translate }}</p>
           } @else if (kycStatusData?.kycStatus === 'rejected') {
             <p class="connect-desc">
-              Your previous verification was not approved.
+              {{ 'dashboard.myAccount.kycRejectedBase' | translate }}
               @if (kycStatusData?.kycRejectionReason) {
-                Reason: <em>{{ kycStatusData!.kycRejectionReason }}</em>.
+                {{ 'dashboard.myAccount.kycRejectedReason' | translate }} <em>{{ kycStatusData!.kycRejectionReason }}</em>.
               }
-              Please try again with a valid government-issued photo ID and a clear selfie.
+              {{ 'dashboard.myAccount.kycRejectedTryAgain' | translate }}
             </p>
-            <button type="button" class="connect-btn" (click)="startKycVerification()">Try Again</button>
+            <button type="button" class="connect-btn" (click)="startKycVerification()">{{ 'dashboard.myAccount.kycTryAgain' | translate }}</button>
           } @else {
-            <p class="connect-desc">
-              Transactions of <strong>$5,000 or more</strong> require identity verification to comply with anti-money laundering (AML) regulations.
-            </p>
+            <p class="connect-desc">{{ 'dashboard.myAccount.kycAmlDesc' | translate }}</p>
             <ul class="connect-features">
-              <li>Government-issued photo ID (passport, driver's licence, or national ID)</li>
-              <li>A selfie with liveness check</li>
-              <li>Handled securely by Stripe Identity — your data is not stored on BidRoom</li>
+              <li>{{ 'dashboard.myAccount.kycDoc1' | translate }}</li>
+              <li>{{ 'dashboard.myAccount.kycDoc2' | translate }}</li>
+              <li>{{ 'dashboard.myAccount.kycDoc3' | translate }}</li>
             </ul>
-            <button type="button" class="connect-btn" (click)="startKycVerification()">Start Verification</button>
+            <button type="button" class="connect-btn" (click)="startKycVerification()">{{ 'dashboard.myAccount.kycStart' | translate }}</button>
           }
         }
       </div>
@@ -275,11 +260,11 @@
 
     <div class="account-card">
       <div class="card-header">
-        <h2 class="card-title">Account Settings</h2>
+        <h2 class="card-title">{{ 'dashboard.myAccount.accountSettings' | translate }}</h2>
       </div>
 
       <div class="card-body">
-        <p class="coming-soon">More account settings will be available here soon.</p>
+        <p class="coming-soon">{{ 'dashboard.myAccount.comingSoon' | translate }}</p>
       </div>
     </div>
   </div>

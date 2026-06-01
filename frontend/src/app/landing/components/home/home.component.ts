@@ -1,28 +1,28 @@
-import { Component, OnDestroy, OnInit, AfterViewInit, inject, ElementRef, ViewChild, HostListener } from '@angular/core';
-import { RouterLink } from '@angular/router';
-import { TranslateService } from '@ngx-translate/core';
+import { Component, OnDestroy, OnInit, AfterViewInit, inject, ElementRef, ViewChild, HostListener, computed } from '@angular/core';
+import { Router, RouterLink } from '@angular/router';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { ListingsService, Listing } from '../../../shared/services/listings.service';
 import { ThemeService } from '../../../shared/services/theme.service';
 import { HeaderComponent } from '../../../shared/components/header/header.component';
+import { BidroomLogoComponent } from '../../../shared/components/bidroom-logo/bidroom-logo.component';
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [RouterLink, HeaderComponent],
+  imports: [RouterLink, TranslateModule, HeaderComponent, BidroomLogoComponent],
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.scss']
 })
 export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
   private translate = inject(TranslateService);
   private listingsService = inject(ListingsService);
-  private themeService = inject(ThemeService);
+  readonly themeService = inject(ThemeService);
+  private router = inject(Router);
 
   @ViewChild('carouselWrap') carouselWrap!: ElementRef<HTMLElement>;
   @ViewChild('carouselTrack') carouselTrack!: ElementRef<HTMLElement>;
 
-  get isLight(): boolean {
-    return this.themeService.resolveEffective(this.themeService.preference()) === 'light';
-  }
+  readonly isLight = computed(() => this.themeService.effective() === 'light');
 
   carouselCurrent = 0;
   carouselTransform = 'translateX(0)';
@@ -124,6 +124,14 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
     this.carouselCurrent = ((idx % this.CARDS) + this.CARDS) % this.CARDS;
     this.updateCarouselTransform();
     if (!skipAuto) this.resetCarouselAuto();
+  }
+
+  onCardClick(idx: number, listing: Listing): void {
+    if (this.carouselCurrent === idx) {
+      void this.router.navigate(['/listing', listing.slug]);
+    } else {
+      this.goTo(idx);
+    }
   }
 
   onCarouselTouchStart(e: TouchEvent): void {

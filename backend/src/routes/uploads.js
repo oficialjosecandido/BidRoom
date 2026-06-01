@@ -3,6 +3,9 @@ const multer = require('multer');
 const { authenticateToken, requireActiveAccount } = require('../middleware/auth');
 const azureStorageService = require('../services/azureStorage.service');
 const { scanImages } = require('../services/contentSafetyService');
+const { recordViolation } = require('../services/contentViolationService');
+const { appendModerationAudit } = require('../services/moderationAuditService');
+const User = require('../models/User');
 
 const router = express.Router();
 
@@ -77,15 +80,49 @@ router.post('/', authenticateToken, requireActiveAccount, upload.array('images',
     // Content safety scan — block before reaching Blob Storage
     try {
       const scan = await scanImages(files.map(f => f.buffer));
+
       if (scan.blocked) {
+        // Resolve the MongoDB user from the Firebase uid carried by the auth token
+        const currentUser = await User.findOne({ uid: req.user.uid }).select('_id contentViolationCount contentRestrictedUntil');
+        if (currentUser) {
+          // Escalating penalty: warning → temp restriction → suspension
+          recordViolation(currentUser, 'inappropriate_image').catch(err =>
+            console.error('recordViolation (image) error:', err.message)
+          );
+          appendModerationAudit({
+            subjectUserId: currentUser._id,
+            actionType: 'image_upload_blocked',
+            metadata: {
+              fileCount: files.length,
+              categories: scan.results?.map(r => r.categories),
+              provider: scan.results?.[0]?.provider || 'azure'
+            }
+          }).catch(() => {});
+        }
         return res.status(400).json({
           error: 'Content policy violation',
           message: 'One or more images contain content that violates our policies and cannot be uploaded.'
         });
       }
+
+      // Borderline (flagged): allow upload but queue for admin review
+      if (scan.anyFlagged) {
+        const currentUser = await User.findOne({ uid: req.user.uid }).select('_id').lean();
+        if (currentUser) {
+          appendModerationAudit({
+            subjectUserId: currentUser._id,
+            actionType: 'image_upload_flagged',
+            metadata: {
+              fileCount: files.length,
+              categories: scan.results?.map(r => r.categories),
+              provider: scan.results?.[0]?.provider || 'azure'
+            }
+          }).catch(() => {});
+        }
+      }
     } catch (scanErr) {
       console.error('Content safety scan error (non-blocking):', scanErr.message);
-      // Scan failure is non-fatal — don't block the upload
+      // Scan failure is non-fatal — availability is preserved; monitoring should alert on repeated errors
     }
 
     // Upload to Azure Blob Storage — returns [{ url, blobName }]

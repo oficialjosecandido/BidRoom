@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, computed, inject } from '@angular/core';
 import { Router, RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { Subscription } from 'rxjs';
@@ -7,10 +7,11 @@ import { NotificationService } from '../shared/services/notification.service';
 import { TransactionsService } from '../shared/services/transactions.service';
 import { SocketService } from '../shared/services/socket.service';
 import { ThemeService } from '../shared/services/theme.service';
+import { BidroomLogoComponent } from '../shared/components/bidroom-logo/bidroom-logo.component';
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, TranslateModule],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, TranslateModule, BidroomLogoComponent],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss']
 })
@@ -22,6 +23,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   private socketService = inject(SocketService);
   private translate = inject(TranslateService);
   readonly theme = inject(ThemeService);
+  readonly effectiveTheme = this.theme.effective;
 
   notificationUnreadCount = 0;
   pendingBuyerTransactions = 0;
@@ -59,10 +61,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    this.loadNotificationCount();
+    this.notificationService.refreshUnreadCount();
     this.loadPendingTransactionCounts();
     this.refreshInterval = setInterval(() => {
-      this.loadNotificationCount();
       this.loadPendingTransactionCounts();
     }, 60000);
 
@@ -87,19 +88,18 @@ export class DashboardComponent implements OnInit, OnDestroy {
       })
     );
     this.subs.add(
-      this.socketService.onNewNotification().subscribe(() => this.loadNotificationCount())
+      this.notificationService.unreadCount$.subscribe((count) => {
+        this.notificationUnreadCount = count;
+      })
+    );
+    this.subs.add(
+      this.socketService.onNewNotification().subscribe(() => this.notificationService.refreshUnreadCount())
     );
   }
 
   ngOnDestroy(): void {
     this.subs.unsubscribe();
     if (this.refreshInterval) clearInterval(this.refreshInterval);
-  }
-
-  private loadNotificationCount(): void {
-    this.notificationService.getUnreadCount().subscribe({
-      next: (res) => { this.notificationUnreadCount = res.unreadCount; }
-    });
   }
 
   private loadPendingTransactionCounts(): void {

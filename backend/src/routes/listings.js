@@ -14,7 +14,10 @@ const { handleWinnerSelection, handleAuctionEnd } = require('../services/auction
 const { notifyFollowersNewListing, notifyCategoryFollowersNewListing, notifySimilarItemWatchers } = require('../services/notificationService');
 const { getReviewScoresForUser } = require('../services/reviewService');
 const { logAuctionCreated } = require('../services/bestOfferLogger');
-const { scanTexts, scanTextsForProhibitedContent } = require('../utils/contentFilter');
+const Block = require('../models/Block');
+const { scanTexts, scanTextsForProhibitedContent, scanForAbusiveContent } = require('../utils/contentFilter');
+const { appendModerationAudit } = require('../services/moderationAuditService');
+const { scanListingText } = require('../services/contentSafetyService');
 const { recordViolation } = require('../services/contentViolationService');
 const { createTransactionForBuyNow } = require('../services/transactionService');
 
@@ -76,7 +79,7 @@ function queueListingDetailView(req, listingLean) {
 }
 
 // GET /api/listings - Get all active listings with filtering and sorting
-router.get('/', async (req, res) => {
+router.get('/', optionalAuth, async (req, res) => {
   try {
     const {
       category,
@@ -91,8 +94,12 @@ router.get('/', async (req, res) => {
       search,
       condition,
       shipping,
+      location,
       locationCity,
       locationCountry,
+      auctionFormat,
+      allowPrivateRoom,
+      endingSoon,
       limit = 20,
       skip,
       page
@@ -175,23 +182,43 @@ router.get('/', async (req, res) => {
     }
 
     const locationClauses = [];
-    if (locationCity && String(locationCity).trim()) {
-      const esc = escapeRegex(String(locationCity).trim());
-      locationClauses.push({
-        $or: [
-          { locationCity: { $regex: esc, $options: 'i' } },
-          { location: { $regex: esc, $options: 'i' } }
-        ]
-      });
-    }
-    if (locationCountry && String(locationCountry).trim()) {
-      const code = String(locationCountry).trim().toUpperCase();
-      if (/^[A-Z]{2}$/.test(code)) {
-        locationClauses.push({ locationCountry: code });
+    if (location && String(location).trim()) {
+      const esc = escapeRegex(String(location).trim().slice(0, 200));
+      locationClauses.push({ location: { $regex: esc, $options: 'i' } });
+    } else {
+      if (locationCity && String(locationCity).trim()) {
+        const esc = escapeRegex(String(locationCity).trim());
+        locationClauses.push({
+          $or: [
+            { locationCity: { $regex: esc, $options: 'i' } },
+            { location: { $regex: esc, $options: 'i' } }
+          ]
+        });
+      }
+      if (locationCountry && String(locationCountry).trim()) {
+        const code = String(locationCountry).trim().toUpperCase();
+        if (/^[A-Z]{2}$/.test(code)) {
+          locationClauses.push({ locationCountry: code });
+        }
       }
     }
     if (locationClauses.length) {
       query.$and = [...(query.$and || []), ...locationClauses];
+    }
+
+    if (auctionFormat === 'highest-bid' || auctionFormat === 'best-offer') {
+      query.auctionFormat = auctionFormat;
+    }
+
+    if (allowPrivateRoom === 'true') {
+      query.allowPrivateRoom = true;
+    }
+
+    if (endingSoon === 'true') {
+      const now = new Date();
+      const in24h = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+      query.status = 'active';
+      query.endDate = { $gte: now, $lte: in24h };
     }
 
     // Build sort object
@@ -222,6 +249,24 @@ router.get('/', async (req, res) => {
     // For featured listings, prioritize them (live listings only)
     if (sort === 'deadline') {
       sortObj = { isFeatured: -1, endDate: 1 };
+    }
+
+    // Block filter — hide listings from sellers I have blocked or who have blocked me
+    if (req.user?.uid) {
+      const viewer = await User.findOne({ uid: req.user.uid }).select('_id').lean();
+      if (viewer) {
+        const [blockedBySelf, blockedByOthers] = await Promise.all([
+          Block.find({ blocker: viewer._id }).distinct('blocked'),
+          Block.find({ blocked: viewer._id }).distinct('blocker')
+        ]);
+        const hiddenSellers = [...new Set([
+          ...blockedBySelf.map(id => id.toString()),
+          ...blockedByOthers.map(id => id.toString())
+        ])];
+        if (hiddenSellers.length > 0) {
+          query.seller = { $nin: hiddenSellers };
+        }
+      }
     }
 
     const listings = await Listing.find(query)
@@ -395,6 +440,19 @@ router.get('/slug/:slug', optionalAuth, async (req, res) => {
         error: 'Listing not found',
         slug: req.params.slug
       });
+    }
+
+    // Pending-review guard: only the seller can view their own listing while it's under moderation
+    if (listing.status === 'pending_review') {
+      let viewerIsOwner = false;
+      if (req.user) {
+        const viewer = await User.findOne({ uid: req.user.uid }).select('_id').lean();
+        const sellerId = listing.seller?._id || listing.seller;
+        viewerIsOwner = viewer && String(viewer._id) === String(sellerId);
+      }
+      if (!viewerIsOwner) {
+        return res.status(404).json({ error: 'Listing not found' });
+      }
     }
 
     // Lazy finalize: if auction has ended by time but scheduler hasn't run yet, process it now
@@ -871,6 +929,19 @@ router.get('/:id', optionalAuth, async (req, res) => {
       });
     }
 
+    // Pending-review guard: only the seller can view their own listing while it's under moderation
+    if (listing.status === 'pending_review') {
+      let viewerIsOwner = false;
+      if (req.user) {
+        const viewer = await User.findOne({ uid: req.user.uid }).select('_id').lean();
+        const sellerId = listing.seller?._id || listing.seller;
+        viewerIsOwner = viewer && String(viewer._id) === String(sellerId);
+      }
+      if (!viewerIsOwner) {
+        return res.status(404).json({ error: 'Listing not found' });
+      }
+    }
+
     // Lazy finalize: if auction has ended by time but scheduler hasn't run yet, process it now
     const now = new Date();
     if (
@@ -961,6 +1032,7 @@ router.get('/:id', optionalAuth, async (req, res) => {
 
 // POST /api/listings - Create a new listing (requires authentication)
 router.post('/', authenticateToken, requireActiveAccount, requireNoDisputeRestriction, async (req, res) => {
+  let listingContentWarning = null; // set when low-severity language is detected
   try {
     // Find or create user in database from Firebase UID
     let user = await User.findOne({ uid: req.user.uid });
@@ -1064,10 +1136,10 @@ router.post('/', authenticateToken, requireActiveAccount, requireNoDisputeRestri
       return res.status(400).json({ error: 'Listing duration is required' });
     }
     // Normalize duration: frontend may send hours (number) or label (string)
-    const validSlots = ['5 minutes', '1 hour', '2 hours', '7 hours', '24 hours', '3 days', '7 days'];
+    const validSlots = ['5 minutes', '1 hour', '2 hours', '7 hours', '24 hours', '3 days', '7 days', '10 days', '15 days'];
     let durationSlot = duration;
     if (typeof duration === 'number') {
-      // Map legacy hours to slot: 5min≈0.083, 1h=1, 2h=2, 7h=7, 24h=24, 3d=72, 7d=168
+      // Map legacy hours to slot: 5min≈0.083, 1h=1, 2h=2, 7h=7, 24h=24, 3d=72, 7d=168, 10d=240, 15d=360
       const h = duration;
       if (h <= 0.1) durationSlot = '5 minutes';
       else if (h <= 1.5) durationSlot = '1 hour';
@@ -1075,7 +1147,9 @@ router.post('/', authenticateToken, requireActiveAccount, requireNoDisputeRestri
       else if (h <= 15) durationSlot = '7 hours';
       else if (h <= 48) durationSlot = '24 hours';
       else if (h <= 120) durationSlot = '3 days';
-      else durationSlot = '7 days';
+      else if (h <= 192) durationSlot = '7 days';
+      else if (h <= 300) durationSlot = '10 days';
+      else durationSlot = '15 days';
     }
     if (!validSlots.includes(durationSlot)) {
       return res.status(400).json({ error: 'Invalid duration. Must be one of: ' + validSlots.join(', ') });
@@ -1145,10 +1219,59 @@ router.post('/', authenticateToken, requireActiveAccount, requireNoDisputeRestri
       });
     }
 
+    // Azure AI Content Safety text scan (blocklist + AI categories — complementary to local regex)
+    try {
+      const aiScan = await scanListingText(title, description || '');
+      if (aiScan.blocked) {
+        return res.status(400).json({
+          error: 'Content policy violation',
+          message: `Your listing was rejected: ${aiScan.reason}. If you believe this is a mistake, please contact support.`
+        });
+      }
+    } catch (aiErr) {
+      console.error('Azure Content Safety text scan error (non-blocking):', aiErr.message);
+    }
+
+    // Abusive language check on title + description
+    const abuseCheck = scanForAbusiveContent(`${title} ${description || ''}`);
+    if (abuseCheck.found) {
+      if (abuseCheck.severity === 'high') {
+        const fullUserForAbuse = await User.findById(user._id);
+        const violation = await recordViolation(fullUserForAbuse, 'offensive_language');
+        appendModerationAudit({
+          subjectUserId: user._id,
+          actionType: 'abusive_content_flagged',
+          metadata: { context: 'listing_create', severity: 'high', categories: abuseCheck.categories, matches: abuseCheck.matches, title }
+        }).catch(() => {});
+        return res.status(400).json({ error: 'Content policy violation', message: violation.message, violationAction: violation.action });
+      }
+      if (abuseCheck.severity === 'medium') {
+        // Record the violation so repeat medium offenders escalate through the ladder
+        const fullUserForAbuse = await User.findById(user._id);
+        const violation = await recordViolation(fullUserForAbuse, 'offensive_language');
+        appendModerationAudit({
+          subjectUserId: user._id,
+          actionType: 'abusive_content_flagged',
+          metadata: { context: 'listing_create', severity: 'medium', categories: abuseCheck.categories, matches: abuseCheck.matches, title }
+        }).catch(() => {});
+        return res.status(400).json({ error: 'Content policy violation', message: violation.message, violationAction: violation.action });
+      }
+      // low: hold for moderation review — listing is NOT published until approved
+      listingContentWarning = {
+        severity: 'low',
+        message: 'Your listing is currently under review because it contains mild language. It will not be visible to buyers until our moderation team approves it. Please keep your listings professional.'
+      };
+      appendModerationAudit({
+        subjectUserId: user._id,
+        actionType: 'abusive_content_flagged',
+        metadata: { context: 'listing_create', severity: 'low', categories: abuseCheck.categories, matches: abuseCheck.matches, title }
+      }).catch(() => {});
+    }
+
     // Duplicate listing check — same seller, same title, active or draft
     const existingListing = await Listing.findOne({
       seller: user._id,
-      status: { $in: ['active', 'draft'] },
+      status: { $in: ['active', 'draft', 'pending_review'] },
       title: { $regex: new RegExp(`^${escapeRegex(title.trim())}$`, 'i') }
     }).select('_id slug').lean();
     if (existingListing) {
@@ -1212,7 +1335,14 @@ router.post('/', authenticateToken, requireActiveAccount, requireNoDisputeRestri
         ? bundleItems.slice(0, 50).map(b => ({ title: String(b.title || '').trim().slice(0, 100), description: String(b.description || '').trim().slice(0, 500) })).filter(b => b.title)
         : [],
       seller: user._id,
-      status: 'active'
+      status: listingContentWarning ? 'pending_review' : 'active',
+      ...(listingContentWarning && {
+        moderationWarning: {
+          severity: listingContentWarning.severity,
+          message: listingContentWarning.message,
+          flaggedAt: new Date()
+        }
+      })
     };
 
     // Calculate end date based on duration slot
@@ -1223,7 +1353,9 @@ router.post('/', authenticateToken, requireActiveAccount, requireNoDisputeRestri
       '7 hours': 7 * 60 * 60 * 1000,
       '24 hours': 24 * 60 * 60 * 1000,
       '3 days': 3 * 24 * 60 * 60 * 1000,
-      '7 days': 7 * 24 * 60 * 60 * 1000
+      '7 days': 7 * 24 * 60 * 60 * 1000,
+      '10 days': 10 * 24 * 60 * 60 * 1000,
+      '15 days': 15 * 24 * 60 * 60 * 1000
     };
     const durationMs = durations[durationSlot] || durations['7 days'];
     listingData.startDate = new Date();
@@ -1301,7 +1433,8 @@ router.post('/', authenticateToken, requireActiveAccount, requireNoDisputeRestri
       ...populatedListing,
       seller: sanitizeSellerForPublic(populatedListing.seller),
       timeRemaining,
-      endingSoon: timeRemaining.ended ? false : (timeRemaining.days === 0 && timeRemaining.hours <= 24)
+      endingSoon: timeRemaining.ended ? false : (timeRemaining.days === 0 && timeRemaining.hours <= 24),
+      ...(listingContentWarning && { contentWarning: listingContentWarning })
     });
   } catch (error) {
     console.error('Error creating listing:', error);
@@ -1334,6 +1467,7 @@ const CRITICAL_FIELDS = new Set([
 
 // PATCH /api/listings/:id - Edit a listing (state-based edit locks)
 router.patch('/:id', authenticateToken, requireActiveAccount, async (req, res) => {
+  let listingContentWarning = null; // set when low-severity language is detected
   try {
     const user = await User.findOne({ uid: req.user.uid });
     if (!user) return res.status(404).json({ error: 'User not found' });
@@ -1410,6 +1544,52 @@ router.patch('/:id', authenticateToken, requireActiveAccount, async (req, res) =
           violationAction: violation.action
         });
       }
+
+      try {
+        const aiScanUpdate = await scanListingText(updates.title || '', updates.description || '');
+        if (aiScanUpdate.blocked) {
+          return res.status(400).json({
+            error: 'Content policy violation',
+            message: `Your listing was rejected: ${aiScanUpdate.reason}. If you believe this is a mistake, please contact support.`
+          });
+        }
+      } catch (aiErr) {
+        console.error('Azure Content Safety text scan error (non-blocking):', aiErr.message);
+      }
+
+      const abuseCheckUpdate = scanForAbusiveContent(textFields.join(' '));
+      if (abuseCheckUpdate.found) {
+        if (abuseCheckUpdate.severity === 'high') {
+          const fullUser = await User.findById(user._id);
+          const violation = await recordViolation(fullUser, 'offensive_language');
+          appendModerationAudit({
+            subjectUserId: user._id,
+            actionType: 'abusive_content_flagged',
+            metadata: { context: 'listing_update', severity: 'high', categories: abuseCheckUpdate.categories, matches: abuseCheckUpdate.matches, listingId: listing._id }
+          }).catch(() => {});
+          return res.status(400).json({ error: 'Content policy violation', message: violation.message, violationAction: violation.action });
+        }
+        if (abuseCheckUpdate.severity === 'medium') {
+          const fullUser = await User.findById(user._id);
+          const violation = await recordViolation(fullUser, 'offensive_language');
+          appendModerationAudit({
+            subjectUserId: user._id,
+            actionType: 'abusive_content_flagged',
+            metadata: { context: 'listing_update', severity: 'medium', categories: abuseCheckUpdate.categories, matches: abuseCheckUpdate.matches, listingId: listing._id }
+          }).catch(() => {});
+          return res.status(400).json({ error: 'Content policy violation', message: violation.message, violationAction: violation.action });
+        }
+        // low: allow through but warn the user and log for admin review
+        listingContentWarning = {
+          severity: 'low',
+          message: 'Your listing was saved, but it contains mild language that may be reviewed by our moderation team. Please keep your listings professional.'
+        };
+        appendModerationAudit({
+          subjectUserId: user._id,
+          actionType: 'abusive_content_flagged',
+          metadata: { context: 'listing_update', severity: 'low', categories: abuseCheckUpdate.categories, matches: abuseCheckUpdate.matches, listingId: listing._id }
+        }).catch(() => {});
+      }
     }
 
     // Apply updates
@@ -1420,7 +1600,11 @@ router.patch('/:id', authenticateToken, requireActiveAccount, async (req, res) =
       .populate('seller', SELLER_DSA_PUBLIC_SELECT)
       .lean();
 
-    return res.json({ listing: updated, message: 'Listing updated successfully.' });
+    return res.json({
+      listing: updated,
+      message: 'Listing updated successfully.',
+      ...(listingContentWarning && { contentWarning: listingContentWarning })
+    });
   } catch (error) {
     console.error('Error updating listing:', error);
     if (error.name === 'ValidationError') {

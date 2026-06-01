@@ -168,6 +168,10 @@ export class EditListing implements OnInit {
         this.http.post<{ urls: string[] }>(`${API_CONFIG.getApiUrl()}/uploads`, formData)
       );
       return res.urls || [];
+    } catch (error: any) {
+      const isContentViolation = error?.error?.error === 'Content policy violation';
+      const msg = error?.error?.message || error?.message || 'Failed to upload images. Please try again.';
+      throw Object.assign(new Error(msg), { isContentViolation });
     } finally {
       this.isUploadingImages = false;
     }
@@ -208,12 +212,38 @@ export class EditListing implements OnInit {
         payload.subCategory = raw.subCategory;
       }
 
-      await firstValueFrom(this.listingsService.updateListing(this.listing!._id, payload));
+      const result = await firstValueFrom(this.listingsService.updateListing(this.listing!._id, payload));
 
-      Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Listing updated', showConfirmButton: false, timer: 2500 });
+      if (result.contentWarning) {
+        await Swal.fire({
+          icon: 'warning',
+          title: 'Content notice',
+          text: result.contentWarning.message,
+          confirmButtonText: 'View listing',
+          confirmButtonColor: '#2563eb'
+        });
+      } else {
+        Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Listing updated', showConfirmButton: false, timer: 2500 });
+      }
       this.router.navigate(['/listing', this.listing!.slug]);
     } catch (err: any) {
-      this.errorMessage = err.error?.message || err.message || 'Failed to update listing.';
+      // Image blocked by content moderation — show a prominent modal
+      if (err?.isContentViolation) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Image Not Allowed',
+          html: `<p>${err.message}</p>
+                 <p style="font-size:0.82em;margin-top:0.75em;color:#6b7280">
+                   Remove or replace the flagged image(s) and try again.
+                   Repeated violations may lead to account restrictions.
+                 </p>`,
+          confirmButtonText: 'OK',
+          confirmButtonColor: '#dc2626'
+        });
+        this.errorMessage = '';
+      } else {
+        this.errorMessage = err.error?.message || err.message || 'Failed to update listing.';
+      }
     } finally {
       this.isSubmitting = false;
     }

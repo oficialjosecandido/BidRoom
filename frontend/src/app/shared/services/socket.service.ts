@@ -2,6 +2,7 @@ import { Injectable, NgZone, inject } from '@angular/core';
 import { io, Socket } from 'socket.io-client';
 import { Observable } from 'rxjs';
 import { API_CONFIG } from '../config/api.config';
+import { logger } from '../utils/logger';
 
 export interface NewBidEvent {
   bid: any;
@@ -19,7 +20,7 @@ export interface ListingUpdateEvent {
   privateRoomEndDate?: string;
   privateRoomStatus?: 'not-triggered' | 'eligible' | 'invited' | 'active' | 'ended';
   privateRoomClosedReason?: 'no_acceptances' | 'seller_left' | 'time_expired';
-  status?: 'draft' | 'active' | 'ended' | 'cancelled';
+  status?: 'draft' | 'active' | 'pending_review' | 'ended' | 'cancelled';
   endDate?: string;
   winnerSelectionDeadline?: string;
   winner?: string;
@@ -95,16 +96,16 @@ export class SocketService {
       });
 
       this.socket.on('connect', () => {
-        console.log('🔌 Connected to Socket.io server');
+        logger.debug('Socket.io connected');
         this.flushRoomJoins();
       });
 
       this.socket.on('disconnect', () => {
-        console.log('🔌 Disconnected from Socket.io server');
+        logger.debug('Socket.io disconnected');
       });
 
       this.socket.on('connect_error', (error) => {
-        console.error('❌ Socket.io connection error:', error);
+        logger.error('Socket.io connection error', error);
       });
     });
   }
@@ -139,7 +140,7 @@ export class SocketService {
       this.connect();
     }
     this.socket?.emit('join-listing', listingId);
-    console.log(`👤 Joined listing room: ${listingId}`);
+    logger.debug('Joined listing room', listingId);
   }
 
   /** Join multiple listing rooms at once (e.g. seller dashboard showing several listings). */
@@ -152,7 +153,7 @@ export class SocketService {
   leaveListing(listingId: string): void {
     this.joinedListingIds.delete(listingId);
     this.socket?.emit('leave-listing', listingId);
-    console.log(`👤 Left listing room: ${listingId}`);
+    logger.debug('Left listing room', listingId);
   }
 
   /** Leave multiple listing rooms at once. */
@@ -192,6 +193,21 @@ export class SocketService {
       const handler = () => this.ngZone.run(() => observer.next());
       socket.on('new-notification', handler);
       return () => socket.off('new-notification', handler);
+    });
+  }
+
+  /** Fired when the current user receives a private room invitation (time-sensitive prompt) */
+  onPrivateRoomInvitation(): Observable<{ listingId: string; listingTitle: string }> {
+    return new Observable((observer) => {
+      if (!this.socket) {
+        this.connect();
+      }
+      const socket = this.socket;
+      if (!socket) return () => {};
+      const handler = (data: { listingId: string; listingTitle: string }) =>
+        this.ngZone.run(() => observer.next(data));
+      socket.on('private-room-invitation', handler);
+      return () => socket.off('private-room-invitation', handler);
     });
   }
 
@@ -253,7 +269,7 @@ export class SocketService {
       this.connect();
     }
     this.socket?.emit('join-private-room-viewer', listingId);
-    console.log(`👁️ Joined private room viewer: ${listingId}`);
+    logger.debug('Joined private room viewer', listingId);
   }
 
   leavePrivateRoomViewer(listingId: string): void {
@@ -261,7 +277,7 @@ export class SocketService {
       this.joinedPrivateRoomViewerId = null;
     }
     this.socket?.emit('leave-private-room-viewer', listingId);
-    console.log(`👁️ Left private room viewer: ${listingId}`);
+    logger.debug('Left private room viewer', listingId);
   }
 
   onPrivateRoomViewerCountUpdate(): Observable<ViewerCountUpdateEvent> {

@@ -1,4 +1,4 @@
-<div class="pg" [class.light]="isLight">
+<div class="pg" [class.light]="isLight()">
 
 <app-header></app-header>
 
@@ -25,6 +25,17 @@
   <span>›</span>
   <strong>{{ listing.title }}</strong>
 </div>
+
+<!-- PENDING REVIEW BANNER (seller only) -->
+@if (isOwnListing && listing.status === 'pending_review') {
+  <div class="moderation-banner">
+    <span class="moderation-banner__icon">🔍</span>
+    <div class="moderation-banner__text">
+      <strong>{{ 'listingDetails.moderationBanner.title' | translate }}</strong>
+      <span>{{ 'listingDetails.moderationBanner.body' | translate }}</span>
+    </div>
+  </div>
+}
 
 <!-- PAGE -->
 <div class="page">
@@ -389,7 +400,12 @@
       <button class="btn-offer" (click)="openBidModal()">{{ 'listingDetails.sidebar.bidPrivateRoom' | translate }}</button>
       <button class="btn-watch" (click)="openPrivateRoom()">{{ 'listingDetails.privateRoom.watch' | translate }}</button>
     }
-    @if (listing.privateRoomStatus === 'active' && !isAcceptedPrivateRoomBidder()) {
+    <!-- Seller: show a dedicated "Access Private Room" CTA when the room is live -->
+    @if (isOwnListing && listing.privateRoomStatus === 'active') {
+      <button class="btn-offer" (click)="openPrivateRoom()">{{ 'listingDetails.sidebar.accessPrivateRoomSeller' | translate }}</button>
+    }
+    <!-- Spectator (not the seller, not an accepted bidder): watch-only -->
+    @if (listing.privateRoomStatus === 'active' && !isAcceptedPrivateRoomBidder() && !isOwnListing) {
       <button class="btn-watch" (click)="openPrivateRoom()">{{ 'listingDetails.sidebar.watchPrivateRoomSpectator' | translate }}</button>
     }
     @if (listing.allowPrivateRoom && listing.privateRoomStatus === 'invited' && !isOwnListing) {
@@ -400,6 +416,7 @@
     }
     @if (isOwnListing && !isAuctionEnded()) {
       <div class="own-note">{{ 'listingDetails.sidebar.ownListingNote' | translate }}</div>
+      <button class="btn-watch" [routerLink]="['/listing', listing._id, 'edit']">{{ 'listingDetails.actions.editListing' | translate }}</button>
     }
     @if (canReopenListing()) {
       <div class="own-note">
@@ -465,6 +482,9 @@
     @if (isAuthenticated && !isOwnListing) {
       <button class="btn-follow" [class.following]="sellerFollowStatus.following" [disabled]="followLoading" (click)="toggleFollowSeller()">
         {{ sellerFollowStatus.following ? ('listingDetails.sidebar.following' | translate) : ('listingDetails.sidebar.follow' | translate) }}
+      </button>
+      <button class="btn-block" [class.blocked]="sellerBlocked" [disabled]="blockLoading" (click)="toggleBlockSeller()">
+        {{ sellerBlocked ? ('listingDetails.sidebar.unblock' | translate) : ('listingDetails.sidebar.block' | translate) }}
       </button>
     }
 

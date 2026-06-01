@@ -2,13 +2,14 @@ import { Component, Input, inject } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { ThemeService } from '../../../shared/services/theme.service';
+import { BidroomLogoComponent } from '../../../shared/components/bidroom-logo/bidroom-logo.component';
 
 export type LegalTab = 'terms' | 'privacy' | 'cookies' | 'contact';
 
 @Component({
   selector: 'app-legal-layout',
   standalone: true,
-  imports: [RouterLink, RouterLinkActive, TranslateModule],
+  imports: [RouterLink, RouterLinkActive, TranslateModule, BidroomLogoComponent],
   templateUrl: './legal-layout.component.html',
   styleUrls: ['./legal-layout.component.scss']
 })

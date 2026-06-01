@@ -136,6 +136,29 @@ nav {
   strong { font-size: 11.5px; font-weight: 500; color: var(--text); }
 }
 
+/* ── MODERATION BANNER ─────────────────────── */
+.moderation-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 14px 24px;
+  background: #fffbeb;
+  border-bottom: 1px solid #fcd34d;
+  color: #92400e;
+
+  &__icon { font-size: 20px; flex-shrink: 0; line-height: 1.4; }
+
+  &__text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    font-size: 13px;
+
+    strong { font-weight: 600; color: #78350f; }
+    span   { color: #92400e; }
+  }
+}
+
 /* ── PAGE GRID ──────────────────────────────── */
 .page {
   display: grid;
@@ -899,6 +922,26 @@ nav {
   &:disabled { opacity: .4; cursor: not-allowed; }
 }
 
+.btn-block {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 10px;
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--sub);
+  border: 1px solid var(--line);
+  border-radius: 100px;
+  background: none;
+  cursor: pointer;
+  font-family: inherit;
+  transition: color .15s, border-color .15s;
+  &:hover { color: var(--red); border-color: rgba(194,90,90,.3); }
+  &.blocked { color: var(--red); border-color: rgba(194,90,90,.3); }
+  &:disabled { opacity: .4; cursor: not-allowed; }
+}
+
 /* info rows */
 .info-rows { margin-top: 4px; }
 .ir {
@@ -1043,10 +1086,11 @@ nav {
 }
 
 /* ── SHEET / OVERLAY ────────────────────────── */
+/* z-index 1000 — sits above the cookie banner (999) but below SweetAlert2 (≥10000) */
 .overlay {
   position: fixed;
   inset: 0;
-  z-index: 200;
+  z-index: 1000;
   background: rgba(0,0,0,.65);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);

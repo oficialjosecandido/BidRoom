@@ -1,10 +1,10 @@
-<div class="pg" [class.light]="isLight">
+<div class="pg" [class.light]="isLight()">
 
 <!-- NAV -->
 <nav>
   <button class="back" (click)="navigateBack()">
     <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M10 3L5 8l5 5"/></svg>
-    <span class="brand">BidRoom<em>.pt</em></span>
+    <span class="brand"><app-bidroom-logo [height]="28" /></span>
   </button>
   <div class="draft-status-nav">
     @if (draftSaveStatus === 'saving') {
@@ -19,7 +19,7 @@
     }
   </div>
   <div class="nav-r">
-    <button class="btn-th" (click)="toggleTheme()">{{ isLight ? '☽' : '☀' }}</button>
+    <button class="btn-th" (click)="toggleTheme()">{{ isLight() ? '☽' : '☀' }}</button>
     <button class="btn-go" (click)="navigateToDashboard()">{{ 'addListing.nav.dashboard' | translate }}</button>
   </div>
 </nav>
@@ -152,7 +152,7 @@
               <select class="field-select" formControlName="subCategory">
                 <option value="">{{ 'addListing.selectSubCategory' | translate }}</option>
                 @for (sub of getSelectedSubCategories(); track sub) {
-                  <option [value]="sub">{{ sub }}</option>
+                  <option [value]="sub">{{ getSubCategoryLabel(sub) }}</option>
                 }
               </select>
               @if (getFieldError('subCategory')) { <div class="field-err">{{ getFieldError('subCategory') }}</div> }
@@ -178,7 +178,11 @@
           <textarea class="field-textarea" formControlName="description" maxlength="3000"
             [placeholder]="'addListing.descriptionPlaceholder' | translate"></textarea>
           @if (getFieldError('description')) { <div class="field-err">{{ getFieldError('description') }}</div> }
-          <div class="char-count"><span>{{ listingForm.get('description')?.value?.length || 0 }}</span>/3000</div>
+          <div class="char-count"
+               [class.char-count--warn]="(listingForm.get('description')?.value?.length || 0) < 50">
+            <span>{{ listingForm.get('description')?.value?.length || 0 }}</span>/3000
+            <span class="char-min"> · {{ 'addListing.descriptionMinChars' | translate }}</span>
+          </div>
         </div>
       </div>
 
@@ -301,9 +305,10 @@
             <div class="price-input-wrap">
               <span class="price-prefix">€</span>
               <input class="field-input price-input" type="number" formControlName="buyNowPrice"
-                min="0" step="0.01" placeholder="0.00">
+                min="0.01" step="0.01" placeholder="0.00">
             </div>
             <div class="field-hint">{{ 'addListing.buyNowHint' | translate }}</div>
+            @if (getFieldError('buyNowPrice')) { <div class="field-err">{{ getFieldError('buyNowPrice') }}</div> }
           </div>
 
           <div class="field">
@@ -347,9 +352,10 @@
               <div class="price-input-wrap">
                 <span class="price-prefix">€</span>
                 <input class="field-input price-input" type="number" formControlName="buyNowPrice"
-                  min="0" step="0.01" placeholder="0.00">
+                  min="0.01" step="0.01" placeholder="0.00">
               </div>
               <div class="field-hint">{{ 'addListing.buyNowHint' | translate }}</div>
+              @if (getFieldError('buyNowPrice')) { <div class="field-err">{{ getFieldError('buyNowPrice') }}</div> }
             </div>
           </div>
 
@@ -492,11 +498,11 @@
           </div>
           <div class="review-row">
             <span class="review-label">{{ 'addListing.category' | translate }}</span>
-            <span class="review-val">{{ listingForm.get('category')?.value || '—' }}</span>
+            <span class="review-val">{{ reviewCategoryLabel }}</span>
           </div>
           <div class="review-row">
             <span class="review-label">{{ 'addListing.condition' | translate }}</span>
-            <span class="review-val">{{ listingForm.get('condition')?.value || '—' }}</span>
+            <span class="review-val">{{ reviewConditionLabel }}</span>
           </div>
           @if (listingForm.get('listingFormat')?.value === 'auction') {
             <div class="review-row">
@@ -510,11 +516,14 @@
           </div>
           <div class="review-row">
             <span class="review-label">{{ 'addListing.shippingOptions' | translate }}</span>
-            <span class="review-val">{{ listingForm.get('shippingOption')?.value || '—' }}</span>
+            <span class="review-val">{{ reviewShippingLabel }}</span>
           </div>
           <div class="review-row">
             <span class="review-label">{{ 'addListing.step3Title' | translate }}</span>
-            <span class="review-val">{{ uploadedFiles.length }} {{ 'addListing.photosLabel' | translate }}</span>
+            <span class="review-val">
+              {{ uploadedFiles.length }}
+              {{ (uploadedFiles.length === 1 ? 'addListing.photoSingular' : 'addListing.photosLabel') | translate }}
+            </span>
           </div>
         </div>
 
@@ -559,14 +568,25 @@
 
   <!-- PREVIEW SIDEBAR -->
   <aside class="preview-sidebar">
-    <div class="preview-label">{{ 'addListing.preview.label' | translate }}</div>
+    <header class="preview-head">
+      <h3 class="preview-label">{{ 'addListing.preview.label' | translate }}</h3>
+      <p class="preview-hint">{{ 'addListing.preview.hint' | translate }}</p>
+    </header>
 
     <div class="preview-card">
       <div class="preview-img">
         @if (previewUrls[0]) {
-          <img [src]="previewUrls[0] || ''" style="width:100%;height:100%;object-fit:cover" alt="">
+          <img class="preview-img-photo" [src]="previewUrls[0] || ''" alt="" />
+          <div class="preview-img-shade"></div>
         } @else {
-          <span style="font-size:36px;opacity:.15">📷</span>
+          <div class="preview-img-empty" aria-hidden="true">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+              <rect x="3" y="5" width="18" height="14" rx="2"/>
+              <circle cx="8.5" cy="10.5" r="1.5" fill="currentColor" stroke="none"/>
+              <path d="M21 16l-5-5L5 21"/>
+            </svg>
+            <span>{{ 'addListing.preview.noPhoto' | translate }}</span>
+          </div>
         }
         <span class="preview-badge"
               [class.pb-auction]="previewFormat === 'auction'"
@@ -575,54 +595,39 @@
         </span>
       </div>
       <div class="preview-body">
-        <div class="preview-cat">{{ previewCategory || '—' }}</div>
-        <div class="preview-title">{{ previewTitle || ('addListing.preview.titlePlaceholder' | translate) }}</div>
+        <div class="preview-cat">{{ previewCategoryLabel || '—' }}</div>
+        <h4 class="preview-title" [class.preview-title--empty]="!previewTitle">
+          {{ previewTitle || ('addListing.preview.titlePlaceholder' | translate) }}
+        </h4>
         <div class="preview-foot">
-          <div>
-            <div class="preview-pl">{{ previewPriceLabel }}</div>
-            <div class="preview-price">{{ previewPrice }}</div>
+          <div class="preview-stat">
+            <span class="preview-stat-label">{{ previewPriceLabel }}</span>
+            <span class="preview-stat-value preview-stat-value--gold">{{ previewPrice }}</span>
           </div>
-          <div>
-            <div class="preview-ml">{{ 'addListing.duration' | translate }}</div>
-            <div class="preview-mv">{{ previewDuration }}</div>
+          <div class="preview-stat preview-stat--end">
+            <span class="preview-stat-label">{{ 'addListing.duration' | translate }}</span>
+            <span class="preview-stat-value">{{ previewDuration }}</span>
           </div>
         </div>
       </div>
     </div>
 
-    <div class="preview-checklist">
-      <div class="pck-item" [class.ok]="checklist['format']">
-        <span class="pck-ico">{{ checklist['format'] ? '✓' : '○' }}</span>
-        <span>{{ 'addListing.ck.format' | translate }}</span>
+    <div class="preview-progress-panel">
+      <div class="preview-progress-head">
+        <span class="preview-progress-title">{{ 'addListing.preview.progress' | translate }}</span>
+        <span class="preview-progress-count">{{ checklistDoneCount }}/{{ checklistMeta.length }}</span>
       </div>
-      <div class="pck-item" [class.ok]="checklist['title']">
-        <span class="pck-ico">{{ checklist['title'] ? '✓' : '○' }}</span>
-        <span>{{ 'addListing.ck.title' | translate }}</span>
+      <div class="preview-progress-track" role="progressbar" [attr.aria-valuenow]="checklistProgressPct" aria-valuemin="0" aria-valuemax="100">
+        <div class="preview-progress-fill" [style.width.%]="checklistProgressPct"></div>
       </div>
-      <div class="pck-item" [class.ok]="checklist['category']">
-        <span class="pck-ico">{{ checklist['category'] ? '✓' : '○' }}</span>
-        <span>{{ 'addListing.ck.category' | translate }}</span>
-      </div>
-      <div class="pck-item" [class.ok]="checklist['condition']">
-        <span class="pck-ico">{{ checklist['condition'] ? '✓' : '○' }}</span>
-        <span>{{ 'addListing.ck.condition' | translate }}</span>
-      </div>
-      <div class="pck-item" [class.ok]="checklist['description']">
-        <span class="pck-ico">{{ checklist['description'] ? '✓' : '○' }}</span>
-        <span>{{ 'addListing.ck.desc' | translate }}</span>
-      </div>
-      <div class="pck-item" [class.ok]="checklist['photos']">
-        <span class="pck-ico">{{ checklist['photos'] ? '✓' : '○' }}</span>
-        <span>{{ 'addListing.ck.photos' | translate }}</span>
-      </div>
-      <div class="pck-item" [class.ok]="checklist['price']">
-        <span class="pck-ico">{{ checklist['price'] ? '✓' : '○' }}</span>
-        <span>{{ 'addListing.ck.price' | translate }}</span>
-      </div>
-      <div class="pck-item" [class.ok]="checklist['shipping']">
-        <span class="pck-ico">{{ checklist['shipping'] ? '✓' : '○' }}</span>
-        <span>{{ 'addListing.ck.shipping' | translate }}</span>
-      </div>
+      <ul class="preview-checklist">
+        @for (item of checklistMeta; track item.key) {
+          <li class="pck-item" [class.ok]="checklist[item.key]">
+            <span class="pck-mark" aria-hidden="true"></span>
+            <span class="pck-text">{{ item.labelKey | translate }}</span>
+          </li>
+        }
+      </ul>
     </div>
   </aside>
 

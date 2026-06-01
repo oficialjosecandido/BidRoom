@@ -1,5 +1,5 @@
-import { Component, OnDestroy, OnInit, inject } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormArray } from '@angular/forms';
+import { Component, OnDestroy, OnInit, inject, computed } from '@angular/core';
+import { AbstractControl, FormBuilder, FormGroup, ValidationErrors, ValidatorFn, Validators, ReactiveFormsModule, FormArray } from '@angular/forms';
 import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom, from, merge, Subject, Subscription } from 'rxjs';
@@ -11,6 +11,8 @@ import { CustomerService, CustomerInfo } from '../../../shared/services/customer
 import { KycService, KYC_THRESHOLD } from '../../../shared/services/kyc.service';
 import { API_CONFIG } from '../../../shared/config/api.config';
 import { environment } from '@env';
+import { BidroomLogoComponent } from '../../../shared/components/bidroom-logo/bidroom-logo.component';
+import { ThemeService } from '../../../shared/services/theme.service';
 
 interface Category {
   id: string;
@@ -18,10 +20,29 @@ interface Category {
   subCategories: string[];
 }
 
+/** Cross-field validator: buyNowPrice, when filled, must exceed startingBid. */
+function buyNowAboveStartingBid(): ValidatorFn {
+  return (group: AbstractControl): ValidationErrors | null => {
+    const buyNow   = group.get('buyNowPrice')?.value;
+    const starting = group.get('startingBid')?.value;
+    if (buyNow !== null && buyNow !== '' && Number(buyNow) > 0 &&
+        starting !== null && starting !== '' && Number(buyNow) <= Number(starting)) {
+      group.get('buyNowPrice')?.setErrors({ mustBeHigherThanStartingBid: true });
+    } else {
+      const ctrl = group.get('buyNowPrice');
+      if (ctrl?.hasError('mustBeHigherThanStartingBid')) {
+        const { mustBeHigherThanStartingBid: _, ...rest } = ctrl.errors ?? {};
+        ctrl.setErrors(Object.keys(rest).length ? rest : null);
+      }
+    }
+    return null; // errors live on the child control, not the group
+  };
+}
+
 @Component({
   selector: 'app-add-listing',
   standalone: true,
-  imports: [ReactiveFormsModule, TranslateModule],
+  imports: [ReactiveFormsModule, TranslateModule, BidroomLogoComponent],
   templateUrl: './add-listing.html',
   styleUrl: './add-listing.scss',
 })
@@ -33,6 +54,7 @@ export class AddListing implements OnInit, OnDestroy {
   private http = inject(HttpClient);
   private translate = inject(TranslateService);
   private kycService = inject(KycService);
+  private themeService = inject(ThemeService);
 
   listingForm!: FormGroup;
   isSubmitting = false;
@@ -59,7 +81,7 @@ export class AddListing implements OnInit, OnDestroy {
   // ─── Step management ────────────────────────────────────────────────────────
   currentStep = 1;
   readonly totalSteps = 6;
-  isLight = false;
+  readonly isLight = computed(() => this.themeService.effective() === 'light');
 
   readonly steps = [
     { n: 1, titleKey: 'addListing.step1Title', subKey: 'addListing.step1' },
@@ -70,10 +92,41 @@ export class AddListing implements OnInit, OnDestroy {
     { n: 6, titleKey: 'addListing.step6Title', subKey: 'addListing.step6' },
   ];
 
-  toggleTheme(): void { this.isLight = !this.isLight; }
-  goStep(n: number): void { if (n >= 1 && n <= this.totalSteps) this.currentStep = n; }
-  nextStep(): void { this.goStep(this.currentStep + 1); }
-  prevStep(): void { this.goStep(this.currentStep - 1); }
+  toggleTheme(): void {
+    const eff = this.themeService.effective();
+    this.themeService.setPreference(eff === 'dark' ? 'light' : 'dark');
+  }
+  goStep(n: number): void {
+    if (n < 1 || n > this.totalSteps) return;
+    if (n <= this.currentStep) {
+      this.currentStep = n;
+      this.errorMessage = '';
+      return;
+    }
+    for (let s = this.currentStep; s < n; s++) {
+      if (!this.validateStep(s)) {
+        this.currentStep = s;
+        return;
+      }
+    }
+    this.errorMessage = '';
+    this.currentStep = n;
+  }
+
+  nextStep(): void {
+    if (this.currentStep >= this.totalSteps) return;
+    if (this.validateStep(this.currentStep)) {
+      this.errorMessage = '';
+      this.currentStep = this.currentStep + 1;
+    }
+  }
+
+  prevStep(): void {
+    if (this.currentStep > 1) {
+      this.errorMessage = '';
+      this.currentStep = this.currentStep - 1;
+    }
+  }
   navigateToDashboard(): void { void this.router.navigate(['/dashboard/home']); }
   navigateBack(): void { void this.router.navigate(['/listing/list']); }
 
@@ -102,16 +155,75 @@ export class AddListing implements OnInit, OnDestroy {
 
   get checklist(): Record<string, boolean> {
     const fmt = this.previewFormat;
+    const titleCtrl = this.listingForm?.get('title');
+    const descCtrl = this.listingForm?.get('description');
+    const shippingOk = this.isStepValid(5, false);
     return {
       format: true,
-      title: (this.listingForm?.get('title')?.value?.length ?? 0) >= 3,
-      category: !!this.listingForm?.get('category')?.value,
-      condition: !!this.listingForm?.get('condition')?.value,
-      description: (this.listingForm?.get('description')?.value?.length ?? 0) >= 50,
-      photos: this.uploadedFiles.length >= 1,
-      price: fmt === 'best-offer' || parseFloat(this.listingForm?.get('startingBid')?.value || '0') > 0,
-      shipping: !!this.listingForm?.get('shippingOption')?.value,
+      title: !!titleCtrl?.valid,
+      category: !!this.listingForm?.get('category')?.valid && !!this.listingForm?.get('subCategory')?.valid,
+      condition: !!this.listingForm?.get('condition')?.valid,
+      description: !!descCtrl?.valid,
+      photos: this.uploadedFiles.length >= 1 && this.isMediaValid,
+      price: fmt === 'best-offer' ? true : !!this.listingForm?.get('startingBid')?.valid,
+      shipping: shippingOk,
     };
+  }
+
+  readonly checklistMeta: { key: string; labelKey: string }[] = [
+    { key: 'format', labelKey: 'addListing.ck.format' },
+    { key: 'title', labelKey: 'addListing.ck.title' },
+    { key: 'category', labelKey: 'addListing.ck.category' },
+    { key: 'condition', labelKey: 'addListing.ck.condition' },
+    { key: 'description', labelKey: 'addListing.ck.desc' },
+    { key: 'photos', labelKey: 'addListing.ck.photos' },
+    { key: 'price', labelKey: 'addListing.ck.price' },
+    { key: 'shipping', labelKey: 'addListing.ck.shipping' },
+  ];
+
+  get checklistDoneCount(): number {
+    const c = this.checklist;
+    return this.checklistMeta.filter((item) => c[item.key]).length;
+  }
+
+  get checklistProgressPct(): number {
+    return Math.round((this.checklistDoneCount / this.checklistMeta.length) * 100);
+  }
+
+  get previewCategoryLabel(): string {
+    const id = this.previewCategory;
+    if (!id) return '';
+    const key = `addListing.categories.${id}`;
+    const t = this.translate.instant(key);
+    return t !== key ? t : (this.categories.find((c) => c.id === id)?.name ?? id);
+  }
+
+  getSubCategoryLabel(sub: string): string {
+    const key = `addListing.subcategories.${sub}`;
+    const t = this.translate.instant(key);
+    return t !== key ? t : sub;
+  }
+
+  get reviewCategoryLabel(): string {
+    const catId = this.listingForm?.get('category')?.value;
+    if (!catId) return '—';
+    const catKey = `addListing.categories.${catId}`;
+    const catLabel = this.translate.instant(catKey);
+    return catLabel !== catKey ? catLabel : catId;
+  }
+
+  get reviewConditionLabel(): string {
+    const val = this.listingForm?.get('condition')?.value;
+    if (!val) return '—';
+    const cond = this.itemConditions.find(c => c.value === val);
+    return cond ? this.translate.instant(cond.labelKey) : val;
+  }
+
+  get reviewShippingLabel(): string {
+    const val = this.listingForm?.get('shippingOption')?.value;
+    if (!val) return '—';
+    const opt = this.shippingOptions.find(o => o.value === val);
+    return opt ? this.translate.instant(opt.labelKey) : val;
   }
 
   // ─── Categories ──────────────────────────────────────────────────────────────
@@ -190,12 +302,19 @@ export class AddListing implements OnInit, OnDestroy {
     { value: 'For Parts or Not Working', labelKey: 'addListing.conditionForParts' }
   ];
 
+  // Short durations (5 min, 1 h, 2 h) are only shown in non-production builds
+  // so testers can create quick listings for private-room testing.
   listingDurations = [
-    { label: '1 day',   hours: 24  },
-    { label: '3 days',  hours: 72  },
-    { label: '7 days',  hours: 168 },
-    { label: '10 days', hours: 240 },
-    { label: '15 days', hours: 360 },
+    ...(!environment.production ? [
+      { label: '5 minutes', hours: 1 / 12 },
+      { label: '1 hour',    hours: 1      },
+      { label: '2 hours',   hours: 2      },
+    ] : []),
+    { label: '24 hours', hours: 24  },
+    { label: '3 days',   hours: 72  },
+    { label: '7 days',   hours: 168 },
+    { label: '10 days',  hours: 240 },
+    { label: '15 days',  hours: 360 },
   ];
 
   offerDurations = [
@@ -281,7 +400,7 @@ export class AddListing implements OnInit, OnDestroy {
       shippingOriginCountry: ['PT'],
       returnPolicy: ['14-days', Validators.required],
       sellerDeclaration: [false, Validators.requiredTrue]
-    });
+    }, { validators: buyNowAboveStartingBid() });
 
     this.listingForm.get('listingFormat')?.valueChanges.subscribe(format => {
       this.updateConditionalValidators(format);
@@ -528,19 +647,15 @@ export class AddListing implements OnInit, OnDestroy {
 
     for (let i = 0; i < urls.length; i++) {
       const url = urls[i];
-      try {
-        const res = await fetch(url, { mode: 'cors' });
-        if (!res.ok) continue;
-        const blob = await res.blob();
-        const ext = blob.type?.split('/')[1] || 'jpg';
-        const file = new File([blob], `draft-${i}.${ext}`, { type: blob.type || 'image/jpeg' });
-        this.urlByFileKey.set(this.fileKey(file), url);
-        this.uploadedFiles.push(file);
-        this.previewUrls.push(URL.createObjectURL(blob));
-        this.media.push(this.fb.control(file));
-      } catch {
-        /* skip broken image */
-      }
+      // Use a 0-byte placeholder so the existing indexed structure (uploadedFiles[i] ↔
+      // previewUrls[i]) is maintained without any cross-origin fetch.  The URL is
+      // pre-registered in urlByFileKey, so neither draft-save nor final-submit will
+      // try to re-upload this image.
+      const placeholder = new File([], `restored-${i}.jpg`, { type: 'image/jpeg' });
+      this.urlByFileKey.set(this.fileKey(placeholder), url);
+      this.uploadedFiles.push(placeholder);
+      this.previewUrls.push(url);
+      this.media.push(this.fb.control(placeholder));
     }
   }
 
@@ -554,14 +669,8 @@ export class AddListing implements OnInit, OnDestroy {
       startingBidControl?.setValidators([Validators.required, Validators.min(0.01)]);
       reservePriceControl?.clearValidators();
       reservePriceControl?.setValue(null);
-      buyNowPriceControl?.setValidators([]);
+      buyNowPriceControl?.setValidators([Validators.min(0.01)]);
       minimumAcceptPriceControl?.clearValidators();
-
-      buyNowPriceControl?.valueChanges.subscribe(value => {
-        if (value && startingBidControl?.value && value <= startingBidControl.value) {
-          buyNowPriceControl.setErrors({ mustBeHigherThanStartingBid: true });
-        }
-      });
     } else if (format === 'best-offer') {
       startingBidControl?.clearValidators();
       reservePriceControl?.clearValidators();
@@ -627,6 +736,9 @@ export class AddListing implements OnInit, OnDestroy {
     'video/mp4', 'video/webm', 'video/quicktime'
   ];
 
+  /** Maximum allowed video file size: 15 MB */
+  private readonly MAX_VIDEO_SIZE_BYTES = 15 * 1024 * 1024;
+
   get imageCount(): number { return this.uploadedFiles.filter(f => this.ALLOWED_IMAGE_TYPES.includes(f.type)).length; }
   get videoCount(): number { return this.uploadedFiles.filter(f => this.ALLOWED_VIDEO_TYPES.includes(f.type)).length; }
   isVideoFile(file: File): boolean { return this.ALLOWED_VIDEO_TYPES.includes(file.type); }
@@ -643,7 +755,7 @@ export class AddListing implements OnInit, OnDestroy {
     this.errorMessage = '';
     const files = Array.from(fileList);
     const countBefore = this.uploadedFiles.length;
-    const rejected: { name: string; reason: 'type' | 'maxPhotos' | 'maxPhotosWithVideo' | 'videoLimit' }[] = [];
+    const rejected: { name: string; reason: 'type' | 'maxPhotos' | 'maxPhotosWithVideo' | 'videoLimit' | 'videoSize' }[] = [];
     let imgs = this.imageCount;
     let vids = this.videoCount;
 
@@ -661,6 +773,8 @@ export class AddListing implements OnInit, OnDestroy {
         reader.readAsDataURL(file);
       } else if (isVideo) {
         if (vids >= 1 || imgs >= 5) { rejected.push({ name: file.name, reason: 'videoLimit' }); return; }
+        // Enforce 100 MB size limit before the file is accepted
+        if (file.size > this.MAX_VIDEO_SIZE_BYTES) { rejected.push({ name: file.name, reason: 'videoSize' }); return; }
         this.uploadedFiles.push(file);
         this.previewUrls.push(null);
         vids++;
@@ -684,6 +798,7 @@ export class AddListing implements OnInit, OnDestroy {
       if (byReason.has('maxPhotos')) parts.push(this.translate.instant('addListing.errors.mediaMaxPhotos', { files: joinFiles(byReason.get('maxPhotos')!) }));
       if (byReason.has('maxPhotosWithVideo')) parts.push(this.translate.instant('addListing.errors.mediaMaxPhotosWithVideo', { files: joinFiles(byReason.get('maxPhotosWithVideo')!) }));
       if (byReason.has('videoLimit')) parts.push(this.translate.instant('addListing.errors.mediaVideoLimit', { files: joinFiles(byReason.get('videoLimit')!) }));
+      if (byReason.has('videoSize')) parts.push(this.translate.instant('addListing.errors.mediaVideoSize', { files: joinFiles(byReason.get('videoSize')!) }));
       this.errorMessage = parts.join(' ');
     }
     while (this.media.length < this.uploadedFiles.length) {
@@ -774,17 +889,33 @@ export class AddListing implements OnInit, OnDestroy {
     if (this.uploadedFiles.length === 0) return [];
     this.isUploadingImages = true;
     try {
-      const formData = new FormData();
-      this.uploadedFiles.forEach(file => formData.append('images', file));
-      const response = await firstValueFrom(
-        this.http.post<{ urls: string[]; count: number }>(`${API_CONFIG.getApiUrl()}/uploads`, formData)
+      // Only upload files that don't already have a server URL (new additions that
+      // were not yet draft-saved, or files that are not 0-byte restored placeholders).
+      const filesToUpload = this.uploadedFiles.filter(
+        f => this.ALLOWED_IMAGE_TYPES.includes(f.type)
+          && f.size > 0
+          && !this.urlByFileKey.has(this.fileKey(f))
       );
-      this.uploadedFileUrls = response.urls || [];
+      if (filesToUpload.length > 0) {
+        const formData = new FormData();
+        filesToUpload.forEach(file => formData.append('images', file));
+        const response = await firstValueFrom(
+          this.http.post<{ urls: string[]; count: number }>(`${API_CONFIG.getApiUrl()}/uploads`, formData)
+        );
+        const urls = response.urls || [];
+        filesToUpload.forEach((file, idx) => {
+          if (urls[idx]) this.urlByFileKey.set(this.fileKey(file), urls[idx]);
+        });
+      }
+      this.uploadedFileUrls = this.buildOrderedImageUrlList();
       this.isUploadingImages = false;
       return this.uploadedFileUrls;
     } catch (error: any) {
       this.isUploadingImages = false;
-      throw new Error(error.error?.message || 'Failed to upload images. Please try again.');
+      const isContentViolation = error?.error?.error === 'Content policy violation';
+      const msg = error?.error?.message || error?.message || 'Failed to upload images. Please try again.';
+      const enriched = Object.assign(new Error(msg), { isContentViolation });
+      throw enriched;
     }
   }
 
@@ -796,28 +927,17 @@ export class AddListing implements OnInit, OnDestroy {
     });
 
     if (!this.listingForm.valid || this.uploadedFiles.length < 1 || !this.isMediaValid) {
-      const fieldLabels: Record<string, string> = {
-        title: 'Listing Title',
-        category: 'Category',
-        subCategory: 'Sub-Category',
-        condition: 'Item Condition',
-        description: 'Full Description (min. 50 characters)',
-        startingBid: 'Starting Bid',
-        locationCity: 'City',
-        locationRegion: 'Region / State',
-        duration: 'Listing Duration',
-        shippingOption: 'Shipping Option',
-        returnPolicy: 'Return Policy',
-        sellerDeclaration: 'Seller Declaration checkbox',
-      };
-      const missing: string[] = [];
-      if (this.uploadedFiles.length < 1) missing.push('at least 1 photo');
-      Object.keys(fieldLabels).forEach(key => {
-        if (this.listingForm.get(key)?.invalid) missing.push(fieldLabels[key]);
+      Object.keys(this.listingForm.controls).forEach(key => {
+        this.listingForm.get(key)?.markAsTouched();
       });
-      this.errorMessage = missing.length > 0
-        ? `Please complete the following before publishing: ${missing.join(', ')}.`
-        : 'Please fix the highlighted errors before publishing.';
+      this.specifications.controls.forEach(c => c.markAllAsTouched());
+      this.bundleItems.controls.forEach(c => c.markAllAsTouched());
+      const firstInvalid = this.findFirstInvalidStep();
+      if (firstInvalid) {
+        this.currentStep = firstInvalid;
+        this.validateStep(firstInvalid);
+      }
+      this.errorMessage = this.buildPublishValidationMessage();
       return;
     }
 
@@ -846,20 +966,52 @@ export class AddListing implements OnInit, OnDestroy {
 
       this.isSubmitting = false;
       this.errorMessage = '';
-      Swal.fire({
-        toast: true, position: 'top-end', icon: 'success',
-        title: this.translate.instant('addListing.successMessage'),
-        showConfirmButton: false, timer: 3000, timerProgressBar: true
-      });
-      this.router.navigate(['/listing', listing.slug]);
       firstValueFrom(this.listingsService.deleteListingDraft()).catch(() => {});
+
+      if (listing.contentWarning) {
+        await Swal.fire({
+          icon: 'warning',
+          title: this.translate.instant('addListing.moderationTitle'),
+          html: `<p>${this.translate.instant('addListing.moderationBody')}</p>`,
+          confirmButtonText: this.translate.instant('addListing.moderationCta'),
+          confirmButtonColor: '#2563eb'
+        });
+        // Navigate to the listing — it is visible to the seller but not to the public
+        this.router.navigate(['/listing', listing.slug]);
+      } else {
+        Swal.fire({
+          toast: true, position: 'top-end', icon: 'success',
+          title: this.translate.instant('addListing.successMessage'),
+          showConfirmButton: false, timer: 3000, timerProgressBar: true
+        });
+        this.router.navigate(['/listing', listing.slug]);
+      }
     } catch (error: any) {
       this.isSubmitting = false;
+
+      // Image blocked by content moderation — show a prominent modal
+      if (error?.isContentViolation) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Image Not Allowed',
+          html: `<p>${error.message}</p>
+                 <p style="font-size:0.82em;margin-top:0.75em;color:#6b7280">
+                   Remove or replace the flagged image(s) and try again.
+                   Repeated violations may lead to account restrictions.
+                 </p>`,
+          confirmButtonText: 'OK',
+          confirmButtonColor: '#dc2626'
+        });
+        this.errorMessage = '';
+        return;
+      }
+
       if (error?.error?.error === 'kyc_required') {
         this.kycService.openKycGate(error.error.kycStatus || 'none');
         return;
       }
-      this.errorMessage = error.message || error.error?.message || 'Failed to create listing. Please try again.';
+      const apiErr = error?.error?.error || error?.error?.message;
+      this.errorMessage = apiErr || error.message || 'Failed to create listing. Please try again.';
     }
   }
 
@@ -897,17 +1049,130 @@ export class AddListing implements OnInit, OnDestroy {
     };
   }
 
+  private getStepFields(step: number): string[] {
+    switch (step) {
+      case 1:
+        return ['listingFormat'];
+      case 2:
+        return ['title', 'category', 'subCategory', 'condition', 'description'];
+      case 3:
+        return [];
+      case 4:
+        return this.listingForm.get('listingFormat')?.value === 'auction'
+          ? ['startingBid', 'duration']
+          : ['duration'];
+      case 5: {
+        const fields = ['shippingOption', 'locationCity', 'locationRegion', 'returnPolicy'];
+        const opt = this.listingForm.get('shippingOption')?.value;
+        if (opt === 'flat-rate') fields.push('flatRateShipping');
+        if (opt === 'calculated') fields.push('packageSize', 'shippingOriginPostalCode');
+        return fields;
+      }
+      case 6:
+        return ['sellerDeclaration'];
+      default:
+        return [];
+    }
+  }
+
+  private isStepValid(step: number, markTouched: boolean): boolean {
+    if (step === 3) {
+      if (markTouched) { /* media has no form controls */ }
+      return this.uploadedFiles.length >= 1 && this.isMediaValid;
+    }
+
+    const fields = this.getStepFields(step);
+    if (markTouched) {
+      fields.forEach(f => this.listingForm.get(f)?.markAsTouched());
+      if (step === 2) {
+        this.specifications.controls.forEach(c => c.markAllAsTouched());
+      }
+    }
+
+    if (fields.some(f => this.listingForm.get(f)?.invalid)) return false;
+    if (step === 2 && this.specifications.length > 0 && this.specifications.invalid) return false;
+    return true;
+  }
+
+  validateStep(step: number): boolean {
+    if (this.isStepValid(step, true)) {
+      return true;
+    }
+    this.errorMessage = this.getStepValidationMessage(step);
+    return false;
+  }
+
+  private getStepValidationMessage(step: number): string {
+    switch (step) {
+      case 2:
+        return this.translate.instant('addListing.errorStep2Description');
+      case 3:
+        return this.uploadedFiles.length < 1
+          ? this.translate.instant('addListing.errors.atLeastOnePhoto')
+          : this.translate.instant('addListing.uploadMediaError');
+      case 4:
+        return this.translate.instant('addListing.errors.step4Pricing');
+      case 5:
+        return this.translate.instant('addListing.errors.step5Shipping');
+      case 6:
+        return this.translate.instant('addListing.errors.step6Declaration');
+      default:
+        return this.translate.instant('addListing.errors.stepBlocked');
+    }
+  }
+
+  private findFirstInvalidStep(): number | null {
+    for (let s = 1; s <= this.totalSteps; s++) {
+      if (!this.isStepValid(s, false)) return s;
+    }
+    return null;
+  }
+
+  private buildPublishValidationMessage(): string {
+    const missing = this.collectInvalidFieldLabels();
+    if (missing.length > 0) {
+      return this.translate.instant('addListing.errors.publishIncomplete', { fields: missing.join(', ') });
+    }
+    return this.translate.instant('addListing.errors.publishFix');
+  }
+
+  private collectInvalidFieldLabels(): string[] {
+    const keys = [
+      'title', 'category', 'subCategory', 'condition', 'description',
+      'startingBid', 'duration', 'shippingOption', 'flatRateShipping',
+      'packageSize', 'shippingOriginPostalCode',
+      'locationCity', 'locationRegion', 'returnPolicy', 'sellerDeclaration',
+    ];
+    const missing: string[] = [];
+    if (this.uploadedFiles.length < 1 || !this.isMediaValid) {
+      missing.push(this.translate.instant('addListing.errors.atLeastOnePhoto'));
+    }
+    keys.forEach(key => {
+      if (this.listingForm.get(key)?.invalid) {
+        missing.push(this.getFieldLabel(key));
+      }
+    });
+    if (this.specifications.length > 0 && this.specifications.invalid) {
+      missing.push(this.translate.instant('addListing.errors.specificationsIncomplete'));
+    }
+    return missing;
+  }
+
   getFieldError(fieldName: string): string {
     const control = this.listingForm.get(fieldName);
-    if (control && control.invalid && control.touched) {
+    if (control && control.invalid && (control.touched || control.dirty)) {
       if (control.hasError('required')) {
         return this.translate.instant('addListing.errors.required', { field: this.getFieldLabel(fieldName) });
       }
       if (control.hasError('maxLength')) {
         return this.translate.instant('addListing.errors.tooLong', { field: this.getFieldLabel(fieldName) });
       }
-      if (control.hasError('minLength')) {
-        return this.translate.instant('addListing.errors.tooShort', { field: this.getFieldLabel(fieldName) });
+      if (control.hasError('minlength') || control.hasError('minLength')) {
+        const min = control.errors?.['minlength']?.requiredLength ?? control.errors?.['minLength']?.requiredLength ?? 50;
+        return this.translate.instant('addListing.errors.tooShortMin', {
+          field: this.getFieldLabel(fieldName),
+          min,
+        });
       }
       if (control.hasError('min')) {
         return this.translate.instant('addListing.errors.minValue', { min: control.errors?.['min'].min });
@@ -934,7 +1199,11 @@ export class AddListing implements OnInit, OnDestroy {
       startingBid: 'addListing.startingBid',
       reservePrice: 'addListing.reservePrice',
       shippingOption: 'addListing.shippingOptions',
-      returnPolicy: 'addListing.returnPolicy'
+      returnPolicy: 'addListing.returnPolicy',
+      sellerDeclaration: 'addListing.sellerDeclaration',
+      flatRateShipping: 'addListing.flatRateCost',
+      packageSize: 'addListing.packageSize',
+      shippingOriginPostalCode: 'addListing.originPostalCode',
     };
     return this.translate.instant(keyMap[fieldName] || fieldName);
   }

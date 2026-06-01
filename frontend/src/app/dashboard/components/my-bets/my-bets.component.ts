@@ -73,7 +73,7 @@ export class MyBetsComponent implements OnInit {
         this.isLoading = false;
       },
       error: (err) => {
-        this.error = err?.error?.message || err?.message || 'Failed to load your bets';
+        this.error = err?.error?.message || err?.message || this.translate.instant('dashboard.myBets.errorLoading');
         this.isLoading = false;
       }
     });

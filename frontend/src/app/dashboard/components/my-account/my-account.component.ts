@@ -2,6 +2,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { AuthService, AppUser } from '../../../auth/services/auth.service';
 import { CustomerService } from '../../../shared/services/customer.service';
 import { StripeConnectService, ConnectAccountStatus, OnboardingFormData } from '../../../shared/services/stripe-connect.service';
@@ -11,7 +12,7 @@ import { Observable } from 'rxjs';
 @Component({
   selector: 'app-my-account',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, TranslateModule],
   templateUrl: './my-account.component.html',
   styleUrls: ['./my-account.component.scss']
 })
@@ -21,6 +22,7 @@ export class MyAccountComponent implements OnInit {
   private stripeConnect = inject(StripeConnectService);
   private kycService = inject(KycService);
   private route = inject(ActivatedRoute);
+  private translate = inject(TranslateService);
 
   currentUser$: Observable<AppUser | null>;
 
@@ -181,21 +183,21 @@ export class MyAccountComponent implements OnInit {
         this.connectSubmitting = false;
         this.showOnboardingForm = false;
         this.connectStatusMessage = res.onboarded
-          ? 'Your payout account is now active!'
-          : 'Your details have been submitted. Stripe will verify them shortly — this usually takes a few minutes.';
+          ? this.translate.instant('dashboard.myAccount.payoutNowActive')
+          : this.translate.instant('dashboard.myAccount.detailsSubmitted');
         this.loadConnectStatus();
       },
       error: (err) => {
         this.connectSubmitting = false;
-        this.connectError = err?.error?.message || err?.error?.error || 'Something went wrong. Please check your details and try again.';
+        this.connectError = err?.error?.message || err?.error?.error || this.translate.instant('dashboard.myAccount.connectError');
       }
     });
   }
 
   get connectStatusLabel(): string {
-    if (!this.connectStatus?.connected) return 'Not connected';
-    if (this.connectStatus.onboarded) return 'Active';
-    return 'Pending verification';
+    if (!this.connectStatus?.connected) return this.translate.instant('dashboard.myAccount.connectNotConnected');
+    if (this.connectStatus.onboarded) return this.translate.instant('dashboard.myAccount.connectActive');
+    return this.translate.instant('dashboard.myAccount.connectPending');
   }
 
   get connectStatusClass(): string {

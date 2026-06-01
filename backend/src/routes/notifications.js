@@ -61,7 +61,7 @@ router.get('/', authenticateToken, async (req, res) => {
   }
 });
 
-/** GET /api/notifications/unread-count - Get unread count for badge */
+/** GET /api/notifications/unread-count - Get unread count for badge (optional ?types=bid,shipping) */
 router.get('/unread-count', authenticateToken, async (req, res) => {
   try {
     const user = await User.findOne({ uid: req.user.uid });
@@ -69,10 +69,17 @@ router.get('/unread-count', authenticateToken, async (req, res) => {
       return res.status(404).json({ error: 'User not found' });
     }
 
-    const count = await Notification.countDocuments({
-      user: user._id,
-      status: 'unread'
-    });
+    const query = { user: user._id, status: 'unread' };
+    const typesParam = req.query.types;
+    if (typesParam) {
+      const types = String(typesParam)
+        .split(',')
+        .map((t) => t.trim())
+        .filter(Boolean);
+      if (types.length) query.type = { $in: types };
+    }
+
+    const count = await Notification.countDocuments(query);
 
     res.json({ unreadCount: count });
   } catch (error) {
@@ -92,8 +99,18 @@ router.patch('/read-all', authenticateToken, async (req, res) => {
       return res.status(404).json({ error: 'User not found' });
     }
 
+    const query = { user: user._id, status: 'unread' };
+    const typesParam = req.query.types;
+    if (typesParam) {
+      const types = String(typesParam)
+        .split(',')
+        .map((t) => t.trim())
+        .filter(Boolean);
+      if (types.length) query.type = { $in: types };
+    }
+
     const result = await Notification.updateMany(
-      { user: user._id, status: 'unread' },
+      query,
       { status: 'read', readAt: new Date() }
     );
 

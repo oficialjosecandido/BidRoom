@@ -2,7 +2,7 @@ import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { Subscription } from 'rxjs';
 import { ListingsService, Listing } from '../../../shared/services/listings.service';
 import { SocketService } from '../../../shared/services/socket.service';
@@ -47,6 +47,7 @@ export class MyAuctionsComponent implements OnInit, OnDestroy {
   private listingsService = inject(ListingsService);
   private socketService = inject(SocketService);
   private router = inject(Router);
+  private translate = inject(TranslateService);
 
   listings: EnhancedListing[] = [];
   isLoading = true;
@@ -61,7 +62,7 @@ export class MyAuctionsComponent implements OnInit, OnDestroy {
   relistSubmitting = false;
   relistError: string | null = null;
 
-  readonly durationOptions: DurationSlot[] = ['24 hours', '3 days', '7 days'];
+  readonly durationOptions: DurationSlot[] = ['5 minutes', '24 hours', '3 days', '7 days'];
 
   private socketSubscriptions: Subscription[] = [];
   private joinedListingIds: string[] = [];
@@ -87,7 +88,7 @@ export class MyAuctionsComponent implements OnInit, OnDestroy {
         this.setupRealTimeUpdates();
       },
       error: (error) => {
-        this.error = error?.message || 'Failed to load your listings';
+        this.error = error?.message || this.translate.instant('dashboard.myAuctions.errorLoading');
         this.isLoading = false;
       }
     });
@@ -229,7 +230,7 @@ export class MyAuctionsComponent implements OnInit, OnDestroy {
       next: (res) => {
         this.relistSubmitting = false;
         this.closeRelistModal();
-        successToast.fire({ title: 'Listing relisted successfully!' });
+        successToast.fire({ title: this.translate.instant('dashboard.myAuctions.relistSuccess') });
         if (res.listing?.slug) {
           this.router.navigate(['/listing', res.listing.slug]);
         } else {
@@ -238,7 +239,7 @@ export class MyAuctionsComponent implements OnInit, OnDestroy {
       },
       error: (err) => {
         this.relistSubmitting = false;
-        this.relistError = err?.error?.message || 'Failed to relist listing.';
+        this.relistError = err?.error?.message || this.translate.instant('dashboard.myAuctions.relistError');
       }
     });
   }

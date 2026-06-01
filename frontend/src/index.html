@@ -5,7 +5,8 @@
   <title>BidRoom</title>
   <base href="/">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="apple-touch-icon" href="apple-touch-icon.svg">
   <meta name="description" content="BidRoom – Live auctions and best-offer marketplace. Buy and sell unique items with confidence.">
 
   <!-- Open Graph -->
@@ -34,8 +35,13 @@
   -->
   <script>
     window.APP_CONFIG = {
+      /**
+       * Local ng serve: '/api' (proxy.conf.json).
+       * Azure SWA / production: use full backend URL (CI patches this on deploy).
+       * Empty or relative on non-localhost hosts is ignored — see api.config.ts.
+       */
+      API_URL: '/api',
       // API_URL: 'https://bidroom-backend-dev.azurewebsites.net/api',
-      API_URL: 'http://localhost:3000/api',
       STRIPE_PUBLISHABLE_KEY: 'pk_test_51TI5X806hw2O8NlNioZFt34bFn38uQPhm4hayUKZtrPf41BWH4xxdjiox9gNlMpSSHdUfCYtAM5FNX1UF3KyhNuP00Vqz8RtvH'
     };
   </script>

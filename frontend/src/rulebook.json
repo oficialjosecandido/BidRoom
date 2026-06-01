@@ -22,11 +22,12 @@
     "bidroomFeeBuyerRate": 0,
 
     "auctionDurations": [
-      { "label": "1 hour",   "hours": 1   },
-      { "label": "7 hours",  "hours": 7   },
-      { "label": "24 hours", "hours": 24  },
-      { "label": "3 days",   "hours": 72  },
-      { "label": "7 days",   "hours": 168 }
+      { "label": "5 minutes", "hours": 0.0833 },
+      { "label": "1 hour",    "hours": 1 },
+      { "label": "7 hours",   "hours": 7 },
+      { "label": "24 hours",  "hours": 24 },
+      { "label": "3 days",    "hours": 72 },
+      { "label": "7 days",    "hours": 168 }
     ],
 
     "shippingOptions": [

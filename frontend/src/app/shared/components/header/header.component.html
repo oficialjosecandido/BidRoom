@@ -2,7 +2,7 @@
 
   <!-- Brand -->
   <div class="brand" (click)="navigateToHome()" (keydown.enter)="navigateToHome()" tabindex="0" role="button" aria-label="BidRoom">
-    BidRoom<em>.pt</em>
+    <app-bidroom-logo variant="horizontal" [compact]="true" [height]="40" [animated]="false" />
   </div>
 
   <!-- Centre nav links -->
@@ -23,6 +23,16 @@
   <!-- Right cluster -->
   <div class="nav-r">
 
+    <!-- Theme: light ↔ dark -->
+    <button
+      type="button"
+      class="btn-th"
+      (click)="cycleTheme()"
+      [attr.aria-label]="'header.theme.button' | translate"
+      [attr.title]="'header.theme.button' | translate">
+      {{ themeGlyph }}
+    </button>
+
     <!-- Lang toggle PT | EN -->
     <div class="lang-tog">
       <button class="lt" [class.on]="currentLang === 'pt'" (click)="switchLanguage('pt')">PT</button>
@@ -38,7 +48,7 @@
         placeholder="{{ 'header.search.placeholder' | translate }}"
         (keydown.enter)="doSearch(searchInput)"
         (keydown.escape)="closeSearch()">
-      <button class="search-clear" (click)="closeSearch()" aria-label="Fechar">×</button>
+      <button class="search-clear" (click)="closeSearch()" [attr.aria-label]="'header.search.close' | translate">×</button>
     </div>
 
     <!-- Search icon (shown when search is closed) -->
@@ -103,6 +113,7 @@
       <button class="nm-action nm-action--primary" (click)="navigateToAuth()">{{ 'header.actions.startBidding' | translate }}</button>
     }
     <div class="nm-lang">
+      <button type="button" class="nm-theme" (click)="cycleTheme(); closeMenu()">{{ themeGlyph }} {{ 'header.theme.button' | translate }}</button>
       <button class="lt" [class.on]="currentLang === 'pt'" (click)="switchLanguage('pt'); closeMenu()">PT</button>
       <button class="lt" [class.on]="currentLang === 'en'" (click)="switchLanguage('en'); closeMenu()">EN</button>
     </div>

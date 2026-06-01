@@ -1,7 +1,7 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { WatchlistService } from '../../../shared/services/watchlist.service';
 import { Listing } from '../../../shared/services/listings.service';
 
@@ -14,6 +14,7 @@ import { Listing } from '../../../shared/services/listings.service';
 })
 export class DashboardWatchlistComponent implements OnInit {
   private watchlistService = inject(WatchlistService);
+  private translate = inject(TranslateService);
 
   watchlist: Listing[] = [];
   isLoading = true;
@@ -34,7 +35,7 @@ export class DashboardWatchlistComponent implements OnInit {
         this.isLoading = false;
       },
       error: (err) => {
-        this.error = err?.error?.message || err?.message || 'Failed to load watchlist';
+        this.error = err?.error?.message || err?.message || this.translate.instant('dashboard.watchlist.errorLoading');
         this.isLoading = false;
       }
     });

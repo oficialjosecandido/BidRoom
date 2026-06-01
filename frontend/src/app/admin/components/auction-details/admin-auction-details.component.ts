@@ -25,6 +25,7 @@ export class AdminAuctionDetailsComponent implements OnInit {
   isLoading = false;
   isCreatingPrivateRoom = false;
   isClosingPrivateRoom = false;
+  isDeleting = false;
   error: string | null = null;
   showPlatinumSelection = false;
   selectedPlatinumBidders: string[] = [];
@@ -195,6 +196,21 @@ export class AdminAuctionDetailsComponent implements OnInit {
 
   bidderTrackKey(bidder: Bidder): string {
     return bidder._id != null ? String(bidder._id) : bidder.email;
+  }
+
+  deleteListing(): void {
+    if (!this.auction || this.isDeleting) return;
+    if (!confirm(`Delete "${this.auction.title}"? This permanently removes the listing and all its bids. Active transactions will block deletion.`)) return;
+    this.isDeleting = true;
+    this.adminService.deleteListing(this.auctionId).subscribe({
+      next: () => {
+        this.router.navigate(['/nexus/auctions']);
+      },
+      error: (err) => {
+        this.isDeleting = false;
+        alert(err?.error?.message || 'Failed to delete listing.');
+      }
+    });
   }
 
   goBack(): void {

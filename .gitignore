@@ -78,3 +78,13 @@ frontend/.angular/
 LogFiles/
 deployments/
 *.zip
+
+# Local-only scratch projects / dumps that should never be deployed
+-bidroom-react-nativ-bsrrkd/
+docs/
+docs.zip
+
+# Old publish profiles — auth uses GitHub Action secrets (AZURE_CREDENTIALS).
+# Kept in the ignore list in case Azure regenerates them locally.
+*publish-profile.xml
+*publish-profile.PublishSettings

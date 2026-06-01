@@ -121,6 +121,26 @@ export class AdminAuctionsComponent implements OnInit {
     });
   }
 
+  deletingId: string | null = null;
+
+  deleteListing(auction: Listing, event: Event): void {
+    event.stopPropagation();
+    if (this.deletingId) return;
+    if (!confirm(`Delete "${auction.title}"? This permanently removes the listing and all its bids. Active transactions will block deletion.`)) return;
+    this.deletingId = auction._id;
+    this.adminService.deleteListing(auction._id).subscribe({
+      next: () => {
+        this.auctions = this.auctions.filter(a => a._id !== auction._id);
+        this.total = Math.max(0, this.total - 1);
+        this.deletingId = null;
+      },
+      error: (err) => {
+        this.deletingId = null;
+        alert(err?.error?.message || 'Failed to delete listing.');
+      }
+    });
+  }
+
   bidCount(auction: Listing): number {
     return auction.bidCount ?? 0;
   }

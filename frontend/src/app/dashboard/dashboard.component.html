@@ -1,8 +1,8 @@
-<div class="dashboard-container">
+<div class="dashboard-container" [attr.data-theme]="effectiveTheme()">
 
   <nav class="dash-nav">
     <a class="brand" (click)="navigateToLanding()" (keydown.enter)="navigateToLanding()" tabindex="0" role="button">
-      BidRoom<em>.pt</em>
+      <app-bidroom-logo [height]="32" />
     </a>
     <div class="nav-r">
       <button type="button" class="btn-th" (click)="cycleTheme()" [attr.aria-label]="'Theme'">{{ themeGlyph }}</button>

@@ -1,0 +1,132 @@
+:host {
+  display: inline-flex;
+  align-items: center;
+  line-height: 0;
+  flex-shrink: 0;
+  --logo-gold: #c9a84c;
+  --logo-text: #f0ede8;
+  --logo-ghost-opacity: 0.25;
+}
+
+:host-context(html[data-theme='light']) {
+  --logo-gold: #8c6b1e;
+  --logo-text: #1d1d1f;
+  --logo-ghost-opacity: 0.22;
+}
+
+.bidroom-logo {
+  display: block;
+  height: 100%;
+  width: auto;
+  flex-shrink: 0;
+}
+
+.bidroom-logo[data-variant='horizontal'][data-compact='true'] {
+  aspect-ratio: 168 / 40;
+  min-width: 140px;
+}
+
+.bidroom-logo[data-variant='horizontal']:not([data-compact]) {
+  aspect-ratio: 220 / 56;
+}
+
+.arc-ghost {
+  stroke: var(--logo-gold);
+  opacity: var(--logo-ghost-opacity);
+}
+
+.arc-fill {
+  stroke: var(--logo-gold);
+  fill: none;
+}
+
+.arc-dot {
+  fill: var(--logo-gold);
+}
+
+.mono-text,
+.wordmark {
+  fill: var(--logo-text);
+}
+
+.pt-suffix {
+  fill: var(--logo-gold);
+}
+
+.bidroom-logo[data-variant='horizontal'] .arc-fill:not(.arc-fill--compact) {
+  stroke-dasharray: 230 84;
+}
+
+.bidroom-logo[data-variant='horizontal'] .arc-fill--compact {
+  stroke-dasharray: 73 28;
+}
+
+.bidroom-logo[data-variant='vertical'] .arc-fill {
+  stroke-dasharray: 156 58;
+}
+
+.bidroom-logo[data-variant='icon'] .arc-fill {
+  stroke-dasharray: 120 43;
+}
+
+@keyframes bidroom-arc-fill-h {
+  from { stroke-dasharray: 0 314; }
+  to { stroke-dasharray: 230 84; }
+}
+
+@keyframes bidroom-arc-fill-h-compact {
+  from { stroke-dasharray: 0 101; }
+  to { stroke-dasharray: 73 28; }
+}
+
+@keyframes bidroom-arc-fill-v {
+  from { stroke-dasharray: 0 214; }
+  to { stroke-dasharray: 156 58; }
+}
+
+@keyframes bidroom-arc-fill-i {
+  from { stroke-dasharray: 0 164; }
+  to { stroke-dasharray: 120 43; }
+}
+
+@keyframes bidroom-dot-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+@keyframes bidroom-ring-glow {
+  0%, 100% { opacity: 0.25; }
+  50% { opacity: 0.5; }
+}
+
+.bidroom-logo--animated[data-variant='horizontal']:not(.bidroom-logo--compact) .arc-fill {
+  animation: bidroom-arc-fill-h 1.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.bidroom-logo--animated.bidroom-logo--compact[data-variant='horizontal'] .arc-fill {
+  animation: bidroom-arc-fill-h-compact 1.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.bidroom-logo--animated[data-variant='vertical'] .arc-fill {
+  animation: bidroom-arc-fill-v 1.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.bidroom-logo--animated[data-variant='icon'] .arc-fill {
+  animation: bidroom-arc-fill-i 1.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.bidroom-logo--animated .arc-dot {
+  animation: bidroom-dot-pulse 2s ease-in-out infinite 1.8s;
+}
+
+.bidroom-logo--animated .arc-ghost {
+  animation: bidroom-ring-glow 2.5s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bidroom-logo--animated .arc-fill,
+  .bidroom-logo--animated .arc-dot,
+  .bidroom-logo--animated .arc-ghost {
+    animation: none;
+  }
+}

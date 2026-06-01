@@ -2,7 +2,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import Swal from 'sweetalert2';
 import { TransactionsService, Transaction, TransactionStatus } from '../../../shared/services/transactions.service';
 
@@ -33,6 +33,7 @@ const successToast = Swal.mixin({
 export class DashboardDisputesComponent implements OnInit {
   transactionsService = inject(TransactionsService);
   private route = inject(ActivatedRoute);
+  private translate = inject(TranslateService);
 
   transactions: Transaction[] = [];
   eligibleToOpen: Transaction[] = [];
@@ -80,7 +81,7 @@ export class DashboardDisputesComponent implements OnInit {
         }
       },
       error: (err) => {
-        this.error = err?.error?.message || err?.message || 'Failed to load disputes';
+        this.error = err?.error?.message || err?.message || this.translate.instant('disputes.errorLoading');
         this.isLoading = false;
       }
     });
@@ -223,7 +224,7 @@ export class DashboardDisputesComponent implements OnInit {
           this.loadData();
         },
         error: (err) => {
-          this.disputeError = err?.error?.message || 'Failed to submit dispute.';
+          this.disputeError = err?.error?.message || this.translate.instant('disputes.submitError');
           this.disputeSubmitting = false;
         }
       });

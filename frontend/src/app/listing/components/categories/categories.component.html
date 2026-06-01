@@ -20,7 +20,7 @@
                 class="cat-filter-chip"
                 [class.active]="selectedConditions.has(opt.key)"
                 (click)="toggleCondition(opt.key)">
-                {{ opt.label }}
+                {{ opt.labelKey | translate }}
               </button>
             }
           </div>
@@ -39,20 +39,13 @@
         <!-- Location -->
         <div class="cat-filter-group cat-filter-group--location">
           <span class="cat-filter-label">{{ 'listingList.location' | translate }}</span>
-          <div class="cat-location-row">
-            <input
-              type="text"
-              class="cat-location-input"
-              [(ngModel)]="locationCityFilter"
-              [placeholder]="'listingList.locationCityPlaceholder' | translate"
-            />
-            <select class="cat-location-select" [(ngModel)]="locationCountryFilter">
-              <option value="">{{ 'listingList.anyCountry' | translate }}</option>
-              @for (c of countryFilterOptions; track c.code) {
-                <option [value]="c.code">{{ c.labelKey | translate }}</option>
-              }
-            </select>
-          </div>
+          <input
+            type="text"
+            class="cat-location-input"
+            [(ngModel)]="locationFilter"
+            [placeholder]="'listingList.locationPlaceholder' | translate"
+            [attr.aria-label]="'listingList.location' | translate"
+          />
         </div>
 
         <!-- Shipping -->

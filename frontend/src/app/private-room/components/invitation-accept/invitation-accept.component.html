@@ -7,13 +7,14 @@
       </div>
     }
 
-    @if (success && !isLoading) {
+    <!-- ACCEPT SUCCESS -->
+    @if (success && !isLoading && action === 'accept') {
       <div class="success-state">
         <div class="success-icon">✓</div>
         <h2>Invitation Accepted!</h2>
         <p>You've successfully accepted the Platinum Bidder invitation.</p>
         @if (authService.getCurrentUser()) {
-          <p class="redirect-notice">Redirecting you to the private auction room...</p>
+          <p class="redirect-notice">Redirecting you to the private auction room…</p>
           <button class="action-btn" (click)="goToPrivateRoom()">Go to Private Room Now</button>
         } @else {
           <p class="redirect-notice">Please log in to enter the private auction room.</p>
@@ -22,12 +23,28 @@
       </div>
     }
 
+    <!-- DECLINE SUCCESS -->
+    @if (success && !isLoading && action === 'decline') {
+      <div class="success-state decline-state">
+        <div class="success-icon" style="background:#e53e3e">✗</div>
+        <h2>Invitation Declined</h2>
+        <p>You have declined the private auction room invitation. Your seat has been released.</p>
+        <p class="redirect-notice">Redirecting you to the listings page…</p>
+        <button class="action-btn" (click)="goToListings()">Browse Listings</button>
+      </div>
+    }
+
+    <!-- ERROR -->
     @if (error && !isLoading) {
       <div class="error-state">
         <div class="error-icon">⚠️</div>
         <h2>{{ expired ? 'Invitation Expired' : 'Unable to Process Invitation' }}</h2>
         <p class="error-message">{{ error }}</p>
-        <button class="action-btn" (click)="goToPrivateRoom()">Go to Listings</button>
+        @if (action === 'decline') {
+          <button class="action-btn" (click)="goToListings()">Browse Listings</button>
+        } @else {
+          <button class="action-btn" (click)="goToListings()">Browse Listings</button>
+        }
       </div>
     }
   </div>

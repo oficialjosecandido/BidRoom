@@ -1,6 +1,6 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 import { Auth, applyActionCode } from '@angular/fire/auth';
 
@@ -15,6 +15,7 @@ export class VerifyEmailComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private auth = inject(Auth);
+  private translate = inject(TranslateService);
 
   isLoading = true;
   isVerified = false;
@@ -28,7 +29,7 @@ export class VerifyEmailComponent implements OnInit {
       if (this.code) {
         this.verifyEmail();
       } else {
-        this.errorMessage = 'Invalid or missing verification code.';
+        this.errorMessage = this.translate.instant('auth.verifyEmail.invalidCode');
         this.isLoading = false;
       }
     });
@@ -42,7 +43,7 @@ export class VerifyEmailComponent implements OnInit {
       })
       .catch((error: any) => {
         this.isLoading = false;
-        this.errorMessage = error?.message || 'Email verification failed.';
+        this.errorMessage = error?.message || this.translate.instant('auth.verifyEmail.failedGeneric');
       });
   }
 
