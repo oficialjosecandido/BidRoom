@@ -115,13 +115,10 @@ export class HeaderComponent implements OnInit, OnDestroy {
     return this.translate.currentLang || 'pt';
   }
 
-  get themeGlyph(): string {
-    return this.theme.resolveEffective(this.theme.preference()) === 'dark' ? '☾' : '☀';
-  }
+  readonly effectiveTheme = this.theme.effective;
 
-  cycleTheme(): void {
-    const eff = this.theme.resolveEffective(this.theme.preference());
-    this.theme.setPreference(eff === 'dark' ? 'light' : 'dark');
+  setTheme(mode: 'light' | 'dark'): void {
+    this.theme.setPreference(mode);
   }
 
   switchLanguage(code: string): void {

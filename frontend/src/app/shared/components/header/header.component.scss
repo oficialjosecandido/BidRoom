@@ -60,27 +60,52 @@
   &:hover { opacity: .85; }
 }
 
-/* ── Theme toggle ── */
-.btn-th {
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  border: 1px solid var(--line);
+/* ── Theme toggle (matches lang-tog) ── */
+.theme-tog {
+  display: flex;
   background: var(--s1);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.tt {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 15px;
-  line-height: 1;
+  gap: 6px;
+  min-width: 34px;
+  height: 28px;
+  padding: 0 8px;
+  font-size: 11px;
+  font-weight: 600;
   color: var(--sub);
+  border: none;
+  background: none;
   cursor: pointer;
-  flex-shrink: 0;
-  transition: color .15s, border-color .15s, background .15s;
+  font-family: inherit;
+  transition: background .15s, color .15s;
 
-  &:hover {
-    color: var(--text);
-    border-color: var(--dim);
+  &.on {
+    background: var(--gold);
+    color: #0a0a0a;
+  }
+
+  &:not(.on):hover {
     background: var(--s2);
+    color: var(--text);
+  }
+}
+
+.theme-tog--full {
+  width: 100%;
+
+  .tt {
+    flex: 1;
+    height: 36px;
+    font-size: 12px;
+    font-weight: 500;
   }
 }
 
@@ -403,20 +428,15 @@
   gap: 10px;
   margin-top: 12px;
 
-  .nm-theme {
-    width: 100%;
-    padding: 10px 14px;
-    border-radius: 8px;
-    border: 1px solid var(--line);
-    background: var(--s1);
-    font-size: 13px;
-    color: var(--text);
-    cursor: pointer;
-    font-family: inherit;
-    text-align: left;
+  .nm-lang-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--sub);
   }
 
-  .lang-tog {
+  .lang-tog--full {
     width: 100%;
     border-radius: 8px;
 

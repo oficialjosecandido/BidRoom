@@ -1,6 +1,6 @@
 <app-header activePage="how-it-works"></app-header>
 
-<!-- HERO -->
+<!-- ── HERO ─────────────────────────────────────────────────────────────────── -->
 <section class="hiw-hero">
   <div class="hiw-hero__eye">{{ 'howItWorks.hero.eye' | translate }}</div>
   <h1 class="hiw-hero__title">
@@ -8,31 +8,42 @@
     <strong>{{ 'howItWorks.hero.title2' | translate }}</strong>
   </h1>
   <p class="hiw-hero__sub">{{ 'howItWorks.hero.sub' | translate }}</p>
-  <div class="hiw-hero__cta">
-    <button class="btn-primary-gold" (click)="switchTab('buyer')">{{ 'howItWorks.hero.ctaBuyer' | translate }}</button>
-    <button class="btn-ghost" (click)="switchTab('seller')">{{ 'howItWorks.hero.ctaSeller' | translate }}</button>
+  <div class="hiw-hero__stats">
+    <div class="hero-stat">
+      <span class="hero-stat__val">2</span>
+      <span class="hero-stat__lbl">{{ 'howItWorks.hero.stat1' | translate }}</span>
+    </div>
+    <div class="hero-stat">
+      <span class="hero-stat__val">3.5%</span>
+      <span class="hero-stat__lbl">{{ 'howItWorks.hero.stat2' | translate }}</span>
+    </div>
+    <div class="hero-stat">
+      <span class="hero-stat__val">15 min</span>
+      <span class="hero-stat__lbl">{{ 'howItWorks.hero.stat3' | translate }}</span>
+    </div>
   </div>
 </section>
 
-<!-- TABS BAR -->
+<!-- ── TABS ──────────────────────────────────────────────────────────────────── -->
 <div class="tabs-bar">
-  <button class="tab" [class.active]="activeTab === 'buyer'" (click)="switchTab('buyer')">
-    {{ 'howItWorks.tabs.buyer' | translate }}
+  <button class="tab" [class.active]="activeTab === 'buyer'"    (click)="switchTab('buyer')">
+    <span class="tab-icon">🛒</span>{{ 'howItWorks.tabs.buyer' | translate }}
   </button>
-  <button class="tab" [class.active]="activeTab === 'seller'" (click)="switchTab('seller')">
-    {{ 'howItWorks.tabs.seller' | translate }}
+  <button class="tab" [class.active]="activeTab === 'seller'"   (click)="switchTab('seller')">
+    <span class="tab-icon">🏷️</span>{{ 'howItWorks.tabs.seller' | translate }}
   </button>
-  <button class="tab" [class.active]="activeTab === 'private'" (click)="switchTab('private')">
-    {{ 'howItWorks.tabs.private' | translate }}
+  <button class="tab" [class.active]="activeTab === 'private'"  (click)="switchTab('private')">
+    <span class="tab-icon">🔒</span>{{ 'howItWorks.tabs.private' | translate }}
   </button>
   <button class="tab" [class.active]="activeTab === 'payments'" (click)="switchTab('payments')">
-    {{ 'howItWorks.tabs.payments' | translate }}
+    <span class="tab-icon">💳</span>{{ 'howItWorks.tabs.payments' | translate }}
   </button>
 </div>
 
-<!-- ── COMPRADOR ─────────────────────────────── -->
+<!-- ════════════════════════════════════════════════════════════════════════════
+     COMPRADOR
+     ════════════════════════════════════════════════════════════════════════════ -->
 @if (activeTab === 'buyer') {
-  <!-- Formatos -->
   <section class="hiw-section">
     <div class="hiw-wrap">
       <div class="section-eye">{{ 'howItWorks.buyer.s1.eye' | translate }}</div>
@@ -41,7 +52,7 @@
 
       <div class="format-grid">
         <div class="format-card">
-          <div class="fc-icon">🎨</div>
+          <div class="fc-icon">⚡</div>
           <h3 class="fc-title">{{ 'howItWorks.buyer.auction.title' | translate }}</h3>
           <p class="fc-desc">{{ 'howItWorks.buyer.auction.desc' | translate }}</p>
           <span class="fc-badge">{{ 'howItWorks.buyer.auction.commission' | translate }}</span>
@@ -68,7 +79,6 @@
     </div>
   </section>
 
-  <!-- Passo a passo -->
   <section class="hiw-section hiw-section--alt">
     <div class="hiw-wrap">
       <div class="section-eye">{{ 'howItWorks.buyer.s2.eye' | translate }}</div>
@@ -76,66 +86,71 @@
       <p class="section-intro">{{ 'howItWorks.buyer.s2.intro' | translate }}</p>
 
       <div class="steps">
-        <div class="step step--key">
-          <div class="step-left"><div class="step-num">1</div><div class="step-line"></div></div>
+        <div class="step">
+          <div class="step-num-col"><div class="step-num">01</div><div class="step-connector"></div></div>
           <div class="step-body">
             <h3 class="step-title">{{ 'howItWorks.buyer.step1.title' | translate }}</h3>
             <p class="step-desc">{{ 'howItWorks.buyer.step1.desc' | translate }}</p>
           </div>
         </div>
         <div class="step">
-          <div class="step-left"><div class="step-num">2</div><div class="step-line"></div></div>
+          <div class="step-num-col"><div class="step-num">02</div><div class="step-connector"></div></div>
           <div class="step-body">
             <h3 class="step-title">{{ 'howItWorks.buyer.step2.title' | translate }}</h3>
             <p class="step-desc">{{ 'howItWorks.buyer.step2.desc' | translate }}</p>
           </div>
         </div>
         <div class="step step--key">
-          <div class="step-left"><div class="step-num">3</div><div class="step-line"></div></div>
+          <div class="step-num-col"><div class="step-num">03</div><div class="step-connector"></div></div>
           <div class="step-body">
             <h3 class="step-title">{{ 'howItWorks.buyer.step3.title' | translate }}</h3>
             <p class="step-desc" [innerHTML]="'howItWorks.buyer.step3.desc' | translate"></p>
-            <div class="step-note step-note--gold">
-              <strong>{{ 'howItWorks.buyer.step3.noteTitle' | translate }}</strong>
-              {{ 'howItWorks.buyer.step3.note' | translate }}
-            </div>
-          </div>
-        </div>
-        <div class="step">
-          <div class="step-left"><div class="step-num">4</div><div class="step-line"></div></div>
-          <div class="step-body">
-            <h3 class="step-title">{{ 'howItWorks.buyer.step4.title' | translate }}</h3>
-            <p class="step-desc">{{ 'howItWorks.buyer.step4.desc' | translate }}</p>
-            <div class="step-note">
-              <strong>{{ 'howItWorks.buyer.step4.noteTitle' | translate }}</strong>
-              {{ 'howItWorks.buyer.step4.note' | translate }}
-            </div>
-          </div>
-        </div>
-        <div class="step">
-          <div class="step-left"><div class="step-num">5</div><div class="step-line"></div></div>
-          <div class="step-body">
-            <h3 class="step-title">{{ 'howItWorks.buyer.step5.title' | translate }}</h3>
-            <p class="step-desc">{{ 'howItWorks.buyer.step5.desc' | translate }}</p>
-            <div class="step-note step-note--green">
-              <strong>{{ 'howItWorks.buyer.step5.noteTitle' | translate }}</strong>
-              {{ 'howItWorks.buyer.step5.note' | translate }}
+            <div class="step-detail">
+              <span class="step-detail__icon">🔒</span>
+              <div class="step-detail__text">
+                <strong>{{ 'howItWorks.buyer.step3.noteTitle' | translate }}</strong>
+                {{ 'howItWorks.buyer.step3.note' | translate }}
+              </div>
             </div>
           </div>
         </div>
         <div class="step step--key">
-          <div class="step-left"><div class="step-num">6</div><div class="step-line"></div></div>
+          <div class="step-num-col"><div class="step-num">04</div><div class="step-connector"></div></div>
           <div class="step-body">
-            <h3 class="step-title">{{ 'howItWorks.buyer.step6.title' | translate }}</h3>
-            <p class="step-desc">{{ 'howItWorks.buyer.step6.desc' | translate }}</p>
-            <div class="step-note">
-              <strong>{{ 'howItWorks.buyer.step6.noteTitle' | translate }}</strong>
-              {{ 'howItWorks.buyer.step6.note' | translate }}
+            <h3 class="step-title">{{ 'howItWorks.buyer.step4.title' | translate }}</h3>
+            <p class="step-desc">{{ 'howItWorks.buyer.step4.desc' | translate }}</p>
+            <div class="step-detail">
+              <span class="step-detail__icon">ℹ️</span>
+              <div class="step-detail__text">
+                <strong>{{ 'howItWorks.buyer.step4.noteTitle' | translate }}</strong>
+                {{ 'howItWorks.buyer.step4.note' | translate }}
+              </div>
             </div>
           </div>
         </div>
         <div class="step">
-          <div class="step-left"><div class="step-num">7</div></div>
+          <div class="step-num-col"><div class="step-num">05</div><div class="step-connector"></div></div>
+          <div class="step-body">
+            <h3 class="step-title">{{ 'howItWorks.buyer.step5.title' | translate }}</h3>
+            <p class="step-desc">{{ 'howItWorks.buyer.step5.desc' | translate }}</p>
+            <div class="step-detail">
+              <span class="step-detail__icon">🛡️</span>
+              <div class="step-detail__text">
+                <strong>{{ 'howItWorks.buyer.step5.noteTitle' | translate }}</strong>
+                {{ 'howItWorks.buyer.step5.note' | translate }}
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num-col"><div class="step-num">06</div><div class="step-connector"></div></div>
+          <div class="step-body">
+            <h3 class="step-title">{{ 'howItWorks.buyer.step6.title' | translate }}</h3>
+            <p class="step-desc">{{ 'howItWorks.buyer.step6.desc' | translate }}</p>
+          </div>
+        </div>
+        <div class="step step--last">
+          <div class="step-num-col"><div class="step-num">07</div></div>
           <div class="step-body">
             <h3 class="step-title">{{ 'howItWorks.buyer.step7.title' | translate }}</h3>
             <p class="step-desc">{{ 'howItWorks.buyer.step7.desc' | translate }}</p>
@@ -145,7 +160,6 @@
     </div>
   </section>
 
-  <!-- FAQ comprador -->
   <section class="hiw-section">
     <div class="hiw-wrap">
       <div class="section-eye">{{ 'howItWorks.faq.eye' | translate }}</div>
@@ -153,13 +167,11 @@
       <div class="faq">
         @for (i of buyerFaqs; track i) {
           <div class="faq-item" [class.open]="isFaqOpen('buyer', i)" (click)="toggleFaq('buyer', i)">
-            <div class="faq-q">
+            <button class="faq-q">
               <span>{{ 'howItWorks.buyer.faq.q' + i | translate }}</span>
-              <span class="faq-chevron">▼</span>
-            </div>
-            <div class="faq-a">
-              <p [innerHTML]="'howItWorks.buyer.faq.a' + i | translate"></p>
-            </div>
+              <span class="faq-chevron">+</span>
+            </button>
+            <div class="faq-a"><p [innerHTML]="'howItWorks.buyer.faq.a' + i | translate"></p></div>
           </div>
         }
       </div>
@@ -167,46 +179,47 @@
   </section>
 }
 
-<!-- ── VENDEDOR ─────────────────────────────── -->
+<!-- ════════════════════════════════════════════════════════════════════════════
+     VENDEDOR
+     ════════════════════════════════════════════════════════════════════════════ -->
 @if (activeTab === 'seller') {
-  <!-- Comissões -->
   <section class="hiw-section">
     <div class="hiw-wrap">
       <div class="section-eye">{{ 'howItWorks.seller.s1.eye' | translate }}</div>
       <h2 class="section-title"><strong>{{ 'howItWorks.seller.s1.title' | translate }}</strong> {{ 'howItWorks.seller.s1.title2' | translate }}</h2>
       <p class="section-intro">{{ 'howItWorks.seller.s1.intro' | translate }}</p>
 
-      <table class="comm-table">
-        <thead>
-          <tr>
-            <th>{{ 'howItWorks.seller.comm.th1' | translate }}</th>
-            <th>{{ 'howItWorks.seller.comm.th2' | translate }}</th>
-            <th>{{ 'howItWorks.seller.comm.th3' | translate }}</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td><strong>{{ 'howItWorks.seller.comm.r1' | translate }}</strong></td>
-            <td><span class="comm-rate">3,5%</span></td>
-            <td>{{ 'howItWorks.seller.comm.ex1' | translate }}</td>
-          </tr>
-          <tr>
-            <td><strong>{{ 'howItWorks.seller.comm.r2' | translate }}</strong></td>
-            <td><span class="comm-rate">6%</span></td>
-            <td>{{ 'howItWorks.seller.comm.ex2' | translate }}</td>
-          </tr>
-          <tr>
-            <td><strong>{{ 'howItWorks.seller.comm.r3' | translate }}</strong></td>
-            <td><span class="comm-rate">3,5%</span></td>
-            <td>{{ 'howItWorks.seller.comm.ex3' | translate }}</td>
-          </tr>
-        </tbody>
-      </table>
+      <!-- Commission comparison cards -->
+      <div class="commission-compare">
+        <div class="commission-card">
+          <span class="commission-badge commission-badge--standard">Standard</span>
+          <div class="commission-rate">3.5<span>%</span></div>
+          <div class="commission-type">{{ 'howItWorks.seller.comm.r1' | translate }}</div>
+          <div class="commission-desc">{{ 'howItWorks.seller.comm.ex1' | translate }}</div>
+          <ul class="commission-features">
+            <li>{{ 'howItWorks.buyer.auction.title' | translate }}</li>
+            <li>{{ 'howItWorks.buyer.offer.title' | translate }}</li>
+            <li>{{ 'howItWorks.seller.card.noListingFee' | translate }}</li>
+            <li>{{ 'howItWorks.seller.card.noCancellation' | translate }}</li>
+          </ul>
+        </div>
+        <div class="commission-card commission-card--featured">
+          <span class="commission-badge commission-badge--premium">{{ 'howItWorks.seller.card2.badge' | translate }}</span>
+          <div class="commission-rate">6<span>%</span></div>
+          <div class="commission-type">{{ 'howItWorks.seller.comm.r2' | translate }}</div>
+          <div class="commission-desc">{{ 'howItWorks.seller.comm.ex2' | translate }}</div>
+          <ul class="commission-features">
+            <li>{{ 'howItWorks.buyer.auction.title' | translate }}</li>
+            <li>{{ 'howItWorks.seller.card2.f2' | translate }}</li>
+            <li>{{ 'howItWorks.seller.card2.f3' | translate }}</li>
+            <li>{{ 'howItWorks.seller.card2.f4' | translate }}</li>
+          </ul>
+        </div>
+      </div>
       <p class="comm-note">{{ 'howItWorks.seller.comm.note' | translate }}</p>
     </div>
   </section>
 
-  <!-- Passo a passo vendedor -->
   <section class="hiw-section hiw-section--alt">
     <div class="hiw-wrap">
       <div class="section-eye">{{ 'howItWorks.seller.s2.eye' | translate }}</div>
@@ -215,64 +228,82 @@
 
       <div class="steps">
         <div class="step step--key">
-          <div class="step-left"><div class="step-num">1</div><div class="step-line"></div></div>
+          <div class="step-num-col"><div class="step-num">01</div><div class="step-connector"></div></div>
           <div class="step-body">
             <h3 class="step-title">{{ 'howItWorks.seller.step1.title' | translate }}</h3>
             <p class="step-desc">{{ 'howItWorks.seller.step1.desc' | translate }}</p>
           </div>
         </div>
         <div class="step step--key">
-          <div class="step-left"><div class="step-num">2</div><div class="step-line"></div></div>
+          <div class="step-num-col"><div class="step-num">02</div><div class="step-connector"></div></div>
           <div class="step-body">
             <h3 class="step-title">{{ 'howItWorks.seller.step2.title' | translate }}</h3>
             <p class="step-desc">{{ 'howItWorks.seller.step2.desc' | translate }}</p>
-            <div class="step-note step-note--gold">
-              <strong>{{ 'howItWorks.seller.step2.noteTitle' | translate }}</strong>
-              {{ 'howItWorks.seller.step2.note' | translate }}
+            <div class="step-detail">
+              <span class="step-detail__icon">💡</span>
+              <div class="step-detail__text">
+                <strong>{{ 'howItWorks.seller.step2.noteTitle' | translate }}</strong>
+                {{ 'howItWorks.seller.step2.note' | translate }}
+              </div>
             </div>
           </div>
         </div>
         <div class="step">
-          <div class="step-left"><div class="step-num">3</div><div class="step-line"></div></div>
+          <div class="step-num-col"><div class="step-num">03</div><div class="step-connector"></div></div>
           <div class="step-body">
             <h3 class="step-title">{{ 'howItWorks.seller.step3.title' | translate }}</h3>
             <p class="step-desc" [innerHTML]="'howItWorks.seller.step3.desc' | translate"></p>
           </div>
         </div>
         <div class="step">
-          <div class="step-left"><div class="step-num">4</div><div class="step-line"></div></div>
+          <div class="step-num-col"><div class="step-num">04</div><div class="step-connector"></div></div>
           <div class="step-body">
             <h3 class="step-title">{{ 'howItWorks.seller.step4.title' | translate }}</h3>
             <p class="step-desc">{{ 'howItWorks.seller.step4.desc' | translate }}</p>
           </div>
         </div>
         <div class="step step--key">
-          <div class="step-left"><div class="step-num">5</div><div class="step-line"></div></div>
+          <div class="step-num-col"><div class="step-num">05</div><div class="step-connector"></div></div>
           <div class="step-body">
             <h3 class="step-title">{{ 'howItWorks.seller.step5.title' | translate }}</h3>
             <p class="step-desc">{{ 'howItWorks.seller.step5.desc' | translate }}</p>
-            <div class="step-note">
-              <strong>{{ 'howItWorks.seller.step5.noteTitle' | translate }}</strong>
-              {{ 'howItWorks.seller.step5.note' | translate }}
+            <div class="step-detail">
+              <span class="step-detail__icon">💰</span>
+              <div class="step-detail__text">
+                <strong>{{ 'howItWorks.seller.step5.noteTitle' | translate }}</strong>
+                {{ 'howItWorks.seller.step5.note' | translate }}
+              </div>
             </div>
           </div>
         </div>
-        <div class="step">
-          <div class="step-left"><div class="step-num">6</div></div>
+        <div class="step step--last">
+          <div class="step-num-col"><div class="step-num">06</div></div>
           <div class="step-body">
             <h3 class="step-title">{{ 'howItWorks.seller.step6.title' | translate }}</h3>
             <p class="step-desc">{{ 'howItWorks.seller.step6.desc' | translate }}</p>
-            <div class="step-note step-note--green">
-              <strong>{{ 'howItWorks.seller.step6.noteTitle' | translate }}</strong>
-              {{ 'howItWorks.seller.step6.note' | translate }}
+            <div class="step-detail step-detail--green">
+              <span class="step-detail__icon">🎉</span>
+              <div class="step-detail__text">
+                <strong>{{ 'howItWorks.seller.step6.noteTitle' | translate }}</strong>
+                {{ 'howItWorks.seller.step6.note' | translate }}
+              </div>
             </div>
           </div>
+        </div>
+      </div>
+
+      <!-- Tip highlight -->
+      <div class="highlight">
+        <div class="highlight__bar"></div>
+        <div class="highlight__body">
+          <div class="highlight__tag">{{ 'howItWorks.seller.tip.tag' | translate }}</div>
+          <div class="highlight__title">{{ 'howItWorks.seller.tip.title' | translate }}</div>
+          <p class="highlight__desc">{{ 'howItWorks.seller.tip.desc' | translate }}</p>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- FAQ vendedor -->
   <section class="hiw-section">
     <div class="hiw-wrap">
       <div class="section-eye">{{ 'howItWorks.faq.eye' | translate }}</div>
@@ -280,13 +311,11 @@
       <div class="faq">
         @for (i of sellerFaqs; track i) {
           <div class="faq-item" [class.open]="isFaqOpen('seller', i)" (click)="toggleFaq('seller', i)">
-            <div class="faq-q">
+            <button class="faq-q">
               <span>{{ 'howItWorks.seller.faq.q' + i | translate }}</span>
-              <span class="faq-chevron">▼</span>
-            </div>
-            <div class="faq-a">
-              <p [innerHTML]="'howItWorks.seller.faq.a' + i | translate"></p>
-            </div>
+              <span class="faq-chevron">+</span>
+            </button>
+            <div class="faq-a"><p [innerHTML]="'howItWorks.seller.faq.a' + i | translate"></p></div>
           </div>
         }
       </div>
@@ -294,7 +323,9 @@
   </section>
 }
 
-<!-- ── SALAS PRIVADAS ─────────────────────────── -->
+<!-- ════════════════════════════════════════════════════════════════════════════
+     SALA PRIVADA
+     ════════════════════════════════════════════════════════════════════════════ -->
 @if (activeTab === 'private') {
   <section class="hiw-section">
     <div class="hiw-wrap">
@@ -302,22 +333,50 @@
       <h2 class="section-title"><strong>{{ 'howItWorks.private.title' | translate }}</strong> {{ 'howItWorks.private.title2' | translate }}</h2>
       <p class="section-intro">{{ 'howItWorks.private.intro' | translate }}</p>
 
-      <!-- Private Room Visual -->
-      <div class="pr-visual">
-        <div class="pr-circle">
-          <div class="pr-ring"></div>
-          <div class="pr-center">
-            <div class="pr-timer">{{ prTimerStr }}</div>
-            <div class="pr-timer-label">{{ 'howItWorks.private.timerLabel' | translate }}</div>
+      <!-- Live demo -->
+      <div class="pr-demo">
+        <div class="pr-demo__header">
+          <div class="pr-demo__title">
+            <div class="pr-live-dot"></div>
+            {{ 'howItWorks.private.demo.header' | translate }}
           </div>
-          @for (seat of prSeats; track $index) {
-            <div class="pr-seat" [class.on]="seat">{{ ['MS','JF','RC','AP','LT'][$index] }}</div>
-          }
+          <span class="pr-status-badge">{{ 'howItWorks.private.demo.status' | translate }}</span>
         </div>
-        <div class="pr-stats">
-          <div class="pr-stat"><span class="pr-stat-val">2–5</span><span class="pr-stat-label">{{ 'howItWorks.private.stat1' | translate }}</span></div>
-          <div class="pr-stat"><span class="pr-stat-val">60s</span><span class="pr-stat-label">{{ 'howItWorks.private.stat2' | translate }}</span></div>
-          <div class="pr-stat"><span class="pr-stat-val">Auto</span><span class="pr-stat-label">{{ 'howItWorks.private.stat3' | translate }}</span></div>
+        <div class="pr-demo__body">
+          <div class="pr-item-row">
+            <div class="pr-item-img">⌚</div>
+            <div class="pr-item-info">
+              <div class="pr-item-name">{{ 'howItWorks.private.demo.itemName' | translate }}</div>
+              <div class="pr-item-sub">{{ 'howItWorks.private.demo.itemSub' | translate }}</div>
+            </div>
+            <div class="pr-current-bid">
+              <div class="pr-bid-label">{{ 'howItWorks.private.demo.bidLabel' | translate }}</div>
+              <div class="pr-bid-val" [class.pr-bid-val--pulse]="prBidPulse">{{ prBidFormatted }}</div>
+            </div>
+          </div>
+
+          <div class="pr-seats-section">
+            <div class="pr-seats-label">{{ 'howItWorks.private.demo.seatsLabel' | translate }}</div>
+            <div class="pr-seats">
+              @for (accepted of prSeats; track $index) {
+                <div class="pr-seat" [class.pr-seat--accepted]="accepted" [class.pr-seat--waiting]="!accepted">
+                  🤝
+                  @if (accepted) { <div class="pr-seat__check">✓</div> }
+                </div>
+              }
+            </div>
+          </div>
+
+          <div class="pr-timer-row">
+            <div class="pr-timer-info">
+              <span class="pr-timer-icon">⏱</span>
+              <div>
+                <div class="pr-timer-label">{{ 'howItWorks.private.demo.timerLabel' | translate }}</div>
+                <div class="pr-timer-val" [class.pr-timer-val--urgent]="prTimerUrgent">{{ prTimerStr }}</div>
+              </div>
+            </div>
+            <div class="pr-extend-note">{{ 'howItWorks.private.demo.extendNote' | translate }}</div>
+          </div>
         </div>
       </div>
     </div>
@@ -330,45 +389,51 @@
 
       <div class="steps">
         <div class="step">
-          <div class="step-left"><div class="step-num">1</div><div class="step-line"></div></div>
+          <div class="step-num-col"><div class="step-num">01</div><div class="step-connector"></div></div>
           <div class="step-body">
             <h3 class="step-title">{{ 'howItWorks.private.step1.title' | translate }}</h3>
             <p class="step-desc">{{ 'howItWorks.private.step1.desc' | translate }}</p>
           </div>
         </div>
         <div class="step step--key">
-          <div class="step-left"><div class="step-num">2</div><div class="step-line"></div></div>
+          <div class="step-num-col"><div class="step-num">02</div><div class="step-connector"></div></div>
           <div class="step-body">
             <h3 class="step-title">{{ 'howItWorks.private.step2.title' | translate }}</h3>
             <p class="step-desc">{{ 'howItWorks.private.step2.desc' | translate }}</p>
           </div>
         </div>
         <div class="step step--key">
-          <div class="step-left"><div class="step-num">3</div><div class="step-line"></div></div>
+          <div class="step-num-col"><div class="step-num">03</div><div class="step-connector"></div></div>
           <div class="step-body">
             <h3 class="step-title">{{ 'howItWorks.private.step3.title' | translate }}</h3>
             <p class="step-desc">{{ 'howItWorks.private.step3.desc' | translate }}</p>
-            <div class="step-note">
-              <strong>{{ 'howItWorks.private.step3.noteTitle' | translate }}</strong>
-              {{ 'howItWorks.private.step3.note' | translate }}
+            <div class="step-detail">
+              <span class="step-detail__icon">ℹ️</span>
+              <div class="step-detail__text">
+                <strong>{{ 'howItWorks.private.step3.noteTitle' | translate }}</strong>
+                {{ 'howItWorks.private.step3.note' | translate }}
+              </div>
             </div>
           </div>
         </div>
         <div class="step">
-          <div class="step-left"><div class="step-num">4</div><div class="step-line"></div></div>
+          <div class="step-num-col"><div class="step-num">04</div><div class="step-connector"></div></div>
           <div class="step-body">
             <h3 class="step-title">{{ 'howItWorks.private.step4.title' | translate }}</h3>
             <p class="step-desc">{{ 'howItWorks.private.step4.desc' | translate }}</p>
           </div>
         </div>
-        <div class="step">
-          <div class="step-left"><div class="step-num">5</div></div>
+        <div class="step step--last">
+          <div class="step-num-col"><div class="step-num">05</div></div>
           <div class="step-body">
             <h3 class="step-title">{{ 'howItWorks.private.step5.title' | translate }}</h3>
             <p class="step-desc">{{ 'howItWorks.private.step5.desc' | translate }}</p>
-            <div class="step-note step-note--gold">
-              <strong>{{ 'howItWorks.private.step5.noteTitle' | translate }}</strong>
-              {{ 'howItWorks.private.step5.note' | translate }}
+            <div class="step-detail step-detail--gold">
+              <span class="step-detail__icon">⚠️</span>
+              <div class="step-detail__text">
+                <strong>{{ 'howItWorks.private.step5.noteTitle' | translate }}</strong>
+                {{ 'howItWorks.private.step5.note' | translate }}
+              </div>
             </div>
           </div>
         </div>
@@ -398,9 +463,29 @@
       </div>
     </div>
   </section>
+
+  <section class="hiw-section">
+    <div class="hiw-wrap">
+      <div class="section-eye">{{ 'howItWorks.faq.eye' | translate }}</div>
+      <h2 class="section-title" style="margin-bottom:28px"><strong>{{ 'howItWorks.faq.private.title' | translate }}</strong></h2>
+      <div class="faq">
+        @for (i of privateFaqs; track i) {
+          <div class="faq-item" [class.open]="isFaqOpen('private', i)" (click)="toggleFaq('private', i)">
+            <button class="faq-q">
+              <span>{{ 'howItWorks.private.faq.q' + i | translate }}</span>
+              <span class="faq-chevron">+</span>
+            </button>
+            <div class="faq-a"><p [innerHTML]="'howItWorks.private.faq.a' + i | translate"></p></div>
+          </div>
+        }
+      </div>
+    </div>
+  </section>
 }
 
-<!-- ── PAGAMENTO & SEGURANÇA ─────────────────── -->
+<!-- ════════════════════════════════════════════════════════════════════════════
+     PAGAMENTOS
+     ════════════════════════════════════════════════════════════════════════════ -->
 @if (activeTab === 'payments') {
   <section class="hiw-section">
     <div class="hiw-wrap">
@@ -408,6 +493,94 @@
       <h2 class="section-title"><strong>{{ 'howItWorks.payments.title' | translate }}</strong> {{ 'howItWorks.payments.title2' | translate }}</h2>
       <p class="section-intro">{{ 'howItWorks.payments.intro' | translate }}</p>
 
+      <!-- Payment flow -->
+      <div class="pay-flow">
+        <div class="pay-flow__step">
+          <div class="pay-flow__icon">🏆</div>
+          <div class="pay-flow__title">{{ 'howItWorks.payments.flow.s1.title' | translate }}</div>
+          <div class="pay-flow__sub">{{ 'howItWorks.payments.flow.s1.sub' | translate }}</div>
+          <div class="pay-flow__time">T+0h</div>
+        </div>
+        <div class="pay-flow__step">
+          <div class="pay-flow__icon">💳</div>
+          <div class="pay-flow__title">{{ 'howItWorks.payments.flow.s2.title' | translate }}</div>
+          <div class="pay-flow__sub">{{ 'howItWorks.payments.flow.s2.sub' | translate }}</div>
+          <div class="pay-flow__time">T+24h</div>
+        </div>
+        <div class="pay-flow__step">
+          <div class="pay-flow__icon">📦</div>
+          <div class="pay-flow__title">{{ 'howItWorks.payments.flow.s3.title' | translate }}</div>
+          <div class="pay-flow__sub">{{ 'howItWorks.payments.flow.s3.sub' | translate }}</div>
+          <div class="pay-flow__time">T+5d</div>
+        </div>
+        <div class="pay-flow__step">
+          <div class="pay-flow__icon">✅</div>
+          <div class="pay-flow__title">{{ 'howItWorks.payments.flow.s4.title' | translate }}</div>
+          <div class="pay-flow__sub">{{ 'howItWorks.payments.flow.s4.sub' | translate }}</div>
+          <div class="pay-flow__time">T+7d</div>
+        </div>
+        <div class="pay-flow__step">
+          <div class="pay-flow__icon">💸</div>
+          <div class="pay-flow__title">{{ 'howItWorks.payments.flow.s5.title' | translate }}</div>
+          <div class="pay-flow__sub">{{ 'howItWorks.payments.flow.s5.sub' | translate }}</div>
+          <div class="pay-flow__time">T+9d</div>
+        </div>
+      </div>
+
+      <!-- Payment table -->
+      <div class="pay-table">
+        <div class="pay-table__row pay-table__row--header">
+          <span>{{ 'howItWorks.payments.table.col1' | translate }}</span>
+          <span>{{ 'howItWorks.payments.table.col2' | translate }}</span>
+        </div>
+        <div class="pay-table__row">
+          <div>
+            <div class="pay-table__label">💳 {{ 'howItWorks.payments.table.r1.label' | translate }}</div>
+            <div class="pay-table__sub">{{ 'howItWorks.payments.table.r1.sub' | translate }}</div>
+          </div>
+          <div class="pay-table__val">{{ 'howItWorks.payments.table.r1.val' | translate }}</div>
+        </div>
+        <div class="pay-table__row">
+          <div>
+            <div class="pay-table__label">🏦 {{ 'howItWorks.payments.table.r2.label' | translate }}</div>
+            <div class="pay-table__sub">{{ 'howItWorks.payments.table.r2.sub' | translate }}</div>
+          </div>
+          <div class="pay-table__val">{{ 'howItWorks.payments.table.r2.val' | translate }}</div>
+        </div>
+        <div class="pay-table__row">
+          <div>
+            <div class="pay-table__label">💸 {{ 'howItWorks.payments.table.r3.label' | translate }}</div>
+            <div class="pay-table__sub">{{ 'howItWorks.payments.table.r3.sub' | translate }}</div>
+          </div>
+          <div class="pay-table__val pay-table__val--green">{{ 'howItWorks.payments.table.r3.val' | translate }}</div>
+        </div>
+        <div class="pay-table__row">
+          <div>
+            <div class="pay-table__label">🔒 {{ 'howItWorks.payments.table.r4.label' | translate }}</div>
+            <div class="pay-table__sub">{{ 'howItWorks.payments.table.r4.sub' | translate }}</div>
+          </div>
+          <div class="pay-table__val">{{ 'howItWorks.payments.table.r4.val' | translate }}</div>
+        </div>
+        <div class="pay-table__row">
+          <div>
+            <div class="pay-table__label">↩ {{ 'howItWorks.payments.table.r5.label' | translate }}</div>
+            <div class="pay-table__sub">{{ 'howItWorks.payments.table.r5.sub' | translate }}</div>
+          </div>
+          <div class="pay-table__val pay-table__val--green">{{ 'howItWorks.payments.table.r5.val' | translate }}</div>
+        </div>
+        <div class="pay-table__row">
+          <div>
+            <div class="pay-table__label">🛡️ {{ 'howItWorks.payments.table.r6.label' | translate }}</div>
+            <div class="pay-table__sub">{{ 'howItWorks.payments.table.r6.sub' | translate }}</div>
+          </div>
+          <div class="pay-table__val pay-table__val--green">{{ 'howItWorks.payments.table.r6.val' | translate }}</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="hiw-section hiw-section--alt">
+    <div class="hiw-wrap">
       <div class="info-grid">
         <div class="info-box info-box--green">
           <div class="ib-icon">🔒</div>
@@ -433,73 +606,6 @@
     </div>
   </section>
 
-  <!-- Timeline -->
-  <section class="hiw-section hiw-section--alt">
-    <div class="hiw-wrap">
-      <div class="section-eye">{{ 'howItWorks.payments.tl.eye' | translate }}</div>
-      <h2 class="section-title" style="margin-bottom:36px"><strong>{{ 'howItWorks.payments.tl.title' | translate }}</strong> {{ 'howItWorks.payments.tl.title2' | translate }}</h2>
-
-      <div class="timeline">
-        <div class="tl-item tl-item--active">
-          <div class="tl-left">
-            <div class="tl-phase">{{ 'howItWorks.payments.tl.p1.phase' | translate }}</div>
-            <div class="tl-deadline">{{ 'howItWorks.payments.tl.p1.deadline' | translate }}</div>
-          </div>
-          <div class="tl-line-wrap"><div class="tl-dot"></div><div class="tl-connector"></div></div>
-          <div class="tl-right">
-            <div class="tl-title">{{ 'howItWorks.payments.tl.p1.title' | translate }}</div>
-            <p class="tl-desc" [innerHTML]="'howItWorks.payments.tl.p1.desc' | translate"></p>
-          </div>
-        </div>
-        <div class="tl-item">
-          <div class="tl-left">
-            <div class="tl-phase">{{ 'howItWorks.payments.tl.p2.phase' | translate }}</div>
-            <div class="tl-deadline">{{ 'howItWorks.payments.tl.p2.deadline' | translate }}</div>
-          </div>
-          <div class="tl-line-wrap"><div class="tl-dot"></div><div class="tl-connector"></div></div>
-          <div class="tl-right">
-            <div class="tl-title">{{ 'howItWorks.payments.tl.p2.title' | translate }}</div>
-            <p class="tl-desc" [innerHTML]="'howItWorks.payments.tl.p2.desc' | translate"></p>
-          </div>
-        </div>
-        <div class="tl-item">
-          <div class="tl-left">
-            <div class="tl-phase">{{ 'howItWorks.payments.tl.p3.phase' | translate }}</div>
-            <div class="tl-deadline">{{ 'howItWorks.payments.tl.p3.deadline' | translate }}</div>
-          </div>
-          <div class="tl-line-wrap"><div class="tl-dot"></div><div class="tl-connector"></div></div>
-          <div class="tl-right">
-            <div class="tl-title">{{ 'howItWorks.payments.tl.p3.title' | translate }}</div>
-            <p class="tl-desc" [innerHTML]="'howItWorks.payments.tl.p3.desc' | translate"></p>
-          </div>
-        </div>
-        <div class="tl-item tl-item--warn">
-          <div class="tl-left">
-            <div class="tl-phase">{{ 'howItWorks.payments.tl.p4.phase' | translate }}</div>
-            <div class="tl-deadline">{{ 'howItWorks.payments.tl.p4.deadline' | translate }}</div>
-          </div>
-          <div class="tl-line-wrap"><div class="tl-dot"></div><div class="tl-connector"></div></div>
-          <div class="tl-right">
-            <div class="tl-title">{{ 'howItWorks.payments.tl.p4.title' | translate }}</div>
-            <p class="tl-desc" [innerHTML]="'howItWorks.payments.tl.p4.desc' | translate"></p>
-          </div>
-        </div>
-        <div class="tl-item tl-item--done">
-          <div class="tl-left">
-            <div class="tl-phase">{{ 'howItWorks.payments.tl.p5.phase' | translate }}</div>
-            <div class="tl-deadline">{{ 'howItWorks.payments.tl.p5.deadline' | translate }}</div>
-          </div>
-          <div class="tl-line-wrap"><div class="tl-dot"></div></div>
-          <div class="tl-right">
-            <div class="tl-title">{{ 'howItWorks.payments.tl.p5.title' | translate }}</div>
-            <p class="tl-desc" [innerHTML]="'howItWorks.payments.tl.p5.desc' | translate"></p>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- FAQ pagamentos -->
   <section class="hiw-section">
     <div class="hiw-wrap">
       <div class="section-eye">{{ 'howItWorks.faq.eye' | translate }}</div>
@@ -507,13 +613,11 @@
       <div class="faq">
         @for (i of paymentsFaqs; track i) {
           <div class="faq-item" [class.open]="isFaqOpen('payments', i)" (click)="toggleFaq('payments', i)">
-            <div class="faq-q">
+            <button class="faq-q">
               <span>{{ 'howItWorks.payments.faq.q' + i | translate }}</span>
-              <span class="faq-chevron">▼</span>
-            </div>
-            <div class="faq-a">
-              <p [innerHTML]="'howItWorks.payments.faq.a' + i | translate"></p>
-            </div>
+              <span class="faq-chevron">+</span>
+            </button>
+            <div class="faq-a"><p [innerHTML]="'howItWorks.payments.faq.a' + i | translate"></p></div>
           </div>
         }
       </div>
@@ -521,9 +625,10 @@
   </section>
 }
 
-<!-- CTA -->
+<!-- ── CTA ───────────────────────────────────────────────────────────────────── -->
 <section class="hiw-cta">
   <div class="hiw-wrap hiw-wrap--center">
+    <div class="hiw-cta__eye">{{ 'howItWorks.cta.eye' | translate }}</div>
     <h2 class="hiw-cta__title">{{ 'howItWorks.cta.title' | translate }}<br><strong>{{ 'howItWorks.cta.title2' | translate }}</strong></h2>
     <p class="hiw-cta__sub">{{ 'howItWorks.cta.sub' | translate }}</p>
     <div class="hiw-hero__cta">

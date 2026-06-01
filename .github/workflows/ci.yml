@@ -69,7 +69,7 @@ jobs:
         timeout-minutes: 5
         run: |
           cd frontend
-          npm ci
+          npm ci --legacy-peer-deps
 
       - name: Build frontend (acts as the smoke test until karma is set up)
         timeout-minutes: 10

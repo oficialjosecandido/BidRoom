@@ -2150,7 +2150,10 @@
       "title2": "end to end.",
       "sub": "We explain exactly what happens at every step — for buyers, for sellers, and for everyone taking part in Private Rooms.",
       "ctaBuyer": "I'm a buyer",
-      "ctaSeller": "I'm a seller"
+      "ctaSeller": "I'm a seller",
+      "stat1": "Auction formats",
+      "stat2": "Standard commission",
+      "stat3": "Private Room"
     },
     "tabs": {
       "buyer": "Buyer",
@@ -2304,6 +2307,21 @@
         "a3": "You can cancel a listing with no bids or offers before the deadline. Once there are bids or offers, cancellation may result in a reputation penalty. You can never cancel after the auction has ended with a winner determined.",
         "q4": "What items can I not list?",
         "a4": "Prohibited: live animals, controlled substances, weapons, and any item illegal in Portugal. BidRoom uses automatic moderation (Azure AI Content Safety) to detect and block these listings before they go live."
+      },
+      "card": {
+        "noListingFee": "No listing fee",
+        "noCancellation": "No cancellation fee"
+      },
+      "card2": {
+        "badge": "With Private Room",
+        "f2": "Exclusive post-auction round",
+        "f3": "Up to 5 invited bidders",
+        "f4": "Guaranteed automatic winner"
+      },
+      "tip": {
+        "tag": "Tip for sellers",
+        "title": "Activate Private Room to maximise the final sale price",
+        "desc": "Auctions with a Private Room close on average 30% above the last public bid. The buyer who loses the main auction is often willing to pay more in an exclusive round — the Private Room captures that value for you."
       }
     },
     "private": {
@@ -2358,6 +2376,26 @@
       "audit": {
         "title": "Full audit trail",
         "text": "All actions in a Private Room are logged in the internal audit system — invitations, acceptances, bids, and closing. Available for review in case of dispute."
+      },
+      "demo": {
+        "header": "Private Room – live demonstration",
+        "status": "ACTIVE",
+        "itemName": "Rolex Submariner 5513 – 1972",
+        "itemSub": "Auction closed · Private Room in progress",
+        "bidLabel": "Current bid",
+        "seatsLabel": "Platinum Bidders in the room",
+        "timerLabel": "Time remaining",
+        "extendNote": "Each bid extends by 60 seconds"
+      },
+      "faq": {
+        "q0": "Can I decline a Private Room invitation?",
+        "a0": "Yes. You can decline or ignore the invitation within 15 minutes. If fewer than 2 invited bidders remain active, the room may close or the last accepted bidder wins automatically.",
+        "q1": "What if only one bidder accepts?",
+        "a1": "If only 1 bidder accepts and the rest do not respond within the deadline, that bidder wins automatically at the value of their original bid. The room cannot exist with only one active participant.",
+        "q2": "Can I see who else is in the room?",
+        "a2": "You can see how many participants are in the room and their status, but not their names during the round. After closing, the winner is announced.",
+        "q3": "Do I have to bid if I accept the invitation?",
+        "a3": "You are not obliged to bid, but by accepting the invitation you are part of the room. You can enter and not bid — in that case another participant wins if they exceed your original bid."
       }
     },
     "payments": {
@@ -2425,6 +2463,62 @@
         "a2": "Yes. BidRoom supports all payment methods available via Stripe in the Portuguese market — including Visa/Mastercard cards, MB Way, Multibanco (reference) and Apple/Google Pay.",
         "q3": "What is the reputation system?",
         "a3": "Each user has a reputation score from 0 to 100, calculated automatically based on received reviews, completed transactions and disputes. A score ≥ 60 with no lost disputes is required to be eligible for Private Rooms."
+      },
+      "flow": {
+        "s1": {
+          "title": "Auction won",
+          "sub": "Buyer wins"
+        },
+        "s2": {
+          "title": "Payment",
+          "sub": "Secure checkout"
+        },
+        "s3": {
+          "title": "Shipping",
+          "sub": "5 business days"
+        },
+        "s4": {
+          "title": "Delivery",
+          "sub": "Buyer confirms"
+        },
+        "s5": {
+          "title": "Payout",
+          "sub": "Seller's IBAN"
+        }
+      },
+      "table": {
+        "col1": "Description",
+        "col2": "Value",
+        "r1": {
+          "label": "Credit / debit card",
+          "sub": "Visa, Mastercard, European cards",
+          "val": "Included"
+        },
+        "r2": {
+          "label": "Bank transfer",
+          "sub": "SEPA, Multibanco reference",
+          "val": "Included"
+        },
+        "r3": {
+          "label": "Payout to seller",
+          "sub": "SEPA transfer to registered IBAN",
+          "val": "Free"
+        },
+        "r4": {
+          "label": "Escrow period",
+          "sub": "Funds held until delivery confirmed",
+          "val": "Automatic"
+        },
+        "r5": {
+          "label": "Refund on cancellation",
+          "sub": "Shipping not done within 5 business days",
+          "val": "Full"
+        },
+        "r6": {
+          "label": "Dispute protection",
+          "sub": "BidRoom mediation – CNIACC – Court",
+          "val": "Included"
+        }
       }
     },
     "faq": {
@@ -2439,6 +2533,9 @@
       },
       "payments": {
         "title": "Payment & Security"
+      },
+      "private": {
+        "title": "Frequently asked questions – Private Room"
       }
     },
     "cta": {
@@ -2446,7 +2543,8 @@
       "title2": "It's free.",
       "sub": "Create your account in under 2 minutes. No membership fees, no surprises.",
       "btn1": "Create free account",
-      "btn2": "Browse live auctions"
+      "btn2": "Browse live auctions",
+      "eye": "Ready to start?"
     }
   },
   "contact": {
@@ -3053,7 +3151,7 @@
       "eyebrow": "Terms of Use",
       "title": "General terms and conditions of platform use",
       "updated": "Last updated: 1 May 2025",
-      "intro": "By using BidRoom.pt, you accept these Terms of Use. Please read them carefully. If you have questions, contact us at <a href=\"mailto:legal@bidroom.pt\">legal@bidroom.pt</a>.",
+      "intro": "By using BidRoom.pt, you accept these Terms of Use. Please read them carefully. If you have questions, contact us at <a href=\"mailto:contact@bidroom.pt\">contact@bidroom.pt</a>.",
       "h1": "1. Who we are",
       "h1p1": "BidRoom.pt is an online auction marketplace operated by <strong>BidRoom Unipessoal Lda</strong>, based in Lisbon, Portugal, registered with the Lisbon Commercial Registry. BidRoom acts as a technology intermediary between buyers and sellers and is not a contracting party in transactions on the platform.",
       "h2": "2. Eligibility",
@@ -3090,7 +3188,7 @@
       "h9li1": "<strong>Automatic suspension</strong> — whenever a dispute is opened, both accounts involved are automatically suspended until resolution.",
       "h9li2": "<strong>Administrative suspension</strong> — in case of suspected fraud, breach of these Terms, or activity that puts other users at risk.",
       "h9li3": "<strong>Permanent closure</strong> — in case of serious or repeated violations, or at the user's own request.",
-      "h9p2": "Suspended users are notified by email and may challenge the decision via <a href=\"mailto:legal@bidroom.pt\">legal@bidroom.pt</a>. Transactions in progress at the time of suspension are handled case by case by BidRoom.",
+      "h9p2": "Suspended users are notified by email and may challenge the decision via <a href=\"mailto:contact@bidroom.pt\">contact@bidroom.pt</a>. Transactions in progress at the time of suspension are handled case by case by BidRoom.",
       "h10": "10. Disputes between users",
       "h10p1": "In case of dispute between buyer and seller, BidRoom provides an internal mediation mechanism. Both accounts are automatically suspended during the dispute period. BidRoom's decision is binding within the platform. For unresolved disputes, users may refer to the <strong>Portuguese Centre for Consumer Conflict Arbitration (CNIACC)</strong> at <a href=\"https://www.cniacc.pt\" target=\"_blank\" rel=\"noopener\">cniacc.pt</a>.",
       "h11": "11. Reputation system and automated decisions",
@@ -3098,9 +3196,9 @@
       "h11li1": "Score ≥ 60 and zero dispute losses — eligibility for Private Rooms",
       "h11li2": "Suspicious review patterns — automatic fraud detection",
       "h11li3": "Very low score — may result in restricted functionality",
-      "h11p2": "Under GDPR Article 22, you have the right not to be subject solely to automated decisions that produce significant effects. To challenge an automated reputation decision, contact <a href=\"mailto:legal@bidroom.pt\">legal@bidroom.pt</a>.",
+      "h11p2": "Under GDPR Article 22, you have the right not to be subject solely to automated decisions that produce significant effects. To challenge an automated reputation decision, contact <a href=\"mailto:contact@bidroom.pt\">contact@bidroom.pt</a>.",
       "h12": "12. Minors",
-      "h12p1": "BidRoom.pt is intended exclusively for users aged <strong>18 or over</strong>. We do not knowingly collect personal data from anyone under 18. If we learn that a minor has created an account, we will close it immediately and delete associated data. Parents or guardians who suspect a minor has created a BidRoom account should contact us at <a href=\"mailto:legal@bidroom.pt\">legal@bidroom.pt</a>.",
+      "h12p1": "BidRoom.pt is intended exclusively for users aged <strong>18 or over</strong>. We do not knowingly collect personal data from anyone under 18. If we learn that a minor has created an account, we will close it immediately and delete associated data. Parents or guardians who suspect a minor has created a BidRoom account should contact us at <a href=\"mailto:contact@bidroom.pt\">contact@bidroom.pt</a>.",
       "h13": "13. Intellectual property",
       "h13p1": "All content on BidRoom.pt — including design, code, brand, and text — is owned by BidRoom Unipessoal Lda. Users may not reproduce, distribute, or create derivative works without express written authorisation.",
       "h14": "14. Limitation of liability",
@@ -3115,7 +3213,7 @@
       "title": "How we process your personal data",
       "updated": "Last updated: 1 May 2025 · GDPR compliant",
       "dpoLabel": "Data controller:",
-      "dpoVal": " BidRoom Unipessoal Lda · legal@bidroom.pt",
+      "dpoVal": " BidRoom Unipessoal Lda · contact@bidroom.pt",
       "h1": "1. What data we collect",
       "th1": "Category",
       "th2": "Data",
@@ -3154,14 +3252,14 @@
       "h4li4": "<strong>Portability</strong> — receive your data in a structured format",
       "h4li5": "<strong>Objection</strong> — object to processing based on legitimate interest",
       "h4li6": "<strong>Restriction</strong> — request suspension of processing in certain circumstances",
-      "h4p2": "To exercise any of these rights, contact <a href=\"mailto:legal@bidroom.pt\">legal@bidroom.pt</a>. We respond within 30 days. You also have the right to lodge a complaint with the <strong>CNPD</strong> (Portuguese Data Protection Authority) at <a href=\"https://www.cnpd.pt\" target=\"_blank\" rel=\"noopener\">cnpd.pt</a>.",
+      "h4p2": "To exercise any of these rights, contact <a href=\"mailto:contact@bidroom.pt\">contact@bidroom.pt</a>. We respond within 30 days. You also have the right to lodge a complaint with the <strong>CNPD</strong> (Portuguese Data Protection Authority) at <a href=\"https://www.cnpd.pt\" target=\"_blank\" rel=\"noopener\">cnpd.pt</a>.",
       "h5": "5. Automated decisions (GDPR Art. 22)",
       "h5p1": "BidRoom uses automated processing to calculate each user's reputation score (0–100). This calculation may produce significant effects, including eligibility for Private Rooms and feature restrictions. You have the right to:",
       "h5li1": "Request human intervention in reviewing the automated decision",
       "h5li2": "Express your point of view",
-      "h5li3": "Challenge the decision via <a href=\"mailto:legal@bidroom.pt\">legal@bidroom.pt</a>",
+      "h5li3": "Challenge the decision via <a href=\"mailto:contact@bidroom.pt\">contact@bidroom.pt</a>",
       "h6": "6. Minors",
-      "h6p1": "BidRoom.pt is intended exclusively for users aged 18 or over. We do not knowingly collect personal data from anyone under 18. If we detect that a minor has created an account, we will immediately delete all associated data. Parents or guardians who suspect a minor's account should contact <a href=\"mailto:legal@bidroom.pt\">legal@bidroom.pt</a>.",
+      "h6p1": "BidRoom.pt is intended exclusively for users aged 18 or over. We do not knowingly collect personal data from anyone under 18. If we detect that a minor has created an account, we will immediately delete all associated data. Parents or guardians who suspect a minor's account should contact <a href=\"mailto:contact@bidroom.pt\">contact@bidroom.pt</a>.",
       "h7": "7. Data retention",
       "h7p1": "Account data is kept while the account is active. After account deletion, data is erased within 90 days, except data we must retain by law (e.g. tax data, kept for 10 years under Portuguese tax law).",
       "h8": "8. International transfers",

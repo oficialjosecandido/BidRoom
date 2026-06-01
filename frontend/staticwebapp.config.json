@@ -10,16 +10,6 @@
   },
   "routes": [
     {
-      "route": "/*",
-      "redirect": "https://www.bidroom.pt{url.path}",
-      "statusCode": 301,
-      "conditions": {
-        "requestHeaders": {
-          "X-Forwarded-Host": "bidroom.pt"
-        }
-      }
-    },
-    {
       "route": "/index.html",
       "headers": {
         "Cache-Control": "no-cache, must-revalidate"
