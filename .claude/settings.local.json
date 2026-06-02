@@ -91,7 +91,11 @@
       "Bash(awk -F: '{print $1\":\"$2}')",
       "Bash(node --check /Users/josecandido/Documents/BidRoom/backend/src/models/Listing.js)",
       "Bash(node --check /Users/josecandido/Documents/BidRoom/backend/src/services/auctionNotificationService.js)",
-      "Bash(git -C /Users/josecandido/Documents/BidRoom add -A)"
+      "Bash(git -C /Users/josecandido/Documents/BidRoom add -A)",
+      "Bash(curl -s \"https://bidroom-backend-dev.azurewebsites.net/share/listing/teste-listing\")",
+      "Bash(curl -sI \"https://bidroomimagesdev.blob.core.windows.net/listing-images/b14d7071-2926-4ded-841b-b045e747f787-icon--1-.png.png\")",
+      "Bash(node --check /Users/josecandido/Documents/BidRoom/backend/src/utils/ogImage.js)",
+      "Bash(git -C /Users/josecandido/Documents/BidRoom add backend/src/routes/share.js backend/src/utils/ogImage.js backend/src/index.js)"
     ]
   }
 }

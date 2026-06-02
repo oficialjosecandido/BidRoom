@@ -1485,7 +1485,14 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
   // ── Share ────────────────────────────────────────────────────────────────────
 
   buildShareUrl(slug: string): string {
-    return `${API_CONFIG.getBackendBaseUrl()}/share/listing/${slug}`;
+    // Use same-domain /api/share/... if the SWA has the backend linked (bidroom.pt/api/share/...)
+    // Falls back to the direct backend URL for dev environments without linked backend
+    const origin = window.location.origin;
+    const isDev  = origin.includes('localhost') || origin.includes('azurestaticapps.net');
+    if (isDev) {
+      return `${API_CONFIG.getBackendBaseUrl()}/share/listing/${slug}`;
+    }
+    return `${origin}/api/share/listing/${slug}`;
   }
 
   async shareListing(): Promise<void> {
