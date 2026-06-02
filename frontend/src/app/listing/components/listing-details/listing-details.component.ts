@@ -97,6 +97,7 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
   /** Ensures /listing/:slug/choose-winner deep link runs once after load. */
   private chooseWinnerDeepLinkHandled = false;
   displayedTimeRemaining = '';
+  private countdownEnded = false;
   winnerSelectionCountdownDisplay = '';
   newBidIds = new Set<string>();
 
@@ -353,6 +354,8 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
     if (this.countdownInterval) {
       clearInterval(this.countdownInterval);
     }
+    this.countdownEnded = false;
+    this.justEndedRefetched = false;
 
     // Calculate and display immediately
     this.updateCountdown();
@@ -365,7 +368,8 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
 
   updateCountdown(): void {
     if (!this.listing) {
-      this.displayedTimeRemaining = 'N/A';
+      this.countdownEnded = false;
+      this.displayedTimeRemaining = '';
       return;
     }
 
@@ -379,7 +383,8 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
     }
 
     if (!endDate) {
-      this.displayedTimeRemaining = 'N/A';
+      this.countdownEnded = false;
+      this.displayedTimeRemaining = '';
       return;
     }
 
@@ -387,7 +392,8 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
     const diff = endDate.getTime() - now.getTime();
 
     if (diff <= 0) {
-      this.displayedTimeRemaining = 'Ended';
+      this.countdownEnded = true;
+      this.displayedTimeRemaining = '';
       if (this.countdownInterval) {
         clearInterval(this.countdownInterval);
         this.countdownInterval = null;
@@ -407,6 +413,8 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
       return;
     }
 
+    this.countdownEnded = false;
+
     // Calculate time components
     const totalSeconds = Math.floor(diff / 1000);
     const days = Math.floor(totalSeconds / (24 * 60 * 60));
@@ -424,12 +432,14 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
       // If 24 hours or more, show days and hours
       const parts: string[] = [];
       if (days > 0) {
-        parts.push(`${days} day${days !== 1 ? 's' : ''}`);
+        parts.push(this.translate.instant('listingDetails.time.daysCount', { count: days }));
       }
       if (hours > 0) {
-        parts.push(`${hours} hour${hours !== 1 ? 's' : ''}`);
+        parts.push(this.translate.instant('listingDetails.time.hoursCount', { count: hours }));
       }
-      this.displayedTimeRemaining = parts.length > 0 ? parts.join(' ') : 'Ending Soon';
+      this.displayedTimeRemaining = parts.length > 0
+        ? parts.join(' ')
+        : this.translate.instant('listingDetails.time.endingSoon');
     }
 
     // Update winner selection countdown when auction ended and seller has 24h
@@ -443,13 +453,16 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
   }
 
   formatTimeRemaining(): string {
-    // Return the displayed time that updates in real-time
-    return this.displayedTimeRemaining || (this.listing?.timeRemaining?.ended ? 'Ended' : 'N/A');
+    if (this.countdownEnded || this.listing?.status === 'ended' || this.listing?.timeRemaining?.ended) {
+      return this.translate.instant('listingDetails.time.endedShort');
+    }
+    if (this.displayedTimeRemaining) return this.displayedTimeRemaining;
+    return this.translate.instant('listingDetails.time.na');
   }
 
   getAuctionEndType(): 'regular' | 'private-room' | 'ended' {
     if (!this.listing) return 'ended';
-    if (this.listing.status === 'ended' || this.displayedTimeRemaining === 'Ended') return 'ended';
+    if (this.listing.status === 'ended' || this.countdownEnded) return 'ended';
     if (this.listing.privateRoomStatus === 'active') return 'private-room';
     return 'regular';
   }
@@ -654,29 +667,61 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
 
   getAuctionEndLabel(): string {
     const endType = this.getAuctionEndType();
-    switch (endType) {
-      case 'private-room':
-        return 'Private Room Ends';
-      case 'ended':
-        return 'Auction Ended';
-      default:
-        return 'Auction Ends';
+    if (endType === 'private-room') {
+      return this.translate.instant('listingDetails.time.privateRoomEnds');
     }
+    if (endType === 'ended') {
+      return this.listing?.auctionFormat === 'best-offer'
+        ? this.translate.instant('listingDetails.time.listingEnded')
+        : this.translate.instant('listingDetails.time.auctionEnded');
+    }
+    return this.listing?.auctionFormat === 'best-offer'
+      ? this.translate.instant('listingDetails.time.offerDeadline')
+      : this.translate.instant('listingDetails.time.auctionEnds');
+  }
+
+  categoryLabel(category: string): string {
+    const key = `addListing.categories.${category}`;
+    const t = this.translate.instant(key);
+    return t !== key ? t : category;
+  }
+
+  subCategoryLabel(subCategory: string): string {
+    const key = `addListing.subcategories.${subCategory}`;
+    const t = this.translate.instant(key);
+    return t !== key ? t : subCategory;
   }
 
   getReturnPolicyLabel(value: string): string {
-    const labels: Record<string, string> = {
-      '30-days': '30 Day Returns',
-      '14-days': '14 Day Returns',
-      'no-returns': 'No Returns Accepted',
-      'custom': 'Custom Policy'
+    const keys: Record<string, string> = {
+      '30-days': 'addListing.return30',
+      '14-days': 'addListing.return14',
+      '7-days': 'addListing.return7',
+      'no-returns': 'addListing.returnNo',
+      custom: 'addListing.returnCustom'
     };
-    return labels[value] || value || '';
+    const key = keys[value];
+    if (!key) return value || '';
+    const t = this.translate.instant(key);
+    return t !== key ? t : value;
   }
 
   getHandlingTimeLabel(days: number): string {
-    if (days === 1) return '1 Business Day';
-    return `${days} Business Days`;
+    const key = `addListing.handling${days}`;
+    const t = this.translate.instant(key);
+    return t !== key ? t : this.translate.instant('listingDetails.shipping.workingDaysCount', { count: days });
+  }
+
+  /** Item origin for the shipping section (location field or city/country). */
+  listingLocation(): string {
+    const l = this.listing;
+    if (!l) return '';
+    const full = l.location?.trim();
+    if (full) return full;
+    const city = l.locationCity?.trim();
+    const country = l.locationCountry?.trim();
+    if (city && country) return `${city}, ${country}`;
+    return city || country || '';
   }
 
   setupRealTimeUpdates(listingId: string): void {

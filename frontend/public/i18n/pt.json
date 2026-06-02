@@ -807,11 +807,23 @@
       "statusDeclined": "Recusado"
     },
     "time": {
-      "auctionEnds": "Leilão Encerra",
-      "offerDeadline": "Prazo para Ofertas",
-      "privateRoomEnds": "Sala Privada Encerra",
-      "auctionEnded": "Leilão Encerrado",
-      "listingEnded": "Anúncio Encerrado"
+      "auctionEnds": "Leilão termina",
+      "offerDeadline": "Prazo para ofertas",
+      "privateRoomEnds": "Sala privada termina",
+      "auctionEnded": "Leilão encerrado",
+      "listingEnded": "Anúncio encerrado",
+      "daysCount": "{{count}} dias",
+      "hoursCount": "{{count}} horas",
+      "endedShort": "Terminado",
+      "na": "—",
+      "endingSoon": "A terminar em breve"
+    },
+    "share": {
+      "button": "Partilhar anúncio",
+      "linkCopied": "Link copiado",
+      "linkCopiedTitle": "Link copiado!",
+      "shareTitle": "Partilhar",
+      "note": "Usa este botão para partilhar no WhatsApp e ver a imagem do produto."
     },
     "ended": {
       "noBidsSeller": "Este leilão encerrou sem lances. Você pode reabri-lo por mais 7 dias abaixo.",
@@ -947,11 +959,12 @@
       "stripeSettingsLink": "Definições → Pagamentos"
     },
     "shipping": {
-      "title": "Frete",
-      "free": "Frete grátis",
-      "cost": "Custo do frete:",
+      "title": "Envio",
+      "free": "Envio grátis",
+      "cost": "Custo do envio:",
       "from": "De:",
-      "workingDays": "dias úteis"
+      "workingDays": "dias úteis",
+      "workingDaysCount": "{{count}} dias úteis"
     },
     "returnPolicy": {
       "title": "Política de devolução",

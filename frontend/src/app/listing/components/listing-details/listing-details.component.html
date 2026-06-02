@@ -21,11 +21,11 @@
 <div class="bc">
   <a routerLink="/listing/list">{{ 'listingDetails.nav.back' | translate }}</a>
   <span>›</span>
-  <a [routerLink]="['/listing/list']" [queryParams]="{category: listing.category}">{{ listing.category }}</a>
+  <a [routerLink]="['/listing/list']" [queryParams]="{category: listing.category}">{{ categoryLabel(listing.category) }}</a>
   <span>›</span>
   <strong>{{ listing.title }}</strong>
-  <button class="bc-share" (click)="shareListing()" [title]="linkCopied ? 'Link copiado!' : 'Partilhar'">
-    @if (linkCopied) { ✓ Link copiado } @else { ↗ Partilhar }
+  <button class="bc-share" (click)="shareListing()" [attr.title]="linkCopied ? ('listingDetails.share.linkCopiedTitle' | translate) : ('listingDetails.share.shareTitle' | translate)">
+    @if (linkCopied) { ✓ {{ 'listingDetails.share.linkCopied' | translate }} } @else { ↗ {{ 'listingDetails.share.shareTitle' | translate }} }
   </button>
 </div>
 
@@ -80,8 +80,8 @@
     <!-- INFO -->
     <div class="info">
       <div class="info-cat">
-        {{ listing.category }}
-        @if (listing.subCategory) { · {{ listing.subCategory }} }
+        {{ categoryLabel(listing.category) }}
+        @if (listing.subCategory) { · {{ subCategoryLabel(listing.subCategory) }} }
         @if (listing.locationCity) { · {{ listing.locationCity }} }
       </div>
       <h1 class="info-title">{{ listing.title }}</h1>
@@ -463,9 +463,9 @@
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/>
         </svg>
-        @if (linkCopied) { ✓ Link copiado! } @else { Partilhar listing }
+        @if (linkCopied) { ✓ {{ 'listingDetails.share.linkCopied' | translate }} } @else { {{ 'listingDetails.share.button' | translate }} }
       </button>
-      <p class="share-note">Usa este botão para partilhar no WhatsApp e ver a imagem do produto.</p>
+      <p class="share-note">{{ 'listingDetails.share.note' | translate }}</p>
     </div>
 
     <div class="sep"></div>
@@ -523,7 +523,12 @@
           } @else {
             <div class="ir-v">{{ formatPrice(listing.shippingCost) }}</div>
           }
-          @if (listing.handlingTime) { <div class="ir-s">{{ listing.handlingTime }} {{ 'listingDetails.shipping.workingDays' | translate }}</div> }
+          @if (listingLocation()) {
+            <div class="ir-s">{{ 'listingDetails.shipping.from' | translate }} {{ listingLocation() }}</div>
+          }
+          @if (listing.handlingTime) {
+            <div class="ir-s">{{ getHandlingTimeLabel(listing.handlingTime) }}</div>
+          }
         </div>
       </div>
       @if (listing.returnPolicy) {

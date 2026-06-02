@@ -90,7 +90,7 @@
           <p>Results are being confirmed. You will be notified by email if you won.</p>
         }
         @if (listing.slug) {
-          <a [href]="getListingPageUrl()" class="pr-btn pr-btn--secondary" target="_blank" rel="noopener noreferrer">View listing</a>
+          <a [href]="getListingPageUrl()" class="pr-btn pr-btn--secondary" target="_blank" rel="noopener noreferrer">{{ 'privateRoomAuction.expired.viewListing' | translate }}</a>
         }
       </div>
     </div>
@@ -125,7 +125,7 @@
             </button>
           }
           @if (listing.slug) {
-            <a [href]="getListingPageUrl()" class="pr-btn pr-btn--secondary" target="_blank" rel="noopener noreferrer">View listing</a>
+            <a [href]="getListingPageUrl()" class="pr-btn pr-btn--secondary" target="_blank" rel="noopener noreferrer">{{ 'privateRoomAuction.expired.viewListing' | translate }}</a>
           }
         </div>
       </div>
