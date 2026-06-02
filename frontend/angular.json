@@ -109,6 +109,17 @@
               ],
               "outputHashing": "all"
             },
+            "ericeira-prod-dev": {
+              "fileReplacements": [
+                {
+                  "replace": "src/environments/environment.ts",
+                  "with": "src/environments/environment.ericeira-prod.ts"
+                }
+              ],
+              "optimization": false,
+              "sourceMap": true,
+              "extractLicenses": false
+            },
             "ericeira-e2e": {
               "fileReplacements": [
                 {
@@ -147,7 +158,7 @@
               "buildTarget": "frontend:build:ericeira"
             },
             "ericeira-prod": {
-              "buildTarget": "frontend:build:ericeira-prod"
+              "buildTarget": "frontend:build:ericeira-prod-dev"
             },
             "ericeira-e2e": {
               "buildTarget": "frontend:build:ericeira-e2e"
