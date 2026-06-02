@@ -1,11 +1,36 @@
 const express  = require('express');
+const https    = require('https');
+const http     = require('http');
 const Listing  = require('../models/Listing');
+const { getBrandPNG } = require('../utils/ogImage');
 
-const router   = express.Router();
+const router      = express.Router();
+const BACKEND_URL = process.env.BACKEND_URL || process.env.FRONTEND_URL?.replace('www.', 'api.') || 'https://bidroom-backend-dev.azurewebsites.net';
+const FRONTEND    = process.env.FRONTEND_URL || 'https://www.bidroom.pt';
+const SITE_NAME   = 'BidRoom';
+// PNG served from our own backend — WhatsApp supports PNG, not SVG
+const DEFAULT_OG_IMAGE = `${BACKEND_URL}/og-default.png`;
 
-const FRONTEND = process.env.FRONTEND_URL || 'https://www.bidroom.pt';
-const SITE_NAME = 'BidRoom';
-const DEFAULT_OG_IMAGE = `${FRONTEND}/og-image.svg`;
+/**
+ * Check if an image URL is "usable" for WhatsApp OG:
+ * - Must respond 200
+ * - Content-Length must be > 5 KB (tiny icons are useless)
+ * Returns the image URL if OK, otherwise null.
+ */
+function checkImage(imageUrl) {
+  return new Promise((resolve) => {
+    if (!imageUrl || !imageUrl.startsWith('http')) return resolve(null);
+    const lib = imageUrl.startsWith('https') ? https : http;
+    const req = lib.request(imageUrl, { method: 'HEAD', timeout: 3000 }, (res) => {
+      const len = parseInt(res.headers['content-length'] || '0', 10);
+      const ok  = res.statusCode === 200 && len > 5000;
+      resolve(ok ? imageUrl : null);
+    });
+    req.on('error', () => resolve(null));
+    req.on('timeout', () => { req.destroy(); resolve(null); });
+    req.end();
+  });
+}
 
 /** Detect social-media crawler user agents that need OG HTML. */
 function isCrawler(ua = '') {
@@ -38,6 +63,14 @@ function fmtTime(endDate) {
   return `${Math.floor(h / 24)} dias restantes`;
 }
 
+/** GET /og-default.png — BidRoom branded PNG fallback for OG image */
+router.get('/og-default.png', (_req, res) => {
+  const png = getBrandPNG();
+  res.setHeader('Content-Type', 'image/png');
+  res.setHeader('Cache-Control', 'public, max-age=86400');
+  res.send(png);
+});
+
 /**
  * GET /share/listing/:slug
  * Returns an OG-rich HTML page for social crawlers, with a JS redirect for browsers.
@@ -55,8 +88,11 @@ router.get('/listing/:slug', async (req, res) => {
     }
 
     const canonicalUrl = `${FRONTEND}/listing/${listing.slug}`;
-    const image        = (listing.images?.[0]) || DEFAULT_OG_IMAGE;
-    const price        = fmtPrice(listing.currentPrice || listing.startingPrice);
+    // Validate the listing image — skip tiny icons (< 5 KB); fall back to brand PNG
+    const rawImage  = listing.images?.[0] || null;
+    const validImage = rawImage ? await checkImage(rawImage) : null;
+    const image      = validImage || DEFAULT_OG_IMAGE;
+    const price      = fmtPrice(listing.currentPrice || listing.startingPrice);
     const timeLeft     = fmtTime(listing.endDate);
     const format       = listing.auctionFormat === 'best-offer' ? 'Melhor Proposta' : 'Leilão';
     const condition    = listing.condition ? ` · ${listing.condition}` : '';
@@ -93,9 +129,8 @@ router.get('/listing/:slug', async (req, res) => {
   <meta property="og:title"       content="${ogTitle}">
   <meta property="og:description" content="${ogDescription}">
   <meta property="og:url"         content="${ogUrl}">
-  <meta property="og:image"       content="${ogImage}">
-  <meta property="og:image:width" content="1200">
-  <meta property="og:image:height" content="630">
+  <meta property="og:image"            content="${ogImage}">
+  <meta property="og:image:secure_url" content="${ogImage}">
 
   <!-- Twitter / X -->
   <meta name="twitter:card"        content="summary_large_image">

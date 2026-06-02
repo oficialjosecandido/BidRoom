@@ -267,6 +267,7 @@ app.use('/api/kyc', generalLimiter, kycRoutes);
 
 // Share pages — no auth, no rate limit beyond express defaults
 // URL: /share/listing/:slug → OG HTML page for social bots, JS redirect for browsers
+// URL: /share/og-default.png → BidRoom brand PNG for OG image fallback
 app.use('/share', shareRoutes);
 
 app.get('/', (req, res) => {
