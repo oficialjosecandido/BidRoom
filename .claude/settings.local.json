@@ -77,7 +77,9 @@
       "Bash(node -e \"require\\('@tensorflow/tfjs-node'\\); console.log\\('tfjs-node ok'\\)\")",
       "Bash(node -e \"require\\('nsfwjs'\\); console.log\\('nsfwjs ok'\\)\")",
       "Bash(npm --version)",
-      "Bash(sort -t: -k3 -rn)"
+      "Bash(sort -t: -k3 -rn)",
+      "Bash(node --check /Users/josecandido/Documents/BidRoom/backend/src/routes/share.js)",
+      "Bash(node --check /Users/josecandido/Documents/BidRoom/backend/src/index.js)"
     ]
   }
 }

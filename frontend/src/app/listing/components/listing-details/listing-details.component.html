@@ -24,6 +24,9 @@
   <a [routerLink]="['/listing/list']" [queryParams]="{category: listing.category}">{{ listing.category }}</a>
   <span>›</span>
   <strong>{{ listing.title }}</strong>
+  <button class="bc-share" (click)="shareListing()" [title]="linkCopied ? 'Link copiado!' : 'Partilhar'">
+    @if (linkCopied) { ✓ Link copiado } @else { ↗ Partilhar }
+  </button>
 </div>
 
 <!-- PENDING REVIEW BANNER (seller only) -->

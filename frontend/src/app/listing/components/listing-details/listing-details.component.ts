@@ -22,6 +22,8 @@ import { FollowService, FollowStatus } from '../../../shared/services/follow.ser
 import { BlockService } from '../../../shared/services/block.service';
 import { ThemeService } from '../../../shared/services/theme.service';
 import { HeaderComponent } from '../../../shared/components/header/header.component';
+import { SeoService } from '../../../shared/services/seo.service';
+import { API_CONFIG } from '../../../shared/config/api.config';
 
 @Component({
   selector: 'app-listing-details',
@@ -49,6 +51,8 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
   private cdr = inject(ChangeDetectorRef);
   private translate = inject(TranslateService);
   readonly themeService = inject(ThemeService);
+  private seo = inject(SeoService);
+  linkCopied = false;
 
   readonly isLight = computed(() => this.themeService.effective() === 'light');
 
@@ -153,6 +157,7 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
         this.inWatchlist = !!listing.inWatchlist;
         this.updateIsOwnListing();
         this.loading = false;
+        this.seo.setListing(listing, this.buildShareUrl(listing.slug));
         if (this.isAuthenticated && !this.isOwnListing && listing.seller?._id) {
           this.loadSellerFollowStatus(listing.seller._id);
           this.loadSellerBlockStatus(listing.seller._id);
@@ -1474,6 +1479,32 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
     }
     // Note: Don't disconnect socket completely as it might be used by other components
     // this.socketService.disconnect();
+    this.seo.resetToDefault();
+  }
+
+  // ── Share ────────────────────────────────────────────────────────────────────
+
+  buildShareUrl(slug: string): string {
+    return `${API_CONFIG.getBackendBaseUrl()}/share/listing/${slug}`;
+  }
+
+  async shareListing(): Promise<void> {
+    if (!this.listing) return;
+    const shareUrl = this.buildShareUrl(this.listing.slug);
+    const price    = this.listing.currentPrice || this.listing.startingPrice || 0;
+    const priceStr = `€${price.toLocaleString('pt-PT', { minimumFractionDigits: 0 })}`;
+    const title    = `${this.listing.title} — BidRoom`;
+    const text     = `${priceStr} · ${this.listing.auctionFormat === 'best-offer' ? 'Melhor Proposta' : 'Leilão'}`;
+
+    if (navigator.share) {
+      try {
+        await navigator.share({ title, text, url: shareUrl });
+      } catch { /* cancelled by user */ }
+    } else {
+      await navigator.clipboard.writeText(shareUrl);
+      this.linkCopied = true;
+      setTimeout(() => { this.linkCopied = false; }, 2500);
+    }
   }
 }
 
