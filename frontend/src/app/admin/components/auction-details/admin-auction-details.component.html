@@ -95,12 +95,6 @@
                   }
                 </td>
               </tr>
-              @if (auction.reservePrice) {
-                <tr>
-                  <th scope="row">Reserve price</th>
-                  <td>{{ auction.reservePrice | currency: 'USD' : 'symbol' : '1.2-2' }}</td>
-                </tr>
-              }
               @if (auction.buyNowPrice) {
                 <tr>
                   <th scope="row">Buy now</th>

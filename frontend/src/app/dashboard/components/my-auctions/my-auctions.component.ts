@@ -17,7 +17,7 @@ const successToast = Swal.mixin({
   timerProgressBar: true
 });
 
-type UnsoldReason = 'no_bids' | 'reserve_not_met' | 'non_payment';
+type UnsoldReason = 'no_bids' | 'non_payment';
 type DurationSlot = '5 minutes' | '1 hour' | '2 hours' | '7 hours' | '24 hours' | '3 days' | '7 days';
 
 interface PlatinumBidderStatus {
@@ -56,7 +56,6 @@ export class MyAuctionsComponent implements OnInit, OnDestroy {
   // ── Relist modal ────────────────────────────────────────────────────────────
   relistListing: EnhancedListing | null = null;
   relistStartingPrice: number = 0;
-  relistReservePrice: number | null = null;
   relistDurationSlot: DurationSlot = '7 days';
   relistAutoRelist = false;
   relistSubmitting = false;
@@ -151,8 +150,7 @@ export class MyAuctionsComponent implements OnInit, OnDestroy {
 
   getUnsoldReason(listing: EnhancedListing): UnsoldReason {
     if (listing.privateRoomClosedReason === 'non_payment_no_second_bidder') return 'non_payment';
-    if ((listing.bidCount ?? 0) === 0) return 'no_bids';
-    return 'reserve_not_met';
+    return 'no_bids';
   }
 
   // ── Relist modal ────────────────────────────────────────────────────────────
@@ -160,7 +158,6 @@ export class MyAuctionsComponent implements OnInit, OnDestroy {
   openRelistModal(listing: EnhancedListing): void {
     this.relistListing = listing;
     this.relistStartingPrice = listing.startingPrice;
-    this.relistReservePrice = listing.reservePrice ?? null;
     this.relistDurationSlot = (listing.durationSlot as DurationSlot) || '7 days';
     this.relistAutoRelist = false;
     this.relistError = null;
@@ -176,18 +173,6 @@ export class MyAuctionsComponent implements OnInit, OnDestroy {
     this.relistStartingPrice = Math.max(0.01, Math.round(this.relistStartingPrice * 0.9 * 100) / 100);
   }
 
-  /** Smart suggestion: lower reserve price by 10%. */
-  applySuggestLowerReserve(): void {
-    if (this.relistReservePrice) {
-      this.relistReservePrice = Math.max(0.01, Math.round(this.relistReservePrice * 0.9 * 100) / 100);
-    }
-  }
-
-  /** Smart suggestion: remove reserve price entirely. */
-  applySuggestRemoveReserve(): void {
-    this.relistReservePrice = null;
-  }
-
   /** Smart suggestion: set to maximum duration. */
   applySuggestMaxDuration(): void {
     this.relistDurationSlot = '7 days';
@@ -201,11 +186,6 @@ export class MyAuctionsComponent implements OnInit, OnDestroy {
       suggestions.push({ key: 'dashboard.myAuctions.relist.suggestions.lower10Price', action: () => this.applySuggestLowerPrice() });
       if (this.relistDurationSlot !== '7 days') {
         suggestions.push({ key: 'dashboard.myAuctions.relist.suggestions.extend7Days', action: () => this.applySuggestMaxDuration() });
-      }
-    } else if (reason === 'reserve_not_met') {
-      if (this.relistReservePrice) {
-        suggestions.push({ key: 'dashboard.myAuctions.relist.suggestions.lower10Reserve', action: () => this.applySuggestLowerReserve() });
-        suggestions.push({ key: 'dashboard.myAuctions.relist.suggestions.removeReserve', action: () => this.applySuggestRemoveReserve() });
       }
     } else if (reason === 'non_payment') {
       if (this.relistDurationSlot !== '7 days') {
@@ -223,7 +203,6 @@ export class MyAuctionsComponent implements OnInit, OnDestroy {
 
     this.listingsService.relistListing(this.relistListing._id, {
       startingPrice: this.relistStartingPrice,
-      reservePrice: this.relistReservePrice,
       durationSlot: this.relistDurationSlot,
       autoRelist: this.relistAutoRelist,
     }).subscribe({

@@ -13,7 +13,6 @@ export interface Listing {
   images: string[];
   startingPrice: number;
   currentPrice: number;
-  reservePrice?: number;
   buyNowPrice?: number;
   bidIncrement: number;
   bidCount: number;
@@ -325,7 +324,7 @@ export class ListingsService {
   /** Relist an unsold ended listing (creates a new listing). Seller may override price/duration. */
   relistListing(
     listingId: string,
-    body: { startingPrice?: number; reservePrice?: number | null; durationSlot?: string; autoRelist?: boolean }
+    body: { startingPrice?: number; durationSlot?: string; autoRelist?: boolean }
   ): Observable<{ message: string; listing: Listing }> {
     return this.http.post<{ message: string; listing: Listing }>(
       `${this.apiUrl}/${listingId}/relist`,

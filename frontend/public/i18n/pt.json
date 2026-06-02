@@ -573,7 +573,6 @@
     "draftError": "Não foi possível guardar o rascunho. Verifique a ligação e tente novamente.",
     "errorUploadFailed": "Falha ao carregar imagens. Tente novamente.",
     "errorStep2Description": "Por favor, complete todos os campos obrigatórios. A descrição deve ter pelo menos 50 caracteres.",
-    "reservePrice": "Preço de Reserva",
     "errors": {
       "required": "{{field}} é obrigatório",
       "tooLong": "{{field}} é muito longo",
@@ -615,7 +614,6 @@
     "offerDeadline": "Prazo para ofertas",
     "offerDeadlineHint": "Mais tempo significa mais compradores a ver o seu anúncio e mais propostas a receber.",
     "startingBidHint": "O valor mínimo para o primeiro lance. Um lance inicial competitivo atrai mais licitantes.",
-    "reserveHint": "O leilão só vincula o vencedor se este valor for atingido.",
     "durationHint": "Artigos raros ou premium tendem a gerar mais lances com 7–10 dias.",
     "formatBestOfferDesc": "Os compradores submetem propostas e você escolhe a que prefere. Defina um preço mínimo — tem total liberdade para recusar qualquer oferta abaixo desse valor.",
     "formatAuctionDesc": "Compradores fazem lances em tempo real e competem pelo seu artigo. Você define a duração e o lance inicial. O vencedor é apurado automaticamente.",
@@ -1801,18 +1799,14 @@
         "relistCount": "Relistar #{{count}}",
         "unsoldReasons": {
           "no_bids": "Terminou sem lances",
-          "reserve_not_met": "Preço de reserva não atingido",
           "non_payment": "Comprador não concluiu o pagamento"
         },
         "suggestions": {
           "lower10Price": "Baixar preço inicial 10%",
-          "lower10Reserve": "Baixar reserva 10%",
-          "removeReserve": "Remover preço de reserva",
           "extend7Days": "Definir duração para 7 dias"
         },
         "form": {
           "startingPrice": "Preço inicial ($)",
-          "reservePrice": "Preço de reserva (opcional, 0 = sem reserva)",
           "duration": "Duração",
           "autoRelist": "Relistar automaticamente se não vender",
           "autoRelistHint": "Relista automaticamente até 3 vezes se o leilão terminar sem venda.",
@@ -2235,10 +2229,8 @@
         "a1": "Se o vendedor não enviar dentro de <strong>5 dias úteis</strong>, a transacção é cancelada automaticamente e receberá o reembolso completo na sua forma de pagamento original.",
         "q2": "Tenho direito de arrependimento?",
         "a2": "O BidRoom é maioritariamente uma plataforma C2C (particulares). Em leilões online entre particulares, o direito de arrependimento geralmente não se aplica. Se o vendedor for um profissional, os seus direitos são diferentes — verifique nos Termos de Utilização.",
-        "q3": "Como funciona o preço de reserva?",
-        "a3": "Alguns vendedores definem um <strong>preço de reserva mínimo</strong> que não é mostrado publicamente. Se o lance mais alto no final não atingir esse valor, o vendedor não é obrigado a vender. Verá uma indicação «Reserva atingida» quando o limite for ultrapassado.",
-        "q4": "Quanto pago de comissão?",
-        "a4": "<strong>O comprador não paga comissão ao BidRoom.</strong> Paga apenas o valor do artigo mais a taxa de processamento da Stripe (~2,9% + €0,30 por transacção), que é acrescentada ao total no checkout."
+        "q3": "Quanto pago de comissão?",
+        "a3": "<strong>O comprador não paga comissão ao BidRoom.</strong> Paga apenas o valor do artigo mais a taxa de processamento da Stripe (~2,9% + €0,30 por transacção), que é acrescentada ao total no checkout."
       }
     },
     "seller": {
@@ -3158,7 +3150,7 @@
       "h2p1": "Para utilizar a plataforma, o utilizador deve ter pelo menos 18 anos de idade e capacidade legal para celebrar contratos. Ao criar uma conta, o utilizador declara cumprir estes requisitos.",
       "h3": "3. A plataforma",
       "h3p1": "O BidRoom disponibiliza dois formatos de listagem:",
-      "h3li1": "<strong>Leilão (Highest Bid):</strong> compradores fazem lances em tempo real. O lance mais alto no final do período vence automaticamente, desde que o preço de reserva (se definido) seja atingido.",
+      "h3li1": "<strong>Leilão (Highest Bid):</strong> compradores fazem lances em tempo real. O lance mais alto no final do período vence automaticamente.",
       "h3li2": "<strong>Melhor Oferta (Best Offer):</strong> compradores submetem propostas. O vendedor escolhe a que prefere antes do prazo. O vendedor não é obrigado a aceitar qualquer oferta abaixo do preço mínimo definido.",
       "h3p2": "O BidRoom pode ainda oferecer <strong>Salas Privadas</strong>, uma funcionalidade opcional disponível em leilões, onde o vendedor convida licitantes seleccionados para uma ronda adicional após o encerramento do leilão público.",
       "h4": "4. Comissões e pagamentos",

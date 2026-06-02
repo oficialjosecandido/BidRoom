@@ -79,7 +79,19 @@
       "Bash(npm --version)",
       "Bash(sort -t: -k3 -rn)",
       "Bash(node --check /Users/josecandido/Documents/BidRoom/backend/src/routes/share.js)",
-      "Bash(node --check /Users/josecandido/Documents/BidRoom/backend/src/index.js)"
+      "Bash(node --check /Users/josecandido/Documents/BidRoom/backend/src/index.js)",
+      "Bash(git -C /Users/josecandido/Documents/BidRoom show ericeira-prod:frontend/angular.json)",
+      "Bash(git -C /Users/josecandido/Documents/BidRoom add frontend/angular.json)",
+      "Bash(git -C /Users/josecandido/Documents/BidRoom diff --cached --stat)",
+      "Bash(git -C /Users/josecandido/Documents/BidRoom add frontend/src/index.html frontend/src/app/shared/services/seo.service.ts frontend/public/og-image.svg frontend/src/app/listing/components/listing-details/listing-details.component.ts frontend/src/app/listing/components/listing-details/listing-details.component.html frontend/src/app/listing/components/listing-details/listing-details.component.scss backend/src/routes/share.js backend/src/index.js)",
+      "Bash(git -C /Users/josecandido/Documents/BidRoom commit -m ' *)",
+      "Bash(git -C /Users/josecandido/Documents/BidRoom push origin dev)",
+      "Bash(git -C /Users/josecandido/Documents/BidRoom status --short)",
+      "Bash(git -C /Users/josecandido/Documents/BidRoom log --oneline -4)",
+      "Bash(awk -F: '{print $1\":\"$2}')",
+      "Bash(node --check /Users/josecandido/Documents/BidRoom/backend/src/models/Listing.js)",
+      "Bash(node --check /Users/josecandido/Documents/BidRoom/backend/src/services/auctionNotificationService.js)",
+      "Bash(git -C /Users/josecandido/Documents/BidRoom add -A)"
     ]
   }
 }

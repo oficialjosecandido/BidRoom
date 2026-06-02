@@ -41,7 +41,7 @@ export class HowItWorksComponent implements OnInit, OnDestroy {
   private bidInterval?:   ReturnType<typeof setInterval>;
   private seatIdx = 0;
 
-  readonly buyerFaqs    = [0, 1, 2, 3, 4];
+  readonly buyerFaqs    = [0, 1, 2, 3];
   readonly sellerFaqs   = [0, 1, 2, 3, 4];
   readonly privateFaqs  = [0, 1, 2, 3];
   readonly paymentsFaqs = [0, 1, 2, 3];

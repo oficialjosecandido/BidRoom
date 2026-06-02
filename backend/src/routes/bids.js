@@ -471,13 +471,6 @@ router.post('/', optionalAuth, requireActiveAccountIfAuthenticated, requireNoDis
       }
     }
     
-    // Check if reserve price is met (seller must sell if met or exceeded)
-    let reserveMet = false;
-    if (listing.reservePrice && amount >= listing.reservePrice) {
-      reserveMet = true;
-      // Reserve price is met - seller is committed to sell
-    }
-
     await listing.save();
 
     // Populate bid for response

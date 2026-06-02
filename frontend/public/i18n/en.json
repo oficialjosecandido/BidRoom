@@ -573,7 +573,6 @@
     "draftError": "Could not save draft. Check your connection and try again.",
     "errorUploadFailed": "Failed to upload images. Please try again.",
     "errorStep2Description": "Please complete all required fields. Description must be at least 50 characters.",
-    "reservePrice": "Reserve Price",
     "errors": {
       "required": "{{field}} is required",
       "tooLong": "{{field}} is too long",
@@ -615,7 +614,6 @@
     "offerDeadline": "Offer deadline",
     "offerDeadlineHint": "More time means more buyers seeing your listing and more offers to receive.",
     "startingBidHint": "The minimum value for the first bid. A competitive starting bid attracts more bidders.",
-    "reserveHint": "The auction only binds the winner if this value is reached.",
     "durationHint": "Rare or premium items tend to attract more bids over 7–10 days.",
     "formatBestOfferDesc": "Buyers submit offers and you choose which to accept. Set a minimum price — you have full freedom to decline any offer below that value.",
     "formatAuctionDesc": "Buyers bid in real time and compete for your item. You set the duration and the starting bid. The winner is determined automatically.",
@@ -1801,18 +1799,14 @@
         "relistCount": "Relist #{{count}}",
         "unsoldReasons": {
           "no_bids": "Ended with no bids",
-          "reserve_not_met": "Reserve price not met",
           "non_payment": "Buyer did not complete payment"
         },
         "suggestions": {
           "lower10Price": "Lower starting price by 10%",
-          "lower10Reserve": "Lower reserve by 10%",
-          "removeReserve": "Remove reserve price",
           "extend7Days": "Set duration to 7 days"
         },
         "form": {
           "startingPrice": "Starting Price ($)",
-          "reservePrice": "Reserve Price (optional, 0 = none)",
           "duration": "Duration",
           "autoRelist": "Auto-relist if unsold again",
           "autoRelistHint": "Automatically relist up to 3 times if the auction ends without a sale.",
@@ -2235,10 +2229,8 @@
         "a1": "If the seller doesn't ship within <strong>5 business days</strong>, the transaction is automatically cancelled and you will receive a full refund to your original payment method.",
         "q2": "Do I have a right of withdrawal?",
         "a2": "BidRoom is primarily a C2C (private individuals) platform. In online auctions between private individuals, the right of withdrawal generally does not apply. If the seller is a professional, your rights are different — check the Terms of Use.",
-        "q3": "How does the reserve price work?",
-        "a3": "Some sellers set a <strong>minimum reserve price</strong> that is not shown publicly. If the highest bid at the end does not reach that amount, the seller is not obliged to sell. You will see a \"Reserve met\" indicator when the threshold is exceeded.",
-        "q4": "How much commission do I pay?",
-        "a4": "<strong>Buyers pay no commission to BidRoom.</strong> You only pay the item price plus the Stripe processing fee (~2.9% + €0.30 per transaction), which is added to the total at checkout."
+        "q3": "How much commission do I pay?",
+        "a3": "<strong>Buyers pay no commission to BidRoom.</strong> You only pay the item price plus the Stripe processing fee (~2.9% + €0.30 per transaction), which is added to the total at checkout."
       }
     },
     "seller": {
@@ -2969,7 +2961,7 @@
       "intro": "If you list items for auction, you agree to:",
       "li1": "Provide accurate and complete item descriptions",
       "li2": "Include clear, high-quality photographs",
-      "li3": "Set appropriate starting prices and reserve prices",
+      "li3": "Set appropriate starting prices",
       "li4": "Ship items promptly after receiving payment",
       "li5": "Respond to buyer inquiries in a timely manner",
       "li6": "Comply with all applicable laws and regulations"
@@ -3158,7 +3150,7 @@
       "h2p1": "To use the platform, you must be at least 18 years old and have legal capacity to enter into contracts. By creating an account, you declare that you meet these requirements.",
       "h3": "3. The platform",
       "h3p1": "BidRoom offers two listing formats:",
-      "h3li1": "<strong>Auction (Highest Bid):</strong> buyers place real-time bids. The highest bid at the end of the period wins automatically, provided any reserve price (if set) is met.",
+      "h3li1": "<strong>Auction (Highest Bid):</strong> buyers place real-time bids. The highest bid at the end of the period wins automatically.",
       "h3li2": "<strong>Best Offer:</strong> buyers submit offers. The seller chooses their preferred offer before the deadline. The seller is not obliged to accept any offer below the minimum price set.",
       "h3p2": "BidRoom may also offer <strong>Private Rooms</strong>, an optional feature where the seller invites selected bidders to an additional round after the public auction ends.",
       "h4": "4. Fees and payments",
