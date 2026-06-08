@@ -60,9 +60,19 @@
           @else { {{ 'listingDetails.formatPill.auction' | translate }} }
         </div>
         @if (!isOwnListing) {
-          <button class="wishlist-btn" (click)="addToWatchlist()" [disabled]="watchlistLoading"
-            [title]="inWatchlist ? ('listingDetails.actions.removeFromWatchlist' | translate) : ('listingDetails.actions.addToWatchlist' | translate)">
-            {{ inWatchlist ? '♥' : '♡' }}
+          <button
+            class="wishlist-btn"
+            [class.saved]="inWatchlist"
+            (click)="addToWatchlist()"
+            [disabled]="watchlistLoading"
+            [attr.aria-label]="inWatchlist ? ('listingDetails.actions.removeFromWatchlist' | translate) : ('listingDetails.actions.addToWatchlist' | translate)"
+            [attr.aria-pressed]="inWatchlist">
+            <svg class="wishlist-btn-icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path
+                class="wishlist-btn-path"
+                d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"
+              />
+            </svg>
           </button>
         }
       </div>
@@ -432,8 +442,13 @@
 
     <!-- WATCHLIST -->
     @if (!isOwnListing && !listing.winner) {
-      <button class="btn-watch" (click)="addToWatchlist()" [disabled]="watchlistLoading">
-        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M7 12.5S1.5 9 1.5 4.5a2.5 2.5 0 015 0 2.5 2.5 0 015 0C11.5 9 7 12.5 7 12.5z"/></svg>
+      <button class="btn-watch" [class.saved]="inWatchlist" (click)="addToWatchlist()" [disabled]="watchlistLoading">
+        <svg class="btn-watch-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <path
+            class="btn-watch-path"
+            d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"
+          />
+        </svg>
         {{ inWatchlist ? ('listingDetails.sidebar.inWatchlist' | translate) : ('listingDetails.actions.addToWatchlist' | translate) }}
       </button>
       @if ((listing.watchlistCount ?? 0) > 0) {

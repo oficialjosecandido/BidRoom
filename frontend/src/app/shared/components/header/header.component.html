@@ -10,6 +10,9 @@
     <button class="nl" [class.active]="activePage === 'auctions'" (click)="navigateToAuctions()">
       {{ 'header.nav.auctions' | translate }}
     </button>
+    <button class="nl" [class.active]="activePage === 'categories'" (click)="navigateToCategories()">
+      {{ 'header.nav.categories' | translate }}
+    </button>
     <button class="nl" (click)="navigateToPrivateRooms()">
       {{ 'header.nav.privateRooms' | translate }}
     </button>
@@ -87,13 +90,16 @@
         </svg>
         {{ 'header.actions.publish' | translate }}
       </button>
-      <a routerLink="/dashboard/notifications" class="icon-btn bell-btn" aria-label="{{ 'header.actions.notifications' | translate }}">
+      <a
+        routerLink="/dashboard/notifications"
+        class="icon-btn bell-btn"
+        [attr.aria-label]="notifCount > 0 ? ('header.actions.notificationsUnread' | translate:{ count: notifBadge }) : ('header.actions.notifications' | translate)">
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" width="15" height="15" aria-hidden="true">
           <path d="M8 2a5 5 0 00-5 5v3l-1 1h12l-1-1V7a5 5 0 00-5-5z"/>
           <path d="M6.5 13.5a1.5 1.5 0 003 0"/>
         </svg>
         @if (notifCount > 0) {
-          <div class="notif-dot"></div>
+          <span class="notif-badge" aria-hidden="true">{{ notifBadge }}</span>
         }
       </a>
       <div class="avatar" (click)="navigateToDashboard()" (keydown.enter)="navigateToDashboard()" tabindex="0" role="button" aria-label="Dashboard">
@@ -121,6 +127,7 @@
 @if (menuOpen) {
   <div class="mobile-menu" role="dialog" aria-modal="true">
     <button class="nm" (click)="navigateToAuctions()">{{ 'header.nav.auctions' | translate }}</button>
+    <button class="nm" (click)="navigateToCategories()">{{ 'header.nav.categories' | translate }}</button>
     <button class="nm" (click)="navigateToPrivateRooms()">{{ 'header.nav.privateRooms' | translate }}</button>
     <button class="nm" (click)="navigateToHowItWorks()">{{ 'header.nav.howItWorks' | translate }}</button>
     <div class="nm-divider"></div>

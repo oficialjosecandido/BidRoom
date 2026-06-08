@@ -17,7 +17,8 @@
       "signIn": "Sign In",
       "startBidding": "Start Bidding",
       "publish": "Publish",
-      "notifications": "Notifications"
+      "notifications": "Notifications",
+      "notificationsUnread": "{{count}} unread notifications"
     },
     "search": {
       "placeholder": "Search auctions, items, sellers…",
@@ -44,7 +45,7 @@
       "signIn": "Sign in"
     },
     "home": {
-      "skipHeading": "BidRoom.pt — premium auctions in Portugal. Available in light and dark mode, with Portuguese tile motifs in light mode.",
+      "skipHeading": "BidRoom.pt — premium auctions. Available in light and dark mode, with tile motifs in light mode.",
       "breadcrumb": {
         "home": "Home",
         "featured": "Featured auctions"
@@ -57,13 +58,13 @@
       "hero": {
         "svgDarkTitle": "Decorative illustration — dark mode sardine and tiles",
         "svgLightTitle": "Decorative tile background — light mode",
-        "eyebrow": "Portugal · Premium auctions",
+        "eyebrow": "Premium auctions",
         "title1": "High-value",
         "title2": "auctions,",
         "titleEm": "done right.",
         "titleLine1": "Buy the",
         "titleLine2": "extraordinary.",
-        "subtitle": "The first Portuguese premium auction platform with real-time private rooms, verified reputation, and secure payments.",
+        "subtitle": "A premium auction platform with real-time private rooms, verified reputation, and secure payments.",
         "subtitleAlt": "Real-time auctions for watches, art, and unique pieces.",
         "ctaExplore": "Explore auctions",
         "ctaHow": "How it works",
@@ -170,10 +171,10 @@
         "c5t": "AI moderation",
         "c5b": "Azure AI reviews text and images. Prohibited items and inappropriate content blocked automatically.",
         "c6t": "Portuguese & English",
-        "c6b": "Fully bilingual platform for the Portuguese market with full PT and EN support."
+        "c6b": "Fully bilingual platform with complete Portuguese and English support."
       },
       "footer": {
-        "tagline": "Portugal’s premium auction marketplace",
+        "tagline": "The premium auction marketplace",
         "platform": "Platform",
         "account": "Account",
         "legal": "Legal",
@@ -210,7 +211,7 @@
     }
   },
   "footer": {
-    "tagline": "Portugal's premier auction marketplace.",
+    "tagline": "The premier auction marketplace.",
     "quickLinks": "Quick Links",
     "howItWorks": "How it works",
     "contact": "Contact",
@@ -727,6 +728,7 @@
     "minPrice": "Minimum price",
     "badgeLive": "Live",
     "badgeClosing": "Closing",
+    "badgeAuction": "Auction",
     "badgeBestOffer": "Best offer",
     "badgePrivateRoom": "Private room",
     "addWatchlist": "Add to watchlist",
@@ -745,8 +747,9 @@
   "categories": {
     "title": "Browse by Category",
     "subtitle": "Explore our full range of categories and subcategories",
-    "browseAll": "Browse all",
-    "allListings": "All Listings",
+    "browseAll": "Browse all auctions",
+    "browseCategory": "Browse category",
+    "subcategoryCount": "{{count}} subcategories",
     "follow": "Follow",
     "following": "Following",
     "unfollow": "Unfollow"
@@ -1276,6 +1279,7 @@
   "dashboard": {
     "sidebar": {
       "home": "Home",
+      "browseAuctions": "Browse Auctions",
       "store": "Store",
       "main": "Main",
       "activity": "Activity",
@@ -1292,6 +1296,7 @@
       "buyerProfile": "Buyer Profile",
       "sellerProfile": "Seller Profile",
       "settings": "Settings",
+      "disputes": "Disputes",
       "logout": "Logout"
     },
     "following": {
@@ -1334,7 +1339,6 @@
       "balance": "Balance",
       "buyerScore": "Buyer Score",
       "sellerScore": "Seller Score",
-      "noReviews": "No reviews yet",
       "topUpHistory": "Top-up History",
       "noTopUps": "No top-ups yet.",
       "date": "Date",
@@ -1346,12 +1350,6 @@
       "noActiveListings": "No active listings.",
       "viewAll": "View all listings",
       "errorLoading": "Failed to load dashboard data.",
-      "reviewModalTitle": "Leave a Review",
-      "reviewModalDesc": "How was your experience with this transaction?",
-      "reviewRating": "Rating",
-      "reviewComment": "Comment (optional)",
-      "reviewSubmit": "Submit Review",
-      "reviewSubmitting": "Submitting...",
       "reviewError": "Failed to submit review.",
       "balanceModalTitle": "Your Balance",
       "topUp": "Top Up",
@@ -1366,7 +1364,6 @@
       "increaseBalance": "Increase Balance",
       "reviews": "reviews",
       "review": "review",
-      "noReviewsYet": "No reviews yet",
       "viewProfile": "View Profile",
       "yourMembership": "Your Membership",
       "balanceLabel": "Balance:",
@@ -1385,8 +1382,6 @@
       "ends": "Ends",
       "recentlyEnded": "Recently Ended",
       "noOffersYet": "No offers yet",
-      "leaveAReview": "Leave a Review",
-      "leaveReviewDesc": "Rate your recent transactions to help the community.",
       "as": "as",
       "leaveReview": "Leave Review",
       "youreReviewing": "You're reviewing",
@@ -1422,7 +1417,6 @@
       "continueToCheckout": "Continue to Checkout",
       "buyingWatchlist": "Buying & Watchlist",
       "subtitle": "Here's your account summary",
-      "myListingsTitle": "My listings",
       "live": "Live",
       "pendingReviews": "Pending reviews",
       "greeting": {
@@ -1436,11 +1430,7 @@
       "statAwaitingSeller": "awaiting seller",
       "statPendingTx": "Pending transactions",
       "statActionNeeded": "action needed",
-      "statReputation": "Reputation",
-      "statOutOf100": "out of 100",
       "statActiveListings": "Active listings",
-      "sectionActiveBids": "Active bids",
-      "yourBid": "Your bid",
       "formatAuction": "Auction",
       "formatBestOffer": "Best offer",
       "statusWinning": "Winning",
@@ -1544,21 +1534,6 @@
     "role": {
       "toggleLabel": "Buyer or seller mode"
     },
-    "buyer": {
-      "title": "Buyer Profile",
-      "subtitle": "Manage your bids, watchlist, and purchases.",
-      "tabBets": "My Bets",
-      "tabWatchlist": "Watchlist",
-      "tabTransactions": "Transactions",
-      "tabDisputes": "Disputes",
-      "noReviews": "No reviews yet.",
-      "tabs": {
-        "bets": "My Bets",
-        "watchlist": "Watchlist",
-        "transactions": "Transactions",
-        "disputes": "Disputes"
-      }
-    },
     "myBets": {
       "title": "My Bets",
       "subtitle": "All your bids and offers in one place. Expand any listing to see your bet history.",
@@ -1588,14 +1563,10 @@
     "seller": {
       "title": "Seller Profile",
       "subtitle": "Manage your listings, sales, and payouts.",
-      "tabAuctions": "My Auctions",
-      "tabTransactions": "Transactions",
-      "tabDisputes": "Disputes",
       "noReviews": "No reviews yet.",
       "tabs": {
         "auctions": "My Auctions",
         "analytics": "Analytics",
-        "transactions": "Transactions",
         "disputes": "Disputes"
       },
       "analytics": {
@@ -1870,6 +1841,15 @@
     "filterDelivered": "Delivered",
     "filterCompleted": "Completed",
     "filterDisputed": "Disputed",
+    "table": {
+      "item": "Item",
+      "role": "Role",
+      "status": "Status",
+      "amount": "Amount",
+      "date": "Date",
+      "manage": "Manage",
+      "noFilterResults": "No transactions match this filter."
+    },
     "drawer": {
       "details": "Details",
       "amount": "Amount",
@@ -1934,11 +1914,6 @@
     "uploadingProof": "Uploading...",
     "leaveReview": "Leave a Review",
     "reviewLeft": "Review submitted",
-    "reviewModalTitle": "Leave a Review",
-    "reviewRating": "Rating",
-    "reviewComment": "Comment (optional)",
-    "reviewSubmit": "Submit Review",
-    "reviewSubmitting": "Submitting...",
     "reviewError": "Failed to submit review.",
     "openDispute": "Open Dispute",
     "disputeOpenedBadge": "Dispute Opened",

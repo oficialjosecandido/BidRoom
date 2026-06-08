@@ -1,117 +1,55 @@
-<app-header activePage="auctions"></app-header>
+<app-header activePage="categories"></app-header>
 
 <section class="categories-page">
   <div class="container">
     <div class="page-header">
       <h1 class="page-title">{{ 'categories.title' | translate }}</h1>
       <p class="page-subtitle">{{ 'categories.subtitle' | translate }}</p>
-    </div>
-
-    <!-- Filter Bar -->
-    <div class="cat-filter-bar">
-      <div class="cat-filter-groups">
-
-        <!-- Condition -->
-        <div class="cat-filter-group">
-          <span class="cat-filter-label">{{ 'listingList.condition' | translate }}</span>
-          <div class="cat-filter-options">
-            @for (opt of conditionOptions; track opt.key) {
-              <button
-                class="cat-filter-chip"
-                [class.active]="selectedConditions.has(opt.key)"
-                (click)="toggleCondition(opt.key)">
-                {{ opt.labelKey | translate }}
-              </button>
-            }
-          </div>
-        </div>
-
-        <!-- Price -->
-        <div class="cat-filter-group">
-          <span class="cat-filter-label">{{ 'listingList.price' | translate }}</span>
-          <div class="cat-price-range">
-            <input type="number" class="cat-price-input" placeholder="Min $" [(ngModel)]="minPrice" min="0">
-            <span class="cat-price-sep">–</span>
-            <input type="number" class="cat-price-input" placeholder="Max $" [(ngModel)]="maxPrice" min="0">
-          </div>
-        </div>
-
-        <!-- Location -->
-        <div class="cat-filter-group cat-filter-group--location">
-          <span class="cat-filter-label">{{ 'listingList.location' | translate }}</span>
-          <input
-            type="text"
-            class="cat-location-input"
-            [(ngModel)]="locationFilter"
-            [placeholder]="'listingList.locationPlaceholder' | translate"
-            [attr.aria-label]="'listingList.location' | translate"
-          />
-        </div>
-
-        <!-- Shipping -->
-        <div class="cat-filter-group">
-          <span class="cat-filter-label">{{ 'listingList.shipping' | translate }}</span>
-          <div class="cat-filter-options">
-            @for (opt of shippingOptions; track opt.key) {
-              <button
-                type="button"
-                class="cat-filter-chip"
-                [class.active]="selectedShipping.has(opt.key)"
-                (click)="toggleShipping(opt.key)">
-                {{ opt.labelKey | translate }}
-              </button>
-            }
-          </div>
-        </div>
-
-      </div>
-
-      <div class="cat-filter-actions">
-        @if (hasActiveFilters) {
-          <button class="cat-clear-btn" (click)="clearFilters()">{{ 'listingList.clearAllFilters' | translate }}</button>
-        }
-        <button class="btn btn-primary cat-browse-btn" (click)="browseAll()">
-          {{ 'categories.browseAll' | translate }} →
-        </button>
-      </div>
+      <button type="button" class="browse-all-btn" (click)="browseAll()">
+        {{ 'categories.browseAll' | translate }} →
+      </button>
     </div>
 
     <div class="categories-list">
       @for (category of categories; track category.id) {
-        <div class="category-section">
-
+        <article class="category-section">
           <div class="category-header">
-            <div class="category-header-left" (click)="browseCategory(category.id)">
-              <span class="category-icon">{{ category.icon }}</span>
+            <button type="button" class="category-header-main" (click)="browseCategory(category.id)">
+              <span class="category-icon" aria-hidden="true">{{ category.icon }}</span>
               <div class="category-info">
-                <h2 class="category-name">{{ category.name }}</h2>
-                <p class="category-description">{{ category.description }}</p>
+                <h2 class="category-name">{{ categoryTitleKey(category.id) | translate }}</h2>
+                <p class="category-description">{{ categoryDescKey(category.id) | translate }}</p>
               </div>
-            </div>
-            <div class="category-header-right">
-              <button
-                type="button"
-                class="cat-follow-btn"
-                [class.cat-follow-btn--following]="followedCategories.has(category.id)"
-                [disabled]="followTogglingCategory === category.id"
-                (click)="toggleFollowCategory($event, category.id)"
-                [attr.title]="followedCategories.has(category.id) ? ('categories.unfollow' | translate) : ('categories.follow' | translate)">
-                {{ followedCategories.has(category.id) ? ('categories.following' | translate) : ('categories.follow' | translate) }}
+            </button>
+            <div class="category-header-actions">
+              @if (isLoggedIn) {
+                <button
+                  type="button"
+                  class="cat-follow-btn"
+                  [class.cat-follow-btn--following]="followedCategories.has(category.id)"
+                  [disabled]="followTogglingCategory === category.id"
+                  (click)="toggleFollowCategory($event, category.id)"
+                  [attr.title]="followedCategories.has(category.id) ? ('categories.unfollow' | translate) : ('categories.follow' | translate)">
+                  {{ followedCategories.has(category.id) ? ('categories.following' | translate) : ('categories.follow' | translate) }}
+                </button>
+              }
+              <span class="category-count">
+                {{ 'categories.subcategoryCount' | translate:{ count: category.subCategories.length } }}
+              </span>
+              <button type="button" class="browse-arrow" (click)="browseCategory(category.id)">
+                {{ 'categories.browseCategory' | translate }} →
               </button>
-              <span class="category-count">{{ category.subCategories.length }} subcategories</span>
-              <span class="browse-arrow" (click)="browseCategory(category.id)">{{ 'categories.browseAll' | translate }} →</span>
             </div>
           </div>
 
           <div class="subcategories-grid">
             @for (sub of category.subCategories; track sub) {
-              <button class="subcategory-chip" (click)="browseSubCategory(category.id, sub)">
-                {{ sub }}
+              <button type="button" class="subcategory-chip" (click)="browseSubCategory(category.id, sub)">
+                {{ subCategoryLabelKey(sub) | translate }}
               </button>
             }
           </div>
-
-        </div>
+        </article>
       }
     </div>
   </div>

@@ -5,10 +5,6 @@ import { FormsModule } from '@angular/forms';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import Swal from 'sweetalert2';
 import { TransactionsService, Transaction, TransactionStatus, DamageClaim } from '../../../shared/services/transactions.service';
-import {
-  NotificationService,
-  TRANSACTION_RELATED_NOTIFICATION_TYPES
-} from '../../../shared/services/notification.service';
 import { ReviewsService } from '../../../shared/services/reviews.service';
 import { StripeConnectService } from '../../../shared/services/stripe-connect.service';
 import { ShippingService, ShippingRate, DeliveryAddress } from '../../../shared/services/shipping.service';
@@ -31,7 +27,6 @@ const successToast = Swal.mixin({
 })
 export class DashboardTransactionsComponent implements OnInit {
   transactionsService = inject(TransactionsService);
-  private notificationService = inject(NotificationService);
   private reviewsService = inject(ReviewsService);
   private stripeConnect = inject(StripeConnectService);
   private shippingService = inject(ShippingService);
@@ -107,12 +102,11 @@ export class DashboardTransactionsComponent implements OnInit {
   /** Filter pills */
   txFilter: 'all' | 'pending_payment' | 'shipping' | 'delivered' | 'completed' | 'disputed' = 'all';
 
-  /** Unread transaction-related in-app notifications */
-  unreadTxNotifCount = 0;
-  markingAllTxNotifs = false;
-
   /** Slide-in drawer */
   drawerTx: Transaction | null = null;
+
+  /** Row selected in the table — shows the management panel below */
+  selectedTx: Transaction | null = null;
 
   get filteredTransactions(): Transaction[] {
     if (this.txFilter === 'all') return this.transactions;
@@ -129,31 +123,23 @@ export class DashboardTransactionsComponent implements OnInit {
     });
   }
 
-  loadUnreadTransactionNotifications(): void {
-    this.notificationService
-      .getUnreadCount([...TRANSACTION_RELATED_NOTIFICATION_TYPES])
-      .subscribe({
-        next: (r) => { this.unreadTxNotifCount = r.unreadCount ?? 0; },
-        error: () => { this.unreadTxNotifCount = 0; }
-      });
-  }
-
-  markAllTransactionNotificationsRead(): void {
-    if (this.unreadTxNotifCount === 0 || this.markingAllTxNotifs) return;
-    this.markingAllTxNotifs = true;
-    this.notificationService.markAllAsRead([...TRANSACTION_RELATED_NOTIFICATION_TYPES]).subscribe({
-      next: () => {
-        this.unreadTxNotifCount = 0;
-        this.markingAllTxNotifs = false;
-      },
-      error: () => {
-        this.markingAllTxNotifs = false;
-      }
-    });
-  }
-
   openDrawer(t: Transaction): void { this.drawerTx = t; }
   closeDrawer(): void { this.drawerTx = null; }
+
+  selectTransaction(t: Transaction): void {
+    this.selectedTx = this.selectedTx?._id === t._id ? null : t;
+    if (this.selectedTx) {
+      setTimeout(() => {
+        document.getElementById(`transaction-${t._id}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 50);
+    }
+  }
+
+  getRoleLabel(t: Transaction): string {
+    return this.isBuyer(t)
+      ? this.translate.instant('transactions.buyer')
+      : this.translate.instant('transactions.seller');
+  }
 
   getDrawerProgressStep(t: Transaction): number {
     const s = this.getEffectiveStatus(t);
@@ -190,7 +176,6 @@ export class DashboardTransactionsComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadTransactions();
-    this.loadUnreadTransactionNotifications();
 
     // Scroll to transaction when navigating with fragment (e.g. from review modal)
     this.route.fragment.subscribe(fragment => {
@@ -230,25 +215,20 @@ export class DashboardTransactionsComponent implements OnInit {
   }
 
   private scrollToTransactionAfterLoad(fragment: string): void {
-    const scroll = () => {
-      const el = document.getElementById(fragment);
-      if (el) {
-        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }
-    };
     if (!this.isLoading && this.transactions.length > 0) {
-      setTimeout(scroll, 100);
+      this.scrollToTransactionFromFragment();
     }
   }
 
   private scrollToTransactionFromFragment(): void {
     const fragment = this.route.snapshot.fragment;
-    if (fragment?.startsWith('transaction-')) {
-      setTimeout(() => {
-        const el = document.getElementById(fragment);
-        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }, 150);
-    }
+    if (!fragment?.startsWith('transaction-')) return;
+    const id = fragment.slice('transaction-'.length);
+    const t = this.transactions.find(tx => tx._id === id);
+    if (t) this.selectedTx = t;
+    setTimeout(() => {
+      document.getElementById(fragment)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 150);
   }
 
   isBuyer(t: Transaction): boolean {

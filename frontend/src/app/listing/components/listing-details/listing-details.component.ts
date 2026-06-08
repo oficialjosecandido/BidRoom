@@ -285,7 +285,7 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
           reverseButtons: true
         }).then(result => {
           if (result.isConfirmed) {
-            this.router.navigate(['/dashboard/seller'], { queryParams: { tab: 'transactions' } });
+            this.router.navigate(['/dashboard/transactions']);
           }
         });
       },
@@ -1057,7 +1057,7 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
             confirmButtonText: 'Go to Payment',
             confirmButtonColor: '#7A4F84'
           }).then(() => {
-            this.router.navigate(['/dashboard/buyer'], { queryParams: { tab: 'transactions' } });
+            this.router.navigate(['/dashboard/transactions']);
           });
         },
         error: (err) => {
@@ -1214,7 +1214,7 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
   }
 
   goToBuyerTransactions(): void {
-    this.router.navigate(['/dashboard/buyer'], { queryParams: { tab: 'transactions' } });
+    this.router.navigate(['/dashboard/transactions']);
   }
 
   /** True when the current authenticated buyer is the chosen winner of this auction. */
@@ -1273,7 +1273,7 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
           reverseButtons: true
         }).then(result => {
           if (result.isConfirmed) {
-            this.router.navigate(['/dashboard/seller'], { queryParams: { tab: 'transactions' } });
+            this.router.navigate(['/dashboard/transactions']);
           }
         });
       },

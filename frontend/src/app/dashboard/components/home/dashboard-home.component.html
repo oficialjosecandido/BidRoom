@@ -80,8 +80,8 @@
   </div>
   }
 
-  @if (!isLoading && statCards.length > 0) {
-    <div class="stats-grid" [style.grid-template-columns]="statsGridColumns">
+  @if (statCards.length > 0 || showBuyerReputation || showSellerReputation) {
+    <div class="stats-grid" [style.grid-template-columns]="topRowGridColumns">
       @for (card of statCards; track card.key) {
         <div class="stat-card">
           <div class="stat-label">{{ card.label }}</div>
@@ -89,116 +89,54 @@
           <div class="stat-change" [class.up]="card.subUp">{{ card.sub }}</div>
         </div>
       }
-    </div>
-  }
-
-  @if (isLoading) {
-    <div class="loading-state">
-      <div class="spinner"></div>
-      <p>{{ 'dashboard.home.loading' | translate }}</p>
-    </div>
-  }
-
-  @if (error && !isLoading) {
-    <div class="error-state">
-      <p class="error-message">{{ error }}</p>
-      <button class="retry-btn" (click)="loadMyListings()">{{ 'dashboard.common.tryAgain' | translate }}</button>
-    </div>
-  }
-
-  @if (!isLoading && !error) {
-    <section class="section">
-      <div class="section-header">
-        <h2 class="section-title">{{ 'dashboard.home.sectionActiveBids' | translate }}</h2>
-        <a routerLink="/dashboard/buyer" [queryParams]="{ tab: 'bets' }" class="section-link">
-          {{ 'dashboard.home.viewAll' | translate }}
-          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M1 6h10M7 2l4 4-4 4"/></svg>
-        </a>
-      </div>
-      @if (activeBidderListings.length > 0) {
-        <div class="listing-list mock-list">
-          @for (listing of activeBidderListings.slice(0, 5); track listing._id) {
-            <a [routerLink]="['/listing', listing.slug]" class="listing-row">
-              <div class="lr-thumb">
-                @if (getListingThumb(listing); as thumb) {
-                  <img [src]="thumb" [alt]="listing.title" />
-                } @else {
-                  <span>{{ getListingEmoji(listing) }}</span>
-                }
-              </div>
-              <div class="lr-info">
-                <div class="lr-title">{{ listing.title }}</div>
-                <div class="lr-meta">
-                  <span class="lr-badge-type">{{ getFormatLabel(listing) }}</span>
-                  · {{ 'dashboard.home.yourBid' | translate }}:
-                  <strong [style.color]="isListingWinning(listing) ? 'var(--gold)' : 'var(--red)'">{{ formatPrice(listing.myHighestBid ?? listing.currentPrice) }}</strong>
-                  · {{ getTimeRemaining(listing.endDate) }}
+      @if (showBuyerReputation) {
+        <div class="home-rep-card">
+          <div class="home-rep-card-title">{{ 'dashboard.settings.buyerScore' | translate }}</div>
+          @if (buyerScore !== null) {
+            <div class="rep-score">
+              <div class="rep-number rep-number--buyer">{{ (buyerScore * 10) | number:'1.0-0' }}</div>
+              <div class="rep-bar-wrap">
+                <div class="rep-bar-track">
+                  <div class="rep-bar-fill rep-bar-fill--buyer" [style.width.%]="buyerScore * 10"></div>
+                </div>
+                <div class="rep-labels">
+                  <span class="rep-label-text">{{ 'dashboard.settings.overallScore' | translate }}</span>
+                  <span class="rep-label-text">{{ buyerScore | number:'1.1-1' }} / {{ reviewScoreMax }} · {{ buyerReviewCount }} {{ buyerReviewCount === 1 ? ('dashboard.common.review' | translate) : ('dashboard.common.reviews' | translate) }}</span>
                 </div>
               </div>
-              <div class="lr-right">
-                <div class="lr-price">{{ formatPrice(listing.currentPrice) }}</div>
-                <span class="lr-status" [class]="getBidStatusClass(listing)">
-                  @if (isListingWinning(listing)) { <span class="status-dot"></span> }
-                  {{ getBidStatusKey(listing) | translate }}
-                </span>
-              </div>
-            </a>
+            </div>
+          } @else {
+            <p class="rep-empty">{{ 'dashboard.settings.noReviews' | translate }}</p>
           }
         </div>
-      } @else {
-        <div class="empty">
-          <div class="empty-ico">🔨</div>
-          <div class="empty-title">{{ 'dashboard.myBets.emptyTitle' | translate }}</div>
-          <p class="empty-sub">{{ 'dashboard.myBets.emptyDesc' | translate }}</p>
-        </div>
       }
-    </section>
-  }
-
-  @if (!isLoading && !error) {
-    <section class="section">
-      <div class="section-header">
-        <h2 class="section-title">{{ 'dashboard.home.myListingsTitle' | translate }}</h2>
-        <a routerLink="/dashboard/seller" class="section-link">
-          {{ 'dashboard.home.viewAll' | translate }}
-          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M1 6h10M7 2l4 4-4 4"/></svg>
-        </a>
-      </div>
-      @if (activeListings.length > 0) {
-        <div class="listing-list mock-list">
-          @for (listing of activeListings.slice(0, 5); track listing._id) {
-            <a [routerLink]="['/listing', listing.slug]" class="listing-row">
-              <div class="lr-thumb">
-                @if (getListingThumb(listing); as thumb) {
-                  <img [src]="thumb" [alt]="listing.title" />
-                } @else {
-                  <span>{{ getListingEmoji(listing) }}</span>
-                }
-              </div>
-              <div class="lr-info">
-                <div class="lr-title">{{ listing.title }}</div>
-                <div class="lr-meta">
-                  <span class="lr-badge-type">{{ getFormatLabel(listing) }}</span>
-                  · {{ listing.bidCount }} {{ 'dashboard.home.bids' | translate }}
-                  · {{ getTimeRemaining(listing.endDate) }}
+      @if (showSellerReputation) {
+        <div class="home-rep-card">
+          <div class="home-rep-card-title">{{ 'dashboard.settings.sellerScore' | translate }}</div>
+          @if (sellerScore !== null) {
+            <div class="rep-score">
+              <div class="rep-number rep-number--seller">{{ (sellerScore * 10) | number:'1.0-0' }}</div>
+              <div class="rep-bar-wrap">
+                <div class="rep-bar-track">
+                  <div class="rep-bar-fill rep-bar-fill--seller" [style.width.%]="sellerScore * 10"></div>
+                </div>
+                <div class="rep-labels">
+                  <span class="rep-label-text">{{ 'dashboard.settings.overallScore' | translate }}</span>
+                  <span class="rep-label-text">{{ sellerScore | number:'1.1-1' }} / {{ reviewScoreMax }} · {{ sellerReviewCount }} {{ sellerReviewCount === 1 ? ('dashboard.common.review' | translate) : ('dashboard.common.reviews' | translate) }}</span>
                 </div>
               </div>
-              <div class="lr-right">
-                <div class="lr-price">{{ formatPrice(listing.currentPrice) }}</div>
-                <span class="lr-status status-live"><span class="status-dot"></span>{{ 'dashboard.home.live' | translate }}</span>
-              </div>
-            </a>
+            </div>
+          } @else {
+            <p class="rep-empty">{{ 'dashboard.settings.noReviews' | translate }}</p>
           }
         </div>
-      } @else {
-        <div class="empty">
-          <div class="empty-ico">📋</div>
-          <div class="empty-title">{{ 'dashboard.home.noActiveListings' | translate }}</div>
-          <a routerLink="/listing/add" class="btn-action btn-primary-action" style="margin-top:12px;display:inline-flex">{{ 'dashboard.home.createListing' | translate }}</a>
-        </div>
       }
-    </section>
+    </div>
   }
+
+  <section class="section analytics-section">
+    <app-seller-analytics />
+  </section>
 
   @if (!isLoading && pendingReviews.length > 0) {
     <section class="section">
@@ -242,7 +180,7 @@
               <span class="review-target-name">{{ reviewTarget.otherPartyName }}</span>
               <span class="review-target-detail">{{ 'dashboard.home.as' | translate }} {{ reviewTarget.theirRole }} {{ 'dashboard.home.for' | translate }} {{ reviewTarget.listingTitle }}</span>
             </div>
-            <a [routerLink]="getTransactionLink(reviewTarget)" [queryParams]="{ tab: 'transactions' }" [fragment]="reviewTarget.transactionId ? 'transaction-' + reviewTarget.transactionId : undefined" class="review-view-transaction-btn" (click)="closeReviewModal()">
+            <a routerLink="/dashboard/transactions" [fragment]="reviewTarget.transactionId ? 'transaction-' + reviewTarget.transactionId : undefined" class="review-view-transaction-btn" (click)="closeReviewModal()">
               <span class="btn-icon">🔗</span>
               {{ 'dashboard.home.viewTransactionDetails' | translate }}
             </a>

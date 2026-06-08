@@ -7,7 +7,7 @@ const BASE_URL   = 'https://www.bidroom.pt';
 const DEFAULT_OG = `${BASE_URL}/og-image.svg`;
 
 const DEFAULTS = {
-  title:       'BidRoom — Leilões Premium em Portugal',
+  title:       'BidRoom — Leilões Premium',
   description: 'Compra e vende artigos únicos através de leilões em tempo real, Melhor Proposta ou Sala Privada. Pagamentos seguros, payouts directos.',
   url:         BASE_URL,
   image:       DEFAULT_OG,

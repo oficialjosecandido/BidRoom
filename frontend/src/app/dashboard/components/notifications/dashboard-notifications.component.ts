@@ -82,18 +82,18 @@ export class DashboardNotificationsComponent implements OnInit, OnDestroy {
   private getNotificationUrl(notification: Notification): string | null {
     if (notification.link) return notification.link;
     const fallbacks: Record<string, string> = {
-      auction_ended: '/dashboard/buyer?tab=transactions',
-      shipping: '/dashboard/buyer?tab=transactions',
-      transaction: '/dashboard/buyer?tab=transactions',
-      bid: '/dashboard/buyer?tab=bets',
+      auction_ended: '/dashboard/transactions',
+      shipping: '/dashboard/transactions',
+      transaction: '/dashboard/transactions',
+      bid: '/dashboard/my-bets',
       dispute: '/dashboard/disputes',
       listing: '/dashboard/seller',
       follow: '/dashboard/following',
-      watchlist: '/dashboard/buyer?tab=watchlist',
+      watchlist: '/dashboard/buyer',
       private_room: '/dashboard/buyer',
       account: '/dashboard/settings',
       security: '/dashboard/settings',
-      review: '/dashboard/buyer?tab=transactions'
+      review: '/dashboard/transactions'
     };
     return fallbacks[notification.type] || null;
   }

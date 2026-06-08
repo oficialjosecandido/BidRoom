@@ -17,7 +17,8 @@
       "signIn": "Entrar",
       "startBidding": "Começar",
       "publish": "Publicar",
-      "notifications": "Notificações"
+      "notifications": "Notificações",
+      "notificationsUnread": "{{count}} notificações não lidas"
     },
     "search": {
       "placeholder": "Procurar leilões, artigos, vendedores…",
@@ -44,7 +45,7 @@
       "signIn": "Entrar"
     },
     "home": {
-      "skipHeading": "BidRoom.pt — leilões premium em Portugal. Disponível em modo claro e escuro, com referências aos azulejos portugueses no modo claro.",
+      "skipHeading": "BidRoom.pt — leilões premium. Disponível em modo claro e escuro, com referências aos azulejos no modo claro.",
       "breadcrumb": {
         "home": "Início",
         "featured": "Leilões em destaque"
@@ -57,13 +58,13 @@
       "hero": {
         "svgDarkTitle": "Ilustração decorativa modo escuro — sardinha e azulejos",
         "svgLightTitle": "Fundo decorativo de azulejos — modo claro",
-        "eyebrow": "Portugal · Leilões premium",
+        "eyebrow": "Leilões premium",
         "title1": "Leilões de",
         "title2": "alto valor,",
         "titleEm": "feitos bem.",
         "titleLine1": "Compre o",
         "titleLine2": "extraordinário.",
-        "subtitle": "A primeira plataforma portuguesa de leilões premium com salas privadas em tempo real, reputação verificada e pagamentos seguros.",
+        "subtitle": "Uma plataforma de leilões premium com salas privadas em tempo real, reputação verificada e pagamentos seguros.",
         "subtitleAlt": "Leilões em tempo real para relógios, arte e peças únicas.",
         "ctaExplore": "Explorar leilões",
         "ctaHow": "Como funciona",
@@ -170,10 +171,10 @@
         "c5t": "Moderação por IA",
         "c5b": "Azure AI analisa texto e imagens. Artigos proibidos e conteúdo impróprio bloqueados automaticamente.",
         "c6t": "Português e Inglês",
-        "c6b": "Plataforma completamente bilingue, adaptada ao mercado português com suporte integral em PT e EN."
+        "c6b": "Plataforma completamente bilingue com suporte integral em português e inglês."
       },
       "footer": {
-        "tagline": "O marketplace de leilões premium de Portugal.",
+        "tagline": "O marketplace de leilões premium.",
         "platform": "Plataforma",
         "account": "Conta",
         "legal": "Legal",
@@ -210,7 +211,7 @@
     }
   },
   "footer": {
-    "tagline": "O marketplace de leilões premium de Portugal.",
+    "tagline": "O marketplace de leilões premium.",
     "quickLinks": "Links Rápidos",
     "howItWorks": "Como funciona",
     "contact": "Contacto",
@@ -727,6 +728,7 @@
     "minPrice": "Preço mínimo",
     "badgeLive": "Ao vivo",
     "badgeClosing": "A fechar",
+    "badgeAuction": "Leilão",
     "badgeBestOffer": "Melhor Oferta",
     "badgePrivateRoom": "Sala Privada",
     "addWatchlist": "Adicionar à watchlist",
@@ -745,8 +747,9 @@
   "categories": {
     "title": "Navegar por Categoria",
     "subtitle": "Explore todas as nossas categorias e subcategorias",
-    "browseAll": "Ver todos",
-    "allListings": "Todos os Anúncios",
+    "browseAll": "Ver todos os leilões",
+    "browseCategory": "Ver categoria",
+    "subcategoryCount": "{{count}} subcategorias",
     "follow": "Seguir",
     "following": "A seguir",
     "unfollow": "Deixar de seguir"
@@ -1276,6 +1279,7 @@
   "dashboard": {
     "sidebar": {
       "home": "Início",
+      "browseAuctions": "Ver Leilões",
       "store": "Loja",
       "main": "Principal",
       "activity": "Atividade",
@@ -1292,6 +1296,7 @@
       "buyerProfile": "Perfil do Comprador",
       "sellerProfile": "Perfil do Vendedor",
       "settings": "Configurações",
+      "disputes": "Disputas",
       "logout": "Sair"
     },
     "following": {
@@ -1334,7 +1339,6 @@
       "balance": "Saldo",
       "buyerScore": "Pontuação como Comprador",
       "sellerScore": "Pontuação como Vendedor",
-      "noReviews": "Sem avaliações ainda",
       "topUpHistory": "Histórico de Recargas",
       "noTopUps": "Sem recargas ainda.",
       "date": "Data",
@@ -1346,12 +1350,6 @@
       "noActiveListings": "Sem anúncios ativos.",
       "viewAll": "Ver todos os anúncios",
       "errorLoading": "Falha ao carregar dados do painel.",
-      "reviewModalTitle": "Deixar uma Avaliação",
-      "reviewModalDesc": "Como foi sua experiência com esta transação?",
-      "reviewRating": "Avaliação",
-      "reviewComment": "Comentário (opcional)",
-      "reviewSubmit": "Enviar Avaliação",
-      "reviewSubmitting": "Enviando...",
       "reviewError": "Falha ao enviar avaliação.",
       "balanceModalTitle": "Seu Saldo",
       "topUp": "Recarregar",
@@ -1366,7 +1364,6 @@
       "increaseBalance": "Aumentar Saldo",
       "reviews": "avaliações",
       "review": "avaliação",
-      "noReviewsYet": "Sem avaliações ainda",
       "viewProfile": "Ver Perfil",
       "yourMembership": "Sua Assinatura",
       "balanceLabel": "Saldo:",
@@ -1385,8 +1382,6 @@
       "ends": "Termina",
       "recentlyEnded": "Recentemente encerrado",
       "noOffersYet": "Nenhuma oferta ainda",
-      "leaveAReview": "Deixar Avaliação",
-      "leaveReviewDesc": "Avalie suas transações recentes para ajudar a comunidade.",
       "as": "como",
       "leaveReview": "Deixar Avaliação",
       "youreReviewing": "Você está avaliando",
@@ -1422,7 +1417,6 @@
       "continueToCheckout": "Continuar para o Checkout",
       "buyingWatchlist": "Compras e Lista de Favoritos",
       "subtitle": "Aqui está o resumo da sua conta",
-      "myListingsTitle": "Os meus anúncios",
       "live": "Ativo",
       "pendingReviews": "Avaliações pendentes",
       "greeting": {
@@ -1436,11 +1430,7 @@
       "statAwaitingSeller": "à espera do vendedor",
       "statPendingTx": "Transacções pendentes",
       "statActionNeeded": "ação necessária",
-      "statReputation": "Reputação",
-      "statOutOf100": "em 100",
       "statActiveListings": "Anúncios activos",
-      "sectionActiveBids": "Lances activos",
-      "yourBid": "O seu lance",
       "formatAuction": "Leilão",
       "formatBestOffer": "Melhor oferta",
       "statusWinning": "A ganhar",
@@ -1544,21 +1534,6 @@
     "role": {
       "toggleLabel": "Modo comprador ou vendedor"
     },
-    "buyer": {
-      "title": "Perfil do Comprador",
-      "subtitle": "Gerencie seus lances, lista de favoritos e compras.",
-      "tabBets": "Meus Lances",
-      "tabWatchlist": "Favoritos",
-      "tabTransactions": "Transações",
-      "tabDisputes": "Disputas",
-      "noReviews": "Sem avaliações ainda.",
-      "tabs": {
-        "bets": "Meus Lances",
-        "watchlist": "Favoritos",
-        "transactions": "Transações",
-        "disputes": "Disputas"
-      }
-    },
     "myBets": {
       "title": "Meus Lances",
       "subtitle": "Todos os seus lances e ofertas em um só lugar. Expanda um anúncio para ver o histórico.",
@@ -1588,14 +1563,10 @@
     "seller": {
       "title": "Perfil do Vendedor",
       "subtitle": "Gerencie seus anúncios, vendas e pagamentos.",
-      "tabAuctions": "Meus Leilões",
-      "tabTransactions": "Transações",
-      "tabDisputes": "Disputas",
       "noReviews": "Sem avaliações ainda.",
       "tabs": {
         "auctions": "Meus Anúncios",
         "analytics": "Análises",
-        "transactions": "Transações",
         "disputes": "Disputas"
       },
       "analytics": {
@@ -1870,6 +1841,15 @@
     "filterDelivered": "Entregues",
     "filterCompleted": "Concluídas",
     "filterDisputed": "Disputas",
+    "table": {
+      "item": "Artigo",
+      "role": "Papel",
+      "status": "Estado",
+      "amount": "Valor",
+      "date": "Data",
+      "manage": "Gerir",
+      "noFilterResults": "Nenhuma transação corresponde a este filtro."
+    },
     "drawer": {
       "details": "Detalhes",
       "amount": "Valor",
@@ -1934,11 +1914,6 @@
     "uploadingProof": "Enviando...",
     "leaveReview": "Deixar uma Avaliação",
     "reviewLeft": "Avaliação enviada",
-    "reviewModalTitle": "Deixar uma Avaliação",
-    "reviewRating": "Avaliação",
-    "reviewComment": "Comentário (opcional)",
-    "reviewSubmit": "Enviar Avaliação",
-    "reviewSubmitting": "Enviando...",
     "reviewError": "Falha ao enviar avaliação.",
     "openDispute": "Abrir Disputa",
     "disputeOpenedBadge": "Disputa Aberta",

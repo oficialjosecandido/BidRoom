@@ -4,51 +4,6 @@
     <p class="page-subtitle">{{ 'dashboard.settings.subtitle' | translate }}</p>
   </div>
 
-  <!-- Reputation section -->
-  <div class="settings-section">
-    <h2 class="section-title">{{ 'dashboard.settings.reputation' | translate }}</h2>
-    <div class="rep-grid">
-      <div class="settings-card rep-card">
-        <div class="settings-card-title">{{ 'dashboard.settings.buyerScore' | translate }}</div>
-        @if (buyerScore !== null) {
-          <div class="rep-score">
-            <div class="rep-number" [style.color]="'var(--gold)'">{{ (buyerScore * 10) | number:'1.0-0' }}</div>
-            <div class="rep-bar-wrap">
-              <div class="rep-bar-track">
-                <div class="rep-bar-fill" [style.width.%]="buyerScore * 10"></div>
-              </div>
-              <div class="rep-labels">
-                <span class="rep-label-text">{{ 'dashboard.settings.overallScore' | translate }}</span>
-                <span class="rep-label-text">{{ buyerScore | number:'1.1-1' }} / {{ reviewScoreMax }} · {{ buyerReviewCount }} {{ 'dashboard.common.reviews' | translate }}</span>
-              </div>
-            </div>
-          </div>
-        } @else {
-          <p class="rep-empty">{{ 'dashboard.settings.noReviews' | translate }}</p>
-        }
-      </div>
-      <div class="settings-card rep-card">
-        <div class="settings-card-title">{{ 'dashboard.settings.sellerScore' | translate }}</div>
-        @if (sellerScore !== null) {
-          <div class="rep-score">
-            <div class="rep-number" [style.color]="'var(--green)'">{{ (sellerScore * 10) | number:'1.0-0' }}</div>
-            <div class="rep-bar-wrap">
-              <div class="rep-bar-track">
-                <div class="rep-bar-fill" [style.width.%]="sellerScore * 10" style="background:var(--green)"></div>
-              </div>
-              <div class="rep-labels">
-                <span class="rep-label-text">{{ 'dashboard.settings.overallScore' | translate }}</span>
-                <span class="rep-label-text">{{ sellerScore | number:'1.1-1' }} / {{ reviewScoreMax }} · {{ sellerReviewCount }} {{ 'dashboard.common.reviews' | translate }}</span>
-              </div>
-            </div>
-          </div>
-        } @else {
-          <p class="rep-empty">{{ 'dashboard.settings.noReviews' | translate }}</p>
-        }
-      </div>
-    </div>
-  </div>
-
   <div class="settings-grid">
     <!-- Profile Info -->
     <div class="settings-card">
@@ -93,7 +48,7 @@
     </div>
 
     <!-- DSA seller classification -->
-    <div class="settings-card settings-card-full">
+    <div class="settings-card">
       <div class="card-header">
         <span class="card-icon">⚖️</span>
         <h2 class="card-title">{{ 'dashboard.settings.dsa.title' | translate }}</h2>
