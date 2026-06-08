@@ -24,7 +24,7 @@ const listingSchema = new mongoose.Schema({
   category: {
     type: String,
     required: true,
-    enum: ['electronics', 'home-garden', 'art', 'collectibles', 'jewelry'],
+    enum: ['electronics', 'home-garden', 'art', 'collectibles', 'jewelry', 'real-estate', 'vehicles'],
     index: true
   },
   subCategory: {

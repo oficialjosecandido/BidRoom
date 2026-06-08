@@ -22,17 +22,21 @@ import { FollowService, FollowStatus } from '../../../shared/services/follow.ser
 import { BlockService } from '../../../shared/services/block.service';
 import { ThemeService } from '../../../shared/services/theme.service';
 import { HeaderComponent } from '../../../shared/components/header/header.component';
+import { FooterComponent } from '../../../shared/components/footer/footer.component';
+import { getTrustTierInfo } from '../../../shared/utils/trust-tier.util';
 import { SeoService } from '../../../shared/services/seo.service';
 import { API_CONFIG } from '../../../shared/config/api.config';
 
 @Component({
   selector: 'app-listing-details',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslateModule, RouterLink, ReportModalComponent, HeaderComponent],
+  imports: [CommonModule, FormsModule, TranslateModule, RouterLink, ReportModalComponent, HeaderComponent, FooterComponent],
   templateUrl: './listing-details.component.html',
   styleUrls: ['./listing-details.component.scss']
 })
 export class ListingDetailsComponent implements OnInit, OnDestroy {
+  readonly getTrustTierInfo = getTrustTierInfo;
+
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private location = inject(Location);

@@ -336,6 +336,61 @@
         }
       </div>
     </div>
+    <!-- Payment Method — Buyer Trust Tier 3 -->
+    <div class="settings-card">
+      <div class="card-header">
+        <span class="card-icon">🛡️</span>
+        <h2 class="card-title">{{ 'dashboard.settings.paymentMethod.title' | translate }}</h2>
+      </div>
+      <div class="card-body">
+        @if (loadingPaymentMethod) {
+          <p class="loading-text">{{ 'dashboard.settings.paymentMethod.loading' | translate }}</p>
+        } @else if (savedPaymentMethod?.saved) {
+          <div class="trust-badge-active">
+            <span class="trust-badge-icon">🛡️</span>
+            <div>
+              <strong>{{ 'dashboard.settings.paymentMethod.activeBadge' | translate }}</strong>
+              <small>{{ 'dashboard.settings.paymentMethod.activeDesc' | translate }}</small>
+            </div>
+          </div>
+          <div class="saved-card-row">
+            <span class="card-brand">{{ savedPaymentMethod!.brand | uppercase }}</span>
+            <span class="card-number">•••• {{ savedPaymentMethod!.last4 }}</span>
+            <span class="card-expiry">{{ savedPaymentMethod!.expiry }}</span>
+            <button class="btn-remove-card" (click)="removeCard()" title="Remove card">✕</button>
+          </div>
+          <p class="card-disclaimer">{{ 'dashboard.settings.paymentMethod.disclaimer' | translate }}</p>
+        } @else {
+          <div class="trust-upgrade-prompt">
+            <div class="trust-upgrade-icon">🛡️</div>
+            <div class="trust-upgrade-text">
+              <strong>{{ 'dashboard.settings.paymentMethod.upgradeTitle' | translate }}</strong>
+              <ul class="trust-upgrade-list">
+                <li>{{ 'dashboard.settings.paymentMethod.benefit1' | translate }}</li>
+                <li>{{ 'dashboard.settings.paymentMethod.benefit2' | translate }}</li>
+                <li>{{ 'dashboard.settings.paymentMethod.benefit3' | translate }}</li>
+              </ul>
+            </div>
+          </div>
+          <button class="action-btn" (click)="toggleAddCard()">
+            {{ showAddCard ? ('dashboard.settings.paymentMethod.cancel' | translate) : ('dashboard.settings.paymentMethod.addCard' | translate) }}
+          </button>
+          @if (showAddCard) {
+            <div class="card-form-wrap">
+              <div id="card-element" class="stripe-card-element"></div>
+              @if (cardError) {
+                <div class="card-error">{{ cardError }}</div>
+              }
+              <button class="action-btn" (click)="saveCard()" [disabled]="savingCard">
+                {{ savingCard ? ('dashboard.settings.paymentMethod.saving' | translate) : ('dashboard.settings.paymentMethod.saveCard' | translate) }}
+              </button>
+              <p class="stripe-note">🔒 {{ 'dashboard.settings.paymentMethod.stripeNote' | translate }}</p>
+            </div>
+          }
+        }
+      </div>
+    </div>
+
     <!-- Notification Preferences -->
     <div class="settings-card">
       <div class="card-header">

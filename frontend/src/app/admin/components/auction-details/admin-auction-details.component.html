@@ -180,11 +180,8 @@
                           @if (bidder.emailVerified) {
                             <span class="badge verified">Verified</span>
                           }
-                          @if (bidder.hasDeposit) {
-                            <span class="badge deposit">Deposit</span>
-                          }
                           @if (isPlatinumBidder(bidder._id)) {
-                            <span class="badge platinum">Platinum</span>
+                            <span class="badge invited">Invited</span>
                           }
                         </div>
                       </td>
@@ -243,7 +240,7 @@
 }
             @if (auction.privateRoomStatus !== 'active' && auction.privateRoomStatus !== 'eligible') {
 <p class="action-hint">
-              Select up to 5 Platinum Bidders to invite to the private room
+              Select up to 5 bidders to invite to the private room
             </p>
 }
             @if (auction.status === 'ended') {
@@ -263,13 +260,13 @@
 <div class="modal-overlay" (click)="closePlatinumSelection()">
     <div class="modal-content" (click)="$event.stopPropagation()">
       <div class="modal-header">
-        <h2>Select Platinum Bidders</h2>
+        <h2>Select Private Room Bidders</h2>
         <button class="close-btn" (click)="closePlatinumSelection()">×</button>
       </div>
       
       <div class="modal-body">
         <p class="selection-info">
-          Select up to 5 Platinum Bidders to invite to the private auction room. 
+          Select up to 5 bidders to invite to the private auction room.
           Only authenticated users can be selected.
         </p>
         
@@ -303,9 +300,6 @@
             <div class="bidder-selection-badges">
               @if (bidder.emailVerified) {
 <span class="badge verified">Verified</span>
-}
-              @if (bidder.hasDeposit) {
-<span class="badge deposit">Deposit</span>
 }
             </div>
           </div>

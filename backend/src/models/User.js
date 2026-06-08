@@ -192,6 +192,13 @@ const userSchema = new mongoose.Schema({
   kycRejectionReason: { type: String, default: null },
   kycSubmittedAt: { type: Date, default: null },
 
+  // ─── Buyer payment method (Tier 3 trust & dispute compensation) ──────────
+  stripeCustomerId: { type: String, default: null, trim: true, sparse: true },
+  savedPaymentMethodId: { type: String, default: null, trim: true },
+  savedPaymentMethodBrand: { type: String, default: null, trim: true },
+  savedPaymentMethodLast4: { type: String, default: null, trim: true },
+  savedPaymentMethodExpiry: { type: String, default: null, trim: true },
+
   // ─── DSA Article 29 compliance monitoring ────────────────────────────────
   /** When the platform first issued a DSA threshold-exceeded warning to this seller */
   dsaWarningIssuedAt: { type: Date, default: null, index: true },
@@ -265,6 +272,14 @@ userSchema.pre('save', async function (next) {
     this.slug = await generateUniqueSlug(base, this._id);
   }
   next();
+});
+
+// Virtual: buyer trust tier (computed, never stored)
+userSchema.virtual('buyerTrustTier').get(function () {
+  if (this.kycStatus === 'approved' && this.savedPaymentMethodId) return 3;
+  if (this.kycStatus === 'approved') return 2;
+  if (this.emailVerified) return 1;
+  return 0;
 });
 
 const User = mongoose.model('User', userSchema);

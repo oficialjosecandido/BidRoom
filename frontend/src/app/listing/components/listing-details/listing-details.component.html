@@ -197,7 +197,11 @@
                         @if (bid.bidderFirstName && bid.bidderLastName) { {{ bid.bidderFirstName }} {{ bid.bidderLastName }} }
                         @else { {{ bid.bidderName || ('listingDetails.bidHistory.anonymous' | translate) }} }
                       </span>
-                      @if (bid.isAuthenticated) { <span class="chip c-ver">{{ 'listingDetails.bidHistory.verified' | translate }}</span> }
+                      @if (bid.isAuthenticated) {
+                        <span class="trust-badge" [ngClass]="getTrustTierInfo(bid.buyerTrustTier ?? 1).cssClass" [title]="getTrustTierInfo(bid.buyerTrustTier ?? 1).sellerNote">
+                          {{ getTrustTierInfo(bid.buyerTrustTier ?? 1).icon }} {{ getTrustTierInfo(bid.buyerTrustTier ?? 1).labelPt }}
+                        </span>
+                      }
                       @else { <span class="chip c-sub">{{ 'listingDetails.bidHistory.guestBidder' | translate }}</span> }
                       @if (isWinnerBid(bid)) { <span class="chip c-win">{{ 'listingDetails.bidsTab.winnerChip' | translate }}</span> }
                     </div>
@@ -738,5 +742,7 @@
     (closed)="showReportModal = null"
   ></app-report-modal>
 }
+
+<app-footer></app-footer>
 
 </div><!-- /pg -->

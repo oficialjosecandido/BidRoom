@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
@@ -7,6 +7,8 @@ import { CustomerService, SellerCompliance } from '../../../shared/services/cust
 import { ThemePreference, ThemeService } from '../../../shared/services/theme.service';
 import { StripeConnectService, ConnectAccountStatus, OnboardingFormData } from '../../../shared/services/stripe-connect.service';
 import { NotificationPreferencesService, NotificationPreferences, NOTIFICATION_EVENT_KEYS, DEFAULT_CHANNEL_PREF } from '../../../shared/services/notification-preferences.service';
+import { BuyerPaymentService, PaymentMethodResponse } from '../../../shared/services/buyer-payment.service';
+import { loadStripe, Stripe, StripeElements, StripeCardElement } from '@stripe/stripe-js';
 import { Observable } from 'rxjs';
 
 @Component({
@@ -16,13 +18,14 @@ import { Observable } from 'rxjs';
   templateUrl: './dashboard-settings.component.html',
   styleUrls: ['./dashboard-settings.component.scss']
 })
-export class DashboardSettingsComponent implements OnInit {
+export class DashboardSettingsComponent implements OnInit, OnDestroy {
   private authService = inject(AuthService);
   private customerService = inject(CustomerService);
   private translate = inject(TranslateService);
   readonly theme = inject(ThemeService);
   private stripeConnect = inject(StripeConnectService);
   private notifPrefsService = inject(NotificationPreferencesService);
+  private buyerPaymentService = inject(BuyerPaymentService);
 
   /** Display scale for buyer/seller review averages (matches 1–10 transaction reviews). */
   readonly reviewScoreMax = 10;
@@ -100,6 +103,16 @@ export class DashboardSettingsComponent implements OnInit {
   dsaError: string | null = null;
   dsaSaved = false;
 
+  // Payment method (Buyer Trust Tier 3)
+  savedPaymentMethod: PaymentMethodResponse | null = null;
+  loadingPaymentMethod = true;
+  showAddCard = false;
+  savingCard = false;
+  cardError: string | null = null;
+  private stripe: Stripe | null = null;
+  private stripeElements: StripeElements | null = null;
+  private cardElement: StripeCardElement | null = null;
+
   readonly notifEventKeys = NOTIFICATION_EVENT_KEYS;
   notifPrefs: NotificationPreferences | null = null;
   notifPrefsLoading = false;
@@ -144,6 +157,78 @@ export class DashboardSettingsComponent implements OnInit {
 
     this.loadConnectStatus();
     this.loadNotifPrefs();
+    this.loadPaymentMethod();
+  }
+
+  ngOnDestroy(): void {
+    this.cardElement?.destroy();
+  }
+
+  loadPaymentMethod(): void {
+    this.buyerPaymentService.getPaymentMethod().subscribe({
+      next: (pm) => { this.savedPaymentMethod = pm; this.loadingPaymentMethod = false; },
+      error: () => { this.loadingPaymentMethod = false; }
+    });
+  }
+
+  toggleAddCard(): void {
+    this.showAddCard = !this.showAddCard;
+    if (this.showAddCard) {
+      this.initStripeElements();
+    } else {
+      this.cardElement?.destroy();
+      this.cardElement = null;
+      this.cardError = null;
+    }
+  }
+
+  async initStripeElements(): Promise<void> {
+    const pk = (window as any).APP_CONFIG?.STRIPE_PUBLISHABLE_KEY;
+    if (!pk) return;
+    this.stripe = await loadStripe(pk);
+    this.stripeElements = this.stripe!.elements();
+    this.cardElement = this.stripeElements.create('card', {
+      style: { base: { fontFamily: 'DM Sans, sans-serif', fontSize: '14px', color: 'var(--text)' } }
+    });
+    setTimeout(() => this.cardElement?.mount('#card-element'), 0);
+  }
+
+  async saveCard(): Promise<void> {
+    if (!this.stripe || !this.cardElement) return;
+    this.savingCard = true;
+    this.cardError = null;
+
+    this.buyerPaymentService.createSetupIntent().subscribe({
+      next: async (res) => {
+        const { error } = await this.stripe!.confirmCardSetup(res.clientSecret, {
+          payment_method: { card: this.cardElement! }
+        });
+        if (error) {
+          this.cardError = error.message ?? 'Erro ao guardar o cartão.';
+          this.savingCard = false;
+        } else {
+          setTimeout(() => {
+            this.showAddCard = false;
+            this.savingCard = false;
+            this.cardElement?.destroy();
+            this.cardElement = null;
+            this.loadPaymentMethod();
+          }, 1500);
+        }
+      },
+      error: () => {
+        this.cardError = 'Erro ao iniciar o processo. Tenta novamente.';
+        this.savingCard = false;
+      }
+    });
+  }
+
+  removeCard(): void {
+    if (!confirm('Remover cartão guardado? O badge Pagamento Garantido será desactivado.')) return;
+    this.buyerPaymentService.deletePaymentMethod().subscribe({
+      next: () => this.loadPaymentMethod(),
+      error: (err) => alert(err.error?.message ?? 'Erro ao remover o cartão.')
+    });
   }
 
   saveLanguage(): void {

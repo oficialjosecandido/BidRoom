@@ -8,6 +8,33 @@ export interface Category {
 
 export const CATEGORIES: Category[] = [
   {
+    id: 'real-estate',
+    name: 'Real Estate',
+    icon: '🏢',
+    description: 'Apartments, houses and land',
+    subCategories: [
+      'Apartments', 'Studios', 'Duplexes & Penthouses',
+      'Houses', 'Villas', 'Townhouses',
+      'Land & Plots', 'Rural & Countryside',
+      'Commercial Property', 'Office Space', 'Industrial & Warehouse',
+      'Garages & Parking', 'Holiday Homes', 'Other Real Estate'
+    ]
+  },
+  {
+    id: 'vehicles',
+    name: 'Vehicles',
+    icon: '🚗',
+    description: 'Cars, motorcycles and boats',
+    subCategories: [
+      'Cars', 'Classic Cars', 'Electric & Hybrid Cars',
+      'Motorcycles', 'Scooters & Mopeds',
+      'Vans & Minibuses', 'Trucks & HGV',
+      'Boats', 'Jet Skis & Watercraft', 'Sailboats',
+      'Caravans & Motorhomes', 'ATVs & Quad Bikes',
+      'Vehicle Parts', 'Vehicle Accessories', 'Other Vehicles'
+    ]
+  },
+  {
     id: 'electronics',
     name: 'Electronics',
     icon: '📱',

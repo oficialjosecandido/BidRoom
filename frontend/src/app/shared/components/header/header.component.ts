@@ -187,6 +187,11 @@ export class HeaderComponent implements OnInit, OnDestroy {
     this.router.navigate(['/landing/how-it-works']);
   }
 
+  navigateToTrust(): void {
+    this.closeMenu();
+    this.router.navigate(['/landing/trust']);
+  }
+
   navigateToAddListing(): void {
     this.closeMenu();
     this.router.navigate(['/listing/add']);

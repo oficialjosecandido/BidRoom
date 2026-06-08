@@ -287,6 +287,50 @@
   .notif-ch { text-align: center; width: 80px; }
 }
 
+/* ── Payment method card ── */
+.trust-badge-active {
+  display: flex; align-items: flex-start; gap: 10px;
+  background: #EBF1FC; border: 1px solid #7AAEE8; border-radius: 10px;
+  padding: 12px 14px; margin-bottom: 14px;
+  .trust-badge-icon { font-size: 20px; flex-shrink: 0; }
+  strong { display: block; font-size: 14px; color: #1A3C70; margin-bottom: 2px; }
+  small { font-size: 12px; color: var(--sub); }
+}
+.saved-card-row {
+  display: flex; align-items: center; gap: 12px;
+  background: var(--s1, #fafafa); border: 1px solid var(--line);
+  border-radius: 8px; padding: 10px 14px; margin-bottom: 8px;
+  .card-brand { font-size: 12px; font-weight: 700; text-transform: uppercase; color: var(--sub); min-width: 52px; }
+  .card-number { font-family: 'DM Mono', monospace; font-size: 14px; flex: 1; }
+  .card-expiry { font-family: 'DM Mono', monospace; font-size: 13px; color: var(--sub); }
+  .btn-remove-card {
+    background: none; border: none; cursor: pointer;
+    font-size: 16px; color: var(--dim); padding: 2px 6px;
+    &:hover { color: var(--red, #b84040); }
+  }
+}
+.card-disclaimer { font-size: 12px; color: var(--dim); line-height: 1.5; }
+.trust-upgrade-prompt {
+  display: flex; gap: 12px; align-items: flex-start;
+  margin-bottom: 16px;
+  .trust-upgrade-icon { font-size: 28px; flex-shrink: 0; }
+  .trust-upgrade-text strong { display: block; font-size: 14px; margin-bottom: 6px; }
+  .trust-upgrade-list {
+    padding-left: 18px; margin: 0;
+    li { font-size: 13px; color: var(--sub); margin-bottom: 3px; }
+  }
+}
+.card-form-wrap {
+  margin-top: 14px; padding: 16px; border: 1px solid var(--line);
+  border-radius: 10px; background: var(--s1, #fafafa);
+}
+.stripe-card-element {
+  padding: 10px 12px; border: 1px solid var(--line);
+  border-radius: 8px; background: var(--bg); margin-bottom: 12px;
+}
+.card-error { color: #B84040; font-size: 13px; margin-bottom: 10px; }
+.stripe-note { font-size: 12px; color: var(--dim); margin-top: 10px; }
+
 @media (max-width: 700px) {
   .settings-grid { grid-template-columns: 1fr; }
   .rep-grid { grid-template-columns: 1fr; }

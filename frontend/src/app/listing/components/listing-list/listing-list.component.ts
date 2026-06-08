@@ -281,6 +281,10 @@ export class ListingListComponent implements OnInit {
     return `addListing.categories.${catId}`;
   }
 
+  subCategoryLabelKey(sub: string): string {
+    return `addListing.subcategories.${sub}`;
+  }
+
   categoryHasSubcategories(cat: Category): boolean {
     return cat.subCategories.length > 0;
   }

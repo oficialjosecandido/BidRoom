@@ -9,8 +9,8 @@ export interface Bidder {
   lastName?: string;
   email: string;
   emailVerified?: boolean;
-  hasDeposit?: boolean;
   isAuthenticated: boolean;
+  buyerTrustTier?: number;
   bidCount: number;
   highestBid: number;
   firstBidDate: string;

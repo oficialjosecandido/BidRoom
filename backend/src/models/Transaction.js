@@ -233,7 +233,9 @@ const transactionSchema = new mongoose.Schema({
   /** When the admin issued the ruling */
   disputeRuledAt: { type: Date, default: null },
   /** Admin notes (internal) */
-  disputeAdminNotes: { type: String, trim: true, maxlength: 2000, default: null }
+  disputeAdminNotes: { type: String, trim: true, maxlength: 2000, default: null },
+  /** Stripe PaymentIntent ID for buyer compensation charge (seller_payout verdict, Tier 3 buyer) */
+  disputeCompensationChargeId: { type: String, trim: true, default: null }
 }, {
   timestamps: true
 });

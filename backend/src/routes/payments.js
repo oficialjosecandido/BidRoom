@@ -3,6 +3,7 @@ const Stripe = require('stripe');
 const { authenticateToken, requireActiveAccount } = require('../middleware/auth');
 const Customer = require('../models/Customer');
 const Topup = require('../models/Topup');
+const User = require('../models/User');
 const { sendEmail } = require('../services/emailService');
 
 const features = require('../config/features');
@@ -175,6 +176,121 @@ router.get('/topups', authenticateToken, async (req, res) => {
 });
 
 /**
+ * POST /api/payments/setup-intent
+ * Creates a Stripe SetupIntent so the buyer can save a card for off-session dispute charges.
+ * Returns { clientSecret, customerId }.
+ */
+router.post('/setup-intent', authenticateToken, requireActiveAccount, async (req, res) => {
+  const PREFIX = '[SetupIntent]';
+  try {
+    const stripe = getStripe();
+    if (!stripe) return res.status(503).json({ error: 'Payments not configured' });
+
+    const user = await User.findById(req.user.uid).select('stripeCustomerId email firstName lastName');
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    let customerId = user.stripeCustomerId;
+    if (!customerId) {
+      const customer = await stripe.customers.create({
+        email: user.email,
+        name: `${user.firstName} ${user.lastName}`,
+        metadata: { uid: req.user.uid },
+      });
+      customerId = customer.id;
+      await User.findByIdAndUpdate(req.user.uid, { stripeCustomerId: customerId });
+      console.log(`${PREFIX} Created Stripe Customer ${customerId} for uid=${req.user.uid?.slice(0, 8)}...`);
+    }
+
+    const setupIntent = await stripe.setupIntents.create({
+      customer: customerId,
+      usage: 'off_session',
+      payment_method_types: ['card'],
+      metadata: { uid: req.user.uid },
+    });
+
+    res.json({ clientSecret: setupIntent.client_secret, customerId });
+  } catch (err) {
+    console.error('[SetupIntent] Error:', err.message);
+    res.status(500).json({ error: 'Failed to create setup intent' });
+  }
+});
+
+/**
+ * GET /api/payments/payment-method
+ * Returns saved card details (brand, last4, expiry) and current trust tier.
+ */
+router.get('/payment-method', authenticateToken, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.uid).select(
+      'savedPaymentMethodId savedPaymentMethodBrand savedPaymentMethodLast4 savedPaymentMethodExpiry kycStatus emailVerified'
+    );
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    const trustTier = user.buyerTrustTier;
+
+    if (!user.savedPaymentMethodId) {
+      return res.json({ saved: false, trustTier });
+    }
+    res.json({
+      saved: true,
+      brand: user.savedPaymentMethodBrand,
+      last4: user.savedPaymentMethodLast4,
+      expiry: user.savedPaymentMethodExpiry,
+      trustTier,
+    });
+  } catch (err) {
+    console.error('[GetPaymentMethod] Error:', err.message);
+    res.status(500).json({ error: 'Failed to fetch payment method' });
+  }
+});
+
+/**
+ * DELETE /api/payments/payment-method
+ * Detaches the saved card and clears payment method fields. Blocked during active disputes.
+ */
+router.delete('/payment-method', authenticateToken, requireActiveAccount, async (req, res) => {
+  const PREFIX = '[DeletePaymentMethod]';
+  try {
+    const stripe = getStripe();
+    if (!stripe) return res.status(503).json({ error: 'Payments not configured' });
+
+    const user = await User.findById(req.user.uid).select('savedPaymentMethodId stripeCustomerId');
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    if (!user.savedPaymentMethodId) return res.status(400).json({ error: 'No payment method saved' });
+
+    const Transaction = require('../models/Transaction');
+    const activeDispute = await Transaction.findOne({
+      buyer: req.user.uid,
+      disputeOpen: true,
+      disputeAdminVerdict: null,
+    }).lean();
+    if (activeDispute) {
+      return res.status(409).json({
+        error: 'Active dispute',
+        message: 'Cannot remove payment method while a dispute is pending.',
+      });
+    }
+
+    await stripe.paymentMethods.detach(user.savedPaymentMethodId);
+    console.log(`${PREFIX} Detached PM ${user.savedPaymentMethodId} for uid=${req.user.uid?.slice(0, 8)}...`);
+
+    await User.findByIdAndUpdate(req.user.uid, {
+      $set: {
+        savedPaymentMethodId: null,
+        savedPaymentMethodBrand: null,
+        savedPaymentMethodLast4: null,
+        savedPaymentMethodExpiry: null,
+      },
+    });
+
+    res.json({ success: true, message: 'Payment method removed. Trust tier updated.' });
+  } catch (err) {
+    console.error('[DeletePaymentMethod] Error:', err.message);
+    res.status(500).json({ error: 'Failed to remove payment method' });
+  }
+});
+
+/**
  * Send payment confirmation email after balance is credited.
  */
 async function sendPaymentConfirmationEmail(toEmail, firstName, amountDollars) {
@@ -289,7 +405,40 @@ function stripeWebhookHandler(req, res) {
       console.error(`${LOG_PREFIX} Webhook: failed to credit balance:`, err.message)
     );
   }
+  if (event.type === 'setup_intent.succeeded') {
+    handleSetupIntentSucceeded(event.data.object).catch(err =>
+      console.error(`${LOG_PREFIX} setup_intent.succeeded error:`, err.message)
+    );
+  }
   res.json({ received: true });
 }
 
-module.exports = { router, creditBalanceForSession, stripeWebhookHandler };
+async function handleSetupIntentSucceeded(setupIntent) {
+  const uid = setupIntent.metadata?.uid;
+  if (!uid) {
+    console.warn('[SetupIntent Webhook] No uid in metadata — skipping');
+    return;
+  }
+  const stripe = getStripe();
+  if (!stripe) return;
+
+  const pmId = setupIntent.payment_method;
+  if (!pmId) return;
+
+  const pm = await stripe.paymentMethods.retrieve(pmId);
+  const card = pm.card;
+  const expiry = card ? `${String(card.exp_month).padStart(2, '0')}/${card.exp_year}` : null;
+
+  await User.findByIdAndUpdate(uid, {
+    $set: {
+      savedPaymentMethodId: pmId,
+      savedPaymentMethodBrand: card?.brand ?? 'unknown',
+      savedPaymentMethodLast4: card?.last4 ?? null,
+      savedPaymentMethodExpiry: expiry,
+    },
+  });
+
+  console.log(`[SetupIntent Webhook] ✅ PM saved uid=${uid?.slice(0, 8)}... brand=${card?.brand} last4=${card?.last4}`);
+}
+
+module.exports = { router, creditBalanceForSession, stripeWebhookHandler, handleSetupIntentSucceeded };

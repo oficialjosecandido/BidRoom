@@ -27,24 +27,32 @@ export class CategoriesComponent implements OnInit {
 
   private readonly categoryMetaKeys: Record<string, { title: string; desc: string }> = {
     electronics: {
-      title: 'landing.home.categories.electronics.title',
-      desc: 'landing.home.categories.electronics.desc'
+      title: 'home.categories.electronics.title',
+      desc: 'home.categories.electronics.desc'
     },
     'home-garden': {
-      title: 'landing.home.categories.homeGarden.title',
-      desc: 'landing.home.categories.homeGarden.desc'
+      title: 'home.categories.homeGarden.title',
+      desc: 'home.categories.homeGarden.desc'
     },
     art: {
-      title: 'landing.home.categories.art.title',
-      desc: 'landing.home.categories.art.desc'
+      title: 'home.categories.art.title',
+      desc: 'home.categories.art.desc'
     },
     collectibles: {
-      title: 'landing.home.categories.collectibles.title',
-      desc: 'landing.home.categories.collectibles.desc'
+      title: 'home.categories.collectibles.title',
+      desc: 'home.categories.collectibles.desc'
     },
     jewelry: {
-      title: 'landing.home.categories.jewelry.title',
-      desc: 'landing.home.categories.jewelry.desc'
+      title: 'home.categories.jewelry.title',
+      desc: 'home.categories.jewelry.desc'
+    },
+    'real-estate': {
+      title: 'home.categories.realEstate.title',
+      desc: 'home.categories.realEstate.desc'
+    },
+    vehicles: {
+      title: 'home.categories.vehicles.title',
+      desc: 'home.categories.vehicles.desc'
     }
   };
 

@@ -1,0 +1,399 @@
+<app-header activePage="trust"></app-header>
+
+<!-- HERO -->
+<div class="trust-hero">
+  <div class="hero-pill">
+    <span class="pill-dot"></span>
+    {{ 'trust.hero.pill' | translate }}
+  </div>
+  <h1>{{ 'trust.hero.title1' | translate }}<br><strong>{{ 'trust.hero.titleBold' | translate }}</strong></h1>
+  <p class="hero-sub">{{ 'trust.hero.sub' | translate }}</p>
+  <div class="hero-tabs">
+    <button class="hero-tab" [class.active]="activeView === 'buyer'" (click)="switchView('buyer')">
+      🛒 {{ 'trust.hero.tabBuyer' | translate }}
+    </button>
+    <button class="hero-tab" [class.active]="activeView === 'seller'" (click)="switchView('seller')">
+      🏷️ {{ 'trust.hero.tabSeller' | translate }}
+    </button>
+  </div>
+</div>
+
+<!-- ── BUYER ─────────────────────────────────────────────────────────── -->
+@if (activeView === 'buyer') {
+<div class="trust-container">
+
+  <!-- 1. Trust tiers -->
+  <div class="block">
+    <div class="eyebrow">{{ 'trust.buyer.tiers.eyebrow' | translate }}</div>
+    <h2 class="block-title">{{ 'trust.buyer.tiers.title' | translate }} <strong>{{ 'trust.buyer.tiers.titleBold' | translate }}</strong></h2>
+    <p class="block-desc">{{ 'trust.buyer.tiers.desc' | translate }}</p>
+    <div class="tier-grid">
+
+      <div class="tier-card t1">
+        <div class="tier-num">{{ 'trust.buyer.tiers.t1Num' | translate }}</div>
+        <span class="tier-icon">🧾</span>
+        <div class="tier-badge t1"><span class="dot"></span>{{ 'trust.buyer.tiers.t1Badge' | translate }}</div>
+        <div class="tier-name">{{ 'trust.buyer.tiers.t1Name' | translate }}</div>
+        <div class="tier-cond">{{ 'trust.buyer.tiers.t1Cond' | translate }}</div>
+        <div class="tier-guarantee t1">{{ 'trust.buyer.tiers.t1Guarantee' | translate }}</div>
+      </div>
+
+      <div class="tier-card t2">
+        <div class="tier-num">{{ 'trust.buyer.tiers.t2Num' | translate }}</div>
+        <span class="tier-icon">🪪</span>
+        <div class="tier-badge t2"><span class="dot"></span>{{ 'trust.buyer.tiers.t2Badge' | translate }}</div>
+        <div class="tier-name">{{ 'trust.buyer.tiers.t2Name' | translate }}</div>
+        <div class="tier-cond">{{ 'trust.buyer.tiers.t2Cond' | translate }}</div>
+        <div class="tier-guarantee t2">{{ 'trust.buyer.tiers.t2Guarantee' | translate }}</div>
+      </div>
+
+      <div class="tier-card t3">
+        <div class="tier-num">{{ 'trust.buyer.tiers.t3Num' | translate }}</div>
+        <span class="tier-icon">🛡️</span>
+        <div class="tier-badge t3"><span class="dot"></span>{{ 'trust.buyer.tiers.t3Badge' | translate }}</div>
+        <div class="tier-name">{{ 'trust.buyer.tiers.t3Name' | translate }}</div>
+        <div class="tier-cond">{{ 'trust.buyer.tiers.t3Cond' | translate }}</div>
+        <div class="tier-guarantee t3" [innerHTML]="'trust.buyer.tiers.t3Guarantee' | translate"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- 2. How to level up -->
+  <div class="block">
+    <div class="eyebrow">{{ 'trust.buyer.levelUp.eyebrow' | translate }}</div>
+    <h2 class="block-title">{{ 'trust.buyer.levelUp.title' | translate }} <strong>{{ 'trust.buyer.levelUp.titleBold' | translate }}</strong></h2>
+    <p class="block-desc">{{ 'trust.buyer.levelUp.desc' | translate }}</p>
+    <div class="step-path">
+
+      <div class="step-item">
+        <div class="step-num-wrap"><div class="step-num">01</div></div>
+        <div class="step-content">
+          <div class="step-title">{{ 'trust.buyer.levelUp.s1Title' | translate }}</div>
+          <div class="step-desc">{{ 'trust.buyer.levelUp.s1Desc' | translate }}</div>
+          <div class="step-tag t1">✓ {{ 'trust.buyer.levelUp.s1Tag' | translate }}</div>
+        </div>
+      </div>
+
+      <div class="step-item">
+        <div class="step-num-wrap"><div class="step-num">02</div></div>
+        <div class="step-content">
+          <div class="step-title">{{ 'trust.buyer.levelUp.s2Title' | translate }}</div>
+          <div class="step-desc">{{ 'trust.buyer.levelUp.s2Desc' | translate }}</div>
+          <div class="step-tag t2">✓ {{ 'trust.buyer.levelUp.s2Tag' | translate }}</div>
+        </div>
+      </div>
+
+      <div class="step-item">
+        <div class="step-num-wrap"><div class="step-num">03</div></div>
+        <div class="step-content">
+          <div class="step-title">{{ 'trust.buyer.levelUp.s3Title' | translate }}</div>
+          <div class="step-desc" [innerHTML]="'trust.buyer.levelUp.s3Desc' | translate"></div>
+          <div class="step-tag t3">✓ {{ 'trust.buyer.levelUp.s3Tag' | translate }}</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- 3. Benefits table -->
+  <div class="block">
+    <div class="eyebrow">{{ 'trust.buyer.benefits.eyebrow' | translate }}</div>
+    <h2 class="block-title">{{ 'trust.buyer.benefits.title' | translate }} <strong>{{ 'trust.buyer.benefits.titleBold' | translate }}</strong></h2>
+    <p class="block-desc">{{ 'trust.buyer.benefits.desc' | translate }}</p>
+    <div class="compare-table">
+      <div class="compare-header">
+        <div class="compare-col-head">{{ 'trust.buyer.benefits.colFeature' | translate }}</div>
+        <div class="compare-col-head t1">{{ 'trust.buyer.benefits.colT1' | translate }}</div>
+        <div class="compare-col-head t2">{{ 'trust.buyer.benefits.colT2' | translate }}</div>
+        <div class="compare-col-head t3">{{ 'trust.buyer.benefits.colT3' | translate }}</div>
+      </div>
+      <div class="compare-row">
+        <div class="compare-cell label">{{ 'trust.buyer.benefits.r1' | translate }}<span class="hint">{{ 'trust.buyer.benefits.r1Hint' | translate }}</span></div>
+        <div class="compare-cell"><span class="check">✓</span></div>
+        <div class="compare-cell"><span class="check">✓</span></div>
+        <div class="compare-cell hi"><span class="check">✓</span></div>
+      </div>
+      <div class="compare-row">
+        <div class="compare-cell label">{{ 'trust.buyer.benefits.r2' | translate }}</div>
+        <div class="compare-cell"><span class="check">✓</span></div>
+        <div class="compare-cell"><span class="check">✓</span></div>
+        <div class="compare-cell hi"><span class="check">✓</span></div>
+      </div>
+      <div class="compare-row">
+        <div class="compare-cell label">{{ 'trust.buyer.benefits.r3' | translate }}<span class="hint">{{ 'trust.buyer.benefits.r3Hint' | translate }}</span></div>
+        <div class="compare-cell"><span class="check">✓</span></div>
+        <div class="compare-cell"><span class="check">✓</span></div>
+        <div class="compare-cell hi"><span class="check">✓</span></div>
+      </div>
+      <div class="compare-row">
+        <div class="compare-cell label">{{ 'trust.buyer.benefits.r4' | translate }}<span class="hint">{{ 'trust.buyer.benefits.r4Hint' | translate }}</span></div>
+        <div class="compare-cell"><span class="cross">✗</span></div>
+        <div class="compare-cell"><span class="check">✓</span></div>
+        <div class="compare-cell hi"><span class="check">✓</span></div>
+      </div>
+      <div class="compare-row">
+        <div class="compare-cell label">{{ 'trust.buyer.benefits.r5' | translate }}<span class="hint">{{ 'trust.buyer.benefits.r5Hint' | translate }}</span></div>
+        <div class="compare-cell"><span class="partial">{{ 'trust.buyer.benefits.r5T1' | translate }}</span></div>
+        <div class="compare-cell"><span class="partial">{{ 'trust.buyer.benefits.r5T2' | translate }}</span></div>
+        <div class="compare-cell hi"><span class="check-blue">🛡️ {{ 'trust.buyer.benefits.r5T3' | translate }}</span></div>
+      </div>
+      <div class="compare-row">
+        <div class="compare-cell label">{{ 'trust.buyer.benefits.r6' | translate }}<span class="hint">{{ 'trust.buyer.benefits.r6Hint' | translate }}</span></div>
+        <div class="compare-cell"><span class="cross">✗</span></div>
+        <div class="compare-cell"><span class="cross">✗</span></div>
+        <div class="compare-cell hi"><span class="check">✓</span></div>
+      </div>
+      <div class="compare-row">
+        <div class="compare-cell label">{{ 'trust.buyer.benefits.r7' | translate }}<span class="hint">{{ 'trust.buyer.benefits.r7Hint' | translate }}</span></div>
+        <div class="compare-cell"><span class="cross">✗</span></div>
+        <div class="compare-cell"><span class="cross">✗</span></div>
+        <div class="compare-cell hi"><span class="check">✓</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- 4. Disputes -->
+  <div class="block">
+    <div class="eyebrow">{{ 'trust.buyer.disputes.eyebrow' | translate }}</div>
+    <h2 class="block-title">{{ 'trust.buyer.disputes.title' | translate }} <strong>{{ 'trust.buyer.disputes.titleBold' | translate }}</strong></h2>
+    <p class="block-desc">{{ 'trust.buyer.disputes.desc' | translate }}</p>
+    <div class="dispute-flow">
+      <div class="dispute-step">
+        <div class="ds-num">{{ 'trust.buyer.disputes.p1Num' | translate }}</div>
+        <span class="ds-icon">💬</span>
+        <div class="ds-title">{{ 'trust.buyer.disputes.p1Title' | translate }}</div>
+        <div class="ds-desc">{{ 'trust.buyer.disputes.p1Desc' | translate }}</div>
+        <div class="ds-note amber">{{ 'trust.buyer.disputes.p1Note' | translate }}</div>
+      </div>
+      <div class="dispute-step">
+        <div class="ds-num">{{ 'trust.buyer.disputes.p2Num' | translate }}</div>
+        <span class="ds-icon">⚖️</span>
+        <div class="ds-title">{{ 'trust.buyer.disputes.p2Title' | translate }}</div>
+        <div class="ds-desc">{{ 'trust.buyer.disputes.p2Desc' | translate }}</div>
+        <div class="ds-note blue">{{ 'trust.buyer.disputes.p2Note' | translate }}</div>
+      </div>
+      <div class="dispute-step">
+        <div class="ds-num">{{ 'trust.buyer.disputes.p3Num' | translate }}</div>
+        <span class="ds-icon">🏛️</span>
+        <div class="ds-title">{{ 'trust.buyer.disputes.p3Title' | translate }}</div>
+        <div class="ds-desc">{{ 'trust.buyer.disputes.p3Desc' | translate }}</div>
+        <div class="ds-note green">{{ 'trust.buyer.disputes.p3Note' | translate }}</div>
+      </div>
+    </div>
+    <div class="alert gold">
+      <span class="alert-icon">💳</span>
+      <div>
+        <div class="alert-title gold">{{ 'trust.buyer.disputes.alertTitle' | translate }}</div>
+        <div class="alert-desc">{{ 'trust.buyer.disputes.alertDesc' | translate }}</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- 5. FAQ Buyer -->
+  <div class="block block-last">
+    <div class="eyebrow">{{ 'trust.buyer.faq.eyebrow' | translate }}</div>
+    <h2 class="block-title" style="margin-bottom:24px">{{ 'trust.buyer.faq.title' | translate }} <strong>{{ 'trust.buyer.faq.titleBold' | translate }}</strong></h2>
+    <div class="faq-list">
+      @for (n of [1,2,3,4,5]; track n) {
+        <div class="faq-item" [class.open]="openFaq === 'b' + n">
+          <button class="faq-q" (click)="toggleFaq('b' + n)">
+            {{ 'trust.buyer.faq.q' + n | translate }}
+            <span class="faq-chevron">+</span>
+          </button>
+          <div class="faq-a">{{ 'trust.buyer.faq.a' + n | translate }}</div>
+        </div>
+      }
+    </div>
+  </div>
+
+</div>
+}
+
+<!-- ── SELLER ────────────────────────────────────────────────────────── -->
+@if (activeView === 'seller') {
+<div class="trust-container">
+
+  <!-- 1. What each badge means -->
+  <div class="block">
+    <div class="eyebrow">{{ 'trust.seller.tiers.eyebrow' | translate }}</div>
+    <h2 class="block-title">{{ 'trust.seller.tiers.title' | translate }} <strong>{{ 'trust.seller.tiers.titleBold' | translate }}</strong></h2>
+    <p class="block-desc">{{ 'trust.seller.tiers.desc' | translate }}</p>
+    <div class="tier-grid">
+
+      <div class="tier-card t1">
+        <div class="tier-num">{{ 'trust.seller.tiers.t1Num' | translate }}</div>
+        <span class="tier-icon">🧾</span>
+        <div class="tier-badge t1"><span class="dot"></span>{{ 'trust.seller.tiers.t1Badge' | translate }}</div>
+        <div class="tier-name">{{ 'trust.seller.tiers.t1Name' | translate }}</div>
+        <div class="tier-cond">{{ 'trust.seller.tiers.t1Cond' | translate }}</div>
+        <div class="tier-guarantee t1" [innerHTML]="'trust.seller.tiers.t1Guarantee' | translate"></div>
+      </div>
+
+      <div class="tier-card t2">
+        <div class="tier-num">{{ 'trust.seller.tiers.t2Num' | translate }}</div>
+        <span class="tier-icon">🪪</span>
+        <div class="tier-badge t2"><span class="dot"></span>{{ 'trust.seller.tiers.t2Badge' | translate }}</div>
+        <div class="tier-name">{{ 'trust.seller.tiers.t2Name' | translate }}</div>
+        <div class="tier-cond">{{ 'trust.seller.tiers.t2Cond' | translate }}</div>
+        <div class="tier-guarantee t2" [innerHTML]="'trust.seller.tiers.t2Guarantee' | translate"></div>
+      </div>
+
+      <div class="tier-card t3">
+        <div class="tier-num">{{ 'trust.seller.tiers.t3Num' | translate }}</div>
+        <span class="tier-icon">🛡️</span>
+        <div class="tier-badge t3"><span class="dot"></span>{{ 'trust.seller.tiers.t3Badge' | translate }}</div>
+        <div class="tier-name">{{ 'trust.seller.tiers.t3Name' | translate }}</div>
+        <div class="tier-cond">{{ 'trust.seller.tiers.t3Cond' | translate }}</div>
+        <div class="tier-guarantee t3" [innerHTML]="'trust.seller.tiers.t3Guarantee' | translate"></div>
+      </div>
+
+    </div>
+    <div class="alert gold">
+      <span class="alert-icon">💡</span>
+      <div>
+        <div class="alert-title gold">{{ 'trust.seller.tiers.alertTitle' | translate }}</div>
+        <div class="alert-desc">{{ 'trust.seller.tiers.alertDesc' | translate }}</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- 2. How to read the bid feed -->
+  <div class="block">
+    <div class="eyebrow">{{ 'trust.seller.bidFeed.eyebrow' | translate }}</div>
+    <h2 class="block-title">{{ 'trust.seller.bidFeed.title' | translate }} <strong>{{ 'trust.seller.bidFeed.titleBold' | translate }}</strong></h2>
+    <p class="block-desc">{{ 'trust.seller.bidFeed.desc' | translate }}</p>
+    <div class="how-to-steps">
+      <div class="how-to-step">
+        <div class="hts-num">1</div>
+        <div class="hts-body">
+          <div class="hts-title">{{ 'trust.seller.bidFeed.s1Title' | translate }}</div>
+          <div class="hts-desc">{{ 'trust.seller.bidFeed.s1Desc' | translate }}</div>
+        </div>
+        <div class="tier-badge t3" style="font-size:10px;flex-shrink:0"><span class="dot"></span>{{ 'trust.buyer.tiers.t3Badge' | translate }}</div>
+      </div>
+      <div class="how-to-step">
+        <div class="hts-num">2</div>
+        <div class="hts-body">
+          <div class="hts-title">{{ 'trust.seller.bidFeed.s2Title' | translate }}</div>
+          <div class="hts-desc">{{ 'trust.seller.bidFeed.s2Desc' | translate }}</div>
+        </div>
+        <div class="hts-badge-pill">2/4 🛡️</div>
+      </div>
+      <div class="how-to-step">
+        <div class="hts-num">3</div>
+        <div class="hts-body">
+          <div class="hts-title">{{ 'trust.seller.bidFeed.s3Title' | translate }}</div>
+          <div class="hts-desc">{{ 'trust.seller.bidFeed.s3Desc' | translate }}</div>
+        </div>
+        <div class="hts-badge-pill">{{ 'trust.seller.bidFeed.filterBtn' | translate }} ↑</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- 3. How we protect you -->
+  <div class="block">
+    <div class="eyebrow">{{ 'trust.seller.protection.eyebrow' | translate }}</div>
+    <h2 class="block-title">{{ 'trust.seller.protection.title' | translate }} <strong>{{ 'trust.seller.protection.titleBold' | translate }}</strong></h2>
+    <p class="block-desc">{{ 'trust.seller.protection.desc' | translate }}</p>
+    <div class="info-grid">
+      <div class="info-card">
+        <span class="info-card-icon">⏱️</span>
+        <div class="info-card-title">{{ 'trust.seller.protection.c1Title' | translate }}</div>
+        <div class="info-card-desc">{{ 'trust.seller.protection.c1Desc' | translate }}</div>
+      </div>
+      <div class="info-card">
+        <span class="info-card-icon">📦</span>
+        <div class="info-card-title">{{ 'trust.seller.protection.c2Title' | translate }}</div>
+        <div class="info-card-desc">{{ 'trust.seller.protection.c2Desc' | translate }}</div>
+      </div>
+      <div class="info-card">
+        <span class="info-card-icon">⚖️</span>
+        <div class="info-card-title">{{ 'trust.seller.protection.c3Title' | translate }}</div>
+        <div class="info-card-desc">{{ 'trust.seller.protection.c3Desc' | translate }}</div>
+      </div>
+      <div class="info-card">
+        <span class="info-card-icon">📁</span>
+        <div class="info-card-title">{{ 'trust.seller.protection.c4Title' | translate }}</div>
+        <div class="info-card-desc">{{ 'trust.seller.protection.c4Desc' | translate }}</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- 4. Seller trust -->
+  <div class="block">
+    <div class="eyebrow">{{ 'trust.seller.sellerTrust.eyebrow' | translate }}</div>
+    <h2 class="block-title">{{ 'trust.seller.sellerTrust.title' | translate }} <strong>{{ 'trust.seller.sellerTrust.titleBold' | translate }}</strong></h2>
+    <p class="block-desc">{{ 'trust.seller.sellerTrust.desc' | translate }}</p>
+    <div class="compare-table">
+      <div class="compare-header" style="grid-template-columns:1fr 1fr">
+        <div class="compare-col-head">{{ 'trust.seller.sellerTrust.colFeature' | translate }}</div>
+        <div class="compare-col-head">{{ 'trust.seller.sellerTrust.colHow' | translate }}</div>
+      </div>
+      @for (n of [1,2,3,4,5]; track n) {
+        <div class="compare-row" style="grid-template-columns:1fr 1fr">
+          <div class="compare-cell label">{{ 'trust.seller.sellerTrust.r' + n + 'Label' | translate }}</div>
+          <div class="compare-cell sub">{{ 'trust.seller.sellerTrust.r' + n + 'How' | translate }}</div>
+        </div>
+      }
+    </div>
+    <div class="alert blue" style="margin-top:20px">
+      <span class="alert-icon">📋</span>
+      <div>
+        <div class="alert-title blue">{{ 'trust.seller.sellerTrust.alertTitle' | translate }}</div>
+        <div class="alert-desc">{{ 'trust.seller.sellerTrust.alertDesc' | translate }}</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- 5. FAQ Seller -->
+  <div class="block block-last">
+    <div class="eyebrow">{{ 'trust.seller.faq.eyebrow' | translate }}</div>
+    <h2 class="block-title" style="margin-bottom:24px">{{ 'trust.seller.faq.title' | translate }} <strong>{{ 'trust.seller.faq.titleBold' | translate }}</strong></h2>
+    <div class="faq-list">
+      @for (n of [1,2,3,4]; track n) {
+        <div class="faq-item" [class.open]="openFaq === 's' + n">
+          <button class="faq-q" (click)="toggleFaq('s' + n)">
+            {{ 'trust.seller.faq.q' + n | translate }}
+            <span class="faq-chevron">+</span>
+          </button>
+          <div class="faq-a">{{ 'trust.seller.faq.a' + n | translate }}</div>
+        </div>
+      }
+    </div>
+  </div>
+
+</div>
+}
+
+<!-- CTA (always visible) -->
+<div class="cta-wrap">
+  <div class="cta-block">
+    <div>
+      <div class="cta-title">{{ 'trust.cta.title' | translate }}<br><strong>{{ 'trust.cta.titleBold' | translate }}</strong></div>
+      <div class="cta-desc">{{ 'trust.cta.desc' | translate }}</div>
+    </div>
+    <div class="cta-actions">
+      <a routerLink="/auth/signup" class="cta-btn gold">{{ 'trust.cta.btnPrimary' | translate }}</a>
+      <a routerLink="/listing/list" class="cta-btn outline">{{ 'trust.cta.btnSecondary' | translate }}</a>
+    </div>
+  </div>
+</div>
+
+<app-footer></app-footer>

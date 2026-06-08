@@ -25,7 +25,8 @@ export interface Bid {
   bidderLastName?: string | null;
   isAuthenticated?: boolean;
   bidderVerified?: boolean;
-  bidderHasDeposit?: boolean;
+  buyerTrustTier?: number;
+  reputationScore?: number | null;
   /** Bidder's average rating as buyer (from reviews) */
   buyerScore?: number | null;
   /** Number of reviews the bidder has received as buyer */

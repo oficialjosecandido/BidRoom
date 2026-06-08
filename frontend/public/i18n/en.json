@@ -8,6 +8,7 @@
       "categories": "Categories",
       "privateRooms": "Private Rooms",
       "howItWorks": "How It Works",
+      "trust": "Trust & Safety",
       "faq": "FAQ",
       "contact": "Contact"
     },
@@ -301,6 +302,14 @@
       "jewelry": {
         "title": "Jewelry",
         "desc": "Rings, watches and gemstones"
+      },
+      "realEstate": {
+        "title": "Real Estate",
+        "desc": "Apartments, houses and land"
+      },
+      "vehicles": {
+        "title": "Vehicles",
+        "desc": "Cars, motorcycles and boats"
       }
     },
     "liveAuctions": {
@@ -463,7 +472,9 @@
       "home-garden": "Home & Garden",
       "art": "Art",
       "collectibles": "Collectibles",
-      "jewelry": "Jewelry"
+      "jewelry": "Jewelry",
+      "real-estate": "Real Estate",
+      "vehicles": "Vehicles"
     },
     "subcategories": {
       "Laptops": "Laptops",
@@ -560,7 +571,36 @@
       "Brooches & Pins": "Brooches & Pins",
       "Jewelry Sets": "Jewelry Sets",
       "Loose Gemstones": "Loose Gemstones",
-      "Other Jewelry": "Other Jewelry"
+      "Other Jewelry": "Other Jewelry",
+      "Apartments": "Apartments",
+      "Studios": "Studios",
+      "Duplexes & Penthouses": "Duplexes & Penthouses",
+      "Houses": "Houses",
+      "Villas": "Villas",
+      "Townhouses": "Townhouses",
+      "Land & Plots": "Land & Plots",
+      "Rural & Countryside": "Rural & Countryside",
+      "Commercial Property": "Commercial Property",
+      "Office Space": "Office Space",
+      "Industrial & Warehouse": "Industrial & Warehouse",
+      "Garages & Parking": "Garages & Parking",
+      "Holiday Homes": "Holiday Homes",
+      "Other Real Estate": "Other Real Estate",
+      "Cars": "Cars",
+      "Classic Cars": "Classic Cars",
+      "Electric & Hybrid Cars": "Electric & Hybrid Cars",
+      "Motorcycles": "Motorcycles",
+      "Scooters & Mopeds": "Scooters & Mopeds",
+      "Vans & Minibuses": "Vans & Minibuses",
+      "Trucks & HGV": "Trucks & HGV",
+      "Boats": "Boats",
+      "Jet Skis & Watercraft": "Jet Skis & Watercraft",
+      "Sailboats": "Sailboats",
+      "Caravans & Motorhomes": "Caravans & Motorhomes",
+      "ATVs & Quad Bikes": "ATVs & Quad Bikes",
+      "Vehicle Parts": "Vehicle Parts",
+      "Vehicle Accessories": "Vehicle Accessories",
+      "Other Vehicles": "Other Vehicles"
     },
     "successMessage": "Listing created successfully!",
     "moderationTitle": "Listing under review",
@@ -1040,13 +1080,32 @@
       "ineligible": "Verified account required"
     },
     "platinumBidders": {
-      "title": "Select Platinum Bidders",
+      "title": "Invite to Private Room",
       "subtitle": "Select up to 5 bidders to invite to the Private Room. These bidders will be able to continue bidding after the main auction ends.",
       "backBtn": "Back to Dashboard",
       "loading": "Loading bidders...",
-      "maxAlert": "You can select a maximum of 5 Platinum Bidders.",
+      "maxAlert": "You can select a maximum of 5 bidders.",
       "errorLoading": "Failed to load bidders.",
       "errorSaving": "Failed to save selection."
+    },
+    "privateRoomBidders": {
+      "title": "Invite to Private Room",
+      "subtitle": "Select up to 5 bidders to invite. They will be able to continue bidding after the main auction ends.",
+      "backBtn": "Back to Dashboard",
+      "loading": "Loading bidders…",
+      "retry": "Try again",
+      "ofMax": "of 5 selected",
+      "save": "Save selection",
+      "saving": "Saving…",
+      "badgeAuth": "Registered",
+      "badgeGuest": "Guest",
+      "badgeInvited": "Invited",
+      "statBids": "Bids",
+      "statHighest": "Highest bid",
+      "statLast": "Last bid",
+      "guestNote": "Guest bidders cannot be invited to the Private Room.",
+      "empty": "No bidders yet",
+      "emptyDesc": "Bidders will appear here once they place bids on your listing."
     },
     "privateRoomModal": {
       "title": "Create private room",
@@ -1529,7 +1588,23 @@
       "detailsSubmitted": "Your details have been submitted. Stripe will verify them shortly — this usually takes a few minutes.",
       "connectNotConnected": "Not connected",
       "connectActive": "Active",
-      "connectPending": "Pending verification"
+      "connectPending": "Pending verification",
+      "paymentMethod": {
+        "title": "Payment Guarantee",
+        "loading": "Loading…",
+        "activeBadge": "Payment Guaranteed — Level 3",
+        "activeDesc": "Sellers see your badge. If you lose a dispute, the amount is charged automatically.",
+        "disclaimer": "Your card is never charged without prior email notification and a 48h contestation period.",
+        "upgradeTitle": "Reach Level 3 — Payment Guaranteed",
+        "benefit1": "🛡️ Sellers prioritise you in Private Rooms",
+        "benefit2": "💳 Bid on auctions above €5,000",
+        "benefit3": "✓ Automatic compensation to seller if dispute resolved against you",
+        "addCard": "Add payment card",
+        "cancel": "Cancel",
+        "saveCard": "Save card",
+        "saving": "Saving…",
+        "stripeNote": "Your card details are encrypted by Stripe (PCI DSS Level 1) — BidRoom never sees the full card number."
+      }
     },
     "role": {
       "toggleLabel": "Buyer or seller mode"
@@ -1762,7 +1837,8 @@
       "privateRoomAwaiting": "Awaiting Acceptance",
       "privateRoomEnded": "Ended",
       "goToPrivateRoom": "Go to Private Room",
-      "platinumBidders": "Platinum Bidders",
+      "platinumBidders": "Private Room Bidders",
+      "privateRoomBidders": "Private Room Bidders",
       "accepted": "Accepted",
       "pendingStatus": "Pending",
       "declined": "Declined",
@@ -3367,6 +3443,159 @@
       "confirm": "Got it",
       "viewListing": "View listing",
       "viewTransactions": "Go to transactions"
+    }
+  },
+  "trust": {
+    "hero": {
+      "pill": "Safety & Trust",
+      "title1": "The marketplace only works",
+      "titleBold": "if everyone trusts it",
+      "sub": "BidRoom protects buyers and sellers in every transaction. Our trust system makes that protection visible — so every decision is an informed one.",
+      "tabBuyer": "I'm a buyer",
+      "tabSeller": "I'm a seller"
+    },
+    "buyer": {
+      "tiers": {
+        "eyebrow": "Your trust level",
+        "title": "Three tiers.",
+        "titleBold": "Higher tier, more credibility.",
+        "desc": "Your trust tier is calculated automatically based on the steps you've completed. It's visible to all sellers when you bid — it works as your instant reputation.",
+        "t1Num": "Level 1", "t1Badge": "Verified", "t1Name": "Email verified",
+        "t1Cond": "Requirement: confirm your registration email.",
+        "t1Guarantee": "⚠️ No payment guarantee. If you don't pay after winning an auction, the seller relies solely on your reputation history.",
+        "t2Num": "Level 2", "t2Badge": "Identity Verified", "t2Name": "Document verified",
+        "t2Cond": "Requirement: verify identity via Stripe Identity (passport or national ID).",
+        "t2Guarantee": "🔒 Your identity is known. In case of an unresolved dispute, you can be held legally accountable.",
+        "t3Num": "Level 3", "t3Badge": "Payment Guaranteed", "t3Name": "Identity + saved card",
+        "t3Cond": "Requirement: KYC completed + valid credit/debit card registered on your account.",
+        "t3Guarantee": "🛡️ <strong>Automatic compensation.</strong> If you lose a dispute, BidRoom charges your saved card directly — no manual process."
+      },
+      "levelUp": {
+        "eyebrow": "How to level up",
+        "title": "From Level 1 to",
+        "titleBold": "Payment Guaranteed",
+        "desc": "Three sequential steps. Each takes under 5 minutes. You can stop at any level — but Level 3 unlocks exclusive benefits.",
+        "s1Title": "Create account and verify email",
+        "s1Desc": "Register with email or Google. Confirm the link sent to your email. Immediate.",
+        "s1Tag": "Reaches Level 1 — Verified",
+        "s2Title": "Verify your identity",
+        "s2Desc": "In your Dashboard → Settings → Identity. Submit a photo of your passport or national ID via Stripe Identity. Secure and encrypted. Result in seconds.",
+        "s2Tag": "Reaches Level 2 — Identity Verified",
+        "s3Title": "Add a payment card",
+        "s3Desc": "In your Dashboard → Settings → Payment Method. Save a valid card. The card is <strong>never charged preventively</strong> — only if you lose a formal dispute. Processed by Stripe (PCI DSS Level 1).",
+        "s3Tag": "Reaches Level 3 — Payment Guaranteed"
+      },
+      "benefits": {
+        "eyebrow": "Benefits by level", "title": "What you", "titleBold": "gain by levelling up",
+        "desc": "Each level unlocks concrete advantages — not just a badge.",
+        "colFeature": "Feature", "colT1": "Level 1", "colT2": "Level 2", "colT3": "Level 3",
+        "r1": "Bid in auctions", "r1Hint": "All formats",
+        "r2": "Submit offers (Best Offer)",
+        "r3": "Private Room eligibility", "r3Hint": "Reputation ≥ 60 required",
+        "r4": "Auctions above €5,000", "r4Hint": "Law 83/2017 AML",
+        "r5": "Badge visible to sellers", "r5Hint": "In the bid feed",
+        "r5T1": "Basic", "r5T2": "Enhanced", "r5T3": "Featured",
+        "r6": "Priority in Private Room invitations", "r6Hint": "Suggested to seller",
+        "r7": "Automatic compensation to seller", "r7Hint": "In dispute resolved against you"
+      },
+      "disputes": {
+        "eyebrow": "Buyer protection", "title": "What happens", "titleBold": "in case of a dispute",
+        "desc": "BidRoom acts as a facilitator, never as final arbiter. The process always has three phases before any irreversible decision.",
+        "p1Num": "Phase 01", "p1Title": "BidRoom Mediation",
+        "p1Desc": "The buyer opens the dispute with evidence. The seller responds within 7 business days. BidRoom analyses and attempts an agreement.",
+        "p1Note": "⏱ 7 business days maximum",
+        "p2Num": "Phase 02", "p2Title": "CNIACC (arbitration)",
+        "p2Desc": "If mediation produces no agreement, either party can escalate to CNIACC — an independent Portuguese ADR entity.",
+        "p2Note": "Voluntary for both parties",
+        "p3Num": "Phase 03", "p3Title": "Court",
+        "p3Desc": "Last resort. The court ruling is binding. Platform records (logs, communications, transactions) are kept for 5 years as evidence.",
+        "p3Note": "European ODR platform available",
+        "alertTitle": "The saved card (Level 3) is never charged preventively",
+        "alertDesc": "The automatic debit on the saved card only happens after a formal dispute decision resolved against the buyer — never before, never without prior email notification. The debited amount never exceeds the transaction value."
+      },
+      "faq": {
+        "eyebrow": "Frequently asked questions", "title": "Questions about", "titleBold": "your trust tier",
+        "q1": "Is my trust tier public — can anyone see I have a saved card?",
+        "a1": "No. What's visible is only the badge — \"Verified\", \"Identity Verified\" or \"Payment Guaranteed\". No card, IBAN or document data is visible to third parties. The seller only knows you have a valid card registered, not which one or its details.",
+        "q2": "Can I remove the saved card at any time?",
+        "a2": "Yes, you can remove the card at any time in Dashboard → Settings → Payment Method. When you do so, your trust tier drops to Level 2 (if you have KYC) or Level 1. The badge is immediately updated on all active auctions where you've already bid.",
+        "q3": "What happens if my card expires?",
+        "a3": "You'll receive an email warning 30 days before your card expires. If the card expires without you updating it, the trust tier drops automatically. Any active dispute at that point is not affected — it remains subject to the manual process.",
+        "q4": "Can BidRoom charge me without my knowledge?",
+        "a4": "No. Any debit to the saved card is always preceded by an email notification with the amount, the reason (dispute decision), and a 48-hour contestation period. If you believe the debit is unfair, you can contact support before final processing.",
+        "q5": "Is identity verification (Level 2) mandatory to bid?",
+        "a5": "It's not mandatory for most auctions. It becomes mandatory for auctions with a value above €5,000, under the terms of Law 83/2017 (anti-money laundering). For all other auctions, Level 1 (verified email) is sufficient."
+      }
+    },
+    "seller": {
+      "tiers": {
+        "eyebrow": "Buyer trust tiers", "title": "What each badge", "titleBold": "means for you",
+        "desc": "As a seller, you see each bidder's trust tier in real time, directly in the bid feed. Here's what each badge implies for your protection.",
+        "t1Num": "Buyer Level 1", "t1Badge": "Verified", "t1Name": "Email verified",
+        "t1Cond": "Account created and email confirmed. No additional verification.",
+        "t1Guarantee": "If this buyer wins and doesn't pay or the dispute is resolved in your favour: BidRoom records the infraction in their reputation. <strong>No automatic monetary compensation.</strong>",
+        "t2Num": "Buyer Level 2", "t2Badge": "Identity Verified", "t2Name": "Document verified",
+        "t2Cond": "Real identity confirmed via Stripe Identity.",
+        "t2Guarantee": "If the dispute is resolved in your favour: the buyer's identity is known. You can hold them legally accountable. BidRoom provides the necessary records. <strong>No automatic debit.</strong>",
+        "t3Num": "Buyer Level 3", "t3Badge": "Payment Guaranteed", "t3Name": "Identity + saved card",
+        "t3Cond": "KYC completed and valid card registered on BidRoom account.",
+        "t3Guarantee": "If the dispute is resolved in your favour: BidRoom automatically debits the buyer's card. <strong>You receive the transaction amount directly to your IBAN.</strong>",
+        "alertTitle": "Tip for Private Rooms",
+        "alertDesc": "When selecting guests for the Private Room, bidders with <strong>Payment Guaranteed</strong> appear suggested first. You're not required to choose them — but for high-value items, it's the safest path."
+      },
+      "bidFeed": {
+        "eyebrow": "What you see in the listing", "title": "How to read the", "titleBold": "bid feed",
+        "desc": "On each of your listings, the bid feed shows the badge of each bidder next to their name. In the summary below the list, you see how many have each guarantee level.",
+        "s1Title": "See the badge in the bid feed",
+        "s1Desc": "Each feed line shows the name + badge. The badge updates in real time if the buyer changes level during the auction (rare but possible).",
+        "s2Title": "Read the guarantee summary",
+        "s2Desc": "Below the feed, a summary shows: \"X of Y bidders with automatic compensation\". Gives you a quick view of the overall risk level of the auction.",
+        "s3Title": "Sort by guarantee in Private Room",
+        "s3Desc": "When creating the Private Room, use the \"Sort by highest guarantee\" filter to see Payment Guaranteed bidders first before selecting guests.",
+        "filterBtn": "Filter"
+      },
+      "protection": {
+        "eyebrow": "Seller protection", "title": "How we", "titleBold": "protect you in each scenario",
+        "desc": "Regardless of the buyer's trust tier, you have active protections at every stage of the transaction.",
+        "c1Title": "Non-payment after won auction",
+        "c1Desc": "The buyer has 24 hours to pay. If they don't pay, the transaction is automatically cancelled, the item returns to its original state, and the buyer receives a reputation penalty (-15 points). You can relist at no cost.",
+        "c2Title": "Item shipped but not confirmed",
+        "c2Desc": "After shipping confirmation, the delivery deadline is calculated automatically. If the buyer doesn't mark it as received, payment is released to you automatically after the deadline — no action needed.",
+        "c3Title": "Dispute opened by buyer",
+        "c3Desc": "Both your account and the buyer's are preventively suspended. BidRoom analyses evidence from both parties. If the decision is in your favour, the buyer is debited (Level 3) or held legally accountable (Level 2).",
+        "c4Title": "Records for legal accountability",
+        "c4Desc": "All communications, bids, transactions and dispute evidence are kept for 5 years. In case of legal proceedings, BidRoom makes the necessary records available for your defence."
+      },
+      "sellerTrust": {
+        "eyebrow": "Your trust as a seller", "title": "Buyers also", "titleBold": "evaluate your credibility",
+        "desc": "Trust isn't just for buyers. Buyers see your profile — and decide whether to trust you to deliver what you promised.",
+        "colFeature": "What buyers see on your profile", "colHow": "How to improve",
+        "r1Label": "⭐ Reviews from previous buyers", "r1How": "Deliver on time, communicate well, describe the item accurately",
+        "r2Label": "📊 Reputation score (0–100)", "r2How": "Each successfully completed transaction: +2 points",
+        "r3Label": "⚡ On-time shipping rate", "r3How": "Always ship within 5 business days after payment",
+        "r4Label": "🛡️ Dispute history", "r4How": "Zero open disputes = maximum trust",
+        "r5Label": "🪪 DSA classification (individual / professional)", "r5How": "In Settings → Seller classification — fill in accurately",
+        "alertTitle": "Professional sellers have additional obligations",
+        "alertDesc": "If you sell regularly and for commercial purposes (trader), you must classify yourself as a \"Professional seller\" in Settings. This is a legal obligation under the DSA (Digital Services Act) — and gives you access to invoicing and advanced analytics features."
+      },
+      "faq": {
+        "eyebrow": "Frequently asked questions", "title": "Questions about", "titleBold": "seller protection",
+        "q1": "Can I refuse a Level 1 buyer before the auction ends?",
+        "a1": "You cannot refuse bids based on trust tier during a public auction — that would go against the open market principle. What you can do is activate the Private Room and select only buyers with your preferred tier for the exclusive round.",
+        "q2": "If a Level 3 buyer wins and doesn't pay, am I automatically compensated?",
+        "a2": "Level 3 refers to compensation in case of a dispute resolved in your favour — not immediate non-payment. For non-payment, the process is the same regardless of tier: automatic cancellation after 24h, buyer reputation penalty, and you can relist the item for free.",
+        "q3": "What happens to my payment while a dispute is open?",
+        "a3": "Funds are held in escrow while the dispute is active. Your account and the buyer's are preventively suspended. The hold is lifted immediately after the decision, whether in your favour (payout) or the buyer's (refund).",
+        "q4": "My listing is incorrectly described and I want to withdraw it. Is there a penalty?",
+        "a4": "You can cancel a listing with no bids without any penalty. If there are already bids, cancellation may affect your reputation and requires justification. Items with bids cannot be cancelled unilaterally — contact support for exceptional cases."
+      }
+    },
+    "cta": {
+      "title": "Ready to bid",
+      "titleBold": "with confidence?",
+      "desc": "Create your account, verify your identity and add a card — all in under 10 minutes. Sellers will see your badge immediately.",
+      "btnPrimary": "Create free account",
+      "btnSecondary": "View active auctions"
     }
   }
 }

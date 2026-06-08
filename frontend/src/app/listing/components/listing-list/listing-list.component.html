@@ -42,7 +42,7 @@
         }
         @if (selectedSubCategory) {
           <button type="button" class="filter-tag" (click)="clearSubCategory()">
-            {{ selectedSubCategory }}<span class="filter-tag-x">×</span>
+            {{ subCategoryLabelKey(selectedSubCategory) | translate }}<span class="filter-tag-x">×</span>
           </button>
         }
         @if (formatFilter !== 'all') {
@@ -137,7 +137,7 @@
                           class="cat-pill cat-pill--sub"
                           [class.active]="selectedCategory === cat.id && selectedSubCategory === sub"
                           (click)="selectSubCategory(sub, cat.id)">
-                          <span>{{ sub }}</span>
+                          <span>{{ subCategoryLabelKey(sub) | translate }}</span>
                         </button>
                       }
                     </div>
