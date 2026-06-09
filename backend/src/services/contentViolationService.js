@@ -1,4 +1,4 @@
-const User = require('../models/User');
+const Customer = require('../models/Customer');
 const { appendModerationAudit } = require('./moderationAuditService');
 const { suspendUser } = require('./accountStatusService');
 

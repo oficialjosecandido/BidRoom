@@ -2,8 +2,8 @@ const mongoose = require('mongoose');
 
 const blockSchema = new mongoose.Schema(
   {
-    blocker: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-    blocked: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }
+    blocker: { type: mongoose.Schema.Types.ObjectId, ref: 'Customer', required: true },
+    blocked: { type: mongoose.Schema.Types.ObjectId, ref: 'Customer', required: true }
   },
   { timestamps: true }
 );

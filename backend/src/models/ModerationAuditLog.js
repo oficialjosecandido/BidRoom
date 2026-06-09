@@ -7,7 +7,7 @@ const mongoose = require('mongoose');
 const moderationAuditLogSchema = new mongoose.Schema({
   subjectUserId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
+    ref: 'Customer',
     required: true,
     index: true
   },
@@ -20,7 +20,7 @@ const moderationAuditLogSchema = new mongoose.Schema({
   /** Admin user id when action is manual; null for automated/system */
   performedByUserId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
+    ref: 'Customer',
     default: null,
     index: true
   },

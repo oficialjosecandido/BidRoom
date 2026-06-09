@@ -1,7 +1,7 @@
 const express = require('express');
 const Watchlist = require('../models/Watchlist');
 const Listing = require('../models/Listing');
-const User = require('../models/User');
+const Customer = require('../models/Customer');
 const { authenticateToken } = require('../middleware/auth');
 const { notifyItemAddedToWatchlist, emitNewNotificationToUser } = require('../services/notificationService');
 
@@ -18,7 +18,7 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ error: 'listingId is required' });
     }
 
-    let user = await User.findOne({ uid: req.user.uid });
+    let user = await Customer.findOne({ uid: req.user.uid });
     if (!user) {
       return res.status(404).json({ error: 'User not found. Please complete your profile.' });
     }
@@ -60,7 +60,7 @@ router.post('/', async (req, res) => {
 router.delete('/:listingId', async (req, res) => {
   try {
     const { listingId } = req.params;
-    const user = await User.findOne({ uid: req.user.uid });
+    const user = await Customer.findOne({ uid: req.user.uid });
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
@@ -79,7 +79,7 @@ router.delete('/:listingId', async (req, res) => {
 // GET /api/watchlist - Get current user's watchlist (listings)
 router.get('/', async (req, res) => {
   try {
-    const user = await User.findOne({ uid: req.user.uid });
+    const user = await Customer.findOne({ uid: req.user.uid });
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
@@ -110,7 +110,7 @@ router.get('/', async (req, res) => {
 router.get('/check/:listingId', async (req, res) => {
   try {
     const { listingId } = req.params;
-    const user = await User.findOne({ uid: req.user.uid });
+    const user = await Customer.findOne({ uid: req.user.uid });
     if (!user) {
       return res.json({ inWatchlist: false });
     }

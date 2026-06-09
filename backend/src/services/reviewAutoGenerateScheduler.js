@@ -10,7 +10,7 @@
 
 const Transaction = require('../models/Transaction');
 const Review = require('../models/Review');
-const User = require('../models/User');
+const Customer = require('../models/Customer');
 
 const LOG_PREFIX = '[ReviewAutoGenerate]';
 const AUTO_REVIEW_DAYS = 5;

@@ -1,7 +1,6 @@
 const express = require('express');
 const { authenticateToken, requireActiveAccount } = require('../middleware/auth');
 const { getStripe, isStripeTestMode } = require('../utils/stripe.util');
-const User = require('../models/User');
 const Customer = require('../models/Customer');
 const Transaction = require('../models/Transaction');
 const Listing = require('../models/Listing');
@@ -276,7 +275,7 @@ router.post('/onboarding-link', requireActiveAccount, async (req, res) => {
   const country = String(req.body?.country || 'PT').toUpperCase();
 
   try {
-    const user = await User.findOne({ uid: req.user.uid });
+    const user = await Customer.findOne({ uid: req.user.uid });
     if (!user) return res.status(404).json({ error: 'User not found' });
 
     let accountId = await resolveConnectAccountId(stripe, user);
@@ -363,7 +362,7 @@ router.post('/submit-onboarding', requireActiveAccount, async (req, res) => {
   const tosTimestamp = Math.floor(Date.now() / 1000);
 
   try {
-    const user = await User.findOne({ uid: req.user.uid });
+    const user = await Customer.findOne({ uid: req.user.uid });
     if (!user) return res.status(404).json({ error: 'User not found' });
 
     await persistSellerPayoutIban(user, ibanClean);
@@ -493,7 +492,7 @@ router.post('/test-activate', requireActiveAccount, async (req, res) => {
   }
 
   try {
-    const user = await User.findOne({ uid: req.user.uid });
+    const user = await Customer.findOne({ uid: req.user.uid });
     if (!user) return res.status(404).json({ error: 'User not found' });
     const accountId = await resolveConnectAccountId(stripe, user);
     if (!accountId) {
@@ -541,7 +540,7 @@ router.get('/account-status', async (req, res) => {
     return res.json({ connected: false, onboarded: false });
   }
   try {
-    const user = await User.findOne({ uid: req.user.uid }).select('stripeConnectAccountId stripeConnectOnboarded');
+    const user = await Customer.findOne({ uid: req.user.uid }).select('stripeConnectAccountId stripeConnectOnboarded');
     if (!user) return res.status(404).json({ error: 'User not found' });
 
     const accountId = await resolveConnectAccountId(stripe, user);
@@ -579,7 +578,7 @@ router.get('/account-status', async (req, res) => {
   } catch (err) {
     console.error(`${LOG_PREFIX} Account status error:`, err.message);
     if (isOrphanedConnectAccountError(err)) {
-      const user = await User.findOne({ uid: req.user.uid }).select('stripeConnectAccountId stripeConnectOnboarded');
+      const user = await Customer.findOne({ uid: req.user.uid }).select('stripeConnectAccountId stripeConnectOnboarded');
       if (user) await clearStaleConnectAccount(user);
       return res.json({ connected: false, onboarded: false });
     }
@@ -598,7 +597,7 @@ router.post('/create-checkout-session', requireActiveAccount, async (req, res) =
   if (!stripe) return res.status(503).json({ error: 'Payments not configured' });
 
   try {
-    const buyer = await User.findOne({ uid: req.user.uid });
+    const buyer = await Customer.findOne({ uid: req.user.uid });
     if (!buyer) return res.status(404).json({ error: 'User not found' });
 
     const { transactionId } = req.body;
@@ -784,7 +783,7 @@ router.post('/confirm-payment', requireActiveAccount, async (req, res) => {
   if (!stripe) return res.status(503).json({ error: 'Payments not configured' });
 
   try {
-    const buyer = await User.findOne({ uid: req.user.uid });
+    const buyer = await Customer.findOne({ uid: req.user.uid });
     if (!buyer) return res.status(404).json({ error: 'User not found' });
 
     const { sessionId, transactionId } = req.body;
@@ -1002,7 +1001,7 @@ async function handleAccountUpdated(account) {
   const uid = account.metadata.uid;
   const onboarded = !!(account.details_submitted && account.charges_enabled);
 
-  const user = await User.findOne({ uid }).select('firstName email stripeConnectOnboarded');
+  const user = await Customer.findOne({ uid }).select('firstName email stripeConnectOnboarded');
   if (!user) return;
 
   const wasOnboarded = user.stripeConnectOnboarded;

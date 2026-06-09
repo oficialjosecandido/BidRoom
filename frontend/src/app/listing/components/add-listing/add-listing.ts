@@ -150,8 +150,33 @@ export class AddListing implements OnInit, OnDestroy {
   }
 
   get previewDuration(): string {
-    return this.listingForm?.get('duration')?.value || '—';
+    return this.getDurationLabel(this.listingForm?.get('duration')?.value);
   }
+
+  get reviewDurationLabel(): string {
+    return this.getDurationLabel(this.listingForm?.get('duration')?.value);
+  }
+
+  getDurationLabel(value: string | null | undefined): string {
+    if (!value) return '—';
+    const key = this.durationLabelKeys[value];
+    if (!key) return value;
+    const t = this.translate.instant(key);
+    return t !== key ? t : value;
+  }
+
+  private readonly durationLabelKeys: Record<string, string> = {
+    '5 minutes': 'addListing.duration5min',
+    '1 hour': 'addListing.duration1hour',
+    '2 hours': 'addListing.duration2hours',
+    '7 hours': 'addListing.duration7hours',
+    '24 hours': 'addListing.duration24hours',
+    '3 days': 'addListing.duration3days',
+    '7 days': 'addListing.duration7days',
+    '10 days': 'addListing.duration10days',
+    '15 days': 'addListing.duration15days',
+    '30 days': 'addListing.duration30days',
+  };
 
   get checklist(): Record<string, boolean> {
     const fmt = this.previewFormat;
@@ -306,22 +331,40 @@ export class AddListing implements OnInit, OnDestroy {
   // so testers can create quick listings for private-room testing.
   listingDurations = [
     ...(!environment.production ? [
-      { label: '5 minutes', hours: 1 / 12 },
-      { label: '1 hour',    hours: 1      },
-      { label: '2 hours',   hours: 2      },
+      { value: '5 minutes', labelKey: 'addListing.duration5min', hours: 1 / 12 },
+      { value: '1 hour', labelKey: 'addListing.duration1hour', hours: 1 },
+      { value: '2 hours', labelKey: 'addListing.duration2hours', hours: 2 },
     ] : []),
-    { label: '24 hours', hours: 24  },
-    { label: '3 days',   hours: 72  },
-    { label: '7 days',   hours: 168 },
-    { label: '10 days',  hours: 240 },
-    { label: '15 days',  hours: 360 },
+    { value: '24 hours', labelKey: 'addListing.duration24hours', hours: 24 },
+    { value: '3 days', labelKey: 'addListing.duration3days', hours: 72 },
+    { value: '7 days', labelKey: 'addListing.duration7days', hours: 168 },
+    { value: '10 days', labelKey: 'addListing.duration10days', hours: 240 },
+    { value: '15 days', labelKey: 'addListing.duration15days', hours: 360 },
   ];
 
   offerDurations = [
-    { label: '3 days',  hours: 72  },
-    { label: '7 days',  hours: 168 },
-    { label: '15 days', hours: 360 },
-    { label: '30 days', hours: 720 },
+    { value: '3 days', labelKey: 'addListing.duration3days', hours: 72 },
+    { value: '7 days', labelKey: 'addListing.duration7days', hours: 168 },
+    { value: '15 days', labelKey: 'addListing.duration15days', hours: 360 },
+    { value: '30 days', labelKey: 'addListing.duration30days', hours: 720 },
+  ];
+
+  itemCountries = [
+    { value: 'PT', labelKey: 'addListing.countryPT' },
+    { value: 'ES', labelKey: 'addListing.countryES' },
+    { value: 'FR', labelKey: 'addListing.countryFR' },
+    { value: 'DE', labelKey: 'addListing.countryDE' },
+    { value: 'IT', labelKey: 'addListing.countryIT' },
+    { value: 'GB', labelKey: 'addListing.countryGB' },
+    { value: 'IE', labelKey: 'addListing.countryIE' },
+    { value: 'NL', labelKey: 'addListing.countryNL' },
+    { value: 'BE', labelKey: 'addListing.countryBE' },
+    { value: 'CH', labelKey: 'addListing.countryCH' },
+    { value: 'AT', labelKey: 'addListing.countryAT' },
+    { value: 'LU', labelKey: 'addListing.countryLU' },
+    { value: 'US', labelKey: 'addListing.countryUS' },
+    { value: 'CA', labelKey: 'addListing.countryCA' },
+    { value: 'AU', labelKey: 'addListing.countryAU' },
   ];
 
   shippingOptions = [
@@ -384,7 +427,6 @@ export class AddListing implements OnInit, OnDestroy {
       specifications: this.fb.array([]),
       bundleItems: this.fb.array([]),
       locationCity: ['', Validators.required],
-      locationRegion: ['', Validators.required],
       locationCountry: ['PT', Validators.required],
       duration: ['7 days', Validators.required],
       startingBid: [null],
@@ -590,7 +632,7 @@ export class AddListing implements OnInit, OnDestroy {
       const patch: Record<string, unknown> = {};
       const keys = [
         'title', 'category', 'subCategory', 'listingFormat', 'itemMode', 'quantity', 'condition', 'description',
-        'locationCity', 'locationRegion', 'locationCountry', 'duration', 'startingBid',
+        'locationCity', 'locationCountry', 'duration', 'startingBid',
         'buyNowPrice', 'minimumAcceptPrice', 'allowPrivateRoom',
         'shippingOption', 'flatRateShipping', 'packageSize', 'shippingOriginPostalCode',
         'shippingOriginCity', 'shippingOriginCountry', 'returnPolicy', 'sellerDeclaration'
@@ -1038,7 +1080,7 @@ export class AddListing implements OnInit, OnDestroy {
       commissionRate: this.sellerFeeRatePct,
       locationCity: formValue.locationCity?.trim(),
       locationCountry: formValue.locationCountry,
-      location: `${formValue.locationCity}, ${formValue.locationRegion}, ${formValue.locationCountry}`,
+      location: `${formValue.locationCity?.trim()}, ${formValue.locationCountry}`,
       shippingCost: formValue.flatRateShipping || (formValue.shippingOption === 'free' ? 0 : null),
       shippingOption: formValue.shippingOption,
       packageSize: formValue.shippingOption === 'calculated' ? formValue.packageSize : null,
@@ -1067,7 +1109,7 @@ export class AddListing implements OnInit, OnDestroy {
           ? ['startingBid', 'duration']
           : ['duration'];
       case 5: {
-        const fields = ['shippingOption', 'locationCity', 'locationRegion', 'returnPolicy'];
+        const fields = ['shippingOption', 'locationCity', 'locationCountry', 'returnPolicy'];
         const opt = this.listingForm.get('shippingOption')?.value;
         if (opt === 'flat-rate') fields.push('flatRateShipping');
         if (opt === 'calculated') fields.push('packageSize', 'shippingOriginPostalCode');
@@ -1146,7 +1188,7 @@ export class AddListing implements OnInit, OnDestroy {
       'title', 'category', 'subCategory', 'condition', 'description',
       'startingBid', 'duration', 'shippingOption', 'flatRateShipping',
       'packageSize', 'shippingOriginPostalCode',
-      'locationCity', 'locationRegion', 'returnPolicy', 'sellerDeclaration',
+      'locationCity', 'locationCountry', 'returnPolicy', 'sellerDeclaration',
     ];
     const missing: string[] = [];
     if (this.uploadedFiles.length < 1 || !this.isMediaValid) {
@@ -1198,8 +1240,7 @@ export class AddListing implements OnInit, OnDestroy {
       condition: 'addListing.condition',
       description: 'addListing.description',
       locationCity: 'addListing.city',
-      locationRegion: 'addListing.regionState',
-      locationCountry: 'addListing.originCountry',
+      locationCountry: 'addListing.itemCountry',
       duration: 'addListing.duration',
       startingBid: 'addListing.startingBid',
       shippingOption: 'addListing.shippingOptions',

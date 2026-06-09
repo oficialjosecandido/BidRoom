@@ -20,8 +20,11 @@
               } @else {
                 <span class="hc-img-emoji">🏷</span>
               }
-              <div class="hc-live" [style]="isLiveBadge(listing) ? '' : 'background:rgba(9,9,9,.7);border-color:rgba(240,237,232,.15);color:var(--sub)'">
-                @if (isLiveBadge(listing)) { <span class="hc-dot"></span> }
+              <div class="hc-live"
+                   [class.hc-badge--auction]="isAuctionBadge(listing)"
+                   [class.hc-badge--offer]="isOfferBadge(listing)"
+                   [class.hc-badge--private]="isPrivateBadge(listing)">
+                @if (isAuctionBadge(listing)) { <span class="hc-dot"></span> }
                 {{ listingBadge(listing) }}
               </div>
             </div>
@@ -117,7 +120,10 @@
               } @else {
                 <span class="lc-thumb">🏷</span>
               }
-              <span class="lc-pill" [class.pill-live]="isLiveBadge(listing)" [class.pill-offer]="!isLiveBadge(listing)">
+              <span class="lc-pill"
+                    [class.pill-auction]="isAuctionBadge(listing)"
+                    [class.pill-offer]="isOfferBadge(listing)"
+                    [class.pill-private]="isPrivateBadge(listing)">
                 {{ listingBadge(listing) }}
               </span>
             </div>

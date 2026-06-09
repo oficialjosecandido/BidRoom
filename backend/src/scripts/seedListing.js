@@ -1,7 +1,7 @@
 require('dotenv').config();
 const connectDB = require('../config/database');
 const Listing = require('../models/Listing');
-const User = require('../models/User');
+const Customer = require('../models/Customer');
 
 const seedSeaGullWatch = async () => {
   try {
@@ -9,11 +9,11 @@ const seedSeaGullWatch = async () => {
     await connectDB();
 
     // Find or create a test seller user
-    let seller = await User.findOne({ email: 'seller@bidroom.com' });
+    let seller = await Customer.findOne({ email: 'seller@bidroom.com' });
     
     if (!seller) {
       // Create a test seller if it doesn't exist
-      seller = new User({
+      seller = new Customer({
         email: 'seller@bidroom.com',
         firstName: 'Test',
         lastName: 'Seller',

@@ -1,7 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const Follow = require('../models/Follow');
-const User = require('../models/User');
+const Customer = require('../models/Customer');
 const { authenticateToken, requireActiveAccount } = require('../middleware/auth');
 
 const router = express.Router();
@@ -9,7 +9,7 @@ const router = express.Router();
 // POST /api/follows/:sellerId — follow a seller
 router.post('/:sellerId', authenticateToken, requireActiveAccount, async (req, res) => {
   try {
-    const currentUser = await User.findOne({ uid: req.user.uid }).select('_id').lean();
+    const currentUser = await Customer.findOne({ uid: req.user.uid }).select('_id').lean();
     if (!currentUser) return res.status(404).json({ error: 'User not found' });
     const followerId = currentUser._id;
     const { sellerId } = req.params;
@@ -41,7 +41,7 @@ router.post('/:sellerId', authenticateToken, requireActiveAccount, async (req, r
 // DELETE /api/follows/:sellerId — unfollow a seller
 router.delete('/:sellerId', authenticateToken, requireActiveAccount, async (req, res) => {
   try {
-    const currentUser = await User.findOne({ uid: req.user.uid }).select('_id').lean();
+    const currentUser = await Customer.findOne({ uid: req.user.uid }).select('_id').lean();
     if (!currentUser) return res.status(404).json({ error: 'User not found' });
     const followerId = currentUser._id;
     const { sellerId } = req.params;
@@ -61,7 +61,7 @@ router.delete('/:sellerId', authenticateToken, requireActiveAccount, async (req,
 // PATCH /api/follows/:sellerId/mute — toggle mute for a followed seller
 router.patch('/:sellerId/mute', authenticateToken, requireActiveAccount, async (req, res) => {
   try {
-    const currentUser = await User.findOne({ uid: req.user.uid }).select('_id').lean();
+    const currentUser = await Customer.findOne({ uid: req.user.uid }).select('_id').lean();
     if (!currentUser) return res.status(404).json({ error: 'User not found' });
     const followerId = currentUser._id;
     const { sellerId } = req.params;
@@ -95,7 +95,7 @@ router.patch('/:sellerId/mute', authenticateToken, requireActiveAccount, async (
 // GET /api/follows/status/:sellerId — check follow status
 router.get('/status/:sellerId', authenticateToken, async (req, res) => {
   try {
-    const currentUser = await User.findOne({ uid: req.user.uid }).select('_id').lean();
+    const currentUser = await Customer.findOne({ uid: req.user.uid }).select('_id').lean();
     if (!currentUser) return res.json({ following: false, muted: false });
     const followerId = currentUser._id;
     const { sellerId } = req.params;
@@ -120,7 +120,7 @@ router.get('/status/:sellerId', authenticateToken, async (req, res) => {
 // GET /api/follows/following — list all sellers the current user follows
 router.get('/following', authenticateToken, async (req, res) => {
   try {
-    const user = await User.findOne({ uid: req.user.uid }).select('_id').lean();
+    const user = await Customer.findOne({ uid: req.user.uid }).select('_id').lean();
     if (!user) return res.json({ following: [] });
 
     const entries = await Follow.find({ follower: user._id })

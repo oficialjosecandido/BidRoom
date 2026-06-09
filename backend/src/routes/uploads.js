@@ -5,7 +5,7 @@ const azureStorageService = require('../services/azureStorage.service');
 const { scanImages } = require('../services/contentSafetyService');
 const { recordViolation } = require('../services/contentViolationService');
 const { appendModerationAudit } = require('../services/moderationAuditService');
-const User = require('../models/User');
+const Customer = require('../models/Customer');
 
 const router = express.Router();
 
@@ -83,7 +83,7 @@ router.post('/', authenticateToken, requireActiveAccount, upload.array('images',
 
       if (scan.blocked) {
         // Resolve the MongoDB user from the Firebase uid carried by the auth token
-        const currentUser = await User.findOne({ uid: req.user.uid }).select('_id contentViolationCount contentRestrictedUntil');
+        const currentUser = await Customer.findOne({ uid: req.user.uid }).select('_id contentViolationCount contentRestrictedUntil');
         if (currentUser) {
           // Escalating penalty: warning → temp restriction → suspension
           recordViolation(currentUser, 'inappropriate_image').catch(err =>
@@ -107,7 +107,7 @@ router.post('/', authenticateToken, requireActiveAccount, upload.array('images',
 
       // Borderline (flagged): allow upload but queue for admin review
       if (scan.anyFlagged) {
-        const currentUser = await User.findOne({ uid: req.user.uid }).select('_id').lean();
+        const currentUser = await Customer.findOne({ uid: req.user.uid }).select('_id').lean();
         if (currentUser) {
           appendModerationAudit({
             subjectUserId: currentUser._id,

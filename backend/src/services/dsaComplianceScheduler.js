@@ -15,7 +15,7 @@
  * Grace period: 30 days from first warning before flagging.
  */
 
-const User = require('../models/User');
+const Customer = require('../models/Customer');
 const Transaction = require('../models/Transaction');
 const { sendEmail } = require('./emailService');
 const { notifyDsaWarning, notifyDsaSuspectedProfessional, emitNewNotificationToUser } = require('./notificationService');
@@ -35,7 +35,7 @@ async function checkDsaCompliance() {
 
   try {
     // Only check active private sellers
-    const privateSellers = await User.find({
+    const privateSellers = await Customer.find({
       sellerClassification: 'private',
       accountStatus: 'active'
     }).select('_id uid email firstName dsaWarningIssuedAt dsaWarningAcknowledgedAt dsaWarningResponse suspectedProfessional dsaListingRestricted').lean();
@@ -80,7 +80,7 @@ async function checkDsaCompliance() {
 
       if (!alreadyWarned) {
         // First time exceeding threshold — issue warning
-        await User.updateOne({ _id: seller._id }, { $set: { dsaWarningIssuedAt: now } });
+        await Customer.updateOne({ _id: seller._id }, { $set: { dsaWarningIssuedAt: now } });
         await notifyDsaWarning({
           userId: uid,
           annualSalesEur: stats.totalSalesEur,
@@ -101,7 +101,7 @@ async function checkDsaCompliance() {
         const updateFields = { suspectedProfessional: true };
         // Optionally restrict listing creation (uncomment to enforce):
         // updateFields.dsaListingRestricted = true;
-        await User.updateOne({ _id: seller._id }, { $set: updateFields });
+        await Customer.updateOne({ _id: seller._id }, { $set: updateFields });
 
         await notifyDsaSuspectedProfessional({ userId: uid, io: ioInstance }).catch(err =>
           console.error(`${LOG_PREFIX} notify flagged failed for ${uid}:`, err.message)

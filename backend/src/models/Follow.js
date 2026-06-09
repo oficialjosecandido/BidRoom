@@ -2,8 +2,8 @@ const mongoose = require('mongoose');
 
 const followSchema = new mongoose.Schema(
   {
-    follower: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-    following: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    follower: { type: mongoose.Schema.Types.ObjectId, ref: 'Customer', required: true },
+    following: { type: mongoose.Schema.Types.ObjectId, ref: 'Customer', required: true },
     muted: { type: Boolean, default: false }
   },
   { timestamps: true }

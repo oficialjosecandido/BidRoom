@@ -1,5 +1,5 @@
 const Notification = require('../models/Notification');
-const User = require('../models/User');
+const Customer = require('../models/Customer');
 const NotificationPreferences = require('../models/NotificationPreferences');
 const Follow = require('../models/Follow');
 const CategoryFollow = require('../models/CategoryFollow');
@@ -89,7 +89,7 @@ async function shouldSendEmail(userId, eventType) {
 async function emitNewNotificationToUser(io, userMongoId) {
   if (!io || !userMongoId) return;
   try {
-    const user = await User.findById(userMongoId).select('uid').lean();
+    const user = await Customer.findById(userMongoId).select('uid').lean();
     if (user?.uid) {
       io.to(`user:${user.uid}`).emit('new-notification');
     }
@@ -108,7 +108,7 @@ async function emitNewNotificationToUser(io, userMongoId) {
 async function emitPrivateRoomInvitationToUser(io, userMongoId, { listingId, listingTitle }) {
   if (!io || !userMongoId) return;
   try {
-    const user = await User.findById(userMongoId).select('uid').lean();
+    const user = await Customer.findById(userMongoId).select('uid').lean();
     if (user?.uid) {
       const room = `user:${user.uid}`;
       io.to(room).emit('new-notification');

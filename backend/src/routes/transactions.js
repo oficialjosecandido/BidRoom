@@ -1,7 +1,7 @@
 const express = require('express');
 const Transaction = require('../models/Transaction');
 const Listing = require('../models/Listing');
-const User = require('../models/User');
+const Customer = require('../models/Customer');
 const Review = require('../models/Review');
 const { authenticateToken, requireActiveAccount } = require('../middleware/auth');
 const { sendSellerDisputeOpenedNotification, sendEmail } = require('../services/emailService');
@@ -40,7 +40,7 @@ router.use(authenticateToken);
  */
 router.get('/', async (req, res) => {
   try {
-    const user = await User.findOne({ uid: req.user.uid });
+    const user = await Customer.findOne({ uid: req.user.uid });
     if (!user) {
       return res.status(404).json({ error: 'User not found. Please complete your profile.' });
     }
@@ -105,7 +105,7 @@ router.get('/', async (req, res) => {
  */
 router.get('/:id/invoice', async (req, res) => {
   try {
-    const user = await User.findOne({ uid: req.user.uid });
+    const user = await Customer.findOne({ uid: req.user.uid });
     if (!user) {
       return res.status(404).json({ error: 'User not found.' });
     }
@@ -157,7 +157,7 @@ router.get('/:id/invoice', async (req, res) => {
  */
 router.get('/:id', async (req, res) => {
   try {
-    const user = await User.findOne({ uid: req.user.uid });
+    const user = await Customer.findOne({ uid: req.user.uid });
     if (!user) {
       return res.status(404).json({ error: 'User not found.' });
     }
@@ -205,7 +205,7 @@ router.get('/:id', async (req, res) => {
  */
 router.post('/:id/open-dispute', async (req, res) => {
   try {
-    const user = await User.findOne({ uid: req.user.uid });
+    const user = await Customer.findOne({ uid: req.user.uid });
     if (!user) {
       return res.status(404).json({ error: 'User not found.' });
     }
@@ -321,7 +321,7 @@ router.post('/:id/open-dispute', async (req, res) => {
  */
 router.patch('/:id/dispute/counter-evidence', async (req, res) => {
   try {
-    const user = await User.findOne({ uid: req.user.uid });
+    const user = await Customer.findOne({ uid: req.user.uid });
     if (!user) {
       return res.status(404).json({ error: 'User not found.' });
     }
@@ -397,7 +397,7 @@ const REMIND_SHIP_COOLDOWN_MS = 24 * 60 * 60 * 1000;
  */
 router.post('/:id/remind-ship', requireActiveAccount, async (req, res) => {
   try {
-    const user = await User.findOne({ uid: req.user.uid });
+    const user = await Customer.findOne({ uid: req.user.uid });
     if (!user) {
       return res.status(404).json({ error: 'User not found.' });
     }
@@ -470,7 +470,7 @@ router.post('/:id/remind-ship', requireActiveAccount, async (req, res) => {
  */
 router.patch('/:id', requireActiveAccount, async (req, res) => {
   try {
-    const user = await User.findOne({ uid: req.user.uid });
+    const user = await Customer.findOne({ uid: req.user.uid });
     if (!user) {
       return res.status(404).json({ error: 'User not found.' });
     }
@@ -516,7 +516,7 @@ router.patch('/:id', requireActiveAccount, async (req, res) => {
           const io = req.app.get('io');
           if (io) emitNewNotificationToUser(io, buyerUserId).catch(() => {});
           // Email to buyer
-          const buyer = await User.findById(buyerUserId).select('email firstName').lean();
+          const buyer = await Customer.findById(buyerUserId).select('email firstName').lean();
           if (buyer?.email) {
             const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:4200';
             const txLink = `${frontendUrl}/dashboard/transactions`;
@@ -595,7 +595,7 @@ router.patch('/:id', requireActiveAccount, async (req, res) => {
           if (io) emitNewNotificationToUser(io, buyerUserId).catch(() => {});
 
           // Email to buyer with optional proof-of-shipment link
-          const buyer = await User.findById(buyerUserId).select('email firstName').lean();
+          const buyer = await Customer.findById(buyerUserId).select('email firstName').lean();
           if (buyer?.email) {
             const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:4200';
             const txLink = `${frontendUrl}/dashboard/transactions`;
@@ -659,7 +659,7 @@ router.patch('/:id', requireActiveAccount, async (req, res) => {
         if (sellerUserId) {
           const listing = await Listing.findById(transaction.listing).select('title').lean();
           const listingTitle = listing?.title || 'the item';
-          const buyer = await User.findById(transaction.buyer).select('firstName lastName').lean();
+          const buyer = await Customer.findById(transaction.buyer).select('firstName lastName').lean();
           const buyerName = buyer ? `${buyer.firstName || ''} ${buyer.lastName || ''}`.trim() : 'The buyer';
           notifyBuyerConfirmedReceipt({
             transactionId: transaction._id.toString(),
@@ -734,7 +734,7 @@ const RETURN_WINDOW_DAYS = 7;
  */
 router.post('/:id/request-return', requireActiveAccount, async (req, res) => {
   try {
-    const user = await User.findOne({ uid: req.user.uid });
+    const user = await Customer.findOne({ uid: req.user.uid });
     if (!user) return res.status(404).json({ error: 'User not found.' });
 
     const transaction = await Transaction.findById(req.params.id)

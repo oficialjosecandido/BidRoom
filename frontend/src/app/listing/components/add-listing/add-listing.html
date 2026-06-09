@@ -299,14 +299,14 @@
             @if (getFieldError('buyNowPrice')) { <div class="field-err">{{ getFieldError('buyNowPrice') }}</div> }
           </div>
 
-          <div class="field">
+          <div class="duration-field">
             <label class="field-label">{{ 'addListing.duration' | translate }} <span class="req">*</span></label>
-            <div class="field-hint" style="margin-bottom:10px">{{ 'addListing.durationHint' | translate }}</div>
-            <div class="pill-group">
-              @for (d of listingDurations; track d.label) {
-                <label class="pill" [class.selected]="listingForm.get('duration')?.value === d.label">
-                  <input type="radio" formControlName="duration" [value]="d.label" style="display:none">
-                  {{ d.label }}
+            <p class="field-hint field-hint--block">{{ 'addListing.durationHint' | translate }}</p>
+            <div class="pill-group duration-pill-group">
+              @for (d of listingDurations; track d.value) {
+                <label class="pill" [class.selected]="listingForm.get('duration')?.value === d.value">
+                  <input type="radio" formControlName="duration" [value]="d.value" style="display:none">
+                  {{ d.labelKey | translate }}
                 </label>
               }
             </div>
@@ -316,45 +316,49 @@
       }
 
       @if (listingForm.get('listingFormat')?.value === 'best-offer') {
-        <div class="section">
+        <div class="section pricing-section">
           <div class="section-title">{{ 'addListing.step4.offer.section' | translate }}</div>
 
-          <div class="field-row">
-            <div class="field">
-              <label class="field-label">
-                {{ 'addListing.minimumAcceptPrice' | translate }}
-                <span class="optional-tag">{{ 'addListing.optional' | translate }}</span>
-              </label>
-              <div class="price-input-wrap">
-                <span class="price-prefix">€</span>
-                <input class="field-input price-input" type="number" formControlName="minimumAcceptPrice"
-                  min="0" step="0.01" placeholder="0.00">
+          <div class="pricing-grid">
+            <div class="pricing-field-card">
+              <div class="field">
+                <label class="field-label">
+                  <span>{{ 'addListing.minimumAcceptPrice' | translate }}</span>
+                  <span class="optional-tag">{{ 'addListing.optional' | translate }}</span>
+                </label>
+                <div class="price-input-wrap">
+                  <span class="price-prefix">€</span>
+                  <input class="field-input price-input" type="number" formControlName="minimumAcceptPrice"
+                    min="0" step="0.01" placeholder="0,00">
+                </div>
+                <div class="field-hint">{{ 'addListing.minimumAcceptHint' | translate }}</div>
               </div>
-              <div class="field-hint">{{ 'addListing.minimumAcceptHint' | translate }}</div>
             </div>
-            <div class="field">
-              <label class="field-label">
-                {{ 'addListing.buyNowPrice' | translate }}
-                <span class="optional-tag">{{ 'addListing.optional' | translate }}</span>
-              </label>
-              <div class="price-input-wrap">
-                <span class="price-prefix">€</span>
-                <input class="field-input price-input" type="number" formControlName="buyNowPrice"
-                  min="0.01" step="0.01" placeholder="0.00">
+            <div class="pricing-field-card">
+              <div class="field">
+                <label class="field-label">
+                  <span>{{ 'addListing.buyNowPrice' | translate }}</span>
+                  <span class="optional-tag">{{ 'addListing.optional' | translate }}</span>
+                </label>
+                <div class="price-input-wrap">
+                  <span class="price-prefix">€</span>
+                  <input class="field-input price-input" type="number" formControlName="buyNowPrice"
+                    min="0.01" step="0.01" placeholder="0,00">
+                </div>
+                <div class="field-hint">{{ 'addListing.buyNowHint' | translate }}</div>
+                @if (getFieldError('buyNowPrice')) { <div class="field-err">{{ getFieldError('buyNowPrice') }}</div> }
               </div>
-              <div class="field-hint">{{ 'addListing.buyNowHint' | translate }}</div>
-              @if (getFieldError('buyNowPrice')) { <div class="field-err">{{ getFieldError('buyNowPrice') }}</div> }
             </div>
           </div>
 
-          <div class="field">
+          <div class="duration-field">
             <label class="field-label">{{ 'addListing.offerDeadline' | translate }} <span class="req">*</span></label>
-            <div class="field-hint" style="margin-bottom:10px">{{ 'addListing.offerDeadlineHint' | translate }}</div>
-            <div class="pill-group">
-              @for (d of offerDurations; track d.label) {
-                <label class="pill" [class.selected]="listingForm.get('duration')?.value === d.label">
-                  <input type="radio" formControlName="duration" [value]="d.label" style="display:none">
-                  {{ d.label }}
+            <p class="field-hint field-hint--block">{{ 'addListing.offerDeadlineHint' | translate }}</p>
+            <div class="pill-group duration-pill-group duration-pill-group--offer">
+              @for (d of offerDurations; track d.value) {
+                <label class="pill" [class.selected]="listingForm.get('duration')?.value === d.value">
+                  <input type="radio" formControlName="duration" [value]="d.value" style="display:none">
+                  {{ d.labelKey | translate }}
                 </label>
               }
             </div>
@@ -453,16 +457,19 @@
         <div class="section-title">{{ 'addListing.step5.location' | translate }}</div>
         <div class="field-row">
           <div class="field">
+            <label class="field-label">{{ 'addListing.itemCountry' | translate }} <span class="req">*</span></label>
+            <select class="field-input field-select" formControlName="locationCountry">
+              @for (country of itemCountries; track country.value) {
+                <option [value]="country.value">{{ country.labelKey | translate }}</option>
+              }
+            </select>
+            @if (getFieldError('locationCountry')) { <div class="field-err">{{ getFieldError('locationCountry') }}</div> }
+          </div>
+          <div class="field">
             <label class="field-label">{{ 'addListing.city' | translate }} <span class="req">*</span></label>
             <input class="field-input" type="text" formControlName="locationCity"
               [placeholder]="'addListing.cityPlaceholder' | translate">
             @if (getFieldError('locationCity')) { <div class="field-err">{{ getFieldError('locationCity') }}</div> }
-          </div>
-          <div class="field">
-            <label class="field-label">{{ 'addListing.regionState' | translate }} <span class="req">*</span></label>
-            <input class="field-input" type="text" formControlName="locationRegion"
-              [placeholder]="'addListing.regionPlaceholder' | translate">
-            @if (getFieldError('locationRegion')) { <div class="field-err">{{ getFieldError('locationRegion') }}</div> }
           </div>
         </div>
       </div>
@@ -500,7 +507,7 @@
           }
           <div class="review-row">
             <span class="review-label">{{ 'addListing.duration' | translate }}</span>
-            <span class="review-val">{{ listingForm.get('duration')?.value || '—' }}</span>
+            <span class="review-val">{{ reviewDurationLabel }}</span>
           </div>
           <div class="review-row">
             <span class="review-label">{{ 'addListing.shippingOptions' | translate }}</span>

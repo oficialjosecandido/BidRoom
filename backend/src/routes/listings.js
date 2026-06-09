@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const Listing = require('../models/Listing');
 const ListingDraft = require('../models/ListingDraft');
 const ListingPageView = require('../models/ListingPageView');
-const User = require('../models/User');
+const Customer = require('../models/Customer');
 const Bid = require('../models/Bid');
 const Offer = require('../models/Offer');
 const Transaction = require('../models/Transaction');
@@ -63,9 +63,9 @@ function queueListingDetailView(req, listingLean) {
       const sellerId = listingLean.seller && (listingLean.seller._id || listingLean.seller);
       if (!sellerId) return;
       if (req.user?.uid) {
-        let viewer = await User.findOne({ uid: req.user.uid }).select('_id').lean();
+        let viewer = await Customer.findOne({ uid: req.user.uid }).select('_id').lean();
         if (!viewer && req.user.email) {
-          viewer = await User.findOne({ email: String(req.user.email).toLowerCase().trim() })
+          viewer = await Customer.findOne({ email: String(req.user.email).toLowerCase().trim() })
             .select('_id')
             .lean();
         }
@@ -253,7 +253,7 @@ router.get('/', optionalAuth, async (req, res) => {
 
     // Block filter — hide listings from sellers I have blocked or who have blocked me
     if (req.user?.uid) {
-      const viewer = await User.findOne({ uid: req.user.uid }).select('_id').lean();
+      const viewer = await Customer.findOne({ uid: req.user.uid }).select('_id').lean();
       if (viewer) {
         const [blockedBySelf, blockedByOthers] = await Promise.all([
           Block.find({ blocker: viewer._id }).distinct('blocked'),
@@ -446,7 +446,7 @@ router.get('/slug/:slug', optionalAuth, async (req, res) => {
     if (listing.status === 'pending_review') {
       let viewerIsOwner = false;
       if (req.user) {
-        const viewer = await User.findOne({ uid: req.user.uid }).select('_id').lean();
+        const viewer = await Customer.findOne({ uid: req.user.uid }).select('_id').lean();
         const sellerId = listing.seller?._id || listing.seller;
         viewerIsOwner = viewer && String(viewer._id) === String(sellerId);
       }
@@ -497,7 +497,7 @@ router.get('/slug/:slug', optionalAuth, async (req, res) => {
     const [watchlistCount, inWatchlist] = await Promise.all([
       Watchlist.countDocuments({ listing: listing._id }),
       req.user ? (async () => {
-        const user = await User.findOne({ uid: req.user.uid });
+        const user = await Customer.findOne({ uid: req.user.uid });
         if (!user) return false;
         const entry = await Watchlist.findOne({ user: user._id, listing: listing._id });
         return !!entry;
@@ -598,7 +598,7 @@ router.get('/stats/overview', async (req, res) => {
 
 router.get('/drafts/current', authenticateToken, async (req, res) => {
   try {
-    const user = await User.findOne({ uid: req.user.uid });
+    const user = await Customer.findOne({ uid: req.user.uid });
     if (!user) return res.status(404).json({ error: 'User not found' });
     const doc = await ListingDraft.findOne({ seller: user._id }).lean();
     if (!doc) return res.json({ draft: null });
@@ -616,7 +616,7 @@ router.get('/drafts/current', authenticateToken, async (req, res) => {
 
 router.put('/drafts/current', authenticateToken, requireActiveAccount, async (req, res) => {
   try {
-    const user = await User.findOne({ uid: req.user.uid });
+    const user = await Customer.findOne({ uid: req.user.uid });
     if (!user) return res.status(404).json({ error: 'User not found' });
     const body = req.body && typeof req.body === 'object' ? req.body : {};
     const payload = body.payload != null ? body.payload : body;
@@ -637,7 +637,7 @@ router.put('/drafts/current', authenticateToken, requireActiveAccount, async (re
 
 router.delete('/drafts/current', authenticateToken, async (req, res) => {
   try {
-    const user = await User.findOne({ uid: req.user.uid });
+    const user = await Customer.findOne({ uid: req.user.uid });
     if (!user) return res.status(404).json({ error: 'User not found' });
     await ListingDraft.deleteOne({ seller: user._id });
     return res.status(204).send();
@@ -650,9 +650,9 @@ router.delete('/drafts/current', authenticateToken, async (req, res) => {
 // GET /api/listings/seller/analytics — seller performance (must be registered before `/:id`)
 router.get('/seller/analytics', authenticateToken, async (req, res) => {
   try {
-    let user = await User.findOne({ uid: req.user.uid });
+    let user = await Customer.findOne({ uid: req.user.uid });
     if (!user && req.user.email) {
-      user = await User.findOne({ email: String(req.user.email).toLowerCase().trim() });
+      user = await Customer.findOne({ email: String(req.user.email).toLowerCase().trim() });
     }
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
@@ -933,7 +933,7 @@ router.get('/:id', optionalAuth, async (req, res) => {
     if (listing.status === 'pending_review') {
       let viewerIsOwner = false;
       if (req.user) {
-        const viewer = await User.findOne({ uid: req.user.uid }).select('_id').lean();
+        const viewer = await Customer.findOne({ uid: req.user.uid }).select('_id').lean();
         const sellerId = listing.seller?._id || listing.seller;
         viewerIsOwner = viewer && String(viewer._id) === String(sellerId);
       }
@@ -986,9 +986,9 @@ router.get('/:id', optionalAuth, async (req, res) => {
 
     // When authenticated, include platinum bidder status for current user (replaces check-platinum endpoint)
     if (req.isAuthenticated && req.user) {
-      let user = await User.findOne({ uid: req.user.uid });
+      let user = await Customer.findOne({ uid: req.user.uid });
       if (!user && req.user.email) {
-        user = await User.findOne({ email: req.user.email.toLowerCase().trim() });
+        user = await Customer.findOne({ email: req.user.email.toLowerCase().trim() });
       }
       if (user) {
         const isInPlatinumBidders = listing.platinumBidders && listing.platinumBidders.some(
@@ -1035,7 +1035,7 @@ router.post('/', authenticateToken, requireActiveAccount, requireNoDisputeRestri
   let listingContentWarning = null; // set when low-severity language is detected
   try {
     // Find or create user in database from Firebase UID
-    let user = await User.findOne({ uid: req.user.uid });
+    let user = await Customer.findOne({ uid: req.user.uid });
     if (!user) {
       // If user doesn't exist, create one
       // Parse name from Firebase user
@@ -1043,7 +1043,7 @@ router.post('/', authenticateToken, requireActiveAccount, requireNoDisputeRestri
       const firstName = nameParts[0] || 'User';
       const lastName = nameParts.slice(1).join(' ') || 'User'; // Use 'User' as default if no lastName
       
-      user = new User({
+      user = new Customer({
         uid: req.user.uid,
         email: req.user.email,
         firstName: firstName,
@@ -1228,7 +1228,7 @@ router.post('/', authenticateToken, requireActiveAccount, requireNoDisputeRestri
     const abuseCheck = scanForAbusiveContent(`${title} ${description || ''}`);
     if (abuseCheck.found) {
       if (abuseCheck.severity === 'high') {
-        const fullUserForAbuse = await User.findById(user._id);
+        const fullUserForAbuse = await Customer.findById(user._id);
         const violation = await recordViolation(fullUserForAbuse, 'offensive_language');
         appendModerationAudit({
           subjectUserId: user._id,
@@ -1239,7 +1239,7 @@ router.post('/', authenticateToken, requireActiveAccount, requireNoDisputeRestri
       }
       if (abuseCheck.severity === 'medium') {
         // Record the violation so repeat medium offenders escalate through the ladder
-        const fullUserForAbuse = await User.findById(user._id);
+        const fullUserForAbuse = await Customer.findById(user._id);
         const violation = await recordViolation(fullUserForAbuse, 'offensive_language');
         appendModerationAudit({
           subjectUserId: user._id,
@@ -1278,7 +1278,7 @@ router.post('/', authenticateToken, requireActiveAccount, requireNoDisputeRestri
     const specTexts = (specifications || []).map(s => `${s.key || ''} ${s.value || ''}`);
     const contentScan = scanTexts([title, description, ...specTexts]);
     if (contentScan.found) {
-      const fullUser = await User.findById(user._id);
+      const fullUser = await Customer.findById(user._id);
       const violation = await recordViolation(fullUser);
       return res.status(400).json({
         error: 'Content policy violation',
@@ -1459,7 +1459,7 @@ const CRITICAL_FIELDS = new Set([
 router.patch('/:id', authenticateToken, requireActiveAccount, async (req, res) => {
   let listingContentWarning = null; // set when low-severity language is detected
   try {
-    const user = await User.findOne({ uid: req.user.uid });
+    const user = await Customer.findOne({ uid: req.user.uid });
     if (!user) return res.status(404).json({ error: 'User not found' });
 
     const listing = await Listing.findById(req.params.id);
@@ -1526,7 +1526,7 @@ router.patch('/:id', authenticateToken, requireActiveAccount, async (req, res) =
     if (textFields.length > 0) {
       const contentScan = scanTexts(textFields);
       if (contentScan.found) {
-        const fullUser = await User.findById(user._id);
+        const fullUser = await Customer.findById(user._id);
         const violation = await recordViolation(fullUser);
         return res.status(400).json({
           error: 'Content policy violation',
@@ -1550,7 +1550,7 @@ router.patch('/:id', authenticateToken, requireActiveAccount, async (req, res) =
       const abuseCheckUpdate = scanForAbusiveContent(textFields.join(' '));
       if (abuseCheckUpdate.found) {
         if (abuseCheckUpdate.severity === 'high') {
-          const fullUser = await User.findById(user._id);
+          const fullUser = await Customer.findById(user._id);
           const violation = await recordViolation(fullUser, 'offensive_language');
           appendModerationAudit({
             subjectUserId: user._id,
@@ -1560,7 +1560,7 @@ router.patch('/:id', authenticateToken, requireActiveAccount, async (req, res) =
           return res.status(400).json({ error: 'Content policy violation', message: violation.message, violationAction: violation.action });
         }
         if (abuseCheckUpdate.severity === 'medium') {
-          const fullUser = await User.findById(user._id);
+          const fullUser = await Customer.findById(user._id);
           const violation = await recordViolation(fullUser, 'offensive_language');
           appendModerationAudit({
             subjectUserId: user._id,
@@ -1608,7 +1608,7 @@ router.patch('/:id', authenticateToken, requireActiveAccount, async (req, res) =
 // POST /api/listings/:id/buy-now - Buy now (instantly closes auction and creates transaction)
 router.post('/:id/buy-now', authenticateToken, requireActiveAccount, requireNoDisputeRestriction, async (req, res) => {
   try {
-    const user = await User.findOne({ uid: req.user.uid });
+    const user = await Customer.findOne({ uid: req.user.uid });
     if (!user) return res.status(404).json({ error: 'User not found' });
 
     const listing = await Listing.findById(req.params.id).populate('seller', SELLER_DSA_PUBLIC_SELECT);
@@ -1727,7 +1727,7 @@ router.post('/:id/choose-winner', authenticateToken, requireActiveAccount, async
     }
 
     // Verify user is the seller
-    const user = await User.findOne({ uid: req.user.uid });
+    const user = await Customer.findOne({ uid: req.user.uid });
     if (!user || listing.seller._id.toString() !== user._id.toString()) {
       return res.status(403).json({
         error: 'Unauthorized',
@@ -1828,7 +1828,7 @@ router.post('/:id/reopen', authenticateToken, requireActiveAccount, async (req, 
       });
     }
 
-    const user = await User.findOne({ uid: req.user.uid });
+    const user = await Customer.findOne({ uid: req.user.uid });
     if (!user || listing.seller._id.toString() !== user._id.toString()) {
       return res.status(403).json({
         error: 'Unauthorized',
@@ -1910,7 +1910,7 @@ router.post('/:id/relist', authenticateToken, requireActiveAccount, async (req, 
     const listing = await Listing.findById(req.params.id);
     if (!listing) return res.status(404).json({ error: 'Listing not found' });
 
-    const user = await User.findOne({ uid: req.user.uid });
+    const user = await Customer.findOne({ uid: req.user.uid });
     if (!user || String(listing.seller) !== String(user._id)) {
       return res.status(403).json({ error: 'Only the seller can relist this item' });
     }
@@ -2035,7 +2035,7 @@ router.get('/:id/bids', authenticateToken, async (req, res) => {
     }
 
     // Verify user is the seller
-    const user = await User.findOne({ uid: req.user.uid });
+    const user = await Customer.findOne({ uid: req.user.uid });
     if (!user || listing.seller._id.toString() !== user._id.toString()) {
       return res.status(403).json({
         error: 'Unauthorized',
@@ -2085,17 +2085,17 @@ router.get('/:id/bids', authenticateToken, async (req, res) => {
 // GET /api/listings/seller/my-listings - Get all listings for the authenticated seller
 router.get('/seller/my-listings', authenticateToken, async (req, res) => {
   try {
-    let user = await User.findOne({ uid: req.user.uid });
+    let user = await Customer.findOne({ uid: req.user.uid });
 
     if (!user && req.user.email) {
       const email = req.user.email.toLowerCase().trim();
-      user = await User.findOne({ email });
+      user = await Customer.findOne({ email });
       if (user) {
-        await User.updateOne(
+        await Customer.updateOne(
           { _id: user._id },
           { $set: { uid: req.user.uid, emailVerified: req.user.emailVerified ?? true } }
         );
-        user = await User.findById(user._id);
+        user = await Customer.findById(user._id);
       }
     }
 
@@ -2103,7 +2103,7 @@ router.get('/seller/my-listings', authenticateToken, async (req, res) => {
       const nameParts = (req.user.name || '').split(' ').filter(Boolean);
       const firstName = nameParts[0] || 'User';
       const lastName = nameParts.slice(1).join(' ') || 'User';
-      user = new User({
+      user = new Customer({
         uid: req.user.uid,
         email: req.user.email || '',
         firstName,
@@ -2115,13 +2115,13 @@ router.get('/seller/my-listings', authenticateToken, async (req, res) => {
         await user.save();
       } catch (err) {
         if (err.code === 11000 && req.user.email) {
-          user = await User.findOne({ email: (req.user.email || '').toLowerCase().trim() });
+          user = await Customer.findOne({ email: (req.user.email || '').toLowerCase().trim() });
           if (user) {
-            await User.updateOne(
+            await Customer.updateOne(
               { _id: user._id },
               { $set: { uid: req.user.uid, emailVerified: req.user.emailVerified ?? true } }
             );
-            user = await User.findById(user._id);
+            user = await Customer.findById(user._id);
           }
         } else {
           throw err;
@@ -2205,7 +2205,7 @@ router.get('/seller/my-listings', authenticateToken, async (req, res) => {
 // GET /api/listings/bidder/my-auctions - Listings where the current user has placed at least one bid
 router.get('/bidder/my-auctions', authenticateToken, async (req, res) => {
   try {
-    const user = await User.findOne({ uid: req.user.uid });
+    const user = await Customer.findOne({ uid: req.user.uid });
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
@@ -2270,7 +2270,7 @@ router.get('/bidder/my-auctions', authenticateToken, async (req, res) => {
 // GET /api/listings/bidder/my-bets - Listings with all bets (bids + offers) per listing, for My Bets tab
 router.get('/bidder/my-bets', authenticateToken, async (req, res) => {
   try {
-    const user = await User.findOne({ uid: req.user.uid });
+    const user = await Customer.findOne({ uid: req.user.uid });
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }

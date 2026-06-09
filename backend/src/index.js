@@ -17,7 +17,7 @@ require('./config/firebaseAdmin');
 
 // Import database connection
 const connectDB = require('./config/database');
-const User = require('./models/User');
+const Customer = require('./models/Customer');
 const Listing = require('./models/Listing');
 const redisService = require('./services/redis.service');
 

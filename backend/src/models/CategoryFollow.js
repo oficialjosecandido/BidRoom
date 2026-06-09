@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 
 const categoryFollowSchema = new mongoose.Schema(
   {
-    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    user: { type: mongoose.Schema.Types.ObjectId, ref: 'Customer', required: true },
     category: { type: String, required: true, trim: true },
     muted: { type: Boolean, default: false }
   },

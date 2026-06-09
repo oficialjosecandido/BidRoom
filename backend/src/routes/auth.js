@@ -1,6 +1,6 @@
 const express = require('express');
 const { authenticateToken } = require('../middleware/auth');
-const User = require('../models/User');
+const Customer = require('../models/Customer');
 const { getTrustBadges } = require('../services/reputationService');
 const { getReviewScoresForUser } = require('../services/reviewService');
 const { sendPasswordReset } = require('../services/emailService');
@@ -50,7 +50,7 @@ router.get('/me', authenticateToken, async (req, res) => {
 router.get('/customer', authenticateToken, async (req, res) => {
   try {
     const selectFields = '_id uid email firstName lastName emailVerified isActive accountStatus hasDeposit depositAmount reputationScore disputeLossCount successfulTransactionCount lastLogin createdAt';
-    let dbUser = await User.findOne({ uid: req.user.uid })
+    let dbUser = await Customer.findOne({ uid: req.user.uid })
       .select(selectFields)
       .lean();
 
@@ -58,7 +58,7 @@ router.get('/customer', authenticateToken, async (req, res) => {
       const nameParts = (req.user.name || '').split(' ').filter(Boolean);
       const firstName = nameParts[0] || 'User';
       const lastName = nameParts.slice(1).join(' ') || 'User';
-      const newUser = new User({
+      const newUser = new Customer({
         uid: req.user.uid,
         email: req.user.email || '',
         firstName,
@@ -67,11 +67,11 @@ router.get('/customer', authenticateToken, async (req, res) => {
         emailVerified: req.user.emailVerified ?? false
       });
       await newUser.save();
-      dbUser = await User.findById(newUser._id)
+      dbUser = await Customer.findById(newUser._id)
         .select(selectFields)
         .lean();
     } else {
-      await User.updateOne({ uid: req.user.uid }, { lastLogin: new Date() });
+      await Customer.updateOne({ uid: req.user.uid }, { lastLogin: new Date() });
     }
 
     const [badges, reviewScores] = await Promise.all([
@@ -128,7 +128,7 @@ router.post('/forgot-password', async (req, res) => {
     const resetUrl = `${frontendBase}/auth/reset-password?oobCode=${encodeURIComponent(oobCode)}`;
 
     // Look up first name for personalisation (best-effort)
-    const user = await User.findOne({ email: email.toLowerCase().trim() }).select('firstName').lean();
+    const user = await Customer.findOne({ email: email.toLowerCase().trim() }).select('firstName').lean();
 
     await sendPasswordReset(email.toLowerCase().trim(), user?.firstName || 'there', resetUrl);
 
@@ -165,7 +165,7 @@ router.post('/login-failure', async (req, res) => {
   }
 
   try {
-    const user = await User.findOne({ email: email.toLowerCase().trim() })
+    const user = await Customer.findOne({ email: email.toLowerCase().trim() })
       .select('loginFailedAttempts loginLockedUntil');
     if (!user) {
       // Security: don't reveal whether this email is registered
@@ -174,7 +174,7 @@ router.post('/login-failure', async (req, res) => {
 
     const attempts = (user.loginFailedAttempts || 0) + 1;
     const locked = attempts >= LOGIN_MAX_ATTEMPTS;
-    await User.updateOne(
+    await Customer.updateOne(
       { _id: user._id },
       {
         $set: {

@@ -15,9 +15,9 @@ const fraudEventSchema = new Schema({
     index: true
   },
   /** The user who triggered the event (bidder) */
-  userId: { type: Schema.Types.ObjectId, ref: 'User', default: null, index: true },
+  userId: { type: Schema.Types.ObjectId, ref: 'Customer', default: null, index: true },
   /** The other party (e.g. seller in a shill-bid event) */
-  targetUserId: { type: Schema.Types.ObjectId, ref: 'User', default: null },
+  targetUserId: { type: Schema.Types.ObjectId, ref: 'Customer', default: null },
   listingId: { type: Schema.Types.ObjectId, ref: 'Listing', default: null },
   bidId: { type: Schema.Types.ObjectId, ref: 'Bid', default: null },
   ipAddress: { type: String, default: null },

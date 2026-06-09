@@ -370,6 +370,8 @@ nav {
   border: 1px solid var(--line);
   border-radius: 4px;
   padding: 1px 6px;
+  margin-left: auto;
+  flex-shrink: 0;
 }
 
 .field-hint {
@@ -378,6 +380,11 @@ nav {
   color: var(--dim);
   margin-top: 5px;
   line-height: 1.45;
+
+  &--block {
+    margin: 0 0 12px;
+    color: var(--sub);
+  }
 }
 
 .field-err {
@@ -567,16 +574,75 @@ nav {
   border: 1px solid var(--line);
   color: var(--sub);
   cursor: pointer;
-  transition: color .15s, border-color .15s, background .15s;
+  transition: color .15s, border-color .15s, background .15s, box-shadow .15s;
   display: inline-block;
 
   &:hover { color: var(--text); border-color: var(--dim); }
 
   &.selected {
     background: var(--gb);
-    border-color: var(--gl);
+    border-color: var(--gold);
     color: var(--gold);
-    font-weight: 500;
+    font-weight: 600;
+    box-shadow: 0 0 0 1px var(--gl);
+  }
+}
+
+.pricing-section {
+  .pricing-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-bottom: 16px;
+  }
+
+  .pricing-field-card {
+    padding: 16px;
+    background: var(--s1);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+
+    .field { margin-bottom: 0; }
+  }
+}
+
+.duration-field {
+  padding: 18px;
+  background: var(--s1);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+
+.duration-pill-group {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 10px;
+
+  .pill {
+    text-align: center;
+    padding: 12px 14px;
+    border-radius: 10px;
+
+    &.selected {
+      background: var(--gold);
+      border-color: var(--gold);
+      color: #0a0a0a;
+      box-shadow: none;
+    }
+  }
+
+  &--offer {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 720px) {
+  .pricing-section .pricing-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .duration-pill-group--offer {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 

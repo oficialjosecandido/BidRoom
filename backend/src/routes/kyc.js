@@ -9,7 +9,7 @@
  */
 
 const express = require('express');
-const User = require('../models/User');
+const Customer = require('../models/Customer');
 const { authenticateToken, requireActiveAccount } = require('../middleware/auth');
 const { getStripe } = require('../utils/stripe.util');
 
@@ -21,7 +21,7 @@ const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:4200';
 // Returns the current user's KYC status (public-safe fields only).
 router.get('/status', authenticateToken, async (req, res) => {
   try {
-    const user = await User.findOne({ uid: req.user.uid })
+    const user = await Customer.findOne({ uid: req.user.uid })
       .select('kycStatus kycVerifiedAt kycRejectionReason kycSubmittedAt')
       .lean();
 
@@ -49,7 +49,7 @@ router.post('/session', authenticateToken, requireActiveAccount, async (req, res
       return res.status(503).json({ error: 'Identity verification is not configured', message: 'STRIPE_SECRET_KEY is not set.' });
     }
 
-    const user = await User.findOne({ uid: req.user.uid });
+    const user = await Customer.findOne({ uid: req.user.uid });
     if (!user) return res.status(404).json({ error: 'User not found' });
 
     if (user.kycStatus === 'approved') {
@@ -69,7 +69,7 @@ router.post('/session', authenticateToken, requireActiveAccount, async (req, res
     });
 
     // Mark user as pending and store session ID
-    await User.updateOne(
+    await Customer.updateOne(
       { _id: user._id },
       { $set: { kycStatus: 'pending', kycStripeSessionId: session.id, kycSubmittedAt: new Date() } }
     );
@@ -115,7 +115,7 @@ async function processKycWebhookEvent(rawBody, res, event) {
 
     switch (event.type) {
       case 'identity.verification_session.verified':
-        await User.updateOne(
+        await Customer.updateOne(
           { _id: userId },
           { $set: { kycStatus: 'approved', kycVerifiedAt: new Date(), kycRejectionReason: null } }
         );
@@ -125,7 +125,7 @@ async function processKycWebhookEvent(rawBody, res, event) {
       case 'identity.verification_session.requires_input': {
         const error = session.last_error;
         const reason = error?.code || error?.reason || 'verification_failed';
-        await User.updateOne(
+        await Customer.updateOne(
           { _id: userId },
           { $set: { kycStatus: 'rejected', kycRejectionReason: reason } }
         );
@@ -134,7 +134,7 @@ async function processKycWebhookEvent(rawBody, res, event) {
       }
 
       case 'identity.verification_session.canceled':
-        await User.updateOne(
+        await Customer.updateOne(
           { _id: userId, kycStatus: 'pending' },
           { $set: { kycStatus: 'none', kycStripeSessionId: null } }
         );

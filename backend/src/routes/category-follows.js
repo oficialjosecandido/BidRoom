@@ -1,6 +1,6 @@
 const express = require('express');
 const CategoryFollow = require('../models/CategoryFollow');
-const User = require('../models/User');
+const Customer = require('../models/Customer');
 const { authenticateToken, requireActiveAccount } = require('../middleware/auth');
 
 const router = express.Router();
@@ -8,7 +8,7 @@ const router = express.Router();
 // POST /api/category-follows/:category — follow a category
 router.post('/:category', authenticateToken, requireActiveAccount, async (req, res) => {
   try {
-    const user = await User.findOne({ uid: req.user.uid }).select('_id').lean();
+    const user = await Customer.findOne({ uid: req.user.uid }).select('_id').lean();
     if (!user) return res.status(404).json({ error: 'User not found' });
 
     const category = req.params.category.trim().toLowerCase();
@@ -30,7 +30,7 @@ router.post('/:category', authenticateToken, requireActiveAccount, async (req, r
 // DELETE /api/category-follows/:category — unfollow a category
 router.delete('/:category', authenticateToken, async (req, res) => {
   try {
-    const user = await User.findOne({ uid: req.user.uid }).select('_id').lean();
+    const user = await Customer.findOne({ uid: req.user.uid }).select('_id').lean();
     if (!user) return res.status(404).json({ error: 'User not found' });
 
     const category = req.params.category.trim().toLowerCase();
@@ -45,7 +45,7 @@ router.delete('/:category', authenticateToken, async (req, res) => {
 // GET /api/category-follows/status/:category — check follow status
 router.get('/status/:category', authenticateToken, async (req, res) => {
   try {
-    const user = await User.findOne({ uid: req.user.uid }).select('_id').lean();
+    const user = await Customer.findOne({ uid: req.user.uid }).select('_id').lean();
     if (!user) return res.json({ following: false });
 
     const category = req.params.category.trim().toLowerCase();
@@ -60,7 +60,7 @@ router.get('/status/:category', authenticateToken, async (req, res) => {
 // GET /api/category-follows — list all categories the current user follows
 router.get('/', authenticateToken, async (req, res) => {
   try {
-    const user = await User.findOne({ uid: req.user.uid }).select('_id').lean();
+    const user = await Customer.findOne({ uid: req.user.uid }).select('_id').lean();
     if (!user) return res.json({ categories: [] });
 
     const entries = await CategoryFollow.find({ user: user._id }).select('category muted').lean();
@@ -74,7 +74,7 @@ router.get('/', authenticateToken, async (req, res) => {
 // PATCH /api/category-follows/:category/mute — toggle mute for a followed category
 router.patch('/:category/mute', authenticateToken, async (req, res) => {
   try {
-    const user = await User.findOne({ uid: req.user.uid }).select('_id').lean();
+    const user = await Customer.findOne({ uid: req.user.uid }).select('_id').lean();
     if (!user) return res.status(404).json({ error: 'User not found' });
 
     const { muted } = req.body;

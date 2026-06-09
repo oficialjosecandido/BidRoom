@@ -8,7 +8,7 @@
 const express = require('express');
 const { authenticateToken, requireActiveAccount } = require('../middleware/auth');
 const Transaction = require('../models/Transaction');
-const User = require('../models/User');
+const Customer = require('../models/Customer');
 const { calculateRates } = require('../services/shippingCalculationService');
 
 const LOG_PREFIX = '[Shipping]';
@@ -40,7 +40,7 @@ router.post('/rates', requireActiveAccount, async (req, res) => {
   }
 
   try {
-    const user = await User.findOne({ uid: req.user.uid });
+    const user = await Customer.findOne({ uid: req.user.uid });
     if (!user) return res.status(404).json({ error: 'User not found' });
 
     const transaction = await Transaction.findById(transactionId)
@@ -128,7 +128,7 @@ router.post('/lock-rate', requireActiveAccount, async (req, res) => {
   }
 
   try {
-    const user = await User.findOne({ uid: req.user.uid });
+    const user = await Customer.findOne({ uid: req.user.uid });
     if (!user) return res.status(404).json({ error: 'User not found' });
 
     const transaction = await Transaction.findById(transactionId)

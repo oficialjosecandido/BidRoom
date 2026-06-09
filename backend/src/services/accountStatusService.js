@@ -5,7 +5,7 @@
  */
 
 const mongoose = require('mongoose');
-const User = require('../models/User');
+const Customer = require('../models/Customer');
 const AccountStatusAuditLog = require('../models/AccountStatusAuditLog');
 const { notifyAccountSuspended, notifyAccountReactivated, notifyAccountClosed, emitNewNotificationToUser } = require('./notificationService');
 const Listing = require('../models/Listing');
@@ -42,7 +42,7 @@ async function hasActiveContext(userId) {
  * @returns {{ updated: boolean, deferred?: boolean, reason?: string }}
  */
 async function suspendUser(userId, metadata = {}, io = null) {
-  const user = await User.findById(userId);
+  const user = await Customer.findById(userId);
   if (!user) return { updated: false, reason: 'user_not_found' };
   if (user.accountStatus === ACCOUNT_STATUS.SUSPENDED) return { updated: false, reason: 'already_suspended' };
   if (user.accountStatus === ACCOUNT_STATUS.CLOSED) return { updated: false, reason: 'account_closed' };
@@ -117,7 +117,7 @@ async function suspendUser(userId, metadata = {}, io = null) {
  * Reactivate a user (admin ruling: reactivate both or one party).
  */
 async function reactivateUser(userId, metadata = {}, io = null) {
-  const user = await User.findById(userId);
+  const user = await Customer.findById(userId);
   if (!user) return { updated: false, reason: 'user_not_found' };
   if (user.accountStatus === ACCOUNT_STATUS.ACTIVE) return { updated: false, reason: 'already_active' };
   if (user.accountStatus === ACCOUNT_STATUS.CLOSED) return { updated: false, reason: 'account_closed' };
@@ -146,7 +146,7 @@ async function reactivateUser(userId, metadata = {}, io = null) {
  * Permanently close a user account.
  */
 async function closeUser(userId, metadata = {}, io = null) {
-  const user = await User.findById(userId);
+  const user = await Customer.findById(userId);
   if (!user) return { updated: false, reason: 'user_not_found' };
   if (user.accountStatus === ACCOUNT_STATUS.CLOSED) return { updated: false, reason: 'already_closed' };
 
@@ -194,7 +194,7 @@ async function suspendBothPartiesForDispute(transactionId, buyerUserId, sellerUs
  * @param {string|ObjectId} transactionId
  */
 async function restrictUserForDispute(userId, transactionId) {
-  await User.updateOne(
+  await Customer.updateOne(
     { _id: userId },
     { $addToSet: { activeDisputeTransactionIds: transactionId } }
   );
@@ -207,7 +207,7 @@ async function restrictUserForDispute(userId, transactionId) {
  * @param {string|ObjectId} transactionId
  */
 async function unrestrictUserForDispute(userId, transactionId) {
-  await User.updateOne(
+  await Customer.updateOne(
     { _id: userId },
     { $pull: { activeDisputeTransactionIds: transactionId } }
   );
@@ -253,8 +253,8 @@ async function restrictBothPartiesForDispute(transactionId, buyerUserId, sellerU
 
   if (io) {
     const [buyer, seller] = await Promise.all([
-      User.findById(buyerUserId).select('uid').lean(),
-      User.findById(sellerUserId).select('uid').lean()
+      Customer.findById(buyerUserId).select('uid').lean(),
+      Customer.findById(sellerUserId).select('uid').lean()
     ]);
     if (buyer?.uid) emitNewNotificationToUser(io, buyerUserId).catch(() => {});
     if (seller?.uid) emitNewNotificationToUser(io, sellerUserId).catch(() => {});
@@ -304,7 +304,7 @@ async function applyDisputeAccountOutcome(accountOutcome, buyerUserId, sellerUse
  * Called after an auction concludes for any participant who had a suspension queued.
  */
 async function applyPendingSuspension(userId, io = null) {
-  const user = await User.findById(userId);
+  const user = await Customer.findById(userId);
   if (!user || !user.suspensionPending) return { applied: false };
 
   if (user.accountStatus === ACCOUNT_STATUS.SUSPENDED || user.accountStatus === ACCOUNT_STATUS.CLOSED) {
@@ -353,7 +353,7 @@ async function checkAndApplyPendingSuspensions(userIds, io = null) {
   const uniqueIds = [...new Set(userIds.filter(Boolean).map(id => id.toString()))];
   if (!uniqueIds.length) return;
 
-  const pending = await User.find({ _id: { $in: uniqueIds }, suspensionPending: true }).select('_id').lean();
+  const pending = await Customer.find({ _id: { $in: uniqueIds }, suspensionPending: true }).select('_id').lean();
   if (!pending.length) return;
 
   for (const { _id } of pending) {

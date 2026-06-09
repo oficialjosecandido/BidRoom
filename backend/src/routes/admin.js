@@ -1,7 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const { authenticateToken } = require('../middleware/auth');
-const User = require('../models/User');
+const Customer = require('../models/Customer');
 const Listing = require('../models/Listing');
 const Transaction = require('../models/Transaction');
 const ReviewFlag = require('../models/ReviewFlag');
@@ -146,8 +146,8 @@ async function snapshotMetricsForWindow(from, to) {
   };
 
   const [activeAccounts, newRegistrations, bids, txnAggRows] = await Promise.all([
-    User.countDocuments({ isActive: true, createdAt: { $lte: to } }),
-    User.countDocuments({ createdAt: timeRange }),
+    Customer.countDocuments({ isActive: true, createdAt: { $lte: to } }),
+    Customer.countDocuments({ createdAt: timeRange }),
     Bid.countDocuments({ createdAt: timeRange }),
     Transaction.aggregate([
       { $match: paidMatch },
@@ -188,7 +188,7 @@ router.get('/statistics', authenticateToken, requireAdmin, async (req, res) => {
       totalTransactions,
       listingSegmentAgg
     ] = await Promise.all([
-      User.countDocuments({ isActive: true }),
+      Customer.countDocuments({ isActive: true }),
       Listing.aggregate([{ $group: { _id: '$status', n: { $sum: 1 } } }]),
       Listing.countDocuments({
         status: 'active',
@@ -474,7 +474,7 @@ router.post('/auctions/:id/private-room', authenticateToken, requireAdmin, async
     }
 
     // Validate that all selected bidders are valid users
-    const validBidders = await User.find({ 
+    const validBidders = await Customer.find({ 
       _id: { $in: platinumBidderIds } 
     }).select('_id firstName lastName email emailVerified');
     
@@ -608,13 +608,13 @@ router.get('/customers', authenticateToken, requireAdmin, async (req, res) => {
     }
 
     const [users, total] = await Promise.all([
-      User.find(filter)
+      Customer.find(filter)
         .select('firstName lastName email accountStatus emailVerified reputationScore createdAt lastLogin sellerClassification')
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)
         .lean(),
-      User.countDocuments(filter)
+      Customer.countDocuments(filter)
     ]);
 
     res.json({ customers: users, total, page, limit, pages: Math.max(1, Math.ceil(total / limit)) });
@@ -849,7 +849,7 @@ router.post('/disputes/:transactionId/ruling', authenticateToken, requireAdmin, 
         try {
           const stripe = getStripe();
           if (stripe) {
-            const buyerUser = await User.findById(buyerUserId).select(
+            const buyerUser = await Customer.findById(buyerUserId).select(
               'stripeCustomerId savedPaymentMethodId savedPaymentMethodLast4 email firstName'
             );
             if (buyerUser?.savedPaymentMethodId && buyerUser?.stripeCustomerId) {
@@ -879,8 +879,8 @@ router.post('/disputes/:transactionId/ruling', authenticateToken, requireAdmin, 
     if (resolvedRefundAmount > 0) {
       try {
         const [buyerUser, sellerUser] = await Promise.all([
-          User.findById(transaction.buyer).select('firstName lastName email').lean(),
-          User.findById(transaction.seller).select('firstName lastName email').lean()
+          Customer.findById(transaction.buyer).select('firstName lastName email').lean(),
+          Customer.findById(transaction.seller).select('firstName lastName email').lean()
         ]);
         const listingForEmail = await Listing.findById(transaction.listing).select('title').lean();
         const listingTitle = listingForEmail?.title || 'your listing';
@@ -956,8 +956,8 @@ router.get('/reviews/flagged', authenticateToken, requireAdmin, async (req, res)
         const r = f.review;
         if (!r) return { ...f, reviewer: null, reviewee: null, listing: null };
         const [reviewer, reviewee, listing] = await Promise.all([
-          User.findById(r.reviewer).select('firstName lastName email').lean(),
-          User.findById(r.reviewee).select('firstName lastName email').lean(),
+          Customer.findById(r.reviewer).select('firstName lastName email').lean(),
+          Customer.findById(r.reviewee).select('firstName lastName email').lean(),
           Listing.findById(r.listing).select('title slug').lean()
         ]);
         return { ...f, reviewer, reviewee, listing };
@@ -1023,7 +1023,7 @@ router.get('/reviews/appeals', authenticateToken, requireAdmin, async (req, res)
       appeals.map(async (a) => {
         const [review, appellant] = await Promise.all([
           Review.findById(a.review).lean(),
-          User.findById(a.appellant).select('firstName lastName email').lean()
+          Customer.findById(a.appellant).select('firstName lastName email').lean()
         ]);
         let listing = null;
         let reviewer = null;
@@ -1031,8 +1031,8 @@ router.get('/reviews/appeals', authenticateToken, requireAdmin, async (req, res)
         if (review) {
           [listing, reviewer, reviewee] = await Promise.all([
             Listing.findById(review.listing).select('title slug').lean(),
-            User.findById(review.reviewer).select('firstName lastName email').lean(),
-            User.findById(review.reviewee).select('firstName lastName email').lean()
+            Customer.findById(review.reviewer).select('firstName lastName email').lean(),
+            Customer.findById(review.reviewee).select('firstName lastName email').lean()
           ]);
         }
         return { ...a, review, appellant, listing, reviewer, reviewee };
@@ -1263,7 +1263,7 @@ router.post('/seller-verifications/:userId', authenticateToken, requireAdmin, as
     if (!['verified', 'rejected'].includes(status)) {
       return res.status(400).json({ error: 'Invalid status', message: 'status must be "verified" or "rejected".' });
     }
-    const user = await User.findById(req.params.userId);
+    const user = await Customer.findById(req.params.userId);
     if (!user) return res.status(404).json({ error: 'User not found' });
     if (user.sellerClassification !== 'professional') {
       return res.status(400).json({ error: 'Not a professional seller', message: 'This user is not registered as a professional (trader) seller.' });

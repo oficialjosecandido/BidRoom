@@ -4,7 +4,7 @@ const crypto = require('crypto');
 const { authenticateToken, requireActiveAccount } = require('../middleware/auth');
 const Listing = require('../models/Listing');
 const Bid = require('../models/Bid');
-const User = require('../models/User');
+const Customer = require('../models/Customer');
 const { sendPlatinumBidderInvitations, sendPrivateRoomNotInvitedToBidders, handleSellerLeftPrivateRoom } = require('../services/auctionNotificationService');
 const { notifyPrivateRoomInvitation, notifyPrivateRoomAccepted, notifyPrivateRoomDeclined, emitNewNotificationToUser, emitPrivateRoomInvitationToUser } = require('../services/notificationService');
 const { isPrivateRoomEligible } = require('../services/reputationService');
@@ -34,7 +34,7 @@ router.get('/listings/:id/bidders', authenticateToken, async (req, res) => {
     // Verify the user is the seller
     if (listing.seller._id.toString() !== req.user.uid) {
       // Find user by Firebase UID
-      const user = await User.findOne({ uid: req.user.uid });
+      const user = await Customer.findOne({ uid: req.user.uid });
       if (!user || listing.seller._id.toString() !== user._id.toString()) {
         return res.status(403).json({ error: 'Forbidden', message: 'Only the seller can view bidders' });
       }
@@ -108,7 +108,7 @@ router.get('/listings/:id/bidders', authenticateToken, async (req, res) => {
     const bidderUserIds = biddersList.filter(b => b._id).map(b => b._id.toString());
     const [reputationMap, scoreMap] = bidderUserIds.length > 0
       ? await Promise.all([
-          User.find({ _id: { $in: bidderUserIds } }).select('reputationScore disputeLossCount depositAmount hasDeposit').lean().then(users => {
+          Customer.find({ _id: { $in: bidderUserIds } }).select('reputationScore disputeLossCount depositAmount hasDeposit').lean().then(users => {
             const m = {};
             users.forEach(u => { m[u._id.toString()] = u; });
             return m;
@@ -161,7 +161,7 @@ router.post('/listings/:id/platinum-bidders', authenticateToken, requireActiveAc
       return res.status(404).json({ error: 'Listing not found' });
     }
 
-    const user = await User.findOne({ uid: req.user.uid });
+    const user = await Customer.findOne({ uid: req.user.uid });
     if (!user || listing.seller._id.toString() !== user._id.toString()) {
       return res.status(403).json({ error: 'Forbidden', message: 'Only the seller can select Platinum Bidders' });
     }
@@ -189,7 +189,7 @@ router.post('/listings/:id/platinum-bidders', authenticateToken, requireActiveAc
     const ineligibleBidders = [];
     for (const bidderId of bidderIds) {
       if (mongoose.Types.ObjectId.isValid(bidderId)) {
-        const bidder = await User.findById(bidderId)
+        const bidder = await Customer.findById(bidderId)
           .select('firstName lastName reputationScore disputeLossCount');
         if (bidder) {
           if (!isPrivateRoomEligible(bidder)) {
@@ -311,7 +311,7 @@ router.post('/listings/:id/start-now', authenticateToken, async (req, res) => {
       return res.status(404).json({ error: 'Listing not found' });
     }
 
-    const user = await User.findOne({ uid: req.user.uid });
+    const user = await Customer.findOne({ uid: req.user.uid });
     if (!user || listing.seller._id.toString() !== user._id.toString()) {
       return res.status(403).json({ error: 'Forbidden', message: 'Only the seller can start the room' });
     }
@@ -379,7 +379,7 @@ router.post('/listings/:id/seller-leave', authenticateToken, async (req, res) =>
       return res.status(404).json({ error: 'Listing not found' });
     }
 
-    const user = await User.findOne({ uid: req.user.uid });
+    const user = await Customer.findOne({ uid: req.user.uid });
     if (!user || listing.seller._id.toString() !== user._id.toString()) {
       return res.status(403).json({ error: 'Forbidden', message: 'Only the seller can leave the private room' });
     }
@@ -428,7 +428,7 @@ router.post('/listings/:id/accept-invitation', authenticateToken, async (req, re
       return res.status(400).json({ error: 'Room ended', message: 'The private room has already ended.' });
     }
 
-    const user = await User.findOne({ uid: req.user.uid });
+    const user = await Customer.findOne({ uid: req.user.uid });
     if (!user) return res.status(404).json({ error: 'User not found' });
 
     const invIndex = (listing.platinumBidderInvitations || []).findIndex(
