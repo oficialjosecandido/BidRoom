@@ -4,12 +4,11 @@ const http     = require('http');
 const Listing  = require('../models/Listing');
 const { getBrandPNG } = require('../utils/ogImage');
 
-const router      = express.Router();
-const BACKEND_URL = process.env.BACKEND_URL || process.env.FRONTEND_URL?.replace('www.', 'api.') || 'https://bidroom-backend-dev.azurewebsites.net';
-const FRONTEND    = process.env.FRONTEND_URL || 'https://www.bidroom.pt';
-const SITE_NAME   = 'BidRoom';
-// PNG served from our own backend — WhatsApp supports PNG, not SVG
-const DEFAULT_OG_IMAGE = `${BACKEND_URL}/og-default.png`;
+const router   = express.Router();
+const FRONTEND = process.env.FRONTEND_URL || 'https://www.bidroom.pt';
+const SITE_NAME = 'BidRoom';
+// Served via SWA proxy: bidroom.pt/api/share/og-default.png → backend /share/og-default.png
+const DEFAULT_OG_IMAGE = `${FRONTEND}/api/share/og-default.png`;
 
 /**
  * Check if an image URL is "usable" for WhatsApp OG:
@@ -131,6 +130,8 @@ router.get('/listing/:slug', async (req, res) => {
   <meta property="og:url"         content="${ogUrl}">
   <meta property="og:image"            content="${ogImage}">
   <meta property="og:image:secure_url" content="${ogImage}">
+  <meta property="og:image:width"      content="1200">
+  <meta property="og:image:height"     content="630">
 
   <!-- Twitter / X -->
   <meta name="twitter:card"        content="summary_large_image">
