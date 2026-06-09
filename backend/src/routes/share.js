@@ -88,19 +88,17 @@ router.get('/listing/:slug', async (req, res) => {
 
     const canonicalUrl = `${FRONTEND}/listing/${listing.slug}`;
     // Validate the listing image — skip tiny icons (< 5 KB); fall back to brand PNG
-    const rawImage  = listing.images?.[0] || null;
+    const rawImage   = listing.images?.[0] || null;
     const validImage = rawImage ? await checkImage(rawImage) : null;
     const image      = validImage || DEFAULT_OG_IMAGE;
-    const price      = fmtPrice(listing.currentPrice || listing.startingPrice);
-    const timeLeft     = fmtTime(listing.endDate);
-    const format       = listing.auctionFormat === 'best-offer' ? 'Melhor Proposta' : 'Leilão';
-    const condition    = listing.condition ? ` · ${listing.condition}` : '';
 
-    const ogTitle       = esc(`${listing.title} — ${SITE_NAME}`);
-    const ogDescription = esc(
-      [price, format, timeLeft, condition.trim()].filter(Boolean).join(' · ') +
-      '. Compra segura com escrow BidRoom.'
-    );
+    const rawDesc = (listing.description || '').replace(/\s+/g, ' ').trim();
+    const descBase = rawDesc.length > 140
+      ? rawDesc.slice(0, 137) + '…'
+      : rawDesc;
+
+    const ogTitle       = esc(`${SITE_NAME} | ${listing.title}`);
+    const ogDescription = esc(descBase ? `${descBase} Licite já` : 'Licite já');
     const ogUrl   = esc(canonicalUrl);
     const ogImage = esc(image);
 
