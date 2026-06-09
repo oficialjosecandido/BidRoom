@@ -34,6 +34,11 @@ export interface ConnectCheckoutResponse {
   url: string;
 }
 
+export interface ConnectOnboardingLinkResponse {
+  url: string;
+  accountId: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class StripeConnectService {
   private http = inject(HttpClient);
@@ -41,6 +46,10 @@ export class StripeConnectService {
 
   getAccountStatus(): Observable<ConnectAccountStatus> {
     return this.http.get<ConnectAccountStatus>(`${this.apiUrl}/account-status`);
+  }
+
+  createOnboardingLink(country = 'PT'): Observable<ConnectOnboardingLinkResponse> {
+    return this.http.post<ConnectOnboardingLinkResponse>(`${this.apiUrl}/onboarding-link`, { country });
   }
 
   submitOnboarding(data: OnboardingFormData): Observable<OnboardingSubmitResponse> {

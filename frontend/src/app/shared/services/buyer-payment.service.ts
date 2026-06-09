@@ -8,17 +8,25 @@ export interface SetupIntentResponse {
   customerId: string;
 }
 
-export interface PaymentMethodResponse {
+export interface SavedPaymentMethod {
+  id: string;
+  brand: string;
+  last4: string;
+  expiry: string;
+  isDefault: boolean;
+}
+
+export interface PaymentMethodsResponse {
   saved: boolean;
-  brand?: string;
-  last4?: string;
-  expiry?: string;
+  methods: SavedPaymentMethod[];
   trustTier: number;
 }
 
 export interface DeletePaymentMethodResponse {
   success: boolean;
-  message: string;
+  saved: boolean;
+  methods: SavedPaymentMethod[];
+  trustTier: number;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -30,11 +38,24 @@ export class BuyerPaymentService {
     return this.http.post<SetupIntentResponse>(`${this.apiUrl}/setup-intent`, {});
   }
 
-  getPaymentMethod(): Observable<PaymentMethodResponse> {
-    return this.http.get<PaymentMethodResponse>(`${this.apiUrl}/payment-method`);
+  getPaymentMethods(): Observable<PaymentMethodsResponse> {
+    return this.http.get<PaymentMethodsResponse>(`${this.apiUrl}/payment-method`);
   }
 
-  deletePaymentMethod(): Observable<DeletePaymentMethodResponse> {
-    return this.http.delete<DeletePaymentMethodResponse>(`${this.apiUrl}/payment-method`);
+  confirmPaymentMethod(setupIntentId: string): Observable<PaymentMethodsResponse> {
+    return this.http.post<PaymentMethodsResponse>(`${this.apiUrl}/payment-method/confirm`, { setupIntentId });
+  }
+
+  setDefaultPaymentMethod(paymentMethodId: string): Observable<PaymentMethodsResponse> {
+    return this.http.patch<PaymentMethodsResponse>(
+      `${this.apiUrl}/payment-method/${encodeURIComponent(paymentMethodId)}/default`,
+      {}
+    );
+  }
+
+  deletePaymentMethod(paymentMethodId: string): Observable<DeletePaymentMethodResponse> {
+    return this.http.delete<DeletePaymentMethodResponse>(
+      `${this.apiUrl}/payment-method/${encodeURIComponent(paymentMethodId)}`
+    );
   }
 }

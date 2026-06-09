@@ -2,6 +2,7 @@ const express = require('express');
 const { authenticateToken, requireActiveAccount } = require('../middleware/auth');
 const { getStripe, isStripeTestMode } = require('../utils/stripe.util');
 const User = require('../models/User');
+const Customer = require('../models/Customer');
 const Transaction = require('../models/Transaction');
 const Listing = require('../models/Listing');
 const { sendEmail } = require('../services/emailService');
@@ -11,6 +12,64 @@ const { applyShippingDeadlinesFromPaidAt } = require('../services/shippingDeadli
 const LOG_PREFIX = '[Connect]';
 const BIDROOMFEE_RATE = 0.04; // 4% — charged to seller via transfer_data.amount
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:4200';
+/** Stripe rejects localhost for business_profile.url — use a public https origin in dev. */
+const STRIPE_BUSINESS_URL_FALLBACK = 'https://www.bidroom.pt';
+
+function stripeBusinessProfileUrl() {
+  const candidates = [
+    process.env.STRIPE_BUSINESS_URL,
+    process.env.FRONTEND_URL_PROD,
+    process.env.FRONTEND_URL
+  ];
+  for (const raw of candidates) {
+    if (!raw) continue;
+    try {
+      const url = new URL(raw);
+      if (url.protocol === 'https:' && !url.hostname.includes('localhost')) {
+        return url.origin;
+      }
+    } catch (_) {
+      // ignore invalid URL
+    }
+  }
+  return STRIPE_BUSINESS_URL_FALLBACK;
+}
+
+/** Connected account was created under a different Stripe platform key (or was deleted). */
+function isOrphanedConnectAccountError(err) {
+  if (!err || err.type !== 'StripePermissionError') return false;
+  const msg = String(err.message || '');
+  return (
+    msg.includes('does not have access to account') ||
+    msg.includes('account does not exist') ||
+    msg.includes('Application access may have been revoked')
+  );
+}
+
+async function clearStaleConnectAccount(user) {
+  const staleId = user.stripeConnectAccountId;
+  if (!staleId) return;
+  console.warn(`${LOG_PREFIX} Clearing stale Connect account ${staleId} for uid=${user.uid?.slice(0, 8)}...`);
+  user.stripeConnectAccountId = null;
+  user.stripeConnectOnboarded = false;
+  await user.save();
+}
+
+/** Returns a usable account id, or null after clearing a stale record. */
+async function resolveConnectAccountId(stripe, user) {
+  const accountId = user.stripeConnectAccountId;
+  if (!accountId) return null;
+  try {
+    await stripe.accounts.retrieve(accountId);
+    return accountId;
+  } catch (err) {
+    if (isOrphanedConnectAccountError(err)) {
+      await clearStaleConnectAccount(user);
+      return null;
+    }
+    throw err;
+  }
+}
 
 /**
  * Extract the real public client IP from the request.
@@ -86,8 +145,176 @@ const COUNTRY_CURRENCY = {
   SG: 'sgd', HK: 'hkd', JP: 'jpy', IN: 'inr', ZA: 'zar'
 };
 
+/** EU/EEA sellers use the recipient service agreement (immutable once set). */
+const RECIPIENT_SERVICE_AGREEMENT_COUNTRIES = new Set([
+  'AT', 'BE', 'BG', 'HR', 'CY', 'CZ', 'DK', 'EE', 'FI', 'FR', 'DE', 'GR',
+  'HU', 'IE', 'IT', 'LV', 'LT', 'LU', 'MT', 'NL', 'PL', 'PT', 'RO',
+  'SK', 'SI', 'ES', 'SE', 'GB', 'NO', 'CH', 'IS', 'LI'
+]);
+
+function serviceAgreementForCountry(country) {
+  return RECIPIENT_SERVICE_AGREEMENT_COUNTRIES.has(country) ? 'recipient' : 'full';
+}
+
+function isPlatformProfileError(err) {
+  const msg = String(err?.message || '');
+  return (
+    msg.includes('platform-profile') ||
+    msg.includes('collecting requirements for connected accounts')
+  );
+}
+
+function connectPlatformProfileUrl() {
+  const base = isStripeTestMode()
+    ? 'https://dashboard.stripe.com/test/settings/connect/platform-profile'
+    : 'https://dashboard.stripe.com/settings/connect/platform-profile';
+  return base;
+}
+
+function connectSettingsPath() {
+  return `${FRONTEND_URL.replace(/\/$/, '')}/dashboard/settings`;
+}
+
+/** Persist seller IBAN on User (and Customer) before Stripe calls. */
+async function persistSellerPayoutIban(user, ibanClean) {
+  if (!user || !ibanClean) return;
+  const now = new Date();
+  user.sellerPayoutIban = ibanClean;
+  user.sellerPayoutIbanUpdatedAt = now;
+  await user.save();
+
+  if (!user.uid) return;
+  await Customer.findOneAndUpdate(
+    { uid: user.uid },
+    {
+      $set: {
+        sellerPayoutIban: ibanClean,
+        sellerPayoutIbanUpdatedAt: now,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName
+      },
+      $setOnInsert: {
+        uid: user.uid,
+        balance: 0,
+        reviewCount: 0
+      }
+    },
+    { upsert: true }
+  );
+}
+
+/** Express account — Stripe collects KYC via hosted onboarding (no platform-profile ack required). */
+function buildExpressAccountCreatePayload(user, country = 'PT') {
+  return {
+    type: 'express',
+    country,
+    email: user.email,
+    business_type: 'individual',
+    business_profile: {
+      url: stripeBusinessProfileUrl(),
+      product_description: 'Online marketplace seller on BidRoom'
+    },
+    capabilities: {
+      card_payments: { requested: true },
+      transfers: { requested: true }
+    },
+    metadata: { uid: user.uid }
+  };
+}
+
+/** Payload for a new API-onboarded connected account (platform collects KYC). */
+function buildConnectAccountCreatePayload(user, country, kyc, tosTimestamp, ip) {
+  return {
+    controller: {
+      losses: { payments: 'application' },
+      fees: { payer: 'application' },
+      stripe_dashboard: { type: 'none' },
+      requirement_collection: 'application'
+    },
+    country,
+    email: user.email,
+    business_type: 'individual',
+    business_profile: {
+      url: stripeBusinessProfileUrl(),
+      product_description: 'Online marketplace seller on BidRoom'
+    },
+    individual: {
+      first_name: user.firstName,
+      last_name: user.lastName,
+      email: user.email,
+      dob: { day: kyc.dobDay, month: kyc.dobMonth, year: kyc.dobYear },
+      address: {
+        line1: kyc.addressLine1,
+        city: kyc.addressCity,
+        postal_code: kyc.addressPostal,
+        country
+      }
+    },
+    capabilities: {
+      card_payments: { requested: true },
+      transfers: { requested: true }
+    },
+    tos_acceptance: {
+      date: tosTimestamp,
+      ip,
+      service_agreement: serviceAgreementForCountry(country)
+    },
+    metadata: { uid: user.uid }
+  };
+}
+
+/**
+ * POST /api/connect/onboarding-link
+ * Returns a Stripe-hosted onboarding URL (Express). Stripe collects seller KYC.
+ * Body (optional): { country } — ISO country for new accounts (default PT).
+ */
+router.post('/onboarding-link', requireActiveAccount, async (req, res) => {
+  const stripe = getStripe();
+  if (!stripe) return res.status(503).json({ error: 'Payments not configured' });
+
+  const country = String(req.body?.country || 'PT').toUpperCase();
+
+  try {
+    const user = await User.findOne({ uid: req.user.uid });
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    let accountId = await resolveConnectAccountId(stripe, user);
+
+    if (!accountId) {
+      const account = await stripe.accounts.create(buildExpressAccountCreatePayload(user, country));
+      accountId = account.id;
+      user.stripeConnectAccountId = accountId;
+      user.stripeConnectOnboarded = false;
+      await user.save();
+      console.log(`${LOG_PREFIX} Created Express account ${accountId} for uid=${user.uid?.slice(0, 8)}...`);
+    }
+
+    const settingsUrl = connectSettingsPath();
+    const linkType = user.stripeConnectOnboarded ? 'account_update' : 'account_onboarding';
+    const link = await stripe.accountLinks.create({
+      account: accountId,
+      refresh_url: `${settingsUrl}?connect=refresh`,
+      return_url: `${settingsUrl}?connect=return`,
+      type: linkType
+    });
+
+    console.log(`${LOG_PREFIX} Onboarding link created uid=${user.uid?.slice(0, 8)} accountId=${accountId} type=${linkType}`);
+    res.json({ url: link.url, accountId });
+  } catch (err) {
+    const isTestMode = isStripeTestMode();
+    console.error(`${LOG_PREFIX} Onboarding link error type=${err.type} message=${err.message}`);
+    res.status(500).json({
+      error: 'Failed to start payout setup',
+      message: err.message,
+      ...(isTestMode && { debug: `type=${err.type}` })
+    });
+  }
+});
+
 /**
  * POST /api/connect/submit-onboarding
+ * @deprecated Prefer POST /onboarding-link (Stripe-hosted). Kept for legacy clients.
  * Creates (or updates) a Stripe Custom account for the seller using their KYC data.
  * Body: { dobDay, dobMonth, dobYear, addressLine1, addressCity, addressPostal, addressCountry, iban, tosAccepted }
  */
@@ -139,37 +366,31 @@ router.post('/submit-onboarding', requireActiveAccount, async (req, res) => {
     const user = await User.findOne({ uid: req.user.uid });
     if (!user) return res.status(404).json({ error: 'User not found' });
 
-    let accountId = user.stripeConnectAccountId;
+    await persistSellerPayoutIban(user, ibanClean);
+
+    let accountId = await resolveConnectAccountId(stripe, user);
+    let recreatedAccount = false;
 
     if (!accountId) {
-      // Create new Stripe Custom account — seller never visits Stripe
-      const account = await stripe.accounts.create({
-        type: 'custom',
+      // Create new connected account — platform collects KYC; seller never visits Stripe
+      const account = await stripe.accounts.create(buildConnectAccountCreatePayload(
+        user,
         country,
-        email: user.email,
-        business_type: 'individual',
-        individual: {
-          first_name: user.firstName,
-          last_name: user.lastName,
-          email: user.email,
-          dob: { day: dobDayInt, month: dobMonthInt, year: dobYearInt },
-          address: {
-            line1: String(addressLine1),
-            city: String(addressCity),
-            postal_code: String(addressPostal),
-            country
-          }
+        {
+          dobDay: dobDayInt,
+          dobMonth: dobMonthInt,
+          dobYear: dobYearInt,
+          addressLine1: String(addressLine1),
+          addressCity: String(addressCity),
+          addressPostal: String(addressPostal)
         },
-        capabilities: {
-          card_payments: { requested: true },
-          transfers: { requested: true }
-        },
-        tos_acceptance: { date: tosTimestamp, ip },
-        metadata: { uid: user.uid }
-      });
+        tosTimestamp,
+        ip
+      ));
       accountId = account.id;
       user.stripeConnectAccountId = accountId;
       await user.save();
+      recreatedAccount = true;
       console.log(`${LOG_PREFIX} Created Custom account ${accountId} for uid=${user.uid?.slice(0, 8)}...`);
     } else {
       // Update existing account with fresh KYC details
@@ -226,15 +447,23 @@ router.post('/submit-onboarding', requireActiveAccount, async (req, res) => {
     }
 
     console.log(`${LOG_PREFIX} Onboarding submitted uid=${user.uid?.slice(0, 8)} accountId=${accountId} onboarded=${onboarded}`);
-    res.json({ onboarded, requiresVerification: !onboarded, accountId });
+    res.json({ onboarded, requiresVerification: !onboarded, accountId, recreatedAccount });
   } catch (err) {
     const isTestMode = isStripeTestMode();
     console.error(`${LOG_PREFIX} Submit onboarding error type=${err.type} message=${err.message}`);
-    // Stripe Connect not enabled on the platform account
-    if (err.type === 'StripePermissionError') {
+    // Platform key cannot manage Connect (not enabled, wrong account, etc.)
+    if (err.type === 'StripePermissionError' && !isOrphanedConnectAccountError(err)) {
       return res.status(503).json({
         error: 'Stripe Connect not configured',
         message: 'Payout account setup is temporarily unavailable. Our team has been notified. Please try again later or contact support.',
+        ...(isTestMode && { debug: err.message })
+      });
+    }
+    if (err.type === 'StripeInvalidRequestError' && isPlatformProfileError(err)) {
+      return res.status(503).json({
+        error: 'Stripe Connect platform setup incomplete',
+        message: 'Payout setup is not available yet. The platform owner must complete the Stripe Connect platform profile (Settings → Connect → Platform profile) and confirm that BidRoom collects seller verification requirements.',
+        dashboardUrl: connectPlatformProfileUrl(),
         ...(isTestMode && { debug: err.message })
       });
     }
@@ -266,19 +495,20 @@ router.post('/test-activate', requireActiveAccount, async (req, res) => {
   try {
     const user = await User.findOne({ uid: req.user.uid });
     if (!user) return res.status(404).json({ error: 'User not found' });
-    if (!user.stripeConnectAccountId) {
+    const accountId = await resolveConnectAccountId(stripe, user);
+    if (!accountId) {
       return res.status(400).json({ error: 'No Stripe account found. Complete the payout setup form first.' });
     }
 
     // Magic DOB 1901-01-01 triggers immediate charges_enabled in Stripe test mode
-    await stripe.accounts.update(user.stripeConnectAccountId, {
+    await stripe.accounts.update(accountId, {
       individual: {
         dob: { day: 1, month: 1, year: 1901 },
         id_number: '000000000'
       }
     });
 
-    const account = await stripe.accounts.retrieve(user.stripeConnectAccountId);
+    const account = await stripe.accounts.retrieve(accountId);
     // Trust details_submitted in test mode — charges_enabled can still lag even after magic values
     const onboarded = !!(account.details_submitted);
     user.stripeConnectOnboarded = true; // force true in test mode
@@ -288,6 +518,12 @@ router.post('/test-activate', requireActiveAccount, async (req, res) => {
     res.json({ onboarded: true, chargesEnabled: account.charges_enabled, payoutsEnabled: account.payouts_enabled });
   } catch (err) {
     console.error(`${LOG_PREFIX} Test activate error:`, err.message);
+    if (isOrphanedConnectAccountError(err)) {
+      return res.status(400).json({
+        error: 'Payout account not found',
+        message: 'Your previous payout account is no longer linked. Please submit the setup form again.'
+      });
+    }
     res.status(500).json({ error: err.message });
   }
 });
@@ -308,12 +544,13 @@ router.get('/account-status', async (req, res) => {
     const user = await User.findOne({ uid: req.user.uid }).select('stripeConnectAccountId stripeConnectOnboarded');
     if (!user) return res.status(404).json({ error: 'User not found' });
 
-    if (!user.stripeConnectAccountId) {
+    const accountId = await resolveConnectAccountId(stripe, user);
+    if (!accountId) {
       return res.json({ connected: false, onboarded: false });
     }
 
     // Retrieve fresh status from Stripe to keep local record in sync
-    const account = await stripe.accounts.retrieve(user.stripeConnectAccountId);
+    const account = await stripe.accounts.retrieve(accountId);
     const isTestMode = isStripeTestMode();
     // In test mode, trust the DB value if it was force-set by test-activate;
     // only override with Stripe's live value if Stripe actually says charges_enabled.
@@ -334,13 +571,18 @@ router.get('/account-status', async (req, res) => {
     res.json({
       connected: true,
       onboarded,
-      accountId: user.stripeConnectAccountId,
+      accountId,
       chargesEnabled: account.charges_enabled,
       payoutsEnabled: account.payouts_enabled,
       requirementErrors: requirementErrors.length ? requirementErrors : undefined
     });
   } catch (err) {
     console.error(`${LOG_PREFIX} Account status error:`, err.message);
+    if (isOrphanedConnectAccountError(err)) {
+      const user = await User.findOne({ uid: req.user.uid }).select('stripeConnectAccountId stripeConnectOnboarded');
+      if (user) await clearStaleConnectAccount(user);
+      return res.json({ connected: false, onboarded: false });
+    }
     res.status(500).json({ error: 'Failed to retrieve account status', message: err.message });
   }
 });

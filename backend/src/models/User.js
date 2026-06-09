@@ -100,6 +100,16 @@ const userSchema = new mongoose.Schema({
     default: false,
     index: true
   },
+  /** Seller payout IBAN (normalized, no spaces). Set on Connect onboarding submit. */
+  sellerPayoutIban: {
+    type: String,
+    default: null,
+    trim: true
+  },
+  sellerPayoutIbanUpdatedAt: {
+    type: Date,
+    default: null
+  },
   /**
    * IDs of transactions with an open dispute that restrict this user from initiating NEW marketplace
    * actions (bidding, listing, making offers). Existing transactions are NOT affected.
@@ -192,12 +202,21 @@ const userSchema = new mongoose.Schema({
   kycRejectionReason: { type: String, default: null },
   kycSubmittedAt: { type: Date, default: null },
 
-  // ─── Buyer payment method (Tier 3 trust & dispute compensation) ──────────
+  // ─── Buyer payment methods (Tier 3 trust & dispute compensation) ─────────
   stripeCustomerId: { type: String, default: null, trim: true, sparse: true },
+  /** Denormalised default PM — kept in sync with savedPaymentMethods for legacy reads */
   savedPaymentMethodId: { type: String, default: null, trim: true },
   savedPaymentMethodBrand: { type: String, default: null, trim: true },
   savedPaymentMethodLast4: { type: String, default: null, trim: true },
   savedPaymentMethodExpiry: { type: String, default: null, trim: true },
+  savedPaymentMethods: [{
+    stripePaymentMethodId: { type: String, required: true, trim: true },
+    brand: { type: String, default: 'unknown', trim: true },
+    last4: { type: String, default: null, trim: true },
+    expiry: { type: String, default: null, trim: true },
+    isDefault: { type: Boolean, default: false },
+    addedAt: { type: Date, default: Date.now },
+  }],
 
   // ─── DSA Article 29 compliance monitoring ────────────────────────────────
   /** When the platform first issued a DSA threshold-exceeded warning to this seller */

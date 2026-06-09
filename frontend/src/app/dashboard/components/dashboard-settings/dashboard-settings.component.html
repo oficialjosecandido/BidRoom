@@ -4,7 +4,9 @@
     <p class="page-subtitle">{{ 'dashboard.settings.subtitle' | translate }}</p>
   </div>
 
-  <div class="settings-grid">
+  <div class="settings-layout">
+    <!-- Row 1: Profile + Seller classification -->
+    <div class="settings-row" [class.settings-row--single]="!isSellerUser">
     <!-- Profile Info -->
     <div class="settings-card">
       <div class="card-header">
@@ -47,6 +49,7 @@
       </div>
     </div>
 
+    @if (isSellerUser) {
     <!-- DSA seller classification -->
     <div class="settings-card">
       <div class="card-header">
@@ -159,7 +162,250 @@
         }
       </div>
     </div>
+    }
+    </div>
 
+    <!-- Row 2: Payment methods + Seller payout -->
+    <div class="settings-row" [class.settings-row--single]="!isSellerUser">
+    <!-- Payment Methods -->
+    <div class="settings-card pm-card-section">
+      <div class="card-header">
+        <span class="card-icon">💳</span>
+        <h2 class="card-title">{{ 'dashboard.settings.paymentMethod.title' | translate }}</h2>
+      </div>
+      <div class="card-body">
+        @if (loadingPaymentMethod) {
+          <p class="loading-text">{{ 'dashboard.settings.paymentMethod.loading' | translate }}</p>
+        } @else {
+          @if (hasPaymentMethods) {
+            <div class="pm-status">
+              <div class="pm-tier-badge" aria-hidden="true">L3</div>
+              <div class="pm-status-copy">
+                <strong>{{ 'dashboard.settings.paymentMethod.activeBadge' | translate }}</strong>
+                <p>{{ 'dashboard.settings.paymentMethod.activeDesc' | translate }}</p>
+              </div>
+            </div>
+
+            <ul class="pm-list" role="list">
+              @for (method of paymentMethods; track method.id) {
+                <li class="pm-item" [class.pm-item--default]="method.isDefault">
+                  <div class="pm-item-visual" aria-hidden="true">
+                    <span class="pm-item-chip"></span>
+                  </div>
+                  <div class="pm-item-body">
+                    <span class="pm-item-brand">{{ method.brand | uppercase }}</span>
+                    <span class="pm-item-number">•••• •••• •••• {{ method.last4 }}</span>
+                    <span class="pm-item-meta">{{ 'dashboard.settings.paymentMethod.expires' | translate }} {{ method.expiry }}</span>
+                  </div>
+                  <div class="pm-item-actions">
+                    @if (method.isDefault) {
+                      <span class="pm-default-pill">{{ 'dashboard.settings.paymentMethod.defaultBadge' | translate }}</span>
+                    } @else {
+                      <button
+                        type="button"
+                        class="pm-text-btn"
+                        [disabled]="settingDefaultId === method.id"
+                        (click)="setDefaultCard(method)">
+                        {{ 'dashboard.settings.paymentMethod.setDefault' | translate }}
+                      </button>
+                    }
+                    @if (canRemoveMethod(method)) {
+                      <button
+                        type="button"
+                        class="pm-icon-btn"
+                        [disabled]="removingPaymentId === method.id"
+                        (click)="openRemoveModal(method)"
+                        [attr.aria-label]="'dashboard.settings.paymentMethod.removeCard' | translate">
+                        <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+                          <path fill="currentColor" d="M6 7h12v2H6V7zm2 3h8l-.9 9H8.9L8 10zm3-6h2v2h-2V4zm-4 0h10a1 1 0 0 1 1 1v1H6V5a1 1 0 0 1 1-1z"/>
+                        </svg>
+                      </button>
+                    }
+                  </div>
+                </li>
+              }
+            </ul>
+
+            <p class="pm-disclaimer">{{ 'dashboard.settings.paymentMethod.disclaimer' | translate }}</p>
+          } @else {
+            <div class="pm-empty">
+              <div class="pm-empty-icon" aria-hidden="true">🛡️</div>
+              <div class="pm-empty-copy">
+                <strong>{{ 'dashboard.settings.paymentMethod.upgradeTitle' | translate }}</strong>
+                <ul>
+                  <li>{{ 'dashboard.settings.paymentMethod.benefit1' | translate }}</li>
+                  <li>{{ 'dashboard.settings.paymentMethod.benefit2' | translate }}</li>
+                  <li>{{ 'dashboard.settings.paymentMethod.benefit3' | translate }}</li>
+                </ul>
+              </div>
+            </div>
+          }
+
+          <div class="pm-footer">
+            <button type="button" class="action-btn" (click)="toggleAddCard()">
+              {{ showAddCard
+                ? ('dashboard.settings.paymentMethod.cancel' | translate)
+                : (hasPaymentMethods
+                  ? ('dashboard.settings.paymentMethod.addAnotherCard' | translate)
+                  : ('dashboard.settings.paymentMethod.addCard' | translate)) }}
+            </button>
+          </div>
+
+          @if (showAddCard) {
+            <div class="pm-form">
+              <p class="pm-form-label">{{ 'dashboard.settings.paymentMethod.cardDetails' | translate }}</p>
+              <div id="card-element" class="stripe-card-element"></div>
+              @if (cardError) {
+                <div class="card-error">{{ cardError }}</div>
+              }
+              <div class="pm-form-actions">
+                <button type="button" class="action-btn" (click)="saveCard()" [disabled]="savingCard">
+                  {{ savingCard ? ('dashboard.settings.paymentMethod.saving' | translate) : ('dashboard.settings.paymentMethod.saveCard' | translate) }}
+                </button>
+              </div>
+              <p class="stripe-note">🔒 {{ 'dashboard.settings.paymentMethod.stripeNote' | translate }}</p>
+            </div>
+          }
+        }
+      </div>
+    </div>
+
+    @if (isSellerUser) {
+    <!-- Seller Payout Account -->
+    <div class="settings-card">
+      <div class="card-header">
+        <span class="card-icon">💳</span>
+        <h2 class="card-title">{{ 'dashboard.settings.payoutAccount' | translate }}</h2>
+      </div>
+      <div class="card-body">
+        @if (connectStatusMessage) {
+          <div class="connect-message">{{ connectStatusMessage }}</div>
+        }
+        @if (connectLoading) {
+          <p class="text-muted">{{ 'dashboard.settings.checkingPayout' | translate }}</p>
+        } @else if (!showOnboardingForm) {
+          <div class="connect-status-row">
+            <span class="info-label">{{ 'dashboard.settings.payoutStatus' | translate }}</span>
+            <span class="status-badge" [ngClass]="connectStatusClass">{{ connectStatusLabel }}</span>
+          </div>
+          @if (connectStatus?.onboarded) {
+            <p class="card-desc">{{ 'dashboard.settings.payoutActive' | translate }}</p>
+            @if (connectStatus?.chargesEnabled) {
+              <p class="text-success">{{ 'dashboard.settings.chargesEnabled' | translate }} · {{ 'dashboard.settings.payoutsLabel' | translate }} {{ connectStatus?.payoutsEnabled ? ('dashboard.settings.enabled' | translate) : ('dashboard.settings.pending' | translate) }}</p>
+            }
+            <button class="action-btn action-btn-secondary" (click)="openOnboardingForm()">{{ 'dashboard.settings.updateBank' | translate }}</button>
+          } @else if (connectStatus?.connected) {
+            @if (connectStatus?.requirementErrors?.length) {
+              <div class="connect-errors">
+                <p class="connect-errors-title">{{ 'dashboard.settings.requirementIssue' | translate }}</p>
+                <ul>
+                  @for (err of connectStatus!.requirementErrors!; track err) {
+                    <li>{{ err }}</li>
+                  }
+                </ul>
+              </div>
+            } @else {
+              <p class="card-desc">{{ 'dashboard.settings.verifyingDetails' | translate }}</p>
+            }
+            <div class="button-row">
+              <button class="action-btn action-btn-secondary" (click)="openOnboardingForm()">{{ 'dashboard.settings.updateDetails' | translate }}</button>
+              @if (isStripeTestMode) {
+                <button class="action-btn action-btn-test" (click)="testActivate()" [disabled]="connectTestActivating">
+                  {{ connectTestActivating ? ('dashboard.settings.activating' | translate) : ('dashboard.settings.simulateVerification' | translate) }}
+                </button>
+              }
+            </div>
+          } @else {
+            <p class="card-desc">{{ 'dashboard.settings.setupDesc' | translate }}</p>
+            <ul class="feature-list">
+              <li>{{ 'dashboard.settings.feature1' | translate }}</li>
+              <li>{{ 'dashboard.settings.feature2' | translate }}</li>
+              <li>{{ 'dashboard.settings.feature3' | translate }}</li>
+            </ul>
+            <button class="action-btn" (click)="openOnboardingForm()">{{ 'dashboard.settings.setupBtn' | translate }}</button>
+          }
+        } @else {
+          <form class="onboarding-form" (ngSubmit)="submitOnboarding()">
+            @if (connectError) {
+              <div class="form-error-banner">{{ connectError }}</div>
+            }
+
+            <div class="form-section">
+              <h3 class="form-section-title">{{ 'dashboard.settings.dobTitle' | translate }}</h3>
+              <div class="dob-row">
+                <div class="form-field">
+                  <label>{{ 'dashboard.settings.dobDay' | translate }}</label>
+                  <input type="number" [(ngModel)]="dobDay" name="dobDay" min="1" max="31" placeholder="DD" required />
+                </div>
+                <div class="form-field">
+                  <label>{{ 'dashboard.settings.dobMonth' | translate }}</label>
+                  <input type="number" [(ngModel)]="dobMonth" name="dobMonth" min="1" max="12" placeholder="MM" required />
+                </div>
+                <div class="form-field form-field-year">
+                  <label>{{ 'dashboard.settings.dobYear' | translate }}</label>
+                  <input type="number" [(ngModel)]="dobYear" name="dobYear" min="1900" max="2010" placeholder="YYYY" required />
+                </div>
+              </div>
+            </div>
+
+            <div class="form-section">
+              <h3 class="form-section-title">{{ 'dashboard.settings.addressTitle' | translate }}</h3>
+              <div class="form-field">
+                <label>{{ 'dashboard.settings.streetAddress' | translate }}</label>
+                <input type="text" [(ngModel)]="addressLine1" name="addressLine1" placeholder="123 Main St" required />
+              </div>
+              <div class="form-row-2">
+                <div class="form-field">
+                  <label>{{ 'dashboard.settings.city' | translate }}</label>
+                  <input type="text" [(ngModel)]="addressCity" name="addressCity" placeholder="Lisbon" required />
+                </div>
+                <div class="form-field">
+                  <label>{{ 'dashboard.settings.postalCode' | translate }}</label>
+                  <input type="text" [(ngModel)]="addressPostal" name="addressPostal" placeholder="1000-001" required />
+                </div>
+              </div>
+              <div class="form-field">
+                <label>{{ 'dashboard.settings.country' | translate }}</label>
+                <select [(ngModel)]="addressCountry" name="addressCountry" required>
+                  @for (c of countries; track c.code) {
+                    <option [value]="c.code">{{ c.label }}</option>
+                  }
+                </select>
+              </div>
+            </div>
+
+            <div class="form-section">
+              <h3 class="form-section-title">{{ 'dashboard.settings.bankTitle' | translate }}</h3>
+              <div class="form-field">
+                <label>{{ 'dashboard.settings.ibanLabel' | translate }}</label>
+                <input type="text" [(ngModel)]="iban" name="iban" placeholder="PT50 0035 0552 0001 3600 5312 9" required
+                       (input)="iban = $any($event.target).value.toUpperCase()" />
+                <span class="form-hint">{{ 'dashboard.settings.ibanHint' | translate }}</span>
+              </div>
+            </div>
+
+            <div class="form-section">
+              <label class="tos-row">
+                <input type="checkbox" [(ngModel)]="tosAccepted" name="tosAccepted" />
+                <span>{{ 'dashboard.settings.tosText' | translate }} <a href="https://stripe.com/legal/connect-account" target="_blank" rel="noopener">{{ 'dashboard.settings.tosLink' | translate }}</a>.</span>
+              </label>
+            </div>
+
+            <div class="form-actions">
+              <button type="submit" class="action-btn" [disabled]="connectSubmitting">
+                {{ connectSubmitting ? ('dashboard.settings.submitting' | translate) : ('dashboard.settings.submitBtn' | translate) }}
+              </button>
+              <button type="button" class="action-btn action-btn-ghost" (click)="cancelOnboardingForm()" [disabled]="connectSubmitting">{{ 'dashboard.settings.cancelBtn' | translate }}</button>
+            </div>
+          </form>
+        }
+      </div>
+    </div>
+    }
+    </div>
+
+    <!-- Row 3: Language, Appearance, Notifications -->
+    <div class="settings-row settings-row--triple">
     <!-- Language Preference -->
     <div class="settings-card">
       <div class="card-header">
@@ -202,192 +448,6 @@
             </label>
           }
         </div>
-      </div>
-    </div>
-
-    <!-- Seller Payout Account -->
-    <div class="settings-card settings-card-full">
-      <div class="card-header">
-        <span class="card-icon">💳</span>
-        <h2 class="card-title">Seller Payout Account</h2>
-      </div>
-      <div class="card-body">
-        @if (connectStatusMessage) {
-          <div class="connect-message">{{ connectStatusMessage }}</div>
-        }
-        @if (connectLoading) {
-          <p class="text-muted">Checking payout account status...</p>
-        } @else if (!showOnboardingForm) {
-          <div class="connect-status-row">
-            <span class="info-label">Payout status</span>
-            <span class="status-badge" [ngClass]="connectStatusClass">{{ connectStatusLabel }}</span>
-          </div>
-          @if (connectStatus?.onboarded) {
-            <p class="card-desc">Your payout account is active. Buyers can pay you directly — funds will be sent to your registered bank account.</p>
-            @if (connectStatus?.chargesEnabled) {
-              <p class="text-success">Charges enabled · Payouts {{ connectStatus?.payoutsEnabled ? 'enabled' : 'pending' }}</p>
-            }
-            <button class="action-btn action-btn-secondary" (click)="openOnboardingForm()">Update bank account</button>
-          } @else if (connectStatus?.connected) {
-            @if (connectStatus?.requirementErrors?.length) {
-              <div class="connect-errors">
-                <p class="connect-errors-title">Issue with your payout account:</p>
-                <ul>
-                  @for (err of connectStatus!.requirementErrors!; track err) {
-                    <li>{{ err }}</li>
-                  }
-                </ul>
-              </div>
-            } @else {
-              <p class="card-desc">Your details have been submitted and are being verified by Stripe. This usually takes a few minutes.</p>
-            }
-            <div class="button-row">
-              <button class="action-btn action-btn-secondary" (click)="openOnboardingForm()">Update details</button>
-              @if (isStripeTestMode) {
-                <button class="action-btn action-btn-test" (click)="testActivate()" [disabled]="connectTestActivating">
-                  {{ connectTestActivating ? 'Activating…' : '⚡ Simulate verification' }}
-                </button>
-              }
-            </div>
-          } @else {
-            <p class="card-desc">To receive payments from buyers, set up your payout account. No Stripe account needed — just fill in your details below.</p>
-            <ul class="feature-list">
-              <li>Enter your identity and bank details once</li>
-              <li>Stripe processes payouts securely in the background</li>
-              <li>Funds transferred directly to your bank account</li>
-            </ul>
-            <button class="action-btn" (click)="openOnboardingForm()">Set up payout account</button>
-          }
-        } @else {
-          <!-- Onboarding Form -->
-          <form class="onboarding-form" (ngSubmit)="submitOnboarding()">
-            @if (connectError) {
-              <div class="form-error-banner">{{ connectError }}</div>
-            }
-
-            <div class="form-section">
-              <h3 class="form-section-title">Date of birth</h3>
-              <div class="dob-row">
-                <div class="form-field">
-                  <label>Day</label>
-                  <input type="number" [(ngModel)]="dobDay" name="dobDay" min="1" max="31" placeholder="DD" required />
-                </div>
-                <div class="form-field">
-                  <label>Month</label>
-                  <input type="number" [(ngModel)]="dobMonth" name="dobMonth" min="1" max="12" placeholder="MM" required />
-                </div>
-                <div class="form-field form-field-year">
-                  <label>Year</label>
-                  <input type="number" [(ngModel)]="dobYear" name="dobYear" min="1900" max="2010" placeholder="YYYY" required />
-                </div>
-              </div>
-            </div>
-
-            <div class="form-section">
-              <h3 class="form-section-title">Address</h3>
-              <div class="form-field">
-                <label>Street address</label>
-                <input type="text" [(ngModel)]="addressLine1" name="addressLine1" placeholder="123 Main St" required />
-              </div>
-              <div class="form-row-2">
-                <div class="form-field">
-                  <label>City</label>
-                  <input type="text" [(ngModel)]="addressCity" name="addressCity" placeholder="Lisbon" required />
-                </div>
-                <div class="form-field">
-                  <label>Postal code</label>
-                  <input type="text" [(ngModel)]="addressPostal" name="addressPostal" placeholder="1000-001" required />
-                </div>
-              </div>
-              <div class="form-field">
-                <label>Country</label>
-                <select [(ngModel)]="addressCountry" name="addressCountry" required>
-                  @for (c of countries; track c.code) {
-                    <option [value]="c.code">{{ c.label }}</option>
-                  }
-                </select>
-              </div>
-            </div>
-
-            <div class="form-section">
-              <h3 class="form-section-title">Bank account (IBAN)</h3>
-              <div class="form-field">
-                <label>IBAN</label>
-                <input type="text" [(ngModel)]="iban" name="iban" placeholder="PT50 0035 0552 0001 3600 5312 9" required
-                       (input)="iban = $any($event.target).value.toUpperCase()" />
-                <span class="form-hint">Your International Bank Account Number. Spaces are ignored.</span>
-              </div>
-            </div>
-
-            <div class="form-section">
-              <label class="tos-row">
-                <input type="checkbox" [(ngModel)]="tosAccepted" name="tosAccepted" />
-                <span>I authorise BidRoom to submit my information to Stripe for identity verification and payout processing, and I accept the <a href="https://stripe.com/legal/connect-account" target="_blank" rel="noopener">Stripe Connected Account Agreement</a>.</span>
-              </label>
-            </div>
-
-            <div class="form-actions">
-              <button type="submit" class="action-btn" [disabled]="connectSubmitting">
-                {{ connectSubmitting ? 'Submitting…' : 'Save payout account' }}
-              </button>
-              <button type="button" class="action-btn action-btn-ghost" (click)="cancelOnboardingForm()" [disabled]="connectSubmitting">Cancel</button>
-            </div>
-          </form>
-        }
-      </div>
-    </div>
-    <!-- Payment Method — Buyer Trust Tier 3 -->
-    <div class="settings-card">
-      <div class="card-header">
-        <span class="card-icon">🛡️</span>
-        <h2 class="card-title">{{ 'dashboard.settings.paymentMethod.title' | translate }}</h2>
-      </div>
-      <div class="card-body">
-        @if (loadingPaymentMethod) {
-          <p class="loading-text">{{ 'dashboard.settings.paymentMethod.loading' | translate }}</p>
-        } @else if (savedPaymentMethod?.saved) {
-          <div class="trust-badge-active">
-            <span class="trust-badge-icon">🛡️</span>
-            <div>
-              <strong>{{ 'dashboard.settings.paymentMethod.activeBadge' | translate }}</strong>
-              <small>{{ 'dashboard.settings.paymentMethod.activeDesc' | translate }}</small>
-            </div>
-          </div>
-          <div class="saved-card-row">
-            <span class="card-brand">{{ savedPaymentMethod!.brand | uppercase }}</span>
-            <span class="card-number">•••• {{ savedPaymentMethod!.last4 }}</span>
-            <span class="card-expiry">{{ savedPaymentMethod!.expiry }}</span>
-            <button class="btn-remove-card" (click)="removeCard()" title="Remove card">✕</button>
-          </div>
-          <p class="card-disclaimer">{{ 'dashboard.settings.paymentMethod.disclaimer' | translate }}</p>
-        } @else {
-          <div class="trust-upgrade-prompt">
-            <div class="trust-upgrade-icon">🛡️</div>
-            <div class="trust-upgrade-text">
-              <strong>{{ 'dashboard.settings.paymentMethod.upgradeTitle' | translate }}</strong>
-              <ul class="trust-upgrade-list">
-                <li>{{ 'dashboard.settings.paymentMethod.benefit1' | translate }}</li>
-                <li>{{ 'dashboard.settings.paymentMethod.benefit2' | translate }}</li>
-                <li>{{ 'dashboard.settings.paymentMethod.benefit3' | translate }}</li>
-              </ul>
-            </div>
-          </div>
-          <button class="action-btn" (click)="toggleAddCard()">
-            {{ showAddCard ? ('dashboard.settings.paymentMethod.cancel' | translate) : ('dashboard.settings.paymentMethod.addCard' | translate) }}
-          </button>
-          @if (showAddCard) {
-            <div class="card-form-wrap">
-              <div id="card-element" class="stripe-card-element"></div>
-              @if (cardError) {
-                <div class="card-error">{{ cardError }}</div>
-              }
-              <button class="action-btn" (click)="saveCard()" [disabled]="savingCard">
-                {{ savingCard ? ('dashboard.settings.paymentMethod.saving' | translate) : ('dashboard.settings.paymentMethod.saveCard' | translate) }}
-              </button>
-              <p class="stripe-note">🔒 {{ 'dashboard.settings.paymentMethod.stripeNote' | translate }}</p>
-            </div>
-          }
-        }
       </div>
     </div>
 
@@ -458,5 +518,37 @@
         }
       </div>
     </div>
+    </div>
   </div>
 </div>
+
+@if (removeModalMethod) {
+  <div class="modal-overlay" (click)="closeRemoveModal()">
+    <div class="modal-content pm-remove-modal" (click)="$event.stopPropagation()" role="dialog" aria-modal="true"
+         [attr.aria-label]="'dashboard.settings.paymentMethod.removeModalTitle' | translate">
+      <div class="modal-header">
+        <h3 class="modal-title">{{ 'dashboard.settings.paymentMethod.removeModalTitle' | translate }}</h3>
+        <button type="button" class="modal-close" (click)="closeRemoveModal()" [disabled]="!!removingPaymentId" aria-label="Close">×</button>
+      </div>
+      <div class="modal-body">
+        <p class="pm-remove-desc">
+          {{ 'dashboard.settings.paymentMethod.removeModalDesc' | translate:{
+            brand: (removeModalMethod.brand | uppercase),
+            last4: removeModalMethod.last4
+          } }}
+        </p>
+        @if (removeModalError) {
+          <p class="pm-remove-error">{{ removeModalError }}</p>
+        }
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="action-btn action-btn-ghost" (click)="closeRemoveModal()" [disabled]="!!removingPaymentId">
+          {{ 'dashboard.settings.paymentMethod.cancel' | translate }}
+        </button>
+        <button type="button" class="action-btn pm-remove-confirm" (click)="confirmRemoveCard()" [disabled]="!!removingPaymentId">
+          {{ removingPaymentId ? ('dashboard.settings.paymentMethod.removing' | translate) : ('dashboard.settings.paymentMethod.removeConfirmBtn' | translate) }}
+        </button>
+      </div>
+    </div>
+  </div>
+}

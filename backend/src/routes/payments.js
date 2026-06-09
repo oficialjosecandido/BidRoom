@@ -8,6 +8,14 @@ const { sendEmail } = require('../services/emailService');
 
 const features = require('../config/features');
 const { getStripe } = require('../utils/stripe.util');
+const {
+  formatMethodsResponse,
+  loadUserForPaymentMethods,
+  attachPaymentMethodToUser,
+  setDefaultPaymentMethod,
+  removePaymentMethod,
+  confirmSetupIntent,
+} = require('../services/paymentMethodService');
 const LOG_PREFIX = '[Payments]';
 
 const router = express.Router();
@@ -185,23 +193,47 @@ router.post('/setup-intent', authenticateToken, requireActiveAccount, async (req
     if (!user) return res.status(404).json({ error: 'User not found' });
 
     let customerId = user.stripeCustomerId;
-    if (!customerId) {
+
+    // Helper: create a fresh Stripe customer on the current account
+    const createCustomer = async () => {
       const customer = await stripe.customers.create({
         email: user.email,
         name: `${user.firstName} ${user.lastName}`,
         metadata: { uid: req.user.uid },
       });
-      customerId = customer.id;
-      await User.findOneAndUpdate({ uid: req.user.uid }, { stripeCustomerId: customerId });
-      console.log(`${PREFIX} Created Stripe Customer ${customerId} for uid=${req.user.uid?.slice(0, 8)}...`);
+      await User.findOneAndUpdate({ uid: req.user.uid }, { stripeCustomerId: customer.id });
+      console.log(`${PREFIX} Created Stripe Customer ${customer.id} for uid=${req.user.uid?.slice(0, 8)}...`);
+      return customer.id;
+    };
+
+    if (!customerId) {
+      customerId = await createCustomer();
     }
 
-    const setupIntent = await stripe.setupIntents.create({
-      customer: customerId,
-      usage: 'off_session',
-      payment_method_types: ['card'],
-      metadata: { uid: req.user.uid },
-    });
+    let setupIntent;
+    try {
+      setupIntent = await stripe.setupIntents.create({
+        customer: customerId,
+        usage: 'off_session',
+        payment_method_types: ['card'],
+        metadata: { uid: req.user.uid },
+      });
+    } catch (siErr) {
+      // Stored customer belongs to a different Stripe account (e.g. after key rotation).
+      // Create a fresh customer on the current account and retry once.
+      if (siErr.code === 'resource_missing' || siErr.type === 'invalid_request_error') {
+        console.warn(`${PREFIX} Stored customer ${customerId} invalid — creating new one and retrying`);
+        customerId = await createCustomer();
+        setupIntent = await stripe.setupIntents.create({
+          customer: customerId,
+          usage: 'off_session',
+          payment_method_types: ['card'],
+          metadata: { uid: req.user.uid },
+        });
+      } else {
+        throw siErr;
+      }
+    }
 
     res.json({ clientSecret: setupIntent.client_secret, customerId });
   } catch (err) {
@@ -212,27 +244,14 @@ router.post('/setup-intent', authenticateToken, requireActiveAccount, async (req
 
 /**
  * GET /api/payments/payment-method
- * Returns saved card details (brand, last4, expiry) and current trust tier.
+ * Returns all saved cards and current trust tier.
  */
 router.get('/payment-method', authenticateToken, async (req, res) => {
   try {
-    const user = await User.findOne({ uid: req.user.uid }).select(
-      'savedPaymentMethodId savedPaymentMethodBrand savedPaymentMethodLast4 savedPaymentMethodExpiry kycStatus emailVerified'
-    );
+    const user = await loadUserForPaymentMethods(req.user.uid);
     if (!user) return res.status(404).json({ error: 'User not found' });
-
-    const trustTier = user.buyerTrustTier;
-
-    if (!user.savedPaymentMethodId) {
-      return res.json({ saved: false, trustTier });
-    }
-    res.json({
-      saved: true,
-      brand: user.savedPaymentMethodBrand,
-      last4: user.savedPaymentMethodLast4,
-      expiry: user.savedPaymentMethodExpiry,
-      trustTier,
-    });
+    if (user.isModified('savedPaymentMethods')) await user.save();
+    res.json(formatMethodsResponse(user));
   } catch (err) {
     console.error('[GetPaymentMethod] Error:', err.message);
     res.status(500).json({ error: 'Failed to fetch payment method' });
@@ -240,22 +259,53 @@ router.get('/payment-method', authenticateToken, async (req, res) => {
 });
 
 /**
- * DELETE /api/payments/payment-method
- * Detaches the saved card and clears payment method fields. Blocked during active disputes.
+ * POST /api/payments/payment-method/confirm
+ * Body: { setupIntentId: string }
+ * Persists a card immediately after Stripe confirmCardSetup (no webhook wait).
  */
-router.delete('/payment-method', authenticateToken, requireActiveAccount, async (req, res) => {
+router.post('/payment-method/confirm', authenticateToken, requireActiveAccount, async (req, res) => {
+  try {
+    const { setupIntentId } = req.body;
+    if (!setupIntentId || typeof setupIntentId !== 'string') {
+      return res.status(400).json({ error: 'setupIntentId is required' });
+    }
+    const result = await confirmSetupIntent(req.user.uid, setupIntentId);
+    res.json(result);
+  } catch (err) {
+    if (err.code === 'FORBIDDEN') return res.status(403).json({ error: err.message });
+    if (err.code === 'SETUP_INCOMPLETE') return res.status(400).json({ error: err.message });
+    console.error('[ConfirmPaymentMethod] Error:', err.message);
+    res.status(500).json({ error: 'Failed to save payment method' });
+  }
+});
+
+/**
+ * PATCH /api/payments/payment-method/:paymentMethodId/default
+ */
+router.patch('/payment-method/:paymentMethodId/default', authenticateToken, requireActiveAccount, async (req, res) => {
+  try {
+    const result = await setDefaultPaymentMethod(req.user.uid, req.params.paymentMethodId);
+    res.json(result);
+  } catch (err) {
+    if (err.message === 'Payment method not found') return res.status(404).json({ error: err.message });
+    console.error('[SetDefaultPaymentMethod] Error:', err.message);
+    res.status(500).json({ error: 'Failed to update default payment method' });
+  }
+});
+
+/**
+ * DELETE /api/payments/payment-method/:paymentMethodId
+ * Cannot remove default or the only remaining method. Blocked during active disputes.
+ */
+router.delete('/payment-method/:paymentMethodId', authenticateToken, requireActiveAccount, async (req, res) => {
   const PREFIX = '[DeletePaymentMethod]';
   try {
-    const stripe = getStripe();
-    if (!stripe) return res.status(503).json({ error: 'Payments not configured' });
-
-    const user = await User.findOne({ uid: req.user.uid }).select('savedPaymentMethodId stripeCustomerId');
-    if (!user) return res.status(404).json({ error: 'User not found' });
-    if (!user.savedPaymentMethodId) return res.status(400).json({ error: 'No payment method saved' });
+    const buyer = await User.findOne({ uid: req.user.uid }).select('_id').lean();
+    if (!buyer) return res.status(404).json({ error: 'User not found' });
 
     const Transaction = require('../models/Transaction');
     const activeDispute = await Transaction.findOne({
-      buyer: req.user.uid,
+      buyer: buyer._id,
       disputeOpen: true,
       disputeAdminVerdict: null,
     }).lean();
@@ -266,20 +316,17 @@ router.delete('/payment-method', authenticateToken, requireActiveAccount, async 
       });
     }
 
-    await stripe.paymentMethods.detach(user.savedPaymentMethodId);
-    console.log(`${PREFIX} Detached PM ${user.savedPaymentMethodId} for uid=${req.user.uid?.slice(0, 8)}...`);
-
-    await User.findOneAndUpdate({ uid: req.user.uid }, {
-      $set: {
-        savedPaymentMethodId: null,
-        savedPaymentMethodBrand: null,
-        savedPaymentMethodLast4: null,
-        savedPaymentMethodExpiry: null,
-      },
-    });
-
-    res.json({ success: true, message: 'Payment method removed. Trust tier updated.' });
+    const result = await removePaymentMethod(req.user.uid, req.params.paymentMethodId);
+    console.log(`${PREFIX} Detached PM ${req.params.paymentMethodId} for uid=${req.user.uid?.slice(0, 8)}...`);
+    res.json({ success: true, ...result });
   } catch (err) {
+    if (err.code === 'DEFAULT_PAYMENT_METHOD') {
+      return res.status(400).json({ error: err.message, code: err.code });
+    }
+    if (err.code === 'ONLY_PAYMENT_METHOD') {
+      return res.status(400).json({ error: err.message, code: err.code });
+    }
+    if (err.message === 'Payment method not found') return res.status(404).json({ error: err.message });
     console.error('[DeletePaymentMethod] Error:', err.message);
     res.status(500).json({ error: 'Failed to remove payment method' });
   }
@@ -414,26 +461,15 @@ async function handleSetupIntentSucceeded(setupIntent) {
     console.warn('[SetupIntent Webhook] No uid in metadata — skipping');
     return;
   }
-  const stripe = getStripe();
-  if (!stripe) return;
-
   const pmId = setupIntent.payment_method;
   if (!pmId) return;
 
-  const pm = await stripe.paymentMethods.retrieve(pmId);
-  const card = pm.card;
-  const expiry = card ? `${String(card.exp_month).padStart(2, '0')}/${card.exp_year}` : null;
-
-  await User.findOneAndUpdate({ uid }, {
-    $set: {
-      savedPaymentMethodId: pmId,
-      savedPaymentMethodBrand: card?.brand ?? 'unknown',
-      savedPaymentMethodLast4: card?.last4 ?? null,
-      savedPaymentMethodExpiry: expiry,
-    },
-  });
-
-  console.log(`[SetupIntent Webhook] ✅ PM saved uid=${uid?.slice(0, 8)}... brand=${card?.brand} last4=${card?.last4}`);
+  try {
+    await attachPaymentMethodToUser(uid, pmId);
+    console.log(`[SetupIntent Webhook] ✅ PM saved uid=${uid?.slice(0, 8)}... pm=${pmId}`);
+  } catch (err) {
+    console.error('[SetupIntent Webhook] Failed to save PM:', err.message);
+  }
 }
 
 module.exports = { router, creditBalanceForSession, stripeWebhookHandler, handleSetupIntentSucceeded };

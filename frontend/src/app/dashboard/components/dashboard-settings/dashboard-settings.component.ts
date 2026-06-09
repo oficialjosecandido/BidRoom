@@ -7,7 +7,8 @@ import { CustomerService, SellerCompliance } from '../../../shared/services/cust
 import { ThemePreference, ThemeService } from '../../../shared/services/theme.service';
 import { StripeConnectService, ConnectAccountStatus, OnboardingFormData } from '../../../shared/services/stripe-connect.service';
 import { NotificationPreferencesService, NotificationPreferences, NOTIFICATION_EVENT_KEYS, DEFAULT_CHANNEL_PREF } from '../../../shared/services/notification-preferences.service';
-import { BuyerPaymentService, PaymentMethodResponse } from '../../../shared/services/buyer-payment.service';
+import { BuyerPaymentService, PaymentMethodsResponse, SavedPaymentMethod } from '../../../shared/services/buyer-payment.service';
+import { ListingsService } from '../../../shared/services/listings.service';
 import { loadStripe, Stripe, StripeElements, StripeCardElement } from '@stripe/stripe-js';
 import { Observable } from 'rxjs';
 
@@ -26,6 +27,9 @@ export class DashboardSettingsComponent implements OnInit, OnDestroy {
   private stripeConnect = inject(StripeConnectService);
   private notifPrefsService = inject(NotificationPreferencesService);
   private buyerPaymentService = inject(BuyerPaymentService);
+  private listingsService = inject(ListingsService);
+
+  private sellerListingCount = 0;
 
   /** Display scale for buyer/seller review averages (matches 1–10 transaction reviews). */
   readonly reviewScoreMax = 10;
@@ -46,7 +50,7 @@ export class DashboardSettingsComponent implements OnInit, OnDestroy {
 
   get isStripeTestMode(): boolean { return this.stripeConnect.isTestMode; }
 
-  // Onboarding form fields
+  // Seller payout onboarding (BidRoom collects KYC via API)
   dobDay: number | null = null;
   dobMonth: number | null = null;
   dobYear: number | null = null;
@@ -104,8 +108,13 @@ export class DashboardSettingsComponent implements OnInit, OnDestroy {
   dsaSaved = false;
 
   // Payment method (Buyer Trust Tier 3)
-  savedPaymentMethod: PaymentMethodResponse | null = null;
+  paymentMethods: SavedPaymentMethod[] = [];
+  paymentTrustTier = 0;
   loadingPaymentMethod = true;
+  settingDefaultId: string | null = null;
+  removingPaymentId: string | null = null;
+  removeModalMethod: SavedPaymentMethod | null = null;
+  removeModalError: string | null = null;
   showAddCard = false;
   savingCard = false;
   cardError: string | null = null;
@@ -158,17 +167,55 @@ export class DashboardSettingsComponent implements OnInit, OnDestroy {
     this.loadConnectStatus();
     this.loadNotifPrefs();
     this.loadPaymentMethod();
+    this.loadSellerListingCount();
+  }
+
+  /** Has listed at least one item (active or ended), same rule as dashboard home. */
+  get isSellerUser(): boolean {
+    return this.sellerListingCount > 0;
+  }
+
+  private loadSellerListingCount(): void {
+    this.listingsService.getMyListings().subscribe({
+      next: (response) => {
+        const all = response.listings ?? [];
+        const now = new Date();
+        const active = all.filter(
+          (l) => l.status === 'active' && new Date(l.endDate) > now
+        ).length;
+        const ended = all.filter(
+          (l) => l.status === 'ended' || l.status === 'cancelled' || (l.status === 'active' && new Date(l.endDate) <= now)
+        ).length;
+        this.sellerListingCount = active + ended;
+      }
+    });
   }
 
   ngOnDestroy(): void {
     this.cardElement?.destroy();
   }
 
+  get hasPaymentMethods(): boolean {
+    return this.paymentMethods.length > 0;
+  }
+
   loadPaymentMethod(): void {
-    this.buyerPaymentService.getPaymentMethod().subscribe({
-      next: (pm) => { this.savedPaymentMethod = pm; this.loadingPaymentMethod = false; },
+    this.buyerPaymentService.getPaymentMethods().subscribe({
+      next: (res) => {
+        this.applyPaymentMethods(res);
+        this.loadingPaymentMethod = false;
+      },
       error: () => { this.loadingPaymentMethod = false; }
     });
+  }
+
+  private applyPaymentMethods(res: PaymentMethodsResponse): void {
+    this.paymentMethods = res.methods ?? [];
+    this.paymentTrustTier = res.trustTier ?? 0;
+  }
+
+  canRemoveMethod(method: SavedPaymentMethod): boolean {
+    return !method.isDefault && this.paymentMethods.length > 1;
   }
 
   toggleAddCard(): void {
@@ -188,6 +235,7 @@ export class DashboardSettingsComponent implements OnInit, OnDestroy {
     this.stripe = await loadStripe(pk);
     this.stripeElements = this.stripe!.elements();
     this.cardElement = this.stripeElements.create('card', {
+      hidePostalCode: true,
       style: { base: { fontFamily: 'DM Sans, sans-serif', fontSize: '14px', color: 'var(--text)' } }
     });
     setTimeout(() => this.cardElement?.mount('#card-element'), 0);
@@ -200,34 +248,89 @@ export class DashboardSettingsComponent implements OnInit, OnDestroy {
 
     this.buyerPaymentService.createSetupIntent().subscribe({
       next: async (res) => {
-        const { error } = await this.stripe!.confirmCardSetup(res.clientSecret, {
+        const { error, setupIntent } = await this.stripe!.confirmCardSetup(res.clientSecret, {
           payment_method: { card: this.cardElement! }
         });
         if (error) {
-          this.cardError = error.message ?? 'Erro ao guardar o cartão.';
+          this.cardError = error.message ?? this.translate.instant('dashboard.settings.paymentMethod.saveError');
           this.savingCard = false;
-        } else {
-          setTimeout(() => {
+          return;
+        }
+        if (!setupIntent?.id) {
+          this.cardError = this.translate.instant('dashboard.settings.paymentMethod.saveError');
+          this.savingCard = false;
+          return;
+        }
+        this.buyerPaymentService.confirmPaymentMethod(setupIntent.id).subscribe({
+          next: (saved) => {
+            this.applyPaymentMethods(saved);
             this.showAddCard = false;
             this.savingCard = false;
             this.cardElement?.destroy();
             this.cardElement = null;
-            this.loadPaymentMethod();
-          }, 1500);
-        }
+            this.cardError = null;
+          },
+          error: () => {
+            this.cardError = this.translate.instant('dashboard.settings.paymentMethod.saveError');
+            this.savingCard = false;
+          }
+        });
       },
       error: () => {
-        this.cardError = 'Erro ao iniciar o processo. Tenta novamente.';
+        this.cardError = this.translate.instant('dashboard.settings.paymentMethod.setupError');
         this.savingCard = false;
       }
     });
   }
 
-  removeCard(): void {
-    if (!confirm('Remover cartão guardado? O badge Pagamento Garantido será desactivado.')) return;
-    this.buyerPaymentService.deletePaymentMethod().subscribe({
-      next: () => this.loadPaymentMethod(),
-      error: (err) => alert(err.error?.message ?? 'Erro ao remover o cartão.')
+  setDefaultCard(method: SavedPaymentMethod): void {
+    if (method.isDefault || this.settingDefaultId) return;
+    this.settingDefaultId = method.id;
+    this.buyerPaymentService.setDefaultPaymentMethod(method.id).subscribe({
+      next: (res) => {
+        this.applyPaymentMethods(res);
+        this.settingDefaultId = null;
+      },
+      error: () => { this.settingDefaultId = null; }
+    });
+  }
+
+  openRemoveModal(method: SavedPaymentMethod): void {
+    if (!this.canRemoveMethod(method)) return;
+    this.removeModalError = null;
+    this.removeModalMethod = method;
+  }
+
+  closeRemoveModal(): void {
+    if (this.removingPaymentId) return;
+    this.removeModalMethod = null;
+    this.removeModalError = null;
+  }
+
+  confirmRemoveCard(): void {
+    const method = this.removeModalMethod;
+    if (!method || !this.canRemoveMethod(method) || this.removingPaymentId) return;
+
+    this.removingPaymentId = method.id;
+    this.removeModalError = null;
+    this.buyerPaymentService.deletePaymentMethod(method.id).subscribe({
+      next: (res) => {
+        this.applyPaymentMethods(res);
+        this.removingPaymentId = null;
+        this.removeModalMethod = null;
+      },
+      error: (err) => {
+        this.removingPaymentId = null;
+        const code = err.error?.code;
+        const key = code === 'DEFAULT_PAYMENT_METHOD'
+          ? 'dashboard.settings.paymentMethod.cannotRemoveDefault'
+          : code === 'ONLY_PAYMENT_METHOD'
+            ? 'dashboard.settings.paymentMethod.cannotRemoveOnly'
+            : null;
+        this.removeModalError = key
+          ? this.translate.instant(key)
+          : (err.error?.message ?? this.translate.instant('dashboard.settings.paymentMethod.removeError'));
+      }
     });
   }
 
@@ -266,19 +369,19 @@ export class DashboardSettingsComponent implements OnInit, OnDestroy {
   submitOnboarding(): void {
     this.connectError = null;
     if (!this.dobDay || !this.dobMonth || !this.dobYear) {
-      this.connectError = 'Please enter your date of birth.';
+      this.connectError = this.translate.instant('dashboard.settings.dobRequired');
       return;
     }
     if (!this.addressLine1 || !this.addressCity || !this.addressPostal || !this.addressCountry) {
-      this.connectError = 'Please fill in your full address.';
+      this.connectError = this.translate.instant('dashboard.settings.addressRequired');
       return;
     }
     if (!this.iban.trim()) {
-      this.connectError = 'Please enter your IBAN.';
+      this.connectError = this.translate.instant('dashboard.settings.ibanRequired');
       return;
     }
     if (!this.tosAccepted) {
-      this.connectError = 'You must accept the Terms of Service.';
+      this.connectError = this.translate.instant('dashboard.settings.tosRequired');
       return;
     }
 
