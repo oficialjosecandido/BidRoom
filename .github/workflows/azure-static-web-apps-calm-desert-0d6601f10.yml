@@ -78,6 +78,8 @@ jobs:
 
           echo "✅ Patched runtime config:"
           grep -oE "(API_URL|STRIPE_PUBLISHABLE_KEY|BACKEND_ORIGIN): '[^']*'" "$INDEX" | sed -E "s/(STRIPE_PUBLISHABLE_KEY: ')([^']{8}).*$/\1\2…(redacted)/"
+      - name: Copy staticwebapp.config.json to dist
+        run: cp frontend/staticwebapp.config.json frontend/dist/frontend/browser/staticwebapp.config.json
       - name: Build And Deploy
         id: builddeploy
         uses: Azure/static-web-apps-deploy@v1
