@@ -12,6 +12,7 @@ import { ReviewsService, PendingReview, ReviewTag } from '../../../shared/servic
 import { FeatureFlagsService } from '../../../shared/services/feature-flags.service';
 import { SocketService } from '../../../shared/services/socket.service';
 import { TransactionsService } from '../../../shared/services/transactions.service';
+import { BuyerPaymentService } from '../../../shared/services/buyer-payment.service';
 import { SellerAnalyticsComponent } from '../seller-analytics/seller-analytics.component';
 import { Observable, Subscription } from 'rxjs';
 
@@ -50,6 +51,7 @@ export class DashboardHomeComponent implements OnInit, OnDestroy {
   private router = inject(Router);
   private translate = inject(TranslateService);
   private transactionsService = inject(TransactionsService);
+  private buyerPaymentService = inject(BuyerPaymentService);
 
   private socketSubscriptions: Subscription[] = [];
   private joinedListingIds: string[] = [];
@@ -74,6 +76,8 @@ export class DashboardHomeComponent implements OnInit, OnDestroy {
   sellerScore: number | null = null;
   buyerReviewCount = 0;
   sellerReviewCount = 0;
+  hasPaymentMethod = false;
+  paymentMethodsLoading = true;
 
   showReviewModal = false;
   reviewTarget: PendingReview | null = null;
@@ -141,6 +145,7 @@ export class DashboardHomeComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.loadCustomer();
+    this.loadPaymentMethods();
     this.loadMyListings();
     this.loadBidderListings();
     this.loadPendingTransactionCounts();
@@ -208,12 +213,8 @@ export class DashboardHomeComponent implements OnInit, OnDestroy {
     return this.completedBuyerTransactions > 0;
   }
 
-  get showBuyerReputation(): boolean {
-    return !this.isSellerUser || this.isBuyerUser;
-  }
-
-  get showSellerReputation(): boolean {
-    return this.isSellerUser;
+  get isEmailVerified(): boolean {
+    return this.customer?.user?.emailVerified === true;
   }
 
   get statCards(): HomeStatCard[] {
@@ -276,9 +277,7 @@ export class DashboardHomeComponent implements OnInit, OnDestroy {
   }
 
   get topRowGridColumns(): string {
-    const n = this.statCards.length
-      + (this.showBuyerReputation ? 1 : 0)
-      + (this.showSellerReputation ? 1 : 0);
+    const n = this.statCards.length;
     if (n <= 1) return '1fr';
     if (n === 2) return 'repeat(2, 1fr)';
     if (n === 3) return 'repeat(3, 1fr)';
@@ -356,6 +355,7 @@ export class DashboardHomeComponent implements OnInit, OnDestroy {
     if (payment === 'success') {
       const done = () => {
         this.loadCustomer();
+        this.loadPaymentMethods();
         this.loadTopups();
         this.router.navigate(['/dashboard/home'], { replaceUrl: true }).then(() => {
           Swal.fire({
@@ -552,6 +552,20 @@ export class DashboardHomeComponent implements OnInit, OnDestroy {
       error: (err) => {
         this.reviewSubmitting = false;
         this.reviewError = err?.error?.message || this.translate.instant('dashboard.home.reviewError');
+      }
+    });
+  }
+
+  loadPaymentMethods(): void {
+    this.paymentMethodsLoading = true;
+    this.buyerPaymentService.getPaymentMethods().subscribe({
+      next: (res) => {
+        this.hasPaymentMethod = res.saved && (res.methods?.length ?? 0) > 0;
+        this.paymentMethodsLoading = false;
+      },
+      error: () => {
+        this.hasPaymentMethod = false;
+        this.paymentMethodsLoading = false;
       }
     });
   }

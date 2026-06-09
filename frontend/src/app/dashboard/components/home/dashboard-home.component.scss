@@ -7,13 +7,27 @@
   margin-top: 8px;
 }
 
-/* ── Reputation cards (inline with stat cards) ── */
+/* ── Reputation cards (buyer + seller side by side) ── */
+.reputation-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+@media (max-width: 768px) {
+  .reputation-row { grid-template-columns: 1fr; }
+}
+
 .home-rep-card {
   background: var(--s1);
   border-radius: 14px;
   border: 1px solid var(--line);
   padding: 18px 20px;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .home-rep-card-title {
@@ -84,6 +98,71 @@
   font-weight: 300;
   color: var(--sub);
   margin: 0;
+}
+
+.home-rep-alert {
+  border-radius: 10px;
+  padding: 12px 14px;
+  font-size: 13px;
+  line-height: 1.45;
+
+  strong {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+
+  p {
+    margin: 0 0 8px;
+    color: var(--sub);
+    font-weight: 300;
+  }
+
+  &--warn {
+    background: var(--ab);
+    border: 1px solid var(--al);
+
+    strong { color: var(--amber); }
+  }
+
+  &--info {
+    background: var(--gb);
+    border: 1px solid var(--gl);
+
+    strong { color: var(--gold); }
+  }
+}
+
+.home-rep-benefits {
+  margin: 0 0 8px;
+  padding-left: 18px;
+  color: var(--text);
+  font-size: 12.5px;
+  font-weight: 300;
+
+  li + li { margin-top: 4px; }
+}
+
+.home-rep-disclaimer {
+  font-size: 11.5px !important;
+  color: var(--sub) !important;
+  margin-bottom: 10px !important;
+}
+
+.home-rep-alert-cta {
+  display: inline-flex;
+  align-items: center;
+  padding: 7px 14px;
+  border-radius: 100px;
+  background: var(--gold);
+  color: #0a0a0a;
+  font-size: 12px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: opacity .15s;
+
+  &:hover { opacity: .85; }
 }
 
 /* ── Page header (mockup) ── */

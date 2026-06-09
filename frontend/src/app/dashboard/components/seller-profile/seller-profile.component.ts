@@ -1,18 +1,14 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { MyAuctionsComponent } from '../my-auctions/my-auctions.component';
-import { SellerAnalyticsComponent } from '../seller-analytics/seller-analytics.component';
-import { DashboardDisputesComponent } from '../disputes/dashboard-disputes.component';
 import { CustomerService } from '../../../shared/services/customer.service';
-
-type SellerTab = 'auctions' | 'analytics' | 'disputes';
 
 @Component({
   selector: 'app-seller-profile',
   standalone: true,
-  imports: [CommonModule, MyAuctionsComponent, SellerAnalyticsComponent, DashboardDisputesComponent, TranslateModule],
+  imports: [CommonModule, RouterLink, MyAuctionsComponent, TranslateModule],
   templateUrl: './seller-profile.component.html',
   styleUrls: ['./seller-profile.component.scss']
 })
@@ -21,7 +17,6 @@ export class SellerProfileComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
 
-  activeTab: SellerTab = 'auctions';
   sellerScore: number | null = null;
   sellerReviewCount = 0;
 
@@ -30,10 +25,10 @@ export class SellerProfileComponent implements OnInit {
       const tab = params['tab'];
       if (tab === 'transactions') {
         void this.router.navigate(['/dashboard/transactions'], { replaceUrl: true });
-        return;
-      }
-      if (tab === 'disputes' || tab === 'auctions' || tab === 'analytics') {
-        this.activeTab = tab;
+      } else if (tab === 'disputes') {
+        void this.router.navigate(['/dashboard/disputes'], { replaceUrl: true });
+      } else if (tab === 'analytics') {
+        void this.router.navigate(['/dashboard/home'], { replaceUrl: true });
       }
     });
     this.customerService.getCustomer().subscribe({
@@ -42,9 +37,5 @@ export class SellerProfileComponent implements OnInit {
         this.sellerReviewCount = info.sellerReviewCount ?? 0;
       }
     });
-  }
-
-  setTab(tab: SellerTab): void {
-    this.activeTab = tab;
   }
 }

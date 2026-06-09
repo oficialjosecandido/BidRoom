@@ -1398,6 +1398,14 @@
       "balance": "Saldo",
       "buyerScore": "Pontuação como Comprador",
       "sellerScore": "Pontuação como Vendedor",
+      "reputation": {
+        "emailNotVerifiedTitle": "Email não confirmado",
+        "emailNotVerifiedBody": "Confirme o seu email para licitar, receber atualizações de transações e construir a sua reputação como comprador.",
+        "emailVerifyCta": "Verificar nas definições",
+        "paymentMissingTitle": "Adicione um método de pagamento",
+        "paymentMissingIntro": "Alcance o Nível 3 — Pagamento Garantido e desbloqueie:",
+        "paymentCta": "Adicionar cartão nas definições"
+      },
       "topUpHistory": "Histórico de Recargas",
       "noTopUps": "Sem recargas ainda.",
       "date": "Data",
@@ -1907,6 +1915,8 @@
       "emptyTitle": "Nenhum anúncio ainda",
       "emptyDesc": "Você ainda não criou nenhum anúncio. Comece criando seu primeiro anúncio!",
       "createFirst": "Criar Meu Primeiro Anúncio",
+      "listingSingular": "anúncio",
+      "listingPlural": "anúncios",
       "highestOffer": "Maior Oferta",
       "currentPrice": "Preço Atual",
       "noOffersYet": "Nenhuma oferta ainda",

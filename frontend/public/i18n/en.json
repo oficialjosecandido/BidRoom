@@ -1398,6 +1398,14 @@
       "balance": "Balance",
       "buyerScore": "Buyer Score",
       "sellerScore": "Seller Score",
+      "reputation": {
+        "emailNotVerifiedTitle": "Email not verified",
+        "emailNotVerifiedBody": "Confirm your email to place bids, receive transaction updates, and build your buyer reputation.",
+        "emailVerifyCta": "Verify in settings",
+        "paymentMissingTitle": "Add a payment method",
+        "paymentMissingIntro": "Reach Level 3 — Payment Guaranteed and unlock:",
+        "paymentCta": "Add payment card in settings"
+      },
       "topUpHistory": "Top-up History",
       "noTopUps": "No top-ups yet.",
       "date": "Date",
@@ -1907,6 +1915,8 @@
       "emptyTitle": "No Listings Yet",
       "emptyDesc": "You haven't created any listings yet. Start by creating your first listing!",
       "createFirst": "Create Your First Listing",
+      "listingSingular": "listing",
+      "listingPlural": "listings",
       "highestOffer": "Highest Offer",
       "currentPrice": "Current Price",
       "noOffersYet": "No offers yet",
