@@ -1534,23 +1534,16 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
   // ── Share ────────────────────────────────────────────────────────────────────
 
   buildShareUrl(slug: string): string {
-    // Use same-domain /api/share/... if the SWA has the backend linked (bidroom.pt/api/share/...)
-    // Falls back to the direct backend URL for dev environments without linked backend
-    const origin = window.location.origin;
-    const isDev  = origin.includes('localhost') || origin.includes('azurestaticapps.net');
-    if (isDev) {
-      return `${API_CONFIG.getBackendBaseUrl()}/share/listing/${slug}`;
-    }
-    return `${origin}/api/share/listing/${slug}`;
+    // Always use the backend share endpoint directly — the SWA catch-all serves index.html
+    // for /api/share/* so we must bypass it and hit the backend directly.
+    return `${API_CONFIG.getBackendBaseUrl()}/share/listing/${slug}`;
   }
 
   async shareListing(): Promise<void> {
     if (!this.listing) return;
     const shareUrl = this.buildShareUrl(this.listing.slug);
-    const price    = this.listing.currentPrice || this.listing.startingPrice || 0;
-    const priceStr = `€${price.toLocaleString('pt-PT', { minimumFractionDigits: 0 })}`;
-    const title    = `${this.listing.title} — BidRoom`;
-    const text     = `${priceStr} · ${this.listing.auctionFormat === 'best-offer' ? 'Melhor Proposta' : 'Leilão'}`;
+    const title    = `BidRoom | ${this.listing.title}`;
+    const text     = this.listing.title;
 
     if (navigator.share) {
       try {
