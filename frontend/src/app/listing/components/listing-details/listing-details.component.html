@@ -491,6 +491,7 @@
 
     <!-- SELLER -->
     <div class="seller-label">{{ 'listingDetails.info.seller' | translate }}</div>
+    @if (listing.seller) {
     <div class="seller-row">
       <div class="s-av">{{ listing.seller.firstName[0] || '?' }}{{ listing.seller.lastName[0] || '' }}</div>
       <div>
@@ -500,6 +501,7 @@
         @if (listing.locationCity) { <div class="s-since">{{ listing.locationCity }}</div> }
       </div>
     </div>
+    }
 
     @if (listing.sellerScore !== null) {
       <div class="s-rating">
@@ -734,11 +736,11 @@
 </div>
 }
 
-@if (showReportModal && listing) {
+@if (showReportModal && listing && (showReportModal === 'listing' || listing.seller)) {
   <app-report-modal
     [reportType]="showReportModal === 'listing' ? 'listing' : 'user'"
-    [targetId]="showReportModal === 'listing' ? listing._id : listing.seller._id"
-    [targetName]="showReportModal === 'listing' ? listing.title : (listing.seller.firstName + ' ' + listing.seller.lastName)"
+    [targetId]="showReportModal === 'listing' ? listing._id : listing.seller!._id"
+    [targetName]="showReportModal === 'listing' ? listing.title : (listing.seller!.firstName + ' ' + listing.seller!.lastName)"
     (closed)="showReportModal = null"
   ></app-report-modal>
 }
