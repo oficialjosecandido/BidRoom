@@ -61,6 +61,16 @@ const customerSchema = new mongoose.Schema({
     type: String,
     enum: ['light', 'dark', 'system'],
     required: false
+  },
+  /** Seller payout IBAN (normalized, no spaces). Set when Connect onboarding is submitted. */
+  sellerPayoutIban: {
+    type: String,
+    default: null,
+    trim: true
+  },
+  sellerPayoutIbanUpdatedAt: {
+    type: Date,
+    default: null
   }
 }, {
   timestamps: true,

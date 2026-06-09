@@ -73,7 +73,7 @@ export const API_CONFIG = {
     const hostname = typeof window !== 'undefined' ? window.location.hostname : 'localhost';
 
     if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '0.0.0.0') {
-      return 'pk_test_51T98Ps1Me1kcdayq7UjnAMHVW88Blkx2MCBtwMvCL7XLmTBxb59PrSwhxSIJY8qrDiJBpbRY9YwHGPKGSOULrSzk00Mmg5sYh5';
+      return 'pk_test_51TI5X806hw2O8NlNioZFt34bFn38uQPhm4hayUKZtrPf41BWH4xxdjiox9gNlMpSSHdUfCYtAM5FNX1UF3KyhNuP00Vqz8RtvH';
     }
 
     console.warn('[BidRoom] STRIPE_PUBLISHABLE_KEY not configured via APP_CONFIG. Set window.APP_CONFIG.STRIPE_PUBLISHABLE_KEY at deploy time.');

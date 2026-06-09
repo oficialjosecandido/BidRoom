@@ -158,6 +158,14 @@ const PREF_EVENT_KEYS = [
   'paymentReceived', 'newBid', 'disputeUpdate'
 ];
 
+function buildGlobalUnsubscribeUpdate() {
+  const update = { globalEmailUnsubscribed: true };
+  for (const key of PREF_EVENT_KEYS) {
+    update[key] = { email: false, push: false, inApp: false };
+  }
+  return update;
+}
+
 /** GET /api/notifications/preferences - Load notification preferences for current user */
 router.get('/preferences', authenticateToken, async (req, res) => {
   try {
@@ -186,17 +194,21 @@ router.patch('/preferences', authenticateToken, async (req, res) => {
     const user = await User.findOne({ uid: req.user.uid }).select('_id').lean();
     if (!user) return res.status(404).json({ error: 'User not found' });
 
-    const update = {};
-    if (typeof req.body.globalEmailUnsubscribed === 'boolean') {
-      update.globalEmailUnsubscribed = req.body.globalEmailUnsubscribed;
-    }
-    for (const key of PREF_EVENT_KEYS) {
-      if (req.body[key] && typeof req.body[key] === 'object') {
-        const { email, push, inApp } = req.body[key];
-        update[key] = {};
-        if (typeof email === 'boolean') update[key].email = email;
-        if (typeof push === 'boolean') update[key].push = push;
-        if (typeof inApp === 'boolean') update[key].inApp = inApp;
+    let update = {};
+    if (req.body.globalEmailUnsubscribed === true) {
+      update = buildGlobalUnsubscribeUpdate();
+    } else {
+      if (typeof req.body.globalEmailUnsubscribed === 'boolean') {
+        update.globalEmailUnsubscribed = req.body.globalEmailUnsubscribed;
+      }
+      for (const key of PREF_EVENT_KEYS) {
+        if (req.body[key] && typeof req.body[key] === 'object') {
+          const { email, push, inApp } = req.body[key];
+          update[key] = {};
+          if (typeof email === 'boolean') update[key].email = email;
+          if (typeof push === 'boolean') update[key].push = push;
+          if (typeof inApp === 'boolean') update[key].inApp = inApp;
+        }
       }
     }
 
@@ -227,7 +239,7 @@ router.get('/unsubscribe', unsubscribeLimiter, async (req, res) => {
 
     await NotificationPreferences.findOneAndUpdate(
       { user: user._id },
-      { $set: { globalEmailUnsubscribed: true } },
+      { $set: buildGlobalUnsubscribeUpdate() },
       { upsert: true, setDefaultsOnInsert: true }
     );
     res.json({ success: true });

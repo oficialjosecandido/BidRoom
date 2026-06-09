@@ -4,15 +4,6 @@
       <h1 class="page-title">{{ 'transactions.title' | translate }}</h1>
       <p class="page-sub">{{ 'transactions.subtitle' | translate }}</p>
     </div>
-    @if (unreadTxNotifCount > 0) {
-      <div class="tx-notif-actions">
-        <span class="tx-notif-count">{{ 'transactions.unreadNotifications' | translate:{ count: unreadTxNotifCount } }}</span>
-        <button type="button" class="btn-mark-all-notifs" (click)="markAllTransactionNotificationsRead()" [disabled]="markingAllTxNotifs">
-          {{ 'transactions.markAllNotificationsRead' | translate }}
-        </button>
-        <a routerLink="/dashboard/notifications" class="tx-notif-link">{{ 'transactions.viewAllNotifications' | translate }}</a>
-      </div>
-    }
   </div>
 
   <div class="tx-filters">
@@ -63,8 +54,55 @@
         </div>
       }
 
-      @for (t of filteredTransactions; track t._id) {
-        <div class="transaction-card" [id]="'transaction-' + t._id">
+      @if (filteredTransactions.length > 0) {
+        <div class="tx-table-wrap">
+          <table class="tx-table">
+            <thead>
+              <tr>
+                <th scope="col">{{ 'transactions.table.item' | translate }}</th>
+                <th scope="col">{{ 'transactions.table.role' | translate }}</th>
+                <th scope="col">{{ 'transactions.table.status' | translate }}</th>
+                <th scope="col" class="tx-col-amount">{{ 'transactions.table.amount' | translate }}</th>
+                <th scope="col" class="tx-col-date">{{ 'transactions.table.date' | translate }}</th>
+                <th scope="col" class="tx-col-action"></th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (t of filteredTransactions; track t._id) {
+                <tr
+                  class="tx-row"
+                  [class.selected]="selectedTx?._id === t._id"
+                  (click)="selectTransaction(t)"
+                  (keydown.enter)="selectTransaction(t)"
+                  tabindex="0"
+                  role="button"
+                  [attr.aria-expanded]="selectedTx?._id === t._id">
+                  <td class="tx-cell-item">
+                    <img class="tx-thumb" [src]="getListingImage(t)" [alt]="" />
+                    <span class="tx-item-title">{{ t.listing.title }}</span>
+                  </td>
+                  <td>{{ getRoleLabel(t) }}</td>
+                  <td>
+                    <span class="tx-status-pill" [ngClass]="getTxStatusBadgeClass(t)">{{ getSimpleStatusLabel(t) }}</span>
+                  </td>
+                  <td class="tx-col-amount mono">{{ formatPrice(t.amount) }}</td>
+                  <td class="tx-col-date">{{ t.createdAt | date:'dd/MM/yyyy' }}</td>
+                  <td class="tx-col-action">
+                    <button type="button" class="tx-view-btn" (click)="selectTransaction(t); $event.stopPropagation()">
+                      {{ 'transactions.table.manage' | translate }}
+                    </button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      } @else if (transactions.length > 0) {
+        <p class="tx-filter-empty">{{ 'transactions.table.noFilterResults' | translate }}</p>
+      }
+
+      @if (selectedTx; as t) {
+        <div class="transaction-card transaction-detail-panel" [id]="'transaction-' + t._id">
           <a [routerLink]="getListingUrl(t)" class="card-main">
             <div class="card-col card-col-image">
               <img [src]="getListingImage(t)" [alt]="t.listing.title" />

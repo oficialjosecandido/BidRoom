@@ -12,6 +12,14 @@ const Block = require('../models/Block');
 
 const router = express.Router();
 
+function computeBuyerTrustTier(bidder) {
+  if (!bidder) return 1;
+  if (bidder.kycStatus === 'approved' && bidder.savedPaymentMethodId) return 3;
+  if (bidder.kycStatus === 'approved') return 2;
+  if (bidder.emailVerified) return 1;
+  return 0;
+}
+
 // GET /api/bids/listing/:listingId - Get all bids for a listing
 router.get('/listing/:listingId', optionalAuth, async (req, res) => {
   try {
@@ -20,7 +28,7 @@ router.get('/listing/:listingId', optionalAuth, async (req, res) => {
     const sortOrder = sort === 'asc' ? 1 : -1;
 
     const bids = await Bid.find({ listing: req.params.listingId })
-      .populate('bidder', 'firstName lastName email emailVerified hasDeposit')
+      .populate('bidder', 'firstName lastName emailVerified kycStatus savedPaymentMethodId reputationScore')
       .sort({ createdAt: sortOrder })
       .lean();
 
@@ -50,7 +58,8 @@ router.get('/listing/:listingId', optionalAuth, async (req, res) => {
         bidderEmail: isSeller ? fullEmail : null,
         isAuthenticated: !!bid.bidder,
         bidderVerified: bid.bidder ? (bid.bidder.emailVerified || false) : false,
-        bidderHasDeposit: bid.bidder ? (bid.bidder.hasDeposit || false) : false,
+        buyerTrustTier: computeBuyerTrustTier(bid.bidder),
+        reputationScore: bid.bidder?.reputationScore ?? null,
         bidderFirstName: bid.bidder ? bid.bidder.firstName : null,
         bidderLastName: bid.bidder ? bid.bidder.lastName : null,
         buyerScore: scores ? scores.buyerScore : null,
@@ -471,18 +480,11 @@ router.post('/', optionalAuth, requireActiveAccountIfAuthenticated, requireNoDis
       }
     }
     
-    // Check if reserve price is met (seller must sell if met or exceeded)
-    let reserveMet = false;
-    if (listing.reservePrice && amount >= listing.reservePrice) {
-      reserveMet = true;
-      // Reserve price is met - seller is committed to sell
-    }
-
     await listing.save();
 
     // Populate bid for response
     const populatedBid = await Bid.findById(savedBid._id)
-      .populate('bidder', 'firstName lastName email emailVerified hasDeposit')
+      .populate('bidder', 'firstName lastName emailVerified kycStatus savedPaymentMethodId reputationScore')
       .lean();
 
     // Send first bid notification (non-blocking, don't fail if email fails)
@@ -593,7 +595,8 @@ router.post('/', optionalAuth, requireActiveAccountIfAuthenticated, requireNoDis
       // Add verification and deposit info for authenticated bidders
       isAuthenticated: !!populatedBid.bidder,
       bidderVerified: populatedBid.bidder ? (populatedBid.bidder.emailVerified || false) : false,
-      bidderHasDeposit: populatedBid.bidder ? (populatedBid.bidder.hasDeposit || false) : false,
+      buyerTrustTier: computeBuyerTrustTier(populatedBid.bidder),
+      reputationScore: populatedBid.bidder?.reputationScore ?? null,
       bidderFirstName: populatedBid.bidder ? populatedBid.bidder.firstName : null,
       bidderLastName: populatedBid.bidder ? populatedBid.bidder.lastName : null
     };

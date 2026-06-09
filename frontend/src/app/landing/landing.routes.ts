@@ -28,5 +28,9 @@ export const landingRoutes: Routes = [
   {
     path: 'terms-conditions',
     loadComponent: () => import('./components/terms-conditions/terms-conditions.component').then(m => m.TermsConditionsComponent)
+  },
+  {
+    path: 'trust',
+    loadComponent: () => import('./components/trust/trust.component').then(m => m.TrustComponent)
   }
 ];

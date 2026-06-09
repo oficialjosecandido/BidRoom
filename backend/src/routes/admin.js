@@ -1,5 +1,4 @@
 const express = require('express');
-const Stripe = require('stripe');
 const mongoose = require('mongoose');
 const { authenticateToken } = require('../middleware/auth');
 const User = require('../models/User');
@@ -23,9 +22,14 @@ const { getBlocklistItems, addBlocklistItem, removeBlocklistItem, ensureBlocklis
 const azureStorageService = require('../services/azureStorage.service');
 const { requireAdmin, ADMIN_EMAILS } = require('../utils/roles');
 
-function getStripe() {
-  const key = process.env.STRIPE_SECRET_KEY;
-  return key ? new Stripe(key) : null;
+const { getStripe } = require('../utils/stripe.util');
+
+function computeBuyerTrustTier(buyer) {
+  if (!buyer) return 1;
+  if (buyer.kycStatus === 'approved' && buyer.savedPaymentMethodId) return 3;
+  if (buyer.kycStatus === 'approved') return 2;
+  if (buyer.emailVerified) return 1;
+  return 0;
 }
 
 const router = express.Router();
@@ -704,7 +708,7 @@ router.get('/disputes/:transactionId', authenticateToken, requireAdmin, async (r
     const transaction = await Transaction.findById(req.params.transactionId)
       .populate('listing', 'title slug images description')
       .populate('seller', 'firstName lastName email')
-      .populate('buyer', 'firstName lastName email')
+      .populate('buyer', 'firstName lastName email kycStatus savedPaymentMethodId stripeCustomerId')
       .lean();
 
     if (!transaction) {
@@ -714,7 +718,11 @@ router.get('/disputes/:transactionId', authenticateToken, requireAdmin, async (r
       return res.status(400).json({ error: 'Not a dispute', message: 'This transaction does not have an open dispute.' });
     }
 
-    res.json(transaction);
+    res.json({
+      ...transaction,
+      buyerTrustTier: computeBuyerTrustTier(transaction.buyer),
+      buyerHasSavedMethod: !!(transaction.buyer?.savedPaymentMethodId),
+    });
   } catch (error) {
     console.error('Error fetching dispute:', error);
     res.status(500).json({
@@ -828,6 +836,42 @@ router.post('/disputes/:transactionId/ruling', authenticateToken, requireAdmin, 
       } catch (refundErr) {
         // Log but don't fail the ruling — admin can retry the Stripe refund manually
         console.error(`[Admin] Stripe refund failed transaction=${transaction._id}:`, refundErr.message);
+      }
+    }
+
+    // Issue Stripe charge to buyer when verdict favours the seller (Tier 3 buyers only)
+    if (verdict === 'seller_payout' || verdict === 'partial_refund') {
+      const chargeAmount = verdict === 'seller_payout'
+        ? transaction.amount
+        : transaction.amount - (resolvedRefundAmount ?? 0);
+
+      if (chargeAmount > 0) {
+        try {
+          const stripe = getStripe();
+          if (stripe) {
+            const buyerUser = await User.findById(buyerUserId).select(
+              'stripeCustomerId savedPaymentMethodId savedPaymentMethodLast4 email firstName'
+            );
+            if (buyerUser?.savedPaymentMethodId && buyerUser?.stripeCustomerId) {
+              const chargeIntent = await stripe.paymentIntents.create({
+                amount: Math.round(chargeAmount * 100),
+                currency: 'eur',
+                customer: buyerUser.stripeCustomerId,
+                payment_method: buyerUser.savedPaymentMethodId,
+                off_session: true,
+                confirm: true,
+                description: `BidRoom dispute compensation — transaction ${transaction._id}`,
+                metadata: { transactionId: transaction._id.toString(), disputeVerdict: verdict, sellerUserId, buyerUserId },
+              });
+              await Transaction.findByIdAndUpdate(transaction._id, { $set: { disputeCompensationChargeId: chargeIntent.id } }, { runValidators: false });
+              console.log(`[Admin Ruling] ✅ Buyer compensation charge created chargeId=${chargeIntent.id} amount=${chargeAmount} transaction=${transaction._id}`);
+            } else {
+              console.warn(`[Admin Ruling] ⚠️ Verdict=${verdict} but buyer has no saved payment method. Manual compensation required. transaction=${transaction._id} buyer=${buyerUserId}`);
+            }
+          }
+        } catch (chargeErr) {
+          console.error(`[Admin Ruling] ❌ Buyer compensation charge FAILED transaction=${transaction._id}:`, chargeErr.message);
+        }
       }
     }
 

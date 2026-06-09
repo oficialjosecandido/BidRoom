@@ -32,7 +32,12 @@
         <span>{{ 'dashboard.sidebar.home' | translate }}</span>
       </a>
 
-      <a routerLink="/dashboard/buyer" routerLinkActive="active" class="nav-item" [queryParams]="{ tab: 'transactions' }">
+      <a routerLink="/listing/list" routerLinkActive="active" class="nav-item">
+        <span class="nav-ico">🔍</span>
+        <span>{{ 'dashboard.sidebar.browseAuctions' | translate }}</span>
+      </a>
+
+      <a routerLink="/dashboard/transactions" routerLinkActive="active" class="nav-item">
         <span class="nav-ico">↔</span>
         <span>{{ 'dashboard.sidebar.transactions' | translate }}</span>
         @if (pendingTransactions > 0) {
@@ -50,12 +55,17 @@
 
       <div class="nav-section">{{ 'dashboard.sidebar.activity' | translate }}</div>
 
-      <a routerLink="/dashboard/buyer" routerLinkActive="active" class="nav-item" [queryParams]="{ tab: 'bets' }">
+      <a routerLink="/dashboard/my-bets" routerLinkActive="active" class="nav-item">
         <span class="nav-ico">🔨</span>
         <span>{{ 'dashboard.sidebar.myBids' | translate }}</span>
       </a>
 
-      <a routerLink="/dashboard/buyer" routerLinkActive="active" class="nav-item" [queryParams]="{ tab: 'watchlist' }">
+      <a routerLink="/dashboard/seller" routerLinkActive="active" class="nav-item">
+        <span class="nav-ico">📋</span>
+        <span>{{ 'dashboard.sidebar.myListings' | translate }}</span>
+      </a>
+
+      <a routerLink="/dashboard/buyer" routerLinkActive="active" class="nav-item">
         <span class="nav-ico">♡</span>
         <span>{{ 'dashboard.sidebar.watchlist' | translate }}</span>
       </a>
@@ -65,16 +75,9 @@
         <span>{{ 'dashboard.sidebar.following' | translate }}</span>
       </a>
 
-      <div class="nav-section">{{ 'dashboard.sidebar.listings' | translate }}</div>
-
-      <a routerLink="/dashboard/seller" routerLinkActive="active" class="nav-item">
-        <span class="nav-ico">📋</span>
-        <span>{{ 'dashboard.sidebar.myListings' | translate }}</span>
-      </a>
-
-      <a routerLink="/dashboard/analytics" routerLinkActive="active" class="nav-item">
-        <span class="nav-ico">📈</span>
-        <span>{{ 'dashboard.seller.analytics.title' | translate }}</span>
+      <a routerLink="/dashboard/disputes" routerLinkActive="active" class="nav-item">
+        <span class="nav-ico">⚖</span>
+        <span>{{ 'dashboard.sidebar.disputes' | translate }}</span>
       </a>
 
       <div class="nav-section">{{ 'dashboard.sidebar.account' | translate }}</div>
@@ -104,6 +107,21 @@
       <router-outlet></router-outlet>
     </main>
 
+  </div>
+
+  <div class="ft-legal-bar">
+    <div class="ft-wrap">
+      <div class="ft-legal-inner">
+        <span class="ft-copy">{{ 'footer.copyright' | translate }}</span>
+        <div class="ft-legal-links">
+          <a routerLink="/landing/terms-conditions" class="ft-legal-link">{{ 'footer.termsShort' | translate }}</a>
+          <a routerLink="/landing/privacy-policy" class="ft-legal-link">{{ 'footer.privacyShort' | translate }}</a>
+          <a routerLink="/landing/cookies" class="ft-legal-link">{{ 'footer.cookies' | translate }}</a>
+          <a href="https://www.livroreclamacoes.pt" target="_blank" rel="noopener noreferrer" class="ft-legal-link ft-ral-link">{{ 'footer.complaintsBook' | translate }}</a>
+          <a href="https://www.consumidor.gov.pt" target="_blank" rel="noopener noreferrer" class="ft-legal-link">{{ 'footer.ral' | translate }}</a>
+        </div>
+      </div>
+    </div>
   </div>
 
 </div>

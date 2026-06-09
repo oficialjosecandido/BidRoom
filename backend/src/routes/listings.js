@@ -1094,7 +1094,6 @@ router.post('/', authenticateToken, requireActiveAccount, requireNoDisputeRestri
       listingFormat,
       duration,
       startingPrice,
-      reservePrice,
       buyNowPrice,
       minimumOfferPrice,
       allowPrivateRoom,
@@ -1136,7 +1135,7 @@ router.post('/', authenticateToken, requireActiveAccount, requireNoDisputeRestri
       return res.status(400).json({ error: 'Listing duration is required' });
     }
     // Normalize duration: frontend may send hours (number) or label (string)
-    const validSlots = ['5 minutes', '1 hour', '2 hours', '7 hours', '24 hours', '3 days', '7 days', '10 days', '15 days'];
+    const validSlots = ['5 minutes', '1 hour', '2 hours', '7 hours', '24 hours', '3 days', '7 days', '10 days', '15 days', '30 days'];
     let durationSlot = duration;
     if (typeof duration === 'number') {
       // Map legacy hours to slot: 5min≈0.083, 1h=1, 2h=2, 7h=7, 24h=24, 3d=72, 7d=168, 10d=240, 15d=360
@@ -1182,13 +1181,6 @@ router.post('/', authenticateToken, requireActiveAccount, requireNoDisputeRestri
     if (isAuction) {
       if (!startingPrice || startingPrice <= 0) {
         return res.status(400).json({ error: 'Starting bid is required for auction format' });
-      }
-      if (reservePrice != null && reservePrice !== '' && parseFloat(reservePrice) > 0) {
-        const startNum = parseFloat(startingPrice);
-        const reserveNum = parseFloat(reservePrice);
-        if (reserveNum < startNum) {
-          return res.status(400).json({ error: 'Reserve price must be at least the starting bid' });
-        }
       }
       if (buyNowPrice && buyNowPrice <= startingPrice) {
         return res.status(400).json({ error: 'Buy Now price must be higher than Starting Bid' });
@@ -1306,9 +1298,6 @@ router.post('/', authenticateToken, requireActiveAccount, requireNoDisputeRestri
       durationSlot,
       startingPrice: isAuction ? parseFloat(startingPrice) : 0,
       currentPrice: isAuction ? parseFloat(startingPrice) : 0,
-      reservePrice: isAuction
-        ? (reservePrice && parseFloat(reservePrice) > 0 ? parseFloat(reservePrice) : undefined)
-        : (reservePrice ? parseFloat(reservePrice) : undefined),
       buyNowPrice: buyNowPrice ? parseFloat(buyNowPrice) : undefined,
       minimumOfferPrice: minimumOfferPrice ? parseFloat(minimumOfferPrice) : undefined,
       allowPrivateRoom: allowPrivateRoom === true || allowPrivateRoom === 'true',
@@ -1355,7 +1344,8 @@ router.post('/', authenticateToken, requireActiveAccount, requireNoDisputeRestri
       '3 days': 3 * 24 * 60 * 60 * 1000,
       '7 days': 7 * 24 * 60 * 60 * 1000,
       '10 days': 10 * 24 * 60 * 60 * 1000,
-      '15 days': 15 * 24 * 60 * 60 * 1000
+      '15 days': 15 * 24 * 60 * 60 * 1000,
+      '30 days': 30 * 24 * 60 * 60 * 1000,
     };
     const durationMs = durations[durationSlot] || durations['7 days'];
     listingData.startDate = new Date();
@@ -1462,7 +1452,7 @@ router.post('/', authenticateToken, requireActiveAccount, requireNoDisputeRestri
 const CRITICAL_FIELDS = new Set([
   'title', 'category', 'subCategory', 'startingPrice', 'currentPrice',
   'auctionFormat', 'durationSlot', 'endDate', 'buyNowPrice',
-  'reservePrice', 'minimumOfferPrice', 'allowPrivateRoom'
+  'minimumOfferPrice', 'allowPrivateRoom'
 ]);
 
 // PATCH /api/listings/:id - Edit a listing (state-based edit locks)
@@ -1900,16 +1890,19 @@ router.post('/:id/reopen', authenticateToken, requireActiveAccount, async (req, 
  * POST /api/listings/:id/relist
  * One-click relist for any unsold auction (no bids, reserve not met, or non-payment).
  * Creates a NEW listing preserving title/description/images; seller can override price/duration.
- * Body (all optional): { startingPrice, reservePrice, durationSlot, autoRelist }
+ * Body (all optional): { startingPrice, durationSlot, autoRelist }
  */
 const RELIST_DURATION_MS = {
   '5 minutes': 5 * 60 * 1000,
-  '1 hour': 60 * 60 * 1000,
-  '2 hours': 2 * 60 * 60 * 1000,
-  '7 hours': 7 * 60 * 60 * 1000,
-  '24 hours': 24 * 60 * 60 * 1000,
-  '3 days': 3 * 24 * 60 * 60 * 1000,
-  '7 days': 7 * 24 * 60 * 60 * 1000,
+  '1 hour':    60 * 60 * 1000,
+  '2 hours':   2 * 60 * 60 * 1000,
+  '7 hours':   7 * 60 * 60 * 1000,
+  '24 hours':  24 * 60 * 60 * 1000,
+  '3 days':    3  * 24 * 60 * 60 * 1000,
+  '7 days':    7  * 24 * 60 * 60 * 1000,
+  '10 days':   10 * 24 * 60 * 60 * 1000,
+  '15 days':   15 * 24 * 60 * 60 * 1000,
+  '30 days':   30 * 24 * 60 * 60 * 1000,
 };
 
 router.post('/:id/relist', authenticateToken, requireActiveAccount, async (req, res) => {
@@ -1934,16 +1927,12 @@ router.post('/:id/relist', authenticateToken, requireActiveAccount, async (req, 
       return res.status(409).json({ error: 'This listing has already been relisted', message: 'Each ended listing can only be relisted once' });
     }
 
-    const { startingPrice, reservePrice, durationSlot, autoRelist } = req.body;
+    const { startingPrice, durationSlot, autoRelist } = req.body;
 
     const newStartingPrice = startingPrice != null ? parseFloat(startingPrice) : listing.startingPrice;
     if (isNaN(newStartingPrice) || newStartingPrice < 0) {
       return res.status(400).json({ error: 'Invalid starting price' });
     }
-
-    const newReservePrice = reservePrice != null
-      ? (parseFloat(reservePrice) > 0 ? parseFloat(reservePrice) : null)
-      : listing.reservePrice;
 
     const newDurationSlot = durationSlot || listing.durationSlot || '7 days';
     const durationMs = RELIST_DURATION_MS[newDurationSlot] || RELIST_DURATION_MS['7 days'];
@@ -1965,7 +1954,6 @@ router.post('/:id/relist', authenticateToken, requireActiveAccount, async (req, 
       slug,
       startingPrice: newStartingPrice,
       currentPrice: newStartingPrice,
-      reservePrice: newReservePrice,
       bidIncrement: listing.bidIncrement,
       auctionFormat: listing.auctionFormat,
       durationSlot: newDurationSlot,

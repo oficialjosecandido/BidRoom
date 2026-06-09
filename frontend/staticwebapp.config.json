@@ -10,6 +10,10 @@
   },
   "routes": [
     {
+      "route": "/api/share/*",
+      "allowedRoles": ["anonymous"]
+    },
+    {
       "route": "/index.html",
       "headers": {
         "Cache-Control": "no-cache, must-revalidate"

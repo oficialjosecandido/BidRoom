@@ -21,9 +21,12 @@
 <div class="bc">
   <a routerLink="/listing/list">{{ 'listingDetails.nav.back' | translate }}</a>
   <span>›</span>
-  <a [routerLink]="['/listing/list']" [queryParams]="{category: listing.category}">{{ listing.category }}</a>
+  <a [routerLink]="['/listing/list']" [queryParams]="{category: listing.category}">{{ categoryLabel(listing.category) }}</a>
   <span>›</span>
   <strong>{{ listing.title }}</strong>
+  <button class="bc-share" (click)="shareListing()" [attr.title]="linkCopied ? ('listingDetails.share.linkCopiedTitle' | translate) : ('listingDetails.share.shareTitle' | translate)">
+    @if (linkCopied) { ✓ {{ 'listingDetails.share.linkCopied' | translate }} } @else { ↗ {{ 'listingDetails.share.shareTitle' | translate }} }
+  </button>
 </div>
 
 <!-- PENDING REVIEW BANNER (seller only) -->
@@ -57,9 +60,19 @@
           @else { {{ 'listingDetails.formatPill.auction' | translate }} }
         </div>
         @if (!isOwnListing) {
-          <button class="wishlist-btn" (click)="addToWatchlist()" [disabled]="watchlistLoading"
-            [title]="inWatchlist ? ('listingDetails.actions.removeFromWatchlist' | translate) : ('listingDetails.actions.addToWatchlist' | translate)">
-            {{ inWatchlist ? '♥' : '♡' }}
+          <button
+            class="wishlist-btn"
+            [class.saved]="inWatchlist"
+            (click)="addToWatchlist()"
+            [disabled]="watchlistLoading"
+            [attr.aria-label]="inWatchlist ? ('listingDetails.actions.removeFromWatchlist' | translate) : ('listingDetails.actions.addToWatchlist' | translate)"
+            [attr.aria-pressed]="inWatchlist">
+            <svg class="wishlist-btn-icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path
+                class="wishlist-btn-path"
+                d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"
+              />
+            </svg>
           </button>
         }
       </div>
@@ -77,8 +90,8 @@
     <!-- INFO -->
     <div class="info">
       <div class="info-cat">
-        {{ listing.category }}
-        @if (listing.subCategory) { · {{ listing.subCategory }} }
+        {{ categoryLabel(listing.category) }}
+        @if (listing.subCategory) { · {{ subCategoryLabel(listing.subCategory) }} }
         @if (listing.locationCity) { · {{ listing.locationCity }} }
       </div>
       <h1 class="info-title">{{ listing.title }}</h1>
@@ -184,7 +197,11 @@
                         @if (bid.bidderFirstName && bid.bidderLastName) { {{ bid.bidderFirstName }} {{ bid.bidderLastName }} }
                         @else { {{ bid.bidderName || ('listingDetails.bidHistory.anonymous' | translate) }} }
                       </span>
-                      @if (bid.isAuthenticated) { <span class="chip c-ver">{{ 'listingDetails.bidHistory.verified' | translate }}</span> }
+                      @if (bid.isAuthenticated) {
+                        <span class="trust-badge" [ngClass]="getTrustTierInfo(bid.buyerTrustTier ?? 1).cssClass" [title]="getTrustTierInfo(bid.buyerTrustTier ?? 1).sellerNote">
+                          {{ getTrustTierInfo(bid.buyerTrustTier ?? 1).icon }} {{ getTrustTierInfo(bid.buyerTrustTier ?? 1).labelPt }}
+                        </span>
+                      }
                       @else { <span class="chip c-sub">{{ 'listingDetails.bidHistory.guestBidder' | translate }}</span> }
                       @if (isWinnerBid(bid)) { <span class="chip c-win">{{ 'listingDetails.bidsTab.winnerChip' | translate }}</span> }
                     </div>
@@ -429,8 +446,13 @@
 
     <!-- WATCHLIST -->
     @if (!isOwnListing && !listing.winner) {
-      <button class="btn-watch" (click)="addToWatchlist()" [disabled]="watchlistLoading">
-        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M7 12.5S1.5 9 1.5 4.5a2.5 2.5 0 015 0 2.5 2.5 0 015 0C11.5 9 7 12.5 7 12.5z"/></svg>
+      <button class="btn-watch" [class.saved]="inWatchlist" (click)="addToWatchlist()" [disabled]="watchlistLoading">
+        <svg class="btn-watch-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <path
+            class="btn-watch-path"
+            d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"
+          />
+        </svg>
         {{ inWatchlist ? ('listingDetails.sidebar.inWatchlist' | translate) : ('listingDetails.actions.addToWatchlist' | translate) }}
       </button>
       @if ((listing.watchlistCount ?? 0) > 0) {
@@ -453,6 +475,17 @@
         <div class="mb-d">{{ 'listingDetails.sidebar.bidIncrement' | translate }} {{ formatPrice(listing.bidIncrement) }}</div>
       </div>
     }
+
+    <!-- SHARE -->
+    <div class="share-block">
+      <button class="share-btn" (click)="shareListing()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/>
+        </svg>
+        @if (linkCopied) { ✓ {{ 'listingDetails.share.linkCopied' | translate }} } @else { {{ 'listingDetails.share.button' | translate }} }
+      </button>
+      <p class="share-note">{{ 'listingDetails.share.note' | translate }}</p>
+    </div>
 
     <div class="sep"></div>
 
@@ -509,7 +542,12 @@
           } @else {
             <div class="ir-v">{{ formatPrice(listing.shippingCost) }}</div>
           }
-          @if (listing.handlingTime) { <div class="ir-s">{{ listing.handlingTime }} {{ 'listingDetails.shipping.workingDays' | translate }}</div> }
+          @if (listingLocation()) {
+            <div class="ir-s">{{ 'listingDetails.shipping.from' | translate }} {{ listingLocation() }}</div>
+          }
+          @if (listing.handlingTime) {
+            <div class="ir-s">{{ getHandlingTimeLabel(listing.handlingTime) }}</div>
+          }
         </div>
       </div>
       @if (listing.returnPolicy) {
@@ -704,5 +742,7 @@
     (closed)="showReportModal = null"
   ></app-report-modal>
 }
+
+<app-footer></app-footer>
 
 </div><!-- /pg -->

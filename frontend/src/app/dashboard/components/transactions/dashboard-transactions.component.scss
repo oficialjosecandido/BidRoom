@@ -16,42 +16,129 @@
 }
 .page-sub { font-size: 13.5px; font-weight: 300; color: var(--sub, #666); margin: 0; }
 
-.tx-notif-actions {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 8px;
-  flex-shrink: 0;
+/* ── Transactions table ── */
+.tx-table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--line, rgba(0, 0, 0, 0.08));
+  border-radius: 12px;
+  background: var(--bg, #fff);
+  margin-bottom: 20px;
 }
 
-.tx-notif-count {
-  font-size: 12.5px;
-  color: var(--sub, #666);
+.tx-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+
+  th {
+    text-align: left;
+    padding: 12px 14px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--sub, #666);
+    border-bottom: 1px solid var(--line, rgba(0, 0, 0, 0.08));
+    background: var(--s1, #f5f5f7);
+    white-space: nowrap;
+  }
+
+  td {
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--line, rgba(0, 0, 0, 0.06));
+    color: var(--text, #333);
+    vertical-align: middle;
+  }
+
+  tbody tr:last-child td { border-bottom: none; }
 }
 
-.btn-mark-all-notifs {
-  padding: 8px 14px;
-  border-radius: 100px;
-  font-size: 12.5px;
-  font-weight: 500;
-  font-family: inherit;
-  border: 1px solid var(--gl, rgba(201, 168, 76, 0.2));
-  background: var(--gb, rgba(201, 168, 76, 0.08));
-  color: var(--gold, #c9a84c);
+.tx-row {
   cursor: pointer;
-  transition: opacity 0.15s;
+  transition: background 0.15s;
 
-  &:hover:not(:disabled) { opacity: 0.85; }
-  &:disabled { opacity: 0.5; cursor: not-allowed; }
+  &:hover { background: var(--s1, #f5f5f7); }
+  &.selected { background: var(--gb, rgba(201, 168, 76, 0.08)); }
+
+  &:focus-visible {
+    outline: 2px solid var(--gold, #c9a84c);
+    outline-offset: -2px;
+  }
 }
 
-.tx-notif-link {
-  font-size: 12px;
-  color: var(--sub, #666);
-  text-decoration: underline;
-  text-underline-offset: 2px;
+.tx-cell-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 180px;
+  max-width: 320px;
+}
 
-  &:hover { color: var(--gold, #c9a84c); }
+.tx-thumb {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  object-fit: cover;
+  flex-shrink: 0;
+  background: var(--s2, #eee);
+}
+
+.tx-item-title {
+  font-weight: 500;
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.tx-col-amount { white-space: nowrap; }
+.tx-col-date { white-space: nowrap; color: var(--sub, #666); }
+.tx-col-action { width: 1%; white-space: nowrap; }
+
+.mono { font-variant-numeric: tabular-nums; }
+
+.tx-status-pill {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 100px;
+  font-size: 11px;
+  font-weight: 500;
+
+  &.tbs-payment { background: rgba(234, 179, 8, 0.15); color: #a16207; }
+  &.tbs-shipping { background: rgba(59, 130, 246, 0.12); color: #1d4ed8; }
+  &.tbs-delivered { background: rgba(34, 197, 94, 0.12); color: #15803d; }
+  &.tbs-completed { background: var(--s2, #eee); color: var(--sub, #666); }
+  &.tbs-dispute { background: rgba(239, 68, 68, 0.12); color: #b91c1c; }
+}
+
+.tx-view-btn {
+  padding: 5px 12px;
+  border-radius: 100px;
+  border: 1px solid var(--line, rgba(0, 0, 0, 0.1));
+  background: none;
+  font-size: 12px;
+  font-family: inherit;
+  color: var(--sub, #666);
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+
+  &:hover {
+    color: var(--gold, #c9a84c);
+    border-color: var(--gl, rgba(201, 168, 76, 0.3));
+  }
+}
+
+.tx-filter-empty {
+  text-align: center;
+  padding: 24px;
+  color: var(--sub, #666);
+  font-size: 14px;
+}
+
+.transaction-detail-panel {
+  margin-top: 8px;
 }
 
 /* ── Filter pills ── */

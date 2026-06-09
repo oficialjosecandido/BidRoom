@@ -26,12 +26,6 @@
     <button class="tab-btn" [class.active]="activeTab === 'analytics'" (click)="setTab('analytics')">
       <span class="tab-icon">📊</span> {{ 'dashboard.seller.tabs.analytics' | translate }}
     </button>
-    <button class="tab-btn" [class.active]="activeTab === 'transactions'" (click)="setTab('transactions')">
-      <span class="tab-icon">💳</span> {{ 'dashboard.seller.tabs.transactions' | translate }}
-      @if (pendingTransactions > 0) {
-        <span class="tab-badge">{{ pendingTransactions > 99 ? '99+' : pendingTransactions }}</span>
-      }
-    </button>
     <button class="tab-btn" [class.active]="activeTab === 'disputes'" (click)="setTab('disputes')">
       <span class="tab-icon">⚖️</span> {{ 'dashboard.seller.tabs.disputes' | translate }}
     </button>
@@ -43,9 +37,6 @@
     }
     @if (activeTab === 'analytics') {
       <app-seller-analytics></app-seller-analytics>
-    }
-    @if (activeTab === 'transactions') {
-      <app-dashboard-transactions></app-dashboard-transactions>
     }
     @if (activeTab === 'disputes') {
       <app-dashboard-disputes></app-dashboard-disputes>

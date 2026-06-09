@@ -388,7 +388,6 @@ export class AddListing implements OnInit, OnDestroy {
       locationCountry: ['PT', Validators.required],
       duration: ['7 days', Validators.required],
       startingBid: [null],
-      reservePrice: [null],
       buyNowPrice: [null],
       minimumAcceptPrice: [null],
       allowPrivateRoom: [false, Validators.required],
@@ -592,7 +591,7 @@ export class AddListing implements OnInit, OnDestroy {
       const keys = [
         'title', 'category', 'subCategory', 'listingFormat', 'itemMode', 'quantity', 'condition', 'description',
         'locationCity', 'locationRegion', 'locationCountry', 'duration', 'startingBid',
-        'reservePrice', 'buyNowPrice', 'minimumAcceptPrice', 'allowPrivateRoom',
+        'buyNowPrice', 'minimumAcceptPrice', 'allowPrivateRoom',
         'shippingOption', 'flatRateShipping', 'packageSize', 'shippingOriginPostalCode',
         'shippingOriginCity', 'shippingOriginCountry', 'returnPolicy', 'sellerDeclaration'
       ];
@@ -669,25 +668,20 @@ export class AddListing implements OnInit, OnDestroy {
 
   updateConditionalValidators(format: string): void {
     const startingBidControl        = this.listingForm.get('startingBid');
-    const reservePriceControl       = this.listingForm.get('reservePrice');
     const buyNowPriceControl        = this.listingForm.get('buyNowPrice');
     const minimumAcceptPriceControl = this.listingForm.get('minimumAcceptPrice');
 
     if (format === 'auction') {
       startingBidControl?.setValidators([Validators.required, Validators.min(0.01)]);
-      reservePriceControl?.clearValidators();
-      reservePriceControl?.setValue(null);
       buyNowPriceControl?.setValidators([Validators.min(0.01)]);
       minimumAcceptPriceControl?.clearValidators();
     } else if (format === 'best-offer') {
       startingBidControl?.clearValidators();
-      reservePriceControl?.clearValidators();
       buyNowPriceControl?.clearValidators();
       minimumAcceptPriceControl?.setValidators([]);
     }
 
     startingBidControl?.updateValueAndValidity();
-    reservePriceControl?.updateValueAndValidity();
     buyNowPriceControl?.updateValueAndValidity();
     minimumAcceptPriceControl?.updateValueAndValidity();
   }
@@ -1038,7 +1032,6 @@ export class AddListing implements OnInit, OnDestroy {
       listingFormat: formValue.listingFormat,
       duration: formValue.duration,
       startingPrice: formValue.startingBid || null,
-      reservePrice: formValue.listingFormat === 'auction' ? null : (formValue.reservePrice || null),
       buyNowPrice: formValue.buyNowPrice || null,
       minimumOfferPrice: formValue.minimumAcceptPrice || null,
       allowPrivateRoom: formValue.allowPrivateRoom,
@@ -1209,7 +1202,6 @@ export class AddListing implements OnInit, OnDestroy {
       locationCountry: 'addListing.originCountry',
       duration: 'addListing.duration',
       startingBid: 'addListing.startingBid',
-      reservePrice: 'addListing.reservePrice',
       shippingOption: 'addListing.shippingOptions',
       returnPolicy: 'addListing.returnPolicy',
       sellerDeclaration: 'addListing.sellerDeclaration',

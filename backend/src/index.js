@@ -45,6 +45,7 @@ const blockRoutes = require('./routes/blocks');
 const categoryFollowRoutes = require('./routes/category-follows');
 const damageClaimsRoutes = require('./routes/damageClaims');
 const { router: kycRoutes, kycWebhookHandler } = require('./routes/kyc');
+const shareRoutes = require('./routes/share');
 
 // Import services
 const auctionEndScheduler = require('./services/auctionEndScheduler');
@@ -263,6 +264,11 @@ app.use('/api/blocks', generalLimiter, blockRoutes);
 app.use('/api/category-follows', generalLimiter, categoryFollowRoutes);
 app.use('/api/damage-claims', generalLimiter, damageClaimsRoutes);
 app.use('/api/kyc', generalLimiter, kycRoutes);
+
+// Share pages — no auth, no rate limit beyond express defaults
+// URL: /share/listing/:slug → OG HTML page for social bots, JS redirect for browsers
+// URL: /share/og-default.png → BidRoom brand PNG for OG image fallback
+app.use('/share', shareRoutes);
 
 app.get('/', (req, res) => {
   res.json({

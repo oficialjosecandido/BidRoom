@@ -3,6 +3,89 @@
   max-width: 100%;
 }
 
+.analytics-section {
+  margin-top: 8px;
+}
+
+/* ── Reputation cards (inline with stat cards) ── */
+.home-rep-card {
+  background: var(--s1);
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  padding: 18px 20px;
+  min-width: 0;
+}
+
+.home-rep-card-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+  margin-bottom: 12px;
+}
+
+.rep-score {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0;
+  margin: 0;
+}
+
+.rep-number {
+  font-family: 'DM Mono', monospace;
+  font-size: 28px;
+  font-weight: 500;
+  line-height: 1;
+  flex-shrink: 0;
+
+  &--buyer { color: var(--gold); }
+  &--seller { color: var(--green, #4a9b6f); }
+}
+
+.rep-bar-wrap { flex: 1; }
+
+.rep-bar-track {
+  height: 5px;
+  background: var(--s2);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: 6px;
+}
+
+.rep-bar-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.6s cubic-bezier(.25, .46, .45, .94);
+
+  &--buyer {
+    background: linear-gradient(90deg, var(--gold) 0%, var(--green, #4a9b6f) 100%);
+  }
+
+  &--seller {
+    background: var(--green, #4a9b6f);
+  }
+}
+
+.rep-labels {
+  display: flex;
+  justify-content: space-between;
+}
+
+.rep-label-text {
+  font-size: 11px;
+  font-weight: 300;
+  color: var(--sub);
+
+  &:last-child { text-align: right; }
+}
+
+.rep-empty {
+  font-size: 13px;
+  font-weight: 300;
+  color: var(--sub);
+  margin: 0;
+}
+
 /* ── Page header (mockup) ── */
 .page-header {
   display: flex;

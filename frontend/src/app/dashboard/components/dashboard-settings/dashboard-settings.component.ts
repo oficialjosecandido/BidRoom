@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
@@ -7,6 +7,9 @@ import { CustomerService, SellerCompliance } from '../../../shared/services/cust
 import { ThemePreference, ThemeService } from '../../../shared/services/theme.service';
 import { StripeConnectService, ConnectAccountStatus, OnboardingFormData } from '../../../shared/services/stripe-connect.service';
 import { NotificationPreferencesService, NotificationPreferences, NOTIFICATION_EVENT_KEYS, DEFAULT_CHANNEL_PREF } from '../../../shared/services/notification-preferences.service';
+import { BuyerPaymentService, PaymentMethodsResponse, SavedPaymentMethod } from '../../../shared/services/buyer-payment.service';
+import { ListingsService } from '../../../shared/services/listings.service';
+import { loadStripe, Stripe, StripeElements, StripeCardElement } from '@stripe/stripe-js';
 import { Observable } from 'rxjs';
 
 @Component({
@@ -16,13 +19,17 @@ import { Observable } from 'rxjs';
   templateUrl: './dashboard-settings.component.html',
   styleUrls: ['./dashboard-settings.component.scss']
 })
-export class DashboardSettingsComponent implements OnInit {
+export class DashboardSettingsComponent implements OnInit, OnDestroy {
   private authService = inject(AuthService);
   private customerService = inject(CustomerService);
   private translate = inject(TranslateService);
   readonly theme = inject(ThemeService);
   private stripeConnect = inject(StripeConnectService);
   private notifPrefsService = inject(NotificationPreferencesService);
+  private buyerPaymentService = inject(BuyerPaymentService);
+  private listingsService = inject(ListingsService);
+
+  private sellerListingCount = 0;
 
   /** Display scale for buyer/seller review averages (matches 1–10 transaction reviews). */
   readonly reviewScoreMax = 10;
@@ -43,7 +50,7 @@ export class DashboardSettingsComponent implements OnInit {
 
   get isStripeTestMode(): boolean { return this.stripeConnect.isTestMode; }
 
-  // Onboarding form fields
+  // Seller payout onboarding (BidRoom collects KYC via API)
   dobDay: number | null = null;
   dobMonth: number | null = null;
   dobYear: number | null = null;
@@ -100,6 +107,21 @@ export class DashboardSettingsComponent implements OnInit {
   dsaError: string | null = null;
   dsaSaved = false;
 
+  // Payment method (Buyer Trust Tier 3)
+  paymentMethods: SavedPaymentMethod[] = [];
+  paymentTrustTier = 0;
+  loadingPaymentMethod = true;
+  settingDefaultId: string | null = null;
+  removingPaymentId: string | null = null;
+  removeModalMethod: SavedPaymentMethod | null = null;
+  removeModalError: string | null = null;
+  showAddCard = false;
+  savingCard = false;
+  cardError: string | null = null;
+  private stripe: Stripe | null = null;
+  private stripeElements: StripeElements | null = null;
+  private cardElement: StripeCardElement | null = null;
+
   readonly notifEventKeys = NOTIFICATION_EVENT_KEYS;
   notifPrefs: NotificationPreferences | null = null;
   notifPrefsLoading = false;
@@ -144,6 +166,172 @@ export class DashboardSettingsComponent implements OnInit {
 
     this.loadConnectStatus();
     this.loadNotifPrefs();
+    this.loadPaymentMethod();
+    this.loadSellerListingCount();
+  }
+
+  /** Has listed at least one item (active or ended), same rule as dashboard home. */
+  get isSellerUser(): boolean {
+    return this.sellerListingCount > 0;
+  }
+
+  private loadSellerListingCount(): void {
+    this.listingsService.getMyListings().subscribe({
+      next: (response) => {
+        const all = response.listings ?? [];
+        const now = new Date();
+        const active = all.filter(
+          (l) => l.status === 'active' && new Date(l.endDate) > now
+        ).length;
+        const ended = all.filter(
+          (l) => l.status === 'ended' || l.status === 'cancelled' || (l.status === 'active' && new Date(l.endDate) <= now)
+        ).length;
+        this.sellerListingCount = active + ended;
+      }
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.cardElement?.destroy();
+  }
+
+  get hasPaymentMethods(): boolean {
+    return this.paymentMethods.length > 0;
+  }
+
+  loadPaymentMethod(): void {
+    this.buyerPaymentService.getPaymentMethods().subscribe({
+      next: (res) => {
+        this.applyPaymentMethods(res);
+        this.loadingPaymentMethod = false;
+      },
+      error: () => { this.loadingPaymentMethod = false; }
+    });
+  }
+
+  private applyPaymentMethods(res: PaymentMethodsResponse): void {
+    this.paymentMethods = res.methods ?? [];
+    this.paymentTrustTier = res.trustTier ?? 0;
+  }
+
+  canRemoveMethod(method: SavedPaymentMethod): boolean {
+    return !method.isDefault && this.paymentMethods.length > 1;
+  }
+
+  toggleAddCard(): void {
+    this.showAddCard = !this.showAddCard;
+    if (this.showAddCard) {
+      this.initStripeElements();
+    } else {
+      this.cardElement?.destroy();
+      this.cardElement = null;
+      this.cardError = null;
+    }
+  }
+
+  async initStripeElements(): Promise<void> {
+    const pk = (window as any).APP_CONFIG?.STRIPE_PUBLISHABLE_KEY;
+    if (!pk) return;
+    this.stripe = await loadStripe(pk);
+    this.stripeElements = this.stripe!.elements();
+    this.cardElement = this.stripeElements.create('card', {
+      hidePostalCode: true,
+      style: { base: { fontFamily: 'DM Sans, sans-serif', fontSize: '14px', color: 'var(--text)' } }
+    });
+    setTimeout(() => this.cardElement?.mount('#card-element'), 0);
+  }
+
+  async saveCard(): Promise<void> {
+    if (!this.stripe || !this.cardElement) return;
+    this.savingCard = true;
+    this.cardError = null;
+
+    this.buyerPaymentService.createSetupIntent().subscribe({
+      next: async (res) => {
+        const { error, setupIntent } = await this.stripe!.confirmCardSetup(res.clientSecret, {
+          payment_method: { card: this.cardElement! }
+        });
+        if (error) {
+          this.cardError = error.message ?? this.translate.instant('dashboard.settings.paymentMethod.saveError');
+          this.savingCard = false;
+          return;
+        }
+        if (!setupIntent?.id) {
+          this.cardError = this.translate.instant('dashboard.settings.paymentMethod.saveError');
+          this.savingCard = false;
+          return;
+        }
+        this.buyerPaymentService.confirmPaymentMethod(setupIntent.id).subscribe({
+          next: (saved) => {
+            this.applyPaymentMethods(saved);
+            this.showAddCard = false;
+            this.savingCard = false;
+            this.cardElement?.destroy();
+            this.cardElement = null;
+            this.cardError = null;
+          },
+          error: () => {
+            this.cardError = this.translate.instant('dashboard.settings.paymentMethod.saveError');
+            this.savingCard = false;
+          }
+        });
+      },
+      error: () => {
+        this.cardError = this.translate.instant('dashboard.settings.paymentMethod.setupError');
+        this.savingCard = false;
+      }
+    });
+  }
+
+  setDefaultCard(method: SavedPaymentMethod): void {
+    if (method.isDefault || this.settingDefaultId) return;
+    this.settingDefaultId = method.id;
+    this.buyerPaymentService.setDefaultPaymentMethod(method.id).subscribe({
+      next: (res) => {
+        this.applyPaymentMethods(res);
+        this.settingDefaultId = null;
+      },
+      error: () => { this.settingDefaultId = null; }
+    });
+  }
+
+  openRemoveModal(method: SavedPaymentMethod): void {
+    if (!this.canRemoveMethod(method)) return;
+    this.removeModalError = null;
+    this.removeModalMethod = method;
+  }
+
+  closeRemoveModal(): void {
+    if (this.removingPaymentId) return;
+    this.removeModalMethod = null;
+    this.removeModalError = null;
+  }
+
+  confirmRemoveCard(): void {
+    const method = this.removeModalMethod;
+    if (!method || !this.canRemoveMethod(method) || this.removingPaymentId) return;
+
+    this.removingPaymentId = method.id;
+    this.removeModalError = null;
+    this.buyerPaymentService.deletePaymentMethod(method.id).subscribe({
+      next: (res) => {
+        this.applyPaymentMethods(res);
+        this.removingPaymentId = null;
+        this.removeModalMethod = null;
+      },
+      error: (err) => {
+        this.removingPaymentId = null;
+        const code = err.error?.code;
+        const key = code === 'DEFAULT_PAYMENT_METHOD'
+          ? 'dashboard.settings.paymentMethod.cannotRemoveDefault'
+          : code === 'ONLY_PAYMENT_METHOD'
+            ? 'dashboard.settings.paymentMethod.cannotRemoveOnly'
+            : null;
+        this.removeModalError = key
+          ? this.translate.instant(key)
+          : (err.error?.message ?? this.translate.instant('dashboard.settings.paymentMethod.removeError'));
+      }
+    });
   }
 
   saveLanguage(): void {
@@ -181,19 +369,19 @@ export class DashboardSettingsComponent implements OnInit {
   submitOnboarding(): void {
     this.connectError = null;
     if (!this.dobDay || !this.dobMonth || !this.dobYear) {
-      this.connectError = 'Please enter your date of birth.';
+      this.connectError = this.translate.instant('dashboard.settings.dobRequired');
       return;
     }
     if (!this.addressLine1 || !this.addressCity || !this.addressPostal || !this.addressCountry) {
-      this.connectError = 'Please fill in your full address.';
+      this.connectError = this.translate.instant('dashboard.settings.addressRequired');
       return;
     }
     if (!this.iban.trim()) {
-      this.connectError = 'Please enter your IBAN.';
+      this.connectError = this.translate.instant('dashboard.settings.ibanRequired');
       return;
     }
     if (!this.tosAccepted) {
-      this.connectError = 'You must accept the Terms of Service.';
+      this.connectError = this.translate.instant('dashboard.settings.tosRequired');
       return;
     }
 
@@ -251,11 +439,27 @@ export class DashboardSettingsComponent implements OnInit {
 
   getEventPref(key: string): { email: boolean; push: boolean; inApp: boolean } {
     if (!this.notifPrefs) return { ...DEFAULT_CHANNEL_PREF };
-    return (this.notifPrefs as any)[key] ?? { ...DEFAULT_CHANNEL_PREF };
+    const pref = (this.notifPrefs as any)[key] ?? { ...DEFAULT_CHANNEL_PREF };
+    if (this.notifPrefs.globalEmailUnsubscribed) {
+      return { ...pref, email: false, inApp: false };
+    }
+    return pref;
+  }
+
+  toggleGlobalUnsubscribe(): void {
+    if (!this.notifPrefs) return;
+    const next = !this.notifPrefs.globalEmailUnsubscribed;
+    this.notifPrefs.globalEmailUnsubscribed = next;
+    if (next) {
+      for (const key of this.notifEventKeys) {
+        const pref = (this.notifPrefs as any)[key] ?? { ...DEFAULT_CHANNEL_PREF };
+        (this.notifPrefs as any)[key] = { ...pref, email: false, inApp: false };
+      }
+    }
   }
 
   toggleEventChannel(key: string, channel: 'email' | 'push' | 'inApp'): void {
-    if (!this.notifPrefs) return;
+    if (!this.notifPrefs || this.notifPrefs.globalEmailUnsubscribed) return;
     const pref = (this.notifPrefs as any)[key] ?? { ...DEFAULT_CHANNEL_PREF };
     (this.notifPrefs as any)[key] = { ...pref, [channel]: !pref[channel] };
   }

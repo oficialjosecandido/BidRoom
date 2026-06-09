@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, OnDestroy, inject } from '@angular/core';
+import { Component, Input, OnInit, OnDestroy, HostListener, inject } from '@angular/core';
 import { AsyncPipe } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { Observable, Subscription } from 'rxjs';
@@ -49,8 +49,6 @@ export class HeaderComponent implements OnInit, OnDestroy {
       })
     );
 
-    // Join the user's personal socket room as soon as authenticated so
-    // notification badge and invitation alerts work on every page.
     this.subs.add(
       this.authService.currentUser$.subscribe(user => {
         if (user?.displayName) {
@@ -80,14 +78,12 @@ export class HeaderComponent implements OnInit, OnDestroy {
       })
     );
 
-    // Refresh badge on any in-app notification (works globally now that user room is joined here)
     this.subs.add(
       this.socketService.onNewNotification().subscribe(() => {
         this.notificationService.refreshUnreadCount();
       })
     );
 
-    // Show a time-sensitive prompt when a private room invitation arrives
     this.subs.add(
       this.socketService.onPrivateRoomInvitation().subscribe(({ listingId, listingTitle }) => {
         Swal.fire({
@@ -113,6 +109,11 @@ export class HeaderComponent implements OnInit, OnDestroy {
 
   get currentLang(): string {
     return this.translate.currentLang || 'pt';
+  }
+
+  get notifBadge(): string {
+    if (this.notifCount <= 0) return '';
+    return this.notifCount > 9 ? '9+' : String(this.notifCount);
   }
 
   readonly effectiveTheme = this.theme.effective;
@@ -155,6 +156,12 @@ export class HeaderComponent implements OnInit, OnDestroy {
     this.menuOpen = false;
   }
 
+  @HostListener('document:keydown.escape')
+  onEscape(): void {
+    this.closeMenu();
+    this.closeSearch();
+  }
+
   navigateToHome(): void {
     this.closeMenu();
     this.router.navigate(['/landing']);
@@ -165,6 +172,11 @@ export class HeaderComponent implements OnInit, OnDestroy {
     this.router.navigate(['/listing/list']);
   }
 
+  navigateToCategories(): void {
+    this.closeMenu();
+    this.router.navigate(['/listing/categories']);
+  }
+
   navigateToPrivateRooms(): void {
     this.closeMenu();
     this.router.navigate(['/landing'], { fragment: 'salas' });
@@ -173,6 +185,11 @@ export class HeaderComponent implements OnInit, OnDestroy {
   navigateToHowItWorks(): void {
     this.closeMenu();
     this.router.navigate(['/landing/how-it-works']);
+  }
+
+  navigateToTrust(): void {
+    this.closeMenu();
+    this.router.navigate(['/landing/trust']);
   }
 
   navigateToAddListing(): void {

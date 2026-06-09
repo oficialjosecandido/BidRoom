@@ -283,18 +283,6 @@
               <div class="field-hint">{{ 'addListing.startingBidHint' | translate }}</div>
               @if (getFieldError('startingBid')) { <div class="field-err">{{ getFieldError('startingBid') }}</div> }
             </div>
-            <div class="field">
-              <label class="field-label">
-                {{ 'addListing.reservePrice' | translate }}
-                <span class="optional-tag">{{ 'addListing.optional' | translate }}</span>
-              </label>
-              <div class="price-input-wrap">
-                <span class="price-prefix">€</span>
-                <input class="field-input price-input" type="number" formControlName="reservePrice"
-                  min="0" step="0.01" placeholder="0.00">
-              </div>
-              <div class="field-hint">{{ 'addListing.reserveHint' | translate }}</div>
-            </div>
           </div>
 
           <div class="field">

@@ -12,6 +12,7 @@ import { ReviewsService, PendingReview, ReviewTag } from '../../../shared/servic
 import { FeatureFlagsService } from '../../../shared/services/feature-flags.service';
 import { SocketService } from '../../../shared/services/socket.service';
 import { TransactionsService } from '../../../shared/services/transactions.service';
+import { SellerAnalyticsComponent } from '../seller-analytics/seller-analytics.component';
 import { Observable, Subscription } from 'rxjs';
 
 interface BidderListing extends Listing {
@@ -34,7 +35,7 @@ interface HomeStatCard {
 @Component({
   selector: 'app-dashboard-home',
   standalone: true,
-  imports: [CommonModule, RouterLink, FormsModule, TranslateModule],
+  imports: [CommonModule, RouterLink, FormsModule, TranslateModule, SellerAnalyticsComponent],
   templateUrl: './dashboard-home.component.html',
   styleUrls: ['./dashboard-home.component.scss']
 })
@@ -62,6 +63,8 @@ export class DashboardHomeComponent implements OnInit, OnDestroy {
   pendingReviews: PendingReview[] = [];
   pendingBuyerTransactions = 0;
   pendingSellerTransactions = 0;
+  completedBuyerTransactions = 0;
+  completedSellerTransactions = 0;
   isLoading = true;
   error: string | null = null;
 
@@ -101,6 +104,8 @@ export class DashboardHomeComponent implements OnInit, OnDestroy {
   balanceModalError: string | null = null;
 
   readonly minBalanceAmount = 5;
+  /** Display scale for buyer/seller review averages (matches settings). */
+  readonly reviewScoreMax = 10;
   topups: TopupRecord[] = [];
 
   readonly membershipTiers = [
@@ -156,10 +161,28 @@ export class DashboardHomeComponent implements OnInit, OnDestroy {
   }
 
   loadPendingTransactionCounts(): void {
-    this.transactionsService.getPendingCounts().subscribe({
-      next: (counts) => {
-        this.pendingBuyerTransactions = counts.buyer;
-        this.pendingSellerTransactions = counts.seller;
+    this.transactionsService.getMyTransactions().subscribe({
+      next: ({ transactions }) => {
+        const DONE = new Set(['completed', 'cancelled']);
+        let pendingBuyer = 0;
+        let pendingSeller = 0;
+        let completedBuyer = 0;
+        let completedSeller = 0;
+        for (const t of transactions) {
+          const status = t.transactionStatus ?? t.status ?? '';
+          if (status === 'completed') {
+            if (t.role === 'buyer') completedBuyer++;
+            else if (t.role === 'seller') completedSeller++;
+            continue;
+          }
+          if (DONE.has(status)) continue;
+          if (t.role === 'buyer') pendingBuyer++;
+          else if (t.role === 'seller') pendingSeller++;
+        }
+        this.pendingBuyerTransactions = pendingBuyer;
+        this.pendingSellerTransactions = pendingSeller;
+        this.completedBuyerTransactions = completedBuyer;
+        this.completedSellerTransactions = completedSeller;
       }
     });
   }
@@ -175,8 +198,22 @@ export class DashboardHomeComponent implements OnInit, OnDestroy {
     }).length;
   }
 
-  private scoreToPercent(score: number | null | undefined): number | null {
-    return score != null ? Math.round((score / 5) * 100) : null;
+  /** Has listed at least one item (active or ended). */
+  get isSellerUser(): boolean {
+    return this.activeListings.length + this.endedListings.length > 0;
+  }
+
+  /** Has completed at least one purchase as buyer. */
+  get isBuyerUser(): boolean {
+    return this.completedBuyerTransactions > 0;
+  }
+
+  get showBuyerReputation(): boolean {
+    return !this.isSellerUser || this.isBuyerUser;
+  }
+
+  get showSellerReputation(): boolean {
+    return this.isSellerUser;
   }
 
   get statCards(): HomeStatCard[] {
@@ -235,37 +272,17 @@ export class DashboardHomeComponent implements OnInit, OnDestroy {
       });
     }
 
-    const buyerRep = this.scoreToPercent(this.buyerScore);
-    if (buyerRep != null) {
-      cards.push({
-        key: 'reputationBuyer',
-        label: this.translate.instant('dashboard.home.statReputation'),
-        value: String(buyerRep),
-        sub: this.translate.instant('dashboard.home.statOutOf100'),
-        valueTone: 'green'
-      });
-    }
-
-    const sellerRep = this.scoreToPercent(this.sellerScore);
-    if (sellerRep != null && sellerRep !== buyerRep) {
-      cards.push({
-        key: 'reputationSeller',
-        label: this.translate.instant('dashboard.home.statReputation'),
-        value: String(sellerRep),
-        sub: this.translate.instant('dashboard.home.statOutOf100'),
-        valueTone: 'green'
-      });
-    }
-
     return cards;
   }
 
-  get statsGridColumns(): string {
-    const n = this.statCards.length;
+  get topRowGridColumns(): string {
+    const n = this.statCards.length
+      + (this.showBuyerReputation ? 1 : 0)
+      + (this.showSellerReputation ? 1 : 0);
     if (n <= 1) return '1fr';
     if (n === 2) return 'repeat(2, 1fr)';
     if (n === 3) return 'repeat(3, 1fr)';
-    return 'repeat(4, 1fr)';
+    return 'repeat(auto-fit, minmax(220px, 1fr))';
   }
 
   isListingWinning(listing: BidderListing): boolean {

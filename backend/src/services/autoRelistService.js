@@ -62,7 +62,6 @@ async function processAutoRelists(io = null) {
         slug,
         startingPrice: listing.startingPrice,
         currentPrice: listing.startingPrice,
-        reservePrice: listing.reservePrice,
         bidIncrement: listing.bidIncrement,
         auctionFormat: listing.auctionFormat,
         durationSlot: listing.durationSlot,

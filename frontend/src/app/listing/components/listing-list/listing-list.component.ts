@@ -281,6 +281,10 @@ export class ListingListComponent implements OnInit {
     return `addListing.categories.${catId}`;
   }
 
+  subCategoryLabelKey(sub: string): string {
+    return `addListing.subcategories.${sub}`;
+  }
+
   categoryHasSubcategories(cat: Category): boolean {
     return cat.subCategories.length > 0;
   }
@@ -502,6 +506,8 @@ export class ListingListComponent implements OnInit {
     }
     if (listing.auctionFormat === 'best-offer') {
       badges.push({ type: 'off', class: 'lb-off', label: this.translate.instant('listingList.badgeBestOffer') });
+    } else {
+      badges.push({ type: 'auc', class: 'lb-auc', label: this.translate.instant('listingList.badgeAuction') });
     }
     if (listing.allowPrivateRoom) {
       badges.push({ type: 'priv', class: 'lb-priv', label: this.translate.instant('listingList.badgePrivateRoom') });

@@ -8,6 +8,7 @@
       "categories": "Categorias",
       "privateRooms": "Salas Privadas",
       "howItWorks": "Como Funciona",
+      "trust": "Confiança",
       "faq": "FAQ",
       "contact": "Contacto"
     },
@@ -17,7 +18,8 @@
       "signIn": "Entrar",
       "startBidding": "Começar",
       "publish": "Publicar",
-      "notifications": "Notificações"
+      "notifications": "Notificações",
+      "notificationsUnread": "{{count}} notificações não lidas"
     },
     "search": {
       "placeholder": "Procurar leilões, artigos, vendedores…",
@@ -44,7 +46,7 @@
       "signIn": "Entrar"
     },
     "home": {
-      "skipHeading": "BidRoom.pt — leilões premium em Portugal. Disponível em modo claro e escuro, com referências aos azulejos portugueses no modo claro.",
+      "skipHeading": "BidRoom.pt — leilões premium. Disponível em modo claro e escuro, com referências aos azulejos no modo claro.",
       "breadcrumb": {
         "home": "Início",
         "featured": "Leilões em destaque"
@@ -57,13 +59,13 @@
       "hero": {
         "svgDarkTitle": "Ilustração decorativa modo escuro — sardinha e azulejos",
         "svgLightTitle": "Fundo decorativo de azulejos — modo claro",
-        "eyebrow": "Portugal · Leilões premium",
+        "eyebrow": "Leilões premium",
         "title1": "Leilões de",
         "title2": "alto valor,",
         "titleEm": "feitos bem.",
         "titleLine1": "Compre o",
         "titleLine2": "extraordinário.",
-        "subtitle": "A primeira plataforma portuguesa de leilões premium com salas privadas em tempo real, reputação verificada e pagamentos seguros.",
+        "subtitle": "Uma plataforma de leilões premium com salas privadas em tempo real, reputação verificada e pagamentos seguros.",
         "subtitleAlt": "Leilões em tempo real para relógios, arte e peças únicas.",
         "ctaExplore": "Explorar leilões",
         "ctaHow": "Como funciona",
@@ -170,10 +172,10 @@
         "c5t": "Moderação por IA",
         "c5b": "Azure AI analisa texto e imagens. Artigos proibidos e conteúdo impróprio bloqueados automaticamente.",
         "c6t": "Português e Inglês",
-        "c6b": "Plataforma completamente bilingue, adaptada ao mercado português com suporte integral em PT e EN."
+        "c6b": "Plataforma completamente bilingue com suporte integral em português e inglês."
       },
       "footer": {
-        "tagline": "O marketplace de leilões premium de Portugal.",
+        "tagline": "O marketplace de leilões premium.",
         "platform": "Plataforma",
         "account": "Conta",
         "legal": "Legal",
@@ -210,7 +212,7 @@
     }
   },
   "footer": {
-    "tagline": "O marketplace de leilões premium de Portugal.",
+    "tagline": "O marketplace de leilões premium.",
     "quickLinks": "Links Rápidos",
     "howItWorks": "Como funciona",
     "contact": "Contacto",
@@ -282,12 +284,12 @@
       "subtitle": "Encontre o que ama nas nossas categorias selecionadas",
       "viewAll": "Ver Todas as Categorias →",
       "electronics": {
-        "title": "Eletrónicos",
-        "desc": "Gadgets, câmeras e áudio"
+        "title": "Eletrónica",
+        "desc": "Gadgets, câmaras e áudio"
       },
       "homeGarden": {
-        "title": "Casa & Jardim",
-        "desc": "Mobiliário, decoração e mais"
+        "title": "Casa e Jardim",
+        "desc": "Mobiliário, decoração e exterior"
       },
       "art": {
         "title": "Arte",
@@ -295,11 +297,19 @@
       },
       "collectibles": {
         "title": "Colecionáveis",
-        "desc": "Selos, moedas e memorabília"
+        "desc": "Selos, moedas e memorabilia"
       },
       "jewelry": {
         "title": "Joalharia",
         "desc": "Anéis, relógios e pedras preciosas"
+      },
+      "realEstate": {
+        "title": "Imóveis",
+        "desc": "Apartamentos, moradias e terrenos"
+      },
+      "vehicles": {
+        "title": "Veículos",
+        "desc": "Carros, motas e barcos"
       }
     },
     "liveAuctions": {
@@ -462,7 +472,9 @@
       "home-garden": "Casa e Jardim",
       "art": "Arte",
       "collectibles": "Colecionáveis",
-      "jewelry": "Joalharia"
+      "jewelry": "Joalharia",
+      "real-estate": "Imóveis",
+      "vehicles": "Veículos"
     },
     "subcategories": {
       "Laptops": "Portáteis",
@@ -559,7 +571,36 @@
       "Brooches & Pins": "Broches e Alfinetes",
       "Jewelry Sets": "Conjuntos de Joalharia",
       "Loose Gemstones": "Pedras Preciosas Avulsas",
-      "Other Jewelry": "Outra Joalharia"
+      "Other Jewelry": "Outra Joalharia",
+      "Apartments": "Apartamentos",
+      "Studios": "Estúdios",
+      "Duplexes & Penthouses": "Duplex e Penthouses",
+      "Houses": "Moradias",
+      "Villas": "Vivendas",
+      "Townhouses": "Casas em Banda",
+      "Land & Plots": "Terrenos",
+      "Rural & Countryside": "Propriedades Rústicas",
+      "Commercial Property": "Imóveis Comerciais",
+      "Office Space": "Escritórios",
+      "Industrial & Warehouse": "Industrial e Armazéns",
+      "Garages & Parking": "Garagens e Estacionamento",
+      "Holiday Homes": "Casas de Férias",
+      "Other Real Estate": "Outros Imóveis",
+      "Cars": "Automóveis",
+      "Classic Cars": "Carros Clássicos",
+      "Electric & Hybrid Cars": "Carros Elétricos e Híbridos",
+      "Motorcycles": "Motociclos",
+      "Scooters & Mopeds": "Scooters e Ciclomotores",
+      "Vans & Minibuses": "Carrinhas e Minibus",
+      "Trucks & HGV": "Camiões",
+      "Boats": "Barcos",
+      "Jet Skis & Watercraft": "Jet Ski e Náutica",
+      "Sailboats": "Veleiros",
+      "Caravans & Motorhomes": "Caravanas e Autocaravanas",
+      "ATVs & Quad Bikes": "ATVs e Quads",
+      "Vehicle Parts": "Peças de Veículo",
+      "Vehicle Accessories": "Acessórios de Veículo",
+      "Other Vehicles": "Outros Veículos"
     },
     "successMessage": "Anúncio criado com sucesso!",
     "moderationTitle": "Anúncio em revisão",
@@ -573,7 +614,6 @@
     "draftError": "Não foi possível guardar o rascunho. Verifique a ligação e tente novamente.",
     "errorUploadFailed": "Falha ao carregar imagens. Tente novamente.",
     "errorStep2Description": "Por favor, complete todos os campos obrigatórios. A descrição deve ter pelo menos 50 caracteres.",
-    "reservePrice": "Preço de Reserva",
     "errors": {
       "required": "{{field}} é obrigatório",
       "tooLong": "{{field}} é muito longo",
@@ -615,7 +655,6 @@
     "offerDeadline": "Prazo para ofertas",
     "offerDeadlineHint": "Mais tempo significa mais compradores a ver o seu anúncio e mais propostas a receber.",
     "startingBidHint": "O valor mínimo para o primeiro lance. Um lance inicial competitivo atrai mais licitantes.",
-    "reserveHint": "O leilão só vincula o vencedor se este valor for atingido.",
     "durationHint": "Artigos raros ou premium tendem a gerar mais lances com 7–10 dias.",
     "formatBestOfferDesc": "Os compradores submetem propostas e você escolhe a que prefere. Defina um preço mínimo — tem total liberdade para recusar qualquer oferta abaixo desse valor.",
     "formatAuctionDesc": "Compradores fazem lances em tempo real e competem pelo seu artigo. Você define a duração e o lance inicial. O vencedor é apurado automaticamente.",
@@ -729,6 +768,7 @@
     "minPrice": "Preço mínimo",
     "badgeLive": "Ao vivo",
     "badgeClosing": "A fechar",
+    "badgeAuction": "Leilão",
     "badgeBestOffer": "Melhor Oferta",
     "badgePrivateRoom": "Sala Privada",
     "addWatchlist": "Adicionar à watchlist",
@@ -747,8 +787,9 @@
   "categories": {
     "title": "Navegar por Categoria",
     "subtitle": "Explore todas as nossas categorias e subcategorias",
-    "browseAll": "Ver todos",
-    "allListings": "Todos os Anúncios",
+    "browseAll": "Ver todos os leilões",
+    "browseCategory": "Ver categoria",
+    "subcategoryCount": "{{count}} subcategorias",
     "follow": "Seguir",
     "following": "A seguir",
     "unfollow": "Deixar de seguir"
@@ -809,11 +850,23 @@
       "statusDeclined": "Recusado"
     },
     "time": {
-      "auctionEnds": "Leilão Encerra",
-      "offerDeadline": "Prazo para Ofertas",
-      "privateRoomEnds": "Sala Privada Encerra",
-      "auctionEnded": "Leilão Encerrado",
-      "listingEnded": "Anúncio Encerrado"
+      "auctionEnds": "Leilão termina",
+      "offerDeadline": "Prazo para ofertas",
+      "privateRoomEnds": "Sala privada termina",
+      "auctionEnded": "Leilão encerrado",
+      "listingEnded": "Anúncio encerrado",
+      "daysCount": "{{count}} dias",
+      "hoursCount": "{{count}} horas",
+      "endedShort": "Terminado",
+      "na": "—",
+      "endingSoon": "A terminar em breve"
+    },
+    "share": {
+      "button": "Partilhar anúncio",
+      "linkCopied": "Link copiado",
+      "linkCopiedTitle": "Link copiado!",
+      "shareTitle": "Partilhar",
+      "note": "Usa este botão para partilhar no WhatsApp e ver a imagem do produto."
     },
     "ended": {
       "noBidsSeller": "Este leilão encerrou sem lances. Você pode reabri-lo por mais 7 dias abaixo.",
@@ -949,11 +1002,12 @@
       "stripeSettingsLink": "Definições → Pagamentos"
     },
     "shipping": {
-      "title": "Frete",
-      "free": "Frete grátis",
-      "cost": "Custo do frete:",
+      "title": "Envio",
+      "free": "Envio grátis",
+      "cost": "Custo do envio:",
       "from": "De:",
-      "workingDays": "dias úteis"
+      "workingDays": "dias úteis",
+      "workingDaysCount": "{{count}} dias úteis"
     },
     "returnPolicy": {
       "title": "Política de devolução",
@@ -1026,13 +1080,32 @@
       "ineligible": "Conta verificada necessária"
     },
     "platinumBidders": {
-      "title": "Seleccionar Licitantes Platina",
-      "subtitle": "Seleccione até 5 licitantes para convidar para a Sala Privada. Estes licitantes poderão continuar a licitar após o leilão principal terminar.",
+      "title": "Convidar para Sala Privada",
+      "subtitle": "Selecciona até 5 licitantes para convidar para a Sala Privada. Estes licitantes poderão continuar a licitar após o leilão principal terminar.",
       "backBtn": "Voltar ao Painel",
       "loading": "A carregar licitantes...",
-      "maxAlert": "Pode seleccionar no máximo 5 Licitantes Platina.",
+      "maxAlert": "Pode seleccionar no máximo 5 licitantes.",
       "errorLoading": "Falha ao carregar licitantes.",
       "errorSaving": "Falha ao guardar selecção."
+    },
+    "privateRoomBidders": {
+      "title": "Convidar para Sala Privada",
+      "subtitle": "Selecciona até 5 licitantes para convidar. Poderão continuar a licitar após o leilão principal terminar.",
+      "backBtn": "Voltar ao Painel",
+      "loading": "A carregar licitantes…",
+      "retry": "Tentar novamente",
+      "ofMax": "de 5 seleccionados",
+      "save": "Guardar selecção",
+      "saving": "A guardar…",
+      "badgeAuth": "Registado",
+      "badgeGuest": "Convidado",
+      "badgeInvited": "Convidado",
+      "statBids": "Lances",
+      "statHighest": "Lance mais alto",
+      "statLast": "Último lance",
+      "guestNote": "Licitantes não registados não podem ser convidados para a Sala Privada.",
+      "empty": "Sem licitantes",
+      "emptyDesc": "Os licitantes aparecerão aqui assim que fizerem lances no seu anúncio."
     },
     "privateRoomModal": {
       "title": "Criar sala privada",
@@ -1265,6 +1338,7 @@
   "dashboard": {
     "sidebar": {
       "home": "Início",
+      "browseAuctions": "Ver Leilões",
       "store": "Loja",
       "main": "Principal",
       "activity": "Atividade",
@@ -1281,6 +1355,7 @@
       "buyerProfile": "Perfil do Comprador",
       "sellerProfile": "Perfil do Vendedor",
       "settings": "Configurações",
+      "disputes": "Disputas",
       "logout": "Sair"
     },
     "following": {
@@ -1323,7 +1398,6 @@
       "balance": "Saldo",
       "buyerScore": "Pontuação como Comprador",
       "sellerScore": "Pontuação como Vendedor",
-      "noReviews": "Sem avaliações ainda",
       "topUpHistory": "Histórico de Recargas",
       "noTopUps": "Sem recargas ainda.",
       "date": "Data",
@@ -1335,12 +1409,6 @@
       "noActiveListings": "Sem anúncios ativos.",
       "viewAll": "Ver todos os anúncios",
       "errorLoading": "Falha ao carregar dados do painel.",
-      "reviewModalTitle": "Deixar uma Avaliação",
-      "reviewModalDesc": "Como foi sua experiência com esta transação?",
-      "reviewRating": "Avaliação",
-      "reviewComment": "Comentário (opcional)",
-      "reviewSubmit": "Enviar Avaliação",
-      "reviewSubmitting": "Enviando...",
       "reviewError": "Falha ao enviar avaliação.",
       "balanceModalTitle": "Seu Saldo",
       "topUp": "Recarregar",
@@ -1355,7 +1423,6 @@
       "increaseBalance": "Aumentar Saldo",
       "reviews": "avaliações",
       "review": "avaliação",
-      "noReviewsYet": "Sem avaliações ainda",
       "viewProfile": "Ver Perfil",
       "yourMembership": "Sua Assinatura",
       "balanceLabel": "Saldo:",
@@ -1374,8 +1441,6 @@
       "ends": "Termina",
       "recentlyEnded": "Recentemente encerrado",
       "noOffersYet": "Nenhuma oferta ainda",
-      "leaveAReview": "Deixar Avaliação",
-      "leaveReviewDesc": "Avalie suas transações recentes para ajudar a comunidade.",
       "as": "como",
       "leaveReview": "Deixar Avaliação",
       "youreReviewing": "Você está avaliando",
@@ -1383,9 +1448,9 @@
       "viewTransactionDetails": "Ver Detalhes da Transação",
       "howWouldYouRate": "Como você avaliaria sua experiência?",
       "tapToRate": "Toque para avaliar",
-      "yourReview": "A tua avaliação",
+      "yourReview": "A sua avaliação",
       "visibleToOthers": "Visível para outros",
-      "shareExperience": "Partilha a tua experiência...",
+      "shareExperience": "Partilhe a sua experiência...",
       "submitReview": "Enviar Avaliação",
       "reviewTagsLabel": "O que se destacou? (opcional, até 5)",
       "reviewTags": {
@@ -1411,7 +1476,6 @@
       "continueToCheckout": "Continuar para o Checkout",
       "buyingWatchlist": "Compras e Lista de Favoritos",
       "subtitle": "Aqui está o resumo da sua conta",
-      "myListingsTitle": "Os meus anúncios",
       "live": "Ativo",
       "pendingReviews": "Avaliações pendentes",
       "greeting": {
@@ -1425,11 +1489,7 @@
       "statAwaitingSeller": "à espera do vendedor",
       "statPendingTx": "Transacções pendentes",
       "statActionNeeded": "ação necessária",
-      "statReputation": "Reputação",
-      "statOutOf100": "em 100",
       "statActiveListings": "Anúncios activos",
-      "sectionActiveBids": "Lances activos",
-      "yourBid": "O seu lance",
       "formatAuction": "Leilão",
       "formatBestOffer": "Melhor oferta",
       "statusWinning": "A ganhar",
@@ -1473,6 +1533,7 @@
       "payoutStatus": "Estado dos pagamentos:",
       "payoutActive": "A sua conta de pagamentos está activa. Os compradores podem pagar-lhe directamente — os fundos serão enviados para a sua conta bancária registada.",
       "chargesEnabled": "Cobranças activas",
+      "payoutsLabel": "Pagamentos",
       "enabled": "activo",
       "pending": "pendente",
       "updateBank": "Actualizar conta bancária",
@@ -1483,6 +1544,11 @@
       "simulateVerification": "⚡ Simular verificação",
       "activating": "A activar…",
       "setupDesc": "Para receber pagamentos de compradores, configure a sua conta de pagamentos. Não precisa de conta Stripe — basta preencher os seus dados abaixo.",
+      "setupDescStripe": "Para receber pagamentos dos compradores, conclua uma configuração segura e rápida no Stripe.",
+      "setupBtnStripe": "Continuar no Stripe",
+      "stripeRedirectNote": "Será redirecionado para o Stripe para introduzir os seus dados de identidade e conta bancária de forma segura.",
+      "stripeRedirecting": "A redirecionar para o Stripe…",
+      "payoutReturnBanner": "Bem-vindo de volta! Estamos a verificar o estado da sua conta de pagamentos — normalmente demora alguns minutos.",
       "feature1": "Introduza os seus dados de identidade e bancários uma vez",
       "feature2": "O Stripe processa os pagamentos em segurança em segundo plano",
       "feature3": "Fundos transferidos directamente para a sua conta bancária",
@@ -1528,25 +1594,26 @@
       "detailsSubmitted": "Os seus dados foram submetidos. A Stripe irá verificá-los em breve — normalmente demora alguns minutos.",
       "connectNotConnected": "Não ligado",
       "connectActive": "Ativo",
-      "connectPending": "Verificação pendente"
+      "connectPending": "Verificação pendente",
+      "paymentMethod": {
+        "title": "Garantia de Pagamento",
+        "loading": "A carregar…",
+        "activeBadge": "Pagamento Garantido — Nível 3",
+        "activeDesc": "Os vendedores vêem o seu badge. Em caso de disputa perdida, o valor é cobrado automaticamente.",
+        "disclaimer": "O seu cartão nunca é debitado sem notificação prévia por email e prazo de contestação de 48h.",
+        "upgradeTitle": "Alcance o Nível 3 — Pagamento Garantido",
+        "benefit1": "🛡️ Vendedores dão-lhe prioridade nas Salas Privadas",
+        "benefit2": "💳 Pode licitar em leilões acima de €5.000",
+        "benefit3": "✓ Compensação automática ao vendedor se a disputa for resolvida contra si",
+        "addCard": "Adicionar cartão de pagamento",
+        "cancel": "Cancelar",
+        "saveCard": "Guardar cartão",
+        "saving": "A guardar…",
+        "stripeNote": "Os dados do seu cartão são encriptados pela Stripe (PCI DSS Level 1) — o BidRoom nunca vê o número completo."
+      }
     },
     "role": {
       "toggleLabel": "Modo comprador ou vendedor"
-    },
-    "buyer": {
-      "title": "Perfil do Comprador",
-      "subtitle": "Gerencie seus lances, lista de favoritos e compras.",
-      "tabBets": "Meus Lances",
-      "tabWatchlist": "Favoritos",
-      "tabTransactions": "Transações",
-      "tabDisputes": "Disputas",
-      "noReviews": "Sem avaliações ainda.",
-      "tabs": {
-        "bets": "Meus Lances",
-        "watchlist": "Favoritos",
-        "transactions": "Transações",
-        "disputes": "Disputas"
-      }
     },
     "myBets": {
       "title": "Meus Lances",
@@ -1577,14 +1644,10 @@
     "seller": {
       "title": "Perfil do Vendedor",
       "subtitle": "Gerencie seus anúncios, vendas e pagamentos.",
-      "tabAuctions": "Meus Leilões",
-      "tabTransactions": "Transações",
-      "tabDisputes": "Disputas",
       "noReviews": "Sem avaliações ainda.",
       "tabs": {
         "auctions": "Meus Anúncios",
         "analytics": "Análises",
-        "transactions": "Transações",
         "disputes": "Disputas"
       },
       "analytics": {
@@ -1730,7 +1793,7 @@
       "notifications": {
         "title": "Preferências de Notificação",
         "loading": "A carregar preferências...",
-        "globalEmailUnsubscribed": "Cancelar subscrição de todos os e-mails",
+        "globalEmailUnsubscribed": "Cancelar subscrição de todas as notificações (email e na app)",
         "event": "Evento",
         "channelEmail": "E-mail",
         "channelInApp": "Na App",
@@ -1749,6 +1812,39 @@
           "disputeUpdate": "Atualização de disputa"
         }
       },
+      "paymentMethod": {
+        "title": "Métodos de Pagamento",
+        "loading": "A carregar…",
+        "activeBadge": "Pagamento Garantido — Nível 3",
+        "activeDesc": "Os vendedores vêem o seu badge. Em caso de disputa perdida, o valor é cobrado automaticamente no cartão predefinido.",
+        "disclaimer": "O seu cartão predefinido nunca é debitado sem notificação prévia por email e prazo de contestação de 48h.",
+        "upgradeTitle": "Alcance o Nível 3 — Pagamento Garantido",
+        "benefit1": "🛡️ Vendedores dão-lhe prioridade nas Salas Privadas",
+        "benefit2": "💳 Pode licitar em leilões acima de €5.000",
+        "benefit3": "✓ Compensação automática ao vendedor se a disputa for resolvida contra si",
+        "addCard": "Adicionar cartão de pagamento",
+        "addAnotherCard": "Adicionar outro cartão",
+        "cardDetails": "Dados do cartão",
+        "expires": "Validade",
+        "defaultBadge": "Predefinido",
+        "setDefault": "Definir como predefinido",
+        "removeCard": "Remover cartão",
+        "removeModalTitle": "Remover cartão",
+        "removeModalDesc": "Tem a certeza de que pretende remover o cartão {{brand}} •••• {{last4}}? Esta acção não pode ser anulada.",
+        "removeConfirmBtn": "Remover cartão",
+        "removing": "A remover…",
+        "removeConfirm": "Remover este cartão da sua conta?",
+        "cannotRemoveDefault": "Não pode remover o cartão predefinido. Defina outro como predefinido primeiro.",
+        "cannotRemoveOnly": "Não pode remover o único cartão válido associado à sua conta.",
+        "cannotRemoveHint": "Não pode remover este cartão",
+        "saveError": "Erro ao guardar o cartão. Tente novamente.",
+        "setupError": "Erro ao iniciar o processo. Tente novamente.",
+        "removeError": "Erro ao remover o cartão.",
+        "cancel": "Cancelar",
+        "saveCard": "Guardar cartão",
+        "saving": "A guardar…",
+        "stripeNote": "Os dados do seu cartão são encriptados pela Stripe (PCI DSS Level 1) — o BidRoom nunca vê o número completo."
+      },
       "savePrefsError": "Falha ao guardar preferências. Tente novamente.",
       "connectError": "Algo correu mal. Verifique os seus dados e tente novamente.",
       "payoutNowActive": "A sua conta de pagamentos está agora ativa!",
@@ -1757,7 +1853,49 @@
       "testActivationFailed": "Falha na ativação de teste.",
       "connectNotConnected": "Não ligado",
       "connectActive": "Ativo",
-      "connectPending": "Verificação pendente"
+      "connectPending": "Verificação pendente",
+      "payoutAccount": "Conta de Pagamentos ao Vendedor",
+      "checkingPayout": "A verificar estado da conta de pagamentos...",
+      "payoutStatus": "Estado dos pagamentos:",
+      "payoutActive": "A sua conta de pagamentos está activa. Os compradores podem pagar-lhe directamente — os fundos serão enviados para a sua conta bancária registada.",
+      "payoutsLabel": "Pagamentos",
+      "updateBank": "Actualizar conta bancária",
+      "requirementIssue": "Há um problema com os detalhes da sua conta de pagamentos:",
+      "verifyingDetails": "Os seus detalhes foram submetidos e estão a ser verificados pelo Stripe. Normalmente demora alguns minutos.",
+      "updateDetails": "Actualizar dados",
+      "simulateVerification": "⚡ Simular verificação",
+      "activating": "A activar…",
+      "setupDesc": "Para receber pagamentos dos compradores, configure a sua conta de pagamentos. Não precisa de conta Stripe — basta preencher os seus dados abaixo.",
+      "setupDescStripe": "Para receber pagamentos dos compradores, conclua uma configuração segura e rápida no Stripe.",
+      "setupBtn": "Configurar conta de pagamentos",
+      "feature1": "Introduza os seus dados de identidade e bancários uma vez",
+      "feature2": "O Stripe processa os pagamentos em segurança em segundo plano",
+      "feature3": "Fundos transferidos directamente para a sua conta bancária",
+      "setupBtnStripe": "Continuar no Stripe",
+      "stripeRedirectNote": "Será redirecionado para o Stripe para introduzir os seus dados de identidade e conta bancária de forma segura.",
+      "stripeRedirecting": "A redirecionar para o Stripe…",
+      "payoutReturnBanner": "Bem-vindo de volta! Estamos a verificar o estado da sua conta de pagamentos — normalmente demora alguns minutos.",
+      "dobTitle": "Data de nascimento",
+      "dobDay": "Dia",
+      "dobMonth": "Mês",
+      "dobYear": "Ano",
+      "addressTitle": "Morada",
+      "streetAddress": "Morada",
+      "city": "Localidade",
+      "postalCode": "Código postal",
+      "country": "País",
+      "bankTitle": "Conta bancária (IBAN)",
+      "ibanLabel": "IBAN",
+      "ibanHint": "O seu Número Internacional de Conta Bancária. Os espaços são ignorados.",
+      "tosText": "Autorizo o BidRoom a submeter os meus dados ao Stripe para verificação de identidade e processamento de pagamentos, e aceito o",
+      "tosLink": "Acordo de Conta Conectada Stripe",
+      "submitBtn": "Guardar conta de pagamentos",
+      "submitting": "A submeter…",
+      "cancelBtn": "Cancelar",
+      "dobRequired": "Introduza a sua data de nascimento.",
+      "addressRequired": "Preencha a morada completa.",
+      "ibanRequired": "Introduza o IBAN.",
+      "tosRequired": "Tem de aceitar os Termos de Serviço."
     },
     "myAuctions": {
       "title": "Meus Anúncios",
@@ -1780,7 +1918,8 @@
       "privateRoomAwaiting": "Aguardando Aceitação",
       "privateRoomEnded": "Encerrada",
       "goToPrivateRoom": "Ir para a Sala Privada",
-      "platinumBidders": "Licitantes Platina",
+      "platinumBidders": "Licitantes da Sala Privada",
+      "privateRoomBidders": "Licitantes da Sala Privada",
       "accepted": "Aceito",
       "pendingStatus": "Pendente",
       "declined": "Recusado",
@@ -1801,18 +1940,14 @@
         "relistCount": "Relistar #{{count}}",
         "unsoldReasons": {
           "no_bids": "Terminou sem lances",
-          "reserve_not_met": "Preço de reserva não atingido",
           "non_payment": "Comprador não concluiu o pagamento"
         },
         "suggestions": {
           "lower10Price": "Baixar preço inicial 10%",
-          "lower10Reserve": "Baixar reserva 10%",
-          "removeReserve": "Remover preço de reserva",
           "extend7Days": "Definir duração para 7 dias"
         },
         "form": {
           "startingPrice": "Preço inicial ($)",
-          "reservePrice": "Preço de reserva (opcional, 0 = sem reserva)",
           "duration": "Duração",
           "autoRelist": "Relistar automaticamente se não vender",
           "autoRelistHint": "Relista automaticamente até 3 vezes se o leilão terminar sem venda.",
@@ -1863,6 +1998,15 @@
     "filterDelivered": "Entregues",
     "filterCompleted": "Concluídas",
     "filterDisputed": "Disputas",
+    "table": {
+      "item": "Artigo",
+      "role": "Papel",
+      "status": "Estado",
+      "amount": "Valor",
+      "date": "Data",
+      "manage": "Gerir",
+      "noFilterResults": "Nenhuma transação corresponde a este filtro."
+    },
     "drawer": {
       "details": "Detalhes",
       "amount": "Valor",
@@ -1927,11 +2071,6 @@
     "uploadingProof": "Enviando...",
     "leaveReview": "Deixar uma Avaliação",
     "reviewLeft": "Avaliação enviada",
-    "reviewModalTitle": "Deixar uma Avaliação",
-    "reviewRating": "Avaliação",
-    "reviewComment": "Comentário (opcional)",
-    "reviewSubmit": "Enviar Avaliação",
-    "reviewSubmitting": "Enviando...",
     "reviewError": "Falha ao enviar avaliação.",
     "openDispute": "Abrir Disputa",
     "disputeOpenedBadge": "Disputa Aberta",
@@ -2235,10 +2374,8 @@
         "a1": "Se o vendedor não enviar dentro de <strong>5 dias úteis</strong>, a transacção é cancelada automaticamente e receberá o reembolso completo na sua forma de pagamento original.",
         "q2": "Tenho direito de arrependimento?",
         "a2": "O BidRoom é maioritariamente uma plataforma C2C (particulares). Em leilões online entre particulares, o direito de arrependimento geralmente não se aplica. Se o vendedor for um profissional, os seus direitos são diferentes — verifique nos Termos de Utilização.",
-        "q3": "Como funciona o preço de reserva?",
-        "a3": "Alguns vendedores definem um <strong>preço de reserva mínimo</strong> que não é mostrado publicamente. Se o lance mais alto no final não atingir esse valor, o vendedor não é obrigado a vender. Verá uma indicação «Reserva atingida» quando o limite for ultrapassado.",
-        "q4": "Quanto pago de comissão?",
-        "a4": "<strong>O comprador não paga comissão ao BidRoom.</strong> Paga apenas o valor do artigo mais a taxa de processamento da Stripe (~2,9% + €0,30 por transacção), que é acrescentada ao total no checkout."
+        "q3": "Quanto pago de comissão?",
+        "a3": "<strong>O comprador não paga comissão ao BidRoom.</strong> Paga apenas o valor do artigo mais a taxa de processamento da Stripe (~2,9% + €0,30 por transacção), que é acrescentada ao total no checkout."
       }
     },
     "seller": {
@@ -2291,7 +2428,7 @@
         "note": "Fins de semana e feriados não contam. O prazo é calculado automaticamente pelo sistema a partir da confirmação do pagamento."
       },
       "step6": {
-        "title": "Recebe o payout automaticamente",
+        "title": "Receba o payout automaticamente",
         "desc": "Quando o comprador confirma que recebeu o artigo em boas condições, os fundos são libertados automaticamente e transferidos para a sua conta bancária via Stripe Connect (tipicamente 1–2 dias úteis bancários).",
         "noteTitle": "Se não houver confirmação do comprador.",
         "note": "Se o comprador não confirmar a recepção dentro do prazo, o sistema liberta os fundos automaticamente (auto-release). Não precisa de contactar o suporte."
@@ -2320,8 +2457,8 @@
       },
       "tip": {
         "tag": "Tip para vendedores",
-        "title": "Activa a Sala Privada para maximizar o valor de venda",
-        "desc": "Leilões com Sala Privada fecham em média 30% acima do último lance público. O comprador que perde o leilão principal muitas vezes está disposto a pagar mais numa ronda exclusiva — a Sala Privada captura esse valor para ti."
+        "title": "Active a Sala Privada para maximizar o valor de venda",
+        "desc": "Leilões com Sala Privada fecham em média 30% acima do último lance público. O comprador que perde o leilão principal muitas vezes está disposto a pagar mais numa ronda exclusiva — a Sala Privada captura esse valor para si."
       }
     },
     "private": {
@@ -2389,13 +2526,13 @@
       },
       "faq": {
         "q0": "Posso recusar um convite para a Sala Privada?",
-        "a0": "Sim. Podes recusar ou ignorar o convite dentro dos 15 minutos. Se ficarem menos de 2 convidados activos, a sala pode encerrar ou o último convidado aceite pode vencer automaticamente.",
+        "a0": "Sim. Pode recusar ou ignorar o convite dentro dos 15 minutos. Se ficarem menos de 2 convidados activos, a sala pode encerrar ou o último convidado aceite pode vencer automaticamente.",
         "q1": "O que acontece se só um convidado aceitar?",
         "a1": "Se apenas 1 convidado aceitar e os restantes não responderem no prazo, esse convidado vence automaticamente pelo valor do seu lance original. A sala não pode existir com apenas um participante activo.",
         "q2": "Posso ver quem mais está na sala?",
-        "a2": "Vês quantos participantes estão na sala e o seu estado, mas não os seus nomes durante a ronda. Após o encerramento, o vencedor é anunciado.",
+        "a2": "Veja quantos participantes estão na sala e o seu estado, mas não os seus nomes durante a ronda. Após o encerramento, o vencedor é anunciado.",
         "q3": "Tenho de licitar se aceitar o convite?",
-        "a3": "Não és obrigado a licitar, mas ao aceitar o convite és parte da sala. Podes entrar e não licitar — nesse caso outro participante vence se superar o teu lance original."
+        "a3": "Não é obrigado a licitar, mas ao aceitar o convite é parte da sala. Pode entrar e não licitar — nesse caso outro participante vence se superar o seu lance original."
       }
     },
     "payments": {
@@ -3072,13 +3209,13 @@
     "cancel": "Cancelar",
     "success": {
       "title": "Denúncia Enviada",
-      "message": "Obrigado. A tua denúncia foi recebida e a nossa equipa irá analisá-la brevemente.",
+      "message": "Obrigado. A sua denúncia foi recebida e a nossa equipa irá analisá-la brevemente.",
       "close": "Fechar"
     },
     "errors": {
-      "selectReason": "Por favor seleciona um motivo antes de enviar.",
-      "alreadyReported": "Já denunciaste este item.",
-      "generic": "Ocorreu um erro. Por favor tenta novamente."
+      "selectReason": "Por favor seleccione um motivo antes de enviar.",
+      "alreadyReported": "Já denunciou este item.",
+      "generic": "Ocorreu um erro. Por favor tente novamente."
     },
     "reportUser": "Reportar Utilizador"
   },
@@ -3158,7 +3295,7 @@
       "h2p1": "Para utilizar a plataforma, o utilizador deve ter pelo menos 18 anos de idade e capacidade legal para celebrar contratos. Ao criar uma conta, o utilizador declara cumprir estes requisitos.",
       "h3": "3. A plataforma",
       "h3p1": "O BidRoom disponibiliza dois formatos de listagem:",
-      "h3li1": "<strong>Leilão (Highest Bid):</strong> compradores fazem lances em tempo real. O lance mais alto no final do período vence automaticamente, desde que o preço de reserva (se definido) seja atingido.",
+      "h3li1": "<strong>Leilão (Highest Bid):</strong> compradores fazem lances em tempo real. O lance mais alto no final do período vence automaticamente.",
       "h3li2": "<strong>Melhor Oferta (Best Offer):</strong> compradores submetem propostas. O vendedor escolhe a que prefere antes do prazo. O vendedor não é obrigado a aceitar qualquer oferta abaixo do preço mínimo definido.",
       "h3p2": "O BidRoom pode ainda oferecer <strong>Salas Privadas</strong>, uma funcionalidade opcional disponível em leilões, onde o vendedor convida licitantes seleccionados para uma ronda adicional após o encerramento do leilão público.",
       "h4": "4. Comissões e pagamentos",
@@ -3387,6 +3524,159 @@
       "confirm": "Entendido",
       "viewListing": "Ver anúncio",
       "viewTransactions": "Ir para transações"
+    }
+  },
+  "trust": {
+    "hero": {
+      "pill": "Segurança & Confiança",
+      "title1": "O marketplace só funciona",
+      "titleBold": "se toda a gente confiar",
+      "sub": "O BidRoom protege compradores e vendedores em cada transacção. O nosso sistema de trust torna essa protecção visível — para que cada decisão seja informada.",
+      "tabBuyer": "Sou comprador",
+      "tabSeller": "Sou vendedor"
+    },
+    "buyer": {
+      "tiers": {
+        "eyebrow": "O seu nível de confiança",
+        "title": "Três níveis.",
+        "titleBold": "Mais nível, mais credibilidade.",
+        "desc": "O seu trust tier é calculado automaticamente com base nos passos que completou. É visível a todos os vendedores quando licita — funciona como a sua reputação instantânea.",
+        "t1Num": "Nível 1", "t1Badge": "Verificado", "t1Name": "Email verificado",
+        "t1Cond": "Condição: confirmar o email de registo.",
+        "t1Guarantee": "⚠️ Sem garantia de pagamento. Se não pagar após ganhar um leilão, o vendedor depende apenas do seu historial de reputação.",
+        "t2Num": "Nível 2", "t2Badge": "Identidade Verificada", "t2Name": "Documento verificado",
+        "t2Cond": "Condição: verificar identidade via Stripe Identity (passaporte ou CC).",
+        "t2Guarantee": "🔒 A sua identidade é conhecida. Em caso de disputa não resolvida, pode ser responsabilizado legalmente.",
+        "t3Num": "Nível 3", "t3Badge": "Pagamento Garantido", "t3Name": "Identidade + cartão guardado",
+        "t3Cond": "Condição: KYC concluído + cartão de crédito/débito válido registado na conta.",
+        "t3Guarantee": "🛡️ <strong>Compensação automática.</strong> Se perder uma disputa, o BidRoom debita o cartão guardado directamente — sem processos manuais."
+      },
+      "levelUp": {
+        "eyebrow": "Como evoluir",
+        "title": "Do Nível 1 ao",
+        "titleBold": "Pagamento Garantido",
+        "desc": "São três passos sequenciais. Cada um demora menos de 5 minutos. Pode parar em qualquer nível — mas o Nível 3 dá-lhe acesso a vantagens exclusivas.",
+        "s1Title": "Crie conta e verifique o email",
+        "s1Desc": "Registe-se com email ou Google. Confirme o link enviado para o seu email. Imediato.",
+        "s1Tag": "Alcance o Nível 1 — Verificado",
+        "s2Title": "Verifique a sua identidade",
+        "s2Desc": "No seu Dashboard → Definições → Identidade. Submeta uma foto do passaporte ou cartão de cidadão via Stripe Identity. Processo seguro e encriptado. Resultado em segundos.",
+        "s2Tag": "Alcance o Nível 2 — Identidade Verificada",
+        "s3Title": "Adicione um cartão de pagamento",
+        "s3Desc": "No seu Dashboard → Definições → Método de Pagamento. Guarde um cartão válido. O cartão <strong>nunca é cobrado preventivamente</strong> — apenas se perder uma disputa formal. Processado pela Stripe (PCI DSS Level 1).",
+        "s3Tag": "Alcance o Nível 3 — Pagamento Garantido"
+      },
+      "benefits": {
+        "eyebrow": "Vantagens por nível", "title": "O que", "titleBold": "ganha ao subir de nível",
+        "desc": "Cada nível desbloqueia vantagens concretas — não apenas um badge.",
+        "colFeature": "Funcionalidade", "colT1": "Nível 1", "colT2": "Nível 2", "colT3": "Nível 3",
+        "r1": "Licitar em leilões", "r1Hint": "Todos os formatos",
+        "r2": "Submeter propostas (Best Offer)",
+        "r3": "Elegibilidade para Sala Privada", "r3Hint": "Reputação ≥ 60 obrigatória",
+        "r4": "Leilões acima de €5.000", "r4Hint": "Lei 83/2017 AML",
+        "r5": "Badge visível a vendedores", "r5Hint": "No feed de lances",
+        "r5T1": "Básico", "r5T2": "Melhorado", "r5T3": "Destacado",
+        "r6": "Prioridade em convites para Sala Privada", "r6Hint": "Sugerido ao vendedor",
+        "r7": "Compensação automática ao vendedor", "r7Hint": "Em disputa resolvida contra si"
+      },
+      "disputes": {
+        "eyebrow": "Protecção do comprador", "title": "O que acontece", "titleBold": "em caso de disputa",
+        "desc": "O BidRoom actua como facilitador, nunca como árbitro final. O processo tem sempre três fases antes de qualquer decisão irreversível.",
+        "p1Num": "Fase 01", "p1Title": "Mediação BidRoom",
+        "p1Desc": "O comprador abre a disputa com evidências. O vendedor responde em 7 dias úteis. O BidRoom analisa e tenta um acordo.",
+        "p1Note": "⏱ 7 dias úteis máximo",
+        "p2Num": "Fase 02", "p2Title": "CNIACC (arbitragem)",
+        "p2Desc": "Se a mediação não produzir acordo, qualquer parte pode escalar para o CNIACC — entidade RAL portuguesa independente.",
+        "p2Note": "Voluntário para ambas as partes",
+        "p3Num": "Fase 03", "p3Title": "Tribunal",
+        "p3Desc": "Último recurso. A decisão judicial é vinculativa. Os registos da plataforma (logs, comunicações, transacções) são mantidos por 5 anos como evidência.",
+        "p3Note": "Plataforma ODR europeia disponível",
+        "alertTitle": "O cartão guardado (Nível 3) nunca é cobrado preventivamente",
+        "alertDesc": "O débito automático no cartão guardado só acontece após uma decisão formal de disputa resolvida contra o comprador — nunca antes, nunca sem notificação prévia por email. O valor debitado nunca excede o valor da transacção em causa."
+      },
+      "faq": {
+        "eyebrow": "Dúvidas frequentes", "title": "Perguntas sobre", "titleBold": "o seu trust tier",
+        "q1": "O meu trust tier é público — qualquer pessoa pode ver que tenho cartão guardado?",
+        "a1": "Não. O que é visível é apenas o badge — \"Verificado\", \"Identidade Verificada\" ou \"Pagamento Garantido\". Nenhum dado de cartão, IBAN ou documento é visível a terceiros. O vendedor só sabe que tem um cartão válido registado, não qual é nem os detalhes.",
+        "q2": "Posso remover o cartão guardado a qualquer momento?",
+        "a2": "Sim, pode remover o cartão em qualquer altura em Dashboard → Definições → Método de Pagamento. Ao fazer isso, o seu trust tier baixa para Nível 2 (se tiver KYC) ou Nível 1. O badge é actualizado imediatamente em todos os leilões activos onde já licitou.",
+        "q3": "O que acontece se o meu cartão expirar?",
+        "a3": "Recebe um aviso por email 30 dias antes da expiração do cartão. Se o cartão expirar sem que o actualize, o trust tier baixa automaticamente. Qualquer disputa activa nesse momento não é afectada — fica sujeita ao processo manual.",
+        "q4": "O BidRoom pode cobrar-me sem eu saber?",
+        "a4": "Não. Qualquer débito no cartão guardado é sempre precedido de notificação por email com o valor, o motivo (decisão de disputa), e um prazo de contestação de 48 horas. Se acreditar que o débito é injusto, pode contactar o suporte antes do processamento final.",
+        "q5": "A verificação de identidade (Nível 2) é obrigatória para licitar?",
+        "a5": "Não é obrigatória para a maioria dos leilões. Torna-se obrigatória para leilões com valor acima de €5.000, nos termos da Lei 83/2017 (anti-branqueamento de capitais). Para todos os outros leilões, o Nível 1 (email verificado) é suficiente."
+      }
+    },
+    "seller": {
+      "tiers": {
+        "eyebrow": "Trust tier dos compradores", "title": "O que cada badge", "titleBold": "significa para si",
+        "desc": "Como vendedor, vê o trust tier de cada licitante em tempo real, directamente no feed de lances. Aqui está o que cada badge implica para a sua protecção.",
+        "t1Num": "Nível 1 do comprador", "t1Badge": "Verificado", "t1Name": "Email verificado",
+        "t1Cond": "Conta criada e email confirmado. Sem verificação adicional.",
+        "t1Guarantee": "Se este comprador ganhar e não pagar ou a disputa for resolvida a seu favor: o BidRoom regista a infracção na reputação dele. <strong>Sem compensação monetária automática.</strong>",
+        "t2Num": "Nível 2 do comprador", "t2Badge": "Identidade Verificada", "t2Name": "Documento verificado",
+        "t2Cond": "Identidade real confirmada via Stripe Identity.",
+        "t2Guarantee": "Se a disputa for resolvida a seu favor: a identidade do comprador é conhecida. Pode responsabilizá-lo legalmente. O BidRoom fornece os registos necessários. <strong>Sem débito automático.</strong>",
+        "t3Num": "Nível 3 do comprador", "t3Badge": "Pagamento Garantido", "t3Name": "Identidade + cartão guardado",
+        "t3Cond": "KYC concluído e cartão válido registado na conta BidRoom.",
+        "t3Guarantee": "Se a disputa for resolvida a seu favor: o BidRoom débita automaticamente o cartão do comprador. <strong>Recebe o valor da transacção directamente no seu IBAN.</strong>",
+        "alertTitle": "Dica para Salas Privadas",
+        "alertDesc": "Ao seleccionar os convidados para a Sala Privada, os licitantes com <strong>Pagamento Garantido</strong> aparecem sugeridos em primeiro lugar. Não é obrigado a escolhê-los — mas para artigos de alto valor, é o caminho mais seguro."
+      },
+      "bidFeed": {
+        "eyebrow": "O que vê no listing", "title": "Como ler o", "titleBold": "feed de lances",
+        "desc": "Em cada anúncio seu, o feed de lances mostra o badge de cada licitante ao lado do nome. No resumo abaixo da lista, vê quantos têm cada nível de garantia.",
+        "s1Title": "Veja o badge no feed de lances",
+        "s1Desc": "Cada linha do feed mostra o nome + badge. O badge actualiza em tempo real se o comprador mudar de nível durante o leilão (raro mas possível).",
+        "s2Title": "Leia o resumo de garantias",
+        "s2Desc": "Por baixo do feed, um resumo mostra: \"X de Y licitantes com compensação automática\". Dá-lhe uma visão rápida do nível de risco geral do leilão.",
+        "s3Title": "Ordene por garantia na Sala Privada",
+        "s3Desc": "Ao criar a Sala Privada, use o filtro \"Ordenar por maior garantia\" para ver os licitantes com Pagamento Garantido em primeiro lugar antes de seleccionar os convidados.",
+        "filterBtn": "Filtrar"
+      },
+      "protection": {
+        "eyebrow": "Protecção do vendedor", "title": "Como o", "titleBold": "protegemos em cada cenário",
+        "desc": "Independentemente do trust tier do comprador, tem protecções activas em cada fase da transacção.",
+        "c1Title": "Não pagamento após leilão ganho",
+        "c1Desc": "O comprador tem 24 horas para pagar. Se não pagar, a transacção é cancelada automaticamente, o artigo volta ao estado original, e o comprador recebe uma penalização de reputação (-15 pontos). Pode re-listar sem custo.",
+        "c2Title": "Artigo enviado mas não confirmado",
+        "c2Desc": "Após a confirmação de envio, o prazo de entrega é calculado automaticamente. Se o comprador não marcar como recebido, o pagamento é libertado automaticamente para si após o prazo — sem necessidade de acção.",
+        "c3Title": "Disputa aberta pelo comprador",
+        "c3Desc": "Tanto a sua conta como a do comprador ficam suspensas preventivamente. O BidRoom analisa as evidências de ambas as partes. Se a decisão for a seu favor, o comprador é debitado (Nível 3) ou responsabilizado por via legal (Nível 2).",
+        "c4Title": "Registos para responsabilização legal",
+        "c4Desc": "Todas as comunicações, lances, transacções e evidências de disputas são mantidas durante 5 anos. Em caso de processo judicial, o BidRoom disponibiliza os registos necessários para a sua defesa."
+      },
+      "sellerTrust": {
+        "eyebrow": "O seu trust como vendedor", "title": "Os compradores também", "titleBold": "avaliam a sua credibilidade",
+        "desc": "O trust não é só dos compradores. Os compradores vêem o seu perfil — e decidem se confiam em si para entregar o que prometeu.",
+        "colFeature": "O que os compradores vêem no seu perfil", "colHow": "Como melhorar",
+        "r1Label": "⭐ Avaliações de compradores anteriores", "r1How": "Entregue a tempo, comunique bem, descreva o artigo com rigor",
+        "r2Label": "📊 Pontuação de reputação (0–100)", "r2How": "Cada transacção concluída com sucesso: +2 pontos",
+        "r3Label": "⚡ Taxa de envio a tempo", "r3How": "Envie sempre dentro dos 5 dias úteis após pagamento",
+        "r4Label": "🛡️ Histórico de disputas", "r4How": "Zero disputas abertas = máximo de confiança",
+        "r5Label": "🪪 Classificação DSA (individual / profissional)", "r5How": "Em Definições → Classificação de vendedor — preenche com rigor",
+        "alertTitle": "Vendedores profissionais têm obrigações adicionais",
+        "alertDesc": "Se vender de forma regular e com fins comerciais (trader), deve classificar-se como \"Vendedor profissional\" nas Definições. Isto é uma obrigação legal nos termos do DSA (Digital Services Act) — e dá-lhe acesso a funcionalidades de facturação e analytics avançados."
+      },
+      "faq": {
+        "eyebrow": "Dúvidas frequentes", "title": "Perguntas sobre", "titleBold": "protecção do vendedor",
+        "q1": "Posso recusar um comprador com Nível 1 antes de o leilão terminar?",
+        "a1": "Não pode recusar licitações com base no trust tier durante um leilão público — isso iria contra o princípio de mercado aberto. O que pode fazer é activar a Sala Privada e seleccionar apenas compradores com o tier que preferir para a ronda exclusiva.",
+        "q2": "Se o comprador do Nível 3 ganhar e não pagar, sou compensado automaticamente?",
+        "a2": "O Nível 3 refere-se à compensação em caso de disputa resolvida a seu favor — não ao não pagamento imediato. Para não pagamento, o processo é o mesmo independentemente do tier: cancelamento automático ao fim de 24h, penalização de reputação do comprador, e pode re-listar o artigo gratuitamente.",
+        "q3": "O que acontece ao meu pagamento enquanto a disputa está em aberto?",
+        "a3": "Os fundos ficam bloqueados em escrow enquanto a disputa está activa. A sua conta e a do comprador ficam suspensas preventivamente. O bloqueio levanta-se imediatamente após a decisão, seja ela a seu favor (payout) ou do comprador (reembolso).",
+        "q4": "O meu artigo está anunciado incorrectamente e quero retirar. Há penalização?",
+        "a4": "Pode cancelar um anúncio sem lances sem qualquer penalização. Se já houver lances, o cancelamento pode afectar a sua reputação e requer justificação. Artigos com lances não podem ser cancelados unilateralmente — contacte o suporte para casos excepcionais."
+      }
+    },
+    "cta": {
+      "title": "Pronto para licitar",
+      "titleBold": "com confiança?",
+      "desc": "Crie a sua conta, verifique a identidade e adicione um cartão — tudo em menos de 10 minutos. Os vendedores verão o seu badge imediatamente.",
+      "btnPrimary": "Criar conta gratuita",
+      "btnSecondary": "Ver leilões activos"
     }
   }
 }

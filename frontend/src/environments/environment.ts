@@ -1,5 +1,7 @@
 export const environment = {
   production: false,
+  /** Google Analytics measurement ID — only loaded when production is true and analytics cookies are accepted */
+  googleAnalyticsId: '',
   defaultApiBaseUrl: 'https://bidroom-backend-dev.azurewebsites.net',
   firebase: {
     apiKey: 'AIzaSyBb3nk50nwBME8dN5pNhu2W1B7-m35qqHw',

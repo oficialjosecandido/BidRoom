@@ -42,7 +42,7 @@
         }
         @if (selectedSubCategory) {
           <button type="button" class="filter-tag" (click)="clearSubCategory()">
-            {{ selectedSubCategory }}<span class="filter-tag-x">×</span>
+            {{ subCategoryLabelKey(selectedSubCategory) | translate }}<span class="filter-tag-x">×</span>
           </button>
         }
         @if (formatFilter !== 'all') {
@@ -137,7 +137,7 @@
                           class="cat-pill cat-pill--sub"
                           [class.active]="selectedCategory === cat.id && selectedSubCategory === sub"
                           (click)="selectSubCategory(sub, cat.id)">
-                          <span>{{ sub }}</span>
+                          <span>{{ subCategoryLabelKey(sub) | translate }}</span>
                         </button>
                       }
                     </div>
@@ -350,8 +350,14 @@
                     class="lcard-fav"
                     [class.saved]="isInWatchlist(listing._id)"
                     (click)="toggleWatchlist($event, listing)"
-                    [attr.aria-label]="isInWatchlist(listing._id) ? ('listingList.removeWatchlist' | translate) : ('listingList.addWatchlist' | translate)">
-                    {{ isInWatchlist(listing._id) ? '♥' : '♡' }}
+                    [attr.aria-label]="isInWatchlist(listing._id) ? ('listingList.removeWatchlist' | translate) : ('listingList.addWatchlist' | translate)"
+                    [attr.aria-pressed]="isInWatchlist(listing._id)">
+                    <svg class="lcard-fav-icon" viewBox="0 0 24 24" aria-hidden="true">
+                      <path
+                        class="lcard-fav-path"
+                        d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"
+                      />
+                    </svg>
                   </button>
                 </div>
                 <div class="lcard-body">
@@ -362,7 +368,7 @@
                       <div class="price-lbl">{{ priceLabel(listing) }}</div>
                       <div class="price-val">
                         @if (listing.auctionFormat === 'best-offer' && (listing.currentPrice == null || listing.currentPrice === 0)) {
-                          {{ 'listingList.noOffersYet' | translate }}
+                          <span class="price-val--text">{{ 'listingList.noOffersYet' | translate }}</span>
                         } @else {
                           {{ formatPrice(listing.currentPrice) }}
                         }

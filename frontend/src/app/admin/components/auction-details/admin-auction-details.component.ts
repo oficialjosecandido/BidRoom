@@ -69,7 +69,7 @@ export class AdminAuctionDetailsComponent implements OnInit {
     // Filter to only authenticated bidders (required for platinum)
     const authenticatedBidders = this.bidders.filter(b => b.isAuthenticated && b._id);
     if (authenticatedBidders.length === 0) {
-      alert('No authenticated bidders available. Only authenticated users can be selected as Platinum Bidders.');
+      alert('No authenticated bidders available. Only registered users can be selected.');
       return;
     }
     this.showPlatinumSelection = true;
@@ -94,7 +94,7 @@ export class AdminAuctionDetailsComponent implements OnInit {
       this.selectedPlatinumBidders.splice(index, 1);
     } else {
       if (this.selectedPlatinumBidders.length >= 5) {
-        alert('You can select a maximum of 5 Platinum Bidders.');
+        alert('You can select a maximum of 5 bidders.');
         return;
       }
       this.selectedPlatinumBidders.push(bidderId);
@@ -110,7 +110,7 @@ export class AdminAuctionDetailsComponent implements OnInit {
     if (!this.auction) return;
 
     if (this.selectedPlatinumBidders.length === 0) {
-      alert('Please select at least one Platinum Bidder to create a private room.');
+      alert('Please select at least one bidder to create a private room.');
       return;
     }
 

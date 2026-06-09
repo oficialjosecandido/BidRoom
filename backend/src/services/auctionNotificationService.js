@@ -3,6 +3,7 @@ const Listing = require('../models/Listing');
 const Offer = require('../models/Offer');
 const User = require('../models/User');
 const { sendEmail } = require('./emailService');
+const { isStripeTestMode } = require('../utils/stripe.util');
 const { getEmailTemplate, getUserLanguage } = require('./emailTemplates');
 const { createTransactionForListing, createTransactionForAcceptedOffer } = require('./transactionService');
 
@@ -855,7 +856,7 @@ async function handleAuctionEnd(listingId, io = null) {
         // Exactly one qualifying offer — check if seller has Stripe before auto-accepting
         const sellerId = listing.seller?._id || listing.seller;
         const sellerUser = sellerId ? await User.findById(sellerId).select('stripeConnectAccountId stripeConnectOnboarded').lean() : null;
-        const isTestMode = process.env.STRIPE_SECRET_KEY?.startsWith('sk_test_');
+        const isTestMode = isStripeTestMode();
         const sellerStripeReady = !!(sellerUser?.stripeConnectAccountId && (sellerUser?.stripeConnectOnboarded || isTestMode));
 
         if (!sellerStripeReady) {
@@ -918,7 +919,6 @@ async function handleAuctionEnd(listingId, io = null) {
 
     const bidCount = await Bid.countDocuments({ listing: listingId });
     const hasBids = bidCount > 0;
-    const reserveMet = listing.reservePrice == null || listing.currentPrice >= listing.reservePrice;
 
     // Count unique authenticated bidders (private room requires 2–5 to invite; only registered bidders eligible)
     const distinctBidders = await Bid.distinct('bidder', {
@@ -927,9 +927,8 @@ async function handleAuctionEnd(listingId, io = null) {
     });
     const authenticatedBidderCount = distinctBidders.filter(id => id != null).length;
 
-    // Private room enabled, has bids, reserve met, AND at least 2 authenticated bidders → seller creates room.
-    // If fewer than 2 authenticated bidders, we cannot create a private room → treat as regular auction, auto-select winner.
-    if (listing.allowPrivateRoom && hasBids && reserveMet && authenticatedBidderCount >= 2) {
+    // Private room enabled, has bids, AND at least 2 authenticated bidders → seller creates room.
+    if (listing.allowPrivateRoom && hasBids && authenticatedBidderCount >= 2) {
       const deadline = new Date();
       deadline.setMinutes(deadline.getMinutes() + 15);
 

@@ -248,16 +248,25 @@
   &:hover { color: var(--text); border-color: var(--dim); background: var(--s1); }
 }
 
-/* ── Notification dot ── */
-.notif-dot {
+/* ── Notification count badge ── */
+.notif-badge {
   position: absolute;
-  top: 2px;
-  right: 2px;
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
+  top: -4px;
+  right: -4px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 100px;
   background: var(--gold);
-  border: 1.5px solid var(--bg);
+  color: #0a0a0a;
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid var(--nav);
+  pointer-events: none;
 }
 
 /* ── CTA buttons ── */

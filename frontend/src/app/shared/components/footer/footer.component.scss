@@ -1,7 +1,7 @@
 .footer {
   background: var(--s1);
   border-top: 1px solid var(--line);
-  padding: 64px 0 0;
+  padding: 64px 0 32px;
 }
 
 .ft-wrap {
@@ -83,63 +83,16 @@
   background: var(--gl2);
 }
 
-.ft-legal-bar {
-  background: var(--s2);
-  border-top: 1px solid var(--line);
-  padding: 20px 0;
-  margin-top: 0;
-}
-
-.ft-legal-inner {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  flex-wrap: wrap;
-}
-
 .ft-copy {
   font-size: 12px;
   font-weight: 300;
   color: var(--dim);
-}
-
-.ft-legal-links {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  flex-wrap: wrap;
-}
-
-.ft-legal-link {
-  font-size: 12px;
-  font-weight: 300;
-  color: var(--dim);
-  text-decoration: none;
-  transition: color .15s;
-}
-
-.ft-legal-link:hover {
-  color: var(--gold);
-}
-
-.ft-legal-link.ft-ral-link {
-  background: var(--gb);
-  border: 1px solid var(--gl);
-  color: var(--gold) !important;
-  padding: 3px 8px;
-  border-radius: 5px;
-  font-size: 11px;
-  font-weight: 500;
-}
-
-.ft-legal-link.ft-ral-link:hover {
-  background: var(--gl2);
+  margin: 0;
 }
 
 @media (max-width: 900px) {
   .footer {
-    padding: 48px 0 0;
+    padding: 48px 0 28px;
   }
 
   .ft-wrap {
@@ -149,16 +102,6 @@
   .ft-cols {
     grid-template-columns: repeat(2, 1fr);
     gap: 24px;
-  }
-
-  .ft-legal-inner {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 12px;
-  }
-
-  .ft-legal-links {
-    gap: 12px;
   }
 }
 

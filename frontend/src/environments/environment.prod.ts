@@ -1,5 +1,6 @@
 export const environment = {
   production: true,
+  googleAnalyticsId: 'G-4FDFR1ZSRV',
   defaultApiBaseUrl: 'https://bidroom-backend-dev.azurewebsites.net', // TODO: update to prod backend URL when available
   firebase: {
     apiKey: 'AIzaSyBb3nk50nwBME8dN5pNhu2W1B7-m35qqHw',
