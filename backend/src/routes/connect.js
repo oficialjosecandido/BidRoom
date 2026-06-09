@@ -1,6 +1,6 @@
 const express = require('express');
-const Stripe = require('stripe');
 const { authenticateToken, requireActiveAccount } = require('../middleware/auth');
+const { getStripe, isStripeTestMode } = require('../utils/stripe.util');
 const User = require('../models/User');
 const Transaction = require('../models/Transaction');
 const Listing = require('../models/Listing');
@@ -19,7 +19,7 @@ const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:4200';
  * a private/internal IP. Stripe requires a valid public IPv4 for tos_acceptance.
  */
 function getClientIp(req) {
-  const isTestMode = process.env.STRIPE_SECRET_KEY?.startsWith('sk_test_');
+  const isTestMode = isStripeTestMode();
 
   // In test mode Stripe accepts any IP — skip detection entirely to avoid
   // Azure internal IPs (100.x.x.x CGNAT range) slipping through as "public".
@@ -69,11 +69,6 @@ function getClientIp(req) {
   if (isPublic(socketIp)) return socketIp;
 
   return null;
-}
-
-function getStripe() {
-  const key = process.env.STRIPE_SECRET_KEY;
-  return key ? new Stripe(key) : null;
 }
 
 const router = express.Router();
@@ -209,7 +204,7 @@ router.post('/submit-onboarding', requireActiveAccount, async (req, res) => {
     // In Stripe test mode, apply magic values so the account verifies synchronously:
     // - dob.year 1901 is Stripe's documented magic value that sets charges_enabled immediately
     // - id_number '000000000' bypasses identity verification
-    const isTestMode = process.env.STRIPE_SECRET_KEY?.startsWith('sk_test_');
+    const isTestMode = isStripeTestMode();
     if (isTestMode) {
       await stripe.accounts.update(accountId, {
         individual: {
@@ -233,7 +228,7 @@ router.post('/submit-onboarding', requireActiveAccount, async (req, res) => {
     console.log(`${LOG_PREFIX} Onboarding submitted uid=${user.uid?.slice(0, 8)} accountId=${accountId} onboarded=${onboarded}`);
     res.json({ onboarded, requiresVerification: !onboarded, accountId });
   } catch (err) {
-    const isTestMode = process.env.STRIPE_SECRET_KEY?.startsWith('sk_test_');
+    const isTestMode = isStripeTestMode();
     console.error(`${LOG_PREFIX} Submit onboarding error type=${err.type} message=${err.message}`);
     // Stripe Connect not enabled on the platform account
     if (err.type === 'StripePermissionError') {
@@ -263,7 +258,7 @@ router.post('/test-activate', requireActiveAccount, async (req, res) => {
   const stripe = getStripe();
   if (!stripe) return res.status(503).json({ error: 'Payments not configured' });
 
-  const isTestMode = process.env.STRIPE_SECRET_KEY?.startsWith('sk_test_');
+  const isTestMode = isStripeTestMode();
   if (!isTestMode) {
     return res.status(403).json({ error: 'Only available in test mode' });
   }
@@ -319,7 +314,7 @@ router.get('/account-status', async (req, res) => {
 
     // Retrieve fresh status from Stripe to keep local record in sync
     const account = await stripe.accounts.retrieve(user.stripeConnectAccountId);
-    const isTestMode = process.env.STRIPE_SECRET_KEY?.startsWith('sk_test_');
+    const isTestMode = isStripeTestMode();
     // In test mode, trust the DB value if it was force-set by test-activate;
     // only override with Stripe's live value if Stripe actually says charges_enabled.
     const stripeOnboarded = !!(account.details_submitted && account.charges_enabled);
@@ -395,7 +390,7 @@ router.post('/create-checkout-session', requireActiveAccount, async (req, res) =
     }
 
     const seller = transaction.seller;
-    const isTestMode = process.env.STRIPE_SECRET_KEY?.startsWith('sk_test_');
+    const isTestMode = isStripeTestMode();
     const skipValidation = process.env.SKIP_STRIPE_VALIDATION === 'true';
     if (!skipValidation && (!seller.stripeConnectAccountId || (!seller.stripeConnectOnboarded && !isTestMode))) {
       return res.status(400).json({

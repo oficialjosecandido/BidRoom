@@ -405,8 +405,9 @@
           <div class="notif-global-row">
             <label class="toggle-row">
               <span class="toggle-label">{{ 'dashboard.settings.notifications.globalEmailUnsubscribed' | translate }}</span>
-              <input type="checkbox" [checked]="notifPrefs.globalEmailUnsubscribed"
-                     (change)="notifPrefs!.globalEmailUnsubscribed = !notifPrefs!.globalEmailUnsubscribed" />
+              <input type="checkbox" class="notif-checkbox"
+                     [checked]="notifPrefs.globalEmailUnsubscribed"
+                     (change)="toggleGlobalUnsubscribe()" />
             </label>
           </div>
 
@@ -425,14 +426,15 @@
                   <tr>
                     <td>{{ ('dashboard.settings.notifications.events.' + key) | translate }}</td>
                     <td class="notif-ch">
-                      <input type="checkbox"
+                      <input type="checkbox" class="notif-checkbox"
                              [checked]="getEventPref(key).email"
                              [disabled]="notifPrefs!.globalEmailUnsubscribed"
                              (change)="toggleEventChannel(key, 'email')" />
                     </td>
                     <td class="notif-ch">
-                      <input type="checkbox"
+                      <input type="checkbox" class="notif-checkbox"
                              [checked]="getEventPref(key).inApp"
+                             [disabled]="notifPrefs!.globalEmailUnsubscribed"
                              (change)="toggleEventChannel(key, 'inApp')" />
                     </td>
                   </tr>

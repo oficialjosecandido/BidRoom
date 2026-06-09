@@ -336,11 +336,27 @@ export class DashboardSettingsComponent implements OnInit, OnDestroy {
 
   getEventPref(key: string): { email: boolean; push: boolean; inApp: boolean } {
     if (!this.notifPrefs) return { ...DEFAULT_CHANNEL_PREF };
-    return (this.notifPrefs as any)[key] ?? { ...DEFAULT_CHANNEL_PREF };
+    const pref = (this.notifPrefs as any)[key] ?? { ...DEFAULT_CHANNEL_PREF };
+    if (this.notifPrefs.globalEmailUnsubscribed) {
+      return { ...pref, email: false, inApp: false };
+    }
+    return pref;
+  }
+
+  toggleGlobalUnsubscribe(): void {
+    if (!this.notifPrefs) return;
+    const next = !this.notifPrefs.globalEmailUnsubscribed;
+    this.notifPrefs.globalEmailUnsubscribed = next;
+    if (next) {
+      for (const key of this.notifEventKeys) {
+        const pref = (this.notifPrefs as any)[key] ?? { ...DEFAULT_CHANNEL_PREF };
+        (this.notifPrefs as any)[key] = { ...pref, email: false, inApp: false };
+      }
+    }
   }
 
   toggleEventChannel(key: string, channel: 'email' | 'push' | 'inApp'): void {
-    if (!this.notifPrefs) return;
+    if (!this.notifPrefs || this.notifPrefs.globalEmailUnsubscribed) return;
     const pref = (this.notifPrefs as any)[key] ?? { ...DEFAULT_CHANNEL_PREF };
     (this.notifPrefs as any)[key] = { ...pref, [channel]: !pref[channel] };
   }

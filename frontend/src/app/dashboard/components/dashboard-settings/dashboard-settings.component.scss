@@ -278,6 +278,20 @@
 
 /* ── Notification prefs table ── */
 .notif-global-row { margin-bottom: 14px; }
+
+.notif-checkbox {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  cursor: pointer;
+  accent-color: var(--gold, #c9a84c);
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+}
+
 .notif-table-wrapper { overflow-x: auto; margin-bottom: 14px; }
 .notif-table {
   width: 100%; border-collapse: collapse; font-size: 13.5px;

@@ -1787,7 +1787,7 @@
       "notifications": {
         "title": "Preferências de Notificação",
         "loading": "A carregar preferências...",
-        "globalEmailUnsubscribed": "Cancelar subscrição de todos os e-mails",
+        "globalEmailUnsubscribed": "Cancelar subscrição de todas as notificações (email e na app)",
         "event": "Evento",
         "channelEmail": "E-mail",
         "channelInApp": "Na App",
@@ -1805,6 +1805,22 @@
           "newBid": "Nova licitação no seu anúncio",
           "disputeUpdate": "Atualização de disputa"
         }
+      },
+      "paymentMethod": {
+        "title": "Garantia de Pagamento",
+        "loading": "A carregar…",
+        "activeBadge": "Pagamento Garantido — Nível 3",
+        "activeDesc": "Os vendedores vêem o seu badge. Em caso de disputa perdida, o valor é cobrado automaticamente.",
+        "disclaimer": "O seu cartão nunca é debitado sem notificação prévia por email e prazo de contestação de 48h.",
+        "upgradeTitle": "Alcance o Nível 3 — Pagamento Garantido",
+        "benefit1": "🛡️ Vendedores dão-lhe prioridade nas Salas Privadas",
+        "benefit2": "💳 Pode licitar em leilões acima de €5.000",
+        "benefit3": "✓ Compensação automática ao vendedor se a disputa for resolvida contra si",
+        "addCard": "Adicionar cartão de pagamento",
+        "cancel": "Cancelar",
+        "saveCard": "Guardar cartão",
+        "saving": "A guardar…",
+        "stripeNote": "Os dados do seu cartão são encriptados pela Stripe (PCI DSS Level 1) — o BidRoom nunca vê o número completo."
       },
       "savePrefsError": "Falha ao guardar preferências. Tente novamente.",
       "connectError": "Algo correu mal. Verifique os seus dados e tente novamente.",

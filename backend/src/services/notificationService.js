@@ -135,8 +135,9 @@ async function createNotification({ userId, title, message, type = 'system', lin
   try {
     if (eventType) {
       const prefs = await NotificationPreferences.findOne({ user: userId })
-        .select(`${eventType}`)
+        .select(`globalEmailUnsubscribed ${eventType}`)
         .lean();
+      if (prefs?.globalEmailUnsubscribed) return null;
       if (prefs && prefs[eventType] && prefs[eventType].inApp === false) return null;
     }
 

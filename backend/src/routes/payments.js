@@ -7,13 +7,8 @@ const User = require('../models/User');
 const { sendEmail } = require('../services/emailService');
 
 const features = require('../config/features');
+const { getStripe } = require('../utils/stripe.util');
 const LOG_PREFIX = '[Payments]';
-
-/** Lazy Stripe client so the server can start even when STRIPE_SECRET_KEY is not set. */
-function getStripe() {
-  const key = process.env.STRIPE_SECRET_KEY;
-  return key ? new Stripe(key) : null;
-}
 
 const router = express.Router();
 
@@ -186,7 +181,7 @@ router.post('/setup-intent', authenticateToken, requireActiveAccount, async (req
     const stripe = getStripe();
     if (!stripe) return res.status(503).json({ error: 'Payments not configured' });
 
-    const user = await User.findById(req.user.uid).select('stripeCustomerId email firstName lastName');
+    const user = await User.findOne({ uid: req.user.uid }).select('stripeCustomerId email firstName lastName');
     if (!user) return res.status(404).json({ error: 'User not found' });
 
     let customerId = user.stripeCustomerId;
@@ -197,7 +192,7 @@ router.post('/setup-intent', authenticateToken, requireActiveAccount, async (req
         metadata: { uid: req.user.uid },
       });
       customerId = customer.id;
-      await User.findByIdAndUpdate(req.user.uid, { stripeCustomerId: customerId });
+      await User.findOneAndUpdate({ uid: req.user.uid }, { stripeCustomerId: customerId });
       console.log(`${PREFIX} Created Stripe Customer ${customerId} for uid=${req.user.uid?.slice(0, 8)}...`);
     }
 
@@ -221,7 +216,7 @@ router.post('/setup-intent', authenticateToken, requireActiveAccount, async (req
  */
 router.get('/payment-method', authenticateToken, async (req, res) => {
   try {
-    const user = await User.findById(req.user.uid).select(
+    const user = await User.findOne({ uid: req.user.uid }).select(
       'savedPaymentMethodId savedPaymentMethodBrand savedPaymentMethodLast4 savedPaymentMethodExpiry kycStatus emailVerified'
     );
     if (!user) return res.status(404).json({ error: 'User not found' });
@@ -254,7 +249,7 @@ router.delete('/payment-method', authenticateToken, requireActiveAccount, async 
     const stripe = getStripe();
     if (!stripe) return res.status(503).json({ error: 'Payments not configured' });
 
-    const user = await User.findById(req.user.uid).select('savedPaymentMethodId stripeCustomerId');
+    const user = await User.findOne({ uid: req.user.uid }).select('savedPaymentMethodId stripeCustomerId');
     if (!user) return res.status(404).json({ error: 'User not found' });
     if (!user.savedPaymentMethodId) return res.status(400).json({ error: 'No payment method saved' });
 
@@ -274,7 +269,7 @@ router.delete('/payment-method', authenticateToken, requireActiveAccount, async 
     await stripe.paymentMethods.detach(user.savedPaymentMethodId);
     console.log(`${PREFIX} Detached PM ${user.savedPaymentMethodId} for uid=${req.user.uid?.slice(0, 8)}...`);
 
-    await User.findByIdAndUpdate(req.user.uid, {
+    await User.findOneAndUpdate({ uid: req.user.uid }, {
       $set: {
         savedPaymentMethodId: null,
         savedPaymentMethodBrand: null,
@@ -429,7 +424,7 @@ async function handleSetupIntentSucceeded(setupIntent) {
   const card = pm.card;
   const expiry = card ? `${String(card.exp_month).padStart(2, '0')}/${card.exp_year}` : null;
 
-  await User.findByIdAndUpdate(uid, {
+  await User.findOneAndUpdate({ uid }, {
     $set: {
       savedPaymentMethodId: pmId,
       savedPaymentMethodBrand: card?.brand ?? 'unknown',

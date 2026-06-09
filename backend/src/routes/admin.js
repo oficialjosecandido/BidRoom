@@ -1,5 +1,4 @@
 const express = require('express');
-const Stripe = require('stripe');
 const mongoose = require('mongoose');
 const { authenticateToken } = require('../middleware/auth');
 const User = require('../models/User');
@@ -23,10 +22,7 @@ const { getBlocklistItems, addBlocklistItem, removeBlocklistItem, ensureBlocklis
 const azureStorageService = require('../services/azureStorage.service');
 const { requireAdmin, ADMIN_EMAILS } = require('../utils/roles');
 
-function getStripe() {
-  const key = process.env.STRIPE_SECRET_KEY;
-  return key ? new Stripe(key) : null;
-}
+const { getStripe } = require('../utils/stripe.util');
 
 function computeBuyerTrustTier(buyer) {
   if (!buyer) return 1;

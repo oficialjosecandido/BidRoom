@@ -31,7 +31,8 @@
       "Bash(node --check /Users/josecandido/Documents/BidRoom/backend/src/models/FraudEvent.js)",
       "Bash(node --check /Users/josecandido/Documents/BidRoom/backend/src/models/Bid.js)",
       "Bash(node --check /Users/josecandido/Documents/BidRoom/backend/src/models/User.js)",
-      "Bash(node -e ' *)"
+      "Bash(node -e ' *)",
+      "Bash(curl -s -X POST http://localhost:3000/api/payments/setup-intent -H 'Content-Type: application/json' -H 'Authorization: Bearer eyJhbGciOiJSUzI1NiIsImtpZCI6Ijc5OTRiNGYzMTU2MzJiMjk3NzAwNmQ5M2U5NGIyYWNiZTMwNWZlNDYiLCJ0eXAiOiJKV1QifQ.eyJuYW1lIjoiSm9zw6kgQ8OibmRpZG8iLCJwaWN0dXJlIjoiaHR0cHM6Ly9saDMuZ29vZ2xldXNlcmNvbnRlbnQuY29tL2EvQUNnOG9jTHlGaDJZVjZMN2NFdVZDU3JKcFVCcTNsWVI3ZUVPZWx1WWloRllkdEdHaGZqTkJZczk9czk2LWMiLCJpc3MiOiJodHRwczovL3NlY3VyZXRva2VuLmdvb2dsZS5jb20vYmlkcm9vbS00N2NiNSIsImF1ZCI6ImJpZHJvb20tNDdjYjUiLCJhdXRoX3RpbWUiOjE3NzU4NTYxMjYsInVzZXJfaWQiOiJVWVRJNjZyNE9XVlpQSDQxNzVVVWxiSjIyRVMyIiwic3ViIjoiVVlUSTY2cjRPV1ZaUEg0MTc1VVVsYkoyMkVTMiIsImlhdCI6MTc4MDk1ODQzOCwiZXhwIjoxNzgwOTYyMDM4LCJlbWFpbCI6Impvc2V2Y2FuZGlkb0BnbWFpbC5jb20iLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwiZmlyZWJhc2UiOnsiaWRlbnRpdGllcyI6eyJnb29nbGUuY29tIjpbIjEwNzkxMDIyODY2NjM5NzMxMDUzOSJdLCJlbWFpbCI6WyJqb3NldmNhbmRpZG9AZ21haWwuY29tIl19LCJzaWduX2luX3Byb3ZpZGVyIjoiZ29vZ2xlLmNvbSJ9fQ.R8M2lEDD15d-2R11Mdr-qbfTE2dV9gFBKST3eAt63cd4BgPSJ5H4ItUt6sa9KiYnyD6jDB6BMLxLqm5MWBHIlKgrCvM6scP_B28vkTiSiUjkKlsJyDJCyd2xMaqpJKlPqic2pLUrI7xp7CvUdlBc-W6A2m6a-Lrr82cS5y8_FS5bEtE591OLuivPtdFv1NCreZUUsAZQ87LVgX8hZ9jj_DHXZ47zEg8sji5F5EvwHyBZ1JityryGwKZD3U5MdI3rKhGfqLEvaaG64MI_IcO5MudbUdrvAgsdvlLRcIHjAFiRXt-WRJRnt5eMt6-HYBZVRX-QnAfywflSUs_euj_-Kg' -d '{}')"
     ],
     "additionalDirectories": [
       "/Users/josecandido/Documents/BidRoom/.claude"

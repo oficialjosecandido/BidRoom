@@ -1787,7 +1787,7 @@
       "notifications": {
         "title": "Notification Preferences",
         "loading": "Loading preferences...",
-        "globalEmailUnsubscribed": "Unsubscribe from all email notifications",
+        "globalEmailUnsubscribed": "Unsubscribe from all notifications (email and in-app)",
         "event": "Event",
         "channelEmail": "Email",
         "channelInApp": "In-App",
@@ -1805,6 +1805,22 @@
           "newBid": "New bid on your listing",
           "disputeUpdate": "Dispute update"
         }
+      },
+      "paymentMethod": {
+        "title": "Payment Guarantee",
+        "loading": "Loading…",
+        "activeBadge": "Payment Guaranteed — Level 3",
+        "activeDesc": "Sellers see your badge. If you lose a dispute, the amount is charged automatically.",
+        "disclaimer": "Your card is never charged without prior email notification and a 48h contestation period.",
+        "upgradeTitle": "Reach Level 3 — Payment Guaranteed",
+        "benefit1": "🛡️ Sellers prioritise you in Private Rooms",
+        "benefit2": "💳 Bid on auctions above €5,000",
+        "benefit3": "✓ Automatic compensation to seller if dispute resolved against you",
+        "addCard": "Add payment card",
+        "cancel": "Cancel",
+        "saveCard": "Save card",
+        "saving": "Saving…",
+        "stripeNote": "Your card details are encrypted by Stripe (PCI DSS Level 1) — BidRoom never sees the full card number."
       },
       "savePrefsError": "Failed to save preferences. Please try again.",
       "connectError": "Something went wrong. Please check your details and try again.",

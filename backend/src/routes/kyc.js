@@ -9,18 +9,13 @@
  */
 
 const express = require('express');
-const Stripe = require('stripe');
 const User = require('../models/User');
 const { authenticateToken, requireActiveAccount } = require('../middleware/auth');
+const { getStripe } = require('../utils/stripe.util');
 
 const router = express.Router();
 
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:4200';
-
-function getStripe() {
-  const key = process.env.STRIPE_SECRET_KEY;
-  return key ? new Stripe(key) : null;
-}
 
 // ── GET /api/kyc/status ───────────────────────────────────────────────────────
 // Returns the current user's KYC status (public-safe fields only).
