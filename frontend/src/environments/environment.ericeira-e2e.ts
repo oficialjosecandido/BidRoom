@@ -1,5 +1,6 @@
 export const environment = {
   production: true,
+  googleAnalyticsId: '',
   appUrl: 'https://blue-glacier-0e23ae710.2.azurestaticapps.net/landing',
   enableAuctions: false,
   enablePrivateRooms: false,

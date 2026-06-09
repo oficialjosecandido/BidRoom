@@ -1,5 +1,6 @@
 export const environment = {
   production: true,
+  googleAnalyticsId: 'G-4FDFR1ZSRV',
   appUrl: 'https://calm-desert-0d6601f10.1.azurestaticapps.net',
   enableAuctions: false,
   enablePrivateRooms: false,
