@@ -89,9 +89,11 @@ async function calculateRates({ origin, destination, packageSize }) {
       to_address: {
         street1: destination.street1,
         city: destination.city,
-        state: destination.state || '',
+        // Only include state when it has a value — sending empty string causes
+        // EasyPost validation errors for countries that don't use state/province.
+        ...(destination.state ? { state: destination.state } : {}),
         zip: destination.postalCode,
-        country: destination.country || 'US'
+        country: destination.country || 'PT'
       },
       parcel
     }

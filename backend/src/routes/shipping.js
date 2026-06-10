@@ -14,6 +14,22 @@ const { calculateRates } = require('../services/shippingCalculationService');
 const LOG_PREFIX = '[Shipping]';
 const router = express.Router();
 
+/** US-style state/province codes are required for rate APIs on these countries only. */
+function requiresState(country) {
+  return ['US', 'CA', 'AU'].includes(String(country || '').toUpperCase());
+}
+
+function validateDestination(destination) {
+  const { street1, city, state, postalCode, country } = destination || {};
+  if (!street1 || !city || !postalCode) {
+    return 'Shipping cannot be calculated for this delivery address. Please provide street, city, and postal code.';
+  }
+  if (requiresState(country) && !state) {
+    return 'Shipping cannot be calculated for this delivery address. Please provide the state or province for this country.';
+  }
+  return null;
+}
+
 router.use(authenticateToken);
 
 /**
@@ -31,11 +47,11 @@ router.post('/rates', requireActiveAccount, async (req, res) => {
   if (!transactionId || !destination) {
     return res.status(400).json({ error: 'transactionId and destination are required' });
   }
-  const { street1, city, state, postalCode } = destination;
-  if (!street1 || !city || !state || !postalCode) {
+  const destError = validateDestination(destination);
+  if (destError) {
     return res.status(400).json({
       error: 'Incomplete destination',
-      message: 'Shipping cannot be calculated for this delivery address. Please provide street, city, state, and postal code.'
+      message: destError
     });
   }
 
@@ -72,7 +88,7 @@ router.post('/rates', requireActiveAccount, async (req, res) => {
     const origin = {
       postalCode: listing.shippingOriginPostalCode,
       city: listing.shippingOriginCity || '',
-      country: listing.shippingOriginCountry || 'US'
+      country: listing.shippingOriginCountry || 'PT'
     };
 
     let rates;
@@ -86,9 +102,16 @@ router.post('/rates', requireActiveAccount, async (req, res) => {
           message: 'Shipping cannot be calculated at this time. Please try again later.'
         });
       }
+      // EasyPost address validation errors (e.g. missing state for US)
+      if (err.code === 'EASYPOST_ERROR') {
+        return res.status(422).json({
+          error: 'Address validation failed',
+          message: 'Não foi possível calcular o envio para esta morada. Verifique os dados e tente novamente.'
+        });
+      }
       return res.status(503).json({
         error: 'Rate calculation failed',
-        message: 'Shipping cannot be calculated for this delivery address. Please update shipping details or try again later.'
+        message: 'Não foi possível calcular o envio de momento. Tente novamente mais tarde.'
       });
     }
 
