@@ -8,6 +8,7 @@ const Bid = require('../models/Bid');
 const { handleAuctionEnd, handlePrivateRoomEnd, handlePrivateRoomClosedNoAcceptance, handlePrivateRoomEligibleExpired } = require('./auctionNotificationService');
 const { checkAndApplyPendingSuspensions } = require('./accountStatusService');
 const { processPrivateRoomNonPayments, sendPaymentDeadlineWarnings } = require('./privateRoomPaymentService');
+const { processAllNonPayments } = require('./nonPaymentPenaltyService');
 const { processAutoRelists } = require('./autoRelistService');
 const { notifyWatchlistersAuctionEnding } = require('./notificationService');
 
@@ -130,12 +131,15 @@ async function checkEndedAuctions() {
       }
     }
 
-    // 3) Private-room payment warnings (1h before deadline) and non-payment enforcement
+    // 3) Payment warnings + non-payment enforcement (private rooms + all other formats)
     await sendPaymentDeadlineWarnings(ioInstance).catch(err =>
       console.error('❌ Payment deadline warnings error:', err.message)
     );
     await processPrivateRoomNonPayments(ioInstance).catch(err =>
-      console.error('❌ Non-payment processing error:', err.message)
+      console.error('❌ Private-room non-payment processing error:', err.message)
+    );
+    await processAllNonPayments(ioInstance).catch(err =>
+      console.error('❌ Non-payment penalty processing error:', err.message)
     );
     await processAutoRelists(ioInstance).catch(err =>
       console.error('❌ Auto-relist processing error:', err.message)

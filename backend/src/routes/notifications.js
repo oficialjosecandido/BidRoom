@@ -2,7 +2,7 @@ const express = require('express');
 const crypto = require('crypto');
 const rateLimit = require('express-rate-limit');
 const Notification = require('../models/Notification');
-const User = require('../models/User');
+const Customer = require('../models/Customer');
 const NotificationPreferences = require('../models/NotificationPreferences');
 const { authenticateToken } = require('../middleware/auth');
 
@@ -19,7 +19,7 @@ const unsubscribeLimiter = rateLimit({
 /** GET /api/notifications - List notifications for the current user (newest first) */
 router.get('/', authenticateToken, async (req, res) => {
   try {
-    const user = await User.findOne({ uid: req.user.uid });
+    const user = await Customer.findOne({ uid: req.user.uid });
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
@@ -64,7 +64,7 @@ router.get('/', authenticateToken, async (req, res) => {
 /** GET /api/notifications/unread-count - Get unread count for badge (optional ?types=bid,shipping) */
 router.get('/unread-count', authenticateToken, async (req, res) => {
   try {
-    const user = await User.findOne({ uid: req.user.uid });
+    const user = await Customer.findOne({ uid: req.user.uid });
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
@@ -94,7 +94,7 @@ router.get('/unread-count', authenticateToken, async (req, res) => {
 /** PATCH /api/notifications/read-all - Mark all notifications as read (must be before /:id/read) */
 router.patch('/read-all', authenticateToken, async (req, res) => {
   try {
-    const user = await User.findOne({ uid: req.user.uid });
+    const user = await Customer.findOne({ uid: req.user.uid });
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
@@ -127,7 +127,7 @@ router.patch('/read-all', authenticateToken, async (req, res) => {
 /** PATCH /api/notifications/:id/read - Mark a single notification as read */
 router.patch('/:id/read', authenticateToken, async (req, res) => {
   try {
-    const user = await User.findOne({ uid: req.user.uid });
+    const user = await Customer.findOne({ uid: req.user.uid });
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
@@ -169,7 +169,7 @@ function buildGlobalUnsubscribeUpdate() {
 /** GET /api/notifications/preferences - Load notification preferences for current user */
 router.get('/preferences', authenticateToken, async (req, res) => {
   try {
-    const user = await User.findOne({ uid: req.user.uid }).select('_id').lean();
+    const user = await Customer.findOne({ uid: req.user.uid }).select('_id').lean();
     if (!user) return res.status(404).json({ error: 'User not found' });
 
     let prefs = await NotificationPreferences.findOne({ user: user._id }).lean();
@@ -191,7 +191,7 @@ router.get('/preferences', authenticateToken, async (req, res) => {
 /** PATCH /api/notifications/preferences - Save notification preferences for current user */
 router.patch('/preferences', authenticateToken, async (req, res) => {
   try {
-    const user = await User.findOne({ uid: req.user.uid }).select('_id').lean();
+    const user = await Customer.findOne({ uid: req.user.uid }).select('_id').lean();
     if (!user) return res.status(404).json({ error: 'User not found' });
 
     let update = {};
@@ -234,7 +234,7 @@ router.get('/unsubscribe', unsubscribeLimiter, async (req, res) => {
     return res.status(400).json({ error: 'Invalid unsubscribe link' });
   }
   try {
-    const user = await User.findOne({ emailUnsubscribeToken: token }).select('_id').lean();
+    const user = await Customer.findOne({ emailUnsubscribeToken: token }).select('_id').lean();
     if (!user) return res.status(404).json({ error: 'Unsubscribe link not recognised' });
 
     await NotificationPreferences.findOneAndUpdate(

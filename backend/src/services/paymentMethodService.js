@@ -1,4 +1,4 @@
-const User = require('../models/User');
+const Customer = require('../models/Customer');
 const { getStripe } = require('../utils/stripe.util');
 
 function migrateLegacyIfNeeded(user) {
@@ -46,7 +46,7 @@ function formatMethodsResponse(user) {
 }
 
 async function loadUserForPaymentMethods(uid) {
-  const user = await User.findOne({ uid }).select(
+  const user = await Customer.findOne({ uid }).select(
     'savedPaymentMethods savedPaymentMethodId savedPaymentMethodBrand savedPaymentMethodLast4 savedPaymentMethodExpiry stripeCustomerId kycStatus emailVerified'
   );
   if (!user) return null;

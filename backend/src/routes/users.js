@@ -1,6 +1,6 @@
 const express = require('express');
 const mongoose = require('mongoose');
-const User = require('../models/User');
+const Customer = require('../models/Customer');
 const Listing = require('../models/Listing');
 const Review = require('../models/Review');
 const Transaction = require('../models/Transaction');
@@ -52,9 +52,9 @@ function isValidObjectId(v) {
 /** Resolve a route param that can be a 24-char ObjectId OR a slug. Returns the User lean doc or null. */
 async function resolveUser(idOrSlug, select) {
   if (isValidObjectId(idOrSlug)) {
-    return User.findById(idOrSlug).select(select).lean();
+    return Customer.findById(idOrSlug).select(select).lean();
   }
-  return User.findOne({ slug: idOrSlug }).select(select).lean();
+  return Customer.findOne({ slug: idOrSlug }).select(select).lean();
 }
 
 /**

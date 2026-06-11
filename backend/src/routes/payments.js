@@ -3,7 +3,6 @@ const Stripe = require('stripe');
 const { authenticateToken, requireActiveAccount } = require('../middleware/auth');
 const Customer = require('../models/Customer');
 const Topup = require('../models/Topup');
-const User = require('../models/User');
 const { sendEmail } = require('../services/emailService');
 
 const features = require('../config/features');
@@ -189,7 +188,7 @@ router.post('/setup-intent', authenticateToken, requireActiveAccount, async (req
     const stripe = getStripe();
     if (!stripe) return res.status(503).json({ error: 'Payments not configured' });
 
-    const user = await User.findOne({ uid: req.user.uid }).select('stripeCustomerId email firstName lastName');
+    const user = await Customer.findOne({ uid: req.user.uid }).select('stripeCustomerId email firstName lastName');
     if (!user) return res.status(404).json({ error: 'User not found' });
 
     let customerId = user.stripeCustomerId;
@@ -201,7 +200,7 @@ router.post('/setup-intent', authenticateToken, requireActiveAccount, async (req
         name: `${user.firstName} ${user.lastName}`,
         metadata: { uid: req.user.uid },
       });
-      await User.findOneAndUpdate({ uid: req.user.uid }, { stripeCustomerId: customer.id });
+      await Customer.findOneAndUpdate({ uid: req.user.uid }, { stripeCustomerId: customer.id });
       console.log(`${PREFIX} Created Stripe Customer ${customer.id} for uid=${req.user.uid?.slice(0, 8)}...`);
       return customer.id;
     };
@@ -300,7 +299,7 @@ router.patch('/payment-method/:paymentMethodId/default', authenticateToken, requ
 router.delete('/payment-method/:paymentMethodId', authenticateToken, requireActiveAccount, async (req, res) => {
   const PREFIX = '[DeletePaymentMethod]';
   try {
-    const buyer = await User.findOne({ uid: req.user.uid }).select('_id').lean();
+    const buyer = await Customer.findOne({ uid: req.user.uid }).select('_id').lean();
     if (!buyer) return res.status(404).json({ error: 'User not found' });
 
     const Transaction = require('../models/Transaction');

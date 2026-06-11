@@ -1,6 +1,6 @@
 /**
  * API Configuration
- * - Local (ng serve):  /api via proxy.conf.json → backend (avoids CORS)
+ * - Local (ng serve):  /api via proxy.conf.local.json → localhost:3000 (avoids CORS)
  * - Deployed (SWA):    full backend URL — same-origin /api only serves index.html
  * - Override:          window.APP_CONFIG.API_URL (absolute URL on deploy)
  */
@@ -28,7 +28,7 @@ export const API_CONFIG = {
       typeof window !== 'undefined' ? (window as { APP_CONFIG?: { API_URL?: string } }).APP_CONFIG?.API_URL : undefined;
 
     if (isLocal) {
-      // ng serve + proxy.conf.json; allow absolute override for direct backend testing
+      // ng serve + proxy.conf.local.json; allow absolute override for direct backend testing
       if (runtimeUrl && (runtimeUrl.startsWith('http://') || runtimeUrl.startsWith('https://'))) {
         return normalizeApiUrl(runtimeUrl);
       }

@@ -40,6 +40,7 @@ export class DashboardTransactionsComponent implements OnInit {
   /** Review modal */
   reviewModalTransaction: Transaction | null = null;
   reviewScore = 0;
+  reviewScoreHover = 0;
   reviewDescription = '';
   reviewError: string | null = null;
   reviewSubmitting = false;
@@ -51,7 +52,6 @@ export class DashboardTransactionsComponent implements OnInit {
   disputeError: string | null = null;
   disputeSubmitting = false;
   disputeEvidenceUploading = false;
-  showTrackingFormId: string | null = null;
   trackingNumber = '';
   trackingCarrier = '';
   estimatedDeliveryDays: number | null = null;
@@ -72,8 +72,6 @@ export class DashboardTransactionsComponent implements OnInit {
   deliveryProofFileNameByTxId: Record<string, string> = {};
   deliveryProofUploadingTxId: string | null = null;
   deliveryProofErrorByTxId: Record<string, string> = {};
-  /** Transaction ID currently downloading invoice/receipt PDF */
-  invoiceDownloadingTxId: string | null = null;
   /** Shipping rate flow state */
   shippingRatesTxId: string | null = null;      // txId for which rate panel is open
   shippingRates: ShippingRate[] = [];
@@ -81,9 +79,14 @@ export class DashboardTransactionsComponent implements OnInit {
   shippingRatesError: string | null = null;
   lockingRateTxId: string | null = null;
   /** Delivery address form used for shipping rate calculation */
-  deliveryAddress: DeliveryAddress = { street1: '', city: '', state: '', postalCode: '', country: 'US' };
-  /** Transaction ID for which a "Remind seller to ship" request is in flight (loading state). */
-  remindSellerShipTxId: string | null = null;
+  deliveryAddress: DeliveryAddress = { street1: '', city: '', state: '', postalCode: '', country: 'PT' };
+
+  /** Countries where carrier APIs expect a state/province code (US, CA, AU). */
+  private readonly stateRequiredCountries = new Set(['US', 'CA', 'AU']);
+
+  readonly shippingCountries = [
+    'PT', 'ES', 'FR', 'DE', 'IT', 'GB', 'IE', 'NL', 'BE', 'CH', 'AT', 'LU', 'US', 'CA', 'AU',
+  ];
   /** Damage claim modal */
   damageClaimTransaction: Transaction | null = null;
   damagePhotoUrls: string[] = [];
@@ -204,6 +207,7 @@ export class DashboardTransactionsComponent implements OnInit {
     this.transactionsService.getMyTransactions().subscribe({
       next: (res) => {
         this.transactions = res.transactions || [];
+        this.syncSelectedTransactions();
         this.isLoading = false;
         this.scrollToTransactionFromFragment();
       },
@@ -254,6 +258,11 @@ export class DashboardTransactionsComponent implements OnInit {
     return !!(t.buyerHasReviewedSeller && t.sellerHasReviewedBuyer);
   }
 
+  /** Transaction flow finished and both parties have reviewed */
+  isFullyCompleted(t: Transaction): boolean {
+    return this.isDone(t) && this.hasBothReviewed(t);
+  }
+
   /** Buyer can mark as completed once item flow reached paid/shipped/delivered */
   canMarkAsCompleted(t: Transaction): boolean {
     return ['paid', 'shipped', 'delivered'].includes(this.getEffectiveStatus(t));
@@ -282,7 +291,9 @@ export class DashboardTransactionsComponent implements OnInit {
     }
     const map: Record<TransactionStatus, string> = {
       pending_payment: 'Pending Payment',
-      awaiting_seller_acceptance: 'Payment Submitted',
+      awaiting_seller_acceptance: this.hasVerifiedPayment(t)
+        ? this.translate.instant('transactions.buyingStatus.paid')
+        : this.translate.instant('transactions.buyingStatus.paymentSubmitted'),
       paid: 'Paid',
       shipped: 'Paid',
       delivered: 'Received',
@@ -302,8 +313,10 @@ export class DashboardTransactionsComponent implements OnInit {
     }
     const map: Record<TransactionStatus, string> = {
       pending_payment: 'Pending Delivery',
-      awaiting_seller_acceptance: 'Pending Acceptance',
-      paid: 'Payment Received',
+      awaiting_seller_acceptance: this.hasVerifiedPayment(t)
+        ? this.translate.instant('transactions.sellingStatus.pendingShipment')
+        : this.translate.instant('transactions.sellingStatus.pendingAcceptance'),
+      paid: this.translate.instant('transactions.sellingStatus.paymentReceived'),
       shipped: 'Sent',
       delivered: 'Sent',
       under_dispute: 'Under Dispute',
@@ -340,7 +353,7 @@ export class DashboardTransactionsComponent implements OnInit {
     }
     const map: Record<TransactionStatus, string> = {
       pending_payment: 'status-pending',
-      awaiting_seller_acceptance: 'status-pending',
+      awaiting_seller_acceptance: this.hasVerifiedPayment(t) ? 'status-paid' : 'status-pending',
       paid: 'status-paid',
       shipped: 'status-shipped',
       delivered: 'status-shipped',
@@ -365,9 +378,25 @@ export class DashboardTransactionsComponent implements OnInit {
     return classes[status] || '';
   }
 
-  /** Seller can accept payment when buyer has submitted proof (5-day window) */
+  isStripePaid(t: Transaction): boolean {
+    return !!(t.stripePaymentIntentId || t.stripeCheckoutSessionId);
+  }
+
+  /** Payment verified (Stripe or paymentStatus paid) — no manual seller acceptance. */
+  hasVerifiedPayment(t: Transaction): boolean {
+    return t.paymentStatus === 'paid' || this.isStripePaid(t);
+  }
+
+  /** Manual (non-Stripe) payment — seller must confirm receipt before shipping. */
   canSellerAcceptPayment(t: Transaction): boolean {
-    return this.getEffectiveStatus(t) === 'awaiting_seller_acceptance';
+    return this.getEffectiveStatus(t) === 'awaiting_seller_acceptance' && !this.hasVerifiedPayment(t);
+  }
+
+  /** Seller can upload proof and mark shipped once payment is verified. */
+  canSellerPrepareShipment(t: Transaction): boolean {
+    if (!this.isSeller(t)) return false;
+    const s = this.getEffectiveStatus(t);
+    return s === 'paid' || (s === 'awaiting_seller_acceptance' && this.hasVerifiedPayment(t));
   }
 
   hasPaymentAcceptanceDeadlinePassed(t: Transaction): boolean {
@@ -406,12 +435,17 @@ export class DashboardTransactionsComponent implements OnInit {
       },
       error: (err) => {
         this.stripePayingTxId = null;
-        const apiError = err?.error?.error;
+        const body = err?.error;
+        const apiError = body?.error;
+        if (apiError === 'Payment already completed' && body?.sessionId) {
+          this.confirmStripePayment(body.sessionId, t._id);
+          return;
+        }
         if (apiError === 'Seller not ready') {
           this.stripePaymentError = `Payment unavailable: the seller has not connected their Stripe account yet. ` +
             `Please contact the seller (${t.seller?.firstName} ${t.seller?.lastName}) or wait for them to complete their payment setup.`;
         } else {
-          this.stripePaymentError = err?.error?.message || this.translate.instant('transactions.stripePaymentError');
+          this.stripePaymentError = body?.message || apiError || this.translate.instant('transactions.stripePaymentError');
         }
       }
     });
@@ -432,10 +466,14 @@ export class DashboardTransactionsComponent implements OnInit {
     });
   }
 
-  /** Financial breakdown: BidRoom fee (4% of item price, charged to seller) */
+  /**
+   * BidRoom fee charged to the BUYER (3.5% standard, 6% private room, max €500).
+   * Uses the stored amount when available; falls back to the commission rate on the listing.
+   */
   getBidRoomFee(t: Transaction): number {
     if (t.bidRoomFeeAmount != null) return t.bidRoomFeeAmount;
-    return t.amount * 0.04;
+    const rate = t.listing?.commissionRate ?? 0.035;
+    return Math.min(t.amount * rate, 500);
   }
 
   /** Shipping amount: uses locked rate if available, falls back to flat-rate / free / null */
@@ -469,11 +507,22 @@ export class DashboardTransactionsComponent implements OnInit {
         city: t.buyerDeliveryAddress.city || '',
         state: t.buyerDeliveryAddress.state || '',
         postalCode: t.buyerDeliveryAddress.postalCode || '',
-        country: t.buyerDeliveryAddress.country || 'US'
+        country: t.buyerDeliveryAddress.country || 'PT'
       };
     } else {
-      this.deliveryAddress = { street1: '', city: '', state: '', postalCode: '', country: 'US' };
+      this.deliveryAddress = { street1: '', city: '', state: '', postalCode: '', country: 'PT' };
     }
+  }
+
+  deliveryAddressRequiresState(): boolean {
+    return this.stateRequiredCountries.has((this.deliveryAddress.country || '').toUpperCase());
+  }
+
+  isDeliveryAddressComplete(): boolean {
+    const addr = this.deliveryAddress;
+    if (!addr.street1?.trim() || !addr.city?.trim() || !addr.postalCode?.trim()) return false;
+    if (this.deliveryAddressRequiresState() && !addr.state?.trim()) return false;
+    return true;
   }
 
   closeShippingPanel(): void {
@@ -485,8 +534,12 @@ export class DashboardTransactionsComponent implements OnInit {
   /** Fetch carrier rates from the backend */
   fetchShippingRates(t: Transaction): void {
     const addr = this.deliveryAddress;
-    if (!addr.street1 || !addr.city || !addr.state || !addr.postalCode) {
-      this.shippingRatesError = 'Please fill in all address fields (street, city, state, postal code).';
+    if (!this.isDeliveryAddressComplete()) {
+      this.shippingRatesError = this.translate.instant(
+        this.deliveryAddressRequiresState()
+          ? 'transactions.addressIncompleteWithState'
+          : 'transactions.addressIncomplete'
+      );
       return;
     }
     this.shippingRatesLoading = true;
@@ -546,14 +599,20 @@ export class DashboardTransactionsComponent implements OnInit {
     return t.stripeFeeAmount ?? null;
   }
 
-  /** Seller net payout */
+  /**
+   * Seller payout: per documentation, seller receives 100% of the bid.
+   * Uses the stored Stripe payout amount when available.
+   * Fallback: amount + shipping (no deductions — doc says seller pays 0%).
+   */
   getSellerNet(t: Transaction): number {
-    if (t.sellerPayoutAmount != null) return t.sellerPayoutAmount;
-    const stripeFee = this.getStripeFee(t) ?? 0;
-    return t.amount - this.getBidRoomFee(t) - stripeFee;
+    const shipping = this.getShippingAmount(t) ?? 0;
+    return t.amount + shipping;
   }
 
-  /** Buyer total charged (amount + BidRoom fee + shipping) */
+  /**
+   * Buyer total: bid + BidRoom fee (charged to buyer) + shipping.
+   * Per documentation: Comprador paga = Lance + Fee BidRoom + Envio.
+   */
   getBuyerTotal(t: Transaction): number | null {
     if (t.buyerTotalPaid != null) return t.buyerTotalPaid;
     const bidRoomFee = this.getBidRoomFee(t);
@@ -633,44 +692,6 @@ export class DashboardTransactionsComponent implements OnInit {
     return '—';
   }
 
-  /** Whether the buyer has already used the "Remind seller" action within the last 24 hours. */
-  isRemindSellerOnCooldown(t: Transaction): boolean {
-    if (!t.buyerRemindSellerShipAt) return false;
-    return Date.now() - new Date(t.buyerRemindSellerShipAt).getTime() < 24 * 60 * 60 * 1000;
-  }
-
-  /** True when the buyer is allowed to send a shipping reminder (correct role + status + not on cooldown). */
-  canRemindSellerToShip(t: Transaction): boolean {
-    if (!this.isBuyer(t)) return false;
-    if (!['awaiting_seller_acceptance', 'paid'].includes(this.getEffectiveStatus(t))) return false;
-    if (this.isRemindSellerOnCooldown(t)) return false;
-    return true;
-  }
-
-  /**
-   * Send a "Remind seller to ship" request. Updates the local transaction
-   * on success, shows a toast, or displays the 24-hour cooldown message on 429.
-   */
-  remindSellerToShip(t: Transaction): void {
-    if (!this.canRemindSellerToShip(t) || this.remindSellerShipTxId) return;
-    this.remindSellerShipTxId = t._id;
-    this.transactionsService.remindSellerToShip(t._id).subscribe({
-      next: (updated) => {
-        this.remindSellerShipTxId = null;
-        this.replaceTransaction(updated);
-        successToast.fire({ title: 'Reminder sent to the seller' });
-      },
-      error: (err) => {
-        this.remindSellerShipTxId = null;
-        const msg =
-          err?.status === 429
-            ? 'You can send another reminder after 24 hours.'
-            : err?.error?.message || 'Could not send reminder.';
-        Swal.fire({ icon: 'info', title: 'Reminder', text: msg, confirmButtonColor: '#7A4F84' });
-      }
-    });
-  }
-
   hasPaymentDeadlinePassed(t: Transaction): boolean {
     if (!t.paymentDeadline) return false;
     return new Date(t.paymentDeadline) < new Date();
@@ -683,6 +704,7 @@ export class DashboardTransactionsComponent implements OnInit {
       next: (updated) => {
         this.replaceTransaction(updated);
         this.updatingId = null;
+        successToast.fire({ title: this.translate.instant('transactions.receivedConfirmedToast') });
       },
       error: () => (this.updatingId = null)
     });
@@ -700,20 +722,6 @@ export class DashboardTransactionsComponent implements OnInit {
     });
   }
 
-  toggleTrackingForm(t: Transaction): void {
-    if (this.showTrackingFormId === t._id) {
-      this.showTrackingFormId = null;
-      this.trackingNumber = '';
-      this.trackingCarrier = '';
-      this.estimatedDeliveryDays = null;
-    } else {
-      this.showTrackingFormId = t._id;
-      this.trackingNumber = t.trackingNumber || '';
-      this.trackingCarrier = t.trackingCarrier || '';
-      this.estimatedDeliveryDays = t.shippingDeliveryDays ?? null;
-    }
-  }
-
   triggerDeliveryProofUpload(t: Transaction, input: HTMLInputElement): void {
     input.value = '';
     input.click();
@@ -724,9 +732,9 @@ export class DashboardTransactionsComponent implements OnInit {
   }
 
   getDeliveryProofUploadButtonLabel(t: Transaction): string {
-    if (this.deliveryProofUploadingTxId === t._id) return 'Uploading…';
-    if (this.deliveryProofUploadedUrlByTxId[t._id]) return 'Proof uploaded';
-    return 'Upload proof of delivery';
+    if (this.deliveryProofUploadingTxId === t._id) return this.translate.instant('transactions.uploadingProof');
+    if (this.deliveryProofUploadedUrlByTxId[t._id]) return this.translate.instant('transactions.proofUploaded');
+    return this.translate.instant('transactions.uploadProofOptional');
   }
 
   getDeliveryProofFileName(t: Transaction): string {
@@ -795,23 +803,21 @@ export class DashboardTransactionsComponent implements OnInit {
   }
 
   submitShipped(t: Transaction): void {
-    if (this.updatingId || t.role !== 'seller' || this.getEffectiveStatus(t) !== 'paid') return;
+    if (this.updatingId || t.role !== 'seller' || !this.canSellerPrepareShipment(t)) return;
     const proofUrl = this.deliveryProofUploadedUrlByTxId[t._id];
-    if (!proofUrl) return;
     this.updatingId = t._id;
     this.transactionsService
       .updateTransaction(t._id, {
         status: 'shipped',
-        trackingNumber: this.trackingNumber || undefined,
+        trackingNumber: this.trackingNumber?.trim() || undefined,
         trackingCarrier: this.trackingCarrier || undefined,
         estimatedDeliveryDays: this.estimatedDeliveryDays ?? undefined,
-        sellerProofOfDeliveryUrl: proofUrl
+        sellerProofOfDeliveryUrl: proofUrl || undefined
       })
       .subscribe({
         next: (updated) => {
           this.replaceTransaction(updated);
           this.updatingId = null;
-          this.showTrackingFormId = null;
           this.trackingNumber = '';
           this.trackingCarrier = '';
           this.estimatedDeliveryDays = null;
@@ -853,18 +859,31 @@ export class DashboardTransactionsComponent implements OnInit {
   canRequestReturn(t: Transaction): boolean {
     if (!this.isBuyer(t)) return false;
     if (this.getEffectiveStatus(t) !== 'delivered') return false;
+    if (t.listing?.returnPolicy === 'no-returns') return false;
     if (t.returnRequestedAt) return false; // already submitted
     if (!t.deliveredAt) return true; // no deliveredAt recorded — allow
+    const returnDays = this.returnWindowDays(t);
     const deadline = new Date(t.deliveredAt);
-    deadline.setDate(deadline.getDate() + 7);
+    deadline.setDate(deadline.getDate() + returnDays);
     return new Date() <= deadline;
+  }
+
+  /** Return window in days based on the listing's return policy. */
+  private returnWindowDays(t: Transaction): number {
+    switch (t.listing?.returnPolicy) {
+      case '30-days': return 30;
+      case '14-days': return 14;
+      case '7-days':  return 7;
+      default:        return 7;
+    }
   }
 
   /** Days remaining in return window */
   returnWindowDaysLeft(t: Transaction): number {
-    if (!t.deliveredAt) return 7;
+    const days = this.returnWindowDays(t);
+    if (!t.deliveredAt) return days;
     const deadline = new Date(t.deliveredAt);
-    deadline.setDate(deadline.getDate() + 7);
+    deadline.setDate(deadline.getDate() + days);
     return Math.max(0, Math.ceil((deadline.getTime() - Date.now()) / (1000 * 60 * 60 * 24)));
   }
 
@@ -932,11 +951,14 @@ export class DashboardTransactionsComponent implements OnInit {
   /** Whether buyer can open a damage claim (delivered + within 48h + no existing claim) */
   canOpenDamageClaim(t: Transaction): boolean {
     if (!this.isBuyer(t)) return false;
-    if (this.getEffectiveStatus(t) !== 'delivered') return false;
+    const s = this.getEffectiveStatus(t);
+    // Allow reporting damage when the item has been shipped (before confirming receipt)
+    // or within 48h after the buyer confirmed delivery.
+    if (s === 'shipped') return this.existingClaimsByTxId[t._id] === undefined;
+    if (s !== 'delivered') return false;
     if (!t.deliveredAt) return false;
     const elapsed = Date.now() - new Date(t.deliveredAt).getTime();
     if (elapsed > this.CLAIM_WINDOW_MS) return false;
-    // Hide if we already know a claim exists
     if (this.existingClaimsByTxId[t._id] !== undefined) return false;
     return true;
   }
@@ -1092,30 +1114,17 @@ export class DashboardTransactionsComponent implements OnInit {
     });
   }
 
-  /** Download invoice (seller) or receipt (buyer) PDF for completed transactions */
-  downloadInvoice(t: Transaction): void {
-    if (!t.role || this.invoiceDownloadingTxId) return;
-    this.invoiceDownloadingTxId = t._id;
-    this.transactionsService.getInvoice(t._id, t.role).subscribe({
-      next: (blob) => {
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = t.role === 'seller' ? `invoice-${t._id}.pdf` : `receipt-${t._id}.pdf`;
-        a.click();
-        URL.revokeObjectURL(url);
-        this.invoiceDownloadingTxId = null;
-      },
-      error: () => {
-        this.invoiceDownloadingTxId = null;
-      }
-    });
-  }
-
   private isWithinReviewWindow(t: Transaction): boolean {
     const completed = t.completedAt || t.updatedAt;
     if (!completed) return false;
     return Date.now() - new Date(completed).getTime() <= 30 * 24 * 60 * 60 * 1000;
+  }
+
+  /** Whether the current user has already submitted their review for this transaction. */
+  hasCurrentUserReviewed(t: Transaction): boolean {
+    if (this.isBuyer(t)) return !!t.buyerHasReviewedSeller;
+    if (this.isSeller(t)) return !!t.sellerHasReviewedBuyer;
+    return false;
   }
 
   /** Whether the current user can leave a review for this transaction (completed + 30-day window + hasn't reviewed) */
@@ -1123,9 +1132,7 @@ export class DashboardTransactionsComponent implements OnInit {
     const s = this.getEffectiveStatus(t);
     if (s !== 'completed') return false;
     if (!this.isWithinReviewWindow(t)) return false;
-    if (this.isBuyer(t) && !t.buyerHasReviewedSeller) return true;
-    if (this.isSeller(t) && !t.sellerHasReviewedBuyer) return true;
-    return false;
+    return !this.hasCurrentUserReviewed(t);
   }
 
   getReviewOtherPartyName(t: Transaction): string {
@@ -1146,8 +1153,10 @@ export class DashboardTransactionsComponent implements OnInit {
   }
 
   openReviewModal(t: Transaction): void {
+    if (!this.canLeaveReview(t)) return;
     this.reviewModalTransaction = t;
     this.reviewScore = 0;
+    this.reviewScoreHover = 0;
     this.reviewDescription = '';
     this.reviewError = null;
   }
@@ -1155,25 +1164,46 @@ export class DashboardTransactionsComponent implements OnInit {
   closeReviewModal(): void {
     this.reviewModalTransaction = null;
     this.reviewScore = 0;
+    this.reviewScoreHover = 0;
     this.reviewDescription = '';
     this.reviewError = null;
   }
 
   setReviewScore(n: number): void {
     this.reviewScore = n;
+    this.reviewScoreHover = 0;
+    this.reviewError = null;
   }
 
-  /** Visual tier for 1–5 score buttons (matches review modal styling). */
-  scoreTier(i: number): 'low' | 'mid' | 'high' {
-    if (i <= 2) return 'low';
-    if (i <= 4) return 'mid';
-    return 'high';
+  setReviewScoreHover(n: number): void {
+    this.reviewScoreHover = n;
+  }
+
+  clearReviewScoreHover(): void {
+    this.reviewScoreHover = 0;
+  }
+
+  /** Active score for star fill (committed or hover preview). */
+  displayReviewScore(): number {
+    return this.reviewScore || this.reviewScoreHover;
+  }
+
+  getScoreEmoji(score: number): string {
+    if (score <= 1) return '😞';
+    if (score <= 2) return '😐';
+    if (score <= 3) return '🙂';
+    if (score <= 4) return '😊';
+    return '🎉';
+  }
+
+  getScoreLabel(score: number): string {
+    return this.translate.instant(`transactions.scoreReactions.${score}`);
   }
 
   submitReview(): void {
     const t = this.reviewModalTransaction;
     if (!t || this.reviewScore < 1 || this.reviewScore > 5) {
-      this.reviewError = 'Please select a score from 1 to 5.';
+      this.reviewError = this.translate.instant('transactions.selectScore');
       return;
     }
     const listingId = (t.listing && (t.listing as { _id?: string })._id ? (t.listing as { _id?: string })._id : t.listing)?.toString();
@@ -1194,9 +1224,17 @@ export class DashboardTransactionsComponent implements OnInit {
       .subscribe({
         next: () => {
           this.reviewSubmitting = false;
+          if (t) {
+            const updated: Transaction = {
+              ...t,
+              buyerHasReviewedSeller: this.isBuyer(t) ? true : t.buyerHasReviewedSeller,
+              sellerHasReviewedBuyer: this.isSeller(t) ? true : t.sellerHasReviewedBuyer
+            };
+            this.replaceTransaction(updated);
+          }
           this.closeReviewModal();
           this.loadTransactions();
-          successToast.fire({ title: 'Review submitted' });
+          successToast.fire({ title: this.translate.instant('transactions.reviewSubmitted') });
         },
         error: (err) => {
           this.reviewSubmitting = false;
@@ -1312,17 +1350,41 @@ export class DashboardTransactionsComponent implements OnInit {
     return labels[reason] || reason;
   }
 
+  private syncSelectedTransactions(): void {
+    if (this.selectedTx) {
+      const match = this.transactions.find((tx) => tx._id === this.selectedTx!._id);
+      if (match) this.selectedTx = match;
+    }
+    if (this.drawerTx) {
+      const match = this.transactions.find((tx) => tx._id === this.drawerTx!._id);
+      if (match) this.drawerTx = match;
+    }
+  }
+
   private replaceTransaction(updated: Transaction): void {
     const idx = this.transactions.findIndex((x) => x._id === updated._id);
-    if (idx !== -1) {
-      const role = this.transactions[idx].role;
-      this.transactions[idx] = {
-        ...updated,
-        role,
-        transactionStatus: updated.transactionStatus ?? updated.status,
-        paymentStatus: updated.paymentStatus,
-        sendingStatus: updated.sendingStatus
-      };
+    if (idx === -1) return;
+
+    const role = this.transactions[idx].role;
+    const merged: Transaction = {
+      ...updated,
+      role,
+      transactionStatus: updated.transactionStatus ?? updated.status,
+      paymentStatus: updated.paymentStatus,
+      sendingStatus: updated.sendingStatus
+    };
+
+    this.transactions = [
+      ...this.transactions.slice(0, idx),
+      merged,
+      ...this.transactions.slice(idx + 1)
+    ];
+
+    if (this.selectedTx?._id === merged._id) {
+      this.selectedTx = merged;
+    }
+    if (this.drawerTx?._id === merged._id) {
+      this.drawerTx = merged;
     }
   }
 }

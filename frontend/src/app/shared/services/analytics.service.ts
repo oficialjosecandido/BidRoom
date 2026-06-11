@@ -3,6 +3,7 @@ import { NavigationEnd, Router } from '@angular/router';
 import { filter } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import { CookiePreferencesService } from '../../landing/components/legal/cookie-preferences.service';
+import { AnalyticsEventName, AnalyticsEventParams } from './analytics.events';
 
 declare global {
   interface Window {
@@ -30,6 +31,46 @@ export class AnalyticsService {
         this.grantConsent();
       }
     });
+  }
+
+  /** Send a custom GA4 event (only when analytics cookies are accepted). */
+  trackEvent(name: AnalyticsEventName | string, params?: AnalyticsEventParams): void {
+    if (!this.canTrack()) return;
+    const payload = params ? this.sanitizeParams(params) : {};
+    window.gtag!('event', name, payload);
+  }
+
+  /** Common listing context for conversion events. */
+  listingParams(listing: {
+    _id?: string;
+    slug?: string;
+    auctionFormat?: string;
+    category?: string;
+  }): AnalyticsEventParams {
+    return {
+      listing_id: listing._id ?? '',
+      listing_slug: listing.slug ?? '',
+      auction_format: listing.auctionFormat ?? '',
+      item_category: listing.category ?? '',
+    };
+  }
+
+  private canTrack(): boolean {
+    return !!(
+      environment.production &&
+      this.measurementId &&
+      this.cookiePrefs.analytics() &&
+      window.gtag
+    );
+  }
+
+  private sanitizeParams(params: AnalyticsEventParams): AnalyticsEventParams {
+    const out: AnalyticsEventParams = {};
+    for (const [key, value] of Object.entries(params)) {
+      if (value === undefined || value === null || value === '') continue;
+      out[key] = value;
+    }
+    return out;
   }
 
   private initConsentMode(): void {
@@ -76,7 +117,7 @@ export class AnalyticsService {
   }
 
   private trackPageView(path: string): void {
-    if (!window.gtag || !this.measurementId) return;
-    window.gtag('config', this.measurementId, { page_path: path });
+    if (!this.canTrack()) return;
+    window.gtag!('config', this.measurementId!, { page_path: path });
   }
 }

@@ -139,7 +139,7 @@
                     }
                   </div>
                   <div class="card-body">
-                    <p class="card-title">{{ listing.title }}</p>
+                    <p class="card-title">{{ listingTitle(listing) }}</p>
                     <p class="card-price">{{ formatPrice(listing.currentPrice || listing.startingPrice) }}</p>
                     <div class="card-meta">
                       <span>{{ listing.bidCount }} {{ listing.bidCount === 1 ? ('sellerProfile.bid' | translate) : ('sellerProfile.bids' | translate) }}</span>

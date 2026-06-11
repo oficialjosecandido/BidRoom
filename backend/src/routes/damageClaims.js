@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const DamageClaim = require('../models/DamageClaim');
 const Transaction = require('../models/Transaction');
 const Listing = require('../models/Listing');
-const User = require('../models/User');
+const Customer = require('../models/Customer');
 const { authenticateToken, requireActiveAccount } = require('../middleware/auth');
 const {
   notifyDamageClaimOpened,
@@ -43,7 +43,7 @@ router.post('/', requireActiveAccount, async (req, res) => {
       return res.status(400).json({ error: 'At least one packaging photo is required.' });
     }
 
-    const dbUser = await User.findOne({ uid: req.user.uid }).lean();
+    const dbUser = await Customer.findOne({ uid: req.user.uid }).lean();
     if (!dbUser) return res.status(404).json({ error: 'User not found.' });
 
     const transaction = await Transaction.findById(transactionId)
@@ -133,7 +133,7 @@ router.get('/transaction/:transactionId', async (req, res) => {
     const { transactionId } = req.params;
     if (!isValidObjectId(transactionId)) return res.status(400).json({ error: 'Invalid transactionId.' });
 
-    const dbUser = await User.findOne({ uid: req.user.uid }).lean();
+    const dbUser = await Customer.findOne({ uid: req.user.uid }).lean();
     if (!dbUser) return res.status(404).json({ error: 'User not found.' });
 
     const claim = await DamageClaim.findOne({ transaction: transactionId })
@@ -166,7 +166,7 @@ router.get('/:id', async (req, res) => {
     const { id } = req.params;
     if (!isValidObjectId(id)) return res.status(400).json({ error: 'Invalid claim ID.' });
 
-    const dbUser = await User.findOne({ uid: req.user.uid }).lean();
+    const dbUser = await Customer.findOne({ uid: req.user.uid }).lean();
     if (!dbUser) return res.status(404).json({ error: 'User not found.' });
 
     const claim = await DamageClaim.findById(id)

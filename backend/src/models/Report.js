@@ -14,7 +14,7 @@ const reportSchema = new mongoose.Schema({
   },
   reportedBy: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
+    ref: 'Customer',
     required: true,
     index: true
   },
@@ -43,7 +43,7 @@ const reportSchema = new mongoose.Schema({
   },
   resolvedBy: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
+    ref: 'Customer',
     default: null
   },
   resolvedAt: {

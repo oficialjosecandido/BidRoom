@@ -7,7 +7,7 @@ const mongoose = require('mongoose');
 const accountStatusAuditLogSchema = new mongoose.Schema({
   user: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
+    ref: 'Customer',
     required: true,
     index: true
   },

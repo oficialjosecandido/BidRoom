@@ -20,7 +20,7 @@ const privateRoomAuditLogSchema = new mongoose.Schema({
   /** Mongo User _id of seller (for seller_left) */
   sellerId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
+    ref: 'Customer',
     default: null
   },
   /** Firebase UID of seller (for seller_left) */

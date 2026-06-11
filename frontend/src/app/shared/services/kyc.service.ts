@@ -2,6 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { tap } from 'rxjs/operators';
+import { TranslateService } from '@ngx-translate/core';
 import { API_CONFIG } from '../config/api.config';
 import Swal from 'sweetalert2';
 
@@ -19,6 +20,7 @@ export const KYC_THRESHOLD = 5000;
 @Injectable({ providedIn: 'root' })
 export class KycService {
   private http = inject(HttpClient);
+  private translate = inject(TranslateService);
   private apiUrl = `${API_CONFIG.getApiUrl()}/kyc`;
 
   private kycStatusSubject = new BehaviorSubject<KycStatus>('none');
@@ -45,8 +47,8 @@ export class KycService {
       error: (err) => {
         Swal.fire({
           icon: 'error',
-          title: 'Verification unavailable',
-          text: err?.error?.message || 'Could not start identity verification. Please try again later.',
+          title: this.translate.instant('dashboard.settings.kycUnavailableTitle'),
+          text: err?.error?.message || this.translate.instant('dashboard.settings.kycUnavailableText'),
           confirmButtonColor: '#7A4F84'
         });
       }
@@ -61,13 +63,9 @@ export class KycService {
     if (kycStatus === 'pending') {
       Swal.fire({
         icon: 'info',
-        title: 'Verification in progress',
-        html: `
-          <p style="color:#374151;font-size:0.95rem;line-height:1.5">
-            Your identity is being verified. This usually takes a few minutes.<br><br>
-            You will be able to proceed once the verification is approved.
-          </p>`,
-        confirmButtonText: 'OK',
+        title: this.translate.instant('dashboard.settings.kycPendingTitle'),
+        html: `<p style="color:#374151;font-size:0.95rem;line-height:1.5">${this.translate.instant('dashboard.settings.kycPending')}</p>`,
+        confirmButtonText: this.translate.instant('dashboard.settings.kycOk'),
         confirmButtonColor: '#7A4F84'
       });
       return;
@@ -76,15 +74,15 @@ export class KycService {
     if (kycStatus === 'rejected') {
       Swal.fire({
         icon: 'warning',
-        title: 'Verification not approved',
+        title: this.translate.instant('dashboard.settings.kycRejectedTitle'),
         html: `
           <p style="color:#374151;font-size:0.95rem;line-height:1.5">
-            Your previous identity verification was not approved.<br><br>
-            Please try again with a valid government-issued ID and a clear selfie.
+            ${this.translate.instant('dashboard.settings.kycRejectedBase')}<br><br>
+            ${this.translate.instant('dashboard.settings.kycRejectedTryAgain')}
           </p>`,
         showCancelButton: true,
-        confirmButtonText: 'Try Again',
-        cancelButtonText: 'Cancel',
+        confirmButtonText: this.translate.instant('dashboard.settings.kycTryAgain'),
+        cancelButtonText: this.translate.instant('dashboard.settings.cancelBtn'),
         confirmButtonColor: '#7A4F84'
       }).then(result => {
         if (result.isConfirmed) this.startVerification();
@@ -92,28 +90,28 @@ export class KycService {
       return;
     }
 
-    // kycStatus === 'none' or default
+    const threshold = this.translate.instant('dashboard.settings.kycThresholdAmount');
     Swal.fire({
-      title: 'Identity Verification Required',
+      title: this.translate.instant('dashboard.settings.kycGateTitle'),
       html: `
         <div style="text-align:left;padding:4px 0">
           <p style="color:#374151;font-size:0.9rem;line-height:1.5;margin:0 0 12px">
-            Transactions of <strong>$${KYC_THRESHOLD.toLocaleString()} or more</strong> require identity verification to comply with anti-money laundering (AML) regulations.
+            ${this.translate.instant('dashboard.settings.kycAmlDesc', { threshold })}
           </p>
-          <p style="color:#374151;font-size:0.9rem;line-height:1.5;margin:0 0 12px">
-            You will need:
+          <p style="color:#374151;font-size:0.9rem;line-height:1.5;margin:0 0 8px">
+            ${this.translate.instant('dashboard.settings.kycYouWillNeed')}
           </p>
           <ul style="color:#374151;font-size:0.9rem;line-height:1.7;padding-left:18px;margin:0 0 12px">
-            <li>A government-issued photo ID (passport, driver's licence, or national ID)</li>
-            <li>A selfie (live photo — liveness check required)</li>
+            <li>${this.translate.instant('dashboard.settings.kycDoc1')}</li>
+            <li>${this.translate.instant('dashboard.settings.kycDoc2')}</li>
           </ul>
           <p style="color:#6b7280;font-size:0.82rem;margin:0">
-            Verification is handled securely by Stripe Identity. Your data is not stored on BidRoom.
+            ${this.translate.instant('dashboard.settings.kycDoc3')}
           </p>
         </div>`,
       showCancelButton: true,
-      confirmButtonText: 'Start Verification',
-      cancelButtonText: 'Not now',
+      confirmButtonText: this.translate.instant('dashboard.settings.kycStart'),
+      cancelButtonText: this.translate.instant('dashboard.settings.kycNotNow'),
       confirmButtonColor: '#7A4F84',
       width: 480
     }).then(result => {

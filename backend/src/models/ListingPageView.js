@@ -6,7 +6,7 @@ const mongoose = require('mongoose');
 const listingPageViewSchema = new mongoose.Schema(
   {
     listing: { type: mongoose.Schema.Types.ObjectId, ref: 'Listing', required: true, index: true },
-    seller: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, index: true }
+    seller: { type: mongoose.Schema.Types.ObjectId, ref: 'Customer', required: true, index: true }
   },
   {
     timestamps: { createdAt: true, updatedAt: false }

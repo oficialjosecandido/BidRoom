@@ -22,13 +22,13 @@ const damageClaimSchema = new mongoose.Schema({
   },
   buyer: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
+    ref: 'Customer',
     required: true,
     index: true
   },
   seller: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
+    ref: 'Customer',
     required: true,
     index: true
   },

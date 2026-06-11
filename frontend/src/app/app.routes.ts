@@ -62,6 +62,10 @@ export const routes: Routes = [
         path: 'my-bets',
         loadComponent: () => import('./dashboard/components/my-bets/my-bets.component').then(m => m.MyBetsComponent)
       },
+      {
+        path: 'reviews',
+        loadComponent: () => import('./dashboard/components/my-reviews/my-reviews.component').then(m => m.MyReviewsComponent)
+      },
       // Legacy redirects so old links still work
       { path: 'my-account', redirectTo: 'settings', pathMatch: 'full' },
       { path: 'watchlist', redirectTo: 'buyer', pathMatch: 'full' },

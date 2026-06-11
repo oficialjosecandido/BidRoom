@@ -1,6 +1,6 @@
 const express = require('express');
 const Block = require('../models/Block');
-const User = require('../models/User');
+const Customer = require('../models/Customer');
 const { authenticateToken, requireActiveAccount } = require('../middleware/auth');
 
 const router = express.Router();
@@ -8,10 +8,10 @@ const router = express.Router();
 // POST /api/blocks/:userId — block a user
 router.post('/:userId', authenticateToken, requireActiveAccount, async (req, res) => {
   try {
-    const blocker = await User.findOne({ uid: req.user.uid }).select('_id').lean();
+    const blocker = await Customer.findOne({ uid: req.user.uid }).select('_id').lean();
     if (!blocker) return res.status(404).json({ error: 'User not found' });
 
-    const blockedUser = await User.findById(req.params.userId).select('_id').lean();
+    const blockedUser = await Customer.findById(req.params.userId).select('_id').lean();
     if (!blockedUser) return res.status(404).json({ error: 'Target user not found' });
 
     if (blocker._id.toString() === blockedUser._id.toString()) {
@@ -35,7 +35,7 @@ router.post('/:userId', authenticateToken, requireActiveAccount, async (req, res
 // DELETE /api/blocks/:userId — unblock a user
 router.delete('/:userId', authenticateToken, async (req, res) => {
   try {
-    const blocker = await User.findOne({ uid: req.user.uid }).select('_id').lean();
+    const blocker = await Customer.findOne({ uid: req.user.uid }).select('_id').lean();
     if (!blocker) return res.status(404).json({ error: 'User not found' });
 
     await Block.deleteOne({ blocker: blocker._id, blocked: req.params.userId });
@@ -49,7 +49,7 @@ router.delete('/:userId', authenticateToken, async (req, res) => {
 // GET /api/blocks/status/:userId — check if current user has blocked this user
 router.get('/status/:userId', authenticateToken, async (req, res) => {
   try {
-    const blocker = await User.findOne({ uid: req.user.uid }).select('_id').lean();
+    const blocker = await Customer.findOne({ uid: req.user.uid }).select('_id').lean();
     if (!blocker) return res.json({ blocked: false });
 
     const entry = await Block.findOne({ blocker: blocker._id, blocked: req.params.userId }).lean();
@@ -63,7 +63,7 @@ router.get('/status/:userId', authenticateToken, async (req, res) => {
 // GET /api/blocks — list all users the current user has blocked
 router.get('/', authenticateToken, async (req, res) => {
   try {
-    const blocker = await User.findOne({ uid: req.user.uid }).select('_id').lean();
+    const blocker = await Customer.findOne({ uid: req.user.uid }).select('_id').lean();
     if (!blocker) return res.json({ blocked: [] });
 
     const entries = await Block.find({ blocker: blocker._id })

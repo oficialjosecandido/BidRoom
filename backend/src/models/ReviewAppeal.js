@@ -13,7 +13,7 @@ const reviewAppealSchema = new mongoose.Schema({
   },
   appellant: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
+    ref: 'Customer',
     required: true,
     index: true
   },

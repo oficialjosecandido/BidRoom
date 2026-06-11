@@ -1,5 +1,5 @@
 const admin = require('firebase-admin');
-const User = require('../models/User');
+const Customer = require('../models/Customer');
 
 const AUTH_VERIFY_TIMEOUT_MS = 15000;
 
@@ -51,7 +51,7 @@ const authenticateToken = async (req, res, next) => {
     }
 
     // Brute-force lockout check (application-level, supplements Firebase's own protection)
-    const dbUser = await User.findOne({ uid: decodedToken.uid }).select('loginLockedUntil loginFailedAttempts').lean();
+    const dbUser = await Customer.findOne({ uid: decodedToken.uid }).select('loginLockedUntil loginFailedAttempts').lean();
     if (dbUser?.loginLockedUntil && new Date(dbUser.loginLockedUntil) > new Date()) {
       const retryAfterMs = new Date(dbUser.loginLockedUntil).getTime() - Date.now();
       return res.status(403).json({
@@ -62,7 +62,7 @@ const authenticateToken = async (req, res, next) => {
     }
     // Clear stale failed-attempt counter on successful auth
     if (dbUser?.loginFailedAttempts > 0) {
-      User.findOneAndUpdate({ uid: decodedToken.uid }, { $set: { loginFailedAttempts: 0, loginLockedUntil: null } })
+      Customer.findOneAndUpdate({ uid: decodedToken.uid }, { $set: { loginFailedAttempts: 0, loginLockedUntil: null } })
         .catch(() => {});
     }
 
@@ -144,7 +144,7 @@ const requireActiveAccount = async (req, res, next) => {
     return res.status(401).json({ error: 'Unauthorized', message: 'Authentication required.' });
   }
   try {
-    const dbUser = await User.findOne({ uid: req.user.uid }).select('accountStatus contentRestrictedUntil').lean();
+    const dbUser = await Customer.findOne({ uid: req.user.uid }).select('accountStatus contentRestrictedUntil').lean();
     if (!dbUser) {
       // No DB record yet — user is authenticated but hasn't been persisted.
       // They cannot be suspended, so let the route handler proceed (it will create the record).
@@ -194,7 +194,7 @@ const requireActiveAccountIfAuthenticated = async (req, res, next) => {
 const requireNoDisputeRestriction = async (req, res, next) => {
   if (!req.user?.uid) return res.status(401).json({ error: 'Unauthorized', message: 'Authentication required.' });
   try {
-    const dbUser = await User.findOne({ uid: req.user.uid }).select('activeDisputeTransactionIds accountStatus').lean();
+    const dbUser = await Customer.findOne({ uid: req.user.uid }).select('activeDisputeTransactionIds accountStatus').lean();
     if (!dbUser) return next(); // No record yet → no restrictions possible
     if (dbUser.accountStatus === 'closed') {
       return res.status(403).json({ error: 'Account closed', message: 'Your account has been permanently closed.' });

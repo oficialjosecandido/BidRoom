@@ -4,6 +4,7 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { ListingsService, Listing } from '../../../shared/services/listings.service';
 import { ThemeService } from '../../../shared/services/theme.service';
 import { HeaderComponent } from '../../../shared/components/header/header.component';
+import { getLocalizedTitle } from '../../../shared/utils/listing-locale';
 import { BidroomLogoComponent } from '../../../shared/components/bidroom-logo/bidroom-logo.component';
 
 @Component({
@@ -48,6 +49,10 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
 
   get currentLang(): string {
     return this.translate.currentLang || 'pt';
+  }
+
+  listingTitle(listing: Listing): string {
+    return getLocalizedTitle(listing, this.currentLang);
   }
 
   get toggleLangLabel(): string {
@@ -171,13 +176,24 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
 
   /** Badge label for a listing card. */
   listingBadge(l: Listing): string {
-    if (l.auctionFormat === 'best-offer') return 'Melhor oferta';
-    if (l.allowPrivateRoom) return 'Sala Privada';
-    return 'Ao vivo';
+    if (l.auctionFormat === 'best-offer') {
+      return this.translate.instant('landing.home.badges.bestOffer');
+    }
+    if (l.allowPrivateRoom) {
+      return this.translate.instant('landing.home.badges.privateRoom');
+    }
+    return this.translate.instant('landing.home.badges.auction');
   }
 
-  /** True if badge should use "live" (gold) style. */
-  isLiveBadge(l: Listing): boolean {
+  isOfferBadge(l: Listing): boolean {
+    return l.auctionFormat === 'best-offer';
+  }
+
+  isPrivateBadge(l: Listing): boolean {
+    return l.auctionFormat !== 'best-offer' && !!l.allowPrivateRoom;
+  }
+
+  isAuctionBadge(l: Listing): boolean {
     return l.auctionFormat !== 'best-offer' && !l.allowPrivateRoom;
   }
 

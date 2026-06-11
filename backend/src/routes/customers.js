@@ -1,19 +1,16 @@
 const express = require('express');
 const { authenticateToken, requireActiveAccount } = require('../middleware/auth');
 const Customer = require('../models/Customer');
-const User = require('../models/User');
 const { getReviewScoresForUser } = require('../services/reviewService');
 const { appendModerationAudit } = require('../services/moderationAuditService');
 const { getClientIp } = require('../middleware/bidRateLimiter');
-const { emitNewNotificationToUser } = require('../services/notificationService');
 
 const router = express.Router();
 
 /**
  * GET /api/customers/profile
- * Returns the authenticated customer's profile from the customers collection.
- * Creates a customer document if one doesn't exist (from Firebase token).
- * Includes buyer and seller review scores (from User/reviews).
+ * Returns the authenticated customer's profile.
+ * Creates the document if it doesn't exist yet (first login via Firebase).
  */
 router.get('/profile', authenticateToken, async (req, res) => {
   try {
@@ -50,56 +47,33 @@ router.get('/profile', authenticateToken, async (req, res) => {
       customer = await Customer.findOne({ uid }).lean();
     }
 
-    // Resolve User by uid for review scores, Stripe Connect status, and account status
     const isTestMode = process.env.STRIPE_SECRET_KEY?.startsWith('sk_test_');
-    const dbUser = await User.findOne({ uid }).select(
-      '_id stripeConnectOnboarded accountStatus sellerClassification professionalVerificationStatus ' +
-      'professionalLegalName professionalTradeName professionalAddressLine1 professionalAddressLine2 ' +
-      'professionalCity professionalRegion professionalPostalCode professionalCountry professionalContactPhone ' +
-      'professionalContactEmail professionalVatId professionalSubmittedAt professionalVerifiedAt ' +
-      'professionalVerifiedByEmail professionalRejectionNote ' +
-      'dsaWarningIssuedAt dsaWarningAcknowledgedAt dsaWarningResponse suspectedProfessional dsaListingRestricted'
-    ).lean();
-    let buyerScore = null;
-    let sellerScore = null;
-    let buyerReviewCount = 0;
-    let sellerReviewCount = 0;
-    if (dbUser) {
-      const scores = await getReviewScoresForUser(dbUser._id);
-      buyerScore = scores.buyerScore;
-      sellerScore = scores.sellerScore;
-      buyerReviewCount = scores.buyerReviewCount;
-      sellerReviewCount = scores.sellerReviewCount;
-
-      // In test/dev mode auto-mark as onboarded so manual Stripe setup isn't required
-      if (isTestMode && !dbUser.stripeConnectOnboarded) {
-        await User.updateOne({ uid }, { $set: { stripeConnectOnboarded: true } });
-      }
+    if (isTestMode && !customer.stripeConnectOnboarded) {
+      await Customer.updateOne({ uid }, { $set: { stripeConnectOnboarded: true } });
+      customer.stripeConnectOnboarded = true;
     }
 
-    const stripeConnectOnboarded = isTestMode ? true : !!(dbUser?.stripeConnectOnboarded);
+    const scores = await getReviewScoresForUser(customer._id);
 
-    const sellerCompliance = dbUser
-      ? {
-          sellerClassification: dbUser.sellerClassification || 'private',
-          professionalVerificationStatus: dbUser.professionalVerificationStatus || 'none',
-          professionalLegalName: dbUser.professionalLegalName,
-          professionalTradeName: dbUser.professionalTradeName,
-          professionalAddressLine1: dbUser.professionalAddressLine1,
-          professionalAddressLine2: dbUser.professionalAddressLine2,
-          professionalCity: dbUser.professionalCity,
-          professionalRegion: dbUser.professionalRegion,
-          professionalPostalCode: dbUser.professionalPostalCode,
-          professionalCountry: dbUser.professionalCountry,
-          professionalContactPhone: dbUser.professionalContactPhone,
-          professionalContactEmail: dbUser.professionalContactEmail,
-          professionalVatId: dbUser.professionalVatId,
-          professionalSubmittedAt: dbUser.professionalSubmittedAt,
-          professionalVerifiedAt: dbUser.professionalVerifiedAt,
-          professionalVerifiedByEmail: dbUser.professionalVerifiedByEmail,
-          professionalRejectionNote: dbUser.professionalRejectionNote
-        }
-      : null;
+    const sellerCompliance = {
+      sellerClassification: customer.sellerClassification || 'private',
+      professionalVerificationStatus: customer.professionalVerificationStatus || 'none',
+      professionalLegalName: customer.professionalLegalName || null,
+      professionalTradeName: customer.professionalTradeName || null,
+      professionalAddressLine1: customer.professionalAddressLine1 || null,
+      professionalAddressLine2: customer.professionalAddressLine2 || null,
+      professionalCity: customer.professionalCity || null,
+      professionalRegion: customer.professionalRegion || null,
+      professionalPostalCode: customer.professionalPostalCode || null,
+      professionalCountry: customer.professionalCountry || null,
+      professionalContactPhone: customer.professionalContactPhone || null,
+      professionalContactEmail: customer.professionalContactEmail || null,
+      professionalVatId: customer.professionalVatId || null,
+      professionalSubmittedAt: customer.professionalSubmittedAt || null,
+      professionalVerifiedAt: customer.professionalVerifiedAt || null,
+      professionalVerifiedByEmail: customer.professionalVerifiedByEmail || null,
+      professionalRejectionNote: customer.professionalRejectionNote || null
+    };
 
     res.json({
       user: {
@@ -109,28 +83,29 @@ router.get('/profile', authenticateToken, async (req, res) => {
         firstName: customer.firstName,
         lastName: customer.lastName,
         emailVerified: !!emailVerified,
-        isActive: dbUser?.accountStatus !== 'suspended' && dbUser?.accountStatus !== 'closed',
-        accountStatus: dbUser?.accountStatus || 'active',
+        isActive: customer.accountStatus !== 'suspended' && customer.accountStatus !== 'closed',
+        accountStatus: customer.accountStatus || 'active',
         lastLogin: customer.lastLogin,
         createdAt: customer.createdAt
       },
       balance: customer.balance ?? 0,
       reviewCount: customer.reviewCount ?? 0,
       language: customer.language || 'en',
-      buyerScore,
-      sellerScore,
-      buyerReviewCount,
-      sellerReviewCount,
-      stripeConnectOnboarded,
+      buyerScore: scores.buyerScore,
+      sellerScore: scores.sellerScore,
+      buyerReviewCount: scores.buyerReviewCount,
+      sellerReviewCount: scores.sellerReviewCount,
+      stripeConnectOnboarded: isTestMode ? true : !!(customer.stripeConnectOnboarded),
       sellerCompliance,
-      dsaWarning: dbUser ? {
-        warningIssuedAt: dbUser.dsaWarningIssuedAt || null,
-        acknowledgedAt: dbUser.dsaWarningAcknowledgedAt || null,
-        response: dbUser.dsaWarningResponse || null,
-        suspectedProfessional: !!dbUser.suspectedProfessional,
-        listingRestricted: !!dbUser.dsaListingRestricted
-      } : null,
-      theme: customer.theme && ['light', 'dark', 'system'].includes(customer.theme) ? customer.theme : null
+      dsaWarning: {
+        warningIssuedAt: customer.dsaWarningIssuedAt || null,
+        acknowledgedAt: customer.dsaWarningAcknowledgedAt || null,
+        response: customer.dsaWarningResponse || null,
+        suspectedProfessional: !!customer.suspectedProfessional,
+        listingRestricted: !!customer.dsaListingRestricted
+      },
+      theme: customer.theme && ['light', 'dark', 'system'].includes(customer.theme) ? customer.theme : null,
+      cookieConsent: customer.cookieConsent && ['all', 'essential'].includes(customer.cookieConsent) ? customer.cookieConsent : null
     });
   } catch (error) {
     console.error('Error fetching customer profile:', error);
@@ -154,32 +129,32 @@ router.patch('/seller-compliance', authenticateToken, requireActiveAccount, asyn
       return res.status(400).json({ error: 'Invalid sellerClassification', message: 'Must be "private" or "professional".' });
     }
 
-    const user = await User.findOne({ uid });
-    if (!user) {
+    const customer = await Customer.findOne({ uid });
+    if (!customer) {
       return res.status(404).json({ error: 'User not found' });
     }
 
-    const prevClass = user.sellerClassification || 'private';
-    const prevStatus = user.professionalVerificationStatus || 'none';
+    const prevClass = customer.sellerClassification || 'private';
+    const prevStatus = customer.professionalVerificationStatus || 'none';
 
     if (classification === 'private') {
-      user.sellerClassification = 'private';
-      user.professionalVerificationStatus = 'none';
-      user.professionalLegalName = null;
-      user.professionalTradeName = null;
-      user.professionalAddressLine1 = null;
-      user.professionalAddressLine2 = null;
-      user.professionalCity = null;
-      user.professionalRegion = null;
-      user.professionalPostalCode = null;
-      user.professionalCountry = null;
-      user.professionalContactPhone = null;
-      user.professionalContactEmail = null;
-      user.professionalVatId = null;
-      user.professionalSubmittedAt = null;
-      user.professionalVerifiedAt = null;
-      user.professionalVerifiedByEmail = null;
-      user.professionalRejectionNote = null;
+      customer.sellerClassification = 'private';
+      customer.professionalVerificationStatus = 'none';
+      customer.professionalLegalName = null;
+      customer.professionalTradeName = null;
+      customer.professionalAddressLine1 = null;
+      customer.professionalAddressLine2 = null;
+      customer.professionalCity = null;
+      customer.professionalRegion = null;
+      customer.professionalPostalCode = null;
+      customer.professionalCountry = null;
+      customer.professionalContactPhone = null;
+      customer.professionalContactEmail = null;
+      customer.professionalVatId = null;
+      customer.professionalSubmittedAt = null;
+      customer.professionalVerifiedAt = null;
+      customer.professionalVerifiedByEmail = null;
+      customer.professionalRejectionNote = null;
     } else {
       const take = (k, max) => {
         const v = body[k];
@@ -216,49 +191,49 @@ router.patch('/seller-compliance', authenticateToken, requireActiveAccount, asyn
       const wasVerified = prevStatus === 'verified' && prevClass === 'professional';
       const samePayload =
         wasVerified &&
-        (user.professionalLegalName || '') === legalName &&
-        (user.professionalTradeName || '') === tradeName &&
-        (user.professionalAddressLine1 || '') === line1 &&
-        (user.professionalAddressLine2 || '') === line2 &&
-        (user.professionalCity || '') === city &&
-        (user.professionalRegion || '') === region &&
-        (user.professionalPostalCode || '') === postal &&
-        (user.professionalCountry || '') === country &&
-        (user.professionalContactPhone || '') === phone &&
-        (user.professionalContactEmail || '') === bizEmail.toLowerCase() &&
-        (user.professionalVatId || '') === vat;
+        (customer.professionalLegalName || '') === legalName &&
+        (customer.professionalTradeName || '') === tradeName &&
+        (customer.professionalAddressLine1 || '') === line1 &&
+        (customer.professionalAddressLine2 || '') === line2 &&
+        (customer.professionalCity || '') === city &&
+        (customer.professionalRegion || '') === region &&
+        (customer.professionalPostalCode || '') === postal &&
+        (customer.professionalCountry || '') === country &&
+        (customer.professionalContactPhone || '') === phone &&
+        (customer.professionalContactEmail || '') === bizEmail.toLowerCase() &&
+        (customer.professionalVatId || '') === vat;
 
-      user.sellerClassification = 'professional';
-      user.professionalLegalName = legalName;
-      user.professionalTradeName = tradeName || null;
-      user.professionalAddressLine1 = line1;
-      user.professionalAddressLine2 = line2 || null;
-      user.professionalCity = city;
-      user.professionalRegion = region;
-      user.professionalPostalCode = postal;
-      user.professionalCountry = country;
-      user.professionalContactPhone = phone;
-      user.professionalContactEmail = bizEmail.toLowerCase();
-      user.professionalVatId = vat;
-      user.professionalSubmittedAt = new Date();
+      customer.sellerClassification = 'professional';
+      customer.professionalLegalName = legalName;
+      customer.professionalTradeName = tradeName || null;
+      customer.professionalAddressLine1 = line1;
+      customer.professionalAddressLine2 = line2 || null;
+      customer.professionalCity = city;
+      customer.professionalRegion = region;
+      customer.professionalPostalCode = postal;
+      customer.professionalCountry = country;
+      customer.professionalContactPhone = phone;
+      customer.professionalContactEmail = bizEmail.toLowerCase();
+      customer.professionalVatId = vat;
+      customer.professionalSubmittedAt = new Date();
 
       if (!wasVerified || !samePayload) {
-        user.professionalVerificationStatus = 'pending';
-        user.professionalVerifiedAt = null;
-        user.professionalVerifiedByEmail = null;
-        user.professionalRejectionNote = null;
+        customer.professionalVerificationStatus = 'pending';
+        customer.professionalVerifiedAt = null;
+        customer.professionalVerifiedByEmail = null;
+        customer.professionalRejectionNote = null;
       }
     }
 
-    await user.save();
+    await customer.save();
 
     await appendModerationAudit({
-      subjectUserId: user._id,
+      subjectUserId: customer._id,
       actionType: 'seller_compliance_updated',
       performedByEmail: req.user.email || null,
       metadata: {
-        sellerClassification: user.sellerClassification,
-        professionalVerificationStatus: user.professionalVerificationStatus,
+        sellerClassification: customer.sellerClassification,
+        professionalVerificationStatus: customer.professionalVerificationStatus,
         previousClassification: prevClass,
         previousVerificationStatus: prevStatus
       },
@@ -266,9 +241,9 @@ router.patch('/seller-compliance', authenticateToken, requireActiveAccount, asyn
     });
 
     res.json({
-      sellerClassification: user.sellerClassification,
-      professionalVerificationStatus: user.professionalVerificationStatus,
-      professionalSubmittedAt: user.professionalSubmittedAt,
+      sellerClassification: customer.sellerClassification,
+      professionalVerificationStatus: customer.professionalVerificationStatus,
+      professionalSubmittedAt: customer.professionalSubmittedAt,
       message: classification === 'professional'
         ? 'Trader details saved. Your profile will show as pending until the platform verifies your information.'
         : 'You are now registered as a private (non-trader) seller.'
@@ -295,6 +270,25 @@ router.patch('/theme', authenticateToken, async (req, res) => {
   } catch (error) {
     console.error('Error updating customer theme:', error);
     res.status(500).json({ error: 'Failed to update theme', message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error' });
+  }
+});
+
+/**
+ * PATCH /api/customers/cookie-consent
+ * Persist cookie consent level (all / essential) for cross-device sync.
+ */
+router.patch('/cookie-consent', authenticateToken, async (req, res) => {
+  try {
+    const { uid } = req.user;
+    const { cookieConsent } = req.body || {};
+    if (!['all', 'essential'].includes(cookieConsent)) {
+      return res.status(400).json({ error: 'Invalid value', message: 'cookieConsent must be "all" or "essential".' });
+    }
+    await Customer.updateOne({ uid }, { $set: { cookieConsent } });
+    res.json({ cookieConsent });
+  } catch (error) {
+    console.error('Error updating cookie consent:', error);
+    res.status(500).json({ error: 'Failed to update cookie consent' });
   }
 });
 
@@ -327,11 +321,11 @@ router.post('/dsa-warning-response', authenticateToken, async (req, res) => {
       return res.status(400).json({ error: 'Invalid response. Use "remain_private" or "switch_professional".' });
     }
 
-    const user = await User.findOne({ uid: req.user.uid }).select(
+    const customer = await Customer.findOne({ uid: req.user.uid }).select(
       '_id dsaWarningIssuedAt dsaWarningAcknowledgedAt'
     );
-    if (!user) return res.status(404).json({ error: 'User not found.' });
-    if (!user.dsaWarningIssuedAt) {
+    if (!customer) return res.status(404).json({ error: 'User not found.' });
+    if (!customer.dsaWarningIssuedAt) {
       return res.status(400).json({ error: 'No active DSA warning for this account.' });
     }
 
@@ -343,12 +337,11 @@ router.post('/dsa-warning-response', authenticateToken, async (req, res) => {
     if (response === 'remain_private') {
       update.suspectedProfessional = true;
     } else {
-      // User intends to switch — clear suspected flag (they will submit trader details separately)
       update.suspectedProfessional = false;
       update.dsaListingRestricted = false;
     }
 
-    await User.updateOne({ _id: user._id }, { $set: update });
+    await Customer.updateOne({ _id: customer._id }, { $set: update });
     return res.json({ ok: true, response });
   } catch (err) {
     console.error('POST /dsa-warning-response error:', err);

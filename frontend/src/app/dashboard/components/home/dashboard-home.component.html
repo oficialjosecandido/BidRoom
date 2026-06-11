@@ -80,55 +80,91 @@
   </div>
   }
 
-  @if (statCards.length > 0 || showBuyerReputation || showSellerReputation) {
+  <section class="reputation-row">
+    <div class="home-rep-card home-rep-card--buyer">
+      <div class="home-rep-card-title">{{ 'dashboard.home.buyerScore' | translate }}</div>
+      @if (buyerScore !== null) {
+        <div class="rep-score">
+          <div class="rep-score-main">
+            <div class="rep-number rep-number--buyer">{{ buyerScore | number:'1.1-1' }}</div>
+            <div class="rep-stars" aria-hidden="true">
+              @for (s of [1,2,3,4,5]; track s) {
+                <span class="rep-star" [class.filled]="s <= buyerScore">★</span>
+              }
+            </div>
+          </div>
+          <div class="rep-bar-wrap">
+            <div class="rep-bar-track">
+              <div class="rep-bar-fill rep-bar-fill--buyer" [style.width.%]="reviewScorePercent(buyerScore)"></div>
+            </div>
+            <div class="rep-labels">
+              <span class="rep-label-text">{{ 'dashboard.settings.overallScore' | translate }}</span>
+              <span class="rep-label-text">{{ buyerScore | number:'1.1-1' }} / {{ reviewScoreMax }} · {{ buyerReviewCount }} {{ buyerReviewCount === 1 ? ('dashboard.common.review' | translate) : ('dashboard.common.reviews' | translate) }}</span>
+            </div>
+          </div>
+        </div>
+      } @else {
+        <p class="rep-empty">{{ 'dashboard.settings.noReviews' | translate }}</p>
+      }
+
+      @if (customer && !isEmailVerified) {
+        <div class="home-rep-alert home-rep-alert--warn">
+          <strong>{{ 'dashboard.home.reputation.emailNotVerifiedTitle' | translate }}</strong>
+          <p>{{ 'dashboard.home.reputation.emailNotVerifiedBody' | translate }}</p>
+          <a routerLink="/dashboard/settings" class="home-rep-alert-cta">{{ 'dashboard.home.reputation.emailVerifyCta' | translate }}</a>
+        </div>
+      }
+
+      @if (customer && !paymentMethodsLoading && !hasPaymentMethod) {
+        <div class="home-rep-alert home-rep-alert--info">
+          <strong>{{ 'dashboard.home.reputation.paymentMissingTitle' | translate }}</strong>
+          <p>{{ 'dashboard.home.reputation.paymentMissingIntro' | translate }}</p>
+          <ul class="home-rep-benefits">
+            <li>{{ 'dashboard.settings.paymentMethod.benefit1' | translate }}</li>
+            <li>{{ 'dashboard.settings.paymentMethod.benefit2' | translate }}</li>
+            <li>{{ 'dashboard.settings.paymentMethod.benefit3' | translate }}</li>
+          </ul>
+          <p class="home-rep-disclaimer">{{ 'dashboard.settings.paymentMethod.disclaimer' | translate }}</p>
+          <a routerLink="/dashboard/settings" class="home-rep-alert-cta">{{ 'dashboard.home.reputation.paymentCta' | translate }}</a>
+        </div>
+      }
+    </div>
+
+    <div class="home-rep-card home-rep-card--seller">
+      <div class="home-rep-card-title">{{ 'dashboard.home.sellerScore' | translate }}</div>
+      @if (sellerScore !== null) {
+        <div class="rep-score">
+          <div class="rep-score-main">
+            <div class="rep-number rep-number--seller">{{ sellerScore | number:'1.1-1' }}</div>
+            <div class="rep-stars" aria-hidden="true">
+              @for (s of [1,2,3,4,5]; track s) {
+                <span class="rep-star" [class.filled]="s <= sellerScore">★</span>
+              }
+            </div>
+          </div>
+          <div class="rep-bar-wrap">
+            <div class="rep-bar-track">
+              <div class="rep-bar-fill rep-bar-fill--seller" [style.width.%]="reviewScorePercent(sellerScore)"></div>
+            </div>
+            <div class="rep-labels">
+              <span class="rep-label-text">{{ 'dashboard.settings.overallScore' | translate }}</span>
+              <span class="rep-label-text">{{ sellerScore | number:'1.1-1' }} / {{ reviewScoreMax }} · {{ sellerReviewCount }} {{ sellerReviewCount === 1 ? ('dashboard.common.review' | translate) : ('dashboard.common.reviews' | translate) }}</span>
+            </div>
+          </div>
+        </div>
+      } @else {
+        <p class="rep-empty">{{ 'dashboard.settings.noReviews' | translate }}</p>
+      }
+    </div>
+  </section>
+
+  @if (statCards.length > 0) {
     <div class="stats-grid" [style.grid-template-columns]="topRowGridColumns">
       @for (card of statCards; track card.key) {
         <div class="stat-card">
           <div class="stat-label">{{ card.label }}</div>
           <div class="stat-value" [class.gold]="card.valueTone === 'gold'" [class.green]="card.valueTone === 'green'" [class.amber]="card.valueTone === 'amber'">{{ card.value }}</div>
           <div class="stat-change" [class.up]="card.subUp">{{ card.sub }}</div>
-        </div>
-      }
-      @if (showBuyerReputation) {
-        <div class="home-rep-card">
-          <div class="home-rep-card-title">{{ 'dashboard.settings.buyerScore' | translate }}</div>
-          @if (buyerScore !== null) {
-            <div class="rep-score">
-              <div class="rep-number rep-number--buyer">{{ (buyerScore * 10) | number:'1.0-0' }}</div>
-              <div class="rep-bar-wrap">
-                <div class="rep-bar-track">
-                  <div class="rep-bar-fill rep-bar-fill--buyer" [style.width.%]="buyerScore * 10"></div>
-                </div>
-                <div class="rep-labels">
-                  <span class="rep-label-text">{{ 'dashboard.settings.overallScore' | translate }}</span>
-                  <span class="rep-label-text">{{ buyerScore | number:'1.1-1' }} / {{ reviewScoreMax }} · {{ buyerReviewCount }} {{ buyerReviewCount === 1 ? ('dashboard.common.review' | translate) : ('dashboard.common.reviews' | translate) }}</span>
-                </div>
-              </div>
-            </div>
-          } @else {
-            <p class="rep-empty">{{ 'dashboard.settings.noReviews' | translate }}</p>
-          }
-        </div>
-      }
-      @if (showSellerReputation) {
-        <div class="home-rep-card">
-          <div class="home-rep-card-title">{{ 'dashboard.settings.sellerScore' | translate }}</div>
-          @if (sellerScore !== null) {
-            <div class="rep-score">
-              <div class="rep-number rep-number--seller">{{ (sellerScore * 10) | number:'1.0-0' }}</div>
-              <div class="rep-bar-wrap">
-                <div class="rep-bar-track">
-                  <div class="rep-bar-fill rep-bar-fill--seller" [style.width.%]="sellerScore * 10"></div>
-                </div>
-                <div class="rep-labels">
-                  <span class="rep-label-text">{{ 'dashboard.settings.overallScore' | translate }}</span>
-                  <span class="rep-label-text">{{ sellerScore | number:'1.1-1' }} / {{ reviewScoreMax }} · {{ sellerReviewCount }} {{ sellerReviewCount === 1 ? ('dashboard.common.review' | translate) : ('dashboard.common.reviews' | translate) }}</span>
-                </div>
-              </div>
-            </div>
-          } @else {
-            <p class="rep-empty">{{ 'dashboard.settings.noReviews' | translate }}</p>
-          }
         </div>
       }
     </div>

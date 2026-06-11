@@ -87,6 +87,27 @@ export class CookiePreferencesService {
     }
   }
 
+  /**
+   * Apply a consent level fetched from the server without sending it back.
+   * Used on initial load when the user is authenticated and already gave consent
+   * on another device.
+   */
+  syncFromServer(level: 'all' | 'essential'): void {
+    if (typeof localStorage !== 'undefined' && !localStorage.getItem(CONSENT_KEY)) {
+      localStorage.setItem(CONSENT_KEY, level);
+    }
+    this.writeCookie(CONSENT_KEY, level, 365);
+    if (level === 'all') {
+      this.functional.set(true);
+      this.analytics.set(true);
+      this.marketing.set(true);
+    } else {
+      this.functional.set(false);
+      this.analytics.set(false);
+      this.marketing.set(false);
+    }
+  }
+
   /** Persist consent level from toggles on the cookies policy page. */
   applyConsentFromToggles(): void {
     const level: CookieConsentLevel =

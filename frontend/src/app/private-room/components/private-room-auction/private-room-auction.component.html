@@ -4,22 +4,27 @@
   <header class="pr-topbar">
     <div class="pr-topbar__left">
       @if (listing?.slug) {
-        <a [href]="getListingPageUrl()" class="pr-topbar__back" target="_blank" rel="noopener noreferrer">&larr; Back to listing</a>
+        <a [href]="getListingPageUrl()" class="pr-topbar__back" target="_blank" rel="noopener noreferrer">&larr; {{ 'privateRoomAuction.topbar.backToListing' | translate }}</a>
       }
       <div class="pr-topbar__brand">
         <span class="pr-topbar__lock">&#x1F512;</span>
-        <span class="pr-topbar__title">Private Auction Room</span>
+        <span class="pr-topbar__title">{{ 'privateRoomAuction.topbar.title' | translate }}</span>
       </div>
       @if (listing) {
-        <span class="pr-topbar__subtitle">{{ listing.title }}</span>
+        <span class="pr-topbar__subtitle">{{ localizedListingTitle }}</span>
       }
     </div>
 
     <div class="pr-topbar__right">
+      <div class="pr-topbar__lang">
+        <button type="button" class="pr-topbar__lang-btn" [class.pr-topbar__lang-btn--on]="currentLang === 'pt'" (click)="switchLanguage('pt')">PT</button>
+        <button type="button" class="pr-topbar__lang-btn" [class.pr-topbar__lang-btn--on]="currentLang === 'en'" (click)="switchLanguage('en')">EN</button>
+      </div>
+
       @if (listing?.privateRoomStatus !== 'ended') {
         <div class="pr-topbar__viewers">
           <span class="pr-topbar__viewers-count">{{ viewerCount }}</span>
-          <span class="pr-topbar__viewers-label">Viewers</span>
+          <span class="pr-topbar__viewers-label">{{ 'privateRoomAuction.topbar.viewers' | translate }}</span>
         </div>
       }
 
@@ -27,24 +32,21 @@
         <div class="pr-topbar__timer" [class.pr-topbar__timer--warn]="countdown <= 300" [class.pr-topbar__timer--critical]="countdown <= 60">
           <span class="pr-topbar__timer-value">{{ formatCountdown() }}</span>
           <span class="pr-topbar__timer-label">
-            @if (listing?.privateRoomStatus === 'invited') { Acceptance window }
-            @else if (countdown <= 60) { Closing soon }
-            @else { Time remaining }
+            @if (listing?.privateRoomStatus === 'invited') { {{ 'privateRoomAuction.topbar.acceptanceWindow' | translate }} }
+            @else if (countdown <= 60) { {{ 'privateRoomAuction.topbar.closingSoon' | translate }} }
+            @else { {{ 'privateRoomAuction.topbar.timeRemaining' | translate }} }
           </span>
         </div>
       }
 
       @if (listing?.privateRoomStatus === 'ended') {
-        <div class="pr-topbar__badge pr-topbar__badge--ended">Auction ended</div>
+        <div class="pr-topbar__badge pr-topbar__badge--ended">{{ 'privateRoomAuction.topbar.auctionEnded' | translate }}</div>
       }
 
       @if (isAuthenticated && currentUser) {
         <div class="pr-topbar__user">
           <div class="pr-topbar__avatar"><span>{{ getCurrentUserInitials() }}</span></div>
           <span class="pr-topbar__user-name">{{ getCurrentUserName() }}</span>
-          @if (isPlatinumBidder) {
-            <span class="pr-topbar__platinum">Platinum</span>
-          }
           <button class="pr-topbar__logout" (click)="logout()" title="Logout">&times;</button>
         </div>
       }
@@ -70,28 +72,37 @@
       <div class="pr-login-card">
         <h3>Login Required</h3>
         <p>You need to be logged in to participate in this private auction room.</p>
-        <p class="pr-login-card__sub">If you're a Platinum Bidder, log in to place your bids.</p>
+        <p class="pr-login-card__sub">If you're an invited bidder, log in to place your bids.</p>
         <button class="pr-btn pr-btn--primary" (click)="navigateToLogin()">Log In to Participate</button>
       </div>
     </div>
   }
 
   <!-- ── Room Ended ── -->
-  @if (listing && !loading && !error && listing.privateRoomStatus === 'ended') {
-    <div class="pr-state">
-      <div class="pr-ended-card">
-        <div class="pr-ended-card__badge">Auction ended</div>
-        <h2>Private room closed</h2>
-        @if (listing.privateRoomClosedReason === 'seller_left') {
-          <p>The seller has left the room. The auction closed without a winner.</p>
-        } @else if (listing.winner) {
-          <p>The auction has ended. The winner was the highest bidder. You will be notified by email if you won.</p>
-        } @else {
-          <p>Results are being confirmed. You will be notified by email if you won.</p>
+  @if (listing && !loading && !error && listing.privateRoomStatus === 'ended' && endedPageView; as ended) {
+    <div class="pr-state pr-state--ended">
+      <div class="pr-ended-card" [class.pr-ended-card--success]="ended.tone === 'success'" [class.pr-ended-card--warning]="ended.tone === 'warning'">
+        <div class="pr-ended-card__icon" aria-hidden="true">🏁</div>
+        <div class="pr-ended-card__badge">{{ 'privateRoomAuction.topbar.auctionEnded' | translate }}</div>
+        <h2 class="pr-ended-card__title">{{ ended.title }}</h2>
+        <p class="pr-ended-card__subtitle">{{ 'privateRoomAuction.endedPage.subtitle' | translate }}</p>
+        @if (ended.winnerAmount) {
+          <div class="pr-ended-card__winner">
+            <span class="pr-ended-card__winner-label">{{ ended.winnerName }}</span>
+            <span class="pr-ended-card__winner-amount">{{ ended.winnerAmount }}</span>
+          </div>
         }
-        @if (listing.slug) {
-          <a [href]="getListingPageUrl()" class="pr-btn pr-btn--secondary" target="_blank" rel="noopener noreferrer">{{ 'privateRoomAuction.expired.viewListing' | translate }}</a>
-        }
+        <p class="pr-ended-card__body" [innerHTML]="ended.bodyHtml"></p>
+        <div class="pr-ended-card__actions">
+          @if (ended.showTransactions) {
+            <button type="button" class="pr-btn pr-btn--gold" (click)="navigateToTransactions()">
+              {{ 'privateRoomAuction.endedPage.viewTransactions' | translate }}
+            </button>
+          }
+          @if (listing.slug) {
+            <a [href]="getListingPageUrl()" class="pr-btn pr-btn--secondary" target="_blank" rel="noopener noreferrer">{{ 'privateRoomAuction.expired.viewListing' | translate }}</a>
+          }
+        </div>
       </div>
     </div>
   }
@@ -112,22 +123,19 @@
           <button class="pr-btn pr-btn--gold" (click)="acceptInvitationInPage()" [disabled]="acceptingInvitation">
             {{ acceptingInvitation ? 'Accepting…' : 'Accept Invitation' }}
           </button>
-        } @else if (isAuthenticated && isPlatinumBidder) {
+        } @else if (isAuthenticated && isInvitedBidder) {
           <p class="pr-invited__sub">You accepted your invitation. The auction will start shortly.</p>
         } @else {
           <p class="pr-invited__sub">Check your email for the accept link.</p>
         }
 
-        <div class="pr-invited__actions">
-          @if (isSeller) {
+        @if (isSeller) {
+          <div class="pr-invited__actions">
             <button class="pr-btn pr-btn--gold" (click)="startRoomNow()" [disabled]="startNowLoading">
               {{ startNowLoading ? 'Starting…' : 'Start auction now' }}
             </button>
-          }
-          @if (listing.slug) {
-            <a [href]="getListingPageUrl()" class="pr-btn pr-btn--secondary" target="_blank" rel="noopener noreferrer">{{ 'privateRoomAuction.expired.viewListing' | translate }}</a>
-          }
-        </div>
+          </div>
+        }
       </div>
 
       <!-- Invited bidders list -->
@@ -182,22 +190,8 @@
           </div>
         </div>
 
-        <!-- My Status (for platinum bidders) -->
-        @if (isPlatinumBidder && currentUser) {
-          <div class="pr-mystatus">
-            <h4 class="pr-mystatus__heading">My Status</h4>
-            <div class="pr-mystatus__row">
-              <div class="pr-mystatus__avatar"><span>{{ getCurrentUserInitials() }}</span></div>
-              <div class="pr-mystatus__info">
-                <span class="pr-mystatus__name">{{ getCurrentUserName() }}</span>
-                <span class="pr-mystatus__badge">Platinum Bidder</span>
-              </div>
-            </div>
-          </div>
-        }
-
         <!-- Quick Bids -->
-        @if (isPlatinumBidder && listing) {
+        @if (isInvitedBidder && listing) {
           <div class="pr-quickbids">
             <h4 class="pr-quickbids__heading">Quick bids</h4>
             <div class="pr-quickbids__grid">
@@ -250,7 +244,7 @@
         </div>
 
         <!-- Place Bid CTA -->
-        @if (isPlatinumBidder) {
+        @if (isInvitedBidder) {
           <div class="pr-bid-cta">
             <div class="pr-bid-cta__input-row">
               <input
@@ -291,13 +285,13 @@
           </div>
         }
 
-        @if (isAuthenticated && !isPlatinumBidder && !isSeller && !invitationPending && listing.privateRoomStatus === 'active') {
+        @if (isAuthenticated && !isInvitedBidder && !isSeller && !invitationPending && listing.privateRoomStatus === 'active') {
           <div class="pr-viewer-notice">
             <p>You're watching this room. Only invited bidders can place bids.</p>
           </div>
         }
 
-        @if (countdown <= 30 && isPlatinumBidder) {
+        @if (countdown <= 30 && isInvitedBidder) {
           <div class="pr-soft-close">Closing soon &mdash; next bid extends by 60s</div>
         }
       </section>

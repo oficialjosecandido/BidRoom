@@ -65,6 +65,8 @@ export interface CustomerInfo {
   dsaWarning?: DsaWarningInfo | null;
   /** UI theme from Customer; null if never saved server-side. */
   theme?: ThemePreference | null;
+  /** Cookie consent level from Customer; null if never saved server-side. */
+  cookieConsent?: 'all' | 'essential' | null;
 }
 
 @Injectable({
@@ -84,6 +86,10 @@ export class CustomerService {
 
   updateLanguage(language: string): Observable<{ language: string }> {
     return this.http.patch<{ language: string }>(`${this.apiUrl}/language`, { language });
+  }
+
+  saveCookieConsent(level: 'all' | 'essential'): Observable<{ cookieConsent: string }> {
+    return this.http.patch<{ cookieConsent: string }>(`${this.apiUrl}/cookie-consent`, { cookieConsent: level });
   }
 
   respondToDsaWarning(response: 'remain_private' | 'switch_professional'): Observable<{ ok: boolean; response: string }> {

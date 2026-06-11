@@ -1,7 +1,6 @@
 const express = require('express');
 const Offer = require('../models/Offer');
 const Listing = require('../models/Listing');
-const User = require('../models/User');
 const Customer = require('../models/Customer');
 const { authenticateToken, optionalAuth, requireActiveAccountIfAuthenticated, requireNoDisputeRestrictionIfAuthenticated } = require('../middleware/auth');
 const { createTransactionForAcceptedOffer } = require('../services/transactionService');
@@ -58,7 +57,7 @@ router.get('/listing/:listingId', optionalAuth, async (req, res) => {
     // Determine if the requester is the listing's seller (entitled to see full emails)
     const listing = await Listing.findById(req.params.listingId).select('seller').lean();
     const requestingUid = req.user?.uid || null;
-    const sellerUser = listing?.seller ? await User.findById(listing.seller).select('uid').lean() : null;
+    const sellerUser = listing?.seller ? await Customer.findById(listing.seller).select('uid').lean() : null;
     const isSeller = requestingUid && sellerUser && requestingUid === sellerUser.uid;
 
     const uids = [...new Set(offers.map(o => o.offerer?.uid).filter(Boolean))];
@@ -120,12 +119,12 @@ async function createOffer(req, res) {
 
     if (req.isAuthenticated && req.user) {
       // Find or create user
-      user = await User.findOne({ uid: req.user.uid });
+      user = await Customer.findOne({ uid: req.user.uid });
       if (!user) {
         const nameParts = req.user.name?.split(' ') || [];
         const firstName = nameParts[0] || 'User';
         const lastName = nameParts.slice(1).join(' ') || 'User';
-        user = new User({
+        user = new Customer({
           uid: req.user.uid,
           email: req.user.email,
           firstName,
@@ -367,7 +366,7 @@ router.patch('/:offerId/accept', authenticateToken, async (req, res) => {
     }
 
     // Verify user is the seller
-    const user = await User.findOne({ uid: req.user.uid });
+    const user = await Customer.findOne({ uid: req.user.uid });
     if (offer.listing.seller.toString() !== user._id.toString()) {
       return res.status(403).json({
         error: 'Unauthorized',
@@ -506,7 +505,7 @@ router.patch('/:offerId/reject', authenticateToken, async (req, res) => {
       return res.status(404).json({ error: 'Offer not found' });
     }
 
-    const user = await User.findOne({ uid: req.user.uid });
+    const user = await Customer.findOne({ uid: req.user.uid });
     if (offer.listing.seller.toString() !== user._id.toString()) {
       return res.status(403).json({
         error: 'Unauthorized',

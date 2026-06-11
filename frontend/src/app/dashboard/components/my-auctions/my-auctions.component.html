@@ -1,9 +1,4 @@
-<div class="my-auctions-container">
-  <div class="page-header">
-    <h1>{{ 'dashboard.myAuctions.title' | translate }}</h1>
-    <p class="subtitle">{{ 'dashboard.myAuctions.subtitle' | translate }}</p>
-  </div>
-
+<div class="my-auctions">
   @if (isLoading) {
     <div class="loading-state">
       <div class="spinner"></div>
@@ -20,13 +15,23 @@
   }
 
   @if (!isLoading && !error) {
+    @if (listings.length > 0) {
+      <div class="section-meta">
+        <span class="listing-count">{{ listings.length }} {{ listings.length === 1 ? ('dashboard.myAuctions.listingSingular' | translate) : ('dashboard.myAuctions.listingPlural' | translate) }}</span>
+      </div>
+    }
+
     <div class="listings-list">
       @if (listings.length === 0) {
         <div class="empty-state">
-          <div class="empty-icon">📦</div>
-          <h3>{{ 'dashboard.myAuctions.emptyTitle' | translate }}</h3>
-          <p>{{ 'dashboard.myAuctions.emptyDesc' | translate }}</p>
-          <a routerLink="/listing/add" class="create-btn">{{ 'dashboard.myAuctions.createFirst' | translate }}</a>
+          <div class="empty-icon-wrap">
+            <span class="empty-icon">📦</span>
+          </div>
+          <h2 class="empty-title">{{ 'dashboard.myAuctions.emptyTitle' | translate }}</h2>
+          <p class="empty-desc">{{ 'dashboard.myAuctions.emptyDesc' | translate }}</p>
+          <a routerLink="/listing/add" class="btn-primary">
+            + {{ 'dashboard.myAuctions.createFirst' | translate }}
+          </a>
         </div>
       }
 
@@ -39,7 +44,7 @@
               </h2>
               <div class="badge-row">
                 <span class="status-badge" [ngClass]="getStatusBadgeClass(listing.status)">
-                  {{ listing.status }}
+                  {{ getStatusLabel(listing.status) }}
                 </span>
                 @if (listing.autoRelist && listing.status === 'active') {
                   <span class="auto-relist-badge" title="{{ 'dashboard.myAuctions.relist.autoRelistBadgeTitle' | translate }}">
@@ -62,10 +67,10 @@
                 @if ((listing.highestOfferAmount ?? listing.currentPrice) == null || (listing.highestOfferAmount ?? listing.currentPrice) === 0) {
                   <span class="price-value">{{ 'dashboard.myAuctions.noOffersYet' | translate }}</span>
                 } @else {
-                  <span class="price-value">${{ (listing.highestOfferAmount ?? listing.currentPrice) | number:'1.2-2' }}</span>
+                  <span class="price-value">{{ formatPrice(listing.highestOfferAmount ?? listing.currentPrice) }}</span>
                 }
               } @else {
-                <span class="price-value">${{ listing.currentPrice | number:'1.2-2' }}</span>
+                <span class="price-value">{{ formatPrice(listing.currentPrice) }}</span>
               }
             </div>
           </div>
@@ -105,13 +110,11 @@
                   <div>
                     <h3>{{ 'dashboard.myAuctions.privateRoom' | translate }}</h3>
                     <span class="private-room-status-badge" [ngClass]="'status-' + listing.privateRoomStatus">
-                      {{ listing.privateRoomStatus === 'active' ? ('dashboard.myAuctions.privateRoomActive' | translate) :
-                         listing.privateRoomStatus === 'eligible' ? ('dashboard.myAuctions.privateRoomAwaiting' | translate) :
-                         listing.privateRoomStatus === 'ended' ? ('dashboard.myAuctions.privateRoomEnded' | translate) : listing.privateRoomStatus }}
+                      {{ getPrivateRoomStatusLabel(listing.privateRoomStatus) }}
                     </span>
                   </div>
                 </div>
-                @if (listing.privateRoomStatus === 'active' || listing.privateRoomStatus === 'eligible') {
+                @if (privateRoomLinkVisible(listing)) {
                   <a [routerLink]="['/private-room/auction', listing._id]" class="private-room-link">
                     <span>{{ 'dashboard.myAuctions.goToPrivateRoom' | translate }}</span>
                     <span class="link-arrow">→</span>
@@ -120,14 +123,14 @@
               </div>
 
               @if (listing.platinumBidderStatus && listing.platinumBidderStatus.length > 0) {
-                <div class="platinum-bidders-section">
-                  <div class="platinum-section-header">
+                <div class="invited-bidders-section">
+                  <div class="invited-section-header">
                     <h4>
-                      <span class="platinum-icon">🔒</span>
+                      <span class="invited-icon">🔒</span>
                       {{ 'dashboard.myAuctions.privateRoomBidders' | translate }}
-                      <span class="platinum-count">({{ listing.platinumBidderStatus.length }})</span>
+                      <span class="invited-count">({{ listing.platinumBidderStatus.length }})</span>
                     </h4>
-                    <div class="platinum-status-summary">
+                    <div class="invited-status-summary">
                       @if (getPlatinumStatusCounts(listing).accepted > 0) {
                         <span class="status-item accepted">
                           <span class="status-icon">✓</span>
@@ -149,9 +152,9 @@
                     </div>
                   </div>
 
-                  <div class="platinum-bidders-list">
+                  <div class="invited-bidders-list">
                     @for (platinumStatus of listing.platinumBidderStatus; track platinumStatus) {
-                      <div class="platinum-bidder-item" [ngClass]="'status-' + platinumStatus.status">
+                      <div class="invited-bidder-item" [ngClass]="'status-' + platinumStatus.status">
                         <div class="bidder-avatar">
                           <span class="avatar-initial">{{ platinumStatus.bidder.firstName[0] }}{{ platinumStatus.bidder.lastName[0] }}</span>
                         </div>
@@ -184,7 +187,7 @@
           <div class="auction-actions">
             <a [routerLink]="['/listing', listing.slug]" class="view-btn">{{ 'dashboard.myAuctions.viewListing' | translate }}</a>
             @if (listing.status === 'draft' || listing.status === 'active') {
-              <a [routerLink]="['/listing', listing._id, 'edit']" class="edit-btn">Edit</a>
+              <a [routerLink]="['/listing', listing._id, 'edit']" class="edit-btn">{{ 'dashboard.myAuctions.editListing' | translate }}</a>
             }
             @if (isEligibleForRelist(listing)) {
               <button type="button" class="relist-btn" (click)="openRelistModal(listing)">

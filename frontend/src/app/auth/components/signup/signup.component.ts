@@ -6,6 +6,8 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { AuthService } from '../../services/auth.service';
 import { ThemeService } from '../../../shared/services/theme.service';
 import { BidroomLogoComponent } from '../../../shared/components/bidroom-logo/bidroom-logo.component';
+import { AnalyticsService } from '../../../shared/services/analytics.service';
+import { AnalyticsEvents } from '../../../shared/services/analytics.events';
 
 @Component({
   selector: 'app-signup',
@@ -20,6 +22,7 @@ export class SignupComponent {
   private router = inject(Router);
   private translate = inject(TranslateService);
   private themeService = inject(ThemeService);
+  private analytics = inject(AnalyticsService);
 
   readonly isLight = computed(() => this.themeService.effective() === 'light');
 
@@ -80,6 +83,7 @@ export class SignupComponent {
 
       this.authService.register(this.signupForm.value.email, this.signupForm.value.password, displayName).subscribe({
         next: () => {
+          this.analytics.trackEvent(AnalyticsEvents.SIGN_UP, { method: 'email' });
           this.isLoading = false;
           this.router.navigate(['/auth/check-email'], {
             queryParams: { email: this.signupForm.value.email }
@@ -104,6 +108,7 @@ export class SignupComponent {
     this.errorMessage = '';
     this.authService.loginWithGoogle().subscribe({
       next: () => {
+        this.analytics.trackEvent(AnalyticsEvents.SIGN_UP, { method: 'google' });
         this.isLoading = false;
         this.router.navigate(['/dashboard/home']);
       },

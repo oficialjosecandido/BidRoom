@@ -123,52 +123,69 @@
                   <span class="breakdown-icon">💰</span>
                   <h4 class="breakdown-title">{{ 'transactions.financialBreakdown' | translate }}</h4>
                 </div>
-                <div class="breakdown-rows">
-                  <div class="breakdown-row">
-                    <span class="breakdown-label">{{ getSalePriceLabel(t) }}</span>
-                    <span class="breakdown-value">{{ formatPrice(t.amount) }}</span>
-                  </div>
-                  <div class="breakdown-row breakdown-row-fee">
-                    <span class="breakdown-label">{{ 'transactions.bidRoomFee' | translate }}</span>
-                    <span class="breakdown-value breakdown-value-fee">{{ formatPrice(getBidRoomFee(t)) }}</span>
-                  </div>
-                  @if (getStripeFee(t) !== null) {
-                    <div class="breakdown-row breakdown-row-fee">
-                      <span class="breakdown-label">{{ 'transactions.stripeProcessingFee' | translate }}</span>
-                      <span class="breakdown-value breakdown-value-fee">{{ formatPrice(getStripeFee(t)!) }}</span>
-                    </div>
-                  }
-                  <div class="breakdown-row">
-                    <span class="breakdown-label">{{ 'transactions.shipping' | translate }}</span>
-                    <span class="breakdown-value">
-                      @if (getShippingAmount(t) !== null) {
-                        {{ getShippingAmount(t) === 0 ? ('transactions.freeShipping' | translate) : formatPrice(getShippingAmount(t)!) }}
-                      } @else {
-                        {{ 'transactions.calculatedSeparately' | translate }}
-                      }
-                    </span>
-                  </div>
-                </div>
-                <div class="breakdown-divider"></div>
-                @if (isSeller(t)) {
-                  <div class="breakdown-total breakdown-total-seller">
-                    <span class="breakdown-total-label">{{ 'transactions.youReceive' | translate }}</span>
-                    <span class="breakdown-total-value">{{ formatPrice(getSellerNet(t)) }}</span>
-                  </div>
-                  @if (getStripeFee(t) === null && getEffectiveStatus(t) === 'pending_payment') {
-                    <p class="breakdown-note">{{ 'transactions.stripeDeductedNote' | translate }}</p>
-                  }
-                }
+
                 @if (isBuyer(t)) {
+                  <!--
+                    COMPRADOR: lance + Fee BidRoom (cobrada ao comprador) + envio
+                    Doc: Comprador paga → Lance + Fee BidRoom (cap €500) + Envio
+                  -->
+                  <div class="breakdown-rows">
+                    <div class="breakdown-row">
+                      <span class="breakdown-label">{{ getSalePriceLabel(t) }}</span>
+                      <span class="breakdown-value breakdown-value-pos">+{{ formatPrice(t.amount) }}</span>
+                    </div>
+                    <div class="breakdown-row">
+                      <span class="breakdown-label">{{ 'transactions.bidRoomFee' | translate }} ({{ getCommissionRateLabel(t) }})</span>
+                      <span class="breakdown-value breakdown-value-pos">+{{ formatPrice(getBidRoomFee(t)) }}</span>
+                    </div>
+                    @if (getShippingAmount(t) !== null) {
+                      <div class="breakdown-row">
+                        <span class="breakdown-label">{{ 'transactions.shipping' | translate }}</span>
+                        <span class="breakdown-value breakdown-value-pos">
+                          {{ getShippingAmount(t) === 0 ? ('transactions.freeShipping' | translate) : ('+' + formatPrice(getShippingAmount(t)!)) }}
+                        </span>
+                      </div>
+                    } @else {
+                      <div class="breakdown-row">
+                        <span class="breakdown-label">{{ 'transactions.shipping' | translate }}</span>
+                        <span class="breakdown-value breakdown-value-dim">{{ 'transactions.calculatedSeparately' | translate }}</span>
+                      </div>
+                    }
+                  </div>
+                  <div class="breakdown-divider"></div>
                   <div class="breakdown-total breakdown-total-buyer">
                     <span class="breakdown-total-label">{{ 'transactions.totalCharged' | translate }}</span>
                     <span class="breakdown-total-value">
                       @if (getBuyerTotal(t) !== null) {
                         {{ formatPrice(getBuyerTotal(t)!) }}
                       } @else {
-                        {{ formatPrice(t.amount + getBidRoomFee(t)) }} + {{ 'transactions.shippingLower' | translate }}
+                        {{ formatPrice(t.amount) }} + {{ 'transactions.shippingLower' | translate }}
                       }
                     </span>
+                  </div>
+                }
+
+                @if (isSeller(t)) {
+                  <!--
+                    VENDEDOR: recebe 100% do lance + envio, sem deduções.
+                    Doc: Vendedor recebe → Lance (100%). −0% comissão BidRoom.
+                  -->
+                  <div class="breakdown-rows">
+                    <div class="breakdown-row">
+                      <span class="breakdown-label">{{ getSalePriceLabel(t) }}</span>
+                      <span class="breakdown-value breakdown-value-pos">+{{ formatPrice(t.amount) }}</span>
+                    </div>
+                    @if (getShippingAmount(t) !== null && getShippingAmount(t)! > 0) {
+                      <div class="breakdown-row">
+                        <span class="breakdown-label">{{ 'transactions.shipping' | translate }}</span>
+                        <span class="breakdown-value breakdown-value-pos">+{{ formatPrice(getShippingAmount(t)!) }}</span>
+                      </div>
+                    }
+                  </div>
+                  <div class="breakdown-divider"></div>
+                  <div class="breakdown-total breakdown-total-seller">
+                    <span class="breakdown-total-label">{{ 'transactions.youReceive' | translate }}</span>
+                    <span class="breakdown-total-value">{{ formatPrice(getSellerNet(t)) }}</span>
                   </div>
                 }
               </div>
@@ -245,9 +262,6 @@
                 {{ 'transactions.youAreThe' | translate }} <strong>{{ 'transactions.seller' | translate }}</strong>. {{ 'transactions.buyer' | translate }}: {{ t.buyer.firstName }} {{ t.buyer.lastName }}
               </p>
             }
-            @if (isSeller(t) && ['awaiting_seller_acceptance', 'paid'].includes(getEffectiveStatus(t)) && (t.shipByBusinessDeadline || t.handlingDeadline)) {
-              <p class="form-hint">{{ 'transactions.sellerMustShipBy' | translate }}: {{ formatShipByDeadline(t) }}</p>
-            }
             @if (isSeller(t) && canSellerAcceptPayment(t)) {
               @if (t.paymentAcceptanceDeadline) {
                 <p class="form-hint">
@@ -255,10 +269,25 @@
                   {{ 'transactions.acknowledgeBy' | translate }} {{ formatPaymentAcceptanceDeadline(t) }}{{ hasPaymentAcceptanceDeadlinePassed(t) ? (' (' + ('transactions.deadlinePassed' | translate) + ')') : '' }}
                 </p>
               }
-              <p class="stripe-payment-confirmed">{{ 'transactions.paymentConfirmedStripe' | translate }}</p>
               <button type="button" class="btn btn-primary" (click)="acceptPayment(t)" [disabled]="updatingId === t._id">
                 {{ updatingId === t._id ? ('transactions.confirming' | translate) : ('transactions.confirmPrepareShip' | translate) }}
               </button>
+            }
+            @if (isSeller(t) && canSellerPrepareShipment(t)) {
+              <div class="seller-shipping-panel">
+                @if (isStripePaid(t)) {
+                  <p class="stripe-payment-confirmed">{{ 'transactions.paymentConfirmedStripe' | translate }}</p>
+                }
+                @if (t.shipByBusinessDeadline || t.handlingDeadline) {
+                  <p class="seller-ship-deadline">
+                    <span class="seller-ship-deadline__label">{{ 'transactions.sellerMustShipBy' | translate }}</span>
+                    <span class="seller-ship-deadline__value">{{ formatShipByDeadline(t) }}</span>
+                  </p>
+                }
+                <p class="seller-ship-hint">
+                  {{ (isStripePaid(t) ? 'transactions.stripePrepareShipHint' : 'transactions.prepareShipHint') | translate }}
+                </p>
+              </div>
             }
             @if (isBuyer(t)) {
               @if (getEffectiveStatus(t) === 'pending_payment') {
@@ -280,25 +309,24 @@
                         <label>{{ 'transactions.city' | translate }} *</label>
                         <input type="text" [(ngModel)]="deliveryAddress.city" [placeholder]="'transactions.city' | translate" class="input-sm" />
                       </div>
-                      <div class="form-group">
-                        <label>{{ 'transactions.state' | translate }} *</label>
-                        <input type="text" [(ngModel)]="deliveryAddress.state" placeholder="CA" class="input-sm" maxlength="2" />
-                      </div>
+                      @if (deliveryAddressRequiresState()) {
+                        <div class="form-group">
+                          <label>{{ 'transactions.state' | translate }} *</label>
+                          <input type="text" [(ngModel)]="deliveryAddress.state" placeholder="CA" class="input-sm" maxlength="10" />
+                        </div>
+                      }
                     </div>
                     <div class="form-row-sm">
                       <div class="form-group">
                         <label>{{ 'transactions.postalCode' | translate }} *</label>
-                        <input type="text" [(ngModel)]="deliveryAddress.postalCode" placeholder="90001" class="input-sm" />
+                        <input type="text" [(ngModel)]="deliveryAddress.postalCode" [placeholder]="'transactions.postalCodePlaceholder' | translate" class="input-sm" />
                       </div>
                       <div class="form-group">
-                        <label>{{ 'transactions.country' | translate }}</label>
+                        <label>{{ 'transactions.country' | translate }} *</label>
                         <select [(ngModel)]="deliveryAddress.country" class="input-sm">
-                          <option value="US">US</option>
-                          <option value="CA">Canada</option>
-                          <option value="GB">UK</option>
-                          <option value="AU">Australia</option>
-                          <option value="DE">Germany</option>
-                          <option value="FR">France</option>
+                          @for (code of shippingCountries; track code) {
+                            <option [value]="code">{{ ('addListing.country' + code) | translate }}</option>
+                          }
                         </select>
                       </div>
                     </div>
@@ -356,7 +384,7 @@
                   }
                 </div>
               }
-              @if (getEffectiveStatus(t) === 'awaiting_seller_acceptance') {
+              @if (isStripePaid(t) && ['awaiting_seller_acceptance', 'paid'].includes(getEffectiveStatus(t))) {
                 <p class="form-hint stripe-paid-hint">
                   {{ 'transactions.paymentConfirmedSellerNotified' | translate }}
                 </p>
@@ -368,17 +396,6 @@
                   </p>
                   @if (t.shipByBusinessDeadline || t.handlingDeadline) {
                     <p class="form-hint">{{ 'transactions.expectedShipBy' | translate }}: {{ formatShipByDeadline(t) }}</p>
-                  }
-                  <button
-                    type="button"
-                    class="btn btn-secondary"
-                    (click)="remindSellerToShip(t); $event.stopPropagation()"
-                    [disabled]="!canRemindSellerToShip(t) || remindSellerShipTxId === t._id"
-                  >
-                    {{ remindSellerShipTxId === t._id ? ('transactions.remindingSeller' | translate) : ('transactions.remindSellerToShip' | translate) }}
-                  </button>
-                  @if (isRemindSellerOnCooldown(t)) {
-                    <p class="form-hint">{{ 'transactions.remindSellerCooldown' | translate }}</p>
                   }
                 </div>
               }
@@ -412,6 +429,14 @@
                   } @else {
                     <p class="auto-release-warning">{{ 'transactions.autoReleaseImminent' | translate }}</p>
                   }
+                }
+                @if (canOpenDamageClaim(t)) {
+                  <div class="damage-claim-panel">
+                    <p class="form-hint">{{ 'transactions.damageClaimShippedNotice' | translate }}</p>
+                    <button type="button" class="btn btn-damage" (click)="openDamageClaimModal(t); $event.stopPropagation()">
+                      {{ 'transactions.reportDamage' | translate }}
+                    </button>
+                  </div>
                 }
                 <button type="button" class="btn btn-primary" (click)="markAsDelivered(t)" [disabled]="updatingId === t._id">
                   {{ updatingId === t._id ? ('transactions.updating' | translate) : ('transactions.markAsReceivedProperly' | translate) }}
@@ -483,43 +508,43 @@
               }
             }
 
-            @if (isSeller(t) && getEffectiveStatus(t) === 'paid') {
-              <input
-                type="file"
-                #deliveryProofFileInput
-                [accept]="transactionsService.proofOfPaymentAccept"
-                (change)="onDeliveryProofFileSelected(t, deliveryProofFileInput)"
-                class="file-input-hidden"
-                style="display: none;"
-              />
-              <button type="button" class="btn btn-secondary" (click)="triggerDeliveryProofUpload(t, deliveryProofFileInput)" [disabled]="deliveryProofUploadingTxId === t._id">
-                {{ getDeliveryProofUploadButtonLabel(t) }}
-              </button>
-              @if (hasDeliveryProofUploaded(t)) {
-                <div class="proof-preview">
-                  <div class="proof-preview-content">
-                    <span class="proof-preview-filename">{{ getDeliveryProofFileName(t) }}</span>
-                    <div class="d-flex gap-2">
-                      <a [href]="getDeliveryProofUploadedUrl(t)!" target="_blank" rel="noopener noreferrer" class="btn btn-secondary mr-2">{{ 'transactions.view' | translate }}</a>
-                      <button type="button" class="btn btn-remove" (click)="removeDeliveryProof(t)">{{ 'transactions.remove' | translate }}</button>
+            @if (isSeller(t) && canSellerPrepareShipment(t)) {
+              <div class="seller-ship-optional">
+                <p class="seller-ship-optional__title">{{ 'transactions.shippingDetailsOptional' | translate }}</p>
+
+                <input
+                  type="file"
+                  #deliveryProofFileInput
+                  [accept]="transactionsService.proofOfPaymentAccept"
+                  (change)="onDeliveryProofFileSelected(t, deliveryProofFileInput)"
+                  class="file-input-hidden"
+                  style="display: none;"
+                />
+                <button type="button" class="btn btn-secondary" (click)="triggerDeliveryProofUpload(t, deliveryProofFileInput)" [disabled]="deliveryProofUploadingTxId === t._id">
+                  {{ getDeliveryProofUploadButtonLabel(t) }}
+                </button>
+                @if (hasDeliveryProofUploaded(t)) {
+                  <div class="proof-preview">
+                    <div class="proof-preview-content">
+                      <span class="proof-preview-filename">{{ getDeliveryProofFileName(t) }}</span>
+                      <div class="d-flex gap-2">
+                        <a [href]="getDeliveryProofUploadedUrl(t)!" target="_blank" rel="noopener noreferrer" class="btn btn-secondary mr-2">{{ 'transactions.view' | translate }}</a>
+                        <button type="button" class="btn btn-remove" (click)="removeDeliveryProof(t)">{{ 'transactions.remove' | translate }}</button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              }
-              @if (getDeliveryProofUploadError(t)) {
-                <p class="form-error">{{ getDeliveryProofUploadError(t) }}</p>
-              }
-              <button type="button" class="btn btn-primary" (click)="toggleTrackingForm(t)" [disabled]="!hasDeliveryProofUploaded(t) || updatingId === t._id">
-                {{ showTrackingFormId === t._id ? ('dashboard.common.cancel' | translate) : ('transactions.markAsShipped' | translate) }}
-              </button>
-              @if (showTrackingFormId === t._id) {
+                }
+                @if (getDeliveryProofUploadError(t)) {
+                  <p class="form-error">{{ getDeliveryProofUploadError(t) }}</p>
+                }
+
                 <div class="tracking-form">
                   <div class="form-group">
-                    <label>{{ 'transactions.trackingNumber' | translate }}</label>
+                    <label>{{ 'transactions.trackingNumber' | translate }} <span class="label-optional">{{ 'transactions.optional' | translate }}</span></label>
                     <input type="text" [(ngModel)]="trackingNumber" [placeholder]="'transactions.trackingNumberPlaceholder' | translate" class="input-sm" />
                   </div>
                   <div class="form-group">
-                    <label>{{ 'transactions.carrier' | translate }}</label>
+                    <label>{{ 'transactions.carrier' | translate }} <span class="label-optional">{{ 'transactions.optional' | translate }}</span></label>
                     <select [(ngModel)]="trackingCarrier" class="input-sm">
                       <option value="">{{ 'transactions.selectCarrier' | translate }}</option>
                       <option value="USPS">USPS</option>
@@ -530,24 +555,33 @@
                     </select>
                   </div>
                   <div class="form-group">
-                    <label>{{ 'transactions.estimatedDeliveryDays' | translate }}</label>
+                    <label>{{ 'transactions.estimatedDeliveryDays' | translate }} <span class="label-optional">{{ 'transactions.optional' | translate }}</span></label>
                     <input type="number" [(ngModel)]="estimatedDeliveryDays" min="1" max="60" [placeholder]="'transactions.estimatedDeliveryDaysPlaceholder' | translate" class="input-sm" />
                     <span class="form-hint">{{ 'transactions.estimatedDeliveryDaysHint' | translate }}</span>
                   </div>
-                  <button type="button" class="btn btn-primary" (click)="submitShipped(t)" [disabled]="updatingId === t._id">
-                    {{ updatingId === t._id ? ('transactions.updating' | translate) : ('transactions.confirmShipped' | translate) }}
-                  </button>
                 </div>
-              }
-            }
-            @if (canLeaveReview(t)) {
-              <button type="button" class="btn btn-secondary" (click)="openReviewModal(t)">
-                {{ 'dashboard.home.leaveReview' | translate }}
+              </div>
+
+              <button type="button" class="btn btn-primary" (click)="submitShipped(t)" [disabled]="updatingId === t._id">
+                {{ updatingId === t._id ? ('transactions.updating' | translate) : ('transactions.confirmShipped' | translate) }}
               </button>
             }
-            @if (isDone(t)) {
-              <button type="button" class="btn btn-secondary" (click)="downloadInvoice(t); $event.stopPropagation()" [disabled]="invoiceDownloadingTxId === t._id">
-                {{ invoiceDownloadingTxId === t._id ? ('transactions.downloading' | translate) : (isSeller(t) ? ('transactions.downloadInvoice' | translate) : ('transactions.downloadReceipt' | translate)) }}
+            @if (isFullyCompleted(t)) {
+              <div class="tx-completed-success">
+                <span class="tx-completed-success-icon" aria-hidden="true">✓</span>
+                <div class="tx-completed-success-copy">
+                  <span class="tx-completed-success-title">{{ 'transactions.txCompletedTitle' | translate }}</span>
+                  <span class="tx-completed-success-detail">{{ 'transactions.txCompletedBothSides' | translate }}</span>
+                </div>
+              </div>
+            } @else if (hasCurrentUserReviewed(t) && isDone(t)) {
+              <span class="review-submitted-badge">
+                <span class="review-submitted-icon" aria-hidden="true">✓</span>
+                {{ 'transactions.reviewSubmitted' | translate }}
+              </span>
+            } @else if (canLeaveReview(t)) {
+              <button type="button" class="btn btn-secondary btn-leave-review" (click)="openReviewModal(t)">
+                {{ 'dashboard.home.leaveReview' | translate }}
               </button>
             }
           </div>
@@ -751,56 +785,81 @@
   }
 
   @if (reviewModalTransaction) {
-    <div class="modal-overlay" (click)="closeReviewModal()">
-      <div class="modal-content review-modal" (click)="$event.stopPropagation()">
+    <div class="modal-overlay review-modal-overlay" (click)="closeReviewModal()">
+      <div class="modal-content review-modal tx-review-modal" (click)="$event.stopPropagation()">
         <div class="modal-header">
           <h3 class="modal-title">{{ 'dashboard.home.leaveReview' | translate }}</h3>
           <button type="button" class="modal-close" (click)="closeReviewModal()" aria-label="Close">×</button>
         </div>
         <div class="modal-body">
-          <p class="review-target-text">
-            {{ 'transactions.review' | translate }} <strong>{{ getReviewOtherPartyName(reviewModalTransaction) }}</strong>
-            ({{ 'transactions.as' | translate }} {{ isBuyer(reviewModalTransaction) ? ('transactions.seller' | translate) : ('transactions.buyer' | translate) }}) {{ 'transactions.for' | translate }}
-            <em>{{ reviewModalTransaction.listing.title }}</em>
-          </p>
-          <fieldset class="review-score-section">
-            <legend class="review-score-label">{{ 'transactions.score' | translate }} (1–5)</legend>
-            <div class="review-score-card">
-              <div class="review-score-scale">
-                <span class="scale-low">{{ 'transactions.scoreScaleLow' | translate }}</span>
-                <span class="scale-high">{{ 'transactions.scoreScaleHigh' | translate }}</span>
-              </div>
-              <div class="review-score-grid" role="group" [attr.aria-label]="'transactions.score' | translate">
-                @for (i of [1,2,3,4,5]; track i) {
-                  <button
-                    type="button"
-                    class="score-btn"
-                    [class.tier-low]="scoreTier(i) === 'low'"
-                    [class.tier-mid]="scoreTier(i) === 'mid'"
-                    [class.tier-high]="scoreTier(i) === 'high'"
-                    [class.selected]="i === reviewScore"
-                    (click)="setReviewScore(i)"
-                  >
-                    {{ i }}
-                  </button>
-                }
-              </div>
-              @if (reviewScore > 0) {
-                <p class="review-score-picked">{{ 'transactions.scoreSelected' | translate: { score: reviewScore } }}</p>
+          <div class="review-target-card">
+            <span class="review-target-label">{{ 'dashboard.home.youreReviewing' | translate }}</span>
+            <span class="review-target-name">{{ getReviewOtherPartyName(reviewModalTransaction) }}</span>
+            <span class="review-target-detail">
+              {{ 'transactions.as' | translate }} {{ isBuyer(reviewModalTransaction) ? ('transactions.seller' | translate) : ('transactions.buyer' | translate) }}
+              · {{ reviewModalTransaction.listing.title }}
+            </span>
+          </div>
+
+          <div class="review-score-section">
+            <label class="review-score-label">{{ 'dashboard.home.howWouldYouRate' | translate }}</label>
+            <div
+              class="review-star-row"
+              role="group"
+              [attr.aria-label]="'transactions.score' | translate"
+              (mouseleave)="clearReviewScoreHover()"
+            >
+              @for (i of [1,2,3,4,5]; track i) {
+                <button
+                  type="button"
+                  class="star-btn"
+                  [class.filled]="i <= displayReviewScore()"
+                  [class.active]="i === reviewScore"
+                  [attr.aria-label]="i + ' ' + ('transactions.score' | translate)"
+                  [attr.aria-pressed]="i === reviewScore"
+                  (mouseenter)="setReviewScoreHover(i)"
+                  (click)="setReviewScore(i)"
+                >
+                  <span class="star-icon" aria-hidden="true">★</span>
+                </button>
               }
             </div>
-          </fieldset>
-          <div class="review-description-section">
-            <label class="review-description-label" for="review-description">{{ 'transactions.descriptionOptional' | translate }}</label>
-            <textarea id="review-description" class="review-description-input" [(ngModel)]="reviewDescription" rows="3" maxlength="2000" [placeholder]="'transactions.reviewPrivate' | translate"></textarea>
+            <div class="review-star-scale">
+              <span>{{ 'transactions.scoreScaleLow' | translate }}</span>
+              <span>{{ 'transactions.scoreScaleHigh' | translate }}</span>
+            </div>
+            @if (reviewScore > 0) {
+              <div class="review-score-reaction">
+                <span class="reaction-emoji" aria-hidden="true">{{ getScoreEmoji(reviewScore) }}</span>
+                <span class="reaction-label">{{ getScoreLabel(reviewScore) }}</span>
+              </div>
+            } @else {
+              <span class="review-score-hint">{{ 'dashboard.home.tapToRate' | translate }}</span>
+            }
           </div>
+
+          <div class="comment-row">
+            <label class="comment-label" for="review-description">
+              <span class="comment-label-text">{{ 'dashboard.home.yourReview' | translate }}</span>
+              <span class="comment-label-badge">{{ 'dashboard.home.visibleToOthers' | translate }}</span>
+            </label>
+            <textarea
+              id="review-description"
+              class="comment-input"
+              [(ngModel)]="reviewDescription"
+              rows="4"
+              maxlength="2000"
+              [placeholder]="'dashboard.home.shareExperience' | translate"
+            ></textarea>
+          </div>
+
           @if (reviewError) {
             <p class="review-error">{{ reviewError }}</p>
           }
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" (click)="closeReviewModal()">{{ 'dashboard.common.cancel' | translate }}</button>
-          <button type="button" class="btn btn-primary" (click)="submitReview()" [disabled]="reviewSubmitting">
+          <button type="button" class="btn btn-primary" (click)="submitReview()" [disabled]="reviewSubmitting || reviewScore < 1">
             {{ reviewSubmitting ? ('dashboard.common.submitting' | translate) : ('dashboard.home.submitReview' | translate) }}
           </button>
         </div>
@@ -911,20 +970,12 @@
           @if (isBuyer(drawerTx) && getEffectiveStatus(drawerTx) === 'pending_payment' && !hasPaymentDeadlinePassed(drawerTx)) {
             <button type="button" class="btn-drawer-primary" (click)="payWithStripe(drawerTx); closeDrawer()">{{ 'transactions.payNow' | translate }}</button>
           }
-          @if (isBuyer(drawerTx) && ['awaiting_seller_acceptance','paid'].includes(getEffectiveStatus(drawerTx))) {
-            <button type="button" class="btn-drawer-ghost" (click)="remindSellerToShip(drawerTx)" [disabled]="!canRemindSellerToShip(drawerTx)">{{ 'transactions.remindSellerToShip' | translate }}</button>
-          }
           @if (isBuyer(drawerTx) && getEffectiveStatus(drawerTx) === 'shipped') {
             <button type="button" class="btn-drawer-primary green" (click)="markAsDelivered(drawerTx); closeDrawer()" [disabled]="updatingId === drawerTx._id">{{ 'transactions.markAsReceivedProperly' | translate }}</button>
             <button type="button" class="btn-drawer-danger" (click)="openDisputeModal(drawerTx); closeDrawer()">{{ 'transactions.receivedNotProperly' | translate }}</button>
           }
           @if (isBuyer(drawerTx) && getEffectiveStatus(drawerTx) === 'delivered') {
             <button type="button" class="btn-drawer-primary" (click)="markAsCompleted(drawerTx); closeDrawer()" [disabled]="updatingId === drawerTx._id">{{ 'transactions.markAsCompleted' | translate }}</button>
-          }
-          @if (isDone(drawerTx)) {
-            <button type="button" class="btn-drawer-ghost" (click)="downloadInvoice(drawerTx); closeDrawer()" [disabled]="invoiceDownloadingTxId === drawerTx._id">
-              {{ isSeller(drawerTx) ? ('transactions.downloadInvoice' | translate) : ('transactions.downloadReceipt' | translate) }}
-            </button>
           }
         </div>
 

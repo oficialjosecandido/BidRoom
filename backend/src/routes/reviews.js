@@ -5,7 +5,7 @@ const Review = require('../models/Review');
 const ReviewFlag = require('../models/ReviewFlag');
 const ReviewAppeal = require('../models/ReviewAppeal');
 const Transaction = require('../models/Transaction');
-const User = require('../models/User');
+const Customer = require('../models/Customer');
 const { authenticateToken } = require('../middleware/auth');
 const { getReviewScoresForUser } = require('../services/reviewService');
 const {
@@ -70,7 +70,7 @@ router.get('/reputation/:userId', async (req, res) => {
     if (!isValidObjectId(req.params.userId)) {
       return res.status(400).json({ error: 'Invalid user id' });
     }
-    const user = await User.findById(req.params.userId)
+    const user = await Customer.findById(req.params.userId)
       .select('reputationScore disputeLossCount successfulTransactionCount hasDeposit depositAmount')
       .lean();
     if (!user) {
@@ -128,7 +128,7 @@ const ALLOWED_TAGS = [
  */
 router.get('/pending', authenticateToken, async (req, res) => {
   try {
-    const user = await User.findOne({ uid: req.user.uid }).select('_id').lean();
+    const user = await Customer.findOne({ uid: req.user.uid }).select('_id').lean();
     if (!user) {
       return res.json({ pending: [] });
     }
@@ -202,6 +202,58 @@ router.get('/pending', authenticateToken, async (req, res) => {
 });
 
 /**
+ * GET /api/reviews/mine
+ * Returns reviews written by the current user AND reviews received by them.
+ */
+router.get('/mine', authenticateToken, async (req, res) => {
+  try {
+    const user = await Customer.findOne({ uid: req.user.uid }).select('_id').lean();
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    const [written, received] = await Promise.all([
+      Review.find({ reviewer: user._id })
+        .sort({ createdAt: -1 })
+        .populate('reviewee', 'firstName lastName slug')
+        .populate('listing', 'title slug images')
+        .limit(200)
+        .lean(),
+      Review.find({ reviewee: user._id })
+        .sort({ createdAt: -1 })
+        .populate('reviewer', 'firstName lastName slug')
+        .populate('listing', 'title slug images')
+        .limit(200)
+        .lean()
+    ]);
+
+    const sanitizedReceived = received.map(({ description: _d, reviewerIp: _ip, reviewerUserAgent: _ua, ...r }) => r);
+
+    res.json({ written, received: sanitizedReceived });
+  } catch (error) {
+    console.error('Error fetching my reviews:', error);
+    res.status(500).json(serverError(error, 'Failed to fetch reviews'));
+  }
+});
+
+/**
+ * GET /api/reviews/appeals/mine
+ * List appeals created by the authenticated user.
+ */
+router.get('/appeals/mine', authenticateToken, async (req, res) => {
+  try {
+    const user = await Customer.findOne({ uid: req.user.uid }).select('_id').lean();
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    const appeals = await ReviewAppeal.find({ appellant: user._id })
+      .sort({ createdAt: -1 })
+      .limit(100)
+      .lean();
+    res.json({ appeals });
+  } catch (error) {
+    console.error('Error fetching my appeals:', error);
+    res.status(500).json(serverError(error, 'Failed to fetch appeals'));
+  }
+});
+
+/**
  * After a new review is saved, decide whether the seller should be auto-suspended
  * for sustained low ratings (< AUTO_SUSPEND_AVG_THRESHOLD across ≥ AUTO_SUSPEND_MIN_REVIEWS).
  *
@@ -218,7 +270,7 @@ async function maybeAutoSuspendSeller(sellerId, io) {
     if (!row || row.count < AUTO_SUSPEND_MIN_REVIEWS || row.avg >= AUTO_SUSPEND_AVG_THRESHOLD) {
       return;
     }
-    const seller = await User.findById(sellerId).select('accountStatus').lean();
+    const seller = await Customer.findById(sellerId).select('accountStatus').lean();
     if (!seller || seller.accountStatus === ACCOUNT_STATUS.SUSPENDED || seller.accountStatus === ACCOUNT_STATUS.CLOSED) {
       return;
     }
@@ -269,7 +321,7 @@ router.post('/', authenticateToken, async (req, res) => {
       });
     }
 
-    const user = await User.findOne({ uid: req.user.uid }).select('_id').lean();
+    const user = await Customer.findOne({ uid: req.user.uid }).select('_id').lean();
     if (!user) {
       return res.status(403).json({
         error: 'User not found',
@@ -433,7 +485,7 @@ router.post('/:id/flag', authenticateToken, async (req, res) => {
     const { reason, details } = req.body;
     const review = await Review.findById(req.params.id).select('_id').lean();
     if (!review) return res.status(404).json({ error: 'Review not found' });
-    const user = await User.findOne({ uid: req.user.uid }).select('_id').lean();
+    const user = await Customer.findOne({ uid: req.user.uid }).select('_id').lean();
     if (!user) return res.status(404).json({ error: 'User not found' });
 
     const normalized = String(reason || '').trim().toLowerCase();
@@ -482,7 +534,7 @@ router.post('/:id/appeals', authenticateToken, async (req, res) => {
     }
     const review = await Review.findById(req.params.id).select('reviewer reviewee').lean();
     if (!review) return res.status(404).json({ error: 'Review not found' });
-    const user = await User.findOne({ uid: req.user.uid }).select('_id').lean();
+    const user = await Customer.findOne({ uid: req.user.uid }).select('_id').lean();
     if (!user) return res.status(404).json({ error: 'User not found' });
 
     const isParty =
@@ -511,25 +563,6 @@ router.post('/:id/appeals', authenticateToken, async (req, res) => {
   } catch (error) {
     console.error('Error creating review appeal:', error);
     res.status(500).json(serverError(error, 'Failed to create appeal'));
-  }
-});
-
-/**
- * GET /api/reviews/appeals/mine
- * List appeals created by the authenticated user.
- */
-router.get('/appeals/mine', authenticateToken, async (req, res) => {
-  try {
-    const user = await User.findOne({ uid: req.user.uid }).select('_id').lean();
-    if (!user) return res.status(404).json({ error: 'User not found' });
-    const appeals = await ReviewAppeal.find({ appellant: user._id })
-      .sort({ createdAt: -1 })
-      .limit(100)
-      .lean();
-    res.json({ appeals });
-  } catch (error) {
-    console.error('Error fetching my appeals:', error);
-    res.status(500).json(serverError(error, 'Failed to fetch appeals'));
   }
 });
 

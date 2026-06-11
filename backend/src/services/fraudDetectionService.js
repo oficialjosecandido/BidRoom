@@ -13,7 +13,7 @@
  */
 
 const Bid       = require('../models/Bid');
-const User      = require('../models/User');
+const Customer = require('../models/Customer');
 const FraudEvent = require('../models/FraudEvent');
 
 // Score increments applied to user.fraudScore
@@ -33,7 +33,7 @@ async function logFraudEvent(data) {
 async function raiseFraudScore(userId, delta) {
   if (!userId) return;
   try {
-    const user = await User.findById(userId);
+    const user = await Customer.findById(userId);
     if (!user) return;
     user.fraudScore = Math.min(MAX_SCORE, (user.fraudScore || 0) + delta);
     if (user.fraudScore >= 60) user.isFraudSuspect = true;
@@ -51,7 +51,7 @@ async function updateUserSignals(userId, ip, fingerprint) {
   if (!userId) return;
   try {
     const now = new Date();
-    const user = await User.findById(userId);
+    const user = await Customer.findById(userId);
     if (!user) return;
 
     // Update knownIPs (cap at 20)
@@ -129,7 +129,7 @@ async function detectShillBidding(bidderId, sellerId, listingId, ip, fingerprint
   if (bidderId.toString() === sellerId.toString()) return { outcome: 'allow', reason: null, flags: [] }; // handled elsewhere
 
   try {
-    const seller = await User.findById(sellerId).select('knownIPs knownFingerprints').lean();
+    const seller = await Customer.findById(sellerId).select('knownIPs knownFingerprints').lean();
     if (!seller) return { outcome: 'allow', reason: null, flags: [] };
 
     const sellerIPs = (seller.knownIPs || []).map(e => e.ip);
@@ -184,7 +184,7 @@ async function detectMultiAccount(bidderId, ip, fingerprint) {
     if (fingerprint) query.$or.push({ 'knownFingerprints.fingerprint': fingerprint });
     if (query.$or.length === 0) return { outcome: 'allow', flags: [] };
 
-    const sharedAccounts = await User.countDocuments(query);
+    const sharedAccounts = await Customer.countDocuments(query);
     if (sharedAccounts === 0) return { outcome: 'allow', flags: [] };
 
     await logFraudEvent({

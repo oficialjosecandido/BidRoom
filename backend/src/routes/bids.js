@@ -1,7 +1,7 @@
 const express = require('express');
 const Bid = require('../models/Bid');
 const Listing = require('../models/Listing');
-const User = require('../models/User');
+const Customer = require('../models/Customer');
 const { authenticateToken, optionalAuth, requireActiveAccountIfAuthenticated, requireNoDisputeRestrictionIfAuthenticated } = require('../middleware/auth');
 const { sendFirstBidNotification, sendOutbidNotification } = require('../services/auctionNotificationService');
 const { getReviewScoresForUsers } = require('../services/reviewService');
@@ -35,7 +35,7 @@ router.get('/listing/:listingId', optionalAuth, async (req, res) => {
     // Determine if the requester is the listing's seller (entitled to see full emails)
     const listing = await Listing.findById(req.params.listingId).select('seller').lean();
     const requestingUid = req.user?.uid || null;
-    const sellerUser = listing?.seller ? await User.findById(listing.seller).select('uid').lean() : null;
+    const sellerUser = listing?.seller ? await Customer.findById(listing.seller).select('uid').lean() : null;
     const isSeller = requestingUid && sellerUser && requestingUid === sellerUser.uid;
 
     // Get buyer review scores for all bidders (authenticated users only)
@@ -152,13 +152,13 @@ router.post('/', optionalAuth, requireActiveAccountIfAuthenticated, requireNoDis
       }
       
       // Find or create user in database from Firebase UID
-      user = await User.findOne({ uid: req.user.uid });
+      user = await Customer.findOne({ uid: req.user.uid });
       if (!user) {
         const nameParts = req.user.name?.split(' ') || [];
         const firstName = nameParts[0] || 'User';
         const lastName = nameParts.slice(1).join(' ') || 'User';
         try {
-          user = new User({
+          user = new Customer({
             uid: req.user.uid,
             email: req.user.email,
             firstName,
@@ -170,7 +170,7 @@ router.post('/', optionalAuth, requireActiveAccountIfAuthenticated, requireNoDis
         } catch (createErr) {
           if (createErr.code === 11000) {
             // Concurrent request already created this user — just fetch it.
-            user = await User.findOne({ uid: req.user.uid });
+            user = await Customer.findOne({ uid: req.user.uid });
             if (!user) throw createErr;
           } else {
             throw createErr;
@@ -286,12 +286,26 @@ router.post('/', optionalAuth, requireActiveAccountIfAuthenticated, requireNoDis
     const isPrivateRoom = listing.privateRoomStatus === 'active' || listing.privateRoomStatus === 'eligible' || listing.privateRoomStatus === 'invited';
 
     if (isPrivateRoom) {
-      // Room not started yet: invitees have 15 min to accept, then room starts automatically
+      // Room not started yet — but check if the acceptance window has already expired.
+      // If so, auto-start inline (covers the gap before the scheduler next runs).
       if (listing.privateRoomStatus === 'invited') {
-        return res.status(400).json({
-          error: 'Room not started',
-          message: 'The private room has not started yet. It will start automatically after the 15 minute acceptance window.'
-        });
+        const deadlinePassed = listing.platinumBidderAcceptanceDeadline && now > new Date(listing.platinumBidderAcceptanceDeadline);
+        const acceptedCount = (listing.platinumBidderInvitations || []).filter(inv => inv.status === 'accepted').length;
+        if (deadlinePassed && acceptedCount > 0) {
+          // Transition to active so the bid can proceed
+          const PRIVATE_ROOM_EXTEND_MS = 60 * 1000;
+          listing.privateRoomStatus = 'active';
+          if (!listing.privateRoomActivatedAt) listing.privateRoomActivatedAt = now;
+          if (!listing.privateRoomEndDate) {
+            listing.privateRoomEndDate = new Date(now.getTime() + PRIVATE_ROOM_EXTEND_MS);
+          }
+          // Fall through to normal active-room bid logic
+        } else {
+          return res.status(400).json({
+            error: 'Room not started',
+            message: 'The private room has not started yet. It will start automatically after the 15 minute acceptance window.'
+          });
+        }
       }
 
       // Private Room logic: check if still active/eligible
@@ -687,7 +701,7 @@ router.post('/', optionalAuth, requireActiveAccountIfAuthenticated, requireNoDis
 // PATCH /api/bids/preference - Update outbid notification preference for a listing (authenticated bidders only)
 router.patch('/preference', authenticateToken, async (req, res) => {
   try {
-    const user = await User.findOne({ uid: req.user.uid });
+    const user = await Customer.findOne({ uid: req.user.uid });
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }

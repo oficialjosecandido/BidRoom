@@ -1,10 +1,10 @@
 <div class="profile-page">
   <div class="profile-header">
-    <div class="profile-header-content">
+    <div class="profile-header-main">
       <div class="profile-avatar seller-avatar">📦</div>
       <div class="profile-info">
-        <h1 class="profile-title">{{ 'dashboard.seller.title' | translate }}</h1>
-        <p class="profile-subtitle">{{ 'dashboard.seller.subtitle' | translate }}</p>
+        <h1 class="profile-title">{{ 'dashboard.myAuctions.title' | translate }}</h1>
+        <p class="profile-subtitle">{{ 'dashboard.myAuctions.subtitle' | translate }}</p>
         @if (sellerScore !== null || sellerReviewCount > 0) {
           <div class="seller-rating">
             <span class="rating-stars">★ {{ sellerScore !== null ? (sellerScore | number:'1.1-1') : '—' }}</span>
@@ -17,29 +17,10 @@
         }
       </div>
     </div>
+    <a routerLink="/listing/add" class="btn-create-listing">
+      + {{ 'dashboard.home.createListing' | translate }}
+    </a>
   </div>
 
-  <div class="tab-bar">
-    <button class="tab-btn" [class.active]="activeTab === 'auctions'" (click)="setTab('auctions')">
-      <span class="tab-icon">🔨</span> {{ 'dashboard.seller.tabs.auctions' | translate }}
-    </button>
-    <button class="tab-btn" [class.active]="activeTab === 'analytics'" (click)="setTab('analytics')">
-      <span class="tab-icon">📊</span> {{ 'dashboard.seller.tabs.analytics' | translate }}
-    </button>
-    <button class="tab-btn" [class.active]="activeTab === 'disputes'" (click)="setTab('disputes')">
-      <span class="tab-icon">⚖️</span> {{ 'dashboard.seller.tabs.disputes' | translate }}
-    </button>
-  </div>
-
-  <div class="tab-content">
-    @if (activeTab === 'auctions') {
-      <app-my-auctions></app-my-auctions>
-    }
-    @if (activeTab === 'analytics') {
-      <app-seller-analytics></app-seller-analytics>
-    }
-    @if (activeTab === 'disputes') {
-      <app-dashboard-disputes></app-dashboard-disputes>
-    }
-  </div>
+  <app-my-auctions></app-my-auctions>
 </div>

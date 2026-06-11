@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const { authenticateToken } = require('../middleware/auth');
 const Report = require('../models/Report');
 const Listing = require('../models/Listing');
-const User = require('../models/User');
+const Customer = require('../models/Customer');
 const { createNotification } = require('../services/notificationService');
 
 const router = express.Router();
@@ -37,7 +37,7 @@ router.post('/', authenticateToken, async (req, res) => {
         return res.status(400).json({ error: 'You cannot report your own listing.' });
       }
     } else {
-      const target = await User.findById(targetId).select('_id').lean();
+      const target = await Customer.findById(targetId).select('_id').lean();
       if (!target) return res.status(404).json({ error: 'User not found.' });
       if (targetId === req.user._id.toString()) {
         return res.status(400).json({ error: 'You cannot report yourself.' });

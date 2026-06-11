@@ -1,5 +1,5 @@
 const Notification = require('../models/Notification');
-const User = require('../models/User');
+const Customer = require('../models/Customer');
 const NotificationPreferences = require('../models/NotificationPreferences');
 const Follow = require('../models/Follow');
 const CategoryFollow = require('../models/CategoryFollow');
@@ -89,7 +89,7 @@ async function shouldSendEmail(userId, eventType) {
 async function emitNewNotificationToUser(io, userMongoId) {
   if (!io || !userMongoId) return;
   try {
-    const user = await User.findById(userMongoId).select('uid').lean();
+    const user = await Customer.findById(userMongoId).select('uid').lean();
     if (user?.uid) {
       io.to(`user:${user.uid}`).emit('new-notification');
     }
@@ -108,7 +108,7 @@ async function emitNewNotificationToUser(io, userMongoId) {
 async function emitPrivateRoomInvitationToUser(io, userMongoId, { listingId, listingTitle }) {
   if (!io || !userMongoId) return;
   try {
-    const user = await User.findById(userMongoId).select('uid').lean();
+    const user = await Customer.findById(userMongoId).select('uid').lean();
     if (user?.uid) {
       const room = `user:${user.uid}`;
       io.to(room).emit('new-notification');
@@ -508,20 +508,6 @@ async function notifySellerShippingFinalTwoDays({ transactionId, listingTitle, s
   });
 }
 
-async function notifySellerBuyerRemindedShip({ transactionId, listingTitle, sellerUserId }) {
-  const link = transactionId
-    ? `/dashboard/seller?tab=transactions#transaction-${transactionId}`
-    : '/dashboard/seller?tab=transactions';
-  return createNotification({
-    userId: sellerUserId,
-    title: 'Buyer reminder: please ship',
-    message: `The buyer asked you to ship "${listingTitle || 'their order'}" soon.`,
-    type: 'shipping',
-    link,
-    referenceId: transactionId
-  });
-}
-
 async function notifyBuyerOrderCancelledNoShipment({ transactionId, listingTitle, buyerUserId }) {
   const link = transactionId
     ? `/dashboard/buyer?tab=transactions#transaction-${transactionId}`
@@ -675,7 +661,7 @@ async function notifySellerPaymentReceived({ transactionId, listingTitle, buyerN
   return createNotification({
     userId: sellerUserId,
     title: 'Payment received',
-    message: `${buyerName || 'A buyer'} paid for "${listingTitle || 'your listing'}". Confirm acceptance and prepare to ship.`,
+    message: `${buyerName || 'A buyer'} paid for "${listingTitle || 'your listing'}". Prepare and ship the order.`,
     type: 'transaction',
     link,
     referenceId: transactionId
@@ -1106,6 +1092,31 @@ async function notifyDsaSuspectedProfessional({ userId, io }) {
   });
 }
 
+/**
+ * Send a review reminder to whichever party (or both) has not yet reviewed.
+ * milestone: '24h' | '48h' | '7d'
+ */
+async function notifyReviewReminder({ buyerId, sellerId, listingTitle, transactionId, milestone, buyerHasReviewed, sellerHasReviewed, io }) {
+  const milestoneLabel = { '24h': '24 hours', '48h': '48 hours', '7d': '1 week' }[milestone] ?? milestone;
+  const title = 'Don\'t forget to leave a review';
+  const message = `It's been ${milestoneLabel} since your transaction for "${listingTitle || 'an item'}". Share your experience — reviews help the community.`;
+  const link = '/dashboard/transactions';
+
+  const targets = [];
+  if (!buyerHasReviewed)  targets.push(buyerId);
+  if (!sellerHasReviewed) targets.push(sellerId);
+
+  if (targets.length === 0) return;
+
+  await Promise.allSettled(
+    targets.map(uid => createNotification({ userId: uid, title, message, type: 'review', link, referenceId: transactionId }))
+  );
+
+  if (io) {
+    await Promise.allSettled(targets.map(uid => emitNewNotificationToUser(io, uid)));
+  }
+}
+
 module.exports = {
   createNotification,
   shouldSendEmail,
@@ -1134,7 +1145,6 @@ module.exports = {
   notifyShippingDeadlineStarted,
   notifyShippingDeadlineApproaching,
   notifySellerShippingFinalTwoDays,
-  notifySellerBuyerRemindedShip,
   notifyBuyerOrderCancelledNoShipment,
   notifySellerOrderCancelledNoShipment,
   notifyBuyerConfirmedReceipt,
@@ -1153,6 +1163,7 @@ module.exports = {
   notifySellerPaymentReceived,
   notifyBuyerSellerAccepted,
   notifyReviewPrompt,
+  notifyReviewReminder,
   notifyBuyerPaymentDeadlineWarning,
   notifyBuyerNonPayment,
   notifySellerBuyerNonPayment,

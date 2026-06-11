@@ -31,8 +31,8 @@ export class DashboardSettingsComponent implements OnInit, OnDestroy {
 
   private sellerListingCount = 0;
 
-  /** Display scale for buyer/seller review averages (matches 1–10 transaction reviews). */
-  readonly reviewScoreMax = 10;
+  /** Review averages use the same 1–5 star scale as transaction reviews. */
+  readonly reviewScoreMax = 5;
 
   currentUser$: Observable<AppUser | null>;
   buyerScore: number | null = null;

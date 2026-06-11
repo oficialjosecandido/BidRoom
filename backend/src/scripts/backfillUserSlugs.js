@@ -5,13 +5,13 @@
 const mongoose = require('mongoose');
 require('dotenv').config();
 
-const User = require('../models/User');
+const Customer = require('../models/Customer');
 
 async function run() {
   await mongoose.connect(process.env.MONGODB_URI);
   console.log('Connected to MongoDB');
 
-  const users = await User.find({ slug: { $in: [null, undefined, ''] } })
+  const users = await Customer.find({ slug: { $in: [null, undefined, ''] } })
     .select('_id firstName lastName slug')
     .lean();
 
@@ -19,9 +19,9 @@ async function run() {
 
   let updated = 0;
   for (const u of users) {
-    const base = User.buildSlugBase(u.firstName, u.lastName);
-    const slug = await User.generateUniqueSlug(base, u._id);
-    await User.updateOne({ _id: u._id }, { $set: { slug } });
+    const base = Customer.buildSlugBase(u.firstName, u.lastName);
+    const slug = await Customer.generateUniqueSlug(base, u._id);
+    await Customer.updateOne({ _id: u._id }, { $set: { slug } });
     console.log(`  ${u.firstName} ${u.lastName} → ${slug}`);
     updated++;
   }

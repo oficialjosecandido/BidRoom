@@ -34,6 +34,7 @@ const {
   emitNewNotificationToUser
 } = require('./notificationService');
 const { sendEmail } = require('./emailService');
+const { wrapBidRoomEmail, emailInfoBox, transactionUrl } = require('../utils/bidroomEmailLayout');
 
 const LOG_PREFIX = '[ShippingDeadline]';
 
@@ -119,23 +120,17 @@ async function processMidpointWarnings(now, io) {
         const sellerEmail = tx.seller?.email;
         const sellerName = tx.seller?.firstName || 'there';
         if (sellerEmail) {
-          const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:4200';
-          const txLink = `${frontendUrl}/dashboard/transactions`;
-          const html = `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-              <div style="background: linear-gradient(135deg, #7A4F84 0%, #9b6ba8 100%); color: white; padding: 24px; text-align: center; border-radius: 8px 8px 0 0;">
-                <h1 style="margin: 0;">Shipping reminder</h1>
-              </div>
-              <div style="background: #f9f9f9; padding: 24px; border-radius: 0 0 8px 8px;">
-                <p>Hi ${sellerName},</p>
-                <p>You have <strong>2 business days</strong> left to ship <strong>${listingTitle}</strong> or the order will be automatically cancelled and the buyer refunded.</p>
-                <p>Please mark the item as shipped and add tracking information in your dashboard.</p>
-                <p style="text-align: center; margin: 24px 0;">
-                  <a href="${txLink}" style="background: #7A4F84; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: bold;">Go to Transactions</a>
-                </p>
-                <p>Best regards,<br>The BidRoom Team</p>
-              </div>
-            </div>`;
+          const txLink = transactionUrl(tx._id?.toString?.());
+          const bodyHtml = `
+            <p style="margin:0 0 16px;">Hi ${sellerName},</p>
+            <p style="margin:0 0 16px;">You have <strong>2 business days</strong> left to ship <strong>${listingTitle}</strong>.</p>
+            ${emailInfoBox('If you do not mark the order as shipped in time, it will be cancelled and the buyer refunded.')}`;
+          const html = wrapBidRoomEmail({
+            title: 'Shipping reminder',
+            bodyHtml,
+            ctaUrl: txLink,
+            ctaLabel: 'Manage shipment'
+          });
           await sendEmail(sellerEmail, `Action required: ship "${listingTitle}" within 2 days`, html).catch(() => {});
         }
         if (io) emitNewNotificationToUser(io, sellerId).catch(() => {});
@@ -221,21 +216,16 @@ async function processAutoCancellations(now, stripe, io) {
         const buyerEmail = tx.buyer?.email;
         const buyerName = tx.buyer?.firstName || 'there';
         if (buyerEmail) {
-          const html = `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-              <div style="background: linear-gradient(135deg, #7A4F84 0%, #9b6ba8 100%); color: white; padding: 24px; text-align: center; border-radius: 8px 8px 0 0;">
-                <h1 style="margin: 0;">Order cancelled — refund issued</h1>
-              </div>
-              <div style="background: #f9f9f9; padding: 24px; border-radius: 0 0 8px 8px;">
-                <p>Hi ${buyerName},</p>
-                <p>Your order for <strong>${listingTitle}</strong> was cancelled because the seller did not ship within the required 5 business-day timeframe.</p>
-                <p>A full refund has been issued to your original payment method. It may take 5–10 business days to appear on your statement.</p>
-                <p style="text-align: center; margin: 24px 0;">
-                  <a href="${txLink}" style="background: #7A4F84; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: bold;">View Transactions</a>
-                </p>
-                <p>Best regards,<br>The BidRoom Team</p>
-              </div>
-            </div>`;
+          const bodyHtml = `
+            <p style="margin:0 0 16px;">Hi ${buyerName},</p>
+            <p style="margin:0 0 16px;">Your order for <strong>${listingTitle}</strong> was cancelled because the seller did not ship in time.</p>
+            ${emailInfoBox('A full refund was issued to your original payment method. It may take 5–10 business days to appear.')}`;
+          const html = wrapBidRoomEmail({
+            title: 'Order cancelled — refund issued',
+            bodyHtml,
+            ctaUrl: transactionUrl(tx._id?.toString?.()),
+            ctaLabel: 'View transactions'
+          });
           await sendEmail(buyerEmail, `Order cancelled — refund for "${listingTitle}"`, html).catch(() => {});
         }
         if (io) emitNewNotificationToUser(io, buyerId).catch(() => {});
@@ -251,21 +241,16 @@ async function processAutoCancellations(now, stripe, io) {
         const sellerEmail = tx.seller?.email;
         const sellerName = tx.seller?.firstName || 'there';
         if (sellerEmail) {
-          const html = `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-              <div style="background: linear-gradient(135deg, #7A4F84 0%, #9b6ba8 100%); color: white; padding: 24px; text-align: center; border-radius: 8px 8px 0 0;">
-                <h1 style="margin: 0;">Order cancelled — failed to ship</h1>
-              </div>
-              <div style="background: #f9f9f9; padding: 24px; border-radius: 0 0 8px 8px;">
-                <p>Hi ${sellerName},</p>
-                <p>The order for <strong>${listingTitle}</strong> was cancelled automatically because shipment was not confirmed within the required 5 business-day window.</p>
-                <p>The buyer has been refunded in full. Please ensure future orders are shipped promptly to avoid cancellations.</p>
-                <p style="text-align: center; margin: 24px 0;">
-                  <a href="${txLink}" style="background: #7A4F84; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: bold;">View Transactions</a>
-                </p>
-                <p>Best regards,<br>The BidRoom Team</p>
-              </div>
-            </div>`;
+          const bodyHtml = `
+            <p style="margin:0 0 16px;">Hi ${sellerName},</p>
+            <p style="margin:0 0 16px;">The order for <strong>${listingTitle}</strong> was cancelled because shipment was not confirmed in time.</p>
+            ${emailInfoBox('The buyer has been refunded in full. Ship future orders promptly to avoid cancellations.')}`;
+          const html = wrapBidRoomEmail({
+            title: 'Order cancelled — failed to ship',
+            bodyHtml,
+            ctaUrl: transactionUrl(tx._id?.toString?.()),
+            ctaLabel: 'View transactions'
+          });
           await sendEmail(sellerEmail, `Order cancelled — "${listingTitle}"`, html).catch(() => {});
         }
         if (io) emitNewNotificationToUser(io, sellerId).catch(() => {});

@@ -6,7 +6,7 @@
 require('dotenv').config();
 const connectDB = require('../config/database');
 const Listing = require('../models/Listing');
-const User = require('../models/User');
+const Customer = require('../models/Customer');
 
 const PLACEHOLDER_IMAGE = 'https://img.freepik.com/premium-vector/auction-logo-initial-letter-design-template-inspiration_340145-109.jpg';
 
@@ -174,7 +174,7 @@ async function seed() {
   await connectDB();
 
   // Find the first available user to use as seller
-  const seller = await User.findOne().sort({ createdAt: 1 });
+  const seller = await Customer.findOne().sort({ createdAt: 1 });
   if (!seller) {
     console.error('❌ No users found in database. Please create a user account first.');
     process.exit(1);

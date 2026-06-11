@@ -1,19 +1,34 @@
 const express = require('express');
 const { authenticateToken, requireActiveAccount } = require('../middleware/auth');
 const { getStripe, isStripeTestMode } = require('../utils/stripe.util');
-const User = require('../models/User');
 const Customer = require('../models/Customer');
 const Transaction = require('../models/Transaction');
 const Listing = require('../models/Listing');
 const { sendEmail } = require('../services/emailService');
 const { notifySellerPaymentReceived, emitNewNotificationToUser } = require('../services/notificationService');
 const { applyShippingDeadlinesFromPaidAt } = require('../services/shippingDeadlines');
+const {
+  wrapBidRoomEmail,
+  emailInfoBox,
+  emailPayoutBox,
+  transactionUrl
+} = require('../utils/bidroomEmailLayout');
 
 const LOG_PREFIX = '[Connect]';
+const { estimateBuyerProcessingFeeCents } = require('../utils/fees');
 const BIDROOMFEE_RATE = 0.04; // 4% — charged to seller via transfer_data.amount
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:4200';
 /** Stripe rejects localhost for business_profile.url — use a public https origin in dev. */
 const STRIPE_BUSINESS_URL_FALLBACK = 'https://www.bidroom.pt';
+
+/** Stripe payments are verified automatically — seller can ship without a manual accept step. */
+function markTransactionStripePaid(transaction) {
+  transaction.transactionStatus = 'paid';
+  transaction.paymentStatus = 'paid';
+  transaction.paidAt = transaction.paidAt || new Date();
+  applyShippingDeadlinesFromPaidAt(transaction);
+  transaction.paymentAcceptanceDeadline = null;
+}
 
 function stripeBusinessProfileUrl() {
   const candidates = [
@@ -276,7 +291,7 @@ router.post('/onboarding-link', requireActiveAccount, async (req, res) => {
   const country = String(req.body?.country || 'PT').toUpperCase();
 
   try {
-    const user = await User.findOne({ uid: req.user.uid });
+    const user = await Customer.findOne({ uid: req.user.uid });
     if (!user) return res.status(404).json({ error: 'User not found' });
 
     let accountId = await resolveConnectAccountId(stripe, user);
@@ -363,7 +378,7 @@ router.post('/submit-onboarding', requireActiveAccount, async (req, res) => {
   const tosTimestamp = Math.floor(Date.now() / 1000);
 
   try {
-    const user = await User.findOne({ uid: req.user.uid });
+    const user = await Customer.findOne({ uid: req.user.uid });
     if (!user) return res.status(404).json({ error: 'User not found' });
 
     await persistSellerPayoutIban(user, ibanClean);
@@ -493,7 +508,7 @@ router.post('/test-activate', requireActiveAccount, async (req, res) => {
   }
 
   try {
-    const user = await User.findOne({ uid: req.user.uid });
+    const user = await Customer.findOne({ uid: req.user.uid });
     if (!user) return res.status(404).json({ error: 'User not found' });
     const accountId = await resolveConnectAccountId(stripe, user);
     if (!accountId) {
@@ -541,7 +556,7 @@ router.get('/account-status', async (req, res) => {
     return res.json({ connected: false, onboarded: false });
   }
   try {
-    const user = await User.findOne({ uid: req.user.uid }).select('stripeConnectAccountId stripeConnectOnboarded');
+    const user = await Customer.findOne({ uid: req.user.uid }).select('stripeConnectAccountId stripeConnectOnboarded');
     if (!user) return res.status(404).json({ error: 'User not found' });
 
     const accountId = await resolveConnectAccountId(stripe, user);
@@ -579,7 +594,7 @@ router.get('/account-status', async (req, res) => {
   } catch (err) {
     console.error(`${LOG_PREFIX} Account status error:`, err.message);
     if (isOrphanedConnectAccountError(err)) {
-      const user = await User.findOne({ uid: req.user.uid }).select('stripeConnectAccountId stripeConnectOnboarded');
+      const user = await Customer.findOne({ uid: req.user.uid }).select('stripeConnectAccountId stripeConnectOnboarded');
       if (user) await clearStaleConnectAccount(user);
       return res.json({ connected: false, onboarded: false });
     }
@@ -598,7 +613,7 @@ router.post('/create-checkout-session', requireActiveAccount, async (req, res) =
   if (!stripe) return res.status(503).json({ error: 'Payments not configured' });
 
   try {
-    const buyer = await User.findOne({ uid: req.user.uid });
+    const buyer = await Customer.findOne({ uid: req.user.uid });
     if (!buyer) return res.status(404).json({ error: 'User not found' });
 
     const { transactionId } = req.body;
@@ -628,7 +643,40 @@ router.post('/create-checkout-session', requireActiveAccount, async (req, res) =
     }
 
     if (transaction.stripeCheckoutSessionId) {
-      return res.status(400).json({ error: 'A Stripe checkout session already exists for this transaction' });
+      try {
+        const existingSession = await stripe.checkout.sessions.retrieve(transaction.stripeCheckoutSessionId);
+
+        if (existingSession.status === 'open') {
+          if (existingSession.url) {
+            console.log(`${LOG_PREFIX} Reusing open checkout session session_id=${existingSession.id} transaction=${transaction._id}`);
+            return res.json({ url: existingSession.url });
+          }
+          try {
+            await stripe.checkout.sessions.expire(transaction.stripeCheckoutSessionId);
+          } catch (expireErr) {
+            console.warn(`${LOG_PREFIX} Could not expire open session without url:`, expireErr.message);
+          }
+          transaction.stripeCheckoutSessionId = null;
+          await transaction.save();
+        } else if (existingSession.payment_status === 'paid') {
+          return res.status(409).json({
+            error: 'Payment already completed',
+            message: 'Your payment was already processed. Refresh the page to see the updated status.',
+            sessionId: existingSession.id
+          });
+        } else {
+          // Expired or otherwise unusable — allow a fresh checkout session below.
+          transaction.stripeCheckoutSessionId = null;
+          await transaction.save();
+        }
+      } catch (retrieveErr) {
+        if (retrieveErr.code === 'resource_missing') {
+          transaction.stripeCheckoutSessionId = null;
+          await transaction.save();
+        } else {
+          throw retrieveErr;
+        }
+      }
     }
 
     const seller = transaction.seller;
@@ -684,7 +732,7 @@ router.post('/create-checkout-session', requireActiveAccount, async (req, res) =
     // Estimate Stripe's processing fee on the item+shipping subtotal.
     // Actual fee will differ slightly (Stripe charges on the final total including this estimate),
     // but the error is a few cents at most and is absorbed by the platform.
-    const stripeFeeEstimateCents = Math.round((itemCents + shippingCents) * 0.029) + 30;
+    const stripeFeeEstimateCents = estimateBuyerProcessingFeeCents(itemCents + shippingCents);
 
     // Buyer total: item + shipping + Stripe fee estimate
     const buyerTotalCents = itemCents + shippingCents + stripeFeeEstimateCents;
@@ -777,14 +825,14 @@ router.post('/create-checkout-session', requireActiveAccount, async (req, res) =
  * POST /api/connect/confirm-payment
  * Called by frontend after successful Stripe Checkout redirect.
  * Body: { sessionId, transactionId }
- * Updates transaction to awaiting_seller_acceptance if payment confirmed.
+ * Updates transaction to paid if payment confirmed (Stripe — no manual seller acceptance).
  */
 router.post('/confirm-payment', requireActiveAccount, async (req, res) => {
   const stripe = getStripe();
   if (!stripe) return res.status(503).json({ error: 'Payments not configured' });
 
   try {
-    const buyer = await User.findOne({ uid: req.user.uid });
+    const buyer = await Customer.findOne({ uid: req.user.uid });
     if (!buyer) return res.status(404).json({ error: 'User not found' });
 
     const { sessionId, transactionId } = req.body;
@@ -842,13 +890,7 @@ router.post('/confirm-payment', requireActiveAccount, async (req, res) => {
     transaction.stripePaymentIntentId = paymentIntentId;
     transaction.stripeFeeAmount = stripeFeeAmount;
     transaction.sellerPayoutAmount = Math.max(0, sellerPayout);
-    transaction.transactionStatus = 'awaiting_seller_acceptance';
-    transaction.paymentStatus = 'paid';
-    transaction.paidAt = new Date();
-    applyShippingDeadlinesFromPaidAt(transaction);
-    const deadlinePa = new Date();
-    deadlinePa.setDate(deadlinePa.getDate() + 5);
-    transaction.paymentAcceptanceDeadline = deadlinePa;
+    markTransactionStripePaid(transaction);
     await transaction.save();
 
     await sendPaymentReceivedEmail(transaction);
@@ -867,7 +909,7 @@ router.post('/confirm-payment', requireActiveAccount, async (req, res) => {
       if (io) emitNewNotificationToUser(io, sellerMongoId).catch(() => {});
     }
 
-    console.log(`${LOG_PREFIX} Payment confirmed transaction=${transactionId} pi=${paymentIntentId}`);
+    console.log(`${LOG_PREFIX} Payment confirmed transaction=${transactionId} pi=${paymentIntentId} status=paid`);
 
     const updated = await Transaction.findById(transactionId)
       .populate('listing', 'title slug images status commissionRate shippingCost shippingOption')
@@ -970,13 +1012,7 @@ async function handleCheckoutCompleted(session, stripe, io) {
   transaction.stripePaymentIntentId = paymentIntentId;
   transaction.stripeFeeAmount = stripeFeeAmount;
   transaction.sellerPayoutAmount = Math.max(0, sellerPayout);
-  transaction.transactionStatus = 'awaiting_seller_acceptance';
-  transaction.paymentStatus = 'paid';
-  transaction.paidAt = new Date();
-  applyShippingDeadlinesFromPaidAt(transaction);
-  const deadlinePa = new Date();
-  deadlinePa.setDate(deadlinePa.getDate() + 5);
-  transaction.paymentAcceptanceDeadline = deadlinePa;
+  markTransactionStripePaid(transaction);
   await transaction.save();
 
   await sendPaymentReceivedEmail(transaction);
@@ -994,7 +1030,7 @@ async function handleCheckoutCompleted(session, stripe, io) {
     if (io) emitNewNotificationToUser(io, sellerMongoId).catch(() => {});
   }
 
-  console.log(`${LOG_PREFIX} Webhook: transaction ${transactionId} marked awaiting_seller_acceptance`);
+  console.log(`${LOG_PREFIX} Webhook: transaction ${transactionId} marked paid`);
 }
 
 async function handleAccountUpdated(account) {
@@ -1002,7 +1038,7 @@ async function handleAccountUpdated(account) {
   const uid = account.metadata.uid;
   const onboarded = !!(account.details_submitted && account.charges_enabled);
 
-  const user = await User.findOne({ uid }).select('firstName email stripeConnectOnboarded');
+  const user = await Customer.findOne({ uid }).select('firstName email stripeConnectOnboarded');
   if (!user) return;
 
   const wasOnboarded = user.stripeConnectOnboarded;
@@ -1076,22 +1112,26 @@ async function sendPaymentReceivedEmail(transaction) {
   const listing = transaction.listing;
   if (!seller?.email) return;
 
-  const subject = 'Payment received for your listing – prepare to ship';
+  const subject = 'Payment received — prepare your shipment';
   const buyerName = [transaction.buyer?.firstName, transaction.buyer?.lastName].filter(Boolean).join(' ') || 'A buyer';
-  const html = `
-    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-      <div style="background: linear-gradient(135deg, #7A4F84 0%, #9b6ba8 100%); color: white; padding: 24px; text-align: center; border-radius: 8px 8px 0 0;">
-        <h1 style="margin: 0;">Payment received!</h1>
-      </div>
-      <div style="background: #f9f9f9; padding: 24px; border-radius: 0 0 8px 8px;">
-        <p>Hi ${seller.firstName || 'Seller'},</p>
-        <p><strong>${buyerName}</strong> has paid for your listing <strong>${listing?.title || 'your item'}</strong>.</p>
-        <p>Please confirm you are ready to ship and mark the item as shipped once dispatched.</p>
-        <p>Your payout of <strong>$${(transaction.sellerPayoutAmount ?? (transaction.amount * (1 - (listing?.commissionRate ?? BIDROOMFEE_RATE)))).toFixed(2)}</strong> (sale price minus the BidRoom platform fee) will be transferred to your bank account after the transaction is completed.</p>
-        <p>Best regards,<br>The BidRoom Team</p>
-      </div>
-    </div>
-  `;
+  const listingTitle = listing?.title || 'your item';
+  const payout = (transaction.sellerPayoutAmount ?? (transaction.amount * (1 - (listing?.commissionRate ?? BIDROOMFEE_RATE)))).toFixed(2);
+  const txId = transaction._id?.toString?.() || transaction._id;
+
+  const bodyHtml = `
+    <p style="margin:0 0 16px;">Hi ${seller.firstName || 'Seller'},</p>
+    <p style="margin:0 0 16px;"><strong>${buyerName}</strong> paid for <strong>${listingTitle}</strong>. Payment is secured via Stripe.</p>
+    ${emailInfoBox('When you dispatch the order, mark it as <strong>shipped</strong> in your dashboard. Tracking and proof of postage are optional.')}
+    ${emailPayoutBox(`$${payout}`)}
+    <p style="margin:0;color:#64748b;font-size:14px;">Your payout (sale price minus BidRoom fees) is released after the buyer completes the transaction.</p>`;
+
+  const html = wrapBidRoomEmail({
+    title: 'Payment received',
+    bodyHtml,
+    ctaUrl: transactionUrl(txId),
+    ctaLabel: 'Manage shipment'
+  });
+
   try {
     await sendEmail(seller.email, subject, html);
   } catch (err) {

@@ -9,7 +9,7 @@ const offerSchema = new mongoose.Schema({
   },
   offerer: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
+    ref: 'Customer',
     required: false,
     index: true,
     default: null

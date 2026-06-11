@@ -21,6 +21,10 @@ const listingSchema = new mongoose.Schema({
     required: true,
     maxlength: 5000
   },
+  titlePt: { type: String, default: null, trim: true, maxlength: 80 },
+  titleEn: { type: String, default: null, trim: true, maxlength: 80 },
+  descriptionPt: { type: String, default: null, maxlength: 5000 },
+  descriptionEn: { type: String, default: null, maxlength: 5000 },
   category: {
     type: String,
     required: true,
@@ -77,7 +81,7 @@ const listingSchema = new mongoose.Schema({
   },
   seller: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
+    ref: 'Customer',
     required: true,
     index: true
   },
@@ -256,7 +260,7 @@ const listingSchema = new mongoose.Schema({
   // Platinum Bidders (up to 5 selected by seller)
   platinumBidders: [{
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
+    ref: 'Customer',
     default: []
   }],
   platinumBidderInvitedAt: {
@@ -272,7 +276,7 @@ const listingSchema = new mongoose.Schema({
   platinumBidderInvitations: [{
     bidder: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
+      ref: 'Customer',
       required: true
     },
     status: {
@@ -312,12 +316,12 @@ const listingSchema = new mongoose.Schema({
   // Tracking unique bidders for Private Room trigger
   uniqueBidders: [{
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
+    ref: 'Customer'
   }],
   // Winner selection
   winner: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
+    ref: 'Customer',
     default: null
   },
   winnerBid: {
@@ -432,7 +436,7 @@ listingSchema.methods.checkPrivateRoomEligibility = async function() {
 // Method to get Top 5 bidders for Private Room
 listingSchema.methods.getTop5Bidders = async function() {
   const Bid = require('./Bid');
-  const User = require('./User');
+  const Customer = require('./Customer');
   
   // Get unique bidders with their highest bid amounts
   const bids = await Bid.aggregate([
@@ -451,7 +455,7 @@ listingSchema.methods.getTop5Bidders = async function() {
   // Populate bidders and get reputation scores (placeholder for now)
   const topBidders = await Promise.all(
     bids.map(async (bid) => {
-      const user = await User.findById(bid._id).lean();
+      const user = await Customer.findById(bid._id).lean();
       return {
         bidder: user,
         maxBid: bid.maxBid,

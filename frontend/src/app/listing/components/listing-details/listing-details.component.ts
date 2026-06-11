@@ -25,7 +25,10 @@ import { HeaderComponent } from '../../../shared/components/header/header.compon
 import { FooterComponent } from '../../../shared/components/footer/footer.component';
 import { getTrustTierInfo } from '../../../shared/utils/trust-tier.util';
 import { SeoService } from '../../../shared/services/seo.service';
+import { AnalyticsService } from '../../../shared/services/analytics.service';
+import { AnalyticsEvents } from '../../../shared/services/analytics.events';
 import { API_CONFIG } from '../../../shared/config/api.config';
+import { getLocalizedTitle, getLocalizedDescription } from '../../../shared/utils/listing-locale';
 
 @Component({
   selector: 'app-listing-details',
@@ -56,6 +59,7 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
   private translate = inject(TranslateService);
   readonly themeService = inject(ThemeService);
   private seo = inject(SeoService);
+  private analytics = inject(AnalyticsService);
   linkCopied = false;
 
   readonly isLight = computed(() => this.themeService.effective() === 'light');
@@ -169,6 +173,7 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
         }
         window.scrollTo(0, 0);
         // Start countdown timer
+        this.justEndedRefetched = false;
         this.startCountdown();
         // Load bids or offers when listing is loaded
         if (listing._id) {
@@ -354,20 +359,29 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
   }
 
   startCountdown(): void {
-    // Clear any existing interval
     if (this.countdownInterval) {
       clearInterval(this.countdownInterval);
+      this.countdownInterval = null;
     }
     this.countdownEnded = false;
-    this.justEndedRefetched = false;
 
-    // Calculate and display immediately
     this.updateCountdown();
 
-    // Update every second
-    this.countdownInterval = setInterval(() => {
-      this.updateCountdown();
-    }, 1000);
+    if (!this.countdownEnded) {
+      this.countdownInterval = setInterval(() => {
+        this.updateCountdown();
+      }, 1000);
+    }
+  }
+
+  private hasFutureCountdownEnd(listing: Listing): boolean {
+    let endDate: Date | null = null;
+    if (listing.privateRoomStatus === 'active' && listing.privateRoomEndDate) {
+      endDate = new Date(listing.privateRoomEndDate);
+    } else if (listing.endDate) {
+      endDate = new Date(listing.endDate);
+    }
+    return !!endDate && endDate.getTime() > Date.now();
   }
 
   updateCountdown(): void {
@@ -409,6 +423,9 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
           next: (listing) => {
             this.listing = listing;
             this.updateIsOwnListing();
+            if (this.hasFutureCountdownEnd(listing)) {
+              this.justEndedRefetched = false;
+            }
             this.startCountdown();
             this.cdr.detectChanges();
           }
@@ -651,6 +668,13 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
     return this.listing?.privateRoomStatus === 'active';
   }
 
+  /** True when a private room was created (invited, active, or ended). */
+  hasPrivateRoomCreated(): boolean {
+    const status = this.listing?.privateRoomStatus;
+    return !!this.listing?.allowPrivateRoom
+      && (status === 'invited' || status === 'active' || status === 'ended');
+  }
+
   /** True when the authenticated user has an accepted invitation to this listing's private room. */
   isAcceptedPrivateRoomBidder(): boolean {
     return this.listing?.currentUserPlatinumStatus?.isPlatinumBidder === true;
@@ -831,6 +855,9 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
           this.loadListing(this.listing.slug);
         }
 
+        if (event.privateRoomEndDate || event.privateRoomStatus === 'active' || event.status === 'active') {
+          this.justEndedRefetched = false;
+        }
         this.startCountdown();
         this.cdr.detectChanges();
       }
@@ -846,11 +873,16 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
 
   openBidModal(): void {
     if (!this.listing) return;
-    this.bidAmount = '';
+    const minBid = this.getMinBid();
+    this.bidAmount = String(minBid);
     this.bidEmail = '';
     this.bidNotifyWhenOutbid = true;
     this.bidModalError = null;
     this.showBidModal = true;
+    this.analytics.trackEvent(AnalyticsEvents.BID_MODAL_OPEN, {
+      ...this.analytics.listingParams(this.listing),
+      min_bid: minBid,
+    });
   }
 
   closeBidModal(): void {
@@ -864,18 +896,20 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
     const minBid = this.getMinBid();
     const amount = parseFloat((this.bidAmount || '').replace(/[^0-9.]/g, ''));
     if (isNaN(amount) || amount < minBid) {
-      this.bidModalError = `Your bid must be at least ${this.formatPrice(minBid)}.`;
+      this.bidModalError = this.translate.instant('listingDetails.bidModal.minBidError', {
+        amount: this.formatPrice(minBid),
+      });
       return;
     }
     let email: string | undefined;
     if (!this.isAuthenticated) {
       const trimmed = (this.bidEmail || '').trim();
       if (!trimmed) {
-        this.bidModalError = 'Please enter your email address to receive bid notifications.';
+        this.bidModalError = this.translate.instant('listingDetails.bidModal.emailRequired');
         return;
       }
       if (!EMAIL_REGEX.test(trimmed)) {
-        this.bidModalError = 'Please enter a valid email address.';
+        this.bidModalError = this.translate.instant('listingDetails.bidModal.emailInvalid');
         return;
       }
       email = trimmed;
@@ -896,6 +930,10 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
       })
     ).subscribe({
       next: () => {
+        this.analytics.trackEvent(AnalyticsEvents.BID_PLACED, {
+          ...this.analytics.listingParams(this.listing!),
+          amount,
+        });
         this.closeBidModal();
         this.loadListing(this.listing!.slug); // loadListing already calls loadBids internally
         this.cdr.markForCheck();
@@ -903,7 +941,7 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
           toast: true,
           position: 'top-end',
           icon: 'success',
-          title: 'Bid placed successfully!',
+          title: this.translate.instant('listingDetails.bidModal.successTitle'),
           showConfirmButton: false,
           timer: 3000,
           timerProgressBar: true
@@ -915,14 +953,15 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
           this.kycService.openKycGate(err.error.kycStatus || 'none');
           return;
         }
-        const msg = err?.error?.message || err?.message || 'Failed to place bid. Please try again.';
+        const msg = err?.error?.message || err?.message || this.translate.instant('listingDetails.bidModal.errorText');
         this.bidModalError = msg;
         this.cdr.markForCheck();
         Swal.fire({
           icon: 'error',
-          title: 'Bid failed',
+          title: this.translate.instant('listingDetails.bidModal.errorTitle'),
           text: msg,
-          confirmButtonColor: '#7A4F84'
+          confirmButtonText: this.translate.instant('listingDetails.bidModal.errorConfirm'),
+          confirmButtonColor: '#C9A84C'
         });
       }
     });
@@ -935,6 +974,7 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
     this.offerEmail = '';
     this.offerModalError = null;
     this.showOfferModal = true;
+    this.analytics.trackEvent(AnalyticsEvents.OFFER_MODAL_OPEN, this.analytics.listingParams(this.listing));
   }
 
   closeOfferModal(): void {
@@ -971,7 +1011,7 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
     this.offerModalError = null;
     const amount = parseFloat((this.offerAmount || '').replace(/[^0-9.]/g, ''));
     if (isNaN(amount) || amount <= 0) {
-      this.offerModalError = 'Please enter a valid amount.';
+      this.offerModalError = this.translate.instant('listingDetails.offerModal.invalidAmount');
       return;
     }
     // Allow offers below minimum; seller is not obliged to accept (we show an indication in the modal)
@@ -979,11 +1019,11 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
     if (!this.isAuthenticated) {
       const trimmed = (this.offerEmail || '').trim();
       if (!trimmed) {
-        this.offerModalError = 'Please enter your email so the seller can contact you.';
+        this.offerModalError = this.translate.instant('listingDetails.offerModal.emailRequired');
         return;
       }
       if (!EMAIL_REGEX.test(trimmed)) {
-        this.offerModalError = 'Please enter a valid email address.';
+        this.offerModalError = this.translate.instant('listingDetails.offerModal.emailInvalid');
         return;
       }
       email = trimmed;
@@ -1001,6 +1041,11 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
       })
     ).subscribe({
       next: (created) => {
+        this.analytics.trackEvent(AnalyticsEvents.OFFER_PLACED, {
+          ...this.analytics.listingParams(this.listing!),
+          amount,
+          offer_status: created?.status ?? 'pending',
+        });
         this.closeOfferModal();
         if (this.listing?._id) this.loadOffers(this.listing._id);
         const wasAccepted = created?.status === 'accepted';
@@ -1052,8 +1097,16 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
       cancelButtonText: 'Cancel'
     }).then(result => {
       if (!result.isConfirmed) return;
+      this.analytics.trackEvent(AnalyticsEvents.BUY_NOW_CLICK, {
+        ...this.analytics.listingParams(listing),
+        amount: listing.buyNowPrice ?? 0,
+      });
       this.listingsService.buyNow(listing._id).subscribe({
         next: () => {
+          this.analytics.trackEvent(AnalyticsEvents.BUY_NOW_COMPLETE, {
+            ...this.analytics.listingParams(listing),
+            amount: listing.buyNowPrice ?? 0,
+          });
           Swal.fire({
             icon: 'success',
             title: 'Purchase successful!',
@@ -1084,6 +1137,7 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
           this.inWatchlist = res.inWatchlist;
           this.watchlistLoading = false;
           this.updateListingWatchlistCount(-1);
+          this.analytics.trackEvent(AnalyticsEvents.WATCHLIST_REMOVE, this.analytics.listingParams(this.listing!));
           this.cdr.detectChanges();
         },
         error: () => {
@@ -1097,6 +1151,7 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
           this.inWatchlist = res.inWatchlist;
           this.watchlistLoading = false;
           this.updateListingWatchlistCount(1);
+          this.analytics.trackEvent(AnalyticsEvents.WATCHLIST_ADD, this.analytics.listingParams(this.listing!));
           this.cdr.detectChanges();
         },
         error: () => {
@@ -1296,6 +1351,7 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
       next: (res) => {
         this.listing = res.listing;
         this.reopenLoading = false;
+        this.justEndedRefetched = false;
         this.startCountdown();
         this.cdr.detectChanges();
       },
@@ -1313,6 +1369,10 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
 
   openPrivateRoom(): void {
     if (!this.listing?._id) return;
+    this.analytics.trackEvent(AnalyticsEvents.PRIVATE_ROOM_OPEN, {
+      ...this.analytics.listingParams(this.listing),
+      private_room_status: this.listing.privateRoomStatus ?? '',
+    });
     const url = `/private-room/auction/${this.listing._id}`;
     window.open(url, '_blank', 'width=1200,height=800');
   }
@@ -1330,6 +1390,7 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
           if (u.endDate) this.listing.endDate = u.endDate;
         }
         this.privateRoomStartNowLoading = false;
+        this.justEndedRefetched = false;
         this.startCountdown();
         this.cdr.detectChanges();
         this.openPrivateRoom();
@@ -1405,6 +1466,7 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
         }
         this.closeCreatePrivateRoomModal();
         this.createPrivateRoomSubmitting = false;
+        this.justEndedRefetched = false;
         this.startCountdown();
         // Refetch listing to populate platinumBidderStatus with invitation details
         if (this.listing?.slug) {
@@ -1425,7 +1487,7 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
   }
 
   getDescriptionByline(): string {
-    const d = this.listing?.description || '';
+    const d = this.localizedDescription;
     return d.length > 180 ? d.slice(0, 180).trimEnd() + '…' : d;
   }
 
@@ -1506,6 +1568,16 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
     return this.listing.bidCount || 0;
   }
 
+  get localizedTitle(): string {
+    if (!this.listing) return '';
+    return getLocalizedTitle(this.listing, this.translate.currentLang || 'pt');
+  }
+
+  get localizedDescription(): string {
+    if (!this.listing) return '';
+    return getLocalizedDescription(this.listing, this.translate.currentLang || 'pt');
+  }
+
   ngOnDestroy(): void {
     // Clear countdown interval
     if (this.countdownInterval) {
@@ -1548,10 +1620,18 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
     if (navigator.share) {
       try {
         await navigator.share({ title, text, url: shareUrl });
+        this.analytics.trackEvent(AnalyticsEvents.SHARE_LISTING, {
+          ...this.analytics.listingParams(this.listing),
+          share_method: 'native',
+        });
       } catch { /* cancelled by user */ }
     } else {
       await navigator.clipboard.writeText(shareUrl);
       this.linkCopied = true;
+      this.analytics.trackEvent(AnalyticsEvents.SHARE_LISTING, {
+        ...this.analytics.listingParams(this.listing),
+        share_method: 'clipboard',
+      });
       setTimeout(() => { this.linkCopied = false; }, 2500);
     }
   }

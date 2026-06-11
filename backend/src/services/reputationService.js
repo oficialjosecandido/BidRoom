@@ -19,7 +19,7 @@
  *   PRIVATE_ROOM_MIN_REPUTATION, restricting access to Private Rooms.
  */
 
-const User = require('../models/User');
+const Customer = require('../models/Customer');
 const Review = require('../models/Review');
 const Transaction = require('../models/Transaction');
 const ReviewFlag = require('../models/ReviewFlag');
@@ -37,7 +37,7 @@ const II_MIN_REPUTATION = 80;        // Score must be ≥ 80 ("4 stars") for II 
 
 // ── Penalties & recovery ───────────────────────────────────────────────────────
 const DISPUTE_LOSS_PENALTY = 25;
-const NON_PAYMENT_PENALTY = 10;          // Per missed private-room payment deadline
+const NON_PAYMENT_PENALTY = 20;          // Per missed payment deadline (any format)
 const ISOLATED_LOW_REVIEW_PENALTY = 5;   // Per negative review — Isolated Incident
 const RECURRING_LOW_REVIEW_PENALTY = 20; // Per negative review — Recurring Pattern
 const SUCCESSFUL_TX_RECOVERY = 2;        // Points per successful transaction
@@ -133,7 +133,7 @@ async function classifyNegativePattern(userId, currentScore) {
  * Recalculate reputation for a user based on reviews, disputes, and successful transactions.
  */
 async function recalculateReputation(userId) {
-  const user = await User.findById(userId);
+  const user = await Customer.findById(userId);
   if (!user) return null;
 
   const currentScore = user.reputationScore ?? REPUTATION_MAX;
@@ -174,12 +174,12 @@ async function recalculateReputation(userId) {
  */
 async function applyDisputeVerdictImpact(verdict, buyerUserId, sellerUserId) {
   if (verdict === 'buyer_refund') {
-    await User.findByIdAndUpdate(sellerUserId, { $inc: { disputeLossCount: 1 } });
+    await Customer.findByIdAndUpdate(sellerUserId, { $inc: { disputeLossCount: 1 } });
   } else if (verdict === 'seller_payout') {
-    await User.findByIdAndUpdate(buyerUserId, { $inc: { disputeLossCount: 1 } });
+    await Customer.findByIdAndUpdate(buyerUserId, { $inc: { disputeLossCount: 1 } });
   } else if (verdict === 'partial_refund') {
-    await User.findByIdAndUpdate(buyerUserId, { $inc: { disputeLossCount: 1 } });
-    await User.findByIdAndUpdate(sellerUserId, { $inc: { disputeLossCount: 1 } });
+    await Customer.findByIdAndUpdate(buyerUserId, { $inc: { disputeLossCount: 1 } });
+    await Customer.findByIdAndUpdate(sellerUserId, { $inc: { disputeLossCount: 1 } });
   }
   await recalculateReputation(buyerUserId);
   await recalculateReputation(sellerUserId);
@@ -189,8 +189,8 @@ async function applyDisputeVerdictImpact(verdict, buyerUserId, sellerUserId) {
  * Increment successful transaction count for both parties and trigger recovery recalculation.
  */
 async function recordSuccessfulTransaction(buyerUserId, sellerUserId) {
-  await User.findByIdAndUpdate(buyerUserId, { $inc: { successfulTransactionCount: 1 } });
-  await User.findByIdAndUpdate(sellerUserId, { $inc: { successfulTransactionCount: 1 } });
+  await Customer.findByIdAndUpdate(buyerUserId, { $inc: { successfulTransactionCount: 1 } });
+  await Customer.findByIdAndUpdate(sellerUserId, { $inc: { successfulTransactionCount: 1 } });
   await recalculateReputation(buyerUserId);
   await recalculateReputation(sellerUserId);
 }

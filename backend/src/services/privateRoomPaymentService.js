@@ -12,7 +12,7 @@
 const Transaction = require('../models/Transaction');
 const Listing = require('../models/Listing');
 const Bid = require('../models/Bid');
-const User = require('../models/User');
+const Customer = require('../models/Customer');
 const AccountStatusAuditLog = require('../models/AccountStatusAuditLog');
 const { recalculateReputation } = require('./reputationService');
 const {
@@ -99,7 +99,7 @@ async function handleNonPayment(tx, now, io) {
   const listingId = tx.listing?._id ?? tx.listing;
 
   // ── Step 1: Apply penalty and reputation to original buyer ──────────────────
-  const buyer = await User.findById(originalBuyerId);
+  const buyer = await Customer.findById(originalBuyerId);
   if (buyer) {
     buyer.nonPaymentCount = (buyer.nonPaymentCount || 0) + 1;
     await buyer.save();

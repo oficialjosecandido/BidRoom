@@ -9,13 +9,13 @@ const transactionSchema = new mongoose.Schema({
   },
   seller: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
+    ref: 'Customer',
     required: true,
     index: true
   },
   buyer: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
+    ref: 'Customer',
     required: true,
     index: true
   },
@@ -100,11 +100,6 @@ const transactionSchema = new mongoose.Schema({
    */
   shippingMidpointWarningSentAt: { type: Date, default: null },
   /**
-   * Last time the buyer used "Remind seller to ship".
-   * The endpoint enforces a 24-hour cooldown between reminders.
-   */
-  buyerRemindSellerShipAt: { type: Date, default: null },
-  /**
    * Populated by the scheduler when the order is auto-cancelled for
    * non-shipment. Distinguishes auto-cancels from other cancel reasons.
    */
@@ -173,6 +168,11 @@ const transactionSchema = new mongoose.Schema({
     type: Date,
     default: null
   },
+  /** Review reminder milestones already sent ('24h' | '48h' | '7d'). Prevents duplicates. */
+  reviewRemindersSent: {
+    type: [String],
+    default: []
+  },
   trackingNumber: {
     type: String,
     trim: true,
@@ -197,7 +197,7 @@ const transactionSchema = new mongoose.Schema({
     default: null
   },
   /** When a private-room winner fails to pay, the transaction is re-assigned to this buyer. Stores the original buyer's _id. */
-  originalBuyerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
+  originalBuyerId: { type: mongoose.Schema.Types.ObjectId, ref: 'Customer', default: null },
   /** When the buyer was re-assigned to a second-chance bidder */
   secondChanceAssignedAt: { type: Date, default: null },
   /** Whether a non-payment scheduler run has already processed this transaction (idempotency guard) */

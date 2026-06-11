@@ -5,122 +5,204 @@
     "bidroomFeeSellerRate": 0.035,
     "bidroomFeePrivateRoomRate": 0.06,
     "bidroomFeeBuyerRate": 0,
+    "maxBuyerProcessingFeeEur": 500,
     "stripeFeePassedToBuyer": true,
     "notes": [
       "BidRoom charges sellers a 3.5% platform fee on standard auctions and best-offer listings.",
       "BidRoom charges sellers a 6.0% platform fee on auctions with Private Room enabled.",
       "Stripe's processing fee (~2.9% + €0.30 per transaction) is paid by the buyer on top of the sale price — BidRoom does not add any additional buyer fee.",
+      "The buyer's processing fee is capped at €500 per transaction (estimate: 2.9% of item + shipping + €0.30, max €500). Amounts above the cap are absorbed by the platform.",
       "Payment flow: buyer pays full amount (sale price + Stripe fee) → BidRoom platform account → BidRoom deducts seller fee → remaining net is transferred to seller's connected Stripe account.",
       "Sellers must onboard via Stripe Connect before they can receive payouts.",
       "Payouts are held until the transaction reaches 'delivered' status and the auto-release window passes (see autoReleaseAfterDeliveryDays)."
     ]
   },
-
   "defaults": {
     "bidroomFeeSellerRate": 0.035,
     "bidroomFeePrivateRoomRate": 0.06,
     "bidroomFeeBuyerRate": 0,
-
     "auctionDurations": [
-      { "label": "5 minutes", "hours": 0.0833 },
-      { "label": "1 hour",    "hours": 1 },
-      { "label": "7 hours",   "hours": 7 },
-      { "label": "24 hours",  "hours": 24 },
-      { "label": "3 days",    "hours": 72 },
-      { "label": "7 days",    "hours": 168 }
+      {
+        "label": "5 minutes",
+        "hours": 0.0833
+      },
+      {
+        "label": "1 hour",
+        "hours": 1
+      },
+      {
+        "label": "7 hours",
+        "hours": 7
+      },
+      {
+        "label": "24 hours",
+        "hours": 24
+      },
+      {
+        "label": "3 days",
+        "hours": 72
+      },
+      {
+        "label": "7 days",
+        "hours": 168
+      }
     ],
-
     "shippingOptions": [
-      { "label": "Flat Rate",      "value": "flat-rate"   },
-      { "label": "Calculated",     "value": "calculated"  },
-      { "label": "Meet in Person", "value": "local-pickup"},
-      { "label": "Free",           "value": "free"        }
+      {
+        "label": "Flat Rate",
+        "value": "flat-rate"
+      },
+      {
+        "label": "Calculated",
+        "value": "calculated"
+      },
+      {
+        "label": "Meet in Person",
+        "value": "local-pickup"
+      },
+      {
+        "label": "Free",
+        "value": "free"
+      }
     ],
-
     "handlingTimes": [
-      { "label": "1 day",  "value": 1 },
-      { "label": "2 days", "value": 2 },
-      { "label": "3 days", "value": 3 },
-      { "label": "5 days", "value": 5 },
-      { "label": "7 days", "value": 7 }
+      {
+        "label": "1 day",
+        "value": 1
+      },
+      {
+        "label": "2 days",
+        "value": 2
+      },
+      {
+        "label": "3 days",
+        "value": 3
+      },
+      {
+        "label": "5 days",
+        "value": 5
+      },
+      {
+        "label": "7 days",
+        "value": 7
+      }
     ],
-
     "returnPolicies": [
-      { "label": "30 days",    "value": "30-days"    },
-      { "label": "14 days",    "value": "14-days"    },
-      { "label": "No Returns", "value": "no-returns" },
-      { "label": "Custom",     "value": "custom"     }
+      {
+        "label": "30 days",
+        "value": "30-days"
+      },
+      {
+        "label": "14 days",
+        "value": "14-days"
+      },
+      {
+        "label": "No Returns",
+        "value": "no-returns"
+      },
+      {
+        "label": "Custom",
+        "value": "custom"
+      }
     ],
-
     "returnWindowDays": 7,
     "autoReleaseAfterDeliveryDays": 5,
     "shipByBusinessDays": 5,
-
     "featureFlags": {
-      "auctions":        true,
-      "privateRooms":    true,
-      "bestOffers":      true,
-      "reviews":         true,
+      "auctions": true,
+      "privateRooms": true,
+      "bestOffers": true,
+      "reviews": true,
       "membershipTiers": false
     },
-
     "theme": {
-      "primaryColor":    "#7A4F84",
-      "secondaryColor":  "#9b6ba8",
+      "primaryColor": "#7A4F84",
+      "secondaryColor": "#9b6ba8",
       "backgroundColor": "#F8FAFC"
     }
   },
-
   "environments": {
     "development": {
       "auctionDurations": [
-        { "label": "5 minutes", "hours": 0.0833 },
-        { "label": "1 hour",    "hours": 1      },
-        { "label": "7 hours",   "hours": 7      },
-        { "label": "24 hours",  "hours": 24     },
-        { "label": "3 days",    "hours": 72     },
-        { "label": "7 days",    "hours": 168    }
+        {
+          "label": "5 minutes",
+          "hours": 0.0833
+        },
+        {
+          "label": "1 hour",
+          "hours": 1
+        },
+        {
+          "label": "7 hours",
+          "hours": 7
+        },
+        {
+          "label": "24 hours",
+          "hours": 24
+        },
+        {
+          "label": "3 days",
+          "hours": 72
+        },
+        {
+          "label": "7 days",
+          "hours": 168
+        }
       ],
       "featureFlags": {
-        "auctions":        true,
-        "privateRooms":    true,
-        "bestOffers":      true,
-        "reviews":         true,
+        "auctions": true,
+        "privateRooms": true,
+        "bestOffers": true,
+        "reviews": true,
         "membershipTiers": true
       }
     },
-
     "staging": {
       "auctionDurations": [
-        { "label": "5 minutes", "hours": 0.0833 },
-        { "label": "1 hour",    "hours": 1      },
-        { "label": "7 hours",   "hours": 7      },
-        { "label": "24 hours",  "hours": 24     },
-        { "label": "3 days",    "hours": 72     },
-        { "label": "7 days",    "hours": 168    }
+        {
+          "label": "5 minutes",
+          "hours": 0.0833
+        },
+        {
+          "label": "1 hour",
+          "hours": 1
+        },
+        {
+          "label": "7 hours",
+          "hours": 7
+        },
+        {
+          "label": "24 hours",
+          "hours": 24
+        },
+        {
+          "label": "3 days",
+          "hours": 72
+        },
+        {
+          "label": "7 days",
+          "hours": 168
+        }
       ],
       "featureFlags": {
-        "auctions":        true,
-        "privateRooms":    true,
-        "bestOffers":      true,
-        "reviews":         true,
+        "auctions": true,
+        "privateRooms": true,
+        "bestOffers": true,
+        "reviews": true,
         "membershipTiers": false
       }
     },
-
     "production": {
       "featureFlags": {
-        "auctions":        true,
-        "privateRooms":    true,
-        "bestOffers":      true,
-        "reviews":         true,
+        "auctions": true,
+        "privateRooms": true,
+        "bestOffers": true,
+        "reviews": true,
         "membershipTiers": false
       }
     }
   },
-
   "edgeCases": {
-
     "authentication": {
       "loginDuringSuspension": {
         "status": "implemented",
@@ -139,7 +221,6 @@
         "maxFailedAttempts": 5
       }
     },
-
     "listings": {
       "prohibitedItems": {
         "status": "implemented",
@@ -166,7 +247,6 @@
         "behaviour": "On listing creation, the backend checks whether the same seller has an active or draft listing with an identical (case-insensitive) title. If found, the request is rejected with HTTP 409 and a message directing the seller to their existing listing."
       }
     },
-
     "bidding": {
       "simultaneousBids": {
         "status": "safe-by-design",
@@ -207,7 +287,6 @@
         "behaviour": "Device fingerprinting and IP tracking are used to detect secondary accounts from suspended users. Bids placed from a known fingerprint or IP associated with a suspended account are flagged as FraudEvents and reviewed. The bid is not automatically blocked to avoid false positives on shared networks."
       }
     },
-
     "offersAndBuyNow": {
       "buyNowOfferRaceCondition": {
         "status": "implemented",
@@ -215,9 +294,19 @@
         "privateRoomPenalty": "DECISION NEEDED (@José Cândido). If a seller accepts an offer in a private room but the item was simultaneously purchased via Buy Now, should the seller face a penalty? Proposed: no penalty if the race was genuine (< 5 seconds apart); warn the seller to disable Buy Now when running private room negotiations."
       },
       "buyerAcceptsOfferDoesNotPay": {
-        "status": "needs-decision",
-        "behaviour": "DECISION NEEDED (@José Cândido). Currently there is no automated penalty for a buyer who does not pay after an offer is accepted. The payment deadline (T+24h) expires and the transaction is cancelled. Proposed options: (1) no penalty, matching Vinted's current behaviour; (2) record a 'non-payment strike' on the buyer's profile — 3 strikes = temporary ban from placing offers.",
-        "currentBehaviour": "Transaction auto-cancels at paymentDeadline. Seller is notified and can relist."
+        "status": "implemented",
+        "decidedAt": "2026-06-10",
+        "behaviour": "When the payment deadline expires unpaid, the following are applied automatically by nonPaymentPenaltyService.js: (1) transaction cancelled; (2) seller notified to relist; (3) buyer loses 20 reputation points (nonPaymentCount +1, NON_PAYMENT_PENALTY=20); (4) if buyer has a saved payment method: €30 charged off-session — €10 transferred to seller's Stripe Connect account, €20 retained by BidRoom; (5) on 3rd offense: account permanently closed.",
+        "financialPenalty": {
+          "total": "€30",
+          "toSeller": "€10 (Stripe transfer to Connect account if available)",
+          "toBidRoom": "€20",
+          "condition": "Buyer must have stripeCustomerId + savedPaymentMethodId"
+        },
+        "reputationPenalty": "-20 points (applies regardless of payment method)",
+        "banThreshold": "3rd non-payment → accountStatus: closed",
+        "service": "backend/src/services/nonPaymentPenaltyService.js",
+        "scheduler": "auctionEndScheduler.js → processAllNonPayments()"
       },
       "offerExpiresDuringCounterProposal": {
         "status": "needs-decision",
@@ -229,5 +318,22 @@
         "behaviour": "The counter-proposal endpoint validates that the counter amount does not exceed the listing's buyNowPrice (or startingPrice if no Buy Now). Requests above this ceiling are rejected with HTTP 400."
       }
     }
+  },
+  "nonPaymentPolicy": {
+    "summary": "Non-payment penalty system — applies to all transaction formats (auction, best-offer, private room)",
+    "reputationPenaltyPoints": 20,
+    "financialPenaltyEuros": 30,
+    "financialPenaltySplit": {
+      "toSeller": 10,
+      "toBidRoom": 20
+    },
+    "financialPenaltyCondition": "Buyer has stripeCustomerId + savedPaymentMethodId",
+    "banThresholdOffenses": 3,
+    "sellerAction": "Listing set to ended; seller notified to relist manually",
+    "services": {
+      "regularTransactions": "nonPaymentPenaltyService.js",
+      "privateRoomTransactions": "privateRoomPaymentService.js"
+    },
+    "termsSection": "Section 17 of Terms & Conditions"
   }
 }

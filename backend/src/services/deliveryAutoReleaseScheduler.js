@@ -18,6 +18,7 @@
 const Transaction = require('../models/Transaction');
 const { emitNewNotificationToUser, createNotification } = require('./notificationService');
 const { sendEmail } = require('./emailService');
+const { wrapBidRoomEmail, emailInfoBox, transactionUrl } = require('../utils/bidroomEmailLayout');
 const { checkAndApplyPendingSuspensions } = require('./accountStatusService');
 
 const LOG_PREFIX = '[DeliveryRelease]';
@@ -99,21 +100,16 @@ async function processAutoReleases(io) {
 
         const buyerEmail = tx.buyer?.email;
         if (buyerEmail) {
-          const html = `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-              <div style="background: linear-gradient(135deg, #7A4F84 0%, #9b6ba8 100%); color: white; padding: 24px; text-align: center; border-radius: 8px 8px 0 0;">
-                <h1 style="margin: 0;">Order completed automatically</h1>
-              </div>
-              <div style="background: #f9f9f9; padding: 24px; border-radius: 0 0 8px 8px;">
-                <p>Hi ${tx.buyer?.firstName || 'there'},</p>
-                <p>Your order for <strong>${listingTitle}</strong> was automatically completed because the delivery confirmation window passed.</p>
-                <p>Payment has been released to the seller. If you have an issue with this order, please contact BidRoom support.</p>
-                <p style="text-align: center; margin: 24px 0;">
-                  <a href="${txLink}" style="background: #7A4F84; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: bold;">View Transaction</a>
-                </p>
-                <p>Best regards,<br>The BidRoom Team</p>
-              </div>
-            </div>`;
+          const bodyHtml = `
+            <p style="margin:0 0 16px;">Hi ${tx.buyer?.firstName || 'there'},</p>
+            <p style="margin:0 0 16px;">Your order for <strong>${listingTitle}</strong> was automatically completed.</p>
+            ${emailInfoBox('Payment was released to the seller. Contact BidRoom support if you have an issue with this order.')}`;
+          const html = wrapBidRoomEmail({
+            title: 'Order completed automatically',
+            bodyHtml,
+            ctaUrl: transactionUrl(tx._id?.toString?.()),
+            ctaLabel: 'View transaction'
+          });
           await sendEmail(buyerEmail, `Order completed — "${listingTitle}"`, html).catch(() => {});
         }
         if (io) emitNewNotificationToUser(io, buyerId).catch(() => {});
@@ -131,20 +127,15 @@ async function processAutoReleases(io) {
 
         const sellerEmail = tx.seller?.email;
         if (sellerEmail) {
-          const html = `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-              <div style="background: linear-gradient(135deg, #7A4F84 0%, #9b6ba8 100%); color: white; padding: 24px; text-align: center; border-radius: 8px 8px 0 0;">
-                <h1 style="margin: 0;">Payment released to you</h1>
-              </div>
-              <div style="background: #f9f9f9; padding: 24px; border-radius: 0 0 8px 8px;">
-                <p>Hi ${tx.seller?.firstName || 'there'},</p>
-                <p>The order for <strong>${listingTitle}</strong> was automatically completed. Your payment has been released.</p>
-                <p style="text-align: center; margin: 24px 0;">
-                  <a href="${txLink}" style="background: #7A4F84; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: bold;">View Transaction</a>
-                </p>
-                <p>Best regards,<br>The BidRoom Team</p>
-              </div>
-            </div>`;
+          const bodyHtml = `
+            <p style="margin:0 0 16px;">Hi ${tx.seller?.firstName || 'there'},</p>
+            <p style="margin:0 0 16px;">The order for <strong>${listingTitle}</strong> was automatically completed and your payment has been released.</p>`;
+          const html = wrapBidRoomEmail({
+            title: 'Payment released',
+            bodyHtml,
+            ctaUrl: transactionUrl(tx._id?.toString?.()),
+            ctaLabel: 'View transaction'
+          });
           await sendEmail(sellerEmail, `Payment released — "${listingTitle}"`, html).catch(() => {});
         }
         if (io) emitNewNotificationToUser(io, sellerId).catch(() => {});

@@ -1,7 +1,7 @@
 const Bid = require('../models/Bid');
 const Listing = require('../models/Listing');
 const Offer = require('../models/Offer');
-const User = require('../models/User');
+const Customer = require('../models/Customer');
 const { sendEmail } = require('./emailService');
 const { isStripeTestMode } = require('../utils/stripe.util');
 const { getEmailTemplate, getUserLanguage } = require('./emailTemplates');
@@ -48,7 +48,7 @@ async function sendAuctionClosedNotifications(listing, winnerBidId = null) {
       notifiedEmails.add(bidderEmail);
 
       // Get user for language preference
-      const user = bid.bidder ? await User.findById(bid.bidder._id) : null;
+      const user = bid.bidder ? await Customer.findById(bid.bidder._id) : null;
       const language = getUserLanguage(user);
 
       // Get email template
@@ -84,7 +84,7 @@ async function sendChooseWinnerNotification(listing) {
       return;
     }
 
-    const seller = await User.findById(listing.seller);
+    const seller = await Customer.findById(listing.seller);
     if (!seller || !seller.email) {
       console.error('Seller not found or has no email for listing:', listing._id);
       return;
@@ -118,8 +118,8 @@ async function sendChooseWinnerNotification(listing) {
 async function sendAuctionNotSoldNotification(listing) {
   try {
     const seller = listing.seller && listing.seller._id
-      ? await User.findById(listing.seller._id)
-      : await User.findById(listing.seller);
+      ? await Customer.findById(listing.seller._id)
+      : await Customer.findById(listing.seller);
     if (!seller || !seller.email) {
       console.error('Seller not found or has no email for listing:', listing._id);
       return;
@@ -182,7 +182,7 @@ async function sendWinnerNotification(listing, winnerBid) {
     let winnerName = 'Guest Bidder';
 
     if (winnerBid.bidder) {
-      const winner = await User.findById(winnerBid.bidder);
+      const winner = await Customer.findById(winnerBid.bidder);
       if (winner && winner.email) {
         winnerEmail = winner.email;
         winnerName = `${winner.firstName} ${winner.lastName}`;
@@ -202,7 +202,7 @@ async function sendWinnerNotification(listing, winnerBid) {
     const winningBid = `$${winnerBid.amount.toFixed(2)}`;
 
     // Get user for language preference
-    const user = winnerBid.bidder ? await User.findById(winnerBid.bidder) : null;
+    const user = winnerBid.bidder ? await Customer.findById(winnerBid.bidder) : null;
     const language = getUserLanguage(user);
 
     const email = getEmailTemplate('youWon', language, {
@@ -250,7 +250,7 @@ async function sendFirstBidNotification(listing, bid, bidderEmail, bidderName) {
     // Get user for language preference (if authenticated)
     let language = 'en';
     if (bid.bidder) {
-      const user = await User.findById(bid.bidder);
+      const user = await Customer.findById(bid.bidder);
       language = getUserLanguage(user);
     }
 
@@ -326,8 +326,8 @@ async function sendOfferOutbidEmail(listing, offererEmail, offererName, previous
 async function sendBestOfferEndedNotification(listing, offerCount) {
   try {
     const seller = listing.seller && listing.seller._id
-      ? await User.findById(listing.seller._id)
-      : await User.findById(listing.seller);
+      ? await Customer.findById(listing.seller._id)
+      : await Customer.findById(listing.seller);
     if (!seller || !seller.email) {
       console.error('Seller not found or has no email for listing:', listing._id);
       return;
@@ -355,8 +355,8 @@ async function sendBestOfferEndedNotification(listing, offerCount) {
 async function sendPrivateRoomClosedNoAcceptanceToSeller(listing) {
   try {
     const seller = listing.seller && listing.seller._id
-      ? await User.findById(listing.seller._id)
-      : await User.findById(listing.seller);
+      ? await Customer.findById(listing.seller._id)
+      : await Customer.findById(listing.seller);
     if (!seller || !seller.email) {
       console.error('Seller not found or has no email for listing:', listing._id);
       return;
@@ -385,11 +385,11 @@ async function sendPrivateRoomClosedNoAcceptanceToInvitedBuyers(listing) {
     const invitations = listing.platinumBidderInvitations || [];
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:4200';
     const listingUrl = `${frontendUrl}/listing/${listing.slug}`;
-    const seller = listing.seller && listing.seller._id ? await User.findById(listing.seller._id) : await User.findById(listing.seller);
+    const seller = listing.seller && listing.seller._id ? await Customer.findById(listing.seller._id) : await Customer.findById(listing.seller);
     const sellerEmail = (seller && seller.email) ? seller.email.toLowerCase() : '';
 
     for (const inv of invitations) {
-      const user = inv.bidder && inv.bidder._id ? await User.findById(inv.bidder._id) : null;
+      const user = inv.bidder && inv.bidder._id ? await Customer.findById(inv.bidder._id) : null;
       if (!user || !user.email) continue;
       if (user.email.toLowerCase() === sellerEmail) continue;
 
@@ -419,8 +419,8 @@ async function sendPrivateRoomClosedNoAcceptanceToInvitedBuyers(listing) {
 async function sendPrivateRoomClosedSellerLeftToSeller(listing) {
   try {
     const seller = listing.seller && listing.seller._id
-      ? await User.findById(listing.seller._id)
-      : await User.findById(listing.seller);
+      ? await Customer.findById(listing.seller._id)
+      : await Customer.findById(listing.seller);
     if (!seller || !seller.email) return;
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:4200';
     const listingUrl = `${frontendUrl}/listing/${listing.slug}`;
@@ -446,11 +446,11 @@ async function sendPrivateRoomClosedSellerLeftToBuyers(listing) {
     const invitations = listing.platinumBidderInvitations || [];
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:4200';
     const listingUrl = `${frontendUrl}/listing/${listing.slug}`;
-    const seller = listing.seller && listing.seller._id ? await User.findById(listing.seller._id) : await User.findById(listing.seller);
+    const seller = listing.seller && listing.seller._id ? await Customer.findById(listing.seller._id) : await Customer.findById(listing.seller);
     const sellerEmail = (seller && seller.email) ? seller.email.toLowerCase() : '';
 
     for (const inv of invitations) {
-      const user = inv.bidder && inv.bidder._id ? await User.findById(inv.bidder._id) : null;
+      const user = inv.bidder && inv.bidder._id ? await Customer.findById(inv.bidder._id) : null;
       if (!user || !user.email) continue;
       if (user.email.toLowerCase() === sellerEmail) continue;
 
@@ -522,7 +522,7 @@ async function handlePrivateRoomClosedNoAcceptance(listingId, io = null) {
 
     const invitations = listingForNotify.platinumBidderInvitations || [];
     for (const inv of invitations) {
-      const bidder = inv.bidder && inv.bidder._id ? await User.findById(inv.bidder._id) : null;
+      const bidder = inv.bidder && inv.bidder._id ? await Customer.findById(inv.bidder._id) : null;
       if (!bidder) continue;
       const bidderUserId = bidder._id.toString();
       await notifyPrivateRoomClosedNoAcceptanceInvited({
@@ -615,7 +615,7 @@ async function handleSellerLeftPrivateRoom(listingId, sellerUid = null, io = nul
 
     const invitations = listingForNotify.platinumBidderInvitations || [];
     for (const inv of invitations) {
-      const bidder = inv.bidder && inv.bidder._id ? await User.findById(inv.bidder._id) : null;
+      const bidder = inv.bidder && inv.bidder._id ? await Customer.findById(inv.bidder._id) : null;
       if (!bidder) continue;
       const bidderUserId = bidder._id.toString();
       await notifySellerLeftPrivateRoomBuyers({
@@ -657,8 +657,8 @@ async function handleSellerLeftPrivateRoom(listingId, sellerUid = null, io = nul
 async function sendPrivateRoomClosedSellerLeftToSeller(listing) {
   try {
     const seller = listing.seller && listing.seller._id
-      ? await User.findById(listing.seller._id)
-      : await User.findById(listing.seller);
+      ? await Customer.findById(listing.seller._id)
+      : await Customer.findById(listing.seller);
     if (!seller || !seller.email) return;
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:4200';
     const listingUrl = `${frontendUrl}/listing/${listing.slug}`;
@@ -683,7 +683,7 @@ async function sendPrivateRoomClosedSellerLeftToBuyers(listing) {
     const listingUrl = `${frontendUrl}/listing/${listing.slug}`;
     const invitations = listing.platinumBidderInvitations || [];
     for (const inv of invitations) {
-      const bidder = inv.bidder && inv.bidder._id ? await User.findById(inv.bidder._id) : null;
+      const bidder = inv.bidder && inv.bidder._id ? await Customer.findById(inv.bidder._id) : null;
       if (!bidder || !bidder.email) continue;
       const language = getUserLanguage(bidder);
       const email = getEmailTemplate('privateRoomClosedSellerLeftBuyers', language, {
@@ -704,8 +704,8 @@ async function sendPrivateRoomClosedSellerLeftToBuyers(listing) {
 async function sendCreatePrivateRoomNotification(listing) {
   try {
     const seller = listing.seller && listing.seller._id
-      ? await User.findById(listing.seller._id)
-      : await User.findById(listing.seller);
+      ? await Customer.findById(listing.seller._id)
+      : await Customer.findById(listing.seller);
     if (!seller || !seller.email) {
       console.error('Seller not found or has no email for listing:', listing._id);
       return;
@@ -740,7 +740,7 @@ async function sendPrivateRoomNotInvitedToBidders(listing, invitedUserIds) {
     const listingUrl = `${frontendUrl}/listing/${listing.slug}`;
     const invitedSet = new Set(invitedUserIds.map(id => id.toString()));
     const notifiedEmails = new Set();
-    const seller = listing.seller && listing.seller._id ? await User.findById(listing.seller._id) : await User.findById(listing.seller);
+    const seller = listing.seller && listing.seller._id ? await Customer.findById(listing.seller._id) : await Customer.findById(listing.seller);
     const sellerEmail = (seller && seller.email) ? seller.email.toLowerCase() : '';
 
     for (const bid of bids) {
@@ -759,7 +759,7 @@ async function sendPrivateRoomNotInvitedToBidders(listing, invitedUserIds) {
       if (bidderId && invitedSet.has(bidderId)) continue;
 
       notifiedEmails.add(bidderEmail);
-      const user = bid.bidder ? await User.findById(bid.bidder._id) : null;
+      const user = bid.bidder ? await Customer.findById(bid.bidder._id) : null;
       const language = getUserLanguage(user);
       const email = getEmailTemplate('privateRoomNotInvited', language, {
         bidderName,
@@ -797,7 +797,7 @@ async function sendPlatinumBidderInvitations(listing, requestOrigin = null) {
     const invitations = listing.platinumBidderInvitations || [];
 
     for (const inv of invitations) {
-      const user = inv.bidder && inv.bidder._id ? await User.findById(inv.bidder._id) : null;
+      const user = inv.bidder && inv.bidder._id ? await Customer.findById(inv.bidder._id) : null;
       if (!user || !user.email || !inv.invitationToken) continue;
       const acceptInvitationUrl = `${frontendUrl}/private-room/invitation/accept?token=${encodeURIComponent(inv.invitationToken)}&listingId=${listing._id}`;
       const declineInvitationUrl = `${frontendUrl}/private-room/invitation/decline?token=${encodeURIComponent(inv.invitationToken)}&listingId=${listing._id}`;
@@ -855,7 +855,7 @@ async function handleAuctionEnd(listingId, io = null) {
       if (offersAboveMin.length === 1) {
         // Exactly one qualifying offer — check if seller has Stripe before auto-accepting
         const sellerId = listing.seller?._id || listing.seller;
-        const sellerUser = sellerId ? await User.findById(sellerId).select('stripeConnectAccountId stripeConnectOnboarded').lean() : null;
+        const sellerUser = sellerId ? await Customer.findById(sellerId).select('stripeConnectAccountId stripeConnectOnboarded').lean() : null;
         const isTestMode = isStripeTestMode();
         const sellerStripeReady = !!(sellerUser?.stripeConnectAccountId && (sellerUser?.stripeConnectOnboarded || isTestMode));
 
@@ -1181,7 +1181,7 @@ async function sendPrivateRoomEndNotifications(listing, highestBid = null) {
         winnerName = highestBid.bidderEmail.split('@')[0];
       }
       if (winnerEmail && winnerEmail !== sellerEmail) {
-        const user = highestBid.bidder?._id ? await User.findById(highestBid.bidder._id) : null;
+        const user = highestBid.bidder?._id ? await Customer.findById(highestBid.bidder._id) : null;
         const language = getUserLanguage(user);
         const winningBid = `$${highestBid.amount.toFixed(2)}`;
         const email = getEmailTemplate('privateRoomWinner', language, {
@@ -1209,7 +1209,7 @@ async function sendPrivateRoomEndNotifications(listing, highestBid = null) {
       if (!bidderEmail || notifiedEmails.has(bidderEmail) || bidderEmail === sellerEmail) continue;
       notifiedEmails.add(bidderEmail);
 
-      const user = bid.bidder?._id ? await User.findById(bid.bidder._id) : null;
+      const user = bid.bidder?._id ? await Customer.findById(bid.bidder._id) : null;
       const language = getUserLanguage(user);
       const email = getEmailTemplate('privateRoomNotWinner', language, {
         bidderName,
