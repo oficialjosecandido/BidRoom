@@ -34,6 +34,10 @@ const PENALTY_TOTAL_CENTS       = PENALTY_TO_SELLER_CENTS + PENALTY_TO_BIDROOM_C
  * Process all non-private-room transactions whose payment deadline has expired unpaid.
  * Idempotent: skips any tx where nonPaymentProcessedAt is already set.
  */
+// Only apply penalties to transactions created on/after this date.
+// Prevents retroactive penalisation of historical test/legacy transactions.
+const PENALTY_CUTOFF_DATE = new Date('2026-06-10T00:00:00.000Z');
+
 async function processAllNonPayments(io = null) {
   const now = new Date();
 
@@ -41,7 +45,8 @@ async function processAllNonPayments(io = null) {
     isPrivateRoom: { $ne: true },
     transactionStatus: 'pending_payment',
     paymentDeadline: { $lte: now },
-    nonPaymentProcessedAt: null
+    nonPaymentProcessedAt: null,
+    createdAt: { $gte: PENALTY_CUTOFF_DATE }
   })
     .populate('listing', 'title slug seller status auctionFormat')
     .lean();

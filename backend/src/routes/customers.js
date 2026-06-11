@@ -104,7 +104,8 @@ router.get('/profile', authenticateToken, async (req, res) => {
         suspectedProfessional: !!customer.suspectedProfessional,
         listingRestricted: !!customer.dsaListingRestricted
       },
-      theme: customer.theme && ['light', 'dark', 'system'].includes(customer.theme) ? customer.theme : null
+      theme: customer.theme && ['light', 'dark', 'system'].includes(customer.theme) ? customer.theme : null,
+      cookieConsent: customer.cookieConsent && ['all', 'essential'].includes(customer.cookieConsent) ? customer.cookieConsent : null
     });
   } catch (error) {
     console.error('Error fetching customer profile:', error);
@@ -269,6 +270,25 @@ router.patch('/theme', authenticateToken, async (req, res) => {
   } catch (error) {
     console.error('Error updating customer theme:', error);
     res.status(500).json({ error: 'Failed to update theme', message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error' });
+  }
+});
+
+/**
+ * PATCH /api/customers/cookie-consent
+ * Persist cookie consent level (all / essential) for cross-device sync.
+ */
+router.patch('/cookie-consent', authenticateToken, async (req, res) => {
+  try {
+    const { uid } = req.user;
+    const { cookieConsent } = req.body || {};
+    if (!['all', 'essential'].includes(cookieConsent)) {
+      return res.status(400).json({ error: 'Invalid value', message: 'cookieConsent must be "all" or "essential".' });
+    }
+    await Customer.updateOne({ uid }, { $set: { cookieConsent } });
+    res.json({ cookieConsent });
+  } catch (error) {
+    console.error('Error updating cookie consent:', error);
+    res.status(500).json({ error: 'Failed to update cookie consent' });
   }
 });
 

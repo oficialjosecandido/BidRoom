@@ -4,6 +4,7 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { ListingsService, Listing } from '../../../shared/services/listings.service';
 import { ThemeService } from '../../../shared/services/theme.service';
 import { HeaderComponent } from '../../../shared/components/header/header.component';
+import { getLocalizedTitle } from '../../../shared/utils/listing-locale';
 import { BidroomLogoComponent } from '../../../shared/components/bidroom-logo/bidroom-logo.component';
 
 @Component({
@@ -48,6 +49,10 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
 
   get currentLang(): string {
     return this.translate.currentLang || 'pt';
+  }
+
+  listingTitle(listing: Listing): string {
+    return getLocalizedTitle(listing, this.currentLang);
   }
 
   get toggleLangLabel(): string {

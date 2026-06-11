@@ -235,6 +235,27 @@ export class MyAuctionsComponent implements OnInit, OnDestroy {
     }
   }
 
+  getStatusLabel(status: string): string {
+    const key = `dashboard.myAuctions.status.${status}`;
+    const translated = this.translate.instant(key);
+    return translated !== key ? translated : status;
+  }
+
+  getPrivateRoomStatusLabel(status: string): string {
+    switch (status) {
+      case 'active': return this.translate.instant('dashboard.myAuctions.privateRoomActive');
+      case 'eligible':
+      case 'invited': return this.translate.instant('dashboard.myAuctions.privateRoomAwaiting');
+      case 'ended': return this.translate.instant('dashboard.myAuctions.privateRoomEnded');
+      default: return status;
+    }
+  }
+
+  privateRoomLinkVisible(listing: EnhancedListing): boolean {
+    const s = listing.privateRoomStatus;
+    return s === 'active' || s === 'eligible' || s === 'invited' || s === 'ended';
+  }
+
   getPlatinumStatusCounts(listing: EnhancedListing): { pending: number; accepted: number; declined: number } {
     if (!listing.platinumBidderStatus || listing.platinumBidderStatus.length === 0) {
       return { pending: 0, accepted: 0, declined: 0 };
@@ -247,7 +268,8 @@ export class MyAuctionsComponent implements OnInit, OnDestroy {
 
   formatDate(dateString: string): string {
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
+    const locale = this.translate.currentLang === 'pt' ? 'pt-PT' : 'en-GB';
+    return date.toLocaleDateString(locale, {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
@@ -258,6 +280,7 @@ export class MyAuctionsComponent implements OnInit, OnDestroy {
 
   formatPrice(value: number | null | undefined): string {
     if (value == null) return '—';
-    return '$' + value.toFixed(2);
+    const locale = this.translate.currentLang === 'pt' ? 'pt-PT' : 'en-GB';
+    return new Intl.NumberFormat(locale, { style: 'currency', currency: 'EUR' }).format(value);
   }
 }

@@ -1112,7 +1112,11 @@ router.post('/', authenticateToken, requireActiveAccount, requireNoDisputeRestri
       images = [],
       itemMode,
       quantity,
-      bundleItems
+      bundleItems,
+      titlePt,
+      titleEn,
+      descriptionPt,
+      descriptionEn
     } = req.body;
 
     // Validate required fields
@@ -1276,7 +1280,8 @@ router.post('/', authenticateToken, requireActiveAccount, requireNoDisputeRestri
 
     // Scan for contact info in user-provided text fields
     const specTexts = (specifications || []).map(s => `${s.key || ''} ${s.value || ''}`);
-    const contentScan = scanTexts([title, description, ...specTexts]);
+    const allTranslations = [titlePt, titleEn, descriptionPt, descriptionEn].filter(Boolean);
+    const contentScan = scanTexts([title, description, ...specTexts, ...allTranslations]);
     if (contentScan.found) {
       const fullUser = await Customer.findById(user._id);
       const violation = await recordViolation(fullUser);
@@ -1291,6 +1296,10 @@ router.post('/', authenticateToken, requireActiveAccount, requireNoDisputeRestri
     const listingData = {
       title: title.trim(),
       description: description.trim(),
+      titlePt: titlePt && String(titlePt).trim() ? String(titlePt).trim() : null,
+      titleEn: titleEn && String(titleEn).trim() ? String(titleEn).trim() : null,
+      descriptionPt: descriptionPt && String(descriptionPt).trim() ? String(descriptionPt).trim() : null,
+      descriptionEn: descriptionEn && String(descriptionEn).trim() ? String(descriptionEn).trim() : null,
       category: category.toLowerCase().replace(/\s+/g, '-'), // Normalize category
       subCategory: subCategory.trim(),
       condition,
@@ -1503,7 +1512,8 @@ router.patch('/:id', authenticateToken, requireActiveAccount, async (req, res) =
       'location', 'locationCity', 'locationCountry',
       'shippingOption', 'shippingCost', 'packageSize',
       'shippingOriginPostalCode', 'shippingOriginCity', 'shippingOriginCountry',
-      'returnPolicy', 'handlingTime', 'images'
+      'returnPolicy', 'handlingTime', 'images',
+      'titlePt', 'titleEn', 'descriptionPt', 'descriptionEn'
     ];
 
     const allowedKeys = isDraft ? Object.keys(body) : EDITABLE_FIELDS;

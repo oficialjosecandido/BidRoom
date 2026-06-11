@@ -43,7 +43,11 @@
       "Bash(sed -i '' 's/User\\\\.updateOne/Customer.updateOne/g' /Users/josecandido/Documents/BidRoom/backend/src/services/fraudDetectionService.js)",
       "Bash(mkdir -p /Users/josecandido/.claude/projects/-Users-josecandido-Documents-BidRoom/memory/)",
       "Bash(git stash *)",
-      "Bash(git cherry-pick *)"
+      "Bash(git cherry-pick *)",
+      "Bash(git restore *)",
+      "Bash(gh run *)",
+      "Bash(gh workflow *)",
+      "Bash(node /tmp/reset_dev_users.js)"
     ],
     "additionalDirectories": [
       "/Users/josecandido/Documents/BidRoom/.claude",

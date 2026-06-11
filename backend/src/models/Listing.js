@@ -21,6 +21,10 @@ const listingSchema = new mongoose.Schema({
     required: true,
     maxlength: 5000
   },
+  titlePt: { type: String, default: null, trim: true, maxlength: 80 },
+  titleEn: { type: String, default: null, trim: true, maxlength: 80 },
+  descriptionPt: { type: String, default: null, maxlength: 5000 },
+  descriptionEn: { type: String, default: null, maxlength: 5000 },
   category: {
     type: String,
     required: true,

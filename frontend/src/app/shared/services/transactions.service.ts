@@ -34,6 +34,8 @@ export interface TransactionListing {
   auctionFormat?: 'highest-bid' | 'best-offer';
   /** Whether the listing allowed a private room (affects commission rate) */
   allowPrivateRoom?: boolean;
+  /** Return policy: 30-days | 14-days | 7-days | no-returns */
+  returnPolicy?: string | null;
 }
 
 export interface TransactionUser {
@@ -93,7 +95,6 @@ export interface Transaction {
   /** End of 5th business day after payment — auto-cancel if not shipped */
   shipByBusinessDeadline?: string | null;
   shippingMidpointWarningSentAt?: string | null;
-  buyerRemindSellerShipAt?: string | null;
   shippingAutoCancelledAt?: string | null;
   /** Whether buyer has reviewed seller (for this listing) */
   buyerHasReviewedSeller?: boolean;
@@ -301,18 +302,6 @@ export class TransactionsService {
     return this.http.patch<Transaction>(`${this.apiUrl}/${id}/dispute/counter-evidence`, {
       mediaUrls
     });
-  }
-
-  /** Download invoice (seller) or receipt (buyer) PDF for a completed transaction. */
-  getInvoice(id: string, role: 'seller' | 'buyer'): Observable<Blob> {
-    return this.http.get(`${this.apiUrl}/${id}/invoice?role=${role}`, {
-      responseType: 'blob'
-    });
-  }
-
-  /** Buyer: remind seller to ship (24h cooldown). */
-  remindSellerToShip(id: string): Observable<Transaction> {
-    return this.http.post<Transaction>(`${this.apiUrl}/${id}/remind-ship`, {});
   }
 
   /** Seller: quick relist after non-payment (uses listing id, not transaction id). */

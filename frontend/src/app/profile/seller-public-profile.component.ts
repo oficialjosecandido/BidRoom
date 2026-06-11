@@ -2,7 +2,8 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { getLocalizedTitle } from '../shared/utils/listing-locale';
 import { HeaderComponent } from '../shared/components/header/header.component';
 import { ReportModalComponent } from '../shared/components/report-modal/report-modal.component';
 import { AuthService } from '../auth/services/auth.service';
@@ -37,6 +38,8 @@ interface PublicProfile {
     _id: string;
     slug: string;
     title: string;
+    titlePt?: string | null;
+    titleEn?: string | null;
     images: string[];
     currentPrice: number;
     startingPrice: number;
@@ -62,6 +65,7 @@ export class SellerPublicProfileComponent implements OnInit {
   private http = inject(HttpClient);
   private authService = inject(AuthService);
   private followService = inject(FollowService);
+  private translate = inject(TranslateService);
 
   private apiBase = API_CONFIG.getApiUrl();
 
@@ -87,6 +91,10 @@ export class SellerPublicProfileComponent implements OnInit {
   reviewPage = 1;
   reviewPages = 1;
   reviewTotal = 0;
+
+  listingTitle(listing: { title: string; titlePt?: string | null; titleEn?: string | null }): string {
+    return getLocalizedTitle(listing, this.translate.currentLang || 'pt');
+  }
 
   ngOnInit(): void {
     this.authService.isAuthenticated().subscribe(auth => {

@@ -52,6 +52,7 @@ const auctionEndScheduler = require('./services/auctionEndScheduler');
 const shippingDeadlineScheduler = require('./services/shippingDeadlineScheduler');
 const deliveryAutoReleaseScheduler = require('./services/deliveryAutoReleaseScheduler');
 const reviewAutoGenerateScheduler = require('./services/reviewAutoGenerateScheduler');
+const { startReviewReminderScheduler } = require('./services/reviewReminderScheduler');
 const dsaComplianceScheduler = require('./services/dsaComplianceScheduler');
 const { runCleanup: runProofOfPaymentCleanup } = require('./services/proofOfPaymentCleanup');
 const { runImagePurge } = require('./services/imagePurgeScheduler');
@@ -498,6 +499,7 @@ const startServer = async () => {
       shippingDeadlineScheduler.startScheduler(15, io);
       deliveryAutoReleaseScheduler.startDeliveryAutoReleaseScheduler(15, io);
       reviewAutoGenerateScheduler.startReviewAutoGenerateScheduler(6, io);
+      startReviewReminderScheduler(30, io);
       dsaComplianceScheduler.startDsaComplianceScheduler(24, io);
       logger.info('Schedulers started', {
         auctionEnd: '1m',

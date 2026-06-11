@@ -85,6 +85,12 @@ const customerSchema = new mongoose.Schema({
     enum: ['light', 'dark', 'system'],
     required: false
   },
+  /** Cookie consent level, synced across devices when the user is logged in. */
+  cookieConsent: {
+    type: String,
+    enum: ['all', 'essential'],
+    default: null
+  },
   /** Reputation: 0-100, cached; recalculated on review/dispute */
   reputationScore: {
     type: Number,

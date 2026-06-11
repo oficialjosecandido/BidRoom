@@ -23,7 +23,7 @@
   <span>›</span>
   <a [routerLink]="['/listing/list']" [queryParams]="{category: listing.category}">{{ categoryLabel(listing.category) }}</a>
   <span>›</span>
-  <strong>{{ listing.title }}</strong>
+  <strong>{{ localizedTitle }}</strong>
   <button class="bc-share" (click)="shareListing()" [attr.title]="linkCopied ? ('listingDetails.share.linkCopiedTitle' | translate) : ('listingDetails.share.shareTitle' | translate)">
     @if (linkCopied) { ✓ {{ 'listingDetails.share.linkCopied' | translate }} } @else { ↗ {{ 'listingDetails.share.shareTitle' | translate }} }
   </button>
@@ -94,7 +94,7 @@
         @if (listing.subCategory) { · {{ subCategoryLabel(listing.subCategory) }} }
         @if (listing.locationCity) { · {{ listing.locationCity }} }
       </div>
-      <h1 class="info-title">{{ listing.title }}</h1>
+      <h1 class="info-title">{{ localizedTitle }}</h1>
       @if (listing.description) {
         <p class="info-byline">{{ getDescriptionByline() }}</p>
       }
@@ -118,7 +118,7 @@
     <!-- DESCRIPTION TAB -->
     @if (activeTab === 'description') {
       <div class="tab-panel">
-        <div class="desc-p">{{ listing.description }}</div>
+        <div class="desc-p">{{ localizedDescription }}</div>
 
         @if (listing.itemMode === 'multi_quantity') {
           <div class="spec-note">{{ listing.quantity }} {{ 'listingDetails.itemMode.identicalUnits' | translate }}</div>
@@ -408,25 +408,18 @@
 
     <!-- PRIMARY CTA -->
     @if (listing.auctionFormat === 'highest-bid' && !isAuctionEnded() && !hasPrivateRoom() && !isOwnListing) {
-      <button class="btn-offer" (click)="openBidModal()">{{ 'listingDetails.actions.placeBid' | translate }}</button>
+      <button class="btn-offer" (click)="openBidModal()">
+        {{ 'listingDetails.actions.placeBidAtMin' | translate:{ amount: formatPrice(getMinBid()) } }}
+      </button>
     }
     @if (listing.auctionFormat === 'best-offer' && !hasPrivateRoom() && !isOwnListing && isBestOfferActive()) {
       <button class="btn-offer" (click)="openOfferModal()">{{ 'listingDetails.actions.makeOffer' | translate }}</button>
     }
+    @if (hasPrivateRoomCreated()) {
+      <button class="btn-offer" (click)="openPrivateRoom()">{{ 'listingDetails.sidebar.goToPrivateRoom' | translate }}</button>
+    }
     @if (isAcceptedPrivateRoomBidder() && !isOwnListing && listing.privateRoomStatus === 'active') {
       <button class="btn-offer" (click)="openBidModal()">{{ 'listingDetails.sidebar.bidPrivateRoom' | translate }}</button>
-      <button class="btn-watch" (click)="openPrivateRoom()">{{ 'listingDetails.privateRoom.watch' | translate }}</button>
-    }
-    <!-- Seller: show a dedicated "Access Private Room" CTA when the room is live -->
-    @if (isOwnListing && listing.privateRoomStatus === 'active') {
-      <button class="btn-offer" (click)="openPrivateRoom()">{{ 'listingDetails.sidebar.accessPrivateRoomSeller' | translate }}</button>
-    }
-    <!-- Spectator (not the seller, not an accepted bidder): watch-only -->
-    @if (listing.privateRoomStatus === 'active' && !isAcceptedPrivateRoomBidder() && !isOwnListing) {
-      <button class="btn-watch" (click)="openPrivateRoom()">{{ 'listingDetails.sidebar.watchPrivateRoomSpectator' | translate }}</button>
-    }
-    @if (listing.allowPrivateRoom && listing.privateRoomStatus === 'invited' && !isOwnListing) {
-      <button class="btn-watch" (click)="openPrivateRoom()">{{ 'listingDetails.sidebar.watchRoomWaiting' | translate }}</button>
     }
     @if (canCreatePrivateRoom()) {
       <button class="btn-offer" (click)="openCreatePrivateRoomModal()">{{ 'listingDetails.actions.createPrivateRoom' | translate }}</button>

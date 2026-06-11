@@ -218,15 +218,31 @@ $radius-lg:      20px;
     @media (max-width: 768px) { display: none; }
   }
 
-  &__platinum {
-    font-size: 0.6rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    padding: 0.15rem 0.45rem;
-    border-radius: 4px;
-    background: $gold-bg;
-    color: $gold;
+  &__lang {
+    display: flex;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid $border-glass;
+    border-radius: 6px;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+
+  &__lang-btn {
+    padding: 4px 9px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    color: $text-secondary;
+    border: none;
+    background: none;
+    cursor: pointer;
+    font-family: inherit;
+    transition: background 0.15s, color 0.15s;
+
+    &--on {
+      background: $gold-bg;
+      color: $gold;
+    }
   }
 
   &__logout {
@@ -289,7 +305,35 @@ $radius-lg:      20px;
 
 .pr-login-card__sub { font-size: 0.85rem; color: $text-muted; margin-bottom: 1.5rem !important; }
 
+.pr-state--ended {
+  padding: 2rem 1.25rem 3rem;
+  min-height: calc(100vh - 4rem);
+  justify-content: center;
+}
+
 .pr-ended-card {
+  max-width: 520px;
+  width: 100%;
+  padding: 2.5rem 2rem 2rem;
+  border: 1px solid $border-glass;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.35);
+
+  &--success {
+    border-color: rgba($green, 0.35);
+    background: linear-gradient(180deg, rgba($green, 0.08) 0%, $bg-card 40%);
+  }
+
+  &--warning {
+    border-color: rgba($amber, 0.35);
+    background: linear-gradient(180deg, rgba($amber, 0.08) 0%, $bg-card 40%);
+  }
+
+  &__icon {
+    font-size: 2.5rem;
+    line-height: 1;
+    margin-bottom: 0.75rem;
+  }
+
   &__badge {
     display: inline-block;
     font-size: 0.7rem;
@@ -302,6 +346,62 @@ $radius-lg:      20px;
     color: rgba(255, 255, 255, 0.7);
     border: 1px solid rgba(100, 116, 139, 0.3);
     margin-bottom: 1rem;
+  }
+
+  &__title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin: 0 0 0.35rem;
+    @include gold-text;
+  }
+
+  &__subtitle {
+    font-size: 0.9rem;
+    color: $text-muted;
+    margin: 0 0 1.25rem !important;
+  }
+
+  &__winner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.85rem 1rem;
+    margin-bottom: 1rem;
+    border-radius: $radius-sm;
+    background: $gold-bg;
+    border: 1px solid rgba($gold, 0.25);
+  }
+
+  &__winner-label {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: $text-primary;
+    text-align: left;
+  }
+
+  &__winner-amount {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: $gold-light;
+    white-space: nowrap;
+  }
+
+  &__body {
+    font-size: 0.95rem;
+    line-height: 1.65;
+    color: $text-secondary;
+    margin: 0 0 1.5rem !important;
+    text-align: left;
+
+    strong { color: $text-primary; }
+  }
+
+  &__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    justify-content: center;
   }
 }
 

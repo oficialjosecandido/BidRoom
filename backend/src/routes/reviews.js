@@ -202,6 +202,58 @@ router.get('/pending', authenticateToken, async (req, res) => {
 });
 
 /**
+ * GET /api/reviews/mine
+ * Returns reviews written by the current user AND reviews received by them.
+ */
+router.get('/mine', authenticateToken, async (req, res) => {
+  try {
+    const user = await Customer.findOne({ uid: req.user.uid }).select('_id').lean();
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    const [written, received] = await Promise.all([
+      Review.find({ reviewer: user._id })
+        .sort({ createdAt: -1 })
+        .populate('reviewee', 'firstName lastName slug')
+        .populate('listing', 'title slug images')
+        .limit(200)
+        .lean(),
+      Review.find({ reviewee: user._id })
+        .sort({ createdAt: -1 })
+        .populate('reviewer', 'firstName lastName slug')
+        .populate('listing', 'title slug images')
+        .limit(200)
+        .lean()
+    ]);
+
+    const sanitizedReceived = received.map(({ description: _d, reviewerIp: _ip, reviewerUserAgent: _ua, ...r }) => r);
+
+    res.json({ written, received: sanitizedReceived });
+  } catch (error) {
+    console.error('Error fetching my reviews:', error);
+    res.status(500).json(serverError(error, 'Failed to fetch reviews'));
+  }
+});
+
+/**
+ * GET /api/reviews/appeals/mine
+ * List appeals created by the authenticated user.
+ */
+router.get('/appeals/mine', authenticateToken, async (req, res) => {
+  try {
+    const user = await Customer.findOne({ uid: req.user.uid }).select('_id').lean();
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    const appeals = await ReviewAppeal.find({ appellant: user._id })
+      .sort({ createdAt: -1 })
+      .limit(100)
+      .lean();
+    res.json({ appeals });
+  } catch (error) {
+    console.error('Error fetching my appeals:', error);
+    res.status(500).json(serverError(error, 'Failed to fetch appeals'));
+  }
+});
+
+/**
  * After a new review is saved, decide whether the seller should be auto-suspended
  * for sustained low ratings (< AUTO_SUSPEND_AVG_THRESHOLD across ≥ AUTO_SUSPEND_MIN_REVIEWS).
  *
@@ -511,25 +563,6 @@ router.post('/:id/appeals', authenticateToken, async (req, res) => {
   } catch (error) {
     console.error('Error creating review appeal:', error);
     res.status(500).json(serverError(error, 'Failed to create appeal'));
-  }
-});
-
-/**
- * GET /api/reviews/appeals/mine
- * List appeals created by the authenticated user.
- */
-router.get('/appeals/mine', authenticateToken, async (req, res) => {
-  try {
-    const user = await Customer.findOne({ uid: req.user.uid }).select('_id').lean();
-    if (!user) return res.status(404).json({ error: 'User not found' });
-    const appeals = await ReviewAppeal.find({ appellant: user._id })
-      .sort({ createdAt: -1 })
-      .limit(100)
-      .lean();
-    res.json({ appeals });
-  } catch (error) {
-    console.error('Error fetching my appeals:', error);
-    res.status(500).json(serverError(error, 'Failed to fetch appeals'));
   }
 });
 

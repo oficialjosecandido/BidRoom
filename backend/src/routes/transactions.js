@@ -12,13 +12,17 @@ const {
   notifyTrackingProvided,
   notifyBuyerConfirmedReceipt,
   notifyBuyerSellerAccepted,
-  notifySellerBuyerRemindedShip,
   notifyReviewPrompt,
   emitNewNotificationToUser
 } = require('../services/notificationService');
 const { ensureShippingDeadlinesFromPaidAt } = require('../services/shippingDeadlines');
 const { restrictBothPartiesForDispute, checkAndApplyPendingSuspensions } = require('../services/accountStatusService');
-const { generateInvoicePdf } = require('../services/invoiceService');
+const {
+  wrapBidRoomEmail,
+  emailInfoBox,
+  emailTextLink,
+  transactionUrl
+} = require('../utils/bidroomEmailLayout');
 
 const router = express.Router();
 
@@ -28,6 +32,62 @@ function normalizeTransactionStatus(t) {
   const paymentStatus = t.paymentStatus ?? (['paid', 'shipped', 'delivered', 'under_dispute', 'completed'].includes(transactionStatus) ? 'paid' : 'pending');
   const sendingStatus = t.sendingStatus ?? (transactionStatus === 'shipped' ? 'shipped' : ['delivered', 'under_dispute', 'completed'].includes(transactionStatus) ? 'delivered' : 'pending');
   return { transactionStatus, paymentStatus, sendingStatus };
+}
+
+function partyId(party) {
+  if (!party) return null;
+  return (party._id || party).toString();
+}
+
+function listingIdOf(listing) {
+  if (!listing) return null;
+  return (listing._id || listing).toString();
+}
+
+/** Whether buyer/seller have left their review for this specific transaction pair. */
+function getPartyReviewFlags(transaction, reviews) {
+  const lid = listingIdOf(transaction.listing);
+  const buyerId = partyId(transaction.buyer);
+  const sellerId = partyId(transaction.seller);
+  if (!lid || !buyerId || !sellerId) {
+    return { buyerHasReviewedSeller: false, sellerHasReviewedBuyer: false };
+  }
+
+  let buyerHasReviewedSeller = false;
+  let sellerHasReviewedBuyer = false;
+  for (const r of reviews) {
+    if (listingIdOf(r.listing) !== lid) continue;
+    const reviewerId = partyId(r.reviewer);
+    const revieweeId = partyId(r.reviewee);
+    if (reviewerId === buyerId && revieweeId === sellerId) buyerHasReviewedSeller = true;
+    if (reviewerId === sellerId && revieweeId === buyerId) sellerHasReviewedBuyer = true;
+  }
+  return { buyerHasReviewedSeller, sellerHasReviewedBuyer };
+}
+
+async function getPartyReviewFlagsForTransaction(transaction) {
+  const lid = listingIdOf(transaction.listing);
+  const buyerId = partyId(transaction.buyer);
+  const sellerId = partyId(transaction.seller);
+  if (!lid || !buyerId || !sellerId) {
+    return { buyerHasReviewedSeller: false, sellerHasReviewedBuyer: false };
+  }
+  const [buyerHasReviewedSeller, sellerHasReviewedBuyer] = await Promise.all([
+    Review.exists({ listing: lid, reviewer: buyerId, reviewee: sellerId }),
+    Review.exists({ listing: lid, reviewer: sellerId, reviewee: buyerId })
+  ]);
+  return { buyerHasReviewedSeller: !!buyerHasReviewedSeller, sellerHasReviewedBuyer: !!sellerHasReviewedBuyer };
+}
+
+/** Seller may ship when paid, or Stripe/verified payment while legacy status awaits manual accept. */
+function sellerCanMarkAsShipped(transaction, transactionStatus) {
+  if (transactionStatus === 'paid') return true;
+  if (transactionStatus !== 'awaiting_seller_acceptance') return false;
+  return (
+    transaction.paymentStatus === 'paid' ||
+    !!transaction.stripePaymentIntentId ||
+    !!transaction.stripeCheckoutSessionId
+  );
 }
 
 const DISPUTE_REASON_CODES = ['item_not_as_described', 'damaged_in_transit', 'missing_parts', 'counterfeit', 'other'];
@@ -52,7 +112,7 @@ router.get('/', async (req, res) => {
 
     const [transactions, total] = await Promise.all([
       Transaction.find(filter)
-        .populate('listing', 'title slug images status commissionRate shippingCost shippingOption auctionFormat allowPrivateRoom')
+        .populate('listing', 'title slug images status commissionRate shippingCost shippingOption auctionFormat allowPrivateRoom returnPolicy')
         .populate('seller', 'firstName lastName')
         .populate('buyer', 'firstName lastName')
         .sort({ updatedAt: -1 })
@@ -64,25 +124,12 @@ router.get('/', async (req, res) => {
 
     const listingIds = [...new Set(transactions.map(t => t.listing?._id || t.listing).filter(Boolean))];
     const reviews = listingIds.length > 0
-      ? await Review.find({ listing: { $in: listingIds } }).select('listing reviewer reviewee role').lean()
+      ? await Review.find({ listing: { $in: listingIds } }).select('listing reviewer reviewee').lean()
       : [];
-    const buyerReviewedSeller = {};
-    const sellerReviewedBuyer = {};
-    for (const r of reviews) {
-      const lid = (r.listing && r.listing._id ? r.listing._id : r.listing)?.toString();
-      if (!lid) continue;
-      if (r.role === 'as_seller') {
-        buyerReviewedSeller[lid] = true;
-      } else {
-        sellerReviewedBuyer[lid] = true;
-      }
-    }
 
     const withRole = transactions.map(t => {
       const role = t.seller?._id?.toString() === user._id.toString() ? 'seller' : 'buyer';
-      const listingId = (t.listing && t.listing._id ? t.listing._id : t.listing)?.toString();
-      const buyerHasReviewedSeller = !!buyerReviewedSeller[listingId];
-      const sellerHasReviewedBuyer = !!sellerReviewedBuyer[listingId];
+      const { buyerHasReviewedSeller, sellerHasReviewedBuyer } = getPartyReviewFlags(t, reviews);
       return {
         ...t,
         role,
@@ -100,58 +147,6 @@ router.get('/', async (req, res) => {
 });
 
 /**
- * GET /api/transactions/:id/invoice?role=seller|buyer
- * Download invoice/receipt PDF (completed transactions only)
- */
-router.get('/:id/invoice', async (req, res) => {
-  try {
-    const user = await Customer.findOne({ uid: req.user.uid });
-    if (!user) {
-      return res.status(404).json({ error: 'User not found.' });
-    }
-
-    const role = req.query.role;
-    if (!role || !['seller', 'buyer'].includes(role)) {
-      return res.status(400).json({ error: 'Invalid or missing role. Use ?role=seller or ?role=buyer' });
-    }
-
-    const transaction = await Transaction.findById(req.params.id)
-      .populate('listing', 'title slug images status commissionRate shippingCost shippingOption auctionFormat allowPrivateRoom')
-      .populate('seller', 'firstName lastName')
-      .populate('buyer', 'firstName lastName')
-      .lean();
-
-    if (!transaction) {
-      return res.status(404).json({ error: 'Transaction not found' });
-    }
-
-    const ts = transaction.transactionStatus ?? transaction.status;
-    if (ts !== 'completed') {
-      return res.status(400).json({ error: 'Invoice is only available for completed transactions.' });
-    }
-
-    const sellerId = transaction.seller?._id?.toString() || transaction.seller?.toString();
-    const buyerId = transaction.buyer?._id?.toString() || transaction.buyer?.toString();
-    if (role === 'seller' && sellerId !== user._id.toString()) {
-      return res.status(403).json({ error: 'You do not have access to the seller invoice for this transaction.' });
-    }
-    if (role === 'buyer' && buyerId !== user._id.toString()) {
-      return res.status(403).json({ error: 'You do not have access to the buyer receipt for this transaction.' });
-    }
-
-    const pdfBuffer = await generateInvoicePdf(transaction, role);
-    const filename = role === 'seller' ? `invoice-${transaction._id}.pdf` : `receipt-${transaction._id}.pdf`;
-
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-    res.send(pdfBuffer);
-  } catch (error) {
-    console.error('Error generating invoice:', error);
-    res.status(500).json({ error: 'Failed to generate invoice', message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error' });
-  }
-});
-
-/**
  * GET /api/transactions/:id
  * Get a single transaction (only if current user is buyer or seller)
  */
@@ -163,7 +158,7 @@ router.get('/:id', async (req, res) => {
     }
 
     const transaction = await Transaction.findById(req.params.id)
-      .populate('listing', 'title slug images status commissionRate shippingCost shippingOption auctionFormat allowPrivateRoom')
+      .populate('listing', 'title slug images status commissionRate shippingCost shippingOption auctionFormat allowPrivateRoom returnPolicy')
       .populate('seller', 'firstName lastName')
       .populate('buyer', 'firstName lastName')
       .lean();
@@ -178,18 +173,12 @@ router.get('/:id', async (req, res) => {
       return res.status(403).json({ error: 'You do not have access to this transaction' });
     }
 
-    const listingId = (transaction.listing && transaction.listing._id ? transaction.listing._id : transaction.listing)?.toString();
-    const [buyerReviewedSeller, sellerReviewedBuyer] = listingId
-      ? await Promise.all([
-          Review.exists({ listing: listingId, role: 'as_seller' }),
-          Review.exists({ listing: listingId, role: 'as_buyer' })
-        ])
-      : [false, false];
+    const { buyerHasReviewedSeller, sellerHasReviewedBuyer } = await getPartyReviewFlagsForTransaction(transaction);
 
     res.json({
       ...transaction,
-      buyerHasReviewedSeller: !!buyerReviewedSeller,
-      sellerHasReviewedBuyer: !!sellerReviewedBuyer,
+      buyerHasReviewedSeller,
+      sellerHasReviewedBuyer,
       ...normalizeTransactionStatus(transaction)
     });
   } catch (error) {
@@ -299,7 +288,7 @@ router.post('/:id/open-dispute', async (req, res) => {
     }
 
     const updated = await Transaction.findById(transaction._id)
-      .populate('listing', 'title slug images status commissionRate shippingCost shippingOption auctionFormat allowPrivateRoom')
+      .populate('listing', 'title slug images status commissionRate shippingCost shippingOption auctionFormat allowPrivateRoom returnPolicy')
       .populate('seller', 'firstName lastName')
       .populate('buyer', 'firstName lastName')
       .lean();
@@ -366,7 +355,7 @@ router.patch('/:id/dispute/counter-evidence', async (req, res) => {
     }
 
     const updated = await Transaction.findById(transaction._id)
-      .populate('listing', 'title slug images status commissionRate shippingCost shippingOption auctionFormat allowPrivateRoom')
+      .populate('listing', 'title slug images status commissionRate shippingCost shippingOption auctionFormat allowPrivateRoom returnPolicy')
       .populate('seller', 'firstName lastName')
       .populate('buyer', 'firstName lastName')
       .lean();
@@ -379,88 +368,6 @@ router.patch('/:id/dispute/counter-evidence', async (req, res) => {
   } catch (error) {
     console.error('Error updating counter-evidence:', error);
     res.status(500).json({ error: 'Failed to update counter-evidence', message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error' });
-  }
-});
-
-/** 24-hour cooldown between buyer "Remind seller to ship" requests. */
-const REMIND_SHIP_COOLDOWN_MS = 24 * 60 * 60 * 1000;
-
-/**
- * POST /api/transactions/:id/remind-ship
- *
- * Allows the buyer to send a push notification nudging the seller to ship.
- * - Only available while transactionStatus is 'awaiting_seller_acceptance' or 'paid'.
- * - Rate-limited: returns HTTP 429 with retryAfterMs if called within 24 hours
- *   of the last reminder.
- * - Updates buyerRemindSellerShipAt on the transaction and sends an in-app
- *   notification to the seller via notificationService.
- */
-router.post('/:id/remind-ship', requireActiveAccount, async (req, res) => {
-  try {
-    const user = await Customer.findOne({ uid: req.user.uid });
-    if (!user) {
-      return res.status(404).json({ error: 'User not found.' });
-    }
-
-    const transaction = await Transaction.findById(req.params.id)
-      .populate('listing', 'title slug')
-      .populate('seller', '_id uid email firstName');
-
-    if (!transaction) {
-      return res.status(404).json({ error: 'Transaction not found' });
-    }
-
-    const isBuyer = transaction.buyer.toString() === user._id.toString();
-    if (!isBuyer) {
-      return res.status(403).json({ error: 'Only the buyer can send this reminder.' });
-    }
-
-    const ts = transaction.transactionStatus ?? transaction.status;
-    if (!['awaiting_seller_acceptance', 'paid'].includes(ts)) {
-      return res.status(400).json({
-        error: 'Cannot remind',
-        message: 'A reminder is only available before the item is marked as shipped.'
-      });
-    }
-
-    const last = transaction.buyerRemindSellerShipAt ? new Date(transaction.buyerRemindSellerShipAt).getTime() : 0;
-    if (last && Date.now() - last < REMIND_SHIP_COOLDOWN_MS) {
-      return res.status(429).json({
-        error: 'Too soon',
-        message: 'You can remind the seller again after 24 hours.',
-        retryAfterMs: REMIND_SHIP_COOLDOWN_MS - (Date.now() - last)
-      });
-    }
-
-    transaction.buyerRemindSellerShipAt = new Date();
-    await transaction.save();
-
-    const sellerUserId = transaction.seller?._id?.toString?.() || transaction.seller?.toString?.();
-    const listingTitle = transaction.listing?.title || 'your order';
-    if (sellerUserId) {
-      notifySellerBuyerRemindedShip({
-        transactionId: transaction._id.toString(),
-        listingTitle,
-        sellerUserId
-      }).catch(err => console.error('Failed to notify seller remind-ship:', err));
-      const io = req.app.get('io');
-      if (io) emitNewNotificationToUser(io, sellerUserId).catch(() => {});
-    }
-
-    const updated = await Transaction.findById(transaction._id)
-      .populate('listing', 'title slug images status commissionRate shippingCost shippingOption auctionFormat allowPrivateRoom')
-      .populate('seller', 'firstName lastName')
-      .populate('buyer', 'firstName lastName')
-      .lean();
-
-    res.json({
-      ...updated,
-      role: 'buyer',
-      ...normalizeTransactionStatus(updated)
-    });
-  } catch (error) {
-    console.error('Error remind-ship:', error);
-    res.status(500).json({ error: 'Failed to send reminder', message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error' });
   }
 });
 
@@ -518,23 +425,17 @@ router.patch('/:id', requireActiveAccount, async (req, res) => {
           // Email to buyer
           const buyer = await Customer.findById(buyerUserId).select('email firstName').lean();
           if (buyer?.email) {
-            const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:4200';
-            const txLink = `${frontendUrl}/dashboard/transactions`;
-            const html = `
-              <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-                <div style="background: linear-gradient(135deg, #7A4F84 0%, #9b6ba8 100%); color: white; padding: 24px; text-align: center; border-radius: 8px 8px 0 0;">
-                  <h1 style="margin: 0;">Your order has been confirmed!</h1>
-                </div>
-                <div style="background: #f9f9f9; padding: 24px; border-radius: 0 0 8px 8px;">
-                  <p>Hi ${buyer.firstName || 'there'},</p>
-                  <p>The seller has accepted your payment for <strong>${listingTitle}</strong> and will prepare your order for shipment shortly.</p>
-                  <p style="text-align: center; margin: 24px 0;">
-                    <a href="${txLink}" style="background: #7A4F84; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: bold;">View Transaction</a>
-                  </p>
-                  <p>Best regards,<br>The BidRoom Team</p>
-                </div>
-              </div>
-            `;
+            const txLink = transactionUrl(transaction._id?.toString?.());
+            const bodyHtml = `
+              <p style="margin:0 0 16px;">Hi ${buyer.firstName || 'there'},</p>
+              <p style="margin:0 0 16px;">The seller confirmed your payment for <strong>${listingTitle}</strong> and will prepare your order for shipment.</p>
+              ${emailInfoBox('We will notify you when the item is marked as shipped.')}`;
+            const html = wrapBidRoomEmail({
+              title: 'Order confirmed',
+              bodyHtml,
+              ctaUrl: txLink,
+              ctaLabel: 'View transaction'
+            });
             sendEmail(buyer.email, `Your order for "${listingTitle}" has been confirmed`, html)
               .catch(err => console.error('Failed to send seller-accepted email to buyer:', err.message));
           }
@@ -545,11 +446,18 @@ router.patch('/:id', requireActiveAccount, async (req, res) => {
           ).catch(err => console.error('[AccountStatus] checkAndApplyPendingSuspensions error:', err.message));
         }
       } else if (status === 'shipped') {
-        if (ts !== 'paid') {
+        if (!sellerCanMarkAsShipped(transaction, ts)) {
           return res.status(400).json({
             error: 'Invalid state',
-            message: 'You can only mark the item as shipped after confirming payment from the buyer.'
+            message: 'You can only mark the item as shipped after payment has been received.'
           });
+        }
+        if (ts === 'awaiting_seller_acceptance') {
+          transaction.transactionStatus = 'paid';
+          transaction.paymentStatus = 'paid';
+          transaction.paidAt = transaction.paidAt || new Date();
+          ensureShippingDeadlinesFromPaidAt(transaction);
+          transaction.paymentAcceptanceDeadline = null;
         }
         transaction.transactionStatus = 'shipped';
         transaction.sendingStatus = 'shipped';
@@ -597,31 +505,25 @@ router.patch('/:id', requireActiveAccount, async (req, res) => {
           // Email to buyer with optional proof-of-shipment link
           const buyer = await Customer.findById(buyerUserId).select('email firstName').lean();
           if (buyer?.email) {
-            const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:4200';
-            const txLink = `${frontendUrl}/dashboard/transactions`;
-            const proofSection = sellerProofOfDeliveryUrl
-              ? `<p style="margin-top: 16px;"><a href="${sellerProofOfDeliveryUrl}" target="_blank" style="color: #7A4F84; font-weight: bold;">View proof of shipment</a></p>`
-              : '';
+            const txLink = transactionUrl(transaction._id?.toString?.());
             const trackingSection = trackingNumber
-              ? `<p>Tracking: <strong>${trackingCarrier ? trackingCarrier + ' – ' : ''}${trackingNumber}</strong></p>`
+              ? emailInfoBox(`Tracking: <strong>${trackingCarrier ? trackingCarrier + ' – ' : ''}${trackingNumber}</strong>`)
               : '';
-            const html = `
-              <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-                <div style="background: linear-gradient(135deg, #7A4F84 0%, #9b6ba8 100%); color: white; padding: 24px; text-align: center; border-radius: 8px 8px 0 0;">
-                  <h1 style="margin: 0;">Your item has been shipped!</h1>
-                </div>
-                <div style="background: #f9f9f9; padding: 24px; border-radius: 0 0 8px 8px;">
-                  <p>Hi ${buyer.firstName || 'there'},</p>
-                  <p>The seller has shipped <strong>${listingTitle}</strong>.</p>
-                  ${trackingSection}
-                  ${proofSection}
-                  <p style="text-align: center; margin: 24px 0;">
-                    <a href="${txLink}" style="background: #7A4F84; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: bold;">View Transaction</a>
-                  </p>
-                  <p>Best regards,<br>The BidRoom Team</p>
-                </div>
-              </div>
-            `;
+            const proofSection = sellerProofOfDeliveryUrl
+              ? `<p style="margin:16px 0 0;">${emailTextLink(sellerProofOfDeliveryUrl, 'View proof of shipment')}</p>`
+              : '';
+            const bodyHtml = `
+              <p style="margin:0 0 16px;">Hi ${buyer.firstName || 'there'},</p>
+              <p style="margin:0 0 16px;">The seller marked <strong>${listingTitle}</strong> as shipped.</p>
+              ${trackingSection}
+              ${proofSection}
+              ${emailInfoBox('When you receive the item, confirm receipt in your dashboard.')}`;
+            const html = wrapBidRoomEmail({
+              title: 'Your item has shipped',
+              bodyHtml,
+              ctaUrl: txLink,
+              ctaLabel: 'View transaction'
+            });
             sendEmail(buyer.email, `Your item "${listingTitle}" has been shipped`, html)
               .catch(err => console.error('Failed to send shipped email to buyer:', err.message));
           }
@@ -693,22 +595,12 @@ router.patch('/:id', requireActiveAccount, async (req, res) => {
     await transaction.save();
 
     const updated = await Transaction.findById(transaction._id)
-      .populate('listing', 'title slug images status commissionRate shippingCost shippingOption auctionFormat allowPrivateRoom')
+      .populate('listing', 'title slug images status commissionRate shippingCost shippingOption auctionFormat allowPrivateRoom returnPolicy')
       .populate('seller', 'firstName lastName')
       .populate('buyer', 'firstName lastName')
       .lean();
 
-    const listingId = (updated.listing && updated.listing._id ? updated.listing._id : updated.listing)?.toString();
-    let buyerHasReviewedSeller = false;
-    let sellerHasReviewedBuyer = false;
-    if (listingId) {
-      const [b, s] = await Promise.all([
-        Review.exists({ listing: listingId, role: 'as_seller' }),
-        Review.exists({ listing: listingId, role: 'as_buyer' })
-      ]);
-      buyerHasReviewedSeller = !!b;
-      sellerHasReviewedBuyer = !!s;
-    }
+    const { buyerHasReviewedSeller, sellerHasReviewedBuyer } = await getPartyReviewFlagsForTransaction(updated);
 
     const role = updated.seller?._id?.toString() === user._id.toString() ? 'seller' : 'buyer';
     res.json({
@@ -818,31 +710,25 @@ router.post('/:id/request-return', requireActiveAccount, async (req, res) => {
         emitNewNotificationToUser(io, sellerMongoId).catch(() => {});
       }
       if (transaction.seller?.email) {
-        const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:4200';
-        const txLink = `${frontendUrl}/dashboard/transactions`;
-        const html = `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <div style="background: linear-gradient(135deg, #7A4F84 0%, #9b6ba8 100%); color: white; padding: 24px; text-align: center; border-radius: 8px 8px 0 0;">
-              <h1 style="margin: 0;">Return request received</h1>
-            </div>
-            <div style="background: #f9f9f9; padding: 24px; border-radius: 0 0 8px 8px;">
-              <p>Hi ${transaction.seller.firstName || 'there'},</p>
-              <p>The buyer has requested a return for <strong>${listingTitle}</strong>.</p>
-              <p><strong>Reason:</strong> ${transaction.returnReason}</p>
-              <p>You have <strong>48 hours</strong> to accept or reject the return request before the platform mediates.</p>
-              <p style="text-align: center; margin: 24px 0;">
-                <a href="${txLink}" style="background: #7A4F84; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: bold;">View Transaction</a>
-              </p>
-              <p>Best regards,<br>The BidRoom Team</p>
-            </div>
-          </div>`;
+        const txLink = transactionUrl(transaction._id?.toString?.());
+        const bodyHtml = `
+          <p style="margin:0 0 16px;">Hi ${transaction.seller.firstName || 'there'},</p>
+          <p style="margin:0 0 16px;">The buyer requested a return for <strong>${listingTitle}</strong>.</p>
+          ${emailInfoBox(`<strong>Reason:</strong> ${transaction.returnReason}`)}
+          ${emailInfoBox('You have <strong>48 hours</strong> to accept or reject before BidRoom mediates.')}`;
+        const html = wrapBidRoomEmail({
+          title: 'Return request received',
+          bodyHtml,
+          ctaUrl: txLink,
+          ctaLabel: 'View transaction'
+        });
         sendEmail(transaction.seller.email, `Return request for "${listingTitle}"`, html)
           .catch(err => console.error('Failed to send return request email:', err.message));
       }
     }
 
     const updated = await Transaction.findById(transaction._id)
-      .populate('listing', 'title slug images status commissionRate shippingCost shippingOption auctionFormat allowPrivateRoom')
+      .populate('listing', 'title slug images status commissionRate shippingCost shippingOption auctionFormat allowPrivateRoom returnPolicy')
       .populate('seller', 'firstName lastName')
       .populate('buyer', 'firstName lastName')
       .lean();

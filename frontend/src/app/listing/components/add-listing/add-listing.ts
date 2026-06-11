@@ -1,3 +1,4 @@
+import { DecimalPipe } from '@angular/common';
 import { Component, OnDestroy, OnInit, inject, computed } from '@angular/core';
 import { AbstractControl, FormBuilder, FormGroup, ValidationErrors, ValidatorFn, Validators, ReactiveFormsModule, FormArray } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -9,10 +10,13 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { ListingsService } from '../../../shared/services/listings.service';
 import { CustomerService, CustomerInfo } from '../../../shared/services/customer.service';
 import { KycService, KYC_THRESHOLD } from '../../../shared/services/kyc.service';
+import { estimateBuyerProcessingFeeEuros } from '../../../shared/utils/fees';
 import { API_CONFIG } from '../../../shared/config/api.config';
 import { environment } from '@env';
 import { BidroomLogoComponent } from '../../../shared/components/bidroom-logo/bidroom-logo.component';
 import { ThemeService } from '../../../shared/services/theme.service';
+import { AnalyticsService } from '../../../shared/services/analytics.service';
+import { AnalyticsEvents } from '../../../shared/services/analytics.events';
 
 interface Category {
   id: string;
@@ -42,7 +46,7 @@ function buyNowAboveStartingBid(): ValidatorFn {
 @Component({
   selector: 'app-add-listing',
   standalone: true,
-  imports: [ReactiveFormsModule, TranslateModule, BidroomLogoComponent],
+  imports: [DecimalPipe, ReactiveFormsModule, TranslateModule, BidroomLogoComponent],
   templateUrl: './add-listing.html',
   styleUrl: './add-listing.scss',
 })
@@ -55,8 +59,11 @@ export class AddListing implements OnInit, OnDestroy {
   private translate = inject(TranslateService);
   private kycService = inject(KycService);
   private themeService = inject(ThemeService);
+  private analytics = inject(AnalyticsService);
 
   listingForm!: FormGroup;
+  activeLangTab: 'pt' | 'en' = 'pt';
+  primaryLangTab: 'pt' | 'en' = 'pt';
   isSubmitting = false;
   errorMessage = '';
   isUploadingImages = false;
@@ -131,7 +138,9 @@ export class AddListing implements OnInit, OnDestroy {
   navigateBack(): void { void this.router.navigate(['/listing/list']); }
 
   // ─── Preview sidebar ─────────────────────────────────────────────────────────
-  get previewTitle(): string { return this.listingForm?.get('title')?.value || ''; }
+  get previewTitle(): string {
+    return this.listingForm?.get(this.primaryLangTab === 'pt' ? 'titlePt' : 'titleEn')?.value || '';
+  }
   get previewCategory(): string { return this.listingForm?.get('category')?.value || ''; }
   get previewFormat(): string { return this.listingForm?.get('listingFormat')?.value || 'auction'; }
 
@@ -180,8 +189,9 @@ export class AddListing implements OnInit, OnDestroy {
 
   get checklist(): Record<string, boolean> {
     const fmt = this.previewFormat;
-    const titleCtrl = this.listingForm?.get('title');
-    const descCtrl = this.listingForm?.get('description');
+    const tab = this.primaryLangTab;
+    const titleCtrl = this.listingForm?.get(tab === 'pt' ? 'titlePt' : 'titleEn');
+    const descCtrl = this.listingForm?.get(tab === 'pt' ? 'descriptionPt' : 'descriptionEn');
     const shippingOk = this.isStepValid(5, false);
     return {
       format: true,
@@ -388,6 +398,9 @@ export class AddListing implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    const lang: 'pt' | 'en' = this.translate.currentLang === 'en' ? 'en' : 'pt';
+    this.activeLangTab = lang;
+    this.primaryLangTab = lang;
     this.initializeForm();
     this.setupFormSubscriptions();
     void this.loadDraftFromServer();
@@ -413,9 +426,36 @@ export class AddListing implements OnInit, OnDestroy {
     });
   }
 
+  setLangTab(lang: 'pt' | 'en'): void {
+    this.activeLangTab = lang;
+  }
+
+  private updateLangValidators(): void {
+    const ptTitle = this.listingForm.get('titlePt');
+    const enTitle = this.listingForm.get('titleEn');
+    const ptDesc  = this.listingForm.get('descriptionPt');
+    const enDesc  = this.listingForm.get('descriptionEn');
+    if (!ptTitle) return;
+
+    if (this.primaryLangTab === 'pt') {
+      ptTitle.setValidators([Validators.required, Validators.maxLength(80)]);
+      ptDesc!.setValidators([Validators.required, Validators.minLength(50)]);
+      enTitle!.setValidators([Validators.maxLength(80)]);
+      enDesc!.setValidators([]);
+    } else {
+      enTitle!.setValidators([Validators.required, Validators.maxLength(80)]);
+      enDesc!.setValidators([Validators.required, Validators.minLength(50)]);
+      ptTitle.setValidators([Validators.maxLength(80)]);
+      ptDesc!.setValidators([]);
+    }
+    [ptTitle, enTitle, ptDesc, enDesc].forEach(c => c!.updateValueAndValidity({ emitEvent: false }));
+  }
+
   initializeForm(): void {
     this.listingForm = this.fb.group({
       title: ['', [Validators.required, Validators.maxLength(80)]],
+      titlePt: ['', [Validators.required, Validators.maxLength(80)]],
+      titleEn: ['', [Validators.maxLength(80)]],
       category: ['', Validators.required],
       subCategory: ['', Validators.required],
       listingFormat: ['best-offer', Validators.required],
@@ -423,6 +463,8 @@ export class AddListing implements OnInit, OnDestroy {
       quantity: [null],
       condition: ['', Validators.required],
       description: ['', [Validators.required, Validators.minLength(50)]],
+      descriptionPt: ['', [Validators.required, Validators.minLength(50)]],
+      descriptionEn: ['', []],
       media: this.fb.array([]),
       specifications: this.fb.array([]),
       bundleItems: this.fb.array([]),
@@ -450,6 +492,7 @@ export class AddListing implements OnInit, OnDestroy {
       }
     });
     this.updateConditionalValidators(this.listingForm.get('listingFormat')?.value || 'best-offer');
+    this.updateLangValidators();
 
     this.listingForm.get('itemMode')?.valueChanges.subscribe(mode => {
       const qtyControl = this.listingForm.get('quantity');
@@ -494,6 +537,18 @@ export class AddListing implements OnInit, OnDestroy {
       this.selectedCategory = this.categories.find(c => c.id === categoryId) || null;
       this.listingForm.patchValue({ subCategory: '' });
     });
+
+    // Keep generic `title`/`description` in sync with the primary language fields
+    // so all existing validation, preview and checklist logic continues to work.
+    const syncPrimary = () => {
+      const tab = this.primaryLangTab;
+      const t = this.listingForm.get(tab === 'pt' ? 'titlePt' : 'titleEn')?.value ?? '';
+      const d = this.listingForm.get(tab === 'pt' ? 'descriptionPt' : 'descriptionEn')?.value ?? '';
+      this.listingForm.patchValue({ title: t, description: d }, { emitEvent: false });
+    };
+    ['titlePt', 'titleEn', 'descriptionPt', 'descriptionEn'].forEach(ctrl => {
+      this.listingForm.get(ctrl)?.valueChanges.subscribe(() => syncPrimary());
+    });
   }
 
   private fileKey(file: File): string {
@@ -523,8 +578,8 @@ export class AddListing implements OnInit, OnDestroy {
   private hasDraftableContent(): boolean {
     const v = this.listingForm.getRawValue() as Record<string, unknown>;
     const text = (s: unknown) => (typeof s === 'string' ? s.trim() : '');
-    if (text(v['title'])) return true;
-    if (text(v['description'])) return true;
+    if (text(v['titlePt']) || text(v['titleEn'])) return true;
+    if (text(v['descriptionPt']) || text(v['descriptionEn'])) return true;
     if (text(v['category'])) return true;
     if (text(v['subCategory'])) return true;
     if (v['startingBid'] != null && v['startingBid'] !== '') return true;
@@ -632,6 +687,7 @@ export class AddListing implements OnInit, OnDestroy {
       const patch: Record<string, unknown> = {};
       const keys = [
         'title', 'category', 'subCategory', 'listingFormat', 'itemMode', 'quantity', 'condition', 'description',
+        'titlePt', 'titleEn', 'descriptionPt', 'descriptionEn',
         'locationCity', 'locationCountry', 'duration', 'startingBid',
         'buyNowPrice', 'minimumAcceptPrice', 'allowPrivateRoom',
         'shippingOption', 'flatRateShipping', 'packageSize', 'shippingOriginPostalCode',
@@ -929,6 +985,10 @@ export class AddListing implements OnInit, OnDestroy {
     return this.getFeeForecastPriceBasis() * this.sellerFeeRateDecimal();
   }
 
+  estimatedBuyerProcessingFee(): number {
+    return estimateBuyerProcessingFeeEuros(this.getFeeForecastPriceBasis());
+  }
+
   async uploadImages(): Promise<string[]> {
     if (this.uploadedFiles.length === 0) return [];
     this.isUploadingImages = true;
@@ -1008,6 +1068,12 @@ export class AddListing implements OnInit, OnDestroy {
 
       const listing = await firstValueFrom(this.listingsService.createListing(formData));
 
+      this.analytics.trackEvent(AnalyticsEvents.LISTING_PUBLISHED, {
+        ...this.analytics.listingParams(listing),
+        listing_format: formData.listingFormat ?? '',
+        allow_private_room: !!formData.allowPrivateRoom,
+      });
+
       this.isSubmitting = false;
       this.errorMessage = '';
       // Mark draft as published locally before deleting — guards against a failed DELETE
@@ -1068,6 +1134,10 @@ export class AddListing implements OnInit, OnDestroy {
     return {
       title: formValue.title,
       description: formValue.description,
+      titlePt: formValue.titlePt || null,
+      titleEn: formValue.titleEn || null,
+      descriptionPt: formValue.descriptionPt || null,
+      descriptionEn: formValue.descriptionEn || null,
       category: formValue.category,
       subCategory: formValue.subCategory,
       condition: formValue.condition,
@@ -1101,7 +1171,11 @@ export class AddListing implements OnInit, OnDestroy {
       case 1:
         return ['listingFormat'];
       case 2:
-        return ['title', 'category', 'subCategory', 'condition', 'description'];
+        return [
+          this.primaryLangTab === 'pt' ? 'titlePt' : 'titleEn',
+          'category', 'subCategory', 'condition',
+          this.primaryLangTab === 'pt' ? 'descriptionPt' : 'descriptionEn',
+        ];
       case 3:
         return [];
       case 4:
@@ -1185,7 +1259,9 @@ export class AddListing implements OnInit, OnDestroy {
 
   private collectInvalidFieldLabels(): string[] {
     const keys = [
-      'title', 'category', 'subCategory', 'condition', 'description',
+      this.primaryLangTab === 'pt' ? 'titlePt' : 'titleEn',
+      'category', 'subCategory', 'condition',
+      this.primaryLangTab === 'pt' ? 'descriptionPt' : 'descriptionEn',
       'startingBid', 'duration', 'shippingOption', 'flatRateShipping',
       'packageSize', 'shippingOriginPostalCode',
       'locationCity', 'locationCountry', 'returnPolicy', 'sellerDeclaration',
@@ -1234,11 +1310,15 @@ export class AddListing implements OnInit, OnDestroy {
   getFieldLabel(fieldName: string): string {
     const keyMap: Record<string, string> = {
       title: 'addListing.listingTitle',
+      titlePt: 'addListing.titlePt',
+      titleEn: 'addListing.titleEn',
       category: 'addListing.category',
       subCategory: 'addListing.subCategory',
       listingFormat: 'addListing.listingFormat',
       condition: 'addListing.condition',
       description: 'addListing.description',
+      descriptionPt: 'addListing.descriptionPt',
+      descriptionEn: 'addListing.descriptionEn',
       locationCity: 'addListing.city',
       locationCountry: 'addListing.itemCountry',
       duration: 'addListing.duration',

@@ -30,7 +30,7 @@
             </div>
             <div class="hc-body">
               <div class="hc-cat">{{ listing.category }}{{ listing.locationCity ? ' · ' + listing.locationCity : '' }}</div>
-              <div class="hc-title">{{ listing.title }}</div>
+              <div class="hc-title">{{ listingTitle(listing) }}</div>
               <div class="hc-row">
                 <div>
                   <div class="hc-bid-l">{{ listing.auctionFormat === 'best-offer' ? ('landing.home.listing.highestOffer' | translate) : ('landing.home.listing.currentBid' | translate) }}</div>
@@ -129,7 +129,7 @@
             </div>
             <div class="lc-body">
               <div class="lc-cat">{{ listing.category }}{{ listing.subCategory ? ' · ' + listing.subCategory : '' }}</div>
-              <div class="lc-title">{{ listing.title }}</div>
+              <div class="lc-title">{{ listingTitle(listing) }}</div>
               <div class="lc-foot">
                 <div>
                   <div class="lc-pl">{{ listing.auctionFormat === 'best-offer' ? ('landing.home.listing.highestOffer' | translate) : ('landing.home.listing.currentBid' | translate) }}</div>

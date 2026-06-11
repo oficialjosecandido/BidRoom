@@ -2,29 +2,10 @@
   min-width: 0;
 }
 
-.section-header {
+.section-meta {
   display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 16px;
-  flex-wrap: wrap;
-}
-
-.section-title {
-  font-size: 18px;
-  font-weight: 500;
-  letter-spacing: -.02em;
-  color: var(--text);
-  margin: 0 0 4px;
-}
-
-.section-sub {
-  font-size: 13px;
-  font-weight: 300;
-  color: var(--sub);
-  margin: 0;
-  line-height: 1.45;
+  justify-content: flex-end;
+  margin-bottom: 12px;
 }
 
 .listing-count {
@@ -71,7 +52,7 @@
   }
 
   .error-message {
-    color: #c53030;
+    color: var(--red);
     font-size: 14px;
   }
 
@@ -211,15 +192,15 @@
       letter-spacing: .04em;
 
       &.badge-active {
-        background: rgba(74, 155, 111, 0.12);
-        color: var(--green, #4a9b6f);
-        border: 1px solid rgba(74, 155, 111, 0.25);
+        background: var(--gb2);
+        color: var(--green);
+        border: 1px solid var(--gl2);
       }
 
       &.badge-ended {
-        background: rgba(197, 48, 48, 0.08);
-        color: #c53030;
-        border: 1px solid rgba(197, 48, 48, 0.2);
+        background: var(--rb);
+        color: var(--red);
+        border: 1px solid var(--al);
       }
 
       &.badge-cancelled {
@@ -239,9 +220,9 @@
   .auction-price {
     text-align: right;
     padding: 10px 16px;
-    background: var(--s2);
+    background: var(--gb);
     border-radius: 10px;
-    border: 1px solid var(--line);
+    border: 1px solid var(--gl);
     flex-shrink: 0;
 
     .price-label {
@@ -338,18 +319,22 @@
         letter-spacing: .04em;
 
         &.status-active {
-          background: rgba(74, 155, 111, 0.12);
-          color: var(--green, #4a9b6f);
+          background: var(--gb2);
+          color: var(--green);
+          border: 1px solid var(--gl2);
         }
 
-        &.status-eligible {
+        &.status-eligible,
+        &.status-invited {
           background: var(--gb);
           color: var(--gold);
+          border: 1px solid var(--gl);
         }
 
         &.status-ended {
-          background: rgba(197, 48, 48, 0.08);
-          color: #c53030;
+          background: var(--rb);
+          color: var(--red);
+          border: 1px solid var(--al);
         }
       }
     }
@@ -374,9 +359,9 @@
   }
 }
 
-.platinum-bidders-section { margin-top: 14px; }
+.invited-bidders-section { margin-top: 14px; }
 
-.platinum-section-header {
+.invited-section-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -393,7 +378,7 @@
     align-items: center;
     gap: 6px;
 
-    .platinum-count {
+    .invited-count {
       font-weight: 400;
       color: var(--sub);
       font-size: 14px;
@@ -401,7 +386,7 @@
   }
 }
 
-.platinum-status-summary {
+.invited-status-summary {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
@@ -417,19 +402,19 @@
     border: 1px solid var(--line);
     background: var(--s1);
 
-    &.accepted { color: var(--green, #4a9b6f); }
+    &.accepted { color: var(--green); }
     &.pending { color: var(--gold); }
-    &.declined { color: #c53030; }
+    &.declined { color: var(--red); }
   }
 }
 
-.platinum-bidders-list {
+.invited-bidders-list {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
   gap: 12px;
 }
 
-.platinum-bidder-item {
+.invited-bidder-item {
   background: var(--s1);
   border-radius: 10px;
   padding: 14px;
@@ -438,7 +423,7 @@
   gap: 10px;
   align-items: flex-start;
 
-  &.status-accepted { border-color: rgba(74, 155, 111, 0.35); }
+  &.status-accepted { border-color: var(--gl2); }
   &.status-pending { border-color: var(--gl); }
   &.status-declined { opacity: .75; }
 
@@ -483,9 +468,9 @@
         font-size: 10px;
         font-weight: 600;
 
-        &.badge-accepted { background: rgba(74, 155, 111, 0.12); color: var(--green, #4a9b6f); }
+        &.badge-accepted { background: var(--gb2); color: var(--green); }
         &.badge-pending { background: var(--gb); color: var(--gold); }
-        &.badge-declined { background: rgba(197, 48, 48, 0.08); color: #c53030; }
+        &.badge-declined { background: var(--rb); color: var(--red); }
       }
     }
 
@@ -519,9 +504,9 @@
 }
 
 .auto-relist-badge {
-  color: var(--green, #4a9b6f);
-  border-color: rgba(74, 155, 111, 0.25);
-  background: rgba(74, 155, 111, 0.08);
+  color: var(--green);
+  border-color: var(--gl2);
+  background: var(--gb2);
 }
 
 .unsold-notice {
@@ -537,7 +522,7 @@
   background: var(--s2);
 
   &.unsold-no_bids { color: var(--gold); border-color: var(--gl); background: var(--gb); }
-  &.unsold-non_payment { color: #c53030; border-color: rgba(197, 48, 48, 0.2); }
+  &.unsold-non_payment { color: var(--red); border-color: var(--al); background: var(--rb); }
 }
 
 .auction-actions {
@@ -575,8 +560,8 @@
   }
 
   .relist-btn {
-    background: var(--green, #4a9b6f);
-    color: #fff;
+    background: var(--green);
+    color: var(--bg);
   }
 }
 
@@ -772,13 +757,13 @@
 }
 
 .relist-error {
-  color: #c53030;
+  color: var(--red);
   font-size: 13px;
   margin: 0;
   padding: 8px 12px;
-  background: rgba(197, 48, 48, 0.08);
+  background: var(--rb);
   border-radius: 8px;
-  border: 1px solid rgba(197, 48, 48, 0.2);
+  border: 1px solid var(--al);
 }
 
 .relist-modal-footer {

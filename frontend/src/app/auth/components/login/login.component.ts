@@ -7,6 +7,8 @@ import { AuthService } from '../../services/auth.service';
 import { UserRolesService } from '../../../shared/services/user-roles.service';
 import { ThemeService } from '../../../shared/services/theme.service';
 import { BidroomLogoComponent } from '../../../shared/components/bidroom-logo/bidroom-logo.component';
+import { AnalyticsService } from '../../../shared/services/analytics.service';
+import { AnalyticsEvents } from '../../../shared/services/analytics.events';
 
 @Component({
   selector: 'app-login',
@@ -23,6 +25,7 @@ export class LoginComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private translate = inject(TranslateService);
   private themeService = inject(ThemeService);
+  private analytics = inject(AnalyticsService);
 
   readonly isLight = computed(() => this.themeService.effective() === 'light');
 
@@ -56,6 +59,7 @@ export class LoginComponent implements OnInit {
 
       this.authService.login(this.loginForm.value.email, this.loginForm.value.password).subscribe({
         next: () => {
+          this.analytics.trackEvent(AnalyticsEvents.LOGIN, { method: 'email' });
           this.isLoading = false;
           this.routeAfterLogin();
         },
@@ -73,6 +77,7 @@ export class LoginComponent implements OnInit {
     this.errorMessage = '';
     this.authService.loginWithGoogle().subscribe({
       next: () => {
+        this.analytics.trackEvent(AnalyticsEvents.LOGIN, { method: 'google' });
         this.isLoading = false;
         this.routeAfterLogin();
       },

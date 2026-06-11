@@ -286,12 +286,26 @@ router.post('/', optionalAuth, requireActiveAccountIfAuthenticated, requireNoDis
     const isPrivateRoom = listing.privateRoomStatus === 'active' || listing.privateRoomStatus === 'eligible' || listing.privateRoomStatus === 'invited';
 
     if (isPrivateRoom) {
-      // Room not started yet: invitees have 15 min to accept, then room starts automatically
+      // Room not started yet — but check if the acceptance window has already expired.
+      // If so, auto-start inline (covers the gap before the scheduler next runs).
       if (listing.privateRoomStatus === 'invited') {
-        return res.status(400).json({
-          error: 'Room not started',
-          message: 'The private room has not started yet. It will start automatically after the 15 minute acceptance window.'
-        });
+        const deadlinePassed = listing.platinumBidderAcceptanceDeadline && now > new Date(listing.platinumBidderAcceptanceDeadline);
+        const acceptedCount = (listing.platinumBidderInvitations || []).filter(inv => inv.status === 'accepted').length;
+        if (deadlinePassed && acceptedCount > 0) {
+          // Transition to active so the bid can proceed
+          const PRIVATE_ROOM_EXTEND_MS = 60 * 1000;
+          listing.privateRoomStatus = 'active';
+          if (!listing.privateRoomActivatedAt) listing.privateRoomActivatedAt = now;
+          if (!listing.privateRoomEndDate) {
+            listing.privateRoomEndDate = new Date(now.getTime() + PRIVATE_ROOM_EXTEND_MS);
+          }
+          // Fall through to normal active-room bid logic
+        } else {
+          return res.status(400).json({
+            error: 'Room not started',
+            message: 'The private room has not started yet. It will start automatically after the 15 minute acceptance window.'
+          });
+        }
       }
 
       // Private Room logic: check if still active/eligible

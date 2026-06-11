@@ -108,8 +108,12 @@ export class DashboardHomeComponent implements OnInit, OnDestroy {
   balanceModalError: string | null = null;
 
   readonly minBalanceAmount = 5;
-  /** Display scale for buyer/seller review averages (matches settings). */
-  readonly reviewScoreMax = 10;
+  /** Review averages use the same 1–5 star scale as transaction reviews. */
+  readonly reviewScoreMax = 5;
+
+  reviewScorePercent(score: number): number {
+    return Math.min(100, Math.max(0, (score / this.reviewScoreMax) * 100));
+  }
   topups: TopupRecord[] = [];
 
   readonly membershipTiers = [

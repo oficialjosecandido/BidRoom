@@ -45,15 +45,40 @@
   margin: 0;
 }
 
+.rep-score-main {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+  min-width: 72px;
+}
+
 .rep-number {
   font-family: 'DM Mono', monospace;
   font-size: 28px;
   font-weight: 500;
   line-height: 1;
-  flex-shrink: 0;
 
-  &--buyer { color: var(--gold); }
-  &--seller { color: var(--green, #4a9b6f); }
+  &--buyer,
+  &--seller {
+    color: var(--gold, #c9a84c);
+  }
+}
+
+.rep-stars {
+  display: flex;
+  gap: 2px;
+  line-height: 1;
+}
+
+.rep-star {
+  font-size: 12px;
+  color: var(--line, #d8d8de);
+
+  &.filled {
+    color: var(--gold, #c9a84c);
+  }
 }
 
 .rep-bar-wrap { flex: 1; }
@@ -71,12 +96,9 @@
   border-radius: 3px;
   transition: width 0.6s cubic-bezier(.25, .46, .45, .94);
 
-  &--buyer {
-    background: linear-gradient(90deg, var(--gold) 0%, var(--green, #4a9b6f) 100%);
-  }
-
+  &--buyer,
   &--seller {
-    background: var(--green, #4a9b6f);
+    background: linear-gradient(90deg, var(--gold, #c9a84c) 0%, #e8d49a 100%);
   }
 }
 

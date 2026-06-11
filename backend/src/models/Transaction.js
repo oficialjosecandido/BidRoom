@@ -100,11 +100,6 @@ const transactionSchema = new mongoose.Schema({
    */
   shippingMidpointWarningSentAt: { type: Date, default: null },
   /**
-   * Last time the buyer used "Remind seller to ship".
-   * The endpoint enforces a 24-hour cooldown between reminders.
-   */
-  buyerRemindSellerShipAt: { type: Date, default: null },
-  /**
    * Populated by the scheduler when the order is auto-cancelled for
    * non-shipment. Distinguishes auto-cancels from other cancel reasons.
    */
@@ -172,6 +167,11 @@ const transactionSchema = new mongoose.Schema({
   completedAt: {
     type: Date,
     default: null
+  },
+  /** Review reminder milestones already sent ('24h' | '48h' | '7d'). Prevents duplicates. */
+  reviewRemindersSent: {
+    type: [String],
+    default: []
   },
   trackingNumber: {
     type: String,

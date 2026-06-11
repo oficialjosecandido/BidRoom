@@ -31,13 +31,9 @@ router.get('/listings/:id/bidders', authenticateToken, async (req, res) => {
       return res.status(404).json({ error: 'Listing not found' });
     }
 
-    // Verify the user is the seller
-    if (listing.seller._id.toString() !== req.user.uid) {
-      // Find user by Firebase UID
-      const user = await Customer.findOne({ uid: req.user.uid });
-      if (!user || listing.seller._id.toString() !== user._id.toString()) {
-        return res.status(403).json({ error: 'Forbidden', message: 'Only the seller can view bidders' });
-      }
+    // Verify the user is the seller (compare by Firebase uid, not _id)
+    if ((listing.seller.uid || listing.seller._id?.toString()) !== req.user.uid) {
+      return res.status(403).json({ error: 'Forbidden', message: 'Only the seller can view bidders' });
     }
 
     // Get all bids for this listing (include reputation for Private Room eligibility)

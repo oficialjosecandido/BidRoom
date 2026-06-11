@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute, RouterLink } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { HeaderComponent } from '../../../shared/components/header/header.component';
+import { getLocalizedTitle } from '../../../shared/utils/listing-locale';
 import { FooterComponent } from '../../../shared/components/footer/footer.component';
 import { ListingsService, Listing, ListingsQueryParams } from '../../../shared/services/listings.service';
 import { WatchlistService } from '../../../shared/services/watchlist.service';
@@ -400,6 +401,10 @@ export class ListingListComponent implements OnInit {
     this.maxPrice = preset.max != null ? String(preset.max) : '';
     this.currentPage = 1;
     this.navigate();
+  }
+
+  listingTitle(listing: Listing): string {
+    return getLocalizedTitle(listing, this.translate.currentLang || 'pt');
   }
 
   priceChipLabel(): string {
