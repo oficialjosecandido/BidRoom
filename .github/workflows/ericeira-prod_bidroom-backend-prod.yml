@@ -58,8 +58,10 @@ jobs:
 
       - name: Deploy to Azure Web App
         run: |
+          RESOURCE_GROUP=$(az webapp show --name bidroom-backend-prod --query resourceGroup -o tsv)
           az webapp deploy \
             --name bidroom-backend-prod \
+            --resource-group "$RESOURCE_GROUP" \
             --src-path deploy.zip \
             --type zip \
             --async false
