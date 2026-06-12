@@ -23,18 +23,26 @@ export class SeoService {
     this.apply(DEFAULTS);
   }
 
+  /**
+   * Sets OG/Twitter tags for a listing page.
+   *
+   * - Title:       "BidRoom - [EN title preferred]"
+   * - Description: "[description snippet, ≤120 chars] Bid Now"
+   * - Image:       first listing image, falling back to the default OG image
+   * - URL:         backendShareUrl (OG-rich HTML for crawlers) or canonical
+   */
   setListing(listing: Listing, backendShareUrl?: string): void {
-    const image     = listing.images?.[0] || DEFAULT_OG;
     const canonical = `${BASE_URL}/listing/${listing.slug}`;
 
-    const desc = (listing.description || '').replace(/\s+/g, ' ').trim();
-    const snippet = desc.length > 120 ? `${desc.slice(0, 117)}…` : desc;
+    const rawTitle = listing.titleEn || listing.title || '';
+    const rawDesc  = (listing.descriptionEn || listing.description || '').replace(/\s+/g, ' ').trim();
+    const snippet  = rawDesc.length > 120 ? `${rawDesc.slice(0, 117)}…` : rawDesc;
 
     this.apply({
-      title:       `BidRoom - ${listing.title}`,
+      title:       `BidRoom - ${rawTitle}`,
       description: snippet ? `${snippet} Bid Now` : 'Bid Now',
       url:         backendShareUrl || canonical,
-      image,
+      image:       listing.images?.[0] || DEFAULT_OG,
     });
 
     this.setCanonical(canonical);
@@ -79,26 +87,6 @@ export class SeoService {
 
   private removeCanonical(): void {
     const link = this.doc.querySelector('link[rel="canonical"]');
-    if (link) link.setAttribute('href', BASE_URL + '/');
-  }
-
-  private formatPrice(listing: Listing): string {
-    const price = listing.currentPrice || listing.startingPrice || 0;
-    return `€${price.toLocaleString('pt-PT', { minimumFractionDigits: 0 })}`;
-  }
-
-  private formatFormat(listing: Listing): string {
-    if (listing.auctionFormat === 'best-offer') return 'Melhor Proposta.';
-    return 'Leilão em tempo real.';
-  }
-
-  private formatTime(listing: Listing): string {
-    if (!listing.endDate) return '';
-    const ms   = new Date(listing.endDate).getTime() - Date.now();
-    if (ms <= 0) return 'Encerrado.';
-    const h    = Math.floor(ms / 3_600_000);
-    if (h < 24) return `${h}h restantes.`;
-    const d    = Math.floor(h / 24);
-    return `${d} dias restantes.`;
+    if (link) link.remove();
   }
 }
