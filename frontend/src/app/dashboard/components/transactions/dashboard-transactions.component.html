@@ -388,21 +388,21 @@
                             <span>{{ 'transactions.payWithCard' | translate }}</span>
                           </label>
                         }
-                        @if (t.listing?.acceptedPaymentMethods?.inPerson && t.seller?.sellerPaymentConfig?.inPerson) {
+                        @if (t.listing.acceptedPaymentMethods?.inPerson && t.seller.sellerPaymentConfig?.inPerson) {
                           <label class="pm-option" [class.pm-selected]="getSelectedMethod(t) === 'in_person'">
                             <input type="radio" [name]="'pm_' + t._id" value="in_person" (change)="setPaymentMethod(t, 'in_person')" [checked]="getSelectedMethod(t) === 'in_person'">
                             <span class="pm-icon">🤝</span>
                             <span>{{ 'transactions.payInPerson' | translate }}</span>
                           </label>
                         }
-                        @if (t.listing?.acceptedPaymentMethods?.bankTransfer && t.seller?.sellerPaymentConfig?.bankTransfer?.enabled) {
+                        @if (t.listing.acceptedPaymentMethods?.bankTransfer && t.seller.sellerPaymentConfig?.bankTransfer?.enabled) {
                           <label class="pm-option" [class.pm-selected]="getSelectedMethod(t) === 'bank_transfer'">
                             <input type="radio" [name]="'pm_' + t._id" value="bank_transfer" (change)="setPaymentMethod(t, 'bank_transfer')" [checked]="getSelectedMethod(t) === 'bank_transfer'">
                             <span class="pm-icon">🏦</span>
                             <span>{{ 'transactions.payBankTransfer' | translate }}</span>
                           </label>
                         }
-                        @if (t.listing?.acceptedPaymentMethods?.mbway && t.seller?.sellerPaymentConfig?.mbway?.enabled) {
+                        @if (t.listing.acceptedPaymentMethods?.mbway && t.seller.sellerPaymentConfig?.mbway?.enabled) {
                           <label class="pm-option" [class.pm-selected]="getSelectedMethod(t) === 'mbway'">
                             <input type="radio" [name]="'pm_' + t._id" value="mbway" (change)="setPaymentMethod(t, 'mbway')" [checked]="getSelectedMethod(t) === 'mbway'">
                             <span class="pm-icon">📱</span>
@@ -421,7 +421,7 @@
                     }
 
                     <!-- Bank transfer details -->
-                    @if (getSelectedMethod(t) === 'bank_transfer' && t.seller?.sellerPaymentConfig?.bankTransfer?.enabled) {
+                    @if (getSelectedMethod(t) === 'bank_transfer' && t.seller.sellerPaymentConfig?.bankTransfer?.enabled) {
                       <div class="manual-payment-details">
                         <p class="manual-pay-instructions">{{ 'transactions.bankTransferInstructions' | translate }}</p>
                         <div class="manual-pay-fields">
@@ -447,7 +447,7 @@
                     }
 
                     <!-- MBWay details -->
-                    @if (getSelectedMethod(t) === 'mbway' && t.seller?.sellerPaymentConfig?.mbway?.enabled) {
+                    @if (getSelectedMethod(t) === 'mbway' && t.seller.sellerPaymentConfig?.mbway?.enabled) {
                       <div class="manual-payment-details">
                         <p class="manual-pay-instructions">{{ 'transactions.mbwayInstructions' | translate }}</p>
                         <div class="manual-pay-fields">
