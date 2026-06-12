@@ -1116,7 +1116,8 @@ router.post('/', authenticateToken, requireActiveAccount, requireNoDisputeRestri
       titlePt,
       titleEn,
       descriptionPt,
-      descriptionEn
+      descriptionEn,
+      acceptedPaymentMethods
     } = req.body;
 
     // Validate required fields
@@ -1325,6 +1326,12 @@ router.post('/', authenticateToken, requireActiveAccount, requireNoDisputeRestri
       shippingOriginCountry: shippingOption === 'calculated' ? (shippingOriginCountry || 'US') : null,
       handlingTime: 5,
       returnPolicy,
+      acceptedPaymentMethods: {
+        stripe: acceptedPaymentMethods?.stripe !== false,
+        inPerson: acceptedPaymentMethods?.inPerson === true || user.sellerPaymentConfig?.inPerson === true,
+        bankTransfer: acceptedPaymentMethods?.bankTransfer === true || user.sellerPaymentConfig?.bankTransfer?.enabled === true,
+        mbway: acceptedPaymentMethods?.mbway === true || user.sellerPaymentConfig?.mbway?.enabled === true,
+      },
       specifications: specifications || [],
       images: Array.isArray(images) && images.length > 0 ? images : ['https://via.placeholder.com/400x300?text=No+Image'],
       itemMode: ['bundle', 'multi_quantity'].includes(itemMode) ? itemMode : 'single',

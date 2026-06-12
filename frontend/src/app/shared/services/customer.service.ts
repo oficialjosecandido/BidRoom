@@ -49,6 +49,19 @@ export interface DsaWarningInfo {
   listingRestricted: boolean;
 }
 
+export interface SellerPaymentConfig {
+  inPerson?: boolean;
+  bankTransfer?: {
+    enabled?: boolean;
+    iban?: string | null;
+    accountName?: string | null;
+  };
+  mbway?: {
+    enabled?: boolean;
+    phone?: string | null;
+  };
+}
+
 export interface CustomerInfo {
   user: CustomerUser;
   balance: number;
@@ -94,6 +107,14 @@ export class CustomerService {
 
   respondToDsaWarning(response: 'remain_private' | 'switch_professional'): Observable<{ ok: boolean; response: string }> {
     return this.http.post<{ ok: boolean; response: string }>(`${this.apiUrl}/dsa-warning-response`, { response });
+  }
+
+  getPaymentConfig(): Observable<{ paymentConfig: SellerPaymentConfig }> {
+    return this.http.get<{ paymentConfig: SellerPaymentConfig }>(`${this.apiUrl}/payment-config`);
+  }
+
+  updatePaymentConfig(config: SellerPaymentConfig): Observable<{ paymentConfig: SellerPaymentConfig }> {
+    return this.http.put<{ paymentConfig: SellerPaymentConfig }>(`${this.apiUrl}/payment-config`, config);
   }
 
   updateSellerCompliance(payload: Record<string, unknown>): Observable<{

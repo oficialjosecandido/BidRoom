@@ -776,6 +776,16 @@ router.post('/create-checkout-session', requireActiveAccount, async (req, res) =
     // Buyer total: item + shipping + Stripe fee estimate
     const buyerTotalCents = itemCents + shippingCents + stripeFeeEstimateCents;
 
+    // Stripe payments are not available above €10,000
+    const STRIPE_LIMIT_CENTS = 1_000_000;
+    if (buyerTotalCents > STRIPE_LIMIT_CENTS) {
+      return res.status(400).json({
+        error: 'stripe_limit_exceeded',
+        message: 'Pagamentos via Stripe não estão disponíveis para valores acima de €10.000. Por favor, utiliza um método de pagamento alternativo.',
+        limitAmount: 10000
+      });
+    }
+
     // Seller receives: item - BidRoom fee + shipping
     const sellerTransferCents = itemCents - bidRoomFeeCents + shippingCents;
 

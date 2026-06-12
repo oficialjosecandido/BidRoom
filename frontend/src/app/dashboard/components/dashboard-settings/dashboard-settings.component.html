@@ -402,6 +402,81 @@
     </div>
     </div>
 
+    <!-- Row 2b: Seller alternative payment methods -->
+    <div class="settings-row settings-row--single">
+    <div class="settings-card">
+      <div class="card-header">
+        <span class="card-icon">💸</span>
+        <h2 class="card-title">{{ 'dashboard.settings.sellerPaymentConfig.title' | translate }}</h2>
+      </div>
+      <div class="card-body">
+        <p class="card-desc">{{ 'dashboard.settings.sellerPaymentConfig.desc' | translate }}</p>
+
+        <!-- In-Person -->
+        <div class="spc-toggle-row">
+          <label class="spc-toggle">
+            <input type="checkbox" [(ngModel)]="sellerPmInPerson" name="spcInPerson">
+            <span class="spc-toggle-label">{{ 'dashboard.settings.sellerPaymentConfig.inPerson' | translate }}</span>
+          </label>
+          <span class="spc-toggle-desc">{{ 'dashboard.settings.sellerPaymentConfig.inPersonDesc' | translate }}</span>
+        </div>
+
+        <!-- Bank Transfer -->
+        <div class="spc-toggle-row">
+          <label class="spc-toggle">
+            <input type="checkbox" [(ngModel)]="sellerPmBankEnabled" name="spcBankEnabled">
+            <span class="spc-toggle-label">{{ 'dashboard.settings.sellerPaymentConfig.bankTransfer' | translate }}</span>
+          </label>
+          <span class="spc-toggle-desc">{{ 'dashboard.settings.sellerPaymentConfig.bankTransferDesc' | translate }}</span>
+        </div>
+        @if (sellerPmBankEnabled) {
+          <div class="spc-sub-fields">
+            <div class="form-field">
+              <label>IBAN</label>
+              <input type="text" [(ngModel)]="sellerPmBankIban" name="spcIban"
+                placeholder="PT50 0000 0000 0000 0000 0000 0" class="field-input" />
+            </div>
+            <div class="form-field">
+              <label>{{ 'dashboard.settings.sellerPaymentConfig.accountName' | translate }}</label>
+              <input type="text" [(ngModel)]="sellerPmBankName" name="spcBankName"
+                placeholder="{{ 'dashboard.settings.sellerPaymentConfig.accountNamePlaceholder' | translate }}" class="field-input" />
+            </div>
+          </div>
+        }
+
+        <!-- MBWay -->
+        <div class="spc-toggle-row">
+          <label class="spc-toggle">
+            <input type="checkbox" [(ngModel)]="sellerPmMbwayEnabled" name="spcMbwayEnabled">
+            <span class="spc-toggle-label">{{ 'dashboard.settings.sellerPaymentConfig.mbway' | translate }}</span>
+          </label>
+          <span class="spc-toggle-desc">{{ 'dashboard.settings.sellerPaymentConfig.mbwayDesc' | translate }}</span>
+        </div>
+        @if (sellerPmMbwayEnabled) {
+          <div class="spc-sub-fields">
+            <div class="form-field">
+              <label>{{ 'dashboard.settings.sellerPaymentConfig.phone' | translate }}</label>
+              <input type="tel" [(ngModel)]="sellerPmMbwayPhone" name="spcMbwayPhone"
+                placeholder="+351 9XX XXX XXX" class="field-input" />
+            </div>
+          </div>
+        }
+
+        @if (paymentConfigError) {
+          <p class="form-error">{{ paymentConfigError }}</p>
+        }
+
+        <button type="button" class="btn-save" (click)="savePaymentConfig()" [disabled]="savingPaymentConfig">
+          @if (paymentConfigSaved) {
+            {{ 'dashboard.settings.saved' | translate }}
+          } @else {
+            {{ savingPaymentConfig ? ('dashboard.settings.saving' | translate) : ('dashboard.settings.save' | translate) }}
+          }
+        </button>
+      </div>
+    </div>
+    </div>
+
     <!-- Row 3: Language, Appearance, Notifications -->
     <div class="settings-row settings-row--triple">
     <!-- Language Preference -->

@@ -67,6 +67,11 @@ export class DashboardTransactionsComponent implements OnInit {
   /** Transaction ID currently confirming Stripe payment on return */
   stripeConfirmingTxId: string | null = null;
   stripePaymentError: string | null = null;
+  /** Selected payment method per transaction (local, before submitting) */
+  selectedPaymentMethodMap: Record<string, 'stripe' | 'in_person' | 'bank_transfer' | 'mbway'> = {};
+  /** Transaction ID currently submitting manual payment */
+  manualPaymentSendingId: string | null = null;
+  manualPaymentError: string | null = null;
   /** Proof of delivery (seller): uploaded URL and file name per transaction. */
   deliveryProofUploadedUrlByTxId: Record<string, string> = {};
   deliveryProofFileNameByTxId: Record<string, string> = {};
@@ -272,6 +277,7 @@ export class DashboardTransactionsComponent implements OnInit {
     const labels: Record<TransactionStatus, string> = {
       pending_payment: 'Pending payment',
       awaiting_seller_acceptance: 'Awaiting seller acceptance',
+      manual_payment_sent: 'Payment sent',
       paid: 'Paid',
       shipped: 'Shipped',
       delivered: 'Delivered',
@@ -294,6 +300,7 @@ export class DashboardTransactionsComponent implements OnInit {
       awaiting_seller_acceptance: this.hasVerifiedPayment(t)
         ? this.translate.instant('transactions.buyingStatus.paid')
         : this.translate.instant('transactions.buyingStatus.paymentSubmitted'),
+      manual_payment_sent: this.translate.instant('transactions.buyingStatus.paymentSubmitted'),
       paid: 'Paid',
       shipped: 'Paid',
       delivered: 'Received',
@@ -316,6 +323,7 @@ export class DashboardTransactionsComponent implements OnInit {
       awaiting_seller_acceptance: this.hasVerifiedPayment(t)
         ? this.translate.instant('transactions.sellingStatus.pendingShipment')
         : this.translate.instant('transactions.sellingStatus.pendingAcceptance'),
+      manual_payment_sent: this.translate.instant('transactions.sellingStatus.pendingAcceptance'),
       paid: this.translate.instant('transactions.sellingStatus.paymentReceived'),
       shipped: 'Sent',
       delivered: 'Sent',
@@ -335,6 +343,7 @@ export class DashboardTransactionsComponent implements OnInit {
     const map: Record<TransactionStatus, string> = {
       pending_payment: 'status-pending',
       awaiting_seller_acceptance: 'status-paid',
+      manual_payment_sent: 'status-paid',
       paid: 'status-paid',
       shipped: 'status-paid',
       delivered: 'status-delivered',
@@ -354,6 +363,7 @@ export class DashboardTransactionsComponent implements OnInit {
     const map: Record<TransactionStatus, string> = {
       pending_payment: 'status-pending',
       awaiting_seller_acceptance: this.hasVerifiedPayment(t) ? 'status-paid' : 'status-pending',
+      manual_payment_sent: 'status-pending',
       paid: 'status-paid',
       shipped: 'status-shipped',
       delivered: 'status-shipped',
@@ -368,6 +378,7 @@ export class DashboardTransactionsComponent implements OnInit {
     const classes: Record<TransactionStatus, string> = {
       pending_payment: 'status-pending',
       awaiting_seller_acceptance: 'status-pending',
+      manual_payment_sent: 'status-pending',
       paid: 'status-paid',
       shipped: 'status-shipped',
       delivered: 'status-delivered',
@@ -423,6 +434,10 @@ export class DashboardTransactionsComponent implements OnInit {
   /** Pay via Stripe: create checkout session and redirect */
   payWithStripe(t: Transaction): void {
     if (this.stripePayingTxId || t.role !== 'buyer' || this.getEffectiveStatus(t) !== 'pending_payment') return;
+    if (!this.isStripeAvailable(t)) {
+      this.stripePaymentError = this.translate.instant('transactions.stripeNotAvailable');
+      return;
+    }
     if (this.needsShippingRate(t)) {
       this.openShippingPanel(t);
       return;
@@ -441,7 +456,9 @@ export class DashboardTransactionsComponent implements OnInit {
           this.confirmStripePayment(body.sessionId, t._id);
           return;
         }
-        if (apiError === 'Seller not ready') {
+        if (apiError === 'stripe_limit_exceeded') {
+          this.stripePaymentError = body?.message || this.translate.instant('transactions.stripeNotAvailable');
+        } else if (apiError === 'Seller not ready') {
           this.stripePaymentError = `Payment unavailable: the seller has not connected their Stripe account yet. ` +
             `Please contact the seller (${t.seller?.firstName} ${t.seller?.lastName}) or wait for them to complete their payment setup.`;
         } else {
@@ -449,6 +466,53 @@ export class DashboardTransactionsComponent implements OnInit {
         }
       }
     });
+  }
+
+  /** Returns true if the transaction has any non-Stripe payment methods available */
+  hasManualPaymentMethods(t: Transaction): boolean {
+    const cfg = t.seller?.sellerPaymentConfig;
+    const apm = t.listing?.acceptedPaymentMethods;
+    if (!cfg || !apm) return false;
+    return !!(
+      (apm.inPerson && cfg.inPerson === true) ||
+      (apm.bankTransfer && cfg.bankTransfer?.enabled === true) ||
+      (apm.mbway && cfg.mbway?.enabled === true)
+    );
+  }
+
+  /** Stripe is available if amount is at or below €10,000 */
+  isStripeAvailable(t: Transaction): boolean {
+    return t.amount <= 10000;
+  }
+
+  getSelectedMethod(t: Transaction): 'stripe' | 'in_person' | 'bank_transfer' | 'mbway' {
+    if (this.selectedPaymentMethodMap[t._id]) return this.selectedPaymentMethodMap[t._id];
+    return this.isStripeAvailable(t) ? 'stripe' : 'in_person';
+  }
+
+  setPaymentMethod(t: Transaction, method: 'stripe' | 'in_person' | 'bank_transfer' | 'mbway'): void {
+    this.selectedPaymentMethodMap[t._id] = method;
+    this.manualPaymentError = null;
+    this.stripePaymentError = null;
+  }
+
+  markManualPaymentSent(t: Transaction, method: 'in_person' | 'bank_transfer' | 'mbway'): void {
+    if (this.manualPaymentSendingId || t.role !== 'buyer' || this.getEffectiveStatus(t) !== 'pending_payment') return;
+    this.manualPaymentSendingId = t._id;
+    this.manualPaymentError = null;
+    this.transactionsService
+      .updateTransaction(t._id, { status: 'manual_payment_sent', paymentMethod: method })
+      .subscribe({
+        next: (updated) => {
+          this.replaceTransaction({ ...updated, role: 'buyer' });
+          this.manualPaymentSendingId = null;
+          successToast.fire({ title: this.translate.instant('transactions.manualPaymentSentConfirmation') });
+        },
+        error: (err) => {
+          this.manualPaymentSendingId = null;
+          this.manualPaymentError = err?.error?.message || this.translate.instant('transactions.manualPaymentError');
+        }
+      });
   }
 
   confirmStripePayment(sessionId: string, transactionId: string): void {

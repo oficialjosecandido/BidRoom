@@ -1892,3 +1892,130 @@
     color: #fff;
   }
 }
+
+// ── Alternative payment methods ──────────────────────────────────────────────
+
+.payment-method-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--sub, #666);
+  margin: 0 0 8px;
+}
+
+.payment-method-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.pm-option {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: 1.5px solid var(--line, rgba(0,0,0,.1));
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  background: var(--s1, #f9f9f9);
+  transition: border-color .15s, background .15s;
+
+  input[type="radio"] { display: none; }
+
+  .pm-icon { font-size: 16px; }
+
+  &.pm-selected {
+    border-color: var(--gold, #c9a84c);
+    background: var(--gb, rgba(201,168,76,.06));
+    color: var(--text, #222);
+  }
+
+  &:hover:not(.pm-selected) {
+    border-color: rgba(201,168,76,.4);
+  }
+}
+
+.manual-payment-details {
+  padding: 14px;
+  background: var(--s1, #f8f8f8);
+  border: 1px solid var(--line, rgba(0,0,0,.08));
+  border-radius: 10px;
+  margin-top: 4px;
+}
+
+.manual-pay-instructions {
+  font-size: 13px;
+  color: var(--sub, #666);
+  margin: 0 0 12px;
+}
+
+.manual-pay-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+.manual-pay-row {
+  display: flex;
+  gap: 8px;
+  font-size: 13px;
+
+  .manual-pay-label {
+    color: var(--sub, #888);
+    min-width: 90px;
+    flex-shrink: 0;
+  }
+
+  .manual-pay-value {
+    font-weight: 600;
+    font-family: monospace;
+    word-break: break-all;
+
+    &.gold { color: var(--gold, #c9a84c); font-family: inherit; }
+  }
+}
+
+.btn-manual-pay {
+  background: var(--green, #2d7d52);
+  color: #fff;
+  border: none;
+  border-radius: 100px;
+  padding: 10px 22px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity .15s;
+
+  &:hover:not(:disabled) { opacity: .88; }
+  &:disabled { opacity: .5; cursor: not-allowed; }
+}
+
+.payment-error-msg {
+  font-size: 13px;
+  color: var(--err, #c25a5a);
+  margin: 8px 0 0;
+}
+
+.manual-payment-sent-notice {
+  background: rgba(74, 155, 111, 0.08);
+  border: 1px solid rgba(74, 155, 111, 0.2);
+  border-radius: 8px;
+  padding: 12px 14px;
+  margin-top: 8px;
+}
+
+.manual-sent-title {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--green, #2d7d52);
+  margin: 0 0 4px;
+}
+
+.manual-sent-body {
+  font-size: 12.5px;
+  color: var(--sub, #666);
+  margin: 0;
+}

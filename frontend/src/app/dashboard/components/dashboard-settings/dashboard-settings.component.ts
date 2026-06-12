@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { AuthService, AppUser } from '../../../auth/services/auth.service';
-import { CustomerService, SellerCompliance } from '../../../shared/services/customer.service';
+import { CustomerService, SellerCompliance, SellerPaymentConfig } from '../../../shared/services/customer.service';
 import { ThemePreference, ThemeService } from '../../../shared/services/theme.service';
 import { StripeConnectService, ConnectAccountStatus, OnboardingFormData } from '../../../shared/services/stripe-connect.service';
 import { NotificationPreferencesService, NotificationPreferences, NOTIFICATION_EVENT_KEYS, DEFAULT_CHANNEL_PREF } from '../../../shared/services/notification-preferences.service';
@@ -122,6 +122,17 @@ export class DashboardSettingsComponent implements OnInit, OnDestroy {
   private stripeElements: StripeElements | null = null;
   private cardElement: StripeCardElement | null = null;
 
+  // ── Seller alternative payment config ──────────────────────────────────────
+  sellerPmInPerson = false;
+  sellerPmBankEnabled = false;
+  sellerPmBankIban = '';
+  sellerPmBankName = '';
+  sellerPmMbwayEnabled = false;
+  sellerPmMbwayPhone = '';
+  savingPaymentConfig = false;
+  paymentConfigSaved = false;
+  paymentConfigError: string | null = null;
+
   readonly notifEventKeys = NOTIFICATION_EVENT_KEYS;
   notifPrefs: NotificationPreferences | null = null;
   notifPrefsLoading = false;
@@ -169,6 +180,7 @@ export class DashboardSettingsComponent implements OnInit, OnDestroy {
     this.loadNotifPrefs();
     this.loadPaymentMethod();
     this.loadSellerListingCount();
+    this.loadPaymentConfig();
   }
 
   /** Has listed at least one item (active or ended), same rule as dashboard home. */
@@ -188,6 +200,50 @@ export class DashboardSettingsComponent implements OnInit, OnDestroy {
           (l) => l.status === 'ended' || l.status === 'cancelled' || (l.status === 'active' && new Date(l.endDate) <= now)
         ).length;
         this.sellerListingCount = active + ended;
+      }
+    });
+  }
+
+  private loadPaymentConfig(): void {
+    this.customerService.getPaymentConfig().subscribe({
+      next: (res) => {
+        const cfg = res.paymentConfig ?? {};
+        this.sellerPmInPerson = cfg.inPerson ?? false;
+        this.sellerPmBankEnabled = cfg.bankTransfer?.enabled ?? false;
+        this.sellerPmBankIban = cfg.bankTransfer?.iban ?? '';
+        this.sellerPmBankName = cfg.bankTransfer?.accountName ?? '';
+        this.sellerPmMbwayEnabled = cfg.mbway?.enabled ?? false;
+        this.sellerPmMbwayPhone = cfg.mbway?.phone ?? '';
+      },
+      error: () => {}
+    });
+  }
+
+  savePaymentConfig(): void {
+    this.savingPaymentConfig = true;
+    this.paymentConfigSaved = false;
+    this.paymentConfigError = null;
+    const config: SellerPaymentConfig = {
+      inPerson: this.sellerPmInPerson,
+      bankTransfer: {
+        enabled: this.sellerPmBankEnabled,
+        iban: this.sellerPmBankIban.trim() || null,
+        accountName: this.sellerPmBankName.trim() || null,
+      },
+      mbway: {
+        enabled: this.sellerPmMbwayEnabled,
+        phone: this.sellerPmMbwayPhone.trim() || null,
+      }
+    };
+    this.customerService.updatePaymentConfig(config).subscribe({
+      next: () => {
+        this.savingPaymentConfig = false;
+        this.paymentConfigSaved = true;
+        setTimeout(() => (this.paymentConfigSaved = false), 3000);
+      },
+      error: () => {
+        this.savingPaymentConfig = false;
+        this.paymentConfigError = this.translate.instant('dashboard.settings.sellerPaymentConfig.saveError');
       }
     });
   }

@@ -8,7 +8,7 @@ import { debounceTime, filter, switchMap, tap } from 'rxjs/operators';
 import Swal from 'sweetalert2';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { ListingsService } from '../../../shared/services/listings.service';
-import { CustomerService, CustomerInfo } from '../../../shared/services/customer.service';
+import { CustomerService, CustomerInfo, SellerPaymentConfig } from '../../../shared/services/customer.service';
 import { KycService, KYC_THRESHOLD } from '../../../shared/services/kyc.service';
 import { estimateBuyerProcessingFeeEuros } from '../../../shared/utils/fees';
 import { API_CONFIG } from '../../../shared/config/api.config';
@@ -70,6 +70,7 @@ export class AddListing implements OnInit, OnDestroy {
   isLoadingCustomer = true;
   isStripeConnected = false;
   customerLoadError = false;
+  sellerPaymentConfig: SellerPaymentConfig = {};
 
   uploadedFiles: File[] = [];
   uploadedFileUrls: string[] = [];
@@ -438,6 +439,17 @@ export class AddListing implements OnInit, OnDestroy {
         this.customerLoadError = true;
       }
     });
+    this.customerService.getPaymentConfig().subscribe({
+      next: (res) => {
+        this.sellerPaymentConfig = res.paymentConfig ?? {};
+        this.listingForm.patchValue({
+          acceptPayInPerson: this.sellerPaymentConfig.inPerson ?? false,
+          acceptPayBankTransfer: this.sellerPaymentConfig.bankTransfer?.enabled ?? false,
+          acceptPayMbway: this.sellerPaymentConfig.mbway?.enabled ?? false,
+        });
+      },
+      error: () => {}
+    });
   }
 
   setLangTab(lang: 'pt' | 'en'): void {
@@ -496,6 +508,10 @@ export class AddListing implements OnInit, OnDestroy {
       shippingOriginCity: [''],
       shippingOriginCountry: ['PT'],
       returnPolicy: ['14-days', Validators.required],
+      acceptPayStripe: [true],
+      acceptPayInPerson: [false],
+      acceptPayBankTransfer: [false],
+      acceptPayMbway: [false],
       sellerDeclaration: [false, Validators.requiredTrue]
     }, { validators: buyNowAboveStartingBid() });
 
@@ -521,6 +537,8 @@ export class AddListing implements OnInit, OnDestroy {
         while (this.bundleItems.length) this.bundleItems.removeAt(0);
       }
     });
+
+    this.listingForm.get('acceptPayStripe')?.disable();
 
     this.listingForm.get('shippingOption')?.valueChanges.subscribe(option => {
       const flatRateControl    = this.listingForm.get('flatRateShipping');
@@ -1172,6 +1190,12 @@ export class AddListing implements OnInit, OnDestroy {
       shippingOriginCity: formValue.shippingOption === 'calculated' ? formValue.shippingOriginCity : null,
       shippingOriginCountry: formValue.shippingOption === 'calculated' ? (formValue.shippingOriginCountry || 'PT') : null,
       returnPolicy: formValue.returnPolicy,
+      acceptedPaymentMethods: {
+        stripe: formValue.acceptPayStripe !== false,
+        inPerson: formValue.acceptPayInPerson === true,
+        bankTransfer: formValue.acceptPayBankTransfer === true,
+        mbway: formValue.acceptPayMbway === true,
+      },
       specifications: formValue.specifications || [],
       itemMode: formValue.itemMode || 'single',
       quantity: formValue.itemMode === 'multi_quantity' ? (formValue.quantity || 2) : 1,

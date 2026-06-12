@@ -7,12 +7,26 @@ import { API_CONFIG } from '../config/api.config';
 export type TransactionStatus =
   | 'pending_payment'
   | 'awaiting_seller_acceptance'
+  | 'manual_payment_sent'
   | 'paid'
   | 'shipped'
   | 'delivered'
   | 'under_dispute'
   | 'completed'
   | 'cancelled';
+
+export interface SellerPaymentConfig {
+  inPerson?: boolean;
+  bankTransfer?: {
+    enabled?: boolean;
+    iban?: string | null;
+    accountName?: string | null;
+  };
+  mbway?: {
+    enabled?: boolean;
+    phone?: string | null;
+  };
+}
 
 export interface TransactionListing {
   _id: string;
@@ -36,6 +50,13 @@ export interface TransactionListing {
   allowPrivateRoom?: boolean;
   /** Return policy: 30-days | 14-days | 7-days | no-returns */
   returnPolicy?: string | null;
+  /** Payment methods accepted for this listing */
+  acceptedPaymentMethods?: {
+    stripe?: boolean;
+    inPerson?: boolean;
+    bankTransfer?: boolean;
+    mbway?: boolean;
+  } | null;
 }
 
 export interface TransactionUser {
@@ -43,6 +64,7 @@ export interface TransactionUser {
   firstName: string;
   lastName: string;
   email: string;
+  sellerPaymentConfig?: SellerPaymentConfig | null;
 }
 
 export interface Transaction {
@@ -151,6 +173,8 @@ export interface Transaction {
   createdAt: string;
   updatedAt: string;
   role?: 'seller' | 'buyer';
+  /** Payment method chosen by buyer */
+  paymentMethod?: 'stripe' | 'in_person' | 'bank_transfer' | 'mbway' | null;
 }
 
 export interface TransactionsResponse {
@@ -262,6 +286,7 @@ export class TransactionsService {
     id: string,
     body: {
       status?: TransactionStatus | 'accept_payment';
+      paymentMethod?: 'in_person' | 'bank_transfer' | 'mbway';
       trackingNumber?: string;
       trackingCarrier?: string;
       estimatedDeliveryDays?: number;

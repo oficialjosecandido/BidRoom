@@ -1117,6 +1117,20 @@ async function notifyReviewReminder({ buyerId, sellerId, listingTitle, transacti
   }
 }
 
+async function notifySellerManualPaymentSent({ sellerId, buyerName, listingTitle, method, io }) {
+  const methodLabels = {
+    in_person: 'em mão',
+    bank_transfer: 'transferência bancária',
+    mbway: 'MBWay',
+  };
+  const methodLabel = methodLabels[method] || method;
+  const title = 'Pagamento enviado pelo comprador';
+  const message = `${buyerName} marcou o pagamento de "${listingTitle}" como enviado via ${methodLabel}. Confirma quando receberes o pagamento.`;
+  const link = '/dashboard/buyer?tab=transactions';
+  await createNotification({ userId: sellerId, title, message, type: 'transaction', link });
+  if (io) emitNewNotificationToUser(io, sellerId).catch(() => {});
+}
+
 async function notifyPayoutSetupReminder({ sellerId, io }) {
   const title   = 'Configura a conta de pagamentos';
   const message = 'Tens anúncios ativos mas ainda não configuraste a tua conta bancária. Configura-a para receberes o pagamento das tuas vendas.';
@@ -1186,5 +1200,6 @@ module.exports = {
   emitNewNotificationToUser,
   notifyDsaWarning,
   notifyDsaSuspectedProfessional,
-  notifyPayoutSetupReminder
+  notifyPayoutSetupReminder,
+  notifySellerManualPaymentSent
 };
