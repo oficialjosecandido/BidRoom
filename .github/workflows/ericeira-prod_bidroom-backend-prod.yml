@@ -58,7 +58,8 @@ jobs:
 
       - name: Deploy to Azure Web App
         run: |
-          RESOURCE_GROUP=$(az webapp show --name bidroom-backend-prod --query resourceGroup -o tsv)
+          RESOURCE_GROUP=$(az webapp list --query "[?name=='bidroom-backend-prod'].resourceGroup | [0]" -o tsv)
+          echo "Deploying to resource group: $RESOURCE_GROUP"
           az webapp deploy \
             --name bidroom-backend-prod \
             --resource-group "$RESOURCE_GROUP" \
