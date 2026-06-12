@@ -566,6 +566,65 @@
       </div>
     </div>
 
+    <!-- ── STEP 5b: Payment methods ──────────────────────────────────────── -->
+    <div class="step-panel" [class.active]="currentStep === 5">
+      <div class="section">
+        <div class="section-title">{{ 'addListing.step5.paymentMethods' | translate }}</div>
+        <p class="field-hint">{{ 'addListing.step5.paymentMethodsHint' | translate }}</p>
+
+        <div class="pm-check-list">
+          <label class="pm-check-item pm-check-stripe">
+            <input type="checkbox" formControlName="acceptPayStripe">
+            <span class="pm-check-icon">💳</span>
+            <div class="pm-check-info">
+              <span class="pm-check-label">Stripe ({{ 'addListing.step5.pmStripeLabel' | translate }})</span>
+              <span class="pm-check-sub">{{ 'addListing.step5.pmStripeDesc' | translate }}</span>
+            </div>
+          </label>
+
+          @if (sellerPaymentConfig.inPerson) {
+            <label class="pm-check-item">
+              <input type="checkbox" formControlName="acceptPayInPerson">
+              <span class="pm-check-icon">🤝</span>
+              <div class="pm-check-info">
+                <span class="pm-check-label">{{ 'addListing.step5.pmInPerson' | translate }}</span>
+                <span class="pm-check-sub">{{ 'addListing.step5.pmInPersonDesc' | translate }}</span>
+              </div>
+            </label>
+          }
+
+          @if (sellerPaymentConfig.bankTransfer?.enabled && sellerPaymentConfig.bankTransfer?.iban) {
+            <label class="pm-check-item">
+              <input type="checkbox" formControlName="acceptPayBankTransfer">
+              <span class="pm-check-icon">🏦</span>
+              <div class="pm-check-info">
+                <span class="pm-check-label">{{ 'addListing.step5.pmBankTransfer' | translate }}</span>
+                <span class="pm-check-sub">{{ sellerPaymentConfig.bankTransfer?.iban }}</span>
+              </div>
+            </label>
+          }
+
+          @if (sellerPaymentConfig.mbway?.enabled && sellerPaymentConfig.mbway?.phone) {
+            <label class="pm-check-item">
+              <input type="checkbox" formControlName="acceptPayMbway">
+              <span class="pm-check-icon">📱</span>
+              <div class="pm-check-info">
+                <span class="pm-check-label">{{ 'addListing.step5.pmMbway' | translate }}</span>
+                <span class="pm-check-sub">{{ sellerPaymentConfig.mbway?.phone }}</span>
+              </div>
+            </label>
+          }
+
+          @if (!sellerPaymentConfig.inPerson && !sellerPaymentConfig.bankTransfer?.enabled && !sellerPaymentConfig.mbway?.enabled) {
+            <p class="pm-no-methods-hint">
+              {{ 'addListing.step5.pmNoConfig' | translate }}
+              <a routerLink="/dashboard/settings" [queryParams]="{tab: 'payments'}">{{ 'addListing.step5.pmConfigureNow' | translate }}</a>
+            </p>
+          }
+        </div>
+      </div>
+    </div>
+
     <!-- ── STEP 6: Review & Publish ───────────────────────────────────────── -->
     <div class="step-panel" [class.active]="currentStep === 6">
       <div class="section">

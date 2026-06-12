@@ -349,4 +349,66 @@ router.post('/dsa-warning-response', authenticateToken, async (req, res) => {
   }
 });
 
+/**
+ * GET /api/customers/payment-config
+ * Returns the authenticated seller's payment configuration.
+ */
+router.get('/payment-config', authenticateToken, async (req, res) => {
+  try {
+    const customer = await Customer.findOne({ uid: req.user.uid }).select('sellerPaymentConfig').lean();
+    if (!customer) return res.status(404).json({ error: 'User not found' });
+    res.json({ paymentConfig: customer.sellerPaymentConfig ?? {} });
+  } catch (err) {
+    console.error('GET /payment-config error:', err);
+    res.status(500).json({ error: 'Failed to fetch payment config' });
+  }
+});
+
+/**
+ * PUT /api/customers/payment-config
+ * Updates the authenticated seller's payment configuration.
+ * Body: { inPerson, bankTransfer: { enabled, iban, accountName }, mbway: { enabled, phone } }
+ */
+router.put('/payment-config', authenticateToken, async (req, res) => {
+  try {
+    const { inPerson, bankTransfer, mbway } = req.body;
+    const $set = {};
+
+    if (typeof inPerson === 'boolean') {
+      $set['sellerPaymentConfig.inPerson'] = inPerson;
+    }
+    if (bankTransfer !== undefined && typeof bankTransfer === 'object') {
+      if (typeof bankTransfer.enabled === 'boolean') {
+        $set['sellerPaymentConfig.bankTransfer.enabled'] = bankTransfer.enabled;
+      }
+      if (typeof bankTransfer.iban === 'string') {
+        $set['sellerPaymentConfig.bankTransfer.iban'] = bankTransfer.iban.replace(/\s/g, '').toUpperCase() || null;
+      }
+      if (typeof bankTransfer.accountName === 'string') {
+        $set['sellerPaymentConfig.bankTransfer.accountName'] = bankTransfer.accountName.trim() || null;
+      }
+    }
+    if (mbway !== undefined && typeof mbway === 'object') {
+      if (typeof mbway.enabled === 'boolean') {
+        $set['sellerPaymentConfig.mbway.enabled'] = mbway.enabled;
+      }
+      if (typeof mbway.phone === 'string') {
+        $set['sellerPaymentConfig.mbway.phone'] = mbway.phone.trim() || null;
+      }
+    }
+
+    const customer = await Customer.findOneAndUpdate(
+      { uid: req.user.uid },
+      { $set },
+      { new: true }
+    ).select('sellerPaymentConfig').lean();
+
+    if (!customer) return res.status(404).json({ error: 'User not found' });
+    res.json({ paymentConfig: customer.sellerPaymentConfig });
+  } catch (err) {
+    console.error('PUT /payment-config error:', err);
+    res.status(500).json({ error: 'Failed to save payment config' });
+  }
+});
+
 module.exports = router;

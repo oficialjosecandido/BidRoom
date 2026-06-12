@@ -254,6 +254,21 @@ const customerSchema = new mongoose.Schema({
     addedAt: { type: Date, default: Date.now },
   }],
 
+  // ─── Seller alternative payment methods ──────────────────────────────────
+  /** Payment methods the seller is willing to accept (in addition to or instead of Stripe). */
+  sellerPaymentConfig: {
+    inPerson: { type: Boolean, default: false },
+    bankTransfer: {
+      enabled: { type: Boolean, default: false },
+      iban: { type: String, default: null, trim: true },
+      accountName: { type: String, default: null, trim: true },
+    },
+    mbway: {
+      enabled: { type: Boolean, default: false },
+      phone: { type: String, default: null, trim: true },
+    },
+  },
+
   // ─── DSA Article 29 compliance monitoring ────────────────────────────────
   /** When the platform first issued a DSA threshold-exceeded warning to this seller */
   dsaWarningIssuedAt: { type: Date, default: null, index: true },

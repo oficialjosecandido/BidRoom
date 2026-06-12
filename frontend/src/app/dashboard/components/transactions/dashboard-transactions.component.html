@@ -377,11 +377,116 @@
                       {{ 'transactions.chooseShippingMethod' | translate }}
                     </button>
                   } @else {
-                    <p class="stripe-pay-hint">{{ 'transactions.paySecurelyHint' | translate }}</p>
-                    <button type="button" class="btn btn-stripe-pay" (click)="payWithStripe(t)" [disabled]="stripePayingTxId === t._id">
-                      {{ stripePayingTxId === t._id ? ('transactions.redirectingToStripe' | translate) : ('transactions.payNow' | translate) }}
-                    </button>
+                    <!-- Payment method picker (shown when seller offers alternatives) -->
+                    @if (hasManualPaymentMethods(t) || !isStripeAvailable(t)) {
+                      <p class="payment-method-label">{{ 'transactions.choosePaymentMethod' | translate }}</p>
+                      <div class="payment-method-options">
+                        @if (isStripeAvailable(t)) {
+                          <label class="pm-option" [class.pm-selected]="getSelectedMethod(t) === 'stripe'">
+                            <input type="radio" [name]="'pm_' + t._id" value="stripe" (change)="setPaymentMethod(t, 'stripe')" [checked]="getSelectedMethod(t) === 'stripe'">
+                            <span class="pm-icon">💳</span>
+                            <span>{{ 'transactions.payWithCard' | translate }}</span>
+                          </label>
+                        }
+                        @if (t.listing?.acceptedPaymentMethods?.inPerson && t.seller?.sellerPaymentConfig?.inPerson) {
+                          <label class="pm-option" [class.pm-selected]="getSelectedMethod(t) === 'in_person'">
+                            <input type="radio" [name]="'pm_' + t._id" value="in_person" (change)="setPaymentMethod(t, 'in_person')" [checked]="getSelectedMethod(t) === 'in_person'">
+                            <span class="pm-icon">🤝</span>
+                            <span>{{ 'transactions.payInPerson' | translate }}</span>
+                          </label>
+                        }
+                        @if (t.listing?.acceptedPaymentMethods?.bankTransfer && t.seller?.sellerPaymentConfig?.bankTransfer?.enabled) {
+                          <label class="pm-option" [class.pm-selected]="getSelectedMethod(t) === 'bank_transfer'">
+                            <input type="radio" [name]="'pm_' + t._id" value="bank_transfer" (change)="setPaymentMethod(t, 'bank_transfer')" [checked]="getSelectedMethod(t) === 'bank_transfer'">
+                            <span class="pm-icon">🏦</span>
+                            <span>{{ 'transactions.payBankTransfer' | translate }}</span>
+                          </label>
+                        }
+                        @if (t.listing?.acceptedPaymentMethods?.mbway && t.seller?.sellerPaymentConfig?.mbway?.enabled) {
+                          <label class="pm-option" [class.pm-selected]="getSelectedMethod(t) === 'mbway'">
+                            <input type="radio" [name]="'pm_' + t._id" value="mbway" (change)="setPaymentMethod(t, 'mbway')" [checked]="getSelectedMethod(t) === 'mbway'">
+                            <span class="pm-icon">📱</span>
+                            <span>{{ 'transactions.payMbway' | translate }}</span>
+                          </label>
+                        }
+                      </div>
+                    }
+
+                    <!-- Stripe button -->
+                    @if (getSelectedMethod(t) === 'stripe') {
+                      <p class="stripe-pay-hint">{{ 'transactions.paySecurelyHint' | translate }}</p>
+                      <button type="button" class="btn btn-stripe-pay" (click)="payWithStripe(t)" [disabled]="stripePayingTxId === t._id">
+                        {{ stripePayingTxId === t._id ? ('transactions.redirectingToStripe' | translate) : ('transactions.payNow' | translate) }}
+                      </button>
+                    }
+
+                    <!-- Bank transfer details -->
+                    @if (getSelectedMethod(t) === 'bank_transfer' && t.seller?.sellerPaymentConfig?.bankTransfer?.enabled) {
+                      <div class="manual-payment-details">
+                        <p class="manual-pay-instructions">{{ 'transactions.bankTransferInstructions' | translate }}</p>
+                        <div class="manual-pay-fields">
+                          <div class="manual-pay-row">
+                            <span class="manual-pay-label">IBAN</span>
+                            <span class="manual-pay-value">{{ t.seller.sellerPaymentConfig!.bankTransfer!.iban }}</span>
+                          </div>
+                          @if (t.seller.sellerPaymentConfig!.bankTransfer!.accountName) {
+                            <div class="manual-pay-row">
+                              <span class="manual-pay-label">{{ 'transactions.accountName' | translate }}</span>
+                              <span class="manual-pay-value">{{ t.seller.sellerPaymentConfig!.bankTransfer!.accountName }}</span>
+                            </div>
+                          }
+                          <div class="manual-pay-row">
+                            <span class="manual-pay-label">{{ 'transactions.amountLabel' | translate }}</span>
+                            <span class="manual-pay-value gold">{{ formatPrice(t.amount) }}</span>
+                          </div>
+                        </div>
+                        <button type="button" class="btn btn-manual-pay" (click)="markManualPaymentSent(t, 'bank_transfer')" [disabled]="manualPaymentSendingId === t._id">
+                          {{ manualPaymentSendingId === t._id ? ('transactions.sending' | translate) : ('transactions.iHaveSentPayment' | translate) }}
+                        </button>
+                      </div>
+                    }
+
+                    <!-- MBWay details -->
+                    @if (getSelectedMethod(t) === 'mbway' && t.seller?.sellerPaymentConfig?.mbway?.enabled) {
+                      <div class="manual-payment-details">
+                        <p class="manual-pay-instructions">{{ 'transactions.mbwayInstructions' | translate }}</p>
+                        <div class="manual-pay-fields">
+                          <div class="manual-pay-row">
+                            <span class="manual-pay-label">{{ 'transactions.phoneLabel' | translate }}</span>
+                            <span class="manual-pay-value">{{ t.seller.sellerPaymentConfig!.mbway!.phone }}</span>
+                          </div>
+                          <div class="manual-pay-row">
+                            <span class="manual-pay-label">{{ 'transactions.amountLabel' | translate }}</span>
+                            <span class="manual-pay-value gold">{{ formatPrice(t.amount) }}</span>
+                          </div>
+                        </div>
+                        <button type="button" class="btn btn-manual-pay" (click)="markManualPaymentSent(t, 'mbway')" [disabled]="manualPaymentSendingId === t._id">
+                          {{ manualPaymentSendingId === t._id ? ('transactions.sending' | translate) : ('transactions.iHaveSentPayment' | translate) }}
+                        </button>
+                      </div>
+                    }
+
+                    <!-- In-person payment -->
+                    @if (getSelectedMethod(t) === 'in_person') {
+                      <div class="manual-payment-details">
+                        <p class="manual-pay-instructions">{{ 'transactions.inPersonInstructions' | translate }}</p>
+                        <button type="button" class="btn btn-manual-pay" (click)="markManualPaymentSent(t, 'in_person')" [disabled]="manualPaymentSendingId === t._id">
+                          {{ manualPaymentSendingId === t._id ? ('transactions.sending' | translate) : ('transactions.iHaveArrangedPayment' | translate) }}
+                        </button>
+                      </div>
+                    }
+
+                    @if (manualPaymentError) {
+                      <p class="payment-error-msg">{{ manualPaymentError }}</p>
+                    }
                   }
+                </div>
+              }
+              <!-- Manual payment sent — waiting for seller confirmation -->
+              @if (isBuyer(t) && getEffectiveStatus(t) === 'awaiting_seller_acceptance' && !isStripePaid(t)) {
+                <div class="manual-payment-sent-notice">
+                  <p class="manual-sent-title">{{ 'transactions.manualPaymentSentTitle' | translate }}</p>
+                  <p class="manual-sent-body">{{ 'transactions.manualPaymentSentBody' | translate }}</p>
                 </div>
               }
               @if (isStripePaid(t) && ['awaiting_seller_acceptance', 'paid'].includes(getEffectiveStatus(t))) {

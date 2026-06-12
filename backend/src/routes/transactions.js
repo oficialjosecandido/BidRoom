@@ -13,6 +13,7 @@ const {
   notifyBuyerConfirmedReceipt,
   notifyBuyerSellerAccepted,
   notifyReviewPrompt,
+  notifySellerManualPaymentSent,
   emitNewNotificationToUser
 } = require('../services/notificationService');
 const { ensureShippingDeadlinesFromPaidAt } = require('../services/shippingDeadlines');
@@ -112,8 +113,8 @@ router.get('/', async (req, res) => {
 
     const [transactions, total] = await Promise.all([
       Transaction.find(filter)
-        .populate('listing', 'title slug images status commissionRate shippingCost shippingOption auctionFormat allowPrivateRoom returnPolicy')
-        .populate('seller', 'firstName lastName')
+        .populate('listing', 'title slug images status commissionRate shippingCost shippingOption auctionFormat allowPrivateRoom returnPolicy acceptedPaymentMethods')
+        .populate('seller', 'firstName lastName sellerPaymentConfig')
         .populate('buyer', 'firstName lastName')
         .sort({ updatedAt: -1 })
         .skip(skip)
@@ -158,8 +159,8 @@ router.get('/:id', async (req, res) => {
     }
 
     const transaction = await Transaction.findById(req.params.id)
-      .populate('listing', 'title slug images status commissionRate shippingCost shippingOption auctionFormat allowPrivateRoom returnPolicy')
-      .populate('seller', 'firstName lastName')
+      .populate('listing', 'title slug images status commissionRate shippingCost shippingOption auctionFormat allowPrivateRoom returnPolicy acceptedPaymentMethods')
+      .populate('seller', 'firstName lastName sellerPaymentConfig')
       .populate('buyer', 'firstName lastName')
       .lean();
 
@@ -288,8 +289,8 @@ router.post('/:id/open-dispute', async (req, res) => {
     }
 
     const updated = await Transaction.findById(transaction._id)
-      .populate('listing', 'title slug images status commissionRate shippingCost shippingOption auctionFormat allowPrivateRoom returnPolicy')
-      .populate('seller', 'firstName lastName')
+      .populate('listing', 'title slug images status commissionRate shippingCost shippingOption auctionFormat allowPrivateRoom returnPolicy acceptedPaymentMethods')
+      .populate('seller', 'firstName lastName sellerPaymentConfig')
       .populate('buyer', 'firstName lastName')
       .lean();
 
@@ -355,8 +356,8 @@ router.patch('/:id/dispute/counter-evidence', async (req, res) => {
     }
 
     const updated = await Transaction.findById(transaction._id)
-      .populate('listing', 'title slug images status commissionRate shippingCost shippingOption auctionFormat allowPrivateRoom returnPolicy')
-      .populate('seller', 'firstName lastName')
+      .populate('listing', 'title slug images status commissionRate shippingCost shippingOption auctionFormat allowPrivateRoom returnPolicy acceptedPaymentMethods')
+      .populate('seller', 'firstName lastName sellerPaymentConfig')
       .populate('buyer', 'firstName lastName')
       .lean();
 
@@ -552,7 +553,30 @@ router.patch('/:id', requireActiveAccount, async (req, res) => {
     }
 
     if (isBuyer) {
-      if (status === 'delivered' && ts === 'shipped') {
+      if (status === 'manual_payment_sent' && ts === 'pending_payment') {
+        const allowedMethods = ['in_person', 'bank_transfer', 'mbway'];
+        const method = req.body.paymentMethod;
+        if (!allowedMethods.includes(method)) {
+          return res.status(400).json({ error: 'Invalid payment method', message: 'paymentMethod must be in_person, bank_transfer, or mbway' });
+        }
+        transaction.paymentMethod = method;
+        transaction.transactionStatus = 'awaiting_seller_acceptance';
+        transaction.paymentAcceptanceDeadline = new Date(Date.now() + 5 * 24 * 60 * 60 * 1000);
+        const sellerUserId = transaction.seller?.toString?.();
+        if (sellerUserId) {
+          const listing = await Listing.findById(transaction.listing).select('title').lean();
+          const buyer = await Customer.findById(transaction.buyer).select('firstName lastName').lean();
+          const buyerName = buyer ? `${buyer.firstName || ''} ${buyer.lastName || ''}`.trim() : 'The buyer';
+          const io = req.app.get('io');
+          notifySellerManualPaymentSent({
+            sellerId: sellerUserId,
+            buyerName,
+            listingTitle: listing?.title || 'the item',
+            method,
+            io
+          }).catch(err => console.error('Failed to create manual payment notification:', err));
+        }
+      } else if (status === 'delivered' && ts === 'shipped') {
         transaction.transactionStatus = 'delivered';
         transaction.sendingStatus = 'delivered';
         transaction.deliveredAt = transaction.deliveredAt || new Date();
@@ -595,8 +619,8 @@ router.patch('/:id', requireActiveAccount, async (req, res) => {
     await transaction.save();
 
     const updated = await Transaction.findById(transaction._id)
-      .populate('listing', 'title slug images status commissionRate shippingCost shippingOption auctionFormat allowPrivateRoom returnPolicy')
-      .populate('seller', 'firstName lastName')
+      .populate('listing', 'title slug images status commissionRate shippingCost shippingOption auctionFormat allowPrivateRoom returnPolicy acceptedPaymentMethods')
+      .populate('seller', 'firstName lastName sellerPaymentConfig')
       .populate('buyer', 'firstName lastName')
       .lean();
 
@@ -728,8 +752,8 @@ router.post('/:id/request-return', requireActiveAccount, async (req, res) => {
     }
 
     const updated = await Transaction.findById(transaction._id)
-      .populate('listing', 'title slug images status commissionRate shippingCost shippingOption auctionFormat allowPrivateRoom returnPolicy')
-      .populate('seller', 'firstName lastName')
+      .populate('listing', 'title slug images status commissionRate shippingCost shippingOption auctionFormat allowPrivateRoom returnPolicy acceptedPaymentMethods')
+      .populate('seller', 'firstName lastName sellerPaymentConfig')
       .populate('buyer', 'firstName lastName')
       .lean();
 

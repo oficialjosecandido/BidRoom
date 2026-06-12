@@ -172,6 +172,13 @@ const listingSchema = new mongoose.Schema({
     enum: ['30-days', '14-days', 'no-returns', 'custom'],
     required: true
   },
+  /** Payment methods the seller accepts for this listing */
+  acceptedPaymentMethods: {
+    stripe: { type: Boolean, default: true },
+    inPerson: { type: Boolean, default: false },
+    bankTransfer: { type: Boolean, default: false },
+    mbway: { type: Boolean, default: false },
+  },
   specifications: [{
     key: {
       type: String,

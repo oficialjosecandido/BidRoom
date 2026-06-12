@@ -188,6 +188,12 @@ const transactionSchema = new mongoose.Schema({
     trim: true,
     default: null
   },
+  /** Payment method the buyer used: 'stripe' | 'in_person' | 'bank_transfer' | 'mbway' */
+  paymentMethod: {
+    type: String,
+    enum: ['stripe', 'in_person', 'bank_transfer', 'mbway'],
+    default: null
+  },
   /** True when this transaction originated from a private room (affects payment window and non-payment rules) */
   isPrivateRoom: { type: Boolean, default: false, index: true },
   /** Why this transaction was cancelled (non_payment | seller_cancelled | auto_cancelled_no_shipment | ...) */
