@@ -819,8 +819,8 @@ async function notifyBuyerNonPayment({ buyerId, listingTitle, penaltyPoints, non
   const link = `/dashboard/buyer?tab=transactions`;
   const warningLevel = nonPaymentCount >= 3 ? 'ban' : nonPaymentCount === 2 ? 'final_warning' : 'warning';
   const messages = {
-    warning: `Your payment window for "${listingTitle || 'the item'}" expired. A reputation penalty of ${penaltyPoints} points has been applied.`,
-    final_warning: `Payment expired for "${listingTitle || 'the item'}". This is your 2nd non-payment. One more will result in a permanent account ban.`,
+    warning: `Your payment window for "${listingTitle || 'the item'}" expired. A ${penaltyPoints}-point reputation penalty was applied, a 2/5 BidRoom review was added to your profile, and the listing has been automatically relisted.`,
+    final_warning: `Payment expired for "${listingTitle || 'the item'}". A ${penaltyPoints}-point penalty and a 2/5 BidRoom review were applied. This is your 2nd non-payment — one more will result in a permanent account ban.`,
     ban: `Payment expired for "${listingTitle || 'the item'}". This is your 3rd non-payment. Your account has been suspended.`
   };
   await createNotification({
@@ -839,7 +839,7 @@ async function notifySellerBuyerNonPayment({ sellerId, listingTitle, listingSlug
   const link = `/listing/${listingSlug}`;
   const message = hasSecondBidder
     ? `The winning bidder for "${listingTitle}" did not pay. We've automatically offered the item to the next highest bidder.`
-    : `The winning bidder for "${listingTitle}" did not pay and there is no second bidder. You can relist the item or cancel.`;
+    : `The winning bidder for "${listingTitle}" did not pay. Your listing has been automatically relisted with the same conditions.`;
   await createNotification({
     userId: sellerId,
     title: 'Buyer did not pay',
@@ -1117,6 +1117,15 @@ async function notifyReviewReminder({ buyerId, sellerId, listingTitle, transacti
   }
 }
 
+async function notifyPayoutSetupReminder({ sellerId, io }) {
+  const title   = 'Configura a conta de pagamentos';
+  const message = 'Tens anúncios ativos mas ainda não configuraste a tua conta bancária. Configura-a para receberes o pagamento das tuas vendas.';
+  const link    = '/dashboard/settings?tab=payout';
+
+  await createNotification({ userId: sellerId, title, message, type: 'account', link });
+  if (io) emitNewNotificationToUser(io, sellerId).catch(() => {});
+}
+
 module.exports = {
   createNotification,
   shouldSendEmail,
@@ -1176,5 +1185,6 @@ module.exports = {
   notifyWatchlistersAuctionEnding,
   emitNewNotificationToUser,
   notifyDsaWarning,
-  notifyDsaSuspectedProfessional
+  notifyDsaSuspectedProfessional,
+  notifyPayoutSetupReminder
 };

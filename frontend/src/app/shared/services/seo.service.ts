@@ -25,13 +25,14 @@ export class SeoService {
 
   setListing(listing: Listing, backendShareUrl?: string): void {
     const image     = listing.images?.[0] || DEFAULT_OG;
-    const priceStr  = this.formatPrice(listing);
-    const condition = listing.condition ? ` · ${listing.condition}` : '';
     const canonical = `${BASE_URL}/listing/${listing.slug}`;
 
+    const desc = (listing.description || '').replace(/\s+/g, ' ').trim();
+    const snippet = desc.length > 120 ? `${desc.slice(0, 117)}…` : desc;
+
     this.apply({
-      title:       `${listing.title} — BidRoom`,
-      description: `${priceStr}${condition}. ${this.formatFormat(listing)} ${this.formatTime(listing)}. Compra segura com escrow BidRoom.`,
+      title:       `BidRoom - ${listing.title}`,
+      description: snippet ? `${snippet} Bid Now` : 'Bid Now',
       url:         backendShareUrl || canonical,
       image,
     });

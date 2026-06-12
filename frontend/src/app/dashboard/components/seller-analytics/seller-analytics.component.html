@@ -1,5 +1,5 @@
 <div class="analytics-wrap">
-  <div class="analytics-toolbar card">
+  <div class="analytics-toolbar analytics-card">
     <div class="toolbar-row">
       <div class="field-group presets">
         <span class="field-label">{{ 'dashboard.seller.analytics.range' | translate }}</span>
@@ -87,22 +87,22 @@
     </p>
 
     <div class="kpi-grid">
-      <article class="kpi card">
+      <article class="kpi analytics-card">
         <h3>{{ 'dashboard.seller.analytics.views' | translate }}</h3>
         <p class="kpi-num">{{ data.overview.totalViews }}</p>
         <p class="kpi-note">{{ 'dashboard.seller.analytics.viewsHint' | translate }}</p>
       </article>
-      <article class="kpi card">
+      <article class="kpi analytics-card">
         <h3>{{ 'dashboard.seller.analytics.bidsOffers' | translate }}</h3>
         <p class="kpi-num">{{ data.overview.totalBidsAndOffers }}</p>
         <p class="kpi-note">{{ 'dashboard.seller.analytics.bidsOffersHint' | translate }}</p>
       </article>
-      <article class="kpi card">
+      <article class="kpi analytics-card">
         <h3>{{ 'dashboard.seller.analytics.salesPeriod' | translate }}</h3>
         <p class="kpi-num">{{ data.overview.salesInRange }}</p>
         <p class="kpi-note">{{ 'dashboard.seller.analytics.salesPeriodHint' | translate }}</p>
       </article>
-      <article class="kpi card">
+      <article class="kpi analytics-card">
         <h3>{{ 'dashboard.seller.analytics.followers' | translate }}</h3>
         <p class="kpi-num">{{ data.overview.followersTotal }}</p>
         <p class="kpi-note">
@@ -114,7 +114,7 @@
       </article>
     </div>
 
-    <section class="card counts-section">
+    <section class="analytics-card counts-section">
       <h2>{{ 'dashboard.seller.analytics.inventory' | translate }}</h2>
       <div class="counts-row">
         <div><strong>{{ data.listingCounts.active }}</strong> {{ 'dashboard.seller.analytics.countActive' | translate }}</div>
@@ -133,7 +133,7 @@
       </div>
     </section>
 
-    <section class="card table-card">
+    <section class="analytics-card table-card">
       <div class="table-head">
         <h2>{{ 'dashboard.seller.analytics.perListing' | translate }}</h2>
       </div>

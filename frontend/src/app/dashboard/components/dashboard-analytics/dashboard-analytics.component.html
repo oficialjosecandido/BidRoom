@@ -1,0 +1,156 @@
+<div class="dashboard-analytics">
+  <div class="analytics-head">
+    <h2 class="analytics-title">{{ 'dashboard.home.analytics.title' | translate }}</h2>
+    <div class="mode-segmented">
+      <button type="button" class="mode-btn" [class.active]="mode === 'overview'" (click)="setMode('overview')">
+        {{ 'dashboard.home.analytics.modeOverview' | translate }}
+      </button>
+      <button type="button" class="mode-btn" [class.active]="mode === 'seller'" (click)="setMode('seller')">
+        {{ 'dashboard.home.analytics.modeSeller' | translate }}
+      </button>
+      <button type="button" class="mode-btn" [class.active]="mode === 'buyer'" (click)="setMode('buyer')">
+        {{ 'dashboard.home.analytics.modeBuyer' | translate }}
+      </button>
+    </div>
+  </div>
+
+  @if (mode === 'overview') {
+    <div class="overview-toolbar">
+      <div class="toolbar-row">
+        <div class="field-group presets">
+          <span class="field-label">{{ 'dashboard.home.analytics.range' | translate }}</span>
+          <div class="segmented">
+            <button type="button" class="seg-btn" [class.active]="preset === '7d'" (click)="setPreset('7d')">
+              {{ 'dashboard.home.analytics.last7d' | translate }}
+            </button>
+            <button type="button" class="seg-btn" [class.active]="preset === '30d'" (click)="setPreset('30d')">
+              {{ 'dashboard.home.analytics.last30d' | translate }}
+            </button>
+            <button type="button" class="seg-btn" [class.active]="preset === 'custom'" (click)="setPreset('custom')">
+              {{ 'dashboard.home.analytics.custom' | translate }}
+            </button>
+          </div>
+        </div>
+
+        @if (preset === 'custom') {
+          <div class="custom-dates">
+            <label class="mini-field">
+              <span>{{ 'dashboard.home.analytics.from' | translate }}</span>
+              <input type="date" [(ngModel)]="customFrom" name="from" />
+            </label>
+            <label class="mini-field">
+              <span>{{ 'dashboard.home.analytics.toOptional' | translate }}</span>
+              <input type="date" [(ngModel)]="customTo" name="to" />
+            </label>
+          </div>
+        }
+
+        <button type="button" class="apply-btn" (click)="applyOverviewFilters()">
+          {{ 'dashboard.home.analytics.apply' | translate }}
+        </button>
+      </div>
+    </div>
+
+    @if (loading && !sellerOverview) {
+      <div class="state-block">
+        <div class="spinner"></div>
+        <span>{{ 'dashboard.common.loading' | translate }}</span>
+      </div>
+    }
+
+    @if (error && !sellerOverview) {
+      <div class="state-block error">
+        <span>{{ ('dashboard.home.analytics.' + error) | translate }}</span>
+        <button type="button" class="retry" (click)="reloadOverview()">{{ 'dashboard.common.tryAgain' | translate }}</button>
+      </div>
+    }
+
+    @if (sellerOverview && buyerOverview) {
+      @if (loading) {
+        <div class="updating-chip">{{ 'dashboard.home.analytics.updating' | translate }}</div>
+      }
+
+      <p class="range-hint">
+        {{ sellerOverview.range.from | date: 'mediumDate' }} — {{ sellerOverview.range.to | date: 'mediumDate' }}
+      </p>
+
+      <div class="blend-grid">
+        <section class="blend-panel">
+          <div class="blend-panel-head">
+            <h3>{{ 'dashboard.home.analytics.sellingTitle' | translate }}</h3>
+            <button type="button" class="detail-link" (click)="setMode('seller')">
+              {{ 'dashboard.home.analytics.viewDetails' | translate }} →
+            </button>
+          </div>
+          <div class="blend-kpis">
+            <div class="blend-kpi">
+              <span class="blend-kpi-label">{{ 'dashboard.seller.analytics.views' | translate }}</span>
+              <span class="blend-kpi-value">{{ sellerOverview.overview.totalViews }}</span>
+            </div>
+            <div class="blend-kpi">
+              <span class="blend-kpi-label">{{ 'dashboard.seller.analytics.bidsOffers' | translate }}</span>
+              <span class="blend-kpi-value">{{ sellerOverview.overview.totalBidsAndOffers }}</span>
+            </div>
+            <div class="blend-kpi">
+              <span class="blend-kpi-label">{{ 'dashboard.seller.analytics.salesPeriod' | translate }}</span>
+              <span class="blend-kpi-value">{{ sellerOverview.overview.salesInRange }}</span>
+            </div>
+            <div class="blend-kpi">
+              <span class="blend-kpi-label">{{ 'dashboard.seller.analytics.followers' | translate }}</span>
+              <span class="blend-kpi-value">{{ sellerOverview.overview.followersTotal }}</span>
+            </div>
+          </div>
+          <div class="blend-meta">
+            <span><strong>{{ sellerOverview.listingCounts.active }}</strong> {{ 'dashboard.seller.analytics.countActive' | translate }}</span>
+            <span><strong>{{ sellerOverview.listingCounts.sold }}</strong> {{ 'dashboard.seller.analytics.countSoldEver' | translate }}</span>
+            @if (sellerOverview.overview.conversionPercent !== null) {
+              <span class="blend-highlight">{{ sellerOverview.overview.conversionPercent }}% {{ 'dashboard.seller.analytics.conversionTitle' | translate }}</span>
+            }
+          </div>
+        </section>
+
+        <section class="blend-panel">
+          <div class="blend-panel-head">
+            <h3>{{ 'dashboard.home.analytics.buyingTitle' | translate }}</h3>
+            <button type="button" class="detail-link" (click)="setMode('buyer')">
+              {{ 'dashboard.home.analytics.viewDetails' | translate }} →
+            </button>
+          </div>
+          <div class="blend-kpis">
+            <div class="blend-kpi">
+              <span class="blend-kpi-label">{{ 'dashboard.buyer.analytics.bidsPlaced' | translate }}</span>
+              <span class="blend-kpi-value">{{ buyerOverview.overview.totalBidsInRange }}</span>
+            </div>
+            <div class="blend-kpi">
+              <span class="blend-kpi-label">{{ 'dashboard.buyer.analytics.offersMade' | translate }}</span>
+              <span class="blend-kpi-value">{{ buyerOverview.overview.totalOffersInRange }}</span>
+            </div>
+            <div class="blend-kpi">
+              <span class="blend-kpi-label">{{ 'dashboard.buyer.analytics.purchases' | translate }}</span>
+              <span class="blend-kpi-value">{{ buyerOverview.overview.purchasesInRange }}</span>
+            </div>
+            <div class="blend-kpi">
+              <span class="blend-kpi-label">{{ 'dashboard.buyer.analytics.totalSpent' | translate }}</span>
+              <span class="blend-kpi-value">{{ formatMoney(buyerOverview.overview.totalSpentInRange) }}</span>
+            </div>
+          </div>
+          <div class="blend-meta">
+            <span><strong>{{ buyerOverview.activityCounts.active }}</strong> {{ 'dashboard.buyer.analytics.countActive' | translate }}</span>
+            <span><strong>{{ buyerOverview.overview.watchlistTotal }}</strong> {{ 'dashboard.buyer.analytics.watchlist' | translate }}</span>
+            @if (buyerOverview.overview.winRatePercent !== null) {
+              <span class="blend-highlight">{{ buyerOverview.overview.winRatePercent }}% {{ 'dashboard.buyer.analytics.winRate' | translate }}</span>
+            }
+          </div>
+        </section>
+      </div>
+    }
+  }
+
+  @if (mode === 'seller') {
+    <app-seller-analytics />
+  }
+
+  @if (mode === 'buyer') {
+    <app-buyer-analytics />
+  }
+</div>

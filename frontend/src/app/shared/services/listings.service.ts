@@ -217,6 +217,53 @@ export interface SellerAnalyticsQueryParams {
   listingId?: string;
 }
 
+export interface BuyerAnalyticsListingRow {
+  listingId: string;
+  title: string;
+  slug: string;
+  status: string;
+  category: string;
+  auctionFormat: string;
+  bidsInRange: number;
+  offersInRange: number;
+  eventsInRange: number;
+  myHighestBid: number | null;
+  myHighestOffer: number | null;
+  outcome: string;
+  purchased: boolean;
+  purchaseInRange: boolean;
+}
+
+export interface BuyerAnalyticsResponse {
+  preset: string;
+  range: { from: string; to: string };
+  filters: { category: string | null; interaction: string };
+  overview: {
+    totalBidsInRange: number;
+    totalOffersInRange: number;
+    purchasesInRange: number;
+    totalSpentInRange: number;
+    watchlistTotal: number;
+    watchlistAddedInRange: number;
+    winRatePercent: number | null;
+  };
+  activityCounts: {
+    active: number;
+    won: number;
+    lost: number;
+    pendingPayment: number;
+  };
+  listings: BuyerAnalyticsListingRow[];
+}
+
+export interface BuyerAnalyticsQueryParams {
+  preset?: '7d' | '30d' | 'custom';
+  from?: string;
+  to?: string;
+  category?: string;
+  interaction?: 'all' | 'bid' | 'offer';
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -289,6 +336,16 @@ export class ListingsService {
     if (params.category) httpParams = httpParams.set('category', params.category);
     if (params.listingId) httpParams = httpParams.set('listingId', params.listingId);
     return this.http.get<SellerAnalyticsResponse>(`${this.apiUrl}/seller/analytics`, { params: httpParams });
+  }
+
+  getBuyerAnalytics(params: BuyerAnalyticsQueryParams): Observable<BuyerAnalyticsResponse> {
+    let httpParams = new HttpParams();
+    if (params.preset) httpParams = httpParams.set('preset', params.preset);
+    if (params.from) httpParams = httpParams.set('from', params.from);
+    if (params.to) httpParams = httpParams.set('to', params.to);
+    if (params.category) httpParams = httpParams.set('category', params.category);
+    if (params.interaction) httpParams = httpParams.set('interaction', params.interaction);
+    return this.http.get<BuyerAnalyticsResponse>(`${this.apiUrl}/bidder/analytics`, { params: httpParams });
   }
 
   /** Listings where the current user has placed at least one bid (bidder view) */

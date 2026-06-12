@@ -53,6 +53,7 @@ const shippingDeadlineScheduler = require('./services/shippingDeadlineScheduler'
 const deliveryAutoReleaseScheduler = require('./services/deliveryAutoReleaseScheduler');
 const reviewAutoGenerateScheduler = require('./services/reviewAutoGenerateScheduler');
 const { startReviewReminderScheduler } = require('./services/reviewReminderScheduler');
+const { startPayoutSetupReminderScheduler } = require('./services/payoutSetupReminderScheduler');
 const dsaComplianceScheduler = require('./services/dsaComplianceScheduler');
 const { runCleanup: runProofOfPaymentCleanup } = require('./services/proofOfPaymentCleanup');
 const { runImagePurge } = require('./services/imagePurgeScheduler');
@@ -267,8 +268,9 @@ app.use('/api/damage-claims', generalLimiter, damageClaimsRoutes);
 app.use('/api/kyc', generalLimiter, kycRoutes);
 
 // Share pages — no auth, no rate limit beyond express defaults
-// URL: /share/listing/:slug → OG HTML page for social bots, JS redirect for browsers
-// URL: /share/og-default.png → BidRoom brand PNG for OG image fallback
+// /api/share/* — same-origin URLs via Azure SWA linked API (WhatsApp OG crawlers)
+// /share/*      — direct backend access (local dev / direct App Service)
+app.use('/api/share', shareRoutes);
 app.use('/share', shareRoutes);
 
 app.get('/', (req, res) => {
@@ -500,6 +502,7 @@ const startServer = async () => {
       deliveryAutoReleaseScheduler.startDeliveryAutoReleaseScheduler(15, io);
       reviewAutoGenerateScheduler.startReviewAutoGenerateScheduler(6, io);
       startReviewReminderScheduler(30, io);
+      startPayoutSetupReminderScheduler(24, io);
       dsaComplianceScheduler.startDsaComplianceScheduler(24, io);
       logger.info('Schedulers started', {
         auctionEnd: '1m',

@@ -1,0 +1,195 @@
+<div class="analytics-wrap">
+  <div class="analytics-toolbar analytics-card">
+    <div class="toolbar-row">
+      <div class="field-group presets">
+        <span class="field-label">{{ 'dashboard.buyer.analytics.range' | translate }}</span>
+        <div class="segmented">
+          <button type="button" class="seg-btn" [class.active]="preset === '7d'" (click)="setPreset('7d')">
+            {{ 'dashboard.buyer.analytics.last7d' | translate }}
+          </button>
+          <button type="button" class="seg-btn" [class.active]="preset === '30d'" (click)="setPreset('30d')">
+            {{ 'dashboard.buyer.analytics.last30d' | translate }}
+          </button>
+          <button type="button" class="seg-btn" [class.active]="preset === 'custom'" (click)="setPreset('custom')">
+            {{ 'dashboard.buyer.analytics.custom' | translate }}
+          </button>
+        </div>
+      </div>
+
+      @if (preset === 'custom') {
+        <div class="custom-dates">
+          <label class="mini-field">
+            <span>{{ 'dashboard.buyer.analytics.from' | translate }}</span>
+            <input type="date" [(ngModel)]="customFrom" name="from" />
+          </label>
+          <label class="mini-field">
+            <span>{{ 'dashboard.buyer.analytics.toOptional' | translate }}</span>
+            <input type="date" [(ngModel)]="customTo" name="to" />
+          </label>
+        </div>
+      }
+    </div>
+
+    <div class="toolbar-row filters-row">
+      <label class="field-group">
+        <span class="field-label">{{ 'dashboard.buyer.analytics.filterCategory' | translate }}</span>
+        <select class="control" [(ngModel)]="categoryFilter" name="cat">
+          <option value="">{{ 'dashboard.buyer.analytics.allCategories' | translate }}</option>
+          <option value="electronics">{{ 'listing.categories.electronics' | translate }}</option>
+          <option value="home-garden">{{ 'listing.categories.home-garden' | translate }}</option>
+          <option value="art">{{ 'listing.categories.art' | translate }}</option>
+          <option value="collectibles">{{ 'listing.categories.collectibles' | translate }}</option>
+          <option value="jewelry">{{ 'listing.categories.jewelry' | translate }}</option>
+        </select>
+      </label>
+
+      <label class="field-group grow">
+        <span class="field-label">{{ 'dashboard.buyer.analytics.filterInteraction' | translate }}</span>
+        <select class="control" [(ngModel)]="interactionFilter" name="interaction">
+          <option value="all">{{ 'dashboard.buyer.analytics.allInteractions' | translate }}</option>
+          <option value="bid">{{ 'dashboard.buyer.analytics.bidsOnly' | translate }}</option>
+          <option value="offer">{{ 'dashboard.buyer.analytics.offersOnly' | translate }}</option>
+        </select>
+      </label>
+
+      <button type="button" class="apply-btn" (click)="applyFilters()">
+        {{ 'dashboard.buyer.analytics.apply' | translate }}
+      </button>
+    </div>
+  </div>
+
+  @if (loading && !data) {
+    <div class="state-block">
+      <div class="spinner"></div>
+      <span>{{ 'dashboard.common.loading' | translate }}</span>
+    </div>
+  }
+
+  @if (error && !data) {
+    <div class="state-block error">
+      <span>{{ ('dashboard.buyer.analytics.' + error) | translate }}</span>
+      <button type="button" class="retry" (click)="reload()">{{ 'dashboard.common.tryAgain' | translate }}</button>
+    </div>
+  }
+
+  @if (data) {
+    @if (loading) {
+      <div class="updating-chip">{{ 'dashboard.buyer.analytics.updating' | translate }}</div>
+    }
+
+    @if (error) {
+      <div class="soft-error">{{ ('dashboard.buyer.analytics.' + error) | translate }}</div>
+    }
+
+    <p class="range-hint">
+      {{ data.range.from | date: 'mediumDate' }} — {{ data.range.to | date: 'mediumDate' }}
+    </p>
+
+    <div class="kpi-grid">
+      <article class="kpi analytics-card">
+        <h3>{{ 'dashboard.buyer.analytics.bidsPlaced' | translate }}</h3>
+        <p class="kpi-num">{{ data.overview.totalBidsInRange }}</p>
+        <p class="kpi-note">{{ 'dashboard.buyer.analytics.bidsPlacedHint' | translate }}</p>
+      </article>
+      <article class="kpi analytics-card">
+        <h3>{{ 'dashboard.buyer.analytics.offersMade' | translate }}</h3>
+        <p class="kpi-num">{{ data.overview.totalOffersInRange }}</p>
+        <p class="kpi-note">{{ 'dashboard.buyer.analytics.offersMadeHint' | translate }}</p>
+      </article>
+      <article class="kpi analytics-card">
+        <h3>{{ 'dashboard.buyer.analytics.purchases' | translate }}</h3>
+        <p class="kpi-num">{{ data.overview.purchasesInRange }}</p>
+        <p class="kpi-note">{{ 'dashboard.buyer.analytics.purchasesHint' | translate }}</p>
+      </article>
+      <article class="kpi analytics-card">
+        <h3>{{ 'dashboard.buyer.analytics.totalSpent' | translate }}</h3>
+        <p class="kpi-num">{{ formatMoney(data.overview.totalSpentInRange) }}</p>
+        <p class="kpi-note">{{ 'dashboard.buyer.analytics.totalSpentHint' | translate }}</p>
+      </article>
+    </div>
+
+    <div class="kpi-grid kpi-grid--secondary">
+      <article class="kpi analytics-card">
+        <h3>{{ 'dashboard.buyer.analytics.watchlist' | translate }}</h3>
+        <p class="kpi-num">{{ data.overview.watchlistTotal }}</p>
+        <p class="kpi-note">
+          {{ 'dashboard.buyer.analytics.watchlistHint' | translate: { n: data.overview.watchlistAddedInRange } }}
+        </p>
+      </article>
+      <article class="kpi analytics-card">
+        <h3>{{ 'dashboard.buyer.analytics.winRate' | translate }}</h3>
+        @if (data.overview.winRatePercent !== null) {
+          <p class="kpi-num">{{ data.overview.winRatePercent }}%</p>
+          <p class="kpi-note">{{ 'dashboard.buyer.analytics.winRateHint' | translate }}</p>
+        } @else {
+          <p class="kpi-num muted">—</p>
+          <p class="kpi-note">{{ 'dashboard.buyer.analytics.winRateDash' | translate }}</p>
+        }
+      </article>
+    </div>
+
+    <section class="card counts-section">
+      <h2>{{ 'dashboard.buyer.analytics.activity' | translate }}</h2>
+      <div class="counts-row">
+        <div><strong>{{ data.activityCounts.active }}</strong> {{ 'dashboard.buyer.analytics.countActive' | translate }}</div>
+        <div><strong>{{ data.activityCounts.won }}</strong> {{ 'dashboard.buyer.analytics.countWon' | translate }}</div>
+        <div><strong>{{ data.activityCounts.lost }}</strong> {{ 'dashboard.buyer.analytics.countLost' | translate }}</div>
+        <div><strong>{{ data.activityCounts.pendingPayment }}</strong> {{ 'dashboard.buyer.analytics.countPending' | translate }}</div>
+      </div>
+    </section>
+
+    <section class="analytics-card table-card">
+      <div class="table-head">
+        <h2>{{ 'dashboard.buyer.analytics.perListing' | translate }}</h2>
+      </div>
+      @if (data.listings.length === 0) {
+        <p class="muted empty-table">{{ 'dashboard.buyer.analytics.noListings' | translate }}</p>
+      } @else {
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>{{ 'dashboard.buyer.analytics.colListing' | translate }}</th>
+                <th>{{ 'dashboard.buyer.analytics.colStatus' | translate }}</th>
+                <th>{{ 'dashboard.buyer.analytics.colEvents' | translate }}</th>
+                <th>{{ 'dashboard.buyer.analytics.colMyBest' | translate }}</th>
+                <th>{{ 'dashboard.buyer.analytics.colOutcome' | translate }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (row of data.listings; track row.listingId) {
+                <tr>
+                  <td class="title-cell">
+                    <a [routerLink]="['/listing', row.slug]" class="listing-link">{{ row.title }}</a>
+                  </td>
+                  <td><span class="pill">{{ statusLabel(row) | translate }}</span></td>
+                  <td>
+                    {{ row.eventsInRange }}
+                    <span class="sub-muted">
+                      ({{ row.bidsInRange }} / {{ row.offersInRange }})
+                    </span>
+                  </td>
+                  <td>
+                    @if (row.myHighestBid != null) {
+                      <span>{{ row.myHighestBid | number:'1.0-0' }} €</span>
+                    } @else if (row.myHighestOffer != null) {
+                      <span>{{ row.myHighestOffer | number:'1.0-0' }} €</span>
+                    } @else {
+                      <span class="muted">—</span>
+                    }
+                  </td>
+                  <td>
+                    <span class="pill pill-outcome">{{ outcomeLabel(row) | translate }}</span>
+                    @if (row.purchaseInRange) {
+                      <span class="dot-in-range">{{ 'dashboard.buyer.analytics.purchaseThisPeriod' | translate }}</span>
+                    }
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </section>
+  }
+</div>

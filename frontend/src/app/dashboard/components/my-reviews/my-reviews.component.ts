@@ -44,12 +44,14 @@ export class MyReviewsComponent implements OnInit {
   }
 
   otherPartyName(review: MyReview): string {
+    if (this.activeTab === 'received' && review.isPlatformReview) return 'BidRoom';
     const party = this.activeTab === 'received' ? review.reviewer : review.reviewee;
     if (!party) return '—';
     return `${party.firstName} ${party.lastName}`.trim();
   }
 
   otherPartySlug(review: MyReview): string | null {
+    if (this.activeTab === 'received' && review.isPlatformReview) return null;
     const party = this.activeTab === 'received' ? review.reviewer : review.reviewee;
     return party?.slug ?? null;
   }

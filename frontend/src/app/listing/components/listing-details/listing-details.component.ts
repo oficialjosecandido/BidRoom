@@ -1606,9 +1606,10 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
   // ── Share ────────────────────────────────────────────────────────────────────
 
   buildShareUrl(slug: string): string {
-    // Always use the backend share endpoint directly — the SWA catch-all serves index.html
-    // for /api/share/* so we must bypass it and hit the backend directly.
-    return `${API_CONFIG.getBackendBaseUrl()}/share/listing/${slug}`;
+    // Social crawlers need server-rendered OG HTML from the backend — not /listing/:slug (SPA).
+    // www.bidroom.pt/api/* currently serves index.html until SWA links the App Service API.
+    const backend = API_CONFIG.getBackendBaseUrl().replace(/\/$/, '');
+    return `${backend}/share/listing/${slug}`;
   }
 
   async shareListing(): Promise<void> {

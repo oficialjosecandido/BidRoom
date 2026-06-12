@@ -112,10 +112,11 @@
       <h2>{{ 'legal.terms.h17' | translate }}</h2>
       <p>{{ 'legal.terms.h17p1' | translate }}</p>
       <ul>
-        <li>{{ 'legal.terms.h17li1' | translate }}</li>
+        <li [innerHTML]="'legal.terms.h17li1' | translate"></li>
         <li [innerHTML]="'legal.terms.h17li2' | translate"></li>
         <li [innerHTML]="'legal.terms.h17li3' | translate"></li>
         <li [innerHTML]="'legal.terms.h17li4' | translate"></li>
+        <li [innerHTML]="'legal.terms.h17li5' | translate"></li>
       </ul>
       <p [innerHTML]="'legal.terms.h17p2' | translate"></p>
     </div>

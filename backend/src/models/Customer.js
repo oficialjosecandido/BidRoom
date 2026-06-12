@@ -135,6 +135,7 @@ const customerSchema = new mongoose.Schema({
     default: false,
     index: true
   },
+  payoutReminderLastSentAt: { type: Date, default: null },
   /** Seller payout IBAN (normalized, no spaces). Set on Connect onboarding submit. */
   sellerPayoutIban: {
     type: String,

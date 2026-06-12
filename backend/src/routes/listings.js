@@ -2277,6 +2277,304 @@ router.get('/bidder/my-auctions', authenticateToken, async (req, res) => {
   }
 });
 
+// GET /api/listings/bidder/analytics — buyer activity (must be before /bidder/my-bets)
+router.get('/bidder/analytics', authenticateToken, async (req, res) => {
+  try {
+    let user = await Customer.findOne({ uid: req.user.uid });
+    if (!user && req.user.email) {
+      user = await Customer.findOne({ email: String(req.user.email).toLowerCase().trim() });
+    }
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const presetRaw = String(req.query.preset || '30d').toLowerCase();
+    const now = new Date();
+    let fromDate;
+    let toDate = new Date(now);
+
+    if (presetRaw === '7d') {
+      fromDate = new Date(now);
+      fromDate.setDate(fromDate.getDate() - 7);
+    } else if (presetRaw === '30d') {
+      fromDate = new Date(now);
+      fromDate.setDate(fromDate.getDate() - 30);
+    } else if (presetRaw === 'custom') {
+      const rawFrom = req.query.from ? new Date(String(req.query.from)) : null;
+      const rawTo = req.query.to ? new Date(String(req.query.to)) : null;
+      if (!rawFrom || Number.isNaN(rawFrom.getTime())) {
+        return res.status(400).json({ error: 'Custom range requires valid `from` (ISO date).' });
+      }
+      fromDate = rawFrom;
+      toDate = rawTo && !Number.isNaN(rawTo.getTime()) ? rawTo : now;
+    } else {
+      return res.status(400).json({ error: 'Invalid preset', validPresets: ['7d', '30d', 'custom'] });
+    }
+
+    if (toDate > now) toDate = now;
+    if (fromDate > toDate) {
+      return res.status(400).json({ error: '`from` must be before `to`' });
+    }
+    const maxMs = 366 * 24 * 60 * 60 * 1000;
+    if (toDate.getTime() - fromDate.getTime() > maxMs) {
+      return res.status(400).json({ error: 'Date range cannot exceed one year.' });
+    }
+
+    const ALLOWED_CAT = ['electronics', 'home-garden', 'art', 'collectibles', 'jewelry'];
+    const categoryRaw = req.query.category ? String(req.query.category).trim() : '';
+    const interactionRaw = req.query.interaction ? String(req.query.interaction).trim().toLowerCase() : 'all';
+
+    const rangeMatch = { $gte: fromDate, $lte: toDate };
+    const userId = user._id;
+
+    const [
+      totalBidsInRange,
+      totalOffersInRange,
+      watchlistTotal,
+      watchlistAddedInRange,
+      bidListingIds,
+      offerListingIds
+    ] = await Promise.all([
+      Bid.countDocuments({ bidder: userId, createdAt: rangeMatch }),
+      Offer.countDocuments({ offerer: userId, createdAt: rangeMatch }),
+      Watchlist.countDocuments({ user: userId }),
+      Watchlist.countDocuments({ user: userId, createdAt: rangeMatch }),
+      Bid.distinct('listing', { bidder: userId }),
+      Offer.distinct('listing', { offerer: userId })
+    ]);
+
+    let listingIdSet = new Set([
+      ...bidListingIds.map((id) => id.toString()),
+      ...offerListingIds.map((id) => id.toString())
+    ]);
+
+    if (interactionRaw === 'bid') {
+      listingIdSet = new Set(bidListingIds.map((id) => id.toString()));
+    } else if (interactionRaw === 'offer') {
+      listingIdSet = new Set(offerListingIds.map((id) => id.toString()));
+    }
+
+    const listingIds = [...listingIdSet].map((id) => new mongoose.Types.ObjectId(id));
+
+    const purchaseTxs = await Transaction.find({
+      buyer: userId,
+      transactionStatus: { $nin: ['cancelled'] },
+      $or: [
+        { paidAt: rangeMatch },
+        { completedAt: rangeMatch }
+      ]
+    })
+      .select('listing amount buyerTotalPaid paidAt completedAt transactionStatus')
+      .lean();
+
+    const purchasesInRange = purchaseTxs.length;
+    const totalSpentInRange =
+      Math.round(
+        purchaseTxs.reduce((sum, t) => sum + (t.buyerTotalPaid ?? t.amount ?? 0), 0) * 100
+      ) / 100;
+
+    const purchaseInRangeSet = new Set(purchaseTxs.map((t) => t.listing.toString()));
+
+    const emptyResponse = {
+      preset: presetRaw,
+      range: { from: fromDate.toISOString(), to: toDate.toISOString() },
+      filters: { category: categoryRaw || null, interaction: interactionRaw },
+      overview: {
+        totalBidsInRange,
+        totalOffersInRange,
+        purchasesInRange,
+        totalSpentInRange,
+        watchlistTotal,
+        watchlistAddedInRange,
+        winRatePercent: null
+      },
+      activityCounts: { active: 0, won: 0, lost: 0, pendingPayment: 0 },
+      listings: []
+    };
+
+    if (listingIds.length === 0) {
+      const listingsTouchedInRange = await Bid.distinct('listing', { bidder: userId, createdAt: rangeMatch });
+      const offersTouchedInRange = await Offer.distinct('listing', { offerer: userId, createdAt: rangeMatch });
+      const touched = new Set([
+        ...listingsTouchedInRange.map((id) => id.toString()),
+        ...offersTouchedInRange.map((id) => id.toString())
+      ]);
+      const winRatePercent =
+        touched.size > 0 ? Math.round((purchasesInRange / touched.size) * 1000) / 10 : null;
+      return res.json({
+        ...emptyResponse,
+        overview: { ...emptyResponse.overview, winRatePercent }
+      });
+    }
+
+    const listingQuery = { _id: { $in: listingIds } };
+    if (categoryRaw && ALLOWED_CAT.includes(categoryRaw)) {
+      listingQuery.category = categoryRaw;
+    }
+
+    const listingDocs = await Listing.find(listingQuery)
+      .select('_id title slug status category auctionFormat currentPrice winner')
+      .sort({ updatedAt: -1 })
+      .lean();
+
+    const filteredIds = listingDocs.map((l) => l._id);
+
+    const [bidStats, offerStats, buyerTxAll, acceptedOffers] = await Promise.all([
+      Bid.aggregate([
+        { $match: { bidder: userId, listing: { $in: filteredIds } } },
+        {
+          $group: {
+            _id: '$listing',
+            maxAmount: { $max: '$amount' },
+            bidsInRange: {
+              $sum: {
+                $cond: [
+                  { $and: [{ $gte: ['$createdAt', fromDate] }, { $lte: ['$createdAt', toDate] }] },
+                  1,
+                  0
+                ]
+              }
+            }
+          }
+        }
+      ]),
+      Offer.aggregate([
+        { $match: { offerer: userId, listing: { $in: filteredIds } } },
+        {
+          $group: {
+            _id: '$listing',
+            maxAmount: { $max: '$amount' },
+            offersInRange: {
+              $sum: {
+                $cond: [
+                  { $and: [{ $gte: ['$createdAt', fromDate] }, { $lte: ['$createdAt', toDate] }] },
+                  1,
+                  0
+                ]
+              }
+            },
+            hasAccepted: { $max: { $cond: [{ $eq: ['$status', 'accepted'] }, 1, 0] } }
+          }
+        }
+      ]),
+      Transaction.find({
+        buyer: userId,
+        listing: { $in: filteredIds },
+        transactionStatus: { $nin: ['cancelled'] }
+      })
+        .select('listing transactionStatus paidAt completedAt')
+        .lean(),
+      Offer.find({ offerer: userId, listing: { $in: filteredIds }, status: 'accepted' })
+        .select('listing')
+        .lean()
+    ]);
+
+    const bidMap = Object.fromEntries(bidStats.map((r) => [r._id.toString(), r]));
+    const offerMap = Object.fromEntries(offerStats.map((r) => [r._id.toString(), r]));
+    const txByListing = Object.fromEntries(buyerTxAll.map((t) => [t.listing.toString(), t]));
+    const acceptedOfferSet = new Set(acceptedOffers.map((o) => o.listing.toString()));
+
+    let active = 0;
+    let won = 0;
+    let lost = 0;
+    let pendingPayment = 0;
+    let listingsWithActivityInRange = 0;
+
+    const rows = listingDocs.map((l) => {
+      const id = l._id.toString();
+      const bidInfo = bidMap[id];
+      const offerInfo = offerMap[id];
+      const bidsInRange = bidInfo?.bidsInRange ?? 0;
+      const offersInRange = offerInfo?.offersInRange ?? 0;
+      const eventsInRange = bidsInRange + offersInRange;
+      if (eventsInRange > 0) listingsWithActivityInRange += 1;
+
+      const myHighestBid = bidInfo?.maxAmount ?? null;
+      const myHighestOffer = offerInfo?.maxAmount ?? null;
+      const tx = txByListing[id];
+      const isWinner =
+        l.winner?.toString() === userId.toString() || acceptedOfferSet.has(id);
+      const purchased = !!tx && ['paid', 'shipped', 'delivered', 'completed'].includes(tx.transactionStatus);
+      const purchaseInRange = purchaseInRangeSet.has(id);
+
+      let outcome = 'active';
+      if (purchased || tx?.transactionStatus === 'completed') {
+        outcome = 'purchased';
+        won += 1;
+      } else if (tx?.transactionStatus === 'pending_payment') {
+        outcome = 'pending_payment';
+        pendingPayment += 1;
+        won += 1;
+      } else if (isWinner && l.status === 'ended') {
+        outcome = 'won';
+        won += 1;
+      } else if (l.status === 'active') {
+        if (
+          l.auctionFormat !== 'best-offer' &&
+          myHighestBid != null &&
+          l.currentPrice != null &&
+          myHighestBid >= l.currentPrice
+        ) {
+          outcome = 'leading';
+        } else if (offerInfo?.hasAccepted) {
+          outcome = 'won';
+        } else {
+          outcome = 'active';
+        }
+        active += 1;
+      } else if (l.status === 'ended' || l.status === 'cancelled') {
+        outcome = 'lost';
+        lost += 1;
+      }
+
+      return {
+        listingId: id,
+        title: l.title,
+        slug: l.slug,
+        status: l.status,
+        category: l.category,
+        auctionFormat: l.auctionFormat,
+        bidsInRange,
+        offersInRange,
+        eventsInRange,
+        myHighestBid,
+        myHighestOffer,
+        outcome,
+        purchased,
+        purchaseInRange
+      };
+    });
+
+    const winRatePercent =
+      listingsWithActivityInRange > 0
+        ? Math.round((purchasesInRange / listingsWithActivityInRange) * 1000) / 10
+        : null;
+
+    return res.json({
+      preset: presetRaw,
+      range: { from: fromDate.toISOString(), to: toDate.toISOString() },
+      filters: { category: categoryRaw || null, interaction: interactionRaw },
+      overview: {
+        totalBidsInRange,
+        totalOffersInRange,
+        purchasesInRange,
+        totalSpentInRange,
+        watchlistTotal,
+        watchlistAddedInRange,
+        winRatePercent
+      },
+      activityCounts: { active, won, lost, pendingPayment },
+      listings: rows
+    });
+  } catch (error) {
+    console.error('Error fetching buyer analytics:', error);
+    res.status(500).json({
+      error: 'Failed to fetch analytics',
+      message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
+    });
+  }
+});
+
 // GET /api/listings/bidder/my-bets - Listings with all bets (bids + offers) per listing, for My Bets tab
 router.get('/bidder/my-bets', authenticateToken, async (req, res) => {
   try {
