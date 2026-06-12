@@ -3,31 +3,46 @@ const https    = require('https');
 const http     = require('http');
 const Listing  = require('../models/Listing');
 const { getBrandPNG } = require('../utils/ogImage');
+const {
+  pickShareLocale,
+  getLocalizedListingText,
+  buildOgTitle,
+  buildOgDescription
+} = require('../utils/shareMeta');
 
 const router   = express.Router();
-const FRONTEND = process.env.FRONTEND_URL || 'https://www.bidroom.pt';
-const SITE_NAME = 'BidRoom';
-// Served via SWA proxy: bidroom.pt/api/share/og-default.png → backend /share/og-default.png
+const FRONTEND = (process.env.FRONTEND_URL || 'https://www.bidroom.pt').replace(/\/$/, '');
+// Served via SWA linked API: bidroom.pt/api/share/og-default.png
 const DEFAULT_OG_IMAGE = `${FRONTEND}/api/share/og-default.png`;
 
 /**
- * Check if an image URL is "usable" for WhatsApp OG:
- * - Must respond 200
- * - Content-Length must be > 5 KB (tiny icons are useless)
- * Returns the image URL if OK, otherwise null.
+ * Check if an image URL responds 200. Many CDNs omit Content-Length on HEAD —
+ * accept those; only reject clearly tiny responses (< 1 KB when length is known).
  */
 function checkImage(imageUrl) {
   return new Promise((resolve) => {
     if (!imageUrl || !imageUrl.startsWith('http')) return resolve(null);
-    const lib = imageUrl.startsWith('https') ? https : http;
-    const req = lib.request(imageUrl, { method: 'HEAD', timeout: 3000 }, (res) => {
-      const len = parseInt(res.headers['content-length'] || '0', 10);
-      const ok  = res.statusCode === 200 && len > 5000;
-      resolve(ok ? imageUrl : null);
-    });
-    req.on('error', () => resolve(null));
-    req.on('timeout', () => { req.destroy(); resolve(null); });
-    req.end();
+
+    const tryHead = (url, redirects = 0) => {
+      const lib = url.startsWith('https') ? https : http;
+      const req = lib.request(url, { method: 'HEAD', timeout: 5000 }, (res) => {
+        if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location && redirects < 2) {
+          const next = res.headers.location.startsWith('http')
+            ? res.headers.location
+            : new URL(res.headers.location, url).href;
+          return tryHead(next, redirects + 1);
+        }
+        if (res.statusCode !== 200) return resolve(null);
+        const len = parseInt(res.headers['content-length'] || '0', 10);
+        if (len > 0 && len < 1000) return resolve(null);
+        resolve(url);
+      });
+      req.on('error', () => resolve(imageUrl));
+      req.on('timeout', () => { req.destroy(); resolve(imageUrl); });
+      req.end();
+    };
+
+    tryHead(imageUrl);
   });
 }
 
@@ -45,23 +60,6 @@ function esc(str = '') {
     .replace(/>/g,  '&gt;');
 }
 
-/** Format price as €X,XXX */
-function fmtPrice(n) {
-  if (!n || n === 0) return '';
-  return '€' + Number(n).toLocaleString('pt-PT', { minimumFractionDigits: 0 });
-}
-
-/** Format time remaining. */
-function fmtTime(endDate) {
-  if (!endDate) return '';
-  const ms = new Date(endDate).getTime() - Date.now();
-  if (ms <= 0) return 'Encerrado';
-  const h = Math.floor(ms / 3_600_000);
-  if (h < 1) return `${Math.floor(ms / 60_000)} min restantes`;
-  if (h < 24) return `${h}h restantes`;
-  return `${Math.floor(h / 24)} dias restantes`;
-}
-
 /** GET /og-default.png — BidRoom branded PNG fallback for OG image */
 router.get('/og-default.png', (_req, res) => {
   const png = getBrandPNG();
@@ -71,9 +69,9 @@ router.get('/og-default.png', (_req, res) => {
 });
 
 /**
- * GET /share/listing/:slug
+ * GET /listing/:slug
  * Returns an OG-rich HTML page for social crawlers, with a JS redirect for browsers.
- * This page is meant to be the "shareable URL" for listing pages.
+ * Mounted at /api/share (production share links) and /share (direct backend).
  */
 router.get('/listing/:slug', async (req, res) => {
   try {
@@ -81,37 +79,39 @@ router.get('/listing/:slug', async (req, res) => {
       .populate('seller', 'firstName lastName')
       .lean();
 
-    // Unknown listing — redirect to frontend
+    const canonicalUrl = `${FRONTEND}/listing/${req.params.slug}`;
+    const proto = (req.get('x-forwarded-proto') || req.protocol || 'https').split(',')[0].trim();
+    const host = (req.get('x-forwarded-host') || req.get('host') || '').split(',')[0].trim();
+    const sharePath = (req.originalUrl || req.url || '').split('?')[0];
+    const shareUrl = host
+      ? `${proto}://${host}${sharePath}`
+      : `${FRONTEND}/api/share/listing/${req.params.slug}`;
+
     if (!listing) {
-      return res.redirect(301, `${FRONTEND}/listing/${req.params.slug}`);
+      return res.redirect(301, canonicalUrl);
     }
 
-    const canonicalUrl = `${FRONTEND}/listing/${listing.slug}`;
-    // Validate the listing image — skip tiny icons (< 5 KB); fall back to brand PNG
+    const lang = pickShareLocale(req.headers['accept-language']);
+    const { title, description } = getLocalizedListingText(listing, lang);
+
     const rawImage   = listing.images?.[0] || null;
     const validImage = rawImage ? await checkImage(rawImage) : null;
     const image      = validImage || DEFAULT_OG_IMAGE;
 
-    const rawDesc = (listing.description || '').replace(/\s+/g, ' ').trim();
-    const descBase = rawDesc.length > 140
-      ? rawDesc.slice(0, 137) + '…'
-      : rawDesc;
-
-    const ogTitle       = esc(`${SITE_NAME} | ${listing.title}`);
-    const ogDescription = esc(descBase ? `${descBase} Licite já` : 'Licite já');
-    const ogUrl   = esc(canonicalUrl);
-    const ogImage = esc(image);
+    const ogTitle       = esc(buildOgTitle(title));
+    const ogDescription = esc(buildOgDescription(description, lang));
+    const ogUrl         = esc(shareUrl);
+    const ogImage       = esc(image);
+    const ogCanonical   = esc(canonicalUrl);
 
     const ua = req.headers['user-agent'] || '';
 
-    // For regular browsers: redirect immediately to Angular frontend.
-    // For crawlers: serve the OG meta page (they don't follow JS redirects).
     const redirectScript = isCrawler(ua) ? '' : `
     <script>window.location.replace(${JSON.stringify(canonicalUrl)});</script>
-    <noscript><meta http-equiv="refresh" content="0;url=${ogUrl}"></noscript>`;
+    <noscript><meta http-equiv="refresh" content="0;url=${ogCanonical}"></noscript>`;
 
     const html = `<!DOCTYPE html>
-<html lang="pt" prefix="og: https://ogp.me/ns#">
+<html lang="${lang}" prefix="og: https://ogp.me/ns#">
 <head>
   <meta charset="utf-8">
   <title>${ogTitle}</title>
@@ -121,8 +121,8 @@ router.get('/listing/:slug', async (req, res) => {
 
   <!-- Open Graph -->
   <meta property="og:type"        content="website">
-  <meta property="og:site_name"   content="${SITE_NAME}">
-  <meta property="og:locale"      content="pt_PT">
+  <meta property="og:site_name"   content="BidRoom">
+  <meta property="og:locale"      content="${lang === 'pt' ? 'pt_PT' : 'en_US'}">
   <meta property="og:title"       content="${ogTitle}">
   <meta property="og:description" content="${ogDescription}">
   <meta property="og:url"         content="${ogUrl}">
@@ -138,19 +138,18 @@ router.get('/listing/:slug', async (req, res) => {
   <meta name="twitter:description" content="${ogDescription}">
   <meta name="twitter:image"       content="${ogImage}">
 
-  <link rel="canonical" href="${ogUrl}">
+  <link rel="canonical" href="${ogCanonical}">
   ${redirectScript}
 </head>
 <body style="font-family:sans-serif;background:#0a0a0a;color:#f0ede8;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0">
   <div style="text-align:center;padding:32px">
     <p style="color:#888;font-size:14px">A redirecionar para BidRoom…</p>
-    <a href="${ogUrl}" style="color:#c9a84c;font-size:13px">Clique aqui se não for redireccionado</a>
+    <a href="${ogCanonical}" style="color:#c9a84c;font-size:13px">Clique aqui se não for redireccionado</a>
   </div>
 </body>
 </html>`;
 
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
-    // Cache briefly so bots don't hammer the DB, but not too long (prices change)
     res.setHeader('Cache-Control', 'public, max-age=60, s-maxage=120');
     res.send(html);
   } catch (err) {

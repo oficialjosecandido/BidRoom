@@ -268,8 +268,9 @@ app.use('/api/damage-claims', generalLimiter, damageClaimsRoutes);
 app.use('/api/kyc', generalLimiter, kycRoutes);
 
 // Share pages — no auth, no rate limit beyond express defaults
-// URL: /share/listing/:slug → OG HTML page for social bots, JS redirect for browsers
-// URL: /share/og-default.png → BidRoom brand PNG for OG image fallback
+// /api/share/* — same-origin URLs via Azure SWA linked API (WhatsApp OG crawlers)
+// /share/*      — direct backend access (local dev / direct App Service)
+app.use('/api/share', shareRoutes);
 app.use('/share', shareRoutes);
 
 app.get('/', (req, res) => {
