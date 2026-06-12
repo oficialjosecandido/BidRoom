@@ -247,6 +247,8 @@
     "sellerDeclaration": "Je confirme être le propriétaire légal de cet article et accepter les Conditions Générales et la structure de commission de Bidroom. *",
     "previous": "← Précédent",
     "next": "Suivant →",
+    "previousBtn": "Précédent",
+    "nextBtn": "Suivant",
     "listItemNow": "Mettre en Ligne Maintenant",
     "uploadingImages": "Téléchargement des images...",
     "creatingListing": "Création de l'annonce...",
@@ -289,7 +291,20 @@
       "specificationsIncomplete": "spécifications incomplètes"
     },
     "steps": {
-      "label": "Étapes"
+      "label": "Étapes",
+      "progress": "{{current}} / {{total}}",
+      "format": "Format",
+      "formatSub": "Enchère ou meilleure offre",
+      "details": "Détails",
+      "detailsSub": "Titre, catégorie et description",
+      "photos": "Photos",
+      "photosSub": "Téléverser les images",
+      "pricing": "Tarification",
+      "pricingSub": "Prix, durée et règles",
+      "shipping": "Expédition",
+      "shippingSub": "Méthode et localisation",
+      "publish": "Publier",
+      "publishSub": "Vérifier et confirmer"
     },
     "step5Title": "Expédition",
     "step5": "Méthode et origine",

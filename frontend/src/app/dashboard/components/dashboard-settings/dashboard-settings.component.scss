@@ -322,15 +322,15 @@
   border: 1px solid var(--gl, rgba(201, 168, 76, 0.22));
 }
 
-.pm-tier-badge {
+.pm-verified-badge {
   flex-shrink: 0;
   width: 36px; height: 36px;
   display: grid; place-items: center;
-  border-radius: 10px;
-  font-size: 11px; font-weight: 700; letter-spacing: 0.04em;
-  color: var(--gold, #c9a84c);
-  background: var(--s1, #fff);
-  border: 1px solid var(--gl, rgba(201, 168, 76, 0.25));
+  border-radius: 50%;
+  font-size: 16px; font-weight: 700;
+  color: var(--green, #4a9b6f);
+  background: var(--gb2, rgba(74, 155, 111, 0.1));
+  border: 1px solid var(--gl2, rgba(74, 155, 111, 0.25));
 }
 
 .pm-status-copy {

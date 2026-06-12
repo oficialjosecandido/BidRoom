@@ -125,6 +125,7 @@ export class DashboardSettingsComponent implements OnInit, OnDestroy {
   readonly notifEventKeys = NOTIFICATION_EVENT_KEYS;
   notifPrefs: NotificationPreferences | null = null;
   notifPrefsLoading = false;
+  notifPrefsLoadError: string | null = null;
   notifPrefsSaving = false;
   notifPrefsSaved = false;
   notifPrefsError: string | null = null;
@@ -431,10 +432,33 @@ export class DashboardSettingsComponent implements OnInit, OnDestroy {
 
   loadNotifPrefs(): void {
     this.notifPrefsLoading = true;
+    this.notifPrefsLoadError = null;
     this.notifPrefsService.getPreferences().subscribe({
-      next: (prefs) => { this.notifPrefs = prefs; this.notifPrefsLoading = false; },
-      error: () => { this.notifPrefsLoading = false; }
+      next: (prefs) => {
+        this.notifPrefs = this.normalizeNotifPrefs(prefs);
+        this.notifPrefsLoading = false;
+      },
+      error: () => {
+        this.notifPrefsLoading = false;
+        this.notifPrefsLoadError = this.translate.instant('dashboard.settings.notifications.loadError');
+      }
     });
+  }
+
+  private normalizeNotifPrefs(prefs: NotificationPreferences): NotificationPreferences {
+    const normalized: NotificationPreferences = {
+      globalEmailUnsubscribed: !!prefs.globalEmailUnsubscribed,
+      outbid: { ...DEFAULT_CHANNEL_PREF, ...prefs.outbid },
+      auctionEndingSoon: { ...DEFAULT_CHANNEL_PREF, ...prefs.auctionEndingSoon },
+      auctionWon: { ...DEFAULT_CHANNEL_PREF, ...prefs.auctionWon },
+      offerReceived: { ...DEFAULT_CHANNEL_PREF, ...prefs.offerReceived },
+      offerAccepted: { ...DEFAULT_CHANNEL_PREF, ...prefs.offerAccepted },
+      dispatch: { ...DEFAULT_CHANNEL_PREF, ...prefs.dispatch },
+      paymentReceived: { ...DEFAULT_CHANNEL_PREF, ...prefs.paymentReceived },
+      newBid: { ...DEFAULT_CHANNEL_PREF, ...prefs.newBid },
+      disputeUpdate: { ...DEFAULT_CHANNEL_PREF, ...prefs.disputeUpdate },
+    };
+    return normalized;
   }
 
   getEventPref(key: string): { email: boolean; push: boolean; inApp: boolean } {

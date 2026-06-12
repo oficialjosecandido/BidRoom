@@ -47,7 +47,9 @@
       "Bash(git restore *)",
       "Bash(gh run *)",
       "Bash(gh workflow *)",
-      "Bash(node /tmp/reset_dev_users.js)"
+      "Bash(node /tmp/reset_dev_users.js)",
+      "Bash(node --check /Users/josecandido/Documents/BidRoom/backend/src/services/nonPaymentPenaltyService.js)",
+      "Bash(node --check /Users/josecandido/Documents/BidRoom/backend/src/models/Review.js)"
     ],
     "additionalDirectories": [
       "/Users/josecandido/Documents/BidRoom/.claude",

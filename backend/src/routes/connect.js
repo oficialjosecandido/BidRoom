@@ -13,6 +13,7 @@ const {
   emailPayoutBox,
   transactionUrl
 } = require('../utils/bidroomEmailLayout');
+const { attachPaymentMethodToUser } = require('../services/paymentMethodService');
 
 const LOG_PREFIX = '[Connect]';
 const { estimateBuyerProcessingFeeCents } = require('../utils/fees');
@@ -20,6 +21,36 @@ const BIDROOMFEE_RATE = 0.04; // 4% — charged to seller via transfer_data.amou
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:4200';
 /** Stripe rejects localhost for business_profile.url — use a public https origin in dev. */
 const STRIPE_BUSINESS_URL_FALLBACK = 'https://www.bidroom.pt';
+
+async function ensureStripeCustomer(stripe, buyer) {
+  if (buyer.stripeCustomerId) return buyer.stripeCustomerId;
+  const customer = await stripe.customers.create({
+    email: buyer.email,
+    name: [buyer.firstName, buyer.lastName].filter(Boolean).join(' ') || undefined,
+    metadata: { uid: buyer.uid },
+  });
+  await Customer.findOneAndUpdate({ uid: buyer.uid }, { stripeCustomerId: customer.id });
+  buyer.stripeCustomerId = customer.id;
+  return customer.id;
+}
+
+async function autoSavePaymentMethodIfNew(buyerUid, session) {
+  try {
+    const buyer = await Customer.findOne({ uid: buyerUid })
+      .select('savedPaymentMethods savedPaymentMethodId').lean();
+    if (!buyer) return;
+    if ((buyer.savedPaymentMethods?.length ?? 0) > 0 || buyer.savedPaymentMethodId) return;
+
+    const pi = session.payment_intent;
+    const pmId = (typeof pi === 'object' && pi !== null) ? pi.payment_method : null;
+    if (!pmId || typeof pmId !== 'string') return;
+
+    await attachPaymentMethodToUser(buyerUid, pmId, { setAsDefault: true });
+    console.log(`${LOG_PREFIX} Auto-saved PM ${pmId} as default for buyer uid=${buyerUid?.slice(0, 8)}...`);
+  } catch (err) {
+    console.warn(`${LOG_PREFIX} Auto-save PM failed (non-critical):`, err.message);
+  }
+}
 
 /** Stripe payments are verified automatically — seller can ship without a manual accept step. */
 function markTransactionStripePaid(transaction) {
@@ -616,6 +647,14 @@ router.post('/create-checkout-session', requireActiveAccount, async (req, res) =
     const buyer = await Customer.findOne({ uid: req.user.uid });
     if (!buyer) return res.status(404).json({ error: 'User not found' });
 
+    // Best-effort: ensure the buyer has a Stripe customer so the PM can be saved after payment.
+    let stripeCustomerId = null;
+    try {
+      stripeCustomerId = await ensureStripeCustomer(stripe, buyer);
+    } catch (custErr) {
+      console.warn(`${LOG_PREFIX} Could not ensure Stripe customer (non-critical):`, custErr.message);
+    }
+
     const { transactionId } = req.body;
     if (!transactionId) return res.status(400).json({ error: 'transactionId is required' });
 
@@ -778,6 +817,7 @@ router.post('/create-checkout-session', requireActiveAccount, async (req, res) =
     // In test mode, if the account doesn't have transfers capability active yet, skip
     // transfer_data to avoid a "stripe_balance.stripe_transfers feature" error.
     const paymentIntentData = {
+      setup_future_usage: 'off_session',
       metadata: {
         transactionId: transaction._id.toString(),
         buyerUid: buyer.uid,
@@ -798,6 +838,7 @@ router.post('/create-checkout-session', requireActiveAccount, async (req, res) =
       line_items: lineItems,
       mode: 'payment',
       payment_intent_data: paymentIntentData,
+      ...(stripeCustomerId ? { customer: stripeCustomerId } : {}),
       success_url: `${FRONTEND_URL}/dashboard/transactions?stripe_payment=success&session_id={CHECKOUT_SESSION_ID}&transaction_id=${transaction._id}`,
       cancel_url: `${FRONTEND_URL}/dashboard/transactions?stripe_payment=cancelled&transaction_id=${transaction._id}`,
       metadata: {
@@ -892,6 +933,8 @@ router.post('/confirm-payment', requireActiveAccount, async (req, res) => {
     transaction.sellerPayoutAmount = Math.max(0, sellerPayout);
     markTransactionStripePaid(transaction);
     await transaction.save();
+
+    autoSavePaymentMethodIfNew(buyer.uid, session).catch(() => {});
 
     await sendPaymentReceivedEmail(transaction);
 
@@ -1014,6 +1057,8 @@ async function handleCheckoutCompleted(session, stripe, io) {
   transaction.sellerPayoutAmount = Math.max(0, sellerPayout);
   markTransactionStripePaid(transaction);
   await transaction.save();
+
+  autoSavePaymentMethodIfNew(session.metadata?.buyerUid, expandedSession).catch(() => {});
 
   await sendPaymentReceivedEmail(transaction);
 

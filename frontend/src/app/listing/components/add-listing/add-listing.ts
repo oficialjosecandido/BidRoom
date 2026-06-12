@@ -1,7 +1,7 @@
 import { DecimalPipe } from '@angular/common';
 import { Component, OnDestroy, OnInit, inject, computed } from '@angular/core';
 import { AbstractControl, FormBuilder, FormGroup, ValidationErrors, ValidatorFn, Validators, ReactiveFormsModule, FormArray } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom, from, merge, Subject, Subscription } from 'rxjs';
 import { debounceTime, filter, switchMap, tap } from 'rxjs/operators';
@@ -46,7 +46,7 @@ function buyNowAboveStartingBid(): ValidatorFn {
 @Component({
   selector: 'app-add-listing',
   standalone: true,
-  imports: [DecimalPipe, ReactiveFormsModule, TranslateModule, BidroomLogoComponent],
+  imports: [DecimalPipe, ReactiveFormsModule, TranslateModule, BidroomLogoComponent, RouterLink],
   templateUrl: './add-listing.html',
   styleUrl: './add-listing.scss',
 })
@@ -87,27 +87,38 @@ export class AddListing implements OnInit, OnDestroy {
 
   // ─── Step management ────────────────────────────────────────────────────────
   currentStep = 1;
+  mobileStepsOpen = false;
   readonly totalSteps = 6;
   readonly isLight = computed(() => this.themeService.effective() === 'light');
 
   readonly steps = [
-    { n: 1, titleKey: 'addListing.step1Title', subKey: 'addListing.step1' },
-    { n: 2, titleKey: 'addListing.step2Title', subKey: 'addListing.step2' },
-    { n: 3, titleKey: 'addListing.step3Title', subKey: 'addListing.step3' },
-    { n: 4, titleKey: 'addListing.step4Title', subKey: 'addListing.step4' },
-    { n: 5, titleKey: 'addListing.step5Title', subKey: 'addListing.step5' },
-    { n: 6, titleKey: 'addListing.step6Title', subKey: 'addListing.step6' },
+    { n: 1, titleKey: 'addListing.steps.format', subKey: 'addListing.steps.formatSub' },
+    { n: 2, titleKey: 'addListing.steps.details', subKey: 'addListing.steps.detailsSub' },
+    { n: 3, titleKey: 'addListing.steps.photos', subKey: 'addListing.steps.photosSub' },
+    { n: 4, titleKey: 'addListing.steps.pricing', subKey: 'addListing.steps.pricingSub' },
+    { n: 5, titleKey: 'addListing.steps.shipping', subKey: 'addListing.steps.shippingSub' },
+    { n: 6, titleKey: 'addListing.steps.publish', subKey: 'addListing.steps.publishSub' },
   ];
 
   toggleTheme(): void {
     const eff = this.themeService.effective();
     this.themeService.setPreference(eff === 'dark' ? 'light' : 'dark');
   }
+
+  get currentStepDef() {
+    return this.steps.find((s) => s.n === this.currentStep);
+  }
+
+  toggleMobileSteps(): void {
+    this.mobileStepsOpen = !this.mobileStepsOpen;
+  }
+
   goStep(n: number): void {
     if (n < 1 || n > this.totalSteps) return;
     if (n <= this.currentStep) {
       this.currentStep = n;
       this.errorMessage = '';
+      this.mobileStepsOpen = false;
       return;
     }
     for (let s = this.currentStep; s < n; s++) {
@@ -118,6 +129,7 @@ export class AddListing implements OnInit, OnDestroy {
     }
     this.errorMessage = '';
     this.currentStep = n;
+    this.mobileStepsOpen = false;
   }
 
   nextStep(): void {
@@ -125,6 +137,7 @@ export class AddListing implements OnInit, OnDestroy {
     if (this.validateStep(this.currentStep)) {
       this.errorMessage = '';
       this.currentStep = this.currentStep + 1;
+      this.mobileStepsOpen = false;
     }
   }
 
@@ -132,6 +145,7 @@ export class AddListing implements OnInit, OnDestroy {
     if (this.currentStep > 1) {
       this.errorMessage = '';
       this.currentStep = this.currentStep - 1;
+      this.mobileStepsOpen = false;
     }
   }
   navigateToDashboard(): void { void this.router.navigate(['/dashboard/home']); }

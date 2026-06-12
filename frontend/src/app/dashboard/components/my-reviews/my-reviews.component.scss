@@ -271,3 +271,20 @@
   color: var(--sub, #999);
   font-style: italic;
 }
+
+.review-platform-badge {
+  display: inline-block;
+  margin-top: 8px;
+  font-size: 10.5px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 100px;
+  background: rgba(194, 90, 90, 0.1);
+  color: var(--err, #c25a5a);
+  border: 1px solid rgba(194, 90, 90, 0.2);
+}
+
+.review-party-platform {
+  color: var(--gold, #c9a84c);
+  font-weight: 600;
+}

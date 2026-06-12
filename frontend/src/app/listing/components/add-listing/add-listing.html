@@ -43,35 +43,68 @@
 
 <div class="shell">
 
-  <!-- STEPS SIDEBAR -->
-  <aside class="steps-sidebar">
-    <div class="steps-label">{{ 'addListing.steps.label' | translate }}</div>
-
-    @for (step of steps; track step.n) {
-      <div class="step-item"
-           [class.active]="currentStep === step.n"
-           [class.done]="currentStep > step.n"
-           (click)="goStep(step.n)">
-        <div class="step-num">
-          @if (currentStep > step.n) { ✓ } @else { {{ step.n }} }
+  <!-- STEPS SIDEBAR (mobile only, collapsible) -->
+  <aside class="steps-sidebar" [class.expanded]="mobileStepsOpen">
+    <button
+      type="button"
+      class="steps-mobile-toggle"
+      (click)="toggleMobileSteps()"
+      [attr.aria-expanded]="mobileStepsOpen"
+      [attr.aria-controls]="'steps-mobile-panel'"
+    >
+      <div class="steps-mobile-toggle-main">
+        <div class="steps-mobile-toggle-step">
+          <span class="steps-mobile-num">{{ currentStep }}</span>
+          <div class="steps-mobile-copy">
+            @if (currentStepDef; as step) {
+              <span class="step-title">{{ step.titleKey | translate }}</span>
+              <span class="step-sub">{{ step.subKey | translate }}</span>
+            }
+          </div>
         </div>
-        <div class="step-info">
-          <div class="step-title">{{ step.titleKey | translate }}</div>
-          <div class="step-sub">{{ step.subKey | translate }}</div>
-        </div>
-        @if (step.n < totalSteps) { <div class="step-connector"></div> }
+        <span class="steps-count">{{ 'addListing.steps.progress' | translate:{ current: currentStep, total: totalSteps } }}</span>
       </div>
-    }
+      <div class="steps-progress-track steps-progress-track--mobile" aria-hidden="true">
+        <div class="steps-progress-fill" [style.width.%]="(currentStep / totalSteps) * 100"></div>
+      </div>
+      <span class="steps-chevron" [class.open]="mobileStepsOpen" aria-hidden="true"></span>
+    </button>
+
+    <div id="steps-mobile-panel" class="steps-collapsible" [class.open]="mobileStepsOpen">
+      <div class="steps-list">
+        @for (step of steps; track step.n) {
+          <div class="step-item"
+               [class.active]="currentStep === step.n"
+               [class.done]="currentStep > step.n"
+               (click)="goStep(step.n)">
+            <div class="step-marker">
+              <div class="step-num">
+                @if (currentStep > step.n) { ✓ } @else { {{ step.n }} }
+              </div>
+              @if (step.n < totalSteps) {
+                <div class="step-line" [class.done]="currentStep > step.n"></div>
+              }
+            </div>
+            <div class="step-info">
+              <div class="step-title">{{ step.titleKey | translate }}</div>
+              <div class="step-sub">{{ step.subKey | translate }}</div>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
   </aside>
 
   <!-- MAIN (form) -->
   <form [formGroup]="listingForm" (ngSubmit)="onSubmit()" class="main">
 
-    <!-- Stripe notice -->
+    <!-- Payout setup notice (informational — does not block publishing) -->
     @if (!isStripeConnected && !isLoadingCustomer) {
       <div class="stripe-notice">
         <div class="stripe-notice-title">{{ 'addListing.stripeRequired' | translate }}</div>
-        <p class="stripe-notice-text">{{ 'addListing.stripeRequiredText' | translate }}</p>
+        <p class="stripe-notice-text">{{ 'addListing.stripeRequiredText' | translate }}
+          <a routerLink="/dashboard/settings" [queryParams]="{tab: 'payout'}" class="stripe-notice-link">{{ 'addListing.stripeRequiredLink' | translate }}</a>
+        </p>
       </div>
     }
 
@@ -706,10 +739,16 @@
     </button>
     <div class="bottom-actions">
       @if (currentStep > 1) {
-        <button type="button" class="btn-back-step" (click)="prevStep()">{{ 'addListing.previous' | translate }}</button>
+        <button type="button" class="btn-back-step" (click)="prevStep()">
+          <span class="step-btn-caret" aria-hidden="true">←</span>
+          <span class="step-btn-label">{{ 'addListing.previousBtn' | translate }}</span>
+        </button>
       }
       @if (currentStep < totalSteps) {
-        <button type="button" class="btn-next-step" (click)="nextStep()">{{ 'addListing.next' | translate }}</button>
+        <button type="button" class="btn-next-step" (click)="nextStep()">
+          <span class="step-btn-label">{{ 'addListing.nextBtn' | translate }}</span>
+          <span class="step-btn-caret" aria-hidden="true">→</span>
+        </button>
       }
       @if (currentStep === totalSteps) {
         <button type="button" class="btn-publish"

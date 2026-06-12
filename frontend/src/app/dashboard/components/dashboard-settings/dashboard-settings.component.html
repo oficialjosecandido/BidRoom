@@ -166,7 +166,7 @@
     </div>
 
     <!-- Row 2: Payment methods + Seller payout -->
-    <div class="settings-row" [class.settings-row--single]="!isSellerUser">
+    <div class="settings-row">
     <!-- Payment Methods -->
     <div class="settings-card pm-card-section">
       <div class="card-header">
@@ -179,7 +179,7 @@
         } @else {
           @if (hasPaymentMethods) {
             <div class="pm-status">
-              <div class="pm-tier-badge" aria-hidden="true">L3</div>
+              <div class="pm-verified-badge" aria-hidden="true">✓</div>
               <div class="pm-status-copy">
                 <strong>{{ 'dashboard.settings.paymentMethod.activeBadge' | translate }}</strong>
                 <p>{{ 'dashboard.settings.paymentMethod.activeDesc' | translate }}</p>
@@ -270,7 +270,6 @@
       </div>
     </div>
 
-    @if (isSellerUser) {
     <!-- Seller Payout Account -->
     <div class="settings-card">
       <div class="card-header">
@@ -401,7 +400,6 @@
         }
       </div>
     </div>
-    }
     </div>
 
     <!-- Row 3: Language, Appearance, Notifications -->
@@ -460,6 +458,11 @@
       <div class="card-body">
         @if (notifPrefsLoading) {
           <p class="loading-text">{{ 'dashboard.settings.notifications.loading' | translate }}</p>
+        } @else if (notifPrefsLoadError) {
+          <p class="error-text">{{ notifPrefsLoadError }}</p>
+          <button type="button" class="action-btn" (click)="loadNotifPrefs()">
+            {{ 'dashboard.settings.notifications.retry' | translate }}
+          </button>
         } @else if (notifPrefs) {
           <!-- Global email unsubscribe -->
           <div class="notif-global-row">

@@ -13,7 +13,7 @@ import { FeatureFlagsService } from '../../../shared/services/feature-flags.serv
 import { SocketService } from '../../../shared/services/socket.service';
 import { TransactionsService } from '../../../shared/services/transactions.service';
 import { BuyerPaymentService } from '../../../shared/services/buyer-payment.service';
-import { SellerAnalyticsComponent } from '../seller-analytics/seller-analytics.component';
+import { DashboardAnalyticsComponent } from '../dashboard-analytics/dashboard-analytics.component';
 import { Observable, Subscription } from 'rxjs';
 
 interface BidderListing extends Listing {
@@ -36,7 +36,7 @@ interface HomeStatCard {
 @Component({
   selector: 'app-dashboard-home',
   standalone: true,
-  imports: [CommonModule, RouterLink, FormsModule, TranslateModule, SellerAnalyticsComponent],
+  imports: [CommonModule, RouterLink, FormsModule, TranslateModule, DashboardAnalyticsComponent],
   templateUrl: './dashboard-home.component.html',
   styleUrls: ['./dashboard-home.component.scss']
 })
