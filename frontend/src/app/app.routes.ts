@@ -17,6 +17,11 @@ export const routes: Routes = [
     loadChildren: () => import('./listing/listing.routes').then(r => r.listingRoutes)
   },
   {
+    path: 'api/share/listing/:slug',
+    loadComponent: () =>
+      import('./listing/components/listing-details/listing-details.component').then(m => m.ListingDetailsComponent)
+  },
+  {
     path: 'dashboard',
     loadComponent: () => import('./dashboard/dashboard.component').then(m => m.DashboardComponent),
     canActivate: [AuthGuard],

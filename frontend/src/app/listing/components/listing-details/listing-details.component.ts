@@ -27,7 +27,6 @@ import { getTrustTierInfo } from '../../../shared/utils/trust-tier.util';
 import { SeoService } from '../../../shared/services/seo.service';
 import { AnalyticsService } from '../../../shared/services/analytics.service';
 import { AnalyticsEvents } from '../../../shared/services/analytics.events';
-import { API_CONFIG } from '../../../shared/config/api.config';
 import { getLocalizedTitle, getLocalizedDescription } from '../../../shared/utils/listing-locale';
 
 @Component({
@@ -167,6 +166,7 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
         this.updateIsOwnListing();
         this.loading = false;
         this.seo.setListing(listing, this.buildShareUrl(listing.slug));
+        this.syncShareUrlInAddressBar(listing.slug);
         if (this.isAuthenticated && !this.isOwnListing && listing.seller?._id) {
           this.loadSellerFollowStatus(listing.seller._id);
           this.loadSellerBlockStatus(listing.seller._id);
@@ -1606,10 +1606,22 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
   // ── Share ────────────────────────────────────────────────────────────────────
 
   buildShareUrl(slug: string): string {
-    // Social crawlers need server-rendered OG HTML from the backend — not /listing/:slug (SPA).
-    // www.bidroom.pt/api/* currently serves index.html until SWA links the App Service API.
-    const backend = API_CONFIG.getBackendBaseUrl().replace(/\/$/, '');
-    return `${backend}/share/listing/${slug}`;
+    const origin =
+      typeof window !== 'undefined'
+        ? window.location.origin.replace(/\/$/, '')
+        : 'https://www.bidroom.pt';
+    return `${origin}/api/share/listing/${slug}`;
+  }
+
+  /** Put the share URL in the address bar so copy/paste gets OG-friendly HTML on bidroom.pt. */
+  private syncShareUrlInAddressBar(slug: string): void {
+    if (typeof window === 'undefined') return;
+    const current = window.location.pathname;
+    if (!/^\/listing\/[^/]+$/.test(current)) return;
+    const sharePath = `/api/share/listing/${slug}`;
+    if (current !== sharePath) {
+      this.location.replaceState(sharePath);
+    }
   }
 
   async shareListing(): Promise<void> {

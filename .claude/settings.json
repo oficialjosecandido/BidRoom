@@ -49,7 +49,9 @@
       "Bash(gh workflow *)",
       "Bash(node /tmp/reset_dev_users.js)",
       "Bash(node --check /Users/josecandido/Documents/BidRoom/backend/src/services/nonPaymentPenaltyService.js)",
-      "Bash(node --check /Users/josecandido/Documents/BidRoom/backend/src/models/Review.js)"
+      "Bash(node --check /Users/josecandido/Documents/BidRoom/backend/src/models/Review.js)",
+      "Bash(grep -n \"isSellerUser\\\\|sellerPayment\\\\|paymentConfig\\\\|paymentMethod\\\\|saveSettings\\\\|loadCustomer\\\\|customer\\\\$\\\\|customer =\" /Users/josecandido/Documents/BidRoom/frontend/src/app/dashboard/components/dashboard-settings/dashboard-settings.component.ts)",
+      "Bash(awk -F: 'NR<=25')"
     ],
     "additionalDirectories": [
       "/Users/josecandido/Documents/BidRoom/.claude",
