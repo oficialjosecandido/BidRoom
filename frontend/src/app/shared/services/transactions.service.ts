@@ -56,7 +56,7 @@ export interface TransactionListing {
     inPerson?: boolean;
     bankTransfer?: boolean;
     mbway?: boolean;
-  } | null;
+  };
 }
 
 export interface TransactionUser {
@@ -64,7 +64,7 @@ export interface TransactionUser {
   firstName: string;
   lastName: string;
   email: string;
-  sellerPaymentConfig?: SellerPaymentConfig | null;
+  sellerPaymentConfig?: SellerPaymentConfig;
 }
 
 export interface Transaction {
