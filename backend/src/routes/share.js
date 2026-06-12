@@ -11,7 +11,7 @@ const {
 } = require('../utils/shareMeta');
 
 const router   = express.Router();
-const FRONTEND = (process.env.FRONTEND_URL || 'https://www.bidroom.pt').replace(/\/$/, '');
+const FRONTEND = (process.env.FRONTEND_URL_PROD || process.env.FRONTEND_URL || 'https://www.bidroom.pt').replace(/\/$/, '');
 // Served via SWA linked API: bidroom.pt/api/share/og-default.png
 const DEFAULT_OG_IMAGE = `${FRONTEND}/api/share/og-default.png`;
 
