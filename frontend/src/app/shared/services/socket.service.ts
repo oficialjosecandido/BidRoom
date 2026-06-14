@@ -1,6 +1,7 @@
 import { Injectable, NgZone, inject } from '@angular/core';
 import { io, Socket } from 'socket.io-client';
 import { Observable } from 'rxjs';
+import { Auth, getIdToken } from '@angular/fire/auth';
 import { API_CONFIG } from '../config/api.config';
 import { logger } from '../utils/logger';
 
@@ -67,12 +68,17 @@ export interface OfferUpdateEvent {
 export class SocketService {
   private socket: Socket | null = null;
   private ngZone = inject(NgZone);
+  private firebaseAuth = inject(Auth);
   /** Re-joined on every successful connect/reconnect so listing rooms are not lost after disconnect */
   private joinedListingIds: Set<string> = new Set();
   private joinedPrivateRoomViewerId: string | null = null;
   private joinedUserUid: string | null = null;
 
   connect(): void {
+    this.connectWithToken(undefined);
+  }
+
+  private connectWithToken(token: string | undefined): void {
     if (this.socket?.connected) {
       return;
     }
@@ -92,7 +98,8 @@ export class SocketService {
         reconnection: true,
         reconnectionDelay: 1000,
         reconnectionAttempts: 5,
-        reconnectionDelayMax: 5000
+        reconnectionDelayMax: 5000,
+        auth: token ? { token } : {}
       });
 
       this.socket.on('connect', () => {
@@ -167,10 +174,33 @@ export class SocketService {
   joinUser(uid: string): void {
     if (!uid) return;
     this.joinedUserUid = uid;
-    if (!this.socket?.connected) {
-      this.connect();
+    // Get the Firebase ID token so the backend can verify this socket owns the uid.
+    const firebaseUser = this.firebaseAuth.currentUser;
+    if (!firebaseUser) {
+      // No authenticated user — connect without token (join-user will be silently rejected)
+      if (!this.socket?.connected) this.connect();
+      this.socket?.emit('join-user', uid);
+      return;
     }
-    this.socket?.emit('join-user', uid);
+    getIdToken(firebaseUser).then((token) => {
+      // Update or create socket with the auth token for this and future connections.
+      if (!this.socket) {
+        this.connectWithToken(token);
+        // flushRoomJoins will emit join-user after connect
+      } else {
+        // Update auth for future reconnections, then emit directly on current connection.
+        (this.socket as any).auth = { token };
+        if (!this.socket.connected) {
+          this.socket.connect();
+        } else {
+          this.socket.emit('join-user', uid);
+        }
+      }
+    }).catch(() => {
+      // Token fetch failed — fall back gracefully
+      if (!this.socket?.connected) this.connect();
+      this.socket?.emit('join-user', uid);
+    });
   }
 
   leaveUser(uid: string): void {

@@ -14,6 +14,7 @@ const { createLimiter } = require('./middleware/rateLimiters');
 
 // Initialize Firebase Admin
 require('./config/firebaseAdmin');
+const admin = require('firebase-admin');
 
 // Import database connection
 const connectDB = require('./config/database');
@@ -241,6 +242,12 @@ const reviewsLimiter = createLimiter({
   windowMs: 60 * 1000,
   max: 30,
 });
+// Share limiter: unauthenticated endpoint, each hit queries MongoDB
+const shareLimiter = createLimiter({
+  name: 'share',
+  windowMs: 60 * 1000,
+  max: 120,
+});
 
 // Routes
 app.use('/api/auth', authLimiter, authRoutes);
@@ -267,11 +274,11 @@ app.use('/api/category-follows', generalLimiter, categoryFollowRoutes);
 app.use('/api/damage-claims', generalLimiter, damageClaimsRoutes);
 app.use('/api/kyc', generalLimiter, kycRoutes);
 
-// Share pages — no auth, no rate limit beyond express defaults
+// Share pages — unauthenticated; rate-limited to prevent DB exhaustion via random slug enumeration
 // /api/share/* — same-origin URLs via Azure SWA linked API (WhatsApp OG crawlers)
 // /share/*      — direct backend access (local dev / direct App Service)
-app.use('/api/share', shareRoutes);
-app.use('/share', shareRoutes);
+app.use('/api/share', shareLimiter, shareRoutes);
+app.use('/share',     shareLimiter, shareRoutes);
 
 app.get('/', (req, res) => {
   res.json({
@@ -360,6 +367,21 @@ app.use((err, req, res, next) => {
 const OBJECT_ID_RE = /^[a-f\d]{24}$/i;
 const SAFE_UID_RE  = /^[a-zA-Z0-9_-]{1,128}$/;
 
+// Socket.io auth middleware — verify Firebase token if provided.
+// Unauthenticated sockets are still allowed for public listing rooms;
+// socket.data.uid is null when no valid token is present.
+io.use(async (socket, next) => {
+  const token = socket.handshake.auth?.token;
+  if (!token) { socket.data.uid = null; return next(); }
+  try {
+    const decoded = await admin.auth().verifyIdToken(token);
+    socket.data.uid = decoded.uid;
+  } catch {
+    socket.data.uid = null;
+  }
+  next();
+});
+
 // Socket.io connection handling
 io.on('connection', (socket) => {
   // Join a listing room to receive real-time updates
@@ -390,13 +412,17 @@ io.on('connection', (socket) => {
     updatePrivateRoomViewerCount(io, listingId);
   });
 
-  // Join user room for real-time notification updates (uid = Firebase/auth uid)
+  // Join user room — only allowed if the socket authenticated as that uid.
   socket.on('join-user', (uid) => {
-    if (uid && SAFE_UID_RE.test(uid)) socket.join(`user:${uid}`);
+    if (!uid || !SAFE_UID_RE.test(uid)) return;
+    if (socket.data.uid !== uid) return; // prevent subscribing to another user's events
+    socket.join(`user:${uid}`);
   });
 
   socket.on('leave-user', (uid) => {
-    if (uid && SAFE_UID_RE.test(uid)) socket.leave(`user:${uid}`);
+    if (!uid || !SAFE_UID_RE.test(uid)) return;
+    if (socket.data.uid !== uid) return;
+    socket.leave(`user:${uid}`);
   });
 
   socket.on('disconnect', () => {

@@ -16,8 +16,10 @@ const {
 const { attachPaymentMethodToUser } = require('../services/paymentMethodService');
 
 const LOG_PREFIX = '[Connect]';
+const logger = require('../utils/logger');
 const { estimateBuyerProcessingFeeCents } = require('../utils/fees');
-const BIDROOMFEE_RATE = 0.04; // 4% — charged to seller via transfer_data.amount
+/** Fallback rate when listing.commissionRate is missing (edge case for old data). */
+const BIDROOMFEE_RATE = 0.035; // 3.5% standard rate (was incorrectly 0.04)
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:4200';
 /** Stripe rejects localhost for business_profile.url — use a public https origin in dev. */
 const STRIPE_BUSINESS_URL_FALLBACK = 'https://www.bidroom.pt';
@@ -763,6 +765,9 @@ router.post('/create-checkout-session', requireActiveAccount, async (req, res) =
     // BidRoom fee: per-listing commissionRate (set at listing creation) — deducted from SELLER payout
     // Stripe processing fee: ~2.9% + $0.30 — passed through to BUYER as "Processing fee" line item
     const effectiveFeeRate = listing?.commissionRate ?? BIDROOMFEE_RATE;
+    if (listing?.commissionRate == null) {
+      logger.warn(`${LOG_PREFIX} commissionRate missing on listing ${listing?._id}, using fallback ${BIDROOMFEE_RATE}`);
+    }
     const itemCents    = Math.round(itemAmount * 100);
     const shippingCents = Math.round(shippingAmount * 100);
 
@@ -792,7 +797,7 @@ router.post('/create-checkout-session', requireActiveAccount, async (req, res) =
     const lineItems = [
       {
         price_data: {
-          currency: 'usd',
+          currency: 'eur',
           product_data: { name: listing?.title || 'Auction item' },
           unit_amount: itemCents
         },
@@ -800,7 +805,7 @@ router.post('/create-checkout-session', requireActiveAccount, async (req, res) =
       },
       {
         price_data: {
-          currency: 'usd',
+          currency: 'eur',
           product_data: { name: 'Processing fee' },
           unit_amount: stripeFeeEstimateCents
         },
@@ -814,7 +819,7 @@ router.post('/create-checkout-session', requireActiveAccount, async (req, res) =
         : 'Shipping';
       lineItems.push({
         price_data: {
-          currency: 'usd',
+          currency: 'eur',
           product_data: { name: shippingLabel },
           unit_amount: shippingCents
         },
