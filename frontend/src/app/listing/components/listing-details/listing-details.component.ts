@@ -28,6 +28,7 @@ import { SeoService } from '../../../shared/services/seo.service';
 import { AnalyticsService } from '../../../shared/services/analytics.service';
 import { AnalyticsEvents } from '../../../shared/services/analytics.events';
 import { getLocalizedTitle, getLocalizedDescription } from '../../../shared/utils/listing-locale';
+import { API_CONFIG } from '../../../shared/config/api.config';
 
 @Component({
   selector: 'app-listing-details',
@@ -166,7 +167,6 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
         this.updateIsOwnListing();
         this.loading = false;
         this.seo.setListing(listing, this.buildShareUrl(listing.slug));
-        this.syncShareUrlInAddressBar(listing.slug);
         if (this.isAuthenticated && !this.isOwnListing && listing.seller?._id) {
           this.loadSellerFollowStatus(listing.seller._id);
           this.loadSellerBlockStatus(listing.seller._id);
@@ -1606,22 +1606,10 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
   // ── Share ────────────────────────────────────────────────────────────────────
 
   buildShareUrl(slug: string): string {
-    const origin =
-      typeof window !== 'undefined'
-        ? window.location.origin.replace(/\/$/, '')
-        : 'https://www.bidroom.pt';
-    return `${origin}/api/share/listing/${slug}`;
-  }
-
-  /** Put the share URL in the address bar so copy/paste gets OG-friendly HTML on bidroom.pt. */
-  private syncShareUrlInAddressBar(slug: string): void {
-    if (typeof window === 'undefined') return;
-    const current = window.location.pathname;
-    if (!/^\/listing\/[^/]+$/.test(current)) return;
-    const sharePath = `/api/share/listing/${slug}`;
-    if (current !== sharePath) {
-      this.location.replaceState(sharePath);
-    }
+    // Share links go directly to the backend App Service, which serves OG-rich HTML
+    // for social crawlers and JS-redirects human browsers to the real listing page.
+    // The SWA does not proxy /api/share/* because the backend is a standalone App Service.
+    return `${API_CONFIG.getBackendBaseUrl()}/share/listing/${slug}`;
   }
 
   async shareListing(): Promise<void> {
