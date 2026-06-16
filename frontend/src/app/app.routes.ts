@@ -90,5 +90,8 @@ export const routes: Routes = [
     path: 'notifications/unsubscribe',
     loadComponent: () => import('./notifications/unsubscribe.component').then(m => m.UnsubscribeComponent)
   },
-  { path: '**', redirectTo: '/landing' }
+  // Note: no '**' catch-all here — Angular SSR build fails with path-to-regexp v8 on unnamed wildcards.
+  // Unknown paths are handled at the server level (Express redirects to /landing).
+  // On the browser SPA, unknown paths simply don't navigate (stays on current route).
+  { path: 'not-found', redirectTo: '/landing', pathMatch: 'full' }
 ];

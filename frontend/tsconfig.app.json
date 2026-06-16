@@ -5,13 +5,14 @@
   "compilerOptions": {
     "baseUrl": "./",
     "outDir": "./out-tsc/app",
-    "types": [],
+    "types": ["node"],
     "paths": {
       "@env": ["src/environments/environment"]
     }
   },
   "include": [
-    "src/**/*.ts"
+    "src/**/*.ts",
+    "server.ts"
   ],
   "exclude": [
     "src/**/*.spec.ts"

@@ -1,5 +1,5 @@
-import { Component, OnInit, OnDestroy, ChangeDetectorRef, inject, computed } from '@angular/core';
-import { CommonModule, Location } from '@angular/common';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef, PLATFORM_ID, inject, computed } from '@angular/core';
+import { CommonModule, Location, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Subscription } from 'rxjs';
@@ -60,6 +60,8 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
   readonly themeService = inject(ThemeService);
   private seo = inject(SeoService);
   private analytics = inject(AnalyticsService);
+  private platformId = inject(PLATFORM_ID);
+  private isBrowser = isPlatformBrowser(this.platformId);
   linkCopied = false;
 
   readonly isLight = computed(() => this.themeService.effective() === 'light');
@@ -129,7 +131,7 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
   sellerStripeReady = true;
 
   ngOnInit(): void {
-    window.scrollTo(0, 0);
+    if (this.isBrowser) window.scrollTo(0, 0);
     const slug = this.route.snapshot.paramMap.get('slug');
     if (slug) {
       this.loadListing(slug);
@@ -171,7 +173,7 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
           this.loadSellerFollowStatus(listing.seller._id);
           this.loadSellerBlockStatus(listing.seller._id);
         }
-        window.scrollTo(0, 0);
+        if (this.isBrowser) window.scrollTo(0, 0);
         // Start countdown timer
         this.justEndedRefetched = false;
         this.startCountdown();
@@ -183,7 +185,9 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
             this.loadBids(listing._id);
           }
           // Connect to Socket.io and join listing room for real-time updates
-          this.setupRealTimeUpdates(listing._id);
+          // (browser-only: a one-shot SSR render has no use for a live socket connection,
+          // and opening one would keep the render from ever reaching whenStable()).
+          if (this.isBrowser) this.setupRealTimeUpdates(listing._id);
         }
       },
       error: () => {
@@ -367,7 +371,10 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
 
     this.updateCountdown();
 
-    if (!this.countdownEnded) {
+    // A live-ticking interval is meaningless for a one-shot SSR render, and zone.js
+    // treats an uncleared setInterval as a permanently pending task — which would
+    // keep the server's whenStable() from ever resolving and hang the response.
+    if (this.isBrowser && !this.countdownEnded) {
       this.countdownInterval = setInterval(() => {
         this.updateCountdown();
       }, 1000);
@@ -1600,7 +1607,10 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
     }
     // Note: Don't disconnect socket completely as it might be used by other components
     // this.socketService.disconnect();
-    this.seo.resetToDefault();
+    // SSR destroys the component tree right after rendering to produce the final HTML;
+    // resetting here would overwrite the listing-specific OG tags we just rendered.
+    // Only relevant for client-side route transitions away from this page.
+    if (this.isBrowser) this.seo.resetToDefault();
   }
 
   // ── Share ────────────────────────────────────────────────────────────────────

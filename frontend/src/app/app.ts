@@ -17,7 +17,7 @@ export class App implements OnInit {
   private readonly _analytics = inject(AnalyticsService);
 
   ngOnInit(): void {
-    const saved = localStorage.getItem('lang') || 'en';
+    const saved = (typeof localStorage !== 'undefined' && localStorage.getItem('lang')) || 'en';
     this.translate.use(saved);
   }
 }

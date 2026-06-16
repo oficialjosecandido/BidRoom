@@ -22,8 +22,9 @@ function apiUrlFromEnvironment(): string {
 
 export const API_CONFIG = {
   getApiUrl(): string {
-    const hostname = typeof window !== 'undefined' ? window.location.hostname : 'localhost';
-    const isLocal = isLocalHost(hostname);
+    // No `window` means we're rendering on the server (SSR/Node) — there's no dev
+    // proxy there, so always hit the real backend directly instead of defaulting to "local".
+    const isLocal = typeof window !== 'undefined' && isLocalHost(window.location.hostname);
     const runtimeUrl =
       typeof window !== 'undefined' ? (window as { APP_CONFIG?: { API_URL?: string } }).APP_CONFIG?.API_URL : undefined;
 
@@ -70,9 +71,7 @@ export const API_CONFIG = {
     const runtimeKey = typeof window !== 'undefined' && (window as any).APP_CONFIG?.STRIPE_PUBLISHABLE_KEY;
     if (runtimeKey) return runtimeKey;
 
-    const hostname = typeof window !== 'undefined' ? window.location.hostname : 'localhost';
-
-    if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '0.0.0.0') {
+    if (typeof window !== 'undefined' && isLocalHost(window.location.hostname)) {
       return 'pk_test_51TI5X806hw2O8NlNioZFt34bFn38uQPhm4hayUKZtrPf41BWH4xxdjiox9gNlMpSSHdUfCYtAM5FNX1UF3KyhNuP00Vqz8RtvH';
     }
 

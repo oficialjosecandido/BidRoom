@@ -38,7 +38,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
 
   constructor() {
     this.isAuthenticated$ = this.authService.isAuthenticated();
-    const saved = localStorage.getItem('lang') || 'pt';
+    const saved = (typeof localStorage !== 'undefined' && localStorage.getItem('lang')) || 'pt';
     this.translate.use(saved);
   }
 
