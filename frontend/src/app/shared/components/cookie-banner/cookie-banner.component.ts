@@ -111,6 +111,7 @@ export class CookieBannerComponent implements OnInit, OnDestroy {
   }
 
   private clearBodyPadding(): void {
+    if (typeof document === 'undefined') return;
     document.body.style.paddingBottom = '';
     document.documentElement.style.setProperty('--cookie-banner-height', '0px');
   }
