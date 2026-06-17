@@ -55,9 +55,14 @@ jobs:
           STRIPE_PUBLISHABLE_KEY: ${{ secrets.STRIPE_PUBLISHABLE_KEY }}
         run: |
           set -euo pipefail
+          # Angular SSR builds produce index.csr.html; Azure SWA needs index.html
+          CSR="frontend/dist/frontend/browser/index.csr.html"
           INDEX="frontend/dist/frontend/browser/index.html"
+          if [ -f "$CSR" ]; then
+            cp "$CSR" "$INDEX"
+          fi
           if [ ! -f "$INDEX" ]; then
-            echo "❌ Built index.html not found at $INDEX"
+            echo "❌ Built index.html (or index.csr.html) not found in frontend/dist/frontend/browser/"
             exit 1
           fi
 
