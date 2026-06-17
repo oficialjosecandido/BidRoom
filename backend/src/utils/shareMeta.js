@@ -1,7 +1,6 @@
 const SITE_NAME = 'BidRoom';
 
-/** CTA appended to every OG description — always English, always "Bid Now". */
-const CTA = 'Bid Now';
+const CTA = { pt: 'Licite já', en: 'Bid Now' };
 
 /** Pick pt/en from Accept-Language (WhatsApp often sends pt-PT). */
 function pickShareLocale(acceptLanguage = '') {
@@ -35,22 +34,18 @@ function buildOgTitle(title) {
   return t ? `${SITE_NAME} - ${t}` : SITE_NAME;
 }
 
-/**
- * "[description snippet, max 120 chars] Bid Now"
- *
- * Always ends with "Bid Now" regardless of language — it is a BidRoom brand
- * phrase and should be consistent across all share previews.
- */
-function buildOgDescription(description) {
+/** "[description snippet, max 120 chars] Licite já|Bid Now" */
+function buildOgDescription(description, lang = 'en') {
+  const cta = CTA[lang] ?? CTA.en;
   const raw = String(description || '').replace(/\s+/g, ' ').trim();
-  if (!raw) return CTA;
+  if (!raw) return cta;
   const snippet = raw.length > 120 ? `${raw.slice(0, 117)}…` : raw;
-  return `${snippet} ${CTA}`;
+  return `${snippet} ${cta}`;
 }
 
 module.exports = {
   SITE_NAME,
-  CTA,
+  CTA: CTA.en,
   pickShareLocale,
   getLocalizedListingText,
   buildOgTitle,
