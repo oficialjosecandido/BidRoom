@@ -1,4 +1,4 @@
-name: Deploy Frontend to Azure Static Web App
+name: Deploy Frontend to Azure App Service (SSR)
 
 on:
   push:
@@ -11,12 +11,13 @@ on:
   workflow_dispatch:
 
 env:
-  NODE_VERSION: '20.x'
+  NODE_VERSION: '22.x'
+  AZURE_WEBAPP_NAME: bidroom-frontend-dev
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -35,92 +36,90 @@ jobs:
           cd frontend
           npm ci --legacy-peer-deps
 
-      - name: Build Angular app
+      - name: Build Angular SSR app
         run: |
           cd frontend
-          # dev branch → development config (shows test durations, non-production flags)
-          # main branch → production config (hides test-only features)
+          # dev branch → development config; main → production
           if [ "${{ github.ref_name }}" = "dev" ]; then
             npx ng build --configuration=development
           else
             npm run build
           fi
-        env:
-          # Set API URL for production build
-          API_URL: https://bidroom-backend-prod-e9eghtc0aha4e3dw.uksouth-01.azurewebsites.net/api
 
-      - name: Patch runtime config in built index.html
+      - name: Patch runtime config in built HTML templates
         env:
           API_URL: https://bidroom-backend-prod-e9eghtc0aha4e3dw.uksouth-01.azurewebsites.net/api
           STRIPE_PUBLISHABLE_KEY: ${{ secrets.STRIPE_PUBLISHABLE_KEY }}
         run: |
           set -euo pipefail
-          INDEX="frontend/dist/frontend/browser/index.html"
-          if [ ! -f "$INDEX" ]; then
-            echo "❌ Built index.html not found at $INDEX"
-            exit 1
-          fi
 
-          # Replace API_URL placeholder (default in index.html is '/api')
-          sed -i "s|API_URL: '/api'|API_URL: '${API_URL}'|" "$INDEX"
+          # The SSR build produces two HTML templates that both need APP_CONFIG patched:
+          #   browser/index.csr.html  — shell served for RenderMode.Client routes
+          #   server/index.server.html — template used by the SSR engine (affects <head> OG tags)
+          BROWSER_HTML="frontend/dist/frontend/browser/index.csr.html"
+          SERVER_HTML="frontend/dist/frontend/server/index.server.html"
 
-          # Replace Stripe publishable key. Fails the build if the secret was not set,
-          # otherwise we would silently ship the dev/test key to production users.
-          if [ -z "${STRIPE_PUBLISHABLE_KEY:-}" ]; then
-            echo "❌ STRIPE_PUBLISHABLE_KEY secret is not set in GitHub Actions. Refusing to deploy with the test key embedded in index.html."
-            exit 1
-          fi
-          # Use a delimiter unlikely to appear inside the key; awk avoids sed escaping headaches.
-          awk -v k="$STRIPE_PUBLISHABLE_KEY" '
-            { gsub(/STRIPE_PUBLISHABLE_KEY: '\''[^'\'']*'\''/, "STRIPE_PUBLISHABLE_KEY: '\''" k "'\''"); print }
-          ' "$INDEX" > "$INDEX.tmp" && mv "$INDEX.tmp" "$INDEX"
+          for INDEX in "$BROWSER_HTML" "$SERVER_HTML"; do
+            if [ ! -f "$INDEX" ]; then
+              echo "❌ Built template not found at $INDEX"
+              exit 1
+            fi
 
-          echo "✅ Patched runtime config:"
-          grep -oE "(API_URL|STRIPE_PUBLISHABLE_KEY): '[^']*'" "$INDEX" | sed -E "s/(STRIPE_PUBLISHABLE_KEY: ')([^']{8}).*$/\1\2…(redacted)/"
+            # Replace API_URL placeholder
+            sed -i "s|API_URL: '/api'|API_URL: '${API_URL}'|" "$INDEX"
+
+            # Replace Stripe publishable key — fail hard if the secret is missing so
+            # we never silently ship the test key to production users.
+            if [ -z "${STRIPE_PUBLISHABLE_KEY:-}" ]; then
+              echo "❌ STRIPE_PUBLISHABLE_KEY secret is not set. Refusing to deploy with the test key."
+              exit 1
+            fi
+            awk -v k="$STRIPE_PUBLISHABLE_KEY" '
+              { gsub(/STRIPE_PUBLISHABLE_KEY: '\''[^'\'']*'\''/, "STRIPE_PUBLISHABLE_KEY: '\''" k "'\''"); print }
+            ' "$INDEX" > "$INDEX.tmp" && mv "$INDEX.tmp" "$INDEX"
+          done
+
+          echo "✅ Patched runtime config in both HTML templates:"
+          grep -oE "(API_URL|STRIPE_PUBLISHABLE_KEY): '[^']*'" "$BROWSER_HTML" \
+            | sed -E "s/(STRIPE_PUBLISHABLE_KEY: ')([^']{8}).*$/\1\2…(redacted)/"
 
       - name: Verify build output
         run: |
-          echo "Build output location:"
-          ls -la frontend/dist/frontend/browser/index.html
-          echo ""
-          echo "Files in build output:"
-          ls -la frontend/dist/frontend/browser/ | head -10
+          echo "📂 browser/ HTML:"
+          ls -la frontend/dist/frontend/browser/index.csr.html
+          echo "📂 server/ HTML:"
+          ls -la frontend/dist/frontend/server/index.server.html
+          echo "📂 server/ entry:"
+          ls -la frontend/dist/frontend/server/server.mjs
 
-      - name: Prepare deployment directory
+      - name: Create deployment package
         run: |
-          # Clean up frontend directory, keep only dist output
-          # Azure Static Web Apps has a 250MB limit
-          echo "📦 Preparing deployment directory..."
-          
-          # Create a temporary directory for deployment
-          mkdir -p deploy
-          
-          # Copy only the built files (not source files)
-          cp -r frontend/dist/frontend/browser/* deploy/
-          
-          # Copy staticwebapp.config.json if it exists (needed for SPA routing)
-          if [ -f "frontend/staticwebapp.config.json" ]; then
-            cp frontend/staticwebapp.config.json deploy/
-            echo "✅ Copied staticwebapp.config.json"
-          fi
-          
-          # Calculate size
-          echo "📊 Deployment size:"
-          du -sh deploy
-          du -sh deploy/* | head -10
-          
-          echo "✅ Deployment files ready in deploy/"
-          ls -la deploy/index.html
-          ls -la deploy/staticwebapp.config.json 2>/dev/null || echo "⚠️  staticwebapp.config.json not found"
+          cd frontend/dist/frontend
+          # Package both browser assets and the SSR server bundle.
+          # The server is self-contained (esbuild-bundled) — no node_modules needed.
+          # Layout after extraction to wwwroot/:
+          #   browser/   → static assets served by express.static
+          #   server/    → SSR engine; startup: node server/server.mjs
+          zip -r ../../../frontend-deploy.zip browser/ server/
+          echo "📊 Deployment package size: $(du -sh ../../../frontend-deploy.zip | cut -f1)"
 
-      - name: Deploy to Azure Static Web Apps
-        uses: Azure/static-web-apps-deploy@v1
+      - name: Azure Login
+        uses: azure/login@v2
         with:
-          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          action: "upload"
-          app_location: "/deploy"
-          api_location: "api"
-          output_location: ""
-          skip_app_build: true
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
 
+      - name: Configure App Service settings
+        run: |
+          az webapp config appsettings set \
+            --name ${{ env.AZURE_WEBAPP_NAME }} \
+            --resource-group bidroom-dev-rg \
+            --settings \
+              NODE_ENV=production \
+              NG_ALLOWED_HOSTS="${{ env.AZURE_WEBAPP_NAME }}.azurewebsites.net,bidroom.pt"
+
+      - name: Deploy to Azure App Service
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ env.AZURE_WEBAPP_NAME }}
+          package: ./frontend-deploy.zip
+          startup-command: 'node server/server.mjs'

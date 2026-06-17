@@ -1,5 +1,5 @@
-import { Component, Input, OnInit, OnDestroy, HostListener, inject } from '@angular/core';
-import { AsyncPipe } from '@angular/common';
+import { Component, Input, OnInit, OnDestroy, HostListener, inject, PLATFORM_ID } from '@angular/core';
+import { isPlatformBrowser, AsyncPipe } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { Observable, Subscription } from 'rxjs';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
@@ -23,7 +23,10 @@ export class HeaderComponent implements OnInit, OnDestroy {
   private notificationService = inject(NotificationService);
   private socketService = inject(SocketService);
   private translate = inject(TranslateService);
+  private platformId = inject(PLATFORM_ID);
   readonly theme = inject(ThemeService);
+
+  private readonly isBrowser = isPlatformBrowser(this.platformId);
 
   @Input() activePage = '';
 
@@ -78,29 +81,31 @@ export class HeaderComponent implements OnInit, OnDestroy {
       })
     );
 
-    this.subs.add(
-      this.socketService.onNewNotification().subscribe(() => {
-        this.notificationService.refreshUnreadCount();
-      })
-    );
+    if (this.isBrowser) {
+      this.subs.add(
+        this.socketService.onNewNotification().subscribe(() => {
+          this.notificationService.refreshUnreadCount();
+        })
+      );
 
-    this.subs.add(
-      this.socketService.onPrivateRoomInvitation().subscribe(({ listingId, listingTitle }) => {
-        Swal.fire({
-          title: "You're invited!",
-          html: `You have been invited to a private auction room for <strong>${listingTitle}</strong>.<br>You have <strong>15 minutes</strong> to accept.`,
-          icon: 'info',
-          showCancelButton: true,
-          confirmButtonText: 'Go to room',
-          cancelButtonText: 'Dismiss',
-          confirmButtonColor: '#2563eb'
-        }).then(result => {
-          if (result.isConfirmed) {
-            this.router.navigateByUrl(`/private-room/auction/${listingId}`);
-          }
-        });
-      })
-    );
+      this.subs.add(
+        this.socketService.onPrivateRoomInvitation().subscribe(({ listingId, listingTitle }) => {
+          Swal.fire({
+            title: "You're invited!",
+            html: `You have been invited to a private auction room for <strong>${listingTitle}</strong>.<br>You have <strong>15 minutes</strong> to accept.`,
+            icon: 'info',
+            showCancelButton: true,
+            confirmButtonText: 'Go to room',
+            cancelButtonText: 'Dismiss',
+            confirmButtonColor: '#2563eb'
+          }).then(result => {
+            if (result.isConfirmed) {
+              this.router.navigateByUrl(`/private-room/auction/${listingId}`);
+            }
+          });
+        })
+      );
+    }
   }
 
   ngOnDestroy(): void {

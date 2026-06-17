@@ -54,6 +54,10 @@ export class AuthService {
       this.userRoles.invalidate();
       this.userRoles.load().subscribe((roles) => {
         if (!roles.isAdmin) return;
+        // Guard: localStorage and window.location are browser-only.
+        // onAuthStateChanged fires with a null user on the server (no persistence),
+        // so mapped is always null there and we never reach this block on SSR.
+        if (typeof localStorage === 'undefined' || typeof window === 'undefined') return;
         const adminRoute = localStorage.getItem('admin_route');
         if (!adminRoute) return;
         const currentPath = window.location.pathname;

@@ -1,120 +1,95 @@
 #!/bin/bash
+# BidRoom — Local SSR build & smoke-test helper
+#
+# This script builds the Angular SSR app locally, patches runtime config, and
+# runs a quick smoke-test against the local Node server.
+#
+# Production deployment is handled entirely by GitHub Actions:
+#   .github/workflows/deploy-frontend.yml → Azure App Service bidroom-frontend-dev
+#
+# Usage: ./scripts/deploy-frontend-azure.sh [dev|prod]
 
-# Deploy Frontend to Azure Static Web App
-# This script builds the frontend and provides deployment instructions
-# Usage: ./scripts/deploy-frontend-azure.sh
-
-set -e
+set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 FRONTEND_DIR="$PROJECT_ROOT/frontend"
-BACKEND_URL="https://bidroom-backend-dev.azurewebsites.net"
+BACKEND_URL="${BACKEND_URL:-https://bidroom-backend-dev.azurewebsites.net}"
+CONFIG="${1:-prod}"
 
-# Colors for output
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-RED='\033[0;31m'
-BLUE='\033[0;34m'
-NC='\033[0m' # No Color
+GREEN='\033[0;32m'; YELLOW='\033[1;33m'; BLUE='\033[0;34m'; RED='\033[0;31m'; NC='\033[0m'
+ok()   { echo -e "${GREEN}✅  $1${NC}"; }
+warn() { echo -e "${YELLOW}⚠️   $1${NC}"; }
+info() { echo -e "${BLUE}ℹ️   $1${NC}"; }
+err()  { echo -e "${RED}❌  $1${NC}"; exit 1; }
 
-print_status() {
-    echo -e "${GREEN}✅ $1${NC}"
-}
-
-print_warning() {
-    echo -e "${YELLOW}⚠️  $1${NC}"
-}
-
-print_info() {
-    echo -e "${BLUE}ℹ️  $1${NC}"
-}
-
-echo "🚀 Building Frontend for Azure Deployment..."
-
-# Step 1: Clean and install dependencies
 echo ""
-echo "📦 Installing dependencies..."
+info "BidRoom frontend — local SSR build ($CONFIG)"
+echo ""
+
+# ── 1. Install ──────────────────────────────────────────────────────────────────
+info "Installing dependencies…"
 cd "$FRONTEND_DIR"
+npm ci --legacy-peer-deps --prefer-offline 2>/dev/null || npm ci --legacy-peer-deps
+ok "Dependencies ready"
 
-# Remove node_modules for clean install
-if [ -d "node_modules" ]; then
-    echo "🧹 Cleaning existing node_modules..."
-    rm -rf node_modules
+# ── 2. Build ────────────────────────────────────────────────────────────────────
+info "Building Angular SSR ($CONFIG)…"
+if [ "$CONFIG" = "dev" ]; then
+  npx ng build --configuration=development
+else
+  npm run build
 fi
 
-npm install
-print_status "Dependencies installed"
+BROWSER_HTML="$FRONTEND_DIR/dist/frontend/browser/index.csr.html"
+SERVER_HTML="$FRONTEND_DIR/dist/frontend/server/index.server.html"
+SERVER_MJS="$FRONTEND_DIR/dist/frontend/server/server.mjs"
 
-# Step 2: Build frontend
-echo ""
-echo "🔨 Building frontend with production configuration..."
+[ -f "$SERVER_MJS" ]    || err "server.mjs not found — SSR build may have failed"
+[ -f "$BROWSER_HTML" ]  || err "browser/index.csr.html not found"
+[ -f "$SERVER_HTML" ]   || err "server/index.server.html not found"
+ok "Build completed ($(du -sh "$FRONTEND_DIR/dist/frontend" | cut -f1))"
 
-# Create environment configuration for production build
-print_info "Setting API URL to: $BACKEND_URL"
+# ── 3. Patch runtime config ──────────────────────────────────────────────────────
+API_URL="${BACKEND_URL}/api"
+info "Patching runtime config → $API_URL"
 
-# Build with production configuration
-npm run build
+for INDEX in "$BROWSER_HTML" "$SERVER_HTML"; do
+  sed -i.bak "s|API_URL: '/api'|API_URL: '${API_URL}'|" "$INDEX"
+  rm -f "$INDEX.bak"
+done
+ok "Patched API_URL in both HTML templates"
 
-# Check if build was successful
-BUILD_DIR="$FRONTEND_DIR/dist/frontend/browser"
-if [ ! -f "$BUILD_DIR/index.html" ]; then
-    print_error "Build failed. index.html not found in build output."
-    exit 1
+# ── 4. Smoke-test locally ────────────────────────────────────────────────────────
+info "Starting local SSR server on port 4000…"
+cd "$FRONTEND_DIR/dist/frontend"
+node server/server.mjs &
+SERVER_PID=$!
+trap "kill $SERVER_PID 2>/dev/null || true" EXIT
+
+sleep 3  # give the server a moment to bind
+
+info "Smoke-testing /listing/test-slug …"
+HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:4000/listing/test-slug --max-time 10 || echo "000")
+
+if [[ "$HTTP_CODE" == "200" || "$HTTP_CODE" == "302" ]]; then
+  ok "Server is responding (HTTP $HTTP_CODE)"
+else
+  warn "Got HTTP $HTTP_CODE — check server output above"
 fi
 
-print_status "Build completed successfully"
+info "Checking OG tags (listing page)…"
+curl -sL http://localhost:4000/listing/test-slug --max-time 10 \
+  | grep -o 'property="og:[^>]*>' | head -5 || warn "No OG tags found (slug may not exist)"
 
-# Patch index.html so Azure SWA calls the backend (not same-origin /api → SPA HTML)
-INDEX_HTML="$BUILD_DIR/index.html"
-if [ -f "$INDEX_HTML" ]; then
-    sed -i.bak "s|API_URL: '/api'|API_URL: '${BACKEND_URL}/api'|" "$INDEX_HTML"
-    rm -f "$INDEX_HTML.bak"
-    print_status "Patched APP_CONFIG.API_URL → ${BACKEND_URL}/api"
-fi
-
-# Step 3: Display deployment information
 echo ""
-echo "═══════════════════════════════════════════════════════════════"
-echo "📋 Frontend Build Complete!"
-echo "═══════════════════════════════════════════════════════════════"
+echo "══════════════════════════════════════════════════════════════════════════"
+ok "Local build & smoke-test done"
+echo "══════════════════════════════════════════════════════════════════════════"
 echo ""
-echo "Build output: $BUILD_DIR"
-echo "Build size: $(du -sh "$BUILD_DIR" | cut -f1)"
+echo "  Server running at:  http://localhost:4000   (stops when this script exits)"
 echo ""
-echo "═══════════════════════════════════════════════════════════════"
-echo "🚀 Deployment Options:"
-echo "═══════════════════════════════════════════════════════════════"
+echo "  To deploy to production, push to main on GitHub:"
+echo "  → .github/workflows/deploy-frontend.yml deploys to bidroom-frontend-dev.azurewebsites.net"
 echo ""
-echo "Option 1: Automatic Deployment via GitHub"
-echo "   - Push your code to the main branch"
-echo "   - Azure Static Web App will automatically build and deploy"
-echo "   - Make sure your Static Web App is connected to your GitHub repo"
-echo ""
-echo "Option 2: Manual Deployment via Azure CLI"
-echo "   Run the following command:"
-echo ""
-echo "   cd $BUILD_DIR"
-echo "   zip -r ../frontend-deploy.zip ."
-echo "   az staticwebapp deploy \\"
-echo "     --name bidroom-frontend-dev \\"
-echo "     --resource-group bidroom-dev-rg \\"
-echo "     --artifact-location dist/frontend/browser"
-echo ""
-echo "Option 3: Using SWA CLI (Static Web Apps CLI)"
-echo "   npm install -g @azure/static-web-apps-cli"
-echo "   swa deploy $BUILD_DIR \\"
-echo "     --env production \\"
-echo "     --deployment-token <your-deployment-token>"
-echo ""
-echo "═══════════════════════════════════════════════════════════════"
-print_warning "Important: Make sure the API URL is configured correctly!"
-echo ""
-echo "   Update the API URL in your services:"
-echo "   - bids.service.ts"
-echo "   - listings.service.ts"
-echo "   - socket.service.ts"
-echo ""
-echo "   Current backend URL: $BACKEND_URL"
-echo ""
-
+read -p "  Press Enter to stop the server → "
