@@ -53,6 +53,14 @@ jobs:
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_E211810EC57F40E4B475643EF78F6C4B }}
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_9D1F200D974B446B8715549D224AE368 }}
 
+      - name: Configure startup command
+        run: |
+          RESOURCE_GROUP=$(az webapp list --query "[?name=='bidroom-backend-prod'].resourceGroup | [0]" -o tsv)
+          az webapp config set \
+            --name bidroom-backend-prod \
+            --resource-group "$RESOURCE_GROUP" \
+            --startup-file "node src/index.js"
+
       - name: Zip deployment package
         run: zip -r deploy.zip . -x "*.git*"
 
