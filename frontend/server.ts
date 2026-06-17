@@ -7,10 +7,13 @@ const serverDistFolder = dirname(fileURLToPath(import.meta.url));
 const browserDistFolder = resolve(serverDistFolder, '../browser');
 
 const app = express();
-// SSRF protection: only these hosts may appear in the request's Host header
-// during SSR. Override/extend via NG_ALLOWED_HOSTS (comma-separated) at runtime.
+
+// SSRF protection: only these hosts may appear in the request's Host header during SSR.
+// Extend at runtime by setting NG_ALLOWED_HOSTS (comma-separated) in App Service settings.
+const extraHosts = (process.env['NG_ALLOWED_HOSTS'] ?? '')
+  .split(',').map(h => h.trim()).filter(Boolean);
 const angularApp = new AngularNodeAppEngine({
-  allowedHosts: ['localhost', '127.0.0.1', 'www.bidroom.pt', 'bidroom.pt'],
+  allowedHosts: ['localhost', '127.0.0.1', 'www.bidroom.pt', 'bidroom.pt', ...extraHosts],
 });
 
 // Serve static files from /browser
