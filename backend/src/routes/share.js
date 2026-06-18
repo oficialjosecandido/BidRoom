@@ -149,7 +149,7 @@ router.get('/listing/:slug', async (req, res) => {
     // ── Build escaped OG values ──────────────────────────────────────────────
     const ogTitle       = esc(buildOgTitle(title));
     const ogDescription = esc(buildOgDescription(description));
-    const ogUrl         = esc(shareUrl);
+    const ogUrl         = esc(canonicalUrl);
     const ogImage       = esc(resolvedImage);
     const ogCanonical   = esc(canonicalUrl);
     const ogImageAlt    = esc(title || 'BidRoom listing');

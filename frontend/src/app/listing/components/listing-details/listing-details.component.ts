@@ -1616,8 +1616,10 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
   // ── Share ────────────────────────────────────────────────────────────────────
 
   buildShareUrl(slug: string): string {
-    const base = typeof window !== 'undefined' ? window.location.origin : 'https://www.bidroom.pt';
-    return `${base}/listing/${slug}`;
+    // Use the backend share endpoint so social crawlers (WhatsApp, Telegram, etc.)
+    // receive OG-rich HTML. Browsers are redirected to the canonical listing URL.
+    const backendBase = API_CONFIG.getBackendBaseUrl();
+    return `${backendBase}/api/share/listing/${slug}`;
   }
 
   async shareListing(): Promise<void> {
