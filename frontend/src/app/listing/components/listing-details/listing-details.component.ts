@@ -168,7 +168,7 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
         this.inWatchlist = !!listing.inWatchlist;
         this.updateIsOwnListing();
         this.loading = false;
-        this.seo.setListing(listing, this.buildShareUrl(listing.slug));
+        this.seo.setListing(listing);
         if (this.isAuthenticated && !this.isOwnListing && listing.seller?._id) {
           this.loadSellerFollowStatus(listing.seller._id);
           this.loadSellerBlockStatus(listing.seller._id);
@@ -1616,10 +1616,8 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
   // ── Share ────────────────────────────────────────────────────────────────────
 
   buildShareUrl(slug: string): string {
-    // Share links go directly to the backend App Service, which serves OG-rich HTML
-    // for social crawlers and JS-redirects human browsers to the real listing page.
-    // The SWA does not proxy /api/share/* because the backend is a standalone App Service.
-    return `${API_CONFIG.getBackendBaseUrl()}/share/listing/${slug}`;
+    const base = typeof window !== 'undefined' ? window.location.origin : 'https://www.bidroom.pt';
+    return `${base}/listing/${slug}`;
   }
 
   async shareListing(): Promise<void> {
