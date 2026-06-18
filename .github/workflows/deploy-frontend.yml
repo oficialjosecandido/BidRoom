@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - dev
+      - ericeira-prod
     paths:
       - 'frontend/**'
       - '.github/workflows/deploy-frontend.yml'
@@ -39,9 +40,10 @@ jobs:
       - name: Build Angular SSR app
         run: |
           cd frontend
-          # dev branch → development config; main → production
           if [ "${{ github.ref_name }}" = "dev" ]; then
             npx ng build --configuration=development
+          elif [ "${{ github.ref_name }}" = "ericeira-prod" ]; then
+            npm run build:ericeira-prod
           else
             npm run build
           fi
@@ -115,7 +117,7 @@ jobs:
             --resource-group bidroom-dev-rg \
             --settings \
               NODE_ENV=production \
-              NG_ALLOWED_HOSTS="${{ env.AZURE_WEBAPP_NAME }}.azurewebsites.net,bidroom.pt"
+              NG_ALLOWED_HOSTS="${{ env.AZURE_WEBAPP_NAME }}.azurewebsites.net,bidroom.pt,www.bidroom.pt"
 
       - name: Deploy to Azure App Service
         uses: azure/webapps-deploy@v3
