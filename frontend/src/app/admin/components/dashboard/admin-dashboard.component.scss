@@ -227,6 +227,139 @@
   }
 }
 
+// ── Business health metrics ──────────────────────────────────────────────────
+
+.biz-metrics-section {
+  margin-bottom: 24px;
+}
+
+.biz-metrics-heading {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 0 0 14px;
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: #64748b;
+}
+
+.biz-metrics-period-note {
+  font-size: 12px;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+  color: #94a3b8;
+
+  strong {
+    font-weight: 600;
+    color: #64748b;
+  }
+}
+
+.biz-metrics-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 14px;
+}
+
+.biz-metric-card {
+  background: #fff;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 14px;
+  padding: 18px 20px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(15, 23, 42, 0.07);
+  }
+
+  &--loading {
+    opacity: 0.55;
+    pointer-events: none;
+  }
+}
+
+.biz-metric-head {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex-wrap: wrap;
+  min-height: 22px;
+}
+
+.biz-metric-icon {
+  font-size: 15px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.biz-metric-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #64748b;
+  flex: 1;
+  min-width: 0;
+}
+
+.biz-metric-value {
+  margin: 4px 0 0;
+  font-size: 32px;
+  font-weight: 800;
+  color: #0f172a;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+  letter-spacing: -0.025em;
+}
+
+.biz-metric-foot {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 2px;
+}
+
+.biz-metric-sub {
+  font-size: 11px;
+  color: #94a3b8;
+  line-height: 1.4;
+}
+
+.biz-metric-prev {
+  font-size: 12px;
+  font-weight: 600;
+  color: #94a3b8;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.biz-metric-tag-platform {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #94a3b8;
+  background: #f1f5f9;
+  padding: 2px 7px;
+  border-radius: 999px;
+  border: 1px solid #e2e8f0;
+  flex-shrink: 0;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+
 .tables-row {
   padding: 0;
   overflow: hidden;

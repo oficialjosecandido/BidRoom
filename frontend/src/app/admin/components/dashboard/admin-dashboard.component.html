@@ -60,6 +60,43 @@
           </article>
         </section>
 
+        <!-- ── Business health metrics ─────────────────────────────────── -->
+        @if (derivedMetrics.length > 0) {
+          <section class="biz-metrics-section" aria-labelledby="biz-metrics-heading">
+            <h2 class="biz-metrics-heading" id="biz-metrics-heading">
+              Business health
+              @if (snapshotComparison && !snapshotLoading) {
+                <span class="biz-metrics-period-note">
+                  First 3 reflect <strong>{{ snapshotComparison.current.label }}</strong> vs previous · Last 2 are platform-wide totals
+                </span>
+              }
+            </h2>
+            <div class="biz-metrics-row">
+              @for (m of derivedMetrics; track m.label) {
+                <article class="biz-metric-card" [class.biz-metric-card--loading]="snapshotLoading && !m.platformWide">
+                  <div class="biz-metric-head">
+                    <span class="biz-metric-icon" aria-hidden="true">{{ m.icon }}</span>
+                    <span class="biz-metric-label">{{ m.label }}</span>
+                    @if (m.delta && !snapshotLoading) {
+                      <span [class]="m.delta.css" [attr.title]="m.delta.srLabel" aria-label="{{ m.delta.srLabel }}">{{ m.delta.text }}</span>
+                    }
+                    @if (m.platformWide) {
+                      <span class="biz-metric-tag-platform">total</span>
+                    }
+                  </div>
+                  <p class="biz-metric-value">{{ m.currentFormatted }}</p>
+                  <div class="biz-metric-foot">
+                    <span class="biz-metric-sub">{{ m.subtitle }}</span>
+                    @if (m.previousFormatted !== null && !snapshotLoading) {
+                      <span class="biz-metric-prev">ant: {{ m.previousFormatted }}</span>
+                    }
+                  </div>
+                </article>
+              }
+            </div>
+          </section>
+        }
+
         <section class="nexus-panel tables-row">
           <div class="snapshot-panel-head">
             <h2 class="nexus-panel-title">Platform snapshot</h2>
@@ -206,7 +243,7 @@
                           <div class="snapshot-cell-stack">
                             <span class="snapshot-primary">{{
                               snapshotComparison.current.transactionAmountTotal
-                                | currency: 'USD' : 'symbol' : '1.2-2'
+                                | currency: 'EUR' : 'symbol' : '1.2-2'
                             }}</span>
                             <span
                               [class]="snapshotDelta('transactionAmountTotal').css"
@@ -219,7 +256,7 @@
                         <td class="num">
                           {{
                             snapshotComparison.previous.transactionAmountTotal
-                              | currency: 'USD' : 'symbol' : '1.2-2'
+                              | currency: 'EUR' : 'symbol' : '1.2-2'
                           }}
                         </td>
                       </tr>
@@ -228,7 +265,7 @@
                         <td class="num snapshot-period-cell">
                           <div class="snapshot-cell-stack">
                             <span class="snapshot-primary">{{
-                              snapshotComparison.current.bidRoomFeesTotal | currency: 'USD' : 'symbol' : '1.2-2'
+                              snapshotComparison.current.bidRoomFeesTotal | currency: 'EUR' : 'symbol' : '1.2-2'
                             }}</span>
                             <span
                               [class]="snapshotDelta('bidRoomFeesTotal').css"
@@ -240,7 +277,7 @@
                         </td>
                         <td class="num">
                           {{
-                            snapshotComparison.previous.bidRoomFeesTotal | currency: 'USD' : 'symbol' : '1.2-2'
+                            snapshotComparison.previous.bidRoomFeesTotal | currency: 'EUR' : 'symbol' : '1.2-2'
                           }}
                         </td>
                       </tr>

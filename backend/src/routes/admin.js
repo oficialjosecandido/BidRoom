@@ -310,7 +310,7 @@ router.get('/platform-snapshot-comparison', authenticateToken, requireAdmin, asy
       comparison: raw,
       current: packSide(bounds.current, current),
       previous: packSide(bounds.previous, previous),
-      currency: 'USD'
+      currency: 'EUR'
     });
   } catch (error) {
     console.error('Error fetching platform snapshot comparison:', error);
