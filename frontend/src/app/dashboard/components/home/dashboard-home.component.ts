@@ -437,8 +437,8 @@ export class DashboardHomeComponent implements OnInit, OnDestroy {
     const amount = this.getCheckoutAmount();
     if (amount == null) {
       this.balanceModalError = this.balanceModalIsCustom
-        ? `Please enter at least $${this.minBalanceAmount}.`
-        : 'Please select an amount or enter a custom value (min $5).';
+        ? `Please enter at least €${this.minBalanceAmount}.`
+        : 'Please select an amount or enter a custom value (min €5).';
       return;
     }
     this.balanceModalSubmitting = true;

@@ -521,9 +521,9 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
       this.translate.instant(`privateRoomAuction.expired.${key}`, params);
 
     const winner = this.getTemporaryWinner();
-    const amount = winner ? `$${winner.amount.toFixed(2)}` : '';
+    const amount = winner ? this.formatEur(winner.amount) : '';
     const name = winner?.name ?? '';
-    const params = { amount, name };
+    const params = { amount, name: this.escapeHtml(name) };
 
     if (confirming) {
       return {
@@ -628,9 +628,9 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
       this.translate.instant(`privateRoomAuction.expired.${key}`, params);
 
     const winner = this.getTemporaryWinner();
-    const winnerAmount = winner ? `$${winner.amount.toFixed(2)}` : '';
+    const winnerAmount = winner ? this.formatEur(winner.amount) : '';
     const winnerName = winner?.name ?? '';
-    const params = { amount: winnerAmount, name: winnerName };
+    const params = { amount: winnerAmount, name: this.escapeHtml(winnerName) };
 
     if (listing.privateRoomClosedReason === 'no_acceptances') {
       return { title: t('titleClosed'), bodyHtml: t('bodyNoAccept'), tone: 'warning', showTransactions: false, winnerName, winnerAmount };
@@ -948,7 +948,7 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
         return;
       }
       if (parsed < minBid) {
-        this.bidInputError = `Your bid must be at least $${minBid.toFixed(2)} (current bid + increment).`;
+        this.bidInputError = `Your bid must be at least ${this.formatEur(minBid)} (current bid + increment).`;
         return;
       }
       amount = parsed;
@@ -971,7 +971,7 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
           toast: true,
           position: 'top-end',
           icon: 'success',
-          title: `Bid of $${amount.toFixed(2)} placed successfully!`,
+          title: `Bid of ${this.formatEur(amount)} placed successfully!`,
           showConfirmButton: false,
           timer: 3000,
           timerProgressBar: true
@@ -1024,6 +1024,18 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
       next: () => this.router.navigate(['/landing']),
       error: () => this.router.navigate(['/landing'])
     });
+  }
+
+  private formatEur(amount: number): string {
+    return new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR' }).format(amount);
+  }
+
+  private escapeHtml(text: string): string {
+    return text
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
   }
 }
 
