@@ -125,19 +125,18 @@
                 </div>
 
                 @if (isBuyer(t)) {
-                  <!--
-                    COMPRADOR: lance + Fee BidRoom (cobrada ao comprador) + envio
-                    Doc: Comprador paga → Lance + Fee BidRoom (cap €500) + Envio
-                  -->
+                  <!-- COMPRADOR: lance + taxa Stripe + envio. Sem comissão BidRoom para o comprador. -->
                   <div class="breakdown-rows">
                     <div class="breakdown-row">
                       <span class="breakdown-label">{{ getSalePriceLabel(t) }}</span>
                       <span class="breakdown-value breakdown-value-pos">+{{ formatPrice(t.amount) }}</span>
                     </div>
-                    <div class="breakdown-row">
-                      <span class="breakdown-label">{{ 'transactions.bidRoomFee' | translate }} ({{ getCommissionRateLabel(t) }})</span>
-                      <span class="breakdown-value breakdown-value-pos">+{{ formatPrice(getBidRoomFee(t)) }}</span>
-                    </div>
+                    @if (getStripeFee(t) !== null) {
+                      <div class="breakdown-row">
+                        <span class="breakdown-label">{{ 'transactions.stripeProcessingFee' | translate }}</span>
+                        <span class="breakdown-value breakdown-value-pos">+{{ formatPrice(getStripeFee(t)!) }}</span>
+                      </div>
+                    }
                     @if (getShippingAmount(t) !== null) {
                       <div class="breakdown-row">
                         <span class="breakdown-label">{{ 'transactions.shipping' | translate }}</span>
@@ -166,14 +165,15 @@
                 }
 
                 @if (isSeller(t)) {
-                  <!--
-                    VENDEDOR: recebe 100% do lance + envio, sem deduções.
-                    Doc: Vendedor recebe → Lance (100%). −0% comissão BidRoom.
-                  -->
+                  <!-- VENDEDOR: lance + envio − comissão BidRoom (3,5% padrão / 6% sala privada). -->
                   <div class="breakdown-rows">
                     <div class="breakdown-row">
                       <span class="breakdown-label">{{ getSalePriceLabel(t) }}</span>
                       <span class="breakdown-value breakdown-value-pos">+{{ formatPrice(t.amount) }}</span>
+                    </div>
+                    <div class="breakdown-row">
+                      <span class="breakdown-label">{{ 'transactions.bidRoomFee' | translate }} ({{ getCommissionRateLabel(t) }})</span>
+                      <span class="breakdown-value breakdown-value-neg">−{{ formatPrice(getSellerCommission(t)) }}</span>
                     </div>
                     @if (getShippingAmount(t) !== null && getShippingAmount(t)! > 0) {
                       <div class="breakdown-row">
@@ -1052,21 +1052,29 @@
             <span class="dr-label">{{ getSalePriceLabel(drawerTx) }}</span>
             <span class="dr-val mono">{{ formatPrice(drawerTx.amount) }}</span>
           </div>
-          <div class="drawer-row">
-            <span class="dr-label">{{ 'transactions.bidRoomFee' | translate }}</span>
-            <span class="dr-val mono">{{ formatPrice(getBidRoomFee(drawerTx)) }}</span>
-          </div>
           @if (isSeller(drawerTx)) {
+            <div class="drawer-row">
+              <span class="dr-label">{{ 'transactions.bidRoomFee' | translate }} ({{ getCommissionRateLabel(drawerTx) }})</span>
+              <span class="dr-val mono">−{{ formatPrice(getSellerCommission(drawerTx)) }}</span>
+            </div>
             <div class="drawer-row">
               <span class="dr-label">{{ 'transactions.youReceive' | translate }}</span>
               <span class="dr-val gold">{{ formatPrice(getSellerNet(drawerTx)) }}</span>
             </div>
           }
-          @if (isBuyer(drawerTx) && getBuyerTotal(drawerTx) !== null) {
-            <div class="drawer-row">
-              <span class="dr-label">{{ 'transactions.totalCharged' | translate }}</span>
-              <span class="dr-val gold">{{ formatPrice(getBuyerTotal(drawerTx)!) }}</span>
-            </div>
+          @if (isBuyer(drawerTx)) {
+            @if (getStripeFee(drawerTx) !== null) {
+              <div class="drawer-row">
+                <span class="dr-label">{{ 'transactions.stripeProcessingFee' | translate }}</span>
+                <span class="dr-val mono">+{{ formatPrice(getStripeFee(drawerTx)!) }}</span>
+              </div>
+            }
+            @if (getBuyerTotal(drawerTx) !== null) {
+              <div class="drawer-row">
+                <span class="dr-label">{{ 'transactions.totalCharged' | translate }}</span>
+                <span class="dr-val gold">{{ formatPrice(getBuyerTotal(drawerTx)!) }}</span>
+              </div>
+            }
           }
         </div>
 

@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, ChangeDetectorRef, PLATFORM_ID, inject, computed } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef, PLATFORM_ID, inject, computed, TransferState, makeStateKey } from '@angular/core';
 import { CommonModule, Location, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -62,6 +62,7 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
   private analytics = inject(AnalyticsService);
   private platformId = inject(PLATFORM_ID);
   private isBrowser = isPlatformBrowser(this.platformId);
+  private transferState = inject(TransferState);
   linkCopied = false;
 
   readonly isLight = computed(() => this.themeService.effective() === 'light');
@@ -159,42 +160,58 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
       return;
     }
 
+    const stateKey = makeStateKey<Listing | null>(`listing:${slug}`);
+    const cached = this.transferState.get(stateKey, null);
+
+    if (cached) {
+      // Client-side hydration: server already fetched this — skip the HTTP request.
+      this.transferState.remove(stateKey);
+      this.applyListing(cached);
+      return;
+    }
+
     this.loading = true;
     this.error = null;
 
     this.listingsService.getListingBySlug(slug).subscribe({
       next: (listing) => {
-        this.listing = listing;
-        this.inWatchlist = !!listing.inWatchlist;
-        this.updateIsOwnListing();
-        this.loading = false;
-        this.seo.setListing(listing);
-        if (this.isAuthenticated && !this.isOwnListing && listing.seller?._id) {
-          this.loadSellerFollowStatus(listing.seller._id);
-          this.loadSellerBlockStatus(listing.seller._id);
+        if (!this.isBrowser) {
+          // SSR: store for the client so it doesn't re-fetch on hydration.
+          this.transferState.set(stateKey, listing);
         }
-        if (this.isBrowser) window.scrollTo(0, 0);
-        // Start countdown timer
-        this.justEndedRefetched = false;
-        this.startCountdown();
-        // Load bids or offers when listing is loaded
-        if (listing._id) {
-          if (listing.auctionFormat === 'best-offer') {
-            this.loadOffers(listing._id);
-          } else {
-            this.loadBids(listing._id);
-          }
-          // Connect to Socket.io and join listing room for real-time updates
-          // (browser-only: a one-shot SSR render has no use for a live socket connection,
-          // and opening one would keep the render from ever reaching whenStable()).
-          if (this.isBrowser) this.setupRealTimeUpdates(listing._id);
-        }
+        this.applyListing(listing);
       },
       error: () => {
         this.error = 'Listing not found';
         this.loading = false;
       }
     });
+  }
+
+  private applyListing(listing: Listing): void {
+    this.listing = listing;
+    this.inWatchlist = !!listing.inWatchlist;
+    this.updateIsOwnListing();
+    this.loading = false;
+    this.seo.setListing(listing);
+    if (this.isAuthenticated && !this.isOwnListing && listing.seller?._id) {
+      this.loadSellerFollowStatus(listing.seller._id);
+      this.loadSellerBlockStatus(listing.seller._id);
+    }
+    if (this.isBrowser) window.scrollTo(0, 0);
+    this.justEndedRefetched = false;
+    this.startCountdown();
+    if (listing._id) {
+      if (listing.auctionFormat === 'best-offer') {
+        this.loadOffers(listing._id);
+      } else {
+        this.loadBids(listing._id);
+      }
+      // Connect to Socket.io and join listing room for real-time updates
+      // (browser-only: a one-shot SSR render has no use for a live socket connection,
+      // and opening one would keep the render from ever reaching whenStable()).
+      if (this.isBrowser) this.setupRealTimeUpdates(listing._id);
+    }
   }
 
   loadBids(listingId: string): void {

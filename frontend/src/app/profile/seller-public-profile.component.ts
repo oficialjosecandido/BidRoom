@@ -1,5 +1,5 @@
-import { Component, OnInit, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnInit, inject, TransferState, makeStateKey, PLATFORM_ID } from '@angular/core';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
@@ -66,6 +66,8 @@ export class SellerPublicProfileComponent implements OnInit {
   private authService = inject(AuthService);
   private followService = inject(FollowService);
   private translate = inject(TranslateService);
+  private transferState = inject(TransferState);
+  private isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
 
   private apiBase = API_CONFIG.getApiUrl();
 
@@ -114,8 +116,25 @@ export class SellerPublicProfileComponent implements OnInit {
       }
     });
 
+    const stateKey = makeStateKey<PublicProfile | null>(`seller-profile:${id}`);
+    const cached = this.transferState.get(stateKey, null);
+
+    if (cached) {
+      this.transferState.remove(stateKey);
+      this.profile = cached;
+      this.loading = false;
+      this.checkSelf();
+      if (this.isAuthenticated && !this.isSelf) {
+        this.loadFollowStatus(cached._id);
+      }
+      return;
+    }
+
     this.http.get<PublicProfile>(`${this.apiBase}/users/${id}/profile`).subscribe({
       next: (profile) => {
+        if (!this.isBrowser) {
+          this.transferState.set(stateKey, profile);
+        }
         this.profile = profile;
         this.loading = false;
         this.checkSelf();

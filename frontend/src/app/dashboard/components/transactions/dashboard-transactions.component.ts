@@ -531,10 +531,11 @@ export class DashboardTransactionsComponent implements OnInit {
   }
 
   /**
-   * BidRoom fee charged to the BUYER (3.5% standard, 6% private room, max €500).
+   * BidRoom commission deducted from the SELLER payout (3.5% standard, 6% private room, max €500).
    * Uses the stored amount when available; falls back to the commission rate on the listing.
+   * The buyer pays 0% BidRoom commission — they only pay the Stripe processing fee.
    */
-  getBidRoomFee(t: Transaction): number {
+  getSellerCommission(t: Transaction): number {
     if (t.bidRoomFeeAmount != null) return t.bidRoomFeeAmount;
     const rate = t.listing?.commissionRate ?? 0.035;
     return Math.min(t.amount * rate, 500);
@@ -664,24 +665,25 @@ export class DashboardTransactionsComponent implements OnInit {
   }
 
   /**
-   * Seller payout: per documentation, seller receives 100% of the bid.
-   * Uses the stored Stripe payout amount when available.
-   * Fallback: amount + shipping (no deductions — doc says seller pays 0%).
+   * Seller payout: bid + shipping − BidRoom commission (3.5% standard, 6% private room).
+   * Uses the stored payout amount when available; otherwise deducts the commission.
    */
   getSellerNet(t: Transaction): number {
     const shipping = this.getShippingAmount(t) ?? 0;
-    return t.amount + shipping;
+    const commission = this.getSellerCommission(t);
+    return t.amount + shipping - commission;
   }
 
   /**
-   * Buyer total: bid + BidRoom fee (charged to buyer) + shipping.
-   * Per documentation: Comprador paga = Lance + Fee BidRoom + Envio.
+   * Buyer total: bid + Stripe processing fee + shipping.
+   * Buyer pays 0% BidRoom commission — only the Stripe processing fee applies.
+   * Stripe fee is only known after payment; estimated total excludes it if unavailable.
    */
   getBuyerTotal(t: Transaction): number | null {
     if (t.buyerTotalPaid != null) return t.buyerTotalPaid;
-    const bidRoomFee = this.getBidRoomFee(t);
+    const stripeFee = this.getStripeFee(t) ?? 0;
     const shipping = this.getShippingAmount(t);
-    return shipping !== null ? t.amount + bidRoomFee + shipping : null;
+    return shipping !== null ? t.amount + stripeFee + shipping : null;
   }
 
   /** Auction type label: Best Offer | Highest-Bid Auction (Private Room) | Highest-Bid Auction */
@@ -699,7 +701,7 @@ export class DashboardTransactionsComponent implements OnInit {
 
   /** Commission rate as a formatted percentage string */
   getCommissionRateLabel(t: Transaction): string {
-    const rate = t.listing?.commissionRate ?? 0.005;
+    const rate = t.listing?.commissionRate ?? 0.035;
     return (rate * 100).toFixed(1) + '%';
   }
 
