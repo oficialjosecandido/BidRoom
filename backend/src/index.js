@@ -21,6 +21,7 @@ const connectDB = require('./config/database');
 const Customer = require('./models/Customer');
 const Listing = require('./models/Listing');
 const redisService = require('./services/redis.service');
+const { isAdminEmail } = require('./utils/roles');
 
 // Import routes
 const authRoutes = require('./routes/auth');
@@ -47,6 +48,7 @@ const categoryFollowRoutes = require('./routes/category-follows');
 const damageClaimsRoutes = require('./routes/damageClaims');
 const { router: kycRoutes, kycWebhookHandler } = require('./routes/kyc');
 const shareRoutes = require('./routes/share');
+const supportRoutes = require('./routes/support');
 
 // Import services
 const auctionEndScheduler = require('./services/auctionEndScheduler');
@@ -277,7 +279,8 @@ app.use('/api/kyc', generalLimiter, kycRoutes);
 // Share pages — unauthenticated; rate-limited to prevent DB exhaustion via random slug enumeration
 // /api/share/* — same-origin URLs via Azure SWA linked API (WhatsApp OG crawlers)
 // /share/*      — direct backend access (local dev / direct App Service)
-app.use('/api/share', shareLimiter, shareRoutes);
+app.use('/api/share',   shareLimiter,   shareRoutes);
+app.use('/api/support', generalLimiter, supportRoutes);
 app.use('/share',     shareLimiter, shareRoutes);
 
 app.get('/', (req, res) => {
@@ -372,12 +375,14 @@ const SAFE_UID_RE  = /^[a-zA-Z0-9_-]{1,128}$/;
 // socket.data.uid is null when no valid token is present.
 io.use(async (socket, next) => {
   const token = socket.handshake.auth?.token;
-  if (!token) { socket.data.uid = null; return next(); }
+  if (!token) { socket.data.uid = null; socket.data.email = null; return next(); }
   try {
     const decoded = await admin.auth().verifyIdToken(token);
-    socket.data.uid = decoded.uid;
+    socket.data.uid   = decoded.uid;
+    socket.data.email = decoded.email || null;
   } catch {
-    socket.data.uid = null;
+    socket.data.uid   = null;
+    socket.data.email = null;
   }
   next();
 });
@@ -423,6 +428,17 @@ io.on('connection', (socket) => {
     if (!uid || !SAFE_UID_RE.test(uid)) return;
     if (socket.data.uid !== uid) return;
     socket.leave(`user:${uid}`);
+  });
+
+  // Support agents (admins) join a shared room to receive all support messages in real time.
+  socket.on('support:join-agents', () => {
+    if (socket.data.email && isAdminEmail(socket.data.email)) {
+      socket.join('support:agents');
+    }
+  });
+
+  socket.on('support:leave-agents', () => {
+    socket.leave('support:agents');
   });
 
   socket.on('disconnect', () => {

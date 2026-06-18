@@ -1,4 +1,5 @@
-import { Injectable, inject, effect } from '@angular/core';
+import { Injectable, inject, effect, PLATFORM_ID } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import { NavigationEnd, Router } from '@angular/router';
 import { filter } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
@@ -17,9 +18,10 @@ export class AnalyticsService {
   private readonly router = inject(Router);
   private readonly cookiePrefs = inject(CookiePreferencesService);
   private readonly measurementId = environment.googleAnalyticsId;
+  private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
 
   constructor() {
-    if (!environment.production || !this.measurementId) return;
+    if (!this.isBrowser || !environment.production || !this.measurementId) return;
 
     // Initialize gtag immediately with consent denied — GA4 uses modeling
     // to estimate traffic even without cookies. Consent is upgraded when
@@ -57,6 +59,7 @@ export class AnalyticsService {
 
   private canTrack(): boolean {
     return !!(
+      this.isBrowser &&
       environment.production &&
       this.measurementId &&
       this.cookiePrefs.analytics() &&

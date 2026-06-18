@@ -351,6 +351,42 @@ export class SocketService {
     });
   }
 
+  // ── Support chat ───────────────────────────────────────────────────────────
+
+  /** Nexus agents join this room to receive all support messages in real time. */
+  joinSupportAgents(): void {
+    if (!this.socket?.connected) this.connect();
+    this.socket?.emit('support:join-agents');
+  }
+
+  leaveSupportAgents(): void {
+    this.socket?.emit('support:leave-agents');
+  }
+
+  onSupportMessage(): Observable<{ conversationId: string; message: Record<string, unknown> }> {
+    return new Observable((observer) => {
+      if (!this.socket) this.connect();
+      const socket = this.socket;
+      if (!socket) return () => {};
+      const handler = (data: { conversationId: string; message: Record<string, unknown> }) =>
+        this.ngZone.run(() => observer.next(data));
+      socket.on('support:new-message', handler);
+      return () => socket.off('support:new-message', handler);
+    });
+  }
+
+  onSupportConversationUpdated(): Observable<{ conversationId: string; status: string }> {
+    return new Observable((observer) => {
+      if (!this.socket) this.connect();
+      const socket = this.socket;
+      if (!socket) return () => {};
+      const handler = (data: { conversationId: string; status: string }) =>
+        this.ngZone.run(() => observer.next(data));
+      socket.on('support:conversation-updated', handler);
+      return () => socket.off('support:conversation-updated', handler);
+    });
+  }
+
   isConnected(): boolean {
     return this.socket?.connected || false;
   }

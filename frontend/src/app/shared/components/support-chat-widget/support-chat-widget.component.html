@@ -1,0 +1,118 @@
+@if (isAuthenticated) {
+  <div class="sw-root">
+
+    @if (isOpen) {
+      <div class="sw-panel" role="dialog" aria-label="Suporte BidRoom" aria-modal="true">
+
+        <div class="sw-panel__header">
+          <div class="sw-panel__header-left">
+            <span class="sw-panel__avatar" aria-hidden="true">💬</span>
+            <div class="sw-panel__header-text">
+              <span class="sw-panel__title">Suporte BidRoom</span>
+              <span class="sw-panel__status">
+                <span class="sw-panel__dot" aria-hidden="true"></span>
+                Online — respondemos em breve
+              </span>
+            </div>
+          </div>
+          <button type="button" class="sw-panel__close" (click)="close()" aria-label="Fechar chat">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
+              <path stroke-linecap="round" d="M6 6l12 12M18 6L6 18"/>
+            </svg>
+          </button>
+        </div>
+
+        <div class="sw-panel__body" #msgList>
+          @if (loading) {
+            <div class="sw-state">
+              <div class="sw-spinner" aria-hidden="true"></div>
+              <span>A carregar…</span>
+            </div>
+          } @else if (messages.length === 0) {
+            <div class="sw-empty">
+              <span class="sw-empty__icon" aria-hidden="true">👋</span>
+              <p class="sw-empty__headline">Olá! Como podemos ajudar?</p>
+              <p class="sw-empty__sub">Escreve a tua mensagem abaixo e a equipa BidRoom responde em breve.</p>
+            </div>
+          } @else {
+            @for (msg of messages; track trackByMsg($index, msg)) {
+              <div
+                class="sw-msg"
+                [class.sw-msg--agent]="msg.senderType === 'agent'"
+                [class.sw-msg--customer]="msg.senderType === 'customer'"
+                [class.sw-msg--system]="msg.senderType === 'system'"
+              >
+                @if (msg.senderType === 'agent') {
+                  <span class="sw-msg__name">BidRoom</span>
+                }
+                <p class="sw-msg__body">{{ msg.body }}</p>
+                <time class="sw-msg__time" [attr.datetime]="msg.createdAt">
+                  {{ msg.createdAt | date:'HH:mm' }}
+                </time>
+              </div>
+            }
+          }
+        </div>
+
+        @if (error) {
+          <div class="sw-panel__error" role="alert">{{ error }}</div>
+        }
+
+        @if (isClosed()) {
+          <div class="sw-panel__closed-notice">
+            Esta conversa foi resolvida.
+            <button type="button" class="sw-panel__new-link" (click)="startNew()">Abrir novo pedido</button>
+          </div>
+        } @else {
+          <div class="sw-panel__footer">
+            <textarea
+              class="sw-panel__input"
+              [(ngModel)]="draft"
+              placeholder="Escreve uma mensagem…"
+              rows="2"
+              [disabled]="sending"
+              (keydown)="onKeydown($event)"
+              aria-label="Escrever mensagem de suporte"
+            ></textarea>
+            <button
+              type="button"
+              class="sw-panel__send"
+              (click)="send()"
+              [disabled]="!draft.trim() || sending"
+              aria-label="Enviar mensagem"
+            >
+              @if (sending) {
+                <span class="sw-spinner sw-spinner--sm" aria-hidden="true"></span>
+              } @else {
+                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                  <path d="M3.4 20.4l17.45-7.45a1 1 0 0 0 0-1.84L3.4 3.66a1 1 0 0 0-1.51.86v5.9a1 1 0 0 0 .55.9l5.12 2.57-5.12 2.57a1 1 0 0 0-.55.9v5.9a1 1 0 0 0 1.51.86z"/>
+                </svg>
+              }
+            </button>
+          </div>
+        }
+
+      </div>
+    }
+
+    @if (!isOpen) {
+      <button
+        type="button"
+        class="sw-fab"
+        (click)="open()"
+        aria-label="Abrir suporte"
+        [attr.aria-expanded]="false"
+      >
+        <svg class="sw-fab__icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/>
+        </svg>
+        @if (unreadCount > 0) {
+          <span class="sw-fab__badge" [attr.aria-label]="unreadCount + ' mensagens não lidas'">
+            {{ unreadCount > 9 ? '9+' : unreadCount }}
+          </span>
+        }
+      </button>
+    }
+
+  </div>
+}

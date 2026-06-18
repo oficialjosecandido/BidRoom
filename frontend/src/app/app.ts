@@ -2,11 +2,12 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { TranslateService } from '@ngx-translate/core';
 import { CookieBannerComponent } from './shared/components/cookie-banner/cookie-banner.component';
+import { SupportChatWidgetComponent } from './shared/components/support-chat-widget/support-chat-widget.component';
 import { AnalyticsService } from './shared/services/analytics.service';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, CookieBannerComponent],
+  imports: [RouterOutlet, CookieBannerComponent, SupportChatWidgetComponent],
   templateUrl: './app.html',
   styleUrl: './app.scss'
 })

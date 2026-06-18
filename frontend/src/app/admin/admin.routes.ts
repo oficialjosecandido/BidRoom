@@ -37,6 +37,11 @@ export const adminRoutes: Routes = [
     path: 'reports',
     loadComponent: () => import('./components/reports/admin-reports.component').then(m => m.AdminReportsComponent),
     canActivate: [AdminGuard]
+  },
+  {
+    path: 'support',
+    loadComponent: () => import('./components/support/admin-support.component').then(m => m.AdminSupportComponent),
+    canActivate: [AdminGuard]
   }
 ];
 

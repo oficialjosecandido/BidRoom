@@ -1,0 +1,203 @@
+<div class="admin-layout">
+  <app-admin-sidebar></app-admin-sidebar>
+
+  <div class="admin-content">
+    <div class="support-page">
+
+      <!-- Header -->
+      <header class="support-header">
+        <div>
+          <p class="nexus-badge">BidRoom Nexus</p>
+          <h1 class="support-title">Suporte</h1>
+        </div>
+        <div class="support-header-actions">
+          <!-- Status filter pills -->
+          <div class="status-pills" role="tablist" aria-label="Filtrar por estado">
+            @for (opt of statusOptions; track opt.value) {
+              <button
+                type="button"
+                class="status-pill"
+                [class.active]="statusFilter === opt.value"
+                (click)="setStatusFilter(opt.value)"
+                role="tab"
+                [attr.aria-selected]="statusFilter === opt.value"
+              >{{ opt.label }}</button>
+            }
+          </div>
+          <button type="button" class="refresh-btn" (click)="loadQueue()" [disabled]="loading">
+            &#10227; Actualizar
+          </button>
+        </div>
+      </header>
+
+      <!-- Split view -->
+      <div class="support-split">
+
+        <!-- ── Conversation queue ─────────────────────────────────────── -->
+        <aside class="support-queue">
+          @if (loading) {
+            <div class="queue-empty">
+              <div class="queue-spinner" aria-hidden="true"></div>
+              <span>A carregar…</span>
+            </div>
+          } @else if (conversations.length === 0) {
+            <div class="queue-empty">
+              <span class="queue-empty__icon" aria-hidden="true">✅</span>
+              <p>Nenhuma conversa</p>
+            </div>
+          } @else {
+            <ul class="queue-list" role="list">
+              @for (conv of conversations; track trackByConv($index, conv)) {
+                <li>
+                  <button
+                    type="button"
+                    class="queue-item"
+                    [class.queue-item--active]="isActive(conv)"
+                    (click)="selectConversation(conv)"
+                  >
+                    <div class="queue-item__top">
+                      <span class="queue-item__name">{{ customerName(conv) }}</span>
+                      <div class="queue-item__meta">
+                        @if (conv.unreadByAgent > 0) {
+                          <span class="queue-badge">{{ conv.unreadByAgent }}</span>
+                        }
+                        <span class="queue-item__time">{{ conv.lastMessageAt | date:'d MMM HH:mm' }}</span>
+                      </div>
+                    </div>
+                    <div class="queue-item__bottom">
+                      <span class="queue-item__category">{{ categoryLabel(conv.category) }}</span>
+                      <span class="status-chip" [class]="statusClass(conv.status)">
+                        {{ statusLabel(conv.status) }}
+                      </span>
+                    </div>
+                    @if (conv.subject) {
+                      <p class="queue-item__subject">{{ conv.subject }}</p>
+                    }
+                  </button>
+                </li>
+              }
+            </ul>
+          }
+        </aside>
+
+        <!-- ── Thread view ────────────────────────────────────────────── -->
+        <main class="support-thread" aria-label="Conversa de suporte">
+          @if (!selected) {
+            <div class="thread-empty">
+              <span class="thread-empty__icon" aria-hidden="true">💬</span>
+              <p>Selecciona uma conversa da lista</p>
+            </div>
+          } @else {
+            <!-- Thread header: customer info + actions -->
+            <div class="thread-header">
+              <div class="thread-customer">
+                <div class="thread-customer__avatar" aria-hidden="true">
+                  {{ customerName(selected).charAt(0).toUpperCase() }}
+                </div>
+                <div class="thread-customer__info">
+                  <span class="thread-customer__name">{{ customerName(selected) }}</span>
+                  <span class="thread-customer__email">{{ customerEmail(selected) }}</span>
+                </div>
+                @if (customerScore(selected) !== null) {
+                  <span class="thread-score" title="Reputação">⭐ {{ customerScore(selected) }}</span>
+                }
+                <span class="status-chip" [class]="statusClass(selected.status)">{{ statusLabel(selected.status) }}</span>
+                @if (selected.assignedAgent) {
+                  <span class="thread-assigned" title="Atribuído a">👤 {{ selected.assignedAgent }}</span>
+                }
+              </div>
+              <div class="thread-actions">
+                @if (!selected.assignedAgent || selected.assignedAgent !== currentAgentEmail) {
+                  <button type="button" class="action-btn action-btn--secondary" (click)="assignToMe()">
+                    Atribuir-me
+                  </button>
+                } @else {
+                  <button type="button" class="action-btn action-btn--ghost" (click)="unassign()">
+                    Remover atribuição
+                  </button>
+                }
+                @if (isResolvable()) {
+                  <button type="button" class="action-btn action-btn--primary" (click)="setConvStatus('resolved')">
+                    Resolver ✓
+                  </button>
+                }
+                @if (selected.status !== 'closed') {
+                  <button type="button" class="action-btn action-btn--ghost" (click)="setConvStatus('closed')">
+                    Fechar
+                  </button>
+                }
+                @if (selected.status === 'resolved' || selected.status === 'closed') {
+                  <button type="button" class="action-btn action-btn--secondary" (click)="setConvStatus('open')">
+                    Reabrir
+                  </button>
+                }
+              </div>
+            </div>
+
+            <!-- Message thread -->
+            <div class="thread-body" #threadBody>
+              @if (messagesLoading) {
+                <div class="thread-state">
+                  <div class="thread-spinner" aria-hidden="true"></div>
+                  A carregar mensagens…
+                </div>
+              } @else if (messages.length === 0) {
+                <div class="thread-state">Sem mensagens ainda.</div>
+              } @else {
+                @for (msg of messages; track trackByMsg($index, msg)) {
+                  <div
+                    class="thread-msg"
+                    [class.thread-msg--agent]="msg.senderType === 'agent'"
+                    [class.thread-msg--customer]="msg.senderType === 'customer'"
+                    [class.thread-msg--system]="msg.senderType === 'system'"
+                  >
+                    <div class="thread-msg__meta">
+                      <span class="thread-msg__sender">
+                        {{ msg.senderType === 'agent' ? 'BidRoom (' + msg.senderName + ')' : msg.senderName || 'Cliente' }}
+                      </span>
+                      <time class="thread-msg__time" [attr.datetime]="msg.createdAt">
+                        {{ msg.createdAt | date:'d MMM yyyy, HH:mm' }}
+                      </time>
+                    </div>
+                    <p class="thread-msg__body">{{ msg.body }}</p>
+                  </div>
+                }
+              }
+            </div>
+
+            <!-- Reply box -->
+            @if (selected.status !== 'closed' && selected.status !== 'resolved') {
+              <div class="thread-reply">
+                <textarea
+                  class="thread-reply__input"
+                  [(ngModel)]="replyDraft"
+                  placeholder="Escrever resposta… (Ctrl+Enter para enviar)"
+                  rows="3"
+                  [disabled]="sending"
+                  (keydown)="onReplyKeydown($event)"
+                  aria-label="Resposta de suporte"
+                ></textarea>
+                <div class="thread-reply__footer">
+                  <span class="thread-reply__hint">Ctrl + Enter para enviar</span>
+                  <button
+                    type="button"
+                    class="action-btn action-btn--primary"
+                    (click)="sendReply()"
+                    [disabled]="!replyDraft.trim() || sending"
+                  >
+                    {{ sending ? 'A enviar…' : 'Responder' }}
+                  </button>
+                </div>
+              </div>
+            } @else {
+              <div class="thread-closed-notice">
+                Conversa {{ statusLabel(selected.status).toLowerCase() }}. Para retomar, usa "Reabrir".
+              </div>
+            }
+          }
+        </main>
+      </div>
+
+    </div>
+  </div>
+</div>

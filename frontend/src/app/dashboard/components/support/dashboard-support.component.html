@@ -1,0 +1,188 @@
+<div class="sup-page">
+
+  <header class="sup-header">
+    <div class="sup-header-text">
+      <h1 class="sup-title">Pedidos de Suporte</h1>
+      <p class="sup-sub">Envia-nos uma mensagem e respondemos o mais breve possível.</p>
+    </div>
+    @if (conversations.length > 0 && !showNewForm) {
+      <button type="button" class="sup-new-btn" (click)="openNewForm()">
+        + Novo pedido
+      </button>
+    }
+  </header>
+
+  @if (loading) {
+    <div class="sup-loading">
+      <div class="sup-spinner" aria-hidden="true"></div>
+      <span>A carregar…</span>
+    </div>
+  } @else if (conversations.length === 0 && !showNewForm) {
+    <div class="sup-empty-page">
+      <span class="sup-empty-page__icon" aria-hidden="true">💬</span>
+      <h2>Ainda não tens pedidos de suporte</h2>
+      <p>Descreve o teu problema e a nossa equipa responde em breve.</p>
+      <button type="button" class="sup-new-btn" (click)="openNewForm()">Criar primeiro pedido</button>
+    </div>
+  } @else {
+    <div class="sup-split" [class.sup-split--solo]="conversations.length === 0">
+
+      @if (conversations.length > 0) {
+        <aside class="sup-list">
+          <ul class="conv-list" role="list">
+            @for (conv of conversations; track trackByConv($index, conv)) {
+              <li>
+                <button
+                  type="button"
+                  class="conv-item"
+                  [class.conv-item--active]="isActive(conv)"
+                  (click)="selectConversation(conv)"
+                >
+                  <div class="conv-item__top">
+                    <span class="conv-item__cat">{{ categoryLabel(conv.category) }}</span>
+                    <div class="conv-item__meta">
+                      @if (conv.unreadByCustomer > 0) {
+                        <span class="conv-badge">{{ conv.unreadByCustomer }}</span>
+                      }
+                      <span class="conv-item__time">{{ conv.lastMessageAt | date:'d MMM' }}</span>
+                    </div>
+                  </div>
+                  @if (conv.subject) {
+                    <p class="conv-item__subject">{{ conv.subject }}</p>
+                  }
+                  <div class="conv-item__bottom">
+                    <span class="conv-chip" [class]="statusClass(conv.status)">{{ statusLabel(conv.status) }}</span>
+                  </div>
+                </button>
+              </li>
+            }
+          </ul>
+        </aside>
+      }
+
+      <main class="sup-thread">
+
+        @if (showNewForm) {
+          <div class="sup-new-form">
+            <h2 class="sup-new-title">Novo pedido de suporte</h2>
+
+            <label class="sup-label">Assunto <span class="sup-opt">(opcional)</span>
+              <input
+                type="text"
+                class="sup-input"
+                [(ngModel)]="newSubject"
+                placeholder="Ex: Problema com pagamento"
+                maxlength="120"
+              />
+            </label>
+
+            <label class="sup-label">Categoria
+              <select class="sup-select" [(ngModel)]="newCategory">
+                @for (cat of categories; track cat.value) {
+                  <option [value]="cat.value">{{ cat.label }}</option>
+                }
+              </select>
+            </label>
+
+            <label class="sup-label">Mensagem
+              <textarea
+                class="sup-textarea"
+                [(ngModel)]="newMessage"
+                placeholder="Descreve o teu problema…"
+                rows="5"
+                maxlength="5000"
+              ></textarea>
+            </label>
+
+            <div class="sup-new-actions">
+              <button type="button" class="sup-btn sup-btn--ghost" (click)="cancelNew()">Cancelar</button>
+              <button
+                type="button"
+                class="sup-btn sup-btn--primary"
+                (click)="submitNew()"
+                [disabled]="!newMessage.trim() || creating"
+              >
+                {{ creating ? 'A enviar…' : 'Enviar pedido' }}
+              </button>
+            </div>
+          </div>
+
+        } @else if (!selected) {
+          <div class="sup-placeholder">
+            <span class="sup-placeholder__icon" aria-hidden="true">💬</span>
+            <p>Selecciona um pedido para ver a conversa</p>
+          </div>
+
+        } @else {
+          <div class="thread-head">
+            <div class="thread-head__left">
+              <span class="conv-chip" [class]="statusClass(selected.status)">{{ statusLabel(selected.status) }}</span>
+              <span class="thread-cat">{{ categoryLabel(selected.category) }}</span>
+              @if (selected.subject) {
+                <span class="thread-subject">{{ selected.subject }}</span>
+              }
+            </div>
+            <time class="thread-date">{{ selected.createdAt | date:'d MMM yyyy' }}</time>
+          </div>
+
+          <div class="thread-msgs" #msgList>
+            @if (messagesLoading) {
+              <div class="thread-state">
+                <div class="sup-spinner" aria-hidden="true"></div>
+                A carregar…
+              </div>
+            } @else if (messages.length === 0) {
+              <div class="thread-state">Sem mensagens ainda.</div>
+            } @else {
+              @for (msg of messages; track trackByMsg($index, msg)) {
+                <div
+                  class="msg"
+                  [class.msg--customer]="msg.senderType === 'customer'"
+                  [class.msg--agent]="msg.senderType === 'agent'"
+                  [class.msg--system]="msg.senderType === 'system'"
+                >
+                  <div class="msg__meta">
+                    <span class="msg__sender">{{ msg.senderType === 'agent' ? 'BidRoom' : 'Tu' }}</span>
+                    <time class="msg__time">{{ msg.createdAt | date:'d MMM, HH:mm' }}</time>
+                  </div>
+                  <p class="msg__body">{{ msg.body }}</p>
+                </div>
+              }
+            }
+          </div>
+
+          @if (canReply()) {
+            <div class="thread-reply">
+              <textarea
+                class="thread-reply__input"
+                [(ngModel)]="draft"
+                placeholder="Responder… (Ctrl+Enter para enviar)"
+                rows="3"
+                [disabled]="sending"
+                (keydown)="onKeydown($event)"
+                aria-label="Mensagem de resposta"
+              ></textarea>
+              <div class="thread-reply__foot">
+                <span class="thread-reply__hint">Ctrl + Enter</span>
+                <button
+                  type="button"
+                  class="sup-btn sup-btn--primary"
+                  (click)="send()"
+                  [disabled]="!draft.trim() || sending"
+                >
+                  {{ sending ? 'A enviar…' : 'Enviar' }}
+                </button>
+              </div>
+            </div>
+          } @else {
+            <div class="thread-closed">
+              Conversa {{ statusLabel(selected.status).toLowerCase() }}. Cria um novo pedido se precisares de mais ajuda.
+            </div>
+          }
+        }
+
+      </main>
+    </div>
+  }
+
+</div>

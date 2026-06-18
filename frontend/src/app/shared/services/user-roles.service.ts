@@ -1,4 +1,5 @@
-import { Injectable, inject } from '@angular/core';
+import { Injectable, inject, PLATFORM_ID } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { Observable, ReplaySubject, of } from 'rxjs';
 import { catchError, shareReplay, tap } from 'rxjs/operators';
@@ -28,7 +29,8 @@ const ANONYMOUS_ROLES: UserRoles = {
  */
 @Injectable({ providedIn: 'root' })
 export class UserRolesService {
-  private http = inject(HttpClient);
+  private http      = inject(HttpClient);
+  private isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
 
   private rolesSubject = new ReplaySubject<UserRoles>(1);
   /** Last value, so synchronous callers can fall back to a cached answer. */
@@ -52,6 +54,7 @@ export class UserRolesService {
    * user. Anonymous users get a resolved Observable with the anonymous roles.
    */
   load(): Observable<UserRoles> {
+    if (!this.isBrowser) return of(ANONYMOUS_ROLES);
     if (this.pending$) return this.pending$;
     this.pending$ = this.http.get<UserRoles>(`${API_CONFIG.getApiUrl()}/users/me/roles`).pipe(
       tap((roles) => {
