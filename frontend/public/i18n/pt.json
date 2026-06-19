@@ -834,7 +834,8 @@
     "oneOffer": "1 oferta",
     "offersCount": "{{count}} ofertas",
     "hoursLeft": "{{hours}}h restantes",
-    "applyFilters": "Aplicar filtros"
+    "applyFilters": "Aplicar filtros",
+    "closeFilters": "Fechar filtros"
   },
   "categories": {
     "title": "Navegar por Categoria",
@@ -1421,6 +1422,8 @@
       "settings": "Configurações",
       "disputes": "Disputas",
       "reviews": "Avaliações",
+      "openMenu": "Abrir menu",
+      "closeMenu": "Fechar menu",
       "logout": "Sair"
     },
     "myReviews": {

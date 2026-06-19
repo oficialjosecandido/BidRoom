@@ -110,6 +110,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.subs.unsubscribe();
+    if (this.isBrowser) document.body.style.overflow = '';
   }
 
   get currentLang(): string {
@@ -155,10 +156,18 @@ export class HeaderComponent implements OnInit, OnDestroy {
 
   toggleMenu(): void {
     this.menuOpen = !this.menuOpen;
+    this.syncBodyScroll();
   }
 
   closeMenu(): void {
+    if (!this.menuOpen) return;
     this.menuOpen = false;
+    this.syncBodyScroll();
+  }
+
+  private syncBodyScroll(): void {
+    if (!this.isBrowser) return;
+    document.body.style.overflow = this.menuOpen ? 'hidden' : '';
   }
 
   @HostListener('document:keydown.escape')

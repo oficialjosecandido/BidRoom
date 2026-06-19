@@ -4,36 +4,38 @@
   <div class="admin-content">
     <div class="support-page">
 
-      <!-- Header -->
       <header class="support-header">
-        <div>
+        <div class="support-header__text">
           <p class="nexus-badge">BidRoom Nexus</p>
           <h1 class="support-title">Suporte</h1>
-        </div>
-        <div class="support-header-actions">
-          <!-- Status filter pills -->
-          <div class="status-pills" role="tablist" aria-label="Filtrar por estado">
-            @for (opt of statusOptions; track opt.value) {
-              <button
-                type="button"
-                class="status-pill"
-                [class.active]="statusFilter === opt.value"
-                (click)="setStatusFilter(opt.value)"
-                role="tab"
-                [attr.aria-selected]="statusFilter === opt.value"
-              >{{ opt.label }}</button>
-            }
-          </div>
-          <button type="button" class="refresh-btn" (click)="loadQueue()" [disabled]="loading">
-            &#10227; Actualizar
-          </button>
+          <p class="support-lead">Gerir pedidos de suporte dos utilizadores</p>
         </div>
       </header>
 
-      <!-- Split view -->
+      <div class="support-toolbar">
+        <div class="status-pills" role="tablist" aria-label="Filtrar por estado">
+          @for (opt of statusOptions; track opt.value) {
+            <button
+              type="button"
+              class="status-pill"
+              [class.active]="statusFilter === opt.value"
+              (click)="setStatusFilter(opt.value)"
+              role="tab"
+              [attr.aria-selected]="statusFilter === opt.value"
+            >{{ opt.label }}</button>
+          }
+        </div>
+        <button type="button" class="refresh-btn" (click)="loadQueue()" [disabled]="loading">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="M21 12a9 9 0 1 1-2.64-6.36"/>
+            <path d="M21 3v6h-6"/>
+          </svg>
+          Actualizar
+        </button>
+      </div>
+
       <div class="support-split">
 
-        <!-- ── Conversation queue ─────────────────────────────────────── -->
         <aside class="support-queue">
           @if (loading) {
             <div class="queue-empty">
@@ -44,6 +46,7 @@
             <div class="queue-empty">
               <span class="queue-empty__icon" aria-hidden="true">✅</span>
               <p>Nenhuma conversa</p>
+              <span class="queue-empty__hint">Sem pedidos para este filtro</span>
             </div>
           } @else {
             <ul class="queue-list" role="list">
@@ -80,15 +83,14 @@
           }
         </aside>
 
-        <!-- ── Thread view ────────────────────────────────────────────── -->
         <main class="support-thread" aria-label="Conversa de suporte">
           @if (!selected) {
             <div class="thread-empty">
               <span class="thread-empty__icon" aria-hidden="true">💬</span>
               <p>Selecciona uma conversa da lista</p>
+              <span class="thread-empty__hint">Os pedidos mais recentes aparecem primeiro</span>
             </div>
           } @else {
-            <!-- Thread header: customer info + actions -->
             <div class="thread-header">
               <div class="thread-customer">
                 <div class="thread-customer__avatar" aria-hidden="true">
@@ -134,7 +136,6 @@
               </div>
             </div>
 
-            <!-- Message thread -->
             <div class="thread-body" #threadBody>
               @if (messagesLoading) {
                 <div class="thread-state">
@@ -165,13 +166,12 @@
               }
             </div>
 
-            <!-- Reply box -->
             @if (selected.status !== 'closed' && selected.status !== 'resolved') {
               <div class="thread-reply">
                 <textarea
                   class="thread-reply__input"
                   [(ngModel)]="replyDraft"
-                  placeholder="Escrever resposta… (Ctrl+Enter para enviar)"
+                  placeholder="Escrever resposta…"
                   rows="3"
                   [disabled]="sending"
                   (keydown)="onReplyKeydown($event)"

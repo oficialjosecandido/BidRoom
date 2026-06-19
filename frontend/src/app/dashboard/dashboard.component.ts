@@ -1,7 +1,8 @@
-import { Component, OnInit, OnDestroy, computed, inject } from '@angular/core';
-import { Router, RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
+import { Component, OnInit, OnDestroy, inject, HostListener } from '@angular/core';
+import { Router, RouterOutlet, RouterLink, RouterLinkActive, NavigationEnd } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { Subscription } from 'rxjs';
+import { filter } from 'rxjs/operators';
 import { AuthService } from '../auth/services/auth.service';
 import { NotificationService } from '../shared/services/notification.service';
 import { TransactionsService } from '../shared/services/transactions.service';
@@ -30,6 +31,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   pendingSellerTransactions = 0;
   userName = '';
   userInitials = '';
+  mobileSidebarOpen = false;
 
   private refreshInterval: ReturnType<typeof setInterval> | null = null;
   private subs = new Subscription();
@@ -61,6 +63,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    this.subs.add(
+      this.router.events.pipe(filter((e): e is NavigationEnd => e instanceof NavigationEnd))
+        .subscribe(() => this.closeMobileSidebar())
+    );
+
     this.notificationService.refreshUnreadCount();
     this.loadPendingTransactionCounts();
     this.refreshInterval = setInterval(() => {
@@ -100,6 +107,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.subs.unsubscribe();
     if (this.refreshInterval) clearInterval(this.refreshInterval);
+    if (typeof document !== 'undefined') document.body.style.overflow = '';
   }
 
   private loadPendingTransactionCounts(): void {
@@ -123,5 +131,26 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.authService.logout().subscribe({
       next: () => this.router.navigate(['/landing'])
     });
+  }
+
+  toggleMobileSidebar(): void {
+    this.mobileSidebarOpen = !this.mobileSidebarOpen;
+    this.syncBodyScroll();
+  }
+
+  closeMobileSidebar(): void {
+    if (!this.mobileSidebarOpen) return;
+    this.mobileSidebarOpen = false;
+    this.syncBodyScroll();
+  }
+
+  @HostListener('document:keydown.escape')
+  onEscape(): void {
+    this.closeMobileSidebar();
+  }
+
+  private syncBodyScroll(): void {
+    if (typeof document === 'undefined') return;
+    document.body.style.overflow = this.mobileSidebarOpen ? 'hidden' : '';
   }
 }

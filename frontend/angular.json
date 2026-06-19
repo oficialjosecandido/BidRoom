@@ -168,7 +168,8 @@
               "buildTarget": "frontend:build:ericeira"
             },
             "ericeira-prod": {
-              "buildTarget": "frontend:build:ericeira-prod-dev"
+              "buildTarget": "frontend:build:ericeira-prod-dev",
+              "proxyConfig": "proxy.conf.local.json"
             },
             "ericeira-e2e": {
               "buildTarget": "frontend:build:ericeira-e2e"

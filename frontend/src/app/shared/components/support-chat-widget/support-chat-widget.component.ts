@@ -5,6 +5,8 @@ import {
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Router, NavigationEnd } from '@angular/router';
+import { filter } from 'rxjs/operators';
 import { AuthService } from '../../../auth/services/auth.service';
 import { SupportService, SupportConversation, SupportMessage } from '../../services/support.service';
 
@@ -22,9 +24,12 @@ export class SupportChatWidgetComponent implements OnInit, OnDestroy, AfterViewC
   private support     = inject(SupportService);
   private cdr         = inject(ChangeDetectorRef);
   private platformId  = inject(PLATFORM_ID);
+  private router      = inject(Router);
 
   @ViewChild('msgList') private msgListRef?: ElementRef<HTMLElement>;
 
+  /** Hidden on Nexus — agents use the admin support page instead. */
+  hiddenOnRoute = false;
   isAuthenticated = false;
   isOpen          = false;
   loading         = false;
@@ -40,6 +45,16 @@ export class SupportChatWidgetComponent implements OnInit, OnDestroy, AfterViewC
 
   ngOnInit(): void {
     if (!isPlatformBrowser(this.platformId)) return;
+
+    this.hiddenOnRoute = this.router.url.startsWith('/nexus');
+    this.router.events.pipe(
+      filter((e): e is NavigationEnd => e instanceof NavigationEnd),
+      takeUntilDestroyed(this.destroyRef),
+    ).subscribe(() => {
+      this.hiddenOnRoute = this.router.url.startsWith('/nexus');
+      if (this.hiddenOnRoute) this.isOpen = false;
+      this.cdr.markForCheck();
+    });
 
     this.auth.isAuthenticated()
       .pipe(takeUntilDestroyed(this.destroyRef))

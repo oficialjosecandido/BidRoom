@@ -1,8 +1,28 @@
 <nav class="nav">
 
-  <!-- Brand -->
-  <div class="brand" (click)="navigateToHome()" (keydown.enter)="navigateToHome()" tabindex="0" role="button" aria-label="BidRoom">
-    <app-bidroom-logo variant="horizontal" [compact]="true" [height]="40" [animated]="false" />
+  <div class="nav-l">
+    <button
+      class="menu-toggle"
+      type="button"
+      (click)="toggleMenu()"
+      [attr.aria-expanded]="menuOpen"
+      [attr.aria-controls]="menuOpen ? 'header-mobile-menu' : null"
+      [attr.aria-label]="menuOpen ? ('header.menu.close' | translate) : ('header.menu.open' | translate)"
+    >
+      @if (menuOpen) {
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path stroke-linecap="round" d="M6 6l12 12M18 6L6 18"/>
+        </svg>
+      } @else {
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path stroke-linecap="round" d="M4 7h16M4 12h16M4 17h16"/>
+        </svg>
+      }
+    </button>
+
+    <div class="brand" (click)="navigateToHome()" (keydown.enter)="navigateToHome()" tabindex="0" role="button" aria-label="BidRoom">
+      <app-bidroom-logo variant="horizontal" [compact]="true" [height]="40" [animated]="false" />
+    </div>
   </div>
 
   <!-- Centre nav links -->
@@ -114,21 +134,17 @@
       <button class="btn-start" (click)="navigateToAuth()">{{ 'header.actions.startBidding' | translate }}</button>
     }
 
-    <!-- Mobile hamburger -->
-    <button class="menu-toggle" type="button" (click)="toggleMenu()"
-      [attr.aria-expanded]="menuOpen"
-      [attr.aria-label]="menuOpen ? 'Fechar menu' : 'Abrir menu'">
-      <span class="bar"></span>
-      <span class="bar"></span>
-      <span class="bar"></span>
-    </button>
-
   </div>
 </nav>
 
-<!-- Mobile menu -->
 @if (menuOpen) {
-  <div class="mobile-menu" role="dialog" aria-modal="true">
+  <button
+    type="button"
+    class="mobile-backdrop"
+    (click)="closeMenu()"
+    [attr.aria-label]="'header.menu.close' | translate"
+  ></button>
+  <div id="header-mobile-menu" class="mobile-menu" role="dialog" aria-modal="true">
     <button class="nm" (click)="navigateToAuctions()">{{ 'header.nav.auctions' | translate }}</button>
     <button class="nm" (click)="navigateToCategories()">{{ 'header.nav.categories' | translate }}</button>
     <button class="nm" (click)="navigateToPrivateRooms()">{{ 'header.nav.privateRooms' | translate }}</button>
@@ -166,5 +182,4 @@
       </div>
     </div>
   </div>
-  <div class="mobile-backdrop" (click)="closeMenu()" aria-hidden="true"></div>
 }

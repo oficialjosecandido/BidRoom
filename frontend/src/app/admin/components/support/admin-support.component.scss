@@ -1,47 +1,76 @@
 @use '../../styles/nexus-shared';
 
+$nexus-accent: #2563eb;
+$nexus-text: #0f172a;
+$nexus-muted: #64748b;
+$nexus-dim: #94a3b8;
+$nexus-border: #e2e8f0;
+$nexus-bg: #ffffff;
+$nexus-bg-subtle: #f8fafc;
+$nexus-bg-queue: #fafbfc;
+
 .support-page {
-  padding: 28px 32px 0;
+  padding: 28px 32px 32px;
   max-width: 1440px;
   margin: 0 auto;
-  height: 100%;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  gap: 16px;
+  min-height: calc(100vh - 56px);
+  box-sizing: border-box;
+
+  // Override global dark-mode input styles inside Nexus support
+  textarea,
+  input {
+    background-color: $nexus-bg;
+    color: $nexus-text;
+  }
 }
 
+// ── Header ────────────────────────────────────────────────────────────────────
+
 .support-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 24px;
-  margin-bottom: 20px;
   flex-shrink: 0;
 
   .nexus-badge {
     display: inline-block;
-    margin: 0 0 6px;
+    margin: 0 0 4px;
     font-size: 11px;
     font-weight: 700;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    color: var(--primary-color);
+    color: $nexus-accent;
   }
 }
 
 .support-title {
-  font-size: 28px;
+  font-size: 24px;
   font-weight: 800;
-  color: #0f172a;
-  margin: 0;
+  color: $nexus-text;
+  margin: 0 0 4px;
   letter-spacing: -0.02em;
 }
 
-.support-header-actions {
+.support-lead {
+  margin: 0;
+  font-size: 14px;
+  color: $nexus-muted;
+}
+
+// ── Toolbar ───────────────────────────────────────────────────────────────────
+
+.support-toolbar {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 12px;
   flex-wrap: wrap;
+  padding: 14px 16px;
+  background: $nexus-bg;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+  flex-shrink: 0;
 }
 
 .status-pills {
@@ -51,55 +80,73 @@
 }
 
 .status-pill {
-  border: 1px solid #e2e8f0;
-  background: #fff;
+  border: 1px solid $nexus-border;
+  background: $nexus-bg-subtle;
   color: #334155;
   padding: 6px 14px;
   border-radius: 999px;
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
+  font-family: inherit;
   transition: background 0.15s, border-color 0.15s, color 0.15s;
 
-  &:hover { border-color: #cbd5e1; background: #f8fafc; }
-  &.active { background: var(--primary-color); border-color: var(--primary-color); color: #fff; }
+  &:hover { border-color: #cbd5e1; background: #f1f5f9; }
+
+  &.active {
+    background: $nexus-accent;
+    border-color: $nexus-accent;
+    color: #fff;
+  }
 }
 
 .refresh-btn {
-  padding: 8px 16px;
-  background: var(--primary-color);
-  color: #fff;
-  border: none;
-  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  background: $nexus-bg;
+  color: #334155;
+  border: 1px solid $nexus-border;
+  border-radius: 999px;
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
-  transition: opacity 0.2s;
+  font-family: inherit;
   white-space: nowrap;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
 
-  &:disabled { opacity: 0.55; cursor: not-allowed; }
-  &:hover:not(:disabled) { opacity: 0.9; }
+  svg { width: 15px; height: 15px; }
+
+  &:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  &:hover:not(:disabled) {
+    border-color: $nexus-accent;
+    color: $nexus-accent;
+    background: #eff6ff;
+  }
 }
 
 // ── Split view ────────────────────────────────────────────────────────────────
 
 .support-split {
   display: grid;
-  grid-template-columns: 320px 1fr;
-  gap: 0;
+  grid-template-columns: 280px 1fr;
   flex: 1;
+  min-height: min(640px, calc(100vh - 260px));
   overflow: hidden;
   border: 1px solid rgba(15, 23, 42, 0.08);
-  border-radius: 14px 14px 0 0;
-  background: #fff;
+  border-radius: 12px;
+  background: $nexus-bg;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
 }
 
-// ── Queue (left panel) ────────────────────────────────────────────────────────
+// ── Queue ─────────────────────────────────────────────────────────────────────
 
 .support-queue {
   border-right: 1px solid #f1f5f9;
   overflow-y: auto;
-  background: #fafbfc;
+  background: $nexus-bg-queue;
 }
 
 .queue-empty {
@@ -107,19 +154,26 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 10px;
-  height: 180px;
-  color: #94a3b8;
+  gap: 8px;
+  padding: 48px 20px;
+  color: $nexus-dim;
   font-size: 14px;
+  text-align: center;
 
-  &__icon { font-size: 32px; }
+  &__icon { font-size: 28px; }
+  p { margin: 0; font-weight: 600; color: $nexus-muted; }
+
+  &__hint {
+    font-size: 12px;
+    color: $nexus-dim;
+  }
 }
 
 .queue-spinner {
   width: 24px;
   height: 24px;
-  border: 2px solid #e2e8f0;
-  border-top-color: var(--primary-color);
+  border: 2px solid $nexus-border;
+  border-top-color: $nexus-accent;
   border-radius: 50%;
   animation: spin 0.9s linear infinite;
 }
@@ -135,13 +189,18 @@
   background: none;
   border: none;
   border-bottom: 1px solid #f1f5f9;
-  padding: 14px 16px;
+  padding: 12px 14px;
   cursor: pointer;
   text-align: left;
+  font-family: inherit;
   transition: background 0.12s;
 
   &:hover { background: #f1f5f9; }
-  &--active { background: #fff; border-left: 3px solid var(--primary-color); padding-left: 13px; }
+
+  &--active {
+    background: $nexus-bg;
+    box-shadow: inset 3px 0 0 $nexus-accent;
+  }
 
   &__top {
     display: flex;
@@ -152,9 +211,9 @@
   }
 
   &__name {
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 700;
-    color: #0f172a;
+    color: $nexus-text;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -169,7 +228,7 @@
 
   &__time {
     font-size: 11px;
-    color: #94a3b8;
+    color: $nexus-dim;
     white-space: nowrap;
   }
 
@@ -181,9 +240,9 @@
   }
 
   &__category {
-    font-size: 11px;
+    font-size: 10px;
     font-weight: 600;
-    color: #64748b;
+    color: $nexus-muted;
     text-transform: uppercase;
     letter-spacing: 0.05em;
   }
@@ -191,7 +250,7 @@
   &__subject {
     margin: 4px 0 0;
     font-size: 12px;
-    color: #64748b;
+    color: $nexus-muted;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -227,15 +286,16 @@
   &.status--open   { background: #dbeafe; color: #1e40af; }
   &.status--info   { background: #e0e7ff; color: #3730a3; }
   &.status--ok     { background: #d1fae5; color: #065f46; }
-  &.status--muted  { background: #f1f5f9; color: #64748b; }
+  &.status--muted  { background: #f1f5f9; color: $nexus-muted; }
 }
 
-// ── Thread (right panel) ──────────────────────────────────────────────────────
+// ── Thread ────────────────────────────────────────────────────────────────────
 
 .support-thread {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  min-height: 0;
 }
 
 .thread-empty {
@@ -244,22 +304,30 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 12px;
-  color: #94a3b8;
+  gap: 8px;
+  padding: 32px;
+  color: $nexus-dim;
+  text-align: center;
 
-  &__icon { font-size: 40px; }
-  p { margin: 0; font-size: 14px; }
+  &__icon { font-size: 36px; opacity: 0.5; }
+  p { margin: 0; font-size: 14px; font-weight: 600; color: $nexus-muted; }
+
+  &__hint {
+    font-size: 12px;
+    color: $nexus-dim;
+  }
 }
 
 .thread-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
-  padding: 14px 20px;
+  gap: 12px;
+  padding: 12px 16px;
   border-bottom: 1px solid #f1f5f9;
   flex-shrink: 0;
   flex-wrap: wrap;
+  background: $nexus-bg-subtle;
 }
 
 .thread-customer {
@@ -270,28 +338,28 @@
   min-width: 0;
 
   &__avatar {
-    width: 36px;
-    height: 36px;
+    width: 34px;
+    height: 34px;
     border-radius: 50%;
     background: linear-gradient(135deg, #c9a84c, #a88530);
     color: #fff;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 16px;
+    font-size: 14px;
     font-weight: 700;
     flex-shrink: 0;
   }
 
   &__info { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
-  &__name { font-size: 15px; font-weight: 700; color: #0f172a; }
-  &__email { font-size: 12px; color: #64748b; }
+  &__name { font-size: 14px; font-weight: 700; color: $nexus-text; }
+  &__email { font-size: 12px; color: $nexus-muted; }
 }
 
 .thread-score {
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
-  color: #64748b;
+  color: #92400e;
   padding: 2px 8px;
   background: #fef9ee;
   border-radius: 999px;
@@ -299,8 +367,8 @@
 }
 
 .thread-assigned {
-  font-size: 12px;
-  color: #64748b;
+  font-size: 11px;
+  color: $nexus-muted;
   background: #f1f5f9;
   padding: 3px 10px;
   border-radius: 999px;
@@ -308,22 +376,23 @@
 
 .thread-actions {
   display: flex;
-  gap: 8px;
+  gap: 6px;
   flex-wrap: wrap;
   flex-shrink: 0;
 }
 
 .action-btn {
-  padding: 7px 14px;
+  padding: 7px 13px;
   border-radius: 8px;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
   cursor: pointer;
   border: none;
+  font-family: inherit;
   transition: opacity 0.15s, background 0.15s;
 
   &--primary {
-    background: var(--primary-color);
+    background: $nexus-accent;
     color: #fff;
     &:hover:not(:disabled) { opacity: 0.88; }
     &:disabled { opacity: 0.45; cursor: not-allowed; }
@@ -332,14 +401,14 @@
   &--secondary {
     background: #f1f5f9;
     color: #334155;
-    border: 1px solid #e2e8f0;
+    border: 1px solid $nexus-border;
     &:hover { background: #e2e8f0; }
   }
 
   &--ghost {
     background: transparent;
-    color: #64748b;
-    border: 1px solid #e2e8f0;
+    color: $nexus-muted;
+    border: 1px solid $nexus-border;
     &:hover { background: #f8fafc; }
   }
 }
@@ -347,11 +416,13 @@
 .thread-body {
   flex: 1;
   overflow-y: auto;
-  padding: 20px;
+  padding: 16px;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 12px;
   scroll-behavior: smooth;
+  min-height: 0;
+  background: $nexus-bg-subtle;
 }
 
 .thread-state {
@@ -359,47 +430,49 @@
   align-items: center;
   gap: 10px;
   justify-content: center;
-  height: 100%;
-  color: #94a3b8;
+  flex: 1;
+  color: $nexus-dim;
   font-size: 14px;
 }
 
 .thread-spinner {
   width: 22px;
   height: 22px;
-  border: 2px solid #e2e8f0;
-  border-top-color: var(--primary-color);
+  border: 2px solid $nexus-border;
+  border-top-color: $nexus-accent;
   border-radius: 50%;
   animation: spin 0.9s linear infinite;
 }
 
+// Customer = left, Agent = right (support desk convention)
 .thread-msg {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  max-width: 72%;
+  max-width: 78%;
 
-  &--customer { align-self: flex-end; align-items: flex-end; }
-  &--agent    { align-self: flex-start; align-items: flex-start; }
+  &--customer { align-self: flex-start; align-items: flex-start; }
+  &--agent    { align-self: flex-end; align-items: flex-end; }
   &--system   { align-self: center; align-items: center; max-width: 100%; }
 
   &__meta {
     display: flex;
     align-items: baseline;
     gap: 8px;
+    flex-wrap: wrap;
   }
 
   &__sender {
-    font-size: 11px;
+    font-size: 10px;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    color: #64748b;
+    color: $nexus-muted;
   }
 
   &__time {
-    font-size: 11px;
-    color: #94a3b8;
+    font-size: 10px;
+    color: $nexus-dim;
   }
 
   &__body {
@@ -412,50 +485,61 @@
     word-break: break-word;
 
     .thread-msg--customer & {
-      background: #dbeafe;
-      color: #1e3a5f;
-      border-bottom-right-radius: 4px;
+      background: $nexus-bg;
+      color: $nexus-text;
+      border: 1px solid $nexus-border;
+      border-bottom-left-radius: 4px;
     }
 
     .thread-msg--agent & {
-      background: var(--primary-color);
+      background: $nexus-accent;
       color: #fff;
-      border-bottom-left-radius: 4px;
+      border-bottom-right-radius: 4px;
     }
 
     .thread-msg--system & {
       background: transparent;
-      color: #94a3b8;
+      color: $nexus-dim;
       font-size: 12px;
       font-style: italic;
+      padding: 4px 0;
     }
   }
 }
 
 .thread-reply {
   border-top: 1px solid #f1f5f9;
-  padding: 14px 20px;
+  padding: 12px 16px;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
   gap: 8px;
+  background: $nexus-bg;
 
   &__input {
     width: 100%;
-    resize: none;
-    border: 1px solid #e2e8f0;
+    resize: vertical;
+    min-height: 72px;
+    max-height: 160px;
+    border: 1px solid $nexus-border;
     border-radius: 10px;
     padding: 10px 14px;
     font-size: 14px;
     line-height: 1.5;
     font-family: inherit;
-    color: #0f172a;
-    transition: border-color 0.15s;
+    color: $nexus-text;
+    background-color: $nexus-bg;
+    transition: border-color 0.15s, box-shadow 0.15s;
     box-sizing: border-box;
 
-    &:focus { outline: none; border-color: var(--primary-color); }
-    &::placeholder { color: #94a3b8; }
-    &:disabled { opacity: 0.6; }
+    &:focus {
+      outline: none;
+      border-color: $nexus-accent;
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+    }
+
+    &::placeholder { color: $nexus-dim; }
+    &:disabled { opacity: 0.6; cursor: not-allowed; }
   }
 
   &__footer {
@@ -467,16 +551,16 @@
 
   &__hint {
     font-size: 12px;
-    color: #94a3b8;
+    color: $nexus-dim;
   }
 }
 
 .thread-closed-notice {
   border-top: 1px solid #f1f5f9;
-  padding: 14px 20px;
+  padding: 14px 16px;
   font-size: 13px;
-  color: #64748b;
-  background: #f8fafc;
+  color: $nexus-muted;
+  background: $nexus-bg-subtle;
   text-align: center;
   flex-shrink: 0;
 }
@@ -488,12 +572,20 @@
 @media (max-width: 900px) {
   .support-split {
     grid-template-columns: 1fr;
+    min-height: auto;
+  }
+
+  .support-queue {
+    max-height: 240px;
+    border-right: none;
+    border-bottom: 1px solid #f1f5f9;
   }
 }
 
 @media (max-width: 768px) {
-  .support-page { padding: 20px; }
-  .support-header { flex-direction: column; align-items: stretch; }
+  .support-page { padding: 20px 16px 32px; }
+  .support-toolbar { flex-direction: column; align-items: stretch; }
+  .refresh-btn { align-self: flex-end; }
 }
 
 .sr-only {

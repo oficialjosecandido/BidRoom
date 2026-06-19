@@ -1,5 +1,5 @@
-import { Component, OnInit, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnInit, OnDestroy, HostListener, inject, PLATFORM_ID } from '@angular/core';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute, RouterLink } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
@@ -51,13 +51,14 @@ type StatusFilterKey = 'ending' | 'private';
   templateUrl: './listing-list.component.html',
   styleUrls: ['./listing-list.component.scss']
 })
-export class ListingListComponent implements OnInit {
+export class ListingListComponent implements OnInit, OnDestroy {
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private listingsService = inject(ListingsService);
   private watchlistService = inject(WatchlistService);
   private authService = inject(AuthService);
   private translate = inject(TranslateService);
+  private isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
 
   listings: Listing[] = [];
   total = 0;
@@ -613,5 +614,30 @@ export class ListingListComponent implements OnInit {
     if (days > 0) return `${days}d ${hours}h`;
     if (hours > 0) return `${hours}h ${minutes}m`;
     return `${minutes}m`;
+  }
+
+  toggleFilters(): void {
+    this.filtersOpen = !this.filtersOpen;
+    this.syncBodyScroll();
+  }
+
+  closeFilters(): void {
+    if (!this.filtersOpen) return;
+    this.filtersOpen = false;
+    this.syncBodyScroll();
+  }
+
+  @HostListener('document:keydown.escape')
+  onEscape(): void {
+    this.closeFilters();
+  }
+
+  ngOnDestroy(): void {
+    if (this.isBrowser) document.body.style.overflow = '';
+  }
+
+  private syncBodyScroll(): void {
+    if (!this.isBrowser) return;
+    document.body.style.overflow = this.filtersOpen ? 'hidden' : '';
   }
 }

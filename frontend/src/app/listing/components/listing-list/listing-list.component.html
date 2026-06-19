@@ -81,9 +81,23 @@
   </div>
 
   <div class="page-layout">
+    @if (filtersOpen) {
+      <button
+        type="button"
+        class="filter-backdrop"
+        (click)="closeFilters()"
+        [attr.aria-label]="'listingList.closeFilters' | translate"
+      ></button>
+    }
+
     <aside class="sidebar" [class.sidebar--open]="filtersOpen" aria-label="Search filters">
       <div class="sidebar-header">
         <span class="sidebar-title">{{ 'listingList.filtersTitle' | translate }}</span>
+        <button type="button" class="sidebar-close" (click)="closeFilters()" [attr.aria-label]="'listingList.closeFilters' | translate">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path stroke-linecap="round" d="M6 6l12 12M18 6L6 18"/>
+          </svg>
+        </button>
         @if (hasActiveFilters || selectedCategory) {
           <button type="button" class="sidebar-reset" (click)="clearAllFilters(); clearCategory()">
             {{ 'listingList.filtersClear' | translate }}
@@ -266,7 +280,7 @@
         }
       </div>
 
-      <button type="button" class="sidebar-mobile-close" (click)="filtersOpen = false">{{ 'listingList.applyFilters' | translate }}</button>
+      <button type="button" class="sidebar-mobile-close" (click)="closeFilters()">{{ 'listingList.applyFilters' | translate }}</button>
     </aside>
 
     <div class="results-wrapper">
@@ -283,7 +297,7 @@
           }
         </div>
         <div class="bar-right">
-          <button type="button" class="filter-toggle-mobile" (click)="filtersOpen = !filtersOpen">
+          <button type="button" class="filter-toggle-mobile" (click)="toggleFilters()">
             {{ 'listingList.filtersTitle' | translate }}
             @if (activeFilterCount > 0) {
               <span class="filter-count-badge">{{ activeFilterCount }}</span>
