@@ -646,9 +646,31 @@
         }
       </div>
       @if (!isAuthenticated) {
-        <label class="f-label" for="offer-email">{{ 'listingDetails.offerModal.emailLabel' | translate }}</label>
-        <input class="f-input f-input-sm" id="offer-email" type="email" placeholder="you@example.com" [(ngModel)]="offerEmail" autocomplete="email" />
-        <p class="f-hint">{{ 'listingDetails.offerModal.emailHint' | translate }}</p>
+        <div
+          class="offer-email-block"
+          [class.offer-email-block--highlight]="needsOfferEmail()"
+          [class.offer-email-block--valid]="isOfferEmailValid()"
+        >
+          <p class="offer-email-callout">
+            <span class="offer-email-callout__icon" aria-hidden="true">✉</span>
+            {{ 'listingDetails.offerModal.emailRequiredCallout' | translate }}
+          </p>
+          <label class="offer-email-l" for="offer-email">
+            {{ 'listingDetails.offerModal.emailLabel' | translate }}
+            <span class="offer-required-tag">{{ 'listingDetails.offerModal.emailRequiredBadge' | translate }}</span>
+          </label>
+          <input
+            class="offer-email-input"
+            id="offer-email"
+            type="email"
+            [placeholder]="'listingDetails.offerModal.emailPlaceholder' | translate"
+            [(ngModel)]="offerEmail"
+            autocomplete="email"
+            required
+            aria-required="true"
+          />
+          <p class="offer-email-hint">{{ 'listingDetails.offerModal.emailHint' | translate }}</p>
+        </div>
       }
       @if (isOfferBelowMinimum()) {
         <div class="below-min">{{ 'listingDetails.offerModal.belowMinNote' | translate }}</div>

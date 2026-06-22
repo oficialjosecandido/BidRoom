@@ -3,7 +3,7 @@ export const environment = {
   googleAnalyticsId: 'G-4FDFR1ZSRV',
   posthog: {
     apiKey:  'phc_kLcVSTdnMKj4eDek9zMhTKGxsqvtFTrYyVUhQxXRRwgh',
-    apiHost: 'https://eu.i.posthog.com',
+    apiHost: 'https://us.i.posthog.com',
     enabled: true,
   },
   defaultApiBaseUrl: 'https://bidroom-backend-dev.azurewebsites.net', // TODO: update to prod backend URL when available

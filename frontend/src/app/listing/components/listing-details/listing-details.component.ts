@@ -1043,6 +1043,17 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
     return true;
   }
 
+  needsOfferEmail(): boolean {
+    if (this.isAuthenticated) return false;
+    const trimmed = (this.offerEmail || '').trim();
+    return !trimmed || !EMAIL_REGEX.test(trimmed);
+  }
+
+  isOfferEmailValid(): boolean {
+    const trimmed = (this.offerEmail || '').trim();
+    return !!trimmed && EMAIL_REGEX.test(trimmed);
+  }
+
   submitOffer(): void {
     if (!this.listing) return;
     this.offerModalError = null;
