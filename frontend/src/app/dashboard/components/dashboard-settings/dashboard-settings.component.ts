@@ -11,6 +11,8 @@ import { BuyerPaymentService, PaymentMethodsResponse, SavedPaymentMethod } from 
 import { ListingsService } from '../../../shared/services/listings.service';
 import { loadStripe, Stripe, StripeElements, StripeCardElement } from '@stripe/stripe-js';
 import { Observable } from 'rxjs';
+import { PostHogService } from '../../../shared/services/posthog.service';
+import { AnalyticsEvents } from '../../../shared/services/analytics.events';
 
 @Component({
   selector: 'app-dashboard-settings',
@@ -28,6 +30,7 @@ export class DashboardSettingsComponent implements OnInit, OnDestroy {
   private notifPrefsService = inject(NotificationPreferencesService);
   private buyerPaymentService = inject(BuyerPaymentService);
   private listingsService = inject(ListingsService);
+  private postHog = inject(PostHogService);
 
   private sellerListingCount = 0;
 
@@ -416,6 +419,7 @@ export class DashboardSettingsComponent implements OnInit, OnDestroy {
   openOnboardingForm(): void {
     this.connectError = null;
     this.showOnboardingForm = true;
+    this.postHog.track(AnalyticsEvents.SELLER_ONBOARDING_STARTED);
   }
 
   cancelOnboardingForm(): void {
@@ -462,6 +466,7 @@ export class DashboardSettingsComponent implements OnInit, OnDestroy {
         this.connectStatusMessage = res.onboarded
           ? this.translate.instant('dashboard.settings.payoutNowActive')
           : this.translate.instant('dashboard.settings.detailsSubmitted');
+        this.postHog.track(AnalyticsEvents.PAYOUT_DETAILS_ADDED, { onboarded: res.onboarded });
         this.loadConnectStatus();
       },
       error: (err) => {

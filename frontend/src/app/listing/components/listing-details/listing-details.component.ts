@@ -27,6 +27,7 @@ import { getTrustTierInfo } from '../../../shared/utils/trust-tier.util';
 import { SeoService } from '../../../shared/services/seo.service';
 import { AnalyticsService } from '../../../shared/services/analytics.service';
 import { AnalyticsEvents } from '../../../shared/services/analytics.events';
+import { PostHogService } from '../../../shared/services/posthog.service';
 import { getLocalizedTitle, getLocalizedDescription } from '../../../shared/utils/listing-locale';
 import { API_CONFIG } from '../../../shared/config/api.config';
 
@@ -60,6 +61,7 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
   readonly themeService = inject(ThemeService);
   private seo = inject(SeoService);
   private analytics = inject(AnalyticsService);
+  private postHog = inject(PostHogService);
   private platformId = inject(PLATFORM_ID);
   private isBrowser = isPlatformBrowser(this.platformId);
   private transferState = inject(TransferState);
@@ -197,6 +199,13 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
     if (this.isAuthenticated && !this.isOwnListing && listing.seller?._id) {
       this.loadSellerFollowStatus(listing.seller._id);
       this.loadSellerBlockStatus(listing.seller._id);
+    }
+    if (this.isBrowser && this.isAuthenticated && !this.isOwnListing) {
+      this.postHog.track(AnalyticsEvents.LISTING_VIEWED, {
+        ...this.analytics.listingParams(listing),
+        current_price: listing.currentPrice ?? listing.startingPrice,
+        bid_count: listing.bidCount ?? 0,
+      });
     }
     if (this.isBrowser) window.scrollTo(0, 0);
     this.justEndedRefetched = false;
@@ -958,6 +967,10 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
           ...this.analytics.listingParams(this.listing!),
           amount,
         });
+        this.postHog.track(AnalyticsEvents.BID_PLACED, {
+          ...this.analytics.listingParams(this.listing!),
+          amount,
+        });
         this.closeBidModal();
         this.loadListing(this.listing!.slug); // loadListing already calls loadBids internally
         this.cdr.markForCheck();
@@ -1488,6 +1501,10 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
           if (u.platinumBidders) this.listing.platinumBidders = u.platinumBidders;
           if (u.platinumBidderInvitedAt) this.listing.platinumBidderInvitedAt = u.platinumBidderInvitedAt;
         }
+        this.postHog.track(AnalyticsEvents.PRIVATE_ROOM_CREATED, {
+          ...this.analytics.listingParams(this.listing!),
+          invited_count: ids.length,
+        });
         this.closeCreatePrivateRoomModal();
         this.createPrivateRoomSubmitting = false;
         this.justEndedRefetched = false;

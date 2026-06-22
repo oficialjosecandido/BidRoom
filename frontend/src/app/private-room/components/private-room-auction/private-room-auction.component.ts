@@ -13,6 +13,8 @@ import { PrivateRoomService } from '../../services/private-room.service';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { API_CONFIG } from '../../../shared/config/api.config';
 import { getLocalizedTitle } from '../../../shared/utils/listing-locale';
+import { PostHogService } from '../../../shared/services/posthog.service';
+import { AnalyticsEvents } from '../../../shared/services/analytics.events';
 
 type InvitationDisplayStatus = 'pending' | 'accepted' | 'declined';
 
@@ -41,6 +43,7 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
   private socketService = inject(SocketService);
   private authService = inject(AuthService);
   private privateRoomService = inject(PrivateRoomService);
+  private postHog = inject(PostHogService);
   private translate = inject(TranslateService);
 
   listingId = '';
@@ -265,6 +268,11 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
         this.acceptingInvitation = false;
         this.invitationPending = false;
         this.isPlatinumBidder = true;
+        this.postHog.track(AnalyticsEvents.PRIVATE_ROOM_INVITE_ACCEPTED, {
+          listing_id: this.listingId,
+          listing_slug: this.listing?.slug,
+          item_category: this.listing?.category,
+        });
         // Refresh listing data so the UI reflects the latest room state
         // (e.g. privateRoomStatus may have changed, or we need accurate platinumBidderStatus)
         this.loadListing();
@@ -475,6 +483,17 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
     this.sessionEndModalShown = true;
     const phaseAtExpiry = this.expiredAtStatus;
     this.expiredAtStatus = null;
+
+    const winner = this.getTemporaryWinner();
+    if (this.isSeller && winner) {
+      this.postHog.track(AnalyticsEvents.PRIVATE_ROOM_WON, {
+        listing_id: listing._id,
+        listing_slug: listing.slug,
+        item_category: listing.category,
+        final_price: winner.amount,
+        participants: this.platinumBidders.length,
+      });
+    }
 
     const content = this.buildSessionEndModalContent(listing, confirming, phaseAtExpiry);
     const listingUrl = this.getListingPageUrl();
@@ -966,6 +985,12 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
       next: () => {
         this.isPlacingBid = false;
         this.customBidAmount = '';
+        this.postHog.track(AnalyticsEvents.PRIVATE_ROOM_BID_PLACED, {
+          listing_id: this.listing!._id,
+          listing_slug: this.listing!.slug,
+          item_category: this.listing!.category,
+          amount,
+        });
         this.loadListing(); // loadListing calls loadBids internally
         Swal.fire({
           toast: true,

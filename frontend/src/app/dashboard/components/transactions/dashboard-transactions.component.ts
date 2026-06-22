@@ -8,6 +8,8 @@ import { TransactionsService, Transaction, TransactionStatus, DamageClaim } from
 import { ReviewsService } from '../../../shared/services/reviews.service';
 import { StripeConnectService } from '../../../shared/services/stripe-connect.service';
 import { ShippingService, ShippingRate, DeliveryAddress } from '../../../shared/services/shipping.service';
+import { PostHogService } from '../../../shared/services/posthog.service';
+import { AnalyticsEvents } from '../../../shared/services/analytics.events';
 
 const successToast = Swal.mixin({
   toast: true,
@@ -30,6 +32,7 @@ export class DashboardTransactionsComponent implements OnInit {
   private reviewsService = inject(ReviewsService);
   private stripeConnect = inject(StripeConnectService);
   private shippingService = inject(ShippingService);
+  private postHog = inject(PostHogService);
   private route = inject(ActivatedRoute);
   private translate = inject(TranslateService);
 
@@ -446,6 +449,11 @@ export class DashboardTransactionsComponent implements OnInit {
     this.stripePaymentError = null;
     this.stripeConnect.createCheckoutSession(t._id).subscribe({
       next: (res) => {
+        this.postHog.track(AnalyticsEvents.CHECKOUT_STARTED, {
+          listing_id: t.listing?._id ?? t._id,
+          listing_slug: t.listing?.slug,
+          amount: t.amount,
+        });
         window.location.href = res.url;
       },
       error: (err) => {
@@ -521,6 +529,12 @@ export class DashboardTransactionsComponent implements OnInit {
       next: (updated) => {
         this.stripeConfirmingTxId = null;
         this.replaceTransaction({ ...updated, role: 'buyer' });
+        this.postHog.track(AnalyticsEvents.PAYMENT_COMPLETED, {
+          listing_id: updated.listing?._id ?? transactionId,
+          listing_slug: updated.listing?.slug,
+          amount: updated.amount,
+          payment_method: 'stripe',
+        });
         successToast.fire({ title: 'Payment confirmed! The seller has been notified.' });
       },
       error: (err) => {
@@ -765,11 +779,20 @@ export class DashboardTransactionsComponent implements OnInit {
 
   markAsDelivered(t: Transaction): void {
     if (this.updatingId || t.role !== 'buyer' || this.getEffectiveStatus(t) !== 'shipped') return;
+    const shippedAt = t.shippedAt ? new Date(t.shippedAt) : null;
     this.updatingId = t._id;
     this.transactionsService.updateTransaction(t._id, { status: 'delivered' }).subscribe({
       next: (updated) => {
         this.replaceTransaction(updated);
         this.updatingId = null;
+        const daysToReceive = shippedAt
+          ? Math.round((Date.now() - shippedAt.getTime()) / 86_400_000)
+          : undefined;
+        this.postHog.track(AnalyticsEvents.ITEM_RECEIVED, {
+          listing_id: t.listing?._id ?? t._id,
+          listing_slug: t.listing?.slug,
+          ...(daysToReceive !== undefined && { days_to_receive: daysToReceive }),
+        });
         successToast.fire({ title: this.translate.instant('transactions.receivedConfirmedToast') });
       },
       error: () => (this.updatingId = null)

@@ -1,6 +1,11 @@
 export const environment = {
   production: true,
   googleAnalyticsId: '',
+  posthog: {
+    apiKey:   '',
+    apiHost:  'https://eu.i.posthog.com',
+    enabled:  false, // off in e2e — avoids polluting analytics with test traffic
+  },
   appUrl: 'https://blue-glacier-0e23ae710.2.azurestaticapps.net/landing',
   enableAuctions: false,
   enablePrivateRooms: false,

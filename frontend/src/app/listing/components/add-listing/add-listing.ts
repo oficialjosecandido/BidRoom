@@ -17,6 +17,7 @@ import { BidroomLogoComponent } from '../../../shared/components/bidroom-logo/bi
 import { ThemeService } from '../../../shared/services/theme.service';
 import { AnalyticsService } from '../../../shared/services/analytics.service';
 import { AnalyticsEvents } from '../../../shared/services/analytics.events';
+import { PostHogService } from '../../../shared/services/posthog.service';
 
 interface Category {
   id: string;
@@ -60,6 +61,7 @@ export class AddListing implements OnInit, OnDestroy {
   private kycService = inject(KycService);
   private themeService = inject(ThemeService);
   private analytics = inject(AnalyticsService);
+  private postHog = inject(PostHogService);
 
   listingForm!: FormGroup;
   activeLangTab: 'pt' | 'en' = 'pt';
@@ -1104,6 +1106,13 @@ export class AddListing implements OnInit, OnDestroy {
         ...this.analytics.listingParams(listing),
         listing_format: formData.listingFormat ?? '',
         allow_private_room: !!formData.allowPrivateRoom,
+      });
+      this.postHog.track(AnalyticsEvents.LISTING_PUBLISHED, {
+        ...this.analytics.listingParams(listing),
+        listing_format: formData.listingFormat ?? '',
+        allow_private_room: !!formData.allowPrivateRoom,
+        starting_price: formData.startingPrice ?? 0,
+        image_count: imageUrls.length,
       });
 
       this.isSubmitting = false;

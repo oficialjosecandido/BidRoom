@@ -9,6 +9,8 @@ import { Router, NavigationEnd } from '@angular/router';
 import { filter } from 'rxjs/operators';
 import { AuthService } from '../../../auth/services/auth.service';
 import { SupportService, SupportConversation, SupportMessage } from '../../services/support.service';
+import { PostHogService } from '../../services/posthog.service';
+import { AnalyticsEvents } from '../../services/analytics.events';
 
 @Component({
   selector: 'app-support-chat-widget',
@@ -22,6 +24,7 @@ export class SupportChatWidgetComponent implements OnInit, OnDestroy, AfterViewC
   private destroyRef  = inject(DestroyRef);
   private auth        = inject(AuthService);
   private support     = inject(SupportService);
+  private postHog     = inject(PostHogService);
   private cdr         = inject(ChangeDetectorRef);
   private platformId  = inject(PLATFORM_ID);
   private router      = inject(Router);
@@ -118,6 +121,7 @@ export class SupportChatWidgetComponent implements OnInit, OnDestroy, AfterViewC
     this.isOpen     = true;
     this.unreadCount = 0;
     this.error       = null;
+    this.postHog.track(AnalyticsEvents.SUPPORT_CHAT_OPENED, { source: 'widget' });
     if (this.conversation && this.messages.length === 0) {
       this.loadMessages();
     }

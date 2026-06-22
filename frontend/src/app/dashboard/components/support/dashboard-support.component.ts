@@ -11,6 +11,8 @@ import {
   SupportMessage,
   OpenConversationPayload,
 } from '../../../shared/services/support.service';
+import { PostHogService } from '../../../shared/services/posthog.service';
+import { AnalyticsEvents } from '../../../shared/services/analytics.events';
 
 const STATUS_LABELS: Record<SupportConversation['status'], string> = {
   open:             'Aberta',
@@ -39,6 +41,7 @@ const CATEGORY_LABELS: Record<string, string> = {
 })
 export class DashboardSupportComponent implements OnInit, AfterViewChecked {
   private support    = inject(SupportService);
+  private postHog    = inject(PostHogService);
   private cdr        = inject(ChangeDetectorRef);
   private destroyRef = inject(DestroyRef);
   private isBrowser  = isPlatformBrowser(inject(PLATFORM_ID));
@@ -217,6 +220,7 @@ export class DashboardSupportComponent implements OnInit, AfterViewChecked {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: ({ conversation }) => {
+          this.postHog.track(AnalyticsEvents.SUPPORT_REQUEST_SENT, { category: this.newCategory, source: 'dashboard' });
           this.conversations  = [conversation, ...this.conversations];
           this.showNewForm    = false;
           this.creating       = false;

@@ -3,6 +3,8 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 import { Auth, applyActionCode } from '@angular/fire/auth';
+import { PostHogService } from '../../../shared/services/posthog.service';
+import { AnalyticsEvents } from '../../../shared/services/analytics.events';
 
 @Component({
   selector: 'app-verify-email',
@@ -16,6 +18,7 @@ export class VerifyEmailComponent implements OnInit {
   private router = inject(Router);
   private auth = inject(Auth);
   private translate = inject(TranslateService);
+  private postHog = inject(PostHogService);
 
   isLoading = true;
   isVerified = false;
@@ -40,6 +43,7 @@ export class VerifyEmailComponent implements OnInit {
       .then(() => {
         this.isLoading = false;
         this.isVerified = true;
+        this.postHog.track(AnalyticsEvents.EMAIL_VERIFIED);
       })
       .catch((error: any) => {
         this.isLoading = false;

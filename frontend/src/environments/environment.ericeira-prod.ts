@@ -1,6 +1,11 @@
 export const environment = {
   production: true,
   googleAnalyticsId: 'G-4FDFR1ZSRV',
+  posthog: {
+    apiKey:  'phc_kLcVSTdnMKj4eDek9zMhTKGxsqvtFTrYyVUhQxXRRwgh',
+    apiHost: 'https://eu.i.posthog.com',
+    enabled: true,
+  },
   appUrl: 'https://calm-desert-0d6601f10.1.azurestaticapps.net',
   enableAuctions: false,
   enablePrivateRooms: false,

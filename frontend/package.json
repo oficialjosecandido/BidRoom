@@ -43,6 +43,7 @@
     "@ngx-translate/http-loader": "^17.0.0",
     "@stripe/stripe-js": "^8.9.0",
     "firebase": "^11.1.0",
+    "posthog-js": "^1.391.6",
     "rxjs": "~7.8.0",
     "socket.io-client": "^4.8.1",
     "sweetalert2": "^11.26.18",

@@ -5,6 +5,8 @@ import { FormsModule } from '@angular/forms';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import Swal from 'sweetalert2';
 import { TransactionsService, Transaction, TransactionStatus } from '../../../shared/services/transactions.service';
+import { PostHogService } from '../../../shared/services/posthog.service';
+import { AnalyticsEvents } from '../../../shared/services/analytics.events';
 
 const DISPUTE_REASON_LABELS: Record<string, string> = {
   item_not_as_described: 'Item not as described',
@@ -32,6 +34,7 @@ const successToast = Swal.mixin({
 })
 export class DashboardDisputesComponent implements OnInit {
   transactionsService = inject(TransactionsService);
+  private postHog = inject(PostHogService);
   private route = inject(ActivatedRoute);
   private translate = inject(TranslateService);
 
@@ -219,6 +222,12 @@ export class DashboardDisputesComponent implements OnInit {
       .subscribe({
         next: () => {
           this.disputeSubmitting = false;
+          this.postHog.track(AnalyticsEvents.DISPUTE_OPENED, {
+            listing_id: t.listing?._id ?? t._id,
+            listing_slug: t.listing?.slug,
+            transaction_amount: t.amount,
+            reason_category: this.disputeReason,
+          });
           this.closeDisputeModal();
           successToast.fire({ title: 'Dispute submitted' });
           this.loadData();

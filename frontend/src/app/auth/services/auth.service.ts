@@ -5,6 +5,8 @@ import { HttpClient } from '@angular/common/http';
 import { Auth, GoogleAuthProvider, User as FirebaseUser, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithPopup, sendEmailVerification, updateProfile, signOut, getIdToken, confirmPasswordReset, verifyPasswordResetCode } from '@angular/fire/auth';
 import { API_CONFIG } from '../../shared/config/api.config';
 import { UserRolesService } from '../../shared/services/user-roles.service';
+import { PostHogService } from '../../shared/services/posthog.service';
+import { AnalyticsEvents } from '../../shared/services/analytics.events';
 
 export interface AppUser {
   uid: string;
@@ -18,9 +20,10 @@ export interface AppUser {
   providedIn: 'root'
 })
 export class AuthService {
-  private auth = inject(Auth);
-  private http = inject(HttpClient);
+  private auth      = inject(Auth);
+  private http      = inject(HttpClient);
   private userRoles = inject(UserRolesService);
+  private postHog   = inject(PostHogService);
   private apiUrl = API_CONFIG.getApiUrl();
 
   private currentUserSubject = new BehaviorSubject<AppUser | null>(null);
@@ -46,8 +49,14 @@ export class AuthService {
 
       if (!mapped) {
         this.userRoles.invalidate();
+        this.postHog.reset();
         return;
       }
+
+      this.postHog.identify(mapped.uid, {
+        email:          mapped.email ?? '',
+        email_verified: mapped.emailVerified,
+      });
 
       // Refresh role flags for the new user, then route admins to a saved
       // /nexus route (handles page-refresh scenario for support staff).
@@ -89,6 +98,7 @@ export class AuthService {
             switchMap(() => throwError(() => new Error('Please verify your email address before logging in. Check your inbox for the verification email.')))
           );
         }
+        this.postHog.track(AnalyticsEvents.LOGIN, { method: 'email' });
         return of(this.mapFirebaseUser(cred.user) as AppUser);
       }),
       catchError((err) => {
@@ -110,6 +120,7 @@ export class AuthService {
           await updateProfile(cred.user, { displayName });
         }
         await sendEmailVerification(cred.user);
+        this.postHog.track(AnalyticsEvents.SIGN_UP, { method: 'email' });
         return this.mapFirebaseUser(cred.user) as AppUser;
       })
     );
@@ -119,15 +130,13 @@ export class AuthService {
     const provider = new GoogleAuthProvider();
     return from(signInWithPopup(this.auth, provider)).pipe(
       switchMap((cred) => {
-        // Google accounts are typically verified, but check anyway
         if (!cred.user.emailVerified) {
-          // Sign out the user immediately
           return from(signOut(this.auth)).pipe(
-            switchMap(() => {
-              return throwError(() => new Error('Your Google account email must be verified. Please verify your email address in your Google account settings.'));
-            })
+            switchMap(() => throwError(() => new Error('Your Google account email must be verified. Please verify your email address in your Google account settings.')))
           );
         }
+        const isNew = (cred as unknown as { _tokenResponse?: { isNewUser?: boolean } })._tokenResponse?.isNewUser;
+        this.postHog.track(isNew ? AnalyticsEvents.SIGN_UP : AnalyticsEvents.LOGIN, { method: 'google' });
         return of(this.mapFirebaseUser(cred.user) as AppUser);
       })
     );
