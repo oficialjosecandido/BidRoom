@@ -270,8 +270,8 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
         this.isPlatinumBidder = true;
         this.postHog.track(AnalyticsEvents.PRIVATE_ROOM_INVITE_ACCEPTED, {
           listing_id: this.listingId,
-          listing_slug: this.listing?.slug,
-          item_category: this.listing?.category,
+          listing_slug: this.listing?.slug ?? '',
+          item_category: this.listing?.category ?? '',
         });
         // Refresh listing data so the UI reflects the latest room state
         // (e.g. privateRoomStatus may have changed, or we need accurate platinumBidderStatus)
