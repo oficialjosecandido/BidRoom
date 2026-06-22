@@ -14,6 +14,11 @@ const extraHosts = (process.env['NG_ALLOWED_HOSTS'] ?? '')
   .split(',').map(h => h.trim()).filter(Boolean);
 const angularApp = new AngularNodeAppEngine({
   allowedHosts: ['localhost', '127.0.0.1', 'www.bidroom.pt', 'bidroom.pt', ...extraHosts],
+  // Azure App Service always sits behind its own load balancer, so every
+  // request arrives with x-forwarded-* headers. Without this, the engine
+  // doesn't trust them, can't resolve the real Host, and silently falls
+  // back to the client-only shell for every Server-rendered route.
+  trustProxyHeaders: true,
 });
 
 // Sitemap is generated dynamically by the backend from live listing data —
