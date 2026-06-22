@@ -16,6 +16,12 @@ const angularApp = new AngularNodeAppEngine({
   allowedHosts: ['localhost', '127.0.0.1', 'www.bidroom.pt', 'bidroom.pt', ...extraHosts],
 });
 
+// Sitemap is generated dynamically by the backend from live listing data —
+// redirect before express.static can serve a stale cached copy (maxAge: '1y' below).
+app.get('/sitemap.xml', (req, res) => {
+  res.redirect(301, 'https://bidroom-backend-prod-e9eghtc0aha4e3dw.uksouth-01.azurewebsites.net/sitemap.xml');
+});
+
 // Serve static files from /browser
 app.use(
   express.static(browserDistFolder, {
