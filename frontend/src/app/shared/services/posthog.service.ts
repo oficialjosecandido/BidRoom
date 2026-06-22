@@ -22,11 +22,11 @@ export class PostHogService {
     if (!cfg?.enabled || !cfg.apiKey) return;
 
     posthog.init(cfg.apiKey, {
-      api_host:                    cfg.apiHost,
-      opt_out_capturing_by_default: true,
-      respect_dnt:                 true,
-      capture_pageview:            false,
-      person_profiles:             'identified_only',
+      api_host:         cfg.apiHost,
+      persistence:      'memory',       // no cookies or localStorage — cookieless by default
+      respect_dnt:      true,
+      capture_pageview: false,
+      person_profiles:  'identified_only',
       session_recording: {
         maskAllInputs:    true,
         maskTextSelector: '[data-ph-mask]',
@@ -34,26 +34,29 @@ export class PostHogService {
     });
     this.initialized = true;
 
+    // When analytics consent is given, switch to cookie-backed persistence so
+    // the user identity survives page reloads. When revoked, reset to memory-only.
     effect(() => {
       if (!this.initialized) return;
       if (this.cookiePrefs.analytics()) {
-        posthog.opt_in_capturing();
+        posthog.set_config({ persistence: 'localStorage+cookie' });
       } else {
-        posthog.opt_out_capturing();
+        posthog.set_config({ persistence: 'memory' });
+        posthog.reset();
       }
     });
 
     this.router.events
       .pipe(filter((e): e is NavigationEnd => e instanceof NavigationEnd))
       .subscribe((e) => {
-        if (this.canCapture()) {
+        if (this.initialized) {
           posthog.capture('$pageview', { $current_url: e.urlAfterRedirects });
         }
       });
   }
 
   track(name: AnalyticsEventName | string, params?: AnalyticsEventParams): void {
-    if (!this.canCapture()) return;
+    if (!this.initialized) return;
     posthog.capture(name, params ?? {});
   }
 
@@ -63,7 +66,7 @@ export class PostHogService {
   }
 
   setPersonProperties(props: Record<string, string | number | boolean>): void {
-    if (!this.canCapture()) return;
+    if (!this.initialized) return;
     posthog.setPersonProperties(props);
   }
 
@@ -75,9 +78,5 @@ export class PostHogService {
   isFeatureEnabled(flag: string): boolean {
     if (!this.initialized) return false;
     return posthog.isFeatureEnabled(flag) ?? false;
-  }
-
-  private canCapture(): boolean {
-    return this.initialized && this.cookiePrefs.analytics();
   }
 }
