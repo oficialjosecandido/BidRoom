@@ -15,10 +15,12 @@ const extraHosts = (process.env['NG_ALLOWED_HOSTS'] ?? '')
 const angularApp = new AngularNodeAppEngine({
   allowedHosts: ['localhost', '127.0.0.1', 'www.bidroom.pt', 'bidroom.pt', ...extraHosts],
   // Azure App Service always sits behind its own load balancer, so every
-  // request arrives with x-forwarded-* headers. Without this, the engine
-  // doesn't trust them, can't resolve the real Host, and silently falls
-  // back to the client-only shell for every Server-rendered route.
-  trustProxyHeaders: true,
+  // request arrives with x-forwarded-* headers. `true` only trusts the
+  // engine's built-in set (for/host/port/proto/prefix) — Azure also sends
+  // a non-standard "x-forwarded-tlsversion" header, which isn't in that
+  // set, so the engine deopted to the client-only shell on every single
+  // request regardless. Listing the exact headers Azure sends fixes it.
+  trustProxyHeaders: ['x-forwarded-for', 'x-forwarded-host', 'x-forwarded-port', 'x-forwarded-proto', 'x-forwarded-prefix', 'x-forwarded-tlsversion'],
 });
 
 // Sitemap is generated dynamically by the backend from live listing data —
