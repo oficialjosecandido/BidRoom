@@ -14,7 +14,8 @@
   "routes": [
     {
       "route": "/sitemap.xml",
-      "rewrite": "/api/sitemap.xml"
+      "redirect": "https://bidroom-backend-prod-e9eghtc0aha4e3dw.uksouth-01.azurewebsites.net/sitemap.xml",
+      "statusCode": 301
     },
     {
       "route": "/api/share/*",

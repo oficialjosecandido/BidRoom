@@ -31,7 +31,9 @@ function urlEntry({ loc, lastmod, changefreq, priority }) {
   ].filter(Boolean).join('\n');
 }
 
-// GET /sitemap.xml  (served at root via Azure SWA rewrite or Express directly)
+// GET /sitemap.xml
+// The SWA has no linked backend, so www.bidroom.pt/sitemap.xml is a 301
+// redirect (staticwebapp.config.json) straight to this backend route.
 router.get('/', async (req, res) => {
   try {
     const listings = await Listing
