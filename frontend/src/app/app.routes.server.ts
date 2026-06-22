@@ -7,5 +7,7 @@ export const serverRoutes: ServerRoute[] = [
   { path: 'listing/:slug',             renderMode: RenderMode.Server },
   { path: 'seller/:id',                renderMode: RenderMode.Server },
   { path: 'notifications/unsubscribe', renderMode: RenderMode.Server },
+  { path: 'blog',                      renderMode: RenderMode.Server },
+  { path: 'blog/:slug',                renderMode: RenderMode.Server },
   { path: '**',                        renderMode: RenderMode.Client },
 ];

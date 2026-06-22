@@ -1,6 +1,7 @@
 const express = require('express');
 const router  = express.Router();
 const Listing = require('../models/Listing');
+const BlogPost = require('../models/BlogPost');
 
 const BASE_URL = 'https://www.bidroom.pt';
 
@@ -9,6 +10,7 @@ const STATIC_PAGES = [
   { path: 'listings',     changefreq: 'hourly',  priority: '0.9' },
   { path: 'how-it-works', changefreq: 'monthly', priority: '0.7' },
   { path: 'trust',        changefreq: 'monthly', priority: '0.6' },
+  { path: 'blog',         changefreq: 'daily',   priority: '0.8' },
 ];
 
 function xmlEscape(str) {
@@ -36,12 +38,20 @@ function urlEntry({ loc, lastmod, changefreq, priority }) {
 // redirect (staticwebapp.config.json) straight to this backend route.
 router.get('/', async (req, res) => {
   try {
-    const listings = await Listing
-      .find({ status: 'active' })
-      .select('slug updatedAt category')
-      .sort({ updatedAt: -1 })
-      .limit(50_000)
-      .lean();
+    const [listings, posts] = await Promise.all([
+      Listing
+        .find({ status: 'active' })
+        .select('slug updatedAt category')
+        .sort({ updatedAt: -1 })
+        .limit(50_000)
+        .lean(),
+      BlogPost
+        .find({ status: 'published' })
+        .select('slug updatedAt')
+        .sort({ updatedAt: -1 })
+        .limit(10_000)
+        .lean(),
+    ]);
 
     const staticEntries = STATIC_PAGES.map(p =>
       urlEntry({
@@ -60,11 +70,21 @@ router.get('/', async (req, res) => {
       })
     );
 
+    const postEntries = posts.map(p =>
+      urlEntry({
+        loc:        `${BASE_URL}/blog/${p.slug}`,
+        lastmod:    new Date(p.updatedAt).toISOString().slice(0, 10),
+        changefreq: 'monthly',
+        priority:   '0.7',
+      })
+    );
+
     const xml = [
       '<?xml version="1.0" encoding="UTF-8"?>',
       '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
       ...staticEntries,
       ...listingEntries,
+      ...postEntries,
       '</urlset>',
     ].join('\n');
 

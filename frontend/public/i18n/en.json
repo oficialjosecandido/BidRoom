@@ -9,6 +9,7 @@
       "privateRooms": "Private Rooms",
       "howItWorks": "How It Works",
       "trust": "Trust & Safety",
+      "blog": "Blog",
       "faq": "FAQ",
       "contact": "Contact"
     },
@@ -228,6 +229,7 @@
     "sellers": "Sellers",
     "activeAuctions": "Active auctions",
     "categories": "Categories",
+    "blog": "Blog",
     "createAccount": "Create account",
     "buyerGuide": "Buyer's guide",
     "securePayment": "Secure payment",
@@ -4011,5 +4013,25 @@
       "btnPrimary": "Create free account",
       "btnSecondary": "View active auctions"
     }
+  },
+  "blog": {
+    "pageTitle": "Blog",
+    "pageSubtitle": "Trends, guides and data from the auction market.",
+    "categories": {
+      "all": "All",
+      "relogios": "Watches",
+      "arte": "Art",
+      "mercado": "Market",
+      "guias": "Guides",
+      "bidroom": "BidRoom"
+    },
+    "readMore": "Read article",
+    "loading": "Loading articles...",
+    "empty": "No articles published yet.",
+    "error": "Could not load articles.",
+    "backToBlog": "Back to Blog",
+    "publishedOn": "Published on",
+    "by": "by",
+    "notFound": "Article not found."
   }
 }

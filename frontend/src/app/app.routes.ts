@@ -17,6 +17,10 @@ export const routes: Routes = [
     loadChildren: () => import('./listing/listing.routes').then(r => r.listingRoutes)
   },
   {
+    path: 'blog',
+    loadChildren: () => import('./blog/blog.routes').then(r => r.blogRoutes)
+  },
+  {
     path: 'dashboard',
     loadComponent: () => import('./dashboard/dashboard.component').then(m => m.DashboardComponent),
     canActivate: [AuthGuard],

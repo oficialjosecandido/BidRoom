@@ -1,0 +1,62 @@
+<app-header activePage="blog"></app-header>
+
+<main class="blog-page">
+  <header class="blog-hero">
+    <h1>{{ 'blog.pageTitle' | translate }}</h1>
+    <p>{{ 'blog.pageSubtitle' | translate }}</p>
+  </header>
+
+  <nav class="blog-cats" aria-label="Categorias">
+    @for (cat of categories; track cat.value) {
+      <button
+        class="cat-chip"
+        [class.active]="selectedCategory === cat.value"
+        (click)="selectCategory(cat.value)">
+        {{ cat.labelKey | translate }}
+      </button>
+    }
+  </nav>
+
+  @if (loading) {
+    <div class="blog-state">{{ 'blog.loading' | translate }}</div>
+  } @else if (error) {
+    <div class="blog-state blog-state--error">{{ error | translate }}</div>
+  } @else if (posts.length === 0) {
+    <div class="blog-state">{{ 'blog.empty' | translate }}</div>
+  } @else {
+    <div class="blog-grid">
+      @for (post of posts; track trackByPost($index, post)) {
+        <a class="post-card" [routerLink]="['/blog', post.slug]">
+          <div class="post-card__image">
+            @if (post.coverImage) {
+              <img [src]="post.coverImage" [alt]="post.title" loading="lazy" width="400" height="240">
+            } @else {
+              <div class="post-card__placeholder"></div>
+            }
+            <span class="post-card__cat">{{ ('blog.categories.' + post.category) | translate }}</span>
+          </div>
+          <div class="post-card__body">
+            <h2>{{ post.title }}</h2>
+            <p>{{ post.excerpt }}</p>
+            <div class="post-card__meta">
+              @if (post.publishedAt) {
+                <span>{{ post.publishedAt | date:'dd MMM yyyy' }}</span>
+              }
+              <span class="post-card__read">{{ 'blog.readMore' | translate }} →</span>
+            </div>
+          </div>
+        </a>
+      }
+    </div>
+
+    @if (totalPages > 1) {
+      <div class="blog-pagination">
+        <button [disabled]="currentPage <= 1" (click)="goToPage(currentPage - 1)">←</button>
+        <span>{{ currentPage }} / {{ totalPages }}</span>
+        <button [disabled]="currentPage >= totalPages" (click)="goToPage(currentPage + 1)">→</button>
+      </div>
+    }
+  }
+</main>
+
+<app-footer></app-footer>

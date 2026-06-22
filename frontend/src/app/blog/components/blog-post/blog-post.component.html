@@ -1,0 +1,43 @@
+<app-header activePage="blog"></app-header>
+
+<main class="post-page">
+  @if (loading) {
+    <div class="post-state">{{ 'blog.loading' | translate }}</div>
+  } @else if (notFound || !post) {
+    <div class="post-state">
+      <p>{{ 'blog.notFound' | translate }}</p>
+      <button class="back-btn" (click)="goToBlog()">{{ 'blog.backToBlog' | translate }}</button>
+    </div>
+  } @else {
+    <article class="post-article">
+      <a class="back-link" routerLink="/blog">← {{ 'blog.backToBlog' | translate }}</a>
+
+      <header class="post-header">
+        <span class="post-cat">{{ categoryLabel(post.category) | translate }}</span>
+        <h1>{{ post.title }}</h1>
+        <div class="post-meta">
+          @if (post.publishedAt) {
+            <span>{{ 'blog.publishedOn' | translate }} {{ post.publishedAt | date:'dd MMMM yyyy' }}</span>
+          }
+          <span>{{ 'blog.by' | translate }} {{ post.author }}</span>
+        </div>
+      </header>
+
+      @if (post.coverImage) {
+        <img class="post-cover" [src]="post.coverImage" [alt]="post.title" width="1200" height="630">
+      }
+
+      <div class="post-content" [innerHTML]="contentHtml"></div>
+
+      @if (post.tags.length > 0) {
+        <div class="post-tags">
+          @for (tag of post.tags; track tag) {
+            <span class="tag">#{{ tag }}</span>
+          }
+        </div>
+      }
+    </article>
+  }
+</main>
+
+<app-footer></app-footer>

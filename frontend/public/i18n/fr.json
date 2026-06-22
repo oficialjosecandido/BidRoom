@@ -7,6 +7,7 @@
       "auctions": "Enchères",
       "categories": "Catégories",
       "howItWorks": "Comment Ça Marche",
+      "blog": "Blog",
       "faq": "FAQ",
       "contact": "Contact"
     },
@@ -36,6 +37,8 @@
     "tagline": "Votre marketplace d'enchères premium pour des trouvailles uniques et des trésors de valeur.",
     "quickLinks": "Liens Rapides",
     "howItWorks": "Comment Ça Marche",
+    "blog": "Blog",
+    "categories": "Catégories",
     "contact": "Contact",
     "faq": "FAQ",
     "legal": "Légal",
@@ -2146,5 +2149,25 @@
   "watchlist": {
     "typeLive": "En direct",
     "ended": "Terminé"
+  },
+  "blog": {
+    "pageTitle": "Blog",
+    "pageSubtitle": "Tendances, guides et données du marché des enchères.",
+    "categories": {
+      "all": "Tous",
+      "relogios": "Montres",
+      "arte": "Art",
+      "mercado": "Marché",
+      "guias": "Guides",
+      "bidroom": "BidRoom"
+    },
+    "readMore": "Lire l'article",
+    "loading": "Chargement des articles...",
+    "empty": "Aucun article publié pour le moment.",
+    "error": "Impossible de charger les articles.",
+    "backToBlog": "Retour au Blog",
+    "publishedOn": "Publié le",
+    "by": "par",
+    "notFound": "Article non trouvé."
   }
 }

@@ -51,6 +51,7 @@ const { router: kycRoutes, kycWebhookHandler } = require('./routes/kyc');
 const shareRoutes = require('./routes/share');
 const supportRoutes = require('./routes/support');
 const sitemapRoutes = require('./routes/sitemap');
+const blogRoutes = require('./routes/blog');
 
 // Import services
 const auctionEndScheduler = require('./services/auctionEndScheduler');
@@ -280,6 +281,7 @@ app.use('/api/blocks', generalLimiter, blockRoutes);
 app.use('/api/category-follows', generalLimiter, categoryFollowRoutes);
 app.use('/api/damage-claims', generalLimiter, damageClaimsRoutes);
 app.use('/api/kyc', generalLimiter, kycRoutes);
+app.use('/api/blog', generalLimiter, blogRoutes);
 
 // Share pages — unauthenticated; rate-limited to prevent DB exhaustion via random slug enumeration
 // /api/share/* — same-origin URLs via Azure SWA linked API (WhatsApp OG crawlers)

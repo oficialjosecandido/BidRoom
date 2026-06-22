@@ -2,6 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { Meta, Title } from '@angular/platform-browser';
 import { DOCUMENT } from '@angular/common';
 import { Listing } from './listings.service';
+import { BlogPost } from './blog.service';
 
 const BASE_URL   = 'https://www.bidroom.pt';
 const DEFAULT_OG = `${BASE_URL}/og-image.png`;
@@ -59,10 +60,42 @@ export class SeoService {
     this.injectListingSchema(listing, image, canonical);
   }
 
+  /** Sets title/meta for the blog index page. */
+  setBlogIndex(): void {
+    const canonical = `${BASE_URL}/blog`;
+    this.apply({
+      title:       'Blog | BidRoom',
+      description: 'Tendências, guias e dados do mercado de leilões — relógios, arte e colecionismo em Portugal.',
+      url:         canonical,
+      image:       DEFAULT_OG,
+    });
+    this.setCanonical(canonical);
+    this.injectOrganizationSchema();
+  }
+
+  /** Sets title, meta, OG/Twitter and JSON-LD Article structured data for a blog post page. */
+  setBlogPost(post: BlogPost): void {
+    const canonical = `${BASE_URL}/blog/${post.slug}`;
+    const image = post.coverImage || DEFAULT_OG;
+    const description = post.metaDescription || post.excerpt || '';
+
+    this.apply({
+      title:       `${post.title} | Blog · BidRoom`.slice(0, 70),
+      description: description.length > 155 ? `${description.slice(0, 152)}…` : description,
+      url:         canonical,
+      image,
+    });
+
+    this.setCanonical(canonical);
+    this.setListingOgType('article');
+    this.injectBlogPostSchema(post, image, canonical);
+  }
+
   resetToDefault(): void {
     this.setDefault();
     this.removeCanonical();
     this.removeJsonLd('listing-schema');
+    this.removeJsonLd('blogpost-schema');
   }
 
   // ── Private — title / description helpers ──────────────────────────────────
@@ -216,6 +249,26 @@ export class SeoService {
     }
 
     this.injectJsonLd('listing-schema', schema);
+  }
+
+  private injectBlogPostSchema(post: BlogPost, image: string, canonical: string): void {
+    const schema = {
+      '@context': 'https://schema.org',
+      '@type':    'Article',
+      headline:    post.title,
+      description: post.metaDescription || post.excerpt || undefined,
+      image:       [image],
+      datePublished: post.publishedAt || post.createdAt,
+      dateModified:  post.updatedAt || post.publishedAt || post.createdAt,
+      author:  { '@type': 'Organization', name: post.author || 'BidRoom' },
+      publisher: {
+        '@type': 'Organization',
+        name: 'BidRoom',
+        logo: { '@type': 'ImageObject', url: `${BASE_URL}/favicon.svg` },
+      },
+      mainEntityOfPage: { '@type': 'WebPage', '@id': canonical },
+    };
+    this.injectJsonLd('blogpost-schema', schema);
   }
 
   private injectJsonLd(id: string, schema: object): void {

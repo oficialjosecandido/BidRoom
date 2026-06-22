@@ -39,6 +39,9 @@
     <button class="nl" [class.active]="activePage === 'trust'" (click)="navigateToTrust()">
       {{ 'header.nav.trust' | translate }}
     </button>
+    <button class="nl" [class.active]="activePage === 'blog'" (click)="navigateToBlog()">
+      {{ 'header.nav.blog' | translate }}
+    </button>
     @if (!(isAuthenticated$ | async)) {
       <button class="nl" [class.active]="activePage === 'how-it-works'" (click)="navigateToHowItWorks()">
         {{ 'header.nav.howItWorks' | translate }}
@@ -149,6 +152,7 @@
     <button class="nm" (click)="navigateToCategories()">{{ 'header.nav.categories' | translate }}</button>
     <button class="nm" (click)="navigateToPrivateRooms()">{{ 'header.nav.privateRooms' | translate }}</button>
     <button class="nm" (click)="navigateToTrust()">{{ 'header.nav.trust' | translate }}</button>
+    <button class="nm" (click)="navigateToBlog()">{{ 'header.nav.blog' | translate }}</button>
     <button class="nm" (click)="navigateToHowItWorks()">{{ 'header.nav.howItWorks' | translate }}</button>
     <div class="nm-divider"></div>
     @if (isAuthenticated$ | async) {

@@ -9,6 +9,7 @@
       "privateRooms": "Salas Privadas",
       "howItWorks": "Como Funciona",
       "trust": "Confiança",
+      "blog": "Blog",
       "faq": "FAQ",
       "contact": "Contacto"
     },
@@ -228,6 +229,7 @@
     "sellers": "Vendedores",
     "activeAuctions": "Leilões activos",
     "categories": "Categorias",
+    "blog": "Blog",
     "createAccount": "Criar conta",
     "buyerGuide": "Guia do comprador",
     "securePayment": "Pagamento seguro",
@@ -4011,5 +4013,25 @@
       "btnPrimary": "Criar conta gratuita",
       "btnSecondary": "Ver leilões activos"
     }
+  },
+  "blog": {
+    "pageTitle": "Blog",
+    "pageSubtitle": "Tendências, guias e dados do mercado de leilões.",
+    "categories": {
+      "all": "Todos",
+      "relogios": "Relógios",
+      "arte": "Arte",
+      "mercado": "Mercado",
+      "guias": "Guias",
+      "bidroom": "BidRoom"
+    },
+    "readMore": "Ler artigo",
+    "loading": "A carregar artigos...",
+    "empty": "Ainda não há artigos publicados.",
+    "error": "Não foi possível carregar os artigos.",
+    "backToBlog": "Voltar ao Blog",
+    "publishedOn": "Publicado em",
+    "by": "por",
+    "notFound": "Artigo não encontrado."
   }
 }
