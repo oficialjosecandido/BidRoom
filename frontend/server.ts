@@ -22,31 +22,6 @@ app.get('/sitemap.xml', (req, res) => {
   res.redirect(301, 'https://bidroom-backend-prod-e9eghtc0aha4e3dw.uksouth-01.azurewebsites.net/sitemap.xml');
 });
 
-// TEMP diagnostic — remove after debugging the empty-SSR-output issue on /listing/:slug.
-app.get('/__debug/backend-check', async (req, res) => {
-  const url = 'https://bidroom-backend-prod-e9eghtc0aha4e3dw.uksouth-01.azurewebsites.net/api/listings/slug/rolex-datejust-blue-dial-41mm-2026';
-  const started = Date.now();
-  try {
-    const r = await fetch(url, { signal: AbortSignal.timeout(8000) });
-    const body = await r.text();
-    res.json({
-      ok: true,
-      status: r.status,
-      ms: Date.now() - started,
-      nodeVersion: process.version,
-      bodyLength: body.length,
-      bodySnippet: body.slice(0, 150),
-    });
-  } catch (err) {
-    res.json({
-      ok: false,
-      ms: Date.now() - started,
-      nodeVersion: process.version,
-      error: err instanceof Error ? `${err.name}: ${err.message}` : String(err),
-    });
-  }
-});
-
 // Serve static files from /browser
 app.use(
   express.static(browserDistFolder, {
@@ -59,18 +34,21 @@ app.use(
 // All regular routes use the Angular engine.
 // No path pattern needed — Express 5 uses path-to-regexp v8 which rejects unnamed wildcards (/**).
 // If Angular returns no response (unmatched route), redirect to landing.
-app.use((req, res, next) => {
-  angularApp
-    .handle(req)
-    .then((response) => {
-      if (response) {
-        writeResponseToNodeResponse(response, res);
-      } else {
-        // No Angular route matched — send to landing page
-        res.redirect(302, '/landing');
-      }
-    })
-    .catch(next);
+// Must be a native async function — Express 5 logs "Promise-like handlers are
+// deprecated" for a .then()/.catch() chain and does not reliably await it,
+// which was silently falling through to the static index.csr.html shell.
+app.use(async (req, res, next) => {
+  try {
+    const response = await angularApp.handle(req);
+    if (response) {
+      writeResponseToNodeResponse(response, res);
+    } else {
+      // No Angular route matched — send to landing page
+      res.redirect(302, '/landing');
+    }
+  } catch (err) {
+    next(err);
+  }
 });
 
 if (isMainModule(import.meta.url)) {
