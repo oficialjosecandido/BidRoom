@@ -6,10 +6,16 @@
       "/images/*",
       "/i18n/*",
       "/assets/*",
-      "*.{css,js,json,svg,png,jpg,jpeg,gif,webp,ico,woff,woff2,ttf,map}"
+      "/robots.txt",
+      "/sitemap.xml",
+      "*.{css,js,json,svg,png,jpg,jpeg,gif,webp,ico,woff,woff2,ttf,map,xml,txt}"
     ]
   },
   "routes": [
+    {
+      "route": "/sitemap.xml",
+      "rewrite": "/api/sitemap.xml"
+    },
     {
       "route": "/api/share/*",
       "allowedRoles": ["anonymous"]

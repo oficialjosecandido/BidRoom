@@ -4,7 +4,7 @@ import { DOCUMENT } from '@angular/common';
 import { Listing } from './listings.service';
 
 const BASE_URL   = 'https://www.bidroom.pt';
-const DEFAULT_OG = `${BASE_URL}/og-image.svg`;
+const DEFAULT_OG = `${BASE_URL}/og-image.png`;
 
 const DEFAULTS = {
   title:       'BidRoom — Leilões Premium',
@@ -12,6 +12,15 @@ const DEFAULTS = {
   url:         BASE_URL,
   image:       DEFAULT_OG,
 };
+
+/** Format EUR without cents when the value is a round number, for shorter descriptions. */
+function fmtEur(value: number): string {
+  return new Intl.NumberFormat('pt-PT', {
+    style: 'currency',
+    currency: 'EUR',
+    maximumFractionDigits: value % 1 === 0 ? 0 : 2,
+  }).format(value);
+}
 
 @Injectable({ providedIn: 'root' })
 export class SeoService {
@@ -21,58 +30,97 @@ export class SeoService {
 
   setDefault(): void {
     this.apply(DEFAULTS);
+    this.injectOrganizationSchema();
   }
 
   /**
-   * Sets OG/Twitter tags for a listing page.
+   * Sets title, meta, OG/Twitter and JSON-LD structured data for a listing page.
    *
-   * - Title:       "BidRoom - [EN title preferred]"
-   * - Description: "[description snippet, ≤120 chars] Bid Now"
-   * - Image:       first listing image, falling back to the default OG image
-   * - URL:         backendShareUrl (OG-rich HTML for crawlers) or canonical
+   * Title format (≤60 chars):  "[Product] | [Category] | Leilão · BidRoom"
+   * Description (≤155 chars):  "[snippet] — Leilão a partir de €X. Lance já."
    */
   setListing(listing: Listing, backendShareUrl?: string): void {
     const canonical = `${BASE_URL}/listing/${listing.slug}`;
 
-    const rawTitle = listing.titleEn || listing.title || '';
-    const rawDesc  = (listing.descriptionEn || listing.description || '').replace(/\s+/g, ' ').trim();
-    const snippet  = rawDesc.length > 120 ? `${rawDesc.slice(0, 117)}…` : rawDesc;
+    const rawTitle   = listing.titlePt || listing.titleEn || listing.title || '';
+    const rawDescPt  = listing.descriptionPt || listing.descriptionEn || listing.description || '';
+    const cleanDesc  = rawDescPt.replace(/\s+/g, ' ').trim();
+    const image      = listing.images?.[0] || DEFAULT_OG;
 
     this.apply({
-      title:       `BidRoom - ${rawTitle}`,
-      description: snippet ? `${snippet} Bid Now` : 'Bid Now',
+      title:       this.buildListingTitle(rawTitle, listing.category),
+      description: this.buildListingDescription(listing, cleanDesc),
       url:         backendShareUrl || canonical,
-      image:       listing.images?.[0] || DEFAULT_OG,
+      image,
     });
 
     this.setCanonical(canonical);
+    this.setListingOgType('product');
+    this.injectListingSchema(listing, image, canonical);
   }
 
   resetToDefault(): void {
     this.setDefault();
     this.removeCanonical();
+    this.removeJsonLd('listing-schema');
   }
 
-  // ── Private helpers ────────────────────────────────────────────────────────
+  // ── Private — title / description helpers ──────────────────────────────────
+
+  private buildListingTitle(rawTitle: string, category?: string): string {
+    const brand  = ' · BidRoom';
+    const suffix = ` | Leilão${brand}`;
+
+    const withCat = category
+      ? `${rawTitle} | ${category}${suffix}`
+      : `${rawTitle}${suffix}`;
+
+    if (withCat.length <= 60) return withCat;
+
+    const withoutCat = `${rawTitle}${suffix}`;
+    if (withoutCat.length <= 60) return withoutCat;
+
+    const maxTitle = 60 - suffix.length - 1;
+    return `${rawTitle.slice(0, maxTitle)}…${suffix}`;
+  }
+
+  private buildListingDescription(listing: Listing, cleanDesc: string): string {
+    const price     = listing.currentPrice ?? listing.startingPrice;
+    const priceStr  = fmtEur(price);
+    const format    = listing.auctionFormat === 'best-offer' ? 'Melhor Proposta' : 'Leilão';
+    const cta       = `${format} a partir de ${priceStr}. Lance já.`;
+
+    if (!cleanDesc) return cta;
+
+    const budget = 155 - 3 - cta.length; // 3 for " — "
+    const snippet = cleanDesc.length > budget
+      ? `${cleanDesc.slice(0, budget - 1)}…`
+      : cleanDesc;
+
+    return `${snippet} — ${cta}`;
+  }
+
+  // ── Private — meta helpers ─────────────────────────────────────────────────
 
   private apply(p: { title: string; description: string; url: string; image: string }): void {
     this.title.setTitle(p.title);
 
-    // Standard
     this.meta.updateTag({ name: 'description', content: p.description });
 
-    // OG
     this.meta.updateTag({ property: 'og:title',       content: p.title });
     this.meta.updateTag({ property: 'og:description', content: p.description });
     this.meta.updateTag({ property: 'og:url',         content: p.url });
     this.meta.updateTag({ property: 'og:image',       content: p.image });
     this.meta.updateTag({ property: 'og:type',        content: 'website' });
 
-    // Twitter
     this.meta.updateTag({ name: 'twitter:title',       content: p.title });
     this.meta.updateTag({ name: 'twitter:description', content: p.description });
     this.meta.updateTag({ name: 'twitter:image',       content: p.image });
     this.meta.updateTag({ name: 'twitter:card',        content: 'summary_large_image' });
+  }
+
+  private setListingOgType(type: string): void {
+    this.meta.updateTag({ property: 'og:type', content: type });
   }
 
   private setCanonical(url: string): void {
@@ -86,7 +134,100 @@ export class SeoService {
   }
 
   private removeCanonical(): void {
-    const link = this.doc.querySelector('link[rel="canonical"]');
-    if (link) link.remove();
+    this.doc.querySelector('link[rel="canonical"]')?.remove();
+  }
+
+  // ── Private — Schema.org JSON-LD ──────────────────────────────────────────
+
+  private injectOrganizationSchema(): void {
+    const schema = {
+      '@context': 'https://schema.org',
+      '@graph': [
+        {
+          '@type': 'Organization',
+          name:    'BidRoom',
+          url:     BASE_URL,
+          logo:    `${BASE_URL}/favicon.svg`,
+          sameAs:  [
+            'https://www.instagram.com/bidroompt',
+            'https://twitter.com/bidroompt',
+          ],
+        },
+        {
+          '@type': 'WebSite',
+          name:    'BidRoom',
+          url:     BASE_URL,
+          potentialAction: {
+            '@type':        'SearchAction',
+            target: {
+              '@type':      'EntryPoint',
+              urlTemplate:  `${BASE_URL}/listings?q={search_term_string}`,
+            },
+            'query-input':  'required name=search_term_string',
+          },
+        },
+      ],
+    };
+    this.injectJsonLd('org-schema', schema);
+  }
+
+  private injectListingSchema(listing: Listing, image: string, canonical: string): void {
+    const price = listing.currentPrice ?? listing.startingPrice;
+    const sellerName = listing.seller
+      ? `${listing.seller.firstName} ${listing.seller.lastName}`.trim()
+      : undefined;
+
+    const schema: Record<string, unknown> = {
+      '@context': 'https://schema.org',
+      '@type':    'Product',
+      name:        listing.titlePt || listing.titleEn || listing.title,
+      description: (listing.descriptionPt || listing.descriptionEn || listing.description || '')
+        .replace(/\s+/g, ' ').trim().slice(0, 500),
+      image:       listing.images?.length ? listing.images : [image],
+      category:    listing.category,
+      url:         canonical,
+      offers: {
+        '@type':        'Offer',
+        priceCurrency:  'EUR',
+        price:          price.toFixed(2),
+        availability:   listing.status === 'active'
+          ? 'https://schema.org/InStock'
+          : 'https://schema.org/OutOfStock',
+        url:            canonical,
+        ...(listing.endDate && { priceValidUntil: listing.endDate.slice(0, 10) }),
+        ...(sellerName && {
+          seller: { '@type': 'Person', name: sellerName },
+        }),
+      },
+    };
+
+    if (listing.condition) {
+      const condMap: Record<string, string> = {
+        new:          'https://schema.org/NewCondition',
+        like_new:     'https://schema.org/LikeNewCondition',
+        'like-new':   'https://schema.org/LikeNewCondition',
+        good:         'https://schema.org/UsedCondition',
+        used:         'https://schema.org/UsedCondition',
+        fair:         'https://schema.org/DamagedCondition',
+        for_parts:    'https://schema.org/DamagedCondition',
+      };
+      const mapped = condMap[listing.condition.toLowerCase()];
+      if (mapped) schema['itemCondition'] = mapped;
+    }
+
+    this.injectJsonLd('listing-schema', schema);
+  }
+
+  private injectJsonLd(id: string, schema: object): void {
+    this.doc.getElementById(id)?.remove();
+    const script = this.doc.createElement('script');
+    script.id   = id;
+    script.type = 'application/ld+json';
+    script.text = JSON.stringify(schema);
+    this.doc.head.appendChild(script);
+  }
+
+  private removeJsonLd(id: string): void {
+    this.doc.getElementById(id)?.remove();
   }
 }

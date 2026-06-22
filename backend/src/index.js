@@ -1,5 +1,6 @@
 const express = require('express');
 const http = require('http');
+const compression = require('compression');
 const { Server } = require('socket.io');
 const { createAdapter } = require('@socket.io/redis-adapter');
 const Redis = require('ioredis');
@@ -49,6 +50,7 @@ const damageClaimsRoutes = require('./routes/damageClaims');
 const { router: kycRoutes, kycWebhookHandler } = require('./routes/kyc');
 const shareRoutes = require('./routes/share');
 const supportRoutes = require('./routes/support');
+const sitemapRoutes = require('./routes/sitemap');
 
 // Import services
 const auctionEndScheduler = require('./services/auctionEndScheduler');
@@ -129,6 +131,9 @@ const PORT = process.env.PORT || 3000;
 
 // Trust the first hop proxy (Azure App Service / load balancer) so req.ip is the real client IP
 app.set('trust proxy', 1);
+
+// Gzip/Brotli compression for all JSON and text responses
+app.use(compression());
 
 // ─── Security headers ───────────────────────────────────────────────────────
 // The API is consumed exclusively from the Angular SPA, so we can ship a strict
@@ -282,6 +287,9 @@ app.use('/api/kyc', generalLimiter, kycRoutes);
 app.use('/api/share',   shareLimiter,   shareRoutes);
 app.use('/api/support', generalLimiter, supportRoutes);
 app.use('/share',     shareLimiter, shareRoutes);
+
+// SEO — served at /sitemap.xml (no /api prefix — crawlers fetch directly)
+app.use('/sitemap.xml', sitemapRoutes);
 
 app.get('/', (req, res) => {
   res.json({

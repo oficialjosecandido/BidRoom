@@ -1,10 +1,11 @@
 User-agent: *
 Allow: /
 
-# Disallow admin area
+# Private — keep crawlers out
 Disallow: /nexus/
-
-# Disallow dashboard (private pages)
 Disallow: /dashboard/
+Disallow: /api/
+Disallow: /checkout/
+Disallow: /auth/
 
-Sitemap: https://bidroom.com/sitemap.xml
+Sitemap: https://www.bidroom.pt/sitemap.xml
