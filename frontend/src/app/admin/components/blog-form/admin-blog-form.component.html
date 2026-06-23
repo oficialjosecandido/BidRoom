@@ -1,0 +1,96 @@
+<div class="admin-layout">
+  <app-admin-sidebar></app-admin-sidebar>
+
+  <div class="admin-content">
+    <div class="admin-blog-form">
+      <header class="form-header">
+        <p class="nexus-crumb">Nexus · Blog</p>
+        <h1 class="page-title">{{ isEditMode ? 'Editar publicação' : 'Nova publicação' }}</h1>
+      </header>
+
+      @if (isLoading) {
+        <div class="loading-state">
+          <div class="spinner"></div>
+          <p>A carregar…</p>
+        </div>
+      }
+
+      @if (!isLoading) {
+        <form class="nexus-panel post-form" (ngSubmit)="save()">
+          @if (error) {
+            <div class="form-error">{{ error }}</div>
+          }
+
+          <div class="field">
+            <label for="title">Título *</label>
+            <input id="title" type="text" [(ngModel)]="title" name="title" maxlength="160" required>
+          </div>
+
+          <div class="field">
+            <label for="slug">Slug</label>
+            <input id="slug" type="text" [(ngModel)]="slug" name="slug" placeholder="Gerado automaticamente a partir do título se vazio">
+          </div>
+
+          <div class="field-row">
+            <div class="field">
+              <label for="category">Categoria</label>
+              <select id="category" [(ngModel)]="category" name="category">
+                @for (c of categories; track c.value) {
+                  <option [value]="c.value">{{ c.label }}</option>
+                }
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="status">Estado</label>
+              <select id="status" [(ngModel)]="status" name="status">
+                <option value="draft">Rascunho</option>
+                <option value="published">Publicado</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="author">Autor</label>
+              <input id="author" type="text" [(ngModel)]="author" name="author">
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="excerpt">Resumo (excerpt)</label>
+            <textarea id="excerpt" [(ngModel)]="excerpt" name="excerpt" rows="2" maxlength="300"></textarea>
+          </div>
+
+          <div class="field">
+            <label for="content">Conteúdo (Markdown) *</label>
+            <textarea id="content" [(ngModel)]="content" name="content" rows="18" required></textarea>
+          </div>
+
+          <div class="field">
+            <label for="coverImage">Imagem de capa (URL)</label>
+            <input id="coverImage" type="text" [(ngModel)]="coverImage" name="coverImage" placeholder="https://…">
+            @if (coverImage) {
+              <img [src]="coverImage" alt="" class="cover-preview">
+            }
+          </div>
+
+          <div class="field">
+            <label for="tags">Tags (separadas por vírgula)</label>
+            <input id="tags" type="text" [(ngModel)]="tagsInput" name="tags" placeholder="relógios vintage, tendências, 2027">
+          </div>
+
+          <div class="field">
+            <label for="metaDescription">Meta description ({{ metaDescription.length }}/160)</label>
+            <textarea id="metaDescription" [(ngModel)]="metaDescription" name="metaDescription" rows="2" maxlength="160"></textarea>
+          </div>
+
+          <div class="form-actions">
+            <button type="button" class="btn-cancel" (click)="cancel()">Cancelar</button>
+            <button type="submit" class="btn-save" [disabled]="isSaving">
+              {{ isSaving ? 'A guardar…' : (isEditMode ? 'Guardar alterações' : 'Criar publicação') }}
+            </button>
+          </div>
+        </form>
+      }
+    </div>
+  </div>
+</div>

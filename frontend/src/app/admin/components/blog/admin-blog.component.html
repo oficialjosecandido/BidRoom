@@ -1,0 +1,91 @@
+<div class="admin-layout">
+  <app-admin-sidebar></app-admin-sidebar>
+
+  <div class="admin-content">
+    <div class="admin-blog">
+      <header class="blog-header">
+        <div>
+          <p class="nexus-crumb">Nexus</p>
+          <h1 class="page-title">Blog</h1>
+          <p class="page-lead">Publicações visíveis em /blog. Rascunhos não aparecem ao público.</p>
+        </div>
+        <a class="new-post-btn" routerLink="/nexus/blog/new">+ Nova publicação</a>
+      </header>
+
+      @if (isLoading) {
+        <div class="loading-state">
+          <div class="spinner"></div>
+          <p>A carregar publicações…</p>
+        </div>
+      }
+
+      @if (error && !isLoading) {
+        <div class="error-state">
+          <div class="error-icon" aria-hidden="true">⚠️</div>
+          <p class="error-message">{{ error }}</p>
+          <button type="button" class="retry-btn" (click)="load()">Tentar novamente</button>
+        </div>
+      }
+
+      @if (!isLoading && !error) {
+        <div class="table-shell">
+          @if (posts.length > 0) {
+            <div class="table-scroll">
+              <table class="nexus-data-table blog-row-table">
+                <thead>
+                  <tr>
+                    <th scope="col">Publicação</th>
+                    <th scope="col">Categoria</th>
+                    <th scope="col">Estado</th>
+                    <th scope="col">Publicado em</th>
+                    <th scope="col"><span class="sr-only">Ações</span></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (post of posts; track post._id) {
+                    <tr>
+                      <td class="title-cell">
+                        <div class="title-content">
+                          @if (post.coverImage) {
+                            <img [src]="post.coverImage" [alt]="" role="presentation" class="post-thumbnail">
+                          }
+                          <span class="title-text">{{ post.title }}</span>
+                        </div>
+                      </td>
+                      <td class="muted-cell">{{ categoryLabel(post.category) }}</td>
+                      <td class="tag-cell">
+                        <span class="status-badge" [class.status-published]="post.status === 'published'" [class.status-draft]="post.status === 'draft'">
+                          {{ post.status === 'published' ? 'Publicado' : 'Rascunho' }}
+                        </span>
+                      </td>
+                      <td class="date-cell">{{ formatDate(post.publishedAt) }}</td>
+                      <td class="actions-cell">
+                        <a class="action-link" [routerLink]="['/nexus/blog', post._id, 'edit']" title="Editar">Editar</a>
+                        <button
+                          type="button"
+                          class="action-delete"
+                          [disabled]="deletingId === post._id"
+                          (click)="deletePost(post, $event)"
+                          title="Eliminar">
+                          {{ deletingId === post._id ? '…' : 'Eliminar' }}
+                        </button>
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          }
+
+          @if (posts.length === 0) {
+            <div class="empty-state">
+              <div class="empty-icon" aria-hidden="true">📝</div>
+              <p class="empty-message">Ainda não há publicações</p>
+              <p class="empty-description">Cria a primeira publicação do blog.</p>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  </div>
+</div>
