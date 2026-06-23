@@ -65,38 +65,16 @@
     })();
   </script>
 
-  <!--
-    Google tag (gtag.js) — the <script src> tag below is static and
-    unconditional (per Google's own install instructions) so GA4's
-    install-verification check, which reads the raw HTML, can detect it.
-    The actual consent/config calls are gated to the production hostname
-    below, since index.html is shared by every build (dev, e2e,
-    ericeira-prod) — loading the idle library elsewhere is harmless, but
-    we don't want dev/e2e traffic counted in the real GA4 property.
-    Do not also create this script tag from TypeScript — that duplicates
-    the library load and breaks the consent call ordering.
-  -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-4FDFR1ZSRV"></script>
-  <script>
-    (function () {
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){ dataLayer.push(arguments); }
-      window.gtag = gtag;
+  <!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-4FDFR1ZSRV"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
 
-      var h = location.hostname;
-      if (h !== 'www.bidroom.pt' && h !== 'bidroom.pt') return;
-
-      gtag('consent', 'default', {
-        analytics_storage: 'denied',
-        ad_storage: 'denied',
-        ad_user_data: 'denied',
-        ad_personalization: 'denied',
-        wait_for_update: 500
-      });
-      gtag('js', new Date());
-      gtag('config', 'G-4FDFR1ZSRV', { send_page_view: false });
-    })();
-  </script>
+  gtag('config', 'G-4FDFR1ZSRV');
+</script>
 </head>
 <body>
   <app-root></app-root>
