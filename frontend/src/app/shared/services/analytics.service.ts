@@ -35,7 +35,8 @@ export class AnalyticsService {
     });
   }
 
-  /** Send a custom GA4 event (only when analytics cookies are accepted). */
+  /** Send a custom GA4 event. Fires regardless of cookie consent — Consent Mode v2
+   *  default ('denied') keeps these cookieless/modeled until the user opts in. */
   trackEvent(name: AnalyticsEventName | string, params?: AnalyticsEventParams): void {
     if (!this.canTrack()) return;
     const payload = params ? this.sanitizeParams(params) : {};
@@ -57,12 +58,14 @@ export class AnalyticsService {
     };
   }
 
+  /** Gate is intentionally consent-independent — Consent Mode v2 (set in
+   *  initConsentMode/grantConsent) controls whether hits are cookied or
+   *  cookieless, not whether they're sent at all. */
   private canTrack(): boolean {
     return !!(
       this.isBrowser &&
       environment.production &&
       this.measurementId &&
-      this.cookiePrefs.analytics() &&
       window.gtag
     );
   }
