@@ -209,6 +209,27 @@ export class SeoService {
     const sellerName = listing.seller
       ? `${listing.seller.firstName} ${listing.seller.lastName}`.trim()
       : undefined;
+    const country = listing.locationCountry || 'PT';
+
+    const offer: Record<string, unknown> = {
+      '@type':        'Offer',
+      priceCurrency:  'EUR',
+      price:          price.toFixed(2),
+      availability:   listing.status === 'active'
+        ? 'https://schema.org/InStock'
+        : 'https://schema.org/OutOfStock',
+      url:            canonical,
+      ...(listing.endDate && { priceValidUntil: listing.endDate.slice(0, 10) }),
+      ...(sellerName && {
+        seller: { '@type': 'Person', name: sellerName },
+      }),
+    };
+
+    const returnPolicy = this.buildReturnPolicy(listing.returnPolicy, country);
+    if (returnPolicy) offer['hasMerchantReturnPolicy'] = returnPolicy;
+
+    const shippingDetails = this.buildShippingDetails(listing, country);
+    if (shippingDetails) offer['shippingDetails'] = shippingDetails;
 
     const schema: Record<string, unknown> = {
       '@context': 'https://schema.org',
@@ -219,20 +240,11 @@ export class SeoService {
       image:       listing.images?.length ? listing.images : [image],
       category:    listing.category,
       url:         canonical,
-      offers: {
-        '@type':        'Offer',
-        priceCurrency:  'EUR',
-        price:          price.toFixed(2),
-        availability:   listing.status === 'active'
-          ? 'https://schema.org/InStock'
-          : 'https://schema.org/OutOfStock',
-        url:            canonical,
-        ...(listing.endDate && { priceValidUntil: listing.endDate.slice(0, 10) }),
-        ...(sellerName && {
-          seller: { '@type': 'Person', name: sellerName },
-        }),
-      },
+      offers:      offer,
     };
+
+    const brand = listing.specifications?.find(s => /^(brand|marca)$/i.test(s.key))?.value;
+    if (brand) schema['brand'] = { '@type': 'Brand', name: brand };
 
     if (listing.condition) {
       const condMap: Record<string, string> = {
@@ -249,6 +261,49 @@ export class SeoService {
     }
 
     this.injectJsonLd('listing-schema', schema);
+  }
+
+  /** Maps the seller-chosen return policy to schema.org's MerchantReturnPolicy. Omitted for 'custom' since we don't have fixed terms to declare. */
+  private buildReturnPolicy(returnPolicy: string | undefined, country: string): Record<string, unknown> | null {
+    if (returnPolicy === 'no-returns') {
+      return {
+        '@type':               'MerchantReturnPolicy',
+        returnPolicyCategory:  'https://schema.org/MerchantReturnNotPermitted',
+        applicableCountry:     country,
+      };
+    }
+    if (returnPolicy === '14-days' || returnPolicy === '30-days') {
+      return {
+        '@type':               'MerchantReturnPolicy',
+        returnPolicyCategory:  'https://schema.org/MerchantReturnFiniteReturnWindow',
+        merchantReturnDays:    returnPolicy === '14-days' ? 14 : 30,
+        applicableCountry:     country,
+      };
+    }
+    return null;
+  }
+
+  /**
+   * Maps the seller-chosen shipping option to schema.org's OfferShippingDetails.
+   * Omitted for 'calculated' (real-time carrier rates vary per buyer) and
+   * 'local-pickup' (nothing is shipped) — declaring a fixed rate there would be inaccurate.
+   */
+  private buildShippingDetails(listing: Listing, country: string): Record<string, unknown> | null {
+    if (listing.shippingOption !== 'flat-rate' && listing.shippingOption !== 'free') return null;
+
+    const rate = listing.shippingOption === 'free' ? 0 : (listing.shippingCost ?? 0);
+    const handlingDays = listing.handlingTime ?? 5;
+
+    return {
+      '@type': 'OfferShippingDetails',
+      shippingRate: { '@type': 'MonetaryAmount', value: rate.toFixed(2), currency: 'EUR' },
+      shippingDestination: { '@type': 'DefinedRegion', addressCountry: country },
+      deliveryTime: {
+        '@type': 'ShippingDeliveryTime',
+        handlingTime:  { '@type': 'QuantitativeValue', minValue: 0, maxValue: handlingDays, unitCode: 'DAY' },
+        transitTime:   { '@type': 'QuantitativeValue', minValue: 1, maxValue: 5, unitCode: 'DAY' },
+      },
+    };
   }
 
   private injectBlogPostSchema(post: BlogPost, image: string, canonical: string): void {
