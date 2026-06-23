@@ -23,10 +23,12 @@ export class AnalyticsService {
   constructor() {
     if (!this.isBrowser || !environment.production || !this.measurementId) return;
 
-    // Initialize gtag immediately with consent denied — GA4 uses modeling
-    // to estimate traffic even without cookies. Consent is upgraded when
-    // the user accepts analytics cookies.
-    this.initConsentMode();
+    // gtag itself (script tag + consent default + initial config) is
+    // bootstrapped statically in index.html — before Angular even loads —
+    // so GA4's install check can see it and so consent defaults are set as
+    // early as possible. We just hook routing and the consent upgrade here.
+    this.hookRouter();
+    this.trackPageView(this.router.url);
 
     effect(() => {
       if (this.cookiePrefs.analytics()) {
@@ -58,9 +60,9 @@ export class AnalyticsService {
     };
   }
 
-  /** Gate is intentionally consent-independent — Consent Mode v2 (set in
-   *  initConsentMode/grantConsent) controls whether hits are cookied or
-   *  cookieless, not whether they're sent at all. */
+  /** Gate is intentionally consent-independent — Consent Mode v2 (default set
+   *  in index.html, upgraded by grantConsent()) controls whether hits are
+   *  cookied or cookieless, not whether they're sent at all. */
   private canTrack(): boolean {
     return !!(
       this.isBrowser &&
@@ -77,33 +79,6 @@ export class AnalyticsService {
       out[key] = value;
     }
     return out;
-  }
-
-  private initConsentMode(): void {
-    window.dataLayer = window.dataLayer || [];
-    window.gtag = function gtag(...args: unknown[]) {
-      window.dataLayer!.push(args);
-    };
-
-    // Must be called before the gtag script loads
-    window.gtag('consent', 'default', {
-      analytics_storage: 'denied',
-      ad_storage: 'denied',
-      ad_user_data: 'denied',
-      ad_personalization: 'denied',
-      wait_for_update: 500
-    });
-
-    window.gtag('js', new Date());
-    window.gtag('config', this.measurementId!, { send_page_view: false });
-
-    const script = document.createElement('script');
-    script.async = true;
-    script.src = `https://www.googletagmanager.com/gtag/js?id=${this.measurementId}`;
-    document.head.appendChild(script);
-
-    this.hookRouter();
-    this.trackPageView(this.router.url);
   }
 
   private grantConsent(): void {
