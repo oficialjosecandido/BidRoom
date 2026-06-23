@@ -92,11 +92,15 @@ export class EditListing implements OnInit {
     this.editForm = this.fb.group({
       // Critical fields — always present but disabled when not in full mode
       title:       [{ value: l.title,    disabled: this.editMode !== 'full' }, [Validators.required, Validators.maxLength(80)]],
+      titlePt:     [{ value: l.titlePt || l.title || '', disabled: this.editMode !== 'full' }, [Validators.required, Validators.maxLength(80)]],
+      titleEn:     [{ value: l.titleEn || '', disabled: this.editMode === 'locked' }, [Validators.maxLength(80)]],
       category:    [{ value: l.category, disabled: this.editMode !== 'full' }, Validators.required],
       subCategory: [{ value: l.subCategory || '', disabled: this.editMode !== 'full' }],
 
       // Editable in partial + full
       description: [{ value: l.description, disabled: this.editMode === 'locked' }, [Validators.required, Validators.minLength(50)]],
+      descriptionPt: [{ value: l.descriptionPt || l.description || '', disabled: this.editMode === 'locked' }, [Validators.required, Validators.minLength(50)]],
+      descriptionEn: [{ value: l.descriptionEn || '', disabled: this.editMode === 'locked' }],
       condition:   [{ value: l.condition,   disabled: this.editMode === 'locked' }, Validators.required],
 
       locationCity:    [{ value: l.locationCity    || '', disabled: this.editMode === 'locked' }],
@@ -194,7 +198,9 @@ export class EditListing implements OnInit {
 
       const raw = this.editForm.getRawValue();
       const payload: any = {
-        description:     raw.description,
+        description:     raw.descriptionPt || raw.description,
+        descriptionPt:   raw.descriptionPt,
+        descriptionEn:   raw.descriptionEn,
         condition:       raw.condition,
         locationCity:    raw.locationCity,
         locationCountry: raw.locationCountry,
@@ -206,8 +212,11 @@ export class EditListing implements OnInit {
         images:          allImages
       };
 
+      payload.titleEn = raw.titleEn;
+
       if (this.editMode === 'full') {
-        payload.title       = raw.title;
+        payload.title       = raw.titlePt || raw.title;
+        payload.titlePt     = raw.titlePt;
         payload.category    = raw.category;
         payload.subCategory = raw.subCategory;
       }

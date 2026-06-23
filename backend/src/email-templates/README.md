@@ -18,6 +18,7 @@ email-templates/
 
 Each template is a JSON file with the following structure:
 
+**Standard (legacy inline HTML):**
 ```json
 {
   "subject": "Email Subject with {{variable}}",
@@ -25,6 +26,22 @@ Each template is a JSON file with the following structure:
   "text": "Plain text version with {{variable}}"
 }
 ```
+
+**BidRoom branded layout (recommended):**
+```json
+{
+  "subject": "Offer confirmed: {{listingTitle}}",
+  "layout": "bidroom",
+  "title": "Offer confirmed",
+  "preheader": "Optional inbox preview text",
+  "body": "<p>Hello {{name}},</p>...",
+  "ctaUrl": "{{actionUrl}}",
+  "ctaLabel": "View listing",
+  "text": "Plain text fallback"
+}
+```
+
+Use `layout: "bidroom"` for emails that match the app UI (dark header, gold accent, pill CTA). Helpers live in `backend/src/utils/bidroomEmailLayout.js`.
 
 ## Variable Substitution
 

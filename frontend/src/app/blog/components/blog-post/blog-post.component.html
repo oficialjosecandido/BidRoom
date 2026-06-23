@@ -1,6 +1,6 @@
 <app-header activePage="blog"></app-header>
 
-<main class="post-page">
+<main class="post-page" [class.light]="isLight()">
   @if (loading) {
     <div class="post-state">{{ 'blog.loading' | translate }}</div>
   } @else if (notFound || !post) {
@@ -14,7 +14,7 @@
 
       <header class="post-header">
         <span class="post-cat">{{ categoryLabel(post.category) | translate }}</span>
-        <h1>{{ post.title }}</h1>
+        <h1>{{ postTitle() }}</h1>
         <div class="post-meta">
           @if (post.publishedAt) {
             <span>{{ 'blog.publishedOn' | translate }} {{ post.publishedAt | date:'dd MMMM yyyy' }}</span>
@@ -24,8 +24,18 @@
       </header>
 
       @if (post.coverImage) {
-        <img class="post-cover" [src]="post.coverImage" [alt]="post.title" width="1200" height="630">
+        <img class="post-cover" [src]="post.coverImage" [alt]="postTitle()" width="1200" height="630">
       }
+
+      <div class="share-block">
+        <button class="share-btn" type="button" (click)="sharePost()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/>
+          </svg>
+          @if (linkCopied) { ✓ {{ 'blog.share.linkCopied' | translate }} } @else { {{ 'blog.share.button' | translate }} }
+        </button>
+        <p class="share-note">{{ 'blog.share.note' | translate }}</p>
+      </div>
 
       <div class="post-content" [innerHTML]="contentHtml"></div>
 

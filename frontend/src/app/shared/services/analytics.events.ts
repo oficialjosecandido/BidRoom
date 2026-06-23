@@ -50,6 +50,9 @@ export const AnalyticsEvents = {
   // ── Support ───────────────────────────────────────────────────────────────
   SUPPORT_CHAT_OPENED:    'support_chat_opened',
   SUPPORT_REQUEST_SENT:   'support_request_sent',
+
+  // ── Blog ──────────────────────────────────────────────────────────────────
+  SHARE_BLOG_POST: 'share_blog_post',
 } as const;
 
 export type AnalyticsEventName = (typeof AnalyticsEvents)[keyof typeof AnalyticsEvents];

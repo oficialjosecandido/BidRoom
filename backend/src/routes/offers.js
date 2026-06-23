@@ -45,6 +45,7 @@ const {
   sendOfferOutbidEmail
 } = require('../services/auctionNotificationService');
 const { sendEmail } = require('../services/emailService');
+const { wrapBidRoomEmail, emailSuccessBox, emailAmountCard } = require('../utils/bidroomEmailLayout');
 
 // GET /api/offers/listing/:listingId - Get all offers for a listing
 router.get('/listing/:listingId', optionalAuth, async (req, res) => {
@@ -448,22 +449,20 @@ router.patch('/:offerId/accept', authenticateToken, async (req, res) => {
           const listingTitle = listing.title || 'your item';
           const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:4200';
           const txLink = `${frontendUrl}/dashboard/transactions`;
-          const html = `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-              <div style="background: linear-gradient(135deg, #7A4F84 0%, #9b6ba8 100%); color: white; padding: 24px; text-align: center; border-radius: 8px 8px 0 0;">
-                <h1 style="margin: 0;">Your offer was accepted!</h1>
-              </div>
-              <div style="background: #f9f9f9; padding: 24px; border-radius: 0 0 8px 8px;">
-                <p>Hi ${buyerFirstName},</p>
-                <p>Great news! The seller accepted your offer of <strong>${amountStr}</strong> for <strong>${listingTitle}</strong>.</p>
-                <p>A transaction has been created. Please complete payment to proceed.</p>
-                <p style="text-align: center; margin: 24px 0;">
-                  <a href="${txLink}" style="background: #7A4F84; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: bold;">View Transaction</a>
-                </p>
-                <p>Best regards,<br>The BidRoom Team</p>
-              </div>
-            </div>
-          `;
+          const html = wrapBidRoomEmail({
+            title: 'Your offer was accepted!',
+            preheader: `The seller accepted your offer of ${amountStr} for ${listingTitle}.`,
+            bodyHtml: `
+              <p style="margin:0 0 16px;">Hi <strong>${buyerFirstName}</strong>,</p>
+              ${emailSuccessBox(
+                'Great news — your offer was accepted',
+                `<p style="margin:0 0 12px;">The seller accepted your offer for this listing.</p>${emailAmountCard(amountStr, listingTitle)}`
+              )}
+              <p style="margin:16px 0 0;color:#334155;font-size:14px;line-height:1.55;">A transaction has been created. Please complete payment to proceed.</p>
+            `,
+            ctaUrl: txLink,
+            ctaLabel: 'View transaction'
+          });
           sendEmail(buyerEmail, `Your offer on "${listingTitle}" was accepted`, html)
             .catch(err => console.error('Failed to send offer-accepted email:', err.message));
         }

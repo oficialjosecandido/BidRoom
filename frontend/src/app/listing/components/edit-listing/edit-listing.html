@@ -44,10 +44,18 @@
         <section class="form-section">
           <h2>Listing Details</h2>
 
-          <div class="form-group" [class.locked-field]="editMode !== 'full'">
-            <label>Title</label>
-            <input type="text" formControlName="title" [readonly]="editMode !== 'full'" />
-            @if (editMode !== 'full') { <span class="locked-tag">Locked</span> }
+          <div class="form-grid">
+            <div class="form-group" [class.locked-field]="editMode !== 'full'">
+              <label>Title (Português)</label>
+              <input type="text" formControlName="titlePt" [readonly]="editMode !== 'full'" />
+              @if (editMode !== 'full') { <span class="locked-tag">Locked</span> }
+            </div>
+
+            <div class="form-group" [class.locked-field]="editMode === 'locked'">
+              <label>Title (English)</label>
+              <input type="text" formControlName="titleEn" [readonly]="editMode === 'locked'" placeholder="Optional — falls back to Portuguese" />
+              @if (editMode === 'locked') { <span class="locked-tag">Locked</span> }
+            </div>
           </div>
 
           <div class="form-group" [class.locked-field]="editMode !== 'full'">
@@ -74,10 +82,18 @@
         <!-- Description -->
         <section class="form-section">
           <h2>Description</h2>
-          <div class="form-group" [class.locked-field]="editMode === 'locked'">
-            <label>Description <span class="hint">(min 50 characters)</span></label>
-            <textarea formControlName="description" rows="8" [readonly]="editMode === 'locked'"></textarea>
-            @if (editMode === 'locked') { <span class="locked-tag">Locked</span> }
+          <div class="form-grid">
+            <div class="form-group" [class.locked-field]="editMode === 'locked'">
+              <label>Description (Português) <span class="hint">(min 50 characters)</span></label>
+              <textarea formControlName="descriptionPt" rows="8" [readonly]="editMode === 'locked'"></textarea>
+              @if (editMode === 'locked') { <span class="locked-tag">Locked</span> }
+            </div>
+
+            <div class="form-group" [class.locked-field]="editMode === 'locked'">
+              <label>Description (English)</label>
+              <textarea formControlName="descriptionEn" rows="8" [readonly]="editMode === 'locked'" placeholder="Optional — falls back to Portuguese"></textarea>
+              @if (editMode === 'locked') { <span class="locked-tag">Locked</span> }
+            </div>
           </div>
         </section>
 

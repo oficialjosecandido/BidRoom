@@ -7,8 +7,8 @@ const { requireAdmin } = require('../utils/roles');
 const OBJECT_ID_RE = /^[a-f\d]{24}$/i;
 const VALID_CATEGORIES = ['relogios', 'arte', 'mercado', 'guias', 'bidroom'];
 
-const PUBLIC_FIELDS = 'title slug excerpt content coverImage category tags author publishedAt metaDescription viewCount createdAt updatedAt';
-const LIST_FIELDS   = 'title slug excerpt coverImage category tags author publishedAt';
+const PUBLIC_FIELDS = 'title titleEn slug excerpt excerptEn content contentEn coverImage category tags author publishedAt metaDescription metaDescriptionEn viewCount createdAt updatedAt';
+const LIST_FIELDS   = 'title titleEn slug excerpt excerptEn coverImage category tags author publishedAt';
 
 // ── Public ───────────────────────────────────────────────────────────────────
 
@@ -20,6 +20,22 @@ router.get('/', async (req, res) => {
     const filter = { status: 'published' };
     if (req.query.category && VALID_CATEGORIES.includes(req.query.category)) {
       filter.category = req.query.category;
+    }
+
+    const search = String(req.query.search || req.query.q || '').trim();
+    if (search) {
+      const escaped = search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const regex = new RegExp(escaped, 'i');
+      filter.$or = [
+        { title: regex },
+        { titleEn: regex },
+        { excerpt: regex },
+        { excerptEn: regex },
+        { tags: regex },
+        { content: regex },
+        { contentEn: regex },
+        { author: regex }
+      ];
     }
 
     const [posts, total] = await Promise.all([
@@ -92,7 +108,10 @@ router.get('/admin/:id', authenticateToken, requireAdmin, async (req, res) => {
 /** POST /api/blog — create a post (draft by default). */
 router.post('/', authenticateToken, requireAdmin, async (req, res) => {
   try {
-    const { title, excerpt, content, coverImage, category, tags, author, status, metaDescription, slug } = req.body;
+    const {
+      title, titleEn, excerpt, excerptEn, content, contentEn, coverImage,
+      category, tags, author, status, metaDescription, metaDescriptionEn, slug
+    } = req.body;
 
     if (!title || !content) {
       return res.status(400).json({ error: 'title and content are required' });
@@ -103,15 +122,19 @@ router.post('/', authenticateToken, requireAdmin, async (req, res) => {
 
     const post = await BlogPost.create({
       title,
+      titleEn: titleEn || '',
       slug: slug || undefined,
       excerpt: excerpt || '',
+      excerptEn: excerptEn || '',
       content,
+      contentEn: contentEn || '',
       coverImage: coverImage || '',
       category: category || 'mercado',
       tags: Array.isArray(tags) ? tags : [],
       author: author || 'BidRoom',
       status: status === 'published' ? 'published' : 'draft',
-      metaDescription: metaDescription || ''
+      metaDescription: metaDescription || '',
+      metaDescriptionEn: metaDescriptionEn || ''
     });
 
     res.status(201).json({ post });
@@ -130,7 +153,10 @@ router.put('/:id', authenticateToken, requireAdmin, async (req, res) => {
     if (!OBJECT_ID_RE.test(req.params.id)) {
       return res.status(400).json({ error: 'Invalid post id' });
     }
-    const { title, excerpt, content, coverImage, category, tags, author, status, metaDescription, slug } = req.body;
+    const {
+      title, titleEn, excerpt, excerptEn, content, contentEn, coverImage,
+      category, tags, author, status, metaDescription, metaDescriptionEn, slug
+    } = req.body;
 
     if (category && !VALID_CATEGORIES.includes(category)) {
       return res.status(400).json({ error: 'Invalid category' });
@@ -138,14 +164,18 @@ router.put('/:id', authenticateToken, requireAdmin, async (req, res) => {
 
     const update = {};
     if (title !== undefined) update.title = title;
+    if (titleEn !== undefined) update.titleEn = titleEn;
     if (slug !== undefined && slug) update.slug = slug;
     if (excerpt !== undefined) update.excerpt = excerpt;
+    if (excerptEn !== undefined) update.excerptEn = excerptEn;
     if (content !== undefined) update.content = content;
+    if (contentEn !== undefined) update.contentEn = contentEn;
     if (coverImage !== undefined) update.coverImage = coverImage;
     if (category !== undefined) update.category = category;
     if (tags !== undefined) update.tags = Array.isArray(tags) ? tags : [];
     if (author !== undefined) update.author = author;
     if (metaDescription !== undefined) update.metaDescription = metaDescription;
+    if (metaDescriptionEn !== undefined) update.metaDescriptionEn = metaDescriptionEn;
     if (status !== undefined && ['draft', 'published'].includes(status)) update.status = status;
 
     const post = await BlogPost.findById(req.params.id);

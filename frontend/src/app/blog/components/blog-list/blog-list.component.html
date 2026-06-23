@@ -1,43 +1,67 @@
 <app-header activePage="blog"></app-header>
 
-<main class="blog-page">
+<main class="blog-page" [class.light]="isLight()">
   <header class="blog-hero">
     <h1>{{ 'blog.pageTitle' | translate }}</h1>
     <p>{{ 'blog.pageSubtitle' | translate }}</p>
-  </header>
 
-  <nav class="blog-cats" aria-label="Categorias">
-    @for (cat of categories; track cat.value) {
-      <button
-        class="cat-chip"
-        [class.active]="selectedCategory === cat.value"
-        (click)="selectCategory(cat.value)">
-        {{ cat.labelKey | translate }}
-      </button>
+    <div class="blog-search" role="search">
+      <div class="blog-search__input-wrap">
+        <svg class="blog-search__icon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+        </svg>
+        <input
+          type="search"
+          class="blog-search__input"
+          [(ngModel)]="searchInput"
+          (keyup.enter)="onSearch()"
+          [placeholder]="'blog.searchPlaceholder' | translate"
+          [attr.aria-label]="'blog.search' | translate" />
+        @if (searchInput) {
+          <button type="button" class="blog-search__clear" (click)="clearSearch()" [attr.aria-label]="'blog.clearSearch' | translate">×</button>
+        }
+      </div>
+      <button type="button" class="blog-search__btn" (click)="onSearch()">{{ 'blog.search' | translate }}</button>
+    </div>
+
+    @if (searchQuery && !loading) {
+      <p class="blog-results">
+        @if (total === 0) {
+          {{ 'blog.noResultsFor' | translate:{ query: searchQuery } }}
+        } @else {
+          {{ 'blog.resultsCount' | translate:{ count: total, query: searchQuery } }}
+        }
+      </p>
     }
-  </nav>
+  </header>
 
   @if (loading) {
     <div class="blog-state">{{ 'blog.loading' | translate }}</div>
   } @else if (error) {
     <div class="blog-state blog-state--error">{{ error | translate }}</div>
   } @else if (posts.length === 0) {
-    <div class="blog-state">{{ 'blog.empty' | translate }}</div>
+    <div class="blog-state">
+      @if (searchQuery) {
+        {{ 'blog.emptySearch' | translate }}
+      } @else {
+        {{ 'blog.empty' | translate }}
+      }
+    </div>
   } @else {
     <div class="blog-grid">
       @for (post of posts; track trackByPost($index, post)) {
         <a class="post-card" [routerLink]="['/blog', post.slug]">
           <div class="post-card__image">
             @if (post.coverImage) {
-              <img [src]="post.coverImage" [alt]="post.title" loading="lazy" width="400" height="240">
+              <img [src]="post.coverImage" [alt]="postTitle(post)" loading="lazy" width="400" height="240">
             } @else {
               <div class="post-card__placeholder"></div>
             }
             <span class="post-card__cat">{{ ('blog.categories.' + post.category) | translate }}</span>
           </div>
           <div class="post-card__body">
-            <h2>{{ post.title }}</h2>
-            <p>{{ post.excerpt }}</p>
+            <h2>{{ postTitle(post) }}</h2>
+            <p>{{ postExcerpt(post) }}</p>
             <div class="post-card__meta">
               @if (post.publishedAt) {
                 <span>{{ post.publishedAt | date:'dd MMM yyyy' }}</span>

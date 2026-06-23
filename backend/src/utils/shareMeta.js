@@ -43,6 +43,27 @@ function buildOgDescription(description, lang = 'en') {
   return `${snippet} ${cta}`;
 }
 
+/**
+ * Returns the best available title/excerpt for the given locale.
+ * Falls back to the base (Portuguese) fields if the English variant is empty.
+ */
+function getLocalizedBlogText(post, lang) {
+  const title   = (lang === 'en' && post.titleEn)   ? post.titleEn   : post.title || '';
+  const excerpt = (lang === 'en' && post.excerptEn)  ? post.excerptEn  :
+                  (lang === 'en' && post.metaDescriptionEn) ? post.metaDescriptionEn :
+                  post.excerpt || post.metaDescription || '';
+  return { title, excerpt };
+}
+
+/** "[excerpt snippet, max 120 chars] Leia mais|Read more" */
+function buildBlogOgDescription(excerpt, lang = 'en') {
+  const cta = (lang === 'pt' ? 'Leia mais no blog' : 'Read more on the blog');
+  const raw = String(excerpt || '').replace(/\s+/g, ' ').trim();
+  if (!raw) return cta;
+  const snippet = raw.length > 120 ? `${raw.slice(0, 117)}…` : raw;
+  return `${snippet} — ${cta}`;
+}
+
 module.exports = {
   SITE_NAME,
   CTA: CTA.en,
@@ -50,4 +71,6 @@ module.exports = {
   getLocalizedListingText,
   buildOgTitle,
   buildOgDescription,
+  getLocalizedBlogText,
+  buildBlogOgDescription,
 };

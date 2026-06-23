@@ -3,6 +3,7 @@
 }
 
 .post-page {
+  --bg-page: #0a0a0a;
   --bg-gold: #c9a84c;
   --bg-gold2: #e8d08a;
   --bg-cream: #f0ede8;
@@ -13,9 +14,19 @@
   --bg-line: rgba(201, 168, 76, 0.12);
 
   min-height: 70vh;
-  background: #0a0a0a;
+  background: var(--bg-page);
   color: var(--bg-cream);
   padding: 48px 24px 96px;
+}
+
+.post-page.light {
+  --bg-page: #f7f6f2;
+  --bg-cream: #111111;
+  --bg-mist: rgba(17, 17, 17, 0.62);
+  --bg-dim: rgba(17, 17, 17, 0.38);
+  --bg-surf: #ffffff;
+  --bg-card: #ffffff;
+  --bg-line: rgba(201, 168, 76, 0.26);
 }
 
 .post-state {
@@ -92,15 +103,57 @@
 .post-cover {
   width: 100%;
   border-radius: 14px;
-  margin-bottom: 36px;
+  margin-bottom: 18px;
   object-fit: cover;
   max-height: 480px;
+  box-shadow: 0 18px 56px rgba(0, 0, 0, 0.16);
+}
+
+.share-block {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0 0 36px;
+}
+
+.share-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 12px 18px;
+  background: transparent;
+  border: 1px solid var(--bg-line);
+  border-radius: 10px;
+  color: var(--bg-gold);
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+
+  &:hover {
+    background: rgba(201, 168, 76, 0.08);
+    border-color: rgba(201, 168, 76, 0.34);
+  }
+
+  svg {
+    flex-shrink: 0;
+  }
+}
+
+.share-note {
+  margin: 0;
+  color: var(--bg-dim);
+  font-size: 0.78rem;
+  line-height: 1.5;
+  text-align: center;
 }
 
 .post-content {
   font-size: 1.05rem;
   line-height: 1.75;
-  color: rgba(240, 237, 232, 0.88);
+  color: color-mix(in srgb, var(--bg-cream) 88%, transparent);
 
   :first-child { margin-top: 0; }
 
@@ -158,6 +211,10 @@
     border-radius: 4px;
     font-size: 0.9em;
   }
+}
+
+.post-page.light .post-content {
+  color: rgba(17, 17, 17, 0.82);
 }
 
 .post-tags {

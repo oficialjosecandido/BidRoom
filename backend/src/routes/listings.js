@@ -27,6 +27,33 @@ function escapeRegex(str) {
   return String(str).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
+function cleanText(value) {
+  return value == null ? '' : String(value).trim();
+}
+
+function nullableText(value) {
+  const clean = cleanText(value);
+  return clean || null;
+}
+
+function normalizeListingLocaleFields(body = {}) {
+  const legacyTitle = cleanText(body.title);
+  const legacyDescription = cleanText(body.description);
+  const titlePt = cleanText(body.titlePt) || legacyTitle;
+  const titleEn = cleanText(body.titleEn);
+  const descriptionPt = cleanText(body.descriptionPt) || legacyDescription;
+  const descriptionEn = cleanText(body.descriptionEn);
+
+  return {
+    title: titlePt || titleEn || legacyTitle,
+    description: descriptionPt || descriptionEn || legacyDescription,
+    titlePt: nullableText(titlePt),
+    titleEn: nullableText(titleEn),
+    descriptionPt: nullableText(descriptionPt),
+    descriptionEn: nullableText(descriptionEn)
+  };
+}
+
 /** Populated seller fields for public listing APIs (DSA trader transparency). */
 const SELLER_DSA_PUBLIC_SELECT =
   'firstName lastName slug email uid sellerClassification professionalVerificationStatus ' +
@@ -1119,12 +1146,13 @@ router.post('/', authenticateToken, requireActiveAccount, requireNoDisputeRestri
       descriptionEn,
       acceptedPaymentMethods
     } = req.body;
+    const localizedText = normalizeListingLocaleFields(req.body);
 
     // Validate required fields
-    if (!title || title.trim().length === 0) {
+    if (!localizedText.title) {
       return res.status(400).json({ error: 'Title is required' });
     }
-    if (!description || description.trim().length < 50) {
+    if (!localizedText.description || localizedText.description.length < 50) {
       return res.status(400).json({ error: 'Description must be at least 50 characters' });
     }
     if (!category) {
@@ -1207,7 +1235,15 @@ router.post('/', authenticateToken, requireActiveAccount, requireNoDisputeRestri
     }
 
     // Prohibited item check — runs before anything else
-    const prohibitedCheck = scanTextsForProhibitedContent([title, description || '']);
+    const localizedScanTexts = [
+      localizedText.title,
+      localizedText.description,
+      localizedText.titlePt,
+      localizedText.titleEn,
+      localizedText.descriptionPt,
+      localizedText.descriptionEn
+    ].filter(Boolean);
+    const prohibitedCheck = scanTextsForProhibitedContent(localizedScanTexts);
     if (prohibitedCheck.prohibited) {
       return res.status(400).json({
         error: 'Prohibited item',
@@ -1218,7 +1254,10 @@ router.post('/', authenticateToken, requireActiveAccount, requireNoDisputeRestri
 
     // Azure AI Content Safety text scan (blocklist + AI categories — complementary to local regex)
     try {
-      const aiScan = await scanListingText(title, description || '');
+      const aiScan = await scanListingText(
+        [localizedText.titlePt, localizedText.titleEn].filter(Boolean).join(' '),
+        [localizedText.descriptionPt, localizedText.descriptionEn].filter(Boolean).join('\n\n')
+      );
       if (aiScan.blocked) {
         return res.status(400).json({
           error: 'Content policy violation',
@@ -1230,7 +1269,7 @@ router.post('/', authenticateToken, requireActiveAccount, requireNoDisputeRestri
     }
 
     // Abusive language check on title + description
-    const abuseCheck = scanForAbusiveContent(`${title} ${description || ''}`);
+    const abuseCheck = scanForAbusiveContent(localizedScanTexts.join(' '));
     if (abuseCheck.found) {
       if (abuseCheck.severity === 'high') {
         const fullUserForAbuse = await Customer.findById(user._id);
@@ -1238,7 +1277,7 @@ router.post('/', authenticateToken, requireActiveAccount, requireNoDisputeRestri
         appendModerationAudit({
           subjectUserId: user._id,
           actionType: 'abusive_content_flagged',
-          metadata: { context: 'listing_create', severity: 'high', categories: abuseCheck.categories, matches: abuseCheck.matches, title }
+          metadata: { context: 'listing_create', severity: 'high', categories: abuseCheck.categories, matches: abuseCheck.matches, title: localizedText.title }
         }).catch(() => {});
         return res.status(400).json({ error: 'Content policy violation', message: violation.message, violationAction: violation.action });
       }
@@ -1249,7 +1288,7 @@ router.post('/', authenticateToken, requireActiveAccount, requireNoDisputeRestri
         appendModerationAudit({
           subjectUserId: user._id,
           actionType: 'abusive_content_flagged',
-          metadata: { context: 'listing_create', severity: 'medium', categories: abuseCheck.categories, matches: abuseCheck.matches, title }
+          metadata: { context: 'listing_create', severity: 'medium', categories: abuseCheck.categories, matches: abuseCheck.matches, title: localizedText.title }
         }).catch(() => {});
         return res.status(400).json({ error: 'Content policy violation', message: violation.message, violationAction: violation.action });
       }
@@ -1261,15 +1300,26 @@ router.post('/', authenticateToken, requireActiveAccount, requireNoDisputeRestri
       appendModerationAudit({
         subjectUserId: user._id,
         actionType: 'abusive_content_flagged',
-        metadata: { context: 'listing_create', severity: 'low', categories: abuseCheck.categories, matches: abuseCheck.matches, title }
+        metadata: { context: 'listing_create', severity: 'low', categories: abuseCheck.categories, matches: abuseCheck.matches, title: localizedText.title }
       }).catch(() => {});
     }
 
     // Duplicate listing check — same seller, same title, active or draft
+    const duplicateTitleFilters = [
+      localizedText.title,
+      localizedText.titlePt,
+      localizedText.titleEn
+    ].filter(Boolean).map(t => ({ $regex: new RegExp(`^${escapeRegex(t)}$`, 'i') }));
     const existingListing = await Listing.findOne({
       seller: user._id,
       status: { $in: ['active', 'draft', 'pending_review'] },
-      title: { $regex: new RegExp(`^${escapeRegex(title.trim())}$`, 'i') }
+      ...(duplicateTitleFilters.length > 0 && {
+        $or: [
+          ...duplicateTitleFilters.map(v => ({ title: v })),
+          ...duplicateTitleFilters.map(v => ({ titlePt: v })),
+          ...duplicateTitleFilters.map(v => ({ titleEn: v }))
+        ]
+      })
     }).select('_id slug').lean();
     if (existingListing) {
       return res.status(409).json({
@@ -1281,8 +1331,7 @@ router.post('/', authenticateToken, requireActiveAccount, requireNoDisputeRestri
 
     // Scan for contact info in user-provided text fields
     const specTexts = (specifications || []).map(s => `${s.key || ''} ${s.value || ''}`);
-    const allTranslations = [titlePt, titleEn, descriptionPt, descriptionEn].filter(Boolean);
-    const contentScan = scanTexts([title, description, ...specTexts, ...allTranslations]);
+    const contentScan = scanTexts([...localizedScanTexts, ...specTexts]);
     if (contentScan.found) {
       const fullUser = await Customer.findById(user._id);
       const violation = await recordViolation(fullUser);
@@ -1295,12 +1344,12 @@ router.post('/', authenticateToken, requireActiveAccount, requireNoDisputeRestri
 
     // Prepare listing data
     const listingData = {
-      title: title.trim(),
-      description: description.trim(),
-      titlePt: titlePt && String(titlePt).trim() ? String(titlePt).trim() : null,
-      titleEn: titleEn && String(titleEn).trim() ? String(titleEn).trim() : null,
-      descriptionPt: descriptionPt && String(descriptionPt).trim() ? String(descriptionPt).trim() : null,
-      descriptionEn: descriptionEn && String(descriptionEn).trim() ? String(descriptionEn).trim() : null,
+      title: localizedText.title,
+      description: localizedText.description,
+      titlePt: localizedText.titlePt,
+      titleEn: localizedText.titleEn,
+      descriptionPt: localizedText.descriptionPt,
+      descriptionEn: localizedText.descriptionEn,
       category: category.toLowerCase().replace(/\s+/g, '-'), // Normalize category
       subCategory: subCategory.trim(),
       condition,
@@ -1466,7 +1515,7 @@ router.post('/', authenticateToken, requireActiveAccount, requireNoDisputeRestri
  * Locked regardless of bid count to prevent price manipulation.
  */
 const CRITICAL_FIELDS = new Set([
-  'title', 'category', 'subCategory', 'startingPrice', 'currentPrice',
+  'title', 'titlePt', 'category', 'subCategory', 'startingPrice', 'currentPrice',
   'auctionFormat', 'durationSlot', 'endDate', 'buyNowPrice',
   'minimumOfferPrice', 'allowPrivateRoom'
 ]);
@@ -1520,13 +1569,39 @@ router.patch('/:id', authenticateToken, requireActiveAccount, async (req, res) =
       'shippingOption', 'shippingCost', 'packageSize',
       'shippingOriginPostalCode', 'shippingOriginCity', 'shippingOriginCountry',
       'returnPolicy', 'handlingTime', 'images',
-      'titlePt', 'titleEn', 'descriptionPt', 'descriptionEn'
+      'titleEn', 'descriptionPt', 'descriptionEn'
     ];
 
     const allowedKeys = isDraft ? Object.keys(body) : EDITABLE_FIELDS;
     const updates = {};
     for (const key of allowedKeys) {
       if (key in body) updates[key] = body[key];
+    }
+
+    const hasLocaleUpdate = ['title', 'titlePt', 'titleEn', 'description', 'descriptionPt', 'descriptionEn']
+      .some(key => key in updates);
+    if (hasLocaleUpdate) {
+      const localizedUpdates = normalizeListingLocaleFields({
+        title: listing.title,
+        description: listing.description,
+        titlePt: listing.titlePt,
+        titleEn: listing.titleEn,
+        descriptionPt: listing.descriptionPt,
+        descriptionEn: listing.descriptionEn,
+        ...updates
+      });
+
+      if (isDraft && ('title' in updates || 'titlePt' in updates || 'titleEn' in updates)) {
+        updates.title = localizedUpdates.title;
+        updates.titlePt = localizedUpdates.titlePt;
+        updates.titleEn = localizedUpdates.titleEn;
+      }
+
+      if ('description' in updates || 'descriptionPt' in updates || 'descriptionEn' in updates) {
+        updates.description = localizedUpdates.description;
+        updates.descriptionPt = localizedUpdates.descriptionPt;
+        updates.descriptionEn = localizedUpdates.descriptionEn;
+      }
     }
 
     if (Object.keys(updates).length === 0) {
@@ -1537,6 +1612,10 @@ router.patch('/:id', authenticateToken, requireActiveAccount, async (req, res) =
     const textFields = [
       updates.title || '',
       updates.description || '',
+      updates.titlePt || '',
+      updates.titleEn || '',
+      updates.descriptionPt || '',
+      updates.descriptionEn || '',
       ...((updates.specifications || []).map(s => `${s.key || ''} ${s.value || ''}`))
     ].filter(Boolean);
 
@@ -1553,7 +1632,10 @@ router.patch('/:id', authenticateToken, requireActiveAccount, async (req, res) =
       }
 
       try {
-        const aiScanUpdate = await scanListingText(updates.title || '', updates.description || '');
+        const aiScanUpdate = await scanListingText(
+          [updates.title, updates.titlePt, updates.titleEn].filter(Boolean).join(' '),
+          [updates.description, updates.descriptionPt, updates.descriptionEn].filter(Boolean).join('\n\n')
+        );
         if (aiScanUpdate.blocked) {
           return res.status(400).json({
             error: 'Content policy violation',

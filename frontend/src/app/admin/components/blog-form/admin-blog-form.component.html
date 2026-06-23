@@ -21,14 +21,20 @@
             <div class="form-error">{{ error }}</div>
           }
 
-          <div class="field">
-            <label for="title">Título *</label>
-            <input id="title" type="text" [(ngModel)]="title" name="title" maxlength="160" required>
+          <div class="field-row">
+            <div class="field">
+              <label for="title">Título (Português) *</label>
+              <input id="title" type="text" [(ngModel)]="title" name="title" maxlength="160" required>
+            </div>
+            <div class="field">
+              <label for="titleEn">Título (English)</label>
+              <input id="titleEn" type="text" [(ngModel)]="titleEn" name="titleEn" maxlength="160" placeholder="Opcional — usa o título PT se vazio">
+            </div>
           </div>
 
           <div class="field">
             <label for="slug">Slug</label>
-            <input id="slug" type="text" [(ngModel)]="slug" name="slug" placeholder="Gerado automaticamente a partir do título se vazio">
+            <input id="slug" type="text" [(ngModel)]="slug" name="slug" placeholder="Gerado automaticamente a partir do título inglês se vazio">
           </div>
 
           <div class="field-row">
@@ -55,19 +61,39 @@
             </div>
           </div>
 
-          <div class="field">
-            <label for="excerpt">Resumo (excerpt)</label>
-            <textarea id="excerpt" [(ngModel)]="excerpt" name="excerpt" rows="2" maxlength="300"></textarea>
+          <div class="field-row">
+            <div class="field">
+              <label for="excerpt">Resumo (Português)</label>
+              <textarea id="excerpt" [(ngModel)]="excerpt" name="excerpt" rows="2" maxlength="300"></textarea>
+            </div>
+            <div class="field">
+              <label for="excerptEn">Resumo (English)</label>
+              <textarea id="excerptEn" [(ngModel)]="excerptEn" name="excerptEn" rows="2" maxlength="300" placeholder="Opcional — usa o resumo PT se vazio"></textarea>
+            </div>
           </div>
 
           <div class="field">
-            <label for="content">Conteúdo (Markdown) *</label>
+            <label for="content">Conteúdo (Markdown, Português) *</label>
             <textarea id="content" [(ngModel)]="content" name="content" rows="18" required></textarea>
           </div>
 
           <div class="field">
-            <label for="coverImage">Imagem de capa (URL)</label>
-            <input id="coverImage" type="text" [(ngModel)]="coverImage" name="coverImage" placeholder="https://…">
+            <label for="contentEn">Conteúdo (Markdown, English)</label>
+            <textarea id="contentEn" [(ngModel)]="contentEn" name="contentEn" rows="18" placeholder="Opcional — usa o conteúdo PT se vazio"></textarea>
+          </div>
+
+          <div class="field">
+            <label for="coverImage">Imagem de capa</label>
+            <div class="cover-row">
+              <input id="coverImage" type="text" [(ngModel)]="coverImage" name="coverImage" placeholder="https://… ou faz upload">
+              <button type="button" class="btn-upload" (click)="coverFileInput.click()" [disabled]="isUploadingCover">
+                {{ isUploadingCover ? 'A enviar…' : '📤 Upload' }}
+              </button>
+              <input #coverFileInput type="file" accept="image/jpeg,image/jpg,image/png,image/gif,image/webp,image/bmp" style="display:none" (change)="onCoverFileSelected($event)">
+            </div>
+            @if (uploadError) {
+              <p class="field-error">{{ uploadError }}</p>
+            }
             @if (coverImage) {
               <img [src]="coverImage" alt="" class="cover-preview">
             }
@@ -78,9 +104,15 @@
             <input id="tags" type="text" [(ngModel)]="tagsInput" name="tags" placeholder="relógios vintage, tendências, 2027">
           </div>
 
-          <div class="field">
-            <label for="metaDescription">Meta description ({{ metaDescription.length }}/160)</label>
-            <textarea id="metaDescription" [(ngModel)]="metaDescription" name="metaDescription" rows="2" maxlength="160"></textarea>
+          <div class="field-row">
+            <div class="field">
+              <label for="metaDescription">Meta description (Português) ({{ metaDescription.length }}/160)</label>
+              <textarea id="metaDescription" [(ngModel)]="metaDescription" name="metaDescription" rows="2" maxlength="160"></textarea>
+            </div>
+            <div class="field">
+              <label for="metaDescriptionEn">Meta description (English) ({{ metaDescriptionEn.length }}/160)</label>
+              <textarea id="metaDescriptionEn" [(ngModel)]="metaDescriptionEn" name="metaDescriptionEn" rows="2" maxlength="160" placeholder="Opcional — usa a meta description PT se vazia"></textarea>
+            </div>
           </div>
 
           <div class="form-actions">

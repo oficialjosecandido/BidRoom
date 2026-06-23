@@ -4025,6 +4025,12 @@
       "guias": "Guides",
       "bidroom": "BidRoom"
     },
+    "search": "Search",
+    "searchPlaceholder": "Search articles…",
+    "clearSearch": "Clear search",
+    "resultsCount": "{{count}} result(s) for “{{query}}”",
+    "noResultsFor": "No results for “{{query}}”",
+    "emptySearch": "No articles match your search. Try different keywords.",
     "readMore": "Read article",
     "loading": "Loading articles...",
     "empty": "No articles published yet.",
@@ -4032,6 +4038,11 @@
     "backToBlog": "Back to Blog",
     "publishedOn": "Published on",
     "by": "by",
-    "notFound": "Article not found."
+    "notFound": "Article not found.",
+    "share": {
+      "button": "Share article",
+      "linkCopied": "Link copied",
+      "note": "Share this article with buyers, sellers, or collectors."
+    }
   }
 }

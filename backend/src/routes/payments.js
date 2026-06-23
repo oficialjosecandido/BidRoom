@@ -4,6 +4,7 @@ const { authenticateToken, requireActiveAccount } = require('../middleware/auth'
 const Customer = require('../models/Customer');
 const Topup = require('../models/Topup');
 const { sendEmail } = require('../services/emailService');
+const { wrapBidRoomEmail, emailSuccessBox, emailAmountCard } = require('../utils/bidroomEmailLayout');
 
 const features = require('../config/features');
 const { getStripe } = require('../utils/stripe.util');
@@ -337,19 +338,20 @@ router.delete('/payment-method/:paymentMethodId', authenticateToken, requireActi
 async function sendPaymentConfirmationEmail(toEmail, firstName, amountDollars) {
   const amountStr = `$${Number(amountDollars).toFixed(2)}`;
   const subject = 'Payment received – your BidRoom balance has been updated';
-  const html = `
-    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-      <div style="background: linear-gradient(135deg, #7A4F84 0%, #9b6ba8 100%); color: white; padding: 24px; text-align: center; border-radius: 8px 8px 0 0;">
-        <h1 style="margin: 0;">Payment confirmed</h1>
-      </div>
-      <div style="background: #f9f9f9; padding: 24px; border-radius: 0 0 8px 8px;">
-        <p>Hi ${firstName},</p>
-        <p>We've received your payment of <strong>${amountStr}</strong>. Your balance has been updated and is ready to use for auctions and offers.</p>
-        <p>Thank you for using BidRoom.</p>
-        <p>Best regards,<br>The BidRoom Team</p>
-      </div>
-    </div>
-  `;
+  const html = wrapBidRoomEmail({
+    title: 'Payment confirmed',
+    preheader: `We've received your payment of ${amountStr}.`,
+    bodyHtml: `
+      <p style="margin:0 0 16px;">Hi <strong>${firstName}</strong>,</p>
+      ${emailSuccessBox(
+        'Payment received',
+        emailAmountCard(amountStr, 'Added to your BidRoom balance')
+      )}
+      <p style="margin:16px 0 0;color:#334155;font-size:14px;line-height:1.55;">Your balance is ready to use for auctions and offers. Thank you for using BidRoom.</p>
+    `,
+    ctaUrl: `${FRONTEND_URL.replace(/\/$/, '')}/dashboard`,
+    ctaLabel: 'Go to dashboard'
+  });
   try {
     await sendEmail(toEmail, subject, html);
     console.log(`${LOG_PREFIX} Confirmation email sent to ${toEmail} amount=${amountStr}`);

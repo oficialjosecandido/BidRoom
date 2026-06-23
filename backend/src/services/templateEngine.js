@@ -6,6 +6,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const { wrapBidRoomEmail } = require('../utils/bidroomEmailLayout');
 
 const TEMPLATES_DIR = path.join(__dirname, '../email-templates');
 const DEFAULT_LANGUAGE = 'en';
@@ -86,8 +87,12 @@ function loadTemplate(templateName, language = DEFAULT_LANGUAGE) {
     if (!template.subject) {
       throw new Error(`Invalid template structure for "${templateName}": missing "subject" field`);
     }
-    if (!template.html) {
+    const usesLayout = template.layout === 'bidroom';
+    if (!usesLayout && !template.html) {
       throw new Error(`Invalid template structure for "${templateName}": missing "html" field`);
+    }
+    if (usesLayout && (!template.body || !template.title)) {
+      throw new Error(`Invalid template structure for "${templateName}": layout "bidroom" requires "title" and "body"`);
     }
     
     // text field is optional
@@ -128,12 +133,24 @@ function loadTemplate(templateName, language = DEFAULT_LANGUAGE) {
  */
 function renderEmailTemplate(templateName, language = DEFAULT_LANGUAGE, data = {}) {
   const template = loadTemplate(templateName, language);
-  
-  return {
-    subject: renderTemplate(template.subject, data),
-    html: renderTemplate(template.html, data),
-    text: template.text ? renderTemplate(template.text, data) : null
-  };
+
+  const subject = renderTemplate(template.subject, data);
+  const text = template.text ? renderTemplate(template.text, data) : null;
+
+  let html;
+  if (template.layout === 'bidroom') {
+    html = wrapBidRoomEmail({
+      title: renderTemplate(template.title, data),
+      preheader: template.preheader ? renderTemplate(template.preheader, data) : undefined,
+      bodyHtml: renderTemplate(template.body, data),
+      ctaUrl: template.ctaUrl ? renderTemplate(template.ctaUrl, data) : undefined,
+      ctaLabel: template.ctaLabel ? renderTemplate(template.ctaLabel, data) : undefined
+    });
+  } else {
+    html = renderTemplate(template.html, data);
+  }
+
+  return { subject, html, text };
 }
 
 /**

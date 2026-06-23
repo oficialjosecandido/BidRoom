@@ -74,13 +74,16 @@ export class SeoService {
   }
 
   /** Sets title, meta, OG/Twitter and JSON-LD Article structured data for a blog post page. */
-  setBlogPost(post: BlogPost): void {
+  setBlogPost(post: BlogPost, lang: string = 'pt'): void {
     const canonical = `${BASE_URL}/blog/${post.slug}`;
     const image = post.coverImage || DEFAULT_OG;
-    const description = post.metaDescription || post.excerpt || '';
+    const title = lang === 'en' && post.titleEn ? post.titleEn : post.title;
+    const metaDesc = lang === 'en' && post.metaDescriptionEn ? post.metaDescriptionEn : post.metaDescription;
+    const excerpt = lang === 'en' && post.excerptEn ? post.excerptEn : post.excerpt;
+    const description = metaDesc || excerpt || '';
 
     this.apply({
-      title:       `${post.title} | Blog · BidRoom`.slice(0, 70),
+      title:       `${title} | Blog · BidRoom`.slice(0, 70),
       description: description.length > 155 ? `${description.slice(0, 152)}…` : description,
       url:         canonical,
       image,
@@ -88,7 +91,7 @@ export class SeoService {
 
     this.setCanonical(canonical);
     this.setListingOgType('article');
-    this.injectBlogPostSchema(post, image, canonical);
+    this.injectBlogPostSchema(post, image, canonical, lang);
   }
 
   resetToDefault(): void {
@@ -306,12 +309,15 @@ export class SeoService {
     };
   }
 
-  private injectBlogPostSchema(post: BlogPost, image: string, canonical: string): void {
+  private injectBlogPostSchema(post: BlogPost, image: string, canonical: string, lang: string = 'pt'): void {
+    const title = lang === 'en' && post.titleEn ? post.titleEn : post.title;
+    const metaDesc = lang === 'en' && post.metaDescriptionEn ? post.metaDescriptionEn : post.metaDescription;
+    const excerpt = lang === 'en' && post.excerptEn ? post.excerptEn : post.excerpt;
     const schema = {
       '@context': 'https://schema.org',
       '@type':    'Article',
-      headline:    post.title,
-      description: post.metaDescription || post.excerpt || undefined,
+      headline:    title,
+      description: metaDesc || excerpt || undefined,
       image:       [image],
       datePublished: post.publishedAt || post.createdAt,
       dateModified:  post.updatedAt || post.publishedAt || post.createdAt,

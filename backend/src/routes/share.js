@@ -2,12 +2,15 @@ const express  = require('express');
 const https    = require('https');
 const http     = require('http');
 const Listing  = require('../models/Listing');
+const BlogPost = require('../models/BlogPost');
 const { getBrandPNG } = require('../utils/ogImage');
 const {
   pickShareLocale,
   getLocalizedListingText,
   buildOgTitle,
   buildOgDescription,
+  getLocalizedBlogText,
+  buildBlogOgDescription,
 } = require('../utils/shareMeta');
 
 const router   = express.Router();
@@ -87,6 +90,80 @@ function esc(str = '') {
     .replace(/"/g,  '&quot;')
     .replace(/</g,  '&lt;')
     .replace(/>/g,  '&gt;');
+}
+
+/**
+ * Builds the OG-rich share HTML shared by /listing/:slug and /blog/:slug.
+ * Crawlers get the full meta tags with no redirect; browsers get an instant
+ * JS redirect to the canonical URL.
+ */
+function buildShareHtml({ title, description, canonicalUrl, image, lang, isDefaultImage, ua }) {
+  const ogTitle       = esc(title);
+  const ogDescription = esc(description);
+  const ogUrl         = esc(canonicalUrl);
+  const ogImage       = esc(image);
+  const ogCanonical   = esc(canonicalUrl);
+  const ogImageAlt    = esc(title || 'BidRoom');
+  const detectedType  = isDefaultImage ? 'image/png' : imageType(image);
+
+  const dimensionTags = isDefaultImage
+    ? `\n  <meta property="og:image:width"  content="1200">
+  <meta property="og:image:height" content="630">`
+    : '';
+
+  const typeTags = detectedType
+    ? `\n  <meta property="og:image:type" content="${esc(detectedType)}">`
+    : '';
+
+  const redirectScript = isCrawler(ua) ? '' : `
+  <script>window.location.replace(${JSON.stringify(canonicalUrl)});</script>
+  <noscript><meta http-equiv="refresh" content="0;url=${ogCanonical}"></noscript>`;
+
+  return `<!DOCTYPE html>
+<html lang="${lang}" prefix="og: https://ogp.me/ns#">
+<head>
+  <meta charset="utf-8">
+  <title>${ogTitle}</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="${ogDescription}">
+  <meta name="robots" content="noindex, follow">
+
+  <!-- Open Graph -->
+  <meta property="og:type"             content="website">
+  <meta property="og:site_name"        content="BidRoom">
+  <meta property="og:locale"           content="${lang === 'pt' ? 'pt_PT' : 'en_US'}">
+  <meta property="og:title"            content="${ogTitle}">
+  <meta property="og:description"      content="${ogDescription}">
+  <meta property="og:url"              content="${ogUrl}">
+  <meta property="og:image"            content="${ogImage}">
+  <meta property="og:image:secure_url" content="${ogImage}">
+  <meta property="og:image:alt"        content="${ogImageAlt}">${dimensionTags}${typeTags}
+
+  <!-- Twitter / X -->
+  <meta name="twitter:card"        content="summary_large_image">
+  <meta name="twitter:site"        content="@bidroompt">
+  <meta name="twitter:title"       content="${ogTitle}">
+  <meta name="twitter:description" content="${ogDescription}">
+  <meta name="twitter:image"       content="${ogImage}">
+  <meta name="twitter:image:alt"   content="${ogImageAlt}">
+
+  <link rel="canonical" href="${ogCanonical}">${redirectScript}
+</head>
+<body style="font-family:sans-serif;background:#0a0a0a;color:#f0ede8;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0">
+  <div style="text-align:center;padding:32px">
+    <p style="color:#888;font-size:14px">A redirecionar para BidRoom…</p>
+    <a href="${ogCanonical}" style="color:#c9a84c;font-size:13px">Clique aqui se não for redireccionado</a>
+  </div>
+</body>
+</html>`;
+}
+
+/** Resolves the best OG image for a given raw image URL (trusted Azure URLs pass through; others are probed). */
+async function resolveOgImage(rawImage) {
+  if (!rawImage) return { image: DEFAULT_OG_IMAGE, isDefault: true };
+  if (isTrustedImageUrl(rawImage)) return { image: rawImage, isDefault: false };
+  const probed = await checkImage(rawImage);
+  return probed ? { image: probed, isDefault: false } : { image: DEFAULT_OG_IMAGE, isDefault: true };
 }
 
 // ─── Routes ───────────────────────────────────────────────────────────────────
@@ -215,6 +292,44 @@ router.get('/listing/:slug', async (req, res) => {
   } catch (err) {
     console.error('[share] Error:', err.message);
     res.redirect(302, `${FRONTEND}/listing/${req.params.slug}`);
+  }
+});
+
+/**
+ * GET /blog/:slug
+ *
+ * Social-share endpoint for blog posts. Crawlers receive OG-rich HTML;
+ * browsers are redirected to the canonical blog URL.
+ */
+router.get('/blog/:slug', async (req, res) => {
+  try {
+    const post = await BlogPost.findOne({ slug: req.params.slug, status: 'published' }).lean();
+    const canonicalUrl = `${FRONTEND}/blog/${req.params.slug}`;
+
+    if (!post) {
+      return res.redirect(301, canonicalUrl);
+    }
+
+    const lang = pickShareLocale(req.headers['accept-language']);
+    const { title, excerpt } = getLocalizedBlogText(post, lang);
+    const { image, isDefault } = await resolveOgImage(post.coverImage || null);
+
+    const html = buildShareHtml({
+      title: buildOgTitle(title),
+      description: buildBlogOgDescription(excerpt, lang),
+      canonicalUrl,
+      image,
+      lang,
+      isDefaultImage: isDefault,
+      ua: req.headers['user-agent'] || ''
+    });
+
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    res.setHeader('Cache-Control', 'public, max-age=60, s-maxage=120');
+    res.send(html);
+  } catch (err) {
+    console.error('[share:blog] Error:', err.message);
+    res.redirect(302, `${FRONTEND}/blog/${req.params.slug}`);
   }
 });
 

@@ -8,8 +8,10 @@ export type BlogCategory = 'relogios' | 'arte' | 'mercado' | 'guias' | 'bidroom'
 export interface BlogPostSummary {
   _id: string;
   title: string;
+  titleEn?: string;
   slug: string;
   excerpt: string;
+  excerptEn?: string;
   coverImage: string;
   category: BlogCategory;
   tags: string[];
@@ -19,7 +21,9 @@ export interface BlogPostSummary {
 
 export interface BlogPost extends BlogPostSummary {
   content: string;
+  contentEn?: string;
   metaDescription: string;
+  metaDescriptionEn?: string;
   viewCount: number;
   createdAt: string;
   updatedAt: string;
@@ -40,15 +44,19 @@ export interface BlogListResponse {
 
 export interface BlogPostPayload {
   title: string;
+  titleEn?: string;
   slug?: string;
   excerpt?: string;
+  excerptEn?: string;
   content: string;
+  contentEn?: string;
   coverImage?: string;
   category?: BlogCategory;
   tags?: string[];
   author?: string;
   status?: 'draft' | 'published';
   metaDescription?: string;
+  metaDescriptionEn?: string;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -56,9 +64,10 @@ export class BlogService {
   private http = inject(HttpClient);
   private apiUrl = `${API_CONFIG.getApiUrl()}/blog`;
 
-  getPosts(page = 1, limit = 12, category?: BlogCategory): Observable<BlogListResponse> {
+  getPosts(page = 1, limit = 12, search?: string): Observable<BlogListResponse> {
     let params = new HttpParams().set('page', page).set('limit', limit);
-    if (category) params = params.set('category', category);
+    const q = search?.trim();
+    if (q) params = params.set('search', q);
     return this.http.get<BlogListResponse>(this.apiUrl, { params });
   }
 
