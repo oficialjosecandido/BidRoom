@@ -82,6 +82,10 @@ BidRoom/
 - Backend includes CORS configuration to allow frontend requests
 - Hot reload enabled for both frontend and backend during development
 
+## Documentation
+
+- [Blog](docs/BLOG.md) - public blog pages, Nexus editor, localization, search, sharing, slugs, and deployment notes
+
 ## API Endpoints
 
 ### Health Check

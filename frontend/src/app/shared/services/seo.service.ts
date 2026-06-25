@@ -281,6 +281,8 @@ export class SeoService {
         returnPolicyCategory:  'https://schema.org/MerchantReturnFiniteReturnWindow',
         merchantReturnDays:    returnPolicy === '14-days' ? 14 : 30,
         applicableCountry:     country,
+        returnMethod:          'https://schema.org/ReturnByMail',
+        returnFees:            'https://schema.org/ReturnShippingFees',
       };
     }
     return null;

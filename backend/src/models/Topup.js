@@ -25,7 +25,7 @@ const topupSchema = new mongoose.Schema({
   },
   currency: {
     type: String,
-    default: 'usd',
+    default: 'eur',
     trim: true
   }
 }, {

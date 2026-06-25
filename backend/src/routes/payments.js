@@ -22,8 +22,8 @@ const router = express.Router();
 
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:4200';
 
-const MIN_AMOUNT_DOLLARS = 5;
-const MAX_AMOUNT_DOLLARS = 50000;
+const MIN_AMOUNT_EUR = 5;
+const MAX_AMOUNT_EUR = 50000;
 
 /**
  * POST /api/payments/create-checkout-session
@@ -44,10 +44,10 @@ router.post('/create-checkout-session', authenticateToken, requireActiveAccount,
 
     const { amountDollars } = req.body;
     const amount = Number(amountDollars);
-    if (Number.isNaN(amount) || amount < MIN_AMOUNT_DOLLARS || amount > MAX_AMOUNT_DOLLARS) {
+    if (Number.isNaN(amount) || amount < MIN_AMOUNT_EUR || amount > MAX_AMOUNT_EUR) {
       return res.status(400).json({
         error: 'Invalid amount',
-        message: `Amount must be between $${MIN_AMOUNT_DOLLARS} and $${MAX_AMOUNT_DOLLARS}.`
+        message: `Amount must be between €${MIN_AMOUNT_EUR} and €${MAX_AMOUNT_EUR}.`
       });
     }
 
@@ -55,7 +55,7 @@ router.post('/create-checkout-session', authenticateToken, requireActiveAccount,
     if (amountCents < 500) {
       return res.status(400).json({
         error: 'Invalid amount',
-        message: 'Minimum amount is $5.00.'
+        message: 'Minimum amount is €5.00.'
       });
     }
     const uid = req.user.uid;
@@ -66,10 +66,10 @@ router.post('/create-checkout-session', authenticateToken, requireActiveAccount,
       line_items: [
         {
           price_data: {
-            currency: 'usd',
+            currency: 'eur',
             product_data: {
               name: 'BidRoom – Add balance',
-              description: `Add $${amount.toFixed(2)} to your balance to secure your membership.`,
+              description: `Add €${amount.toFixed(2)} to your balance to secure your membership.`,
               images: []
             },
             unit_amount: amountCents
@@ -86,7 +86,7 @@ router.post('/create-checkout-session', authenticateToken, requireActiveAccount,
       }
     });
 
-    console.log(`${LOG_PREFIX} Checkout session created session_id=${session.id} amount=$${amount} uid=${uid?.slice(0, 8)}...`);
+    console.log(`${LOG_PREFIX} Checkout session created session_id=${session.id} amount=€${amount} uid=${uid?.slice(0, 8)}...`);
     res.json({ url: session.url });
   } catch (err) {
     console.error(`${LOG_PREFIX} Create checkout session error:`, err.message);
@@ -336,7 +336,7 @@ router.delete('/payment-method/:paymentMethodId', authenticateToken, requireActi
  * Send payment confirmation email after balance is credited.
  */
 async function sendPaymentConfirmationEmail(toEmail, firstName, amountDollars) {
-  const amountStr = `$${Number(amountDollars).toFixed(2)}`;
+  const amountStr = `€${Number(amountDollars).toFixed(2)}`;
   const subject = 'Payment received – your BidRoom balance has been updated';
   const html = wrapBidRoomEmail({
     title: 'Payment confirmed',
@@ -372,7 +372,7 @@ async function creditBalanceForSession(session) {
   const uid = session.metadata?.uid;
   const amountDollars = Number(session.metadata?.amountDollars) || (session.amount_total / 100);
 
-  console.log(`${LOG_PREFIX} creditBalanceForSession session_id=${sessionId} uid=${uid?.slice(0, 8)}... amount=$${amountDollars}`);
+  console.log(`${LOG_PREFIX} creditBalanceForSession session_id=${sessionId} uid=${uid?.slice(0, 8)}... amount=€${amountDollars}`);
 
   if (!sessionId || !uid || amountDollars <= 0) {
     console.log(`${LOG_PREFIX} creditBalanceForSession skipped: missing sessionId/uid or invalid amount`);
@@ -402,7 +402,7 @@ async function creditBalanceForSession(session) {
       uid,
       amount: amountDollars,
       stripeSessionId: sessionId,
-      currency: 'usd'
+      currency: 'eur'
     });
   } catch (err) {
     if (err.code === 11000) {
@@ -412,7 +412,7 @@ async function creditBalanceForSession(session) {
     }
   }
 
-  console.log(`${LOG_PREFIX} Balance credited +$${amountDollars} for uid=${uid?.slice(0, 8)}... new balance would be ~$${(customer.balance || 0) + amountDollars}`);
+  console.log(`${LOG_PREFIX} Balance credited +€${amountDollars} for uid=${uid?.slice(0, 8)}... new balance would be ~€${(customer.balance || 0) + amountDollars}`);
 
   await sendPaymentConfirmationEmail(customer.email, customer.firstName, amountDollars);
 }

@@ -1,4 +1,5 @@
 import { Component, OnInit, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
@@ -23,6 +24,7 @@ export class MyAccountComponent implements OnInit {
   private kycService = inject(KycService);
   private route = inject(ActivatedRoute);
   private translate = inject(TranslateService);
+  private destroyed$ = takeUntilDestroyed();
 
   currentUser$: Observable<AppUser | null>;
 
@@ -81,7 +83,7 @@ export class MyAccountComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.customerService.getCustomer().subscribe({
+    this.customerService.getCustomer().pipe(this.destroyed$).subscribe({
       next: (info) => {
         this.buyerScore = info.buyerScore ?? null;
         this.sellerScore = info.sellerScore ?? null;
@@ -93,7 +95,7 @@ export class MyAccountComponent implements OnInit {
     this.loadConnectStatus();
     this.loadKycStatus();
 
-    this.route.queryParams.subscribe(params => {
+    this.route.queryParams.pipe(this.destroyed$).subscribe(params => {
       if (params['kyc_return'] === '1') {
         this.kycReturnBanner = true;
       }
@@ -102,7 +104,7 @@ export class MyAccountComponent implements OnInit {
 
   loadKycStatus(): void {
     this.kycLoading = true;
-    this.kycService.fetchStatus().subscribe({
+    this.kycService.fetchStatus().pipe(this.destroyed$).subscribe({
       next: (data) => { this.kycStatusData = data; this.kycLoading = false; },
       error: () => { this.kycLoading = false; }
     });
@@ -130,7 +132,7 @@ export class MyAccountComponent implements OnInit {
 
   loadConnectStatus(): void {
     this.connectLoading = true;
-    this.stripeConnect.getAccountStatus().subscribe({
+    this.stripeConnect.getAccountStatus().pipe(this.destroyed$).subscribe({
       next: (status) => { this.connectStatus = status; this.connectLoading = false; },
       error: () => { this.connectLoading = false; }
     });
@@ -178,7 +180,7 @@ export class MyAccountComponent implements OnInit {
     };
 
     this.connectSubmitting = true;
-    this.stripeConnect.submitOnboarding(data).subscribe({
+    this.stripeConnect.submitOnboarding(data).pipe(this.destroyed$).subscribe({
       next: (res) => {
         this.connectSubmitting = false;
         this.showOnboardingForm = false;
@@ -208,7 +210,7 @@ export class MyAccountComponent implements OnInit {
 
   testActivate(): void {
     this.connectTestActivating = true;
-    this.stripeConnect.testActivate().subscribe({
+    this.stripeConnect.testActivate().pipe(this.destroyed$).subscribe({
       next: () => {
         this.connectTestActivating = false;
         this.connectStatusMessage = 'Test account activated!';

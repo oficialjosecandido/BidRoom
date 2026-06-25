@@ -828,7 +828,7 @@ router.post('/create-checkout-session', requireActiveAccount, async (req, res) =
     }
 
     // payment_intent_data: use explicit transfer_data.amount so the seller receives
-    // exactly item*(1-0.04)+shipping, regardless of the Stripe fee estimate rounding.
+    // exactly item*(1-commissionRate)+shipping, regardless of the Stripe fee estimate rounding.
     // In test mode, if the account doesn't have transfers capability active yet, skip
     // transfer_data to avoid a "stripe_balance.stripe_transfers feature" error.
     const paymentIntentData = {
