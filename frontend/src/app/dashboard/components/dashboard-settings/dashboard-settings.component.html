@@ -466,13 +466,25 @@
           <p class="form-error">{{ paymentConfigError }}</p>
         }
 
-        <button type="button" class="btn-save" (click)="savePaymentConfig()" [disabled]="savingPaymentConfig">
-          @if (paymentConfigSaved) {
-            {{ 'dashboard.settings.saved' | translate }}
-          } @else {
-            {{ savingPaymentConfig ? ('dashboard.settings.saving' | translate) : ('dashboard.settings.save' | translate) }}
-          }
-        </button>
+        <div class="spc-actions">
+          <button
+            type="button"
+            class="spc-save-btn"
+            [class.spc-save-btn--saved]="paymentConfigSaved"
+            (click)="savePaymentConfig()"
+            [disabled]="savingPaymentConfig">
+            @if (paymentConfigSaved) {
+              <span class="spc-save-btn__icon" aria-hidden="true">✓</span>
+              {{ 'dashboard.settings.sellerPaymentConfig.saved' | translate }}
+            } @else if (savingPaymentConfig) {
+              <span class="spc-save-btn__spinner" aria-hidden="true"></span>
+              {{ 'dashboard.settings.sellerPaymentConfig.saving' | translate }}
+            } @else {
+              <span class="spc-save-btn__icon" aria-hidden="true">↗</span>
+              {{ 'dashboard.settings.sellerPaymentConfig.save' | translate }}
+            }
+          </button>
+        </div>
       </div>
     </div>
     </div>

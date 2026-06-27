@@ -28,7 +28,8 @@ export class AdminSidebarComponent {
     { label: 'Disputes', route: '/nexus/disputes', icon: '⚖️' },
     { label: 'Reports', route: '/nexus/reports', icon: '🚩' },
     { label: 'Suporte', route: '/nexus/support', icon: '💬' },
-    { label: 'Blog', route: '/nexus/blog', icon: '📝' }
+    { label: 'Blog', route: '/nexus/blog', icon: '📝' },
+    { label: 'Landing Page', route: '/landing', icon: '🌐' }
   ];
 
   navigateTo(route: string): void {

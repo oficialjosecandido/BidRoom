@@ -1186,7 +1186,27 @@
       "payoutSchedule": "Virements selon un calendrier progressif",
       "connectStripe": "Connecter avec Stripe",
       "redirecting": "Redirection...",
-      "redirectingToStripe": "Redirection vers Stripe..."
+      "redirectingToStripe": "Redirection vers Stripe...",
+      "sellerPaymentConfig": {
+        "title": "Méthodes de paiement alternatives",
+        "desc": "Configurez les méthodes de paiement que les acheteurs peuvent utiliser en plus de Stripe.",
+        "inPerson": "Paiement en personne",
+        "inPersonDesc": "L'acheteur peut payer en personne.",
+        "bankTransfer": "Virement bancaire",
+        "bankTransferDesc": "Indiquez votre IBAN pour les paiements par virement bancaire.",
+        "iban": "IBAN",
+        "ibanPlaceholder": "ex. PT50 0002 0123 1234 5678 9015 4",
+        "accountName": "Nom du titulaire",
+        "accountNamePlaceholder": "ex. Jean Dupont",
+        "mbway": "MBWay",
+        "mbwayDesc": "Indiquez votre numéro de téléphone pour les paiements par MBWay.",
+        "phone": "Numéro MBWay",
+        "phonePlaceholder": "+351 912 345 678",
+        "save": "Enregistrer",
+        "saving": "Enregistrement…",
+        "saved": "Enregistré",
+        "saveError": "Erreur lors de l'enregistrement. Veuillez réessayer."
+      }
     },
     "myAuctions": {
       "title": "Mes Annonces",

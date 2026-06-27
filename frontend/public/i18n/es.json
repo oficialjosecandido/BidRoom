@@ -1189,7 +1189,27 @@
       "payoutSchedule": "Pagos en horario continuo",
       "connectStripe": "Conectar con Stripe",
       "redirecting": "Redirigiendo...",
-      "redirectingToStripe": "Redirigiendo a Stripe..."
+      "redirectingToStripe": "Redirigiendo a Stripe...",
+      "sellerPaymentConfig": {
+        "title": "Métodos de pago alternativos",
+        "desc": "Configura los métodos de pago que los compradores pueden usar además de Stripe.",
+        "inPerson": "Pago en persona",
+        "inPersonDesc": "El comprador puede pagar presencialmente.",
+        "bankTransfer": "Transferencia bancaria",
+        "bankTransferDesc": "Indica tu IBAN para pagos por transferencia bancaria.",
+        "iban": "IBAN",
+        "ibanPlaceholder": "ej. PT50 0002 0123 1234 5678 9015 4",
+        "accountName": "Nombre del titular",
+        "accountNamePlaceholder": "ej. Juan Silva",
+        "mbway": "MBWay",
+        "mbwayDesc": "Indica tu número de móvil para pagos por MBWay.",
+        "phone": "Número MBWay",
+        "phonePlaceholder": "+351 912 345 678",
+        "save": "Guardar",
+        "saving": "Guardando…",
+        "saved": "Guardado",
+        "saveError": "Error al guardar. Inténtalo de nuevo."
+      }
     },
     "myAuctions": {
       "title": "Mis Anuncios",
