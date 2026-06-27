@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, TransferState, makeStateKey, PLATFORM_ID } from '@angular/core';
+import { Component, OnInit, inject, DestroyRef, TransferState, makeStateKey, PLATFORM_ID } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
@@ -69,7 +69,7 @@ export class SellerPublicProfileComponent implements OnInit {
   private translate = inject(TranslateService);
   private transferState = inject(TransferState);
   private isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
-  private destroyed$ = takeUntilDestroyed();
+  private destroyRef = inject(DestroyRef);
 
   private apiBase = API_CONFIG.getApiUrl();
 
@@ -101,7 +101,7 @@ export class SellerPublicProfileComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.authService.isAuthenticated().pipe(this.destroyed$).subscribe(auth => {
+    this.authService.isAuthenticated().pipe(takeUntilDestroyed(this.destroyRef)).subscribe(auth => {
       this.isAuthenticated = auth;
     });
 
@@ -112,7 +112,7 @@ export class SellerPublicProfileComponent implements OnInit {
       return;
     }
 
-    this.authService.currentUser$.pipe(this.destroyed$).subscribe(user => {
+    this.authService.currentUser$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(user => {
       if (user && this.profile) {
         this.isSelf = user.uid === this.profile._id || false;
       }
@@ -132,7 +132,7 @@ export class SellerPublicProfileComponent implements OnInit {
       return;
     }
 
-    this.http.get<PublicProfile>(`${this.apiBase}/users/${id}/profile`).pipe(this.destroyed$).subscribe({
+    this.http.get<PublicProfile>(`${this.apiBase}/users/${id}/profile`).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (profile) => {
         if (!this.isBrowser) {
           this.transferState.set(stateKey, profile);
@@ -174,7 +174,7 @@ export class SellerPublicProfileComponent implements OnInit {
 
     this.http.get<{ reviews: PublicReview[]; total: number; pages: number }>(
       `${this.apiBase}/users/${this.profile._id}/reviews`, { params }
-    ).pipe(this.destroyed$).subscribe({
+    ).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (res) => {
         this.reviews = res.reviews;
         this.reviewTotal = res.total;
@@ -208,7 +208,7 @@ export class SellerPublicProfileComponent implements OnInit {
   }
 
   private loadFollowStatus(sellerId: string): void {
-    this.followService.getStatus(sellerId).pipe(this.destroyed$).subscribe({
+    this.followService.getStatus(sellerId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (status) => { this.followStatus = status; },
       error: () => {}
     });
@@ -221,7 +221,7 @@ export class SellerPublicProfileComponent implements OnInit {
       ? this.followService.unfollow(this.profile._id)
       : this.followService.follow(this.profile._id);
 
-    action.pipe(this.destroyed$).subscribe({
+    action.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (status) => { this.followStatus = status; this.followLoading = false; },
       error: () => { this.followLoading = false; }
     });
@@ -230,7 +230,7 @@ export class SellerPublicProfileComponent implements OnInit {
   toggleMute(): void {
     if (!this.profile || this.followLoading) return;
     this.followLoading = true;
-    this.followService.setMuted(this.profile._id, !this.followStatus.muted).pipe(this.destroyed$).subscribe({
+    this.followService.setMuted(this.profile._id, !this.followStatus.muted).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (status) => { this.followStatus = status; this.followLoading = false; },
       error: () => { this.followLoading = false; }
     });
