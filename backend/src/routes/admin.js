@@ -12,7 +12,7 @@ const ModerationAuditLog = require('../models/ModerationAuditLog');
 const Bid = require('../models/Bid');
 const { sendEmail } = require('../services/emailService');
 const { renderEmailTemplate } = require('../services/templateEngine');
-const { notifyDisputeDecisionIssued, notifyDamageClaimResolved, emitNewNotificationToUser } = require('../services/notificationService');
+const { notifyDisputeDecisionIssued, notifyDamageClaimResolved, notifyContentRestrictionLifted, emitNewNotificationToUser } = require('../services/notificationService');
 const DamageClaim = require('../models/DamageClaim');
 const { applyDisputeAccountOutcome } = require('../services/accountStatusService');
 const { applyDisputeVerdictImpact } = require('../services/reputationService');
@@ -609,7 +609,7 @@ router.get('/customers', authenticateToken, requireAdmin, async (req, res) => {
 
     const [users, total] = await Promise.all([
       Customer.find(filter)
-        .select('firstName lastName email accountStatus emailVerified reputationScore createdAt lastLogin sellerClassification')
+        .select('firstName lastName email accountStatus emailVerified reputationScore createdAt lastLogin sellerClassification contentViolationCount contentRestrictedUntil')
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)
@@ -621,6 +621,44 @@ router.get('/customers', authenticateToken, requireAdmin, async (req, res) => {
   } catch (error) {
     console.error('Error fetching customers:', error);
     res.status(500).json({ error: 'Failed to fetch customers', message: error.message });
+  }
+});
+
+/**
+ * POST /api/admin/customers/:id/unlock-content-restriction
+ * Lifts an active content-policy (contact info / abusive language / image) restriction early.
+ * Does not reset contentViolationCount — repeat future violations still escalate the same ladder.
+ */
+router.post('/customers/:id/unlock-content-restriction', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    if (!isValidObjectId(req.params.id)) {
+      return res.status(400).json({ error: 'Invalid user id' });
+    }
+    const user = await Customer.findById(req.params.id);
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    const wasRestricted = !!(user.contentRestrictedUntil && user.contentRestrictedUntil > new Date());
+    if (!wasRestricted) {
+      return res.status(400).json({ error: 'Not currently restricted', message: 'This user does not have an active content restriction.' });
+    }
+
+    const previousRestrictedUntil = user.contentRestrictedUntil;
+    user.contentRestrictedUntil = null;
+    await user.save();
+
+    await appendModerationAudit({
+      subjectUserId: user._id,
+      actionType: 'content_restriction_unlocked',
+      performedByEmail: req.user.email || null,
+      metadata: { previousRestrictedUntil, violationCount: user.contentViolationCount }
+    });
+
+    await notifyContentRestrictionLifted({ userId: user._id }).catch(err => console.error('Notify restriction lifted:', err.message));
+
+    res.json({ success: true, message: 'Content restriction lifted.' });
+  } catch (error) {
+    console.error('Error unlocking content restriction:', error);
+    res.status(500).json({ error: 'Failed to unlock content restriction', message: error.message });
   }
 });
 

@@ -638,6 +638,18 @@ async function notifyAccountReactivated({ userId }) {
   });
 }
 
+/** Content-policy restriction lifted early by an admin */
+async function notifyContentRestrictionLifted({ userId }) {
+  return createNotification({
+    userId,
+    title: 'Restriction lifted',
+    message: 'Your content policy restriction has been lifted by our team. You can create and edit listings again.',
+    type: 'account',
+    link: '/dashboard/my-account',
+    referenceId: 'content-restriction-lifted'
+  });
+}
+
 /** Seller accepted payment — notify buyer */
 async function notifyBuyerSellerAccepted({ transactionId, listingTitle, buyerUserId }) {
   const link = transactionId
@@ -1178,6 +1190,7 @@ module.exports = {
   notifyAccountRestricted,
   notifyAccountSuspended,
   notifyAccountReactivated,
+  notifyContentRestrictionLifted,
   notifyAccountClosed,
   notifyLoginFromNewDevice,
   notifySellerWinnerSelected,

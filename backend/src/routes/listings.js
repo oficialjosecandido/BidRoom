@@ -15,7 +15,7 @@ const { notifyFollowersNewListing, notifyCategoryFollowersNewListing, notifySimi
 const { getReviewScoresForUser } = require('../services/reviewService');
 const { logAuctionCreated } = require('../services/bestOfferLogger');
 const Block = require('../models/Block');
-const { scanTexts, scanTextsForProhibitedContent, scanForAbusiveContent } = require('../utils/contentFilter');
+const { scanTexts, describeContactInfoTypes, scanTextsForProhibitedContent, scanForAbusiveContent } = require('../utils/contentFilter');
 const { appendModerationAudit } = require('../services/moderationAuditService');
 const { scanListingText } = require('../services/contentSafetyService');
 const { recordViolation } = require('../services/contentViolationService');
@@ -1335,9 +1335,15 @@ router.post('/', authenticateToken, requireActiveAccount, requireNoDisputeRestri
     if (contentScan.found) {
       const fullUser = await Customer.findById(user._id);
       const violation = await recordViolation(fullUser);
+      appendModerationAudit({
+        subjectUserId: user._id,
+        actionType: 'content_violation',
+        metadata: { context: 'listing_create', violationType: 'contact_info', types: contentScan.types, title: localizedText.title }
+      }).catch(() => {});
       return res.status(400).json({
         error: 'Content policy violation',
-        message: violation.message,
+        message: `${violation.message} We detected ${describeContactInfoTypes(contentScan.types)} in your listing title, description, or specifications — please remove it and try again.`,
+        detectedTypes: contentScan.types,
         violationAction: violation.action
       });
     }
@@ -1624,9 +1630,15 @@ router.patch('/:id', authenticateToken, requireActiveAccount, async (req, res) =
       if (contentScan.found) {
         const fullUser = await Customer.findById(user._id);
         const violation = await recordViolation(fullUser);
+        appendModerationAudit({
+          subjectUserId: user._id,
+          actionType: 'content_violation',
+          metadata: { context: 'listing_update', violationType: 'contact_info', types: contentScan.types, listingId: listing._id, title: updates.title || listing.title }
+        }).catch(() => {});
         return res.status(400).json({
           error: 'Content policy violation',
-          message: violation.message,
+          message: `${violation.message} We detected ${describeContactInfoTypes(contentScan.types)} in your listing title, description, or specifications — please remove it and try again.`,
+          detectedTypes: contentScan.types,
           violationAction: violation.action
         });
       }

@@ -273,6 +273,25 @@
   &.type-private { background: #f1f5f9; color: #475569; }
 }
 
+// ── Unlock action ─────────────────────────────────────────────────────────────
+
+.unlock-btn {
+  height: 30px;
+  padding: 0 14px;
+  background: #fff;
+  color: #166534;
+  border: 1px solid #bbf7d0;
+  border-radius: 7px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s, opacity 0.15s;
+
+  &:hover:not(:disabled) { background: #f0fdf4; }
+  &:disabled { opacity: 0.6; cursor: default; }
+}
+
 // ── Date ─────────────────────────────────────────────────────────────────────
 
 .date-cell {

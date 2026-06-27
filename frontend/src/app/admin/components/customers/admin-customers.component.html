@@ -73,11 +73,13 @@
                   <th scope="col">Customer</th>
                   <th scope="col">Email</th>
                   <th scope="col">Status</th>
+                  <th scope="col">Content restriction</th>
                   <th scope="col">Verified</th>
                   <th scope="col" class="num">Score</th>
                   <th scope="col">Type</th>
                   <th scope="col">Joined</th>
                   <th scope="col">Last login</th>
+                  <th scope="col">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -93,6 +95,16 @@
                         <span class="status-dot" aria-hidden="true"></span>
                         {{ statusLabel(c.accountStatus) }}
                       </span>
+                    </td>
+                    <td>
+                      @if (isContentRestricted(c)) {
+                        <span class="status-badge status-suspended" [title]="'Violations: ' + (c.contentViolationCount ?? 0)">
+                          <span class="status-dot" aria-hidden="true"></span>
+                          Until {{ formatDate(c.contentRestrictedUntil) }}
+                        </span>
+                      } @else {
+                        <span class="date-cell muted">—</span>
+                      }
                     </td>
                     <td>
                       @if (c.emailVerified) {
@@ -119,6 +131,18 @@
                     </td>
                     <td class="date-cell">{{ formatDate(c.createdAt) }}</td>
                     <td class="date-cell muted">{{ formatDate(c.lastLogin) }}</td>
+                    <td>
+                      @if (isContentRestricted(c)) {
+                        <button
+                          class="unlock-btn"
+                          type="button"
+                          [disabled]="unlockingId === c._id"
+                          (click)="unlockContentRestriction(c)"
+                        >
+                          {{ unlockingId === c._id ? 'Unlocking…' : 'Unlock' }}
+                        </button>
+                      }
+                    </td>
                   </tr>
                 }
               </tbody>

@@ -1,5 +1,7 @@
 const admin = require('firebase-admin');
 const Customer = require('../models/Customer');
+const ModerationAuditLog = require('../models/ModerationAuditLog');
+const { describeContactInfoTypes } = require('../utils/contentFilter');
 
 const AUTH_VERIFY_TIMEOUT_MS = 15000;
 
@@ -144,7 +146,7 @@ const requireActiveAccount = async (req, res, next) => {
     return res.status(401).json({ error: 'Unauthorized', message: 'Authentication required.' });
   }
   try {
-    const dbUser = await Customer.findOne({ uid: req.user.uid }).select('accountStatus contentRestrictedUntil').lean();
+    const dbUser = await Customer.findOne({ uid: req.user.uid }).select('_id accountStatus contentRestrictedUntil').lean();
     if (!dbUser) {
       // No DB record yet — user is authenticated but hasn't been persisted.
       // They cannot be suspended, so let the route handler proceed (it will create the record).
@@ -165,9 +167,17 @@ const requireActiveAccount = async (req, res, next) => {
     }
     if (dbUser.contentRestrictedUntil && dbUser.contentRestrictedUntil > new Date()) {
       const until = dbUser.contentRestrictedUntil.toISOString().slice(0, 10);
+      const lastViolation = await ModerationAuditLog.findOne({
+        subjectUserId: dbUser._id,
+        actionType: 'content_violation'
+      }).sort({ createdAt: -1 }).select('metadata').lean();
+      const types = lastViolation?.metadata?.types;
+      const reasonStr = types?.length
+        ? ` Your last flagged listing ("${lastViolation.metadata.title || 'untitled'}") contained ${describeContactInfoTypes(types)}.`
+        : '';
       return res.status(403).json({
         error: 'Account temporarily restricted',
-        message: `Your account has been temporarily restricted until ${until} due to violations of our contact information policy. You cannot create or edit listings during this period.`
+        message: `Your account has been temporarily restricted until ${until} due to violations of our contact information policy. You cannot create or edit listings during this period.${reasonStr} If you believe this is a mistake, please contact support.`
       });
     }
     next();

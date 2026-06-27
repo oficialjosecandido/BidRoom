@@ -50,6 +50,8 @@ export interface AdminCustomer {
   sellerClassification: 'private' | 'professional';
   createdAt: string;
   lastLogin: string | null;
+  contentViolationCount?: number;
+  contentRestrictedUntil?: string | null;
 }
 
 export interface AdminCustomersResponse {
@@ -193,6 +195,13 @@ export class AdminService {
     if (params?.q) httpParams = httpParams.set('q', params.q);
     if (params?.status && params.status !== 'all') httpParams = httpParams.set('status', params.status);
     return this.http.get<AdminCustomersResponse>(`${this.apiUrl}/customers`, { params: httpParams });
+  }
+
+  unlockContentRestriction(customerId: string): Observable<{ success: boolean; message: string }> {
+    return this.http.post<{ success: boolean; message: string }>(
+      `${this.apiUrl}/customers/${customerId}/unlock-content-restriction`,
+      {}
+    );
   }
 
   getTransactions(params?: AdminTransactionsQueryParams): Observable<AdminTransactionsResponse> {

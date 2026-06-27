@@ -3,7 +3,7 @@
  * Used to prevent sellers from bypassing the platform by sharing direct contact details.
  */
 
-const PHONE_RE = /(\+?\d[\s\-.]?){7,15}\d/g;
+const PHONE_RE = /(\+?\d[\s\-.]?){8,15}\d/g;
 
 const EMAIL_RE = /[a-zA-Z0-9._%+\-]+\s*@\s*[a-zA-Z0-9.\-]+\s*\.\s*[a-zA-Z]{2,}/g;
 
@@ -32,9 +32,10 @@ function scanForContactInfo(text) {
   if (URL_RE.test(text)) types.add('url');
   URL_RE.lastIndex = 0;
 
-  // Phone: only flag if it looks intentional (7+ digits, possibly spaced/dashed)
+  // Phone: only flag if it looks intentional (9+ digits, possibly spaced/dashed).
+  // Below 9 digits this catches too many false positives (reference numbers, year ranges like "1966-1991").
   const phoneMatches = text.match(PHONE_RE);
-  if (phoneMatches && phoneMatches.some(m => m.replace(/\D/g, '').length >= 7)) {
+  if (phoneMatches && phoneMatches.some(m => m.replace(/\D/g, '').length >= 9)) {
     types.add('phone');
   }
 
@@ -53,6 +54,21 @@ function scanTexts(texts) {
     result.types.forEach(t => allTypes.add(t));
   }
   return { found: allTypes.size > 0, types: [...allTypes] };
+}
+
+const CONTACT_INFO_TYPE_LABELS = { phone: 'a phone number', email: 'an email address', url: 'a link to an external website' };
+
+/**
+ * Turns ['phone', 'email'] into "a phone number and an email address" so the
+ * seller knows exactly what to remove instead of just "contact info".
+ * @param {string[]} types
+ * @returns {string}
+ */
+function describeContactInfoTypes(types) {
+  const labels = (types || []).map(t => CONTACT_INFO_TYPE_LABELS[t] || t);
+  if (labels.length === 0) return 'contact information';
+  if (labels.length === 1) return labels[0];
+  return `${labels.slice(0, -1).join(', ')} and ${labels[labels.length - 1]}`;
 }
 
 // EN + PT profanity (derivatives via \w* where applicable, explicit forms elsewhere)
@@ -194,6 +210,7 @@ function scanTextsForProhibitedContent(texts) {
 module.exports = {
   scanForContactInfo,
   scanTexts,
+  describeContactInfoTypes,
   scanForAbusiveContent,
   normalizeText,
   getAbuseSeverity,

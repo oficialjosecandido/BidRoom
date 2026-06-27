@@ -25,6 +25,7 @@ export class AdminCustomersComponent implements OnInit {
 
   searchQuery = '';
   selectedStatus = 'all';
+  unlockingId: string | null = null;
 
   statuses = [
     { value: 'all',       label: 'All statuses' },
@@ -98,5 +99,27 @@ export class AdminCustomersComponent implements OnInit {
   formatDate(d: string | null | undefined): string {
     if (!d) return '—';
     return new Date(d).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+  }
+
+  isContentRestricted(c: AdminCustomer): boolean {
+    return !!c.contentRestrictedUntil && new Date(c.contentRestrictedUntil) > new Date();
+  }
+
+  unlockContentRestriction(c: AdminCustomer): void {
+    if (this.unlockingId) return;
+    if (!confirm(`Lift the content restriction for ${c.firstName} ${c.lastName}? They will be able to create and edit listings again immediately.`)) {
+      return;
+    }
+    this.unlockingId = c._id;
+    this.adminService.unlockContentRestriction(c._id).subscribe({
+      next: () => {
+        c.contentRestrictedUntil = null;
+        this.unlockingId = null;
+      },
+      error: (err) => {
+        alert(err?.error?.message || 'Failed to lift the content restriction.');
+        this.unlockingId = null;
+      }
+    });
   }
 }
