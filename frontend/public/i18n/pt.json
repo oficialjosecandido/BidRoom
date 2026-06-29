@@ -641,6 +641,18 @@
     "draftSaving": "A guardar rascunho…",
     "draftSaved": "Rascunho guardado",
     "draftError": "Não foi possível guardar o rascunho. Verifique a ligação e tente novamente.",
+    "contactWarning": {
+      "title": "Atenção: informação de contacto detetada",
+      "phone": "Parece que o seu anúncio contém um número de telefone. Contactos diretos não são permitidos nos anúncios — toda a comunicação acontece de forma segura na plataforma. Remova o número antes de publicar.",
+      "email": "Parece que o seu anúncio contém um endereço de email. Contactos diretos não são permitidos para proteger compradores e vendedores. Remova o email antes de publicar.",
+      "url": "Parece que o seu anúncio contém um link externo. Links para fora da plataforma não são permitidos nos anúncios. Remova o link antes de publicar.",
+      "phoneEmail": "O seu anúncio parece conter contactos diretos (número de telefone e/ou email). Estes não são permitidos — a comunicação segura acontece na plataforma. Remova-os antes de publicar.",
+      "generic": "O seu anúncio parece conter informações de contacto, que não são permitidas. Reveja o texto antes de publicar.",
+      "dialogTitle": "Informação de contacto detetada",
+      "dialogSub": "Se publicar assim, o anúncio será bloqueado e poderá receber um aviso na sua conta.",
+      "dialogReview": "Rever anúncio",
+      "dialogPublish": "Publicar mesmo assim"
+    },
     "errorUploadFailed": "Falha ao carregar imagens. Tente novamente.",
     "errorStep2Description": "Por favor, complete todos os campos obrigatórios. A descrição deve ter pelo menos 50 caracteres.",
     "errors": {

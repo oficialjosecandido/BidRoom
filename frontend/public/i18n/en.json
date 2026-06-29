@@ -641,6 +641,18 @@
     "draftSaving": "Saving draft…",
     "draftSaved": "Draft saved",
     "draftError": "Could not save draft. Check your connection and try again.",
+    "contactWarning": {
+      "title": "Contact information detected",
+      "phone": "Your listing appears to contain a phone number. Direct contact details are not allowed in listings — all communication happens securely through the platform. Please remove it before publishing.",
+      "email": "Your listing appears to contain an email address. Direct contact details are not allowed in listings to protect buyers and sellers. Please remove it before publishing.",
+      "url": "Your listing appears to contain an external link. Links outside the platform are not allowed in listings. Please remove it before publishing.",
+      "phoneEmail": "Your listing appears to contain direct contact details (phone number and/or email). These are not allowed — secure communication happens through the platform. Please remove them before publishing.",
+      "generic": "Your listing appears to contain contact information, which is not allowed. Please review your text before publishing.",
+      "dialogTitle": "Contact information detected",
+      "dialogSub": "If you publish as-is, your listing will be blocked and your account may receive a warning.",
+      "dialogReview": "Review listing",
+      "dialogPublish": "Publish anyway"
+    },
     "errorUploadFailed": "Failed to upload images. Please try again.",
     "errorStep2Description": "Please complete all required fields. Description must be at least 50 characters.",
     "errors": {

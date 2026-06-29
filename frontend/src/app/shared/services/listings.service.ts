@@ -305,6 +305,18 @@ export class ListingsService {
     return this.http.post<Listing & { contentWarning?: { severity: string; message: string } }>(this.apiUrl, listingData);
   }
 
+  validateContent(payload: { title: string; description: string }): Observable<{
+    hasContactInfo: boolean;
+    types: string[];
+    fields: { title: boolean; description: boolean };
+  }> {
+    return this.http.post<{
+      hasContactInfo: boolean;
+      types: string[];
+      fields: { title: boolean; description: boolean };
+    }>(`${this.apiUrl}/validate-content`, payload);
+  }
+
   /** In-progress add-listing snapshot for the current seller (or null). */
   getListingDraft(): Observable<{ draft: { payload: Record<string, unknown>; updatedAt: string } | null }> {
     return this.http.get<{ draft: { payload: Record<string, unknown>; updatedAt: string } | null }>(

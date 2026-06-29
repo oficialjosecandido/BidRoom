@@ -15,7 +15,7 @@ const { notifyFollowersNewListing, notifyCategoryFollowersNewListing, notifySimi
 const { getReviewScoresForUser } = require('../services/reviewService');
 const { logAuctionCreated } = require('../services/bestOfferLogger');
 const Block = require('../models/Block');
-const { scanTexts, describeContactInfoTypes, scanTextsForProhibitedContent, scanForAbusiveContent } = require('../utils/contentFilter');
+const { scanTexts, scanForContactInfo, describeContactInfoTypes, scanTextsForProhibitedContent, scanForAbusiveContent } = require('../utils/contentFilter');
 const { appendModerationAudit } = require('../services/moderationAuditService');
 const { scanListingText } = require('../services/contentSafetyService');
 const { recordViolation } = require('../services/contentViolationService');
@@ -617,6 +617,35 @@ router.get('/stats/overview', async (req, res) => {
       error: 'Failed to fetch stats',
       message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
     });
+  }
+});
+
+// ─── Real-time content validation (no violation recorded) ────────────────────
+// Must be registered BEFORE `/:id` so the path is not captured as an id.
+
+/**
+ * POST /api/listings/validate-content
+ *
+ * Advisory-only check: returns whether the submitted text contains contact
+ * info, WITHOUT recording a violation or restricting the account. Used by the
+ * add-listing form to warn sellers while they type.
+ *
+ * The enforcing check (which DOES penalise) stays on the publish endpoint.
+ */
+router.post('/validate-content', authenticateToken, async (req, res) => {
+  try {
+    const { title, description } = req.body;
+    const titleScan = scanForContactInfo(title || '');
+    const descScan  = scanForContactInfo(description || '');
+    const allTypes  = [...new Set([...titleScan.types, ...descScan.types])];
+    res.json({
+      hasContactInfo: titleScan.found || descScan.found,
+      types: allTypes,
+      fields: { title: titleScan.found, description: descScan.found },
+    });
+  } catch (err) {
+    // On error, don't block the user — let the submit endpoint decide
+    res.json({ hasContactInfo: false, types: [], fields: {} });
   }
 });
 

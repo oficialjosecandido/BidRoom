@@ -269,6 +269,18 @@
     "draftSaving": "Guardando borrador…",
     "draftSaved": "Borrador guardado",
     "draftError": "No se pudo guardar el borrador. Comprueba la conexión e inténtalo de nuevo.",
+    "contactWarning": {
+      "title": "Información de contacto detectada",
+      "phone": "Tu anuncio parece contener un número de teléfono. Los datos de contacto directos no están permitidos en los anuncios — toda la comunicación ocurre de forma segura en la plataforma. Elimínalo antes de publicar.",
+      "email": "Tu anuncio parece contener una dirección de email. Los contactos directos no están permitidos para proteger a compradores y vendedores. Elimínalo antes de publicar.",
+      "url": "Tu anuncio parece contener un enlace externo. Los enlaces fuera de la plataforma no están permitidos en los anuncios. Elimínalo antes de publicar.",
+      "phoneEmail": "Tu anuncio parece contener datos de contacto directos (teléfono y/o email). No están permitidos — la comunicación segura ocurre en la plataforma. Elimínalos antes de publicar.",
+      "generic": "Tu anuncio parece contener información de contacto, que no está permitida. Revisa el texto antes de publicar.",
+      "dialogTitle": "Información de contacto detectada",
+      "dialogSub": "Si publicas así, el anuncio será bloqueado y tu cuenta podría recibir un aviso.",
+      "dialogReview": "Revisar anuncio",
+      "dialogPublish": "Publicar de todos modos"
+    },
     "errorUploadFailed": "Error al subir imágenes. Inténtalo de nuevo.",
     "errorStep2Description": "Por favor completa todos los campos. La descripción debe tener al menos 50 caracteres.",
     "reservePrice": "Precio de Reserva",

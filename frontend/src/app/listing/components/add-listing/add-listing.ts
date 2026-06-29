@@ -4,7 +4,7 @@ import { AbstractControl, FormBuilder, FormGroup, ValidationErrors, ValidatorFn,
 import { Router, RouterLink } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom, from, merge, Subject, Subscription } from 'rxjs';
-import { debounceTime, filter, switchMap, tap } from 'rxjs/operators';
+import { debounceTime, distinctUntilChanged, filter, switchMap, tap } from 'rxjs/operators';
 import Swal from 'sweetalert2';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { ListingsService } from '../../../shared/services/listings.service';
@@ -83,6 +83,9 @@ export class AddListing implements OnInit, OnDestroy {
 
   private readonly mediaChange$ = new Subject<void>();
   private draftAutosaveSub?: Subscription;
+  private contentCheckSub?: Subscription;
+  private readonly contentCheck$ = new Subject<{ title: string; description: string }>();
+  contactWarning: { show: boolean; types: string[] } = { show: false, types: [] };
   private restoringDraft = false;
   private readonly urlByFileKey = new Map<string, string>();
   draftSaveStatus: 'idle' | 'saving' | 'saved' | 'error' = 'idle';
@@ -427,7 +430,9 @@ export class AddListing implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.draftAutosaveSub?.unsubscribe();
+    this.contentCheckSub?.unsubscribe();
     this.mediaChange$.complete();
+    this.contentCheck$.complete();
   }
 
   loadCustomerInfo(): void {
@@ -581,8 +586,53 @@ export class AddListing implements OnInit, OnDestroy {
       this.listingForm.patchValue({ title: t, description: d }, { emitEvent: false });
     };
     ['titlePt', 'titleEn', 'descriptionPt', 'descriptionEn'].forEach(ctrl => {
-      this.listingForm.get(ctrl)?.valueChanges.subscribe(() => syncPrimary());
+      this.listingForm.get(ctrl)?.valueChanges.subscribe(() => {
+        syncPrimary();
+        this.triggerContentCheck();
+      });
     });
+
+    // Real-time contact-info check (advisory only — no violation recorded here).
+    this.contentCheckSub = this.contentCheck$.pipe(
+      debounceTime(600),
+      distinctUntilChanged((a, b) => a.title === b.title && a.description === b.description),
+      switchMap(payload => this.listingsService.validateContent(payload))
+    ).subscribe({
+      next: result => {
+        this.contactWarning = { show: result.hasContactInfo, types: result.types };
+      },
+      error: () => {
+        this.contactWarning = { show: false, types: [] };
+      }
+    });
+  }
+
+  private triggerContentCheck(): void {
+    const title = [
+      this.listingForm.get('titlePt')?.value ?? '',
+      this.listingForm.get('titleEn')?.value ?? '',
+    ].join(' ').trim();
+    const description = [
+      this.listingForm.get('descriptionPt')?.value ?? '',
+      this.listingForm.get('descriptionEn')?.value ?? '',
+    ].join(' ').trim();
+    if (!title && !description) {
+      this.contactWarning = { show: false, types: [] };
+      return;
+    }
+    this.contentCheck$.next({ title, description });
+  }
+
+  getContactWarningMessage(): string {
+    const types = this.contactWarning.types;
+    const hasPhone = types.includes('phone');
+    const hasEmail = types.includes('email');
+    const hasUrl   = types.includes('url');
+    if (hasPhone && hasEmail) return this.translate.instant('addListing.contactWarning.phoneEmail');
+    if (hasPhone) return this.translate.instant('addListing.contactWarning.phone');
+    if (hasEmail) return this.translate.instant('addListing.contactWarning.email');
+    if (hasUrl)   return this.translate.instant('addListing.contactWarning.url');
+    return this.translate.instant('addListing.contactWarning.generic');
   }
 
   private fileKey(file: File): string {
@@ -1077,6 +1127,27 @@ export class AddListing implements OnInit, OnDestroy {
       }
       this.errorMessage = this.buildPublishValidationMessage();
       return;
+    }
+
+    // If the real-time scanner still shows contact info, give one last chance to review
+    // before hitting the endpoint that records a violation.
+    if (this.contactWarning.show) {
+      const result = await Swal.fire({
+        icon: 'warning',
+        title: this.translate.instant('addListing.contactWarning.dialogTitle'),
+        html: `<p style="font-size:0.92em;color:#374151">${this.getContactWarningMessage()}</p>
+               <p style="font-size:0.82em;margin-top:0.75em;color:#6b7280">
+                 ${this.translate.instant('addListing.contactWarning.dialogSub')}
+               </p>`,
+        showCancelButton: true,
+        confirmButtonText: this.translate.instant('addListing.contactWarning.dialogReview'),
+        cancelButtonText:  this.translate.instant('addListing.contactWarning.dialogPublish'),
+        confirmButtonColor: '#2563eb',
+        cancelButtonColor:  '#dc2626',
+        reverseButtons: true,
+      });
+      if (result.isConfirmed) return; // user chose to review — no penalty
+      // user chose "Publish anyway" — fall through and let the backend decide
     }
 
     const price = parseFloat(this.listingForm.get('startingBid')?.value || '0');

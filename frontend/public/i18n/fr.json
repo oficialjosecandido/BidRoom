@@ -269,6 +269,18 @@
     "draftSaving": "Enregistrement du brouillon…",
     "draftSaved": "Brouillon enregistré",
     "draftError": "Impossible d’enregistrer le brouillon. Vérifiez la connexion et réessayez.",
+    "contactWarning": {
+      "title": "Informations de contact détectées",
+      "phone": "Votre annonce semble contenir un numéro de téléphone. Les coordonnées directes ne sont pas autorisées dans les annonces — toutes les communications se font en sécurité sur la plateforme. Retirez-le avant de publier.",
+      "email": "Votre annonce semble contenir une adresse email. Les contacts directs ne sont pas autorisés pour protéger acheteurs et vendeurs. Retirez-la avant de publier.",
+      "url": "Votre annonce semble contenir un lien externe. Les liens vers l’extérieur de la plateforme ne sont pas autorisés. Retirez-le avant de publier.",
+      "phoneEmail": "Votre annonce semble contenir des coordonnées directes (téléphone et/ou email). Celles-ci ne sont pas autorisées — les communications sécurisées se font sur la plateforme. Retirez-les avant de publier.",
+      "generic": "Votre annonce semble contenir des informations de contact, qui ne sont pas autorisées. Vérifiez le texte avant de publier.",
+      "dialogTitle": "Informations de contact détectées",
+      "dialogSub": "Si vous publiez ainsi, l’annonce sera bloquée et votre compte pourrait recevoir un avertissement.",
+      "dialogReview": "Réviser l’annonce",
+      "dialogPublish": "Publier quand même"
+    },
     "errorUploadFailed": "Échec du téléchargement des images. Veuillez réessayer.",
     "errorStep2Description": "Veuillez compléter tous les champs obligatoires. La description doit comporter au moins 50 caractères.",
     "reservePrice": "Prix de Réserve",
