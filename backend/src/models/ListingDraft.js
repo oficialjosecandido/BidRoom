@@ -15,6 +15,11 @@ const listingDraftSchema = new mongoose.Schema({
   payload: {
     type: mongoose.Schema.Types.Mixed,
     default: {}
+  },
+  /** Prevents duplicate 24h reminder emails. Reset to false when seller edits the draft. */
+  draftReminderSent: {
+    type: Boolean,
+    default: false
   }
 }, {
   timestamps: true

@@ -19,6 +19,7 @@
       "signIn": "Sign In",
       "startBidding": "Start Bidding",
       "publish": "Publish",
+      "resume": "Resume listing",
       "notifications": "Notifications",
       "notificationsUnread": "{{count}} unread notifications"
     },

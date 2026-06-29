@@ -110,12 +110,21 @@
 
     @if (isAuthenticated$ | async) {
       <!-- Authenticated -->
-      <button class="btn-publish" (click)="navigateToAddListing()">
-        <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
-          <path d="M6.5 1v11M1 6.5h11"/>
-        </svg>
-        {{ 'header.actions.publish' | translate }}
-      </button>
+      @if (hasDraft) {
+        <button class="btn-publish btn-publish--resume" (click)="navigateToAddListing()" [title]="draftTitle || ''">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.7"/>
+          </svg>
+          {{ 'header.actions.resume' | translate }}
+        </button>
+      } @else {
+        <button class="btn-publish" (click)="navigateToAddListing()">
+          <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+            <path d="M6.5 1v11M1 6.5h11"/>
+          </svg>
+          {{ 'header.actions.publish' | translate }}
+        </button>
+      }
       <a
         routerLink="/dashboard/notifications"
         class="icon-btn bell-btn"
@@ -156,7 +165,9 @@
     <button class="nm" (click)="navigateToHowItWorks()">{{ 'header.nav.howItWorks' | translate }}</button>
     <div class="nm-divider"></div>
     @if (isAuthenticated$ | async) {
-      <button class="nm" (click)="navigateToAddListing()">+ {{ 'header.actions.publish' | translate }}</button>
+      <button class="nm" (click)="navigateToAddListing()">
+        {{ hasDraft ? ('header.actions.resume' | translate) : ('+ ' + ('header.actions.publish' | translate)) }}
+      </button>
       <button class="nm" (click)="navigateToDashboard()">Dashboard</button>
     } @else {
       <button class="nm-action nm-action--secondary" (click)="navigateToLogin()">{{ 'header.actions.signIn' | translate }}</button>

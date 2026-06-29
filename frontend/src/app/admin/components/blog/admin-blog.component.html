@@ -60,6 +60,16 @@
                       </td>
                       <td class="date-cell">{{ formatDate(post.publishedAt) }}</td>
                       <td class="actions-cell">
+                        @if (post.status === 'draft') {
+                          <button
+                            type="button"
+                            class="action-publish"
+                            [disabled]="publishingId === post._id"
+                            (click)="publishPost(post, $event)"
+                            title="Publicar">
+                            {{ publishingId === post._id ? '…' : 'Publicar' }}
+                          </button>
+                        }
                         <a class="action-link" [routerLink]="['/nexus/blog', post._id, 'edit']" title="Editar">Editar</a>
                         <button
                           type="button"

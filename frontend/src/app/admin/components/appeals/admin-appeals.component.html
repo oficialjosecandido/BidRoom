@@ -1,0 +1,96 @@
+<div class="admin-layout">
+  <app-admin-sidebar />
+
+  <div class="admin-content">
+    <div class="admin-appeals">
+
+      <header class="page-header">
+        <div>
+          <p class="nexus-crumb">Nexus · Appeals</p>
+          <h1 class="page-title">Account Appeals</h1>
+          <p class="page-lead">Review restriction appeals submitted by users.</p>
+        </div>
+      </header>
+
+      <div class="filters-bar">
+        <div class="filter-group">
+          <label for="status">Status</label>
+          <select id="status" class="filter-select" [(ngModel)]="selectedStatus" (change)="load()">
+            @for (s of statuses; track s.value) {
+              <option [value]="s.value">{{ s.label }}</option>
+            }
+          </select>
+        </div>
+        <span class="results-count"><strong>{{ appeals.length }}</strong> appeal{{ appeals.length === 1 ? '' : 's' }}</span>
+      </div>
+
+      @if (isLoading) {
+        <div class="loading-state"><div class="spinner"></div><p>Loading…</p></div>
+      } @else if (error) {
+        <div class="error-state">
+          <p class="error-message">{{ error }}</p>
+          <button class="retry-btn" type="button" (click)="load()">Retry</button>
+        </div>
+      } @else if (appeals.length === 0) {
+        <div class="empty-state">
+          <p class="empty-message">No appeals found</p>
+          <p class="empty-description">Appeals submitted by users will appear here.</p>
+        </div>
+      } @else {
+        <div class="appeals-list">
+          @for (appeal of appeals; track appeal._id) {
+            <div class="appeal-card">
+              <div class="appeal-card__header">
+                <div class="appeal-user">
+                  <strong>{{ appeal.user.firstName }} {{ appeal.user.lastName }}</strong>
+                  <span class="email-muted">{{ appeal.user.email }}</span>
+                </div>
+                <div class="appeal-meta">
+                  <span class="badge" [class]="statusClass(appeal.status)">{{ appeal.status }}</span>
+                  <span class="date-muted">{{ formatDate(appeal.createdAt) }}</span>
+                </div>
+              </div>
+
+              <div class="appeal-card__body">
+                <div class="restriction-info">
+                  <span class="label">Type:</span> {{ appeal.restrictionType }}
+                  @if (appeal.restrictedUntil) {
+                    · <span class="label">Until:</span> {{ formatDate(appeal.restrictedUntil) }}
+                  }
+                  · <span class="label">Violations:</span> {{ appeal.user.contentViolationCount ?? 0 }}
+                </div>
+                <blockquote class="appeal-message">{{ appeal.message }}</blockquote>
+              </div>
+
+              @if (appeal.status === 'pending') {
+                @if (reviewingId === appeal._id) {
+                  <div class="appeal-card__review">
+                    <label class="review-label">Optional note to user</label>
+                    <textarea class="review-textarea" rows="2" maxlength="500" [(ngModel)]="adminResponseText"
+                      placeholder="Explain the decision (optional)…"></textarea>
+                    @if (reviewError) { <p class="review-error">{{ reviewError }}</p> }
+                    <div class="review-actions">
+                      <button class="btn-approve" type="button" (click)="decide(appeal._id, 'approved')">✓ Approve — lift restriction</button>
+                      <button class="btn-reject"  type="button" (click)="decide(appeal._id, 'rejected')">✕ Reject</button>
+                      <button class="btn-cancel"  type="button" (click)="cancelReview()">Cancel</button>
+                    </div>
+                  </div>
+                } @else {
+                  <div class="appeal-card__footer">
+                    <button class="btn-review" type="button" (click)="startReview(appeal)">Review appeal</button>
+                  </div>
+                }
+              } @else if (appeal.adminResponse) {
+                <div class="appeal-card__footer resolved">
+                  <span class="label">Admin note:</span> {{ appeal.adminResponse }}
+                  <span class="date-muted"> · {{ formatDate(appeal.reviewedAt) }} by {{ appeal.reviewedByEmail }}</span>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      }
+
+    </div>
+  </div>
+</div>

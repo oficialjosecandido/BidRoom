@@ -14,6 +14,7 @@ export interface CustomerUser {
   emailVerified: boolean;
   isActive: boolean;
   accountStatus?: 'active' | 'suspended' | 'closed';
+  contentRestrictedUntil?: string | null;
   hasDeposit?: boolean;
   depositAmount?: number;
   lastLogin?: string;
@@ -130,4 +131,38 @@ export class CustomerService {
       message: string;
     }>(`${this.apiUrl}/seller-compliance`, payload);
   }
+
+  // ── Appeals ──────────────────────────────────────────────────────────────────
+
+  private get appealsUrl(): string {
+    return `${API_CONFIG.getApiUrl()}/appeals`;
+  }
+
+  submitAppeal(message: string): Observable<{ success: boolean; appeal: AppealRecord }> {
+    return this.http.post<{ success: boolean; appeal: AppealRecord }>(this.appealsUrl, { message });
+  }
+
+  getMyAppeal(): Observable<{
+    appeal: AppealRecord | null;
+    isRestricted: boolean;
+    contentRestrictedUntil: string | null;
+    accountStatus: string;
+  }> {
+    return this.http.get<{
+      appeal: AppealRecord | null;
+      isRestricted: boolean;
+      contentRestrictedUntil: string | null;
+      accountStatus: string;
+    }>(`${this.appealsUrl}/mine`);
+  }
+}
+
+export interface AppealRecord {
+  _id: string;
+  restrictionType: 'content_restriction' | 'suspended' | 'other';
+  restrictedUntil: string | null;
+  message: string;
+  status: 'pending' | 'approved' | 'rejected';
+  adminResponse: string;
+  createdAt: string;
 }

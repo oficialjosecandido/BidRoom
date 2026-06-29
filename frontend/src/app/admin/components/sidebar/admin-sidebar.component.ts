@@ -26,6 +26,7 @@ export class AdminSidebarComponent {
     { label: 'Customers', route: '/nexus/customers', icon: '👥' },
     { label: 'Transactions', route: '/nexus/transactions', icon: '💳' },
     { label: 'Disputes', route: '/nexus/disputes', icon: '⚖️' },
+    { label: 'Appeals', route: '/nexus/appeals', icon: '🔔' },
     { label: 'Reports', route: '/nexus/reports', icon: '🚩' },
     { label: 'Suporte', route: '/nexus/support', icon: '💬' },
     { label: 'Blog', route: '/nexus/blog', icon: '📝' },

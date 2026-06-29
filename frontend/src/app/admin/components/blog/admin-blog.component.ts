@@ -18,6 +18,7 @@ export class AdminBlogComponent implements OnInit {
   isLoading = false;
   error: string | null = null;
   deletingId: string | null = null;
+  publishingId: string | null = null;
 
   private readonly categoryLabelMap: Record<string, string> = {
     relogios: 'Relógios',
@@ -54,6 +55,24 @@ export class AdminBlogComponent implements OnInit {
     if (!dateString) return '—';
     return new Date(dateString).toLocaleString(undefined, {
       year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+    });
+  }
+
+  publishPost(post: BlogPostAdmin, event: Event): void {
+    event.stopPropagation();
+    if (this.publishingId) return;
+    if (!confirm(`Publicar "${post.title}"? Ficará visível em /blog imediatamente.`)) return;
+    this.publishingId = post._id;
+    this.blogService.updatePost(post._id, { status: 'published' }).subscribe({
+      next: ({ post: updated }) => {
+        const idx = this.posts.findIndex(p => p._id === updated._id);
+        if (idx !== -1) this.posts[idx] = { ...this.posts[idx], status: 'published', publishedAt: updated.publishedAt };
+        this.publishingId = null;
+      },
+      error: (err) => {
+        this.publishingId = null;
+        alert(err?.error?.error || 'Failed to publish post.');
+      }
     });
   }
 

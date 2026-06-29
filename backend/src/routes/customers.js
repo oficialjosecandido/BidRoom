@@ -85,6 +85,7 @@ router.get('/profile', authenticateToken, async (req, res) => {
         emailVerified: !!emailVerified,
         isActive: customer.accountStatus !== 'suspended' && customer.accountStatus !== 'closed',
         accountStatus: customer.accountStatus || 'active',
+        contentRestrictedUntil: customer.contentRestrictedUntil || null,
         lastLogin: customer.lastLogin,
         createdAt: customer.createdAt
       },

@@ -1,4 +1,59 @@
 <div class="my-account-container">
+
+  @if (isContentRestricted || accountStatus === 'suspended') {
+    <div class="restriction-banner">
+      <div class="restriction-banner__icon" aria-hidden="true">🔒</div>
+      <div class="restriction-banner__body">
+        <strong>
+          @if (accountStatus === 'suspended') {
+            A sua conta está temporariamente suspensa
+          } @else {
+            A sua conta está temporariamente restrita até {{ restrictedUntilDate }}
+          }
+        </strong>
+        <p>Não pode criar ou editar anúncios durante este período. Se acredita que se trata de um engano, pode pedir revisão abaixo.</p>
+
+        @if (existingAppeal && existingAppeal.status === 'pending') {
+          <div class="appeal-status appeal-status--pending">
+            ⏳ O seu pedido de revisão foi recebido e está a ser analisado. Responderemos em breve.
+          </div>
+        } @else if (existingAppeal && existingAppeal.status === 'approved') {
+          <div class="appeal-status appeal-status--approved">
+            ✅ O seu pedido foi aprovado — a restrição foi levantada. Recarregue a página.
+          </div>
+        } @else if (existingAppeal && existingAppeal.status === 'rejected') {
+          <div class="appeal-status appeal-status--rejected">
+            ❌ O seu pedido foi analisado e a restrição mantém-se.
+            @if (existingAppeal.adminResponse) { <span> Nota: {{ existingAppeal.adminResponse }}</span> }
+          </div>
+        } @else if (!appealSuccess) {
+          <div class="appeal-form">
+            <label class="appeal-label">Explique a situação (obrigatório)</label>
+            <textarea
+              class="appeal-textarea"
+              rows="4"
+              maxlength="2000"
+              placeholder="Descreva brevemente o que aconteceu e porque acredita que a restrição foi aplicada por engano…"
+              [(ngModel)]="appealMessage">
+            </textarea>
+            @if (appealError) { <p class="appeal-error">{{ appealError }}</p> }
+            <button
+              class="appeal-btn"
+              type="button"
+              [disabled]="appealSubmitting || appealMessage.trim().length < 10"
+              (click)="submitAppeal()">
+              {{ appealSubmitting ? 'A enviar…' : 'Pedir revisão da decisão' }}
+            </button>
+          </div>
+        } @else {
+          <div class="appeal-status appeal-status--pending">
+            ⏳ Pedido enviado. A nossa equipa irá analisá-lo em breve.
+          </div>
+        }
+      </div>
+    </div>
+  }
+
   <div class="page-header">
     <h1 class="page-title">{{ 'dashboard.myAccount.title' | translate }}</h1>
     <p class="page-subtitle">{{ 'dashboard.myAccount.subtitle' | translate }}</p>

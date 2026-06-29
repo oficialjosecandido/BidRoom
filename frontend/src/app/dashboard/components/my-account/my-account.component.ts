@@ -5,7 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { AuthService, AppUser } from '../../../auth/services/auth.service';
-import { CustomerService } from '../../../shared/services/customer.service';
+import { CustomerService, AppealRecord } from '../../../shared/services/customer.service';
 import { StripeConnectService, ConnectAccountStatus, OnboardingFormData } from '../../../shared/services/stripe-connect.service';
 import { KycService, KycStatus, KycStatusResponse } from '../../../shared/services/kyc.service';
 import { Observable } from 'rxjs';
@@ -27,6 +27,15 @@ export class MyAccountComponent implements OnInit {
   private destroyRef = inject(DestroyRef);
 
   currentUser$: Observable<AppUser | null>;
+
+  // Restriction / appeal state
+  contentRestrictedUntil: string | null = null;
+  accountStatus = 'active';
+  existingAppeal: AppealRecord | null = null;
+  appealMessage = '';
+  appealSubmitting = false;
+  appealError = '';
+  appealSuccess = false;
 
   kycStatusData: KycStatusResponse | null = null;
   kycLoading = false;
@@ -89,7 +98,18 @@ export class MyAccountComponent implements OnInit {
         this.sellerScore = info.sellerScore ?? null;
         this.buyerReviewCount = info.buyerReviewCount ?? 0;
         this.sellerReviewCount = info.sellerReviewCount ?? 0;
+        this.accountStatus = info.user.accountStatus ?? 'active';
+        this.contentRestrictedUntil = (info.user as any).contentRestrictedUntil ?? null;
       }
+    });
+
+    this.customerService.getMyAppeal().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: (res) => {
+        this.existingAppeal = res.appeal;
+        if (!this.contentRestrictedUntil) this.contentRestrictedUntil = res.contentRestrictedUntil;
+        if (this.accountStatus === 'active') this.accountStatus = res.accountStatus;
+      },
+      error: () => {}
     });
 
     this.loadConnectStatus();
@@ -219,6 +239,37 @@ export class MyAccountComponent implements OnInit {
       error: (err) => {
         this.connectTestActivating = false;
         this.connectError = err?.error?.error || 'Test activation failed.';
+      }
+    });
+  }
+
+  get isContentRestricted(): boolean {
+    return !!(this.contentRestrictedUntil && new Date(this.contentRestrictedUntil) > new Date());
+  }
+
+  get restrictedUntilDate(): string {
+    if (!this.contentRestrictedUntil) return '';
+    return new Date(this.contentRestrictedUntil).toLocaleDateString('pt-PT', { day: 'numeric', month: 'long', year: 'numeric' });
+  }
+
+  get hasPendingAppeal(): boolean {
+    return this.existingAppeal?.status === 'pending';
+  }
+
+  submitAppeal(): void {
+    if (this.appealSubmitting || !this.appealMessage.trim()) return;
+    this.appealSubmitting = true;
+    this.appealError = '';
+    this.customerService.submitAppeal(this.appealMessage.trim()).subscribe({
+      next: ({ appeal }) => {
+        this.existingAppeal = appeal;
+        this.appealSuccess = true;
+        this.appealSubmitting = false;
+        this.appealMessage = '';
+      },
+      error: (err) => {
+        this.appealError = err?.error?.message || 'Não foi possível enviar o pedido. Tente novamente.';
+        this.appealSubmitting = false;
       }
     });
   }

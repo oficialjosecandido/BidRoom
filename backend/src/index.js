@@ -46,6 +46,7 @@ const userRoutes = require('./routes/users');
 const followRoutes = require('./routes/follows');
 const blockRoutes = require('./routes/blocks');
 const categoryFollowRoutes = require('./routes/category-follows');
+const appealsRoutes = require('./routes/appeals');
 const damageClaimsRoutes = require('./routes/damageClaims');
 const { router: kycRoutes, kycWebhookHandler } = require('./routes/kyc');
 const shareRoutes = require('./routes/share');
@@ -61,6 +62,7 @@ const reviewAutoGenerateScheduler = require('./services/reviewAutoGenerateSchedu
 const { startReviewReminderScheduler } = require('./services/reviewReminderScheduler');
 const { startPayoutSetupReminderScheduler } = require('./services/payoutSetupReminderScheduler');
 const dsaComplianceScheduler = require('./services/dsaComplianceScheduler');
+const { startDraftReminderScheduler } = require('./services/draftReminderScheduler');
 const { runCleanup: runProofOfPaymentCleanup } = require('./services/proofOfPaymentCleanup');
 const { runImagePurge } = require('./services/imagePurgeScheduler');
 
@@ -279,6 +281,7 @@ app.use('/api/users', generalLimiter, userRoutes);
 app.use('/api/follows', generalLimiter, followRoutes);
 app.use('/api/blocks', generalLimiter, blockRoutes);
 app.use('/api/category-follows', generalLimiter, categoryFollowRoutes);
+app.use('/api/appeals', generalLimiter, appealsRoutes);
 app.use('/api/damage-claims', generalLimiter, damageClaimsRoutes);
 app.use('/api/kyc', generalLimiter, kycRoutes);
 app.use('/api/blog', generalLimiter, blogRoutes);
@@ -556,6 +559,7 @@ const startServer = async () => {
       startReviewReminderScheduler(30, io);
       startPayoutSetupReminderScheduler(24, io);
       dsaComplianceScheduler.startDsaComplianceScheduler(24, io);
+      startDraftReminderScheduler(60);
       logger.info('Schedulers started', {
         auctionEnd: '1m',
         shipping: '15m',

@@ -138,6 +138,20 @@ table.blog-row-table {
     }
   }
 
+  .action-publish {
+    font-size: 13px;
+    font-weight: 600;
+    color: #166534;
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    line-height: inherit;
+
+    &:hover:not(:disabled) { text-decoration: underline; }
+    &:disabled { opacity: 0.5; cursor: not-allowed; }
+  }
+
   .action-delete {
     font-size: 13px;
     font-weight: 600;

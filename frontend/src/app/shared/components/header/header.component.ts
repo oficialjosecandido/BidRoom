@@ -5,6 +5,7 @@ import { Observable, Subscription } from 'rxjs';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import Swal from 'sweetalert2';
 import { AuthService } from '../../../auth/services/auth.service';
+import { ListingsService } from '../../services/listings.service';
 import { NotificationService } from '../../services/notification.service';
 import { SocketService } from '../../services/socket.service';
 import { ThemeService } from '../../services/theme.service';
@@ -20,6 +21,7 @@ import { BidroomLogoComponent } from '../bidroom-logo/bidroom-logo.component';
 export class HeaderComponent implements OnInit, OnDestroy {
   private router = inject(Router);
   private authService = inject(AuthService);
+  private listingsService = inject(ListingsService);
   private notificationService = inject(NotificationService);
   private socketService = inject(SocketService);
   private translate = inject(TranslateService);
@@ -31,6 +33,8 @@ export class HeaderComponent implements OnInit, OnDestroy {
   @Input() activePage = '';
 
   isAuthenticated$!: Observable<boolean>;
+  hasDraft = false;
+  draftTitle = '';
   menuOpen = false;
   searchOpen = false;
   notifCount = 0;
@@ -71,12 +75,26 @@ export class HeaderComponent implements OnInit, OnDestroy {
             this.socketService.joinUser(user.uid);
           }
           this.notificationService.refreshUnreadCount();
+          // Check for a stale draft so the publish button can say "Resume"
+          if (this.isBrowser && this.currentUserUid !== user.uid) {
+            this.listingsService.getListingDraft().subscribe({
+              next: ({ draft }) => {
+                const p = (draft as any)?.payload ?? draft;
+                const hasContent = !!(p?.titlePt || p?.titleEn || p?.title || p?.descriptionPt);
+                this.hasDraft  = hasContent;
+                this.draftTitle = p?.titlePt || p?.titleEn || p?.title || '';
+              },
+              error: () => { this.hasDraft = false; this.draftTitle = ''; }
+            });
+          }
         } else {
           if (this.currentUserUid) {
             this.socketService.leaveUser(this.currentUserUid);
             this.currentUserUid = null;
           }
           this.notifCount = 0;
+          this.hasDraft = false;
+          this.draftTitle = '';
         }
       })
     );

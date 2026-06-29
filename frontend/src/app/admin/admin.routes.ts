@@ -57,6 +57,11 @@ export const adminRoutes: Routes = [
     path: 'blog/:id/edit',
     loadComponent: () => import('./components/blog-form/admin-blog-form.component').then(m => m.AdminBlogFormComponent),
     canActivate: [AdminGuard]
+  },
+  {
+    path: 'appeals',
+    loadComponent: () => import('./components/appeals/admin-appeals.component').then(m => m.AdminAppealsComponent),
+    canActivate: [AdminGuard]
   }
 ];
 

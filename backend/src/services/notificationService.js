@@ -705,6 +705,32 @@ async function notifyAccountClosed({ userId }) {
   });
 }
 
+/** User's restriction-appeal was approved by an admin */
+async function notifyAppealApproved({ userId }) {
+  return createNotification({
+    userId,
+    title: 'Appeal approved',
+    message: 'Your appeal has been reviewed and your account restriction has been lifted. You can create and edit listings again.',
+    type: 'account',
+    link: '/dashboard/my-account',
+    referenceId: 'appeal_approved'
+  });
+}
+
+/** User's restriction-appeal was rejected by an admin */
+async function notifyAppealRejected({ userId, adminResponse }) {
+  return createNotification({
+    userId,
+    title: 'Appeal reviewed',
+    message: adminResponse
+      ? `Your appeal was reviewed: ${adminResponse}`
+      : 'Your appeal was reviewed and the restriction remains in place. If you have questions, please contact support.',
+    type: 'account',
+    link: '/dashboard/my-account',
+    referenceId: 'appeal_rejected'
+  });
+}
+
 /**
  * Format shipping for pricing overview.
  * @param {string} shippingOption - flat-rate | calculated | local-pickup | free
@@ -1192,6 +1218,8 @@ module.exports = {
   notifyAccountReactivated,
   notifyContentRestrictionLifted,
   notifyAccountClosed,
+  notifyAppealApproved,
+  notifyAppealRejected,
   notifyLoginFromNewDevice,
   notifySellerWinnerSelected,
   notifyBuyerAuctionWon,

@@ -679,9 +679,10 @@ router.put('/drafts/current', authenticateToken, requireActiveAccount, async (re
     if (payload == null || typeof payload !== 'object') {
       return res.status(400).json({ error: 'Invalid payload', message: 'Expected a JSON object.' });
     }
+    // Reset reminder flag so an edited-then-abandoned draft re-triggers the 24h email
     const doc = await ListingDraft.findOneAndUpdate(
       { seller: user._id },
-      { seller: user._id, payload },
+      { seller: user._id, payload, draftReminderSent: false },
       { upsert: true, new: true, setDefaultsOnInsert: true }
     ).lean();
     return res.json({ ok: true, updatedAt: doc.updatedAt });
