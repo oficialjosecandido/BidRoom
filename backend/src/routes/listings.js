@@ -1481,6 +1481,9 @@ router.post('/', authenticateToken, requireActiveAccount, requireNoDisputeRestri
     const listing = new Listing(listingData);
     await listing.save();
 
+    // Auto-clear the seller's in-progress draft now that the listing is published
+    ListingDraft.deleteOne({ seller: user._id }).catch(() => {});
+
     // Notify followers / category followers / similar-item watchers (fire-and-forget)
     setImmediate(() => {
       const io = req.app.get('io');
