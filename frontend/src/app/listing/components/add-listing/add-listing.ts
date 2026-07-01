@@ -1,5 +1,5 @@
 import { DecimalPipe } from '@angular/common';
-import { Component, OnDestroy, OnInit, inject, computed } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject, computed, signal } from '@angular/core';
 import { AbstractControl, FormBuilder, FormGroup, ValidationErrors, ValidatorFn, Validators, ReactiveFormsModule, FormArray } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
@@ -7,7 +7,7 @@ import { firstValueFrom, from, merge, Subject, Subscription } from 'rxjs';
 import { debounceTime, distinctUntilChanged, filter, switchMap, tap } from 'rxjs/operators';
 import Swal from 'sweetalert2';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
-import { ListingsService } from '../../../shared/services/listings.service';
+import { ListingsService, AttributeDef } from '../../../shared/services/listings.service';
 import { CustomerService, CustomerInfo, SellerPaymentConfig } from '../../../shared/services/customer.service';
 import { KycService, KYC_THRESHOLD } from '../../../shared/services/kyc.service';
 import { estimateBuyerProcessingFeeEuros } from '../../../shared/utils/fees';
@@ -413,6 +413,14 @@ export class AddListing implements OnInit, OnDestroy {
 
   selectedCategory: Category | null = null;
 
+  // ── Structured attributes ─────────────────────────────────────────────────
+  attributeSchema = signal<AttributeDef[]>([]);
+  private attributeSchemaSub?: Subscription;
+
+  get attributesGroup(): FormGroup {
+    return this.listingForm.get('attributes') as FormGroup;
+  }
+
   get canPublish(): boolean {
     return this.listingForm.valid && this.isMediaValid && this.uploadedFiles.length >= 1 && !this.isSubmitting && !this.isUploadingImages;
   }
@@ -431,6 +439,7 @@ export class AddListing implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.draftAutosaveSub?.unsubscribe();
     this.contentCheckSub?.unsubscribe();
+    this.attributeSchemaSub?.unsubscribe();
     this.mediaChange$.complete();
     this.contentCheck$.complete();
   }
@@ -500,6 +509,7 @@ export class AddListing implements OnInit, OnDestroy {
       descriptionEn: ['', []],
       media: this.fb.array([]),
       specifications: this.fb.array([]),
+      attributes: this.fb.group({}),
       bundleItems: this.fb.array([]),
       locationCity: ['', Validators.required],
       locationCountry: ['PT', Validators.required],
@@ -575,6 +585,14 @@ export class AddListing implements OnInit, OnDestroy {
     this.listingForm.get('category')?.valueChanges.subscribe(categoryId => {
       this.selectedCategory = this.categories.find(c => c.id === categoryId) || null;
       this.listingForm.patchValue({ subCategory: '' });
+    });
+
+    this.listingForm.get('subCategory')?.valueChanges.subscribe(sub => {
+      const cat = this.listingForm.get('category')?.value || '';
+      if (!sub) { this.attributeSchema.set([]); this.buildAttributeControls([]); return; }
+      this.attributeSchemaSub?.unsubscribe();
+      this.attributeSchemaSub = this.listingsService.getAttributeSchema(sub, cat)
+        .subscribe({ next: ({ schema }) => { this.attributeSchema.set(schema); this.buildAttributeControls(schema); }, error: () => {} });
     });
 
     // Keep generic `title`/`description` in sync with the primary language fields
@@ -809,6 +827,25 @@ export class AddListing implements OnInit, OnDestroy {
         }
       }
 
+      // Restore structured attributes — must happen after category/subCategory patch
+      const savedAttrs = p['attributes'];
+      if (savedAttrs && typeof savedAttrs === 'object' && !Array.isArray(savedAttrs)) {
+        const subCat = patch['subCategory'] as string || '';
+        const cat    = patch['category'] as string || '';
+        if (subCat) {
+          const { schema } = await firstValueFrom(this.listingsService.getAttributeSchema(subCat, cat));
+          this.attributeSchema.set(schema);
+          this.buildAttributeControls(schema);
+          const attrPatch: Record<string, unknown> = {};
+          for (const def of schema) {
+            if ((savedAttrs as Record<string, unknown>)[def.key] !== undefined) {
+              attrPatch[def.key] = (savedAttrs as Record<string, unknown>)[def.key];
+            }
+          }
+          this.attributesGroup.patchValue(attrPatch, { emitEvent: false });
+        }
+      }
+
       const format = (patch['listingFormat'] as string) || this.listingForm.get('listingFormat')?.value;
       this.updateConditionalValidators(format || 'best-offer');
 
@@ -891,6 +928,30 @@ export class AddListing implements OnInit, OnDestroy {
   }
 
   removeSpecification(index: number): void { this.specifications.removeAt(index); }
+
+  private buildAttributeControls(schema: AttributeDef[]): void {
+    const current = this.attributesGroup;
+    // Remove controls no longer in schema
+    Object.keys(current.controls).forEach(k => {
+      if (!schema.find(d => d.key === k)) current.removeControl(k);
+    });
+    // Add / update controls for current schema
+    for (const def of schema) {
+      if (!current.contains(def.key)) {
+        const validators = def.required ? [Validators.required] : [];
+        current.addControl(def.key, this.fb.control('', validators));
+      }
+    }
+  }
+
+  getAttrValue(key: string): unknown {
+    return this.attributesGroup?.get(key)?.value;
+  }
+
+  setAttrValue(key: string, val: unknown): void {
+    this.attributesGroup?.get(key)?.setValue(val);
+    this.attributesGroup?.get(key)?.markAsDirty();
+  }
 
   onFileSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
@@ -1277,6 +1338,7 @@ export class AddListing implements OnInit, OnDestroy {
         mbway: formValue.acceptPayMbway === true,
       },
       specifications: formValue.specifications || [],
+      attributes: formValue.attributes || {},
       itemMode: formValue.itemMode || 'single',
       quantity: formValue.itemMode === 'multi_quantity' ? (formValue.quantity || 2) : 1,
       bundleItems: formValue.itemMode === 'bundle' ? (formValue.bundleItems || []) : [],
@@ -1330,6 +1392,7 @@ export class AddListing implements OnInit, OnDestroy {
 
     if (fields.some(f => this.listingForm.get(f)?.invalid)) return false;
     if (step === 2 && this.specifications.length > 0 && this.specifications.invalid) return false;
+    if (step === 2 && this.attributesGroup?.invalid) return false;
     return true;
   }
 

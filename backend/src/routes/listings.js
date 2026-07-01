@@ -649,6 +649,15 @@ router.post('/validate-content', authenticateToken, async (req, res) => {
   }
 });
 
+// ─── Attribute schema ────────────────────────────────────────────────────────
+// Must be registered BEFORE `/:id` so the path is not captured as an id.
+
+router.get('/attribute-schema', (req, res) => {
+  const { getAttributeSchema } = require('../config/categoryAttributes');
+  const schema = getAttributeSchema(req.query.subCategory, req.query.category);
+  res.json({ schema });
+});
+
 // ─── Listing drafts (in-progress add-listing), one per seller ───────────────
 // Must be registered BEFORE `/:id` so paths are not captured as ids.
 
@@ -1174,7 +1183,8 @@ router.post('/', authenticateToken, requireActiveAccount, requireNoDisputeRestri
       titleEn,
       descriptionPt,
       descriptionEn,
-      acceptedPaymentMethods
+      acceptedPaymentMethods,
+      attributes,
     } = req.body;
     const localizedText = normalizeListingLocaleFields(req.body);
 
@@ -1378,6 +1388,20 @@ router.post('/', authenticateToken, requireActiveAccount, requireNoDisputeRestri
       });
     }
 
+    // Validate structured attributes against the category schema
+    let cleanedAttributes = {};
+    if (attributes && typeof attributes === 'object') {
+      const { validateAttributes } = require('../validators/listingValidator');
+      const attrResult = validateAttributes(attributes, subCategory, category);
+      if (!attrResult.valid) {
+        return res.status(400).json({
+          error: 'Invalid listing attributes',
+          details: attrResult.errors,
+        });
+      }
+      cleanedAttributes = attrResult.cleaned;
+    }
+
     // Prepare listing data
     const listingData = {
       title: localizedText.title,
@@ -1418,6 +1442,7 @@ router.post('/', authenticateToken, requireActiveAccount, requireNoDisputeRestri
         mbway: acceptedPaymentMethods?.mbway === true || user.sellerPaymentConfig?.mbway?.enabled === true,
       },
       specifications: specifications || [],
+      attributes: cleanedAttributes,
       images: Array.isArray(images) && images.length > 0 ? images : ['https://via.placeholder.com/400x300?text=No+Image'],
       itemMode: ['bundle', 'multi_quantity'].includes(itemMode) ? itemMode : 'single',
       quantity: itemMode === 'multi_quantity' ? Math.max(1, Math.min(999, parseInt(quantity) || 1)) : 1,

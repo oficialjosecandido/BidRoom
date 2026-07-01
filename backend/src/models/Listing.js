@@ -191,6 +191,16 @@ const listingSchema = new mongoose.Schema({
       trim: true
     }
   }],
+  /**
+   * Structured attributes validated against config/categoryAttributes.js.
+   * Typed values (boolean/number) are stored natively for filtering.
+   * Legacy listings keep specifications; new ones populate attributes.
+   */
+  attributes: {
+    type: Map,
+    of: mongoose.Schema.Types.Mixed,
+    default: {},
+  },
   // Multi-item / bundle support
   itemMode: {
     type: String,

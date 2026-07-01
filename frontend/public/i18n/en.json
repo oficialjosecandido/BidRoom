@@ -393,7 +393,14 @@
     "uploadMinError": "Add at least 1 image.",
     "uploadMediaError": "Use 1–20 images only, or 1–5 images with 1 video.",
     "filesUploaded": "{{images}} image(s), {{videos}} video(s)",
-    "keySpecs": "Key Specifications (Optional)",
+    "attributes": {
+      "title": "Item characteristics",
+      "yes": "Yes",
+      "no": "No",
+      "select": "Select…",
+      "required": "This field is required"
+    },
+    "keySpecs": "Additional Specifications (Optional)",
     "specKeyPlaceholder": "Specification (e.g. Model, Brand)",
     "specValuePlaceholder": "Value",
     "remove": "Remove",

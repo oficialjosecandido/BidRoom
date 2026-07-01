@@ -289,6 +289,61 @@
         }
       </div>
 
+      <!-- ── Structured attributes (loaded by category/subcategory) ─────────── -->
+      @if (attributeSchema().length > 0) {
+        <div class="section" formGroupName="attributes">
+          <div class="section-title">{{ 'addListing.attributes.title' | translate }}</div>
+          <div class="attributes-grid">
+            @for (attr of attributeSchema(); track attr.key) {
+              <div class="attr-field" [class.attr-field--full]="attr.type === 'boolean'">
+                <label class="field-label">
+                  {{ attr.label }}
+                  @if (attr.required) { <span class="req">*</span> }
+                </label>
+
+                @switch (attr.type) {
+                  @case ('boolean') {
+                    <div class="attr-toggle">
+                      <button type="button"
+                        class="attr-toggle__btn"
+                        [class.active]="getAttrValue(attr.key) === true"
+                        (click)="setAttrValue(attr.key, true)">
+                        {{ 'addListing.attributes.yes' | translate }}
+                      </button>
+                      <button type="button"
+                        class="attr-toggle__btn"
+                        [class.active]="getAttrValue(attr.key) === false"
+                        (click)="setAttrValue(attr.key, false)">
+                        {{ 'addListing.attributes.no' | translate }}
+                      </button>
+                    </div>
+                  }
+                  @case ('enum') {
+                    <select class="field-input" [formControlName]="attr.key">
+                      <option value="">{{ 'addListing.attributes.select' | translate }}</option>
+                      @for (opt of attr.options; track opt) {
+                        <option [value]="opt">{{ opt }}</option>
+                      }
+                    </select>
+                  }
+                  @case ('number') {
+                    <input class="field-input" type="number" [formControlName]="attr.key"
+                      [placeholder]="attr.unit || ''">
+                  }
+                  @default {
+                    <input class="field-input" type="text" [formControlName]="attr.key">
+                  }
+                }
+
+                @if (attributesGroup.get(attr.key)?.invalid && attributesGroup.get(attr.key)?.touched) {
+                  <span class="field-error">{{ 'addListing.attributes.required' | translate }}</span>
+                }
+              </div>
+            }
+          </div>
+        </div>
+      }
+
       <div class="section">
         <div class="section-title">
           {{ 'addListing.keySpecs' | translate }}

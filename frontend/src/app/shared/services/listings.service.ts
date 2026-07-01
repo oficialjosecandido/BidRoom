@@ -58,6 +58,7 @@ export interface Listing {
   returnPolicy?: string;
   handlingTime?: number;
   specifications?: { key: string; value: string }[];
+  attributes?: Record<string, string | number | boolean>;
   // New auction mechanics
   auctionFormat: 'highest-bid' | 'best-offer';
   durationSlot: '5 minutes' | '2 hours' | '24 hours' | '3 days' | '7 days';
@@ -126,6 +127,17 @@ export interface Listing {
   itemMode?: 'single' | 'bundle' | 'multi_quantity';
   quantity?: number;
   bundleItems?: { title: string; description?: string }[];
+}
+
+export interface AttributeDef {
+  key: string;
+  label: string;
+  type: 'text' | 'number' | 'boolean' | 'enum';
+  required: boolean;
+  filterable?: boolean;
+  schemaOrg?: string;
+  options?: string[];
+  unit?: string;
 }
 
 export interface ListingsResponse {
@@ -330,6 +342,11 @@ export class ListingsService {
 
   deleteListingDraft(): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/drafts/current`);
+  }
+
+  getAttributeSchema(subCategory: string, category: string): Observable<{ schema: AttributeDef[] }> {
+    const params = new HttpParams().set('subCategory', subCategory).set('category', category);
+    return this.http.get<{ schema: AttributeDef[] }>(`${this.apiUrl}/attribute-schema`, { params });
   }
 
   buyNow(listingId: string): Observable<any> {

@@ -948,6 +948,56 @@ nav {
 }
 
 // ─── Specifications ───────────────────────────────────────────────────────────
+// ─── Structured attributes ───────────────────────────────────────────────────
+.attributes-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px 20px;
+
+  @media (max-width: 600px) { grid-template-columns: 1fr; }
+}
+
+.attr-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  &--full { grid-column: 1 / -1; }
+}
+
+.attr-toggle {
+  display: flex;
+  gap: 0;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  width: fit-content;
+
+  &__btn {
+    padding: 8px 18px;
+    font-size: 13px;
+    font-weight: 500;
+    font-family: var(--sans);
+    background: var(--s2);
+    color: var(--sub);
+    border: none;
+    cursor: pointer;
+    transition: background .15s, color .15s;
+
+    &:first-child { border-right: 1px solid var(--line); }
+
+    &.active {
+      background: var(--gb);
+      color: var(--gold);
+    }
+    &:hover:not(.active) { background: var(--s3); color: var(--text); }
+  }
+}
+
+.req { color: var(--err); margin-left: 2px; }
+
+.field-error { font-size: 11.5px; color: var(--err); }
+
 .spec-row-input {
   display: grid;
   grid-template-columns: 1fr 1fr auto;
