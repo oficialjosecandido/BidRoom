@@ -38,6 +38,7 @@
     "@angular/platform-browser": "^20.3.16",
     "@angular/platform-server": "^20.3.25",
     "@angular/router": "^20.3.16",
+    "@angular/service-worker": "^20.3.25",
     "@angular/ssr": "^20.3.28",
     "@ngx-translate/core": "^17.0.0",
     "@ngx-translate/http-loader": "^17.0.0",

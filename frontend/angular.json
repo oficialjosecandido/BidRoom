@@ -66,18 +66,14 @@
                   "maximumError": "400MB"
                 }
               ],
-              "outputHashing": "all"
+              "outputHashing": "all",
+              "serviceWorker": "ngsw-config.json"
             },
-            "development": {
-              "optimization": false,
-              "extractLicenses": false,
-              "sourceMap": true
-            },
-            "ericeira": {
+            "ericeira-prod": {
               "fileReplacements": [
                 {
                   "replace": "src/environments/environment.ts",
-                  "with": "src/environments/environment.ericeira.ts"
+                  "with": "src/environments/environment.ericeira-prod.ts"
                 }
               ],
               "budgets": [
@@ -92,13 +88,19 @@
                   "maximumError": "400MB"
                 }
               ],
-              "outputHashing": "all"
+              "outputHashing": "all",
+              "serviceWorker": "ngsw-config.json"
             },
-            "ericeira-prod": {
+            "development": {
+              "optimization": false,
+              "extractLicenses": false,
+              "sourceMap": true
+            },
+            "ericeira": {
               "fileReplacements": [
                 {
                   "replace": "src/environments/environment.ts",
-                  "with": "src/environments/environment.ericeira-prod.ts"
+                  "with": "src/environments/environment.ericeira.ts"
                 }
               ],
               "budgets": [

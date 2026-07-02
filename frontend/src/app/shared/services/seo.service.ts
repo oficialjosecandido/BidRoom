@@ -121,7 +121,9 @@ export class SeoService {
   }
 
   private buildListingDescription(listing: Listing, cleanDesc: string): string {
-    const price     = listing.currentPrice ?? listing.startingPrice;
+    const price     = (listing.currentPrice && listing.currentPrice > 0)
+      ? listing.currentPrice
+      : listing.startingPrice;
     const priceStr  = fmtEur(price);
     const format    = listing.auctionFormat === 'best-offer' ? 'Melhor Proposta' : 'Leilão';
     const cta       = `${format} a partir de ${priceStr}. Lance já.`;
@@ -208,31 +210,13 @@ export class SeoService {
   }
 
   private injectListingSchema(listing: Listing, image: string, canonical: string): void {
-    const price = listing.currentPrice ?? listing.startingPrice;
+    const price = (listing.currentPrice && listing.currentPrice > 0)
+      ? listing.currentPrice
+      : listing.startingPrice;
     const sellerName = listing.seller
       ? `${listing.seller.firstName} ${listing.seller.lastName}`.trim()
       : undefined;
     const country = listing.locationCountry || 'PT';
-
-    const offer: Record<string, unknown> = {
-      '@type':        'Offer',
-      priceCurrency:  'EUR',
-      price:          price.toFixed(2),
-      availability:   listing.status === 'active'
-        ? 'https://schema.org/InStock'
-        : 'https://schema.org/OutOfStock',
-      url:            canonical,
-      ...(listing.endDate && { priceValidUntil: listing.endDate.slice(0, 10) }),
-      ...(sellerName && {
-        seller: { '@type': 'Person', name: sellerName },
-      }),
-    };
-
-    const returnPolicy = this.buildReturnPolicy(listing.returnPolicy, country);
-    if (returnPolicy) offer['hasMerchantReturnPolicy'] = returnPolicy;
-
-    const shippingDetails = this.buildShippingDetails(listing, country);
-    if (shippingDetails) offer['shippingDetails'] = shippingDetails;
 
     const schema: Record<string, unknown> = {
       '@context': 'https://schema.org',
@@ -243,8 +227,33 @@ export class SeoService {
       image:       listing.images?.length ? listing.images : [image],
       category:    listing.category,
       url:         canonical,
-      offers:      offer,
     };
+
+    // Only emit offers when we have a valid positive price — a €0.00 offer
+    // is worse than no offer (misleads users and can trigger Google penalties).
+    if (price && price > 0) {
+      const offer: Record<string, unknown> = {
+        '@type':        'Offer',
+        priceCurrency:  'EUR',
+        price:          price.toFixed(2),
+        availability:   listing.status === 'active'
+          ? 'https://schema.org/InStock'
+          : 'https://schema.org/OutOfStock',
+        url:            canonical,
+        ...(listing.endDate && { priceValidUntil: listing.endDate.slice(0, 10) }),
+        ...(sellerName && {
+          seller: { '@type': 'Person', name: sellerName },
+        }),
+      };
+
+      const returnPolicy = this.buildReturnPolicy(listing.returnPolicy, country);
+      if (returnPolicy) offer['hasMerchantReturnPolicy'] = returnPolicy;
+
+      const shippingDetails = this.buildShippingDetails(listing, country);
+      if (shippingDetails) offer['shippingDetails'] = shippingDetails;
+
+      schema['offers'] = offer;
+    }
 
     const brand = listing.specifications?.find(s => /^(brand|marca)$/i.test(s.key))?.value;
     if (brand) schema['brand'] = { '@type': 'Brand', name: brand };

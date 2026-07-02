@@ -1,0 +1,28 @@
+{
+  "name": "BidRoom",
+  "short_name": "BidRoom",
+  "description": "Leilões premium. Compra e vende artigos únicos através de leilões em tempo real, Melhor Proposta ou Sala Privada.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#090909",
+  "theme_color": "#C9A84C",
+  "lang": "pt-PT",
+  "dir": "ltr",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "categories": ["shopping", "finance"],
+  "icons": [
+    {
+      "src": "apple-touch-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

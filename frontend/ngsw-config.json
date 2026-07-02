@@ -1,0 +1,79 @@
+{
+  "$schema": "./node_modules/@angular/service-worker/config/schema.json",
+  "index": "/index.html",
+  "assetGroups": [
+    {
+      "name": "app-shell",
+      "installMode": "prefetch",
+      "updateMode": "prefetch",
+      "resources": {
+        "files": [
+          "/favicon.ico",
+          "/favicon.svg",
+          "/apple-touch-icon.svg",
+          "/manifest.webmanifest",
+          "/*.css",
+          "/*.js",
+          "!/sw.js"
+        ]
+      }
+    },
+    {
+      "name": "i18n",
+      "installMode": "lazy",
+      "updateMode": "prefetch",
+      "resources": {
+        "files": ["/i18n/*.json"]
+      }
+    },
+    {
+      "name": "static-assets",
+      "installMode": "lazy",
+      "updateMode": "lazy",
+      "resources": {
+        "files": [
+          "/assets/**",
+          "/**/*.svg",
+          "/**/*.png",
+          "/**/*.jpg",
+          "/**/*.webp",
+          "/**/*.woff2"
+        ]
+      }
+    }
+  ],
+  "dataGroups": [
+    {
+      "name": "listings-api",
+      "urls": [
+        "/api/listings",
+        "/api/listings?**",
+        "/api/listings/slug/**",
+        "/api/listings/stats/**",
+        "/api/listings/attribute-schema**",
+        "/api/categories**",
+        "/api/blog**"
+      ],
+      "cacheConfig": {
+        "maxSize": 100,
+        "maxAge": "5m",
+        "timeout": "5s",
+        "strategy": "freshness"
+      }
+    },
+    {
+      "name": "profile-api",
+      "urls": [
+        "/api/customers/profile",
+        "/api/customers/*/profile",
+        "/api/notifications**"
+      ],
+      "cacheConfig": {
+        "maxSize": 20,
+        "maxAge": "2m",
+        "timeout": "3s",
+        "strategy": "freshness"
+      }
+    }
+  ]
+}
