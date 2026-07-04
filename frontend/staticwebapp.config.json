@@ -7,16 +7,10 @@
       "/i18n/*",
       "/assets/*",
       "/robots.txt",
-      "/sitemap.xml",
       "*.{css,js,json,svg,png,jpg,jpeg,gif,webp,ico,woff,woff2,ttf,map,xml,txt}"
     ]
   },
   "routes": [
-    {
-      "route": "/sitemap.xml",
-      "redirect": "https://bidroom-backend-prod-e9eghtc0aha4e3dw.uksouth-01.azurewebsites.net/sitemap.xml",
-      "statusCode": 301
-    },
     {
       "route": "/api/share/*",
       "allowedRoles": ["anonymous"]

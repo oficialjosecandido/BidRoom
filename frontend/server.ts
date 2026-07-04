@@ -23,10 +23,21 @@ const angularApp = new AngularNodeAppEngine({
   trustProxyHeaders: ['x-forwarded-for', 'x-forwarded-host', 'x-forwarded-port', 'x-forwarded-proto', 'x-forwarded-prefix', 'x-forwarded-tlsversion'],
 });
 
-// Sitemap is generated dynamically by the backend from live listing data —
-// redirect before express.static can serve a stale cached copy (maxAge: '1y' below).
-app.get('/sitemap.xml', (req, res) => {
-  res.redirect(301, 'https://bidroom-backend-prod-e9eghtc0aha4e3dw.uksouth-01.azurewebsites.net/sitemap.xml');
+// Sitemap is generated dynamically by the backend from live listing data.
+// Proxied transparently so Google sees a 200 at www.bidroom.pt/sitemap.xml
+// instead of a 301 redirect (which it flags as a non-indexable page).
+app.get('/sitemap.xml', async (_req, res) => {
+  try {
+    const backendSitemapUrl = process.env['BACKEND_SITEMAP_URL']
+      || 'https://bidroom-backend-prod-e9eghtc0aha4e3dw.uksouth-01.azurewebsites.net/sitemap.xml';
+    const upstream = await fetch(backendSitemapUrl, { signal: AbortSignal.timeout(8000) });
+    const xml = await upstream.text();
+    res.setHeader('Content-Type', 'application/xml; charset=utf-8');
+    res.setHeader('Cache-Control', 'public, max-age=3600');
+    res.status(200).send(xml);
+  } catch {
+    res.status(503).send('<?xml version="1.0"?><error>Sitemap temporarily unavailable</error>');
+  }
 });
 
 // Serve static files from /browser
