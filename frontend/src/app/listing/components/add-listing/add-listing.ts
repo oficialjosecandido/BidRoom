@@ -25,6 +25,174 @@ interface Category {
   subCategories: string[];
 }
 
+interface PhotoHint {
+  icon: string;
+  label: string;
+  /** If set, the hint is visually highlighted when the attribute equals true */
+  attrKey?: string;
+}
+
+interface PhotoGuide {
+  title: string;
+  required: PhotoHint[];
+  recommended: PhotoHint[];
+}
+
+const PHOTO_GUIDES: Record<string, PhotoGuide> = {
+  // ── Relógios (Luxury + Vintage) ──────────────────────────────────────────
+  'Luxury Watches': {
+    title: 'photoGuide.watches.title',
+    required: [
+      { icon: '🕐', label: 'photoGuide.watches.front' },
+      { icon: '🔄', label: 'photoGuide.watches.back' },
+      { icon: '🔢', label: 'photoGuide.watches.serial' },
+      { icon: '📜', label: 'photoGuide.watches.papers', attrKey: 'papersIncluded' },
+      { icon: '📦', label: 'photoGuide.watches.box',    attrKey: 'boxIncluded' },
+    ],
+    recommended: [
+      { icon: '⌚', label: 'photoGuide.watches.strap' },
+      { icon: '👑', label: 'photoGuide.watches.crown' },
+      { icon: '🖼️', label: 'photoGuide.watches.full' },
+    ],
+  },
+  'Vintage Watches': {
+    title: 'photoGuide.watches.title',
+    required: [
+      { icon: '🕐', label: 'photoGuide.watches.front' },
+      { icon: '🔄', label: 'photoGuide.watches.back' },
+      { icon: '🔢', label: 'photoGuide.watches.serial' },
+      { icon: '📜', label: 'photoGuide.watches.papers', attrKey: 'papersIncluded' },
+    ],
+    recommended: [
+      { icon: '⌚', label: 'photoGuide.watches.strap' },
+      { icon: '🔎', label: 'photoGuide.watches.patina' },
+      { icon: '🖼️', label: 'photoGuide.watches.full' },
+    ],
+  },
+  // ── Arte ─────────────────────────────────────────────────────────────────
+  'Paintings': {
+    title: 'photoGuide.art.title',
+    required: [
+      { icon: '🖼️', label: 'photoGuide.art.full' },
+      { icon: '✍️',  label: 'photoGuide.art.signature' },
+      { icon: '🔎', label: 'photoGuide.art.detail' },
+      { icon: '📜', label: 'photoGuide.art.cert', attrKey: 'certificate' },
+    ],
+    recommended: [
+      { icon: '🔄', label: 'photoGuide.art.back' },
+      { icon: '📐', label: 'photoGuide.art.frame' },
+    ],
+  },
+  'Drawings': {
+    title: 'photoGuide.art.title',
+    required: [
+      { icon: '🖼️', label: 'photoGuide.art.full' },
+      { icon: '✍️',  label: 'photoGuide.art.signature' },
+      { icon: '📜', label: 'photoGuide.art.cert', attrKey: 'certificate' },
+    ],
+    recommended: [
+      { icon: '🔎', label: 'photoGuide.art.detail' },
+      { icon: '🔄', label: 'photoGuide.art.back' },
+    ],
+  },
+  'Prints': {
+    title: 'photoGuide.art.title',
+    required: [
+      { icon: '🖼️', label: 'photoGuide.art.full' },
+      { icon: '🔢', label: 'photoGuide.art.edition' },
+      { icon: '✍️',  label: 'photoGuide.art.signature' },
+    ],
+    recommended: [
+      { icon: '🔎', label: 'photoGuide.art.detail' },
+      { icon: '📜', label: 'photoGuide.art.cert', attrKey: 'certificate' },
+    ],
+  },
+  'Sculptures': {
+    title: 'photoGuide.art.title',
+    required: [
+      { icon: '🖼️', label: 'photoGuide.art.full' },
+      { icon: '🔄', label: 'photoGuide.art.multiangleScuplt' },
+      { icon: '🔢', label: 'photoGuide.art.edition' },
+    ],
+    recommended: [
+      { icon: '📜', label: 'photoGuide.art.cert', attrKey: 'certificate' },
+      { icon: '🔎', label: 'photoGuide.art.detail' },
+    ],
+  },
+  // ── Joalharia ────────────────────────────────────────────────────────────
+  'Engagement Rings': {
+    title: 'photoGuide.jewelry.title',
+    required: [
+      { icon: '💍', label: 'photoGuide.jewelry.full' },
+      { icon: '🔎', label: 'photoGuide.jewelry.stone' },
+      { icon: '🔢', label: 'photoGuide.jewelry.hallmark', attrKey: 'hallmark' },
+      { icon: '📜', label: 'photoGuide.jewelry.cert', attrKey: 'certificate' },
+    ],
+    recommended: [
+      { icon: '📏', label: 'photoGuide.jewelry.size' },
+      { icon: '🔄', label: 'photoGuide.jewelry.side' },
+    ],
+  },
+  'Wedding Rings': {
+    title: 'photoGuide.jewelry.title',
+    required: [
+      { icon: '💍', label: 'photoGuide.jewelry.full' },
+      { icon: '🔢', label: 'photoGuide.jewelry.hallmark', attrKey: 'hallmark' },
+    ],
+    recommended: [
+      { icon: '📏', label: 'photoGuide.jewelry.size' },
+      { icon: '📜', label: 'photoGuide.jewelry.cert', attrKey: 'certificate' },
+    ],
+  },
+  'Loose Gemstones': {
+    title: 'photoGuide.jewelry.title',
+    required: [
+      { icon: '💎', label: 'photoGuide.jewelry.gemFull' },
+      { icon: '📜', label: 'photoGuide.jewelry.cert', attrKey: 'certificate' },
+      { icon: '📏', label: 'photoGuide.jewelry.scale' },
+    ],
+    recommended: [
+      { icon: '🔎', label: 'photoGuide.jewelry.stone' },
+    ],
+  },
+  // ── Selos ────────────────────────────────────────────────────────────────
+  'Definitive Stamps': {
+    title: 'photoGuide.stamps.title',
+    required: [
+      { icon: '📬', label: 'photoGuide.stamps.front' },
+      { icon: '🔄', label: 'photoGuide.stamps.back' },
+    ],
+    recommended: [
+      { icon: '🔎', label: 'photoGuide.stamps.watermark' },
+      { icon: '📐', label: 'photoGuide.stamps.margin' },
+    ],
+  },
+  'Commemorative Stamps': {
+    title: 'photoGuide.stamps.title',
+    required: [
+      { icon: '📬', label: 'photoGuide.stamps.front' },
+      { icon: '🔄', label: 'photoGuide.stamps.back' },
+    ],
+    recommended: [
+      { icon: '🔎', label: 'photoGuide.stamps.watermark' },
+      { icon: '📐', label: 'photoGuide.stamps.margin' },
+    ],
+  },
+  // ── Moedas ───────────────────────────────────────────────────────────────
+  'Coins & Banknotes': {
+    title: 'photoGuide.coins.title',
+    required: [
+      { icon: '🪙', label: 'photoGuide.coins.obverse' },
+      { icon: '🔄', label: 'photoGuide.coins.reverse' },
+      { icon: '📏', label: 'photoGuide.coins.edge' },
+    ],
+    recommended: [
+      { icon: '📜', label: 'photoGuide.coins.cert', attrKey: 'certified' },
+      { icon: '🔎', label: 'photoGuide.coins.detail' },
+    ],
+  },
+};
+
 /** Cross-field validator: buyNowPrice, when filled, must exceed startingBid. */
 function buyNowAboveStartingBid(): ValidatorFn {
   return (group: AbstractControl): ValidationErrors | null => {
@@ -412,6 +580,19 @@ export class AddListing implements OnInit, OnDestroy {
   ];
 
   selectedCategory: Category | null = null;
+
+  // ── Photo guide ───────────────────────────────────────────────────────────
+  photoGuideOpen = true;
+
+  get photoGuide(): PhotoGuide | null {
+    const sub = this.listingForm?.get('subCategory')?.value as string;
+    return PHOTO_GUIDES[sub] ?? null;
+  }
+
+  isAttrHighlighted(attrKey?: string): boolean {
+    if (!attrKey) return false;
+    return this.getAttrValue(attrKey) === true;
+  }
 
   // ── Structured attributes ─────────────────────────────────────────────────
   attributeSchema = signal<AttributeDef[]>([]);

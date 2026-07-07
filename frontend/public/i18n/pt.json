@@ -4084,5 +4084,59 @@
       "linkCopied": "Link copiado",
       "note": "Partilha este artigo com compradores, vendedores ou colecionadores."
     }
+  },
+  "photoGuide": {
+    "lead": "Inclui estas fotos para aumentar a confiança dos compradores e evitar que o anúncio seja ocultado.",
+    "required": "Fotos essenciais",
+    "recommended": "Fotos recomendadas",
+    "watches": {
+      "title": "Guia de fotos — Relógio",
+      "front": "Vista dianteira (mostrador visível)",
+      "back": "Vista traseira (referência gravada)",
+      "serial": "Número de série",
+      "papers": "Certificado / documentação",
+      "box": "Caixa original",
+      "strap": "Bracelete e fecho",
+      "crown": "Coroa e botões",
+      "full": "Artigo completo",
+      "patina": "Pátina e marcas de uso"
+    },
+    "art": {
+      "title": "Guia de fotos — Arte",
+      "full": "Obra completa (boa iluminação)",
+      "signature": "Assinatura do artista",
+      "detail": "Detalhe da técnica / textura",
+      "cert": "Certificado de autenticidade",
+      "back": "Verso da obra",
+      "frame": "Moldura (se incluída)",
+      "edition": "Número de edição",
+      "multiangleScuplt": "Vistas múltiplas (frente, lado, atrás)"
+    },
+    "jewelry": {
+      "title": "Guia de fotos — Joalharia",
+      "full": "Vista completa da peça",
+      "stone": "Detalhe das pedras",
+      "hallmark": "Marca de contraste",
+      "cert": "Certificado gemológico",
+      "size": "Escala / tamanho",
+      "side": "Vista lateral",
+      "gemFull": "Pedra solta (várias vistas)",
+      "scale": "Escala com referência (moeda, régua)"
+    },
+    "stamps": {
+      "title": "Guia de fotos — Selos",
+      "front": "Frente do selo",
+      "back": "Verso (goma e carimbo)",
+      "watermark": "Filigrana (se aplicável)",
+      "margin": "Margens e dentado"
+    },
+    "coins": {
+      "title": "Guia de fotos — Moedas",
+      "obverse": "Anverso (frente)",
+      "reverse": "Reverso (verso)",
+      "edge": "Bordo (cunhagem)",
+      "cert": "Certificado (PCGS / NGC)",
+      "detail": "Detalhe de pormenores"
+    }
   }
 }

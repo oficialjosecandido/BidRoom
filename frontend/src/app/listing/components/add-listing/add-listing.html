@@ -369,6 +369,52 @@
 
     <!-- ── STEP 3: Photos ─────────────────────────────────────────────────── -->
     <div class="step-panel" [class.active]="currentStep === 3">
+
+      <!-- Photo authenticity guide — only shown when subcategory has a guide -->
+      @if (photoGuide; as guide) {
+        <div class="photo-guide" [class.collapsed]="!photoGuideOpen">
+          <div class="photo-guide__header" (click)="photoGuideOpen = !photoGuideOpen">
+            <span class="photo-guide__icon">📸</span>
+            <span class="photo-guide__title">{{ guide.title | translate }}</span>
+            <span class="photo-guide__chevron" [class.open]="photoGuideOpen">›</span>
+          </div>
+
+          @if (photoGuideOpen) {
+            <div class="photo-guide__body">
+              <p class="photo-guide__lead">{{ 'photoGuide.lead' | translate }}</p>
+
+              <div class="photo-guide__group">
+                <span class="photo-guide__group-label">{{ 'photoGuide.required' | translate }}</span>
+                <div class="photo-guide__chips">
+                  @for (hint of guide.required; track hint.label) {
+                    <div class="photo-guide__chip"
+                         [class.highlighted]="isAttrHighlighted(hint.attrKey)">
+                      <span class="photo-guide__chip-icon">{{ hint.icon }}</span>
+                      <span>{{ hint.label | translate }}</span>
+                    </div>
+                  }
+                </div>
+              </div>
+
+              @if (guide.recommended.length > 0) {
+                <div class="photo-guide__group">
+                  <span class="photo-guide__group-label photo-guide__group-label--rec">{{ 'photoGuide.recommended' | translate }}</span>
+                  <div class="photo-guide__chips">
+                    @for (hint of guide.recommended; track hint.label) {
+                      <div class="photo-guide__chip photo-guide__chip--rec"
+                           [class.highlighted]="isAttrHighlighted(hint.attrKey)">
+                        <span class="photo-guide__chip-icon">{{ hint.icon }}</span>
+                        <span>{{ hint.label | translate }}</span>
+                      </div>
+                    }
+                  </div>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      }
+
       <div class="section">
         <div class="section-title">{{ 'addListing.step3.section' | translate }}</div>
 

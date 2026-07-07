@@ -2223,5 +2223,59 @@
       "linkCopied": "Enlace copiado",
       "note": "Comparte este artículo con compradores, vendedores o coleccionistas."
     }
+  },
+  "photoGuide": {
+    "lead": "Incluye estas fotos para generar confianza en los compradores y evitar que el anuncio sea ocultado.",
+    "required": "Fotos esenciales",
+    "recommended": "Fotos recomendadas",
+    "watches": {
+      "title": "Guía de fotos — Reloj",
+      "front": "Vista delantera (esfera visible)",
+      "back": "Vista trasera (referencia grabada)",
+      "serial": "Número de serie",
+      "papers": "Certificado / documentación",
+      "box": "Caja original",
+      "strap": "Correa y cierre",
+      "crown": "Corona y pulsadores",
+      "full": "Artículo completo",
+      "patina": "Pátina y marcas de uso"
+    },
+    "art": {
+      "title": "Guía de fotos — Arte",
+      "full": "Obra completa (buena iluminación)",
+      "signature": "Firma del artista",
+      "detail": "Detalle de técnica / textura",
+      "cert": "Certificado de autenticidad",
+      "back": "Reverso de la obra",
+      "frame": "Marco (si se incluye)",
+      "edition": "Número de edición",
+      "multiangleScuplt": "Múltiples ángulos (frente, lado, atrás)"
+    },
+    "jewelry": {
+      "title": "Guía de fotos — Joyería",
+      "full": "Vista completa de la pieza",
+      "stone": "Detalle de las piedras",
+      "hallmark": "Contraste / punzonado",
+      "cert": "Certificado gemológico",
+      "size": "Escala / tamaño",
+      "side": "Vista lateral",
+      "gemFull": "Piedra suelta (varias vistas)",
+      "scale": "Escala con referencia (moneda, regla)"
+    },
+    "stamps": {
+      "title": "Guía de fotos — Sellos",
+      "front": "Frente del sello",
+      "back": "Reverso (goma y matasellos)",
+      "watermark": "Filigrana (si aplica)",
+      "margin": "Márgenes y dentado"
+    },
+    "coins": {
+      "title": "Guía de fotos — Monedas",
+      "obverse": "Anverso (cara)",
+      "reverse": "Reverso (cruz)",
+      "edge": "Canto (acuñación)",
+      "cert": "Certificado (PCGS / NGC)",
+      "detail": "Detalle de detalles finos"
+    }
   }
 }

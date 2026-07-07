@@ -4084,5 +4084,59 @@
       "linkCopied": "Link copied",
       "note": "Share this article with buyers, sellers, or collectors."
     }
+  },
+  "photoGuide": {
+    "lead": "Include these photos to build buyer confidence and avoid your listing being hidden.",
+    "required": "Essential photos",
+    "recommended": "Recommended photos",
+    "watches": {
+      "title": "Photo guide — Watch",
+      "front": "Front view (dial visible)",
+      "back": "Back view (engraved reference)",
+      "serial": "Serial number",
+      "papers": "Certificate / documentation",
+      "box": "Original box",
+      "strap": "Bracelet and clasp",
+      "crown": "Crown and pushers",
+      "full": "Complete item",
+      "patina": "Patina and signs of wear"
+    },
+    "art": {
+      "title": "Photo guide — Art",
+      "full": "Complete work (good lighting)",
+      "signature": "Artist's signature",
+      "detail": "Technique / texture detail",
+      "cert": "Certificate of authenticity",
+      "back": "Back of the work",
+      "frame": "Frame (if included)",
+      "edition": "Edition number",
+      "multiangleScuplt": "Multiple angles (front, side, back)"
+    },
+    "jewelry": {
+      "title": "Photo guide — Jewelry",
+      "full": "Full view of the piece",
+      "stone": "Stone detail",
+      "hallmark": "Hallmark",
+      "cert": "Gemological certificate",
+      "size": "Scale / size",
+      "side": "Side view",
+      "gemFull": "Loose gem (multiple views)",
+      "scale": "Scale with reference (coin, ruler)"
+    },
+    "stamps": {
+      "title": "Photo guide — Stamps",
+      "front": "Stamp front",
+      "back": "Back (gum and postmark)",
+      "watermark": "Watermark (if applicable)",
+      "margin": "Margins and perforation"
+    },
+    "coins": {
+      "title": "Photo guide — Coins",
+      "obverse": "Obverse (heads)",
+      "reverse": "Reverse (tails)",
+      "edge": "Edge (minting)",
+      "cert": "Certificate (PCGS / NGC)",
+      "detail": "Fine detail"
+    }
   }
 }

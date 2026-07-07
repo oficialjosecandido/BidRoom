@@ -2220,5 +2220,59 @@
       "linkCopied": "Lien copié",
       "note": "Partagez cet article avec des acheteurs, vendeurs ou collectionneurs."
     }
+  },
+  "photoGuide": {
+    "lead": "Incluez ces photos pour renforcer la confiance des acheteurs et éviter que l'annonce soit masquée.",
+    "required": "Photos essentielles",
+    "recommended": "Photos recommandées",
+    "watches": {
+      "title": "Guide photo — Montre",
+      "front": "Vue de face (cadran visible)",
+      "back": "Vue de dos (référence gravée)",
+      "serial": "Numéro de série",
+      "papers": "Certificat / documentation",
+      "box": "Boîte d'origine",
+      "strap": "Bracelet et fermoir",
+      "crown": "Couronne et poussoirs",
+      "full": "Article complet",
+      "patina": "Patine et traces d'usure"
+    },
+    "art": {
+      "title": "Guide photo — Art",
+      "full": "Œuvre complète (bonne luminosité)",
+      "signature": "Signature de l'artiste",
+      "detail": "Détail de la technique / texture",
+      "cert": "Certificat d'authenticité",
+      "back": "Verso de l'œuvre",
+      "frame": "Cadre (si inclus)",
+      "edition": "Numéro d'édition",
+      "multiangleScuplt": "Vues multiples (face, côté, dos)"
+    },
+    "jewelry": {
+      "title": "Guide photo — Bijouterie",
+      "full": "Vue complète de la pièce",
+      "stone": "Détail des pierres",
+      "hallmark": "Poinçon",
+      "cert": "Certificat gemmologique",
+      "size": "Échelle / taille",
+      "side": "Vue de côté",
+      "gemFull": "Pierre libre (plusieurs vues)",
+      "scale": "Échelle avec référence (pièce, règle)"
+    },
+    "stamps": {
+      "title": "Guide photo — Timbres",
+      "front": "Face du timbre",
+      "back": "Dos (gomme et oblitération)",
+      "watermark": "Filigrane (si applicable)",
+      "margin": "Marges et dentelure"
+    },
+    "coins": {
+      "title": "Guide photo — Monnaies",
+      "obverse": "Avers (face)",
+      "reverse": "Revers (pile)",
+      "edge": "Tranche (frappe)",
+      "cert": "Certificat (PCGS / NGC)",
+      "detail": "Détail fin"
+    }
   }
 }
