@@ -10,8 +10,12 @@ export interface Listing {
   description: string;
   titlePt?: string | null;
   titleEn?: string | null;
+  titleFr?: string | null;
+  titleEs?: string | null;
   descriptionPt?: string | null;
   descriptionEn?: string | null;
+  descriptionFr?: string | null;
+  descriptionEs?: string | null;
   category: string;
   subCategory?: string;
   images: string[];

@@ -361,10 +361,16 @@
     "titlePlaceholder": "Enter a descriptive title (max 80 characters)",
     "langPt": "Portuguese",
     "langEn": "English",
+    "langFr": "French",
+    "langEs": "Spanish",
     "titlePt": "Title (Portuguese)",
     "titleEn": "Title (English)",
+    "titleFr": "Title (French)",
+    "titleEs": "Title (Spanish)",
     "descriptionPt": "Description (Portuguese)",
     "descriptionEn": "Description (English)",
+    "descriptionFr": "Description (French)",
+    "descriptionEs": "Description (Spanish)",
     "translationOptionalHint": "This translation is optional. Adding it helps you reach buyers in both languages.",
     "translateWithDeepl": "Translate with DeepL",
     "charactersCount": "{{count}}/80 characters",
@@ -4138,5 +4144,9 @@
       "cert": "Certificate (PCGS / NGC)",
       "detail": "Fine detail"
     }
+  },
+  "CURRENCY": {
+    "SELECTOR_LABEL": "Display currency",
+    "DISCLAIMER": "Amounts in other currencies are approximate and for guidance only. All auctions and payments are processed in euros (EUR). The final amount in your currency depends on your bank's exchange rate at the time of payment."
   }
 }

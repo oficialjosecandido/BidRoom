@@ -763,6 +763,15 @@ $radius-lg:      20px;
     &--pulse { animation: bid-pulse 1s ease-in-out infinite; }
   }
 
+  &__disclaimer {
+    display: block;
+    font-size: 0.65rem;
+    color: $text-secondary;
+    line-height: 1.4;
+    margin-top: 4px;
+    opacity: 0.75;
+  }
+
   &__count {
     font-size: 0.75rem;
     color: $text-secondary;

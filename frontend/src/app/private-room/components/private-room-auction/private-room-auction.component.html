@@ -229,8 +229,11 @@
             <div class="pr-bid-hero__inner">
               <span class="pr-bid-hero__label">Current Bid</span>
               <span class="pr-bid-hero__amount" [class.pr-bid-hero__amount--pulse]="countdown <= 30">
-                ${{ listing.currentPrice | number:'1.2-2' }}
+                {{ listing.currentPrice | displayPrice }}
               </span>
+              @if (currencyService.displayCurrency() !== 'EUR' && currencyService.ratesAvailable()) {
+                <span class="pr-bid-hero__disclaimer">{{ 'CURRENCY.DISCLAIMER' | translate }}</span>
+              }
               <span class="pr-bid-hero__count">{{ listing.bidCount }} {{ listing.bidCount === 1 ? 'bid' : 'bids' }}</span>
             </div>
           </div>

@@ -823,6 +823,18 @@ nav {
   color: var(--sub);
 }
 
+/* currency disclaimer */
+.currency-disclaimer {
+  font-size: 11px;
+  color: var(--sub);
+  line-height: 1.5;
+  margin: 6px 0 0;
+  padding: 6px 10px;
+  background: var(--s1);
+  border-radius: 6px;
+  border-left: 2px solid var(--gl);
+}
+
 /* status banners */
 .status-banner {
   display: flex;

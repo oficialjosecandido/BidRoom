@@ -147,8 +147,20 @@
     "step2Title": "Étape 2 : Détails et Médias",
     "step3Title": "Étape 3 : Prix et Règles des Enchères",
     "step4Title": "Étape 4 : Expédition et Révision Finale",
-    "listingTitle": "Titre de l'Annonce *",
+    "listingTitle": "Titre de l'Annonce",
     "titlePlaceholder": "Entrez un titre descriptif (max. 80 caractères)",
+    "langPt": "Portugais",
+    "langEn": "Anglais",
+    "langFr": "Français",
+    "langEs": "Espagnol",
+    "titlePt": "Titre (Portugais)",
+    "titleEn": "Titre (Anglais)",
+    "titleFr": "Titre (Français)",
+    "titleEs": "Titre (Espagnol)",
+    "descriptionPt": "Description (Portugais)",
+    "descriptionEn": "Description (Anglais)",
+    "descriptionFr": "Description (Français)",
+    "descriptionEs": "Description (Espagnol)",
     "charactersCount": "{{count}}/80 caractères",
     "category": "Catégorie *",
     "selectCategory": "Sélectionner une Catégorie",
@@ -2274,5 +2286,9 @@
       "cert": "Certificat (PCGS / NGC)",
       "detail": "Détail fin"
     }
+  },
+  "CURRENCY": {
+    "SELECTOR_LABEL": "Devise d'affichage",
+    "DISCLAIMER": "Les montants dans d'autres devises sont approximatifs et fournis à titre indicatif uniquement. Toutes les enchères et tous les paiements sont traités en euros (EUR). Le montant final dans votre devise dépend du taux de change de votre banque au moment du paiement."
   }
 }

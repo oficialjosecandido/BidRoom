@@ -11,6 +11,7 @@ import { WatchlistService } from '../../../shared/services/watchlist.service';
 import { AuthService } from '../../../auth/services/auth.service';
 import { CATEGORIES, Category } from '../../../shared/config/categories.config';
 import { take } from 'rxjs/operators';
+import { DisplayPricePipe } from '../../../shared/pipes/display-price.pipe';
 
 const PAGE_SIZE = 20;
 
@@ -47,7 +48,7 @@ type StatusFilterKey = 'ending' | 'private';
 @Component({
   selector: 'app-listing-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslateModule, RouterLink, HeaderComponent, FooterComponent],
+  imports: [CommonModule, FormsModule, TranslateModule, RouterLink, HeaderComponent, FooterComponent, DisplayPricePipe],
   templateUrl: './listing-list.component.html',
   styleUrls: ['./listing-list.component.scss']
 })

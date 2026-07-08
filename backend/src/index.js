@@ -53,6 +53,7 @@ const shareRoutes = require('./routes/share');
 const supportRoutes = require('./routes/support');
 const sitemapRoutes = require('./routes/sitemap');
 const blogRoutes = require('./routes/blog');
+const exchangeRoutes = require('./routes/exchange');
 
 // Import services
 const auctionEndScheduler = require('./services/auctionEndScheduler');
@@ -285,6 +286,7 @@ app.use('/api/appeals', generalLimiter, appealsRoutes);
 app.use('/api/damage-claims', generalLimiter, damageClaimsRoutes);
 app.use('/api/kyc', generalLimiter, kycRoutes);
 app.use('/api/blog', generalLimiter, blogRoutes);
+app.use('/api/exchange-rates', generalLimiter, exchangeRoutes);
 
 // Share pages — unauthenticated; rate-limited to prevent DB exhaustion via random slug enumeration
 // /api/share/* — same-origin URLs via Azure SWA linked API (WhatsApp OG crawlers)

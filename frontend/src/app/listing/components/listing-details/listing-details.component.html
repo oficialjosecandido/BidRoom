@@ -302,11 +302,14 @@
       <div class="price-big">
         @if (listing.auctionFormat === 'best-offer') {
           @if (getHighestOfferAmount() === 0) { <span class="price-empty">{{ 'listingDetails.noOffersYet' | translate }}</span> }
-          @else { {{ formatPrice(getHighestOfferAmount()) }} }
+          @else { {{ getHighestOfferAmount() | displayPrice }} }
         } @else {
-          {{ formatPrice(listing.currentPrice || listing.startingPrice) }}
+          {{ (listing.currentPrice || listing.startingPrice) | displayPrice }}
         }
       </div>
+      @if (currencyService.displayCurrency() !== 'EUR' && currencyService.ratesAvailable()) {
+        <p class="currency-disclaimer">{{ 'CURRENCY.DISCLAIMER' | translate }}</p>
+      }
       <div class="price-meta">
         {{ getOfferOrBidCount() }}
         {{ listing.auctionFormat === 'best-offer'
@@ -341,7 +344,7 @@
         <span>🔒</span>
         <div>
           <strong>{{ 'listingDetails.privateRoom.closed' | translate }}</strong>
-          @if (listing.winner) { <p>{{ 'listingDetails.sidebar.privateRoomClosedWinner' | translate }} <strong>{{ formatPrice(listing.currentPrice) }}</strong>.</p> }
+          @if (listing.winner) { <p>{{ 'listingDetails.sidebar.privateRoomClosedWinner' | translate }} <strong>{{ listing.currentPrice | displayPrice }}</strong>.</p> }
           @else { <p>{{ 'listingDetails.privateRoom.closedNoWinner' | translate }}</p> }
         </div>
       </div>
@@ -403,7 +406,7 @@
 
     <!-- BUY NOW -->
     @if (listing.buyNowPrice && listing.auctionFormat === 'highest-bid' && !isAuctionEnded() && !hasPrivateRoom() && !isOwnListing) {
-      <button class="btn-offer btn-buynow" (click)="buyNow()">{{ 'listingDetails.sidebar.buyNow' | translate }} {{ formatPrice(listing.buyNowPrice) }}</button>
+      <button class="btn-offer btn-buynow" (click)="buyNow()">{{ 'listingDetails.sidebar.buyNow' | translate }} {{ listing.buyNowPrice | displayPrice }}</button>
     }
 
     <!-- PRIMARY CTA -->
@@ -457,15 +460,15 @@
     @if (listing.auctionFormat === 'best-offer' && listing.minimumOfferPrice) {
       <div class="min-box">
         <div class="mb-l">{{ 'listingDetails.sidebar.minimumOffer' | translate }}</div>
-        <div class="mb-v">{{ formatPrice(listing.minimumOfferPrice) }}</div>
+        <div class="mb-v">{{ listing.minimumOfferPrice | displayPrice }}</div>
         <div class="mb-d">{{ 'listingDetails.sidebar.minimumOfferDesc' | translate }}</div>
       </div>
     }
     @if (listing.auctionFormat === 'highest-bid' && !isAuctionEnded() && listing.startingPrice) {
       <div class="min-box">
         <div class="mb-l">{{ 'listingDetails.sidebar.minimumBid' | translate }}</div>
-        <div class="mb-v">{{ formatPrice(getMinBid()) }}</div>
-        <div class="mb-d">{{ 'listingDetails.sidebar.bidIncrement' | translate }} {{ formatPrice(listing.bidIncrement) }}</div>
+        <div class="mb-v">{{ getMinBid() | displayPrice }}</div>
+        <div class="mb-d">{{ 'listingDetails.sidebar.bidIncrement' | translate }} {{ listing.bidIncrement | displayPrice }}</div>
       </div>
     }
 
@@ -582,13 +585,16 @@
       <div class="chips">
         <div class="chip-box">
           <div class="cb-l">{{ 'listingDetails.bidModal.currentBid' | translate }}</div>
-          <div class="cb-v">{{ formatPrice(listing?.currentPrice || listing?.startingPrice || 0) }}</div>
+          <div class="cb-v">{{ (listing?.currentPrice || listing?.startingPrice || 0) | displayPrice }}</div>
         </div>
         <div class="chip-box">
           <div class="cb-l">{{ 'listingDetails.bidModal.minBid' | translate }}</div>
-          <div class="cb-v">{{ formatPrice(getMinBid()) }}</div>
+          <div class="cb-v">{{ getMinBid() | displayPrice }}</div>
         </div>
       </div>
+      @if (currencyService.displayCurrency() !== 'EUR' && currencyService.ratesAvailable()) {
+        <p class="currency-disclaimer">{{ 'CURRENCY.DISCLAIMER' | translate }}</p>
+      }
       <label class="f-label" for="bid-amount">{{ 'listingDetails.bidModal.valueLabel' | translate }}</label>
       <input class="f-input" id="bid-amount" type="text" inputmode="decimal" [placeholder]="formatPrice(getMinBid())" [(ngModel)]="bidAmount" autocomplete="off" />
       @if (!isAuthenticated) {
@@ -624,15 +630,18 @@
       <div class="offer-stats">
         <div class="offer-stat" [class.offer-stat--lead]="getHighestOfferAmount() > 0">
           <span class="offer-stat-l">{{ 'listingDetails.offerModal.highestOffer' | translate }}</span>
-          <span class="offer-stat-v">{{ getHighestOfferAmount() > 0 ? formatPrice(getHighestOfferAmount()) : '—' }}</span>
+          <span class="offer-stat-v">{{ getHighestOfferAmount() > 0 ? (getHighestOfferAmount() | displayPrice) : '—' }}</span>
         </div>
         @if (listing?.minimumOfferPrice) {
           <div class="offer-stat">
             <span class="offer-stat-l">{{ 'listingDetails.offerModal.minimumOffer' | translate }}</span>
-            <span class="offer-stat-v">{{ formatPrice(listing!.minimumOfferPrice!) }}</span>
+            <span class="offer-stat-v">{{ listing!.minimumOfferPrice! | displayPrice }}</span>
           </div>
         }
       </div>
+      @if (currencyService.displayCurrency() !== 'EUR' && currencyService.ratesAvailable()) {
+        <p class="currency-disclaimer">{{ 'CURRENCY.DISCLAIMER' | translate }}</p>
+      }
       <div class="offer-amount-block">
         <label class="offer-amount-l" for="offer-amount">{{ 'listingDetails.offerModal.valueLabel' | translate }}</label>
         <div class="offer-amount-row">
@@ -642,7 +651,7 @@
             [(ngModel)]="offerAmount" autocomplete="off" />
         </div>
         @if (getOfferAmountNumber() > 0) {
-          <p class="offer-preview">{{ 'listingDetails.offerModal.yourOfferPreview' | translate }} <strong>{{ formatPrice(getOfferAmountNumber()) }}</strong></p>
+          <p class="offer-preview">{{ 'listingDetails.offerModal.yourOfferPreview' | translate }} <strong>{{ getOfferAmountNumber() | displayPrice }}</strong></p>
         }
       </div>
       @if (!isAuthenticated) {

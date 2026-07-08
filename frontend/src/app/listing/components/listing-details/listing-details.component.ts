@@ -30,16 +30,19 @@ import { AnalyticsEvents } from '../../../shared/services/analytics.events';
 import { PostHogService } from '../../../shared/services/posthog.service';
 import { getLocalizedTitle, getLocalizedDescription } from '../../../shared/utils/listing-locale';
 import { API_CONFIG } from '../../../shared/config/api.config';
+import { CurrencyDisplayService } from '../../../shared/services/currency-display.service';
+import { DisplayPricePipe } from '../../../shared/pipes/display-price.pipe';
 
 @Component({
   selector: 'app-listing-details',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslateModule, RouterLink, ReportModalComponent, HeaderComponent, FooterComponent],
+  imports: [CommonModule, FormsModule, TranslateModule, RouterLink, ReportModalComponent, HeaderComponent, FooterComponent, DisplayPricePipe],
   templateUrl: './listing-details.component.html',
   styleUrls: ['./listing-details.component.scss']
 })
 export class ListingDetailsComponent implements OnInit, OnDestroy {
   readonly getTrustTierInfo = getTrustTierInfo;
+  readonly currencyService = inject(CurrencyDisplayService);
 
   private route = inject(ActivatedRoute);
   private router = inject(Router);

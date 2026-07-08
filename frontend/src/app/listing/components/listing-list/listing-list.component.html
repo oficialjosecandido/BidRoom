@@ -384,7 +384,7 @@
                         @if (listing.auctionFormat === 'best-offer' && (listing.currentPrice == null || listing.currentPrice === 0)) {
                           <span class="price-val--text">{{ 'listingList.noOffersYet' | translate }}</span>
                         } @else {
-                          {{ formatPrice(listing.currentPrice) }}
+                          {{ listing.currentPrice | displayPrice }}
                         }
                       </div>
                     </div>

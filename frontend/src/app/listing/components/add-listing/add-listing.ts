@@ -232,8 +232,8 @@ export class AddListing implements OnInit, OnDestroy {
   private postHog = inject(PostHogService);
 
   listingForm!: FormGroup;
-  activeLangTab: 'pt' | 'en' = 'pt';
-  primaryLangTab: 'pt' | 'en' = 'pt';
+  activeLangTab: 'pt' | 'en' | 'fr' | 'es' = 'pt';
+  primaryLangTab: 'pt' | 'en' | 'fr' | 'es' = 'pt';
   isSubmitting = false;
   errorMessage = '';
   isUploadingImages = false;
@@ -327,7 +327,7 @@ export class AddListing implements OnInit, OnDestroy {
 
   // ─── Preview sidebar ─────────────────────────────────────────────────────────
   get previewTitle(): string {
-    return this.listingForm?.get(this.primaryLangTab === 'pt' ? 'titlePt' : 'titleEn')?.value || '';
+    return this.listingForm?.get(this.langTitleKey(this.primaryLangTab))?.value || '';
   }
   get previewCategory(): string { return this.listingForm?.get('category')?.value || ''; }
   get previewFormat(): string { return this.listingForm?.get('listingFormat')?.value || 'auction'; }
@@ -378,8 +378,8 @@ export class AddListing implements OnInit, OnDestroy {
   get checklist(): Record<string, boolean> {
     const fmt = this.previewFormat;
     const tab = this.primaryLangTab;
-    const titleCtrl = this.listingForm?.get(tab === 'pt' ? 'titlePt' : 'titleEn');
-    const descCtrl = this.listingForm?.get(tab === 'pt' ? 'descriptionPt' : 'descriptionEn');
+    const titleCtrl = this.listingForm?.get(this.langTitleKey(tab));
+    const descCtrl = this.listingForm?.get(this.langDescKey(tab));
     const shippingOk = this.isStepValid(5, false);
     return {
       format: true,
@@ -607,7 +607,8 @@ export class AddListing implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    const lang: 'pt' | 'en' = this.translate.currentLang === 'en' ? 'en' : 'pt';
+    const cl = this.translate.currentLang;
+    const lang: 'pt' | 'en' | 'fr' | 'es' = (['pt', 'en', 'fr', 'es'] as const).includes(cl as any) ? cl as 'pt' | 'en' | 'fr' | 'es' : 'pt';
     this.activeLangTab = lang;
     this.primaryLangTab = lang;
     this.initializeForm();
@@ -649,29 +650,29 @@ export class AddListing implements OnInit, OnDestroy {
     });
   }
 
-  setLangTab(lang: 'pt' | 'en'): void {
+  setLangTab(lang: 'pt' | 'en' | 'fr' | 'es'): void {
     this.activeLangTab = lang;
   }
 
-  private updateLangValidators(): void {
-    const ptTitle = this.listingForm.get('titlePt');
-    const enTitle = this.listingForm.get('titleEn');
-    const ptDesc  = this.listingForm.get('descriptionPt');
-    const enDesc  = this.listingForm.get('descriptionEn');
-    if (!ptTitle) return;
+  private langTitleKey(lang: string): string { return 'title' + lang[0].toUpperCase() + lang.slice(1); }
+  private langDescKey(lang: string): string { return 'description' + lang[0].toUpperCase() + lang.slice(1); }
 
-    if (this.primaryLangTab === 'pt') {
-      ptTitle.setValidators([Validators.required, Validators.maxLength(80)]);
-      ptDesc!.setValidators([Validators.required, Validators.minLength(50)]);
-      enTitle!.setValidators([Validators.maxLength(80)]);
-      enDesc!.setValidators([]);
-    } else {
-      enTitle!.setValidators([Validators.required, Validators.maxLength(80)]);
-      enDesc!.setValidators([Validators.required, Validators.minLength(50)]);
-      ptTitle.setValidators([Validators.maxLength(80)]);
-      ptDesc!.setValidators([]);
-    }
-    [ptTitle, enTitle, ptDesc, enDesc].forEach(c => c!.updateValueAndValidity({ emitEvent: false }));
+  private updateLangValidators(): void {
+    const langs = ['pt', 'en', 'fr', 'es'] as const;
+    langs.forEach(lang => {
+      const t = this.listingForm.get(this.langTitleKey(lang));
+      const d = this.listingForm.get(this.langDescKey(lang));
+      if (!t || !d) return;
+      if (lang === this.primaryLangTab) {
+        t.setValidators([Validators.required, Validators.maxLength(80)]);
+        d.setValidators([Validators.required, Validators.minLength(50)]);
+      } else {
+        t.setValidators([Validators.maxLength(80)]);
+        d.setValidators([]);
+      }
+      t.updateValueAndValidity({ emitEvent: false });
+      d.updateValueAndValidity({ emitEvent: false });
+    });
   }
 
   initializeForm(): void {
@@ -679,6 +680,8 @@ export class AddListing implements OnInit, OnDestroy {
       title: ['', [Validators.required, Validators.maxLength(80)]],
       titlePt: ['', [Validators.required, Validators.maxLength(80)]],
       titleEn: ['', [Validators.maxLength(80)]],
+      titleFr: ['', [Validators.maxLength(80)]],
+      titleEs: ['', [Validators.maxLength(80)]],
       category: ['', Validators.required],
       subCategory: ['', Validators.required],
       listingFormat: ['best-offer', Validators.required],
@@ -688,6 +691,8 @@ export class AddListing implements OnInit, OnDestroy {
       description: ['', [Validators.required, Validators.minLength(50)]],
       descriptionPt: ['', [Validators.required, Validators.minLength(50)]],
       descriptionEn: ['', []],
+      descriptionFr: ['', []],
+      descriptionEs: ['', []],
       media: this.fb.array([]),
       specifications: this.fb.array([]),
       attributes: this.fb.group({}),
@@ -780,11 +785,11 @@ export class AddListing implements OnInit, OnDestroy {
     // so all existing validation, preview and checklist logic continues to work.
     const syncPrimary = () => {
       const tab = this.primaryLangTab;
-      const t = this.listingForm.get(tab === 'pt' ? 'titlePt' : 'titleEn')?.value ?? '';
-      const d = this.listingForm.get(tab === 'pt' ? 'descriptionPt' : 'descriptionEn')?.value ?? '';
+      const t = this.listingForm.get(this.langTitleKey(tab))?.value ?? '';
+      const d = this.listingForm.get(this.langDescKey(tab))?.value ?? '';
       this.listingForm.patchValue({ title: t, description: d }, { emitEvent: false });
     };
-    ['titlePt', 'titleEn', 'descriptionPt', 'descriptionEn'].forEach(ctrl => {
+    ['titlePt', 'titleEn', 'titleFr', 'titleEs', 'descriptionPt', 'descriptionEn', 'descriptionFr', 'descriptionEs'].forEach(ctrl => {
       this.listingForm.get(ctrl)?.valueChanges.subscribe(() => {
         syncPrimary();
         this.triggerContentCheck();
@@ -807,14 +812,10 @@ export class AddListing implements OnInit, OnDestroy {
   }
 
   private triggerContentCheck(): void {
-    const title = [
-      this.listingForm.get('titlePt')?.value ?? '',
-      this.listingForm.get('titleEn')?.value ?? '',
-    ].join(' ').trim();
-    const description = [
-      this.listingForm.get('descriptionPt')?.value ?? '',
-      this.listingForm.get('descriptionEn')?.value ?? '',
-    ].join(' ').trim();
+    const title = ['titlePt', 'titleEn', 'titleFr', 'titleEs']
+      .map(k => this.listingForm.get(k)?.value ?? '').join(' ').trim();
+    const description = ['descriptionPt', 'descriptionEn', 'descriptionFr', 'descriptionEs']
+      .map(k => this.listingForm.get(k)?.value ?? '').join(' ').trim();
     if (!title && !description) {
       this.contactWarning = { show: false, types: [] };
       return;
@@ -861,8 +862,8 @@ export class AddListing implements OnInit, OnDestroy {
   private hasDraftableContent(): boolean {
     const v = this.listingForm.getRawValue() as Record<string, unknown>;
     const text = (s: unknown) => (typeof s === 'string' ? s.trim() : '');
-    if (text(v['titlePt']) || text(v['titleEn'])) return true;
-    if (text(v['descriptionPt']) || text(v['descriptionEn'])) return true;
+    if (text(v['titlePt']) || text(v['titleEn']) || text(v['titleFr']) || text(v['titleEs'])) return true;
+    if (text(v['descriptionPt']) || text(v['descriptionEn']) || text(v['descriptionFr']) || text(v['descriptionEs'])) return true;
     if (text(v['category'])) return true;
     if (text(v['subCategory'])) return true;
     if (v['startingBid'] != null && v['startingBid'] !== '') return true;
@@ -970,7 +971,7 @@ export class AddListing implements OnInit, OnDestroy {
       const patch: Record<string, unknown> = {};
       const keys = [
         'title', 'category', 'subCategory', 'listingFormat', 'itemMode', 'quantity', 'condition', 'description',
-        'titlePt', 'titleEn', 'descriptionPt', 'descriptionEn',
+        'titlePt', 'titleEn', 'titleFr', 'titleEs', 'descriptionPt', 'descriptionEn', 'descriptionFr', 'descriptionEs',
         'locationCity', 'locationCountry', 'duration', 'startingBid',
         'buyNowPrice', 'minimumAcceptPrice', 'allowPrivateRoom',
         'shippingOption', 'flatRateShipping', 'packageSize', 'shippingOriginPostalCode',
@@ -1490,8 +1491,12 @@ export class AddListing implements OnInit, OnDestroy {
       description: formValue.description,
       titlePt: formValue.titlePt || null,
       titleEn: formValue.titleEn || null,
+      titleFr: formValue.titleFr || null,
+      titleEs: formValue.titleEs || null,
       descriptionPt: formValue.descriptionPt || null,
       descriptionEn: formValue.descriptionEn || null,
+      descriptionFr: formValue.descriptionFr || null,
+      descriptionEs: formValue.descriptionEs || null,
       category: formValue.category,
       subCategory: formValue.subCategory,
       condition: formValue.condition,
@@ -1533,9 +1538,9 @@ export class AddListing implements OnInit, OnDestroy {
         return ['listingFormat'];
       case 2:
         return [
-          this.primaryLangTab === 'pt' ? 'titlePt' : 'titleEn',
+          this.langTitleKey(this.primaryLangTab),
           'category', 'subCategory', 'condition',
-          this.primaryLangTab === 'pt' ? 'descriptionPt' : 'descriptionEn',
+          this.langDescKey(this.primaryLangTab),
         ];
       case 3:
         return [];
@@ -1621,9 +1626,9 @@ export class AddListing implements OnInit, OnDestroy {
 
   private collectInvalidFieldLabels(): string[] {
     const keys = [
-      this.primaryLangTab === 'pt' ? 'titlePt' : 'titleEn',
+      this.langTitleKey(this.primaryLangTab),
       'category', 'subCategory', 'condition',
-      this.primaryLangTab === 'pt' ? 'descriptionPt' : 'descriptionEn',
+      this.langDescKey(this.primaryLangTab),
       'startingBid', 'duration', 'shippingOption', 'flatRateShipping',
       'packageSize', 'shippingOriginPostalCode',
       'locationCity', 'locationCountry', 'returnPolicy', 'sellerDeclaration',

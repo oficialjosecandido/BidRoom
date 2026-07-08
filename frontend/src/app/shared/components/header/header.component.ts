@@ -9,6 +9,7 @@ import { ListingsService } from '../../services/listings.service';
 import { NotificationService } from '../../services/notification.service';
 import { SocketService } from '../../services/socket.service';
 import { ThemeService } from '../../services/theme.service';
+import { CurrencyDisplayService, DisplayCurrency, DISPLAY_CURRENCIES, CURRENCY_SYMBOLS } from '../../services/currency-display.service';
 import { BidroomLogoComponent } from '../bidroom-logo/bidroom-logo.component';
 
 @Component({
@@ -27,6 +28,10 @@ export class HeaderComponent implements OnInit, OnDestroy {
   private translate = inject(TranslateService);
   private platformId = inject(PLATFORM_ID);
   readonly theme = inject(ThemeService);
+  readonly currencyService = inject(CurrencyDisplayService);
+
+  readonly displayCurrencies: DisplayCurrency[] = DISPLAY_CURRENCIES;
+  readonly currencySymbols = CURRENCY_SYMBOLS;
 
   private readonly isBrowser = isPlatformBrowser(this.platformId);
 
@@ -46,7 +51,8 @@ export class HeaderComponent implements OnInit, OnDestroy {
   constructor() {
     this.isAuthenticated$ = this.authService.isAuthenticated();
     const saved = (typeof localStorage !== 'undefined' && localStorage.getItem('lang')) || 'pt';
-    this.translate.use(saved);
+    const validLangs = ['pt', 'en', 'fr', 'es'];
+    this.translate.use(validLangs.includes(saved) ? saved : 'pt');
   }
 
   ngOnInit(): void {

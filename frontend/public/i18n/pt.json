@@ -361,10 +361,16 @@
     "titlePlaceholder": "Introduza um título descritivo (máx. 80 caracteres)",
     "langPt": "Português",
     "langEn": "Inglês",
+    "langFr": "Francês",
+    "langEs": "Espanhol",
     "titlePt": "Título (Português)",
     "titleEn": "Título (Inglês)",
+    "titleFr": "Título (Francês)",
+    "titleEs": "Título (Espanhol)",
     "descriptionPt": "Descrição (Português)",
     "descriptionEn": "Descrição (Inglês)",
+    "descriptionFr": "Descrição (Francês)",
+    "descriptionEs": "Descrição (Espanhol)",
     "translationOptionalHint": "Esta tradução é opcional. Adicioná-la ajuda a chegar a compradores nos dois idiomas.",
     "translateWithDeepl": "Traduzir com DeepL",
     "charactersCount": "{{count}}/80 caracteres",
@@ -4138,5 +4144,9 @@
       "cert": "Certificado (PCGS / NGC)",
       "detail": "Detalhe de pormenores"
     }
+  },
+  "CURRENCY": {
+    "SELECTOR_LABEL": "Moeda de apresentação",
+    "DISCLAIMER": "Os valores noutras moedas são aproximados e apenas indicativos. Todos os leilões e pagamentos são processados em euros (EUR). O valor final na sua moeda depende da taxa de câmbio do seu banco no momento do pagamento."
   }
 }

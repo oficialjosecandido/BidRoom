@@ -168,6 +168,12 @@
           <button type="button" class="lang-tab" [class.active]="activeLangTab === 'en'" (click)="setLangTab('en')">
             🇬🇧 {{ 'addListing.langEn' | translate }}
           </button>
+          <button type="button" class="lang-tab" [class.active]="activeLangTab === 'fr'" (click)="setLangTab('fr')">
+            🇫🇷 {{ 'addListing.langFr' | translate }}
+          </button>
+          <button type="button" class="lang-tab" [class.active]="activeLangTab === 'es'" (click)="setLangTab('es')">
+            🇪🇸 {{ 'addListing.langEs' | translate }}
+          </button>
         </div>
 
         @if (activeLangTab !== primaryLangTab) {
@@ -190,7 +196,8 @@
             @if (getFieldError('titlePt')) { <div class="field-err">{{ getFieldError('titlePt') }}</div> }
             <div class="char-count"><span>{{ listingForm.get('titlePt')?.value?.length || 0 }}</span>/80</div>
           </div>
-        } @else {
+        }
+        @if (activeLangTab === 'en') {
           <div class="field">
             <label class="field-label">
               {{ 'addListing.listingTitle' | translate }}
@@ -200,6 +207,30 @@
               [placeholder]="'addListing.titlePlaceholder' | translate">
             @if (getFieldError('titleEn')) { <div class="field-err">{{ getFieldError('titleEn') }}</div> }
             <div class="char-count"><span>{{ listingForm.get('titleEn')?.value?.length || 0 }}</span>/80</div>
+          </div>
+        }
+        @if (activeLangTab === 'fr') {
+          <div class="field">
+            <label class="field-label">
+              {{ 'addListing.listingTitle' | translate }}
+              @if (primaryLangTab === 'fr') { <span class="req">*</span> }
+            </label>
+            <input class="field-input" type="text" formControlName="titleFr" maxlength="80"
+              [placeholder]="'addListing.titlePlaceholder' | translate">
+            @if (getFieldError('titleFr')) { <div class="field-err">{{ getFieldError('titleFr') }}</div> }
+            <div class="char-count"><span>{{ listingForm.get('titleFr')?.value?.length || 0 }}</span>/80</div>
+          </div>
+        }
+        @if (activeLangTab === 'es') {
+          <div class="field">
+            <label class="field-label">
+              {{ 'addListing.listingTitle' | translate }}
+              @if (primaryLangTab === 'es') { <span class="req">*</span> }
+            </label>
+            <input class="field-input" type="text" formControlName="titleEs" maxlength="80"
+              [placeholder]="'addListing.titlePlaceholder' | translate">
+            @if (getFieldError('titleEs')) { <div class="field-err">{{ getFieldError('titleEs') }}</div> }
+            <div class="char-count"><span>{{ listingForm.get('titleEs')?.value?.length || 0 }}</span>/80</div>
           </div>
         }
 
@@ -256,7 +287,8 @@
               <span class="char-min"> · {{ 'addListing.descriptionMinChars' | translate }}</span>
             </div>
           </div>
-        } @else {
+        }
+        @if (activeLangTab === 'en') {
           <div class="field">
             <label class="field-label">
               {{ 'addListing.description' | translate }}
@@ -268,6 +300,38 @@
             <div class="char-count"
                  [class.char-count--warn]="primaryLangTab === 'en' && (listingForm.get('descriptionEn')?.value?.length || 0) < 50">
               <span>{{ listingForm.get('descriptionEn')?.value?.length || 0 }}</span>/3000
+              <span class="char-min"> · {{ 'addListing.descriptionMinChars' | translate }}</span>
+            </div>
+          </div>
+        }
+        @if (activeLangTab === 'fr') {
+          <div class="field">
+            <label class="field-label">
+              {{ 'addListing.description' | translate }}
+              @if (primaryLangTab === 'fr') { <span class="req">*</span> }
+            </label>
+            <textarea class="field-textarea" formControlName="descriptionFr" maxlength="3000"
+              [placeholder]="'addListing.descriptionPlaceholder' | translate"></textarea>
+            @if (getFieldError('descriptionFr')) { <div class="field-err">{{ getFieldError('descriptionFr') }}</div> }
+            <div class="char-count"
+                 [class.char-count--warn]="primaryLangTab === 'fr' && (listingForm.get('descriptionFr')?.value?.length || 0) < 50">
+              <span>{{ listingForm.get('descriptionFr')?.value?.length || 0 }}</span>/3000
+              <span class="char-min"> · {{ 'addListing.descriptionMinChars' | translate }}</span>
+            </div>
+          </div>
+        }
+        @if (activeLangTab === 'es') {
+          <div class="field">
+            <label class="field-label">
+              {{ 'addListing.description' | translate }}
+              @if (primaryLangTab === 'es') { <span class="req">*</span> }
+            </label>
+            <textarea class="field-textarea" formControlName="descriptionEs" maxlength="3000"
+              [placeholder]="'addListing.descriptionPlaceholder' | translate"></textarea>
+            @if (getFieldError('descriptionEs')) { <div class="field-err">{{ getFieldError('descriptionEs') }}</div> }
+            <div class="char-count"
+                 [class.char-count--warn]="primaryLangTab === 'es' && (listingForm.get('descriptionEs')?.value?.length || 0) < 50">
+              <span>{{ listingForm.get('descriptionEs')?.value?.length || 0 }}</span>/3000
               <span class="char-min"> · {{ 'addListing.descriptionMinChars' | translate }}</span>
             </div>
           </div>

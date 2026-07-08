@@ -81,11 +81,29 @@
       </button>
     </div>
 
-    <!-- Lang toggle PT | EN -->
+    <!-- Lang toggle PT | EN | FR | ES -->
     <div class="lang-tog">
       <button class="lt" [class.on]="currentLang === 'pt'" (click)="switchLanguage('pt')">PT</button>
       <button class="lt" [class.on]="currentLang === 'en'" (click)="switchLanguage('en')">EN</button>
+      <button class="lt" [class.on]="currentLang === 'fr'" (click)="switchLanguage('fr')">FR</button>
+      <button class="lt" [class.on]="currentLang === 'es'" (click)="switchLanguage('es')">ES</button>
     </div>
+
+    <!-- Currency selector (only shown when rates are available) -->
+    @if (currencyService.ratesAvailable()) {
+      <div class="currency-sel">
+        @for (c of displayCurrencies; track c) {
+          <button
+            type="button"
+            class="cs-btn"
+            [class.on]="currencyService.displayCurrency() === c"
+            (click)="currencyService.setCurrency(c)"
+            [attr.title]="currencySymbols[c] + ' ' + c">
+            {{ c }}
+          </button>
+        }
+      </div>
+    }
 
     <!-- Inline search bar -->
     <div class="search-bar" [class.open]="searchOpen">
@@ -194,7 +212,23 @@
       <div class="lang-tog lang-tog--full">
         <button class="lt" [class.on]="currentLang === 'pt'" (click)="switchLanguage('pt'); closeMenu()">PT</button>
         <button class="lt" [class.on]="currentLang === 'en'" (click)="switchLanguage('en'); closeMenu()">EN</button>
+        <button class="lt" [class.on]="currentLang === 'fr'" (click)="switchLanguage('fr'); closeMenu()">FR</button>
+        <button class="lt" [class.on]="currentLang === 'es'" (click)="switchLanguage('es'); closeMenu()">ES</button>
       </div>
+      @if (currencyService.ratesAvailable()) {
+        <span class="nm-lang-label">{{ 'CURRENCY.SELECTOR_LABEL' | translate }}</span>
+        <div class="currency-sel currency-sel--full">
+          @for (c of displayCurrencies; track c) {
+            <button
+              type="button"
+              class="cs-btn"
+              [class.on]="currencyService.displayCurrency() === c"
+              (click)="currencyService.setCurrency(c); closeMenu()">
+              {{ currencySymbols[c] }} {{ c }}
+            </button>
+          }
+        </div>
+      }
     </div>
   </div>
 }

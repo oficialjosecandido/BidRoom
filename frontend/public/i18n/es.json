@@ -147,8 +147,20 @@
     "step2Title": "Paso 2: Detalles y Media",
     "step3Title": "Paso 3: Precios y Reglas de la Subasta",
     "step4Title": "Paso 4: Envío y Revisión Final",
-    "listingTitle": "Título del Anuncio *",
+    "listingTitle": "Título del Anuncio",
     "titlePlaceholder": "Introduce un título descriptivo (máx. 80 caracteres)",
+    "langPt": "Portugués",
+    "langEn": "Inglés",
+    "langFr": "Francés",
+    "langEs": "Español",
+    "titlePt": "Título (Portugués)",
+    "titleEn": "Título (Inglés)",
+    "titleFr": "Título (Francés)",
+    "titleEs": "Título (Español)",
+    "descriptionPt": "Descripción (Portugués)",
+    "descriptionEn": "Descripción (Inglés)",
+    "descriptionFr": "Descripción (Francés)",
+    "descriptionEs": "Descripción (Español)",
     "charactersCount": "{{count}}/80 caracteres",
     "category": "Categoría *",
     "selectCategory": "Seleccionar Categoría",
@@ -2277,5 +2289,9 @@
       "cert": "Certificado (PCGS / NGC)",
       "detail": "Detalle de detalles finos"
     }
+  },
+  "CURRENCY": {
+    "SELECTOR_LABEL": "Moneda de presentación",
+    "DISCLAIMER": "Los importes en otras monedas son aproximados y solo informativos. Todas las subastas y pagos se procesan en euros (EUR). El importe final en tu moneda depende del tipo de cambio de tu banco en el momento del pago."
   }
 }

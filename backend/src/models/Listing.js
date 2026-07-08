@@ -23,8 +23,12 @@ const listingSchema = new mongoose.Schema({
   },
   titlePt: { type: String, default: null, trim: true, maxlength: 80 },
   titleEn: { type: String, default: null, trim: true, maxlength: 80 },
+  titleFr: { type: String, default: null, trim: true, maxlength: 80 },
+  titleEs: { type: String, default: null, trim: true, maxlength: 80 },
   descriptionPt: { type: String, default: null, maxlength: 5000 },
   descriptionEn: { type: String, default: null, maxlength: 5000 },
+  descriptionFr: { type: String, default: null, maxlength: 5000 },
+  descriptionEs: { type: String, default: null, maxlength: 5000 },
   category: {
     type: String,
     required: true,

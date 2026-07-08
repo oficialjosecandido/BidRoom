@@ -15,6 +15,8 @@ import { API_CONFIG } from '../../../shared/config/api.config';
 import { getLocalizedTitle } from '../../../shared/utils/listing-locale';
 import { PostHogService } from '../../../shared/services/posthog.service';
 import { AnalyticsEvents } from '../../../shared/services/analytics.events';
+import { CurrencyDisplayService } from '../../../shared/services/currency-display.service';
+import { DisplayPricePipe } from '../../../shared/pipes/display-price.pipe';
 
 type InvitationDisplayStatus = 'pending' | 'accepted' | 'declined';
 
@@ -30,7 +32,7 @@ interface PlatinumBidderInfo {
 @Component({
   selector: 'app-private-room-auction',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslateModule],
+  imports: [CommonModule, FormsModule, TranslateModule, DisplayPricePipe],
   templateUrl: './private-room-auction.component.html',
   styleUrls: ['./private-room-auction.component.scss']
 })
@@ -45,6 +47,7 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
   private privateRoomService = inject(PrivateRoomService);
   private postHog = inject(PostHogService);
   private translate = inject(TranslateService);
+  readonly currencyService = inject(CurrencyDisplayService);
 
   listingId = '';
   listing: Listing | null = null;

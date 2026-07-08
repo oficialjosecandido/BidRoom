@@ -41,16 +41,24 @@ function normalizeListingLocaleFields(body = {}) {
   const legacyDescription = cleanText(body.description);
   const titlePt = cleanText(body.titlePt) || legacyTitle;
   const titleEn = cleanText(body.titleEn);
+  const titleFr = cleanText(body.titleFr);
+  const titleEs = cleanText(body.titleEs);
   const descriptionPt = cleanText(body.descriptionPt) || legacyDescription;
   const descriptionEn = cleanText(body.descriptionEn);
+  const descriptionFr = cleanText(body.descriptionFr);
+  const descriptionEs = cleanText(body.descriptionEs);
 
   return {
-    title: titlePt || titleEn || legacyTitle,
-    description: descriptionPt || descriptionEn || legacyDescription,
+    title: titlePt || titleEn || titleFr || titleEs || legacyTitle,
+    description: descriptionPt || descriptionEn || descriptionFr || descriptionEs || legacyDescription,
     titlePt: nullableText(titlePt),
     titleEn: nullableText(titleEn),
+    titleFr: nullableText(titleFr),
+    titleEs: nullableText(titleEs),
     descriptionPt: nullableText(descriptionPt),
-    descriptionEn: nullableText(descriptionEn)
+    descriptionEn: nullableText(descriptionEn),
+    descriptionFr: nullableText(descriptionFr),
+    descriptionEs: nullableText(descriptionEs),
   };
 }
 
@@ -1280,8 +1288,12 @@ router.post('/', authenticateToken, requireActiveAccount, requireNoDisputeRestri
       localizedText.description,
       localizedText.titlePt,
       localizedText.titleEn,
+      localizedText.titleFr,
+      localizedText.titleEs,
       localizedText.descriptionPt,
-      localizedText.descriptionEn
+      localizedText.descriptionEn,
+      localizedText.descriptionFr,
+      localizedText.descriptionEs,
     ].filter(Boolean);
     const prohibitedCheck = scanTextsForProhibitedContent(localizedScanTexts);
     if (prohibitedCheck.prohibited) {
@@ -1295,8 +1307,8 @@ router.post('/', authenticateToken, requireActiveAccount, requireNoDisputeRestri
     // Azure AI Content Safety text scan (blocklist + AI categories — complementary to local regex)
     try {
       const aiScan = await scanListingText(
-        [localizedText.titlePt, localizedText.titleEn].filter(Boolean).join(' '),
-        [localizedText.descriptionPt, localizedText.descriptionEn].filter(Boolean).join('\n\n')
+        [localizedText.titlePt, localizedText.titleEn, localizedText.titleFr, localizedText.titleEs].filter(Boolean).join(' '),
+        [localizedText.descriptionPt, localizedText.descriptionEn, localizedText.descriptionFr, localizedText.descriptionEs].filter(Boolean).join('\n\n')
       );
       if (aiScan.blocked) {
         return res.status(400).json({
@@ -1348,7 +1360,9 @@ router.post('/', authenticateToken, requireActiveAccount, requireNoDisputeRestri
     const duplicateTitleFilters = [
       localizedText.title,
       localizedText.titlePt,
-      localizedText.titleEn
+      localizedText.titleEn,
+      localizedText.titleFr,
+      localizedText.titleEs,
     ].filter(Boolean).map(t => ({ $regex: new RegExp(`^${escapeRegex(t)}$`, 'i') }));
     const existingListing = await Listing.findOne({
       seller: user._id,
@@ -1357,7 +1371,9 @@ router.post('/', authenticateToken, requireActiveAccount, requireNoDisputeRestri
         $or: [
           ...duplicateTitleFilters.map(v => ({ title: v })),
           ...duplicateTitleFilters.map(v => ({ titlePt: v })),
-          ...duplicateTitleFilters.map(v => ({ titleEn: v }))
+          ...duplicateTitleFilters.map(v => ({ titleEn: v })),
+          ...duplicateTitleFilters.map(v => ({ titleFr: v })),
+          ...duplicateTitleFilters.map(v => ({ titleEs: v })),
         ]
       })
     }).select('_id slug').lean();
@@ -1408,8 +1424,12 @@ router.post('/', authenticateToken, requireActiveAccount, requireNoDisputeRestri
       description: localizedText.description,
       titlePt: localizedText.titlePt,
       titleEn: localizedText.titleEn,
+      titleFr: localizedText.titleFr,
+      titleEs: localizedText.titleEs,
       descriptionPt: localizedText.descriptionPt,
       descriptionEn: localizedText.descriptionEn,
+      descriptionFr: localizedText.descriptionFr,
+      descriptionEs: localizedText.descriptionEs,
       category: category.toLowerCase().replace(/\s+/g, '-'), // Normalize category
       subCategory: subCategory.trim(),
       condition,
@@ -1633,7 +1653,7 @@ router.patch('/:id', authenticateToken, requireActiveAccount, async (req, res) =
       'shippingOption', 'shippingCost', 'packageSize',
       'shippingOriginPostalCode', 'shippingOriginCity', 'shippingOriginCountry',
       'returnPolicy', 'handlingTime', 'images',
-      'titleEn', 'descriptionPt', 'descriptionEn'
+      'titleEn', 'titleFr', 'titleEs', 'descriptionPt', 'descriptionEn', 'descriptionFr', 'descriptionEs'
     ];
 
     const allowedKeys = isDraft ? Object.keys(body) : EDITABLE_FIELDS;
@@ -1642,7 +1662,7 @@ router.patch('/:id', authenticateToken, requireActiveAccount, async (req, res) =
       if (key in body) updates[key] = body[key];
     }
 
-    const hasLocaleUpdate = ['title', 'titlePt', 'titleEn', 'description', 'descriptionPt', 'descriptionEn']
+    const hasLocaleUpdate = ['title', 'titlePt', 'titleEn', 'titleFr', 'titleEs', 'description', 'descriptionPt', 'descriptionEn', 'descriptionFr', 'descriptionEs']
       .some(key => key in updates);
     if (hasLocaleUpdate) {
       const localizedUpdates = normalizeListingLocaleFields({
@@ -1650,21 +1670,29 @@ router.patch('/:id', authenticateToken, requireActiveAccount, async (req, res) =
         description: listing.description,
         titlePt: listing.titlePt,
         titleEn: listing.titleEn,
+        titleFr: listing.titleFr,
+        titleEs: listing.titleEs,
         descriptionPt: listing.descriptionPt,
         descriptionEn: listing.descriptionEn,
+        descriptionFr: listing.descriptionFr,
+        descriptionEs: listing.descriptionEs,
         ...updates
       });
 
-      if (isDraft && ('title' in updates || 'titlePt' in updates || 'titleEn' in updates)) {
+      if (isDraft && ['title', 'titlePt', 'titleEn', 'titleFr', 'titleEs'].some(k => k in updates)) {
         updates.title = localizedUpdates.title;
         updates.titlePt = localizedUpdates.titlePt;
         updates.titleEn = localizedUpdates.titleEn;
+        updates.titleFr = localizedUpdates.titleFr;
+        updates.titleEs = localizedUpdates.titleEs;
       }
 
-      if ('description' in updates || 'descriptionPt' in updates || 'descriptionEn' in updates) {
+      if (['description', 'descriptionPt', 'descriptionEn', 'descriptionFr', 'descriptionEs'].some(k => k in updates)) {
         updates.description = localizedUpdates.description;
         updates.descriptionPt = localizedUpdates.descriptionPt;
         updates.descriptionEn = localizedUpdates.descriptionEn;
+        updates.descriptionFr = localizedUpdates.descriptionFr;
+        updates.descriptionEs = localizedUpdates.descriptionEs;
       }
     }
 
@@ -1678,8 +1706,12 @@ router.patch('/:id', authenticateToken, requireActiveAccount, async (req, res) =
       updates.description || '',
       updates.titlePt || '',
       updates.titleEn || '',
+      updates.titleFr || '',
+      updates.titleEs || '',
       updates.descriptionPt || '',
       updates.descriptionEn || '',
+      updates.descriptionFr || '',
+      updates.descriptionEs || '',
       ...((updates.specifications || []).map(s => `${s.key || ''} ${s.value || ''}`))
     ].filter(Boolean);
 
@@ -1703,8 +1735,8 @@ router.patch('/:id', authenticateToken, requireActiveAccount, async (req, res) =
 
       try {
         const aiScanUpdate = await scanListingText(
-          [updates.title, updates.titlePt, updates.titleEn].filter(Boolean).join(' '),
-          [updates.description, updates.descriptionPt, updates.descriptionEn].filter(Boolean).join('\n\n')
+          [updates.title, updates.titlePt, updates.titleEn, updates.titleFr, updates.titleEs].filter(Boolean).join(' '),
+          [updates.description, updates.descriptionPt, updates.descriptionEn, updates.descriptionFr, updates.descriptionEs].filter(Boolean).join('\n\n')
         );
         if (aiScanUpdate.blocked) {
           return res.status(400).json({
