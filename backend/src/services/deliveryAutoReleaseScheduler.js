@@ -100,18 +100,17 @@ async function processAutoReleases(io) {
           }
         }, { runValidators: false });
       }
-      const sellerId = tx.seller?._id?.toString?.() || tx.seller?.toString?.();
-      if (updatedTx !== null && sellerId) {
-        Customer.findByIdAndUpdate(sellerId, { $inc: { completedSalesCount: 1 } })
-          .catch(err => console.error('[Waiver] Failed to increment completedSalesCount:', err.message));
-      }
-
       const listingTitle = tx.listing?.title || 'the item';
       const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:4200';
       const txLink = `${frontendUrl}/dashboard/transactions`;
 
       const buyerId = tx.buyer?._id?.toString?.() || tx.buyer?.toString?.();
       const sellerId = tx.seller?._id?.toString?.() || tx.seller?.toString?.();
+
+      if (updatedTx !== null && sellerId) {
+        Customer.findByIdAndUpdate(sellerId, { $inc: { completedSalesCount: 1 } })
+          .catch(err => console.error('[Waiver] Failed to increment completedSalesCount:', err.message));
+      }
 
       if (buyerId) {
         await createNotification({
