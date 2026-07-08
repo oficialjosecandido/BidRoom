@@ -2290,5 +2290,11 @@
   "CURRENCY": {
     "SELECTOR_LABEL": "Devise d'affichage",
     "DISCLAIMER": "Les montants dans d'autres devises sont approximatifs et fournis à titre indicatif uniquement. Toutes les enchères et tous les paiements sont traités en euros (EUR). Le montant final dans votre devise dépend du taux de change de votre banque au moment du paiement."
+  },
+  "WAIVER": {
+    "FEE_LABEL": "Commission BidRoom (Vendeur Fondateur)",
+    "LISTING_NOTE": "En tant que Vendeur Fondateur, vous ne payez aucune commission sur cette vente. Il vous reste {{count}} vente(s) gratuite(s).",
+    "SIDEBAR_BADGE": "🎁 {{count}} vente(s) sans commission — avantage Vendeur Fondateur",
+    "REMAINING": "Vous avez {{count}} vente(s) sans aucune commission. Profitez de votre avantage Vendeur Fondateur !"
   }
 }

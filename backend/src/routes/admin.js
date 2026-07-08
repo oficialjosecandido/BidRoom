@@ -822,6 +822,15 @@ router.post('/disputes/:transactionId/ruling', authenticateToken, requireAdmin, 
     transaction.transactionStatus = 'completed';
     transaction.completedAt = transaction.completedAt || new Date();
     transaction.disputeOpen = false;
+    // Idempotent: only increment seller's completed-sales counter once per transaction.
+    if (!transaction.salesCountIncremented) {
+      transaction.salesCountIncremented = true;
+      const sellerId = transaction.seller?._id?.toString?.() || transaction.seller?.toString?.();
+      if (sellerId) {
+        Customer.findByIdAndUpdate(sellerId, { $inc: { completedSalesCount: 1 } })
+          .catch(err => console.error('[Waiver] Failed to increment completedSalesCount:', err.message));
+      }
+    }
     await transaction.save();
 
     const listing = await Listing.findById(transaction.listing).select('title').lean();

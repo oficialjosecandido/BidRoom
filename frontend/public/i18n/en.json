@@ -4148,5 +4148,11 @@
   "CURRENCY": {
     "SELECTOR_LABEL": "Display currency",
     "DISCLAIMER": "Amounts in other currencies are approximate and for guidance only. All auctions and payments are processed in euros (EUR). The final amount in your currency depends on your bank's exchange rate at the time of payment."
+  },
+  "WAIVER": {
+    "FEE_LABEL": "BidRoom commission (Founding Seller)",
+    "LISTING_NOTE": "As a Founding Seller, you pay no commission on this sale. You have {{count}} free sale(s) remaining.",
+    "SIDEBAR_BADGE": "🎁 {{count}} commission-free sale(s) — Founding Seller benefit",
+    "REMAINING": "You have {{count}} sale(s) with no commission. Enjoy your Founding Seller benefit!"
   }
 }

@@ -5,6 +5,7 @@ import { HttpClient } from '@angular/common/http';
 import { Auth, GoogleAuthProvider, User as FirebaseUser, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithPopup, sendEmailVerification, updateProfile, signOut, getIdToken, confirmPasswordReset, verifyPasswordResetCode } from '@angular/fire/auth';
 import { API_CONFIG } from '../../shared/config/api.config';
 import { UserRolesService } from '../../shared/services/user-roles.service';
+import { WaiverService } from '../../shared/services/waiver.service';
 import { PostHogService } from '../../shared/services/posthog.service';
 import { AnalyticsEvents } from '../../shared/services/analytics.events';
 
@@ -20,10 +21,11 @@ export interface AppUser {
   providedIn: 'root'
 })
 export class AuthService {
-  private auth      = inject(Auth);
-  private http      = inject(HttpClient);
-  private userRoles = inject(UserRolesService);
-  private postHog   = inject(PostHogService);
+  private auth          = inject(Auth);
+  private http          = inject(HttpClient);
+  private userRoles     = inject(UserRolesService);
+  private waiverService = inject(WaiverService);
+  private postHog       = inject(PostHogService);
   private apiUrl = API_CONFIG.getApiUrl();
 
   private currentUserSubject = new BehaviorSubject<AppUser | null>(null);
@@ -49,6 +51,7 @@ export class AuthService {
 
       if (!mapped) {
         this.userRoles.invalidate();
+        this.waiverService.invalidate();
         this.postHog.reset();
         return;
       }
@@ -58,9 +61,10 @@ export class AuthService {
         email_verified: mapped.emailVerified,
       });
 
-      // Refresh role flags for the new user, then route admins to a saved
-      // /nexus route (handles page-refresh scenario for support staff).
+      // Refresh role flags and waiver status for the new user.
       this.userRoles.invalidate();
+      this.waiverService.invalidate();
+      this.waiverService.load();
       this.userRoles.load().subscribe((roles) => {
         if (!roles.isAdmin) return;
         // Guard: localStorage and window.location are browser-only.

@@ -18,6 +18,7 @@ import { ThemeService } from '../../../shared/services/theme.service';
 import { AnalyticsService } from '../../../shared/services/analytics.service';
 import { AnalyticsEvents } from '../../../shared/services/analytics.events';
 import { PostHogService } from '../../../shared/services/posthog.service';
+import { WaiverService } from '../../../shared/services/waiver.service';
 
 interface Category {
   id: string;
@@ -230,6 +231,7 @@ export class AddListing implements OnInit, OnDestroy {
   private themeService = inject(ThemeService);
   private analytics = inject(AnalyticsService);
   private postHog = inject(PostHogService);
+  readonly waiverService = inject(WaiverService);
 
   listingForm!: FormGroup;
   activeLangTab: 'pt' | 'en' | 'fr' | 'es' = 'pt';

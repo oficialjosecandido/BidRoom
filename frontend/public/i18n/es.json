@@ -2293,5 +2293,11 @@
   "CURRENCY": {
     "SELECTOR_LABEL": "Moneda de presentación",
     "DISCLAIMER": "Los importes en otras monedas son aproximados y solo informativos. Todas las subastas y pagos se procesan en euros (EUR). El importe final en tu moneda depende del tipo de cambio de tu banco en el momento del pago."
+  },
+  "WAIVER": {
+    "FEE_LABEL": "Comisión BidRoom (Vendedor Fundador)",
+    "LISTING_NOTE": "Como Vendedor Fundador, no pagas comisión en esta venta. Te quedan {{count}} venta(s) gratuita(s).",
+    "SIDEBAR_BADGE": "🎁 {{count}} venta(s) sin comisión — beneficio Vendedor Fundador",
+    "REMAINING": "Tienes {{count}} venta(s) sin comisión. ¡Aprovecha tu beneficio de Vendedor Fundador!"
   }
 }

@@ -49,6 +49,10 @@ const transactionSchema = new mongoose.Schema({
   stripePaymentIntentId: { type: String, trim: true, default: null, sparse: true },
   /** BidRoom platform fee charged to buyer (2% of amount, in dollars) */
   bidRoomFeeAmount: { type: Number, default: null, min: 0 },
+  /** True when the founding-seller waiver zeroed the commission on this sale. */
+  commissionWaived: { type: Boolean, default: false },
+  /** Guards against double-incrementing seller.completedSalesCount across retries/schedulers. */
+  salesCountIncremented: { type: Boolean, default: false },
   /** Stripe processing fee deducted from seller payout (retrieved from Stripe BalanceTx, in dollars) */
   stripeFeeAmount: { type: Number, default: null, min: 0 },
   /** Total charged to buyer including BidRoom fee and shipping (in dollars) */

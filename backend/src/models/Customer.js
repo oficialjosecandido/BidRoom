@@ -295,6 +295,15 @@ const customerSchema = new mongoose.Schema({
     trim: true
   },
 
+  // ─── Founding-seller commission waiver ───────────────────────────────────
+  /** Number of transactions that reached 'completed' as the seller. Incremented once per sale. */
+  completedSalesCount: { type: Number, default: 0, min: 0 },
+  /** Controls the founding-seller 0% commission waiver (first N successful sales). */
+  foundingSellerWaiver: {
+    active:       { type: Boolean, default: true },
+    freeSalesCap: { type: Number,  default: 5, min: 0 }
+  },
+
   // ─── Deferred suspension ─────────────────────────────────────────────────
   /** True when a suspension has been queued but not yet applied (user has active auction) */
   suspensionPending: { type: Boolean, default: false, index: true },

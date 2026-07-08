@@ -16,6 +16,7 @@
  */
 
 const Transaction = require('../models/Transaction');
+const Customer = require('../models/Customer');
 const { emitNewNotificationToUser, createNotification } = require('./notificationService');
 const { sendEmail } = require('./emailService');
 const { wrapBidRoomEmail, emailInfoBox, transactionUrl } = require('../utils/bidroomEmailLayout');
@@ -71,15 +72,39 @@ async function processAutoReleases(io) {
 
   for (const tx of candidates) {
     try {
-      await Transaction.findByIdAndUpdate(tx._id, {
-        $set: {
-          transactionStatus: 'completed',
-          sendingStatus: 'delivered',
-          completedAt: now,
-          deliveredAt: now,
-          autoReleaseExecutedAt: now
-        }
-      }, { runValidators: false });
+      // Atomic: only set salesCountIncremented if not already set, so we can detect below whether we won the race.
+      const updatedTx = await Transaction.findOneAndUpdate(
+        { _id: tx._id, salesCountIncremented: { $ne: true } },
+        {
+          $set: {
+            transactionStatus: 'completed',
+            sendingStatus: 'delivered',
+            completedAt: now,
+            deliveredAt: now,
+            autoReleaseExecutedAt: now,
+            salesCountIncremented: true
+          }
+        },
+        { runValidators: false }
+      );
+      // updatedTx is null when the filter didn't match (already incremented) — skip counter in that case.
+      if (updatedTx === null) {
+        // salesCountIncremented was already true; still need to set the other status fields.
+        await Transaction.findByIdAndUpdate(tx._id, {
+          $set: {
+            transactionStatus: 'completed',
+            sendingStatus: 'delivered',
+            completedAt: now,
+            deliveredAt: now,
+            autoReleaseExecutedAt: now
+          }
+        }, { runValidators: false });
+      }
+      const sellerId = tx.seller?._id?.toString?.() || tx.seller?.toString?.();
+      if (updatedTx !== null && sellerId) {
+        Customer.findByIdAndUpdate(sellerId, { $inc: { completedSalesCount: 1 } })
+          .catch(err => console.error('[Waiver] Failed to increment completedSalesCount:', err.message));
+      }
 
       const listingTitle = tx.listing?.title || 'the item';
       const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:4200';

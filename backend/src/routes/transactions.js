@@ -599,6 +599,15 @@ router.patch('/:id', requireActiveAccount, async (req, res) => {
       } else if (status === 'completed' && ['paid', 'shipped', 'delivered'].includes(ts)) {
         transaction.transactionStatus = 'completed';
         transaction.completedAt = transaction.completedAt || new Date();
+        // Idempotent: only increment seller's completed-sales counter once per transaction.
+        if (!transaction.salesCountIncremented) {
+          transaction.salesCountIncremented = true;
+          const sellerId = transaction.seller?._id?.toString?.() || transaction.seller?.toString?.();
+          if (sellerId) {
+            Customer.findByIdAndUpdate(sellerId, { $inc: { completedSalesCount: 1 } })
+              .catch(err => console.error('[Waiver] Failed to increment completedSalesCount:', err.message));
+          }
+        }
         // Prompt both parties to leave a review
         const io = req.app.get('io');
         notifyReviewPrompt({

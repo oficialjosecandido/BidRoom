@@ -319,6 +319,24 @@ $sidebar-w: 220px;
 }
 
 /* ── Sidebar footer / user row ── */
+.waiver-badge {
+  display: block;
+  margin: 0 14px 12px;
+  padding: 9px 14px;
+  background: color-mix(in srgb, var(--gold) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--gold) 35%, transparent);
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--gold);
+  text-decoration: none;
+  line-height: 1.4;
+  text-align: center;
+  transition: background 0.15s;
+
+  &:hover { background: color-mix(in srgb, var(--gold) 18%, transparent); }
+}
+
 .sidebar-footer {
   margin-top: auto;
   padding: 16px 20px;

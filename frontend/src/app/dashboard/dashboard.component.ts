@@ -9,6 +9,8 @@ import { TransactionsService } from '../shared/services/transactions.service';
 import { SocketService } from '../shared/services/socket.service';
 import { ThemeService } from '../shared/services/theme.service';
 import { BidroomLogoComponent } from '../shared/components/bidroom-logo/bidroom-logo.component';
+import { WaiverService } from '../shared/services/waiver.service';
+
 @Component({
   selector: 'app-dashboard',
   standalone: true,
@@ -25,6 +27,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   private translate = inject(TranslateService);
   readonly theme = inject(ThemeService);
   readonly effectiveTheme = this.theme.effective;
+  readonly waiverService = inject(WaiverService);
 
   notificationUnreadCount = 0;
   pendingBuyerTransactions = 0;

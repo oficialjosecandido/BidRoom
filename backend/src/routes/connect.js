@@ -18,6 +18,7 @@ const { attachPaymentMethodToUser } = require('../services/paymentMethodService'
 const LOG_PREFIX = '[Connect]';
 const logger = require('../utils/logger');
 const { estimateBuyerProcessingFeeCents } = require('../utils/fees');
+const { resolveCommissionRate } = require('../utils/commission');
 /** Fallback rate when listing.commissionRate is missing (edge case for old data). */
 const BIDROOMFEE_RATE = 0.035; // 3.5% standard rate (was incorrectly 0.04)
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:4200';
@@ -662,7 +663,7 @@ router.post('/create-checkout-session', requireActiveAccount, async (req, res) =
 
     const transaction = await Transaction.findById(transactionId)
       .populate('listing', 'title commissionRate shippingCost shippingOption packageSize shippingOriginPostalCode shippingOriginCity shippingOriginCountry')
-      .populate('seller', 'firstName lastName email stripeConnectAccountId stripeConnectOnboarded')
+      .populate('seller', 'firstName lastName email stripeConnectAccountId stripeConnectOnboarded completedSalesCount foundingSellerWaiver')
       .populate('buyer', '_id');
 
     if (!transaction) return res.status(404).json({ error: 'Transaction not found' });
@@ -763,10 +764,14 @@ router.post('/create-checkout-session', requireActiveAccount, async (req, res) =
 
     // === Fee model ===
     // BidRoom fee: per-listing commissionRate (set at listing creation) — deducted from SELLER payout
-    // Stripe processing fee: ~2.9% + $0.30 — passed through to BUYER as "Processing fee" line item
-    const effectiveFeeRate = listing?.commissionRate ?? BIDROOMFEE_RATE;
+    // Stripe processing fee: ~2.9% + €0.30 — passed through to BUYER as "Processing fee" line item
+    // Founding-seller waiver: effectiveFeeRate is 0 for the first N successful sales (checked at payout time).
+    const { effectiveFeeRate, waiverApplied } = resolveCommissionRate(listing, transaction.seller);
     if (listing?.commissionRate == null) {
-      logger.warn(`${LOG_PREFIX} commissionRate missing on listing ${listing?._id}, using fallback ${BIDROOMFEE_RATE}`);
+      logger.warn(`${LOG_PREFIX} commissionRate missing on listing ${listing?._id}, using fallback`);
+    }
+    if (waiverApplied) {
+      logger.info(`${LOG_PREFIX} Founding-seller waiver applied: seller=${transaction.seller?._id} completedSales=${transaction.seller?.completedSalesCount ?? 0}`);
     }
     const itemCents    = Math.round(itemAmount * 100);
     const shippingCents = Math.round(shippingAmount * 100);
@@ -864,9 +869,10 @@ router.post('/create-checkout-session', requireActiveAccount, async (req, res) =
 
     // Store fee breakdown on transaction before save
     transaction.stripeCheckoutSessionId = session.id;
-    transaction.bidRoomFeeAmount  = bidRoomFeeCents  / 100;   // 4% from seller
-    transaction.sellerPayoutAmount = sellerTransferCents / 100; // item*0.96 + shipping
-    transaction.buyerTotalPaid    = buyerTotalCents   / 100;   // item + stripe_est + shipping
+    transaction.bidRoomFeeAmount   = bidRoomFeeCents   / 100;
+    transaction.sellerPayoutAmount = sellerTransferCents / 100;
+    transaction.buyerTotalPaid     = buyerTotalCents    / 100;
+    transaction.commissionWaived   = waiverApplied;
     await transaction.save();
 
     console.log(`${LOG_PREFIX} Checkout session created session_id=${session.id} transaction=${transaction._id} amount=$${(buyerTotalCents / 100).toFixed(2)}`);

@@ -28,6 +28,32 @@ const reviewsSchema = z.object({
 });
 
 /**
+ * GET /api/users/me/waiver-status
+ * Authenticated — returns the seller's founding-seller waiver state for UI display.
+ */
+router.get('/me/waiver-status', authenticateToken, async (req, res) => {
+  try {
+    const user = await Customer.findOne({ uid: req.user.uid })
+      .select('completedSalesCount foundingSellerWaiver')
+      .lean();
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    const cap    = user.foundingSellerWaiver?.freeSalesCap ?? 5;
+    const used   = user.completedSalesCount ?? 0;
+    const active = user.foundingSellerWaiver?.active ?? true;
+
+    res.json({
+      active,
+      freeSalesCap:       cap,
+      completedSales:     used,
+      freeSalesRemaining: active ? Math.max(0, cap - used) : 0,
+    });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch waiver status' });
+  }
+});
+
+/**
  * GET /api/users/me/roles
  * Authenticated — returns the current user's role flags.
  *

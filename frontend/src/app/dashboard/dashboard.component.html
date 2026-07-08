@@ -130,6 +130,12 @@
         <span>{{ 'dashboard.sidebar.settings' | translate }}</span>
       </a>
 
+      @if (waiverService.waiverActive()) {
+        <a routerLink="/listing/add" class="waiver-badge" (click)="closeMobileSidebar()">
+          {{ 'WAIVER.SIDEBAR_BADGE' | translate:{ count: waiverService.freeSalesRemaining() } }}
+        </a>
+      }
+
       <div class="sidebar-footer">
         <div class="user-row">
           <div class="user-av">{{ userInitials }}</div>
