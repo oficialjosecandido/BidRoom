@@ -229,31 +229,29 @@ export class SeoService {
       url:         canonical,
     };
 
-    // Only emit offers when we have a valid positive price — a €0.00 offer
-    // is worse than no offer (misleads users and can trigger Google penalties).
-    if (price && price > 0) {
-      const offer: Record<string, unknown> = {
-        '@type':        'Offer',
-        priceCurrency:  'EUR',
-        price:          price.toFixed(2),
-        availability:   listing.status === 'active'
-          ? 'https://schema.org/InStock'
-          : 'https://schema.org/OutOfStock',
-        url:            canonical,
-        ...(listing.endDate && { priceValidUntil: listing.endDate.slice(0, 10) }),
-        ...(sellerName && {
-          seller: { '@type': 'Person', name: sellerName },
-        }),
-      };
+    // Always emit offers — Google requires at least one of offers/review/aggregateRating
+    // on a Product schema. Price is only included when positive to avoid misleading €0 offers.
+    const offer: Record<string, unknown> = {
+      '@type':        'Offer',
+      priceCurrency:  'EUR',
+      availability:   listing.status === 'active'
+        ? 'https://schema.org/InStock'
+        : 'https://schema.org/OutOfStock',
+      url:            canonical,
+      ...(price && price > 0 && { price: price.toFixed(2) }),
+      ...(listing.endDate && { priceValidUntil: listing.endDate.slice(0, 10) }),
+      ...(sellerName && {
+        seller: { '@type': 'Person', name: sellerName },
+      }),
+    };
 
-      const returnPolicy = this.buildReturnPolicy(listing.returnPolicy, country);
-      if (returnPolicy) offer['hasMerchantReturnPolicy'] = returnPolicy;
+    const returnPolicy = this.buildReturnPolicy(listing.returnPolicy, country);
+    if (returnPolicy) offer['hasMerchantReturnPolicy'] = returnPolicy;
 
-      const shippingDetails = this.buildShippingDetails(listing, country);
-      if (shippingDetails) offer['shippingDetails'] = shippingDetails;
+    const shippingDetails = this.buildShippingDetails(listing, country);
+    if (shippingDetails) offer['shippingDetails'] = shippingDetails;
 
-      schema['offers'] = offer;
-    }
+    schema['offers'] = offer;
 
     const brand = listing.specifications?.find(s => /^(brand|marca)$/i.test(s.key))?.value;
     if (brand) schema['brand'] = { '@type': 'Brand', name: brand };
