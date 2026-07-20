@@ -685,6 +685,7 @@
       "publishIncomplete": "Complete the following before publishing: {{fields}}.",
       "publishFix": "Fix the highlighted errors before publishing.",
       "stepBlocked": "Fix the errors on this step before continuing.",
+      "requiredAttributes": "Please complete the following required fields: {{fields}}.",
       "atLeastOnePhoto": "at least 1 photo",
       "step4Pricing": "Set the listing price and duration.",
       "step5Shipping": "Configure shipping and location.",

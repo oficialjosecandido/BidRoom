@@ -21,7 +21,7 @@ const SCHEMAS = {
     { key: 'model',            label: 'Modelo',                            type: 'text',    required: false, filterable: true },
     { key: 'referenceNo',      label: 'Referência',                        type: 'text',    required: false, filterable: true },
     { key: 'year',             label: 'Ano / período',                     type: 'text',    required: false, filterable: true },
-    { key: 'movement',         label: 'Movimento',                         type: 'enum',    required: true,  filterable: true,
+    { key: 'movement',         label: 'Movimento',                         type: 'enum',    required: false, filterable: true,
       options: ['Automático', 'Manual', 'Quartzo', 'Outro'] },
     { key: 'caseDiameter',     label: 'Diâmetro da caixa (mm)',            type: 'number',  required: false, filterable: true, unit: 'mm' },
     { key: 'caseMaterial',     label: 'Material da caixa',                 type: 'text',    required: false, filterable: true },

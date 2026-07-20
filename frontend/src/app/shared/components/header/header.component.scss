@@ -149,80 +149,133 @@
   flex-shrink: 0;
 }
 
-/* ── Lang toggle ── */
-.lang-tog {
-  display: flex;
-  background: var(--s1);
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  overflow: hidden;
+/* ── Language / currency dropdowns ── */
+.pref-dd {
+  position: relative;
+  flex-shrink: 0;
 }
 
-.lt {
-  padding: 4px 9px;
+.pref-dd-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 30px;
+  padding: 0 10px 0 12px;
+  border-radius: 100px;
+  border: 1px solid var(--line);
+  background: var(--s1);
+  color: var(--text);
+  font-family: inherit;
   font-size: 11px;
-  font-weight: 600;
-  letter-spacing: .05em;
-  color: var(--sub);
-  border: none;
-  background: none;
+  font-weight: 700;
+  letter-spacing: .04em;
   cursor: pointer;
-  font-family: inherit;
-  transition: background .15s, color .15s;
+  transition: border-color .15s, background .15s, color .15s, box-shadow .15s;
 
-  &.on {
-    background: var(--gold);
-    color: #0a0a0a;
+  &:hover {
+    border-color: var(--dim);
+    background: var(--s2);
   }
 
-  &:not(.on):hover {
-    background: var(--s2);
-    color: var(--text);
+  .pref-dd.open & {
+    border-color: var(--gold);
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--gold) 35%, transparent);
   }
 }
 
-/* ── Currency selector ── */
-.currency-sel {
+.pref-dd-value {
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.pref-dd-chevron {
+  color: var(--sub);
+  transition: transform .18s ease, color .15s;
+  flex-shrink: 0;
+
+  .pref-dd.open & {
+    transform: rotate(180deg);
+    color: var(--gold);
+  }
+}
+
+.pref-dd-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  min-width: 168px;
+  padding: 6px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18), 0 2px 8px rgba(0, 0, 0, 0.08);
+  z-index: 200;
+  animation: pref-dd-in .16s ease;
+}
+
+@keyframes pref-dd-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.pref-dd-item,
+.pref-list-item {
   display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 9px 10px;
+  border: none;
+  border-radius: 8px;
+  background: none;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  text-align: left;
+  transition: background .12s, color .12s;
+
+  &:hover {
+    background: var(--s1);
+  }
+
+  &.on {
+    background: color-mix(in srgb, var(--gold) 16%, transparent);
+  }
+}
+
+.pref-dd-item-code {
+  min-width: 28px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .05em;
+  color: var(--gold);
+}
+
+.pref-dd-item-name {
+  flex: 1;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.pref-dd-check {
+  color: var(--gold);
+  flex-shrink: 0;
+}
+
+.pref-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 4px;
   background: var(--s1);
   border: 1px solid var(--line);
-  border-radius: 6px;
-  overflow: hidden;
+  border-radius: 12px;
 }
 
-.cs-btn {
-  padding: 4px 8px;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: .06em;
-  color: var(--sub);
-  border: none;
-  background: none;
-  cursor: pointer;
-  font-family: inherit;
-  transition: background .15s, color .15s;
-
-  &.on {
-    background: var(--gold);
-    color: #0a0a0a;
-  }
-
-  &:not(.on):hover {
-    background: var(--s2);
-    color: var(--text);
-  }
-}
-
-.currency-sel--full {
-  width: 100%;
-  border-radius: 8px;
-
-  .cs-btn {
-    flex: 1;
-    padding: 8px 0;
-    font-size: 12px;
-    font-weight: 600;
-  }
+.pref-list-item {
+  padding: 11px 12px;
 }
 
 /* ── Search bar ── */
@@ -502,16 +555,6 @@
     color: var(--sub);
   }
 
-  .lang-tog--full {
-    width: 100%;
-    border-radius: 8px;
-
-    .lt {
-      flex: 1;
-      padding: 8px 0;
-      font-size: 12px;
-    }
-  }
 }
 
 .mobile-backdrop {
@@ -542,8 +585,7 @@
   .nav { padding: 0 16px; }
   .nav-links { display: none; }
   .theme-tog { display: none; }
-  .lang-tog { display: none; }
-  .currency-sel:not(.currency-sel--full) { display: none; }
+  .pref-dd { display: none; }
   .search-bar.open { width: min(200px, 42vw); }
   .btn-signin, .btn-start, .btn-publish { display: none; }
   .menu-toggle { display: flex; }

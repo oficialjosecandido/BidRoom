@@ -1592,8 +1592,22 @@ export class AddListing implements OnInit, OnDestroy {
 
   private getStepValidationMessage(step: number): string {
     switch (step) {
-      case 2:
-        return this.translate.instant('addListing.errorStep2Description');
+      case 2: {
+        const descKey = this.langDescKey(this.primaryLangTab);
+        const descCtrl = this.listingForm.get(descKey);
+        if (descCtrl?.hasError('minlength') || descCtrl?.hasError('required')) {
+          return this.translate.instant('addListing.errorStep2Description');
+        }
+        if (this.attributesGroup?.invalid) {
+          const invalidAttrs = this.attributeSchema()
+            .filter(def => def.required && this.attributesGroup.get(def.key)?.invalid)
+            .map((def: { label: string }) => def.label);
+          if (invalidAttrs.length > 0) {
+            return this.translate.instant('addListing.errors.requiredAttributes', { fields: invalidAttrs.join(', ') });
+          }
+        }
+        return this.translate.instant('addListing.errors.stepBlocked');
+      }
       case 3:
         return this.uploadedFiles.length < 1
           ? this.translate.instant('addListing.errors.atLeastOnePhoto')

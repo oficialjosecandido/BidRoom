@@ -318,6 +318,7 @@
       "publishIncomplete": "Complétez les éléments suivants avant de publier : {{fields}}.",
       "publishFix": "Corrigez les erreurs indiquées avant de publier.",
       "stepBlocked": "Corrigez les erreurs à cette étape avant de continuer.",
+      "requiredAttributes": "Veuillez compléter les champs obligatoires suivants : {{fields}}.",
       "atLeastOnePhoto": "au moins 1 photo",
       "step4Pricing": "Définissez le prix et la durée de l'annonce.",
       "step5Shipping": "Configurez l'expédition et la localisation.",
