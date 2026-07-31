@@ -6,6 +6,7 @@ const { logTransactionCreated } = require('./bestOfferLogger');
 
 const PAYMENT_WINDOW_MS = 24 * 60 * 60 * 1000;        // T+24h (regular auctions)
 const PR_PAYMENT_WINDOW_MS = 48 * 60 * 60 * 1000;     // T+48h (private rooms, per spec)
+const DEPOSIT_WINDOW_MS = 3 * 24 * 60 * 60 * 1000;    // T+72h (vehicle deposit deal window)
 
 /**
  * Create a transaction for a listing that has a winner set (auction flow).
@@ -18,7 +19,8 @@ async function createTransactionForListing(listingId, opts = {}) {
     const listing = await Listing.findById(listingId)
       .populate('seller', '_id')
       .populate('winner', '_id')
-      .populate('winnerBid');
+      .populate('winnerBid')
+      .select('+category');
     if (!listing || !listing.winner || !listing.winnerBid) {
       return null;
     }
@@ -36,6 +38,8 @@ async function createTransactionForListing(listingId, opts = {}) {
     const windowMs = isPrivateRoom ? PR_PAYMENT_WINDOW_MS : PAYMENT_WINDOW_MS;
     const paymentDeadline = new Date(Date.now() + windowMs);
 
+    const isVehicle = listing.category === 'vehicles';
+
     const transaction = await Transaction.create({
       listing: listingId,
       seller: sellerId,
@@ -47,7 +51,12 @@ async function createTransactionForListing(listingId, opts = {}) {
       paymentStatus: 'pending',
       sendingStatus: 'pending',
       paymentDeadline,
-      isPrivateRoom
+      isPrivateRoom,
+      ...(isVehicle && {
+        depositRequired: true,
+        depositStatus: 'pending',
+        depositDeadline: new Date(Date.now() + DEPOSIT_WINDOW_MS),
+      }),
     });
 
     console.log(`✅ Transaction created for listing ${listingId}: ${transaction._id}`);

@@ -241,7 +241,27 @@ const transactionSchema = new mongoose.Schema({
   /** Admin notes (internal) */
   disputeAdminNotes: { type: String, trim: true, maxlength: 2000, default: null },
   /** Stripe PaymentIntent ID for buyer compensation charge (seller_payout verdict, Tier 3 buyer) */
-  disputeCompensationChargeId: { type: String, trim: true, default: null }
+  disputeCompensationChargeId: { type: String, trim: true, default: null },
+
+  // ── Vehicle Deposit (€100 pre-authorization, vehicles category only) ──────
+  /** Whether a €100 Stripe pre-authorization deposit is required (set for vehicle listings) */
+  depositRequired: { type: Boolean, default: false, index: true },
+  /** Stripe PaymentIntent ID for the deposit hold */
+  depositPaymentIntentId: { type: String, trim: true, default: null, sparse: true },
+  /** Deposit lifecycle: pending → authorized → released | captured */
+  depositStatus: {
+    type: String,
+    enum: ['pending', 'authorized', 'released', 'captured'],
+    default: 'pending',
+  },
+  /** When the buyer successfully authorized the deposit */
+  depositAuthorizedAt: { type: Date, default: null },
+  /** Deadline by which the deal must complete (3 days from transaction creation) */
+  depositDeadline: { type: Date, default: null },
+  /** When the deposit was captured (deal not completed in time) */
+  depositCapturedAt: { type: Date, default: null },
+  /** When the deposit was released (deal completed successfully) */
+  depositReleasedAt: { type: Date, default: null }
 }, {
   timestamps: true
 });

@@ -76,6 +76,26 @@ const SCHEMAS = {
     { key: 'certified',    label: 'Certificado (PCGS/NGC/…)',  type: 'boolean', required: false, filterable: true },
   ],
 
+  // ─── Veículos ────────────────────────────────────────────────────────────
+  vehicles: [
+    { key: 'make',         label: 'Marca',                        type: 'text',    required: true,  filterable: true, schemaOrg: 'brand' },
+    { key: 'model',        label: 'Modelo',                       type: 'text',    required: true,  filterable: true },
+    { key: 'year',         label: 'Ano',                          type: 'number',  required: true,  filterable: true },
+    { key: 'fuel',         label: 'Combustível',                  type: 'enum',    required: true,  filterable: true,
+      options: ['Gasolina', 'Diesel', 'Elétrico', 'Híbrido Plug-in', 'Híbrido Mild', 'GPL', 'Outro'] },
+    { key: 'transmission', label: 'Caixa de velocidades',         type: 'enum',    required: true,  filterable: true,
+      options: ['Manual', 'Automático', 'Semi-automático'] },
+    { key: 'mileage',      label: 'Quilómetros',                  type: 'number',  required: true,  filterable: true, unit: 'km' },
+    { key: 'color',        label: 'Cor',                          type: 'text',    required: false, filterable: true },
+    { key: 'doors',        label: 'Número de portas',             type: 'enum',    required: false, filterable: true,
+      options: ['2', '3', '4', '5'] },
+    { key: 'vin',          label: 'Número de Chassis (VIN)',      type: 'text',    required: false, filterable: false },
+    { key: 'plate',        label: 'Matrícula',                    type: 'text',    required: false, filterable: false },
+    { key: 'inspection',   label: 'Inspeção automóvel válida',    type: 'boolean', required: true,  filterable: true },
+    { key: 'owners',       label: 'Nº de proprietários anteriores', type: 'number', required: false, filterable: false },
+    { key: 'iuc',          label: 'IUC em dia',                   type: 'boolean', required: false, filterable: false },
+  ],
+
   // ─── Genérico ────────────────────────────────────────────────────────────
   default: [
     { key: 'brand',    label: 'Marca',    type: 'text', required: false, filterable: true, schemaOrg: 'brand' },
@@ -131,12 +151,26 @@ const SUBCATEGORY_MAP = {
   'Modern Stamps (2000 to Present)':  'stamps',
   // Coins
   'Coins & Banknotes': 'coins',
+  // Vehicles
+  'Cars':                   'vehicles',
+  'Classic Cars':           'vehicles',
+  'Electric & Hybrid Cars': 'vehicles',
+  'Motorcycles':            'vehicles',
+  'Scooters & Mopeds':      'vehicles',
+  'Vans & Minibuses':       'vehicles',
+  'Trucks & HGV':           'vehicles',
+  'Boats':                  'vehicles',
+  'Jet Skis & Watercraft':  'vehicles',
+  'Sailboats':              'vehicles',
+  'Caravans & Motorhomes':  'vehicles',
+  'ATVs & Quad Bikes':      'vehicles',
 };
 
 // Category-level fallbacks (used when no subCategory match above)
 const CATEGORY_MAP = {
-  art:    'art',
-  jewelry: 'jewelry',
+  art:      'art',
+  jewelry:  'jewelry',
+  vehicles: 'vehicles',
   collectibles: 'stamps', // sensible default; stamp-heavy vertical
 };
 
