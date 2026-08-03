@@ -91,6 +91,7 @@
         [attr.aria-haspopup]="true"
         [attr.aria-label]="'landing.nav.language' | translate"
         [attr.title]="'landing.nav.language' | translate">
+        <span class="pref-dd-symbol" aria-hidden="true">{{ currentLangSymbol }}</span>
         <span class="pref-dd-value">{{ currentLangLabel }}</span>
         <svg class="pref-dd-chevron" viewBox="0 0 12 12" width="10" height="10" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
           <path stroke-linecap="round" stroke-linejoin="round" d="M3 4.5L6 7.5l3-3"/>
@@ -106,8 +107,9 @@
               [class.on]="currentLang === lang.code"
               [attr.aria-selected]="currentLang === lang.code"
               (click)="switchLanguage(lang.code)">
-              <span class="pref-dd-item-code">{{ lang.label }}</span>
+              <span class="pref-dd-item-symbol" aria-hidden="true">{{ lang.symbol }}</span>
               <span class="pref-dd-item-name">{{ lang.name }}</span>
+              <span class="pref-dd-item-meta">{{ lang.label }}</span>
               @if (currentLang === lang.code) {
                 <svg class="pref-dd-check" viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M3.5 8.5l3 3 6-6"/>
@@ -130,7 +132,8 @@
           [attr.aria-haspopup]="true"
           [attr.aria-label]="'CURRENCY.SELECTOR_LABEL' | translate"
           [attr.title]="'CURRENCY.SELECTOR_LABEL' | translate">
-          <span class="pref-dd-value">{{ currencySymbols[currencyService.displayCurrency()] }} {{ currencyService.displayCurrency() }}</span>
+          <span class="pref-dd-symbol pref-dd-symbol--currency" aria-hidden="true">{{ currencySymbols[currencyService.displayCurrency()] }}</span>
+          <span class="pref-dd-value">{{ currencyService.displayCurrency() }}</span>
           <svg class="pref-dd-chevron" viewBox="0 0 12 12" width="10" height="10" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
             <path stroke-linecap="round" stroke-linejoin="round" d="M3 4.5L6 7.5l3-3"/>
           </svg>
@@ -145,7 +148,7 @@
                 [class.on]="currencyService.displayCurrency() === c"
                 [attr.aria-selected]="currencyService.displayCurrency() === c"
                 (click)="setCurrency(c)">
-                <span class="pref-dd-item-code">{{ currencySymbols[c] }}</span>
+                <span class="pref-dd-item-symbol pref-dd-item-symbol--currency" aria-hidden="true">{{ currencySymbols[c] }}</span>
                 <span class="pref-dd-item-name">{{ c }}</span>
                 @if (currencyService.displayCurrency() === c) {
                   <svg class="pref-dd-check" viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
@@ -270,8 +273,9 @@
             class="pref-list-item"
             [class.on]="currentLang === lang.code"
             (click)="switchLanguage(lang.code); closeMenu()">
-            <span class="pref-dd-item-code">{{ lang.label }}</span>
+            <span class="pref-dd-item-symbol" aria-hidden="true">{{ lang.symbol }}</span>
             <span class="pref-dd-item-name">{{ lang.name }}</span>
+            <span class="pref-dd-item-meta">{{ lang.label }}</span>
             @if (currentLang === lang.code) {
               <svg class="pref-dd-check" viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M3.5 8.5l3 3 6-6"/>
@@ -289,7 +293,7 @@
               class="pref-list-item"
               [class.on]="currencyService.displayCurrency() === c"
               (click)="setCurrency(c); closeMenu()">
-              <span class="pref-dd-item-code">{{ currencySymbols[c] }}</span>
+              <span class="pref-dd-item-symbol pref-dd-item-symbol--currency" aria-hidden="true">{{ currencySymbols[c] }}</span>
               <span class="pref-dd-item-name">{{ c }}</span>
               @if (currencyService.displayCurrency() === c) {
                 <svg class="pref-dd-check" viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">

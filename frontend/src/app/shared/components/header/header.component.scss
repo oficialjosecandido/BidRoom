@@ -158,9 +158,9 @@
 .pref-dd-trigger {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
   height: 30px;
-  padding: 0 10px 0 12px;
+  padding: 0 10px 0 10px;
   border-radius: 100px;
   border: 1px solid var(--line);
   background: var(--s1);
@@ -180,6 +180,22 @@
   .pref-dd.open & {
     border-color: var(--gold);
     box-shadow: 0 0 0 1px color-mix(in srgb, var(--gold) 35%, transparent);
+  }
+}
+
+.pref-dd-symbol {
+  font-size: 14px;
+  line-height: 1;
+  flex-shrink: 0;
+
+  &--currency {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 16px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--gold);
   }
 }
 
@@ -244,12 +260,25 @@
   }
 }
 
-.pref-dd-item-code {
-  min-width: 28px;
+.pref-dd-item-symbol {
+  width: 22px;
+  font-size: 16px;
+  line-height: 1;
+  text-align: center;
+  flex-shrink: 0;
+
+  &--currency {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--gold);
+  }
+}
+
+.pref-dd-item-meta {
   font-size: 11px;
-  font-weight: 700;
-  letter-spacing: .05em;
-  color: var(--gold);
+  font-weight: 600;
+  letter-spacing: .04em;
+  color: var(--sub);
 }
 
 .pref-dd-item-name {

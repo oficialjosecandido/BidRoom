@@ -48,10 +48,10 @@ export class HeaderComponent implements OnInit, OnDestroy {
   userInitials = '';
 
   readonly languages = [
-    { code: 'pt', label: 'PT', name: 'Português' },
-    { code: 'en', label: 'EN', name: 'English' },
-    { code: 'fr', label: 'FR', name: 'Français' },
-    { code: 'es', label: 'ES', name: 'Español' },
+    { code: 'pt', label: 'PT', name: 'Português', symbol: '🇵🇹' },
+    { code: 'en', label: 'EN', name: 'English',   symbol: '🇬🇧' },
+    { code: 'fr', label: 'FR', name: 'Français',  symbol: '🇫🇷' },
+    { code: 'es', label: 'ES', name: 'Español',   symbol: '🇪🇸' },
   ] as const;
 
   private subs = new Subscription();
@@ -152,6 +152,10 @@ export class HeaderComponent implements OnInit, OnDestroy {
 
   get currentLangLabel(): string {
     return this.languages.find(l => l.code === this.currentLang)?.label ?? 'PT';
+  }
+
+  get currentLangSymbol(): string {
+    return this.languages.find(l => l.code === this.currentLang)?.symbol ?? '🇵🇹';
   }
 
   get notifBadge(): string {
