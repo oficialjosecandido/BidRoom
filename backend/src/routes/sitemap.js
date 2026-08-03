@@ -6,11 +6,11 @@ const BlogPost = require('../models/BlogPost');
 const BASE_URL = 'https://www.bidroom.pt';
 
 const STATIC_PAGES = [
-  { path: '',              changefreq: 'weekly',  priority: '1.0' },
-  { path: 'listings',     changefreq: 'hourly',  priority: '0.9' },
-  { path: 'how-it-works', changefreq: 'monthly', priority: '0.7' },
-  { path: 'trust',        changefreq: 'monthly', priority: '0.6' },
-  { path: 'blog',         changefreq: 'daily',   priority: '0.8' },
+  { path: '',                       changefreq: 'weekly',  priority: '1.0' },
+  { path: 'listing/list',           changefreq: 'hourly',  priority: '0.9' },
+  { path: 'landing/how-it-works',   changefreq: 'monthly', priority: '0.7' },
+  { path: 'landing/trust',          changefreq: 'monthly', priority: '0.6' },
+  { path: 'blog',                   changefreq: 'daily',   priority: '0.8' },
 ];
 
 function xmlEscape(str) {

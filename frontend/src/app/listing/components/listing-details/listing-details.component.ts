@@ -124,6 +124,7 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
   bidNotifyWhenOutbid = true;
   bidSubmitting = false;
   bidModalError: string | null = null;
+  vehicleConsentChecked = false;
 
   // Make Offer modal
   showOfferModal = false;
@@ -907,6 +908,10 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
     return current + (this.listing.bidIncrement || 1);
   }
 
+  isVehicleListing(): boolean {
+    return this.listing?.category === 'vehicles';
+  }
+
   openBidModal(): void {
     if (!this.listing) return;
     const minBid = this.getMinBid();
@@ -914,6 +919,7 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
     this.bidEmail = '';
     this.bidNotifyWhenOutbid = true;
     this.bidModalError = null;
+    this.vehicleConsentChecked = false;
     this.showBidModal = true;
     this.analytics.trackEvent(AnalyticsEvents.BID_MODAL_OPEN, {
       ...this.analytics.listingParams(this.listing),
@@ -929,6 +935,10 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
   submitBid(): void {
     if (!this.listing) return;
     this.bidModalError = null;
+    if (this.isVehicleListing() && !this.vehicleConsentChecked) {
+      this.bidModalError = this.translate.instant('listingDetails.bidModal.vehicleConsentRequired');
+      return;
+    }
     const minBid = this.getMinBid();
     const amount = parseFloat((this.bidAmount || '').replace(/[^0-9.]/g, ''));
     if (isNaN(amount) || amount < minBid) {

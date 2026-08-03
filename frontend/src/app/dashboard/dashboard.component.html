@@ -78,6 +78,11 @@
         }
       </a>
 
+      <a routerLink="/dashboard/vehicle-transactions" routerLinkActive="active" class="nav-item" (click)="closeMobileSidebar()">
+        <span class="nav-ico">🚗</span>
+        <span>{{ 'dashboard.sidebar.vehicleTransactions' | translate }}</span>
+      </a>
+
       <a routerLink="/dashboard/notifications" routerLinkActive="active" class="nav-item" (click)="closeMobileSidebar()">
         <span class="nav-ico">🔔</span>
         <span>{{ 'dashboard.sidebar.notifications' | translate }}</span>

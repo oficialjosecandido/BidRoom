@@ -3,6 +3,7 @@ import { Router, RouterLink } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { ListingsService, Listing } from '../../../shared/services/listings.service';
 import { ThemeService } from '../../../shared/services/theme.service';
+import { SeoService } from '../../../shared/services/seo.service';
 import { HeaderComponent } from '../../../shared/components/header/header.component';
 import { getLocalizedTitle } from '../../../shared/utils/listing-locale';
 import { BidroomLogoComponent } from '../../../shared/components/bidroom-logo/bidroom-logo.component';
@@ -18,6 +19,7 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
   private translate = inject(TranslateService);
   private listingsService = inject(ListingsService);
   readonly themeService = inject(ThemeService);
+  private seo = inject(SeoService);
   private router = inject(Router);
 
   @ViewChild('carouselWrap') carouselWrap!: ElementRef<HTMLElement>;
@@ -62,6 +64,7 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
   ngOnInit(): void {
     const saved = localStorage.getItem('lang') || 'pt';
     this.translate.use(saved);
+    this.seo.setDefault();
 
     this.loadFeaturedListings();
     this.loadActiveListings();

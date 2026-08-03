@@ -1,0 +1,178 @@
+<div class="vt-page">
+
+  @if (isLoading) {
+    <div class="vt-loading">
+      <div class="spinner"></div>
+    </div>
+  }
+
+  @if (error) {
+    <p class="vt-error">{{ error }}</p>
+  }
+
+  @if (vt && !isLoading) {
+    <!-- Header -->
+    <div class="vt-header">
+      @if (vt.listing?.images?.[0]) {
+        <img class="vt-thumb" [src]="vt.listing.images[0]" [alt]="vt.listing.title" />
+      }
+      <div class="vt-header__body">
+        <h1 class="vt-title">{{ vt.listing.title }}</h1>
+        <p class="vt-price">€{{ vt.agreedPrice | number:'1.2-2' }}</p>
+        <span class="vt-badge" [class]="'vt-badge--' + vt.status">{{ statusLabel(vt.status) }}</span>
+      </div>
+    </div>
+
+    <!-- Setup deadline (only when awaiting) -->
+    @if (vt.status === 'awaiting_setup') {
+      <div class="vt-deadline-bar">
+        <span class="vt-deadline-bar__label">{{ 'vehicleTransaction.setupDeadline' | translate }}</span>
+        <span class="vt-deadline-bar__value" [class.expired]="!countdownTo(vt.setupDeadline)">
+          {{ countdownTo(vt.setupDeadline) }}
+        </span>
+      </div>
+    }
+
+    <!-- Setup steps card -->
+    @if (vt.status === 'awaiting_setup') {
+      <div class="vt-card">
+        <h2 class="vt-card__title">{{ 'vehicleTransaction.setupTitle' | translate }}</h2>
+
+        <!-- Buyer deposit step -->
+        <div class="vt-step" [class.vt-step--done]="vt.deposit.status === 'authorized'">
+          <span class="vt-step__icon">{{ vt.deposit.status === 'authorized' ? '✅' : '🔒' }}</span>
+          <div class="vt-step__body">
+            <strong>{{ 'vehicleTransaction.depositStep' | translate }}</strong>
+            <p>{{ 'vehicleTransaction.depositDesc' | translate: { amount: vt.deposit.amount } }}</p>
+            @if (needsBuyerDeposit()) {
+              <button class="btn btn-primary" [disabled]="actionLoading" (click)="runAuthorizeDeposit()">
+                @if (actionLoading) { <span class="spinner-sm-inline"></span> }
+                {{ 'vehicleTransaction.authorizeDeposit' | translate }}
+              </button>
+            }
+            @if (vt.deposit.status === 'authorized') {
+              <span class="vt-step__done-label">{{ 'vehicleTransaction.done' | translate }}</span>
+            }
+          </div>
+        </div>
+
+        <!-- Seller fee step -->
+        <div class="vt-step" [class.vt-step--done]="vt.sellerFee.status === 'paid'">
+          <span class="vt-step__icon">{{ vt.sellerFee.status === 'paid' ? '✅' : '💳' }}</span>
+          <div class="vt-step__body">
+            <strong>{{ 'vehicleTransaction.feeStep' | translate }}</strong>
+            <p>{{ 'vehicleTransaction.feeDesc' | translate: { amount: vt.sellerFee.amount } }}</p>
+            @if (needsSellerFee()) {
+              <button class="btn btn-primary" [disabled]="actionLoading" (click)="runPayFee()">
+                @if (actionLoading) { <span class="spinner-sm-inline"></span> }
+                {{ 'vehicleTransaction.payFee' | translate }}
+              </button>
+            }
+            @if (vt.sellerFee.status === 'paid') {
+              <span class="vt-step__done-label">{{ 'vehicleTransaction.done' | translate }}</span>
+            }
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- In-progress card (parties introduced) -->
+    @if (vt.status === 'in_progress') {
+      <div class="vt-card">
+        <h2 class="vt-card__title">{{ 'vehicleTransaction.dealInProgress' | translate }}</h2>
+        <p class="vt-card__desc">{{ 'vehicleTransaction.dealInProgressDesc' | translate }}</p>
+
+        <!-- Contact info (shown after partiesIntroducedAt) -->
+        @if (isBuyer && vt.seller?.email) {
+          <div class="vt-contact">
+            <strong>{{ 'vehicleTransaction.seller' | translate }}</strong>
+            <p>{{ vt.seller.firstName }} {{ vt.seller.lastName }}</p>
+            <p><a [href]="'mailto:' + vt.seller.email">{{ vt.seller.email }}</a></p>
+          </div>
+        }
+        @if (isSeller && vt.buyer?.email) {
+          <div class="vt-contact">
+            <strong>{{ 'vehicleTransaction.buyer' | translate }}</strong>
+            <p>{{ vt.buyer.firstName }} {{ vt.buyer.lastName }}</p>
+            <p><a [href]="'mailto:' + vt.buyer.email">{{ vt.buyer.email }}</a></p>
+          </div>
+        }
+
+        <!-- Deal deadline -->
+        <div class="vt-deadline-row">
+          <span>{{ 'vehicleTransaction.transactionDeadline' | translate }}</span>
+          <span>{{ countdownTo(vt.transactionDeadline) }}</span>
+        </div>
+
+        @if (canConfirmCompletion()) {
+          <button class="btn btn-success vt-confirm-btn" [disabled]="actionLoading" (click)="runConfirmCompletion()">
+            @if (actionLoading) { <span class="spinner-sm-inline"></span> }
+            {{ 'vehicleTransaction.confirmCompletion' | translate }}
+          </button>
+        }
+      </div>
+    }
+
+    <!-- Awaiting confirmation card -->
+    @if (vt.status === 'awaiting_confirmation') {
+      <div class="vt-card">
+        <h2 class="vt-card__title">{{ 'vehicleTransaction.awaitingConfirmation' | translate }}</h2>
+        <p class="vt-card__desc">{{ 'vehicleTransaction.awaitingConfirmationDesc' | translate }}</p>
+
+        <div class="vt-deadline-row">
+          <span>{{ 'vehicleTransaction.confirmationDeadline' | translate }}</span>
+          <span>{{ countdownTo(vt.confirmationDeadline) }}</span>
+        </div>
+
+        <div class="vt-confirmation-status">
+          <div class="vt-conf-party" [class.done]="vt.completion.buyerConfirmed">
+            {{ vt.completion.buyerConfirmed ? '✅' : '⏳' }} {{ 'vehicleTransaction.buyer' | translate }}
+          </div>
+          <div class="vt-conf-party" [class.done]="vt.completion.sellerConfirmed">
+            {{ vt.completion.sellerConfirmed ? '✅' : '⏳' }} {{ 'vehicleTransaction.seller' | translate }}
+          </div>
+        </div>
+
+        @if (canConfirmCompletion()) {
+          <button class="btn btn-success vt-confirm-btn" [disabled]="actionLoading" (click)="runConfirmCompletion()">
+            @if (actionLoading) { <span class="spinner-sm-inline"></span> }
+            {{ 'vehicleTransaction.confirmCompletion' | translate }}
+          </button>
+        }
+      </div>
+    }
+
+    <!-- Completed card -->
+    @if (vt.status === 'completed') {
+      <div class="vt-card vt-card--completed">
+        <div class="vt-completed-icon">✅</div>
+        <h2 class="vt-card__title">{{ 'vehicleTransaction.completed' | translate }}</h2>
+        <p class="vt-card__desc">{{ 'vehicleTransaction.completedDesc' | translate: { amount: vt.deposit.amount } }}</p>
+      </div>
+    }
+
+    <!-- Failed card -->
+    @if (vt.status === 'failed') {
+      <div class="vt-card vt-card--failed">
+        <div class="vt-failed-icon">⚠️</div>
+        <h2 class="vt-card__title">{{ 'vehicleTransaction.failed' | translate }}</h2>
+        <p class="vt-card__desc">{{ 'vehicleTransaction.failedDesc' | translate: { amount: vt.deposit.amount } }}</p>
+      </div>
+    }
+
+    <!-- Cancelled card -->
+    @if (vt.status === 'cancelled') {
+      <div class="vt-card vt-card--cancelled">
+        <h2 class="vt-card__title">{{ 'vehicleTransaction.cancelled' | translate }}</h2>
+        <p class="vt-card__desc">{{ 'vehicleTransaction.cancelledDesc' | translate }}</p>
+      </div>
+    }
+
+    @if (actionError) {
+      <p class="vt-action-error">{{ actionError }}</p>
+    }
+
+    <a class="vt-back-link" routerLink="/dashboard">← {{ 'vehicleTransaction.backToDashboard' | translate }}</a>
+  }
+
+</div>

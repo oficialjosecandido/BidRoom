@@ -31,6 +31,7 @@ export class SeoService {
 
   setDefault(): void {
     this.apply(DEFAULTS);
+    this.setCanonical(BASE_URL);
     this.injectOrganizationSchema();
   }
 
@@ -121,12 +122,17 @@ export class SeoService {
   }
 
   private buildListingDescription(listing: Listing, cleanDesc: string): string {
-    const price     = (listing.currentPrice && listing.currentPrice > 0)
-      ? listing.currentPrice
-      : listing.startingPrice;
+    const priceCandidates = [
+      listing.currentPrice,
+      listing.startingPrice,
+      listing.minimumOfferPrice,
+    ].filter((v): v is number => typeof v === 'number' && v > 0);
+    const price = priceCandidates.length ? Math.max(...priceCandidates) : 0;
     const priceStr  = fmtEur(price);
     const format    = listing.auctionFormat === 'best-offer' ? 'Melhor Proposta' : 'Leilão';
-    const cta       = `${format} a partir de ${priceStr}. Lance já.`;
+    const cta       = price > 0
+      ? `${format} a partir de ${priceStr}. Lance já.`
+      : `${format} no BidRoom. Lance já.`;
 
     if (!cleanDesc) return cta;
 
@@ -199,7 +205,7 @@ export class SeoService {
             '@type':        'SearchAction',
             target: {
               '@type':      'EntryPoint',
-              urlTemplate:  `${BASE_URL}/listings?q={search_term_string}`,
+              urlTemplate:  `${BASE_URL}/listing/list?search={search_term_string}`,
             },
             'query-input':  'required name=search_term_string',
           },
@@ -210,64 +216,77 @@ export class SeoService {
   }
 
   private injectListingSchema(listing: Listing, image: string, canonical: string): void {
-    const price = (listing.currentPrice && listing.currentPrice > 0)
-      ? listing.currentPrice
-      : listing.startingPrice;
+    // Prefer live bid / current price, then starting / minimum offer — never omit price.
+    // Google Product + Shopping free listings require offers with price > 0.
+    const priceCandidates = [
+      listing.currentPrice,
+      listing.startingPrice,
+      listing.minimumOfferPrice,
+    ].filter((v): v is number => typeof v === 'number' && v > 0);
+    const price = priceCandidates.length ? Math.max(...priceCandidates) : null;
+
     const sellerName = listing.seller
       ? `${listing.seller.firstName} ${listing.seller.lastName}`.trim()
       : undefined;
     const country = listing.locationCountry || 'PT';
+    const name = listing.titlePt || listing.titleEn || listing.title;
+
+    const conditionMap: Record<string, string> = {
+      new:        'https://schema.org/NewCondition',
+      like_new:   'https://schema.org/LikeNewCondition',
+      'like-new': 'https://schema.org/LikeNewCondition',
+      good:       'https://schema.org/UsedCondition',
+      used:       'https://schema.org/UsedCondition',
+      fair:       'https://schema.org/DamagedCondition',
+      for_parts:  'https://schema.org/DamagedCondition',
+    };
+    const itemCondition = listing.condition
+      ? conditionMap[listing.condition.toLowerCase()]
+      : undefined;
 
     const schema: Record<string, unknown> = {
       '@context': 'https://schema.org',
       '@type':    'Product',
-      name:        listing.titlePt || listing.titleEn || listing.title,
+      '@id':      `${canonical}#product`,
+      name,
       description: (listing.descriptionPt || listing.descriptionEn || listing.description || '')
         .replace(/\s+/g, ' ').trim().slice(0, 500),
       image:       listing.images?.length ? listing.images : [image],
       category:    listing.category,
       url:         canonical,
+      sku:         listing.slug || listing._id,
+      brand:       {
+        '@type': 'Brand',
+        name: listing.specifications?.find(s => /^(brand|marca)$/i.test(s.key))?.value || 'BidRoom',
+      },
+      ...(itemCondition && { itemCondition }),
     };
 
-    // Always emit offers — Google requires at least one of offers/review/aggregateRating
-    // on a Product schema. Price is only included when positive to avoid misleading €0 offers.
-    const offer: Record<string, unknown> = {
-      '@type':        'Offer',
-      priceCurrency:  'EUR',
-      availability:   listing.status === 'active'
-        ? 'https://schema.org/InStock'
-        : 'https://schema.org/OutOfStock',
-      url:            canonical,
-      ...(price && price > 0 && { price: price.toFixed(2) }),
-      ...(listing.endDate && { priceValidUntil: listing.endDate.slice(0, 10) }),
-      ...(sellerName && {
-        seller: { '@type': 'Person', name: sellerName },
-      }),
-    };
-
-    const returnPolicy = this.buildReturnPolicy(listing.returnPolicy, country);
-    if (returnPolicy) offer['hasMerchantReturnPolicy'] = returnPolicy;
-
-    const shippingDetails = this.buildShippingDetails(listing, country);
-    if (shippingDetails) offer['shippingDetails'] = shippingDetails;
-
-    schema['offers'] = offer;
-
-    const brand = listing.specifications?.find(s => /^(brand|marca)$/i.test(s.key))?.value;
-    if (brand) schema['brand'] = { '@type': 'Brand', name: brand };
-
-    if (listing.condition) {
-      const condMap: Record<string, string> = {
-        new:          'https://schema.org/NewCondition',
-        like_new:     'https://schema.org/LikeNewCondition',
-        'like-new':   'https://schema.org/LikeNewCondition',
-        good:         'https://schema.org/UsedCondition',
-        used:         'https://schema.org/UsedCondition',
-        fair:         'https://schema.org/DamagedCondition',
-        for_parts:    'https://schema.org/DamagedCondition',
+    // Always emit offers when we have a positive price (required for Product rich results
+    // and Shopping free listings). Without price, Google flags the Product as invalid.
+    if (price) {
+      const offer: Record<string, unknown> = {
+        '@type':        'Offer',
+        priceCurrency:  'EUR',
+        price:          price.toFixed(2),
+        availability:   listing.status === 'active'
+          ? 'https://schema.org/InStock'
+          : 'https://schema.org/OutOfStock',
+        url:            canonical,
+        ...(itemCondition && { itemCondition }),
+        ...(listing.endDate && { priceValidUntil: listing.endDate.slice(0, 10) }),
+        ...(sellerName && {
+          seller: { '@type': 'Person', name: sellerName },
+        }),
       };
-      const mapped = condMap[listing.condition.toLowerCase()];
-      if (mapped) schema['itemCondition'] = mapped;
+
+      const returnPolicy = this.buildReturnPolicy(listing.returnPolicy, country);
+      if (returnPolicy) offer['hasMerchantReturnPolicy'] = returnPolicy;
+
+      const shippingDetails = this.buildShippingDetails(listing, country);
+      if (shippingDetails) offer['shippingDetails'] = shippingDetails;
+
+      schema['offers'] = offer;
     }
 
     this.injectJsonLd('listing-schema', schema);

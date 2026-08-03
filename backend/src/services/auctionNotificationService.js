@@ -6,6 +6,7 @@ const { sendEmail } = require('./emailService');
 const { isStripeTestMode } = require('../utils/stripe.util');
 const { getEmailTemplate, getUserLanguage } = require('./emailTemplates');
 const { createTransactionForListing, createTransactionForAcceptedOffer } = require('./transactionService');
+const { createVehicleTransaction } = require('./vehicleTransactionService');
 
 /**
  * Send auction closed notifications to all bidders (except winner and seller)
@@ -989,9 +990,18 @@ async function handleAuctionEnd(listingId, io = null) {
 
       await sendWinnerNotification(listingForNotify, highestBid);
       await sendAuctionClosedNotifications(listingForNotify, highestBid._id);
-      await createTransactionForListing(listingId).catch(err =>
-        console.error('Transaction create for auto-winner:', err.message)
-      );
+
+      if (listingForNotify.category === 'vehicles') {
+        const sellerId = listingForNotify.seller?._id || listingForNotify.seller;
+        const buyerId  = highestBid.bidder?._id || highestBid.bidder;
+        await createVehicleTransaction(listingId, buyerId, sellerId, highestBid.amount).catch(err =>
+          console.error('VehicleTransaction create:', err.message)
+        );
+      } else {
+        await createTransactionForListing(listingId).catch(err =>
+          console.error('Transaction create for auto-winner:', err.message)
+        );
+      }
 
       const { notifySellerWinnerSelected, notifyBuyerAuctionWon, emitNewNotificationToUser } = require('./notificationService');
       const winnerName = highestBid.bidder ? `${highestBid.bidder.firstName} ${highestBid.bidder.lastName}`.trim() : (highestBid.bidderEmail || 'A bidder').split('@')[0];

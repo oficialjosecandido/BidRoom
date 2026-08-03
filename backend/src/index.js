@@ -54,6 +54,7 @@ const supportRoutes = require('./routes/support');
 const sitemapRoutes = require('./routes/sitemap');
 const blogRoutes = require('./routes/blog');
 const exchangeRoutes = require('./routes/exchange');
+const vehicleTransactionRoutes = require('./routes/vehicleTransactions');
 
 // Import services
 const auctionEndScheduler = require('./services/auctionEndScheduler');
@@ -64,6 +65,7 @@ const { startReviewReminderScheduler } = require('./services/reviewReminderSched
 const { startPayoutSetupReminderScheduler } = require('./services/payoutSetupReminderScheduler');
 const dsaComplianceScheduler = require('./services/dsaComplianceScheduler');
 const { startDraftReminderScheduler } = require('./services/draftReminderScheduler');
+const { startVehicleTransactionScheduler } = require('./services/vehicleTransactionScheduler');
 const { runCleanup: runProofOfPaymentCleanup } = require('./services/proofOfPaymentCleanup');
 const { runImagePurge } = require('./services/imagePurgeScheduler');
 
@@ -287,6 +289,7 @@ app.use('/api/damage-claims', generalLimiter, damageClaimsRoutes);
 app.use('/api/kyc', generalLimiter, kycRoutes);
 app.use('/api/blog', generalLimiter, blogRoutes);
 app.use('/api/exchange-rates', generalLimiter, exchangeRoutes);
+app.use('/api/vehicle-transactions', generalLimiter, vehicleTransactionRoutes);
 
 // Share pages — unauthenticated; rate-limited to prevent DB exhaustion via random slug enumeration
 // /api/share/* — same-origin URLs via Azure SWA linked API (WhatsApp OG crawlers)
@@ -562,6 +565,7 @@ const startServer = async () => {
       startPayoutSetupReminderScheduler(24, io);
       dsaComplianceScheduler.startDsaComplianceScheduler(24, io);
       startDraftReminderScheduler(60);
+      startVehicleTransactionScheduler();
       logger.info('Schedulers started', {
         auctionEnd: '1m',
         shipping: '15m',

@@ -608,6 +608,14 @@
           <span>{{ 'listingDetails.bidModal.notifyOutbid' | translate }}</span>
         </label>
       </div>
+      @if (isVehicleListing()) {
+        <div class="vehicle-consent-box">
+          <label class="vehicle-consent-label">
+            <input type="checkbox" [(ngModel)]="vehicleConsentChecked" />
+            <span>{{ 'listingDetails.bidModal.vehicleConsentBuyer' | translate }}</span>
+          </label>
+        </div>
+      }
       @if (bidModalError) { <p class="sh-error">{{ bidModalError }}</p> }
       <div class="sh-acts">
         <button class="btn-sh-cancel" (click)="closeBidModal()">{{ 'listingDetails.cancel' | translate }}</button>

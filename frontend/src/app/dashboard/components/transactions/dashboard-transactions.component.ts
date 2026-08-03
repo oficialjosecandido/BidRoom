@@ -35,7 +35,6 @@ export class DashboardTransactionsComponent implements OnInit {
   private postHog = inject(PostHogService);
   private route = inject(ActivatedRoute);
   private translate = inject(TranslateService);
-
   transactions: Transaction[] = [];
   isLoading = true;
   error: string | null = null;
@@ -1476,4 +1475,5 @@ export class DashboardTransactionsComponent implements OnInit {
       this.drawerTx = merged;
     }
   }
+
 }

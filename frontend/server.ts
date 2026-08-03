@@ -49,9 +49,22 @@ app.use(
   }),
 );
 
+// Permanent redirects for outdated sitemap / bookmarked paths so Google consolidates
+// to the real 200 URLs instead of keeping "Page with redirect" issues open.
+const permanentRedirects: Record<string, string> = {
+  '/listings': '/listing/list',
+  '/how-it-works': '/landing/how-it-works',
+  '/trust': '/landing/trust',
+};
+for (const [from, to] of Object.entries(permanentRedirects)) {
+  app.get(from, (_req, res) => {
+    res.redirect(301, to);
+  });
+}
+
 // All regular routes use the Angular engine.
 // No path pattern needed — Express 5 uses path-to-regexp v8 which rejects unnamed wildcards (/**).
-// If Angular returns no response (unmatched route), redirect to landing.
+// If Angular returns no response (unmatched route), redirect to homepage.
 // Must be a native async function — Express 5 logs "Promise-like handlers are
 // deprecated" for a .then()/.catch() chain and does not reliably await it,
 // which was silently falling through to the static index.csr.html shell.
@@ -61,8 +74,8 @@ app.use(async (req, res, next) => {
     if (response) {
       writeResponseToNodeResponse(response, res);
     } else {
-      // No Angular route matched — send to landing page
-      res.redirect(302, '/landing');
+      // No Angular route matched — send to homepage
+      res.redirect(302, '/');
     }
   } catch (err) {
     next(err);

@@ -252,6 +252,7 @@
                 {{ 'transactions.paymentWindowEnds' | translate }}: {{ formatPaymentDeadline(t) }}{{ hasPaymentDeadlinePassed(t) ? (' (' + ('transactions.passed' | translate) + ')') : '' }}
               </p>
             }
+
             @if (isBuyer(t)) {
               <p class="card-role">
                 {{ 'transactions.youAreThe' | translate }} <strong>{{ 'transactions.buyer' | translate }}</strong>. {{ 'transactions.seller' | translate }}: {{ t.seller.firstName }} {{ t.seller.lastName }}

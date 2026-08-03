@@ -1,0 +1,251 @@
+.vt-page {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 24px 16px 64px;
+}
+
+.vt-loading {
+  display: flex;
+  justify-content: center;
+  padding: 64px 0;
+}
+
+.vt-error {
+  color: #dc2626;
+  padding: 16px;
+  background: #fef2f2;
+  border-radius: 8px;
+}
+
+// ── Header ────────────────────────────────────────────────────────────────────
+
+.vt-header {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  margin-bottom: 24px;
+}
+
+.vt-thumb {
+  width: 80px;
+  height: 64px;
+  object-fit: cover;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+
+.vt-header__body {
+  flex: 1;
+}
+
+.vt-title {
+  font-size: 18px;
+  font-weight: 700;
+  margin: 0 0 4px;
+  color: var(--color-text, #0f172a);
+}
+
+.vt-price {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--color-primary, #0ea5e9);
+  margin: 0 0 8px;
+}
+
+// ── Status badge ──────────────────────────────────────────────────────────────
+
+.vt-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+
+  &--awaiting_setup    { background: #fef3c7; color: #92400e; }
+  &--in_progress       { background: #dbeafe; color: #1e40af; }
+  &--awaiting_confirmation { background: #e0e7ff; color: #3730a3; }
+  &--completed         { background: #dcfce7; color: #166534; }
+  &--failed            { background: #fee2e2; color: #991b1b; }
+  &--cancelled         { background: #f1f5f9; color: #475569; }
+}
+
+// ── Deadline bar ──────────────────────────────────────────────────────────────
+
+.vt-deadline-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #fffbeb;
+  border: 1px solid #fcd34d;
+  border-radius: 8px;
+  padding: 10px 16px;
+  margin-bottom: 20px;
+  font-size: 14px;
+
+  &__label { color: #78350f; font-weight: 500; }
+  &__value { font-weight: 600; color: #92400e; }
+  .expired { color: #dc2626; }
+}
+
+// ── Card ──────────────────────────────────────────────────────────────────────
+
+.vt-card {
+  background: var(--surface, #fff);
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 20px;
+
+  &__title {
+    font-size: 16px;
+    font-weight: 700;
+    margin: 0 0 8px;
+    color: var(--color-text, #0f172a);
+  }
+
+  &__desc {
+    font-size: 14px;
+    color: #64748b;
+    margin: 0 0 16px;
+  }
+
+  &--completed { border-color: #86efac; background: #f0fdf4; }
+  &--failed    { border-color: #fca5a5; background: #fef2f2; }
+  &--cancelled { border-color: #cbd5e1; background: #f8fafc; }
+}
+
+.vt-completed-icon,
+.vt-failed-icon { font-size: 32px; margin-bottom: 8px; }
+
+// ── Setup steps ───────────────────────────────────────────────────────────────
+
+.vt-step {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border, #e2e8f0);
+
+  &:last-child { border-bottom: none; }
+
+  &--done { opacity: 0.75; }
+
+  &__icon { font-size: 20px; flex-shrink: 0; margin-top: 2px; }
+
+  &__body {
+    flex: 1;
+    strong { display: block; margin-bottom: 4px; color: var(--color-text, #0f172a); }
+    p { font-size: 13px; color: #64748b; margin: 0 0 10px; }
+  }
+
+  &__done-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #16a34a;
+    text-transform: uppercase;
+  }
+}
+
+// ── Contact block ─────────────────────────────────────────────────────────────
+
+.vt-contact {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+
+  strong { display: block; font-size: 12px; color: #64748b; text-transform: uppercase; margin-bottom: 4px; }
+  p { margin: 0; font-size: 14px; color: #0f172a; }
+  a { color: var(--color-primary, #0ea5e9); text-decoration: none; }
+}
+
+// ── Deadline row ──────────────────────────────────────────────────────────────
+
+.vt-deadline-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  color: #64748b;
+  margin-bottom: 16px;
+  span:last-child { font-weight: 600; color: #0f172a; }
+}
+
+// ── Confirmation status ───────────────────────────────────────────────────────
+
+.vt-confirmation-status {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.vt-conf-party {
+  flex: 1;
+  text-align: center;
+  padding: 10px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 13px;
+  color: #64748b;
+
+  &.done { border-color: #86efac; background: #f0fdf4; color: #166534; font-weight: 600; }
+}
+
+// ── Actions ───────────────────────────────────────────────────────────────────
+
+.vt-confirm-btn { width: 100%; }
+
+.vt-action-error {
+  color: #dc2626;
+  font-size: 13px;
+  margin: -12px 0 16px;
+  padding: 8px 12px;
+  background: #fef2f2;
+  border-radius: 6px;
+}
+
+.vt-back-link {
+  display: inline-block;
+  margin-top: 24px;
+  color: #64748b;
+  font-size: 14px;
+  text-decoration: none;
+  &:hover { color: var(--color-primary, #0ea5e9); }
+}
+
+// ── Spinner ───────────────────────────────────────────────────────────────────
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #e2e8f0;
+  border-top-color: var(--color-primary, #0ea5e9);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+.spinner-sm-inline {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255,255,255,0.4);
+  border-top-color: #fff;
+  border-radius: 50%;
+  vertical-align: middle;
+  margin-right: 6px;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+// ── Dark mode ─────────────────────────────────────────────────────────────────
+
+@media (prefers-color-scheme: dark) {
+  .vt-card { background: #1e293b; border-color: #334155; }
+  .vt-title, .vt-step__body strong { color: #f1f5f9; }
+  .vt-contact { background: #0f172a; border-color: #334155; }
+  .vt-contact p { color: #e2e8f0; }
+  .vt-conf-party { background: #1e293b; border-color: #334155; }
+}

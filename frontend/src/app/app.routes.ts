@@ -3,14 +3,18 @@ import { AuthGuard } from './auth/guards/auth.guard';
 import { AdminGuard } from './admin/guards/admin.guard';
 
 export const routes: Routes = [
-  { path: '', redirectTo: '/landing', pathMatch: 'full' },
+  // Homepage at `/` (200) — avoid `/` → `/landing` redirect that Search Console flags.
   {
-    path: 'auth',
-    loadChildren: () => import('./auth/auth.module').then(m => m.AuthModule)
+    path: '',
+    loadComponent: () => import('./landing/components/home/home.component').then(m => m.HomeComponent)
   },
   {
     path: 'landing',
     loadChildren: () => import('./landing/landing.module').then(m => m.LandingModule)
+  },
+  {
+    path: 'auth',
+    loadChildren: () => import('./auth/auth.module').then(m => m.AuthModule)
   },
   {
     path: 'listing',
@@ -63,6 +67,14 @@ export const routes: Routes = [
         loadComponent: () => import('./dashboard/components/transactions/dashboard-transactions.component').then(m => m.DashboardTransactionsComponent)
       },
       {
+        path: 'vehicle-transactions',
+        loadComponent: () => import('./dashboard/components/vehicle-transactions/vehicle-transactions-list.component').then(m => m.VehicleTransactionsListComponent)
+      },
+      {
+        path: 'vehicle-transactions/:id',
+        loadComponent: () => import('./dashboard/components/vehicle-transactions/vehicle-transactions.component').then(m => m.VehicleTransactionsComponent)
+      },
+      {
         path: 'my-bets',
         loadComponent: () => import('./dashboard/components/my-bets/my-bets.component').then(m => m.MyBetsComponent)
       },
@@ -99,7 +111,7 @@ export const routes: Routes = [
     loadComponent: () => import('./notifications/unsubscribe.component').then(m => m.UnsubscribeComponent)
   },
   // Note: no '**' catch-all here — Angular SSR build fails with path-to-regexp v8 on unnamed wildcards.
-  // Unknown paths are handled at the server level (Express redirects to /landing).
+  // Unknown paths are handled at the server level (Express redirects to /).
   // On the browser SPA, unknown paths simply don't navigate (stays on current route).
-  { path: 'not-found', redirectTo: '/landing', pathMatch: 'full' }
+  { path: 'not-found', redirectTo: '/', pathMatch: 'full' }
 ];

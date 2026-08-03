@@ -1234,6 +1234,11 @@ router.post('/', authenticateToken, requireActiveAccount, requireNoDisputeRestri
     if (!validSlots.includes(durationSlot)) {
       return res.status(400).json({ error: 'Invalid duration. Must be one of: ' + validSlots.join(', ') });
     }
+    // Vehicle auctions are capped at 7 days
+    const vehicleMaxSlots = ['5 minutes', '1 hour', '2 hours', '7 hours', '24 hours', '3 days', '7 days'];
+    if (category === 'vehicles' && !vehicleMaxSlots.includes(durationSlot)) {
+      durationSlot = '7 days';
+    }
     if (!shippingOption) {
       return res.status(400).json({ error: 'Shipping option is required' });
     }

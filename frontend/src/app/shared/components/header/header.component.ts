@@ -249,7 +249,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
 
   navigateToHome(): void {
     this.closeMenu();
-    this.router.navigate(['/landing']);
+    this.router.navigate(['/']);
   }
 
   navigateToAuctions(): void {
@@ -264,7 +264,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
 
   navigateToPrivateRooms(): void {
     this.closeMenu();
-    this.router.navigate(['/landing'], { fragment: 'salas' });
+    this.router.navigate(['/'], { fragment: 'salas' });
   }
 
   navigateToHowItWorks(): void {
