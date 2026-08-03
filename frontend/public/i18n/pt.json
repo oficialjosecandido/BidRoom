@@ -312,7 +312,7 @@
         "desc": "Apartamentos, moradias e terrenos"
       },
       "vehicles": {
-        "title": "Veículos",
+        "title": "Automóveis e Veículos",
         "desc": "Carros, motas e barcos"
       }
     },
@@ -517,7 +517,7 @@
       "collectibles": "Colecionáveis",
       "jewelry": "Joalharia",
       "real-estate": "Imóveis",
-      "vehicles": "Veículos"
+      "vehicles": "Automóveis e Veículos"
     },
     "subcategories": {
       "Laptops": "Portáteis",
