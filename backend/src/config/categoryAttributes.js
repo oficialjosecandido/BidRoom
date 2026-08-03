@@ -16,8 +16,9 @@
 
 const SCHEMAS = {
   // ─── Relógios ────────────────────────────────────────────────────────────────
+  // All watch characteristics are optional — sellers can publish without filling them.
   watches: [
-    { key: 'brand',            label: 'Marca',                             type: 'text',    required: true,  filterable: true, schemaOrg: 'brand' },
+    { key: 'brand',            label: 'Marca',                             type: 'text',    required: false, filterable: true, schemaOrg: 'brand' },
     { key: 'model',            label: 'Modelo',                            type: 'text',    required: false, filterable: true },
     { key: 'referenceNo',      label: 'Referência',                        type: 'text',    required: false, filterable: true },
     { key: 'year',             label: 'Ano / período',                     type: 'text',    required: false, filterable: true },
@@ -27,9 +28,9 @@ const SCHEMAS = {
     { key: 'caseMaterial',     label: 'Material da caixa',                 type: 'text',    required: false, filterable: true },
     { key: 'dialColor',        label: 'Cor do mostrador',                  type: 'text',    required: false, filterable: true },
     { key: 'braceletMaterial', label: 'Material da bracelete',             type: 'text',    required: false },
-    { key: 'originalDial',     label: 'Mostrador original (não repintado)', type: 'boolean', required: true,  filterable: true },
-    { key: 'boxIncluded',      label: 'Caixa original incluída',           type: 'boolean', required: true,  filterable: true },
-    { key: 'papersIncluded',   label: 'Documentação / certificado incluído', type: 'boolean', required: true, filterable: true },
+    { key: 'originalDial',     label: 'Mostrador original (não repintado)', type: 'boolean', required: false, filterable: true },
+    { key: 'boxIncluded',      label: 'Caixa original incluída',           type: 'boolean', required: false, filterable: true },
+    { key: 'papersIncluded',   label: 'Documentação / certificado incluído', type: 'boolean', required: false, filterable: true },
     { key: 'serviced',         label: 'Revisão / serviço efetuado',        type: 'boolean', required: false },
   ],
 

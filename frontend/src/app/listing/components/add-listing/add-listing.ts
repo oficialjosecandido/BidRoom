@@ -1131,9 +1131,13 @@ export class AddListing implements OnInit, OnDestroy {
     });
     // Add / update controls for current schema
     for (const def of schema) {
+      const validators = def.required ? [Validators.required] : [];
       if (!current.contains(def.key)) {
-        const validators = def.required ? [Validators.required] : [];
         current.addControl(def.key, this.fb.control('', validators));
+      } else {
+        const ctrl = current.get(def.key);
+        ctrl?.setValidators(validators);
+        ctrl?.updateValueAndValidity({ emitEvent: false });
       }
     }
   }
