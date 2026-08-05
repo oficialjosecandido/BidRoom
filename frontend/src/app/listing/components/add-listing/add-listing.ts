@@ -515,6 +515,18 @@ export class AddListing implements OnInit, OnDestroy {
         'Luxury Watches', 'Vintage Watches', 'Smart Watches',
         'Brooches & Pins', 'Jewelry Sets', 'Loose Gemstones', 'Other Jewelry'
       ]
+    },
+    {
+      id: 'vehicles',
+      name: 'Vehicles',
+      subCategories: [
+        'Cars', 'Classic Cars', 'Electric & Hybrid Cars',
+        'Motorcycles', 'Scooters & Mopeds',
+        'Vans & Minibuses', 'Trucks & HGV',
+        'Boats', 'Jet Skis & Watercraft', 'Sailboats',
+        'Caravans & Motorhomes', 'ATVs & Quad Bikes',
+        'Vehicle Parts', 'Vehicle Accessories', 'Other Vehicles'
+      ]
     }
   ];
 
