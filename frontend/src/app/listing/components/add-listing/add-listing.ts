@@ -295,6 +295,7 @@ export class AddListing implements OnInit, OnDestroy {
       this.currentStep = n;
       this.errorMessage = '';
       this.mobileStepsOpen = false;
+      if (n === 5) this.applyVehicleLogisticsDefaults();
       return;
     }
     for (let s = this.currentStep; s < n; s++) {
@@ -306,6 +307,7 @@ export class AddListing implements OnInit, OnDestroy {
     this.errorMessage = '';
     this.currentStep = n;
     this.mobileStepsOpen = false;
+    if (n === 5) this.applyVehicleLogisticsDefaults();
   }
 
   nextStep(): void {
@@ -314,6 +316,7 @@ export class AddListing implements OnInit, OnDestroy {
       this.errorMessage = '';
       this.currentStep = this.currentStep + 1;
       this.mobileStepsOpen = false;
+      if (this.currentStep === 5) this.applyVehicleLogisticsDefaults();
     }
   }
 
@@ -595,6 +598,37 @@ export class AddListing implements OnInit, OnDestroy {
 
   selectedCategory: Category | null = null;
 
+  /** Vehicle listings have no postal shipping — only in-person collection. */
+  get isVehicleListing(): boolean {
+    return this.listingForm?.get('category')?.value === 'vehicles';
+  }
+
+  get availableShippingOptions(): { value: string; labelKey: string }[] {
+    if (this.isVehicleListing) {
+      return this.shippingOptions.filter(o => o.value === 'local-pickup');
+    }
+    return this.shippingOptions;
+  }
+
+  get availableReturnPolicies(): { value: string; labelKey: string }[] {
+    if (this.isVehicleListing) {
+      return this.returnPolicies.filter(p => p.value === 'no-returns');
+    }
+    return this.returnPolicies;
+  }
+
+  private applyVehicleLogisticsDefaults(): void {
+    if (!this.isVehicleListing) return;
+    this.listingForm.patchValue({
+      shippingOption: 'local-pickup',
+      returnPolicy: 'no-returns',
+      flatRateShipping: null,
+      packageSize: '',
+      shippingOriginPostalCode: '',
+      shippingOriginCity: '',
+    }, { emitEvent: true });
+  }
+
   // ── Photo guide ───────────────────────────────────────────────────────────
   photoGuideOpen = true;
 
@@ -785,6 +819,9 @@ export class AddListing implements OnInit, OnDestroy {
     this.listingForm.get('category')?.valueChanges.subscribe(categoryId => {
       this.selectedCategory = this.categories.find(c => c.id === categoryId) || null;
       this.listingForm.patchValue({ subCategory: '' });
+      if (categoryId === 'vehicles') {
+        this.applyVehicleLogisticsDefaults();
+      }
     });
 
     this.listingForm.get('subCategory')?.valueChanges.subscribe(sub => {
@@ -998,6 +1035,9 @@ export class AddListing implements OnInit, OnDestroy {
 
       const catId = patch['category'] as string;
       this.selectedCategory = catId ? this.categories.find(c => c.id === catId) || null : null;
+      if (catId === 'vehicles') {
+        this.applyVehicleLogisticsDefaults();
+      }
 
       const specs = p['specifications'];
       if (Array.isArray(specs)) {
@@ -1366,6 +1406,7 @@ export class AddListing implements OnInit, OnDestroy {
 
   async onSubmit(): Promise<void> {
     if (this.isSubmitting || this.isUploadingImages) return;
+    this.applyVehicleLogisticsDefaults();
 
     Object.keys(this.listingForm.controls).forEach(key => {
       this.listingForm.get(key)?.markAsTouched();

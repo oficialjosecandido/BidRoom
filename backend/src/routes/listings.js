@@ -1237,6 +1237,12 @@ router.post('/', authenticateToken, requireActiveAccount, requireNoDisputeRestri
     if (!shippingOption) {
       return res.status(400).json({ error: 'Shipping option is required' });
     }
+    // Vehicles are collection-only (no postal shipping), like OLX car listings.
+    if (category === 'vehicles' && shippingOption !== 'local-pickup') {
+      return res.status(400).json({
+        error: 'Vehicle listings only support in-person collection (local-pickup).'
+      });
+    }
     if (!returnPolicy) {
       return res.status(400).json({ error: 'Return policy is required' });
     }

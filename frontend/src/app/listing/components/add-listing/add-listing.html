@@ -679,12 +679,23 @@
     <!-- ── STEP 5: Shipping ───────────────────────────────────────────────── -->
     <div class="step-panel" [class.active]="currentStep === 5">
       <div class="section">
-        <div class="section-title">{{ 'addListing.step5.section' | translate }}</div>
+        <div class="section-title">
+          {{ (isVehicleListing ? 'addListing.step5.sectionVehicle' : 'addListing.step5.section') | translate }}
+        </div>
+
+        @if (isVehicleListing) {
+          <div class="vehicle-pickup-notice">
+            <p>{{ 'addListing.vehiclePickupNotice' | translate }}</p>
+          </div>
+        }
 
         <div class="field">
-          <label class="field-label">{{ 'addListing.shippingOptions' | translate }} <span class="req">*</span></label>
+          <label class="field-label">
+            {{ (isVehicleListing ? 'addListing.deliveryMethod' : 'addListing.shippingOptions') | translate }}
+            <span class="req">*</span>
+          </label>
           <div class="pill-group">
-            @for (opt of shippingOptions; track opt.value) {
+            @for (opt of availableShippingOptions; track opt.value) {
               <label class="pill" [class.selected]="listingForm.get('shippingOption')?.value === opt.value">
                 <input type="radio" formControlName="shippingOption" [value]="opt.value" style="display:none">
                 {{ opt.labelKey | translate }}
@@ -694,7 +705,7 @@
           @if (getFieldError('shippingOption')) { <div class="field-err">{{ getFieldError('shippingOption') }}</div> }
         </div>
 
-        @if (listingForm.get('shippingOption')?.value === 'flat-rate') {
+        @if (!isVehicleListing && listingForm.get('shippingOption')?.value === 'flat-rate') {
           <div class="field">
             <label class="field-label">{{ 'addListing.flatRateCost' | translate }} <span class="req">*</span></label>
             <div class="price-input-wrap" style="max-width:180px">
@@ -706,7 +717,7 @@
           </div>
         }
 
-        @if (listingForm.get('shippingOption')?.value === 'calculated') {
+        @if (!isVehicleListing && listingForm.get('shippingOption')?.value === 'calculated') {
           <div class="field-row">
             <div class="field">
               <label class="field-label">{{ 'addListing.packageSize' | translate }}</label>
@@ -727,8 +738,11 @@
 
       <div class="section">
         <div class="section-title">{{ 'addListing.returnPolicy' | translate }}</div>
+        @if (isVehicleListing) {
+          <p class="vehicle-pickup-hint">{{ 'addListing.vehicleNoReturnsHint' | translate }}</p>
+        }
         <div class="pill-group">
-          @for (policy of returnPolicies; track policy.value) {
+          @for (policy of availableReturnPolicies; track policy.value) {
             <label class="pill" [class.selected]="listingForm.get('returnPolicy')?.value === policy.value">
               <input type="radio" formControlName="returnPolicy" [value]="policy.value" style="display:none">
               {{ policy.labelKey | translate }}

@@ -76,6 +76,33 @@ const SCHEMAS = {
     { key: 'certified',    label: 'Certificado (PCGS/NGC/…)',  type: 'boolean', required: false, filterable: true },
   ],
 
+  // ─── Veículos (alinhado com campos típicos OLX / Standvirtual) ────────────
+  // Entrega é sempre encontro presencial — sem envio postal.
+  vehicles: [
+    { key: 'make',         label: 'Marca',                        type: 'text',    required: false, filterable: true, schemaOrg: 'brand' },
+    { key: 'model',        label: 'Modelo',                       type: 'text',    required: false, filterable: true },
+    { key: 'year',         label: 'Ano',                          type: 'number',  required: false, filterable: true },
+    { key: 'mileage',      label: 'Quilómetros',                  type: 'number',  required: false, filterable: true, unit: 'km' },
+    { key: 'fuel',         label: 'Combustível',                  type: 'enum',    required: false, filterable: true,
+      options: ['Gasolina', 'Diesel', 'Elétrico', 'Híbrido Plug-in', 'Híbrido Mild', 'GPL', 'Outro'] },
+    { key: 'transmission', label: 'Tipo de caixa',                type: 'enum',    required: false, filterable: true,
+      options: ['Manual', 'Automático', 'Semi-automático'] },
+    { key: 'engineSize',   label: 'Cilindrada (cm³)',             type: 'number',  required: false, filterable: true, unit: 'cm³' },
+    { key: 'power',        label: 'Potência (cv)',                type: 'number',  required: false, filterable: true, unit: 'cv' },
+    { key: 'bodyType',     label: 'Tipo de carroçaria',           type: 'enum',    required: false, filterable: true,
+      options: ['Citadino', 'Sedan', 'Carrinha', 'SUV / Todo-o-terreno', 'Coupé', 'Cabrio', 'Monovolume', 'Comercial', 'Outro'] },
+    { key: 'color',        label: 'Cor',                          type: 'text',    required: false, filterable: true },
+    { key: 'doors',        label: 'Número de portas',             type: 'enum',    required: false, filterable: true,
+      options: ['2', '3', '4', '5'] },
+    { key: 'seats',        label: 'Número de lugares',            type: 'enum',    required: false, filterable: true,
+      options: ['2', '4', '5', '6', '7', '8+'] },
+    { key: 'inspection',   label: 'IPO / inspeção válida',        type: 'boolean', required: false, filterable: true },
+    { key: 'iuc',          label: 'IUC em dia',                   type: 'boolean', required: false, filterable: false },
+    { key: 'owners',       label: 'Nº de proprietários anteriores', type: 'number', required: false, filterable: false },
+    { key: 'plate',        label: 'Matrícula',                    type: 'text',    required: false, filterable: false },
+    { key: 'vin',          label: 'Número de chassis (VIN)',      type: 'text',    required: false, filterable: false },
+  ],
+
   // ─── Genérico ────────────────────────────────────────────────────────────
   default: [
     { key: 'brand',    label: 'Marca',    type: 'text', required: false, filterable: true, schemaOrg: 'brand' },
@@ -131,12 +158,26 @@ const SUBCATEGORY_MAP = {
   'Modern Stamps (2000 to Present)':  'stamps',
   // Coins
   'Coins & Banknotes': 'coins',
+  // Vehicles
+  'Cars':                   'vehicles',
+  'Classic Cars':           'vehicles',
+  'Electric & Hybrid Cars': 'vehicles',
+  'Motorcycles':            'vehicles',
+  'Scooters & Mopeds':      'vehicles',
+  'Vans & Minibuses':       'vehicles',
+  'Trucks & HGV':           'vehicles',
+  'Boats':                  'vehicles',
+  'Jet Skis & Watercraft':  'vehicles',
+  'Sailboats':              'vehicles',
+  'Caravans & Motorhomes':  'vehicles',
+  'ATVs & Quad Bikes':      'vehicles',
 };
 
 // Category-level fallbacks (used when no subCategory match above)
 const CATEGORY_MAP = {
-  art:    'art',
-  jewelry: 'jewelry',
+  art:      'art',
+  jewelry:  'jewelry',
+  vehicles: 'vehicles',
   collectibles: 'stamps', // sensible default; stamp-heavy vertical
 };
 
