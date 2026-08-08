@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, ChangeDetectorRef, PLATFORM_ID, inject, computed, TransferState, makeStateKey } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef, PLATFORM_ID, inject, computed, TransferState, makeStateKey, RESPONSE_INIT } from '@angular/core';
 import { CommonModule, Location, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -32,6 +32,7 @@ import { getLocalizedTitle, getLocalizedDescription } from '../../../shared/util
 import { API_CONFIG } from '../../../shared/config/api.config';
 import { CurrencyDisplayService } from '../../../shared/services/currency-display.service';
 import { DisplayPricePipe } from '../../../shared/pipes/display-price.pipe';
+import { applySsrStatus } from '../../../shared/utils/ssr-status';
 
 @Component({
   selector: 'app-listing-details',
@@ -68,6 +69,7 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
   private platformId = inject(PLATFORM_ID);
   private isBrowser = isPlatformBrowser(this.platformId);
   private transferState = inject(TransferState);
+  private responseInit = inject(RESPONSE_INIT, { optional: true });
   linkCopied = false;
 
   readonly isLight = computed(() => this.themeService.effective() === 'light');
@@ -162,6 +164,7 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
     if (!slug) {
       this.error = 'Invalid listing URL';
       this.loading = false;
+      applySsrStatus(this.responseInit, 404);
       return;
     }
 
@@ -189,6 +192,7 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
       error: () => {
         this.error = 'Listing not found';
         this.loading = false;
+        applySsrStatus(this.responseInit, 404);
       }
     });
   }

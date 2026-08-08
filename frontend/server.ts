@@ -61,8 +61,16 @@ app.use(async (req, res, next) => {
     if (response) {
       writeResponseToNodeResponse(response, res);
     } else {
-      // No Angular route matched — send to landing page
-      res.redirect(302, '/landing');
+      // No Angular route matched — real 404 (avoid Soft 404 / redirect loops for crawlers).
+      res.status(404).type('html').send(`<!DOCTYPE html>
+<html lang="pt"><head><meta charset="utf-8"><title>404 · BidRoom</title>
+<meta name="robots" content="noindex">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+</head><body style="font-family:system-ui,sans-serif;max-width:40rem;margin:4rem auto;padding:0 1.5rem;color:#1d1d1f">
+<h1 style="font-size:1.5rem">Página não encontrada</h1>
+<p style="color:#6e6e73">O endereço que pediu não existe ou foi removido.</p>
+<p><a href="/" style="color:#8C6B1E">Voltar ao BidRoom</a></p>
+</body></html>`);
     }
   } catch (err) {
     next(err);

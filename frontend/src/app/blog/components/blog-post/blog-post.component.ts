@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, inject, ChangeDetectionStrategy, ChangeDetectorRef, computed } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, ChangeDetectionStrategy, ChangeDetectorRef, computed, RESPONSE_INIT } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, ActivatedRoute, Router } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
@@ -13,6 +13,7 @@ import { ThemeService } from '../../../shared/services/theme.service';
 import { API_CONFIG } from '../../../shared/config/api.config';
 import { AnalyticsService } from '../../../shared/services/analytics.service';
 import { AnalyticsEvents } from '../../../shared/services/analytics.events';
+import { applySsrStatus } from '../../../shared/utils/ssr-status';
 
 @Component({
   selector: 'app-blog-post',
@@ -31,6 +32,7 @@ export class BlogPostComponent implements OnInit, OnDestroy {
   private translate = inject(TranslateService);
   private themeService = inject(ThemeService);
   private analytics = inject(AnalyticsService);
+  private responseInit = inject(RESPONSE_INIT, { optional: true });
 
   post: BlogPost | null = null;
   contentHtml = '';
@@ -46,6 +48,7 @@ export class BlogPostComponent implements OnInit, OnDestroy {
     if (!slug) {
       this.notFound = true;
       this.loading = false;
+      applySsrStatus(this.responseInit, 404);
       return;
     }
 
@@ -59,6 +62,7 @@ export class BlogPostComponent implements OnInit, OnDestroy {
       error: () => {
         this.notFound = true;
         this.loading = false;
+        applySsrStatus(this.responseInit, 404);
         this.cdr.markForCheck();
       }
     });

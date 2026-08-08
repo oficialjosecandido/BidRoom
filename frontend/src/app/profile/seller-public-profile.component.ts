@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, DestroyRef, TransferState, makeStateKey, PLATFORM_ID } from '@angular/core';
+import { Component, OnInit, inject, DestroyRef, TransferState, makeStateKey, PLATFORM_ID, RESPONSE_INIT } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
@@ -10,6 +10,7 @@ import { ReportModalComponent } from '../shared/components/report-modal/report-m
 import { AuthService } from '../auth/services/auth.service';
 import { FollowService, FollowStatus } from '../shared/services/follow.service';
 import { API_CONFIG } from '../shared/config/api.config';
+import { applySsrStatus } from '../shared/utils/ssr-status';
 
 export interface PublicReview {
   _id: string;
@@ -70,6 +71,7 @@ export class SellerPublicProfileComponent implements OnInit {
   private transferState = inject(TransferState);
   private isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
   private destroyRef = inject(DestroyRef);
+  private responseInit = inject(RESPONSE_INIT, { optional: true });
 
   private apiBase = API_CONFIG.getApiUrl();
 
@@ -109,6 +111,7 @@ export class SellerPublicProfileComponent implements OnInit {
     if (!id) {
       this.error = 'Invalid profile URL.';
       this.loading = false;
+      applySsrStatus(this.responseInit, 404);
       return;
     }
 
@@ -147,6 +150,7 @@ export class SellerPublicProfileComponent implements OnInit {
       error: (err) => {
         this.error = err.status === 404 ? 'sellerProfile.notFound' : 'sellerProfile.loadError';
         this.loading = false;
+        if (err.status === 404) applySsrStatus(this.responseInit, 404);
       }
     });
   }
