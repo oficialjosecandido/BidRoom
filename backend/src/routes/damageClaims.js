@@ -11,6 +11,7 @@ const {
   emitNewNotificationToUser
 } = require('../services/notificationService');
 const { getPackagingRequirements } = require('../config/packagingPolicy');
+const logger = require('../utils/logger');
 
 const router = express.Router();
 router.use(authenticateToken);
@@ -107,7 +108,7 @@ router.post('/', requireActiveAccount, async (req, res) => {
           io
         });
       } catch (e) {
-        console.error('notifyDamageClaimOpened error:', e.message);
+        logger.error('notifyDamageClaimOpened error:', e.message);
       }
     });
 
@@ -119,7 +120,7 @@ router.post('/', requireActiveAccount, async (req, res) => {
     if (err.name === 'ValidationError') {
       return res.status(400).json({ error: Object.values(err.errors).map(e => e.message).join(', ') });
     }
-    console.error('POST /api/damage-claims error:', err);
+    logger.error('POST /api/damage-claims error:', err);
     return res.status(500).json({ error: 'Failed to open damage claim.' });
   }
 });
@@ -152,7 +153,7 @@ router.get('/transaction/:transactionId', async (req, res) => {
 
     return res.json({ claim: publicClaim });
   } catch (err) {
-    console.error('GET /api/damage-claims/transaction/:id error:', err);
+    logger.error('GET /api/damage-claims/transaction/:id error:', err);
     return res.status(500).json({ error: 'Failed to load damage claim.' });
   }
 });
@@ -182,7 +183,7 @@ router.get('/:id', async (req, res) => {
     const { adminNotes: _adminNotes, ...publicClaim } = claim;
     return res.json({ claim: publicClaim });
   } catch (err) {
-    console.error('GET /api/damage-claims/:id error:', err);
+    logger.error('GET /api/damage-claims/:id error:', err);
     return res.status(500).json({ error: 'Failed to load damage claim.' });
   }
 });

@@ -46,6 +46,7 @@ const {
 } = require('../services/auctionNotificationService');
 const { sendEmail } = require('../services/emailService');
 const { wrapBidRoomEmail, emailSuccessBox, emailAmountCard } = require('../utils/bidroomEmailLayout');
+const logger = require('../utils/logger');
 
 // GET /api/offers/listing/:listingId - Get all offers for a listing
 router.get('/listing/:listingId', optionalAuth, async (req, res) => {
@@ -96,7 +97,7 @@ router.get('/listing/:listingId', optionalAuth, async (req, res) => {
       total: formattedOffers.length
     });
   } catch (error) {
-    console.error('Error fetching offers:', error);
+    logger.error('Error fetching offers:', error);
     res.status(500).json({
       error: 'Failed to fetch offers',
       message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
@@ -277,11 +278,11 @@ async function createOffer(req, res) {
     const confirmUserId = populatedOffer.offerer?._id?.toString?.();
     if (confirmUserId) {
       notifyOfferPlaced({ listingSlug: listing.slug, listingTitle: listing.title, offerAmount: amount, offererUserId: confirmUserId })
-        .catch(err => console.error('Failed offer confirmation notification:', err));
+        .catch(err => logger.error('Failed offer confirmation notification:', err));
       if (io) emitNewNotificationToUser(io, confirmUserId).catch(() => {});
     }
     if (confirmEmail) {
-      sendOfferPlacedEmail(listing, confirmEmail, name, amount).catch(err => console.error('Failed offer confirmation email:', err));
+      sendOfferPlacedEmail(listing, confirmEmail, name, amount).catch(err => logger.error('Failed offer confirmation email:', err));
     }
     // Fetch other buyers' pending offers (exclude same buyer to avoid self-outbid notifications)
     const otherBuyerFilter = user
@@ -300,11 +301,11 @@ async function createOffer(req, res) {
         notified.add(e);
         if (u) {
           notifyOfferOutbid({ listingSlug: listing.slug, listingTitle: listing.title, previousOffer: prevHigh, newOffer: amount, offererUserId: u })
-            .catch(err => console.error('Failed offer outbid notification:', err));
+            .catch(err => logger.error('Failed offer outbid notification:', err));
           if (io) emitNewNotificationToUser(io, u).catch(() => {});
         }
         sendOfferOutbidEmail(listing, e, o.offerer ? `${o.offerer.firstName} ${o.offerer.lastName}` : o.offererEmail?.split('@')[0], prevHigh, amount)
-          .catch(err => console.error('Failed offer outbid email:', err));
+          .catch(err => logger.error('Failed offer outbid email:', err));
       }
     }
     if (io) {
@@ -322,7 +323,7 @@ async function createOffer(req, res) {
         offerAmount: amount,
         offererName: name,
         sellerUserId
-      }).catch(err => console.error('Failed to create proposal notification:', err));
+      }).catch(err => logger.error('Failed to create proposal notification:', err));
       if (io) emitNewNotificationToUser(io, sellerUserId).catch(() => {});
     }
 
@@ -345,7 +346,7 @@ router.post('/', optionalAuth, requireActiveAccountIfAuthenticated, requireNoDis
   }, OFFER_CREATE_TIMEOUT_MS);
   res.once('finish', () => clearTimeout(timeoutId));
   createOffer(req, res).catch((err) => {
-    console.error('Error creating offer:', err);
+    logger.error('Error creating offer:', err);
     if (!res.headersSent) {
       res.status(400).json({
         error: 'Failed to create offer',
@@ -427,7 +428,7 @@ router.patch('/:offerId/accept', authenticateToken, async (req, res) => {
     const io = req.app.get('io');
     if (offer.offerer) {
       createTransactionForAcceptedOffer(offer.listing._id.toString(), offer._id.toString()).catch(err =>
-        console.error('Transaction create for accepted offer:', err.message)
+        logger.error('Transaction create for accepted offer:', err.message)
       );
       // Notify buyer that proposal was accepted
       const buyerUserId = offer.offerer._id?.toString?.() || offer.offerer?.toString?.();
@@ -438,7 +439,7 @@ router.patch('/:offerId/accept', authenticateToken, async (req, res) => {
           listingTitle: listing.title || 'the item',
           offerAmount: offer.amount,
           buyerUserId
-        }).catch(err => console.error('Failed to create proposal-accepted notification:', err));
+        }).catch(err => logger.error('Failed to create proposal-accepted notification:', err));
         if (io) emitNewNotificationToUser(io, buyerUserId).catch(() => {});
 
         // Email to buyer
@@ -464,7 +465,7 @@ router.patch('/:offerId/accept', authenticateToken, async (req, res) => {
             ctaLabel: 'View transaction'
           });
           sendEmail(buyerEmail, `Your offer on "${listingTitle}" was accepted`, html)
-            .catch(err => console.error('Failed to send offer-accepted email:', err.message));
+            .catch(err => logger.error('Failed to send offer-accepted email:', err.message));
         }
       }
     }
@@ -487,7 +488,7 @@ router.patch('/:offerId/accept', authenticateToken, async (req, res) => {
       offererName
     });
   } catch (error) {
-    console.error('Error accepting offer:', error);
+    logger.error('Error accepting offer:', error);
     res.status(400).json({
       error: 'Failed to accept offer',
       message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
@@ -556,7 +557,7 @@ router.patch('/:offerId/reject', authenticateToken, async (req, res) => {
             listingTitle: offer.listing.title || 'Your listing',
             offerAmount: remainingQualifying[0].amount,
             sellerUserId: user._id.toString()
-          }).catch(err => console.error('Failed Stripe-required notification:', err));
+          }).catch(err => logger.error('Failed Stripe-required notification:', err));
           if (io) emitNewNotificationToUser(io, user._id.toString()).catch(() => {});
           return res.json({ ...offer.toObject(), stripeRequired: true });
         }
@@ -577,7 +578,7 @@ router.patch('/:offerId/reject', authenticateToken, async (req, res) => {
 
         if (autoOffer.offerer) {
           createTransactionForAcceptedOffer(offer.listing._id.toString(), autoOffer._id.toString())
-            .catch(err => console.error('Transaction create for auto-accepted offer:', err.message));
+            .catch(err => logger.error('Transaction create for auto-accepted offer:', err.message));
         }
 
         const io = req.app.get('io');
@@ -606,7 +607,7 @@ router.patch('/:offerId/reject', authenticateToken, async (req, res) => {
           listingTitle: listing.title || 'the item',
           offerAmount: offer.amount,
           buyerUserId
-        }).catch(err => console.error('Failed to create proposal-declined notification:', err));
+        }).catch(err => logger.error('Failed to create proposal-declined notification:', err));
         if (io) emitNewNotificationToUser(io, buyerUserId).catch(() => {});
       }
     }
@@ -622,7 +623,7 @@ router.patch('/:offerId/reject', authenticateToken, async (req, res) => {
 
     res.json(offer);
   } catch (error) {
-    console.error('Error rejecting offer:', error);
+    logger.error('Error rejecting offer:', error);
     res.status(400).json({
       error: 'Failed to reject offer',
       message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'

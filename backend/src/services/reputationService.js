@@ -23,6 +23,7 @@ const Customer = require('../models/Customer');
 const Review = require('../models/Review');
 const Transaction = require('../models/Transaction');
 const ReviewFlag = require('../models/ReviewFlag');
+const logger = require('../utils/logger');
 
 // ── Score bounds ───────────────────────────────────────────────────────────────
 const REPUTATION_MAX = 100;
@@ -257,7 +258,7 @@ async function checkReviewFraud(review) {
   await Promise.all(
     flags.map(f =>
       ReviewFlag.create({ review: review._id, reason: f.reason, metadata: f.metadata, status: 'pending' })
-        .catch(err => console.error('ReviewFlag create:', err.message))
+        .catch(err => logger.error('ReviewFlag create:', err.message))
     )
   );
   return flags;

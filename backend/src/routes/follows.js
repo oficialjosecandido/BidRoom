@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const Follow = require('../models/Follow');
 const Customer = require('../models/Customer');
 const { authenticateToken, requireActiveAccount } = require('../middleware/auth');
+const logger = require('../utils/logger');
 
 const router = express.Router();
 
@@ -33,7 +34,7 @@ router.post('/:sellerId', authenticateToken, requireActiveAccount, async (req, r
     if (error.code === 11000) {
       return res.json({ following: true });
     }
-    console.error('Error following seller:', error);
+    logger.error('Error following seller:', error);
     res.status(500).json({ error: 'Failed to follow seller' });
   }
 });
@@ -53,7 +54,7 @@ router.delete('/:sellerId', authenticateToken, requireActiveAccount, async (req,
     await Follow.deleteOne({ follower: followerId, following: sellerId });
     res.json({ following: false });
   } catch (error) {
-    console.error('Error unfollowing seller:', error);
+    logger.error('Error unfollowing seller:', error);
     res.status(500).json({ error: 'Failed to unfollow seller' });
   }
 });
@@ -87,7 +88,7 @@ router.patch('/:sellerId/mute', authenticateToken, requireActiveAccount, async (
 
     res.json({ following: true, muted: follow.muted });
   } catch (error) {
-    console.error('Error toggling mute:', error);
+    logger.error('Error toggling mute:', error);
     res.status(500).json({ error: 'Failed to update mute setting' });
   }
 });
@@ -112,7 +113,7 @@ router.get('/status/:sellerId', authenticateToken, async (req, res) => {
 
     res.json({ following: true, muted: follow.muted });
   } catch (error) {
-    console.error('Error getting follow status:', error);
+    logger.error('Error getting follow status:', error);
     res.status(500).json({ error: 'Failed to get follow status' });
   }
 });
@@ -137,7 +138,7 @@ router.get('/following', authenticateToken, async (req, res) => {
 
     res.json({ following });
   } catch (err) {
-    console.error('Error fetching following list:', err);
+    logger.error('Error fetching following list:', err);
     res.status(500).json({ error: 'Failed to fetch following list' });
   }
 });

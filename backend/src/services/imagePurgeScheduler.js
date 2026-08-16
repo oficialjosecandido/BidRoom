@@ -1,12 +1,13 @@
 const { purgeExpiredListingImages } = require('./imagePurgeService');
+const logger = require('../utils/logger');
 
 async function runImagePurge() {
-  console.log('[ImagePurge] Starting daily image purge run...');
+  logger.info('[ImagePurge] Starting daily image purge run...');
   try {
     const result = await purgeExpiredListingImages();
     return result;
   } catch (err) {
-    console.error('[ImagePurge] Unhandled error during purge run:', err.message);
+    logger.error('[ImagePurge] Unhandled error during purge run:', err.message);
     throw err;
   }
 }

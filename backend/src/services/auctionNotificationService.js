@@ -6,6 +6,7 @@ const { sendEmail } = require('./emailService');
 const { isStripeTestMode } = require('../utils/stripe.util');
 const { getEmailTemplate, getUserLanguage } = require('./emailTemplates');
 const { createTransactionForListing, createTransactionForAcceptedOffer } = require('./transactionService');
+const logger = require('../utils/logger');
 
 /**
  * Send auction closed notifications to all bidders (except winner and seller)
@@ -63,13 +64,13 @@ async function sendAuctionClosedNotifications(listing, winnerBidId = null) {
       try {
         await sendEmail(bidderEmail, email.subject, email.html);
       } catch (error) {
-        console.error(`❌ Failed to send email to ${bidderEmail}:`, error.message);
+        logger.error(`❌ Failed to send email to ${bidderEmail}:`, error.message);
       }
     }
 
     return { notified: notifiedEmails.size };
   } catch (error) {
-    console.error('Error sending auction closed notifications:', error);
+    logger.error('Error sending auction closed notifications:', error);
     throw error;
   }
 }
@@ -86,7 +87,7 @@ async function sendChooseWinnerNotification(listing) {
 
     const seller = await Customer.findById(listing.seller);
     if (!seller || !seller.email) {
-      console.error('Seller not found or has no email for listing:', listing._id);
+      logger.error('Seller not found or has no email for listing:', listing._id);
       return;
     }
 
@@ -106,7 +107,7 @@ async function sendChooseWinnerNotification(listing) {
 
     return { sent: true };
   } catch (error) {
-    console.error('Error sending choose winner notification:', error);
+    logger.error('Error sending choose winner notification:', error);
     throw error;
   }
 }
@@ -121,7 +122,7 @@ async function sendAuctionNotSoldNotification(listing) {
       ? await Customer.findById(listing.seller._id)
       : await Customer.findById(listing.seller);
     if (!seller || !seller.email) {
-      console.error('Seller not found or has no email for listing:', listing._id);
+      logger.error('Seller not found or has no email for listing:', listing._id);
       return;
     }
 
@@ -139,7 +140,7 @@ async function sendAuctionNotSoldNotification(listing) {
 
     return { sent: true };
   } catch (error) {
-    console.error('Error sending auction not sold notification:', error);
+    logger.error('Error sending auction not sold notification:', error);
     throw error;
   }
 }
@@ -168,7 +169,7 @@ async function sendOutbidNotification(listing, bidderEmail, bidderName, previous
     await sendEmail(bidderEmail, email.subject, email.html);
     return { sent: true };
   } catch (error) {
-    console.error('Error sending outbid notification:', error);
+    logger.error('Error sending outbid notification:', error);
     return { sent: false, error: error.message };
   }
 }
@@ -193,7 +194,7 @@ async function sendWinnerNotification(listing, winnerBid) {
     }
 
     if (!winnerEmail) {
-      console.error('Winner has no email for bid:', winnerBid._id);
+      logger.error('Winner has no email for bid:', winnerBid._id);
       return;
     }
 
@@ -216,7 +217,7 @@ async function sendWinnerNotification(listing, winnerBid) {
 
     return { sent: true };
   } catch (error) {
-    console.error('Error sending winner notification:', error);
+    logger.error('Error sending winner notification:', error);
     throw error;
   }
 }
@@ -266,7 +267,7 @@ async function sendFirstBidNotification(listing, bid, bidderEmail, bidderName) {
 
     return { sent: true };
   } catch (error) {
-    console.error('Error sending first bid notification:', error);
+    logger.error('Error sending first bid notification:', error);
     // Don't throw - this is a non-critical notification
     return { sent: false, error: error.message };
   }
@@ -290,7 +291,7 @@ async function sendOfferPlacedEmail(listing, offererEmail, offererName, offerAmo
     await sendEmail(offererEmail, email.subject, email.html);
     return { sent: true };
   } catch (error) {
-    console.error('Error sending offer confirmation email:', error);
+    logger.error('Error sending offer confirmation email:', error);
     return { sent: false, error: error.message };
   }
 }
@@ -315,7 +316,7 @@ async function sendOfferOutbidEmail(listing, offererEmail, offererName, previous
     await sendEmail(offererEmail, email.subject, email.html);
     return { sent: true };
   } catch (error) {
-    console.error('Error sending offer outbid email:', error);
+    logger.error('Error sending offer outbid email:', error);
     return { sent: false, error: error.message };
   }
 }
@@ -329,7 +330,7 @@ async function sendBestOfferEndedNotification(listing, offerCount) {
       ? await Customer.findById(listing.seller._id)
       : await Customer.findById(listing.seller);
     if (!seller || !seller.email) {
-      console.error('Seller not found or has no email for listing:', listing._id);
+      logger.error('Seller not found or has no email for listing:', listing._id);
       return;
     }
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:4200';
@@ -344,7 +345,7 @@ async function sendBestOfferEndedNotification(listing, offerCount) {
     await sendEmail(seller.email, email.subject, email.html);
     return { sent: true };
   } catch (error) {
-    console.error('Error sending best-offer ended notification:', error);
+    logger.error('Error sending best-offer ended notification:', error);
     return { sent: false, error: error.message };
   }
 }
@@ -358,7 +359,7 @@ async function sendPrivateRoomClosedNoAcceptanceToSeller(listing) {
       ? await Customer.findById(listing.seller._id)
       : await Customer.findById(listing.seller);
     if (!seller || !seller.email) {
-      console.error('Seller not found or has no email for listing:', listing._id);
+      logger.error('Seller not found or has no email for listing:', listing._id);
       return;
     }
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:4200';
@@ -372,7 +373,7 @@ async function sendPrivateRoomClosedNoAcceptanceToSeller(listing) {
     await sendEmail(seller.email, email.subject, email.html);
     return { sent: true };
   } catch (error) {
-    console.error('Error sending private room closed (no acceptances) to seller:', error);
+    logger.error('Error sending private room closed (no acceptances) to seller:', error);
     throw error;
   }
 }
@@ -403,12 +404,12 @@ async function sendPrivateRoomClosedNoAcceptanceToInvitedBuyers(listing) {
       try {
         await sendEmail(user.email, email.subject, email.html);
       } catch (err) {
-        console.error(`Failed to send private room closed to ${user.email}:`, err.message);
+        logger.error(`Failed to send private room closed to ${user.email}:`, err.message);
       }
     }
     return { sent: true };
   } catch (error) {
-    console.error('Error sending private room closed (no acceptances) to invited buyers:', error);
+    logger.error('Error sending private room closed (no acceptances) to invited buyers:', error);
     throw error;
   }
 }
@@ -433,7 +434,7 @@ async function sendPrivateRoomClosedSellerLeftToSeller(listing) {
     await sendEmail(seller.email, email.subject, email.html);
     return { sent: true };
   } catch (error) {
-    console.error('Error sending private room closed (seller left) to seller:', error);
+    logger.error('Error sending private room closed (seller left) to seller:', error);
     throw error;
   }
 }
@@ -464,12 +465,12 @@ async function sendPrivateRoomClosedSellerLeftToBuyers(listing) {
       try {
         await sendEmail(user.email, email.subject, email.html);
       } catch (err) {
-        console.error(`Failed to send private room closed (seller left) to ${user.email}:`, err.message);
+        logger.error(`Failed to send private room closed (seller left) to ${user.email}:`, err.message);
       }
     }
     return { sent: true };
   } catch (error) {
-    console.error('Error sending private room closed (seller left) to invited buyers:', error);
+    logger.error('Error sending private room closed (seller left) to invited buyers:', error);
     throw error;
   }
 }
@@ -516,7 +517,7 @@ async function handlePrivateRoomClosedNoAcceptance(listingId, io = null) {
         listingSlug: listingForNotify.slug,
         listingTitle: listingForNotify.title,
         sellerUserId
-      }).catch(err => console.error('Seller notification:', err));
+      }).catch(err => logger.error('Seller notification:', err));
       if (io) emitNewNotificationToUser(io, sellerUserId).catch(() => {});
     }
 
@@ -529,7 +530,7 @@ async function handlePrivateRoomClosedNoAcceptance(listingId, io = null) {
         listingSlug: listingForNotify.slug,
         listingTitle: listingForNotify.title,
         bidderUserId
-      }).catch(err => console.error('Invited buyer notification:', err));
+      }).catch(err => logger.error('Invited buyer notification:', err));
       if (io) emitNewNotificationToUser(io, bidderUserId).catch(() => {});
     }
 
@@ -550,7 +551,7 @@ async function handlePrivateRoomClosedNoAcceptance(listingId, io = null) {
 
     return { processed: true };
   } catch (error) {
-    console.error('Error handling private room closed (no acceptances):', error);
+    logger.error('Error handling private room closed (no acceptances):', error);
     throw error;
   }
 }
@@ -609,7 +610,7 @@ async function handleSellerLeftPrivateRoom(listingId, sellerUid = null, io = nul
         listingSlug: listingForNotify.slug,
         listingTitle: listingForNotify.title,
         sellerUserId
-      }).catch(err => console.error('Seller notification:', err));
+      }).catch(err => logger.error('Seller notification:', err));
       if (io) emitNewNotificationToUser(io, sellerUserId).catch(() => {});
     }
 
@@ -622,7 +623,7 @@ async function handleSellerLeftPrivateRoom(listingId, sellerUid = null, io = nul
         listingSlug: listingForNotify.slug,
         listingTitle: listingForNotify.title,
         bidderUserId
-      }).catch(err => console.error('Invited buyer notification:', err));
+      }).catch(err => logger.error('Invited buyer notification:', err));
       if (io) emitNewNotificationToUser(io, bidderUserId).catch(() => {});
     }
 
@@ -646,7 +647,7 @@ async function handleSellerLeftPrivateRoom(listingId, sellerUid = null, io = nul
 
     return { processed: true };
   } catch (error) {
-    console.error('Error handling seller left private room:', error);
+    logger.error('Error handling seller left private room:', error);
     throw error;
   }
 }
@@ -670,7 +671,7 @@ async function sendPrivateRoomClosedSellerLeftToSeller(listing) {
     });
     await sendEmail(seller.email, email.subject, email.html);
   } catch (err) {
-    console.error('Error sending seller-left email to seller:', err);
+    logger.error('Error sending seller-left email to seller:', err);
   }
 }
 
@@ -694,7 +695,7 @@ async function sendPrivateRoomClosedSellerLeftToBuyers(listing) {
       await sendEmail(bidder.email, email.subject, email.html);
     }
   } catch (err) {
-    console.error('Error sending seller-left email to buyers:', err);
+    logger.error('Error sending seller-left email to buyers:', err);
   }
 }
 
@@ -707,7 +708,7 @@ async function sendCreatePrivateRoomNotification(listing) {
       ? await Customer.findById(listing.seller._id)
       : await Customer.findById(listing.seller);
     if (!seller || !seller.email) {
-      console.error('Seller not found or has no email for listing:', listing._id);
+      logger.error('Seller not found or has no email for listing:', listing._id);
       return;
     }
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:4200';
@@ -723,7 +724,7 @@ async function sendCreatePrivateRoomNotification(listing) {
     await sendEmail(seller.email, email.subject, email.html);
     return { sent: true };
   } catch (error) {
-    console.error('Error sending create private room notification:', error);
+    logger.error('Error sending create private room notification:', error);
     throw error;
   }
 }
@@ -769,12 +770,12 @@ async function sendPrivateRoomNotInvitedToBidders(listing, invitedUserIds) {
       try {
         await sendEmail(bidderEmail, email.subject, email.html);
       } catch (err) {
-        console.error(`Failed to send private room not invited to ${bidderEmail}:`, err.message);
+        logger.error(`Failed to send private room not invited to ${bidderEmail}:`, err.message);
       }
     }
     return { notified: notifiedEmails.size };
   } catch (error) {
-    console.error('Error sending private room not invited notifications:', error);
+    logger.error('Error sending private room not invited notifications:', error);
     throw error;
   }
 }
@@ -816,12 +817,12 @@ async function sendPlatinumBidderInvitations(listing, requestOrigin = null) {
       try {
         await sendEmail(user.email, email.subject, email.html);
       } catch (err) {
-        console.error(`Failed to send platinum invitation to ${user.email}:`, err.message);
+        logger.error(`Failed to send platinum invitation to ${user.email}:`, err.message);
       }
     }
     return { sent: true };
   } catch (error) {
-    console.error('Error sending platinum bidder invitations:', error);
+    logger.error('Error sending platinum bidder invitations:', error);
     throw error;
   }
 }
@@ -870,7 +871,7 @@ async function handleAuctionEnd(listingId, io = null) {
               listingTitle: listing.title || 'Your listing',
               offerAmount: offersAboveMin[0].amount,
               sellerUserId
-            }).catch(err => console.error('Failed Stripe-required notification:', err));
+            }).catch(err => logger.error('Failed Stripe-required notification:', err));
             if (io) emitNewNotificationToUser(io, sellerUserId).catch(() => {});
           }
           return { listingId, notified: true, bestOfferStripeRequired: true };
@@ -894,7 +895,7 @@ async function handleAuctionEnd(listingId, io = null) {
 
           if (singleOffer.offerer) {
             await createTransactionForAcceptedOffer(listingId.toString(), singleOffer._id.toString()).catch(err =>
-              console.error('Transaction create for auto-accepted offer:', err.message)
+              logger.error('Transaction create for auto-accepted offer:', err.message)
             );
           }
 
@@ -990,7 +991,7 @@ async function handleAuctionEnd(listingId, io = null) {
       await sendWinnerNotification(listingForNotify, highestBid);
       await sendAuctionClosedNotifications(listingForNotify, highestBid._id);
       await createTransactionForListing(listingId).catch(err =>
-        console.error('Transaction create for auto-winner:', err.message)
+        logger.error('Transaction create for auto-winner:', err.message)
       );
 
       const { notifySellerWinnerSelected, notifyBuyerAuctionWon, emitNewNotificationToUser } = require('./notificationService');
@@ -1007,7 +1008,7 @@ async function handleAuctionEnd(listingId, io = null) {
           shippingCost: listingForNotify.shippingCost ?? 0,
           shippingOption: listingForNotify.shippingOption ?? 'flat-rate',
           sellerUserId
-        }).catch(err => console.error('Seller winner notification:', err));
+        }).catch(err => logger.error('Seller winner notification:', err));
         if (io) emitNewNotificationToUser(io, sellerUserId).catch(() => {});
       }
       if (buyerUserId) {
@@ -1016,7 +1017,7 @@ async function handleAuctionEnd(listingId, io = null) {
           listingTitle: listingForNotify.title,
           winningAmount: highestBid.amount,
           buyerUserId
-        }).catch(err => console.error('Buyer won notification:', err));
+        }).catch(err => logger.error('Buyer won notification:', err));
         if (io) emitNewNotificationToUser(io, buyerUserId).catch(() => {});
       }
 
@@ -1066,7 +1067,7 @@ async function handleAuctionEnd(listingId, io = null) {
       hasBids: !!highestBid
     };
   } catch (error) {
-    console.error('Error handling auction end:', error);
+    logger.error('Error handling auction end:', error);
     throw error;
   }
 }
@@ -1107,7 +1108,7 @@ async function handleWinnerSelection(listingId, winnerBidId, io = null) {
     await sendWinnerNotification(listing, winnerBid);
 
     // Create transaction so buyer/seller can track payment and shipping
-    await createTransactionForListing(listingId).catch(err => console.error('Transaction create:', err.message));
+    await createTransactionForListing(listingId).catch(err => logger.error('Transaction create:', err.message));
 
     // In-app notifications for seller and winner
     const { notifySellerWinnerSelected, notifyBuyerAuctionWon, emitNewNotificationToUser } = require('./notificationService');
@@ -1124,7 +1125,7 @@ async function handleWinnerSelection(listingId, winnerBidId, io = null) {
         shippingCost: listing.shippingCost ?? 0,
         shippingOption: listing.shippingOption ?? 'flat-rate',
         sellerUserId
-      }).catch(err => console.error('Seller winner notification:', err));
+      }).catch(err => logger.error('Seller winner notification:', err));
       if (io) emitNewNotificationToUser(io, sellerUserId).catch(() => {});
     }
     if (buyerUserId) {
@@ -1135,7 +1136,7 @@ async function handleWinnerSelection(listingId, winnerBidId, io = null) {
         shippingCost: listing.shippingCost ?? 0,
         shippingOption: listing.shippingOption ?? 'flat-rate',
         buyerUserId
-      }).catch(err => console.error('Buyer won notification:', err));
+      }).catch(err => logger.error('Buyer won notification:', err));
       if (io) emitNewNotificationToUser(io, buyerUserId).catch(() => {});
     }
 
@@ -1146,7 +1147,7 @@ async function handleWinnerSelection(listingId, winnerBidId, io = null) {
       notified: true
     };
   } catch (error) {
-    console.error('Error handling winner selection:', error);
+    logger.error('Error handling winner selection:', error);
     throw error;
   }
 }
@@ -1222,7 +1223,7 @@ async function sendPrivateRoomEndNotifications(listing, highestBid = null) {
 
     return { notified: notifiedEmails.size };
   } catch (error) {
-    console.error('Error sending private room end notifications:', error);
+    logger.error('Error sending private room end notifications:', error);
     throw error;
   }
 }
@@ -1272,13 +1273,13 @@ async function handlePrivateRoomEnd(listingId, io = null) {
     // Create transaction first — must not be blocked by notification failures
     // Private-room winners get a 48h payment window
     if (highestBid && (highestBid.bidder?._id || highestBid.bidder)) {
-      await createTransactionForListing(listingId, { privateRoom: true }).catch(err => console.error('Transaction create:', err.message));
+      await createTransactionForListing(listingId, { privateRoom: true }).catch(err => logger.error('Transaction create:', err.message));
     }
 
     try {
       await sendPrivateRoomEndNotifications(listingForNotify, highestBid);
     } catch (notificationError) {
-      console.error('Error sending private room end notifications:', notificationError);
+      logger.error('Error sending private room end notifications:', notificationError);
     }
 
     // Fire in-app notifications for winner and seller
@@ -1299,7 +1300,7 @@ async function handlePrivateRoomEnd(listingId, io = null) {
           shippingCost: listingForNotify.shippingCost ?? 0,
           shippingOption: listingForNotify.shippingOption ?? 'flat-rate',
           sellerUserId
-        }).catch(err => console.error('Seller winner notification (private room):', err));
+        }).catch(err => logger.error('Seller winner notification (private room):', err));
         if (io) emitNewNotificationToUser(io, sellerUserId).catch(() => {});
       }
       if (buyerUserId) {
@@ -1308,7 +1309,7 @@ async function handlePrivateRoomEnd(listingId, io = null) {
           listingTitle: listingForNotify.title,
           winningAmount: highestBid.amount,
           buyerUserId
-        }).catch(err => console.error('Buyer won notification (private room):', err));
+        }).catch(err => logger.error('Buyer won notification (private room):', err));
         if (io) emitNewNotificationToUser(io, buyerUserId).catch(() => {});
       }
     }
@@ -1330,7 +1331,7 @@ async function handlePrivateRoomEnd(listingId, io = null) {
 
     return { processed: true };
   } catch (error) {
-    console.error('Error handling private room end:', error);
+    logger.error('Error handling private room end:', error);
     throw error;
   }
 }
@@ -1358,7 +1359,7 @@ async function handlePrivateRoomEligibleExpired(listingId, io = null) {
       if (listingForNotify) {
         await sendWinnerNotification(listingForNotify, highestBid);
         await sendAuctionClosedNotifications(listingForNotify, highestBid._id);
-        await createTransactionForListing(listingId, { privateRoom: true }).catch(err => console.error('Tx for eligible-expired:', err.message));
+        await createTransactionForListing(listingId, { privateRoom: true }).catch(err => logger.error('Tx for eligible-expired:', err.message));
         const { notifySellerWinnerSelected, notifyBuyerAuctionWon, emitNewNotificationToUser } = require('./notificationService');
         const winnerName = `${highestBid.bidder.firstName} ${highestBid.bidder.lastName}`.trim();
         const sellerUserId = listingForNotify.seller?._id?.toString?.() || listingForNotify.seller?.toString?.();
@@ -1378,7 +1379,7 @@ async function handlePrivateRoomEligibleExpired(listingId, io = null) {
       if (io) io.to(`listing:${listingId}`).emit('listing-update', { listingId: listingId.toString(), privateRoomStatus: 'ended' });
     }
   } catch (err) {
-    console.error('Error in handlePrivateRoomEligibleExpired:', err.message);
+    logger.error('Error in handlePrivateRoomEligibleExpired:', err.message);
     throw err;
   }
 }
@@ -1413,7 +1414,7 @@ async function handlePrivateRoomSingleAcceptance(listingId, acceptedInvitation, 
     if (listingForNotify) {
       await sendWinnerNotification(listingForNotify, winnerBid);
       await sendAuctionClosedNotifications(listingForNotify, winnerBid._id);
-      await createTransactionForListing(listingId, { privateRoom: true }).catch(err => console.error('Tx for single-acceptance:', err.message));
+      await createTransactionForListing(listingId, { privateRoom: true }).catch(err => logger.error('Tx for single-acceptance:', err.message));
       const { notifySellerWinnerSelected, notifyBuyerAuctionWon, emitNewNotificationToUser } = require('./notificationService');
       const winnerName = `${winnerBid.bidder.firstName} ${winnerBid.bidder.lastName}`.trim();
       const sellerUserId = listingForNotify.seller?._id?.toString?.() || listingForNotify.seller?.toString?.();
@@ -1429,7 +1430,7 @@ async function handlePrivateRoomSingleAcceptance(listingId, acceptedInvitation, 
     }
     if (io) io.to(`listing:${listingId}`).emit('listing-update', { listingId: listingId.toString(), status: 'ended', privateRoomStatus: 'ended', winner: winnerBid.bidder._id.toString() });
   } catch (err) {
-    console.error('Error in handlePrivateRoomSingleAcceptance:', err.message);
+    logger.error('Error in handlePrivateRoomSingleAcceptance:', err.message);
     throw err;
   }
 }

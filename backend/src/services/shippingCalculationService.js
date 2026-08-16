@@ -1,3 +1,4 @@
+const logger = require('../utils/logger');
 /**
  * Shipping Calculation Service
  *
@@ -103,7 +104,7 @@ async function calculateRates({ origin, destination, packageSize }) {
   try {
     shipment = await easypostPost('/shipments', payload);
   } catch (err) {
-    console.error(`${LOG_PREFIX} EasyPost createShipment failed:`, err.message);
+    logger.error(`${LOG_PREFIX} EasyPost createShipment failed:`, err.message);
     throw err;
   }
 
@@ -123,7 +124,7 @@ async function calculateRates({ origin, destination, packageSize }) {
     return (a.deliveryDays ?? 999) - (b.deliveryDays ?? 999);
   });
 
-  console.log(`${LOG_PREFIX} Got ${rates.length} rates for ${packageSize} package ${origin.postalCode} → ${destination.postalCode}`);
+  logger.info(`${LOG_PREFIX} Got ${rates.length} rates for ${packageSize} package ${origin.postalCode} → ${destination.postalCode}`);
   return rates;
 }
 

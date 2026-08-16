@@ -7,6 +7,7 @@
 const fs = require('fs');
 const path = require('path');
 const { wrapBidRoomEmail } = require('../utils/bidroomEmailLayout');
+const logger = require('../utils/logger');
 
 const TEMPLATES_DIR = path.join(__dirname, '../email-templates');
 const DEFAULT_LANGUAGE = 'en';
@@ -53,7 +54,7 @@ function renderTemplate(template, data) {
 function loadTemplate(templateName, language = DEFAULT_LANGUAGE) {
   // Normalize language
   if (!SUPPORTED_LANGUAGES.includes(language)) {
-    console.warn(`⚠️  Language "${language}" not supported, using "${DEFAULT_LANGUAGE}"`);
+    logger.warn(`⚠️  Language "${language}" not supported, using "${DEFAULT_LANGUAGE}"`);
     language = DEFAULT_LANGUAGE;
   }
 
@@ -70,7 +71,7 @@ function loadTemplate(templateName, language = DEFAULT_LANGUAGE) {
   // Fallback to default language if template not found
   if (!fs.existsSync(templatePath)) {
     if (language !== DEFAULT_LANGUAGE) {
-      console.warn(`⚠️  Template "${templateName}" not found for language "${language}", using "${DEFAULT_LANGUAGE}"`);
+      logger.warn(`⚠️  Template "${templateName}" not found for language "${language}", using "${DEFAULT_LANGUAGE}"`);
       templatePath = path.join(TEMPLATES_DIR, DEFAULT_LANGUAGE, `${templateName}.json`);
     }
     
@@ -172,7 +173,7 @@ function getAvailableTemplates(language = DEFAULT_LANGUAGE) {
       .filter(file => file.endsWith('.json') && file !== 'template.example.json')
       .map(file => file.replace('.json', ''));
   } catch (error) {
-    console.error(`Error reading templates directory for "${language}":`, error.message);
+    logger.error(`Error reading templates directory for "${language}":`, error.message);
     return [];
   }
 }
@@ -209,7 +210,7 @@ function templateExists(templateName, language = DEFAULT_LANGUAGE) {
  */
 function clearCache() {
   templateCache.clear();
-  console.log('✅ Template cache cleared');
+  logger.info('✅ Template cache cleared');
 }
 
 /**
@@ -227,11 +228,11 @@ function preloadTemplates(language = DEFAULT_LANGUAGE) {
       loadTemplate(templateName, language);
       loaded++;
     } catch (error) {
-      console.warn(`Failed to preload template "${templateName}" for "${language}":`, error.message);
+      logger.warn(`Failed to preload template "${templateName}" for "${language}":`, error.message);
     }
   }
   
-  console.log(`✅ Preloaded ${loaded} template(s) for language "${language}"`);
+  logger.info(`✅ Preloaded ${loaded} template(s) for language "${language}"`);
   return loaded;
 }
 

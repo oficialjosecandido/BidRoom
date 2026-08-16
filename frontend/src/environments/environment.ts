@@ -4,7 +4,7 @@ export const environment = {
   googleAnalyticsId: '',
   posthog: {
     apiKey:   '',
-    apiHost:  'https://us.i.posthog.com',
+    apiHost:  'https://eu.i.posthog.com',
     enabled:  false, // off in dev — avoids polluting production data
   },
   defaultApiBaseUrl: 'https://bidroom-backend-dev.azurewebsites.net',

@@ -21,6 +21,7 @@ const { emitNewNotificationToUser, createNotification } = require('./notificatio
 const { sendEmail } = require('./emailService');
 const { wrapBidRoomEmail, emailInfoBox, transactionUrl } = require('../utils/bidroomEmailLayout');
 const { checkAndApplyPendingSuspensions } = require('./accountStatusService');
+const logger = require('../utils/logger');
 
 const LOG_PREFIX = '[DeliveryRelease]';
 const BATCH_LIMIT = 200;
@@ -30,11 +31,11 @@ let _timer = null;
 function startDeliveryAutoReleaseScheduler(intervalMinutes = 15, io = null) {
   if (_timer) return;
   const ms = intervalMinutes * 60 * 1000;
-  setTimeout(() => runDeliveryChecks(io).catch(e => console.error(LOG_PREFIX, 'startup:', e.message)), 12000);
+  setTimeout(() => runDeliveryChecks(io).catch(e => logger.error(LOG_PREFIX, 'startup:', e.message)), 12000);
   _timer = setInterval(() => {
-    runDeliveryChecks(io).catch(e => console.error(LOG_PREFIX, e.message));
+    runDeliveryChecks(io).catch(e => logger.error(LOG_PREFIX, e.message));
   }, ms);
-  console.log(`${LOG_PREFIX} Started — every ${intervalMinutes} min`);
+  logger.info(`${LOG_PREFIX} Started — every ${intervalMinutes} min`);
 }
 
 function stopDeliveryAutoReleaseScheduler() {
@@ -109,7 +110,7 @@ async function processAutoReleases(io) {
 
       if (updatedTx !== null && sellerId) {
         Customer.findByIdAndUpdate(sellerId, { $inc: { completedSalesCount: 1 } })
-          .catch(err => console.error('[Waiver] Failed to increment completedSalesCount:', err.message));
+          .catch(err => logger.error('[Waiver] Failed to increment completedSalesCount:', err.message));
       }
 
       if (buyerId) {
@@ -167,11 +168,11 @@ async function processAutoReleases(io) {
 
       // Transaction is now terminal — apply any pending suspensions for either party.
       checkAndApplyPendingSuspensions([buyerId, sellerId].filter(Boolean), io)
-        .catch(err => console.error(`${LOG_PREFIX} Pending suspension check failed tx=${tx._id}:`, err.message));
+        .catch(err => logger.error(`${LOG_PREFIX} Pending suspension check failed tx=${tx._id}:`, err.message));
 
-      console.log(`${LOG_PREFIX} Auto-released tx=${tx._id}`);
+      logger.info(`${LOG_PREFIX} Auto-released tx=${tx._id}`);
     } catch (e) {
-      console.error(`${LOG_PREFIX} Auto-release error tx=${tx._id}:`, e.message);
+      logger.error(`${LOG_PREFIX} Auto-release error tx=${tx._id}:`, e.message);
     }
   }
 }
@@ -231,9 +232,9 @@ async function processReturnMediations(io) {
         if (io) emitNewNotificationToUser(io, sellerId).catch(() => {});
       }
 
-      console.log(`${LOG_PREFIX} Return auto-mediated tx=${tx._id}`);
+      logger.info(`${LOG_PREFIX} Return auto-mediated tx=${tx._id}`);
     } catch (e) {
-      console.error(`${LOG_PREFIX} Return mediation error tx=${tx._id}:`, e.message);
+      logger.error(`${LOG_PREFIX} Return mediation error tx=${tx._id}:`, e.message);
     }
   }
 }

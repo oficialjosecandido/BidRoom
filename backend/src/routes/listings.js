@@ -20,6 +20,7 @@ const { appendModerationAudit } = require('../services/moderationAuditService');
 const { scanListingText } = require('../services/contentSafetyService');
 const { recordViolation } = require('../services/contentViolationService');
 const { createTransactionForBuyNow } = require('../services/transactionService');
+const logger = require('../utils/logger');
 
 const router = express.Router();
 
@@ -357,7 +358,7 @@ router.get('/', optionalAuth, async (req, res) => {
       totalPages
     });
   } catch (error) {
-    console.error('Error fetching listings:', error);
+    logger.error('Error fetching listings:', error);
     res.status(500).json({
       error: 'Failed to fetch listings',
       message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
@@ -505,7 +506,7 @@ router.get('/slug/:slug', optionalAuth, async (req, res) => {
           .populate('seller', SELLER_DSA_PUBLIC_SELECT)
           .lean();
       } catch (err) {
-        console.error('Lazy finalize auction on fetch:', err.message);
+        logger.error('Lazy finalize auction on fetch:', err.message);
       }
     }
 
@@ -566,7 +567,7 @@ router.get('/slug/:slug', optionalAuth, async (req, res) => {
       sellerReviewCount
     });
   } catch (error) {
-    console.error('Error fetching listing:', error);
+    logger.error('Error fetching listing:', error);
     res.status(500).json({
       error: 'Failed to fetch listing',
       message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
@@ -620,7 +621,7 @@ router.get('/stats/overview', async (req, res) => {
       totalValueTraded: Math.round(stats.totalValueTraded || 0)
     });
   } catch (error) {
-    console.error('Error fetching stats:', error);
+    logger.error('Error fetching stats:', error);
     res.status(500).json({
       error: 'Failed to fetch stats',
       message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
@@ -682,7 +683,7 @@ router.get('/drafts/current', authenticateToken, async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Error loading listing draft:', error);
+    logger.error('Error loading listing draft:', error);
     res.status(500).json({ error: 'Failed to load draft', message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error' });
   }
 });
@@ -704,7 +705,7 @@ router.put('/drafts/current', authenticateToken, requireActiveAccount, async (re
     ).lean();
     return res.json({ ok: true, updatedAt: doc.updatedAt });
   } catch (error) {
-    console.error('Error saving listing draft:', error);
+    logger.error('Error saving listing draft:', error);
     res.status(500).json({ error: 'Failed to save draft', message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error' });
   }
 });
@@ -716,7 +717,7 @@ router.delete('/drafts/current', authenticateToken, async (req, res) => {
     await ListingDraft.deleteOne({ seller: user._id });
     return res.status(204).send();
   } catch (error) {
-    console.error('Error deleting listing draft:', error);
+    logger.error('Error deleting listing draft:', error);
     res.status(500).json({ error: 'Failed to delete draft', message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error' });
   }
 });
@@ -970,7 +971,7 @@ router.get('/seller/analytics', authenticateToken, async (req, res) => {
       listings: rows
     });
   } catch (error) {
-    console.error('Error fetching seller analytics:', error);
+    logger.error('Error fetching seller analytics:', error);
     res.status(500).json({
       error: 'Failed to fetch analytics',
       message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
@@ -1031,7 +1032,7 @@ router.get('/:id', optionalAuth, async (req, res) => {
           .populate('platinumBidderInvitations.bidder', '_id firstName lastName')
           .lean();
       } catch (err) {
-        console.error('Lazy finalize auction on fetch:', err.message);
+        logger.error('Lazy finalize auction on fetch:', err.message);
       }
     }
 
@@ -1096,7 +1097,7 @@ router.get('/:id', optionalAuth, async (req, res) => {
 
     res.json(response);
   } catch (error) {
-    console.error('Error fetching listing:', error);
+    logger.error('Error fetching listing:', error);
     res.status(500).json({
       error: 'Failed to fetch listing',
       message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
@@ -1323,7 +1324,7 @@ router.post('/', authenticateToken, requireActiveAccount, requireNoDisputeRestri
         });
       }
     } catch (aiErr) {
-      console.error('Azure Content Safety text scan error (non-blocking):', aiErr.message);
+      logger.error('Azure Content Safety text scan error (non-blocking):', aiErr.message);
     }
 
     // Abusive language check on title + description
@@ -1582,7 +1583,7 @@ router.post('/', authenticateToken, requireActiveAccount, requireNoDisputeRestri
       ...(listingContentWarning && { contentWarning: listingContentWarning })
     });
   } catch (error) {
-    console.error('Error creating listing:', error);
+    logger.error('Error creating listing:', error);
     
     // Handle Mongoose validation errors
     if (error.name === 'ValidationError') {
@@ -1751,7 +1752,7 @@ router.patch('/:id', authenticateToken, requireActiveAccount, async (req, res) =
           });
         }
       } catch (aiErr) {
-        console.error('Azure Content Safety text scan error (non-blocking):', aiErr.message);
+        logger.error('Azure Content Safety text scan error (non-blocking):', aiErr.message);
       }
 
       const abuseCheckUpdate = scanForAbusiveContent(textFields.join(' '));
@@ -1803,7 +1804,7 @@ router.patch('/:id', authenticateToken, requireActiveAccount, async (req, res) =
       ...(listingContentWarning && { contentWarning: listingContentWarning })
     });
   } catch (error) {
-    console.error('Error updating listing:', error);
+    logger.error('Error updating listing:', error);
     if (error.name === 'ValidationError') {
       const errors = Object.values(error.errors).map(e => e.message);
       return res.status(400).json({ error: 'Validation failed', message: errors.join(', ') });
@@ -1888,7 +1889,7 @@ router.post('/:id/buy-now', authenticateToken, requireActiveAccount, requireNoDi
         shippingCost: listing.shippingCost ?? 0,
         shippingOption: listing.shippingOption ?? 'flat-rate',
         sellerUserId
-      }).catch(err => console.error('Buy-now seller notification:', err.message));
+      }).catch(err => logger.error('Buy-now seller notification:', err.message));
 
       notifyBuyerAuctionWon({
         listingSlug: listing.slug,
@@ -1897,14 +1898,14 @@ router.post('/:id/buy-now', authenticateToken, requireActiveAccount, requireNoDi
         shippingCost: listing.shippingCost ?? 0,
         shippingOption: listing.shippingOption ?? 'flat-rate',
         buyerUserId
-      }).catch(err => console.error('Buy-now buyer notification:', err.message));
+      }).catch(err => logger.error('Buy-now buyer notification:', err.message));
 
       if (io) {
         emitNewNotificationToUser(io, sellerUserId).catch(() => {});
         emitNewNotificationToUser(io, buyerUserId).catch(() => {});
       }
     } catch (notifErr) {
-      console.error('Buy-now notification error (non-fatal):', notifErr.message);
+      logger.error('Buy-now notification error (non-fatal):', notifErr.message);
     }
 
     res.json({
@@ -1914,7 +1915,7 @@ router.post('/:id/buy-now', authenticateToken, requireActiveAccount, requireNoDi
       transactionId: transaction?._id || null
     });
   } catch (error) {
-    console.error('Error processing buy now:', error);
+    logger.error('Error processing buy now:', error);
     res.status(500).json({
       error: 'Failed to process Buy Now',
       message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
@@ -2016,7 +2017,7 @@ router.post('/:id/choose-winner', authenticateToken, requireActiveAccount, async
       listing: updatedListing
     });
   } catch (error) {
-    console.error('Error choosing winner:', error);
+    logger.error('Error choosing winner:', error);
     res.status(400).json({
       error: 'Failed to choose winner',
       message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
@@ -2085,7 +2086,7 @@ router.post('/:id/reopen', authenticateToken, requireActiveAccount, async (req, 
       listing: updatedListing
     });
   } catch (error) {
-    console.error('Error reopening listing:', error);
+    logger.error('Error reopening listing:', error);
     res.status(400).json({
       error: 'Failed to reopen auction',
       message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
@@ -2225,7 +2226,7 @@ router.post('/:id/relist', authenticateToken, requireActiveAccount, async (req, 
     const populated = await Listing.findById(newListing._id).populate('seller', SELLER_DSA_PUBLIC_SELECT).lean();
     return res.status(201).json({ message: 'Listing relisted successfully', listing: populated });
   } catch (err) {
-    console.error('POST /listings/:id/relist error:', err);
+    logger.error('POST /listings/:id/relist error:', err);
     return res.status(500).json({ error: 'Failed to relist listing' });
   }
 });
@@ -2281,7 +2282,7 @@ router.get('/:id/bids', authenticateToken, async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Error fetching bids for winner selection:', error);
+    logger.error('Error fetching bids for winner selection:', error);
     res.status(500).json({
       error: 'Failed to fetch bids',
       message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
@@ -2401,7 +2402,7 @@ router.get('/seller/my-listings', authenticateToken, async (req, res) => {
       total: enhancedListings.length
     });
   } catch (error) {
-    console.error('Error fetching seller listings:', error);
+    logger.error('Error fetching seller listings:', error);
     res.status(500).json({
       error: 'Failed to fetch listings',
       message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
@@ -2466,7 +2467,7 @@ router.get('/bidder/my-auctions', authenticateToken, async (req, res) => {
 
     res.json({ listings: enhanced, total: enhanced.length });
   } catch (error) {
-    console.error('Error fetching bidder auctions:', error);
+    logger.error('Error fetching bidder auctions:', error);
     res.status(500).json({
       error: 'Failed to fetch your auctions',
       message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
@@ -2764,7 +2765,7 @@ router.get('/bidder/analytics', authenticateToken, async (req, res) => {
       listings: rows
     });
   } catch (error) {
-    console.error('Error fetching buyer analytics:', error);
+    logger.error('Error fetching buyer analytics:', error);
     res.status(500).json({
       error: 'Failed to fetch analytics',
       message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
@@ -2840,7 +2841,7 @@ router.get('/bidder/my-bets', authenticateToken, async (req, res) => {
 
     res.json({ listings: enhanced, total: enhanced.length });
   } catch (error) {
-    console.error('Error fetching bidder bets:', error);
+    logger.error('Error fetching bidder bets:', error);
     res.status(500).json({
       error: 'Failed to fetch your bets',
       message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'

@@ -24,6 +24,7 @@ const {
   emailTextLink,
   transactionUrl
 } = require('../utils/bidroomEmailLayout');
+const logger = require('../utils/logger');
 
 const router = express.Router();
 
@@ -142,7 +143,7 @@ router.get('/', async (req, res) => {
 
     res.json({ transactions: withRole, total, page, limit, pages: Math.ceil(total / limit) });
   } catch (error) {
-    console.error('Error fetching transactions:', error);
+    logger.error('Error fetching transactions:', error);
     res.status(500).json({ error: 'Failed to fetch transactions' });
   }
 });
@@ -183,7 +184,7 @@ router.get('/:id', async (req, res) => {
       ...normalizeTransactionStatus(transaction)
     });
   } catch (error) {
-    console.error('Error fetching transaction:', error);
+    logger.error('Error fetching transaction:', error);
     res.status(500).json({ error: 'Failed to fetch transaction', message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error' });
   }
 });
@@ -262,7 +263,7 @@ router.post('/:id/open-dispute', async (req, res) => {
     const io = req.app.get('io');
     if (buyerUserId && sellerUserId) {
       restrictBothPartiesForDispute(transaction._id, buyerUserId, sellerUserId, io).catch(err =>
-        console.error('Failed to restrict accounts for dispute:', err)
+        logger.error('Failed to restrict accounts for dispute:', err)
       );
     }
 
@@ -274,7 +275,7 @@ router.post('/:id/open-dispute', async (req, res) => {
         listingTitle,
         openerName: buyerName,
         otherPartyUserId: sellerUserId
-      }).catch(err => console.error('Failed to create dispute-opened notification:', err));
+      }).catch(err => logger.error('Failed to create dispute-opened notification:', err));
       const io = req.app.get('io');
       if (io) emitNewNotificationToUser(io, sellerUserId).catch(() => {});
     }
@@ -285,7 +286,7 @@ router.post('/:id/open-dispute', async (req, res) => {
         listingTitle,
         buyerName,
         transaction._id.toString()
-      ).catch((err) => console.error('Dispute notification email:', err.message));
+      ).catch((err) => logger.error('Dispute notification email:', err.message));
     }
 
     const updated = await Transaction.findById(transaction._id)
@@ -300,7 +301,7 @@ router.post('/:id/open-dispute', async (req, res) => {
       ...normalizeTransactionStatus(updated)
     });
   } catch (error) {
-    console.error('Error opening dispute:', error);
+    logger.error('Error opening dispute:', error);
     res.status(500).json({ error: 'Failed to open dispute', message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error' });
   }
 });
@@ -350,7 +351,7 @@ router.patch('/:id/dispute/counter-evidence', async (req, res) => {
         listingTitle,
         submitterRole: 'seller',
         otherPartyUserId: buyerUserId
-      }).catch(err => console.error('Failed to create evidence-submitted notification:', err));
+      }).catch(err => logger.error('Failed to create evidence-submitted notification:', err));
       const io = req.app.get('io');
       if (io) emitNewNotificationToUser(io, buyerUserId).catch(() => {});
     }
@@ -367,7 +368,7 @@ router.patch('/:id/dispute/counter-evidence', async (req, res) => {
       ...normalizeTransactionStatus(updated)
     });
   } catch (error) {
-    console.error('Error updating counter-evidence:', error);
+    logger.error('Error updating counter-evidence:', error);
     res.status(500).json({ error: 'Failed to update counter-evidence', message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error' });
   }
 });
@@ -420,7 +421,7 @@ router.patch('/:id', requireActiveAccount, async (req, res) => {
             transactionId: transaction._id.toString(),
             listingTitle,
             buyerUserId
-          }).catch(err => console.error('Failed to create buyer seller-accepted notification:', err));
+          }).catch(err => logger.error('Failed to create buyer seller-accepted notification:', err));
           const io = req.app.get('io');
           if (io) emitNewNotificationToUser(io, buyerUserId).catch(() => {});
           // Email to buyer
@@ -438,13 +439,13 @@ router.patch('/:id', requireActiveAccount, async (req, res) => {
               ctaLabel: 'View transaction'
             });
             sendEmail(buyer.email, `Your order for "${listingTitle}" has been confirmed`, html)
-              .catch(err => console.error('Failed to send seller-accepted email to buyer:', err.message));
+              .catch(err => logger.error('Failed to send seller-accepted email to buyer:', err.message));
           }
           // Payment accepted: apply any deferred suspensions (listing auction has ended at this point).
           checkAndApplyPendingSuspensions(
             [transaction.buyer?.toString(), transaction.seller?.toString()].filter(Boolean),
             io
-          ).catch(err => console.error('[AccountStatus] checkAndApplyPendingSuspensions error:', err.message));
+          ).catch(err => logger.error('[AccountStatus] checkAndApplyPendingSuspensions error:', err.message));
         }
       } else if (status === 'shipped') {
         if (!sellerCanMarkAsShipped(transaction, ts)) {
@@ -492,13 +493,13 @@ router.patch('/:id', requireActiveAccount, async (req, res) => {
             transactionId: transaction._id.toString(),
             listingTitle,
             buyerUserId
-          }).catch(err => console.error('Failed to create shipped notification:', err));
+          }).catch(err => logger.error('Failed to create shipped notification:', err));
           if (trackingNumber) {
             notifyTrackingProvided({
               transactionId: transaction._id.toString(),
               listingTitle,
               buyerUserId
-            }).catch(err => console.error('Failed to create tracking notification:', err));
+            }).catch(err => logger.error('Failed to create tracking notification:', err));
           }
           const io = req.app.get('io');
           if (io) emitNewNotificationToUser(io, buyerUserId).catch(() => {});
@@ -526,7 +527,7 @@ router.patch('/:id', requireActiveAccount, async (req, res) => {
               ctaLabel: 'View transaction'
             });
             sendEmail(buyer.email, `Your item "${listingTitle}" has been shipped`, html)
-              .catch(err => console.error('Failed to send shipped email to buyer:', err.message));
+              .catch(err => logger.error('Failed to send shipped email to buyer:', err.message));
           }
         }
       } else if (status === 'cancelled' && ts === 'pending_payment') {
@@ -547,7 +548,7 @@ router.patch('/:id', requireActiveAccount, async (req, res) => {
       const patchIo = req.app.get('io');
       if (patchBuyerId && patchSellerId) {
         restrictBothPartiesForDispute(transaction._id, patchBuyerId, patchSellerId, patchIo).catch(err =>
-          console.error('Failed to restrict accounts for seller-opened dispute:', err)
+          logger.error('Failed to restrict accounts for seller-opened dispute:', err)
         );
       }
     }
@@ -574,7 +575,7 @@ router.patch('/:id', requireActiveAccount, async (req, res) => {
             listingTitle: listing?.title || 'the item',
             method,
             io
-          }).catch(err => console.error('Failed to create manual payment notification:', err));
+          }).catch(err => logger.error('Failed to create manual payment notification:', err));
         }
       } else if (status === 'delivered' && ts === 'shipped') {
         transaction.transactionStatus = 'delivered';
@@ -592,7 +593,7 @@ router.patch('/:id', requireActiveAccount, async (req, res) => {
             listingTitle,
             buyerName,
             sellerUserId
-          }).catch(err => console.error('Failed to create buyer-confirmed-receipt notification:', err));
+          }).catch(err => logger.error('Failed to create buyer-confirmed-receipt notification:', err));
           const io = req.app.get('io');
           if (io) emitNewNotificationToUser(io, sellerUserId).catch(() => {});
         }
@@ -605,7 +606,7 @@ router.patch('/:id', requireActiveAccount, async (req, res) => {
           const sellerId = transaction.seller?._id?.toString?.() || transaction.seller?.toString?.();
           if (sellerId) {
             Customer.findByIdAndUpdate(sellerId, { $inc: { completedSalesCount: 1 } })
-              .catch(err => console.error('[Waiver] Failed to increment completedSalesCount:', err.message));
+              .catch(err => logger.error('[Waiver] Failed to increment completedSalesCount:', err.message));
           }
         }
         // Prompt both parties to leave a review
@@ -616,12 +617,12 @@ router.patch('/:id', requireActiveAccount, async (req, res) => {
           listingTitle: transaction.listing?.title,
           transactionId: transaction._id?.toString(),
           io
-        }).catch(err => console.error('Failed to send review prompt notification:', err));
+        }).catch(err => logger.error('Failed to send review prompt notification:', err));
         // Apply any deferred suspensions now that the transaction is concluded.
         checkAndApplyPendingSuspensions(
           [transaction.buyer?.toString(), transaction.seller?.toString()].filter(Boolean),
           io
-        ).catch(err => console.error('[AccountStatus] checkAndApplyPendingSuspensions error:', err.message));
+        ).catch(err => logger.error('[AccountStatus] checkAndApplyPendingSuspensions error:', err.message));
       }
     }
 
@@ -644,7 +645,7 @@ router.patch('/:id', requireActiveAccount, async (req, res) => {
       ...normalizeTransactionStatus(updated)
     });
   } catch (error) {
-    console.error('Error updating transaction:', error);
+    logger.error('Error updating transaction:', error);
     res.status(500).json({ error: 'Failed to update transaction', message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error' });
   }
 });
@@ -724,7 +725,7 @@ router.post('/:id/request-return', requireActiveAccount, async (req, res) => {
     if (buyerMongoId && sellerMongoId) {
       const { restrictBothPartiesForDispute } = require('../services/accountStatusService');
       restrictBothPartiesForDispute(transaction._id, buyerMongoId, sellerMongoId, io).catch(err =>
-        console.error('Failed to restrict accounts for return dispute:', err)
+        logger.error('Failed to restrict accounts for return dispute:', err)
       );
     }
 
@@ -756,7 +757,7 @@ router.post('/:id/request-return', requireActiveAccount, async (req, res) => {
           ctaLabel: 'View transaction'
         });
         sendEmail(transaction.seller.email, `Return request for "${listingTitle}"`, html)
-          .catch(err => console.error('Failed to send return request email:', err.message));
+          .catch(err => logger.error('Failed to send return request email:', err.message));
       }
     }
 
@@ -768,7 +769,7 @@ router.post('/:id/request-return', requireActiveAccount, async (req, res) => {
 
     res.json({ ...updated, role: 'buyer', ...normalizeTransactionStatus(updated) });
   } catch (error) {
-    console.error('Error requesting return:', error);
+    logger.error('Error requesting return:', error);
     res.status(500).json({ error: 'Failed to submit return request', message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error' });
   }
 });

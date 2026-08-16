@@ -9,6 +9,7 @@ const { notifyNewBid, notifyBidderOutbid, emitNewNotificationToUser, checkAndSet
 const { checkBidRateLimit, getClientIp } = require('../middleware/bidRateLimiter');
 const { runFraudChecks, updateUserSignals } = require('../services/fraudDetectionService');
 const Block = require('../models/Block');
+const logger = require('../utils/logger');
 
 const router = express.Router();
 
@@ -72,7 +73,7 @@ router.get('/listing/:listingId', optionalAuth, async (req, res) => {
       total: formattedBids.length
     });
   } catch (error) {
-    console.error('Error fetching bids:', error);
+    logger.error('Error fetching bids:', error);
     res.status(500).json({
       error: 'Failed to fetch bids',
       message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
@@ -108,7 +109,7 @@ router.get('/listing/:listingId/stats', async (req, res) => {
 
     res.json(stats);
   } catch (error) {
-    console.error('Error fetching bid stats:', error);
+    logger.error('Error fetching bid stats:', error);
     res.status(500).json({
       error: 'Failed to fetch bid statistics',
       message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
@@ -514,7 +515,7 @@ router.post('/', optionalAuth, requireActiveAccountIfAuthenticated, requireNoDis
       // Send notification asynchronously (don't wait)
       sendFirstBidNotification(listing, populatedBid, bidderEmailForNotification, bidderNameForNotification)
         .catch(err => {
-          console.error('Failed to send first bid notification:', err);
+          logger.error('Failed to send first bid notification:', err);
         });
     }
 
@@ -579,7 +580,7 @@ router.post('/', optionalAuth, requireActiveAccountIfAuthenticated, requireNoDis
             outbidName,
             previousHighAmount,
             amount
-          ).catch(err => console.error('Failed to send outbid notification:', err));
+          ).catch(err => logger.error('Failed to send outbid notification:', err));
         }
 
         if (outbidderMongoId) {
@@ -590,7 +591,7 @@ router.post('/', optionalAuth, requireActiveAccountIfAuthenticated, requireNoDis
             newBidAmount: amount,
             bidderUserId: outbidderMongoId,
             listingId: listingId.toString()
-          }).catch(err => console.error('Failed to create outbid in-app notification:', err));
+          }).catch(err => logger.error('Failed to create outbid in-app notification:', err));
           emitNewNotificationToUser(io, outbidderMongoId).catch(() => {});
         }
       }
@@ -627,7 +628,7 @@ router.post('/', optionalAuth, requireActiveAccountIfAuthenticated, requireNoDis
       timestamp: new Date().toISOString()
     };
     redisService.cacheListingBid(listingId.toString(), cacheData).catch(err =>
-      console.error('Redis cacheListingBid failed (non-fatal):', err?.message)
+      logger.error('Redis cacheListingBid failed (non-fatal):', err?.message)
     );
 
     const stats = {
@@ -637,7 +638,7 @@ router.post('/', optionalAuth, requireActiveAccountIfAuthenticated, requireNoDis
       updatedAt: new Date().toISOString()
     };
     redisService.cacheListingStats(listingId.toString(), stats).catch(err =>
-      console.error('Redis cacheListingStats failed (non-fatal):', err?.message)
+      logger.error('Redis cacheListingStats failed (non-fatal):', err?.message)
     );
 
     // Emit real-time bid update via Socket.io to all clients watching this listing.
@@ -684,13 +685,13 @@ router.post('/', optionalAuth, requireActiveAccountIfAuthenticated, requireNoDis
         bidAmount: amount,
         bidderName: formattedBid.bidderName || 'A bidder',
         sellerUserId
-      }).catch(err => console.error('Failed to create bid notification:', err));
+      }).catch(err => logger.error('Failed to create bid notification:', err));
       emitNewNotificationToUser(io, sellerUserId).catch(() => {});
     }
 
     res.status(201).json(formattedBid);
   } catch (error) {
-    console.error('Error creating bid:', error);
+    logger.error('Error creating bid:', error);
     res.status(400).json({
       error: 'Failed to create bid',
       message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
@@ -738,7 +739,7 @@ router.patch('/preference', authenticateToken, async (req, res) => {
       updated: result.modifiedCount
     });
   } catch (error) {
-    console.error('Error updating bid preference:', error);
+    logger.error('Error updating bid preference:', error);
     res.status(500).json({
       error: 'Failed to update preference',
       message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'

@@ -15,6 +15,7 @@
 const Bid       = require('../models/Bid');
 const Customer = require('../models/Customer');
 const FraudEvent = require('../models/FraudEvent');
+const logger = require('../utils/logger');
 
 // Score increments applied to user.fraudScore
 const SCORE_DELTA = { bot_pattern: 15, shill_bid_high: 40, shill_bid_medium: 20, multi_account: 25 };
@@ -25,7 +26,7 @@ async function logFraudEvent(data) {
   try {
     await FraudEvent.create(data);
   } catch (err) {
-    console.error('FraudEvent log error (non-fatal):', err.message);
+    logger.error('FraudEvent log error (non-fatal):', err.message);
   }
 }
 
@@ -39,7 +40,7 @@ async function raiseFraudScore(userId, delta) {
     if (user.fraudScore >= 60) user.isFraudSuspect = true;
     await user.save();
   } catch (err) {
-    console.error('raiseFraudScore error (non-fatal):', err.message);
+    logger.error('raiseFraudScore error (non-fatal):', err.message);
   }
 }
 
@@ -78,7 +79,7 @@ async function updateUserSignals(userId, ip, fingerprint) {
 
     await user.save();
   } catch (err) {
-    console.error('updateUserSignals error (non-fatal):', err.message);
+    logger.error('updateUserSignals error (non-fatal):', err.message);
   }
 }
 
@@ -113,7 +114,7 @@ async function detectBotPattern(bidderId, listingId, ip) {
     }
     return { outcome: 'allow', reason: null };
   } catch (err) {
-    console.error('detectBotPattern error (non-fatal):', err.message);
+    logger.error('detectBotPattern error (non-fatal):', err.message);
     return { outcome: 'allow', reason: null };
   }
 }
@@ -163,7 +164,7 @@ async function detectShillBidding(bidderId, sellerId, listingId, ip, fingerprint
     // Medium confidence: allow but flag for admin review
     return { outcome: 'flag', reason: null, flags };
   } catch (err) {
-    console.error('detectShillBidding error (non-fatal):', err.message);
+    logger.error('detectShillBidding error (non-fatal):', err.message);
     return { outcome: 'allow', reason: null, flags: [] };
   }
 }
@@ -199,7 +200,7 @@ async function detectMultiAccount(bidderId, ip, fingerprint) {
 
     return { outcome: 'flag', flags: ['multi_account_suspected'] };
   } catch (err) {
-    console.error('detectMultiAccount error (non-fatal):', err.message);
+    logger.error('detectMultiAccount error (non-fatal):', err.message);
     return { outcome: 'allow', flags: [] };
   }
 }

@@ -35,6 +35,7 @@ const {
 } = require('./notificationService');
 const { sendEmail } = require('./emailService');
 const { wrapBidRoomEmail, emailInfoBox, transactionUrl } = require('../utils/bidroomEmailLayout');
+const logger = require('../utils/logger');
 
 const LOG_PREFIX = '[ShippingDeadline]';
 
@@ -58,11 +59,11 @@ let _timer = null;
 function startScheduler(intervalMinutes = 15, io = null) {
   if (_timer) return;
   const ms = intervalMinutes * 60 * 1000;
-  setTimeout(() => runChecks(io).catch(e => console.error(LOG_PREFIX, 'startup:', e.message)), 8000);
+  setTimeout(() => runChecks(io).catch(e => logger.error(LOG_PREFIX, 'startup:', e.message)), 8000);
   _timer = setInterval(() => {
-    runChecks(io).catch(e => console.error(LOG_PREFIX, e.message));
+    runChecks(io).catch(e => logger.error(LOG_PREFIX, e.message));
   }, ms);
-  console.log(`${LOG_PREFIX} Started — every ${intervalMinutes} min`);
+  logger.info(`${LOG_PREFIX} Started — every ${intervalMinutes} min`);
 }
 
 function stopScheduler() {
@@ -135,9 +136,9 @@ async function processMidpointWarnings(now, io) {
         }
         if (io) emitNewNotificationToUser(io, sellerId).catch(() => {});
       }
-      console.log(`${LOG_PREFIX} Midpoint warning tx=${tx._id}`);
+      logger.info(`${LOG_PREFIX} Midpoint warning tx=${tx._id}`);
     } catch (e) {
-      console.error(`${LOG_PREFIX} Midpoint warning error tx=${tx._id}:`, e.message);
+      logger.error(`${LOG_PREFIX} Midpoint warning error tx=${tx._id}:`, e.message);
     }
   }
 }
@@ -187,7 +188,7 @@ async function processAutoCancellations(now, stripe, io) {
             payment_intent: tx.stripePaymentIntentId
           });
         } catch (re2) {
-          console.error(`${LOG_PREFIX} Refund failed tx=${tx._id}:`, re.message, re2.message);
+          logger.error(`${LOG_PREFIX} Refund failed tx=${tx._id}:`, re.message, re2.message);
           continue;
         }
       }
@@ -256,9 +257,9 @@ async function processAutoCancellations(now, stripe, io) {
         if (io) emitNewNotificationToUser(io, sellerId).catch(() => {});
       }
 
-      console.log(`${LOG_PREFIX} Auto-cancelled tx=${tx._id} refund=${refund.id}`);
+      logger.info(`${LOG_PREFIX} Auto-cancelled tx=${tx._id} refund=${refund.id}`);
     } catch (e) {
-      console.error(`${LOG_PREFIX} Auto-cancel error tx=${tx._id}:`, e.message);
+      logger.error(`${LOG_PREFIX} Auto-cancel error tx=${tx._id}:`, e.message);
     }
   }
 }

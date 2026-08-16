@@ -12,6 +12,7 @@ const Listing = require('../models/Listing');
 const Transaction = require('../models/Transaction');
 const Bid = require('../models/Bid');
 const { purgeUserImagesOnClosure } = require('./imagePurgeService');
+const logger = require('../utils/logger');
 
 const ACCOUNT_STATUS = { ACTIVE: 'active', SUSPENDED: 'suspended', CLOSED: 'closed' };
 
@@ -101,14 +102,14 @@ async function suspendUser(userId, metadata = {}, io = null) {
     metadata: { triggeredBy: metadata.triggeredBy || 'system' }
   });
 
-  await notifyAccountSuspended({ userId }).catch(err => console.error('Notify suspend:', err.message));
+  await notifyAccountSuspended({ userId }).catch(err => logger.error('Notify suspend:', err.message));
   if (io && user.uid) emitNewNotificationToUser(io, userId).catch(() => {});
 
   // End all active listings for this seller so buyers cannot bid on a suspended account's items
   Listing.updateMany(
     { seller: userId, status: 'active' },
     { $set: { status: 'ended', endDate: new Date() } }
-  ).catch(err => console.error('Failed to end suspended seller listings:', err.message));
+  ).catch(err => logger.error('Failed to end suspended seller listings:', err.message));
 
   return { updated: true };
 }
@@ -136,7 +137,7 @@ async function reactivateUser(userId, metadata = {}, io = null) {
     metadata: { triggeredBy: metadata.triggeredBy || 'admin' }
   });
 
-  await notifyAccountReactivated({ userId }).catch(err => console.error('Notify reactivate:', err.message));
+  await notifyAccountReactivated({ userId }).catch(err => logger.error('Notify reactivate:', err.message));
   if (io && user.uid) emitNewNotificationToUser(io, userId).catch(() => {});
 
   return { updated: true };
@@ -164,11 +165,11 @@ async function closeUser(userId, metadata = {}, io = null) {
     metadata: { triggeredBy: metadata.triggeredBy || 'admin' }
   });
 
-  await notifyAccountClosed({ userId }).catch(err => console.error('Notify closed:', err.message));
+  await notifyAccountClosed({ userId }).catch(err => logger.error('Notify closed:', err.message));
   if (io && user.uid) emitNewNotificationToUser(io, userId).catch(() => {});
 
   // RGPD Art. 17 — purge images immediately on account closure (fiscal-protected images are preserved)
-  purgeUserImagesOnClosure(userId).catch(err => console.error('Image purge on closure failed:', err.message));
+  purgeUserImagesOnClosure(userId).catch(err => logger.error('Image purge on closure failed:', err.message));
 
   return { updated: true };
 }
@@ -235,7 +236,7 @@ async function restrictBothPartiesForDispute(transactionId, buyerUserId, sellerU
       reason: 'dispute_opened_scoped_restriction',
       transactionId: transactionId || null,
       metadata: { triggeredBy: 'system', note: 'Scoped restriction: new actions blocked, existing transactions unaffected' }
-    }).catch(err => console.error('Audit log buyer restrict:', err.message)),
+    }).catch(err => logger.error('Audit log buyer restrict:', err.message)),
     AccountStatusAuditLog.create({
       user: sellerUserId,
       previousStatus,
@@ -243,12 +244,12 @@ async function restrictBothPartiesForDispute(transactionId, buyerUserId, sellerU
       reason: 'dispute_opened_scoped_restriction',
       transactionId: transactionId || null,
       metadata: { triggeredBy: 'system', note: 'Scoped restriction: new actions blocked, existing transactions unaffected' }
-    }).catch(err => console.error('Audit log seller restrict:', err.message))
+    }).catch(err => logger.error('Audit log seller restrict:', err.message))
   ]);
 
   await Promise.all([
-    notifyAccountSuspended({ userId: buyerUserId }).catch(err => console.error('Notify buyer restrict:', err.message)),
-    notifyAccountSuspended({ userId: sellerUserId }).catch(err => console.error('Notify seller restrict:', err.message))
+    notifyAccountSuspended({ userId: buyerUserId }).catch(err => logger.error('Notify buyer restrict:', err.message)),
+    notifyAccountSuspended({ userId: sellerUserId }).catch(err => logger.error('Notify seller restrict:', err.message))
   ]);
 
   if (io) {
@@ -331,13 +332,13 @@ async function applyPendingSuspension(userId, io = null) {
     metadata: { triggeredBy: meta.triggeredBy || 'system', note: 'Deferred suspension applied after auction concluded' }
   });
 
-  await notifyAccountSuspended({ userId }).catch(err => console.error('Notify deferred suspend:', err.message));
+  await notifyAccountSuspended({ userId }).catch(err => logger.error('Notify deferred suspend:', err.message));
   if (io && user.uid) emitNewNotificationToUser(io, userId).catch(() => {});
 
   Listing.updateMany(
     { seller: userId, status: 'active' },
     { $set: { status: 'ended', endDate: new Date() } }
-  ).catch(err => console.error('Failed to end deferred-suspended seller listings:', err.message));
+  ).catch(err => logger.error('Failed to end deferred-suspended seller listings:', err.message));
 
   return { applied: true };
 }
@@ -374,7 +375,7 @@ async function checkAndApplyPendingSuspensions(userIds, io = null) {
     if (!stillActive) {
       const result = await applyPendingSuspension(_id.toString(), io);
       if (result.applied) {
-        console.log(`✅ Deferred suspension applied for user ${_id}`);
+        logger.info(`✅ Deferred suspension applied for user ${_id}`);
       }
     }
   }

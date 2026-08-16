@@ -13,6 +13,7 @@ const Transaction = require('../models/Transaction');
 const azureStorageService = require('./azureStorage.service');
 const ModerationAuditLog = require('../models/ModerationAuditLog');
 const { extractBlobName } = require('../shared/schemas/imageSchema');
+const logger = require('../utils/logger');
 
 const RETENTION_DAYS = {
   COMPLETED_TRANSACTION: 10 * 365, // ~10 years (fiscal law)
@@ -97,7 +98,7 @@ async function purgeExpiredListingImages() {
       await Listing.updateOne({ _id: listing._id }, { $set: { imageManifest: manifest } });
       purgeSet++;
     } catch (err) {
-      console.error(`[ImagePurge] Failed to set purge date for listing ${listing._id}:`, err.message);
+      logger.error(`[ImagePurge] Failed to set purge date for listing ${listing._id}:`, err.message);
       errors++;
     }
   }
@@ -128,14 +129,14 @@ async function purgeExpiredListingImages() {
         );
         purged++;
       } catch (err) {
-        console.error(`[ImagePurge] Failed to purge ${img.blobName || img.url}:`, err.message);
+        logger.error(`[ImagePurge] Failed to purge ${img.blobName || img.url}:`, err.message);
         errors++;
       }
     }
   }
 
   const summary = { purgeSet, purged, errors, runAt: now.toISOString() };
-  console.log(`[ImagePurge] Daily run complete — manifests set: ${purgeSet}, blobs purged: ${purged}, errors: ${errors}`);
+  logger.info(`[ImagePurge] Daily run complete — manifests set: ${purgeSet}, blobs purged: ${purged}, errors: ${errors}`);
   return summary;
 }
 
@@ -177,7 +178,7 @@ async function purgeUserImagesOnClosure(userId) {
         updatedManifest.push({ ...img, blobName, purgeAfter: now, purged: true, purgedAt: now });
         purged++;
       } catch (err) {
-        console.error(`[ImagePurge] Closure purge error for ${blobName}:`, err.message);
+        logger.error(`[ImagePurge] Closure purge error for ${blobName}:`, err.message);
         updatedManifest.push({ ...img, blobName });
         errors++;
       }
@@ -186,7 +187,7 @@ async function purgeUserImagesOnClosure(userId) {
     await Listing.updateOne(
       { _id: listing._id },
       { $set: { imageManifest: updatedManifest } }
-    ).catch(e => console.error(`[ImagePurge] Manifest update failed for listing ${listing._id}:`, e.message));
+    ).catch(e => logger.error(`[ImagePurge] Manifest update failed for listing ${listing._id}:`, e.message));
   }
 
   await ModerationAuditLog.create({
@@ -194,9 +195,9 @@ async function purgeUserImagesOnClosure(userId) {
     actionType: 'image_purge_account_closure',
     performedByUserId: null,
     metadata: { purgedCount: purged, errorCount: errors, runAt: now, protectedListings: protectedSet.size }
-  }).catch(e => console.error('[ImagePurge] Audit log write failed:', e.message));
+  }).catch(e => logger.error('[ImagePurge] Audit log write failed:', e.message));
 
-  console.log(`[ImagePurge] Account closure purge for user ${userId}: ${purged} blobs deleted, ${errors} errors`);
+  logger.info(`[ImagePurge] Account closure purge for user ${userId}: ${purged} blobs deleted, ${errors} errors`);
   return { purged, errors };
 }
 

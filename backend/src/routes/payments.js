@@ -16,6 +16,7 @@ const {
   removePaymentMethod,
   confirmSetupIntent,
 } = require('../services/paymentMethodService');
+const logger = require('../utils/logger');
 const LOG_PREFIX = '[Payments]';
 
 const router = express.Router();
@@ -86,10 +87,10 @@ router.post('/create-checkout-session', authenticateToken, requireActiveAccount,
       }
     });
 
-    console.log(`${LOG_PREFIX} Checkout session created session_id=${session.id} amount=€${amount} uid=${uid?.slice(0, 8)}...`);
+    logger.info(`${LOG_PREFIX} Checkout session created session_id=${session.id} amount=€${amount} uid=${uid?.slice(0, 8)}...`);
     res.json({ url: session.url });
   } catch (err) {
-    console.error(`${LOG_PREFIX} Create checkout session error:`, err.message);
+    logger.error(`${LOG_PREFIX} Create checkout session error:`, err.message);
     res.status(500).json({
       error: 'Failed to create checkout session',
       message: err.message || 'Unknown error'
@@ -115,19 +116,19 @@ router.post('/confirm-session', authenticateToken, async (req, res) => {
 
     const { session_id: sessionId } = req.body;
     if (!sessionId || typeof sessionId !== 'string') {
-      console.log(`${LOG_PREFIX} confirm-session called without session_id`);
+      logger.info(`${LOG_PREFIX} confirm-session called without session_id`);
       return res.status(400).json({
         error: 'Missing session_id',
         message: 'Please provide the checkout session_id from the success URL.'
       });
     }
 
-    console.log(`${LOG_PREFIX} confirm-session called session_id=${sessionId} uid=${req.user.uid?.slice(0, 8)}...`);
+    logger.info(`${LOG_PREFIX} confirm-session called session_id=${sessionId} uid=${req.user.uid?.slice(0, 8)}...`);
     const session = await stripe.checkout.sessions.retrieve(sessionId);
-    console.log(`${LOG_PREFIX} Session retrieved payment_status=${session.payment_status} metadata.uid=${session.metadata?.uid?.slice(0, 8)}...`);
+    logger.info(`${LOG_PREFIX} Session retrieved payment_status=${session.payment_status} metadata.uid=${session.metadata?.uid?.slice(0, 8)}...`);
 
     if (session.payment_status !== 'paid') {
-      console.log(`${LOG_PREFIX} confirm-session rejected: payment not paid`);
+      logger.info(`${LOG_PREFIX} confirm-session rejected: payment not paid`);
       return res.status(400).json({
         error: 'Payment not completed',
         message: 'This session is not paid yet.'
@@ -136,7 +137,7 @@ router.post('/confirm-session', authenticateToken, async (req, res) => {
 
     const uid = session.metadata?.uid;
     if (uid !== req.user.uid) {
-      console.log(`${LOG_PREFIX} confirm-session rejected: uid mismatch`);
+      logger.info(`${LOG_PREFIX} confirm-session rejected: uid mismatch`);
       return res.status(403).json({
         error: 'Forbidden',
         message: 'This session does not belong to you.'
@@ -144,11 +145,11 @@ router.post('/confirm-session', authenticateToken, async (req, res) => {
     }
 
     await creditBalanceForSession(session);
-    console.log(`${LOG_PREFIX} confirm-session completed for session_id=${sessionId}`);
+    logger.info(`${LOG_PREFIX} confirm-session completed for session_id=${sessionId}`);
 
     res.json({ success: true, message: 'Balance updated.' });
   } catch (err) {
-    console.error(`${LOG_PREFIX} Confirm session error:`, err.message);
+    logger.error(`${LOG_PREFIX} Confirm session error:`, err.message);
     res.status(500).json({
       error: 'Failed to confirm payment',
       message: err.message || 'Unknown error'
@@ -170,7 +171,7 @@ router.get('/topups', authenticateToken, async (req, res) => {
       .lean();
     res.json({ topups });
   } catch (err) {
-    console.error(`${LOG_PREFIX} Get topups error:`, err.message);
+    logger.error(`${LOG_PREFIX} Get topups error:`, err.message);
     res.status(500).json({
       error: 'Failed to load top-up history',
       message: err.message || 'Unknown error'
@@ -202,7 +203,7 @@ router.post('/setup-intent', authenticateToken, requireActiveAccount, async (req
         metadata: { uid: req.user.uid },
       });
       await Customer.findOneAndUpdate({ uid: req.user.uid }, { stripeCustomerId: customer.id });
-      console.log(`${PREFIX} Created Stripe Customer ${customer.id} for uid=${req.user.uid?.slice(0, 8)}...`);
+      logger.info(`${PREFIX} Created Stripe Customer ${customer.id} for uid=${req.user.uid?.slice(0, 8)}...`);
       return customer.id;
     };
 
@@ -222,7 +223,7 @@ router.post('/setup-intent', authenticateToken, requireActiveAccount, async (req
       // Stored customer belongs to a different Stripe account (e.g. after key rotation).
       // Create a fresh customer on the current account and retry once.
       if (siErr.code === 'resource_missing' || siErr.type === 'invalid_request_error') {
-        console.warn(`${PREFIX} Stored customer ${customerId} invalid — creating new one and retrying`);
+        logger.warn(`${PREFIX} Stored customer ${customerId} invalid — creating new one and retrying`);
         customerId = await createCustomer();
         setupIntent = await stripe.setupIntents.create({
           customer: customerId,
@@ -237,7 +238,7 @@ router.post('/setup-intent', authenticateToken, requireActiveAccount, async (req
 
     res.json({ clientSecret: setupIntent.client_secret, customerId });
   } catch (err) {
-    console.error('[SetupIntent] Error:', err.message);
+    logger.error('[SetupIntent] Error:', err.message);
     res.status(500).json({ error: 'Failed to create setup intent' });
   }
 });
@@ -253,7 +254,7 @@ router.get('/payment-method', authenticateToken, async (req, res) => {
     if (user.isModified('savedPaymentMethods')) await user.save();
     res.json(formatMethodsResponse(user));
   } catch (err) {
-    console.error('[GetPaymentMethod] Error:', err.message);
+    logger.error('[GetPaymentMethod] Error:', err.message);
     res.status(500).json({ error: 'Failed to fetch payment method' });
   }
 });
@@ -274,7 +275,7 @@ router.post('/payment-method/confirm', authenticateToken, requireActiveAccount, 
   } catch (err) {
     if (err.code === 'FORBIDDEN') return res.status(403).json({ error: err.message });
     if (err.code === 'SETUP_INCOMPLETE') return res.status(400).json({ error: err.message });
-    console.error('[ConfirmPaymentMethod] Error:', err.message);
+    logger.error('[ConfirmPaymentMethod] Error:', err.message);
     res.status(500).json({ error: 'Failed to save payment method' });
   }
 });
@@ -288,7 +289,7 @@ router.patch('/payment-method/:paymentMethodId/default', authenticateToken, requ
     res.json(result);
   } catch (err) {
     if (err.message === 'Payment method not found') return res.status(404).json({ error: err.message });
-    console.error('[SetDefaultPaymentMethod] Error:', err.message);
+    logger.error('[SetDefaultPaymentMethod] Error:', err.message);
     res.status(500).json({ error: 'Failed to update default payment method' });
   }
 });
@@ -317,7 +318,7 @@ router.delete('/payment-method/:paymentMethodId', authenticateToken, requireActi
     }
 
     const result = await removePaymentMethod(req.user.uid, req.params.paymentMethodId);
-    console.log(`${PREFIX} Detached PM ${req.params.paymentMethodId} for uid=${req.user.uid?.slice(0, 8)}...`);
+    logger.info(`${PREFIX} Detached PM ${req.params.paymentMethodId} for uid=${req.user.uid?.slice(0, 8)}...`);
     res.json({ success: true, ...result });
   } catch (err) {
     if (err.code === 'DEFAULT_PAYMENT_METHOD') {
@@ -327,7 +328,7 @@ router.delete('/payment-method/:paymentMethodId', authenticateToken, requireActi
       return res.status(400).json({ error: err.message, code: err.code });
     }
     if (err.message === 'Payment method not found') return res.status(404).json({ error: err.message });
-    console.error('[DeletePaymentMethod] Error:', err.message);
+    logger.error('[DeletePaymentMethod] Error:', err.message);
     res.status(500).json({ error: 'Failed to remove payment method' });
   }
 });
@@ -354,11 +355,11 @@ async function sendPaymentConfirmationEmail(toEmail, firstName, amountDollars) {
   });
   try {
     await sendEmail(toEmail, subject, html);
-    console.log(`${LOG_PREFIX} Confirmation email sent to ${toEmail} amount=${amountStr}`);
+    logger.info(`${LOG_PREFIX} Confirmation email sent to ${toEmail} amount=${amountStr}`);
   } catch (err) {
-    console.error(`${LOG_PREFIX} Failed to send payment confirmation email to ${toEmail}:`, err.message);
+    logger.error(`${LOG_PREFIX} Failed to send payment confirmation email to ${toEmail}:`, err.message);
     if (err.message && err.message.includes('535')) {
-      console.warn(`${LOG_PREFIX} Gmail SMTP auth failed: set EMAIL_USER and EMAIL_PASSWORD (use a Gmail App Password) in your environment.`);
+      logger.warn(`${LOG_PREFIX} Gmail SMTP auth failed: set EMAIL_USER and EMAIL_PASSWORD (use a Gmail App Password) in your environment.`);
     }
   }
 }
@@ -372,20 +373,20 @@ async function creditBalanceForSession(session) {
   const uid = session.metadata?.uid;
   const amountDollars = Number(session.metadata?.amountDollars) || (session.amount_total / 100);
 
-  console.log(`${LOG_PREFIX} creditBalanceForSession session_id=${sessionId} uid=${uid?.slice(0, 8)}... amount=€${amountDollars}`);
+  logger.info(`${LOG_PREFIX} creditBalanceForSession session_id=${sessionId} uid=${uid?.slice(0, 8)}... amount=€${amountDollars}`);
 
   if (!sessionId || !uid || amountDollars <= 0) {
-    console.log(`${LOG_PREFIX} creditBalanceForSession skipped: missing sessionId/uid or invalid amount`);
+    logger.info(`${LOG_PREFIX} creditBalanceForSession skipped: missing sessionId/uid or invalid amount`);
     return;
   }
 
   const customer = await Customer.findOne({ uid });
   if (!customer) {
-    console.log(`${LOG_PREFIX} creditBalanceForSession skipped: no customer found for uid=${uid?.slice(0, 8)}...`);
+    logger.info(`${LOG_PREFIX} creditBalanceForSession skipped: no customer found for uid=${uid?.slice(0, 8)}...`);
     return;
   }
   if ((customer.creditedStripeSessionIds || []).includes(sessionId)) {
-    console.log(`${LOG_PREFIX} creditBalanceForSession skipped: session_id=${sessionId} already credited (idempotent)`);
+    logger.info(`${LOG_PREFIX} creditBalanceForSession skipped: session_id=${sessionId} already credited (idempotent)`);
     return;
   }
 
@@ -406,13 +407,13 @@ async function creditBalanceForSession(session) {
     });
   } catch (err) {
     if (err.code === 11000) {
-      console.log(`${LOG_PREFIX} Topup already recorded for session_id=${sessionId} (duplicate)`);
+      logger.info(`${LOG_PREFIX} Topup already recorded for session_id=${sessionId} (duplicate)`);
     } else {
-      console.error(`${LOG_PREFIX} Failed to save topup record:`, err.message);
+      logger.error(`${LOG_PREFIX} Failed to save topup record:`, err.message);
     }
   }
 
-  console.log(`${LOG_PREFIX} Balance credited +€${amountDollars} for uid=${uid?.slice(0, 8)}... new balance would be ~€${(customer.balance || 0) + amountDollars}`);
+  logger.info(`${LOG_PREFIX} Balance credited +€${amountDollars} for uid=${uid?.slice(0, 8)}... new balance would be ~€${(customer.balance || 0) + amountDollars}`);
 
   await sendPaymentConfirmationEmail(customer.email, customer.firstName, amountDollars);
 }
@@ -425,32 +426,32 @@ function stripeWebhookHandler(req, res) {
   const sig = req.headers['stripe-signature'];
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
   if (!webhookSecret) {
-    console.warn(`${LOG_PREFIX} Webhook received but STRIPE_WEBHOOK_SECRET not set`);
+    logger.warn(`${LOG_PREFIX} Webhook received but STRIPE_WEBHOOK_SECRET not set`);
     return res.status(503).send('Webhook not configured');
   }
   const stripe = getStripe();
   if (!stripe) {
-    console.warn(`${LOG_PREFIX} Webhook received but Stripe not configured`);
+    logger.warn(`${LOG_PREFIX} Webhook received but Stripe not configured`);
     return res.status(503).send('Stripe not configured');
   }
   let event;
   try {
     event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret);
   } catch (err) {
-    console.error(`${LOG_PREFIX} Webhook signature verification failed:`, err.message);
+    logger.error(`${LOG_PREFIX} Webhook signature verification failed:`, err.message);
     return res.status(400).send(`Webhook Error: ${err.message}`);
   }
-  console.log(`${LOG_PREFIX} Webhook received type=${event.type} id=${event.id}`);
+  logger.info(`${LOG_PREFIX} Webhook received type=${event.type} id=${event.id}`);
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object;
-    console.log(`${LOG_PREFIX} Webhook checkout.session.completed session_id=${session.id}`);
+    logger.info(`${LOG_PREFIX} Webhook checkout.session.completed session_id=${session.id}`);
     creditBalanceForSession(session).catch((err) =>
-      console.error(`${LOG_PREFIX} Webhook: failed to credit balance:`, err.message)
+      logger.error(`${LOG_PREFIX} Webhook: failed to credit balance:`, err.message)
     );
   }
   if (event.type === 'setup_intent.succeeded') {
     handleSetupIntentSucceeded(event.data.object).catch(err =>
-      console.error(`${LOG_PREFIX} setup_intent.succeeded error:`, err.message)
+      logger.error(`${LOG_PREFIX} setup_intent.succeeded error:`, err.message)
     );
   }
   res.json({ received: true });
@@ -459,7 +460,7 @@ function stripeWebhookHandler(req, res) {
 async function handleSetupIntentSucceeded(setupIntent) {
   const uid = setupIntent.metadata?.uid;
   if (!uid) {
-    console.warn('[SetupIntent Webhook] No uid in metadata — skipping');
+    logger.warn('[SetupIntent Webhook] No uid in metadata — skipping');
     return;
   }
   const pmId = setupIntent.payment_method;
@@ -467,9 +468,9 @@ async function handleSetupIntentSucceeded(setupIntent) {
 
   try {
     await attachPaymentMethodToUser(uid, pmId);
-    console.log(`[SetupIntent Webhook] ✅ PM saved uid=${uid?.slice(0, 8)}... pm=${pmId}`);
+    logger.info(`[SetupIntent Webhook] ✅ PM saved uid=${uid?.slice(0, 8)}... pm=${pmId}`);
   } catch (err) {
-    console.error('[SetupIntent Webhook] Failed to save PM:', err.message);
+    logger.error('[SetupIntent Webhook] Failed to save PM:', err.message);
   }
 }
 

@@ -9,6 +9,7 @@ const { authenticateToken } = require('../middleware/auth');
 const { isAdminEmail } = require('../utils/roles');
 const { validate, z } = require('../middleware/validate');
 const { objectIdOrSlug } = require('../validators/common');
+const logger = require('../utils/logger');
 
 const router = express.Router();
 
@@ -141,7 +142,7 @@ router.get('/:id/profile', validate(profileParamsSchema), async (req, res) => {
       activeListings
     });
   } catch (err) {
-    console.error('GET /api/users/:id/profile error:', err);
+    logger.error('GET /api/users/:id/profile error:', err);
     return res.status(500).json({ error: 'Failed to load profile.' });
   }
 });
@@ -210,7 +211,7 @@ router.get('/:id/reviews', validate(reviewsSchema), async (req, res) => {
       pages: Math.ceil(total / PAGE_SIZE)
     });
   } catch (err) {
-    console.error('GET /api/users/:id/reviews error:', err);
+    logger.error('GET /api/users/:id/reviews error:', err);
     return res.status(500).json({ error: 'Failed to load reviews.' });
   }
 });

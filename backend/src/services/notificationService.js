@@ -5,6 +5,7 @@ const Follow = require('../models/Follow');
 const CategoryFollow = require('../models/CategoryFollow');
 const Watchlist = require('../models/Watchlist');
 const Listing = require('../models/Listing');
+const logger = require('../utils/logger');
 
 // In-memory debounce: prevent outbid notification floods in high-activity auctions.
 // Key: "userId:listingId", value: timestamp of last sent notification.
@@ -94,7 +95,7 @@ async function emitNewNotificationToUser(io, userMongoId) {
       io.to(`user:${user.uid}`).emit('new-notification');
     }
   } catch (err) {
-    console.error('Failed to emit new-notification:', err);
+    logger.error('Failed to emit new-notification:', err);
   }
 }
 
@@ -115,7 +116,7 @@ async function emitPrivateRoomInvitationToUser(io, userMongoId, { listingId, lis
       io.to(room).emit('private-room-invitation', { listingId, listingTitle });
     }
   } catch (err) {
-    console.error('Failed to emit private-room-invitation:', err);
+    logger.error('Failed to emit private-room-invitation:', err);
   }
 }
 
@@ -154,7 +155,7 @@ async function createNotification({ userId, title, message, type = 'system', lin
     await notification.save();
     return notification;
   } catch (err) {
-    console.error('Failed to create notification:', err);
+    logger.error('Failed to create notification:', err);
     return null;
   }
 }
@@ -977,7 +978,7 @@ async function notifyCategoryFollowersNewListing({ category, listingTitle, listi
       })
     );
   } catch (err) {
-    console.error('notifyCategoryFollowersNewListing error:', err.message);
+    logger.error('notifyCategoryFollowersNewListing error:', err.message);
   }
 }
 
@@ -1025,7 +1026,7 @@ async function notifySimilarItemWatchers({ category, startingPrice, listingTitle
       })
     );
   } catch (err) {
-    console.error('notifySimilarItemWatchers error:', err.message);
+    logger.error('notifySimilarItemWatchers error:', err.message);
   }
 }
 
@@ -1058,7 +1059,7 @@ async function notifyWatchlistersAuctionEnding({ listingId, listingTitle, listin
       })
     );
   } catch (err) {
-    console.error('notifyWatchlistersAuctionEnding error:', err.message);
+    logger.error('notifyWatchlistersAuctionEnding error:', err.message);
   }
 }
 
@@ -1090,7 +1091,7 @@ async function notifyFollowersNewListing({ sellerId, sellerFirstName, listingTit
       })
     );
   } catch (err) {
-    console.error('notifyFollowersNewListing error:', err.message);
+    logger.error('notifyFollowersNewListing error:', err.message);
   }
 }
 

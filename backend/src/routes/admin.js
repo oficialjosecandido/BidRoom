@@ -23,6 +23,7 @@ const azureStorageService = require('../services/azureStorage.service');
 const { requireAdmin, ADMIN_EMAILS } = require('../utils/roles');
 
 const { getStripe } = require('../utils/stripe.util');
+const logger = require('../utils/logger');
 
 function computeBuyerTrustTier(buyer) {
   if (!buyer) return 1;
@@ -264,7 +265,7 @@ router.get('/statistics', authenticateToken, requireAdmin, async (req, res) => {
       totalTransactions
     });
   } catch (error) {
-    console.error('Error fetching admin statistics:', error);
+    logger.error('Error fetching admin statistics:', error);
     res.status(500).json({ 
       error: 'Failed to fetch statistics',
       message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error' 
@@ -313,7 +314,7 @@ router.get('/platform-snapshot-comparison', authenticateToken, requireAdmin, asy
       currency: 'EUR'
     });
   } catch (error) {
-    console.error('Error fetching platform snapshot comparison:', error);
+    logger.error('Error fetching platform snapshot comparison:', error);
     res.status(500).json({
       error: 'Failed to fetch platform snapshot comparison',
       message: error.message
@@ -360,7 +361,7 @@ router.get('/auctions', authenticateToken, requireAdmin, async (req, res) => {
       pages: Math.max(1, Math.ceil(total / limit))
     });
   } catch (error) {
-    console.error('Error fetching auctions:', error);
+    logger.error('Error fetching auctions:', error);
     res.status(500).json({
       error: 'Failed to fetch auctions',
       message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
@@ -383,7 +384,7 @@ router.get('/auctions/:id', authenticateToken, requireAdmin, async (req, res) =>
 
     res.json(auction);
   } catch (error) {
-    console.error('Error fetching auction:', error);
+    logger.error('Error fetching auction:', error);
     res.status(500).json({ 
       error: 'Failed to fetch auction',
       message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error' 
@@ -427,7 +428,7 @@ router.delete('/auctions/:id', authenticateToken, requireAdmin, async (req, res)
 
     return res.json({ ok: true, deletedId: listing._id });
   } catch (error) {
-    console.error('Error deleting listing:', error);
+    logger.error('Error deleting listing:', error);
     res.status(500).json({
       error: 'Failed to delete listing',
       message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
@@ -549,9 +550,9 @@ router.post('/auctions/:id/private-room', authenticateToken, requireAdmin, async
         }
 
         await sendEmail(bidder.email, emailContent.subject, emailContent.html);
-        console.log(`📧 Notification sent to ${bidder.email}`);
+        logger.info(`📧 Notification sent to ${bidder.email}`);
       } catch (emailError) {
-        console.error(`Failed to send notification to ${bidder.email}:`, emailError);
+        logger.error(`Failed to send notification to ${bidder.email}:`, emailError);
       }
     }
 
@@ -578,7 +579,7 @@ router.post('/auctions/:id/private-room', authenticateToken, requireAdmin, async
       invitationsSent: validBidders.length
     });
   } catch (error) {
-    console.error('Error creating private room:', error);
+    logger.error('Error creating private room:', error);
     res.status(500).json({ 
       error: 'Failed to create private room',
       message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error' 
@@ -619,7 +620,7 @@ router.get('/customers', authenticateToken, requireAdmin, async (req, res) => {
 
     res.json({ customers: users, total, page, limit, pages: Math.max(1, Math.ceil(total / limit)) });
   } catch (error) {
-    console.error('Error fetching customers:', error);
+    logger.error('Error fetching customers:', error);
     res.status(500).json({ error: 'Failed to fetch customers', message: error.message });
   }
 });
@@ -653,11 +654,11 @@ router.post('/customers/:id/unlock-content-restriction', authenticateToken, requ
       metadata: { previousRestrictedUntil, violationCount: user.contentViolationCount }
     });
 
-    await notifyContentRestrictionLifted({ userId: user._id }).catch(err => console.error('Notify restriction lifted:', err.message));
+    await notifyContentRestrictionLifted({ userId: user._id }).catch(err => logger.error('Notify restriction lifted:', err.message));
 
     res.json({ success: true, message: 'Content restriction lifted.' });
   } catch (error) {
-    console.error('Error unlocking content restriction:', error);
+    logger.error('Error unlocking content restriction:', error);
     res.status(500).json({ error: 'Failed to unlock content restriction', message: error.message });
   }
 });
@@ -693,7 +694,7 @@ router.get('/transactions', authenticateToken, requireAdmin, async (req, res) =>
 
     res.json({ transactions, total, page, limit, pages: Math.max(1, Math.ceil(total / limit)) });
   } catch (error) {
-    console.error('Error fetching transactions:', error);
+    logger.error('Error fetching transactions:', error);
     res.status(500).json({ error: 'Failed to fetch transactions', message: error.message });
   }
 });
@@ -728,7 +729,7 @@ router.get('/disputes', authenticateToken, requireAdmin, async (req, res) => {
 
     res.json({ disputes: withAge });
   } catch (error) {
-    console.error('Error fetching disputes:', error);
+    logger.error('Error fetching disputes:', error);
     res.status(500).json({
       error: 'Failed to fetch disputes',
       message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
@@ -762,7 +763,7 @@ router.get('/disputes/:transactionId', authenticateToken, requireAdmin, async (r
       buyerHasSavedMethod: !!(transaction.buyer?.savedPaymentMethodId),
     });
   } catch (error) {
-    console.error('Error fetching dispute:', error);
+    logger.error('Error fetching dispute:', error);
     res.status(500).json({
       error: 'Failed to fetch dispute',
       message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
@@ -828,7 +829,7 @@ router.post('/disputes/:transactionId/ruling', authenticateToken, requireAdmin, 
       const sellerId = transaction.seller?._id?.toString?.() || transaction.seller?.toString?.();
       if (sellerId) {
         Customer.findByIdAndUpdate(sellerId, { $inc: { completedSalesCount: 1 } })
-          .catch(err => console.error('[Waiver] Failed to increment completedSalesCount:', err.message));
+          .catch(err => logger.error('[Waiver] Failed to increment completedSalesCount:', err.message));
       }
     }
     await transaction.save();
@@ -839,11 +840,11 @@ router.post('/disputes/:transactionId/ruling', authenticateToken, requireAdmin, 
     const buyerUserId = transaction.buyer?._id?.toString?.() || transaction.buyer?.toString?.();
     if (sellerUserId) {
       notifyDisputeDecisionIssued({ transactionId: transaction._id.toString(), listingTitle, verdict, userId: sellerUserId })
-        .catch(err => console.error('Failed to create dispute decision notification:', err));
+        .catch(err => logger.error('Failed to create dispute decision notification:', err));
     }
     if (buyerUserId) {
       notifyDisputeDecisionIssued({ transactionId: transaction._id.toString(), listingTitle, verdict, userId: buyerUserId })
-        .catch(err => console.error('Failed to create dispute decision notification:', err));
+        .catch(err => logger.error('Failed to create dispute decision notification:', err));
     }
     const io = req.app.get('io');
     if (io) {
@@ -859,7 +860,7 @@ router.post('/disputes/:transactionId/ruling', authenticateToken, requireAdmin, 
 
     // Reputation impact: increment disputeLossCount for party ruled against
     applyDisputeVerdictImpact(verdict, buyerUserId, sellerUserId).catch(err =>
-      console.error('Dispute verdict reputation impact:', err.message)
+      logger.error('Dispute verdict reputation impact:', err.message)
     );
 
     // Issue Stripe refund when verdict favours the buyer
@@ -878,11 +879,11 @@ router.post('/disputes/:transactionId/ruling', authenticateToken, requireAdmin, 
             }
           });
           await Transaction.findByIdAndUpdate(transaction._id, { $set: { stripeRefundId: refund.id } }, { runValidators: false });
-          console.log(`[Admin] Stripe refund issued refundId=${refund.id} amount=${resolvedRefundAmount} transaction=${transaction._id}`);
+          logger.info(`[Admin] Stripe refund issued refundId=${refund.id} amount=${resolvedRefundAmount} transaction=${transaction._id}`);
         }
       } catch (refundErr) {
         // Log but don't fail the ruling — admin can retry the Stripe refund manually
-        console.error(`[Admin] Stripe refund failed transaction=${transaction._id}:`, refundErr.message);
+        logger.error(`[Admin] Stripe refund failed transaction=${transaction._id}:`, refundErr.message);
       }
     }
 
@@ -911,13 +912,13 @@ router.post('/disputes/:transactionId/ruling', authenticateToken, requireAdmin, 
                 metadata: { transactionId: transaction._id.toString(), disputeVerdict: verdict, sellerUserId, buyerUserId },
               });
               await Transaction.findByIdAndUpdate(transaction._id, { $set: { disputeCompensationChargeId: chargeIntent.id } }, { runValidators: false });
-              console.log(`[Admin Ruling] ✅ Buyer compensation charge created chargeId=${chargeIntent.id} amount=${chargeAmount} transaction=${transaction._id}`);
+              logger.info(`[Admin Ruling] ✅ Buyer compensation charge created chargeId=${chargeIntent.id} amount=${chargeAmount} transaction=${transaction._id}`);
             } else {
-              console.warn(`[Admin Ruling] ⚠️ Verdict=${verdict} but buyer has no saved payment method. Manual compensation required. transaction=${transaction._id} buyer=${buyerUserId}`);
+              logger.warn(`[Admin Ruling] ⚠️ Verdict=${verdict} but buyer has no saved payment method. Manual compensation required. transaction=${transaction._id} buyer=${buyerUserId}`);
             }
           }
         } catch (chargeErr) {
-          console.error(`[Admin Ruling] ❌ Buyer compensation charge FAILED transaction=${transaction._id}:`, chargeErr.message);
+          logger.error(`[Admin Ruling] ❌ Buyer compensation charge FAILED transaction=${transaction._id}:`, chargeErr.message);
         }
       }
     }
@@ -940,7 +941,7 @@ router.post('/disputes/:transactionId/ruling', authenticateToken, requireAdmin, 
             refundAmount: refundAmountFormatted
           });
           await sendEmail(buyerUser.email, buyerEmail.subject, buyerEmail.html).catch(err =>
-            console.error('[Admin] Failed to send dispute refund buyer email:', err.message)
+            logger.error('[Admin] Failed to send dispute refund buyer email:', err.message)
           );
         }
 
@@ -951,11 +952,11 @@ router.post('/disputes/:transactionId/ruling', authenticateToken, requireAdmin, 
             refundAmount: refundAmountFormatted
           });
           await sendEmail(sellerUser.email, sellerEmail.subject, sellerEmail.html).catch(err =>
-            console.error('[Admin] Failed to send dispute refund seller email:', err.message)
+            logger.error('[Admin] Failed to send dispute refund seller email:', err.message)
           );
         }
       } catch (emailErr) {
-        console.error('[Admin] Failed to send dispute refund emails:', emailErr.message);
+        logger.error('[Admin] Failed to send dispute refund emails:', emailErr.message);
       }
     }
 
@@ -971,7 +972,7 @@ router.post('/disputes/:transactionId/ruling', authenticateToken, requireAdmin, 
       transaction: updated
     });
   } catch (error) {
-    console.error('Error issuing dispute ruling:', error);
+    logger.error('Error issuing dispute ruling:', error);
     res.status(500).json({
       error: 'Failed to issue ruling',
       message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
@@ -1012,7 +1013,7 @@ router.get('/reviews/flagged', authenticateToken, requireAdmin, async (req, res)
     );
     res.json({ flags: withReviewDetails, total, page, limit, pages: Math.ceil(total / limit) });
   } catch (error) {
-    console.error('Error fetching flagged reviews:', error);
+    logger.error('Error fetching flagged reviews:', error);
     res.status(500).json({ error: 'Failed to fetch flagged reviews', message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error' });
   }
 });
@@ -1044,7 +1045,7 @@ router.patch('/reviews/flags/:id', authenticateToken, requireAdmin, async (req, 
     await flag.save();
     res.json({ success: true, flag });
   } catch (error) {
-    console.error('Error resolving review flag:', error);
+    logger.error('Error resolving review flag:', error);
     res.status(500).json({ error: 'Failed to resolve flag', message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error' });
   }
 });
@@ -1087,7 +1088,7 @@ router.get('/reviews/appeals', authenticateToken, requireAdmin, async (req, res)
     );
     res.json({ appeals: withDetails, total, page, limit, pages: Math.ceil(total / limit) });
   } catch (error) {
-    console.error('Error fetching review appeals:', error);
+    logger.error('Error fetching review appeals:', error);
     res.status(500).json({ error: 'Failed to fetch review appeals', message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error' });
   }
 });
@@ -1119,7 +1120,7 @@ router.patch('/reviews/appeals/:id', authenticateToken, requireAdmin, async (req
     await appeal.save();
     res.json({ success: true, appeal });
   } catch (error) {
-    console.error('Error resolving review appeal:', error);
+    logger.error('Error resolving review appeal:', error);
     res.status(500).json({ error: 'Failed to resolve appeal', message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error' });
   }
 });
@@ -1185,9 +1186,9 @@ router.post('/auctions/:id/close-private-room', authenticateToken, requireAdmin,
       // Send notification to seller to choose winner
       await auctionNotificationService.sendChooseWinnerNotification(listing);
       
-      console.log(`✅ Auction end notifications sent for listing: ${listingId}`);
+      logger.info(`✅ Auction end notifications sent for listing: ${listingId}`);
     } catch (notificationError) {
-      console.error('Error sending auction end notifications:', notificationError);
+      logger.error('Error sending auction end notifications:', notificationError);
       // Don't fail the request if notifications fail
     }
 
@@ -1213,7 +1214,7 @@ router.post('/auctions/:id/close-private-room', authenticateToken, requireAdmin,
       }
     });
   } catch (error) {
-    console.error('Error closing private room and ending auction:', error);
+    logger.error('Error closing private room and ending auction:', error);
     res.status(500).json({ 
       error: 'Failed to close private room and end auction',
       message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error' 
@@ -1240,7 +1241,7 @@ router.get('/reports', authenticateToken, requireAdmin, async (req, res) => {
 
     return res.json({ reports, total });
   } catch (err) {
-    console.error('GET /api/admin/reports error:', err);
+    logger.error('GET /api/admin/reports error:', err);
     return res.status(500).json({ error: 'Failed to fetch reports.' });
   }
 });
@@ -1266,7 +1267,7 @@ router.patch('/reports/:id', authenticateToken, requireAdmin, async (req, res) =
 
     return res.json({ report });
   } catch (err) {
-    console.error('PATCH /api/admin/reports error:', err);
+    logger.error('PATCH /api/admin/reports error:', err);
     return res.status(500).json({ error: 'Failed to update report.' });
   }
 });
@@ -1291,7 +1292,7 @@ router.get('/moderation-audit', authenticateToken, requireAdmin, async (req, res
       .lean();
     return res.json({ entries, total: entries.length });
   } catch (err) {
-    console.error('GET /api/admin/moderation-audit error:', err);
+    logger.error('GET /api/admin/moderation-audit error:', err);
     return res.status(500).json({ error: 'Failed to fetch moderation audit log.' });
   }
 });
@@ -1342,7 +1343,7 @@ router.post('/seller-verifications/:userId', authenticateToken, requireAdmin, as
       message: status === 'verified' ? 'Seller trader identity marked as verified.' : 'Seller trader identity rejected.'
     });
   } catch (err) {
-    console.error('POST /api/admin/seller-verifications error:', err);
+    logger.error('POST /api/admin/seller-verifications error:', err);
     return res.status(500).json({ error: 'Failed to update seller verification.' });
   }
 });
@@ -1376,7 +1377,7 @@ router.get('/damage-claims', authenticateToken, requireAdmin, async (req, res) =
 
     return res.json({ claims, total, page, pages: Math.ceil(total / PAGE_SIZE) });
   } catch (err) {
-    console.error('GET /api/admin/damage-claims error:', err);
+    logger.error('GET /api/admin/damage-claims error:', err);
     return res.status(500).json({ error: 'Failed to load damage claims.' });
   }
 });
@@ -1399,7 +1400,7 @@ router.get('/damage-claims/:id', authenticateToken, requireAdmin, async (req, re
     if (!claim) return res.status(404).json({ error: 'Claim not found.' });
     return res.json({ claim });
   } catch (err) {
-    console.error('GET /api/admin/damage-claims/:id error:', err);
+    logger.error('GET /api/admin/damage-claims/:id error:', err);
     return res.status(500).json({ error: 'Failed to load claim.' });
   }
 });
@@ -1473,7 +1474,7 @@ router.patch('/damage-claims/:id', authenticateToken, requireAdmin, async (req, 
             io
           });
         } catch (e) {
-          console.error('notifyDamageClaimResolved error:', e.message);
+          logger.error('notifyDamageClaimResolved error:', e.message);
         }
       });
     }
@@ -1486,7 +1487,7 @@ router.patch('/damage-claims/:id', authenticateToken, requireAdmin, async (req, 
 
     return res.json({ claim: updated });
   } catch (err) {
-    console.error('PATCH /api/admin/damage-claims/:id error:', err);
+    logger.error('PATCH /api/admin/damage-claims/:id error:', err);
     return res.status(500).json({ error: 'Failed to update claim.' });
   }
 });
@@ -1500,7 +1501,7 @@ router.post('/maintenance/image-purge', authenticateToken, requireAdmin, async (
     const result = await runImagePurge();
     return res.json({ success: true, result });
   } catch (err) {
-    console.error('POST /api/admin/maintenance/image-purge error:', err);
+    logger.error('POST /api/admin/maintenance/image-purge error:', err);
     return res.status(500).json({ error: 'Image purge failed', message: err.message });
   }
 });
@@ -1514,7 +1515,7 @@ router.get('/moderation/blocklist', authenticateToken, requireAdmin, async (req,
     const items = await getBlocklistItems();
     return res.json({ items });
   } catch (err) {
-    console.error('GET /api/admin/moderation/blocklist error:', err);
+    logger.error('GET /api/admin/moderation/blocklist error:', err);
     return res.status(500).json({ error: 'Failed to fetch blocklist', message: err.message });
   }
 });
@@ -1532,10 +1533,10 @@ router.post('/moderation/blocklist', authenticateToken, requireAdmin, async (req
     }
     await ensureBlocklistExists();
     const item = await addBlocklistItem(text.trim());
-    console.log(`[admin] blocklist term added by ${req.user?.email}: "${text.trim()}"`);
+    logger.info(`[admin] blocklist term added by ${req.user?.email}: "${text.trim()}"`);
     return res.json({ success: true, item });
   } catch (err) {
-    console.error('POST /api/admin/moderation/blocklist error:', err);
+    logger.error('POST /api/admin/moderation/blocklist error:', err);
     return res.status(500).json({ error: 'Failed to add term', message: err.message });
   }
 });
@@ -1547,10 +1548,10 @@ router.post('/moderation/blocklist', authenticateToken, requireAdmin, async (req
 router.delete('/moderation/blocklist/:itemId', authenticateToken, requireAdmin, async (req, res) => {
   try {
     await removeBlocklistItem(req.params.itemId);
-    console.log(`[admin] blocklist term removed by ${req.user?.email}: itemId=${req.params.itemId}`);
+    logger.info(`[admin] blocklist term removed by ${req.user?.email}: itemId=${req.params.itemId}`);
     return res.json({ success: true });
   } catch (err) {
-    console.error('DELETE /api/admin/moderation/blocklist error:', err);
+    logger.error('DELETE /api/admin/moderation/blocklist error:', err);
     return res.status(500).json({ error: 'Failed to remove term', message: err.message });
   }
 });

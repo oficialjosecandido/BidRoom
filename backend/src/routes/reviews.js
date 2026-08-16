@@ -18,6 +18,7 @@ const {
 } = require('../services/reputationService');
 const { suspendUser, ACCOUNT_STATUS } = require('../services/accountStatusService');
 const { scanForAbusiveContent } = require('../utils/contentFilter');
+const logger = require('../utils/logger');
 
 const router = express.Router();
 
@@ -87,7 +88,7 @@ router.get('/reputation/:userId', async (req, res) => {
       ...scores
     });
   } catch (error) {
-    console.error('Error fetching reputation:', error);
+    logger.error('Error fetching reputation:', error);
     res.status(500).json(serverError(error, 'Failed to fetch reputation'));
   }
 });
@@ -104,7 +105,7 @@ router.get('/scores/:userId', async (req, res) => {
     const scores = await getReviewScoresForUser(req.params.userId);
     res.json(scores);
   } catch (error) {
-    console.error('Error fetching review scores:', error);
+    logger.error('Error fetching review scores:', error);
     res.status(500).json(serverError(error, 'Failed to fetch review scores'));
   }
 });
@@ -196,7 +197,7 @@ router.get('/pending', authenticateToken, async (req, res) => {
 
     res.json({ pending });
   } catch (error) {
-    console.error('Error fetching pending reviews:', error);
+    logger.error('Error fetching pending reviews:', error);
     res.status(500).json(serverError(error, 'Failed to fetch pending reviews'));
   }
 });
@@ -229,7 +230,7 @@ router.get('/mine', authenticateToken, async (req, res) => {
 
     res.json({ written, received: sanitizedReceived });
   } catch (error) {
-    console.error('Error fetching my reviews:', error);
+    logger.error('Error fetching my reviews:', error);
     res.status(500).json(serverError(error, 'Failed to fetch reviews'));
   }
 });
@@ -248,7 +249,7 @@ router.get('/appeals/mine', authenticateToken, async (req, res) => {
       .lean();
     res.json({ appeals });
   } catch (error) {
-    console.error('Error fetching my appeals:', error);
+    logger.error('Error fetching my appeals:', error);
     res.status(500).json(serverError(error, 'Failed to fetch appeals'));
   }
 });
@@ -282,9 +283,9 @@ async function maybeAutoSuspendSeller(sellerId, io) {
       },
       io
     );
-    console.log(`[Reviews] Auto-suspended seller ${sellerId} (avg=${row.avg.toFixed(2)}, count=${row.count})`);
+    logger.info(`[Reviews] Auto-suspended seller ${sellerId} (avg=${row.avg.toFixed(2)}, count=${row.count})`);
   } catch (err) {
-    console.error('Auto-suspend check failed:', err.message);
+    logger.error('Auto-suspend check failed:', err.message);
   }
 }
 
@@ -442,12 +443,12 @@ router.post('/', authenticateToken, async (req, res) => {
         reason: 'profanity_hate_speech',
         metadata: { categories: abuse.categories, matches: abuse.matches },
         status: 'pending'
-      }).catch(err => console.error('Profanity flag create:', err.message));
+      }).catch(err => logger.error('Profanity flag create:', err.message));
     }
 
     // Async post-write side-effects: errors here must never break the user-facing response.
-    checkReviewFraud(review).catch(err => console.error('Review fraud check:', err.message));
-    recalculateReputation(toUserId).catch(err => console.error('Reputation recalc:', err.message));
+    checkReviewFraud(review).catch(err => logger.error('Review fraud check:', err.message));
+    recalculateReputation(toUserId).catch(err => logger.error('Reputation recalc:', err.message));
 
     // Auto-suspend evaluation runs only when a seller is reviewed (role === 'as_seller'
     // means the reviewee was acting as seller). Goes through accountStatusService so it
@@ -467,7 +468,7 @@ router.post('/', authenticateToken, async (req, res) => {
       createdAt: review.createdAt
     });
   } catch (error) {
-    console.error('Error creating review:', error);
+    logger.error('Error creating review:', error);
     res.status(500).json(serverError(error, 'Failed to create review'));
   }
 });
@@ -513,7 +514,7 @@ router.post('/:id/flag', authenticateToken, async (req, res) => {
       throw createErr;
     }
   } catch (error) {
-    console.error('Error flagging review:', error);
+    logger.error('Error flagging review:', error);
     res.status(500).json(serverError(error, 'Failed to flag review'));
   }
 });
@@ -561,7 +562,7 @@ router.post('/:id/appeals', authenticateToken, async (req, res) => {
       throw createErr;
     }
   } catch (error) {
-    console.error('Error creating review appeal:', error);
+    logger.error('Error creating review appeal:', error);
     res.status(500).json(serverError(error, 'Failed to create appeal'));
   }
 });

@@ -12,6 +12,7 @@ const {
   getLocalizedBlogText,
   buildBlogOgDescription,
 } = require('../utils/shareMeta');
+const logger = require('../utils/logger');
 
 const router   = express.Router();
 const FRONTEND = (process.env.FRONTEND_URL_PROD || process.env.FRONTEND_URL || 'https://www.bidroom.pt').replace(/\/$/, '');
@@ -290,7 +291,7 @@ router.get('/listing/:slug', async (req, res) => {
     res.send(html);
 
   } catch (err) {
-    console.error('[share] Error:', err.message);
+    logger.error('[share] Error:', err.message);
     res.redirect(302, `${FRONTEND}/listing/${req.params.slug}`);
   }
 });
@@ -328,7 +329,7 @@ router.get('/blog/:slug', async (req, res) => {
     res.setHeader('Cache-Control', 'public, max-age=60, s-maxage=120');
     res.send(html);
   } catch (err) {
-    console.error('[share:blog] Error:', err.message);
+    logger.error('[share:blog] Error:', err.message);
     res.redirect(302, `${FRONTEND}/blog/${req.params.slug}`);
   }
 });

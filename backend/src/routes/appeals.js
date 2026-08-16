@@ -8,6 +8,7 @@ const AccountAppeal = require('../models/AccountAppeal');
 const { appendModerationAudit } = require('../services/moderationAuditService');
 const { notifyAppealApproved, notifyAppealRejected, notifyContentRestrictionLifted } = require('../services/notificationService');
 const { authenticateToken } = require('../middleware/auth');
+const logger = require('../utils/logger');
 
 function isValidObjectId(id) {
   return mongoose.Types.ObjectId.isValid(id);
@@ -62,7 +63,7 @@ router.post('/', authenticateToken, async (req, res) => {
 
     res.status(201).json({ success: true, appeal });
   } catch (error) {
-    console.error('Error submitting appeal:', error);
+    logger.error('Error submitting appeal:', error);
     res.status(500).json({ error: 'Failed to submit appeal', message: error.message });
   }
 });
@@ -151,14 +152,14 @@ router.patch('/admin/:id', authenticateToken, requireAdmin, async (req, res) => 
         metadata: { source: 'appeal', appealId: appeal._id }
       }).catch(() => {});
 
-      await notifyAppealApproved({ userId: appeal.user._id }).catch(err => console.error('Notify appeal approved:', err.message));
+      await notifyAppealApproved({ userId: appeal.user._id }).catch(err => logger.error('Notify appeal approved:', err.message));
     } else {
-      await notifyAppealRejected({ userId: appeal.user._id, adminResponse: appeal.adminResponse }).catch(err => console.error('Notify appeal rejected:', err.message));
+      await notifyAppealRejected({ userId: appeal.user._id, adminResponse: appeal.adminResponse }).catch(err => logger.error('Notify appeal rejected:', err.message));
     }
 
     res.json({ success: true, appeal });
   } catch (error) {
-    console.error('Error reviewing appeal:', error);
+    logger.error('Error reviewing appeal:', error);
     res.status(500).json({ error: 'Failed to review appeal', message: error.message });
   }
 });

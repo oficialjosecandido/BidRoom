@@ -4,6 +4,7 @@ const Customer = require('../models/Customer');
 const { getReviewScoresForUser } = require('../services/reviewService');
 const { appendModerationAudit } = require('../services/moderationAuditService');
 const { getClientIp } = require('../middleware/bidRateLimiter');
+const logger = require('../utils/logger');
 
 const router = express.Router();
 
@@ -109,7 +110,7 @@ router.get('/profile', authenticateToken, async (req, res) => {
       cookieConsent: customer.cookieConsent && ['all', 'essential'].includes(customer.cookieConsent) ? customer.cookieConsent : null
     });
   } catch (error) {
-    console.error('Error fetching customer profile:', error);
+    logger.error('Error fetching customer profile:', error);
     res.status(500).json({
       error: 'Failed to load customer information',
       message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
@@ -250,7 +251,7 @@ router.patch('/seller-compliance', authenticateToken, requireActiveAccount, asyn
         : 'You are now registered as a private (non-trader) seller.'
     });
   } catch (error) {
-    console.error('Error updating seller compliance:', error);
+    logger.error('Error updating seller compliance:', error);
     res.status(500).json({ error: 'Failed to update seller compliance', message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error' });
   }
 });
@@ -269,7 +270,7 @@ router.patch('/theme', authenticateToken, async (req, res) => {
     await Customer.updateOne({ uid }, { $set: { theme } });
     res.json({ theme });
   } catch (error) {
-    console.error('Error updating customer theme:', error);
+    logger.error('Error updating customer theme:', error);
     res.status(500).json({ error: 'Failed to update theme', message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error' });
   }
 });
@@ -288,7 +289,7 @@ router.patch('/cookie-consent', authenticateToken, async (req, res) => {
     await Customer.updateOne({ uid }, { $set: { cookieConsent } });
     res.json({ cookieConsent });
   } catch (error) {
-    console.error('Error updating cookie consent:', error);
+    logger.error('Error updating cookie consent:', error);
     res.status(500).json({ error: 'Failed to update cookie consent' });
   }
 });
@@ -304,7 +305,7 @@ router.patch('/language', authenticateToken, async (req, res) => {
     await Customer.updateOne({ uid }, { $set: { language } });
     res.json({ language });
   } catch (error) {
-    console.error('Error updating language:', error);
+    logger.error('Error updating language:', error);
     res.status(500).json({ error: 'Failed to update language' });
   }
 });
@@ -345,7 +346,7 @@ router.post('/dsa-warning-response', authenticateToken, async (req, res) => {
     await Customer.updateOne({ _id: customer._id }, { $set: update });
     return res.json({ ok: true, response });
   } catch (err) {
-    console.error('POST /dsa-warning-response error:', err);
+    logger.error('POST /dsa-warning-response error:', err);
     res.status(500).json({ error: 'Failed to record DSA warning response.' });
   }
 });
@@ -360,7 +361,7 @@ router.get('/payment-config', authenticateToken, async (req, res) => {
     if (!customer) return res.status(404).json({ error: 'User not found' });
     res.json({ paymentConfig: customer.sellerPaymentConfig ?? {} });
   } catch (err) {
-    console.error('GET /payment-config error:', err);
+    logger.error('GET /payment-config error:', err);
     res.status(500).json({ error: 'Failed to fetch payment config' });
   }
 });
@@ -407,7 +408,7 @@ router.put('/payment-config', authenticateToken, async (req, res) => {
     if (!customer) return res.status(404).json({ error: 'User not found' });
     res.json({ paymentConfig: customer.sellerPaymentConfig });
   } catch (err) {
-    console.error('PUT /payment-config error:', err);
+    logger.error('PUT /payment-config error:', err);
     res.status(500).json({ error: 'Failed to save payment config' });
   }
 });

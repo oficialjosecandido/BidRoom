@@ -1,3 +1,4 @@
+const logger = require('../utils/logger');
 /**
  * Structured logging for Best Offer auctions.
  * All messages are prefixed with [BestOffer] for easy filtering.
@@ -32,7 +33,7 @@ function logAuctionCreated(populatedListing) {
     status: populatedListing.status,
     seller: populatedListing.seller
   };
-  console.log(`${TAG} Auction created:\n${safeJson(summary)}`);
+  logger.info(`${TAG} Auction created:\n${safeJson(summary)}`);
 }
 
 function logOfferReceived(offer, bidderDetails) {
@@ -43,13 +44,13 @@ function logOfferReceived(offer, bidderDetails) {
     status: offer.status,
     bidder: bidderDetails
   };
-  console.log(`${TAG} Offer received:\n${safeJson(payload)}`);
+  logger.info(`${TAG} Offer received:\n${safeJson(payload)}`);
 }
 
 function logMultipleOffers(listingId, count, offersDetail) {
-  console.log(`${TAG} Listing ${listingId} has ${count} offer(s). Seller must choose.`);
+  logger.info(`${TAG} Listing ${listingId} has ${count} offer(s). Seller must choose.`);
   if (offersDetail && offersDetail.length) {
-    console.log(`${TAG} Offers on listing:\n${safeJson(offersDetail)}`);
+    logger.info(`${TAG} Offers on listing:\n${safeJson(offersDetail)}`);
   }
 }
 
@@ -61,10 +62,10 @@ function logSellerAcceptedWinner(offer, sellerDetails, allOffersSummary) {
       ? { id: offer.offerer._id, email: offer.offerer.email, name: `${offer.offerer.firstName || ''} ${offer.offerer.lastName || ''}`.trim() }
       : { guestEmail: offer.offererEmail }
   };
-  console.log(`${TAG} Seller accepted offer. Winner:\n${safeJson(winner)}`);
-  console.log(`${TAG} Seller: ${safeJson(sellerDetails)}`);
+  logger.info(`${TAG} Seller accepted offer. Winner:\n${safeJson(winner)}`);
+  logger.info(`${TAG} Seller: ${safeJson(sellerDetails)}`);
   if (allOffersSummary) {
-    console.log(`${TAG} Offers on listing: ${safeJson(allOffersSummary)}`);
+    logger.info(`${TAG} Offers on listing: ${safeJson(allOffersSummary)}`);
   }
 }
 
@@ -78,7 +79,7 @@ function logTransactionCreated(transaction) {
     paymentDeadline: transaction.paymentDeadline,
     transactionStatus: transaction.transactionStatus
   };
-  console.log(`${TAG} Transaction created:\n${safeJson(details)}`);
+  logger.info(`${TAG} Transaction created:\n${safeJson(details)}`);
 }
 
 module.exports = {

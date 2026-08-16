@@ -2,6 +2,7 @@ const ContentSafetyClient = require('@azure-rest/ai-content-safety').default;
 const { AzureKeyCredential } = require('@azure/core-auth');
 const FormData = require('form-data');
 const fetch = require('node-fetch');
+const logger = require('../utils/logger');
 
 // ---------------------------------------------------------------------------
 // Azure Content Safety — image severity thresholds (0–6 scale, even numbers)
@@ -200,7 +201,7 @@ async function scanImage(imageBuffer) {
   if (!process.env._CONTENT_SAFETY_WARNED) {
     // Emit once per process so production logs are not flooded
     process.env._CONTENT_SAFETY_WARNED = '1';
-    console.warn(
+    logger.warn(
       '[ContentSafety] WARNING: No image scan provider is configured. ' +
       'Images are being allowed through without moderation. ' +
       'Set AZURE_CONTENT_SAFETY_ENDPOINT + AZURE_CONTENT_SAFETY_KEY ' +

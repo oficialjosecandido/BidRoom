@@ -1,4 +1,5 @@
 const Redis = require('ioredis');
+const logger = require('../utils/logger');
 
 class RedisService {
   constructor() {
@@ -36,23 +37,23 @@ class RedisService {
       // Handle connection events
       this.client.on('connect', () => {
         this.isConnected = true;
-        console.log('✅ Connected to Redis');
+        logger.info('✅ Connected to Redis');
         resolve();
       });
 
       this.client.on('ready', () => {
         this.isConnected = true;
-        console.log('✅ Redis is ready');
+        logger.info('✅ Redis is ready');
       });
 
       this.client.on('error', (error) => {
-        console.error('❌ Redis error:', error);
+        logger.error('❌ Redis error:', error);
         this.isConnected = false;
         // In development, continue without Redis; in production, reject
         if (process.env.NODE_ENV === 'production') {
           reject(error);
         } else {
-          console.warn('⚠️  Continuing without Redis (development mode)');
+          logger.warn('⚠️  Continuing without Redis (development mode)');
           this.client.disconnect();
           resolve();
         }
@@ -60,14 +61,14 @@ class RedisService {
 
       this.client.on('close', () => {
         if (this.isConnected) {
-          console.log('Redis connection closed');
+          logger.info('Redis connection closed');
         }
         this.isConnected = false;
       });
 
       this.client.on('reconnecting', () => {
         if (process.env.NODE_ENV === 'production') {
-          console.log('Reconnecting to Redis...');
+          logger.info('Reconnecting to Redis...');
         }
       });
 
@@ -87,7 +88,7 @@ class RedisService {
       const value = await this.client.get(key);
       return value ? JSON.parse(value) : null;
     } catch (error) {
-      console.error(`Redis GET error for key ${key}:`, error);
+      logger.error(`Redis GET error for key ${key}:`, error);
       return null;
     }
   }
@@ -105,7 +106,7 @@ class RedisService {
       }
       return true;
     } catch (error) {
-      console.error(`Redis SET error for key ${key}:`, error);
+      logger.error(`Redis SET error for key ${key}:`, error);
       return false;
     }
   }
@@ -118,7 +119,7 @@ class RedisService {
       await this.client.del(key);
       return true;
     } catch (error) {
-      console.error(`Redis DEL error for key ${key}:`, error);
+      logger.error(`Redis DEL error for key ${key}:`, error);
       return false;
     }
   }
@@ -131,7 +132,7 @@ class RedisService {
       const result = await this.client.exists(key);
       return result === 1;
     } catch (error) {
-      console.error(`Redis EXISTS error for key ${key}:`, error);
+      logger.error(`Redis EXISTS error for key ${key}:`, error);
       return false;
     }
   }

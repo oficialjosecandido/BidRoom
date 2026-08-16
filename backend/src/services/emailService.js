@@ -1,4 +1,5 @@
 const nodemailer = require('nodemailer');
+const logger = require('../utils/logger');
 
 // Create a transporter (you'll need to configure this with your email provider)
 const createTransporter = () => {
@@ -53,13 +54,13 @@ const sendEmail = async (to, subject, html, maxRetries = 3, retryDelay = 1000) =
       };
 
       const info = await transporter.sendMail(mailOptions);
-      console.log('📧 Email sent:', info.messageId);
+      logger.info('📧 Email sent:', info.messageId);
       
       // In development, log the preview URL
       if (process.env.NODE_ENV !== 'production') {
         const previewUrl = nodemailer.getTestMessageUrl(info);
         if (previewUrl) {
-          console.log('📧 Preview URL:', previewUrl);
+          logger.info('📧 Preview URL:', previewUrl);
         }
       }
       
@@ -106,22 +107,22 @@ const sendEmail = async (to, subject, html, maxRetries = 3, retryDelay = 1000) =
           waitTime = retryDelay * attempt;
         }
         
-        console.warn(`⚠️  Email rate limited. Retrying in ${(waitTime/1000).toFixed(1)}s... (attempt ${attempt}/${maxRetries})`);
+        logger.warn(`⚠️  Email rate limited. Retrying in ${(waitTime/1000).toFixed(1)}s... (attempt ${attempt}/${maxRetries})`);
         await new Promise(resolve => setTimeout(resolve, waitTime));
         continue;
       }
       
       // For other errors or final attempt, log and throw
       if (attempt === maxRetries) {
-        console.error(`❌ Email sending failed after ${maxRetries} attempts:`, error.message);
+        logger.error(`❌ Email sending failed after ${maxRetries} attempts:`, error.message);
         // In development, log email details instead of failing completely
         if (process.env.NODE_ENV !== 'production') {
-          console.log('\n📧 EMAIL CONTENT (would have been sent):');
-          console.log('=====================================');
-          console.log(`To: ${to}`);
-          console.log(`Subject: ${subject}`);
-          console.log(`HTML Length: ${html.length} chars`);
-          console.log('=====================================\n');
+          logger.info('\n📧 EMAIL CONTENT (would have been sent):');
+          logger.info('=====================================');
+          logger.info(`To: ${to}`);
+          logger.info(`Subject: ${subject}`);
+          logger.info(`HTML Length: ${html.length} chars`);
+          logger.info('=====================================\n');
         }
       }
     }
@@ -148,17 +149,17 @@ const sendEmailVerification = async (email, firstName, verificationToken) => {
   `;
 
   // For development, print the verification link to console
-  console.log('\n🔗 EMAIL VERIFICATION LINK:');
-  console.log('=====================================');
-  console.log(`Email: ${email}`);
-  console.log(`Verification URL: ${verificationUrl}`);
-  console.log('=====================================\n');
+  logger.info('\n🔗 EMAIL VERIFICATION LINK:');
+  logger.info('=====================================');
+  logger.info(`Email: ${email}`);
+  logger.info(`Verification URL: ${verificationUrl}`);
+  logger.info('=====================================\n');
 
   // Still try to send email, but don't fail if it doesn't work
   try {
     return await sendEmail(email, 'Verify your BidRoom account', html);
   } catch (error) {
-    console.log('📧 Email sending failed, but verification link is available above');
+    logger.info('📧 Email sending failed, but verification link is available above');
     return { messageId: 'console-only' };
   }
 };
@@ -183,11 +184,11 @@ const sendPasswordReset = async (email, firstName, resetUrl) => {
     </div>
   `;
 
-  console.log('\n🔐 PASSWORD RESET LINK:');
-  console.log('=====================================');
-  console.log(`Email: ${email}`);
-  console.log(`Reset URL: ${resetUrl}`);
-  console.log('=====================================\n');
+  logger.info('\n🔐 PASSWORD RESET LINK:');
+  logger.info('=====================================');
+  logger.info(`Email: ${email}`);
+  logger.info(`Reset URL: ${resetUrl}`);
+  logger.info('=====================================\n');
 
   return await sendEmail(email, 'Reset your BidRoom password', html);
 };

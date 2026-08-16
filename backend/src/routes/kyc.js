@@ -12,6 +12,7 @@ const express = require('express');
 const Customer = require('../models/Customer');
 const { authenticateToken, requireActiveAccount } = require('../middleware/auth');
 const { getStripe } = require('../utils/stripe.util');
+const logger = require('../utils/logger');
 
 const router = express.Router();
 
@@ -34,7 +35,7 @@ router.get('/status', authenticateToken, async (req, res) => {
       kycSubmittedAt: user.kycSubmittedAt || null,
     });
   } catch (err) {
-    console.error('GET /kyc/status error:', err);
+    logger.error('GET /kyc/status error:', err);
     res.status(500).json({ error: 'Failed to fetch KYC status' });
   }
 });
@@ -76,7 +77,7 @@ router.post('/session', authenticateToken, requireActiveAccount, async (req, res
 
     res.json({ url: session.url, sessionId: session.id });
   } catch (err) {
-    console.error('POST /kyc/session error:', err);
+    logger.error('POST /kyc/session error:', err);
     res.status(500).json({ error: 'Failed to create verification session', message: err.message });
   }
 });
@@ -88,9 +89,8 @@ async function kycWebhookHandler(req, res) {
   const webhookSecret = process.env.STRIPE_IDENTITY_WEBHOOK_SECRET;
 
   if (!webhookSecret) {
-    console.warn('[KYC Webhook] STRIPE_IDENTITY_WEBHOOK_SECRET not set — skipping signature verification');
-    // In dev/test you might skip verification; in production this is required
-    return processKycWebhookEvent(req.body.toString(), res);
+    logger.error('[KYC Webhook] STRIPE_IDENTITY_WEBHOOK_SECRET not set — rejecting event');
+    return res.status(500).json({ error: 'Webhook verification unavailable' });
   }
 
   let event;
@@ -98,7 +98,7 @@ async function kycWebhookHandler(req, res) {
     const stripe = getStripe();
     event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret);
   } catch (err) {
-    console.error('[KYC Webhook] Signature verification failed:', err.message);
+    logger.error('[KYC Webhook] Signature verification failed:', err.message);
     return res.status(400).json({ error: 'Webhook signature invalid' });
   }
 
@@ -119,7 +119,7 @@ async function processKycWebhookEvent(rawBody, res, event) {
           { _id: userId },
           { $set: { kycStatus: 'approved', kycVerifiedAt: new Date(), kycRejectionReason: null } }
         );
-        console.log(`[KYC] ✅ User ${userId} identity verified`);
+        logger.info(`[KYC] ✅ User ${userId} identity verified`);
         break;
 
       case 'identity.verification_session.requires_input': {
@@ -129,7 +129,7 @@ async function processKycWebhookEvent(rawBody, res, event) {
           { _id: userId },
           { $set: { kycStatus: 'rejected', kycRejectionReason: reason } }
         );
-        console.log(`[KYC] ❌ User ${userId} verification failed: ${reason}`);
+        logger.info(`[KYC] ❌ User ${userId} verification failed: ${reason}`);
         break;
       }
 
@@ -146,7 +146,7 @@ async function processKycWebhookEvent(rawBody, res, event) {
 
     res.json({ received: true });
   } catch (err) {
-    console.error('[KYC Webhook] Processing error:', err);
+    logger.error('[KYC Webhook] Processing error:', err);
     res.status(500).json({ error: 'Webhook processing failed' });
   }
 }

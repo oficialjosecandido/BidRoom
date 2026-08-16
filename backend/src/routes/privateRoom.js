@@ -9,6 +9,7 @@ const { sendPlatinumBidderInvitations, sendPrivateRoomNotInvitedToBidders, handl
 const { notifyPrivateRoomInvitation, notifyPrivateRoomAccepted, notifyPrivateRoomDeclined, emitNewNotificationToUser, emitPrivateRoomInvitationToUser } = require('../services/notificationService');
 const { isPrivateRoomEligible } = require('../services/reputationService');
 const { getReviewScoresForUsers } = require('../services/reviewService');
+const logger = require('../utils/logger');
 
 const router = express.Router();
 const ACCEPTANCE_WINDOW_MS = 15 * 60 * 1000; // 15 minutes to accept; after that the room starts automatically
@@ -125,7 +126,7 @@ router.get('/listings/:id/bidders', authenticateToken, async (req, res) => {
       currentPlatinumBidders: listing.platinumBidders || []
     });
   } catch (error) {
-    console.error('Error fetching bidders:', error);
+    logger.error('Error fetching bidders:', error);
     res.status(500).json({ 
       error: 'Failed to fetch bidders',
       message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error' 
@@ -265,7 +266,7 @@ router.post('/listings/:id/platinum-bidders', authenticateToken, requireActiveAc
     for (const bidderId of validBidderIds) {
       const bidderUserId = bidderId.toString?.() || bidderId;
       notifyPrivateRoomInvitation({ listingId, listingSlug, listingTitle, bidderUserId }).catch(err =>
-        console.error('Failed to create private room invitation notification:', err)
+        logger.error('Failed to create private room invitation notification:', err)
       );
       if (io) {
         emitPrivateRoomInvitationToUser(io, bidderUserId, {
@@ -289,7 +290,7 @@ router.post('/listings/:id/platinum-bidders', authenticateToken, requireActiveAc
       }
     });
   } catch (error) {
-    console.error('Error selecting Platinum Bidders:', error);
+    logger.error('Error selecting Platinum Bidders:', error);
     res.status(500).json({
       error: 'Failed to select Platinum Bidders',
       message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
@@ -357,7 +358,7 @@ router.post('/listings/:id/start-now', authenticateToken, async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Error starting private room:', error);
+    logger.error('Error starting private room:', error);
     res.status(500).json({
       error: 'Failed to start room',
       message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
@@ -402,7 +403,7 @@ router.post('/listings/:id/seller-leave', authenticateToken, async (req, res) =>
       message: 'You have left the private room. The auction has been closed and all participants have been notified.'
     });
   } catch (error) {
-    console.error('Error in seller-leave:', error);
+    logger.error('Error in seller-leave:', error);
     res.status(500).json({
       error: 'Failed to leave private room',
       message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
@@ -471,7 +472,7 @@ router.post('/listings/:id/accept-invitation', authenticateToken, async (req, re
         listingTitle: listing.title || 'your listing',
         bidderName,
         sellerUserId
-      }).catch(err => console.error('Failed to create private room accepted notification:', err));
+      }).catch(err => logger.error('Failed to create private room accepted notification:', err));
       if (io) emitNewNotificationToUser(io, sellerUserId).catch(() => {});
     }
     emitToListingAndPrivateRoom(io, listingId, 'invitation-accepted', {
@@ -483,7 +484,7 @@ router.post('/listings/:id/accept-invitation', authenticateToken, async (req, re
     });
     return res.json({ success: true, message: 'Invitation accepted. You can now place bids in the private room.', listingId });
   } catch (error) {
-    console.error('Error accepting invitation in-page:', error);
+    logger.error('Error accepting invitation in-page:', error);
     res.status(500).json({ error: 'Failed to accept invitation', message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error' });
   }
 });
@@ -552,7 +553,7 @@ router.post('/invitation/accept', async (req, res) => {
         listingTitle: listing.title || 'your listing',
         bidderName,
         sellerUserId
-      }).catch(err => console.error('Failed to create private room accepted notification:', err));
+      }).catch(err => logger.error('Failed to create private room accepted notification:', err));
       if (io) emitNewNotificationToUser(io, sellerUserId).catch(() => {});
     }
     // Emit to everyone in the private room so the poker table updates live
@@ -565,7 +566,7 @@ router.post('/invitation/accept', async (req, res) => {
     });
     return res.json({ success: true, message: 'Invitation accepted. You can now place bids in the private room.', listingId });
   } catch (error) {
-    console.error('Error accepting invitation:', error);
+    logger.error('Error accepting invitation:', error);
     res.status(500).json({ error: 'Failed to accept invitation', message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error' });
   }
 });
@@ -612,12 +613,12 @@ router.post('/invitation/decline', async (req, res) => {
         listingTitle: listing.title || 'your listing',
         bidderName,
         sellerUserId
-      }).catch(err => console.error('Failed to create private room declined notification:', err));
+      }).catch(err => logger.error('Failed to create private room declined notification:', err));
       if (io) emitNewNotificationToUser(io, sellerUserId).catch(() => {});
     }
     return res.json({ success: true, message: 'Invitation declined.', listingId });
   } catch (error) {
-    console.error('Error declining invitation:', error);
+    logger.error('Error declining invitation:', error);
     res.status(500).json({ error: 'Failed to decline invitation', message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error' });
   }
 });

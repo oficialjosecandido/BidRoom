@@ -49,9 +49,9 @@ async function autoSavePaymentMethodIfNew(buyerUid, session) {
     if (!pmId || typeof pmId !== 'string') return;
 
     await attachPaymentMethodToUser(buyerUid, pmId, { setAsDefault: true });
-    console.log(`${LOG_PREFIX} Auto-saved PM ${pmId} as default for buyer uid=${buyerUid?.slice(0, 8)}...`);
+    logger.info(`${LOG_PREFIX} Auto-saved PM ${pmId} as default for buyer uid=${buyerUid?.slice(0, 8)}...`);
   } catch (err) {
-    console.warn(`${LOG_PREFIX} Auto-save PM failed (non-critical):`, err.message);
+    logger.warn(`${LOG_PREFIX} Auto-save PM failed (non-critical):`, err.message);
   }
 }
 
@@ -98,7 +98,7 @@ function isOrphanedConnectAccountError(err) {
 async function clearStaleConnectAccount(user) {
   const staleId = user.stripeConnectAccountId;
   if (!staleId) return;
-  console.warn(`${LOG_PREFIX} Clearing stale Connect account ${staleId} for uid=${user.uid?.slice(0, 8)}...`);
+  logger.warn(`${LOG_PREFIX} Clearing stale Connect account ${staleId} for uid=${user.uid?.slice(0, 8)}...`);
   user.stripeConnectAccountId = null;
   user.stripeConnectOnboarded = false;
   await user.save();
@@ -336,7 +336,7 @@ router.post('/onboarding-link', requireActiveAccount, async (req, res) => {
       user.stripeConnectAccountId = accountId;
       user.stripeConnectOnboarded = false;
       await user.save();
-      console.log(`${LOG_PREFIX} Created Express account ${accountId} for uid=${user.uid?.slice(0, 8)}...`);
+      logger.info(`${LOG_PREFIX} Created Express account ${accountId} for uid=${user.uid?.slice(0, 8)}...`);
     }
 
     const settingsUrl = connectSettingsPath();
@@ -348,11 +348,11 @@ router.post('/onboarding-link', requireActiveAccount, async (req, res) => {
       type: linkType
     });
 
-    console.log(`${LOG_PREFIX} Onboarding link created uid=${user.uid?.slice(0, 8)} accountId=${accountId} type=${linkType}`);
+    logger.info(`${LOG_PREFIX} Onboarding link created uid=${user.uid?.slice(0, 8)} accountId=${accountId} type=${linkType}`);
     res.json({ url: link.url, accountId });
   } catch (err) {
     const isTestMode = isStripeTestMode();
-    console.error(`${LOG_PREFIX} Onboarding link error type=${err.type} message=${err.message}`);
+    logger.error(`${LOG_PREFIX} Onboarding link error type=${err.type} message=${err.message}`);
     res.status(500).json({
       error: 'Failed to start payout setup',
       message: err.message,
@@ -440,7 +440,7 @@ router.post('/submit-onboarding', requireActiveAccount, async (req, res) => {
       user.stripeConnectAccountId = accountId;
       await user.save();
       recreatedAccount = true;
-      console.log(`${LOG_PREFIX} Created Custom account ${accountId} for uid=${user.uid?.slice(0, 8)}...`);
+      logger.info(`${LOG_PREFIX} Created Custom account ${accountId} for uid=${user.uid?.slice(0, 8)}...`);
     } else {
       // Update existing account with fresh KYC details
       await stripe.accounts.update(accountId, {
@@ -455,7 +455,7 @@ router.post('/submit-onboarding', requireActiveAccount, async (req, res) => {
         },
         tos_acceptance: { date: tosTimestamp, ip }
       });
-      console.log(`${LOG_PREFIX} Updated Custom account ${accountId} for uid=${user.uid?.slice(0, 8)}...`);
+      logger.info(`${LOG_PREFIX} Updated Custom account ${accountId} for uid=${user.uid?.slice(0, 8)}...`);
     }
 
     // Add/replace external bank account (IBAN)
@@ -482,7 +482,7 @@ router.post('/submit-onboarding', requireActiveAccount, async (req, res) => {
           id_number: '000000000'
         }
       });
-      console.log(`${LOG_PREFIX} Test mode: applied magic DOB + id_number bypass for accountId=${accountId}`);
+      logger.info(`${LOG_PREFIX} Test mode: applied magic DOB + id_number bypass for accountId=${accountId}`);
     }
 
     // Retrieve fresh status to determine if Stripe has already enabled charges
@@ -495,11 +495,11 @@ router.post('/submit-onboarding', requireActiveAccount, async (req, res) => {
       await user.save();
     }
 
-    console.log(`${LOG_PREFIX} Onboarding submitted uid=${user.uid?.slice(0, 8)} accountId=${accountId} onboarded=${onboarded}`);
+    logger.info(`${LOG_PREFIX} Onboarding submitted uid=${user.uid?.slice(0, 8)} accountId=${accountId} onboarded=${onboarded}`);
     res.json({ onboarded, requiresVerification: !onboarded, accountId, recreatedAccount });
   } catch (err) {
     const isTestMode = isStripeTestMode();
-    console.error(`${LOG_PREFIX} Submit onboarding error type=${err.type} message=${err.message}`);
+    logger.error(`${LOG_PREFIX} Submit onboarding error type=${err.type} message=${err.message}`);
     // Platform key cannot manage Connect (not enabled, wrong account, etc.)
     if (err.type === 'StripePermissionError' && !isOrphanedConnectAccountError(err)) {
       return res.status(503).json({
@@ -563,10 +563,10 @@ router.post('/test-activate', requireActiveAccount, async (req, res) => {
     user.stripeConnectOnboarded = true; // force true in test mode
     await user.save();
 
-    console.log(`${LOG_PREFIX} Test activate uid=${user.uid?.slice(0, 8)} charges_enabled=${account.charges_enabled} details_submitted=${account.details_submitted}`);
+    logger.info(`${LOG_PREFIX} Test activate uid=${user.uid?.slice(0, 8)} charges_enabled=${account.charges_enabled} details_submitted=${account.details_submitted}`);
     res.json({ onboarded: true, chargesEnabled: account.charges_enabled, payoutsEnabled: account.payouts_enabled });
   } catch (err) {
-    console.error(`${LOG_PREFIX} Test activate error:`, err.message);
+    logger.error(`${LOG_PREFIX} Test activate error:`, err.message);
     if (isOrphanedConnectAccountError(err)) {
       return res.status(400).json({
         error: 'Payout account not found',
@@ -626,7 +626,7 @@ router.get('/account-status', async (req, res) => {
       requirementErrors: requirementErrors.length ? requirementErrors : undefined
     });
   } catch (err) {
-    console.error(`${LOG_PREFIX} Account status error:`, err.message);
+    logger.error(`${LOG_PREFIX} Account status error:`, err.message);
     if (isOrphanedConnectAccountError(err)) {
       const user = await Customer.findOne({ uid: req.user.uid }).select('stripeConnectAccountId stripeConnectOnboarded');
       if (user) await clearStaleConnectAccount(user);
@@ -655,7 +655,7 @@ router.post('/create-checkout-session', requireActiveAccount, async (req, res) =
     try {
       stripeCustomerId = await ensureStripeCustomer(stripe, buyer);
     } catch (custErr) {
-      console.warn(`${LOG_PREFIX} Could not ensure Stripe customer (non-critical):`, custErr.message);
+      logger.warn(`${LOG_PREFIX} Could not ensure Stripe customer (non-critical):`, custErr.message);
     }
 
     const { transactionId } = req.body;
@@ -690,13 +690,13 @@ router.post('/create-checkout-session', requireActiveAccount, async (req, res) =
 
         if (existingSession.status === 'open') {
           if (existingSession.url) {
-            console.log(`${LOG_PREFIX} Reusing open checkout session session_id=${existingSession.id} transaction=${transaction._id}`);
+            logger.info(`${LOG_PREFIX} Reusing open checkout session session_id=${existingSession.id} transaction=${transaction._id}`);
             return res.json({ url: existingSession.url });
           }
           try {
             await stripe.checkout.sessions.expire(transaction.stripeCheckoutSessionId);
           } catch (expireErr) {
-            console.warn(`${LOG_PREFIX} Could not expire open session without url:`, expireErr.message);
+            logger.warn(`${LOG_PREFIX} Could not expire open session without url:`, expireErr.message);
           }
           transaction.stripeCheckoutSessionId = null;
           await transaction.save();
@@ -850,7 +850,7 @@ router.post('/create-checkout-session', requireActiveAccount, async (req, res) =
         amount: sellerTransferCents   // explicit: seller gets item*0.96 + shipping
       };
     } else if (isTestMode) {
-      console.log(`${LOG_PREFIX} Test mode: skipping transfer_data — seller account not fully capable (transfers not active)`);
+      logger.info(`${LOG_PREFIX} Test mode: skipping transfer_data — seller account not fully capable (transfers not active)`);
     }
 
     const session = await stripe.checkout.sessions.create({
@@ -875,10 +875,10 @@ router.post('/create-checkout-session', requireActiveAccount, async (req, res) =
     transaction.commissionWaived   = waiverApplied;
     await transaction.save();
 
-    console.log(`${LOG_PREFIX} Checkout session created session_id=${session.id} transaction=${transaction._id} amount=$${(buyerTotalCents / 100).toFixed(2)}`);
+    logger.info(`${LOG_PREFIX} Checkout session created session_id=${session.id} transaction=${transaction._id} amount=$${(buyerTotalCents / 100).toFixed(2)}`);
     res.json({ url: session.url });
   } catch (err) {
-    console.error(`${LOG_PREFIX} Create checkout session error:`, err.message);
+    logger.error(`${LOG_PREFIX} Create checkout session error:`, err.message);
     res.status(500).json({ error: 'Failed to create checkout session', message: err.message });
   }
 });
@@ -968,12 +968,12 @@ router.post('/confirm-payment', requireActiveAccount, async (req, res) => {
         listingTitle: transaction.listing?.title || 'your listing',
         buyerName,
         sellerUserId: sellerMongoId
-      }).catch(err => console.error(`${LOG_PREFIX} Failed to create seller payment notification:`, err));
+      }).catch(err => logger.error(`${LOG_PREFIX} Failed to create seller payment notification:`, err));
       const io = req.app.get('io');
       if (io) emitNewNotificationToUser(io, sellerMongoId).catch(() => {});
     }
 
-    console.log(`${LOG_PREFIX} Payment confirmed transaction=${transactionId} pi=${paymentIntentId} status=paid`);
+    logger.info(`${LOG_PREFIX} Payment confirmed transaction=${transactionId} pi=${paymentIntentId} status=paid`);
 
     const updated = await Transaction.findById(transactionId)
       .populate('listing', 'title slug images status commissionRate shippingCost shippingOption')
@@ -983,7 +983,7 @@ router.post('/confirm-payment', requireActiveAccount, async (req, res) => {
 
     res.json(updated);
   } catch (err) {
-    console.error(`${LOG_PREFIX} Confirm payment error:`, err.message);
+    logger.error(`${LOG_PREFIX} Confirm payment error:`, err.message);
     res.status(500).json({ error: 'Failed to confirm payment', message: err.message });
   }
 });
@@ -1008,8 +1008,8 @@ function connectWebhookHandler(req, res) {
   ].filter(Boolean);
 
   if (secrets.length === 0) {
-    console.warn(`${LOG_PREFIX} No webhook secrets configured — skipping signature verification`);
-    return res.json({ received: true });
+    logger.error(`${LOG_PREFIX} Webhook secrets not configured — rejecting event`);
+    return res.status(500).json({ error: 'Webhook verification unavailable' });
   }
 
   let event;
@@ -1023,24 +1023,24 @@ function connectWebhookHandler(req, res) {
   }
 
   if (!event) {
-    console.error(`${LOG_PREFIX} Webhook signature verification failed against all configured secrets`);
+    logger.error(`${LOG_PREFIX} Webhook signature verification failed against all configured secrets`);
     return res.status(400).send('Webhook Error: signature verification failed');
   }
 
-  console.log(`${LOG_PREFIX} Webhook received type=${event.type} id=${event.id}`);
+  logger.info(`${LOG_PREFIX} Webhook received type=${event.type} id=${event.id}`);
 
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object;
     const io = req.app.get('io');
     handleCheckoutCompleted(session, stripe, io).catch(err =>
-      console.error(`${LOG_PREFIX} Webhook handleCheckoutCompleted error:`, err.message)
+      logger.error(`${LOG_PREFIX} Webhook handleCheckoutCompleted error:`, err.message)
     );
   }
 
   if (event.type === 'account.updated') {
     const account = event.data.object;
     handleAccountUpdated(account).catch(err =>
-      console.error(`${LOG_PREFIX} Webhook handleAccountUpdated error:`, err.message)
+      logger.error(`${LOG_PREFIX} Webhook handleAccountUpdated error:`, err.message)
     );
   }
 
@@ -1092,11 +1092,11 @@ async function handleCheckoutCompleted(session, stripe, io) {
       listingTitle: transaction.listing?.title || 'your listing',
       buyerName,
       sellerUserId: sellerMongoId
-    }).catch(err => console.error(`${LOG_PREFIX} Failed to create seller payment notification:`, err));
+    }).catch(err => logger.error(`${LOG_PREFIX} Failed to create seller payment notification:`, err));
     if (io) emitNewNotificationToUser(io, sellerMongoId).catch(() => {});
   }
 
-  console.log(`${LOG_PREFIX} Webhook: transaction ${transactionId} marked paid`);
+  logger.info(`${LOG_PREFIX} Webhook: transaction ${transactionId} marked paid`);
 }
 
 async function handleAccountUpdated(account) {
@@ -1111,7 +1111,7 @@ async function handleAccountUpdated(account) {
   user.stripeConnectOnboarded = onboarded;
   await user.save();
 
-  console.log(`${LOG_PREFIX} Account updated uid=${uid?.slice(0, 8)} onboarded=${onboarded}`);
+  logger.info(`${LOG_PREFIX} Account updated uid=${uid?.slice(0, 8)} onboarded=${onboarded}`);
 
   if (!wasOnboarded && onboarded) {
     // Account just got verified — notify the seller
@@ -1142,9 +1142,9 @@ async function sendAccountVerifiedEmail(user) {
   `;
   try {
     await sendEmail(user.email, subject, html);
-    console.log(`${LOG_PREFIX} Sent account verified email to uid=${user.uid?.slice(0, 8)}`);
+    logger.info(`${LOG_PREFIX} Sent account verified email to uid=${user.uid?.slice(0, 8)}`);
   } catch (err) {
-    console.error(`${LOG_PREFIX} Failed to send account verified email:`, err.message);
+    logger.error(`${LOG_PREFIX} Failed to send account verified email:`, err.message);
   }
 }
 
@@ -1167,9 +1167,9 @@ async function sendAccountVerificationFailedEmail(user, errors) {
   `;
   try {
     await sendEmail(user.email, subject, html);
-    console.log(`${LOG_PREFIX} Sent verification failed email to uid=${user.uid?.slice(0, 8)}`);
+    logger.info(`${LOG_PREFIX} Sent verification failed email to uid=${user.uid?.slice(0, 8)}`);
   } catch (err) {
-    console.error(`${LOG_PREFIX} Failed to send verification failed email:`, err.message);
+    logger.error(`${LOG_PREFIX} Failed to send verification failed email:`, err.message);
   }
 }
 
@@ -1201,7 +1201,7 @@ async function sendPaymentReceivedEmail(transaction) {
   try {
     await sendEmail(seller.email, subject, html);
   } catch (err) {
-    console.error(`${LOG_PREFIX} Failed to send payment received email:`, err.message);
+    logger.error(`${LOG_PREFIX} Failed to send payment received email:`, err.message);
   }
 }
 

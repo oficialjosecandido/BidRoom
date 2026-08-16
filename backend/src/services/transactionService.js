@@ -3,6 +3,7 @@ const Listing = require('../models/Listing');
 const Bid = require('../models/Bid');
 const Offer = require('../models/Offer');
 const { logTransactionCreated } = require('./bestOfferLogger');
+const logger = require('../utils/logger');
 
 const PAYMENT_WINDOW_MS = 24 * 60 * 60 * 1000;        // T+24h (regular auctions)
 const PR_PAYMENT_WINDOW_MS = 48 * 60 * 60 * 1000;     // T+48h (private rooms, per spec)
@@ -50,13 +51,13 @@ async function createTransactionForListing(listingId, opts = {}) {
       isPrivateRoom
     });
 
-    console.log(`✅ Transaction created for listing ${listingId}: ${transaction._id}`);
+    logger.info(`✅ Transaction created for listing ${listingId}: ${transaction._id}`);
     return transaction;
   } catch (error) {
     if (error.code === 11000) {
       return await Transaction.findOne({ listing: listingId });
     }
-    console.error('Error creating transaction for listing:', listingId, error);
+    logger.error('Error creating transaction for listing:', listingId, error);
     throw error;
   }
 }
@@ -95,14 +96,14 @@ async function createTransactionForAcceptedOffer(listingId, offerId) {
       paymentDeadline
     });
 
-    console.log(`✅ Transaction created for best-offer listing ${listingId}: ${transaction._id}`);
+    logger.info(`✅ Transaction created for best-offer listing ${listingId}: ${transaction._id}`);
     logTransactionCreated(transaction);
     return transaction;
   } catch (error) {
     if (error.code === 11000) {
       return await Transaction.findOne({ listing: listingId });
     }
-    console.error('Error creating transaction for accepted offer:', offerId, error);
+    logger.error('Error creating transaction for accepted offer:', offerId, error);
     throw error;
   }
 }
@@ -137,14 +138,14 @@ async function createTransactionForBuyNow(listingId, buyerUserId) {
       paymentDeadline
     });
 
-    console.log(`✅ Buy-Now transaction created for listing ${listingId}: ${transaction._id}`);
+    logger.info(`✅ Buy-Now transaction created for listing ${listingId}: ${transaction._id}`);
     logTransactionCreated(transaction);
     return transaction;
   } catch (error) {
     if (error.code === 11000) {
       return await Transaction.findOne({ listing: listingId });
     }
-    console.error('Error creating buy-now transaction for listing:', listingId, error);
+    logger.error('Error creating buy-now transaction for listing:', listingId, error);
     throw error;
   }
 }

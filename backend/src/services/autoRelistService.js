@@ -6,6 +6,7 @@
 
 const Listing = require('../models/Listing');
 const { notifyFollowersNewListing } = require('./notificationService');
+const logger = require('../utils/logger');
 
 const MAX_AUTO_RELISTS = 3;
 
@@ -40,7 +41,7 @@ async function processAutoRelists(io = null) {
     try {
       if ((listing.relistCount || 0) >= MAX_AUTO_RELISTS) {
         await Listing.updateOne({ _id: listing._id }, { $set: { autoRelist: false } });
-        console.log(`⏹  Auto-relist cap reached for listing ${listing._id}, disabled.`);
+        logger.info(`⏹  Auto-relist cap reached for listing ${listing._id}, disabled.`);
         continue;
       }
 
@@ -90,7 +91,7 @@ async function processAutoRelists(io = null) {
 
       await Listing.updateOne({ _id: listing._id }, { $set: { relistedAt: new Date() } });
 
-      console.log(`✅ Auto-relisted: ${listing._id} → ${newListing._id} (attempt ${newListing.relistCount})`);
+      logger.info(`✅ Auto-relisted: ${listing._id} → ${newListing._id} (attempt ${newListing.relistCount})`);
 
       notifyFollowersNewListing({
         sellerId: listing.seller._id,
@@ -100,7 +101,7 @@ async function processAutoRelists(io = null) {
         io
       }).catch(() => {});
     } catch (err) {
-      console.error(`❌ Auto-relist failed for listing ${listing._id}:`, err.message);
+      logger.error(`❌ Auto-relist failed for listing ${listing._id}:`, err.message);
     }
   }
 }

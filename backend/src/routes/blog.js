@@ -3,6 +3,7 @@ const router = express.Router();
 const BlogPost = require('../models/BlogPost');
 const { authenticateToken } = require('../middleware/auth');
 const { requireAdmin } = require('../utils/roles');
+const logger = require('../utils/logger');
 
 const OBJECT_ID_RE = /^[a-f\d]{24}$/i;
 const VALID_CATEGORIES = ['relogios', 'arte', 'mercado', 'guias', 'bidroom'];
@@ -50,7 +51,7 @@ router.get('/', async (req, res) => {
 
     res.json({ posts, total, page, pages: Math.ceil(total / limit) });
   } catch (error) {
-    console.error('Error listing blog posts:', error);
+    logger.error('Error listing blog posts:', error);
     res.status(500).json({ error: 'Failed to load blog posts' });
   }
 });
@@ -69,7 +70,7 @@ router.get('/:slug', async (req, res) => {
     }
     res.json({ post });
   } catch (error) {
-    console.error('Error loading blog post:', error);
+    logger.error('Error loading blog post:', error);
     res.status(500).json({ error: 'Failed to load blog post' });
   }
 });
@@ -85,7 +86,7 @@ router.get('/admin/all', authenticateToken, requireAdmin, async (req, res) => {
       .lean();
     res.json({ posts });
   } catch (error) {
-    console.error('Error listing admin blog posts:', error);
+    logger.error('Error listing admin blog posts:', error);
     res.status(500).json({ error: 'Failed to load posts' });
   }
 });
@@ -100,7 +101,7 @@ router.get('/admin/:id', authenticateToken, requireAdmin, async (req, res) => {
     if (!post) return res.status(404).json({ error: 'Post not found' });
     res.json({ post });
   } catch (error) {
-    console.error('Error loading admin blog post:', error);
+    logger.error('Error loading admin blog post:', error);
     res.status(500).json({ error: 'Failed to load post' });
   }
 });
@@ -142,7 +143,7 @@ router.post('/', authenticateToken, requireAdmin, async (req, res) => {
     if (error.code === 11000) {
       return res.status(409).json({ error: 'A post with this slug already exists' });
     }
-    console.error('Error creating blog post:', error);
+    logger.error('Error creating blog post:', error);
     res.status(500).json({ error: 'Failed to create blog post' });
   }
 });
@@ -189,7 +190,7 @@ router.put('/:id', authenticateToken, requireAdmin, async (req, res) => {
     if (error.code === 11000) {
       return res.status(409).json({ error: 'A post with this slug already exists' });
     }
-    console.error('Error updating blog post:', error);
+    logger.error('Error updating blog post:', error);
     res.status(500).json({ error: 'Failed to update blog post' });
   }
 });
@@ -204,7 +205,7 @@ router.delete('/:id', authenticateToken, requireAdmin, async (req, res) => {
     if (!post) return res.status(404).json({ error: 'Post not found' });
     res.json({ message: 'Post deleted' });
   } catch (error) {
-    console.error('Error deleting blog post:', error);
+    logger.error('Error deleting blog post:', error);
     res.status(500).json({ error: 'Failed to delete blog post' });
   }
 });

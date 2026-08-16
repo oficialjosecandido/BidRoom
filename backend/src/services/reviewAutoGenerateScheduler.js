@@ -11,6 +11,7 @@
 const Transaction = require('../models/Transaction');
 const Review = require('../models/Review');
 const Customer = require('../models/Customer');
+const logger = require('../utils/logger');
 
 const LOG_PREFIX = '[ReviewAutoGenerate]';
 const AUTO_REVIEW_DAYS = 5;
@@ -24,9 +25,9 @@ function startReviewAutoGenerateScheduler(intervalHours = 6, io = null) {
   if (_timer) return;
   const ms = intervalHours * 60 * 60 * 1000;
   // Initial run 2 minutes after startup
-  setTimeout(() => runAutoGenerate(io).catch(e => console.error(LOG_PREFIX, 'startup:', e.message)), 2 * 60 * 1000);
-  _timer = setInterval(() => runAutoGenerate(io).catch(e => console.error(LOG_PREFIX, 'interval:', e.message)), ms);
-  console.log(`${LOG_PREFIX} Scheduler started (every ${intervalHours}h, auto-review after ${AUTO_REVIEW_DAYS} days).`);
+  setTimeout(() => runAutoGenerate(io).catch(e => logger.error(LOG_PREFIX, 'startup:', e.message)), 2 * 60 * 1000);
+  _timer = setInterval(() => runAutoGenerate(io).catch(e => logger.error(LOG_PREFIX, 'interval:', e.message)), ms);
+  logger.info(`${LOG_PREFIX} Scheduler started (every ${intervalHours}h, auto-review after ${AUTO_REVIEW_DAYS} days).`);
 }
 
 function stopReviewAutoGenerateScheduler() {
@@ -99,14 +100,14 @@ async function runAutoGenerate(io) {
         created++;
       } catch (err) {
         if (err.code !== 11000) {
-          console.error(LOG_PREFIX, `Failed to create auto-review for tx ${tx._id}:`, err.message);
+          logger.error(LOG_PREFIX, `Failed to create auto-review for tx ${tx._id}:`, err.message);
         }
       }
     }
   }
 
   if (created > 0) {
-    console.log(`${LOG_PREFIX} Auto-generated ${created} reviews for ${transactions.length} transactions.`);
+    logger.info(`${LOG_PREFIX} Auto-generated ${created} reviews for ${transactions.length} transactions.`);
   }
 }
 

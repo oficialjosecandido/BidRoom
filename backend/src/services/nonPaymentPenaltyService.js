@@ -25,6 +25,7 @@ const {
   notifySellerBuyerNonPayment,
   emitNewNotificationToUser
 } = require('./notificationService');
+const logger = require('../utils/logger');
 
 const DURATION_MS = {
   '5 minutes': 5 * 60 * 1000,
@@ -74,7 +75,7 @@ async function processAllNonPayments(io = null) {
     try {
       await handleNonPayment(tx, now, io);
     } catch (err) {
-      console.error(`${LOG} Processing failed for tx ${tx._id}:`, err.message);
+      logger.error(`${LOG} Processing failed for tx ${tx._id}:`, err.message);
     }
   }
 }
@@ -96,7 +97,7 @@ async function handleNonPayment(tx, now, io) {
   let penaltyPoints = 20;
 
   await createNonPaymentPlatformReview(buyerId, listingId).catch(err =>
-    console.error(`${LOG} Platform review creation error:`, err.message)
+    logger.error(`${LOG} Platform review creation error:`, err.message)
   );
 
   if (buyer) {
@@ -104,7 +105,7 @@ async function handleNonPayment(tx, now, io) {
     await buyer.save();
     // Recalculate AFTER the platform review is created so it's included in the score
     await recalculateReputation(buyerId).catch(err =>
-      console.error(`${LOG} recalculateReputation error:`, err.message)
+      logger.error(`${LOG} recalculateReputation error:`, err.message)
     );
 
     if (buyer.nonPaymentCount >= NON_PAYMENT_BAN_THRESHOLD) {
@@ -119,7 +120,7 @@ async function handleNonPayment(tx, now, io) {
   if (hasSavedMethod) {
     const seller = await Customer.findById(sellerId).select('stripeConnectAccountId stripeConnectOnboarded').lean();
     stripeChargedCents = await chargeNonPaymentPenalty(buyer, seller, tx).catch(err => {
-      console.error(`${LOG} Stripe penalty charge failed for tx ${tx._id}:`, err.message);
+      logger.error(`${LOG} Stripe penalty charge failed for tx ${tx._id}:`, err.message);
       return 0;
     });
   }
@@ -138,7 +139,7 @@ async function handleNonPayment(tx, now, io) {
 
   // ── Step 4: Auto-relist with same conditions ──────────────────────────────────
   await relistAfterNonPayment(listingId, sellerId, tx.listing?.title, io).catch(err =>
-    console.error(`${LOG} Auto-relist failed for listing ${listingId}:`, err.message)
+    logger.error(`${LOG} Auto-relist failed for listing ${listingId}:`, err.message)
   );
 
   // ── Step 5: Notifications ─────────────────────────────────────────────────────
@@ -167,7 +168,7 @@ async function handleNonPayment(tx, now, io) {
     io && sellerId ? emitNewNotificationToUser(io, sellerId).catch(() => {}) : Promise.resolve()
   ]);
 
-  console.log(`${LOG} Non-payment processed: tx=${tx._id} buyer=${buyerId} penalty=${penaltyPoints}pts stripeCharged=${stripeChargedCents}cts`);
+  logger.info(`${LOG} Non-payment processed: tx=${tx._id} buyer=${buyerId} penalty=${penaltyPoints}pts stripeCharged=${stripeChargedCents}cts`);
 }
 
 /**
@@ -187,7 +188,7 @@ async function createNonPaymentPlatformReview(buyerId, listingId) {
       tags: ['non_payment'],
       description: 'Não pagamento confirmado pela BidRoom.',
     });
-    console.log(`${LOG} Platform review (2/5) created for buyer ${buyerId}`);
+    logger.info(`${LOG} Platform review (2/5) created for buyer ${buyerId}`);
   } catch (err) {
     if (err.code === 11000) return; // already exists — idempotent
     throw err;
@@ -256,7 +257,7 @@ async function relistAfterNonPayment(listingId, sellerId, listingTitle, io) {
   });
 
   await Listing.updateOne({ _id: listingId }, { $set: { relistedAt: new Date() } });
-  console.log(`${LOG} Auto-relisted: ${listingId} → ${newListing._id}`);
+  logger.info(`${LOG} Auto-relisted: ${listingId} → ${newListing._id}`);
 
   const { notifyFollowersNewListing } = require('./notificationService');
   notifyFollowersNewListing({
@@ -277,7 +278,7 @@ async function relistAfterNonPayment(listingId, sellerId, listingTitle, io) {
 async function chargeNonPaymentPenalty(buyer, seller, tx) {
   const stripe = getStripe();
   if (!stripe) {
-    console.warn(`${LOG} Stripe not configured — skipping penalty charge for tx ${tx._id}`);
+    logger.warn(`${LOG} Stripe not configured — skipping penalty charge for tx ${tx._id}`);
     return 0;
   }
 
@@ -307,7 +308,7 @@ async function chargeNonPaymentPenalty(buyer, seller, tx) {
   }
 
   const pi = await stripe.paymentIntents.create(piParams);
-  console.log(`${LOG} Penalty charged: pi=${pi.id} total=€${PENALTY_TOTAL_CENTS / 100} sellerSplit=${sellerHasConnect ? '€10' : '€0 (no connect)'}`);
+  logger.info(`${LOG} Penalty charged: pi=${pi.id} total=€${PENALTY_TOTAL_CENTS / 100} sellerSplit=${sellerHasConnect ? '€10' : '€0 (no connect)'}`);
   return PENALTY_TOTAL_CENTS;
 }
 
@@ -334,9 +335,9 @@ async function applyNonPaymentBan(buyer, tx, io) {
     );
 
     if (io) await emitNewNotificationToUser(io, buyer._id).catch(() => {});
-    console.log(`${LOG} Buyer banned for repeat non-payment: ${buyer._id} (${buyer.nonPaymentCount} offenses)`);
+    logger.info(`${LOG} Buyer banned for repeat non-payment: ${buyer._id} (${buyer.nonPaymentCount} offenses)`);
   } catch (err) {
-    console.error(`${LOG} applyNonPaymentBan error:`, err.message);
+    logger.error(`${LOG} applyNonPaymentBan error:`, err.message);
   }
 }
 

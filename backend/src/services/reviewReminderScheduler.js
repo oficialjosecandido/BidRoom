@@ -14,6 +14,7 @@
 const Transaction = require('../models/Transaction');
 const Review      = require('../models/Review');
 const { notifyReviewReminder } = require('./notificationService');
+const logger = require('../utils/logger');
 
 const LOG_PREFIX = '[ReviewReminder]';
 const BATCH_LIMIT = 200;
@@ -33,9 +34,9 @@ function startReviewReminderScheduler(intervalMinutes = 30, io = null) {
   if (_timer) return;
   const ms = intervalMinutes * 60 * 1000;
   // First run 3 minutes after startup so the DB is fully warmed up.
-  setTimeout(() => run(io).catch(e => console.error(LOG_PREFIX, 'startup:', e.message)), 3 * 60 * 1000);
-  _timer = setInterval(() => run(io).catch(e => console.error(LOG_PREFIX, 'interval:', e.message)), ms);
-  console.log(`${LOG_PREFIX} Scheduler started (every ${intervalMinutes}min).`);
+  setTimeout(() => run(io).catch(e => logger.error(LOG_PREFIX, 'startup:', e.message)), 3 * 60 * 1000);
+  _timer = setInterval(() => run(io).catch(e => logger.error(LOG_PREFIX, 'interval:', e.message)), ms);
+  logger.info(`${LOG_PREFIX} Scheduler started (every ${intervalMinutes}min).`);
 }
 
 function stopReviewReminderScheduler() {
@@ -115,13 +116,13 @@ async function run(io) {
 
         sent++;
       } catch (err) {
-        console.error(`${LOG_PREFIX} Failed to send ${milestone.key} reminder for tx ${tx._id}:`, err.message);
+        logger.error(`${LOG_PREFIX} Failed to send ${milestone.key} reminder for tx ${tx._id}:`, err.message);
       }
     }
   }
 
   if (sent > 0) {
-    console.log(`${LOG_PREFIX} Sent ${sent} review reminder notification(s).`);
+    logger.info(`${LOG_PREFIX} Sent ${sent} review reminder notification(s).`);
   }
 }
 

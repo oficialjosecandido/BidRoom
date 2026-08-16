@@ -6,6 +6,7 @@ const { scanImages } = require('../services/contentSafetyService');
 const { recordViolation } = require('../services/contentViolationService');
 const { appendModerationAudit } = require('../services/moderationAuditService');
 const Customer = require('../models/Customer');
+const logger = require('../utils/logger');
 
 const router = express.Router();
 
@@ -121,7 +122,7 @@ router.post('/', authenticateToken, requireActiveAccount, upload.array('images',
         if (currentUser) {
           // Escalating penalty: warning → temp restriction → suspension
           recordViolation(currentUser, 'inappropriate_image').catch(err =>
-            console.error('recordViolation (image) error:', err.message)
+            logger.error('recordViolation (image) error:', err.message)
           );
           appendModerationAudit({
             subjectUserId: currentUser._id,
@@ -155,7 +156,7 @@ router.post('/', authenticateToken, requireActiveAccount, upload.array('images',
         }
       }
     } catch (scanErr) {
-      console.error('Content safety scan error (non-blocking):', scanErr.message);
+      logger.error('Content safety scan error (non-blocking):', scanErr.message);
       // Scan failure is non-fatal — availability is preserved; monitoring should alert on repeated errors
     }
 
@@ -169,7 +170,7 @@ router.post('/', authenticateToken, requireActiveAccount, upload.array('images',
       count: urls.length
     });
   } catch (error) {
-    console.error('Error uploading images:', error);
+    logger.error('Error uploading images:', error);
     res.status(500).json({
       error: 'Failed to upload images',
       message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
@@ -209,7 +210,7 @@ router.post('/proof-of-payment', authenticateToken, (req, res, next) => {
 
     res.json({ url });
   } catch (error) {
-    console.error('Error uploading proof of payment:', error);
+    logger.error('Error uploading proof of payment:', error);
     res.status(500).json({
       error: 'Failed to upload file',
       message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
@@ -267,7 +268,7 @@ router.post('/dispute-evidence', authenticateToken, (req, res, next) => {
     );
     res.json({ url });
   } catch (error) {
-    console.error('Error uploading dispute evidence:', error);
+    logger.error('Error uploading dispute evidence:', error);
     res.status(500).json({
       error: 'Upload failed',
       message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
@@ -304,7 +305,7 @@ router.post('/proof-of-delivery', authenticateToken, (req, res, next) => {
     );
     res.json({ url });
   } catch (error) {
-    console.error('Error uploading proof of delivery:', error);
+    logger.error('Error uploading proof of delivery:', error);
     res.status(500).json({ error: 'Failed to upload file', message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error' });
   }
 });
@@ -332,7 +333,7 @@ router.delete('/', authenticateToken, async (req, res) => {
       message: 'Images deleted successfully'
     });
   } catch (error) {
-    console.error('Error deleting images:', error);
+    logger.error('Error deleting images:', error);
     res.status(500).json({
       error: 'Failed to delete images',
       message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'

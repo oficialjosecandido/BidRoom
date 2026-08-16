@@ -4,6 +4,7 @@ const Listing = require('../models/Listing');
 const Customer = require('../models/Customer');
 const { authenticateToken } = require('../middleware/auth');
 const { notifyItemAddedToWatchlist, emitNewNotificationToUser } = require('../services/notificationService');
+const logger = require('../utils/logger');
 
 const router = express.Router();
 
@@ -42,7 +43,7 @@ router.post('/', async (req, res) => {
         listingTitle: listing.title || 'your listing',
         watcherName,
         sellerUserId
-      }).catch(err => console.error('Failed to create watchlist notification:', err));
+      }).catch(err => logger.error('Failed to create watchlist notification:', err));
       const io = req.app.get('io');
       if (io) emitNewNotificationToUser(io, sellerUserId).catch(() => {});
     }
@@ -51,7 +52,7 @@ router.post('/', async (req, res) => {
     if (error.code === 11000) {
       return res.json({ success: true, message: 'Already in watchlist', inWatchlist: true });
     }
-    console.error('Error adding to watchlist:', error);
+    logger.error('Error adding to watchlist:', error);
     res.status(500).json({ error: 'Failed to add to watchlist', message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error' });
   }
 });
@@ -71,7 +72,7 @@ router.delete('/:listingId', async (req, res) => {
     }
     res.json({ success: true, message: 'Removed from watchlist', inWatchlist: false });
   } catch (error) {
-    console.error('Error removing from watchlist:', error);
+    logger.error('Error removing from watchlist:', error);
     res.status(500).json({ error: 'Failed to remove from watchlist', message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error' });
   }
 });
@@ -101,7 +102,7 @@ router.get('/', async (req, res) => {
 
     res.json({ watchlist: listings, total: listings.length });
   } catch (error) {
-    console.error('Error fetching watchlist:', error);
+    logger.error('Error fetching watchlist:', error);
     res.status(500).json({ error: 'Failed to fetch watchlist', message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error' });
   }
 });
@@ -118,7 +119,7 @@ router.get('/check/:listingId', async (req, res) => {
     const entry = await Watchlist.findOne({ user: user._id, listing: listingId });
     res.json({ inWatchlist: !!entry });
   } catch (error) {
-    console.error('Error checking watchlist:', error);
+    logger.error('Error checking watchlist:', error);
     res.json({ inWatchlist: false });
   }
 });

@@ -2,6 +2,7 @@ const express = require('express');
 const Block = require('../models/Block');
 const Customer = require('../models/Customer');
 const { authenticateToken, requireActiveAccount } = require('../middleware/auth');
+const logger = require('../utils/logger');
 
 const router = express.Router();
 
@@ -27,7 +28,7 @@ router.post('/:userId', authenticateToken, requireActiveAccount, async (req, res
     res.json({ blocked: true, userId: req.params.userId });
   } catch (err) {
     if (err.code === 11000) return res.json({ blocked: true, userId: req.params.userId });
-    console.error('Error blocking user:', err);
+    logger.error('Error blocking user:', err);
     res.status(500).json({ error: 'Failed to block user' });
   }
 });
@@ -41,7 +42,7 @@ router.delete('/:userId', authenticateToken, async (req, res) => {
     await Block.deleteOne({ blocker: blocker._id, blocked: req.params.userId });
     res.json({ blocked: false, userId: req.params.userId });
   } catch (err) {
-    console.error('Error unblocking user:', err);
+    logger.error('Error unblocking user:', err);
     res.status(500).json({ error: 'Failed to unblock user' });
   }
 });
@@ -55,7 +56,7 @@ router.get('/status/:userId', authenticateToken, async (req, res) => {
     const entry = await Block.findOne({ blocker: blocker._id, blocked: req.params.userId }).lean();
     res.json({ blocked: !!entry, userId: req.params.userId });
   } catch (err) {
-    console.error('Error checking block status:', err);
+    logger.error('Error checking block status:', err);
     res.json({ blocked: false });
   }
 });
@@ -79,7 +80,7 @@ router.get('/', authenticateToken, async (req, res) => {
       }))
     });
   } catch (err) {
-    console.error('Error fetching blocked users:', err);
+    logger.error('Error fetching blocked users:', err);
     res.status(500).json({ error: 'Failed to fetch blocked users' });
   }
 });

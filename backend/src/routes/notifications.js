@@ -5,6 +5,7 @@ const Notification = require('../models/Notification');
 const Customer = require('../models/Customer');
 const NotificationPreferences = require('../models/NotificationPreferences');
 const { authenticateToken } = require('../middleware/auth');
+const logger = require('../utils/logger');
 
 const router = express.Router();
 
@@ -53,7 +54,7 @@ router.get('/', authenticateToken, async (req, res) => {
       unreadCount
     });
   } catch (error) {
-    console.error('Error fetching notifications:', error);
+    logger.error('Error fetching notifications:', error);
     res.status(500).json({
       error: 'Failed to fetch notifications',
       message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
@@ -83,7 +84,7 @@ router.get('/unread-count', authenticateToken, async (req, res) => {
 
     res.json({ unreadCount: count });
   } catch (error) {
-    console.error('Error fetching unread count:', error);
+    logger.error('Error fetching unread count:', error);
     res.status(500).json({
       error: 'Failed to fetch unread count',
       message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
@@ -116,7 +117,7 @@ router.patch('/read-all', authenticateToken, async (req, res) => {
 
     res.json({ modifiedCount: result.modifiedCount });
   } catch (error) {
-    console.error('Error marking all notifications as read:', error);
+    logger.error('Error marking all notifications as read:', error);
     res.status(500).json({
       error: 'Failed to mark notifications as read',
       message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
@@ -144,7 +145,7 @@ router.patch('/:id/read', authenticateToken, async (req, res) => {
 
     res.json(notification);
   } catch (error) {
-    console.error('Error marking notification as read:', error);
+    logger.error('Error marking notification as read:', error);
     res.status(500).json({
       error: 'Failed to mark notification as read',
       message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
@@ -183,7 +184,7 @@ router.get('/preferences', authenticateToken, async (req, res) => {
     }
     res.json(prefs);
   } catch (err) {
-    console.error('GET /preferences error:', err);
+    logger.error('GET /preferences error:', err);
     res.status(500).json({ error: 'Failed to load preferences' });
   }
 });
@@ -219,7 +220,7 @@ router.patch('/preferences', authenticateToken, async (req, res) => {
     );
     res.json(prefs);
   } catch (err) {
-    console.error('PATCH /preferences error:', err);
+    logger.error('PATCH /preferences error:', err);
     res.status(500).json({ error: 'Failed to save preferences' });
   }
 });
@@ -244,7 +245,7 @@ router.get('/unsubscribe', unsubscribeLimiter, async (req, res) => {
     );
     res.json({ success: true });
   } catch (err) {
-    console.error('GET /unsubscribe error:', err);
+    logger.error('GET /unsubscribe error:', err);
     res.status(500).json({ error: 'Failed to process unsubscribe request' });
   }
 });

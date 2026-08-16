@@ -1,4 +1,5 @@
 const ModerationAuditLog = require('../models/ModerationAuditLog');
+const logger = require('../utils/logger');
 
 /**
  * @param {object} params
@@ -20,7 +21,7 @@ async function appendModerationAudit(params) {
       ip: params.ip || null
     });
   } catch (e) {
-    console.error('appendModerationAudit failed:', e.message);
+    logger.error('appendModerationAudit failed:', e.message);
   }
 }
 

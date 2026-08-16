@@ -5,6 +5,7 @@ const { getTrustBadges } = require('../services/reputationService');
 const { getReviewScoresForUser } = require('../services/reviewService');
 const { sendPasswordReset } = require('../services/emailService');
 const admin = require('../config/firebaseAdmin');
+const logger = require('../utils/logger');
 
 // Per-email rate limiting for sensitive auth operations.
 // Keyed by normalised email; entries expire after the window.
@@ -35,7 +36,7 @@ setInterval(() => {
 const CONFIGURED_FRONTEND_URL = process.env.FRONTEND_URL;
 if (!CONFIGURED_FRONTEND_URL || CONFIGURED_FRONTEND_URL.includes('localhost')) {
   if (process.env.NODE_ENV === 'production') {
-    console.warn('[Auth] WARNING: FRONTEND_URL is not set or points to localhost in production. Password reset links will be broken. Set FRONTEND_URL in Azure App Service Configuration.');
+    logger.warn('[Auth] WARNING: FRONTEND_URL is not set or points to localhost in production. Password reset links will be broken. Set FRONTEND_URL in Azure App Service Configuration.');
   }
 }
 
@@ -87,7 +88,7 @@ router.get('/customer', authenticateToken, async (req, res) => {
       reputationScore: dbUser.reputationScore ?? 100
     });
   } catch (error) {
-    console.error('Error fetching customer:', error);
+    logger.error('Error fetching customer:', error);
     res.status(500).json({
       error: 'Failed to load customer information',
       message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
@@ -132,14 +133,14 @@ router.post('/forgot-password', async (req, res) => {
 
     await sendPasswordReset(email.toLowerCase().trim(), user?.firstName || 'there', resetUrl);
 
-    console.log(`[Auth] Password reset email sent to ${email}`);
+    logger.info(`[Auth] Password reset email sent to ${email}`);
     res.json({ success: true });
   } catch (err) {
     if (err.code === 'auth/user-not-found' || err.code === 'auth/invalid-email') {
       // Security: don't reveal whether this email is registered
       return res.json({ success: true });
     }
-    console.error('[Auth] Forgot password error:', err.message);
+    logger.error('[Auth] Forgot password error:', err.message);
     res.status(500).json({ error: 'Failed to send reset email. Please try again.' });
   }
 });
@@ -190,7 +191,7 @@ router.post('/login-failure', async (req, res) => {
       retryAfterMs: locked ? LOGIN_LOCKOUT_MS : null
     });
   } catch (err) {
-    console.error('[Auth] login-failure error:', err.message);
+    logger.error('[Auth] login-failure error:', err.message);
     res.status(500).json({ error: 'Internal error' });
   }
 });

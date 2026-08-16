@@ -6,7 +6,7 @@ class AzureStorageService {
     const containerName = process.env.AZURE_STORAGE_CONTAINER_NAME || 'listing-images';
 
     if (!connectionString) {
-      console.warn('⚠️  AZURE_STORAGE_CONNECTION_STRING not set. Image uploads will fail.');
+      logger.warn('⚠️  AZURE_STORAGE_CONNECTION_STRING not set. Image uploads will fail.');
       this.blobServiceClient = null;
       this.containerClient = null;
     } else {
@@ -25,14 +25,14 @@ class AzureStorageService {
     try {
       const exists = await this.containerClient.exists();
       if (!exists) {
-        console.log(`Creating container: ${this.containerName}`);
+        logger.info(`Creating container: ${this.containerName}`);
         await this.containerClient.create({
           access: 'blob' // Allow public read access to blobs
         });
-        console.log(`✅ Container ${this.containerName} created successfully`);
+        logger.info(`✅ Container ${this.containerName} created successfully`);
       }
     } catch (error) {
-      console.error('Error ensuring container exists:', error);
+      logger.error('Error ensuring container exists:', error);
     }
   }
 
@@ -44,6 +44,7 @@ class AzureStorageService {
    */
   generateBlobName(originalFilename, mimetype) {
     const uuid = require('uuid').v4();
+const logger = require('../utils/logger');
     const extension = this.getFileExtension(originalFilename, mimetype);
     const sanitizedOriginal = originalFilename
       .replace(/[^a-zA-Z0-9.-]/g, '-')
@@ -224,7 +225,7 @@ class AzureStorageService {
       const blockBlobClient = this.containerClient.getBlockBlobClient(blobName);
       await blockBlobClient.delete();
     } catch (error) {
-      console.error('Error deleting blob:', error);
+      logger.error('Error deleting blob:', error);
     }
   }
 
@@ -244,7 +245,7 @@ class AzureStorageService {
       const blockBlobClient = this.containerClient.getBlockBlobClient(blobName);
       await blockBlobClient.deleteIfExists();
     } catch (error) {
-      console.error(`Error deleting blob "${blobName}":`, error);
+      logger.error(`Error deleting blob "${blobName}":`, error);
     }
   }
 

@@ -14,6 +14,7 @@
 const Listing  = require('../models/Listing');
 const Customer = require('../models/Customer');
 const { notifyPayoutSetupReminder } = require('./notificationService');
+const logger = require('../utils/logger');
 
 const LOG_PREFIX  = '[PayoutReminder]';
 const BATCH_LIMIT = 500;
@@ -25,9 +26,9 @@ function startPayoutSetupReminderScheduler(intervalHours = 24, io = null) {
   if (_timer) return;
   const ms = intervalHours * 60 * 60 * 1000;
   // First run 5 minutes after startup.
-  setTimeout(() => run(io).catch(e => console.error(LOG_PREFIX, 'startup:', e.message)), 5 * 60 * 1000);
-  _timer = setInterval(() => run(io).catch(e => console.error(LOG_PREFIX, 'interval:', e.message)), ms);
-  console.log(`${LOG_PREFIX} Scheduler started (every ${intervalHours}h).`);
+  setTimeout(() => run(io).catch(e => logger.error(LOG_PREFIX, 'startup:', e.message)), 5 * 60 * 1000);
+  _timer = setInterval(() => run(io).catch(e => logger.error(LOG_PREFIX, 'interval:', e.message)), ms);
+  logger.info(`${LOG_PREFIX} Scheduler started (every ${intervalHours}h).`);
 }
 
 function stopPayoutSetupReminderScheduler() {
@@ -63,12 +64,12 @@ async function run(io) {
       await Customer.updateOne({ _id: seller._id }, { payoutReminderLastSentAt: new Date() });
       sent++;
     } catch (err) {
-      console.error(`${LOG_PREFIX} Failed to notify seller ${seller._id}:`, err.message);
+      logger.error(`${LOG_PREFIX} Failed to notify seller ${seller._id}:`, err.message);
     }
   }
 
   if (sent > 0) {
-    console.log(`${LOG_PREFIX} Sent ${sent} payout setup reminder(s).`);
+    logger.info(`${LOG_PREFIX} Sent ${sent} payout setup reminder(s).`);
   }
 }
 

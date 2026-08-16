@@ -19,6 +19,7 @@ const Customer = require('../models/Customer');
 const Transaction = require('../models/Transaction');
 const { sendEmail } = require('./emailService');
 const { notifyDsaWarning, notifyDsaSuspectedProfessional, emitNewNotificationToUser } = require('./notificationService');
+const logger = require('../utils/logger');
 
 const SALES_THRESHOLD_EUR = 2000;
 const TX_COUNT_THRESHOLD = 30;
@@ -86,15 +87,15 @@ async function checkDsaCompliance() {
           annualSalesEur: stats.totalSalesEur,
           annualTransactionCount: stats.txCount,
           io: ioInstance
-        }).catch(err => console.error(`${LOG_PREFIX} notify warning failed for ${uid}:`, err.message));
+        }).catch(err => logger.error(`${LOG_PREFIX} notify warning failed for ${uid}:`, err.message));
         if (ioInstance) emitNewNotificationToUser(ioInstance, uid).catch(() => {});
 
         // Send email
         await sendDsaWarningEmail(seller, stats).catch(err =>
-          console.error(`${LOG_PREFIX} email warning failed for ${seller.email}:`, err.message)
+          logger.error(`${LOG_PREFIX} email warning failed for ${seller.email}:`, err.message)
         );
 
-        console.log(`${LOG_PREFIX} Warning issued to seller ${uid} (€${Math.round(stats.totalSalesEur)}, ${stats.txCount} tx)`);
+        logger.info(`${LOG_PREFIX} Warning issued to seller ${uid} (€${Math.round(stats.totalSalesEur)}, ${stats.txCount} tx)`);
 
       } else if (gracePassed && !acknowledged && !alreadyFlagged) {
         // Grace period expired with no response — flag as suspected professional
@@ -104,15 +105,15 @@ async function checkDsaCompliance() {
         await Customer.updateOne({ _id: seller._id }, { $set: updateFields });
 
         await notifyDsaSuspectedProfessional({ userId: uid, io: ioInstance }).catch(err =>
-          console.error(`${LOG_PREFIX} notify flagged failed for ${uid}:`, err.message)
+          logger.error(`${LOG_PREFIX} notify flagged failed for ${uid}:`, err.message)
         );
         if (ioInstance) emitNewNotificationToUser(ioInstance, uid).catch(() => {});
 
-        console.log(`${LOG_PREFIX} Flagged seller ${uid} as suspected_professional after grace period`);
+        logger.info(`${LOG_PREFIX} Flagged seller ${uid} as suspected_professional after grace period`);
       }
     }
   } catch (err) {
-    console.error(`${LOG_PREFIX} Error during compliance check:`, err.message);
+    logger.error(`${LOG_PREFIX} Error during compliance check:`, err.message);
   }
 }
 
@@ -167,7 +168,7 @@ function startDsaComplianceScheduler(intervalHours = 24, io = null) {
     checkInterval = setInterval(checkDsaCompliance, intervalHours * 60 * 60 * 1000);
   }, 5 * 60 * 1000);
 
-  console.log(`⚖️  DSA compliance scheduler started (interval: every ${intervalHours}h)`);
+  logger.info(`⚖️  DSA compliance scheduler started (interval: every ${intervalHours}h)`);
 }
 
 function stopDsaComplianceScheduler() {

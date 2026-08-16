@@ -22,6 +22,7 @@ const {
   notifySecondBidderSecondChance,
   emitNewNotificationToUser
 } = require('./notificationService');
+const logger = require('../utils/logger');
 
 const SECOND_CHANCE_WINDOW_MS = 24 * 60 * 60 * 1000; // 24h for second-chance bidder
 const WARNING_BEFORE_MS = 60 * 60 * 1000;             // Send warning 1h before deadline
@@ -56,7 +57,7 @@ async function sendPaymentDeadlineWarnings(io = null) {
       });
       if (io) await emitNewNotificationToUser(io, tx.buyer).catch(() => {});
     } catch (err) {
-      console.error(`Warning notification failed for tx ${tx._id}:`, err.message);
+      logger.error(`Warning notification failed for tx ${tx._id}:`, err.message);
     }
   }
 }
@@ -81,7 +82,7 @@ async function processPrivateRoomNonPayments(io = null) {
     try {
       await handleNonPayment(tx, now, io);
     } catch (err) {
-      console.error(`Non-payment processing failed for tx ${tx._id}:`, err.message);
+      logger.error(`Non-payment processing failed for tx ${tx._id}:`, err.message);
     }
   }
 }
@@ -104,7 +105,7 @@ async function handleNonPayment(tx, now, io) {
     buyer.nonPaymentCount = (buyer.nonPaymentCount || 0) + 1;
     await buyer.save();
     await recalculateReputation(originalBuyerId).catch(err =>
-      console.error('recalculateReputation error:', err.message)
+      logger.error('recalculateReputation error:', err.message)
     );
 
     // Notify buyer of penalty
@@ -235,7 +236,7 @@ async function applyNonPaymentBan(buyer, tx, io) {
 
     if (io) await emitNewNotificationToUser(io, buyer._id).catch(() => {});
   } catch (err) {
-    console.error('applyNonPaymentBan error:', err.message);
+    logger.error('applyNonPaymentBan error:', err.message);
   }
 }
 

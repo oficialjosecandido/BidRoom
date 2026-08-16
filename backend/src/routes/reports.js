@@ -5,6 +5,7 @@ const Report = require('../models/Report');
 const Listing = require('../models/Listing');
 const Customer = require('../models/Customer');
 const { createNotification } = require('../services/notificationService');
+const logger = require('../utils/logger');
 
 const router = express.Router();
 
@@ -65,7 +66,7 @@ router.post('/', authenticateToken, async (req, res) => {
     if (err.code === 11000) {
       return res.status(409).json({ error: 'You have already reported this item.' });
     }
-    console.error('POST /api/reports error:', err);
+    logger.error('POST /api/reports error:', err);
     return res.status(500).json({ error: 'Failed to submit report.' });
   }
 });

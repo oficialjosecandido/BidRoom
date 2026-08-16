@@ -3,6 +3,7 @@
 const ListingDraft = require('../models/ListingDraft');
 const { sendEmail }  = require('./emailService');
 const { getEmailTemplate, getUserLanguage } = require('./emailTemplates');
+const logger = require('../utils/logger');
 
 const LOG_PREFIX  = '[DraftReminder]';
 const BATCH_LIMIT = 100;
@@ -13,9 +14,9 @@ let _timer = null;
 function startDraftReminderScheduler(intervalMinutes = 60) {
   if (_timer) return;
   const ms = intervalMinutes * 60 * 1000;
-  setTimeout(() => run().catch(e => console.error(LOG_PREFIX, 'startup:', e.message)), 5 * 60 * 1000);
-  _timer = setInterval(() => run().catch(e => console.error(LOG_PREFIX, 'interval:', e.message)), ms);
-  console.log(`${LOG_PREFIX} Scheduler started (every ${intervalMinutes}min).`);
+  setTimeout(() => run().catch(e => logger.error(LOG_PREFIX, 'startup:', e.message)), 5 * 60 * 1000);
+  _timer = setInterval(() => run().catch(e => logger.error(LOG_PREFIX, 'interval:', e.message)), ms);
+  logger.info(`${LOG_PREFIX} Scheduler started (every ${intervalMinutes}min).`);
 }
 
 function stopDraftReminderScheduler() {
@@ -39,7 +40,7 @@ async function run() {
     .lean();
 
   if (!staleDrafts.length) return;
-  console.log(`${LOG_PREFIX} Sending reminders for ${staleDrafts.length} stale draft(s).`);
+  logger.info(`${LOG_PREFIX} Sending reminders for ${staleDrafts.length} stale draft(s).`);
 
   for (const draft of staleDrafts) {
     const seller = draft.seller;
@@ -63,9 +64,9 @@ async function run() {
       await sendEmail(seller.email, email.subject, email.html);
 
       await ListingDraft.updateOne({ _id: draft._id }, { draftReminderSent: true });
-      console.log(`${LOG_PREFIX} Sent to ${seller.email} (draft: ${draft._id})`);
+      logger.info(`${LOG_PREFIX} Sent to ${seller.email} (draft: ${draft._id})`);
     } catch (err) {
-      console.error(`${LOG_PREFIX} Failed for draft ${draft._id}:`, err.message);
+      logger.error(`${LOG_PREFIX} Failed for draft ${draft._id}:`, err.message);
     }
   }
 }

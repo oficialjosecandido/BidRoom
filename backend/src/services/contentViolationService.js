@@ -1,6 +1,7 @@
 const Customer = require('../models/Customer');
 const { appendModerationAudit } = require('./moderationAuditService');
 const { suspendUser } = require('./accountStatusService');
+const logger = require('../utils/logger');
 
 const VIOLATION_MESSAGES = {
   contact_info: {
@@ -82,7 +83,7 @@ async function recordViolation(user, violationType = 'contact_info') {
     await suspendUser(user._id.toString(), {
       reason: 'content_violation_5th_plus',
       triggeredBy: 'system'
-    }).catch(err => console.error('Content violation suspend error:', err.message));
+    }).catch(err => logger.error('Content violation suspend error:', err.message));
   }
 
   return { action, message, restrictedUntil };

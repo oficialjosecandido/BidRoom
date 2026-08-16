@@ -2,6 +2,7 @@ const express = require('express');
 const CategoryFollow = require('../models/CategoryFollow');
 const Customer = require('../models/Customer');
 const { authenticateToken, requireActiveAccount } = require('../middleware/auth');
+const logger = require('../utils/logger');
 
 const router = express.Router();
 
@@ -22,7 +23,7 @@ router.post('/:category', authenticateToken, requireActiveAccount, async (req, r
     res.json({ following: true, category });
   } catch (err) {
     if (err.code === 11000) return res.json({ following: true });
-    console.error('Error following category:', err);
+    logger.error('Error following category:', err);
     res.status(500).json({ error: 'Failed to follow category' });
   }
 });
@@ -37,7 +38,7 @@ router.delete('/:category', authenticateToken, async (req, res) => {
     await CategoryFollow.deleteOne({ user: user._id, category });
     res.json({ following: false, category });
   } catch (err) {
-    console.error('Error unfollowing category:', err);
+    logger.error('Error unfollowing category:', err);
     res.status(500).json({ error: 'Failed to unfollow category' });
   }
 });
@@ -52,7 +53,7 @@ router.get('/status/:category', authenticateToken, async (req, res) => {
     const entry = await CategoryFollow.findOne({ user: user._id, category }).lean();
     res.json({ following: !!entry, category });
   } catch (err) {
-    console.error('Error checking category follow status:', err);
+    logger.error('Error checking category follow status:', err);
     res.json({ following: false });
   }
 });
@@ -66,7 +67,7 @@ router.get('/', authenticateToken, async (req, res) => {
     const entries = await CategoryFollow.find({ user: user._id }).select('category muted').lean();
     res.json({ categories: entries.map(e => ({ category: e.category, muted: e.muted })) });
   } catch (err) {
-    console.error('Error fetching followed categories:', err);
+    logger.error('Error fetching followed categories:', err);
     res.status(500).json({ error: 'Failed to fetch followed categories' });
   }
 });
@@ -92,7 +93,7 @@ router.patch('/:category/mute', authenticateToken, async (req, res) => {
     if (!entry) return res.status(404).json({ error: 'Category not followed' });
     res.json({ following: true, category, muted: entry.muted });
   } catch (err) {
-    console.error('Error updating category mute:', err);
+    logger.error('Error updating category mute:', err);
     res.status(500).json({ error: 'Failed to update notification preference' });
   }
 });

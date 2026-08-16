@@ -5,6 +5,7 @@
 
 const Transaction = require('../models/Transaction');
 const azureStorageService = require('./azureStorage.service');
+const logger = require('../utils/logger');
 
 const DAYS_TO_RETAIN = 30;
 
@@ -35,7 +36,7 @@ async function runCleanup() {
       );
       deleted++;
     } catch (err) {
-      console.error('Proof-of-payment cleanup: failed for transaction', t._id, err.message);
+      logger.error('Proof-of-payment cleanup: failed for transaction', t._id, err.message);
     }
   }
 
@@ -58,12 +59,12 @@ async function runCleanup() {
       );
       deliveryDeleted++;
     } catch (err) {
-      console.error('Proof-of-delivery cleanup: failed for transaction', t._id, err.message);
+      logger.error('Proof-of-delivery cleanup: failed for transaction', t._id, err.message);
     }
   }
 
   if (deleted > 0 || deliveryDeleted > 0) {
-    console.log(`[ProofCleanup] Deleted ${deleted} payment proof(s), ${deliveryDeleted} delivery proof(s) older than ${DAYS_TO_RETAIN} days.`);
+    logger.info(`[ProofCleanup] Deleted ${deleted} payment proof(s), ${deliveryDeleted} delivery proof(s) older than ${DAYS_TO_RETAIN} days.`);
   }
 }
 

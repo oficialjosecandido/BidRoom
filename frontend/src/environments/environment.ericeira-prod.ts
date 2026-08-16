@@ -3,7 +3,7 @@ export const environment = {
   googleAnalyticsId: 'G-4FDFR1ZSRV',
   posthog: {
     apiKey:  'phc_kLcVSTdnMKj4eDek9zMhTKGxsqvtFTrYyVUhQxXRRwgh',
-    apiHost: 'https://us.i.posthog.com',
+    apiHost: 'https://eu.i.posthog.com',
     enabled: true,
   },
   appUrl: 'https://calm-desert-0d6601f10.1.azurestaticapps.net',

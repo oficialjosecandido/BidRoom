@@ -10,6 +10,7 @@ const { authenticateToken, requireActiveAccount } = require('../middleware/auth'
 const Transaction = require('../models/Transaction');
 const Customer = require('../models/Customer');
 const { calculateRates } = require('../services/shippingCalculationService');
+const logger = require('../utils/logger');
 
 const LOG_PREFIX = '[Shipping]';
 const router = express.Router();
@@ -95,7 +96,7 @@ router.post('/rates', requireActiveAccount, async (req, res) => {
     try {
       rates = await calculateRates({ origin, destination, packageSize: listing.packageSize });
     } catch (err) {
-      console.error(`${LOG_PREFIX} calculateRates error:`, err.message);
+      logger.error(`${LOG_PREFIX} calculateRates error:`, err.message);
       if (err.code === 'TIMEOUT') {
         return res.status(503).json({
           error: 'Carrier timeout',
@@ -127,7 +128,7 @@ router.post('/rates', requireActiveAccount, async (req, res) => {
       origin: { postalCode: origin.postalCode, country: origin.country }
     });
   } catch (err) {
-    console.error(`${LOG_PREFIX} /rates error:`, err.message);
+    logger.error(`${LOG_PREFIX} /rates error:`, err.message);
     res.status(500).json({ error: 'Failed to calculate shipping rates', message: err.message });
   }
 });
@@ -186,7 +187,7 @@ router.post('/lock-rate', requireActiveAccount, async (req, res) => {
     }
 
     await transaction.save();
-    console.log(`${LOG_PREFIX} Rate locked txn=${transactionId} ${carrier} ${service} $${rate}`);
+    logger.info(`${LOG_PREFIX} Rate locked txn=${transactionId} ${carrier} ${service} $${rate}`);
 
     return res.json({
       success: true,
@@ -196,7 +197,7 @@ router.post('/lock-rate', requireActiveAccount, async (req, res) => {
       deliveryDays: transaction.shippingDeliveryDays
     });
   } catch (err) {
-    console.error(`${LOG_PREFIX} /lock-rate error:`, err.message);
+    logger.error(`${LOG_PREFIX} /lock-rate error:`, err.message);
     res.status(500).json({ error: 'Failed to lock shipping rate', message: err.message });
   }
 });

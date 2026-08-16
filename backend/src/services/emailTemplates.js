@@ -5,6 +5,7 @@
  */
 
 const { renderEmailTemplate, DEFAULT_LANGUAGE } = require('./templateEngine');
+const logger = require('../utils/logger');
 
 // Legacy templates object - will be removed
 const templates = {
@@ -279,7 +280,7 @@ function getEmailTemplate(templateType, language = DEFAULT_LANGUAGE, data = {}) 
   try {
     return renderEmailTemplate(templateType, language, data);
   } catch (error) {
-    console.error(`Error loading template "${templateType}" for language "${language}":`, error.message);
+    logger.error(`Error loading template "${templateType}" for language "${language}":`, error.message);
     // Fallback to default language
     if (language !== DEFAULT_LANGUAGE) {
       try {
