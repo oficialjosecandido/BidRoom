@@ -42,8 +42,17 @@ export class HeaderComponent implements OnInit, OnDestroy {
   draftTitle = '';
   menuOpen = false;
   searchOpen = false;
+  langMenuOpen = false;
+  currencyMenuOpen = false;
   notifCount = 0;
   userInitials = '';
+
+  readonly languages = [
+    { code: 'pt', label: 'PT', name: 'Português', symbol: '🇵🇹' },
+    { code: 'en', label: 'EN', name: 'English',   symbol: '🇬🇧' },
+    { code: 'fr', label: 'FR', name: 'Français',  symbol: '🇫🇷' },
+    { code: 'es', label: 'ES', name: 'Español',   symbol: '🇪🇸' },
+  ] as const;
 
   private subs = new Subscription();
   private currentUserUid: string | null = null;
@@ -141,6 +150,14 @@ export class HeaderComponent implements OnInit, OnDestroy {
     return this.translate.currentLang || 'pt';
   }
 
+  get currentLangLabel(): string {
+    return this.languages.find(l => l.code === this.currentLang)?.label ?? 'PT';
+  }
+
+  get currentLangSymbol(): string {
+    return this.languages.find(l => l.code === this.currentLang)?.symbol ?? '🇵🇹';
+  }
+
   get notifBadge(): string {
     if (this.notifCount <= 0) return '';
     return this.notifCount > 9 ? '9+' : String(this.notifCount);
@@ -152,12 +169,36 @@ export class HeaderComponent implements OnInit, OnDestroy {
     this.theme.setPreference(mode);
   }
 
+  toggleLangMenu(event?: Event): void {
+    event?.stopPropagation();
+    this.langMenuOpen = !this.langMenuOpen;
+    if (this.langMenuOpen) this.currencyMenuOpen = false;
+  }
+
+  toggleCurrencyMenu(event?: Event): void {
+    event?.stopPropagation();
+    this.currencyMenuOpen = !this.currencyMenuOpen;
+    if (this.currencyMenuOpen) this.langMenuOpen = false;
+  }
+
+  closePrefMenus(): void {
+    this.langMenuOpen = false;
+    this.currencyMenuOpen = false;
+  }
+
   switchLanguage(code: string): void {
     this.translate.use(code);
     localStorage.setItem('lang', code);
+    this.langMenuOpen = false;
+  }
+
+  setCurrency(currency: DisplayCurrency): void {
+    this.currencyService.setCurrency(currency);
+    this.currencyMenuOpen = false;
   }
 
   openSearch(): void {
+    this.closePrefMenus();
     this.searchOpen = true;
     setTimeout(() => {
       const input = document.querySelector('.nav .search-bar input') as HTMLInputElement | null;
@@ -179,6 +220,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
   }
 
   toggleMenu(): void {
+    this.closePrefMenus();
     this.menuOpen = !this.menuOpen;
     this.syncBodyScroll();
   }
@@ -196,13 +238,22 @@ export class HeaderComponent implements OnInit, OnDestroy {
 
   @HostListener('document:keydown.escape')
   onEscape(): void {
+    this.closePrefMenus();
     this.closeMenu();
     this.closeSearch();
   }
 
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent): void {
+    if (!this.langMenuOpen && !this.currencyMenuOpen) return;
+    const target = event.target as HTMLElement | null;
+    if (target?.closest('.pref-dd')) return;
+    this.closePrefMenus();
+  }
+
   navigateToHome(): void {
     this.closeMenu();
-    this.router.navigate(['/landing']);
+    this.router.navigate(['/']);
   }
 
   navigateToAuctions(): void {
@@ -217,7 +268,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
 
   navigateToPrivateRooms(): void {
     this.closeMenu();
-    this.router.navigate(['/landing'], { fragment: 'salas' });
+    this.router.navigate(['/'], { fragment: 'salas' });
   }
 
   navigateToHowItWorks(): void {

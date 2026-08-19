@@ -81,26 +81,83 @@
       </button>
     </div>
 
-    <!-- Lang toggle PT | EN | FR | ES -->
-    <div class="lang-tog">
-      <button class="lt" [class.on]="currentLang === 'pt'" (click)="switchLanguage('pt')">PT</button>
-      <button class="lt" [class.on]="currentLang === 'en'" (click)="switchLanguage('en')">EN</button>
-      <button class="lt" [class.on]="currentLang === 'fr'" (click)="switchLanguage('fr')">FR</button>
-      <button class="lt" [class.on]="currentLang === 'es'" (click)="switchLanguage('es')">ES</button>
+    <!-- Language dropdown -->
+    <div class="pref-dd" [class.open]="langMenuOpen">
+      <button
+        type="button"
+        class="pref-dd-trigger"
+        (click)="toggleLangMenu($event)"
+        [attr.aria-expanded]="langMenuOpen"
+        [attr.aria-haspopup]="true"
+        [attr.aria-label]="'landing.nav.language' | translate"
+        [attr.title]="'landing.nav.language' | translate">
+        <span class="pref-dd-symbol" aria-hidden="true">{{ currentLangSymbol }}</span>
+        <span class="pref-dd-value">{{ currentLangLabel }}</span>
+        <svg class="pref-dd-chevron" viewBox="0 0 12 12" width="10" height="10" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M3 4.5L6 7.5l3-3"/>
+        </svg>
+      </button>
+      @if (langMenuOpen) {
+        <div class="pref-dd-menu" role="listbox" [attr.aria-label]="'landing.nav.language' | translate">
+          @for (lang of languages; track lang.code) {
+            <button
+              type="button"
+              class="pref-dd-item"
+              role="option"
+              [class.on]="currentLang === lang.code"
+              [attr.aria-selected]="currentLang === lang.code"
+              (click)="switchLanguage(lang.code)">
+              <span class="pref-dd-item-symbol" aria-hidden="true">{{ lang.symbol }}</span>
+              <span class="pref-dd-item-name">{{ lang.name }}</span>
+              <span class="pref-dd-item-meta">{{ lang.label }}</span>
+              @if (currentLang === lang.code) {
+                <svg class="pref-dd-check" viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M3.5 8.5l3 3 6-6"/>
+                </svg>
+              }
+            </button>
+          }
+        </div>
+      }
     </div>
 
-    <!-- Currency selector (only shown when rates are available) -->
+    <!-- Currency dropdown (only shown when rates are available) -->
     @if (currencyService.ratesAvailable()) {
-      <div class="currency-sel">
-        @for (c of displayCurrencies; track c) {
-          <button
-            type="button"
-            class="cs-btn"
-            [class.on]="currencyService.displayCurrency() === c"
-            (click)="currencyService.setCurrency(c)"
-            [attr.title]="currencySymbols[c] + ' ' + c">
-            {{ c }}
-          </button>
+      <div class="pref-dd" [class.open]="currencyMenuOpen">
+        <button
+          type="button"
+          class="pref-dd-trigger"
+          (click)="toggleCurrencyMenu($event)"
+          [attr.aria-expanded]="currencyMenuOpen"
+          [attr.aria-haspopup]="true"
+          [attr.aria-label]="'CURRENCY.SELECTOR_LABEL' | translate"
+          [attr.title]="'CURRENCY.SELECTOR_LABEL' | translate">
+          <span class="pref-dd-symbol pref-dd-symbol--currency" aria-hidden="true">{{ currencySymbols[currencyService.displayCurrency()] }}</span>
+          <span class="pref-dd-value">{{ currencyService.displayCurrency() }}</span>
+          <svg class="pref-dd-chevron" viewBox="0 0 12 12" width="10" height="10" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3 4.5L6 7.5l3-3"/>
+          </svg>
+        </button>
+        @if (currencyMenuOpen) {
+          <div class="pref-dd-menu" role="listbox" [attr.aria-label]="'CURRENCY.SELECTOR_LABEL' | translate">
+            @for (c of displayCurrencies; track c) {
+              <button
+                type="button"
+                class="pref-dd-item"
+                role="option"
+                [class.on]="currencyService.displayCurrency() === c"
+                [attr.aria-selected]="currencyService.displayCurrency() === c"
+                (click)="setCurrency(c)">
+                <span class="pref-dd-item-symbol pref-dd-item-symbol--currency" aria-hidden="true">{{ currencySymbols[c] }}</span>
+                <span class="pref-dd-item-name">{{ c }}</span>
+                @if (currencyService.displayCurrency() === c) {
+                  <svg class="pref-dd-check" viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3.5 8.5l3 3 6-6"/>
+                  </svg>
+                }
+              </button>
+            }
+          </div>
         }
       </div>
     }
@@ -209,22 +266,40 @@
         </button>
       </div>
       <span class="nm-lang-label">{{ 'landing.nav.language' | translate }}</span>
-      <div class="lang-tog lang-tog--full">
-        <button class="lt" [class.on]="currentLang === 'pt'" (click)="switchLanguage('pt'); closeMenu()">PT</button>
-        <button class="lt" [class.on]="currentLang === 'en'" (click)="switchLanguage('en'); closeMenu()">EN</button>
-        <button class="lt" [class.on]="currentLang === 'fr'" (click)="switchLanguage('fr'); closeMenu()">FR</button>
-        <button class="lt" [class.on]="currentLang === 'es'" (click)="switchLanguage('es'); closeMenu()">ES</button>
+      <div class="pref-list">
+        @for (lang of languages; track lang.code) {
+          <button
+            type="button"
+            class="pref-list-item"
+            [class.on]="currentLang === lang.code"
+            (click)="switchLanguage(lang.code); closeMenu()">
+            <span class="pref-dd-item-symbol" aria-hidden="true">{{ lang.symbol }}</span>
+            <span class="pref-dd-item-name">{{ lang.name }}</span>
+            <span class="pref-dd-item-meta">{{ lang.label }}</span>
+            @if (currentLang === lang.code) {
+              <svg class="pref-dd-check" viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3.5 8.5l3 3 6-6"/>
+              </svg>
+            }
+          </button>
+        }
       </div>
       @if (currencyService.ratesAvailable()) {
         <span class="nm-lang-label">{{ 'CURRENCY.SELECTOR_LABEL' | translate }}</span>
-        <div class="currency-sel currency-sel--full">
+        <div class="pref-list">
           @for (c of displayCurrencies; track c) {
             <button
               type="button"
-              class="cs-btn"
+              class="pref-list-item"
               [class.on]="currencyService.displayCurrency() === c"
-              (click)="currencyService.setCurrency(c); closeMenu()">
-              {{ currencySymbols[c] }} {{ c }}
+              (click)="setCurrency(c); closeMenu()">
+              <span class="pref-dd-item-symbol pref-dd-item-symbol--currency" aria-hidden="true">{{ currencySymbols[c] }}</span>
+              <span class="pref-dd-item-name">{{ c }}</span>
+              @if (currencyService.displayCurrency() === c) {
+                <svg class="pref-dd-check" viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M3.5 8.5l3 3 6-6"/>
+                </svg>
+              }
             </button>
           }
         </div>
