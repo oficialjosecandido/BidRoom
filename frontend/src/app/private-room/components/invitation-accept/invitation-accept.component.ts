@@ -1,4 +1,5 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, DestroyRef, OnInit, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 import { ActivatedRoute, Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
@@ -16,6 +17,7 @@ export class InvitationAcceptComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private http = inject(HttpClient);
+  private destroyRef = inject(DestroyRef);
   authService = inject(AuthService);
 
   token = '';
@@ -27,7 +29,7 @@ export class InvitationAcceptComponent implements OnInit {
   error: string | null = null;
 
   ngOnInit(): void {
-    this.route.queryParams.subscribe(params => {
+    this.route.queryParams.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(params => {
       this.token = params['token'] || '';
       this.listingId = params['listingId'] || '';
 

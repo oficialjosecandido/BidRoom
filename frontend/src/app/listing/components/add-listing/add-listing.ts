@@ -1,5 +1,6 @@
 import { DecimalPipe } from '@angular/common';
-import { Component, OnDestroy, OnInit, inject, computed, signal } from '@angular/core';
+import { Component, DestroyRef, OnDestroy, OnInit, inject, computed, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AbstractControl, FormBuilder, FormGroup, ValidationErrors, ValidatorFn, Validators, ReactiveFormsModule, FormArray } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
@@ -232,6 +233,7 @@ export class AddListing implements OnInit, OnDestroy {
   private analytics = inject(AnalyticsService);
   private postHog = inject(PostHogService);
   readonly waiverService = inject(WaiverService);
+  private destroyRef = inject(DestroyRef);
 
   listingForm!: FormGroup;
   activeLangTab: 'pt' | 'en' | 'fr' | 'es' = 'pt';
@@ -766,7 +768,7 @@ export class AddListing implements OnInit, OnDestroy {
       sellerDeclaration: [false, Validators.requiredTrue]
     }, { validators: buyNowAboveStartingBid() });
 
-    this.listingForm.get('listingFormat')?.valueChanges.subscribe(format => {
+    this.listingForm.get('listingFormat')?.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(format => {
       this.updateConditionalValidators(format);
       if (format === 'best-offer') {
         this.listingForm.patchValue({ allowPrivateRoom: false });
@@ -775,7 +777,7 @@ export class AddListing implements OnInit, OnDestroy {
     this.updateConditionalValidators(this.listingForm.get('listingFormat')?.value || 'best-offer');
     this.updateLangValidators();
 
-    this.listingForm.get('itemMode')?.valueChanges.subscribe(mode => {
+    this.listingForm.get('itemMode')?.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(mode => {
       const qtyControl = this.listingForm.get('quantity');
       if (mode === 'multi_quantity') {
         qtyControl?.setValidators([Validators.required, Validators.min(2), Validators.max(999)]);
@@ -791,7 +793,7 @@ export class AddListing implements OnInit, OnDestroy {
 
     this.listingForm.get('acceptPayStripe')?.disable();
 
-    this.listingForm.get('shippingOption')?.valueChanges.subscribe(option => {
+    this.listingForm.get('shippingOption')?.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(option => {
       const flatRateControl    = this.listingForm.get('flatRateShipping');
       const packageSizeControl = this.listingForm.get('packageSize');
       const postalCodeControl  = this.listingForm.get('shippingOriginPostalCode');
@@ -816,7 +818,7 @@ export class AddListing implements OnInit, OnDestroy {
   }
 
   setupFormSubscriptions(): void {
-    this.listingForm.get('category')?.valueChanges.subscribe(categoryId => {
+    this.listingForm.get('category')?.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(categoryId => {
       this.selectedCategory = this.categories.find(c => c.id === categoryId) || null;
       this.listingForm.patchValue({ subCategory: '' });
       if (categoryId === 'vehicles') {
@@ -824,7 +826,7 @@ export class AddListing implements OnInit, OnDestroy {
       }
     });
 
-    this.listingForm.get('subCategory')?.valueChanges.subscribe(sub => {
+    this.listingForm.get('subCategory')?.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(sub => {
       const cat = this.listingForm.get('category')?.value || '';
       if (!sub) { this.attributeSchema.set([]); this.buildAttributeControls([]); return; }
       this.attributeSchemaSub?.unsubscribe();
@@ -841,7 +843,7 @@ export class AddListing implements OnInit, OnDestroy {
       this.listingForm.patchValue({ title: t, description: d }, { emitEvent: false });
     };
     ['titlePt', 'titleEn', 'titleFr', 'titleEs', 'descriptionPt', 'descriptionEn', 'descriptionFr', 'descriptionEs'].forEach(ctrl => {
-      this.listingForm.get(ctrl)?.valueChanges.subscribe(() => {
+      this.listingForm.get(ctrl)?.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
         syncPrimary();
         this.triggerContentCheck();
       });

@@ -1,4 +1,5 @@
-import { Component, OnInit, OnDestroy, inject, ChangeDetectionStrategy, ChangeDetectorRef, computed } from '@angular/core';
+import { Component, DestroyRef, OnInit, OnDestroy, inject, ChangeDetectionStrategy, ChangeDetectorRef, computed } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink, ActivatedRoute, Router } from '@angular/router';
@@ -27,6 +28,7 @@ export class BlogListComponent implements OnInit, OnDestroy {
   private cdr = inject(ChangeDetectorRef);
   private translate = inject(TranslateService);
   private themeService = inject(ThemeService);
+  private destroyRef = inject(DestroyRef);
 
   posts: BlogPostSummary[] = [];
   loading = true;
@@ -43,7 +45,7 @@ export class BlogListComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.seo.setBlogIndex();
 
-    this.route.queryParams.subscribe(params => {
+    this.route.queryParams.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(params => {
       this.searchQuery = (params['search'] as string) || '';
       this.searchInput = this.searchQuery;
       this.currentPage = Number(params['page']) || 1;

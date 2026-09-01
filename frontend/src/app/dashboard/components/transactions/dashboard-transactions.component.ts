@@ -1,4 +1,5 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, DestroyRef, OnInit, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { RouterLink, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -35,6 +36,7 @@ export class DashboardTransactionsComponent implements OnInit {
   private postHog = inject(PostHogService);
   private route = inject(ActivatedRoute);
   private translate = inject(TranslateService);
+  private destroyRef = inject(DestroyRef);
 
   transactions: Transaction[] = [];
   isLoading = true;
@@ -189,14 +191,14 @@ export class DashboardTransactionsComponent implements OnInit {
     this.loadTransactions();
 
     // Scroll to transaction when navigating with fragment (e.g. from review modal)
-    this.route.fragment.subscribe(fragment => {
+    this.route.fragment.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(fragment => {
       if (fragment?.startsWith('transaction-')) {
         this.scrollToTransactionAfterLoad(fragment);
       }
     });
 
     // Handle return from Stripe Checkout
-    this.route.queryParams.subscribe(params => {
+    this.route.queryParams.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(params => {
       const payment = params['stripe_payment'];
       const sessionId = params['session_id'];
       const transactionId = params['transaction_id'];

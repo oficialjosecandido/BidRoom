@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, ChangeDetectorRef, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, OnDestroy, ChangeDetectorRef, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -34,7 +34,8 @@ interface PlatinumBidderInfo {
   standalone: true,
   imports: [CommonModule, FormsModule, TranslateModule, DisplayPricePipe],
   templateUrl: './private-room-auction.component.html',
-  styleUrls: ['./private-room-auction.component.scss']
+  styleUrls: ['./private-room-auction.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
   private route = inject(ActivatedRoute);
@@ -136,6 +137,7 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
             this.applyPlatinumStatusFromListing();
           }
         }
+        this.cdr.detectChanges();
       })
     );
 
@@ -194,10 +196,12 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
         this.applyPlatinumStatusFromListing();
         this.startCountdown();
         this.subscribeToUpdates();
+        this.cdr.detectChanges();
       },
       error: (error) => {
         this.error = error?.message || 'Failed to load listing';
         this.loading = false;
+        this.cdr.detectChanges();
       }
     });
   }
@@ -209,6 +213,7 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
       next: (response) => {
         this.bids = response.bids;
         this.updatePlatinumBidders();
+        this.cdr.detectChanges();
       },
       error: () => { /* bids load failure is non-critical; listing remains usable */ }
     });
@@ -279,6 +284,7 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
         // Refresh listing data so the UI reflects the latest room state
         // (e.g. privateRoomStatus may have changed, or we need accurate platinumBidderStatus)
         this.loadListing();
+        this.cdr.detectChanges();
       },
       error: (err) => {
         this.acceptingInvitation = false;
@@ -288,6 +294,7 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
           text: err?.error?.message || 'Failed to accept invitation. Please try the email link.',
           confirmButtonColor: '#7A4F84'
         });
+        this.cdr.detectChanges();
       }
     });
   }
@@ -306,6 +313,7 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
           this.startCountdown();
           this.loadListing();
         }
+        this.cdr.detectChanges();
       },
       error: () => {
         this.startNowLoading = false;
@@ -315,6 +323,7 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
           text: 'The room could not be started. It may have already started or ended.',
           confirmButtonColor: '#7A4F84'
         });
+        this.cdr.detectChanges();
       }
     });
   }
@@ -378,6 +387,8 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
       clearInterval(this.countdownInterval);
       this.countdownInterval = null;
     }
+
+    this.cdr.detectChanges();
   }
 
   /** True while the active bidding window is open (blocks bid UI after expiry). */
@@ -857,6 +868,7 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
       if (!isSelf) {
         this.loadListing();
       }
+      this.cdr.detectChanges();
     });
 
     this.rtSubscriptions.push(acceptSub);
@@ -870,6 +882,7 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
       } else {
         this.loadListing();
       }
+      this.cdr.detectChanges();
     });
 
     this.rtSubscriptions.push(declineSub);
@@ -1004,10 +1017,12 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
           timer: 3000,
           timerProgressBar: true
         });
+        this.cdr.detectChanges();
       },
       error: (error) => {
         this.isPlacingBid = false;
         this.bidInputError = error?.error?.message || error?.message || 'Failed to place bid. Please try again.';
+        this.cdr.detectChanges();
       }
     });
   }

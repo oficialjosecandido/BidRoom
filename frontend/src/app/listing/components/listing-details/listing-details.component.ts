@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, ChangeDetectorRef, PLATFORM_ID, inject, computed, TransferState, makeStateKey, RESPONSE_INIT } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, OnDestroy, ChangeDetectorRef, PLATFORM_ID, inject, computed, TransferState, makeStateKey, RESPONSE_INIT } from '@angular/core';
 import { CommonModule, Location, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -39,7 +39,8 @@ import { applySsrStatus } from '../../../shared/utils/ssr-status';
   standalone: true,
   imports: [CommonModule, FormsModule, TranslateModule, RouterLink, ReportModalComponent, HeaderComponent, FooterComponent, DisplayPricePipe],
   templateUrl: './listing-details.component.html',
-  styleUrls: ['./listing-details.component.scss']
+  styleUrls: ['./listing-details.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ListingDetailsComponent implements OnInit, OnDestroy {
   readonly getTrustTierInfo = getTrustTierInfo;
@@ -193,6 +194,7 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
         this.error = 'Listing not found';
         this.loading = false;
         applySsrStatus(this.responseInit, 404);
+        this.cdr.detectChanges();
       }
     });
   }
@@ -239,11 +241,13 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
         this.bids = response.bids;
         this.bidsLoading = false;
         this.handleChooseWinnerDeepLink();
+        this.cdr.detectChanges();
       },
       error: () => {
         this.bidsError = 'Failed to load bid history';
         this.bidsLoading = false;
         this.handleChooseWinnerDeepLink();
+        this.cdr.detectChanges();
       }
     });
   }
@@ -260,10 +264,12 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
       next: (response) => {
         this.offers = response.offers;
         this.offersLoading = false;
+        this.cdr.detectChanges();
       },
       error: () => {
         this.offersError = 'Failed to load offer history';
         this.offersLoading = false;
+        this.cdr.detectChanges();
       }
     });
   }
@@ -320,6 +326,7 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
       next: () => {
         this.offerActionLoadingId = null;
         this.loadListing(this.route.snapshot.paramMap.get('slug') || '');
+        this.cdr.detectChanges();
         Swal.fire({
           icon: 'success',
           title: 'Proposal Accepted!',
@@ -356,6 +363,7 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
         } else {
           this.offersError = err?.error?.message || 'Failed to accept offer.';
         }
+        this.cdr.detectChanges();
       }
     });
   }
@@ -378,10 +386,12 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
         this.offerActionLoadingId = null;
         // loadListing calls loadOffers internally for best-offer listings
         this.loadListing(this.route.snapshot.paramMap.get('slug') || '');
+        this.cdr.detectChanges();
       },
       error: (err) => {
         this.offerActionLoadingId = null;
         this.offersError = err?.error?.message || 'Failed to reject offer.';
+        this.cdr.detectChanges();
       }
     });
   }
@@ -428,6 +438,7 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
     if (!this.listing) {
       this.countdownEnded = false;
       this.displayedTimeRemaining = '';
+      this.cdr.markForCheck();
       return;
     }
 
@@ -443,6 +454,7 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
     if (!endDate) {
       this.countdownEnded = false;
       this.displayedTimeRemaining = '';
+      this.cdr.markForCheck();
       return;
     }
 
@@ -471,6 +483,7 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
           }
         });
       }
+      this.cdr.markForCheck();
       return;
     }
 
@@ -666,6 +679,7 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
       if (this.listing.auctionFormat === 'highest-bid') {
         this.setActiveTab('bids');
       }
+      this.cdr.detectChanges();
 
       if (!this.isAuthenticated) {
         this.router.navigate(['/auth/login'], {
@@ -692,6 +706,7 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
       if (this.canSellerSelectWinnerManually()) {
         this.openSelectWinnerModal();
       }
+      this.cdr.detectChanges();
     });
   }
 
@@ -827,6 +842,7 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
       const newOfferSubscription = this.socketService.onNewOffer().subscribe((event) => {
         if (event.listingId === listingId && event.offer) {
           mergeOfferIntoList(event.offer as Offer);
+          this.cdr.detectChanges();
         }
       });
       this.rtSubscriptions.push(newOfferSubscription);
@@ -837,6 +853,7 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
           if (event.listingStatus === 'ended' && this.listing) {
             this.listing.status = 'ended';
           }
+          this.cdr.detectChanges();
         }
       });
       this.rtSubscriptions.push(offerUpdateSubscription);
@@ -1225,7 +1242,7 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
 
   loadSellerFollowStatus(sellerId: string): void {
     this.followService.getStatus(sellerId).subscribe({
-      next: (status) => { this.sellerFollowStatus = status; },
+      next: (status) => { this.sellerFollowStatus = status; this.cdr.detectChanges(); },
       error: () => {}
     });
   }
@@ -1238,8 +1255,8 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
       ? this.followService.unfollow(sellerId)
       : this.followService.follow(sellerId);
     action.subscribe({
-      next: (status) => { this.sellerFollowStatus = status; this.followLoading = false; },
-      error: () => { this.followLoading = false; }
+      next: (status) => { this.sellerFollowStatus = status; this.followLoading = false; this.cdr.detectChanges(); },
+      error: () => { this.followLoading = false; this.cdr.detectChanges(); }
     });
   }
 
@@ -1248,14 +1265,14 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
     if (!sellerId || this.followLoading) return;
     this.followLoading = true;
     this.followService.setMuted(sellerId, !this.sellerFollowStatus.muted).subscribe({
-      next: (status) => { this.sellerFollowStatus = status; this.followLoading = false; },
-      error: () => { this.followLoading = false; }
+      next: (status) => { this.sellerFollowStatus = status; this.followLoading = false; this.cdr.detectChanges(); },
+      error: () => { this.followLoading = false; this.cdr.detectChanges(); }
     });
   }
 
   loadSellerBlockStatus(sellerId: string): void {
     this.blockService.getStatus(sellerId).subscribe({
-      next: (status) => { this.sellerBlocked = status.blocked; },
+      next: (status) => { this.sellerBlocked = status.blocked; this.cdr.detectChanges(); },
       error: () => {}
     });
   }
@@ -1268,8 +1285,8 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
       ? this.blockService.unblock(sellerId)
       : this.blockService.block(sellerId);
     action.subscribe({
-      next: (status) => { this.sellerBlocked = status.blocked; this.blockLoading = false; },
-      error: () => { this.blockLoading = false; }
+      next: (status) => { this.sellerBlocked = status.blocked; this.blockLoading = false; this.cdr.detectChanges(); },
+      error: () => { this.blockLoading = false; this.cdr.detectChanges(); }
     });
   }
 
@@ -1695,7 +1712,11 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
         ...this.analytics.listingParams(this.listing),
         share_method: 'clipboard',
       });
-      setTimeout(() => { this.linkCopied = false; }, 2500);
+      this.cdr.detectChanges();
+      setTimeout(() => {
+        this.linkCopied = false;
+        this.cdr.detectChanges();
+      }, 2500);
     }
   }
 }

@@ -1,4 +1,5 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, DestroyRef, OnInit, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
@@ -19,6 +20,7 @@ export class VerifyEmailComponent implements OnInit {
   private auth = inject(Auth);
   private translate = inject(TranslateService);
   private postHog = inject(PostHogService);
+  private destroyRef = inject(DestroyRef);
 
   isLoading = true;
   isVerified = false;
@@ -27,7 +29,7 @@ export class VerifyEmailComponent implements OnInit {
 
   ngOnInit(): void {
     // Get oobCode from query parameters (Firebase email verification)
-    this.route.queryParams.subscribe(params => {
+    this.route.queryParams.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(params => {
       this.code = params['oobCode'];
       if (this.code) {
         this.verifyEmail();

@@ -1,4 +1,5 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, DestroyRef, OnInit, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
@@ -18,6 +19,7 @@ export class ResetPasswordComponent implements OnInit {
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private translate = inject(TranslateService);
+  private destroyRef = inject(DestroyRef);
 
   resetPasswordForm: FormGroup;
   isLoading = false;
@@ -36,7 +38,7 @@ export class ResetPasswordComponent implements OnInit {
 
   ngOnInit(): void {
     // Get Firebase oobCode from query parameters
-    this.route.queryParams.subscribe(params => {
+    this.route.queryParams.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(params => {
       this.code = params['oobCode'];
       if (!this.code) {
         this.errorMessage = this.translate.instant('auth.resetPassword.errorInvalidCode');

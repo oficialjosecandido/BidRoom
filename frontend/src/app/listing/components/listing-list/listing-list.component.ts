@@ -1,4 +1,5 @@
-import { Component, OnInit, OnDestroy, HostListener, inject, PLATFORM_ID } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, DestroyRef, OnInit, OnDestroy, HostListener, inject, PLATFORM_ID } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute, RouterLink } from '@angular/router';
@@ -50,7 +51,8 @@ type StatusFilterKey = 'ending' | 'private';
   standalone: true,
   imports: [CommonModule, FormsModule, TranslateModule, RouterLink, HeaderComponent, FooterComponent, DisplayPricePipe],
   templateUrl: './listing-list.component.html',
-  styleUrls: ['./listing-list.component.scss']
+  styleUrls: ['./listing-list.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ListingListComponent implements OnInit, OnDestroy {
   private router = inject(Router);
@@ -59,6 +61,8 @@ export class ListingListComponent implements OnInit, OnDestroy {
   private watchlistService = inject(WatchlistService);
   private authService = inject(AuthService);
   private translate = inject(TranslateService);
+  private destroyRef = inject(DestroyRef);
+  private cdr = inject(ChangeDetectorRef);
   private isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
 
   listings: Listing[] = [];
@@ -153,7 +157,7 @@ export class ListingListComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    this.route.queryParams.subscribe(params => {
+    this.route.queryParams.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(params => {
       this.selectedCategory = params['category'] || '';
       this.selectedSubCategory = params['subCategory'] || '';
       this.searchQuery = params['search'] || params['q'] || '';
@@ -181,6 +185,7 @@ export class ListingListComponent implements OnInit, OnDestroy {
         this.expandedCategories = new Set([this.selectedCategory]);
       }
       this.loadListings();
+      this.cdr.markForCheck();
     });
 
     this.authService.currentUser$.pipe(take(1)).subscribe(user => {
@@ -192,6 +197,7 @@ export class ListingListComponent implements OnInit, OnDestroy {
     this.watchlistService.getMyWatchlist().subscribe({
       next: (res) => {
         this.watchlistIds = new Set((res.watchlist || []).map(l => l._id));
+        this.cdr.markForCheck();
       },
       error: () => { /* non-critical */ }
     });
@@ -231,10 +237,12 @@ export class ListingListComponent implements OnInit, OnDestroy {
         this.total = response.total;
         this.totalPages = response.totalPages || Math.ceil(response.total / PAGE_SIZE);
         this.loading = false;
+        this.cdr.markForCheck();
       },
       error: () => {
         this.error = 'Failed to load listings. Please try again.';
         this.loading = false;
+        this.cdr.markForCheck();
       }
     });
   }
@@ -569,6 +577,7 @@ export class ListingListComponent implements OnInit, OnDestroy {
         next: () => {
           this.watchlistIds.delete(id);
           this.watchlistIds = new Set(this.watchlistIds);
+          this.cdr.markForCheck();
         }
       });
     } else {
@@ -576,6 +585,7 @@ export class ListingListComponent implements OnInit, OnDestroy {
         next: () => {
           this.watchlistIds.add(id);
           this.watchlistIds = new Set(this.watchlistIds);
+          this.cdr.markForCheck();
         }
       });
     }
