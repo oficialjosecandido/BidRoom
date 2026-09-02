@@ -1,0 +1,281 @@
+<div class="admin-layout">
+  <app-admin-sidebar></app-admin-sidebar>
+
+  <div class="admin-content">
+    <div class="admin-emails">
+      <header class="page-header">
+        <h1 class="page-title">Emails</h1>
+        <p class="page-subtitle">Ferramenta de newsletter e emails personalizados para trazer mais leilões para a BidRoom.</p>
+      </header>
+
+      <div class="main-tabs">
+        <button type="button" class="main-tab-btn" [class.active]="activeTab === 'newsletter'" (click)="setTab('newsletter')">
+          📰 Newsletter
+        </button>
+        <button type="button" class="main-tab-btn" [class.active]="activeTab === 'personalized'" (click)="setTab('personalized')">
+          ✉️ Emails personalizados
+        </button>
+      </div>
+
+      <!-- ================= NEWSLETTER ================= -->
+      @if (activeTab === 'newsletter') {
+        <section class="panel-card">
+          <h2 class="panel-title">Nova campanha</h2>
+
+          <div class="form-group">
+            <label>Audiência</label>
+            <div class="audience-options">
+              <label class="radio-option">
+                <input type="radio" name="audience" [checked]="audience === 'all_users'" (change)="setAudience('all_users')" />
+                Todos os utilizadores
+              </label>
+              <label class="radio-option">
+                <input type="radio" name="audience" [checked]="audience === 'interested'" (change)="setAudience('interested')" />
+                Todos os interessados
+              </label>
+              <span class="audience-count">
+                @if (loadingCount) { a calcular… } @else if (audienceCount !== null) { {{ audienceCount }} destinatário(s) }
+              </span>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="campaign-subject">Assunto</label>
+            <input id="campaign-subject" type="text" class="form-input" [(ngModel)]="subject" placeholder="Assunto do email" />
+          </div>
+
+          <div class="html-editor-grid">
+            <div class="form-group">
+              <label for="campaign-html">HTML do email</label>
+              <textarea id="campaign-html" class="form-input html-textarea" [(ngModel)]="html" rows="16" placeholder="&lt;p&gt;Escreve aqui o HTML do email…&lt;/p&gt;"></textarea>
+            </div>
+            <div class="form-group">
+              <label>Pré-visualização</label>
+              <iframe class="preview-frame" [srcdoc]="html" title="Pré-visualização do email" sandbox=""></iframe>
+            </div>
+          </div>
+
+          <div class="actions-row">
+            <button type="button" class="btn btn-secondary" [disabled]="!canSend || sendingTest" (click)="sendTest()">
+              {{ sendingTest ? 'A enviar…' : 'Enviar teste' }}
+            </button>
+            <button type="button" class="btn btn-primary" [disabled]="!canSend || sendingCampaign" (click)="sendCampaign()">
+              {{ sendingCampaign ? 'A enviar…' : 'Enviar campanha' }}
+            </button>
+          </div>
+
+          @if (testMessage) { <p class="result-message success">{{ testMessage }}</p> }
+          @if (testError) { <p class="result-message error">{{ testError }}</p> }
+          @if (campaignResult) {
+            <p class="result-message success">
+              Campanha enviada: {{ campaignResult.sent }}/{{ campaignResult.total }} com sucesso
+              @if (campaignResult.failed > 0) { ({{ campaignResult.failed }} falha(s)) }
+            </p>
+          }
+          @if (campaignError) { <p class="result-message error">{{ campaignError }}</p> }
+        </section>
+
+        <section class="panel-card">
+          <h2 class="panel-title">Lista de interessados</h2>
+          <p class="panel-subtitle">Emails que não são clientes registados mas que queres incluir nas campanhas.</p>
+
+          <div class="add-contact-form">
+            <input type="email" class="form-input" [(ngModel)]="newContactEmail" placeholder="email@exemplo.com" (keyup.enter)="addContact()" />
+            <input type="text" class="form-input" [(ngModel)]="newContactName" placeholder="Nome (opcional)" (keyup.enter)="addContact()" />
+            <button type="button" class="btn btn-primary" [disabled]="!newContactEmail.trim() || addingContact" (click)="addContact()">
+              {{ addingContact ? 'A adicionar…' : 'Adicionar' }}
+            </button>
+          </div>
+          @if (addContactError) { <p class="result-message error">{{ addContactError }}</p> }
+
+          @if (loadingInterested) {
+            <div class="loading-state"><div class="spinner"></div></div>
+          } @else if (interestedContacts.length === 0) {
+            <div class="empty-state small">
+              <p class="empty-message">Ainda não há contactos interessados.</p>
+            </div>
+          } @else {
+            <div class="panel-table">
+              <div class="table-scroll">
+                <table class="nexus-data-table">
+                  <thead>
+                    <tr>
+                      <th scope="col">Email</th>
+                      <th scope="col">Nome</th>
+                      <th scope="col">Adicionado em</th>
+                      <th scope="col"><span class="sr-only">Ações</span></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (c of interestedContacts; track c._id) {
+                      <tr>
+                        <td>{{ c.email }}</td>
+                        <td class="muted-col">{{ c.name || '—' }}</td>
+                        <td class="date-cell">{{ formatDate(c.createdAt) }}</td>
+                        <td>
+                          <button type="button" class="action-btn remove-action" (click)="removeContact(c)">Remover</button>
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          }
+        </section>
+      }
+
+      <!-- ================= PERSONALIZED ================= -->
+      @if (activeTab === 'personalized') {
+        <div class="sub-tabs">
+          <button type="button" class="sub-tab-btn" [class.active]="personalizedSection === 'drafts'" (click)="setPersonalizedSection('drafts')">
+            Rascunhos por publicar
+          </button>
+          <button type="button" class="sub-tab-btn" [class.active]="personalizedSection === 'customer'" (click)="setPersonalizedSection('customer')">
+            Email para um utilizador
+          </button>
+        </div>
+
+        @if (personalizedSection === 'drafts') {
+          <section class="panel-card">
+            <h2 class="panel-title">Anúncios começados e nunca publicados</h2>
+            <p class="panel-subtitle">Vendedores que deixaram um rascunho de anúncio por terminar — envia-lhes um lembrete para retomar.</p>
+
+            @if (loadingDrafts) {
+              <div class="loading-state"><div class="spinner"></div></div>
+            } @else if (draftsError) {
+              <div class="error-state"><p class="error-message">{{ draftsError }}</p></div>
+            } @else if (draftReminders.length === 0) {
+              <div class="empty-state small">
+                <p class="empty-message">Sem rascunhos por publicar de momento.</p>
+              </div>
+            } @else {
+              <div class="panel-table">
+                <div class="table-scroll">
+                  <table class="nexus-data-table">
+                    <thead>
+                      <tr>
+                        <th scope="col">Vendedor</th>
+                        <th scope="col">Título do rascunho</th>
+                        <th scope="col">Última edição</th>
+                        <th scope="col">Lembrete enviado</th>
+                        <th scope="col"><span class="sr-only">Ações</span></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      @for (d of draftReminders; track d._id) {
+                        <tr>
+                          <td>
+                            {{ d.sellerName || '—' }}<br/>
+                            <span class="email-small">{{ d.sellerEmail }}</span>
+                          </td>
+                          <td class="muted-col">{{ d.draftTitle || '—' }}</td>
+                          <td class="date-cell">{{ formatDate(d.updatedAt) }}</td>
+                          <td>
+                            <span class="status-badge" [class.status-resolved]="d.draftReminderSent" [class.status-pending]="!d.draftReminderSent">
+                              {{ d.draftReminderSent ? 'Sim' : 'Não' }}
+                            </span>
+                          </td>
+                          <td>
+                            <button type="button" class="action-btn view-action" (click)="openDraftEditor(d)">Enviar lembrete</button>
+                          </td>
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            }
+          </section>
+
+          @if (editingDraft) {
+            <div class="modal-overlay" (click)="closeDraftEditor()">
+              <div class="modal-content editor-modal" (click)="$event.stopPropagation()">
+                <div class="modal-header">
+                  <h3 class="modal-title">Enviar lembrete a {{ editingDraft.sellerEmail }}</h3>
+                  <button type="button" class="modal-close" (click)="closeDraftEditor()" aria-label="Fechar">×</button>
+                </div>
+                <div class="modal-body">
+                  <div class="form-group">
+                    <label for="draft-subject">Assunto</label>
+                    <input id="draft-subject" type="text" class="form-input" [(ngModel)]="draftSubject" />
+                  </div>
+                  <div class="html-editor-grid">
+                    <div class="form-group">
+                      <label for="draft-html">HTML do email</label>
+                      <textarea id="draft-html" class="form-input html-textarea" [(ngModel)]="draftHtml" rows="14"></textarea>
+                    </div>
+                    <div class="form-group">
+                      <label>Pré-visualização</label>
+                      <iframe class="preview-frame" [srcdoc]="draftHtml" title="Pré-visualização do email" sandbox=""></iframe>
+                    </div>
+                  </div>
+                  @if (draftSendError) { <p class="result-message error">{{ draftSendError }}</p> }
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary" (click)="closeDraftEditor()">Cancelar</button>
+                  <button type="button" class="btn btn-primary" [disabled]="sendingDraft" (click)="sendDraftReminderEmail()">
+                    {{ sendingDraft ? 'A enviar…' : 'Enviar' }}
+                  </button>
+                </div>
+              </div>
+            </div>
+          }
+        }
+
+        @if (personalizedSection === 'customer') {
+          <section class="panel-card">
+            <h2 class="panel-title">Email personalizado para um utilizador</h2>
+
+            @if (!selectedCustomer) {
+              <div class="form-group">
+                <label for="customer-search">Procurar utilizador (nome ou email)</label>
+                <input id="customer-search" type="text" class="form-input" [ngModel]="customerQuery" (ngModelChange)="onCustomerQueryChange($event)" placeholder="Procurar…" />
+              </div>
+              @if (searchingCustomers) {
+                <p class="muted-inline">A procurar…</p>
+              } @else if (customerResults.length > 0) {
+                <ul class="customer-results">
+                  @for (c of customerResults; track c._id) {
+                    <li (click)="selectCustomer(c)">
+                      <strong>{{ c.firstName }} {{ c.lastName }}</strong>
+                      <span class="email-small">{{ c.email }}</span>
+                    </li>
+                  }
+                </ul>
+              }
+            } @else {
+              <div class="selected-customer">
+                <span>Para: <strong>{{ selectedCustomer.firstName }} {{ selectedCustomer.lastName }}</strong> ({{ selectedCustomer.email }})</span>
+                <button type="button" class="btn btn-secondary" (click)="clearSelectedCustomer()">Trocar utilizador</button>
+              </div>
+
+              <div class="form-group">
+                <label for="customer-subject">Assunto</label>
+                <input id="customer-subject" type="text" class="form-input" [(ngModel)]="customerSubject" />
+              </div>
+              <div class="html-editor-grid">
+                <div class="form-group">
+                  <label for="customer-html">HTML do email</label>
+                  <textarea id="customer-html" class="form-input html-textarea" [(ngModel)]="customerHtml" rows="14"></textarea>
+                </div>
+                <div class="form-group">
+                  <label>Pré-visualização</label>
+                  <iframe class="preview-frame" [srcdoc]="customerHtml" title="Pré-visualização do email" sandbox=""></iframe>
+                </div>
+              </div>
+
+              <div class="actions-row">
+                <button type="button" class="btn btn-primary" [disabled]="sendingCustomerEmail" (click)="sendCustomerEmail()">
+                  {{ sendingCustomerEmail ? 'A enviar…' : 'Enviar' }}
+                </button>
+              </div>
+              @if (customerSendMessage) { <p class="result-message success">{{ customerSendMessage }}</p> }
+              @if (customerSendError) { <p class="result-message error">{{ customerSendError }}</p> }
+            }
+          </section>
+        }
+      }
+    </div>
+  </div>
+</div>

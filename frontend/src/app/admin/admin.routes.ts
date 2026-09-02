@@ -62,6 +62,11 @@ export const adminRoutes: Routes = [
     path: 'appeals',
     loadComponent: () => import('./components/appeals/admin-appeals.component').then(m => m.AdminAppealsComponent),
     canActivate: [AdminGuard]
+  },
+  {
+    path: 'emails',
+    loadComponent: () => import('./components/emails/admin-emails.component').then(m => m.AdminEmailsComponent),
+    canActivate: [AdminGuard]
   }
 ];
 

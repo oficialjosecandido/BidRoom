@@ -30,6 +30,7 @@ export class AdminSidebarComponent {
     { label: 'Reports', route: '/nexus/reports', icon: '🚩' },
     { label: 'Suporte', route: '/nexus/support', icon: '💬' },
     { label: 'Blog', route: '/nexus/blog', icon: '📝' },
+    { label: 'Emails', route: '/nexus/emails', icon: '📧' },
     { label: 'Landing Page', route: '/landing', icon: '🌐' }
   ];
 
