@@ -109,6 +109,26 @@
   font-size: 13px;
 }
 
+.status-toggle-btn {
+  padding: 6px 14px;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  background: #fee2e2;
+  color: #b91c1c;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover:not(:disabled) { opacity: 0.85; }
+  &:disabled { opacity: 0.6; cursor: not-allowed; }
+
+  &.subscribed {
+    border-color: #bbf7d0;
+    background: #dcfce7;
+    color: #166534;
+  }
+}
+
 .panel-card {
   background: #fff;
   border-radius: 14px;

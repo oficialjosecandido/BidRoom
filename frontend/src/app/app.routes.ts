@@ -98,6 +98,10 @@ export const routes: Routes = [
     path: 'notifications/unsubscribe',
     loadComponent: () => import('./notifications/unsubscribe.component').then(m => m.UnsubscribeComponent)
   },
+  {
+    path: 'email-preferences',
+    loadComponent: () => import('./notifications/email-preferences.component').then(m => m.EmailPreferencesComponent)
+  },
   // Note: no '**' catch-all here — Angular SSR build fails with path-to-regexp v8 on unnamed wildcards.
   // Unknown paths are handled at the server level (Express redirects to /landing).
   // On the browser SPA, unknown paths simply don't navigate (stays on current route).

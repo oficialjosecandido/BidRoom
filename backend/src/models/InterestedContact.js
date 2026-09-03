@@ -22,7 +22,14 @@ const interestedContactSchema = new mongoose.Schema({
     type: String,
     enum: ['en', 'pt', 'es', 'fr'],
     default: 'en'
-  }
+  },
+  /** Opted out of all campaign emails via the self-service unsubscribe link */
+  unsubscribed: {
+    type: Boolean,
+    default: false
+  },
+  /** Opaque token used to unsubscribe/change language without login (generated on first use) */
+  emailUnsubscribeToken: { type: String, default: null, sparse: true, index: true }
 }, {
   timestamps: true
 });

@@ -8,6 +8,7 @@ const InterestedContact = require('../models/InterestedContact');
 const ListingDraft = require('../models/ListingDraft');
 const { sendEmail } = require('../services/emailService');
 const { renderEmailTemplate } = require('../services/templateEngine');
+const { appendPreferencesFooter } = require('../services/emailPreferencesService');
 const logger = require('../utils/logger');
 
 const router = express.Router();
@@ -35,12 +36,12 @@ async function getAllUsersRecipients() {
   const unsubscribedIds = new Set(unsubscribed.map(p => String(p.user)));
   return customers
     .filter(c => !unsubscribedIds.has(String(c._id)))
-    .map(c => ({ email: c.email, language: c.language || 'en' }));
+    .map(c => ({ id: c._id, type: 'customer', email: c.email, language: c.language || 'en' }));
 }
 
 async function getInterestedRecipients() {
-  const contacts = await InterestedContact.find({}, 'email language').lean();
-  return contacts.map(c => ({ email: c.email, language: c.language || 'en' }));
+  const contacts = await InterestedContact.find({ unsubscribed: { $ne: true } }, 'email language').lean();
+  return contacts.map(c => ({ id: c._id, type: 'interested', email: c.email, language: c.language || 'en' }));
 }
 
 async function resolveAudience(audience) {
@@ -55,9 +56,10 @@ async function sendInBatches(recipients, content) {
   let failed = 0;
   for (let i = 0; i < recipients.length; i += SEND_BATCH_SIZE) {
     const batch = recipients.slice(i, i + SEND_BATCH_SIZE);
-    const results = await Promise.allSettled(batch.map(r => {
+    const results = await Promise.allSettled(batch.map(async r => {
       const variant = content[r.language] || content.en;
-      return sendEmail(r.email, variant.subject, variant.html);
+      const html = await appendPreferencesFooter(variant.html, { type: r.type, id: r.id, language: r.language });
+      return sendEmail(r.email, variant.subject, html);
     }));
     for (const result of results) {
       if (result.status === 'fulfilled') sent++;
@@ -115,6 +117,9 @@ router.patch('/interested/:id', authenticateToken, requireAdmin, async (req, res
     if (req.body?.name !== undefined) {
       update.name = String(req.body.name).trim();
     }
+    if (typeof req.body?.unsubscribed === 'boolean') {
+      update.unsubscribed = req.body.unsubscribed;
+    }
     const contact = await InterestedContact.findByIdAndUpdate(req.params.id, update, { new: true }).lean();
     if (!contact) return res.status(404).json({ error: 'Contact not found.' });
     res.json({ contact });
@@ -153,8 +158,10 @@ router.post('/test', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const subject = String(req.body?.subject || '').trim();
     const html = String(req.body?.html || '');
+    const language = CAMPAIGN_LANGUAGES.includes(req.body?.language) ? req.body.language : 'pt';
     if (!subject || !html) return res.status(400).json({ error: 'Subject and HTML are required.' });
-    await sendEmail(TEST_EMAIL_RECIPIENT, subject, html);
+    const htmlWithFooter = await appendPreferencesFooter(html, { type: 'customer', id: null, language });
+    await sendEmail(TEST_EMAIL_RECIPIENT, subject, htmlWithFooter);
     res.json({ ok: true, to: TEST_EMAIL_RECIPIENT });
   } catch (err) {
     logger.error('POST /api/admin/emails/test error:', err);
@@ -249,11 +256,16 @@ router.post('/draft-reminders/:draftId/send', authenticateToken, requireAdmin, a
     const html = String(req.body?.html || '');
     if (!subject || !html) return res.status(400).json({ error: 'Subject and HTML are required.' });
 
-    const draft = await ListingDraft.findById(req.params.draftId).populate('seller', 'email').lean();
+    const draft = await ListingDraft.findById(req.params.draftId).populate('seller', 'email language').lean();
     if (!draft) return res.status(404).json({ error: 'Draft not found.' });
     if (!draft.seller?.email) return res.status(400).json({ error: 'This draft has no seller email.' });
 
-    await sendEmail(draft.seller.email, subject, html);
+    const htmlWithFooter = await appendPreferencesFooter(html, {
+      type: 'customer',
+      id: draft.seller._id,
+      language: draft.seller.language || 'en'
+    });
+    await sendEmail(draft.seller.email, subject, htmlWithFooter);
     await ListingDraft.updateOne({ _id: draft._id }, { draftReminderSent: true });
 
     res.json({ ok: true, sentTo: draft.seller.email });
@@ -276,10 +288,53 @@ router.get('/customers/search', authenticateToken, requireAdmin, async (req, res
     )
       .limit(20)
       .lean();
-    res.json({ customers });
+
+    const prefs = await NotificationPreferences.find(
+      { user: { $in: customers.map(c => c._id) }, globalEmailUnsubscribed: true },
+      'user'
+    ).lean();
+    const unsubscribedIds = new Set(prefs.map(p => String(p.user)));
+
+    res.json({
+      customers: customers.map(c => ({ ...c, unsubscribed: unsubscribedIds.has(String(c._id)) }))
+    });
   } catch (err) {
     logger.error('GET /api/admin/emails/customers/search error:', err);
     res.status(500).json({ error: 'Failed to search customers.' });
+  }
+});
+
+router.patch('/customers/:customerId/preferences', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    if (!isValidObjectId(req.params.customerId)) return res.status(400).json({ error: 'Invalid customer ID.' });
+
+    if (req.body?.language !== undefined) {
+      if (!CAMPAIGN_LANGUAGES.includes(req.body.language)) {
+        return res.status(400).json({ error: 'Invalid language.' });
+      }
+      const customer = await Customer.findByIdAndUpdate(
+        req.params.customerId,
+        { language: req.body.language },
+        { new: true }
+      ).lean();
+      if (!customer) return res.status(404).json({ error: 'Customer not found.' });
+    } else {
+      const exists = await Customer.exists({ _id: req.params.customerId });
+      if (!exists) return res.status(404).json({ error: 'Customer not found.' });
+    }
+
+    if (typeof req.body?.unsubscribed === 'boolean') {
+      await NotificationPreferences.findOneAndUpdate(
+        { user: req.params.customerId },
+        { $set: { globalEmailUnsubscribed: req.body.unsubscribed } },
+        { upsert: true, setDefaultsOnInsert: true }
+      );
+    }
+
+    res.json({ ok: true });
+  } catch (err) {
+    logger.error('PATCH /api/admin/emails/customers/:customerId/preferences error:', err);
+    res.status(500).json({ error: 'Failed to update preferences.' });
   }
 });
 
@@ -290,10 +345,15 @@ router.post('/customers/:customerId/send', authenticateToken, requireAdmin, asyn
     const html = String(req.body?.html || '');
     if (!subject || !html) return res.status(400).json({ error: 'Subject and HTML are required.' });
 
-    const customer = await Customer.findById(req.params.customerId, 'email').lean();
+    const customer = await Customer.findById(req.params.customerId, 'email language').lean();
     if (!customer) return res.status(404).json({ error: 'Customer not found.' });
 
-    await sendEmail(customer.email, subject, html);
+    const htmlWithFooter = await appendPreferencesFooter(html, {
+      type: 'customer',
+      id: customer._id,
+      language: customer.language || 'en'
+    });
+    await sendEmail(customer.email, subject, htmlWithFooter);
     res.json({ ok: true, sentTo: customer.email });
   } catch (err) {
     logger.error('POST /api/admin/emails/customers/:customerId/send error:', err);

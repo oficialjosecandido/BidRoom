@@ -12,7 +12,13 @@ export interface InterestedContact {
   email: string;
   name?: string;
   language: CampaignLanguage;
+  unsubscribed: boolean;
   createdAt: string;
+}
+
+export interface ContactPreferencesUpdate {
+  language?: CampaignLanguage;
+  unsubscribed?: boolean;
 }
 
 export interface LanguageContent {
@@ -45,7 +51,8 @@ export interface CustomerSearchResult {
   firstName: string;
   lastName: string;
   email: string;
-  language?: string;
+  language?: CampaignLanguage;
+  unsubscribed?: boolean;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -65,8 +72,12 @@ export class AdminEmailsService {
     return this.http.post<{ contact: InterestedContact }>(`${this.apiUrl}/interested`, { email, name, language });
   }
 
-  updateInterestedContactLanguage(id: string, language: CampaignLanguage): Observable<{ contact: InterestedContact }> {
-    return this.http.patch<{ contact: InterestedContact }>(`${this.apiUrl}/interested/${id}`, { language });
+  updateInterestedContact(id: string, updates: ContactPreferencesUpdate): Observable<{ contact: InterestedContact }> {
+    return this.http.patch<{ contact: InterestedContact }>(`${this.apiUrl}/interested/${id}`, updates);
+  }
+
+  updateCustomerPreferences(customerId: string, updates: ContactPreferencesUpdate): Observable<{ ok: boolean }> {
+    return this.http.patch<{ ok: boolean }>(`${this.apiUrl}/customers/${customerId}/preferences`, updates);
   }
 
   removeInterestedContact(id: string): Observable<{ ok: boolean; deletedId: string }> {
@@ -79,8 +90,8 @@ export class AdminEmailsService {
     return this.http.get<{ count: number }>(`${this.apiUrl}/audience-count`, { params });
   }
 
-  sendTest(subject: string, html: string): Observable<{ ok: boolean; to: string }> {
-    return this.http.post<{ ok: boolean; to: string }>(`${this.apiUrl}/test`, { subject, html });
+  sendTest(subject: string, html: string, language: CampaignLanguage): Observable<{ ok: boolean; to: string }> {
+    return this.http.post<{ ok: boolean; to: string }>(`${this.apiUrl}/test`, { subject, html, language });
   }
 
   sendCampaign(content: CampaignContent, audience: EmailAudience): Observable<SendResult> {

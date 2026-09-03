@@ -27,7 +27,7 @@ export class AdminEmailsComponent implements OnInit {
   private adminEmailsService = inject(AdminEmailsService);
   private destroyRef = inject(DestroyRef);
 
-  activeTab: 'newsletter' | 'personalized' = 'newsletter';
+  activeTab: 'newsletter' | 'personalized' | 'preferences' = 'newsletter';
 
   // ---- Newsletter ----
   readonly LANGUAGES: { code: CampaignLanguage; label: string }[] = [
@@ -89,6 +89,15 @@ export class AdminEmailsComponent implements OnInit {
   customerSendError: string | null = null;
   customerSendMessage: string | null = null;
 
+  // ---- Preferences: customer lookup ----
+  private prefsCustomerSearch$ = new Subject<string>();
+  prefsCustomerQuery = '';
+  prefsCustomerResults: CustomerSearchResult[] = [];
+  prefsSearchingCustomers = false;
+  prefsSelectedCustomer: CustomerSearchResult | null = null;
+  prefsSaving = false;
+  prefsSaveError: string | null = null;
+
   ngOnInit(): void {
     this.loadAudienceCount();
     this.loadInterested();
@@ -105,9 +114,21 @@ export class AdminEmailsComponent implements OnInit {
       next: (res) => { this.customerResults = res.customers; this.searchingCustomers = false; },
       error: () => { this.searchingCustomers = false; }
     });
+
+    this.prefsCustomerSearch$.pipe(
+      debounceTime(300),
+      distinctUntilChanged(),
+      switchMap(q => q.trim().length >= 2
+        ? this.adminEmailsService.searchCustomers(q.trim())
+        : of({ customers: [] as CustomerSearchResult[] })),
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe({
+      next: (res) => { this.prefsCustomerResults = res.customers; this.prefsSearchingCustomers = false; },
+      error: () => { this.prefsSearchingCustomers = false; }
+    });
   }
 
-  setTab(tab: 'newsletter' | 'personalized'): void {
+  setTab(tab: 'newsletter' | 'personalized' | 'preferences'): void {
     this.activeTab = tab;
   }
 
@@ -152,7 +173,7 @@ export class AdminEmailsComponent implements OnInit {
     this.sendingTest = true;
     this.testMessage = null;
     this.testError = null;
-    this.adminEmailsService.sendTest(variant.subject.trim(), variant.html).subscribe({
+    this.adminEmailsService.sendTest(variant.subject.trim(), variant.html, this.activeLanguage).subscribe({
       next: (res) => {
         this.sendingTest = false;
         this.testMessage = `Email de teste (${this.activeLanguage.toUpperCase()}) enviado para ${res.to}.`;
@@ -222,8 +243,16 @@ export class AdminEmailsComponent implements OnInit {
   updateContactLanguage(contact: InterestedContact, language: CampaignLanguage): void {
     const previous = contact.language;
     contact.language = language;
-    this.adminEmailsService.updateInterestedContactLanguage(contact._id, language).subscribe({
+    this.adminEmailsService.updateInterestedContact(contact._id, { language }).subscribe({
       error: () => { contact.language = previous; }
+    });
+  }
+
+  toggleContactUnsubscribed(contact: InterestedContact): void {
+    const previous = contact.unsubscribed;
+    contact.unsubscribed = !previous;
+    this.adminEmailsService.updateInterestedContact(contact._id, { unsubscribed: contact.unsubscribed }).subscribe({
+      error: () => { contact.unsubscribed = previous; }
     });
   }
 
@@ -325,6 +354,58 @@ export class AdminEmailsComponent implements OnInit {
       error: (err) => {
         this.sendingCustomerEmail = false;
         this.customerSendError = err?.error?.error || 'Falha ao enviar email.';
+      }
+    });
+  }
+
+  // ---- Preferences: customer lookup ----
+
+  onPrefsCustomerQueryChange(value: string): void {
+    this.prefsCustomerQuery = value;
+    this.prefsSearchingCustomers = value.trim().length >= 2;
+    this.prefsCustomerSearch$.next(value);
+  }
+
+  selectPrefsCustomer(customer: CustomerSearchResult): void {
+    this.prefsSelectedCustomer = customer;
+    this.prefsSaveError = null;
+    this.prefsCustomerResults = [];
+    this.prefsCustomerQuery = '';
+  }
+
+  clearPrefsCustomer(): void {
+    this.prefsSelectedCustomer = null;
+  }
+
+  savePrefsCustomerLanguage(language: CampaignLanguage): void {
+    if (!this.prefsSelectedCustomer || this.prefsSaving) return;
+    const previous = this.prefsSelectedCustomer.language;
+    this.prefsSelectedCustomer.language = language;
+    this.prefsSaving = true;
+    this.prefsSaveError = null;
+    this.adminEmailsService.updateCustomerPreferences(this.prefsSelectedCustomer._id, { language }).subscribe({
+      next: () => { this.prefsSaving = false; },
+      error: (err) => {
+        this.prefsSaving = false;
+        if (this.prefsSelectedCustomer) this.prefsSelectedCustomer.language = previous;
+        this.prefsSaveError = err?.error?.error || 'Falha ao guardar idioma.';
+      }
+    });
+  }
+
+  togglePrefsCustomerUnsubscribed(): void {
+    if (!this.prefsSelectedCustomer || this.prefsSaving) return;
+    const previous = this.prefsSelectedCustomer.unsubscribed;
+    const unsubscribed = !previous;
+    this.prefsSelectedCustomer.unsubscribed = unsubscribed;
+    this.prefsSaving = true;
+    this.prefsSaveError = null;
+    this.adminEmailsService.updateCustomerPreferences(this.prefsSelectedCustomer._id, { unsubscribed }).subscribe({
+      next: () => { this.prefsSaving = false; },
+      error: (err) => {
+        this.prefsSaving = false;
+        if (this.prefsSelectedCustomer) this.prefsSelectedCustomer.unsubscribed = previous;
+        this.prefsSaveError = err?.error?.error || 'Falha ao guardar preferência.';
       }
     });
   }
