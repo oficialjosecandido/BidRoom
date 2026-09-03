@@ -259,4 +259,14 @@ export class AdminService {
   deleteListing(id: string): Observable<{ ok: boolean; deletedId: string }> {
     return this.http.delete<{ ok: boolean; deletedId: string }>(`${this.apiUrl}/auctions/${id}`);
   }
+
+  updateListingCategory(
+    id: string,
+    payload: { category: string; subCategory: string }
+  ): Observable<{ ok: boolean; category: string; subCategory: string }> {
+    return this.http.patch<{ ok: boolean; category: string; subCategory: string }>(
+      `${this.apiUrl}/auctions/${id}/category`,
+      payload
+    );
+  }
 }

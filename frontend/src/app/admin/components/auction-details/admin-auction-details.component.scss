@@ -187,6 +187,50 @@ table.auction-kv-table {
     font-weight: 500;
   }
 
+  .category-edit {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .category-edit__select {
+    min-width: 140px;
+    max-width: 220px;
+    padding: 6px 10px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    background: #fff;
+    font-size: 13px;
+    color: #0f172a;
+  }
+
+  .category-edit__save {
+    padding: 6px 14px;
+    border: none;
+    border-radius: 8px;
+    background: #0f172a;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    &:not(:disabled):hover {
+      background: #1e293b;
+    }
+  }
+
+  .category-edit__ok {
+    font-size: 12px;
+    font-weight: 600;
+    color: #0f766e;
+  }
+
   .price-highlight {
     font-weight: 700;
     color: var(--primary-color);

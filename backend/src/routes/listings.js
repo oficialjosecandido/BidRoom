@@ -1204,12 +1204,11 @@ router.post('/', authenticateToken, requireActiveAccount, requireNoDisputeRestri
     if (!localizedText.description || localizedText.description.length < 50) {
       return res.status(400).json({ error: 'Description must be at least 50 characters' });
     }
-    if (!category) {
-      return res.status(400).json({ error: 'Category is required' });
-    }
-    if (!subCategory) {
-      return res.status(400).json({ error: 'Sub-category is required' });
-    }
+    // Category is assigned automatically on create (Nexus can override later).
+    const DEFAULT_CATEGORY = 'jewelry';
+    const DEFAULT_SUBCATEGORY = 'Luxury Watches';
+    const resolvedCategory = (category && String(category).trim()) || DEFAULT_CATEGORY;
+    const resolvedSubCategory = (subCategory && String(subCategory).trim()) || DEFAULT_SUBCATEGORY;
     if (!condition) {
       return res.status(400).json({ error: 'Item condition is required' });
     }
@@ -1239,7 +1238,7 @@ router.post('/', authenticateToken, requireActiveAccount, requireNoDisputeRestri
       return res.status(400).json({ error: 'Shipping option is required' });
     }
     // Vehicles are collection-only (no postal shipping), like OLX car listings.
-    if (category === 'vehicles' && shippingOption !== 'local-pickup') {
+    if (resolvedCategory === 'vehicles' && shippingOption !== 'local-pickup') {
       return res.status(400).json({
         error: 'Vehicle listings only support in-person collection (local-pickup).'
       });
@@ -1415,7 +1414,7 @@ router.post('/', authenticateToken, requireActiveAccount, requireNoDisputeRestri
     let cleanedAttributes = {};
     if (attributes && typeof attributes === 'object') {
       const { validateAttributes } = require('../validators/listingValidator');
-      const attrResult = validateAttributes(attributes, subCategory, category);
+      const attrResult = validateAttributes(attributes, resolvedSubCategory, resolvedCategory);
       if (!attrResult.valid) {
         return res.status(400).json({
           error: 'Invalid listing attributes',
@@ -1437,8 +1436,8 @@ router.post('/', authenticateToken, requireActiveAccount, requireNoDisputeRestri
       descriptionEn: localizedText.descriptionEn,
       descriptionFr: localizedText.descriptionFr,
       descriptionEs: localizedText.descriptionEs,
-      category: category.toLowerCase().replace(/\s+/g, '-'), // Normalize category
-      subCategory: subCategory.trim(),
+      category: resolvedCategory.toLowerCase().replace(/\s+/g, '-'), // Normalize category
+      subCategory: resolvedSubCategory.trim(),
       condition,
       auctionFormat: (listingFormat === 'best-offer') ? 'best-offer' : 'highest-bid',
       durationSlot,

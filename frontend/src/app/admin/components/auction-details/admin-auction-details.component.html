@@ -69,10 +69,35 @@
               <tr>
                 <th scope="row">Category</th>
                 <td>
-                  {{ auction.category }}
-                  @if (auction.subCategory) {
-                    <span class="subcat">· {{ auction.subCategory }}</span>
-                  }
+                  <div class="category-edit">
+                    <select
+                      class="category-edit__select"
+                      [(ngModel)]="editCategory"
+                      (ngModelChange)="onCategoryChange()"
+                      [disabled]="isSavingCategory">
+                      @for (cat of categories; track cat.id) {
+                        <option [value]="cat.id">{{ cat.name }}</option>
+                      }
+                    </select>
+                    <select
+                      class="category-edit__select"
+                      [(ngModel)]="editSubCategory"
+                      [disabled]="isSavingCategory || !editSubCategories.length">
+                      @for (sub of editSubCategories; track sub) {
+                        <option [value]="sub">{{ sub }}</option>
+                      }
+                    </select>
+                    <button
+                      type="button"
+                      class="category-edit__save"
+                      [disabled]="isSavingCategory || !editCategory || !editSubCategory"
+                      (click)="saveCategory()">
+                      {{ isSavingCategory ? 'Saving…' : 'Save' }}
+                    </button>
+                    @if (categorySavedMsg) {
+                      <span class="category-edit__ok">{{ categorySavedMsg }}</span>
+                    }
+                  </div>
                 </td>
               </tr>
               <tr>

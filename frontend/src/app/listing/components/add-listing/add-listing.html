@@ -234,31 +234,6 @@
           </div>
         }
 
-        <div class="field-row">
-          <div class="field">
-            <label class="field-label">{{ 'addListing.category' | translate }} <span class="req">*</span></label>
-            <select class="field-select" formControlName="category">
-              <option value="">{{ 'addListing.selectCategory' | translate }}</option>
-              @for (cat of categories; track cat.id) {
-                <option [value]="cat.id">{{ 'addListing.categories.' + cat.id | translate }}</option>
-              }
-            </select>
-            @if (getFieldError('category')) { <div class="field-err">{{ getFieldError('category') }}</div> }
-          </div>
-          @if (selectedCategory) {
-            <div class="field">
-              <label class="field-label">{{ 'addListing.subCategory' | translate }} <span class="req">*</span></label>
-              <select class="field-select" formControlName="subCategory">
-                <option value="">{{ 'addListing.selectSubCategory' | translate }}</option>
-                @for (sub of getSelectedSubCategories(); track sub) {
-                  <option [value]="sub">{{ getSubCategoryLabel(sub) }}</option>
-                }
-              </select>
-              @if (getFieldError('subCategory')) { <div class="field-err">{{ getFieldError('subCategory') }}</div> }
-            </div>
-          }
-        </div>
-
         <div class="field">
           <label class="field-label">{{ 'addListing.condition' | translate }} <span class="req">*</span></label>
           <div class="pill-group">
@@ -848,10 +823,6 @@
           <div class="review-row">
             <span class="review-label">{{ 'addListing.listingTitle' | translate }}</span>
             <span class="review-val">{{ previewTitle || '—' }}</span>
-          </div>
-          <div class="review-row">
-            <span class="review-label">{{ 'addListing.category' | translate }}</span>
-            <span class="review-val">{{ reviewCategoryLabel }}</span>
           </div>
           <div class="review-row">
             <span class="review-label">{{ 'addListing.condition' | translate }}</span>

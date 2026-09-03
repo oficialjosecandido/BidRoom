@@ -392,6 +392,49 @@ router.get('/auctions/:id', authenticateToken, requireAdmin, async (req, res) =>
   }
 });
 
+// Update listing category (admin) — sellers no longer pick category on create
+router.patch('/auctions/:id/category', authenticateToken, requireAdmin, async (req, res) => {
+  if (!isValidObjectId(req.params.id)) return res.status(400).json({ error: 'Invalid listing ID' });
+  try {
+    const ALLOWED = ['electronics', 'home-garden', 'art', 'collectibles', 'jewelry', 'real-estate', 'vehicles'];
+    const category = req.body?.category ? String(req.body.category).trim().toLowerCase().replace(/\s+/g, '-') : '';
+    const subCategory = req.body?.subCategory ? String(req.body.subCategory).trim() : '';
+    if (!category || !ALLOWED.includes(category)) {
+      return res.status(400).json({ error: 'Invalid category', allowed: ALLOWED });
+    }
+    if (!subCategory) {
+      return res.status(400).json({ error: 'Sub-category is required' });
+    }
+
+    const listing = await Listing.findById(req.params.id);
+    if (!listing) return res.status(404).json({ error: 'Listing not found' });
+
+    listing.category = category;
+    listing.subCategory = subCategory;
+    await listing.save();
+
+    await appendModerationAudit({
+      action: 'admin_listing_category_updated',
+      subjectUserId: listing.seller,
+      targetType: 'listing',
+      targetId: listing._id,
+      details: { category, subCategory }
+    });
+
+    return res.json({
+      ok: true,
+      category: listing.category,
+      subCategory: listing.subCategory
+    });
+  } catch (error) {
+    logger.error('Error updating listing category:', error);
+    res.status(500).json({
+      error: 'Failed to update category',
+      message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
+    });
+  }
+});
+
 // Hard-delete a listing (admin only)
 router.delete('/auctions/:id', authenticateToken, requireAdmin, async (req, res) => {
   if (!isValidObjectId(req.params.id)) return res.status(400).json({ error: 'Invalid listing ID' });

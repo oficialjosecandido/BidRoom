@@ -391,7 +391,6 @@ export class AddListing implements OnInit, OnDestroy {
     return {
       format: true,
       title: !!titleCtrl?.valid,
-      category: !!this.listingForm?.get('category')?.valid && !!this.listingForm?.get('subCategory')?.valid,
       condition: !!this.listingForm?.get('condition')?.valid,
       description: !!descCtrl?.valid,
       photos: this.uploadedFiles.length >= 1 && this.isMediaValid,
@@ -403,7 +402,6 @@ export class AddListing implements OnInit, OnDestroy {
   readonly checklistMeta: { key: string; labelKey: string }[] = [
     { key: 'format', labelKey: 'addListing.ck.format' },
     { key: 'title', labelKey: 'addListing.ck.title' },
-    { key: 'category', labelKey: 'addListing.ck.category' },
     { key: 'condition', labelKey: 'addListing.ck.condition' },
     { key: 'description', labelKey: 'addListing.ck.desc' },
     { key: 'photos', labelKey: 'addListing.ck.photos' },
@@ -456,7 +454,11 @@ export class AddListing implements OnInit, OnDestroy {
     return opt ? this.translate.instant(opt.labelKey) : val;
   }
 
-  // ─── Categories ──────────────────────────────────────────────────────────────
+  // ─── Categories (auto-assigned on create; editable in Nexus) ───────────────
+  /** Default until auto-classification / Nexus override. Watch vertical. */
+  static readonly DEFAULT_CATEGORY = 'jewelry';
+  static readonly DEFAULT_SUBCATEGORY = 'Luxury Watches';
+
   categories: Category[] = [
     {
       id: 'electronics',
@@ -663,6 +665,8 @@ export class AddListing implements OnInit, OnDestroy {
     this.primaryLangTab = lang;
     this.initializeForm();
     this.setupFormSubscriptions();
+    this.selectedCategory = this.categories.find(c => c.id === AddListing.DEFAULT_CATEGORY) || null;
+    this.loadAttributeSchema(AddListing.DEFAULT_SUBCATEGORY, AddListing.DEFAULT_CATEGORY);
     void this.loadDraftFromServer();
     this.setupDraftAutosave();
     this.loadCustomerInfo();
@@ -732,8 +736,8 @@ export class AddListing implements OnInit, OnDestroy {
       titleEn: ['', [Validators.maxLength(80)]],
       titleFr: ['', [Validators.maxLength(80)]],
       titleEs: ['', [Validators.maxLength(80)]],
-      category: ['', Validators.required],
-      subCategory: ['', Validators.required],
+      category: [AddListing.DEFAULT_CATEGORY, Validators.required],
+      subCategory: [AddListing.DEFAULT_SUBCATEGORY, Validators.required],
       listingFormat: ['best-offer', Validators.required],
       itemMode: ['single', Validators.required],
       quantity: [null],
@@ -829,9 +833,7 @@ export class AddListing implements OnInit, OnDestroy {
     this.listingForm.get('subCategory')?.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(sub => {
       const cat = this.listingForm.get('category')?.value || '';
       if (!sub) { this.attributeSchema.set([]); this.buildAttributeControls([]); return; }
-      this.attributeSchemaSub?.unsubscribe();
-      this.attributeSchemaSub = this.listingsService.getAttributeSchema(sub, cat)
-        .subscribe({ next: ({ schema }) => { this.attributeSchema.set(schema); this.buildAttributeControls(schema); }, error: () => {} });
+      this.loadAttributeSchema(sub, cat);
     });
 
     // Keep generic `title`/`description` in sync with the primary language fields
@@ -1033,10 +1035,13 @@ export class AddListing implements OnInit, OnDestroy {
       for (const k of keys) {
         if (k in p && p[k] !== undefined) patch[k] = p[k];
       }
+      // Category is no longer chosen in the form — keep a valid default if draft lacks one.
+      if (!patch['category']) patch['category'] = AddListing.DEFAULT_CATEGORY;
+      if (!patch['subCategory']) patch['subCategory'] = AddListing.DEFAULT_SUBCATEGORY;
       this.listingForm.patchValue(patch, { emitEvent: false });
 
-      const catId = patch['category'] as string;
-      this.selectedCategory = catId ? this.categories.find(c => c.id === catId) || null : null;
+      const catId = (patch['category'] as string) || AddListing.DEFAULT_CATEGORY;
+      this.selectedCategory = this.categories.find(c => c.id === catId) || null;
       if (catId === 'vehicles') {
         this.applyVehicleLogisticsDefaults();
       }
@@ -1067,21 +1072,21 @@ export class AddListing implements OnInit, OnDestroy {
 
       // Restore structured attributes — must happen after category/subCategory patch
       const savedAttrs = p['attributes'];
-      if (savedAttrs && typeof savedAttrs === 'object' && !Array.isArray(savedAttrs)) {
-        const subCat = patch['subCategory'] as string || '';
-        const cat    = patch['category'] as string || '';
-        if (subCat) {
-          const { schema } = await firstValueFrom(this.listingsService.getAttributeSchema(subCat, cat));
-          this.attributeSchema.set(schema);
-          this.buildAttributeControls(schema);
-          const attrPatch: Record<string, unknown> = {};
-          for (const def of schema) {
-            if ((savedAttrs as Record<string, unknown>)[def.key] !== undefined) {
-              attrPatch[def.key] = (savedAttrs as Record<string, unknown>)[def.key];
-            }
+      const subCat = (patch['subCategory'] as string) || AddListing.DEFAULT_SUBCATEGORY;
+      const cat    = (patch['category'] as string) || AddListing.DEFAULT_CATEGORY;
+      if (savedAttrs && typeof savedAttrs === 'object' && !Array.isArray(savedAttrs) && subCat) {
+        const { schema } = await firstValueFrom(this.listingsService.getAttributeSchema(subCat, cat));
+        this.attributeSchema.set(schema);
+        this.buildAttributeControls(schema);
+        const attrPatch: Record<string, unknown> = {};
+        for (const def of schema) {
+          if ((savedAttrs as Record<string, unknown>)[def.key] !== undefined) {
+            attrPatch[def.key] = (savedAttrs as Record<string, unknown>)[def.key];
           }
-          this.attributesGroup.patchValue(attrPatch, { emitEvent: false });
         }
+        this.attributesGroup.patchValue(attrPatch, { emitEvent: false });
+      } else if (subCat) {
+        this.loadAttributeSchema(subCat, cat);
       }
 
       const format = (patch['listingFormat'] as string) || this.listingForm.get('listingFormat')?.value;
@@ -1155,6 +1160,15 @@ export class AddListing implements OnInit, OnDestroy {
   }
 
   removeBundleItem(index: number): void { this.bundleItems.removeAt(index); }
+
+  private loadAttributeSchema(sub: string, cat: string): void {
+    this.attributeSchemaSub?.unsubscribe();
+    this.attributeSchemaSub = this.listingsService.getAttributeSchema(sub, cat)
+      .subscribe({
+        next: ({ schema }) => { this.attributeSchema.set(schema); this.buildAttributeControls(schema); },
+        error: () => {}
+      });
+  }
 
   getSelectedSubCategories(): string[] { return this.selectedCategory?.subCategories || []; }
 
@@ -1554,8 +1568,8 @@ export class AddListing implements OnInit, OnDestroy {
       descriptionEn: formValue.descriptionEn || null,
       descriptionFr: formValue.descriptionFr || null,
       descriptionEs: formValue.descriptionEs || null,
-      category: formValue.category,
-      subCategory: formValue.subCategory,
+      category: formValue.category || AddListing.DEFAULT_CATEGORY,
+      subCategory: formValue.subCategory || AddListing.DEFAULT_SUBCATEGORY,
       condition: formValue.condition,
       listingFormat: formValue.listingFormat,
       duration: formValue.duration,
@@ -1596,7 +1610,7 @@ export class AddListing implements OnInit, OnDestroy {
       case 2:
         return [
           this.langTitleKey(this.primaryLangTab),
-          'category', 'subCategory', 'condition',
+          'condition',
           this.langDescKey(this.primaryLangTab),
         ];
       case 3:
@@ -1684,7 +1698,7 @@ export class AddListing implements OnInit, OnDestroy {
   private collectInvalidFieldLabels(): string[] {
     const keys = [
       this.langTitleKey(this.primaryLangTab),
-      'category', 'subCategory', 'condition',
+      'condition',
       this.langDescKey(this.primaryLangTab),
       'startingBid', 'duration', 'shippingOption', 'flatRateShipping',
       'packageSize', 'shippingOriginPostalCode',

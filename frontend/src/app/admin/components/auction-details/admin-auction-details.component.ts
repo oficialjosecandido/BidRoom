@@ -1,15 +1,95 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AdminService } from '../../services/admin.service';
 import { AdminSidebarComponent } from '../sidebar/admin-sidebar.component';
 import { PrivateRoomService, Bidder } from '../../../private-room/services/private-room.service';
 import { Listing } from '../../../shared/services/listings.service';
 
+const NEXUS_CATEGORIES: { id: string; name: string; subCategories: string[] }[] = [
+  {
+    id: 'electronics',
+    name: 'Electronics',
+    subCategories: [
+      'Laptops', 'Desktop Computers', 'Computer Components',
+      'Smartphones', 'Tablets', 'Mobile Accessories',
+      'Headphones', 'Speakers', 'Hi Fi Systems', 'Turntables',
+      'Gaming Consoles', 'Video Games', 'Gaming Accessories',
+      'Digital Cameras', 'Film Cameras', 'Camera Lenses', 'Camera Accessories',
+      'Televisions', 'Projectors', 'Streaming Devices',
+      'Smart Watches', 'Fitness Trackers', 'Wearables Accessories',
+      'Other Electronics'
+    ]
+  },
+  {
+    id: 'home-garden',
+    name: 'Home & Garden',
+    subCategories: [
+      'Tables', 'Chairs', 'Cabinets', 'Shelves', 'Beds',
+      'Lamps', 'Mirrors', 'Vases', 'Wall Decor', 'Decorative Objects',
+      'Cookware', 'Tableware', 'Glassware', 'Barware',
+      'Garden Furniture', 'Garden Tools', 'Outdoor Decor', 'Planters',
+      'Rugs', 'Curtains', 'Blankets', 'Cushions',
+      'Lighting', 'Other Home & Garden'
+    ]
+  },
+  {
+    id: 'art',
+    name: 'Art',
+    subCategories: ['Paintings', 'Drawings', 'Prints', 'Photography', 'Sculptures', 'Figurines', 'Other Art']
+  },
+  {
+    id: 'collectibles',
+    name: 'Collectibles',
+    subCategories: [
+      'Definitive Stamps', 'Commemorative Stamps', 'Airmail Stamps',
+      'Postage Due Stamps', 'Revenue / Fiscal Stamps', 'Official Stamps',
+      'Military Mail', 'Local Issues', 'First Day Covers (FDC)',
+      'Stamp Booklets', 'Collections / Lots',
+      'Classic Stamps (Before 1900)', 'Early 20th Century (1900 to 1945)',
+      'Post War (1945 to 1960)', 'Late 20th Century (1960 to 2000)',
+      'Modern Stamps (2000 to Present)',
+      'Coins & Banknotes', 'Trading Cards', 'Toys & Models',
+      'Sports Memorabilia', 'Music Memorabilia', 'Movie Memorabilia',
+      'Vintage Items', 'Other Collectibles'
+    ]
+  },
+  {
+    id: 'jewelry',
+    name: 'Jewelry',
+    subCategories: [
+      'Engagement Rings', 'Wedding Rings', 'Fashion Rings',
+      'Chains', 'Pendants',
+      'Bangles', 'Charm Bracelets',
+      'Stud Earrings', 'Hoop Earrings', 'Drop Earrings',
+      'Luxury Watches', 'Vintage Watches', 'Smart Watches',
+      'Brooches & Pins', 'Jewelry Sets', 'Loose Gemstones', 'Other Jewelry'
+    ]
+  },
+  {
+    id: 'vehicles',
+    name: 'Vehicles',
+    subCategories: [
+      'Cars', 'Classic Cars', 'Electric & Hybrid Cars',
+      'Motorcycles', 'Scooters & Mopeds',
+      'Vans & Minibuses', 'Trucks & HGV',
+      'Boats', 'Jet Skis & Watercraft', 'Sailboats',
+      'Caravans & Motorhomes', 'ATVs & Quad Bikes',
+      'Vehicle Parts', 'Vehicle Accessories', 'Other Vehicles'
+    ]
+  },
+  {
+    id: 'real-estate',
+    name: 'Real Estate',
+    subCategories: ['Apartments', 'Houses', 'Land', 'Commercial', 'Other Real Estate']
+  }
+];
+
 @Component({
   selector: 'app-admin-auction-details',
   standalone: true,
-  imports: [CommonModule, AdminSidebarComponent],
+  imports: [CommonModule, FormsModule, AdminSidebarComponent],
   templateUrl: './admin-auction-details.component.html',
   styleUrls: ['./admin-auction-details.component.scss']
 })
@@ -26,9 +106,19 @@ export class AdminAuctionDetailsComponent implements OnInit {
   isCreatingPrivateRoom = false;
   isClosingPrivateRoom = false;
   isDeleting = false;
+  isSavingCategory = false;
   error: string | null = null;
   showPlatinumSelection = false;
   selectedPlatinumBidders: string[] = [];
+
+  readonly categories = NEXUS_CATEGORIES;
+  editCategory = '';
+  editSubCategory = '';
+  categorySavedMsg: string | null = null;
+
+  get editSubCategories(): string[] {
+    return this.categories.find(c => c.id === this.editCategory)?.subCategories ?? [];
+  }
 
   ngOnInit(): void {
     this.auctionId = this.route.snapshot.paramMap.get('id') || '';
@@ -45,11 +135,44 @@ export class AdminAuctionDetailsComponent implements OnInit {
     this.adminService.getAuctionById(this.auctionId).subscribe({
       next: (auction) => {
         this.auction = auction;
+        this.editCategory = auction.category || 'jewelry';
+        this.editSubCategory = auction.subCategory || '';
         this.isLoading = false;
       },
       error: (error) => {
         this.error = error?.message || 'Failed to load auction details';
         this.isLoading = false;
+      }
+    });
+  }
+
+  onCategoryChange(): void {
+    const subs = this.editSubCategories;
+    if (!subs.includes(this.editSubCategory)) {
+      this.editSubCategory = subs[0] || '';
+    }
+  }
+
+  saveCategory(): void {
+    if (!this.auction || !this.editCategory || !this.editSubCategory || this.isSavingCategory) return;
+    this.isSavingCategory = true;
+    this.categorySavedMsg = null;
+    this.adminService.updateListingCategory(this.auctionId, {
+      category: this.editCategory,
+      subCategory: this.editSubCategory
+    }).subscribe({
+      next: (res) => {
+        if (this.auction) {
+          this.auction.category = res.category;
+          this.auction.subCategory = res.subCategory;
+        }
+        this.isSavingCategory = false;
+        this.categorySavedMsg = 'Category updated';
+        setTimeout(() => { this.categorySavedMsg = null; }, 2500);
+      },
+      error: (err) => {
+        this.isSavingCategory = false;
+        alert(err?.error?.message || err?.error?.error || 'Failed to update category.');
       }
     });
   }
