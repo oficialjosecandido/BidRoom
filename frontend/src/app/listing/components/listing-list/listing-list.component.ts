@@ -519,13 +519,15 @@ export class ListingListComponent implements OnInit, OnDestroy {
         badges.push({ type: 'live', class: 'lb-live', label: this.translate.instant('listingList.badgeLive') });
       }
     }
-    if (listing.auctionFormat === 'best-offer') {
-      badges.push({ type: 'off', class: 'lb-off', label: this.translate.instant('listingList.badgeBestOffer') });
-    } else {
-      badges.push({ type: 'auc', class: 'lb-auc', label: this.translate.instant('listingList.badgeAuction') });
-    }
+    // Private room first among format badges — high visibility for buyers.
     if (listing.allowPrivateRoom) {
       badges.push({ type: 'priv', class: 'lb-priv', label: this.translate.instant('listingList.badgePrivateRoom') });
+    }
+    if (listing.auctionFormat === 'best-offer') {
+      badges.push({ type: 'off', class: 'lb-off', label: this.translate.instant('listingList.badgeBestOffer') });
+    } else if (!listing.allowPrivateRoom) {
+      // Skip redundant "Auction" label when private-room already signals auction format.
+      badges.push({ type: 'auc', class: 'lb-auc', label: this.translate.instant('listingList.badgeAuction') });
     }
     return badges;
   }
