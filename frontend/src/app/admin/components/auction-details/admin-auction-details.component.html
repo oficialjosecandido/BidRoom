@@ -136,7 +136,26 @@
               </tr>
               <tr>
                 <th scope="row">End date</th>
-                <td>{{ formatDate(auction.endDate) }}</td>
+                <td>
+                  <div class="end-date-edit">
+                    <input
+                      type="datetime-local"
+                      class="end-date-edit__input"
+                      [value]="editEndDate"
+                      (input)="editEndDate = $any($event.target).value"
+                      [disabled]="isSavingEndDate" />
+                    <button
+                      type="button"
+                      class="end-date-edit__save"
+                      [disabled]="isSavingEndDate || !editEndDate"
+                      (click)="saveEndDate()">
+                      {{ isSavingEndDate ? 'Saving…' : 'Update' }}
+                    </button>
+                    @if (endDateSavedMsg) {
+                      <span class="end-date-edit__ok">{{ endDateSavedMsg }}</span>
+                    }
+                  </div>
+                </td>
               </tr>
               @if (auction.privateRoomStatus) {
                 <tr>

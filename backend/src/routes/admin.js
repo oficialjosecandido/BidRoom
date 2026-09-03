@@ -435,6 +435,47 @@ router.patch('/auctions/:id/category', authenticateToken, requireAdmin, async (r
   }
 });
 
+// Update listing end date (admin) — extend or shorten an auction
+router.patch('/auctions/:id/end-date', authenticateToken, requireAdmin, async (req, res) => {
+  if (!isValidObjectId(req.params.id)) return res.status(400).json({ error: 'Invalid listing ID' });
+  try {
+    const { endDate } = req.body;
+    const parsed = new Date(endDate);
+    if (!endDate || isNaN(parsed.getTime())) {
+      return res.status(400).json({ error: 'A valid end date is required' });
+    }
+
+    const listing = await Listing.findById(req.params.id);
+    if (!listing) return res.status(404).json({ error: 'Listing not found' });
+
+    const oldEnd = listing.endDate;
+    listing.endDate = parsed;
+
+    // If the listing had already ended but is being extended into the future, reactivate it.
+    if (listing.status === 'ended' && parsed > new Date()) {
+      listing.status = 'active';
+    }
+
+    await listing.save();
+
+    await appendModerationAudit({
+      action: 'admin_listing_end_date_updated',
+      subjectUserId: listing.seller,
+      targetType: 'listing',
+      targetId: listing._id,
+      details: { oldEndDate: oldEnd, newEndDate: parsed }
+    });
+
+    return res.json({ ok: true, endDate: listing.endDate });
+  } catch (error) {
+    logger.error('Error updating listing end date:', error);
+    res.status(500).json({
+      error: 'Failed to update end date',
+      message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
+    });
+  }
+});
+
 // Hard-delete a listing (admin only)
 router.delete('/auctions/:id', authenticateToken, requireAdmin, async (req, res) => {
   if (!isValidObjectId(req.params.id)) return res.status(400).json({ error: 'Invalid listing ID' });

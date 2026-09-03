@@ -115,6 +115,9 @@ export class AdminAuctionDetailsComponent implements OnInit {
   editCategory = '';
   editSubCategory = '';
   categorySavedMsg: string | null = null;
+  editEndDate = '';
+  isSavingEndDate = false;
+  endDateSavedMsg: string | null = null;
 
   get editSubCategories(): string[] {
     return this.categories.find(c => c.id === this.editCategory)?.subCategories ?? [];
@@ -137,6 +140,7 @@ export class AdminAuctionDetailsComponent implements OnInit {
         this.auction = auction;
         this.editCategory = auction.category || 'jewelry';
         this.editSubCategory = auction.subCategory || '';
+        this.editEndDate = this.toDatetimeLocal(auction.endDate);
         this.isLoading = false;
       },
       error: (error) => {
@@ -173,6 +177,36 @@ export class AdminAuctionDetailsComponent implements OnInit {
       error: (err) => {
         this.isSavingCategory = false;
         alert(err?.error?.message || err?.error?.error || 'Failed to update category.');
+      }
+    });
+  }
+
+  private toDatetimeLocal(dateStr: string | undefined): string {
+    if (!dateStr) return '';
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return '';
+    const pad = (n: number) => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  }
+
+  saveEndDate(): void {
+    if (!this.auction || !this.editEndDate || this.isSavingEndDate) return;
+    const newEnd = new Date(this.editEndDate);
+    if (isNaN(newEnd.getTime())) { alert('Invalid date'); return; }
+    this.isSavingEndDate = true;
+    this.endDateSavedMsg = null;
+    this.adminService.updateListingEndDate(this.auctionId, newEnd.toISOString()).subscribe({
+      next: (res) => {
+        if (this.auction) {
+          (this.auction as any).endDate = res.endDate;
+        }
+        this.isSavingEndDate = false;
+        this.endDateSavedMsg = 'End date updated';
+        setTimeout(() => { this.endDateSavedMsg = null; }, 2500);
+      },
+      error: (err) => {
+        this.isSavingEndDate = false;
+        alert(err?.error?.message || err?.error?.error || 'Failed to update end date.');
       }
     });
   }

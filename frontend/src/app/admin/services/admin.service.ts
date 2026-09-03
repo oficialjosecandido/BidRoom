@@ -269,4 +269,14 @@ export class AdminService {
       payload
     );
   }
+
+  updateListingEndDate(
+    id: string,
+    endDate: string
+  ): Observable<{ ok: boolean; endDate: string }> {
+    return this.http.patch<{ ok: boolean; endDate: string }>(
+      `${this.apiUrl}/auctions/${id}/end-date`,
+      { endDate }
+    );
+  }
 }
