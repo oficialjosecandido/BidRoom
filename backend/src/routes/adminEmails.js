@@ -160,9 +160,36 @@ router.post('/test', authenticateToken, requireAdmin, async (req, res) => {
     const html = String(req.body?.html || '');
     const language = CAMPAIGN_LANGUAGES.includes(req.body?.language) ? req.body.language : 'pt';
     if (!subject || !html) return res.status(400).json({ error: 'Subject and HTML are required.' });
-    const htmlWithFooter = await appendPreferencesFooter(html, { type: 'customer', id: null, language });
+
+    // Prefer a real recipient record so the footer link works (unsubscribe / language).
+    const testEmail = TEST_EMAIL_RECIPIENT.toLowerCase();
+    let footerType = 'customer';
+    let footerId = null;
+    let footerLanguage = language;
+    const customer = await Customer.findOne({ email: testEmail }, '_id language').lean();
+    if (customer) {
+      footerId = customer._id;
+      footerLanguage = customer.language || language;
+    } else {
+      const contact = await InterestedContact.findOne({ email: testEmail }, '_id language').lean();
+      if (contact) {
+        footerType = 'interested';
+        footerId = contact._id;
+        footerLanguage = contact.language || language;
+      }
+    }
+
+    const htmlWithFooter = await appendPreferencesFooter(html, {
+      type: footerType,
+      id: footerId,
+      language: footerLanguage
+    });
     await sendEmail(TEST_EMAIL_RECIPIENT, subject, htmlWithFooter);
-    res.json({ ok: true, to: TEST_EMAIL_RECIPIENT });
+    res.json({
+      ok: true,
+      to: TEST_EMAIL_RECIPIENT,
+      preferencesLink: !!footerId
+    });
   } catch (err) {
     logger.error('POST /api/admin/emails/test error:', err);
     res.status(500).json({ error: 'Failed to send test email.' });
