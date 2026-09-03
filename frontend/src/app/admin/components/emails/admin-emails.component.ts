@@ -7,6 +7,8 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
   AdminEmailsService,
   EmailAudience,
+  CampaignLanguage,
+  CampaignContent,
   InterestedContact,
   SendResult,
   DraftReminderRow,
@@ -28,11 +30,24 @@ export class AdminEmailsComponent implements OnInit {
   activeTab: 'newsletter' | 'personalized' = 'newsletter';
 
   // ---- Newsletter ----
+  readonly LANGUAGES: { code: CampaignLanguage; label: string }[] = [
+    { code: 'pt', label: 'Português' },
+    { code: 'en', label: 'English' },
+    { code: 'fr', label: 'Français' },
+    { code: 'es', label: 'Español' }
+  ];
+
   audience: EmailAudience = 'all_users';
   audienceCount: number | null = null;
   loadingCount = false;
-  subject = '';
-  html = '';
+
+  activeLanguage: CampaignLanguage = 'pt';
+  content: CampaignContent = {
+    pt: { subject: '', html: '' },
+    en: { subject: '', html: '' },
+    fr: { subject: '', html: '' },
+    es: { subject: '', html: '' }
+  };
 
   sendingTest = false;
   testMessage: string | null = null;
@@ -47,6 +62,7 @@ export class AdminEmailsComponent implements OnInit {
   loadingInterested = true;
   newContactEmail = '';
   newContactName = '';
+  newContactLanguage: CampaignLanguage = 'pt';
   addingContact = false;
   addContactError: string | null = null;
 
@@ -106,6 +122,10 @@ export class AdminEmailsComponent implements OnInit {
     this.loadAudienceCount();
   }
 
+  setActiveLanguage(lang: CampaignLanguage): void {
+    this.activeLanguage = lang;
+  }
+
   loadAudienceCount(): void {
     this.loadingCount = true;
     this.adminEmailsService.getAudienceCount(this.audience).subscribe({
@@ -114,19 +134,28 @@ export class AdminEmailsComponent implements OnInit {
     });
   }
 
-  get canSend(): boolean {
-    return this.subject.trim().length > 0 && this.html.trim().length > 0;
+  get canSendTest(): boolean {
+    const variant = this.content[this.activeLanguage];
+    return variant.subject.trim().length > 0 && variant.html.trim().length > 0;
+  }
+
+  get canSendCampaign(): boolean {
+    return this.LANGUAGES.every(l => {
+      const variant = this.content[l.code];
+      return variant.subject.trim().length > 0 && variant.html.trim().length > 0;
+    });
   }
 
   sendTest(): void {
-    if (!this.canSend || this.sendingTest) return;
+    if (!this.canSendTest || this.sendingTest) return;
+    const variant = this.content[this.activeLanguage];
     this.sendingTest = true;
     this.testMessage = null;
     this.testError = null;
-    this.adminEmailsService.sendTest(this.subject.trim(), this.html).subscribe({
+    this.adminEmailsService.sendTest(variant.subject.trim(), variant.html).subscribe({
       next: (res) => {
         this.sendingTest = false;
-        this.testMessage = `Email de teste enviado para ${res.to}.`;
+        this.testMessage = `Email de teste (${this.activeLanguage.toUpperCase()}) enviado para ${res.to}.`;
       },
       error: (err) => {
         this.sendingTest = false;
@@ -136,18 +165,18 @@ export class AdminEmailsComponent implements OnInit {
   }
 
   sendCampaign(): void {
-    if (!this.canSend || this.sendingCampaign) return;
+    if (!this.canSendCampaign || this.sendingCampaign) return;
     const count = this.audienceCount ?? 0;
     const audienceLabel = this.audience === 'all_users' ? 'todos os utilizadores' : 'todos os interessados';
     const confirmed = window.confirm(
-      `Enviar esta campanha para ${count} destinatário(s) (${audienceLabel})? Esta ação não pode ser desfeita.`
+      `Enviar esta campanha para ${count} destinatário(s) (${audienceLabel})? Cada destinatário recebe a versão no seu idioma. Esta ação não pode ser desfeita.`
     );
     if (!confirmed) return;
 
     this.sendingCampaign = true;
     this.campaignResult = null;
     this.campaignError = null;
-    this.adminEmailsService.sendCampaign(this.subject.trim(), this.html, this.audience).subscribe({
+    this.adminEmailsService.sendCampaign(this.content, this.audience).subscribe({
       next: (res) => {
         this.sendingCampaign = false;
         this.campaignResult = res;
@@ -174,18 +203,27 @@ export class AdminEmailsComponent implements OnInit {
     if (!email || this.addingContact) return;
     this.addingContact = true;
     this.addContactError = null;
-    this.adminEmailsService.addInterestedContact(email, this.newContactName.trim() || undefined).subscribe({
+    this.adminEmailsService.addInterestedContact(email, this.newContactName.trim() || undefined, this.newContactLanguage).subscribe({
       next: (res) => {
         this.addingContact = false;
         this.interestedContacts = [res.contact, ...this.interestedContacts];
         this.newContactEmail = '';
         this.newContactName = '';
+        this.newContactLanguage = 'pt';
         if (this.audience === 'interested') this.loadAudienceCount();
       },
       error: (err) => {
         this.addingContact = false;
         this.addContactError = err?.error?.error || 'Falha ao adicionar contacto.';
       }
+    });
+  }
+
+  updateContactLanguage(contact: InterestedContact, language: CampaignLanguage): void {
+    const previous = contact.language;
+    contact.language = language;
+    this.adminEmailsService.updateInterestedContactLanguage(contact._id, language).subscribe({
+      error: () => { contact.language = previous; }
     });
   }
 

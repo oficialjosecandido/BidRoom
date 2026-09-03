@@ -16,6 +16,12 @@ const interestedContactSchema = new mongoose.Schema({
   name: {
     type: String,
     trim: true
+  },
+  /** Preferred email language: en, pt, es, fr — determines which campaign variant they receive. */
+  language: {
+    type: String,
+    enum: ['en', 'pt', 'es', 'fr'],
+    default: 'en'
   }
 }, {
   timestamps: true

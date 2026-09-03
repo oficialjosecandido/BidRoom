@@ -15,6 +15,7 @@ const router = express.Router();
 const TEST_EMAIL_RECIPIENT = 'josevcandido@gmail.com';
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const SEND_BATCH_SIZE = 10;
+const CAMPAIGN_LANGUAGES = ['pt', 'en', 'es', 'fr'];
 
 function isValidObjectId(id) {
   return mongoose.Types.ObjectId.isValid(id);
@@ -24,9 +25,9 @@ function draftTitleFromPayload(payload) {
   return payload?.titlePt || payload?.titleEn || payload?.title || null;
 }
 
-/** Active customers, minus anyone who has globally unsubscribed from emails. */
+/** Active customers, minus anyone who has globally unsubscribed from emails. Each recipient carries their language. */
 async function getAllUsersRecipients() {
-  const customers = await Customer.find({ accountStatus: 'active' }, '_id email').lean();
+  const customers = await Customer.find({ accountStatus: 'active' }, '_id email language').lean();
   const unsubscribed = await NotificationPreferences.find(
     { globalEmailUnsubscribed: true },
     'user'
@@ -34,12 +35,12 @@ async function getAllUsersRecipients() {
   const unsubscribedIds = new Set(unsubscribed.map(p => String(p.user)));
   return customers
     .filter(c => !unsubscribedIds.has(String(c._id)))
-    .map(c => c.email);
+    .map(c => ({ email: c.email, language: c.language || 'en' }));
 }
 
 async function getInterestedRecipients() {
-  const contacts = await InterestedContact.find({}, 'email').lean();
-  return contacts.map(c => c.email);
+  const contacts = await InterestedContact.find({}, 'email language').lean();
+  return contacts.map(c => ({ email: c.email, language: c.language || 'en' }));
 }
 
 async function resolveAudience(audience) {
@@ -48,12 +49,16 @@ async function resolveAudience(audience) {
   return null;
 }
 
-async function sendInBatches(recipients, subject, html) {
+/** content: { pt: {subject, html}, en: {...}, es: {...}, fr: {...} } — picks the recipient's language, falls back to en. */
+async function sendInBatches(recipients, content) {
   let sent = 0;
   let failed = 0;
   for (let i = 0; i < recipients.length; i += SEND_BATCH_SIZE) {
     const batch = recipients.slice(i, i + SEND_BATCH_SIZE);
-    const results = await Promise.allSettled(batch.map(to => sendEmail(to, subject, html)));
+    const results = await Promise.allSettled(batch.map(r => {
+      const variant = content[r.language] || content.en;
+      return sendEmail(r.email, variant.subject, variant.html);
+    }));
     for (const result of results) {
       if (result.status === 'fulfilled') sent++;
       else failed++;
@@ -78,18 +83,44 @@ router.post('/interested', authenticateToken, requireAdmin, async (req, res) => 
   try {
     const email = String(req.body?.email || '').trim().toLowerCase();
     const name = req.body?.name ? String(req.body.name).trim() : undefined;
+    const language = req.body?.language;
     if (!EMAIL_REGEX.test(email)) {
       return res.status(400).json({ error: 'Invalid email address.' });
+    }
+    if (language && !CAMPAIGN_LANGUAGES.includes(language)) {
+      return res.status(400).json({ error: 'Invalid language.' });
     }
     const existing = await InterestedContact.findOne({ email }).lean();
     if (existing) {
       return res.status(409).json({ error: 'This email is already on the list.' });
     }
-    const contact = await InterestedContact.create({ email, name });
+    const contact = await InterestedContact.create({ email, name, language });
     res.status(201).json({ contact });
   } catch (err) {
     logger.error('POST /api/admin/emails/interested error:', err);
     res.status(500).json({ error: 'Failed to add contact.' });
+  }
+});
+
+router.patch('/interested/:id', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    if (!isValidObjectId(req.params.id)) return res.status(400).json({ error: 'Invalid ID.' });
+    const update = {};
+    if (req.body?.language !== undefined) {
+      if (!CAMPAIGN_LANGUAGES.includes(req.body.language)) {
+        return res.status(400).json({ error: 'Invalid language.' });
+      }
+      update.language = req.body.language;
+    }
+    if (req.body?.name !== undefined) {
+      update.name = String(req.body.name).trim();
+    }
+    const contact = await InterestedContact.findByIdAndUpdate(req.params.id, update, { new: true }).lean();
+    if (!contact) return res.status(404).json({ error: 'Contact not found.' });
+    res.json({ contact });
+  } catch (err) {
+    logger.error('PATCH /api/admin/emails/interested/:id error:', err);
+    res.status(500).json({ error: 'Failed to update contact.' });
   }
 });
 
@@ -133,16 +164,20 @@ router.post('/test', authenticateToken, requireAdmin, async (req, res) => {
 
 router.post('/send', authenticateToken, requireAdmin, async (req, res) => {
   try {
-    const subject = String(req.body?.subject || '').trim();
-    const html = String(req.body?.html || '');
     const audience = req.body?.audience;
-    if (!subject || !html) return res.status(400).json({ error: 'Subject and HTML are required.' });
+    const content = req.body?.content || {};
+    for (const lang of CAMPAIGN_LANGUAGES) {
+      const variant = content[lang];
+      if (!variant || !String(variant.subject || '').trim() || !String(variant.html || '').trim()) {
+        return res.status(400).json({ error: `Missing subject/HTML for language "${lang}".` });
+      }
+    }
 
     const recipients = await resolveAudience(audience);
     if (!recipients) return res.status(400).json({ error: 'Invalid audience.' });
     if (recipients.length === 0) return res.status(400).json({ error: 'No recipients for this audience.' });
 
-    const result = await sendInBatches(recipients, subject, html);
+    const result = await sendInBatches(recipients, content);
     logger.info(`[AdminEmails] Campaign sent by ${req.user?.email}: ${result.sent}/${result.total} ok (audience=${audience})`);
     res.json(result);
   } catch (err) {

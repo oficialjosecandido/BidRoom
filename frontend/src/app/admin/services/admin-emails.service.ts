@@ -5,12 +5,22 @@ import { API_CONFIG } from '../../shared/config/api.config';
 
 export type EmailAudience = 'all_users' | 'interested';
 
+export type CampaignLanguage = 'pt' | 'en' | 'es' | 'fr';
+
 export interface InterestedContact {
   _id: string;
   email: string;
   name?: string;
+  language: CampaignLanguage;
   createdAt: string;
 }
+
+export interface LanguageContent {
+  subject: string;
+  html: string;
+}
+
+export type CampaignContent = Record<CampaignLanguage, LanguageContent>;
 
 export interface SendResult {
   total: number;
@@ -51,8 +61,12 @@ export class AdminEmailsService {
     return this.http.get<{ contacts: InterestedContact[] }>(`${this.apiUrl}/interested`);
   }
 
-  addInterestedContact(email: string, name?: string): Observable<{ contact: InterestedContact }> {
-    return this.http.post<{ contact: InterestedContact }>(`${this.apiUrl}/interested`, { email, name });
+  addInterestedContact(email: string, name?: string, language?: CampaignLanguage): Observable<{ contact: InterestedContact }> {
+    return this.http.post<{ contact: InterestedContact }>(`${this.apiUrl}/interested`, { email, name, language });
+  }
+
+  updateInterestedContactLanguage(id: string, language: CampaignLanguage): Observable<{ contact: InterestedContact }> {
+    return this.http.patch<{ contact: InterestedContact }>(`${this.apiUrl}/interested/${id}`, { language });
   }
 
   removeInterestedContact(id: string): Observable<{ ok: boolean; deletedId: string }> {
@@ -69,8 +83,8 @@ export class AdminEmailsService {
     return this.http.post<{ ok: boolean; to: string }>(`${this.apiUrl}/test`, { subject, html });
   }
 
-  sendCampaign(subject: string, html: string, audience: EmailAudience): Observable<SendResult> {
-    return this.http.post<SendResult>(`${this.apiUrl}/send`, { subject, html, audience });
+  sendCampaign(content: CampaignContent, audience: EmailAudience): Observable<SendResult> {
+    return this.http.post<SendResult>(`${this.apiUrl}/send`, { content, audience });
   }
 
   // Personalized: draft reminders

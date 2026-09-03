@@ -59,6 +59,56 @@
   font-size: 13px;
 }
 
+.language-tabs {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.language-tab-btn {
+  padding: 8px 14px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #fff;
+  color: #475569;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+
+  &:hover { border-color: var(--primary-color); }
+
+  &.active {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+    color: #fff;
+  }
+
+  .lang-done {
+    color: #22c55e;
+    font-weight: 800;
+  }
+
+  &.active .lang-done {
+    color: #fff;
+  }
+}
+
+.hint-text {
+  margin: 8px 0 0;
+  font-size: 12.5px;
+  color: #94a3b8;
+}
+
+.lang-select {
+  width: auto;
+  min-width: 130px;
+  padding: 6px 10px;
+  font-size: 13px;
+}
+
 .panel-card {
   background: #fff;
   border-radius: 14px;
