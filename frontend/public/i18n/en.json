@@ -4153,6 +4153,14 @@
     "SELECTOR_LABEL": "Display currency",
     "DISCLAIMER": "Amounts in other currencies are approximate and for guidance only. All auctions and payments are processed in euros (EUR). The final amount in your currency depends on your bank's exchange rate at the time of payment."
   },
+  "pwaInstall": {
+    "title": "Install BidRoom",
+    "iosPrefix": "Tap",
+    "iosSuffix": "Share, then Add to Home Screen.",
+    "androidHint": "Add BidRoom to your home screen for faster access to auctions.",
+    "install": "Install",
+    "close": "Close"
+  },
   "WAIVER": {
     "FEE_LABEL": "BidRoom commission (Founding Seller)",
     "LISTING_NOTE": "As a Founding Seller, you pay no commission on this sale. You have {{count}} free sale(s) remaining.",

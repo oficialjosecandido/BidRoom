@@ -2295,6 +2295,14 @@
     "SELECTOR_LABEL": "Devise d'affichage",
     "DISCLAIMER": "Les montants dans d'autres devises sont approximatifs et fournis à titre indicatif uniquement. Toutes les enchères et tous les paiements sont traités en euros (EUR). Le montant final dans votre devise dépend du taux de change de votre banque au moment du paiement."
   },
+  "pwaInstall": {
+    "title": "Installer BidRoom",
+    "iosPrefix": "Appuyez sur",
+    "iosSuffix": "Partager, puis Sur l'écran d'accueil.",
+    "androidHint": "Ajoutez BidRoom à l'écran d'accueil pour accéder plus vite aux enchères.",
+    "install": "Installer",
+    "close": "Fermer"
+  },
   "WAIVER": {
     "FEE_LABEL": "Commission BidRoom (Vendeur Fondateur)",
     "LISTING_NOTE": "En tant que Vendeur Fondateur, vous ne payez aucune commission sur cette vente. Il vous reste {{count}} vente(s) gratuite(s).",

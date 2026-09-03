@@ -4153,6 +4153,14 @@
     "SELECTOR_LABEL": "Moeda de apresentação",
     "DISCLAIMER": "Os valores noutras moedas são aproximados e apenas indicativos. Todos os leilões e pagamentos são processados em euros (EUR). O valor final na sua moeda depende da taxa de câmbio do seu banco no momento do pagamento."
   },
+  "pwaInstall": {
+    "title": "Instalar BidRoom",
+    "iosPrefix": "Toque em",
+    "iosSuffix": "Partilhar, depois em Adicionar ao Ecrã Principal.",
+    "androidHint": "Adicione o BidRoom ao ecrã inicial para aceder aos leilões mais depressa.",
+    "install": "Instalar",
+    "close": "Fechar"
+  },
   "WAIVER": {
     "FEE_LABEL": "Comissão BidRoom (Vendedor Fundador)",
     "LISTING_NOTE": "Como Vendedor Fundador, não paga comissão nesta venda. Restam-lhe {{count}} venda(s) gratuita(s).",
