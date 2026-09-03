@@ -29,12 +29,16 @@
             <label>Audiência</label>
             <div class="audience-options">
               <label class="radio-option">
+                <input type="radio" name="audience" [checked]="audience === 'all_contacts'" (change)="setAudience('all_contacts')" />
+                Todos os contactos
+              </label>
+              <label class="radio-option">
                 <input type="radio" name="audience" [checked]="audience === 'all_users'" (change)="setAudience('all_users')" />
-                Todos os utilizadores
+                Só clientes
               </label>
               <label class="radio-option">
                 <input type="radio" name="audience" [checked]="audience === 'interested'" (change)="setAudience('interested')" />
-                Todos os interessados
+                Só interessados
               </label>
               <span class="audience-count">
                 @if (loadingCount) { a calcular… } @else if (audienceCount !== null) { {{ audienceCount }} destinatário(s) }
@@ -249,8 +253,9 @@
       <!-- ================= PREFERENCES ================= -->
       @if (activeTab === 'preferences') {
         <section class="panel-card">
-          <h2 class="panel-title">Lista de interessados</h2>
-          <p class="panel-subtitle">Emails que não são clientes registados mas que queres incluir nas campanhas. Idioma e subscrição podem ser alterados pela própria pessoa através do link no rodapé dos emails.</p>
+          <h2 class="panel-title">Lista de contactos</h2>
+          <p class="panel-subtitle">Clientes registados e interessados numa só lista. Idioma e subscrição podem ser alterados pela própria pessoa através do link no rodapé dos emails.</p>
+          <p class="contacts-summary">{{ contactsSummary }}</p>
 
           <div class="add-contact-form">
             <input type="email" class="form-input" [(ngModel)]="newContactEmail" placeholder="email@exemplo.com" (keyup.enter)="addContact()" />
@@ -261,16 +266,25 @@
               }
             </select>
             <button type="button" class="btn btn-primary" [disabled]="!newContactEmail.trim() || addingContact" (click)="addContact()">
-              {{ addingContact ? 'A adicionar…' : 'Adicionar' }}
+              {{ addingContact ? 'A adicionar…' : 'Adicionar interessado' }}
             </button>
           </div>
           @if (addContactError) { <p class="result-message error">{{ addContactError }}</p> }
 
-          @if (loadingInterested) {
+          <div class="contacts-toolbar">
+            <div class="contacts-filters">
+              <button type="button" class="filter-chip" [class.active]="contactsFilter === 'all'" (click)="contactsFilter = 'all'">Todos</button>
+              <button type="button" class="filter-chip" [class.active]="contactsFilter === 'customers'" (click)="contactsFilter = 'customers'">Clientes</button>
+              <button type="button" class="filter-chip" [class.active]="contactsFilter === 'interested'" (click)="contactsFilter = 'interested'">Interessados</button>
+            </div>
+            <input type="search" class="form-input contacts-search" [(ngModel)]="contactsQuery" placeholder="Filtrar por nome ou email…" />
+          </div>
+
+          @if (loadingContacts) {
             <div class="loading-state"><div class="spinner"></div></div>
-          } @else if (interestedContacts.length === 0) {
+          } @else if (filteredContacts.length === 0) {
             <div class="empty-state small">
-              <p class="empty-message">Ainda não há contactos interessados.</p>
+              <p class="empty-message">Nenhum contacto encontrado.</p>
             </div>
           } @else {
             <div class="panel-table">
@@ -280,17 +294,23 @@
                     <tr>
                       <th scope="col">Email</th>
                       <th scope="col">Nome</th>
+                      <th scope="col">Tipo</th>
                       <th scope="col">Idioma</th>
                       <th scope="col">Subscrito</th>
-                      <th scope="col">Adicionado em</th>
+                      <th scope="col">Desde</th>
                       <th scope="col"><span class="sr-only">Ações</span></th>
                     </tr>
                   </thead>
                   <tbody>
-                    @for (c of interestedContacts; track c._id) {
+                    @for (c of filteredContacts; track c.type + c._id) {
                       <tr>
                         <td>{{ c.email }}</td>
                         <td class="muted-col">{{ c.name || '—' }}</td>
+                        <td>
+                          <span class="type-badge" [class.type-badge--customer]="c.isCustomer" [class.type-badge--interested]="!c.isCustomer">
+                            {{ c.isCustomer ? 'Cliente' : 'Interessado' }}
+                          </span>
+                        </td>
                         <td>
                           <select class="form-input lang-select" [ngModel]="c.language" (ngModelChange)="updateContactLanguage(c, $event)">
                             @for (lang of LANGUAGES; track lang.code) {
@@ -305,7 +325,9 @@
                         </td>
                         <td class="date-cell">{{ formatDate(c.createdAt) }}</td>
                         <td>
-                          <button type="button" class="action-btn remove-action" (click)="removeContact(c)">Remover</button>
+                          @if (!c.isCustomer) {
+                            <button type="button" class="action-btn remove-action" (click)="removeContact(c)">Remover</button>
+                          }
                         </td>
                       </tr>
                     }
@@ -313,55 +335,6 @@
                 </table>
               </div>
             </div>
-          }
-        </section>
-
-        <section class="panel-card">
-          <h2 class="panel-title">Clientes registados</h2>
-          <p class="panel-subtitle">Procura um cliente para ver ou alterar o idioma preferido e o estado de subscrição de emails.</p>
-
-          @if (!prefsSelectedCustomer) {
-            <div class="form-group">
-              <label for="prefs-customer-search">Procurar utilizador (nome ou email)</label>
-              <input id="prefs-customer-search" type="text" class="form-input" [ngModel]="prefsCustomerQuery" (ngModelChange)="onPrefsCustomerQueryChange($event)" placeholder="Procurar…" />
-            </div>
-            @if (prefsSearchingCustomers) {
-              <p class="muted-inline">A procurar…</p>
-            } @else if (prefsCustomerResults.length > 0) {
-              <ul class="customer-results">
-                @for (c of prefsCustomerResults; track c._id) {
-                  <li (click)="selectPrefsCustomer(c)">
-                    <strong>{{ c.firstName }} {{ c.lastName }}</strong>
-                    <span class="email-small">{{ c.email }}</span>
-                  </li>
-                }
-              </ul>
-            }
-          } @else {
-            <div class="selected-customer">
-              <span>Cliente: <strong>{{ prefsSelectedCustomer.firstName }} {{ prefsSelectedCustomer.lastName }}</strong> ({{ prefsSelectedCustomer.email }})</span>
-              <button type="button" class="btn btn-secondary" (click)="clearPrefsCustomer()">Trocar utilizador</button>
-            </div>
-
-            <div class="form-group">
-              <label>Idioma preferido</label>
-              <div class="language-tabs">
-                @for (lang of LANGUAGES; track lang.code) {
-                  <button type="button" class="language-tab-btn" [class.active]="prefsSelectedCustomer.language === lang.code" [disabled]="prefsSaving" (click)="savePrefsCustomerLanguage(lang.code)">
-                    {{ lang.label }}
-                  </button>
-                }
-              </div>
-            </div>
-
-            <div class="form-group">
-              <label>Subscrição de emails</label>
-              <button type="button" class="status-toggle-btn" [class.subscribed]="!prefsSelectedCustomer.unsubscribed" [disabled]="prefsSaving" (click)="togglePrefsCustomerUnsubscribed()">
-                {{ prefsSelectedCustomer.unsubscribed ? 'Não recebe emails' : 'Recebe emails' }}
-              </button>
-            </div>
-
-            @if (prefsSaveError) { <p class="result-message error">{{ prefsSaveError }}</p> }
           }
         </section>
       }

@@ -3,14 +3,18 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { API_CONFIG } from '../../shared/config/api.config';
 
-export type EmailAudience = 'all_users' | 'interested';
+export type EmailAudience = 'all_contacts' | 'all_users' | 'interested';
 
 export type CampaignLanguage = 'pt' | 'en' | 'es' | 'fr';
 
-export interface InterestedContact {
+export type ContactType = 'customer' | 'interested';
+
+export interface UnifiedContact {
   _id: string;
+  type: ContactType;
+  isCustomer: boolean;
   email: string;
-  name?: string;
+  name?: string | null;
   language: CampaignLanguage;
   unsubscribed: boolean;
   createdAt: string;
@@ -63,21 +67,17 @@ export class AdminEmailsService {
     return `${API_CONFIG.getApiUrl()}/admin/emails`;
   }
 
-  // Interested contacts
-  getInterestedContacts(): Observable<{ contacts: InterestedContact[] }> {
-    return this.http.get<{ contacts: InterestedContact[] }>(`${this.apiUrl}/interested`);
+  // Unified contacts (customers + interested)
+  getContacts(): Observable<{ contacts: UnifiedContact[] }> {
+    return this.http.get<{ contacts: UnifiedContact[] }>(`${this.apiUrl}/contacts`);
   }
 
-  addInterestedContact(email: string, name?: string, language?: CampaignLanguage): Observable<{ contact: InterestedContact }> {
-    return this.http.post<{ contact: InterestedContact }>(`${this.apiUrl}/interested`, { email, name, language });
+  addInterestedContact(email: string, name?: string, language?: CampaignLanguage): Observable<{ contact: UnifiedContact }> {
+    return this.http.post<{ contact: UnifiedContact }>(`${this.apiUrl}/interested`, { email, name, language });
   }
 
-  updateInterestedContact(id: string, updates: ContactPreferencesUpdate): Observable<{ contact: InterestedContact }> {
-    return this.http.patch<{ contact: InterestedContact }>(`${this.apiUrl}/interested/${id}`, updates);
-  }
-
-  updateCustomerPreferences(customerId: string, updates: ContactPreferencesUpdate): Observable<{ ok: boolean }> {
-    return this.http.patch<{ ok: boolean }>(`${this.apiUrl}/customers/${customerId}/preferences`, updates);
+  updateContact(type: ContactType, id: string, updates: ContactPreferencesUpdate): Observable<{ contact: UnifiedContact }> {
+    return this.http.patch<{ contact: UnifiedContact }>(`${this.apiUrl}/contacts/${type}/${id}`, updates);
   }
 
   removeInterestedContact(id: string): Observable<{ ok: boolean; deletedId: string }> {

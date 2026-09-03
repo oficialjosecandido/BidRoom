@@ -44,9 +44,23 @@ async function getInterestedRecipients() {
   return contacts.map(c => ({ id: c._id, type: 'interested', email: c.email, language: c.language || 'en' }));
 }
 
+/** Merged audience: customers + interested contacts, deduped by email (customer wins). */
+async function getAllContactsRecipients() {
+  const [customers, interested] = await Promise.all([getAllUsersRecipients(), getInterestedRecipients()]);
+  const byEmail = new Map();
+  for (const r of interested) {
+    byEmail.set(String(r.email).toLowerCase(), r);
+  }
+  for (const r of customers) {
+    byEmail.set(String(r.email).toLowerCase(), r);
+  }
+  return Array.from(byEmail.values());
+}
+
 async function resolveAudience(audience) {
   if (audience === 'all_users') return getAllUsersRecipients();
   if (audience === 'interested') return getInterestedRecipients();
+  if (audience === 'all_contacts') return getAllContactsRecipients();
   return null;
 }
 
@@ -68,6 +82,149 @@ async function sendInBatches(recipients, content) {
   }
   return { total: recipients.length, sent, failed };
 }
+
+// ---- Unified contacts list (customers + interested) ----
+
+router.get('/contacts', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const [customers, interested, unsubscribedPrefs] = await Promise.all([
+      Customer.find(
+        { accountStatus: { $ne: 'closed' } },
+        'firstName lastName email language createdAt'
+      ).lean(),
+      InterestedContact.find({}).sort('-createdAt').lean(),
+      NotificationPreferences.find({ globalEmailUnsubscribed: true }, 'user').lean()
+    ]);
+
+    const unsubscribedIds = new Set(unsubscribedPrefs.map(p => String(p.user)));
+    const customerEmails = new Set(
+      customers.map(c => String(c.email || '').toLowerCase()).filter(Boolean)
+    );
+
+    const contacts = [];
+
+    for (const c of customers) {
+      const name = `${c.firstName || ''} ${c.lastName || ''}`.trim();
+      contacts.push({
+        _id: c._id,
+        type: 'customer',
+        isCustomer: true,
+        email: c.email,
+        name: name || null,
+        language: c.language || 'en',
+        unsubscribed: unsubscribedIds.has(String(c._id)),
+        createdAt: c.createdAt
+      });
+    }
+
+    for (const c of interested) {
+      const email = String(c.email || '').toLowerCase();
+      // Skip interested rows already covered by a registered customer account.
+      if (email && customerEmails.has(email)) continue;
+      contacts.push({
+        _id: c._id,
+        type: 'interested',
+        isCustomer: false,
+        email: c.email,
+        name: c.name || null,
+        language: c.language || 'en',
+        unsubscribed: !!c.unsubscribed,
+        createdAt: c.createdAt
+      });
+    }
+
+    contacts.sort((a, b) => {
+      const ae = String(a.email || '').toLowerCase();
+      const be = String(b.email || '').toLowerCase();
+      return ae.localeCompare(be);
+    });
+
+    res.json({ contacts });
+  } catch (err) {
+    logger.error('GET /api/admin/emails/contacts error:', err);
+    res.status(500).json({ error: 'Failed to load contacts.' });
+  }
+});
+
+router.patch('/contacts/:type/:id', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const { type, id } = req.params;
+    if (!['customer', 'interested'].includes(type)) {
+      return res.status(400).json({ error: 'Invalid contact type.' });
+    }
+    if (!isValidObjectId(id)) return res.status(400).json({ error: 'Invalid ID.' });
+
+    if (type === 'interested') {
+      const update = {};
+      if (req.body?.language !== undefined) {
+        if (!CAMPAIGN_LANGUAGES.includes(req.body.language)) {
+          return res.status(400).json({ error: 'Invalid language.' });
+        }
+        update.language = req.body.language;
+      }
+      if (typeof req.body?.unsubscribed === 'boolean') {
+        update.unsubscribed = req.body.unsubscribed;
+      }
+      const contact = await InterestedContact.findByIdAndUpdate(id, update, { new: true }).lean();
+      if (!contact) return res.status(404).json({ error: 'Contact not found.' });
+      return res.json({
+        contact: {
+          _id: contact._id,
+          type: 'interested',
+          isCustomer: false,
+          email: contact.email,
+          name: contact.name || null,
+          language: contact.language || 'en',
+          unsubscribed: !!contact.unsubscribed,
+          createdAt: contact.createdAt
+        }
+      });
+    }
+
+    // customer
+    if (req.body?.language !== undefined) {
+      if (!CAMPAIGN_LANGUAGES.includes(req.body.language)) {
+        return res.status(400).json({ error: 'Invalid language.' });
+      }
+      const customer = await Customer.findByIdAndUpdate(
+        id,
+        { language: req.body.language },
+        { new: true }
+      ).lean();
+      if (!customer) return res.status(404).json({ error: 'Customer not found.' });
+    } else {
+      const exists = await Customer.exists({ _id: id });
+      if (!exists) return res.status(404).json({ error: 'Customer not found.' });
+    }
+
+    if (typeof req.body?.unsubscribed === 'boolean') {
+      await NotificationPreferences.findOneAndUpdate(
+        { user: id },
+        { $set: { globalEmailUnsubscribed: req.body.unsubscribed } },
+        { upsert: true, setDefaultsOnInsert: true }
+      );
+    }
+
+    const customer = await Customer.findById(id, 'firstName lastName email language createdAt').lean();
+    const prefs = await NotificationPreferences.findOne({ user: id }, 'globalEmailUnsubscribed').lean();
+    const name = `${customer.firstName || ''} ${customer.lastName || ''}`.trim();
+    return res.json({
+      contact: {
+        _id: customer._id,
+        type: 'customer',
+        isCustomer: true,
+        email: customer.email,
+        name: name || null,
+        language: customer.language || 'en',
+        unsubscribed: !!prefs?.globalEmailUnsubscribed,
+        createdAt: customer.createdAt
+      }
+    });
+  } catch (err) {
+    logger.error('PATCH /api/admin/emails/contacts/:type/:id error:', err);
+    res.status(500).json({ error: 'Failed to update contact.' });
+  }
+});
 
 // ---- Interested contacts list ----
 
@@ -96,8 +253,23 @@ router.post('/interested', authenticateToken, requireAdmin, async (req, res) => 
     if (existing) {
       return res.status(409).json({ error: 'This email is already on the list.' });
     }
+    const existingCustomer = await Customer.findOne({ email }, '_id').lean();
+    if (existingCustomer) {
+      return res.status(409).json({ error: 'This email already belongs to a registered customer. Find them in the contacts list.' });
+    }
     const contact = await InterestedContact.create({ email, name, language });
-    res.status(201).json({ contact });
+    res.status(201).json({
+      contact: {
+        _id: contact._id,
+        type: 'interested',
+        isCustomer: false,
+        email: contact.email,
+        name: contact.name || null,
+        language: contact.language || 'en',
+        unsubscribed: !!contact.unsubscribed,
+        createdAt: contact.createdAt
+      }
+    });
   } catch (err) {
     logger.error('POST /api/admin/emails/interested error:', err);
     res.status(500).json({ error: 'Failed to add contact.' });

@@ -9,7 +9,7 @@ import {
   EmailAudience,
   CampaignLanguage,
   CampaignContent,
-  InterestedContact,
+  UnifiedContact,
   SendResult,
   DraftReminderRow,
   CustomerSearchResult
@@ -37,7 +37,7 @@ export class AdminEmailsComponent implements OnInit {
     { code: 'es', label: 'Español' }
   ];
 
-  audience: EmailAudience = 'all_users';
+  audience: EmailAudience = 'all_contacts';
   audienceCount: number | null = null;
   loadingCount = false;
 
@@ -57,9 +57,11 @@ export class AdminEmailsComponent implements OnInit {
   campaignResult: SendResult | null = null;
   campaignError: string | null = null;
 
-  // Interested contacts
-  interestedContacts: InterestedContact[] = [];
-  loadingInterested = true;
+  // Unified contacts
+  contacts: UnifiedContact[] = [];
+  loadingContacts = true;
+  contactsFilter: 'all' | 'customers' | 'interested' = 'all';
+  contactsQuery = '';
   newContactEmail = '';
   newContactName = '';
   newContactLanguage: CampaignLanguage = 'pt';
@@ -89,18 +91,9 @@ export class AdminEmailsComponent implements OnInit {
   customerSendError: string | null = null;
   customerSendMessage: string | null = null;
 
-  // ---- Preferences: customer lookup ----
-  private prefsCustomerSearch$ = new Subject<string>();
-  prefsCustomerQuery = '';
-  prefsCustomerResults: CustomerSearchResult[] = [];
-  prefsSearchingCustomers = false;
-  prefsSelectedCustomer: CustomerSearchResult | null = null;
-  prefsSaving = false;
-  prefsSaveError: string | null = null;
-
   ngOnInit(): void {
     this.loadAudienceCount();
-    this.loadInterested();
+    this.loadContacts();
     this.loadDraftReminders();
 
     this.customerSearch$.pipe(
@@ -113,18 +106,6 @@ export class AdminEmailsComponent implements OnInit {
     ).subscribe({
       next: (res) => { this.customerResults = res.customers; this.searchingCustomers = false; },
       error: () => { this.searchingCustomers = false; }
-    });
-
-    this.prefsCustomerSearch$.pipe(
-      debounceTime(300),
-      distinctUntilChanged(),
-      switchMap(q => q.trim().length >= 2
-        ? this.adminEmailsService.searchCustomers(q.trim())
-        : of({ customers: [] as CustomerSearchResult[] })),
-      takeUntilDestroyed(this.destroyRef)
-    ).subscribe({
-      next: (res) => { this.prefsCustomerResults = res.customers; this.prefsSearchingCustomers = false; },
-      error: () => { this.prefsSearchingCustomers = false; }
     });
   }
 
@@ -167,6 +148,12 @@ export class AdminEmailsComponent implements OnInit {
     });
   }
 
+  private audienceLabel(audience: EmailAudience): string {
+    if (audience === 'all_contacts') return 'todos os contactos';
+    if (audience === 'all_users') return 'só clientes';
+    return 'só interessados';
+  }
+
   sendTest(): void {
     if (!this.canSendTest || this.sendingTest) return;
     const variant = this.content[this.activeLanguage];
@@ -188,9 +175,8 @@ export class AdminEmailsComponent implements OnInit {
   sendCampaign(): void {
     if (!this.canSendCampaign || this.sendingCampaign) return;
     const count = this.audienceCount ?? 0;
-    const audienceLabel = this.audience === 'all_users' ? 'todos os utilizadores' : 'todos os interessados';
     const confirmed = window.confirm(
-      `Enviar esta campanha para ${count} destinatário(s) (${audienceLabel})? Cada destinatário recebe a versão no seu idioma. Esta ação não pode ser desfeita.`
+      `Enviar esta campanha para ${count} destinatário(s) (${this.audienceLabel(this.audience)})? Cada destinatário recebe a versão no seu idioma. Esta ação não pode ser desfeita.`
     );
     if (!confirmed) return;
 
@@ -209,14 +195,33 @@ export class AdminEmailsComponent implements OnInit {
     });
   }
 
-  // ---- Interested contacts ----
+  // ---- Unified contacts ----
 
-  loadInterested(): void {
-    this.loadingInterested = true;
-    this.adminEmailsService.getInterestedContacts().subscribe({
-      next: (res) => { this.interestedContacts = res.contacts; this.loadingInterested = false; },
-      error: () => { this.loadingInterested = false; }
+  loadContacts(): void {
+    this.loadingContacts = true;
+    this.adminEmailsService.getContacts().subscribe({
+      next: (res) => { this.contacts = res.contacts; this.loadingContacts = false; },
+      error: () => { this.loadingContacts = false; }
     });
+  }
+
+  get filteredContacts(): UnifiedContact[] {
+    const q = this.contactsQuery.trim().toLowerCase();
+    return this.contacts.filter(c => {
+      if (this.contactsFilter === 'customers' && !c.isCustomer) return false;
+      if (this.contactsFilter === 'interested' && c.isCustomer) return false;
+      if (!q) return true;
+      return (
+        String(c.email || '').toLowerCase().includes(q) ||
+        String(c.name || '').toLowerCase().includes(q)
+      );
+    });
+  }
+
+  get contactsSummary(): string {
+    const customers = this.contacts.filter(c => c.isCustomer).length;
+    const interested = this.contacts.filter(c => !c.isCustomer).length;
+    return `${this.contacts.length} contactos · ${customers} clientes · ${interested} interessados`;
   }
 
   addContact(): void {
@@ -227,11 +232,11 @@ export class AdminEmailsComponent implements OnInit {
     this.adminEmailsService.addInterestedContact(email, this.newContactName.trim() || undefined, this.newContactLanguage).subscribe({
       next: (res) => {
         this.addingContact = false;
-        this.interestedContacts = [res.contact, ...this.interestedContacts];
+        this.contacts = [res.contact, ...this.contacts];
         this.newContactEmail = '';
         this.newContactName = '';
         this.newContactLanguage = 'pt';
-        if (this.audience === 'interested') this.loadAudienceCount();
+        this.loadAudienceCount();
       },
       error: (err) => {
         this.addingContact = false;
@@ -240,28 +245,30 @@ export class AdminEmailsComponent implements OnInit {
     });
   }
 
-  updateContactLanguage(contact: InterestedContact, language: CampaignLanguage): void {
+  updateContactLanguage(contact: UnifiedContact, language: CampaignLanguage): void {
     const previous = contact.language;
     contact.language = language;
-    this.adminEmailsService.updateInterestedContact(contact._id, { language }).subscribe({
+    this.adminEmailsService.updateContact(contact.type, contact._id, { language }).subscribe({
       error: () => { contact.language = previous; }
     });
   }
 
-  toggleContactUnsubscribed(contact: InterestedContact): void {
+  toggleContactUnsubscribed(contact: UnifiedContact): void {
     const previous = contact.unsubscribed;
     contact.unsubscribed = !previous;
-    this.adminEmailsService.updateInterestedContact(contact._id, { unsubscribed: contact.unsubscribed }).subscribe({
+    this.adminEmailsService.updateContact(contact.type, contact._id, { unsubscribed: contact.unsubscribed }).subscribe({
+      next: () => this.loadAudienceCount(),
       error: () => { contact.unsubscribed = previous; }
     });
   }
 
-  removeContact(contact: InterestedContact): void {
-    if (!window.confirm(`Remover ${contact.email} da lista de interessados?`)) return;
+  removeContact(contact: UnifiedContact): void {
+    if (contact.isCustomer) return;
+    if (!window.confirm(`Remover ${contact.email} da lista de contactos?`)) return;
     this.adminEmailsService.removeInterestedContact(contact._id).subscribe({
       next: () => {
-        this.interestedContacts = this.interestedContacts.filter(c => c._id !== contact._id);
-        if (this.audience === 'interested') this.loadAudienceCount();
+        this.contacts = this.contacts.filter(c => !(c._id === contact._id && c.type === 'interested'));
+        this.loadAudienceCount();
       },
       error: () => {}
     });
@@ -354,58 +361,6 @@ export class AdminEmailsComponent implements OnInit {
       error: (err) => {
         this.sendingCustomerEmail = false;
         this.customerSendError = err?.error?.error || 'Falha ao enviar email.';
-      }
-    });
-  }
-
-  // ---- Preferences: customer lookup ----
-
-  onPrefsCustomerQueryChange(value: string): void {
-    this.prefsCustomerQuery = value;
-    this.prefsSearchingCustomers = value.trim().length >= 2;
-    this.prefsCustomerSearch$.next(value);
-  }
-
-  selectPrefsCustomer(customer: CustomerSearchResult): void {
-    this.prefsSelectedCustomer = customer;
-    this.prefsSaveError = null;
-    this.prefsCustomerResults = [];
-    this.prefsCustomerQuery = '';
-  }
-
-  clearPrefsCustomer(): void {
-    this.prefsSelectedCustomer = null;
-  }
-
-  savePrefsCustomerLanguage(language: CampaignLanguage): void {
-    if (!this.prefsSelectedCustomer || this.prefsSaving) return;
-    const previous = this.prefsSelectedCustomer.language;
-    this.prefsSelectedCustomer.language = language;
-    this.prefsSaving = true;
-    this.prefsSaveError = null;
-    this.adminEmailsService.updateCustomerPreferences(this.prefsSelectedCustomer._id, { language }).subscribe({
-      next: () => { this.prefsSaving = false; },
-      error: (err) => {
-        this.prefsSaving = false;
-        if (this.prefsSelectedCustomer) this.prefsSelectedCustomer.language = previous;
-        this.prefsSaveError = err?.error?.error || 'Falha ao guardar idioma.';
-      }
-    });
-  }
-
-  togglePrefsCustomerUnsubscribed(): void {
-    if (!this.prefsSelectedCustomer || this.prefsSaving) return;
-    const previous = this.prefsSelectedCustomer.unsubscribed;
-    const unsubscribed = !previous;
-    this.prefsSelectedCustomer.unsubscribed = unsubscribed;
-    this.prefsSaving = true;
-    this.prefsSaveError = null;
-    this.adminEmailsService.updateCustomerPreferences(this.prefsSelectedCustomer._id, { unsubscribed }).subscribe({
-      next: () => { this.prefsSaving = false; },
-      error: (err) => {
-        this.prefsSaving = false;
-        if (this.prefsSelectedCustomer) this.prefsSelectedCustomer.unsubscribed = previous;
-        this.prefsSaveError = err?.error?.error || 'Falha ao guardar preferência.';
       }
     });
   }
