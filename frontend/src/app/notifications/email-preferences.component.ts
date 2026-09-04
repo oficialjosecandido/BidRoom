@@ -23,19 +23,39 @@ const LANGUAGE_LABELS: Record<Language, string> = {
       <div class="prefs-card">
         @if (loading) {
           <div class="state-icon">⏳</div>
-          <h1>Loading…</h1>
+          <h1>A carregar…</h1>
+        } @else if (needsEmail) {
+          <div class="state-icon">✉️</div>
+          <h1>Preferências de email</h1>
+          <p class="intro">Para cancelar a subscrição ou alterar o idioma, confirme o seu email.</p>
+
+          <form class="email-form" (ngSubmit)="lookupByEmail()">
+            <div class="field">
+              <label for="prefs-email">Email</label>
+              <input id="prefs-email" type="email" class="input" [(ngModel)]="emailInput" name="email" autocomplete="email" required />
+            </div>
+            <div class="field">
+              <label for="prefs-email-confirm">Repetir email</label>
+              <input id="prefs-email-confirm" type="email" class="input" [(ngModel)]="emailConfirmInput" name="emailConfirm" autocomplete="email" required />
+            </div>
+            @if (lookupError) { <p class="save-message error">{{ lookupError }}</p> }
+            <button type="submit" class="btn btn-primary" [disabled]="lookingUp || !emailInput.trim() || !emailConfirmInput.trim()">
+              {{ lookingUp ? 'A verificar…' : 'Continuar' }}
+            </button>
+          </form>
         } @else if (invalid) {
           <div class="state-icon">❌</div>
-          <h1>Invalid link</h1>
+          <h1>Link inválido</h1>
           <p>{{ errorMessage }}</p>
-          <a routerLink="/landing" class="home-link">Go to homepage</a>
+          <button type="button" class="btn btn-secondary" (click)="showEmailForm()">Usar o meu email</button>
+          <a routerLink="/landing" class="home-link">Ir para a página inicial</a>
         } @else {
           <div class="state-icon">✉️</div>
-          <h1>Email preferences</h1>
+          <h1>Preferências de email</h1>
           <p class="email-line">{{ email }}</p>
 
           <div class="section">
-            <label>Preferred language</label>
+            <label>Idioma preferido</label>
             <div class="lang-options">
               @for (lang of languages; track lang) {
                 <button type="button" class="lang-btn" [class.active]="language === lang" [disabled]="saving" (click)="saveLanguage(lang)">
@@ -46,13 +66,13 @@ const LANGUAGE_LABELS: Record<Language, string> = {
           </div>
 
           <div class="section">
-            <label>Subscription</label>
+            <label>Subscrição</label>
             @if (unsubscribed) {
-              <p class="status-text">You are unsubscribed from BidRoom emails.</p>
-              <button type="button" class="btn btn-secondary" [disabled]="saving" (click)="resubscribe()">Resubscribe</button>
+              <p class="status-text">Cancelou a subscrição dos emails BidRoom.</p>
+              <button type="button" class="btn btn-secondary" [disabled]="saving" (click)="resubscribe()">Voltar a subscrever</button>
             } @else {
-              <p class="status-text">You are currently subscribed.</p>
-              <button type="button" class="btn btn-danger" [disabled]="saving" (click)="unsubscribe()">Unsubscribe from all emails</button>
+              <p class="status-text">Está subscrito aos emails BidRoom.</p>
+              <button type="button" class="btn btn-danger" [disabled]="saving" (click)="unsubscribe()">Cancelar subscrição</button>
             }
           </div>
 
@@ -82,10 +102,38 @@ const LANGUAGE_LABELS: Record<Language, string> = {
     }
     .state-icon { font-size: 40px; margin-bottom: 12px; }
     h1 { font-size: 22px; font-weight: 700; margin: 0 0 8px; color: #1a1a1a; }
+    .intro { color: #64748b; font-size: 14px; margin: 0 0 20px; line-height: 1.5; }
     .email-line { color: #64748b; font-size: 14px; margin: 0 0 24px; }
     p { color: #555; line-height: 1.6; margin: 0 0 16px; }
     a { color: var(--primary-color, #1565c0); text-decoration: underline; }
-    .home-link { display: inline-block; margin-top: 8px; }
+    .home-link { display: inline-block; margin-top: 12px; }
+
+    .email-form {
+      text-align: left;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .field label {
+      display: block;
+      font-size: 13px;
+      font-weight: 700;
+      color: #334155;
+      margin-bottom: 6px;
+    }
+    .input {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 10px 12px;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 14px;
+      font-family: inherit;
+    }
+    .input:focus {
+      outline: none;
+      border-color: #94a3b8;
+    }
 
     .section {
       text-align: left;
@@ -120,8 +168,10 @@ const LANGUAGE_LABELS: Record<Language, string> = {
       font-size: 14px;
       font-weight: 600;
       cursor: pointer;
+      font-family: inherit;
       &:disabled { opacity: 0.6; cursor: not-allowed; }
     }
+    .btn-primary { background: #0f172a; color: #fff; width: 100%; }
     .btn-danger { background: #fee2e2; color: #b91c1c; }
     .btn-secondary { background: #e2e8f0; color: #334155; }
 
@@ -139,14 +189,20 @@ export class EmailPreferencesComponent implements OnInit {
   readonly languageLabels = LANGUAGE_LABELS;
 
   loading = true;
+  needsEmail = false;
   invalid = false;
-  errorMessage = 'This link is invalid or has expired.';
+  errorMessage = 'Este link é inválido ou expirou.';
 
   private token: string | null = null;
   private type: string | null = null;
   email = '';
   language: Language = 'en';
   unsubscribed = false;
+
+  emailInput = '';
+  emailConfirmInput = '';
+  lookingUp = false;
+  lookupError: string | null = null;
 
   saving = false;
   saveMessage: string | null = null;
@@ -157,17 +213,15 @@ export class EmailPreferencesComponent implements OnInit {
     this.type = this.route.snapshot.queryParamMap.get('type');
     if (!this.token || !this.type) {
       this.loading = false;
-      this.invalid = true;
+      this.needsEmail = true;
       return;
     }
-    this.http.get<{ email: string; language: Language; unsubscribed: boolean }>(`${this.apiUrl}/email-preferences`, {
+    this.http.get<{ email: string; language: Language; unsubscribed: boolean; type?: string }>(`${this.apiUrl}/email-preferences`, {
       params: { token: this.token, type: this.type }
     }).subscribe({
       next: (res) => {
         this.loading = false;
-        this.email = res.email;
-        this.language = res.language;
-        this.unsubscribed = res.unsubscribed;
+        this.applyPrefs(res);
       },
       error: (err) => {
         this.loading = false;
@@ -177,6 +231,65 @@ export class EmailPreferencesComponent implements OnInit {
     });
   }
 
+  showEmailForm(): void {
+    this.invalid = false;
+    this.needsEmail = true;
+    this.token = null;
+    this.type = null;
+  }
+
+  lookupByEmail(): void {
+    if (this.lookingUp) return;
+    const email = this.emailInput.trim().toLowerCase();
+    const emailConfirm = this.emailConfirmInput.trim().toLowerCase();
+    this.lookupError = null;
+
+    if (!email || !email.includes('@')) {
+      this.lookupError = 'Introduza um email válido.';
+      return;
+    }
+    if (email !== emailConfirm) {
+      this.lookupError = 'Os emails não coincidem.';
+      return;
+    }
+
+    this.lookingUp = true;
+    this.http.post<{ email: string; language: Language; unsubscribed: boolean; type: string }>(
+      `${this.apiUrl}/email-preferences/lookup`,
+      { email, emailConfirm }
+    ).subscribe({
+      next: (res) => {
+        this.lookingUp = false;
+        this.needsEmail = false;
+        this.applyPrefs(res);
+      },
+      error: (err) => {
+        this.lookingUp = false;
+        this.lookupError = err?.error?.error || 'Não foi possível carregar as preferências.';
+      }
+    });
+  }
+
+  private applyPrefs(res: { email: string; language: Language; unsubscribed: boolean; type?: string }): void {
+    this.email = res.email;
+    this.language = res.language;
+    this.unsubscribed = res.unsubscribed;
+    if (res.type) this.type = res.type;
+    this.emailInput = res.email;
+    this.emailConfirmInput = res.email;
+  }
+
+  private authBody(extra: Record<string, unknown> = {}): Record<string, unknown> {
+    if (this.token && this.type) {
+      return { token: this.token, type: this.type, ...extra };
+    }
+    return {
+      email: this.emailInput.trim().toLowerCase() || this.email,
+      emailConfirm: this.emailConfirmInput.trim().toLowerCase() || this.email,
+      ...extra
+    };
+  }
+
   saveLanguage(language: Language): void {
     if (this.saving || language === this.language) return;
     const previous = this.language;
@@ -184,14 +297,12 @@ export class EmailPreferencesComponent implements OnInit {
     this.saving = true;
     this.saveMessage = null;
     this.saveError = null;
-    this.http.post<{ ok: boolean }>(`${this.apiUrl}/email-preferences/language`, {
-      token: this.token, type: this.type, language
-    }).subscribe({
-      next: () => { this.saving = false; this.saveMessage = 'Language updated.'; },
+    this.http.post<{ ok: boolean }>(`${this.apiUrl}/email-preferences/language`, this.authBody({ language })).subscribe({
+      next: () => { this.saving = false; this.saveMessage = 'Idioma atualizado.'; },
       error: (err) => {
         this.saving = false;
         this.language = previous;
-        this.saveError = err?.error?.error || 'Failed to update language.';
+        this.saveError = err?.error?.error || 'Falha ao atualizar o idioma.';
       }
     });
   }
@@ -200,13 +311,11 @@ export class EmailPreferencesComponent implements OnInit {
     if (this.saving) return;
     this.saving = true;
     this.saveError = null;
-    this.http.post<{ ok: boolean }>(`${this.apiUrl}/email-preferences/unsubscribe`, {
-      token: this.token, type: this.type
-    }).subscribe({
-      next: () => { this.saving = false; this.unsubscribed = true; this.saveMessage = 'You have been unsubscribed.'; },
+    this.http.post<{ ok: boolean }>(`${this.apiUrl}/email-preferences/unsubscribe`, this.authBody()).subscribe({
+      next: () => { this.saving = false; this.unsubscribed = true; this.saveMessage = 'Subscrição cancelada.'; },
       error: (err) => {
         this.saving = false;
-        this.saveError = err?.error?.error || 'Failed to unsubscribe.';
+        this.saveError = err?.error?.error || 'Falha ao cancelar a subscrição.';
       }
     });
   }
@@ -215,13 +324,11 @@ export class EmailPreferencesComponent implements OnInit {
     if (this.saving) return;
     this.saving = true;
     this.saveError = null;
-    this.http.post<{ ok: boolean }>(`${this.apiUrl}/email-preferences/resubscribe`, {
-      token: this.token, type: this.type
-    }).subscribe({
-      next: () => { this.saving = false; this.unsubscribed = false; this.saveMessage = 'You have been resubscribed.'; },
+    this.http.post<{ ok: boolean }>(`${this.apiUrl}/email-preferences/resubscribe`, this.authBody()).subscribe({
+      next: () => { this.saving = false; this.unsubscribed = false; this.saveMessage = 'Voltou a subscrever.'; },
       error: (err) => {
         this.saving = false;
-        this.saveError = err?.error?.error || 'Failed to resubscribe.';
+        this.saveError = err?.error?.error || 'Falha ao voltar a subscrever.';
       }
     });
   }

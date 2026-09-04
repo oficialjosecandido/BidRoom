@@ -1,13 +1,18 @@
 const express = require('express');
 const rateLimit = require('express-rate-limit');
 const NotificationPreferences = require('../models/NotificationPreferences');
-const { findByToken } = require('../services/emailPreferencesService');
+const {
+  findByToken,
+  findByEmail,
+  normalizeEmail
+} = require('../services/emailPreferencesService');
 const logger = require('../utils/logger');
 
 const router = express.Router();
 
 const LANGUAGES = ['pt', 'en', 'es', 'fr'];
 const VALID_TYPES = ['customer', 'interested'];
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const preferencesLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 hour
@@ -25,6 +30,40 @@ function parseTokenAndType(req) {
   return { token, type };
 }
 
+function parseEmailPair(req) {
+  const email = normalizeEmail(req.body?.email);
+  const emailConfirm = normalizeEmail(req.body?.emailConfirm);
+  if (!EMAIL_REGEX.test(email)) return { error: 'Introduza um email válido.' };
+  if (!emailConfirm) return { error: 'Repita o email para confirmar.' };
+  if (email !== emailConfirm) return { error: 'Os emails não coincidem.' };
+  return { email };
+}
+
+async function resolveRecipient(req) {
+  const token = req.query?.token || req.body?.token;
+  const type = req.query?.type || req.body?.type;
+  if (token && type) {
+    if (!VALID_TYPES.includes(type)) return { error: 'Invalid link.', status: 400 };
+    const doc = await findByToken(type, token);
+    if (!doc) return { error: 'Link not recognised.', status: 404 };
+    return { type, doc };
+  }
+
+  const pair = parseEmailPair(req);
+  if (pair.error) return { error: pair.error, status: 400 };
+  const found = await findByEmail(pair.email);
+  if (!found) return { error: 'Não encontrámos este email na nossa lista.', status: 404 };
+  return found;
+}
+
+async function getUnsubscribedState(type, doc) {
+  if (type === 'customer') {
+    const prefs = await NotificationPreferences.findOne({ user: doc._id }, 'globalEmailUnsubscribed').lean();
+    return !!prefs?.globalEmailUnsubscribed;
+  }
+  return !!doc.unsubscribed;
+}
+
 /** GET /api/email-preferences?token=&type= (public) — current language + subscription state */
 router.get('/', preferencesLimiter, async (req, res) => {
   const { token, type, error } = parseTokenAndType(req);
@@ -33,28 +72,41 @@ router.get('/', preferencesLimiter, async (req, res) => {
     const doc = await findByToken(type, token);
     if (!doc) return res.status(404).json({ error: 'Link not recognised.' });
 
-    let unsubscribed = false;
-    if (type === 'customer') {
-      const prefs = await NotificationPreferences.findOne({ user: doc._id }, 'globalEmailUnsubscribed').lean();
-      unsubscribed = !!prefs?.globalEmailUnsubscribed;
-    } else {
-      unsubscribed = !!doc.unsubscribed;
-    }
-
-    res.json({ email: doc.email, language: doc.language || 'en', unsubscribed });
+    const unsubscribed = await getUnsubscribedState(type, doc);
+    res.json({ email: doc.email, language: doc.language || 'en', unsubscribed, type });
   } catch (err) {
     logger.error('GET /api/email-preferences error:', err);
     res.status(500).json({ error: 'Failed to load preferences.' });
   }
 });
 
-/** POST /api/email-preferences/unsubscribe (public) */
-router.post('/unsubscribe', preferencesLimiter, async (req, res) => {
-  const { token, type, error } = parseTokenAndType(req);
-  if (error) return res.status(400).json({ error });
+/** POST /api/email-preferences/lookup (public) — load prefs by email + confirmation */
+router.post('/lookup', preferencesLimiter, async (req, res) => {
+  const pair = parseEmailPair(req);
+  if (pair.error) return res.status(400).json({ error: pair.error });
   try {
-    const doc = await findByToken(type, token);
-    if (!doc) return res.status(404).json({ error: 'Link not recognised.' });
+    const found = await findByEmail(pair.email);
+    if (!found) return res.status(404).json({ error: 'Não encontrámos este email na nossa lista.' });
+
+    const unsubscribed = await getUnsubscribedState(found.type, found.doc);
+    res.json({
+      email: found.doc.email,
+      language: found.doc.language || 'en',
+      unsubscribed,
+      type: found.type
+    });
+  } catch (err) {
+    logger.error('POST /api/email-preferences/lookup error:', err);
+    res.status(500).json({ error: 'Failed to load preferences.' });
+  }
+});
+
+/** POST /api/email-preferences/unsubscribe (public) — token or email+confirm */
+router.post('/unsubscribe', preferencesLimiter, async (req, res) => {
+  try {
+    const resolved = await resolveRecipient(req);
+    if (resolved.error) return res.status(resolved.status || 400).json({ error: resolved.error });
+    const { type, doc } = resolved;
 
     if (type === 'customer') {
       await NotificationPreferences.findOneAndUpdate(
@@ -74,13 +126,12 @@ router.post('/unsubscribe', preferencesLimiter, async (req, res) => {
   }
 });
 
-/** POST /api/email-preferences/resubscribe (public) */
+/** POST /api/email-preferences/resubscribe (public) — token or email+confirm */
 router.post('/resubscribe', preferencesLimiter, async (req, res) => {
-  const { token, type, error } = parseTokenAndType(req);
-  if (error) return res.status(400).json({ error });
   try {
-    const doc = await findByToken(type, token);
-    if (!doc) return res.status(404).json({ error: 'Link not recognised.' });
+    const resolved = await resolveRecipient(req);
+    if (resolved.error) return res.status(resolved.status || 400).json({ error: resolved.error });
+    const { type, doc } = resolved;
 
     if (type === 'customer') {
       await NotificationPreferences.findOneAndUpdate(
@@ -100,15 +151,14 @@ router.post('/resubscribe', preferencesLimiter, async (req, res) => {
   }
 });
 
-/** POST /api/email-preferences/language (public) */
+/** POST /api/email-preferences/language (public) — token or email+confirm */
 router.post('/language', preferencesLimiter, async (req, res) => {
-  const { token, type, error } = parseTokenAndType(req);
-  if (error) return res.status(400).json({ error });
   const language = req.body?.language;
   if (!LANGUAGES.includes(language)) return res.status(400).json({ error: 'Invalid language.' });
   try {
-    const doc = await findByToken(type, token);
-    if (!doc) return res.status(404).json({ error: 'Link not recognised.' });
+    const resolved = await resolveRecipient(req);
+    if (resolved.error) return res.status(resolved.status || 400).json({ error: resolved.error });
+    const { doc } = resolved;
 
     doc.language = language;
     await doc.save();
