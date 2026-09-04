@@ -17,20 +17,9 @@
 const SCHEMAS = {
   // ─── Relógios ────────────────────────────────────────────────────────────────
   watches: [
-    { key: 'brand',            label: 'Marca',                             type: 'text',    required: true,  filterable: true, schemaOrg: 'brand' },
-    { key: 'model',            label: 'Modelo',                            type: 'text',    required: false, filterable: true },
-    { key: 'referenceNo',      label: 'Referência',                        type: 'text',    required: false, filterable: true },
-    { key: 'year',             label: 'Ano / período',                     type: 'text',    required: false, filterable: true },
-    { key: 'movement',         label: 'Movimento',                         type: 'enum',    required: true,  filterable: true,
-      options: ['Automático', 'Manual', 'Quartzo', 'Outro'] },
-    { key: 'caseDiameter',     label: 'Diâmetro da caixa (mm)',            type: 'number',  required: false, filterable: true, unit: 'mm' },
-    { key: 'caseMaterial',     label: 'Material da caixa',                 type: 'text',    required: false, filterable: true },
-    { key: 'dialColor',        label: 'Cor do mostrador',                  type: 'text',    required: false, filterable: true },
-    { key: 'braceletMaterial', label: 'Material da bracelete',             type: 'text',    required: false },
-    { key: 'originalDial',     label: 'Mostrador original (não repintado)', type: 'boolean', required: true,  filterable: true },
-    { key: 'boxIncluded',      label: 'Caixa original incluída',           type: 'boolean', required: true,  filterable: true },
-    { key: 'papersIncluded',   label: 'Documentação / certificado incluído', type: 'boolean', required: true, filterable: true },
-    { key: 'serviced',         label: 'Revisão / serviço efetuado',        type: 'boolean', required: false },
+    { key: 'brand',       label: 'Marca',         type: 'text', required: false, filterable: true, schemaOrg: 'brand' },
+    { key: 'referenceNo', label: 'Referência',    type: 'text', required: false, filterable: true },
+    { key: 'year',        label: 'Ano / período', type: 'text', required: false, filterable: true },
   ],
 
   // ─── Arte ────────────────────────────────────────────────────────────────────

@@ -48,8 +48,8 @@ const PHOTO_GUIDES: Record<string, PhotoGuide> = {
       { icon: '🕐', label: 'photoGuide.watches.front' },
       { icon: '🔄', label: 'photoGuide.watches.back' },
       { icon: '🔢', label: 'photoGuide.watches.serial' },
-      { icon: '📜', label: 'photoGuide.watches.papers', attrKey: 'papersIncluded' },
-      { icon: '📦', label: 'photoGuide.watches.box',    attrKey: 'boxIncluded' },
+      { icon: '📜', label: 'photoGuide.watches.papers' },
+      { icon: '📦', label: 'photoGuide.watches.box' },
     ],
     recommended: [
       { icon: '⌚', label: 'photoGuide.watches.strap' },
@@ -63,7 +63,7 @@ const PHOTO_GUIDES: Record<string, PhotoGuide> = {
       { icon: '🕐', label: 'photoGuide.watches.front' },
       { icon: '🔄', label: 'photoGuide.watches.back' },
       { icon: '🔢', label: 'photoGuide.watches.serial' },
-      { icon: '📜', label: 'photoGuide.watches.papers', attrKey: 'papersIncluded' },
+      { icon: '📜', label: 'photoGuide.watches.papers' },
     ],
     recommended: [
       { icon: '⌚', label: 'photoGuide.watches.strap' },

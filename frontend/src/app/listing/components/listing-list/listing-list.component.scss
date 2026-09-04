@@ -643,8 +643,8 @@
 
   .listings-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 12px;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 14px;
     &.view-list {
       grid-template-columns: 1fr;
     }
@@ -717,13 +717,14 @@
   }
 
   .lbadge {
-    padding: 2px 7px;
+    padding: 3px 8px;
     border-radius: 2px;
-    font-size: 9px;
+    font-size: 10px;
     font-weight: 600;
-    letter-spacing: 0.07em;
+    letter-spacing: 0.05em;
     text-transform: uppercase;
     width: fit-content;
+    white-space: nowrap;
     &.lb-live { background: var(--sr-red); color: #fff; }
     &.lb-priv {
       background: #0a0a0a;
@@ -809,62 +810,67 @@
     }
   }
 
-  .lcard-body { padding: 11px; }
+  .lcard-body { padding: 13px; }
 
   .lcard-title {
-    font-size: 13px;
+    font-size: 14px;
+    line-height: 1.3;
     font-weight: 500;
     color: var(--sr-cream);
-    margin-bottom: 3px;
+    margin-bottom: 4px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
   }
 
   .lcard-meta {
-    font-size: 11px;
+    font-size: 12px;
+    line-height: 1.4;
     color: var(--sr-dim);
-    margin-bottom: 9px;
-    font-weight: 300;
+    margin-bottom: 10px;
+    font-weight: 400;
   }
 
   .lcard-foot {
     display: flex;
     justify-content: space-between;
     align-items: flex-end;
+    gap: 8px;
   }
 
   .price-lbl {
-    font-size: 9px;
+    font-size: 10px;
     text-transform: uppercase;
-    letter-spacing: 0.1em;
+    letter-spacing: 0.08em;
     color: var(--sr-dim);
-    margin-bottom: 2px;
+    margin-bottom: 3px;
   }
 
   .price-val {
     font-family: ui-monospace, 'DM Mono', monospace;
-    font-size: 16px;
+    font-size: 18px;
+    line-height: 1.2;
     color: var(--sr-gold);
     &--text {
       font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-size: 13px;
     }
   }
 
-  .timer-block { text-align: right; }
+  .timer-block { text-align: right; white-space: nowrap; }
 
   .timer-val {
     font-family: ui-monospace, 'DM Mono', monospace;
-    font-size: 11px;
+    font-size: 12px;
     color: var(--sr-dim);
-    &.ending { color: var(--sr-red); }
+    &.ending { color: var(--sr-red); font-weight: 600; }
   }
 
   .bids-count {
-    font-size: 10px;
+    font-size: 11px;
     color: var(--sr-dim);
-    margin-top: 2px;
-    font-weight: 300;
+    margin-top: 3px;
+    font-weight: 400;
   }
 
   .loading-state,
