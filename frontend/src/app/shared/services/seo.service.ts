@@ -121,12 +121,12 @@ export class SeoService {
   }
 
   private buildListingDescription(listing: Listing, cleanDesc: string): string {
-    const price     = (listing.currentPrice && listing.currentPrice > 0)
-      ? listing.currentPrice
-      : listing.startingPrice;
-    const priceStr  = fmtEur(price);
+    const price = this.resolveListingPrice(listing);
+    const priceStr  = price != null ? fmtEur(price) : 'proposta';
     const format    = listing.auctionFormat === 'best-offer' ? 'Melhor Proposta' : 'Leilão';
-    const cta       = `${format} a partir de ${priceStr}. Lance já.`;
+    const cta       = price != null
+      ? `${format} a partir de ${priceStr}. Lance já.`
+      : `${format} aberta. Faça a sua proposta.`;
 
     if (!cleanDesc) return cta;
 
@@ -136,6 +136,22 @@ export class SeoService {
       : cleanDesc;
 
     return `${snippet} — ${cta}`;
+  }
+
+  /** Best display/schema price: current → starting → buy-now → minimum offer. */
+  private resolveListingPrice(listing: Listing): number | null {
+    const candidates = [
+      listing.currentPrice,
+      listing.startingPrice,
+      listing.buyNowPrice,
+      listing.minimumOfferPrice,
+    ];
+    for (const value of candidates) {
+      if (typeof value === 'number' && Number.isFinite(value) && value > 0) {
+        return value;
+      }
+    }
+    return null;
   }
 
   // ── Private — meta helpers ─────────────────────────────────────────────────
@@ -210,69 +226,88 @@ export class SeoService {
   }
 
   private injectListingSchema(listing: Listing, image: string, canonical: string): void {
-    const price = (listing.currentPrice && listing.currentPrice > 0)
-      ? listing.currentPrice
-      : listing.startingPrice;
+    const price = this.resolveListingPrice(listing);
     const sellerName = listing.seller
       ? `${listing.seller.firstName} ${listing.seller.lastName}`.trim()
       : undefined;
     const country = listing.locationCountry || 'PT';
 
-    const schema: Record<string, unknown> = {
-      '@context': 'https://schema.org',
-      '@type':    'Product',
-      name:        listing.titlePt || listing.titleEn || listing.title,
-      description: (listing.descriptionPt || listing.descriptionEn || listing.description || '')
-        .replace(/\s+/g, ' ').trim().slice(0, 500),
-      image:       listing.images?.length ? listing.images : [image],
-      category:    listing.category,
-      url:         canonical,
+    // Google Product snippets require offers, review, or aggregateRating.
+    // Never emit Product without a valid Offer — that is the Soft/critical GSC error.
+    if (price == null) {
+      this.injectJsonLd('listing-schema', {
+        '@context': 'https://schema.org',
+        '@type': 'WebPage',
+        name: listing.titlePt || listing.titleEn || listing.title,
+        description: (listing.descriptionPt || listing.descriptionEn || listing.description || '')
+          .replace(/\s+/g, ' ').trim().slice(0, 500),
+        url: canonical,
+        primaryImageOfPage: { '@type': 'ImageObject', url: image },
+      });
+      return;
+    }
+
+    const offer: Record<string, unknown> = {
+      '@type': 'Offer',
+      priceCurrency: 'EUR',
+      price: price.toFixed(2),
+      availability: listing.status === 'active'
+        ? 'https://schema.org/InStock'
+        : 'https://schema.org/OutOfStock',
+      url: canonical,
+      ...(listing.endDate && { priceValidUntil: listing.endDate.slice(0, 10) }),
+      ...(sellerName && {
+        seller: { '@type': 'Person', name: sellerName },
+      }),
     };
 
-    // Only emit offers when we have a valid positive price — a €0.00 offer
-    // is worse than no offer (misleads users and can trigger Google penalties).
-    if (price && price > 0) {
-      const offer: Record<string, unknown> = {
-        '@type':        'Offer',
-        priceCurrency:  'EUR',
-        price:          price.toFixed(2),
-        availability:   listing.status === 'active'
-          ? 'https://schema.org/InStock'
-          : 'https://schema.org/OutOfStock',
-        url:            canonical,
-        ...(listing.endDate && { priceValidUntil: listing.endDate.slice(0, 10) }),
-        ...(sellerName && {
-          seller: { '@type': 'Person', name: sellerName },
-        }),
-      };
+    const returnPolicy = this.buildReturnPolicy(listing.returnPolicy, country);
+    if (returnPolicy) offer['hasMerchantReturnPolicy'] = returnPolicy;
 
-      const returnPolicy = this.buildReturnPolicy(listing.returnPolicy, country);
-      if (returnPolicy) offer['hasMerchantReturnPolicy'] = returnPolicy;
+    const shippingDetails = this.buildShippingDetails(listing, country);
+    if (shippingDetails) offer['shippingDetails'] = shippingDetails;
 
-      const shippingDetails = this.buildShippingDetails(listing, country);
-      if (shippingDetails) offer['shippingDetails'] = shippingDetails;
+    const schema: Record<string, unknown> = {
+      '@context': 'https://schema.org',
+      '@type': 'Product',
+      name: listing.titlePt || listing.titleEn || listing.title,
+      description: (listing.descriptionPt || listing.descriptionEn || listing.description || '')
+        .replace(/\s+/g, ' ').trim().slice(0, 500),
+      image: listing.images?.length ? listing.images : [image],
+      category: listing.category,
+      url: canonical,
+      offers: offer,
+    };
 
-      schema['offers'] = offer;
+    const brandFromSpecs = listing.specifications?.find(s => /^(brand|marca)$/i.test(s.key))?.value;
+    const brandFromAttrs = listing.attributes?.['brand'] ?? listing.attributes?.['make'];
+    const brand = (typeof brandFromSpecs === 'string' && brandFromSpecs.trim())
+      ? brandFromSpecs.trim()
+      : (typeof brandFromAttrs === 'string' && brandFromAttrs.trim() ? brandFromAttrs.trim() : null);
+    if (brand) {
+      schema['brand'] = { '@type': 'Brand', name: brand };
     }
 
-    const brand = listing.specifications?.find(s => /^(brand|marca)$/i.test(s.key))?.value;
-    if (brand) schema['brand'] = { '@type': 'Brand', name: brand };
-
-    if (listing.condition) {
-      const condMap: Record<string, string> = {
-        new:          'https://schema.org/NewCondition',
-        like_new:     'https://schema.org/LikeNewCondition',
-        'like-new':   'https://schema.org/LikeNewCondition',
-        good:         'https://schema.org/UsedCondition',
-        used:         'https://schema.org/UsedCondition',
-        fair:         'https://schema.org/DamagedCondition',
-        for_parts:    'https://schema.org/DamagedCondition',
-      };
-      const mapped = condMap[listing.condition.toLowerCase()];
-      if (mapped) schema['itemCondition'] = mapped;
-    }
+    const itemCondition = this.mapItemCondition(listing.condition);
+    if (itemCondition) schema['itemCondition'] = itemCondition;
 
     this.injectJsonLd('listing-schema', schema);
+  }
+
+  private mapItemCondition(condition: string | undefined): string | null {
+    if (!condition) return null;
+    const c = condition.toLowerCase().trim();
+    if (c === 'new' || c.startsWith('new')) return 'https://schema.org/NewCondition';
+    if (c.includes('excellent') || c.includes('like new') || c.includes('like-new')) {
+      return 'https://schema.org/UsedCondition';
+    }
+    if (c.includes('parts') || c.includes('not working') || c.includes('fair')) {
+      return 'https://schema.org/DamagedCondition';
+    }
+    if (c.includes('used') || c.includes('good') || c.includes('very good')) {
+      return 'https://schema.org/UsedCondition';
+    }
+    return 'https://schema.org/UsedCondition';
   }
 
   /** Maps the seller-chosen return policy to schema.org's MerchantReturnPolicy. Omitted for 'custom' since we don't have fixed terms to declare. */
