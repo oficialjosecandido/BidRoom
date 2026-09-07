@@ -1235,6 +1235,7 @@
     },
     "sidebar": {
       "watching": "a observar",
+      "views": "visualizações",
       "congratsWon": "Parabéns! Ganhou este leilão.",
       "winnerWasSelected": "O vencedor foi selecionado.",
       "viewTransaction": "Ver transação →",

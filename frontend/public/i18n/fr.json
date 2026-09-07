@@ -769,6 +769,7 @@
     },
     "sidebar": {
       "watching": "observent",
+      "views": "vues",
       "congratsWon": "Félicitations ! Vous avez remporté cette enchère.",
       "winnerWasSelected": "Un gagnant a été sélectionné.",
       "viewTransaction": "Voir la transaction →",

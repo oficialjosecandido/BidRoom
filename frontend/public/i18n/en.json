@@ -1235,6 +1235,7 @@
     },
     "sidebar": {
       "watching": "watching",
+      "views": "views",
       "congratsWon": "Congratulations! You won this auction.",
       "winnerWasSelected": "A winner was selected.",
       "viewTransaction": "View transaction →",

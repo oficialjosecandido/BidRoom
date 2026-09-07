@@ -21,6 +21,7 @@ const { scanListingText } = require('../services/contentSafetyService');
 const { recordViolation } = require('../services/contentViolationService');
 const { createTransactionForBuyNow } = require('../services/transactionService');
 const logger = require('../utils/logger');
+const { recordViewIfNew } = require('../utils/viewCounter');
 
 const router = express.Router();
 
@@ -108,6 +109,7 @@ function queueListingDetailView(req, listingLean) {
         if (viewer && String(viewer._id) === String(sellerId)) return;
       }
       await ListingPageView.create({ listing: listingLean._id, seller: sellerId });
+      await recordViewIfNew(listingLean._id, req);
     } catch (_) {
       // Listing views are non-critical
     }

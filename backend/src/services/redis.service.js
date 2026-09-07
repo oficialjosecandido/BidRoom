@@ -172,6 +172,23 @@ class RedisService {
     }
   }
 
+  // Records a listing view for a viewer, deduplicated within windowSeconds.
+  // Returns true if this is a NEW view (caller should increment the counter),
+  // false if this viewer already viewed the listing within the window.
+  async recordListingView(listingId, viewerKey, windowSeconds = 43200) {
+    if (!this.isConnected || !this.client) {
+      return false;
+    }
+    try {
+      const key = `listing:view:${listingId}:${viewerKey}`;
+      const result = await this.client.set(key, '1', 'EX', windowSeconds, 'NX');
+      return result === 'OK';
+    } catch (error) {
+      logger.error(`Redis recordListingView error for listing ${listingId}:`, error);
+      return false;
+    }
+  }
+
   disconnect() {
     if (this.client) {
       this.client.disconnect();

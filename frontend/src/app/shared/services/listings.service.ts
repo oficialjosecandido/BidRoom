@@ -116,6 +116,7 @@ export interface Listing {
   updatedAt: string;
   watchlistCount?: number;
   inWatchlist?: boolean;
+  viewCount?: number;
   /** Set on seller/my-listings: highest offer received (pending or accepted) */
   highestOfferAmount?: number | null;
   /** Seller's average rating as seller (from reviews) */

@@ -772,6 +772,7 @@
     },
     "sidebar": {
       "watching": "observando",
+      "views": "visitas",
       "congratsWon": "¡Enhorabuena! Has ganado esta subasta.",
       "winnerWasSelected": "Se seleccionó un ganador.",
       "viewTransaction": "Ver transacción →",
