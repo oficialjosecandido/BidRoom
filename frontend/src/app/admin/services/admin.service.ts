@@ -37,6 +37,7 @@ export interface AdminAuctionsQueryParams {
   limit?: number;
   category?: string;
   status?: string;
+  q?: string;
 }
 
 export interface AdminCustomer {
@@ -165,6 +166,9 @@ export class AdminService {
     }
     if (params?.status && params.status !== 'all') {
       httpParams = httpParams.set('status', params.status);
+    }
+    if (params?.q?.trim()) {
+      httpParams = httpParams.set('q', params.q.trim());
     }
     return this.http.get<AdminAuctionsResponse>(`${this.apiUrl}/auctions`, { params: httpParams });
   }

@@ -1,7 +1,10 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, DestroyRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
+import { Subject } from 'rxjs';
+import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AdminService } from '../../services/admin.service';
 import { AdminSidebarComponent } from '../sidebar/admin-sidebar.component';
 import { Listing } from '../../../shared/services/listings.service';
@@ -15,6 +18,8 @@ import { Listing } from '../../../shared/services/listings.service';
 })
 export class AdminAuctionsComponent implements OnInit {
   private adminService = inject(AdminService);
+  private destroyRef = inject(DestroyRef);
+  private search$ = new Subject<string>();
 
   auctions: Listing[] = [];
   isLoading = false;
@@ -27,6 +32,7 @@ export class AdminAuctionsComponent implements OnInit {
 
   selectedCategory = 'all';
   selectedStatus = 'all';
+  searchQuery = '';
 
   categories = [
     { value: 'all', label: 'All categories' },
@@ -34,7 +40,8 @@ export class AdminAuctionsComponent implements OnInit {
     { value: 'home-garden', label: 'Home & Garden' },
     { value: 'art', label: 'Art' },
     { value: 'collectibles', label: 'Collectibles' },
-    { value: 'jewelry', label: 'Jewelry' }
+    { value: 'jewelry', label: 'Jewelry' },
+    { value: 'vehicles', label: 'Vehicles' }
   ];
 
   statuses = [
@@ -50,10 +57,20 @@ export class AdminAuctionsComponent implements OnInit {
     'home-garden': 'Home & Garden',
     art: 'Art',
     collectibles: 'Collectibles',
-    jewelry: 'Jewelry'
+    jewelry: 'Jewelry',
+    vehicles: 'Vehicles',
+    'real-estate': 'Real Estate'
   };
 
   ngOnInit(): void {
+    this.search$.pipe(
+      debounceTime(300),
+      distinctUntilChanged(),
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(() => {
+      this.page = 1;
+      this.loadAuctions();
+    });
     this.loadAuctions();
   }
 
@@ -66,7 +83,8 @@ export class AdminAuctionsComponent implements OnInit {
         page: this.page,
         limit: this.pageSize,
         category: this.selectedCategory,
-        status: this.selectedStatus
+        status: this.selectedStatus,
+        q: this.searchQuery.trim() || undefined
       })
       .subscribe({
         next: (res) => {
@@ -86,6 +104,17 @@ export class AdminAuctionsComponent implements OnInit {
   filterChanged(): void {
     this.page = 1;
     this.loadAuctions();
+  }
+
+  onSearchChange(value: string): void {
+    this.searchQuery = value;
+    this.search$.next(value.trim());
+  }
+
+  clearSearch(): void {
+    if (!this.searchQuery) return;
+    this.searchQuery = '';
+    this.search$.next('');
   }
 
   goToPage(delta: number): void {

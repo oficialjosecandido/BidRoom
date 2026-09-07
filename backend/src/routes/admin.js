@@ -332,7 +332,8 @@ router.get('/auctions', authenticateToken, requireAdmin, async (req, res) => {
     const filter = {};
     const cat = req.query.category && String(req.query.category).trim();
     const stat = req.query.status && String(req.query.status).trim();
-    const allowedCat = ['electronics', 'home-garden', 'art', 'collectibles', 'jewelry'];
+    const q = req.query.q && String(req.query.q).trim();
+    const allowedCat = ['electronics', 'home-garden', 'art', 'collectibles', 'jewelry', 'real-estate', 'vehicles'];
     if (cat && cat !== 'all' && allowedCat.includes(cat)) {
       filter.category = cat;
     }
@@ -341,6 +342,33 @@ router.get('/auctions', authenticateToken, requireAdmin, async (req, res) => {
       if (allowedStat.includes(stat)) {
         filter.status = stat;
       }
+    }
+    if (q) {
+      const escaped = q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const regex = new RegExp(escaped, 'i');
+      const sellerMatches = await Customer.find(
+        {
+          $or: [
+            { firstName: regex },
+            { lastName: regex },
+            { email: regex }
+          ]
+        },
+        '_id'
+      ).limit(50).lean();
+      const sellerIds = sellerMatches.map(s => s._id);
+      filter.$or = [
+        { title: regex },
+        { titlePt: regex },
+        { titleEn: regex },
+        { titleFr: regex },
+        { titleEs: regex },
+        { slug: regex },
+        { 'attributes.brand': regex },
+        { 'attributes.referenceNo': regex },
+        { 'attributes.year': regex },
+        ...(sellerIds.length ? [{ seller: { $in: sellerIds } }] : [])
+      ];
     }
 
     const [auctions, total] = await Promise.all([

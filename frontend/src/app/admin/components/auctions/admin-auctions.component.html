@@ -12,6 +12,23 @@
       </header>
 
       <section class="filters-section">
+        <div class="filter-group filter-group--search">
+          <label for="auction-search">Search</label>
+          <div class="search-field">
+            <input
+              id="auction-search"
+              type="search"
+              class="filter-search"
+              [ngModel]="searchQuery"
+              (ngModelChange)="onSearchChange($event)"
+              placeholder="Title, brand, ref, seller…"
+              autocomplete="off" />
+            @if (searchQuery.trim()) {
+              <button type="button" class="search-clear" (click)="clearSearch()" aria-label="Clear search">×</button>
+            }
+          </div>
+        </div>
+
         <div class="filter-group">
           <label for="category-filter">Category</label>
           <select id="category-filter" [(ngModel)]="selectedCategory" (ngModelChange)="filterChanged()" class="filter-select">
