@@ -561,6 +561,13 @@ export class ListingListComponent implements OnInit, OnDestroy {
       : this.translate.instant('listingList.bidsCount', { count: n });
   }
 
+  viewCountLabel(listing: Listing): string {
+    const n = listing.viewCount ?? 0;
+    return n === 1
+      ? this.translate.instant('listingList.oneView')
+      : this.translate.instant('listingList.viewsCount', { count: n });
+  }
+
   isEndingTimer(listing: Listing): boolean {
     if (!listing.timeRemaining || listing.timeRemaining.ended) return false;
     return listing.endingSoon === true || (listing.timeRemaining.days === 0 && listing.timeRemaining.hours < 1);

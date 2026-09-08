@@ -390,7 +390,7 @@
                     </div>
                     <div class="timer-block">
                       <div class="timer-val" [class.ending]="isEndingTimer(listing)">{{ formatTimeRemaining(listing) }}</div>
-                      <div class="bids-count">{{ bidCountLabel(listing) }}</div>
+                      <div class="bids-count">{{ bidCountLabel(listing) }} · {{ viewCountLabel(listing) }}</div>
                     </div>
                   </div>
                 </div>

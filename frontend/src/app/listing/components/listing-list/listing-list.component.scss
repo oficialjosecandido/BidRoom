@@ -740,9 +740,12 @@
       border: 1px solid var(--sr-line);
     }
     &.lb-off {
-      background: rgba(41, 128, 185, 0.12);
-      color: var(--sr-blue);
-      border: 1px solid rgba(41, 128, 185, 0.22);
+      background: #1a5276;
+      color: #fff;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.45);
+      font-weight: 700;
+      letter-spacing: 0.06em;
     }
     &.lb-end {
       background: rgba(255, 255, 255, 0.06);

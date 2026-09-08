@@ -316,7 +316,7 @@
           ? (getOfferOrBidCount() !== 1 ? ('listingDetails.info.offersPlural' | translate) : ('listingDetails.info.offer' | translate))
           : (getOfferOrBidCount() !== 1 ? ('listingDetails.info.bidsPlural' | translate) : ('listingDetails.info.bid' | translate)) }}
         @if ((listing.watchlistCount ?? 0) > 0) { · {{ listing.watchlistCount }} {{ 'listingDetails.sidebar.watching' | translate }} }
-        @if ((listing.viewCount ?? 0) >= 10) { · {{ listing.viewCount }} {{ 'listingDetails.sidebar.views' | translate }} }
+        · {{ listing.viewCount ?? 0 }} {{ 'listingDetails.sidebar.views' | translate }}
       </div>
     </div>
 

@@ -540,6 +540,19 @@ listingSchema.pre('save', async function(next) {
   next();
 });
 
+// Track status→'active' transitions so we can ping IndexNow after the save commits,
+// regardless of which route/service flips the status (creation, relist, reactivation).
+listingSchema.pre('save', function(next) {
+  this.$locals.notifyIndexNow = this.isModified('status') && this.status === 'active';
+  next();
+});
+
+listingSchema.post('save', function(doc) {
+  if (doc.$locals.notifyIndexNow) {
+    require('../utils/indexNow').submitListingUrl(doc.slug);
+  }
+});
+
 const Listing = mongoose.model('Listing', listingSchema);
 
 module.exports = Listing;
