@@ -1196,6 +1196,7 @@ router.post('/', authenticateToken, requireActiveAccount, requireNoDisputeRestri
       descriptionEn,
       acceptedPaymentMethods,
       attributes,
+      autoRelist,
     } = req.body;
     const localizedText = normalizeListingLocaleFields(req.body);
 
@@ -1442,6 +1443,9 @@ router.post('/', authenticateToken, requireActiveAccount, requireNoDisputeRestri
       subCategory: resolvedSubCategory.trim(),
       condition,
       auctionFormat: (listingFormat === 'best-offer') ? 'best-offer' : 'highest-bid',
+      // Best Offer sales don't set `winner` on acceptance, so auto-relist eligibility
+      // (status: ended, winner: null) can't distinguish "unsold" from "sold via offer" — restrict to auctions.
+      autoRelist: isAuction && autoRelist === true,
       durationSlot,
       startingPrice: isAuction ? parseFloat(startingPrice) : 0,
       currentPrice: isAuction ? parseFloat(startingPrice) : 0,
@@ -2132,11 +2136,18 @@ router.post('/:id/relist', authenticateToken, requireActiveAccount, async (req, 
       return res.status(400).json({ error: 'Cannot relist a successfully sold listing' });
     }
 
+    // Best Offer sales don't set `winner` on acceptance — check accepted offers too.
+    const hasAcceptedOffer = await Offer.exists({ listing: listing._id, status: 'accepted' });
+    if (hasAcceptedOffer) {
+      return res.status(400).json({ error: 'Cannot relist a successfully sold listing' });
+    }
+
     if (listing.relistedAt) {
       return res.status(409).json({ error: 'This listing has already been relisted', message: 'Each ended listing can only be relisted once' });
     }
 
     const { startingPrice, durationSlot, autoRelist } = req.body;
+    const isAuctionFormat = listing.auctionFormat !== 'best-offer';
 
     const newStartingPrice = startingPrice != null ? parseFloat(startingPrice) : listing.startingPrice;
     if (isNaN(newStartingPrice) || newStartingPrice < 0) {
@@ -2187,7 +2198,7 @@ router.post('/:id/relist', authenticateToken, requireActiveAccount, async (req, 
       status: 'active',
       startDate: new Date(),
       endDate: newEndDate,
-      autoRelist: autoRelist === true,
+      autoRelist: isAuctionFormat && autoRelist === true,
       relistCount: (listing.relistCount || 0) + 1,
       relistOf: listing._id,
     });

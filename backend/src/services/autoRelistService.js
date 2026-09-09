@@ -35,6 +35,9 @@ async function processAutoRelists(io = null) {
     winner: null,
     autoRelist: true,
     relistedAt: null,
+    // Best Offer sales don't set `winner` on acceptance, so a sold Best Offer
+    // listing can't be told apart from an unsold one here — exclude the format entirely.
+    auctionFormat: { $ne: 'best-offer' },
   }).populate('seller', 'firstName lastName _id');
 
   for (const listing of eligible) {

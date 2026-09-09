@@ -755,6 +755,8 @@
     "offerDeadlineHint": "Mais tempo significa mais compradores a ver o seu anúncio e mais propostas a receber.",
     "startingBidHint": "O valor mínimo para o primeiro lance. Um lance inicial competitivo atrai mais licitantes.",
     "durationHint": "Artigos raros ou premium tendem a gerar mais lances com 7–10 dias.",
+    "autoRelistLabel": "Reabrir automaticamente se não vender",
+    "autoRelistHint": "Se o leilão terminar sem venda (sem licitações ou reserva não atingida), será reaberto automaticamente por mais um período igual. Pode desativar a qualquer momento.",
     "formatBestOfferDesc": "Os compradores submetem propostas e você escolhe a que prefere. Defina um preço mínimo — tem total liberdade para recusar qualquer oferta abaixo desse valor.",
     "formatAuctionDesc": "Compradores fazem lances em tempo real e competem pelo seu artigo. Você define a duração e o lance inicial. O vencedor é apurado automaticamente.",
     "drop": {

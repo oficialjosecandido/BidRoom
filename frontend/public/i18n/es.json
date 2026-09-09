@@ -388,6 +388,8 @@
     "startingBidHint": "El valor mínimo para la primera puja. Una puja inicial competitiva atrae más licitadores.",
     "reserveHint": "La subasta solo vincula al ganador si se alcanza este valor.",
     "durationHint": "Los artículos raros o premium tienden a generar más pujas con 7–10 días.",
+    "autoRelistLabel": "Volver a publicar automáticamente si no se vende",
+    "autoRelistHint": "Si la subasta termina sin venta (sin pujas o sin alcanzar la reserva), se volverá a publicar automáticamente por otro período igual. Puedes desactivarlo en cualquier momento.",
     "formatBestOfferDesc": "Los compradores envían propuestas y tú eliges cuál aceptar. Define un precio mínimo — tienes total libertad para rechazar cualquier oferta por debajo de ese valor.",
     "formatAuctionDesc": "Los compradores pujan en tiempo real y compiten por tu artículo. Defines la duración y la puja inicial. El ganador se determina automáticamente.",
     "drop": {

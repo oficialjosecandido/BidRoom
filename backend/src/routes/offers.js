@@ -400,6 +400,11 @@ router.patch('/:offerId/accept', authenticateToken, async (req, res) => {
     // Close the listing
     offer.listing.status = 'ended';
     offer.listing.currentPrice = offer.amount;
+    // Mark the buyer as winner so "ended, winner: null" checks elsewhere (relist,
+    // auto-relist) can't mistake a Best Offer sale for an unsold listing.
+    if (offer.offerer) {
+      offer.listing.winner = offer.offerer._id || offer.offerer;
+    }
     
     // Reject all other pending offers
     await Offer.updateMany(

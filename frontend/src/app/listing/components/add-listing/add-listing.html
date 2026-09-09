@@ -555,6 +555,16 @@
             </div>
             @if (getFieldError('duration')) { <div class="field-err">{{ getFieldError('duration') }}</div> }
           </div>
+
+          <div class="field-row" style="margin-top: 12px;">
+            <label class="checkbox-row" style="display:flex; align-items:flex-start; gap:8px; cursor:pointer;">
+              <input type="checkbox" formControlName="autoRelist" style="margin-top:3px;">
+              <span>
+                <strong style="display:block;">{{ 'addListing.autoRelistLabel' | translate }}</strong>
+                <small class="field-hint" style="display:block;">{{ 'addListing.autoRelistHint' | translate }}</small>
+              </span>
+            </label>
+          </div>
         </div>
       }
 

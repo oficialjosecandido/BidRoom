@@ -388,6 +388,8 @@
     "startingBidHint": "La valeur minimale pour la première mise. Une mise de départ compétitive attire plus d'enchérisseurs.",
     "reserveHint": "L'enchère ne lie le gagnant que si cette valeur est atteinte.",
     "durationHint": "Les articles rares ou premium ont tendance à générer plus d'enchères avec 7–10 jours.",
+    "autoRelistLabel": "Republier automatiquement si non vendu",
+    "autoRelistHint": "Si l'enchère se termine sans vente (aucune offre ou réserve non atteinte), elle sera republiée automatiquement pour une période identique. Vous pouvez désactiver cette option à tout moment.",
     "formatBestOfferDesc": "Les acheteurs soumettent des offres et vous choisissez celle que vous préférez. Définissez un prix minimum — vous avez toute liberté de refuser toute offre en dessous de cette valeur.",
     "formatAuctionDesc": "Les acheteurs enchérissent en temps réel et se disputent votre article. Vous définissez la durée et la mise de départ. Le gagnant est déterminé automatiquement.",
     "drop": {

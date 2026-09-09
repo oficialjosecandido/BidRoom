@@ -755,6 +755,8 @@
     "offerDeadlineHint": "More time means more buyers seeing your listing and more offers to receive.",
     "startingBidHint": "The minimum value for the first bid. A competitive starting bid attracts more bidders.",
     "durationHint": "Rare or premium items tend to attract more bids over 7–10 days.",
+    "autoRelistLabel": "Automatically relist if unsold",
+    "autoRelistHint": "If the auction ends without a sale (no bids or reserve not met), it will be relisted automatically for another matching period. You can turn this off at any time.",
     "formatBestOfferDesc": "Buyers submit offers and you choose which to accept. Set a minimum price — you have full freedom to decline any offer below that value.",
     "formatAuctionDesc": "Buyers bid in real time and compete for your item. You set the duration and the starting bid. The winner is determined automatically.",
     "drop": {

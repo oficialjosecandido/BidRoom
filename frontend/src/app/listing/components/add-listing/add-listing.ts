@@ -769,6 +769,7 @@ export class AddListing implements OnInit, OnDestroy {
       duration: ['7 days', Validators.required],
       startingBid: [null],
       buyNowPrice: [null],
+      autoRelist: [false],
       minimumAcceptPrice: [null],
       allowPrivateRoom: [false, Validators.required],
       shippingOption: ['', Validators.required],
@@ -788,7 +789,7 @@ export class AddListing implements OnInit, OnDestroy {
     this.listingForm.get('listingFormat')?.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(format => {
       this.updateConditionalValidators(format);
       if (format === 'best-offer') {
-        this.listingForm.patchValue({ allowPrivateRoom: false });
+        this.listingForm.patchValue({ allowPrivateRoom: false, autoRelist: false });
       }
     });
     this.updateConditionalValidators(this.listingForm.get('listingFormat')?.value || 'best-offer');
@@ -1590,6 +1591,7 @@ export class AddListing implements OnInit, OnDestroy {
       buyNowPrice: formValue.buyNowPrice || null,
       minimumOfferPrice: formValue.minimumAcceptPrice || null,
       allowPrivateRoom: formValue.allowPrivateRoom,
+      autoRelist: formValue.listingFormat === 'auction' && formValue.autoRelist === true,
       commissionRate: this.sellerFeeRatePct,
       locationCity: formValue.locationCity?.trim(),
       locationCountry: formValue.locationCountry,
