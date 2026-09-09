@@ -5,6 +5,10 @@
   <title>BidRoom</title>
   <base href="/">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Listing images and the API live on other origins; opening those
+       connections early removes a DNS+TLS round-trip from the LCP path. -->
+  <link rel="preconnect" href="https://bidroomimagesdev.blob.core.windows.net" crossorigin>
+  <link rel="dns-prefetch" href="https://bidroomimagesdev.blob.core.windows.net">
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <link rel="apple-touch-icon" href="apple-touch-icon.svg">
   <link rel="manifest" href="manifest.webmanifest">
@@ -70,16 +74,20 @@
     })();
   </script>
 
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-4FDFR1ZSRV"></script>
-  <!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-4FDFR1ZSRV"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'G-4FDFR1ZSRV');
-</script>
+  <!-- Google tag (gtag.js) — loaded once, and only after the page is interactive
+       so it never competes with the LCP image for bandwidth on mobile. -->
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-4FDFR1ZSRV');
+    window.addEventListener('load', function () {
+      var s = document.createElement('script');
+      s.async = true;
+      s.src = 'https://www.googletagmanager.com/gtag/js?id=G-4FDFR1ZSRV';
+      document.head.appendChild(s);
+    }, { once: true });
+  </script>
 </head>
 <body>
   <app-root></app-root>

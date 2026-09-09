@@ -1,4 +1,5 @@
 import { AngularNodeAppEngine, createNodeRequestHandler, isMainModule, writeResponseToNodeResponse } from '@angular/ssr/node';
+import compression from 'compression';
 import express from 'express';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -7,6 +8,11 @@ const serverDistFolder = dirname(fileURLToPath(import.meta.url));
 const browserDistFolder = resolve(serverDistFolder, '../browser');
 
 const app = express();
+
+// Azure App Service does not compress responses from Node apps — without this
+// every JS/CSS/HTML byte is served raw, which dominates FCP/LCP on mobile 4G.
+// Must be registered before express.static and the Angular handler.
+app.use(compression());
 
 // SSRF protection: only these hosts may appear in the request's Host header during SSR.
 // Extend at runtime by setting NG_ALLOWED_HOSTS (comma-separated) in App Service settings.
@@ -40,12 +46,23 @@ app.get('/sitemap.xml', async (_req, res) => {
   }
 });
 
-// Serve static files from /browser
+// Serve static files from /browser.
+// Only build-hashed filenames (main-4YIEBKAU.js, styles-XXXX.css, …) may be
+// cached immutably — everything else (i18n JSON, manifest, icons, og-image)
+// keeps a short TTL so a deploy is picked up without a hash change.
+const HASHED_ASSET = /-[A-Z0-9]{8}\.(js|css)$/;
 app.use(
   express.static(browserDistFolder, {
-    maxAge: '1y',
     index: false,
     redirect: false,
+    setHeaders: (res, path) => {
+      res.setHeader(
+        'Cache-Control',
+        HASHED_ASSET.test(path)
+          ? 'public, max-age=31536000, immutable'
+          : 'public, max-age=3600',
+      );
+    },
   }),
 );
 
@@ -59,6 +76,11 @@ app.use(async (req, res, next) => {
   try {
     const response = await angularApp.handle(req);
     if (response) {
+      // SSR'd HTML is anonymous (no per-user data is rendered on the server),
+      // so shared caches may hold it briefly; browsers always revalidate.
+      if (!response.headers.has('cache-control')) {
+        res.setHeader('Cache-Control', 'public, max-age=0, s-maxage=60, stale-while-revalidate=300');
+      }
       writeResponseToNodeResponse(response, res);
     } else {
       // No Angular route matched — real 404 (avoid Soft 404 / redirect loops for crawlers).

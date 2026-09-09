@@ -16,7 +16,12 @@
           <div class="hc" [class.active]="carouselCurrent === i" (click)="onCardClick(i, listing)">
             <div class="hc-img" [style.background]="listingImage(listing) ? 'none' : ''">
               @if (listingImage(listing)) {
-                <img [src]="listingImage(listing)" [alt]="listing.title" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0" />
+                <img [src]="listingImage(listing)" [alt]="listing.title"
+                     width="400" height="300"
+                     [attr.fetchpriority]="i === 0 ? 'high' : null"
+                     [attr.loading]="i === 0 ? null : 'lazy'"
+                     decoding="async"
+                     style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0" />
               } @else {
                 <span class="hc-img-emoji">🏷</span>
               }
@@ -116,7 +121,9 @@
           <a [routerLink]="['/listing', listing.slug]" class="lc" style="display:block;text-decoration:none">
             <div class="lc-thumb-wrap">
               @if (listingImage(listing)) {
-                <img [src]="listingImage(listing)" [alt]="listing.title" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0" />
+                <img [src]="listingImage(listing)" [alt]="listing.title"
+                     width="400" height="300" loading="lazy" decoding="async"
+                     style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0" />
               } @else {
                 <span class="lc-thumb">🏷</span>
               }

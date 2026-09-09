@@ -43,6 +43,8 @@
     "@ngx-translate/core": "^17.0.0",
     "@ngx-translate/http-loader": "^17.0.0",
     "@stripe/stripe-js": "^8.9.0",
+    "@types/compression": "^1.8.1",
+    "compression": "^1.8.1",
     "firebase": "^11.1.0",
     "marked": "^18.0.5",
     "posthog-js": "^1.391.6",

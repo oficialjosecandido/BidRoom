@@ -1,4 +1,5 @@
-import { Component, OnDestroy, OnInit, AfterViewInit, inject, ElementRef, ViewChild, HostListener, computed } from '@angular/core';
+import { Component, OnDestroy, OnInit, AfterViewInit, inject, ElementRef, ViewChild, HostListener, computed, PLATFORM_ID } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { ListingsService, Listing } from '../../../shared/services/listings.service';
@@ -19,6 +20,7 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
   private listingsService = inject(ListingsService);
   readonly themeService = inject(ThemeService);
   private router = inject(Router);
+  private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
 
   @ViewChild('carouselWrap') carouselWrap!: ElementRef<HTMLElement>;
   @ViewChild('carouselTrack') carouselTrack!: ElementRef<HTMLElement>;
@@ -60,11 +62,15 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    const saved = localStorage.getItem('lang') || 'pt';
-    this.translate.use(saved);
-
     this.loadFeaturedListings();
     this.loadActiveListings();
+
+    // Everything below touches browser-only APIs. On the server the periodic
+    // timers would also keep the zone unstable and stall the SSR render.
+    if (!this.isBrowser) return;
+
+    const saved = localStorage.getItem('lang') || 'pt';
+    this.translate.use(saved);
 
     // private room timer animation
     this.timers.push(setInterval(() => {
@@ -84,6 +90,7 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngAfterViewInit(): void {
+    if (!this.isBrowser) return;
     setTimeout(() => this.updateCarouselTransform(), 0);
     this.startCarouselAuto();
   }
@@ -107,10 +114,10 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
           this.listingsService.getListings({ status: 'active', limit: 5, sort: 'deadline' }).subscribe({
             next: r => {
               this.featuredListings = r.listings;
-              setTimeout(() => { this.carouselCurrent = 0; this.updateCarouselTransform(); }, 0);
+              if (this.isBrowser) setTimeout(() => { this.carouselCurrent = 0; this.updateCarouselTransform(); }, 0);
             }
           });
-        } else {
+        } else if (this.isBrowser) {
           setTimeout(() => { this.carouselCurrent = 0; this.updateCarouselTransform(); }, 0);
         }
       }
