@@ -3,7 +3,6 @@ import { isPlatformBrowser, AsyncPipe } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { Observable, Subscription } from 'rxjs';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
-import Swal from 'sweetalert2';
 import { AuthService } from '../../../auth/services/auth.service';
 import { ListingsService } from '../../services/listings.service';
 import { NotificationService } from '../../services/notification.service';
@@ -138,18 +137,20 @@ export class HeaderComponent implements OnInit, OnDestroy {
 
     this.subs.add(
       this.socketService.onPrivateRoomInvitation().subscribe(({ listingId, listingTitle }) => {
-          Swal.fire({
-            title: "You're invited!",
-            html: `You have been invited to a private auction room for <strong>${listingTitle}</strong>.<br>You have <strong>15 minutes</strong> to accept.`,
-            icon: 'info',
-            showCancelButton: true,
-            confirmButtonText: 'Go to room',
-            cancelButtonText: 'Dismiss',
-            confirmButtonColor: '#2563eb'
-          }).then(result => {
-            if (result.isConfirmed) {
-              this.router.navigateByUrl(`/private-room/auction/${listingId}`);
-            }
+          void import('sweetalert2').then(({ default: Swal }) => {
+            Swal.fire({
+              title: "You're invited!",
+              html: `You have been invited to a private auction room for <strong>${listingTitle}</strong>.<br>You have <strong>15 minutes</strong> to accept.`,
+              icon: 'info',
+              showCancelButton: true,
+              confirmButtonText: 'Go to room',
+              cancelButtonText: 'Dismiss',
+              confirmButtonColor: '#2563eb'
+            }).then(result => {
+              if (result.isConfirmed) {
+                this.router.navigateByUrl(`/private-room/auction/${listingId}`);
+              }
+            });
           });
       })
     );

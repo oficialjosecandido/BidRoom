@@ -21,6 +21,7 @@
                      [attr.fetchpriority]="i === 0 ? 'high' : null"
                      [attr.loading]="i === 0 ? null : 'lazy'"
                      decoding="async"
+                     (error)="onImgError($event, listing)"
                      style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0" />
               } @else {
                 <span class="hc-img-emoji">🏷</span>
@@ -123,6 +124,7 @@
               @if (listingImage(listing)) {
                 <img [src]="listingImage(listing)" [alt]="listing.title"
                      width="400" height="300" loading="lazy" decoding="async"
+                     (error)="onImgError($event, listing)"
                      style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0" />
               } @else {
                 <span class="lc-thumb">🏷</span>

@@ -50,7 +50,15 @@
     <div class="gallery">
       <div class="main-img">
         @if (listing.images[activeImageIndex]) {
-          <img [src]="listing.images[activeImageIndex]" [alt]="listing.title" class="main-img-photo" />
+          <img
+            [src]="mainImageSrc()"
+            [alt]="listing.title"
+            class="main-img-photo"
+            width="800"
+            height="800"
+            fetchpriority="high"
+            decoding="async"
+            (error)="onGalleryImgError($event, mainImageOriginal())" />
         } @else {
           <span class="main-img-em">🏷</span>
         }
@@ -80,7 +88,14 @@
         <div class="thumbs">
           @for (img of listing.images; track $index; let i = $index) {
             <div class="thumb" [class.on]="i === activeImageIndex" (click)="setActiveImage(i)">
-              <img [src]="img" [alt]="listing.title" />
+              <img
+                [src]="thumbImageSrc(img)"
+                [alt]="listing.title"
+                width="80"
+                height="80"
+                loading="lazy"
+                decoding="async"
+                (error)="onGalleryImgError($event, img)" />
             </div>
           }
         </div>

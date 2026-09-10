@@ -10,6 +10,8 @@
     "test": "jest --watchman=false",
     "test:ci": "jest --watchman=false --ci --reporters=default",
     "seed:listing": "node src/scripts/seedListing.js",
+    "vinted:export": "node src/scripts/vinted_export.js",
+    "images:backfill-variants": "node src/scripts/backfill_image_variants.js",
     "migrate:slugs": "node src/scripts/addSlugsToExistingListings.js",
     "email:create-template": "node scripts/create-email-template.js"
   },
@@ -42,6 +44,7 @@
     "multer": "^1.4.5-lts.1",
     "nodemailer": "^8.0.7",
     "rate-limit-redis": "^4.3.1",
+    "sharp": "^0.35.4",
     "socket.io": "^4.8.1",
     "stripe": "^20.3.0",
     "uuid": "^13.0.0",

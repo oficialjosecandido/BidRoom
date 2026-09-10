@@ -1,5 +1,5 @@
 import { Injectable, NgZone, inject } from '@angular/core';
-import { io, Socket } from 'socket.io-client';
+import type { Socket } from 'socket.io-client';
 import { Observable } from 'rxjs';
 import { Auth, getIdToken } from '@angular/fire/auth';
 import { API_CONFIG } from '../config/api.config';
@@ -73,21 +73,34 @@ export class SocketService {
   private joinedListingIds: Set<string> = new Set();
   private joinedPrivateRoomViewerId: string | null = null;
   private joinedUserUid: string | null = null;
+  private connecting: Promise<void> | null = null;
 
   connect(): void {
-    this.connectWithToken(undefined);
+    void this.ensureSocket();
   }
 
-  private connectWithToken(token: string | undefined): void {
+  private ensureSocket(token?: string): Promise<void> {
     if (this.socket?.connected) {
-      return;
+      return Promise.resolve();
     }
 
     if (this.socket) {
       this.socket.connect();
-      return;
+      return Promise.resolve();
     }
 
+    if (this.connecting) {
+      return this.connecting;
+    }
+
+    this.connecting = this.createSocket(token).finally(() => {
+      this.connecting = null;
+    });
+    return this.connecting;
+  }
+
+  private async createSocket(token?: string): Promise<void> {
+    const { io } = await import('socket.io-client');
     const baseUrl = API_CONFIG.getBackendBaseUrl();
 
     // Run socket.io setup outside Angular's zone so internal timers/polling
@@ -143,11 +156,10 @@ export class SocketService {
 
   joinListing(listingId: string): void {
     this.joinedListingIds.add(listingId);
-    if (!this.socket?.connected) {
-      this.connect();
-    }
-    this.socket?.emit('join-listing', listingId);
-    logger.debug('Joined listing room', listingId);
+    void this.ensureSocket().then(() => {
+      this.socket?.emit('join-listing', listingId);
+      logger.debug('Joined listing room', listingId);
+    });
   }
 
   /** Join multiple listing rooms at once (e.g. seller dashboard showing several listings). */
@@ -177,19 +189,17 @@ export class SocketService {
     // Get the Firebase ID token so the backend can verify this socket owns the uid.
     const firebaseUser = this.firebaseAuth.currentUser;
     if (!firebaseUser) {
-      // No authenticated user — connect without token (join-user will be silently rejected)
-      if (!this.socket?.connected) this.connect();
-      this.socket?.emit('join-user', uid);
+      void this.ensureSocket().then(() => {
+        this.socket?.emit('join-user', uid);
+      });
       return;
     }
     getIdToken(firebaseUser).then((token) => {
-      // Update or create socket with the auth token for this and future connections.
       if (!this.socket) {
-        this.connectWithToken(token);
+        void this.ensureSocket(token);
         // flushRoomJoins will emit join-user after connect
       } else {
-        // Update auth for future reconnections, then emit directly on current connection.
-        (this.socket as any).auth = { token };
+        (this.socket as unknown as { auth?: { token: string } }).auth = { token };
         if (!this.socket.connected) {
           this.socket.connect();
         } else {
@@ -197,9 +207,9 @@ export class SocketService {
         }
       }
     }).catch(() => {
-      // Token fetch failed — fall back gracefully
-      if (!this.socket?.connected) this.connect();
-      this.socket?.emit('join-user', uid);
+      void this.ensureSocket().then(() => {
+        this.socket?.emit('join-user', uid);
+      });
     });
   }
 
@@ -212,94 +222,61 @@ export class SocketService {
     }
   }
 
+  /** Attach an event listener after the socket module has loaded. */
+  private listen<T>(event: string): Observable<T> {
+    return new Observable<T>((observer) => {
+      let activeSocket: Socket | null = null;
+      let handler: ((data: T) => void) | null = null;
+      let cancelled = false;
+
+      void this.ensureSocket().then(() => {
+        if (cancelled || !this.socket) return;
+        activeSocket = this.socket;
+        handler = (data: T) => this.ngZone.run(() => observer.next(data));
+        activeSocket.on(event, handler as (data: T) => void);
+      });
+
+      return () => {
+        cancelled = true;
+        if (activeSocket && handler) {
+          activeSocket.off(event, handler as (data: T) => void);
+        }
+      };
+    });
+  }
+
   /** Fired when a new notification is created for the current user (refresh badge/list) */
   onNewNotification(): Observable<void> {
-    return new Observable<void>((observer) => {
-      if (!this.socket) {
-        this.connect();
-      }
-      const socket = this.socket;
-      if (!socket) return () => {};
-      const handler = () => this.ngZone.run(() => observer.next());
-      socket.on('new-notification', handler);
-      return () => socket.off('new-notification', handler);
-    });
+    return this.listen<void>('new-notification');
   }
 
   /** Fired when the current user receives a private room invitation (time-sensitive prompt) */
   onPrivateRoomInvitation(): Observable<{ listingId: string; listingTitle: string }> {
-    return new Observable((observer) => {
-      if (!this.socket) {
-        this.connect();
-      }
-      const socket = this.socket;
-      if (!socket) return () => {};
-      const handler = (data: { listingId: string; listingTitle: string }) =>
-        this.ngZone.run(() => observer.next(data));
-      socket.on('private-room-invitation', handler);
-      return () => socket.off('private-room-invitation', handler);
-    });
+    return this.listen<{ listingId: string; listingTitle: string }>('private-room-invitation');
   }
 
   onNewBid(): Observable<NewBidEvent> {
-    return new Observable<NewBidEvent>((observer) => {
-      if (!this.socket) {
-        this.connect();
-      }
-      const socket = this.socket;
-      if (!socket) return () => {};
-      const handler = (data: NewBidEvent) => this.ngZone.run(() => observer.next(data));
-      socket.on('new-bid', handler);
-      return () => socket.off('new-bid', handler);
-    });
+    return this.listen<NewBidEvent>('new-bid');
   }
 
   onListingUpdate(): Observable<ListingUpdateEvent> {
-    return new Observable<ListingUpdateEvent>((observer) => {
-      if (!this.socket) {
-        this.connect();
-      }
-      const socket = this.socket;
-      if (!socket) return () => {};
-      const handler = (data: ListingUpdateEvent) => this.ngZone.run(() => observer.next(data));
-      socket.on('listing-update', handler);
-      return () => socket.off('listing-update', handler);
-    });
+    return this.listen<ListingUpdateEvent>('listing-update');
   }
 
   onNewOffer(): Observable<NewOfferEvent> {
-    return new Observable<NewOfferEvent>((observer) => {
-      if (!this.socket) {
-        this.connect();
-      }
-      const socket = this.socket;
-      if (!socket) return () => {};
-      const handler = (data: NewOfferEvent) => this.ngZone.run(() => observer.next(data));
-      socket.on('new-offer', handler);
-      return () => socket.off('new-offer', handler);
-    });
+    return this.listen<NewOfferEvent>('new-offer');
   }
 
   onOfferUpdate(): Observable<OfferUpdateEvent> {
-    return new Observable<OfferUpdateEvent>((observer) => {
-      if (!this.socket) {
-        this.connect();
-      }
-      const socket = this.socket;
-      if (!socket) return () => {};
-      const handler = (data: OfferUpdateEvent) => this.ngZone.run(() => observer.next(data));
-      socket.on('offer-update', handler);
-      return () => socket.off('offer-update', handler);
-    });
+    return this.listen<OfferUpdateEvent>('offer-update');
   }
 
   joinPrivateRoomViewer(listingId: string): void {
     this.joinedPrivateRoomViewerId = listingId;
-    if (!this.socket?.connected) {
-      this.connect();
-    }
-    this.socket?.emit('join-private-room-viewer', listingId);
-    logger.debug('Joined private room viewer', listingId);
+    void this.ensureSocket().then(() => {
+      this.socket?.emit('join-private-room-viewer', listingId);
+      logger.debug('Joined private room viewer', listingId);
+    });
   }
 
   leavePrivateRoomViewer(listingId: string): void {
@@ -311,52 +288,24 @@ export class SocketService {
   }
 
   onPrivateRoomViewerCountUpdate(): Observable<ViewerCountUpdateEvent> {
-    return new Observable<ViewerCountUpdateEvent>((observer) => {
-      if (!this.socket) {
-        this.connect();
-      }
-      const socket = this.socket;
-      if (!socket) return () => {};
-      const handler = (data: ViewerCountUpdateEvent) => this.ngZone.run(() => observer.next(data));
-      socket.on('private-room-viewer-count-update', handler);
-      return () => socket.off('private-room-viewer-count-update', handler);
-    });
+    return this.listen<ViewerCountUpdateEvent>('private-room-viewer-count-update');
   }
 
   onInvitationAccepted(): Observable<{ listingId: string; bidderId: string | null; bidderName: string; bidderFirstName: string; bidderLastName: string }> {
-    return new Observable((observer) => {
-      if (!this.socket) {
-        this.connect();
-      }
-      const socket = this.socket;
-      if (!socket) return () => {};
-      const handler = (data: { listingId: string; bidderId: string | null; bidderName: string; bidderFirstName: string; bidderLastName: string }) =>
-        this.ngZone.run(() => observer.next(data));
-      socket.on('invitation-accepted', handler);
-      return () => socket.off('invitation-accepted', handler);
-    });
+    return this.listen('invitation-accepted');
   }
 
   onInvitationDeclined(): Observable<{ listingId: string; bidderId: string | null }> {
-    return new Observable((observer) => {
-      if (!this.socket) {
-        this.connect();
-      }
-      const socket = this.socket;
-      if (!socket) return () => {};
-      const handler = (data: { listingId: string; bidderId: string | null }) =>
-        this.ngZone.run(() => observer.next(data));
-      socket.on('invitation-declined', handler);
-      return () => socket.off('invitation-declined', handler);
-    });
+    return this.listen('invitation-declined');
   }
 
   // ── Support chat ───────────────────────────────────────────────────────────
 
   /** Nexus agents join this room to receive all support messages in real time. */
   joinSupportAgents(): void {
-    if (!this.socket?.connected) this.connect();
-    this.socket?.emit('support:join-agents');
+    void this.ensureSocket().then(() => {
+      this.socket?.emit('support:join-agents');
+    });
   }
 
   leaveSupportAgents(): void {
@@ -364,27 +313,11 @@ export class SocketService {
   }
 
   onSupportMessage(): Observable<{ conversationId: string; message: Record<string, unknown> }> {
-    return new Observable((observer) => {
-      if (!this.socket) this.connect();
-      const socket = this.socket;
-      if (!socket) return () => {};
-      const handler = (data: { conversationId: string; message: Record<string, unknown> }) =>
-        this.ngZone.run(() => observer.next(data));
-      socket.on('support:new-message', handler);
-      return () => socket.off('support:new-message', handler);
-    });
+    return this.listen('support:new-message');
   }
 
   onSupportConversationUpdated(): Observable<{ conversationId: string; status: string }> {
-    return new Observable((observer) => {
-      if (!this.socket) this.connect();
-      const socket = this.socket;
-      if (!socket) return () => {};
-      const handler = (data: { conversationId: string; status: string }) =>
-        this.ngZone.run(() => observer.next(data));
-      socket.on('support:conversation-updated', handler);
-      return () => socket.off('support:conversation-updated', handler);
-    });
+    return this.listen('support:conversation-updated');
   }
 
   isConnected(): boolean {

@@ -157,8 +157,14 @@ async function createListingAsAdmin(input = {}) {
   const listing = new Listing({
     title,
     titlePt: title,
+    titleEn: input.titleEn ? String(input.titleEn).trim().slice(0, 80) : null,
+    titleFr: input.titleFr ? String(input.titleFr).trim().slice(0, 80) : null,
+    titleEs: input.titleEs ? String(input.titleEs).trim().slice(0, 80) : null,
     description,
     descriptionPt: description,
+    descriptionEn: input.descriptionEn ? String(input.descriptionEn).trim().slice(0, 5000) : null,
+    descriptionFr: input.descriptionFr ? String(input.descriptionFr).trim().slice(0, 5000) : null,
+    descriptionEs: input.descriptionEs ? String(input.descriptionEs).trim().slice(0, 5000) : null,
     slug,
     category,
     subCategory,
@@ -181,7 +187,8 @@ async function createListingAsAdmin(input = {}) {
     locationCountry,
     allowPrivateRoom: auctionFormat === 'highest-bid' ? !!input.allowPrivateRoom : false,
     images,
-    specifications: Array.isArray(input.specifications) ? input.specifications : []
+    specifications: Array.isArray(input.specifications) ? input.specifications : [],
+    attributes: input.attributes && typeof input.attributes === 'object' ? input.attributes : {}
   });
 
   await listing.save();

@@ -29,6 +29,7 @@ import { AnalyticsService } from '../../../shared/services/analytics.service';
 import { AnalyticsEvents } from '../../../shared/services/analytics.events';
 import { PostHogService } from '../../../shared/services/posthog.service';
 import { getLocalizedTitle, getLocalizedDescription } from '../../../shared/utils/listing-locale';
+import { listingImageSrc, onListingImageError } from '../../../shared/utils/listing-image';
 import { API_CONFIG } from '../../../shared/config/api.config';
 import { CurrencyDisplayService } from '../../../shared/services/currency-display.service';
 import { DisplayPricePipe } from '../../../shared/pipes/display-price.pipe';
@@ -398,6 +399,23 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
 
   setActiveImage(index: number): void {
     this.activeImageIndex = index;
+  }
+
+  mainImageSrc(): string {
+    const original = this.listing?.images?.[this.activeImageIndex];
+    return listingImageSrc(original, 'card');
+  }
+
+  mainImageOriginal(): string {
+    return this.listing?.images?.[this.activeImageIndex] || '';
+  }
+
+  thumbImageSrc(url: string): string {
+    return listingImageSrc(url, 'thumb');
+  }
+
+  onGalleryImgError(event: Event, originalUrl: string): void {
+    onListingImageError(event, originalUrl);
   }
 
 

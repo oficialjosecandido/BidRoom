@@ -6,6 +6,7 @@ import { ListingsService, Listing } from '../../../shared/services/listings.serv
 import { ThemeService } from '../../../shared/services/theme.service';
 import { HeaderComponent } from '../../../shared/components/header/header.component';
 import { getLocalizedTitle } from '../../../shared/utils/listing-locale';
+import { listingImageSrc, onListingImageError } from '../../../shared/utils/listing-image';
 import { BidroomLogoComponent } from '../../../shared/components/bidroom-logo/bidroom-logo.component';
 
 @Component({
@@ -204,9 +205,17 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
     return l.auctionFormat !== 'best-offer' && !l.allowPrivateRoom;
   }
 
-  /** Primary image for a listing. */
+  /** Card-sized WebP (w960) for hero/grid; falls back to original via onImgError. */
   listingImage(l: Listing): string {
+    return listingImageSrc(l.images?.[0], 'card');
+  }
+
+  listingImageOriginal(l: Listing): string {
     return l.images?.[0] || '';
+  }
+
+  onImgError(event: Event, listing: Listing): void {
+    onListingImageError(event, this.listingImageOriginal(listing));
   }
 
   private updateCarouselTransform(): void {

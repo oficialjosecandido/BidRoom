@@ -1,4 +1,9 @@
 const { BlobServiceClient } = require('@azure/storage-blob');
+const sharp = require('sharp');
+const logger = require('../utils/logger');
+
+/** Responsive WebP widths generated alongside each listing original. */
+const IMAGE_VARIANT_WIDTHS = [480, 960];
 
 class AzureStorageService {
   constructor() {
@@ -13,7 +18,7 @@ class AzureStorageService {
       this.blobServiceClient = BlobServiceClient.fromConnectionString(connectionString);
       this.containerClient = this.blobServiceClient.getContainerClient(containerName);
       this.containerName = containerName;
-      
+
       // Ensure container exists
       this.ensureContainerExists();
     }
@@ -21,7 +26,7 @@ class AzureStorageService {
 
   async ensureContainerExists() {
     if (!this.containerClient) return;
-    
+
     try {
       const exists = await this.containerClient.exists();
       if (!exists) {
@@ -44,13 +49,12 @@ class AzureStorageService {
    */
   generateBlobName(originalFilename, mimetype) {
     const uuid = require('uuid').v4();
-const logger = require('../utils/logger');
     const extension = this.getFileExtension(originalFilename, mimetype);
     const sanitizedOriginal = originalFilename
       .replace(/[^a-zA-Z0-9.-]/g, '-')
       .toLowerCase()
       .substring(0, 50); // Limit length
-    
+
     return `${uuid}-${sanitizedOriginal}${extension}`;
   }
 
@@ -63,7 +67,7 @@ const logger = require('../utils/logger');
     if (filenameExt) {
       return filenameExt[0];
     }
-    
+
     // Fall back to MIME type
     const mimeToExt = {
       'image/jpeg': '.jpg',
@@ -79,6 +83,65 @@ const logger = require('../utils/logger');
     };
 
     return mimeToExt[mimetype] || '.jpg';
+  }
+
+  /**
+   * Derive variant blob name: uuid-name.jpg → uuid-name.jpg-w480.webp
+   * (append style — keeps original extension visible in the blob key)
+   */
+  variantBlobName(originalBlobName, width) {
+    const withoutQuery = String(originalBlobName || '').split('?')[0];
+    if (/-w(480|960)\.webp$/i.test(withoutQuery)) return withoutQuery;
+    return `${withoutQuery}-w${width}.webp`;
+  }
+
+  /**
+   * Variant blob names for a given original (used on delete + backfill).
+   */
+  variantBlobNames(originalBlobName) {
+    return IMAGE_VARIANT_WIDTHS.map((w) => this.variantBlobName(originalBlobName, w));
+  }
+
+  /**
+   * Upload a WebP buffer as a public long-cached blob.
+   */
+  async uploadWebpVariant(buffer, blobName) {
+    const client = this.containerClient.getBlockBlobClient(blobName);
+    await client.upload(buffer, buffer.length, {
+      blobHTTPHeaders: {
+        blobContentType: 'image/webp',
+        blobCacheControl: 'public, max-age=31536000'
+      }
+    });
+    return client.url;
+  }
+
+  /**
+   * Generate and upload -w480 / -w960 WebP variants for a listing image buffer.
+   * Skips silently on non-raster or sharp failures (original still usable).
+   */
+  async uploadImageVariants(buffer, originalBlobName) {
+    if (!this.containerClient || !Buffer.isBuffer(buffer) || buffer.length === 0) {
+      return [];
+    }
+
+    const urls = [];
+    try {
+      const pipeline = sharp(buffer, { failOn: 'none' }).rotate();
+      for (const width of IMAGE_VARIANT_WIDTHS) {
+        const webp = await pipeline
+          .clone()
+          .resize({ width, withoutEnlargement: true })
+          .webp({ quality: 78, effort: 4 })
+          .toBuffer();
+        const name = this.variantBlobName(originalBlobName, width);
+        const url = await this.uploadWebpVariant(webp, name);
+        urls.push({ width, url, blobName: name });
+      }
+    } catch (err) {
+      logger.warn(`Image variants skipped for ${originalBlobName}: ${err.message || err}`);
+    }
+    return urls;
   }
 
   /**
@@ -113,7 +176,7 @@ const logger = require('../utils/logger');
   }
 
   /**
-   * Upload a single image to Azure Blob Storage
+   * Upload a single image to Azure Blob Storage (+ WebP width variants).
    * @param {Buffer} buffer - File buffer
    * @param {string} originalFilename - Original filename
    * @param {string} mimetype - MIME type
@@ -133,6 +196,8 @@ const logger = require('../utils/logger');
         blobCacheControl: 'public, max-age=31536000'
       }
     });
+
+    await this.uploadImageVariants(buffer, blobName);
 
     return { url: blockBlobClient.url, blobName };
   }
@@ -206,8 +271,18 @@ const logger = require('../utils/logger');
   }
 
   /**
+   * Extract blob name from a full Azure blob URL.
+   */
+  blobNameFromUrl(blobUrl) {
+    const parsed = new URL(blobUrl);
+    const parts = parsed.pathname.split('/');
+    // pathname: /container-name/rest-of-blob-path
+    return parts.slice(2).join('/').split('?')[0];
+  }
+
+  /**
    * Delete an image from Azure Blob Storage by its full URL.
-   * Correctly handles path-prefixed blobs (e.g. dispute-evidence/uuid.jpg).
+   * Also deletes -w480 / -w960 WebP variants when present.
    * @param {string} blobUrl - Full URL of the blob
    * @returns {Promise<void>}
    */
@@ -217,13 +292,12 @@ const logger = require('../utils/logger');
     }
 
     try {
-      const parsed = new URL(blobUrl);
-      const parts = parsed.pathname.split('/');
-      // pathname: /container-name/rest-of-blob-path
-      const blobName = parts.slice(2).join('/').split('?')[0];
+      const blobName = this.blobNameFromUrl(blobUrl);
       if (!blobName) return;
-      const blockBlobClient = this.containerClient.getBlockBlobClient(blobName);
-      await blockBlobClient.delete();
+      await this.deleteBlobByName(blobName);
+      await Promise.allSettled(
+        this.variantBlobNames(blobName).map((name) => this.deleteBlobByName(name))
+      );
     } catch (error) {
       logger.error('Error deleting blob:', error);
     }
@@ -264,6 +338,7 @@ const logger = require('../utils/logger');
   }
 }
 
+AzureStorageService.IMAGE_VARIANT_WIDTHS = IMAGE_VARIANT_WIDTHS;
+
 // Export singleton instance
 module.exports = new AzureStorageService();
-

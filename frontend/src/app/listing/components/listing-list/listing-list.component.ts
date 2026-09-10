@@ -6,6 +6,7 @@ import { Router, ActivatedRoute, RouterLink } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { HeaderComponent } from '../../../shared/components/header/header.component';
 import { getLocalizedTitle } from '../../../shared/utils/listing-locale';
+import { listingImageSrc, onListingImageError } from '../../../shared/utils/listing-image';
 import { FooterComponent } from '../../../shared/components/footer/footer.component';
 import { ListingsService, Listing, ListingsQueryParams } from '../../../shared/services/listings.service';
 import { WatchlistService } from '../../../shared/services/watchlist.service';
@@ -415,6 +416,23 @@ export class ListingListComponent implements OnInit, OnDestroy {
 
   listingTitle(listing: Listing): string {
     return getLocalizedTitle(listing, this.translate.currentLang || 'pt');
+  }
+
+  listingThumb(listing: Listing): string {
+    const original = listing.images?.[0];
+    if (!original) {
+      return `https://via.placeholder.com/400x300?text=${encodeURIComponent(listing.subCategory || 'Item')}`;
+    }
+    return listingImageSrc(original, 'thumb');
+  }
+
+  listingThumbOriginal(listing: Listing): string {
+    return listing.images?.[0]
+      || `https://via.placeholder.com/400x300?text=${encodeURIComponent(listing.subCategory || 'Item')}`;
+  }
+
+  onListingThumbError(event: Event, listing: Listing): void {
+    onListingImageError(event, this.listingThumbOriginal(listing));
   }
 
   priceChipLabel(): string {

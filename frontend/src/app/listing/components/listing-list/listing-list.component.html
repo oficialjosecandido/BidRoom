@@ -351,9 +351,13 @@
               <article class="lcard" [class.view-list]="viewMode === 'list'" tabindex="0" (click)="viewListing(listing.slug)" (keyup.enter)="viewListing(listing.slug)">
                 <div class="lcard-img">
                   <img
-                    [src]="listing.images[0] || 'https://via.placeholder.com/400x300?text=' + (listing.subCategory || 'Item')"
+                    [src]="listingThumb(listing)"
                     [alt]="listing.title"
-                    loading="lazy" />
+                    width="400"
+                    height="300"
+                    loading="lazy"
+                    decoding="async"
+                    (error)="onListingThumbError($event, listing)" />
                   <div class="lcard-badges">
                     @for (badge of listingBadges(listing); track badge.type) {
                       <span class="lbadge" [class]="badge.class">{{ badge.label }}</span>
