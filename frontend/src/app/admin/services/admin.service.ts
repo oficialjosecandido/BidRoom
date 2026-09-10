@@ -110,6 +110,56 @@ export interface AdminReportsQueryParams {
   reportType?: string;
 }
 
+export interface AdminCreateAuctionPayload {
+  sellerEmail?: string;
+  sellerId?: string;
+  title: string;
+  description: string;
+  category?: string;
+  subCategory?: string;
+  condition?: string;
+  listingFormat?: 'highest-bid' | 'best-offer';
+  startingPrice?: number;
+  duration?: string;
+  shippingOption?: string;
+  shippingCost?: number;
+  returnPolicy?: string;
+  locationCity?: string;
+  locationCountry?: string;
+  allowPrivateRoom?: boolean;
+  images?: string[];
+}
+
+export interface AdminCreateAuctionResponse {
+  ok: boolean;
+  listing: {
+    _id: string;
+    title: string;
+    slug: string;
+    status: string;
+    endDate: string;
+    seller: { _id: string; email: string; firstName: string; lastName: string };
+  };
+}
+
+export interface AdminCsvImportResultRow {
+  row: number;
+  ok: boolean;
+  title?: string | null;
+  listingId?: string;
+  slug?: string;
+  sellerEmail?: string;
+  error?: string;
+}
+
+export interface AdminCsvImportResponse {
+  ok: boolean;
+  created: number;
+  failed: number;
+  total: number;
+  results: AdminCsvImportResultRow[];
+}
+
 export type AdminSnapshotComparisonMode =
   | 'today_vs_yesterday'
   | 'week_vs_week'
@@ -262,6 +312,28 @@ export class AdminService {
 
   deleteListing(id: string): Observable<{ ok: boolean; deletedId: string }> {
     return this.http.delete<{ ok: boolean; deletedId: string }>(`${this.apiUrl}/auctions/${id}`);
+  }
+
+  createAuction(payload: AdminCreateAuctionPayload): Observable<AdminCreateAuctionResponse> {
+    return this.http.post<AdminCreateAuctionResponse>(`${this.apiUrl}/auctions`, payload);
+  }
+
+  importAuctionsCsv(file: File): Observable<AdminCsvImportResponse> {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.http.post<AdminCsvImportResponse>(`${this.apiUrl}/auctions/import`, formData);
+  }
+
+  createReport(payload: {
+    reportType?: 'listing' | 'user';
+    targetId: string;
+    reason: string;
+    description?: string;
+  }): Observable<{ ok: boolean; message: string; reportId: string }> {
+    return this.http.post<{ ok: boolean; message: string; reportId: string }>(
+      `${this.apiUrl}/reports`,
+      payload
+    );
   }
 
   updateListingCategory(

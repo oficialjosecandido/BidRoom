@@ -56,6 +56,8 @@ export class HeaderComponent implements OnInit, OnDestroy {
 
   private subs = new Subscription();
   private currentUserUid: string | null = null;
+  /** Guards subscribeToUserSocketEvents against re-running on every auth emission. */
+  private socketEventsBound = false;
 
   constructor() {
     this.isAuthenticated$ = this.authService.isAuthenticated();
@@ -89,6 +91,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
             this.currentUserUid = user.uid;
             this.socketService.joinUser(user.uid);
           }
+          if (this.isBrowser) this.subscribeToUserSocketEvents();
           this.notificationService.refreshUnreadCount();
           // Check for a stale draft so the publish button can say "Resume"
           if (this.isBrowser && this.currentUserUid !== user.uid) {
@@ -114,15 +117,27 @@ export class HeaderComponent implements OnInit, OnDestroy {
       })
     );
 
-    if (this.isBrowser) {
-      this.subs.add(
-        this.socketService.onNewNotification().subscribe(() => {
-          this.notificationService.refreshUnreadCount();
-        })
-      );
+  }
 
-      this.subs.add(
-        this.socketService.onPrivateRoomInvitation().subscribe(({ listingId, listingTitle }) => {
+  /**
+   * Both listeners below open the Socket.IO connection on subscribe, and both
+   * only ever fire for a signed-in user. Wiring them up eagerly meant every
+   * anonymous visitor — including everyone landing on the homepage — paid for
+   * the socket.io bundle and a persistent WebSocket that could never deliver
+   * anything. Called once, the first time a user is authenticated.
+   */
+  private subscribeToUserSocketEvents(): void {
+    if (this.socketEventsBound) return;
+    this.socketEventsBound = true;
+
+    this.subs.add(
+      this.socketService.onNewNotification().subscribe(() => {
+        this.notificationService.refreshUnreadCount();
+      })
+    );
+
+    this.subs.add(
+      this.socketService.onPrivateRoomInvitation().subscribe(({ listingId, listingTitle }) => {
           Swal.fire({
             title: "You're invited!",
             html: `You have been invited to a private auction room for <strong>${listingTitle}</strong>.<br>You have <strong>15 minutes</strong> to accept.`,
@@ -136,9 +151,8 @@ export class HeaderComponent implements OnInit, OnDestroy {
               this.router.navigateByUrl(`/private-room/auction/${listingId}`);
             }
           });
-        })
-      );
-    }
+      })
+    );
   }
 
   ngOnDestroy(): void {

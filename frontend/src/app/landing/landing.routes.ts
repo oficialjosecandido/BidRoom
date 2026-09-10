@@ -1,10 +1,9 @@
 import { Routes } from '@angular/router';
 
 export const landingRoutes: Routes = [
-  {
-    path: '',
-    loadComponent: () => import('./components/home/home.component').then(m => m.HomeComponent)
-  },
+  // The homepage moved to the domain root; /landing is kept as an alias so
+  // existing links and the many router.navigate(['/landing']) calls still work.
+  { path: '', redirectTo: '/', pathMatch: 'full' },
   {
     path: 'how-it-works',
     loadComponent: () => import('./components/how-it-works/how-it-works.component').then(m => m.HowItWorksComponent)

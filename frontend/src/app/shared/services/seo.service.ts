@@ -94,6 +94,19 @@ export class SeoService {
     this.injectBlogPostSchema(post, image, canonical, lang);
   }
 
+  /**
+   * Self-referencing canonical for a plain content route.
+   *
+   * Every page needs one that points at itself — a canonical pointing at the
+   * domain root from a non-root URL tells Google the page is a duplicate of
+   * the homepage, which is what Lighthouse flags. Query strings and the
+   * trailing slash are dropped so /a, /a/ and /a?x=1 collapse to one URL.
+   */
+  setCanonicalForRoute(path: string): void {
+    const clean = path.split(/[?#]/)[0].replace(/\/+$/, '');
+    this.setCanonical(clean ? `${BASE_URL}${clean}` : `${BASE_URL}/`);
+  }
+
   resetToDefault(): void {
     this.setDefault();
     this.removeCanonical();

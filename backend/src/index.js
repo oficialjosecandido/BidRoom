@@ -39,6 +39,7 @@ const reviewRoutes = require('./routes/reviews');
 const transactionsRoutes = require('./routes/transactions');
 const notificationsRoutes = require('./routes/notifications');
 const emailPreferencesRoutes = require('./routes/emailPreferences');
+const emailTrackingRoutes = require('./routes/emailTracking');
 const { router: paymentsRouter, stripeWebhookHandler } = require('./routes/payments');
 const { router: connectRouter, connectWebhookHandler } = require('./routes/connect');
 const shippingRoutes = require('./routes/shipping');
@@ -277,6 +278,8 @@ app.use('/api/reviews', reviewsLimiter, reviewRoutes);
 app.use('/api/transactions', generalLimiter, transactionsRoutes);
 app.use('/api/notifications', generalLimiter, notificationsRoutes);
 app.use('/api/email-preferences', emailPreferencesRoutes);
+// Public and unauthenticated: fetched by recipients' mail clients, no session.
+app.use('/api/email-track', emailTrackingRoutes);
 app.use('/api/payments', generalLimiter, paymentsRouter);
 app.use('/api/connect', generalLimiter, connectRouter);
 app.use('/api/shipping', generalLimiter, shippingRoutes);

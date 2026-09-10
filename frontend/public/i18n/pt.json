@@ -372,6 +372,7 @@
     "descriptionFr": "Descrição (Francês)",
     "descriptionEs": "Descrição (Espanhol)",
     "translationOptionalHint": "Esta tradução é opcional. Adicioná-la ajuda a chegar a compradores nos dois idiomas.",
+    "optionalTranslation": "Opcional — usa o idioma principal se vazio",
     "translateWithDeepl": "Traduzir com DeepL",
     "charactersCount": "{{count}}/80 caracteres",
     "category": "Categoria",

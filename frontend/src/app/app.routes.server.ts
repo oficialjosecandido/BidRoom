@@ -5,7 +5,6 @@ import { RenderMode, ServerRoute } from '@angular/ssr';
 // e continua a ser renderizado no cliente exatamente como hoje (sem SSR).
 export const serverRoutes: ServerRoute[] = [
   { path: '',                          renderMode: RenderMode.Server },
-  { path: 'landing',                   renderMode: RenderMode.Server },
   { path: 'landing/how-it-works',      renderMode: RenderMode.Server },
   { path: 'landing/faq',               renderMode: RenderMode.Server },
   { path: 'landing/trust',             renderMode: RenderMode.Server },

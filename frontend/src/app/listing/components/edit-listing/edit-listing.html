@@ -40,32 +40,78 @@
 
       <form [formGroup]="editForm" (ngSubmit)="onSubmit()" class="edit-form">
 
-        <!-- Critical fields (shown read-only when not in full mode) -->
+        <!-- Title + description: one language at a time -->
         <section class="form-section">
           <h2>Listing Details</h2>
 
-          <div class="form-grid">
-            <div class="form-group" [class.locked-field]="editMode !== 'full'">
-              <label>Title (Português)</label>
-              <input type="text" formControlName="titlePt" [readonly]="editMode !== 'full'" />
-              @if (editMode !== 'full') { <span class="locked-tag">Locked</span> }
-            </div>
-
-            <div class="form-group" [class.locked-field]="editMode === 'locked'">
-              <label>Title (English)</label>
-              <input type="text" formControlName="titleEn" [readonly]="editMode === 'locked'" placeholder="Optional — falls back to Portuguese" />
-              @if (editMode === 'locked') { <span class="locked-tag">Locked</span> }
-            </div>
+          <div class="lang-tabs" role="tablist">
+            @for (tab of langTabs; track tab.code) {
+              <button
+                type="button"
+                class="lang-tab"
+                role="tab"
+                [class.active]="activeLangTab === tab.code"
+                [attr.aria-selected]="activeLangTab === tab.code"
+                (click)="setLangTab(tab.code)">
+                {{ tab.flag }} {{ tab.labelKey | translate }}
+                @if (tab.code === primaryLangTab) {
+                  <span class="lang-primary-mark">*</span>
+                }
+              </button>
+            }
           </div>
 
+          @if (activeLangTab !== primaryLangTab) {
+            <div class="lang-translation-hint">
+              {{ 'addListing.translationOptionalHint' | translate }}
+              <a class="lang-translation-deepl" href="https://www.deepl.com/translator" target="_blank" rel="noopener noreferrer">
+                {{ 'addListing.translateWithDeepl' | translate }} ↗
+              </a>
+            </div>
+          }
+
+          @for (tab of langTabs; track tab.code) {
+            @if (activeLangTab === tab.code) {
+              <div class="form-group" [class.locked-field]="editMode !== 'full'">
+                <label>
+                  {{ 'addListing.listingTitle' | translate }}
+                  @if (tab.code === primaryLangTab) { <span class="req">*</span> }
+                </label>
+                <input
+                  type="text"
+                  [formControlName]="'title' + (tab.code[0].toUpperCase() + tab.code.slice(1))"
+                  [readonly]="editMode !== 'full'"
+                  maxlength="80"
+                  [placeholder]="tab.code === primaryLangTab ? '' : ('addListing.optionalTranslation' | translate)" />
+                @if (editMode !== 'full') { <span class="locked-tag">Locked</span> }
+              </div>
+
+              <div class="form-group" [class.locked-field]="editMode === 'locked'">
+                <label>
+                  {{ 'addListing.description' | translate }}
+                  @if (tab.code === primaryLangTab) {
+                    <span class="req">*</span>
+                    <span class="hint">({{ 'addListing.descriptionMinChars' | translate }})</span>
+                  }
+                </label>
+                <textarea
+                  [formControlName]="'description' + (tab.code[0].toUpperCase() + tab.code.slice(1))"
+                  rows="8"
+                  [readonly]="editMode === 'locked'"
+                  [placeholder]="tab.code === primaryLangTab ? '' : ('addListing.optionalTranslation' | translate)"></textarea>
+                @if (editMode === 'locked') { <span class="locked-tag">Locked</span> }
+              </div>
+            }
+          }
+
           <div class="form-group" [class.locked-field]="editMode !== 'full'">
-            <label>Category</label>
+            <label>{{ 'addListing.category' | translate }}</label>
             <input type="text" formControlName="category" [readonly]="editMode !== 'full'" />
             @if (editMode !== 'full') { <span class="locked-tag">Locked</span> }
           </div>
 
           <div class="form-group" [class.locked-field]="editMode === 'locked'">
-            <label>Condition</label>
+            <label>{{ 'addListing.condition' | translate }}</label>
             @if (editMode !== 'locked') {
               <select formControlName="condition">
                 @for (c of itemConditions; track c) {
@@ -76,24 +122,6 @@
               <input type="text" formControlName="condition" readonly />
               <span class="locked-tag">Locked</span>
             }
-          </div>
-        </section>
-
-        <!-- Description -->
-        <section class="form-section">
-          <h2>Description</h2>
-          <div class="form-grid">
-            <div class="form-group" [class.locked-field]="editMode === 'locked'">
-              <label>Description (Português) <span class="hint">(min 50 characters)</span></label>
-              <textarea formControlName="descriptionPt" rows="8" [readonly]="editMode === 'locked'"></textarea>
-              @if (editMode === 'locked') { <span class="locked-tag">Locked</span> }
-            </div>
-
-            <div class="form-group" [class.locked-field]="editMode === 'locked'">
-              <label>Description (English)</label>
-              <textarea formControlName="descriptionEn" rows="8" [readonly]="editMode === 'locked'" placeholder="Optional — falls back to Portuguese"></textarea>
-              @if (editMode === 'locked') { <span class="locked-tag">Locked</span> }
-            </div>
           </div>
         </section>
 

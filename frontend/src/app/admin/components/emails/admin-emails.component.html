@@ -15,6 +15,9 @@
         <button type="button" class="main-tab-btn" [class.active]="activeTab === 'personalized'" (click)="setTab('personalized')">
           ✉️ Emails personalizados
         </button>
+        <button type="button" class="main-tab-btn" [class.active]="activeTab === 'history'" (click)="setTab('history')">
+          📊 Histórico
+        </button>
         <button type="button" class="main-tab-btn" [class.active]="activeTab === 'preferences'" (click)="setTab('preferences')">
           🔧 Preferências
         </button>
@@ -250,6 +253,102 @@
         }
       }
 
+      <!-- ================= HISTORY ================= -->
+      @if (activeTab === 'history') {
+        <section class="panel-card">
+          <div class="history-header">
+            <div>
+              <h2 class="panel-title">Emails enviados</h2>
+              <p class="panel-subtitle">Uma linha por envio, do mais recente para o mais antigo. Clica numa linha para ver quem recebeu.</p>
+            </div>
+            <button type="button" class="btn btn-secondary" [disabled]="loadingCampaigns" (click)="loadCampaigns()">
+              {{ loadingCampaigns ? 'A carregar…' : 'Atualizar' }}
+            </button>
+          </div>
+
+          <p class="opens-note">
+            As aberturas são estimadas por um pixel de imagem: quem bloqueia imagens não conta,
+            e o Apple Mail pode contar aberturas que ninguém leu. Serve para comparar envios, não como número exato.
+          </p>
+
+          @if (campaignsError) { <p class="result-message error">{{ campaignsError }}</p> }
+
+          @if (loadingCampaigns) {
+            <div class="loading-state"><div class="spinner"></div></div>
+          } @else if (campaigns.length === 0) {
+            <div class="empty-state small">
+              <p class="empty-message">Ainda não foi enviado nenhum email a partir desta página.</p>
+            </div>
+          } @else {
+            <div class="panel-table">
+              <div class="table-scroll">
+                <table class="nexus-data-table">
+                  <thead>
+                    <tr>
+                      <th scope="col">Semana</th>
+                      <th scope="col">Assunto</th>
+                      <th scope="col">Tipo</th>
+                      <th scope="col">Data</th>
+                      <th scope="col">Enviados</th>
+                      <th scope="col">Aberturas</th>
+                      <th scope="col"><span class="sr-only">Detalhe</span></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (row of campaigns; track row._id) {
+                      <tr class="campaign-row" (click)="toggleCampaignDetails(row)">
+                        <td><span class="week-badge">{{ row.weekLabel }}</span></td>
+                        <td>{{ row.subject }}</td>
+                        <td class="muted-col">{{ campaignKindLabel(row) }}</td>
+                        <td class="date-cell">{{ formatDate(row.sentAt) }}</td>
+                        <td>
+                          <span class="emails-count">{{ row.sentCount }}</span>
+                          @if (row.failedCount) {
+                            <span class="failed-count">{{ row.failedCount }} falha(s)</span>
+                          }
+                        </td>
+                        <td>
+                          <span class="emails-count">{{ row.openedCount }}</span>
+                          <span class="emails-opened">{{ row.openRate }}%</span>
+                        </td>
+                        <td class="expand-cell">{{ expandedCampaignId === row._id ? '▾' : '▸' }}</td>
+                      </tr>
+
+                      @if (expandedCampaignId === row._id) {
+                        <tr class="campaign-detail-row">
+                          <td colspan="7">
+                            @if (loadingDeliveriesFor === row._id) {
+                              <div class="loading-state"><div class="spinner"></div></div>
+                            } @else {
+                              <ul class="delivery-list">
+                                @for (d of deliveriesByCampaign[row._id]; track d._id) {
+                                  <li class="delivery-item" [class.failed]="d.status === 'failed'">
+                                    <span class="delivery-email">{{ d.email }}</span>
+                                    @if (d.status === 'failed') {
+                                      <span class="delivery-status failed">Falhou{{ d.error ? ': ' + d.error : '' }}</span>
+                                    } @else if (d.openedAt) {
+                                      <span class="delivery-status opened">Aberto {{ formatDate(d.openedAt) }} ({{ d.openCount }}×)</span>
+                                    } @else {
+                                      <span class="delivery-status">Sem abertura registada</span>
+                                    }
+                                  </li>
+                                } @empty {
+                                  <li class="delivery-item">Sem destinatários registados.</li>
+                                }
+                              </ul>
+                            }
+                          </td>
+                        </tr>
+                      }
+                    }
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          }
+        </section>
+      }
+
       <!-- ================= PREFERENCES ================= -->
       @if (activeTab === 'preferences') {
         <section class="panel-card">
@@ -297,6 +396,7 @@
                       <th scope="col">Tipo</th>
                       <th scope="col">Idioma</th>
                       <th scope="col">Subscrito</th>
+                      <th scope="col">Emails</th>
                       <th scope="col">Desde</th>
                       <th scope="col"><span class="sr-only">Ações</span></th>
                     </tr>
@@ -322,6 +422,12 @@
                           <button type="button" class="status-toggle-btn" [class.subscribed]="!c.unsubscribed" (click)="toggleContactUnsubscribed(c)">
                             {{ c.unsubscribed ? 'Não' : 'Sim' }}
                           </button>
+                        </td>
+                        <td class="emails-cell" [title]="c.lastEmailAt ? 'Último envio: ' + formatDate(c.lastEmailAt) : 'Nunca recebeu emails'">
+                          <span class="emails-count">{{ c.emailsReceived || 0 }}</span>
+                          @if (c.emailsReceived) {
+                            <span class="emails-opened">{{ c.emailsOpened || 0 }} aberto(s)</span>
+                          }
                         </td>
                         <td class="date-cell">{{ formatDate(c.createdAt) }}</td>
                         <td>

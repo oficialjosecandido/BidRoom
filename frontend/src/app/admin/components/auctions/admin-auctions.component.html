@@ -9,6 +9,10 @@
           <h1 class="page-title">Auctions</h1>
           <p class="page-lead">Paginated catalogue with server-side filters (newest first).</p>
         </div>
+        <div class="header-actions">
+          <button type="button" class="btn-secondary" (click)="openImportModal()">Import from CSV</button>
+          <button type="button" class="btn-primary" (click)="openCreateModal()">Create Auction</button>
+        </div>
       </header>
 
       <section class="filters-section">
@@ -138,6 +142,13 @@
                           title="View details">View</a>
                         <button
                           type="button"
+                          class="action-report"
+                          (click)="openReport(auction, $event)"
+                          title="Report listing">
+                          Report listing
+                        </button>
+                        <button
+                          type="button"
                           class="action-delete"
                           [disabled]="deletingId === auction._id"
                           (click)="deleteListing(auction, $event)"
@@ -172,3 +183,172 @@
     </div>
   </div>
 </div>
+
+@if (showCreateModal) {
+  <div class="modal-overlay" (click)="closeCreateModal()">
+    <div class="modal-content modal-wide" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Create Auction</h2>
+        <button type="button" class="close-btn" (click)="closeCreateModal()" aria-label="Close">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-grid">
+          <label>
+            Seller email *
+            <input type="email" [(ngModel)]="createForm.sellerEmail" autocomplete="off" />
+          </label>
+          <label>
+            Title *
+            <input type="text" [(ngModel)]="createForm.title" maxlength="80" />
+          </label>
+          <label class="full">
+            Description * (min 50 chars)
+            <textarea rows="5" [(ngModel)]="createForm.description"></textarea>
+          </label>
+          <label>
+            Category
+            <select [(ngModel)]="createForm.category">
+              @for (c of createCategories; track c.value) {
+                <option [value]="c.value">{{ c.label }}</option>
+              }
+            </select>
+          </label>
+          <label>
+            Sub-category
+            <input type="text" [(ngModel)]="createForm.subCategory" />
+          </label>
+          <label>
+            Condition
+            <select [(ngModel)]="createForm.condition">
+              @for (c of conditions; track c) {
+                <option [value]="c">{{ c }}</option>
+              }
+            </select>
+          </label>
+          <label>
+            Auction type
+            <select [(ngModel)]="createForm.listingFormat">
+              <option value="highest-bid">Highest bid</option>
+              <option value="best-offer">Best offer</option>
+            </select>
+          </label>
+          <label>
+            Starting price (€)
+            <input type="number" min="0" step="0.01" [(ngModel)]="createForm.startingPrice" />
+          </label>
+          <label>
+            Duration
+            <select [(ngModel)]="createForm.duration">
+              @for (d of durations; track d) {
+                <option [value]="d">{{ d }}</option>
+              }
+            </select>
+          </label>
+          <label>
+            Shipping
+            <select [(ngModel)]="createForm.shippingOption">
+              <option value="flat-rate">Flat rate</option>
+              <option value="calculated">Calculated</option>
+              <option value="local-pickup">Meet in person</option>
+              <option value="free">Free</option>
+            </select>
+          </label>
+          <label>
+            Shipping cost (€)
+            <input type="number" min="0" step="0.01" [(ngModel)]="createForm.shippingCost" />
+          </label>
+          <label>
+            Return policy
+            <select [(ngModel)]="createForm.returnPolicy">
+              <option value="no-returns">No returns</option>
+              <option value="14-days">14 days</option>
+              <option value="30-days">30 days</option>
+              <option value="custom">Custom</option>
+            </select>
+          </label>
+          <label>
+            City
+            <input type="text" [(ngModel)]="createForm.locationCity" />
+          </label>
+          <label>
+            Country
+            <input type="text" [(ngModel)]="createForm.locationCountry" maxlength="2" />
+          </label>
+          <label class="checkbox-row">
+            <input type="checkbox" [(ngModel)]="createForm.allowPrivateRoom" />
+            Allow private room
+          </label>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-secondary" (click)="closeCreateModal()" [disabled]="createSubmitting">Cancel</button>
+        <button type="button" class="btn-primary" (click)="submitCreate()" [disabled]="createSubmitting">
+          {{ createSubmitting ? 'Creating…' : 'Create auction' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+@if (showImportModal) {
+  <div class="modal-overlay" (click)="closeImportModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Import from CSV</h2>
+        <button type="button" class="close-btn" (click)="closeImportModal()" aria-label="Close">×</button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-help">
+          Upload a CSV with seller email, title, description, and optional fields.
+          Each row creates one auction for that seller.
+        </p>
+        <button type="button" class="btn-link" (click)="downloadCsvTemplate()">Download CSV template</button>
+        <label class="file-field">
+          <span>CSV file</span>
+          <input type="file" accept=".csv,text/csv" (change)="onImportFileSelected($event)" />
+        </label>
+        @if (importPreviewName) {
+          <p class="file-name">Selected: {{ importPreviewName }}</p>
+        }
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-secondary" (click)="closeImportModal()" [disabled]="importSubmitting">Cancel</button>
+        <button type="button" class="btn-primary" (click)="submitImport()" [disabled]="importSubmitting || !importFile">
+          {{ importSubmitting ? 'Importing…' : 'Import CSV' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+@if (showReportModal && reportTarget) {
+  <div class="modal-overlay" (click)="closeReportModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Report listing</h2>
+        <button type="button" class="close-btn" (click)="closeReportModal()" aria-label="Close">×</button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-help">Reporting: <strong>{{ reportTarget.title }}</strong></p>
+        <label>
+          Reason
+          <select [(ngModel)]="reportReason">
+            @for (r of reportReasons; track r.value) {
+              <option [value]="r.value">{{ r.label }}</option>
+            }
+          </select>
+        </label>
+        <label>
+          Notes (optional)
+          <textarea rows="4" [(ngModel)]="reportDescription" placeholder="Optional details for the moderation queue"></textarea>
+        </label>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-secondary" (click)="closeReportModal()" [disabled]="reportSubmitting">Cancel</button>
+        <button type="button" class="btn-primary" (click)="submitReport()" [disabled]="reportSubmitting">
+          {{ reportSubmitting ? 'Submitting…' : 'Submit report' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}

@@ -21,6 +21,23 @@ const { runImagePurge } = require('../services/imagePurgeScheduler');
 const { getBlocklistItems, addBlocklistItem, removeBlocklistItem, ensureBlocklistExists } = require('../services/contentSafetyService');
 const azureStorageService = require('../services/azureStorage.service');
 const { requireAdmin, ADMIN_EMAILS } = require('../utils/roles');
+const {
+  createListingAsAdmin,
+  parseCsv,
+  mapCsvRowToCreateInput
+} = require('../services/adminListingService');
+const multer = require('multer');
+const csvUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 2 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    const name = String(file.originalname || '').toLowerCase();
+    if (file.mimetype === 'text/csv' || file.mimetype === 'application/vnd.ms-excel' || name.endsWith('.csv')) {
+      return cb(null, true);
+    }
+    cb(new Error('Only CSV files are allowed'));
+  }
+});
 
 const { getStripe } = require('../utils/stripe.util');
 const logger = require('../utils/logger');
@@ -395,6 +412,126 @@ router.get('/auctions', authenticateToken, requireAdmin, async (req, res) => {
       message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
     });
   }
+});
+
+// POST /api/admin/auctions — create listing on behalf of a seller
+router.post('/auctions', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const { listing, seller } = await createListingAsAdmin(req.body || {});
+    const adminUser =
+      (req.user?.uid && await Customer.findOne({ uid: req.user.uid }).select('_id').lean()) ||
+      (req.user?.email && await Customer.findOne({ email: String(req.user.email).toLowerCase() }).select('_id').lean());
+    await appendModerationAudit({
+      subjectUserId: seller._id,
+      actionType: 'admin_listing_created',
+      performedByUserId: adminUser?._id || null,
+      performedByEmail: req.user?.email || null,
+      metadata: {
+        listingId: listing._id,
+        title: listing.title,
+        auctionFormat: listing.auctionFormat
+      }
+    });
+    return res.status(201).json({
+      ok: true,
+      listing: {
+        _id: listing._id,
+        title: listing.title,
+        slug: listing.slug,
+        status: listing.status,
+        endDate: listing.endDate,
+        seller: { _id: seller._id, email: seller.email, firstName: seller.firstName, lastName: seller.lastName }
+      }
+    });
+  } catch (error) {
+    logger.error('Error creating admin auction:', error);
+    const status = error.status || (error.name === 'ValidationError' ? 400 : 500);
+    return res.status(status).json({
+      error: 'Failed to create auction',
+      message: error.message || 'Internal server error'
+    });
+  }
+});
+
+// POST /api/admin/auctions/import — bulk create from CSV
+router.post('/auctions/import', authenticateToken, requireAdmin, (req, res) => {
+  csvUpload.single('file')(req, res, async (err) => {
+    if (err) {
+      return res.status(400).json({
+        error: 'Invalid CSV upload',
+        message: err.message || 'Failed to read CSV file'
+      });
+    }
+    try {
+      if (!req.file?.buffer) {
+        return res.status(400).json({
+          error: 'Missing file',
+          message: 'Upload a CSV file in the "file" field.'
+        });
+      }
+
+      const text = req.file.buffer.toString('utf8');
+      const rows = parseCsv(text);
+      if (!rows.length) {
+        return res.status(400).json({
+          error: 'Empty CSV',
+          message: 'CSV must include a header row and at least one data row.'
+        });
+      }
+
+      const results = [];
+      let created = 0;
+      let failed = 0;
+
+      for (let i = 0; i < rows.length; i += 1) {
+        const rowNumber = i + 2; // header is row 1
+        const payload = mapCsvRowToCreateInput(rows[i]);
+        try {
+          const { listing, seller } = await createListingAsAdmin(payload);
+          created += 1;
+          results.push({
+            row: rowNumber,
+            ok: true,
+            title: listing.title,
+            listingId: listing._id,
+            slug: listing.slug,
+            sellerEmail: seller.email
+          });
+        } catch (rowErr) {
+          failed += 1;
+          results.push({
+            row: rowNumber,
+            ok: false,
+            title: payload.title || null,
+            error: rowErr.message || 'Failed to create listing'
+          });
+        }
+      }
+
+      if (req.user?.uid || req.user?.email) {
+        const adminUser =
+          (req.user.uid && await Customer.findOne({ uid: req.user.uid }).select('_id').lean()) ||
+          (req.user.email && await Customer.findOne({ email: String(req.user.email).toLowerCase() }).select('_id').lean());
+        if (adminUser?._id) {
+          await appendModerationAudit({
+            subjectUserId: adminUser._id,
+            actionType: 'admin_listings_csv_import',
+            performedByUserId: adminUser._id,
+            performedByEmail: req.user?.email || null,
+            metadata: { created, failed, totalRows: rows.length }
+          });
+        }
+      }
+
+      return res.json({ ok: failed === 0, created, failed, total: rows.length, results });
+    } catch (error) {
+      logger.error('Error importing auctions CSV:', error);
+      return res.status(500).json({
+        error: 'Failed to import CSV',
+        message: error.message || 'Internal server error'
+      });
+    }
+  });
 });
 
 // Get single auction by ID for admin
@@ -1355,6 +1492,74 @@ router.get('/reports', authenticateToken, requireAdmin, async (req, res) => {
   } catch (err) {
     logger.error('GET /api/admin/reports error:', err);
     return res.status(500).json({ error: 'Failed to fetch reports.' });
+  }
+});
+
+// POST /api/admin/reports — admin flags a listing/user (source: nexus)
+router.post('/reports', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const { reportType = 'listing', targetId, reason, description } = req.body || {};
+    const VALID_REASONS = ['fraud_scam', 'offensive_content', 'prohibited_item', 'spam', 'off_platform_transaction', 'other'];
+
+    if (!['listing', 'user'].includes(reportType)) {
+      return res.status(400).json({ error: 'Invalid reportType', message: 'Must be listing or user.' });
+    }
+    if (!isValidObjectId(targetId)) {
+      return res.status(400).json({ error: 'Invalid targetId', message: 'A valid target id is required.' });
+    }
+    if (!VALID_REASONS.includes(reason)) {
+      return res.status(400).json({ error: 'Invalid reason', message: `Allowed: ${VALID_REASONS.join(', ')}` });
+    }
+
+    if (reportType === 'listing') {
+      const listing = await Listing.findById(targetId).select('_id').lean();
+      if (!listing) return res.status(404).json({ error: 'Listing not found', message: 'Listing not found.' });
+    } else {
+      const user = await Customer.findById(targetId).select('_id').lean();
+      if (!user) return res.status(404).json({ error: 'User not found', message: 'User not found.' });
+    }
+
+    const reporter =
+      (await Customer.findOne({ uid: req.user.uid }).select('_id').lean()) ||
+      (req.user.email
+        ? await Customer.findOne({ email: String(req.user.email).toLowerCase() }).select('_id').lean()
+        : null);
+    if (!reporter) {
+      return res.status(401).json({ error: 'Unauthorized', message: 'Admin user not found in database.' });
+    }
+    const reporterId = reporter._id;
+
+    const report = await Report.create({
+      reportType,
+      targetId,
+      reportedBy: reporterId,
+      reason,
+      description: description?.trim() || 'Reported from Nexus auctions',
+      status: 'pending'
+    });
+
+    await appendModerationAudit({
+      subjectUserId: reporterId,
+      actionType: 'admin_report_created',
+      performedByUserId: reporterId,
+      performedByEmail: req.user?.email || null,
+      metadata: { reason, reportId: report._id, reportType, targetId }
+    });
+
+    return res.status(201).json({
+      ok: true,
+      message: 'Report submitted successfully.',
+      reportId: report._id
+    });
+  } catch (err) {
+    if (err.code === 11000) {
+      return res.status(409).json({
+        error: 'Already reported',
+        message: 'You have already reported this item.'
+      });
+    }
+    logger.error('POST /api/admin/reports error:', err);
+    return res.status(500).json({ error: 'Failed to submit report.', message: err.message || 'Internal server error' });
   }
 });
 

@@ -6,9 +6,12 @@ const Customer = require('../models/Customer');
 const NotificationPreferences = require('../models/NotificationPreferences');
 const InterestedContact = require('../models/InterestedContact');
 const ListingDraft = require('../models/ListingDraft');
+const EmailCampaign = require('../models/EmailCampaign');
+const EmailDelivery = require('../models/EmailDelivery');
 const { sendEmail } = require('../services/emailService');
 const { renderEmailTemplate } = require('../services/templateEngine');
 const { appendPreferencesFooter } = require('../services/emailPreferencesService');
+const { newTrackingToken, injectTrackingPixel } = require('../services/emailTrackingService');
 const logger = require('../utils/logger');
 
 const router = express.Router();
@@ -64,37 +67,187 @@ async function resolveAudience(audience) {
   return null;
 }
 
-/** content: { pt: {subject, html}, en: {...}, es: {...}, fr: {...} } — picks the recipient's language, falls back to en. */
+/**
+ * ISO-8601 week number and week-year for a date.
+ *
+ * ISO weeks start on Monday and belong to the year containing their Thursday,
+ * which is why the week-year is returned alongside: 1 Jan can fall in week 52
+ * of the previous year, and 31 Dec in week 1 of the next.
+ */
+function isoWeekOf(date) {
+  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  // Shift to the Thursday of this week (getUTCDay: Sunday = 0 → treat as 7).
+  d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
+  const isoYear = d.getUTCFullYear();
+  const yearStart = new Date(Date.UTC(isoYear, 0, 1));
+  const isoWeek = Math.ceil(((d - yearStart) / 86400000 + 1) / 7);
+  return { isoWeek, isoYear };
+}
+
+/**
+ * Records a send and returns the campaign document.
+ *
+ * `deliveries` are the per-recipient rows built during the send — they carry
+ * the tracking tokens that were embedded in each message, so they must be
+ * written even when the send failed (a failed row is how a bad address shows
+ * up later).
+ */
+async function recordCampaign({ kind, audience, subject, content, deliveries, admin }) {
+  const now = new Date();
+  const { isoWeek, isoYear } = isoWeekOf(now);
+  const sentCount = deliveries.filter(d => d.status === 'sent').length;
+
+  const campaign = await EmailCampaign.create({
+    kind,
+    audience: audience || null,
+    subject,
+    content: content || null,
+    isoWeek,
+    isoYear,
+    totalRecipients: deliveries.length,
+    sentCount,
+    failedCount: deliveries.length - sentCount,
+    sentBy: admin?.id || admin?._id || null,
+    sentByEmail: admin?.email || null
+  });
+
+  if (deliveries.length > 0) {
+    await EmailDelivery.insertMany(
+      deliveries.map(d => ({ ...d, campaign: campaign._id })),
+      { ordered: false }
+    );
+  }
+
+  return campaign;
+}
+
+/**
+ * Sends one tracked message to one person and records it as its own campaign,
+ * so a personalized email shows up in the same history as a newsletter.
+ * Throws if the send fails — the caller decides the HTTP response.
+ */
+async function sendTrackedSingle({ kind, subject, html, recipient, admin }) {
+  const language = recipient.language || 'en';
+  const token = newTrackingToken();
+  const withFooter = await appendPreferencesFooter(html, {
+    type: recipient.type,
+    id: recipient.id,
+    language
+  });
+
+  let error = null;
+  try {
+    await sendEmail(recipient.email, subject, injectTrackingPixel(withFooter, token));
+  } catch (err) {
+    error = String(err?.message || err).slice(0, 500);
+  }
+
+  await recordCampaign({
+    kind,
+    audience: null,
+    subject,
+    content: null,
+    admin,
+    deliveries: [{
+      recipientType: recipient.type,
+      recipient: recipient.id || null,
+      email: recipient.email,
+      language,
+      status: error ? 'failed' : 'sent',
+      trackingToken: token,
+      ...(error ? { error } : {})
+    }]
+  });
+
+  if (error) throw new Error(error);
+}
+
+/**
+ * content: { pt: {subject, html}, en: {...}, es: {...}, fr: {...} } — picks the
+ * recipient's language, falls back to en.
+ *
+ * Each message gets its own tracking token, so an open can be attributed to a
+ * specific recipient rather than only counted in aggregate.
+ */
 async function sendInBatches(recipients, content) {
+  const deliveries = [];
   let sent = 0;
   let failed = 0;
+
   for (let i = 0; i < recipients.length; i += SEND_BATCH_SIZE) {
     const batch = recipients.slice(i, i + SEND_BATCH_SIZE);
     const results = await Promise.allSettled(batch.map(async r => {
       const variant = content[r.language] || content.en;
-      const html = await appendPreferencesFooter(variant.html, { type: r.type, id: r.id, language: r.language });
-      return sendEmail(r.email, variant.subject, html);
+      const token = newTrackingToken();
+      const withFooter = await appendPreferencesFooter(variant.html, { type: r.type, id: r.id, language: r.language });
+      await sendEmail(r.email, variant.subject, injectTrackingPixel(withFooter, token));
+      return token;
     }));
-    for (const result of results) {
-      if (result.status === 'fulfilled') sent++;
-      else failed++;
-    }
+
+    results.forEach((result, idx) => {
+      const r = batch[idx];
+      const base = {
+        recipientType: r.type,
+        recipient: r.id || null,
+        email: r.email,
+        language: r.language
+      };
+      if (result.status === 'fulfilled') {
+        sent++;
+        deliveries.push({ ...base, status: 'sent', trackingToken: result.value });
+      } else {
+        failed++;
+        // The token was generated inside the failed task and is unrecoverable
+        // here; a fresh one keeps the unique index satisfied and is never used.
+        deliveries.push({
+          ...base,
+          status: 'failed',
+          trackingToken: newTrackingToken(),
+          error: String(result.reason?.message || result.reason || 'Unknown error').slice(0, 500)
+        });
+      }
+    });
   }
-  return { total: recipients.length, sent, failed };
+
+  return { total: recipients.length, sent, failed, deliveries };
 }
 
 // ---- Unified contacts list (customers + interested) ----
 
 router.get('/contacts', authenticateToken, requireAdmin, async (req, res) => {
   try {
-    const [customers, interested, unsubscribedPrefs] = await Promise.all([
+    const [customers, interested, unsubscribedPrefs, deliveryStats] = await Promise.all([
       Customer.find(
         { accountStatus: { $ne: 'closed' } },
         'firstName lastName email language createdAt'
       ).lean(),
       InterestedContact.find({}).sort('-createdAt').lean(),
-      NotificationPreferences.find({ globalEmailUnsubscribed: true }, 'user').lean()
+      NotificationPreferences.find({ globalEmailUnsubscribed: true }, 'user').lean(),
+      // Rolled up by address rather than by contact id: a person can exist both
+      // as an interested contact and, later, as a customer, and the address is
+      // what the two have in common.
+      EmailDelivery.aggregate([
+        { $match: { status: 'sent' } },
+        {
+          $group: {
+            _id: '$email',
+            received: { $sum: 1 },
+            opened: { $sum: { $cond: [{ $ne: ['$openedAt', null] }, 1, 0] } },
+            lastSentAt: { $max: '$createdAt' }
+          }
+        }
+      ])
     ]);
+
+    const statsByEmail = new Map(deliveryStats.map(s => [String(s._id || '').toLowerCase(), s]));
+    const statsFor = email => {
+      const s = statsByEmail.get(String(email || '').toLowerCase());
+      return {
+        emailsReceived: s?.received || 0,
+        emailsOpened: s?.opened || 0,
+        lastEmailAt: s?.lastSentAt || null
+      };
+    };
 
     const unsubscribedIds = new Set(unsubscribedPrefs.map(p => String(p.user)));
     const customerEmails = new Set(
@@ -113,7 +266,8 @@ router.get('/contacts', authenticateToken, requireAdmin, async (req, res) => {
         name: name || null,
         language: c.language || 'en',
         unsubscribed: unsubscribedIds.has(String(c._id)),
-        createdAt: c.createdAt
+        createdAt: c.createdAt,
+        ...statsFor(c.email)
       });
     }
 
@@ -129,7 +283,8 @@ router.get('/contacts', authenticateToken, requireAdmin, async (req, res) => {
         name: c.name || null,
         language: c.language || 'en',
         unsubscribed: !!c.unsubscribed,
-        createdAt: c.createdAt
+        createdAt: c.createdAt,
+        ...statsFor(c.email)
       });
     }
 
@@ -383,9 +538,19 @@ router.post('/send', authenticateToken, requireAdmin, async (req, res) => {
     if (!recipients) return res.status(400).json({ error: 'Invalid audience.' });
     if (recipients.length === 0) return res.status(400).json({ error: 'No recipients for this audience.' });
 
-    const result = await sendInBatches(recipients, content);
+    const { deliveries, ...result } = await sendInBatches(recipients, content);
+
+    const campaign = await recordCampaign({
+      kind: 'newsletter',
+      audience,
+      subject: content.pt?.subject || content.en?.subject || '(sem assunto)',
+      content,
+      deliveries,
+      admin: req.user
+    });
+
     logger.info(`[AdminEmails] Campaign sent by ${req.user?.email}: ${result.sent}/${result.total} ok (audience=${audience})`);
-    res.json(result);
+    res.json({ ...result, campaignId: campaign._id });
   } catch (err) {
     logger.error('POST /api/admin/emails/send error:', err);
     res.status(500).json({ error: 'Failed to send campaign.' });
@@ -459,12 +624,18 @@ router.post('/draft-reminders/:draftId/send', authenticateToken, requireAdmin, a
     if (!draft) return res.status(404).json({ error: 'Draft not found.' });
     if (!draft.seller?.email) return res.status(400).json({ error: 'This draft has no seller email.' });
 
-    const htmlWithFooter = await appendPreferencesFooter(html, {
-      type: 'customer',
-      id: draft.seller._id,
-      language: draft.seller.language || 'en'
+    await sendTrackedSingle({
+      kind: 'draft-reminder',
+      subject,
+      html,
+      recipient: {
+        type: 'customer',
+        id: draft.seller._id,
+        email: draft.seller.email,
+        language: draft.seller.language || 'en'
+      },
+      admin: req.user
     });
-    await sendEmail(draft.seller.email, subject, htmlWithFooter);
     await ListingDraft.updateOne({ _id: draft._id }, { draftReminderSent: true });
 
     res.json({ ok: true, sentTo: draft.seller.email });
@@ -547,16 +718,107 @@ router.post('/customers/:customerId/send', authenticateToken, requireAdmin, asyn
     const customer = await Customer.findById(req.params.customerId, 'email language').lean();
     if (!customer) return res.status(404).json({ error: 'Customer not found.' });
 
-    const htmlWithFooter = await appendPreferencesFooter(html, {
-      type: 'customer',
-      id: customer._id,
-      language: customer.language || 'en'
+    await sendTrackedSingle({
+      kind: 'personalized',
+      subject,
+      html,
+      recipient: {
+        type: 'customer',
+        id: customer._id,
+        email: customer.email,
+        language: customer.language || 'en'
+      },
+      admin: req.user
     });
-    await sendEmail(customer.email, subject, htmlWithFooter);
     res.json({ ok: true, sentTo: customer.email });
   } catch (err) {
     logger.error('POST /api/admin/emails/customers/:customerId/send error:', err);
     res.status(500).json({ error: 'Failed to send email.' });
+  }
+});
+
+// ---- Sent history ----
+
+/**
+ * One row per send, newest first, with the open rollup joined in.
+ *
+ * Opens are counted live from EmailDelivery rather than denormalised onto the
+ * campaign — they keep arriving for days after a send, and a stored counter
+ * would need the pixel endpoint to write twice on every hit.
+ */
+router.get('/campaigns', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 50, 1), 200);
+    const skip = Math.max(parseInt(req.query.skip, 10) || 0, 0);
+
+    const [campaigns, total] = await Promise.all([
+      EmailCampaign.find({}).sort({ createdAt: -1 }).skip(skip).limit(limit).lean(),
+      EmailCampaign.countDocuments({})
+    ]);
+
+    const openStats = campaigns.length
+      ? await EmailDelivery.aggregate([
+          { $match: { campaign: { $in: campaigns.map(c => c._id) }, status: 'sent' } },
+          {
+            $group: {
+              _id: '$campaign',
+              opened: { $sum: { $cond: [{ $ne: ['$openedAt', null] }, 1, 0] } },
+              totalOpens: { $sum: '$openCount' }
+            }
+          }
+        ])
+      : [];
+    const openByCampaign = new Map(openStats.map(s => [String(s._id), s]));
+
+    res.json({
+      total,
+      campaigns: campaigns.map(c => {
+        const stats = openByCampaign.get(String(c._id));
+        const opened = stats?.opened || 0;
+        return {
+          _id: c._id,
+          kind: c.kind,
+          audience: c.audience,
+          subject: c.subject,
+          isoWeek: c.isoWeek,
+          isoYear: c.isoYear,
+          // "S30/2026" — the label the history list is read by.
+          weekLabel: `S${String(c.isoWeek).padStart(2, '0')}/${c.isoYear}`,
+          sentAt: c.createdAt,
+          sentByEmail: c.sentByEmail,
+          totalRecipients: c.totalRecipients,
+          sentCount: c.sentCount,
+          failedCount: c.failedCount,
+          openedCount: opened,
+          totalOpens: stats?.totalOpens || 0,
+          openRate: c.sentCount > 0 ? Math.round((opened / c.sentCount) * 100) : 0
+        };
+      })
+    });
+  } catch (err) {
+    logger.error('GET /api/admin/emails/campaigns error:', err);
+    res.status(500).json({ error: 'Failed to load campaign history.' });
+  }
+});
+
+/** Per-recipient detail for one send: who got it and who opened it. */
+router.get('/campaigns/:id/deliveries', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    if (!isValidObjectId(req.params.id)) return res.status(400).json({ error: 'Invalid campaign ID.' });
+
+    const deliveries = await EmailDelivery.find(
+      { campaign: req.params.id },
+      // trackingToken is deliberately excluded: it is a capability to mark an
+      // open, and nothing in the admin UI needs it.
+      'email recipientType language status error openedAt lastOpenedAt openCount createdAt'
+    )
+      .sort({ openedAt: -1, email: 1 })
+      .lean();
+
+    res.json({ deliveries });
+  } catch (err) {
+    logger.error('GET /api/admin/emails/campaigns/:id/deliveries error:', err);
+    res.status(500).json({ error: 'Failed to load campaign deliveries.' });
   }
 });
 

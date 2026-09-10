@@ -18,6 +18,10 @@ export interface UnifiedContact {
   language: CampaignLanguage;
   unsubscribed: boolean;
   createdAt: string;
+  /** Emails successfully sent to this address, across every campaign. */
+  emailsReceived: number;
+  emailsOpened: number;
+  lastEmailAt: string | null;
 }
 
 export interface ContactPreferencesUpdate {
@@ -36,6 +40,43 @@ export interface SendResult {
   total: number;
   sent: number;
   failed: number;
+  campaignId?: string;
+}
+
+export type CampaignKind = 'newsletter' | 'personalized' | 'draft-reminder';
+
+/** One line in the sent-email history. */
+export interface EmailCampaignRow {
+  _id: string;
+  kind: CampaignKind;
+  audience: EmailAudience | null;
+  subject: string;
+  isoWeek: number;
+  isoYear: number;
+  /** e.g. "S30/2026". */
+  weekLabel: string;
+  sentAt: string;
+  sentByEmail: string | null;
+  totalRecipients: number;
+  sentCount: number;
+  failedCount: number;
+  /** Recipients who opened at least once — approximate, see the history note. */
+  openedCount: number;
+  totalOpens: number;
+  openRate: number;
+}
+
+export interface CampaignDelivery {
+  _id: string;
+  email: string;
+  recipientType: ContactType;
+  language: CampaignLanguage;
+  status: 'sent' | 'failed';
+  error: string | null;
+  openedAt: string | null;
+  lastOpenedAt: string | null;
+  openCount: number;
+  createdAt: string;
 }
 
 export interface DraftReminderRow {
@@ -65,6 +106,16 @@ export class AdminEmailsService {
 
   private get apiUrl(): string {
     return `${API_CONFIG.getApiUrl()}/admin/emails`;
+  }
+
+  // Sent history
+  getCampaigns(limit = 50, skip = 0): Observable<{ campaigns: EmailCampaignRow[]; total: number }> {
+    const params = new HttpParams().set('limit', limit).set('skip', skip);
+    return this.http.get<{ campaigns: EmailCampaignRow[]; total: number }>(`${this.apiUrl}/campaigns`, { params });
+  }
+
+  getCampaignDeliveries(id: string): Observable<{ deliveries: CampaignDelivery[] }> {
+    return this.http.get<{ deliveries: CampaignDelivery[] }>(`${this.apiUrl}/campaigns/${id}/deliveries`);
   }
 
   // Unified contacts (customers + interested)

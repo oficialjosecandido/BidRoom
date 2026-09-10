@@ -3,7 +3,14 @@ import { AuthGuard } from './auth/guards/auth.guard';
 import { AdminGuard } from './admin/guards/admin.guard';
 
 export const routes: Routes = [
-  { path: '', redirectTo: '/landing', pathMatch: 'full' },
+  // The homepage lives at the domain root so it can carry a self-referencing
+  // canonical and so first-time visitors are not sent through a redirect hop.
+  // /landing still resolves — it redirects here (see landing.routes.ts).
+  {
+    path: '',
+    pathMatch: 'full',
+    loadComponent: () => import('./landing/components/home/home.component').then(m => m.HomeComponent)
+  },
   {
     path: 'auth',
     loadChildren: () => import('./auth/auth.module').then(m => m.AuthModule)

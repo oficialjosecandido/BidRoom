@@ -29,6 +29,12 @@ const angularApp = new AngularNodeAppEngine({
   trustProxyHeaders: ['x-forwarded-for', 'x-forwarded-host', 'x-forwarded-port', 'x-forwarded-proto', 'x-forwarded-prefix', 'x-forwarded-tlsversion'],
 });
 
+// The homepage used to live at /landing and is now served at the domain root.
+// A permanent redirect keeps old links and search results working while giving
+// crawlers a single canonical homepage URL. Only the exact path — the children
+// (/landing/faq, /landing/trust, …) keep their URLs.
+app.get('/landing', (_req, res) => res.redirect(301, '/'));
+
 // Sitemap is generated dynamically by the backend from live listing data.
 // Proxied transparently so Google sees a 200 at www.bidroom.pt/sitemap.xml
 // instead of a 301 redirect (which it flags as a non-indexable page).

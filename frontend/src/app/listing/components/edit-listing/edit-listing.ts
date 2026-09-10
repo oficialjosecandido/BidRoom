@@ -11,6 +11,7 @@ import { HeaderComponent } from '../../../shared/components/header/header.compon
 import { FooterComponent } from '../../../shared/components/footer/footer.component';
 
 export type EditMode = 'full' | 'partial' | 'locked';
+type LangCode = 'pt' | 'en' | 'fr' | 'es';
 
 @Component({
   selector: 'app-edit-listing',
@@ -33,6 +34,16 @@ export class EditListing implements OnInit {
   isSubmitting = false;
   errorMessage = '';
   isUploadingImages = false;
+
+  /** One language at a time — translations are optional. */
+  activeLangTab: LangCode = 'pt';
+  primaryLangTab: LangCode = 'pt';
+  readonly langTabs: { code: LangCode; labelKey: string; flag: string }[] = [
+    { code: 'pt', labelKey: 'addListing.langPt', flag: '🇵🇹' },
+    { code: 'en', labelKey: 'addListing.langEn', flag: '🇬🇧' },
+    { code: 'fr', labelKey: 'addListing.langFr', flag: '🇫🇷' },
+    { code: 'es', labelKey: 'addListing.langEs', flag: '🇪🇸' }
+  ];
 
   uploadedFiles: File[] = [];
   previewUrls: (string | ArrayBuffer | null)[] = [];
@@ -87,37 +98,86 @@ export class EditListing implements OnInit {
     }
   }
 
+  setLangTab(lang: LangCode): void {
+    this.activeLangTab = lang;
+  }
+
+  private langTitleKey(lang: LangCode): string {
+    return 'title' + lang[0].toUpperCase() + lang.slice(1);
+  }
+
+  private langDescKey(lang: LangCode): string {
+    return 'description' + lang[0].toUpperCase() + lang.slice(1);
+  }
+
+  private detectPrimaryLang(l: Listing): LangCode {
+    const order: LangCode[] = ['pt', 'en', 'fr', 'es'];
+    for (const lang of order) {
+      const title = (l as any)[this.langTitleKey(lang)];
+      if (typeof title === 'string' && title.trim()) return lang;
+    }
+    return 'pt';
+  }
+
+  private updateLangValidators(): void {
+    const langs: LangCode[] = ['pt', 'en', 'fr', 'es'];
+    for (const lang of langs) {
+      const t = this.editForm.get(this.langTitleKey(lang));
+      const d = this.editForm.get(this.langDescKey(lang));
+      if (!t || !d) continue;
+      if (lang === this.primaryLangTab) {
+        t.setValidators([Validators.required, Validators.maxLength(80)]);
+        d.setValidators([Validators.required, Validators.minLength(50)]);
+      } else {
+        t.setValidators([Validators.maxLength(80)]);
+        d.clearValidators();
+      }
+      t.updateValueAndValidity({ emitEvent: false });
+      d.updateValueAndValidity({ emitEvent: false });
+    }
+  }
+
   buildForm(): void {
     const l = this.listing!;
+    this.primaryLangTab = this.detectPrimaryLang(l);
+    this.activeLangTab = this.primaryLangTab;
+
+    const titleLocked = this.editMode !== 'full';
+    const contentLocked = this.editMode === 'locked';
+
     this.editForm = this.fb.group({
-      // Critical fields — always present but disabled when not in full mode
-      title:       [{ value: l.title,    disabled: this.editMode !== 'full' }, [Validators.required, Validators.maxLength(80)]],
-      titlePt:     [{ value: l.titlePt || l.title || '', disabled: this.editMode !== 'full' }, [Validators.required, Validators.maxLength(80)]],
-      titleEn:     [{ value: l.titleEn || '', disabled: this.editMode === 'locked' }, [Validators.maxLength(80)]],
-      category:    [{ value: l.category, disabled: this.editMode !== 'full' }, Validators.required],
-      subCategory: [{ value: l.subCategory || '', disabled: this.editMode !== 'full' }],
+      title:       [{ value: l.title,    disabled: titleLocked }, [Validators.required, Validators.maxLength(80)]],
+      titlePt:     [{ value: l.titlePt || (this.primaryLangTab === 'pt' ? l.title : '') || '', disabled: titleLocked }, [Validators.maxLength(80)]],
+      titleEn:     [{ value: l.titleEn || '', disabled: titleLocked }, [Validators.maxLength(80)]],
+      titleFr:     [{ value: l.titleFr || '', disabled: titleLocked }, [Validators.maxLength(80)]],
+      titleEs:     [{ value: l.titleEs || '', disabled: titleLocked }, [Validators.maxLength(80)]],
+      category:    [{ value: l.category, disabled: titleLocked }, Validators.required],
+      subCategory: [{ value: l.subCategory || '', disabled: titleLocked }],
 
-      // Editable in partial + full
-      description: [{ value: l.description, disabled: this.editMode === 'locked' }, [Validators.required, Validators.minLength(50)]],
-      descriptionPt: [{ value: l.descriptionPt || l.description || '', disabled: this.editMode === 'locked' }, [Validators.required, Validators.minLength(50)]],
-      descriptionEn: [{ value: l.descriptionEn || '', disabled: this.editMode === 'locked' }],
-      condition:   [{ value: l.condition,   disabled: this.editMode === 'locked' }, Validators.required],
+      description: [{ value: l.description, disabled: contentLocked }, [Validators.minLength(50)]],
+      descriptionPt: [{ value: l.descriptionPt || (this.primaryLangTab === 'pt' ? l.description : '') || '', disabled: contentLocked }],
+      descriptionEn: [{ value: l.descriptionEn || '', disabled: contentLocked }],
+      descriptionFr: [{ value: l.descriptionFr || '', disabled: contentLocked }],
+      descriptionEs: [{ value: l.descriptionEs || '', disabled: contentLocked }],
+      condition:   [{ value: l.condition,   disabled: contentLocked }, Validators.required],
 
-      locationCity:    [{ value: l.locationCity    || '', disabled: this.editMode === 'locked' }],
-      locationCountry: [{ value: l.locationCountry || 'PT', disabled: this.editMode === 'locked' }],
+      locationCity:    [{ value: l.locationCity    || '', disabled: contentLocked }],
+      locationCountry: [{ value: l.locationCountry || 'PT', disabled: contentLocked }],
 
-      shippingOption: [{ value: l.shippingOption || 'flat-rate', disabled: this.editMode === 'locked' }, Validators.required],
-      shippingCost:   [{ value: l.shippingCost   ?? 0,          disabled: this.editMode === 'locked' }],
-      returnPolicy:   [{ value: l.returnPolicy   || '',         disabled: this.editMode === 'locked' }, Validators.required],
-      handlingTime:   [{ value: l.handlingTime   ?? 5,          disabled: this.editMode === 'locked' }],
+      shippingOption: [{ value: l.shippingOption || 'flat-rate', disabled: contentLocked }, Validators.required],
+      shippingCost:   [{ value: l.shippingCost   ?? 0,          disabled: contentLocked }],
+      returnPolicy:   [{ value: l.returnPolicy   || '',         disabled: contentLocked }, Validators.required],
+      handlingTime:   [{ value: l.handlingTime   ?? 5,          disabled: contentLocked }],
 
       specifications: this.fb.array(
         (l.specifications as any[] || []).map((s: any) => this.fb.group({
-          key:   [{ value: s.key,   disabled: this.editMode === 'locked' }, Validators.required],
-          value: [{ value: s.value, disabled: this.editMode === 'locked' }, Validators.required]
+          key:   [{ value: s.key,   disabled: contentLocked }, Validators.required],
+          value: [{ value: s.value, disabled: contentLocked }, Validators.required]
         }))
       )
     });
+
+    this.updateLangValidators();
   }
 
   get specifications(): FormArray {
@@ -197,10 +257,15 @@ export class EditListing implements OnInit {
       const allImages = [...this.existingImageUrls, ...newImageUrls];
 
       const raw = this.editForm.getRawValue();
+      const primaryTitle = raw[this.langTitleKey(this.primaryLangTab)] || raw.title;
+      const primaryDesc = raw[this.langDescKey(this.primaryLangTab)] || raw.description;
+
       const payload: any = {
-        description:     raw.descriptionPt || raw.description,
-        descriptionPt:   raw.descriptionPt,
-        descriptionEn:   raw.descriptionEn,
+        description:     primaryDesc,
+        descriptionPt:   raw.descriptionPt || null,
+        descriptionEn:   raw.descriptionEn || null,
+        descriptionFr:   raw.descriptionFr || null,
+        descriptionEs:   raw.descriptionEs || null,
         condition:       raw.condition,
         locationCity:    raw.locationCity,
         locationCountry: raw.locationCountry,
@@ -209,14 +274,15 @@ export class EditListing implements OnInit {
         returnPolicy:    raw.returnPolicy,
         handlingTime:    raw.handlingTime,
         specifications:  raw.specifications,
-        images:          allImages
+        images:          allImages,
+        titleEn:         raw.titleEn || null,
+        titleFr:         raw.titleFr || null,
+        titleEs:         raw.titleEs || null
       };
 
-      payload.titleEn = raw.titleEn;
-
       if (this.editMode === 'full') {
-        payload.title       = raw.titlePt || raw.title;
-        payload.titlePt     = raw.titlePt;
+        payload.title       = primaryTitle;
+        payload.titlePt     = raw.titlePt || null;
         payload.category    = raw.category;
         payload.subCategory = raw.subCategory;
       }

@@ -372,6 +372,7 @@
     "descriptionFr": "Description (French)",
     "descriptionEs": "Description (Spanish)",
     "translationOptionalHint": "This translation is optional. Adding it helps you reach buyers in both languages.",
+    "optionalTranslation": "Optional — falls back to primary language",
     "translateWithDeepl": "Translate with DeepL",
     "charactersCount": "{{count}}/80 characters",
     "category": "Category *",

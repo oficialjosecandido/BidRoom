@@ -3,7 +3,7 @@ const Bid = require('../models/Bid');
 const Listing = require('../models/Listing');
 const Customer = require('../models/Customer');
 const { authenticateToken, optionalAuth, requireActiveAccountIfAuthenticated, requireNoDisputeRestrictionIfAuthenticated } = require('../middleware/auth');
-const { sendFirstBidNotification, sendOutbidNotification } = require('../services/auctionNotificationService');
+const { sendFirstBidNotification, sendOutbidNotification, sendPlatformNewBidAlert } = require('../services/auctionNotificationService');
 const { getReviewScoresForUsers } = require('../services/reviewService');
 const { notifyNewBid, notifyBidderOutbid, emitNewNotificationToUser, checkAndSetOutbidDebounce, shouldSendEmail } = require('../services/notificationService');
 const { checkBidRateLimit, getClientIp } = require('../middleware/bidRateLimiter');
@@ -688,6 +688,14 @@ router.post('/', optionalAuth, requireActiveAccountIfAuthenticated, requireNoDis
       }).catch(err => logger.error('Failed to create bid notification:', err));
       emitNewNotificationToUser(io, sellerUserId).catch(() => {});
     }
+
+    // Platform ops alert (every bid)
+    sendPlatformNewBidAlert(
+      listing,
+      amount,
+      formattedBid.bidderName || 'A bidder',
+      formattedBid.bidderEmail || null
+    ).catch(err => logger.error('Failed to send platform new-bid alert:', err));
 
     res.status(201).json(formattedBid);
   } catch (error) {

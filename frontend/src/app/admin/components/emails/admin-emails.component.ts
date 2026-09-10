@@ -12,9 +12,13 @@ import {
   UnifiedContact,
   SendResult,
   DraftReminderRow,
-  CustomerSearchResult
+  CustomerSearchResult,
+  EmailCampaignRow,
+  CampaignDelivery
 } from '../../services/admin-emails.service';
 import { AdminSidebarComponent } from '../sidebar/admin-sidebar.component';
+
+type EmailsTab = 'newsletter' | 'personalized' | 'history' | 'preferences';
 
 @Component({
   selector: 'app-admin-emails',
@@ -27,7 +31,7 @@ export class AdminEmailsComponent implements OnInit {
   private adminEmailsService = inject(AdminEmailsService);
   private destroyRef = inject(DestroyRef);
 
-  activeTab: 'newsletter' | 'personalized' | 'preferences' = 'newsletter';
+  activeTab: EmailsTab = 'newsletter';
 
   // ---- Newsletter ----
   readonly LANGUAGES: { code: CampaignLanguage; label: string }[] = [
@@ -67,6 +71,14 @@ export class AdminEmailsComponent implements OnInit {
   newContactLanguage: CampaignLanguage = 'pt';
   addingContact = false;
   addContactError: string | null = null;
+
+  // ---- Sent history ----
+  campaigns: EmailCampaignRow[] = [];
+  loadingCampaigns = false;
+  campaignsError: string | null = null;
+  expandedCampaignId: string | null = null;
+  deliveriesByCampaign: Record<string, CampaignDelivery[]> = {};
+  loadingDeliveriesFor: string | null = null;
 
   // ---- Personalized ----
   personalizedSection: 'drafts' | 'customer' = 'drafts';
@@ -109,8 +121,49 @@ export class AdminEmailsComponent implements OnInit {
     });
   }
 
-  setTab(tab: 'newsletter' | 'personalized' | 'preferences'): void {
+  setTab(tab: EmailsTab): void {
     this.activeTab = tab;
+    // Loaded on demand: opens keep arriving after a send, so the list is only
+    // worth fetching when it is about to be looked at.
+    if (tab === 'history' && this.campaigns.length === 0) this.loadCampaigns();
+  }
+
+  // ---- Sent history ----
+
+  loadCampaigns(): void {
+    this.loadingCampaigns = true;
+    this.campaignsError = null;
+    this.adminEmailsService.getCampaigns().subscribe({
+      next: (res) => { this.campaigns = res.campaigns; this.loadingCampaigns = false; },
+      error: (err) => {
+        this.loadingCampaigns = false;
+        this.campaignsError = err?.error?.error || 'Falha ao carregar o histórico.';
+      }
+    });
+  }
+
+  campaignKindLabel(row: EmailCampaignRow): string {
+    if (row.kind === 'newsletter') return `Newsletter · ${this.audienceLabel(row.audience ?? 'all_contacts')}`;
+    if (row.kind === 'draft-reminder') return 'Lembrete de rascunho';
+    return 'Email personalizado';
+  }
+
+  toggleCampaignDetails(row: EmailCampaignRow): void {
+    if (this.expandedCampaignId === row._id) {
+      this.expandedCampaignId = null;
+      return;
+    }
+    this.expandedCampaignId = row._id;
+    if (this.deliveriesByCampaign[row._id]) return;
+
+    this.loadingDeliveriesFor = row._id;
+    this.adminEmailsService.getCampaignDeliveries(row._id).subscribe({
+      next: (res) => {
+        this.deliveriesByCampaign[row._id] = res.deliveries;
+        this.loadingDeliveriesFor = null;
+      },
+      error: () => { this.loadingDeliveriesFor = null; }
+    });
   }
 
   setPersonalizedSection(section: 'drafts' | 'customer'): void {
@@ -187,6 +240,9 @@ export class AdminEmailsComponent implements OnInit {
       next: (res) => {
         this.sendingCampaign = false;
         this.campaignResult = res;
+        // The send just added a row and bumped every recipient's counter.
+        this.loadCampaigns();
+        this.loadContacts();
       },
       error: (err) => {
         this.sendingCampaign = false;
