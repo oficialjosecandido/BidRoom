@@ -500,6 +500,8 @@
     "statusPrivate": "Sala privada",
     "resultsFor": "resultados para",
     "sortLabel": "Ordenar resultados",
+    "pageSizeLabel": "Artículos por página",
+    "pageSizeOption": "{{count}} por página",
     "viewGrid": "Vista cuadrícula",
     "viewList": "Vista lista",
     "currentBid": "Puja actual",

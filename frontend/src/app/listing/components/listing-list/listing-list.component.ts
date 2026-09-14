@@ -15,7 +15,13 @@ import { CATEGORIES, Category } from '../../../shared/config/categories.config';
 import { take } from 'rxjs/operators';
 import { DisplayPricePipe } from '../../../shared/pipes/display-price.pipe';
 
-const PAGE_SIZE = 20;
+const PAGE_SIZE_OPTIONS = [20, 50, 100] as const;
+const DEFAULT_PAGE_SIZE = 20;
+
+function parsePageSize(raw: string | null | undefined): number {
+  const n = parseInt(raw || '', 10);
+  return (PAGE_SIZE_OPTIONS as readonly number[]).includes(n) ? n : DEFAULT_PAGE_SIZE;
+}
 
 export const CONDITION_OPTIONS: { key: string; labelKey: string }[] = [
   { key: 'new',       labelKey: 'addListing.conditionNew' },
@@ -104,7 +110,8 @@ export class ListingListComponent implements OnInit, OnDestroy {
   };
 
   readonly categories: Category[] = CATEGORIES;
-  readonly pageSize = PAGE_SIZE;
+  readonly pageSizeOptions = PAGE_SIZE_OPTIONS;
+  pageSize = DEFAULT_PAGE_SIZE;
   readonly conditionOptions = CONDITION_OPTIONS;
   readonly shippingOptions = SHIPPING_OPTIONS;
 
@@ -177,6 +184,7 @@ export class ListingListComponent implements OnInit, OnDestroy {
       }
       this.sortBy = sort;
       this.currentPage = parseInt(params['page'] || '1', 10) || 1;
+      this.pageSize = parsePageSize(params['limit'] || params['pageSize']);
       this.selectedConditions = new Set((params['condition'] || '').split(',').filter(Boolean));
       this.locationFilter = params['location'] || params['locationCity'] || '';
       this.minPrice = params['minPrice'] || '';
@@ -216,7 +224,7 @@ export class ListingListComponent implements OnInit, OnDestroy {
     const params: ListingsQueryParams = {
       sort,
       status: this.listingStatusFilter === 'ended' ? 'ended' : 'active',
-      limit: PAGE_SIZE,
+      limit: this.pageSize,
       page: this.currentPage
     };
 
@@ -236,7 +244,7 @@ export class ListingListComponent implements OnInit, OnDestroy {
       next: (response) => {
         this.listings = response.listings;
         this.total = response.total;
-        this.totalPages = response.totalPages || Math.ceil(response.total / PAGE_SIZE);
+        this.totalPages = response.totalPages || Math.ceil(response.total / this.pageSize);
         this.loading = false;
         this.cdr.markForCheck();
       },
@@ -259,6 +267,7 @@ export class ListingListComponent implements OnInit, OnDestroy {
     if (this.statusPrivate) queryParams['privateRoom'] = 'true';
     const defaultSort = this.listingStatusFilter === 'ended' ? 'recent-end' : 'deadline';
     if (this.sortBy !== defaultSort) queryParams['sort'] = this.sortBy;
+    if (this.pageSize !== DEFAULT_PAGE_SIZE) queryParams['limit'] = String(this.pageSize);
     if (this.currentPage > 1) queryParams['page'] = String(this.currentPage);
     if (this.selectedConditions.size) queryParams['condition'] = [...this.selectedConditions].join(',');
     if (this.locationFilter.trim()) queryParams['location'] = this.locationFilter.trim();
@@ -442,6 +451,11 @@ export class ListingListComponent implements OnInit, OnDestroy {
   }
 
   onSortChange(): void {
+    this.currentPage = 1;
+    this.navigate();
+  }
+
+  onPageSizeChange(): void {
     this.currentPage = 1;
     this.navigate();
   }

@@ -33,10 +33,13 @@ function norm(s) {
 function classifyFromTitle(title) {
   const t = norm(title);
 
-  const isClothing = /\b(jupe|skirt|gonna|robe|dress|veste|jacket|giacca|blazer|tailleur|blouse|camicia|pull|cardigan|gilet|sweat|t-?shirt|imper|culotte|maillot|ceinture|belt|cap|casquette|scarpe|sandal|shoe|abito|completo|denim|chemise|saia|casaco)\b/.test(t);
-  const isBag = /\b(bag|sac\b|bolsa|bolso|borsa|cabas|hobo|tote|pochette|wallet|portefeuille|penztarca|schoudertas|cassandre|loulou|muse two|bandouliere|handbag|shoulder|cabas)\b/.test(t);
-  const isWatch = /\b(montre|watch|reloj|orologio|uhr|cadran)\b/.test(t);
-  const isJewelry = /\b(earring|orecchin|boucle|brooch|spilla|bracelet|bracelete|pulseira|necklace|collier|collana|colar|clip-on|pendentif|pendant|bijou)\b/.test(t);
+  const isClothing = /\b(jupe|skirt|gonna|robe|dress|veste|jacket|giacca|blazer|tailleur|blouse|camicia|pull|cardigan|gilet|sweat|t-?shirt|imper|culotte|maillot|ceinture|belt|cap|casquette|scarpe|sandal|shoe|abito|completo|denim|chemise|saia|casaco|fergani|mariee|coat|manteau)\b/.test(t);
+  const isWatch = /\b(montre|watch|reloj|orologio|uhr|cadran|tank must|chronograph|chronographe|quartz|horlogerie|hydroconquest|datejust|submariner|seamaster|daytona|nautilus|royal oak)\b/.test(t)
+    || (/\b(cartier|rolex|omega|patek|longines|tudor|breitling|hublot|iwc|seiko|tissot|hamilton|tag heuer|audemars|vacheron|jaeger)\b/.test(t)
+      && !/\b(bag|sac|bolsa|parfum|bracelet|collier|necklace|ring|bague)\b/.test(t));
+  const isJewelry = /\b(earring|orecchin|boucle|brooch|spilla|bracelet|bracelete|pulseira|necklace|collier|collana|colar|clip-on|pendentif|pendant|bijou|parure|armband|ring\b|anel|bague|karaat|carat|18k|jonc|goud|gold set|sieraden)\b/.test(t)
+    || (/\bor\b/.test(t) && /\b(parure|bracelet|collier|jonc|massif|carat|karaat)\b/.test(t));
+  const isBag = /\b(bag|sac\b|bolsa|bolso|borsa|cabas|hobo|tote|pochette|wallet|portefeuille|penztarca|schoudertas|cassandre|loulou|muse two|bandouliere|handbag|shoulder|kelly|birkin|delvaux|pin osier|brillant)\b/.test(t);
   const isEyewear = /\b(lunette|occhiali|sunglasses|soleil|oculos)\b/.test(t);
   const isBeauty = (
     /\b(parfum|perfume|eau de toilette|eau de parfum|mascara|blush|lipstick|foundation|primer|palette|make.?up|pintalabios|hydra|opium|libre berry|toilette|crayon a levre|rouge a levre|rouge pour|fard|cushion|miniatura|miroir|mirror|espejo)\b/.test(t)

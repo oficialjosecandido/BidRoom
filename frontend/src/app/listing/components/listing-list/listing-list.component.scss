@@ -598,6 +598,10 @@
     &:focus { border-color: var(--sr-gold); }
   }
 
+  .page-size-select {
+    min-width: 7.5rem;
+  }
+
   .sort-arrow {
     position: absolute;
     right: 8px;

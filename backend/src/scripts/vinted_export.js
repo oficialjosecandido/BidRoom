@@ -32,10 +32,11 @@ const { createListingAsAdmin, parseCsv } = require('../services/adminListingServ
 const REPO_ROOT = path.resolve(__dirname, '../../..');
 const DEFAULT_CSV = path.join(REPO_ROOT, 'vinted_descricoes_pt_en_es_fr_marketplace.csv');
 const DEFAULT_ZIP = path.join(REPO_ROOT, 'vinted_export.zip');
+const ZIP_CSV_FALLBACK = path.join(REPO_ROOT, 'vinted_export', 'vinted.csv');
 
 function parseArgs(argv) {
   const out = {
-    csv: DEFAULT_CSV,
+    csv: null,
     zip: DEFAULT_ZIP,
     dryRun: false,
     limit: null,
@@ -55,6 +56,20 @@ function parseArgs(argv) {
   return out;
 }
 
+function resolveCsvPath(args, extractRoot) {
+  if (args.csv && fs.existsSync(args.csv)) return args.csv;
+  if (fs.existsSync(DEFAULT_CSV)) return DEFAULT_CSV;
+  if (fs.existsSync(ZIP_CSV_FALLBACK)) return ZIP_CSV_FALLBACK;
+  const fromExtract = extractRoot
+    ? [
+        path.join(extractRoot, 'vinted_export', 'vinted.csv'),
+        path.join(extractRoot, 'vinted.csv')
+      ].find((p) => fs.existsSync(p))
+    : null;
+  if (fromExtract) return fromExtract;
+  return null;
+}
+
 function mimeFromExt(filePath) {
   const ext = path.extname(filePath).toLowerCase();
   if (ext === '.png') return 'image/png';
@@ -72,15 +87,47 @@ function normalizeSellerEmail(email) {
   return e || 'pt.bidnow@gmail.com';
 }
 
-function normalizeCategory(row) {
-  let category = String(row.category || '').trim().toLowerCase().replace(/\s+/g, '-');
-  let subCategory = String(row.subCategory || '').trim();
-  if (!category || category === 'fashion') {
-    category = 'collectibles';
-    if (!subCategory || subCategory.toLowerCase() === 'fashion') subCategory = 'Fashion';
+function normTitle(s) {
+  return String(s || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
+}
+
+/** Classify BidRoom category/subCategory from listing title (CSV Vinted cats are unreliable). */
+function classifyFromTitle(title) {
+  const t = normTitle(title);
+
+  const isClothing = /\b(jupe|skirt|gonna|robe|dress|veste|jacket|giacca|blazer|tailleur|blouse|camicia|pull|cardigan|gilet|sweat|t-?shirt|imper|culotte|maillot|ceinture|belt|cap|casquette|scarpe|sandal|shoe|abito|completo|denim|chemise|saia|casaco|fergani|mariee|coat|manteau)\b/.test(t);
+  const isBag = /\b(bag|sac\b|bolsa|bolso|borsa|cabas|hobo|tote|pochette|wallet|portefeuille|penztarca|schoudertas|cassandre|loulou|muse two|bandouliere|handbag|shoulder|kelly|birkin|delvaux|pin osier|brillant)\b/.test(t);
+  const isWatch = /\b(montre|watch|reloj|orologio|uhr|cadran|tank must|chronograph|chronographe|quartz|horlogerie|hydroconquest|datejust|submariner|seamaster|daytona|nautilus|royal oak)\b/.test(t)
+    || (/\b(cartier|rolex|omega|patek|longines|tudor|breitling|hublot|iwc|seiko|tissot|hamilton|tag heuer|audemars|vacheron|jaeger)\b/.test(t)
+      && !/\b(bag|sac|bolsa|parfum|bracelet|collier|necklace|ring|bague)\b/.test(t));
+  const isJewelry = /\b(earring|orecchin|boucle|brooch|spilla|bracelet|bracelete|pulseira|necklace|collier|collana|colar|clip-on|pendentif|pendant|bijou|parure|armband|ring\b|anel|bague|karaat|carat|18k|jonc|goud|gold set|sieraden)\b/.test(t)
+    || (/\bor\b/.test(t) && /\b(parure|bracelet|collier|jonc|massif|carat|karaat)\b/.test(t));
+  const isEyewear = /\b(lunette|occhiali|sunglasses|soleil|oculos)\b/.test(t);
+  const isBeauty = (
+    /\b(parfum|perfume|eau de toilette|eau de parfum|mascara|blush|lipstick|foundation|primer|palette|make.?up|pintalabios|hydra|opium|libre berry|toilette|crayon a levre|rouge a levre|rouge pour|fard|cushion|miniatura|miroir|mirror|espejo)\b/.test(t)
+    || (/\brouge\b/.test(t) && /\b(levre|labios|lipstick|couture n)\b/.test(t))
+  ) && !isClothing;
+
+  if (isWatch) return { category: 'jewelry', subCategory: 'Luxury Watches' };
+  if (isJewelry) return { category: 'jewelry', subCategory: 'Fine Jewelry' };
+  if (isBeauty) return { category: 'collectibles', subCategory: 'Beauty' };
+  if (isBag || isEyewear || isClothing) return { category: 'collectibles', subCategory: 'Fashion' };
+  return { category: 'collectibles', subCategory: 'Fashion' };
+}
+
+function normalizeCategory(row, title) {
+  // Prefer title heuristics — Vinted CSV often has Women/Other
+  const fromTitle = classifyFromTitle(title || row.titulo || row.title);
+  const rawCat = String(row.category || '').trim().toLowerCase();
+  if (/jewelry|watch/.test(rawCat) && fromTitle.category === 'collectibles') {
+    // CSV says jewelry but title didn't match — keep title Fashion unless watch/jewelry keywords weak
+    if (/watch/.test(rawCat)) return { category: 'jewelry', subCategory: 'Luxury Watches' };
+    if (/jewelry/.test(rawCat)) return { category: 'jewelry', subCategory: 'Fine Jewelry' };
   }
-  if (!subCategory) subCategory = 'Fashion';
-  return { category, subCategory };
+  return fromTitle;
 }
 
 function normalizeCountry(value) {
@@ -166,25 +213,28 @@ Options:
     process.exit(0);
   }
 
-  if (!fs.existsSync(args.csv)) {
-    console.error(`❌ CSV not found: ${args.csv}`);
-    process.exit(1);
-  }
   if (!fs.existsSync(args.zip)) {
     console.error(`❌ ZIP not found: ${args.zip}`);
     process.exit(1);
   }
 
-  console.log('CSV:', args.csv);
   console.log('ZIP:', args.zip);
   console.log('Mode:', args.dryRun ? 'DRY RUN' : 'LIVE IMPORT');
 
-  const rows = readCsvRows(args.csv);
-  console.log(`📄 Rows in CSV: ${rows.length}`);
-  const selected = args.limit ? rows.slice(0, args.limit) : rows;
-
   let extractRoot = null;
   try {
+    extractRoot = unzipToTemp(args.zip);
+    const csvPath = resolveCsvPath(args, extractRoot);
+    if (!csvPath) {
+      console.error('❌ CSV not found (pass --csv or include vinted_export/vinted.csv in the zip)');
+      process.exit(1);
+    }
+    console.log('CSV:', csvPath);
+
+    const rows = readCsvRows(csvPath);
+    console.log(`📄 Rows in CSV: ${rows.length}`);
+    const selected = args.limit ? rows.slice(0, args.limit) : rows;
+
     if (!args.dryRun) {
       await connectDB();
       if (!azureStorageService.blobServiceClient) {
@@ -194,15 +244,14 @@ Options:
       await azureStorageService.ensureContainerExists();
     }
 
-    extractRoot = unzipToTemp(args.zip);
-
     let created = 0;
     let skipped = 0;
     let failed = 0;
+    const catCount = {};
 
     for (let i = 0; i < selected.length; i += 1) {
       const row = selected[i];
-      const itemId = String(row.item_id || '').trim();
+      const itemId = String(row.item_id || row['\ufeffitem_id'] || '').trim();
       const title = String(row.titulo || row.title || '').trim().slice(0, 80);
       const label = `[${i + 1}/${selected.length}] ${itemId || '?'} ${title || '(no title)'}`;
 
@@ -218,9 +267,10 @@ Options:
           }
         }
 
-        const sellerEmail = normalizeSellerEmail(args.sellerEmail || row.sellerEmail);
-        const { category, subCategory } = normalizeCategory(row);
-        const descriptionPt = ensureMinDescription(row.descricao_pt || row.description || row.descricao_original, title);
+        const sellerEmail = normalizeSellerEmail(args.sellerEmail || row.sellerEmail || row.seller);
+        const { category, subCategory } = normalizeCategory(row, title);
+        catCount[`${category}/${subCategory}`] = (catCount[`${category}/${subCategory}`] || 0) + 1;
+        const descriptionPt = ensureMinDescription(row.descricao_pt || row.description || row.descricao_original || row.descricao, title);
         const descriptionEn = row.descricao_en ? String(row.descricao_en).trim() : null;
         const descriptionEs = row.descricao_es ? String(row.descricao_es).trim() : null;
         const descriptionFr = row.descricao_fr ? String(row.descricao_fr).trim() : null;
@@ -293,6 +343,10 @@ Options:
       }
     }
 
+    console.log('\n—— Category tally ——');
+    Object.entries(catCount)
+      .sort((a, b) => b[1] - a[1])
+      .forEach(([k, v]) => console.log(`  ${v}  ${k}`));
     console.log('\n—— Summary ——');
     console.log(`Created/validated: ${created}`);
     console.log(`Skipped existing:  ${skipped}`);

@@ -868,6 +868,8 @@
     "statusPrivate": "Private room",
     "resultsFor": "results for",
     "sortLabel": "Sort results",
+    "pageSizeLabel": "Items per page",
+    "pageSizeOption": "{{count}} per page",
     "viewGrid": "Grid view",
     "viewList": "List view",
     "currentBid": "Current bid",

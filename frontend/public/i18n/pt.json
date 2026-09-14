@@ -868,6 +868,8 @@
     "statusPrivate": "Sala Privada",
     "resultsFor": "resultados para",
     "sortLabel": "Ordenar resultados",
+    "pageSizeLabel": "Artigos por página",
+    "pageSizeOption": "{{count}} por página",
     "viewGrid": "Vista em grelha",
     "viewList": "Vista em lista",
     "currentBid": "Lance actual",

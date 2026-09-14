@@ -321,6 +321,18 @@
             </select>
             <span class="sort-arrow" aria-hidden="true">▼</span>
           </div>
+          <div class="sort-wrap">
+            <select
+              class="sort-select page-size-select"
+              [(ngModel)]="pageSize"
+              (ngModelChange)="onPageSizeChange()"
+              [attr.aria-label]="'listingList.pageSizeLabel' | translate">
+              @for (size of pageSizeOptions; track size) {
+                <option [ngValue]="size">{{ 'listingList.pageSizeOption' | translate:{ count: size } }}</option>
+              }
+            </select>
+            <span class="sort-arrow" aria-hidden="true">▼</span>
+          </div>
           <div class="view-btns" role="group">
             <button type="button" class="view-btn" [class.active]="viewMode === 'grid'" (click)="setViewMode('grid')" [attr.aria-label]="'listingList.viewGrid' | translate">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
