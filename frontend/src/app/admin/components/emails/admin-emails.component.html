@@ -61,7 +61,12 @@
                 </button>
               }
             </div>
-            <p class="hint-text">É preciso preencher os 4 idiomas antes de poder enviar a campanha — cada destinatário recebe a versão no seu idioma.</p>
+            <p class="hint-text">É preciso preencher os 4 idiomas antes de poder enviar a campanha — cada destinatário recebe a versão no seu idioma (campo Idioma na lista de contactos).</p>
+            <button type="button" class="btn btn-secondary preset-btn" [disabled]="loadingPreset" (click)="loadNewsletterPreset()">
+              {{ loadingPreset ? 'A carregar…' : 'Carregar template: Novos leilões Set 2026 (PT/EN/ES/FR)' }}
+            </button>
+            @if (presetMessage) { <p class="result-message success">{{ presetMessage }}</p> }
+            @if (presetError) { <p class="result-message error">{{ presetError }}</p> }
           </div>
 
           <div class="form-group">

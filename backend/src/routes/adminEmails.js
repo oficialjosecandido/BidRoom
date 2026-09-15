@@ -12,6 +12,7 @@ const { sendEmail } = require('../services/emailService');
 const { renderEmailTemplate } = require('../services/templateEngine');
 const { appendPreferencesFooter } = require('../services/emailPreferencesService');
 const { newTrackingToken, injectTrackingPixel } = require('../services/emailTrackingService');
+const { publicBaseUrl } = require('../utils/publicUrls');
 const logger = require('../utils/logger');
 
 const router = express.Router();
@@ -164,7 +165,7 @@ async function sendTrackedSingle({ kind, subject, html, recipient, admin }) {
 
 /**
  * content: { pt: {subject, html}, en: {...}, es: {...}, fr: {...} } — picks the
- * recipient's language, falls back to en.
+ * recipient's language, then pt, then en.
  *
  * Each message gets its own tracking token, so an open can be attributed to a
  * specific recipient rather than only counted in aggregate.
@@ -177,7 +178,7 @@ async function sendInBatches(recipients, content) {
   for (let i = 0; i < recipients.length; i += SEND_BATCH_SIZE) {
     const batch = recipients.slice(i, i + SEND_BATCH_SIZE);
     const results = await Promise.allSettled(batch.map(async r => {
-      const variant = content[r.language] || content.en;
+      const variant = content[r.language] || content.pt || content.en;
       const token = newTrackingToken();
       const withFooter = await appendPreferencesFooter(variant.html, { type: r.type, id: r.id, language: r.language });
       await sendEmail(r.email, variant.subject, injectTrackingPixel(withFooter, token));
@@ -573,7 +574,7 @@ router.get('/draft-reminders', authenticateToken, requireAdmin, async (req, res)
       .limit(200)
       .lean();
 
-    const frontendUrl = process.env.FRONTEND_URL || 'https://bidroom.pt';
+    const frontendUrl = publicBaseUrl();
 
     const rows = drafts
       .filter(d => d.seller?.email)

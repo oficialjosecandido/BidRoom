@@ -7,8 +7,11 @@ const MODELS_BY_TYPE = {
   interested: InterestedContact
 };
 
+const { publicBaseUrl } = require('../utils/publicUrls');
+
+/** Unsubscribe links are opened from the recipient's inbox — never local. */
 function frontendBaseUrl() {
-  return (process.env.FRONTEND_URL || 'https://www.bidroom.pt').replace(/\/$/, '');
+  return publicBaseUrl();
 }
 
 function normalizeEmail(email) {

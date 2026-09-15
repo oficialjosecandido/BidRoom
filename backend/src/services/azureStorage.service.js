@@ -49,8 +49,14 @@ class AzureStorageService {
    */
   generateBlobName(originalFilename, mimetype) {
     const uuid = require('uuid').v4();
-    const extension = this.getFileExtension(originalFilename, mimetype);
+    // Lowercased so blob keys are consistent — everything that reads the format
+    // back off the URL compares against lowercase extensions.
+    const extension = this.getFileExtension(originalFilename, mimetype).toLowerCase();
+    // Strip the original extension before appending ours, otherwise the name
+    // ends up doubled ("photo.webp" → "uuid-photo.webp.webp"), which breaks
+    // any consumer that reads the format from the URL.
     const sanitizedOriginal = originalFilename
+      .replace(/\.[0-9a-z]+$/i, '')
       .replace(/[^a-zA-Z0-9.-]/g, '-')
       .toLowerCase()
       .substring(0, 50); // Limit length

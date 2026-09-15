@@ -60,3 +60,7 @@ jspm_packages/
 .Trashes
 ehthumbs.db
 Thumbs.db
+
+# Copias de seguranca do .env: contem segredos, nunca entram no repositorio.
+.env.bak*
+.env.*.bak

@@ -20,8 +20,11 @@ const BRAND = {
   line: 'rgba(240, 237, 232, 0.12)'
 };
 
+const { publicBaseUrl } = require('./publicUrls');
+
+/** Links in emails are opened elsewhere, so they must never be local. */
 function frontendBaseUrl() {
-  return (process.env.FRONTEND_URL || 'https://www.bidroom.pt').replace(/\/$/, '');
+  return publicBaseUrl();
 }
 
 function transactionUrl(transactionId) {

@@ -20,93 +20,253 @@ const LANGUAGE_LABELS: Record<Language, string> = {
   imports: [CommonModule, FormsModule, RouterModule],
   template: `
     <div class="prefs-page">
-      <div class="prefs-card">
-        @if (loading) {
-          <div class="state-icon">⏳</div>
-          <h1>A carregar…</h1>
-        } @else if (needsEmail) {
-          <div class="state-icon">✉️</div>
-          <h1>Preferências de email</h1>
-          <p class="intro">Para cancelar a subscrição ou alterar o idioma, confirme o seu email.</p>
+      <div class="prefs-shell">
+        <a routerLink="/" class="prefs-brand" aria-label="BidRoom">
+          <span class="prefs-wordmark">BidRoom</span><span class="prefs-pt">.pt</span>
+        </a>
 
-          <form class="email-form" (ngSubmit)="lookupByEmail()">
-            <div class="field">
-              <label for="prefs-email">Email</label>
-              <input id="prefs-email" type="email" class="input" [(ngModel)]="emailInput" name="email" autocomplete="email" required />
+        <div class="prefs-card">
+          @if (loading) {
+            <div class="prefs-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <circle cx="12" cy="12" r="9" opacity="0.25"/>
+                <path d="M12 3a9 9 0 0 1 9 9" stroke-linecap="round"/>
+              </svg>
             </div>
-            <div class="field">
-              <label for="prefs-email-confirm">Repetir email</label>
-              <input id="prefs-email-confirm" type="email" class="input" [(ngModel)]="emailConfirmInput" name="emailConfirm" autocomplete="email" required />
+            <h1>A carregar…</h1>
+            <p class="intro">A preparar as suas preferências.</p>
+          } @else if (needsEmail) {
+            <div class="prefs-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <rect x="3" y="5" width="18" height="14" rx="2"/>
+                <path d="M3 7l9 7 9-7"/>
+              </svg>
             </div>
-            @if (lookupError) { <p class="save-message error">{{ lookupError }}</p> }
-            <button type="submit" class="btn btn-primary" [disabled]="lookingUp || !emailInput.trim() || !emailConfirmInput.trim()">
-              {{ lookingUp ? 'A verificar…' : 'Continuar' }}
-            </button>
-          </form>
-        } @else if (invalid) {
-          <div class="state-icon">❌</div>
-          <h1>Link inválido</h1>
-          <p>{{ errorMessage }}</p>
-          <button type="button" class="btn btn-secondary" (click)="showEmailForm()">Usar o meu email</button>
-          <a routerLink="/landing" class="home-link">Ir para a página inicial</a>
-        } @else {
-          <div class="state-icon">✉️</div>
-          <h1>Preferências de email</h1>
-          <p class="email-line">{{ email }}</p>
+            <h1>Preferências de email</h1>
+            <p class="intro">Confirme o seu email para gerir a newsletter, o idioma ou cancelar a subscrição.</p>
 
-          <div class="section">
-            <label>Idioma preferido</label>
-            <div class="lang-options">
-              @for (lang of languages; track lang) {
-                <button type="button" class="lang-btn" [class.active]="language === lang" [disabled]="saving" (click)="saveLanguage(lang)">
-                  {{ languageLabels[lang] }}
-                </button>
+            <form class="email-form" (ngSubmit)="lookupByEmail()">
+              <div class="field">
+                <label for="prefs-email">Email</label>
+                <input
+                  id="prefs-email"
+                  type="email"
+                  class="input"
+                  [(ngModel)]="emailInput"
+                  name="email"
+                  autocomplete="email"
+                  placeholder="nome@email.com"
+                  required />
+              </div>
+              <div class="field">
+                <label for="prefs-email-confirm">Repetir email</label>
+                <input
+                  id="prefs-email-confirm"
+                  type="email"
+                  class="input"
+                  [(ngModel)]="emailConfirmInput"
+                  name="emailConfirm"
+                  autocomplete="email"
+                  placeholder="Confirme o mesmo email"
+                  required />
+              </div>
+              @if (lookupError) {
+                <p class="save-message error" role="alert">{{ lookupError }}</p>
+              }
+              <button
+                type="submit"
+                class="btn btn-primary"
+                [disabled]="lookingUp || !emailInput.trim() || !emailConfirmInput.trim()">
+                {{ lookingUp ? 'A verificar…' : 'Continuar' }}
+              </button>
+            </form>
+          } @else if (invalid) {
+            <div class="prefs-icon prefs-icon--warn" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <circle cx="12" cy="12" r="9"/>
+                <path d="M12 8v5" stroke-linecap="round"/>
+                <circle cx="12" cy="16" r="0.8" fill="currentColor"/>
+              </svg>
+            </div>
+            <h1>Link inválido</h1>
+            <p class="intro">{{ errorMessage }}</p>
+            <button type="button" class="btn btn-primary" (click)="showEmailForm()">Usar o meu email</button>
+            <a routerLink="/" class="home-link">Voltar à BidRoom</a>
+          } @else {
+            <div class="prefs-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <rect x="3" y="5" width="18" height="14" rx="2"/>
+                <path d="M3 7l9 7 9-7"/>
+              </svg>
+            </div>
+            <h1>Preferências de email</h1>
+            <p class="email-line">{{ email }}</p>
+
+            <div class="section">
+              <label id="lang-label">Idioma preferido</label>
+              <div class="lang-options" role="group" aria-labelledby="lang-label">
+                @for (lang of languages; track lang) {
+                  <button
+                    type="button"
+                    class="lang-btn"
+                    [class.active]="language === lang"
+                    [disabled]="saving"
+                    (click)="saveLanguage(lang)">
+                    {{ languageLabels[lang] }}
+                  </button>
+                }
+              </div>
+            </div>
+
+            <div class="section">
+              <label>Subscrição</label>
+              @if (unsubscribed) {
+                <div class="status-card status-card--off">
+                  <p class="status-text">Cancelou a subscrição dos emails BidRoom.</p>
+                  <button type="button" class="btn btn-secondary" [disabled]="saving" (click)="resubscribe()">
+                    Voltar a subscrever
+                  </button>
+                </div>
+              } @else {
+                <div class="status-card status-card--on">
+                  <p class="status-text">Está subscrito aos emails BidRoom.</p>
+                  <button type="button" class="btn btn-danger" [disabled]="saving" (click)="unsubscribe()">
+                    Cancelar subscrição
+                  </button>
+                </div>
               }
             </div>
-          </div>
 
-          <div class="section">
-            <label>Subscrição</label>
-            @if (unsubscribed) {
-              <p class="status-text">Cancelou a subscrição dos emails BidRoom.</p>
-              <button type="button" class="btn btn-secondary" [disabled]="saving" (click)="resubscribe()">Voltar a subscrever</button>
-            } @else {
-              <p class="status-text">Está subscrito aos emails BidRoom.</p>
-              <button type="button" class="btn btn-danger" [disabled]="saving" (click)="unsubscribe()">Cancelar subscrição</button>
+            @if (saveMessage) {
+              <p class="save-message success" role="status">{{ saveMessage }}</p>
             }
-          </div>
+            @if (saveError) {
+              <p class="save-message error" role="alert">{{ saveError }}</p>
+            }
+          }
+        </div>
 
-          @if (saveMessage) { <p class="save-message success">{{ saveMessage }}</p> }
-          @if (saveError) { <p class="save-message error">{{ saveError }}</p> }
-        }
+        <p class="prefs-footnote">
+          Leilões premium · <a routerLink="/">www.bidroom.pt</a>
+        </p>
       </div>
     </div>
   `,
   styles: [`
+    :host {
+      display: block;
+      --ep-gold: #C9A84C;
+      --ep-gold-dark: #a8872e;
+      --ep-ink: #0f172a;
+      --ep-text: #334155;
+      --ep-muted: #64748b;
+      --ep-line: #e8d9a8;
+      --ep-card: #ffffff;
+    }
+
     .prefs-page {
       min-height: 100vh;
       display: flex;
       align-items: center;
       justify-content: center;
-      background: #f7f7f7;
-      padding: 24px;
+      padding: 32px 20px;
+      background:
+        radial-gradient(ellipse 80% 50% at 50% -10%, rgba(201, 168, 76, 0.18), transparent 55%),
+        radial-gradient(ellipse 60% 40% at 100% 100%, rgba(201, 168, 76, 0.08), transparent 50%),
+        #111111;
+      color-scheme: light;
     }
-    .prefs-card {
-      background: #fff;
-      border-radius: 12px;
-      padding: 48px 40px;
+
+    .prefs-shell {
+      width: 100%;
       max-width: 440px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .prefs-brand {
+      display: inline-flex;
+      align-items: baseline;
+      gap: 1px;
+      text-decoration: none;
+      padding: 4px 0;
+    }
+
+    .prefs-wordmark {
+      color: var(--ep-gold);
+      font-size: 1.35rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .prefs-pt {
+      color: rgba(240, 237, 232, 0.55);
+      font-size: 0.95rem;
+      font-weight: 600;
+    }
+
+    .prefs-card {
+      background: var(--ep-card);
+      border-radius: 16px;
+      padding: 36px 32px 32px;
       width: 100%;
       text-align: center;
-      box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+      box-shadow: 0 8px 40px rgba(0, 0, 0, 0.35);
+      border-top: 3px solid var(--ep-gold);
+      box-sizing: border-box;
     }
-    .state-icon { font-size: 40px; margin-bottom: 12px; }
-    h1 { font-size: 22px; font-weight: 700; margin: 0 0 8px; color: #1a1a1a; }
-    .intro { color: #64748b; font-size: 14px; margin: 0 0 20px; line-height: 1.5; }
-    .email-line { color: #64748b; font-size: 14px; margin: 0 0 24px; }
-    p { color: #555; line-height: 1.6; margin: 0 0 16px; }
-    a { color: var(--primary-color, #1565c0); text-decoration: underline; }
-    .home-link { display: inline-block; margin-top: 12px; }
+
+    .prefs-icon {
+      width: 48px;
+      height: 48px;
+      margin: 0 auto 16px;
+      border-radius: 50%;
+      background: #faf6eb;
+      border: 1px solid var(--ep-line);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--ep-gold-dark);
+
+      svg { width: 22px; height: 22px; }
+
+      &--warn {
+        background: #fff7ed;
+        border-color: #fed7aa;
+        color: #c2410c;
+      }
+    }
+
+    h1 {
+      font-size: 1.35rem;
+      font-weight: 700;
+      margin: 0 0 8px;
+      color: var(--ep-ink);
+      letter-spacing: -0.02em;
+      line-height: 1.25;
+    }
+
+    .intro {
+      color: var(--ep-muted);
+      font-size: 0.9rem;
+      margin: 0 0 24px;
+      line-height: 1.55;
+    }
+
+    .email-line {
+      display: inline-block;
+      margin: 0 0 8px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: #faf6eb;
+      border: 1px solid var(--ep-line);
+      color: var(--ep-text);
+      font-size: 0.85rem;
+      font-weight: 600;
+      word-break: break-all;
+    }
 
     .email-form {
       text-align: left;
@@ -114,70 +274,194 @@ const LANGUAGE_LABELS: Record<Language, string> = {
       flex-direction: column;
       gap: 14px;
     }
+
     .field label {
       display: block;
-      font-size: 13px;
+      font-size: 0.8rem;
       font-weight: 700;
-      color: #334155;
+      color: var(--ep-text);
       margin-bottom: 6px;
+      letter-spacing: 0.01em;
     }
+
     .input {
       width: 100%;
       box-sizing: border-box;
-      padding: 10px 12px;
+      padding: 12px 14px;
       border: 1px solid #e2e8f0;
-      border-radius: 8px;
-      font-size: 14px;
+      border-radius: 10px;
+      font-size: 0.95rem;
       font-family: inherit;
-    }
-    .input:focus {
-      outline: none;
-      border-color: #94a3b8;
+      color: var(--ep-ink) !important;
+      background: #ffffff !important;
+      color-scheme: light;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+
+      &::placeholder { color: #94a3b8; }
+
+      &:hover { border-color: #cbd5e1; }
+
+      &:focus {
+        outline: none;
+        border-color: var(--ep-gold);
+        box-shadow: 0 0 0 3px rgba(201, 168, 76, 0.2);
+      }
     }
 
     .section {
       text-align: left;
-      margin-bottom: 24px;
-      padding-top: 20px;
-      border-top: 1px solid #eee;
+      margin-top: 22px;
+      padding-top: 22px;
+      border-top: 1px solid #f1f5f9;
 
-      label { display: block; font-size: 13px; font-weight: 700; color: #334155; margin-bottom: 10px; }
+      > label {
+        display: block;
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: var(--ep-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        margin-bottom: 12px;
+      }
     }
 
-    .lang-options { display: flex; gap: 8px; flex-wrap: wrap; }
+    .lang-options {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
     .lang-btn {
-      padding: 8px 14px;
+      padding: 10px 12px;
       border: 1px solid #e2e8f0;
-      border-radius: 8px;
+      border-radius: 10px;
       background: #fff;
-      color: #475569;
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
-
-      &.active { background: var(--primary-color, #1565c0); border-color: var(--primary-color, #1565c0); color: #fff; }
-      &:disabled { opacity: 0.6; cursor: not-allowed; }
-    }
-
-    .status-text { font-size: 14px; margin-bottom: 12px; }
-
-    .btn {
-      padding: 10px 18px;
-      border: none;
-      border-radius: 8px;
-      font-size: 14px;
+      color: var(--ep-text);
+      font-size: 0.85rem;
       font-weight: 600;
       cursor: pointer;
       font-family: inherit;
-      &:disabled { opacity: 0.6; cursor: not-allowed; }
-    }
-    .btn-primary { background: #0f172a; color: #fff; width: 100%; }
-    .btn-danger { background: #fee2e2; color: #b91c1c; }
-    .btn-secondary { background: #e2e8f0; color: #334155; }
+      transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
 
-    .save-message { margin: 0; font-size: 13px; font-weight: 600; }
+      &:hover:not(:disabled):not(.active) {
+        border-color: var(--ep-gold);
+        color: var(--ep-ink);
+      }
+
+      &.active {
+        background: #111111;
+        border-color: #111111;
+        color: var(--ep-gold);
+      }
+
+      &:disabled { opacity: 0.55; cursor: not-allowed; }
+    }
+
+    .status-card {
+      border-radius: 12px;
+      padding: 14px 16px;
+      border: 1px solid #e2e8f0;
+      background: #f8fafc;
+
+      &--on {
+        background: #faf6eb;
+        border-color: var(--ep-line);
+      }
+
+      &--off {
+        background: #fff7ed;
+        border-color: #fed7aa;
+      }
+    }
+
+    .status-text {
+      font-size: 0.9rem;
+      color: var(--ep-text);
+      margin: 0 0 12px;
+      line-height: 1.45;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 12px 18px;
+      border: none;
+      border-radius: 999px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+      letter-spacing: 0.01em;
+      transition: transform 0.12s ease, opacity 0.12s ease, background 0.15s ease;
+
+      &:disabled { opacity: 0.55; cursor: not-allowed; }
+      &:not(:disabled):active { transform: scale(0.98); }
+    }
+
+    .btn-primary {
+      width: 100%;
+      background: var(--ep-gold);
+      color: #090909;
+
+      &:hover:not(:disabled) { background: #d4b45a; }
+    }
+
+    .btn-secondary {
+      background: #111111;
+      color: var(--ep-gold);
+
+      &:hover:not(:disabled) { background: #1a1a1a; }
+    }
+
+    .btn-danger {
+      background: transparent;
+      color: #b91c1c;
+      border: 1px solid #fecaca;
+      border-radius: 999px;
+
+      &:hover:not(:disabled) {
+        background: #fef2f2;
+        border-color: #f87171;
+      }
+    }
+
+    .home-link {
+      display: inline-block;
+      margin-top: 16px;
+      color: var(--ep-gold-dark);
+      font-size: 0.85rem;
+      font-weight: 600;
+      text-decoration: none;
+
+      &:hover { text-decoration: underline; }
+    }
+
+    .save-message {
+      margin: 4px 0 0;
+      font-size: 0.85rem;
+      font-weight: 600;
+      text-align: left;
+    }
     .save-message.success { color: #166534; }
     .save-message.error { color: #c53030; }
+
+    .prefs-footnote {
+      margin: 0;
+      font-size: 0.75rem;
+      color: rgba(240, 237, 232, 0.45);
+      text-align: center;
+
+      a {
+        color: var(--ep-gold);
+        text-decoration: none;
+        &:hover { text-decoration: underline; }
+      }
+    }
+
+    @media (max-width: 480px) {
+      .prefs-card { padding: 28px 22px 24px; }
+    }
   `]
 })
 export class EmailPreferencesComponent implements OnInit {

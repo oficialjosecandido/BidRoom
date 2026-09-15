@@ -57,6 +57,10 @@ export class AdminEmailsComponent implements OnInit {
   testMessage: string | null = null;
   testError: string | null = null;
 
+  loadingPreset = false;
+  presetMessage: string | null = null;
+  presetError: string | null = null;
+
   sendingCampaign = false;
   campaignResult: SendResult | null = null;
   campaignError: string | null = null;
@@ -179,6 +183,35 @@ export class AdminEmailsComponent implements OnInit {
 
   setActiveLanguage(lang: CampaignLanguage): void {
     this.activeLanguage = lang;
+  }
+
+  /** Loads PT/EN/ES/FR subject+HTML; send still picks each recipient's language. */
+  async loadNewsletterPreset(): Promise<void> {
+    if (this.loadingPreset) return;
+    this.loadingPreset = true;
+    this.presetMessage = null;
+    this.presetError = null;
+    try {
+      const res = await fetch('/newsletters/2026-09-novos-leiloes.campaign.json');
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json() as CampaignContent;
+      for (const lang of this.LANGUAGES) {
+        const variant = data[lang.code];
+        if (!variant?.subject || !variant?.html) {
+          throw new Error(`Template incompleto para ${lang.code}.`);
+        }
+        this.content[lang.code] = {
+          subject: variant.subject,
+          html: variant.html
+        };
+      }
+      this.activeLanguage = 'pt';
+      this.presetMessage = 'Template «Novos leilões Set 2026» carregado nos 4 idiomas. Cada destinatário recebe a versão do seu idioma.';
+    } catch {
+      this.presetError = 'Não foi possível carregar o template da newsletter.';
+    } finally {
+      this.loadingPreset = false;
+    }
   }
 
   loadAudienceCount(): void {

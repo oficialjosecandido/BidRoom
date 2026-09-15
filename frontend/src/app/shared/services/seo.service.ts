@@ -179,11 +179,52 @@ export class SeoService {
     this.meta.updateTag({ property: 'og:url',         content: p.url });
     this.meta.updateTag({ property: 'og:image',       content: p.image });
     this.meta.updateTag({ property: 'og:type',        content: 'website' });
+    this.applyImageMeta(p.image);
 
     this.meta.updateTag({ name: 'twitter:title',       content: p.title });
     this.meta.updateTag({ name: 'twitter:description', content: p.description });
     this.meta.updateTag({ name: 'twitter:image',       content: p.image });
     this.meta.updateTag({ name: 'twitter:card',        content: 'summary_large_image' });
+  }
+
+  /**
+   * Keeps og:image:width/height/type consistent with the image actually set.
+   *
+   * index.html ships the tags for the branded 1200×630 PNG fallback. Left
+   * alone, a listing photo inherits those values — crawlers then lay out the
+   * preview for dimensions and a format the file does not have. We only know
+   * the size of our own default, so for anything else the dimensions are
+   * dropped rather than guessed.
+   */
+  private applyImageMeta(image: string): void {
+    if (image === DEFAULT_OG) {
+      this.meta.updateTag({ property: 'og:image:width',  content: '1200' });
+      this.meta.updateTag({ property: 'og:image:height', content: '630' });
+      this.meta.updateTag({ property: 'og:image:type',   content: 'image/png' });
+      return;
+    }
+
+    this.meta.removeTag('property="og:image:width"');
+    this.meta.removeTag('property="og:image:height"');
+
+    const type = SeoService.imageMimeType(image);
+    if (type) {
+      this.meta.updateTag({ property: 'og:image:type', content: type });
+    } else {
+      this.meta.removeTag('property="og:image:type"');
+    }
+  }
+
+  /** Mime type from the URL extension; null when it is not one we recognise. */
+  private static imageMimeType(url: string): string | null {
+    // Uploads carry a double extension (…​.webp.webp), so match the last one.
+    const clean = url.split(/[?#]/)[0].toLowerCase();
+    if (/\.jpe?g$/.test(clean)) return 'image/jpeg';
+    if (/\.png$/.test(clean))   return 'image/png';
+    if (/\.gif$/.test(clean))   return 'image/gif';
+    if (/\.webp$/.test(clean))  return 'image/webp';
+    if (/\.avif$/.test(clean))  return 'image/avif';
+    return null;
   }
 
   private setListingOgType(type: string): void {
