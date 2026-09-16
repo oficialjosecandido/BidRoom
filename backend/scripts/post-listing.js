@@ -9,6 +9,8 @@
  *
  * Sem --post não sai nada para fora: compõe a mensagem e mostra-a, para se
  * poder rever o texto antes de ir para uma página pública.
+ *
+ * Só se publica o que já foi aprovado no Nexus — ver assertPublishable().
  */
 
 require('dotenv').config();
@@ -118,13 +120,49 @@ async function pickListing() {
 
   const listing = await Listing.findOne(query)
     .sort(slug ? undefined : { createdAt: -1 })
-    .select('title titlePt description descriptionPt slug currentPrice buyNowPrice endDate images status')
+    .select('title titlePt description descriptionPt slug currentPrice buyNowPrice endDate images status moderationReview')
     .lean();
 
   if (!listing) {
     fail(slug ? `Não existe listing com slug "${slug}".` : 'Nenhum listing ativo com imagens.');
   }
   return listing;
+}
+
+/** Porque é que um anúncio não pode ir para as redes, na língua de quem lê. */
+const NAO_PUBLICAVEL = {
+  pending_review: 'ainda está à espera de aprovação no Nexus',
+  draft: 'ainda é um rascunho',
+  cancelled: 'foi cancelado ou rejeitado na revisão',
+  ended: 'já terminou'
+};
+
+/**
+ * Um anúncio só vai para as redes sociais depois de aprovado.
+ *
+ * `active` é exatamente essa prova: desde a revisão manual, o único caminho para
+ * `active` passa por uma aprovação no Nexus. Não se exige
+ * `moderationReview.decision === 'approved'` porque os anúncios que já estavam
+ * publicados antes desta funcionalidade não têm decisão registada e continuam
+ * legitimamente no ar — exigi-la deixava-os de fora sem razão.
+ *
+ * A barreira existe sobretudo por causa de --slug, que escolhe o anúncio pelo
+ * nome e não passa pelo filtro de estado da consulta por omissão.
+ */
+function assertPublishable(listing) {
+  if (listing.status !== 'active') {
+    fail(
+      `"${listing.slug}" ${NAO_PUBLICAVEL[listing.status] || `está em "${listing.status}"`}.\n` +
+      '   Só se publica nas redes sociais depois de o anúncio ser aprovado.'
+    );
+  }
+
+  // Aprovado e no ar, mas com o relógio já passado: o post levaria seguidores a
+  // um leilão onde não podem licitar. Acontece entre o fim e a passagem do
+  // scheduler, por isso é aviso, não barreira.
+  if (listing.endDate && new Date(listing.endDate) <= new Date()) {
+    console.log('⚠️  O leilão já passou da data de fim — o post apontaria para um leilão fechado.');
+  }
 }
 
 async function postToFacebook(listing, message) {
@@ -317,16 +355,24 @@ async function main() {
 
   const message = buildMessage(listing);
 
-  console.log(`Listing: ${listing.title} (${listing.status})`);
+  const decisao = listing.moderationReview?.decision;
+  console.log(`Listing: ${listing.title} (${listing.status}${decisao ? `, ${decisao}` : ''})`);
   console.log(`Imagens: ${listing.images?.length || 0} (o Instagram leva até ${IG_CAROUSEL_MAX} em carrossel)`);
   console.log('\n--- post ---');
   console.log(message);
   console.log('------------');
 
   if (!process.argv.includes('--post')) {
+    // A pré-visualização continua a funcionar em qualquer estado de propósito:
+    // dá jeito ler o texto do post enquanto se decide se o anúncio é aprovado.
+    if (listing.status !== 'active') {
+      console.log(`\n⛔ ${NAO_PUBLICAVEL[listing.status] || `está em "${listing.status}"`} — --post seria recusado.`);
+    }
     console.log('\nNada publicado. Para publicar: --post (acrescenta --instagram para o IG)');
     return;
   }
+
+  assertPublishable(listing);
 
   // --instagram-only evita republicar no Facebook ao repetir um teste do IG.
   const igOnly = process.argv.includes('--instagram-only');
