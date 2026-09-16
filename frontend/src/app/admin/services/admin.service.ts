@@ -32,6 +32,12 @@ export interface AdminAuctionsResponse {
   pages: number;
 }
 
+/** Outcome of approving or rejecting a listing held for manual review. */
+export interface AdminReviewResponse {
+  success: boolean;
+  listing: { _id: string; slug: string; status: string; endDate?: string };
+}
+
 export interface AdminAuctionsQueryParams {
   page?: number;
   limit?: number;
@@ -225,6 +231,19 @@ export class AdminService {
 
   getAuctionById(auctionId: string): Observable<Listing> {
     return this.http.get<Listing>(`${this.apiUrl}/auctions/${auctionId}`);
+  }
+
+  /**
+   * Publish a listing that is waiting for manual review. The backend restarts
+   * the auction clock at this moment, so the returned endDate is the real one.
+   */
+  approveListing(auctionId: string): Observable<AdminReviewResponse> {
+    return this.http.post<AdminReviewResponse>(`${this.apiUrl}/auctions/${auctionId}/approve`, {});
+  }
+
+  /** Reject a listing awaiting review. The reason is sent to the seller. */
+  rejectListing(auctionId: string, reason: string): Observable<AdminReviewResponse> {
+    return this.http.post<AdminReviewResponse>(`${this.apiUrl}/auctions/${auctionId}/reject`, { reason });
   }
 
   createPrivateRoom(auctionId: string, platinumBidderIds: string[]): Observable<unknown> {

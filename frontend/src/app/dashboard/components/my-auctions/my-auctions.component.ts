@@ -231,6 +231,7 @@ export class MyAuctionsComponent implements OnInit, OnDestroy {
       case 'ended': return 'badge-ended';
       case 'cancelled': return 'badge-cancelled';
       case 'draft': return 'badge-draft';
+      case 'pending_review': return 'badge-pending-review';
       default: return 'badge-default';
     }
   }

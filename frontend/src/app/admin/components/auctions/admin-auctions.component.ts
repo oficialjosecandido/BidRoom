@@ -79,6 +79,8 @@ export class AdminAuctionsComponent implements OnInit {
 
   statuses = [
     { value: 'all', label: 'All statuses' },
+    // First in the list: this is the queue that needs someone to act on it.
+    { value: 'pending_review', label: 'Awaiting approval' },
     { value: 'active', label: 'Active' },
     { value: 'ended', label: 'Ended' },
     { value: 'cancelled', label: 'Cancelled' },
@@ -198,9 +200,75 @@ export class AdminAuctionsComponent implements OnInit {
       active: 'status-active',
       ended: 'status-ended',
       cancelled: 'status-cancelled',
-      draft: 'status-draft'
+      draft: 'status-draft',
+      pending_review: 'status-pending-review'
     };
     return statusClasses[status] || '';
+  }
+
+  statusLabel(status: string): string {
+    return status === 'pending_review' ? 'awaiting approval' : status;
+  }
+
+  // ---- Manual review -------------------------------------------------------
+
+  /** Id of the listing currently being approved or rejected, so only its row is disabled. */
+  reviewingId: string | null = null;
+  rejectTarget: Listing | null = null;
+  rejectReason = '';
+  reviewError: string | null = null;
+
+  approve(listing: Listing): void {
+    // Approving starts the auction clock and makes the listing public — both
+    // hard to walk back, so it is worth one deliberate confirmation.
+    const ends = listing.durationSlot ? ` The auction will run for ${listing.durationSlot} from now.` : '';
+    if (!confirm(`Approve "${listing.title}"? It goes live immediately.${ends}`)) return;
+
+    this.reviewingId = listing._id;
+    this.reviewError = null;
+    this.adminService.approveListing(listing._id).subscribe({
+      next: () => {
+        this.reviewingId = null;
+        this.loadAuctions();
+      },
+      error: (err) => {
+        this.reviewingId = null;
+        this.reviewError = err?.error?.error || err?.message || 'Failed to approve listing';
+      }
+    });
+  }
+
+  openRejectModal(listing: Listing): void {
+    this.rejectTarget = listing;
+    this.rejectReason = '';
+    this.reviewError = null;
+  }
+
+  closeRejectModal(): void {
+    this.rejectTarget = null;
+    this.rejectReason = '';
+  }
+
+  confirmReject(): void {
+    const target = this.rejectTarget;
+    const reason = this.rejectReason.trim();
+    // The reason is emailed to the seller as their instruction on what to fix,
+    // so an empty one would leave them with a rejection and no next step.
+    if (!target || !reason) return;
+
+    this.reviewingId = target._id;
+    this.reviewError = null;
+    this.adminService.rejectListing(target._id, reason).subscribe({
+      next: () => {
+        this.reviewingId = null;
+        this.closeRejectModal();
+        this.loadAuctions();
+      },
+      error: (err) => {
+        this.reviewingId = null;
+        this.reviewError = err?.error?.error || err?.message || 'Failed to reject listing';
+      }
+    });
   }
 
   formatDate(dateString: string): string {

@@ -59,7 +59,21 @@
                 @if (listing.relistedAt) {
                   <span class="relisted-badge">{{ 'dashboard.myAuctions.relist.alreadyRelisted' | translate }}</span>
                 }
+                @if (listing.moderationReview?.decision === 'rejected') {
+                  <span class="rejected-badge">{{ 'dashboard.myAuctions.rejectedLabel' | translate }}</span>
+                }
               </div>
+              @if (listing.status === 'pending_review') {
+                <p class="review-hint">{{ 'dashboard.myAuctions.pendingReviewHint' | translate }}</p>
+              }
+              <!-- The reason an admin gave is the seller's only instruction on what
+                   to fix, so it is shown in full rather than behind a tooltip. -->
+              @if (listing.moderationReview?.decision === 'rejected' && listing.moderationReview?.reason) {
+                <p class="review-reason">
+                  <strong>{{ 'dashboard.myAuctions.rejectionReason' | translate }}:</strong>
+                  {{ listing.moderationReview!.reason }}
+                </p>
+              }
             </div>
             <div class="auction-price">
               <span class="price-label">{{ listing.auctionFormat === 'best-offer' ? ('dashboard.myAuctions.highestOffer' | translate) : ('dashboard.myAuctions.currentPrice' | translate) }}</span>

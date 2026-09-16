@@ -17,6 +17,7 @@ const DamageClaim = require('../models/DamageClaim');
 const { applyDisputeAccountOutcome } = require('../services/accountStatusService');
 const { applyDisputeVerdictImpact } = require('../services/reputationService');
 const { appendModerationAudit } = require('../services/moderationAuditService');
+const { approveListing, rejectListing, ReviewError } = require('../services/listingReviewService');
 const { runImagePurge } = require('../services/imagePurgeScheduler');
 const { getBlocklistItems, addBlocklistItem, removeBlocklistItem, ensureBlocklistExists } = require('../services/contentSafetyService');
 const azureStorageService = require('../services/azureStorage.service');
@@ -355,7 +356,9 @@ router.get('/auctions', authenticateToken, requireAdmin, async (req, res) => {
       filter.category = cat;
     }
     if (stat && stat !== 'all') {
-      const allowedStat = ['active', 'ended', 'cancelled', 'draft'];
+      // pending_review is the review queue — without it here Nexus cannot filter
+      // down to the listings that are actually waiting for a decision.
+      const allowedStat = ['active', 'ended', 'cancelled', 'draft', 'pending_review'];
       if (allowedStat.includes(stat)) {
         filter.status = stat;
       }
@@ -554,6 +557,76 @@ router.get('/auctions/:id', authenticateToken, requireAdmin, async (req, res) =>
       error: 'Failed to fetch auction',
       message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error' 
     });
+  }
+});
+
+/**
+ * Resolves the acting admin to a Customer document.
+ *
+ * The audit trail and moderationReview.reviewedBy store an ObjectId, but the
+ * token only carries an email, so it has to be looked up. Returns whatever is
+ * known: the email alone is still worth recording if no Customer matches.
+ */
+async function resolveAdminActor(req) {
+  const email = req.user?.email ? String(req.user.email).toLowerCase() : null;
+  if (!email) return { _id: null, email: null };
+  const doc = await Customer.findOne({ email }).select('_id').lean();
+  return { _id: doc?._id || null, email };
+}
+
+/**
+ * POST /api/admin/auctions/:id/approve
+ * Publishes a listing awaiting manual review. The auction clock starts here.
+ */
+router.post('/auctions/:id/approve', authenticateToken, requireAdmin, async (req, res) => {
+  if (!isValidObjectId(req.params.id)) return res.status(400).json({ error: 'Invalid listing ID' });
+  try {
+    const listing = await approveListing({
+      listingId: req.params.id,
+      admin: await resolveAdminActor(req),
+      io: req.app.get('io'),
+      ip: req.ip || null
+    });
+
+    res.json({
+      success: true,
+      listing: { _id: listing._id, slug: listing.slug, status: listing.status, endDate: listing.endDate }
+    });
+  } catch (error) {
+    if (error instanceof ReviewError) {
+      return res.status(error.statusCode).json({ error: error.message });
+    }
+    logger.error('Error approving listing:', error);
+    res.status(500).json({ error: 'Failed to approve listing' });
+  }
+});
+
+/**
+ * POST /api/admin/auctions/:id/reject
+ * Rejects a listing awaiting review. The reason is required — it is sent to the
+ * seller as the explanation of what to fix, not kept as an internal note.
+ */
+router.post('/auctions/:id/reject', authenticateToken, requireAdmin, async (req, res) => {
+  if (!isValidObjectId(req.params.id)) return res.status(400).json({ error: 'Invalid listing ID' });
+  try {
+    const listing = await rejectListing({
+      listingId: req.params.id,
+      admin: await resolveAdminActor(req),
+      reason: req.body?.reason,
+      io: req.app.get('io'),
+      ip: req.ip || null
+    });
+
+    res.json({
+      success: true,
+      listing: { _id: listing._id, slug: listing.slug, status: listing.status }
+    });
+  } catch (error) {
+    if (error instanceof ReviewError) {
+      return res.status(error.statusCode).json({ error: error.message });
+    }
+    logger.error('Error rejecting listing:', error);
+    res.status(500).json({ error: 'Failed to reject listing' });
   }
 });
 

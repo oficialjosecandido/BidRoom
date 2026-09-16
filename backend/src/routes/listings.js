@@ -1482,7 +1482,10 @@ router.post('/', authenticateToken, requireActiveAccount, requireNoDisputeRestri
         ? bundleItems.slice(0, 50).map(b => ({ title: String(b.title || '').trim().slice(0, 100), description: String(b.description || '').trim().slice(0, 500) })).filter(b => b.title)
         : [],
       seller: user._id,
-      status: listingContentWarning ? 'pending_review' : 'active',
+      // Every listing is manually approved in Nexus before going live. The
+      // automated content warning no longer decides the status — it only rides
+      // along so the reviewer sees what the filter flagged.
+      status: 'pending_review',
       ...(listingContentWarning && {
         moderationWarning: {
           severity: listingContentWarning.severity,
@@ -1541,33 +1544,10 @@ router.post('/', authenticateToken, requireActiveAccount, requireNoDisputeRestri
     // Auto-clear the seller's in-progress draft now that the listing is published
     ListingDraft.deleteOne({ seller: user._id }).catch(() => {});
 
-    // Notify followers / category followers / similar-item watchers (fire-and-forget)
-    setImmediate(() => {
-      const io = req.app.get('io');
-      notifyFollowersNewListing({
-        sellerId: req.user._id,
-        sellerFirstName: req.user.firstName,
-        listingTitle: listing.title,
-        listingSlug: listingData.slug,
-        io
-      });
-      notifyCategoryFollowersNewListing({
-        category: listingData.category,
-        listingTitle: listing.title,
-        listingSlug: listingData.slug,
-        sellerUserId: req.user._id,
-        io
-      });
-      notifySimilarItemWatchers({
-        category: listingData.category,
-        startingPrice: listing.startingPrice,
-        listingTitle: listing.title,
-        listingSlug: listingData.slug,
-        newListingId: listing._id,
-        sellerUserId: req.user._id,
-        io
-      });
-    });
+    // Followers, category followers and similar-item watchers are told when the
+    // listing is approved, not now — see services/listingReviewService.js. Until
+    // then the listing 404s for everyone except its seller, so announcing it
+    // here would point people at a page they cannot open.
 
     // Populate and return the listing
     const populatedListing = await Listing.findById(listing._id)

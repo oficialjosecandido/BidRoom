@@ -26,7 +26,17 @@ const templateCache = new Map();
  */
 function renderTemplate(template, data) {
   let rendered = template;
-  
+
+  // {{#if var}}…{{/if}} — keep the block when the value is truthy, drop it otherwise.
+  // Templates already shipped this syntax (draftReminder) while the renderer only
+  // knew plain variables, so the markers were going out verbatim in real emails.
+  // Non-nested and non-greedy: one level is all the templates use.
+  const conditionalRegex = /\{\{#if\s+(\w+(?:\.\w+)*)\}\}([\s\S]*?)\{\{\/if\}\}/g;
+  rendered = rendered.replace(conditionalRegex, (_match, varPath, body) => {
+    const value = varPath.split('.').reduce((obj, key) => (obj && obj[key] !== undefined ? obj[key] : undefined), data);
+    return value ? body : '';
+  });
+
   // Replace all {{variable}} or {{object.property}} occurrences
   const variableRegex = /\{\{(\w+(?:\.\w+)*)\}\}/g;
   

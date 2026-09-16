@@ -5,6 +5,7 @@ const Follow = require('../models/Follow');
 const CategoryFollow = require('../models/CategoryFollow');
 const Watchlist = require('../models/Watchlist');
 const Listing = require('../models/Listing');
+const { reviewNotificationCopy } = require('./listingReviewMessages');
 const logger = require('../utils/logger');
 
 // In-memory debounce: prevent outbid notification floods in high-activity auctions.
@@ -297,6 +298,37 @@ async function notifyListingRequiresChanges({ listingSlug, listingTitle, sellerU
     userId: sellerUserId,
     title: 'Listing changes required',
     message: `"${listingTitle || 'Your listing'}" needs changes before it can be approved.`,
+    type: 'listing',
+    link,
+    referenceId: listingSlug
+  });
+}
+
+/**
+ * Manual review outcome — notify the seller in their own language.
+ *
+ * The seller's language is read here rather than passed in so every caller
+ * cannot get it wrong independently; callers only know the listing.
+ */
+async function notifyListingReviewed({ listingSlug, listingTitle, sellerUserId, decision, reason = null }) {
+  const seller = await Customer.findById(sellerUserId).select('language').lean();
+  const { title, message } = reviewNotificationCopy(
+    decision,
+    seller?.language,
+    listingTitle || listingSlug || '',
+    reason
+  );
+
+  // Approved goes to the live listing; rejected goes to the dashboard, which is
+  // the only place a cancelled listing is still reachable.
+  const link = decision === 'approved' && listingSlug
+    ? `/listing/${listingSlug}`
+    : '/dashboard/seller';
+
+  return createNotification({
+    userId: sellerUserId,
+    title,
+    message,
     type: 'listing',
     link,
     referenceId: listingSlug
@@ -1194,6 +1226,7 @@ module.exports = {
   notifySellerBestOfferEnded,
   notifyListingRemoved,
   notifyListingRequiresChanges,
+  notifyListingReviewed,
   notifyItemAddedToWatchlist,
   notifyPrivateRoomInvitation,
   notifyPrivateRoomAccepted,

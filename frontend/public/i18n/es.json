@@ -432,7 +432,14 @@
     "feeBuyer": "Tarifa Stripe",
     "feeBuyerNote": "Pagado por el comprador",
     "feeReceive": "Recibirás aproximadamente",
-    "specHint": "Ej: Material — Oro 18k · Dimensiones — 36mm · Referencia — 5512"
+    "specHint": "Ej: Material — Oro 18k · Dimensiones — 36mm · Referencia — 5512",
+    "reviewTitle": "Anuncio enviado para aprobación",
+    "reviewBody": "Su anuncio se ha creado y ahora espera la aprobación manual de nuestro equipo. Solo será visible para los compradores una vez aprobado, y el tiempo de la subasta empieza en ese momento, así que no pierde tiempo esperando. Puede seguir su estado en su panel.",
+    "reviewDashboardCta": "Ver estado en el panel",
+    "reviewListingCta": "Ver anuncio",
+    "moderationTitle": "Anuncio en revisión",
+    "moderationBody": "Su anuncio se ha enviado, pero nuestro equipo de moderación lo está revisando porque contiene lenguaje inadecuado. No será visible para otros usuarios hasta que se apruebe. Puede consultarlo en su panel.",
+    "moderationCta": "Ver mi anuncio"
   },
   "listingList": {
     "searchPlaceholder": "Buscar subastas...",
@@ -853,7 +860,11 @@
       "createAccount": "Crear cuenta",
       "signIn": "Iniciar sesión"
     },
-    "cancel": "Cancelar"
+    "cancel": "Cancelar",
+    "moderationBanner": {
+      "title": "Este anuncio está en revisión",
+      "body": "Su anuncio todavía no es visible para otros usuarios. Nuestro equipo de moderación lo revisará en breve. Si se aprueba, se publicará automáticamente."
+    }
   },
   "auth": {
     "common": {
@@ -1339,7 +1350,17 @@
           "submit": "Relistar ahora",
           "submitting": "Relistando…"
         }
-      }
+      },
+      "status": {
+        "active": "Activo",
+        "ended": "Finalizado",
+        "cancelled": "Cancelado",
+        "draft": "Borrador",
+        "pending_review": "Pendiente de aprobación"
+      },
+      "rejectedLabel": "No aprobado",
+      "rejectionReason": "Motivo",
+      "pendingReviewHint": "A la espera de aprobación. El tiempo de la subasta solo empieza cuando se apruebe."
     },
     "myAuctionsBidder": {
       "title": "Mis Subastas",

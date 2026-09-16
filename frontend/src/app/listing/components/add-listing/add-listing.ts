@@ -1522,22 +1522,28 @@ export class AddListing implements OnInit, OnDestroy {
       await firstValueFrom(this.listingsService.deleteListingDraft()).catch(() => {});
       localStorage.removeItem('bidroom_draft_published'); // clean up if delete succeeded
 
-      if (listing.contentWarning) {
-        await Swal.fire({
-          icon: 'warning',
-          title: this.translate.instant('addListing.moderationTitle'),
-          html: `<p>${this.translate.instant('addListing.moderationBody')}</p>`,
-          confirmButtonText: this.translate.instant('addListing.moderationCta'),
-          confirmButtonColor: '#2563eb'
-        });
-        // Navigate to the listing — it is visible to the seller but not to the public
-        this.router.navigate(['/listing', listing.slug]);
+      // Every listing now waits for manual approval, so there is no longer a
+      // "published" outcome to celebrate — the seller is told what happens next
+      // and sent to wherever they can act on it. The content warning only
+      // changes the wording, not the destination.
+      const flagged = !!listing.contentWarning;
+      const result = await Swal.fire({
+        icon: flagged ? 'warning' : 'info',
+        title: this.translate.instant(flagged ? 'addListing.moderationTitle' : 'addListing.reviewTitle'),
+        html: `<p>${this.translate.instant(flagged ? 'addListing.moderationBody' : 'addListing.reviewBody')}</p>`,
+        confirmButtonText: this.translate.instant('addListing.reviewDashboardCta'),
+        confirmButtonColor: '#002366',
+        showCancelButton: true,
+        cancelButtonText: this.translate.instant('addListing.reviewListingCta'),
+        cancelButtonColor: '#6b7280',
+        reverseButtons: true
+      });
+
+      // Confirm = the dashboard, where the status of every listing is visible.
+      // Cancel = this listing, which the seller can still open while it is hidden.
+      if (result.isConfirmed) {
+        this.router.navigate(['/dashboard/seller']);
       } else {
-        Swal.fire({
-          toast: true, position: 'top-end', icon: 'success',
-          title: this.translate.instant('addListing.successMessage'),
-          showConfirmButton: false, timer: 3000, timerProgressBar: true
-        });
         this.router.navigate(['/listing', listing.slug]);
       }
     } catch (error: any) {

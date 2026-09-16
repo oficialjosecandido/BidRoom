@@ -432,7 +432,14 @@
     "feeBuyer": "Frais Stripe",
     "feeBuyerNote": "Payé par l'acheteur",
     "feeReceive": "Vous recevrez approximativement",
-    "specHint": "Ex : Matériau — Or 18k · Dimensions — 36mm · Référence — 5512"
+    "specHint": "Ex : Matériau — Or 18k · Dimensions — 36mm · Référence — 5512",
+    "reviewTitle": "Annonce soumise pour approbation",
+    "reviewBody": "Votre annonce a été créée et attend maintenant l'approbation manuelle de notre équipe. Elle ne sera visible par les acheteurs qu'une fois approuvée — et le compte à rebours de l'enchère démarre à ce moment-là, vous ne perdez donc pas de temps à attendre. Vous pouvez suivre son statut dans votre tableau de bord.",
+    "reviewDashboardCta": "Voir le statut dans le tableau de bord",
+    "reviewListingCta": "Voir l'annonce",
+    "moderationTitle": "Annonce en cours de vérification",
+    "moderationBody": "Votre annonce a été soumise mais notre équipe de modération la vérifie car elle contient un langage inapproprié. Elle ne sera pas visible par les autres utilisateurs tant qu'elle n'est pas approuvée. Vous pouvez la consulter dans votre tableau de bord.",
+    "moderationCta": "Voir mon annonce"
   },
   "listingList": {
     "searchPlaceholder": "Rechercher des enchères...",
@@ -850,7 +857,11 @@
       "createAccount": "Créer un compte",
       "signIn": "Se connecter"
     },
-    "cancel": "Annuler"
+    "cancel": "Annuler",
+    "moderationBanner": {
+      "title": "Cette annonce est en cours de vérification",
+      "body": "Votre annonce n'est pas encore visible par les autres utilisateurs. Notre équipe de modération la vérifiera sous peu. Si elle est approuvée, elle sera publiée automatiquement."
+    }
   },
   "auth": {
     "common": {
@@ -1336,7 +1347,17 @@
           "submit": "Remettre en vente",
           "submitting": "Remise en cours…"
         }
-      }
+      },
+      "status": {
+        "active": "Active",
+        "ended": "Terminée",
+        "cancelled": "Annulée",
+        "draft": "Brouillon",
+        "pending_review": "En attente d'approbation"
+      },
+      "rejectedLabel": "Non approuvée",
+      "rejectionReason": "Motif",
+      "pendingReviewHint": "En attente d'approbation. Le compte à rebours ne démarre qu'une fois l'annonce approuvée."
     },
     "myAuctionsBidder": {
       "title": "Mes Enchères",

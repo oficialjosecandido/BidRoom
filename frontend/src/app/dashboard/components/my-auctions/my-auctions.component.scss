@@ -209,11 +209,51 @@
         border: 1px solid var(--line);
       }
 
+      // Awaiting approval: gold like a draft, because both mean "not live yet",
+      // but dashed so it reads as waiting on us rather than on the seller.
+      &.badge-pending-review {
+        background: var(--gb);
+        color: var(--gold);
+        border: 1px dashed var(--gold);
+      }
+
       &.badge-draft {
         background: var(--gb);
         color: var(--gold);
         border: 1px solid var(--gl);
       }
+    }
+
+    .rejected-badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 100px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      background: var(--rb);
+      color: var(--red);
+      border: 1px solid var(--al);
+    }
+
+    .review-hint {
+      margin: 6px 0 0;
+      font-size: 12px;
+      color: var(--sub);
+    }
+
+    .review-reason {
+      margin: 6px 0 0;
+      padding: 8px 12px;
+      font-size: 13px;
+      line-height: 1.5;
+      background: var(--rb);
+      border-left: 3px solid var(--red);
+      border-radius: 4px;
+      // The admin writes this freehand, so a long word must wrap rather than
+      // stretch the card past the viewport.
+      overflow-wrap: anywhere;
     }
   }
 

@@ -799,7 +799,11 @@
     "feeBuyerEstimate": "€{{amount}} (max. €500)",
     "feeBuyerNote": "Paid by the buyer at checkout (~2.9% + €0.30, capped at €500). BidRoom charges buyers no additional platform fee.",
     "feeReceive": "You will receive approximately",
-    "specHint": "E.g.: Material — 18k Gold · Dimensions — 36mm · Reference — 5512"
+    "specHint": "E.g.: Material — 18k Gold · Dimensions — 36mm · Reference — 5512",
+    "reviewTitle": "Listing submitted for approval",
+    "reviewBody": "Your listing has been created and is now waiting for manual approval by our team. It only becomes visible to buyers once approved — and the auction clock starts at that moment, so no time is lost waiting. You can follow its status in your dashboard.",
+    "reviewDashboardCta": "View status in dashboard",
+    "reviewListingCta": "View listing"
   },
   "listingList": {
     "searchPlaceholder": "Search auctions...",
@@ -2223,7 +2227,8 @@
         "active": "Active",
         "ended": "Ended",
         "cancelled": "Cancelled",
-        "draft": "Draft"
+        "draft": "Draft",
+        "pending_review": "Awaiting approval"
       },
       "relist": {
         "title": "Relist Auction",
@@ -2250,7 +2255,10 @@
           "submit": "Relist Now",
           "submitting": "Relisting…"
         }
-      }
+      },
+      "rejectedLabel": "Not approved",
+      "rejectionReason": "Reason",
+      "pendingReviewHint": "Waiting for approval. The auction clock only starts once it is approved."
     },
     "myAuctionsBidder": {
       "title": "My Auctions",
@@ -2364,7 +2372,7 @@
     "proofOfDelivery": "Proof of Delivery",
     "viewProof": "View proof",
     "uploadProof": "Upload Proof",
-    "uploadingProof": "Uploading...",
+    "uploadingProof": "Uploading…",
     "leaveReview": "Leave a Review",
     "reviewLeft": "Review submitted",
     "reviewError": "Failed to submit review.",
@@ -2406,7 +2414,6 @@
     "shippingDetailsOptional": "Shipping details (optional)",
     "optional": "optional",
     "uploadProofOptional": "Upload proof of shipment (optional)",
-    "uploadingProof": "Uploading…",
     "proofUploaded": "Proof uploaded",
     "confirmPrepareShip": "Confirm & Prepare to Ship",
     "buyingStatus": {

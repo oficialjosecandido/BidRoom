@@ -48,13 +48,37 @@
 }
 
 .btn-primary,
-.btn-secondary {
+.btn-secondary,
+.btn-danger {
   border-radius: 8px;
   padding: 10px 16px;
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
   border: 1px solid transparent;
+}
+
+// Rejection is destructive for the seller — it reads as red, not as a primary action.
+.btn-danger {
+  background: #dc2626;
+  color: #fff;
+
+  &:disabled { opacity: 0.6; cursor: not-allowed; }
+}
+
+.modal-error,
+.review-error {
+  margin: 12px 0 0;
+  padding: 10px 12px;
+  font-size: 13px;
+  color: #991b1b;
+  background: #fee2e2;
+  border-left: 3px solid #dc2626;
+  border-radius: 4px;
+}
+
+.review-error {
+  margin: 0 0 16px;
 }
 
 .btn-primary {
@@ -304,6 +328,12 @@ table.auctions-row-table {
       background: #fbcfe8;
       color: #9d174d;
     }
+
+    // Amber: the queue waiting on an admin, distinct from draft (waiting on the seller).
+    &.status-pending-review {
+      background: #fef3c7;
+      color: #b45309;
+    }
   }
 
   .actions-cell {
@@ -324,7 +354,9 @@ table.auctions-row-table {
     }
   }
 
-  .action-delete {
+  .action-delete,
+  .action-approve,
+  .action-reject {
     font-size: 13px;
     font-weight: 600;
     color: #dc2626;
@@ -342,6 +374,12 @@ table.auctions-row-table {
       opacity: 0.5;
       cursor: not-allowed;
     }
+  }
+
+  // Approve is the affirmative action in the review queue, so it is the only
+  // green control in the row; reject keeps the same red as the other removals.
+  .action-approve {
+    color: #15803d;
   }
 
   .action-report {

@@ -799,7 +799,11 @@
     "feeBuyerEstimate": "€{{amount}} (máx. €500)",
     "feeBuyerNote": "Paga pelo comprador no checkout (~2,9% + €0,30, com teto de €500). O BidRoom não cobra comissão adicional ao comprador.",
     "feeReceive": "Receberá aproximadamente",
-    "specHint": "Ex: Material — Ouro 18k · Dimensões — 36mm · Referência — 5512"
+    "specHint": "Ex: Material — Ouro 18k · Dimensões — 36mm · Referência — 5512",
+    "reviewTitle": "Anúncio submetido para aprovação",
+    "reviewBody": "O seu anúncio foi criado e está agora à espera de aprovação manual pela nossa equipa. Só fica visível para os compradores depois de aprovado — e o tempo do leilão começa a contar nesse momento, não perde tempo à espera. Pode acompanhar o estado no seu painel.",
+    "reviewDashboardCta": "Ver estado no painel",
+    "reviewListingCta": "Ver o anúncio"
   },
   "listingList": {
     "searchPlaceholder": "Pesquisar leilões...",
@@ -2223,7 +2227,8 @@
         "active": "Ativo",
         "ended": "Terminado",
         "cancelled": "Cancelado",
-        "draft": "Rascunho"
+        "draft": "Rascunho",
+        "pending_review": "Em aprovação"
       },
       "relist": {
         "title": "Relistar Leilão",
@@ -2250,7 +2255,10 @@
           "submit": "Relistar Agora",
           "submitting": "A relistar…"
         }
-      }
+      },
+      "rejectedLabel": "Não aprovado",
+      "rejectionReason": "Motivo",
+      "pendingReviewHint": "À espera de aprovação. O tempo do leilão só começa quando for aprovado."
     },
     "myAuctionsBidder": {
       "title": "Meus Leilões",
@@ -2364,7 +2372,7 @@
     "proofOfDelivery": "Comprovante de Entrega",
     "viewProof": "Ver comprovante",
     "uploadProof": "Enviar Comprovante",
-    "uploadingProof": "Enviando...",
+    "uploadingProof": "A carregar…",
     "leaveReview": "Deixar uma Avaliação",
     "reviewLeft": "Avaliação enviada",
     "reviewError": "Falha ao enviar avaliação.",
@@ -2406,7 +2414,6 @@
     "shippingDetailsOptional": "Detalhes de envio (opcional)",
     "optional": "opcional",
     "uploadProofOptional": "Carregar comprovativo de envio (opcional)",
-    "uploadingProof": "A carregar…",
     "proofUploaded": "Comprovativo carregado",
     "confirmPrepareShip": "Confirmar e Preparar Envio",
     "buyingStatus": {

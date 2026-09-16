@@ -49,6 +49,15 @@ export interface Listing {
   };
   status: 'draft' | 'active' | 'pending_review' | 'ended' | 'cancelled';
   moderationWarning?: { severity: 'low' | 'medium' | 'high'; message: string; flaggedAt: string };
+  /**
+   * Outcome of the manual review every listing goes through before going live.
+   * `reason` is written by an admin for the seller to read, so it is safe to display.
+   */
+  moderationReview?: {
+    decision: 'approved' | 'rejected' | null;
+    reason: string | null;
+    reviewedAt: string | null;
+  };
   isFeatured: boolean;
   isVerified: boolean;
   verificationDetails?: string;

@@ -106,6 +106,21 @@ const listingSchema = new mongoose.Schema({
     message:  { type: String },
     flaggedAt: { type: Date }
   },
+  /**
+   * Outcome of the manual review every listing goes through before going live.
+   *
+   * Kept separate from `status` because status is where the listing *is* and
+   * this is how it got there: a rejected listing is `cancelled`, which is also
+   * what a seller-cancelled listing is, and only `decision` tells them apart.
+   * `reason` is written by an admin and shown to the seller, so it is their
+   * explanation of what to fix — not an internal note.
+   */
+  moderationReview: {
+    decision: { type: String, enum: ['approved', 'rejected'], default: null },
+    reason: { type: String, maxlength: 1000, default: null },
+    reviewedAt: { type: Date, default: null },
+    reviewedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Customer', default: null }
+  },
   // Trust and Promotion features
   isFeatured: {
     type: Boolean,
@@ -401,6 +416,8 @@ listingSchema.index({ status: 1, endDate: 1 }); // For active listings sorted by
 listingSchema.index({ category: 1, status: 1 });
 listingSchema.index({ isFeatured: -1, createdAt: -1 }); // For featured listings
 listingSchema.index({ currentPrice: 1, bidCount: 1 }); // For sorting
+// Review queue in Nexus: filtered by status, oldest-first so nobody waits behind a newer listing.
+listingSchema.index({ status: 1, createdAt: -1 });
 // Purge scheduler indexes
 listingSchema.index({ 'imageManifest.purgeAfter': 1, 'imageManifest.purged': 1 });
 listingSchema.index({ status: 1, 'imageManifest.0': 1 }); // Find ended/cancelled with empty manifests

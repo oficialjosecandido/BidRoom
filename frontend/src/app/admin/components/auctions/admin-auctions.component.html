@@ -56,6 +56,11 @@
         </p>
       </section>
 
+      <!-- Approve fails inline (no modal to host the message), so it surfaces here. -->
+      @if (reviewError && !rejectTarget) {
+        <p class="review-error">{{ reviewError }}</p>
+      }
+
       @if (isLoading) {
         <div class="loading-state">
           <div class="spinner"></div>
@@ -132,7 +137,7 @@
                       </td>
                       <td class="num bids-cell">{{ bidCount(auction) }}</td>
                       <td class="tag-cell">
-                        <span class="status-badge" [ngClass]="getStatusClass(auction.status)">{{ auction.status }}</span>
+                        <span class="status-badge" [ngClass]="getStatusClass(auction.status)">{{ statusLabel(auction.status) }}</span>
                       </td>
                       <td class="date-cell">{{ formatDate(auction.endDate) }}</td>
                       <td class="actions-cell">
@@ -140,6 +145,24 @@
                           class="action-link"
                           [routerLink]="['/nexus/auctions', auction._id]"
                           title="View details">View</a>
+                        @if (auction.status === 'pending_review') {
+                          <button
+                            type="button"
+                            class="action-approve"
+                            [disabled]="reviewingId === auction._id"
+                            (click)="approve(auction)"
+                            title="Approve and publish">
+                            {{ reviewingId === auction._id ? '…' : 'Approve' }}
+                          </button>
+                          <button
+                            type="button"
+                            class="action-reject"
+                            [disabled]="reviewingId === auction._id"
+                            (click)="openRejectModal(auction)"
+                            title="Reject with a reason">
+                            Reject
+                          </button>
+                        }
                         <button
                           type="button"
                           class="action-report"
@@ -315,6 +338,44 @@
         <button type="button" class="btn-secondary" (click)="closeImportModal()" [disabled]="importSubmitting">Cancel</button>
         <button type="button" class="btn-primary" (click)="submitImport()" [disabled]="importSubmitting || !importFile">
           {{ importSubmitting ? 'Importing…' : 'Import CSV' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+@if (rejectTarget) {
+  <div class="modal-overlay" (click)="closeRejectModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Reject listing</h2>
+        <button type="button" class="close-btn" (click)="closeRejectModal()" aria-label="Close">×</button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-help">Rejecting: <strong>{{ rejectTarget.title }}</strong></p>
+        <label>
+          Reason for the seller
+          <textarea
+            rows="4"
+            [(ngModel)]="rejectReason"
+            placeholder="e.g. The photos are too blurry to identify the item."></textarea>
+        </label>
+        <p class="modal-help">
+          This text is emailed to the seller and shown in their dashboard, in their own language.
+          Write it as the instruction on what to fix.
+        </p>
+        @if (reviewError) {
+          <p class="modal-error">{{ reviewError }}</p>
+        }
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-secondary" (click)="closeRejectModal()" [disabled]="reviewingId">Cancel</button>
+        <button
+          type="button"
+          class="btn-danger"
+          (click)="confirmReject()"
+          [disabled]="!rejectReason.trim() || reviewingId">
+          {{ reviewingId ? 'Rejecting…' : 'Reject listing' }}
         </button>
       </div>
     </div>
