@@ -1,3 +1,5 @@
+const fs = require('fs');
+const os = require('os');
 const express = require('express');
 const mongoose = require('mongoose');
 const { authenticateToken } = require('../middleware/auth');
@@ -9,10 +11,14 @@ const Review = require('../models/Review');
 const ReviewAppeal = require('../models/ReviewAppeal');
 const Report = require('../models/Report');
 const ModerationAuditLog = require('../models/ModerationAuditLog');
+const FraudEvent = require('../models/FraudEvent');
 const Bid = require('../models/Bid');
 const { sendEmail } = require('../services/emailService');
 const { renderEmailTemplate } = require('../services/templateEngine');
-const { notifyDisputeDecisionIssued, notifyDamageClaimResolved, notifyContentRestrictionLifted, emitNewNotificationToUser } = require('../services/notificationService');
+const { notifyDisputeDecisionIssued, notifyDamageClaimResolved, notifyContentRestrictionLifted, emitNewNotificationToUser, notifyGiveawayWinner, emailGiveawayWinner, notifyGiveawayResultToEntrants } = require('../services/notificationService');
+const GiveawayEntry = require('../models/GiveawayEntry');
+const { drawWinner, publicWinnerName, GiveawayError, publishDrawVideo, removeDrawVideo } = require('../services/giveawayService');
+const { detectVideoMagic } = require('../utils/videoMagic');
 const DamageClaim = require('../models/DamageClaim');
 const { applyDisputeAccountOutcome } = require('../services/accountStatusService');
 const { applyDisputeVerdictImpact } = require('../services/reputationService');
@@ -420,7 +426,7 @@ router.get('/auctions', authenticateToken, requireAdmin, async (req, res) => {
 // POST /api/admin/auctions — create listing on behalf of a seller
 router.post('/auctions', authenticateToken, requireAdmin, async (req, res) => {
   try {
-    const { listing, seller } = await createListingAsAdmin(req.body || {});
+    const { listing, seller, sellerCreated } = await createListingAsAdmin(req.body || {});
     const adminUser =
       (req.user?.uid && await Customer.findOne({ uid: req.user.uid }).select('_id').lean()) ||
       (req.user?.email && await Customer.findOne({ email: String(req.user.email).toLowerCase() }).select('_id').lean());
@@ -432,16 +438,20 @@ router.post('/auctions', authenticateToken, requireAdmin, async (req, res) => {
       metadata: {
         listingId: listing._id,
         title: listing.title,
-        auctionFormat: listing.auctionFormat
+        auctionFormat: listing.auctionFormat,
+        saleFormat: listing.saleFormat,
+        sellerCreated: !!sellerCreated
       }
     });
     return res.status(201).json({
       ok: true,
+      sellerCreated: !!sellerCreated,
       listing: {
         _id: listing._id,
         title: listing.title,
         slug: listing.slug,
         status: listing.status,
+        saleFormat: listing.saleFormat,
         endDate: listing.endDate,
         seller: { _id: seller._id, email: seller.email, firstName: seller.firstName, lastName: seller.lastName }
       }
@@ -1945,6 +1955,524 @@ router.delete('/moderation/blocklist/:itemId', authenticateToken, requireAdmin, 
     return res.status(500).json({ error: 'Failed to remove term', message: err.message });
   }
 });
+
+// ─── Compliance flags (vehicle / AML review queue) ──────────────────────────
+// These are FraudEvents, but the three vehicle types are compliance rather than
+// bidding fraud: nothing was blocked, and the queue exists so a human decides.
+// Until now FraudEvent was write-only — flags were recorded and never seen.
+
+/** The flag types raised by vehicle compliance and AML monitoring. */
+const COMPLIANCE_FLAG_TYPES = ['undeclared_professional', 'aml_repeat_winner', 'aml_new_seller_high_value'];
+
+/**
+ * GET /api/admin/compliance-flags
+ * Query: ?resolved=true|false (default false), ?type=, ?page=, ?limit=
+ */
+router.get('/compliance-flags', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const page = Math.max(1, parseInt(req.query.page) || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit) || 50));
+    const skip = (page - 1) * limit;
+
+    const type = COMPLIANCE_FLAG_TYPES.includes(req.query.type) ? req.query.type : null;
+    const filter = {
+      type: type ? type : { $in: COMPLIANCE_FLAG_TYPES },
+      resolved: req.query.resolved === 'true'
+    };
+
+    const [flags, total] = await Promise.all([
+      FraudEvent.find(filter)
+        .populate('userId', 'firstName lastName email sellerClassification kycStatus createdAt')
+        .populate('listingId', 'title slug category startingPrice buyNowPrice')
+        .sort({ severity: -1, createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      FraudEvent.countDocuments(filter)
+    ]);
+
+    res.json({ flags, total, page, limit, pages: Math.ceil(total / limit) });
+  } catch (error) {
+    logger.error('Error fetching compliance flags:', error);
+    res.status(500).json({ error: 'Failed to fetch compliance flags', message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error' });
+  }
+});
+
+/**
+ * PATCH /api/admin/compliance-flags/:id
+ * Close a flag. Body: { resolutionNote }
+ *
+ * Resolving records a decision; it does not act on the account. Reclassifying a
+ * seller or restricting them stays with the routes that already do that, so the
+ * reviewer's action is always explicit.
+ */
+router.patch('/compliance-flags/:id', authenticateToken, requireAdmin, async (req, res) => {
+  if (!isValidObjectId(req.params.id)) return res.status(400).json({ error: 'Invalid flag ID' });
+  try {
+    const note = String(req.body?.resolutionNote || '').trim();
+    if (!note) {
+      return res.status(400).json({
+        error: 'resolutionNote is required',
+        message: 'Record what you concluded — a closed flag with no reasoning is not evidence of review.'
+      });
+    }
+
+    const flag = await FraudEvent.findById(req.params.id);
+    if (!flag) return res.status(404).json({ error: 'Flag not found' });
+    if (!COMPLIANCE_FLAG_TYPES.includes(flag.type)) {
+      return res.status(400).json({ error: 'Not a compliance flag', message: `Type "${flag.type}" is not reviewed here.` });
+    }
+    if (flag.resolved) {
+      return res.status(400).json({ error: 'Already resolved', message: 'This flag has already been reviewed.' });
+    }
+
+    flag.resolved = true;
+    flag.resolvedAt = new Date();
+    flag.resolvedByEmail = req.user?.email || 'admin';
+    flag.resolutionNote = note.slice(0, 2000);
+    await flag.save();
+
+    appendModerationAudit({
+      subjectUserId: flag.userId,
+      actionType: 'compliance_flag_resolved',
+      performedByEmail: req.user?.email || null,
+      metadata: { flagId: flag._id, type: flag.type, resolutionNote: flag.resolutionNote }
+    });
+
+    res.json({ success: true, flag });
+  } catch (error) {
+    logger.error('Error resolving compliance flag:', error);
+    res.status(500).json({ error: 'Failed to resolve flag', message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error' });
+  }
+});
+
+// ─── Giveaways ───────────────────────────────────────────────────────────────
+// Created through POST /api/listings (admin-only for this format). Nexus is
+// where they are watched and drawn. Counts come from the entries themselves,
+// not from giveaway.entryCount: that counter hands out serial numbers and can
+// skip one, so it is an upper bound rather than a headcount.
+
+/** Which lifecycle bucket a giveaway listing is in, as Nexus shows it. */
+function giveawayPhase(listing) {
+  if (listing.giveaway?.drawnAt) return 'drawn';
+  if (listing.status === 'pending_review' || listing.status === 'draft') return 'pending';
+  if (listing.status === 'cancelled') return 'cancelled';
+  if (listing.status === 'active' && new Date(listing.endDate) > new Date()) return 'open';
+  return 'closed';
+}
+
+/**
+ * GET /api/admin/giveaways
+ * Query: ?phase=open|closed|drawn|pending|all (default all), ?page=, ?limit=
+ */
+router.get('/giveaways', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const page = Math.max(1, parseInt(req.query.page) || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit) || 50));
+    const skip = (page - 1) * limit;
+    const now = new Date();
+
+    const filter = { saleFormat: 'giveaway' };
+    switch (req.query.phase) {
+      case 'open':
+        Object.assign(filter, { status: 'active', endDate: { $gt: now }, 'giveaway.drawnAt': null });
+        break;
+      case 'closed':
+        // Entries over, nobody drawn yet — the queue that needs a decision.
+        Object.assign(filter, {
+          'giveaway.drawnAt': null,
+          $or: [{ status: 'ended' }, { status: 'active', endDate: { $lte: now } }]
+        });
+        break;
+      case 'drawn':
+        filter['giveaway.drawnAt'] = { $ne: null };
+        break;
+      case 'pending':
+        filter.status = { $in: ['pending_review', 'draft'] };
+        break;
+      default:
+        break;
+    }
+
+    const [listings, total] = await Promise.all([
+      Listing.find(filter)
+        .select('title titlePt slug images status startDate endDate createdAt category condition giveaway.entryCount giveaway.drawnAt giveaway.winnerEntry giveaway.winner giveaway.drawVideo +giveaway.drawnByEmail +giveaway.winnerEmailedAt')
+        .populate('giveaway.winner', 'firstName lastName email')
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      Listing.countDocuments(filter)
+    ]);
+
+    const counts = listings.length
+      ? await GiveawayEntry.aggregate([
+          { $match: { listing: { $in: listings.map(l => l._id) } } },
+          { $group: { _id: '$listing', n: { $sum: 1 } } }
+        ])
+      : [];
+    const countById = new Map(counts.map(c => [String(c._id), c.n]));
+
+    const giveaways = listings.map(l => ({
+      ...l,
+      phase: giveawayPhase(l),
+      totalEntries: countById.get(String(l._id)) || 0
+    }));
+
+    res.json({ giveaways, total, page, limit, pages: Math.max(1, Math.ceil(total / limit)) });
+  } catch (error) {
+    logger.error('Error fetching giveaways:', error);
+    res.status(500).json({ error: 'Failed to fetch giveaways', message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error' });
+  }
+});
+
+/**
+ * GET /api/admin/giveaways/:id/entries
+ * The giveaway and its entries in serial order. Query: ?page=, ?limit= (max 500)
+ */
+router.get('/giveaways/:id/entries', authenticateToken, requireAdmin, async (req, res) => {
+  if (!isValidObjectId(req.params.id)) return res.status(400).json({ error: 'Invalid giveaway ID' });
+  try {
+    const page = Math.max(1, parseInt(req.query.page) || 1);
+    const limit = Math.min(500, Math.max(1, parseInt(req.query.limit) || 100));
+    const skip = (page - 1) * limit;
+
+    const listing = await Listing.findById(req.params.id)
+      .select('title titlePt slug images status startDate endDate createdAt saleFormat seller giveaway.entryCount giveaway.drawnAt giveaway.winnerEntry giveaway.winner giveaway.drawVideo +giveaway.drawnByEmail +giveaway.winnerEmailedAt')
+      .populate('giveaway.winner', 'firstName lastName email')
+      .populate('seller', 'firstName lastName email')
+      .lean();
+    if (!listing || listing.saleFormat !== 'giveaway') {
+      return res.status(404).json({ error: 'Giveaway not found' });
+    }
+
+    const [entries, total] = await Promise.all([
+      GiveawayEntry.find({ listing: listing._id })
+        .populate('participant', 'firstName lastName email')
+        .sort({ entryNumber: 1 })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      GiveawayEntry.countDocuments({ listing: listing._id })
+    ]);
+
+    res.json({
+      giveaway: { ...listing, phase: giveawayPhase(listing), totalEntries: total },
+      entries,
+      total,
+      page,
+      limit,
+      pages: Math.max(1, Math.ceil(total / limit))
+    });
+  } catch (error) {
+    logger.error('Error fetching giveaway entries:', error);
+    res.status(500).json({ error: 'Failed to fetch entries', message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error' });
+  }
+});
+
+/** How long the draw response waits for the winner email before answering "pending". */
+const WINNER_EMAIL_WAIT_MS = 15 * 1000;
+
+/**
+ * POST /api/admin/giveaways/:id/draw
+ *
+ * Draws the winner — once. The service does the drawing and guarantees a
+ * single result; this route records who pressed the button and tells the
+ * winner (in the app and by email) and everyone else who entered which number
+ * came out.
+ */
+router.post('/giveaways/:id/draw', authenticateToken, requireAdmin, async (req, res) => {
+  if (!isValidObjectId(req.params.id)) return res.status(400).json({ error: 'Invalid giveaway ID' });
+  try {
+    const admin = await resolveAdminActor(req);
+    const result = await drawWinner({ listingId: req.params.id, adminEmail: admin.email });
+    const { listing, winnerEntry, totalEntries, winner } = result;
+    const io = req.app.get('io');
+    const listingTitle = listing.titlePt || listing.title || '';
+
+    await appendModerationAudit({
+      subjectUserId: winner._id,
+      actionType: 'giveaway_winner_drawn',
+      performedByUserId: admin._id,
+      performedByEmail: admin.email,
+      metadata: {
+        listingId: String(listing._id),
+        slug: listing.slug,
+        winnerEntry,
+        totalEntries,
+        method: 'crypto.randomInt',
+        drawnAt: listing.giveaway?.drawnAt
+      },
+      ip: req.ip || null
+    });
+
+    notifyGiveawayWinner({
+      listingSlug: listing.slug,
+      listingTitle,
+      winnerUserId: winner._id,
+      entryNumber: winnerEntry,
+      io
+    }).catch(err => logger.error('Giveaway winner notification failed:', err.message));
+
+    // The email is waited for, so the admin learns straight away whether the
+    // winner was reached — but not forever: a slow mail server must not hold
+    // the response (the draw itself is already committed). If it is still
+    // going when the wait runs out it carries on, and giveaway.winnerEmailedAt
+    // records it once it lands.
+    const winnerEmail = await Promise.race([
+      emailGiveawayWinner({ listingId: listing._id, winnerUserId: winner._id, entryNumber: winnerEntry, totalEntries }),
+      new Promise(resolve => setTimeout(() => resolve(null), WINNER_EMAIL_WAIT_MS).unref())
+    ]);
+
+    GiveawayEntry.distinct('participant', { listing: listing._id })
+      .then(participantIds => notifyGiveawayResultToEntrants({
+        listingSlug: listing.slug,
+        listingTitle,
+        participantIds,
+        winnerEntry,
+        winnerUserId: winner._id,
+        io
+      }))
+      .catch(err => logger.error('Giveaway result notification failed:', err.message));
+
+    if (io) {
+      io.to(`listing:${listing._id}`).emit('giveaway-drawn', {
+        listingId: String(listing._id),
+        winnerEntry,
+        winnerName: publicWinnerName(winner)
+      });
+    }
+
+    res.json({
+      success: true,
+      winnerEntry,
+      totalEntries,
+      drawnAt: listing.giveaway?.drawnAt,
+      winner: {
+        _id: winner._id,
+        firstName: winner.firstName,
+        lastName: winner.lastName,
+        email: winner.email,
+        publicName: publicWinnerName(winner)
+      },
+      winnerEmail: winnerEmail ? (winnerEmail.sent ? 'sent' : 'failed') : 'pending',
+      winnerEmailedAt: winnerEmail?.emailedAt || null
+    });
+  } catch (error) {
+    if (error instanceof GiveawayError) {
+      return res.status(error.statusCode).json({ error: error.code, message: error.message, ...error.details });
+    }
+    logger.error('Error drawing giveaway winner:', error);
+    res.status(500).json({ error: 'Failed to draw winner', message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error' });
+  }
+});
+
+/** Send a giveaway error the way every giveaway route does. Returns true if it was one. */
+function sendGiveawayError(res, error) {
+  if (!(error instanceof GiveawayError)) return false;
+  res.status(error.statusCode).json({ error: error.code, message: error.message, ...error.details });
+  return true;
+}
+
+/**
+ * POST /api/admin/giveaways/:id/email-winner
+ *
+ * Send the winner email again — for when it failed at draw time, or the winner
+ * says it never arrived. Each send is audited.
+ */
+router.post('/giveaways/:id/email-winner', authenticateToken, requireAdmin, async (req, res) => {
+  if (!isValidObjectId(req.params.id)) return res.status(400).json({ error: 'Invalid giveaway ID' });
+  try {
+    const listing = await Listing.findById(req.params.id).select('saleFormat slug giveaway.drawnAt giveaway.winner giveaway.winnerEntry giveaway.entryCount').lean();
+    if (!listing || listing.saleFormat !== 'giveaway') return res.status(404).json({ error: 'giveaway_not_found', message: 'Giveaway not found.' });
+    if (!listing.giveaway?.drawnAt || !listing.giveaway.winner) {
+      return res.status(400).json({ error: 'giveaway_not_drawn', message: 'There is no winner to email yet.' });
+    }
+
+    const totalEntries = await GiveawayEntry.countDocuments({ listing: listing._id });
+    const result = await emailGiveawayWinner({
+      listingId: listing._id,
+      winnerUserId: listing.giveaway.winner,
+      entryNumber: listing.giveaway.winnerEntry,
+      totalEntries
+    });
+
+    const admin = await resolveAdminActor(req);
+    await appendModerationAudit({
+      subjectUserId: listing.giveaway.winner,
+      actionType: 'giveaway_winner_emailed',
+      performedByUserId: admin._id,
+      performedByEmail: admin.email,
+      metadata: { listingId: String(listing._id), slug: listing.slug, sent: result.sent },
+      ip: req.ip || null
+    });
+
+    if (!result.sent) {
+      return res.status(502).json({ error: 'giveaway_email_failed', message: 'The email could not be sent. Try again in a few minutes.' });
+    }
+    res.json({ success: true, winnerEmailedAt: result.emailedAt });
+  } catch (error) {
+    logger.error('Error emailing giveaway winner:', error);
+    res.status(500).json({ error: 'Failed to email winner', message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error' });
+  }
+});
+
+/**
+ * POST /api/admin/giveaways/:id/draw-video
+ * Body: { url, type? } — a YouTube or Instagram link (or one of our uploads).
+ *
+ * Publishes the recording of the draw on the giveaway page. Only once the
+ * winner has been drawn. The link is checked and stored in canonical form by
+ * the service; replacing an existing video is allowed and audited with both URLs.
+ */
+router.post('/giveaways/:id/draw-video', authenticateToken, requireAdmin, async (req, res) => {
+  if (!isValidObjectId(req.params.id)) return res.status(400).json({ error: 'Invalid giveaway ID' });
+  try {
+    const { url, type } = req.body || {};
+    const result = await publishDrawVideo({
+      listingId: req.params.id,
+      url,
+      type,
+      uploadBaseUrl: azureStorageService.getGiveawayVideoBaseUrl()
+    });
+    await auditDrawVideo(req, 'giveaway_draw_video_published', result, { url: result.drawVideo.url, type: result.drawVideo.type, replaced: result.previous?.url || null });
+    res.json({ success: true, drawVideo: result.drawVideo });
+  } catch (error) {
+    if (sendGiveawayError(res, error)) return;
+    logger.error('Error publishing giveaway draw video:', error);
+    res.status(500).json({ error: 'Failed to publish draw video', message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error' });
+  }
+});
+
+const DRAW_VIDEO_MAX_BYTES = 200 * 1024 * 1024;
+const drawVideoUpload = multer({
+  // On disk, not in memory: a few of these at once would otherwise sit whole in RAM.
+  storage: multer.diskStorage({ destination: os.tmpdir() }),
+  limits: { fileSize: DRAW_VIDEO_MAX_BYTES, files: 1 },
+  fileFilter: (_req, file, cb) => {
+    // A first pass only — browsers disagree on the type of a .mov (or send
+    // none). What decides is the file's own bytes, checked after upload.
+    const name = String(file.originalname || '').toLowerCase();
+    const okType = ['video/mp4', 'video/quicktime', 'video/webm', 'video/x-m4v'].includes(file.mimetype);
+    const okName = /\.(mp4|m4v|mov|webm)$/.test(name);
+    cb(okType || okName ? null : Object.assign(new Error('Only MP4, MOV or WebM videos are accepted.'), { code: 'INVALID_VIDEO_TYPE' }), okType || okName);
+  }
+});
+
+/**
+ * POST /api/admin/giveaways/:id/draw-video/upload
+ * multipart/form-data, field "video" (MP4, MOV or WebM, up to 200 MB).
+ *
+ * Uploads the recording to our storage and publishes it. The giveaway is
+ * checked before a single byte is accepted, so a video for an undrawn
+ * giveaway is refused without uploading it first.
+ */
+router.post('/giveaways/:id/draw-video/upload', authenticateToken, requireAdmin, async (req, res, next) => {
+  if (!isValidObjectId(req.params.id)) return res.status(400).json({ error: 'Invalid giveaway ID' });
+  try {
+    const listing = await Listing.findById(req.params.id).select('saleFormat giveaway.drawnAt').lean();
+    if (!listing || listing.saleFormat !== 'giveaway') return res.status(404).json({ error: 'giveaway_not_found', message: 'Giveaway not found.' });
+    if (!listing.giveaway?.drawnAt) {
+      return res.status(400).json({ error: 'giveaway_not_drawn', message: 'Draw a winner before publishing the draw video.' });
+    }
+    if (!azureStorageService.getGiveawayVideoBaseUrl()) {
+      return res.status(503).json({ error: 'storage_not_configured', message: 'Video storage is not configured.' });
+    }
+  } catch (error) {
+    return next(error);
+  }
+
+  drawVideoUpload.single('video')(req, res, (err) => {
+    if (!err) return next();
+    if (req.file?.path) fs.promises.unlink(req.file.path).catch(() => {});
+    if (err.code === 'LIMIT_FILE_SIZE') {
+      return res.status(413).json({ error: 'giveaway_video_too_large', message: 'The video must be 200 MB or less.' });
+    }
+    if (err.code === 'INVALID_VIDEO_TYPE') {
+      return res.status(400).json({ error: 'giveaway_video_invalid_type', message: err.message });
+    }
+    return res.status(400).json({ error: 'upload_error', message: err.message || 'Invalid file.' });
+  });
+}, async (req, res) => {
+  const tempPath = req.file?.path;
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'giveaway_video_missing', message: 'Choose a video file to upload.' });
+    }
+
+    const head = Buffer.alloc(16);
+    const handle = await fs.promises.open(tempPath, 'r');
+    try {
+      await handle.read(head, 0, head.length, 0);
+    } finally {
+      await handle.close();
+    }
+    const mimetype = detectVideoMagic(head);
+    if (!mimetype) {
+      return res.status(400).json({ error: 'giveaway_video_invalid_type', message: 'That file is not an MP4, MOV or WebM video.' });
+    }
+
+    const url = await azureStorageService.uploadGiveawayVideo(tempPath, req.file.originalname, mimetype);
+    const result = await publishDrawVideo({
+      listingId: req.params.id,
+      url,
+      type: 'upload',
+      uploadBaseUrl: azureStorageService.getGiveawayVideoBaseUrl()
+    });
+    await auditDrawVideo(req, 'giveaway_draw_video_published', result, {
+      url: result.drawVideo.url,
+      type: 'upload',
+      bytes: req.file.size,
+      contentType: mimetype,
+      replaced: result.previous?.url || null
+    });
+    res.json({ success: true, drawVideo: result.drawVideo });
+  } catch (error) {
+    if (sendGiveawayError(res, error)) return;
+    logger.error('Error uploading giveaway draw video:', error);
+    res.status(500).json({ error: 'Failed to upload draw video', message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error' });
+  } finally {
+    if (tempPath) fs.promises.unlink(tempPath).catch(() => {});
+  }
+});
+
+/**
+ * DELETE /api/admin/giveaways/:id/draw-video
+ * Takes the video off the giveaway page. An uploaded file stays in storage
+ * (the audit trail points at it); only the link from the page goes.
+ */
+router.delete('/giveaways/:id/draw-video', authenticateToken, requireAdmin, async (req, res) => {
+  if (!isValidObjectId(req.params.id)) return res.status(400).json({ error: 'Invalid giveaway ID' });
+  try {
+    const result = await removeDrawVideo({ listingId: req.params.id });
+    if (result.removed) {
+      await auditDrawVideo(req, 'giveaway_draw_video_removed', result, { url: result.removed.url, type: result.removed.type });
+    }
+    res.json({ success: true, removed: !!result.removed });
+  } catch (error) {
+    if (sendGiveawayError(res, error)) return;
+    logger.error('Error removing giveaway draw video:', error);
+    res.status(500).json({ error: 'Failed to remove draw video', message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error' });
+  }
+});
+
+/** Audit a draw-video change against the giveaway's winner (the person the draw concerns). */
+async function auditDrawVideo(req, actionType, result, metadata) {
+  const [admin, listing] = await Promise.all([
+    resolveAdminActor(req),
+    Listing.findById(req.params.id).select('slug seller giveaway.winner').lean()
+  ]);
+  const subjectUserId = listing?.giveaway?.winner || listing?.seller;
+  if (!subjectUserId) return;
+  await appendModerationAudit({
+    subjectUserId,
+    actionType,
+    performedByUserId: admin._id,
+    performedByEmail: admin.email,
+    metadata: { listingId: String(req.params.id), slug: result.slug || listing.slug, ...metadata },
+    ip: req.ip || null
+  });
+}
 
 module.exports = router;
 

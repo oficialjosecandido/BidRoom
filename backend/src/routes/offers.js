@@ -192,6 +192,15 @@ async function createOffer(req, res) {
       }
     }
 
+    // A giveaway is free to enter and cannot be bought — see routes/bids.js for
+    // why this is refused at the API rather than only hidden in the UI.
+    if (listing.saleFormat === 'giveaway') {
+      return res.status(400).json({
+        error: 'giveaway_no_offers',
+        message: 'This is a free giveaway, not a sale. Entry is free — there is nothing to offer.'
+      });
+    }
+
     // Verify it's a Best Offer listing
     if (listing.auctionFormat !== 'best-offer') {
       return res.status(400).json({

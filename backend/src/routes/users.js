@@ -114,7 +114,7 @@ router.get('/:id/profile', validate(profileParamsSchema), async (req, res) => {
         Transaction.countDocuments({ buyer: oid, status: 'completed' }),
         Follow.countDocuments({ following: oid }),
         Listing.find({ seller: user._id, status: 'active' })
-          .select('_id slug title images currentPrice startingPrice bidCount endDate auctionFormat')
+          .select('_id slug title images currentPrice startingPrice bidCount endDate auctionFormat saleFormat')
           .sort({ endDate: 1 })
           .limit(20)
           .lean()

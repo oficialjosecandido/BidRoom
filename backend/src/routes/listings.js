@@ -20,6 +20,13 @@ const { appendModerationAudit } = require('../services/moderationAuditService');
 const { scanListingText } = require('../services/contentSafetyService');
 const { recordViolation } = require('../services/contentViolationService');
 const { createTransactionForBuyNow } = require('../services/transactionService');
+const {
+  assertVehicleListingAllowed,
+  VehicleComplianceError,
+  flagUndeclaredProfessional
+} = require('../services/vehicleComplianceService');
+const { onVehicleListingCreated } = require('../services/amlMonitorService');
+const { isAdminEmail } = require('../utils/roles');
 const logger = require('../utils/logger');
 const { recordViewIfNew } = require('../utils/viewCounter');
 
@@ -1161,6 +1168,19 @@ router.post('/', authenticateToken, requireActiveAccount, requireNoDisputeRestri
       }
     }
 
+    // A giveaway is a listing with no price, and running one carries legal
+    // duties a marketplace cannot delegate to its sellers: it is only lawful
+    // while entry stays free, and the organiser is answerable for the rules,
+    // the fairness of the draw and the participants' data. So BidRoom runs
+    // them itself — sellers may not.
+    const isGiveaway = req.body?.saleFormat === 'giveaway';
+    if (isGiveaway && !isAdminEmail(req.user?.email)) {
+      return res.status(403).json({
+        error: 'giveaway_admin_only',
+        message: 'Only BidRoom administrators can create giveaways.'
+      });
+    }
+
     // Extract and validate required fields
     const {
       title,
@@ -1246,8 +1266,30 @@ router.post('/', authenticateToken, requireActiveAccount, requireNoDisputeRestri
         error: 'Vehicle listings only support in-person collection (local-pickup).'
       });
     }
-    if (!returnPolicy) {
+    // A giveaway has no purchase, so there is nothing to return and no return
+    // policy to choose — it is fixed rather than asked for.
+    const resolvedReturnPolicy = isGiveaway ? 'no-returns' : returnPolicy;
+    if (!resolvedReturnPolicy) {
       return res.status(400).json({ error: 'Return policy is required' });
+    }
+
+    // Giving away a vehicle is not the same problem as giving away a watch:
+    // it carries the trader/warranty and AML duties built for a *sale*, plus
+    // registration and prize-tax questions this feature does not answer. Property
+    // raises the same questions, only larger. Until those are settled, both stay out.
+    if (isGiveaway && ['vehicles', 'real-estate'].includes(resolvedCategory.toLowerCase().replace(/\s+/g, '-'))) {
+      return res.status(400).json({
+        error: 'giveaway_category_not_allowed',
+        message: 'Vehicles and property cannot be given away — they carry transfer and tax obligations this format does not cover.'
+      });
+    }
+    // "Free" has to hold for the winner too. A prize that costs postage to
+    // receive is a prize with a price, so a giveaway ships free or is collected.
+    if (isGiveaway && !['free', 'local-pickup'].includes(shippingOption)) {
+      return res.status(400).json({
+        error: 'giveaway_shipping_must_be_free',
+        message: 'A giveaway must ship free or be collected in person — the winner cannot be charged to receive the prize.'
+      });
     }
     // Note: Image upload will be handled separately. For now, allow empty images array.
     // Frontend should upload images first, then send URLs in the images array.
@@ -1266,8 +1308,29 @@ router.post('/', authenticateToken, requireActiveAccount, requireNoDisputeRestri
       }
     }
 
+    // Vehicles carry obligations the rest of the catalogue does not — a declared
+    // seller classification (DL 84/2021 warranty), verified identity and a value
+    // ceiling (Lei 83/2017). The service decides; here we only translate its
+    // refusal into a response the frontend can route on.
+    try {
+      assertVehicleListingAllowed({
+        category: resolvedCategory.toLowerCase().replace(/\s+/g, '-'),
+        seller: user,
+        startingPrice,
+        buyNowPrice,
+        vehicleAmlDeclaration: req.body?.vehicleAmlDeclaration === true
+      });
+    } catch (err) {
+      if (!(err instanceof VehicleComplianceError)) throw err;
+      return res.status(err.statusCode).json({
+        error: err.code,
+        message: err.message,
+        ...err.details
+      });
+    }
+
     // Validate format-specific fields
-    const isAuction = listingFormat === 'highest-bid' || listingFormat === 'auction';
+    const isAuction = !isGiveaway && (listingFormat === 'highest-bid' || listingFormat === 'auction');
     if (isAuction) {
       if (!startingPrice || startingPrice <= 0) {
         return res.status(400).json({ error: 'Starting bid is required for auction format' });
@@ -1442,6 +1505,7 @@ router.post('/', authenticateToken, requireActiveAccount, requireNoDisputeRestri
       category: resolvedCategory.toLowerCase().replace(/\s+/g, '-'), // Normalize category
       subCategory: resolvedSubCategory.trim(),
       condition,
+      saleFormat: isGiveaway ? 'giveaway' : 'auction',
       auctionFormat: (listingFormat === 'best-offer') ? 'best-offer' : 'highest-bid',
       // Best Offer sales don't set `winner` on acceptance, so auto-relist eligibility
       // (status: ended, winner: null) can't distinguish "unsold" from "sold via offer" — restrict to auctions.
@@ -1449,30 +1513,35 @@ router.post('/', authenticateToken, requireActiveAccount, requireNoDisputeRestri
       durationSlot,
       startingPrice: isAuction ? parseFloat(startingPrice) : 0,
       currentPrice: isAuction ? parseFloat(startingPrice) : 0,
-      buyNowPrice: buyNowPrice ? parseFloat(buyNowPrice) : undefined,
-      minimumOfferPrice: minimumOfferPrice ? parseFloat(minimumOfferPrice) : undefined,
-      allowPrivateRoom: allowPrivateRoom === true || allowPrivateRoom === 'true',
-      commissionRate: commissionRate ? parseFloat(commissionRate) / 100 : undefined, // Convert percentage to decimal
+      // Every way of paying for the item is switched off on a giveaway. Free
+      // entry is the one thing that keeps this a contest and not a lottery, so
+      // it is enforced here rather than left to the caller not to send a price.
+      buyNowPrice: !isGiveaway && buyNowPrice ? parseFloat(buyNowPrice) : undefined,
+      minimumOfferPrice: !isGiveaway && minimumOfferPrice ? parseFloat(minimumOfferPrice) : undefined,
+      allowPrivateRoom: !isGiveaway && (allowPrivateRoom === true || allowPrivateRoom === 'true'),
+      commissionRate: !isGiveaway && commissionRate ? parseFloat(commissionRate) / 100 : undefined, // Convert percentage to decimal
       location: location || undefined,
       locationCity: locationCity && String(locationCity).trim() ? String(locationCity).trim() : undefined,
       locationCountry:
         locationCountry && /^[A-Za-z]{2}$/.test(String(locationCountry).trim())
           ? String(locationCountry).trim().toUpperCase()
           : undefined,
-      shippingCost: shippingCost ? parseFloat(shippingCost) : 0,
+      shippingCost: !isGiveaway && shippingCost ? parseFloat(shippingCost) : 0,
       shippingOption,
       packageSize: shippingOption === 'calculated' ? (packageSize || null) : null,
       shippingOriginPostalCode: shippingOption === 'calculated' ? (shippingOriginPostalCode || null) : null,
       shippingOriginCity: shippingOption === 'calculated' ? (shippingOriginCity || null) : null,
       shippingOriginCountry: shippingOption === 'calculated' ? (shippingOriginCountry || 'US') : null,
       handlingTime: 5,
-      returnPolicy,
-      acceptedPaymentMethods: {
-        stripe: acceptedPaymentMethods?.stripe !== false,
-        inPerson: acceptedPaymentMethods?.inPerson === true || user.sellerPaymentConfig?.inPerson === true,
-        bankTransfer: acceptedPaymentMethods?.bankTransfer === true || user.sellerPaymentConfig?.bankTransfer?.enabled === true,
-        mbway: acceptedPaymentMethods?.mbway === true || user.sellerPaymentConfig?.mbway?.enabled === true,
-      },
+      returnPolicy: resolvedReturnPolicy,
+      acceptedPaymentMethods: isGiveaway
+        ? { stripe: false, inPerson: false, bankTransfer: false, mbway: false }
+        : {
+            stripe: acceptedPaymentMethods?.stripe !== false,
+            inPerson: acceptedPaymentMethods?.inPerson === true || user.sellerPaymentConfig?.inPerson === true,
+            bankTransfer: acceptedPaymentMethods?.bankTransfer === true || user.sellerPaymentConfig?.bankTransfer?.enabled === true,
+            mbway: acceptedPaymentMethods?.mbway === true || user.sellerPaymentConfig?.mbway?.enabled === true,
+          },
       specifications: specifications || [],
       attributes: cleanedAttributes,
       images: Array.isArray(images) && images.length > 0 ? images : ['https://via.placeholder.com/400x300?text=No+Image'],
@@ -1482,6 +1551,10 @@ router.post('/', authenticateToken, requireActiveAccount, requireNoDisputeRestri
         ? bundleItems.slice(0, 50).map(b => ({ title: String(b.title || '').trim().slice(0, 100), description: String(b.description || '').trim().slice(0, 500) })).filter(b => b.title)
         : [],
       seller: user._id,
+      // Only vehicles are asked for this, and the gate above has already
+      // refused the request if it was not given.
+      vehicleAmlAcceptedAt:
+        resolvedCategory.toLowerCase().replace(/\s+/g, '-') === 'vehicles' ? new Date() : null,
       // Every listing is manually approved in Nexus before going live. The
       // automated content warning no longer decides the status — it only rides
       // along so the reviewer sees what the filter flagged.
@@ -1543,6 +1616,14 @@ router.post('/', authenticateToken, requireActiveAccount, requireNoDisputeRestri
 
     // Auto-clear the seller's in-progress draft now that the listing is published
     ListingDraft.deleteOne({ seller: user._id }).catch(() => {});
+
+    // Compliance monitoring for vehicles: raises flags for a human to review,
+    // never blocks. Deliberately not awaited — the seller is not waiting on it,
+    // and neither service throws.
+    if (listing.category === 'vehicles') {
+      flagUndeclaredProfessional(user).catch(() => {});
+      onVehicleListingCreated(user, listing).catch(() => {});
+    }
 
     // Followers, category followers and similar-item watchers are told when the
     // listing is approved, not now — see services/listingReviewService.js. Until
@@ -1622,6 +1703,15 @@ router.patch('/:id', authenticateToken, requireActiveAccount, async (req, res) =
       });
     }
 
+    // Entries lock a giveaway the way bids lock an auction: people entered to win
+    // the prize as it was described, and the rules they accepted describe it too.
+    if (listing.saleFormat === 'giveaway' && (listing.giveaway?.entryCount || 0) > 0) {
+      return res.status(403).json({
+        error: 'giveaway_locked',
+        message: 'This giveaway cannot be edited because people have already entered.'
+      });
+    }
+
     if (!isDraft && !isLive) {
       return res.status(400).json({ error: 'Only draft or active listings can be edited.' });
     }
@@ -1652,6 +1742,22 @@ router.patch('/:id', authenticateToken, requireActiveAccount, async (req, res) =
     const updates = {};
     for (const key of allowedKeys) {
       if (key in body) updates[key] = body[key];
+    }
+
+    // Whether a listing is a giveaway is decided once, at creation, behind the
+    // admin check there. Draft edits accept any key, so without this a seller
+    // could turn a draft into a giveaway — or write its winner — by PATCH.
+    for (const key of Object.keys(updates)) {
+      if (key === 'saleFormat' || key === 'giveaway' || key.startsWith('giveaway.')) delete updates[key];
+    }
+    if (listing.saleFormat === 'giveaway') {
+      if ('shippingOption' in updates && !['free', 'local-pickup'].includes(updates.shippingOption)) {
+        return res.status(400).json({
+          error: 'giveaway_shipping_must_be_free',
+          message: 'A giveaway must ship free or be collected in person — the winner cannot be charged to receive the prize.'
+        });
+      }
+      if ('shippingCost' in updates) updates.shippingCost = 0;
     }
 
     const hasLocaleUpdate = ['title', 'titlePt', 'titleEn', 'titleFr', 'titleEs', 'description', 'descriptionPt', 'descriptionEn', 'descriptionFr', 'descriptionEs']
@@ -2036,6 +2142,17 @@ router.post('/:id/reopen', authenticateToken, requireActiveAccount, async (req, 
       });
     }
 
+    // A giveaway's winner lives in giveaway.winner, not listing.winner, so the
+    // check below would let a drawn giveaway reopen. And reopening an undrawn
+    // one changes the published closing date after entries closed — the rules
+    // said when it ends, and they do not get rewritten afterwards.
+    if (listing.saleFormat === 'giveaway') {
+      return res.status(400).json({
+        error: 'giveaway_cannot_reopen',
+        message: 'A giveaway cannot be reopened once entries have closed.'
+      });
+    }
+
     if (listing.winner) {
       return res.status(400).json({
         error: 'Winner already selected',
@@ -2110,6 +2227,16 @@ router.post('/:id/relist', authenticateToken, requireActiveAccount, async (req, 
 
     if (listing.status !== 'ended') {
       return res.status(400).json({ error: 'Only ended listings can be relisted' });
+    }
+
+    // Relisting copies a listing into a new *auction* — saleFormat is not
+    // carried over — which would put the prize up for sale at a price of 0.
+    // A new giveaway is created as one, behind the admin check.
+    if (listing.saleFormat === 'giveaway') {
+      return res.status(400).json({
+        error: 'giveaway_cannot_relist',
+        message: 'A giveaway cannot be relisted. Create a new giveaway instead.'
+      });
     }
 
     if (listing.winner) {

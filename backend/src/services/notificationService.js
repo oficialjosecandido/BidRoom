@@ -6,6 +6,10 @@ const CategoryFollow = require('../models/CategoryFollow');
 const Watchlist = require('../models/Watchlist');
 const Listing = require('../models/Listing');
 const { reviewNotificationCopy } = require('./listingReviewMessages');
+const { giveawayNotificationCopy, formatEntry, resolveLanguage } = require('./giveawayMessages');
+const { sendEmail } = require('./emailService');
+const { renderEmailTemplate } = require('./templateEngine');
+const { publicBaseUrl } = require('../utils/publicUrls');
 const logger = require('../utils/logger');
 
 // In-memory debounce: prevent outbid notification floods in high-activity auctions.
@@ -1062,7 +1066,7 @@ async function notifySimilarItemWatchers({ category, startingPrice, listingTitle
   }
 }
 
-async function notifyWatchlistersAuctionEnding({ listingId, listingTitle, listingSlug, io }) {
+async function notifyWatchlistersAuctionEnding({ listingId, listingTitle, listingSlug, isGiveaway = false, io }) {
   try {
     const refId = `ending-soon:${listingId}`;
     const watchers = await Watchlist.find({ listing: listingId }).select('user').lean();
@@ -1080,8 +1084,13 @@ async function notifyWatchlistersAuctionEnding({ listingId, listingTitle, listin
 
         await createNotification({
           userId: w.user,
-          title: 'Auction ending soon',
-          message: listingTitle || 'An item in your watchlist is ending in less than an hour',
+          // A giveaway "ending" means the last chance to enter, not the last
+          // chance to bid — telling a watcher to hurry and bid on something
+          // free would send them looking for a button that is not there.
+          title: isGiveaway ? 'Last chance to enter' : 'Auction ending soon',
+          message: listingTitle || (isGiveaway
+            ? 'A giveaway in your watchlist closes to entries in less than an hour'
+            : 'An item in your watchlist is ending in less than an hour'),
           type: 'watchlist',
           link: listingSlug ? `/listing/${listingSlug}` : '/',
           referenceId: refId,
@@ -1211,6 +1220,143 @@ async function notifyPayoutSetupReminder({ sellerId, io }) {
   if (io) emitNewNotificationToUser(io, sellerId).catch(() => {});
 }
 
+/**
+ * Confirm a giveaway entry, in the participant's own language.
+ *
+ * The confirmation restates that it was free and that every entry counts the
+ * same. That is not padding: it is the promise the contest is built on, and
+ * repeating it where the person will actually read it is part of keeping it.
+ */
+async function notifyGiveawayEntered({ listingSlug, listingTitle, participantUserId, entryNumber, io }) {
+  const participant = await Customer.findById(participantUserId).select('language').lean();
+  const { title, message } = giveawayNotificationCopy('entered', participant?.language, listingTitle || '', entryNumber);
+
+  const notification = await createNotification({
+    userId: participantUserId,
+    title,
+    message,
+    type: 'listing',
+    link: listingSlug ? `/listing/${listingSlug}` : null,
+    referenceId: listingSlug || null
+  });
+  if (io) emitNewNotificationToUser(io, String(participantUserId)).catch(() => {});
+  return notification;
+}
+
+/** Tell the winner. */
+async function notifyGiveawayWinner({ listingSlug, listingTitle, winnerUserId, entryNumber, io }) {
+  const winner = await Customer.findById(winnerUserId).select('language').lean();
+  const { title, message } = giveawayNotificationCopy('won', winner?.language, listingTitle || '', entryNumber);
+
+  const notification = await createNotification({
+    userId: winnerUserId,
+    title,
+    message,
+    type: 'listing',
+    link: listingSlug ? `/listing/${listingSlug}` : '/dashboard',
+    referenceId: listingSlug || null
+  });
+  if (io) emitNewNotificationToUser(io, String(winnerUserId)).catch(() => {});
+  return notification;
+}
+
+function escapeEmailHtml(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+/**
+ * Email the winner, in their language, and record when it went out.
+ *
+ * Sent regardless of notification preferences: this is not marketing, it is
+ * the one message that tells someone they have a prize to collect, and the
+ * rules promise it. The in-app notification alone is easy to miss for anyone
+ * who entered once and never came back.
+ *
+ * Never throws. Returns { sent, emailedAt } so the caller can tell the admin
+ * whether it worked — a draw is not undone because the mail server hiccupped;
+ * Nexus offers to send it again instead.
+ */
+async function emailGiveawayWinner({ listingId, winnerUserId, entryNumber, totalEntries }) {
+  try {
+    const [listing, winner] = await Promise.all([
+      Listing.findById(listingId).select('slug title titlePt titleEn titleEs titleFr').lean(),
+      Customer.findById(winnerUserId).select('firstName email language').lean()
+    ]);
+    if (!listing || !winner?.email) {
+      logger.warn('[Giveaway] Winner email not sent: listing or winner email missing', { listingId: String(listingId) });
+      return { sent: false, emailedAt: null };
+    }
+
+    const language = resolveLanguage(winner.language);
+    const localized = { pt: 'titlePt', en: 'titleEn', es: 'titleEs', fr: 'titleFr' }[language];
+    const title = listing[localized] || listing.title || '';
+
+    const { subject, html } = renderEmailTemplate('giveawayWon', language, {
+      firstName: escapeEmailHtml(winner.firstName || ''),
+      listingTitle: escapeEmailHtml(title),
+      // Subject only: a mail header, where entities would show up literally.
+      listingTitlePlain: title.replace(/[\r\n]+/g, ' '),
+      entryNumber: formatEntry(entryNumber),
+      totalEntries: Number(totalEntries) || 0,
+      listingUrl: escapeEmailHtml(`${publicBaseUrl()}/listing/${encodeURIComponent(listing.slug)}`)
+    });
+
+    await sendEmail(winner.email, subject, html);
+
+    const emailedAt = new Date();
+    await Listing.updateOne({ _id: listing._id }, { $set: { 'giveaway.winnerEmailedAt': emailedAt } });
+    return { sent: true, emailedAt };
+  } catch (err) {
+    logger.error('[Giveaway] Winner email failed:', err.message);
+    return { sent: false, emailedAt: null };
+  }
+}
+
+/**
+ * Tell everyone who entered and did not win what the result was.
+ *
+ * "The winner is announced" is one of the four promises made on the entry
+ * button, and an announcement only the winner sees is not an announcement.
+ * Everyone who took part is told which number came out, so they can check it
+ * against their own.
+ */
+async function notifyGiveawayResultToEntrants({ listingSlug, listingTitle, participantIds, winnerEntry, winnerUserId, io }) {
+  try {
+    const others = (participantIds || []).filter(id => String(id) !== String(winnerUserId));
+    if (!others.length) return;
+
+    const people = await Customer.find({ _id: { $in: others } }).select('language').lean();
+    const languageById = new Map(people.map(p => [String(p._id), p.language]));
+
+    await Promise.allSettled(
+      others.map(async (id) => {
+        const { title, message } = giveawayNotificationCopy(
+          'notWon',
+          languageById.get(String(id)),
+          listingTitle || '',
+          winnerEntry
+        );
+        await createNotification({
+          userId: id,
+          title,
+          message,
+          type: 'listing',
+          link: listingSlug ? `/listing/${listingSlug}` : null,
+          referenceId: listingSlug || null
+        });
+        if (io) await emitNewNotificationToUser(io, String(id));
+      })
+    );
+  } catch (err) {
+    logger.error('notifyGiveawayResultToEntrants error:', err.message);
+  }
+}
+
 module.exports = {
   createNotification,
   shouldSendEmail,
@@ -1276,5 +1422,9 @@ module.exports = {
   notifyDsaWarning,
   notifyDsaSuspectedProfessional,
   notifyPayoutSetupReminder,
-  notifySellerManualPaymentSent
+  notifySellerManualPaymentSent,
+  notifyGiveawayEntered,
+  notifyGiveawayWinner,
+  emailGiveawayWinner,
+  notifyGiveawayResultToEntrants
 };

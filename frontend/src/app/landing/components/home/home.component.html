@@ -39,7 +39,7 @@
               <div class="hc-title">{{ listingTitle(listing) }}</div>
               <div class="hc-row">
                 <div>
-                  <div class="hc-bid-l">{{ listing.auctionFormat === 'best-offer' ? ('landing.home.listing.highestOffer' | translate) : ('landing.home.listing.currentBid' | translate) }}</div>
+                  <div class="hc-bid-l">{{ listingPriceLabel(listing) | translate }}</div>
                   <div class="hc-bid">{{ listingPrice(listing) }}</div>
                 </div>
                 <div class="hc-time">
@@ -141,8 +141,8 @@
               <div class="lc-title">{{ listingTitle(listing) }}</div>
               <div class="lc-foot">
                 <div>
-                  <div class="lc-pl">{{ listing.auctionFormat === 'best-offer' ? ('landing.home.listing.highestOffer' | translate) : ('landing.home.listing.currentBid' | translate) }}</div>
-                  <div class="lc-price" [class.g]="listing.auctionFormat !== 'best-offer'">{{ listingPrice(listing) }}</div>
+                  <div class="lc-pl">{{ listingPriceLabel(listing) | translate }}</div>
+                  <div class="lc-price" [class.g]="listing.saleFormat === 'giveaway' || listing.auctionFormat !== 'best-offer'">{{ listingPrice(listing) }}</div>
                 </div>
                 <div>
                   <div class="lc-ml">{{ listing.auctionFormat === 'best-offer' ? ('landing.home.listing.offers' | translate) : ('landing.home.listing.endsIn' | translate) }}</div>

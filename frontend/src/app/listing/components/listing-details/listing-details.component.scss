@@ -523,6 +523,39 @@ nav {
   margin-right: 8px;
 }
 
+/* ── VEHICLE NOTICE (warranty + offline payment) ── */
+.vehicle-notice {
+  margin-top: 14px;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--dim);
+  border-radius: 14px;
+  background: var(--s1);
+
+  /* Buying from a trader is the case with real rights attached, so it reads as
+     reassurance rather than as a warning. */
+  &.vn-pro { border-left-color: var(--green); }
+}
+.vn-title {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--text);
+  margin-bottom: 8px;
+}
+.vn-text {
+  font-size: 12.5px;
+  font-weight: 300;
+  line-height: 1.55;
+  color: var(--sub);
+}
+.vn-offline {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--line);
+}
+
 /* ── INFO NOTE (bids tab) ───────────────────── */
 .info-note {
   font-size: 13px;
@@ -964,6 +997,166 @@ nav {
   color: var(--sub);
   text-align: center;
   padding: 10px 0;
+}
+
+/* ── GIVEAWAY ───────────────────────────────── */
+.format-pill--giveaway {
+  border-color: var(--gl2);
+  color: var(--green);
+}
+.price-big.gw-free { color: var(--green); }
+
+.giveaway-panel {
+  margin-bottom: 14px;
+}
+/* The four facts: prominent, never collapsed — they are the legal basis of the giveaway. */
+.gw-facts {
+  list-style: none;
+  margin: 0 0 16px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: var(--gb2);
+  border: 1px solid var(--gl2);
+  border-radius: 12px;
+  li {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--text);
+  }
+  .gw-ico { font-size: 15px; flex-shrink: 0; line-height: 1.35; }
+}
+.gw-result {
+  text-align: center;
+  padding: 18px 16px;
+  border-radius: 12px;
+  margin-bottom: 10px;
+  background: var(--s1);
+  border: 1px solid var(--line);
+  &.gw-winner { background: var(--gb); border-color: var(--gl); }
+}
+.gw-result-label {
+  font-size: 13.5px;
+  font-weight: 500;
+  margin: 0 0 6px;
+}
+.gw-check {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--green);
+  color: #fff;
+  font-size: 15px;
+  margin-bottom: 8px;
+}
+.gw-number {
+  font-family: var(--mono);
+  font-size: 34px;
+  font-weight: 500;
+  letter-spacing: .04em;
+  color: var(--gold);
+  line-height: 1.2;
+}
+.gw-winner-name { font-size: 15px; font-weight: 500; margin: 4px 0 0; }
+.gw-video-block { margin: 0 0 10px; }
+.gw-video-label {
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--sub);
+  margin: 0 0 8px;
+}
+.gw-video {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #000;
+  border: 1px solid var(--line);
+
+  video,
+  iframe {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+    object-fit: contain;
+  }
+}
+.gw-video-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  padding: 11px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--gl);
+  background: var(--gb);
+  color: var(--gold);
+  font-size: 13.5px;
+  font-weight: 500;
+  text-decoration: none;
+
+  &:hover { filter: brightness(1.05); }
+  &:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+}
+.gw-you-won { font-size: 13.5px; font-weight: 500; color: var(--green); margin: 10px 0 0; }
+.gw-sub,
+.gw-note {
+  font-size: 12px;
+  font-weight: 300;
+  line-height: 1.5;
+  color: var(--sub);
+  margin: 8px 0 0;
+}
+.gw-note { text-align: center; margin: 0 0 8px; }
+.gw-closed {
+  font-size: 13px;
+  font-weight: 300;
+  color: var(--sub);
+  text-align: center;
+  padding: 14px;
+  background: var(--s1);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  margin-bottom: 10px;
+}
+.gw-rules-link {
+  display: block;
+  width: 100%;
+  margin-top: 6px;
+  padding: 6px 0;
+  background: none;
+  border: none;
+  font-family: inherit;
+  font-size: 13px;
+  color: var(--gold);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+  &:hover { opacity: .8; }
+}
+.gw-rules {
+  font-size: 13.5px;
+  font-weight: 300;
+  line-height: 1.7;
+  color: var(--sub);
+  .gw-rules-title { font-size: 18px; font-weight: 500; color: var(--text); margin: 0 0 8px; }
+  .gw-rules-intro { margin: 0 0 18px; }
+  h3 { font-size: 13px; font-weight: 600; color: var(--text); margin: 20px 0 6px; letter-spacing: .02em; }
+  p { margin: 0 0 8px; }
+  ul { margin: 0 0 8px; padding-left: 18px; }
+  li { margin-bottom: 4px; }
+  a { color: var(--gold); }
 }
 
 /* min box */

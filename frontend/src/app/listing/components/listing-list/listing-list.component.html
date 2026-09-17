@@ -397,7 +397,9 @@
                     <div class="price-block">
                       <div class="price-lbl">{{ priceLabel(listing) }}</div>
                       <div class="price-val">
-                        @if (listing.auctionFormat === 'best-offer' && (listing.currentPrice == null || listing.currentPrice === 0)) {
+                        @if (listing.saleFormat === 'giveaway') {
+                          <span class="price-val--text">{{ 'GIVEAWAY.FREE' | translate }}</span>
+                        } @else if (listing.auctionFormat === 'best-offer' && (listing.currentPrice == null || listing.currentPrice === 0)) {
                           <span class="price-val--text">{{ 'listingList.noOffersYet' | translate }}</span>
                         } @else {
                           {{ listing.currentPrice | displayPrice }}

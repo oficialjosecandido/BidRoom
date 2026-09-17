@@ -246,6 +246,41 @@ class AzureStorageService {
   }
 
   /**
+   * Base URL under which giveaway draw videos are stored, with trailing slash
+   * (https://account.blob.core.windows.net/container-name/giveaway-videos/).
+   * A draw-video URL is only accepted as an "upload" if it starts with this.
+   */
+  getGiveawayVideoBaseUrl() {
+    if (!this.containerClient) return null;
+    return `${this.containerClient.url.replace(/\/+$/, '')}/giveaway-videos/`;
+  }
+
+  /**
+   * Upload a recording of a giveaway draw from a file on disk (streamed, since
+   * videos can be up to a few hundred MB). The caller has already checked the
+   * file's magic bytes; `mimetype` is the type those bytes identified.
+   * @returns {Promise<string>} - Public URL of the uploaded blob
+   */
+  async uploadGiveawayVideo(filePath, originalFilename, mimetype) {
+    if (!this.containerClient) {
+      throw new Error('Azure Storage is not configured. Please set AZURE_STORAGE_CONNECTION_STRING.');
+    }
+    const uuid = require('uuid').v4();
+    const ext = { 'video/mp4': '.mp4', 'video/quicktime': '.mov', 'video/webm': '.webm' }[mimetype] || '.mp4';
+    const sanitized = String(originalFilename || 'draw')
+      .replace(/\.[0-9a-z]+$/i, '')
+      .replace(/[^a-zA-Z0-9-]/g, '-')
+      .toLowerCase()
+      .substring(0, 60) || 'draw';
+    const blobName = `giveaway-videos/${uuid}-${sanitized}${ext}`;
+    const blockBlobClient = this.containerClient.getBlockBlobClient(blobName);
+    await blockBlobClient.uploadFile(filePath, {
+      blobHTTPHeaders: { blobContentType: mimetype, blobCacheControl: 'public, max-age=31536000' }
+    });
+    return blockBlobClient.url;
+  }
+
+  /**
    * Base URL for blobs in our container (e.g. https://account.blob.core.windows.net/container-name/).
    * Used to detect our own proof-of-payment URLs for 30-day cleanup.
    */

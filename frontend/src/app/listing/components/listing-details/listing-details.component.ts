@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, OnInit, OnDestroy, ChangeDetectorRef, PLATFORM_ID, inject, computed, TransferState, makeStateKey, RESPONSE_INIT } from '@angular/core';
 import { CommonModule, Location, isPlatformBrowser } from '@angular/common';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Subscription } from 'rxjs';
@@ -34,6 +35,7 @@ import { API_CONFIG } from '../../../shared/config/api.config';
 import { CurrencyDisplayService } from '../../../shared/services/currency-display.service';
 import { DisplayPricePipe } from '../../../shared/pipes/display-price.pipe';
 import { applySsrStatus } from '../../../shared/utils/ssr-status';
+import { GiveawayService, GiveawayState, formatEntryNumber } from '../../../shared/services/giveaway.service';
 
 @Component({
   selector: 'app-listing-details',
@@ -72,6 +74,9 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
   private isBrowser = isPlatformBrowser(this.platformId);
   private transferState = inject(TransferState);
   private responseInit = inject(RESPONSE_INIT, { optional: true });
+  private giveawayService = inject(GiveawayService);
+  private sanitizer = inject(DomSanitizer);
+  readonly formatEntryNumber = formatEntryNumber;
   linkCopied = false;
 
   readonly isLight = computed(() => this.themeService.effective() === 'light');
@@ -80,7 +85,7 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
   loading = true;
   error: string | null = null;
   activeImageIndex = 0;
-  activeTab: 'description' | 'bids' | 'offers' = 'description';
+  activeTab: 'description' | 'bids' | 'offers' | 'rules' = 'description';
   bids: Bid[] = [];
   bidsLoading = false;
   bidsError: string | null = null;
@@ -140,6 +145,20 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
   /** Whether the current seller has Stripe connected and onboarded */
   sellerStripeReady = true;
 
+  // Giveaway (saleFormat === 'giveaway'): free entry, random draw
+  giveawayState: GiveawayState | null = null;
+  giveawayLoading = false;
+  giveawayEntering = false;
+  giveawayError: string | null = null;
+  /** Ignores a slow state response that arrives after a newer one was requested. */
+  private giveawayRequestSeq = 0;
+  /**
+   * The YouTube embed for the draw video. Built once per video id and kept:
+   * a fresh SafeResourceUrl on every change detection would reload the iframe.
+   */
+  drawVideoEmbedUrl: SafeResourceUrl | null = null;
+  private drawVideoEmbedId: string | null = null;
+
   ngOnInit(): void {
     if (this.isBrowser) window.scrollTo(0, 0);
     const slug = this.route.snapshot.paramMap.get('slug');
@@ -153,8 +172,11 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
     // Check authentication status and whether current user is the seller
     this.socketSubscriptions.push(
       this.authService.isAuthenticated().subscribe(isAuth => {
+        const changed = this.isAuthenticated !== isAuth;
         this.isAuthenticated = isAuth;
         this.updateIsOwnListing();
+        // The viewer's own entry is only returned when signed in.
+        if (changed && this.isGiveaway && this.listing?._id) this.loadGiveawayState(this.listing._id);
       })
     );
     this.socketSubscriptions.push(
@@ -221,7 +243,16 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
     this.justEndedRefetched = false;
     this.startCountdown();
     if (listing._id) {
-      if (listing.auctionFormat === 'best-offer') {
+      if (listing.saleFormat === 'giveaway') {
+        // No bids or offers exist on a giveaway. Entry state depends on who is
+        // signed in, so it is fetched in the browser once auth has settled.
+        if (this.isBrowser) {
+          this.authService.authReady$.pipe(filter(ready => !!ready), take(1))
+            .subscribe(() => this.loadGiveawayState(listing._id));
+        }
+        const tab = this.route.snapshot.queryParamMap.get('tab');
+        this.activeTab = tab === 'rules' ? 'rules' : 'description';
+      } else if (listing.auctionFormat === 'best-offer') {
         this.loadOffers(listing._id);
       } else {
         this.loadBids(listing._id);
@@ -253,8 +284,143 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
     });
   }
 
-  setActiveTab(tab: 'description' | 'bids' | 'offers'): void {
+  setActiveTab(tab: 'description' | 'bids' | 'offers' | 'rules'): void {
     this.activeTab = tab;
+  }
+
+  // ── Giveaway ─────────────────────────────────────────────────────────────────
+
+  get isGiveaway(): boolean {
+    return this.listing?.saleFormat === 'giveaway';
+  }
+
+  loadGiveawayState(listingId: string): void {
+    const seq = ++this.giveawayRequestSeq;
+    this.giveawayLoading = true;
+    this.giveawayService.getState(listingId).subscribe({
+      next: (state) => {
+        if (seq !== this.giveawayRequestSeq) return;
+        this.giveawayState = state;
+        this.updateDrawVideoEmbed(state.drawVideo?.type === 'youtube' ? state.drawVideo.videoId : null);
+        this.giveawayLoading = false;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        // A giveaway still in review has no public state yet. The panel falls
+        // back to the listing's own status, so there is nothing to show here.
+        if (seq !== this.giveawayRequestSeq) return;
+        this.giveawayLoading = false;
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  private updateDrawVideoEmbed(videoId: string | null | undefined): void {
+    // The id is checked again here even though the server validated it: it is
+    // the only part of a URL this component marks as trusted.
+    const id = videoId && /^[A-Za-z0-9_-]{11}$/.test(videoId) ? videoId : null;
+    if (id === this.drawVideoEmbedId) return;
+    this.drawVideoEmbedId = id;
+    this.drawVideoEmbedUrl = id
+      ? this.sanitizer.bypassSecurityTrustResourceUrl(`https://www.youtube-nocookie.com/embed/${id}`)
+      : null;
+  }
+
+  /** Entries are open: from the server when known, otherwise from the listing itself. */
+  isGiveawayOpen(): boolean {
+    if (!this.listing || !this.isGiveaway) return false;
+    if (this.giveawayState) return this.giveawayState.entriesOpen;
+    return this.listing.status === 'active' && !this.countdownEnded && !this.listing.giveaway?.drawnAt;
+  }
+
+  giveawayEntriesLabel(): string {
+    const n = this.giveawayState?.totalEntries ?? 0;
+    return n === 1
+      ? this.translate.instant('GIVEAWAY.ONE_ENTRY')
+      : this.translate.instant('GIVEAWAY.ENTRIES_COUNT', { count: n });
+  }
+
+  /** Entering needs an account — that is how one entry per person is kept — and nothing else. */
+  enterGiveaway(): void {
+    if (!this.listing || this.giveawayEntering) return;
+    if (!this.isAuthenticated) {
+      this.router.navigate(['/auth/login'], { queryParams: { returnUrl: `/listing/${this.listing.slug}` } });
+      return;
+    }
+    const listingId = this.listing._id;
+    this.giveawayEntering = true;
+    this.giveawayError = null;
+    this.giveawayService.enter(listingId).subscribe({
+      next: (res) => {
+        this.giveawayEntering = false;
+        this.giveawayState = {
+          ...(this.giveawayState ?? {
+            totalEntries: 0,
+            entriesOpen: true,
+            endDate: this.listing?.endDate ?? '',
+            drawn: false,
+            drawnAt: null,
+            winnerEntry: null,
+            winnerName: null,
+            youWon: false
+          }),
+          entered: true,
+          entryNumber: res.entryNumber,
+          totalEntries: (this.giveawayState?.totalEntries ?? 0) + (res.alreadyEntered ? 0 : 1)
+        };
+        this.cdr.detectChanges();
+        // Settle the count against the server; others may have entered meanwhile.
+        this.loadGiveawayState(listingId);
+      },
+      error: (err) => {
+        this.giveawayEntering = false;
+        const code: string | undefined = err?.error?.error;
+        const known = ['giveaway_closed', 'giveaway_drawn', 'giveaway_own_listing', 'account_required'];
+        this.giveawayError = this.translate.instant(
+          code && known.includes(code) ? `GIVEAWAY.ERROR_${code.toUpperCase()}` : 'GIVEAWAY.ERROR_GENERIC'
+        );
+        if (code === 'giveaway_closed' || code === 'giveaway_drawn') this.loadGiveawayState(listingId);
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  /** Shows the rules tab and brings it into view — the link sits beside the entry button. */
+  openGiveawayRules(): void {
+    this.setActiveTab('rules');
+    this.cdr.detectChanges();
+    if (this.isBrowser) {
+      document.getElementById('listing-tabs')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }
+
+  giveawayEndDateLabel(): string {
+    const end = this.listing?.endDate;
+    if (!end) return '';
+    const lang = this.translate.currentLang || 'pt';
+    return new Date(end).toLocaleString(lang === 'en' ? 'en-GB' : lang, {
+      day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit'
+    });
+  }
+
+  /** The listing's condition in the reader's language, for the rules text. */
+  giveawayConditionLabel(): string {
+    const keys: Record<string, string> = {
+      'New': 'addListing.conditionNew',
+      'Used - Excellent': 'addListing.conditionUsedExcellent',
+      'Used - Very Good': 'addListing.conditionUsedVeryGood',
+      'Used - Good': 'addListing.conditionUsedGood',
+      'Used - Fair': 'addListing.conditionUsedFair',
+      'For Parts or Not Working': 'addListing.conditionForParts'
+    };
+    const condition = this.listing?.condition || '';
+    return keys[condition] ? this.translate.instant(keys[condition]) : condition;
+  }
+
+  giveawayDeliveryKey(): string {
+    return this.listing?.shippingOption === 'local-pickup'
+      ? 'GIVEAWAY.RULES_PRIZE_PICKUP'
+      : 'GIVEAWAY.RULES_PRIZE_SHIPPING';
   }
 
   loadOffers(listingId: string): void {
@@ -493,6 +659,7 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
           next: (listing) => {
             this.listing = listing;
             this.updateIsOwnListing();
+            if (listing.saleFormat === 'giveaway') this.loadGiveawayState(listing._id);
             if (this.hasFutureCountdownEnd(listing)) {
               this.justEndedRefetched = false;
             }
@@ -572,6 +739,7 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
   /** True if we can show "Reopen" (ended with no bids for highest-bid, or no offers for best-offer). */
   canReopenListing(): boolean {
     if (!this.listing || !this.isOwnListing || !this.isAuctionEnded() || this.hasPrivateRoom()) return false;
+    if (this.isGiveaway) return false;
     if (this.listing.auctionFormat === 'highest-bid') return this.getEndedBidCount() === 0;
     if (this.listing.auctionFormat === 'best-offer') return !this.offersLoading && this.offers.length === 0;
     return false;
@@ -768,6 +936,9 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
 
   getAuctionEndLabel(): string {
     const endType = this.getAuctionEndType();
+    if (this.isGiveaway) {
+      return this.translate.instant(endType === 'ended' ? 'GIVEAWAY.ENTRIES_CLOSED_LABEL' : 'GIVEAWAY.ENTRIES_CLOSE_IN');
+    }
     if (endType === 'private-room') {
       return this.translate.instant('listingDetails.time.privateRoomEnds');
     }
@@ -835,6 +1006,19 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
 
     // Join the listing room
     this.socketService.joinListing(listingId);
+
+    // Giveaway: the winner is announced live to everyone on the page.
+    if (this.listing?.saleFormat === 'giveaway') {
+      this.rtSubscriptions.push(
+        this.socketService.onGiveawayDrawn().subscribe((event) => {
+          if (event.listingId !== listingId) return;
+          if (this.listing) this.listing.status = 'ended';
+          // Re-read rather than trust the event: whether the viewer won is personal.
+          this.loadGiveawayState(listingId);
+          this.cdr.detectChanges();
+        })
+      );
+    }
 
     // Subscribe to new offer / offer update events (Best Offer listings) - in-place merge + debounced refresh
     if (this.listing?.auctionFormat === 'best-offer') {

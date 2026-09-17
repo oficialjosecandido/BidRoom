@@ -158,13 +158,14 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
 
   /** Price to display for a listing (currentPrice, startingPrice, or minimumOfferPrice). */
   listingPrice(l: Listing): string {
+    if (l.saleFormat === 'giveaway') return this.translate.instant('GIVEAWAY.FREE');
     const p = l.currentPrice || l.startingPrice || l.minimumOfferPrice || 0;
     return `€ ${p.toLocaleString('pt-PT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
   }
 
   /** Time remaining label for a listing. */
   timeRemaining(l: Listing): string {
-    if (l.auctionFormat === 'best-offer') {
+    if (l.saleFormat !== 'giveaway' && l.auctionFormat === 'best-offer') {
       return `${l.bidCount || 0} ofertas`;
     }
     const end = new Date(l.endDate).getTime();
@@ -184,6 +185,9 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
 
   /** Badge label for a listing card. */
   listingBadge(l: Listing): string {
+    if (l.saleFormat === 'giveaway') {
+      return this.translate.instant('GIVEAWAY.PILL');
+    }
     if (l.auctionFormat === 'best-offer') {
       return this.translate.instant('landing.home.badges.bestOffer');
     }
@@ -194,15 +198,21 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   isOfferBadge(l: Listing): boolean {
-    return l.auctionFormat === 'best-offer';
+    return l.saleFormat === 'giveaway' || l.auctionFormat === 'best-offer';
   }
 
   isPrivateBadge(l: Listing): boolean {
-    return l.auctionFormat !== 'best-offer' && !!l.allowPrivateRoom;
+    return l.saleFormat !== 'giveaway' && l.auctionFormat !== 'best-offer' && !!l.allowPrivateRoom;
   }
 
   isAuctionBadge(l: Listing): boolean {
-    return l.auctionFormat !== 'best-offer' && !l.allowPrivateRoom;
+    return l.saleFormat !== 'giveaway' && l.auctionFormat !== 'best-offer' && !l.allowPrivateRoom;
+  }
+
+  /** Caption above the price on a listing card. */
+  listingPriceLabel(l: Listing): string {
+    if (l.saleFormat === 'giveaway') return 'GIVEAWAY.ENTRY_LABEL';
+    return l.auctionFormat === 'best-offer' ? 'landing.home.listing.highestOffer' : 'landing.home.listing.currentBid';
   }
 
   /** Card-sized WebP (w960) for hero/grid; falls back to original via onImgError. */

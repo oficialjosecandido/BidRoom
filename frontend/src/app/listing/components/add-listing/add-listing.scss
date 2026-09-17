@@ -1307,6 +1307,16 @@ nav {
   }
 
   .decl-text { font-size: 13px; font-weight: 300; color: var(--sub); line-height: 1.6; cursor: pointer; }
+
+  /* Why the declaration is being asked for — sits under the box it explains,
+     indented to the checkbox's text column. */
+  .decl-note {
+    margin: 8px 0 0 32px;
+    font-size: 12px;
+    font-weight: 300;
+    line-height: 1.55;
+    color: var(--dim);
+  }
 }
 
 // ─── Error / notice banners ───────────────────────────────────────────────────

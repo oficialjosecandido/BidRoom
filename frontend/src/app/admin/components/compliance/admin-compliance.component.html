@@ -1,0 +1,211 @@
+<div class="admin-layout">
+  <app-admin-sidebar></app-admin-sidebar>
+
+  <div class="admin-content">
+    <div class="admin-compliance">
+      <header class="page-header">
+        <h1 class="page-title">Compliance</h1>
+        <p class="page-subtitle">
+          Vehicle and anti-money-laundering flags. Nothing here was blocked automatically —
+          each entry is a pattern waiting for a decision.
+        </p>
+      </header>
+
+      <div class="filters-bar">
+        <div class="filter-group">
+          <label for="filter-type">Type</label>
+          <select id="filter-type" [(ngModel)]="filterType" (ngModelChange)="applyFilter()" class="filter-select">
+            @for (t of TYPE_OPTIONS; track t) {
+              <option [value]="t">{{ t === 'all' ? 'All types' : typeLabel(t) }}</option>
+            }
+          </select>
+        </div>
+        <div class="filter-group">
+          <label for="filter-resolved">State</label>
+          <select id="filter-resolved" [(ngModel)]="showResolved" (ngModelChange)="applyFilter()" class="filter-select">
+            <option [ngValue]="false">Open</option>
+            <option [ngValue]="true">Reviewed</option>
+          </select>
+        </div>
+        <span class="total-label">{{ total }} flag{{ total !== 1 ? 's' : '' }}</span>
+      </div>
+
+      @if (isLoading) {
+        <div class="loading-state">
+          <div class="spinner"></div>
+          <p>Loading flags…</p>
+        </div>
+      }
+
+      @if (error && !isLoading) {
+        <div class="error-state">
+          <div class="error-icon" aria-hidden="true">&#9888;</div>
+          <p class="error-message">{{ error }}</p>
+          <button type="button" class="retry-btn" (click)="load()">Try again</button>
+        </div>
+      }
+
+      @if (!isLoading && !error) {
+        @if (flags.length === 0) {
+          <div class="empty-state">
+            <div class="empty-icon" aria-hidden="true">{{ showResolved ? '🗂️' : '✅' }}</div>
+            <p class="empty-message">{{ showResolved ? 'Nothing reviewed yet' : 'Nothing waiting for review' }}</p>
+            <p class="empty-description">
+              {{ showResolved
+                  ? 'Flags you close will appear here with the reasoning you recorded.'
+                  : 'No vehicle or AML patterns have been flagged under the current filters.' }}
+            </p>
+          </div>
+        } @else {
+          <div class="panel-table">
+            <div class="table-scroll">
+              <table class="nexus-data-table">
+                <caption>Compliance flags</caption>
+                <thead>
+                  <tr>
+                    <th scope="col">Type</th>
+                    <th scope="col">Severity</th>
+                    <th scope="col">Account</th>
+                    <th scope="col">Listing</th>
+                    <th scope="col">Raised</th>
+                    <th scope="col"><span class="sr-only">Actions</span></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (f of flags; track f._id) {
+                    <tr>
+                      <td><span class="type-badge" [class]="'flag-' + f.type">{{ typeLabel(f.type) }}</span></td>
+                      <td><span class="status-badge" [class]="'sev-' + f.severity">{{ f.severity }}</span></td>
+                      <td class="muted-col">
+                        {{ sellerName(f) }}<br/>
+                        <span class="email-small">{{ f.userId?.email || '—' }}</span>
+                      </td>
+                      <td class="muted-col">{{ f.listingId?.title || '—' }}</td>
+                      <td class="date-cell">{{ formatDate(f.createdAt) }}</td>
+                      <td>
+                        <button type="button" class="action-btn view-action" (click)="selectFlag(f)">
+                          {{ f.resolved ? 'View' : 'Review' }}
+                        </button>
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </div>
+        }
+      }
+
+      @if (selectedFlag) {
+        <div class="modal-overlay" (click)="closeDetail()">
+          <div class="modal-content flag-detail-modal" (click)="$event.stopPropagation()">
+            <div class="modal-header">
+              <h3 class="modal-title">{{ typeLabel(selectedFlag.type) }}</h3>
+              <button type="button" class="modal-close" (click)="closeDetail()" aria-label="Close">×</button>
+            </div>
+            <div class="modal-body">
+              <p class="flag-question">{{ typeQuestion(selectedFlag.type) }}</p>
+
+              <section class="detail-section">
+                <h4>Account</h4>
+                <table class="nexus-kv-table">
+                  <tbody>
+                    <tr>
+                      <th scope="row">Name</th>
+                      <td>
+                        {{ sellerName(selectedFlag) }}<br/>
+                        <span class="muted-inline">{{ selectedFlag.userId?.email || '—' }}</span>
+                      </td>
+                    </tr>
+                    <tr>
+                      <th scope="row">Classification</th>
+                      <td>{{ selectedFlag.userId?.sellerClassification || '—' }}</td>
+                    </tr>
+                    <tr>
+                      <th scope="row">Identity (KYC)</th>
+                      <td>{{ selectedFlag.userId?.kycStatus || '—' }}</td>
+                    </tr>
+                    <tr>
+                      <th scope="row">Account created</th>
+                      <td>{{ formatDate(selectedFlag.userId?.createdAt) }}</td>
+                    </tr>
+                    @if (selectedFlag.listingId) {
+                      <tr>
+                        <th scope="row">Listing</th>
+                        <td>{{ selectedFlag.listingId.title }}</td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </section>
+
+              <section class="detail-section">
+                <h4>Why it was flagged</h4>
+                <table class="nexus-kv-table">
+                  <tbody>
+                    @for (row of detailRows(selectedFlag); track row.key) {
+                      <tr>
+                        <th scope="row">{{ row.key }}</th>
+                        <td>{{ row.value }}</td>
+                      </tr>
+                    }
+                    <tr>
+                      <th scope="row">Raised</th>
+                      <td>{{ formatDate(selectedFlag.createdAt) }}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </section>
+
+              @if (selectedFlag.resolved) {
+                <section class="detail-section">
+                  <h4>Review</h4>
+                  <table class="nexus-kv-table">
+                    <tbody>
+                      <tr>
+                        <th scope="row">Reviewed by</th>
+                        <td>{{ selectedFlag.resolvedByEmail || '—' }}</td>
+                      </tr>
+                      <tr>
+                        <th scope="row">Reviewed at</th>
+                        <td>{{ formatDate(selectedFlag.resolvedAt) }}</td>
+                      </tr>
+                      <tr>
+                        <th scope="row">Conclusion</th>
+                        <td><p class="explanation-text">{{ selectedFlag.resolutionNote || '—' }}</p></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </section>
+              } @else {
+                <section class="ruling-section">
+                  <h4>Close this flag</h4>
+                  <div class="form-group">
+                    <label for="resolution-note">What did you conclude?</label>
+                    <textarea id="resolution-note" [(ngModel)]="resolutionNote" class="form-input" rows="3"
+                      placeholder="e.g. Contacted the seller; confirmed private sale of inherited vehicles. No action."></textarea>
+                  </div>
+                  <p class="ruling-hint">
+                    Resolving records your decision. To act on the account — reclassify the seller
+                    or restrict them — use Customers.
+                  </p>
+                  @if (saveError) {
+                    <p class="ruling-error">{{ saveError }}</p>
+                  }
+                </section>
+              }
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" (click)="closeDetail()">Close</button>
+              @if (!selectedFlag.resolved) {
+                <button type="button" class="btn btn-primary" (click)="resolve()" [disabled]="saving">
+                  {{ saving ? 'Saving…' : 'Mark reviewed' }}
+                </button>
+              }
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+</div>

@@ -465,6 +465,114 @@ a {
   --shadow-input-focus: 0 0 0 3px rgba(147, 197, 253, 0.25);
 }
 
+/* BidRoom-branded SweetAlert2 (gold accent, matches add-listing UI) */
+.swal2-popup.br-swal {
+  font-family: 'DM Sans', system-ui, sans-serif;
+  border-radius: 16px;
+  padding: 2rem 1.75rem 1.5rem;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.18);
+  border: 1px solid rgba(201, 168, 76, 0.22);
+}
+
+.swal2-popup.br-swal .br-swal__icon {
+  border-color: rgba(201, 168, 76, 0.45) !important;
+  color: #C9A84C !important;
+}
+
+.swal2-popup.br-swal .swal2-icon.swal2-info,
+.swal2-popup.br-swal .swal2-icon.swal2-warning {
+  border-color: rgba(201, 168, 76, 0.45);
+  color: #C9A84C;
+}
+
+.swal2-popup.br-swal .swal2-icon.swal2-info .swal2-icon-content,
+.swal2-popup.br-swal .swal2-icon.swal2-warning .swal2-icon-content {
+  color: #C9A84C;
+}
+
+.swal2-popup.br-swal .br-swal__title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1d1d1f;
+  letter-spacing: -0.02em;
+  padding: 0;
+  margin-top: 0.5rem;
+}
+
+.swal2-popup.br-swal .br-swal__body {
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: rgba(29, 29, 31, 0.62);
+  padding: 0.35rem 0 0;
+}
+
+.swal2-popup.br-swal .br-swal__body p {
+  margin: 0;
+}
+
+.swal2-popup.br-swal .br-swal__actions {
+  gap: 0.65rem;
+  margin-top: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.swal2-popup.br-swal .br-swal__btn {
+  margin: 0;
+  padding: 11px 22px;
+  font-family: 'DM Sans', system-ui, sans-serif;
+  font-size: 13.5px;
+  font-weight: 600;
+  border-radius: 100px;
+  border: none;
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.15s, background 0.15s;
+}
+
+.swal2-popup.br-swal .br-swal__btn:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.swal2-popup.br-swal .br-swal__btn--primary {
+  background: #C9A84C;
+  color: #0a0a0a;
+}
+
+.swal2-popup.br-swal .br-swal__btn--secondary {
+  background: transparent;
+  color: #1d1d1f;
+  border: 1px solid rgba(29, 29, 31, 0.18);
+}
+
+.swal2-popup.br-swal .br-swal__btn--secondary:hover {
+  border-color: #C9A84C;
+  color: #8C6B1E;
+}
+
+:root[data-theme='dark'] .swal2-popup.br-swal {
+  background: #111 !important;
+  color: #F0EDE8 !important;
+  border-color: rgba(201, 168, 76, 0.28) !important;
+}
+
+:root[data-theme='dark'] .swal2-popup.br-swal .br-swal__title {
+  color: #F0EDE8;
+}
+
+:root[data-theme='dark'] .swal2-popup.br-swal .br-swal__body {
+  color: rgba(240, 237, 232, 0.55);
+}
+
+:root[data-theme='dark'] .swal2-popup.br-swal .br-swal__btn--secondary {
+  color: #F0EDE8;
+  border-color: rgba(240, 237, 232, 0.18);
+}
+
+:root[data-theme='dark'] .swal2-popup.br-swal .br-swal__btn--secondary:hover {
+  border-color: #C9A84C;
+  color: #C9A84C;
+}
+
 :root[data-theme='dark'] .swal2-popup {
   background: #1e293b !important;
   color: #f1f5f9 !important;

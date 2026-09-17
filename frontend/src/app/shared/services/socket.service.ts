@@ -271,6 +271,11 @@ export class SocketService {
     return this.listen<OfferUpdateEvent>('offer-update');
   }
 
+  /** Fired to a listing room when its giveaway winner is drawn in Nexus. */
+  onGiveawayDrawn(): Observable<{ listingId: string; winnerEntry: number; winnerName: string | null }> {
+    return this.listen('giveaway-drawn');
+  }
+
   joinPrivateRoomViewer(listingId: string): void {
     this.joinedPrivateRoomViewerId = listingId;
     void this.ensureSocket().then(() => {

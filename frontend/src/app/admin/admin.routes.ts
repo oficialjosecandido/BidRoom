@@ -34,6 +34,16 @@ export const adminRoutes: Routes = [
     data: { title: 'Disputes', icon: '⚖️' }
   },
   {
+    path: 'compliance',
+    loadComponent: () => import('./components/compliance/admin-compliance.component').then(m => m.AdminComplianceComponent),
+    canActivate: [AdminGuard]
+  },
+  {
+    path: 'giveaways',
+    loadComponent: () => import('./components/giveaways/admin-giveaways.component').then(m => m.AdminGiveawaysComponent),
+    canActivate: [AdminGuard]
+  },
+  {
     path: 'reports',
     loadComponent: () => import('./components/reports/admin-reports.component').then(m => m.AdminReportsComponent),
     canActivate: [AdminGuard]

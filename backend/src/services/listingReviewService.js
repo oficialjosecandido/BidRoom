@@ -4,7 +4,7 @@
  * Every listing is created as `pending_review` and stays invisible to the public
  * until an admin approves it in Nexus. This module owns both outcomes so the
  * route stays a thin HTTP wrapper and the side effects (clock, notifications,
- * follower announcements, audit trail) cannot drift apart between them.
+ * follower announcements, social posts, audit trail) cannot drift apart between them.
  */
 
 const Listing = require('../models/Listing');
@@ -20,6 +20,7 @@ const {
   notifySimilarItemWatchers,
   emitNewNotificationToUser
 } = require('./notificationService');
+const { schedulePublishApprovedListing } = require('./socialPublisherService');
 const { publicBaseUrl } = require('../utils/publicUrls');
 const logger = require('../utils/logger');
 
@@ -133,6 +134,10 @@ async function approveListing({ listingId, admin, io, ip = null }) {
     await notifyReviewedSeller(listing, seller, io, 'approved', null);
     announceToAudience(listing, seller, io);
   }
+
+  // Facebook + Instagram. In the background: a carousel takes tens of seconds
+  // and a Meta failure must not fail an approval that is already saved.
+  schedulePublishApprovedListing(listing._id);
 
   await appendModerationAudit({
     subjectUserId: listing.seller,

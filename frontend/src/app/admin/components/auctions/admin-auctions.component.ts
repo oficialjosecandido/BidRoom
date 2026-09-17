@@ -43,11 +43,15 @@ export class AdminAuctionsComponent implements OnInit {
   searchQuery = '';
 
   showCreateModal = false;
+  showCreateConfirm = false;
   showImportModal = false;
   showReportModal = false;
   createSubmitting = false;
   importSubmitting = false;
   reportSubmitting = false;
+
+  /** UI-only: auction type includes giveaway for the create form. */
+  createSaleType: 'highest-bid' | 'best-offer' | 'giveaway' = 'highest-bid';
 
   createForm: AdminCreateAuctionPayload = this.emptyCreateForm();
   importFile: File | null = null;
@@ -124,10 +128,17 @@ export class AdminAuctionsComponent implements OnInit {
     return {
       sellerEmail: '',
       title: '',
+      titleEn: '',
+      titleEs: '',
+      titleFr: '',
       description: '',
+      descriptionEn: '',
+      descriptionEs: '',
+      descriptionFr: '',
       category: 'jewelry',
       subCategory: 'Luxury Watches',
       condition: 'Used - Excellent',
+      saleFormat: 'auction',
       listingFormat: 'highest-bid',
       startingPrice: 0,
       duration: '7 days',
@@ -138,6 +149,45 @@ export class AdminAuctionsComponent implements OnInit {
       locationCountry: 'PT',
       allowPrivateRoom: false
     };
+  }
+
+  get isGiveawayCreate(): boolean {
+    return this.createSaleType === 'giveaway';
+  }
+
+  get canAllowPrivateRoom(): boolean {
+    return this.createSaleType === 'highest-bid';
+  }
+
+  /** Locale checklist shown in the confirm step. */
+  get localeChecklist(): { code: string; label: string; title: boolean; description: boolean }[] {
+    const f = this.createForm;
+    return [
+      { code: 'pt', label: 'Português', title: !!(f.title || '').trim(), description: !!(f.description || '').trim() },
+      { code: 'en', label: 'English', title: !!(f.titleEn || '').trim(), description: !!(f.descriptionEn || '').trim() },
+      { code: 'es', label: 'Español', title: !!(f.titleEs || '').trim(), description: !!(f.descriptionEs || '').trim() },
+      { code: 'fr', label: 'Français', title: !!(f.titleFr || '').trim(), description: !!(f.descriptionFr || '').trim() }
+    ];
+  }
+
+  onSaleTypeChange(): void {
+    if (this.createSaleType === 'giveaway') {
+      this.createForm.saleFormat = 'giveaway';
+      this.createForm.listingFormat = 'highest-bid';
+      this.createForm.allowPrivateRoom = false;
+      this.createForm.startingPrice = 0;
+      if (this.createForm.shippingOption !== 'free' && this.createForm.shippingOption !== 'local-pickup') {
+        this.createForm.shippingOption = 'free';
+      }
+      this.createForm.shippingCost = 0;
+      this.createForm.returnPolicy = 'no-returns';
+      return;
+    }
+    this.createForm.saleFormat = 'auction';
+    this.createForm.listingFormat = this.createSaleType;
+    if (this.createSaleType === 'best-offer') {
+      this.createForm.allowPrivateRoom = false;
+    }
   }
 
   loadAuctions(): void {
@@ -318,12 +368,42 @@ export class AdminAuctionsComponent implements OnInit {
 
   openCreateModal(): void {
     this.createForm = this.emptyCreateForm();
+    this.createSaleType = 'highest-bid';
+    this.showCreateConfirm = false;
     this.showCreateModal = true;
   }
 
   closeCreateModal(): void {
     if (this.createSubmitting) return;
     this.showCreateModal = false;
+    this.showCreateConfirm = false;
+  }
+
+  /** Validate form then open the multilingual confirm step. */
+  requestCreateConfirm(): void {
+    if (this.createSubmitting) return;
+    const title = (this.createForm.title || '').trim();
+    const description = (this.createForm.description || '').trim();
+    const sellerEmail = (this.createForm.sellerEmail || '').trim();
+    if (!sellerEmail) {
+      alert('Seller email is required (existing customer or a new email).');
+      return;
+    }
+    if (!title) {
+      alert('Portuguese title (PT) is required.');
+      return;
+    }
+    if (description.length < 50) {
+      alert('Portuguese description must be at least 50 characters.');
+      return;
+    }
+    this.onSaleTypeChange();
+    this.showCreateConfirm = true;
+  }
+
+  backFromConfirm(): void {
+    if (this.createSubmitting) return;
+    this.showCreateConfirm = false;
   }
 
   submitCreate(): void {
@@ -331,38 +411,41 @@ export class AdminAuctionsComponent implements OnInit {
     const title = (this.createForm.title || '').trim();
     const description = (this.createForm.description || '').trim();
     const sellerEmail = (this.createForm.sellerEmail || '').trim();
-    if (!sellerEmail) {
-      alert('Seller email is required.');
-      return;
-    }
-    if (!title) {
-      alert('Title is required.');
-      return;
-    }
-    if (description.length < 50) {
-      alert('Description must be at least 50 characters.');
-      return;
-    }
+    this.onSaleTypeChange();
 
     this.createSubmitting = true;
-    this.adminService.createAuction({
+    const payload: AdminCreateAuctionPayload = {
       ...this.createForm,
       sellerEmail,
       title,
       description,
-      startingPrice: Number(this.createForm.startingPrice) || 0,
-      shippingCost: Number(this.createForm.shippingCost) || 0
-    }).subscribe({
+      titleEn: (this.createForm.titleEn || '').trim() || undefined,
+      titleEs: (this.createForm.titleEs || '').trim() || undefined,
+      titleFr: (this.createForm.titleFr || '').trim() || undefined,
+      descriptionEn: (this.createForm.descriptionEn || '').trim() || undefined,
+      descriptionEs: (this.createForm.descriptionEs || '').trim() || undefined,
+      descriptionFr: (this.createForm.descriptionFr || '').trim() || undefined,
+      startingPrice: this.isGiveawayCreate ? 0 : Number(this.createForm.startingPrice) || 0,
+      shippingCost: this.isGiveawayCreate ? 0 : Number(this.createForm.shippingCost) || 0,
+      allowPrivateRoom: this.canAllowPrivateRoom ? !!this.createForm.allowPrivateRoom : false
+    };
+
+    this.adminService.createAuction(payload).subscribe({
       next: (res) => {
         this.createSubmitting = false;
         this.showCreateModal = false;
-        alert(`Success: auction "${res.listing.title}" created.`);
+        this.showCreateConfirm = false;
+        const kind = res.listing.saleFormat === 'giveaway' ? 'giveaway' : 'auction';
+        const sellerNote = res.sellerCreated
+          ? ` New seller account created for ${res.listing.seller.email}.`
+          : '';
+        alert(`Success: ${kind} "${res.listing.title}" created (${res.listing.status}).${sellerNote}`);
         this.page = 1;
         this.loadAuctions();
       },
       error: (err) => {
         this.createSubmitting = false;
-        alert(`Fail: ${err?.error?.message || err?.message || 'Could not create auction.'}`);
+        alert(`Fail: ${err?.error?.message || err?.message || 'Could not create listing.'}`);
       }
     });
   }

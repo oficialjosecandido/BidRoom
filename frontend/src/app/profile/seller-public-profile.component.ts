@@ -48,6 +48,7 @@ interface PublicProfile {
     bidCount: number;
     endDate: string;
     auctionFormat: string;
+    saleFormat?: 'auction' | 'giveaway';
   }[];
 }
 

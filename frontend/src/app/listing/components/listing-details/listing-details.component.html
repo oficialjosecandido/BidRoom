@@ -62,8 +62,9 @@
         } @else {
           <span class="main-img-em">🏷</span>
         }
-        <div class="format-pill">
-          @if (listing.auctionFormat === 'best-offer') { {{ 'listingDetails.saleType.bestOffer' | translate }} }
+        <div class="format-pill" [class.format-pill--giveaway]="isGiveaway">
+          @if (isGiveaway) { 🎁 {{ 'GIVEAWAY.PILL' | translate }} }
+          @else if (listing.auctionFormat === 'best-offer') { {{ 'listingDetails.saleType.bestOffer' | translate }} }
           @else if (listing.allowPrivateRoom && listing.privateRoomStatus === 'active') { {{ 'listingDetails.formatPill.privateRoom' | translate }} }
           @else { {{ 'listingDetails.formatPill.auction' | translate }} }
         </div>
@@ -116,14 +117,17 @@
     </div>
 
     <!-- TABS -->
-    <div class="tabs">
+    <div class="tabs" id="listing-tabs">
       <button class="tab" [class.on]="activeTab === 'description'" (click)="setActiveTab('description')">{{ 'listingDetails.tabs.description' | translate }}</button>
-      @if (listing.auctionFormat === 'highest-bid') {
+      @if (isGiveaway) {
+        <button class="tab" [class.on]="activeTab === 'rules'" (click)="setActiveTab('rules')">{{ 'GIVEAWAY.RULES_TAB' | translate }}</button>
+      }
+      @if (listing.auctionFormat === 'highest-bid' && !isGiveaway) {
         <button class="tab" [class.on]="activeTab === 'bids'" (click)="setActiveTab('bids')">
           {{ 'listingDetails.info.bids' | translate }} <span class="tab-c">{{ bids.length }}</span>
         </button>
       }
-      @if (listing.auctionFormat === 'best-offer') {
+      @if (listing.auctionFormat === 'best-offer' && !isGiveaway) {
         <button class="tab" [class.on]="activeTab === 'offers'" (click)="setActiveTab('offers')">
           {{ 'listingDetails.tabs.offers' | translate }} <span class="tab-c">{{ offers.length }}</span>
         </button>
@@ -181,11 +185,81 @@
             }
           </div>
         }
+
+        <!--
+          Vehicles: whether the buyer gets the legal consumer warranty depends
+          entirely on who is selling (DL 84/2021), so it is said plainly before
+          anyone bids — together with the fact that BidRoom sets the price but
+          never handles the payment for the car.
+        -->
+        @if (listing.category === 'vehicles' && listing.seller) {
+          <div class="vehicle-notice" [class.vn-pro]="listing.seller.sellerClassification === 'professional'">
+            <p class="vn-title">
+              {{ (listing.seller.sellerClassification === 'professional'
+                  ? 'listingDetails.vehicle.proTitle'
+                  : 'listingDetails.vehicle.privateTitle') | translate }}
+            </p>
+            <p class="vn-text">
+              {{ (listing.seller.sellerClassification === 'professional'
+                  ? 'listingDetails.vehicle.proNotice'
+                  : 'listingDetails.vehicle.privateNotice') | translate }}
+            </p>
+            <p class="vn-text vn-offline">{{ 'listingDetails.vehicle.offlineNotice' | translate }}</p>
+          </div>
+        }
+      </div>
+    }
+
+    <!--
+      GIVEAWAY RULES TAB — the public regulamento for this giveaway. The four
+      facts are repeated here on purpose: they also sit beside the entry button,
+      and nobody should have to find them in only one place.
+    -->
+    @if (activeTab === 'rules' && isGiveaway) {
+      <div class="tab-panel gw-rules">
+        <h2 class="gw-rules-title">{{ 'GIVEAWAY.RULES_TITLE' | translate }}</h2>
+        <p class="gw-rules-intro">{{ 'GIVEAWAY.RULES_INTRO' | translate:{ title: localizedTitle } }}</p>
+
+        <h3>1. {{ 'GIVEAWAY.RULES_PRIZE_H' | translate }}</h3>
+        <p>{{ 'GIVEAWAY.RULES_PRIZE' | translate:{ title: localizedTitle, condition: giveawayConditionLabel() } }}</p>
+        <p>{{ giveawayDeliveryKey() | translate:{ location: listingLocation() || '—' } }}</p>
+
+        <h3>2. {{ 'GIVEAWAY.RULES_WHO_H' | translate }}</h3>
+        <ul>
+          <li>{{ 'GIVEAWAY.FACT_FREE' | translate }}</li>
+          <li>{{ 'GIVEAWAY.FACT_ANYONE' | translate }}</li>
+          <li>{{ 'GIVEAWAY.RULES_WHO_ONE' | translate }}</li>
+          <li>{{ 'GIVEAWAY.RULES_WHO_ORGANISER' | translate }}</li>
+        </ul>
+
+        <h3>3. {{ 'GIVEAWAY.RULES_HOW_H' | translate }}</h3>
+        <p>{{ 'GIVEAWAY.RULES_HOW' | translate:{ endDate: giveawayEndDateLabel() } }}</p>
+
+        <h3>4. {{ 'GIVEAWAY.RULES_DRAW_H' | translate }}</h3>
+        <ul>
+          <li>{{ 'GIVEAWAY.FACT_RANDOM' | translate }}</li>
+          <li>{{ 'GIVEAWAY.RULES_DRAW_METHOD' | translate }}</li>
+          <li>{{ 'GIVEAWAY.RULES_DRAW_AUDIT' | translate }}</li>
+          <li>{{ 'GIVEAWAY.RULES_DRAW_VIDEO' | translate }}</li>
+        </ul>
+
+        <h3>5. {{ 'GIVEAWAY.RULES_ANNOUNCE_H' | translate }}</h3>
+        <ul>
+          <li>{{ 'GIVEAWAY.FACT_ANNOUNCED' | translate }}</li>
+          <li>{{ 'GIVEAWAY.RULES_ANNOUNCE_PUBLIC' | translate }}</li>
+          <li>{{ 'GIVEAWAY.RULES_ANNOUNCE_CONTACT' | translate }}</li>
+        </ul>
+
+        <h3>6. {{ 'GIVEAWAY.RULES_DATA_H' | translate }}</h3>
+        <p>{{ 'GIVEAWAY.RULES_DATA' | translate }}</p>
+        <p>{{ 'GIVEAWAY.RULES_DATA_RETENTION' | translate }}
+          <a routerLink="/landing/privacy-policy">{{ 'GIVEAWAY.RULES_PRIVACY_LINK' | translate }}</a>.
+        </p>
       </div>
     }
 
     <!-- BIDS TAB -->
-    @if (activeTab === 'bids' && listing.auctionFormat === 'highest-bid') {
+    @if (activeTab === 'bids' && listing.auctionFormat === 'highest-bid' && !isGiveaway) {
       <div class="tab-panel">
         @if (isOwnListing && isAuctionEnded() && !hasPrivateRoom() && !listing.winner && bids.length > 0 && !isPrivateRoomEnded()) {
           <div class="info-note">{{ 'listingDetails.ended.selectWinner' | translate }}</div>
@@ -309,6 +383,18 @@
   <!-- SIDEBAR -->
   <div class="sidebar">
 
+    <!-- GIVEAWAY: no price — it is free, and says so first -->
+    @if (isGiveaway) {
+      <div class="price-section">
+        <div class="price-label">{{ 'GIVEAWAY.PILL' | translate }}</div>
+        <div class="price-big gw-free">{{ 'GIVEAWAY.FREE' | translate }}</div>
+        <div class="price-meta">
+          {{ giveawayEntriesLabel() }}
+          @if ((listing.watchlistCount ?? 0) > 0) { · {{ listing.watchlistCount }} {{ 'listingDetails.sidebar.watching' | translate }} }
+          · {{ listing.viewCount ?? 0 }} {{ 'listingDetails.sidebar.views' | translate }}
+        </div>
+      </div>
+    } @else {
     <!-- PRICE -->
     <div class="price-section">
       <div class="price-label">
@@ -334,6 +420,7 @@
         · {{ listing.viewCount ?? 0 }} {{ 'listingDetails.sidebar.views' | translate }}
       </div>
     </div>
+    }
 
     <!-- STATUS BANNERS -->
     @if (listing.privateRoomStatus === 'active') {
@@ -365,7 +452,7 @@
         </div>
       </div>
     }
-    @if (isAuctionEnded() && !hasPrivateRoom() && !(listing.allowPrivateRoom && (listing.privateRoomStatus === 'eligible' || listing.privateRoomStatus === 'invited'))) {
+    @if (!isGiveaway && isAuctionEnded() && !hasPrivateRoom() && !(listing.allowPrivateRoom && (listing.privateRoomStatus === 'eligible' || listing.privateRoomStatus === 'invited'))) {
       <div class="status-banner banner-ended">
         <span>🏁</span>
         <div>
@@ -408,9 +495,105 @@
 
     <!-- DEADLINE -->
     <div class="deadline">
-      <span class="dl-l">{{ isAuctionEnded() ? ('listingDetails.time.auctionEnded' | translate) : getAuctionEndLabel() }}</span>
+      @if (isGiveaway) {
+        <span class="dl-l">{{ (isAuctionEnded() ? 'GIVEAWAY.ENTRIES_CLOSED_LABEL' : 'GIVEAWAY.ENTRIES_CLOSE_IN') | translate }}</span>
+      } @else {
+        <span class="dl-l">{{ isAuctionEnded() ? ('listingDetails.time.auctionEnded' | translate) : getAuctionEndLabel() }}</span>
+      }
       <span class="dl-v">{{ isAuctionEnded() ? '–' : formatTimeRemaining() }}</span>
     </div>
+
+    <!--
+      GIVEAWAY PANEL. The four facts are always visible and sit right beside the
+      button: free, open to anyone signed in, random, and announced. They are
+      what keeps this a promotional giveaway and not a lottery, so they are
+      never hidden behind a link or shown only in some states.
+    -->
+    @if (isGiveaway) {
+      <div class="giveaway-panel">
+        <ul class="gw-facts" [attr.aria-label]="'GIVEAWAY.FACTS_LABEL' | translate">
+          <li><span class="gw-ico" aria-hidden="true">🎁</span><span>{{ 'GIVEAWAY.FACT_FREE' | translate }}</span></li>
+          <li><span class="gw-ico" aria-hidden="true">👤</span><span>{{ 'GIVEAWAY.FACT_ANYONE' | translate }}</span></li>
+          <li><span class="gw-ico" aria-hidden="true">🎲</span><span>{{ 'GIVEAWAY.FACT_RANDOM' | translate }}</span></li>
+          <li><span class="gw-ico" aria-hidden="true">🏆</span><span>{{ 'GIVEAWAY.FACT_ANNOUNCED' | translate }}</span></li>
+        </ul>
+
+        @if (giveawayState?.drawn) {
+          <div class="gw-result gw-winner" role="status">
+            <p class="gw-result-label">{{ 'GIVEAWAY.WINNER_ANNOUNCED' | translate }}</p>
+            <div class="gw-number">#{{ formatEntryNumber(giveawayState!.winnerEntry) }}</div>
+            @if (giveawayState!.winnerName) {
+              <p class="gw-winner-name">{{ giveawayState!.winnerName }}</p>
+            }
+            @if (giveawayState!.drawnAt) {
+              <p class="gw-sub">{{ 'GIVEAWAY.DRAWN_ON' | translate:{ date: formatDate(giveawayState!.drawnAt) } }}</p>
+            }
+            @if (giveawayState!.youWon) {
+              <p class="gw-you-won">{{ 'GIVEAWAY.YOU_WON' | translate }}</p>
+            } @else if (giveawayState!.entered) {
+              <p class="gw-sub">{{ 'GIVEAWAY.YOUR_NUMBER_WAS' | translate:{ number: formatEntryNumber(giveawayState!.entryNumber) } }}</p>
+            }
+          </div>
+          @if (giveawayState!.drawVideo; as video) {
+            <div class="gw-video-block">
+              <p class="gw-video-label">{{ 'GIVEAWAY.DRAW_VIDEO_LABEL' | translate }}</p>
+              @switch (video.type) {
+                @case ('upload') {
+                  <div class="gw-video">
+                    <video controls preload="metadata" playsinline [src]="video.url" [attr.aria-label]="'GIVEAWAY.DRAW_VIDEO_TITLE' | translate"></video>
+                  </div>
+                }
+                @case ('youtube') {
+                  @if (drawVideoEmbedUrl) {
+                    <div class="gw-video">
+                      <iframe
+                        [src]="drawVideoEmbedUrl"
+                        [title]="'GIVEAWAY.DRAW_VIDEO_TITLE' | translate"
+                        loading="lazy"
+                        referrerpolicy="strict-origin-when-cross-origin"
+                        allow="accelerometer; encrypted-media; gyroscope; picture-in-picture; fullscreen"
+                        allowfullscreen></iframe>
+                    </div>
+                  }
+                }
+                @case ('instagram') {
+                  <a class="gw-video-link" [href]="video.url" target="_blank" rel="noopener noreferrer">
+                    {{ 'GIVEAWAY.WATCH_ON_INSTAGRAM' | translate }} <span aria-hidden="true">↗</span>
+                  </a>
+                }
+              }
+            </div>
+          }
+        } @else if (giveawayState?.entered) {
+          <div class="gw-result gw-entered" role="status">
+            <span class="gw-check" aria-hidden="true">✓</span>
+            <p class="gw-result-label">{{ 'GIVEAWAY.ENTERED' | translate }}</p>
+            <div class="gw-number">#{{ formatEntryNumber(giveawayState!.entryNumber) }}</div>
+            <p class="gw-sub">{{ (isGiveawayOpen() ? 'GIVEAWAY.ENTERED_NOTE' : 'GIVEAWAY.CLOSED') | translate }}</p>
+          </div>
+        } @else if (isOwnListing) {
+          <div class="own-note">{{ 'GIVEAWAY.OWN_NOTE' | translate }}</div>
+        } @else if (listing.status === 'cancelled') {
+          <div class="gw-closed">{{ 'GIVEAWAY.CANCELLED' | translate }}</div>
+        } @else if (isGiveawayOpen()) {
+          <button class="btn-offer gw-enter" (click)="enterGiveaway()" [disabled]="giveawayEntering || giveawayLoading">
+            {{ giveawayEntering ? ('GIVEAWAY.ENTERING' | translate) : ('GIVEAWAY.ENTER_BUTTON' | translate) }}
+          </button>
+          @if (!isAuthenticated) {
+            <p class="gw-note">{{ 'GIVEAWAY.LOGIN_REQUIRED' | translate }}</p>
+          }
+          <p class="gw-note">{{ 'GIVEAWAY.CONSENT' | translate }}</p>
+        } @else if (giveawayState && giveawayState.totalEntries === 0) {
+          <div class="gw-closed">{{ 'GIVEAWAY.CLOSED_NO_ENTRIES' | translate }}</div>
+        } @else {
+          <div class="gw-closed">{{ 'GIVEAWAY.CLOSED' | translate }}</div>
+        }
+
+        @if (giveawayError) { <p class="sh-error">{{ giveawayError }}</p> }
+
+        <button type="button" class="gw-rules-link" (click)="openGiveawayRules()">{{ 'GIVEAWAY.RULES' | translate }} →</button>
+      </div>
+    }
 
     <!-- COUNTDOWN ALERTS -->
     @if (showPrivateRoomEligibleCountdown()) {
@@ -421,17 +604,17 @@
     }
 
     <!-- BUY NOW -->
-    @if (listing.buyNowPrice && listing.auctionFormat === 'highest-bid' && !isAuctionEnded() && !hasPrivateRoom() && !isOwnListing) {
+    @if (!isGiveaway && listing.buyNowPrice && listing.auctionFormat === 'highest-bid' && !isAuctionEnded() && !hasPrivateRoom() && !isOwnListing) {
       <button class="btn-offer btn-buynow" (click)="buyNow()">{{ 'listingDetails.sidebar.buyNow' | translate }} {{ listing.buyNowPrice | displayPrice }}</button>
     }
 
     <!-- PRIMARY CTA -->
-    @if (listing.auctionFormat === 'highest-bid' && !isAuctionEnded() && !hasPrivateRoom() && !isOwnListing) {
+    @if (!isGiveaway && listing.auctionFormat === 'highest-bid' && !isAuctionEnded() && !hasPrivateRoom() && !isOwnListing) {
       <button class="btn-offer" (click)="openBidModal()">
         {{ 'listingDetails.actions.placeBidAtMin' | translate:{ amount: formatPrice(getMinBid()) } }}
       </button>
     }
-    @if (listing.auctionFormat === 'best-offer' && !hasPrivateRoom() && !isOwnListing && isBestOfferActive()) {
+    @if (!isGiveaway && listing.auctionFormat === 'best-offer' && !hasPrivateRoom() && !isOwnListing && isBestOfferActive()) {
       <button class="btn-offer" (click)="openOfferModal()">{{ 'listingDetails.actions.makeOffer' | translate }}</button>
     }
     @if (hasPrivateRoomCreated()) {
@@ -444,8 +627,13 @@
       <button class="btn-offer" (click)="openCreatePrivateRoomModal()">{{ 'listingDetails.actions.createPrivateRoom' | translate }}</button>
     }
     @if (isOwnListing && !isAuctionEnded()) {
-      <div class="own-note">{{ 'listingDetails.sidebar.ownListingNote' | translate }}</div>
-      <button class="btn-watch" [routerLink]="['/listing', listing._id, 'edit']">{{ 'listingDetails.actions.editListing' | translate }}</button>
+      @if (!isGiveaway) {
+        <div class="own-note">{{ 'listingDetails.sidebar.ownListingNote' | translate }}</div>
+      }
+      <!-- Entries lock a giveaway's description, as bids lock an auction's. -->
+      @if (!isGiveaway || (giveawayState?.totalEntries ?? listing.giveaway?.entryCount ?? 0) === 0) {
+        <button class="btn-watch" [routerLink]="['/listing', listing._id, 'edit']">{{ 'listingDetails.actions.editListing' | translate }}</button>
+      }
     }
     @if (canReopenListing()) {
       <div class="own-note">
@@ -480,7 +668,7 @@
         <div class="mb-d">{{ 'listingDetails.sidebar.minimumOfferDesc' | translate }}</div>
       </div>
     }
-    @if (listing.auctionFormat === 'highest-bid' && !isAuctionEnded() && listing.startingPrice) {
+    @if (!isGiveaway && listing.auctionFormat === 'highest-bid' && !isAuctionEnded() && listing.startingPrice) {
       <div class="min-box">
         <div class="mb-l">{{ 'listingDetails.sidebar.minimumBid' | translate }}</div>
         <div class="mb-v">{{ getMinBid() | displayPrice }}</div>
@@ -539,6 +727,8 @@
 
     <!-- INFO ROWS -->
     <div class="info-rows">
+      <!-- A giveaway has no payment to protect: nobody pays anything, ever. -->
+      @if (!isGiveaway) {
       <div class="ir">
         <span class="ir-ico">🔒</span>
         <div>
@@ -547,12 +737,15 @@
           <div class="ir-s">{{ 'listingDetails.payment.escrow' | translate }}</div>
         </div>
       </div>
+      }
       <div class="ir">
         <span class="ir-ico">📦</span>
         <div>
           <div class="ir-k">{{ 'listingDetails.shipping.title' | translate }}</div>
           @if (listing.shippingOption === 'free') {
             <div class="ir-v">{{ 'listingDetails.shipping.free' | translate }}</div>
+          } @else if (isGiveaway) {
+            <div class="ir-v">{{ 'GIVEAWAY.PICKUP' | translate }}</div>
           } @else {
             <div class="ir-v">{{ formatPrice(listing.shippingCost) }}</div>
           }
@@ -564,7 +757,7 @@
           }
         </div>
       </div>
-      @if (listing.returnPolicy) {
+      @if (listing.returnPolicy && !isGiveaway) {
         <div class="ir">
           <span class="ir-ico">↩</span>
           <div>

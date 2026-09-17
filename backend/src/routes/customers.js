@@ -22,6 +22,28 @@ router.get('/profile', authenticateToken, async (req, res) => {
 
     let customer = await Customer.findOne({ uid }).lean();
 
+    // Nexus can provision a stub by email before the person signs up. On first
+    // Firebase login, adopt that document instead of failing on unique email.
+    if (!customer && email) {
+      const byEmail = await Customer.findOne({ email: String(email).toLowerCase() }).lean();
+      if (byEmail) {
+        await Customer.updateOne(
+          { _id: byEmail._id },
+          {
+            $set: {
+              uid,
+              email: email || byEmail.email,
+              firstName: firstName || byEmail.firstName,
+              lastName: lastName || byEmail.lastName,
+              emailVerified: !!emailVerified,
+              lastLogin: new Date()
+            }
+          }
+        );
+        customer = await Customer.findOne({ uid }).lean();
+      }
+    }
+
     if (!customer) {
       customer = await Customer.create({
         uid,
@@ -138,6 +160,11 @@ router.patch('/seller-compliance', authenticateToken, requireActiveAccount, asyn
 
     const prevClass = customer.sellerClassification || 'private';
     const prevStatus = customer.professionalVerificationStatus || 'none';
+
+    // Reaching this route at all means the seller answered the question, so the
+    // answer is deliberate whichever way it went — that is what vehicle
+    // listings require, and `private` alone cannot prove it (it is the default).
+    customer.sellerClassificationDeclaredAt = new Date();
 
     if (classification === 'private') {
       customer.sellerClassification = 'private';

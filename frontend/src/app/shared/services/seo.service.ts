@@ -137,9 +137,11 @@ export class SeoService {
     const price = this.resolveListingPrice(listing);
     const priceStr  = price != null ? fmtEur(price) : 'proposta';
     const format    = listing.auctionFormat === 'best-offer' ? 'Melhor Proposta' : 'Leilão';
-    const cta       = price != null
-      ? `${format} a partir de ${priceStr}. Lance já.`
-      : `${format} aberta. Faça a sua proposta.`;
+    const cta       = listing.saleFormat === 'giveaway'
+      ? 'Passatempo gratuito, sem obrigação de compra. Participe já.'
+      : price != null
+        ? `${format} a partir de ${priceStr}. Lance já.`
+        : `${format} aberta. Faça a sua proposta.`;
 
     if (!cleanDesc) return cta;
 

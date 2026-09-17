@@ -1,3 +1,4 @@
+const crypto = require('crypto');
 const Listing = require('../models/Listing');
 const Customer = require('../models/Customer');
 
@@ -34,8 +35,10 @@ const ALLOWED_DURATIONS = {
 };
 
 const ALLOWED_SHIPPING = ['flat-rate', 'calculated', 'local-pickup', 'free'];
+const ALLOWED_GIVEAWAY_SHIPPING = ['local-pickup', 'free'];
 const ALLOWED_RETURNS = ['30-days', '14-days', 'no-returns', 'custom'];
 const ALLOWED_FORMATS = ['highest-bid', 'best-offer'];
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function generateSlug(title) {
   const base = String(title || '')
@@ -65,28 +68,77 @@ function normalizeCategory(value) {
     .replace(/\s+/g, '-');
 }
 
+function nameFromEmail(email) {
+  const local = String(email || '').split('@')[0] || 'Seller';
+  const cleaned = local.replace(/[._+-]+/g, ' ').trim();
+  const first = cleaned.split(/\s+/)[0] || 'Seller';
+  return {
+    firstName: first.slice(0, 50),
+    lastName: 'Seller'
+  };
+}
+
+/**
+ * Resolve seller by id/email. If only email is given and no customer exists,
+ * provision a stub account so Nexus can list on their behalf before they sign up.
+ */
+async function resolveOrCreateSeller({ sellerId, sellerEmail }) {
+  let seller = null;
+  let sellerCreated = false;
+
+  if (sellerId) {
+    seller = await Customer.findById(sellerId).select('_id email firstName lastName').lean();
+  } else if (sellerEmail) {
+    if (!EMAIL_RE.test(sellerEmail)) {
+      const err = new Error('Seller email is invalid.');
+      err.status = 400;
+      throw err;
+    }
+    seller = await Customer.findOne({ email: sellerEmail }).select('_id email firstName lastName').lean();
+    if (!seller) {
+      const { firstName, lastName } = nameFromEmail(sellerEmail);
+      const created = await Customer.create({
+        uid: `nexus-${crypto.randomBytes(16).toString('hex')}`,
+        email: sellerEmail,
+        firstName,
+        lastName,
+        emailVerified: false,
+        language: 'pt',
+        balance: 0,
+        reviewCount: 0
+      });
+      seller = {
+        _id: created._id,
+        email: created.email,
+        firstName: created.firstName,
+        lastName: created.lastName
+      };
+      sellerCreated = true;
+    }
+  }
+
+  if (!seller) {
+    const err = new Error('Seller email is required (existing account or new email).');
+    err.status = 400;
+    throw err;
+  }
+
+  return { seller, sellerCreated };
+}
+
 /**
  * Create a listing on behalf of a seller (Nexus admin).
  * Skips seller DSA/KYC gates; still validates required fields.
+ * Supports auction (highest-bid / best-offer) and giveaway.
+ * Best offer never allows private room.
  */
 async function createListingAsAdmin(input = {}) {
   const sellerId = input.sellerId ? String(input.sellerId).trim() : '';
   const sellerEmail = input.sellerEmail ? String(input.sellerEmail).trim().toLowerCase() : '';
+  const { seller, sellerCreated } = await resolveOrCreateSeller({ sellerId, sellerEmail });
 
-  let seller = null;
-  if (sellerId) {
-    seller = await Customer.findById(sellerId).select('_id email firstName lastName').lean();
-  } else if (sellerEmail) {
-    seller = await Customer.findOne({ email: sellerEmail }).select('_id email firstName lastName').lean();
-  }
-  if (!seller) {
-    const err = new Error('Seller not found. Provide a valid sellerId or sellerEmail.');
-    err.status = 404;
-    throw err;
-  }
-
-  const title = String(input.title || '').trim().slice(0, 80);
-  const description = String(input.description || '').trim().slice(0, 5000);
+  const title = String(input.title || input.titlePt || '').trim().slice(0, 80);
+  const description = String(input.description || input.descriptionPt || '').trim().slice(0, 5000);
   if (!title) {
     const err = new Error('Title is required.');
     err.status = 400;
@@ -113,29 +165,39 @@ async function createListingAsAdmin(input = {}) {
     throw err;
   }
 
-  const auctionFormat = ALLOWED_FORMATS.includes(input.auctionFormat || input.listingFormat)
-    ? (input.auctionFormat || input.listingFormat)
-    : 'highest-bid';
+  const isGiveaway = input.saleFormat === 'giveaway';
+  const auctionFormat = isGiveaway
+    ? 'highest-bid'
+    : (ALLOWED_FORMATS.includes(input.auctionFormat || input.listingFormat)
+      ? (input.auctionFormat || input.listingFormat)
+      : 'highest-bid');
+
+  // Best offer and giveaways never get a private room.
+  const allowPrivateRoom = !isGiveaway && auctionFormat === 'highest-bid' && !!input.allowPrivateRoom;
 
   const durationSlot = ALLOWED_DURATIONS[input.duration || input.durationSlot]
     ? (input.duration || input.durationSlot)
     : '7 days';
 
-  const startingPrice = Math.max(0, Number(input.startingPrice ?? 0));
+  const startingPrice = isGiveaway ? 0 : Math.max(0, Number(input.startingPrice ?? 0));
   if (Number.isNaN(startingPrice)) {
     const err = new Error('startingPrice must be a number.');
     err.status = 400;
     throw err;
   }
 
-  const shippingOption = ALLOWED_SHIPPING.includes(input.shippingOption)
+  let shippingOption = ALLOWED_SHIPPING.includes(input.shippingOption)
     ? input.shippingOption
-    : 'flat-rate';
-  const returnPolicy = ALLOWED_RETURNS.includes(input.returnPolicy)
-    ? input.returnPolicy
-    : 'no-returns';
+    : (isGiveaway ? 'free' : 'flat-rate');
+  if (isGiveaway && !ALLOWED_GIVEAWAY_SHIPPING.includes(shippingOption)) {
+    shippingOption = 'free';
+  }
 
-  const shippingCost = shippingOption === 'flat-rate'
+  const returnPolicy = isGiveaway
+    ? 'no-returns'
+    : (ALLOWED_RETURNS.includes(input.returnPolicy) ? input.returnPolicy : 'no-returns');
+
+  const shippingCost = (!isGiveaway && shippingOption === 'flat-rate')
     ? Math.max(0, Number(input.shippingCost ?? 0) || 0)
     : 0;
 
@@ -169,15 +231,17 @@ async function createListingAsAdmin(input = {}) {
     category,
     subCategory,
     condition,
+    saleFormat: isGiveaway ? 'giveaway' : 'auction',
     auctionFormat,
     durationSlot,
     startingPrice,
     currentPrice: startingPrice,
-    bidIncrement: Math.max(0.01, Number(input.bidIncrement ?? 1) || 1),
+    bidIncrement: isGiveaway ? 0 : Math.max(0.01, Number(input.bidIncrement ?? 1) || 1),
     startDate,
     endDate,
     seller: seller._id,
-    status: 'active',
+    // Giveaways still go through Nexus approval; auctions created here go live.
+    status: isGiveaway ? 'pending_review' : 'active',
     shippingOption,
     shippingCost,
     returnPolicy,
@@ -185,8 +249,11 @@ async function createListingAsAdmin(input = {}) {
     location,
     locationCity,
     locationCountry,
-    allowPrivateRoom: auctionFormat === 'highest-bid' ? !!input.allowPrivateRoom : false,
-    images,
+    allowPrivateRoom,
+    images: images.length > 0 ? images : (isGiveaway ? ['https://via.placeholder.com/400x300?text=No+Image'] : images),
+    acceptedPaymentMethods: isGiveaway
+      ? { stripe: false, inPerson: false, bankTransfer: false, mbway: false }
+      : undefined,
     specifications: Array.isArray(input.specifications) ? input.specifications : [],
     attributes: input.attributes && typeof input.attributes === 'object' ? input.attributes : {}
   });
@@ -195,7 +262,8 @@ async function createListingAsAdmin(input = {}) {
 
   return {
     listing,
-    seller
+    seller,
+    sellerCreated
   };
 }
 

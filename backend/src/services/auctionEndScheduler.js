@@ -11,6 +11,8 @@ const { processPrivateRoomNonPayments, sendPaymentDeadlineWarnings } = require('
 const { processAllNonPayments } = require('./nonPaymentPenaltyService');
 const { processAutoRelists } = require('./autoRelistService');
 const { notifyWatchlistersAuctionEnding } = require('./notificationService');
+const { onAuctionEnded: amlOnAuctionEnded } = require('./amlMonitorService');
+const { closeEndedGiveaways } = require('./giveawayService');
 const logger = require('../utils/logger');
 
 let checkInterval = null;
@@ -88,11 +90,20 @@ async function checkEndedAuctions() {
       }
     }
 
+    // 0) Giveaways whose entry window has passed. Handled before — and apart
+    //    from — the auction sweep: handleAuctionEnd resolves bids and reports
+    //    on how the auction went, and a giveaway has neither. All that happens
+    //    automatically is that entries close; drawing stays a human act.
+    await closeEndedGiveaways().catch(err =>
+      logger.error('❌ Giveaway closing error:', err.message)
+    );
+
     // 1) Regular auctions: endDate passed, not in active private room and not invited
     const endedAuctions = await Listing.find({
       status: 'active',
       endDate: { $lte: now },
-      privateRoomStatus: { $nin: ['active', 'invited'] }
+      privateRoomStatus: { $nin: ['active', 'invited'] },
+      saleFormat: { $ne: 'giveaway' }
     }).populate('seller', 'email');
 
     for (const listing of endedAuctions) {
@@ -102,6 +113,9 @@ async function checkEndedAuctions() {
         await handleAuctionEnd(listing._id, ioInstance);
         processed++;
         logger.info(`✅ Processed ended auction: ${listing._id} - ${listing.title}`);
+        // AML: the winner is only known now, so the repeat-buyer pattern can only
+        // be checked here. Flags for review, never blocks, never throws.
+        amlOnAuctionEnded(listing._id).catch(() => {});
         // After auction ends, apply any deferred suspensions for participants who have no other active auctions
         const sellerId = listing.seller?._id || listing.seller;
         checkAndApplyPendingSuspensions([sellerId, ...bidderIds], ioInstance)
@@ -124,6 +138,7 @@ async function checkEndedAuctions() {
         await handlePrivateRoomEnd(listing._id, ioInstance);
         processed++;
         logger.info(`✅ Closed private room (time expired): ${listing._id} - ${listing.title}`);
+        amlOnAuctionEnded(listing._id).catch(() => {});
         const sellerId = listing.seller?._id || listing.seller;
         checkAndApplyPendingSuspensions([sellerId, ...bidderIds], ioInstance)
           .catch(err => logger.error(`❌ Pending suspension check error for private room ${listing._id}:`, err.message));
@@ -152,13 +167,14 @@ async function checkEndedAuctions() {
       status: 'active',
       endDate: { $gt: now, $lte: soonCutoff },
       privateRoomStatus: { $nin: ['active', 'invited'] }
-    }).select('_id title slug').lean();
+    }).select('_id title slug saleFormat').lean();
 
     for (const listing of endingSoonListings) {
       notifyWatchlistersAuctionEnding({
         listingId: listing._id,
         listingTitle: listing.title,
         listingSlug: listing.slug,
+        isGiveaway: listing.saleFormat === 'giveaway',
         io: ioInstance
       }).catch(err => logger.error(`❌ Watchlist ending-soon error for ${listing._id}:`, err.message));
     }

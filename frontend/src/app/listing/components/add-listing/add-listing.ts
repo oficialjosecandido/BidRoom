@@ -20,6 +20,7 @@ import { AnalyticsService } from '../../../shared/services/analytics.service';
 import { AnalyticsEvents } from '../../../shared/services/analytics.events';
 import { PostHogService } from '../../../shared/services/posthog.service';
 import { WaiverService } from '../../../shared/services/waiver.service';
+import { FeatureFlagsService } from '../../../shared/services/feature-flags.service';
 
 interface Category {
   id: string;
@@ -233,7 +234,13 @@ export class AddListing implements OnInit, OnDestroy {
   private analytics = inject(AnalyticsService);
   private postHog = inject(PostHogService);
   readonly waiverService = inject(WaiverService);
+  private featureFlags = inject(FeatureFlagsService);
   private destroyRef = inject(DestroyRef);
+
+  /** Vehicle value ceiling, shown beside the price fields for vehicle listings. */
+  get maxVehicleValue(): number {
+    return this.featureFlags.maxVehicleValueEur;
+  }
 
   listingForm!: FormGroup;
   activeLangTab: 'pt' | 'en' | 'fr' | 'es' = 'pt';
@@ -634,7 +641,26 @@ export class AddListing implements OnInit, OnDestroy {
     return this.returnPolicies;
   }
 
+  /**
+   * The AML declaration is only asked of vehicle sellers, so its validator
+   * follows the category instead of being fixed at form construction. Clearing
+   * the value on the way out matters: a box ticked for a car and then left
+   * ticked on a watch would be a consent the seller never gave.
+   */
+  private syncVehicleAmlValidator(): void {
+    const control = this.listingForm.get('vehicleAmlDeclaration');
+    if (!control) return;
+    if (this.isVehicleListing) {
+      control.setValidators(Validators.requiredTrue);
+    } else {
+      control.clearValidators();
+      control.setValue(false, { emitEvent: false });
+    }
+    control.updateValueAndValidity({ emitEvent: false });
+  }
+
   private applyVehicleLogisticsDefaults(): void {
+    this.syncVehicleAmlValidator();
     if (!this.isVehicleListing) return;
     this.listingForm.patchValue({
       shippingOption: 'local-pickup',
@@ -783,7 +809,9 @@ export class AddListing implements OnInit, OnDestroy {
       acceptPayInPerson: [false],
       acceptPayBankTransfer: [false],
       acceptPayMbway: [false],
-      sellerDeclaration: [false, Validators.requiredTrue]
+      sellerDeclaration: [false, Validators.requiredTrue],
+      // Required only for vehicles — see syncVehicleAmlValidator().
+      vehicleAmlDeclaration: [false]
     }, { validators: buyNowAboveStartingBid() });
 
     this.listingForm.get('listingFormat')?.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(format => {
@@ -839,6 +867,9 @@ export class AddListing implements OnInit, OnDestroy {
     this.listingForm.get('category')?.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(categoryId => {
       this.selectedCategory = this.categories.find(c => c.id === categoryId) || null;
       this.listingForm.patchValue({ subCategory: '' });
+      // Runs on the way out of vehicles too, so the AML requirement is dropped
+      // (and the box cleared) when the listing is no longer a car.
+      this.syncVehicleAmlValidator();
       if (categoryId === 'vehicles') {
         this.applyVehicleLogisticsDefaults();
       }
@@ -1529,14 +1560,23 @@ export class AddListing implements OnInit, OnDestroy {
       const flagged = !!listing.contentWarning;
       const result = await Swal.fire({
         icon: flagged ? 'warning' : 'info',
+        iconColor: '#C9A84C',
         title: this.translate.instant(flagged ? 'addListing.moderationTitle' : 'addListing.reviewTitle'),
         html: `<p>${this.translate.instant(flagged ? 'addListing.moderationBody' : 'addListing.reviewBody')}</p>`,
         confirmButtonText: this.translate.instant('addListing.reviewDashboardCta'),
-        confirmButtonColor: '#002366',
         showCancelButton: true,
         cancelButtonText: this.translate.instant('addListing.reviewListingCta'),
-        cancelButtonColor: '#6b7280',
-        reverseButtons: true
+        reverseButtons: true,
+        buttonsStyling: false,
+        customClass: {
+          popup: 'br-swal',
+          icon: 'br-swal__icon',
+          title: 'br-swal__title',
+          htmlContainer: 'br-swal__body',
+          actions: 'br-swal__actions',
+          confirmButton: 'br-swal__btn br-swal__btn--primary',
+          cancelButton: 'br-swal__btn br-swal__btn--secondary'
+        }
       });
 
       // Confirm = the dashboard, where the status of every listing is visible.
@@ -1568,6 +1608,52 @@ export class AddListing implements OnInit, OnDestroy {
 
       if (error?.error?.error === 'kyc_required') {
         this.kycService.openKycGate(error.error.kycStatus || 'none');
+        return;
+      }
+
+      // Vehicle compliance refusals. Each one names a specific thing the seller
+      // has to go and do, so each sends them there instead of printing a message
+      // beside a form they cannot fix from here.
+      const code = error?.error?.error;
+      if (code === 'vehicle_kyc_required') {
+        this.kycService.openKycGate(error.error.kycStatus || 'none');
+        return;
+      }
+      if (code === 'vehicle_declaration_required' || code === 'vehicle_professional_details_required') {
+        const isDetails = code === 'vehicle_professional_details_required';
+        const res = await Swal.fire({
+          icon: 'info',
+          title: this.translate.instant(isDetails ? 'addListing.vehicle.detailsTitle' : 'addListing.vehicle.declarationTitle'),
+          html: `<p>${this.translate.instant(isDetails ? 'addListing.vehicle.detailsBody' : 'addListing.vehicle.declarationBody')}</p>`,
+          confirmButtonText: this.translate.instant('addListing.vehicle.settingsCta'),
+          confirmButtonColor: '#002366',
+          showCancelButton: true,
+          cancelButtonText: this.translate.instant('addListing.vehicle.cancelCta'),
+          cancelButtonColor: '#6b7280',
+          reverseButtons: true
+        });
+        if (res.isConfirmed) this.router.navigate(['/dashboard/settings']);
+        this.errorMessage = '';
+        return;
+      }
+      if (code === 'vehicle_aml_terms_required') {
+        // The box is on the last step, which is where the seller already is.
+        this.currentStep = 6;
+        this.listingForm.get('vehicleAmlDeclaration')?.markAsTouched();
+        this.errorMessage = this.translate.instant('addListing.vehicle.amlRequiredError');
+        return;
+      }
+      if (code === 'vehicle_value_cap_exceeded') {
+        Swal.fire({
+          icon: 'warning',
+          title: this.translate.instant('addListing.vehicle.valueCapTitle'),
+          html: `<p>${this.translate.instant('addListing.vehicle.valueCapBody', {
+            max: (error.error.maxValue || 0).toLocaleString(this.translate.currentLang || 'pt')
+          })}</p>`,
+          confirmButtonText: 'OK',
+          confirmButtonColor: '#002366'
+        });
+        this.errorMessage = '';
         return;
       }
       const apiErr = error?.error?.message || error?.error?.error;
@@ -1620,7 +1706,9 @@ export class AddListing implements OnInit, OnDestroy {
       itemMode: formValue.itemMode || 'single',
       quantity: formValue.itemMode === 'multi_quantity' ? (formValue.quantity || 2) : 1,
       bundleItems: formValue.itemMode === 'bundle' ? (formValue.bundleItems || []) : [],
-      images: this.uploadedFileUrls
+      images: this.uploadedFileUrls,
+      // Only meaningful for vehicles; the backend records when it was given.
+      vehicleAmlDeclaration: formValue.vehicleAmlDeclaration === true
     };
   }
 
@@ -1648,7 +1736,9 @@ export class AddListing implements OnInit, OnDestroy {
         return fields;
       }
       case 6:
-        return ['sellerDeclaration'];
+        return this.isVehicleListing
+          ? ['sellerDeclaration', 'vehicleAmlDeclaration']
+          : ['sellerDeclaration'];
       default:
         return [];
     }
@@ -1724,6 +1814,7 @@ export class AddListing implements OnInit, OnDestroy {
       'startingBid', 'duration', 'shippingOption', 'flatRateShipping',
       'packageSize', 'shippingOriginPostalCode',
       'locationCity', 'locationCountry', 'returnPolicy', 'sellerDeclaration',
+      ...(this.isVehicleListing ? ['vehicleAmlDeclaration'] : []),
     ];
     const missing: string[] = [];
     if (this.uploadedFiles.length < 1 || !this.isMediaValid) {
@@ -1785,6 +1876,7 @@ export class AddListing implements OnInit, OnDestroy {
       shippingOption: 'addListing.shippingOptions',
       returnPolicy: 'addListing.returnPolicy',
       sellerDeclaration: 'addListing.sellerDeclaration',
+      vehicleAmlDeclaration: 'addListing.vehicle.amlDeclarationLabel',
       flatRateShipping: 'addListing.flatRateCost',
       packageSize: 'addListing.packageSize',
       shippingOriginPostalCode: 'addListing.originPostalCode',

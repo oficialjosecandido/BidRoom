@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpEvent, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { API_CONFIG } from '../../shared/config/api.config';
 import { Listing } from '../../shared/services/listings.service';
@@ -116,14 +116,167 @@ export interface AdminReportsQueryParams {
   reportType?: string;
 }
 
+/**
+ * A vehicle-compliance or AML flag raised for review.
+ *
+ * Nothing was blocked when these were raised — each one is a pattern that needs
+ * a person to decide about, not an enforcement action already taken.
+ */
+export interface AdminComplianceFlag {
+  _id: string;
+  type: 'undeclared_professional' | 'aml_repeat_winner' | 'aml_new_seller_high_value';
+  severity: 'low' | 'medium' | 'high' | 'critical';
+  userId: {
+    _id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    sellerClassification?: 'private' | 'professional';
+    kycStatus?: string;
+    createdAt?: string;
+  } | null;
+  listingId: {
+    _id: string;
+    title: string;
+    slug: string;
+    category: string;
+    startingPrice?: number;
+    buyNowPrice?: number;
+  } | null;
+  details: Record<string, unknown>;
+  resolved: boolean;
+  resolvedAt: string | null;
+  resolvedByEmail: string | null;
+  resolutionNote: string | null;
+  createdAt: string;
+}
+
+export interface AdminComplianceFlagsResponse {
+  flags: AdminComplianceFlag[];
+  total: number;
+  page: number;
+  limit: number;
+  pages: number;
+}
+
+export type AdminGiveawayPhase = 'pending' | 'open' | 'closed' | 'drawn' | 'cancelled';
+
+interface AdminGiveawayPerson {
+  _id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+}
+
+/** A giveaway as Nexus lists it — the listing plus where it is in its life. */
+export interface AdminGiveaway {
+  _id: string;
+  title: string;
+  titlePt?: string | null;
+  slug: string;
+  images: string[];
+  status: string;
+  startDate?: string;
+  endDate: string;
+  createdAt: string;
+  category?: string;
+  condition?: string;
+  phase: AdminGiveawayPhase;
+  totalEntries: number;
+  seller?: AdminGiveawayPerson;
+  giveaway?: {
+    entryCount: number;
+    drawnAt: string | null;
+    winnerEntry: number | null;
+    winner: AdminGiveawayPerson | null;
+    drawnByEmail?: string | null;
+    /** When the winner email went out; null if it has not (Nexus offers to send it). */
+    winnerEmailedAt?: string | null;
+    drawVideo?: AdminGiveawayDrawVideo | null;
+  };
+}
+
+export interface AdminGiveawayDrawVideo {
+  url: string | null;
+  type: 'upload' | 'youtube' | 'instagram' | null;
+  publishedAt: string | null;
+}
+
+export interface AdminGiveawaysResponse {
+  giveaways: AdminGiveaway[];
+  total: number;
+  page: number;
+  limit: number;
+  pages: number;
+}
+
+export interface AdminGiveawayEntry {
+  _id: string;
+  entryNumber: number;
+  participant: AdminGiveawayPerson | null;
+  createdAt: string;
+}
+
+export interface AdminGiveawayEntriesResponse {
+  giveaway: AdminGiveaway;
+  entries: AdminGiveawayEntry[];
+  total: number;
+  page: number;
+  limit: number;
+  pages: number;
+}
+
+export interface AdminGiveawayDrawResponse {
+  success: boolean;
+  winnerEntry: number;
+  totalEntries: number;
+  drawnAt: string;
+  winner: AdminGiveawayPerson & { publicName: string };
+  /** 'pending' when the mail server was still working when the API answered. */
+  winnerEmail: 'sent' | 'failed' | 'pending';
+  winnerEmailedAt: string | null;
+}
+
+export interface AdminGiveawayDrawVideoResponse {
+  success: boolean;
+  drawVideo: AdminGiveawayDrawVideo;
+}
+
+/**
+ * What Nexus sends to create a giveaway. It goes through the ordinary listing
+ * route, which is where the admin-only check and the free-entry rules live.
+ */
+export interface AdminCreateGiveawayPayload {
+  saleFormat: 'giveaway';
+  title: string;
+  description: string;
+  category: string;
+  subCategory: string;
+  condition: string;
+  duration: string;
+  shippingOption: 'free' | 'local-pickup';
+  locationCity: string;
+  locationCountry: string;
+  location: string;
+  images: string[];
+}
+
 export interface AdminCreateAuctionPayload {
   sellerEmail?: string;
   sellerId?: string;
   title: string;
+  titleEn?: string;
+  titleEs?: string;
+  titleFr?: string;
   description: string;
+  descriptionEn?: string;
+  descriptionEs?: string;
+  descriptionFr?: string;
   category?: string;
   subCategory?: string;
   condition?: string;
+  /** auction (via listingFormat) or giveaway */
+  saleFormat?: 'auction' | 'giveaway';
   listingFormat?: 'highest-bid' | 'best-offer';
   startingPrice?: number;
   duration?: string;
@@ -138,11 +291,13 @@ export interface AdminCreateAuctionPayload {
 
 export interface AdminCreateAuctionResponse {
   ok: boolean;
+  sellerCreated?: boolean;
   listing: {
     _id: string;
     title: string;
     slug: string;
     status: string;
+    saleFormat?: string;
     endDate: string;
     seller: { _id: string; email: string; firstName: string; lastName: string };
   };
@@ -327,6 +482,73 @@ export class AdminService {
 
   updateReport(id: string, payload: { status: string; adminNotes?: string }): Observable<{ report: AdminReport }> {
     return this.http.patch<{ report: AdminReport }>(`${this.apiUrl}/reports/${id}`, payload);
+  }
+
+  getComplianceFlags(params?: { resolved?: boolean; type?: string; limit?: number }): Observable<AdminComplianceFlagsResponse> {
+    let httpParams = new HttpParams().set('resolved', String(params?.resolved === true));
+    if (params?.type && params.type !== 'all') httpParams = httpParams.set('type', params.type);
+    if (params?.limit != null) httpParams = httpParams.set('limit', String(params.limit));
+    return this.http.get<AdminComplianceFlagsResponse>(`${this.apiUrl}/compliance-flags`, { params: httpParams });
+  }
+
+  /** The note is required by the API — a closed flag with no reasoning is not evidence of review. */
+  resolveComplianceFlag(id: string, resolutionNote: string): Observable<{ flag: AdminComplianceFlag }> {
+    return this.http.patch<{ flag: AdminComplianceFlag }>(`${this.apiUrl}/compliance-flags/${id}`, { resolutionNote });
+  }
+
+  getGiveaways(params?: { phase?: string; page?: number; limit?: number }): Observable<AdminGiveawaysResponse> {
+    let httpParams = new HttpParams();
+    if (params?.phase && params.phase !== 'all') httpParams = httpParams.set('phase', params.phase);
+    if (params?.page != null) httpParams = httpParams.set('page', String(params.page));
+    if (params?.limit != null) httpParams = httpParams.set('limit', String(params.limit));
+    return this.http.get<AdminGiveawaysResponse>(`${this.apiUrl}/giveaways`, { params: httpParams });
+  }
+
+  getGiveawayEntries(id: string, params?: { page?: number; limit?: number }): Observable<AdminGiveawayEntriesResponse> {
+    let httpParams = new HttpParams();
+    if (params?.page != null) httpParams = httpParams.set('page', String(params.page));
+    if (params?.limit != null) httpParams = httpParams.set('limit', String(params.limit));
+    return this.http.get<AdminGiveawayEntriesResponse>(`${this.apiUrl}/giveaways/${id}/entries`, { params: httpParams });
+  }
+
+  /** Draws once. A second call is refused by the API with giveaway_already_drawn. */
+  drawGiveaway(id: string): Observable<AdminGiveawayDrawResponse> {
+    return this.http.post<AdminGiveawayDrawResponse>(`${this.apiUrl}/giveaways/${id}/draw`, {});
+  }
+
+  /** Resend the winner email. Fails with giveaway_email_failed (502) if the mail server refuses it. */
+  emailGiveawayWinner(id: string): Observable<{ success: boolean; winnerEmailedAt: string }> {
+    return this.http.post<{ success: boolean; winnerEmailedAt: string }>(`${this.apiUrl}/giveaways/${id}/email-winner`, {});
+  }
+
+  /** Publish a YouTube or Instagram link as the draw video. The API checks and canonicalises it. */
+  publishGiveawayDrawVideoLink(id: string, url: string): Observable<AdminGiveawayDrawVideoResponse> {
+    return this.http.post<AdminGiveawayDrawVideoResponse>(`${this.apiUrl}/giveaways/${id}/draw-video`, { url });
+  }
+
+  /** Upload a recording (MP4/MOV/WebM, ≤200 MB) and publish it. Emits progress events. */
+  uploadGiveawayDrawVideo(id: string, file: File): Observable<HttpEvent<AdminGiveawayDrawVideoResponse>> {
+    const formData = new FormData();
+    formData.append('video', file);
+    return this.http.post<AdminGiveawayDrawVideoResponse>(`${this.apiUrl}/giveaways/${id}/draw-video/upload`, formData, {
+      reportProgress: true,
+      observe: 'events'
+    });
+  }
+
+  removeGiveawayDrawVideo(id: string): Observable<{ success: boolean; removed: boolean }> {
+    return this.http.delete<{ success: boolean; removed: boolean }>(`${this.apiUrl}/giveaways/${id}/draw-video`);
+  }
+
+  uploadImages(files: File[]): Observable<{ urls: string[] }> {
+    const formData = new FormData();
+    files.forEach(f => formData.append('images', f));
+    return this.http.post<{ urls: string[] }>(`${API_CONFIG.getApiUrl()}/uploads`, formData);
+  }
+
+  /** Created pending review like every listing — it goes live when approved. */
+  createGiveaway(payload: AdminCreateGiveawayPayload): Observable<Listing> {
+    return this.http.post<Listing>(`${API_CONFIG.getApiUrl()}/listings`, payload);
   }
 
   deleteListing(id: string): Observable<{ ok: boolean; deletedId: string }> {

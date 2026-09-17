@@ -72,6 +72,17 @@ export interface Listing {
   handlingTime?: number;
   specifications?: { key: string; value: string }[];
   attributes?: Record<string, string | number | boolean>;
+  /**
+   * 'giveaway' is a free prize draw, not a sale: no price, no bids, no offers.
+   * When set, auctionFormat, prices and private-room fields do not apply.
+   */
+  saleFormat?: 'auction' | 'giveaway';
+  giveaway?: {
+    entryCount: number;
+    drawnAt: string | null;
+    winnerEntry: number | null;
+    winner: string | null;
+  };
   // New auction mechanics
   auctionFormat: 'highest-bid' | 'best-offer';
   durationSlot: '5 minutes' | '2 hours' | '24 hours' | '3 days' | '7 days';

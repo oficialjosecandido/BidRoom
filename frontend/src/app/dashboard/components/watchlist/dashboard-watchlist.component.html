@@ -37,7 +37,9 @@
               } @else {
                 <div class="wl-img-ph">{{ listing.title[0] }}</div>
               }
-              @if (listing.auctionFormat === 'best-offer') {
+              @if (listing.saleFormat === 'giveaway') {
+                <span class="wl-pill wlp-offer">🎁 {{ 'GIVEAWAY.PILL' | translate }}</span>
+              } @else if (listing.auctionFormat === 'best-offer') {
                 <span class="wl-pill wlp-offer">{{ 'myBids.typeOffer' | translate }}</span>
               } @else {
                 <span class="wl-pill wlp-live">{{ 'watchlist.typeLive' | translate }}</span>
@@ -56,7 +58,9 @@
             </div>
             <div class="wl-foot">
               <span class="wl-price">
-                @if (listing.auctionFormat === 'best-offer' && (listing.currentPrice == null || listing.currentPrice === 0)) {
+                @if (listing.saleFormat === 'giveaway') {
+                  {{ 'GIVEAWAY.FREE' | translate }}
+                } @else if (listing.auctionFormat === 'best-offer' && (listing.currentPrice == null || listing.currentPrice === 0)) {
                   {{ 'dashboard.watchlist.noOffersYet' | translate }}
                 } @else {
                   {{ formatPrice(listing.currentPrice) }}

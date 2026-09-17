@@ -107,6 +107,14 @@ const listingSchema = new mongoose.Schema({
     flaggedAt: { type: Date }
   },
   /**
+   * When the seller accepted the vehicle AML terms — that the car will be paid
+   * for by a traceable method. Vehicles only; null everywhere else.
+   *
+   * Stored rather than merely required, because the point of the term is to be
+   * able to show, afterwards, that the seller agreed to it before listing.
+   */
+  vehicleAmlAcceptedAt: { type: Date, default: null },
+  /**
    * Outcome of the manual review every listing goes through before going live.
    *
    * Kept separate from `status` because status is where the listing *is* and
@@ -120,6 +128,34 @@ const listingSchema = new mongoose.Schema({
     reason: { type: String, maxlength: 1000, default: null },
     reviewedAt: { type: Date, default: null },
     reviewedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Customer', default: null }
+  },
+  /**
+   * What went out to the BidRoom Facebook Page and Instagram account after the
+   * approval — see socialPublisherService. `claimedAt` is set before anything is
+   * posted and is what stops a listing from going out twice; a platform's
+   * `error` is Meta's message when that post failed.
+   *
+   * Hidden unless asked for with `+socialPosts`: the public listing endpoints
+   * spread the whole document, and Meta's error text is not for buyers.
+   */
+  socialPosts: {
+    type: new mongoose.Schema({
+      claimedAt: { type: Date, default: null },
+      facebook: {
+        postId: { type: String, default: null },
+        postedAt: { type: Date, default: null },
+        error: { type: String, default: null }
+      },
+      instagram: {
+        mediaId: { type: String, default: null },
+        permalink: { type: String, default: null },
+        imagesSent: { type: Number, default: null },
+        imageCount: { type: Number, default: null },
+        postedAt: { type: Date, default: null },
+        error: { type: String, default: null }
+      }
+    }, { _id: false }),
+    select: false
   },
   // Trust and Promotion features
   isFeatured: {
@@ -242,6 +278,56 @@ const listingSchema = new mongoose.Schema({
     title: { type: String, trim: true, maxlength: 100 },
     description: { type: String, trim: true, maxlength: 500 }
   }],
+  /**
+   * Whether this listing is sold or given away.
+   *
+   * Separate from `auctionFormat`, which only says *how the price is found* —
+   * this says whether there is a price at all. On a giveaway, `startingPrice`
+   * and `currentPrice` are 0, `auctionFormat` is meaningless, and no bid or
+   * offer may ever be attached (the bid/offer routes refuse them outright).
+   *
+   * Not to be confused with `listingType`, which is the promotion tier.
+   */
+  saleFormat: {
+    type: String,
+    enum: ['auction', 'giveaway'],
+    default: 'auction',
+    index: true
+  },
+  /**
+   * Giveaway state. Only meaningful when saleFormat === 'giveaway'.
+   *
+   * `entryCount` doubles as the serial-number counter: it is incremented with
+   * an atomic $inc and the returned value *is* the entrant's number, so two
+   * simultaneous entries can never share one. It is therefore the count of
+   * numbers issued, which is what the draw picks from.
+   *
+   * The draw is recorded in full — when, by whom, which number came out — so a
+   * challenge to its fairness can be answered with the record rather than an
+   * assurance.
+   */
+  giveaway: {
+    entryCount: { type: Number, default: 0, min: 0 },
+    drawnAt: { type: Date, default: null },
+    winnerEntry: { type: Number, default: null },
+    winner: { type: mongoose.Schema.Types.ObjectId, ref: 'Customer', default: null },
+    // Audit only. The public listing endpoints spread the whole document into
+    // their response, so this stays out of every query unless Nexus asks for
+    // it with `+giveaway.drawnByEmail` — an admin's address is not public.
+    drawnByEmail: { type: String, trim: true, default: null, select: false },
+    // When the winner email went out. Null means it has not — Nexus shows that
+    // and offers to send it again. Internal, so kept out of public responses.
+    winnerEmailedAt: { type: Date, default: null, select: false },
+    // A recording of the draw, published on the giveaway page after the draw
+    // so participants can see the number come out for themselves. The URL is
+    // only ever stored in the canonical form giveawayService produces from an
+    // allow-listed host — never as the admin typed it.
+    drawVideo: {
+      url: { type: String, trim: true, default: null },
+      type: { type: String, enum: ['upload', 'youtube', 'instagram', null], default: null },
+      publishedAt: { type: Date, default: null }
+    }
+  },
   // Auction format and mechanics
   auctionFormat: {
     type: String,

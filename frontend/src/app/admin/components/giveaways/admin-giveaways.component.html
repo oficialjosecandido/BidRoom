@@ -1,0 +1,520 @@
+<div class="admin-layout">
+  <app-admin-sidebar></app-admin-sidebar>
+
+  <div class="admin-content">
+    <div class="admin-giveaways">
+      <header class="page-header">
+        <div>
+          <h1 class="page-title">Giveaways</h1>
+          <p class="page-subtitle">
+            Free prize draws run by BidRoom. Entry is free and one per account; the winner is drawn
+            once, at random, on the server, and the result is public.
+          </p>
+        </div>
+        <button type="button" class="create-btn" (click)="openCreate()">+ New giveaway</button>
+      </header>
+
+      <div class="filters-bar">
+        <div class="filter-group">
+          <label for="filter-phase">Phase</label>
+          <select id="filter-phase" [(ngModel)]="phase" (ngModelChange)="load()" class="filter-select">
+            @for (p of PHASE_OPTIONS; track p.value) {
+              <option [value]="p.value">{{ p.label }}</option>
+            }
+          </select>
+        </div>
+        <span class="total-label">{{ total }} giveaway{{ total !== 1 ? 's' : '' }}</span>
+        <label class="privacy-toggle">
+          <input type="checkbox" [(ngModel)]="showPersonalData" />
+          Show personal data
+        </label>
+      </div>
+
+      @if (isLoading) {
+        <div class="loading-state">
+          <div class="spinner"></div>
+          <p>Loading giveaways…</p>
+        </div>
+      }
+
+      @if (error && !isLoading) {
+        <div class="error-state">
+          <div class="error-icon" aria-hidden="true">&#9888;</div>
+          <p class="error-message">{{ error }}</p>
+          <button type="button" class="retry-btn" (click)="load()">Try again</button>
+        </div>
+      }
+
+      @if (!isLoading && !error) {
+        @if (giveaways.length === 0) {
+          <div class="empty-state">
+            <div class="empty-icon" aria-hidden="true">🎁</div>
+            <p class="empty-message">No giveaways here</p>
+            <p class="empty-description">
+              {{ phase === 'all' ? 'Create one to get started. It will wait for approval before going live.' : 'Nothing matches this phase.' }}
+            </p>
+          </div>
+        } @else {
+          <div class="panel-table">
+            <div class="table-scroll">
+              <table class="nexus-data-table">
+                <caption>Giveaways</caption>
+                <thead>
+                  <tr>
+                    <th scope="col">Prize</th>
+                    <th scope="col">Phase</th>
+                    <th scope="col">Entries</th>
+                    <th scope="col">Entries close</th>
+                    <th scope="col">Winner</th>
+                    <th scope="col"><span class="sr-only">Actions</span></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (g of giveaways; track g._id) {
+                    <tr>
+                      <td>
+                        <div class="prize-cell">
+                          @if (g.images.length) {
+                            <img class="prize-thumb" [src]="g.images[0]" [alt]="titleOf(g)" loading="lazy" />
+                          } @else {
+                            <div class="prize-thumb prize-thumb--empty" aria-hidden="true">🎁</div>
+                          }
+                          <span class="prize-title">{{ titleOf(g) }}</span>
+                        </div>
+                      </td>
+                      <td><span class="phase-badge" [class]="'phase-' + g.phase">{{ phaseLabel(g.phase) }}</span></td>
+                      <td class="num-cell">{{ g.totalEntries }}</td>
+                      <td class="date-cell">{{ g.phase === 'pending' ? 'On approval' : formatDate(g.endDate) }}</td>
+                      <td class="muted-col">
+                        @if (g.giveaway?.drawnAt) {
+                          <span class="entry-no">#{{ formatEntryNumber(g.giveaway?.winnerEntry ?? 0) }}</span>
+                          {{ showPersonalData ? personName(g.giveaway?.winner) : publicName(g.giveaway?.winner) }}
+                        } @else {
+                          —
+                        }
+                      </td>
+                      <td class="actions-cell">
+                        @if (g.phase === 'pending') {
+                          <button type="button" class="action-btn approve-action" [disabled]="approvingId === g._id" (click)="approve(g)">
+                            {{ approvingId === g._id ? 'Publishing…' : 'Publish' }}
+                          </button>
+                        }
+                        <button type="button" class="action-btn view-action" (click)="open(g)">
+                          {{ canDraw(g) ? 'Draw' : 'View' }}
+                        </button>
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </div>
+        }
+      }
+
+      <!-- ── Detail ── -->
+      @if (selected) {
+        <div class="modal-overlay" (click)="closeDetail()">
+          <div class="modal-content giveaway-modal" (click)="$event.stopPropagation()" role="dialog" aria-modal="true" aria-labelledby="gw-detail-title">
+            <div class="modal-header">
+              <h3 class="modal-title" id="gw-detail-title">{{ titleOf(selected) }}</h3>
+              <button type="button" class="modal-close" (click)="closeDetail()" aria-label="Close">×</button>
+            </div>
+            <div class="modal-body">
+              <div class="privacy-bar" [class.privacy-bar--shown]="showPersonalData">
+                <p>
+                  @if (showPersonalData) {
+                    Names and emails are visible. <strong>Hide them before recording the screen.</strong>
+                  } @else {
+                    Names and emails are hidden, so this screen can be recorded: it shows entry numbers and public names only.
+                  }
+                </p>
+                <label class="privacy-toggle">
+                  <input type="checkbox" [(ngModel)]="showPersonalData" />
+                  Show personal data
+                </label>
+              </div>
+
+              <section class="detail-section">
+                <h4>Giveaway</h4>
+                <table class="nexus-kv-table">
+                  <tbody>
+                    <tr>
+                      <th scope="row">Phase</th>
+                      <td><span class="phase-badge" [class]="'phase-' + selected.phase">{{ phaseLabel(selected.phase) }}</span></td>
+                    </tr>
+                    <tr>
+                      <th scope="row">Entries</th>
+                      <td>{{ selected.totalEntries }}</td>
+                    </tr>
+                    <tr>
+                      <th scope="row">Entries close</th>
+                      <td>{{ selected.phase === 'pending' ? 'Set when published' : formatDate(selected.endDate) }}</td>
+                    </tr>
+                    <tr>
+                      <th scope="row">Created</th>
+                      <td>{{ formatDate(selected.createdAt) }}</td>
+                    </tr>
+                    <tr>
+                      <th scope="row">Listing</th>
+                      <td><a class="link" [href]="'/listing/' + selected.slug" target="_blank" rel="noopener">/listing/{{ selected.slug }}</a></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </section>
+
+              @if (selected.giveaway?.drawnAt) {
+                <section class="detail-section winner-section">
+                  <h4>Result</h4>
+                  <div class="winner-card">
+                    <span class="winner-no">#{{ formatEntryNumber(selected.giveaway?.winnerEntry ?? 0) }}</span>
+                    <div class="winner-who">
+                      <strong>{{ showPersonalData ? personName(selected.giveaway?.winner) : publicName(selected.giveaway?.winner) }}</strong>
+                      @if (showPersonalData) {
+                        <span>{{ selected.giveaway?.winner?.email || '—' }}</span>
+                        <span class="muted-inline">Shown publicly as {{ publicName(selected.giveaway?.winner) }}</span>
+                      } @else {
+                        <span class="muted-inline">Public name. Full name and email hidden.</span>
+                      }
+                    </div>
+                  </div>
+                  <table class="nexus-kv-table">
+                    <tbody>
+                      <tr>
+                        <th scope="row">Drawn at</th>
+                        <td>{{ formatDate(selected.giveaway?.drawnAt) }}</td>
+                      </tr>
+                      <tr>
+                        <th scope="row">Drawn by</th>
+                        <td>{{ showPersonalData ? (selected.giveaway?.drawnByEmail || '—') : 'Hidden' }}</td>
+                      </tr>
+                      <tr>
+                        <th scope="row">Winner email</th>
+                        <td>
+                          <div class="email-status">
+                            @if (selected.giveaway?.winnerEmailedAt) {
+                              <span class="status-ok">Sent {{ formatDate(selected.giveaway?.winnerEmailedAt) }}</span>
+                            } @else {
+                              <span class="status-warn">Not sent</span>
+                            }
+                            <button type="button" class="action-btn view-action" [disabled]="emailingWinner" (click)="emailWinner()">
+                              {{ emailingWinner ? 'Sending…' : (selected.giveaway?.winnerEmailedAt ? 'Send again' : 'Send email') }}
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                  <p class="ruling-hint">
+                    The winner is notified in the app and by email at their account address. Write to them from the BidRoom
+                    address to arrange delivery or collection.
+                  </p>
+                </section>
+
+                <section class="detail-section video-section">
+                  <h4>Draw video</h4>
+                  @if (currentVideo; as video) {
+                    <table class="nexus-kv-table">
+                      <tbody>
+                        <tr>
+                          <th scope="row">Source</th>
+                          <td>{{ videoTypeLabel(video.type) }}</td>
+                        </tr>
+                        <tr>
+                          <th scope="row">Link</th>
+                          <td><a class="link video-url" [href]="video.url" target="_blank" rel="noopener noreferrer">{{ video.url }}</a></td>
+                        </tr>
+                        <tr>
+                          <th scope="row">Published</th>
+                          <td>{{ formatDate(video.publishedAt) }}</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                    @if (!replacingVideo) {
+                      <div class="video-actions">
+                        <button type="button" class="action-btn view-action" [disabled]="videoBusy" (click)="startReplacingVideo()">Replace</button>
+                        <button type="button" class="action-btn danger-action" [disabled]="videoBusy" (click)="removeVideo()">Remove</button>
+                      </div>
+                    }
+                  } @else {
+                    <p class="ruling-hint">
+                      No video yet. Publishing the recording of the draw shows participants it was random — it appears
+                      under the result on the giveaway page.
+                    </p>
+                  }
+
+                  @if (showVideoForm) {
+                    <div class="video-form">
+                      <div class="video-tabs" role="tablist" aria-label="How to add the video">
+                        <button type="button" role="tab" class="video-tab" [class.active]="videoMode === 'upload'"
+                          [attr.aria-selected]="videoMode === 'upload'" [disabled]="videoBusy" (click)="videoMode = 'upload'; videoError = null">
+                          Upload a file
+                        </button>
+                        <button type="button" role="tab" class="video-tab" [class.active]="videoMode === 'link'"
+                          [attr.aria-selected]="videoMode === 'link'" [disabled]="videoBusy" (click)="videoMode = 'link'; videoError = null">
+                          Paste a link
+                        </button>
+                      </div>
+
+                      @if (videoMode === 'upload') {
+                        <div class="form-group">
+                          <label class="video-file" [class.video-file--disabled]="videoBusy">
+                            <input type="file" [accept]="VIDEO_ACCEPT" [disabled]="videoBusy" (change)="onVideoSelected($event)" />
+                            <span>{{ videoFile ? videoFile.name + ' · ' + formatBytes(videoFile.size) : 'Choose a video…' }}</span>
+                          </label>
+                          <span class="field-hint">
+                            MP4, MOV or WebM, up to 200 MB. MP4 (H.264) plays in every browser; iPhone recordings in HEVC may not
+                            play on some computers — if in doubt, publish on YouTube and paste the link.
+                          </span>
+                        </div>
+                        @if (videoProgress !== null) {
+                          <div class="upload-progress" role="progressbar" aria-label="Upload progress"
+                            [attr.aria-valuenow]="videoProgress" aria-valuemin="0" aria-valuemax="100">
+                            <div class="upload-progress-bar" [style.width.%]="videoProgress"></div>
+                          </div>
+                          <span class="field-hint">
+                            {{ videoProgress < 100 ? 'Uploading… ' + videoProgress + '%' : 'Processing — publishing the video…' }}
+                          </span>
+                        }
+                        <div class="video-actions">
+                          @if (videoBusy) {
+                            <button type="button" class="action-btn view-action" (click)="cancelVideoUpload()">Cancel upload</button>
+                          } @else {
+                            <button type="button" class="draw-btn" [disabled]="!videoFile" (click)="uploadVideo()">Upload and publish</button>
+                            @if (replacingVideo) {
+                              <button type="button" class="action-btn view-action" (click)="stopReplacingVideo()">Keep the current video</button>
+                            }
+                          }
+                        </div>
+                      } @else {
+                        <div class="form-group">
+                          <label for="gw-video-link">YouTube or Instagram link</label>
+                          <input id="gw-video-link" class="form-input" type="url" inputmode="url" [(ngModel)]="videoLink"
+                            [disabled]="videoBusy" placeholder="https://www.youtube.com/watch?v=…" (keydown.enter)="publishVideoLink()" />
+                          @switch (linkKind) {
+                            @case ('youtube') { <span class="field-hint">YouTube video — it will play on the page.</span> }
+                            @case ('instagram') { <span class="field-hint">Instagram post — the page links to it (Instagram cannot be embedded without its tracking).</span> }
+                            @case ('unknown') { <span class="field-hint field-hint--short">Not a YouTube or Instagram https link.</span> }
+                          }
+                        </div>
+                        <div class="video-actions">
+                          <button type="button" class="draw-btn" [disabled]="videoBusy || !videoLink.trim()" (click)="publishVideoLink()">
+                            {{ videoBusy ? 'Publishing…' : 'Publish' }}
+                          </button>
+                          @if (replacingVideo && !videoBusy) {
+                            <button type="button" class="action-btn view-action" (click)="stopReplacingVideo()">Keep the current video</button>
+                          }
+                        </div>
+                      }
+
+                      @if (videoError) {
+                        <p class="ruling-error" role="alert">{{ videoError }}</p>
+                      }
+                    </div>
+                  }
+                </section>
+              } @else {
+                <section class="detail-section draw-section">
+                  <h4>Draw</h4>
+                  @if (canDraw(selected)) {
+                    <p class="draw-copy">
+                      Entries are closed. One of {{ selected.totalEntries }} entries will be picked at random.
+                      The draw runs once and is recorded with your email.
+                    </p>
+                    <p class="ruling-hint">
+                      Recording the draw? Keep personal data hidden: the result then shows the winning number and public name only.
+                    </p>
+                    <button type="button" class="draw-btn" [disabled]="drawing" (click)="draw()">
+                      {{ drawing ? 'Drawing…' : 'Draw the winner' }}
+                    </button>
+                  } @else {
+                    <p class="ruling-hint">{{ drawBlockedReason(selected) }}</p>
+                    @if (selected.phase === 'pending') {
+                      <button type="button" class="action-btn approve-action" [disabled]="approvingId === selected._id" (click)="approve(selected)">
+                        {{ approvingId === selected._id ? 'Publishing…' : 'Publish now' }}
+                      </button>
+                    }
+                  }
+                </section>
+              }
+
+              <section class="detail-section">
+                <h4>Entries ({{ entriesTotal }})</h4>
+                @if (entriesLoading) {
+                  <div class="inline-loading"><div class="spinner spinner--sm"></div></div>
+                } @else if (entriesError) {
+                  <p class="ruling-error">{{ entriesError }}</p>
+                } @else if (entries.length === 0) {
+                  <p class="ruling-hint">No entries yet.</p>
+                } @else {
+                  <div class="table-scroll entries-scroll">
+                    <table class="nexus-data-table entries-table">
+                      <caption class="sr-only">Entries</caption>
+                      <thead>
+                        <tr>
+                          <th scope="col">No.</th>
+                          <th scope="col">Participant</th>
+                          @if (showPersonalData) {
+                            <th scope="col">Email</th>
+                          }
+                          <th scope="col">Entered</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        @for (e of entries; track e._id) {
+                          <tr [class.is-winner]="selected.giveaway?.winnerEntry === e.entryNumber">
+                            <td class="entry-no">#{{ formatEntryNumber(e.entryNumber) }}</td>
+                            <td>{{ e.participant ? (showPersonalData ? personName(e.participant) : publicName(e.participant)) : 'Deleted account' }}</td>
+                            @if (showPersonalData) {
+                              <td class="muted-col">{{ e.participant?.email || '—' }}</td>
+                            }
+                            <td class="date-cell">{{ formatDate(e.createdAt) }}</td>
+                          </tr>
+                        }
+                      </tbody>
+                    </table>
+                  </div>
+                  @if (entriesPages > 1) {
+                    <div class="pager">
+                      <button type="button" class="page-btn" [disabled]="entriesPage <= 1" (click)="loadEntries(entriesPage - 1)">‹ Previous</button>
+                      <span>Page {{ entriesPage }} of {{ entriesPages }}</span>
+                      <button type="button" class="page-btn" [disabled]="entriesPage >= entriesPages" (click)="loadEntries(entriesPage + 1)">Next ›</button>
+                    </div>
+                  }
+                }
+              </section>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" (click)="closeDetail()">Close</button>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- ── Create ── -->
+      @if (showCreate) {
+        <div class="modal-overlay" (click)="closeCreate()">
+          <div class="modal-content giveaway-modal" (click)="$event.stopPropagation()" role="dialog" aria-modal="true" aria-labelledby="gw-create-title">
+            <div class="modal-header">
+              <h3 class="modal-title" id="gw-create-title">New giveaway</h3>
+              <button type="button" class="modal-close" (click)="closeCreate()" aria-label="Close">×</button>
+            </div>
+            <div class="modal-body">
+              <p class="flag-question">
+                Entry will be free, one per account, with no purchase required. The prize ships free or is
+                collected — the winner never pays. The giveaway waits for approval, and entries open when it is published.
+              </p>
+
+              <div class="form-group">
+                <label for="gw-title">Prize title</label>
+                <input id="gw-title" class="form-input" [(ngModel)]="draft.title" maxlength="120" placeholder="e.g. Seiko Presage Cocktail Time SRPB43" />
+              </div>
+
+              <div class="form-group">
+                <label for="gw-description">Description</label>
+                <textarea id="gw-description" class="form-input" rows="5" [(ngModel)]="draft.description"
+                  placeholder="What the prize is, its condition and anything included."></textarea>
+                <span class="field-hint" [class.field-hint--short]="draft.description.trim().length < MIN_DESCRIPTION">
+                  {{ draft.description.trim().length }} / {{ MIN_DESCRIPTION }} minimum
+                </span>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="gw-category">Category</label>
+                  <select id="gw-category" class="form-input" [(ngModel)]="draft.category" (ngModelChange)="onCategoryChange()">
+                    @for (c of categories; track c.id) {
+                      <option [value]="c.id">{{ c.name }}</option>
+                    }
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="gw-subcategory">Subcategory</label>
+                  <select id="gw-subcategory" class="form-input" [(ngModel)]="draft.subCategory">
+                    @for (s of subCategories; track s) {
+                      <option [value]="s">{{ s }}</option>
+                    }
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="gw-condition">Condition</label>
+                  <select id="gw-condition" class="form-input" [(ngModel)]="draft.condition">
+                    @for (c of CONDITIONS; track c) {
+                      <option [value]="c">{{ c }}</option>
+                    }
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="gw-duration">Entries open for</label>
+                  <select id="gw-duration" class="form-input" [(ngModel)]="draft.duration">
+                    @for (d of DURATIONS; track d) {
+                      <option [value]="d">{{ d }}</option>
+                    }
+                  </select>
+                </div>
+              </div>
+
+              <fieldset class="form-group radio-group">
+                <legend>Getting the prize to the winner</legend>
+                <label class="radio">
+                  <input type="radio" name="gw-shipping" value="free" [(ngModel)]="draft.shippingOption" />
+                  Free shipping
+                </label>
+                <label class="radio">
+                  <input type="radio" name="gw-shipping" value="local-pickup" [(ngModel)]="draft.shippingOption" />
+                  Collection in person
+                </label>
+              </fieldset>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="gw-city">City</label>
+                  <input id="gw-city" class="form-input" [(ngModel)]="draft.locationCity" placeholder="e.g. Lisboa" />
+                </div>
+                <div class="form-group">
+                  <label for="gw-country">Country</label>
+                  <select id="gw-country" class="form-input" [(ngModel)]="draft.locationCountry">
+                    <option value="PT">Portugal</option>
+                    <option value="ES">Spain</option>
+                    <option value="FR">France</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <span class="label-like">Photos ({{ imageFiles.length }}/{{ MAX_IMAGES }})</span>
+                <div class="image-grid">
+                  @for (src of imagePreviews; track src; let i = $index) {
+                    <div class="image-tile">
+                      <img [src]="src" alt="" />
+                      <button type="button" class="image-remove" (click)="removeImage(i)" [attr.aria-label]="'Remove photo ' + (i + 1)">×</button>
+                    </div>
+                  }
+                  @if (imageFiles.length < MAX_IMAGES) {
+                    <label class="image-add">
+                      <input type="file" accept="image/*" multiple (change)="onImagesSelected($event)" />
+                      <span>+ Add</span>
+                    </label>
+                  }
+                </div>
+              </div>
+
+              @if (createError) {
+                <p class="ruling-error">{{ createError }}</p>
+              }
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" (click)="closeCreate()" [disabled]="creating">Cancel</button>
+              <button type="button" class="btn btn-primary" (click)="create()" [disabled]="creating">
+                {{ creating ? 'Creating…' : 'Create giveaway' }}
+              </button>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+</div>

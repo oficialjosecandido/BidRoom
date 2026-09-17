@@ -900,6 +900,19 @@ async function handleAuctionEnd(listingId, io = null) {
       return;
     }
 
+    // A giveaway has no bids to resolve and no sale to report on. Both lazy
+    // finalizers in routes/listings.js reach here on a page view, so this is
+    // the one place that keeps them from treating it as an auction: entries
+    // close, and the winner is left for the draw in Nexus.
+    if (listing.saleFormat === 'giveaway') {
+      await Listing.updateOne(
+        { _id: listingId, status: 'active' },
+        { $set: { status: 'ended' } },
+        { runValidators: false }
+      );
+      return;
+    }
+
     // Best Offer: when listing closes with exactly one offer at or above minimum → auto-accept
     if (listing.auctionFormat === 'best-offer') {
       const offers = await Offer.find({ listing: listingId, status: 'pending' }).lean();

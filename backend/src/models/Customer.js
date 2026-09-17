@@ -202,6 +202,15 @@ const customerSchema = new mongoose.Schema({
     default: 'private',
     index: true
   },
+  /**
+   * When the seller last chose their classification themselves.
+   *
+   * `sellerClassification` defaults to `private`, so on its own it cannot tell
+   * a deliberate "I am not a trader" from an account that never answered the
+   * question. Vehicle listings need the deliberate answer — the consumer
+   * warranty owed under DL 84/2021 depends on it — so they check this instead.
+   */
+  sellerClassificationDeclaredAt: { type: Date, default: null },
   /** Admin verification of professional trader details */
   professionalVerificationStatus: {
     type: String,

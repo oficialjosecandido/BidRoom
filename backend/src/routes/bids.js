@@ -263,6 +263,17 @@ router.post('/', optionalAuth, requireActiveAccountIfAuthenticated, requireNoDis
       }
     }
 
+    // A giveaway has no price and no bidding. This is the enforcement point:
+    // the entry button is the only way in, and it has to stay that way even
+    // for a caller that skips the UI — money changing hands for a chance to
+    // win is the line between a contest and a lottery.
+    if (listing.saleFormat === 'giveaway') {
+      return res.status(400).json({
+        error: 'giveaway_no_bids',
+        message: 'This is a free giveaway, not an auction. Entry is free — there is nothing to bid.'
+      });
+    }
+
     // Check auction format
     if (listing.auctionFormat === 'best-offer') {
       return res.status(400).json({

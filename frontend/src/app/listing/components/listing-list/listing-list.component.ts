@@ -551,6 +551,10 @@ export class ListingListComponent implements OnInit, OnDestroy {
         badges.push({ type: 'live', class: 'lb-live', label: this.translate.instant('listingList.badgeLive') });
       }
     }
+    if (listing.saleFormat === 'giveaway') {
+      badges.push({ type: 'gift', class: 'lb-gift', label: this.translate.instant('GIVEAWAY.PILL') });
+      return badges;
+    }
     // Private room first among format badges — high visibility for buyers.
     if (listing.allowPrivateRoom) {
       badges.push({ type: 'priv', class: 'lb-priv', label: this.translate.instant('listingList.badgePrivateRoom') });
@@ -575,12 +579,14 @@ export class ListingListComponent implements OnInit, OnDestroy {
   }
 
   priceLabel(listing: Listing): string {
+    if (listing.saleFormat === 'giveaway') return this.translate.instant('GIVEAWAY.PILL');
     return listing.auctionFormat === 'best-offer'
       ? this.translate.instant('listingList.minPrice')
       : this.translate.instant('listingList.currentBid');
   }
 
   bidCountLabel(listing: Listing): string {
+    if (listing.saleFormat === 'giveaway') return this.translate.instant('GIVEAWAY.FREE_ENTRY');
     if (listing.auctionFormat === 'best-offer') {
       const n = listing.bidCount || 0;
       return n === 1
