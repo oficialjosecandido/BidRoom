@@ -130,23 +130,31 @@ const listingSchema = new mongoose.Schema({
     reviewedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Customer', default: null }
   },
   /**
-   * What went out to the BidRoom Facebook Page and Instagram account after the
-   * approval — see socialPublisherService. `claimedAt` is set before anything is
-   * posted and is what stops a listing from going out twice; a platform's
-   * `error` is Meta's message when that post failed.
+   * What went out to the BidRoom Facebook Page and Instagram account — see
+   * socialPublisherService. Per platform, `status` is 'publishing' while a post
+   * is under way (set atomically before anything is sent, which is what stops a
+   * listing from going out twice), then 'published' or 'failed'. `error` is
+   * Meta's message for the last failure; post ids and `postedAt` are from the
+   * last success and survive a later failed repost. `requestedBy` is 'auto' for
+   * the post on approval, otherwise the admin's email.
    *
    * Hidden unless asked for with `+socialPosts`: the public listing endpoints
    * spread the whole document, and Meta's error text is not for buyers.
    */
   socialPosts: {
     type: new mongoose.Schema({
-      claimedAt: { type: Date, default: null },
       facebook: {
+        status: { type: String, default: null },
+        startedAt: { type: Date, default: null },
+        requestedBy: { type: String, default: null },
         postId: { type: String, default: null },
         postedAt: { type: Date, default: null },
         error: { type: String, default: null }
       },
       instagram: {
+        status: { type: String, default: null },
+        startedAt: { type: Date, default: null },
+        requestedBy: { type: String, default: null },
         mediaId: { type: String, default: null },
         permalink: { type: String, default: null },
         imagesSent: { type: Number, default: null },

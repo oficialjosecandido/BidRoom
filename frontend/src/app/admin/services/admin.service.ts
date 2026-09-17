@@ -596,4 +596,82 @@ export class AdminService {
       { endDate }
     );
   }
+
+  /** Title and description per language; an empty language falls back to the main text. */
+  updateListingText(id: string, text: AdminListingText): Observable<{ ok: boolean; listing: AdminListingText & { title: string; description: string } }> {
+    return this.http.patch<{ ok: boolean; listing: AdminListingText & { title: string; description: string } }>(
+      `${this.apiUrl}/auctions/${id}/text`,
+      text
+    );
+  }
+
+  /** Uploads photos (up to 10 per call, 10 MB each) and appends them to the listing. */
+  addListingImages(id: string, files: File[]): Observable<{ ok: boolean; images: string[] }> {
+    const formData = new FormData();
+    files.forEach(f => formData.append('images', f));
+    return this.http.post<{ ok: boolean; images: string[] }>(`${this.apiUrl}/auctions/${id}/images`, formData);
+  }
+
+  /**
+   * Keeps these photos in this order (the first is the cover) and removes the rest.
+   * `expected` is the list on screen; if the listing's photos changed meanwhile
+   * the API answers 409 images_changed and nothing is written.
+   */
+  setListingImages(id: string, images: string[], expected: string[]): Observable<{ ok: boolean; images: string[] }> {
+    return this.http.put<{ ok: boolean; images: string[] }>(`${this.apiUrl}/auctions/${id}/images`, { images, expected });
+  }
+
+  getListingSocial(id: string): Observable<AdminListingSocial> {
+    return this.http.get<AdminListingSocial>(`${this.apiUrl}/auctions/${id}/social`);
+  }
+
+  /**
+   * Starts publishing in the background (202). Refused with 409 already_posted
+   * when the listing is already on that platform, unless `repost` is true.
+   */
+  publishListingToSocial(id: string, platform: AdminSocialPlatform, repost = false): Observable<{ ok: boolean; status: string }> {
+    return this.http.post<{ ok: boolean; status: string }>(
+      `${this.apiUrl}/auctions/${id}/social/${platform}`,
+      { repost }
+    );
+  }
+}
+
+export interface AdminListingText {
+  titlePt: string | null;
+  titleEn: string | null;
+  titleFr: string | null;
+  titleEs: string | null;
+  descriptionPt: string | null;
+  descriptionEn: string | null;
+  descriptionFr: string | null;
+  descriptionEs: string | null;
+}
+
+export type AdminSocialPlatform = 'facebook' | 'instagram';
+
+export interface AdminSocialPostState {
+  status: 'publishing' | 'published' | 'failed';
+  startedAt: string | null;
+  requestedBy: string | null;
+  postedAt: string | null;
+  error: string | null;
+  postId?: string | null;
+  mediaId?: string | null;
+  permalink?: string | null;
+  imagesSent?: number | null;
+  imageCount?: number | null;
+}
+
+export interface AdminListingSocial {
+  caption: string;
+  link: string;
+  imageCount: number;
+  instagramMaxImages: number;
+  autopost: { enabled: boolean; reason: string | null };
+  platforms: Record<AdminSocialPlatform, {
+    available: boolean;
+    reason: string | null;
+    state: AdminSocialPostState | null;
+  }>;
 }

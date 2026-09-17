@@ -1,8 +1,13 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { AdminService } from '../../services/admin.service';
+import {
+  AdminListingSocial,
+  AdminListingText,
+  AdminService,
+  AdminSocialPlatform
+} from '../../services/admin.service';
 import { AdminSidebarComponent } from '../sidebar/admin-sidebar.component';
 import { PrivateRoomService, Bidder } from '../../../private-room/services/private-room.service';
 import { Listing } from '../../../shared/services/listings.service';
@@ -86,6 +91,26 @@ const NEXUS_CATEGORIES: { id: string; name: string; subCategories: string[] }[] 
   }
 ];
 
+const TEXT_LANGUAGES: { suffix: 'Pt' | 'En' | 'Fr' | 'Es'; label: string }[] = [
+  { suffix: 'Pt', label: 'Português' },
+  { suffix: 'En', label: 'English' },
+  { suffix: 'Fr', label: 'Français' },
+  { suffix: 'Es', label: 'Español' }
+];
+
+/** Mirrors the API: photos per listing, per upload, and per file. */
+const MAX_LISTING_PHOTOS = 20;
+const MAX_PHOTOS_PER_UPLOAD = 10;
+const MAX_PHOTO_BYTES = 10 * 1024 * 1024;
+
+const SOCIAL_POLL_MS = 4000;
+
+const isPlaceholderImage = (url: string) => /placeholder\.com/i.test(url);
+
+function apiErrorMessage(err: any, fallback: string): string {
+  return err?.error?.error || err?.error?.message || fallback;
+}
+
 @Component({
   selector: 'app-admin-auction-details',
   standalone: true,
@@ -93,7 +118,7 @@ const NEXUS_CATEGORIES: { id: string; name: string; subCategories: string[] }[] 
   templateUrl: './admin-auction-details.component.html',
   styleUrls: ['./admin-auction-details.component.scss']
 })
-export class AdminAuctionDetailsComponent implements OnInit {
+export class AdminAuctionDetailsComponent implements OnInit, OnDestroy {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private adminService = inject(AdminService);
@@ -119,6 +144,30 @@ export class AdminAuctionDetailsComponent implements OnInit {
   isSavingEndDate = false;
   endDateSavedMsg: string | null = null;
 
+  // Photos: edits to order and removals stay local until saved.
+  readonly maxListingPhotos = MAX_LISTING_PHOTOS;
+  photoDraft: string[] = [];
+  isSavingPhotos = false;
+  isUploadingPhotos = false;
+  photoError: string | null = null;
+  photoSavedMsg: string | null = null;
+
+  // Title and description per language.
+  readonly textLanguages = TEXT_LANGUAGES;
+  activeTextLanguage: 'Pt' | 'En' | 'Fr' | 'Es' = 'Pt';
+  textDraft: AdminListingText = this.emptyText();
+  isSavingText = false;
+  textError: string | null = null;
+  textSavedMsg: string | null = null;
+
+  // Facebook / Instagram.
+  readonly socialPlatforms: AdminSocialPlatform[] = ['facebook', 'instagram'];
+  social: AdminListingSocial | null = null;
+  socialError: string | null = null;
+  publishingPlatform: AdminSocialPlatform | null = null;
+  private socialPollTimer: ReturnType<typeof setTimeout> | null = null;
+  private destroyed = false;
+
   get editSubCategories(): string[] {
     return this.categories.find(c => c.id === this.editCategory)?.subCategories ?? [];
   }
@@ -128,7 +177,13 @@ export class AdminAuctionDetailsComponent implements OnInit {
     if (this.auctionId) {
       this.loadAuctionDetails();
       this.loadBidders();
+      this.loadSocial();
     }
+  }
+
+  ngOnDestroy(): void {
+    this.destroyed = true;
+    this.stopSocialPolling();
   }
 
   loadAuctionDetails(): void {
@@ -141,6 +196,8 @@ export class AdminAuctionDetailsComponent implements OnInit {
         this.editCategory = auction.category || 'jewelry';
         this.editSubCategory = auction.subCategory || '';
         this.editEndDate = this.toDatetimeLocal(auction.endDate);
+        this.resetPhotoDraft();
+        this.resetTextDraft();
         this.isLoading = false;
       },
       error: (error) => {
@@ -372,6 +429,304 @@ export class AdminAuctionDetailsComponent implements OnInit {
 
   goBack(): void {
     this.router.navigate(['/nexus/auctions']);
+  }
+
+  // ── Photos ────────────────────────────────────────────────────────────
+
+  /** The listing's real photos, without the "No Image" placeholder. */
+  private get savedPhotos(): string[] {
+    return (this.auction?.images ?? []).filter(url => !isPlaceholderImage(url));
+  }
+
+  get photosDirty(): boolean {
+    return JSON.stringify(this.photoDraft) !== JSON.stringify(this.savedPhotos);
+  }
+
+  private resetPhotoDraft(): void {
+    this.photoDraft = [...this.savedPhotos];
+    this.photoError = null;
+  }
+
+  movePhoto(index: number, delta: number): void {
+    const target = index + delta;
+    if (target < 0 || target >= this.photoDraft.length) return;
+    const next = [...this.photoDraft];
+    [next[index], next[target]] = [next[target], next[index]];
+    this.photoDraft = next;
+  }
+
+  makeCover(index: number): void {
+    if (index <= 0) return;
+    const next = [...this.photoDraft];
+    const [photo] = next.splice(index, 1);
+    this.photoDraft = [photo, ...next];
+  }
+
+  removePhoto(index: number): void {
+    if (this.photoDraft.length <= 1) {
+      this.photoError = 'A listing needs at least one photo. Add another one before removing this.';
+      return;
+    }
+    this.photoDraft = this.photoDraft.filter((_, i) => i !== index);
+  }
+
+  discardPhotoChanges(): void {
+    this.resetPhotoDraft();
+  }
+
+  savePhotos(): void {
+    if (!this.auction || !this.photosDirty || this.isSavingPhotos) return;
+    const removed = this.savedPhotos.filter(url => !this.photoDraft.includes(url)).length;
+    if (removed > 0 && !confirm(
+      `Remove ${removed} photo${removed === 1 ? '' : 's'} from this listing? ` +
+      'Files not used by another listing or a completed sale are deleted permanently.'
+    )) return;
+
+    this.isSavingPhotos = true;
+    this.photoError = null;
+    this.adminService.setListingImages(this.auctionId, this.photoDraft, this.auction.images ?? []).subscribe({
+      next: (res) => this.onPhotosSaved(res.images, 'Photos saved'),
+      error: (err) => {
+        this.isSavingPhotos = false;
+        this.photoError = apiErrorMessage(err, 'Failed to save photos.');
+        if (err?.error?.code === 'images_changed') this.reloadPhotos();
+      }
+    });
+  }
+
+  onPhotosSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const files = Array.from(input.files ?? []);
+    input.value = '';
+    if (files.length === 0 || !this.auction) return;
+
+    this.photoError = null;
+    const tooBig = files.filter(f => f.size > MAX_PHOTO_BYTES).map(f => f.name);
+    if (tooBig.length > 0) {
+      this.photoError = `Each photo can be up to 10 MB: ${tooBig.join(', ')}.`;
+      return;
+    }
+    if (files.length > MAX_PHOTOS_PER_UPLOAD) {
+      this.photoError = `Add up to ${MAX_PHOTOS_PER_UPLOAD} photos at a time.`;
+      return;
+    }
+    if (this.savedPhotos.length + files.length > MAX_LISTING_PHOTOS) {
+      this.photoError = `A listing can have up to ${MAX_LISTING_PHOTOS} photos (it has ${this.savedPhotos.length}).`;
+      return;
+    }
+
+    this.isUploadingPhotos = true;
+    this.adminService.addListingImages(this.auctionId, files).subscribe({
+      next: (res) => {
+        this.isUploadingPhotos = false;
+        this.onPhotosSaved(res.images, `${files.length} photo${files.length === 1 ? '' : 's'} added`);
+      },
+      error: (err) => {
+        this.isUploadingPhotos = false;
+        this.photoError = apiErrorMessage(err, 'Failed to upload photos.');
+      }
+    });
+  }
+
+  private onPhotosSaved(images: string[], message: string): void {
+    if (this.auction) this.auction.images = images;
+    this.isSavingPhotos = false;
+    this.resetPhotoDraft();
+    this.flash(msg => this.photoSavedMsg = msg, message);
+    this.loadSocial();
+  }
+
+  /** After a conflict: take the listing's current photos, keep the error visible. */
+  private reloadPhotos(): void {
+    const error = this.photoError;
+    this.adminService.getAuctionById(this.auctionId).subscribe({
+      next: (auction) => {
+        if (this.auction) this.auction.images = auction.images;
+        this.resetPhotoDraft();
+        this.photoError = error;
+      }
+    });
+  }
+
+  // ── Title & description per language ─────────────────────────────────
+
+  private emptyText(): AdminListingText {
+    return {
+      titlePt: '', titleEn: '', titleFr: '', titleEs: '',
+      descriptionPt: '', descriptionEn: '', descriptionFr: '', descriptionEs: ''
+    };
+  }
+
+  /** The listing's saved text, shaped like the form. */
+  private savedText(): AdminListingText | null {
+    const a = this.auction;
+    if (!a) return null;
+    // A listing from before per-language text only has title/description, which
+    // is Portuguese. Once any language is set, title/description is just the
+    // fallback and must not be copied into Portuguese.
+    const hasLanguages = TEXT_LANGUAGES.some(l => a[`title${l.suffix}`] || a[`description${l.suffix}`]);
+    return {
+      titlePt: a.titlePt || (hasLanguages ? '' : a.title ?? ''),
+      titleEn: a.titleEn ?? '',
+      titleFr: a.titleFr ?? '',
+      titleEs: a.titleEs ?? '',
+      descriptionPt: a.descriptionPt || (hasLanguages ? '' : a.description ?? ''),
+      descriptionEn: a.descriptionEn ?? '',
+      descriptionFr: a.descriptionFr ?? '',
+      descriptionEs: a.descriptionEs ?? ''
+    };
+  }
+
+  private resetTextDraft(): void {
+    this.textDraft = this.savedText() ?? this.emptyText();
+    this.textError = null;
+  }
+
+  private titleField(suffix: string): keyof AdminListingText {
+    return `title${suffix}` as keyof AdminListingText;
+  }
+
+  private descriptionField(suffix: string): keyof AdminListingText {
+    return `description${suffix}` as keyof AdminListingText;
+  }
+
+  get activeTitle(): string {
+    return this.textDraft[this.titleField(this.activeTextLanguage)] ?? '';
+  }
+
+  set activeTitle(value: string) {
+    this.textDraft = { ...this.textDraft, [this.titleField(this.activeTextLanguage)]: value };
+  }
+
+  get activeDescription(): string {
+    return this.textDraft[this.descriptionField(this.activeTextLanguage)] ?? '';
+  }
+
+  set activeDescription(value: string) {
+    this.textDraft = { ...this.textDraft, [this.descriptionField(this.activeTextLanguage)]: value };
+  }
+
+  get textDirty(): boolean {
+    const saved = this.savedText();
+    return Boolean(saved) && JSON.stringify(saved) !== JSON.stringify(this.textDraft);
+  }
+
+  languageFilled(suffix: string): boolean {
+    return Boolean(this.textDraft[this.titleField(suffix)]?.trim() || this.textDraft[this.descriptionField(suffix)]?.trim());
+  }
+
+  /** A language with only one of the two falls back to the main text for the other. */
+  languageIncomplete(suffix: string): boolean {
+    const title = this.textDraft[this.titleField(suffix)]?.trim();
+    const description = this.textDraft[this.descriptionField(suffix)]?.trim();
+    return Boolean(title) !== Boolean(description);
+  }
+
+  discardTextChanges(): void {
+    this.resetTextDraft();
+  }
+
+  saveText(): void {
+    if (!this.auction || this.isSavingText) return;
+    this.isSavingText = true;
+    this.textError = null;
+    this.adminService.updateListingText(this.auctionId, this.textDraft).subscribe({
+      next: ({ listing }) => {
+        if (this.auction) Object.assign(this.auction, listing);
+        this.isSavingText = false;
+        this.resetTextDraft();
+        this.flash(msg => this.textSavedMsg = msg, 'Text saved');
+        this.loadSocial();
+      },
+      error: (err) => {
+        this.isSavingText = false;
+        this.textError = apiErrorMessage(err, 'Failed to save the text.');
+      }
+    });
+  }
+
+  // ── Facebook / Instagram ──────────────────────────────────────────────
+
+  loadSocial(): void {
+    this.stopSocialPolling();
+    this.adminService.getListingSocial(this.auctionId).subscribe({
+      next: (social) => {
+        if (this.destroyed) return;
+        this.social = social;
+        this.socialError = null;
+        const publishing = Object.values(social.platforms).some(p => p.state?.status === 'publishing');
+        if (publishing) this.socialPollTimer = setTimeout(() => this.loadSocial(), SOCIAL_POLL_MS);
+      },
+      error: (err) => {
+        this.socialError = apiErrorMessage(err, 'Failed to load social media state.');
+      }
+    });
+  }
+
+  private stopSocialPolling(): void {
+    if (this.socialPollTimer) clearTimeout(this.socialPollTimer);
+    this.socialPollTimer = null;
+  }
+
+  platformLabel(platform: AdminSocialPlatform): string {
+    return platform === 'facebook' ? 'Facebook' : 'Instagram';
+  }
+
+  socialPostUrl(platform: AdminSocialPlatform): string | null {
+    const state = this.social?.platforms[platform].state;
+    if (!state?.postedAt) return null;
+    if (platform === 'instagram') return state.permalink || null;
+    return state.postId ? `https://www.facebook.com/${state.postId}` : null;
+  }
+
+  publishToSocial(platform: AdminSocialPlatform): void {
+    const entry = this.social?.platforms[platform];
+    if (!entry?.available || this.publishingPlatform) return;
+    const label = this.platformLabel(platform);
+
+    if (entry.state?.postedAt) {
+      this.confirmRepost(platform);
+      return;
+    }
+    if (!confirm(`Publish this listing to the BidRoom ${label} now? The post is public.`)) return;
+    this.sendPublish(platform, false);
+  }
+
+  private confirmRepost(platform: AdminSocialPlatform): void {
+    const state = this.social?.platforms[platform].state;
+    const when = state?.postedAt ? ` on ${this.formatDate(state.postedAt)}` : '';
+    if (!confirm(
+      `This listing was already published to ${this.platformLabel(platform)}${when}. ` +
+      'Publish it again? Followers will see a second post.'
+    )) return;
+    this.sendPublish(platform, true);
+  }
+
+  private sendPublish(platform: AdminSocialPlatform, repost: boolean): void {
+    this.publishingPlatform = platform;
+    this.socialError = null;
+    this.adminService.publishListingToSocial(this.auctionId, platform, repost).subscribe({
+      next: () => {
+        this.publishingPlatform = null;
+        this.loadSocial();
+      },
+      error: (err) => {
+        this.publishingPlatform = null;
+        if (err?.error?.code === 'already_posted' && !repost) {
+          // Someone else published it meanwhile.
+          this.loadSocial();
+          this.confirmRepost(platform);
+          return;
+        }
+        this.socialError = apiErrorMessage(err, `Failed to publish to ${this.platformLabel(platform)}.`);
+        this.loadSocial();
+      }
+    });
+  }
+
+  private flash(set: (msg: string | null) => void, message: string): void {
+    set(message);
+    setTimeout(() => set(null), 2500);
   }
 }
 

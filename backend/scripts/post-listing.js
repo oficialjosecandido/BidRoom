@@ -12,9 +12,11 @@
  * poder rever o texto antes de ir para uma página pública.
  *
  * Com SOCIAL_AUTOPOST=true o backend já publica sozinho quando um anúncio é
- * aprovado no Nexus (ver src/services/socialPublisherService.js). Este script
- * fica para republicar o que falhou ou para anúncios anteriores a isso. Uma
- * rede onde o anúncio já foi publicado é ignorada, a não ser com --repost.
+ * aprovado no Nexus (ver src/services/socialPublisherService.js), e cada anúncio
+ * tem botões de Facebook e Instagram no Nexus para republicar. Este script fica
+ * para testes a partir da linha de comandos — o que publica não fica registado
+ * no anúncio, por isso o Nexus não o vê. Uma rede onde o anúncio já foi
+ * publicado é ignorada, a não ser com --repost.
  *
  * Só se publica o que já foi aprovado no Nexus — ver assertPublishable().
  */
@@ -105,8 +107,11 @@ function assertPublishable(listing) {
 function describeSocialPosts(listing) {
   const { facebook, instagram } = listing.socialPosts || {};
   const line = (nome, post, id) => {
+    if (post?.status === 'publishing') return `   ${nome}: a publicar desde ${new Date(post.startedAt).toISOString()}`;
+    if (post?.status === 'failed') {
+      return `   ${nome}: falhou — ${post.error}${post.postedAt ? ` (publicado antes: ${id})` : ''}`;
+    }
     if (post?.postedAt) return `   ${nome}: publicado (${id})`;
-    if (post?.error) return `   ${nome}: falhou — ${post.error}`;
     return `   ${nome}: nada registado`;
   };
   return [

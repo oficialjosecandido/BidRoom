@@ -2,12 +2,14 @@ import { Component, OnInit, inject, DestroyRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
-import { Subject } from 'rxjs';
+import { HttpClient } from '@angular/common/http';
+import { Subject, firstValueFrom } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AdminService, AdminCreateAuctionPayload } from '../../services/admin.service';
 import { AdminSidebarComponent } from '../sidebar/admin-sidebar.component';
 import { Listing } from '../../../shared/services/listings.service';
+import { API_CONFIG } from '../../../shared/config/api.config';
 
 type ReportReason =
   | 'fraud_scam'
@@ -16,6 +18,31 @@ type ReportReason =
   | 'spam'
   | 'off_platform_transaction'
   | 'other';
+
+type CreateLangCode = 'pt' | 'en' | 'es' | 'fr';
+
+interface CreateLangTab {
+  code: CreateLangCode;
+  label: string;
+  titleField: 'title' | 'titleEn' | 'titleEs' | 'titleFr';
+  descriptionField: 'description' | 'descriptionEn' | 'descriptionEs' | 'descriptionFr';
+  required: boolean;
+}
+
+interface CreatePhoto {
+  id: number;
+  file: File;
+  previewUrl: string;
+  /** Set once the file is in Blob Storage, so a failed create can be retried without re-uploading. */
+  uploadedUrl?: string;
+}
+
+/** Same limits as the seller flow and POST /api/uploads. */
+const MAX_CREATE_PHOTOS = 20;
+const MAX_CREATE_PHOTO_BYTES = 5 * 1024 * 1024;
+const CREATE_PHOTO_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'image/bmp'];
+/** POST /api/uploads accepts at most 10 files per request. */
+const UPLOAD_BATCH_SIZE = 10;
 
 @Component({
   selector: 'app-admin-auctions',
@@ -26,6 +53,7 @@ type ReportReason =
 })
 export class AdminAuctionsComponent implements OnInit {
   private adminService = inject(AdminService);
+  private http = inject(HttpClient);
   private destroyRef = inject(DestroyRef);
   private search$ = new Subject<string>();
 
@@ -54,6 +82,24 @@ export class AdminAuctionsComponent implements OnInit {
   createSaleType: 'highest-bid' | 'best-offer' | 'giveaway' = 'highest-bid';
 
   createForm: AdminCreateAuctionPayload = this.emptyCreateForm();
+
+  readonly createLangTabs: CreateLangTab[] = [
+    { code: 'pt', label: 'Português', titleField: 'title', descriptionField: 'description', required: true },
+    { code: 'en', label: 'English', titleField: 'titleEn', descriptionField: 'descriptionEn', required: false },
+    { code: 'es', label: 'Español', titleField: 'titleEs', descriptionField: 'descriptionEs', required: false },
+    { code: 'fr', label: 'Français', titleField: 'titleFr', descriptionField: 'descriptionFr', required: false }
+  ];
+  activeCreateLang: CreateLangCode = 'pt';
+  /** Language shown in the confirm-step preview. */
+  previewLang: CreateLangCode = 'pt';
+
+  readonly maxCreatePhotos = MAX_CREATE_PHOTOS;
+  createPhotos: CreatePhoto[] = [];
+  createPhotoErrors: string[] = [];
+  createPhotoDragOver = false;
+  createUploadProgress: { done: number; total: number } | null = null;
+  private nextCreatePhotoId = 1;
+
   importFile: File | null = null;
   importPreviewName = '';
 
@@ -121,6 +167,7 @@ export class AdminAuctionsComponent implements OnInit {
       this.page = 1;
       this.loadAuctions();
     });
+    this.destroyRef.onDestroy(() => this.clearCreatePhotos());
     this.loadAuctions();
   }
 
@@ -161,13 +208,151 @@ export class AdminAuctionsComponent implements OnInit {
 
   /** Locale checklist shown in the confirm step. */
   get localeChecklist(): { code: string; label: string; title: boolean; description: boolean }[] {
-    const f = this.createForm;
-    return [
-      { code: 'pt', label: 'Português', title: !!(f.title || '').trim(), description: !!(f.description || '').trim() },
-      { code: 'en', label: 'English', title: !!(f.titleEn || '').trim(), description: !!(f.descriptionEn || '').trim() },
-      { code: 'es', label: 'Español', title: !!(f.titleEs || '').trim(), description: !!(f.descriptionEs || '').trim() },
-      { code: 'fr', label: 'Français', title: !!(f.titleFr || '').trim(), description: !!(f.descriptionFr || '').trim() }
-    ];
+    return this.createLangTabs.map((tab) => ({
+      code: tab.code,
+      label: tab.label,
+      title: !!this.langTitle(tab),
+      description: !!this.langDescription(tab)
+    }));
+  }
+
+  langTitle(tab: CreateLangTab): string {
+    return (this.createForm[tab.titleField] || '').trim();
+  }
+
+  langDescription(tab: CreateLangTab): string {
+    return (this.createForm[tab.descriptionField] || '').trim();
+  }
+
+  /** complete = title and description; partial = only one of them; empty = falls back to PT on the site. */
+  langStatus(tab: CreateLangTab): 'complete' | 'partial' | 'empty' {
+    const title = !!this.langTitle(tab);
+    const description = !!this.langDescription(tab);
+    if (title && description) return 'complete';
+    return title || description ? 'partial' : 'empty';
+  }
+
+  get previewTab(): CreateLangTab {
+    return this.createLangTabs.find((t) => t.code === this.previewLang) ?? this.createLangTabs[0];
+  }
+
+  /** What the site shows for the preview language, mirroring getLocalizedTitle/Description's PT fallback. */
+  get previewContent(): { title: string; description: string; titleFallback: boolean; descriptionFallback: boolean } {
+    const pt = this.createLangTabs[0];
+    const tab = this.previewTab;
+    const title = this.langTitle(tab);
+    const description = this.langDescription(tab);
+    return {
+      title: title || this.langTitle(pt),
+      description: description || this.langDescription(pt),
+      titleFallback: !title,
+      descriptionFallback: !description
+    };
+  }
+
+  // ---- Create: photos ------------------------------------------------------
+
+  onCreatePhotosSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    this.addCreatePhotos(Array.from(input.files ?? []));
+    // Reset so picking the same file again after removing it still fires `change`.
+    input.value = '';
+  }
+
+  onCreatePhotosDragOver(event: DragEvent): void {
+    event.preventDefault();
+    this.createPhotoDragOver = true;
+  }
+
+  onCreatePhotosDragLeave(event: DragEvent): void {
+    event.preventDefault();
+    this.createPhotoDragOver = false;
+  }
+
+  onCreatePhotosDropped(event: DragEvent): void {
+    event.preventDefault();
+    this.createPhotoDragOver = false;
+    if (this.createSubmitting) return;
+    this.addCreatePhotos(Array.from(event.dataTransfer?.files ?? []));
+  }
+
+  private addCreatePhotos(files: File[]): void {
+    this.createPhotoErrors = [];
+    for (const file of files) {
+      if (!CREATE_PHOTO_TYPES.includes(file.type)) {
+        this.createPhotoErrors.push(`${file.name}: not a supported image (JPEG, PNG, GIF, WebP, BMP).`);
+        continue;
+      }
+      if (file.size > MAX_CREATE_PHOTO_BYTES) {
+        this.createPhotoErrors.push(`${file.name}: larger than 5 MB.`);
+        continue;
+      }
+      if (this.createPhotos.length >= MAX_CREATE_PHOTOS) {
+        this.createPhotoErrors.push(`${file.name}: limit of ${MAX_CREATE_PHOTOS} photos reached.`);
+        continue;
+      }
+      const duplicate = this.createPhotos.some(
+        (p) => p.file.name === file.name && p.file.size === file.size && p.file.lastModified === file.lastModified
+      );
+      if (duplicate) continue;
+      this.createPhotos.push({ id: this.nextCreatePhotoId++, file, previewUrl: URL.createObjectURL(file) });
+    }
+  }
+
+  removeCreatePhoto(index: number): void {
+    if (this.createSubmitting) return;
+    const [removed] = this.createPhotos.splice(index, 1);
+    if (removed) URL.revokeObjectURL(removed.previewUrl);
+  }
+
+  /** Moves a photo by `delta` positions; the first photo is the cover. */
+  moveCreatePhoto(index: number, delta: number): void {
+    if (this.createSubmitting) return;
+    const target = index + delta;
+    if (target < 0 || target >= this.createPhotos.length) return;
+    const [photo] = this.createPhotos.splice(index, 1);
+    this.createPhotos.splice(target, 0, photo);
+  }
+
+  makeCreatePhotoCover(index: number): void {
+    this.moveCreatePhoto(index, -index);
+  }
+
+  private clearCreatePhotos(): void {
+    this.createPhotos.forEach((p) => URL.revokeObjectURL(p.previewUrl));
+    this.createPhotos = [];
+    this.createPhotoErrors = [];
+    this.createPhotoDragOver = false;
+    this.createUploadProgress = null;
+  }
+
+  /**
+   * Uploads photos that are not in Blob Storage yet, in batches the upload
+   * endpoint accepts, and returns every URL in display order (cover first).
+   */
+  private async uploadCreatePhotos(): Promise<string[]> {
+    const total = this.createPhotos.length;
+    const pending = this.createPhotos.filter((p) => !p.uploadedUrl);
+    let done = total - pending.length;
+    this.createUploadProgress = { done, total };
+
+    for (let i = 0; i < pending.length; i += UPLOAD_BATCH_SIZE) {
+      const batch = pending.slice(i, i + UPLOAD_BATCH_SIZE);
+      const formData = new FormData();
+      batch.forEach((p) => formData.append('images', p.file, p.file.name));
+      const res = await firstValueFrom(
+        this.http.post<{ urls: string[] }>(`${API_CONFIG.getApiUrl()}/uploads`, formData)
+      );
+      const urls = res?.urls ?? [];
+      if (urls.length !== batch.length) {
+        throw new Error('The upload service returned an unexpected number of photos. Please try again.');
+      }
+      batch.forEach((p, idx) => (p.uploadedUrl = urls[idx]));
+      done += batch.length;
+      this.createUploadProgress = { done, total };
+    }
+
+    return this.createPhotos.map((p) => p.uploadedUrl as string);
   }
 
   onSaleTypeChange(): void {
@@ -369,12 +554,16 @@ export class AdminAuctionsComponent implements OnInit {
   openCreateModal(): void {
     this.createForm = this.emptyCreateForm();
     this.createSaleType = 'highest-bid';
+    this.activeCreateLang = 'pt';
+    this.previewLang = 'pt';
+    this.clearCreatePhotos();
     this.showCreateConfirm = false;
     this.showCreateModal = true;
   }
 
   closeCreateModal(): void {
     if (this.createSubmitting) return;
+    this.clearCreatePhotos();
     this.showCreateModal = false;
     this.showCreateConfirm = false;
   }
@@ -390,14 +579,21 @@ export class AdminAuctionsComponent implements OnInit {
       return;
     }
     if (!title) {
+      this.activeCreateLang = 'pt';
       alert('Portuguese title (PT) is required.');
       return;
     }
     if (description.length < 50) {
+      this.activeCreateLang = 'pt';
       alert('Portuguese description must be at least 50 characters.');
       return;
     }
+    if (this.createPhotos.length === 0) {
+      alert('Add at least one photo.');
+      return;
+    }
     this.onSaleTypeChange();
+    this.previewLang = 'pt';
     this.showCreateConfirm = true;
   }
 
@@ -406,14 +602,35 @@ export class AdminAuctionsComponent implements OnInit {
     this.showCreateConfirm = false;
   }
 
-  submitCreate(): void {
+  async submitCreate(): Promise<void> {
     if (this.createSubmitting) return;
     const title = (this.createForm.title || '').trim();
     const description = (this.createForm.description || '').trim();
     const sellerEmail = (this.createForm.sellerEmail || '').trim();
+    if (this.createPhotos.length === 0) {
+      alert('Add at least one photo.');
+      return;
+    }
     this.onSaleTypeChange();
 
     this.createSubmitting = true;
+    let images: string[];
+    try {
+      images = await this.uploadCreatePhotos();
+    } catch (err: any) {
+      this.createSubmitting = false;
+      this.createUploadProgress = null;
+      const blocked = err?.error?.error === 'Content policy violation';
+      const message = err?.error?.message || err?.message || 'Could not upload the photos.';
+      alert(
+        blocked
+          ? `Fail: a photo was blocked by the content-safety filter. Remove it and try again.\n${message}`
+          : `Fail: ${message}`
+      );
+      return;
+    }
+    this.createUploadProgress = null;
+
     const payload: AdminCreateAuctionPayload = {
       ...this.createForm,
       sellerEmail,
@@ -427,12 +644,14 @@ export class AdminAuctionsComponent implements OnInit {
       descriptionFr: (this.createForm.descriptionFr || '').trim() || undefined,
       startingPrice: this.isGiveawayCreate ? 0 : Number(this.createForm.startingPrice) || 0,
       shippingCost: this.isGiveawayCreate ? 0 : Number(this.createForm.shippingCost) || 0,
-      allowPrivateRoom: this.canAllowPrivateRoom ? !!this.createForm.allowPrivateRoom : false
+      allowPrivateRoom: this.canAllowPrivateRoom ? !!this.createForm.allowPrivateRoom : false,
+      images
     };
 
     this.adminService.createAuction(payload).subscribe({
       next: (res) => {
         this.createSubmitting = false;
+        this.clearCreatePhotos();
         this.showCreateModal = false;
         this.showCreateConfirm = false;
         const kind = res.listing.saleFormat === 'giveaway' ? 'giveaway' : 'auction';

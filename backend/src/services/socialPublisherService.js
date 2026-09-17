@@ -1,10 +1,15 @@
 /**
  * Publishing listings to the BidRoom Facebook Page and Instagram account.
  *
- * Two callers: the Nexus approval, which posts automatically in the background
- * (publishApprovedListing), and scripts/post-listing.js, which posts by hand.
- * Both compose and send through the functions below, so a manual repost looks
+ * Three callers: the Nexus approval, which posts automatically in the background
+ * (publishApprovedListing); the Facebook and Instagram buttons on a listing in
+ * Nexus (requestPublish); and scripts/post-listing.js, which posts by hand. All
+ * compose and send through the functions below, so a manual repost looks
  * exactly like the automatic one.
+ *
+ * listing.socialPosts.<platform> holds one platform's state: `status` is
+ * publishing → published | failed, and the post details stay from the last
+ * success.
  *
  * The accounts are the real public ones — there is no test version of them.
  * Whatever reaches postToFacebook/postToInstagram is seen by followers.
@@ -268,6 +273,23 @@ async function postToInstagram(listing, message, { onImageReady = () => {} } = {
   return { mediaId: posted.id, permalink, imagesSent: selected.length, imageCount };
 }
 
+/**
+ * Asks Facebook to read the listing page's OG tags again.
+ *
+ * Facebook caches a link's preview. After a photo or title was changed in
+ * Nexus, a new post would otherwise show what the page looked like the first
+ * time it was shared. Best effort: a failed refresh still lets the post go out.
+ */
+async function refreshLinkPreview(listing) {
+  const { graph, pageToken } = metaConfig();
+  try {
+    const data = await graphPost(`${graph}/`, { id: listingUrl(listing), scrape: true, access_token: pageToken }, 2);
+    if (data?.error) logger.warn(`[social] Facebook preview refresh for ${listing.slug}: ${data.error.message}`);
+  } catch (err) {
+    logger.warn(`[social] Facebook preview refresh for ${listing.slug}: ${err.message}`);
+  }
+}
+
 /** Database name from a Mongo URI, or null when the URI cannot be read. */
 function databaseName(uri) {
   try {
@@ -288,7 +310,33 @@ function nonProductionDatabase() {
   return db && /dev|test|staging|local/i.test(db) ? db : null;
 }
 
-/** Why this process must not post automatically, or null when it may. */
+const PLATFORMS = ['facebook', 'instagram'];
+
+/**
+ * A publish still marked "publishing" after this long was cut short — the
+ * process restarted mid-post — and may be started again.
+ */
+const STALE_PUBLISH_MS = 15 * 60 * 1000;
+
+/** Why this process cannot post to `platform` at all, or null when it can. */
+function platformBlocker(platform) {
+  const { pageId, pageToken, igUserId } = metaConfig();
+  // Instagram is published with the Page token too.
+  if (!pageId || !pageToken) return 'FB_PAGE_ID or FB_PAGE_ACCESS_TOKEN is not set';
+  if (platform === 'instagram' && !igUserId) return 'IG_USER_ID is not set';
+
+  const db = nonProductionDatabase();
+  if (db && process.env.SOCIAL_ALLOW_DEV_DATA !== 'true') {
+    return `database "${db}" is not production and the social accounts are the real ones`;
+  }
+  return null;
+}
+
+/**
+ * Why this process must not post automatically on approval, or null when it may.
+ * Unlike a publish from Nexus, SOCIAL_ALLOW_DEV_DATA does not lift the database
+ * check: nobody is there to decide that a development listing should go out.
+ */
 function autopostBlocker() {
   if (process.env.SOCIAL_AUTOPOST !== 'true') return 'SOCIAL_AUTOPOST is not "true"';
 
@@ -301,12 +349,91 @@ function autopostBlocker() {
   return null;
 }
 
-/** Records one platform's outcome on the listing. Never throws. */
-function recordOutcome(listingId, platform, fields) {
-  return Listing.updateOne(
-    { _id: listingId },
-    { $set: { [`socialPosts.${platform}`]: fields } }
-  ).catch(err => logger.error(`[social] could not record ${platform} outcome for ${listingId}:`, err.message));
+/** A refused publish request; `code` is what Nexus reacts to. */
+class SocialPublishError extends Error {
+  constructor(statusCode, code, message) {
+    super(message);
+    this.statusCode = statusCode;
+    this.code = code;
+  }
+}
+
+/**
+ * Marks `platform` as being published, atomically, and returns the listing as
+ * it is now — or null when the listing may not be published right now.
+ *
+ * The update only matches a listing that is live and not already publishing on
+ * that platform, so a double click, two admins, or the approval racing a manual
+ * publish cannot post twice. Beyond that:
+ *   auto   — only a platform never attempted (a failure waits for an admin);
+ *   manual — also a failed one, but not one already published;
+ *   repost — also one already published.
+ * Previous post details stay in place until the new post succeeds.
+ */
+function claimPlatform(listingId, platform, { mode, requestedBy, startedAt }) {
+  const key = `socialPosts.${platform}`;
+  const filter = {
+    _id: listingId,
+    status: 'active',
+    endDate: { $gt: startedAt },
+    $or: [
+      { [`${key}.status`]: { $ne: 'publishing' } },
+      { [`${key}.startedAt`]: { $lt: new Date(startedAt.getTime() - STALE_PUBLISH_MS) } }
+    ]
+  };
+  if (mode === 'auto') filter[`${key}.status`] = null;
+  if (mode === 'manual') filter[`${key}.postedAt`] = null;
+
+  return Listing.findOneAndUpdate(
+    filter,
+    {
+      $set: {
+        [`${key}.status`]: 'publishing',
+        [`${key}.startedAt`]: startedAt,
+        [`${key}.requestedBy`]: requestedBy,
+        [`${key}.error`]: null
+      }
+    },
+    { new: true }
+  ).lean();
+}
+
+/**
+ * Saves how a publish ended. Only touches the attempt that `startedAt` claimed,
+ * so a slow post that was given up on cannot overwrite a newer one. Never throws.
+ */
+function recordOutcome(listingId, platform, startedAt, fields) {
+  const key = `socialPosts.${platform}`;
+  const $set = Object.fromEntries(Object.entries(fields).map(([k, v]) => [`${key}.${k}`, v]));
+  return Listing.updateOne({ _id: listingId, [`${key}.startedAt`]: startedAt }, { $set })
+    .catch(err => logger.error(`[social] could not record ${platform} outcome for ${listingId}:`, err.message));
+}
+
+/** Posts a claimed listing to one platform and records the outcome. Never throws. */
+async function runPlatform(listing, platform, startedAt) {
+  const message = buildMessage(listing);
+  try {
+    if (platform === 'facebook') {
+      await refreshLinkPreview(listing);
+      const { postId } = await postToFacebook(listing, message);
+      logger.info(`[social] Facebook post ${postId} for ${listing.slug}`);
+      await recordOutcome(listing._id, platform, startedAt, {
+        status: 'published', postId, postedAt: new Date(), error: null
+      });
+    } else {
+      const { mediaId, permalink, imagesSent, imageCount } = await postToInstagram(listing, message);
+      const partial = imageCount !== null && imageCount < imagesSent;
+      logger[partial ? 'warn' : 'info'](
+        `[social] Instagram post ${permalink || mediaId} for ${listing.slug} (${imageCount ?? '?'}/${imagesSent} images)`
+      );
+      await recordOutcome(listing._id, platform, startedAt, {
+        status: 'published', mediaId, permalink, imagesSent, imageCount, postedAt: new Date(), error: null
+      });
+    }
+  } catch (err) {
+    logger.error(`[social] ${platform} failed for ${listing.slug}:`, err.message);
+    await recordOutcome(listing._id, platform, startedAt, { status: 'failed', error: err.message });
+  }
 }
 
 /**
@@ -315,12 +442,10 @@ function recordOutcome(listingId, platform, fields) {
  * Runs after the approval response has gone out — an Instagram carousel takes
  * tens of seconds, and a Meta failure must never undo or delay an approval.
  * Every outcome, success or error, is saved under listing.socialPosts so Nexus
- * and scripts can tell what went out.
+ * can show what went out and offer to try again.
  *
- * At most once per listing: the claim is an atomic update on socialPosts.claimedAt,
- * so a double-submitted approval or a second instance cannot post twice.
- * A failed platform is not retried automatically — repost it with
- * `node scripts/post-listing.js --slug=<slug> --post --instagram-only`.
+ * Each platform is claimed on its own (see claimPlatform) and at most once: a
+ * platform that failed is left for an admin to publish from Nexus.
  */
 async function publishApprovedListing(listingId) {
   const blocker = autopostBlocker();
@@ -329,45 +454,21 @@ async function publishApprovedListing(listingId) {
     return;
   }
 
-  const listing = await Listing.findOneAndUpdate(
-    { _id: listingId, status: 'active', endDate: { $gt: new Date() }, 'socialPosts.claimedAt': null },
-    { $set: { 'socialPosts.claimedAt': new Date() } },
-    { new: true }
-  ).lean();
+  await Promise.all(PLATFORMS.map(async platform => {
+    const platformBlock = platformBlocker(platform);
+    if (platformBlock) {
+      logger.info(`[social] auto-post to ${platform} skipped for listing ${listingId}: ${platformBlock}`);
+      return;
+    }
 
-  if (!listing) {
-    logger.info(`[social] listing ${listingId} not posted: already posted, not active, or already ended`);
-    return;
-  }
-
-  const message = buildMessage(listing);
-
-  const facebook = postToFacebook(listing, message)
-    .then(({ postId }) => {
-      logger.info(`[social] Facebook post ${postId} for ${listing.slug}`);
-      return recordOutcome(listing._id, 'facebook', { postId, postedAt: new Date(), error: null });
-    })
-    .catch(err => {
-      logger.error(`[social] Facebook failed for ${listing.slug}:`, err.message);
-      return recordOutcome(listing._id, 'facebook', { postId: null, postedAt: null, error: err.message });
-    });
-
-  const instagram = postToInstagram(listing, message)
-    .then(({ mediaId, permalink, imagesSent, imageCount }) => {
-      const partial = imageCount !== null && imageCount < imagesSent;
-      logger[partial ? 'warn' : 'info'](
-        `[social] Instagram post ${permalink || mediaId} for ${listing.slug} (${imageCount ?? '?'}/${imagesSent} images)`
-      );
-      return recordOutcome(listing._id, 'instagram', {
-        mediaId, permalink, imagesSent, imageCount, postedAt: new Date(), error: null
-      });
-    })
-    .catch(err => {
-      logger.error(`[social] Instagram failed for ${listing.slug}:`, err.message);
-      return recordOutcome(listing._id, 'instagram', { mediaId: null, postedAt: null, error: err.message });
-    });
-
-  await Promise.all([facebook, instagram]);
+    const startedAt = new Date();
+    const listing = await claimPlatform(listingId, platform, { mode: 'auto', requestedBy: 'auto', startedAt });
+    if (!listing) {
+      logger.info(`[social] listing ${listingId} not posted to ${platform}: already posted, not active, or already ended`);
+      return;
+    }
+    await runPlatform(listing, platform, startedAt);
+  }));
 }
 
 /** Fire-and-forget wrapper for request handlers. */
@@ -378,15 +479,119 @@ function schedulePublishApprovedListing(listingId) {
   });
 }
 
+/** A platform's saved state, with a publish that never finished shown as failed. */
+function effectiveState(state, now = Date.now()) {
+  if (!state?.status) return null;
+  if (state.status === 'publishing' && new Date(state.startedAt).getTime() < now - STALE_PUBLISH_MS) {
+    return { ...state, status: 'failed', error: 'Interrupted before it finished (the server restarted). Try again.' };
+  }
+  return state;
+}
+
+/** Why the listing itself cannot go out right now, or null. */
+function listingBlocker(listing, now = new Date()) {
+  if (listing.status !== 'active') return `The listing is ${listing.status.replace('_', ' ')} — only live listings are published.`;
+  if (new Date(listing.endDate) <= now) return 'The listing has already ended.';
+  return null;
+}
+
+const OVERVIEW_SELECT =
+  'title titlePt description descriptionPt slug saleFormat currentPrice buyNowPrice endDate images status +socialPosts';
+
+/** What Nexus shows in a listing's social media card. */
+async function getSocialOverview(listingId) {
+  const listing = await Listing.findById(listingId).select(OVERVIEW_SELECT).lean();
+  if (!listing) throw new SocialPublishError(404, 'not_found', 'Listing not found.');
+
+  const images = publishableImages(listing);
+  const blockedListing = listingBlocker(listing);
+  const platforms = {};
+  for (const platform of PLATFORMS) {
+    let reason = platformBlocker(platform) || blockedListing;
+    if (!reason && platform === 'instagram' && images.length === 0) {
+      reason = 'Instagram needs at least one photo.';
+    }
+    platforms[platform] = { available: !reason, reason, state: effectiveState(listing.socialPosts?.[platform]) };
+  }
+
+  return {
+    caption: buildMessage(listing),
+    link: listingUrl(listing),
+    imageCount: images.length,
+    instagramMaxImages: IG_CAROUSEL_MAX,
+    autopost: { enabled: !autopostBlocker(), reason: autopostBlocker() },
+    platforms
+  };
+}
+
+/**
+ * Publishes a listing to one platform on an admin's request, in the background.
+ *
+ * Resolves as soon as the platform is claimed; the post itself takes up to a
+ * minute and its outcome lands in listing.socialPosts, which Nexus polls.
+ * Throws SocialPublishError when the request is refused — notably
+ * `already_posted`, which Nexus answers by asking before sending `repost`.
+ */
+async function requestPublish(listingId, platform, { repost = false, requestedBy = null } = {}) {
+  if (!PLATFORMS.includes(platform)) {
+    throw new SocialPublishError(400, 'invalid_platform', `Unknown platform "${platform}".`);
+  }
+
+  const blocker = platformBlocker(platform);
+  if (blocker) throw new SocialPublishError(503, 'not_configured', `Publishing to ${platform} is unavailable: ${blocker}.`);
+
+  const current = await Listing.findById(listingId).select(OVERVIEW_SELECT).lean();
+  if (!current) throw new SocialPublishError(404, 'not_found', 'Listing not found.');
+
+  const blockedListing = listingBlocker(current);
+  if (blockedListing) throw new SocialPublishError(409, 'not_publishable', blockedListing);
+  if (platform === 'instagram' && publishableImages(current).length === 0) {
+    throw new SocialPublishError(409, 'no_images', 'Instagram needs at least one photo.');
+  }
+
+  const startedAt = new Date();
+  const listing = await claimPlatform(listingId, platform, {
+    mode: repost ? 'repost' : 'manual',
+    requestedBy,
+    startedAt
+  });
+
+  if (!listing) {
+    // Read again: the listing may have changed between the checks and the claim.
+    const now = await Listing.findById(listingId).select(OVERVIEW_SELECT).lean();
+    const state = effectiveState(now?.socialPosts?.[platform]);
+    if (!now) throw new SocialPublishError(404, 'not_found', 'Listing not found.');
+    const nowBlocked = listingBlocker(now);
+    if (nowBlocked) throw new SocialPublishError(409, 'not_publishable', nowBlocked);
+    if (state?.status === 'publishing') {
+      throw new SocialPublishError(409, 'in_progress', `Already being published to ${platform}.`);
+    }
+    throw new SocialPublishError(409, 'already_posted', `This listing was already published to ${platform}.`);
+  }
+
+  setImmediate(() => {
+    runPlatform(listing, platform, startedAt)
+      .catch(err => logger.error(`[social] ${platform} publish crashed for listing ${listingId}:`, err.message));
+  });
+
+  return { status: 'publishing', startedAt };
+}
+
 module.exports = {
   IG_CAROUSEL_MAX,
+  PLATFORMS,
+  STALE_PUBLISH_MS,
+  SocialPublishError,
   buildExcerpt,
   buildMessage,
   publishableImages,
   postToFacebook,
   postToInstagram,
   nonProductionDatabase,
+  platformBlocker,
   autopostBlocker,
   publishApprovedListing,
-  schedulePublishApprovedListing
+  schedulePublishApprovedListing,
+  getSocialOverview,
+  requestPublish
 };

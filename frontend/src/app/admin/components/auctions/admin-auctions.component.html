@@ -235,41 +235,101 @@
               </select>
             </label>
 
-            <label class="full section-label">Titles by language</label>
-            <label>
-              Title PT *
-              <input type="text" [(ngModel)]="createForm.title" maxlength="80" />
-            </label>
-            <label>
-              Title EN
-              <input type="text" [(ngModel)]="createForm.titleEn" maxlength="80" />
-            </label>
-            <label>
-              Title ES
-              <input type="text" [(ngModel)]="createForm.titleEs" maxlength="80" />
-            </label>
-            <label>
-              Title FR
-              <input type="text" [(ngModel)]="createForm.titleFr" maxlength="80" />
-            </label>
+            <div class="full create-section">
+              <span class="section-label">Title &amp; description by language</span>
+              <div class="lang-tabs" role="tablist" aria-label="Listing language">
+                @for (tab of createLangTabs; track tab.code) {
+                  <button
+                    type="button"
+                    role="tab"
+                    class="lang-tab"
+                    [class.active]="activeCreateLang === tab.code"
+                    [attr.aria-selected]="activeCreateLang === tab.code"
+                    (click)="activeCreateLang = tab.code"
+                  >
+                    <span class="lang-status" [attr.data-status]="langStatus(tab)" aria-hidden="true"></span>
+                    {{ tab.label }}{{ tab.required ? ' *' : '' }}
+                  </button>
+                }
+              </div>
 
-            <label class="full section-label">Descriptions by language</label>
-            <label class="full">
-              Description PT * (min 50 chars)
-              <textarea rows="4" [(ngModel)]="createForm.description"></textarea>
-            </label>
-            <label class="full">
-              Description EN
-              <textarea rows="3" [(ngModel)]="createForm.descriptionEn"></textarea>
-            </label>
-            <label class="full">
-              Description ES
-              <textarea rows="3" [(ngModel)]="createForm.descriptionEs"></textarea>
-            </label>
-            <label class="full">
-              Description FR
-              <textarea rows="3" [(ngModel)]="createForm.descriptionFr"></textarea>
-            </label>
+              @for (tab of createLangTabs; track tab.code) {
+                @if (activeCreateLang === tab.code) {
+                  <div class="lang-panel" role="tabpanel">
+                    @if (!tab.required) {
+                      <p class="field-note">
+                        Optional. Left empty, visitors browsing in {{ tab.label }} see the Portuguese text.
+                        Fill both fields, or the missing one falls back to Portuguese.
+                        <a href="https://www.deepl.com/translator" target="_blank" rel="noopener noreferrer">Translate with DeepL ↗</a>
+                      </p>
+                    }
+                    <label>
+                      Title {{ tab.code | uppercase }}{{ tab.required ? ' *' : '' }}
+                      <input type="text" [(ngModel)]="createForm[tab.titleField]" maxlength="80" />
+                      <span class="char-count">{{ (createForm[tab.titleField] || '').length }}/80</span>
+                    </label>
+                    <label>
+                      Description {{ tab.code | uppercase }}{{ tab.required ? ' * (min 50 chars)' : '' }}
+                      <textarea rows="6" [(ngModel)]="createForm[tab.descriptionField]" maxlength="5000"></textarea>
+                      <span class="char-count" [class.char-count--low]="tab.required && langDescription(tab).length < 50">
+                        {{ (createForm[tab.descriptionField] || '').length }}/5000
+                      </span>
+                    </label>
+                  </div>
+                }
+              }
+            </div>
+
+            <div class="full create-section">
+              <span class="section-label">Photos * <small>({{ createPhotos.length }}/{{ maxCreatePhotos }} · first photo is the cover)</small></span>
+              <label
+                class="photo-dropzone"
+                [class.drag-over]="createPhotoDragOver"
+                [class.disabled]="createPhotos.length >= maxCreatePhotos"
+                (dragover)="onCreatePhotosDragOver($event)"
+                (dragleave)="onCreatePhotosDragLeave($event)"
+                (drop)="onCreatePhotosDropped($event)"
+              >
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/gif,image/webp,image/bmp"
+                  multiple
+                  [disabled]="createPhotos.length >= maxCreatePhotos"
+                  (change)="onCreatePhotosSelected($event)"
+                />
+                <strong>Drop photos here or click to choose</strong>
+                <span>JPEG, PNG, GIF, WebP or BMP · up to 5 MB each</span>
+              </label>
+
+              @if (createPhotoErrors.length) {
+                <ul class="photo-errors">
+                  @for (msg of createPhotoErrors; track $index) {
+                    <li>{{ msg }}</li>
+                  }
+                </ul>
+              }
+
+              @if (createPhotos.length) {
+                <ul class="photo-grid">
+                  @for (photo of createPhotos; track photo.id; let i = $index, first = $first, last = $last) {
+                    <li class="photo-thumb" [class.cover]="first">
+                      <img [src]="photo.previewUrl" [alt]="photo.file.name" />
+                      @if (first) {
+                        <span class="cover-badge">Cover</span>
+                      }
+                      <button type="button" class="photo-remove" (click)="removeCreatePhoto(i)" aria-label="Remove photo">×</button>
+                      <div class="photo-actions">
+                        <button type="button" (click)="moveCreatePhoto(i, -1)" [disabled]="first" aria-label="Move left">‹</button>
+                        @if (!first) {
+                          <button type="button" class="make-cover" (click)="makeCreatePhotoCover(i)">Make cover</button>
+                        }
+                        <button type="button" (click)="moveCreatePhoto(i, 1)" [disabled]="last" aria-label="Move right">›</button>
+                      </div>
+                    </li>
+                  }
+                </ul>
+              }
+            </div>
 
             <label>
               Category
@@ -361,28 +421,69 @@
         <div class="modal-footer">
           <button type="button" class="btn-secondary" (click)="closeCreateModal()" [disabled]="createSubmitting">Cancel</button>
           <button type="button" class="btn-primary" (click)="requestCreateConfirm()" [disabled]="createSubmitting">
-            Review languages…
+            Review listing…
           </button>
         </div>
       } @else {
         <div class="modal-body">
           <p class="modal-help">
-            Confirm the languages filled for this {{ isGiveawayCreate ? 'giveaway' : 'auction' }} before creating.
+            Check how this {{ isGiveawayCreate ? 'giveaway' : 'auction' }} reads in each language before creating.
             Empty locales fall back to Portuguese on the site.
           </p>
           <ul class="locale-checklist">
             @for (lang of localeChecklist; track lang.code) {
-              <li [class.ok]="lang.title && lang.description" [class.partial]="lang.title !== lang.description || (lang.title && !lang.description)">
+              <li [class.ok]="lang.title && lang.description" [class.partial]="lang.title !== lang.description">
                 <strong>{{ lang.label }}</strong>
                 <span>Title {{ lang.title ? '✓' : '—' }}</span>
                 <span>Description {{ lang.description ? '✓' : '—' }}</span>
               </li>
             }
           </ul>
+
+          <div class="lang-tabs" role="tablist" aria-label="Preview language">
+            @for (tab of createLangTabs; track tab.code) {
+              <button
+                type="button"
+                role="tab"
+                class="lang-tab"
+                [class.active]="previewLang === tab.code"
+                [attr.aria-selected]="previewLang === tab.code"
+                (click)="previewLang = tab.code"
+              >
+                <span class="lang-status" [attr.data-status]="langStatus(tab)" aria-hidden="true"></span>
+                {{ tab.label }}
+              </button>
+            }
+          </div>
+          <article class="listing-preview">
+            @if (createPhotos.length) {
+              <div class="listing-preview__media">
+                <img [src]="createPhotos[0].previewUrl" alt="Cover photo" />
+                @if (createPhotos.length > 1) {
+                  <ul class="listing-preview__strip">
+                    @for (photo of createPhotos.slice(1); track photo.id) {
+                      <li><img [src]="photo.previewUrl" [alt]="photo.file.name" /></li>
+                    }
+                  </ul>
+                }
+              </div>
+            }
+            <div class="listing-preview__text">
+              <h3>{{ previewContent.title }}</h3>
+              @if (previewContent.titleFallback && previewLang !== 'pt') {
+                <span class="fallback-note">Title shown in Portuguese</span>
+              }
+              <p>{{ previewContent.description }}</p>
+              @if (previewContent.descriptionFallback && previewLang !== 'pt') {
+                <span class="fallback-note">Description shown in Portuguese</span>
+              }
+            </div>
+          </article>
+
           <dl class="confirm-summary">
             <div><dt>Seller</dt><dd>{{ createForm.sellerEmail }}</dd></div>
             <div><dt>Type</dt><dd>{{ createSaleType }}</dd></div>
-            <div><dt>Title (PT)</dt><dd>{{ createForm.title }}</dd></div>
+            <div><dt>Photos</dt><dd>{{ createPhotos.length }}</dd></div>
             @if (canAllowPrivateRoom) {
               <div><dt>Private room</dt><dd>{{ createForm.allowPrivateRoom ? 'Yes' : 'No' }}</dd></div>
             }
@@ -391,7 +492,13 @@
         <div class="modal-footer">
           <button type="button" class="btn-secondary" (click)="backFromConfirm()" [disabled]="createSubmitting">Back</button>
           <button type="button" class="btn-primary" (click)="submitCreate()" [disabled]="createSubmitting">
-            {{ createSubmitting ? 'Creating…' : (isGiveawayCreate ? 'Create giveaway' : 'Create auction') }}
+            @if (createUploadProgress) {
+              Uploading photos {{ createUploadProgress.done }}/{{ createUploadProgress.total }}…
+            } @else if (createSubmitting) {
+              Creating…
+            } @else {
+              {{ isGiveawayCreate ? 'Create giveaway' : 'Create auction' }}
+            }
           </button>
         </div>
       }

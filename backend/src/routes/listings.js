@@ -29,46 +29,12 @@ const { onVehicleListingCreated } = require('../services/amlMonitorService');
 const { isAdminEmail } = require('../utils/roles');
 const logger = require('../utils/logger');
 const { recordViewIfNew } = require('../utils/viewCounter');
+const { normalizeListingLocaleFields } = require('../utils/listingLocale');
 
 const router = express.Router();
 
 function escapeRegex(str) {
   return String(str).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}
-
-function cleanText(value) {
-  return value == null ? '' : String(value).trim();
-}
-
-function nullableText(value) {
-  const clean = cleanText(value);
-  return clean || null;
-}
-
-function normalizeListingLocaleFields(body = {}) {
-  const legacyTitle = cleanText(body.title);
-  const legacyDescription = cleanText(body.description);
-  const titlePt = cleanText(body.titlePt) || legacyTitle;
-  const titleEn = cleanText(body.titleEn);
-  const titleFr = cleanText(body.titleFr);
-  const titleEs = cleanText(body.titleEs);
-  const descriptionPt = cleanText(body.descriptionPt) || legacyDescription;
-  const descriptionEn = cleanText(body.descriptionEn);
-  const descriptionFr = cleanText(body.descriptionFr);
-  const descriptionEs = cleanText(body.descriptionEs);
-
-  return {
-    title: titlePt || titleEn || titleFr || titleEs || legacyTitle,
-    description: descriptionPt || descriptionEn || descriptionFr || descriptionEs || legacyDescription,
-    titlePt: nullableText(titlePt),
-    titleEn: nullableText(titleEn),
-    titleFr: nullableText(titleFr),
-    titleEs: nullableText(titleEs),
-    descriptionPt: nullableText(descriptionPt),
-    descriptionEn: nullableText(descriptionEn),
-    descriptionFr: nullableText(descriptionFr),
-    descriptionEs: nullableText(descriptionEs),
-  };
 }
 
 /** Populated seller fields for public listing APIs (DSA trader transparency). */

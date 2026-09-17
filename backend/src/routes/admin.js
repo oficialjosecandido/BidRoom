@@ -24,6 +24,13 @@ const { applyDisputeAccountOutcome } = require('../services/accountStatusService
 const { applyDisputeVerdictImpact } = require('../services/reputationService');
 const { appendModerationAudit } = require('../services/moderationAuditService');
 const { approveListing, rejectListing, ReviewError } = require('../services/listingReviewService');
+const {
+  ListingEditError,
+  updateListingText,
+  addListingImages,
+  setListingImages
+} = require('../services/adminListingEditService');
+const { SocialPublishError, getSocialOverview, requestPublish } = require('../services/socialPublisherService');
 const { runImagePurge } = require('../services/imagePurgeScheduler');
 const { getBlocklistItems, addBlocklistItem, removeBlocklistItem, ensureBlocklistExists } = require('../services/contentSafetyService');
 const azureStorageService = require('../services/azureStorage.service');
@@ -721,6 +728,136 @@ router.patch('/auctions/:id/end-date', authenticateToken, requireAdmin, async (r
       error: 'Failed to update end date',
       message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
     });
+  }
+});
+
+/** Sends a refusal from the listing edit or social services, or a 500. */
+function sendListingEditError(res, error, what) {
+  if (error instanceof ListingEditError || error instanceof SocialPublishError) {
+    return res.status(error.statusCode).json({ error: error.message, code: error.code });
+  }
+  logger.error(`Error ${what}:`, error);
+  return res.status(500).json({
+    error: `Failed ${what}`,
+    message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
+  });
+}
+
+async function auditListingEdit(req, listingId, actionType, metadata) {
+  const [admin, listing] = await Promise.all([
+    resolveAdminActor(req),
+    Listing.findById(listingId).select('seller').lean()
+  ]);
+  if (!listing) return;
+  await appendModerationAudit({
+    subjectUserId: listing.seller,
+    actionType,
+    performedByUserId: admin._id,
+    performedByEmail: admin.email,
+    metadata: { listingId, ...metadata },
+    ip: req.ip || null
+  });
+}
+
+/**
+ * PATCH /api/admin/auctions/:id/text
+ * Title and description in each language (titlePt, titleEn, titleFr, titleEs,
+ * descriptionPt, …). An empty language falls back to the listing's main text.
+ */
+router.patch('/auctions/:id/text', authenticateToken, requireAdmin, async (req, res) => {
+  if (!isValidObjectId(req.params.id)) return res.status(400).json({ error: 'Invalid listing ID' });
+  try {
+    const listing = await updateListingText(req.params.id, req.body || {});
+    await auditListingEdit(req, req.params.id, 'admin_listing_text_updated', {
+      languages: ['Pt', 'En', 'Fr', 'Es'].filter(l => listing[`title${l}`] || listing[`description${l}`])
+    });
+    return res.json({ ok: true, listing });
+  } catch (error) {
+    return sendListingEditError(res, error, 'to update listing text');
+  }
+});
+
+const listingImageUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 10 * 1024 * 1024, files: 10 },
+  fileFilter: (_req, file, cb) => {
+    if (/^image\//.test(file.mimetype)) return cb(null, true);
+    cb(new Error('Only image files are allowed'));
+  }
+});
+
+/**
+ * POST /api/admin/auctions/:id/images  (multipart, field "images", up to 10)
+ * Uploads photos and appends them to the listing.
+ */
+router.post('/auctions/:id/images', authenticateToken, requireAdmin, (req, res) => {
+  if (!isValidObjectId(req.params.id)) return res.status(400).json({ error: 'Invalid listing ID' });
+  listingImageUpload.array('images', 10)(req, res, async (uploadErr) => {
+    if (uploadErr) {
+      const message = uploadErr.code === 'LIMIT_FILE_SIZE' ? 'Each photo can be up to 10 MB.' : uploadErr.message;
+      return res.status(400).json({ error: message });
+    }
+    try {
+      const images = await addListingImages(req.params.id, req.files || []);
+      await auditListingEdit(req, req.params.id, 'admin_listing_images_added', { added: req.files.length });
+      return res.json({ ok: true, images });
+    } catch (error) {
+      return sendListingEditError(res, error, 'to add listing photos');
+    }
+  });
+});
+
+/**
+ * PUT /api/admin/auctions/:id/images  { images: string[], expected: string[] }
+ * Keeps these photos in this order (the first is the cover) and removes the rest.
+ */
+router.put('/auctions/:id/images', authenticateToken, requireAdmin, async (req, res) => {
+  if (!isValidObjectId(req.params.id)) return res.status(400).json({ error: 'Invalid listing ID' });
+  try {
+    const result = await setListingImages(req.params.id, req.body?.images, req.body?.expected);
+    await auditListingEdit(req, req.params.id, 'admin_listing_images_updated', {
+      removed: result.removed, deletedFiles: result.deletedFiles
+    });
+    return res.json({ ok: true, images: result.images });
+  } catch (error) {
+    return sendListingEditError(res, error, 'to update listing photos');
+  }
+});
+
+/**
+ * GET /api/admin/auctions/:id/social
+ * Facebook and Instagram state for the listing, the caption that would be
+ * posted, and whether each platform can be published to now.
+ */
+router.get('/auctions/:id/social', authenticateToken, requireAdmin, async (req, res) => {
+  if (!isValidObjectId(req.params.id)) return res.status(400).json({ error: 'Invalid listing ID' });
+  try {
+    return res.json(await getSocialOverview(req.params.id));
+  } catch (error) {
+    return sendListingEditError(res, error, 'to load social media state');
+  }
+});
+
+/**
+ * POST /api/admin/auctions/:id/social/:platform  { repost?: boolean }
+ * Publishes to facebook or instagram in the background (202). A platform the
+ * listing was already published to answers 409 already_posted unless `repost`.
+ */
+router.post('/auctions/:id/social/:platform', authenticateToken, requireAdmin, async (req, res) => {
+  if (!isValidObjectId(req.params.id)) return res.status(400).json({ error: 'Invalid listing ID' });
+  try {
+    const admin = await resolveAdminActor(req);
+    const repost = req.body?.repost === true;
+    const state = await requestPublish(req.params.id, req.params.platform, {
+      repost,
+      requestedBy: admin.email
+    });
+    await auditListingEdit(req, req.params.id, 'admin_listing_social_publish', {
+      platform: req.params.platform, repost
+    });
+    return res.status(202).json({ ok: true, ...state });
+  } catch (error) {
+    return sendListingEditError(res, error, 'to publish to social media');
   }
 });
 

@@ -47,14 +47,6 @@
         <!-- Auction Info Card -->
         <div class="info-card">
           <h2 class="card-title">Auction Information</h2>
-          
-          @if (auction.images && auction.images.length > 0) {
-<div class="auction-images">
-            @for (image of auction.images; track image) {
-<img [src]="image" [alt]="auction.title" class="auction-image">
-}
-          </div>
-}
 
           <table class="nexus-kv-table auction-kv-table">
             <tbody>
@@ -165,11 +157,245 @@
               }
             </tbody>
           </table>
+        </div>
 
-          <div class="description-section">
-            <h3 class="section-title">Description</h3>
-            <p class="description-text">{{ auction.description }}</p>
+        <!-- Photos Card -->
+        <div class="info-card">
+          <div class="card-head">
+            <h2 class="card-title">Photos</h2>
+            <span class="card-meta">{{ photoDraft.length }} / {{ maxListingPhotos }}</span>
           </div>
+
+          @if (photoDraft.length > 0) {
+            <ul class="photo-grid">
+              @for (photo of photoDraft; track photo; let i = $index, first = $first, last = $last) {
+                <li class="photo-tile" [class.photo-tile--cover]="first">
+                  <img [src]="photo" [alt]="'Photo ' + (i + 1)" loading="lazy" />
+                  @if (first) {
+                    <span class="photo-tile__badge">Cover</span>
+                  }
+                  <button
+                    type="button"
+                    class="photo-tile__remove"
+                    title="Remove photo"
+                    aria-label="Remove photo"
+                    [disabled]="isSavingPhotos || isUploadingPhotos"
+                    (click)="removePhoto(i)">×</button>
+                  <div class="photo-tile__actions">
+                    <button type="button" title="Move left" aria-label="Move left"
+                      [disabled]="first || isSavingPhotos" (click)="movePhoto(i, -1)">←</button>
+                    @if (!first) {
+                      <button type="button" class="photo-tile__cover-btn"
+                        [disabled]="isSavingPhotos" (click)="makeCover(i)">Set as cover</button>
+                    }
+                    <button type="button" title="Move right" aria-label="Move right"
+                      [disabled]="last || isSavingPhotos" (click)="movePhoto(i, 1)">→</button>
+                  </div>
+                </li>
+              }
+            </ul>
+          } @else {
+            <div class="empty-state">
+              <p>This listing has no photos yet.</p>
+            </div>
+          }
+
+          <div class="edit-bar">
+            <label
+              class="edit-bar__upload"
+              [class.edit-bar__upload--disabled]="isUploadingPhotos || isSavingPhotos || photosDirty || photoDraft.length >= maxListingPhotos">
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/gif"
+                multiple
+                [disabled]="isUploadingPhotos || isSavingPhotos || photosDirty || photoDraft.length >= maxListingPhotos"
+                (change)="onPhotosSelected($event)" />
+              {{ isUploadingPhotos ? 'Uploading…' : '+ Add photos' }}
+            </label>
+
+            @if (photosDirty) {
+              <button type="button" class="edit-bar__secondary" [disabled]="isSavingPhotos" (click)="discardPhotoChanges()">Discard</button>
+              <button type="button" class="edit-bar__save" [disabled]="isSavingPhotos" (click)="savePhotos()">
+                {{ isSavingPhotos ? 'Saving…' : 'Save photos' }}
+              </button>
+            }
+            @if (photoSavedMsg) {
+              <span class="edit-bar__ok">{{ photoSavedMsg }}</span>
+            }
+          </div>
+
+          @if (photoError) {
+            <p class="edit-error">{{ photoError }}</p>
+          }
+          <p class="edit-hint">
+            @if (photosDirty) {
+              Save or discard the order and removals before adding photos.
+            } @else {
+              JPEG, PNG, WebP or GIF · up to 10 MB each, 10 at a time. New photos are added at the end.
+            }
+            The first photo is the cover on the site, Facebook and Instagram.
+          </p>
+        </div>
+
+        <!-- Title & Description Card -->
+        <div class="info-card">
+          <div class="card-head">
+            <h2 class="card-title">Title &amp; description</h2>
+            @if (textDirty) {
+              <span class="card-meta card-meta--warn">Unsaved changes</span>
+            }
+          </div>
+
+          <div class="lang-tabs" role="tablist">
+            @for (lang of textLanguages; track lang.suffix) {
+              <button
+                type="button"
+                role="tab"
+                class="lang-tab"
+                [class.lang-tab--active]="activeTextLanguage === lang.suffix"
+                [attr.aria-selected]="activeTextLanguage === lang.suffix"
+                (click)="activeTextLanguage = lang.suffix">
+                {{ lang.label }}
+                @if (languageIncomplete(lang.suffix)) {
+                  <span class="lang-tab__dot lang-tab__dot--warn" title="Title or description missing"></span>
+                } @else if (languageFilled(lang.suffix)) {
+                  <span class="lang-tab__dot" title="Translated"></span>
+                }
+              </button>
+            }
+          </div>
+
+          <label class="text-field">
+            <span class="text-field__label">
+              Title
+              <span class="text-field__count">{{ activeTitle.length }} / 80</span>
+            </span>
+            <input
+              type="text"
+              maxlength="80"
+              [(ngModel)]="activeTitle"
+              [disabled]="isSavingText" />
+          </label>
+
+          <label class="text-field">
+            <span class="text-field__label">
+              Description
+              <span class="text-field__count">{{ activeDescription.length }} / 5000</span>
+            </span>
+            <textarea
+              rows="8"
+              maxlength="5000"
+              [(ngModel)]="activeDescription"
+              [disabled]="isSavingText"></textarea>
+          </label>
+
+          @if (languageIncomplete(activeTextLanguage)) {
+            <p class="edit-error">Fill in both the title and the description, otherwise visitors in this language see the main text for the missing one.</p>
+          }
+          @if (textError) {
+            <p class="edit-error">{{ textError }}</p>
+          }
+
+          <div class="edit-bar">
+            <button type="button" class="edit-bar__save" [disabled]="isSavingText || !textDirty" (click)="saveText()">
+              {{ isSavingText ? 'Saving…' : 'Save all languages' }}
+            </button>
+            @if (textDirty) {
+              <button type="button" class="edit-bar__secondary" [disabled]="isSavingText" (click)="discardTextChanges()">Discard</button>
+            }
+            @if (textSavedMsg) {
+              <span class="edit-bar__ok">{{ textSavedMsg }}</span>
+            }
+          </div>
+          <p class="edit-hint">
+            Visitors see their language and fall back to the main text when it is empty. The main text is the first language filled in
+            (Português → English → Français → Español) and is used for search, social posts and emails. The listing URL does not change.
+          </p>
+        </div>
+
+        <!-- Social Media Card -->
+        <div class="info-card">
+          <div class="card-head">
+            <h2 class="card-title">Social media</h2>
+            @if (social) {
+              <span class="card-meta">
+                Auto-post on approval: {{ social.autopost.enabled ? 'on' : 'off' }}
+              </span>
+            }
+          </div>
+
+          @if (socialError) {
+            <p class="edit-error">{{ socialError }}</p>
+          }
+
+          @if (social) {
+            <div class="social-grid">
+              @for (p of socialPlatforms; track p) {
+                @let entry = social.platforms[p];
+                <section class="social-panel">
+                  <h3 class="social-panel__title">{{ platformLabel(p) }}</h3>
+
+                  @if (entry.state; as state) {
+                    @switch (state.status) {
+                      @case ('publishing') {
+                        <p class="social-status social-status--busy">Publishing… started {{ formatDate(state.startedAt!) }}</p>
+                      }
+                      @case ('published') {
+                        <p class="social-status social-status--ok">
+                          Published {{ formatDate(state.postedAt!) }}
+                          @if (state.requestedBy) { · {{ state.requestedBy === 'auto' ? 'on approval' : 'by ' + state.requestedBy }} }
+                        </p>
+                        @if (p === 'instagram' && state.imagesSent) {
+                          <p class="social-detail">{{ state.imagesSent }} photo{{ state.imagesSent === 1 ? '' : 's' }} sent</p>
+                        }
+                        @if (socialPostUrl(p); as postUrl) {
+                          <a class="social-link" [href]="postUrl" target="_blank" rel="noopener">View post ↗</a>
+                        }
+                      }
+                      @case ('failed') {
+                        <p class="social-status social-status--error">Failed: {{ state.error }}</p>
+                        @if (state.postedAt) {
+                          <p class="social-detail">Last published {{ formatDate(state.postedAt) }}</p>
+                        }
+                      }
+                    }
+                  } @else {
+                    <p class="social-status">Not published yet</p>
+                  }
+
+                  @if (!entry.available && entry.reason) {
+                    <p class="social-detail social-detail--muted">{{ entry.reason }}</p>
+                  }
+                  @if (p === 'instagram' && social.imageCount > social.instagramMaxImages) {
+                    <p class="social-detail social-detail--muted">Instagram takes the first {{ social.instagramMaxImages }} of {{ social.imageCount }} photos.</p>
+                  }
+
+                  <button
+                    type="button"
+                    class="social-btn"
+                    [ngClass]="'social-btn--' + p"
+                    [disabled]="!entry.available || publishingPlatform !== null || entry.state?.status === 'publishing'"
+                    (click)="publishToSocial(p)">
+                    @if (publishingPlatform === p || entry.state?.status === 'publishing') {
+                      Publishing…
+                    } @else if (entry.state?.postedAt) {
+                      Publish again on {{ platformLabel(p) }}
+                    } @else {
+                      Publish on {{ platformLabel(p) }}
+                    }
+                  </button>
+                </section>
+              }
+            </div>
+
+            <details class="social-preview">
+              <summary>Post text preview</summary>
+              <pre>{{ social.caption }}</pre>
+              <p class="social-detail">Link: <a [href]="social.link" target="_blank" rel="noopener">{{ social.link }}</a></p>
+            </details>
+          } @else if (!socialError) {
+            <p class="social-detail social-detail--muted">Loading…</p>
+          }
         </div>
 
         <!-- Seller Info Card -->
