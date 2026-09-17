@@ -1,20 +1,19 @@
 const express = require('express');
 const crypto = require('crypto');
-const rateLimit = require('express-rate-limit');
 const Notification = require('../models/Notification');
 const Customer = require('../models/Customer');
 const NotificationPreferences = require('../models/NotificationPreferences');
 const { authenticateToken } = require('../middleware/auth');
 const logger = require('../utils/logger');
+const { createLimiter } = require('../middleware/rateLimiters');
 
 const router = express.Router();
 
-const unsubscribeLimiter = rateLimit({
+const unsubscribeLimiter = createLimiter({
   windowMs: 60 * 60 * 1000, // 1 hour
   max: 10,
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: { error: 'Too many requests', message: 'Please try again later.' }
+  name: 'notifications-unsubscribe',
+  message: 'Please try again later.'
 });
 
 /** GET /api/notifications - List notifications for the current user (newest first) */

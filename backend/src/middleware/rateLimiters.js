@@ -65,6 +65,21 @@ function buildStore(name) {
 }
 
 /**
+ * Azure App Service / ARR sometimes sets req.ip to "IPv4:port" (or "[IPv6]:port").
+ * express-rate-limit rejects that as ERR_ERL_INVALID_IP_ADDRESS.
+ */
+function clientKey(req) {
+  const raw = String(req.ip || req.socket?.remoteAddress || 'unknown').trim();
+  const bracket = raw.match(/^\[([^\]]+)\](?::\d+)?$/);
+  if (bracket) return bracket[1];
+  // IPv4 with trailing port (e.g. 20.85.186.109:25729)
+  if (/^\d{1,3}(?:\.\d{1,3}){3}:\d+$/.test(raw)) {
+    return raw.replace(/:\d+$/, '');
+  }
+  return raw;
+}
+
+/**
  * Build a rate limiter with sensible defaults. Pass any of the standard
  * `express-rate-limit` options to override.
  *
@@ -93,6 +108,9 @@ function createLimiter({ windowMs, max, name, message, ...rest } = {}) {
     standardHeaders: true,
     legacyHeaders: false,
     store: store || undefined,
+    // Custom key — Azure may append :port to req.ip; disable the built-in IP check.
+    keyGenerator: (req) => clientKey(req),
+    validate: { ip: false },
     message: {
       error: 'Too many requests',
       message: message || 'Too many requests. Please slow down.',
@@ -109,4 +127,4 @@ function disconnectRateLimitRedis() {
   }
 }
 
-module.exports = { createLimiter, disconnectRateLimitRedis };
+module.exports = { createLimiter, disconnectRateLimitRedis, clientKey };

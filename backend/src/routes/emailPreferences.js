@@ -1,5 +1,4 @@
 const express = require('express');
-const rateLimit = require('express-rate-limit');
 const NotificationPreferences = require('../models/NotificationPreferences');
 const {
   findByToken,
@@ -7,6 +6,7 @@ const {
   normalizeEmail
 } = require('../services/emailPreferencesService');
 const logger = require('../utils/logger');
+const { createLimiter } = require('../middleware/rateLimiters');
 
 const router = express.Router();
 
@@ -14,12 +14,11 @@ const LANGUAGES = ['pt', 'en', 'es', 'fr'];
 const VALID_TYPES = ['customer', 'interested'];
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-const preferencesLimiter = rateLimit({
+const preferencesLimiter = createLimiter({
   windowMs: 60 * 60 * 1000, // 1 hour
   max: 20,
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: { error: 'Too many requests', message: 'Please try again later.' }
+  name: 'email-preferences',
+  message: 'Please try again later.'
 });
 
 function parseTokenAndType(req) {
