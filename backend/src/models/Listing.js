@@ -55,18 +55,25 @@ const listingSchema = new mongoose.Schema({
   },
   startingPrice: {
     type: Number,
-    required: true,
+    required: function () { return this.saleFormat !== 'giveaway'; },
     min: 0
   },
   currentPrice: {
     type: Number,
-    required: true,
+    required: function () { return this.saleFormat !== 'giveaway'; },
     min: 0
   },
   bidIncrement: {
     type: Number,
     default: 1,
-    min: 0.01
+    validate: {
+      validator: function (v) {
+        // Num giveaway não há lances — o incremento não se aplica.
+        if (this.saleFormat === 'giveaway') return true;
+        return v == null || v >= 0.01;
+      },
+      message: 'bidIncrement must be at least 0.01 for auctions',
+    },
   },
   bidCount: {
     type: Number,
@@ -625,11 +632,14 @@ listingSchema.pre('save', async function(next) {
     this.endDate = this.calculateEndDate();
   }
 
-  // Calculate commission rate based on Private Room setting
-  if (this.auctionFormat === 'highest-bid') {
-    this.commissionRate = this.allowPrivateRoom ? 0.06 : 0.035; // 6.0% or 3.5%
-  } else if (this.auctionFormat === 'best-offer') {
-    this.commissionRate = 0.035; // 3.5% for Best Offer
+  // Calculate commission rate based on Private Room setting.
+  // Skip for giveaways — there is no price, so no commission.
+  if (this.saleFormat !== 'giveaway') {
+    if (this.auctionFormat === 'highest-bid') {
+      this.commissionRate = this.allowPrivateRoom ? 0.06 : 0.035; // 6.0% or 3.5%
+    } else if (this.auctionFormat === 'best-offer') {
+      this.commissionRate = 0.035; // 3.5% for Best Offer
+    }
   }
 
   // Check if renewal is required (for listings >7 days)

@@ -99,6 +99,65 @@ function listingUrl(listing) {
   return `${publicBaseUrl()}/listing/${listing.slug}`;
 }
 
+/** Brand from structured attributes or legacy specifications (same sources as SEO). */
+function listingBrand(listing) {
+  const fromAttrs = listing?.attributes?.brand ?? listing?.attributes?.make;
+  if (typeof fromAttrs === 'string' && fromAttrs.trim()) return fromAttrs.trim();
+
+  const specs = Array.isArray(listing?.specifications) ? listing.specifications : [];
+  const fromSpecs = specs.find(s => /^(brand|marca|make)$/i.test(String(s?.key || '')));
+  if (typeof fromSpecs?.value === 'string' && fromSpecs.value.trim()) return fromSpecs.value.trim();
+  return null;
+}
+
+/** Turn free text into a single Instagram/Facebook hashtag (no spaces). */
+function toHashtag(value) {
+  const tag = String(value || '')
+    .trim()
+    .replace(/[''`´]/g, '')
+    .replace(/[^\p{L}\p{N}]+/gu, '');
+  if (tag.length < 2 || tag.length > 40) return null;
+  return `#${tag}`;
+}
+
+const CATEGORY_HASHTAGS = {
+  jewelry: ['#joalharia', '#joias'],
+  watches: ['#relogios', '#watches'],
+  art: ['#arte'],
+  collectibles: ['#colecionaveis'],
+  vehicles: ['#veiculos'],
+  'home-garden': ['#antiguidades'],
+  electronics: ['#eletronicos'],
+  'real-estate': ['#imoveis']
+};
+
+/**
+ * Base tags plus brand (when present) and a couple of category tags.
+ * Deduped, order preserved.
+ */
+function buildHashtags(listing, { giveaway = false } = {}) {
+  const tags = giveaway
+    ? ['#BidRoom', '#passatempo', '#Portugal', '#sorteio']
+    : ['#BidRoom', '#leiloes', '#Portugal'];
+
+  if (!giveaway && listing?.auctionFormat === 'best-offer') {
+    tags.push('#melhorOferta');
+  }
+
+  const brand = listingBrand(listing);
+  if (brand) {
+    const brandTag = toHashtag(brand);
+    if (brandTag) tags.push(brandTag);
+  }
+
+  const category = String(listing?.category || '').toLowerCase().replace(/\s+/g, '-');
+  for (const extra of CATEGORY_HASHTAGS[category] || []) {
+    tags.push(extra);
+  }
+
+  return [...new Set(tags)].join(' ');
+}
+
 /** The post text — what shows up in the feed. */
 function buildMessage(listing) {
   const url = listingUrl(listing);
@@ -123,7 +182,7 @@ function buildMessage(listing) {
       '',
       `Participa e lê o regulamento em ${url}`,
       '',
-      '#BidRoom #passatempo #Portugal'
+      buildHashtags(listing, { giveaway: true })
     );
     return giveawayLines.join('\n');
   }
@@ -137,7 +196,7 @@ function buildMessage(listing) {
   if (listing.buyNowPrice) lines.push(`Compra já: ${euro(listing.buyNowPrice)}`);
   lines.push(`Termina: ${ends}`);
   lines.push('', `Licita em ${url}`);
-  lines.push('', '#BidRoom #leiloes #Portugal');
+  lines.push('', buildHashtags(listing));
 
   return lines.join('\n');
 }
@@ -496,7 +555,7 @@ function listingBlocker(listing, now = new Date()) {
 }
 
 const OVERVIEW_SELECT =
-  'title titlePt description descriptionPt slug saleFormat currentPrice buyNowPrice endDate images status +socialPosts';
+  'title titlePt description descriptionPt slug saleFormat currentPrice buyNowPrice endDate images status category attributes specifications +socialPosts';
 
 /** What Nexus shows in a listing's social media card. */
 async function getSocialOverview(listingId) {
@@ -584,6 +643,8 @@ module.exports = {
   SocialPublishError,
   buildExcerpt,
   buildMessage,
+  listingBrand,
+  buildHashtags,
   publishableImages,
   postToFacebook,
   postToInstagram,

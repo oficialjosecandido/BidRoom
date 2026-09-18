@@ -98,6 +98,26 @@ describe('socialPublisherService', () => {
       expect(msg).toContain('PASSATEMPO');
       expect(msg).not.toContain('Licitação');
     });
+
+    it('adds a brand hashtag when attributes.brand is set', () => {
+      const { service } = load();
+      const msg = service.buildMessage(listing({
+        category: 'watches',
+        attributes: { brand: 'Omega' }
+      }));
+      expect(msg).toContain('#Omega');
+      expect(msg).toContain('#relogios');
+      expect(msg).toContain('#BidRoom');
+    });
+
+    it('adds brand from specifications and strips spaces', () => {
+      const { service } = load();
+      const msg = service.buildMessage(listing({
+        attributes: {},
+        specifications: [{ key: 'Marca', value: 'Louis Vuitton' }]
+      }));
+      expect(msg).toContain('#LouisVuitton');
+    });
   });
 
   it('publishableImages drops placeholders and non-https URLs', () => {

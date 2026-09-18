@@ -1485,7 +1485,10 @@ router.post('/', authenticateToken, requireActiveAccount, requireNoDisputeRestri
       buyNowPrice: !isGiveaway && buyNowPrice ? parseFloat(buyNowPrice) : undefined,
       minimumOfferPrice: !isGiveaway && minimumOfferPrice ? parseFloat(minimumOfferPrice) : undefined,
       allowPrivateRoom: !isGiveaway && (allowPrivateRoom === true || allowPrivateRoom === 'true'),
-      commissionRate: !isGiveaway && commissionRate ? parseFloat(commissionRate) / 100 : undefined, // Convert percentage to decimal
+      // Giveaways have no price — commission must stay 0 (schema default is 3.5%).
+      commissionRate: isGiveaway
+        ? 0
+        : (commissionRate ? parseFloat(commissionRate) / 100 : undefined), // Convert percentage to decimal
       location: location || undefined,
       locationCity: locationCity && String(locationCity).trim() ? String(locationCity).trim() : undefined,
       locationCountry:

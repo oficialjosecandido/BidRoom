@@ -236,7 +236,9 @@ async function createListingAsAdmin(input = {}) {
     durationSlot,
     startingPrice,
     currentPrice: startingPrice,
-    bidIncrement: isGiveaway ? 0 : Math.max(0.01, Number(input.bidIncrement ?? 1) || 1),
+    ...(isGiveaway
+      ? { bidIncrement: undefined, commissionRate: 0 }
+      : { bidIncrement: Math.max(0.01, Number(input.bidIncrement ?? 1) || 1) }),
     startDate,
     endDate,
     seller: seller._id,
