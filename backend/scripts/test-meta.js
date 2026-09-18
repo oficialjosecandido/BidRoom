@@ -16,7 +16,7 @@ const GRAPH = `https://graph.facebook.com/${GRAPH_VERSION}`;
 
 /** Preenchido a partir de /me quando FB_PAGE_ID não está no .env. */
 let PAGE_ID = process.env.FB_PAGE_ID;
-const PAGE_TOKEN = process.env.FB_PAGE_ACCESS_TOKEN;
+const PAGE_TOKEN = process.env.PAGE_ACCESS_TOKEN;
 const IG_USER_ID = process.env.IG_USER_ID;
 
 function fail(msg) {
@@ -141,7 +141,7 @@ async function publishTestPost() {
 }
 
 async function main() {
-  if (!PAGE_TOKEN) fail('FB_PAGE_ACCESS_TOKEN não está definido no .env.');
+  if (!PAGE_TOKEN) fail('PAGE_ACCESS_TOKEN não está definido no .env.');
 
   console.log(`Graph API ${GRAPH_VERSION}\n`);
 

@@ -121,8 +121,8 @@ function describeSocialPosts(listing) {
 }
 
 async function main() {
-  if (!process.env.FB_PAGE_ID || !process.env.FB_PAGE_ACCESS_TOKEN) {
-    fail('FB_PAGE_ID ou FB_PAGE_ACCESS_TOKEN em falta no .env.');
+  if (!process.env.FB_PAGE_ID || !process.env.PAGE_ACCESS_TOKEN) {
+    fail('FB_PAGE_ID ou PAGE_ACCESS_TOKEN em falta no .env.');
   }
   if (!process.env.MONGO_URI) fail('MONGO_URI em falta no .env.');
   if (/localhost|127\.0\.0\.1/.test(FRONTEND)) {

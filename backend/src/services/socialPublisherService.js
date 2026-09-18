@@ -30,7 +30,7 @@ function metaConfig() {
   return {
     graph: `https://graph.facebook.com/${version}`,
     pageId: (process.env.FB_PAGE_ID || '').trim(),
-    pageToken: (process.env.FB_PAGE_ACCESS_TOKEN || '').trim(),
+    pageToken: (process.env.PAGE_ACCESS_TOKEN || '').trim(),
     igUserId: (process.env.IG_USER_ID || '').trim()
   };
 }
@@ -153,7 +153,7 @@ function publishableImages(listing) {
 
 async function postToFacebook(listing, message) {
   const { graph, pageId, pageToken } = metaConfig();
-  if (!pageId || !pageToken) throw new Error('Facebook — FB_PAGE_ID or FB_PAGE_ACCESS_TOKEN is not set.');
+  if (!pageId || !pageToken) throw new Error('Facebook — FB_PAGE_ID or PAGE_ACCESS_TOKEN is not set.');
 
   // Link post: Facebook takes the image and title from the OG tags the backend
   // serves for /listing/:slug, so the image is not uploaded.
@@ -322,7 +322,7 @@ const STALE_PUBLISH_MS = 15 * 60 * 1000;
 function platformBlocker(platform) {
   const { pageId, pageToken, igUserId } = metaConfig();
   // Instagram is published with the Page token too.
-  if (!pageId || !pageToken) return 'FB_PAGE_ID or FB_PAGE_ACCESS_TOKEN is not set';
+  if (!pageId || !pageToken) return 'FB_PAGE_ID or PAGE_ACCESS_TOKEN is not set';
   if (platform === 'instagram' && !igUserId) return 'IG_USER_ID is not set';
 
   const db = nonProductionDatabase();
@@ -341,7 +341,7 @@ function autopostBlocker() {
   if (process.env.SOCIAL_AUTOPOST !== 'true') return 'SOCIAL_AUTOPOST is not "true"';
 
   const { pageId, pageToken } = metaConfig();
-  if (!pageId || !pageToken) return 'FB_PAGE_ID or FB_PAGE_ACCESS_TOKEN is not set';
+  if (!pageId || !pageToken) return 'FB_PAGE_ID or PAGE_ACCESS_TOKEN is not set';
 
   const db = nonProductionDatabase();
   if (db) return `database "${db}" is not production and the social accounts are the real ones`;

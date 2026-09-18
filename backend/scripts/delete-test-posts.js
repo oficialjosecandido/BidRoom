@@ -13,7 +13,7 @@ require('dotenv').config();
 
 const GRAPH_VERSION = process.env.META_GRAPH_VERSION || 'v21.0';
 const GRAPH = `https://graph.facebook.com/${GRAPH_VERSION}`;
-const PAGE_TOKEN = (process.env.FB_PAGE_ACCESS_TOKEN || '').trim();
+const PAGE_TOKEN = (process.env.PAGE_ACCESS_TOKEN || '').trim();
 const PAGE_ID = (process.env.FB_PAGE_ID || '').trim();
 const IG_USER_ID = (process.env.IG_USER_ID || '').trim();
 
@@ -88,7 +88,7 @@ async function handleInstagram() {
 
 async function main() {
   if (!PAGE_TOKEN) {
-    console.error('\n❌ FB_PAGE_ACCESS_TOKEN em falta no .env.\n');
+    console.error('\n❌ PAGE_ACCESS_TOKEN em falta no .env.\n');
     process.exit(1);
   }
 

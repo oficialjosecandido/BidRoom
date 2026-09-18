@@ -7,7 +7,7 @@ jest.mock('../src/utils/logger', () => ({
 }));
 
 const ENV_KEYS = [
-  'SOCIAL_AUTOPOST', 'FB_PAGE_ID', 'FB_PAGE_ACCESS_TOKEN', 'IG_USER_ID',
+  'SOCIAL_AUTOPOST', 'FB_PAGE_ID', 'PAGE_ACCESS_TOKEN', 'IG_USER_ID',
   'MONGO_URI', 'SOCIAL_PUBLIC_URL', 'META_GRAPH_VERSION', 'SOCIAL_ALLOW_DEV_DATA'
 ];
 
@@ -76,7 +76,7 @@ describe('socialPublisherService', () => {
   function configureProduction() {
     process.env.SOCIAL_AUTOPOST = 'true';
     process.env.FB_PAGE_ID = 'PAGE';
-    process.env.FB_PAGE_ACCESS_TOKEN = 'TOKEN';
+    process.env.PAGE_ACCESS_TOKEN = 'TOKEN';
     process.env.IG_USER_ID = 'IG';
     process.env.MONGO_URI = 'mongodb+srv://u:p@cluster.mongodb.net/bidroom';
   }
