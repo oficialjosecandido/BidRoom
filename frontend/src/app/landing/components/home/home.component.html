@@ -145,7 +145,7 @@
                   <div class="lc-price" [class.g]="listing.saleFormat === 'giveaway' || listing.auctionFormat !== 'best-offer'">{{ listingPrice(listing) }}</div>
                 </div>
                 <div>
-                  <div class="lc-ml">{{ listing.auctionFormat === 'best-offer' ? ('landing.home.listing.offers' | translate) : ('landing.home.listing.endsIn' | translate) }}</div>
+                  <div class="lc-ml">{{ listing.saleFormat === 'giveaway' ? ('GIVEAWAY.PARTICIPANTS_HEADING' | translate) : (listing.auctionFormat === 'best-offer' ? ('landing.home.listing.offers' | translate) : ('landing.home.listing.endsIn' | translate)) }}</div>
                   <div class="lc-mv">{{ timeRemaining(listing) }}</div>
                 </div>
               </div>

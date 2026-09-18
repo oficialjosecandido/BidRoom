@@ -586,7 +586,12 @@ export class ListingListComponent implements OnInit, OnDestroy {
   }
 
   bidCountLabel(listing: Listing): string {
-    if (listing.saleFormat === 'giveaway') return this.translate.instant('GIVEAWAY.FREE_ENTRY');
+    if (listing.saleFormat === 'giveaway') {
+      const n = listing.giveaway?.entryCount ?? 0;
+      return n === 1
+        ? this.translate.instant('GIVEAWAY.ONE_ENTRY')
+        : this.translate.instant('GIVEAWAY.ENTRIES_COUNT', { count: n });
+    }
     if (listing.auctionFormat === 'best-offer') {
       const n = listing.bidCount || 0;
       return n === 1

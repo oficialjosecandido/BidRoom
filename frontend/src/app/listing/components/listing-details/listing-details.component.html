@@ -511,6 +511,11 @@
     -->
     @if (isGiveaway) {
       <div class="giveaway-panel">
+        <div class="gw-stat" [attr.aria-label]="giveawayEntriesLabel()">
+          <div class="gw-stat-k">{{ 'GIVEAWAY.PARTICIPANTS_HEADING' | translate }}</div>
+          <div class="gw-stat-n">{{ giveawayEntryCount() }}</div>
+          <div class="gw-stat-l">{{ giveawayPeopleLabel() }}</div>
+        </div>
         <ul class="gw-facts" [attr.aria-label]="'GIVEAWAY.FACTS_LABEL' | translate">
           <li><span class="gw-ico" aria-hidden="true">🎁</span><span>{{ 'GIVEAWAY.FACT_FREE' | translate }}</span></li>
           <li><span class="gw-ico" aria-hidden="true">👤</span><span>{{ 'GIVEAWAY.FACT_ANYONE' | translate }}</span></li>

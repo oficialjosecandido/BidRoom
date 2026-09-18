@@ -1006,6 +1006,36 @@ nav {
 }
 .price-big.gw-free { color: var(--green); }
 
+.gw-stat {
+  text-align: center;
+  margin: 0 0 16px;
+  padding: 18px 16px 16px;
+  background: var(--gb2);
+  border: 1px solid var(--gl2);
+  border-radius: 12px;
+}
+.gw-stat-k {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--sub);
+  margin-bottom: 4px;
+}
+.gw-stat-n {
+  font-size: 36px;
+  font-weight: 800;
+  line-height: 1.1;
+  color: var(--gold, #C9A84C);
+  font-variant-numeric: tabular-nums;
+}
+.gw-stat-l {
+  margin-top: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+}
+
 .giveaway-panel {
   margin-bottom: 14px;
 }

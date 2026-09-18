@@ -1,7 +1,6 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const Customer = require('../models/Customer');
-const Listing = require('../models/Listing');
 const { authenticateToken, optionalAuth, requireActiveAccount } = require('../middleware/auth');
 const { enterGiveaway, getEntryState, getPublicState, GiveawayError } = require('../services/giveawayService');
 const { notifyGiveawayEntered } = require('../services/notificationService');
@@ -55,14 +54,12 @@ router.post('/:id/enter', authenticateToken, requireActiveAccount, async (req, r
     // Only a new entrant is told; re-confirming an entry somebody already has
     // would be a notification about nothing.
     if (!alreadyEntered) {
-      const listing = await Listing.findById(req.params.id).select('slug title titlePt').lean();
       notifyGiveawayEntered({
-        listingSlug: listing?.slug,
-        listingTitle: listing?.titlePt || listing?.title || '',
+        listingId: req.params.id,
         participantUserId: participant._id,
         entryNumber,
         io: req.app.get('io')
-      }).catch(() => {});
+      }).catch((err) => logger.error('[Giveaway] Entry notification failed:', err.message));
     }
 
     return res.json({ success: true, entered: true, entryNumber, alreadyEntered });

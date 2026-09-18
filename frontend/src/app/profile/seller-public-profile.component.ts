@@ -49,6 +49,7 @@ interface PublicProfile {
     endDate: string;
     auctionFormat: string;
     saleFormat?: 'auction' | 'giveaway';
+    giveaway?: { entryCount?: number };
   }[];
 }
 
@@ -291,6 +292,13 @@ export class SellerPublicProfileComponent implements OnInit {
     if (days > 0) return `${days}d ${hours}h`;
     const mins = Math.floor((diff % 3600000) / 60000);
     return `${hours}h ${mins}m`;
+  }
+
+  giveawayEntriesLabel(listing: { giveaway?: { entryCount?: number } }): string {
+    const n = listing.giveaway?.entryCount ?? 0;
+    return n === 1
+      ? this.translate.instant('GIVEAWAY.ONE_ENTRY')
+      : this.translate.instant('GIVEAWAY.ENTRIES_COUNT', { count: n });
   }
 
   get totalReviewCount(): number {

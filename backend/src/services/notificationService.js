@@ -1221,25 +1221,55 @@ async function notifyPayoutSetupReminder({ sellerId, io }) {
 }
 
 /**
- * Confirm a giveaway entry, in the participant's own language.
+ * Confirm a giveaway entry, in the participant's own language: in-app and by
+ * email. The email is the copy they keep — the number they will check against
+ * the draw — so it is sent as a transactional message, not marketing.
  *
- * The confirmation restates that it was free and that every entry counts the
- * same. That is not padding: it is the promise the contest is built on, and
- * repeating it where the person will actually read it is part of keeping it.
+ * Never throws: a mail-server hiccup must not undo an entry that already
+ * succeeded. Failures are logged.
  */
-async function notifyGiveawayEntered({ listingSlug, listingTitle, participantUserId, entryNumber, io }) {
-  const participant = await Customer.findById(participantUserId).select('language').lean();
-  const { title, message } = giveawayNotificationCopy('entered', participant?.language, listingTitle || '', entryNumber);
+async function notifyGiveawayEntered({ listingId, listingSlug, listingTitle, participantUserId, entryNumber, io }) {
+  const [participant, listing] = await Promise.all([
+    Customer.findById(participantUserId).select('language firstName email').lean(),
+    listingId
+      ? Listing.findById(listingId).select('slug title titlePt titleEn titleEs titleFr').lean()
+      : Promise.resolve(null)
+  ]);
+
+  const language = resolveLanguage(participant?.language);
+  const localized = { pt: 'titlePt', en: 'titleEn', es: 'titleEs', fr: 'titleFr' }[language];
+  const titleText = (listing && (listing[localized] || listing.title)) || listingTitle || '';
+  const slug = listing?.slug || listingSlug || '';
+
+  const { title, message } = giveawayNotificationCopy('entered', language, titleText, entryNumber);
 
   const notification = await createNotification({
     userId: participantUserId,
     title,
     message,
     type: 'listing',
-    link: listingSlug ? `/listing/${listingSlug}` : null,
-    referenceId: listingSlug || null
+    link: slug ? `/listing/${slug}` : null,
+    referenceId: slug || null
   });
   if (io) emitNewNotificationToUser(io, String(participantUserId)).catch(() => {});
+
+  if (participant?.email && slug) {
+    try {
+      const { subject, html } = renderEmailTemplate('giveawayEntered', language, {
+        firstName: escapeEmailHtml(participant.firstName || ''),
+        listingTitle: escapeEmailHtml(titleText),
+        listingTitlePlain: String(titleText).replace(/[\r\n]+/g, ' '),
+        entryNumber: formatEntry(entryNumber),
+        listingUrl: escapeEmailHtml(`${publicBaseUrl()}/listing/${encodeURIComponent(slug)}`)
+      });
+      await sendEmail(participant.email, subject, html);
+    } catch (err) {
+      logger.error('[Giveaway] Entry email failed:', err.message);
+    }
+  } else if (!participant?.email) {
+    logger.warn('[Giveaway] Entry email not sent: participant has no email', { participantUserId: String(participantUserId) });
+  }
+
   return notification;
 }
 

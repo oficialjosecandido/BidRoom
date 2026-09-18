@@ -165,7 +165,13 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
 
   /** Time remaining label for a listing. */
   timeRemaining(l: Listing): string {
-    if (l.saleFormat !== 'giveaway' && l.auctionFormat === 'best-offer') {
+    if (l.saleFormat === 'giveaway') {
+      const n = l.giveaway?.entryCount ?? 0;
+      return n === 1
+        ? this.translate.instant('GIVEAWAY.ONE_ENTRY')
+        : this.translate.instant('GIVEAWAY.ENTRIES_COUNT', { count: n });
+    }
+    if (l.auctionFormat === 'best-offer') {
       return `${l.bidCount || 0} ofertas`;
     }
     const end = new Date(l.endDate).getTime();

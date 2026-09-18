@@ -147,7 +147,7 @@
                     }
                     <div class="card-meta">
                       @if (listing.saleFormat === 'giveaway') {
-                        <span>{{ 'GIVEAWAY.PILL' | translate }}</span>
+                        <span>{{ giveawayEntriesLabel(listing) }}</span>
                       } @else {
                         <span>{{ listing.bidCount }} {{ listing.bidCount === 1 ? ('sellerProfile.bid' | translate) : ('sellerProfile.bids' | translate) }}</span>
                       }

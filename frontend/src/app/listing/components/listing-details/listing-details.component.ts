@@ -333,11 +333,21 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
     return this.listing.status === 'active' && !this.countdownEnded && !this.listing.giveaway?.drawnAt;
   }
 
+  giveawayEntryCount(): number {
+    return this.giveawayState?.totalEntries ?? this.listing?.giveaway?.entryCount ?? 0;
+  }
+
   giveawayEntriesLabel(): string {
-    const n = this.giveawayState?.totalEntries ?? 0;
+    const n = this.giveawayEntryCount();
     return n === 1
       ? this.translate.instant('GIVEAWAY.ONE_ENTRY')
       : this.translate.instant('GIVEAWAY.ENTRIES_COUNT', { count: n });
+  }
+
+  giveawayPeopleLabel(): string {
+    return this.giveawayEntryCount() === 1
+      ? this.translate.instant('GIVEAWAY.PEOPLE_LABEL_ONE')
+      : this.translate.instant('GIVEAWAY.PEOPLE_LABEL');
   }
 
   /** Entering needs an account — that is how one entry per person is kept — and nothing else. */
@@ -366,8 +376,11 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
           }),
           entered: true,
           entryNumber: res.entryNumber,
-          totalEntries: (this.giveawayState?.totalEntries ?? 0) + (res.alreadyEntered ? 0 : 1)
+          totalEntries: (this.giveawayState?.totalEntries ?? this.listing?.giveaway?.entryCount ?? 0) + (res.alreadyEntered ? 0 : 1)
         };
+        if (this.listing?.giveaway && !res.alreadyEntered) {
+          this.listing.giveaway.entryCount = this.giveawayState.totalEntries;
+        }
         this.cdr.detectChanges();
         // Settle the count against the server; others may have entered meanwhile.
         this.loadGiveawayState(listingId);
