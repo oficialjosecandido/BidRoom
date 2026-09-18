@@ -1139,7 +1139,9 @@ router.post('/', authenticateToken, requireActiveAccount, requireNoDisputeRestri
     // while entry stays free, and the organiser is answerable for the rules,
     // the fairness of the draw and the participants' data. So BidRoom runs
     // them itself — sellers may not.
-    const isGiveaway = req.body?.saleFormat === 'giveaway';
+    const isGiveaway = req.body?.saleFormat === 'giveaway'
+      || req.body?.listingFormat === 'giveaway'
+      || req.body?.auctionFormat === 'giveaway';
     if (isGiveaway && !isAdminEmail(req.user?.email)) {
       return res.status(403).json({
         error: 'giveaway_admin_only',

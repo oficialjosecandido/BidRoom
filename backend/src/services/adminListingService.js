@@ -38,6 +38,13 @@ const ALLOWED_SHIPPING = ['flat-rate', 'calculated', 'local-pickup', 'free'];
 const ALLOWED_GIVEAWAY_SHIPPING = ['local-pickup', 'free'];
 const ALLOWED_RETURNS = ['30-days', '14-days', 'no-returns', 'custom'];
 const ALLOWED_FORMATS = ['highest-bid', 'best-offer'];
+
+/** Giveaway is not an auction: no price, no bids, no offers — only free entry. */
+function isGiveawayRequest(input = {}) {
+  const keys = [input.saleFormat, input.listingFormat, input.auctionFormat, input.type];
+  return keys.some((v) => String(v || '').toLowerCase() === 'giveaway');
+}
+
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function generateSlug(title) {
@@ -165,7 +172,7 @@ async function createListingAsAdmin(input = {}) {
     throw err;
   }
 
-  const isGiveaway = input.saleFormat === 'giveaway';
+  const isGiveaway = isGiveawayRequest(input);
   const auctionFormat = isGiveaway
     ? 'highest-bid'
     : (ALLOWED_FORMATS.includes(input.auctionFormat || input.listingFormat)
@@ -344,6 +351,7 @@ function mapCsvRowToCreateInput(row) {
     category: row.category || 'jewelry',
     subCategory: row.subCategory || row.sub_category || 'Luxury Watches',
     condition: row.condition || 'Used - Excellent',
+    saleFormat: row.saleFormat || row.sale_format || undefined,
     listingFormat: row.auctionFormat || row.listingFormat || row.format || 'highest-bid',
     startingPrice: row.startingPrice || row.price || 0,
     duration: row.duration || row.durationSlot || '7 days',

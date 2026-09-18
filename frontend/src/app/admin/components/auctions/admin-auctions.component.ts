@@ -633,6 +633,8 @@ export class AdminAuctionsComponent implements OnInit {
 
     const payload: AdminCreateAuctionPayload = {
       ...this.createForm,
+      saleFormat: this.isGiveawayCreate ? 'giveaway' : 'auction',
+      listingFormat: this.isGiveawayCreate ? undefined : (this.createSaleType === 'best-offer' ? 'best-offer' : 'highest-bid'),
       sellerEmail,
       title,
       description,
@@ -647,6 +649,10 @@ export class AdminAuctionsComponent implements OnInit {
       allowPrivateRoom: this.canAllowPrivateRoom ? !!this.createForm.allowPrivateRoom : false,
       images
     };
+    if (this.isGiveawayCreate) {
+      delete payload.listingFormat;
+      delete payload.allowPrivateRoom;
+    }
 
     this.adminService.createAuction(payload).subscribe({
       next: (res) => {

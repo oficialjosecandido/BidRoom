@@ -928,7 +928,7 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
 
   /** Seller can create private room when auction ended, private room enabled, eligible, within 1h deadline, and there are bids. */
   canCreatePrivateRoom(): boolean {
-    if (!this.listing || !this.isOwnListing || this.listing.auctionFormat !== 'highest-bid') return false;
+    if (!this.listing || this.isGiveaway || !this.isOwnListing || this.listing.auctionFormat !== 'highest-bid') return false;
     if (this.listing.status !== 'ended' || !this.listing.allowPrivateRoom || this.listing.privateRoomStatus !== 'eligible' || (this.getEndedBidCount() ?? 0) === 0) return false;
     if (this.listing.winnerSelectionDeadline && new Date(this.listing.winnerSelectionDeadline) < new Date()) return false;
     return true;
@@ -1131,7 +1131,7 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
   }
 
   openBidModal(): void {
-    if (!this.listing) return;
+    if (!this.listing || this.isGiveaway) return;
     const minBid = this.getMinBid();
     this.bidAmount = String(minBid);
     this.bidEmail = '';
@@ -1150,7 +1150,7 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
   }
 
   submitBid(): void {
-    if (!this.listing) return;
+    if (!this.listing || this.isGiveaway) return;
     this.bidModalError = null;
     const minBid = this.getMinBid();
     const amount = parseFloat((this.bidAmount || '').replace(/[^0-9.]/g, ''));
@@ -1231,7 +1231,7 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
   }
 
   openOfferModal(): void {
-    if (!this.listing) return;
+    if (!this.listing || this.isGiveaway) return;
     const min = this.listing.minimumOfferPrice ?? this.listing.startingPrice;
     this.offerAmount = min != null && min > 0 ? String(min) : '';
     this.offerEmail = '';
@@ -1281,7 +1281,7 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
   }
 
   submitOffer(): void {
-    if (!this.listing) return;
+    if (!this.listing || this.isGiveaway) return;
     this.offerModalError = null;
     const amount = parseFloat((this.offerAmount || '').replace(/[^0-9.]/g, ''));
     if (isNaN(amount) || amount <= 0) {
@@ -1359,7 +1359,7 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
   }
 
   buyNow(): void {
-    if (!this.listing) return;
+    if (!this.listing || this.isGiveaway) return;
     const listing = this.listing;
     Swal.fire({
       title: 'Buy Now',

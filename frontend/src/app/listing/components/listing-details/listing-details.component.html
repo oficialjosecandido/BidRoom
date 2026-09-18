@@ -575,17 +575,9 @@
           <div class="own-note">{{ 'GIVEAWAY.OWN_NOTE' | translate }}</div>
         } @else if (listing.status === 'cancelled') {
           <div class="gw-closed">{{ 'GIVEAWAY.CANCELLED' | translate }}</div>
-        } @else if (isGiveawayOpen()) {
-          <button class="btn-offer gw-enter" (click)="enterGiveaway()" [disabled]="giveawayEntering || giveawayLoading">
-            {{ giveawayEntering ? ('GIVEAWAY.ENTERING' | translate) : ('GIVEAWAY.ENTER_BUTTON' | translate) }}
-          </button>
-          @if (!isAuthenticated) {
-            <p class="gw-note">{{ 'GIVEAWAY.LOGIN_REQUIRED' | translate }}</p>
-          }
-          <p class="gw-note">{{ 'GIVEAWAY.CONSENT' | translate }}</p>
-        } @else if (giveawayState && giveawayState.totalEntries === 0) {
+        } @else if (!isGiveawayOpen() && giveawayState && giveawayState.totalEntries === 0) {
           <div class="gw-closed">{{ 'GIVEAWAY.CLOSED_NO_ENTRIES' | translate }}</div>
-        } @else {
+        } @else if (!isGiveawayOpen()) {
           <div class="gw-closed">{{ 'GIVEAWAY.CLOSED' | translate }}</div>
         }
 
@@ -608,7 +600,16 @@
       <button class="btn-offer btn-buynow" (click)="buyNow()">{{ 'listingDetails.sidebar.buyNow' | translate }} {{ listing.buyNowPrice | displayPrice }}</button>
     }
 
-    <!-- PRIMARY CTA -->
+    <!-- PRIMARY CTA: giveaway = participate (no bid, no offer). Auction keeps bid/offer. -->
+    @if (isGiveaway && isGiveawayOpen() && !isOwnListing && !giveawayState?.entered && !giveawayState?.drawn) {
+      <button class="btn-offer gw-enter" (click)="enterGiveaway()" [disabled]="giveawayEntering || giveawayLoading">
+        {{ giveawayEntering ? ('GIVEAWAY.ENTERING' | translate) : ('GIVEAWAY.ENTER_BUTTON' | translate) }}
+      </button>
+      @if (!isAuthenticated) {
+        <p class="gw-note">{{ 'GIVEAWAY.LOGIN_REQUIRED' | translate }}</p>
+      }
+      <p class="gw-note">{{ 'GIVEAWAY.CONSENT' | translate }}</p>
+    }
     @if (!isGiveaway && listing.auctionFormat === 'highest-bid' && !isAuctionEnded() && !hasPrivateRoom() && !isOwnListing) {
       <button class="btn-offer" (click)="openBidModal()">
         {{ 'listingDetails.actions.placeBidAtMin' | translate:{ amount: formatPrice(getMinBid()) } }}
