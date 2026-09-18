@@ -155,7 +155,9 @@ function renderEmailTemplate(templateName, language = DEFAULT_LANGUAGE, data = {
       preheader: template.preheader ? renderTemplate(template.preheader, data) : undefined,
       bodyHtml: renderTemplate(template.body, data),
       ctaUrl: template.ctaUrl ? renderTemplate(template.ctaUrl, data) : undefined,
-      ctaLabel: template.ctaLabel ? renderTemplate(template.ctaLabel, data) : undefined
+      ctaLabel: template.ctaLabel ? renderTemplate(template.ctaLabel, data) : undefined,
+      signOff: template.signOff ? renderTemplate(template.signOff, data) : undefined,
+      footerNote: template.footerNote ? renderTemplate(template.footerNote, data) : undefined
     });
   } else {
     html = renderTemplate(template.html, data);

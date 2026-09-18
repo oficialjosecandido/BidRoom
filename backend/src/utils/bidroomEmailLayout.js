@@ -117,13 +117,15 @@ function emailTextLink(url, label) {
 }
 
 /**
- * @param {{ title: string, bodyHtml: string, preheader?: string, ctaUrl?: string, ctaLabel?: string }} opts
+ * @param {{ title: string, bodyHtml: string, preheader?: string, ctaUrl?: string, ctaLabel?: string, signOff?: string, footerNote?: string }} opts
  */
-function wrapBidRoomEmail({ title, bodyHtml, preheader, ctaUrl, ctaLabel }) {
+function wrapBidRoomEmail({ title, bodyHtml, preheader, ctaUrl, ctaLabel, signOff, footerNote }) {
   const cta = emailCta(ctaUrl, ctaLabel);
   const preheaderHtml = preheader
     ? `<div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;">${preheader}</div>`
     : '';
+  const regards = signOff || `Best regards,<br><strong style="color:${BRAND.textDark};">The BidRoom Team</strong>`;
+  const footer = footerNote || 'Automated message · Please do not reply directly to this email';
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -141,14 +143,8 @@ function wrapBidRoomEmail({ title, bodyHtml, preheader, ctaUrl, ctaLabel }) {
       <td align="center">
         <table width="600" cellpadding="0" cellspacing="0" role="presentation" style="max-width:600px;width:100%;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
           <tr>
-            <td style="background:${BRAND.dark};padding:24px 32px;">
-              <table width="100%" cellpadding="0" cellspacing="0" role="presentation">
-                <tr>
-                  <td>
-                    <span style="color:${BRAND.gold};font-size:18px;font-weight:700;letter-spacing:-0.02em;">BidRoom</span>
-                  </td>
-                </tr>
-              </table>
+            <td style="background:${BRAND.dark};padding:28px 32px;text-align:center;">
+              <span style="color:${BRAND.gold};font-size:22px;font-weight:800;letter-spacing:-0.02em;">BidRoom</span>
             </td>
           </tr>
           <tr>
@@ -163,12 +159,13 @@ function wrapBidRoomEmail({ title, bodyHtml, preheader, ctaUrl, ctaLabel }) {
             <td style="background:#ffffff;padding:8px 32px 36px;color:${BRAND.text};font-size:15px;line-height:1.65;">
               ${bodyHtml}
               ${cta}
-              <p style="margin:28px 0 0;color:${BRAND.muted};font-size:14px;line-height:1.5;">Best regards,<br><strong style="color:${BRAND.textDark};">The BidRoom Team</strong></p>
+              <p style="margin:28px 0 0;color:${BRAND.muted};font-size:14px;line-height:1.5;">${regards}</p>
             </td>
           </tr>
           <tr>
             <td style="background:${BRAND.darkSoft};padding:16px 32px;text-align:center;color:${BRAND.creamMuted};font-size:11px;line-height:1.5;">
-              Automated message · Please do not reply directly to this email
+              BidRoom · Portugal · <a href="${frontendBaseUrl()}" style="color:${BRAND.gold};text-decoration:underline;">bidroom.pt</a><br>
+              ${footer}
             </td>
           </tr>
         </table>

@@ -1559,15 +1559,19 @@ export class AddListing implements OnInit, OnDestroy {
       // changes the wording, not the destination.
       const flagged = !!listing.contentWarning;
       const result = await Swal.fire({
-        icon: flagged ? 'warning' : 'info',
+        icon: flagged ? 'warning' : undefined,
         iconColor: '#C9A84C',
         title: this.translate.instant(flagged ? 'addListing.moderationTitle' : 'addListing.reviewTitle'),
-        html: `<p>${this.translate.instant(flagged ? 'addListing.moderationBody' : 'addListing.reviewBody')}</p>`,
+        html: `
+          <div class="br-swal__brand" aria-hidden="true">BidRoom</div>
+          <p class="br-swal__copy">${this.translate.instant(flagged ? 'addListing.moderationBody' : 'addListing.reviewBody')}</p>
+        `,
         confirmButtonText: this.translate.instant('addListing.reviewDashboardCta'),
         showCancelButton: true,
         cancelButtonText: this.translate.instant('addListing.reviewListingCta'),
         reverseButtons: true,
         buttonsStyling: false,
+        focusConfirm: false,
         customClass: {
           popup: 'br-swal',
           icon: 'br-swal__icon',

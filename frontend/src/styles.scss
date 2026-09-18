@@ -467,11 +467,23 @@ a {
 
 /* BidRoom-branded SweetAlert2 (gold accent, matches add-listing UI) */
 .swal2-popup.br-swal {
-  font-family: 'DM Sans', system-ui, sans-serif;
-  border-radius: 16px;
-  padding: 2rem 1.75rem 1.5rem;
-  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.18);
-  border: 1px solid rgba(201, 168, 76, 0.22);
+  font-family: 'DM Sans', system-ui, sans-serif !important;
+  border-radius: 16px !important;
+  padding: 1.75rem 1.75rem 1.5rem !important;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.18) !important;
+  border: 1px solid rgba(201, 168, 76, 0.28) !important;
+  background: #fff !important;
+}
+
+.swal2-popup.br-swal .br-swal__brand {
+  display: block;
+  margin: 0 0 14px;
+  color: #C9A84C;
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  text-align: center;
 }
 
 .swal2-popup.br-swal .br-swal__icon {
@@ -481,51 +493,57 @@ a {
 
 .swal2-popup.br-swal .swal2-icon.swal2-info,
 .swal2-popup.br-swal .swal2-icon.swal2-warning {
-  border-color: rgba(201, 168, 76, 0.45);
-  color: #C9A84C;
+  border-color: rgba(201, 168, 76, 0.45) !important;
+  color: #C9A84C !important;
 }
 
 .swal2-popup.br-swal .swal2-icon.swal2-info .swal2-icon-content,
 .swal2-popup.br-swal .swal2-icon.swal2-warning .swal2-icon-content {
-  color: #C9A84C;
+  color: #C9A84C !important;
 }
 
 .swal2-popup.br-swal .br-swal__title {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: #1d1d1f;
+  font-size: 1.25rem !important;
+  font-weight: 700 !important;
+  color: #1d1d1f !important;
   letter-spacing: -0.02em;
-  padding: 0;
-  margin-top: 0.5rem;
+  padding: 0 !important;
+  margin: 0 0 0.35rem !important;
 }
 
 .swal2-popup.br-swal .br-swal__body {
-  font-size: 0.95rem;
-  line-height: 1.6;
-  color: rgba(29, 29, 31, 0.62);
-  padding: 0.35rem 0 0;
+  font-size: 0.95rem !important;
+  line-height: 1.6 !important;
+  color: rgba(29, 29, 31, 0.62) !important;
+  padding: 0 !important;
+  margin: 0 !important;
 }
 
-.swal2-popup.br-swal .br-swal__body p {
+.swal2-popup.br-swal .br-swal__body p,
+.swal2-popup.br-swal .br-swal__copy {
   margin: 0;
+  color: rgba(29, 29, 31, 0.62);
+  font-size: 0.95rem;
+  line-height: 1.65;
 }
 
 .swal2-popup.br-swal .br-swal__actions {
-  gap: 0.65rem;
-  margin-top: 1.5rem;
+  gap: 0.65rem !important;
+  margin: 1.5rem 0 0 !important;
   flex-wrap: wrap;
 }
 
 .swal2-popup.br-swal .br-swal__btn {
-  margin: 0;
-  padding: 11px 22px;
-  font-family: 'DM Sans', system-ui, sans-serif;
-  font-size: 13.5px;
-  font-weight: 600;
-  border-radius: 100px;
-  border: none;
+  margin: 0 !important;
+  padding: 11px 22px !important;
+  font-family: 'DM Sans', system-ui, sans-serif !important;
+  font-size: 13.5px !important;
+  font-weight: 600 !important;
+  border-radius: 100px !important;
+  border: none !important;
+  box-shadow: none !important;
   cursor: pointer;
-  transition: opacity 0.15s, transform 0.15s, background 0.15s;
+  transition: opacity 0.15s, transform 0.15s, background 0.15s, border-color 0.15s;
 }
 
 .swal2-popup.br-swal .br-swal__btn:hover {
@@ -534,19 +552,19 @@ a {
 }
 
 .swal2-popup.br-swal .br-swal__btn--primary {
-  background: #C9A84C;
-  color: #0a0a0a;
+  background: #C9A84C !important;
+  color: #0a0a0a !important;
 }
 
 .swal2-popup.br-swal .br-swal__btn--secondary {
-  background: transparent;
-  color: #1d1d1f;
-  border: 1px solid rgba(29, 29, 31, 0.18);
+  background: transparent !important;
+  color: #1d1d1f !important;
+  border: 1px solid rgba(29, 29, 31, 0.18) !important;
 }
 
 .swal2-popup.br-swal .br-swal__btn--secondary:hover {
-  border-color: #C9A84C;
-  color: #8C6B1E;
+  border-color: #C9A84C !important;
+  color: #8C6B1E !important;
 }
 
 :root[data-theme='dark'] .swal2-popup.br-swal {
@@ -556,21 +574,22 @@ a {
 }
 
 :root[data-theme='dark'] .swal2-popup.br-swal .br-swal__title {
-  color: #F0EDE8;
+  color: #F0EDE8 !important;
 }
 
-:root[data-theme='dark'] .swal2-popup.br-swal .br-swal__body {
-  color: rgba(240, 237, 232, 0.55);
+:root[data-theme='dark'] .swal2-popup.br-swal .br-swal__body,
+:root[data-theme='dark'] .swal2-popup.br-swal .br-swal__copy {
+  color: rgba(240, 237, 232, 0.55) !important;
 }
 
 :root[data-theme='dark'] .swal2-popup.br-swal .br-swal__btn--secondary {
-  color: #F0EDE8;
-  border-color: rgba(240, 237, 232, 0.18);
+  color: #F0EDE8 !important;
+  border-color: rgba(240, 237, 232, 0.18) !important;
 }
 
 :root[data-theme='dark'] .swal2-popup.br-swal .br-swal__btn--secondary:hover {
-  border-color: #C9A84C;
-  color: #C9A84C;
+  border-color: #C9A84C !important;
+  color: #C9A84C !important;
 }
 
 :root[data-theme='dark'] .swal2-popup {
