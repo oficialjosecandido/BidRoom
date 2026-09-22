@@ -30,6 +30,7 @@ const { isAdminEmail } = require('../utils/roles');
 const logger = require('../utils/logger');
 const { recordViewIfNew } = require('../utils/viewCounter');
 const { normalizeListingLocaleFields } = require('../utils/listingLocale');
+const { parseScheduledStart, scheduleBlock, ListingScheduleError } = require('../utils/listingSchedule');
 
 const router = express.Router();
 
@@ -1158,6 +1159,7 @@ router.post('/', authenticateToken, requireActiveAccount, requireNoDisputeRestri
       condition,
       listingFormat,
       duration,
+      scheduledStart,
       startingPrice,
       buyNowPrice,
       minimumOfferPrice,
@@ -1224,6 +1226,15 @@ router.post('/', authenticateToken, requireActiveAccount, requireNoDisputeRestri
     }
     if (!validSlots.includes(durationSlot)) {
       return res.status(400).json({ error: 'Invalid duration. Must be one of: ' + validSlots.join(', ') });
+    }
+    // Opening date: null when the seller did not schedule one, and the listing
+    // opens as soon as it goes live.
+    let plannedStart;
+    try {
+      plannedStart = parseScheduledStart(scheduledStart);
+    } catch (err) {
+      if (!(err instanceof ListingScheduleError)) throw err;
+      return res.status(err.statusCode).json({ error: err.code, message: err.message });
     }
     if (!shippingOption) {
       return res.status(400).json({ error: 'Shipping option is required' });
@@ -1552,8 +1563,10 @@ router.post('/', authenticateToken, requireActiveAccount, requireNoDisputeRestri
       '15 days': 15 * 24 * 60 * 60 * 1000,
       '30 days': 30 * 24 * 60 * 60 * 1000,
     };
+    // A scheduled listing is visible from the moment it is created, but the
+    // duration only starts running at the opening, so the end follows the start.
     const durationMs = durations[durationSlot] || durations['7 days'];
-    listingData.startDate = new Date();
+    listingData.startDate = plannedStart || new Date();
     listingData.endDate = new Date(listingData.startDate.getTime() + durationMs);
 
     // Generate slug from title
@@ -1720,6 +1733,9 @@ router.patch('/:id', authenticateToken, requireActiveAccount, async (req, res) =
     // could turn a draft into a giveaway — or write its winner — by PATCH.
     for (const key of Object.keys(updates)) {
       if (key === 'saleFormat' || key === 'giveaway' || key.startsWith('giveaway.')) delete updates[key];
+      // The opening is fixed at creation and gates bidding — a draft edit accepts
+      // any key, so without this a seller could move it past the validated window.
+      if (key === 'startDate') delete updates[key];
     }
     if (listing.saleFormat === 'giveaway') {
       if ('shippingOption' in updates && !['free', 'local-pickup'].includes(updates.shippingOption)) {
@@ -1896,6 +1912,12 @@ router.post('/:id/buy-now', authenticateToken, requireActiveAccount, requireNoDi
         error: 'Listing not active',
         message: 'This listing is no longer available.'
       });
+    }
+
+    // A seller can schedule the opening — nothing is for sale before it
+    const notOpenYet = scheduleBlock(listing);
+    if (notOpenYet) {
+      return res.status(400).json(notOpenYet);
     }
 
     // Seller cannot buy their own listing

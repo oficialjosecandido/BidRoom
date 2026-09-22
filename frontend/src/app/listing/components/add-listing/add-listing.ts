@@ -196,6 +196,46 @@ const PHOTO_GUIDES: Record<string, PhotoGuide> = {
   },
 };
 
+/** How far ahead a seller may schedule the opening — mirrors backend listingSchedule.js. */
+const MAX_SCHEDULE_DAYS = 30;
+/** Anything closer than this counts as "open now", so the seller never gets a listing
+ *  that is closed for a handful of seconds. Mirrors MIN_SCHEDULE_LEAD_MS on the backend. */
+const MIN_SCHEDULE_LEAD_MS = 60 * 1000;
+
+/** Cross-field validator: scheduledStart is only required (and only checked) when the
+ *  seller turned the scheduling toggle on. Errors live on the scheduledStart control. */
+function scheduledStartWindow(): ValidatorFn {
+  return (group: AbstractControl): ValidationErrors | null => {
+    const ctrl = group.get('scheduledStart');
+    if (!ctrl) return null;
+
+    const clear = () => {
+      const { scheduleRequired: _r, schedulePast: _p, scheduleTooFar: _f, ...rest } = ctrl.errors ?? {};
+      ctrl.setErrors(Object.keys(rest).length ? rest : null);
+    };
+
+    if (group.get('scheduleOpening')?.value !== true) { clear(); return null; }
+
+    const raw = String(ctrl.value ?? '').trim();
+    if (!raw) { ctrl.setErrors({ ...(ctrl.errors ?? {}), scheduleRequired: true }); return null; }
+
+    const start = new Date(raw);
+    if (Number.isNaN(start.getTime())) { ctrl.setErrors({ ...(ctrl.errors ?? {}), schedulePast: true }); return null; }
+
+    const now = Date.now();
+    if (start.getTime() <= now + MIN_SCHEDULE_LEAD_MS) {
+      ctrl.setErrors({ ...(ctrl.errors ?? {}), schedulePast: true });
+      return null;
+    }
+    if (start.getTime() > now + MAX_SCHEDULE_DAYS * 24 * 60 * 60 * 1000) {
+      ctrl.setErrors({ ...(ctrl.errors ?? {}), scheduleTooFar: true });
+      return null;
+    }
+    clear();
+    return null;
+  };
+}
+
 /** Cross-field validator: buyNowPrice, when filled, must exceed startingBid. */
 function buyNowAboveStartingBid(): ValidatorFn {
   return (group: AbstractControl): ValidationErrors | null => {
@@ -793,6 +833,8 @@ export class AddListing implements OnInit, OnDestroy {
       locationCity: ['', Validators.required],
       locationCountry: ['PT', Validators.required],
       duration: ['7 days', Validators.required],
+      scheduleOpening: [false],
+      scheduledStart: [''],
       startingBid: [null],
       buyNowPrice: [null],
       autoRelist: [false],
@@ -812,7 +854,7 @@ export class AddListing implements OnInit, OnDestroy {
       sellerDeclaration: [false, Validators.requiredTrue],
       // Required only for vehicles — see syncVehicleAmlValidator().
       vehicleAmlDeclaration: [false]
-    }, { validators: buyNowAboveStartingBid() });
+    }, { validators: [buyNowAboveStartingBid(), scheduledStartWindow()] });
 
     this.listingForm.get('listingFormat')?.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(format => {
       this.updateConditionalValidators(format);
@@ -1072,7 +1114,7 @@ export class AddListing implements OnInit, OnDestroy {
       const keys = [
         'title', 'category', 'subCategory', 'listingFormat', 'itemMode', 'quantity', 'condition', 'description',
         'titlePt', 'titleEn', 'titleFr', 'titleEs', 'descriptionPt', 'descriptionEn', 'descriptionFr', 'descriptionEs',
-        'locationCity', 'locationCountry', 'duration', 'startingBid',
+        'locationCity', 'locationCountry', 'duration', 'scheduleOpening', 'scheduledStart', 'startingBid',
         'buyNowPrice', 'minimumAcceptPrice', 'allowPrivateRoom',
         'shippingOption', 'flatRateShipping', 'packageSize', 'shippingOriginPostalCode',
         'shippingOriginCity', 'shippingOriginCountry', 'returnPolicy', 'sellerDeclaration'
@@ -1431,6 +1473,100 @@ export class AddListing implements OnInit, OnDestroy {
     return estimateBuyerProcessingFeeEuros(this.getFeeForecastPriceBasis());
   }
 
+  // ---------------------------------------------------------------- commission simulator
+  // The seller can forecast fees against the listing's own price or against any other
+  // amount ("what if it sells for 2 000 €?") without touching the listing fields.
+  feeSimMode: 'listing' | 'custom' = 'listing';
+  feeSimCustomAmount: number | null = null;
+
+  setFeeSimMode(mode: 'listing' | 'custom'): void {
+    this.feeSimMode = mode;
+    if (mode === 'custom' && !(Number(this.feeSimCustomAmount) > 0)) {
+      const basis = this.getFeeForecastPriceBasis();
+      if (basis > 0) this.feeSimCustomAmount = basis;
+    }
+  }
+
+  onFeeSimAmountInput(event: Event): void {
+    const raw = (event.target as HTMLInputElement).value;
+    const v = parseFloat(raw);
+    this.feeSimCustomAmount = Number.isFinite(v) && v > 0 ? v : null;
+  }
+
+  /** The amount every simulated figure below is derived from. */
+  get simBasis(): number {
+    if (this.feeSimMode === 'custom') {
+      const v = Number(this.feeSimCustomAmount);
+      return Number.isFinite(v) && v > 0 ? v : 0;
+    }
+    return this.getFeeForecastPriceBasis();
+  }
+
+  /** BidRoom's commission on the simulated amount — €0 while a waiver is still running. */
+  get simSellerFee(): number {
+    if (this.waiverService.waiverActive()) return 0;
+    return this.simBasis * this.sellerFeeRateDecimal();
+  }
+
+  get simBuyerProcessingFee(): number {
+    return estimateBuyerProcessingFeeEuros(this.simBasis);
+  }
+
+  /** What lands in the seller's account: the sale amount minus BidRoom's commission. */
+  get simSellerNet(): number {
+    return Math.max(0, this.simBasis - this.simSellerFee);
+  }
+
+  // ------------------------------------------------------------------ scheduled opening
+  readonly maxScheduleDays = MAX_SCHEDULE_DAYS;
+
+  get scheduleOpeningEnabled(): boolean {
+    return this.listingForm?.get('scheduleOpening')?.value === true;
+  }
+
+  /** `min`/`max` for the datetime-local input, in the browser's own timezone. */
+  get scheduleMinAttr(): string { return this.toLocalInputValue(new Date(Date.now() + 15 * 60 * 1000)); }
+  get scheduleMaxAttr(): string {
+    return this.toLocalInputValue(new Date(Date.now() + MAX_SCHEDULE_DAYS * 24 * 60 * 60 * 1000));
+  }
+
+  private toLocalInputValue(d: Date): string {
+    const pad = (n: number) => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  }
+
+  /** The chosen opening instant, or null when the listing opens immediately. */
+  private scheduledStartDate(): Date | null {
+    if (!this.scheduleOpeningEnabled) return null;
+    const raw = String(this.listingForm.get('scheduledStart')?.value ?? '').trim();
+    if (!raw) return null;
+    const d = new Date(raw);
+    if (Number.isNaN(d.getTime()) || d.getTime() <= Date.now() + MIN_SCHEDULE_LEAD_MS) return null;
+    return d;
+  }
+
+  /** Human-readable opening, for the schedule hint and the review step. */
+  get scheduledStartDisplay(): string {
+    const d = this.scheduledStartDate();
+    if (!d) return '';
+    return d.toLocaleString(this.translate.currentLang || 'pt', {
+      day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
+    });
+  }
+
+  /** When the listing would end: the duration is counted from the opening, not from today. */
+  get scheduledEndDisplay(): string {
+    const start = this.scheduledStartDate();
+    if (!start) return '';
+    const value = this.listingForm.get('duration')?.value;
+    const match = [...this.listingDurations, ...this.offerDurations].find(d => d.value === value);
+    if (!match) return '';
+    const end = new Date(start.getTime() + match.hours * 60 * 60 * 1000);
+    return end.toLocaleString(this.translate.currentLang || 'pt', {
+      day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
+    });
+  }
+
   async uploadImages(): Promise<string[]> {
     if (this.uploadedFiles.length === 0) return [];
     this.isUploadingImages = true;
@@ -1683,6 +1819,8 @@ export class AddListing implements OnInit, OnDestroy {
       condition: formValue.condition,
       listingFormat: formValue.listingFormat,
       duration: formValue.duration,
+      // null = opens immediately; otherwise the listing is visible but closed until then.
+      scheduledStart: this.scheduledStartDate()?.toISOString() || null,
       startingPrice: formValue.startingBid || null,
       buyNowPrice: formValue.buyNowPrice || null,
       minimumOfferPrice: formValue.minimumAcceptPrice || null,
@@ -1728,10 +1866,13 @@ export class AddListing implements OnInit, OnDestroy {
         ];
       case 3:
         return [];
-      case 4:
-        return this.listingForm.get('listingFormat')?.value === 'auction'
+      case 4: {
+        const fields = this.listingForm.get('listingFormat')?.value === 'auction'
           ? ['startingBid', 'duration']
           : ['duration'];
+        if (this.scheduleOpeningEnabled) fields.push('scheduledStart');
+        return fields;
+      }
       case 5: {
         const fields = ['shippingOption', 'locationCity', 'locationCountry', 'returnPolicy'];
         const opt = this.listingForm.get('shippingOption')?.value;
@@ -1856,6 +1997,15 @@ export class AddListing implements OnInit, OnDestroy {
       }
       if (control.hasError('mustBeHigherThanStartingBid')) {
         return this.translate.instant('addListing.errors.buyNowTooLow');
+      }
+      if (control.hasError('scheduleRequired')) {
+        return this.translate.instant('addListing.errors.scheduleRequired');
+      }
+      if (control.hasError('schedulePast')) {
+        return this.translate.instant('addListing.errors.schedulePast');
+      }
+      if (control.hasError('scheduleTooFar')) {
+        return this.translate.instant('addListing.errors.scheduleTooFar', { days: MAX_SCHEDULE_DAYS });
       }
     }
     return '';

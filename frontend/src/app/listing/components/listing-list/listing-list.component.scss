@@ -879,6 +879,8 @@
     font-size: 12px;
     color: var(--sr-dim);
     &.ending { color: var(--sr-red); font-weight: 600; }
+    // Scheduled listing: visible, but bidding only opens later.
+    &.timer-val--opening { color: var(--sr-text, inherit); font-weight: 500; white-space: nowrap; }
   }
 
   .bids-count {

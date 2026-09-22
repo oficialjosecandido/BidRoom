@@ -304,12 +304,19 @@ const customerSchema = new mongoose.Schema({
     trim: true
   },
 
-  // ─── Founding-seller commission waiver ───────────────────────────────────
+  // ─── Founding-seller commission waiver (discontinued) ────────────────────
   /** Number of transactions that reached 'completed' as the seller. Incremented once per sale. */
   completedSalesCount: { type: Number, default: 0, min: 0 },
-  /** Controls the founding-seller 0% commission waiver (first N successful sales). */
+  /**
+   * The founding-seller 0% commission waiver (first N successful sales).
+   *
+   * The offer was withdrawn on 2026-09-22: accounts created from then on get
+   * `active: false` and pay commission from their first sale. Sellers who
+   * already had the waiver keep it until their free sales are used up, so the
+   * field stays and `resolveCommissionRate` still honours it.
+   */
   foundingSellerWaiver: {
-    active:       { type: Boolean, default: true },
+    active:       { type: Boolean, default: false },
     freeSalesCap: { type: Number,  default: 5, min: 0 }
   },
 

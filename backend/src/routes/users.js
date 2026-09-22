@@ -41,7 +41,9 @@ router.get('/me/waiver-status', authenticateToken, async (req, res) => {
 
     const cap    = user.foundingSellerWaiver?.freeSalesCap ?? 5;
     const used   = user.completedSalesCount ?? 0;
-    const active = user.foundingSellerWaiver?.active ?? true;
+    // The waiver is no longer granted: a missing field means no waiver, never
+    // a new one. Only sellers who already have it stored keep it.
+    const active = user.foundingSellerWaiver?.active === true;
 
     res.json({
       active,

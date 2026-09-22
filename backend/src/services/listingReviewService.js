@@ -21,6 +21,7 @@ const {
   emitNewNotificationToUser
 } = require('./notificationService');
 const { schedulePublishApprovedListing } = require('./socialPublisherService');
+const { isScheduled } = require('../utils/listingSchedule');
 const { publicBaseUrl } = require('../utils/publicUrls');
 const logger = require('../utils/logger');
 
@@ -109,12 +110,17 @@ async function loadPendingListing(listingId) {
  * the chosen duration, but the listing does not exist for buyers until this
  * moment — leaving the original dates would silently spend the seller's auction
  * on the review queue, and a short slot could even end before it was published.
+ *
+ * A seller who scheduled the opening is the exception: that date is a promise to
+ * buyers, so it is kept as-is and the duration keeps counting from it.
  */
 async function approveListing({ listingId, admin, io, ip = null }) {
   const listing = await loadPendingListing(listingId);
 
   listing.status = 'active';
-  listing.startDate = new Date();
+  if (!isScheduled(listing)) {
+    listing.startDate = new Date();
+  }
   listing.endDate = listing.calculateEndDate(listing.startDate);
   listing.moderationReview = {
     decision: 'approved',

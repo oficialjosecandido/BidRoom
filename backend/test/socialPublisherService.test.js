@@ -18,6 +18,9 @@ function load() {
   };
 }
 
+/** Relative to now: a fixed date would make these tests expire. */
+const IN_TWO_DAYS = () => new Date(Date.now() + 2 * 24 * 60 * 60 * 1000);
+
 const listing = (overrides = {}) => ({
   _id: 'L1',
   slug: 'relogio-omega',
@@ -26,7 +29,7 @@ const listing = (overrides = {}) => ({
   saleFormat: 'auction',
   currentPrice: 150,
   buyNowPrice: null,
-  endDate: new Date('2026-09-20T17:00:00Z'),
+  endDate: IN_TWO_DAYS(),
   images: ['https://bidroom.blob.core.windows.net/a.jpg'],
   status: 'active',
   ...overrides
@@ -84,7 +87,8 @@ describe('socialPublisherService', () => {
   describe('buildMessage', () => {
     it('shows price, end time in Lisbon time and the public link', () => {
       const { service } = load();
-      const msg = service.buildMessage(listing());
+      // A fixed end here, because the assertion is about how it is formatted.
+      const msg = service.buildMessage(listing({ endDate: new Date('2026-09-20T17:00:00Z') }));
       expect(msg).toContain('🔨 Omega Seamaster');
       expect(msg).toContain('150,00');
       // 17:00 UTC is 18:00 in Lisbon (summer time), whatever the server's zone.

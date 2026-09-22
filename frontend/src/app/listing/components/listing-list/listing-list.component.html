@@ -407,7 +407,13 @@
                       </div>
                     </div>
                     <div class="timer-block">
-                      <div class="timer-val" [class.ending]="isEndingTimer(listing)">{{ formatTimeRemaining(listing) }}</div>
+                      @if (notOpenYet(listing)) {
+                        <div class="timer-val timer-val--opening">
+                          🔒 {{ 'listingList.opensIn' | translate:{ time: formatOpensIn(listing) } }}
+                        </div>
+                      } @else {
+                        <div class="timer-val" [class.ending]="isEndingTimer(listing)">{{ formatTimeRemaining(listing) }}</div>
+                      }
                       <div class="bids-count">{{ bidCountLabel(listing) }} · {{ viewCountLabel(listing) }}</div>
                     </div>
                   </div>

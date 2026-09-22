@@ -311,6 +311,8 @@
           </div>
         } @else if (isOwnListing) {
           <div class="own-note">{{ 'GIVEAWAY.OWN_NOTE' | translate }}</div>
+        } @else if (notOpenYet) {
+          <div class="gw-closed">{{ 'listingDetails.schedule.opensAt' | translate:{ date: opensAtDisplay } }}</div>
         } @else if (listing.status === 'cancelled') {
           <div class="gw-closed">{{ 'GIVEAWAY.CANCELLED' | translate }}</div>
         } @else if (!isGiveawayOpen() && giveawayState && giveawayState.totalEntries === 0) {
@@ -333,8 +335,17 @@
       <div class="countdown-alert">⏱ {{ listing.auctionFormat === 'best-offer' ? ('listingDetails.sidebar.winnerSelectionCountdownOffer' | translate) : ('listingDetails.sidebar.winnerSelectionCountdownWinner' | translate) }}: {{ winnerSelectionCountdownDisplay }}</div>
     }
 
+    <!-- SCHEDULED OPENING: the listing is visible, but closed to bids/offers/buy-now until then -->
+    @if (notOpenYet) {
+      <div class="opening-alert">
+        <p class="opening-title">🔒 {{ 'listingDetails.schedule.notOpenYet' | translate }}</p>
+        <p class="opening-when">{{ 'listingDetails.schedule.opensAt' | translate:{ date: opensAtDisplay } }}</p>
+        <p class="opening-count">{{ 'listingDetails.schedule.opensIn' | translate:{ time: openingCountdown } }}</p>
+      </div>
+    }
+
     <!-- BUY NOW -->
-    @if (!isGiveaway && listing.buyNowPrice && listing.auctionFormat === 'highest-bid' && !isAuctionEnded() && !hasPrivateRoom() && !isOwnListing) {
+    @if (!notOpenYet && !isGiveaway && listing.buyNowPrice && listing.auctionFormat === 'highest-bid' && !isAuctionEnded() && !hasPrivateRoom() && !isOwnListing) {
       <button class="btn-offer btn-buynow" (click)="buyNow()">{{ 'listingDetails.sidebar.buyNow' | translate }} {{ listing.buyNowPrice | displayPrice }}</button>
     }
 
@@ -348,7 +359,7 @@
       }
       <p class="gw-note">{{ 'GIVEAWAY.CONSENT' | translate }}</p>
     }
-    @if (!isGiveaway && listing.auctionFormat === 'highest-bid' && !isAuctionEnded() && !hasPrivateRoom() && !isOwnListing) {
+    @if (!notOpenYet && !isGiveaway && listing.auctionFormat === 'highest-bid' && !isAuctionEnded() && !hasPrivateRoom() && !isOwnListing) {
       <button class="btn-offer" (click)="openBidModal()">
         {{ 'listingDetails.actions.placeBidAtMin' | translate:{ amount: formatPrice(getMinBid()) } }}
       </button>

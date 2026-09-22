@@ -628,39 +628,95 @@
         </div>
       }
 
-      @if (getFeeForecastPriceBasis() > 0) {
-        <div class="fee-preview">
-          @if (waiverService.waiverActive()) {
-            <div class="fee-row fee-waiver-row">
-              <span class="fee-label">{{ 'WAIVER.FEE_LABEL' | translate }}</span>
-              <span class="fee-val fee-val--waived">€0,00</span>
+      <div class="section schedule-section">
+        <div class="section-title">{{ 'addListing.schedule.section' | translate }}</div>
+        <label class="checkbox-row schedule-toggle">
+          <input type="checkbox" formControlName="scheduleOpening">
+          <span>
+            <strong>{{ 'addListing.schedule.toggleLabel' | translate }}</strong>
+            <small class="field-hint">{{ 'addListing.schedule.toggleHint' | translate }}</small>
+          </span>
+        </label>
+
+        @if (scheduleOpeningEnabled) {
+          <div class="schedule-body">
+            <div class="field">
+              <label class="field-label">{{ 'addListing.schedule.dateLabel' | translate }} <span class="req">*</span></label>
+              <input class="field-input schedule-input" type="datetime-local" formControlName="scheduledStart"
+                [min]="scheduleMinAttr" [max]="scheduleMaxAttr">
+              <div class="field-hint">{{ 'addListing.schedule.dateHint' | translate:{ days: maxScheduleDays } }}</div>
+              @if (getFieldError('scheduledStart')) { <div class="field-err">{{ getFieldError('scheduledStart') }}</div> }
             </div>
-            <p class="fee-waiver-note">{{ 'WAIVER.LISTING_NOTE' | translate:{ count: waiverService.freeSalesRemaining() } }}</p>
-          } @else {
-            <div class="fee-row">
-              <span class="fee-label">{{ 'addListing.sellerBidroomFee' | translate:{rate: sellerFeeRateDisplay} }}</span>
-              <span class="fee-val">€{{ estimatedSellerFeeAmount().toFixed(2) }}</span>
-            </div>
-          }
-          <div class="fee-row">
-            <span class="fee-label">{{ 'addListing.feeBuyer' | translate }}</span>
-            <span class="fee-val">
-              {{ 'addListing.feeBuyerEstimate' | translate:{ amount: (estimatedBuyerProcessingFee() | number:'1.2-2') } }}
-            </span>
+
+            @if (scheduledStartDisplay) {
+              <div class="schedule-summary">
+                <p><strong>{{ 'addListing.schedule.opensAt' | translate:{ date: scheduledStartDisplay } }}</strong></p>
+                @if (scheduledEndDisplay) {
+                  <p>{{ 'addListing.schedule.endsAt' | translate:{ date: scheduledEndDisplay } }}</p>
+                }
+                <p class="schedule-note">{{ 'addListing.schedule.visibleNote' | translate }}</p>
+              </div>
+            }
           </div>
-          <p class="fee-buyer-note">{{ 'addListing.feeBuyerNote' | translate }}</p>
-          <div class="fee-row fee-total">
-            <span class="fee-label">{{ 'addListing.feeReceive' | translate }}</span>
-            <span class="fee-val">
-              @if (waiverService.waiverActive()) {
-                ~€{{ getFeeForecastPriceBasis().toFixed(2) }}
-              } @else {
-                ~€{{ (getFeeForecastPriceBasis() - estimatedSellerFeeAmount()).toFixed(2) }}
-              }
-            </span>
-          </div>
+        }
+      </div>
+
+      <div class="section fee-sim-section">
+        <div class="section-title">{{ 'addListing.feeSim.section' | translate }}</div>
+        <p class="field-hint field-hint--block">{{ 'addListing.feeSim.hint' | translate }}</p>
+
+        <div class="pill-group fee-sim-modes">
+          <button type="button" class="pill" [class.selected]="feeSimMode === 'listing'"
+            (click)="setFeeSimMode('listing')">{{ 'addListing.feeSim.useListingValue' | translate }}</button>
+          <button type="button" class="pill" [class.selected]="feeSimMode === 'custom'"
+            (click)="setFeeSimMode('custom')">{{ 'addListing.feeSim.useCustomValue' | translate }}</button>
         </div>
-      }
+
+        @if (feeSimMode === 'custom') {
+          <div class="field fee-sim-amount">
+            <label class="field-label">{{ 'addListing.feeSim.customLabel' | translate }}</label>
+            <div class="price-input-wrap">
+              <span class="price-prefix">€</span>
+              <input class="field-input price-input" type="number" min="0" step="0.01" placeholder="0,00"
+                [value]="feeSimCustomAmount ?? ''" (input)="onFeeSimAmountInput($event)">
+            </div>
+          </div>
+        }
+
+        @if (simBasis > 0) {
+          <div class="fee-preview">
+            <div class="fee-row">
+              <span class="fee-label">{{ 'addListing.feeSim.saleValue' | translate }}</span>
+              <span class="fee-val">€{{ simBasis | number:'1.2-2' }}</span>
+            </div>
+            @if (waiverService.waiverActive()) {
+              <div class="fee-row fee-waiver-row">
+                <span class="fee-label">{{ 'WAIVER.FEE_LABEL' | translate }}</span>
+                <span class="fee-val fee-val--waived">€0,00</span>
+              </div>
+              <p class="fee-waiver-note">{{ 'WAIVER.LISTING_NOTE' | translate:{ count: waiverService.freeSalesRemaining() } }}</p>
+            } @else {
+              <div class="fee-row">
+                <span class="fee-label">{{ 'addListing.sellerBidroomFee' | translate:{rate: sellerFeeRateDisplay} }}</span>
+                <span class="fee-val fee-val--fee">−€{{ simSellerFee | number:'1.2-2' }}</span>
+              </div>
+            }
+            <div class="fee-row fee-total">
+              <span class="fee-label">{{ 'addListing.feeSim.netLabel' | translate }}</span>
+              <span class="fee-val">~€{{ simSellerNet | number:'1.2-2' }}</span>
+            </div>
+            <div class="fee-row">
+              <span class="fee-label">{{ 'addListing.feeBuyer' | translate }}</span>
+              <span class="fee-val">
+                {{ 'addListing.feeBuyerEstimate' | translate:{ amount: (simBuyerProcessingFee | number:'1.2-2') } }}
+              </span>
+            </div>
+            <p class="fee-buyer-note">{{ 'addListing.feeBuyerNote' | translate }}</p>
+          </div>
+        } @else {
+          <p class="fee-sim-empty">{{ 'addListing.feeSim.empty' | translate }}</p>
+        }
+      </div>
 
       @if (getFeeForecastPriceBasis() >= 5000) {
         <div class="kyc-notice">
@@ -856,6 +912,12 @@
             <span class="review-label">{{ 'addListing.duration' | translate }}</span>
             <span class="review-val">{{ reviewDurationLabel }}</span>
           </div>
+          @if (scheduledStartDisplay) {
+            <div class="review-row">
+              <span class="review-label">{{ 'addListing.schedule.reviewLabel' | translate }}</span>
+              <span class="review-val">{{ scheduledStartDisplay }}</span>
+            </div>
+          }
           <div class="review-row">
             <span class="review-label">{{ 'addListing.shippingOptions' | translate }}</span>
             <span class="review-val">{{ reviewShippingLabel }}</span>

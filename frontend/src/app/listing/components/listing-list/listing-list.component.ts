@@ -679,6 +679,25 @@ export class ListingListComponent implements OnInit, OnDestroy {
     return `${minutes}m`;
   }
 
+  /** Scheduled listing: visible and searchable, but closed to bids until startDate. */
+  notOpenYet(listing: Listing): boolean {
+    if (!listing.startDate) return false;
+    const start = new Date(listing.startDate).getTime();
+    return Number.isFinite(start) && start > Date.now();
+  }
+
+  /** "3d 4h" / "02:15:00" until the scheduled opening. */
+  formatOpensIn(listing: Listing): string {
+    if (!listing.startDate) return '';
+    const totalSecs = Math.max(0, Math.floor((new Date(listing.startDate).getTime() - Date.now()) / 1000));
+    const days = Math.floor(totalSecs / 86400);
+    const hours = Math.floor((totalSecs % 86400) / 3600);
+    const minutes = Math.floor((totalSecs % 3600) / 60);
+    if (days > 0) return `${days}d ${hours}h`;
+    if (hours > 0) return `${hours}h ${minutes}m`;
+    return `${minutes}m`;
+  }
+
   toggleFilters(): void {
     this.filtersOpen = !this.filtersOpen;
     this.syncBodyScroll();

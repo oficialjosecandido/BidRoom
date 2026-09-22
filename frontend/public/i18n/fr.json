@@ -353,7 +353,10 @@
       "step4Pricing": "Définissez le prix et la durée de l'annonce.",
       "step5Shipping": "Configurez l'expédition et la localisation.",
       "step6Declaration": "Confirmez la déclaration du vendeur pour publier.",
-      "specificationsIncomplete": "spécifications incomplètes"
+      "specificationsIncomplete": "spécifications incomplètes",
+      "scheduleRequired": "Choisissez la date et l’heure d’ouverture",
+      "schedulePast": "L’ouverture doit être dans le futur",
+      "scheduleTooFar": "L’ouverture ne peut pas dépasser {{days}} jours"
     },
     "steps": {
       "label": "Étapes",
@@ -454,6 +457,27 @@
       "amlNote": "BidRoom ne reçoit ni ne traite le paiement du véhicule. Cette déclaration répond aux obligations de lutte contre le blanchiment de capitaux (loi portugaise 83/2017).",
       "amlRequiredError": "Vous devez accepter la déclaration de paiement traçable pour publier un véhicule.",
       "cancelCta": "Annuler"
+    },
+    "schedule": {
+      "section": "Programmer l’ouverture",
+      "toggleLabel": "Programmer l’ouverture de cette vente",
+      "toggleHint": "L’annonce est visible dès son approbation, mais personne ne peut enchérir, proposer ou acheter avant la date choisie.",
+      "dateLabel": "Date et heure d’ouverture",
+      "dateHint": "Jusqu’à {{days}} jours à partir d’aujourd’hui. La durée choisie commence à l’ouverture.",
+      "opensAt": "Ouvre le {{date}}",
+      "endsAt": "Se termine le {{date}}",
+      "visibleNote": "Jusqu’à l’ouverture, l’annonce apparaît dans les recherches avec un compte à rebours.",
+      "reviewLabel": "Ouverture programmée"
+    },
+    "feeSim": {
+      "section": "Simulateur de commissions",
+      "hint": "Voyez ce que vous payez à BidRoom et ce qu’il vous reste, avec le prix de cette annonce ou tout autre montant.",
+      "useListingValue": "Valeur de cette annonce",
+      "useCustomValue": "Autre montant",
+      "customLabel": "Montant de vente à simuler",
+      "saleValue": "Montant de vente",
+      "netLabel": "Vous recevez (estimation)",
+      "empty": "Indiquez un prix dans l’annonce ou saisissez un montant pour simuler les commissions."
     }
   },
   "listingList": {
@@ -543,7 +567,8 @@
     "oneOffer": "1 offre",
     "offersCount": "{{count}} offres",
     "hoursLeft": "{{hours}}h restantes",
-    "applyFilters": "Appliquer les filtres"
+    "applyFilters": "Appliquer les filtres",
+    "opensIn": "Ouvre dans {{time}}"
   },
   "categories": {
     "title": "Parcourir par Catégorie",
@@ -883,6 +908,11 @@
       "privateTitle": "Vendeur particulier — sans garantie légale de consommation",
       "privateNotice": "Ce véhicule est vendu par un particulier. Les ventes entre particuliers ne sont pas couvertes par la garantie légale de conformité du décret-loi 84/2021. Nous recommandons de faire inspecter le véhicule avant de conclure.",
       "offlineNotice": "BidRoom organise l’enchère et met l’acheteur et le vendeur en relation. Le paiement et la remise du véhicule se règlent directement entre les parties, hors de la plateforme."
+    },
+    "schedule": {
+      "notOpenYet": "Cette vente n’a pas encore ouvert",
+      "opensAt": "Ouvre le {{date}}",
+      "opensIn": "Dans {{time}}"
     }
   },
   "auth": {

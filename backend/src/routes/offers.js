@@ -12,6 +12,7 @@ const {
 
 const Block = require('../models/Block');
 const { scanForAbusiveContent } = require('../utils/contentFilter');
+const { scheduleBlock } = require('../utils/listingSchedule');
 const { recordViolation } = require('../services/contentViolationService');
 const { appendModerationAudit } = require('../services/moderationAuditService');
 const features = require('../config/features');
@@ -215,6 +216,12 @@ async function createOffer(req, res) {
         error: 'Listing not active',
         message: 'This listing is no longer accepting offers'
       });
+    }
+
+    // A seller can schedule the opening — no offers before it
+    const notOpenYet = scheduleBlock(listing);
+    if (notOpenYet) {
+      return res.status(400).json(notOpenYet);
     }
 
     // Offers below minimum are allowed; seller is not obliged to accept (buyer sees indication in UI)

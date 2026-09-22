@@ -710,7 +710,10 @@
       "step4Pricing": "Set the listing price and duration.",
       "step5Shipping": "Configure shipping and location.",
       "step6Declaration": "Confirm the seller declaration to publish.",
-      "specificationsIncomplete": "incomplete specifications"
+      "specificationsIncomplete": "incomplete specifications",
+      "scheduleRequired": "Pick the opening date and time",
+      "schedulePast": "The opening must be in the future",
+      "scheduleTooFar": "The opening cannot be more than {{days}} days away"
     },
     "steps": {
       "label": "Steps",
@@ -818,6 +821,27 @@
       "amlNote": "BidRoom does not receive or process the payment for the vehicle. This declaration exists to meet anti-money-laundering obligations (Portuguese Law 83/2017).",
       "amlRequiredError": "You must accept the traceable payment declaration to list a vehicle.",
       "cancelCta": "Cancel"
+    },
+    "schedule": {
+      "section": "Schedule opening",
+      "toggleLabel": "Schedule when this auction opens",
+      "toggleHint": "The listing is visible as soon as it is approved, but nobody can bid, offer or buy before the date you pick.",
+      "dateLabel": "Opening date and time",
+      "dateHint": "Up to {{days}} days from today. The duration you chose starts counting at the opening.",
+      "opensAt": "Opens on {{date}}",
+      "endsAt": "Ends on {{date}}",
+      "visibleNote": "Until it opens, the listing shows up in search with a countdown to the opening.",
+      "reviewLabel": "Scheduled opening"
+    },
+    "feeSim": {
+      "section": "Commission simulator",
+      "hint": "See what you pay BidRoom and what you take home, using this listing’s price or any other amount.",
+      "useListingValue": "This listing’s value",
+      "useCustomValue": "Another amount",
+      "customLabel": "Sale value to simulate",
+      "saleValue": "Sale value",
+      "netLabel": "You receive (estimate)",
+      "empty": "Set a price on the listing or type an amount to simulate the fees."
     }
   },
   "listingList": {
@@ -910,7 +934,8 @@
     "offersCount": "{{count}} offers",
     "hoursLeft": "{{hours}}h left",
     "applyFilters": "Apply filters",
-    "closeFilters": "Close filters"
+    "closeFilters": "Close filters",
+    "opensIn": "Opens in {{time}}"
   },
   "categories": {
     "title": "Browse by Category",
@@ -1336,6 +1361,11 @@
       "privateTitle": "Private seller — no consumer warranty",
       "privateNotice": "This vehicle is sold by a private individual. Sales between private parties are not covered by the legal warranty of conformity under Decree-Law 84/2021. We recommend inspecting the vehicle before closing the deal.",
       "offlineNotice": "BidRoom runs the auction and puts buyer and seller in touch. Payment and handover of the vehicle are arranged directly between the parties, off the platform."
+    },
+    "schedule": {
+      "notOpenYet": "This auction has not opened yet",
+      "opensAt": "Opens on {{date}}",
+      "opensIn": "{{time}} to go"
     }
   },
   "auth": {

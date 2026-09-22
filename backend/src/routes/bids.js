@@ -9,6 +9,7 @@ const { notifyNewBid, notifyBidderOutbid, emitNewNotificationToUser, checkAndSet
 const { checkBidRateLimit, getClientIp } = require('../middleware/bidRateLimiter');
 const { runFraudChecks, updateUserSignals } = require('../services/fraudDetectionService');
 const Block = require('../models/Block');
+const { scheduleBlock } = require('../utils/listingSchedule');
 const logger = require('../utils/logger');
 
 const router = express.Router();
@@ -291,6 +292,12 @@ router.post('/', optionalAuth, requireActiveAccountIfAuthenticated, requireNoDis
         error: 'Listing not active',
         message: msg
       });
+    }
+
+    // Check if the auction has opened yet (a seller can schedule the opening)
+    const notOpenYet = scheduleBlock(listing);
+    if (notOpenYet) {
+      return res.status(400).json(notOpenYet);
     }
 
     // Check if auction has ended (for main auction)

@@ -9,6 +9,10 @@ const BIDROOMFEE_RATE = 0.035;
  * which they close determines which ones are "free", and only completed sales
  * (not failed ones) consume a waiver slot.
  *
+ * The waiver stopped being granted on 2026-09-22 — new accounts store
+ * `active: false`. Sellers who already had it keep their remaining free sales,
+ * which is why this still runs.
+ *
  * @param {object} listing  - Mongoose listing doc (needs .commissionRate)
  * @param {object} seller   - Mongoose seller doc (needs .completedSalesCount, .foundingSellerWaiver)
  * @returns {{ effectiveFeeRate: number, waiverApplied: boolean }}

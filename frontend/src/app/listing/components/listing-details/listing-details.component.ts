@@ -330,7 +330,7 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
   isGiveawayOpen(): boolean {
     if (!this.listing || !this.isGiveaway) return false;
     if (this.giveawayState) return this.giveawayState.entriesOpen;
-    return this.listing.status === 'active' && !this.countdownEnded && !this.listing.giveaway?.drawnAt;
+    return this.listing.status === 'active' && !this.notOpenYet && !this.countdownEnded && !this.listing.giveaway?.drawnAt;
   }
 
   giveawayEntryCount(): number {
@@ -490,7 +490,7 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
   /** Best-offer listing is still open for offers (active and not ended). */
   isBestOfferActive(): boolean {
     if (!this.listing || this.listing.auctionFormat !== 'best-offer') return false;
-    return this.listing.status === 'active' && !this.isAuctionEnded();
+    return this.listing.status === 'active' && !this.notOpenYet && !this.isAuctionEnded();
   }
 
   /** True when seller can accept/decline offers (Best Offer listing and listing end date has passed). */
@@ -639,9 +639,11 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
       return;
     }
 
+    this.updateOpeningCountdown();
+
     // Determine which end date to use
     let endDate: Date | null = null;
-    
+
     if (this.listing.privateRoomStatus === 'active' && this.listing.privateRoomEndDate) {
       endDate = new Date(this.listing.privateRoomEndDate);
     } else if (this.listing.endDate) {
@@ -687,32 +689,7 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
 
     this.countdownEnded = false;
 
-    // Calculate time components
-    const totalSeconds = Math.floor(diff / 1000);
-    const days = Math.floor(totalSeconds / (24 * 60 * 60));
-    const hours = Math.floor((totalSeconds % (24 * 60 * 60)) / (60 * 60));
-    const minutes = Math.floor((totalSeconds % (60 * 60)) / 60);
-    const seconds = totalSeconds % 60;
-
-    // If less than 24 hours remaining, show HH:MM:SS format
-    if (days === 0) {
-      const hStr = String(hours).padStart(2, '0');
-      const mStr = String(minutes).padStart(2, '0');
-      const sStr = String(seconds).padStart(2, '0');
-      this.displayedTimeRemaining = `${hStr}:${mStr}:${sStr}`;
-    } else {
-      // If 24 hours or more, show days and hours
-      const parts: string[] = [];
-      if (days > 0) {
-        parts.push(this.translate.instant('listingDetails.time.daysCount', { count: days }));
-      }
-      if (hours > 0) {
-        parts.push(this.translate.instant('listingDetails.time.hoursCount', { count: hours }));
-      }
-      this.displayedTimeRemaining = parts.length > 0
-        ? parts.join(' ')
-        : this.translate.instant('listingDetails.time.endingSoon');
-    }
+    this.displayedTimeRemaining = this.formatCountdown(diff);
 
     // Update winner selection countdown when auction ended and seller has 24h
     if (this.showWinnerSelectionCountdown()) {
@@ -722,6 +699,48 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
     }
 
     this.cdr.markForCheck();
+  }
+
+  /** "HH:MM:SS" under a day, "3 days 4 hours" above it. */
+  private formatCountdown(diff: number): string {
+    const totalSeconds = Math.max(0, Math.floor(diff / 1000));
+    const days = Math.floor(totalSeconds / (24 * 60 * 60));
+    const hours = Math.floor((totalSeconds % (24 * 60 * 60)) / (60 * 60));
+    const minutes = Math.floor((totalSeconds % (60 * 60)) / 60);
+    const seconds = totalSeconds % 60;
+
+    if (days === 0) {
+      const pad = (n: number) => String(n).padStart(2, '0');
+      return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
+    }
+
+    const parts: string[] = [this.translate.instant('listingDetails.time.daysCount', { count: days })];
+    if (hours > 0) parts.push(this.translate.instant('listingDetails.time.hoursCount', { count: hours }));
+    return parts.join(' ');
+  }
+
+  /**
+   * A scheduled listing is visible and indexable from approval, but closed to bids,
+   * offers, buy-now and giveaway entries until its startDate — the backend enforces
+   * the same rule in listingSchedule.js.
+   */
+  notOpenYet = false;
+  openingCountdown = '';
+
+  private updateOpeningCountdown(): void {
+    const raw = this.listing?.startDate;
+    const start = raw ? new Date(raw) : null;
+    const diff = start && !Number.isNaN(start.getTime()) ? start.getTime() - Date.now() : 0;
+    this.notOpenYet = diff > 0;
+    this.openingCountdown = this.notOpenYet ? this.formatCountdown(diff) : '';
+  }
+
+  /** The scheduled opening, formatted in the viewer's language. */
+  get opensAtDisplay(): string {
+    if (!this.notOpenYet || !this.listing?.startDate) return '';
+    return new Date(this.listing.startDate).toLocaleString(this.translate.currentLang || 'pt', {
+      day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
+    });
   }
 
   formatTimeRemaining(): string {

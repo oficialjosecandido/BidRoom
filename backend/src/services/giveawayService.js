@@ -19,6 +19,7 @@
 const crypto = require('crypto');
 const Listing = require('../models/Listing');
 const GiveawayEntry = require('../models/GiveawayEntry');
+const { isScheduled } = require('../utils/listingSchedule');
 const logger = require('../utils/logger');
 
 /** Thrown for conditions the caller should turn into a 4xx rather than a 500. */
@@ -31,9 +32,15 @@ class GiveawayError extends Error {
   }
 }
 
-/** Entries close at endDate; after that the giveaway is waiting to be drawn. */
+/**
+ * Entries run from the opening (which the seller can schedule) to endDate;
+ * after that the giveaway is waiting to be drawn.
+ */
 function entriesAreOpen(listing) {
-  return listing.status === 'active' && new Date() <= new Date(listing.endDate);
+  const now = new Date();
+  return listing.status === 'active'
+    && !isScheduled(listing, now)
+    && now <= new Date(listing.endDate);
 }
 
 /**
@@ -45,7 +52,7 @@ function entriesAreOpen(listing) {
  */
 async function enterGiveaway({ listingId, participant }) {
   const listing = await Listing.findById(listingId)
-    .select('saleFormat status endDate seller giveaway slug title')
+    .select('saleFormat status startDate endDate seller giveaway slug title')
     .lean();
 
   if (!listing || listing.saleFormat !== 'giveaway') {
@@ -148,7 +155,7 @@ function publicWinnerName(customer) {
  */
 async function getPublicState({ listingId, participantId = null }) {
   const listing = await Listing.findById(listingId)
-    .select('saleFormat status endDate giveaway')
+    .select('saleFormat status startDate endDate giveaway')
     .populate('giveaway.winner', 'firstName lastName')
     .lean();
 
@@ -166,6 +173,7 @@ async function getPublicState({ listingId, participantId = null }) {
   return {
     ...entryState,
     entriesOpen: !drawn && entriesAreOpen(listing),
+    opensAt: isScheduled(listing) ? listing.startDate : null,
     endDate: listing.endDate,
     drawn,
     drawnAt: listing.giveaway?.drawnAt || null,
