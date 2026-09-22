@@ -43,10 +43,7 @@
 <!-- PAGE -->
 <div class="page">
 
-  <!-- LEFT -->
-  <div class="left">
-
-    <!-- GALLERY -->
+  <!-- GALLERY -->
     <div class="gallery">
       <div class="main-img">
         @if (listing.images[activeImageIndex]) {
@@ -115,270 +112,6 @@
         <p class="info-byline">{{ getDescriptionByline() }}</p>
       }
     </div>
-
-    <!-- TABS -->
-    <div class="tabs" id="listing-tabs">
-      <button class="tab" [class.on]="activeTab === 'description'" (click)="setActiveTab('description')">{{ 'listingDetails.tabs.description' | translate }}</button>
-      @if (isGiveaway) {
-        <button class="tab" [class.on]="activeTab === 'rules'" (click)="setActiveTab('rules')">{{ 'GIVEAWAY.RULES_TAB' | translate }}</button>
-      }
-      @if (listing.auctionFormat === 'highest-bid' && !isGiveaway) {
-        <button class="tab" [class.on]="activeTab === 'bids'" (click)="setActiveTab('bids')">
-          {{ 'listingDetails.info.bids' | translate }} <span class="tab-c">{{ bids.length }}</span>
-        </button>
-      }
-      @if (listing.auctionFormat === 'best-offer' && !isGiveaway) {
-        <button class="tab" [class.on]="activeTab === 'offers'" (click)="setActiveTab('offers')">
-          {{ 'listingDetails.tabs.offers' | translate }} <span class="tab-c">{{ offers.length }}</span>
-        </button>
-      }
-    </div>
-
-    <!-- DESCRIPTION TAB -->
-    @if (activeTab === 'description') {
-      <div class="tab-panel">
-        <div class="desc-p">{{ localizedDescription }}</div>
-
-        @if (listing.itemMode === 'multi_quantity') {
-          <div class="spec-note">{{ listing.quantity }} {{ 'listingDetails.itemMode.identicalUnits' | translate }}</div>
-        }
-        @if (listing.itemMode === 'bundle' && listing.bundleItems?.length) {
-          <div class="spec-note">
-            <strong>{{ 'listingDetails.itemMode.bundleContents' | translate }}:</strong>
-            <ul>
-              @for (item of listing.bundleItems!; track item.title) {
-                <li>{{ item.title }}@if (item.description) { – {{ item.description }} }</li>
-              }
-            </ul>
-          </div>
-        }
-
-        @if (listing.specifications && listing.specifications.length > 0) {
-          <div class="specs">
-            @for (spec of listing.specifications; track spec.key) {
-              <div class="sp"><span class="sp-k">{{ spec.key }}</span><span class="sp-v">{{ spec.value }}</span></div>
-            }
-          </div>
-        }
-
-        <!-- DSA seller info -->
-        @if (listing.seller) {
-          <div class="dsa-block">
-            <span class="dsa-badge" [class.dsa-pro]="listing.seller.sellerClassification === 'professional'">
-              {{ listing.seller.sellerClassification === 'professional' ? ('listingDetails.dsa.professionalSeller' | translate) : ('listingDetails.dsa.privateSeller' | translate) }}
-            </span>
-            @if (listing.seller.sellerClassification === 'professional') {
-              <span class="dsa-badge dsa-status" [ngClass]="'dsa-' + (listing.seller.professionalVerificationStatus || 'none')">
-                {{ listing.seller.professionalVerificationStatus === 'verified' ? ('listingDetails.dsa.status.verified' | translate) : listing.seller.professionalVerificationStatus === 'pending' ? ('listingDetails.dsa.status.pending' | translate) : ('listingDetails.dsa.status.none' | translate) }}
-              </span>
-            }
-            @if (listing.seller.sellerClassification === 'professional' && listing.seller.professionalVerificationStatus === 'verified') {
-              <div class="dsa-trader">
-                @if (listing.seller.professionalLegalName) { <p><span class="dsa-k">{{ 'listingDetails.dsa.legalName' | translate }}</span> {{ listing.seller.professionalLegalName }}</p> }
-                @if (listing.seller.professionalVatId) { <p><span class="dsa-k">{{ 'listingDetails.dsa.vatId' | translate }}</span> {{ listing.seller.professionalVatId }}</p> }
-                @if (sellerVerifiedAddressLines().length) {
-                  <p><span class="dsa-k">{{ 'listingDetails.dsa.address' | translate }}</span>
-                    @for (line of sellerVerifiedAddressLines(); track $index) { {{ line }} }
-                  </p>
-                }
-              </div>
-            }
-          </div>
-        }
-
-        <!--
-          Vehicles: whether the buyer gets the legal consumer warranty depends
-          entirely on who is selling (DL 84/2021), so it is said plainly before
-          anyone bids — together with the fact that BidRoom sets the price but
-          never handles the payment for the car.
-        -->
-        @if (listing.category === 'vehicles' && listing.seller) {
-          <div class="vehicle-notice" [class.vn-pro]="listing.seller.sellerClassification === 'professional'">
-            <p class="vn-title">
-              {{ (listing.seller.sellerClassification === 'professional'
-                  ? 'listingDetails.vehicle.proTitle'
-                  : 'listingDetails.vehicle.privateTitle') | translate }}
-            </p>
-            <p class="vn-text">
-              {{ (listing.seller.sellerClassification === 'professional'
-                  ? 'listingDetails.vehicle.proNotice'
-                  : 'listingDetails.vehicle.privateNotice') | translate }}
-            </p>
-            <p class="vn-text vn-offline">{{ 'listingDetails.vehicle.offlineNotice' | translate }}</p>
-          </div>
-        }
-      </div>
-    }
-
-    <!--
-      GIVEAWAY RULES TAB — the public regulamento for this giveaway. The four
-      facts are repeated here on purpose: they also sit beside the entry button,
-      and nobody should have to find them in only one place.
-    -->
-    @if (activeTab === 'rules' && isGiveaway) {
-      <div class="tab-panel gw-rules">
-        <h2 class="gw-rules-title">{{ 'GIVEAWAY.RULES_TITLE' | translate }}</h2>
-        <p class="gw-rules-intro">{{ 'GIVEAWAY.RULES_INTRO' | translate:{ title: localizedTitle } }}</p>
-
-        <h3>1. {{ 'GIVEAWAY.RULES_PRIZE_H' | translate }}</h3>
-        <p>{{ 'GIVEAWAY.RULES_PRIZE' | translate:{ title: localizedTitle, condition: giveawayConditionLabel() } }}</p>
-        <p>{{ giveawayDeliveryKey() | translate:{ location: listingLocation() || '—' } }}</p>
-
-        <h3>2. {{ 'GIVEAWAY.RULES_WHO_H' | translate }}</h3>
-        <ul>
-          <li>{{ 'GIVEAWAY.FACT_FREE' | translate }}</li>
-          <li>{{ 'GIVEAWAY.FACT_ANYONE' | translate }}</li>
-          <li>{{ 'GIVEAWAY.RULES_WHO_ONE' | translate }}</li>
-          <li>{{ 'GIVEAWAY.RULES_WHO_ORGANISER' | translate }}</li>
-        </ul>
-
-        <h3>3. {{ 'GIVEAWAY.RULES_HOW_H' | translate }}</h3>
-        <p>{{ 'GIVEAWAY.RULES_HOW' | translate:{ endDate: giveawayEndDateLabel() } }}</p>
-
-        <h3>4. {{ 'GIVEAWAY.RULES_DRAW_H' | translate }}</h3>
-        <ul>
-          <li>{{ 'GIVEAWAY.FACT_RANDOM' | translate }}</li>
-          <li>{{ 'GIVEAWAY.RULES_DRAW_METHOD' | translate }}</li>
-          <li>{{ 'GIVEAWAY.RULES_DRAW_AUDIT' | translate }}</li>
-          <li>{{ 'GIVEAWAY.RULES_DRAW_VIDEO' | translate }}</li>
-        </ul>
-
-        <h3>5. {{ 'GIVEAWAY.RULES_ANNOUNCE_H' | translate }}</h3>
-        <ul>
-          <li>{{ 'GIVEAWAY.FACT_ANNOUNCED' | translate }}</li>
-          <li>{{ 'GIVEAWAY.RULES_ANNOUNCE_PUBLIC' | translate }}</li>
-          <li>{{ 'GIVEAWAY.RULES_ANNOUNCE_CONTACT' | translate }}</li>
-        </ul>
-
-        <h3>6. {{ 'GIVEAWAY.RULES_DATA_H' | translate }}</h3>
-        <p>{{ 'GIVEAWAY.RULES_DATA' | translate }}</p>
-        <p>{{ 'GIVEAWAY.RULES_DATA_RETENTION' | translate }}
-          <a routerLink="/landing/privacy-policy">{{ 'GIVEAWAY.RULES_PRIVACY_LINK' | translate }}</a>.
-        </p>
-      </div>
-    }
-
-    <!-- BIDS TAB -->
-    @if (activeTab === 'bids' && listing.auctionFormat === 'highest-bid' && !isGiveaway) {
-      <div class="tab-panel">
-        @if (isOwnListing && isAuctionEnded() && !hasPrivateRoom() && !listing.winner && bids.length > 0 && !isPrivateRoomEnded()) {
-          <div class="info-note">{{ 'listingDetails.ended.selectWinner' | translate }}</div>
-        }
-        @if (bidsLoading) { <p class="tab-loading">{{ 'listingDetails.bidHistory.loading' | translate }}</p> }
-        @if (bidsError && !bidsLoading) {
-          <p class="tab-error">{{ bidsError }}</p>
-          <button class="btn-retry" (click)="loadBids(listing._id)">{{ 'listingDetails.bidHistory.tryAgain' | translate }}</button>
-        }
-        @if (!bidsLoading && !bidsError) {
-          @if (bids.length === 0) {
-            <div class="tab-empty">{{ 'listingDetails.bidsTab.emptyActive' | translate }}</div>
-          } @else {
-            <div class="bids-list">
-              @for (bid of bids; track bid._id; let i = $index) {
-                <div class="bid-row"
-                  [class.bid-top]="i === 0"
-                  [class.bid-new]="newBidIds.has(bid._id)"
-                  [class.bid-ineligible]="isOwnListing && isAuctionEnded() && !hasPrivateRoom() && !listing.winner && !isPrivateRoomEnded() && !canSelectBidAsWinner(bid)">
-                  <div class="bid-av">{{ bid.bidderInitials || '?' }}</div>
-                  <div class="bid-body">
-                    <div class="bid-name-row">
-                      <span class="bid-name">
-                        @if (bid.bidderFirstName && bid.bidderLastName) { {{ bid.bidderFirstName }} {{ bid.bidderLastName }} }
-                        @else { {{ bid.bidderName || ('listingDetails.bidHistory.anonymous' | translate) }} }
-                      </span>
-                      @if (bid.isAuthenticated) {
-                        <span class="trust-badge" [ngClass]="getTrustTierInfo(bid.buyerTrustTier ?? 1).cssClass" [title]="getTrustTierInfo(bid.buyerTrustTier ?? 1).sellerNote">
-                          {{ getTrustTierInfo(bid.buyerTrustTier ?? 1).icon }} {{ getTrustTierInfo(bid.buyerTrustTier ?? 1).labelPt }}
-                        </span>
-                      }
-                      @else { <span class="chip c-sub">{{ 'listingDetails.bidHistory.guestBidder' | translate }}</span> }
-                      @if (isWinnerBid(bid)) { <span class="chip c-win">{{ 'listingDetails.bidsTab.winnerChip' | translate }}</span> }
-                    </div>
-                    <div class="bid-time">{{ relativeTime(bid.createdAt) || formatDate(bid.createdAt) }}</div>
-                    @if (isOwnListing && isAuctionEnded() && !hasPrivateRoom() && !listing.winner && !isPrivateRoomEnded()) {
-                      @if (canSelectBidAsWinner(bid)) {
-                        <button class="btn-acc btn-sm" (click)="selectWinner(bid._id)" [disabled]="selectingWinner">
-                          {{ selectingWinner ? ('listingDetails.bidHistory.selecting' | translate) : ('listingDetails.bidHistory.selectAsWinner' | translate) }}
-                        </button>
-                      } @else {
-                        <span class="ineligible-note">{{ 'listingDetails.bidsTab.notEligible' | translate }}</span>
-                      }
-                    }
-                  </div>
-                  <div class="bid-amt">{{ formatPrice(bid.amount) }}</div>
-                </div>
-              }
-            </div>
-          }
-        }
-      </div>
-    }
-
-    <!-- OFFERS TAB -->
-    @if (activeTab === 'offers' && listing.auctionFormat === 'best-offer') {
-      <div class="tab-panel">
-        @if (offersLoading) { <p class="tab-loading">{{ 'listingDetails.offerHistory.loading' | translate }}</p> }
-        @if (offersError && !offersLoading) {
-          <p class="tab-error">{{ offersError }}</p>
-          <button class="btn-retry" (click)="loadOffers(listing._id)">{{ 'listingDetails.offerHistory.tryAgain' | translate }}</button>
-        }
-        @if (!offersLoading && !offersError) {
-          @if (offers.length === 0) {
-            <div class="tab-empty">
-              {{ 'listingDetails.offerHistory.noOffers' | translate }}.
-              @if (!isOwnListing && isBestOfferActive()) {
-                <button class="btn-link" (click)="openOfferModal()">{{ 'listingDetails.offerHistory.makeOffer' | translate }} →</button>
-              }
-            </div>
-          } @else {
-            <p class="offers-note">{{ offers.length }} {{ offers.length !== 1 ? ('listingDetails.info.offersPlural' | translate) : ('listingDetails.info.offer' | translate) }}</p>
-            <div class="offers-list">
-              @for (offer of sortedOffers; track offer._id) {
-                <div class="offer-item"
-                  [class.accepted]="offer.status === 'accepted'"
-                  [class.declined]="offer.status === 'rejected'">
-                  <div class="av">{{ offer.offererInitials || 'A' }}</div>
-                  <div class="om">
-                    <div class="on-row">
-                      <span class="oname">{{ offer.offererName || ('listingDetails.offerHistory.anonymous' | translate) }}</span>
-                      @if (offer.offererVerified) { <span class="chip c-ver">{{ 'listingDetails.offerHistory.verifiedLabel' | translate }}</span> }
-                      @if (isMyOffer(offer)) { <span class="chip c-you">{{ 'listingDetails.offerHistory.yourOffer' | translate }}</span> }
-                      @if (offer.status === 'accepted') { <span class="chip c-acc">{{ 'listingDetails.offerHistory.statusAccepted' | translate }}</span> }
-                      @if (offer.status === 'rejected') { <span class="chip c-dec">{{ 'listingDetails.offerHistory.statusDeclined' | translate }}</span> }
-                      @if (offer.status === 'expired') { <span class="chip c-sub">{{ 'listingDetails.offerHistory.statusExpired' | translate }}</span> }
-                    </div>
-                    @if (offer.message) { <div class="omsg">"{{ offer.message }}"</div> }
-                    @if (isOwnListing && offer.status === 'pending') {
-                      @if (!canSellerAcceptOrDeclineOffers()) {
-                        <p class="offer-note">{{ 'listingDetails.offerHistory.acceptDeclineNote' | translate }}</p>
-                      } @else {
-                        <div class="o-acts">
-                          @if (!sellerStripeReady) {
-                            <p class="stripe-warn">{{ 'listingDetails.offerHistory.stripeWarningPrefix' | translate }} <a routerLink="/dashboard/settings">{{ 'listingDetails.offerHistory.stripeSettingsLink' | translate }}</a>.</p>
-                          }
-                          <button class="btn-acc" (click)="acceptOffer(offer)" [disabled]="offerActionLoadingId !== null || !sellerStripeReady">
-                            {{ offerActionLoadingId === offer._id ? ('listingDetails.offerHistory.accepting' | translate) : ('listingDetails.offerHistory.accept' | translate) }}
-                          </button>
-                          <button class="btn-dec" (click)="rejectOffer(offer)" [disabled]="offerActionLoadingId !== null || !canDeclineOffer(offer)">
-                            {{ offerActionLoadingId === offer._id ? ('listingDetails.offerHistory.declining' | translate) : ('listingDetails.offerHistory.decline' | translate) }}
-                          </button>
-                        </div>
-                      }
-                    }
-                  </div>
-                  <div class="or">
-                    <div class="o-amt">{{ formatPrice(offer.amount) }}</div>
-                    <div class="o-time">{{ relativeTime(offer.createdAt) || formatDate(offer.createdAt) }}</div>
-                  </div>
-                </div>
-              }
-            </div>
-          }
-        }
-      </div>
-    }
-
-  </div><!-- /left -->
 
   <!-- SIDEBAR -->
   <div class="sidebar">
@@ -784,6 +517,275 @@
     }
 
   </div><!-- /sidebar -->
+
+  <!-- DETAILS (tabs + panels) -->
+  <div class="details">
+
+    <!-- TABS -->
+    <div class="tabs" id="listing-tabs">
+      <button class="tab" [class.on]="activeTab === 'description'" (click)="setActiveTab('description')">{{ 'listingDetails.tabs.description' | translate }}</button>
+      @if (isGiveaway) {
+        <button class="tab" [class.on]="activeTab === 'rules'" (click)="setActiveTab('rules')">{{ 'GIVEAWAY.RULES_TAB' | translate }}</button>
+      }
+      @if (listing.auctionFormat === 'highest-bid' && !isGiveaway) {
+        <button class="tab" [class.on]="activeTab === 'bids'" (click)="setActiveTab('bids')">
+          {{ 'listingDetails.info.bids' | translate }} <span class="tab-c">{{ bids.length }}</span>
+        </button>
+      }
+      @if (listing.auctionFormat === 'best-offer' && !isGiveaway) {
+        <button class="tab" [class.on]="activeTab === 'offers'" (click)="setActiveTab('offers')">
+          {{ 'listingDetails.tabs.offers' | translate }} <span class="tab-c">{{ offers.length }}</span>
+        </button>
+      }
+    </div>
+
+    <!-- DESCRIPTION TAB -->
+    @if (activeTab === 'description') {
+      <div class="tab-panel">
+        <div class="desc-p">{{ localizedDescription }}</div>
+
+        @if (listing.itemMode === 'multi_quantity') {
+          <div class="spec-note">{{ listing.quantity }} {{ 'listingDetails.itemMode.identicalUnits' | translate }}</div>
+        }
+        @if (listing.itemMode === 'bundle' && listing.bundleItems?.length) {
+          <div class="spec-note">
+            <strong>{{ 'listingDetails.itemMode.bundleContents' | translate }}:</strong>
+            <ul>
+              @for (item of listing.bundleItems!; track item.title) {
+                <li>{{ item.title }}@if (item.description) { – {{ item.description }} }</li>
+              }
+            </ul>
+          </div>
+        }
+
+        @if (listing.specifications && listing.specifications.length > 0) {
+          <div class="specs">
+            @for (spec of listing.specifications; track spec.key) {
+              <div class="sp"><span class="sp-k">{{ spec.key }}</span><span class="sp-v">{{ spec.value }}</span></div>
+            }
+          </div>
+        }
+
+        <!-- DSA seller info -->
+        @if (listing.seller) {
+          <div class="dsa-block">
+            <span class="dsa-badge" [class.dsa-pro]="listing.seller.sellerClassification === 'professional'">
+              {{ listing.seller.sellerClassification === 'professional' ? ('listingDetails.dsa.professionalSeller' | translate) : ('listingDetails.dsa.privateSeller' | translate) }}
+            </span>
+            @if (listing.seller.sellerClassification === 'professional') {
+              <span class="dsa-badge dsa-status" [ngClass]="'dsa-' + (listing.seller.professionalVerificationStatus || 'none')">
+                {{ listing.seller.professionalVerificationStatus === 'verified' ? ('listingDetails.dsa.status.verified' | translate) : listing.seller.professionalVerificationStatus === 'pending' ? ('listingDetails.dsa.status.pending' | translate) : ('listingDetails.dsa.status.none' | translate) }}
+              </span>
+            }
+            @if (listing.seller.sellerClassification === 'professional' && listing.seller.professionalVerificationStatus === 'verified') {
+              <div class="dsa-trader">
+                @if (listing.seller.professionalLegalName) { <p><span class="dsa-k">{{ 'listingDetails.dsa.legalName' | translate }}</span> {{ listing.seller.professionalLegalName }}</p> }
+                @if (listing.seller.professionalVatId) { <p><span class="dsa-k">{{ 'listingDetails.dsa.vatId' | translate }}</span> {{ listing.seller.professionalVatId }}</p> }
+                @if (sellerVerifiedAddressLines().length) {
+                  <p><span class="dsa-k">{{ 'listingDetails.dsa.address' | translate }}</span>
+                    @for (line of sellerVerifiedAddressLines(); track $index) { {{ line }} }
+                  </p>
+                }
+              </div>
+            }
+          </div>
+        }
+
+        <!--
+          Vehicles: whether the buyer gets the legal consumer warranty depends
+          entirely on who is selling (DL 84/2021), so it is said plainly before
+          anyone bids — together with the fact that BidRoom sets the price but
+          never handles the payment for the car.
+        -->
+        @if (listing.category === 'vehicles' && listing.seller) {
+          <div class="vehicle-notice" [class.vn-pro]="listing.seller.sellerClassification === 'professional'">
+            <p class="vn-title">
+              {{ (listing.seller.sellerClassification === 'professional'
+                  ? 'listingDetails.vehicle.proTitle'
+                  : 'listingDetails.vehicle.privateTitle') | translate }}
+            </p>
+            <p class="vn-text">
+              {{ (listing.seller.sellerClassification === 'professional'
+                  ? 'listingDetails.vehicle.proNotice'
+                  : 'listingDetails.vehicle.privateNotice') | translate }}
+            </p>
+            <p class="vn-text vn-offline">{{ 'listingDetails.vehicle.offlineNotice' | translate }}</p>
+          </div>
+        }
+      </div>
+    }
+
+    <!--
+      GIVEAWAY RULES TAB — the public regulamento for this giveaway. The four
+      facts are repeated here on purpose: they also sit beside the entry button,
+      and nobody should have to find them in only one place.
+    -->
+    @if (activeTab === 'rules' && isGiveaway) {
+      <div class="tab-panel gw-rules">
+        <h2 class="gw-rules-title">{{ 'GIVEAWAY.RULES_TITLE' | translate }}</h2>
+        <p class="gw-rules-intro">{{ 'GIVEAWAY.RULES_INTRO' | translate:{ title: localizedTitle } }}</p>
+
+        <h3>1. {{ 'GIVEAWAY.RULES_PRIZE_H' | translate }}</h3>
+        <p>{{ 'GIVEAWAY.RULES_PRIZE' | translate:{ title: localizedTitle, condition: giveawayConditionLabel() } }}</p>
+        <p>{{ giveawayDeliveryKey() | translate:{ location: listingLocation() || '—' } }}</p>
+
+        <h3>2. {{ 'GIVEAWAY.RULES_WHO_H' | translate }}</h3>
+        <ul>
+          <li>{{ 'GIVEAWAY.FACT_FREE' | translate }}</li>
+          <li>{{ 'GIVEAWAY.FACT_ANYONE' | translate }}</li>
+          <li>{{ 'GIVEAWAY.RULES_WHO_ONE' | translate }}</li>
+          <li>{{ 'GIVEAWAY.RULES_WHO_ORGANISER' | translate }}</li>
+        </ul>
+
+        <h3>3. {{ 'GIVEAWAY.RULES_HOW_H' | translate }}</h3>
+        <p>{{ 'GIVEAWAY.RULES_HOW' | translate:{ endDate: giveawayEndDateLabel() } }}</p>
+
+        <h3>4. {{ 'GIVEAWAY.RULES_DRAW_H' | translate }}</h3>
+        <ul>
+          <li>{{ 'GIVEAWAY.FACT_RANDOM' | translate }}</li>
+          <li>{{ 'GIVEAWAY.RULES_DRAW_METHOD' | translate }}</li>
+          <li>{{ 'GIVEAWAY.RULES_DRAW_AUDIT' | translate }}</li>
+          <li>{{ 'GIVEAWAY.RULES_DRAW_VIDEO' | translate }}</li>
+        </ul>
+
+        <h3>5. {{ 'GIVEAWAY.RULES_ANNOUNCE_H' | translate }}</h3>
+        <ul>
+          <li>{{ 'GIVEAWAY.FACT_ANNOUNCED' | translate }}</li>
+          <li>{{ 'GIVEAWAY.RULES_ANNOUNCE_PUBLIC' | translate }}</li>
+          <li>{{ 'GIVEAWAY.RULES_ANNOUNCE_CONTACT' | translate }}</li>
+        </ul>
+
+        <h3>6. {{ 'GIVEAWAY.RULES_DATA_H' | translate }}</h3>
+        <p>{{ 'GIVEAWAY.RULES_DATA' | translate }}</p>
+        <p>{{ 'GIVEAWAY.RULES_DATA_RETENTION' | translate }}
+          <a routerLink="/landing/privacy-policy">{{ 'GIVEAWAY.RULES_PRIVACY_LINK' | translate }}</a>.
+        </p>
+      </div>
+    }
+
+    <!-- BIDS TAB -->
+    @if (activeTab === 'bids' && listing.auctionFormat === 'highest-bid' && !isGiveaway) {
+      <div class="tab-panel">
+        @if (isOwnListing && isAuctionEnded() && !hasPrivateRoom() && !listing.winner && bids.length > 0 && !isPrivateRoomEnded()) {
+          <div class="info-note">{{ 'listingDetails.ended.selectWinner' | translate }}</div>
+        }
+        @if (bidsLoading) { <p class="tab-loading">{{ 'listingDetails.bidHistory.loading' | translate }}</p> }
+        @if (bidsError && !bidsLoading) {
+          <p class="tab-error">{{ bidsError }}</p>
+          <button class="btn-retry" (click)="loadBids(listing._id)">{{ 'listingDetails.bidHistory.tryAgain' | translate }}</button>
+        }
+        @if (!bidsLoading && !bidsError) {
+          @if (bids.length === 0) {
+            <div class="tab-empty">{{ 'listingDetails.bidsTab.emptyActive' | translate }}</div>
+          } @else {
+            <div class="bids-list">
+              @for (bid of bids; track bid._id; let i = $index) {
+                <div class="bid-row"
+                  [class.bid-top]="i === 0"
+                  [class.bid-new]="newBidIds.has(bid._id)"
+                  [class.bid-ineligible]="isOwnListing && isAuctionEnded() && !hasPrivateRoom() && !listing.winner && !isPrivateRoomEnded() && !canSelectBidAsWinner(bid)">
+                  <div class="bid-av">{{ bid.bidderInitials || '?' }}</div>
+                  <div class="bid-body">
+                    <div class="bid-name-row">
+                      <span class="bid-name">
+                        @if (bid.bidderFirstName && bid.bidderLastName) { {{ bid.bidderFirstName }} {{ bid.bidderLastName }} }
+                        @else { {{ bid.bidderName || ('listingDetails.bidHistory.anonymous' | translate) }} }
+                      </span>
+                      @if (bid.isAuthenticated) {
+                        <span class="trust-badge" [ngClass]="getTrustTierInfo(bid.buyerTrustTier ?? 1).cssClass" [title]="getTrustTierInfo(bid.buyerTrustTier ?? 1).sellerNote">
+                          {{ getTrustTierInfo(bid.buyerTrustTier ?? 1).icon }} {{ getTrustTierInfo(bid.buyerTrustTier ?? 1).labelPt }}
+                        </span>
+                      }
+                      @else { <span class="chip c-sub">{{ 'listingDetails.bidHistory.guestBidder' | translate }}</span> }
+                      @if (isWinnerBid(bid)) { <span class="chip c-win">{{ 'listingDetails.bidsTab.winnerChip' | translate }}</span> }
+                    </div>
+                    <div class="bid-time">{{ relativeTime(bid.createdAt) || formatDate(bid.createdAt) }}</div>
+                    @if (isOwnListing && isAuctionEnded() && !hasPrivateRoom() && !listing.winner && !isPrivateRoomEnded()) {
+                      @if (canSelectBidAsWinner(bid)) {
+                        <button class="btn-acc btn-sm" (click)="selectWinner(bid._id)" [disabled]="selectingWinner">
+                          {{ selectingWinner ? ('listingDetails.bidHistory.selecting' | translate) : ('listingDetails.bidHistory.selectAsWinner' | translate) }}
+                        </button>
+                      } @else {
+                        <span class="ineligible-note">{{ 'listingDetails.bidsTab.notEligible' | translate }}</span>
+                      }
+                    }
+                  </div>
+                  <div class="bid-amt">{{ formatPrice(bid.amount) }}</div>
+                </div>
+              }
+            </div>
+          }
+        }
+      </div>
+    }
+
+    <!-- OFFERS TAB -->
+    @if (activeTab === 'offers' && listing.auctionFormat === 'best-offer') {
+      <div class="tab-panel">
+        @if (offersLoading) { <p class="tab-loading">{{ 'listingDetails.offerHistory.loading' | translate }}</p> }
+        @if (offersError && !offersLoading) {
+          <p class="tab-error">{{ offersError }}</p>
+          <button class="btn-retry" (click)="loadOffers(listing._id)">{{ 'listingDetails.offerHistory.tryAgain' | translate }}</button>
+        }
+        @if (!offersLoading && !offersError) {
+          @if (offers.length === 0) {
+            <div class="tab-empty">
+              {{ 'listingDetails.offerHistory.noOffers' | translate }}.
+              @if (!isOwnListing && isBestOfferActive()) {
+                <button class="btn-link" (click)="openOfferModal()">{{ 'listingDetails.offerHistory.makeOffer' | translate }} →</button>
+              }
+            </div>
+          } @else {
+            <p class="offers-note">{{ offers.length }} {{ offers.length !== 1 ? ('listingDetails.info.offersPlural' | translate) : ('listingDetails.info.offer' | translate) }}</p>
+            <div class="offers-list">
+              @for (offer of sortedOffers; track offer._id) {
+                <div class="offer-item"
+                  [class.accepted]="offer.status === 'accepted'"
+                  [class.declined]="offer.status === 'rejected'">
+                  <div class="av">{{ offer.offererInitials || 'A' }}</div>
+                  <div class="om">
+                    <div class="on-row">
+                      <span class="oname">{{ offer.offererName || ('listingDetails.offerHistory.anonymous' | translate) }}</span>
+                      @if (offer.offererVerified) { <span class="chip c-ver">{{ 'listingDetails.offerHistory.verifiedLabel' | translate }}</span> }
+                      @if (isMyOffer(offer)) { <span class="chip c-you">{{ 'listingDetails.offerHistory.yourOffer' | translate }}</span> }
+                      @if (offer.status === 'accepted') { <span class="chip c-acc">{{ 'listingDetails.offerHistory.statusAccepted' | translate }}</span> }
+                      @if (offer.status === 'rejected') { <span class="chip c-dec">{{ 'listingDetails.offerHistory.statusDeclined' | translate }}</span> }
+                      @if (offer.status === 'expired') { <span class="chip c-sub">{{ 'listingDetails.offerHistory.statusExpired' | translate }}</span> }
+                    </div>
+                    @if (offer.message) { <div class="omsg">"{{ offer.message }}"</div> }
+                    @if (isOwnListing && offer.status === 'pending') {
+                      @if (!canSellerAcceptOrDeclineOffers()) {
+                        <p class="offer-note">{{ 'listingDetails.offerHistory.acceptDeclineNote' | translate }}</p>
+                      } @else {
+                        <div class="o-acts">
+                          @if (!sellerStripeReady) {
+                            <p class="stripe-warn">{{ 'listingDetails.offerHistory.stripeWarningPrefix' | translate }} <a routerLink="/dashboard/settings">{{ 'listingDetails.offerHistory.stripeSettingsLink' | translate }}</a>.</p>
+                          }
+                          <button class="btn-acc" (click)="acceptOffer(offer)" [disabled]="offerActionLoadingId !== null || !sellerStripeReady">
+                            {{ offerActionLoadingId === offer._id ? ('listingDetails.offerHistory.accepting' | translate) : ('listingDetails.offerHistory.accept' | translate) }}
+                          </button>
+                          <button class="btn-dec" (click)="rejectOffer(offer)" [disabled]="offerActionLoadingId !== null || !canDeclineOffer(offer)">
+                            {{ offerActionLoadingId === offer._id ? ('listingDetails.offerHistory.declining' | translate) : ('listingDetails.offerHistory.decline' | translate) }}
+                          </button>
+                        </div>
+                      }
+                    }
+                  </div>
+                  <div class="or">
+                    <div class="o-amt">{{ formatPrice(offer.amount) }}</div>
+                    <div class="o-time">{{ relativeTime(offer.createdAt) || formatDate(offer.createdAt) }}</div>
+                  </div>
+                </div>
+              }
+            </div>
+          }
+        }
+      </div>
+    }
+
+  </div><!-- /details -->
+
+
 
 </div><!-- /page -->
 }<!-- /listing loaded -->

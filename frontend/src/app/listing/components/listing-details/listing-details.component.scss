@@ -180,6 +180,10 @@ nav {
 .page {
   display: grid;
   grid-template-columns: 1fr 340px;
+  grid-template-areas:
+    "gallery sidebar"
+    "info sidebar"
+    "details sidebar";
   max-width: 1160px;
   margin: 0 auto;
   padding: 0 24px 100px;
@@ -187,10 +191,18 @@ nav {
   align-items: start;
 }
 
-/* ── LEFT ───────────────────────────────────── */
-.left {
+.gallery {
+  grid-area: gallery;
   padding-right: 48px;
   padding-top: 36px;
+}
+.info {
+  grid-area: info;
+  padding-right: 48px;
+}
+.details {
+  grid-area: details;
+  padding-right: 48px;
 }
 
 /* ── GALLERY ────────────────────────────────── */
@@ -821,9 +833,11 @@ nav {
 
 /* ── SIDEBAR ────────────────────────────────── */
 .sidebar {
+  grid-area: sidebar;
   padding-top: 36px;
   position: sticky;
   top: 68px;
+  align-self: start;
 }
 
 /* price */
@@ -2035,14 +2049,25 @@ nav {
   .bc { padding: 10px 16px; }
   .page {
     grid-template-columns: 1fr;
+    grid-template-areas:
+      "gallery"
+      "info"
+      "sidebar"
+      "details";
     padding: 0 16px 80px;
   }
-  .left { padding-right: 0; }
+  .gallery,
+  .info,
+  .details {
+    padding-right: 0;
+  }
+  .gallery { padding-top: 24px; }
   .sidebar {
     position: static;
     top: auto;
     padding-top: 0;
-    margin-top: 32px;
+    margin-top: 20px;
+    margin-bottom: 8px;
   }
   .specs { grid-template-columns: 1fr; }
   .sheet { max-width: 100%; }
