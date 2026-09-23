@@ -14,7 +14,8 @@ import {
   DraftReminderRow,
   CustomerSearchResult,
   EmailCampaignRow,
-  CampaignDelivery
+  CampaignDelivery,
+  FeaturedAuctionsPreview
 } from '../../services/admin-emails.service';
 import { AdminSidebarComponent } from '../sidebar/admin-sidebar.component';
 
@@ -60,6 +61,16 @@ export class AdminEmailsComponent implements OnInit {
   loadingPreset = false;
   presetMessage: string | null = null;
   presetError: string | null = null;
+
+  /**
+   * The automatic auctions block. The composer only ever carries the
+   * placeholder: the backend swaps it for six open auctions at send time, so a
+   * campaign written today still goes out with auctions that are open then.
+   */
+  readonly AUCTIONS_PLACEHOLDER = '{{AUCTIONS}}';
+  featuredPreview: FeaturedAuctionsPreview | null = null;
+  loadingFeatured = false;
+  featuredError: string | null = null;
 
   sendingCampaign = false;
   campaignResult: SendResult | null = null;
@@ -186,13 +197,32 @@ export class AdminEmailsComponent implements OnInit {
   }
 
   /** Loads PT/EN/ES/FR subject+HTML; send still picks each recipient's language. */
-  async loadNewsletterPreset(): Promise<void> {
+  loadNewsletterPreset(): Promise<void> {
+    return this.loadPreset(
+      '2026-09-novos-leiloes.campaign.json',
+      'Template «Novos leilões Set 2026» carregado nos 4 idiomas. Cada destinatário recebe a versão do seu idioma.'
+    );
+  }
+
+  /**
+   * The self-filling edition: same shell, `{{AUCTIONS}}` instead of six
+   * hand-pasted cards. Nothing to update between sends.
+   */
+  async loadAutoNewsletterPreset(): Promise<void> {
+    await this.loadPreset(
+      'auto-leiloes.campaign.json',
+      'Template automático carregado nos 4 idiomas. Os 6 leilões são escolhidos no momento do envio.'
+    );
+    if (!this.presetError) this.loadFeaturedAuctions();
+  }
+
+  private async loadPreset(file: string, successMessage: string): Promise<void> {
     if (this.loadingPreset) return;
     this.loadingPreset = true;
     this.presetMessage = null;
     this.presetError = null;
     try {
-      const res = await fetch('/newsletters/2026-09-novos-leiloes.campaign.json');
+      const res = await fetch(`/newsletters/${file}`);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json() as CampaignContent;
       for (const lang of this.LANGUAGES) {
@@ -206,12 +236,75 @@ export class AdminEmailsComponent implements OnInit {
         };
       }
       this.activeLanguage = 'pt';
-      this.presetMessage = 'Template «Novos leilões Set 2026» carregado nos 4 idiomas. Cada destinatário recebe a versão do seu idioma.';
+      this.presetMessage = successMessage;
     } catch {
       this.presetError = 'Não foi possível carregar o template da newsletter.';
     } finally {
       this.loadingPreset = false;
     }
+  }
+
+  // ---- Automatic auctions block ----
+
+  private hasPlaceholder(html: string): boolean {
+    return /\{\{\s*(?:AUCTIONS|LEILOES|LEILÕES)\s*\}\}/i.test(html || '');
+  }
+
+  get activeHasAuctionsBlock(): boolean {
+    return this.hasPlaceholder(this.content[this.activeLanguage].html);
+  }
+
+  /** Languages whose body would go out without the block, once any body has it. */
+  get languagesMissingAuctionsBlock(): CampaignLanguage[] {
+    const codes = this.LANGUAGES.map(l => l.code);
+    if (!codes.some(code => this.hasPlaceholder(this.content[code].html))) return [];
+    return codes.filter(code => !this.hasPlaceholder(this.content[code].html));
+  }
+
+  /**
+   * Drops the placeholder where the cursor is, so it lands inside the body of
+   * the email rather than after `</html>`.
+   */
+  insertAuctionsPlaceholder(): void {
+    const el = document.getElementById('campaign-html') as HTMLTextAreaElement | null;
+    const html = this.content[this.activeLanguage].html;
+    const at = el ? el.selectionStart ?? html.length : html.length;
+    const token = `\n${this.AUCTIONS_PLACEHOLDER}\n`;
+
+    this.content[this.activeLanguage].html = html.slice(0, at) + token + html.slice(at);
+
+    if (el) {
+      const caret = at + token.length;
+      setTimeout(() => { el.focus(); el.setSelectionRange(caret, caret); });
+    }
+    if (!this.featuredPreview) this.loadFeaturedAuctions();
+  }
+
+  loadFeaturedAuctions(): void {
+    if (this.loadingFeatured) return;
+    this.loadingFeatured = true;
+    this.featuredError = null;
+    this.adminEmailsService.getFeaturedAuctions().subscribe({
+      next: (res) => {
+        this.featuredPreview = res;
+        this.loadingFeatured = false;
+        if (res.count === 0) {
+          this.featuredError = 'Não há leilões a decorrer que cumpram os critérios — o bloco sairia vazio.';
+        }
+      },
+      error: (err) => {
+        this.loadingFeatured = false;
+        this.featuredError = err?.error?.error || 'Falha ao obter os leilões em destaque.';
+      }
+    });
+  }
+
+  /** The preview pane resolves the placeholder so an admin sees the real email. */
+  get previewHtml(): string {
+    const html = this.content[this.activeLanguage].html;
+    const block = this.featuredPreview?.blocks?.[this.activeLanguage];
+    if (!block || !this.hasPlaceholder(html)) return html;
+    return html.replace(/\{\{\s*(?:AUCTIONS|LEILOES|LEILÕES)\s*\}\}/gi, block);
   }
 
   loadAudienceCount(): void {

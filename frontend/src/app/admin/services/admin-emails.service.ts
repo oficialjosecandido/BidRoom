@@ -41,6 +41,27 @@ export interface SendResult {
   sent: number;
   failed: number;
   campaignId?: string;
+  /** How many auctions the `{{AUCTIONS}}` block ended up showing. */
+  featuredAuctions?: number;
+}
+
+/** One auction the automatic block would feature right now. */
+export interface FeaturedAuction {
+  id: string;
+  slug: string;
+  category: string;
+  title: string;
+  price: number;
+  bidCount: number;
+  endDate: string;
+}
+
+export interface FeaturedAuctionsPreview {
+  placeholder: string;
+  count: number;
+  requested: number;
+  listings: FeaturedAuction[];
+  blocks: Record<CampaignLanguage, string>;
 }
 
 export type CampaignKind = 'newsletter' | 'personalized' | 'draft-reminder';
@@ -147,6 +168,13 @@ export class AdminEmailsService {
 
   sendCampaign(content: CampaignContent, audience: EmailAudience): Observable<SendResult> {
     return this.http.post<SendResult>(`${this.apiUrl}/send`, { content, audience });
+  }
+
+  /** What `{{AUCTIONS}}` would render right now — the send re-picks at send time. */
+  getFeaturedAuctions(limit?: number): Observable<FeaturedAuctionsPreview> {
+    let params = new HttpParams();
+    if (limit) params = params.set('limit', String(limit));
+    return this.http.get<FeaturedAuctionsPreview>(`${this.apiUrl}/featured-auctions`, { params });
   }
 
   // Personalized: draft reminders

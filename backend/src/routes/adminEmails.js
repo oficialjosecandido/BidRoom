@@ -12,6 +12,15 @@ const { sendEmail } = require('../services/emailService');
 const { renderEmailTemplate } = require('../services/templateEngine');
 const { appendPreferencesFooter } = require('../services/emailPreferencesService');
 const { newTrackingToken, injectTrackingPixel } = require('../services/emailTrackingService');
+const {
+  pickFeaturedAuctions,
+  renderAuctionsBlock,
+  expandAuctionPlaceholders,
+  expandCampaignContent,
+  hasAuctionPlaceholder,
+  AUCTIONS_PLACEHOLDER,
+  DEFAULT_AUCTION_COUNT
+} = require('../services/newsletterService');
 const { publicBaseUrl } = require('../utils/publicUrls');
 const logger = require('../utils/logger');
 
@@ -482,6 +491,46 @@ router.get('/audience-count', authenticateToken, requireAdmin, async (req, res) 
   }
 });
 
+/**
+ * What `{{AUCTIONS}}` would render right now, in every language.
+ *
+ * The composer uses this to preview the block before sending. The actual send
+ * re-picks the auctions, so what an admin sees here is representative, not a
+ * commitment — an auction that ends in between is simply replaced.
+ */
+router.get('/featured-auctions', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const requested = parseInt(req.query.limit, 10);
+    const limit = Number.isFinite(requested) ? Math.min(Math.max(requested, 1), 12) : DEFAULT_AUCTION_COUNT;
+    const now = new Date();
+    const listings = await pickFeaturedAuctions({ limit, now });
+
+    const blocks = {};
+    for (const language of CAMPAIGN_LANGUAGES) {
+      blocks[language] = renderAuctionsBlock(listings, language, { now });
+    }
+
+    res.json({
+      placeholder: AUCTIONS_PLACEHOLDER,
+      count: listings.length,
+      requested: limit,
+      listings: listings.map(l => ({
+        id: l._id,
+        slug: l.slug,
+        category: l.category,
+        title: l.titlePt || l.titleEn || l.title || '',
+        price: l.currentPrice || l.startingPrice || 0,
+        bidCount: l.bidCount || 0,
+        endDate: l.endDate
+      })),
+      blocks
+    });
+  } catch (err) {
+    logger.error('GET /api/admin/emails/featured-auctions error:', err);
+    res.status(500).json({ error: 'Failed to pick featured auctions.' });
+  }
+});
+
 router.post('/test', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const subject = String(req.body?.subject || '').trim();
@@ -507,7 +556,11 @@ router.post('/test', authenticateToken, requireAdmin, async (req, res) => {
       }
     }
 
-    const htmlWithFooter = await appendPreferencesFooter(html, {
+    // A test must show the real thing, placeholder included.
+    const featured = hasAuctionPlaceholder(html) ? await pickFeaturedAuctions() : [];
+    const expandedHtml = expandAuctionPlaceholders(html, footerLanguage, featured);
+
+    const htmlWithFooter = await appendPreferencesFooter(expandedHtml, {
       type: footerType,
       id: footerId,
       language: footerLanguage
@@ -516,7 +569,8 @@ router.post('/test', authenticateToken, requireAdmin, async (req, res) => {
     res.json({
       ok: true,
       to: TEST_EMAIL_RECIPIENT,
-      preferencesLink: !!footerId
+      preferencesLink: !!footerId,
+      featuredAuctions: expandedHtml === html ? null : featured.length
     });
   } catch (err) {
     logger.error('POST /api/admin/emails/test error:', err);
@@ -539,19 +593,27 @@ router.post('/send', authenticateToken, requireAdmin, async (req, res) => {
     if (!recipients) return res.status(400).json({ error: 'Invalid audience.' });
     if (recipients.length === 0) return res.status(400).json({ error: 'No recipients for this audience.' });
 
-    const { deliveries, ...result } = await sendInBatches(recipients, content);
+    // `{{AUCTIONS}}` is expanded here rather than in the composer so a campaign
+    // written days earlier still goes out with auctions that are open today.
+    const { content: finalContent, listings: featured } = await expandCampaignContent(content);
+
+    const { deliveries, ...result } = await sendInBatches(recipients, finalContent);
 
     const campaign = await recordCampaign({
       kind: 'newsletter',
       audience,
-      subject: content.pt?.subject || content.en?.subject || '(sem assunto)',
-      content,
+      subject: finalContent.pt?.subject || finalContent.en?.subject || '(sem assunto)',
+      // The expanded HTML, so the archive shows what recipients actually got.
+      content: finalContent,
       deliveries,
       admin: req.user
     });
 
-    logger.info(`[AdminEmails] Campaign sent by ${req.user?.email}: ${result.sent}/${result.total} ok (audience=${audience})`);
-    res.json({ ...result, campaignId: campaign._id });
+    logger.info(
+      `[AdminEmails] Campaign sent by ${req.user?.email}: ${result.sent}/${result.total} ok ` +
+      `(audience=${audience}, featuredAuctions=${featured.length})`
+    );
+    res.json({ ...result, campaignId: campaign._id, featuredAuctions: featured.length });
   } catch (err) {
     logger.error('POST /api/admin/emails/send error:', err);
     res.status(500).json({ error: 'Failed to send campaign.' });

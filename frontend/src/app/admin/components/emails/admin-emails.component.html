@@ -62,11 +62,54 @@
               }
             </div>
             <p class="hint-text">É preciso preencher os 4 idiomas antes de poder enviar a campanha — cada destinatário recebe a versão no seu idioma (campo Idioma na lista de contactos).</p>
-            <button type="button" class="btn btn-secondary preset-btn" [disabled]="loadingPreset" (click)="loadNewsletterPreset()">
-              {{ loadingPreset ? 'A carregar…' : 'Carregar template: Novos leilões Set 2026 (PT/EN/ES/FR)' }}
-            </button>
+            <div class="auctions-actions">
+              <button type="button" class="btn btn-primary" [disabled]="loadingPreset" (click)="loadAutoNewsletterPreset()">
+                {{ loadingPreset ? 'A carregar…' : 'Carregar template automático (6 leilões a decorrer)' }}
+              </button>
+              <button type="button" class="btn btn-secondary" [disabled]="loadingPreset" (click)="loadNewsletterPreset()">
+                {{ loadingPreset ? 'A carregar…' : 'Template fixo: Novos leilões Set 2026' }}
+              </button>
+            </div>
             @if (presetMessage) { <p class="result-message success">{{ presetMessage }}</p> }
             @if (presetError) { <p class="result-message error">{{ presetError }}</p> }
+          </div>
+
+          <div class="form-group auctions-block">
+            <label>Bloco automático de leilões</label>
+            <p class="hint-text">
+              Insere <code>{{ AUCTIONS_PLACEHOLDER }}</code> no HTML e o servidor substitui-o por 6 leilões a decorrer —
+              um por categoria, no idioma de cada destinatário. A escolha é feita <strong>no momento do envio</strong>,
+              por isso nunca sai um leilão já terminado nem um que ainda não abriu.
+            </p>
+            <div class="auctions-actions">
+              <button type="button" class="btn btn-secondary" (click)="insertAuctionsPlaceholder()">
+                Inserir {{ AUCTIONS_PLACEHOLDER }} ({{ activeLanguage.toUpperCase() }})
+              </button>
+              <button type="button" class="btn btn-secondary" [disabled]="loadingFeatured" (click)="loadFeaturedAuctions()">
+                {{ loadingFeatured ? 'A obter…' : 'Pré-visualizar leilões' }}
+              </button>
+            </div>
+
+            @if (languagesMissingAuctionsBlock.length > 0) {
+              <p class="result-message error">
+                Falta o {{ AUCTIONS_PLACEHOLDER }} em:
+                @for (code of languagesMissingAuctionsBlock; track code) { <strong>{{ code.toUpperCase() }}</strong> }
+                — esses destinatários recebem o email sem os leilões.
+              </p>
+            }
+            @if (featuredError) { <p class="result-message error">{{ featuredError }}</p> }
+            @if (featuredPreview && featuredPreview.count > 0) {
+              <p class="result-message success">{{ featuredPreview.count }} leilão(ões) seleccionado(s) agora:</p>
+              <ul class="featured-list">
+                @for (item of featuredPreview.listings; track item.id) {
+                  <li>
+                    <span class="featured-cat">{{ item.category }}</span>
+                    <span class="featured-title">{{ item.title }}</span>
+                    <span class="featured-meta">{{ item.price | currency:'EUR':'symbol':'1.0-0' }} · {{ item.bidCount }} licitação(ões)</span>
+                  </li>
+                }
+              </ul>
+            }
           </div>
 
           <div class="form-group">
@@ -81,7 +124,7 @@
             </div>
             <div class="form-group">
               <label>Pré-visualização</label>
-              <iframe class="preview-frame" [srcdoc]="content[activeLanguage].html" title="Pré-visualização do email" sandbox=""></iframe>
+              <iframe class="preview-frame" [srcdoc]="previewHtml" title="Pré-visualização do email" sandbox=""></iframe>
             </div>
           </div>
 
