@@ -14,36 +14,40 @@ const LANGUAGE_LABELS: Record<Language, string> = {
   es: 'Español'
 };
 
+const LANGUAGE_FLAGS: Record<Language, string> = {
+  pt: 'PT',
+  en: 'EN',
+  fr: 'FR',
+  es: 'ES'
+};
+
 @Component({
   selector: 'app-email-preferences',
   standalone: true,
   imports: [CommonModule, FormsModule, RouterModule],
   template: `
     <div class="prefs-page">
+      <div class="prefs-glow" aria-hidden="true"></div>
       <div class="prefs-shell">
         <a routerLink="/" class="prefs-brand" aria-label="BidRoom">
           <span class="prefs-wordmark">BidRoom</span><span class="prefs-pt">.pt</span>
         </a>
 
-        <div class="prefs-card">
+        <div class="prefs-card" [class.prefs-card--manage]="!loading && !needsEmail && !invalid">
           @if (loading) {
-            <div class="prefs-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                <circle cx="12" cy="12" r="9" opacity="0.25"/>
+            <div class="prefs-icon prefs-icon--spin" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+                <circle cx="12" cy="12" r="9" opacity="0.2"/>
                 <path d="M12 3a9 9 0 0 1 9 9" stroke-linecap="round"/>
               </svg>
             </div>
-            <h1>A carregar…</h1>
-            <p class="intro">A preparar as suas preferências.</p>
+            <p class="eyebrow">BidRoom</p>
+            <h1>A carregar</h1>
+            <p class="intro">A preparar as suas preferências de email.</p>
           } @else if (needsEmail) {
-            <div class="prefs-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                <rect x="3" y="5" width="18" height="14" rx="2"/>
-                <path d="M3 7l9 7 9-7"/>
-              </svg>
-            </div>
+            <p class="eyebrow">Gestão de emails</p>
             <h1>Preferências de email</h1>
-            <p class="intro">Confirme o seu email para gerir a newsletter, o idioma ou cancelar a subscrição.</p>
+            <p class="intro">Introduza o email da sua conta para gerir a newsletter, o idioma ou a subscrição.</p>
 
             <form class="email-form" (ngSubmit)="lookupByEmail()">
               <div class="field">
@@ -59,7 +63,7 @@ const LANGUAGE_LABELS: Record<Language, string> = {
                   required />
               </div>
               <div class="field">
-                <label for="prefs-email-confirm">Repetir email</label>
+                <label for="prefs-email-confirm">Confirmar email</label>
                 <input
                   id="prefs-email-confirm"
                   type="email"
@@ -67,11 +71,11 @@ const LANGUAGE_LABELS: Record<Language, string> = {
                   [(ngModel)]="emailConfirmInput"
                   name="emailConfirm"
                   autocomplete="email"
-                  placeholder="Confirme o mesmo email"
+                  placeholder="Repita o mesmo email"
                   required />
               </div>
               @if (lookupError) {
-                <p class="save-message error" role="alert">{{ lookupError }}</p>
+                <p class="banner banner--error" role="alert">{{ lookupError }}</p>
               }
               <button
                 type="submit"
@@ -80,31 +84,34 @@ const LANGUAGE_LABELS: Record<Language, string> = {
                 {{ lookingUp ? 'A verificar…' : 'Continuar' }}
               </button>
             </form>
+            <p class="secure-note">Usamos o email só para confirmar a sua identidade — não enviamos spam.</p>
           } @else if (invalid) {
             <div class="prefs-icon prefs-icon--warn" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
                 <circle cx="12" cy="12" r="9"/>
                 <path d="M12 8v5" stroke-linecap="round"/>
-                <circle cx="12" cy="16" r="0.8" fill="currentColor"/>
+                <circle cx="12" cy="16" r="0.9" fill="currentColor" stroke="none"/>
               </svg>
             </div>
+            <p class="eyebrow eyebrow--warn">Atenção</p>
             <h1>Link inválido</h1>
             <p class="intro">{{ errorMessage }}</p>
             <button type="button" class="btn btn-primary" (click)="showEmailForm()">Usar o meu email</button>
             <a routerLink="/" class="home-link">Voltar à BidRoom</a>
           } @else {
-            <div class="prefs-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                <rect x="3" y="5" width="18" height="14" rx="2"/>
-                <path d="M3 7l9 7 9-7"/>
-              </svg>
-            </div>
+            <p class="eyebrow">A sua conta</p>
             <h1>Preferências de email</h1>
-            <p class="email-line">{{ email }}</p>
+            <div class="account-pill">
+              <span class="account-dot" aria-hidden="true"></span>
+              <span>{{ email }}</span>
+            </div>
 
-            <div class="section">
-              <label id="lang-label">Idioma preferido</label>
-              <div class="lang-options" role="group" aria-labelledby="lang-label">
+            <section class="panel">
+              <header class="panel-head">
+                <h2>Idioma dos emails</h2>
+                <p>Os emails BidRoom chegam neste idioma.</p>
+              </header>
+              <div class="lang-options" role="group" aria-label="Idioma preferido">
                 @for (lang of languages; track lang) {
                   <button
                     type="button"
@@ -112,37 +119,49 @@ const LANGUAGE_LABELS: Record<Language, string> = {
                     [class.active]="language === lang"
                     [disabled]="saving"
                     (click)="saveLanguage(lang)">
-                    {{ languageLabels[lang] }}
+                    <span class="lang-code">{{ languageFlags[lang] }}</span>
+                    <span class="lang-name">{{ languageLabels[lang] }}</span>
                   </button>
                 }
               </div>
-            </div>
+            </section>
 
-            <div class="section">
-              <label>Subscrição</label>
+            <section class="panel">
+              <header class="panel-head">
+                <h2>Newsletter</h2>
+                <p>Novos leilões, passatempos e novidades BidRoom.</p>
+              </header>
               @if (unsubscribed) {
-                <div class="status-card status-card--off">
-                  <p class="status-text">Cancelou a subscrição dos emails BidRoom.</p>
+                <div class="status status--off">
+                  <div class="status-copy">
+                    <strong>Subscrição cancelada</strong>
+                    <span>Já não recebe emails de marketing da BidRoom.</span>
+                  </div>
                   <button type="button" class="btn btn-secondary" [disabled]="saving" (click)="resubscribe()">
                     Voltar a subscrever
                   </button>
                 </div>
               } @else {
-                <div class="status-card status-card--on">
-                  <p class="status-text">Está subscrito aos emails BidRoom.</p>
-                  <button type="button" class="btn btn-danger" [disabled]="saving" (click)="unsubscribe()">
+                <div class="status status--on">
+                  <div class="status-copy">
+                    <strong>Subscrito</strong>
+                    <span>Recebe a newsletter BidRoom neste email.</span>
+                  </div>
+                  <button type="button" class="btn btn-ghost" [disabled]="saving" (click)="unsubscribe()">
                     Cancelar subscrição
                   </button>
                 </div>
               }
-            </div>
+            </section>
 
             @if (saveMessage) {
-              <p class="save-message success" role="status">{{ saveMessage }}</p>
+              <p class="banner banner--ok" role="status">{{ saveMessage }}</p>
             }
             @if (saveError) {
-              <p class="save-message error" role="alert">{{ saveError }}</p>
+              <p class="banner banner--error" role="alert">{{ saveError }}</p>
             }
+
+            <a routerLink="/" class="home-link">Ir para a BidRoom</a>
           }
         </div>
 
@@ -156,74 +175,104 @@ const LANGUAGE_LABELS: Record<Language, string> = {
     :host {
       display: block;
       --ep-gold: #C9A84C;
+      --ep-gold-soft: #d4b45a;
       --ep-gold-dark: #a8872e;
-      --ep-ink: #0f172a;
-      --ep-text: #334155;
-      --ep-muted: #64748b;
+      --ep-ink: #111111;
+      --ep-text: #3a3a3a;
+      --ep-muted: #6b6b6b;
+      --ep-cream: #faf6eb;
       --ep-line: #e8d9a8;
       --ep-card: #ffffff;
+      --ep-border: rgba(17, 17, 17, 0.1);
+      font-family: 'DM Sans', system-ui, sans-serif;
     }
 
     .prefs-page {
+      position: relative;
+      isolation: isolate;
       min-height: 100vh;
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 32px 20px;
-      background:
-        radial-gradient(ellipse 80% 50% at 50% -10%, rgba(201, 168, 76, 0.18), transparent 55%),
-        radial-gradient(ellipse 60% 40% at 100% 100%, rgba(201, 168, 76, 0.08), transparent 50%),
-        #111111;
+      padding: 40px 20px;
+      overflow: hidden;
+      background: #0c0c0c;
       color-scheme: light;
     }
 
+    .prefs-glow {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(ellipse 70% 45% at 50% -5%, rgba(201, 168, 76, 0.22), transparent 60%),
+        radial-gradient(ellipse 50% 35% at 85% 90%, rgba(201, 168, 76, 0.1), transparent 55%),
+        radial-gradient(ellipse 40% 30% at 10% 80%, rgba(240, 237, 232, 0.04), transparent 50%);
+    }
+
     .prefs-shell {
+      position: relative;
       width: 100%;
-      max-width: 440px;
+      max-width: 460px;
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 20px;
+      gap: 22px;
     }
 
     .prefs-brand {
       display: inline-flex;
       align-items: baseline;
-      gap: 1px;
       text-decoration: none;
-      padding: 4px 0;
+      letter-spacing: -0.03em;
     }
 
     .prefs-wordmark {
       color: var(--ep-gold);
-      font-size: 1.35rem;
+      font-size: 1.55rem;
       font-weight: 700;
-      letter-spacing: -0.02em;
     }
 
     .prefs-pt {
-      color: rgba(240, 237, 232, 0.55);
-      font-size: 0.95rem;
+      color: rgba(240, 237, 232, 0.5);
+      font-size: 1.05rem;
       font-weight: 600;
     }
 
     .prefs-card {
-      background: var(--ep-card);
-      border-radius: 16px;
-      padding: 36px 32px 32px;
       width: 100%;
-      text-align: center;
-      box-shadow: 0 8px 40px rgba(0, 0, 0, 0.35);
-      border-top: 3px solid var(--ep-gold);
       box-sizing: border-box;
+      background: var(--ep-card);
+      border-radius: 20px;
+      padding: 36px 32px 28px;
+      text-align: center;
+      box-shadow:
+        0 0 0 1px rgba(201, 168, 76, 0.12),
+        0 24px 60px rgba(0, 0, 0, 0.45);
+      position: relative;
+      overflow: hidden;
+
+      &::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, transparent, var(--ep-gold), transparent);
+      }
+    }
+
+    .prefs-card--manage {
+      text-align: left;
     }
 
     .prefs-icon {
-      width: 48px;
-      height: 48px;
-      margin: 0 auto 16px;
+      width: 52px;
+      height: 52px;
+      margin: 0 auto 18px;
       border-radius: 50%;
-      background: #faf6eb;
+      background: var(--ep-cream);
       border: 1px solid var(--ep-line);
       display: flex;
       align-items: center;
@@ -237,91 +286,139 @@ const LANGUAGE_LABELS: Record<Language, string> = {
         border-color: #fed7aa;
         color: #c2410c;
       }
+
+      &--spin svg {
+        animation: prefs-spin 0.9s linear infinite;
+      }
+    }
+
+    @keyframes prefs-spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .eyebrow {
+      margin: 0 0 8px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--ep-gold-dark);
+
+      &--warn { color: #c2410c; }
     }
 
     h1 {
-      font-size: 1.35rem;
+      font-size: clamp(1.45rem, 4vw, 1.7rem);
       font-weight: 700;
-      margin: 0 0 8px;
+      margin: 0 0 10px;
       color: var(--ep-ink);
-      letter-spacing: -0.02em;
-      line-height: 1.25;
+      letter-spacing: -0.03em;
+      line-height: 1.2;
     }
 
     .intro {
       color: var(--ep-muted);
-      font-size: 0.9rem;
-      margin: 0 0 24px;
-      line-height: 1.55;
+      font-size: 0.95rem;
+      margin: 0 0 28px;
+      line-height: 1.6;
     }
 
-    .email-line {
-      display: inline-block;
-      margin: 0 0 8px;
-      padding: 6px 12px;
+    .account-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin: 0 0 28px;
+      padding: 8px 14px;
       border-radius: 999px;
-      background: #faf6eb;
+      background: var(--ep-cream);
       border: 1px solid var(--ep-line);
-      color: var(--ep-text);
-      font-size: 0.85rem;
+      color: var(--ep-ink);
+      font-size: 0.88rem;
       font-weight: 600;
       word-break: break-all;
+    }
+
+    .account-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--ep-gold);
+      flex-shrink: 0;
     }
 
     .email-form {
       text-align: left;
       display: flex;
       flex-direction: column;
-      gap: 14px;
+      gap: 16px;
     }
 
     .field label {
       display: block;
-      font-size: 0.8rem;
+      font-size: 0.78rem;
       font-weight: 700;
-      color: var(--ep-text);
-      margin-bottom: 6px;
-      letter-spacing: 0.01em;
+      color: var(--ep-ink);
+      margin-bottom: 7px;
+      letter-spacing: 0.02em;
     }
 
     .input {
       width: 100%;
       box-sizing: border-box;
-      padding: 12px 14px;
-      border: 1px solid #e2e8f0;
-      border-radius: 10px;
+      padding: 13px 14px;
+      border: 1px solid var(--ep-border);
+      border-radius: 12px;
       font-size: 0.95rem;
       font-family: inherit;
       color: var(--ep-ink) !important;
-      background: #ffffff !important;
+      background: #fff !important;
       color-scheme: light;
       transition: border-color 0.15s ease, box-shadow 0.15s ease;
 
-      &::placeholder { color: #94a3b8; }
-
-      &:hover { border-color: #cbd5e1; }
-
+      &::placeholder { color: #9a9a9a; }
+      &:hover { border-color: rgba(17, 17, 17, 0.22); }
       &:focus {
         outline: none;
         border-color: var(--ep-gold);
-        box-shadow: 0 0 0 3px rgba(201, 168, 76, 0.2);
+        box-shadow: 0 0 0 3px rgba(201, 168, 76, 0.22);
       }
     }
 
-    .section {
-      text-align: left;
-      margin-top: 22px;
-      padding-top: 22px;
-      border-top: 1px solid #f1f5f9;
+    .secure-note {
+      margin: 18px 0 0;
+      font-size: 0.78rem;
+      line-height: 1.45;
+      color: var(--ep-muted);
+    }
 
-      > label {
-        display: block;
-        font-size: 0.75rem;
+    .panel {
+      margin-top: 8px;
+      padding: 18px;
+      border-radius: 14px;
+      border: 1px solid var(--ep-border);
+      background: #fafafa;
+    }
+
+    .panel + .panel {
+      margin-top: 14px;
+    }
+
+    .panel-head {
+      margin-bottom: 14px;
+
+      h2 {
+        margin: 0 0 4px;
+        font-size: 0.95rem;
         font-weight: 700;
+        color: var(--ep-ink);
+        letter-spacing: -0.01em;
+      }
+
+      p {
+        margin: 0;
+        font-size: 0.8rem;
         color: var(--ep-muted);
-        text-transform: uppercase;
-        letter-spacing: 0.06em;
-        margin-bottom: 12px;
+        line-height: 1.45;
       }
     }
 
@@ -332,103 +429,144 @@ const LANGUAGE_LABELS: Record<Language, string> = {
     }
 
     .lang-btn {
-      padding: 10px 12px;
-      border: 1px solid #e2e8f0;
-      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 11px 12px;
+      border: 1px solid var(--ep-border);
+      border-radius: 12px;
       background: #fff;
       color: var(--ep-text);
-      font-size: 0.85rem;
-      font-weight: 600;
       cursor: pointer;
       font-family: inherit;
-      transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+      text-align: left;
+      transition: border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
 
       &:hover:not(:disabled):not(.active) {
         border-color: var(--ep-gold);
-        color: var(--ep-ink);
       }
 
       &.active {
-        background: #111111;
-        border-color: #111111;
-        color: var(--ep-gold);
+        background: var(--ep-ink);
+        border-color: var(--ep-ink);
+        box-shadow: inset 0 0 0 1px rgba(201, 168, 76, 0.35);
+
+        .lang-code { color: var(--ep-gold); border-color: rgba(201, 168, 76, 0.45); }
+        .lang-name { color: #f0ede8; }
       }
 
       &:disabled { opacity: 0.55; cursor: not-allowed; }
     }
 
-    .status-card {
+    .lang-code {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 32px;
+      height: 24px;
+      padding: 0 6px;
+      border-radius: 6px;
+      border: 1px solid var(--ep-border);
+      font-size: 0.68rem;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      color: var(--ep-gold-dark);
+      background: var(--ep-cream);
+    }
+
+    .lang-name {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--ep-ink);
+    }
+
+    .status {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      padding: 14px;
       border-radius: 12px;
-      padding: 14px 16px;
-      border: 1px solid #e2e8f0;
-      background: #f8fafc;
+      border: 1px solid var(--ep-border);
+      background: #fff;
 
       &--on {
-        background: #faf6eb;
         border-color: var(--ep-line);
+        background: var(--ep-cream);
       }
 
       &--off {
-        background: #fff7ed;
         border-color: #fed7aa;
+        background: #fff7ed;
       }
     }
 
-    .status-text {
-      font-size: 0.9rem;
-      color: var(--ep-text);
-      margin: 0 0 12px;
-      line-height: 1.45;
+    .status-copy {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+
+      strong {
+        font-size: 0.9rem;
+        color: var(--ep-ink);
+      }
+
+      span {
+        font-size: 0.8rem;
+        color: var(--ep-muted);
+        line-height: 1.45;
+      }
     }
 
     .btn {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      padding: 12px 18px;
+      padding: 13px 20px;
       border: none;
       border-radius: 999px;
       font-size: 0.9rem;
       font-weight: 700;
       cursor: pointer;
       font-family: inherit;
-      letter-spacing: 0.01em;
-      transition: transform 0.12s ease, opacity 0.12s ease, background 0.15s ease;
+      letter-spacing: 0.02em;
+      transition: transform 0.12s ease, opacity 0.12s ease, background 0.15s ease, border-color 0.15s ease;
 
       &:disabled { opacity: 0.55; cursor: not-allowed; }
-      &:not(:disabled):active { transform: scale(0.98); }
+      &:not(:disabled):active { transform: scale(0.985); }
     }
 
     .btn-primary {
       width: 100%;
       background: var(--ep-gold);
       color: #090909;
+      box-shadow: 0 8px 20px rgba(201, 168, 76, 0.28);
 
-      &:hover:not(:disabled) { background: #d4b45a; }
+      &:hover:not(:disabled) { background: var(--ep-gold-soft); }
     }
 
     .btn-secondary {
-      background: #111111;
+      width: 100%;
+      background: var(--ep-ink);
       color: var(--ep-gold);
 
       &:hover:not(:disabled) { background: #1a1a1a; }
     }
 
-    .btn-danger {
+    .btn-ghost {
+      width: 100%;
       background: transparent;
-      color: #b91c1c;
-      border: 1px solid #fecaca;
-      border-radius: 999px;
+      color: #9b3030;
+      border: 1px solid rgba(155, 48, 48, 0.28);
 
       &:hover:not(:disabled) {
-        background: #fef2f2;
-        border-color: #f87171;
+        background: rgba(155, 48, 48, 0.06);
+        border-color: rgba(155, 48, 48, 0.45);
       }
     }
 
     .home-link {
       display: inline-block;
-      margin-top: 16px;
+      margin-top: 22px;
       color: var(--ep-gold-dark);
       font-size: 0.85rem;
       font-weight: 600;
@@ -437,19 +575,37 @@ const LANGUAGE_LABELS: Record<Language, string> = {
       &:hover { text-decoration: underline; }
     }
 
-    .save-message {
-      margin: 4px 0 0;
-      font-size: 0.85rem;
+    .prefs-card--manage .home-link {
+      display: block;
+      text-align: center;
+    }
+
+    .banner {
+      margin: 14px 0 0;
+      padding: 10px 12px;
+      border-radius: 10px;
+      font-size: 0.84rem;
       font-weight: 600;
       text-align: left;
+      line-height: 1.4;
+
+      &--ok {
+        color: #1d5e3a;
+        background: #edf9f2;
+        border: 1px solid #82d4a8;
+      }
+
+      &--error {
+        color: #9b3030;
+        background: #fdf2f2;
+        border: 1px solid #f0b4b4;
+      }
     }
-    .save-message.success { color: #166534; }
-    .save-message.error { color: #c53030; }
 
     .prefs-footnote {
       margin: 0;
       font-size: 0.75rem;
-      color: rgba(240, 237, 232, 0.45);
+      color: rgba(240, 237, 232, 0.42);
       text-align: center;
 
       a {
@@ -460,7 +616,9 @@ const LANGUAGE_LABELS: Record<Language, string> = {
     }
 
     @media (max-width: 480px) {
-      .prefs-card { padding: 28px 22px 24px; }
+      .prefs-page { padding: 28px 16px; }
+      .prefs-card { padding: 28px 20px 22px; border-radius: 16px; }
+      .lang-options { grid-template-columns: 1fr; }
     }
   `]
 })
@@ -471,6 +629,7 @@ export class EmailPreferencesComponent implements OnInit {
 
   readonly languages: Language[] = ['pt', 'en', 'fr', 'es'];
   readonly languageLabels = LANGUAGE_LABELS;
+  readonly languageFlags = LANGUAGE_FLAGS;
 
   loading = true;
   needsEmail = false;
