@@ -12,7 +12,8 @@ const {
   expandCampaignContent,
   hasAuctionPlaceholder,
   localizedTitle,
-  categoryLabel
+  categoryLabel,
+  formatPrice
 } = require('../src/services/newsletterService');
 
 const NOW = new Date('2026-09-23T10:00:00.000Z');
@@ -147,6 +148,41 @@ describe('renderAuctionsBlock', () => {
   it('is empty for an empty list, so no stray block is left behind', () => {
     expect(render([])).toBe('');
   });
+
+  it('uses the BidRoom gold palette, not the retired navy', () => {
+    const html = render([listing()]);
+    expect(html).toContain('#e8d9a8'); // card border
+    expect(html).toContain('#a8872e'); // category + price
+    expect(html).not.toContain('#002366');
+  });
+
+  it('has no button of its own — the shell owns the CTA', () => {
+    const html = render([listing(), listing()]);
+    expect(html).not.toMatch(/Ver anúncio|View listing/);
+    // Two links per card: the thumbnail and the title.
+    expect((html.match(/<a href=/g) || []).length).toBe(4);
+  });
+});
+
+describe('formatPrice', () => {
+  it('writes the price the way the design shows it', () => {
+    expect(formatPrice(1350, 'pt')).toBe('€ 1.350');
+    expect(formatPrice(1350, 'es')).toBe('€ 1.350');
+    expect(formatPrice(1350, 'fr')).toBe('€ 1 350');
+    expect(formatPrice(1350, 'en')).toBe('€ 1,350');
+  });
+
+  it('keeps cents only when there are any', () => {
+    expect(formatPrice(240, 'pt')).toBe('€ 240');
+    expect(formatPrice(9500.5, 'pt')).toBe('€ 9.500,50');
+    expect(formatPrice(9500.5, 'en')).toBe('€ 9,500.50');
+  });
+
+  it('survives a missing or unusable amount', () => {
+    expect(formatPrice(0, 'pt')).toBe('€ 0');
+    expect(formatPrice(null, 'pt')).toBe('€ 0');
+    expect(formatPrice(undefined, 'zz')).toBe('€ 0');
+  });
 });
 
 describe('placeholder expansion', () => {
@@ -167,7 +203,7 @@ describe('placeholder expansion', () => {
     expect(out).not.toContain('{{AUCTIONS}}');
     expect(out).toContain('<h1>Olá</h1>');
     expect(out).toContain('<footer>fim</footer>');
-    expect((out.match(/\/listing\/x/g) || []).length).toBe(6); // 2 blocks × (image + title + CTA)
+    expect((out.match(/\/listing\/x/g) || []).length).toBe(4); // 2 blocks × (image + title)
   });
 
   it('leaves content without a placeholder untouched', () => {

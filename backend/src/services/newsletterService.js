@@ -11,9 +11,9 @@
  * language *at send time*, so a campaign written on Monday and sent on Friday
  * still shows auctions that are open on Friday.
  *
- * The markup deliberately matches the existing newsletter preset (600px table,
- * navy #002366, Arial) rather than the gold transactional layout: the block is
- * dropped inside that email and must not look like a different brand.
+ * The cards are rendered in the BidRoom email palette — dark #111 and gold
+ * #C9A84C, the same tokens as `utils/bidroomEmailLayout` — because the block is
+ * dropped inside a branded newsletter shell and must not read as another brand.
  */
 
 const Listing = require('../models/Listing');
@@ -31,11 +31,13 @@ const PLACEHOLDER_PATTERN = /\{\{\s*(?:AUCTIONS|LEILOES|LEILÕES)\s*\}\}/gi;
 
 const DEFAULT_AUCTION_COUNT = 6;
 
+/** The BidRoom email palette — same tokens as `utils/bidroomEmailLayout`. */
 const COLORS = {
-  navy: '#002366',
+  gold: '#C9A84C',
+  goldDark: '#a8872e',
+  goldBorder: '#e8d9a8',
   text: '#111111',
-  muted: '#666666',
-  line: '#e5e7eb',
+  muted: '#64748b',
   white: '#ffffff'
 };
 
@@ -94,41 +96,46 @@ const STRINGS = {
     bestOffer: 'Melhor Oferta',
     currentBid: 'Licitação atual',
     startingBid: 'Base de licitação',
-    cta: 'Ver anúncio',
     endsToday: 'Termina hoje',
-    endsInDays: d => `Termina em ${d} dia${d === 1 ? '' : 's'}`,
-    browseAll: 'Ver todos os leilões'
+    endsInDays: d => `Termina em ${d} dia${d === 1 ? '' : 's'}`
   },
   en: {
     bestOffer: 'Best Offer',
     currentBid: 'Current bid',
     startingBid: 'Starting bid',
-    cta: 'View listing',
     endsToday: 'Ends today',
-    endsInDays: d => `Ends in ${d} day${d === 1 ? '' : 's'}`,
-    browseAll: 'Browse all auctions'
+    endsInDays: d => `Ends in ${d} day${d === 1 ? '' : 's'}`
   },
   es: {
     bestOffer: 'Mejor Oferta',
     currentBid: 'Puja actual',
     startingBid: 'Puja inicial',
-    cta: 'Ver anuncio',
     endsToday: 'Termina hoy',
-    endsInDays: d => `Termina en ${d} día${d === 1 ? '' : 's'}`,
-    browseAll: 'Ver todas las subastas'
+    endsInDays: d => `Termina en ${d} día${d === 1 ? '' : 's'}`
   },
   fr: {
     bestOffer: 'Meilleure Offre',
     currentBid: 'Enchère actuelle',
     startingBid: 'Mise à prix',
-    cta: 'Voir l’annonce',
     endsToday: 'Se termine aujourd’hui',
-    endsInDays: d => `Se termine dans ${d} jour${d === 1 ? '' : 's'}`,
-    browseAll: 'Voir toutes les enchères'
+    endsInDays: d => `Se termine dans ${d} jour${d === 1 ? '' : 's'}`
   }
 };
 
-const PRICE_LOCALES = { pt: 'pt-PT', en: 'en-GB', es: 'es-ES', fr: 'fr-FR' };
+/**
+ * Prices are grouped by hand rather than with `Intl`.
+ *
+ * CLDR leaves four-digit numbers ungrouped in pt-PT ("1350 €"), which is
+ * correct but not what the newsletter design asks for: it shows "€ 1.350", with
+ * the symbol first and every thousand separated. Non-breaking spaces keep a
+ * price from wrapping in the middle.
+ */
+const NUMBER_FORMATS = {
+  pt: { group: '.', decimal: ',' },
+  es: { group: '.', decimal: ',' },
+  fr: { group: '\u00a0', decimal: ',' },
+  en: { group: ',', decimal: '.' }
+};
 
 function lang(language) {
   return NEWSLETTER_LANGUAGES.includes(language) ? language : 'pt';
@@ -163,17 +170,18 @@ function categoryLabel(category, language) {
 }
 
 function formatPrice(amount, language) {
-  const value = Number(amount) || 0;
-  try {
-    return new Intl.NumberFormat(PRICE_LOCALES[lang(language)], {
-      style: 'currency',
-      currency: 'EUR',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: Number.isInteger(value) ? 0 : 2
-    }).format(value);
-  } catch {
-    return `€ ${value.toFixed(2)}`;
-  }
+  const format = NUMBER_FORMATS[lang(language)];
+  const cents = Math.round((Number(amount) || 0) * 100);
+  const whole = Math.floor(cents / 100);
+  const remainder = cents % 100;
+
+  const grouped = String(whole).replace(/\B(?=(\d{3})+(?!\d))/g, format.group);
+  // Whole euros lose the ",00" — the design shows "€ 1.350", not "€ 1.350,00".
+  const body = remainder
+    ? `${grouped}${format.decimal}${String(remainder).padStart(2, '0')}`
+    : grouped;
+
+  return `€\u00a0${body}`;
 }
 
 /** What the price under the title actually means, which depends on the format. */
@@ -292,52 +300,49 @@ async function pickFeaturedAuctions({ limit = DEFAULT_AUCTION_COUNT, now = new D
   return picked;
 }
 
-/** One card: 120px thumbnail on the left, category / title / price / CTA on the right. */
+/**
+ * One card: a square thumbnail flush to the left edge, then category, title,
+ * price and what the price means. The whole title is the link — the card has no
+ * button of its own, so six of them stack without turning into a wall of CTAs.
+ */
 function renderAuctionCard(listing, language, { baseUrl, now }) {
   const l = lang(language);
-  const s = STRINGS[l];
   const url = listingUrl(listing, baseUrl);
   const title = escapeHtml(localizedTitle(listing, l));
   const image = thumbnailUrl(listing);
-  const price = formatPrice(
-    listing.currentPrice || listing.startingPrice || 0,
-    l
-  );
+  const price = formatPrice(listing.currentPrice || listing.startingPrice || 0, l);
   const ends = endsCaption(listing, l, now);
 
   const thumbCell = image
-    ? `<td width="120" valign="top" style="width:120px;background:${COLORS.white};">
-            <a href="${url}"><img src="${escapeHtml(image)}" width="120" height="120" alt="${title}" style="display:block;width:120px;height:120px;object-fit:cover;border:0;"></a>
+    ? `<td width="124" valign="top" style="width:124px;">
+            <a href="${url}"><img src="${escapeHtml(image)}" width="124" height="124" alt="${title}" style="display:block;width:124px;height:124px;object-fit:cover;border:0;"></a>
           </td>`
     : '';
 
-  return `<table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="margin:0 0 18px;border:1px solid ${COLORS.line};border-radius:8px;overflow:hidden;">
+  return `<table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="margin:0 0 14px;border:1px solid ${COLORS.goldBorder};border-radius:10px;overflow:hidden;background:${COLORS.white};">
         <tr>
           ${thumbCell}
-          <td valign="middle" style="padding:14px 16px;background:${COLORS.white};">
-            <div style="font-size:11px;font-weight:700;color:${COLORS.navy};text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px;">${escapeHtml(categoryLabel(listing.category, l))}</div>
+          <td valign="middle" style="padding:16px 18px;background:${COLORS.white};">
+            <div style="font-size:11px;font-weight:700;color:${COLORS.goldDark};text-transform:uppercase;letter-spacing:0.09em;margin-bottom:5px;">${escapeHtml(categoryLabel(listing.category, l))}</div>
             <a href="${url}" style="text-decoration:none;color:${COLORS.text};font-size:15px;font-weight:700;line-height:1.35;">${title}</a>
-            <div style="margin-top:6px;font-size:16px;font-weight:700;color:${COLORS.text};">${escapeHtml(price)}</div>
-            <div style="margin-top:2px;font-size:12px;color:${COLORS.muted};">${escapeHtml(priceCaption(listing, l))}${ends ? ` · ${escapeHtml(ends)}` : ''}</div>
-            <div style="margin-top:10px;"><a href="${url}" style="display:inline-block;background:${COLORS.navy};color:${COLORS.white};padding:8px 16px;text-decoration:none;border-radius:6px;font-size:12px;font-weight:700;">${escapeHtml(s.cta)}</a></div>
+            <div style="margin-top:7px;font-size:17px;font-weight:700;color:${COLORS.goldDark};">${escapeHtml(price)}</div>
+            <div style="margin-top:3px;font-size:12px;color:${COLORS.muted};">${escapeHtml(priceCaption(listing, l))}${ends ? ` · ${escapeHtml(ends)}` : ''}</div>
           </td>
         </tr>
       </table>`;
 }
 
 /**
- * The whole block: the cards plus a "browse all" link. Returns '' for an empty
- * list so an expansion never leaves a stray heading behind.
+ * The cards, and only the cards.
+ *
+ * The "browse all" button belongs to the newsletter shell around this block, so
+ * it sits below the last card exactly once however the block is placed. An
+ * empty list renders nothing, so an expansion never leaves a stray heading.
  */
 function renderAuctionsBlock(listings, language, { baseUrl = publicBaseUrl(), now = new Date() } = {}) {
   if (!Array.isArray(listings) || listings.length === 0) return '';
   const l = lang(language);
-  const cards = listings.map(listing => renderAuctionCard(listing, l, { baseUrl, now })).join('\n      ');
-
-  return `${cards}
-      <div style="margin:4px 0 0;text-align:center;">
-        <a href="${baseUrl}/listings" style="color:${COLORS.navy};font-size:13px;font-weight:700;text-decoration:underline;">${escapeHtml(STRINGS[l].browseAll)}</a>
-      </div>`;
+  return listings.map(listing => renderAuctionCard(listing, l, { baseUrl, now })).join('\n      ');
 }
 
 function hasAuctionPlaceholder(html) {
