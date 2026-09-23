@@ -1,5 +1,6 @@
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { FormsModule } from '@angular/forms';
 import { Subject, of } from 'rxjs';
 import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
@@ -15,11 +16,21 @@ import {
   CustomerSearchResult,
   EmailCampaignRow,
   CampaignDelivery,
-  FeaturedAuctionsPreview
+  NewsletterPreview
 } from '../../services/admin-emails.service';
 import { AdminSidebarComponent } from '../sidebar/admin-sidebar.component';
 
 type EmailsTab = 'newsletter' | 'personalized' | 'history' | 'preferences';
+
+/**
+ * The one weekly edition. There is deliberately no second template: this file
+ * is what goes out every week, and only the blocks inside it change.
+ */
+const WEEKLY_TEMPLATE = 'leiloes-da-semana.campaign.json';
+
+/** Kept in step with the same patterns in `services/newsletterService`. */
+const AUCTIONS_PATTERN = /\{\{\s*(?:AUCTIONS|LEILOES|LEILÕES)\s*\}\}/gi;
+const GIVEAWAY_PATTERN = /\{\{\s*(?:GIVEAWAY|PASSATEMPO|SORTEIO)\s*\}\}/gi;
 
 @Component({
   selector: 'app-admin-emails',
@@ -31,6 +42,7 @@ type EmailsTab = 'newsletter' | 'personalized' | 'history' | 'preferences';
 export class AdminEmailsComponent implements OnInit {
   private adminEmailsService = inject(AdminEmailsService);
   private destroyRef = inject(DestroyRef);
+  private sanitizer = inject(DomSanitizer);
 
   activeTab: EmailsTab = 'newsletter';
 
@@ -59,18 +71,18 @@ export class AdminEmailsComponent implements OnInit {
   testError: string | null = null;
 
   loadingPreset = false;
-  presetMessage: string | null = null;
   presetError: string | null = null;
 
   /**
-   * The automatic auctions block. The composer only ever carries the
-   * placeholder: the backend swaps it for six open auctions at send time, so a
-   * campaign written today still goes out with auctions that are open then.
+   * What the weekly email would contain if it went out now.
+   *
+   * The composer only ever carries the placeholders: the backend picks the
+   * auctions and the giveaway at send time, so a campaign written today still
+   * goes out with what is open then. This is the admin's look at that.
    */
-  readonly AUCTIONS_PLACEHOLDER = '{{AUCTIONS}}';
-  featuredPreview: FeaturedAuctionsPreview | null = null;
-  loadingFeatured = false;
-  featuredError: string | null = null;
+  weekPreview: NewsletterPreview | null = null;
+  loadingWeek = false;
+  weekError: string | null = null;
 
   sendingCampaign = false;
   campaignResult: SendResult | null = null;
@@ -119,6 +131,10 @@ export class AdminEmailsComponent implements OnInit {
   customerSendMessage: string | null = null;
 
   ngOnInit(): void {
+    // The newsletter tab opens ready to send: one template, already loaded,
+    // next to what this week's send would actually contain.
+    this.loadWeeklyTemplate();
+    this.loadWeekPreview();
     this.loadAudienceCount();
     this.loadContacts();
     this.loadDraftReminders();
@@ -196,33 +212,19 @@ export class AdminEmailsComponent implements OnInit {
     this.activeLanguage = lang;
   }
 
-  /** Loads PT/EN/ES/FR subject+HTML; send still picks each recipient's language. */
-  loadNewsletterPreset(): Promise<void> {
-    return this.loadPreset(
-      '2026-09-novos-leiloes.campaign.json',
-      'Template «Novos leilões Set 2026» carregado nos 4 idiomas. Cada destinatário recebe a versão do seu idioma.'
-    );
-  }
-
   /**
-   * The self-filling edition: same shell, `{{AUCTIONS}}` instead of six
-   * hand-pasted cards. Nothing to update between sends.
+   * The weekly template, in all four languages.
+   *
+   * There is only one, and it is loaded when the page opens: the edition never
+   * changes from week to week, only the auctions inside it, and those are
+   * chosen by the backend at send time.
    */
-  async loadAutoNewsletterPreset(): Promise<void> {
-    await this.loadPreset(
-      'auto-leiloes.campaign.json',
-      'Template automático carregado nos 4 idiomas. Os 6 leilões são escolhidos no momento do envio.'
-    );
-    if (!this.presetError) this.loadFeaturedAuctions();
-  }
-
-  private async loadPreset(file: string, successMessage: string): Promise<void> {
+  async loadWeeklyTemplate(): Promise<void> {
     if (this.loadingPreset) return;
     this.loadingPreset = true;
-    this.presetMessage = null;
     this.presetError = null;
     try {
-      const res = await fetch(`/newsletters/${file}`);
+      const res = await fetch(`/newsletters/${WEEKLY_TEMPLATE}`);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json() as CampaignContent;
       for (const lang of this.LANGUAGES) {
@@ -230,13 +232,9 @@ export class AdminEmailsComponent implements OnInit {
         if (!variant?.subject || !variant?.html) {
           throw new Error(`Template incompleto para ${lang.code}.`);
         }
-        this.content[lang.code] = {
-          subject: variant.subject,
-          html: variant.html
-        };
+        this.content[lang.code] = { subject: variant.subject, html: variant.html };
       }
       this.activeLanguage = 'pt';
-      this.presetMessage = successMessage;
     } catch {
       this.presetError = 'Não foi possível carregar o template da newsletter.';
     } finally {
@@ -244,67 +242,57 @@ export class AdminEmailsComponent implements OnInit {
     }
   }
 
-  // ---- Automatic auctions block ----
+  // ---- What goes out this week ----
 
-  private hasPlaceholder(html: string): boolean {
-    return /\{\{\s*(?:AUCTIONS|LEILOES|LEILÕES)\s*\}\}/i.test(html || '');
+  /** `test` on a /g/ regex is stateful, so the cursor is reset every time. */
+  private hasBlock(pattern: RegExp, html: string): boolean {
+    pattern.lastIndex = 0;
+    return pattern.test(html || '');
   }
 
-  get activeHasAuctionsBlock(): boolean {
-    return this.hasPlaceholder(this.content[this.activeLanguage].html);
+  get hasAuctionsBlock(): boolean {
+    return this.hasBlock(AUCTIONS_PATTERN, this.content[this.activeLanguage].html);
   }
 
-  /** Languages whose body would go out without the block, once any body has it. */
-  get languagesMissingAuctionsBlock(): CampaignLanguage[] {
-    const codes = this.LANGUAGES.map(l => l.code);
-    if (!codes.some(code => this.hasPlaceholder(this.content[code].html))) return [];
-    return codes.filter(code => !this.hasPlaceholder(this.content[code].html));
+  get hasGiveawayBlock(): boolean {
+    return this.hasBlock(GIVEAWAY_PATTERN, this.content[this.activeLanguage].html);
   }
 
-  /**
-   * Drops the placeholder where the cursor is, so it lands inside the body of
-   * the email rather than after `</html>`.
-   */
-  insertAuctionsPlaceholder(): void {
-    const el = document.getElementById('campaign-html') as HTMLTextAreaElement | null;
-    const html = this.content[this.activeLanguage].html;
-    const at = el ? el.selectionStart ?? html.length : html.length;
-    const token = `\n${this.AUCTIONS_PLACEHOLDER}\n`;
-
-    this.content[this.activeLanguage].html = html.slice(0, at) + token + html.slice(at);
-
-    if (el) {
-      const caret = at + token.length;
-      setTimeout(() => { el.focus(); el.setSelectionRange(caret, caret); });
-    }
-    if (!this.featuredPreview) this.loadFeaturedAuctions();
-  }
-
-  loadFeaturedAuctions(): void {
-    if (this.loadingFeatured) return;
-    this.loadingFeatured = true;
-    this.featuredError = null;
-    this.adminEmailsService.getFeaturedAuctions().subscribe({
+  loadWeekPreview(): void {
+    if (this.loadingWeek) return;
+    this.loadingWeek = true;
+    this.weekError = null;
+    this.adminEmailsService.getNewsletterPreview().subscribe({
       next: (res) => {
-        this.featuredPreview = res;
-        this.loadingFeatured = false;
+        this.weekPreview = res;
+        this.loadingWeek = false;
         if (res.count === 0) {
-          this.featuredError = 'Não há leilões a decorrer que cumpram os critérios — o bloco sairia vazio.';
+          this.weekError = 'Não há leilões a decorrer que cumpram os critérios — o email sairia sem leilões.';
         }
       },
       error: (err) => {
-        this.loadingFeatured = false;
-        this.featuredError = err?.error?.error || 'Falha ao obter os leilões em destaque.';
+        this.loadingWeek = false;
+        this.weekError = err?.error?.error || 'Falha ao obter o conteúdo da semana.';
       }
     });
   }
 
-  /** The preview pane resolves the placeholder so an admin sees the real email. */
-  get previewHtml(): string {
-    const html = this.content[this.activeLanguage].html;
-    const block = this.featuredPreview?.blocks?.[this.activeLanguage];
-    if (!block || !this.hasPlaceholder(html)) return html;
-    return html.replace(/\{\{\s*(?:AUCTIONS|LEILOES|LEILÕES)\s*\}\}/gi, block);
+  /**
+   * The preview pane resolves both placeholders so an admin sees the real
+   * email, giveaway included — or correctly without one, when none is running.
+   */
+  get previewHtml(): SafeHtml {
+    let html = this.content[this.activeLanguage].html;
+    const blocks = this.weekPreview?.blocks;
+    if (blocks) {
+      html = html
+        .replace(AUCTIONS_PATTERN, () => blocks.auctions[this.activeLanguage] || '')
+        .replace(GIVEAWAY_PATTERN, () => blocks.giveaway[this.activeLanguage] || '');
+    }
+    // The iframe is sandboxed with no permissions, so the email's own inline
+    // styles are safe to keep — without this Angular strips every `style`
+    // attribute and the preview renders as unstyled serif text.
+    return this.sanitizer.bypassSecurityTrustHtml(html);
   }
 
   loadAudienceCount(): void {

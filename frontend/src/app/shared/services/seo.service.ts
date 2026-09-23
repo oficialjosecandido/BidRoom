@@ -3,9 +3,11 @@ import { Meta, Title } from '@angular/platform-browser';
 import { DOCUMENT } from '@angular/common';
 import { Listing } from './listings.service';
 import { BlogPost } from './blog.service';
+import { listingImageSrc, listingImageSrcSet, LISTING_HERO_SIZES } from '../utils/listing-image';
 
 const BASE_URL   = 'https://www.bidroom.pt';
 const DEFAULT_OG = `${BASE_URL}/og-image.png`;
+const LCP_PRELOAD_ID = 'listing-lcp-preload';
 
 const DEFAULTS = {
   title:       'BidRoom — Leilões Premium',
@@ -31,6 +33,7 @@ export class SeoService {
 
   setDefault(): void {
     this.apply(DEFAULTS);
+    this.removeListingLcpPreload();
     this.injectOrganizationSchema();
   }
 
@@ -58,6 +61,7 @@ export class SeoService {
     this.setCanonical(canonical);
     this.setListingOgType('product');
     this.injectListingSchema(listing, image, canonical);
+    this.setListingLcpPreload(image);
   }
 
   /** Sets title/meta for the blog index page. */
@@ -70,6 +74,7 @@ export class SeoService {
       image:       DEFAULT_OG,
     });
     this.setCanonical(canonical);
+    this.removeListingLcpPreload();
     this.injectOrganizationSchema();
   }
 
@@ -91,6 +96,7 @@ export class SeoService {
 
     this.setCanonical(canonical);
     this.setListingOgType('article');
+    this.removeListingLcpPreload();
     this.injectBlogPostSchema(post, image, canonical, lang);
   }
 
@@ -105,11 +111,13 @@ export class SeoService {
   setCanonicalForRoute(path: string): void {
     const clean = path.split(/[?#]/)[0].replace(/\/+$/, '');
     this.setCanonical(clean ? `${BASE_URL}${clean}` : `${BASE_URL}/`);
+    this.removeListingLcpPreload();
   }
 
   resetToDefault(): void {
     this.setDefault();
     this.removeCanonical();
+    this.removeListingLcpPreload();
     this.removeJsonLd('listing-schema');
     this.removeJsonLd('blogpost-schema');
   }
@@ -245,6 +253,43 @@ export class SeoService {
 
   private removeCanonical(): void {
     this.doc.querySelector('link[rel="canonical"]')?.remove();
+  }
+
+  /**
+   * Kick off the listing hero download in &lt;head&gt; during SSR / early hydration,
+   * so mobile LCP does not wait for Angular to paint the &lt;img&gt;.
+   */
+  private setListingLcpPreload(originalImage: string): void {
+    if (!originalImage || originalImage === DEFAULT_OG) {
+      this.removeListingLcpPreload();
+      return;
+    }
+
+    const href = listingImageSrc(originalImage, 'thumb');
+    const srcset = listingImageSrcSet(originalImage);
+
+    let link = this.doc.getElementById(LCP_PRELOAD_ID) as HTMLLinkElement | null;
+    if (!link) {
+      link = this.doc.createElement('link');
+      link.id = LCP_PRELOAD_ID;
+      link.setAttribute('rel', 'preload');
+      link.setAttribute('as', 'image');
+      link.setAttribute('fetchpriority', 'high');
+      this.doc.head.appendChild(link);
+    }
+
+    link.setAttribute('href', href);
+    if (srcset) {
+      link.setAttribute('imagesrcset', srcset);
+      link.setAttribute('imagesizes', LISTING_HERO_SIZES);
+    } else {
+      link.removeAttribute('imagesrcset');
+      link.removeAttribute('imagesizes');
+    }
+  }
+
+  private removeListingLcpPreload(): void {
+    this.doc.getElementById(LCP_PRELOAD_ID)?.remove();
   }
 
   // ── Private — Schema.org JSON-LD ──────────────────────────────────────────

@@ -7,10 +7,14 @@ jest.mock('../src/utils/publicUrls', () => ({ publicBaseUrl: () => 'https://www.
 const Listing = require('../src/models/Listing');
 const {
   pickFeaturedAuctions,
+  pickActiveGiveaway,
   renderAuctionsBlock,
+  renderGiveawayBlock,
   expandAuctionPlaceholders,
+  expandGiveawayPlaceholders,
   expandCampaignContent,
   hasAuctionPlaceholder,
+  hasGiveawayPlaceholder,
   localizedTitle,
   categoryLabel,
   formatPrice
@@ -42,10 +46,30 @@ function listing(overrides = {}) {
   };
 }
 
-/** Listing.find(...).sort(...).limit(...).lean() */
-function mockCandidates(docs) {
-  Listing.find.mockReturnValue({
-    sort: () => ({ limit: () => ({ lean: async () => docs }) })
+function giveawayDoc(overrides = {}) {
+  autoId += 1;
+  return {
+    _id: `gid${autoId}`,
+    slug: `giveaway-${autoId}`,
+    category: 'jewelry',
+    images: [`${BLOB}giveaway-${autoId}.jpg`],
+    endDate: inDays(5),
+    giveaway: { entryCount: 0 },
+    titlePt: `Passatempo ${autoId}`,
+    ...overrides
+  };
+}
+
+/**
+ * Listing.find(...).sort(...).limit(...).lean()
+ *
+ * Auctions and giveaways come from the same collection, so the stub answers by
+ * `saleFormat` — otherwise the giveaway query would be handed auction docs.
+ */
+function mockCandidates(docs, giveaways = []) {
+  Listing.find.mockImplementation(filter => {
+    const rows = filter?.saleFormat === 'giveaway' ? giveaways : docs;
+    return { sort: () => ({ limit: () => ({ lean: async () => rows }) }) };
   });
 }
 
@@ -164,6 +188,77 @@ describe('renderAuctionsBlock', () => {
   });
 });
 
+describe('pickActiveGiveaway', () => {
+  it('only asks for a giveaway that is open and not yet drawn', async () => {
+    mockCandidates([], []);
+    await pickActiveGiveaway({ now: NOW });
+
+    const [filter] = Listing.find.mock.calls[0];
+    expect(filter.status).toBe('active');
+    expect(filter.saleFormat).toBe('giveaway');
+    expect(filter.startDate).toEqual({ $lte: NOW });
+    expect(filter.endDate).toEqual({ $gt: NOW });
+    // A drawn giveaway is a results page, not an invitation to enter.
+    expect(filter['giveaway.drawnAt']).toBeNull();
+  });
+
+  it('returns null when none is running', async () => {
+    mockCandidates([], []);
+    expect(await pickActiveGiveaway({ now: NOW })).toBeNull();
+  });
+
+  it('features the one closing soonest', async () => {
+    mockCandidates([], [giveawayDoc({ slug: 'closes-first' })]);
+    const picked = await pickActiveGiveaway({ now: NOW });
+
+    expect(picked.slug).toBe('closes-first');
+    const chain = Listing.find.mock.results[0].value;
+    expect(typeof chain.sort).toBe('function');
+  });
+});
+
+describe('renderGiveawayBlock', () => {
+  const render = (doc, language = 'pt') =>
+    renderGiveawayBlock(doc, language, { baseUrl: 'https://www.bidroom.pt', now: NOW });
+
+  it('renders nothing at all when no giveaway is running', () => {
+    expect(render(null)).toBe('');
+    expect(render(undefined)).toBe('');
+  });
+
+  it('links to the giveaway and invites the reader to enter for free', () => {
+    const html = render(giveawayDoc({ slug: 'relogio-gratis' }));
+    expect(html).toContain('https://www.bidroom.pt/listing/relogio-gratis');
+    expect(html).toContain('Participar grátis');
+  });
+
+  it('is dark, so it does not read as one more auction card', () => {
+    const html = render(giveawayDoc());
+    expect(html).toContain('#111111');
+    expect(html).toContain('#C9A84C');
+  });
+
+  it('speaks the reader’s language', () => {
+    const doc = giveawayDoc({ titleEn: 'Free watch' });
+    expect(render(doc, 'en')).toContain('Enter for free');
+    expect(render(doc, 'es')).toContain('Participar gratis');
+    expect(render(doc, 'fr')).toContain('Participer gratuitement');
+  });
+
+  it('shows entries once there are some, and "free to enter" before that', () => {
+    expect(render(giveawayDoc({ giveaway: { entryCount: 0 } }))).toContain('Participação gratuita');
+
+    const busy = render(giveawayDoc({ giveaway: { entryCount: 12 } }));
+    expect(busy).toContain('12 participações');
+    expect(busy).not.toContain('0 participações');
+  });
+
+  it('escapes a title that contains markup', () => {
+    const html = render(giveawayDoc({ titlePt: 'Anel <b>ouro</b>' }));
+    expect(html).toContain('Anel &lt;b&gt;ouro&lt;/b&gt;');
+  });
+});
+
 describe('formatPrice', () => {
   it('writes the price the way the design shows it', () => {
     expect(formatPrice(1350, 'pt')).toBe('€ 1.350');
@@ -210,6 +305,20 @@ describe('placeholder expansion', () => {
     const html = '<p>sem leilões</p>';
     expect(expandAuctionPlaceholders(html, 'pt', [listing()])).toBe(html);
   });
+
+  it('recognises the giveaway placeholder under its Portuguese names', () => {
+    expect(hasGiveawayPlaceholder('{{GIVEAWAY}}')).toBe(true);
+    expect(hasGiveawayPlaceholder('{{ PASSATEMPO }}')).toBe(true);
+    expect(hasGiveawayPlaceholder('{{SORTEIO}}')).toBe(true);
+    expect(hasGiveawayPlaceholder('{{AUCTIONS}}')).toBe(false);
+  });
+
+  it('closes the gap when there is no giveaway to announce', () => {
+    const html = '<h1>Olá</h1>{{GIVEAWAY}}<p>leilões</p>';
+    const out = expandGiveawayPlaceholders(html, 'pt', null);
+
+    expect(out).toBe('<h1>Olá</h1><p>leilões</p>');
+  });
 });
 
 describe('expandCampaignContent', () => {
@@ -246,16 +355,25 @@ describe('expandCampaignContent', () => {
     expect(out.fr.html).toContain('Bijouterie');
   });
 
-  it('does not query when no language uses the placeholder', async () => {
+  it('does not query when no language uses a placeholder', async () => {
     const plain = {
       pt: { subject: 'a', html: '<p>a</p>' },
       en: { subject: 'b', html: '<p>b</p>' }
     };
-    const { content: out, listings } = await expandCampaignContent(plain, { now: NOW });
+    const { content: out, listings, giveaway } = await expandCampaignContent(plain, { now: NOW });
 
     expect(Listing.find).not.toHaveBeenCalled();
     expect(out).toBe(plain);
     expect(listings).toEqual([]);
+    expect(giveaway).toBeNull();
+  });
+
+  it('does not look for a giveaway when the template does not ask for one', async () => {
+    mockCandidates([listing()], [giveawayDoc()]);
+    const { giveaway } = await expandCampaignContent(content(), { now: NOW });
+
+    expect(giveaway).toBeNull();
+    expect(Listing.find.mock.calls.every(([f]) => f.saleFormat !== 'giveaway')).toBe(true);
   });
 
   it('sends the email without the block rather than failing when nothing qualifies', async () => {
@@ -264,5 +382,40 @@ describe('expandCampaignContent', () => {
 
     expect(listings).toEqual([]);
     expect(out.pt.html).toBe('<h1>PT</h1>');
+  });
+});
+
+describe('the weekly template: giveaway and auctions together', () => {
+  const weekly = () => ({
+    pt: { subject: 'Leilões da semana', html: '<h1>PT</h1>{{GIVEAWAY}}{{AUCTIONS}}' },
+    en: { subject: 'This week', html: '<h1>EN</h1>{{GIVEAWAY}}{{AUCTIONS}}' }
+  });
+
+  it('fills both blocks, in every language, from one pick each', async () => {
+    mockCandidates(
+      [listing({ category: 'jewelry', slug: 'anel' })],
+      [giveawayDoc({ slug: 'passatempo', titleEn: 'Free watch' })]
+    );
+
+    const { content: out, listings, giveaway } = await expandCampaignContent(weekly(), { now: NOW });
+
+    expect(listings.map(l => l.slug)).toEqual(['anel']);
+    expect(giveaway.slug).toBe('passatempo');
+    expect(out.pt.html).toContain('/listing/passatempo');
+    expect(out.pt.html).toContain('/listing/anel');
+    expect(out.pt.html).toContain('Participar grátis');
+    expect(out.en.html).toContain('Enter for free');
+    // One query for the auctions, one for the giveaway — not one per language.
+    expect(Listing.find).toHaveBeenCalledTimes(2);
+  });
+
+  it('is the same email minus the band on a week with no giveaway', async () => {
+    mockCandidates([listing({ slug: 'anel' })], []);
+
+    const { content: out, giveaway } = await expandCampaignContent(weekly(), { now: NOW });
+
+    expect(giveaway).toBeNull();
+    expect(out.pt.html).not.toContain('{{GIVEAWAY}}');
+    expect(out.pt.html).toContain('/listing/anel');
   });
 });

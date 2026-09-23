@@ -71,11 +71,17 @@ export class CookieBannerComponent implements OnInit, OnDestroy {
   }
 
   private scheduleShow(): void {
-    setTimeout(() => {
+    // After LCP: the banner competes for bandwidth/main-thread if shown too early.
+    const reveal = () => {
       this.visible.set(true);
-      // Wait one animation frame so the element is in the DOM and has size
       requestAnimationFrame(() => this.attachResizeObserver());
-    }, 800);
+    };
+    if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+      (window as Window & { requestIdleCallback: (cb: () => void, opts?: { timeout: number }) => number })
+        .requestIdleCallback(reveal, { timeout: 2500 });
+    } else {
+      setTimeout(reveal, 1500);
+    }
   }
 
   openCookies(): void {
@@ -95,11 +101,13 @@ export class CookieBannerComponent implements OnInit, OnDestroy {
     const bannerEl = this.elRef.nativeElement.querySelector('.cookie-banner') as HTMLElement | null;
     if (!bannerEl) return;
 
-    this.applyBodyPadding(bannerEl.offsetHeight);
-
+    // Prefer ResizeObserver only — reading offsetHeight then writing styles in the
+    // same turn forces a layout (PageSpeed "Forced reflow").
     this.resizeObserver = new ResizeObserver(entries => {
-      const height = entries[0]?.borderBoxSize?.[0]?.blockSize ?? bannerEl.offsetHeight;
-      this.applyBodyPadding(height);
+      const height = entries[0]?.borderBoxSize?.[0]?.blockSize
+        ?? entries[0]?.contentRect?.height
+        ?? 0;
+      if (height > 0) this.applyBodyPadding(height);
     });
     this.resizeObserver.observe(bannerEl);
   }

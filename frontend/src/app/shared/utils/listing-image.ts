@@ -21,6 +21,22 @@ export function listingImageSrc(url: string | null | undefined, size: ListingIma
 }
 
 /**
+ * Responsive srcset for the listing hero: phone gets w480, larger viewports w960.
+ * Keeps mobile LCP from downloading a desktop-sized image.
+ */
+export function listingImageSrcSet(url: string | null | undefined): string {
+  const src = String(url || '').trim();
+  if (!src) return '';
+  const w480 = listingImageSrc(src, 'thumb');
+  const w960 = listingImageSrc(src, 'card');
+  if (w480 === w960) return '';
+  return `${w480} 480w, ${w960} 960w`;
+}
+
+/** Matches the listing-details gallery layout (full-bleed mobile, ~800px desktop). */
+export const LISTING_HERO_SIZES = '(max-width: 840px) 100vw, 800px';
+
+/**
  * If a variant 404s, fall back to the original URL once.
  * Bind: (error)="onListingImageError($event, originalUrl)"
  */
@@ -29,5 +45,6 @@ export function onListingImageError(event: Event, originalUrl: string): void {
   if (!img || !originalUrl) return;
   if (img.dataset['fallbackApplied'] === '1') return;
   img.dataset['fallbackApplied'] = '1';
+  img.removeAttribute('srcset');
   img.src = originalUrl;
 }

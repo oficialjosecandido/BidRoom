@@ -14,11 +14,13 @@ const { appendPreferencesFooter } = require('../services/emailPreferencesService
 const { newTrackingToken, injectTrackingPixel } = require('../services/emailTrackingService');
 const {
   pickFeaturedAuctions,
+  pickActiveGiveaway,
   renderAuctionsBlock,
-  expandAuctionPlaceholders,
+  renderGiveawayBlock,
+  expandNewsletterBlocks,
   expandCampaignContent,
   hasAuctionPlaceholder,
-  AUCTIONS_PLACEHOLDER,
+  hasGiveawayPlaceholder,
   DEFAULT_AUCTION_COUNT
 } = require('../services/newsletterService');
 const { publicBaseUrl } = require('../utils/publicUrls');
@@ -492,26 +494,32 @@ router.get('/audience-count', authenticateToken, requireAdmin, async (req, res) 
 });
 
 /**
- * What `{{AUCTIONS}}` would render right now, in every language.
+ * What this week's edition would contain if it went out now: the giveaway, if
+ * one is running, and the auctions that would fill the block.
  *
- * The composer uses this to preview the block before sending. The actual send
- * re-picks the auctions, so what an admin sees here is representative, not a
- * commitment — an auction that ends in between is simply replaced.
+ * The composer shows this so an admin can see the week's content before
+ * sending. The send itself re-picks everything, so this is representative, not
+ * a commitment — an auction that ends in between is simply replaced.
  */
-router.get('/featured-auctions', authenticateToken, requireAdmin, async (req, res) => {
+router.get('/newsletter-preview', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const requested = parseInt(req.query.limit, 10);
     const limit = Number.isFinite(requested) ? Math.min(Math.max(requested, 1), 12) : DEFAULT_AUCTION_COUNT;
     const now = new Date();
-    const listings = await pickFeaturedAuctions({ limit, now });
+    const [listings, giveaway] = await Promise.all([
+      pickFeaturedAuctions({ limit, now }),
+      pickActiveGiveaway({ now })
+    ]);
 
-    const blocks = {};
+    // The composer previews the email by substituting these, so they are
+    // rendered here rather than in the browser: one renderer, one result.
+    const blocks = { auctions: {}, giveaway: {} };
     for (const language of CAMPAIGN_LANGUAGES) {
-      blocks[language] = renderAuctionsBlock(listings, language, { now });
+      blocks.auctions[language] = renderAuctionsBlock(listings, language, { now });
+      blocks.giveaway[language] = renderGiveawayBlock(giveaway, language, { now });
     }
 
     res.json({
-      placeholder: AUCTIONS_PLACEHOLDER,
       count: listings.length,
       requested: limit,
       listings: listings.map(l => ({
@@ -523,11 +531,18 @@ router.get('/featured-auctions', authenticateToken, requireAdmin, async (req, re
         bidCount: l.bidCount || 0,
         endDate: l.endDate
       })),
+      giveaway: giveaway && {
+        id: giveaway._id,
+        slug: giveaway.slug,
+        title: giveaway.titlePt || giveaway.titleEn || giveaway.title || '',
+        entryCount: giveaway.giveaway?.entryCount || 0,
+        endDate: giveaway.endDate
+      },
       blocks
     });
   } catch (err) {
-    logger.error('GET /api/admin/emails/featured-auctions error:', err);
-    res.status(500).json({ error: 'Failed to pick featured auctions.' });
+    logger.error('GET /api/admin/emails/newsletter-preview error:', err);
+    res.status(500).json({ error: 'Failed to preview the newsletter.' });
   }
 });
 
@@ -556,9 +571,12 @@ router.post('/test', authenticateToken, requireAdmin, async (req, res) => {
       }
     }
 
-    // A test must show the real thing, placeholder included.
-    const featured = hasAuctionPlaceholder(html) ? await pickFeaturedAuctions() : [];
-    const expandedHtml = expandAuctionPlaceholders(html, footerLanguage, featured);
+    // A test must show the real thing, placeholders included.
+    const [featured, giveaway] = await Promise.all([
+      hasAuctionPlaceholder(html) ? pickFeaturedAuctions() : [],
+      hasGiveawayPlaceholder(html) ? pickActiveGiveaway({}) : null
+    ]);
+    const expandedHtml = expandNewsletterBlocks(html, footerLanguage, { listings: featured, giveaway });
 
     const htmlWithFooter = await appendPreferencesFooter(expandedHtml, {
       type: footerType,
@@ -570,7 +588,8 @@ router.post('/test', authenticateToken, requireAdmin, async (req, res) => {
       ok: true,
       to: TEST_EMAIL_RECIPIENT,
       preferencesLink: !!footerId,
-      featuredAuctions: expandedHtml === html ? null : featured.length
+      featuredAuctions: expandedHtml === html ? null : featured.length,
+      giveaway: giveaway ? giveaway.slug : null
     });
   } catch (err) {
     logger.error('POST /api/admin/emails/test error:', err);
@@ -593,9 +612,14 @@ router.post('/send', authenticateToken, requireAdmin, async (req, res) => {
     if (!recipients) return res.status(400).json({ error: 'Invalid audience.' });
     if (recipients.length === 0) return res.status(400).json({ error: 'No recipients for this audience.' });
 
-    // `{{AUCTIONS}}` is expanded here rather than in the composer so a campaign
-    // written days earlier still goes out with auctions that are open today.
-    const { content: finalContent, listings: featured } = await expandCampaignContent(content);
+    // The blocks are expanded here rather than in the composer so a campaign
+    // written days earlier still goes out with auctions that are open today —
+    // and without a giveaway whose draw has since happened.
+    const {
+      content: finalContent,
+      listings: featured,
+      giveaway
+    } = await expandCampaignContent(content);
 
     const { deliveries, ...result } = await sendInBatches(recipients, finalContent);
 
@@ -611,9 +635,14 @@ router.post('/send', authenticateToken, requireAdmin, async (req, res) => {
 
     logger.info(
       `[AdminEmails] Campaign sent by ${req.user?.email}: ${result.sent}/${result.total} ok ` +
-      `(audience=${audience}, featuredAuctions=${featured.length})`
+      `(audience=${audience}, featuredAuctions=${featured.length}, giveaway=${giveaway?.slug || 'none'})`
     );
-    res.json({ ...result, campaignId: campaign._id, featuredAuctions: featured.length });
+    res.json({
+      ...result,
+      campaignId: campaign._id,
+      featuredAuctions: featured.length,
+      giveaway: giveaway ? giveaway.slug : null
+    });
   } catch (err) {
     logger.error('POST /api/admin/emails/send error:', err);
     res.status(500).json({ error: 'Failed to send campaign.' });

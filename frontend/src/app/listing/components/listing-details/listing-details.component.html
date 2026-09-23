@@ -49,6 +49,8 @@
         @if (listing.images[activeImageIndex]) {
           <img
             [src]="mainImageSrc()"
+            [attr.srcset]="mainImageSrcSet() || null"
+            [attr.sizes]="mainImageSrcSet() ? mainImageSizes : null"
             [alt]="listing.title"
             class="main-img-photo"
             width="800"
@@ -92,6 +94,7 @@
                 width="80"
                 height="80"
                 loading="lazy"
+                fetchpriority="low"
                 decoding="async"
                 (error)="onGalleryImgError($event, img)" />
             </div>

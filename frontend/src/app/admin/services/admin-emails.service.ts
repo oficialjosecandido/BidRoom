@@ -43,6 +43,8 @@ export interface SendResult {
   campaignId?: string;
   /** How many auctions the `{{AUCTIONS}}` block ended up showing. */
   featuredAuctions?: number;
+  /** The slug of the giveaway that went in the email, or null if none ran. */
+  giveaway?: string | null;
 }
 
 /** One auction the automatic block would feature right now. */
@@ -56,12 +58,26 @@ export interface FeaturedAuction {
   endDate: string;
 }
 
-export interface FeaturedAuctionsPreview {
-  placeholder: string;
+/** The giveaway the weekly email would carry, when one is running. */
+export interface FeaturedGiveaway {
+  id: string;
+  slug: string;
+  title: string;
+  entryCount: number;
+  endDate: string;
+}
+
+/** What this week's edition would contain if it were sent right now. */
+export interface NewsletterPreview {
   count: number;
   requested: number;
   listings: FeaturedAuction[];
-  blocks: Record<CampaignLanguage, string>;
+  giveaway: FeaturedGiveaway | null;
+  /** The rendered blocks, so the composer previews exactly what is sent. */
+  blocks: {
+    auctions: Record<CampaignLanguage, string>;
+    giveaway: Record<CampaignLanguage, string>;
+  };
 }
 
 export type CampaignKind = 'newsletter' | 'personalized' | 'draft-reminder';
@@ -170,11 +186,11 @@ export class AdminEmailsService {
     return this.http.post<SendResult>(`${this.apiUrl}/send`, { content, audience });
   }
 
-  /** What `{{AUCTIONS}}` would render right now — the send re-picks at send time. */
-  getFeaturedAuctions(limit?: number): Observable<FeaturedAuctionsPreview> {
+  /** This week's content as it stands now — the send re-picks at send time. */
+  getNewsletterPreview(limit?: number): Observable<NewsletterPreview> {
     let params = new HttpParams();
     if (limit) params = params.set('limit', String(limit));
-    return this.http.get<FeaturedAuctionsPreview>(`${this.apiUrl}/featured-auctions`, { params });
+    return this.http.get<NewsletterPreview>(`${this.apiUrl}/newsletter-preview`, { params });
   }
 
   // Personalized: draft reminders

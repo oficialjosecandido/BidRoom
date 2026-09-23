@@ -29,6 +29,10 @@ const AUCTIONS_PLACEHOLDER = '{{AUCTIONS}}';
 /** Both spellings are accepted — the Portuguese one is what admins reach for. */
 const PLACEHOLDER_PATTERN = /\{\{\s*(?:AUCTIONS|LEILOES|LEILÕES)\s*\}\}/gi;
 
+/** The giveaway band, which renders nothing when none is running. */
+const GIVEAWAY_PLACEHOLDER = '{{GIVEAWAY}}';
+const GIVEAWAY_PATTERN = /\{\{\s*(?:GIVEAWAY|PASSATEMPO|SORTEIO)\s*\}\}/gi;
+
 const DEFAULT_AUCTION_COUNT = 6;
 
 /** The BidRoom email palette — same tokens as `utils/bidroomEmailLayout`. */
@@ -38,7 +42,10 @@ const COLORS = {
   goldBorder: '#e8d9a8',
   text: '#111111',
   muted: '#64748b',
-  white: '#ffffff'
+  white: '#ffffff',
+  dark: '#111111',
+  cream: '#F0EDE8',
+  creamMuted: 'rgba(240,237,232,0.72)'
 };
 
 /** Categories, in the order they are offered a slot when scores tie. */
@@ -97,28 +104,44 @@ const STRINGS = {
     currentBid: 'Licitação atual',
     startingBid: 'Base de licitação',
     endsToday: 'Termina hoje',
-    endsInDays: d => `Termina em ${d} dia${d === 1 ? '' : 's'}`
+    endsInDays: d => `Termina em ${d} dia${d === 1 ? '' : 's'}`,
+    giveawayLabel: 'Giveaway',
+    giveawayFree: 'Participação gratuita',
+    giveawayEntries: n => `${n} participaç${n === 1 ? 'ão' : 'ões'}`,
+    giveawayCta: 'Participar grátis'
   },
   en: {
     bestOffer: 'Best Offer',
     currentBid: 'Current bid',
     startingBid: 'Starting bid',
     endsToday: 'Ends today',
-    endsInDays: d => `Ends in ${d} day${d === 1 ? '' : 's'}`
+    endsInDays: d => `Ends in ${d} day${d === 1 ? '' : 's'}`,
+    giveawayLabel: 'Giveaway',
+    giveawayFree: 'Free to enter',
+    giveawayEntries: n => `${n} ${n === 1 ? 'entry' : 'entries'}`,
+    giveawayCta: 'Enter for free'
   },
   es: {
     bestOffer: 'Mejor Oferta',
     currentBid: 'Puja actual',
     startingBid: 'Puja inicial',
     endsToday: 'Termina hoy',
-    endsInDays: d => `Termina en ${d} día${d === 1 ? '' : 's'}`
+    endsInDays: d => `Termina en ${d} día${d === 1 ? '' : 's'}`,
+    giveawayLabel: 'Sorteo',
+    giveawayFree: 'Participación gratuita',
+    giveawayEntries: n => `${n} participaci${n === 1 ? 'ón' : 'ones'}`,
+    giveawayCta: 'Participar gratis'
   },
   fr: {
     bestOffer: 'Meilleure Offre',
     currentBid: 'Enchère actuelle',
     startingBid: 'Mise à prix',
     endsToday: 'Se termine aujourd’hui',
-    endsInDays: d => `Se termine dans ${d} jour${d === 1 ? '' : 's'}`
+    endsInDays: d => `Se termine dans ${d} jour${d === 1 ? '' : 's'}`,
+    giveawayLabel: 'Tirage au sort',
+    giveawayFree: 'Participation gratuite',
+    giveawayEntries: n => `${n} participation${n === 1 ? '' : 's'}`,
+    giveawayCta: 'Participer gratuitement'
   }
 };
 
@@ -239,6 +262,10 @@ const FEATURED_FIELDS =
   'slug category images currentPrice startingPrice bidCount viewCount endDate auctionFormat ' +
   'title titlePt titleEn titleFr titleEs';
 
+/** No price on a giveaway — the entry count is what the band has to show. */
+const GIVEAWAY_FIELDS =
+  'slug category images endDate giveaway.entryCount title titlePt titleEn titleFr titleEs';
+
 /**
  * Most interesting first: auctions people are already bidding on, then ones
  * people are looking at, then the newest. Used to choose which listing
@@ -301,6 +328,83 @@ async function pickFeaturedAuctions({ limit = DEFAULT_AUCTION_COUNT, now = new D
 }
 
 /**
+ * The giveaway running right now, if there is one.
+ *
+ * A giveaway is open under exactly the same conditions as an auction — active,
+ * opened, not yet over — plus one of its own: the draw must not have happened.
+ * `drawnAt` is set the moment a winner comes out, and an already-drawn giveaway
+ * is a results page, not an invitation.
+ *
+ * At most one is featured: the weekly template has a single giveaway band, and
+ * the one closing soonest is the one readers still have to act on.
+ */
+async function pickActiveGiveaway({ now = new Date() } = {}) {
+  const [giveaway] = await Listing.find(
+    {
+      status: 'active',
+      saleFormat: 'giveaway',
+      startDate: { $lte: now },
+      endDate: { $gt: now },
+      'giveaway.drawnAt': null
+    },
+    GIVEAWAY_FIELDS
+  )
+    .sort({ endDate: 1 })
+    .limit(1)
+    .lean();
+
+  return giveaway || null;
+}
+
+/**
+ * The giveaway band: dark, so it reads as a different kind of offer than the
+ * white auction cards stacked under it, with the one button in the body of the
+ * email because entering is a single free action and the whole point of the band.
+ */
+function renderGiveawayBlock(giveaway, language, { baseUrl = publicBaseUrl(), now = new Date() } = {}) {
+  if (!giveaway) return '';
+
+  const l = lang(language);
+  const s = STRINGS[l];
+  const url = listingUrl(giveaway, baseUrl);
+  const title = escapeHtml(localizedTitle(giveaway, l));
+  const image = thumbnailUrl(giveaway);
+  const ends = endsCaption(giveaway, l, now);
+  const entries = Number(giveaway.giveaway?.entryCount) || 0;
+
+  // Entry counts only persuade once there are some — "0 participações" argues
+  // the other way.
+  const meta = [entries > 0 ? s.giveawayEntries(entries) : s.giveawayFree, ends]
+    .filter(Boolean)
+    .map(escapeHtml)
+    .join(' · ');
+
+  const thumbCell = image
+    ? `<td width="124" valign="top" style="width:124px;">
+            <a href="${url}"><img src="${escapeHtml(image)}" width="124" height="124" alt="${title}" style="display:block;width:124px;height:124px;object-fit:cover;border:0;"></a>
+          </td>`
+    : '';
+
+  return `<table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="margin:0 0 18px;border:1px solid ${COLORS.gold};border-radius:10px;overflow:hidden;background:${COLORS.dark};">
+        <tr>
+          ${thumbCell}
+          <td valign="middle" style="padding:16px 18px;background:${COLORS.dark};">
+            <div style="font-size:11px;font-weight:700;color:${COLORS.gold};text-transform:uppercase;letter-spacing:0.09em;margin-bottom:5px;">${escapeHtml(s.giveawayLabel)}</div>
+            <a href="${url}" style="text-decoration:none;color:${COLORS.cream};font-size:15px;font-weight:700;line-height:1.35;">${title}</a>
+            <div style="margin-top:4px;font-size:12px;color:${COLORS.creamMuted};">${meta}</div>
+            <table cellpadding="0" cellspacing="0" role="presentation" style="margin-top:12px;">
+              <tr>
+                <td style="background:${COLORS.gold};border-radius:999px;">
+                  <a href="${url}" style="display:inline-block;padding:9px 22px;color:${COLORS.dark};font-weight:700;text-decoration:none;font-size:13px;">${escapeHtml(s.giveawayCta)}</a>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </table>`;
+}
+
+/**
  * One card: a square thumbnail flush to the left edge, then category, title,
  * price and what the price means. The whole title is the link — the card has no
  * button of its own, so six of them stack without turning into a wall of CTAs.
@@ -350,6 +454,11 @@ function hasAuctionPlaceholder(html) {
   return PLACEHOLDER_PATTERN.test(String(html || ''));
 }
 
+function hasGiveawayPlaceholder(html) {
+  GIVEAWAY_PATTERN.lastIndex = 0;
+  return GIVEAWAY_PATTERN.test(String(html || ''));
+}
+
 /** Swaps every placeholder in one HTML body for the rendered block. */
 function expandAuctionPlaceholders(html, language, listings, options = {}) {
   const source = String(html || '');
@@ -359,18 +468,48 @@ function expandAuctionPlaceholders(html, language, listings, options = {}) {
 }
 
 /**
- * Expands the placeholder across a whole `{ pt: {subject, html}, ... }` content
- * object, picking the auctions once so every language shows the same six.
+ * Swaps the giveaway placeholder for the band — or for nothing, which is the
+ * normal case: most weeks there is no giveaway running and the template must
+ * close over the gap without leaving an empty frame behind.
+ */
+function expandGiveawayPlaceholders(html, language, giveaway, options = {}) {
+  const source = String(html || '');
+  if (!hasGiveawayPlaceholder(source)) return source;
+  const block = renderGiveawayBlock(giveaway, language, options);
+  return source.replace(GIVEAWAY_PATTERN, () => block);
+}
+
+/** Both blocks, in one pass over one language's HTML. */
+function expandNewsletterBlocks(html, language, { listings = [], giveaway = null, baseUrl, now } = {}) {
+  const options = { baseUrl, now };
+  return expandGiveawayPlaceholders(
+    expandAuctionPlaceholders(html, language, listings, options),
+    language,
+    giveaway,
+    options
+  );
+}
+
+/**
+ * Expands both placeholders across a whole `{ pt: {subject, html}, ... }`
+ * content object, choosing the auctions and the giveaway once so every language
+ * shows the same ones.
  *
- * Content without a placeholder is returned untouched and no query is run.
+ * Each query is skipped when no language asks for that block, so a plain
+ * hand-written campaign still goes out without touching the database.
  */
 async function expandCampaignContent(content, { limit = DEFAULT_AUCTION_COUNT, now = new Date() } = {}) {
   const languages = Object.keys(content || {});
   const needsAuctions = languages.some(l => hasAuctionPlaceholder(content[l]?.html));
-  if (!needsAuctions) return { content, listings: [] };
+  const needsGiveaway = languages.some(l => hasGiveawayPlaceholder(content[l]?.html));
+  if (!needsAuctions && !needsGiveaway) return { content, listings: [], giveaway: null };
 
-  const listings = await pickFeaturedAuctions({ limit, now });
-  if (listings.length === 0) {
+  const [listings, giveaway] = await Promise.all([
+    needsAuctions ? pickFeaturedAuctions({ limit, now }) : [],
+    needsGiveaway ? pickActiveGiveaway({ now }) : null
+  ]);
+
+  if (needsAuctions && listings.length === 0) {
     logger.warn('[newsletter] {{AUCTIONS}} used but no open auction qualifies — block rendered empty.');
   }
 
@@ -380,22 +519,28 @@ async function expandCampaignContent(content, { limit = DEFAULT_AUCTION_COUNT, n
     const variant = content[l];
     expanded[l] = {
       ...variant,
-      html: expandAuctionPlaceholders(variant?.html, l, listings, { baseUrl, now })
+      html: expandNewsletterBlocks(variant?.html, l, { listings, giveaway, baseUrl, now })
     };
   }
-  return { content: expanded, listings };
+  return { content: expanded, listings, giveaway };
 }
 
 module.exports = {
   NEWSLETTER_LANGUAGES,
   AUCTIONS_PLACEHOLDER,
+  GIVEAWAY_PLACEHOLDER,
   DEFAULT_AUCTION_COUNT,
   pickFeaturedAuctions,
+  pickActiveGiveaway,
   renderAuctionCard,
   renderAuctionsBlock,
+  renderGiveawayBlock,
   expandAuctionPlaceholders,
+  expandGiveawayPlaceholders,
+  expandNewsletterBlocks,
   expandCampaignContent,
   hasAuctionPlaceholder,
+  hasGiveawayPlaceholder,
   localizedTitle,
   categoryLabel,
   formatPrice
