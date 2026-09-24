@@ -9,6 +9,7 @@ const { sendPlatinumBidderInvitations, sendPrivateRoomNotInvitedToBidders, handl
 const { notifyPrivateRoomInvitation, notifyPrivateRoomAccepted, notifyPrivateRoomDeclined, emitNewNotificationToUser, emitPrivateRoomInvitationToUser } = require('../services/notificationService');
 const { isPrivateRoomEligible } = require('../services/reputationService');
 const { getReviewScoresForUsers } = require('../services/reviewService');
+const { bidderKey } = require('../utils/bidFormat');
 const logger = require('../utils/logger');
 
 const router = express.Router();
@@ -37,9 +38,11 @@ router.get('/listings/:id/bidders', authenticateToken, async (req, res) => {
       return res.status(403).json({ error: 'Forbidden', message: 'Only the seller can view bidders' });
     }
 
-    // Get all bids for this listing (include reputation for Private Room eligibility)
+    // No email is selected. The seller picks who to invite by user id
+    // (see POST platinum-bidders, which only accepts bidderIds), so the address
+    // was never needed here — it was only being displayed.
     const bids = await Bid.find({ listing: listingId })
-      .populate('bidder', 'firstName lastName email emailVerified hasDeposit reputationScore disputeLossCount')
+      .populate('bidder', 'firstName lastName emailVerified hasDeposit reputationScore disputeLossCount')
       .sort({ createdAt: -1 });
 
     // Get unique bidders (both authenticated and unauthenticated)
@@ -52,9 +55,9 @@ router.get('/listings/:id/bidders', authenticateToken, async (req, res) => {
         if (!uniqueBidders.has(bidderId)) {
           uniqueBidders.set(bidderId, {
             _id: bid.bidder._id,
+            bidderKey: bidderKey(bid, listingId),
             firstName: bid.bidder.firstName,
             lastName: bid.bidder.lastName,
-            email: bid.bidder.email,
             emailVerified: bid.bidder.emailVerified,
             hasDeposit: bid.bidder.hasDeposit,
             reputationScore: bid.bidder.reputationScore ?? 100,
@@ -79,7 +82,9 @@ router.get('/listings/:id/bidders', authenticateToken, async (req, res) => {
         // Unauthenticated bidder (by email)
         if (!uniqueBidders.has(bid.bidderEmail)) {
           uniqueBidders.set(bid.bidderEmail, {
-            email: bid.bidderEmail,
+            // Keyed internally by email so guests still group correctly; only
+            // the pseudonym leaves the server.
+            bidderKey: bidderKey(bid, listingId),
             isAuthenticated: false,
             bidCount: 0,
             highestBid: 0,
@@ -449,7 +454,8 @@ router.post('/listings/:id/accept-invitation', authenticateToken, async (req, re
     await listing.save();
 
     const bidder = invitation.bidder;
-    const bidderName = `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email;
+    // Never fall back to the address: this name is shown to the seller.
+    const bidderName = `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'A bidder';
     const sellerUserId = listing.seller?._id?.toString?.() || listing.seller?.toString?.();
     const io = req.app.get('io');
 

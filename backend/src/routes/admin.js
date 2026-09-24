@@ -827,6 +827,55 @@ router.put('/auctions/:id/images', authenticateToken, requireAdmin, async (req, 
 });
 
 /**
+ * GET /api/admin/auctions/:id/bidders
+ * The bidders on a listing, with their email addresses.
+ *
+ * This is the ONE endpoint that returns buyer contact details, and it is
+ * behind requireAdmin — Nexus, and nowhere else. The seller-facing list at
+ * GET /api/private-room/listings/:id/bidders deliberately returns none;
+ * Nexus used to read that one, which both leaked the address to sellers and
+ * answered 403 to any admin who was not the seller.
+ */
+router.get('/auctions/:id/bidders', authenticateToken, requireAdmin, async (req, res) => {
+  if (!isValidObjectId(req.params.id)) return res.status(400).json({ error: 'Invalid listing ID' });
+  try {
+    const bids = await Bid.find({ listing: req.params.id })
+      .populate('bidder', 'firstName lastName email emailVerified')
+      .sort({ createdAt: -1 })
+      .lean();
+
+    const byBidder = new Map();
+    for (const bid of bids) {
+      const key = bid.bidder?._id?.toString() || bid.bidderEmail;
+      if (!key) continue;
+      if (!byBidder.has(key)) {
+        byBidder.set(key, {
+          _id: bid.bidder?._id ?? null,
+          firstName: bid.bidder?.firstName ?? null,
+          lastName: bid.bidder?.lastName ?? null,
+          email: bid.bidder?.email || bid.bidderEmail || null,
+          emailVerified: !!bid.bidder?.emailVerified,
+          isAuthenticated: !!bid.bidder,
+          bidCount: 0,
+          highestBid: 0,
+          lastBidDate: bid.createdAt
+        });
+      }
+      const entry = byBidder.get(key);
+      entry.bidCount++;
+      entry.highestBid = Math.max(entry.highestBid, bid.amount);
+      if (bid.createdAt > entry.lastBidDate) entry.lastBidDate = bid.createdAt;
+    }
+
+    const bidders = Array.from(byBidder.values()).sort((a, b) => b.highestBid - a.highestBid);
+    return res.json({ bidders, total: bidders.length });
+  } catch (error) {
+    logger.error('GET /api/admin/auctions/:id/bidders error:', error);
+    return res.status(500).json({ error: 'Failed to load bidders' });
+  }
+});
+
+/**
  * GET /api/admin/auctions/:id/social
  * Facebook and Instagram state for the listing, the caption that would be
  * posted, and whether each platform can be published to now.

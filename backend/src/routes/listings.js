@@ -31,6 +31,7 @@ const logger = require('../utils/logger');
 const { recordViewIfNew } = require('../utils/viewCounter');
 const { normalizeListingLocaleFields } = require('../utils/listingLocale');
 const { parseScheduledStart, scheduleBlock, ListingScheduleError } = require('../utils/listingSchedule');
+const { formatBidPublic } = require('../utils/bidFormat');
 
 const router = express.Router();
 
@@ -2376,19 +2377,16 @@ router.get('/:id/bids', authenticateToken, async (req, res) => {
 
     // Get all bids sorted by amount (highest first)
     const bids = await Bid.find({ listing: listing._id })
-      .populate('bidder', 'firstName lastName email emailVerified hasDeposit')
+      .populate('bidder', 'firstName lastName emailVerified hasDeposit reputationScore')
       .sort({ amount: -1, createdAt: -1 })
       .lean();
 
-    // Format bids
+    // Allowlist, plus the deposit flag the seller needs to pick a winner. This
+    // used to spread the whole document (`...bid`) and add bidderEmail on top,
+    // which published maxBid, notes, ipAddress and the fraud flags along with
+    // the buyer's address. Buyer contact details are read from Nexus.
     const formattedBids = bids.map(bid => ({
-      ...bid,
-      bidderName: bid.bidder
-        ? `${bid.bidder.firstName} ${bid.bidder.lastName}`
-        : (bid.bidderEmail ? bid.bidderEmail.split('@')[0] : 'Anonymous'),
-      bidderEmail: bid.bidderEmail || (bid.bidder ? bid.bidder.email : null),
-      isAuthenticated: !!bid.bidder,
-      bidderVerified: bid.bidder ? (bid.bidder.emailVerified || false) : false,
+      ...formatBidPublic(bid),
       bidderHasDeposit: bid.bidder ? (bid.bidder.hasDeposit || false) : false
     }));
 

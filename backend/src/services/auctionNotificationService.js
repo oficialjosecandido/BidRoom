@@ -6,6 +6,7 @@ const { sendEmail } = require('./emailService');
 const { isStripeTestMode } = require('../utils/stripe.util');
 const { getEmailTemplate, getUserLanguage } = require('./emailTemplates');
 const { createTransactionForListing, createTransactionForAcceptedOffer } = require('./transactionService');
+const { publicDisplayName } = require('../utils/bidFormat');
 const logger = require('../utils/logger');
 
 /**
@@ -1062,7 +1063,8 @@ async function handleAuctionEnd(listingId, io = null) {
       );
 
       const { notifySellerWinnerSelected, notifyBuyerAuctionWon, emitNewNotificationToUser } = require('./notificationService');
-      const winnerName = highestBid.bidder ? `${highestBid.bidder.firstName} ${highestBid.bidder.lastName}`.trim() : (highestBid.bidderEmail || 'A bidder').split('@')[0];
+      // Shown to the seller, so it must not be derived from a guest's email.
+      const winnerName = publicDisplayName(highestBid.bidder, 'A bidder');
       const sellerUserId = listingForNotify.seller?._id?.toString?.() || listingForNotify.seller?.toString?.();
       const buyerUserId = highestBid.bidder?._id?.toString?.() || highestBid.bidder?.toString?.();
       if (sellerUserId) {
@@ -1179,7 +1181,8 @@ async function handleWinnerSelection(listingId, winnerBidId, io = null) {
 
     // In-app notifications for seller and winner
     const { notifySellerWinnerSelected, notifyBuyerAuctionWon, emitNewNotificationToUser } = require('./notificationService');
-    const winnerName = winnerBid.bidder ? `${winnerBid.bidder.firstName} ${winnerBid.bidder.lastName}`.trim() : (winnerBid.bidderEmail || 'A bidder').split('@')[0];
+    // Shown to the seller, so it must not be derived from a guest's email.
+    const winnerName = publicDisplayName(winnerBid.bidder, 'A bidder');
     const sellerUserId = listing.seller?._id?.toString?.() || listing.seller?.toString?.();
     const buyerUserId = winnerBid.bidder?._id?.toString?.() || winnerBid.bidder?.toString?.();
     if (sellerUserId) {

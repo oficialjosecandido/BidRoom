@@ -63,6 +63,8 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
   invitationPending = false;
   currentUserId: string | null = null;
   currentUser: AppUser | null = null;
+  /** Our own bidderId for this listing, from GET /bids/listing/:id. Null until we bid. */
+  viewerBidderId: string | null = null;
   viewerCount = 0;
   private socketSubscriptions: Subscription[] = [];
   /** Real-time socket subs — tracked separately so re-entering subscribeToUpdates() doesn't stack duplicates. */
@@ -212,6 +214,7 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
     this.bidsService.getBidsByListing(this.listingId, 'desc').subscribe({
       next: (response) => {
         this.bids = response.bids;
+        this.viewerBidderId = response.viewerBidderId || null;
         this.updatePlatinumBidders();
         this.cdr.detectChanges();
       },
@@ -241,16 +244,13 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
 
     // Overlay actual bid data
     for (const b of this.bids) {
-      if (!b.bidder) continue;
-      const bidderId = typeof b.bidder === 'string' ? b.bidder : b.bidder._id;
+      if (!b.bidderId) continue;
+      const bidderId = b.bidderId;
       const existing = platinumMap.get(bidderId);
       if (!existing) continue; // only show platinum invitees
       const bidDate = new Date(b.createdAt).getTime();
       const existingDate = existing.bidCount > 0
-        ? new Date(this.bids.find(x => {
-            const xId = typeof x.bidder === 'string' ? x.bidder : x.bidder?._id;
-            return xId === bidderId && x.amount === existing.latestBid;
-          })?.createdAt || 0).getTime()
+        ? new Date(this.bids.find(x => x.bidderId === bidderId && x.amount === existing.latestBid)?.createdAt || 0).getTime()
         : 0;
       if (bidDate >= existingDate) {
         const name = b.bidderName || [b.bidderFirstName, b.bidderLastName].filter(Boolean).join(' ') || existing.name;
@@ -708,17 +708,21 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
     this.router.navigate(['/dashboard/transactions']);
   }
 
+  /**
+   * Identity is compared by id, never by email: the bids API no longer returns
+   * bidder emails (see backend utils/bidFormat.js). viewerBidderId is our own
+   * id for this listing, so no other bidder is identifiable from the response.
+   */
   private isCurrentUserWinner(listing: Listing): boolean {
-    const email = this.currentUser?.email?.toLowerCase();
-    if (!email) return false;
-    if (listing.winner?.email && listing.winner.email.toLowerCase() === email) {
+    const me = this.viewerBidderId;
+    if (!me) return false;
+    if (listing.winner?._id && listing.winner._id === me) {
       return true;
     }
     const top = this.getTemporaryWinner();
-    if (!top || !this.currentUser?.email) return false;
+    if (!top) return false;
     const topBid = this.bids.find(b => b.amount === top.amount);
-    if (topBid?.bidderEmail && topBid.bidderEmail.toLowerCase() === email) return true;
-    return false;
+    return topBid?.bidderId === me;
   }
 
   private onPrivateRoomEndedFromServer(): void {
@@ -1031,7 +1035,7 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
     if (bidder.bidderFirstName && bidder.bidderLastName) {
       return `${bidder.bidderFirstName} ${bidder.bidderLastName}`;
     }
-    return bidder.bidderName || bidder.bidderEmail || 'Guest Bidder';
+    return bidder.bidderName || 'Guest Bidder';
   }
 
   getInitial(name: string): string {

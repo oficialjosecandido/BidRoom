@@ -3,13 +3,14 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import {
+  AdminBidder,
   AdminListingSocial,
   AdminListingText,
   AdminService,
   AdminSocialPlatform
 } from '../../services/admin.service';
 import { AdminSidebarComponent } from '../sidebar/admin-sidebar.component';
-import { PrivateRoomService, Bidder } from '../../../private-room/services/private-room.service';
+import { PrivateRoomService } from '../../../private-room/services/private-room.service';
 import { Listing } from '../../../shared/services/listings.service';
 
 const NEXUS_CATEGORIES: { id: string; name: string; subCategories: string[] }[] = [
@@ -126,7 +127,7 @@ export class AdminAuctionDetailsComponent implements OnInit, OnDestroy {
 
   auctionId = '';
   auction: Listing | null = null;
-  bidders: Bidder[] = [];
+  bidders: AdminBidder[] = [];
   isLoading = false;
   isCreatingPrivateRoom = false;
   isClosingPrivateRoom = false;
@@ -269,7 +270,8 @@ export class AdminAuctionDetailsComponent implements OnInit, OnDestroy {
   }
 
   loadBidders(): void {
-    this.privateRoomService.getBidders(this.auctionId).subscribe({
+    // Nexus reads its own endpoint: the seller-facing one carries no emails.
+    this.adminService.getAuctionBidders(this.auctionId).subscribe({
       next: (response) => {
         this.bidders = response.bidders;
       },
@@ -300,7 +302,7 @@ export class AdminAuctionDetailsComponent implements OnInit, OnDestroy {
     this.selectedPlatinumBidders = [];
   }
 
-  togglePlatinumBidder(bidderId: string | undefined): void {
+  togglePlatinumBidder(bidderId: string | null | undefined): void {
     if (!bidderId) return;
     
     const index = this.selectedPlatinumBidders.indexOf(bidderId);
@@ -315,7 +317,7 @@ export class AdminAuctionDetailsComponent implements OnInit, OnDestroy {
     }
   }
 
-  isPlatinumSelected(bidderId: string | undefined): boolean {
+  isPlatinumSelected(bidderId: string | null | undefined): boolean {
     if (!bidderId) return false;
     return this.selectedPlatinumBidders.includes(bidderId);
   }
@@ -361,18 +363,18 @@ export class AdminAuctionDetailsComponent implements OnInit, OnDestroy {
     });
   }
 
-  getBidderName(bidder: Bidder): string {
+  getBidderName(bidder: AdminBidder): string {
     if (bidder.isAuthenticated && bidder.firstName && bidder.lastName) {
       return `${bidder.firstName} ${bidder.lastName}`;
     }
-    return bidder.email;
+    return bidder.email || 'Guest Bidder';
   }
 
-  getAuthenticatedBidders(): Bidder[] {
+  getAuthenticatedBidders(): AdminBidder[] {
     return this.bidders.filter(b => b.isAuthenticated && b._id);
   }
 
-  isPlatinumBidder(bidderId: string | undefined): boolean {
+  isPlatinumBidder(bidderId: string | null | undefined): boolean {
     if (!bidderId || !this.auction?.platinumBidders) {
       return false;
     }
@@ -408,8 +410,8 @@ export class AdminAuctionDetailsComponent implements OnInit, OnDestroy {
     });
   }
 
-  bidderTrackKey(bidder: Bidder): string {
-    return bidder._id != null ? String(bidder._id) : bidder.email;
+  bidderTrackKey(bidder: AdminBidder): string {
+    return bidder._id != null ? String(bidder._id) : (bidder.email || String(bidder.lastBidDate));
   }
 
   deleteListing(): void {

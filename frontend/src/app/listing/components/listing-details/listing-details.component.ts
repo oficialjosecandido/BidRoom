@@ -857,10 +857,9 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
   get aggregatedBidsForWinnerSelection(): Bid[] {
     const byKey = new Map<string, Bid>();
     for (const bid of this.bids) {
-      const key =
-        bid.bidder?._id?.toString() ||
-        (bid.bidderEmail ? bid.bidderEmail.toLowerCase() : '') ||
-        bid._id;
+      // Group by identity without an email: bidderId for registered bidders,
+      // bidderKey (an opaque per-listing pseudonym) for guests.
+      const key = bid.bidderId || bid.bidderKey || bid._id;
       const prev = byKey.get(key);
       if (!prev || bid.amount > prev.amount) {
         byKey.set(key, bid);

@@ -10,6 +10,7 @@ const { checkBidRateLimit, getClientIp } = require('../middleware/bidRateLimiter
 const { runFraudChecks, updateUserSignals } = require('../services/fraudDetectionService');
 const Block = require('../models/Block');
 const { scheduleBlock } = require('../utils/listingSchedule');
+const { formatBidPublic } = require('../utils/bidFormat');
 const logger = require('../utils/logger');
 
 const router = express.Router();
@@ -30,48 +31,44 @@ router.get('/listing/:listingId', optionalAuth, async (req, res) => {
     const sortOrder = sort === 'asc' ? 1 : -1;
 
     const bids = await Bid.find({ listing: req.params.listingId })
-      .populate('bidder', 'firstName lastName emailVerified kycStatus savedPaymentMethodId reputationScore')
+      // `uid` is populated only to resolve viewerBidderId below; the allowlist
+      // serializer never emits it.
+      .populate('bidder', 'firstName lastName emailVerified kycStatus savedPaymentMethodId reputationScore uid')
       .sort({ createdAt: sortOrder })
       .lean();
-
-    // Determine if the requester is the listing's seller (entitled to see full emails)
-    const listing = await Listing.findById(req.params.listingId).select('seller').lean();
-    const requestingUid = req.user?.uid || null;
-    const sellerUser = listing?.seller ? await Customer.findById(listing.seller).select('uid').lean() : null;
-    const isSeller = requestingUid && sellerUser && requestingUid === sellerUser.uid;
 
     // Get buyer review scores for all bidders (authenticated users only)
     const bidderIds = bids.filter((b) => b.bidder && b.bidder._id).map((b) => b.bidder._id.toString());
     const scoreMap = bidderIds.length > 0 ? await getReviewScoresForUsers(bidderIds) : {};
 
-    // Format bids for frontend — emails only exposed to the seller
+    // This endpoint is unauthenticated (optionalAuth). Everything it returns is
+    // public, so it goes through the allowlist — which is also why there is no
+    // longer an isSeller branch here: the seller sees what every other bidder
+    // sees, and buyer contact details are read from Nexus, not from the API.
     const formattedBids = bids.map(bid => {
       const bidderId = bid.bidder && bid.bidder._id ? bid.bidder._id.toString() : null;
       const scores = bidderId ? scoreMap[bidderId] : null;
-      const fullEmail = bid.bidderEmail || (bid.bidder ? bid.bidder.email : null);
-      return {
-        ...bid,
-        bidderName: bid.bidder
-          ? `${bid.bidder.firstName} ${bid.bidder.lastName}`
-          : (bid.bidderEmail ? bid.bidderEmail.split('@')[0] : 'Anonymous'),
-        bidderInitials: bid.bidder
-          ? `${bid.bidder.firstName.charAt(0)}${bid.bidder.lastName.charAt(0)}`
-          : (bid.bidderEmail ? bid.bidderEmail.charAt(0).toUpperCase() : 'A'),
-        bidderEmail: isSeller ? fullEmail : null,
-        isAuthenticated: !!bid.bidder,
-        bidderVerified: bid.bidder ? (bid.bidder.emailVerified || false) : false,
+      return formatBidPublic(bid, {
         buyerTrustTier: computeBuyerTrustTier(bid.bidder),
-        reputationScore: bid.bidder?.reputationScore ?? null,
-        bidderFirstName: bid.bidder ? bid.bidder.firstName : null,
-        bidderLastName: bid.bidder ? bid.bidder.lastName : null,
         buyerScore: scores ? scores.buyerScore : null,
         buyerReviewCount: scores ? scores.buyerReviewCount : 0
-      };
+      });
     });
+
+    // The viewer's own id, so the client can tell which bids are theirs without
+    // any identifier of the other bidders being published. Resolved from the
+    // bids already loaded (no extra query); null for guests and for viewers who
+    // have not bid on this listing, which is exactly when it is not needed.
+    const viewerUid = req.isAuthenticated ? req.user?.uid : null;
+    const viewerBid = viewerUid
+      ? bids.find((b) => b.bidder && b.bidder.uid === viewerUid)
+      : null;
+    const viewerBidderId = viewerBid ? viewerBid.bidder._id.toString() : null;
 
     res.json({
       bids: formattedBids,
-      total: formattedBids.length
+      total: formattedBids.length,
+      viewerBidderId
     });
   } catch (error) {
     logger.error('Error fetching bids:', error);
@@ -615,24 +612,13 @@ router.post('/', optionalAuth, requireActiveAccountIfAuthenticated, requireNoDis
       }
     }
 
-    // Format bid response for both authenticated and unauthenticated bidders
-    const formattedBid = {
-      ...populatedBid,
-      bidderName: populatedBid.bidder
-        ? `${populatedBid.bidder.firstName} ${populatedBid.bidder.lastName}`
-        : (populatedBid.bidderEmail ? populatedBid.bidderEmail.split('@')[0] : 'Anonymous'),
-      bidderInitials: populatedBid.bidder
-        ? `${populatedBid.bidder.firstName.charAt(0)}${populatedBid.bidder.lastName.charAt(0)}`
-        : (populatedBid.bidderEmail ? populatedBid.bidderEmail.charAt(0).toUpperCase() : 'A'),
-      bidderEmail: populatedBid.bidderEmail || (populatedBid.bidder ? populatedBid.bidder.email : null),
-      // Add verification and deposit info for authenticated bidders
-      isAuthenticated: !!populatedBid.bidder,
-      bidderVerified: populatedBid.bidder ? (populatedBid.bidder.emailVerified || false) : false,
-      buyerTrustTier: computeBuyerTrustTier(populatedBid.bidder),
-      reputationScore: populatedBid.bidder?.reputationScore ?? null,
-      bidderFirstName: populatedBid.bidder ? populatedBid.bidder.firstName : null,
-      bidderLastName: populatedBid.bidder ? populatedBid.bidder.lastName : null
-    };
+    // This object is broadcast over the socket to everyone in the listing room
+    // and cached in Redis, so it gets the same allowlist as the public list.
+    // It used to be the raw document plus the bidder's email — which meant a
+    // guest's address reached every viewer of the page.
+    const formattedBid = formatBidPublic(populatedBid, {
+      buyerTrustTier: computeBuyerTrustTier(populatedBid.bidder)
+    });
 
     // Get Redis service from app (io already resolved above for outbid / seller notifications)
     const redisService = req.app.get('redisService');
@@ -707,12 +693,14 @@ router.post('/', optionalAuth, requireActiveAccountIfAuthenticated, requireNoDis
       emitNewNotificationToUser(io, sellerUserId).catch(() => {});
     }
 
-    // Platform ops alert (every bid)
+    // Platform ops alert (every bid). The address is read from the source
+    // document, not from formattedBid — that one carries no email by design,
+    // and this alert goes to our own inbox, not to another user.
     sendPlatformNewBidAlert(
       listing,
       amount,
       formattedBid.bidderName || 'A bidder',
-      formattedBid.bidderEmail || null
+      populatedBid.bidderEmail || user?.email || null
     ).catch(err => logger.error('Failed to send platform new-bid alert:', err));
 
     res.status(201).json(formattedBid);

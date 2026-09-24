@@ -71,15 +71,14 @@ offerSchema.index({ offerer: 1, createdAt: -1 }); // For user offer history
 offerSchema.index({ listing: 1, status: 1 }); // For finding active offers
 offerSchema.index({ status: 1, expiresAt: 1 }); // For finding expired offers
 
-// Virtual for offerer display name
+// Virtual for offerer display name. Never the local part of a guest's email:
+// this virtual is serialized wherever an offer is, so it has to be safe to show
+// to the seller and to other bidders. Buyer contact details live in Nexus.
 offerSchema.virtual('offererName').get(function() {
   if (this.populated('offerer')) {
-    return `${this.offerer.firstName} ${this.offerer.lastName}`;
+    return `${this.offerer.firstName || ''} ${this.offerer.lastName || ''}`.trim() || 'Guest';
   }
-  if (this.offererEmail) {
-    return this.offererEmail.split('@')[0];
-  }
-  return 'Anonymous';
+  return 'Guest';
 });
 
 // Pre-save: either offerer or offererEmail must be provided

@@ -106,11 +106,18 @@ export class PlatinumBiddersComponent implements OnInit {
     });
   }
 
+  /**
+   * Sellers see names, never emails — buyer contact details live only in Nexus.
+   * Bidders without a name (guests, who cannot be invited anyway) get a stable
+   * label from their per-listing pseudonym so rows stay tellable apart.
+   */
   getBidderName(bidder: Bidder): string {
     if (bidder.isAuthenticated && bidder.firstName && bidder.lastName) {
       return `${bidder.firstName} ${bidder.lastName}`;
     }
-    return bidder.email;
+    const name = [bidder.firstName, bidder.lastName].filter(Boolean).join(' ');
+    if (name) return name;
+    return bidder.bidderKey ? `Bidder ${bidder.bidderKey.slice(0, 6)}` : 'Guest Bidder';
   }
 
   formatDate(dateString: string): string {

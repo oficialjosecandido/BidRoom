@@ -7,7 +7,8 @@ export interface Bidder {
   _id?: string;
   firstName?: string;
   lastName?: string;
-  email: string;
+  /** Opaque per-listing pseudonym. Replaces email, which the API no longer returns. */
+  bidderKey?: string;
   emailVerified?: boolean;
   isAuthenticated: boolean;
   buyerTrustTier?: number;

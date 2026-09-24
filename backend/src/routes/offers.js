@@ -52,16 +52,12 @@ const logger = require('../utils/logger');
 // GET /api/offers/listing/:listingId - Get all offers for a listing
 router.get('/listing/:listingId', optionalAuth, async (req, res) => {
   try {
+    // No email is selected: nothing downstream may return one, so there is no
+    // reason to load it.
     const offers = await Offer.find({ listing: req.params.listingId })
-      .populate('offerer', 'firstName lastName email emailVerified uid')
+      .populate('offerer', 'firstName lastName emailVerified uid')
       .sort({ createdAt: -1 })
       .lean();
-
-    // Determine if the requester is the listing's seller (entitled to see full emails)
-    const listing = await Listing.findById(req.params.listingId).select('seller').lean();
-    const requestingUid = req.user?.uid || null;
-    const sellerUser = listing?.seller ? await Customer.findById(listing.seller).select('uid').lean() : null;
-    const isSeller = requestingUid && sellerUser && requestingUid === sellerUser.uid;
 
     const uids = [...new Set(offers.map(o => o.offerer?.uid).filter(Boolean))];
     const customers = uids.length
@@ -69,28 +65,16 @@ router.get('/listing/:listingId', optionalAuth, async (req, res) => {
       : [];
     const balanceByUid = customers.reduce((acc, c) => { acc[c.uid] = c.balance ?? 0; return acc; }, {});
 
+    // Same allowlist as the socket payload, so the two cannot drift apart —
+    // which is how the socket ended up broadcasting emails the HTTP list was
+    // careful to withhold.
     const formattedOffers = offers.map(offer => {
-      const offerer = offer.offerer;
-      const uid = offerer?.uid;
+      const uid = offer.offerer?.uid;
       const balance = uid != null ? balanceByUid[uid] : null;
-      const offererTier = features.membershipTiers ? tierFromBalance(balance) : null;
-      const offererVerified = !!offerer?.emailVerified;
-      const name = offerer
-        ? `${offerer.firstName} ${offerer.lastName}`
-        : (offer.offererEmail ? offer.offererEmail.split('@')[0] : 'Anonymous');
-      const initials = offerer
-        ? `${offerer.firstName.charAt(0)}${offerer.lastName.charAt(0)}`
-        : (offer.offererEmail ? offer.offererEmail.charAt(0).toUpperCase() : 'A');
-      return {
-        ...offer,
-        // Expose email only to the seller; strip it for everyone else
-        offerer: offerer ? { _id: offerer._id, firstName: offerer.firstName, lastName: offerer.lastName, email: isSeller ? offerer.email : null } : null,
-        offererEmail: isSeller ? (offer.offererEmail || null) : null,
-        offererName: name,
-        offererInitials: initials,
-        offererVerified,
-        offererTier: offererTier || null
-      };
+      return formatOfferForSocket(offer, {
+        offererVerified: !!offer.offerer?.emailVerified,
+        offererTier: (features.membershipTiers ? tierFromBalance(balance) : null) || null
+      });
     });
 
     res.json({
@@ -285,9 +269,13 @@ async function createOffer(req, res) {
     const name = populatedOffer.offerer
       ? `${populatedOffer.offerer.firstName} ${populatedOffer.offerer.lastName}`
       : (populatedOffer.offererEmail ? populatedOffer.offererEmail.split('@')[0] : 'Anonymous');
-    const initials = populatedOffer.offerer
-      ? `${populatedOffer.offerer.firstName.charAt(0)}${populatedOffer.offerer.lastName.charAt(0)}`
-      : (populatedOffer.offererEmail ? populatedOffer.offererEmail.charAt(0).toUpperCase() : 'A');
+    // `name` above may be the local part of a guest's email. That is fine in the
+    // confirmation email we send to that same person, but it must never be shown
+    // to the seller or anyone else — see utils/offerFormat.js, which is where
+    // the initials shown in the UI now come from.
+    const publicName = populatedOffer.offerer
+      ? `${populatedOffer.offerer.firstName || ''} ${populatedOffer.offerer.lastName || ''}`.trim() || 'A buyer'
+      : 'A buyer';
 
     const io = req.app.get('io');
     const confirmEmail = populatedOffer.offerer?.email || populatedOffer.offererEmail;
@@ -337,17 +325,13 @@ async function createOffer(req, res) {
         listingSlug: listing.slug || null,
         listingTitle: listing.title || 'Your listing',
         offerAmount: amount,
-        offererName: name,
+        offererName: publicName,
         sellerUserId
       }).catch(err => logger.error('Failed to create proposal notification:', err));
       if (io) emitNewNotificationToUser(io, sellerUserId).catch(() => {});
     }
 
-    res.status(201).json({
-      ...populatedOffer,
-      offererName: name,
-      offererInitials: initials
-    });
+    res.status(201).json(formatOfferForSocket(populatedOffer));
 }
 
 // POST /api/offers - Create a new offer (auth optional; guests must provide email)
@@ -500,14 +484,9 @@ router.patch('/:offerId/accept', authenticateToken, async (req, res) => {
       });
     }
 
-    const offererName = offer.offerer
-      ? `${offer.offerer.firstName} ${offer.offerer.lastName}`
-      : (offer.offererEmail ? offer.offererEmail.split('@')[0] : 'Guest');
-
-    res.json({
-      ...offer.toObject(),
-      offererName
-    });
+    // The seller is the one reading this. They get the offer, not the buyer's
+    // address — that is in Nexus.
+    res.json(formatOfferForSocket(offer.toObject()));
   } catch (error) {
     logger.error('Error accepting offer:', error);
     res.status(400).json({
@@ -580,7 +559,7 @@ router.patch('/:offerId/reject', authenticateToken, async (req, res) => {
             sellerUserId: user._id.toString()
           }).catch(err => logger.error('Failed Stripe-required notification:', err));
           if (io) emitNewNotificationToUser(io, user._id.toString()).catch(() => {});
-          return res.json({ ...offer.toObject(), stripeRequired: true });
+          return res.json({ ...formatOfferForSocket(offer.toObject()), stripeRequired: true });
         }
 
         const autoOffer = remainingQualifying[0];
@@ -614,7 +593,7 @@ router.patch('/:offerId/reject', authenticateToken, async (req, res) => {
           });
         }
 
-        return res.json({ ...offer.toObject(), autoAccepted: true });
+        return res.json({ ...formatOfferForSocket(offer.toObject()), autoAccepted: true });
       }
     }
 
@@ -642,7 +621,7 @@ router.patch('/:offerId/reject', authenticateToken, async (req, res) => {
       });
     }
 
-    res.json(offer);
+    res.json(formatOfferForSocket(offer.toObject ? offer.toObject() : offer));
   } catch (error) {
     logger.error('Error rejecting offer:', error);
     res.status(400).json({

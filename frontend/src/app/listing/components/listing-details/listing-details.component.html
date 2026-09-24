@@ -959,10 +959,10 @@
       }
       @if (!createPrivateRoomBiddersLoading && createPrivateRoomBidders.length > 0) {
         <ul class="sel-list">
-          @for (b of createPrivateRoomBidders; track b.email) {
+          @for (b of createPrivateRoomBidders; track b.bidderKey) {
             <li class="sel-item" [class.sel-ineligible]="!b.isAuthenticated">
               <div class="sel-info">
-                <span class="sel-name">{{ (b.firstName && b.lastName) ? b.firstName + ' ' + b.lastName : (b.email || ('listingDetails.privateRoomModal.bidderFallback' | translate)) }}</span>
+                <span class="sel-name">{{ (b.firstName && b.lastName) ? b.firstName + ' ' + b.lastName : ('listingDetails.privateRoomModal.bidderFallback' | translate) }}</span>
                 <span class="sel-meta">{{ 'listingDetails.privateRoomModal.maxBid' | translate }} {{ b.highestBid | number:'1.2-2' }} · {{ b.bidCount }} {{ 'listingDetails.privateRoomModal.bids' | translate }}</span>
               </div>
               @if (b.isAuthenticated && b._id) {

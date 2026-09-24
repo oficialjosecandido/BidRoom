@@ -11,6 +11,19 @@ export interface AdminListingsByAuctionSegment {
   highestBidPrivateRoom: number;
 }
 
+/** A bidder as Nexus sees them — the only view that carries the email. */
+export interface AdminBidder {
+  _id: string | null;
+  firstName: string | null;
+  lastName: string | null;
+  email: string | null;
+  emailVerified: boolean;
+  isAuthenticated: boolean;
+  bidCount: number;
+  highestBid: number;
+  lastBidDate: string;
+}
+
 export interface AdminStatistics {
   totalUsers: number;
   /** Published listings only (active, ended, cancelled) */
@@ -388,6 +401,16 @@ export class AdminService {
 
   getAuctionById(auctionId: string): Observable<Listing> {
     return this.http.get<Listing>(`${this.apiUrl}/auctions/${auctionId}`);
+  }
+
+  /**
+   * Bidders on a listing, with their email addresses. Nexus-only: the
+   * seller-facing endpoint returns no contact details at all.
+   */
+  getAuctionBidders(auctionId: string): Observable<{ bidders: AdminBidder[]; total: number }> {
+    return this.http.get<{ bidders: AdminBidder[]; total: number }>(
+      `${this.apiUrl}/auctions/${auctionId}/bidders`
+    );
   }
 
   /**

@@ -6,19 +6,16 @@ import { API_CONFIG } from '../config/api.config';
 export interface Bid {
   _id: string;
   listing: string;
-  bidder?: {
-    _id: string;
-    firstName: string;
-    lastName: string;
-    email: string;
-    emailVerified?: boolean;
-    hasDeposit?: boolean;
-  } | null;
-  bidderEmail?: string | null;
+  /**
+   * The API no longer returns the bidder's email, nor maxBid (the proxy
+   * ceiling), nor the internal fraud/IP fields — see backend utils/bidFormat.js.
+   * Use bidderId for registered bidders and bidderKey, an opaque per-listing
+   * pseudonym, to group a guest's bids.
+   */
+  bidderId?: string | null;
+  bidderKey?: string | null;
   amount: number;
   bidType: 'manual' | 'proxy' | 'auto';
-  maxBid?: number;
-  notes?: string;
   bidderName?: string;
   bidderInitials?: string;
   bidderFirstName?: string | null;
@@ -38,6 +35,12 @@ export interface Bid {
 export interface BidsResponse {
   bids: Bid[];
   total: number;
+  /**
+   * The viewer's own bidderId, when they are logged in and have bid on this
+   * listing. Lets the client highlight its own bids without the API publishing
+   * an identifier for anyone else.
+   */
+  viewerBidderId?: string | null;
 }
 
 export interface BidStats {
