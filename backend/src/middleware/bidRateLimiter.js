@@ -17,6 +17,7 @@
 
 const redisService = require('../services/redis.service');
 const logger = require('../utils/logger');
+const { clientIpKey } = require('../utils/clientIp');
 
 const WINDOW_MS = 60 * 1000;
 const WINDOW_SECONDS = WINDOW_MS / 1000;
@@ -33,13 +34,14 @@ setInterval(() => {
   }
 }, 5 * 60 * 1000).unref();
 
+/**
+ * Kept as a named export because bids, listings and customers all record it.
+ * Azure appends the client port to X-Forwarded-For, so the raw header entry
+ * is "1.2.3.4:5678" — stored like that it fragments rate-limit buckets and
+ * makes fraud records hard to match. utils/clientIp strips it.
+ */
 function getClientIp(req) {
-  return (
-    req.headers['x-forwarded-for']?.split(',')[0]?.trim() ||
-    req.headers['x-real-ip'] ||
-    req.socket?.remoteAddress ||
-    'unknown'
-  );
+  return clientIpKey(req);
 }
 
 function isRedisReady() {

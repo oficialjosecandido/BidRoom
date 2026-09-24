@@ -14,6 +14,7 @@
 const Redis = require('ioredis');
 const rateLimit = require('express-rate-limit');
 const logger = require('../utils/logger');
+const { clientIpKey } = require('../utils/clientIp');
 
 /** @type {import('ioredis').Redis | null} */
 let rateLimitRedisClient = null;
@@ -69,14 +70,7 @@ function buildStore(name) {
  * express-rate-limit rejects that as ERR_ERL_INVALID_IP_ADDRESS.
  */
 function clientKey(req) {
-  const raw = String(req.ip || req.socket?.remoteAddress || 'unknown').trim();
-  const bracket = raw.match(/^\[([^\]]+)\](?::\d+)?$/);
-  if (bracket) return bracket[1];
-  // IPv4 with trailing port (e.g. 20.85.186.109:25729)
-  if (/^\d{1,3}(?:\.\d{1,3}){3}:\d+$/.test(raw)) {
-    return raw.replace(/:\d+$/, '');
-  }
-  return raw;
+  return clientIpKey(req);
 }
 
 /**

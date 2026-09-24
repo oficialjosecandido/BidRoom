@@ -1,6 +1,7 @@
 const express = require('express');
 const { authenticateToken, requireActiveAccount } = require('../middleware/auth');
 const { getStripe, isStripeTestMode } = require('../utils/stripe.util');
+const { publicClientIp } = require('../utils/clientIp');
 const Customer = require('../models/Customer');
 const Transaction = require('../models/Transaction');
 const Listing = require('../models/Listing');
@@ -121,62 +122,21 @@ async function resolveConnectAccountId(stripe, user) {
 }
 
 /**
- * Extract the real public client IP from the request.
- * Azure (and other proxies) may inject X-Forwarded-For with multiple IPs,
- * or the socket address may be an IPv6-mapped IPv4 (::ffff:x.x.x.x) or
- * a private/internal IP. Stripe requires a valid public IPv4 for tos_acceptance.
+ * The seller's public IP for Stripe's tos_acceptance record, or null.
+ *
+ * Detection lives in utils/clientIp so that the rate limiters and the fraud
+ * log agree with this on what an address is — they did not, and this copy was
+ * the one that got it wrong.
  */
 function getClientIp(req) {
-  const isTestMode = isStripeTestMode();
-
-  // In test mode Stripe accepts any IP — skip detection entirely to avoid
-  // Azure internal IPs (100.x.x.x CGNAT range) slipping through as "public".
-  if (isTestMode) {
+  // Locally there is no public IP to find, and Stripe accepts a loopback
+  // address. Gated on NODE_ENV rather than on the Stripe mode: production
+  // runs on a Stripe *test* key, so keying off the mode would file
+  // 127.0.0.1 as the address where a real seller accepted the terms.
+  if (process.env.NODE_ENV !== 'production' && isStripeTestMode()) {
     return '127.0.0.1';
   }
-
-  const normalize = (raw) => {
-    if (!raw) return null;
-    const trimmed = raw.trim();
-    // Convert IPv6-mapped IPv4 e.g. "::ffff:1.2.3.4" → "1.2.3.4"
-    if (trimmed.startsWith('::ffff:')) return trimmed.slice(7);
-    return trimmed;
-  };
-
-  const isPublic = (ip) => {
-    if (!ip || ip === '127.0.0.1' || ip === '::1') return false;
-    // Private IPv4 ranges (RFC 1918)
-    if (ip.startsWith('10.')) return false;
-    if (ip.startsWith('192.168.')) return false;
-    if (/^172\.(1[6-9]|2[0-9]|3[01])\./.test(ip)) return false;
-    // CGNAT range (RFC 6598) — used by Azure App Service internally (100.64–100.127)
-    if (/^100\.(6[4-9]|[7-9]\d|1[01]\d|12[0-7])\./.test(ip)) return false;
-    // Link-local (169.254.x.x)
-    if (ip.startsWith('169.254.')) return false;
-    // Valid IPv4
-    if (/^\d{1,3}(\.\d{1,3}){3}$/.test(ip)) return true;
-    // Valid IPv6 (non-loopback, non-link-local, non-ULA)
-    if (ip.includes(':') && !ip.startsWith('fe80') && !ip.startsWith('fc') && !ip.startsWith('fd')) return true;
-    return false;
-  };
-
-  // Try each IP in X-Forwarded-For (leftmost = real client)
-  const forwarded = req.headers['x-forwarded-for'];
-  if (forwarded) {
-    for (const raw of forwarded.split(',')) {
-      const ip = normalize(raw);
-      if (isPublic(ip)) return ip;
-    }
-  }
-
-  // Try Express's req.ip (honours trust proxy setting)
-  const expressIp = normalize(req.ip);
-  if (isPublic(expressIp)) return expressIp;
-
-  const socketIp = normalize(req.socket?.remoteAddress || req.connection?.remoteAddress);
-  if (isPublic(socketIp)) return socketIp;
-
-  return null;
+  return publicClientIp(req);
 }
 
 const router = express.Router();
@@ -401,7 +361,11 @@ function buildConnectAccountCreatePayload(user, country, kyc, tosTimestamp, ip) 
     },
     tos_acceptance: {
       date: tosTimestamp,
-      ip,
+      // Omitted rather than sent empty when the proxy chain hid the seller:
+      // Stripe accepts an acceptance with only a date, but answers a missing
+      // or malformed ip with "Invalid IP address", which reads to the seller
+      // as a problem with what they typed.
+      ...(ip && { ip }),
       service_agreement: serviceAgreementForCountry(country)
     },
     metadata: { uid: user.uid }
@@ -548,7 +512,7 @@ router.post('/submit-onboarding', requireActiveAccount, async (req, res) => {
             country
           }
         },
-        tos_acceptance: { date: tosTimestamp, ip }
+        tos_acceptance: { date: tosTimestamp, ...(ip && { ip }) }
       });
       logger.info(`${LOG_PREFIX} Updated Custom account ${accountId} for uid=${user.uid?.slice(0, 8)}...`);
     }
