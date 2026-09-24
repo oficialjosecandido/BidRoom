@@ -47,6 +47,7 @@ export class DashboardSettingsComponent implements OnInit, OnDestroy {
   connectLoading = false;
   connectSubmitting = false;
   connectTestActivating = false;
+  connectLinkLoading = false;
   connectStatusMessage: string | null = null;
   connectError: string | null = null;
   /**
@@ -518,6 +519,29 @@ export class DashboardSettingsComponent implements OnInit, OnDestroy {
         // backend strips both, so this block never renders for a seller.
         this.connectErrorDebug = err?.error?.debug || null;
         this.connectErrorDashboardUrl = err?.error?.dashboardUrl || null;
+      }
+    });
+  }
+
+  /**
+   * Hands the seller to Stripe to finish verification with an ID document.
+   *
+   * Stripe verifies an individual by matching the name, date of birth and
+   * address against records, and when that comes back
+   * verification_failed_keyed_identity there is nothing to correct on our form —
+   * the remedy is the document, which we do not collect and should not hold.
+   * Stripe's hosted flow does, and it accepts one even on these accounts, where
+   * we collect every other requirement ourselves.
+   */
+  openStripeVerification(): void {
+    this.connectLinkLoading = true;
+    this.clearConnectError();
+    this.stripeConnect.createOnboardingLink(this.addressCountry).subscribe({
+      next: (res) => { window.location.href = res.url; },
+      error: (err) => {
+        this.connectLinkLoading = false;
+        this.connectError = err?.error?.message || err?.error?.error
+          || this.translate.instant('dashboard.settings.connectError');
       }
     });
   }

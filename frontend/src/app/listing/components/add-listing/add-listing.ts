@@ -19,7 +19,6 @@ import { ThemeService } from '../../../shared/services/theme.service';
 import { AnalyticsService } from '../../../shared/services/analytics.service';
 import { AnalyticsEvents } from '../../../shared/services/analytics.events';
 import { PostHogService } from '../../../shared/services/posthog.service';
-import { WaiverService } from '../../../shared/services/waiver.service';
 import { FeatureFlagsService } from '../../../shared/services/feature-flags.service';
 
 interface Category {
@@ -273,7 +272,6 @@ export class AddListing implements OnInit, OnDestroy {
   private themeService = inject(ThemeService);
   private analytics = inject(AnalyticsService);
   private postHog = inject(PostHogService);
-  readonly waiverService = inject(WaiverService);
   private featureFlags = inject(FeatureFlagsService);
   private destroyRef = inject(DestroyRef);
 
@@ -1502,9 +1500,8 @@ export class AddListing implements OnInit, OnDestroy {
     return this.getFeeForecastPriceBasis();
   }
 
-  /** BidRoom's commission on the simulated amount — €0 while a waiver is still running. */
+  /** BidRoom's commission on the simulated amount. */
   get simSellerFee(): number {
-    if (this.waiverService.waiverActive()) return 0;
     return this.simBasis * this.sellerFeeRateDecimal();
   }
 

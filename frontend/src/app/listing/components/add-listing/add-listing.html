@@ -690,18 +690,10 @@
               <span class="fee-label">{{ 'addListing.feeSim.saleValue' | translate }}</span>
               <span class="fee-val">€{{ simBasis | number:'1.2-2' }}</span>
             </div>
-            @if (waiverService.waiverActive()) {
-              <div class="fee-row fee-waiver-row">
-                <span class="fee-label">{{ 'WAIVER.FEE_LABEL' | translate }}</span>
-                <span class="fee-val fee-val--waived">€0,00</span>
-              </div>
-              <p class="fee-waiver-note">{{ 'WAIVER.LISTING_NOTE' | translate:{ count: waiverService.freeSalesRemaining() } }}</p>
-            } @else {
-              <div class="fee-row">
-                <span class="fee-label">{{ 'addListing.sellerBidroomFee' | translate:{rate: sellerFeeRateDisplay} }}</span>
-                <span class="fee-val fee-val--fee">−€{{ simSellerFee | number:'1.2-2' }}</span>
-              </div>
-            }
+            <div class="fee-row">
+              <span class="fee-label">{{ 'addListing.sellerBidroomFee' | translate:{rate: sellerFeeRateDisplay} }}</span>
+              <span class="fee-val fee-val--fee">−€{{ simSellerFee | number:'1.2-2' }}</span>
+            </div>
             <div class="fee-row fee-total">
               <span class="fee-label">{{ 'addListing.feeSim.netLabel' | translate }}</span>
               <span class="fee-val">~€{{ simSellerNet | number:'1.2-2' }}</span>
@@ -934,18 +926,10 @@
 
         @if (getFeeForecastPriceBasis() > 0) {
           <div class="fee-preview" style="margin-top:20px">
-            @if (waiverService.waiverActive()) {
-              <div class="fee-row fee-waiver-row">
-                <span class="fee-label">{{ 'WAIVER.FEE_LABEL' | translate }}</span>
-                <span class="fee-val fee-val--waived">€0,00</span>
-              </div>
-              <p class="fee-waiver-note">{{ 'WAIVER.LISTING_NOTE' | translate:{ count: waiverService.freeSalesRemaining() } }}</p>
-            } @else {
-              <div class="fee-row">
-                <span class="fee-label">{{ 'addListing.sellerBidroomFee' | translate:{rate: sellerFeeRateDisplay} }}</span>
-                <span class="fee-val">€{{ estimatedSellerFeeAmount().toFixed(2) }}</span>
-              </div>
-            }
+            <div class="fee-row">
+              <span class="fee-label">{{ 'addListing.sellerBidroomFee' | translate:{rate: sellerFeeRateDisplay} }}</span>
+              <span class="fee-val">€{{ estimatedSellerFeeAmount().toFixed(2) }}</span>
+            </div>
             <div class="fee-row">
               <span class="fee-label">{{ 'addListing.feeBuyer' | translate }}</span>
               <span class="fee-val">
@@ -956,11 +940,7 @@
             <div class="fee-row fee-total">
               <span class="fee-label">{{ 'addListing.feeReceive' | translate }}</span>
               <span class="fee-val">
-                @if (waiverService.waiverActive()) {
-                  ~€{{ getFeeForecastPriceBasis().toFixed(2) }}
-                } @else {
-                  ~€{{ (getFeeForecastPriceBasis() - estimatedSellerFeeAmount()).toFixed(2) }}
-                }
+                ~€{{ (getFeeForecastPriceBasis() - estimatedSellerFeeAmount()).toFixed(2) }}
               </span>
             </div>
           </div>

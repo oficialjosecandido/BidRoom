@@ -302,11 +302,18 @@
                     <li>{{ err }}</li>
                   }
                 </ul>
+                <!-- When Stripe cannot match the typed details against records
+                     there is nothing to fix on our form; the way through is a
+                     document, which only Stripe's own flow collects. -->
+                <p class="form-hint">{{ 'dashboard.settings.verifyDocHint' | translate }}</p>
               </div>
             } @else {
               <p class="card-desc">{{ 'dashboard.settings.verifyingDetails' | translate }}</p>
             }
             <div class="button-row">
+              <button class="action-btn" (click)="openStripeVerification()" [disabled]="connectLinkLoading">
+                {{ connectLinkLoading ? ('dashboard.settings.opening' | translate) : ('dashboard.settings.verifyWithDoc' | translate) }}
+              </button>
               <button class="action-btn action-btn-secondary" (click)="openOnboardingForm()">{{ 'dashboard.settings.updateDetails' | translate }}</button>
               @if (isStripeTestMode) {
                 <button class="action-btn action-btn-test" (click)="testActivate()" [disabled]="connectTestActivating">

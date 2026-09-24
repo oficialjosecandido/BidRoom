@@ -246,6 +246,7 @@
 .connect-errors { padding: 12px 14px; background: var(--rb, #fdecea); border-radius: 10px; margin-bottom: 14px; }
 .connect-errors-title { font-size: 13px; font-weight: 600; color: var(--red, #c62828); margin: 0 0 6px; }
 .connect-errors ul { margin: 0; padding-left: 16px; font-size: 12.5px; color: var(--red, #c62828); }
+.connect-errors .form-hint { color: var(--red, #c62828); margin-top: 8px; }
 
 .text-success { font-size: 12.5px; color: var(--green, #2e7d32); margin-bottom: 12px; }
 .text-muted { font-size: 13px; color: var(--sub, #888); }
