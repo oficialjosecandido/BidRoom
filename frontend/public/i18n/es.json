@@ -220,7 +220,7 @@
     "startingBid": "Puja Inicial *",
     "buyNowPrice": "Precio Comprar Ya (Opcional)",
     "buyNowHint": "Debe ser mayor que la Puja Inicial. Permite compra instantánea.",
-    "minimumAcceptPrice": "Precio Mínimo de Aceptación (Opcional)",
+    "minimumAcceptPrice": "Precio Mínimo de Aceptación",
     "minimumAcceptHint": "Umbral de precio donde debes aceptar una oferta cualificada",
     "enablePrivateRoom": "Activar Sala Privada",
     "privateRoomHint": "Importante: Activar Sala Privada aumenta tu comisión del 3,5% al 6,0%. Debes comprometerte con esta elección.",

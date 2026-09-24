@@ -471,7 +471,7 @@
     "startingBid": "Starting Bid *",
     "buyNowPrice": "Buy Now Price (Optional)",
     "buyNowHint": "Must be higher than Starting Bid. Allows instant purchase.",
-    "minimumAcceptPrice": "Minimum Accept Price (Optional)",
+    "minimumAcceptPrice": "Minimum Accept Price",
     "minimumAcceptHint": "Price threshold at which you must accept a qualifying offer",
     "enablePrivateRoom": "Enable Private Room",
     "privateRoomHint": "Important: Enabling Private Room increases your commission from 3.5% to 6.0%. You must commit to this choice.",

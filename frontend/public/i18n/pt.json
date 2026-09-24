@@ -471,7 +471,7 @@
     "startingBid": "Licitação Inicial",
     "buyNowPrice": "Preço Comprar Agora (Opcional)",
     "buyNowHint": "Deve ser superior à Licitação Inicial. Permite compra instantânea.",
-    "minimumAcceptPrice": "Preço Mínimo de Aceitação (Opcional)",
+    "minimumAcceptPrice": "Preço Mínimo de Aceitação",
     "minimumAcceptHint": "Preço limite em que deve aceitar uma oferta qualificada",
     "enablePrivateRoom": "Ativar Sala Privada",
     "privateRoomHint": "Importante: Ativar Sala Privada aumenta a sua Taxa BidRoom de 3,5% para 6,0%. Deve comprometer-se com esta escolha.",

@@ -213,11 +213,94 @@ function isPlatformProfileError(err) {
   );
 }
 
+/**
+ * Connect is not switched on for the platform's Stripe account at all.
+ *
+ * Stripe words this one for whoever holds the platform keys — "you can only
+ * create new accounts if you've signed up for Connect", with a link to the
+ * platform dashboard. Shown to a seller it reads as an instruction to go and
+ * register their own Stripe platform, which is why it must never reach them.
+ */
+function isConnectNotEnabledError(err) {
+  const msg = String(err?.message || '');
+  return (
+    msg.includes("signed up for Connect") ||
+    msg.includes('enable Connect') ||
+    msg.includes('enable_connect')
+  );
+}
+
 function connectPlatformProfileUrl() {
   const base = isStripeTestMode()
     ? 'https://dashboard.stripe.com/test/settings/connect/platform-profile'
     : 'https://dashboard.stripe.com/settings/connect/platform-profile';
   return base;
+}
+
+function connectSignupUrl() {
+  return isStripeTestMode()
+    ? 'https://dashboard.stripe.com/test/connect/overview'
+    : 'https://dashboard.stripe.com/connect/overview';
+}
+
+/**
+ * The reply to a seller when payouts are down for a reason only the platform
+ * can fix.
+ *
+ * Every one of these is our configuration, never the seller's data, so the
+ * seller is told it is on us and the actionable detail goes to the log — the
+ * raw Stripe text is addressed to the platform operator and misdirects anyone
+ * else who reads it.
+ */
+function platformSetupResponse(res, err, { error, message, dashboardUrl }) {
+  return res.status(503).json({
+    error,
+    message,
+    ...(dashboardUrl && isStripeTestMode() && { dashboardUrl }),
+    ...(isStripeTestMode() && { debug: err.message })
+  });
+}
+
+const PAYOUTS_UNAVAILABLE_MESSAGE =
+  'Payout account setup is temporarily unavailable — this is a configuration issue on our side, ' +
+  'not with your details. Our team has been notified. Please try again later or contact support.';
+
+/**
+ * Classifies a Stripe failure during seller onboarding. Returns true when it
+ * was answered as a platform problem, so the caller can stop.
+ */
+function handlePlatformSetupError(res, err) {
+  if (isConnectNotEnabledError(err)) {
+    logger.error(
+      `${LOG_PREFIX} CONNECT NOT ENABLED on the platform Stripe account — no seller can set up ` +
+      `payouts until Connect is enabled at ${connectSignupUrl()}. Stripe said: ${err.message}`
+    );
+    platformSetupResponse(res, err, {
+      error: 'Stripe Connect not enabled',
+      message: PAYOUTS_UNAVAILABLE_MESSAGE,
+      dashboardUrl: connectSignupUrl()
+    });
+    return true;
+  }
+
+  if (err.type === 'StripePermissionError' && !isOrphanedConnectAccountError(err)) {
+    platformSetupResponse(res, err, {
+      error: 'Stripe Connect not configured',
+      message: PAYOUTS_UNAVAILABLE_MESSAGE
+    });
+    return true;
+  }
+
+  if (err.type === 'StripeInvalidRequestError' && isPlatformProfileError(err)) {
+    platformSetupResponse(res, err, {
+      error: 'Stripe Connect platform setup incomplete',
+      message: PAYOUTS_UNAVAILABLE_MESSAGE,
+      dashboardUrl: connectPlatformProfileUrl()
+    });
+    return true;
+  }
+
+  return false;
 }
 
 function connectSettingsPath() {
@@ -351,12 +434,12 @@ router.post('/onboarding-link', requireActiveAccount, async (req, res) => {
     logger.info(`${LOG_PREFIX} Onboarding link created uid=${user.uid?.slice(0, 8)} accountId=${accountId} type=${linkType}`);
     res.json({ url: link.url, accountId });
   } catch (err) {
-    const isTestMode = isStripeTestMode();
     logger.error(`${LOG_PREFIX} Onboarding link error type=${err.type} message=${err.message}`);
+    if (handlePlatformSetupError(res, err)) return;
     res.status(500).json({
       error: 'Failed to start payout setup',
-      message: err.message,
-      ...(isTestMode && { debug: `type=${err.type}` })
+      message: PAYOUTS_UNAVAILABLE_MESSAGE,
+      ...(isStripeTestMode() && { debug: `type=${err.type} ${err.message}` })
     });
   }
 });
@@ -500,29 +583,16 @@ router.post('/submit-onboarding', requireActiveAccount, async (req, res) => {
   } catch (err) {
     const isTestMode = isStripeTestMode();
     logger.error(`${LOG_PREFIX} Submit onboarding error type=${err.type} message=${err.message}`);
-    // Platform key cannot manage Connect (not enabled, wrong account, etc.)
-    if (err.type === 'StripePermissionError' && !isOrphanedConnectAccountError(err)) {
-      return res.status(503).json({
-        error: 'Stripe Connect not configured',
-        message: 'Payout account setup is temporarily unavailable. Our team has been notified. Please try again later or contact support.',
-        ...(isTestMode && { debug: err.message })
-      });
-    }
-    if (err.type === 'StripeInvalidRequestError' && isPlatformProfileError(err)) {
-      return res.status(503).json({
-        error: 'Stripe Connect platform setup incomplete',
-        message: 'Payout setup is not available yet. The platform owner must complete the Stripe Connect platform profile (Settings → Connect → Platform profile) and confirm that BidRoom collects seller verification requirements.',
-        dashboardUrl: connectPlatformProfileUrl(),
-        ...(isTestMode && { debug: err.message })
-      });
-    }
+    // Our configuration, not the seller's data — answered before anything is
+    // blamed on what they typed.
+    if (handlePlatformSetupError(res, err)) return;
     if (err.type === 'StripeInvalidRequestError') {
       return res.status(400).json({ error: 'Invalid payment details', message: err.message });
     }
     res.status(500).json({
       error: 'Failed to set up payout account',
-      message: err.message,
-      ...(isTestMode && { debug: `type=${err.type}` })
+      message: PAYOUTS_UNAVAILABLE_MESSAGE,
+      ...(isTestMode && { debug: `type=${err.type} ${err.message}` })
     });
   }
 });
@@ -1205,4 +1275,10 @@ async function sendPaymentReceivedEmail(transaction) {
   }
 }
 
-module.exports = { router, connectWebhookHandler };
+module.exports = {
+  router,
+  connectWebhookHandler,
+  // Exported for tests: classifying a platform misconfiguration correctly is
+  // what keeps Stripe's operator-facing text away from sellers.
+  _test: { isConnectNotEnabledError, isPlatformProfileError, handlePlatformSetupError }
+};

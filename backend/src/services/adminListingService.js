@@ -186,11 +186,24 @@ async function createListingAsAdmin(input = {}) {
     ? (input.duration || input.durationSlot)
     : '7 days';
 
-  const startingPrice = isGiveaway ? 0 : Math.max(0, Number(input.startingPrice ?? 0));
+  let startingPrice = isGiveaway ? 0 : Math.max(0, Number(input.startingPrice ?? 0));
   if (Number.isNaN(startingPrice)) {
     const err = new Error('startingPrice must be a number.');
     err.status = 400;
     throw err;
+  }
+
+  let minimumOfferPrice = null;
+  if (!isGiveaway && auctionFormat === 'best-offer') {
+    const min = Number(input.minimumOfferPrice);
+    if (!Number.isFinite(min) || min < 0.01) {
+      const err = new Error('minimumOfferPrice is required for best-offer listings (minimum 0.01).');
+      err.status = 400;
+      throw err;
+    }
+    minimumOfferPrice = min;
+    // Nexus often only collects the min for best-offer — use it as starting when unset.
+    if (startingPrice <= 0) startingPrice = min;
   }
 
   let shippingOption = ALLOWED_SHIPPING.includes(input.shippingOption)
@@ -246,6 +259,7 @@ async function createListingAsAdmin(input = {}) {
     ...(isGiveaway
       ? { bidIncrement: undefined, commissionRate: 0 }
       : { bidIncrement: Math.max(0.01, Number(input.bidIncrement ?? 1) || 1) }),
+    ...(minimumOfferPrice != null ? { minimumOfferPrice } : {}),
     startDate,
     endDate,
     seller: seller._id,
@@ -354,6 +368,7 @@ function mapCsvRowToCreateInput(row) {
     saleFormat: row.saleFormat || row.sale_format || undefined,
     listingFormat: row.auctionFormat || row.listingFormat || row.format || 'highest-bid',
     startingPrice: row.startingPrice || row.price || 0,
+    minimumOfferPrice: row.minimumOfferPrice || row.minimum_offer_price || undefined,
     duration: row.duration || row.durationSlot || '7 days',
     shippingOption: row.shippingOption || row.shipping || 'flat-rate',
     shippingCost: row.shippingCost || 0,

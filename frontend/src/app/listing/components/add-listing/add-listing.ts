@@ -1227,7 +1227,7 @@ export class AddListing implements OnInit, OnDestroy {
     } else if (format === 'best-offer') {
       startingBidControl?.clearValidators();
       buyNowPriceControl?.clearValidators();
-      minimumAcceptPriceControl?.setValidators([]);
+      minimumAcceptPriceControl?.setValidators([Validators.required, Validators.min(0.01)]);
     }
 
     startingBidControl?.updateValueAndValidity();
@@ -1956,7 +1956,7 @@ export class AddListing implements OnInit, OnDestroy {
       this.langTitleKey(this.primaryLangTab),
       'condition',
       this.langDescKey(this.primaryLangTab),
-      'startingBid', 'duration', 'shippingOption', 'flatRateShipping',
+      'startingBid', 'minimumAcceptPrice', 'duration', 'shippingOption', 'flatRateShipping',
       'packageSize', 'shippingOriginPostalCode',
       'locationCity', 'locationCountry', 'returnPolicy', 'sellerDeclaration',
       ...(this.isVehicleListing ? ['vehicleAmlDeclaration'] : []),
@@ -2027,6 +2027,8 @@ export class AddListing implements OnInit, OnDestroy {
       locationCountry: 'addListing.itemCountry',
       duration: 'addListing.duration',
       startingBid: 'addListing.startingBid',
+      minimumAcceptPrice: 'addListing.minimumAcceptPrice',
+      buyNowPrice: 'addListing.buyNowPrice',
       shippingOption: 'addListing.shippingOptions',
       returnPolicy: 'addListing.returnPolicy',
       sellerDeclaration: 'addListing.sellerDeclaration',

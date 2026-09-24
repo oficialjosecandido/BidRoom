@@ -1318,6 +1318,15 @@ router.post('/', authenticateToken, requireActiveAccount, requireNoDisputeRestri
         return res.status(400).json({ error: 'Buy Now price must be higher than Starting Bid' });
       }
     }
+    if (!isGiveaway && listingFormat === 'best-offer') {
+      const minOffer = parseFloat(minimumOfferPrice);
+      if (!Number.isFinite(minOffer) || minOffer < 0.01) {
+        return res.status(400).json({
+          error: 'Minimum offer price is required for best-offer format',
+          message: 'Please set a minimum offer price of at least €0.01.'
+        });
+      }
+    }
 
     // Validate shipping cost for flat-rate
     if (shippingOption === 'flat-rate' && (!shippingCost || shippingCost < 0)) {
@@ -1496,7 +1505,9 @@ router.post('/', authenticateToken, requireActiveAccount, requireNoDisputeRestri
       // entry is the one thing that keeps this a contest and not a lottery, so
       // it is enforced here rather than left to the caller not to send a price.
       buyNowPrice: !isGiveaway && buyNowPrice ? parseFloat(buyNowPrice) : undefined,
-      minimumOfferPrice: !isGiveaway && minimumOfferPrice ? parseFloat(minimumOfferPrice) : undefined,
+      minimumOfferPrice: !isGiveaway && listingFormat === 'best-offer'
+        ? parseFloat(minimumOfferPrice)
+        : (!isGiveaway && minimumOfferPrice ? parseFloat(minimumOfferPrice) : undefined),
       allowPrivateRoom: !isGiveaway && (allowPrivateRoom === true || allowPrivateRoom === 'true'),
       // Giveaways have no price — commission must stay 0 (schema default is 3.5%).
       commissionRate: isGiveaway

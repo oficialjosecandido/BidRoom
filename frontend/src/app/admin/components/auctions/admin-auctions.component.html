@@ -361,10 +361,17 @@
             </label>
 
             @if (!isGiveawayCreate) {
-              <label>
-                Starting price (€)
-                <input type="number" min="0" step="0.01" [(ngModel)]="createForm.startingPrice" />
-              </label>
+              @if (createSaleType === 'best-offer') {
+                <label>
+                  Minimum offer price (€) *
+                  <input type="number" min="0.01" step="0.01" [(ngModel)]="createForm.minimumOfferPrice" />
+                </label>
+              } @else {
+                <label>
+                  Starting price (€)
+                  <input type="number" min="0" step="0.01" [(ngModel)]="createForm.startingPrice" />
+                </label>
+              }
               <label>
                 Shipping
                 <select [(ngModel)]="createForm.shippingOption">
@@ -483,6 +490,11 @@
           <dl class="confirm-summary">
             <div><dt>Seller</dt><dd>{{ createForm.sellerEmail }}</dd></div>
             <div><dt>Type</dt><dd>{{ createSaleType }}</dd></div>
+            @if (createSaleType === 'best-offer') {
+              <div><dt>Min. offer</dt><dd>€{{ createForm.minimumOfferPrice }}</dd></div>
+            } @else if (!isGiveawayCreate) {
+              <div><dt>Starting</dt><dd>€{{ createForm.startingPrice }}</dd></div>
+            }
             <div><dt>Photos</dt><dd>{{ createPhotos.length }}</dd></div>
             @if (canAllowPrivateRoom) {
               <div><dt>Private room</dt><dd>{{ createForm.allowPrivateRoom ? 'Yes' : 'No' }}</dd></div>

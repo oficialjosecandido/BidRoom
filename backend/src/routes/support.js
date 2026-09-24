@@ -6,6 +6,9 @@ const Customer = require('../models/Customer');
 const { authenticateToken, requireActiveAccount } = require('../middleware/auth');
 const { requireAdmin, isAdminEmail } = require('../utils/roles');
 const { createNotification, emitNewNotificationToUser } = require('../services/notificationService');
+const { sendEmail } = require('../services/emailService');
+const { publicBaseUrl } = require('../utils/publicUrls');
+const logger = require('../utils/logger');
 
 const OBJECT_ID_RE = /^[a-f\d]{24}$/i;
 const VALID_CATEGORIES = ['payment', 'shipping', 'dispute', 'account', 'listing', 'other'];
@@ -16,13 +19,74 @@ function sanitizeText(str) {
   return str.replace(/<[^>]*>/g, '').trim();
 }
 
+function escapeHtml(str) {
+  return String(str || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
 async function resolveDisplayName(uid) {
   if (!uid) return '';
   const c = await Customer.findOne({ uid }, 'firstName lastName').lean();
   return c ? `${c.firstName || ''} ${c.lastName || ''}`.trim() : '';
 }
 
-async function createMessageAndEmit(conversation, senderType, senderUid, rawBody, io) {
+/**
+ * Ops inbox alert for customer-side support activity (new ticket or reply).
+ * Recipient: PLATFORM_SUPPORT_NOTIFY_EMAIL → PLATFORM_BID_NOTIFY_EMAIL → pt.bidnow@gmail.com.
+ * Agent replies are skipped (already handled in Nexus).
+ */
+async function notifySupportOps({ conversation, messageBody, isNewConversation, customerName, customerEmail }) {
+  try {
+    const to = (
+      process.env.PLATFORM_SUPPORT_NOTIFY_EMAIL
+      || process.env.PLATFORM_BID_NOTIFY_EMAIL
+      || 'pt.bidnow@gmail.com'
+    ).trim();
+    if (!to) return;
+
+    const nexusUrl = `${publicBaseUrl()}/nexus/support`;
+    const subjectLabel = conversation.subject
+      ? escapeHtml(conversation.subject)
+      : (conversation.category || 'other');
+    const kind = isNewConversation ? 'Novo pedido de suporte' : 'Nova resposta de suporte';
+    const name = escapeHtml(customerName || 'Cliente');
+    const emailLine = customerEmail ? ` (${escapeHtml(customerEmail)})` : '';
+    const preview = escapeHtml((messageBody || '').slice(0, 400));
+    const category = escapeHtml(conversation.category || 'other');
+
+    const subject = `${kind} · ${conversation.subject || category}`;
+    const html = `<!DOCTYPE html>
+<html><head><meta charset="utf-8"></head>
+<body style="margin:0;padding:0;background:#f4f4f5;font-family:Arial,Helvetica,sans-serif;color:#1d1d1f">
+  <div style="max-width:560px;margin:24px auto;background:#fff;border-radius:12px;overflow:hidden;border:1px solid #e5e5ea">
+    <div style="background:#0a0a0a;padding:20px 24px;color:#f0ede8">
+      <div style="font-size:12px;letter-spacing:0.08em;color:#c9a84c;text-transform:uppercase;margin-bottom:6px">BidRoom · Suporte</div>
+      <h1 style="margin:0;font-size:20px;font-weight:700">${kind}</h1>
+    </div>
+    <div style="padding:24px">
+      <p style="margin:0 0 16px;font-size:15px;line-height:1.5">
+        <strong>${name}</strong>${emailLine} ${isNewConversation ? 'abriu um pedido' : 'respondeu'}.
+      </p>
+      <table style="width:100%;border-collapse:collapse;font-size:14px;margin-bottom:16px">
+        <tr><td style="padding:8px 0;color:#666;width:35%">Assunto</td><td style="padding:8px 0;font-weight:600">${subjectLabel}</td></tr>
+        <tr><td style="padding:8px 0;color:#666">Categoria</td><td style="padding:8px 0">${category}</td></tr>
+      </table>
+      ${preview ? `<div style="background:#f8f7f4;border-radius:8px;padding:14px 16px;font-size:14px;line-height:1.5;white-space:pre-wrap;margin-bottom:20px">${preview}</div>` : ''}
+      <a href="${nexusUrl}" style="display:inline-block;background:#c9a84c;color:#1a1408;text-decoration:none;padding:12px 20px;border-radius:8px;font-weight:700;font-size:14px">Abrir no Nexus</a>
+    </div>
+  </div>
+</body></html>`;
+
+    await sendEmail(to, subject, html);
+  } catch (err) {
+    logger.error('Failed to send support ops email:', err.message || err);
+  }
+}
+
+async function createMessageAndEmit(conversation, senderType, senderUid, rawBody, io, { isNewConversation = false } = {}) {
   const body = sanitizeText(rawBody).slice(0, 5000);
   if (!body) {
     const err = new Error('Message body is empty');
@@ -74,6 +138,25 @@ async function createMessageAndEmit(conversation, senderType, senderUid, rawBody
     }
   }
 
+  // Ops inbox: customer-side activity only (new ticket or follow-up reply).
+  if (isFromCustomer) {
+    try {
+      const customer = await Customer.findById(conversation.customer, 'firstName lastName email').lean();
+      const customerName = customer
+        ? `${customer.firstName || ''} ${customer.lastName || ''}`.trim() || senderName
+        : senderName;
+      await notifySupportOps({
+        conversation,
+        messageBody: body,
+        isNewConversation,
+        customerName,
+        customerEmail: customer?.email || null,
+      });
+    } catch {
+      // ops email failure is non-fatal
+    }
+  }
+
   return message;
 }
 
@@ -94,6 +177,7 @@ router.post('/conversations', authenticateToken, requireActiveAccount, async (re
       status: { $in: ['open', 'pending_agent', 'pending_customer'] },
     }).sort({ lastMessageAt: -1 });
 
+    let isNewConversation = false;
     if (!conversation) {
       const subject  = sanitizeText(req.body.subject || '').slice(0, 200);
       const category = VALID_CATEGORIES.includes(req.body.category) ? req.body.category : 'other';
@@ -105,10 +189,24 @@ router.post('/conversations', authenticateToken, requireActiveAccount, async (re
         relatedTransaction: OBJECT_ID_RE.test(req.body.relatedTransaction || '') ? req.body.relatedTransaction : null,
         relatedListing:     OBJECT_ID_RE.test(req.body.relatedListing     || '') ? req.body.relatedListing     : null,
       });
+      isNewConversation = true;
     }
 
     if (req.body.initialMessage) {
-      await createMessageAndEmit(conversation, 'customer', uid, req.body.initialMessage, io);
+      await createMessageAndEmit(conversation, 'customer', uid, req.body.initialMessage, io, { isNewConversation });
+    } else if (isNewConversation) {
+      // Ticket opened without a first message — still alert ops.
+      const profile = await Customer.findById(customer._id, 'firstName lastName email').lean();
+      const customerName = profile
+        ? `${profile.firstName || ''} ${profile.lastName || ''}`.trim()
+        : '';
+      await notifySupportOps({
+        conversation,
+        messageBody: '',
+        isNewConversation: true,
+        customerName,
+        customerEmail: profile?.email || null,
+      });
     }
 
     res.json({ conversation });

@@ -440,11 +440,22 @@ const listingSchema = new mongoose.Schema({
       // No longer used (acceptance flow removed); kept for backwards compatibility
     }
   }],
-  // Best Offer specific fields
+  // Best Offer specific fields — required when auctionFormat is best-offer
   minimumOfferPrice: {
     type: Number,
     default: null,
-    min: 0
+    required: function () {
+      return this.saleFormat !== 'giveaway' && this.auctionFormat === 'best-offer';
+    },
+    validate: {
+      validator: function (v) {
+        if (this.saleFormat === 'giveaway' || this.auctionFormat !== 'best-offer') {
+          return v == null || v >= 0;
+        }
+        return v != null && Number(v) >= 0.01;
+      },
+      message: 'minimumOfferPrice is required for best-offer listings and must be at least 0.01'
+    }
   },
   // Renewal tracking for listings >7 days
   lastRenewalDate: {

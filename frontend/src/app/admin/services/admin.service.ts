@@ -279,6 +279,8 @@ export interface AdminCreateAuctionPayload {
   saleFormat?: 'auction' | 'giveaway';
   listingFormat?: 'highest-bid' | 'best-offer';
   startingPrice?: number;
+  /** Required when listingFormat is best-offer */
+  minimumOfferPrice?: number;
   duration?: string;
   shippingOption?: string;
   shippingCost?: number;

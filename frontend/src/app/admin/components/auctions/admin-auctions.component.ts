@@ -188,6 +188,7 @@ export class AdminAuctionsComponent implements OnInit {
       saleFormat: 'auction',
       listingFormat: 'highest-bid',
       startingPrice: 0,
+      minimumOfferPrice: undefined,
       duration: '7 days',
       shippingOption: 'flat-rate',
       shippingCost: 0,
@@ -366,12 +367,15 @@ export class AdminAuctionsComponent implements OnInit {
       }
       this.createForm.shippingCost = 0;
       this.createForm.returnPolicy = 'no-returns';
+      this.createForm.minimumOfferPrice = undefined;
       return;
     }
     this.createForm.saleFormat = 'auction';
     this.createForm.listingFormat = this.createSaleType;
     if (this.createSaleType === 'best-offer') {
       this.createForm.allowPrivateRoom = false;
+    } else {
+      this.createForm.minimumOfferPrice = undefined;
     }
   }
 
@@ -592,6 +596,13 @@ export class AdminAuctionsComponent implements OnInit {
       alert('Add at least one photo.');
       return;
     }
+    if (this.createSaleType === 'best-offer') {
+      const min = Number(this.createForm.minimumOfferPrice);
+      if (!Number.isFinite(min) || min < 0.01) {
+        alert('Minimum offer price is required (at least €0.01).');
+        return;
+      }
+    }
     this.onSaleTypeChange();
     this.previewLang = 'pt';
     this.showCreateConfirm = true;
@@ -610,6 +621,13 @@ export class AdminAuctionsComponent implements OnInit {
     if (this.createPhotos.length === 0) {
       alert('Add at least one photo.');
       return;
+    }
+    if (this.createSaleType === 'best-offer') {
+      const min = Number(this.createForm.minimumOfferPrice);
+      if (!Number.isFinite(min) || min < 0.01) {
+        alert('Minimum offer price is required (at least €0.01).');
+        return;
+      }
     }
     this.onSaleTypeChange();
 
@@ -644,7 +662,14 @@ export class AdminAuctionsComponent implements OnInit {
       descriptionEn: (this.createForm.descriptionEn || '').trim() || undefined,
       descriptionEs: (this.createForm.descriptionEs || '').trim() || undefined,
       descriptionFr: (this.createForm.descriptionFr || '').trim() || undefined,
-      startingPrice: this.isGiveawayCreate ? 0 : Number(this.createForm.startingPrice) || 0,
+      startingPrice: this.isGiveawayCreate
+        ? 0
+        : this.createSaleType === 'best-offer'
+          ? Number(this.createForm.minimumOfferPrice) || 0
+          : Number(this.createForm.startingPrice) || 0,
+      minimumOfferPrice: this.createSaleType === 'best-offer'
+        ? Number(this.createForm.minimumOfferPrice)
+        : undefined,
       shippingCost: this.isGiveawayCreate ? 0 : Number(this.createForm.shippingCost) || 0,
       allowPrivateRoom: this.canAllowPrivateRoom ? !!this.createForm.allowPrivateRoom : false,
       images
@@ -652,6 +677,10 @@ export class AdminAuctionsComponent implements OnInit {
     if (this.isGiveawayCreate) {
       delete payload.listingFormat;
       delete payload.allowPrivateRoom;
+      delete payload.minimumOfferPrice;
+    }
+    if (this.createSaleType !== 'best-offer') {
+      delete payload.minimumOfferPrice;
     }
 
     this.adminService.createAuction(payload).subscribe({
@@ -703,6 +732,7 @@ export class AdminAuctionsComponent implements OnInit {
       'condition',
       'listingFormat',
       'startingPrice',
+      'minimumOfferPrice',
       'duration',
       'shippingOption',
       'shippingCost',
@@ -721,6 +751,7 @@ export class AdminAuctionsComponent implements OnInit {
       '"Used - Excellent"',
       'highest-bid',
       '100',
+      '',
       '"7 days"',
       'flat-rate',
       '10',
@@ -730,7 +761,26 @@ export class AdminAuctionsComponent implements OnInit {
       '',
       'false'
     ].join(',');
-    const blob = new Blob([`${header}\n${sample}\n`], { type: 'text/csv;charset=utf-8' });
+    const sampleBestOffer = [
+      'seller@example.com',
+      '"Sample Best Offer Title"',
+      '"Detailed description with at least fifty characters so validation passes easily."',
+      'jewelry',
+      '"Luxury Watches"',
+      '"Used - Excellent"',
+      'best-offer',
+      '',
+      '150',
+      '"7 days"',
+      'flat-rate',
+      '10',
+      'no-returns',
+      'Lisboa',
+      'PT',
+      '',
+      'false'
+    ].join(',');
+    const blob = new Blob([`${header}\n${sample}\n${sampleBestOffer}\n`], { type: 'text/csv;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;

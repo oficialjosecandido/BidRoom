@@ -220,7 +220,7 @@
     "startingBid": "Enchère Initiale *",
     "buyNowPrice": "Prix Achat Immédiat (Optionnel)",
     "buyNowHint": "Doit être supérieur à l'Enchère Initiale. Permet l'achat instantané.",
-    "minimumAcceptPrice": "Prix Minimum d'Acceptation (Optionnel)",
+    "minimumAcceptPrice": "Prix Minimum d'Acceptation",
     "minimumAcceptHint": "Seuil de prix où vous devez accepter une offre qualifiée",
     "enablePrivateRoom": "Activer la Salle Privée",
     "privateRoomHint": "Important : Activer la Salle Privée augmente votre commission de 3,5 % à 6,0 %. Vous devez vous engager sur ce choix.",
