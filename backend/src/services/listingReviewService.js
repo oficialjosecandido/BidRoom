@@ -137,13 +137,8 @@ async function approveListing({ listingId, admin, io, ip = null }) {
     .lean();
 
   if (seller) {
-    await notifyReviewedSeller(listing, seller, io, 'approved', null);
-    announceToAudience(listing, seller, io);
+    await notifyListingWentLive({ listing, seller, io });
   }
-
-  // Facebook + Instagram. In the background: a carousel takes tens of seconds
-  // and a Meta failure must not fail an approval that is already saved.
-  schedulePublishApprovedListing(listing._id);
 
   await appendModerationAudit({
     subjectUserId: listing.seller,
@@ -211,4 +206,21 @@ async function notifyReviewedSeller(listing, seller, io, decision, reason) {
   await sendReviewEmail(seller, listing, decision, reason);
 }
 
-module.exports = { approveListing, rejectListing, ReviewError };
+/**
+ * Side effects when a listing goes live — same path for Nexus approve and for
+ * auctions created already-active by an admin on behalf of a seller.
+ * Never throws: publish must not fail because mail/social failed.
+ */
+async function notifyListingWentLive({ listing, seller, io }) {
+  if (!listing || !seller) return;
+  try {
+    await notifyReviewedSeller(listing, seller, io, 'approved', null);
+    announceToAudience(listing, seller, io);
+    // Facebook + Instagram. Background: Meta failure must not fail publish.
+    schedulePublishApprovedListing(listing._id);
+  } catch (err) {
+    logger.error(`[listingReview] notifyListingWentLive failed for ${listing.slug}:`, err.message);
+  }
+}
+
+module.exports = { approveListing, rejectListing, ReviewError, notifyListingWentLive };

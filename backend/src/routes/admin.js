@@ -433,7 +433,8 @@ router.get('/auctions', authenticateToken, requireAdmin, async (req, res) => {
 // POST /api/admin/auctions — create listing on behalf of a seller
 router.post('/auctions', authenticateToken, requireAdmin, async (req, res) => {
   try {
-    const { listing, seller, sellerCreated } = await createListingAsAdmin(req.body || {});
+    const io = req.app.get('io');
+    const { listing, seller, sellerCreated } = await createListingAsAdmin(req.body || {}, { io });
     const adminUser =
       (req.user?.uid && await Customer.findOne({ uid: req.user.uid }).select('_id').lean()) ||
       (req.user?.email && await Customer.findOne({ email: String(req.user.email).toLowerCase() }).select('_id').lean());
@@ -502,12 +503,13 @@ router.post('/auctions/import', authenticateToken, requireAdmin, (req, res) => {
       const results = [];
       let created = 0;
       let failed = 0;
+      const io = req.app.get('io');
 
       for (let i = 0; i < rows.length; i += 1) {
         const rowNumber = i + 2; // header is row 1
         const payload = mapCsvRowToCreateInput(rows[i]);
         try {
-          const { listing, seller } = await createListingAsAdmin(payload);
+          const { listing, seller } = await createListingAsAdmin(payload, { io });
           created += 1;
           results.push({
             row: rowNumber,

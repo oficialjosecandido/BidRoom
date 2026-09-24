@@ -1,6 +1,8 @@
 const crypto = require('crypto');
 const Listing = require('../models/Listing');
 const Customer = require('../models/Customer');
+const { notifyListingWentLive } = require('./listingReviewService');
+const logger = require('../utils/logger');
 
 const ALLOWED_CATEGORIES = [
   'electronics',
@@ -138,8 +140,15 @@ async function resolveOrCreateSeller({ sellerId, sellerEmail }) {
  * Skips seller DSA/KYC gates; still validates required fields.
  * Supports auction (highest-bid / best-offer) and giveaway.
  * Best offer never allows private room.
+ *
+ * Auctions go live immediately — same seller email/notification as a Nexus
+ * approve. Giveaways stay in pending_review.
+ *
+ * @param {object} input
+ * @param {{ io?: import('socket.io').Server }} [opts]
  */
-async function createListingAsAdmin(input = {}) {
+async function createListingAsAdmin(input = {}, opts = {}) {
+  const io = opts.io || null;
   const sellerId = input.sellerId ? String(input.sellerId).trim() : '';
   const sellerEmail = input.sellerEmail ? String(input.sellerEmail).trim().toLowerCase() : '';
   const { seller, sellerCreated } = await resolveOrCreateSeller({ sellerId, sellerEmail });
@@ -265,6 +274,16 @@ async function createListingAsAdmin(input = {}) {
     seller: seller._id,
     // Giveaways still go through Nexus approval; auctions created here go live.
     status: isGiveaway ? 'pending_review' : 'active',
+    ...(isGiveaway
+      ? {}
+      : {
+          moderationReview: {
+            decision: 'approved',
+            reason: null,
+            reviewedAt: new Date(),
+            reviewedBy: null
+          }
+        }),
     shippingOption,
     shippingCost,
     returnPolicy,
@@ -282,6 +301,19 @@ async function createListingAsAdmin(input = {}) {
   });
 
   await listing.save();
+
+  // Auctions created in Nexus skip the review queue but must still notify the
+  // seller (email + in-app) and announce to followers — same as approveListing.
+  if (!isGiveaway) {
+    const sellerForNotify = await Customer.findById(seller._id)
+      .select('_id email firstName language')
+      .lean();
+    if (sellerForNotify) {
+      await notifyListingWentLive({ listing, seller: sellerForNotify, io }).catch((err) => {
+        logger.error(`[adminListing] went-live notify failed for ${listing.slug}:`, err.message);
+      });
+    }
+  }
 
   return {
     listing,
