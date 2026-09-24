@@ -825,8 +825,12 @@ router.get('/account-status', async (req, res) => {
     }
 
     // Surface any Stripe verification errors so the frontend can show them
+    // Deduplicated: Stripe reports one error per failed field, so a single
+    // identity check that comes back "insufficient records" arrives as eight
+    // copies of the same sentence — one for each name, dob and address part.
+    // Repeating it eight times tells the seller nothing the first did not.
     const errors = account.requirements?.errors ?? [];
-    const requirementErrors = errors.map(e => e.reason || e.code).filter(Boolean);
+    const requirementErrors = [...new Set(errors.map(e => e.reason || e.code).filter(Boolean))];
 
     res.json({
       connected: true,
