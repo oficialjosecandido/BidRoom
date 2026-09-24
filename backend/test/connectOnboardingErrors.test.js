@@ -7,17 +7,22 @@
 jest.mock('../src/utils/logger', () => ({
   info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn()
 }));
-// Production is what matters here: in test mode the developer is deliberately
-// handed the dashboard link and Stripe's own wording.
+// Production as it actually is: NODE_ENV=production on a Stripe *test* key.
+// Gating the detail on test mode alone would therefore expose it to real
+// sellers, which is the whole thing this file guards against.
 jest.mock('../src/utils/stripe.util', () => ({
   getStripe: () => null,
-  getStripeKey: () => 'sk_live_xxx',
-  isStripeTestMode: () => false
+  getStripeKey: () => 'sk_test_xxx',
+  isStripeTestMode: () => true
 }));
 
 const logger = require('../src/utils/logger');
 const { _test } = require('../src/routes/connect');
-const { isConnectNotEnabledError, handlePlatformSetupError } = _test;
+const { isConnectNotEnabledError, handlePlatformSetupError, canExposeStripeDetail } = _test;
+
+const REAL_NODE_ENV = process.env.NODE_ENV;
+beforeAll(() => { process.env.NODE_ENV = 'production'; });
+afterAll(() => { process.env.NODE_ENV = REAL_NODE_ENV; });
 
 /** The verbatim production error, as Stripe sent it. */
 const CONNECT_DISABLED = Object.assign(new Error(
@@ -50,6 +55,21 @@ describe('isConnectNotEnabledError', () => {
     });
     expect(isConnectNotEnabledError(badIban)).toBe(false);
     expect(isConnectNotEnabledError(null)).toBe(false);
+  });
+});
+
+describe('canExposeStripeDetail', () => {
+  it('stays shut in production even on a Stripe test key', () => {
+    expect(canExposeStripeDetail()).toBe(false);
+  });
+
+  it('opens outside production, where a developer needs to read it', () => {
+    process.env.NODE_ENV = 'development';
+    try {
+      expect(canExposeStripeDetail()).toBe(true);
+    } finally {
+      process.env.NODE_ENV = 'production';
+    }
   });
 });
 

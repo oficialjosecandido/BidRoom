@@ -244,6 +244,18 @@ function connectSignupUrl() {
 }
 
 /**
+ * Whether Stripe's own words may travel back in the response body.
+ *
+ * Test mode alone is not enough to decide this: production currently runs on
+ * a Stripe *test* key, so isStripeTestMode() is true there too, and gating on
+ * it alone hands real sellers the operator-facing text this whole path exists
+ * to keep from them. NODE_ENV is what actually separates the two.
+ */
+function canExposeStripeDetail() {
+  return isStripeTestMode() && process.env.NODE_ENV !== 'production';
+}
+
+/**
  * The reply to a seller when payouts are down for a reason only the platform
  * can fix.
  *
@@ -256,8 +268,8 @@ function platformSetupResponse(res, err, { error, message, dashboardUrl }) {
   return res.status(503).json({
     error,
     message,
-    ...(dashboardUrl && isStripeTestMode() && { dashboardUrl }),
-    ...(isStripeTestMode() && { debug: err.message })
+    ...(dashboardUrl && canExposeStripeDetail() && { dashboardUrl }),
+    ...(canExposeStripeDetail() && { debug: err.message })
   });
 }
 
@@ -439,7 +451,7 @@ router.post('/onboarding-link', requireActiveAccount, async (req, res) => {
     res.status(500).json({
       error: 'Failed to start payout setup',
       message: PAYOUTS_UNAVAILABLE_MESSAGE,
-      ...(isStripeTestMode() && { debug: `type=${err.type} ${err.message}` })
+      ...(canExposeStripeDetail() && { debug: `type=${err.type} ${err.message}` })
     });
   }
 });
@@ -581,7 +593,6 @@ router.post('/submit-onboarding', requireActiveAccount, async (req, res) => {
     logger.info(`${LOG_PREFIX} Onboarding submitted uid=${user.uid?.slice(0, 8)} accountId=${accountId} onboarded=${onboarded}`);
     res.json({ onboarded, requiresVerification: !onboarded, accountId, recreatedAccount });
   } catch (err) {
-    const isTestMode = isStripeTestMode();
     logger.error(`${LOG_PREFIX} Submit onboarding error type=${err.type} message=${err.message}`);
     // Our configuration, not the seller's data — answered before anything is
     // blamed on what they typed.
@@ -592,7 +603,7 @@ router.post('/submit-onboarding', requireActiveAccount, async (req, res) => {
     res.status(500).json({
       error: 'Failed to set up payout account',
       message: PAYOUTS_UNAVAILABLE_MESSAGE,
-      ...(isTestMode && { debug: `type=${err.type} ${err.message}` })
+      ...(canExposeStripeDetail() && { debug: `type=${err.type} ${err.message}` })
     });
   }
 });
@@ -1280,5 +1291,10 @@ module.exports = {
   connectWebhookHandler,
   // Exported for tests: classifying a platform misconfiguration correctly is
   // what keeps Stripe's operator-facing text away from sellers.
-  _test: { isConnectNotEnabledError, isPlatformProfileError, handlePlatformSetupError }
+  _test: {
+    isConnectNotEnabledError,
+    isPlatformProfileError,
+    handlePlatformSetupError,
+    canExposeStripeDetail
+  }
 };
