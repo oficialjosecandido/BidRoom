@@ -75,6 +75,18 @@ jobs:
               echo "❌ STRIPE_PUBLISHABLE_KEY secret is not set. Refusing to deploy with the test key."
               exit 1
             fi
+
+            # A set-but-test key passed the check above and shipped to production,
+            # where the backend runs on a live secret key: saving a card failed for
+            # every buyer, and the test-only "Simulate verification" button showed
+            # to real sellers. Emptiness was never the thing that mattered — the
+            # mode is.
+            if [ "${{ github.ref_name }}" = "ericeira-prod" ] && \
+               [ "${STRIPE_PUBLISHABLE_KEY#pk_live_}" = "$STRIPE_PUBLISHABLE_KEY" ]; then
+              echo "❌ STRIPE_PUBLISHABLE_KEY is not a pk_live_ key, and this is the production branch."
+              echo "   Set the secret to the live publishable key of the platform Stripe account."
+              exit 1
+            fi
             awk -v k="$STRIPE_PUBLISHABLE_KEY" '
               { gsub(/STRIPE_PUBLISHABLE_KEY: '\''[^'\'']*'\''/, "STRIPE_PUBLISHABLE_KEY: '\''" k "'\''"); print }
             ' "$INDEX" > "$INDEX.tmp" && mv "$INDEX.tmp" "$INDEX"
