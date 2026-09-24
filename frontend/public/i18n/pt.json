@@ -2207,6 +2207,8 @@
       "city": "Localidade",
       "postalCode": "Código postal",
       "country": "País",
+      "phoneLabel": "Telemóvel",
+      "phoneHint": "Exigido pelo Stripe para verificar a sua conta. Não é mostrado aos compradores.",
       "bankTitle": "Conta bancária (IBAN)",
       "ibanLabel": "IBAN",
       "ibanHint": "O seu Número Internacional de Conta Bancária. Os espaços são ignorados.",
@@ -2218,6 +2220,7 @@
       "dobRequired": "Introduza a sua data de nascimento.",
       "addressRequired": "Preencha a morada completa.",
       "ibanRequired": "Introduza o IBAN.",
+      "phoneRequired": "Introduza o seu telemóvel.",
       "tosRequired": "Tem de aceitar os Termos de Serviço."
     },
     "sellerPaymentConfig": {

@@ -147,6 +147,16 @@ const customerSchema = new mongoose.Schema({
     default: null
   },
   /**
+   * Seller phone in E.164, as Stripe requires for individual.phone. Kept so the
+   * payout form only asks for it once — the form reads what is here first, and
+   * falls back to the MBWay or trader contact number before asking at all.
+   */
+  sellerPayoutPhone: {
+    type: String,
+    default: null,
+    trim: true
+  },
+  /**
    * IDs of transactions with an open dispute that restrict this user from initiating NEW marketplace
    * actions (bidding, listing, making offers). Existing transactions are NOT affected.
    * Populated on dispute open; entries removed when each dispute is resolved by admin.

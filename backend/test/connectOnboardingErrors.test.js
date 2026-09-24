@@ -20,7 +20,8 @@ const logger = require('../src/utils/logger');
 const { _test } = require('../src/routes/connect');
 const {
   isConnectNotEnabledError, handlePlatformSetupError, canExposeStripeDetail,
-  isSellerDataError, serviceAgreementForCountry
+  isSellerDataError, serviceAgreementForCountry, resolveSellerPhone,
+  buildConnectAccountCreatePayload, buildExpressAccountCreatePayload, SELLER_MCC
 } = _test;
 
 const REAL_NODE_ENV = process.env.NODE_ENV;
@@ -169,6 +170,74 @@ describe('serviceAgreementForCountry', () => {
     // Stripe was unreachable; better a defined answer than a crash mid-form.
     expect(serviceAgreementForCountry('ES', null)).toBe('recipient');
     expect(serviceAgreementForCountry('US', null)).toBe('full');
+  });
+});
+
+/**
+ * The third production failure: the account was created, then sat at "Pending
+ * verification" with nothing under verification. Stripe was waiting on
+ * business_profile.mcc and individual.phone, neither of which was ever sent.
+ */
+describe('the requirements that left a live account past_due', () => {
+  const SELLER = {
+    uid: 'u1', email: 's@example.com', firstName: 'Ana', lastName: 'Silva'
+  };
+  const KYC = {
+    dobDay: 4, dobMonth: 6, dobYear: 1985,
+    addressLine1: 'Rua A 1', addressCity: 'Lisboa', addressPostal: '1000-001',
+    phone: '+351912345678'
+  };
+
+  it('sends both on a new connected account', () => {
+    const payload = buildConnectAccountCreatePayload(SELLER, 'PT', KYC, 1758700000, '85.240.12.34', 'PT');
+
+    expect(payload.business_profile.mcc).toBe(SELLER_MCC);
+    expect(payload.individual.phone).toBe('+351912345678');
+  });
+
+  it('sends the category on the Stripe-hosted path too', () => {
+    expect(buildExpressAccountCreatePayload(SELLER, 'PT').business_profile.mcc).toBe(SELLER_MCC);
+  });
+
+  it('uses a category Stripe accepts as a four-digit MCC', () => {
+    expect(SELLER_MCC).toMatch(/^\d{4}$/);
+  });
+});
+
+describe('resolveSellerPhone', () => {
+  it('prefers what the seller just typed', () => {
+    const user = { sellerPayoutPhone: '+351911111111' };
+    expect(resolveSellerPhone(user, '912345678', 'PT')).toBe('+351912345678');
+  });
+
+  it('reads what is already on file rather than asking again', () => {
+    expect(resolveSellerPhone({ sellerPayoutPhone: '+351912345678' }, null, 'PT'))
+      .toBe('+351912345678');
+  });
+
+  it('falls back to numbers given for another purpose, personal first', () => {
+    const user = {
+      sellerPaymentConfig: { mbway: { phone: '912345678' } },
+      professionalContactPhone: '210000000'
+    };
+    // MBWay is bound to a personal number; the trader phone may be a switchboard.
+    expect(resolveSellerPhone(user, null, 'PT')).toBe('+351912345678');
+    expect(resolveSellerPhone({ professionalContactPhone: '210000000' }, null, 'PT'))
+      .toBe('+351210000000');
+  });
+
+  it('skips a stored value that cannot be made into a number', () => {
+    const user = {
+      sellerPaymentConfig: { mbway: { phone: 'n/a' } },
+      professionalContactPhone: '912345678'
+    };
+    expect(resolveSellerPhone(user, null, 'PT')).toBe('+351912345678');
+  });
+
+  it('returns null so the caller asks, instead of inventing one', () => {
+    expect(resolveSellerPhone({}, null, 'PT')).toBeNull();
+    expect(resolveSellerPhone(null, null, 'PT')).toBeNull();
+    expect(resolveSellerPhone({ sellerPayoutPhone: '   ' }, '', 'PT')).toBeNull();
   });
 });
 

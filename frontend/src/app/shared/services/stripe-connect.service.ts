@@ -9,6 +9,8 @@ export interface ConnectAccountStatus {
   accountId?: string;
   chargesEnabled?: boolean;
   payoutsEnabled?: boolean;
+  /** False when we hold no usable phone, and the payout form has to ask for one. */
+  phoneOnFile?: boolean;
   requirementErrors?: string[];
 }
 
@@ -22,6 +24,11 @@ export interface OnboardingFormData {
   addressCountry: string;
   iban: string;
   tosAccepted: boolean;
+  /**
+   * Only sent when we have none on file. Stripe lists individual.phone as a
+   * requirement, and an account without one never leaves "Pending verification".
+   */
+  phone?: string;
 }
 
 export interface OnboardingSubmitResponse {

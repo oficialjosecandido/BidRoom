@@ -71,6 +71,15 @@ export class DashboardSettingsComponent implements OnInit, OnDestroy {
   addressCountry = 'PT';
   iban = '';
   tosAccepted = false;
+  phone = '';
+  /**
+   * Whether to ask for a phone at all. Stripe requires individual.phone, but
+   * most sellers already gave us one for MBWay or as trader contact details —
+   * account-status says whether one of those is usable, and the field only
+   * appears when none is. The backend can also turn it on mid-submit, by
+   * answering with field: 'phone'.
+   */
+  phoneRequired = false;
 
   readonly countries = [
     { code: 'AT', label: 'Austria' }, { code: 'BE', label: 'Belgium' },
@@ -419,7 +428,13 @@ export class DashboardSettingsComponent implements OnInit, OnDestroy {
   loadConnectStatus(): void {
     this.connectLoading = true;
     this.stripeConnect.getAccountStatus().subscribe({
-      next: (status) => { this.connectStatus = status; this.connectLoading = false; },
+      next: (status) => {
+        this.connectStatus = status;
+        // Only ask once. A seller who has already given us a number for MBWay
+        // or as trader contact details is not asked for it again here.
+        this.phoneRequired = status.phoneOnFile === false;
+        this.connectLoading = false;
+      },
       error: () => { this.connectLoading = false; }
     });
   }
@@ -456,6 +471,10 @@ export class DashboardSettingsComponent implements OnInit, OnDestroy {
       this.connectError = this.translate.instant('dashboard.settings.ibanRequired');
       return;
     }
+    if (this.phoneRequired && !this.phone.trim()) {
+      this.connectError = this.translate.instant('dashboard.settings.phoneRequired');
+      return;
+    }
     if (!this.tosAccepted) {
       this.connectError = this.translate.instant('dashboard.settings.tosRequired');
       return;
@@ -470,7 +489,8 @@ export class DashboardSettingsComponent implements OnInit, OnDestroy {
       addressPostal: this.addressPostal,
       addressCountry: this.addressCountry,
       iban: this.iban,
-      tosAccepted: this.tosAccepted
+      tosAccepted: this.tosAccepted,
+      ...(this.phone.trim() && { phone: this.phone.trim() })
     };
 
     this.connectSubmitting = true;
@@ -487,6 +507,12 @@ export class DashboardSettingsComponent implements OnInit, OnDestroy {
       },
       error: (err) => {
         this.connectSubmitting = false;
+        // The phone we had on file turned out to be unusable for the country
+        // they picked. Reveal the field instead of leaving them re-reading a
+        // form that looks complete.
+        if (err?.error?.field === 'phone') {
+          this.phoneRequired = true;
+        }
         this.connectError = err?.error?.message || err?.error?.error || this.translate.instant('dashboard.settings.connectError');
         // Present only while Stripe is in test mode; in production the
         // backend strips both, so this block never renders for a seller.

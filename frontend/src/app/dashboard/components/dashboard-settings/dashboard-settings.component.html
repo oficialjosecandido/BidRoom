@@ -381,6 +381,16 @@
                   }
                 </select>
               </div>
+              <!-- Only when we hold no usable number: Stripe requires one, but
+                   most sellers already gave us theirs for MBWay or as trader
+                   contact details. -->
+              @if (phoneRequired) {
+                <div class="form-field">
+                  <label>{{ 'dashboard.settings.phoneLabel' | translate }}</label>
+                  <input type="tel" [(ngModel)]="phone" name="phone" placeholder="912 345 678" required />
+                  <span class="form-hint">{{ 'dashboard.settings.phoneHint' | translate }}</span>
+                </div>
+              }
             </div>
 
             <div class="form-section">

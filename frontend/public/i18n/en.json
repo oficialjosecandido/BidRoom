@@ -2210,6 +2210,8 @@
       "bankTitle": "Bank account (IBAN)",
       "ibanLabel": "IBAN",
       "ibanHint": "Your International Bank Account Number. Spaces are ignored.",
+      "phoneLabel": "Mobile phone",
+      "phoneHint": "Required by Stripe to verify your account. Not shown to buyers.",
       "tosText": "I authorise BidRoom to submit my information to Stripe for identity verification and payout processing, and I accept the",
       "tosLink": "Stripe Connected Account Agreement",
       "submitBtn": "Save payout account",
@@ -2218,6 +2220,7 @@
       "dobRequired": "Please enter your date of birth.",
       "addressRequired": "Please fill in your full address.",
       "ibanRequired": "Please enter your IBAN.",
+      "phoneRequired": "Please enter your mobile phone number.",
       "tosRequired": "You must accept the Terms of Service."
     },
     "sellerPaymentConfig": {

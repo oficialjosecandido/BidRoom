@@ -2,6 +2,7 @@ const express = require('express');
 const { authenticateToken, requireActiveAccount } = require('../middleware/auth');
 const { getStripe, isStripeTestMode } = require('../utils/stripe.util');
 const { publicClientIp } = require('../utils/clientIp');
+const { normalizePhoneE164 } = require('../utils/phoneE164');
 const Customer = require('../models/Customer');
 const Transaction = require('../models/Transaction');
 const Listing = require('../models/Listing');
@@ -160,6 +161,45 @@ const RECIPIENT_SERVICE_AGREEMENT_COUNTRIES = new Set([
   'HU', 'IE', 'IT', 'LV', 'LT', 'LU', 'MT', 'NL', 'PL', 'PT', 'RO',
   'SK', 'SI', 'ES', 'SE', 'GB', 'NO', 'CH', 'IS', 'LI'
 ]);
+
+/**
+ * The merchant category every BidRoom seller trades under.
+ *
+ * Stripe requires an MCC on a connected account and lists it as past_due until
+ * it has one — a live account sat at "Pending verification" for exactly this,
+ * with nothing actually under verification. Sellers here are private
+ * individuals reselling watches, jewellery, clothing and cars, which is what
+ * 5931 (Used Merchandise and Secondhand Stores) describes. It is the platform's
+ * answer, not the seller's: they are never asked, because the marketplace is
+ * what determines the category.
+ *
+ * Overridable because Stripe uses the MCC for risk classification, and a change
+ * there should not wait on a deploy.
+ */
+const SELLER_MCC = String(process.env.STRIPE_SELLER_MCC || '5931');
+
+/**
+ * The seller's phone in E.164, which Stripe also lists as past_due without.
+ *
+ * Nobody was ever asked for one on the payout form, so this prefers what the
+ * seller just typed, then falls back to a number they gave for some other
+ * purpose: MBWay first, since that is bound to a personal number, then the
+ * trader contact phone. Returns null when nothing resolves, and the caller
+ * asks rather than sending Stripe a number nobody confirmed.
+ */
+function resolveSellerPhone(user, typed, country) {
+  const candidates = [
+    typed,
+    user?.sellerPayoutPhone,
+    user?.sellerPaymentConfig?.mbway?.phone,
+    user?.professionalContactPhone
+  ];
+  for (const candidate of candidates) {
+    const phone = normalizePhoneE164(candidate, country);
+    if (phone) return phone;
+  }
+  return null;
+}
 
 /** Used only when Stripe cannot be asked — see getPlatformCountry. */
 function platformCountryFallback() {
@@ -396,6 +436,9 @@ function buildExpressAccountCreatePayload(user, country = 'PT') {
     email: user.email,
     business_type: 'individual',
     business_profile: {
+      // Sent here too so Stripe's hosted onboarding does not ask the seller to
+      // classify a business they do not think of themselves as having.
+      mcc: SELLER_MCC,
       url: stripeBusinessProfileUrl(),
       product_description: 'Online marketplace seller on BidRoom'
     },
@@ -420,6 +463,7 @@ function buildConnectAccountCreatePayload(user, country, kyc, tosTimestamp, ip, 
     email: user.email,
     business_type: 'individual',
     business_profile: {
+      mcc: SELLER_MCC,
       url: stripeBusinessProfileUrl(),
       product_description: 'Online marketplace seller on BidRoom'
     },
@@ -427,6 +471,7 @@ function buildConnectAccountCreatePayload(user, country, kyc, tosTimestamp, ip, 
       first_name: user.firstName,
       last_name: user.lastName,
       email: user.email,
+      phone: kyc.phone,
       dob: { day: kyc.dobDay, month: kyc.dobMonth, year: kyc.dobYear },
       address: {
         line1: kyc.addressLine1,
@@ -513,7 +558,7 @@ router.post('/submit-onboarding', requireActiveAccount, async (req, res) => {
   const {
     dobDay, dobMonth, dobYear,
     addressLine1, addressCity, addressPostal, addressCountry,
-    iban, tosAccepted
+    iban, tosAccepted, phone: typedPhone
   } = req.body;
 
   // Validate required fields
@@ -554,7 +599,24 @@ router.post('/submit-onboarding', requireActiveAccount, async (req, res) => {
     const user = await Customer.findOne({ uid: req.user.uid });
     if (!user) return res.status(404).json({ error: 'User not found' });
 
+    // Stripe holds the account past_due without a phone, which shows in the
+    // dashboard as "Pending verification" forever rather than as a question.
+    // Asked here, before anything is written, so a seller who has to supply it
+    // is not left with a half-saved submission.
+    const phone = resolveSellerPhone(user, typedPhone, country);
+    if (!phone) {
+      return res.status(400).json({
+        error: 'Phone number is required',
+        field: 'phone',
+        message: 'Stripe requires a contact phone number to verify your payout account.'
+      });
+    }
+
     await persistSellerPayoutIban(user, ibanClean);
+    if (user.sellerPayoutPhone !== phone) {
+      user.sellerPayoutPhone = phone;
+      await user.save();
+    }
 
     let accountId = await resolveConnectAccountId(stripe, user);
     let recreatedAccount = false;
@@ -571,7 +633,8 @@ router.post('/submit-onboarding', requireActiveAccount, async (req, res) => {
           dobYear: dobYearInt,
           addressLine1: String(addressLine1),
           addressCity: String(addressCity),
-          addressPostal: String(addressPostal)
+          addressPostal: String(addressPostal),
+          phone
         },
         tosTimestamp,
         ip,
@@ -583,9 +646,14 @@ router.post('/submit-onboarding', requireActiveAccount, async (req, res) => {
       recreatedAccount = true;
       logger.info(`${LOG_PREFIX} Created Custom account ${accountId} for uid=${user.uid?.slice(0, 8)}...`);
     } else {
-      // Update existing account with fresh KYC details
+      // Update existing account with fresh KYC details.
+      // mcc and phone are resent here and not only on create: the accounts that
+      // already exist are precisely the ones stuck past_due on them, and they
+      // are never created again.
       await stripe.accounts.update(accountId, {
+        business_profile: { mcc: SELLER_MCC },
         individual: {
+          phone,
           dob: { day: dobDayInt, month: dobMonthInt, year: dobYearInt },
           address: {
             line1: String(addressLine1),
@@ -726,12 +794,19 @@ router.get('/account-status', async (req, res) => {
     return res.json({ connected: false, onboarded: false });
   }
   try {
-    const user = await Customer.findOne({ uid: req.user.uid }).select('stripeConnectAccountId stripeConnectOnboarded');
+    const user = await Customer.findOne({ uid: req.user.uid })
+      .select('stripeConnectAccountId stripeConnectOnboarded sellerPayoutPhone sellerPaymentConfig.mbway.phone professionalContactPhone');
     if (!user) return res.status(404).json({ error: 'User not found' });
+
+    // Lets the payout form ask for a phone only when we have none to send.
+    // The country is unknown until the seller picks one, so this reports
+    // whether any candidate is usable for the countries we pay out to; a
+    // national-format number still resolves once the form supplies one.
+    const phoneOnFile = !!resolveSellerPhone(user, null, platformCountryFallback());
 
     const accountId = await resolveConnectAccountId(stripe, user);
     if (!accountId) {
-      return res.json({ connected: false, onboarded: false });
+      return res.json({ connected: false, onboarded: false, phoneOnFile });
     }
 
     // Retrieve fresh status from Stripe to keep local record in sync
@@ -759,6 +834,7 @@ router.get('/account-status', async (req, res) => {
       accountId,
       chargesEnabled: account.charges_enabled,
       payoutsEnabled: account.payouts_enabled,
+      phoneOnFile,
       requirementErrors: requirementErrors.length ? requirementErrors : undefined
     });
   } catch (err) {
@@ -1353,6 +1429,10 @@ module.exports = {
     isSellerDataError,
     handlePlatformSetupError,
     canExposeStripeDetail,
-    serviceAgreementForCountry
+    serviceAgreementForCountry,
+    resolveSellerPhone,
+    buildConnectAccountCreatePayload,
+    buildExpressAccountCreatePayload,
+    SELLER_MCC
   }
 };

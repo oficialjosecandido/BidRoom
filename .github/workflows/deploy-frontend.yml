@@ -36,6 +36,53 @@ jobs:
           cd frontend
           npm ci --legacy-peer-deps
 
+      # Patched BEFORE the build, on the source template.
+      #
+      # This used to run after the build, on dist/…/index.csr.html and
+      # index.server.html. Those two files are not what the SSR engine serves:
+      # the build bakes a copy of the index into server/assets-chunks/
+      # index_csr_html.mjs and index_server_html.mjs, and angular-app-manifest
+      # .mjs resolves 'index.csr.html' to the chunk. So the patch reported ✅,
+      # the files on disk really did say pk_live_, and production served the
+      # pk_test_ frozen into the bundle — every buyer's card failed against a
+      # live SetupIntent, and the test-only "Simulate verification" button
+      # showed to real sellers.
+      #
+      # Patching the source removes the class of bug: whatever the build emits,
+      # emits from the patched input, with its own hashes computed over it.
+      - name: Patch runtime config in the source template
+        env:
+          API_URL: https://bidroom-backend-prod-e9eghtc0aha4e3dw.uksouth-01.azurewebsites.net/api
+          STRIPE_PUBLISHABLE_KEY: ${{ secrets.STRIPE_PUBLISHABLE_KEY }}
+        run: |
+          set -euo pipefail
+
+          INDEX="frontend/src/index.html"
+
+          # Fail hard if the secret is missing, so we never silently ship the
+          # test key that sits in the source as the local-dev default.
+          if [ -z "${STRIPE_PUBLISHABLE_KEY:-}" ]; then
+            echo "❌ STRIPE_PUBLISHABLE_KEY secret is not set. Refusing to deploy with the test key."
+            exit 1
+          fi
+
+          # Emptiness was never the thing that mattered — the mode is.
+          if [ "${{ github.ref_name }}" = "ericeira-prod" ] && \
+             [ "${STRIPE_PUBLISHABLE_KEY#pk_live_}" = "$STRIPE_PUBLISHABLE_KEY" ]; then
+            echo "❌ STRIPE_PUBLISHABLE_KEY is not a pk_live_ key, and this is the production branch."
+            echo "   Set the secret to the live publishable key of the platform Stripe account."
+            exit 1
+          fi
+
+          sed -i "s|API_URL: '/api'|API_URL: '${API_URL}'|" "$INDEX"
+          awk -v k="$STRIPE_PUBLISHABLE_KEY" '
+            { gsub(/STRIPE_PUBLISHABLE_KEY: '\''[^'\'']*'\''/, "STRIPE_PUBLISHABLE_KEY: '\''" k "'\''"); print }
+          ' "$INDEX" > "$INDEX.tmp" && mv "$INDEX.tmp" "$INDEX"
+
+          echo "✅ Patched runtime config in $INDEX:"
+          grep -oE "(API_URL|STRIPE_PUBLISHABLE_KEY): '[^']*'" "$INDEX" \
+            | sed -E "s/(STRIPE_PUBLISHABLE_KEY: ')([^']{8}).*$/\1\2…(redacted)/"
+
       - name: Build Angular SSR app
         run: |
           cd frontend
@@ -47,63 +94,43 @@ jobs:
             npm run build
           fi
 
-      - name: Patch runtime config in built HTML templates
-        env:
-          API_URL: https://bidroom-backend-prod-e9eghtc0aha4e3dw.uksouth-01.azurewebsites.net/api
-          STRIPE_PUBLISHABLE_KEY: ${{ secrets.STRIPE_PUBLISHABLE_KEY }}
+      # Checked on the files that are actually served, not the ones we edited.
+      # The previous check passed on a build that shipped the test key.
+      - name: Verify the shipped artifact carries the live key
         run: |
           set -euo pipefail
 
-          # The SSR build produces two HTML templates that both need APP_CONFIG patched:
-          #   browser/index.csr.html  — shell served for RenderMode.Client routes
-          #   server/index.server.html — template used by the SSR engine (affects <head> OG tags)
-          BROWSER_HTML="frontend/dist/frontend/browser/index.csr.html"
-          SERVER_HTML="frontend/dist/frontend/server/index.server.html"
+          DIST="frontend/dist/frontend"
+          SERVED="$DIST/server/assets-chunks/index_csr_html.mjs \
+                  $DIST/server/assets-chunks/index_server_html.mjs \
+                  $DIST/browser/index.csr.html \
+                  $DIST/server/index.server.html"
 
-          for INDEX in "$BROWSER_HTML" "$SERVER_HTML"; do
-            if [ ! -f "$INDEX" ]; then
-              echo "❌ Built template not found at $INDEX"
+          for f in $SERVED; do
+            if [ ! -f "$f" ]; then
+              echo "❌ Expected build output missing: $f"
+              echo "   If Angular changed its output layout, this check needs updating —"
+              echo "   do not delete it, or the test key ships again."
               exit 1
             fi
+            [ "${{ github.ref_name }}" = "ericeira-prod" ] || continue
 
-            # Replace API_URL placeholder
-            sed -i "s|API_URL: '/api'|API_URL: '${API_URL}'|" "$INDEX"
-
-            # Replace Stripe publishable key — fail hard if the secret is missing so
-            # we never silently ship the test key to production users.
-            if [ -z "${STRIPE_PUBLISHABLE_KEY:-}" ]; then
-              echo "❌ STRIPE_PUBLISHABLE_KEY secret is not set. Refusing to deploy with the test key."
+            # A real key, not the literal "pk_test_..." in the explanatory
+            # comment in index.html, which survives the build as prose.
+            if grep -qE "pk_test_[A-Za-z0-9]" "$f"; then
+              echo "❌ $f still contains a pk_test_ key after the build."
               exit 1
             fi
-
-            # A set-but-test key passed the check above and shipped to production,
-            # where the backend runs on a live secret key: saving a card failed for
-            # every buyer, and the test-only "Simulate verification" button showed
-            # to real sellers. Emptiness was never the thing that mattered — the
-            # mode is.
-            if [ "${{ github.ref_name }}" = "ericeira-prod" ] && \
-               [ "${STRIPE_PUBLISHABLE_KEY#pk_live_}" = "$STRIPE_PUBLISHABLE_KEY" ]; then
-              echo "❌ STRIPE_PUBLISHABLE_KEY is not a pk_live_ key, and this is the production branch."
-              echo "   Set the secret to the live publishable key of the platform Stripe account."
+            if ! grep -q "STRIPE_PUBLISHABLE_KEY: 'pk_live_" "$f"; then
+              echo "❌ $f has no live publishable key in APP_CONFIG."
+              echo "   The patch step ran before the build — did the placeholder in"
+              echo "   frontend/src/index.html change shape?"
               exit 1
             fi
-            awk -v k="$STRIPE_PUBLISHABLE_KEY" '
-              { gsub(/STRIPE_PUBLISHABLE_KEY: '\''[^'\'']*'\''/, "STRIPE_PUBLISHABLE_KEY: '\''" k "'\''"); print }
-            ' "$INDEX" > "$INDEX.tmp" && mv "$INDEX.tmp" "$INDEX"
           done
 
-          echo "✅ Patched runtime config in both HTML templates:"
-          grep -oE "(API_URL|STRIPE_PUBLISHABLE_KEY): '[^']*'" "$BROWSER_HTML" \
-            | sed -E "s/(STRIPE_PUBLISHABLE_KEY: ')([^']{8}).*$/\1\2…(redacted)/"
-
-      - name: Verify build output
-        run: |
-          echo "📂 browser/ HTML:"
-          ls -la frontend/dist/frontend/browser/index.csr.html
-          echo "📂 server/ HTML:"
-          ls -la frontend/dist/frontend/server/index.server.html
-          echo "📂 server/ entry:"
-          ls -la frontend/dist/frontend/server/server.mjs
+          echo "✅ Live key present in everything served, no test key anywhere. Entry point:"
+          ls -la "$DIST/server/server.mjs"
 
       - name: Create deployment package
         run: |
