@@ -18,7 +18,10 @@ jest.mock('../src/utils/stripe.util', () => ({
 
 const logger = require('../src/utils/logger');
 const { _test } = require('../src/routes/connect');
-const { isConnectNotEnabledError, handlePlatformSetupError, canExposeStripeDetail } = _test;
+const {
+  isConnectNotEnabledError, handlePlatformSetupError, canExposeStripeDetail,
+  isSellerDataError, serviceAgreementForCountry
+} = _test;
 
 const REAL_NODE_ENV = process.env.NODE_ENV;
 beforeAll(() => { process.env.NODE_ENV = 'production'; });
@@ -30,6 +33,16 @@ const CONNECT_DISABLED = Object.assign(new Error(
   "https://dashboard.stripe.com/connect. Alternatively, you can enable Connect using the Stripe MCP " +
   "(search for 'EnableConnect' using the stripe_api_search tool) or use the Stripe CLI to run " +
   "'stripe tools search enable_connect'"
+), { type: 'StripeInvalidRequestError' });
+
+/**
+ * The second production failure on the same form, once the IP bug was fixed.
+ * The recipient agreement is for paying out across a border; the platform and
+ * the seller were both in PT. Stripe sends it with no `param`.
+ */
+const SERVICE_AGREEMENT = Object.assign(new Error(
+  'The recipient ToS agreement is not supported for platforms in PT creating accounts in PT. ' +
+  'See https://stripe.com/docs/connect/cross-border-payouts for more details.'
 ), { type: 'StripeInvalidRequestError' });
 
 function mockRes() {
@@ -120,5 +133,56 @@ describe('handlePlatformSetupError', () => {
 
     expect(handlePlatformSetupError(res, badIban)).toBe(false);
     expect(res.statusCode).toBeNull();
+  });
+
+  it('answers the wrong-service-agreement error as ours', () => {
+    const res = mockRes();
+
+    expect(handlePlatformSetupError(res, SERVICE_AGREEMENT)).toBe(true);
+    expect(res.statusCode).toBe(503);
+    // The seller saw this verbatim in production and read it as their mistake.
+    const said = JSON.stringify(res.body);
+    expect(said).not.toContain('recipient ToS');
+    expect(said).not.toContain('cross-border-payouts');
+    expect(res.body.message).toContain('on our side');
+
+    const logged = logger.error.mock.calls.map(args => args.join(' ')).join('\n');
+    expect(logged).toContain('WRONG SERVICE AGREEMENT');
+  });
+});
+
+describe('serviceAgreementForCountry', () => {
+  it('signs the full agreement at home — the recipient one is refused there', () => {
+    expect(serviceAgreementForCountry('PT', 'PT')).toBe('full');
+  });
+
+  it('keeps the recipient agreement for an EEA seller abroad', () => {
+    expect(serviceAgreementForCountry('ES', 'PT')).toBe('recipient');
+    expect(serviceAgreementForCountry('DE', 'PT')).toBe('recipient');
+  });
+
+  it('falls back to full outside the EEA list', () => {
+    expect(serviceAgreementForCountry('US', 'PT')).toBe('full');
+  });
+
+  it('still answers when the platform country could not be read', () => {
+    // Stripe was unreachable; better a defined answer than a crash mid-form.
+    expect(serviceAgreementForCountry('ES', null)).toBe('recipient');
+    expect(serviceAgreementForCountry('US', null)).toBe('full');
+  });
+});
+
+describe('isSellerDataError', () => {
+  it('recognises a complaint about a field the seller filled', () => {
+    expect(isSellerDataError({ param: 'external_account' })).toBe(true);
+    expect(isSellerDataError({ param: 'individual[dob][year]' })).toBe(true);
+  });
+
+  it('does not treat a platform parameter as the seller’s doing', () => {
+    expect(isSellerDataError({ param: 'tos_acceptance[service_agreement]' })).toBe(false);
+    expect(isSellerDataError({ param: 'controller[requirement_collection]' })).toBe(false);
+    // No param at all is the shape the PT/PT failure arrived in.
+    expect(isSellerDataError(SERVICE_AGREEMENT)).toBe(false);
+    expect(isSellerDataError(null)).toBe(false);
   });
 });

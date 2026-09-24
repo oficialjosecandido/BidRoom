@@ -154,14 +154,56 @@ const COUNTRY_CURRENCY = {
   SG: 'sgd', HK: 'hkd', JP: 'jpy', IN: 'inr', ZA: 'zar'
 };
 
-/** EU/EEA sellers use the recipient service agreement (immutable once set). */
+/** EU/EEA sellers abroad use the recipient service agreement (immutable once set). */
 const RECIPIENT_SERVICE_AGREEMENT_COUNTRIES = new Set([
   'AT', 'BE', 'BG', 'HR', 'CY', 'CZ', 'DK', 'EE', 'FI', 'FR', 'DE', 'GR',
   'HU', 'IE', 'IT', 'LV', 'LT', 'LU', 'MT', 'NL', 'PL', 'PT', 'RO',
   'SK', 'SI', 'ES', 'SE', 'GB', 'NO', 'CH', 'IS', 'LI'
 ]);
 
-function serviceAgreementForCountry(country) {
+/** Used only when Stripe cannot be asked — see getPlatformCountry. */
+function platformCountryFallback() {
+  return String(process.env.STRIPE_PLATFORM_COUNTRY || 'PT').toUpperCase();
+}
+
+/** @type {Promise<string> | null} */
+let platformCountryPromise = null;
+
+/**
+ * The country of the platform's own Stripe account, cached for the process.
+ *
+ * Read from Stripe rather than configured, because a wrong answer here is only
+ * discovered when a seller is already stuck at the form, and the value changes
+ * only if the platform account itself moves. A failed lookup falls back rather
+ * than failing onboarding, and is not cached so the next seller retries it.
+ */
+function getPlatformCountry(stripe) {
+  if (!platformCountryPromise) {
+    platformCountryPromise = stripe.accounts.retrieve()
+      .then((acct) => String(acct.country || '').toUpperCase() || platformCountryFallback())
+      .catch((err) => {
+        logger.warn(`${LOG_PREFIX} could not read the platform country: ${err.message}`);
+        platformCountryPromise = null;
+        return platformCountryFallback();
+      });
+  }
+  return platformCountryPromise;
+}
+
+/**
+ * Which Stripe service agreement a new connected account signs.
+ *
+ * The recipient agreement exists for cross-border payouts — a platform in one
+ * country paying out to an account in another. Stripe refuses it outright when
+ * both are in the same country ("The recipient ToS agreement is not supported
+ * for platforms in PT creating accounts in PT"), which is the ordinary case
+ * here, so a seller at home signs the full agreement.
+ *
+ * The choice is immutable once the account exists, so it has to be right the
+ * first time; there is no fixing it afterwards on the same account.
+ */
+function serviceAgreementForCountry(country, platformCountry) {
+  if (platformCountry && country === platformCountry) return 'full';
   return RECIPIENT_SERVICE_AGREEMENT_COUNTRIES.has(country) ? 'recipient' : 'full';
 }
 
@@ -171,6 +213,31 @@ function isPlatformProfileError(err) {
     msg.includes('platform-profile') ||
     msg.includes('collecting requirements for connected accounts')
   );
+}
+
+/**
+ * The wrong service agreement was asked for — a decision the platform makes on
+ * the seller's behalf, so it is worth naming in the log rather than logging it
+ * as an unexplained 400.
+ */
+function isServiceAgreementError(err) {
+  const msg = String(err?.message || '');
+  return msg.includes('recipient ToS agreement') || msg.includes('service_agreement');
+}
+
+/**
+ * Whether Stripe is complaining about something the seller actually typed.
+ *
+ * Stripe answers both bad seller input and platform misconfiguration with
+ * StripeInvalidRequestError, and only the first kind is worth repeating to the
+ * seller — "Invalid IBAN" helps them, "not supported for platforms in PT"
+ * sends them looking for a mistake they did not make. `param` is what tells
+ * the two apart: it names the field, and these are the fields the form owns.
+ */
+const SELLER_SUPPLIED_PARAMS = /^(individual|external_account|bank_account|business_profile|country|email)\b/;
+
+function isSellerDataError(err) {
+  return SELLER_SUPPLIED_PARAMS.test(String(err?.param || ''));
 }
 
 /**
@@ -272,6 +339,19 @@ function handlePlatformSetupError(res, err) {
     return true;
   }
 
+  if (err.type === 'StripeInvalidRequestError' && isServiceAgreementError(err)) {
+    logger.error(
+      `${LOG_PREFIX} WRONG SERVICE AGREEMENT for a new connected account — the recipient ` +
+      `agreement only applies when the seller's country differs from the platform's. ` +
+      `Stripe said: ${err.message}`
+    );
+    platformSetupResponse(res, err, {
+      error: 'Stripe Connect platform setup incomplete',
+      message: PAYOUTS_UNAVAILABLE_MESSAGE
+    });
+    return true;
+  }
+
   return false;
 }
 
@@ -328,7 +408,7 @@ function buildExpressAccountCreatePayload(user, country = 'PT') {
 }
 
 /** Payload for a new API-onboarded connected account (platform collects KYC). */
-function buildConnectAccountCreatePayload(user, country, kyc, tosTimestamp, ip) {
+function buildConnectAccountCreatePayload(user, country, kyc, tosTimestamp, ip, platformCountry) {
   return {
     controller: {
       losses: { payments: 'application' },
@@ -366,7 +446,7 @@ function buildConnectAccountCreatePayload(user, country, kyc, tosTimestamp, ip) 
       // or malformed ip with "Invalid IP address", which reads to the seller
       // as a problem with what they typed.
       ...(ip && { ip }),
-      service_agreement: serviceAgreementForCountry(country)
+      service_agreement: serviceAgreementForCountry(country, platformCountry)
     },
     metadata: { uid: user.uid }
   };
@@ -481,6 +561,7 @@ router.post('/submit-onboarding', requireActiveAccount, async (req, res) => {
 
     if (!accountId) {
       // Create new connected account — platform collects KYC; seller never visits Stripe
+      const platformCountry = await getPlatformCountry(stripe);
       const account = await stripe.accounts.create(buildConnectAccountCreatePayload(
         user,
         country,
@@ -493,7 +574,8 @@ router.post('/submit-onboarding', requireActiveAccount, async (req, res) => {
           addressPostal: String(addressPostal)
         },
         tosTimestamp,
-        ip
+        ip,
+        platformCountry
       ));
       accountId = account.id;
       user.stripeConnectAccountId = accountId;
@@ -562,7 +644,16 @@ router.post('/submit-onboarding', requireActiveAccount, async (req, res) => {
     // blamed on what they typed.
     if (handlePlatformSetupError(res, err)) return;
     if (err.type === 'StripeInvalidRequestError') {
-      return res.status(400).json({ error: 'Invalid payment details', message: err.message });
+      // Only a complaint about a field the seller filled is repeated to them.
+      // Anything else is our configuration wearing a 400, and is answered as
+      // ours — the detail is already in the log line above.
+      if (isSellerDataError(err)) {
+        return res.status(400).json({ error: 'Invalid payment details', message: err.message });
+      }
+      return platformSetupResponse(res, err, {
+        error: 'Payout account setup failed',
+        message: PAYOUTS_UNAVAILABLE_MESSAGE
+      });
     }
     res.status(500).json({
       error: 'Failed to set up payout account',
@@ -1258,7 +1349,10 @@ module.exports = {
   _test: {
     isConnectNotEnabledError,
     isPlatformProfileError,
+    isServiceAgreementError,
+    isSellerDataError,
     handlePlatformSetupError,
-    canExposeStripeDetail
+    canExposeStripeDetail,
+    serviceAgreementForCountry
   }
 };
