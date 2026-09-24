@@ -328,6 +328,16 @@
             @if (connectError) {
               <div class="form-error-banner">{{ connectError }}</div>
             }
+            <!-- Only ever populated in Stripe test mode: what Stripe actually
+                 said, so a developer does not have to go digging for it. -->
+            @if (connectErrorDebug) {
+              <div class="form-error-debug">
+                <strong>Stripe (modo test):</strong> {{ connectErrorDebug }}
+                @if (connectErrorDashboardUrl) {
+                  <a [href]="connectErrorDashboardUrl" target="_blank" rel="noopener">Abrir no dashboard Stripe</a>
+                }
+              </div>
+            }
 
             <div class="form-section">
               <h3 class="form-section-title">{{ 'dashboard.settings.dobTitle' | translate }}</h3>

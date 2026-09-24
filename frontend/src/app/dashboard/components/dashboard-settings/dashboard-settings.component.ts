@@ -49,6 +49,14 @@ export class DashboardSettingsComponent implements OnInit, OnDestroy {
   connectTestActivating = false;
   connectStatusMessage: string | null = null;
   connectError: string | null = null;
+  /**
+   * Stripe's own wording, which the backend sends only in test mode. The
+   * seller-facing message is deliberately vague about the cause, so without
+   * this a developer has no way to tell one platform misconfiguration from
+   * another without reading server logs.
+   */
+  connectErrorDebug: string | null = null;
+  connectErrorDashboardUrl: string | null = null;
   showOnboardingForm = false;
 
   get isStripeTestMode(): boolean { return this.stripeConnect.isTestMode; }
@@ -416,19 +424,26 @@ export class DashboardSettingsComponent implements OnInit, OnDestroy {
     });
   }
 
-  openOnboardingForm(): void {
+  /** Clears the banner and any Stripe detail shown beneath it. */
+  private clearConnectError(): void {
     this.connectError = null;
+    this.connectErrorDebug = null;
+    this.connectErrorDashboardUrl = null;
+  }
+
+  openOnboardingForm(): void {
+    this.clearConnectError();
     this.showOnboardingForm = true;
     this.postHog.track(AnalyticsEvents.SELLER_ONBOARDING_STARTED);
   }
 
   cancelOnboardingForm(): void {
     this.showOnboardingForm = false;
-    this.connectError = null;
+    this.clearConnectError();
   }
 
   submitOnboarding(): void {
-    this.connectError = null;
+    this.clearConnectError();
     if (!this.dobDay || !this.dobMonth || !this.dobYear) {
       this.connectError = this.translate.instant('dashboard.settings.dobRequired');
       return;
@@ -463,6 +478,7 @@ export class DashboardSettingsComponent implements OnInit, OnDestroy {
       next: (res) => {
         this.connectSubmitting = false;
         this.showOnboardingForm = false;
+        this.clearConnectError();
         this.connectStatusMessage = res.onboarded
           ? this.translate.instant('dashboard.settings.payoutNowActive')
           : this.translate.instant('dashboard.settings.detailsSubmitted');
@@ -472,6 +488,10 @@ export class DashboardSettingsComponent implements OnInit, OnDestroy {
       error: (err) => {
         this.connectSubmitting = false;
         this.connectError = err?.error?.message || err?.error?.error || this.translate.instant('dashboard.settings.connectError');
+        // Present only while Stripe is in test mode; in production the
+        // backend strips both, so this block never renders for a seller.
+        this.connectErrorDebug = err?.error?.debug || null;
+        this.connectErrorDashboardUrl = err?.error?.dashboardUrl || null;
       }
     });
   }
