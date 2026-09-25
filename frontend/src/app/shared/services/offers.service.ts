@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { API_CONFIG } from '../config/api.config';
 
@@ -29,7 +29,11 @@ export interface Offer {
 
 export interface OffersResponse {
   offers: Offer[];
+  /** Total across all pages, not the length of `offers` — the API paginates. */
   total: number;
+  limit?: number;
+  offset?: number;
+  hasMore?: boolean;
 }
 
 export interface CreateOfferRequest {
@@ -48,8 +52,12 @@ export class OffersService {
 
   private apiUrl = `${API_CONFIG.getApiUrl()}/offers`;
 
-  getOffersByListing(listingId: string): Observable<OffersResponse> {
-    return this.http.get<OffersResponse>(`${this.apiUrl}/listing/${listingId}`);
+  /** One page of a listing's offers. The API caps the page size regardless of `limit`. */
+  getOffersByListing(listingId: string, limit?: number, offset?: number): Observable<OffersResponse> {
+    let params = new HttpParams();
+    if (limit != null) params = params.set('limit', limit);
+    if (offset != null) params = params.set('offset', offset);
+    return this.http.get<OffersResponse>(`${this.apiUrl}/listing/${listingId}`, { params });
   }
 
   createOffer(offerData: CreateOfferRequest): Observable<Offer> {

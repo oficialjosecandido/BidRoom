@@ -717,7 +717,9 @@
       "selecting": "Seleccionando…",
       "verifiedRequired": "Se requiere cuenta verificada",
       "notifyOutbid": "Notificarme cuando me superen la puja",
-      "anonymous": "Anónimo"
+      "anonymous": "Anónimo",
+      "loadMore": "Ver más",
+      "loadingMore": "Cargando…"
     },
     "offerHistory": {
       "loading": "Cargando ofertas...",

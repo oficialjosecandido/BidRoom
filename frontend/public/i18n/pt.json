@@ -1128,7 +1128,9 @@
       "selecting": "Selecionando…",
       "verifiedRequired": "Conta verificada necessária",
       "notifyOutbid": "Notificar-me quando o meu lance for superado",
-      "anonymous": "Anônimo"
+      "anonymous": "Anônimo",
+      "loadMore": "Ver mais",
+      "loadingMore": "A carregar…"
     },
     "offerHistory": {
       "loading": "Carregando ofertas...",

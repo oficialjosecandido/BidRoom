@@ -34,11 +34,19 @@ export interface Bid {
 
 export interface BidsResponse {
   bids: Bid[];
-  total: number;
   /**
-   * The viewer's own bidderId, when they are logged in and have bid on this
-   * listing. Lets the client highlight its own bids without the API publishing
-   * an identifier for anyone else.
+   * Total across all pages, NOT the length of `bids`. The API paginates the bid
+   * history and caps the page size, so use this for counts and `hasMore` to
+   * decide whether to fetch the next page.
+   */
+  total: number;
+  limit?: number;
+  offset?: number;
+  hasMore?: boolean;
+  /**
+   * The viewer's own bidderId when they are logged in. Lets the client tell
+   * which bids are theirs without the API publishing an identifier for anyone
+   * else.
    */
   viewerBidderId?: string | null;
 }
@@ -69,8 +77,19 @@ export class BidsService {
 
   private apiUrl = `${API_CONFIG.getApiUrl()}/bids`;
 
-  getBidsByListing(listingId: string, sort: 'asc' | 'desc' = 'desc'): Observable<BidsResponse> {
-    const params = new HttpParams().set('sort', sort);
+  /**
+   * One page of a listing's bid history. The API caps the page size whatever
+   * `limit` says, so a caller can never fetch the whole history in one request.
+   */
+  getBidsByListing(
+    listingId: string,
+    sort: 'asc' | 'desc' = 'desc',
+    limit?: number,
+    offset?: number
+  ): Observable<BidsResponse> {
+    let params = new HttpParams().set('sort', sort);
+    if (limit != null) params = params.set('limit', limit);
+    if (offset != null) params = params.set('offset', offset);
     return this.http.get<BidsResponse>(`${this.apiUrl}/listing/${listingId}`, { params });
   }
 

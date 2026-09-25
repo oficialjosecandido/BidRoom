@@ -33,6 +33,7 @@ function tierFromBalance(balance) {
 }
 
 const { formatOfferForSocket } = require('../utils/offerFormat');
+const { parsePageParams, pageMeta } = require('../utils/pagination');
 const {
   notifyNewProposal,
   notifyOfferPlaced,
@@ -50,14 +51,35 @@ const { wrapBidRoomEmail, emailSuccessBox, emailAmountCard } = require('../utils
 const logger = require('../utils/logger');
 
 // GET /api/offers/listing/:listingId - Get all offers for a listing
+/**
+ * GET /api/offers/listing/:listingId — one page of a listing's offers.
+ *
+ * Paginated on the same terms as the bid history, and for the same reason: an
+ * unauthenticated endpoint that returns a whole collection is a bulk export.
+ * See utils/pagination.js.
+ */
+const DEFAULT_OFFER_PAGE = 50;
+const MAX_OFFER_PAGE = 100;
+
 router.get('/listing/:listingId', optionalAuth, async (req, res) => {
   try {
+    const { limit, offset } = parsePageParams(req.query, {
+      defaultLimit: DEFAULT_OFFER_PAGE,
+      maxLimit: MAX_OFFER_PAGE
+    });
+
     // No email is selected: nothing downstream may return one, so there is no
     // reason to load it.
-    const offers = await Offer.find({ listing: req.params.listingId })
-      .populate('offerer', 'firstName lastName emailVerified uid')
-      .sort({ createdAt: -1 })
-      .lean();
+    const filter = { listing: req.params.listingId };
+    const [offers, total] = await Promise.all([
+      Offer.find(filter)
+        .populate('offerer', 'firstName lastName emailVerified uid')
+        .sort({ createdAt: -1 })
+        .skip(offset)
+        .limit(limit)
+        .lean(),
+      Offer.countDocuments(filter)
+    ]);
 
     const uids = [...new Set(offers.map(o => o.offerer?.uid).filter(Boolean))];
     const customers = uids.length
@@ -79,7 +101,7 @@ router.get('/listing/:listingId', optionalAuth, async (req, res) => {
 
     res.json({
       offers: formattedOffers,
-      total: formattedOffers.length
+      ...pageMeta({ total, limit, offset })
     });
   } catch (error) {
     logger.error('Error fetching offers:', error);

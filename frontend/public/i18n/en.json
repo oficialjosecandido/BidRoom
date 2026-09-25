@@ -1128,7 +1128,9 @@
       "selecting": "Selecting…",
       "verifiedRequired": "Verified account required",
       "notifyOutbid": "Notify me when I'm outbid",
-      "anonymous": "Anonymous"
+      "anonymous": "Anonymous",
+      "loadMore": "Show more",
+      "loadingMore": "Loading…"
     },
     "offerHistory": {
       "loading": "Loading offers...",

@@ -717,7 +717,9 @@
       "selecting": "Sélection…",
       "verifiedRequired": "Compte vérifié requis",
       "notifyOutbid": "M'avertir lorsque je suis surenchéri",
-      "anonymous": "Anonyme"
+      "anonymous": "Anonyme",
+      "loadMore": "Voir plus",
+      "loadingMore": "Chargement…"
     },
     "offerHistory": {
       "loading": "Chargement des offres...",

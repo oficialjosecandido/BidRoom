@@ -89,9 +89,21 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
   bids: Bid[] = [];
   bidsLoading = false;
   bidsError: string | null = null;
+  /**
+   * Bid history is paginated by the API, so `bids.length` is a page, not the
+   * count. These three carry the rest: the real total for the tab counter, and
+   * whether there is another page to fetch.
+   */
+  bidsTotal = 0;
+  bidsHasMore = false;
+  bidsLoadingMore = false;
   offers: Offer[] = [];
   offersLoading = false;
   offersError: string | null = null;
+  /** Offers are paginated like the bid history — see bidsTotal. */
+  offersTotal = 0;
+  offersHasMore = false;
+  offersLoadingMore = false;
   isAuthenticated = false;
   inWatchlist = false;
   showLoginModal = false;
@@ -271,6 +283,8 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
     this.bidsService.getBidsByListing(listingId, 'desc').subscribe({
       next: (response) => {
         this.bids = response.bids;
+        this.bidsTotal = response.total;
+        this.bidsHasMore = !!response.hasMore;
         this.bidsLoading = false;
         this.handleChooseWinnerDeepLink();
         this.cdr.detectChanges();
@@ -279,6 +293,29 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
         this.bidsError = 'Failed to load bid history';
         this.bidsLoading = false;
         this.handleChooseWinnerDeepLink();
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  /** Append the next page of bid history. */
+  loadMoreBids(): void {
+    if (!this.listing?._id || this.bidsLoadingMore || !this.bidsHasMore) return;
+    this.bidsLoadingMore = true;
+
+    this.bidsService.getBidsByListing(this.listing._id, 'desc', undefined, this.bids.length).subscribe({
+      next: (response) => {
+        // Guard against duplicates: a bid placed between the two requests shifts
+        // the window, so the same document can come back on the next page.
+        const seen = new Set(this.bids.map(b => b._id));
+        this.bids = [...this.bids, ...response.bids.filter(b => !seen.has(b._id))];
+        this.bidsTotal = response.total;
+        this.bidsHasMore = !!response.hasMore;
+        this.bidsLoadingMore = false;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.bidsLoadingMore = false;
         this.cdr.detectChanges();
       }
     });
@@ -443,12 +480,35 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
     this.offersService.getOffersByListing(listingId).subscribe({
       next: (response) => {
         this.offers = response.offers;
+        this.offersTotal = response.total;
+        this.offersHasMore = !!response.hasMore;
         this.offersLoading = false;
         this.cdr.detectChanges();
       },
       error: () => {
         this.offersError = 'Failed to load offer history';
         this.offersLoading = false;
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  /** Append the next page of offers. */
+  loadMoreOffers(): void {
+    if (!this.listing?._id || this.offersLoadingMore || !this.offersHasMore) return;
+    this.offersLoadingMore = true;
+
+    this.offersService.getOffersByListing(this.listing._id, undefined, this.offers.length).subscribe({
+      next: (response) => {
+        const seen = new Set(this.offers.map(o => o._id));
+        this.offers = [...this.offers, ...response.offers.filter(o => !seen.has(o._id))];
+        this.offersTotal = response.total;
+        this.offersHasMore = !!response.hasMore;
+        this.offersLoadingMore = false;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.offersLoadingMore = false;
         this.cdr.detectChanges();
       }
     });
@@ -1106,12 +1166,19 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
       const bidStr = String(event.bid?._id ?? '');
       const alreadyPresent = bidStr && this.bids.some(b => String(b._id) === bidStr);
       if (!alreadyPresent) {
-        this.bids = [event.bid, ...this.bids].slice(0, MAX_DISPLAYED_BIDS);
+        // The cap bounds growth from a flood of live events, but it must never
+        // throw away pages the user asked for with "load more" — so it floors at
+        // however many are already loaded.
+        const cap = Math.max(MAX_DISPLAYED_BIDS, this.bids.length);
+        this.bids = [event.bid, ...this.bids].slice(0, cap);
+        this.bidsTotal = this.bidsTotal + 1;
       }
       // Update listing current price and bid count
       if (this.listing && event.currentPrice !== undefined && event.bidCount !== undefined) {
         this.listing.currentPrice = event.currentPrice;
         this.listing.bidCount = event.bidCount;
+        // bidCount is the authoritative total; prefer it over the local increment.
+        this.bidsTotal = event.bidCount;
       }
       // Flash the new bid
       const newId = event.bid._id;

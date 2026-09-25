@@ -543,12 +543,12 @@
       }
       @if (listing.auctionFormat === 'highest-bid' && !isGiveaway) {
         <button class="tab" [class.on]="activeTab === 'bids'" (click)="setActiveTab('bids')">
-          {{ 'listingDetails.info.bids' | translate }} <span class="tab-c">{{ bids.length }}</span>
+          {{ 'listingDetails.info.bids' | translate }} <span class="tab-c">{{ bidsTotal }}</span>
         </button>
       }
       @if (listing.auctionFormat === 'best-offer' && !isGiveaway) {
         <button class="tab" [class.on]="activeTab === 'offers'" (click)="setActiveTab('offers')">
-          {{ 'listingDetails.tabs.offers' | translate }} <span class="tab-c">{{ offers.length }}</span>
+          {{ 'listingDetails.tabs.offers' | translate }} <span class="tab-c">{{ offersTotal }}</span>
         </button>
       }
     </div>
@@ -728,6 +728,14 @@
                 </div>
               }
             </div>
+            @if (bidsHasMore) {
+              <button class="btn-load-more" (click)="loadMoreBids()" [disabled]="bidsLoadingMore">
+                {{ bidsLoadingMore
+                    ? ('listingDetails.bidHistory.loadingMore' | translate)
+                    : ('listingDetails.bidHistory.loadMore' | translate) }}
+                <span class="load-more-count">{{ bids.length }} / {{ bidsTotal }}</span>
+              </button>
+            }
           }
         }
       </div>
@@ -750,7 +758,7 @@
               }
             </div>
           } @else {
-            <p class="offers-note">{{ offers.length }} {{ offers.length !== 1 ? ('listingDetails.info.offersPlural' | translate) : ('listingDetails.info.offer' | translate) }}</p>
+            <p class="offers-note">{{ offersTotal }} {{ offersTotal !== 1 ? ('listingDetails.info.offersPlural' | translate) : ('listingDetails.info.offer' | translate) }}</p>
             <div class="offers-list">
               @for (offer of sortedOffers; track offer._id) {
                 <div class="offer-item"
@@ -792,6 +800,14 @@
                 </div>
               }
             </div>
+            @if (offersHasMore) {
+              <button class="btn-load-more" (click)="loadMoreOffers()" [disabled]="offersLoadingMore">
+                {{ offersLoadingMore
+                    ? ('listingDetails.bidHistory.loadingMore' | translate)
+                    : ('listingDetails.bidHistory.loadMore' | translate) }}
+                <span class="load-more-count">{{ offers.length }} / {{ offersTotal }}</span>
+              </button>
+            }
           }
         }
       </div>

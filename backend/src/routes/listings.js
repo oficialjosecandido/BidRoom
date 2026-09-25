@@ -32,8 +32,56 @@ const { recordViewIfNew } = require('../utils/viewCounter');
 const { normalizeListingLocaleFields } = require('../utils/listingLocale');
 const { parseScheduledStart, scheduleBlock, ListingScheduleError } = require('../utils/listingSchedule');
 const { formatBidPublic } = require('../utils/bidFormat');
+const { createLimiter, clientKey } = require('../middleware/rateLimiters');
 
 const router = express.Router();
+
+/**
+ * Anti-scraping limits for the three listing endpoints a stranger can read.
+ *
+ * These sit *below* the general 120/min applied to /api/listings as a whole,
+ * and only on the public reads. The authenticated dashboard routes in this file
+ * (/seller/*, /bidder/*, /drafts/*) are deliberately left on the general limit:
+ * they are scoped to one account, they fire several calls per page, and
+ * squeezing them would cost real users something while costing a scraper
+ * nothing.
+ *
+ * Keyed by account when the caller has one, by IP otherwise. Two reasons: a
+ * logged-in scraper is isolated to their own budget instead of spending the
+ * budget of everyone behind the same NAT, and offices, schools and mobile
+ * carriers put a lot of genuine users behind one address. Both limiters are
+ * mounted *after* optionalAuth so req.user is available to the key.
+ */
+function callerKey(req) {
+  return req.user?.uid ? `u:${req.user.uid}` : clientKey(req);
+}
+
+/**
+ * The catalogue. Each call can return up to 100 listings, so this is the bulk
+ * vector: the limit is on calls, but what it really bounds is rows per minute.
+ * A home page costs 3 calls and a filter change costs 1, so 30/min is roughly
+ * ten times what attentive browsing needs.
+ */
+const catalogueLimiter = createLimiter({
+  name: 'listings-catalogue',
+  windowMs: 60 * 1000,
+  max: 30,
+  keyGenerator: callerKey,
+  message: 'Too many catalogue requests. Please slow down.',
+});
+
+/**
+ * Listing detail. One row per call, so this is the enumeration vector — walking
+ * every id or slug on the site. Reading twenty listings in a minute is a fast
+ * human; sixty is not one.
+ */
+const listingDetailLimiter = createLimiter({
+  name: 'listings-detail',
+  windowMs: 60 * 1000,
+  max: 60,
+  keyGenerator: callerKey,
+  message: 'Too many listing requests. Please slow down.',
+});
 
 function escapeRegex(str) {
   return String(str).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -92,7 +140,7 @@ function queueListingDetailView(req, listingLean) {
 }
 
 // GET /api/listings - Get all active listings with filtering and sorting
-router.get('/', optionalAuth, async (req, res) => {
+router.get('/', optionalAuth, catalogueLimiter, async (req, res) => {
   try {
     const {
       category,
@@ -354,7 +402,7 @@ function generateSlug(title) {
 }
 
 // GET /api/listings/slug/:slug - Get a single listing by slug (optionalAuth for inWatchlist)
-router.get('/slug/:slug', optionalAuth, async (req, res) => {
+router.get('/slug/:slug', optionalAuth, listingDetailLimiter, async (req, res) => {
   try {
     let listing = await Listing.findOne({ slug: req.params.slug })
       .populate('seller', SELLER_DSA_PUBLIC_SELECT)
@@ -957,7 +1005,7 @@ router.get('/seller/analytics', authenticateToken, async (req, res) => {
 });
 
 // GET /api/listings/:id - Get a single listing by ID (for backward compatibility)
-router.get('/:id', optionalAuth, async (req, res) => {
+router.get('/:id', optionalAuth, listingDetailLimiter, async (req, res) => {
   try {
     // Check if it's a valid ObjectId, otherwise treat as slug
     const isObjectId = /^[0-9a-fA-F]{24}$/.test(req.params.id);

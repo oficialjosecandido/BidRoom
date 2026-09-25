@@ -1,4 +1,5 @@
 const express = require('express');
+const mongoose = require('mongoose');
 const Bid = require('../models/Bid');
 const Listing = require('../models/Listing');
 const Customer = require('../models/Customer');
@@ -11,6 +12,7 @@ const { runFraudChecks, updateUserSignals } = require('../services/fraudDetectio
 const Block = require('../models/Block');
 const { scheduleBlock } = require('../utils/listingSchedule');
 const { formatBidPublic } = require('../utils/bidFormat');
+const { parsePageParams, pageMeta } = require('../utils/pagination');
 const logger = require('../utils/logger');
 
 const router = express.Router();
@@ -23,19 +25,37 @@ function computeBuyerTrustTier(bidder) {
   return 0;
 }
 
-// GET /api/bids/listing/:listingId - Get all bids for a listing
+/**
+ * GET /api/bids/listing/:listingId — one page of a listing's bid history.
+ *
+ * Paginated without an opt-out. This is an unauthenticated endpoint, and before
+ * pagination a single request returned every bid ever placed on a listing: the
+ * cheapest possible bulk export of who is bidding what, for anyone who knew the
+ * URL. A caller that sends no parameters now gets DEFAULT_BID_PAGE rows.
+ */
+const DEFAULT_BID_PAGE = 50;
+const MAX_BID_PAGE = 100;
+
 router.get('/listing/:listingId', optionalAuth, async (req, res) => {
   try {
     const { sort = 'desc' } = req.query; // 'desc' for newest first, 'asc' for oldest first
 
     const sortOrder = sort === 'asc' ? 1 : -1;
+    const { limit, offset } = parsePageParams(req.query, {
+      defaultLimit: DEFAULT_BID_PAGE,
+      maxLimit: MAX_BID_PAGE
+    });
 
-    const bids = await Bid.find({ listing: req.params.listingId })
-      // `uid` is populated only to resolve viewerBidderId below; the allowlist
-      // serializer never emits it.
-      .populate('bidder', 'firstName lastName emailVerified kycStatus savedPaymentMethodId reputationScore uid')
-      .sort({ createdAt: sortOrder })
-      .lean();
+    const filter = { listing: req.params.listingId };
+    const [bids, total] = await Promise.all([
+      Bid.find(filter)
+        .populate('bidder', 'firstName lastName emailVerified kycStatus savedPaymentMethodId reputationScore')
+        .sort({ createdAt: sortOrder })
+        .skip(offset)
+        .limit(limit)
+        .lean(),
+      Bid.countDocuments(filter)
+    ]);
 
     // Get buyer review scores for all bidders (authenticated users only)
     const bidderIds = bids.filter((b) => b.bidder && b.bidder._id).map((b) => b.bidder._id.toString());
@@ -56,18 +76,17 @@ router.get('/listing/:listingId', optionalAuth, async (req, res) => {
     });
 
     // The viewer's own id, so the client can tell which bids are theirs without
-    // any identifier of the other bidders being published. Resolved from the
-    // bids already loaded (no extra query); null for guests and for viewers who
-    // have not bid on this listing, which is exactly when it is not needed.
-    const viewerUid = req.isAuthenticated ? req.user?.uid : null;
-    const viewerBid = viewerUid
-      ? bids.find((b) => b.bidder && b.bidder.uid === viewerUid)
-      : null;
-    const viewerBidderId = viewerBid ? viewerBid.bidder._id.toString() : null;
+    // any identifier of the other bidders being published. Looked up rather than
+    // read off the page, because the viewer's own bid may sit on another page.
+    let viewerBidderId = null;
+    if (req.isAuthenticated && req.user?.uid) {
+      const viewer = await Customer.findOne({ uid: req.user.uid }).select('_id').lean();
+      viewerBidderId = viewer ? viewer._id.toString() : null;
+    }
 
     res.json({
       bids: formattedBids,
-      total: formattedBids.length,
+      ...pageMeta({ total, limit, offset }),
       viewerBidderId
     });
   } catch (error) {
@@ -82,30 +101,48 @@ router.get('/listing/:listingId', optionalAuth, async (req, res) => {
 // GET /api/bids/listing/:listingId/stats - Get bid statistics for a listing
 router.get('/listing/:listingId/stats', async (req, res) => {
   try {
-    const bids = await Bid.find({ listing: req.params.listingId });
+    if (!mongoose.Types.ObjectId.isValid(req.params.listingId)) {
+      return res.status(400).json({ error: 'Invalid listing id' });
+    }
 
-    // Count unique bidders: authenticated users by user ID, unauthenticated by email
-    const uniqueBidderIds = new Set();
-    const uniqueEmails = new Set();
-    
-    bids.forEach(bid => {
-      if (bid.bidder) {
-        uniqueBidderIds.add(bid.bidder.toString());
-      } else if (bid.bidderEmail) {
-        uniqueEmails.add(bid.bidderEmail.toLowerCase());
+    // Aggregated in the database rather than by loading every bid document into
+    // memory. The old version read the whole collection for a listing on an
+    // unauthenticated endpoint — the counts it produced were small, the work to
+    // produce them was not, which is exactly the shape of a cheap way to make
+    // the server expensive.
+    // Unique bidders: registered users by id, guests by lowercased email. The
+    // email never leaves this aggregation — only the count does.
+    const [result] = await Bid.aggregate([
+      { $match: { listing: new mongoose.Types.ObjectId(req.params.listingId) } },
+      {
+        $group: {
+          _id: null,
+          totalBids: { $sum: 1 },
+          highestBid: { $max: '$amount' },
+          averageBid: { $avg: '$amount' },
+          identities: {
+            $addToSet: {
+              $cond: [
+                { $ifNull: ['$bidder', false] },
+                { $concat: ['u:', { $toString: '$bidder' }] },
+                { $cond: [
+                  { $ifNull: ['$bidderEmail', false] },
+                  { $concat: ['e:', { $toLower: '$bidderEmail' }] },
+                  '$$REMOVE'
+                ] }
+              ]
+            }
+          }
+        }
       }
+    ]);
+
+    res.json({
+      totalBids: result?.totalBids ?? 0,
+      uniqueBidders: result?.identities?.length ?? 0,
+      highestBid: result?.highestBid ?? 0,
+      averageBid: result?.averageBid ?? 0
     });
-
-    const stats = {
-      totalBids: bids.length,
-      uniqueBidders: uniqueBidderIds.size + uniqueEmails.size,
-      highestBid: bids.length > 0 ? Math.max(...bids.map(b => b.amount)) : 0,
-      averageBid: bids.length > 0 
-        ? bids.reduce((sum, b) => sum + b.amount, 0) / bids.length 
-        : 0
-    };
-
-    res.json(stats);
   } catch (error) {
     logger.error('Error fetching bid stats:', error);
     res.status(500).json({
