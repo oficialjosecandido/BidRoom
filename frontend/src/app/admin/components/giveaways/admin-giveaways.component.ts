@@ -102,7 +102,9 @@ export class AdminGiveawaysComponent implements OnInit, OnDestroy {
   videoError: string | null = null;
   private videoUpload: Subscription | null = null;
   readonly MAX_VIDEO_BYTES = 200 * 1024 * 1024;
-  readonly VIDEO_ACCEPT = 'video/mp4,video/quicktime,video/webm,.mp4,.m4v,.mov,.webm';
+  readonly MAX_IMAGE_BYTES = 20 * 1024 * 1024;
+  readonly VIDEO_ACCEPT =
+    'video/mp4,video/quicktime,video/webm,image/jpeg,image/png,image/webp,image/gif,.mp4,.m4v,.mov,.webm,.jpg,.jpeg,.png,.webp,.gif';
 
   // Create
   showCreate = false;
@@ -323,8 +325,13 @@ export class AdminGiveawaysComponent implements OnInit, OnDestroy {
     return !!this.selected?.giveaway?.drawnAt && (!this.currentVideo || this.replacingVideo);
   }
 
-  videoTypeLabel(type: AdminGiveawayDrawVideo['type']): string {
-    const labels: Record<string, string> = { upload: 'Uploaded video', youtube: 'YouTube', instagram: 'Instagram' };
+  videoTypeLabel(type: AdminGiveawayDrawVideo['type'], mediaKind?: AdminGiveawayDrawVideo['mediaKind'], url?: string | null): string {
+    if (type === 'upload') {
+      const kind = mediaKind
+        || (/\.(jpe?g|png|webp|gif)$/i.test((url || '').split('?')[0]) ? 'image' : 'video');
+      return kind === 'image' ? 'Uploaded photo' : 'Uploaded video';
+    }
+    const labels: Record<string, string> = { youtube: 'YouTube', instagram: 'Instagram' };
     return (type && labels[type]) || '—';
   }
 
@@ -350,14 +357,19 @@ export class AdminGiveawaysComponent implements OnInit, OnDestroy {
     input.value = '';
     this.videoError = null;
     if (!file) return;
-    if (!/\.(mp4|m4v|mov|webm)$/i.test(file.name)) {
+    const isImage = /\.(jpe?g|png|webp|gif)$/i.test(file.name) || /^image\//.test(file.type);
+    const isVideo = /\.(mp4|m4v|mov|webm)$/i.test(file.name) || /^video\//.test(file.type);
+    if (!isImage && !isVideo) {
       this.videoFile = null;
-      this.videoError = 'Choose an MP4, MOV or WebM video.';
+      this.videoError = 'Choose an MP4, MOV or WebM video, or a JPEG, PNG, WebP or GIF photo.';
       return;
     }
-    if (file.size > this.MAX_VIDEO_BYTES) {
+    const limit = isImage ? this.MAX_IMAGE_BYTES : this.MAX_VIDEO_BYTES;
+    if (file.size > limit) {
       this.videoFile = null;
-      this.videoError = `That video is ${this.formatBytes(file.size)}. The limit is 200 MB — trim or compress it, or publish it on YouTube and paste the link.`;
+      this.videoError = isImage
+        ? `That photo is ${this.formatBytes(file.size)}. The limit is 20 MB.`
+        : `That video is ${this.formatBytes(file.size)}. The limit is 200 MB — trim or compress it, or publish it on YouTube and paste the link.`;
       return;
     }
     this.videoFile = file;
@@ -468,7 +480,7 @@ export class AdminGiveawaysComponent implements OnInit, OnDestroy {
       this.selected = { ...this.selected, giveaway: { ...this.selected.giveaway, drawVideo } };
     }
     this.resetVideoForm();
-    Swal.fire({ icon: 'success', title: 'Video published', text: 'It now shows in the result on the giveaway page.', timer: 2500, showConfirmButton: false });
+    Swal.fire({ icon: 'success', title: 'Published', text: 'It now shows in the result on the giveaway page.', timer: 2500, showConfirmButton: false });
   }
 
   private resetVideoForm(): void {
@@ -484,19 +496,19 @@ export class AdminGiveawaysComponent implements OnInit, OnDestroy {
       case 'giveaway_video_invalid_url':
         return 'That link was not accepted. Use an https link to a YouTube video, or to an Instagram post or reel.';
       case 'giveaway_video_invalid_type':
-        return 'That file is not an MP4, MOV or WebM video.';
+        return 'That file is not an MP4, MOV or WebM video, nor a JPEG, PNG, WebP or GIF photo.';
       case 'giveaway_video_too_large':
-        return 'The video must be 200 MB or less. Trim or compress it, or publish it on YouTube and paste the link.';
+        return 'The file is too large (200 MB for video, 20 MB for photos). Trim it, or publish on YouTube and paste the link.';
       case 'giveaway_video_missing':
-        return 'Choose a video file to upload.';
+        return 'Choose a video or photo to upload.';
       case 'giveaway_not_drawn':
-        return 'Draw the winner before publishing the video.';
+        return 'Draw the winner before publishing the draw proof.';
       case 'giveaway_not_found':
         return 'This giveaway no longer exists.';
       case 'storage_not_configured':
-        return 'Video storage is not set up on this server. Publish the video on YouTube and paste the link instead.';
+        return 'File storage is not set up on this server. Publish the video on YouTube and paste the link instead.';
       default:
-        if (err?.status === 413) return 'The video is too large for the server to accept. Publish it on YouTube and paste the link instead.';
+        if (err?.status === 413) return 'The file is too large for the server to accept. For video, publish on YouTube and paste the link instead.';
         if (err?.status === 0) return 'The upload was interrupted. Check the connection and try again.';
         return err?.error?.message || 'Something went wrong. Nothing was published.';
     }

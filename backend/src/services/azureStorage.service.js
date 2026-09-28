@@ -266,7 +266,15 @@ class AzureStorageService {
       throw new Error('Azure Storage is not configured. Please set AZURE_STORAGE_CONNECTION_STRING.');
     }
     const uuid = require('uuid').v4();
-    const ext = { 'video/mp4': '.mp4', 'video/quicktime': '.mov', 'video/webm': '.webm' }[mimetype] || '.mp4';
+    const ext = {
+      'video/mp4': '.mp4',
+      'video/quicktime': '.mov',
+      'video/webm': '.webm',
+      'image/jpeg': '.jpg',
+      'image/png': '.png',
+      'image/webp': '.webp',
+      'image/gif': '.gif'
+    }[mimetype] || '.mp4';
     const sanitized = String(originalFilename || 'draw')
       .replace(/\.[0-9a-z]+$/i, '')
       .replace(/[^a-zA-Z0-9-]/g, '-')

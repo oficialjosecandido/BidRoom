@@ -203,7 +203,9 @@ const YOUTUBE_HOSTS = new Set(['youtube.com', 'www.youtube.com', 'm.youtube.com'
 const INSTAGRAM_HOSTS = new Set(['instagram.com', 'www.instagram.com']);
 const YOUTUBE_ID = /^[A-Za-z0-9_-]{11}$/;
 const INSTAGRAM_CODE = /^[A-Za-z0-9_-]{5,64}$/;
-const UPLOAD_FILE = /^[a-z0-9][a-z0-9.-]{0,120}\.(mp4|m4v|mov|webm)$/i;
+// Video or a still photo of the draw (proof of fairness).
+const UPLOAD_FILE = /^[a-z0-9][a-z0-9.-]{0,120}\.(mp4|m4v|mov|webm|jpe?g|png|webp|gif)$/i;
+const UPLOAD_IMAGE_FILE = /\.(jpe?g|png|webp|gif)$/i;
 
 function youTubeVideoId(u) {
   if (u.hostname === 'youtu.be') return u.pathname.split('/')[1] || null;
@@ -262,10 +264,13 @@ function parseDrawVideoUrl(rawUrl, declaredType, uploadBaseUrl) {
   return { type, url: bare };
 }
 
-/** The video as the public page receives it: the stored URL plus, for YouTube, the id to embed. */
+/** The media as the public page receives it: URL plus, for YouTube, the id to embed. */
 function publicDrawVideo(drawVideo) {
   if (!drawVideo?.url || !DRAW_VIDEO_TYPES.includes(drawVideo.type)) return null;
   const out = { type: drawVideo.type, url: drawVideo.url, publishedAt: drawVideo.publishedAt || null };
+  if (drawVideo.type === 'upload') {
+    out.mediaKind = UPLOAD_IMAGE_FILE.test(drawVideo.url.split('?')[0]) ? 'image' : 'video';
+  }
   if (drawVideo.type === 'youtube') {
     try {
       const videoId = youTubeVideoId(new URL(drawVideo.url));
@@ -299,7 +304,7 @@ async function publishDrawVideo({ listingId, url, type, uploadBaseUrl }) {
   if (!parsed) {
     throw new GiveawayError(
       'giveaway_video_invalid_url',
-      'Use an https link to a YouTube video, an Instagram post or reel, or a video uploaded here.',
+      'Use an https link to a YouTube video, an Instagram post or reel, or a video/photo uploaded here.',
       400
     );
   }
@@ -314,7 +319,7 @@ async function publishDrawVideo({ listingId, url, type, uploadBaseUrl }) {
 
   return {
     slug: updated.slug,
-    drawVideo: updated.giveaway.drawVideo,
+    drawVideo: publicDrawVideo(updated.giveaway.drawVideo),
     previous: listing.giveaway?.drawVideo?.url ? listing.giveaway.drawVideo : null
   };
 }

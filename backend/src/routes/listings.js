@@ -9,7 +9,15 @@ const Offer = require('../models/Offer');
 const Transaction = require('../models/Transaction');
 const Follow = require('../models/Follow');
 const Watchlist = require('../models/Watchlist');
-const { authenticateToken, optionalAuth, requireActiveAccount, requireNoDisputeRestriction } = require('../middleware/auth');
+const {
+  authenticateToken,
+  optionalAuth,
+  requireActiveAccount,
+  requireNoDisputeRestriction,
+  authenticateTokenOrGuest,
+  requireActiveAccountIfAuthenticated,
+  requireNoDisputeRestrictionIfAuthenticated
+} = require('../middleware/auth');
 const { handleWinnerSelection, handleAuctionEnd } = require('../services/auctionNotificationService');
 const { notifyFollowersNewListing, notifyCategoryFollowersNewListing, notifySimilarItemWatchers } = require('../services/notificationService');
 const { getReviewScoresForUser } = require('../services/reviewService');
@@ -32,7 +40,9 @@ const { recordViewIfNew } = require('../utils/viewCounter');
 const { normalizeListingLocaleFields } = require('../utils/listingLocale');
 const { parseScheduledStart, scheduleBlock, ListingScheduleError } = require('../utils/listingSchedule');
 const { formatBidPublic } = require('../utils/bidFormat');
-const { createLimiter, clientKey } = require('../middleware/rateLimiters');
+const { createLimiter, clientKey, guestOnly } = require('../middleware/rateLimiters');
+const { issueGuestSession } = require('../utils/guestSession');
+const { resolveGuestSeller, GuestSellerError } = require('../services/guestSellerService');
 
 const router = express.Router();
 
@@ -83,13 +93,63 @@ const listingDetailLimiter = createLimiter({
   message: 'Too many listing requests. Please slow down.',
 });
 
+/**
+ * Guest listing creation.
+ *
+ * A visitor with no account can publish, which means these limits are most of
+ * what stands between the Nexus review queue and a spam flood — there is no
+ * account to suspend afterwards. Both are keyed by IP: the draft ticket is not a
+ * usable key on its own, since anyone can ask for a fresh one.
+ *
+ * A determined attacker with a pool of addresses gets past any rate limit; what
+ * actually stops the listing going public is that a human approves every one.
+ * These limits exist so that queue stays readable.
+ */
+const guestSessionLimiter = createLimiter({
+  name: 'listings-guest-session',
+  windowMs: 60 * 60 * 1000,
+  max: 10,
+  message: 'Too many draft sessions from this network. Please try again later.',
+});
+
+const guestCreateLimiter = createLimiter({
+  name: 'listings-guest-create',
+  windowMs: 60 * 60 * 1000,
+  max: 3,
+  message: 'You have reached the limit for listings submitted without an account. Please sign in or try again later.',
+});
+
+/**
+ * POST /api/listings/guest-session
+ *
+ * Opens an anonymous draft: the visitor gets a short-lived signed ticket that
+ * lets them upload images before we know who they are. It carries no identity and
+ * is not stored anywhere — see utils/guestSession.js.
+ */
+router.post('/guest-session', guestSessionLimiter, (req, res) => {
+  const { token, expiresAt } = issueGuestSession();
+  res.status(201).json({ token, expiresAt });
+});
+
 function escapeRegex(str) {
   return String(str).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
-/** Populated seller fields for public listing APIs (DSA trader transparency). */
+/**
+ * Populated seller fields for public listing APIs (DSA trader transparency).
+ *
+ * `email` and `uid` used to be here so the browser could work out whether the
+ * viewer was the seller. That published every seller's address — and their
+ * Firebase uid — to anyone who opened a listing, including sellers who only ever
+ * typed that address into the guest form. The routes now answer that question
+ * themselves with `viewerIsSeller`, so neither field is loaded at all: an
+ * allowlist that never fetches it cannot leak it from any code path.
+ *
+ * A verified professional seller's public contact details are a separate set of
+ * fields below, required by the DSA and intended to be public.
+ */
 const SELLER_DSA_PUBLIC_SELECT =
-  'firstName lastName slug email uid sellerClassification professionalVerificationStatus ' +
+  'firstName lastName slug sellerClassification professionalVerificationStatus ' +
   'professionalLegalName professionalTradeName professionalAddressLine1 professionalAddressLine2 ' +
   'professionalCity professionalRegion professionalPostalCode professionalCountry professionalContactPhone ' +
   'professionalContactEmail professionalVatId';
@@ -554,15 +614,20 @@ router.get('/slug/:slug', optionalAuth, listingDetailLimiter, async (req, res) =
 
     const timeRemaining = new Listing(listing).getTimeRemaining();
 
+    // The viewer's own Customer id, resolved once: it answers both "is this on
+    // their watchlist" and "is this their own listing". The latter used to be
+    // decided in the browser by comparing emails, which is why the seller's email
+    // was being published on every listing page.
+    const viewerId = req.user?.uid
+      ? (await Customer.findOne({ uid: req.user.uid }).select('_id').lean())?._id || null
+      : null;
+
     // Watchlist count (for sellers) and inWatchlist (for authenticated users)
     const [watchlistCount, inWatchlist] = await Promise.all([
       Watchlist.countDocuments({ listing: listing._id }),
-      req.user ? (async () => {
-        const user = await Customer.findOne({ uid: req.user.uid });
-        if (!user) return false;
-        const entry = await Watchlist.findOne({ user: user._id, listing: listing._id });
-        return !!entry;
-      })() : Promise.resolve(false)
+      viewerId
+        ? Watchlist.exists({ user: viewerId, listing: listing._id })
+        : Promise.resolve(false)
     ]);
 
     // Seller review score (as seller) for listing details
@@ -588,6 +653,7 @@ router.get('/slug/:slug', optionalAuth, listingDetailLimiter, async (req, res) =
       endingSoon: timeRemaining.ended ? false : (timeRemaining.days === 0 && timeRemaining.hours <= 24),
       watchlistCount,
       inWatchlist: !!inWatchlist,
+      viewerIsSeller: !!viewerId && !!sellerId && sellerId.toString() === viewerId.toString(),
       sellerScore,
       sellerReviewCount
     });
@@ -1091,6 +1157,12 @@ router.get('/:id', optionalAuth, listingDetailLimiter, async (req, res) => {
         user = await Customer.findOne({ email: req.user.email.toLowerCase().trim() });
       }
       if (user) {
+        // Decided here, not in the browser. The client used to compare the
+        // viewer's email against the seller's, which meant publishing the
+        // seller's email to everyone who opened the page.
+        const sellerId = response.seller?._id || response.seller;
+        response.viewerIsSeller = !!sellerId && sellerId.toString() === user._id.toString();
+
         const isInPlatinumBidders = listing.platinumBidders && listing.platinumBidders.some(
           pbId => pbId.toString() === user._id.toString()
         );
@@ -1130,33 +1202,78 @@ router.get('/:id', optionalAuth, listingDetailLimiter, async (req, res) => {
   }
 });
 
-// POST /api/listings - Create a new listing (requires authentication)
-router.post('/', authenticateToken, requireActiveAccount, requireNoDisputeRestriction, async (req, res) => {
+/**
+ * POST /api/listings - Create a new listing.
+ *
+ * Open to signed-in sellers and to visitors holding an anonymous draft ticket.
+ * The guest path differs in only four ways, all below: where the seller comes
+ * from (an email typed at the end of the form rather than a Firebase token), a
+ * tighter rate limit, no Stripe on the listing since there is no Connect account
+ * to pay out to, and no draft to clear. Everything else — validation, the
+ * content and abuse scans, the KYC and vehicle gates, the duplicate check,
+ * pending_review — is deliberately the same code, because a listing nobody
+ * signed in to create needs those checks more, not less.
+ */
+router.post(
+  '/',
+  authenticateTokenOrGuest,
+  guestOnly(guestCreateLimiter),
+  requireActiveAccountIfAuthenticated,
+  requireNoDisputeRestrictionIfAuthenticated,
+  async (req, res) => {
   let listingContentWarning = null; // set when low-severity language is detected
+  const isGuest = !!req.guestSession;
   try {
-    // Find or create user in database from Firebase UID
-    let user = await Customer.findOne({ uid: req.user.uid });
-    if (!user) {
-      // If user doesn't exist, create one
-      // Parse name from Firebase user
-      const nameParts = req.user.name?.split(' ') || [];
-      const firstName = nameParts[0] || 'User';
-      const lastName = nameParts.slice(1).join(' ') || 'User'; // Use 'User' as default if no lastName
-      
-      user = new Customer({
-        uid: req.user.uid,
-        email: req.user.email,
-        firstName: firstName,
-        lastName: lastName,
-        isActive: true,
-        emailVerified: req.user.emailVerified || false
-      });
-      await user.save();
+    let user;
+    if (isGuest) {
+      // The visitor's name is free text that ends up on the public listing page,
+      // so it goes through the same contact-info scan as the description. No
+      // violation is recorded: there is no account behind it yet to escalate.
+      const nameScan = scanTexts([String(req.body?.guestName || '')]);
+      if (nameScan.found) {
+        return res.status(400).json({
+          error: 'Content policy violation',
+          message: `Please remove ${describeContactInfoTypes(nameScan.types)} from your name.`,
+          detectedTypes: nameScan.types
+        });
+      }
+      try {
+        const resolved = await resolveGuestSeller({
+          email: req.body?.guestEmail,
+          name: req.body?.guestName
+        });
+        user = resolved.seller;
+      } catch (err) {
+        if (err instanceof GuestSellerError) {
+          return res.status(err.statusCode).json({ error: err.code, message: err.message });
+        }
+        throw err;
+      }
     } else {
-      // Update email verification status if changed
-      if (req.user.emailVerified !== undefined && user.emailVerified !== req.user.emailVerified) {
-        user.emailVerified = req.user.emailVerified;
+      // Find or create user in database from Firebase UID
+      user = await Customer.findOne({ uid: req.user.uid });
+      if (!user) {
+        // If user doesn't exist, create one
+        // Parse name from Firebase user
+        const nameParts = req.user.name?.split(' ') || [];
+        const firstName = nameParts[0] || 'User';
+        const lastName = nameParts.slice(1).join(' ') || 'User'; // Use 'User' as default if no lastName
+
+        user = new Customer({
+          uid: req.user.uid,
+          email: req.user.email,
+          firstName: firstName,
+          lastName: lastName,
+          isActive: true,
+          emailVerified: req.user.emailVerified || false
+        });
         await user.save();
+      } else {
+        // Update email verification status if changed
+        if (req.user.emailVerified !== undefined && user.emailVerified !== req.user.emailVerified) {
+          user.emailVerified = req.user.emailVerified;
+          await user.save();
+        }
       }
     }
 
@@ -1578,6 +1695,14 @@ router.post('/', authenticateToken, requireActiveAccount, requireNoDisputeRestri
       returnPolicy: resolvedReturnPolicy,
       acceptedPaymentMethods: isGiveaway
         ? { stripe: false, inPerson: false, bankTransfer: false, mbway: false }
+        : isGuest
+        // A guest seller has no Stripe Connect account, so there is nowhere for
+        // Stripe to pay the money out to — offering it would take a buyer's card
+        // against a payout that cannot be made. Bank transfer and MB Way need an
+        // IBAN and a phone number we have not asked for either, so the guest
+        // listing ships with in-person settlement only. Once the seller claims
+        // the account and fills in Dashboard → Payments they can enable the rest.
+        ? { stripe: false, inPerson: true, bankTransfer: false, mbway: false }
         : {
             stripe: acceptedPaymentMethods?.stripe !== false,
             inPerson: acceptedPaymentMethods?.inPerson === true || user.sellerPaymentConfig?.inPerson === true,
@@ -1658,8 +1783,12 @@ router.post('/', authenticateToken, requireActiveAccount, requireNoDisputeRestri
     const listing = new Listing(listingData);
     await listing.save();
 
-    // Auto-clear the seller's in-progress draft now that the listing is published
-    ListingDraft.deleteOne({ seller: user._id }).catch(() => {});
+    // Auto-clear the seller's in-progress draft now that the listing is published.
+    // Never on the guest path: the email may belong to an existing account, and
+    // that account's own half-written draft is not this submission's to delete.
+    if (!isGuest) {
+      ListingDraft.deleteOne({ seller: user._id }).catch(() => {});
+    }
 
     // Compliance monitoring for vehicles: raises flags for a human to review,
     // never blocks. Deliberately not awaited — the seller is not waiting on it,
@@ -1690,7 +1819,18 @@ router.post('/', authenticateToken, requireActiveAccount, requireNoDisputeRestri
       seller: sanitizeSellerForPublic(populatedListing.seller),
       timeRemaining,
       endingSoon: timeRemaining.ended ? false : (timeRemaining.days === 0 && timeRemaining.hours <= 24),
-      ...(listingContentWarning && { contentWarning: listingContentWarning })
+      ...(listingContentWarning && { contentWarning: listingContentWarning }),
+      // A guest has no dashboard to be redirected to and no session to keep, so
+      // the response has to carry what the success screen needs to say. Only the
+      // address they just typed is echoed back — deliberately not whether an
+      // account already exists for it, which would turn this into a way to test
+      // whether any given address is registered.
+      ...(isGuest && {
+        guestSubmission: {
+          email: user.email,
+          paymentNote: 'in_person_only'
+        }
+      })
     });
   } catch (error) {
     logger.error('Error creating listing:', error);

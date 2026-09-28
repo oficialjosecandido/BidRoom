@@ -77,6 +77,11 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
   private giveawayService = inject(GiveawayService);
   private sanitizer = inject(DomSanitizer);
   readonly formatEntryNumber = formatEntryNumber;
+
+  /** Uploaded draw proof that is a still photo (vs video). */
+  isGiveawayDrawImage(url: string | null | undefined): boolean {
+    return /\.(jpe?g|png|webp|gif)$/i.test(String(url || '').split('?')[0]);
+  }
   linkCopied = false;
 
   readonly isLight = computed(() => this.themeService.effective() === 'light');
@@ -1605,18 +1610,9 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
       this.cdr.detectChanges();
       return;
     }
-    const seller = this.listing.seller as { uid?: string; email?: string };
-    if (seller.uid && currentUser.uid && seller.uid === currentUser.uid) {
-      this.isOwnListing = true;
-    } else if (
-      currentUser.email &&
-      seller.email &&
-      currentUser.email.toLowerCase() === seller.email.toLowerCase()
-    ) {
-      this.isOwnListing = true;
-    } else {
-      this.isOwnListing = false;
-    }
+    // Answered by the API. This used to compare the viewer's email against the
+    // seller's, which is why the seller's email was in the public payload at all.
+    this.isOwnListing = this.listing.viewerIsSeller === true;
     if (!this.isOwnListing) {
       this.sellerStripeReady = false;
       this.cdr.detectChanges();

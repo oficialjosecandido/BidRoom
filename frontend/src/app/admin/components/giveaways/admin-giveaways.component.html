@@ -212,13 +212,13 @@
                 </section>
 
                 <section class="detail-section video-section">
-                  <h4>Draw video</h4>
+                  <h4>Draw proof</h4>
                   @if (currentVideo; as video) {
                     <table class="nexus-kv-table">
                       <tbody>
                         <tr>
                           <th scope="row">Source</th>
-                          <td>{{ videoTypeLabel(video.type) }}</td>
+                          <td>{{ videoTypeLabel(video.type, video.mediaKind, video.url) }}</td>
                         </tr>
                         <tr>
                           <th scope="row">Link</th>
@@ -238,14 +238,14 @@
                     }
                   } @else {
                     <p class="ruling-hint">
-                      No video yet. Publishing the recording of the draw shows participants it was random — it appears
-                      under the result on the giveaway page.
+                      No proof yet. Publish a photo or recording of the draw so participants can see it was random —
+                      it appears under the result on the giveaway page.
                     </p>
                   }
 
                   @if (showVideoForm) {
                     <div class="video-form">
-                      <div class="video-tabs" role="tablist" aria-label="How to add the video">
+                      <div class="video-tabs" role="tablist" aria-label="How to add the draw proof">
                         <button type="button" role="tab" class="video-tab" [class.active]="videoMode === 'upload'"
                           [attr.aria-selected]="videoMode === 'upload'" [disabled]="videoBusy" (click)="videoMode = 'upload'; videoError = null">
                           Upload a file
@@ -260,11 +260,11 @@
                         <div class="form-group">
                           <label class="video-file" [class.video-file--disabled]="videoBusy">
                             <input type="file" [accept]="VIDEO_ACCEPT" [disabled]="videoBusy" (change)="onVideoSelected($event)" />
-                            <span>{{ videoFile ? videoFile.name + ' · ' + formatBytes(videoFile.size) : 'Choose a video…' }}</span>
+                            <span>{{ videoFile ? videoFile.name + ' · ' + formatBytes(videoFile.size) : 'Choose a photo or video…' }}</span>
                           </label>
                           <span class="field-hint">
-                            MP4, MOV or WebM, up to 200 MB. MP4 (H.264) plays in every browser; iPhone recordings in HEVC may not
-                            play on some computers — if in doubt, publish on YouTube and paste the link.
+                            Photo: JPEG, PNG, WebP or GIF, up to 20 MB. Video: MP4, MOV or WebM, up to 200 MB.
+                            MP4 (H.264) plays in every browser; iPhone HEVC may not — if in doubt, publish on YouTube and paste the link.
                           </span>
                         </div>
                         @if (videoProgress !== null) {
@@ -273,7 +273,7 @@
                             <div class="upload-progress-bar" [style.width.%]="videoProgress"></div>
                           </div>
                           <span class="field-hint">
-                            {{ videoProgress < 100 ? 'Uploading… ' + videoProgress + '%' : 'Processing — publishing the video…' }}
+                            {{ videoProgress < 100 ? 'Uploading… ' + videoProgress + '%' : 'Processing — publishing…' }}
                           </span>
                         }
                         <div class="video-actions">
@@ -282,7 +282,7 @@
                           } @else {
                             <button type="button" class="draw-btn" [disabled]="!videoFile" (click)="uploadVideo()">Upload and publish</button>
                             @if (replacingVideo) {
-                              <button type="button" class="action-btn view-action" (click)="stopReplacingVideo()">Keep the current video</button>
+                              <button type="button" class="action-btn view-action" (click)="stopReplacingVideo()">Keep the current file</button>
                             }
                           }
                         </div>
@@ -302,7 +302,7 @@
                             {{ videoBusy ? 'Publishing…' : 'Publish' }}
                           </button>
                           @if (replacingVideo && !videoBusy) {
-                            <button type="button" class="action-btn view-action" (click)="stopReplacingVideo()">Keep the current video</button>
+                            <button type="button" class="action-btn view-action" (click)="stopReplacingVideo()">Keep the current file</button>
                           }
                         </div>
                       }

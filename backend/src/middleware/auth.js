@@ -2,6 +2,7 @@ const admin = require('firebase-admin');
 const Customer = require('../models/Customer');
 const ModerationAuditLog = require('../models/ModerationAuditLog');
 const { describeContactInfoTypes } = require('../utils/contentFilter');
+const { verifyGuestSession } = require('../utils/guestSession');
 
 const AUTH_VERIFY_TIMEOUT_MS = 15000;
 
@@ -231,11 +232,47 @@ const requireNoDisputeRestrictionIfAuthenticated = async (req, res, next) => {
   return requireNoDisputeRestriction(req, res, next);
 };
 
+/**
+ * Accept either a signed-in user or an anonymous guest draft ticket.
+ *
+ * For routes a visitor may use before they have an account — creating a listing,
+ * and uploading its images. Unlike optionalAuth this is not optional: a request
+ * with neither credential is refused, so nothing here is reachable by a bare
+ * unauthenticated call.
+ *
+ * An Authorization header always wins. A caller who sends a bad Firebase token
+ * gets the 401 it deserves and is never quietly downgraded to a guest — that
+ * fallback would turn every expired session into an anonymous one.
+ */
+const authenticateTokenOrGuest = async (req, res, next) => {
+  if (req.headers['authorization']) {
+    return authenticateToken(req, res, () => {
+      req.isAuthenticated = true;
+      req.guestSession = null;
+      next();
+    });
+  }
+
+  const session = verifyGuestSession(req.headers['x-guest-token']);
+  if (!session) {
+    return res.status(401).json({
+      error: 'guest_session_required',
+      message: 'Start the form again to get a new draft session.'
+    });
+  }
+
+  req.user = null;
+  req.isAuthenticated = false;
+  req.guestSession = session;
+  next();
+};
+
 module.exports = {
   authenticateToken,
   optionalAuth,
   requireActiveAccount,
   requireActiveAccountIfAuthenticated,
   requireNoDisputeRestriction,
-  requireNoDisputeRestrictionIfAuthenticated
+  requireNoDisputeRestrictionIfAuthenticated,
+  authenticateTokenOrGuest
 };

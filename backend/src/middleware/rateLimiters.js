@@ -113,6 +113,15 @@ function createLimiter({ windowMs, max, name, message, ...rest } = {}) {
   });
 }
 
+/**
+ * Apply a limiter only to requests arriving on an anonymous guest draft ticket,
+ * leaving signed-in users on whatever limit already covers them. Use after
+ * authenticateTokenOrGuest, which is what sets req.guestSession.
+ */
+function guestOnly(limiter) {
+  return (req, res, next) => (req.guestSession ? limiter(req, res, next) : next());
+}
+
 /** Graceful shutdown helper (optional — call from SIGTERM handler if needed). */
 function disconnectRateLimitRedis() {
   if (rateLimitRedisClient) {
@@ -121,4 +130,4 @@ function disconnectRateLimitRedis() {
   }
 }
 
-module.exports = { createLimiter, disconnectRateLimitRedis, clientKey };
+module.exports = { createLimiter, disconnectRateLimitRedis, clientKey, guestOnly };

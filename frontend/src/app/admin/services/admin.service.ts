@@ -5,6 +5,19 @@ import { API_CONFIG } from '../../shared/config/api.config';
 import { Listing } from '../../shared/services/listings.service';
 import { Transaction } from '../../shared/services/transactions.service';
 
+/**
+ * A listing as Nexus sees it.
+ *
+ * The public `Listing` deliberately has no seller email — the public APIs stopped
+ * returning it. Nexus is the one place the email is allowed, and the admin
+ * endpoints populate it explicitly, so admin components use this instead of
+ * widening the shared type and putting the field back within reach of the public
+ * pages.
+ */
+export type AdminListing = Omit<Listing, 'seller'> & {
+  seller: Listing['seller'] & { email?: string };
+};
+
 export interface AdminListingsByAuctionSegment {
   bestOffer: number;
   highestBid: number;
@@ -212,6 +225,8 @@ export interface AdminGiveaway {
 export interface AdminGiveawayDrawVideo {
   url: string | null;
   type: 'upload' | 'youtube' | 'instagram' | null;
+  /** Present for type=upload: photo vs recording. */
+  mediaKind?: 'image' | 'video' | null;
   publishedAt: string | null;
 }
 

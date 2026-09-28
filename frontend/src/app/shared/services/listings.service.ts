@@ -31,8 +31,12 @@ export interface Listing {
     slug?: string | null;
     firstName: string;
     lastName: string;
-    email: string;
-    uid?: string;
+    /**
+     * No `email` and no `uid`. The public listing APIs no longer return either —
+     * they were only ever used to work out in the browser whether the viewer was
+     * the seller, which meant publishing every seller's address to anyone who
+     * opened the page. Use `viewerIsSeller` on the listing instead.
+     */
     sellerClassification?: 'private' | 'professional';
     professionalVerificationStatus?: 'none' | 'pending' | 'verified' | 'rejected';
     professionalLegalName?: string | null;
@@ -47,6 +51,11 @@ export interface Listing {
     professionalContactEmail?: string | null;
     professionalVatId?: string | null;
   };
+  /**
+   * Whether the signed-in viewer is this listing's seller. Decided server-side
+   * and absent for anonymous viewers, so treat a missing value as false.
+   */
+  viewerIsSeller?: boolean;
   status: 'draft' | 'active' | 'pending_review' | 'ended' | 'cancelled';
   moderationWarning?: { severity: 'low' | 'medium' | 'high'; message: string; flaggedAt: string };
   /**

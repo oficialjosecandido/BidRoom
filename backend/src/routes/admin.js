@@ -18,7 +18,7 @@ const { renderEmailTemplate } = require('../services/templateEngine');
 const { notifyDisputeDecisionIssued, notifyDamageClaimResolved, notifyContentRestrictionLifted, emitNewNotificationToUser, notifyGiveawayWinner, emailGiveawayWinner, notifyGiveawayResultToEntrants } = require('../services/notificationService');
 const GiveawayEntry = require('../models/GiveawayEntry');
 const { drawWinner, publicWinnerName, GiveawayError, publishDrawVideo, removeDrawVideo } = require('../services/giveawayService');
-const { detectVideoMagic } = require('../utils/videoMagic');
+const { detectDrawMediaMagic } = require('../utils/videoMagic');
 const DamageClaim = require('../models/DamageClaim');
 const { applyDisputeAccountOutcome } = require('../services/accountStatusService');
 const { applyDisputeVerdictImpact } = require('../services/reputationService');
@@ -2533,6 +2533,7 @@ router.post('/giveaways/:id/draw-video', authenticateToken, requireAdmin, async 
 });
 
 const DRAW_VIDEO_MAX_BYTES = 200 * 1024 * 1024;
+const DRAW_IMAGE_MAX_BYTES = 20 * 1024 * 1024;
 const drawVideoUpload = multer({
   // On disk, not in memory: a few of these at once would otherwise sit whole in RAM.
   storage: multer.diskStorage({ destination: os.tmpdir() }),
@@ -2541,19 +2542,27 @@ const drawVideoUpload = multer({
     // A first pass only — browsers disagree on the type of a .mov (or send
     // none). What decides is the file's own bytes, checked after upload.
     const name = String(file.originalname || '').toLowerCase();
-    const okType = ['video/mp4', 'video/quicktime', 'video/webm', 'video/x-m4v'].includes(file.mimetype);
-    const okName = /\.(mp4|m4v|mov|webm)$/.test(name);
-    cb(okType || okName ? null : Object.assign(new Error('Only MP4, MOV or WebM videos are accepted.'), { code: 'INVALID_VIDEO_TYPE' }), okType || okName);
+    const okType = [
+      'video/mp4', 'video/quicktime', 'video/webm', 'video/x-m4v',
+      'image/jpeg', 'image/png', 'image/webp', 'image/gif'
+    ].includes(file.mimetype);
+    const okName = /\.(mp4|m4v|mov|webm|jpe?g|png|webp|gif)$/.test(name);
+    cb(
+      okType || okName
+        ? null
+        : Object.assign(new Error('Only MP4, MOV, WebM videos or JPEG, PNG, WebP, GIF photos are accepted.'), { code: 'INVALID_VIDEO_TYPE' }),
+      okType || okName
+    );
   }
 });
 
 /**
  * POST /api/admin/giveaways/:id/draw-video/upload
- * multipart/form-data, field "video" (MP4, MOV or WebM, up to 200 MB).
+ * multipart/form-data, field "video" (MP4/MOV/WebM up to 200 MB, or JPEG/PNG/WebP/GIF up to 20 MB).
  *
- * Uploads the recording to our storage and publishes it. The giveaway is
- * checked before a single byte is accepted, so a video for an undrawn
- * giveaway is refused without uploading it first.
+ * Uploads the draw proof (video or photo) to our storage and publishes it. The
+ * giveaway is checked before a single byte is accepted, so a file for an
+ * undrawn giveaway is refused without uploading it first.
  */
 router.post('/giveaways/:id/draw-video/upload', authenticateToken, requireAdmin, async (req, res, next) => {
   if (!isValidObjectId(req.params.id)) return res.status(400).json({ error: 'Invalid giveaway ID' });
@@ -2574,7 +2583,7 @@ router.post('/giveaways/:id/draw-video/upload', authenticateToken, requireAdmin,
     if (!err) return next();
     if (req.file?.path) fs.promises.unlink(req.file.path).catch(() => {});
     if (err.code === 'LIMIT_FILE_SIZE') {
-      return res.status(413).json({ error: 'giveaway_video_too_large', message: 'The video must be 200 MB or less.' });
+      return res.status(413).json({ error: 'giveaway_video_too_large', message: 'The file must be 200 MB or less (20 MB for photos).' });
     }
     if (err.code === 'INVALID_VIDEO_TYPE') {
       return res.status(400).json({ error: 'giveaway_video_invalid_type', message: err.message });
@@ -2585,7 +2594,7 @@ router.post('/giveaways/:id/draw-video/upload', authenticateToken, requireAdmin,
   const tempPath = req.file?.path;
   try {
     if (!req.file) {
-      return res.status(400).json({ error: 'giveaway_video_missing', message: 'Choose a video file to upload.' });
+      return res.status(400).json({ error: 'giveaway_video_missing', message: 'Choose a video or photo to upload.' });
     }
 
     const head = Buffer.alloc(16);
@@ -2595,12 +2604,21 @@ router.post('/giveaways/:id/draw-video/upload', authenticateToken, requireAdmin,
     } finally {
       await handle.close();
     }
-    const mimetype = detectVideoMagic(head);
-    if (!mimetype) {
-      return res.status(400).json({ error: 'giveaway_video_invalid_type', message: 'That file is not an MP4, MOV or WebM video.' });
+    const detected = detectDrawMediaMagic(head);
+    if (!detected) {
+      return res.status(400).json({
+        error: 'giveaway_video_invalid_type',
+        message: 'That file is not an MP4, MOV or WebM video, nor a JPEG, PNG, WebP or GIF photo.'
+      });
+    }
+    if (detected.kind === 'image' && req.file.size > DRAW_IMAGE_MAX_BYTES) {
+      return res.status(413).json({
+        error: 'giveaway_video_too_large',
+        message: 'Photos must be 20 MB or less.'
+      });
     }
 
-    const url = await azureStorageService.uploadGiveawayVideo(tempPath, req.file.originalname, mimetype);
+    const url = await azureStorageService.uploadGiveawayVideo(tempPath, req.file.originalname, detected.mimetype);
     const result = await publishDrawVideo({
       listingId: req.params.id,
       url,
@@ -2610,8 +2628,9 @@ router.post('/giveaways/:id/draw-video/upload', authenticateToken, requireAdmin,
     await auditDrawVideo(req, 'giveaway_draw_video_published', result, {
       url: result.drawVideo.url,
       type: 'upload',
+      mediaKind: detected.kind,
       bytes: req.file.size,
-      contentType: mimetype,
+      contentType: detected.mimetype,
       replaced: result.previous?.url || null
     });
     res.json({ success: true, drawVideo: result.drawVideo });

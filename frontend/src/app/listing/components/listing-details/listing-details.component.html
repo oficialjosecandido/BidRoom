@@ -281,7 +281,11 @@
               @switch (video.type) {
                 @case ('upload') {
                   <div class="gw-video">
-                    <video controls preload="metadata" playsinline [src]="video.url" [attr.aria-label]="'GIVEAWAY.DRAW_VIDEO_TITLE' | translate"></video>
+                    @if (video.mediaKind === 'image' || (video.mediaKind !== 'video' && isGiveawayDrawImage(video.url))) {
+                      <img [src]="video.url" [alt]="'GIVEAWAY.DRAW_VIDEO_TITLE' | translate" loading="lazy" />
+                    } @else {
+                      <video controls preload="metadata" playsinline [src]="video.url" [attr.aria-label]="'GIVEAWAY.DRAW_VIDEO_TITLE' | translate"></video>
+                    }
                   </div>
                 }
                 @case ('youtube') {

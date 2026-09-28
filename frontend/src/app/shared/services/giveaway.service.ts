@@ -28,6 +28,8 @@ export interface GiveawayDrawVideo {
   url: string;
   /** YouTube only: the 11-character id to embed. */
   videoId?: string | null;
+  /** Upload only: photo vs recording of the draw. */
+  mediaKind?: 'image' | 'video' | null;
   publishedAt: string | null;
 }
 

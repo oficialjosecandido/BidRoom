@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import {
   AdminBidder,
+  AdminListing,
   AdminListingSocial,
   AdminListingText,
   AdminService,
@@ -11,7 +12,6 @@ import {
 } from '../../services/admin.service';
 import { AdminSidebarComponent } from '../sidebar/admin-sidebar.component';
 import { PrivateRoomService } from '../../../private-room/services/private-room.service';
-import { Listing } from '../../../shared/services/listings.service';
 
 const NEXUS_CATEGORIES: { id: string; name: string; subCategories: string[] }[] = [
   {
@@ -126,7 +126,7 @@ export class AdminAuctionDetailsComponent implements OnInit, OnDestroy {
   private privateRoomService = inject(PrivateRoomService);
 
   auctionId = '';
-  auction: Listing | null = null;
+  auction: AdminListing | null = null;
   bidders: AdminBidder[] = [];
   isLoading = false;
   isCreatingPrivateRoom = false;

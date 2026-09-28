@@ -1169,7 +1169,8 @@ nav {
   border: 1px solid var(--line);
 
   video,
-  iframe {
+  iframe,
+  img {
     position: absolute;
     inset: 0;
     width: 100%;

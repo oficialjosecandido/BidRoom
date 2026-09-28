@@ -1,6 +1,12 @@
 const express = require('express');
 const multer = require('multer');
-const { authenticateToken, requireActiveAccount } = require('../middleware/auth');
+const {
+  authenticateToken,
+  requireActiveAccount,
+  authenticateTokenOrGuest,
+  requireActiveAccountIfAuthenticated
+} = require('../middleware/auth');
+const { createLimiter, clientKey, guestOnly } = require('../middleware/rateLimiters');
 const azureStorageService = require('../services/azureStorage.service');
 const { scanImages } = require('../services/contentSafetyService');
 const { recordViolation } = require('../services/contentViolationService');
@@ -59,11 +65,47 @@ const proofUpload = multer({
 });
 
 /**
- * POST /api/uploads
- * Upload multiple images to Azure Blob Storage
- * Requires authentication
+ * Guest image uploads.
+ *
+ * Someone publishing without an account still has to upload photos, so this
+ * endpoint accepts an anonymous draft ticket. That makes it the one place where a
+ * stranger can put bytes into our storage account, and it is quota'd twice: per
+ * ticket, because a ticket is one listing being written, and per network, because
+ * tickets are free to ask for.
+ *
+ * A listing needs a handful of photos. Six requests of up to ten files is far
+ * more than writing one listing takes, and nowhere near enough to be worth using
+ * as free hosting.
  */
-router.post('/', authenticateToken, requireActiveAccount, upload.array('images', 10), async (req, res) => {
+const guestUploadTicketLimiter = createLimiter({
+  name: 'uploads-guest-ticket',
+  windowMs: 60 * 60 * 1000,
+  max: 6,
+  keyGenerator: (req) => `g:${req.guestSession.jti}`,
+  message: 'Upload limit reached for this draft. Please publish the listing or start again.',
+});
+
+const guestUploadIpLimiter = createLimiter({
+  name: 'uploads-guest-ip',
+  windowMs: 60 * 60 * 1000,
+  max: 20,
+  keyGenerator: (req) => clientKey(req),
+  message: 'Too many uploads from this network. Please try again later.',
+});
+
+/**
+ * POST /api/uploads
+ * Upload multiple images to Azure Blob Storage.
+ * Signed-in users, or a visitor holding an anonymous draft ticket.
+ */
+router.post(
+  '/',
+  authenticateTokenOrGuest,
+  guestOnly(guestUploadTicketLimiter),
+  guestOnly(guestUploadIpLimiter),
+  requireActiveAccountIfAuthenticated,
+  upload.array('images', 10),
+  async (req, res) => {
   try {
     if (!req.files || req.files.length === 0) {
       return res.status(400).json({
@@ -96,8 +138,12 @@ router.post('/', authenticateToken, requireActiveAccount, upload.array('images',
       const scan = await scanImages(files.map(f => f.buffer));
 
       if (scan.blocked) {
-        // Resolve the MongoDB user from the Firebase uid carried by the auth token
-        const currentUser = await Customer.findOne({ uid: req.user.uid }).select('_id contentViolationCount contentRestrictedUntil');
+        // Resolve the MongoDB user from the Firebase uid carried by the auth token.
+        // A guest has no account yet, so there is nothing to escalate against —
+        // the upload is still refused below, which is the part that matters.
+        const currentUser = req.user?.uid
+          ? await Customer.findOne({ uid: req.user.uid }).select('_id contentViolationCount contentRestrictedUntil')
+          : null;
         if (currentUser) {
           // Escalating penalty: warning → temp restriction → suspension
           recordViolation(currentUser, 'inappropriate_image').catch(err =>
@@ -121,7 +167,9 @@ router.post('/', authenticateToken, requireActiveAccount, upload.array('images',
 
       // Borderline (flagged): allow upload but queue for admin review
       if (scan.anyFlagged) {
-        const currentUser = await Customer.findOne({ uid: req.user.uid }).select('_id').lean();
+        const currentUser = req.user?.uid
+          ? await Customer.findOne({ uid: req.user.uid }).select('_id').lean()
+          : null;
         if (currentUser) {
           appendModerationAudit({
             subjectUserId: currentUser._id,
