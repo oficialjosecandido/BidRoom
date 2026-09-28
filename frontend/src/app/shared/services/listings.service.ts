@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { API_CONFIG } from '../config/api.config';
 
@@ -162,6 +162,13 @@ export interface Listing {
   quantity?: number;
   bundleItems?: { title: string; description?: string }[];
 }
+
+/** What `POST /listings` answers with — the listing plus anything the submission flagged. */
+export type CreatedListing = Listing & {
+  contentWarning?: { severity: string; message: string };
+  /** Present only for a submission made without an account. */
+  guestSubmission?: { email: string; paymentNote: string };
+};
 
 export interface AttributeDef {
   key: string;
@@ -347,8 +354,17 @@ export class ListingsService {
     return this.http.get<StatsOverview>(`${this.apiUrl}/stats/overview`);
   }
 
-  createListing(listingData: Partial<Listing>): Observable<Listing & { contentWarning?: { severity: string; message: string } }> {
-    return this.http.post<Listing & { contentWarning?: { severity: string; message: string } }>(this.apiUrl, listingData);
+  /**
+   * Creates a listing. A visitor without an account passes their `guestEmail`/`guestName`
+   * in the payload plus the anonymous draft ticket in `guestToken`; the result is the
+   * same `pending_review` listing an account holder gets.
+   */
+  createListing(
+    listingData: Partial<Listing> & { guestEmail?: string; guestName?: string },
+    guestToken?: string | null
+  ): Observable<CreatedListing> {
+    const options = guestToken ? { headers: new HttpHeaders({ 'X-Guest-Token': guestToken }) } : {};
+    return this.http.post<CreatedListing>(this.apiUrl, listingData, options);
   }
 
   validateContent(payload: { title: string; description: string }): Observable<{

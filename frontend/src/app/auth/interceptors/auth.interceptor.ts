@@ -24,7 +24,10 @@ export const authInterceptor: HttpInterceptorFn = (
       }
       return next(req).pipe(
         catchError((err: HttpErrorResponse) => {
-          if (err.status === 401) {
+          // Only a request that actually carried a token can have an expired session.
+          // Without this guard, an anonymous visitor hitting any auth-only endpoint
+          // (a guest submitting a listing, say) gets thrown to the login page.
+          if (err.status === 401 && token) {
             authService.logout().subscribe({
               complete: () => router.navigate(['/auth/login'])
             });

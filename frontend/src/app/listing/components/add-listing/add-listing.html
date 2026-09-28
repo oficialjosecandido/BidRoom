@@ -20,7 +20,11 @@
   </div>
   <div class="nav-r">
     <button class="btn-th" (click)="toggleTheme()">{{ isLight() ? '☽' : '☀' }}</button>
-    <button class="btn-go" (click)="navigateToDashboard()">{{ 'addListing.nav.dashboard' | translate }}</button>
+    @if (isGuest) {
+      <a class="btn-go" routerLink="/auth/login">{{ 'addListing.guest.signIn' | translate }}</a>
+    } @else {
+      <button class="btn-go" (click)="navigateToDashboard()">{{ 'addListing.nav.dashboard' | translate }}</button>
+    }
   </div>
 </nav>
 
@@ -98,8 +102,22 @@
   <!-- MAIN (form) -->
   <form [formGroup]="listingForm" (ngSubmit)="onSubmit()" class="main">
 
+    <!-- Guest notice: what a submission without an account means, said up front
+         rather than sprung on the visitor at the last step. -->
+    @if (authResolved && isGuest) {
+      <div class="guest-notice">
+        <div class="guest-notice-title">{{ 'addListing.guest.noticeTitle' | translate }}</div>
+        <p class="guest-notice-text">{{ 'addListing.guest.noticeText' | translate }}
+          <a routerLink="/auth/register" class="guest-notice-link">{{ 'addListing.guest.noticeLink' | translate }}</a>
+        </p>
+      </div>
+    }
+    @if (guestSessionError) {
+      <div class="err-banner">{{ 'addListing.guest.sessionError' | translate }}</div>
+    }
+
     <!-- Payout setup notice (informational — does not block publishing) -->
-    @if (!isStripeConnected && !isLoadingCustomer) {
+    @if (!isGuest && !isStripeConnected && !isLoadingCustomer) {
       <div class="stripe-notice">
         <div class="stripe-notice-title">{{ 'addListing.stripeRequired' | translate }}</div>
         <p class="stripe-notice-text">{{ 'addListing.stripeRequiredText' | translate }}
@@ -138,7 +156,9 @@
           </label>
         </div>
 
-        @if (listingForm.get('listingFormat')?.value === 'auction') {
+        <!-- Hidden for guests: the room is a live negotiation the seller has to be
+             signed in to attend, and the backend forces it off for them anyway. -->
+        @if (!isGuest && listingForm.get('listingFormat')?.value === 'auction') {
           <div class="toggle-section">
             <div class="toggle-row">
               <div class="toggle-info">
@@ -822,6 +842,12 @@
         <div class="section-title">{{ 'addListing.step5.paymentMethods' | translate }}</div>
         <p class="field-hint">{{ 'addListing.step5.paymentMethodsHint' | translate }}</p>
 
+        <!-- A guest has no Connect account to be paid out to and gave no IBAN or
+             phone, so the backend forces in-person only. Say that instead of
+             showing toggles that would be overridden server-side. -->
+        @if (isGuest) {
+          <p class="pm-no-methods-hint">{{ 'addListing.guest.paymentNote' | translate }}</p>
+        } @else {
         <div class="pm-check-list">
           <label class="pm-check-item pm-check-stripe">
             <input type="checkbox" formControlName="acceptPayStripe">
@@ -872,6 +898,7 @@
             </p>
           }
         </div>
+        }
       </div>
     </div>
 
@@ -942,6 +969,41 @@
               <span class="fee-val">
                 ~€{{ (getFeeForecastPriceBasis() - estimatedSellerFeeAmount()).toFixed(2) }}
               </span>
+            </div>
+          </div>
+        }
+
+        <!--
+          Guest identity. Asked here, at the end, and nowhere earlier: the whole
+          point of the anonymous draft ticket is that a visitor can fill in the
+          entire form before deciding to hand over an address.
+        -->
+        @if (authResolved && isGuest) {
+          <div class="guest-identity">
+            <div class="guest-identity-title">{{ 'addListing.guest.identityTitle' | translate }}</div>
+            <p class="guest-identity-hint">{{ 'addListing.guest.identityHint' | translate }}</p>
+
+            <div class="field-row">
+              <div class="field">
+                <label class="field-label" for="f-guest-name">
+                  {{ 'addListing.guest.nameLabel' | translate }} <span class="req">*</span>
+                </label>
+                <input class="field-input" id="f-guest-name" type="text" autocomplete="name"
+                  formControlName="guestName"
+                  [placeholder]="'addListing.guest.namePlaceholder' | translate">
+                <span class="field-hint">{{ 'addListing.guest.nameHint' | translate }}</span>
+                @if (getFieldError('guestName')) { <div class="field-err">{{ getFieldError('guestName') }}</div> }
+              </div>
+              <div class="field">
+                <label class="field-label" for="f-guest-email">
+                  {{ 'addListing.guest.emailLabel' | translate }} <span class="req">*</span>
+                </label>
+                <input class="field-input" id="f-guest-email" type="email" autocomplete="email"
+                  formControlName="guestEmail"
+                  [placeholder]="'addListing.guest.emailPlaceholder' | translate">
+                <span class="field-hint">{{ 'addListing.guest.emailHint' | translate }}</span>
+                @if (getFieldError('guestEmail')) { <div class="field-err">{{ getFieldError('guestEmail') }}</div> }
+              </div>
             </div>
           </div>
         }

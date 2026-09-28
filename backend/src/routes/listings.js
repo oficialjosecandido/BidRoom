@@ -1674,7 +1674,10 @@ router.post(
       minimumOfferPrice: !isGiveaway && listingFormat === 'best-offer'
         ? parseFloat(minimumOfferPrice)
         : (!isGiveaway && minimumOfferPrice ? parseFloat(minimumOfferPrice) : undefined),
-      allowPrivateRoom: !isGiveaway && (allowPrivateRoom === true || allowPrivateRoom === 'true'),
+      // A private room is a live negotiation the seller has to be signed in to
+      // attend. A guest has no session to attend it with, so the room would sit
+      // there with a buyer in it and nobody on the other side.
+      allowPrivateRoom: !isGiveaway && !isGuest && (allowPrivateRoom === true || allowPrivateRoom === 'true'),
       // Giveaways have no price — commission must stay 0 (schema default is 3.5%).
       commissionRate: isGiveaway
         ? 0

@@ -1296,6 +1296,42 @@ nav {
   .stripe-notice-link  { color: #9a7000; font-weight: 500; text-decoration: underline; margin-left: 4px; }
 }
 
+// ─── Guest (no account) submission ────────────────────────────────────────────
+.guest-notice {
+  padding: 16px;
+  background: rgba(0, 35, 102, 0.05);
+  border: 1px solid rgba(0, 35, 102, 0.22);
+  border-radius: 12px;
+  margin-bottom: 28px;
+
+  .guest-notice-title { font-size: 14px; font-weight: 500; color: var(--text); margin-bottom: 5px; }
+  .guest-notice-text  { font-size: 13px; font-weight: 300; color: var(--sub); line-height: 1.55; }
+  .guest-notice-link  { color: var(--gold, #C9A84C); font-weight: 500; text-decoration: underline; margin-left: 4px; }
+}
+
+.guest-identity {
+  padding: 18px;
+  background: var(--s2);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  margin-top: 20px;
+
+  .guest-identity-title {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+
+  .guest-identity-hint {
+    font-size: 12.5px;
+    font-weight: 300;
+    color: var(--sub);
+    line-height: 1.55;
+    margin-bottom: 16px;
+  }
+}
+
 // ─── Review summary ───────────────────────────────────────────────────────────
 .review-summary {
   background: var(--s1);

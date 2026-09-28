@@ -5,7 +5,7 @@ import { AbstractControl, FormBuilder, FormGroup, ValidationErrors, ValidatorFn,
 import { Router, RouterLink } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom, from, merge, Subject, Subscription } from 'rxjs';
-import { debounceTime, distinctUntilChanged, filter, switchMap, tap } from 'rxjs/operators';
+import { debounceTime, distinctUntilChanged, filter, switchMap, take, tap } from 'rxjs/operators';
 import Swal from 'sweetalert2';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { ListingsService, AttributeDef } from '../../../shared/services/listings.service';
@@ -20,6 +20,8 @@ import { AnalyticsService } from '../../../shared/services/analytics.service';
 import { AnalyticsEvents } from '../../../shared/services/analytics.events';
 import { PostHogService } from '../../../shared/services/posthog.service';
 import { FeatureFlagsService } from '../../../shared/services/feature-flags.service';
+import { GuestSessionService } from '../../../shared/services/guest-session.service';
+import { AuthService } from '../../../auth/services/auth.service';
 
 interface Category {
   id: string;
@@ -273,6 +275,8 @@ export class AddListing implements OnInit, OnDestroy {
   private analytics = inject(AnalyticsService);
   private postHog = inject(PostHogService);
   private featureFlags = inject(FeatureFlagsService);
+  private guestSession = inject(GuestSessionService);
+  private authService = inject(AuthService);
   private destroyRef = inject(DestroyRef);
 
   /** Vehicle value ceiling, shown beside the price fields for vehicle listings. */
@@ -307,6 +311,18 @@ export class AddListing implements OnInit, OnDestroy {
   private readonly urlByFileKey = new Map<string, string>();
   draftSaveStatus: 'idle' | 'saving' | 'saved' | 'error' = 'idle';
   draftSaveError = '';
+
+  // ─── Guest (no account) submission ──────────────────────────────────────────
+  /**
+   * A visitor with no session fills in the same form and gives their email on the
+   * last step. `authResolved` matters because Firebase may not have restored the
+   * session by first paint: until it answers, neither the guest fields nor the
+   * seller-only ones should be shown, or a returning seller sees the wrong form.
+   */
+  isGuest = false;
+  authResolved = false;
+  /** Set when the anonymous draft ticket could not be obtained — uploads will fail. */
+  guestSessionError = false;
 
   // ─── Step management ────────────────────────────────────────────────────────
   currentStep = 1;
@@ -744,9 +760,50 @@ export class AddListing implements OnInit, OnDestroy {
     this.setupFormSubscriptions();
     this.selectedCategory = this.categories.find(c => c.id === AddListing.DEFAULT_CATEGORY) || null;
     this.loadAttributeSchema(AddListing.DEFAULT_SUBCATEGORY, AddListing.DEFAULT_CATEGORY);
+
+    // Everything below needs to know whether there is a session. Drafts, the
+    // customer profile and the KYC pre-check are all seller-only endpoints, and
+    // calling them anonymously would just produce 401s on page load.
+    this.authService.authReady$
+      .pipe(filter(Boolean), take(1), takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => this.applyAuthMode());
+  }
+
+  private applyAuthMode(): void {
+    this.isGuest = !this.authService.getCurrentUser();
+    this.authResolved = true;
+
+    if (this.isGuest) {
+      this.applyGuestValidators();
+      // Asked for up front so a failure surfaces before the visitor has spent
+      // twenty minutes filling in the form and uploading photos.
+      void this.guestSession.ensureToken().catch(() => {
+        this.guestSessionError = true;
+      });
+      // A guest has no Stripe account to pay out to, so the backend forces the
+      // in-person option; mirror that here instead of leaving the toggles blank.
+      this.isLoadingCustomer = false;
+      this.listingForm.patchValue({
+        acceptPayInPerson: true,
+        acceptPayBankTransfer: false,
+        acceptPayMbway: false,
+      }, { emitEvent: false });
+      return;
+    }
+
     void this.loadDraftFromServer();
     this.setupDraftAutosave();
     this.loadCustomerInfo();
+  }
+
+  /** The identity fields are only required when there is nobody signed in. */
+  private applyGuestValidators(): void {
+    const name = this.listingForm.get('guestName');
+    const email = this.listingForm.get('guestEmail');
+    name?.setValidators([Validators.required, Validators.maxLength(100)]);
+    email?.setValidators([Validators.required, Validators.email, Validators.maxLength(254)]);
+    name?.updateValueAndValidity({ emitEvent: false });
+    email?.updateValueAndValidity({ emitEvent: false });
   }
 
   ngOnDestroy(): void {
@@ -851,7 +908,11 @@ export class AddListing implements OnInit, OnDestroy {
       acceptPayMbway: [false],
       sellerDeclaration: [false, Validators.requiredTrue],
       // Required only for vehicles — see syncVehicleAmlValidator().
-      vehicleAmlDeclaration: [false]
+      vehicleAmlDeclaration: [false],
+      // Identity for a visitor with no account. Validators are attached only in
+      // guest mode (applyGuestValidators), so a signed-in seller is never asked.
+      guestName: [''],
+      guestEmail: ['']
     }, { validators: [buyNowAboveStartingBid(), scheduledStartWindow()] });
 
     this.listingForm.get('listingFormat')?.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(format => {
@@ -1578,8 +1639,11 @@ export class AddListing implements OnInit, OnDestroy {
       if (filesToUpload.length > 0) {
         const formData = new FormData();
         filesToUpload.forEach(file => formData.append('images', file));
+        // A guest has no Authorization header, so the anonymous draft ticket is
+        // what gets them past the upload endpoint's rate limits.
+        const headers = this.isGuest ? this.guestSession.headers(await this.guestSession.ensureToken()) : undefined;
         const response = await firstValueFrom(
-          this.http.post<{ urls: string[]; count: number }>(`${API_CONFIG.getApiUrl()}/uploads`, formData)
+          this.http.post<{ urls: string[]; count: number }>(`${API_CONFIG.getApiUrl()}/uploads`, formData, { headers })
         );
         const urls = response.urls || [];
         filesToUpload.forEach((file, idx) => {
@@ -1644,6 +1708,21 @@ export class AddListing implements OnInit, OnDestroy {
 
     const price = parseFloat(this.listingForm.get('startingBid')?.value || '0');
     if (price >= KYC_THRESHOLD) {
+      if (this.isGuest) {
+        // The backend would refuse this anyway. Say so here, because identity
+        // verification is not something a visitor without an account can do.
+        await Swal.fire({
+          icon: 'info',
+          iconColor: '#C9A84C',
+          title: this.translate.instant('addListing.guest.kycTitle'),
+          html: `<p class="br-swal__copy">${this.translate.instant('addListing.guest.kycBody', { amount: KYC_THRESHOLD })}</p>`,
+          confirmButtonText: this.translate.instant('addListing.guest.kycCta'),
+          buttonsStyling: false,
+          customClass: { popup: 'br-swal', title: 'br-swal__title', htmlContainer: 'br-swal__body', actions: 'br-swal__actions', confirmButton: 'br-swal__btn br-swal__btn--primary' }
+        });
+        this.currentStep = 4;
+        return;
+      }
       const status = await firstValueFrom(this.kycService.fetchStatus()).catch(() => null);
       if (status?.kycStatus !== 'approved') {
         this.kycService.openKycGate(status?.kycStatus ?? 'none');
@@ -1663,7 +1742,8 @@ export class AddListing implements OnInit, OnDestroy {
       const formData = this.prepareListingData();
       formData.images = imageUrls;
 
-      const listing = await firstValueFrom(this.listingsService.createListing(formData));
+      const guestToken = this.isGuest ? await this.guestSession.ensureToken() : null;
+      const listing = await firstValueFrom(this.listingsService.createListing(formData, guestToken));
 
       this.analytics.trackEvent(AnalyticsEvents.LISTING_PUBLISHED, {
         ...this.analytics.listingParams(listing),
@@ -1680,11 +1760,45 @@ export class AddListing implements OnInit, OnDestroy {
 
       this.isSubmitting = false;
       this.errorMessage = '';
-      // Mark draft as published locally before deleting — guards against a failed DELETE
-      // leaving a stale draft that would be restored on the next "new listing" visit.
-      localStorage.setItem('bidroom_draft_published', '1');
-      await firstValueFrom(this.listingsService.deleteListingDraft()).catch(() => {});
-      localStorage.removeItem('bidroom_draft_published'); // clean up if delete succeeded
+      if (this.isGuest) {
+        // Guests never had a server-side draft. The ticket is spent: dropping it
+        // stops a reload of this page from re-submitting under the same session.
+        this.guestSession.clear();
+      } else {
+        // Mark draft as published locally before deleting — guards against a failed DELETE
+        // leaving a stale draft that would be restored on the next "new listing" visit.
+        localStorage.setItem('bidroom_draft_published', '1');
+        await firstValueFrom(this.listingsService.deleteListingDraft()).catch(() => {});
+        localStorage.removeItem('bidroom_draft_published'); // clean up if delete succeeded
+      }
+
+      // A guest has no dashboard to send them to, and the listing is hidden until
+      // approved, so there is nothing for them to open either. They get the one
+      // thing that matters: confirmation, and which address will hear back.
+      if (this.isGuest) {
+        await Swal.fire({
+          iconColor: '#C9A84C',
+          title: this.translate.instant('addListing.guest.successTitle'),
+          html: `
+            <div class="br-swal__brand" aria-hidden="true">BidRoom</div>
+            <p class="br-swal__copy">${this.translate.instant('addListing.guest.successBody', {
+              email: listing.guestSubmission?.email || this.listingForm.get('guestEmail')?.value || ''
+            })}</p>
+          `,
+          confirmButtonText: this.translate.instant('addListing.guest.successCta'),
+          buttonsStyling: false,
+          focusConfirm: false,
+          customClass: {
+            popup: 'br-swal',
+            title: 'br-swal__title',
+            htmlContainer: 'br-swal__body',
+            actions: 'br-swal__actions',
+            confirmButton: 'br-swal__btn br-swal__btn--primary'
+          }
+        });
+        void this.router.navigate(['/listing/list']);
+        return;
+      }
 
       // Every listing now waits for manual approval, so there is no longer a
       // "published" outcome to celebrate — the seller is told what happens next
@@ -1793,6 +1907,39 @@ export class AddListing implements OnInit, OnDestroy {
         this.errorMessage = '';
         return;
       }
+      // Guest submission refusals. The identity fields live on the last step, so
+      // send the visitor back to the field rather than to a page they cannot use.
+      if (code === 'email_invalid' || code === 'name_required') {
+        this.currentStep = 6;
+        this.listingForm.get(code === 'email_invalid' ? 'guestEmail' : 'guestName')?.markAsTouched();
+        this.errorMessage = this.translate.instant(
+          code === 'email_invalid' ? 'addListing.guest.emailInvalid' : 'addListing.guest.nameRequired'
+        );
+        return;
+      }
+      if (code === 'guest_session_required') {
+        // The ticket expired mid-form (two hours). A new one is free; the answer
+        // is to ask again, not to lose the work already typed in.
+        this.guestSession.clear();
+        this.errorMessage = this.translate.instant('addListing.guest.sessionExpired');
+        return;
+      }
+      if (typeof code === 'string' && code.startsWith('account_')) {
+        // The email belongs to an account that is restricted. Deliberately vague:
+        // saying more would confirm to a stranger that the address has an account.
+        await Swal.fire({
+          icon: 'warning',
+          iconColor: '#C9A84C',
+          title: this.translate.instant('addListing.guest.blockedTitle'),
+          html: `<p class="br-swal__copy">${this.translate.instant('addListing.guest.blockedBody')}</p>`,
+          confirmButtonText: 'OK',
+          buttonsStyling: false,
+          customClass: { popup: 'br-swal', title: 'br-swal__title', htmlContainer: 'br-swal__body', actions: 'br-swal__actions', confirmButton: 'br-swal__btn br-swal__btn--primary' }
+        });
+        this.errorMessage = '';
+        return;
+      }
+
       const apiErr = error?.error?.message || error?.error?.error;
       this.errorMessage = apiErr || error.message || 'Failed to create listing. Please try again.';
     }
@@ -1847,7 +1994,13 @@ export class AddListing implements OnInit, OnDestroy {
       bundleItems: formValue.itemMode === 'bundle' ? (formValue.bundleItems || []) : [],
       images: this.uploadedFileUrls,
       // Only meaningful for vehicles; the backend records when it was given.
-      vehicleAmlDeclaration: formValue.vehicleAmlDeclaration === true
+      vehicleAmlDeclaration: formValue.vehicleAmlDeclaration === true,
+      // Only sent when there is no session — the backend resolves or provisions
+      // the seller from these, and ignores them entirely for a signed-in request.
+      ...(this.isGuest && {
+        guestName: (formValue.guestName || '').trim(),
+        guestEmail: (formValue.guestEmail || '').trim()
+      })
     };
   }
 
@@ -1877,10 +2030,12 @@ export class AddListing implements OnInit, OnDestroy {
         if (opt === 'calculated') fields.push('packageSize', 'shippingOriginPostalCode');
         return fields;
       }
-      case 6:
-        return this.isVehicleListing
-          ? ['sellerDeclaration', 'vehicleAmlDeclaration']
-          : ['sellerDeclaration'];
+      case 6: {
+        const fields = ['sellerDeclaration'];
+        if (this.isVehicleListing) fields.push('vehicleAmlDeclaration');
+        if (this.isGuest) fields.push('guestName', 'guestEmail');
+        return fields;
+      }
       default:
         return [];
     }
@@ -1927,6 +2082,9 @@ export class AddListing implements OnInit, OnDestroy {
       case 5:
         return this.translate.instant('addListing.errors.step5Shipping');
       case 6:
+        if (this.isGuest && (this.listingForm.get('guestName')?.invalid || this.listingForm.get('guestEmail')?.invalid)) {
+          return this.translate.instant('addListing.guest.errorIdentity');
+        }
         return this.translate.instant('addListing.errors.step6Declaration');
       default:
         return this.translate.instant('addListing.errors.stepBlocked');
@@ -1957,6 +2115,7 @@ export class AddListing implements OnInit, OnDestroy {
       'packageSize', 'shippingOriginPostalCode',
       'locationCity', 'locationCountry', 'returnPolicy', 'sellerDeclaration',
       ...(this.isVehicleListing ? ['vehicleAmlDeclaration'] : []),
+      ...(this.isGuest ? ['guestName', 'guestEmail'] : []),
     ];
     const missing: string[] = [];
     if (this.uploadedFiles.length < 1 || !this.isMediaValid) {
@@ -1988,6 +2147,9 @@ export class AddListing implements OnInit, OnDestroy {
           field: this.getFieldLabel(fieldName),
           min,
         });
+      }
+      if (control.hasError('email')) {
+        return this.translate.instant('addListing.guest.emailInvalid');
       }
       if (control.hasError('min')) {
         return this.translate.instant('addListing.errors.minValue', { min: control.errors?.['min'].min });
@@ -2033,6 +2195,8 @@ export class AddListing implements OnInit, OnDestroy {
       flatRateShipping: 'addListing.flatRateCost',
       packageSize: 'addListing.packageSize',
       shippingOriginPostalCode: 'addListing.originPostalCode',
+      guestName: 'addListing.guest.nameLabel',
+      guestEmail: 'addListing.guest.emailLabel',
     };
     return this.translate.instant(keyMap[fieldName] || fieldName);
   }
