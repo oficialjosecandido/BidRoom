@@ -193,6 +193,10 @@ export class EditListing implements OnInit {
         value: l.buyNowPrice ?? null,
         disabled: pricesLocked
       }],
+      startingPrice: [{
+        value: l.startingPrice ?? null,
+        disabled: pricesLocked
+      }, [Validators.required, Validators.min(0.01)]],
       minimumOfferPrice: [{
         value: l.minimumOfferPrice ?? null,
         disabled: pricesLocked || !this.isBestOffer
@@ -317,6 +321,7 @@ export class EditListing implements OnInit {
       }
 
       if (this.pricesEditable) {
+        payload.startingPrice = Number(raw.startingPrice);
         if (this.isBestOffer) {
           payload.minimumOfferPrice = raw.minimumOfferPrice != null && raw.minimumOfferPrice !== ''
             ? Number(raw.minimumOfferPrice)

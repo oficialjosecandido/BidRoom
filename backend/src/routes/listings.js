@@ -1856,14 +1856,15 @@ router.post(
 
 /**
  * Fields that may NEVER be changed once a listing is live (active), even with
- * no bids — title, category, starting price, format and duration stay fixed so
- * buyers who opened the page before editing aren't misled.
+ * no bids — title, category, format and duration stay fixed so buyers who
+ * opened the page before editing aren't misled about what the item is.
  *
- * `buyNowPrice` and `minimumOfferPrice` are intentionally excluded: sellers may
- * still adjust them while nobody has bid or offered.
+ * Prices (`startingPrice`, `buyNowPrice`, `minimumOfferPrice`) are editable
+ * while nobody has bid or offered; `currentPrice` is never written by the
+ * client — it is synced from `startingPrice` on the server when needed.
  */
 const CRITICAL_FIELDS = new Set([
-  'title', 'titlePt', 'category', 'subCategory', 'startingPrice', 'currentPrice',
+  'title', 'titlePt', 'category', 'subCategory', 'currentPrice',
   'auctionFormat', 'durationSlot', 'endDate', 'allowPrivateRoom'
 ]);
 
@@ -1933,7 +1934,7 @@ router.patch('/:id', authenticateToken, requireActiveAccount, async (req, res) =
       'shippingOriginPostalCode', 'shippingOriginCity', 'shippingOriginCountry',
       'returnPolicy', 'handlingTime', 'images',
       'titleEn', 'titleFr', 'titleEs', 'descriptionPt', 'descriptionEn', 'descriptionFr', 'descriptionEs',
-      'buyNowPrice', 'minimumOfferPrice'
+      'startingPrice', 'buyNowPrice', 'minimumOfferPrice'
     ];
 
     const allowedKeys = isDraft ? Object.keys(body) : EDITABLE_FIELDS;
@@ -1955,6 +1956,7 @@ router.patch('/:id', authenticateToken, requireActiveAccount, async (req, res) =
       // Giveaways have no prices.
       delete updates.buyNowPrice;
       delete updates.minimumOfferPrice;
+      delete updates.startingPrice;
       if ('shippingOption' in updates && !['free', 'local-pickup'].includes(updates.shippingOption)) {
         return res.status(400).json({
           error: 'giveaway_shipping_must_be_free',
@@ -1964,7 +1966,23 @@ router.patch('/:id', authenticateToken, requireActiveAccount, async (req, res) =
       if ('shippingCost' in updates) updates.shippingCost = 0;
     }
 
-    // Price tweaks while live (or on draft): validate before save.
+    // Price tweaks while live/draft with no bids or offers.
+    if ('startingPrice' in updates) {
+      const start = parseFloat(updates.startingPrice);
+      if (!Number.isFinite(start) || start < 0.01) {
+        return res.status(400).json({
+          error: 'Invalid starting price',
+          message: 'Starting price must be at least €0.01.'
+        });
+      }
+      updates.startingPrice = start;
+      // No activity yet — keep the displayed current price in sync with the new start.
+      updates.currentPrice = start;
+    }
+
+    const effectiveStarting =
+      'startingPrice' in updates ? updates.startingPrice : (listing.startingPrice ?? 0);
+
     if ('buyNowPrice' in updates) {
       const raw = updates.buyNowPrice;
       if (raw === null || raw === '' || raw === undefined) {
@@ -1977,8 +1995,7 @@ router.patch('/:id', authenticateToken, requireActiveAccount, async (req, res) =
             message: 'Buy Now price must be at least €0.01, or left empty.'
           });
         }
-        const floor = listing.startingPrice ?? 0;
-        if (buyNow <= floor) {
+        if (buyNow <= effectiveStarting) {
           return res.status(400).json({
             error: 'Invalid buy now price',
             message: 'Buy Now price must be higher than the starting price.'
@@ -1986,6 +2003,11 @@ router.patch('/:id', authenticateToken, requireActiveAccount, async (req, res) =
         }
         updates.buyNowPrice = buyNow;
       }
+    } else if ('startingPrice' in updates && listing.buyNowPrice != null && listing.buyNowPrice <= effectiveStarting) {
+      return res.status(400).json({
+        error: 'Invalid starting price',
+        message: 'Starting price must be lower than the current Buy Now price. Raise Buy Now or clear it first.'
+      });
     }
 
     if ('minimumOfferPrice' in updates) {
