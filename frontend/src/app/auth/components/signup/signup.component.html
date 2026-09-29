@@ -16,10 +16,13 @@
         <div class="auth-error">
           <div class="auth-error-body">
             <p class="auth-error-text">{{ errorMessage }}</p>
-            @if (errorMessage.includes('already registered')) {
+            @if (errorAction === 'email-exists') {
               <div class="auth-error-actions">
                 <button type="button" class="auth-action-link" (click)="navigateToLogin()">
                   {{ 'auth.login.logIn' | translate }}
+                </button>
+                <button type="button" class="auth-action-link" (click)="navigateToCheckEmail()">
+                  {{ 'auth.signup.resendVerification' | translate }}
                 </button>
                 <button type="button" class="auth-action-link" (click)="navigateToForgotPassword()">
                   {{ 'auth.login.resetPassword' | translate }}
@@ -123,6 +126,11 @@
           @if (getFieldError('password')) {
             <div class="auth-field-error">{{ getFieldError('password') }}</div>
           }
+          <ul class="auth-password-reqs" aria-live="polite">
+            @for (check of passwordChecks; track check.key) {
+              <li [class.ok]="check.ok">{{ check.key | translate }}</li>
+            }
+          </ul>
         </div>
 
         <div class="auth-field">

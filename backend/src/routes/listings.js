@@ -1855,13 +1855,16 @@ router.post(
 });
 
 /**
- * Fields that may NEVER be changed once a listing is live (active).
- * Locked regardless of bid count to prevent price manipulation.
+ * Fields that may NEVER be changed once a listing is live (active), even with
+ * no bids — title, category, starting price, format and duration stay fixed so
+ * buyers who opened the page before editing aren't misled.
+ *
+ * `buyNowPrice` and `minimumOfferPrice` are intentionally excluded: sellers may
+ * still adjust them while nobody has bid or offered.
  */
 const CRITICAL_FIELDS = new Set([
   'title', 'titlePt', 'category', 'subCategory', 'startingPrice', 'currentPrice',
-  'auctionFormat', 'durationSlot', 'endDate', 'buyNowPrice',
-  'minimumOfferPrice', 'allowPrivateRoom'
+  'auctionFormat', 'durationSlot', 'endDate', 'allowPrivateRoom'
 ]);
 
 // PATCH /api/listings/:id - Edit a listing (state-based edit locks)
@@ -1882,11 +1885,18 @@ router.patch('/:id', authenticateToken, requireActiveAccount, async (req, res) =
     const isDraft  = listing.status === 'draft';
     const isLive   = listing.status === 'active';
     const hasBids  = listing.bidCount > 0;
+    // Best-offer listings use Offer docs, not bidCount — treat any offer like a bid.
+    const hasOffers = listing.auctionFormat === 'best-offer'
+      ? (await Offer.countDocuments({ listing: listing._id })) > 0
+      : false;
+    const hasActivity = hasBids || hasOffers;
 
-    if (isLive && hasBids) {
+    if (isLive && hasActivity) {
       return res.status(403).json({
         error: 'Listing locked',
-        message: 'This listing cannot be edited because bids have already been placed.'
+        message: hasOffers
+          ? 'This listing cannot be edited because offers have already been placed.'
+          : 'This listing cannot be edited because bids have already been placed.'
       });
     }
 
@@ -1903,9 +1913,9 @@ router.patch('/:id', authenticateToken, requireActiveAccount, async (req, res) =
       return res.status(400).json({ error: 'Only draft or active listings can be edited.' });
     }
 
-    // For live listings with no bids, block changes to critical fields
+    // For live listings with no bids/offers, block changes to critical fields
     const body = req.body;
-    if (isLive && !hasBids) {
+    if (isLive && !hasActivity) {
       const attempted = Object.keys(body).filter(k => CRITICAL_FIELDS.has(k));
       if (attempted.length > 0) {
         return res.status(400).json({
@@ -1915,14 +1925,15 @@ router.patch('/:id', authenticateToken, requireActiveAccount, async (req, res) =
       }
     }
 
-    // Allowed fields for non-draft edits (excludes all critical fields)
+    // Allowed fields for non-draft edits (excludes critical fields; prices below are ok with no activity)
     const EDITABLE_FIELDS = [
       'description', 'condition', 'specifications',
       'location', 'locationCity', 'locationCountry',
       'shippingOption', 'shippingCost', 'packageSize',
       'shippingOriginPostalCode', 'shippingOriginCity', 'shippingOriginCountry',
       'returnPolicy', 'handlingTime', 'images',
-      'titleEn', 'titleFr', 'titleEs', 'descriptionPt', 'descriptionEn', 'descriptionFr', 'descriptionEs'
+      'titleEn', 'titleFr', 'titleEs', 'descriptionPt', 'descriptionEn', 'descriptionFr', 'descriptionEs',
+      'buyNowPrice', 'minimumOfferPrice'
     ];
 
     const allowedKeys = isDraft ? Object.keys(body) : EDITABLE_FIELDS;
@@ -1941,6 +1952,9 @@ router.patch('/:id', authenticateToken, requireActiveAccount, async (req, res) =
       if (key === 'startDate') delete updates[key];
     }
     if (listing.saleFormat === 'giveaway') {
+      // Giveaways have no prices.
+      delete updates.buyNowPrice;
+      delete updates.minimumOfferPrice;
       if ('shippingOption' in updates && !['free', 'local-pickup'].includes(updates.shippingOption)) {
         return res.status(400).json({
           error: 'giveaway_shipping_must_be_free',
@@ -1948,6 +1962,45 @@ router.patch('/:id', authenticateToken, requireActiveAccount, async (req, res) =
         });
       }
       if ('shippingCost' in updates) updates.shippingCost = 0;
+    }
+
+    // Price tweaks while live (or on draft): validate before save.
+    if ('buyNowPrice' in updates) {
+      const raw = updates.buyNowPrice;
+      if (raw === null || raw === '' || raw === undefined) {
+        updates.buyNowPrice = null;
+      } else {
+        const buyNow = parseFloat(raw);
+        if (!Number.isFinite(buyNow) || buyNow < 0.01) {
+          return res.status(400).json({
+            error: 'Invalid buy now price',
+            message: 'Buy Now price must be at least €0.01, or left empty.'
+          });
+        }
+        const floor = listing.startingPrice ?? 0;
+        if (buyNow <= floor) {
+          return res.status(400).json({
+            error: 'Invalid buy now price',
+            message: 'Buy Now price must be higher than the starting price.'
+          });
+        }
+        updates.buyNowPrice = buyNow;
+      }
+    }
+
+    if ('minimumOfferPrice' in updates) {
+      if (listing.auctionFormat !== 'best-offer') {
+        delete updates.minimumOfferPrice;
+      } else {
+        const min = parseFloat(updates.minimumOfferPrice);
+        if (!Number.isFinite(min) || min < 0.01) {
+          return res.status(400).json({
+            error: 'Invalid minimum offer price',
+            message: 'Minimum offer price is required and must be at least €0.01.'
+          });
+        }
+        updates.minimumOfferPrice = min;
+      }
     }
 
     const hasLocaleUpdate = ['title', 'titlePt', 'titleEn', 'titleFr', 'titleEs', 'description', 'descriptionPt', 'descriptionEn', 'descriptionFr', 'descriptionEs']

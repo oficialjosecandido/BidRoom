@@ -55,8 +55,38 @@
 .hint {
   font-size: 13px;
   color: #888;
-  margin: 0 0 28px 0;
+  margin: 0 0 16px 0;
   line-height: 1.4;
+}
+
+.resend-ok {
+  font-size: 14px;
+  color: #2f7a4a;
+  margin: 0 0 12px;
+}
+
+.resend-err {
+  font-size: 14px;
+  color: #b42318;
+  margin: 0 0 12px;
+}
+
+.resend-btn {
+  width: 100%;
+  padding: 11px 24px;
+  margin-bottom: 10px;
+  background: #fff;
+  color: var(--primary-color, #7A4F84);
+  border: 1.5px solid var(--primary-color, #7A4F84);
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
 }
 
 .login-btn {

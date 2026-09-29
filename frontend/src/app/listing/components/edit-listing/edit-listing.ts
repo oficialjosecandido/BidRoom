@@ -89,9 +89,16 @@ export class EditListing implements OnInit {
 
   determineEditMode(): void {
     if (!this.listing) return;
+    if (this.listing.saleFormat === 'giveaway') {
+      // Giveaways lock on entries (handled by API); treat like auctions for UI.
+      if (this.listing.status === 'draft') this.editMode = 'full';
+      else if (this.listing.status === 'active') this.editMode = 'partial';
+      else this.editMode = 'locked';
+      return;
+    }
     if (this.listing.status === 'draft') {
       this.editMode = 'full';
-    } else if (this.listing.status === 'active' && this.listing.bidCount === 0) {
+    } else if (this.listing.status === 'active' && (this.listing.bidCount || 0) === 0) {
       this.editMode = 'partial';
     } else {
       this.editMode = 'locked';
@@ -137,6 +144,18 @@ export class EditListing implements OnInit {
     }
   }
 
+  get isAuctionListing(): boolean {
+    return this.listing?.saleFormat !== 'giveaway';
+  }
+
+  get isBestOffer(): boolean {
+    return this.listing?.auctionFormat === 'best-offer';
+  }
+
+  get pricesEditable(): boolean {
+    return this.isAuctionListing && this.editMode !== 'locked';
+  }
+
   buildForm(): void {
     const l = this.listing!;
     this.primaryLangTab = this.detectPrimaryLang(l);
@@ -144,6 +163,7 @@ export class EditListing implements OnInit {
 
     const titleLocked = this.editMode !== 'full';
     const contentLocked = this.editMode === 'locked';
+    const pricesLocked = !this.pricesEditable;
 
     this.editForm = this.fb.group({
       title:       [{ value: l.title,    disabled: titleLocked }, [Validators.required, Validators.maxLength(80)]],
@@ -168,6 +188,15 @@ export class EditListing implements OnInit {
       shippingCost:   [{ value: l.shippingCost   ?? 0,          disabled: contentLocked }],
       returnPolicy:   [{ value: l.returnPolicy   || '',         disabled: contentLocked }, Validators.required],
       handlingTime:   [{ value: l.handlingTime   ?? 5,          disabled: contentLocked }],
+
+      buyNowPrice: [{
+        value: l.buyNowPrice ?? null,
+        disabled: pricesLocked
+      }],
+      minimumOfferPrice: [{
+        value: l.minimumOfferPrice ?? null,
+        disabled: pricesLocked || !this.isBestOffer
+      }, this.isBestOffer ? [Validators.required, Validators.min(0.01)] : []],
 
       specifications: this.fb.array(
         (l.specifications as any[] || []).map((s: any) => this.fb.group({
@@ -287,6 +316,20 @@ export class EditListing implements OnInit {
         payload.subCategory = raw.subCategory;
       }
 
+      if (this.pricesEditable) {
+        if (this.isBestOffer) {
+          payload.minimumOfferPrice = raw.minimumOfferPrice != null && raw.minimumOfferPrice !== ''
+            ? Number(raw.minimumOfferPrice)
+            : null;
+        }
+        // Empty buy-now clears it; otherwise send the number.
+        if (raw.buyNowPrice === null || raw.buyNowPrice === '' || raw.buyNowPrice === undefined) {
+          payload.buyNowPrice = null;
+        } else {
+          payload.buyNowPrice = Number(raw.buyNowPrice);
+        }
+      }
+
       const result = await firstValueFrom(this.listingsService.updateListing(this.listing!._id, payload));
 
       if (result.contentWarning) {
@@ -326,7 +369,7 @@ export class EditListing implements OnInit {
 
   get editModeLabel(): string {
     if (this.editMode === 'full')    return 'Full editing available (draft)';
-    if (this.editMode === 'partial') return 'Limited editing — listing is live with no bids';
-    return 'Editing locked — bids have been placed';
+    if (this.editMode === 'partial') return 'Limited editing — listing is live with no bids or offers';
+    return 'Editing locked — bids or offers have been placed';
   }
 }

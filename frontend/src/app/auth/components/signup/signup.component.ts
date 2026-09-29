@@ -32,6 +32,8 @@ export class SignupComponent {
   successMessage = '';
   showPassword = false;
   showConfirmPassword = false;
+  /** When set, show login / forgot / check-email CTAs under the error. */
+  errorAction: 'email-exists' | null = null;
 
   constructor() {
     this.signupForm = this.fb.group({
@@ -42,6 +44,20 @@ export class SignupComponent {
       confirmPassword: ['', [Validators.required]],
       acceptTerms: [false, [Validators.requiredTrue]]
     }, { validators: this.passwordMatchValidator });
+  }
+
+  get passwordValue(): string {
+    return this.signupForm.get('password')?.value || '';
+  }
+
+  get passwordChecks(): { key: string; ok: boolean }[] {
+    const p = this.passwordValue;
+    return [
+      { key: 'auth.signup.passwordRuleLength', ok: p.length >= 12 },
+      { key: 'auth.signup.passwordRuleUpper', ok: /[A-Z]/.test(p) },
+      { key: 'auth.signup.passwordRuleLower', ok: /[a-z]/.test(p) },
+      { key: 'auth.signup.passwordRuleNumber', ok: /\d/.test(p) },
+    ];
   }
 
   strongPasswordValidator(control: AbstractControl) {
@@ -64,48 +80,62 @@ export class SignupComponent {
   passwordMatchValidator(form: FormGroup) {
     const password = form.get('password');
     const confirmPassword = form.get('confirmPassword');
-    
+
     if (password && confirmPassword && password.value !== confirmPassword.value) {
       confirmPassword.setErrors({ passwordMismatch: true });
       return { passwordMismatch: true };
     }
-    
+
+    if (confirmPassword?.hasError('passwordMismatch') && password?.value === confirmPassword?.value) {
+      const { passwordMismatch: _, ...rest } = confirmPassword.errors || {};
+      confirmPassword.setErrors(Object.keys(rest).length ? rest : null);
+    }
+
     return null;
   }
 
   onSubmit(): void {
-    if (this.signupForm.valid && !this.isLoading) {
-      this.isLoading = true;
-      this.errorMessage = '';
-      this.successMessage = '';
+    if (this.isLoading) return;
+    this.errorMessage = '';
+    this.errorAction = null;
 
-      const displayName = `${this.signupForm.value.firstName} ${this.signupForm.value.lastName}`.trim();
-
-      this.authService.register(this.signupForm.value.email, this.signupForm.value.password, displayName).subscribe({
-        next: () => {
-          this.analytics.trackEvent(AnalyticsEvents.SIGN_UP, { method: 'email' });
-          this.isLoading = false;
-          this.router.navigate(['/auth/check-email'], {
-            queryParams: { email: this.signupForm.value.email }
-          });
-        },
-        error: (error) => {
-          this.isLoading = false;
-          this.errorMessage = this.getErrorMessage(error);
-          // Mark email field as invalid if email is already in use
-          if (error?.code === 'auth/email-already-in-use') {
-            this.signupForm.get('email')?.setErrors({ emailExists: true });
-            this.signupForm.get('email')?.markAsTouched();
-          }
-        }
-      });
+    if (this.signupForm.invalid) {
+      this.signupForm.markAllAsTouched();
+      this.errorMessage = this.translate.instant('auth.errors.fixIncomplete');
+      return;
     }
+
+    this.isLoading = true;
+    this.successMessage = '';
+
+    const displayName = `${this.signupForm.value.firstName} ${this.signupForm.value.lastName}`.trim();
+    const email = String(this.signupForm.value.email || '').trim().toLowerCase();
+
+    this.authService.register(email, this.signupForm.value.password, displayName).subscribe({
+      next: () => {
+        this.analytics.trackEvent(AnalyticsEvents.SIGN_UP, { method: 'email' });
+        this.isLoading = false;
+        this.router.navigate(['/auth/check-email'], {
+          queryParams: { email }
+        });
+      },
+      error: (error) => {
+        this.isLoading = false;
+        this.errorMessage = this.getErrorMessage(error);
+        if (error?.code === 'auth/email-already-in-use') {
+          this.errorAction = 'email-exists';
+          this.signupForm.get('email')?.setErrors({ emailExists: true });
+          this.signupForm.get('email')?.markAsTouched();
+        }
+      }
+    });
   }
 
   loginWithGoogle(): void {
     if (this.isLoading) return;
     this.isLoading = true;
     this.errorMessage = '';
+    this.errorAction = null;
     this.authService.loginWithGoogle().subscribe({
       next: () => {
         this.analytics.trackEvent(AnalyticsEvents.SIGN_UP, { method: 'google' });
@@ -120,7 +150,17 @@ export class SignupComponent {
   }
 
   navigateToLogin(): void {
-    this.router.navigate(['/auth/login']);
+    this.router.navigate(['/auth/login'], {
+      queryParams: this.signupForm.value.email
+        ? { email: String(this.signupForm.value.email).trim().toLowerCase() }
+        : undefined
+    });
+  }
+
+  navigateToCheckEmail(): void {
+    this.router.navigate(['/auth/check-email'], {
+      queryParams: { email: String(this.signupForm.value.email || '').trim().toLowerCase() }
+    });
   }
 
   togglePasswordVisibility(): void {
@@ -164,13 +204,15 @@ export class SignupComponent {
 
     switch (errorCode) {
       case 'auth/email-already-in-use':
-        return this.translate.instant('auth.errors.emailAlreadyInUse');
+        return this.translate.instant('auth.errors.emailAlreadyInUseHint');
       case 'auth/invalid-email':
         return this.translate.instant('auth.errors.invalidEmail');
       case 'auth/operation-not-allowed':
         return this.translate.instant('auth.errors.operationNotAllowed');
       case 'auth/weak-password':
         return this.translate.instant('auth.errors.weakPassword');
+      case 'auth/too-many-requests':
+        return this.translate.instant('auth.errors.tooManyRequests');
       case 'auth/popup-closed-by-user':
         return this.translate.instant('auth.errors.popupClosed');
       case 'auth/cancelled-popup-request':
@@ -184,7 +226,7 @@ export class SignupComponent {
 
   navigateToForgotPassword(): void {
     this.router.navigate(['/auth/forgot-password'], {
-      queryParams: { email: this.signupForm.value.email }
+      queryParams: { email: String(this.signupForm.value.email || '').trim().toLowerCase() }
     });
   }
 }

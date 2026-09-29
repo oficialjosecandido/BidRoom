@@ -16,16 +16,21 @@
         <div class="auth-error">
           <div class="auth-error-body">
             <p class="auth-error-text">{{ errorMessage }}</p>
-            @if (errorMessage.includes('No account found') || errorMessage.includes('Incorrect password')) {
+            @if (errorAction) {
               <div class="auth-error-actions">
-                @if (errorMessage.includes('No account found')) {
+                @if (errorAction === 'not-found') {
                   <button type="button" class="auth-action-link" (click)="navigateToSignup()">
                     {{ 'auth.login.signUp' | translate }}
                   </button>
                 }
-                @if (errorMessage.includes('Incorrect password') || errorMessage.includes('Too many failed')) {
+                @if (errorAction === 'wrong-password') {
                   <button type="button" class="auth-action-link" (click)="navigateToForgotPassword()">
                     {{ 'auth.login.resetPassword' | translate }}
+                  </button>
+                }
+                @if (errorAction === 'not-verified') {
+                  <button type="button" class="auth-action-link" (click)="navigateToCheckEmail()">
+                    {{ 'auth.signup.resendVerification' | translate }}
                   </button>
                 }
               </div>

@@ -1,8 +1,8 @@
 import { Injectable, inject } from '@angular/core';
-import { BehaviorSubject, Observable, from, of, throwError } from 'rxjs';
+import { BehaviorSubject, Observable, from, of, throwError, firstValueFrom } from 'rxjs';
 import { catchError, map, switchMap, tap } from 'rxjs/operators';
 import { HttpClient } from '@angular/common/http';
-import { Auth, GoogleAuthProvider, User as FirebaseUser, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithPopup, sendEmailVerification, updateProfile, signOut, getIdToken, confirmPasswordReset, verifyPasswordResetCode } from '@angular/fire/auth';
+import { Auth, GoogleAuthProvider, User as FirebaseUser, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithPopup, updateProfile, signOut, getIdToken, confirmPasswordReset, verifyPasswordResetCode } from '@angular/fire/auth';
 import { API_CONFIG } from '../../shared/config/api.config';
 import { UserRolesService } from '../../shared/services/user-roles.service';
 import { WaiverService } from '../../shared/services/waiver.service';
@@ -95,11 +95,15 @@ export class AuthService {
   }
 
   login(email: string, password: string): Observable<AppUser> {
-    return from(signInWithEmailAndPassword(this.auth, email, password)).pipe(
+    const normalised = email.trim().toLowerCase();
+    return from(signInWithEmailAndPassword(this.auth, normalised, password)).pipe(
       switchMap((cred) => {
         if (!cred.user.emailVerified) {
           return from(signOut(this.auth)).pipe(
-            switchMap(() => throwError(() => new Error('Please verify your email address before logging in. Check your inbox for the verification email.')))
+            switchMap(() => throwError(() => Object.assign(
+              new Error('Please verify your email address before logging in. Check your inbox for the verification email.'),
+              { code: 'auth/email-not-verified' }
+            )))
           );
         }
         this.postHog.track(AnalyticsEvents.LOGIN, { method: 'email' });
@@ -108,8 +112,8 @@ export class AuthService {
       catchError((err) => {
         // Report failed attempt to backend for brute-force tracking (best-effort, non-blocking)
         const firebaseFailureCodes = ['auth/wrong-password', 'auth/invalid-credential', 'auth/user-not-found', 'auth/invalid-password'];
-        if (email && firebaseFailureCodes.some(c => err?.code === c)) {
-          this.http.post(`${API_CONFIG.getApiUrl()}/auth/login-failure`, { email })
+        if (normalised && firebaseFailureCodes.some(c => err?.code === c)) {
+          this.http.post(`${API_CONFIG.getApiUrl()}/auth/login-failure`, { email: normalised })
             .subscribe({ error: () => {} }); // fire-and-forget
         }
         return throwError(() => err);
@@ -118,15 +122,33 @@ export class AuthService {
   }
 
   register(email: string, password: string, displayName?: string): Observable<AppUser> {
-    return from(createUserWithEmailAndPassword(this.auth, email, password)).pipe(
+    const normalised = email.trim().toLowerCase();
+    const firstName = (displayName || '').trim().split(/\s+/)[0] || '';
+    return from(createUserWithEmailAndPassword(this.auth, normalised, password)).pipe(
       switchMap(async (cred) => {
         if (displayName) {
           await updateProfile(cred.user, { displayName });
         }
-        await sendEmailVerification(cred.user);
+        // BidRoom SMTP (same path as password reset) — Firebase Auth mail is unreliable for many inboxes.
+        try {
+          await firstValueFrom(this.http.post(`${this.apiUrl}/auth/send-verification`, {
+            email: normalised,
+            firstName
+          }));
+        } catch {
+          // Account exists; check-email page can resend.
+        }
         this.postHog.track(AnalyticsEvents.SIGN_UP, { method: 'email' });
         return this.mapFirebaseUser(cred.user) as AppUser;
       })
+    );
+  }
+
+  /** Re-send the verification email (BidRoom SMTP). Always safe to call. */
+  resendVerificationEmail(email: string, firstName?: string): Observable<{ success: boolean; alreadyVerified?: boolean }> {
+    return this.http.post<{ success: boolean; alreadyVerified?: boolean }>(
+      `${this.apiUrl}/auth/send-verification`,
+      { email: email.trim().toLowerCase(), firstName: firstName || undefined }
     );
   }
 
@@ -147,7 +169,7 @@ export class AuthService {
   }
 
   forgotPassword(email: string): Observable<void> {
-    return this.http.post<void>(`${this.apiUrl}/auth/forgot-password`, { email });
+    return this.http.post<void>(`${this.apiUrl}/auth/forgot-password`, { email: email.trim().toLowerCase() });
   }
 
   confirmPasswordReset(code: string, newPassword: string): Observable<void> {

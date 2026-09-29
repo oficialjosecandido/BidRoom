@@ -83,6 +83,13 @@
     padding-bottom: $spacing-1;
     border-bottom: 1px solid $border-gray;
   }
+
+  .section-hint {
+    font-size: 13px;
+    color: $text-gray;
+    margin: 0 0 $spacing-2;
+    line-height: 1.45;
+  }
 }
 
 .lang-tabs {

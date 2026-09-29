@@ -7,18 +7,31 @@
     <p class="message">
       {{ 'auth.checkEmail.sentTo' | translate }}
       @if (email) {
-<strong>{{ email }}</strong>
-}
-      @if (!email) {
-<span>{{ 'auth.checkEmail.yourEmail' | translate }}</span>
-}.
+        <strong>{{ email }}</strong>
+      } @else {
+        <span>{{ 'auth.checkEmail.yourEmail' | translate }}</span>
+      }.
     </p>
     <p class="instructions">
-      {{ 'auth.checkEmail.instructions' | translate }}
+      {{ 'auth.checkEmail.instruction' | translate }}
     </p>
     <p class="hint">
       {{ 'auth.checkEmail.hint' | translate }}
     </p>
+
+    @if (resendMessage) {
+      <p class="resend-ok">{{ resendMessage }}</p>
+    }
+    @if (resendError) {
+      <p class="resend-err">{{ resendError }}</p>
+    }
+
+    @if (email) {
+      <button type="button" class="resend-btn" (click)="resend()" [disabled]="resending">
+        {{ resending ? ('auth.checkEmail.resending' | translate) : ('auth.checkEmail.resend' | translate) }}
+      </button>
+    }
+
     <button type="button" class="login-btn" (click)="goToLogin()">
       {{ 'auth.verifyEmail.goToLogin' | translate }}
     </button>

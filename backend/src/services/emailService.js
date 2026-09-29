@@ -132,36 +132,33 @@ const sendEmail = async (to, subject, html, maxRetries = 3, retryDelay = 1000) =
   throw lastError;
 };
 
-const sendEmailVerification = async (email, firstName, verificationToken) => {
-  const verificationUrl = `${process.env.FRONTEND_URL || 'http://localhost:4200'}/auth/verify-email?token=${verificationToken}`;
-  
+const sendEmailVerification = async (email, firstName, verificationUrl) => {
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-      <h2 style="color: #333;">Welcome to BidRoom!</h2>
-      <p>Hi ${firstName},</p>
-      <p>Thank you for registering with BidRoom. Please click the link below to verify your email address:</p>
-      <a href="${verificationUrl}" style="display: inline-block; background-color: #007bff; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px;">Verify Email Address</a>
-      <p>If the button doesn't work, you can copy and paste this link into your browser:</p>
-      <p style="word-break: break-all; color: #666;">${verificationUrl}</p>
-      <p>This link will expire in 24 hours.</p>
-      <p>Best regards,<br>The BidRoom Team</p>
+      <div style="background: linear-gradient(135deg, #7A4F84 0%, #9b6ba8 100%); color: white; padding: 24px; text-align: center; border-radius: 8px 8px 0 0;">
+        <h1 style="margin: 0; font-size: 24px;">Confirm your email</h1>
+      </div>
+      <div style="background: #f9f9f9; padding: 24px; border-radius: 0 0 8px 8px;">
+        <p>Hi ${firstName || 'there'},</p>
+        <p>Welcome to BidRoom. Click the button below to verify your email and activate your account.</p>
+        <div style="text-align: center; margin: 28px 0;">
+          <a href="${verificationUrl}" style="display: inline-block; background: #7A4F84; color: #ffffff; padding: 14px 32px; text-decoration: none; border-radius: 8px; font-size: 15px; font-weight: 600;">Verify email</a>
+        </div>
+        <p style="font-size: 13px; color: #666;">If the button doesn't work, copy and paste this link into your browser:</p>
+        <p style="word-break: break-all; color: #888; font-size: 12px;">${verificationUrl}</p>
+        <p style="font-size: 13px; color: #999; margin-top: 24px;">If you didn't create a BidRoom account, you can ignore this email.</p>
+        <p>Best regards,<br>The BidRoom Team</p>
+      </div>
     </div>
   `;
 
-  // For development, print the verification link to console
   logger.info('\n🔗 EMAIL VERIFICATION LINK:');
   logger.info('=====================================');
   logger.info(`Email: ${email}`);
   logger.info(`Verification URL: ${verificationUrl}`);
   logger.info('=====================================\n');
 
-  // Still try to send email, but don't fail if it doesn't work
-  try {
-    return await sendEmail(email, 'Verify your BidRoom account', html);
-  } catch (error) {
-    logger.info('📧 Email sending failed, but verification link is available above');
-    return { messageId: 'console-only' };
-  }
+  return await sendEmail(email, 'Verify your BidRoom account', html);
 };
 
 const sendPasswordReset = async (email, firstName, resetUrl) => {

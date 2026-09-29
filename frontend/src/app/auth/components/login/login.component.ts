@@ -34,6 +34,8 @@ export class LoginComponent implements OnInit {
   errorMessage = '';
   returnUrl = '';
   showPassword = false;
+  /** Drives CTA buttons under the error banner (locale-independent). */
+  errorAction: 'not-found' | 'wrong-password' | 'not-verified' | null = null;
 
   constructor() {
     this.loginForm = this.fb.group({
@@ -45,36 +47,51 @@ export class LoginComponent implements OnInit {
   ngOnInit(): void {
     // Get return url from route parameters or default to dashboard home
     this.returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/dashboard/home';
-    
+
+    const prefill = this.route.snapshot.queryParams['email'];
+    if (prefill) {
+      this.loginForm.patchValue({ email: String(prefill).trim().toLowerCase() });
+    }
+
     // Check if redirected here due to unverified email
     if (this.route.snapshot.queryParams['verifyEmail'] === 'true') {
       this.errorMessage = this.translate.instant('auth.login.verifyEmailRequired');
+      this.errorAction = 'not-verified';
     }
   }
 
   onSubmit(): void {
-    if (this.loginForm.valid && !this.isLoading) {
-      this.isLoading = true;
-      this.errorMessage = '';
+    if (this.isLoading) return;
+    this.errorMessage = '';
+    this.errorAction = null;
 
-      this.authService.login(this.loginForm.value.email, this.loginForm.value.password).subscribe({
-        next: () => {
-          this.analytics.trackEvent(AnalyticsEvents.LOGIN, { method: 'email' });
-          this.isLoading = false;
-          this.routeAfterLogin();
-        },
-        error: (error) => {
-          this.isLoading = false;
-          this.errorMessage = this.getErrorMessage(error);
-        }
-      });
+    if (this.loginForm.invalid) {
+      this.loginForm.markAllAsTouched();
+      return;
     }
+
+    this.isLoading = true;
+    const email = String(this.loginForm.value.email || '').trim().toLowerCase();
+
+    this.authService.login(email, this.loginForm.value.password).subscribe({
+      next: () => {
+        this.analytics.trackEvent(AnalyticsEvents.LOGIN, { method: 'email' });
+        this.isLoading = false;
+        this.routeAfterLogin();
+      },
+      error: (error) => {
+        this.isLoading = false;
+        this.errorMessage = this.getErrorMessage(error);
+        this.errorAction = this.getErrorAction(error);
+      }
+    });
   }
 
   loginWithGoogle(): void {
     if (this.isLoading) return;
     this.isLoading = true;
     this.errorMessage = '';
+    this.errorAction = null;
     this.authService.loginWithGoogle().subscribe({
       next: () => {
         this.analytics.trackEvent(AnalyticsEvents.LOGIN, { method: 'google' });
@@ -109,7 +126,19 @@ export class LoginComponent implements OnInit {
   }
 
   navigateToForgotPassword(): void {
-    this.router.navigate(['/auth/forgot-password']);
+    this.router.navigate(['/auth/forgot-password'], {
+      queryParams: this.loginForm.value.email
+        ? { email: String(this.loginForm.value.email).trim().toLowerCase() }
+        : undefined
+    });
+  }
+
+  navigateToCheckEmail(): void {
+    this.router.navigate(['/auth/check-email'], {
+      queryParams: {
+        email: String(this.loginForm.value.email || '').trim().toLowerCase()
+      }
+    });
   }
 
   togglePasswordVisibility(): void {
@@ -129,6 +158,20 @@ export class LoginComponent implements OnInit {
     return '';
   }
 
+  getErrorAction(error: { code?: string }): 'not-found' | 'wrong-password' | 'not-verified' | null {
+    switch (error?.code) {
+      case 'auth/user-not-found':
+        return 'not-found';
+      case 'auth/wrong-password':
+      case 'auth/invalid-credential':
+        return 'wrong-password';
+      case 'auth/email-not-verified':
+        return 'not-verified';
+      default:
+        return null;
+    }
+  }
+
   getErrorMessage(error: { code?: string; message?: string }): string {
     const errorCode = error?.code || '';
 
@@ -137,7 +180,9 @@ export class LoginComponent implements OnInit {
         return this.translate.instant('auth.errors.userNotFound');
       case 'auth/wrong-password':
       case 'auth/invalid-credential':
-        return this.translate.instant('auth.errors.wrongPassword');
+        return this.translate.instant('auth.errors.wrongPasswordHint');
+      case 'auth/email-not-verified':
+        return this.translate.instant('auth.login.verifyEmailRequired');
       case 'auth/invalid-email':
         return this.translate.instant('auth.errors.invalidEmail');
       case 'auth/user-disabled':

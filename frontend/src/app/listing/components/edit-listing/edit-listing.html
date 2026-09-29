@@ -29,7 +29,7 @@
           <span class="info-icon">ℹ️</span>
           <div>
             <strong>Limited editing</strong>
-            <p>This listing is live with no bids. You can update the description, shipping, condition, and images. Title, category, pricing, and auction settings are locked.</p>
+            <p>This listing is live with no bids or offers. You can update the description, shipping, condition, images, Buy Now price, and (for Best Offer) the minimum offer price. Title, category, starting price, and auction format stay locked.</p>
           </div>
         </div>
       }
@@ -124,6 +124,45 @@
             }
           </div>
         </section>
+
+        @if (isAuctionListing) {
+          <section class="form-section">
+            <h2>Pricing</h2>
+            <p class="section-hint">
+              Starting price is fixed once the listing is live.
+              @if (pricesEditable) {
+                You can still change Buy Now
+                @if (isBestOffer) { and the minimum offer price }
+                while there are no bids or offers.
+              }
+            </p>
+
+            <div class="form-group locked-field">
+              <label>Starting price (€)</label>
+              <input type="number" [value]="listing.startingPrice" readonly />
+              <span class="locked-tag">Locked</span>
+            </div>
+
+            @if (isBestOffer) {
+              <div class="form-group" [class.locked-field]="!pricesEditable">
+                <label>Minimum offer price (€) <span class="req">*</span></label>
+                <input type="number" formControlName="minimumOfferPrice" min="0.01" step="0.01"
+                  [readonly]="!pricesEditable" />
+                @if (!pricesEditable) { <span class="locked-tag">Locked</span> }
+              </div>
+            }
+
+            <div class="form-group" [class.locked-field]="!pricesEditable">
+              <label>Buy Now price (€) <span class="hint">(optional)</span></label>
+              <input type="number" formControlName="buyNowPrice" min="0.01" step="0.01"
+                [readonly]="!pricesEditable" placeholder="Leave empty to disable" />
+              @if (!pricesEditable) { <span class="locked-tag">Locked</span> }
+              @if (pricesEditable && !isBestOffer) {
+                <span class="hint">Must be higher than the starting price (€{{ listing.startingPrice }}).</span>
+              }
+            </div>
+          </section>
+        }
 
         <!-- Specifications -->
         <section class="form-section">
