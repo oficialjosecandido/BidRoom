@@ -1,48 +1,71 @@
-<app-header></app-header>
+<div class="pg" [class.light]="isLight()">
 
-<main class="edit-listing-page">
-  <div class="page-container">
+  <nav>
+    <button type="button" class="back" (click)="navigateBack()">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M10 3L5 8l5 5"/></svg>
+      <span class="brand"><app-bidroom-logo [height]="28" /></span>
+    </button>
+    <div class="nav-r">
+      <button type="button" class="btn-th" (click)="toggleTheme()" [attr.aria-label]="'Toggle theme'">
+        {{ isLight() ? '☽' : '☀' }}
+      </button>
+      <a class="btn-go" routerLink="/dashboard">Dashboard</a>
+    </div>
+  </nav>
 
+  <div class="shell">
     @if (isLoading) {
       <div class="loading-state">Loading listing…</div>
     } @else if (errorMessage && !listing) {
-      <div class="error-banner">{{ errorMessage }}</div>
+      <div class="notice notice--err">{{ errorMessage }}</div>
     } @else if (listing) {
 
-      <div class="page-header">
-        <h1>Edit Listing</h1>
-        <div class="edit-mode-badge" [class]="'badge-' + editMode">{{ editModeLabel }}</div>
-      </div>
+      <header class="page-head">
+        <div class="page-head-text">
+          <p class="eyebrow">Seller tools</p>
+          <h1>Edit listing</h1>
+        </div>
+        <div class="mode-pill" [class]="'mode-' + editMode">{{ editModeLabel }}</div>
+      </header>
 
       @if (editMode === 'locked') {
-        <div class="locked-notice">
-          <span class="lock-icon">🔒</span>
+        <div class="notice notice--lock">
+          <div class="notice-icon" aria-hidden="true">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+              <rect x="5" y="11" width="14" height="10" rx="2"/>
+              <path d="M8 11V8a4 4 0 0 1 8 0v3"/>
+            </svg>
+          </div>
           <div>
             <strong>Editing is locked</strong>
-            <p>Bids have already been placed on this listing. No changes can be made to protect bidder trust.</p>
+            <p>Bids or offers have already been placed. No changes can be made, to protect bidder trust.</p>
           </div>
         </div>
       }
 
       @if (editMode === 'partial') {
-        <div class="partial-notice">
-          <span class="info-icon">ℹ️</span>
+        <div class="notice notice--info">
+          <div class="notice-icon" aria-hidden="true">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+              <circle cx="12" cy="12" r="9"/>
+              <path d="M12 8v.01M12 12v4"/>
+            </svg>
+          </div>
           <div>
             <strong>Limited editing</strong>
-            <p>This listing is live with no bids or offers. You can update the description, shipping, condition, images, starting price, Buy Now price, and (for Best Offer) the minimum offer price. Title, category, and auction format stay locked.</p>
+            <p>This listing is live with no bids or offers. You can update description, shipping, condition, images, starting price, Buy Now, and (for Best Offer) the minimum offer. Title, category, and auction format stay locked.</p>
           </div>
         </div>
       }
 
       @if (errorMessage) {
-        <div class="error-banner">{{ errorMessage }}</div>
+        <div class="notice notice--err">{{ errorMessage }}</div>
       }
 
-      <form [formGroup]="editForm" (ngSubmit)="onSubmit()" class="edit-form">
+      <form [formGroup]="editForm" (ngSubmit)="onSubmit()" class="main">
 
-        <!-- Title + description: one language at a time -->
-        <section class="form-section">
-          <h2>Listing Details</h2>
+        <section class="section">
+          <h2 class="section-title">Listing details</h2>
 
           <div class="lang-tabs" role="tablist">
             @for (tab of langTabs; track tab.code) {
@@ -72,63 +95,71 @@
 
           @for (tab of langTabs; track tab.code) {
             @if (activeLangTab === tab.code) {
-              <div class="form-group" [class.locked-field]="editMode !== 'full'">
-                <label>
+              <div class="field" [class.locked-field]="editMode !== 'full'">
+                <label class="field-label">
                   {{ 'addListing.listingTitle' | translate }}
                   @if (tab.code === primaryLangTab) { <span class="req">*</span> }
+                  @if (editMode !== 'full') { <span class="locked-chip">Locked</span> }
                 </label>
                 <input
+                  class="field-input"
                   type="text"
                   [formControlName]="'title' + (tab.code[0].toUpperCase() + tab.code.slice(1))"
                   [readonly]="editMode !== 'full'"
                   maxlength="80"
                   [placeholder]="tab.code === primaryLangTab ? '' : ('addListing.optionalTranslation' | translate)" />
-                @if (editMode !== 'full') { <span class="locked-tag">Locked</span> }
               </div>
 
-              <div class="form-group" [class.locked-field]="editMode === 'locked'">
-                <label>
+              <div class="field" [class.locked-field]="editMode === 'locked'">
+                <label class="field-label">
                   {{ 'addListing.description' | translate }}
                   @if (tab.code === primaryLangTab) {
                     <span class="req">*</span>
-                    <span class="hint">({{ 'addListing.descriptionMinChars' | translate }})</span>
+                    <span class="optional-tag">min. 50 chars</span>
                   }
+                  @if (editMode === 'locked') { <span class="locked-chip">Locked</span> }
                 </label>
                 <textarea
+                  class="field-textarea"
                   [formControlName]="'description' + (tab.code[0].toUpperCase() + tab.code.slice(1))"
                   rows="8"
                   [readonly]="editMode === 'locked'"
                   [placeholder]="tab.code === primaryLangTab ? '' : ('addListing.optionalTranslation' | translate)"></textarea>
-                @if (editMode === 'locked') { <span class="locked-tag">Locked</span> }
               </div>
             }
           }
 
-          <div class="form-group" [class.locked-field]="editMode !== 'full'">
-            <label>{{ 'addListing.category' | translate }}</label>
-            <input type="text" formControlName="category" [readonly]="editMode !== 'full'" />
-            @if (editMode !== 'full') { <span class="locked-tag">Locked</span> }
-          </div>
+          <div class="field-row">
+            <div class="field" [class.locked-field]="editMode !== 'full'">
+              <label class="field-label">
+                {{ 'addListing.category' | translate }}
+                @if (editMode !== 'full') { <span class="locked-chip">Locked</span> }
+              </label>
+              <input class="field-input" type="text" formControlName="category" [readonly]="editMode !== 'full'" />
+            </div>
 
-          <div class="form-group" [class.locked-field]="editMode === 'locked'">
-            <label>{{ 'addListing.condition' | translate }}</label>
-            @if (editMode !== 'locked') {
-              <select formControlName="condition">
-                @for (c of itemConditions; track c) {
-                  <option [value]="c">{{ c }}</option>
-                }
-              </select>
-            } @else {
-              <input type="text" formControlName="condition" readonly />
-              <span class="locked-tag">Locked</span>
-            }
+            <div class="field" [class.locked-field]="editMode === 'locked'">
+              <label class="field-label">
+                {{ 'addListing.condition' | translate }}
+                @if (editMode === 'locked') { <span class="locked-chip">Locked</span> }
+              </label>
+              @if (editMode !== 'locked') {
+                <select class="field-select" formControlName="condition">
+                  @for (c of itemConditions; track c) {
+                    <option [value]="c">{{ c }}</option>
+                  }
+                </select>
+              } @else {
+                <input class="field-input" type="text" formControlName="condition" readonly />
+              }
+            </div>
           </div>
         </section>
 
         @if (isAuctionListing) {
-          <section class="form-section">
-            <h2>Pricing</h2>
-            <p class="section-hint">
+          <section class="section">
+            <h2 class="section-title">Pricing</h2>
+            <p class="field-hint field-hint--block">
               @if (pricesEditable) {
                 You can change starting price, Buy Now
                 @if (isBestOffer) { and the minimum offer price }
@@ -138,56 +169,63 @@
               }
             </p>
 
-            <div class="form-group" [class.locked-field]="!pricesEditable">
-              <label>Starting price (€) <span class="req">*</span></label>
-              <input type="number" formControlName="startingPrice" min="0.01" step="0.01"
-                [readonly]="!pricesEditable" />
-              @if (!pricesEditable) { <span class="locked-tag">Locked</span> }
-            </div>
-
-            @if (isBestOffer) {
-              <div class="form-group" [class.locked-field]="!pricesEditable">
-                <label>Minimum offer price (€) <span class="req">*</span></label>
-                <input type="number" formControlName="minimumOfferPrice" min="0.01" step="0.01"
+            <div class="field-row">
+              <div class="field" [class.locked-field]="!pricesEditable">
+                <label class="field-label">
+                  Starting price (€) <span class="req">*</span>
+                  @if (!pricesEditable) { <span class="locked-chip">Locked</span> }
+                </label>
+                <input class="field-input" type="number" formControlName="startingPrice" min="0.01" step="0.01"
                   [readonly]="!pricesEditable" />
-                @if (!pricesEditable) { <span class="locked-tag">Locked</span> }
               </div>
-            }
 
-            <div class="form-group" [class.locked-field]="!pricesEditable">
-              <label>Buy Now price (€) <span class="hint">(optional)</span></label>
-              <input type="number" formControlName="buyNowPrice" min="0.01" step="0.01"
-                [readonly]="!pricesEditable" placeholder="Leave empty to disable" />
-              @if (!pricesEditable) { <span class="locked-tag">Locked</span> }
-              @if (pricesEditable && !isBestOffer) {
-                <span class="hint">Must be higher than the starting price.</span>
+              @if (isBestOffer) {
+                <div class="field" [class.locked-field]="!pricesEditable">
+                  <label class="field-label">
+                    Minimum offer (€) <span class="req">*</span>
+                    @if (!pricesEditable) { <span class="locked-chip">Locked</span> }
+                  </label>
+                  <input class="field-input" type="number" formControlName="minimumOfferPrice" min="0.01" step="0.01"
+                    [readonly]="!pricesEditable" />
+                </div>
               }
+
+              <div class="field" [class.locked-field]="!pricesEditable">
+                <label class="field-label">
+                  Buy Now (€)
+                  <span class="optional-tag">optional</span>
+                  @if (!pricesEditable) { <span class="locked-chip">Locked</span> }
+                </label>
+                <input class="field-input" type="number" formControlName="buyNowPrice" min="0.01" step="0.01"
+                  [readonly]="!pricesEditable" placeholder="Leave empty to disable" />
+                @if (pricesEditable && !isBestOffer) {
+                  <p class="field-hint">Must be higher than the starting price.</p>
+                }
+              </div>
             </div>
           </section>
         }
 
-        <!-- Specifications -->
-        <section class="form-section">
-          <h2>Specifications</h2>
-          <div formArrayName="specifications">
+        <section class="section">
+          <h2 class="section-title">Specifications</h2>
+          <div formArrayName="specifications" class="spec-list">
             @for (spec of specifications.controls; track $index; let i = $index) {
               <div [formGroupName]="i" class="spec-row">
-                <input type="text" formControlName="key"   placeholder="Key"   [readonly]="editMode === 'locked'" />
-                <input type="text" formControlName="value" placeholder="Value" [readonly]="editMode === 'locked'" />
+                <input class="field-input" type="text" formControlName="key"   placeholder="Key"   [readonly]="editMode === 'locked'" />
+                <input class="field-input" type="text" formControlName="value" placeholder="Value" [readonly]="editMode === 'locked'" />
                 @if (editMode !== 'locked') {
-                  <button type="button" class="btn-remove" (click)="removeSpecification(i)">✕</button>
+                  <button type="button" class="btn-icon" (click)="removeSpecification(i)" aria-label="Remove">✕</button>
                 }
               </div>
             }
           </div>
           @if (editMode !== 'locked') {
-            <button type="button" class="btn-secondary btn-sm" (click)="addSpecification()">+ Add specification</button>
+            <button type="button" class="btn-ghost" (click)="addSpecification()">+ Add specification</button>
           }
         </section>
 
-        <!-- Images -->
-        <section class="form-section">
-          <h2>Images</h2>
+        <section class="section">
+          <h2 class="section-title">Images</h2>
 
           @if (existingImageUrls.length > 0) {
             <div class="image-grid">
@@ -195,7 +233,7 @@
                 <div class="image-thumb">
                   <img [src]="url" alt="Listing image {{ i + 1 }}" />
                   @if (editMode !== 'locked') {
-                    <button type="button" class="remove-img-btn" (click)="removeExistingImage(i)">✕</button>
+                    <button type="button" class="remove-img-btn" (click)="removeExistingImage(i)" aria-label="Remove image">✕</button>
                   }
                 </div>
               }
@@ -203,19 +241,18 @@
           }
 
           @if (editMode !== 'locked') {
-            <div class="upload-area">
-              <label class="upload-label">
-                <input type="file" accept="image/*" multiple (change)="onFileSelected($event)" />
-                Add more photos
-              </label>
-            </div>
+            <label class="upload-zone">
+              <input type="file" accept="image/*" multiple (change)="onFileSelected($event)" />
+              <span class="upload-zone-title">Add more photos</span>
+              <span class="upload-zone-sub">JPG, PNG — drag or click to upload</span>
+            </label>
 
             @if (previewUrls.length > 0) {
               <div class="image-grid new-images">
                 @for (url of previewUrls; track $index; let i = $index) {
                   <div class="image-thumb">
                     <img [src]="url" alt="New image {{ i + 1 }}" />
-                    <button type="button" class="remove-img-btn" (click)="removeNewFile(i)">✕</button>
+                    <button type="button" class="remove-img-btn" (click)="removeNewFile(i)" aria-label="Remove image">✕</button>
                   </div>
                 }
               </div>
@@ -223,70 +260,75 @@
           }
         </section>
 
-        <!-- Location -->
-        <section class="form-section">
-          <h2>Location</h2>
-          <div class="form-row">
-            <div class="form-group" [class.locked-field]="editMode === 'locked'">
-              <label>City</label>
-              <input type="text" formControlName="locationCity" [readonly]="editMode === 'locked'" />
+        <section class="section">
+          <h2 class="section-title">Location</h2>
+          <div class="field-row">
+            <div class="field" [class.locked-field]="editMode === 'locked'">
+              <label class="field-label">City</label>
+              <input class="field-input" type="text" formControlName="locationCity" [readonly]="editMode === 'locked'" />
             </div>
-            <div class="form-group" [class.locked-field]="editMode === 'locked'">
-              <label>Country</label>
-              <input type="text" formControlName="locationCountry" [readonly]="editMode === 'locked'" />
+            <div class="field" [class.locked-field]="editMode === 'locked'">
+              <label class="field-label">Country</label>
+              <input class="field-input" type="text" formControlName="locationCountry" [readonly]="editMode === 'locked'" />
             </div>
           </div>
         </section>
 
-        <!-- Shipping & Returns -->
-        <section class="form-section">
-          <h2>Shipping &amp; Returns</h2>
+        <section class="section">
+          <h2 class="section-title">Shipping &amp; returns</h2>
 
-          <div class="form-group" [class.locked-field]="editMode === 'locked'">
-            <label>Shipping Option</label>
+          <div class="field" [class.locked-field]="editMode === 'locked'">
+            <label class="field-label">
+              Shipping option
+              @if (editMode === 'locked') { <span class="locked-chip">Locked</span> }
+            </label>
             @if (editMode !== 'locked') {
-              <select formControlName="shippingOption">
+              <select class="field-select" formControlName="shippingOption">
                 @for (opt of shippingOptions; track opt.value) {
                   <option [value]="opt.value">{{ opt.label }}</option>
                 }
               </select>
             } @else {
-              <input type="text" formControlName="shippingOption" readonly />
-              <span class="locked-tag">Locked</span>
+              <input class="field-input" type="text" formControlName="shippingOption" readonly />
             }
           </div>
 
-          <div class="form-group" [class.locked-field]="editMode === 'locked'">
-            <label>Shipping Cost (€)</label>
-            <input type="number" formControlName="shippingCost" min="0" [readonly]="editMode === 'locked'" />
-          </div>
+          @if (editForm.get('shippingOption')?.value === 'flat-rate') {
+            <div class="field" [class.locked-field]="editMode === 'locked'">
+              <label class="field-label">Shipping cost (€)</label>
+              <input class="field-input" type="number" formControlName="shippingCost" min="0" [readonly]="editMode === 'locked'" />
+            </div>
+          }
 
-          <div class="form-group" [class.locked-field]="editMode === 'locked'">
-            <label>Return Policy</label>
-            @if (editMode !== 'locked') {
-              <select formControlName="returnPolicy">
-                @for (p of returnPolicies; track p.value) {
-                  <option [value]="p.value">{{ p.label }}</option>
-                }
-              </select>
-            } @else {
-              <input type="text" formControlName="returnPolicy" readonly />
-              <span class="locked-tag">Locked</span>
-            }
-          </div>
+          <div class="field-row">
+            <div class="field" [class.locked-field]="editMode === 'locked'">
+              <label class="field-label">
+                Return policy
+                @if (editMode === 'locked') { <span class="locked-chip">Locked</span> }
+              </label>
+              @if (editMode !== 'locked') {
+                <select class="field-select" formControlName="returnPolicy">
+                  @for (p of returnPolicies; track p.value) {
+                    <option [value]="p.value">{{ p.label }}</option>
+                  }
+                </select>
+              } @else {
+                <input class="field-input" type="text" formControlName="returnPolicy" readonly />
+              }
+            </div>
 
-          <div class="form-group" [class.locked-field]="editMode === 'locked'">
-            <label>Handling Time (days)</label>
-            <input type="number" formControlName="handlingTime" min="1" max="30" [readonly]="editMode === 'locked'" />
+            <div class="field" [class.locked-field]="editMode === 'locked'">
+              <label class="field-label">Handling time (days)</label>
+              <input class="field-input" type="number" formControlName="handlingTime" min="1" max="30" [readonly]="editMode === 'locked'" />
+            </div>
           </div>
         </section>
 
-        <!-- Submit -->
         @if (editMode !== 'locked') {
           <div class="form-actions">
-            <button type="button" class="btn-secondary" [routerLink]="['/listing', listing.slug]">Cancel</button>
-            <button type="submit" class="btn-primary" [disabled]="isSubmitting || isUploadingImages">
-              {{ isSubmitting ? 'Saving…' : 'Save Changes' }}
+            <a class="btn-ghost" [routerLink]="['/listing', listing.slug]">Cancel</a>
+            <button type="submit" class="btn-go btn-go-lg" [disabled]="isSubmitting || isUploadingImages">
+              {{ isSubmitting ? 'Saving…' : 'Save changes' }}
             </button>
           </div>
         }
@@ -294,6 +336,4 @@
       </form>
     }
   </div>
-</main>
-
-<app-footer></app-footer>
+</div>

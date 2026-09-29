@@ -27,8 +27,11 @@ function emitToListingAndPrivateRoom(io, listingId, event, payload) {
 router.get('/listings/:id/bidders', authenticateToken, async (req, res) => {
   try {
     const listingId = req.params.id;
-    const listing = await Listing.findById(listingId).populate('seller');
-    
+    // Only the two fields the ownership check below reads. A bare populate('seller')
+    // pulls the whole Customer document — email, kycStatus, Stripe account ids —
+    // into a handler that runs for every room participant.
+    const listing = await Listing.findById(listingId).populate('seller', '_id uid');
+
     if (!listing) {
       return res.status(404).json({ error: 'Listing not found' });
     }
@@ -157,7 +160,9 @@ router.post('/listings/:id/platinum-bidders', authenticateToken, requireActiveAc
       return res.status(400).json({ error: 'Maximum 5 Platinum Bidders allowed' });
     }
 
-    const listing = await Listing.findById(listingId).populate('seller');
+    // Only the id, which is all the ownership check below needs — never the
+    // whole Customer document.
+    const listing = await Listing.findById(listingId).populate('seller', '_id');
     
     if (!listing) {
       return res.status(404).json({ error: 'Listing not found' });
@@ -249,8 +254,10 @@ router.post('/listings/:id/platinum-bidders', authenticateToken, requireActiveAc
       }
     }, { runValidators: false });
 
+    // The two mail helpers below re-fetch the seller themselves, so the id is
+    // all they need from here.
     const updatedListing = await Listing.findById(listingId)
-      .populate('seller')
+      .populate('seller', '_id')
       .populate('platinumBidderInvitations.bidder', 'email firstName lastName');
     if (!updatedListing) return res.status(500).json({ error: 'Listing not found after update' });
 
@@ -307,7 +314,9 @@ router.post('/listings/:id/platinum-bidders', authenticateToken, requireActiveAc
 router.post('/listings/:id/start-now', authenticateToken, async (req, res) => {
   try {
     const listingId = req.params.id;
-    const listing = await Listing.findById(listingId).populate('seller');
+    // Only the id, which is all the ownership check below needs — never the
+    // whole Customer document.
+    const listing = await Listing.findById(listingId).populate('seller', '_id');
 
     if (!listing) {
       return res.status(404).json({ error: 'Listing not found' });
@@ -350,7 +359,8 @@ router.post('/listings/:id/start-now', authenticateToken, async (req, res) => {
       bidCount: listing.bidCount || 0
     });
 
-    const updated = await Listing.findById(listingId).populate('seller', 'firstName lastName email');
+    // The response below is hand-built and carries no seller fields at all.
+    const updated = await Listing.findById(listingId).populate('seller', '_id');
     res.json({
       success: true,
       message: 'Private room started',
@@ -375,7 +385,9 @@ router.post('/listings/:id/start-now', authenticateToken, async (req, res) => {
 router.post('/listings/:id/seller-leave', authenticateToken, async (req, res) => {
   try {
     const listingId = req.params.id;
-    const listing = await Listing.findById(listingId).populate('seller');
+    // Only the id, which is all the ownership check below needs — never the
+    // whole Customer document.
+    const listing = await Listing.findById(listingId).populate('seller', '_id');
 
     if (!listing) {
       return res.status(404).json({ error: 'Listing not found' });

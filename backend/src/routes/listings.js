@@ -43,6 +43,7 @@ const { formatBidPublic } = require('../utils/bidFormat');
 const { createLimiter, clientKey, guestOnly } = require('../middleware/rateLimiters');
 const { issueGuestSession } = require('../utils/guestSession');
 const { resolveGuestSeller, GuestSellerError } = require('../services/guestSellerService');
+const { resolveCustomerForToken, handleAccountClaimError } = require('../services/accountClaimService');
 
 const router = express.Router();
 
@@ -1250,30 +1251,11 @@ router.post(
         throw err;
       }
     } else {
-      // Find or create user in database from Firebase UID
-      user = await Customer.findOne({ uid: req.user.uid });
-      if (!user) {
-        // If user doesn't exist, create one
-        // Parse name from Firebase user
-        const nameParts = req.user.name?.split(' ') || [];
-        const firstName = nameParts[0] || 'User';
-        const lastName = nameParts.slice(1).join(' ') || 'User'; // Use 'User' as default if no lastName
-
-        user = new Customer({
-          uid: req.user.uid,
-          email: req.user.email,
-          firstName: firstName,
-          lastName: lastName,
-          isActive: true,
-          emailVerified: req.user.emailVerified || false
-        });
+      user = await resolveCustomerForToken(req.user);
+      // Keep the stored flag in step with the token.
+      if (req.user.emailVerified !== undefined && user.emailVerified !== req.user.emailVerified) {
+        user.emailVerified = req.user.emailVerified;
         await user.save();
-      } else {
-        // Update email verification status if changed
-        if (req.user.emailVerified !== undefined && user.emailVerified !== req.user.emailVerified) {
-          user.emailVerified = req.user.emailVerified;
-          await user.save();
-        }
       }
     }
 
@@ -1494,6 +1476,16 @@ router.post(
       }
     }
 
+    // Best-offer has no auction starting bid in the form — use the minimum as
+    // starting/current so the listing never goes live with price 0 (which made
+    // offer floors and UI fall back to €0 / €1).
+    const bestOfferMin = !isGiveaway && listingFormat === 'best-offer'
+      ? parseFloat(minimumOfferPrice)
+      : null;
+    const resolvedStartingPrice = isAuction
+      ? parseFloat(startingPrice)
+      : (bestOfferMin != null ? bestOfferMin : 0);
+
     // Validate shipping cost for flat-rate
     if (shippingOption === 'flat-rate' && (!shippingCost || shippingCost < 0)) {
       return res.status(400).json({ error: 'Shipping cost is required for flat-rate shipping' });
@@ -1665,8 +1657,8 @@ router.post(
       // (status: ended, winner: null) can't distinguish "unsold" from "sold via offer" — restrict to auctions.
       autoRelist: isAuction && autoRelist === true,
       durationSlot,
-      startingPrice: isAuction ? parseFloat(startingPrice) : 0,
-      currentPrice: isAuction ? parseFloat(startingPrice) : 0,
+      startingPrice: resolvedStartingPrice,
+      currentPrice: resolvedStartingPrice,
       // Every way of paying for the item is switched off on a giveaway. Free
       // entry is the one thing that keeps this a contest and not a lottery, so
       // it is enforced here rather than left to the caller not to send a price.
@@ -1836,8 +1828,9 @@ router.post(
       })
     });
   } catch (error) {
+    if (handleAccountClaimError(res, error)) return;
     logger.error('Error creating listing:', error);
-    
+
     // Handle Mongoose validation errors
     if (error.name === 'ValidationError') {
       const errors = Object.values(error.errors).map(err => err.message);
@@ -2022,6 +2015,12 @@ router.patch('/:id', authenticateToken, requireActiveAccount, async (req, res) =
           });
         }
         updates.minimumOfferPrice = min;
+        // When the seller only changes the min (or starting was still 0 from
+        // legacy creates), keep starting/current aligned with the floor.
+        if (!('startingPrice' in updates) || updates.startingPrice < min) {
+          updates.startingPrice = min;
+          updates.currentPrice = min;
+        }
       }
     }
 
@@ -2680,49 +2679,10 @@ router.get('/:id/bids', authenticateToken, async (req, res) => {
 // GET /api/listings/seller/my-listings - Get all listings for the authenticated seller
 router.get('/seller/my-listings', authenticateToken, async (req, res) => {
   try {
-    let user = await Customer.findOne({ uid: req.user.uid });
-
-    if (!user && req.user.email) {
-      const email = req.user.email.toLowerCase().trim();
-      user = await Customer.findOne({ email });
-      if (user) {
-        await Customer.updateOne(
-          { _id: user._id },
-          { $set: { uid: req.user.uid, emailVerified: req.user.emailVerified ?? true } }
-        );
-        user = await Customer.findById(user._id);
-      }
-    }
-
-    if (!user) {
-      const nameParts = (req.user.name || '').split(' ').filter(Boolean);
-      const firstName = nameParts[0] || 'User';
-      const lastName = nameParts.slice(1).join(' ') || 'User';
-      user = new Customer({
-        uid: req.user.uid,
-        email: req.user.email || '',
-        firstName,
-        lastName,
-        isActive: true,
-        emailVerified: req.user.emailVerified ?? false
-      });
-      try {
-        await user.save();
-      } catch (err) {
-        if (err.code === 11000 && req.user.email) {
-          user = await Customer.findOne({ email: (req.user.email || '').toLowerCase().trim() });
-          if (user) {
-            await Customer.updateOne(
-              { _id: user._id },
-              { $set: { uid: req.user.uid, emailVerified: req.user.emailVerified ?? true } }
-            );
-            user = await Customer.findById(user._id);
-          }
-        } else {
-          throw err;
-        }
-      }
-    }
+    // This is where a guest seller's listings surface after they sign up: the
+    // stub Customer holding their email is adopted, keeping its _id, and the
+    // query below finds everything already pointing at it.
+    const user = await resolveCustomerForToken(req.user);
 
     const listings = await Listing.find({ seller: user._id })
       .populate('platinumBidders', 'firstName lastName email')
@@ -2789,6 +2749,7 @@ router.get('/seller/my-listings', authenticateToken, async (req, res) => {
       total: enhancedListings.length
     });
   } catch (error) {
+    if (handleAccountClaimError(res, error)) return;
     logger.error('Error fetching seller listings:', error);
     res.status(500).json({
       error: 'Failed to fetch listings',

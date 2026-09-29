@@ -911,13 +911,15 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
     return current + increment;
   }
 
-  /** True if the current user is the listing seller (match by email). */
+  /**
+   * True if the current user is the listing seller.
+   *
+   * Answered by the API. This used to compare the viewer's email against the
+   * seller's, read through an `as { email?: string }` cast — which is why the
+   * seller's address had to be in the payload of a page every participant opens.
+   */
   get isSeller(): boolean {
-    if (!this.currentUser?.email || !this.listing?.seller) return false;
-    const seller = this.listing.seller as { email?: string };
-    const sellerEmail = (seller.email || '').toLowerCase();
-    const userEmail = (this.currentUser.email || '').toLowerCase();
-    return !!sellerEmail && !!userEmail && sellerEmail === userEmail;
+    return this.listing?.viewerIsSeller === true;
   }
 
   /** Display name of the listing seller (for the participants panel). */

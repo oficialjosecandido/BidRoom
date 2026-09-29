@@ -3,6 +3,7 @@ const { authenticateToken } = require('../middleware/auth');
 const Customer = require('../models/Customer');
 const { getTrustBadges } = require('../services/reputationService');
 const { getReviewScoresForUser } = require('../services/reviewService');
+const { resolveCustomerForToken, handleAccountClaimError } = require('../services/accountClaimService');
 const { sendPasswordReset, sendEmailVerification } = require('../services/emailService');
 const admin = require('../config/firebaseAdmin');
 const logger = require('../utils/logger');
@@ -73,29 +74,15 @@ router.get('/me', authenticateToken, async (req, res) => {
 router.get('/customer', authenticateToken, async (req, res) => {
   try {
     const selectFields = '_id uid email firstName lastName emailVerified isActive accountStatus hasDeposit depositAmount reputationScore disputeLossCount successfulTransactionCount lastLogin createdAt';
-    let dbUser = await Customer.findOne({ uid: req.user.uid })
-      .select(selectFields)
-      .lean();
 
-    if (!dbUser) {
-      const nameParts = (req.user.name || '').split(' ').filter(Boolean);
-      const firstName = nameParts[0] || 'User';
-      const lastName = nameParts.slice(1).join(' ') || 'User';
-      const newUser = new Customer({
-        uid: req.user.uid,
-        email: req.user.email || '',
-        firstName,
-        lastName,
-        isActive: true,
-        emailVerified: req.user.emailVerified ?? false
-      });
-      await newUser.save();
-      dbUser = await Customer.findById(newUser._id)
-        .select(selectFields)
-        .lean();
-    } else {
-      await Customer.updateOne({ uid: req.user.uid }, { lastLogin: new Date() });
-    }
+    // An account provisioned by Nexus or by the guest listing form already holds
+    // this email, and Customer.email is unique — so it is adopted here, not
+    // duplicated. That is what puts a guest's listings in their dashboard:
+    // Listing.seller points at a _id that adoption leaves untouched.
+    const resolved = await resolveCustomerForToken(req.user);
+    await Customer.updateOne({ _id: resolved._id }, { lastLogin: new Date() });
+
+    const dbUser = await Customer.findById(resolved._id).select(selectFields).lean();
 
     const [badges, reviewScores] = await Promise.all([
       getTrustBadges(dbUser),
@@ -110,6 +97,7 @@ router.get('/customer', authenticateToken, async (req, res) => {
       reputationScore: dbUser.reputationScore ?? 100
     });
   } catch (error) {
+    if (handleAccountClaimError(res, error)) return;
     logger.error('Error fetching customer:', error);
     res.status(500).json({
       error: 'Failed to load customer information',

@@ -13,6 +13,7 @@ import { FeatureFlagsService } from '../../../shared/services/feature-flags.serv
 import { SocketService } from '../../../shared/services/socket.service';
 import { TransactionsService } from '../../../shared/services/transactions.service';
 import { BuyerPaymentService } from '../../../shared/services/buyer-payment.service';
+import { StripeConnectService } from '../../../shared/services/stripe-connect.service';
 import { DashboardAnalyticsComponent } from '../dashboard-analytics/dashboard-analytics.component';
 import { Observable, Subscription } from 'rxjs';
 
@@ -52,6 +53,7 @@ export class DashboardHomeComponent implements OnInit, OnDestroy {
   private translate = inject(TranslateService);
   private transactionsService = inject(TransactionsService);
   private buyerPaymentService = inject(BuyerPaymentService);
+  private stripeConnect = inject(StripeConnectService);
 
   private socketSubscriptions: Subscription[] = [];
   private joinedListingIds: string[] = [];
@@ -584,6 +586,11 @@ export class DashboardHomeComponent implements OnInit, OnDestroy {
         this.sellerScore = info.sellerScore ?? null;
         this.buyerReviewCount = info.buyerReviewCount ?? 0;
         this.sellerReviewCount = info.sellerReviewCount ?? 0;
+        // Profile flag can lag Stripe (webhook miss). Re-sync so the payout
+        // banner clears once charges_enabled is true.
+        if (!info.stripeConnectOnboarded) {
+          this.syncPayoutStatusFromStripe();
+        }
       },
       error: () => {
         this.balance = 0;
@@ -593,6 +600,17 @@ export class DashboardHomeComponent implements OnInit, OnDestroy {
         this.buyerReviewCount = 0;
         this.sellerReviewCount = 0;
       }
+    });
+  }
+
+  private syncPayoutStatusFromStripe(): void {
+    this.stripeConnect.getAccountStatus().subscribe({
+      next: (status) => {
+        if (this.customer && status?.onboarded) {
+          this.customer = { ...this.customer, stripeConnectOnboarded: true };
+        }
+      },
+      error: () => {}
     });
   }
 

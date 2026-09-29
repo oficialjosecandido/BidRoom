@@ -4,6 +4,7 @@ const Listing = require('../models/Listing');
 const Customer = require('../models/Customer');
 const { authenticateToken, optionalAuth, requireActiveAccountIfAuthenticated, requireNoDisputeRestrictionIfAuthenticated } = require('../middleware/auth');
 const { createTransactionForAcceptedOffer } = require('../services/transactionService');
+const { resolveCustomerForToken, handleAccountClaimError } = require('../services/accountClaimService');
 const {
   logOfferReceived,
   logMultipleOffers,
@@ -127,26 +128,10 @@ async function createOffer(req, res) {
     let offererEmail = null;
 
     if (req.isAuthenticated && req.user) {
-      // Find or create user
-      user = await Customer.findOne({ uid: req.user.uid });
-      if (!user) {
-        const nameParts = req.user.name?.split(' ') || [];
-        const firstName = nameParts[0] || 'User';
-        const lastName = nameParts.slice(1).join(' ') || 'User';
-        user = new Customer({
-          uid: req.user.uid,
-          email: req.user.email,
-          firstName,
-          lastName,
-          isActive: true,
-          emailVerified: req.user.emailVerified || false
-        });
+      user = await resolveCustomerForToken(req.user);
+      if (req.user.emailVerified !== undefined && user.emailVerified !== req.user.emailVerified) {
+        user.emailVerified = req.user.emailVerified;
         await user.save();
-      } else {
-        if (req.user.emailVerified !== undefined && user.emailVerified !== req.user.emailVerified) {
-          user.emailVerified = req.user.emailVerified;
-          await user.save();
-        }
       }
     } else {
       // Guest: email required
@@ -368,6 +353,7 @@ router.post('/', optionalAuth, requireActiveAccountIfAuthenticated, requireNoDis
   }, OFFER_CREATE_TIMEOUT_MS);
   res.once('finish', () => clearTimeout(timeoutId));
   createOffer(req, res).catch((err) => {
+    if (!res.headersSent && handleAccountClaimError(res, err)) return;
     logger.error('Error creating offer:', err);
     if (!res.headersSent) {
       res.status(400).json({

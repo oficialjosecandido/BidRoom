@@ -38,11 +38,34 @@ const listing = (overrides = {}) => ({
 /** Routes Graph API calls by URL; `fail` makes a matching call return a Graph error. */
 function mockGraph({ fail = {} } = {}) {
   const calls = [];
+  // 100×100 JPEG — valid IG aspect, so prepareIgImageUrl returns the source URL.
+  let squareJpegPromise;
+  const squareJpeg = async () => {
+    if (!squareJpegPromise) {
+      const sharp = require('sharp');
+      squareJpegPromise = sharp({
+        create: { width: 100, height: 100, channels: 3, background: { r: 20, g: 20, b: 20 } }
+      }).jpeg().toBuffer();
+    }
+    return squareJpegPromise;
+  };
+
   global.fetch = jest.fn(async (url, init = {}) => {
     const href = String(url);
-    const body = init.body ? JSON.parse(init.body) : null;
+    const isGraph = href.includes('graph.facebook.com');
+    const body = init.body && isGraph ? JSON.parse(init.body) : null;
     calls.push({ href, body });
-    const reply = data => ({ json: async () => data });
+    const reply = data => ({ ok: true, json: async () => data });
+
+    // Listing images fetched for IG aspect prep (not Graph API).
+    if (!isGraph && (/bidroom\.blob|\/a\.jpg|\.jpe?g|\.png|\.webp/i.test(href))) {
+      const buf = await squareJpeg();
+      return {
+        ok: true,
+        arrayBuffer: async () => buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength),
+        headers: { get: () => 'image/jpeg' }
+      };
+    }
 
     if (href.endsWith('v21.0/')) return reply({ id: body.id }); // link preview refresh
     if (href.endsWith('/PAGE/feed')) {

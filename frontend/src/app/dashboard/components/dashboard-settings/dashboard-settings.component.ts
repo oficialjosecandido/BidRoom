@@ -1,6 +1,8 @@
-import { Component, OnInit, OnDestroy, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, DestroyRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute, Router } from '@angular/router';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { AuthService, AppUser } from '../../../auth/services/auth.service';
 import { CustomerService, SellerCompliance, SellerPaymentConfig } from '../../../shared/services/customer.service';
@@ -31,6 +33,9 @@ export class DashboardSettingsComponent implements OnInit, OnDestroy {
   private buyerPaymentService = inject(BuyerPaymentService);
   private listingsService = inject(ListingsService);
   private postHog = inject(PostHogService);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private destroyRef = inject(DestroyRef);
 
   private sellerListingCount = 0;
 
@@ -202,6 +207,24 @@ export class DashboardSettingsComponent implements OnInit, OnDestroy {
     this.loadPaymentMethod();
     this.loadSellerListingCount();
     this.loadPaymentConfig();
+
+    // Stripe Account Link returns here with ?connect=return|refresh — re-sync
+    // from Stripe so stripeConnectOnboarded (and the home banner) update.
+    this.route.queryParams.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(params => {
+      const connect = params['connect'];
+      if (connect !== 'return' && connect !== 'refresh') return;
+      this.loadConnectStatus((status) => {
+        this.connectStatusMessage = status?.onboarded
+          ? this.translate.instant('dashboard.settings.payoutNowActive')
+          : this.translate.instant('dashboard.settings.detailsSubmitted');
+        this.router.navigate([], {
+          relativeTo: this.route,
+          queryParams: { connect: null },
+          queryParamsHandling: 'merge',
+          replaceUrl: true
+        });
+      });
+    });
   }
 
   /** Has listed at least one item (active or ended), same rule as dashboard home. */
@@ -426,7 +449,7 @@ export class DashboardSettingsComponent implements OnInit, OnDestroy {
     });
   }
 
-  loadConnectStatus(): void {
+  loadConnectStatus(onDone?: (status: ConnectAccountStatus | null) => void): void {
     this.connectLoading = true;
     this.stripeConnect.getAccountStatus().subscribe({
       next: (status) => {
@@ -435,8 +458,12 @@ export class DashboardSettingsComponent implements OnInit, OnDestroy {
         // or as trader contact details is not asked for it again here.
         this.phoneRequired = status.phoneOnFile === false;
         this.connectLoading = false;
+        onDone?.(status);
       },
-      error: () => { this.connectLoading = false; }
+      error: () => {
+        this.connectLoading = false;
+        onDone?.(null);
+      }
     });
   }
 

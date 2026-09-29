@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, computed, inject } from '@angular/core';
 import { FormBuilder, FormGroup, FormArray, Validators, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
@@ -7,8 +7,8 @@ import { HttpClient } from '@angular/common/http';
 import { TranslateModule } from '@ngx-translate/core';
 import { ListingsService, Listing } from '../../../shared/services/listings.service';
 import { API_CONFIG } from '../../../shared/config/api.config';
-import { HeaderComponent } from '../../../shared/components/header/header.component';
-import { FooterComponent } from '../../../shared/components/footer/footer.component';
+import { BidroomLogoComponent } from '../../../shared/components/bidroom-logo/bidroom-logo.component';
+import { ThemeService } from '../../../shared/services/theme.service';
 
 export type EditMode = 'full' | 'partial' | 'locked';
 type LangCode = 'pt' | 'en' | 'fr' | 'es';
@@ -16,7 +16,7 @@ type LangCode = 'pt' | 'en' | 'fr' | 'es';
 @Component({
   selector: 'app-edit-listing',
   standalone: true,
-  imports: [ReactiveFormsModule, TranslateModule, RouterLink, HeaderComponent, FooterComponent],
+  imports: [ReactiveFormsModule, TranslateModule, RouterLink, BidroomLogoComponent],
   templateUrl: './edit-listing.html',
   styleUrl: './edit-listing.scss'
 })
@@ -26,6 +26,9 @@ export class EditListing implements OnInit {
   private router = inject(Router);
   private listingsService = inject(ListingsService);
   private http = inject(HttpClient);
+  private themeService = inject(ThemeService);
+
+  readonly isLight = computed(() => this.themeService.effective() === 'light');
 
   listing: Listing | null = null;
   editMode: EditMode = 'locked';
@@ -67,6 +70,19 @@ export class EditListing implements OnInit {
     'New', 'Used - Excellent', 'Used - Very Good', 'Used - Good',
     'Used - Fair', 'For Parts or Not Working'
   ];
+
+  toggleTheme(): void {
+    const eff = this.themeService.effective();
+    this.themeService.setPreference(eff === 'dark' ? 'light' : 'dark');
+  }
+
+  navigateBack(): void {
+    if (this.listing?.slug) {
+      this.router.navigate(['/listing', this.listing.slug]);
+      return;
+    }
+    this.router.navigate(['/dashboard']);
+  }
 
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id');
@@ -303,7 +319,7 @@ export class EditListing implements OnInit {
         locationCity:    raw.locationCity,
         locationCountry: raw.locationCountry,
         shippingOption:  raw.shippingOption,
-        shippingCost:    raw.shippingCost,
+        shippingCost:    raw.shippingOption === 'flat-rate' ? (raw.shippingCost ?? 0) : 0,
         returnPolicy:    raw.returnPolicy,
         handlingTime:    raw.handlingTime,
         specifications:  raw.specifications,

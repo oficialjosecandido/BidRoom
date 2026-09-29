@@ -18,11 +18,21 @@
 const Listing = require('../models/Listing');
 const { publicBaseUrl } = require('../utils/publicUrls');
 const logger = require('../utils/logger');
+const sharp = require('sharp');
+const azureStorageService = require('./azureStorage.service');
 
 /** API limit: a carousel takes between 2 and 10 items. */
 const IG_CAROUSEL_MAX = 10;
 const EXCERPT_MAX = 180;
 const REQUEST_TIMEOUT_MS = 30000;
+
+/**
+ * Instagram feed accepts aspect ratios between 4:5 (0.8) and 1.91:1.
+ * Outside that range the Graph API returns "The aspect ratio is not supported."
+ */
+const IG_ASPECT_MIN = 0.8;
+const IG_ASPECT_MAX = 1.91;
+const IG_MAX_EDGE = 1440;
 
 /** Read on every call so scripts that load dotenv after requiring this still work. */
 function metaConfig() {
@@ -210,6 +220,94 @@ function publishableImages(listing) {
     .filter(url => /^https:\/\//i.test(url) && !/placeholder\.com/i.test(url));
 }
 
+/**
+ * Centre-crop (and optionally downscale) so the image fits Instagram's
+ * allowed aspect window, then upload a JPEG Instagram can fetch.
+ *
+ * Returns the original URL when the ratio is already valid and fetch/upload
+ * is unnecessary; on any prep failure, returns the original URL so publish
+ * still attempts (and surfaces Meta's error if it still fails).
+ */
+async function prepareIgImageUrl(sourceUrl) {
+  try {
+    const res = await fetch(sourceUrl, { signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS) });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const input = Buffer.from(await res.arrayBuffer());
+    if (!input.length) throw new Error('empty image body');
+
+    const meta = await sharp(input, { failOn: 'none' }).rotate().metadata();
+    const width = meta.width || 0;
+    const height = meta.height || 0;
+    if (!width || !height) throw new Error('could not read image dimensions');
+
+    const aspect = width / height;
+    const needsCrop = aspect < IG_ASPECT_MIN - 0.001 || aspect > IG_ASPECT_MAX + 0.001;
+    const needsEncode = !['jpeg', 'jpg', 'png'].includes(String(meta.format || '').toLowerCase());
+
+    if (!needsCrop && !needsEncode) {
+      return sourceUrl;
+    }
+
+    let pipeline = sharp(input, { failOn: 'none' }).rotate();
+
+    if (needsCrop) {
+      let cropW = width;
+      let cropH = height;
+      if (aspect < IG_ASPECT_MIN) {
+        // Too tall → crop height to 4:5
+        cropH = Math.round(width / IG_ASPECT_MIN);
+      } else {
+        // Too wide → crop width to 1.91:1
+        cropW = Math.round(height * IG_ASPECT_MAX);
+      }
+      const left = Math.max(0, Math.floor((width - cropW) / 2));
+      const top = Math.max(0, Math.floor((height - cropH) / 2));
+      pipeline = pipeline.extract({
+        left,
+        top,
+        width: Math.min(cropW, width - left),
+        height: Math.min(cropH, height - top)
+      });
+    }
+
+    pipeline = pipeline.resize({
+      width: IG_MAX_EDGE,
+      height: IG_MAX_EDGE,
+      fit: 'inside',
+      withoutEnlargement: true
+    });
+
+    const jpeg = await pipeline.jpeg({ quality: 88, mozjpeg: true }).toBuffer();
+
+    if (!azureStorageService.containerClient) {
+      logger.warn('[social] Azure Storage not configured — cannot re-upload IG-compatible image');
+      return sourceUrl;
+    }
+
+    const blobName = `social-ig/${require('uuid').v4()}.jpg`;
+    const client = azureStorageService.containerClient.getBlockBlobClient(blobName);
+    await client.upload(jpeg, jpeg.length, {
+      blobHTTPHeaders: {
+        blobContentType: 'image/jpeg',
+        blobCacheControl: 'public, max-age=86400'
+      }
+    });
+    logger.info(`[social] IG image prepared ${needsCrop ? 'cropped' : 're-encoded'} → ${blobName}`);
+    return client.url;
+  } catch (err) {
+    logger.warn(`[social] IG image prep skipped for ${sourceUrl}: ${err.message}`);
+    return sourceUrl;
+  }
+}
+
+async function prepareIgImageUrls(urls) {
+  const out = [];
+  for (const url of urls) {
+    out.push(await prepareIgImageUrl(url));
+  }
+  return out;
+}
+
 async function postToFacebook(listing, message) {
   const { graph, pageId, pageToken } = metaConfig();
   if (!pageId || !pageToken) throw new Error('Facebook — FB_PAGE_ID or PAGE_ACCESS_TOKEN is not set.');
@@ -310,7 +408,7 @@ async function postToInstagram(listing, message, { onImageReady = () => {} } = {
   const images = publishableImages(listing);
   if (images.length === 0) throw new Error('Instagram — no image with a public https URL.');
 
-  const selected = images.slice(0, IG_CAROUSEL_MAX);
+  const selected = await prepareIgImageUrls(images.slice(0, IG_CAROUSEL_MAX));
 
   // A carousel needs at least two items; with one image the post must be a
   // plain one or the API rejects it.
@@ -638,6 +736,8 @@ async function requestPublish(listingId, platform, { repost = false, requestedBy
 
 module.exports = {
   IG_CAROUSEL_MAX,
+  IG_ASPECT_MIN,
+  IG_ASPECT_MAX,
   PLATFORMS,
   STALE_PUBLISH_MS,
   SocialPublishError,
@@ -646,6 +746,7 @@ module.exports = {
   listingBrand,
   buildHashtags,
   publishableImages,
+  prepareIgImageUrl,
   postToFacebook,
   postToInstagram,
   nonProductionDatabase,

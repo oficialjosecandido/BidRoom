@@ -2,6 +2,7 @@ const express = require('express');
 const { authenticateToken, requireActiveAccount } = require('../middleware/auth');
 const Customer = require('../models/Customer');
 const { getReviewScoresForUser } = require('../services/reviewService');
+const { resolveCustomerForToken, handleAccountClaimError } = require('../services/accountClaimService');
 const { appendModerationAudit } = require('../services/moderationAuditService');
 const { getClientIp } = require('../middleware/bidRateLimiter');
 const logger = require('../utils/logger');
@@ -15,60 +16,31 @@ const router = express.Router();
  */
 router.get('/profile', authenticateToken, async (req, res) => {
   try {
-    const { uid, email, name, emailVerified } = req.user;
+    const { uid, name } = req.user;
     const nameParts = (name || '').split(' ').filter(Boolean);
-    const firstName = nameParts[0] || 'User';
-    const lastName = nameParts.slice(1).join(' ') || 'User';
+    // Null, not 'User', when Firebase has no display name: these values refresh
+    // an existing profile below, and a placeholder must never overwrite a real
+    // name — least of all a claimed seller's, printed on their live listings.
+    const firstName = nameParts[0] || null;
+    const lastName = nameParts.slice(1).join(' ') || null;
 
-    let customer = await Customer.findOne({ uid }).lean();
+    // Nexus and the guest listing form both provision an account by email before
+    // the person ever signs in. On first Firebase login that document is adopted
+    // rather than duplicated — Customer.email is unique, so there is no second
+    // document to create. See accountClaimService for why only stubs qualify.
+    const resolved = await resolveCustomerForToken(req.user);
 
-    // Nexus can provision a stub by email before the person signs up. On first
-    // Firebase login, adopt that document instead of failing on unique email.
-    if (!customer && email) {
-      const byEmail = await Customer.findOne({ email: String(email).toLowerCase() }).lean();
-      if (byEmail) {
-        await Customer.updateOne(
-          { _id: byEmail._id },
-          {
-            $set: {
-              uid,
-              email: email || byEmail.email,
-              firstName: firstName || byEmail.firstName,
-              lastName: lastName || byEmail.lastName,
-              emailVerified: !!emailVerified,
-              lastLogin: new Date()
-            }
-          }
-        );
-        customer = await Customer.findOne({ uid }).lean();
-      }
-    }
-
-    if (!customer) {
-      customer = await Customer.create({
-        uid,
-        email: email || '',
-        firstName,
-        lastName,
-        balance: 0,
-        reviewCount: 0,
-        lastLogin: new Date()
-      });
-      customer = customer.toObject ? customer.toObject() : customer;
-    } else {
-      await Customer.updateOne(
-        { uid },
-        {
-          $set: {
-            email: email || customer.email,
-            firstName: firstName || customer.firstName,
-            lastName: lastName || customer.lastName,
-            lastLogin: new Date()
-          }
+    await Customer.updateOne(
+      { _id: resolved._id },
+      {
+        $set: {
+          firstName: firstName || resolved.firstName,
+          lastName: lastName || resolved.lastName,
+          lastLogin: new Date()
         }
-      );
-      customer = await Customer.findOne({ uid }).lean();
-    }
+      }
+    );
+    let customer = await Customer.findById(resolved._id).lean();
 
     const isTestMode = process.env.STRIPE_SECRET_KEY?.startsWith('sk_test_');
     if (isTestMode && !customer.stripeConnectOnboarded) {
@@ -132,6 +104,7 @@ router.get('/profile', authenticateToken, async (req, res) => {
       cookieConsent: customer.cookieConsent && ['all', 'essential'].includes(customer.cookieConsent) ? customer.cookieConsent : null
     });
   } catch (error) {
+    if (handleAccountClaimError(res, error)) return;
     logger.error('Error fetching customer profile:', error);
     res.status(500).json({
       error: 'Failed to load customer information',

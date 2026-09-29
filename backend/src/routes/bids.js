@@ -9,6 +9,7 @@ const { getReviewScoresForUsers } = require('../services/reviewService');
 const { notifyNewBid, notifyBidderOutbid, emitNewNotificationToUser, checkAndSetOutbidDebounce, shouldSendEmail } = require('../services/notificationService');
 const { checkBidRateLimit, getClientIp } = require('../middleware/bidRateLimiter');
 const { runFraudChecks, updateUserSignals } = require('../services/fraudDetectionService');
+const { resolveCustomerForToken, handleAccountClaimError } = require('../services/accountClaimService');
 const Block = require('../models/Block');
 const { scheduleBlock } = require('../utils/listingSchedule');
 const { formatBidPublic } = require('../utils/bidFormat');
@@ -187,37 +188,11 @@ router.post('/', optionalAuth, requireActiveAccountIfAuthenticated, requireNoDis
         });
       }
       
-      // Find or create user in database from Firebase UID
-      user = await Customer.findOne({ uid: req.user.uid });
-      if (!user) {
-        const nameParts = req.user.name?.split(' ') || [];
-        const firstName = nameParts[0] || 'User';
-        const lastName = nameParts.slice(1).join(' ') || 'User';
-        try {
-          user = new Customer({
-            uid: req.user.uid,
-            email: req.user.email,
-            firstName,
-            lastName,
-            isActive: true,
-            emailVerified: req.user.emailVerified || false
-          });
-          await user.save();
-        } catch (createErr) {
-          if (createErr.code === 11000) {
-            // Concurrent request already created this user — just fetch it.
-            user = await Customer.findOne({ uid: req.user.uid });
-            if (!user) throw createErr;
-          } else {
-            throw createErr;
-          }
-        }
-      } else {
-        // Update email verification status if changed
-        if (req.user.emailVerified !== undefined && user.emailVerified !== req.user.emailVerified) {
-          user.emailVerified = req.user.emailVerified;
-          await user.save();
-        }
+      user = await resolveCustomerForToken(req.user);
+      // Update email verification status if changed
+      if (req.user.emailVerified !== undefined && user.emailVerified !== req.user.emailVerified) {
+        user.emailVerified = req.user.emailVerified;
+        await user.save();
       }
     } else {
       // Handle unauthenticated user - email is required
@@ -742,6 +717,7 @@ router.post('/', optionalAuth, requireActiveAccountIfAuthenticated, requireNoDis
 
     res.status(201).json(formattedBid);
   } catch (error) {
+    if (handleAccountClaimError(res, error)) return;
     logger.error('Error creating bid:', error);
     res.status(400).json({
       error: 'Failed to create bid',
