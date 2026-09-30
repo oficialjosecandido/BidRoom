@@ -2005,7 +2005,7 @@ nav {
   }
   .field-row { grid-template-columns: 1fr; }
   .format-selector { grid-template-columns: 1fr; }
-  .media-grid { grid-template-columns: repeat(4, 1fr); }
+  .media-grid { grid-template-columns: repeat(3, 1fr); }
 
   .bottom-bar {
     display: grid;
@@ -2136,5 +2136,29 @@ nav {
     color: var(--gold, #c9a84c);
     text-decoration: underline;
     margin-left: 4px;
+  }
+}
+
+@media (max-width: 480px) {
+  .pg nav {
+    padding: 0 12px;
+
+    .draft-status-nav span:not(.draft-dot) {
+      display: none;
+    }
+
+    .btn-go {
+      padding: 6px 10px;
+      font-size: 12px;
+    }
+
+    .btn-th {
+      width: 36px;
+      height: 36px;
+    }
+  }
+
+  .media-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
   }
 }

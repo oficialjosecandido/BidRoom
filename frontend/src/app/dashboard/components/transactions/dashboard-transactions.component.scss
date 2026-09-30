@@ -1343,6 +1343,18 @@
       border-top: 1px solid #e2e8f0;
     }
   }
+
+  .transactions-container {
+    padding: 0;
+  }
+
+  .page-header {
+    margin-bottom: 20px;
+
+    h1 {
+      font-size: 22px;
+    }
+  }
 }
 
 /* Review modal */

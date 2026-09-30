@@ -32,14 +32,19 @@
   <!-- DSA compliance warning banner -->
   @if (!isLoading && showDsaWarningBanner) {
   <div class="dsa-warning-banner">
-    <div class="dsa-banner-icon">
-      <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M3 6l9-4 9 4v6c0 5.25-3.75 9.75-9 11-5.25-1.25-9-5.75-9-11V6z" />
-      </svg>
-    </div>
-    <div class="dsa-banner-body">
-      <strong>{{ 'dashboard.home.dsaTitle' | translate }}</strong>
-      <span>{{ 'dashboard.home.dsaBody' | translate }}</span>
+    <button type="button" class="dsa-btn-dismiss" (click)="dismissDsaWarning()" [attr.aria-label]="'dashboard.home.dsaDismiss' | translate">
+      <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+    </button>
+    <div class="dsa-banner-main">
+      <div class="dsa-banner-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M3 6l9-4 9 4v6c0 5.25-3.75 9.75-9 11-5.25-1.25-9-5.75-9-11V6z" />
+        </svg>
+      </div>
+      <div class="dsa-banner-body">
+        <strong>{{ 'dashboard.home.dsaTitle' | translate }}</strong>
+        <span>{{ 'dashboard.home.dsaBody' | translate }}</span>
+      </div>
     </div>
     <div class="dsa-banner-actions">
       <button type="button" class="dsa-btn-pro" [disabled]="dsaWarningResponding" (click)="respondDsaWarning('switch_professional')">
@@ -48,9 +53,6 @@
       <button type="button" class="dsa-btn-private" [disabled]="dsaWarningResponding" (click)="respondDsaWarning('remain_private')">
         {{ 'dashboard.home.dsaRemainPrivate' | translate }}
       </button>
-      <button type="button" class="dsa-btn-dismiss" (click)="dismissDsaWarning()" [attr.aria-label]="'dashboard.home.dsaDismiss' | translate">
-        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-      </button>
     </div>
   </div>
   }
@@ -58,25 +60,25 @@
   <!-- Payout setup banner -->
   @if (!isLoading && showPayoutSetupBanner) {
   <div class="payout-setup-banner">
-    <div class="payout-banner-icon">
-      <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+    <button type="button" class="payout-banner-dismiss" (click)="dismissPayoutBanner()" [attr.aria-label]="'dashboard.home.payoutBannerDismiss' | translate">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
       </svg>
-    </div>
-    <div class="payout-banner-body">
-      <strong>{{ 'dashboard.home.payoutBannerTitle' | translate }}</strong>
-      <span>{{ 'dashboard.home.payoutBannerBody' | translate }}</span>
-    </div>
-    <div class="payout-banner-actions">
-      <a routerLink="/dashboard/settings" class="payout-banner-cta">
-        {{ 'dashboard.home.payoutBannerCta' | translate }}
-      </a>
-      <button type="button" class="payout-banner-dismiss" (click)="dismissPayoutBanner()" [attr.aria-label]="'dashboard.home.payoutBannerDismiss' | translate">
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+    </button>
+    <div class="payout-banner-main">
+      <div class="payout-banner-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
         </svg>
-      </button>
+      </div>
+      <div class="payout-banner-body">
+        <strong>{{ 'dashboard.home.payoutBannerTitle' | translate }}</strong>
+        <span>{{ 'dashboard.home.payoutBannerBody' | translate }}</span>
+      </div>
     </div>
+    <a routerLink="/dashboard/settings" class="payout-banner-cta">
+      {{ 'dashboard.home.payoutBannerCta' | translate }}
+    </a>
   </div>
   }
 

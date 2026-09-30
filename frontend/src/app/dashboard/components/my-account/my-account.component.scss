@@ -540,6 +540,10 @@
 }
 
 @media (max-width: 768px) {
+  .page-title {
+    font-size: 22px;
+  }
+
   .info-row {
     flex-direction: column;
     gap: 8px;
@@ -547,6 +551,19 @@
 
   .info-label {
     min-width: auto;
+  }
+
+  .dob-row {
+    grid-template-columns: 1fr;
+  }
+
+  .form-actions {
+    flex-direction: column;
+
+    button,
+    .connect-btn {
+      width: 100%;
+    }
   }
 }
 

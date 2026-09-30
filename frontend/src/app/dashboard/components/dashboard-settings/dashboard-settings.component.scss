@@ -575,7 +575,9 @@
 @media (max-width: 700px) {
   .settings-row { grid-template-columns: 1fr; }
   .rep-grid { grid-template-columns: 1fr; }
-  .dob-row { grid-template-columns: 1fr 1fr; }
+  .dob-row { grid-template-columns: 1fr; }
+  .form-row-2 { grid-template-columns: 1fr; }
+  .dsa-form-grid { grid-template-columns: 1fr; }
 
   .pm-item {
     grid-template-columns: auto 1fr;

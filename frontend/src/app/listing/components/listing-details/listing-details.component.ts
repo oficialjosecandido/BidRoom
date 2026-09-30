@@ -558,6 +558,56 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
     return this.listing.status === 'active' && !this.notOpenYet && !this.isAuctionEnded();
   }
 
+  /**
+   * Mobile sticky bar: show when there is a primary action the visitor can take
+   * (bid, offer, buy-now, enter giveaway, private room, reopen, view transaction).
+   * Hidden while bid/offer sheets are open.
+   */
+  get showMobileStickyCta(): boolean {
+    if (!this.listing || this.showBidModal || this.showOfferModal) return false;
+    if (this.currentUserIsWinner()) return true;
+    if (this.isGiveaway && this.isGiveawayOpen() && !this.isOwnListing && !this.giveawayState?.entered && !this.giveawayState?.drawn) {
+      return true;
+    }
+    if (
+      !this.notOpenYet &&
+      !this.isGiveaway &&
+      this.listing.auctionFormat === 'highest-bid' &&
+      !this.isAuctionEnded() &&
+      !this.hasPrivateRoom() &&
+      !this.isOwnListing
+    ) {
+      return true;
+    }
+    if (
+      !this.isGiveaway &&
+      this.listing.auctionFormat === 'best-offer' &&
+      !this.hasPrivateRoom() &&
+      !this.isOwnListing &&
+      this.isBestOfferActive()
+    ) {
+      return true;
+    }
+    if (this.hasPrivateRoomCreated()) return true;
+    if (this.isAcceptedPrivateRoomBidder() && !this.isOwnListing && this.listing.privateRoomStatus === 'active') {
+      return true;
+    }
+    if (this.canCreatePrivateRoom()) return true;
+    if (this.canReopenListing()) return true;
+    return false;
+  }
+
+  /** Compact price for the mobile sticky bar. */
+  get mobileStickyPriceDisplay(): string {
+    if (!this.listing) return '';
+    if (this.isGiveaway) return '';
+    if (this.listing.auctionFormat === 'best-offer') {
+      const highest = this.getHighestOfferAmount();
+      return highest > 0 ? this.formatPrice(highest) : '';
+    }
+    return this.formatPrice(this.listing.currentPrice || this.listing.startingPrice || 0);
+  }
+
   /** True when seller can accept/decline offers (Best Offer listing and listing end date has passed). */
   canSellerAcceptOrDeclineOffers(): boolean {
     if (!this.listing || this.listing.auctionFormat !== 'best-offer') return false;

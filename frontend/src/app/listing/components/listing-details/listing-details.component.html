@@ -1,4 +1,4 @@
-<div class="pg" [class.light]="isLight()">
+<div class="pg" [class.light]="isLight()" [class.pg--mobile-cta]="showMobileStickyCta">
 
 <app-header></app-header>
 
@@ -822,6 +822,65 @@
 
 
 </div><!-- /page -->
+
+<!-- Mobile sticky action bar: primary CTA always reachable without scrolling past the gallery -->
+@if (showMobileStickyCta) {
+  <div class="mobile-sticky-cta" role="region" [attr.aria-label]="'listingDetails.actions.placeBid' | translate">
+    <div class="msc-meta">
+      @if (isGiveaway) {
+        <span class="msc-price">{{ 'GIVEAWAY.FREE' | translate }}</span>
+      } @else if (mobileStickyPriceDisplay) {
+        <span class="msc-price">{{ mobileStickyPriceDisplay }}</span>
+      } @else if (listing.auctionFormat === 'best-offer') {
+        <span class="msc-price msc-price--muted">{{ 'listingDetails.noOffersYet' | translate }}</span>
+      }
+      @if (!isAuctionEnded()) {
+        <span class="msc-time">{{ formatTimeRemaining() }}</span>
+      }
+    </div>
+    <div class="msc-actions">
+      @if (currentUserIsWinner()) {
+        <button type="button" class="msc-btn msc-btn--green" (click)="goToBuyerTransactions()">
+          {{ 'listingDetails.sidebar.viewTransaction' | translate }}
+        </button>
+      } @else if (isGiveaway && isGiveawayOpen() && !isOwnListing && !giveawayState?.entered && !giveawayState?.drawn) {
+        <button type="button" class="msc-btn" (click)="enterGiveaway()" [disabled]="giveawayEntering || giveawayLoading">
+          {{ giveawayEntering ? ('GIVEAWAY.ENTERING' | translate) : ('GIVEAWAY.ENTER_BUTTON' | translate) }}
+        </button>
+      } @else if (hasPrivateRoomCreated()) {
+        <button type="button" class="msc-btn" (click)="openPrivateRoom()">
+          {{ 'listingDetails.sidebar.goToPrivateRoom' | translate }}
+        </button>
+      } @else if (isAcceptedPrivateRoomBidder() && !isOwnListing && listing.privateRoomStatus === 'active') {
+        <button type="button" class="msc-btn" (click)="openBidModal()">
+          {{ 'listingDetails.sidebar.bidPrivateRoom' | translate }}
+        </button>
+      } @else if (canCreatePrivateRoom()) {
+        <button type="button" class="msc-btn" (click)="openCreatePrivateRoomModal()">
+          {{ 'listingDetails.actions.createPrivateRoom' | translate }}
+        </button>
+      } @else if (canReopenListing()) {
+        <button type="button" class="msc-btn" (click)="reopenAuction()" [disabled]="reopenLoading">
+          {{ reopenLoading ? ('listingDetails.actions.reopening' | translate) : ('listingDetails.actions.reopenForDays' | translate) }}
+        </button>
+      } @else if (!isGiveaway && listing.auctionFormat === 'best-offer' && isBestOfferActive() && !isOwnListing) {
+        <button type="button" class="msc-btn" (click)="openOfferModal()">
+          {{ 'listingDetails.actions.makeOffer' | translate }}
+        </button>
+      } @else if (!notOpenYet && !isGiveaway && listing.auctionFormat === 'highest-bid' && !isAuctionEnded() && !hasPrivateRoom() && !isOwnListing) {
+        @if (listing.buyNowPrice) {
+          <button type="button" class="msc-btn msc-btn--ghost" (click)="buyNow()">
+            {{ 'listingDetails.sidebar.buyNow' | translate }}
+          </button>
+        }
+        <button type="button" class="msc-btn" (click)="openBidModal()">
+          {{ 'listingDetails.actions.placeBidAtMin' | translate:{ amount: formatPrice(getMinBid()) } }}
+        </button>
+      }
+    </div>
+  </div>
+}
+
 }<!-- /listing loaded -->
 
 <!-- ─── MODALS ─── -->

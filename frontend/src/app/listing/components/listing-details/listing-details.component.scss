@@ -125,6 +125,7 @@ nav {
   gap: 6px;
   background: var(--s1);
   border-bottom: 1px solid var(--line);
+  min-width: 0;
   a {
     font-size: 11.5px;
     color: var(--sub);
@@ -132,12 +133,21 @@ nav {
     transition: color .15s;
     &:hover { color: var(--gold); }
   }
-  span { font-size: 10px; color: var(--dim); }
-  strong { font-size: 11.5px; font-weight: 500; color: var(--text); }
+  span { font-size: 10px; color: var(--dim); flex-shrink: 0; }
+  strong {
+    font-size: 11.5px;
+    font-weight: 500;
+    color: var(--text);
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
 }
 
 .bc-share {
   margin-left: auto;
+  flex-shrink: 0;
   background: none;
   border: 1px solid var(--line);
   border-radius: 6px;
@@ -373,6 +383,10 @@ nav {
   gap: 0;
   border-bottom: 1px solid var(--line);
   margin-top: 32px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  &::-webkit-scrollbar { display: none; }
 }
 .tab {
   padding: 11px 18px;
@@ -386,6 +400,7 @@ nav {
   font-family: inherit;
   cursor: pointer;
   transition: color .15s, border-color .15s;
+  flex-shrink: 0;
   &:hover { color: var(--text); }
   &.on { color: var(--text); font-weight: 500; border-bottom-color: var(--gold); }
 }
@@ -2090,7 +2105,17 @@ nav {
 /* ── RESPONSIVE ─────────────────────────────── */
 @media (max-width: 840px) {
   nav { padding: 0 16px; }
-  .bc { padding: 10px 16px; }
+  .bc {
+    padding: 10px 16px;
+    flex-wrap: wrap;
+    row-gap: 8px;
+  }
+  .bc-share {
+    margin-left: 0;
+    width: 100%;
+    text-align: center;
+    padding: 8px 12px;
+  }
   .page {
     grid-template-columns: 1fr;
     grid-template-areas:
@@ -2115,4 +2140,117 @@ nav {
   }
   .specs { grid-template-columns: 1fr; }
   .sheet { max-width: 100%; }
+
+  /* Sticky bar only on mobile; desktop keeps the sidebar CTA */
+  .mobile-sticky-cta {
+    display: flex;
+  }
+
+  .pg--mobile-cta .page {
+    padding-bottom: calc(108px + env(safe-area-inset-bottom, 0px));
+  }
+}
+
+/* ── Mobile sticky bid / offer CTA ── */
+.mobile-sticky-cta {
+  display: none;
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 80;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px calc(10px + env(safe-area-inset-bottom, 0px));
+  /* Leave room for the support chat FAB on the right */
+  padding-right: 76px;
+  background: color-mix(in srgb, var(--bg) 92%, transparent);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-top: 1px solid var(--line);
+  box-shadow: 0 -8px 28px rgba(0, 0, 0, 0.18);
+}
+
+.msc-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 0 1 auto;
+  max-width: 38%;
+}
+
+.msc-price {
+  font-family: var(--mono);
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--text);
+  letter-spacing: -.02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  &--muted {
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--sub);
+    white-space: normal;
+  }
+}
+
+.msc-time {
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--sub);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.msc-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+  justify-content: flex-end;
+}
+
+.msc-btn {
+  flex: 1;
+  min-height: 44px;
+  padding: 10px 14px;
+  border: none;
+  border-radius: 100px;
+  background: var(--gold);
+  color: #0a0a0a;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: opacity .15s;
+
+  &:hover:not(:disabled) { opacity: .88; }
+  &:disabled { opacity: .5; cursor: not-allowed; }
+
+  &--green {
+    background: var(--green);
+    color: #fff;
+  }
+
+  &--ghost {
+    flex: 0 0 auto;
+    background: transparent;
+    color: var(--text);
+    border: 1px solid var(--line);
+    padding: 10px 12px;
+    font-weight: 500;
+  }
+}
+
+.pg.light .mobile-sticky-cta {
+  box-shadow: 0 -6px 20px rgba(0, 0, 0, 0.08);
 }

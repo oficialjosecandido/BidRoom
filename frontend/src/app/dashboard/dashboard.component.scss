@@ -142,8 +142,10 @@ $sidebar-w: 220px;
 
 /* Theme toggle */
 .btn-th {
-  width: 30px;
-  height: 30px;
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  min-height: 36px;
   border-radius: 50%;
   border: 1px solid var(--line);
   display: flex;
@@ -178,8 +180,10 @@ $sidebar-w: 220px;
 
 /* Notification bell */
 .notif-btn {
-  width: 30px;
-  height: 30px;
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  min-height: 36px;
   border-radius: 50%;
   border: 1px solid var(--line);
   display: flex;
@@ -212,8 +216,10 @@ $sidebar-w: 220px;
 
 /* Avatar */
 .avatar {
-  width: 30px;
-  height: 30px;
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  min-height: 36px;
   border-radius: 50%;
   background: var(--gold);
   color: #0a0a0a;
