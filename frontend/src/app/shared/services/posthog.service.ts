@@ -72,6 +72,8 @@ export class PostHogService {
         respect_dnt:      true,
         capture_pageview: false,
         person_profiles:  'identified_only',
+        // Skip /flags when the project key is missing/wrong (avoids 401 spam).
+        advanced_disable_feature_flags: true,
         session_recording: {
           maskAllInputs:    true,
           maskTextSelector: '[data-ph-mask]',

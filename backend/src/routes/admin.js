@@ -663,19 +663,23 @@ router.patch('/auctions/:id/category', authenticateToken, requireAdmin, async (r
       return res.status(400).json({ error: 'Sub-category is required' });
     }
 
-    const listing = await Listing.findById(req.params.id);
+    // Atomic $set — avoid document.save(), which revalidates every field and
+    // 500s on legacy listings (e.g. best-offer with startingPrice 0 / bad min).
+    const listing = await Listing.findByIdAndUpdate(
+      req.params.id,
+      { $set: { category, subCategory } },
+      { new: true, runValidators: false }
+    ).select('category subCategory seller');
     if (!listing) return res.status(404).json({ error: 'Listing not found' });
 
-    listing.category = category;
-    listing.subCategory = subCategory;
-    await listing.save();
-
+    const admin = await resolveAdminActor(req);
     await appendModerationAudit({
-      action: 'admin_listing_category_updated',
       subjectUserId: listing.seller,
-      targetType: 'listing',
-      targetId: listing._id,
-      details: { category, subCategory }
+      actionType: 'admin_listing_category_updated',
+      performedByUserId: admin?._id || null,
+      performedByEmail: req.user?.email || null,
+      metadata: { listingId: listing._id, category, subCategory },
+      ip: req.ip || null
     });
 
     return res.json({
@@ -702,28 +706,41 @@ router.patch('/auctions/:id/end-date', authenticateToken, requireAdmin, async (r
       return res.status(400).json({ error: 'A valid end date is required' });
     }
 
-    const listing = await Listing.findById(req.params.id);
-    if (!listing) return res.status(404).json({ error: 'Listing not found' });
+    const existing = await Listing.findById(req.params.id).select('endDate status seller').lean();
+    if (!existing) return res.status(404).json({ error: 'Listing not found' });
 
-    const oldEnd = listing.endDate;
-    listing.endDate = parsed;
-
-    // If the listing had already ended but is being extended into the future, reactivate it.
-    if (listing.status === 'ended' && parsed > new Date()) {
-      listing.status = 'active';
+    const $set = { endDate: parsed };
+    // Extending an ended listing into the future brings it back online.
+    if (existing.status === 'ended' && parsed > new Date()) {
+      $set.status = 'active';
     }
 
-    await listing.save();
+    // Atomic $set — same reason as category: full document.save() fails on
+    // older listings that no longer pass current schema validators.
+    const listing = await Listing.findByIdAndUpdate(
+      req.params.id,
+      { $set },
+      { new: true, runValidators: false }
+    ).select('endDate status seller');
 
+    if (!listing) return res.status(404).json({ error: 'Listing not found' });
+
+    const admin = await resolveAdminActor(req);
     await appendModerationAudit({
-      action: 'admin_listing_end_date_updated',
       subjectUserId: listing.seller,
-      targetType: 'listing',
-      targetId: listing._id,
-      details: { oldEndDate: oldEnd, newEndDate: parsed }
+      actionType: 'admin_listing_end_date_updated',
+      performedByUserId: admin?._id || null,
+      performedByEmail: req.user?.email || null,
+      metadata: {
+        listingId: listing._id,
+        oldEndDate: existing.endDate,
+        newEndDate: listing.endDate,
+        status: listing.status
+      },
+      ip: req.ip || null
     });
 
-    return res.json({ ok: true, endDate: listing.endDate });
+    return res.json({ ok: true, endDate: listing.endDate, status: listing.status });
   } catch (error) {
     logger.error('Error updating listing end date:', error);
     res.status(500).json({
@@ -939,11 +956,11 @@ router.delete('/auctions/:id', authenticateToken, requireAdmin, async (req, res)
     ]);
 
     await appendModerationAudit({
-      action: 'admin_listing_deleted',
       subjectUserId: listing.seller?._id ?? listing.seller,
-      targetType: 'listing',
-      targetId: listing._id,
-      details: { title: listing.title, status: listing.status }
+      actionType: 'admin_listing_deleted',
+      performedByEmail: req.user?.email || null,
+      metadata: { listingId: listing._id, title: listing.title, status: listing.status },
+      ip: req.ip || null
     });
 
     return res.json({ ok: true, deletedId: listing._id });
