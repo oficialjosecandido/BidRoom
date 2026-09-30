@@ -148,6 +148,10 @@ export interface Listing {
   viewCount?: number;
   /** Set on seller/my-listings: highest offer received (pending or accepted) */
   highestOfferAmount?: number | null;
+  /** Set on seller/my-listings: open offers awaiting seller response */
+  pendingOfferCount?: number;
+  /** Set on seller/my-listings: accepted offers (sold via Best Offer) */
+  acceptedOfferCount?: number;
   /** Seller's average rating as seller (from reviews) */
   sellerScore?: number | null;
   /** Number of reviews the seller has received as seller */

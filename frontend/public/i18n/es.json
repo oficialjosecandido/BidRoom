@@ -766,10 +766,13 @@
       "accepting": "Aceptando…",
       "decline": "Rechazar",
       "declining": "Rechazando…",
+      "withdraw": "Retirar",
+      "withdrawing": "Retirando…",
       "anonymous": "Anónimo",
       "verifiedLabel": "✓ Verificado",
       "statusAccepted": "Aceptada por el vendedor",
       "statusDeclined": "Rechazada",
+      "statusWithdrawn": "Retirada",
       "statusExpired": "Caducada",
       "stripeWarningPrefix": "⚠️ Conecta Stripe en",
       "stripeSettingsLink": "Configuración → Pagos"
@@ -1428,6 +1431,8 @@
         "relistCount": "Relistar #{{count}}",
         "unsoldReasons": {
           "no_bids": "Terminó sin pujas",
+          "no_offers": "Terminó sin propuestas",
+          "pending_offers": "Tienes propuestas pendientes — abre el anuncio para aceptar o rechazar",
           "reserve_not_met": "Precio de reserva no alcanzado",
           "non_payment": "El comprador no completó el pago"
         },

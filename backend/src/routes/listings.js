@@ -1653,8 +1653,7 @@ router.post(
       condition,
       saleFormat: isGiveaway ? 'giveaway' : 'auction',
       auctionFormat: (listingFormat === 'best-offer') ? 'best-offer' : 'highest-bid',
-      // Best Offer sales don't set `winner` on acceptance, so auto-relist eligibility
-      // (status: ended, winner: null) can't distinguish "unsold" from "sold via offer" — restrict to auctions.
+      // Auto-relist scheduler only handles highest-bid; keep Best Offer off this flag.
       autoRelist: isAuction && autoRelist === true,
       durationSlot,
       startingPrice: resolvedStartingPrice,
@@ -2513,10 +2512,17 @@ router.post('/:id/relist', authenticateToken, requireActiveAccount, async (req, 
       return res.status(400).json({ error: 'Cannot relist a successfully sold listing' });
     }
 
-    // Best Offer sales don't set `winner` on acceptance — check accepted offers too.
+    // Best Offer: accepted = sold; pending = seller must decide before Relist.
     const hasAcceptedOffer = await Offer.exists({ listing: listing._id, status: 'accepted' });
     if (hasAcceptedOffer) {
       return res.status(400).json({ error: 'Cannot relist a successfully sold listing' });
+    }
+    const hasPendingOffer = await Offer.exists({ listing: listing._id, status: 'pending' });
+    if (hasPendingOffer) {
+      return res.status(400).json({
+        error: 'pending_offers',
+        message: 'This listing still has pending offers. Accept or reject them before relisting.'
+      });
     }
 
     if (listing.relistedAt) {
@@ -2699,13 +2705,28 @@ router.get('/seller/my-listings', authenticateToken, async (req, res) => {
       watchlistCounts.map((row) => [row._id.toString(), row.count])
     );
 
-    // Highest offer per best-offer listing (regardless of acceptance status)
+    // Offer summary per listing (highest + pending/accepted counts for Relist eligibility)
     const offerAgg = await Offer.aggregate([
-      { $match: { listing: { $in: listingIds }, status: { $in: ['pending', 'accepted'] } } },
-      { $group: { _id: '$listing', highestOffer: { $max: '$amount' } } }
+      { $match: { listing: { $in: listingIds } } },
+      {
+        $group: {
+          _id: '$listing',
+          highestOffer: {
+            $max: {
+              $cond: [{ $in: ['$status', ['pending', 'accepted']] }, '$amount', null]
+            }
+          },
+          pendingOfferCount: {
+            $sum: { $cond: [{ $eq: ['$status', 'pending'] }, 1, 0] }
+          },
+          acceptedOfferCount: {
+            $sum: { $cond: [{ $eq: ['$status', 'accepted'] }, 1, 0] }
+          }
+        }
+      }
     ]);
-    const highestOfferByListing = Object.fromEntries(
-      offerAgg.map((row) => [row._id.toString(), row.highestOffer])
+    const offerStatsByListing = Object.fromEntries(
+      offerAgg.map((row) => [row._id.toString(), row])
     );
 
     // Enhance listings with platinum bidder invitation status and watchlist count
@@ -2736,11 +2757,14 @@ router.get('/seller/my-listings', authenticateToken, async (req, res) => {
         });
       }
 
+      const offerStats = offerStatsByListing[listing._id.toString()];
       return {
         ...listingObj,
         platinumBidderStatus,
         watchlistCount: watchlistByListing[listing._id.toString()] ?? 0,
-        highestOfferAmount: highestOfferByListing[listing._id.toString()] ?? null
+        highestOfferAmount: offerStats?.highestOffer ?? null,
+        pendingOfferCount: offerStats?.pendingOfferCount ?? 0,
+        acceptedOfferCount: offerStats?.acceptedOfferCount ?? 0
       };
     });
 

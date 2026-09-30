@@ -767,7 +767,8 @@
               @for (offer of sortedOffers; track offer._id) {
                 <div class="offer-item"
                   [class.accepted]="offer.status === 'accepted'"
-                  [class.declined]="offer.status === 'rejected'">
+                  [class.declined]="offer.status === 'rejected'"
+                  [class.withdrawn]="offer.status === 'withdrawn'">
                   <div class="av">{{ offer.offererInitials || 'A' }}</div>
                   <div class="om">
                     <div class="on-row">
@@ -776,9 +777,17 @@
                       @if (isMyOffer(offer)) { <span class="chip c-you">{{ 'listingDetails.offerHistory.yourOffer' | translate }}</span> }
                       @if (offer.status === 'accepted') { <span class="chip c-acc">{{ 'listingDetails.offerHistory.statusAccepted' | translate }}</span> }
                       @if (offer.status === 'rejected') { <span class="chip c-dec">{{ 'listingDetails.offerHistory.statusDeclined' | translate }}</span> }
+                      @if (offer.status === 'withdrawn') { <span class="chip c-sub">{{ 'listingDetails.offerHistory.statusWithdrawn' | translate }}</span> }
                       @if (offer.status === 'expired') { <span class="chip c-sub">{{ 'listingDetails.offerHistory.statusExpired' | translate }}</span> }
                     </div>
                     @if (offer.message) { <div class="omsg">"{{ offer.message }}"</div> }
+                    @if (canWithdrawOffer(offer)) {
+                      <div class="o-acts">
+                        <button type="button" class="btn-dec" (click)="withdrawOffer(offer)" [disabled]="offerActionLoadingId !== null">
+                          {{ offerActionLoadingId === offer._id ? ('listingDetails.offerHistory.withdrawing' | translate) : ('listingDetails.offerHistory.withdraw' | translate) }}
+                        </button>
+                      </div>
+                    }
                     @if (isOwnListing && offer.status === 'pending') {
                       @if (!canSellerAcceptOrDeclineOffers()) {
                         <p class="offer-note">{{ 'listingDetails.offerHistory.acceptDeclineNote' | translate }}</p>

@@ -952,6 +952,10 @@ async function handleAuctionEnd(listingId, io = null) {
           singleOffer.sellerResponse = 'Offer automatically accepted (met minimum price)';
           singleOffer.listing.status = 'ended';
           singleOffer.listing.currentPrice = singleOffer.amount;
+          // Same as manual accept — without winner, My Listings treats the sale as "unsold".
+          if (singleOffer.offerer) {
+            singleOffer.listing.winner = singleOffer.offerer._id || singleOffer.offerer;
+          }
 
           // Reject any other pending offers
           await Offer.updateMany(

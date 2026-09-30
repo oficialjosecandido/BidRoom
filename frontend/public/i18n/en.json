@@ -1177,10 +1177,13 @@
       "accepting": "Accepting…",
       "decline": "Decline",
       "declining": "Declining…",
+      "withdraw": "Withdraw",
+      "withdrawing": "Withdrawing…",
       "anonymous": "Anonymous",
       "verifiedLabel": "✓ Verified",
       "statusAccepted": "Accepted by seller",
       "statusDeclined": "Declined",
+      "statusWithdrawn": "Withdrawn",
       "statusExpired": "Expired",
       "stripeWarningPrefix": "⚠️ Connect Stripe in",
       "stripeSettingsLink": "Settings → Payments"
@@ -2343,6 +2346,8 @@
         "relistCount": "Relist #{{count}}",
         "unsoldReasons": {
           "no_bids": "Ended with no bids",
+          "no_offers": "Ended with no offers",
+          "pending_offers": "You have pending offers — open the listing to accept or reject",
           "non_payment": "Buyer did not complete payment"
         },
         "suggestions": {

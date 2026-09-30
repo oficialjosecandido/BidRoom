@@ -17,7 +17,7 @@ const successToast = Swal.mixin({
   timerProgressBar: true
 });
 
-type UnsoldReason = 'no_bids' | 'non_payment';
+type UnsoldReason = 'no_bids' | 'no_offers' | 'non_payment';
 type DurationSlot = '5 minutes' | '1 hour' | '2 hours' | '7 hours' | '24 hours' | '3 days' | '7 days';
 
 interface PlatinumBidderStatus {
@@ -34,6 +34,8 @@ interface PlatinumBidderStatus {
 
 interface EnhancedListing extends Listing {
   platinumBidderStatus?: PlatinumBidderStatus[];
+  pendingOfferCount?: number;
+  acceptedOfferCount?: number;
 }
 
 @Component({
@@ -140,16 +142,35 @@ export class MyAuctionsComponent implements OnInit, OnDestroy {
 
   // ── Relist eligibility ──────────────────────────────────────────────────────
 
-  /** True when the listing ended unsold and has not been relisted yet. */
+  /**
+   * True when the listing ended unsold and has not been relisted yet.
+   * Best Offer with pending/accepted offers is NOT unsold — Relist would create a
+   * duplicate while a sale (or seller decision) is in progress.
+   */
   isEligibleForRelist(listing: EnhancedListing): boolean {
     if (listing.status !== 'ended') return false;
     if (listing.relistedAt) return false;
     if (listing.winner) return false;
+    if ((listing.acceptedOfferCount ?? 0) > 0) return false;
+    if ((listing.pendingOfferCount ?? 0) > 0) return false;
+    // Highest-bid with bids awaiting winner selection — not unsold
+    if (listing.auctionFormat !== 'best-offer' && (listing.bidCount ?? 0) > 0) return false;
     return true;
+  }
+
+  /** Ended Best Offer with open proposals the seller still needs to accept/reject. */
+  hasPendingOffersAfterEnd(listing: EnhancedListing): boolean {
+    return (
+      listing.status === 'ended' &&
+      !listing.winner &&
+      (listing.acceptedOfferCount ?? 0) === 0 &&
+      (listing.pendingOfferCount ?? 0) > 0
+    );
   }
 
   getUnsoldReason(listing: EnhancedListing): UnsoldReason {
     if (listing.privateRoomClosedReason === 'non_payment_no_second_bidder') return 'non_payment';
+    if (listing.auctionFormat === 'best-offer') return 'no_offers';
     return 'no_bids';
   }
 
@@ -182,7 +203,7 @@ export class MyAuctionsComponent implements OnInit, OnDestroy {
     const reason = this.getUnsoldReason(listing);
     const suggestions: Array<{ key: string; action: () => void }> = [];
 
-    if (reason === 'no_bids') {
+    if (reason === 'no_bids' || reason === 'no_offers') {
       suggestions.push({ key: 'dashboard.myAuctions.relist.suggestions.lower10Price', action: () => this.applySuggestLowerPrice() });
       if (this.relistDurationSlot !== '7 days') {
         suggestions.push({ key: 'dashboard.myAuctions.relist.suggestions.extend7Days', action: () => this.applySuggestMaxDuration() });

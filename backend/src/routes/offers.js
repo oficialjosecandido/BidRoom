@@ -88,16 +88,30 @@ router.get('/listing/:listingId', optionalAuth, async (req, res) => {
       : [];
     const balanceByUid = customers.reduce((acc, c) => { acc[c.uid] = c.balance ?? 0; return acc; }, {});
 
+    let currentUid = null;
+    let currentEmail = null;
+    if (req.isAuthenticated && req.user) {
+      currentUid = req.user.uid || null;
+      currentEmail = req.user.email ? String(req.user.email).toLowerCase() : null;
+    }
+
     // Same allowlist as the socket payload, so the two cannot drift apart —
     // which is how the socket ended up broadcasting emails the HTTP list was
     // careful to withhold.
     const formattedOffers = offers.map(offer => {
       const uid = offer.offerer?.uid;
       const balance = uid != null ? balanceByUid[uid] : null;
-      return formatOfferForSocket(offer, {
-        offererVerified: !!offer.offerer?.emailVerified,
-        offererTier: (features.membershipTiers ? tierFromBalance(balance) : null) || null
-      });
+      const isMine = !!(
+        (currentUid && uid && currentUid === uid) ||
+        (currentEmail && offer.offererEmail && offer.offererEmail.toLowerCase() === currentEmail)
+      );
+      return {
+        ...formatOfferForSocket(offer, {
+          offererVerified: !!offer.offerer?.emailVerified,
+          offererTier: (features.membershipTiers ? tierFromBalance(balance) : null) || null
+        }),
+        isMine
+      };
     });
 
     res.json({
@@ -576,6 +590,9 @@ router.patch('/:offerId/reject', authenticateToken, async (req, res) => {
         autoOffer.sellerResponse = 'Offer automatically accepted (only qualifying offer remaining)';
         autoOffer.listing.status = 'ended';
         autoOffer.listing.currentPrice = autoOffer.amount;
+        if (autoOffer.offerer) {
+          autoOffer.listing.winner = autoOffer.offerer._id || autoOffer.offerer;
+        }
 
         await Offer.updateMany(
           { listing: offer.listing._id, _id: { $ne: autoOffer._id }, status: 'pending' },
@@ -634,6 +651,68 @@ router.patch('/:offerId/reject', authenticateToken, async (req, res) => {
     logger.error('Error rejecting offer:', error);
     res.status(400).json({
       error: 'Failed to reject offer',
+      message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
+    });
+  }
+});
+
+// PATCH /api/offers/:offerId/withdraw - Buyer withdraws their own pending offer
+router.patch('/:offerId/withdraw', authenticateToken, async (req, res) => {
+  try {
+    const offer = await Offer.findById(req.params.offerId).populate('listing');
+
+    if (!offer) {
+      return res.status(404).json({ error: 'Offer not found' });
+    }
+
+    const user = await Customer.findOne({ uid: req.user.uid });
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const isOwner =
+      (offer.offerer && offer.offerer.toString() === user._id.toString()) ||
+      (!!offer.offererEmail &&
+        !!user.email &&
+        offer.offererEmail.toLowerCase() === user.email.toLowerCase());
+
+    if (!isOwner) {
+      return res.status(403).json({
+        error: 'Unauthorized',
+        message: 'You can only withdraw your own offers'
+      });
+    }
+
+    if (offer.status !== 'pending') {
+      return res.status(400).json({
+        error: 'Invalid offer status',
+        message: 'Only pending offers can be withdrawn'
+      });
+    }
+
+    offer.status = 'withdrawn';
+    offer.respondedAt = new Date();
+    offer.sellerResponse = 'Withdrawn by buyer';
+    await offer.save();
+
+    const io = req.app.get('io');
+    if (io) {
+      const listingId = offer.listing._id.toString();
+      const populated = await Offer.findById(offer._id)
+        .populate('offerer', 'firstName lastName emailVerified')
+        .lean();
+      io.to(`listing:${listingId}`).emit('offer-update', {
+        listingId,
+        offer: formatOfferForSocket(populated),
+        listingStatus: null
+      });
+    }
+
+    res.json(formatOfferForSocket(offer.toObject ? offer.toObject() : offer));
+  } catch (error) {
+    logger.error('Error withdrawing offer:', error);
+    res.status(400).json({
+      error: 'Failed to withdraw offer',
       message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
     });
   }

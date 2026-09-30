@@ -713,6 +713,7 @@ nav {
     .o-amt { color: var(--green); }
   }
   &.declined { opacity: .35; }
+  &.withdrawn { opacity: .35; }
 }
 .av {
   width: 36px;

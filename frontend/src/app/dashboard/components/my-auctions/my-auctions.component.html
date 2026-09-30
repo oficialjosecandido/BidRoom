@@ -104,11 +104,19 @@
             </div>
           </div>
 
+          <!-- Pending offers after end — seller must act; not Relist -->
+          @if (hasPendingOffersAfterEnd(listing)) {
+            <div class="unsold-notice unsold-pending_offers">
+              <span class="unsold-icon">📩</span>
+              <span class="unsold-text">{{ 'dashboard.myAuctions.relist.unsoldReasons.pending_offers' | translate }}</span>
+            </div>
+          }
+
           <!-- Unsold notice -->
           @if (isEligibleForRelist(listing)) {
             <div class="unsold-notice" [ngClass]="'unsold-' + getUnsoldReason(listing)">
               <span class="unsold-icon">
-                @if (getUnsoldReason(listing) === 'no_bids') { 📭 }
+                @if (getUnsoldReason(listing) === 'no_bids' || getUnsoldReason(listing) === 'no_offers') { 📭 }
                 @if (getUnsoldReason(listing) === 'non_payment') { 💳 }
               </span>
               <span class="unsold-text">{{ 'dashboard.myAuctions.relist.unsoldReasons.' + getUnsoldReason(listing) | translate }}</span>

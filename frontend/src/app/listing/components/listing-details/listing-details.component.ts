@@ -519,12 +519,12 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
     });
   }
 
-  /** Offers sorted: pending first, then accepted, then rejected/expired. Within each status, highest amount first. */
+  /** Offers sorted: pending first, then accepted, then rejected/withdrawn/expired. Within each status, highest amount first. */
   get sortedOffers(): Offer[] {
-    const order: Record<string, number> = { pending: 0, accepted: 1, rejected: 2, expired: 3 };
+    const order: Record<string, number> = { pending: 0, accepted: 1, rejected: 2, withdrawn: 3, expired: 4 };
     return [...this.offers].sort((a, b) => {
-      const statusA = order[a.status] ?? 4;
-      const statusB = order[b.status] ?? 4;
+      const statusA = order[a.status] ?? 5;
+      const statusB = order[b.status] ?? 5;
       if (statusA !== statusB) return statusA - statusB;
       return (b.amount ?? 0) - (a.amount ?? 0);
     });
@@ -545,11 +545,17 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
     return Math.max(...valid.map(o => o.amount));
   }
 
-  /** True if the current user made this offer (by email match for authenticated users). */
+  /** True if the current user made this offer. */
   isMyOffer(offer: Offer): boolean {
+    if (offer.isMine) return true;
     const user = this.authService.getCurrentUser();
-    if (!user?.email || !offer.offerer) return false;
-    return (offer.offerer as { email?: string }).email?.toLowerCase() === user.email.toLowerCase();
+    if (!user?.email || !offer.offerer?.email) return false;
+    return offer.offerer.email.toLowerCase() === user.email.toLowerCase();
+  }
+
+  /** Buyer can withdraw their own pending offer at any time. */
+  canWithdrawOffer(offer: Offer): boolean {
+    return !this.isOwnListing && this.isMyOffer(offer) && offer.status === 'pending';
   }
 
   /** Best-offer listing is still open for offers (active and not ended). */
@@ -686,6 +692,28 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
       error: (err) => {
         this.offerActionLoadingId = null;
         this.offersError = err?.error?.message || 'Failed to reject offer.';
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  withdrawOffer(offer: Offer): void {
+    if (this.offerActionLoadingId || !this.canWithdrawOffer(offer)) return;
+    this.offerActionLoadingId = offer._id;
+    this.offersService.withdrawOffer(offer._id).subscribe({
+      next: (updated) => {
+        this.offerActionLoadingId = null;
+        const idx = this.offers.findIndex(o => o._id === updated._id);
+        if (idx >= 0) {
+          this.offers[idx] = { ...this.offers[idx], ...updated, isMine: true };
+        } else if (this.listing?._id) {
+          this.loadOffers(this.listing._id);
+        }
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        this.offerActionLoadingId = null;
+        this.offersError = err?.error?.message || 'Failed to withdraw offer.';
         this.cdr.detectChanges();
       }
     });
@@ -1185,7 +1213,13 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
 
       const mergeOfferIntoList = (offer: Offer) => {
         const idx = this.offers.findIndex(o => o._id === offer._id);
-        const merged: Offer = { ...offer, offererTier: offer.offererTier ?? null };
+        const prev = idx >= 0 ? this.offers[idx] : null;
+        const merged: Offer = {
+          ...offer,
+          offererTier: offer.offererTier ?? null,
+          // Socket payloads omit isMine — keep it if we already know this is ours
+          isMine: offer.isMine ?? prev?.isMine ?? this.isMyOffer(offer)
+        };
         if (idx >= 0) {
           this.offers = this.offers.map((o, i) => (i === idx ? merged : o));
         } else {

@@ -561,7 +561,9 @@
   border: 1px solid var(--line);
   background: var(--s2);
 
-  &.unsold-no_bids { color: var(--gold); border-color: var(--gl); background: var(--gb); }
+  &.unsold-no_bids,
+  &.unsold-no_offers { color: var(--gold); border-color: var(--gl); background: var(--gb); }
+  &.unsold-pending_offers { color: var(--gold); border-color: var(--gl); background: var(--gb); }
   &.unsold-non_payment { color: var(--red); border-color: var(--al); background: var(--rb); }
 }
 

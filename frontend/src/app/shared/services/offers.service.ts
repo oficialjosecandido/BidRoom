@@ -10,11 +10,11 @@ export interface Offer {
     _id: string;
     firstName: string;
     lastName: string;
-    email: string;
+    email?: string;
   } | null;
   amount: number;
   message?: string;
-  status: 'pending' | 'accepted' | 'rejected' | 'expired';
+  status: 'pending' | 'accepted' | 'rejected' | 'withdrawn' | 'expired';
   respondedAt?: string;
   sellerResponse?: string;
   offererName?: string;
@@ -23,6 +23,8 @@ export interface Offer {
   offererVerified?: boolean;
   /** Membership tier from balance: Bronze, Silver, Gold, or Platinum (only for registered users with customer record). */
   offererTier?: string | null;
+  /** Set by API when the authenticated viewer is the offerer. */
+  isMine?: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -70,6 +72,10 @@ export class OffersService {
 
   rejectOffer(offerId: string, message?: string): Observable<Offer> {
     return this.http.patch<Offer>(`${this.apiUrl}/${offerId}/reject`, { message });
+  }
+
+  withdrawOffer(offerId: string): Observable<Offer> {
+    return this.http.patch<Offer>(`${this.apiUrl}/${offerId}/withdraw`, {});
   }
 }
 
