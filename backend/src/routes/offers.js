@@ -462,10 +462,23 @@ router.patch('/:offerId/accept', authenticateToken, async (req, res) => {
     if (offer.offerer) {
       const buyerUserId = offer.offerer._id?.toString?.() || offer.offerer?.toString?.();
       const listing = offer.listing;
+      let transaction = null;
       try {
-        await createTransactionForAcceptedOffer(offer.listing._id.toString(), offer._id.toString());
+        transaction = await createTransactionForAcceptedOffer(offer.listing._id.toString(), offer._id.toString());
       } catch (err) {
         logger.error('Transaction create for accepted offer:', err.message);
+      }
+      if (!transaction) {
+        // Offer is already accepted — last-chance heal so we never leave a sale without a payment row.
+        const { healMissingOfferTransactions } = require('../services/transactionService');
+        const healed = await healMissingOfferTransactions({
+          buyerId: offer.offerer._id || offer.offerer,
+          notify: false
+        }).catch(() => []);
+        transaction = healed.find((t) => String(t.listing) === String(offer.listing._id)) || null;
+      }
+      if (!transaction) {
+        logger.error(`CRITICAL: offer ${offer._id} accepted but no transaction was created`);
       }
       if (buyerUserId) {
         notifyProposalAccepted({

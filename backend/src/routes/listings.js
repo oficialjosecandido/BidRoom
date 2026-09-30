@@ -3165,6 +3165,12 @@ router.get('/bidder/my-bets', authenticateToken, async (req, res) => {
       return res.status(404).json({ error: 'User not found' });
     }
 
+    // Same heal as Transactions — accepted offers must always have a payment row.
+    const { healMissingOfferTransactions } = require('../services/transactionService');
+    await healMissingOfferTransactions({ buyerId: user._id, notify: true }).catch((err) =>
+      logger.error('healMissingOfferTransactions (my-bets) failed:', err.message)
+    );
+
     const [myBids, myOffers] = await Promise.all([
       Bid.find({ bidder: user._id }).select('listing amount createdAt notifyWhenOutbid status').sort({ createdAt: -1 }).lean(),
       Offer.find({ offerer: user._id }).select('listing amount createdAt status').sort({ createdAt: -1 }).lean()

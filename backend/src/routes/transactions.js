@@ -107,6 +107,15 @@ router.get('/', async (req, res) => {
       return res.status(404).json({ error: 'User not found. Please complete your profile.' });
     }
 
+    // Repair accepted Best Offers that never got a Transaction (older bug / fire-and-forget failure).
+    const { healMissingOfferTransactions } = require('../services/transactionService');
+    await healMissingOfferTransactions({ buyerId: user._id, notify: true }).catch((err) =>
+      logger.error('healMissingOfferTransactions (buyer) failed:', err.message)
+    );
+    await healMissingOfferTransactions({ sellerId: user._id, notify: true }).catch((err) =>
+      logger.error('healMissingOfferTransactions (seller) failed:', err.message)
+    );
+
     const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 50, 1), 100);
     const page  = Math.max(parseInt(req.query.page, 10) || 1, 1);
     const skip  = (page - 1) * limit;

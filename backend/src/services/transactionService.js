@@ -65,11 +65,19 @@ async function createTransactionForListing(listingId, opts = {}) {
 /**
  * Create a transaction when a best-offer is accepted.
  * Idempotent: returns existing transaction if one already exists for the listing.
+ * Also ensures listing.winner is set (older accepts may have left it null).
  */
 async function createTransactionForAcceptedOffer(listingId, offerId) {
   try {
     const existing = await Transaction.findOne({ listing: listingId });
-    if (existing) return existing;
+    if (existing) {
+      // Still repair winner if missing
+      await Listing.updateOne(
+        { _id: listingId, winner: null },
+        { $set: { winner: existing.buyer, currentPrice: existing.amount } }
+      ).catch(() => {});
+      return existing;
+    }
 
     const offer = await Offer.findById(offerId).populate('listing').populate('offerer');
     if (!offer || offer.status !== 'accepted') return null;
@@ -79,7 +87,14 @@ async function createTransactionForAcceptedOffer(listingId, offerId) {
 
     const sellerId = listing.seller?._id || listing.seller;
     const buyerId = offer.offerer?._id || offer.offerer;
-    if (!buyerId) return null; // Guest offers: we'd need offererEmail and no User ref; for now require registered buyer for transaction
+    if (!buyerId) {
+      logger.error(`Cannot create transaction for offer ${offerId}: no registered offerer`);
+      return null;
+    }
+    if (!sellerId) {
+      logger.error(`Cannot create transaction for offer ${offerId}: listing has no seller`);
+      return null;
+    }
 
     const paymentDeadline = new Date(Date.now() + PAYMENT_WINDOW_MS);
 
@@ -96,6 +111,17 @@ async function createTransactionForAcceptedOffer(listingId, offerId) {
       paymentDeadline
     });
 
+    await Listing.updateOne(
+      { _id: listingId },
+      {
+        $set: {
+          status: 'ended',
+          winner: buyerId,
+          currentPrice: offer.amount
+        }
+      }
+    );
+
     logger.info(`✅ Transaction created for best-offer listing ${listingId}: ${transaction._id}`);
     logTransactionCreated(transaction);
     return transaction;
@@ -106,6 +132,68 @@ async function createTransactionForAcceptedOffer(listingId, offerId) {
     logger.error('Error creating transaction for accepted offer:', offerId, error);
     throw error;
   }
+}
+
+/**
+ * Find accepted offers that never got a Transaction (bug / race / older code) and create them.
+ * Optionally scoped to a buyer or seller. Returns newly created transactions.
+ */
+async function healMissingOfferTransactions({ buyerId = null, sellerId = null, notify = true } = {}) {
+  const offerFilter = { status: 'accepted', offerer: { $ne: null } };
+  if (buyerId) offerFilter.offerer = buyerId;
+
+  const offers = await Offer.find(offerFilter)
+    .select('_id listing offerer amount')
+    .sort({ respondedAt: -1 })
+    .limit(100)
+    .lean();
+
+  if (!offers.length) return [];
+
+  const listingIds = [...new Set(offers.map((o) => o.listing.toString()))];
+  const existingTx = await Transaction.find({ listing: { $in: listingIds } }).select('listing').lean();
+  const hasTx = new Set(existingTx.map((t) => t.listing.toString()));
+
+  const created = [];
+  for (const offer of offers) {
+    const lid = offer.listing.toString();
+    if (hasTx.has(lid)) continue;
+
+    if (sellerId) {
+      const listing = await Listing.findById(offer.listing).select('seller').lean();
+      if (!listing || String(listing.seller) !== String(sellerId)) continue;
+    }
+
+    try {
+      const tx = await createTransactionForAcceptedOffer(lid, offer._id.toString());
+      if (!tx) continue;
+      created.push(tx);
+      hasTx.add(lid);
+
+      if (notify) {
+        try {
+          const listing = await Listing.findById(lid).select('title slug').lean();
+          const { notifyProposalAccepted } = require('./notificationService');
+          const buyerUserId = (offer.offerer._id || offer.offerer).toString();
+          await notifyProposalAccepted({
+            listingSlug: listing?.slug || null,
+            listingTitle: listing?.title || 'the item',
+            offerAmount: offer.amount,
+            buyerUserId
+          });
+        } catch (err) {
+          logger.error('Heal notify failed for offer', offer._id, err.message);
+        }
+      }
+    } catch (err) {
+      logger.error('Heal transaction failed for offer', offer._id, err.message);
+    }
+  }
+
+  if (created.length) {
+    logger.info(`🔧 Healed ${created.length} accepted offer(s) missing transactions`);
+  }
+  return created;
 }
 
 /**
@@ -153,5 +241,6 @@ async function createTransactionForBuyNow(listingId, buyerUserId) {
 module.exports = {
   createTransactionForListing,
   createTransactionForAcceptedOffer,
-  createTransactionForBuyNow
+  createTransactionForBuyNow,
+  healMissingOfferTransactions
 };
