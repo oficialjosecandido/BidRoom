@@ -398,6 +398,11 @@ router.get('/', optionalAuth, catalogueLimiter, async (req, res) => {
       .skip(skipNum)
       .lean();
 
+    // Best Offer cards read bidCount/currentPrice; those fields lag unless we overlay live offer stats.
+    const { getOfferStatsForListings } = require('../utils/listingOfferStats');
+    const bestOfferIds = listings.filter((l) => l.auctionFormat === 'best-offer').map((l) => l._id);
+    const offerStatsByListing = await getOfferStatsForListings(bestOfferIds);
+
     // Helper function to generate slug from title
     function generateSlug(title) {
       return title
@@ -421,6 +426,13 @@ router.get('/', optionalAuth, catalogueLimiter, async (req, res) => {
           slug = `${baseSlug}-${similarSlugs.length + counter}`;
         }
         listing.slug = slug;
+      }
+
+      if (listing.auctionFormat === 'best-offer') {
+        const stats = offerStatsByListing[listing._id.toString()];
+        listing.bidCount = stats?.offerCount ?? 0;
+        listing.currentPrice = stats?.highestOffer ?? 0;
+        listing.highestOfferAmount = stats?.highestOffer ?? null;
       }
       
       const timeRemaining = new Listing(listing).getTimeRemaining();
@@ -3190,6 +3202,10 @@ router.get('/bidder/my-bets', authenticateToken, async (req, res) => {
       .sort({ endDate: -1 })
       .lean();
 
+    const { getOfferStatsForListings } = require('../utils/listingOfferStats');
+    const bestOfferIds = listings.filter((l) => l.auctionFormat === 'best-offer').map((l) => l._id);
+    const offerStatsByListing = await getOfferStatsForListings(bestOfferIds);
+
     const enhanced = listings.map((listing) => {
       const id = listing._id.toString();
       const entry = listingMap.get(id) || { type: 'bid', bets: [], lastBid: null };
@@ -3200,6 +3216,13 @@ router.get('/bidder/my-bets', authenticateToken, async (req, res) => {
         : true;
       const isWinner = listing.winner?.toString?.() === user._id.toString() ||
         (listing.auctionFormat === 'best-offer' && bets.some(x => x.type === 'offer' && x.status === 'accepted'));
+
+      if (listing.auctionFormat === 'best-offer') {
+        const stats = offerStatsByListing[id];
+        listing.bidCount = stats?.offerCount ?? 0;
+        listing.currentPrice = stats?.highestOffer ?? 0;
+      }
+
       return {
         ...listing,
         seller: sanitizeSellerForPublic(listing.seller),

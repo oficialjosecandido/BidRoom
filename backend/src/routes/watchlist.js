@@ -100,6 +100,17 @@ router.get('/', async (req, res) => {
         addedAt: item.createdAt
       }));
 
+    const { getOfferStatsForListings } = require('../utils/listingOfferStats');
+    const bestOfferIds = listings.filter((l) => l.auctionFormat === 'best-offer').map((l) => l._id);
+    const offerStatsByListing = await getOfferStatsForListings(bestOfferIds);
+    for (const listing of listings) {
+      if (listing.auctionFormat !== 'best-offer') continue;
+      const stats = offerStatsByListing[listing._id.toString()];
+      listing.bidCount = stats?.offerCount ?? 0;
+      listing.currentPrice = stats?.highestOffer ?? 0;
+      listing.highestOfferAmount = stats?.highestOffer ?? null;
+    }
+
     res.json({ watchlist: listings, total: listings.length });
   } catch (error) {
     logger.error('Error fetching watchlist:', error);

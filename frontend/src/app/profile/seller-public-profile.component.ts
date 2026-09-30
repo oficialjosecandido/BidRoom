@@ -22,6 +22,24 @@ export interface PublicReview {
   reviewer: { firstName: string; lastInitial: string } | null;
 }
 
+interface PublicListing {
+  _id: string;
+  slug: string;
+  title: string;
+  titlePt?: string | null;
+  titleEn?: string | null;
+  titleFr?: string | null;
+  titleEs?: string | null;
+  images: string[];
+  currentPrice: number;
+  startingPrice: number;
+  bidCount: number;
+  endDate: string;
+  auctionFormat: string;
+  saleFormat?: 'auction' | 'giveaway';
+  giveaway?: { entryCount?: number };
+}
+
 interface PublicProfile {
   _id: string;
   slug: string | null;
@@ -36,26 +54,13 @@ interface PublicProfile {
   soldCount: number;
   boughtCount: number;
   followersCount: number;
-  activeListings: {
-    _id: string;
-    slug: string;
-    title: string;
-    titlePt?: string | null;
-    titleEn?: string | null;
-    images: string[];
-    currentPrice: number;
-    startingPrice: number;
-    bidCount: number;
-    endDate: string;
-    auctionFormat: string;
-    saleFormat?: 'auction' | 'giveaway';
-    giveaway?: { entryCount?: number };
-  }[];
+  activeListings: PublicListing[];
+  endedListings?: PublicListing[];
 }
 
 type ReviewSort = 'recent' | 'highest' | 'lowest';
 type ReviewRole = 'all' | 'as_seller' | 'as_buyer';
-type Tab = 'listings' | 'reviews';
+type Tab = 'active' | 'ended' | 'reviews';
 
 @Component({
   selector: 'app-seller-public-profile',
@@ -88,7 +93,7 @@ export class SellerPublicProfileComponent implements OnInit {
   followLoading = false;
 
   // Tabs
-  activeTab: Tab = 'listings';
+  activeTab: Tab = 'active';
 
   // Reviews
   reviews: PublicReview[] = [];
@@ -100,8 +105,17 @@ export class SellerPublicProfileComponent implements OnInit {
   reviewPages = 1;
   reviewTotal = 0;
 
-  listingTitle(listing: { title: string; titlePt?: string | null; titleEn?: string | null }): string {
+  listingTitle(listing: PublicListing): string {
     return getLocalizedTitle(listing, this.translate.currentLang || 'pt');
+  }
+
+  get endedListings(): PublicListing[] {
+    return this.profile?.endedListings ?? [];
+  }
+
+  get displayedListings(): PublicListing[] {
+    if (!this.profile) return [];
+    return this.activeTab === 'ended' ? this.endedListings : this.profile.activeListings;
   }
 
   ngOnInit(): void {
@@ -286,7 +300,7 @@ export class SellerPublicProfileComponent implements OnInit {
 
   timeRemaining(endDate: string): string {
     const diff = new Date(endDate).getTime() - Date.now();
-    if (diff <= 0) return 'Ended';
+    if (diff <= 0) return this.translate.instant('sellerProfile.ended');
     const days = Math.floor(diff / 86400000);
     const hours = Math.floor((diff % 86400000) / 3600000);
     if (days > 0) return `${days}d ${hours}h`;

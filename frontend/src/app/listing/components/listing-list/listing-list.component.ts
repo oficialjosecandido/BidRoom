@@ -366,6 +366,17 @@ export class ListingListComponent implements OnInit, OnDestroy {
     this.navigate();
   }
 
+  /** Switch catalogue to ended listings (keeps search/category filters). */
+  setStatusEnded(): void {
+    if (this.listingStatusFilter === 'ended') return;
+    this.listingStatusFilter = 'ended';
+    this.statusEnding = false;
+    this.statusPrivate = false;
+    if (this.sortBy === 'deadline') this.sortBy = 'recent-end';
+    this.currentPage = 1;
+    this.navigate();
+  }
+
   toggleStatusEnding(): void {
     this.listingStatusFilter = 'active';
     this.statusEnding = !this.statusEnding;
@@ -382,14 +393,10 @@ export class ListingListComponent implements OnInit, OnDestroy {
 
   toggleStatusClosed(): void {
     if (this.listingStatusFilter === 'ended') {
-      this.listingStatusFilter = 'active';
-      if (this.sortBy === 'recent-end') this.sortBy = 'deadline';
+      this.toggleStatusLive();
     } else {
-      this.listingStatusFilter = 'ended';
-      if (this.sortBy === 'deadline') this.sortBy = 'recent-end';
+      this.setStatusEnded();
     }
-    this.currentPage = 1;
-    this.navigate();
   }
 
   activeStatusLabels(): { key: StatusFilterKey; label: string }[] {

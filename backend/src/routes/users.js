@@ -102,7 +102,7 @@ router.get('/:id/profile', validate(profileParamsSchema), async (req, res) => {
 
     const oid = new mongoose.Types.ObjectId(user._id);
 
-    const [sellerAgg, buyerAgg, soldCount, boughtCount, followersCount, activeListings] =
+    const [sellerAgg, buyerAgg, soldCount, boughtCount, followersCount, activeListings, endedListings] =
       await Promise.all([
         Review.aggregate([
           { $match: { reviewee: oid, role: 'as_seller' } },
@@ -116,11 +116,26 @@ router.get('/:id/profile', validate(profileParamsSchema), async (req, res) => {
         Transaction.countDocuments({ buyer: oid, status: 'completed' }),
         Follow.countDocuments({ following: oid }),
         Listing.find({ seller: user._id, status: 'active' })
-          .select('_id slug title images currentPrice startingPrice bidCount endDate auctionFormat saleFormat giveaway.entryCount')
+          .select('_id slug title titlePt titleEn titleFr titleEs images currentPrice startingPrice bidCount endDate auctionFormat saleFormat giveaway.entryCount')
           .sort({ endDate: 1 })
+          .limit(20)
+          .lean(),
+        Listing.find({ seller: user._id, status: 'ended' })
+          .select('_id slug title titlePt titleEn titleFr titleEs images currentPrice startingPrice bidCount endDate auctionFormat saleFormat giveaway.entryCount')
+          .sort({ endDate: -1 })
           .limit(20)
           .lean()
       ]);
+
+    const { getOfferStatsForListings } = require('../utils/listingOfferStats');
+    const allForStats = [...activeListings, ...endedListings].filter((l) => l.auctionFormat === 'best-offer');
+    const offerStats = await getOfferStatsForListings(allForStats.map((l) => l._id));
+    for (const listing of [...activeListings, ...endedListings]) {
+      if (listing.auctionFormat !== 'best-offer') continue;
+      const stats = offerStats[listing._id.toString()];
+      listing.bidCount = stats?.offerCount ?? 0;
+      listing.currentPrice = stats?.highestOffer ?? 0;
+    }
 
     const sellerScore = sellerAgg[0] ? Math.round(sellerAgg[0].avg * 10) / 10 : null;
     const sellerReviewCount = sellerAgg[0]?.count ?? 0;
@@ -141,7 +156,8 @@ router.get('/:id/profile', validate(profileParamsSchema), async (req, res) => {
       soldCount,
       boughtCount,
       followersCount,
-      activeListings
+      activeListings,
+      endedListings
     });
   } catch (err) {
     logger.error('GET /api/users/:id/profile error:', err);

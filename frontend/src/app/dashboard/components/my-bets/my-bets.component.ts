@@ -4,6 +4,7 @@ import { RouterLink } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { ListingsService, Listing } from '../../../shared/services/listings.service';
 import { BidsService } from '../../../shared/services/bids.service';
+import { OffersService } from '../../../shared/services/offers.service';
 
 interface BetItem {
   _id: string;
@@ -30,6 +31,7 @@ interface EnhancedListing extends Listing {
 export class MyBetsComponent implements OnInit {
   private listingsService = inject(ListingsService);
   private bidsService = inject(BidsService);
+  private offersService = inject(OffersService);
   private translate = inject(TranslateService);
 
   listings: EnhancedListing[] = [];
@@ -37,6 +39,7 @@ export class MyBetsComponent implements OnInit {
   error: string | null = null;
   expandedIds = new Set<string>();
   preferenceUpdating: Record<string, boolean> = {};
+  withdrawingId: string | null = null;
   bidFilter: 'all' | 'winning' | 'outbid' | 'ended' = 'all';
 
   get filteredListings(): EnhancedListing[] {
@@ -107,8 +110,41 @@ export class MyBetsComponent implements OnInit {
       case 'accepted': return 'status-accepted';
       case 'rejected': return 'status-rejected';
       case 'pending': return 'status-pending';
+      case 'withdrawn': return 'status-withdrawn';
       default: return 'status-default';
     }
+  }
+
+  canWithdrawBet(bet: BetItem): boolean {
+    return bet.type === 'offer' && bet.status === 'pending';
+  }
+
+  withdrawOffer(listing: EnhancedListing, bet: BetItem, event: Event): void {
+    event.stopPropagation();
+    if (!this.canWithdrawBet(bet) || this.withdrawingId) return;
+    this.withdrawingId = bet._id;
+    this.offersService.withdrawOffer(bet._id).subscribe({
+      next: (updated) => {
+        bet.status = updated.status || 'withdrawn';
+        this.withdrawingId = null;
+        if (listing.auctionFormat === 'best-offer') {
+          const pendingOrAccepted = (listing.bets || []).filter(
+            (b) => b.type === 'offer' && (b.status === 'pending' || b.status === 'accepted')
+          );
+          listing.bidCount = pendingOrAccepted.length;
+          listing.currentPrice = pendingOrAccepted.length
+            ? Math.max(...pendingOrAccepted.map((b) => b.amount))
+            : 0;
+          listing.myHighestBid = pendingOrAccepted.length
+            ? Math.max(...pendingOrAccepted.map((b) => b.amount))
+            : listing.myHighestBid;
+        }
+      },
+      error: (err) => {
+        this.withdrawingId = null;
+        this.error = err?.error?.message || this.translate.instant('dashboard.myBets.withdrawError');
+      }
+    });
   }
 
   formatDate(dateString: string): string {
@@ -149,7 +185,16 @@ export class MyBetsComponent implements OnInit {
   }
 
   getStatusLabel(status: string): string {
-    const key = `dashboard.myBets.status${status.charAt(0).toUpperCase() + status.slice(1)}`;
+    const map: Record<string, string> = {
+      pending: 'dashboard.myBets.statusPending',
+      accepted: 'dashboard.myBets.statusAccepted',
+      rejected: 'dashboard.myBets.statusRejected',
+      withdrawn: 'dashboard.myBets.statusWithdrawn',
+      active: 'dashboard.myBets.statusActive',
+      ended: 'dashboard.myBets.statusEnded',
+      cancelled: 'dashboard.myBets.statusCancelled'
+    };
+    const key = map[status] || `dashboard.myBets.status${status.charAt(0).toUpperCase() + status.slice(1)}`;
     const translated = this.translate.instant(key);
     return translated !== key ? translated : status;
   }

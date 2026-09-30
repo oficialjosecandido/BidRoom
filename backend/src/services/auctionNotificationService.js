@@ -965,10 +965,26 @@ async function handleAuctionEnd(listingId, io = null) {
 
           await Promise.all([singleOffer.save(), singleOffer.listing.save()]);
 
+          const { syncListingOfferStats } = require('../utils/listingOfferStats');
+          await syncListingOfferStats(listingId).catch(err =>
+            logger.error('Failed to sync offer stats after auto-accept:', err.message)
+          );
+
           if (singleOffer.offerer) {
             await createTransactionForAcceptedOffer(listingId.toString(), singleOffer._id.toString()).catch(err =>
               logger.error('Transaction create for auto-accepted offer:', err.message)
             );
+            const buyerUserId = singleOffer.offerer._id?.toString?.() || singleOffer.offerer?.toString?.();
+            if (buyerUserId) {
+              const { notifyProposalAccepted, emitNewNotificationToUser } = require('./notificationService');
+              notifyProposalAccepted({
+                listingSlug: listing.slug || null,
+                listingTitle: listing.title || 'the item',
+                offerAmount: singleOffer.amount,
+                buyerUserId
+              }).catch(err => logger.error('Failed proposal-accepted notification (end auto):', err));
+              if (io) emitNewNotificationToUser(io, buyerUserId).catch(() => {});
+            }
           }
 
           if (io) {

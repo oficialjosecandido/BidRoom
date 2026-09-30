@@ -291,7 +291,7 @@
 
 .bh-row {
   display: grid;
-  grid-template-columns: auto 1fr auto auto;
+  grid-template-columns: auto 1fr auto auto auto;
   gap: 10px;
   align-items: center;
   padding: 8px 12px;
@@ -317,6 +317,27 @@
   &.status-accepted { color: var(--green); }
   &.status-rejected { color: var(--red); }
   &.status-pending  { color: var(--amber); }
+  &.status-withdrawn { color: var(--dim); }
+}
+
+.bh-withdraw {
+  padding: 4px 10px;
+  border-radius: 100px;
+  border: 1px solid var(--line);
+  background: none;
+  color: var(--sub);
+  font-size: 11px;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color .15s, border-color .15s;
+
+  &:hover:not(:disabled) {
+    color: var(--red);
+    border-color: rgba(194, 90, 90, 0.35);
+  }
+  &:disabled { opacity: .4; cursor: not-allowed; }
 }
 
 /* actions */

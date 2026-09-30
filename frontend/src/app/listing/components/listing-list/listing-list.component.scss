@@ -405,6 +405,10 @@
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 4px;
+
+    &--secondary {
+      margin-top: 8px;
+    }
   }
 
   .status-pill {

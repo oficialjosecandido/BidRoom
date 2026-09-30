@@ -74,7 +74,7 @@ async function shouldSendEmail(userId, eventType) {
  * | New bid received           | /listing/:slug?tab=bids        |
  * | Outbid (auction)          | /listing/:slug?tab=bids        |
  * | New proposal               | /listing/:slug?tab=offers       |
- * | Proposal accepted/declined| /listing/:slug?tab=offers       |
+ * | Proposal accepted         | /dashboard/transactions         |
  * | Auction ended (seller)     | /dashboard/transactions         |
  * | Auction won (buyer)        | /dashboard/transactions         |
  * | Listing removed/changes   | /dashboard/my-listings or listing |
@@ -218,16 +218,15 @@ async function notifyNewProposal({ listingId, listingSlug, listingTitle, offerAm
   });
 }
 
-/** Proposal accepted - notify buyer */
+/** Proposal accepted - notify buyer to complete payment in Transactions */
 async function notifyProposalAccepted({ listingSlug, listingTitle, offerAmount, buyerUserId }) {
-  const link = listingSlug ? `/listing/${listingSlug}?tab=offers` : null;
   return createNotification({
     userId: buyerUserId,
-    title: 'Proposal accepted',
-    message: `Your offer of $${(offerAmount || 0).toFixed(2)} on "${listingTitle || 'the item'}" was accepted.`,
-    type: 'proposal',
-    link,
-    referenceId: listingSlug
+    title: 'Offer accepted — complete payment',
+    message: `Your offer of $${(offerAmount || 0).toFixed(2)} on "${listingTitle || 'the item'}" was accepted. Open Transactions to complete payment.`,
+    type: 'transaction',
+    link: '/dashboard/transactions',
+    referenceId: listingSlug || null
   });
 }
 

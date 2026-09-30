@@ -112,24 +112,30 @@
 
       <!-- ── Tabs ── -->
       <div class="tabs-bar">
-        <button class="tab-btn" [class.active]="activeTab === 'listings'" (click)="switchTab('listings')">
+        <button type="button" class="tab-btn" [class.active]="activeTab === 'active'" (click)="switchTab('active')">
           {{ 'sellerProfile.activeListings' | translate }}
           <span class="tab-badge">{{ profile.activeListings.length }}</span>
         </button>
-        <button class="tab-btn" [class.active]="activeTab === 'reviews'" (click)="switchTab('reviews')">
+        <button type="button" class="tab-btn" [class.active]="activeTab === 'ended'" (click)="switchTab('ended')">
+          {{ 'sellerProfile.endedListings' | translate }}
+          <span class="tab-badge">{{ endedListings.length }}</span>
+        </button>
+        <button type="button" class="tab-btn" [class.active]="activeTab === 'reviews'" (click)="switchTab('reviews')">
           {{ 'sellerProfile.reviews' | translate }}
           <span class="tab-badge">{{ totalReviewCount }}</span>
         </button>
       </div>
 
-      <!-- ── Active Listings tab ── -->
-      @if (activeTab === 'listings') {
+      <!-- ── Listings tab (active or ended) ── -->
+      @if (activeTab === 'active' || activeTab === 'ended') {
         <section class="tab-panel">
-          @if (profile.activeListings.length === 0) {
-            <p class="empty-state">{{ 'sellerProfile.noActiveListings' | translate }}</p>
+          @if (displayedListings.length === 0) {
+            <p class="empty-state">
+              {{ (activeTab === 'ended' ? 'sellerProfile.noEndedListings' : 'sellerProfile.noActiveListings') | translate }}
+            </p>
           } @else {
             <div class="listings-grid">
-              @for (listing of profile.activeListings; track listing._id) {
+              @for (listing of displayedListings; track listing._id) {
                 <a class="listing-card" [routerLink]="['/listing', listing.slug]">
                   <div class="card-image">
                     @if (listing.images.length) {
@@ -137,21 +143,30 @@
                     } @else {
                       <div class="card-image-placeholder">📦</div>
                     }
+                    @if (activeTab === 'ended') {
+                      <span class="card-badge">{{ 'sellerProfile.ended' | translate }}</span>
+                    } @else if (listing.auctionFormat === 'best-offer') {
+                      <span class="card-badge card-badge--offer">{{ 'sellerProfile.bestOffer' | translate }}</span>
+                    }
                   </div>
                   <div class="card-body">
                     <p class="card-title">{{ listingTitle(listing) }}</p>
                     @if (listing.saleFormat === 'giveaway') {
-                      <p class="card-price">🎁 {{ 'GIVEAWAY.FREE' | translate }}</p>
+                      <p class="card-price">{{ 'GIVEAWAY.FREE' | translate }}</p>
+                    } @else if (listing.auctionFormat === 'best-offer' && (listing.currentPrice == null || listing.currentPrice === 0)) {
+                      <p class="card-price card-price--muted">{{ 'sellerProfile.noOffersYet' | translate }}</p>
                     } @else {
                       <p class="card-price">{{ formatPrice(listing.currentPrice || listing.startingPrice) }}</p>
                     }
                     <div class="card-meta">
                       @if (listing.saleFormat === 'giveaway') {
                         <span>{{ giveawayEntriesLabel(listing) }}</span>
+                      } @else if (listing.auctionFormat === 'best-offer') {
+                        <span>{{ listing.bidCount }} {{ listing.bidCount === 1 ? ('sellerProfile.offer' | translate) : ('sellerProfile.offers' | translate) }}</span>
                       } @else {
                         <span>{{ listing.bidCount }} {{ listing.bidCount === 1 ? ('sellerProfile.bid' | translate) : ('sellerProfile.bids' | translate) }}</span>
                       }
-                      <span class="card-timer">{{ timeRemaining(listing.endDate) }}</span>
+                      <span class="card-timer" [class.ended]="activeTab === 'ended'">{{ timeRemaining(listing.endDate) }}</span>
                     </div>
                   </div>
                 </a>

@@ -34,6 +34,7 @@ function tierFromBalance(balance) {
 }
 
 const { formatOfferForSocket } = require('../utils/offerFormat');
+const { syncListingOfferStats } = require('../utils/listingOfferStats');
 const { parsePageParams, pageMeta } = require('../utils/pagination');
 const {
   notifyNewProposal,
@@ -267,6 +268,9 @@ async function createOffer(req, res) {
 
     await offer.save();
 
+    // Cards/browse use listing.currentPrice + bidCount — keep them in sync with offers.
+    await syncListingOfferStats(listingId);
+
     const populatedOffer = await Offer.findById(offer._id)
       .populate('offerer', 'firstName lastName email emailVerified')
       .lean();
@@ -443,6 +447,8 @@ router.patch('/:offerId/accept', authenticateToken, async (req, res) => {
 
     await Promise.all([offer.save(), offer.listing.save()]);
 
+    await syncListingOfferStats(offer.listing._id);
+
     const sellerDetails = { id: user._id, email: user.email, name: `${user.firstName || ''} ${user.lastName || ''}`.trim() };
     const allOffers = await Offer.find({ listing: offer.listing._id }).select('_id amount status offerer offererEmail').lean();
     const allOffersSummary = {
@@ -454,12 +460,13 @@ router.patch('/:offerId/accept', authenticateToken, async (req, res) => {
 
     const io = req.app.get('io');
     if (offer.offerer) {
-      createTransactionForAcceptedOffer(offer.listing._id.toString(), offer._id.toString()).catch(err =>
-        logger.error('Transaction create for accepted offer:', err.message)
-      );
-      // Notify buyer that proposal was accepted
       const buyerUserId = offer.offerer._id?.toString?.() || offer.offerer?.toString?.();
       const listing = offer.listing;
+      try {
+        await createTransactionForAcceptedOffer(offer.listing._id.toString(), offer._id.toString());
+      } catch (err) {
+        logger.error('Transaction create for accepted offer:', err.message);
+      }
       if (buyerUserId) {
         notifyProposalAccepted({
           listingSlug: listing.slug || null,
@@ -558,6 +565,8 @@ router.patch('/:offerId/reject', authenticateToken, async (req, res) => {
 
     await offer.save();
 
+    await syncListingOfferStats(offer.listing._id);
+
     // If exactly one qualifying offer remains after this rejection → auto-accept it
     if (minimumOfferPrice > 0) {
       const remainingQualifying = await Offer.find({
@@ -601,9 +610,25 @@ router.patch('/:offerId/reject', authenticateToken, async (req, res) => {
 
         await Promise.all([autoOffer.save(), autoOffer.listing.save()]);
 
+        await syncListingOfferStats(offer.listing._id);
+
         if (autoOffer.offerer) {
-          createTransactionForAcceptedOffer(offer.listing._id.toString(), autoOffer._id.toString())
-            .catch(err => logger.error('Transaction create for auto-accepted offer:', err.message));
+          try {
+            await createTransactionForAcceptedOffer(offer.listing._id.toString(), autoOffer._id.toString());
+          } catch (err) {
+            logger.error('Transaction create for auto-accepted offer:', err.message);
+          }
+          const buyerUserId = autoOffer.offerer._id?.toString?.() || autoOffer.offerer?.toString?.();
+          if (buyerUserId) {
+            notifyProposalAccepted({
+              listingSlug: offer.listing.slug || null,
+              listingTitle: offer.listing.title || 'the item',
+              offerAmount: autoOffer.amount,
+              buyerUserId
+            }).catch(err => logger.error('Failed proposal-accepted notification (auto):', err));
+            const ioNotify = req.app.get('io');
+            if (ioNotify) emitNewNotificationToUser(ioNotify, buyerUserId).catch(() => {});
+          }
         }
 
         const io = req.app.get('io');
@@ -694,6 +719,8 @@ router.patch('/:offerId/withdraw', authenticateToken, async (req, res) => {
     offer.respondedAt = new Date();
     offer.sellerResponse = 'Withdrawn by buyer';
     await offer.save();
+
+    await syncListingOfferStats(offer.listing._id);
 
     const io = req.app.get('io');
     if (io) {

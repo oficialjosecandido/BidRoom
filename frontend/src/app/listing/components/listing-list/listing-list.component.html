@@ -57,7 +57,7 @@
         }
         @if (listingStatusFilter === 'ended') {
           <button type="button" class="filter-tag" (click)="clearListingStatusClosed()">
-            {{ 'listingList.closedAuctions' | translate }}<span class="filter-tag-x">×</span>
+            {{ 'listingList.statusEnded' | translate }}<span class="filter-tag-x">×</span>
           </button>
         }
         @for (c of selectedConditions; track c) {
@@ -192,20 +192,24 @@
         </button>
         @if (!collapsedGroups['status']) {
           <div class="filter-group-body">
-            <div class="status-grid">
-              <button type="button" class="status-pill" [class.active]="statusLive" (click)="toggleStatusLive()">
+            <div class="fmt-row">
+              <button type="button" class="fmt-pill" [class.active]="listingStatusFilter === 'active'" (click)="toggleStatusLive()">
                 {{ 'listingList.statusLive' | translate }}
               </button>
-              <button type="button" class="status-pill" [class.active]="statusEnding" (click)="toggleStatusEnding()">
-                {{ 'listingList.statusEnding' | translate }}
-              </button>
-              <button type="button" class="status-pill" [class.active]="statusPrivate" (click)="toggleStatusPrivate()">
-                {{ 'listingList.statusPrivate' | translate }}
-              </button>
-              <button type="button" class="status-pill" [class.active]="listingStatusFilter === 'ended'" (click)="toggleStatusClosed()">
-                {{ 'listingList.closedAuctions' | translate }}
+              <button type="button" class="fmt-pill" [class.active]="listingStatusFilter === 'ended'" (click)="setStatusEnded()">
+                {{ 'listingList.statusEnded' | translate }}
               </button>
             </div>
+            @if (listingStatusFilter === 'active') {
+              <div class="status-grid status-grid--secondary">
+                <button type="button" class="status-pill" [class.active]="statusEnding" (click)="toggleStatusEnding()">
+                  {{ 'listingList.statusEnding' | translate }}
+                </button>
+                <button type="button" class="status-pill" [class.active]="statusPrivate" (click)="toggleStatusPrivate()">
+                  {{ 'listingList.statusPrivate' | translate }}
+                </button>
+              </div>
+            }
           </div>
         }
       </div>
