@@ -2334,6 +2334,12 @@
       "invitedAt": "Convidado",
       "viewListing": "Ver Anúncio",
       "editListing": "Editar",
+      "deleteListing": "Eliminar",
+      "cancelConfirmTitle": "Eliminar este anúncio?",
+      "cancelConfirmText": "Só pode eliminar anúncios sem ofertas iguais ou superiores ao mínimo (ou sem lances). Esta ação não pode ser anulada.",
+      "cancelConfirmBtn": "Eliminar anúncio",
+      "cancelSuccess": "Anúncio eliminado",
+      "cancelError": "Não foi possível eliminar o anúncio",
       "status": {
         "active": "Ativo",
         "ended": "Terminado",

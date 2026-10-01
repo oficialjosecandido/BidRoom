@@ -54,6 +54,7 @@ export class MyAuctionsComponent implements OnInit, OnDestroy {
   listings: EnhancedListing[] = [];
   isLoading = true;
   error: string | null = null;
+  cancellingId: string | null = null;
 
   // ── Relist modal ────────────────────────────────────────────────────────────
   relistListing: EnhancedListing | null = null;
@@ -138,6 +139,64 @@ export class MyAuctionsComponent implements OnInit, OnDestroy {
       this.socketService.leaveListings(this.joinedListingIds);
       this.joinedListingIds = [];
     }
+  }
+
+  // ── Cancel eligibility ─────────────────────────────────────────────────────
+
+  /**
+   * Seller may withdraw a listing that is not yet sold and has no qualifying
+   * activity: Best Offer with no offers ≥ minimumOfferPrice; highest-bid with
+   * zero bids; draft / pending_review always (nothing live yet for buyers).
+   */
+  canCancelListing(listing: EnhancedListing): boolean {
+    if (!['draft', 'pending_review', 'active'].includes(listing.status)) return false;
+    if (listing.winner) return false;
+    if (listing.saleFormat === 'giveaway') {
+      return (listing.giveaway?.entryCount ?? 0) === 0;
+    }
+    if (listing.auctionFormat === 'best-offer') {
+      if ((listing.acceptedOfferCount ?? 0) > 0) return false;
+      const min = listing.minimumOfferPrice ?? 0;
+      const highest = listing.highestOfferAmount;
+      if (highest != null && highest >= min) return false;
+      return true;
+    }
+    return (listing.bidCount ?? 0) === 0;
+  }
+
+  cancelListing(listing: EnhancedListing): void {
+    if (!this.canCancelListing(listing) || this.cancellingId) return;
+
+    Swal.fire({
+      title: this.translate.instant('dashboard.myAuctions.cancelConfirmTitle'),
+      text: this.translate.instant('dashboard.myAuctions.cancelConfirmText'),
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: this.translate.instant('dashboard.myAuctions.cancelConfirmBtn'),
+      cancelButtonText: this.translate.instant('dashboard.common.cancel'),
+      confirmButtonColor: '#b91c1c',
+      reverseButtons: true
+    }).then((result) => {
+      if (!result.isConfirmed) return;
+      this.cancellingId = listing._id;
+      this.listingsService.cancelListing(listing._id).subscribe({
+        next: () => {
+          this.cancellingId = null;
+          listing.status = 'cancelled';
+          listing.pendingOfferCount = 0;
+          listing.highestOfferAmount = null;
+          successToast.fire({ title: this.translate.instant('dashboard.myAuctions.cancelSuccess') });
+        },
+        error: (err) => {
+          this.cancellingId = null;
+          Swal.fire({
+            icon: 'error',
+            title: this.translate.instant('dashboard.myAuctions.cancelError'),
+            text: err?.error?.message || undefined
+          });
+        }
+      });
+    });
   }
 
   // ── Relist eligibility ──────────────────────────────────────────────────────

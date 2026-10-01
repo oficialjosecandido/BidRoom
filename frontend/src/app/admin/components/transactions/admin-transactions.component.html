@@ -68,12 +68,26 @@
                       <span class="listing-title" [title]="listingTitle(t)">{{ listingTitle(t) }}</span>
                     </td>
                     <td class="person-cell">
-                      <div class="person-avatar" [class]="personAvatarColor(sellerName(t))">{{ personInitials(sellerName(t)) }}</div>
-                      <span>{{ sellerName(t) }}</span>
+                      <div class="person">
+                        <div class="person-avatar" [class]="personAvatarColor(sellerName(t))">{{ personInitials(sellerName(t)) }}</div>
+                        <div class="person-meta">
+                          <span class="person-name">{{ sellerName(t) }}</span>
+                          @if (sellerEmail(t); as email) {
+                            <span class="person-email" [title]="email">{{ email }}</span>
+                          }
+                        </div>
+                      </div>
                     </td>
                     <td class="person-cell">
-                      <div class="person-avatar" [class]="personAvatarColor(buyerName(t))">{{ personInitials(buyerName(t)) }}</div>
-                      <span>{{ buyerName(t) }}</span>
+                      <div class="person">
+                        <div class="person-avatar" [class]="personAvatarColor(buyerName(t))">{{ personInitials(buyerName(t)) }}</div>
+                        <div class="person-meta">
+                          <span class="person-name">{{ buyerName(t) }}</span>
+                          @if (buyerEmail(t); as email) {
+                            <span class="person-email" [title]="email">{{ email }}</span>
+                          }
+                        </div>
+                      </div>
                     </td>
                     <td class="price-cell num">{{ formatPrice(t.amount) }}</td>
                     <td>

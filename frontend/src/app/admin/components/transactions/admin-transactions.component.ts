@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { AdminService } from '../../services/admin.service';
 import { AdminSidebarComponent } from '../sidebar/admin-sidebar.component';
 import { Transaction } from '../../../shared/services/transactions.service';
+import { CurrencyDisplayService } from '../../../shared/services/currency-display.service';
 
 @Component({
   selector: 'app-admin-transactions',
@@ -14,6 +15,7 @@ import { Transaction } from '../../../shared/services/transactions.service';
 })
 export class AdminTransactionsComponent implements OnInit {
   private adminService = inject(AdminService);
+  private currencyDisplay = inject(CurrencyDisplayService);
 
   transactions: Transaction[] = [];
   isLoading = false;
@@ -94,13 +96,14 @@ export class AdminTransactionsComponent implements OnInit {
     return this.statuses.find(s => s.value === status)?.label ?? status;
   }
 
+  /** Amounts are stored in EUR — never hardcode USD. */
   formatPrice(amount: number): string {
-    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2 }).format(amount);
+    return this.currencyDisplay.format(amount);
   }
 
   formatDate(d: string | null | undefined): string {
     if (!d) return '—';
-    return new Date(d).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+    return new Date(d).toLocaleDateString('en-GB', { year: 'numeric', month: 'short', day: 'numeric' });
   }
 
   sellerName(t: Transaction): string {
@@ -109,6 +112,14 @@ export class AdminTransactionsComponent implements OnInit {
 
   buyerName(t: Transaction): string {
     return t.buyer ? `${t.buyer.firstName} ${t.buyer.lastName}` : '—';
+  }
+
+  sellerEmail(t: Transaction): string | null {
+    return t.seller?.email?.trim() || null;
+  }
+
+  buyerEmail(t: Transaction): string | null {
+    return t.buyer?.email?.trim() || null;
   }
 
   listingTitle(t: Transaction): string {

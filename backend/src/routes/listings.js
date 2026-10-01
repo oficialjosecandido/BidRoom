@@ -2478,6 +2478,125 @@ router.post('/:id/reopen', authenticateToken, requireActiveAccount, async (req, 
 });
 
 /**
+ * POST /api/listings/:id/cancel
+ * Seller soft-cancels a listing (status → cancelled).
+ * Allowed when draft / pending_review / active, and there is no qualifying activity:
+ *  - Best Offer: no pending/accepted offer at or above minimumOfferPrice (and no accepted sale)
+ *  - Highest-bid: no bids
+ *  - Giveaway: no entries
+ * Pending below-minimum offers are rejected so the listing can be withdrawn cleanly.
+ */
+router.post('/:id/cancel', authenticateToken, requireActiveAccount, async (req, res) => {
+  try {
+    const listing = await Listing.findById(req.params.id);
+    if (!listing) {
+      return res.status(404).json({ error: 'Listing not found' });
+    }
+
+    const user = await Customer.findOne({ uid: req.user.uid });
+    if (!user || String(listing.seller) !== String(user._id)) {
+      return res.status(403).json({
+        error: 'Unauthorized',
+        message: 'Only the seller can cancel this listing'
+      });
+    }
+
+    const cancellableStatuses = ['draft', 'pending_review', 'active'];
+    if (!cancellableStatuses.includes(listing.status)) {
+      return res.status(400).json({
+        error: 'Cannot cancel',
+        message: 'Only draft, pending review, or active listings can be cancelled'
+      });
+    }
+
+    if (listing.winner) {
+      return res.status(400).json({
+        error: 'Cannot cancel',
+        message: 'This listing already has a winner'
+      });
+    }
+
+    const activeTransaction = await Transaction.findOne({
+      listing: listing._id,
+      transactionStatus: {
+        $in: ['pending_payment', 'awaiting_seller_acceptance', 'paid', 'shipped', 'delivered', 'under_dispute']
+      }
+    }).lean();
+    if (activeTransaction) {
+      return res.status(409).json({
+        error: 'Cannot cancel',
+        message: 'This listing has an active transaction. Resolve it before cancelling.'
+      });
+    }
+
+    if (listing.saleFormat === 'giveaway' && (listing.giveaway?.entryCount || 0) > 0) {
+      return res.status(400).json({
+        error: 'giveaway_has_entries',
+        message: 'This giveaway cannot be cancelled because people have already entered.'
+      });
+    }
+
+    if (listing.auctionFormat === 'best-offer') {
+      const min = Number(listing.minimumOfferPrice) || 0;
+      const acceptedOffer = await Offer.exists({ listing: listing._id, status: 'accepted' });
+      if (acceptedOffer) {
+        return res.status(400).json({
+          error: 'has_accepted_offer',
+          message: 'This listing has an accepted offer and cannot be cancelled.'
+        });
+      }
+      const qualifyingOffer = await Offer.exists({
+        listing: listing._id,
+        status: 'pending',
+        amount: { $gte: min }
+      });
+      if (qualifyingOffer) {
+        return res.status(400).json({
+          error: 'has_qualifying_offers',
+          message: 'This listing has offers at or above the minimum price and cannot be cancelled.'
+        });
+      }
+    } else if (listing.saleFormat !== 'giveaway') {
+      const bidCount = await Bid.countDocuments({ listing: listing._id });
+      if (bidCount > 0 || (listing.bidCount || 0) > 0) {
+        return res.status(400).json({
+          error: 'has_bids',
+          message: 'This listing has bids and cannot be cancelled.'
+        });
+      }
+    }
+
+    // Reject leftover below-minimum pending offers so buyers are not left hanging.
+    await Offer.updateMany(
+      { listing: listing._id, status: 'pending' },
+      { $set: { status: 'rejected', respondedAt: new Date() } }
+    );
+
+    const { syncListingOfferStats } = require('../utils/listingOfferStats');
+    await syncListingOfferStats(listing._id);
+
+    await Listing.findByIdAndUpdate(listing._id, {
+      $set: { status: 'cancelled' }
+    });
+
+    const updated = await Listing.findById(listing._id)
+      .populate('seller', SELLER_DSA_PUBLIC_SELECT)
+      .lean();
+
+    return res.json({
+      message: 'Listing cancelled successfully',
+      listing: updated
+    });
+  } catch (error) {
+    logger.error('POST /listings/:id/cancel error:', error);
+    return res.status(500).json({
+      error: 'Failed to cancel listing',
+      message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
+    });
+  }
+});
+
+/**
  * POST /api/listings/:id/relist
  * One-click relist for any unsold auction (no bids, reserve not met, or non-payment).
  * Creates a NEW listing preserving title/description/images; seller can override price/duration.

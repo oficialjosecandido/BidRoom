@@ -123,14 +123,43 @@
 }
 
 // ── Person cell ───────────────────────────────────────────────────────────────
+// Keep `td` as table-cell — flex on `td` collapses Seller/Buyer columns.
 
 .person-cell {
+  min-width: 160px;
+  max-width: 220px;
+  color: #475569;
+  font-size: 13px;
+}
+
+.person {
   display: flex;
   align-items: center;
   gap: 8px;
+  min-width: 0;
+}
+
+.person-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.person-name {
+  font-weight: 600;
+  color: #334155;
   white-space: nowrap;
-  color: #475569;
-  font-size: 13px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.person-email {
+  font-size: 11px;
+  color: #94a3b8;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .person-avatar {

@@ -211,6 +211,16 @@
             @if (listing.status === 'draft' || listing.status === 'active') {
               <a [routerLink]="['/listing', listing._id, 'edit']" class="edit-btn">{{ 'dashboard.myAuctions.editListing' | translate }}</a>
             }
+            @if (canCancelListing(listing)) {
+              <button
+                type="button"
+                class="delete-listing-btn"
+                [disabled]="cancellingId === listing._id"
+                (click)="cancelListing(listing)"
+              >
+                {{ 'dashboard.myAuctions.deleteListing' | translate }}
+              </button>
+            }
             @if (isEligibleForRelist(listing)) {
               <button type="button" class="relist-btn" (click)="openRelistModal(listing)">
                 {{ 'dashboard.myAuctions.relist.relistBtn' | translate }}

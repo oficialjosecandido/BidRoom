@@ -1423,6 +1423,13 @@
       "acceptedAt": "Accepté",
       "invitedAt": "Invité",
       "viewListing": "Voir l'annonce",
+      "editListing": "Modifier",
+      "deleteListing": "Supprimer",
+      "cancelConfirmTitle": "Supprimer cette annonce ?",
+      "cancelConfirmText": "Vous ne pouvez supprimer que les annonces sans offres au minimum ou plus (ou sans enchères). Cette action est irréversible.",
+      "cancelConfirmBtn": "Supprimer l'annonce",
+      "cancelSuccess": "Annonce supprimée",
+      "cancelError": "Impossible de supprimer l'annonce",
       "relist": {
         "title": "Remettre en vente",
         "subtitle": "Ajustez vos paramètres et remettez l'article en vente pour lui donner une nouvelle chance.",

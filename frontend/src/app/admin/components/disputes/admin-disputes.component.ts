@@ -74,10 +74,11 @@ export class AdminDisputesComponent implements OnInit {
     this.selectedDispute = null;
   }
 
+  /** Amounts are stored in EUR — never hardcode USD. */
   formatPrice(amount: number): string {
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat('pt-PT', {
       style: 'currency',
-      currency: 'USD',
+      currency: 'EUR',
       minimumFractionDigits: 2,
       maximumFractionDigits: 2
     }).format(amount);

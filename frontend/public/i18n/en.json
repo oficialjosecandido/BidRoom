@@ -2334,6 +2334,12 @@
       "invitedAt": "Invited",
       "viewListing": "View Listing",
       "editListing": "Edit",
+      "deleteListing": "Delete",
+      "cancelConfirmTitle": "Delete this listing?",
+      "cancelConfirmText": "You can only delete listings with no qualifying offers or bids. This cannot be undone.",
+      "cancelConfirmBtn": "Delete listing",
+      "cancelSuccess": "Listing deleted",
+      "cancelError": "Could not delete listing",
       "status": {
         "active": "Active",
         "ended": "Ended",

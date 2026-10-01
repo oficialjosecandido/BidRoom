@@ -475,5 +475,16 @@ export class ListingsService {
       body
     );
   }
+
+  /**
+   * Seller soft-cancels a listing (draft / pending_review / active) when there is
+   * no qualifying activity (no offers ≥ minimum for best-offer; no bids otherwise).
+   */
+  cancelListing(listingId: string): Observable<{ message: string; listing: Listing }> {
+    return this.http.post<{ message: string; listing: Listing }>(
+      `${this.apiUrl}/${listingId}/cancel`,
+      {}
+    );
+  }
 }
 

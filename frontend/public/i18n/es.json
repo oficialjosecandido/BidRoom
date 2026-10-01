@@ -1426,6 +1426,13 @@
       "acceptedAt": "Aceptado",
       "invitedAt": "Invitado",
       "viewListing": "Ver Anuncio",
+      "editListing": "Editar",
+      "deleteListing": "Eliminar",
+      "cancelConfirmTitle": "¿Eliminar este anuncio?",
+      "cancelConfirmText": "Solo puedes eliminar anuncios sin ofertas iguales o superiores al mínimo (o sin pujas). Esta acción no se puede deshacer.",
+      "cancelConfirmBtn": "Eliminar anuncio",
+      "cancelSuccess": "Anuncio eliminado",
+      "cancelError": "No se pudo eliminar el anuncio",
       "relist": {
         "title": "Relistar Subasta",
         "subtitle": "Ajusta la configuración y relista el artículo para darle otra oportunidad.",

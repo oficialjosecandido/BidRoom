@@ -576,7 +576,8 @@
 
   .view-btn,
   .edit-btn,
-  .relist-btn {
+  .relist-btn,
+  .delete-listing-btn {
     padding: 9px 16px;
     border-radius: 100px;
     font-weight: 600;
@@ -588,6 +589,11 @@
     font-family: inherit;
 
     &:hover { opacity: .9; transform: translateY(-1px); }
+    &:disabled {
+      opacity: .55;
+      cursor: not-allowed;
+      transform: none;
+    }
   }
 
   .view-btn {
@@ -604,6 +610,17 @@
   .relist-btn {
     background: var(--green);
     color: var(--bg);
+  }
+
+  .delete-listing-btn {
+    background: transparent;
+    color: #f87171;
+    border: 1px solid rgba(248, 113, 113, 0.45);
+
+    &:hover:not(:disabled) {
+      background: rgba(248, 113, 113, 0.12);
+      opacity: 1;
+    }
   }
 }
 
