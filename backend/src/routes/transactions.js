@@ -22,8 +22,10 @@ const {
   wrapBidRoomEmail,
   emailInfoBox,
   emailTextLink,
+  escapeHtml,
   transactionUrl
 } = require('../utils/bidroomEmailLayout');
+const { sendLocalizedEmail } = require('../services/localizedEmail');
 const logger = require('../utils/logger');
 const {
   attachBuyerDeliveryAddressIfMissing,
@@ -537,29 +539,21 @@ router.patch('/:id', requireActiveAccount, async (req, res) => {
           if (io) emitNewNotificationToUser(io, buyerUserId).catch(() => {});
 
           // Email to buyer with optional proof-of-shipment link
-          const buyer = await Customer.findById(buyerUserId).select('email firstName').lean();
+          const buyer = await Customer.findById(buyerUserId).select('email firstName language').lean();
           if (buyer?.email) {
-            const txLink = transactionUrl(transaction._id?.toString?.());
-            const trackingSection = trackingNumber
-              ? emailInfoBox(`Tracking: <strong>${trackingCarrier ? trackingCarrier + ' – ' : ''}${trackingNumber}</strong>`)
+            // trackingLine and proofUrl are falsy when absent, which drops the
+            // whole {{#if}} block from the template rather than leaving an
+            // empty box behind.
+            const trackingLine = trackingNumber
+              ? `${trackingCarrier ? escapeHtml(trackingCarrier) + ' – ' : ''}${escapeHtml(trackingNumber)}`
               : '';
-            const proofSection = sellerProofOfDeliveryUrl
-              ? `<p style="margin:16px 0 0;">${emailTextLink(sellerProofOfDeliveryUrl, 'View proof of shipment')}</p>`
-              : '';
-            const bodyHtml = `
-              <p style="margin:0 0 16px;">Hi ${buyer.firstName || 'there'},</p>
-              <p style="margin:0 0 16px;">The seller marked <strong>${listingTitle}</strong> as shipped.</p>
-              ${trackingSection}
-              ${proofSection}
-              ${emailInfoBox('When you receive the item, confirm receipt in your dashboard.')}`;
-            const html = wrapBidRoomEmail({
-              title: 'Your item has shipped',
-              bodyHtml,
-              ctaUrl: txLink,
-              ctaLabel: 'View transaction'
-            });
-            sendEmail(buyer.email, `Your item "${listingTitle}" has been shipped`, html)
-              .catch(err => logger.error('Failed to send shipped email to buyer:', err.message));
+            sendLocalizedEmail(buyer, 'orderShipped', {
+              buyerFirstName: escapeHtml(buyer.firstName) || 'there',
+              listingTitle: escapeHtml(listingTitle),
+              trackingLine,
+              proofUrl: sellerProofOfDeliveryUrl ? escapeHtml(sellerProofOfDeliveryUrl) : '',
+              ctaUrl: transactionUrl(transaction._id?.toString?.())
+            }).catch(err => logger.error('Failed to send shipped email to buyer:', err.message));
           }
         }
       } else if (status === 'cancelled' && ts === 'pending_payment') {
@@ -697,7 +691,7 @@ router.post('/:id/request-return', requireActiveAccount, async (req, res) => {
 
     const transaction = await Transaction.findById(req.params.id)
       .populate('listing', 'title slug')
-      .populate('seller', '_id uid firstName email');
+      .populate('seller', '_id uid firstName email language');
 
     if (!transaction) return res.status(404).json({ error: 'Transaction not found' });
 
@@ -776,20 +770,14 @@ router.post('/:id/request-return', requireActiveAccount, async (req, res) => {
         emitNewNotificationToUser(io, sellerMongoId).catch(() => {});
       }
       if (transaction.seller?.email) {
-        const txLink = transactionUrl(transaction._id?.toString?.());
-        const bodyHtml = `
-          <p style="margin:0 0 16px;">Hi ${transaction.seller.firstName || 'there'},</p>
-          <p style="margin:0 0 16px;">The buyer requested a return for <strong>${listingTitle}</strong>.</p>
-          ${emailInfoBox(`<strong>Reason:</strong> ${transaction.returnReason}`)}
-          ${emailInfoBox('You have <strong>48 hours</strong> to accept or reject before BidRoom mediates.')}`;
-        const html = wrapBidRoomEmail({
-          title: 'Return request received',
-          bodyHtml,
-          ctaUrl: txLink,
-          ctaLabel: 'View transaction'
-        });
-        sendEmail(transaction.seller.email, `Return request for "${listingTitle}"`, html)
-          .catch(err => logger.error('Failed to send return request email:', err.message));
+        sendLocalizedEmail(transaction.seller, 'returnRequestSeller', {
+          firstName: escapeHtml(transaction.seller.firstName) || 'there',
+          listingTitle: escapeHtml(listingTitle),
+          // The reason is free text the buyer typed — escaped before it reaches HTML.
+          returnReason: escapeHtml(transaction.returnReason),
+          reasonBox: emailInfoBox(escapeHtml(transaction.returnReason)),
+          ctaUrl: transactionUrl(transaction._id?.toString?.())
+        }).catch(err => logger.error('Failed to send return request email:', err.message));
       }
     }
 

@@ -4,9 +4,9 @@
   "title": "A sua encomenda está a caminho",
   "preheader": "{{listingTitle}} foi expedido pelo vendedor.",
   "ctaUrl": "{{ctaUrl}}",
-  "ctaLabel": "Acompanhar encomenda",
+  "ctaLabel": "Ver transacção",
   "signOff": "Com os melhores cumprimentos,<br><strong style=\"color:#0f172a;\">A equipa BidRoom</strong>",
   "footerNote": "Mensagem automática · Por favor não responda directamente a este email",
-  "body": "<p style=\"margin:0 0 16px;\">Olá {{buyerFirstName}},</p><p style=\"margin:0 0 16px;\"><strong style=\"color:#0f172a;\">\"{{listingTitle}}\"</strong> foi expedido pelo vendedor.</p>{{trackingBox}}<p style=\"margin:0 0 16px;\">Quando chegar, confirme a recepção no seu painel para que o vendedor possa ser pago. Se não chegar, pode abrir uma disputa no mesmo ecrã.</p>",
-  "text": "Olá {{buyerFirstName}},\n\n\"{{listingTitle}}\" foi enviado.\n{{trackingText}}\n\n{{ctaUrl}}"
+  "body": "<p style=\"margin:0 0 16px;\">Olá {{buyerFirstName}},</p><p style=\"margin:0 0 16px;\"><strong style=\"color:#0f172a;\">\"{{listingTitle}}\"</strong> foi expedido pelo vendedor.</p>{{#if trackingLine}}<table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" role=\"presentation\" style=\"margin:20px 0;\"><tr><td style=\"background:#faf6eb;border:1px solid #e8d9a8;border-radius:12px;padding:16px 18px;color:#334155;font-size:14px;line-height:1.6;\">Número de registo: <strong style=\"color:#0f172a;\">{{trackingLine}}</strong></td></tr></table>{{/if}}{{#if proofUrl}}<p style=\"margin:0 0 16px;\"><a href=\"{{proofUrl}}\" style=\"color:#a8872e;font-weight:600;\">Ver comprovativo de envio</a></p>{{/if}}<p style=\"margin:0 0 16px;\">Quando chegar, confirme a recepção no seu painel para que o vendedor possa ser pago. Se nunca chegar, pode abrir uma disputa no mesmo ecrã.</p>",
+  "text": "Olá {{buyerFirstName}},\n\n\"{{listingTitle}}\" foi enviado.\n{{#if trackingLine}}Registo: {{trackingLine}}\n{{/if}}\n{{ctaUrl}}"
 }

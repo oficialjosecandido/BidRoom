@@ -33,8 +33,9 @@ const {
   notifySellerOrderCancelledNoShipment,
   emitNewNotificationToUser
 } = require('./notificationService');
-const { sendEmail } = require('./emailService');
-const { wrapBidRoomEmail, emailInfoBox, transactionUrl } = require('../utils/bidroomEmailLayout');
+const { sendLocalizedEmail, formatEmailDate } = require('./localizedEmail');
+const { emailShipToBox, escapeHtml, transactionUrl } = require('../utils/bidroomEmailLayout');
+const { formatDeliveryAddressLines } = require('../utils/deliveryAddress');
 const logger = require('../utils/logger');
 
 const LOG_PREFIX = '[ShippingDeadline]';
@@ -97,7 +98,10 @@ async function processMidpointWarnings(now, io) {
     .sort({ paidAt: 1 })
     .limit(SCHEDULER_BATCH_LIMIT)
     .populate('listing', 'title slug')
-    .populate('seller', '_id uid email firstName')
+    .populate('seller', '_id uid email firstName language')
+    // The buyer's name goes in the ship-to box on the reminder: a seller who
+    // has lost the order in their inbox should not have to go find the address.
+    .populate('buyer', 'firstName lastName')
     .lean();
 
   for (const tx of candidates) {
@@ -118,21 +122,17 @@ async function processMidpointWarnings(now, io) {
           sellerUserId: sellerId
         }).catch(() => {});
 
-        const sellerEmail = tx.seller?.email;
-        const sellerName = tx.seller?.firstName || 'there';
-        if (sellerEmail) {
-          const txLink = transactionUrl(tx._id?.toString?.());
-          const bodyHtml = `
-            <p style="margin:0 0 16px;">Hi ${sellerName},</p>
-            <p style="margin:0 0 16px;">You have <strong>2 business days</strong> left to ship <strong>${listingTitle}</strong>.</p>
-            ${emailInfoBox('If you do not mark the order as shipped in time, it will be cancelled and the buyer refunded.')}`;
-          const html = wrapBidRoomEmail({
-            title: 'Shipping reminder',
-            bodyHtml,
-            ctaUrl: txLink,
-            ctaLabel: 'Manage shipment'
+        if (tx.seller?.email) {
+          const buyerName = [tx.buyer?.firstName, tx.buyer?.lastName].filter(Boolean).join(' ') || 'the buyer';
+          const addressLines = formatDeliveryAddressLines(tx.buyerDeliveryAddress);
+          await sendLocalizedEmail(tx.seller, 'shipReminderSeller', {
+            sellerFirstName: escapeHtml(tx.seller.firstName) || 'there',
+            listingTitle: escapeHtml(listingTitle),
+            shipByDate: formatEmailDate(resolveShipByDeadline(tx), tx.seller),
+            shipToBox: addressLines.length ? emailShipToBox(buyerName, addressLines) : '',
+            shipToText: [buyerName, ...addressLines].join('\n'),
+            ctaUrl: transactionUrl(tx._id?.toString?.())
           });
-          await sendEmail(sellerEmail, `Action required: ship "${listingTitle}" within 2 days`, html).catch(() => {});
         }
         if (io) emitNewNotificationToUser(io, sellerId).catch(() => {});
       }
@@ -214,20 +214,12 @@ async function processAutoCancellations(now, stripe, io) {
           buyerUserId: buyerId
         }).catch(() => {});
 
-        const buyerEmail = tx.buyer?.email;
-        const buyerName = tx.buyer?.firstName || 'there';
-        if (buyerEmail) {
-          const bodyHtml = `
-            <p style="margin:0 0 16px;">Hi ${buyerName},</p>
-            <p style="margin:0 0 16px;">Your order for <strong>${listingTitle}</strong> was cancelled because the seller did not ship in time.</p>
-            ${emailInfoBox('A full refund was issued to your original payment method. It may take 5–10 business days to appear.')}`;
-          const html = wrapBidRoomEmail({
-            title: 'Order cancelled — refund issued',
-            bodyHtml,
-            ctaUrl: transactionUrl(tx._id?.toString?.()),
-            ctaLabel: 'View transactions'
+        if (tx.buyer?.email) {
+          await sendLocalizedEmail(tx.buyer, 'orderCancelledBuyerRefund', {
+            firstName: escapeHtml(tx.buyer.firstName) || 'there',
+            listingTitle: escapeHtml(listingTitle),
+            ctaUrl: transactionUrl(tx._id?.toString?.())
           });
-          await sendEmail(buyerEmail, `Order cancelled — refund for "${listingTitle}"`, html).catch(() => {});
         }
         if (io) emitNewNotificationToUser(io, buyerId).catch(() => {});
       }
@@ -239,20 +231,12 @@ async function processAutoCancellations(now, stripe, io) {
           sellerUserId: sellerId
         }).catch(() => {});
 
-        const sellerEmail = tx.seller?.email;
-        const sellerName = tx.seller?.firstName || 'there';
-        if (sellerEmail) {
-          const bodyHtml = `
-            <p style="margin:0 0 16px;">Hi ${sellerName},</p>
-            <p style="margin:0 0 16px;">The order for <strong>${listingTitle}</strong> was cancelled because shipment was not confirmed in time.</p>
-            ${emailInfoBox('The buyer has been refunded in full. Ship future orders promptly to avoid cancellations.')}`;
-          const html = wrapBidRoomEmail({
-            title: 'Order cancelled — failed to ship',
-            bodyHtml,
-            ctaUrl: transactionUrl(tx._id?.toString?.()),
-            ctaLabel: 'View transactions'
+        if (tx.seller?.email) {
+          await sendLocalizedEmail(tx.seller, 'orderCancelledSellerNoShip', {
+            firstName: escapeHtml(tx.seller.firstName) || 'there',
+            listingTitle: escapeHtml(listingTitle),
+            ctaUrl: transactionUrl(tx._id?.toString?.())
           });
-          await sendEmail(sellerEmail, `Order cancelled — "${listingTitle}"`, html).catch(() => {});
         }
         if (io) emitNewNotificationToUser(io, sellerId).catch(() => {});
       }

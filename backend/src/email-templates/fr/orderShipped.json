@@ -4,9 +4,9 @@
   "title": "Votre commande est en route",
   "preheader": "{{listingTitle}} a été expédié par le vendeur.",
   "ctaUrl": "{{ctaUrl}}",
-  "ctaLabel": "Suivre ma commande",
+  "ctaLabel": "Voir la transaction",
   "signOff": "Cordialement,<br><strong style=\"color:#0f172a;\">L’équipe BidRoom</strong>",
   "footerNote": "Message automatique · Merci de ne pas répondre directement à cet e-mail",
-  "body": "<p style=\"margin:0 0 16px;\">Bonjour {{buyerFirstName}},</p><p style=\"margin:0 0 16px;\"><strong style=\"color:#0f172a;\">« {{listingTitle}} »</strong> a été expédié par le vendeur.</p>{{trackingBox}}<p style=\"margin:0 0 16px;\">À réception, confirmez-la dans votre tableau de bord pour que le vendeur soit payé. En cas de non-livraison, vous pouvez ouvrir un litige depuis le même écran.</p>",
-  "text": "Bonjour {{buyerFirstName}},\n\n« {{listingTitle}} » a été expédié.\n{{trackingText}}\n\n{{ctaUrl}}"
+  "body": "<p style=\"margin:0 0 16px;\">Bonjour {{buyerFirstName}},</p><p style=\"margin:0 0 16px;\"><strong style=\"color:#0f172a;\">« {{listingTitle}} »</strong> a été expédié par le vendeur.</p>{{#if trackingLine}}<table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" role=\"presentation\" style=\"margin:20px 0;\"><tr><td style=\"background:#faf6eb;border:1px solid #e8d9a8;border-radius:12px;padding:16px 18px;color:#334155;font-size:14px;line-height:1.6;\">Numéro de suivi : <strong style=\"color:#0f172a;\">{{trackingLine}}</strong></td></tr></table>{{/if}}{{#if proofUrl}}<p style=\"margin:0 0 16px;\"><a href=\"{{proofUrl}}\" style=\"color:#a8872e;font-weight:600;\">Voir la preuve d’expédition</a></p>{{/if}}<p style=\"margin:0 0 16px;\">À réception, confirmez-la dans votre tableau de bord pour que le vendeur soit payé. En cas de non-livraison, vous pouvez ouvrir un litige depuis le même écran.</p>",
+  "text": "Bonjour {{buyerFirstName}},\n\n« {{listingTitle}} » a été expédié.\n{{#if trackingLine}}Suivi : {{trackingLine}}\n{{/if}}\n{{ctaUrl}}"
 }

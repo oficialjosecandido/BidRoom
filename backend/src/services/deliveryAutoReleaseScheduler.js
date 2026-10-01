@@ -18,8 +18,8 @@
 const Transaction = require('../models/Transaction');
 const Customer = require('../models/Customer');
 const { emitNewNotificationToUser, createNotification } = require('./notificationService');
-const { sendEmail } = require('./emailService');
-const { wrapBidRoomEmail, emailInfoBox, transactionUrl } = require('../utils/bidroomEmailLayout');
+const { sendLocalizedEmail } = require('./localizedEmail');
+const { escapeHtml, transactionUrl } = require('../utils/bidroomEmailLayout');
 const { checkAndApplyPendingSuspensions } = require('./accountStatusService');
 const logger = require('../utils/logger');
 
@@ -67,8 +67,8 @@ async function processAutoReleases(io) {
     .sort({ autoReleaseAt: 1 })
     .limit(BATCH_LIMIT)
     .populate('listing', 'title slug')
-    .populate('seller', '_id uid email firstName')
-    .populate('buyer', '_id uid email firstName')
+    .populate('seller', '_id uid email firstName language')
+    .populate('buyer', '_id uid email firstName language')
     .lean();
 
   for (const tx of candidates) {
@@ -123,19 +123,12 @@ async function processAutoReleases(io) {
           referenceId: tx._id.toString()
         }).catch(() => {});
 
-        const buyerEmail = tx.buyer?.email;
-        if (buyerEmail) {
-          const bodyHtml = `
-            <p style="margin:0 0 16px;">Hi ${tx.buyer?.firstName || 'there'},</p>
-            <p style="margin:0 0 16px;">Your order for <strong>${listingTitle}</strong> was automatically completed.</p>
-            ${emailInfoBox('Payment was released to the seller. Contact BidRoom support if you have an issue with this order.')}`;
-          const html = wrapBidRoomEmail({
-            title: 'Order completed automatically',
-            bodyHtml,
-            ctaUrl: transactionUrl(tx._id?.toString?.()),
-            ctaLabel: 'View transaction'
+        if (tx.buyer?.email) {
+          await sendLocalizedEmail(tx.buyer, 'orderCompletedBuyer', {
+            firstName: escapeHtml(tx.buyer.firstName) || 'there',
+            listingTitle: escapeHtml(listingTitle),
+            ctaUrl: transactionUrl(tx._id?.toString?.())
           });
-          await sendEmail(buyerEmail, `Order completed — "${listingTitle}"`, html).catch(() => {});
         }
         if (io) emitNewNotificationToUser(io, buyerId).catch(() => {});
       }
@@ -150,18 +143,16 @@ async function processAutoReleases(io) {
           referenceId: tx._id.toString()
         }).catch(() => {});
 
-        const sellerEmail = tx.seller?.email;
-        if (sellerEmail) {
-          const bodyHtml = `
-            <p style="margin:0 0 16px;">Hi ${tx.seller?.firstName || 'there'},</p>
-            <p style="margin:0 0 16px;">The order for <strong>${listingTitle}</strong> was automatically completed and your payment has been released.</p>`;
-          const html = wrapBidRoomEmail({
-            title: 'Payment released',
-            bodyHtml,
-            ctaUrl: transactionUrl(tx._id?.toString?.()),
-            ctaLabel: 'View transaction'
+        if (tx.seller?.email) {
+          await sendLocalizedEmail(tx.seller, 'payoutReleasedSeller', {
+            sellerFirstName: escapeHtml(tx.seller.firstName) || 'there',
+            listingTitle: escapeHtml(listingTitle),
+            // No figure is to hand on this path, so the template's payout box
+            // and label collapse to nothing rather than printing "undefined".
+            payoutBox: '',
+            payoutLabel: '',
+            ctaUrl: transactionUrl(tx._id?.toString?.())
           });
-          await sendEmail(sellerEmail, `Payment released — "${listingTitle}"`, html).catch(() => {});
         }
         if (io) emitNewNotificationToUser(io, sellerId).catch(() => {});
       }
@@ -192,8 +183,8 @@ async function processReturnMediations(io) {
     .sort({ returnSellerDeadline: 1 })
     .limit(BATCH_LIMIT)
     .populate('listing', 'title slug')
-    .populate('seller', '_id uid email firstName')
-    .populate('buyer', '_id uid email firstName')
+    .populate('seller', '_id uid email firstName language')
+    .populate('buyer', '_id uid email firstName language')
     .lean();
 
   for (const tx of candidates) {
