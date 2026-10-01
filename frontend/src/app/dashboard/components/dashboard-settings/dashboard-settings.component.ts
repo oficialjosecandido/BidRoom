@@ -111,6 +111,18 @@ export class DashboardSettingsComponent implements OnInit, OnDestroy {
   langSaving = false;
   langSaved = false;
 
+  /** Default buyer delivery address (settings). */
+  deliveryStreet1 = '';
+  deliveryCity = '';
+  deliveryState = '';
+  deliveryPostalCode = '';
+  deliveryCountry = 'PT';
+  deliverySaving = false;
+  deliverySaved = false;
+  deliveryError: string | null = null;
+  deliveryClearing = false;
+  readonly deliveryStateRequiredCountries = new Set(['US', 'CA', 'AU', 'MX']);
+
   /** DSA seller / trader compliance (from User via profile API). */
   sellerComplianceAvailable = false;
   sellerClassification: 'private' | 'professional' = 'private';
@@ -199,6 +211,7 @@ export class DashboardSettingsComponent implements OnInit, OnDestroy {
           localStorage.setItem('lang', info.language);
         }
         this.applySellerComplianceFromProfile(info.sellerCompliance ?? null);
+        this.applyDeliveryAddressFromProfile(info.deliveryAddress ?? null);
       }
     });
 
@@ -446,6 +459,96 @@ export class DashboardSettingsComponent implements OnInit, OnDestroy {
         setTimeout(() => this.langSaved = false, 2500);
       },
       error: () => { this.langSaving = false; }
+    });
+  }
+
+  deliveryAddressRequiresState(): boolean {
+    return this.deliveryStateRequiredCountries.has((this.deliveryCountry || '').toUpperCase());
+  }
+
+  private applyDeliveryAddressFromProfile(addr: {
+    street1?: string;
+    city?: string;
+    state?: string;
+    postalCode?: string;
+    country?: string;
+  } | null): void {
+    if (!addr?.street1) {
+      this.deliveryStreet1 = '';
+      this.deliveryCity = '';
+      this.deliveryState = '';
+      this.deliveryPostalCode = '';
+      this.deliveryCountry = 'PT';
+      return;
+    }
+    this.deliveryStreet1 = addr.street1 || '';
+    this.deliveryCity = addr.city || '';
+    this.deliveryState = addr.state || '';
+    this.deliveryPostalCode = addr.postalCode || '';
+    this.deliveryCountry = (addr.country || 'PT').toUpperCase();
+  }
+
+  saveDeliveryAddress(): void {
+    this.deliveryError = null;
+    const street1 = this.deliveryStreet1.trim();
+    const city = this.deliveryCity.trim();
+    const state = this.deliveryState.trim();
+    const postalCode = this.deliveryPostalCode.trim();
+    const country = (this.deliveryCountry || '').trim().toUpperCase();
+
+    if (!street1 || !city || !postalCode || !country) {
+      this.deliveryError = this.translate.instant('dashboard.settings.deliveryAddress.incomplete');
+      return;
+    }
+    if (this.deliveryAddressRequiresState() && !state) {
+      this.deliveryError = this.translate.instant('dashboard.settings.deliveryAddress.stateRequired');
+      return;
+    }
+
+    this.deliverySaving = true;
+    this.deliverySaved = false;
+    this.customerService.updateDeliveryAddress({
+      street1,
+      city,
+      state,
+      postalCode,
+      country
+    }).subscribe({
+      next: (res) => {
+        this.deliverySaving = false;
+        this.applyDeliveryAddressFromProfile(res.deliveryAddress);
+        this.deliverySaved = true;
+        setTimeout(() => this.deliverySaved = false, 2500);
+      },
+      error: (err) => {
+        this.deliverySaving = false;
+        this.deliveryError = err?.error?.message
+          || this.translate.instant('dashboard.settings.deliveryAddress.saveError');
+      }
+    });
+  }
+
+  clearDeliveryAddress(): void {
+    this.deliveryError = null;
+    this.deliveryClearing = true;
+    this.customerService.updateDeliveryAddress({
+      street1: '',
+      city: '',
+      state: '',
+      postalCode: '',
+      country: ''
+    }).subscribe({
+      next: () => {
+        this.deliveryClearing = false;
+        this.applyDeliveryAddressFromProfile(null);
+        this.deliverySaved = true;
+        setTimeout(() => this.deliverySaved = false, 2500);
+      },
+      error: (err) => {
+        this.deliveryClearing = false;
+        this.deliveryError = err?.error?.message
+          || this.translate.instant('dashboard.settings.deliveryAddress.saveError');
+      }
     });
   }
 

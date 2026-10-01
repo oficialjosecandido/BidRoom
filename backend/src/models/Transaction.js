@@ -47,17 +47,24 @@ const transactionSchema = new mongoose.Schema({
   /** Stripe Connect payment fields */
   stripeCheckoutSessionId: { type: String, trim: true, default: null, sparse: true },
   stripePaymentIntentId: { type: String, trim: true, default: null, sparse: true },
-  /** BidRoom platform fee charged to buyer (2% of amount, in dollars) */
+  // All amounts below are in EUR.
+  /** BidRoom commission, deducted from the SELLER payout (listing commissionRate). */
   bidRoomFeeAmount: { type: Number, default: null, min: 0 },
   /** True when the founding-seller waiver zeroed the commission on this sale. */
   commissionWaived: { type: Boolean, default: false },
   /** Guards against double-incrementing seller.completedSalesCount across retries/schedulers. */
   salesCountIncremented: { type: Boolean, default: false },
-  /** Stripe processing fee deducted from seller payout (retrieved from Stripe BalanceTx, in dollars) */
+  /**
+   * What Stripe itself charged BidRoom on this payment (from the BalanceTransaction).
+   * Recorded for platform accounting only: it is not deducted from the seller and is
+   * not what the buyer paid — see buyerServiceFeeAmount for that.
+   */
   stripeFeeAmount: { type: Number, default: null, min: 0 },
-  /** Total charged to buyer including BidRoom fee and shipping (in dollars) */
+  /** BidRoom service fee charged to the BUYER as a checkout line item. */
+  buyerServiceFeeAmount: { type: Number, default: null, min: 0 },
+  /** Total charged to the buyer: amount + shipping + buyerServiceFeeAmount. */
   buyerTotalPaid: { type: Number, default: null, min: 0 },
-  /** Final payout to seller (amount - bidRoomFee - stripeFee, in dollars) */
+  /** Transferred to the seller: amount - bidRoomFeeAmount + shipping. */
   sellerPayoutAmount: { type: Number, default: null, min: 0 },
   /** Locked shipping cost for 'calculated' shipping (in dollars); set before checkout */
   shippingAmount: { type: Number, default: null, min: 0 },

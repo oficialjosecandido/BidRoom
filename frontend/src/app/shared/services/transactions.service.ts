@@ -127,15 +127,18 @@ export interface Transaction {
   stripePaymentIntentId?: string | null;
   /** Stripe refund ID (set by auto-cancel scheduler or dispute ruling) */
   stripeRefundId?: string | null;
-  /** BidRoom platform fee deducted from seller payout (4% of item price, dollars) */
+  // All amounts below are in EUR.
+  /** BidRoom commission deducted from the seller payout. */
   bidRoomFeeAmount?: number | null;
-  /** Stripe processing fee deducted from seller payout (dollars) */
+  /** What Stripe charged BidRoom. Platform accounting — never shown to a buyer or seller. */
   stripeFeeAmount?: number | null;
-  /** Total charged to buyer including BidRoom fee and shipping (dollars) */
+  /** BidRoom service fee charged to the buyer at checkout. */
+  buyerServiceFeeAmount?: number | null;
+  /** Total charged to the buyer: amount + shipping + buyerServiceFeeAmount. */
   buyerTotalPaid?: number | null;
-  /** Final payout to seller (dollars) */
+  /** Final payout to seller. */
   sellerPayoutAmount?: number | null;
-  /** Locked shipping amount for calculated shipping (dollars) */
+  /** Locked shipping amount for calculated shipping. */
   shippingAmount?: number | null;
   /** Carrier name for locked rate */
   shippingCarrier?: string | null;

@@ -216,6 +216,7 @@
                 type="button"
                 class="delete-listing-btn"
                 [disabled]="cancellingId === listing._id"
+                [attr.title]="'dashboard.myAuctions.deleteListingTitle' | translate"
                 (click)="cancelListing(listing)"
               >
                 {{ 'dashboard.myAuctions.deleteListing' | translate }}
@@ -227,6 +228,9 @@
               </button>
             }
           </div>
+          @if (canCancelListing(listing)) {
+            <p class="action-rules-hint">{{ 'dashboard.myAuctions.deleteRulesHint' | translate }}</p>
+          }
         </div>
       }
     </div>

@@ -296,7 +296,7 @@
     "feeSummary": "Tasa estimada del vendedor (previsión)",
     "feeForecastSubtitle": "Es una estimación si el artículo se vende por tu precio mínimo aceptado. Si aún no lo has indicado, usamos la puja inicial o el precio de Cómpralo ya.",
     "sellerBidroomFee": "Tasa Bidroom para el vendedor ({{rate}}%):",
-    "feeNote": "El procesamiento de pagos con Stripe lo paga el comprador al pagar. Tu tasa Bidroom se descuenta del pago.",
+    "feeNote": "La tarifa de servicio de BidRoom la paga el comprador al pagar. Tu comisión Bidroom se descuenta del pago.",
     "sellerDeclaration": "Confirmo que soy el propietario legal de este artículo y acepto los Términos y Condiciones de Bidroom y la estructura de comisiones. *",
     "previous": "← Anterior",
     "next": "Siguiente →",
@@ -432,7 +432,7 @@
       "dashboard": "Dashboard"
     },
     "return7": "7 días",
-    "feeBuyer": "Tarifa Stripe",
+    "feeBuyer": "Tarifa de servicio",
     "feeBuyerNote": "Pagado por el comprador",
     "feeReceive": "Recibirás aproximadamente",
     "specHint": "Ej: Material — Oro 18k · Dimensiones — 36mm · Referencia — 5512",
@@ -756,7 +756,7 @@
       "noOffers": "Sin Ofertas Aún",
       "noOffersDesc": "¡Sé el primero en hacer una oferta por este artículo!",
       "makeOffer": "Hacer una oferta",
-      "ctaText": "Reglas: Envía tu oferta antes del plazo. El vendedor puede aceptar o no. Si hay una o más ofertas iguales o superiores al mínimo, el vendedor está obligado a vender. Por debajo del mínimo, no está obligado a vender.",
+      "ctaText": "Reglas: Envía tu oferta antes del plazo. Puedes retirarla mientras esté pendiente. Si una o más ofertas alcanzan o superan el mínimo, el vendedor debe vender. Por debajo del mínimo, el vendedor no está obligado a vender.",
       "offerFrom": "Oferta de",
       "yourOffer": "Tu oferta",
       "selectedBySeller": "Seleccionada por el vendedor",
@@ -776,7 +776,9 @@
       "statusWithdrawn": "Retirada",
       "statusExpired": "Caducada",
       "stripeWarningPrefix": "⚠️ Conecta Stripe en",
-      "stripeSettingsLink": "Configuración → Pagos"
+      "stripeSettingsLink": "Configuración → Pagos",
+      "buyerWithdrawNote": "Puedes retirar tu oferta mientras esté pendiente. Las ofertas aceptadas no se pueden retirar.",
+      "withdrawTitle": "Retirar esta oferta pendiente"
     },
     "shipping": {
       "title": "Envío",
@@ -827,7 +829,7 @@
       "cancel": "Cancelar",
       "submit": "Enviar oferta",
       "submitting": "Enviando oferta…",
-      "subtitle": "Si el vendedor acepta, te comprometes a comprar a ese precio. Puedes retirar la oferta mientras siga pendiente.",
+      "subtitle": "Si el vendedor acepta, te comprometes a comprar a ese precio. Puedes retirar la oferta mientras esté pendiente. Las pujas de subasta no se pueden retirar.",
       "figuresHint": "La mínima es la cantidad más baja que el vendedor valorará. La más alta es la mejor oferta hasta ahora: puedes igualarla o superarla, o quedarte en el mínimo.",
       "highestOffer": "Oferta más alta",
       "valueLabel": "Importe (€)",
@@ -1283,7 +1285,7 @@
     },
     "myBets": {
       "title": "Mis Pujas",
-      "subtitle": "Todas tus pujas y ofertas en un solo lugar. Expande cualquier anuncio para ver el historial.",
+      "subtitle": "Todas tus pujas y ofertas en un solo lugar. Las ofertas pendientes (Mejor Oferta) se pueden retirar en cualquier momento; las pujas de subasta no.",
       "loading": "Cargando tus pujas...",
       "tryAgain": "Intentar de nuevo",
       "emptyTitle": "Sin pujas aún",
@@ -1309,7 +1311,10 @@
       "statusPending": "Pendiente",
       "statusAccepted": "Aceptado",
       "statusRejected": "Rechazado",
-      "statusWithdrawn": "Retirada"
+      "statusWithdrawn": "Retirada",
+      "rulesHint": "Ofertas: puedes retirarlas mientras estén pendientes. Las pujas de subasta son vinculantes y no se pueden cancelar.",
+      "withdrawTitle": "Retirar esta oferta pendiente",
+      "withdrawConfirmText": "Solo puedes retirar una oferta mientras esté pendiente. Las ofertas aceptadas no se pueden retirar."
     },
     "seller": {
       "title": "Perfil del Vendedor",
@@ -1396,11 +1401,26 @@
         "saving": "Guardando…",
         "saved": "Guardado",
         "saveError": "Error al guardar. Inténtalo de nuevo."
+      },
+      "deliveryAddress": {
+        "title": "Dirección de entrega",
+        "subtitle": "Guarda tu dirección de entrega predeterminada. Se usará para rellenar los datos de envío cuando compres artículos con portes calculados.",
+        "street": "Dirección",
+        "streetPlaceholder": "Calle y número",
+        "city": "Ciudad",
+        "state": "Provincia / región",
+        "postalCode": "Código postal",
+        "country": "País",
+        "save": "Guardar dirección",
+        "clear": "Borrar dirección",
+        "incomplete": "Completa la dirección, ciudad, código postal y país.",
+        "stateRequired": "La provincia / región es obligatoria para este país.",
+        "saveError": "No se pudo guardar la dirección. Inténtalo de nuevo."
       }
     },
     "myAuctions": {
       "title": "Mis Anuncios",
-      "subtitle": "Gestiona tus anuncios como vendedor y rastrea las invitaciones de licitadores platino",
+      "subtitle": "Sigue tus subastas y el estado de cada anuncio. Solo puedes eliminar un anuncio si no tiene pujas u ofertas cualificadas (Mejor Oferta: ninguna igual o superior al mínimo).",
       "loading": "Cargando tus anuncios...",
       "emptyTitle": "Aún sin anuncios",
       "emptyDesc": "Aún no has creado ningún anuncio. ¡Comienza creando tu primer anuncio!",
@@ -1429,7 +1449,7 @@
       "editListing": "Editar",
       "deleteListing": "Eliminar",
       "cancelConfirmTitle": "¿Eliminar este anuncio?",
-      "cancelConfirmText": "Solo puedes eliminar anuncios sin ofertas iguales o superiores al mínimo (o sin pujas). Esta acción no se puede deshacer.",
+      "cancelConfirmText": "Solo puedes eliminar este anuncio si no hay ofertas o pujas cualificadas. En Mejor Oferta: sin oferta aceptada y sin oferta pendiente igual o superior al mínimo. En subasta: sin pujas. Las ofertas pendientes por debajo del mínimo se rechazarán. Esta acción no se puede deshacer.",
       "cancelConfirmBtn": "Eliminar anuncio",
       "cancelSuccess": "Anuncio eliminado",
       "cancelError": "No se pudo eliminar el anuncio",
@@ -1474,7 +1494,9 @@
       },
       "rejectedLabel": "No aprobado",
       "rejectionReason": "Motivo",
-      "pendingReviewHint": "A la espera de aprobación. El tiempo de la subasta solo empieza cuando se apruebe."
+      "pendingReviewHint": "A la espera de aprobación. El tiempo de la subasta solo empieza cuando se apruebe.",
+      "deleteRulesHint": "Eliminar está disponible cuando no hay pujas y, en Mejor Oferta, solo si ninguna oferta alcanza el precio mínimo. Consulta los Términos de Uso.",
+      "deleteListingTitle": "Eliminar anuncio (solo sin ofertas o pujas cualificadas)"
     },
     "myAuctionsBidder": {
       "title": "Mis Subastas",
@@ -1603,12 +1625,11 @@
     "disputeOpen": "Disputa Abierta",
     "financialBreakdown": "Desglose Financiero",
     "bidRoomFee": "Tarifa BidRoom",
-    "stripeProcessingFee": "Tarifa de Procesamiento Stripe",
+    "buyerServiceFee": "Tarifa de Servicio",
     "shipping": "Envío",
     "freeShipping": "Gratis",
     "calculatedSeparately": "Calculado por separado",
     "youReceive": "Recibes",
-    "stripeDeductedNote": "La tarifa de Stripe se deducirá de tu pago.",
     "totalCharged": "Total cobrado",
     "shippingLower": "envío",
     "paymentWindowEnds": "Plazo de pago termina",
@@ -1997,8 +2018,8 @@
         "a": "Nuestro sistema de puja por proxy te permite establecer tu monto máximo. Pujamos automáticamente en tu nombre."
       },
       "bidding2": {
-        "q": "¿Puedo cancelar una puja?",
-        "a": "Puedes cancelar una puja dentro de 1 hora de hacerla, siempre que la subasta no haya terminado."
+        "q": "¿Puedo cancelar una puja o retirar una oferta?",
+        "a": "Las pujas de subasta son vinculantes y no se pueden cancelar una vez realizadas. Las propuestas de Mejor Oferta se pueden retirar en cualquier momento mientras estén pendientes (aún no aceptadas o rechazadas por el vendedor). Tras la aceptación, la venta es vinculante y se aplican las reglas de pago."
       },
       "bidding3": {
         "q": "¿Cómo sé si gané una subasta?",

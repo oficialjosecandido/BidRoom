@@ -19,7 +19,7 @@ const { attachPaymentMethodToUser } = require('../services/paymentMethodService'
 
 const LOG_PREFIX = '[Connect]';
 const logger = require('../utils/logger');
-const { estimateBuyerProcessingFeeCents } = require('../utils/fees');
+const { buyerServiceFeeCents } = require('../utils/fees');
 const { resolveCommissionRate } = require('../utils/commission');
 /** Fallback rate when listing.commissionRate is missing (edge case for old data). */
 const BIDROOMFEE_RATE = 0.035; // 3.5% standard rate (was incorrectly 0.04)
@@ -979,8 +979,10 @@ router.post('/create-checkout-session', requireActiveAccount, async (req, res) =
     // free / local-pickup = 0
 
     // === Fee model ===
-    // BidRoom fee: per-listing commissionRate (set at listing creation) — deducted from SELLER payout
-    // Stripe processing fee: ~2.9% + €0.30 — passed through to BUYER as "Processing fee" line item
+    // Seller commission: per-listing commissionRate (set at listing creation) — deducted from SELLER payout
+    // Buyer service fee: ~2.9% + €0.30 — charged to the BUYER as a "Service fee" line item.
+    //   Not a pass-through of Stripe's cost: Stripe takes ~1.5% + €0.25 on EEA cards,
+    //   so most of this line is margin. See utils/fees.js.
     // Founding-seller waiver: effectiveFeeRate is 0 for the first N successful sales (checked at payout time).
     const { effectiveFeeRate, waiverApplied } = resolveCommissionRate(listing, transaction.seller);
     if (listing?.commissionRate == null) {
@@ -994,13 +996,10 @@ router.post('/create-checkout-session', requireActiveAccount, async (req, res) =
 
     const bidRoomFeeCents = Math.round(itemCents * effectiveFeeRate);
 
-    // Estimate Stripe's processing fee on the item+shipping subtotal.
-    // Actual fee will differ slightly (Stripe charges on the final total including this estimate),
-    // but the error is a few cents at most and is absorbed by the platform.
-    const stripeFeeEstimateCents = estimateBuyerProcessingFeeCents(itemCents + shippingCents);
+    const serviceFeeCents = buyerServiceFeeCents(itemCents + shippingCents);
 
-    // Buyer total: item + shipping + Stripe fee estimate
-    const buyerTotalCents = itemCents + shippingCents + stripeFeeEstimateCents;
+    // Buyer total: item + shipping + service fee
+    const buyerTotalCents = itemCents + shippingCents + serviceFeeCents;
 
     // Stripe payments are not available above €10,000
     const STRIPE_LIMIT_CENTS = 1_000_000;
@@ -1027,8 +1026,8 @@ router.post('/create-checkout-session', requireActiveAccount, async (req, res) =
       {
         price_data: {
           currency: 'eur',
-          product_data: { name: 'Processing fee' },
-          unit_amount: stripeFeeEstimateCents
+          product_data: { name: 'Service fee' },
+          unit_amount: serviceFeeCents
         },
         quantity: 1
       }
@@ -1049,7 +1048,8 @@ router.post('/create-checkout-session', requireActiveAccount, async (req, res) =
     }
 
     // payment_intent_data: use explicit transfer_data.amount so the seller receives
-    // exactly item*(1-commissionRate)+shipping, regardless of the Stripe fee estimate rounding.
+    // exactly item*(1-commissionRate)+shipping, independent of the service fee and
+    // of whatever Stripe ends up charging the platform on this payment.
     // In test mode, if the account doesn't have transfers capability active yet, skip
     // transfer_data to avoid a "stripe_balance.stripe_transfers feature" error.
     const paymentIntentData = {
@@ -1087,6 +1087,10 @@ router.post('/create-checkout-session', requireActiveAccount, async (req, res) =
     transaction.stripeCheckoutSessionId = session.id;
     transaction.bidRoomFeeAmount   = bidRoomFeeCents   / 100;
     transaction.sellerPayoutAmount = sellerTransferCents / 100;
+    // What the buyer was actually charged for the fee line. Without this the
+    // buyer's breakdown fell back to stripeFeeAmount — Stripe's own cost, a
+    // different and smaller number — and the rows did not add up to the total.
+    transaction.buyerServiceFeeAmount = serviceFeeCents / 100;
     transaction.buyerTotalPaid     = buyerTotalCents    / 100;
     transaction.commissionWaived   = waiverApplied;
     await transaction.save();
@@ -1152,8 +1156,9 @@ router.post('/confirm-payment', requireActiveAccount, async (req, res) => {
       return res.status(403).json({ error: 'Forbidden', message: 'Session does not belong to you.' });
     }
 
-    // Extract the actual Stripe processing fee for transparency (recorded but doesn't change seller payout —
-    // buyer already covered it via the "Processing fee" line item at checkout creation time).
+    // What Stripe charged BidRoom on this payment. Platform accounting only: it does
+    // not change the seller payout, and it is not the fee the buyer paid (that is
+    // buyerServiceFeeAmount, set at checkout creation and typically larger).
     const balanceTx = session.payment_intent?.latest_charge?.balance_transaction;
     const stripeFeeAmount = balanceTx ? balanceTx.fee / 100 : null;
 

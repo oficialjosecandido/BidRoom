@@ -296,7 +296,7 @@
     "feeSummary": "Frais vendeur estimés (prévision)",
     "feeForecastSubtitle": "Estimation si l'article se vend au prix minimum que vous acceptez. Si vous ne l'avez pas encore indiqué, nous utilisons l'enchère de départ ou le prix d'Achat immédiat.",
     "sellerBidroomFee": "Frais vendeur Bidroom ({{rate}} %) :",
-    "feeNote": "Le traitement des paiements Stripe est payé par l'acheteur au paiement. Vos frais Bidroom sont déduits du versement.",
+    "feeNote": "Les frais de service BidRoom sont payés par l'acheteur au paiement. Votre commission Bidroom est déduite du versement.",
     "sellerDeclaration": "Je confirme être le propriétaire légal de cet article et accepter les Conditions Générales et la structure de commission de Bidroom. *",
     "previous": "← Précédent",
     "next": "Suivant →",
@@ -432,7 +432,7 @@
       "dashboard": "Tableau de bord"
     },
     "return7": "7 jours",
-    "feeBuyer": "Frais Stripe",
+    "feeBuyer": "Frais de service",
     "feeBuyerNote": "Payé par l'acheteur",
     "feeReceive": "Vous recevrez approximativement",
     "specHint": "Ex : Matériau — Or 18k · Dimensions — 36mm · Référence — 5512",
@@ -756,7 +756,7 @@
       "noOffers": "Aucune Offre Encore",
       "noOffersDesc": "Soyez le premier à faire une offre sur cet article !",
       "makeOffer": "Faire une offre",
-      "ctaText": "Règles : Soumettez votre offre avant la date limite. Le vendeur peut accepter ou non. Si une ou plusieurs offres atteignent ou dépassent le minimum, le vendeur est obligé de vendre. En dessous du minimum, il n'est pas obligé de vendre.",
+      "ctaText": "Règles : soumettez votre offre avant l’échéance. Vous pouvez la retirer tant qu’elle est en attente. Si une ou plusieurs offres atteignent ou dépassent le minimum, le vendeur doit vendre. En dessous du minimum, le vendeur n’est pas obligé de vendre.",
       "offerFrom": "Offre de",
       "yourOffer": "Votre offre",
       "selectedBySeller": "Sélectionnée par le vendeur",
@@ -776,7 +776,9 @@
       "statusWithdrawn": "Retirée",
       "statusExpired": "Expirée",
       "stripeWarningPrefix": "Connectez Stripe dans",
-      "stripeSettingsLink": "Paramètres → Paiements"
+      "stripeSettingsLink": "Paramètres → Paiements",
+      "buyerWithdrawNote": "Vous pouvez retirer votre offre tant qu’elle est en attente. Les offres acceptées ne peuvent pas être retirées.",
+      "withdrawTitle": "Retirer cette offre en attente"
     },
     "shipping": {
       "title": "Expédition",
@@ -824,7 +826,7 @@
       "cancel": "Annuler",
       "submit": "Envoyer l'offre",
       "submitting": "Envoi de l'offre…",
-      "subtitle": "Si le vendeur accepte, vous vous engagez à acheter à ce prix. Vous pouvez retirer votre offre tant qu'elle est en attente.",
+      "subtitle": "Si le vendeur accepte, vous vous engagez à acheter à ce prix. Vous pouvez retirer l’offre tant qu’elle est en attente. Les enchères ne peuvent pas être retirées.",
       "figuresHint": "Le minimum est le montant le plus bas que le vendeur examinera. Le plus haut est la meilleure offre actuelle : vous pouvez l'égaler, la dépasser ou rester au minimum.",
       "highestOffer": "Offre la plus haute",
       "valueLabel": "Montant (€)",
@@ -1280,7 +1282,7 @@
     },
     "myBets": {
       "title": "Mes enchères",
-      "subtitle": "Toutes vos enchères et offres en un seul endroit. Développez une annonce pour voir l'historique.",
+      "subtitle": "Toutes vos enchères et offres au même endroit. Les offres en attente (Meilleure offre) peuvent être retirées à tout moment ; les enchères ne le peuvent pas.",
       "loading": "Chargement de vos enchères...",
       "tryAgain": "Réessayer",
       "emptyTitle": "Aucune enchère encore",
@@ -1306,7 +1308,10 @@
       "statusPending": "En attente",
       "statusAccepted": "Accepté",
       "statusRejected": "Refusé",
-      "statusWithdrawn": "Retirée"
+      "statusWithdrawn": "Retirée",
+      "rulesHint": "Offres : retirables tant qu’elles sont en attente. Les enchères sont contraignantes et ne peuvent pas être annulées.",
+      "withdrawTitle": "Retirer cette offre en attente",
+      "withdrawConfirmText": "Vous ne pouvez retirer une offre que tant qu’elle est en attente. Les offres acceptées ne peuvent pas être retirées."
     },
     "seller": {
       "title": "Profil vendeur",
@@ -1393,11 +1398,26 @@
         "saving": "Enregistrement…",
         "saved": "Enregistré",
         "saveError": "Erreur lors de l'enregistrement. Veuillez réessayer."
+      },
+      "deliveryAddress": {
+        "title": "Adresse de livraison",
+        "subtitle": "Enregistrez votre adresse de livraison par défaut. Elle servira à préremplir les détails d’expédition lors d’achats avec frais calculés.",
+        "street": "Adresse",
+        "streetPlaceholder": "Rue et numéro",
+        "city": "Ville",
+        "state": "Région / état",
+        "postalCode": "Code postal",
+        "country": "Pays",
+        "save": "Enregistrer l’adresse",
+        "clear": "Effacer l’adresse",
+        "incomplete": "Veuillez renseigner la rue, la ville, le code postal et le pays.",
+        "stateRequired": "La région / l’état est obligatoire pour ce pays.",
+        "saveError": "Impossible d’enregistrer l’adresse. Réessayez."
       }
     },
     "myAuctions": {
       "title": "Mes Annonces",
-      "subtitle": "Gérez vos annonces en tant que vendeur et suivez les invitations des enchérisseurs platine",
+      "subtitle": "Suivez vos enchères et le statut de chaque annonce. Vous ne pouvez supprimer une annonce que s’il n’y a pas d’enchères ou d’offres qualificatives (Meilleure offre : aucune au minimum ou plus).",
       "loading": "Chargement de vos annonces...",
       "emptyTitle": "Aucune annonce pour l'instant",
       "emptyDesc": "Vous n'avez pas encore créé d'annonces. Commencez par créer votre première annonce !",
@@ -1426,7 +1446,7 @@
       "editListing": "Modifier",
       "deleteListing": "Supprimer",
       "cancelConfirmTitle": "Supprimer cette annonce ?",
-      "cancelConfirmText": "Vous ne pouvez supprimer que les annonces sans offres au minimum ou plus (ou sans enchères). Cette action est irréversible.",
+      "cancelConfirmText": "Vous ne pouvez supprimer cette annonce que s’il n’y a pas d’offres ou d’enchères qualificatives. Meilleure offre : aucune offre acceptée et aucune offre en attente au minimum ou plus. Enchère : aucune enchère. Les offres sous le minimum seront rejetées. Cette action est irréversible.",
       "cancelConfirmBtn": "Supprimer l'annonce",
       "cancelSuccess": "Annonce supprimée",
       "cancelError": "Impossible de supprimer l'annonce",
@@ -1471,7 +1491,9 @@
       },
       "rejectedLabel": "Non approuvée",
       "rejectionReason": "Motif",
-      "pendingReviewHint": "En attente d'approbation. Le compte à rebours ne démarre qu'une fois l'annonce approuvée."
+      "pendingReviewHint": "En attente d'approbation. Le compte à rebours ne démarre qu'une fois l'annonce approuvée.",
+      "deleteRulesHint": "La suppression est disponible s’il n’y a pas d’enchères et, en Meilleure offre, seulement si aucune offre n’atteint le prix minimum. Voir les Conditions d’utilisation.",
+      "deleteListingTitle": "Supprimer l’annonce (uniquement sans offres ou enchères qualificatives)"
     },
     "myAuctionsBidder": {
       "title": "Mes Enchères",
@@ -1600,12 +1622,11 @@
     "disputeOpen": "Litige ouvert",
     "financialBreakdown": "Détail financier",
     "bidRoomFee": "Frais BidRoom",
-    "stripeProcessingFee": "Frais de traitement Stripe",
+    "buyerServiceFee": "Frais de service",
     "shipping": "Livraison",
     "freeShipping": "Gratuit",
     "calculatedSeparately": "Calculé séparément",
     "youReceive": "Vous recevez",
-    "stripeDeductedNote": "Les frais Stripe seront déduits de votre paiement.",
     "totalCharged": "Total facturé",
     "shippingLower": "livraison",
     "paymentWindowEnds": "Délai de paiement se termine",
@@ -1994,8 +2015,8 @@
         "a": "Notre système d'enchères par procuration vous permet de définir votre montant d'enchère maximum. Nous enchérissons automatiquement en votre nom jusqu'à ce montant, garantissant que vous ne payez que le minimum nécessaire pour gagner."
       },
       "bidding2": {
-        "q": "Puis-je annuler une enchère ?",
-        "a": "Vous pouvez annuler une enchère dans l'heure suivant son placement, tant que l'enchère n'est pas terminée. Après cela, les enchères sont définitives et ne peuvent être annulées."
+        "q": "Puis-je annuler une enchère ou retirer une offre ?",
+        "a": "Les enchères sont contraignantes et ne peuvent pas être annulées une fois placées. Les propositions Meilleure offre peuvent être retirées à tout moment tant qu’elles sont en attente (pas encore acceptées ou refusées par le vendeur). Après acceptation, la vente est contraignante et les règles de paiement s’appliquent."
       },
       "bidding3": {
         "q": "Comment savoir si j'ai remporté une enchère ?",

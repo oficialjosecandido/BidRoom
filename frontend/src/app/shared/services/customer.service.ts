@@ -63,6 +63,14 @@ export interface SellerPaymentConfig {
   };
 }
 
+export interface DeliveryAddressSaved {
+  street1: string;
+  city: string;
+  state: string;
+  postalCode: string;
+  country: string;
+}
+
 export interface CustomerInfo {
   user: CustomerUser;
   balance: number;
@@ -81,6 +89,8 @@ export interface CustomerInfo {
   theme?: ThemePreference | null;
   /** Cookie consent level from Customer; null if never saved server-side. */
   cookieConsent?: 'all' | 'essential' | null;
+  /** Default buyer delivery address; null if not set. */
+  deliveryAddress?: DeliveryAddressSaved | null;
 }
 
 @Injectable({
@@ -100,6 +110,15 @@ export class CustomerService {
 
   updateLanguage(language: string): Observable<{ language: string }> {
     return this.http.patch<{ language: string }>(`${this.apiUrl}/language`, { language });
+  }
+
+  updateDeliveryAddress(
+    deliveryAddress: DeliveryAddressSaved | null
+  ): Observable<{ deliveryAddress: DeliveryAddressSaved | null }> {
+    return this.http.patch<{ deliveryAddress: DeliveryAddressSaved | null }>(
+      `${this.apiUrl}/delivery-address`,
+      { deliveryAddress }
+    );
   }
 
   saveCookieConsent(level: 'all' | 'essential'): Observable<{ cookieConsent: string }> {

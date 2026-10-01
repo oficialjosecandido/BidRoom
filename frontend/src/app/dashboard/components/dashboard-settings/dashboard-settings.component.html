@@ -165,6 +165,69 @@
     }
     </div>
 
+    <!-- Delivery address (buyers + sellers) -->
+    <div class="settings-row settings-row--single">
+      <div class="settings-card">
+        <div class="card-header">
+          <span class="card-icon">📍</span>
+          <h2 class="card-title">{{ 'dashboard.settings.deliveryAddress.title' | translate }}</h2>
+        </div>
+        <div class="card-body">
+          <p class="card-desc">{{ 'dashboard.settings.deliveryAddress.subtitle' | translate }}</p>
+          <div class="dsa-form-grid">
+            <div class="form-field dsa-span-2">
+              <label>{{ 'dashboard.settings.deliveryAddress.street' | translate }}</label>
+              <input
+                type="text"
+                name="deliveryStreet1"
+                [(ngModel)]="deliveryStreet1"
+                [placeholder]="'dashboard.settings.deliveryAddress.streetPlaceholder' | translate"
+                autocomplete="street-address"
+              />
+            </div>
+            <div class="form-field">
+              <label>{{ 'dashboard.settings.deliveryAddress.city' | translate }}</label>
+              <input type="text" name="deliveryCity" [(ngModel)]="deliveryCity" autocomplete="address-level2" />
+            </div>
+            @if (deliveryAddressRequiresState()) {
+              <div class="form-field">
+                <label>{{ 'dashboard.settings.deliveryAddress.state' | translate }}</label>
+                <input type="text" name="deliveryState" [(ngModel)]="deliveryState" autocomplete="address-level1" />
+              </div>
+            }
+            <div class="form-field">
+              <label>{{ 'dashboard.settings.deliveryAddress.postalCode' | translate }}</label>
+              <input type="text" name="deliveryPostal" [(ngModel)]="deliveryPostalCode" autocomplete="postal-code" />
+            </div>
+            <div class="form-field">
+              <label>{{ 'dashboard.settings.deliveryAddress.country' | translate }}</label>
+              <select name="deliveryCountry" [(ngModel)]="deliveryCountry">
+                @for (c of countries; track c.code) {
+                  <option [value]="c.code">{{ c.label }}</option>
+                }
+              </select>
+            </div>
+          </div>
+          @if (deliveryError) {
+            <div class="form-error-banner">{{ deliveryError }}</div>
+          }
+          <div class="form-actions dsa-actions">
+            <button type="button" class="action-btn" (click)="saveDeliveryAddress()" [disabled]="deliverySaving || deliveryClearing">
+              {{ deliverySaving ? ('dashboard.settings.saving' | translate) : ('dashboard.settings.deliveryAddress.save' | translate) }}
+            </button>
+            @if (deliveryStreet1.trim()) {
+              <button type="button" class="action-btn action-btn-ghost" (click)="clearDeliveryAddress()" [disabled]="deliverySaving || deliveryClearing">
+                {{ deliveryClearing ? ('dashboard.settings.saving' | translate) : ('dashboard.settings.deliveryAddress.clear' | translate) }}
+              </button>
+            }
+            @if (deliverySaved) {
+              <span class="save-success">✓ {{ 'dashboard.settings.saved' | translate }}</span>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Row 2: Payment methods + Seller payout -->
     <div class="settings-row">
     <!-- Payment Methods -->

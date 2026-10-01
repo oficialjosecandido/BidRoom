@@ -763,6 +763,7 @@
             </div>
           } @else {
             <p class="offers-note">{{ offersTotal }} {{ offersTotal !== 1 ? ('listingDetails.info.offersPlural' | translate) : ('listingDetails.info.offer' | translate) }}</p>
+            <p class="offers-rules">{{ 'listingDetails.offerHistory.buyerWithdrawNote' | translate }}</p>
             <div class="offers-list">
               @for (offer of sortedOffers; track offer._id) {
                 <div class="offer-item"
@@ -783,7 +784,7 @@
                     @if (offer.message) { <div class="omsg">"{{ offer.message }}"</div> }
                     @if (canWithdrawOffer(offer)) {
                       <div class="o-acts">
-                        <button type="button" class="btn-dec" (click)="withdrawOffer(offer)" [disabled]="offerActionLoadingId !== null">
+                        <button type="button" class="btn-dec" [attr.title]="'listingDetails.offerHistory.withdrawTitle' | translate" (click)="withdrawOffer(offer)" [disabled]="offerActionLoadingId !== null">
                           {{ offerActionLoadingId === offer._id ? ('listingDetails.offerHistory.withdrawing' | translate) : ('listingDetails.offerHistory.withdraw' | translate) }}
                         </button>
                       </div>

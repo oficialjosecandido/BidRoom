@@ -5,6 +5,7 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { ListingsService, Listing } from '../../../shared/services/listings.service';
 import { BidsService } from '../../../shared/services/bids.service';
 import { OffersService } from '../../../shared/services/offers.service';
+import Swal from 'sweetalert2';
 
 interface BetItem {
   _id: string;
@@ -129,28 +130,40 @@ export class MyBetsComponent implements OnInit {
   withdrawOffer(listing: EnhancedListing, bet: BetItem, event: Event): void {
     event.stopPropagation();
     if (!this.canWithdrawBet(listing, bet) || this.withdrawingId) return;
-    this.withdrawingId = bet._id;
-    this.offersService.withdrawOffer(bet._id).subscribe({
-      next: (updated) => {
-        bet.status = updated.status || 'withdrawn';
-        this.withdrawingId = null;
-        if (listing.auctionFormat === 'best-offer') {
-          const pendingOrAccepted = (listing.bets || []).filter(
-            (b) => b.type === 'offer' && (b.status === 'pending' || b.status === 'accepted')
-          );
-          listing.bidCount = pendingOrAccepted.length;
-          listing.currentPrice = pendingOrAccepted.length
-            ? Math.max(...pendingOrAccepted.map((b) => b.amount))
-            : 0;
-          listing.myHighestBid = pendingOrAccepted.length
-            ? Math.max(...pendingOrAccepted.map((b) => b.amount))
-            : listing.myHighestBid;
+
+    Swal.fire({
+      title: this.translate.instant('dashboard.myBets.withdrawTitle'),
+      text: this.translate.instant('dashboard.myBets.withdrawConfirmText'),
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: this.translate.instant('dashboard.myBets.withdraw'),
+      cancelButtonText: this.translate.instant('dashboard.common.cancel'),
+      reverseButtons: true
+    }).then((result) => {
+      if (!result.isConfirmed) return;
+      this.withdrawingId = bet._id;
+      this.offersService.withdrawOffer(bet._id).subscribe({
+        next: (updated) => {
+          bet.status = updated.status || 'withdrawn';
+          this.withdrawingId = null;
+          if (listing.auctionFormat === 'best-offer') {
+            const pendingOrAccepted = (listing.bets || []).filter(
+              (b) => b.type === 'offer' && (b.status === 'pending' || b.status === 'accepted')
+            );
+            listing.bidCount = pendingOrAccepted.length;
+            listing.currentPrice = pendingOrAccepted.length
+              ? Math.max(...pendingOrAccepted.map((b) => b.amount))
+              : 0;
+            listing.myHighestBid = pendingOrAccepted.length
+              ? Math.max(...pendingOrAccepted.map((b) => b.amount))
+              : listing.myHighestBid;
+          }
+        },
+        error: (err) => {
+          this.withdrawingId = null;
+          this.error = err?.error?.message || this.translate.instant('dashboard.myBets.withdrawError');
         }
-      },
-      error: (err) => {
-        this.withdrawingId = null;
-        this.error = err?.error?.message || this.translate.instant('dashboard.myBets.withdrawError');
-      }
+      });
     });
   }
 

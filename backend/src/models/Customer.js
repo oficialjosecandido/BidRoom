@@ -314,6 +314,16 @@ const customerSchema = new mongoose.Schema({
     trim: true
   },
 
+  // ─── Buyer default delivery address ───────────────────────────────────────
+  /** Saved shipping destination used to prefill checkout / calculated shipping. */
+  deliveryAddress: {
+    street1:    { type: String, trim: true, maxlength: 300, default: null },
+    city:       { type: String, trim: true, maxlength: 120, default: null },
+    state:      { type: String, trim: true, maxlength: 120, default: null },
+    postalCode: { type: String, trim: true, maxlength: 32,  default: null },
+    country:    { type: String, trim: true, maxlength: 2, uppercase: true, default: null }
+  },
+
   // ─── Founding-seller commission waiver (discontinued) ────────────────────
   /** Number of transactions that reached 'completed' as the seller. Incremented once per sale. */
   completedSalesCount: { type: Number, default: 0, min: 0 },

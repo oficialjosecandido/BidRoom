@@ -125,16 +125,16 @@
                 </div>
 
                 @if (isBuyer(t)) {
-                  <!-- COMPRADOR: lance + taxa Stripe + envio. Sem comissão BidRoom para o comprador. -->
+                  <!-- COMPRADOR: lance + taxa de serviço + envio. Sem comissão de venda para o comprador. -->
                   <div class="breakdown-rows">
                     <div class="breakdown-row">
                       <span class="breakdown-label">{{ getSalePriceLabel(t) }}</span>
                       <span class="breakdown-value breakdown-value-pos">+{{ formatPrice(t.amount) }}</span>
                     </div>
-                    @if (getStripeFee(t) !== null) {
+                    @if (getBuyerServiceFee(t) !== null) {
                       <div class="breakdown-row">
-                        <span class="breakdown-label">{{ 'transactions.stripeProcessingFee' | translate }}</span>
-                        <span class="breakdown-value breakdown-value-pos">+{{ formatPrice(getStripeFee(t)!) }}</span>
+                        <span class="breakdown-label">{{ 'transactions.buyerServiceFee' | translate }}</span>
+                        <span class="breakdown-value breakdown-value-pos">+{{ formatPrice(getBuyerServiceFee(t)!) }}</span>
                       </div>
                     }
                     @if (getShippingAmount(t) !== null) {
@@ -1063,10 +1063,10 @@
             </div>
           }
           @if (isBuyer(drawerTx)) {
-            @if (getStripeFee(drawerTx) !== null) {
+            @if (getBuyerServiceFee(drawerTx) !== null) {
               <div class="drawer-row">
-                <span class="dr-label">{{ 'transactions.stripeProcessingFee' | translate }}</span>
-                <span class="dr-val mono">+{{ formatPrice(getStripeFee(drawerTx)!) }}</span>
+                <span class="dr-label">{{ 'transactions.buyerServiceFee' | translate }}</span>
+                <span class="dr-val mono">+{{ formatPrice(getBuyerServiceFee(drawerTx)!) }}</span>
               </div>
             }
             @if (getBuyerTotal(drawerTx) !== null) {

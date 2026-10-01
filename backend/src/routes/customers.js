@@ -77,7 +77,7 @@ router.get('/profile', authenticateToken, async (req, res) => {
         email: customer.email,
         firstName: customer.firstName,
         lastName: customer.lastName,
-        emailVerified: !!emailVerified,
+        emailVerified: !!customer.emailVerified,
         isActive: customer.accountStatus !== 'suspended' && customer.accountStatus !== 'closed',
         accountStatus: customer.accountStatus || 'active',
         contentRestrictedUntil: customer.contentRestrictedUntil || null,
@@ -101,7 +101,16 @@ router.get('/profile', authenticateToken, async (req, res) => {
         listingRestricted: !!customer.dsaListingRestricted
       },
       theme: customer.theme && ['light', 'dark', 'system'].includes(customer.theme) ? customer.theme : null,
-      cookieConsent: customer.cookieConsent && ['all', 'essential'].includes(customer.cookieConsent) ? customer.cookieConsent : null
+      cookieConsent: customer.cookieConsent && ['all', 'essential'].includes(customer.cookieConsent) ? customer.cookieConsent : null,
+      deliveryAddress: customer.deliveryAddress && customer.deliveryAddress.street1
+        ? {
+            street1: customer.deliveryAddress.street1 || '',
+            city: customer.deliveryAddress.city || '',
+            state: customer.deliveryAddress.state || '',
+            postalCode: customer.deliveryAddress.postalCode || '',
+            country: customer.deliveryAddress.country || 'PT'
+          }
+        : null
     });
   } catch (error) {
     if (handleAccountClaimError(res, error)) return;
@@ -307,6 +316,76 @@ router.patch('/language', authenticateToken, async (req, res) => {
   } catch (error) {
     logger.error('Error updating language:', error);
     res.status(500).json({ error: 'Failed to update language' });
+  }
+});
+
+/**
+ * PATCH /api/customers/delivery-address
+ * Save or clear the buyer's default delivery address (used to prefill shipping).
+ * Send an empty/null street1 to clear the saved address.
+ */
+router.patch('/delivery-address', authenticateToken, requireActiveAccount, async (req, res) => {
+  try {
+    const { uid } = req.user;
+    const body = req.body?.deliveryAddress ?? req.body ?? {};
+    const street1 = String(body.street1 || '').trim();
+    const city = String(body.city || '').trim();
+    const state = String(body.state || '').trim();
+    const postalCode = String(body.postalCode || '').trim();
+    const country = String(body.country || '').trim().toUpperCase();
+
+    // Clear saved address
+    if (!street1 && !city && !postalCode) {
+      await Customer.updateOne(
+        { uid },
+        {
+          $set: {
+            deliveryAddress: {
+              street1: null,
+              city: null,
+              state: null,
+              postalCode: null,
+              country: null
+            }
+          }
+        }
+      );
+      return res.json({ deliveryAddress: null });
+    }
+
+    if (!street1 || !city || !postalCode || !country) {
+      return res.status(400).json({
+        error: 'Incomplete address',
+        message: 'Street, city, postal code and country are required.'
+      });
+    }
+    if (!/^[A-Z]{2}$/.test(country)) {
+      return res.status(400).json({
+        error: 'Invalid country',
+        message: 'Country must be a 2-letter ISO code.'
+      });
+    }
+    const stateRequired = ['US', 'CA', 'AU', 'MX'].includes(country);
+    if (stateRequired && !state) {
+      return res.status(400).json({
+        error: 'State required',
+        message: 'State / region is required for this country.'
+      });
+    }
+
+    const deliveryAddress = {
+      street1: street1.slice(0, 300),
+      city: city.slice(0, 120),
+      state: state ? state.slice(0, 120) : null,
+      postalCode: postalCode.slice(0, 32),
+      country
+    };
+
+    await Customer.updateOne({ uid }, { $set: { deliveryAddress } });
+    return res.json({ deliveryAddress });
+  } catch (error) {
+    logger.error('Error updating delivery address:', error);
+    return res.status(500).json({ error: 'Failed to update delivery address' });
   }
 });
 

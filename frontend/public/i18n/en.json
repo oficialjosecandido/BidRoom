@@ -522,7 +522,7 @@
     "feeSummary": "Estimated seller fee (forecast)",
     "feeForecastSubtitle": "This is an estimate if the item sells at your minimum accepted price. If you have not set one yet, we use your starting bid or Buy It Now price instead.",
     "sellerBidroomFee": "Bidroom seller fee ({{rate}}%):",
-    "feeNote": "Stripe payment processing is paid by the buyer at checkout (capped at €500). Your Bidroom fee is deducted from your payout.",
+    "feeNote": "The BidRoom service fee is paid by the buyer at checkout (capped at €500). Your Bidroom commission is deducted from your payout.",
     "sellerDeclaration": "I confirm that I am the legal owner of this item and agree to the Terms & Conditions and commission structure of Bidroom. *",
     "previous": "← Previous",
     "next": "Next →",
@@ -798,9 +798,9 @@
       "dashboard": "Dashboard"
     },
     "return7": "7 days",
-    "feeBuyer": "Buyer processing fee (Stripe)",
+    "feeBuyer": "Buyer service fee",
     "feeBuyerEstimate": "€{{amount}} (max. €500)",
-    "feeBuyerNote": "Paid by the buyer at checkout (~2.9% + €0.30, capped at €500). BidRoom charges buyers no additional platform fee.",
+    "feeBuyerNote": "BidRoom service fee, paid by the buyer at checkout (2.9% + €0.30, capped at €500). It is not deducted from your payout.",
     "feeReceive": "You will receive approximately",
     "specHint": "E.g.: Material — 18k Gold · Dimensions — 36mm · Reference — 5512",
     "reviewTitle": "Listing submitted for approval",
@@ -1167,7 +1167,7 @@
       "noOffers": "No Offers Yet",
       "noOffersDesc": "Be the first to make an offer on this item!",
       "makeOffer": "Make an offer",
-      "ctaText": "Rules: Submit your offer before the deadline. The seller may accept or not. If one or more offers meet or exceed the minimum, the seller must sell. Below the minimum, the seller is not obliged to sell.",
+      "ctaText": "Rules: Submit your offer before the deadline. You can withdraw it while it is still pending. If one or more offers meet or exceed the minimum, the seller must sell. Below the minimum, the seller is not obliged to sell.",
       "offerFrom": "Offer from",
       "yourOffer": "Your offer",
       "selectedBySeller": "Selected by seller",
@@ -1187,7 +1187,9 @@
       "statusWithdrawn": "Withdrawn",
       "statusExpired": "Expired",
       "stripeWarningPrefix": "⚠️ Connect Stripe in",
-      "stripeSettingsLink": "Settings → Payments"
+      "stripeSettingsLink": "Settings → Payments",
+      "buyerWithdrawNote": "You can withdraw your own offer while it is still pending. Accepted offers cannot be withdrawn.",
+      "withdrawTitle": "Withdraw this pending offer"
     },
     "shipping": {
       "title": "Shipping",
@@ -1246,7 +1248,7 @@
       "cancel": "Cancel",
       "submit": "Send offer",
       "submitting": "Sending offer…",
-      "subtitle": "If the seller accepts, you agree to buy at that price. You can withdraw your offer while it is still pending.",
+      "subtitle": "If the seller accepts, you agree to buy at that price. You can withdraw your offer while it is still pending. Auction bids cannot be withdrawn.",
       "figuresHint": "Minimum is the lowest amount the seller will consider. Highest is the best offer so far—you can match or exceed it, or stay at the minimum.",
       "highestOffer": "Highest offer",
       "valueLabel": "Amount (€)",
@@ -1900,7 +1902,7 @@
     },
     "myBets": {
       "title": "My Bets",
-      "subtitle": "All your bids and offers in one place. Expand any listing to see your bet history.",
+      "subtitle": "All your bids and offers in one place. Pending Best Offers can be withdrawn anytime; auction bids cannot.",
       "loading": "Loading your bets...",
       "errorLoading": "Failed to load your bets.",
       "tryAgain": "Try Again",
@@ -1927,7 +1929,10 @@
       "statusPending": "Pending",
       "statusAccepted": "Accepted",
       "statusRejected": "Rejected",
-      "statusWithdrawn": "Withdrawn"
+      "statusWithdrawn": "Withdrawn",
+      "rulesHint": "Offers: withdraw while pending. Auction bids are binding and cannot be cancelled.",
+      "withdrawTitle": "Withdraw this pending offer",
+      "withdrawConfirmText": "You can only withdraw an offer while it is still pending. Accepted offers cannot be withdrawn."
     },
     "buyer": {
       "title": "Buyer Profile",
@@ -2277,7 +2282,22 @@
       "addressRequired": "Please fill in your full address.",
       "ibanRequired": "Please enter your IBAN.",
       "phoneRequired": "Please enter your mobile phone number.",
-      "tosRequired": "You must accept the Terms of Service."
+      "tosRequired": "You must accept the Terms of Service.",
+      "deliveryAddress": {
+        "title": "Delivery address",
+        "subtitle": "Save your default shipping address. It will be used to prefill delivery details when you buy items with calculated shipping.",
+        "street": "Street address",
+        "streetPlaceholder": "Street and number",
+        "city": "City",
+        "state": "State / region",
+        "postalCode": "Postal code",
+        "country": "Country",
+        "save": "Save address",
+        "clear": "Clear address",
+        "incomplete": "Please fill in street, city, postal code and country.",
+        "stateRequired": "State / region is required for this country.",
+        "saveError": "Could not save delivery address. Please try again."
+      }
     },
     "sellerPaymentConfig": {
       "title": "Alternative Payment Methods",
@@ -2301,7 +2321,7 @@
     },
     "myAuctions": {
       "title": "My Listings",
-      "subtitle": "Track your auctions, private room invitations, and listing status.",
+      "subtitle": "Track your auctions and listing status. You can delete a listing only while it has no qualifying bids or offers (Best Offer: none at or above the minimum).",
       "loading": "Loading your listings...",
       "errorLoading": "Failed to load your listings.",
       "relistSuccess": "Listing relisted successfully!",
@@ -2336,7 +2356,7 @@
       "editListing": "Edit",
       "deleteListing": "Delete",
       "cancelConfirmTitle": "Delete this listing?",
-      "cancelConfirmText": "You can only delete listings with no qualifying offers or bids. This cannot be undone.",
+      "cancelConfirmText": "You can delete this listing only if there are no qualifying offers or bids. For Best Offer: no accepted offer and no pending offer at or above the minimum. For auctions: no bids. Below-minimum pending offers will be rejected. This cannot be undone.",
       "cancelConfirmBtn": "Delete listing",
       "cancelSuccess": "Listing deleted",
       "cancelError": "Could not delete listing",
@@ -2377,7 +2397,9 @@
       },
       "rejectedLabel": "Not approved",
       "rejectionReason": "Reason",
-      "pendingReviewHint": "Waiting for approval. The auction clock only starts once it is approved."
+      "pendingReviewHint": "Waiting for approval. The auction clock only starts once it is approved.",
+      "deleteRulesHint": "Delete is available when there are no bids, and for Best Offer only if no offer meets the minimum price. See Terms of Use.",
+      "deleteListingTitle": "Delete listing (only with no qualifying offers or bids)"
     },
     "myAuctionsBidder": {
       "title": "My Auctions",
@@ -2512,12 +2534,11 @@
     "disputeOpen": "Dispute Open",
     "financialBreakdown": "Financial Breakdown",
     "bidRoomFee": "BidRoom Fee",
-    "stripeProcessingFee": "Stripe Processing Fee",
+    "buyerServiceFee": "Service Fee",
     "shipping": "Shipping",
     "freeShipping": "Free",
     "calculatedSeparately": "Calculated separately",
     "youReceive": "You receive",
-    "stripeDeductedNote": "Stripe fee will be deducted from your payout.",
     "totalCharged": "Total charged",
     "shippingLower": "shipping",
     "paymentWindowEnds": "Payment window ends",
@@ -2809,8 +2830,8 @@
       "step3": {
         "title": "Bid or make an offer",
         "desc": "<strong>Auction:</strong> each bid must beat the previous one by the set increment. If outbid, you receive an immediate notification.<br><strong>Best offer:</strong> submit the amount you consider fair, with or without a message.",
-        "noteTitle": "Bids are binding.",
-        "note": "By placing a bid or submitting an offer, you commit to making the payment if you win. Bids cannot be cancelled after placement."
+        "noteTitle": "Bids vs offers.",
+        "note": "Auction bids are binding and cannot be cancelled. Best Offer proposals can be withdrawn while still pending. Once accepted, an offer becomes a binding sale."
       },
       "step4": {
         "title": "If you win — pay within 24 hours",
@@ -2836,13 +2857,13 @@
       },
       "faq": {
         "q0": "Can I cancel a bid after placing it?",
-        "a0": "No. All bids and offers are <strong>binding</strong> from the moment they are placed. Only bid if you are sure you can and want to pay the indicated amount.",
+        "a0": "Auction <strong>bids</strong> are binding and cannot be cancelled. <strong>Best Offer</strong> proposals can be withdrawn while they are still pending. Once the seller accepts, the sale is binding.",
         "q1": "What happens if the seller doesn't ship the item?",
         "a1": "If the seller doesn't ship within <strong>5 business days</strong>, the transaction is automatically cancelled and you will receive a full refund to your original payment method.",
         "q2": "Do I have a right of withdrawal?",
         "a2": "BidRoom is primarily a C2C (private individuals) platform. In online auctions between private individuals, the right of withdrawal generally does not apply. If the seller is a professional, your rights are different — check the Terms of Use.",
         "q3": "How much commission do I pay?",
-        "a3": "<strong>Buyers pay no commission to BidRoom.</strong> You only pay the item price plus the Stripe processing fee (~2.9% + €0.30 per transaction), capped at <strong>€500</strong>, added to the total at checkout."
+        "a3": "<strong>Buyers pay no sales commission to BidRoom.</strong> You pay the item price plus a BidRoom service fee (2.9% + €0.30 per transaction), capped at <strong>€500</strong>, added to the total at checkout."
       }
     },
     "seller": {
@@ -2862,7 +2883,7 @@
         "ex2": "You receive €940 — but closes on average 32% higher",
         "r3": "Best Offer",
         "ex3": "You receive €965",
-        "note": "The Stripe processing fee (~2.9% + €0.30, capped at €500 for the buyer) is borne by the buyer and added to the final amount at checkout. Payout is transferred to your bank account via Stripe Connect after the buyer confirms receipt."
+        "note": "The BidRoom service fee (2.9% + €0.30, capped at €500) is charged to the buyer and added to the final amount at checkout — it is not deducted from your payout. Payout is transferred to your bank account via Stripe Connect after the buyer confirms receipt."
       },
       "s2": {
         "eye": "Step by step",
@@ -2908,7 +2929,7 @@
         "q2": "What happens if the buyer opens a dispute?",
         "a2": "When a dispute is opened, both accounts are restricted and funds are held. The BidRoom team reviews the evidence from both parties. If no agreement can be reached, the case is referred to the CNIACC.",
         "q3": "Can I cancel a listing after publishing?",
-        "a3": "You can cancel a listing with no bids or offers before the deadline. Once there are bids or offers, cancellation may result in a reputation penalty. You can never cancel after the auction has ended with a winner determined.",
+        "a3": "Yes, while the listing is a draft, awaiting approval, or active — and only if there are no qualifying bids/offers: for Best Offer, no accepted offer and no pending offer at or above the minimum; for auctions, no bids. Below-minimum pending offers are rejected automatically. You cannot delete a listing that already has a winner or an active transaction.",
         "q4": "What items can I not list?",
         "a4": "Prohibited: live animals, controlled substances, weapons, and any item illegal in Portugal. BidRoom uses automatic moderation (Azure AI Content Safety) to detect and block these listings before they go live."
       },
@@ -3296,8 +3317,8 @@
         "a": "Our proxy bidding system allows you to set your maximum bid amount. We automatically bid on your behalf up to that amount, ensuring you only pay the minimum needed to win."
       },
       "bidding2": {
-        "q": "Can I cancel a bid?",
-        "a": "You can cancel a bid within 1 hour of placement, as long as the auction hasn't ended. After that, bids are final and cannot be cancelled."
+        "q": "Can I cancel a bid or withdraw an offer?",
+        "a": "Auction bids are binding and cannot be cancelled once placed. Best Offer proposals can be withdrawn anytime while they are still pending (not yet accepted or rejected by the seller). After acceptance, the sale is binding and payment rules apply."
       },
       "bidding3": {
         "q": "How do I know if I won an auction?",
@@ -3764,7 +3785,7 @@
     "terms": {
       "eyebrow": "Terms of Use",
       "title": "General terms and conditions of platform use",
-      "updated": "Last updated: 1 May 2025",
+      "updated": "Last updated: 1 October 2026",
       "intro": "By using BidRoom.pt, you accept these Terms of Use. Please read them carefully. If you have questions, contact us at <a href=\"mailto:contact@bidroom.pt\">contact@bidroom.pt</a>.",
       "h1": "1. Who we are",
       "h1p1": "BidRoom.pt is an online auction marketplace operated by <strong>BidRoom Unipessoal Lda</strong>, based in Lisbon, Portugal, registered with the Lisbon Commercial Registry. BidRoom acts as a technology intermediary between buyers and sellers and is not a contracting party in transactions on the platform.",
@@ -3782,17 +3803,19 @@
       "fmt1": "Auction (without Private Room)",
       "fmt2": "Auction (with Private Room)",
       "fmt3": "Best Offer",
-      "h4p2": "Stripe processing fees are borne by the buyer, added to the final transaction amount. Payments are processed by Stripe and funds are held until the buyer confirms receipt.",
+      "h4p2": "A BidRoom service fee is charged to the buyer, added to the final transaction amount. Payments are processed by Stripe and funds are held until the buyer confirms receipt.",
       "h5": "5. Seller obligations",
       "h5li1": "The seller declares they are the legitimate owner of the listed item.",
       "h5li2": "The description and photographs must be true and complete.",
       "h5li3": "The seller has <strong>5 business days</strong> to ship the item after payment confirmation.",
       "h5li4": "Failure to meet the shipping deadline results in automatic cancellation and a refund to the buyer.",
       "h5li5": "Prohibited items include: live animals, controlled substances, weapons, and any item illegal under Portuguese or EU law.",
+      "h5li6": "<strong>Deleting a listing:</strong> the seller may delete (cancel) a listing that is still a draft, awaiting approval, or active, provided that (a) for <strong>Best Offer</strong>, there is no accepted offer and no pending offer at or above the minimum offer price; (b) for <strong>Highest Bid</strong> auctions, there are no bids; and (c) there is no winner and no active transaction. Below-minimum pending offers are automatically rejected when the listing is deleted. Listings that have already sold or have qualifying bids/offers cannot be deleted unilaterally.",
       "h6": "6. Buyer obligations",
-      "h6li1": "Bids and offers are binding. By placing a bid or submitting an offer, the buyer commits to pay if they win.",
+      "h6li1": "<strong>Auction bids</strong> are binding from the moment they are placed and <strong>cannot be withdrawn</strong>. By placing a bid, the buyer commits to pay if they win.",
       "h6li2": "Payment must be made within <strong>48 hours</strong> of auction close or offer acceptance. Failure to pay within the deadline results in transaction cancellation, a loss of <strong>20 reputation points</strong>, and — if the buyer has a saved payment method — a financial penalty of <strong>€10 to the seller + €20 to BidRoom</strong>. The seller is free to relist the item.",
       "h6li3": "The buyer must confirm receipt of the item within the stipulated period.",
+      "h6li4": "<strong>Best Offer — withdrawing an offer:</strong> while an offer is still <strong>pending</strong> (not yet accepted or rejected by the seller), the buyer may withdraw it at any time from the listing page or from My Bets. Once the seller accepts an offer, it becomes a binding sale and can no longer be withdrawn — payment and fulfilment then follow the transaction rules.",
       "h7": "7. Right of withdrawal and returns",
       "h7p1": "BidRoom is a peer-to-peer (C2C) auction platform. In online auctions between private individuals, the right of withdrawal under Decree-Law No. 24/2014 does not apply. When one party is a professional seller (business or trader), the consumer buyer has <strong>14 days</strong> to exercise the right of withdrawal without giving a reason, under applicable law. Returns are handled directly between buyer and seller, with BidRoom mediation in case of dispute.",
       "h8": "8. Identity verification (KYC)",
@@ -4214,7 +4237,7 @@
         "q3": "What happens to my payment while a dispute is open?",
         "a3": "Funds are held in escrow while the dispute is active. Your account and the buyer's are preventively suspended. The hold is lifted immediately after the decision, whether in your favour (payout) or the buyer's (refund).",
         "q4": "My listing is incorrectly described and I want to withdraw it. Is there a penalty?",
-        "a4": "You can cancel a listing with no bids without any penalty. If there are already bids, cancellation may affect your reputation and requires justification. Items with bids cannot be cancelled unilaterally — contact support for exceptional cases."
+        "a4": "You can delete a listing with no qualifying bids or offers (Best Offer: none at or above the minimum) with no penalty. Listings with qualifying bids/offers, a winner, or an active transaction cannot be cancelled unilaterally — contact support for exceptional cases."
       }
     },
     "cta": {

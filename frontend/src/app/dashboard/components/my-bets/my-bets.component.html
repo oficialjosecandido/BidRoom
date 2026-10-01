@@ -3,6 +3,7 @@
     <div>
       <h1 class="mb-title">{{ 'dashboard.myBets.title' | translate }}</h1>
       <p class="mb-sub">{{ 'dashboard.myBets.subtitle' | translate }}</p>
+      <p class="mb-rules">{{ 'dashboard.myBets.rulesHint' | translate }}</p>
     </div>
   </div>
 
@@ -107,6 +108,7 @@
                             type="button"
                             class="bh-withdraw"
                             [disabled]="withdrawingId !== null"
+                            [attr.title]="'dashboard.myBets.withdrawTitle' | translate"
                             (click)="withdrawOffer(listing, bet, $event)">
                             {{ withdrawingId === bet._id ? ('dashboard.myBets.withdrawing' | translate) : ('dashboard.myBets.withdraw' | translate) }}
                           </button>

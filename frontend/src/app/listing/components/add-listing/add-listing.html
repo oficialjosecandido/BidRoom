@@ -721,7 +721,7 @@
             <div class="fee-row">
               <span class="fee-label">{{ 'addListing.feeBuyer' | translate }}</span>
               <span class="fee-val">
-                {{ 'addListing.feeBuyerEstimate' | translate:{ amount: (simBuyerProcessingFee | number:'1.2-2') } }}
+                {{ 'addListing.feeBuyerEstimate' | translate:{ amount: (simBuyerServiceFee | number:'1.2-2') } }}
               </span>
             </div>
             <p class="fee-buyer-note">{{ 'addListing.feeBuyerNote' | translate }}</p>
@@ -960,7 +960,7 @@
             <div class="fee-row">
               <span class="fee-label">{{ 'addListing.feeBuyer' | translate }}</span>
               <span class="fee-val">
-                {{ 'addListing.feeBuyerEstimate' | translate:{ amount: (estimatedBuyerProcessingFee() | number:'1.2-2') } }}
+                {{ 'addListing.feeBuyerEstimate' | translate:{ amount: (estimatedBuyerServiceFee() | number:'1.2-2') } }}
               </span>
             </div>
             <p class="fee-buyer-note">{{ 'addListing.feeBuyerNote' | translate }}</p>

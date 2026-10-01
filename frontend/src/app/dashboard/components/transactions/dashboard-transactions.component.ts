@@ -9,9 +9,11 @@ import { TransactionsService, Transaction, TransactionStatus, DamageClaim } from
 import { ReviewsService } from '../../../shared/services/reviews.service';
 import { StripeConnectService } from '../../../shared/services/stripe-connect.service';
 import { ShippingService, ShippingRate, DeliveryAddress } from '../../../shared/services/shipping.service';
+import { CustomerService, DeliveryAddressSaved } from '../../../shared/services/customer.service';
 import { PostHogService } from '../../../shared/services/posthog.service';
 import { AnalyticsEvents } from '../../../shared/services/analytics.events';
 import { CurrencyDisplayService } from '../../../shared/services/currency-display.service';
+import { buyerServiceFeeEuros } from '../../../shared/utils/fees';
 
 const successToast = Swal.mixin({
   toast: true,
@@ -34,6 +36,7 @@ export class DashboardTransactionsComponent implements OnInit {
   private reviewsService = inject(ReviewsService);
   private stripeConnect = inject(StripeConnectService);
   private shippingService = inject(ShippingService);
+  private customerService = inject(CustomerService);
   private postHog = inject(PostHogService);
   private route = inject(ActivatedRoute);
   private translate = inject(TranslateService);
@@ -92,6 +95,8 @@ export class DashboardTransactionsComponent implements OnInit {
   lockingRateTxId: string | null = null;
   /** Delivery address form used for shipping rate calculation */
   deliveryAddress: DeliveryAddress = { street1: '', city: '', state: '', postalCode: '', country: 'PT' };
+  /** Prefill from Settings → Delivery address when the transaction has none. */
+  private savedDeliveryAddress: DeliveryAddressSaved | null = null;
 
   /** Countries where carrier APIs expect a state/province code (US, CA, AU). */
   private readonly stateRequiredCountries = new Set(['US', 'CA', 'AU']);
@@ -191,6 +196,14 @@ export class DashboardTransactionsComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadTransactions();
+    this.customerService.getCustomer().subscribe({
+      next: (info) => {
+        this.savedDeliveryAddress = info.deliveryAddress ?? null;
+      },
+      error: () => {
+        this.savedDeliveryAddress = null;
+      }
+    });
 
     // Scroll to transaction when navigating with fragment (e.g. from review modal)
     this.route.fragment.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(fragment => {
@@ -547,7 +560,7 @@ export class DashboardTransactionsComponent implements OnInit {
   /**
    * BidRoom commission deducted from the SELLER payout (3.5% standard, 6% private room, max €500).
    * Uses the stored amount when available; falls back to the commission rate on the listing.
-   * The buyer pays 0% BidRoom commission — they only pay the Stripe processing fee.
+   * This is separate from the buyer's service fee — see getBuyerServiceFee().
    */
   getSellerCommission(t: Transaction): number {
     if (t.bidRoomFeeAmount != null) return t.bidRoomFeeAmount;
@@ -579,7 +592,7 @@ export class DashboardTransactionsComponent implements OnInit {
     this.shippingRatesTxId = t._id;
     this.shippingRates = [];
     this.shippingRatesError = null;
-    // Pre-fill with previously saved address if available
+    // Prefer address already locked on the transaction; else settings default.
     if (t.buyerDeliveryAddress?.street1) {
       this.deliveryAddress = {
         street1: t.buyerDeliveryAddress.street1 || '',
@@ -587,6 +600,14 @@ export class DashboardTransactionsComponent implements OnInit {
         state: t.buyerDeliveryAddress.state || '',
         postalCode: t.buyerDeliveryAddress.postalCode || '',
         country: t.buyerDeliveryAddress.country || 'PT'
+      };
+    } else if (this.savedDeliveryAddress?.street1) {
+      this.deliveryAddress = {
+        street1: this.savedDeliveryAddress.street1 || '',
+        city: this.savedDeliveryAddress.city || '',
+        state: this.savedDeliveryAddress.state || '',
+        postalCode: this.savedDeliveryAddress.postalCode || '',
+        country: this.savedDeliveryAddress.country || 'PT'
       };
     } else {
       this.deliveryAddress = { street1: '', city: '', state: '', postalCode: '', country: 'PT' };
@@ -673,9 +694,23 @@ export class DashboardTransactionsComponent implements OnInit {
     return `${rate.carrier} ${rate.service} — ${price}${days}`;
   }
 
-  /** Stripe processing fee (stored after payment; null if not yet paid) */
-  getStripeFee(t: Transaction): number | null {
-    return t.stripeFeeAmount ?? null;
+  /**
+   * The service fee the BUYER was charged at checkout.
+   *
+   * This used to return stripeFeeAmount — what Stripe charged BidRoom, a smaller
+   * and unrelated number — so the buyer's breakdown rows did not add up to the
+   * total they actually paid. Three sources, in order of trust: the stored fee,
+   * the residual of a stored total (transactions paid before the field existed),
+   * and the checkout formula (nothing stored yet, i.e. before payment).
+   */
+  getBuyerServiceFee(t: Transaction): number | null {
+    if (t.buyerServiceFeeAmount != null) return t.buyerServiceFeeAmount;
+    const shipping = this.getShippingAmount(t);
+    if (shipping === null) return null;
+    if (t.buyerTotalPaid != null) {
+      return Math.max(0, +(t.buyerTotalPaid - t.amount - shipping).toFixed(2));
+    }
+    return +buyerServiceFeeEuros(t.amount + shipping).toFixed(2);
   }
 
   /**
@@ -689,15 +724,16 @@ export class DashboardTransactionsComponent implements OnInit {
   }
 
   /**
-   * Buyer total: bid + Stripe processing fee + shipping.
-   * Buyer pays 0% BidRoom commission — only the Stripe processing fee applies.
-   * Stripe fee is only known after payment; estimated total excludes it if unavailable.
+   * Buyer total: bid + shipping + BidRoom service fee.
+   * Before payment nothing is stored yet, so the fee is estimated with the same
+   * formula the checkout uses (shared/utils/fees.ts).
    */
   getBuyerTotal(t: Transaction): number | null {
     if (t.buyerTotalPaid != null) return t.buyerTotalPaid;
-    const stripeFee = this.getStripeFee(t) ?? 0;
     const shipping = this.getShippingAmount(t);
-    return shipping !== null ? t.amount + stripeFee + shipping : null;
+    if (shipping === null) return null;
+    const subtotal = t.amount + shipping;
+    return +(subtotal + buyerServiceFeeEuros(subtotal)).toFixed(2);
   }
 
   /** Auction type label: Best Offer | Highest-Bid Auction (Private Room) | Highest-Bid Auction */

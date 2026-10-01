@@ -11,7 +11,7 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { ListingsService, AttributeDef } from '../../../shared/services/listings.service';
 import { CustomerService, CustomerInfo, SellerPaymentConfig } from '../../../shared/services/customer.service';
 import { KycService, KYC_THRESHOLD } from '../../../shared/services/kyc.service';
-import { estimateBuyerProcessingFeeEuros } from '../../../shared/utils/fees';
+import { buyerServiceFeeEuros } from '../../../shared/utils/fees';
 import { API_CONFIG } from '../../../shared/config/api.config';
 import { environment } from '@env';
 import { BidroomLogoComponent } from '../../../shared/components/bidroom-logo/bidroom-logo.component';
@@ -1528,8 +1528,8 @@ export class AddListing implements OnInit, OnDestroy {
     return this.getFeeForecastPriceBasis() * this.sellerFeeRateDecimal();
   }
 
-  estimatedBuyerProcessingFee(): number {
-    return estimateBuyerProcessingFeeEuros(this.getFeeForecastPriceBasis());
+  estimatedBuyerServiceFee(): number {
+    return buyerServiceFeeEuros(this.getFeeForecastPriceBasis());
   }
 
   // ---------------------------------------------------------------- commission simulator
@@ -1566,8 +1566,8 @@ export class AddListing implements OnInit, OnDestroy {
     return this.simBasis * this.sellerFeeRateDecimal();
   }
 
-  get simBuyerProcessingFee(): number {
-    return estimateBuyerProcessingFeeEuros(this.simBasis);
+  get simBuyerServiceFee(): number {
+    return buyerServiceFeeEuros(this.simBasis);
   }
 
   /** What lands in the seller's account: the sale amount minus BidRoom's commission. */

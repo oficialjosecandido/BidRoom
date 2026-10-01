@@ -522,7 +522,7 @@
     "feeSummary": "Taxa estimada do vendedor (previsão)",
     "feeForecastSubtitle": "É uma estimativa caso o artigo venda pelo seu preço mínimo aceite. Se ainda não definiu um, usamos o lance inicial ou o preço Compre já.",
     "sellerBidroomFee": "Taxa Bidroom para o vendedor ({{rate}}%):",
-    "feeNote": "O processamento de pagamentos Stripe é pago pelo comprador no checkout (teto de €500). A sua taxa Bidroom é deduzida do pagamento.",
+    "feeNote": "A taxa de serviço BidRoom é paga pelo comprador no checkout (teto de €500). A sua comissão Bidroom é deduzida do pagamento.",
     "sellerDeclaration": "Confirmo que sou o proprietário legal deste item e concordo com os Termos e Condições do Bidroom e com a estrutura de comissões. *",
     "previous": "← Anterior",
     "next": "Seguinte →",
@@ -798,9 +798,9 @@
       "dashboard": "Dashboard"
     },
     "return7": "7 dias",
-    "feeBuyer": "Taxa de processamento (Stripe)",
+    "feeBuyer": "Taxa de serviço do comprador",
     "feeBuyerEstimate": "€{{amount}} (máx. €500)",
-    "feeBuyerNote": "Paga pelo comprador no checkout (~2,9% + €0,30, com teto de €500). O BidRoom não cobra comissão adicional ao comprador.",
+    "feeBuyerNote": "Taxa de serviço BidRoom, paga pelo comprador no checkout (2,9% + €0,30, com teto de €500). Não é deduzida do seu pagamento.",
     "feeReceive": "Receberá aproximadamente",
     "specHint": "Ex: Material — Ouro 18k · Dimensões — 36mm · Referência — 5512",
     "reviewTitle": "Anúncio submetido para aprovação",
@@ -1167,7 +1167,7 @@
       "noOffers": "Nenhuma Oferta Ainda",
       "noOffersDesc": "Seja o primeiro a fazer uma oferta neste item!",
       "makeOffer": "Fazer uma oferta",
-      "ctaText": "Regras: Envie sua oferta antes do prazo. O vendedor pode aceitar ou não. Se houver uma ou mais ofertas iguais ou acima do mínimo, o vendedor é obrigado a vender. Abaixo do mínimo, não é obrigado a vender.",
+      "ctaText": "Regras: Submeta a sua oferta antes do prazo. Pode retirá-la enquanto estiver pendente. Se uma ou mais ofertas atingirem ou ultrapassarem o mínimo, o vendedor tem de vender. Abaixo do mínimo, o vendedor não é obrigado a vender.",
       "offerFrom": "Oferta de",
       "yourOffer": "Sua oferta",
       "selectedBySeller": "Selecionada pelo vendedor",
@@ -1187,7 +1187,9 @@
       "statusWithdrawn": "Retirada",
       "statusExpired": "Expirada",
       "stripeWarningPrefix": "⚠️ Ligue o Stripe em",
-      "stripeSettingsLink": "Definições → Pagamentos"
+      "stripeSettingsLink": "Definições → Pagamentos",
+      "buyerWithdrawNote": "Pode retirar a sua oferta enquanto estiver pendente. Ofertas aceites não podem ser retiradas.",
+      "withdrawTitle": "Retirar esta oferta pendente"
     },
     "shipping": {
       "title": "Envio",
@@ -1246,7 +1248,7 @@
       "cancel": "Cancelar",
       "submit": "Enviar oferta",
       "submitting": "Enviando oferta…",
-      "subtitle": "Se o vendedor aceitar, fica comprometido a comprar a esse preço. Pode retirar a oferta enquanto estiver pendente.",
+      "subtitle": "Se o vendedor aceitar, fica comprometido a comprar a esse preço. Pode retirar a oferta enquanto estiver pendente. Lances de leilão não podem ser retirados.",
       "figuresHint": "O mínimo é o valor mais baixo que o vendedor considera. O mais alto é a melhor oferta até agora—pode igualar ou ultrapassar, ou manter-se no mínimo.",
       "highestOffer": "Oferta mais alta",
       "valueLabel": "Valor (€)",
@@ -1900,7 +1902,7 @@
     },
     "myBets": {
       "title": "Meus Lances",
-      "subtitle": "Todos os seus lances e ofertas em um só lugar. Expanda um anúncio para ver o histórico.",
+      "subtitle": "Todos os seus lances e ofertas num só lugar. Ofertas pendentes (Melhor Oferta) podem ser retiradas a qualquer momento; lances de leilão não.",
       "loading": "Carregando seus lances...",
       "errorLoading": "Falha ao carregar os seus lances.",
       "tryAgain": "Tentar Novamente",
@@ -1927,7 +1929,10 @@
       "statusPending": "Pendente",
       "statusAccepted": "Aceite",
       "statusRejected": "Recusado",
-      "statusWithdrawn": "Retirada"
+      "statusWithdrawn": "Retirada",
+      "rulesHint": "Ofertas: pode retirar enquanto estiverem pendentes. Lances de leilão são vinculativos e não podem ser cancelados.",
+      "withdrawTitle": "Retirar esta oferta pendente",
+      "withdrawConfirmText": "Só pode retirar uma oferta enquanto estiver pendente. Ofertas aceites não podem ser retiradas."
     },
     "buyer": {
       "title": "Perfil do Comprador",
@@ -2277,7 +2282,22 @@
       "addressRequired": "Preencha a morada completa.",
       "ibanRequired": "Introduza o IBAN.",
       "phoneRequired": "Introduza o seu telemóvel.",
-      "tosRequired": "Tem de aceitar os Termos de Serviço."
+      "tosRequired": "Tem de aceitar os Termos de Serviço.",
+      "deliveryAddress": {
+        "title": "Morada de entrega",
+        "subtitle": "Guarde a sua morada de entrega predefinida. Será usada para pré-preencher os dados de envio quando comprar artigos com portes calculados.",
+        "street": "Morada",
+        "streetPlaceholder": "Rua e número",
+        "city": "Cidade",
+        "state": "Distrito / região",
+        "postalCode": "Código postal",
+        "country": "País",
+        "save": "Guardar morada",
+        "clear": "Limpar morada",
+        "incomplete": "Preencha a morada, cidade, código postal e país.",
+        "stateRequired": "O distrito / região é obrigatório para este país.",
+        "saveError": "Não foi possível guardar a morada. Tente novamente."
+      }
     },
     "sellerPaymentConfig": {
       "title": "Métodos de Pagamento Alternativos",
@@ -2301,7 +2321,7 @@
     },
     "myAuctions": {
       "title": "Meus Anúncios",
-      "subtitle": "Acompanhe os seus leilões, convites da sala privada e estado de cada anúncio.",
+      "subtitle": "Acompanhe os seus leilões e o estado de cada anúncio. Pode eliminar um anúncio apenas se não tiver lances ou ofertas qualificativas (Melhor Oferta: nenhuma igual ou acima do mínimo).",
       "loading": "Carregando seus anúncios...",
       "errorLoading": "Falha ao carregar os seus anúncios.",
       "relistSuccess": "Anúncio reanunciado com sucesso!",
@@ -2336,7 +2356,7 @@
       "editListing": "Editar",
       "deleteListing": "Eliminar",
       "cancelConfirmTitle": "Eliminar este anúncio?",
-      "cancelConfirmText": "Só pode eliminar anúncios sem ofertas iguais ou superiores ao mínimo (ou sem lances). Esta ação não pode ser anulada.",
+      "cancelConfirmText": "Só pode eliminar este anúncio se não houver ofertas ou lances qualificativos. Em Melhor Oferta: sem oferta aceite e sem oferta pendente igual ou superior ao mínimo. Em leilão: sem lances. Ofertas pendentes abaixo do mínimo serão rejeitadas. Esta ação não pode ser anulada.",
       "cancelConfirmBtn": "Eliminar anúncio",
       "cancelSuccess": "Anúncio eliminado",
       "cancelError": "Não foi possível eliminar o anúncio",
@@ -2377,7 +2397,9 @@
       },
       "rejectedLabel": "Não aprovado",
       "rejectionReason": "Motivo",
-      "pendingReviewHint": "À espera de aprovação. O tempo do leilão só começa quando for aprovado."
+      "pendingReviewHint": "À espera de aprovação. O tempo do leilão só começa quando for aprovado.",
+      "deleteRulesHint": "Eliminar está disponível quando não há lances e, em Melhor Oferta, só se nenhuma oferta atingir o preço mínimo. Consulte os Termos de Utilização.",
+      "deleteListingTitle": "Eliminar anúncio (apenas sem ofertas ou lances qualificativos)"
     },
     "myAuctionsBidder": {
       "title": "Meus Leilões",
@@ -2512,12 +2534,11 @@
     "disputeOpen": "Disputa Aberta",
     "financialBreakdown": "Detalhes de Pagamento",
     "bidRoomFee": "Taxa BidRoom",
-    "stripeProcessingFee": "Taxa de Processamento Stripe",
+    "buyerServiceFee": "Taxa de Serviço",
     "shipping": "Frete",
     "freeShipping": "Grátis",
     "calculatedSeparately": "Calculado separadamente",
     "youReceive": "Você recebe",
-    "stripeDeductedNote": "A taxa do Stripe será deduzida do seu pagamento.",
     "totalCharged": "Total cobrado",
     "shippingLower": "frete",
     "paymentWindowEnds": "Prazo de pagamento termina",
@@ -2809,8 +2830,8 @@
       "step3": {
         "title": "Lance ou faça uma oferta",
         "desc": "<strong>Leilão:</strong> cada lance tem de superar o anterior pelo incremento definido. Se for superado, recebe uma notificação imediata.<br><strong>Melhor oferta:</strong> submeta o valor que considera justo, com ou sem mensagem.",
-        "noteTitle": "Lances são vinculativos.",
-        "note": "Ao fazer um lance ou submeter uma oferta, compromete-se a efectuar o pagamento se for o vencedor. Lances não podem ser cancelados após a sua colocação."
+        "noteTitle": "Lances vs ofertas.",
+        "note": "Os lances em leilão são vinculativos e não podem ser cancelados. As propostas de Melhor Oferta podem ser retiradas enquanto estiverem pendentes. Depois de aceite, a oferta torna-se uma venda vinculativa."
       },
       "step4": {
         "title": "Se ganhar — pague em 24 horas",
@@ -2836,13 +2857,13 @@
       },
       "faq": {
         "q0": "Posso cancelar um lance depois de o fazer?",
-        "a0": "Não. Todos os lances e ofertas são <strong>vinculativos</strong> desde o momento em que são colocados. Lance apenas se tiver a certeza de que pode e quer pagar o valor indicado.",
+        "a0": "Os <strong>lances</strong> em leilão são vinculativos e não podem ser cancelados. As propostas de <strong>Melhor Oferta</strong> podem ser retiradas enquanto estiverem pendentes. Depois de o vendedor aceitar, a venda é vinculativa.",
         "q1": "O que acontece se o vendedor não enviar o artigo?",
         "a1": "Se o vendedor não enviar dentro de <strong>5 dias úteis</strong>, a transacção é cancelada automaticamente e receberá o reembolso completo na sua forma de pagamento original.",
         "q2": "Tenho direito de arrependimento?",
         "a2": "O BidRoom é maioritariamente uma plataforma C2C (particulares). Em leilões online entre particulares, o direito de arrependimento geralmente não se aplica. Se o vendedor for um profissional, os seus direitos são diferentes — verifique nos Termos de Utilização.",
         "q3": "Quanto pago de comissão?",
-        "a3": "<strong>O comprador não paga comissão ao BidRoom.</strong> Paga apenas o valor do artigo mais a taxa de processamento da Stripe (~2,9% + €0,30 por transacção), com teto de <strong>€500</strong>, acrescentada ao total no checkout."
+        "a3": "<strong>O comprador não paga comissão de venda ao BidRoom.</strong> Paga o valor do artigo mais uma taxa de serviço BidRoom (2,9% + €0,30 por transacção), com teto de <strong>€500</strong>, acrescentada ao total no checkout."
       }
     },
     "seller": {
@@ -2862,7 +2883,7 @@
         "ex2": "Recebe € 940 — mas fecha em média 32% mais alto",
         "r3": "Melhor Oferta",
         "ex3": "Recebe € 965",
-        "note": "A taxa de processamento Stripe (~2,9% + €0,30, com teto de €500 para o comprador) é suportada pelo comprador e acrescentada ao valor final no checkout. O payout é transferido para a sua conta bancária via Stripe Connect após a confirmação de recepção pelo comprador."
+        "note": "A taxa de serviço BidRoom (2,9% + €0,30, com teto de €500) é cobrada ao comprador e acrescentada ao valor final no checkout — não é deduzida do seu pagamento. O payout é transferido para a sua conta bancária via Stripe Connect após a confirmação de recepção pelo comprador."
       },
       "s2": {
         "eye": "Passo a passo",
@@ -2908,7 +2929,7 @@
         "q2": "O que acontece se o comprador abrir uma disputa?",
         "a2": "Quando uma disputa é aberta, ambas as contas são restringidas e os fundos ficam retidos. A equipa BidRoom analisa as evidências de ambas as partes. Se não for possível chegar a acordo, o caso é encaminhado para o CNIACC.",
         "q3": "Posso cancelar um anúncio após publicação?",
-        "a3": "Pode cancelar um anúncio sem lances ou ofertas antes do prazo. Após existirem lances ou ofertas, o cancelamento pode implicar penalização de reputação. Nunca pode cancelar após o leilão ter terminado com um vencedor apurado.",
+        "a3": "Sim, enquanto o anúncio estiver em rascunho, à espera de aprovação ou activo — e apenas se não houver lances/ofertas qualificativos: em Melhor Oferta, sem oferta aceite e sem oferta pendente igual ou superior ao mínimo; em leilão, sem lances. Ofertas abaixo do mínimo são rejeitadas automaticamente. Não pode eliminar um anúncio que já tenha vencedor ou transacção activa.",
         "q4": "Que artigos não posso listar?",
         "a4": "Estão proibidos: animais vivos, substâncias controladas, armas, e qualquer artigo ilegal em Portugal. O BidRoom usa moderação automática (Azure AI Content Safety) para detectar e bloquear estas listagens antes de serem publicadas."
       },
@@ -3296,8 +3317,8 @@
         "a": "Nosso sistema de lance por proxy permite que você defina seu valor máximo de lance. Damos lances automaticamente em seu nome até esse valor, garantindo que você pague o mínimo necessário para vencer."
       },
       "bidding2": {
-        "q": "Posso cancelar um lance?",
-        "a": "Você pode cancelar um lance dentro de 1 hora após fazê-lo, desde que o leilão não tenha encerrado. Após isso, os lances são definitivos."
+        "q": "Posso cancelar um lance ou retirar uma oferta?",
+        "a": "Os lances em leilão são vinculativos e não podem ser cancelados depois de feitos. As propostas de Melhor Oferta podem ser retiradas a qualquer momento enquanto estiverem pendentes (ainda não aceites ou rejeitadas pelo vendedor). Após a aceitação, a venda é vinculativa e aplicam-se as regras de pagamento."
       },
       "bidding3": {
         "q": "Como sei se ganhei um leilão?",
@@ -3764,7 +3785,7 @@
     "terms": {
       "eyebrow": "Termos de Utilização",
       "title": "Condições gerais de utilização da plataforma",
-      "updated": "Última actualização: 1 de Maio de 2025",
+      "updated": "Última actualização: 1 de Outubro de 2026",
       "intro": "Ao utilizar o BidRoom.pt, o utilizador aceita os presentes Termos de Utilização. Leia-os com atenção. Em caso de dúvida, contacte-nos em <a href=\"mailto:contact@bidroom.pt\">contact@bidroom.pt</a>.",
       "h1": "1. Quem somos",
       "h1p1": "O BidRoom.pt é um marketplace de leilões online operado pela <strong>BidRoom Unipessoal Lda</strong>, com sede em Lisboa, Portugal, registada na Conservatória do Registo Comercial de Lisboa. O BidRoom actua como intermediário tecnológico entre compradores e vendedores, não sendo parte contratante nas transacções realizadas na plataforma.",
@@ -3782,7 +3803,7 @@
       "fmt1": "Leilão (sem Sala Privada)",
       "fmt2": "Leilão (com Sala Privada)",
       "fmt3": "Melhor Oferta",
-      "h4p2": "As taxas de processamento Stripe são suportadas pelo comprador, acrescidas ao valor final da transacção. Os pagamentos são processados pela Stripe e os fundos são retidos até confirmação de recepção pelo comprador.",
+      "h4p2": "É cobrada ao comprador uma taxa de serviço BidRoom, acrescida ao valor final da transacção. Os pagamentos são processados pela Stripe e os fundos são retidos até confirmação de recepção pelo comprador.",
       "h5": "5. Obrigações do vendedor",
       "h5li1": "O vendedor declara ser o legítimo proprietário do artigo listado.",
       "h5li2": "A descrição e as fotografias devem ser verdadeiras e completas.",
@@ -3790,7 +3811,7 @@
       "h5li4": "O incumprimento do prazo de envio resulta em cancelamento automático e reembolso ao comprador.",
       "h5li5": "Artigos proibidos incluem: animais vivos, substâncias controladas, armas, e qualquer item ilegal na legislação portuguesa ou europeia.",
       "h6": "6. Obrigações do comprador",
-      "h6li1": "Os lances e ofertas são vinculativos. Ao fazer um lance ou submeter uma oferta, o comprador compromete-se a efectuar o pagamento caso seja o vencedor.",
+      "h6li1": "Os <strong>lances em leilão</strong> são vinculativos desde o momento em que são feitos e <strong>não podem ser retirados</strong>. Ao fazer um lance, o comprador compromete-se a pagar se for o vencedor.",
       "h6li2": "O pagamento deve ser efectuado no prazo de <strong>48 horas</strong> após o encerramento do leilão ou aceitação da proposta. O não pagamento dentro do prazo resulta em cancelamento da transacção, perda de <strong>20 pontos de reputação</strong> e, caso o comprador tenha método de pagamento guardado, numa penalização financeira de <strong>€10 ao vendedor + €20 à BidRoom</strong>. O vendedor fica livre de reanunciar o artigo.",
       "h6li3": "O comprador deve confirmar a recepção do artigo dentro do prazo estipulado.",
       "h7": "7. Direito de arrependimento e devoluções",
@@ -3828,7 +3849,9 @@
       "h17li3": "Se o comprador tiver um método de pagamento guardado: débito automático de <strong>€30</strong> — sendo <strong>€10 transferidos para o vendedor</strong> e <strong>€20 retidos pela BidRoom</strong> a título de penalização.",
       "h17li4": "É registada automaticamente <strong>uma avaliação de 2/5 pela BidRoom</strong> no perfil do comprador.",
       "h17li5": "Ao terceiro incumprimento de pagamento, a conta do comprador é <strong>encerrada permanentemente</strong>.",
-      "h17p2": "A penalização financeira aplica-se independentemente da justificação apresentada pelo comprador. Ao colocar uma proposta ou aceitar uma oferta, o utilizador aceita expressamente estes termos."
+      "h17p2": "A penalização financeira aplica-se independentemente da justificação apresentada pelo comprador. Ao colocar uma proposta ou aceitar uma oferta, o utilizador aceita expressamente estes termos.",
+      "h5li6": "<strong>Eliminar um anúncio:</strong> o vendedor pode eliminar (cancelar) um anúncio que esteja em rascunho, à espera de aprovação ou activo, desde que (a) em <strong>Melhor Oferta</strong>, não exista oferta aceite nem oferta pendente igual ou superior ao preço mínimo; (b) em leilões de <strong>Maior Lance</strong>, não existam lances; e (c) não exista vencedor nem transacção activa. Ofertas pendentes abaixo do mínimo são rejeitadas automaticamente quando o anúncio é eliminado. Anúncios já vendidos ou com lances/ofertas qualificativas não podem ser eliminados unilateralmente.",
+      "h6li4": "<strong>Melhor Oferta — retirar uma oferta:</strong> enquanto a oferta estiver <strong>pendente</strong> (ainda não aceite ou rejeitada pelo vendedor), o comprador pode retirá-la a qualquer momento na página do anúncio ou em Meus Lances. Depois de o vendedor aceitar a oferta, a venda torna-se vinculativa e já não pode ser retirada — o pagamento e o cumprimento seguem as regras da transacção."
     },
     "privacy": {
       "eyebrow": "Política de Privacidade",
@@ -4214,7 +4237,7 @@
         "q3": "O que acontece ao meu pagamento enquanto a disputa está em aberto?",
         "a3": "Os fundos ficam bloqueados em escrow enquanto a disputa está activa. A sua conta e a do comprador ficam suspensas preventivamente. O bloqueio levanta-se imediatamente após a decisão, seja ela a seu favor (payout) ou do comprador (reembolso).",
         "q4": "O meu artigo está anunciado incorrectamente e quero retirar. Há penalização?",
-        "a4": "Pode cancelar um anúncio sem lances sem qualquer penalização. Se já houver lances, o cancelamento pode afectar a sua reputação e requer justificação. Artigos com lances não podem ser cancelados unilateralmente — contacte o suporte para casos excepcionais."
+        "a4": "Pode eliminar um anúncio sem lances ou ofertas qualificativas (Melhor Oferta: nenhuma igual ou acima do mínimo) sem penalização. Anúncios com lances/ofertas qualificativos, vencedor ou transacção activa não podem ser cancelados unilateralmente — contacte o suporte para casos excepcionais."
       }
     },
     "cta": {
