@@ -12,13 +12,6 @@ export class DisplayPricePipe implements PipeTransform {
   private currencyService = inject(CurrencyDisplayService);
 
   transform(amountEur: number | null | undefined): string {
-    if (amountEur == null) return '';
-    const eur = `€${amountEur.toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-
-    const converted = this.currencyService.convert(amountEur);
-    if (!converted) return eur;
-
-    const approx = converted.value.toLocaleString('en', { maximumFractionDigits: 0 });
-    return `${eur} (≈ ${converted.symbol}${approx})`;
+    return this.currencyService.format(amountEur);
   }
 }

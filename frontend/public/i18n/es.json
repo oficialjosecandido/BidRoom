@@ -1299,12 +1299,17 @@
       "emailOutbid": "Notificarme cuando me superen",
       "updating": "Actualizando…",
       "viewListing": "Ver anuncio",
+      "viewTransaction": "Ver transacción",
+      "withdraw": "Retirar",
+      "withdrawing": "Retirando…",
+      "withdrawError": "No se pudo retirar la oferta.",
       "statusActive": "Activo",
       "statusEnded": "Terminado",
       "statusCancelled": "Cancelado",
       "statusPending": "Pendiente",
       "statusAccepted": "Aceptado",
-      "statusRejected": "Rechazado"
+      "statusRejected": "Rechazado",
+      "statusWithdrawn": "Retirada"
     },
     "seller": {
       "title": "Perfil del Vendedor",

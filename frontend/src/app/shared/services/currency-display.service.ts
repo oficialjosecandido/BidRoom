@@ -61,6 +61,19 @@ export class CurrencyDisplayService {
   }
 
   /**
+   * Format a stored EUR amount for UI.
+   * Always shows €… and, when the user picked another display currency, an approximate conversion.
+   */
+  format(amountEur: number | null | undefined): string {
+    if (amountEur == null) return '';
+    const eur = `€${amountEur.toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    const converted = this.convert(amountEur);
+    if (!converted) return eur;
+    const approx = converted.value.toLocaleString('en', { maximumFractionDigits: 0 });
+    return `${eur} (≈ ${converted.symbol}${approx})`;
+  }
+
+  /**
    * Converts a EUR amount to the chosen display currency.
    * Returns null when display currency is EUR (no conversion needed) or rates are unavailable.
    */

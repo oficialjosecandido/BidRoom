@@ -722,9 +722,15 @@ router.patch('/:offerId/withdraw', authenticateToken, async (req, res) => {
     }
 
     if (offer.status !== 'pending') {
+      const msg =
+        offer.status === 'accepted'
+          ? 'This offer was already accepted and cannot be withdrawn. Open Transactions to complete payment.'
+          : offer.status === 'withdrawn'
+            ? 'This offer was already withdrawn.'
+            : 'Only pending offers can be withdrawn.';
       return res.status(400).json({
         error: 'Invalid offer status',
-        message: 'Only pending offers can be withdrawn'
+        message: msg
       });
     }
 

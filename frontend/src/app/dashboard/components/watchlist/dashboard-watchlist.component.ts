@@ -58,7 +58,7 @@ export class DashboardWatchlistComponent implements OnInit {
   formatPrice(price: number): string {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
-      currency: 'USD',
+      currency: 'EUR',
       minimumFractionDigits: 0,
       maximumFractionDigits: 2
     }).format(price);

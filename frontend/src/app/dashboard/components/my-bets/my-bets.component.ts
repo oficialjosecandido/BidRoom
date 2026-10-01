@@ -115,13 +115,20 @@ export class MyBetsComponent implements OnInit {
     }
   }
 
-  canWithdrawBet(bet: BetItem): boolean {
-    return bet.type === 'offer' && bet.status === 'pending';
+  /**
+   * Buyer may withdraw only pending offers.
+   * Accepted / rejected / withdrawn: never.
+   * Ended listing: still allowed while pending (seller may leave offers open).
+   */
+  canWithdrawBet(listing: EnhancedListing, bet: BetItem): boolean {
+    if (bet.type !== 'offer' || bet.status !== 'pending') return false;
+    if (listing.isWinner) return false;
+    return true;
   }
 
   withdrawOffer(listing: EnhancedListing, bet: BetItem, event: Event): void {
     event.stopPropagation();
-    if (!this.canWithdrawBet(bet) || this.withdrawingId) return;
+    if (!this.canWithdrawBet(listing, bet) || this.withdrawingId) return;
     this.withdrawingId = bet._id;
     this.offersService.withdrawOffer(bet._id).subscribe({
       next: (updated) => {
@@ -158,9 +165,9 @@ export class MyBetsComponent implements OnInit {
   }
 
   formatPrice(price: number): string {
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat('pt-PT', {
       style: 'currency',
-      currency: 'USD',
+      currency: 'EUR',
       minimumFractionDigits: 0,
       maximumFractionDigits: 2
     }).format(price);

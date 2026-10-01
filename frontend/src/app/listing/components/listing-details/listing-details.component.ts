@@ -553,9 +553,11 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
     return offer.offerer.email.toLowerCase() === user.email.toLowerCase();
   }
 
-  /** Buyer can withdraw their own pending offer at any time. */
+  /** Buyer can withdraw own pending offers only (never accepted / sold). */
   canWithdrawOffer(offer: Offer): boolean {
-    return !this.isOwnListing && this.isMyOffer(offer) && offer.status === 'pending';
+    if (this.isOwnListing || !this.isMyOffer(offer) || offer.status !== 'pending') return false;
+    // Listing may be ended with pending offers awaiting seller — still withdrawable.
+    return true;
   }
 
   /** Best-offer listing is still open for offers (active and not ended). */

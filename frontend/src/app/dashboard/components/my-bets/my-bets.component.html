@@ -102,13 +102,13 @@
                         <span class="bh-type">{{ bet.type === 'offer' ? ('myBids.typeOffer' | translate) : ('myBids.typeLive' | translate) }}</span>
                         <span class="bh-date">{{ bet.createdAt | date:'d MMM, HH:mm' }}</span>
                         <span class="bh-status" [class]="getBetStatusClass(bet.status)">{{ getStatusLabel(bet.status) }}</span>
-                        @if (canWithdrawBet(bet)) {
+                        @if (canWithdrawBet(listing, bet)) {
                           <button
                             type="button"
                             class="bh-withdraw"
                             [disabled]="withdrawingId !== null"
                             (click)="withdrawOffer(listing, bet, $event)">
-                            {{ withdrawingId === bet._id ? ('myBids.withdrawing' | translate) : ('myBids.withdraw' | translate) }}
+                            {{ withdrawingId === bet._id ? ('dashboard.myBets.withdrawing' | translate) : ('dashboard.myBets.withdraw' | translate) }}
                           </button>
                         }
                       </div>
@@ -118,7 +118,7 @@
 
                 <div class="bc-actions">
                   @if (listing.isWinner) {
-                    <a routerLink="/dashboard/transactions" class="bc-btn btn-bid-now">{{ 'myBids.viewTransaction' | translate }}</a>
+                    <a routerLink="/dashboard/transactions" class="bc-btn btn-bid-now">{{ 'dashboard.myBets.viewTransaction' | translate }}</a>
                   }
                   @if (listing.status === 'active' && !listing.isWinner) {
                     <a [routerLink]="['/listing', listing.slug]" class="bc-btn btn-bid-now">{{ 'myBids.bidAgain' | translate }}</a>

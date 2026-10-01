@@ -11,6 +11,7 @@ import { StripeConnectService } from '../../../shared/services/stripe-connect.se
 import { ShippingService, ShippingRate, DeliveryAddress } from '../../../shared/services/shipping.service';
 import { PostHogService } from '../../../shared/services/posthog.service';
 import { AnalyticsEvents } from '../../../shared/services/analytics.events';
+import { CurrencyDisplayService } from '../../../shared/services/currency-display.service';
 
 const successToast = Swal.mixin({
   toast: true,
@@ -37,6 +38,7 @@ export class DashboardTransactionsComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private translate = inject(TranslateService);
   private destroyRef = inject(DestroyRef);
+  private currencyDisplay = inject(CurrencyDisplayService);
 
   transactions: Transaction[] = [];
   isLoading = true;
@@ -427,13 +429,9 @@ export class DashboardTransactionsComponent implements OnInit {
     return new Date(d).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' });
   }
 
+  /** Amounts are stored in EUR — never hardcode USD. */
   formatPrice(amount: number): string {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    }).format(amount);
+    return this.currencyDisplay.format(amount);
   }
 
   /** Pay via Stripe: create checkout session and redirect */
@@ -670,7 +668,7 @@ export class DashboardTransactionsComponent implements OnInit {
   }
 
   formatShippingRate(rate: ShippingRate): string {
-    const price = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(rate.rate);
+    const price = this.formatPrice(rate.rate);
     const days = rate.deliveryDays ? ` · Est. ${rate.deliveryDays} days` : '';
     return `${rate.carrier} ${rate.service} — ${price}${days}`;
   }

@@ -1296,12 +1296,17 @@
       "emailOutbid": "M'avertir lorsque je suis surenchéri",
       "updating": "Mise à jour…",
       "viewListing": "Voir l'annonce",
+      "viewTransaction": "Voir la transaction",
+      "withdraw": "Retirer",
+      "withdrawing": "Retrait…",
+      "withdrawError": "Impossible de retirer l'offre.",
       "statusActive": "Actif",
       "statusEnded": "Terminé",
       "statusCancelled": "Annulé",
       "statusPending": "En attente",
       "statusAccepted": "Accepté",
-      "statusRejected": "Refusé"
+      "statusRejected": "Refusé",
+      "statusWithdrawn": "Retirée"
     },
     "seller": {
       "title": "Profil vendeur",
