@@ -2702,7 +2702,10 @@
     "damageClaimUploadError": "Falha ao carregar a foto. Tente novamente.",
     "damageClaimSubmitError": "Falha ao submeter a reclamação. Tente novamente.",
     "returnError": "Falha ao submeter o pedido de devolução.",
-    "disputeError": "Falha ao submeter a disputa."
+    "disputeError": "Falha ao submeter a disputa.",
+    "shipToBuyer": "Enviar para",
+    "shipToBuyerMissing": "A morada de entrega do comprador ainda não está disponível. Peça ao comprador para a guardar em Definições.",
+    "deliveryAddressRequired": "Guarde a sua morada de entrega em Definições antes de pagar, para o vendedor saber para onde enviar."
   },
   "returns": {
     "modal": {

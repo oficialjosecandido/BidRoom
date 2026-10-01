@@ -1699,7 +1699,10 @@
     "paymentExpired": "Expiré",
     "secondChance": "Seconde chance",
     "nonPaymentNoSecondBidder": "Cette commande a été annulée pour défaut de paiement et il n'y a pas de second enchérisseur. Vous pouvez relister l'article pour démarrer une nouvelle vente.",
-    "relistItem": "Relister l'article"
+    "relistItem": "Relister l'article",
+    "shipToBuyer": "Expédier à",
+    "shipToBuyerMissing": "L’adresse de livraison de l’acheteur n’est pas encore disponible. Demandez-lui de l’enregistrer dans Paramètres.",
+    "deliveryAddressRequired": "Enregistrez votre adresse de livraison dans Paramètres avant de payer, pour que le vendeur sache où expédier."
   },
   "disputes": {
     "title": "Litiges",

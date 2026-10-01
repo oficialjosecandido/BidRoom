@@ -21,6 +21,10 @@ const LOG_PREFIX = '[Connect]';
 const logger = require('../utils/logger');
 const { buyerServiceFeeCents } = require('../utils/fees');
 const { resolveCommissionRate } = require('../utils/commission');
+const {
+  attachBuyerDeliveryAddressIfMissing,
+  shippingNeedsDeliveryAddress
+} = require('../utils/deliveryAddress');
 /** Fallback rate when listing.commissionRate is missing (edge case for old data). */
 const BIDROOMFEE_RATE = 0.035; // 3.5% standard rate (was incorrectly 0.04)
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:4200';
@@ -978,6 +982,20 @@ router.post('/create-checkout-session', requireActiveAccount, async (req, res) =
     }
     // free / local-pickup = 0
 
+    // Persist buyer delivery address for the seller (from lock-rate or Settings).
+    if (shippingNeedsDeliveryAddress(shippingOpt)) {
+      const attached = attachBuyerDeliveryAddressIfMissing(transaction, buyer, shippingOpt);
+      if (!transaction.buyerDeliveryAddress?.street1) {
+        return res.status(400).json({
+          error: 'delivery_address_required',
+          message: 'Please save your delivery address in Settings before paying, so the seller knows where to ship.'
+        });
+      }
+      if (attached) {
+        await transaction.save();
+      }
+    }
+
     // === Fee model ===
     // Seller commission: per-listing commissionRate (set at listing creation) — deducted from SELLER payout
     // Buyer service fee: ~2.9% + €0.30 — charged to the BUYER as a "Service fee" line item.
@@ -1174,6 +1192,11 @@ router.post('/confirm-payment', requireActiveAccount, async (req, res) => {
     transaction.stripeFeeAmount = stripeFeeAmount;
     transaction.sellerPayoutAmount = Math.max(0, sellerPayout);
     markTransactionStripePaid(transaction);
+    attachBuyerDeliveryAddressIfMissing(
+      transaction,
+      buyer,
+      transaction.listing?.shippingOption || 'flat-rate'
+    );
     await transaction.save();
 
     autoSavePaymentMethodIfNew(buyer.uid, session).catch(() => {});
@@ -1273,9 +1296,9 @@ async function handleCheckoutCompleted(session, stripe, io) {
   if (!transactionId) return;
 
   const transaction = await Transaction.findById(transactionId)
-    .populate('listing', 'handlingTime commissionRate')
+    .populate('listing', 'handlingTime commissionRate shippingOption')
     .populate('seller', 'firstName lastName email')
-    .populate('buyer', 'firstName lastName email');
+    .populate('buyer', 'firstName lastName email deliveryAddress');
   if (!transaction) return;
 
   const ts = transaction.transactionStatus ?? transaction.status;
@@ -1298,6 +1321,11 @@ async function handleCheckoutCompleted(session, stripe, io) {
   transaction.stripeFeeAmount = stripeFeeAmount;
   transaction.sellerPayoutAmount = Math.max(0, sellerPayout);
   markTransactionStripePaid(transaction);
+  attachBuyerDeliveryAddressIfMissing(
+    transaction,
+    transaction.buyer,
+    transaction.listing?.shippingOption || 'flat-rate'
+  );
   await transaction.save();
 
   autoSavePaymentMethodIfNew(session.metadata?.buyerUid, expandedSession).catch(() => {});

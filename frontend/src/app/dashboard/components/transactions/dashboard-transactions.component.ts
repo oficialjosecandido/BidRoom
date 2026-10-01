@@ -430,6 +430,28 @@ export class DashboardTransactionsComponent implements OnInit {
     return s === 'paid' || (s === 'awaiting_seller_acceptance' && this.hasVerifiedPayment(t));
   }
 
+  listingNeedsDeliveryAddress(t: Transaction): boolean {
+    return (t.listing?.shippingOption || 'flat-rate') !== 'local-pickup';
+  }
+
+  hasBuyerDeliveryAddress(t: Transaction): boolean {
+    return !!t.buyerDeliveryAddress?.street1?.trim();
+  }
+
+  formatBuyerDeliveryAddressLines(t: Transaction): string[] {
+    const a = t.buyerDeliveryAddress;
+    if (!a?.street1?.trim()) return [];
+    const lines: string[] = [a.street1.trim()];
+    const cityLine = [a.postalCode, a.city].filter(Boolean).join(' ').trim();
+    if (a.state?.trim()) {
+      lines.push([cityLine, a.state.trim()].filter(Boolean).join(', '));
+    } else if (cityLine) {
+      lines.push(cityLine);
+    }
+    if (a.country?.trim()) lines.push(a.country.trim().toUpperCase());
+    return lines;
+  }
+
   hasPaymentAcceptanceDeadlinePassed(t: Transaction): boolean {
     const d = t.paymentAcceptanceDeadline;
     if (!d) return false;
@@ -479,6 +501,8 @@ export class DashboardTransactionsComponent implements OnInit {
         }
         if (apiError === 'stripe_limit_exceeded') {
           this.stripePaymentError = body?.message || this.translate.instant('transactions.stripeNotAvailable');
+        } else if (apiError === 'delivery_address_required') {
+          this.stripePaymentError = body?.message || this.translate.instant('transactions.deliveryAddressRequired');
         } else if (apiError === 'Seller not ready') {
           this.stripePaymentError = `Payment unavailable: the seller has not connected their Stripe account yet. ` +
             `Please contact the seller (${t.seller?.firstName} ${t.seller?.lastName}) or wait for them to complete their payment setup.`;

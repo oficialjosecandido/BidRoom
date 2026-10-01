@@ -25,6 +25,10 @@ const {
   transactionUrl
 } = require('../utils/bidroomEmailLayout');
 const logger = require('../utils/logger');
+const {
+  attachBuyerDeliveryAddressIfMissing,
+  shippingNeedsDeliveryAddress
+} = require('../utils/deliveryAddress');
 
 const router = express.Router();
 
@@ -125,13 +129,35 @@ router.get('/', async (req, res) => {
       Transaction.find(filter)
         .populate('listing', 'title slug images status commissionRate shippingCost shippingOption auctionFormat allowPrivateRoom returnPolicy acceptedPaymentMethods')
         .populate('seller', 'firstName lastName sellerPaymentConfig')
-        .populate('buyer', 'firstName lastName')
+        .populate('buyer', 'firstName lastName deliveryAddress')
         .sort({ updatedAt: -1 })
         .skip(skip)
         .limit(limit)
         .lean(),
       Transaction.countDocuments(filter)
     ]);
+
+    // Backfill delivery address onto paid/shipped txs so sellers can ship
+    // older flat-rate orders that never locked a calculated rate.
+    const backfillIds = [];
+    for (const t of transactions) {
+      const shippingOpt = t.listing?.shippingOption || 'flat-rate';
+      if (!shippingNeedsDeliveryAddress(shippingOpt)) continue;
+      if (t.buyerDeliveryAddress?.street1) continue;
+      const buyerDoc = t.buyer;
+      const fakeTx = { buyerDeliveryAddress: t.buyerDeliveryAddress };
+      if (attachBuyerDeliveryAddressIfMissing(fakeTx, buyerDoc, shippingOpt)) {
+        t.buyerDeliveryAddress = fakeTx.buyerDeliveryAddress;
+        backfillIds.push({ id: t._id, address: fakeTx.buyerDeliveryAddress });
+      }
+    }
+    if (backfillIds.length) {
+      await Promise.all(
+        backfillIds.map(({ id, address }) =>
+          Transaction.updateOne({ _id: id }, { $set: { buyerDeliveryAddress: address } }).catch(() => {})
+        )
+      );
+    }
 
     const listingIds = [...new Set(transactions.map(t => t.listing?._id || t.listing).filter(Boolean))];
     const reviews = listingIds.length > 0
@@ -141,6 +167,11 @@ router.get('/', async (req, res) => {
     const withRole = transactions.map(t => {
       const role = t.seller?._id?.toString() === user._id.toString() ? 'seller' : 'buyer';
       const { buyerHasReviewedSeller, sellerHasReviewedBuyer } = getPartyReviewFlags(t, reviews);
+      // Never expose the buyer's saved profile address blob on the populated buyer.
+      if (t.buyer && typeof t.buyer === 'object') {
+        const { deliveryAddress: _omit, ...buyerSafe } = t.buyer;
+        t = { ...t, buyer: buyerSafe };
+      }
       return {
         ...t,
         role,

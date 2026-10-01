@@ -2702,7 +2702,10 @@
     "damageClaimUploadError": "Failed to upload photo. Please try again.",
     "damageClaimSubmitError": "Failed to submit claim. Please try again.",
     "returnError": "Failed to submit return request.",
-    "disputeError": "Failed to submit dispute."
+    "disputeError": "Failed to submit dispute.",
+    "shipToBuyer": "Ship to",
+    "shipToBuyerMissing": "Buyer delivery address is not available yet. Ask the buyer to save it in Settings.",
+    "deliveryAddressRequired": "Save your delivery address in Settings before paying, so the seller knows where to ship."
   },
   "returns": {
     "modal": {

@@ -1702,7 +1702,10 @@
     "paymentExpired": "Expirado",
     "secondChance": "Segunda oportunidad",
     "nonPaymentNoSecondBidder": "Este pedido fue cancelado por falta de pago y no hay segundo postor. Puedes relistar el artículo para iniciar una nueva subasta.",
-    "relistItem": "Relistar Artículo"
+    "relistItem": "Relistar Artículo",
+    "shipToBuyer": "Enviar a",
+    "shipToBuyerMissing": "La dirección de entrega del comprador aún no está disponible. Pídele que la guarde en Ajustes.",
+    "deliveryAddressRequired": "Guarda tu dirección de entrega en Ajustes antes de pagar, para que el vendedor sepa adónde enviar."
   },
   "disputes": {
     "title": "Disputas",

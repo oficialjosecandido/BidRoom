@@ -284,9 +284,31 @@
                     <span class="seller-ship-deadline__value">{{ formatShipByDeadline(t) }}</span>
                   </p>
                 }
+                @if (hasBuyerDeliveryAddress(t)) {
+                  <div class="seller-ship-to">
+                    <p class="seller-ship-to__label">{{ 'transactions.shipToBuyer' | translate }}</p>
+                    <address class="seller-ship-to__address">
+                      @for (line of formatBuyerDeliveryAddressLines(t); track line) {
+                        <span>{{ line }}</span>
+                      }
+                    </address>
+                  </div>
+                } @else if (listingNeedsDeliveryAddress(t)) {
+                  <p class="seller-ship-to-missing">{{ 'transactions.shipToBuyerMissing' | translate }}</p>
+                }
                 <p class="seller-ship-hint">
                   {{ (isStripePaid(t) ? 'transactions.stripePrepareShipHint' : 'transactions.prepareShipHint') | translate }}
                 </p>
+              </div>
+            }
+            @if (isSeller(t) && !canSellerPrepareShipment(t) && hasBuyerDeliveryAddress(t) && ['shipped', 'delivered', 'completed'].includes(getEffectiveStatus(t))) {
+              <div class="seller-ship-to seller-ship-to--standalone">
+                <p class="seller-ship-to__label">{{ 'transactions.shipToBuyer' | translate }}</p>
+                <address class="seller-ship-to__address">
+                  @for (line of formatBuyerDeliveryAddressLines(t); track line) {
+                    <span>{{ line }}</span>
+                  }
+                </address>
               </div>
             }
             @if (isBuyer(t)) {
@@ -1042,6 +1064,16 @@
               <span class="dr-label">{{ 'transactions.buyer' | translate }}</span>
               <span class="dr-val">{{ drawerTx.buyer.firstName }} {{ drawerTx.buyer.lastName }}</span>
             </div>
+            @if (hasBuyerDeliveryAddress(drawerTx)) {
+              <div class="drawer-row drawer-row--address">
+                <span class="dr-label">{{ 'transactions.shipToBuyer' | translate }}</span>
+                <span class="dr-val address-block">
+                  @for (line of formatBuyerDeliveryAddressLines(drawerTx); track line) {
+                    <span>{{ line }}</span>
+                  }
+                </span>
+              </div>
+            }
           }
         </div>
 
