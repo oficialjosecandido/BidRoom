@@ -589,6 +589,37 @@
   border-radius: 10px;
   background: #fff;
   border: 1px solid var(--line, rgba(0, 0, 0, 0.08));
+  // The address is what the seller came to this panel for — the gold edge keeps
+  // it from reading as one more quiet row next to the deadline and the hints.
+  border-left: 3px solid var(--gold, #c9a84c);
+
+  &__head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  &__copy {
+    flex: none;
+    padding: 2px 10px;
+    border-radius: 100px;
+    border: 1px solid var(--line, rgba(0, 0, 0, 0.12));
+    background: transparent;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--sub, #64748b);
+    cursor: pointer;
+
+    &:hover {
+      border-color: var(--gold, #c9a84c);
+      color: var(--gold-dark, #a8872e);
+    }
+  }
+
+  &__name {
+    font-weight: 700;
+  }
 
   &__label {
     margin: 0 0 6px;

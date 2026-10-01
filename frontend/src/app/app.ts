@@ -1,7 +1,7 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { filter } from 'rxjs/operators';
-import { TranslateService } from '@ngx-translate/core';
+import { LanguageService } from './shared/services/language.service';
 import { SeoService } from './shared/services/seo.service';
 import { CookieBannerComponent } from './shared/components/cookie-banner/cookie-banner.component';
 import { PwaInstallBannerComponent } from './shared/components/pwa-install-banner/pwa-install-banner.component';
@@ -16,7 +16,7 @@ import { AnalyticsService } from './shared/services/analytics.service';
 })
 export class App implements OnInit {
   protected readonly title = signal('frontend');
-  private translate = inject(TranslateService);
+  private language = inject(LanguageService);
   /** Bootstraps GA in production when analytics cookies are accepted */
   private readonly _analytics = inject(AnalyticsService);
 
@@ -31,8 +31,7 @@ export class App implements OnInit {
   private static readonly SELF_MANAGED_CANONICAL = ['/listing/', '/blog/', '/seller/'];
 
   ngOnInit(): void {
-    const saved = (typeof localStorage !== 'undefined' && localStorage.getItem('lang')) || 'en';
-    this.translate.use(saved);
+    this.language.init();
 
     this.router.events
       .pipe(filter((e): e is NavigationEnd => e instanceof NavigationEnd))

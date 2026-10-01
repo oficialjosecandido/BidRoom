@@ -2297,7 +2297,20 @@
         "incomplete": "Preencha a morada, cidade, código postal e país.",
         "stateRequired": "O distrito / região é obrigatório para este país.",
         "saveError": "Não foi possível guardar a morada. Tente novamente."
-      }
+      },
+      "deliveryAddressTitle": "Morada de entrega",
+      "deliveryAddressSubtitle": "Guarde a sua morada de entrega predefinida. Será usada para pré-preencher os dados de envio quando comprar artigos com portes calculados.",
+      "deliveryStreet": "Morada",
+      "deliveryStreetPlaceholder": "Rua e número",
+      "deliveryCity": "Cidade",
+      "deliveryState": "Distrito / região",
+      "deliveryPostalCode": "Código postal",
+      "deliveryCountry": "País",
+      "deliveryAddressSave": "Guardar morada",
+      "deliveryAddressClear": "Limpar morada",
+      "deliveryAddressIncomplete": "Preencha a morada, cidade, código postal e país.",
+      "deliveryAddressStateRequired": "O distrito / região é obrigatório para este país.",
+      "deliveryAddressSaveError": "Não foi possível guardar a morada. Tente novamente."
     },
     "sellerPaymentConfig": {
       "title": "Métodos de Pagamento Alternativos",
@@ -2704,7 +2717,9 @@
     "returnError": "Falha ao submeter o pedido de devolução.",
     "disputeError": "Falha ao submeter a disputa.",
     "shipToBuyer": "Enviar para",
-    "shipToBuyerMissing": "A morada de entrega do comprador ainda não está disponível. Peça ao comprador para a guardar em Definições.",
+    "shipToBuyerMissing": "Ainda não temos a morada de entrega deste comprador. Não envie — contacte o suporte e tratamos disso consigo.",
+    "copyAddress": "Copiar",
+    "copied": "Copiado",
     "deliveryAddressRequired": "Guarde a sua morada de entrega em Definições antes de pagar, para o vendedor saber para onde enviar."
   },
   "returns": {

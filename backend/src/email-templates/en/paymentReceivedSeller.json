@@ -1,0 +1,12 @@
+{
+  "subject": "Payment received — prepare your shipment",
+  "layout": "bidroom",
+  "title": "Payment received",
+  "preheader": "{{buyerName}} paid for \"{{listingTitle}}\". Ship to the address below.",
+  "ctaUrl": "{{ctaUrl}}",
+  "ctaLabel": "Manage shipment",
+  "signOff": "Best regards,<br><strong style=\"color:#0f172a;\">The BidRoom Team</strong>",
+  "footerNote": "Automated message · Please do not reply directly to this email",
+  "body": "<p style=\"margin:0 0 16px;\">Hi {{sellerFirstName}},</p><p style=\"margin:0 0 16px;\"><strong style=\"color:#0f172a;\">{{buyerName}}</strong> paid for <strong style=\"color:#0f172a;\">\"{{listingTitle}}\"</strong>. The payment is secured by Stripe.</p>{{shipToBox}}<p style=\"margin:0 0 16px;\">When you dispatch the order, mark it as <strong style=\"color:#0f172a;\">shipped</strong> in your dashboard. Tracking and proof of postage are optional.</p>{{payoutBox}}<p style=\"margin:0 0 16px;\">Your payout (sale price minus the BidRoom commission) is released after the buyer confirms receipt.</p>",
+  "text": "Hi {{sellerFirstName}},\n\n{{buyerName}} paid for \"{{listingTitle}}\".\n\nShip to:\n{{shipToText}}\n\nYour payout: {{payoutLabel}}\n\n{{ctaUrl}}"
+}

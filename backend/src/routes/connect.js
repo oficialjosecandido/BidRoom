@@ -7,12 +7,15 @@ const Customer = require('../models/Customer');
 const Transaction = require('../models/Transaction');
 const Listing = require('../models/Listing');
 const { sendEmail } = require('../services/emailService');
+const { sendLocalizedEmail } = require('../services/localizedEmail');
 const { notifySellerPaymentReceived, emitNewNotificationToUser } = require('../services/notificationService');
 const { applyShippingDeadlinesFromPaidAt } = require('../services/shippingDeadlines');
 const {
   wrapBidRoomEmail,
   emailInfoBox,
   emailPayoutBox,
+  emailShipToBox,
+  escapeHtml,
   transactionUrl
 } = require('../utils/bidroomEmailLayout');
 const { attachPaymentMethodToUser } = require('../services/paymentMethodService');
@@ -23,7 +26,9 @@ const { buyerServiceFeeCents } = require('../utils/fees');
 const { resolveCommissionRate } = require('../utils/commission');
 const {
   attachBuyerDeliveryAddressIfMissing,
-  shippingNeedsDeliveryAddress
+  shippingNeedsDeliveryAddress,
+  formatDeliveryAddressLines,
+  formatDeliveryAddressOneLine
 } = require('../utils/deliveryAddress');
 /** Fallback rate when listing.commissionRate is missing (edge case for old data). */
 const BIDROOMFEE_RATE = 0.035; // 3.5% standard rate (was incorrectly 0.04)
@@ -1140,10 +1145,13 @@ router.post('/confirm-payment', requireActiveAccount, async (req, res) => {
       return res.status(400).json({ error: 'sessionId and transactionId are required' });
     }
 
+    // buyer needs its name here, not just the id: the seller's "payment received"
+    // email and notification name the buyer, and with only _id populated they both
+    // read "A buyer". language is what the email is written in.
     const transaction = await Transaction.findById(transactionId)
       .populate('listing', 'title commissionRate shippingCost shippingOption handlingTime')
-      .populate('seller', 'firstName lastName email')
-      .populate('buyer', '_id');
+      .populate('seller', 'firstName lastName email language')
+      .populate('buyer', 'firstName lastName email language');
 
     if (!transaction) return res.status(404).json({ error: 'Transaction not found' });
 
@@ -1211,6 +1219,7 @@ router.post('/confirm-payment', requireActiveAccount, async (req, res) => {
         transactionId,
         listingTitle: transaction.listing?.title || 'your listing',
         buyerName,
+        shipTo: formatDeliveryAddressOneLine(transaction.buyerDeliveryAddress),
         sellerUserId: sellerMongoId
       }).catch(err => logger.error(`${LOG_PREFIX} Failed to create seller payment notification:`, err));
       const io = req.app.get('io');
@@ -1297,8 +1306,8 @@ async function handleCheckoutCompleted(session, stripe, io) {
 
   const transaction = await Transaction.findById(transactionId)
     .populate('listing', 'handlingTime commissionRate shippingOption')
-    .populate('seller', 'firstName lastName email')
-    .populate('buyer', 'firstName lastName email deliveryAddress');
+    .populate('seller', 'firstName lastName email language')
+    .populate('buyer', 'firstName lastName email language deliveryAddress');
   if (!transaction) return;
 
   const ts = transaction.transactionStatus ?? transaction.status;
@@ -1340,6 +1349,7 @@ async function handleCheckoutCompleted(session, stripe, io) {
       transactionId,
       listingTitle: transaction.listing?.title || 'your listing',
       buyerName,
+      shipTo: formatDeliveryAddressOneLine(transaction.buyerDeliveryAddress),
       sellerUserId: sellerMongoId
     }).catch(err => logger.error(`${LOG_PREFIX} Failed to create seller payment notification:`, err));
     if (io) emitNewNotificationToUser(io, sellerMongoId).catch(() => {});
@@ -1427,31 +1437,25 @@ async function sendPaymentReceivedEmail(transaction) {
   const listing = transaction.listing;
   if (!seller?.email) return;
 
-  const subject = 'Payment received — prepare your shipment';
   const buyerName = [transaction.buyer?.firstName, transaction.buyer?.lastName].filter(Boolean).join(' ') || 'A buyer';
   const listingTitle = listing?.title || 'your item';
   const payout = (transaction.sellerPayoutAmount ?? (transaction.amount * (1 - (listing?.commissionRate ?? BIDROOMFEE_RATE)))).toFixed(2);
   const txId = transaction._id?.toString?.() || transaction._id;
+  const addressLines = formatDeliveryAddressLines(transaction.buyerDeliveryAddress);
 
-  const bodyHtml = `
-    <p style="margin:0 0 16px;">Hi ${seller.firstName || 'Seller'},</p>
-    <p style="margin:0 0 16px;"><strong>${buyerName}</strong> paid for <strong>${listingTitle}</strong>. Payment is secured via Stripe.</p>
-    ${emailInfoBox('When you dispatch the order, mark it as <strong>shipped</strong> in your dashboard. Tracking and proof of postage are optional.')}
-    ${emailPayoutBox(`$${payout}`)}
-    <p style="margin:0;color:#64748b;font-size:14px;">Your payout (sale price minus BidRoom fees) is released after the buyer completes the transaction.</p>`;
-
-  const html = wrapBidRoomEmail({
-    title: 'Payment received',
-    bodyHtml,
-    ctaUrl: transactionUrl(txId),
-    ctaLabel: 'Manage shipment'
+  // The template substitutes these raw, so anything the buyer or seller typed is
+  // escaped here. Boxes are passed even when empty — an absent variable is left
+  // in the body verbatim as "{{shipToBox}}".
+  await sendLocalizedEmail(seller, 'paymentReceivedSeller', {
+    sellerFirstName: escapeHtml(seller.firstName) || 'Seller',
+    buyerName: escapeHtml(buyerName),
+    listingTitle: escapeHtml(listingTitle),
+    shipToBox: emailShipToBox(buyerName, addressLines),
+    shipToText: [buyerName, ...addressLines].join('\n'),
+    payoutBox: emailPayoutBox(`€${payout}`),
+    payoutLabel: `€${payout}`,
+    ctaUrl: transactionUrl(txId)
   });
-
-  try {
-    await sendEmail(seller.email, subject, html);
-  } catch (err) {
-    logger.error(`${LOG_PREFIX} Failed to send payment received email:`, err.message);
-  }
 }
 
 module.exports = {

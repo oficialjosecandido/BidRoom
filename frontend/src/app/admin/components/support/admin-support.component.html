@@ -34,7 +34,7 @@
         </button>
       </div>
 
-      <div class="support-split">
+      <div class="support-split" [class.support-split--open]="!!selected">
 
         <aside class="support-queue">
           @if (loading) {
@@ -92,6 +92,12 @@
             </div>
           } @else {
             <div class="thread-header">
+              <button type="button" class="thread-back" (click)="clearSelection()" aria-label="Voltar à lista">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
+                  <path d="M15 18l-6-6 6-6"/>
+                </svg>
+                Lista
+              </button>
               <div class="thread-customer">
                 <div class="thread-customer__avatar" aria-hidden="true">
                   {{ customerName(selected).charAt(0).toUpperCase() }}

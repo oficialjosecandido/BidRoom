@@ -1,6 +1,7 @@
 import { Component, Input, inject } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { LanguageService } from '../../../shared/services/language.service';
 import { ThemeService } from '../../../shared/services/theme.service';
 import { BidroomLogoComponent } from '../../../shared/components/bidroom-logo/bidroom-logo.component';
 
@@ -15,6 +16,8 @@ export type LegalTab = 'terms' | 'privacy' | 'cookies' | 'contact';
 })
 export class LegalLayoutComponent {
   @Input({ required: true }) activeTab!: LegalTab;
+
+  private language = inject(LanguageService);
 
   private router = inject(Router);
   readonly theme = inject(ThemeService);
@@ -38,8 +41,7 @@ export class LegalLayoutComponent {
   }
 
   switchLanguage(code: string): void {
-    this.translate.use(code);
-    localStorage.setItem('lang', code);
+    this.language.use(code);
   }
 
   navigateToLanding(): void {

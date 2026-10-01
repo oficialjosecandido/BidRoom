@@ -1413,7 +1413,20 @@
         "incomplete": "Veuillez renseigner la rue, la ville, le code postal et le pays.",
         "stateRequired": "La région / l’état est obligatoire pour ce pays.",
         "saveError": "Impossible d’enregistrer l’adresse. Réessayez."
-      }
+      },
+      "deliveryAddressTitle": "Adresse de livraison",
+      "deliveryAddressSubtitle": "Enregistrez votre adresse de livraison par défaut. Elle servira à préremplir les détails d’expédition lors d’achats avec frais calculés.",
+      "deliveryStreet": "Adresse",
+      "deliveryStreetPlaceholder": "Rue et numéro",
+      "deliveryCity": "Ville",
+      "deliveryState": "Région / état",
+      "deliveryPostalCode": "Code postal",
+      "deliveryCountry": "Pays",
+      "deliveryAddressSave": "Enregistrer l’adresse",
+      "deliveryAddressClear": "Effacer l’adresse",
+      "deliveryAddressIncomplete": "Veuillez renseigner la rue, la ville, le code postal et le pays.",
+      "deliveryAddressStateRequired": "La région / l’état est obligatoire pour ce pays.",
+      "deliveryAddressSaveError": "Impossible d’enregistrer l’adresse. Réessayez."
     },
     "myAuctions": {
       "title": "Mes Annonces",
@@ -1701,7 +1714,9 @@
     "nonPaymentNoSecondBidder": "Cette commande a été annulée pour défaut de paiement et il n'y a pas de second enchérisseur. Vous pouvez relister l'article pour démarrer une nouvelle vente.",
     "relistItem": "Relister l'article",
     "shipToBuyer": "Expédier à",
-    "shipToBuyerMissing": "L’adresse de livraison de l’acheteur n’est pas encore disponible. Demandez-lui de l’enregistrer dans Paramètres.",
+    "shipToBuyerMissing": "Nous n’avons pas encore l’adresse de livraison de cet acheteur. N’expédiez pas — contactez le support et nous réglons cela avec vous.",
+    "copyAddress": "Copier",
+    "copied": "Copié",
     "deliveryAddressRequired": "Enregistrez votre adresse de livraison dans Paramètres avant de payer, pour que le vendeur sache où expédier."
   },
   "disputes": {

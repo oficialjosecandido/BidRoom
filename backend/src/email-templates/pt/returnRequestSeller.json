@@ -1,0 +1,12 @@
+{
+  "subject": "Pedido de devolução de \"{{listingTitle}}\"",
+  "layout": "bidroom",
+  "title": "Pedido de devolução recebido",
+  "preheader": "O comprador pediu a devolução. Tem 48 horas para responder.",
+  "ctaUrl": "{{ctaUrl}}",
+  "ctaLabel": "Responder ao pedido",
+  "signOff": "Com os melhores cumprimentos,<br><strong style=\"color:#0f172a;\">A equipa BidRoom</strong>",
+  "footerNote": "Mensagem automática · Por favor não responda directamente a este email",
+  "body": "<p style=\"margin:0 0 16px;\">Olá {{firstName}},</p><p style=\"margin:0 0 16px;\">O comprador pediu a devolução de <strong style=\"color:#0f172a;\">\"{{listingTitle}}\"</strong>.</p>{{reasonBox}}<p style=\"margin:0 0 16px;\">Tem <strong style=\"color:#0f172a;\">48 horas</strong> para aceitar ou recusar o pedido. Se não responder, a BidRoom faz a mediação.</p>",
+  "text": "Olá {{firstName}},\n\nO comprador pediu a devolução de \"{{listingTitle}}\".\nMotivo: {{returnReason}}\n\nTem 48 horas para responder.\n\n{{ctaUrl}}"
+}

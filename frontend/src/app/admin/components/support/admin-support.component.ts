@@ -175,6 +175,14 @@ export class AdminSupportComponent implements OnInit, OnDestroy, AfterViewChecke
       });
   }
 
+  clearSelection(): void {
+    this.selected = null;
+    this.messages = [];
+    this.replyDraft = '';
+    this.messagesLoading = false;
+    this.cdr.markForCheck();
+  }
+
   sendReply(): void {
     const body = this.replyDraft.trim();
     if (!body || !this.selected || this.sending) return;

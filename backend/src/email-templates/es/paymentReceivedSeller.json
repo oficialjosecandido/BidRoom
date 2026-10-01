@@ -1,0 +1,12 @@
+{
+  "subject": "Pago recibido — prepara el envío",
+  "layout": "bidroom",
+  "title": "Pago recibido",
+  "preheader": "{{buyerName}} ha pagado \"{{listingTitle}}\". Envía a la dirección de abajo.",
+  "ctaUrl": "{{ctaUrl}}",
+  "ctaLabel": "Gestionar envío",
+  "signOff": "Un saludo,<br><strong style=\"color:#0f172a;\">El equipo de BidRoom</strong>",
+  "footerNote": "Mensaje automático · Por favor, no respondas directamente a este correo",
+  "body": "<p style=\"margin:0 0 16px;\">Hola {{sellerFirstName}},</p><p style=\"margin:0 0 16px;\"><strong style=\"color:#0f172a;\">{{buyerName}}</strong> ha pagado <strong style=\"color:#0f172a;\">\"{{listingTitle}}\"</strong>. El pago está asegurado por Stripe.</p>{{shipToBox}}<p style=\"margin:0 0 16px;\">Cuando envíes el pedido, márcalo como <strong style=\"color:#0f172a;\">enviado</strong> en tu panel. El número de seguimiento y el justificante son opcionales.</p>{{payoutBox}}<p style=\"margin:0 0 16px;\">Tu pago (precio de venta menos la comisión de BidRoom) se libera cuando el comprador confirma la recepción.</p>",
+  "text": "Hola {{sellerFirstName}},\n\n{{buyerName}} ha pagado \"{{listingTitle}}\".\n\nEnviar a:\n{{shipToText}}\n\nTu pago: {{payoutLabel}}\n\n{{ctaUrl}}"
+}

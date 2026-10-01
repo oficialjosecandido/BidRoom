@@ -1,0 +1,12 @@
+{
+  "subject": "Payment released — \"{{listingTitle}}\"",
+  "layout": "bidroom",
+  "title": "Your payout is on its way",
+  "preheader": "The payout for {{listingTitle}} has been released.",
+  "ctaUrl": "{{ctaUrl}}",
+  "ctaLabel": "View transaction",
+  "signOff": "Best regards,<br><strong style=\"color:#0f172a;\">The BidRoom Team</strong>",
+  "footerNote": "Automated message · Please do not reply directly to this email",
+  "body": "<p style=\"margin:0 0 16px;\">Hi {{sellerFirstName}},</p><p style=\"margin:0 0 16px;\">The buyer confirmed receipt of <strong style=\"color:#0f172a;\">\"{{listingTitle}}\"</strong>, so your payout has been released to your Stripe account.</p>{{payoutBox}}<p style=\"margin:0 0 16px;\">Stripe transfers it to your bank account on your usual payout schedule.</p>",
+  "text": "Hi {{sellerFirstName}},\n\nYour payout for \"{{listingTitle}}\" has been released: {{payoutLabel}}\n\n{{ctaUrl}}"
+}

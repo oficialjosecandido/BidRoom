@@ -701,15 +701,23 @@ async function notifyBuyerSellerAccepted({ transactionId, listingTitle, buyerUse
   });
 }
 
-/** Buyer paid — notify seller */
-async function notifySellerPaymentReceived({ transactionId, listingTitle, buyerName, sellerUserId }) {
+/**
+ * Buyer paid — notify seller.
+ *
+ * shipTo carries the buyer's delivery address on one line. It belongs here and
+ * not only on the transaction page: a seller who could not find the address
+ * anywhere in the notification opened a support ticket to ask where to ship.
+ */
+async function notifySellerPaymentReceived({ transactionId, listingTitle, buyerName, shipTo, sellerUserId }) {
   const link = transactionId
     ? `/dashboard/seller?tab=transactions#transaction-${transactionId}`
     : '/dashboard/seller?tab=transactions';
+  const who = buyerName || 'A buyer';
+  const shipLine = shipTo ? ` Ship to ${who}, ${shipTo}.` : '';
   return createNotification({
     userId: sellerUserId,
     title: 'Payment received',
-    message: `${buyerName || 'A buyer'} paid for "${listingTitle || 'your listing'}". Prepare and ship the order.`,
+    message: `${who} paid for "${listingTitle || 'your listing'}". Prepare and ship the order.${shipLine}`,
     type: 'transaction',
     link,
     referenceId: transactionId

@@ -330,6 +330,24 @@ $nexus-bg-queue: #fafbfc;
   background: $nexus-bg-subtle;
 }
 
+.thread-back {
+  display: none;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  background: #fff;
+  color: $nexus-text;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  flex-shrink: 0;
+
+  &:hover { background: #f8fafc; }
+}
+
 .thread-customer {
   display: flex;
   align-items: center;
@@ -573,12 +591,60 @@ $nexus-bg-queue: #fafbfc;
   .support-split {
     grid-template-columns: 1fr;
     min-height: auto;
+    overflow: visible;
+  }
+
+  .support-queue,
+  .support-thread {
+    min-width: 0;
+  }
+
+  /* Master–detail: show only queue OR thread on phones/tablets. */
+  .support-split--open .support-queue {
+    display: none;
+  }
+
+  .support-split:not(.support-split--open) .support-thread {
+    display: none;
   }
 
   .support-queue {
-    max-height: 240px;
+    max-height: none;
     border-right: none;
-    border-bottom: 1px solid #f1f5f9;
+    border-bottom: none;
+    min-height: min(70dvh, 560px);
+  }
+
+  .support-thread {
+    min-height: calc(100dvh - 200px);
+    overflow: visible;
+  }
+
+  .thread-back {
+    display: inline-flex;
+  }
+
+  .thread-body {
+    min-height: 180px;
+    max-height: min(50dvh, 420px);
+    overflow-y: auto;
+  }
+
+  .thread-reply {
+    position: sticky;
+    bottom: 0;
+    background: #fff;
+    border-top: 1px solid #f1f5f9;
+    z-index: 2;
+  }
+
+  .thread-actions {
+    width: 100%;
+  }
+
+  .action-btn {
+    min-height: 40px;
+    padding: 10px 14px;
   }
 }
 
@@ -586,6 +652,24 @@ $nexus-bg-queue: #fafbfc;
   .support-page { padding: 20px 16px 32px; }
   .support-toolbar { flex-direction: column; align-items: stretch; }
   .refresh-btn { align-self: flex-end; }
+
+  .thread-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .thread-customer {
+    width: 100%;
+  }
+
+  .thread-reply__footer {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .thread-reply__hint {
+    display: none;
+  }
 }
 
 .sr-only {

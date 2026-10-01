@@ -96,6 +96,40 @@ function emailPayoutBox(amountLabel) {
     </table>`;
 }
 
+/** Addresses and names come from users, so they are never interpolated raw. */
+function escapeHtml(value) {
+  return String(value || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+/**
+ * Delivery address card for the seller.
+ *
+ * The seller has to copy this onto a label, so it is a plain selectable block
+ * rather than a styled table: a seller emailed support saying the order showed
+ * "only the buyer's name" because nothing in the email carried the address.
+ */
+function emailShipToBox(recipientName, addressLines) {
+  const lines = (addressLines || []).filter(Boolean);
+  if (!lines.length) return '';
+  const rows = [recipientName, ...lines]
+    .filter(Boolean)
+    .map((line) => `<div>${escapeHtml(line)}</div>`)
+    .join('');
+  return `
+    <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="margin:20px 0;">
+      <tr>
+        <td style="background:#ffffff;border:1px solid ${BRAND.goldBorder};border-left:4px solid ${BRAND.gold};border-radius:12px;padding:16px 18px;">
+          <div style="font-size:11px;font-weight:600;color:${BRAND.muted};text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px;">Enviar para / Ship to</div>
+          <div style="font-size:15px;line-height:1.7;color:${BRAND.textDark};font-weight:600;">${rows}</div>
+        </td>
+      </tr>
+    </table>`;
+}
+
 function emailStepsList(items) {
   const rows = items
     .map(
@@ -185,6 +219,8 @@ module.exports = {
   emailSuccessBox,
   emailAmountCard,
   emailPayoutBox,
+  emailShipToBox,
+  escapeHtml,
   emailStepsList,
   emailTextLink,
   wrapBidRoomEmail

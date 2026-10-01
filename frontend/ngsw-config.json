@@ -19,14 +19,6 @@
       }
     },
     {
-      "name": "i18n",
-      "installMode": "lazy",
-      "updateMode": "prefetch",
-      "resources": {
-        "files": ["/i18n/*.json"]
-      }
-    },
-    {
       "name": "static-assets",
       "installMode": "lazy",
       "updateMode": "lazy",
@@ -43,6 +35,16 @@
     }
   ],
   "dataGroups": [
+    {
+      "name": "i18n",
+      "urls": ["/i18n/*.json", "/i18n/**"],
+      "cacheConfig": {
+        "maxSize": 12,
+        "maxAge": "7d",
+        "timeout": "3s",
+        "strategy": "freshness"
+      }
+    },
     {
       "name": "listings-api",
       "urls": [

@@ -1416,7 +1416,20 @@
         "incomplete": "Completa la dirección, ciudad, código postal y país.",
         "stateRequired": "La provincia / región es obligatoria para este país.",
         "saveError": "No se pudo guardar la dirección. Inténtalo de nuevo."
-      }
+      },
+      "deliveryAddressTitle": "Dirección de entrega",
+      "deliveryAddressSubtitle": "Guarda tu dirección de entrega predeterminada. Se usará para rellenar los datos de envío cuando compres artículos con portes calculados.",
+      "deliveryStreet": "Dirección",
+      "deliveryStreetPlaceholder": "Calle y número",
+      "deliveryCity": "Ciudad",
+      "deliveryState": "Provincia / región",
+      "deliveryPostalCode": "Código postal",
+      "deliveryCountry": "País",
+      "deliveryAddressSave": "Guardar dirección",
+      "deliveryAddressClear": "Borrar dirección",
+      "deliveryAddressIncomplete": "Completa la dirección, ciudad, código postal y país.",
+      "deliveryAddressStateRequired": "La provincia / región es obligatoria para este país.",
+      "deliveryAddressSaveError": "No se pudo guardar la dirección. Inténtalo de nuevo."
     },
     "myAuctions": {
       "title": "Mis Anuncios",
@@ -1704,7 +1717,9 @@
     "nonPaymentNoSecondBidder": "Este pedido fue cancelado por falta de pago y no hay segundo postor. Puedes relistar el artículo para iniciar una nueva subasta.",
     "relistItem": "Relistar Artículo",
     "shipToBuyer": "Enviar a",
-    "shipToBuyerMissing": "La dirección de entrega del comprador aún no está disponible. Pídele que la guarde en Ajustes.",
+    "shipToBuyerMissing": "Aún no tenemos la dirección de entrega de este comprador. No envíeds — contacta con soporte y lo resolvemos contigo.",
+    "copyAddress": "Copiar",
+    "copied": "Copiado",
     "deliveryAddressRequired": "Guarda tu dirección de entrega en Ajustes antes de pagar, para que el vendedor sepa adónde enviar."
   },
   "disputes": {

@@ -1,0 +1,12 @@
+{
+  "subject": "Acção necessária: envie \"{{listingTitle}}\" em 2 dias",
+  "layout": "bidroom",
+  "title": "O prazo de envio está a terminar",
+  "preheader": "Envie {{listingTitle}} até {{shipByDate}} ou a encomenda é cancelada e reembolsada.",
+  "ctaUrl": "{{ctaUrl}}",
+  "ctaLabel": "Marcar como enviada",
+  "signOff": "Com os melhores cumprimentos,<br><strong style=\"color:#0f172a;\">A equipa BidRoom</strong>",
+  "footerNote": "Mensagem automática · Por favor não responda directamente a este email",
+  "body": "<p style=\"margin:0 0 16px;\">Olá {{sellerFirstName}},</p><p style=\"margin:0 0 16px;\"><strong style=\"color:#0f172a;\">\"{{listingTitle}}\"</strong> foi pago e continua por marcar como enviado.</p>{{shipToBox}}<p style=\"margin:0 0 16px;\">Tem até <strong style=\"color:#0f172a;\">{{shipByDate}}</strong>. Depois disso a encomenda é cancelada automaticamente e o comprador é reembolsado na totalidade.</p><p style=\"margin:0 0 16px;\">Se já enviou, basta marcar como enviada no seu painel.</p>",
+  "text": "Olá {{sellerFirstName}},\n\n\"{{listingTitle}}\" continua por marcar como enviado. Prazo: {{shipByDate}}.\n\nEnviar para:\n{{shipToText}}\n\n{{ctaUrl}}"
+}

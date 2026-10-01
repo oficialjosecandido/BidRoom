@@ -1,0 +1,12 @@
+{
+  "subject": "Pago liberado — \"{{listingTitle}}\"",
+  "layout": "bidroom",
+  "title": "Tu pago está en camino",
+  "preheader": "El pago de {{listingTitle}} ha sido liberado.",
+  "ctaUrl": "{{ctaUrl}}",
+  "ctaLabel": "Ver transacción",
+  "signOff": "Un saludo,<br><strong style=\"color:#0f172a;\">El equipo de BidRoom</strong>",
+  "footerNote": "Mensaje automático · Por favor, no respondas directamente a este correo",
+  "body": "<p style=\"margin:0 0 16px;\">Hola {{sellerFirstName}},</p><p style=\"margin:0 0 16px;\">El comprador ha confirmado la recepción de <strong style=\"color:#0f172a;\">\"{{listingTitle}}\"</strong>, así que tu pago se ha liberado a tu cuenta de Stripe.</p>{{payoutBox}}<p style=\"margin:0 0 16px;\">Stripe lo transfiere a tu cuenta bancaria en tu calendario de pagos habitual.</p>",
+  "text": "Hola {{sellerFirstName}},\n\nTu pago de \"{{listingTitle}}\" ha sido liberado: {{payoutLabel}}\n\n{{ctaUrl}}"
+}

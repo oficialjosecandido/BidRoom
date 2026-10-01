@@ -1,0 +1,12 @@
+{
+  "subject": "Paiement reçu — préparez votre expédition",
+  "layout": "bidroom",
+  "title": "Paiement reçu",
+  "preheader": "{{buyerName}} a payé « {{listingTitle}} ». Expédiez à l’adresse ci-dessous.",
+  "ctaUrl": "{{ctaUrl}}",
+  "ctaLabel": "Gérer l’expédition",
+  "signOff": "Cordialement,<br><strong style=\"color:#0f172a;\">L’équipe BidRoom</strong>",
+  "footerNote": "Message automatique · Merci de ne pas répondre directement à cet e-mail",
+  "body": "<p style=\"margin:0 0 16px;\">Bonjour {{sellerFirstName}},</p><p style=\"margin:0 0 16px;\"><strong style=\"color:#0f172a;\">{{buyerName}}</strong> a payé <strong style=\"color:#0f172a;\">« {{listingTitle}} »</strong>. Le paiement est sécurisé par Stripe.</p>{{shipToBox}}<p style=\"margin:0 0 16px;\">Lorsque vous expédiez la commande, marquez-la comme <strong style=\"color:#0f172a;\">expédiée</strong> dans votre tableau de bord. Le numéro de suivi et la preuve d’envoi sont facultatifs.</p>{{payoutBox}}<p style=\"margin:0 0 16px;\">Votre versement (prix de vente moins la commission BidRoom) est libéré après confirmation de réception par l’acheteur.</p>",
+  "text": "Bonjour {{sellerFirstName}},\n\n{{buyerName}} a payé « {{listingTitle}} ».\n\nExpédier à :\n{{shipToText}}\n\nVotre versement : {{payoutLabel}}\n\n{{ctaUrl}}"
+}

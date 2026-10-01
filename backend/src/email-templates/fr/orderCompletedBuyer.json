@@ -1,0 +1,12 @@
+{
+  "subject": "Commande terminée — « {{listingTitle}} »",
+  "layout": "bidroom",
+  "title": "Commande terminée",
+  "preheader": "Votre commande a été terminée automatiquement et le vendeur payé.",
+  "ctaUrl": "{{ctaUrl}}",
+  "ctaLabel": "Voir la transaction",
+  "signOff": "Cordialement,<br><strong style=\"color:#0f172a;\">L’équipe BidRoom</strong>",
+  "footerNote": "Message automatique · Merci de ne pas répondre directement à cet e-mail",
+  "body": "<p style=\"margin:0 0 16px;\">Bonjour {{firstName}},</p><p style=\"margin:0 0 16px;\">Votre commande <strong style=\"color:#0f172a;\">« {{listingTitle}} »</strong> a été terminée automatiquement, le délai de livraison étant écoulé.</p><p style=\"margin:0 0 16px;\">Le paiement a été libéré au vendeur. Si quelque chose ne va pas avec cette commande, contactez le support BidRoom.</p>",
+  "text": "Bonjour {{firstName}},\n\nVotre commande « {{listingTitle}} » a été terminée automatiquement et le paiement libéré au vendeur.\n\n{{ctaUrl}}"
+}

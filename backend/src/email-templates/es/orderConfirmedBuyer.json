@@ -1,0 +1,12 @@
+{
+  "subject": "Tu pedido de \"{{listingTitle}}\" ha sido confirmado",
+  "layout": "bidroom",
+  "title": "Pedido confirmado",
+  "preheader": "El vendedor ha confirmado tu pago y está preparando el pedido.",
+  "ctaUrl": "{{ctaUrl}}",
+  "ctaLabel": "Ver transacción",
+  "signOff": "Un saludo,<br><strong style=\"color:#0f172a;\">El equipo de BidRoom</strong>",
+  "footerNote": "Mensaje automático · Por favor, no respondas directamente a este correo",
+  "body": "<p style=\"margin:0 0 16px;\">Hola {{firstName}},</p><p style=\"margin:0 0 16px;\">El vendedor ha confirmado tu pago de <strong style=\"color:#0f172a;\">\"{{listingTitle}}\"</strong> y preparará el pedido para su envío.</p><p style=\"margin:0 0 16px;\">Te escribiremos de nuevo en cuanto se marque como enviado.</p>",
+  "text": "Hola {{firstName}},\n\nTu pago de \"{{listingTitle}}\" ha sido confirmado. El vendedor está preparando el pedido.\n\n{{ctaUrl}}"
+}

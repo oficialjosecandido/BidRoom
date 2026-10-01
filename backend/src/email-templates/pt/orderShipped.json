@@ -1,0 +1,12 @@
+{
+  "subject": "O seu artigo \"{{listingTitle}}\" foi enviado",
+  "layout": "bidroom",
+  "title": "A sua encomenda está a caminho",
+  "preheader": "{{listingTitle}} foi expedido pelo vendedor.",
+  "ctaUrl": "{{ctaUrl}}",
+  "ctaLabel": "Acompanhar encomenda",
+  "signOff": "Com os melhores cumprimentos,<br><strong style=\"color:#0f172a;\">A equipa BidRoom</strong>",
+  "footerNote": "Mensagem automática · Por favor não responda directamente a este email",
+  "body": "<p style=\"margin:0 0 16px;\">Olá {{buyerFirstName}},</p><p style=\"margin:0 0 16px;\"><strong style=\"color:#0f172a;\">\"{{listingTitle}}\"</strong> foi expedido pelo vendedor.</p>{{trackingBox}}<p style=\"margin:0 0 16px;\">Quando chegar, confirme a recepção no seu painel para que o vendedor possa ser pago. Se não chegar, pode abrir uma disputa no mesmo ecrã.</p>",
+  "text": "Olá {{buyerFirstName}},\n\n\"{{listingTitle}}\" foi enviado.\n{{trackingText}}\n\n{{ctaUrl}}"
+}

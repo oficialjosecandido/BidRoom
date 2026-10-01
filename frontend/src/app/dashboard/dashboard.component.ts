@@ -1,6 +1,7 @@
 import { Component, OnInit, OnDestroy, inject, HostListener } from '@angular/core';
 import { Router, RouterOutlet, RouterLink, RouterLinkActive, NavigationEnd } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { LanguageService } from '../shared/services/language.service';
 import { Subscription } from 'rxjs';
 import { filter } from 'rxjs/operators';
 import { AuthService } from '../auth/services/auth.service';
@@ -18,6 +19,7 @@ import { BidroomLogoComponent } from '../shared/components/bidroom-logo/bidroom-
   styleUrls: ['./dashboard.component.scss']
 })
 export class DashboardComponent implements OnInit, OnDestroy {
+  private language = inject(LanguageService);
   private authService = inject(AuthService);
   private router = inject(Router);
   private notificationService = inject(NotificationService);
@@ -58,9 +60,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   toggleLang(): void {
     const current = this.translate.currentLang || 'pt';
-    const next = current === 'pt' ? 'en' : 'pt';
-    this.translate.use(next);
-    localStorage.setItem('lang', next);
+    this.language.use(current === 'pt' ? 'en' : 'pt');
   }
 
   ngOnInit(): void {

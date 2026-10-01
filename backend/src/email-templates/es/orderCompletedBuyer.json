@@ -1,0 +1,12 @@
+{
+  "subject": "Pedido completado — \"{{listingTitle}}\"",
+  "layout": "bidroom",
+  "title": "Pedido completado",
+  "preheader": "Tu pedido se ha completado automáticamente y el vendedor ha cobrado.",
+  "ctaUrl": "{{ctaUrl}}",
+  "ctaLabel": "Ver transacción",
+  "signOff": "Un saludo,<br><strong style=\"color:#0f172a;\">El equipo de BidRoom</strong>",
+  "footerNote": "Mensaje automático · Por favor, no respondas directamente a este correo",
+  "body": "<p style=\"margin:0 0 16px;\">Hola {{firstName}},</p><p style=\"margin:0 0 16px;\">Tu pedido de <strong style=\"color:#0f172a;\">\"{{listingTitle}}\"</strong> se ha completado automáticamente porque el plazo de entrega ya ha pasado.</p><p style=\"margin:0 0 16px;\">El pago se ha liberado al vendedor. Si hay algún problema con este pedido, contacta con el soporte de BidRoom y lo revisamos.</p>",
+  "text": "Hola {{firstName}},\n\nTu pedido de \"{{listingTitle}}\" se ha completado automáticamente y el pago se ha liberado al vendedor.\n\n{{ctaUrl}}"
+}

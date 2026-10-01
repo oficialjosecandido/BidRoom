@@ -464,22 +464,14 @@ router.patch('/:id', requireActiveAccount, async (req, res) => {
           }).catch(err => logger.error('Failed to create buyer seller-accepted notification:', err));
           const io = req.app.get('io');
           if (io) emitNewNotificationToUser(io, buyerUserId).catch(() => {});
-          // Email to buyer
-          const buyer = await Customer.findById(buyerUserId).select('email firstName').lean();
+          // Email to buyer, in the language they chose
+          const buyer = await Customer.findById(buyerUserId).select('email firstName language').lean();
           if (buyer?.email) {
-            const txLink = transactionUrl(transaction._id?.toString?.());
-            const bodyHtml = `
-              <p style="margin:0 0 16px;">Hi ${buyer.firstName || 'there'},</p>
-              <p style="margin:0 0 16px;">The seller confirmed your payment for <strong>${listingTitle}</strong> and will prepare your order for shipment.</p>
-              ${emailInfoBox('We will notify you when the item is marked as shipped.')}`;
-            const html = wrapBidRoomEmail({
-              title: 'Order confirmed',
-              bodyHtml,
-              ctaUrl: txLink,
-              ctaLabel: 'View transaction'
-            });
-            sendEmail(buyer.email, `Your order for "${listingTitle}" has been confirmed`, html)
-              .catch(err => logger.error('Failed to send seller-accepted email to buyer:', err.message));
+            sendLocalizedEmail(buyer, 'orderConfirmedBuyer', {
+              firstName: escapeHtml(buyer.firstName) || 'there',
+              listingTitle: escapeHtml(listingTitle),
+              ctaUrl: transactionUrl(transaction._id?.toString?.())
+            }).catch(err => logger.error('Failed to send seller-accepted email to buyer:', err.message));
           }
           // Payment accepted: apply any deferred suspensions (listing auction has ended at this point).
           checkAndApplyPendingSuspensions(

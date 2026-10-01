@@ -1,0 +1,12 @@
+{
+  "subject": "Pedido cancelado — \"{{listingTitle}}\"",
+  "layout": "bidroom",
+  "title": "Pedido cancelado — no enviado a tiempo",
+  "preheader": "El pedido se ha cancelado y el comprador ha sido reembolsado.",
+  "ctaUrl": "{{ctaUrl}}",
+  "ctaLabel": "Ver transacciones",
+  "signOff": "Un saludo,<br><strong style=\"color:#0f172a;\">El equipo de BidRoom</strong>",
+  "footerNote": "Mensaje automático · Por favor, no respondas directamente a este correo",
+  "body": "<p style=\"margin:0 0 16px;\">Hola {{firstName}},</p><p style=\"margin:0 0 16px;\">El pedido de <strong style=\"color:#0f172a;\">\"{{listingTitle}}\"</strong> se ha cancelado porque el envío no se confirmó antes del plazo.</p><p style=\"margin:0 0 16px;\">El comprador ha sido reembolsado por completo. Las cancelaciones repetidas afectan a tu reputación como vendedor: marca los pedidos como enviados en cuanto los despaches.</p>",
+  "text": "Hola {{firstName}},\n\nEl pedido de \"{{listingTitle}}\" se ha cancelado porque el envío no se confirmó a tiempo. El comprador ha sido reembolsado por completo.\n\n{{ctaUrl}}"
+}

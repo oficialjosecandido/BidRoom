@@ -18,8 +18,14 @@ $nexus-panel-border: rgba(15, 23, 42, 0.08);
 }
 
 @media (max-width: 768px) {
+  .admin-layout {
+    flex-direction: column;
+  }
+
   .admin-content {
     margin-left: 0;
+    min-width: 0;
+    width: 100%;
   }
 }
 

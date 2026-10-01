@@ -2297,7 +2297,20 @@
         "incomplete": "Please fill in street, city, postal code and country.",
         "stateRequired": "State / region is required for this country.",
         "saveError": "Could not save delivery address. Please try again."
-      }
+      },
+      "deliveryAddressTitle": "Delivery address",
+      "deliveryAddressSubtitle": "Save your default shipping address. It will be used to prefill delivery details when you buy items with calculated shipping.",
+      "deliveryStreet": "Street address",
+      "deliveryStreetPlaceholder": "Street and number",
+      "deliveryCity": "City",
+      "deliveryState": "State / region",
+      "deliveryPostalCode": "Postal code",
+      "deliveryCountry": "Country",
+      "deliveryAddressSave": "Save address",
+      "deliveryAddressClear": "Clear address",
+      "deliveryAddressIncomplete": "Please fill in street, city, postal code and country.",
+      "deliveryAddressStateRequired": "State / region is required for this country.",
+      "deliveryAddressSaveError": "Could not save delivery address. Please try again."
     },
     "sellerPaymentConfig": {
       "title": "Alternative Payment Methods",
@@ -2704,7 +2717,9 @@
     "returnError": "Failed to submit return request.",
     "disputeError": "Failed to submit dispute.",
     "shipToBuyer": "Ship to",
-    "shipToBuyerMissing": "Buyer delivery address is not available yet. Ask the buyer to save it in Settings.",
+    "shipToBuyerMissing": "We do not have this buyer's delivery address yet. Do not ship — contact support and we will sort it out with you.",
+    "copyAddress": "Copy",
+    "copied": "Copied",
     "deliveryAddressRequired": "Save your delivery address in Settings before paying, so the seller knows where to ship."
   },
   "returns": {

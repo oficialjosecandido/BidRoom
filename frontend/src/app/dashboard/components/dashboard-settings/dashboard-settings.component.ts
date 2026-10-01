@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { LanguageService } from '../../../shared/services/language.service';
 import { AuthService, AppUser } from '../../../auth/services/auth.service';
 import { CustomerService, SellerCompliance, SellerPaymentConfig } from '../../../shared/services/customer.service';
 import { ThemePreference, ThemeService } from '../../../shared/services/theme.service';
@@ -24,6 +25,7 @@ import { AnalyticsEvents } from '../../../shared/services/analytics.events';
   styleUrls: ['./dashboard-settings.component.scss']
 })
 export class DashboardSettingsComponent implements OnInit, OnDestroy {
+  private language = inject(LanguageService);
   private authService = inject(AuthService);
   private customerService = inject(CustomerService);
   private translate = inject(TranslateService);
@@ -207,8 +209,7 @@ export class DashboardSettingsComponent implements OnInit, OnDestroy {
         this.sellerReviewCount = info.sellerReviewCount ?? 0;
         if (info.language) {
           this.selectedLanguage = info.language;
-          this.translate.use(info.language);
-          localStorage.setItem('lang', info.language);
+          this.language.mergeFromServerIfPresent(info.language);
         }
         this.applySellerComplianceFromProfile(info.sellerCompliance ?? null);
         this.applyDeliveryAddressFromProfile(info.deliveryAddress ?? null);
@@ -450,8 +451,7 @@ export class DashboardSettingsComponent implements OnInit, OnDestroy {
 
   saveLanguage(): void {
     this.langSaving = true;
-    this.translate.use(this.selectedLanguage);
-    localStorage.setItem('lang', this.selectedLanguage);
+    this.language.use(this.selectedLanguage);
     this.customerService.updateLanguage(this.selectedLanguage).subscribe({
       next: () => {
         this.langSaving = false;
@@ -497,11 +497,11 @@ export class DashboardSettingsComponent implements OnInit, OnDestroy {
     const country = (this.deliveryCountry || '').trim().toUpperCase();
 
     if (!street1 || !city || !postalCode || !country) {
-      this.deliveryError = this.translate.instant('dashboard.settings.deliveryAddress.incomplete');
+      this.deliveryError = this.translate.instant('dashboard.settings.deliveryAddressIncomplete');
       return;
     }
     if (this.deliveryAddressRequiresState() && !state) {
-      this.deliveryError = this.translate.instant('dashboard.settings.deliveryAddress.stateRequired');
+      this.deliveryError = this.translate.instant('dashboard.settings.deliveryAddressStateRequired');
       return;
     }
 
@@ -523,7 +523,7 @@ export class DashboardSettingsComponent implements OnInit, OnDestroy {
       error: (err) => {
         this.deliverySaving = false;
         this.deliveryError = err?.error?.message
-          || this.translate.instant('dashboard.settings.deliveryAddress.saveError');
+          || this.translate.instant('dashboard.settings.deliveryAddressSaveError');
       }
     });
   }
@@ -547,7 +547,7 @@ export class DashboardSettingsComponent implements OnInit, OnDestroy {
       error: (err) => {
         this.deliveryClearing = false;
         this.deliveryError = err?.error?.message
-          || this.translate.instant('dashboard.settings.deliveryAddress.saveError');
+          || this.translate.instant('dashboard.settings.deliveryAddressSaveError');
       }
     });
   }

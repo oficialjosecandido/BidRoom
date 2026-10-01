@@ -170,37 +170,37 @@
       <div class="settings-card">
         <div class="card-header">
           <span class="card-icon">📍</span>
-          <h2 class="card-title">{{ 'dashboard.settings.deliveryAddress.title' | translate }}</h2>
+          <h2 class="card-title">{{ 'dashboard.settings.deliveryAddressTitle' | translate }}</h2>
         </div>
         <div class="card-body">
-          <p class="card-desc">{{ 'dashboard.settings.deliveryAddress.subtitle' | translate }}</p>
+          <p class="card-desc">{{ 'dashboard.settings.deliveryAddressSubtitle' | translate }}</p>
           <div class="dsa-form-grid">
             <div class="form-field dsa-span-2">
-              <label>{{ 'dashboard.settings.deliveryAddress.street' | translate }}</label>
+              <label>{{ 'dashboard.settings.deliveryStreet' | translate }}</label>
               <input
                 type="text"
                 name="deliveryStreet1"
                 [(ngModel)]="deliveryStreet1"
-                [placeholder]="'dashboard.settings.deliveryAddress.streetPlaceholder' | translate"
+                [placeholder]="'dashboard.settings.deliveryStreetPlaceholder' | translate"
                 autocomplete="street-address"
               />
             </div>
             <div class="form-field">
-              <label>{{ 'dashboard.settings.deliveryAddress.city' | translate }}</label>
+              <label>{{ 'dashboard.settings.deliveryCity' | translate }}</label>
               <input type="text" name="deliveryCity" [(ngModel)]="deliveryCity" autocomplete="address-level2" />
             </div>
             @if (deliveryAddressRequiresState()) {
               <div class="form-field">
-                <label>{{ 'dashboard.settings.deliveryAddress.state' | translate }}</label>
+                <label>{{ 'dashboard.settings.deliveryState' | translate }}</label>
                 <input type="text" name="deliveryState" [(ngModel)]="deliveryState" autocomplete="address-level1" />
               </div>
             }
             <div class="form-field">
-              <label>{{ 'dashboard.settings.deliveryAddress.postalCode' | translate }}</label>
+              <label>{{ 'dashboard.settings.deliveryPostalCode' | translate }}</label>
               <input type="text" name="deliveryPostal" [(ngModel)]="deliveryPostalCode" autocomplete="postal-code" />
             </div>
             <div class="form-field">
-              <label>{{ 'dashboard.settings.deliveryAddress.country' | translate }}</label>
+              <label>{{ 'dashboard.settings.deliveryCountry' | translate }}</label>
               <select name="deliveryCountry" [(ngModel)]="deliveryCountry">
                 @for (c of countries; track c.code) {
                   <option [value]="c.code">{{ c.label }}</option>
@@ -213,11 +213,11 @@
           }
           <div class="form-actions dsa-actions">
             <button type="button" class="action-btn" (click)="saveDeliveryAddress()" [disabled]="deliverySaving || deliveryClearing">
-              {{ deliverySaving ? ('dashboard.settings.saving' | translate) : ('dashboard.settings.deliveryAddress.save' | translate) }}
+              {{ deliverySaving ? ('dashboard.settings.saving' | translate) : ('dashboard.settings.deliveryAddressSave' | translate) }}
             </button>
             @if (deliveryStreet1.trim()) {
               <button type="button" class="action-btn action-btn-ghost" (click)="clearDeliveryAddress()" [disabled]="deliverySaving || deliveryClearing">
-                {{ deliveryClearing ? ('dashboard.settings.saving' | translate) : ('dashboard.settings.deliveryAddress.clear' | translate) }}
+                {{ deliveryClearing ? ('dashboard.settings.saving' | translate) : ('dashboard.settings.deliveryAddressClear' | translate) }}
               </button>
             }
             @if (deliverySaved) {

@@ -1,0 +1,12 @@
+{
+  "subject": "Tu artículo \"{{listingTitle}}\" ha sido enviado",
+  "layout": "bidroom",
+  "title": "Tu pedido está en camino",
+  "preheader": "{{listingTitle}} ha sido enviado por el vendedor.",
+  "ctaUrl": "{{ctaUrl}}",
+  "ctaLabel": "Seguir pedido",
+  "signOff": "Un saludo,<br><strong style=\"color:#0f172a;\">El equipo de BidRoom</strong>",
+  "footerNote": "Mensaje automático · Por favor, no respondas directamente a este correo",
+  "body": "<p style=\"margin:0 0 16px;\">Hola {{buyerFirstName}},</p><p style=\"margin:0 0 16px;\"><strong style=\"color:#0f172a;\">\"{{listingTitle}}\"</strong> ha sido enviado por el vendedor.</p>{{trackingBox}}<p style=\"margin:0 0 16px;\">Cuando llegue, confirma la recepción en tu panel para que el vendedor pueda cobrar. Si no llega, puedes abrir una disputa desde la misma pantalla.</p>",
+  "text": "Hola {{buyerFirstName}},\n\n\"{{listingTitle}}\" ha sido enviado.\n{{trackingText}}\n\n{{ctaUrl}}"
+}

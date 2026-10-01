@@ -1,0 +1,12 @@
+{
+  "subject": "Demande de retour pour « {{listingTitle}} »",
+  "layout": "bidroom",
+  "title": "Demande de retour reçue",
+  "preheader": "L’acheteur demande un retour. Vous avez 48 heures pour répondre.",
+  "ctaUrl": "{{ctaUrl}}",
+  "ctaLabel": "Répondre à la demande",
+  "signOff": "Cordialement,<br><strong style=\"color:#0f172a;\">L’équipe BidRoom</strong>",
+  "footerNote": "Message automatique · Merci de ne pas répondre directement à cet e-mail",
+  "body": "<p style=\"margin:0 0 16px;\">Bonjour {{firstName}},</p><p style=\"margin:0 0 16px;\">L’acheteur a demandé le retour de <strong style=\"color:#0f172a;\">« {{listingTitle}} »</strong>.</p>{{reasonBox}}<p style=\"margin:0 0 16px;\">Vous avez <strong style=\"color:#0f172a;\">48 heures</strong> pour accepter ou refuser. Sans réponse, BidRoom arbitre.</p>",
+  "text": "Bonjour {{firstName}},\n\nL’acheteur a demandé le retour de « {{listingTitle}} ».\nMotif : {{returnReason}}\n\nVous avez 48 heures pour répondre.\n\n{{ctaUrl}}"
+}

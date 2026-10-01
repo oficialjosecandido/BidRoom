@@ -286,8 +286,14 @@
                 }
                 @if (hasBuyerDeliveryAddress(t)) {
                   <div class="seller-ship-to">
-                    <p class="seller-ship-to__label">{{ 'transactions.shipToBuyer' | translate }}</p>
+                    <div class="seller-ship-to__head">
+                      <p class="seller-ship-to__label">{{ 'transactions.shipToBuyer' | translate }}</p>
+                      <button type="button" class="seller-ship-to__copy" (click)="copyShipTo(t)">
+                        {{ (copiedShipToTxId === t._id ? 'transactions.copied' : 'transactions.copyAddress') | translate }}
+                      </button>
+                    </div>
                     <address class="seller-ship-to__address">
+                      <span class="seller-ship-to__name">{{ t.buyer.firstName }} {{ t.buyer.lastName }}</span>
                       @for (line of formatBuyerDeliveryAddressLines(t); track line) {
                         <span>{{ line }}</span>
                       }
@@ -303,8 +309,14 @@
             }
             @if (isSeller(t) && !canSellerPrepareShipment(t) && hasBuyerDeliveryAddress(t) && ['shipped', 'delivered', 'completed'].includes(getEffectiveStatus(t))) {
               <div class="seller-ship-to seller-ship-to--standalone">
-                <p class="seller-ship-to__label">{{ 'transactions.shipToBuyer' | translate }}</p>
+                <div class="seller-ship-to__head">
+                  <p class="seller-ship-to__label">{{ 'transactions.shipToBuyer' | translate }}</p>
+                  <button type="button" class="seller-ship-to__copy" (click)="copyShipTo(t)">
+                    {{ (copiedShipToTxId === t._id ? 'transactions.copied' : 'transactions.copyAddress') | translate }}
+                  </button>
+                </div>
                 <address class="seller-ship-to__address">
+                  <span class="seller-ship-to__name">{{ t.buyer.firstName }} {{ t.buyer.lastName }}</span>
                   @for (line of formatBuyerDeliveryAddressLines(t); track line) {
                     <span>{{ line }}</span>
                   }
@@ -674,10 +686,9 @@
                     <label>{{ 'transactions.carrier' | translate }} <span class="label-optional">{{ 'transactions.optional' | translate }}</span></label>
                     <select [(ngModel)]="trackingCarrier" class="input-sm">
                       <option value="">{{ 'transactions.selectCarrier' | translate }}</option>
-                      <option value="USPS">USPS</option>
-                      <option value="UPS">UPS</option>
-                      <option value="FedEx">FedEx</option>
-                      <option value="DHL">DHL</option>
+                      @for (carrier of shippingCarriers; track carrier) {
+                        <option [value]="carrier">{{ carrier }}</option>
+                      }
                       <option value="Other">{{ 'transactions.other' | translate }}</option>
                     </select>
                   </div>

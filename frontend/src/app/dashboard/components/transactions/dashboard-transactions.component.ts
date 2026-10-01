@@ -64,6 +64,8 @@ export class DashboardTransactionsComponent implements OnInit {
   disputeEvidenceUploading = false;
   trackingNumber = '';
   trackingCarrier = '';
+  /** Transaction whose ship-to address was just copied — drives the button label. */
+  copiedShipToTxId: string | null = null;
   estimatedDeliveryDays: number | null = null;
   /** Return request modal */
   returnModalTransaction: Transaction | null = null;
@@ -100,6 +102,26 @@ export class DashboardTransactionsComponent implements OnInit {
 
   /** Countries where carrier APIs expect a state/province code (US, CA, AU). */
   private readonly stateRequiredCountries = new Set(['US', 'CA', 'AU']);
+
+  /**
+   * Carriers a seller can pick when marking an order shipped, Portugal first.
+   *
+   * The list used to be USPS/UPS/FedEx/DHL — a US list on a Portuguese
+   * marketplace, with no CTT. A seller wrote in about exactly that: "os CTT nem
+   * sequer está disponível enquanto transportadora. Em Portugal não é normal."
+   */
+  readonly shippingCarriers = [
+    'CTT',
+    'CTT Expresso',
+    'DPD',
+    'GLS',
+    'Nacex',
+    'SEUR',
+    'MRW',
+    'DHL',
+    'UPS',
+    'FedEx',
+  ];
 
   readonly shippingCountries = [
     'PT', 'ES', 'FR', 'DE', 'IT', 'GB', 'IE', 'NL', 'BE', 'CH', 'AT', 'LU', 'US', 'CA', 'AU',
@@ -450,6 +472,30 @@ export class DashboardTransactionsComponent implements OnInit {
     }
     if (a.country?.trim()) lines.push(a.country.trim().toUpperCase());
     return lines;
+  }
+
+  /**
+   * Put the shipping label on the clipboard: buyer name followed by the address.
+   *
+   * Sellers transcribe this into a carrier form, and the one who complained
+   * could not even screenshot it to support — copying beats retyping.
+   */
+  async copyShipTo(t: Transaction): Promise<void> {
+    const text = [
+      [t.buyer?.firstName, t.buyer?.lastName].filter(Boolean).join(' '),
+      ...this.formatBuyerDeliveryAddressLines(t)
+    ].filter(Boolean).join('\n');
+    if (!text) return;
+    try {
+      await navigator.clipboard.writeText(text);
+      this.copiedShipToTxId = t._id;
+      setTimeout(() => {
+        if (this.copiedShipToTxId === t._id) this.copiedShipToTxId = null;
+      }, 2000);
+    } catch {
+      // Clipboard denied (insecure origin, or the user refused): the address is
+      // on screen anyway, so there is nothing useful to say here.
+    }
   }
 
   hasPaymentAcceptanceDeadlinePassed(t: Transaction): boolean {

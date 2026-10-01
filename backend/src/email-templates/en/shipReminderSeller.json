@@ -1,0 +1,12 @@
+{
+  "subject": "Action required: ship \"{{listingTitle}}\" within 2 days",
+  "layout": "bidroom",
+  "title": "Your shipping deadline is close",
+  "preheader": "Ship {{listingTitle}} by {{shipByDate}} or the order is cancelled and refunded.",
+  "ctaUrl": "{{ctaUrl}}",
+  "ctaLabel": "Mark as shipped",
+  "signOff": "Best regards,<br><strong style=\"color:#0f172a;\">The BidRoom Team</strong>",
+  "footerNote": "Automated message · Please do not reply directly to this email",
+  "body": "<p style=\"margin:0 0 16px;\">Hi {{sellerFirstName}},</p><p style=\"margin:0 0 16px;\"><strong style=\"color:#0f172a;\">\"{{listingTitle}}\"</strong> was paid for and still has not been marked as shipped.</p>{{shipToBox}}<p style=\"margin:0 0 16px;\">You have until <strong style=\"color:#0f172a;\">{{shipByDate}}</strong>. After that the order is cancelled automatically and the buyer is refunded in full.</p><p style=\"margin:0 0 16px;\">If you have already sent it, just mark it as shipped in your dashboard.</p>",
+  "text": "Hi {{sellerFirstName}},\n\n\"{{listingTitle}}\" has not been marked as shipped. Deadline: {{shipByDate}}.\n\nShip to:\n{{shipToText}}\n\n{{ctaUrl}}"
+}

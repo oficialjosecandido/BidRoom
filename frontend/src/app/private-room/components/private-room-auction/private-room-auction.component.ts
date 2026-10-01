@@ -11,6 +11,7 @@ import { SocketService } from '../../../shared/services/socket.service';
 import { AuthService, AppUser } from '../../../auth/services/auth.service';
 import { PrivateRoomService } from '../../services/private-room.service';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { LanguageService } from '../../../shared/services/language.service';
 import { API_CONFIG } from '../../../shared/config/api.config';
 import { getLocalizedTitle } from '../../../shared/utils/listing-locale';
 import { PostHogService } from '../../../shared/services/posthog.service';
@@ -38,6 +39,7 @@ interface PlatinumBidderInfo {
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
+  private language = inject(LanguageService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
@@ -95,8 +97,7 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
   }
 
   switchLanguage(code: string): void {
-    this.translate.use(code);
-    localStorage.setItem('lang', code);
+    this.language.use(code);
   }
 
   get localizedListingTitle(): string {
