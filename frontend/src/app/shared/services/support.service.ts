@@ -62,17 +62,42 @@ export class SupportService {
     );
   }
 
+  openAdminConversation(payload: {
+    customerId: string;
+    subject?: string;
+    category?: string;
+    initialMessage?: string;
+  }): Observable<{ conversation: SupportConversation }> {
+    return this.http.post<{ conversation: SupportConversation }>(
+      `${this.base}/admin/conversations`,
+      payload
+    );
+  }
+
   getAdminConversations(
-    params: { status?: string; page?: number; category?: string; assignedAgent?: string } = {}
+    params: {
+      status?: string;
+      page?: number;
+      category?: string;
+      assignedAgent?: string;
+      customerId?: string;
+    } = {}
   ): Observable<{ conversations: SupportConversation[]; total: number; pages: number }> {
     let p = new HttpParams();
     if (params.status)        p = p.set('status',        params.status);
     if (params.category)      p = p.set('category',      params.category);
     if (params.assignedAgent) p = p.set('assignedAgent', params.assignedAgent);
+    if (params.customerId)    p = p.set('customerId',    params.customerId);
     if (params.page != null)  p = p.set('page',          String(params.page));
     return this.http.get<{ conversations: SupportConversation[]; total: number; pages: number }>(
       `${this.base}/admin/conversations`,
       { params: p }
+    );
+  }
+
+  getAdminConversation(conversationId: string): Observable<{ conversation: SupportConversation }> {
+    return this.http.get<{ conversation: SupportConversation }>(
+      `${this.base}/admin/conversations/${conversationId}`
     );
   }
 

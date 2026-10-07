@@ -3,6 +3,7 @@
 const ListingDraft = require('../models/ListingDraft');
 const { sendEmail }  = require('./emailService');
 const { getEmailTemplate, getUserLanguage } = require('./emailTemplates');
+const { escapeHtml } = require('../utils/bidroomEmailLayout');
 const logger = require('../utils/logger');
 
 const LOG_PREFIX  = '[DraftReminder]';
@@ -56,12 +57,15 @@ async function run() {
     const frontendUrl = process.env.FRONTEND_URL || 'https://bidroom.pt';
 
     try {
+      // Both are substituted raw into markup, and the seller typed both. No
+      // English fallback for the name: the greeting is conditional, so an empty
+      // one renders "Olá," instead of "Olá there,".
       const email = getEmailTemplate('draftReminder', language, {
-        firstName:  seller.firstName || 'there',
-        draftTitle: draftTitle || '',
+        firstName:  escapeHtml(seller.firstName),
+        draftTitle: escapeHtml(draftTitle || ''),
         resumeUrl:  `${frontendUrl}/listing/add`,
       });
-      await sendEmail(seller.email, email.subject, email.html);
+      await sendEmail(seller.email, email.subject, email.html, { text: email.text });
 
       await ListingDraft.updateOne({ _id: draft._id }, { draftReminderSent: true });
       logger.info(`${LOG_PREFIX} Sent to ${seller.email} (draft: ${draft._id})`);

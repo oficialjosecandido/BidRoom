@@ -7,6 +7,6 @@
   "ctaLabel": "Voir les transactions",
   "signOff": "Cordialement,<br><strong style=\"color:#0f172a;\">L’équipe BidRoom</strong>",
   "footerNote": "Message automatique · Merci de ne pas répondre directement à cet e-mail",
-  "body": "<p style=\"margin:0 0 16px;\">Bonjour {{firstName}},</p><p style=\"margin:0 0 16px;\">Votre commande <strong style=\"color:#0f172a;\">« {{listingTitle}} »</strong> a été annulée : le vendeur ne l’a pas expédiée à temps.</p><p style=\"margin:0 0 16px;\">Un <strong style=\"color:#0f172a;\">remboursement intégral</strong> a été émis vers votre moyen de paiement d’origine. Comptez 5 à 10 jours ouvrés avant qu’il n’apparaisse.</p><p style=\"margin:0 0 16px;\">Vous ne devez rien et l’annonce peut être remise en ligne par le vendeur.</p>",
-  "text": "Bonjour {{firstName}},\n\nVotre commande « {{listingTitle}} » a été annulée : le vendeur n’a pas expédié à temps. Un remboursement intégral a été émis (5 à 10 jours ouvrés).\n\n{{ctaUrl}}"
+  "body": "<p style=\"margin:0 0 16px;\">Bonjour{{#if firstName}} {{firstName}}{{/if}},</p><p style=\"margin:0 0 16px;\">Votre commande <strong style=\"color:#0f172a;\">« {{listingTitle}} »</strong> a été annulée : le vendeur ne l’a pas expédiée à temps.</p><p style=\"margin:0 0 16px;\">Un <strong style=\"color:#0f172a;\">remboursement intégral</strong> a été émis vers votre moyen de paiement d’origine. Comptez 5 à 10 jours ouvrés avant qu’il n’apparaisse.</p><p style=\"margin:0 0 16px;\">Vous ne devez rien et l’annonce peut être remise en ligne par le vendeur.</p>",
+  "text": "Bonjour{{#if firstName}} {{firstName}}{{/if}},\n\nVotre commande « {{listingTitle}} » a été annulée : le vendeur n’a pas expédié à temps. Un remboursement intégral a été émis (5 à 10 jours ouvrés).\n\n{{ctaUrl}}"
 }

@@ -1,0 +1,12 @@
+{
+  "subject": "Se ha abierto una disputa sobre {{itemTitle}}",
+  "layout": "bidroom",
+  "title": "Se ha abierto una disputa",
+  "preheader": "{{buyerName}} ha abierto una disputa: envía tus pruebas",
+  "body": "<p style=\"margin:0 0 20px;color:#334155;\">Hola{{#if firstName}} {{firstName}}{{/if}},</p><p style=\"margin:0 0 16px;color:#334155;\">{{buyerName}} ha abierto una disputa sobre <strong style=\"color:#0f172a;\">{{itemTitle}}</strong>.</p><p style=\"margin:0 0 16px;color:#334155;\">Puedes consultar las pruebas que ha enviado el comprador y subir las tuyas desde tu panel.</p><p style=\"margin:0 0 16px;color:#334155;\">Responde cuanto antes. Las fotos del anuncio original y una prueba de cómo embalaste el artículo son las pruebas más útiles que puedes aportar.</p>",
+  "ctaUrl": "{{ctaUrl}}",
+  "ctaLabel": "Abrir la disputa",
+  "signOff": "Un saludo,",
+  "footerNote": "Mensaje automático · Por favor, no respondas directamente a este correo",
+  "text": "Hola{{#if firstName}} {{firstName}}{{/if}},\n\n{{buyerName}} ha abierto una disputa sobre {{itemTitle}}.\n\nPuedes consultar las pruebas que ha enviado el comprador y subir las tuyas desde tu panel.\n\nResponde cuanto antes. Las fotos del anuncio original y una prueba de cómo embalaste el artículo son las pruebas más útiles que puedes aportar.\n\n{{ctaUrl}}\n\nUn saludo,\nEl equipo de BidRoom"
+}

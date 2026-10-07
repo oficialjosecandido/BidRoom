@@ -4,6 +4,7 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute, Router } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AdminSidebarComponent } from '../sidebar/admin-sidebar.component';
 import { AuthService } from '../../../auth/services/auth.service';
@@ -42,6 +43,8 @@ export class AdminSupportComponent implements OnInit, OnDestroy, AfterViewChecke
   private destroyRef = inject(DestroyRef);
   private support    = inject(SupportService);
   private auth       = inject(AuthService);
+  private route      = inject(ActivatedRoute);
+  private router     = inject(Router);
   private cdr        = inject(ChangeDetectorRef);
 
   @ViewChild('threadBody') private threadRef?: ElementRef<HTMLElement>;
@@ -59,6 +62,7 @@ export class AdminSupportComponent implements OnInit, OnDestroy, AfterViewChecke
   currentAgentEmail: string | null = null;
 
   private needsScroll = false;
+  private pendingConversationId: string | null = null;
 
   readonly statusOptions: { value: string; label: string }[] = [
     { value: '',               label: 'Todas' },
@@ -75,7 +79,19 @@ export class AdminSupportComponent implements OnInit, OnDestroy, AfterViewChecke
       .subscribe(user => { this.currentAgentEmail = user?.email ?? null; });
 
     this.support.joinSupportAgents();
-    this.loadQueue();
+
+    this.route.queryParamMap
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(params => {
+        const conversationId = params.get('conversationId');
+        if (conversationId && conversationId !== this.pendingConversationId) {
+          this.openConversationById(conversationId);
+          return;
+        }
+        if (!conversationId && !this.conversations.length) {
+          this.loadQueue();
+        }
+      });
 
     this.support.onSupportMessage()
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -140,19 +156,72 @@ export class AdminSupportComponent implements OnInit, OnDestroy, AfterViewChecke
         next: ({ conversations }) => {
           this.conversations = conversations;
           this.loading = false;
+          if (this.pendingConversationId) {
+            const match = conversations.find(c => c._id === this.pendingConversationId);
+            if (match) this.selectConversation(match);
+          }
           this.cdr.markForCheck();
         },
         error: () => { this.loading = false; this.cdr.markForCheck(); },
       });
   }
 
+  openConversationById(conversationId: string): void {
+    this.pendingConversationId = conversationId;
+    this.statusFilter = '';
+    this.loading = true;
+    this.support.getAdminConversations({})
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: ({ conversations }) => {
+          const found = conversations.find(c => c._id === conversationId);
+          if (found) {
+            this.conversations = conversations;
+            this.loading = false;
+            this.selectConversation(found);
+            this.cdr.markForCheck();
+            return;
+          }
+          this.support.getAdminConversation(conversationId)
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe({
+              next: ({ conversation }) => {
+                this.conversations = [conversation, ...conversations];
+                this.loading = false;
+                this.selectConversation(conversation);
+                this.cdr.markForCheck();
+              },
+              error: () => {
+                this.pendingConversationId = null;
+                this.conversations = conversations;
+                this.loading = false;
+                this.cdr.markForCheck();
+              },
+            });
+        },
+        error: () => {
+          this.pendingConversationId = null;
+          this.loading = false;
+          this.cdr.markForCheck();
+        },
+      });
+  }
+
   setStatusFilter(value: string): void {
     this.statusFilter = value;
+    this.pendingConversationId = null;
+    void this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { conversationId: null },
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
+    });
     this.loadQueue();
   }
 
   selectConversation(conv: SupportConversation): void {
     this.selected    = conv;
+    this.pendingConversationId = conv._id;
     this.messages    = [];
     this.replyDraft  = '';
     this.messagesLoading = true;

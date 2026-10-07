@@ -13,8 +13,12 @@ const Report = require('../models/Report');
 const ModerationAuditLog = require('../models/ModerationAuditLog');
 const FraudEvent = require('../models/FraudEvent');
 const Bid = require('../models/Bid');
-const { sendEmail } = require('../services/emailService');
-const { renderEmailTemplate } = require('../services/templateEngine');
+const {
+  sendLocalizedEmail,
+  formatEmailDateTime,
+  emailLabel
+} = require('../services/localizedEmail');
+const { escapeHtml } = require('../utils/bidroomEmailLayout');
 const { notifyDisputeDecisionIssued, notifyDamageClaimResolved, notifyContentRestrictionLifted, emitNewNotificationToUser, notifyGiveawayWinner, emailGiveawayWinner, notifyGiveawayResultToEntrants } = require('../services/notificationService');
 const GiveawayEntry = require('../models/GiveawayEntry');
 const { drawWinner, publicWinnerName, GiveawayError, publishDrawVideo, removeDrawVideo } = require('../services/giveawayService');
@@ -1014,7 +1018,7 @@ router.post('/auctions/:id/private-room', authenticateToken, requireAdmin, async
     // Validate that all selected bidders are valid users
     const validBidders = await Customer.find({ 
       _id: { $in: platinumBidderIds } 
-    }).select('_id firstName lastName email emailVerified');
+    }).select('_id firstName lastName email emailVerified language');
     
     if (validBidders.length !== platinumBidderIds.length) {
       return res.status(400).json({ 
@@ -1052,45 +1056,17 @@ router.post('/auctions/:id/private-room', authenticateToken, requireAdmin, async
     const listingUrl = `${frontendUrl}/listing/${listing.slug}`;
 
     for (const bidder of validBidders) {
-      try {
-        const emailData = {
-          bidderName: `${bidder.firstName} ${bidder.lastName}`,
-          listingTitle: listing.title,
-          listingUrl,
-          currentPrice: listing.currentPrice,
-          endDate: privateRoomEndDate.toLocaleString('en-US', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-          })
-        };
-
-        let emailContent;
-        try {
-          emailContent = renderEmailTemplate('platinumBidderInvitation', 'en', emailData);
-        } catch (templateError) {
-          emailContent = {
-            subject: `🎯 You're in the Private Auction Room: ${listing.title}`,
-            html: `
-              <h2>Private Auction Room</h2>
-              <p>Hello ${bidder.firstName},</p>
-              <p>You have been selected as a Platinum Bidder for the private auction room of:</p>
-              <h3>${listing.title}</h3>
-              <p><strong>Current Price:</strong> $${listing.currentPrice.toFixed(2)}</p>
-              <p><strong>Private Room Ends:</strong> ${emailData.endDate}</p>
-              <p>You can place bids now. Each bid extends the deadline by 30 seconds.</p>
-              <p><a href="${listingUrl}">Join the Private Room</a></p>
-            `
-          };
-        }
-
-        await sendEmail(bidder.email, emailContent.subject, emailContent.html);
-        logger.info(`📧 Notification sent to ${bidder.email}`);
-      } catch (emailError) {
-        logger.error(`Failed to send notification to ${bidder.email}:`, emailError);
-      }
+      // privateRoomOpenInvited, not platinumBidderInvitation: that template's two
+      // buttons point at accept/decline tokens, which only the seller-initiated
+      // flow mints. This route opens the room outright, so it never had those
+      // URLs to pass and the hrefs went out as literal {{acceptInvitationUrl}}.
+      await sendLocalizedEmail(bidder, 'privateRoomOpenInvited', {
+        bidderName: escapeHtml(`${bidder.firstName || ''} ${bidder.lastName || ''}`.trim()),
+        listingTitle: escapeHtml(listing.title),
+        listingUrl,
+        currentPrice: Number(listing.currentPrice || 0).toFixed(2),
+        endDate: formatEmailDateTime(privateRoomEndDate, bidder)
+      });
     }
 
     // Emit socket event if available
@@ -1464,34 +1440,28 @@ router.post('/disputes/:transactionId/ruling', authenticateToken, requireAdmin, 
     if (resolvedRefundAmount > 0) {
       try {
         const [buyerUser, sellerUser] = await Promise.all([
-          Customer.findById(transaction.buyer).select('firstName lastName email').lean(),
-          Customer.findById(transaction.seller).select('firstName lastName email').lean()
+          Customer.findById(transaction.buyer).select('firstName lastName email language').lean(),
+          Customer.findById(transaction.seller).select('firstName lastName email language').lean()
         ]);
         const listingForEmail = await Listing.findById(transaction.listing).select('title').lean();
-        const listingTitle = listingForEmail?.title || 'your listing';
-        const refundAmountFormatted = `$${resolvedRefundAmount.toFixed(2)}`;
+        const rawListingTitle = listingForEmail?.title || '';
+        const refundAmountFormatted = `€${resolvedRefundAmount.toFixed(2)}`;
+        // Resolved per recipient, not once: the buyer and the seller in the same
+        // dispute may well read different languages, so a single shared fallback
+        // would be the wrong word in one of the two emails.
+        const titleFor = (who) => escapeHtml(rawListingTitle) || emailLabel('yourItem', who);
 
-        if (buyerUser?.email) {
-          const buyerEmail = renderEmailTemplate('disputeRefundBuyer', 'en', {
-            buyerName: `${buyerUser.firstName} ${buyerUser.lastName}`.trim(),
-            listingTitle,
-            refundAmount: refundAmountFormatted
-          });
-          await sendEmail(buyerUser.email, buyerEmail.subject, buyerEmail.html).catch(err =>
-            logger.error('[Admin] Failed to send dispute refund buyer email:', err.message)
-          );
-        }
+        await sendLocalizedEmail(buyerUser, 'disputeRefundBuyer', {
+          buyerName: escapeHtml(`${buyerUser?.firstName || ''} ${buyerUser?.lastName || ''}`.trim()),
+          listingTitle: titleFor(buyerUser),
+          refundAmount: refundAmountFormatted
+        });
 
-        if (sellerUser?.email) {
-          const sellerEmail = renderEmailTemplate('disputeRefundSeller', 'en', {
-            sellerName: `${sellerUser.firstName} ${sellerUser.lastName}`.trim(),
-            listingTitle,
-            refundAmount: refundAmountFormatted
-          });
-          await sendEmail(sellerUser.email, sellerEmail.subject, sellerEmail.html).catch(err =>
-            logger.error('[Admin] Failed to send dispute refund seller email:', err.message)
-          );
-        }
+        await sendLocalizedEmail(sellerUser, 'disputeRefundSeller', {
+          sellerName: escapeHtml(`${sellerUser?.firstName || ''} ${sellerUser?.lastName || ''}`.trim()),
+          listingTitle: titleFor(sellerUser),
+          refundAmount: refundAmountFormatted
+        });
       } catch (emailErr) {
         logger.error('[Admin] Failed to send dispute refund emails:', emailErr.message);
       }

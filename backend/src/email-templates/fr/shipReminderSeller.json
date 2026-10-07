@@ -7,6 +7,6 @@
   "ctaLabel": "Marquer comme expédiée",
   "signOff": "Cordialement,<br><strong style=\"color:#0f172a;\">L’équipe BidRoom</strong>",
   "footerNote": "Message automatique · Merci de ne pas répondre directement à cet e-mail",
-  "body": "<p style=\"margin:0 0 16px;\">Bonjour {{sellerFirstName}},</p><p style=\"margin:0 0 16px;\"><strong style=\"color:#0f172a;\">« {{listingTitle}} »</strong> a été payé et n’est toujours pas marqué comme expédié.</p>{{shipToBox}}<p style=\"margin:0 0 16px;\">Vous avez jusqu’au <strong style=\"color:#0f172a;\">{{shipByDate}}</strong>. Passé ce délai, la commande est annulée automatiquement et l’acheteur intégralement remboursé.</p><p style=\"margin:0 0 16px;\">Si vous l’avez déjà envoyé, il suffit de le marquer comme expédié dans votre tableau de bord.</p>",
-  "text": "Bonjour {{sellerFirstName}},\n\n« {{listingTitle}} » n’est pas marqué comme expédié. Délai : {{shipByDate}}.\n\nExpédier à :\n{{shipToText}}\n\n{{ctaUrl}}"
+  "body": "<p style=\"margin:0 0 16px;\">Bonjour{{#if sellerFirstName}} {{sellerFirstName}}{{/if}},</p><p style=\"margin:0 0 16px;\"><strong style=\"color:#0f172a;\">« {{listingTitle}} »</strong> a été payé et n’est toujours pas marqué comme expédié.</p>{{shipToBox}}<p style=\"margin:0 0 16px;\">Vous avez jusqu’au <strong style=\"color:#0f172a;\">{{shipByDate}}</strong>. Passé ce délai, la commande est annulée automatiquement et l’acheteur intégralement remboursé.</p><p style=\"margin:0 0 16px;\">Si vous l’avez déjà envoyé, il suffit de le marquer comme expédié dans votre tableau de bord.</p>",
+  "text": "Bonjour{{#if sellerFirstName}} {{sellerFirstName}}{{/if}},\n\n« {{listingTitle}} » n’est pas marqué comme expédié. Délai : {{shipByDate}}.\n\nExpédier à :\n{{shipToText}}\n\n{{ctaUrl}}"
 }

@@ -1,0 +1,12 @@
+{
+  "subject": "Acção necessária: confirme o seu estado de vendedor",
+  "layout": "bidroom",
+  "title": "Revisão do estado de vendedor",
+  "preheader": "As suas vendas passaram os limites do DSA da UE para venda profissional.",
+  "ctaUrl": "{{ctaUrl}}",
+  "ctaLabel": "Confirmar o meu estado de vendedor",
+  "signOff": "Com os melhores cumprimentos,<br><strong style=\"color:#0f172a;\">A equipa BidRoom</strong>",
+  "footerNote": "Mensagem automática · Por favor não responda directamente a este email",
+  "body": "<p style=\"margin:0 0 16px;\">Olá{{#if firstName}} {{firstName}}{{/if}},</p><p style=\"margin:0 0 16px;\">A sua actividade de venda na BidRoom atingiu os limites que podem contar como <strong style=\"color:#0f172a;\">venda profissional</strong> ao abrigo do Regulamento dos Serviços Digitais (DSA) da UE:</p>{{statsBox}}<p style=\"margin:20px 0 16px;\">Ao abrigo do artigo 29.º do DSA, as plataformas têm de pedir aos vendedores que ultrapassam estes limites que declarem se estão a actuar como profissionais.</p><p style=\"margin:0;\">Confirme o seu estado de vendedor no painel. Tem <strong style=\"color:#0f172a;\">{{graceDays}} dias</strong> para responder antes de a sua conta ser sinalizada para revisão.</p><p style=\"margin:16px 0 0;font-size:13px;color:#64748b;\">Se achar que se trata de um erro, ou se tiver dúvidas, contacte o suporte.</p><p style=\"margin:12px 0 0;font-size:12px;color:#94a3b8;\">Esta notificação é exigida pelo Regulamento (UE) 2022/2065 (Regulamento dos Serviços Digitais), artigo 29.º.</p>",
+  "text": "Olá{{#if firstName}} {{firstName}}{{/if}},\n\nA sua actividade de venda na BidRoom atingiu os limites que podem contar como venda profissional ao abrigo do Regulamento dos Serviços Digitais (DSA) da UE:\n\n{{statsText}}\n\nAo abrigo do artigo 29.º do DSA, as plataformas têm de pedir aos vendedores que ultrapassam estes limites que declarem se estão a actuar como profissionais. Confirme o seu estado de vendedor no painel — tem {{graceDays}} dias para responder antes de a sua conta ser sinalizada para revisão.\n\n{{ctaUrl}}\n\nEsta notificação é exigida pelo Regulamento (UE) 2022/2065 (Regulamento dos Serviços Digitais), artigo 29.º."
+}

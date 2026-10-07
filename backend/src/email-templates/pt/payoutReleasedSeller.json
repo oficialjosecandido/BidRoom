@@ -7,6 +7,6 @@
   "ctaLabel": "Ver transacção",
   "signOff": "Com os melhores cumprimentos,<br><strong style=\"color:#0f172a;\">A equipa BidRoom</strong>",
   "footerNote": "Mensagem automática · Por favor não responda directamente a este email",
-  "body": "<p style=\"margin:0 0 16px;\">Olá {{sellerFirstName}},</p><p style=\"margin:0 0 16px;\">O comprador confirmou a recepção de <strong style=\"color:#0f172a;\">\"{{listingTitle}}\"</strong>, por isso o seu pagamento foi libertado para a sua conta Stripe.</p>{{payoutBox}}<p style=\"margin:0 0 16px;\">A Stripe transfere-o para a sua conta bancária no calendário de pagamentos habitual.</p>",
-  "text": "Olá {{sellerFirstName}},\n\nO seu pagamento de \"{{listingTitle}}\" foi libertado: {{payoutLabel}}\n\n{{ctaUrl}}"
+  "body": "<p style=\"margin:0 0 16px;\">Olá{{#if sellerFirstName}} {{sellerFirstName}}{{/if}},</p><p style=\"margin:0 0 16px;\">O comprador confirmou a recepção de <strong style=\"color:#0f172a;\">\"{{listingTitle}}\"</strong>, por isso o seu pagamento foi libertado para a sua conta Stripe.</p>{{payoutBox}}<p style=\"margin:0 0 16px;\">A Stripe transfere-o para a sua conta bancária no calendário de pagamentos habitual.</p>",
+  "text": "Olá{{#if sellerFirstName}} {{sellerFirstName}}{{/if}},\n\nO seu pagamento de \"{{listingTitle}}\" foi libertado: {{payoutLabel}}\n\n{{ctaUrl}}"
 }

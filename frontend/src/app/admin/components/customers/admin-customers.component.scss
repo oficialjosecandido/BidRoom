@@ -273,7 +273,31 @@
   &.type-private { background: #f1f5f9; color: #475569; }
 }
 
-// ── Unlock action ─────────────────────────────────────────────────────────────
+// ── Row actions ───────────────────────────────────────────────────────────────
+
+.actions-cell {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.message-btn {
+  height: 30px;
+  padding: 0 14px;
+  background: #fff;
+  color: #92400e;
+  border: 1px solid #fcd34d;
+  border-radius: 7px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s, opacity 0.15s;
+
+  &:hover:not(:disabled) { background: #fffbeb; }
+  &:disabled { opacity: 0.6; cursor: default; }
+}
 
 .unlock-btn {
   height: 30px;

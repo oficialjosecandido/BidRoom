@@ -1,14 +1,20 @@
 /**
  * Delivery Auto-Release Scheduler
  *
- * Runs every 15 minutes. Handles two enforcement stages:
+ * Runs every 15 minutes. Handles three enforcement stages:
  *
- * 1. AUTO-COMPLETE (Story 6.2)
+ * 1. CONFIRM-RECEIPT REMINDERS
+ *    While an order is still shipped, remind the buyer to confirm receipt:
+ *    - on_delivery: on/after estimatedDeliveryDate (or 7 days after shippedAt
+ *      when there is no estimate)
+ *    - pre_release: 2 days before autoReleaseAt
+ *
+ * 2. AUTO-COMPLETE (Story 6.2)
  *    When a shipped transaction's autoReleaseAt has passed and the buyer has not
  *    confirmed delivery, the transaction is automatically completed. This releases
  *    payment to the seller and closes the order.
  *
- * 2. RETURN MEDIATION (Story 6.3)
+ * 3. RETURN MEDIATION (Story 6.3)
  *    When a buyer files a return request, the seller has 48 hours to respond.
  *    If returnSellerDeadline passes with returnStatus still 'pending_seller_response',
  *    the scheduler marks the return as 'platform_mediated' — BidRoom's team will
@@ -17,14 +23,23 @@
 
 const Transaction = require('../models/Transaction');
 const Customer = require('../models/Customer');
-const { emitNewNotificationToUser, createNotification } = require('./notificationService');
-const { sendLocalizedEmail } = require('./localizedEmail');
+const {
+  emitNewNotificationToUser,
+  createNotification,
+  notifyBuyerConfirmReceiptReminder
+} = require('./notificationService');
+const { sendLocalizedEmail, formatEmailDate, emailLabel } = require('./localizedEmail');
 const { escapeHtml, transactionUrl } = require('../utils/bidroomEmailLayout');
 const { checkAndApplyPendingSuspensions } = require('./accountStatusService');
 const logger = require('../utils/logger');
 
 const LOG_PREFIX = '[DeliveryRelease]';
 const BATCH_LIMIT = 200;
+const DAY_MS = 24 * 60 * 60 * 1000;
+/** Without an estimated delivery date, ask the buyer after this many days in transit. */
+const NO_ESTIMATE_REMINDER_DAYS = 7;
+/** Second nudge this many days before auto-release. */
+const PRE_RELEASE_REMINDER_DAYS = 2;
 
 let _timer = null;
 
@@ -47,9 +62,97 @@ function stopDeliveryAutoReleaseScheduler() {
 
 async function runDeliveryChecks(io) {
   await Promise.all([
+    processReceiptConfirmReminders(io),
     processAutoReleases(io),
     processReturnMediations(io)
   ]);
+}
+
+/**
+ * When the package should have arrived (or is about to auto-complete), email +
+ * notify the buyer to confirm receipt so payout is not held up / auto-released
+ * without them acting.
+ */
+async function processReceiptConfirmReminders(io) {
+  const now = new Date();
+  const nowMs = now.getTime();
+
+  const candidates = await Transaction.find({
+    transactionStatus: 'shipped',
+    shippedAt: { $ne: null },
+    autoReleaseAt: { $gt: now },
+    $or: [
+      { receiptRemindersSent: { $exists: false } },
+      { receiptRemindersSent: { $nin: ['on_delivery', 'pre_release'] } },
+      { receiptRemindersSent: { $size: 0 } },
+      { receiptRemindersSent: { $size: 1 } }
+    ]
+  })
+    .sort({ shippedAt: 1 })
+    .limit(BATCH_LIMIT)
+    .populate('listing', 'title slug')
+    .populate('buyer', '_id uid email firstName language')
+    .lean();
+
+  for (const tx of candidates) {
+    try {
+      const alreadySent = new Set(tx.receiptRemindersSent || []);
+      const dueKeys = [];
+
+      const onDeliveryAt = tx.estimatedDeliveryDate
+        ? new Date(tx.estimatedDeliveryDate)
+        : new Date(new Date(tx.shippedAt).getTime() + NO_ESTIMATE_REMINDER_DAYS * DAY_MS);
+
+      if (!alreadySent.has('on_delivery') && nowMs >= onDeliveryAt.getTime()) {
+        dueKeys.push('on_delivery');
+      }
+
+      const preReleaseDue = !!(
+        tx.autoReleaseAt &&
+        !alreadySent.has('pre_release') &&
+        nowMs >= new Date(tx.autoReleaseAt).getTime() - PRE_RELEASE_REMINDER_DAYS * DAY_MS
+      );
+      if (preReleaseDue) dueKeys.push('pre_release');
+
+      if (dueKeys.length === 0) continue;
+
+      // One email per tick. If both milestones land together, use the delivery
+      // copy and stamp both keys so we do not send a duplicate later.
+      const isFinalReminder = dueKeys.includes('pre_release') && !dueKeys.includes('on_delivery');
+      const buyerId = tx.buyer?._id?.toString?.() || tx.buyer?.toString?.();
+      // The in-app notification is still English throughout, so the English
+      // stand-in belongs there; the email takes the recipient's own.
+      const listingTitle = tx.listing?.title || 'your item';
+
+      if (buyerId) {
+        await notifyBuyerConfirmReceiptReminder({
+          transactionId: tx._id.toString(),
+          listingTitle,
+          buyerUserId: buyerId
+        }).catch(() => {});
+
+        if (tx.buyer?.email) {
+          await sendLocalizedEmail(tx.buyer, 'confirmReceiptBuyer', {
+            firstName: escapeHtml(tx.buyer.firstName),
+            listingTitle: escapeHtml(tx.listing?.title || emailLabel('yourItem', tx.buyer)),
+            autoReleaseDate: formatEmailDate(tx.autoReleaseAt, tx.buyer),
+            isFinalReminder: isFinalReminder ? '1' : '',
+            ctaUrl: transactionUrl(tx._id?.toString?.())
+          });
+        }
+        if (io) emitNewNotificationToUser(io, buyerId).catch(() => {});
+      }
+
+      await Transaction.updateOne(
+        { _id: tx._id },
+        { $addToSet: { receiptRemindersSent: { $each: dueKeys } } }
+      );
+
+      logger.info(`${LOG_PREFIX} Receipt reminder (${dueKeys.join(',')}) tx=${tx._id}`);
+    } catch (e) {
+      logger.error(`${LOG_PREFIX} Receipt reminder error tx=${tx._id}:`, e.message);
+    }
+  }
 }
 
 /**
@@ -125,8 +228,8 @@ async function processAutoReleases(io) {
 
         if (tx.buyer?.email) {
           await sendLocalizedEmail(tx.buyer, 'orderCompletedBuyer', {
-            firstName: escapeHtml(tx.buyer.firstName) || 'there',
-            listingTitle: escapeHtml(listingTitle),
+            firstName: escapeHtml(tx.buyer.firstName),
+            listingTitle: escapeHtml(tx.listing?.title || emailLabel('yourItem', tx.buyer)),
             ctaUrl: transactionUrl(tx._id?.toString?.())
           });
         }
@@ -145,8 +248,8 @@ async function processAutoReleases(io) {
 
         if (tx.seller?.email) {
           await sendLocalizedEmail(tx.seller, 'payoutReleasedSeller', {
-            sellerFirstName: escapeHtml(tx.seller.firstName) || 'there',
-            listingTitle: escapeHtml(listingTitle),
+            sellerFirstName: escapeHtml(tx.seller.firstName),
+            listingTitle: escapeHtml(tx.listing?.title || emailLabel('yourItem', tx.seller)),
             // No figure is to hand on this path, so the template's payout box
             // and label collapse to nothing rather than printing "undefined".
             payoutBox: '',

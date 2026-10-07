@@ -599,9 +599,8 @@
             </label>
           }
         </div>
-        <button class="save-btn" (click)="saveLanguage()" [disabled]="langSaving">
-          @if (langSaving) { {{ 'dashboard.settings.saving' | translate }} }
-          @else if (langSaved) { ✓ {{ 'dashboard.settings.saved' | translate }} }
+        <button class="save-btn" (click)="saveLanguage()">
+          @if (langSaved) { ✓ {{ 'dashboard.settings.saved' | translate }} }
           @else { {{ 'dashboard.settings.saveLanguage' | translate }} }
         </button>
       </div>

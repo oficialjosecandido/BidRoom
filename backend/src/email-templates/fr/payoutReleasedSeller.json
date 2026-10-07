@@ -7,6 +7,6 @@
   "ctaLabel": "Voir la transaction",
   "signOff": "Cordialement,<br><strong style=\"color:#0f172a;\">L’équipe BidRoom</strong>",
   "footerNote": "Message automatique · Merci de ne pas répondre directement à cet e-mail",
-  "body": "<p style=\"margin:0 0 16px;\">Bonjour {{sellerFirstName}},</p><p style=\"margin:0 0 16px;\">L’acheteur a confirmé la réception de <strong style=\"color:#0f172a;\">« {{listingTitle}} »</strong> : votre versement a été libéré vers votre compte Stripe.</p>{{payoutBox}}<p style=\"margin:0 0 16px;\">Stripe le transfère vers votre compte bancaire selon votre calendrier de versement habituel.</p>",
-  "text": "Bonjour {{sellerFirstName}},\n\nVotre versement pour « {{listingTitle}} » a été libéré : {{payoutLabel}}\n\n{{ctaUrl}}"
+  "body": "<p style=\"margin:0 0 16px;\">Bonjour{{#if sellerFirstName}} {{sellerFirstName}}{{/if}},</p><p style=\"margin:0 0 16px;\">L’acheteur a confirmé la réception de <strong style=\"color:#0f172a;\">« {{listingTitle}} »</strong> : votre versement a été libéré vers votre compte Stripe.</p>{{payoutBox}}<p style=\"margin:0 0 16px;\">Stripe le transfère vers votre compte bancaire selon votre calendrier de versement habituel.</p>",
+  "text": "Bonjour{{#if sellerFirstName}} {{sellerFirstName}}{{/if}},\n\nVotre versement pour « {{listingTitle}} » a été libéré : {{payoutLabel}}\n\n{{ctaUrl}}"
 }

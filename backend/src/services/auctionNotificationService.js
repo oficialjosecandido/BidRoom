@@ -5,6 +5,8 @@ const Customer = require('../models/Customer');
 const { sendEmail } = require('./emailService');
 const { isStripeTestMode } = require('../utils/stripe.util');
 const { getEmailTemplate, getUserLanguage } = require('./emailTemplates');
+const { sendLocalizedEmail, formatEmailDateTime } = require('./localizedEmail');
+const { escapeHtml } = require('../utils/bidroomEmailLayout');
 const { createTransactionForListing, createTransactionForAcceptedOffer } = require('./transactionService');
 const { publicDisplayName } = require('../utils/bidFormat');
 const logger = require('../utils/logger');
@@ -21,7 +23,7 @@ async function sendAuctionClosedNotifications(listing, winnerBidId = null) {
 
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:4200';
     const listingUrl = `${frontendUrl}/listing/${listing.slug}`;
-    const finalBid = `$${listing.currentPrice.toFixed(2)}`;
+    const finalBid = `€${listing.currentPrice.toFixed(2)}`;
 
     // Get unique bidders (by user ID or email)
     const notifiedEmails = new Set();
@@ -63,7 +65,7 @@ async function sendAuctionClosedNotifications(listing, winnerBidId = null) {
 
       // Send email
       try {
-        await sendEmail(bidderEmail, email.subject, email.html);
+        await sendEmail(bidderEmail, email.subject, email.html, { text: email.text });
       } catch (error) {
         logger.error(`❌ Failed to send email to ${bidderEmail}:`, error.message);
       }
@@ -94,7 +96,7 @@ async function sendChooseWinnerNotification(listing) {
 
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:4200';
     const chooseWinnerUrl = `${frontendUrl}/listing/${listing.slug}?chooseWinner=1`;
-    const finalBid = `$${listing.currentPrice.toFixed(2)}`;
+    const finalBid = `€${listing.currentPrice.toFixed(2)}`;
     const language = getUserLanguage(seller);
 
     const email = getEmailTemplate('chooseWinner', language, {
@@ -104,7 +106,7 @@ async function sendChooseWinnerNotification(listing) {
       chooseWinnerUrl
     });
 
-    await sendEmail(seller.email, email.subject, email.html);
+    await sendEmail(seller.email, email.subject, email.html, { text: email.text });
 
     return { sent: true };
   } catch (error) {
@@ -137,7 +139,7 @@ async function sendAuctionNotSoldNotification(listing) {
       relistUrl
     });
 
-    await sendEmail(seller.email, email.subject, email.html);
+    await sendEmail(seller.email, email.subject, email.html, { text: email.text });
 
     return { sent: true };
   } catch (error) {
@@ -156,10 +158,15 @@ async function sendOutbidNotification(listing, bidderEmail, bidderName, previous
 
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:4200';
     const listingUrl = `${frontendUrl}/listing/${listing.slug}`;
-    const previousBid = `$${Number(previousBidAmount).toFixed(2)}`;
-    const newBid = `$${Number(newBidAmount).toFixed(2)}`;
+    const previousBid = `€${Number(previousBidAmount).toFixed(2)}`;
+    const newBid = `€${Number(newBidAmount).toFixed(2)}`;
 
-    const email = getEmailTemplate('outbid', 'en', {
+    // Called with an address, not a profile — a bid can come from someone who
+    // is not logged in. No account means no stored language, and English is
+    // then the only honest answer.
+    const recipient = await Customer.findOne({ email: bidderEmail }).select('language').lean();
+
+    const email = getEmailTemplate('outbid', getUserLanguage(recipient), {
       bidderName: bidderName || bidderEmail.split('@')[0],
       listingTitle: listing.title,
       previousBid,
@@ -167,7 +174,7 @@ async function sendOutbidNotification(listing, bidderEmail, bidderName, previous
       listingUrl
     });
 
-    await sendEmail(bidderEmail, email.subject, email.html);
+    await sendEmail(bidderEmail, email.subject, email.html, { text: email.text });
     return { sent: true };
   } catch (error) {
     logger.error('Error sending outbid notification:', error);
@@ -201,7 +208,7 @@ async function sendWinnerNotification(listing, winnerBid) {
 
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:4200';
     const paymentUrl = `${frontendUrl}/listing/${listing.slug}/payment`;
-    const winningBid = `$${winnerBid.amount.toFixed(2)}`;
+    const winningBid = `€${winnerBid.amount.toFixed(2)}`;
 
     // Get user for language preference
     const user = winnerBid.bidder ? await Customer.findById(winnerBid.bidder) : null;
@@ -214,7 +221,7 @@ async function sendWinnerNotification(listing, winnerBid) {
       paymentUrl
     });
 
-    await sendEmail(winnerEmail, email.subject, email.html);
+    await sendEmail(winnerEmail, email.subject, email.html, { text: email.text });
 
     return { sent: true };
   } catch (error) {
@@ -235,7 +242,7 @@ async function sendFirstBidNotification(listing, bid, bidderEmail, bidderName) {
 
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:4200';
     const listingUrl = `${frontendUrl}/listing/${listing.slug}`;
-    const bidAmount = `$${bid.amount.toFixed(2)}`;
+    const bidAmount = `€${bid.amount.toFixed(2)}`;
     
     // Format auction end date
     const endDate = listing.privateRoomStatus === 'active' && listing.privateRoomEndDate
@@ -264,7 +271,7 @@ async function sendFirstBidNotification(listing, bid, bidderEmail, bidderName) {
       listingUrl
     });
 
-    await sendEmail(bidderEmail, email.subject, email.html);
+    await sendEmail(bidderEmail, email.subject, email.html, { text: email.text });
 
     return { sent: true };
   } catch (error) {
@@ -311,7 +318,7 @@ async function sendPlatformNewBidAlert(listing, bidAmount, bidderName, bidderEma
       </p>
       <table style="width:100%;border-collapse:collapse;font-size:14px;margin-bottom:20px">
         <tr><td style="padding:8px 0;color:#666;width:40%">Anúncio</td><td style="padding:8px 0;font-weight:600">${title}</td></tr>
-        <tr><td style="padding:8px 0;color:#666">Lance atual</td><td style="padding:8px 0">€${currentPrice}</td></tr>
+        <tr><td style="padding:8px 0;color:#666">Lance actual</td><td style="padding:8px 0">€${currentPrice}</td></tr>
         <tr><td style="padding:8px 0;color:#666">Total de lances</td><td style="padding:8px 0">${bidCount}</td></tr>
       </table>
       <a href="${listingUrl}" style="display:inline-block;background:#c9a84c;color:#1a1408;text-decoration:none;padding:12px 20px;border-radius:8px;font-weight:700;font-size:14px;margin-right:8px">Ver anúncio</a>
@@ -336,14 +343,18 @@ async function sendOfferPlacedEmail(listing, offererEmail, offererName, offerAmo
     if (!offererEmail) return { sent: false, reason: 'no_email' };
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:4200';
     const listingUrl = `${frontendUrl}/listing/${listing.slug}`;
-    const formattedAmount = `$${Number(offerAmount).toFixed(2)}`;
-    const email = getEmailTemplate('offerPlaced', 'en', {
+    const formattedAmount = `€${Number(offerAmount).toFixed(2)}`;
+    // Called with an address, not a profile — a bid can come from someone who
+    // is not logged in. No account means no stored language, and English is
+    // then the only honest answer.
+    const recipient = await Customer.findOne({ email: offererEmail }).select('language').lean();
+    const email = getEmailTemplate('offerPlaced', getUserLanguage(recipient), {
       offererName: offererName || offererEmail.split('@')[0],
       listingTitle: listing.title,
       offerAmount: formattedAmount,
       listingUrl
     });
-    await sendEmail(offererEmail, email.subject, email.html);
+    await sendEmail(offererEmail, email.subject, email.html, { text: email.text });
     return { sent: true };
   } catch (error) {
     logger.error('Error sending offer confirmation email:', error);
@@ -359,16 +370,20 @@ async function sendOfferOutbidEmail(listing, offererEmail, offererName, previous
     if (!offererEmail) return { sent: false, reason: 'no_email' };
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:4200';
     const listingUrl = `${frontendUrl}/listing/${listing.slug}`;
-    const previousOffer = `$${Number(previousOfferAmount).toFixed(2)}`;
-    const newOffer = `$${Number(newOfferAmount).toFixed(2)}`;
-    const email = getEmailTemplate('offerOutbid', 'en', {
+    const previousOffer = `€${Number(previousOfferAmount).toFixed(2)}`;
+    const newOffer = `€${Number(newOfferAmount).toFixed(2)}`;
+    // Called with an address, not a profile — a bid can come from someone who
+    // is not logged in. No account means no stored language, and English is
+    // then the only honest answer.
+    const recipient = await Customer.findOne({ email: offererEmail }).select('language').lean();
+    const email = getEmailTemplate('offerOutbid', getUserLanguage(recipient), {
       offererName: offererName || offererEmail.split('@')[0],
       listingTitle: listing.title,
       previousOffer,
       newOffer,
       listingUrl
     });
-    await sendEmail(offererEmail, email.subject, email.html);
+    await sendEmail(offererEmail, email.subject, email.html, { text: email.text });
     return { sent: true };
   } catch (error) {
     logger.error('Error sending offer outbid email:', error);
@@ -397,7 +412,7 @@ async function sendBestOfferEndedNotification(listing, offerCount) {
       offerCount,
       listingUrl
     });
-    await sendEmail(seller.email, email.subject, email.html);
+    await sendEmail(seller.email, email.subject, email.html, { text: email.text });
     return { sent: true };
   } catch (error) {
     logger.error('Error sending best-offer ended notification:', error);
@@ -421,11 +436,14 @@ async function sendPrivateRoomClosedNoAcceptanceToSeller(listing) {
     const listingUrl = `${frontendUrl}/listing/${listing.slug}`;
     const language = getUserLanguage(seller);
     const email = getEmailTemplate('privateRoomClosedNoAcceptanceSeller', language, {
-      sellerName: `${seller.firstName || ''} ${seller.lastName || ''}`.trim() || 'Seller',
-      listingTitle: listing.title,
+      // No 'Seller' fallback: the greeting is conditional in the template, so an
+      // empty name renders "Olá," rather than an English word in a translated
+      // email. Both values are substituted raw into markup, hence the escaping.
+      sellerName: escapeHtml(`${seller.firstName || ''} ${seller.lastName || ''}`.trim()),
+      listingTitle: escapeHtml(listing.title),
       listingUrl
     });
-    await sendEmail(seller.email, email.subject, email.html);
+    await sendEmail(seller.email, email.subject, email.html, { text: email.text });
     return { sent: true };
   } catch (error) {
     logger.error('Error sending private room closed (no acceptances) to seller:', error);
@@ -457,7 +475,7 @@ async function sendPrivateRoomClosedNoAcceptanceToInvitedBuyers(listing) {
         listingUrl
       });
       try {
-        await sendEmail(user.email, email.subject, email.html);
+        await sendEmail(user.email, email.subject, email.html, { text: email.text });
       } catch (err) {
         logger.error(`Failed to send private room closed to ${user.email}:`, err.message);
       }
@@ -482,11 +500,14 @@ async function sendPrivateRoomClosedSellerLeftToSeller(listing) {
     const listingUrl = `${frontendUrl}/listing/${listing.slug}`;
     const language = getUserLanguage(seller);
     const email = getEmailTemplate('privateRoomClosedSellerLeftSeller', language, {
-      sellerName: `${seller.firstName || ''} ${seller.lastName || ''}`.trim() || 'Seller',
-      listingTitle: listing.title,
+      // No 'Seller' fallback: the greeting is conditional in the template, so an
+      // empty name renders "Olá," rather than an English word in a translated
+      // email. Both values are substituted raw into markup, hence the escaping.
+      sellerName: escapeHtml(`${seller.firstName || ''} ${seller.lastName || ''}`.trim()),
+      listingTitle: escapeHtml(listing.title),
       listingUrl
     });
-    await sendEmail(seller.email, email.subject, email.html);
+    await sendEmail(seller.email, email.subject, email.html, { text: email.text });
     return { sent: true };
   } catch (error) {
     logger.error('Error sending private room closed (seller left) to seller:', error);
@@ -518,7 +539,7 @@ async function sendPrivateRoomClosedSellerLeftToBuyers(listing) {
         listingUrl
       });
       try {
-        await sendEmail(user.email, email.subject, email.html);
+        await sendEmail(user.email, email.subject, email.html, { text: email.text });
       } catch (err) {
         logger.error(`Failed to send private room closed (seller left) to ${user.email}:`, err.message);
       }
@@ -724,7 +745,7 @@ async function sendPrivateRoomClosedSellerLeftToSeller(listing) {
       listingTitle: listing.title,
       listingUrl
     });
-    await sendEmail(seller.email, email.subject, email.html);
+    await sendEmail(seller.email, email.subject, email.html, { text: email.text });
   } catch (err) {
     logger.error('Error sending seller-left email to seller:', err);
   }
@@ -747,7 +768,7 @@ async function sendPrivateRoomClosedSellerLeftToBuyers(listing) {
         listingTitle: listing.title,
         listingUrl
       });
-      await sendEmail(bidder.email, email.subject, email.html);
+      await sendEmail(bidder.email, email.subject, email.html, { text: email.text });
     }
   } catch (err) {
     logger.error('Error sending seller-left email to buyers:', err);
@@ -768,7 +789,7 @@ async function sendCreatePrivateRoomNotification(listing) {
     }
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:4200';
     const createPrivateRoomUrl = `${frontendUrl}/listing/${listing.slug}`;
-    const finalBid = `$${Number(listing.currentPrice).toFixed(2)}`;
+    const finalBid = `€${Number(listing.currentPrice).toFixed(2)}`;
     const language = getUserLanguage(seller);
     const email = getEmailTemplate('createPrivateRoomNotification', language, {
       sellerName: `${seller.firstName} ${seller.lastName}`,
@@ -776,7 +797,7 @@ async function sendCreatePrivateRoomNotification(listing) {
       finalBid,
       createPrivateRoomUrl
     });
-    await sendEmail(seller.email, email.subject, email.html);
+    await sendEmail(seller.email, email.subject, email.html, { text: email.text });
     return { sent: true };
   } catch (error) {
     logger.error('Error sending create private room notification:', error);
@@ -823,7 +844,7 @@ async function sendPrivateRoomNotInvitedToBidders(listing, invitedUserIds) {
         listingUrl
       });
       try {
-        await sendEmail(bidderEmail, email.subject, email.html);
+        await sendEmail(bidderEmail, email.subject, email.html, { text: email.text });
       } catch (err) {
         logger.error(`Failed to send private room not invited to ${bidderEmail}:`, err.message);
       }
@@ -846,9 +867,6 @@ async function sendPlatinumBidderInvitations(listing, requestOrigin = null) {
       ? configured.replace(/\/$/, '')
       : (requestOrigin && !requestOrigin.includes('localhost') ? requestOrigin.replace(/\/$/, '') : (configured || 'http://localhost:4200').replace(/\/$/, ''));
     const listingUrl = `${frontendUrl}/listing/${listing.slug || listing._id}`;
-    const endDate = listing.privateRoomEndDate
-      ? new Date(listing.privateRoomEndDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })
-      : '';
     const currentPrice = listing.currentPrice != null ? Number(listing.currentPrice).toFixed(2) : '0.00';
     const invitations = listing.platinumBidderInvitations || [];
 
@@ -857,23 +875,21 @@ async function sendPlatinumBidderInvitations(listing, requestOrigin = null) {
       if (!user || !user.email || !inv.invitationToken) continue;
       const acceptInvitationUrl = `${frontendUrl}/private-room/invitation/accept?token=${encodeURIComponent(inv.invitationToken)}&listingId=${listing._id}`;
       const declineInvitationUrl = `${frontendUrl}/private-room/invitation/decline?token=${encodeURIComponent(inv.invitationToken)}&listingId=${listing._id}`;
-      const language = getUserLanguage(user);
-      const bidderName = `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email?.split('@')[0] || 'Bidder';
-      const endDateDisplay = endDate || 'After 15-min acceptance window';
-      const email = getEmailTemplate('platinumBidderInvitation', language, {
-        bidderName,
-        listingTitle: listing.title,
+      // Both the name and the date are resolved per invitee: the date used to be
+      // formatted once in en-US for everyone, and an invitee with no name on file
+      // was greeted "Hello Bidder" in the middle of a Portuguese email. The
+      // template drops either slot when it is empty.
+      await sendLocalizedEmail(user, 'platinumBidderInvitation', {
+        bidderName: escapeHtml(
+          `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email?.split('@')[0] || ''
+        ),
+        listingTitle: escapeHtml(listing.title),
         listingUrl,
         acceptInvitationUrl,
         declineInvitationUrl,
         currentPrice,
-        endDate: endDateDisplay
+        endDate: formatEmailDateTime(listing.privateRoomEndDate, user)
       });
-      try {
-        await sendEmail(user.email, email.subject, email.html);
-      } catch (err) {
-        logger.error(`Failed to send platinum invitation to ${user.email}:`, err.message);
-      }
     }
     return { sent: true };
   } catch (error) {
@@ -1256,7 +1272,7 @@ async function sendPrivateRoomEndNotifications(listing, highestBid = null) {
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:4200';
     const listingUrl = `${frontendUrl}/listing/${listing.slug}`;
     const paymentUrl = `${frontendUrl}/listing/${listing.slug}/payment`;
-    const finalBid = `$${listing.currentPrice.toFixed(2)}`;
+    const finalBid = `€${listing.currentPrice.toFixed(2)}`;
     const notifiedEmails = new Set();
     const sellerEmail = listing.seller?.email?.toLowerCase() || '';
 
@@ -1274,14 +1290,14 @@ async function sendPrivateRoomEndNotifications(listing, highestBid = null) {
       if (winnerEmail && winnerEmail !== sellerEmail) {
         const user = highestBid.bidder?._id ? await Customer.findById(highestBid.bidder._id) : null;
         const language = getUserLanguage(user);
-        const winningBid = `$${highestBid.amount.toFixed(2)}`;
+        const winningBid = `€${highestBid.amount.toFixed(2)}`;
         const email = getEmailTemplate('privateRoomWinner', language, {
           winnerName,
           listingTitle: listing.title,
           winningBid,
           paymentUrl
         });
-        await sendEmail(winnerEmail, email.subject, email.html);
+        await sendEmail(winnerEmail, email.subject, email.html, { text: email.text });
         notifiedEmails.add(winnerEmail);
       }
     }
@@ -1308,7 +1324,7 @@ async function sendPrivateRoomEndNotifications(listing, highestBid = null) {
         finalBid,
         listingUrl
       });
-      await sendEmail(bidderEmail, email.subject, email.html);
+      await sendEmail(bidderEmail, email.subject, email.html, { text: email.text });
     }
 
     return { notified: notifiedEmails.size };

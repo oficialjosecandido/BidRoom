@@ -1,7 +1,9 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { AdminService, AdminCustomer } from '../../services/admin.service';
+import { SupportService } from '../../../shared/services/support.service';
 import { AdminSidebarComponent } from '../sidebar/admin-sidebar.component';
 
 @Component({
@@ -13,6 +15,8 @@ import { AdminSidebarComponent } from '../sidebar/admin-sidebar.component';
 })
 export class AdminCustomersComponent implements OnInit {
   private adminService = inject(AdminService);
+  private supportService = inject(SupportService);
+  private router = inject(Router);
 
   customers: AdminCustomer[] = [];
   isLoading = false;
@@ -26,6 +30,7 @@ export class AdminCustomersComponent implements OnInit {
   searchQuery = '';
   selectedStatus = 'all';
   unlockingId: string | null = null;
+  messagingId: string | null = null;
 
   statuses = [
     { value: 'all',       label: 'All statuses' },
@@ -120,6 +125,23 @@ export class AdminCustomersComponent implements OnInit {
         alert(err?.error?.message || 'Failed to lift the content restriction.');
         this.unlockingId = null;
       }
+    });
+  }
+
+  messageCustomer(c: AdminCustomer): void {
+    if (this.messagingId) return;
+    this.messagingId = c._id;
+    this.supportService.openAdminConversation({ customerId: c._id }).subscribe({
+      next: ({ conversation }) => {
+        this.messagingId = null;
+        void this.router.navigate(['/nexus/support'], {
+          queryParams: { conversationId: conversation._id },
+        });
+      },
+      error: (err) => {
+        alert(err?.error?.message || err?.error?.error || 'Failed to open support chat.');
+        this.messagingId = null;
+      },
     });
   }
 }

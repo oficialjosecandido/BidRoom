@@ -7,6 +7,6 @@
   "ctaLabel": "Ver anuncio",
   "signOff": "Un cordial saludo,<br><strong style=\"color:#0f172a;\">El equipo BidRoom</strong>",
   "footerNote": "Mensaje automático · No responda directamente a este correo",
-  "body": "<p style=\"margin:0 0 16px;\">Hola {{firstName}},</p><p style=\"margin:0 0 16px;\">Buenas noticias: <strong style=\"color:#0f172a;\">\"{{listingTitle}}\"</strong> ha sido revisado y aprobado. Ya es visible para los compradores.</p><p style=\"margin:0;\">El tiempo de la subasta empieza ahora, por lo que la duración que eligió se cuenta desde este momento.</p>",
-  "text": "Hola {{firstName}}:\n\n\"{{listingTitle}}\" ha sido aprobado y ya está publicado. El tiempo de la subasta empieza ahora.\n\n{{listingUrl}}\n\nEl equipo BidRoom"
+  "body": "<p style=\"margin:0 0 16px;\">Hola{{#if firstName}} {{firstName}}{{/if}},</p><p style=\"margin:0 0 16px;\">Buenas noticias: <strong style=\"color:#0f172a;\">\"{{listingTitle}}\"</strong> ha sido revisado y aprobado. Ya es visible para los compradores.</p><p style=\"margin:0;\">El tiempo de la subasta empieza ahora, por lo que la duración que eligió se cuenta desde este momento.</p>",
+  "text": "Hola{{#if firstName}} {{firstName}}{{/if}}:\n\n\"{{listingTitle}}\" ha sido aprobado y ya está publicado. El tiempo de la subasta empieza ahora.\n\n{{listingUrl}}\n\nEl equipo BidRoom"
 }

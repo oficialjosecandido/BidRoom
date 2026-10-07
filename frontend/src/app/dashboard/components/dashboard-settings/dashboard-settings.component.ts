@@ -109,8 +109,7 @@ export class DashboardSettingsComponent implements OnInit, OnDestroy {
     { code: 'AU', label: 'Australia' }
   ];
 
-  selectedLanguage = 'en';
-  langSaving = false;
+  selectedLanguage = 'pt';
   langSaved = false;
 
   /** Default buyer delivery address (settings). */
@@ -199,7 +198,7 @@ export class DashboardSettingsComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    this.selectedLanguage = this.translate.currentLang || localStorage.getItem('lang') || 'en';
+    this.selectedLanguage = this.language.current();
 
     this.customerService.getCustomer().subscribe({
       next: (info) => {
@@ -207,10 +206,9 @@ export class DashboardSettingsComponent implements OnInit, OnDestroy {
         this.sellerScore = info.sellerScore ?? null;
         this.buyerReviewCount = info.buyerReviewCount ?? 0;
         this.sellerReviewCount = info.sellerReviewCount ?? 0;
-        if (info.language) {
-          this.selectedLanguage = info.language;
-          this.language.mergeFromServerIfPresent(info.language);
-        }
+        // getCustomer() reconciles the language through LanguageService; by the
+        // time this runs, current() is the language that won.
+        this.selectedLanguage = this.language.current();
         this.applySellerComplianceFromProfile(info.sellerCompliance ?? null);
         this.applyDeliveryAddressFromProfile(info.deliveryAddress ?? null);
       }
@@ -450,16 +448,11 @@ export class DashboardSettingsComponent implements OnInit, OnDestroy {
   }
 
   saveLanguage(): void {
-    this.langSaving = true;
+    // use() applies the language, stores it, and PATCHes the profile. The whole
+    // UI retranslating is the confirmation; there is nothing to wait for.
     this.language.use(this.selectedLanguage);
-    this.customerService.updateLanguage(this.selectedLanguage).subscribe({
-      next: () => {
-        this.langSaving = false;
-        this.langSaved = true;
-        setTimeout(() => this.langSaved = false, 2500);
-      },
-      error: () => { this.langSaving = false; }
-    });
+    this.langSaved = true;
+    setTimeout(() => this.langSaved = false, 2500);
   }
 
   deliveryAddressRequiresState(): boolean {

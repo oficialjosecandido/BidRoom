@@ -1,0 +1,12 @@
+{
+  "subject": "Pago recibido — tu saldo de BidRoom está actualizado",
+  "layout": "bidroom",
+  "title": "Pago confirmado",
+  "preheader": "Hemos recibido tu pago de {{amount}}.",
+  "ctaUrl": "{{ctaUrl}}",
+  "ctaLabel": "Ir al panel",
+  "signOff": "Un saludo,<br><strong style=\"color:#0f172a;\">El equipo de BidRoom</strong>",
+  "footerNote": "Mensaje automático · Por favor, no respondas directamente a este correo",
+  "body": "<p style=\"margin:0 0 16px;\">Hola{{#if firstName}} {{firstName}}{{/if}},</p><p style=\"margin:0 0 16px;\">Hemos recibido tu pago.</p>{{amountBox}}<p style=\"margin:16px 0 0;\">Tu saldo está listo para usar en pujas y ofertas.</p>",
+  "text": "Hola{{#if firstName}} {{firstName}}{{/if}},\n\nHemos recibido tu pago de {{amount}}. Se ha añadido a tu saldo de BidRoom y está listo para usar en pujas y ofertas.\n\n{{ctaUrl}}"
+}

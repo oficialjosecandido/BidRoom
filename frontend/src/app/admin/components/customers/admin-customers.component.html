@@ -131,7 +131,16 @@
                     </td>
                     <td class="date-cell">{{ formatDate(c.createdAt) }}</td>
                     <td class="date-cell muted">{{ formatDate(c.lastLogin) }}</td>
-                    <td>
+                    <td class="actions-cell">
+                      <button
+                        class="message-btn"
+                        type="button"
+                        [disabled]="messagingId === c._id"
+                        (click)="messageCustomer(c)"
+                        title="Open support chat"
+                      >
+                        {{ messagingId === c._id ? 'Opening…' : 'Message' }}
+                      </button>
                       @if (isContentRestricted(c)) {
                         <button
                           class="unlock-btn"

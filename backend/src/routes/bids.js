@@ -429,7 +429,7 @@ router.post('/', optionalAuth, requireActiveAccountIfAuthenticated, requireNoDis
     if (amount < minBid) {
       return res.status(400).json({
         error: 'Bid too low',
-        message: `Minimum bid is $${minBid.toFixed(2)}`
+        message: `Minimum bid is €${minBid.toFixed(2)}`
       });
     }
 

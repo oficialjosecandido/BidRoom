@@ -1,0 +1,12 @@
+{
+  "subject": "Action required: confirm your seller status",
+  "layout": "bidroom",
+  "title": "Seller status review",
+  "preheader": "Your sales have passed the EU DSA thresholds for professional selling.",
+  "ctaUrl": "{{ctaUrl}}",
+  "ctaLabel": "Confirm my seller status",
+  "signOff": "Best regards,<br><strong style=\"color:#0f172a;\">The BidRoom Team</strong>",
+  "footerNote": "Automated message · Please do not reply directly to this email",
+  "body": "<p style=\"margin:0 0 16px;\">Hi{{#if firstName}} {{firstName}}{{/if}},</p><p style=\"margin:0 0 16px;\">Your selling activity on BidRoom has reached the thresholds that may count as <strong style=\"color:#0f172a;\">professional selling</strong> under the EU Digital Services Act:</p>{{statsBox}}<p style=\"margin:20px 0 16px;\">Under Article 29 of the DSA, platforms have to ask sellers who pass these thresholds to declare whether they are acting as a trader.</p><p style=\"margin:0;\">Please confirm your seller status in your dashboard. You have <strong style=\"color:#0f172a;\">{{graceDays}} days</strong> to respond before your account is flagged for review.</p><p style=\"margin:16px 0 0;font-size:13px;color:#64748b;\">If you think this is a mistake, or you have questions, contact support.</p><p style=\"margin:12px 0 0;font-size:12px;color:#94a3b8;\">This notice is required under Regulation (EU) 2022/2065 (Digital Services Act), Article 29.</p>",
+  "text": "Hi{{#if firstName}} {{firstName}}{{/if}},\n\nYour selling activity on BidRoom has reached the thresholds that may count as professional selling under the EU Digital Services Act:\n\n{{statsText}}\n\nUnder Article 29 of the DSA, platforms have to ask sellers who pass these thresholds to declare whether they are acting as a trader. Please confirm your seller status in your dashboard — you have {{graceDays}} days to respond before your account is flagged for review.\n\n{{ctaUrl}}\n\nThis notice is required under Regulation (EU) 2022/2065 (Digital Services Act), Article 29."
+}

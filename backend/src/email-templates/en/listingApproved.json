@@ -7,6 +7,6 @@
   "ctaLabel": "View listing",
   "signOff": "Best regards,<br><strong style=\"color:#0f172a;\">The BidRoom Team</strong>",
   "footerNote": "Automated message · Please do not reply directly to this email",
-  "body": "<p style=\"margin:0 0 16px;\">Hi {{firstName}},</p><p style=\"margin:0 0 16px;\">Good news — <strong style=\"color:#0f172a;\">\"{{listingTitle}}\"</strong> has been reviewed and approved. It is now visible to buyers.</p><p style=\"margin:0;\">The auction clock starts now, so the end date you chose is counted from this moment.</p>",
-  "text": "Hi {{firstName}},\n\n\"{{listingTitle}}\" has been approved and is now live. The auction clock starts now.\n\n{{listingUrl}}\n\nThe BidRoom Team"
+  "body": "<p style=\"margin:0 0 16px;\">Hi{{#if firstName}} {{firstName}}{{/if}},</p><p style=\"margin:0 0 16px;\">Good news — <strong style=\"color:#0f172a;\">\"{{listingTitle}}\"</strong> has been reviewed and approved. It is now visible to buyers.</p><p style=\"margin:0;\">The auction clock starts now, so the end date you chose is counted from this moment.</p>",
+  "text": "Hi{{#if firstName}} {{firstName}}{{/if}},\n\n\"{{listingTitle}}\" has been approved and is now live. The auction clock starts now.\n\n{{listingUrl}}\n\nThe BidRoom Team"
 }

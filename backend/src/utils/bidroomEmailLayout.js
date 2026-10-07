@@ -71,12 +71,12 @@ function emailSuccessBox(heading, detailHtml) {
 }
 
 /** Prominent amount + listing summary */
-function emailAmountCard(amount, listingTitle) {
+function emailAmountCard(amount, listingTitle, label = 'Your offer') {
   return `
     <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="margin:8px 0 0;">
       <tr>
         <td align="center" style="padding:16px 12px;background:#ffffff;border:1px solid ${BRAND.goldBorder};border-radius:10px;">
-          <div style="font-size:11px;font-weight:600;color:${BRAND.muted};text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;">Your offer</div>
+          <div style="font-size:11px;font-weight:600;color:${BRAND.muted};text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;">${escapeHtml(label)}</div>
           <div style="font-size:32px;font-weight:700;color:${BRAND.goldDark};line-height:1.1;margin-bottom:8px;">${amount}</div>
           <div style="font-size:14px;color:${BRAND.text};font-weight:600;">${listingTitle}</div>
         </td>
@@ -84,12 +84,12 @@ function emailAmountCard(amount, listingTitle) {
     </table>`;
 }
 
-function emailPayoutBox(amountLabel) {
+function emailPayoutBox(amountLabel, label = 'Your payout') {
   return `
     <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="margin:20px 0;">
       <tr>
         <td align="center" style="background:${BRAND.goldLight};border:1px solid ${BRAND.goldBorder};border-radius:12px;padding:18px;">
-          <div style="font-size:11px;font-weight:600;color:${BRAND.goldDark};text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px;">Your payout</div>
+          <div style="font-size:11px;font-weight:600;color:${BRAND.goldDark};text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px;">${escapeHtml(label)}</div>
           <div style="font-size:28px;font-weight:700;color:${BRAND.goldDark};">${amountLabel}</div>
         </td>
       </tr>
@@ -112,7 +112,7 @@ function escapeHtml(value) {
  * rather than a styled table: a seller emailed support saying the order showed
  * "only the buyer's name" because nothing in the email carried the address.
  */
-function emailShipToBox(recipientName, addressLines) {
+function emailShipToBox(recipientName, addressLines, label = 'Ship to') {
   const lines = (addressLines || []).filter(Boolean);
   if (!lines.length) return '';
   const rows = [recipientName, ...lines]
@@ -123,7 +123,7 @@ function emailShipToBox(recipientName, addressLines) {
     <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="margin:20px 0;">
       <tr>
         <td style="background:#ffffff;border:1px solid ${BRAND.goldBorder};border-left:4px solid ${BRAND.gold};border-radius:12px;padding:16px 18px;">
-          <div style="font-size:11px;font-weight:600;color:${BRAND.muted};text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px;">Enviar para / Ship to</div>
+          <div style="font-size:11px;font-weight:600;color:${BRAND.muted};text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px;">${escapeHtml(label)}</div>
           <div style="font-size:15px;line-height:1.7;color:${BRAND.textDark};font-weight:600;">${rows}</div>
         </td>
       </tr>
@@ -151,9 +151,9 @@ function emailTextLink(url, label) {
 }
 
 /**
- * @param {{ title: string, bodyHtml: string, preheader?: string, ctaUrl?: string, ctaLabel?: string, signOff?: string, footerNote?: string }} opts
+ * @param {{ title: string, bodyHtml: string, preheader?: string, ctaUrl?: string, ctaLabel?: string, signOff?: string, footerNote?: string, lang?: string }} opts
  */
-function wrapBidRoomEmail({ title, bodyHtml, preheader, ctaUrl, ctaLabel, signOff, footerNote }) {
+function wrapBidRoomEmail({ title, bodyHtml, preheader, ctaUrl, ctaLabel, signOff, footerNote, lang }) {
   const cta = emailCta(ctaUrl, ctaLabel);
   const preheaderHtml = preheader
     ? `<div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;">${preheader}</div>`
@@ -162,7 +162,7 @@ function wrapBidRoomEmail({ title, bodyHtml, preheader, ctaUrl, ctaLabel, signOf
   const footer = footerNote || 'Automated message · Please do not reply directly to this email';
 
   return `<!DOCTYPE html>
-<html lang="en">
+<html lang="${escapeHtml(lang) || 'en'}">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">

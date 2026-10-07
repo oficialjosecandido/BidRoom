@@ -582,7 +582,7 @@
                 </button>
                 <button type="button" class="btn btn-dispute" (click)="openDisputeModal(t); $event.stopPropagation()" [attr.aria-label]="'Open a dispute for ' + t.listing.title">{{ 'transactions.receivedNotProperly' | translate }}</button>
               }
-              @if (getEffectiveStatus(t) === 'delivered') {
+              @if (['delivered', 'completed'].includes(getEffectiveStatus(t))) {
                 @if (canOpenDamageClaim(t)) {
                   <div class="damage-claim-panel">
                     <p class="form-hint">
@@ -621,16 +621,18 @@
                     }
                   </div>
                 }
-                <div class="mark-complete-panel">
-                  <p class="form-hint">{{ 'transactions.completeToReview' | translate }}</p>
-                  <button
-                    type="button"
-                    class="btn btn-complete"
-                    (click)="markAsCompleted(t); $event.stopPropagation()"
-                    [disabled]="updatingId === t._id">
-                    {{ updatingId === t._id ? ('transactions.updating' | translate) : ('transactions.markAsCompleted' | translate) }}
-                  </button>
-                </div>
+                @if (getEffectiveStatus(t) === 'delivered') {
+                  <div class="mark-complete-panel">
+                    <p class="form-hint">{{ 'transactions.completeToReview' | translate }}</p>
+                    <button
+                      type="button"
+                      class="btn btn-complete"
+                      (click)="markAsCompleted(t); $event.stopPropagation()"
+                      [disabled]="updatingId === t._id">
+                      {{ updatingId === t._id ? ('transactions.updating' | translate) : ('transactions.markAsCompleted' | translate) }}
+                    </button>
+                  </div>
+                }
               }
               @if (['paid', 'shipped'].includes(getEffectiveStatus(t))) {
                 <p class="form-hint review-required">
@@ -924,19 +926,34 @@
 
   @if (reviewModalTransaction) {
     <div class="modal-overlay review-modal-overlay" (click)="closeReviewModal()">
-      <div class="modal-content review-modal tx-review-modal" (click)="$event.stopPropagation()">
+      <div class="modal-content review-modal tx-review-modal" (click)="$event.stopPropagation()" role="dialog" aria-modal="true" [attr.aria-label]="'dashboard.home.leaveReview' | translate">
+        <div class="tx-review-brand">
+          <app-bidroom-logo [height]="26" [animated]="false" />
+        </div>
         <div class="modal-header">
-          <h3 class="modal-title">{{ 'dashboard.home.leaveReview' | translate }}</h3>
+          <div class="tx-review-heading">
+            <p class="tx-review-eyebrow">BidRoom</p>
+            <h3 class="modal-title">{{ 'dashboard.home.leaveReview' | translate }}</h3>
+          </div>
           <button type="button" class="modal-close" (click)="closeReviewModal()" aria-label="Close">×</button>
         </div>
         <div class="modal-body">
           <div class="review-target-card">
-            <span class="review-target-label">{{ 'dashboard.home.youreReviewing' | translate }}</span>
-            <span class="review-target-name">{{ getReviewOtherPartyName(reviewModalTransaction) }}</span>
-            <span class="review-target-detail">
-              {{ 'transactions.as' | translate }} {{ isBuyer(reviewModalTransaction) ? ('transactions.seller' | translate) : ('transactions.buyer' | translate) }}
-              · {{ reviewModalTransaction.listing.title }}
-            </span>
+            <img
+              class="review-target-thumb"
+              [src]="getListingImage(reviewModalTransaction)"
+              [alt]="reviewModalTransaction.listing.title"
+              width="56"
+              height="56"
+            />
+            <div class="review-target-copy">
+              <span class="review-target-label">{{ 'dashboard.home.youreReviewing' | translate }}</span>
+              <span class="review-target-name">{{ getReviewOtherPartyName(reviewModalTransaction) }}</span>
+              <span class="review-target-detail">
+                {{ 'transactions.as' | translate }} {{ isBuyer(reviewModalTransaction) ? ('transactions.seller' | translate) : ('transactions.buyer' | translate) }}
+                · {{ reviewModalTransaction.listing.title }}
+              </span>
+            </div>
           </div>
 
           <div class="review-score-section">
@@ -968,7 +985,6 @@
             </div>
             @if (reviewScore > 0) {
               <div class="review-score-reaction">
-                <span class="reaction-emoji" aria-hidden="true">{{ getScoreEmoji(reviewScore) }}</span>
                 <span class="reaction-label">{{ getScoreLabel(reviewScore) }}</span>
               </div>
             } @else {
@@ -996,8 +1012,15 @@
           }
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" (click)="closeReviewModal()">{{ 'dashboard.common.cancel' | translate }}</button>
-          <button type="button" class="btn btn-primary" (click)="submitReview()" [disabled]="reviewSubmitting || reviewScore < 1">
+          <button type="button" class="br-review-btn br-review-btn--secondary" (click)="closeReviewModal()">
+            {{ 'dashboard.common.cancel' | translate }}
+          </button>
+          <button
+            type="button"
+            class="br-review-btn br-review-btn--primary"
+            (click)="submitReview()"
+            [disabled]="reviewSubmitting || reviewScore < 1"
+          >
             {{ reviewSubmitting ? ('dashboard.common.submitting' | translate) : ('dashboard.home.submitReview' | translate) }}
           </button>
         </div>

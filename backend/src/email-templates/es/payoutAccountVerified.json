@@ -1,0 +1,12 @@
+{
+  "subject": "Tu cuenta de pagos está verificada ✓",
+  "layout": "bidroom",
+  "title": "Cuenta de pagos verificada",
+  "preheader": "Stripe ha verificado tu cuenta: ya puedes recibir pagos.",
+  "ctaUrl": "{{ctaUrl}}",
+  "ctaLabel": "Ir al panel de vendedor",
+  "signOff": "Un saludo,<br><strong style=\"color:#0f172a;\">El equipo de BidRoom</strong>",
+  "footerNote": "Mensaje automático · Por favor, no respondas directamente a este correo",
+  "body": "<p style=\"margin:0 0 16px;\">Hola{{#if firstName}} {{firstName}}{{/if}},</p><p style=\"margin:0 0 16px;\">Buenas noticias: Stripe ha verificado tu cuenta de pagos. Ya puedes vender en BidRoom y recibir los pagos directamente en tu cuenta bancaria.</p><p style=\"margin:0;\">No tienes que hacer nada más. Cada venta se abona automáticamente en cuanto se confirma el pago del comprador.</p>",
+  "text": "Hola{{#if firstName}} {{firstName}}{{/if}},\n\nStripe ha verificado tu cuenta de pagos. Ya puedes vender en BidRoom y recibir los pagos directamente en tu cuenta bancaria.\n\nNo tienes que hacer nada más: cada venta se abona automáticamente en cuanto se confirma el pago del comprador.\n\n{{ctaUrl}}"
+}

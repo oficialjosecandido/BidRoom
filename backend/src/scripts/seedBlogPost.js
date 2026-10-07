@@ -46,7 +46,7 @@ Para quem compra e vende em Portugal, isto é uma boa notícia. Significa que o 
 
 ---
 
-*A BidRoom é um marketplace de leilões premium feito para Portugal, com foco em relógios, arte e objectos com história. As tendências aqui descritas refletem a análise do mercado atual e projeções para o próximo ano — não constituem aconselhamento de investimento.*`;
+*A BidRoom é um marketplace de leilões premium feito para Portugal, com foco em relógios, arte e objectos com história. As tendências aqui descritas reflectem a análise do mercado actual e projecções para o próximo ano — não constituem aconselhamento de investimento.*`;
 
 async function main() {
   await mongoose.connect(process.env.MONGO_URI);

@@ -1,0 +1,12 @@
+{
+  "subject": "Action requise : confirmez votre statut de vendeur",
+  "layout": "bidroom",
+  "title": "Examen du statut de vendeur",
+  "preheader": "Vos ventes ont dépassé les seuils du DSA de l'UE pour la vente professionnelle.",
+  "ctaUrl": "{{ctaUrl}}",
+  "ctaLabel": "Confirmer mon statut de vendeur",
+  "signOff": "Cordialement,<br><strong style=\"color:#0f172a;\">L'équipe BidRoom</strong>",
+  "footerNote": "Message automatique · Merci de ne pas répondre directement à cet e-mail",
+  "body": "<p style=\"margin:0 0 16px;\">Bonjour{{#if firstName}} {{firstName}}{{/if}},</p><p style=\"margin:0 0 16px;\">Votre activité de vente sur BidRoom a atteint les seuils susceptibles de relever de la <strong style=\"color:#0f172a;\">vente professionnelle</strong> au sens du règlement sur les services numériques (DSA) de l'UE :</p>{{statsBox}}<p style=\"margin:20px 0 16px;\">En vertu de l'article 29 du DSA, les plateformes doivent demander aux vendeurs qui dépassent ces seuils de déclarer s'ils agissent en tant que professionnels.</p><p style=\"margin:0;\">Confirmez votre statut de vendeur dans votre tableau de bord. Vous avez <strong style=\"color:#0f172a;\">{{graceDays}} jours</strong> pour répondre avant que votre compte ne soit signalé pour examen.</p><p style=\"margin:16px 0 0;font-size:13px;color:#64748b;\">Si vous pensez qu'il s'agit d'une erreur ou si vous avez des questions, contactez le support.</p><p style=\"margin:12px 0 0;font-size:12px;color:#94a3b8;\">Cette notification est requise par le règlement (UE) 2022/2065 (règlement sur les services numériques), article 29.</p>",
+  "text": "Bonjour{{#if firstName}} {{firstName}}{{/if}},\n\nVotre activité de vente sur BidRoom a atteint les seuils susceptibles de relever de la vente professionnelle au sens du règlement sur les services numériques (DSA) de l'UE :\n\n{{statsText}}\n\nEn vertu de l'article 29 du DSA, les plateformes doivent demander aux vendeurs qui dépassent ces seuils de déclarer s'ils agissent en tant que professionnels. Confirmez votre statut de vendeur dans votre tableau de bord : vous avez {{graceDays}} jours pour répondre avant que votre compte ne soit signalé pour examen.\n\n{{ctaUrl}}\n\nCette notification est requise par le règlement (UE) 2022/2065 (règlement sur les services numériques), article 29."
+}

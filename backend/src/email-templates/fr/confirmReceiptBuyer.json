@@ -1,0 +1,12 @@
+{
+  "subject": "Confirmez la réception de « {{listingTitle}} »",
+  "layout": "bidroom",
+  "title": "Confirmez la réception de votre commande",
+  "preheader": "Indiquez-nous si « {{listingTitle}} » est arrivé afin que le vendeur puisse être payé.",
+  "ctaUrl": "{{ctaUrl}}",
+  "ctaLabel": "Confirmer la réception",
+  "signOff": "Cordialement,<br><strong style=\"color:#0f172a;\">L'équipe BidRoom</strong>",
+  "footerNote": "Message automatique · Merci de ne pas répondre directement à cet e-mail",
+  "body": "<p style=\"margin:0 0 16px;\">Bonjour{{#if firstName}} {{firstName}}{{/if}},</p><p style=\"margin:0 0 16px;\">{{#if isFinalReminder}}Votre commande pour <strong style=\"color:#0f172a;\">« {{listingTitle}} »</strong> sera bientôt finalisée automatiquement si vous ne confirmez pas la réception.{{else}}Votre commande pour <strong style=\"color:#0f172a;\">« {{listingTitle}} »</strong> devrait être arrivée.{{/if}}</p><p style=\"margin:0 0 16px;\">Confirmez la réception dans votre tableau de bord pour libérer le paiement au vendeur. Si l'article n'est pas arrivé ou qu'il y a un problème, ouvrez un litige depuis le même écran.</p>{{#if autoReleaseDate}}<table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" role=\"presentation\" style=\"margin:20px 0;\"><tr><td style=\"background:#faf6eb;border:1px solid #e8d9a8;border-radius:12px;padding:16px 18px;color:#334155;font-size:14px;line-height:1.6;\">Sans action de votre part, la commande sera finalisée automatiquement le <strong style=\"color:#0f172a;\">{{autoReleaseDate}}</strong>.</td></tr></table>{{/if}}",
+  "text": "Bonjour{{#if firstName}} {{firstName}}{{/if}},\n\nConfirmez la réception de « {{listingTitle}} » dans votre tableau de bord pour que le vendeur puisse être payé.\n{{#if autoReleaseDate}}Sans action de votre part, la commande sera finalisée automatiquement le {{autoReleaseDate}}.\n{{/if}}\n{{ctaUrl}}"
+}

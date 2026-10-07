@@ -74,10 +74,17 @@ const customerSchema = new mongoose.Schema({
     default: []
   },
   /** Preferred UI language: en, pt, es, fr */
+  /**
+   * The language this customer's transactional email is written in.
+   *
+   * Deliberately has no default: 'en' as a default is indistinguishable from a
+   * customer who chose English, and every pre-existing account carries that
+   * default while reading a Portuguese UI. Unset means "infer it", and the
+   * frontend writes a real value on the first profile load.
+   */
   language: {
     type: String,
-    enum: ['en', 'pt', 'es', 'fr'],
-    default: 'en'
+    enum: ['en', 'pt', 'es', 'fr']
   },
   /** UI theme: light, dark, or follow OS (system). Synced across devices when set while logged in. */
   theme: {

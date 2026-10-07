@@ -106,9 +106,6 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    const savedLang = localStorage.getItem('lang') || 'pt';
-    this.translate.use(savedLang);
-
     this.listingId = this.route.snapshot.paramMap.get('id') || '';
 
     // Wait for Firebase auth to initialise before fetching the listing so the

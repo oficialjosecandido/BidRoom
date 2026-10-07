@@ -5,6 +5,7 @@
  */
 
 const { renderEmailTemplate, DEFAULT_LANGUAGE } = require('./templateEngine');
+const { recipientLanguage } = require('./localizedEmail');
 const logger = require('../utils/logger');
 
 // Legacy templates object - will be removed
@@ -299,9 +300,10 @@ function getEmailTemplate(templateType, language = DEFAULT_LANGUAGE, data = {}) 
  * @returns {string} Language code
  */
 function getUserLanguage(user) {
-  // Default to English, can be extended to read from user profile
-  // User language preference can be stored in user.language or user.preferences.language
-  return user?.language || user?.preferences?.language || DEFAULT_LANGUAGE;
+  // Delegated so a regional tag narrows to a language we have templates for:
+  // this used to return 'pt-PT' verbatim, which matches no template directory
+  // and silently fell back to English for the people most likely to store it.
+  return recipientLanguage(user);
 }
 
 module.exports = {

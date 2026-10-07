@@ -7,6 +7,6 @@
   "ctaLabel": "View transactions",
   "signOff": "Best regards,<br><strong style=\"color:#0f172a;\">The BidRoom Team</strong>",
   "footerNote": "Automated message · Please do not reply directly to this email",
-  "body": "<p style=\"margin:0 0 16px;\">Hi {{firstName}},</p><p style=\"margin:0 0 16px;\">The order for <strong style=\"color:#0f172a;\">\"{{listingTitle}}\"</strong> was cancelled because shipment was not confirmed before the deadline.</p><p style=\"margin:0 0 16px;\">The buyer has been refunded in full. Repeated cancellations affect your seller standing, so mark orders as shipped as soon as they are dispatched.</p>",
-  "text": "Hi {{firstName}},\n\nThe order for \"{{listingTitle}}\" was cancelled because shipment was not confirmed in time. The buyer has been refunded in full.\n\n{{ctaUrl}}"
+  "body": "<p style=\"margin:0 0 16px;\">Hi{{#if firstName}} {{firstName}}{{/if}},</p><p style=\"margin:0 0 16px;\">The order for <strong style=\"color:#0f172a;\">\"{{listingTitle}}\"</strong> was cancelled because shipment was not confirmed before the deadline.</p><p style=\"margin:0 0 16px;\">The buyer has been refunded in full. Repeated cancellations affect your seller standing, so mark orders as shipped as soon as they are dispatched.</p>",
+  "text": "Hi{{#if firstName}} {{firstName}}{{/if}},\n\nThe order for \"{{listingTitle}}\" was cancelled because shipment was not confirmed in time. The buyer has been refunded in full.\n\n{{ctaUrl}}"
 }

@@ -1,0 +1,12 @@
+{
+  "subject": "Bitte bestätigen Sie den Empfang von „{{listingTitle}}“",
+  "layout": "bidroom",
+  "title": "Empfang Ihrer Bestellung bestätigen",
+  "preheader": "Teilen Sie uns mit, dass „{{listingTitle}}“ angekommen ist, damit der Verkäufer ausgezahlt werden kann.",
+  "ctaUrl": "{{ctaUrl}}",
+  "ctaLabel": "Empfang bestätigen",
+  "signOff": "Mit freundlichen Grüßen,<br><strong style=\"color:#0f172a;\">Das BidRoom-Team</strong>",
+  "footerNote": "Automatische Nachricht · Bitte antworten Sie nicht direkt auf diese E-Mail",
+  "body": "<p style=\"margin:0 0 16px;\">Hallo{{#if firstName}} {{firstName}}{{/if}},</p><p style=\"margin:0 0 16px;\">{{#if isFinalReminder}}Ihre Bestellung für <strong style=\"color:#0f172a;\">„{{listingTitle}}“</strong> wird bald automatisch abgeschlossen, wenn Sie den Empfang nicht bestätigen.{{else}}Ihre Bestellung für <strong style=\"color:#0f172a;\">„{{listingTitle}}“</strong> sollte inzwischen angekommen sein.{{/if}}</p><p style=\"margin:0 0 16px;\">Bitte bestätigen Sie den Empfang in Ihrem Dashboard, damit wir die Zahlung an den Verkäufer freigeben können. Falls der Artikel nicht angekommen ist oder etwas nicht stimmt, öffnen Sie eine Streitigkeit auf derselben Seite.</p>{{#if autoReleaseDate}}<table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" role=\"presentation\" style=\"margin:20px 0;\"><tr><td style=\"background:#faf6eb;border:1px solid #e8d9a8;border-radius:12px;padding:16px 18px;color:#334155;font-size:14px;line-height:1.6;\">Ohne Ihre Aktion wird die Bestellung am <strong style=\"color:#0f172a;\">{{autoReleaseDate}}</strong> automatisch abgeschlossen.</td></tr></table>{{/if}}",
+  "text": "Hallo{{#if firstName}} {{firstName}}{{/if}},\n\nBitte bestätigen Sie den Empfang von „{{listingTitle}}“ in Ihrem Dashboard, damit der Verkäufer ausgezahlt werden kann.\n{{#if autoReleaseDate}}Ohne Ihre Aktion wird die Bestellung am {{autoReleaseDate}} automatisch abgeschlossen.\n{{/if}}\n{{ctaUrl}}"
+}

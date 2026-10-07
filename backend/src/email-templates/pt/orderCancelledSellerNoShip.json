@@ -7,6 +7,6 @@
   "ctaLabel": "Ver transacções",
   "signOff": "Com os melhores cumprimentos,<br><strong style=\"color:#0f172a;\">A equipa BidRoom</strong>",
   "footerNote": "Mensagem automática · Por favor não responda directamente a este email",
-  "body": "<p style=\"margin:0 0 16px;\">Olá {{firstName}},</p><p style=\"margin:0 0 16px;\">A encomenda de <strong style=\"color:#0f172a;\">\"{{listingTitle}}\"</strong> foi cancelada porque o envio não foi confirmado antes do prazo.</p><p style=\"margin:0 0 16px;\">O comprador foi reembolsado na totalidade. Cancelamentos repetidos afectam a sua reputação como vendedor, por isso marque as encomendas como enviadas logo que as expedir.</p>",
-  "text": "Olá {{firstName}},\n\nA encomenda de \"{{listingTitle}}\" foi cancelada porque o envio não foi confirmado em tempo. O comprador foi reembolsado na totalidade.\n\n{{ctaUrl}}"
+  "body": "<p style=\"margin:0 0 16px;\">Olá{{#if firstName}} {{firstName}}{{/if}},</p><p style=\"margin:0 0 16px;\">A encomenda de <strong style=\"color:#0f172a;\">\"{{listingTitle}}\"</strong> foi cancelada porque o envio não foi confirmado antes do prazo.</p><p style=\"margin:0 0 16px;\">O comprador foi reembolsado na totalidade. Cancelamentos repetidos afectam a sua reputação como vendedor, por isso marque as encomendas como enviadas logo que as expedir.</p>",
+  "text": "Olá{{#if firstName}} {{firstName}}{{/if}},\n\nA encomenda de \"{{listingTitle}}\" foi cancelada porque o envio não foi confirmado em tempo. O comprador foi reembolsado na totalidade.\n\n{{ctaUrl}}"
 }

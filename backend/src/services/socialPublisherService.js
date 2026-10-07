@@ -202,7 +202,7 @@ function buildMessage(listing) {
   const excerpt = buildExcerpt(listing);
   if (excerpt) lines.push('', excerpt);
 
-  lines.push('', `Licitação atual: ${euro(listing.currentPrice)}`);
+  lines.push('', `Licitação actual: ${euro(listing.currentPrice)}`);
   if (listing.buyNowPrice) lines.push(`Compra já: ${euro(listing.buyNowPrice)}`);
   lines.push(`Termina: ${ends}`);
   lines.push('', `Licita em ${url}`);

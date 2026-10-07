@@ -7,6 +7,6 @@
   "ctaLabel": "Marcar como enviado",
   "signOff": "Un saludo,<br><strong style=\"color:#0f172a;\">El equipo de BidRoom</strong>",
   "footerNote": "Mensaje automático · Por favor, no respondas directamente a este correo",
-  "body": "<p style=\"margin:0 0 16px;\">Hola {{sellerFirstName}},</p><p style=\"margin:0 0 16px;\"><strong style=\"color:#0f172a;\">\"{{listingTitle}}\"</strong> está pagado y sigue sin marcarse como enviado.</p>{{shipToBox}}<p style=\"margin:0 0 16px;\">Tienes hasta el <strong style=\"color:#0f172a;\">{{shipByDate}}</strong>. Después el pedido se cancela automáticamente y el comprador recibe el reembolso completo.</p><p style=\"margin:0 0 16px;\">Si ya lo has enviado, solo tienes que marcarlo como enviado en tu panel.</p>",
-  "text": "Hola {{sellerFirstName}},\n\n\"{{listingTitle}}\" sigue sin marcarse como enviado. Plazo: {{shipByDate}}.\n\nEnviar a:\n{{shipToText}}\n\n{{ctaUrl}}"
+  "body": "<p style=\"margin:0 0 16px;\">Hola{{#if sellerFirstName}} {{sellerFirstName}}{{/if}},</p><p style=\"margin:0 0 16px;\"><strong style=\"color:#0f172a;\">\"{{listingTitle}}\"</strong> está pagado y sigue sin marcarse como enviado.</p>{{shipToBox}}<p style=\"margin:0 0 16px;\">Tienes hasta el <strong style=\"color:#0f172a;\">{{shipByDate}}</strong>. Después el pedido se cancela automáticamente y el comprador recibe el reembolso completo.</p><p style=\"margin:0 0 16px;\">Si ya lo has enviado, solo tienes que marcarlo como enviado en tu panel.</p>",
+  "text": "Hola{{#if sellerFirstName}} {{sellerFirstName}}{{/if}},\n\n\"{{listingTitle}}\" sigue sin marcarse como enviado. Plazo: {{shipByDate}}.\n\nEnviar a:\n{{shipToText}}\n\n{{ctaUrl}}"
 }

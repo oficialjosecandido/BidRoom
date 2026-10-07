@@ -86,7 +86,7 @@ router.get('/profile', authenticateToken, async (req, res) => {
       },
       balance: customer.balance ?? 0,
       reviewCount: customer.reviewCount ?? 0,
-      language: customer.language || 'en',
+      language: customer.language || null,
       buyerScore: scores.buyerScore,
       sellerScore: scores.sellerScore,
       buyerReviewCount: scores.buyerReviewCount,

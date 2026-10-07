@@ -7,6 +7,7 @@ const Watchlist = require('../models/Watchlist');
 const Listing = require('../models/Listing');
 const { reviewNotificationCopy } = require('./listingReviewMessages');
 const { giveawayNotificationCopy, formatEntry, resolveLanguage } = require('./giveawayMessages');
+const { transactionReviewPromptCopy } = require('./transactionReviewMessages');
 const { sendEmail } = require('./emailService');
 const { renderEmailTemplate } = require('./templateEngine');
 const { publicBaseUrl } = require('../utils/publicUrls');
@@ -173,7 +174,7 @@ async function notifyNewBid({ listingId, listingSlug, listingTitle, bidAmount, b
   return createNotification({
     userId: sellerUserId,
     title: 'New bid received',
-    message: `${bidderName} placed a bid of $${(bidAmount || 0).toFixed(2)} on "${listingTitle || 'your listing'}"`,
+    message: `${bidderName} placed a bid of €${(bidAmount || 0).toFixed(2)} on "${listingTitle || 'your listing'}"`,
     type: 'bid',
     link,
     referenceId: listingId
@@ -196,7 +197,7 @@ async function notifyBidderOutbid({
     eventType: 'outbid',
     userId: bidderUserId,
     title: "You've been outbid",
-    message: `Your bid of $${prev} on "${listingTitle || 'this auction'}" was exceeded. Current high bid: $${next}.`,
+    message: `Your bid of €${prev} on "${listingTitle || 'this auction'}" was exceeded. Current high bid: €${next}.`,
     type: 'bid',
     link,
     referenceId: listingId ? String(listingId) : listingSlug || null
@@ -211,7 +212,7 @@ async function notifyNewProposal({ listingId, listingSlug, listingTitle, offerAm
   return createNotification({
     userId: sellerUserId,
     title: 'New proposal',
-    message: `${offererName} made an offer of $${(offerAmount || 0).toFixed(2)} on "${listingTitle || 'your listing'}"`,
+    message: `${offererName} made an offer of €${(offerAmount || 0).toFixed(2)} on "${listingTitle || 'your listing'}"`,
     type: 'proposal',
     link,
     referenceId: listingId
@@ -223,7 +224,7 @@ async function notifyProposalAccepted({ listingSlug, listingTitle, offerAmount, 
   return createNotification({
     userId: buyerUserId,
     title: 'Offer accepted — complete payment',
-    message: `Your offer of $${(offerAmount || 0).toFixed(2)} on "${listingTitle || 'the item'}" was accepted. Open Transactions to complete payment.`,
+    message: `Your offer of €${(offerAmount || 0).toFixed(2)} on "${listingTitle || 'the item'}" was accepted. Open Transactions to complete payment.`,
     type: 'transaction',
     link: '/dashboard/transactions',
     referenceId: listingSlug || null
@@ -236,7 +237,7 @@ async function notifyProposalDeclined({ listingSlug, listingTitle, offerAmount, 
   return createNotification({
     userId: buyerUserId,
     title: 'Proposal declined',
-    message: `Your offer of $${(offerAmount || 0).toFixed(2)} on "${listingTitle || 'the item'}" was declined.`,
+    message: `Your offer of €${(offerAmount || 0).toFixed(2)} on "${listingTitle || 'the item'}" was declined.`,
     type: 'proposal',
     link,
     referenceId: listingSlug
@@ -249,7 +250,7 @@ async function notifyOfferPlaced({ listingSlug, listingTitle, offerAmount, offer
   return createNotification({
     userId: offererUserId,
     title: 'Offer confirmed',
-    message: `Your offer of $${(offerAmount || 0).toFixed(2)} on "${listingTitle || 'the item'}" has been received.`,
+    message: `Your offer of €${(offerAmount || 0).toFixed(2)} on "${listingTitle || 'the item'}" has been received.`,
     type: 'proposal',
     link,
     referenceId: listingSlug
@@ -262,7 +263,7 @@ async function notifyOfferOutbid({ listingSlug, listingTitle, previousOffer, new
   return createNotification({
     userId: offererUserId,
     title: 'Higher offer received',
-    message: `Your offer of $${(previousOffer || 0).toFixed(2)} on "${listingTitle || 'the item'}" was exceeded. Someone offered $${(newOffer || 0).toFixed(2)}.`,
+    message: `Your offer of €${(previousOffer || 0).toFixed(2)} on "${listingTitle || 'the item'}" was exceeded. Someone offered €${(newOffer || 0).toFixed(2)}.`,
     type: 'proposal',
     link,
     referenceId: listingSlug
@@ -587,6 +588,21 @@ async function notifyBuyerConfirmedReceipt({ transactionId, listingTitle, buyerN
   });
 }
 
+/** Ask buyer to confirm receipt of a shipped item */
+async function notifyBuyerConfirmReceiptReminder({ transactionId, listingTitle, buyerUserId }) {
+  const link = transactionId
+    ? `/dashboard/buyer?tab=transactions#transaction-${transactionId}`
+    : '/dashboard/buyer?tab=transactions';
+  return createNotification({
+    userId: buyerUserId,
+    title: 'Confirm you received your item',
+    message: `Has "${listingTitle || 'your item'}" arrived? Confirm receipt so the seller can be paid.`,
+    type: 'shipping',
+    link,
+    referenceId: transactionId
+  });
+}
+
 /** Dispute opened - notify other party */
 async function notifyDisputeOpened({ transactionId, listingTitle, openerName, otherPartyUserId }) {
   const link = transactionId ? `/dashboard/disputes?open=${transactionId}` : '/dashboard/disputes';
@@ -730,7 +746,7 @@ async function notifySellerStripeRequiredForOffer({ listingSlug, listingTitle, o
   return createNotification({
     userId: sellerUserId,
     title: 'Action required: Connect Stripe to accept offer',
-    message: `Your listing "${listingTitle || 'the item'}" has a qualifying offer of $${(offerAmount || 0).toFixed(2)}. Connect your Stripe account in Settings → Payments to accept it.`,
+    message: `Your listing "${listingTitle || 'the item'}" has a qualifying offer of €${(offerAmount || 0).toFixed(2)}. Connect your Stripe account in Settings → Payments to accept it.`,
     type: 'transaction',
     link,
     referenceId: listingSlug
@@ -787,7 +803,7 @@ function formatShippingForPricing(shippingOption, shippingCost = 0) {
   if (shippingOption === 'local-pickup') return 'Meet in Person';
   if (shippingOption === 'flat-rate') {
     const cost = Number(shippingCost) || 0;
-    return cost > 0 ? `$${cost.toFixed(2)}` : 'Free';
+    return cost > 0 ? `€${cost.toFixed(2)}` : 'Free';
   }
   if (shippingOption === 'calculated') return 'Calculated at checkout';
   return '—';
@@ -809,8 +825,8 @@ async function notifySellerWinnerSelected({
   const bidRoomFee = amount * (Number(commissionRate) || 0);
   const shippingDisplay = formatShippingForPricing(shippingOption, shippingCost);
 
-  let message = `${winnerName || 'A bidder'} won "${listingTitle || 'your listing'}" with a bid of $${amount.toFixed(2)}.`;
-  message += ` Pricing: Final price $${amount.toFixed(2)}; BidRoom fee $${bidRoomFee.toFixed(2)}; Shipping (buyer pays): ${shippingDisplay}.`;
+  let message = `${winnerName || 'A bidder'} won "${listingTitle || 'your listing'}" with a bid of €${amount.toFixed(2)}.`;
+  message += ` Pricing: Final price €${amount.toFixed(2)}; BidRoom fee €${bidRoomFee.toFixed(2)}; Shipping (buyer pays): ${shippingDisplay}.`;
 
   return createNotification({
     userId: sellerUserId,
@@ -835,8 +851,8 @@ async function notifyBuyerAuctionWon({
   const amount = Number(winningAmount) || 0;
   const shippingDisplay = formatShippingForPricing(shippingOption, shippingCost);
 
-  let message = `Congratulations! You won "${listingTitle || 'the listing'}" with your bid of $${amount.toFixed(2)}.`;
-  message += ` Pricing: Item $${amount.toFixed(2)}; Shipping: ${shippingDisplay}.`;
+  let message = `Congratulations! You won "${listingTitle || 'the listing'}" with your bid of €${amount.toFixed(2)}.`;
+  message += ` Pricing: Item €${amount.toFixed(2)}; Shipping: ${shippingDisplay}.`;
   message += ' Complete payment to proceed.';
 
   return createNotification({
@@ -862,24 +878,65 @@ async function notifyLoginFromNewDevice({ userId, deviceInfo }) {
 }
 
 /**
- * Notify both buyer and seller to leave a review after a transaction reaches a terminal state.
- * @param {{ buyerId, sellerId, listingTitle, transactionId, io }}
+ * Notify both buyer and seller to leave a review after a transaction completes.
+ * Each party gets role-specific copy in their own language, naming the listing.
+ * @param {{ buyerId, sellerId, listingTitle?, listingId?, transactionId, io }}
  */
-async function notifyReviewPrompt({ buyerId, sellerId, listingTitle, transactionId, io }) {
-  const title = 'Leave a review';
-  const message = `How was your experience with "${listingTitle || 'this transaction'}"? Leave a review to help the community.`;
-  const link = '/dashboard/home';
+async function notifyReviewPrompt({ buyerId, sellerId, listingTitle, listingId, transactionId, io }) {
+  let resolvedTitle = String(listingTitle || '').trim();
+  if (!resolvedTitle && listingId) {
+    const listing = await Listing.findById(listingId).select('title').lean();
+    resolvedTitle = listing?.title || '';
+  }
 
-  await Promise.allSettled([
-    createNotification({ userId: buyerId, title, message, type: 'review', link, referenceId: transactionId }),
-    createNotification({ userId: sellerId, title, message, type: 'review', link, referenceId: transactionId })
-  ]);
+  const ids = [buyerId, sellerId].filter(Boolean).map(id => id.toString?.() || String(id));
+  const people = ids.length
+    ? await Customer.find({ _id: { $in: ids } }).select('_id language').lean()
+    : [];
+  const languageById = new Map(people.map(p => [String(p._id), p.language]));
+
+  const link = transactionId
+    ? `/dashboard/transactions#transaction-${transactionId}`
+    : '/dashboard/transactions';
+
+  const jobs = [];
+  if (buyerId) {
+    const { title, message } = transactionReviewPromptCopy(
+      'buyer',
+      languageById.get(String(buyerId)),
+      resolvedTitle
+    );
+    jobs.push(createNotification({
+      userId: buyerId,
+      title,
+      message,
+      type: 'review',
+      link,
+      referenceId: transactionId
+    }));
+  }
+  if (sellerId) {
+    const { title, message } = transactionReviewPromptCopy(
+      'seller',
+      languageById.get(String(sellerId)),
+      resolvedTitle
+    );
+    jobs.push(createNotification({
+      userId: sellerId,
+      title,
+      message,
+      type: 'review',
+      link,
+      referenceId: transactionId
+    }));
+  }
+
+  await Promise.allSettled(jobs);
 
   if (io) {
-    await Promise.allSettled([
-      emitNewNotificationToUser(io, buyerId),
-      emitNewNotificationToUser(io, sellerId)
-    ]);
+    await Promise.allSettled(
+      [buyerId, sellerId].filter(Boolean).map(id => emitNewNotificationToUser(io, id))
+    );
   }
 }
 
@@ -1426,6 +1483,7 @@ module.exports = {
   notifyBuyerOrderCancelledNoShipment,
   notifySellerOrderCancelledNoShipment,
   notifyBuyerConfirmedReceipt,
+  notifyBuyerConfirmReceiptReminder,
   notifyDisputeOpened,
   notifyEvidenceSubmitted,
   notifyDisputeDecisionIssued,

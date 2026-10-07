@@ -6,15 +6,13 @@ const { normalizePhoneE164 } = require('../utils/phoneE164');
 const Customer = require('../models/Customer');
 const Transaction = require('../models/Transaction');
 const Listing = require('../models/Listing');
-const { sendEmail } = require('../services/emailService');
-const { sendLocalizedEmail } = require('../services/localizedEmail');
+const { sendLocalizedEmail, emailLabel } = require('../services/localizedEmail');
 const { notifySellerPaymentReceived, emitNewNotificationToUser } = require('../services/notificationService');
 const { applyShippingDeadlinesFromPaidAt } = require('../services/shippingDeadlines');
 const {
-  wrapBidRoomEmail,
-  emailInfoBox,
   emailPayoutBox,
   emailShipToBox,
+  emailStepsList,
   escapeHtml,
   transactionUrl
 } = require('../utils/bidroomEmailLayout');
@@ -1118,7 +1116,7 @@ router.post('/create-checkout-session', requireActiveAccount, async (req, res) =
     transaction.commissionWaived   = waiverApplied;
     await transaction.save();
 
-    logger.info(`${LOG_PREFIX} Checkout session created session_id=${session.id} transaction=${transaction._id} amount=$${(buyerTotalCents / 100).toFixed(2)}`);
+    logger.info(`${LOG_PREFIX} Checkout session created session_id=${session.id} transaction=${transaction._id} amount=€${(buyerTotalCents / 100).toFixed(2)}`);
     res.json({ url: session.url });
   } catch (err) {
     logger.error(`${LOG_PREFIX} Create checkout session error:`, err.message);
@@ -1363,7 +1361,11 @@ async function handleAccountUpdated(account) {
   const uid = account.metadata.uid;
   const onboarded = !!(account.details_submitted && account.charges_enabled);
 
-  const user = await Customer.findOne({ uid }).select('firstName email stripeConnectOnboarded');
+  // `language` is part of the projection because both branches below send the
+  // seller an email: left out, the profile loads without it and every payout
+  // email goes out in English however good the templates are.
+  const user = await Customer.findOne({ uid })
+    .select('uid firstName email language stripeConnectOnboarded');
   if (!user) return;
 
   const wasOnboarded = user.stripeConnectOnboarded;
@@ -1385,50 +1387,38 @@ async function handleAccountUpdated(account) {
 }
 
 async function sendAccountVerifiedEmail(user) {
-  const subject = 'Your payout account is verified ✓';
-  const html = `
-    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-      <div style="background: linear-gradient(135deg, #7A4F84 0%, #9b6ba8 100%); color: white; padding: 24px; text-align: center; border-radius: 8px 8px 0 0;">
-        <h1 style="margin: 0;">Payout account verified!</h1>
-      </div>
-      <div style="background: #f9f9f9; padding: 24px; border-radius: 0 0 8px 8px;">
-        <p>Hi ${user.firstName || 'there'},</p>
-        <p>Great news — your payout account has been verified by Stripe. You can now sell items on BidRoom and receive payments directly to your bank account.</p>
-        <p>No further action is needed. Payouts are processed automatically after each successful transaction.</p>
-        <p>Best regards,<br>The BidRoom Team</p>
-      </div>
-    </div>
-  `;
-  try {
-    await sendEmail(user.email, subject, html);
+  const sent = await sendLocalizedEmail(user, 'payoutAccountVerified', {
+    firstName: escapeHtml(user.firstName),
+    ctaUrl: `${FRONTEND_URL.replace(/\/$/, '')}/dashboard/seller`
+  });
+  if (sent) {
     logger.info(`${LOG_PREFIX} Sent account verified email to uid=${user.uid?.slice(0, 8)}`);
-  } catch (err) {
-    logger.error(`${LOG_PREFIX} Failed to send account verified email:`, err.message);
   }
 }
 
 async function sendAccountVerificationFailedEmail(user, errors) {
-  const errorList = errors.map(e => `<li>${e.reason || e.code || 'Unknown issue'}</li>`).join('');
-  const subject = 'Action needed: issue with your payout account';
-  const html = `
-    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-      <div style="background: linear-gradient(135deg, #c0392b 0%, #e74c3c 100%); color: white; padding: 24px; text-align: center; border-radius: 8px 8px 0 0;">
-        <h1 style="margin: 0;">Action required</h1>
-      </div>
-      <div style="background: #f9f9f9; padding: 24px; border-radius: 0 0 8px 8px;">
-        <p>Hi ${user.firstName || 'there'},</p>
-        <p>There was an issue verifying your payout account. Stripe flagged the following:</p>
-        <ul style="color: #c0392b; margin: 16px 0; padding-left: 20px;">${errorList}</ul>
-        <p>Please log in to BidRoom and update your payout account details to fix these issues.</p>
-        <p>Best regards,<br>The BidRoom Team</p>
-      </div>
-    </div>
-  `;
-  try {
-    await sendEmail(user.email, subject, html);
-    logger.info(`${LOG_PREFIX} Sent verification failed email to uid=${user.uid?.slice(0, 8)}`);
-  } catch (err) {
-    logger.error(`${LOG_PREFIX} Failed to send verification failed email:`, err.message);
+  // Stripe writes these reasons itself and only in English, so they are passed
+  // through verbatim — escaped, because they are strings from an external API
+  // dropped straight into the template's markup. Every translated file carries
+  // a line saying the list is in Stripe's own words.
+  const reasons = errors
+    .map(e => e.reason || e.code)
+    .filter(Boolean);
+  if (!reasons.length) {
+    reasons.push(emailLabel('verificationIssueUnknown', user));
+  }
+
+  const sent = await sendLocalizedEmail(user, 'payoutAccountIssue', {
+    firstName: escapeHtml(user.firstName),
+    issuesBox: emailStepsList(reasons.map(escapeHtml)),
+    issuesText: reasons.map(r => `- ${r}`).join('\n'),
+    ctaUrl: connectSettingsPath()
+  });
+  if (sent) {
+    logger.info(
+      `${LOG_PREFIX} Sent verification failed email to uid=${user.uid?.slice(0, 8)} ` +
+      `issues=${reasons.length}`
+    );
   }
 }
 
@@ -1437,8 +1427,11 @@ async function sendPaymentReceivedEmail(transaction) {
   const listing = transaction.listing;
   if (!seller?.email) return;
 
-  const buyerName = [transaction.buyer?.firstName, transaction.buyer?.lastName].filter(Boolean).join(' ') || 'A buyer';
-  const listingTitle = listing?.title || 'your item';
+  // Stand-ins in the seller's own language, not the English literals these used
+  // to be: 'A buyer' and 'your item' landed mid-sentence in a Portuguese email.
+  const buyerName = [transaction.buyer?.firstName, transaction.buyer?.lastName]
+    .filter(Boolean).join(' ') || emailLabel('theBuyer', seller);
+  const listingTitle = listing?.title || emailLabel('yourItem', seller);
   const payout = (transaction.sellerPayoutAmount ?? (transaction.amount * (1 - (listing?.commissionRate ?? BIDROOMFEE_RATE)))).toFixed(2);
   const txId = transaction._id?.toString?.() || transaction._id;
   const addressLines = formatDeliveryAddressLines(transaction.buyerDeliveryAddress);
@@ -1447,12 +1440,12 @@ async function sendPaymentReceivedEmail(transaction) {
   // escaped here. Boxes are passed even when empty — an absent variable is left
   // in the body verbatim as "{{shipToBox}}".
   await sendLocalizedEmail(seller, 'paymentReceivedSeller', {
-    sellerFirstName: escapeHtml(seller.firstName) || 'Seller',
+    sellerFirstName: escapeHtml(seller.firstName),
     buyerName: escapeHtml(buyerName),
     listingTitle: escapeHtml(listingTitle),
-    shipToBox: emailShipToBox(buyerName, addressLines),
+    shipToBox: emailShipToBox(buyerName, addressLines, emailLabel('shipTo', seller)),
     shipToText: [buyerName, ...addressLines].join('\n'),
-    payoutBox: emailPayoutBox(`€${payout}`),
+    payoutBox: emailPayoutBox(`€${payout}`, emailLabel('payout', seller)),
     payoutLabel: `€${payout}`,
     ctaUrl: transactionUrl(txId)
   });

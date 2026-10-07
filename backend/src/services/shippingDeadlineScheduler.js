@@ -33,7 +33,7 @@ const {
   notifySellerOrderCancelledNoShipment,
   emitNewNotificationToUser
 } = require('./notificationService');
-const { sendLocalizedEmail, formatEmailDate } = require('./localizedEmail');
+const { sendLocalizedEmail, formatEmailDate, emailLabel } = require('./localizedEmail');
 const { emailShipToBox, escapeHtml, transactionUrl } = require('../utils/bidroomEmailLayout');
 const { formatDeliveryAddressLines } = require('../utils/deliveryAddress');
 const logger = require('../utils/logger');
@@ -126,10 +126,10 @@ async function processMidpointWarnings(now, io) {
           const buyerName = [tx.buyer?.firstName, tx.buyer?.lastName].filter(Boolean).join(' ') || 'the buyer';
           const addressLines = formatDeliveryAddressLines(tx.buyerDeliveryAddress);
           await sendLocalizedEmail(tx.seller, 'shipReminderSeller', {
-            sellerFirstName: escapeHtml(tx.seller.firstName) || 'there',
+            sellerFirstName: escapeHtml(tx.seller.firstName),
             listingTitle: escapeHtml(listingTitle),
             shipByDate: formatEmailDate(resolveShipByDeadline(tx), tx.seller),
-            shipToBox: addressLines.length ? emailShipToBox(buyerName, addressLines) : '',
+            shipToBox: emailShipToBox(buyerName, addressLines, emailLabel('shipTo', tx.seller)),
             shipToText: [buyerName, ...addressLines].join('\n'),
             ctaUrl: transactionUrl(tx._id?.toString?.())
           });
@@ -162,8 +162,8 @@ async function processAutoCancellations(now, stripe, io) {
     .sort({ paidAt: 1 })
     .limit(SCHEDULER_BATCH_LIMIT)
     .populate('listing', 'title slug')
-    .populate('seller', '_id uid email firstName')
-    .populate('buyer', '_id uid email firstName')
+    .populate('seller', '_id uid email firstName language')
+    .populate('buyer', '_id uid email firstName language')
     .lean();
 
   for (const tx of candidates) {
@@ -216,7 +216,7 @@ async function processAutoCancellations(now, stripe, io) {
 
         if (tx.buyer?.email) {
           await sendLocalizedEmail(tx.buyer, 'orderCancelledBuyerRefund', {
-            firstName: escapeHtml(tx.buyer.firstName) || 'there',
+            firstName: escapeHtml(tx.buyer.firstName),
             listingTitle: escapeHtml(listingTitle),
             ctaUrl: transactionUrl(tx._id?.toString?.())
           });
@@ -233,7 +233,7 @@ async function processAutoCancellations(now, stripe, io) {
 
         if (tx.seller?.email) {
           await sendLocalizedEmail(tx.seller, 'orderCancelledSellerNoShip', {
-            firstName: escapeHtml(tx.seller.firstName) || 'there',
+            firstName: escapeHtml(tx.seller.firstName),
             listingTitle: escapeHtml(listingTitle),
             ctaUrl: transactionUrl(tx._id?.toString?.())
           });

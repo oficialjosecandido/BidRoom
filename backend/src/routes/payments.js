@@ -3,8 +3,8 @@ const Stripe = require('stripe');
 const { authenticateToken, requireActiveAccount } = require('../middleware/auth');
 const Customer = require('../models/Customer');
 const Topup = require('../models/Topup');
-const { sendEmail } = require('../services/emailService');
-const { wrapBidRoomEmail, emailSuccessBox, emailAmountCard } = require('../utils/bidroomEmailLayout');
+const { sendLocalizedEmail, emailLabel } = require('../services/localizedEmail');
+const { emailSuccessBox, emailAmountCard, escapeHtml } = require('../utils/bidroomEmailLayout');
 
 const features = require('../config/features');
 const { getStripe } = require('../utils/stripe.util');
@@ -335,32 +335,30 @@ router.delete('/payment-method/:paymentMethodId', authenticateToken, requireActi
 
 /**
  * Send payment confirmation email after balance is credited.
+ *
+ * Takes the customer rather than an address so the email can be written in the
+ * language on their profile. The amount card is built here, from the layout
+ * helpers, and passed into the template as markup — the same arrangement the
+ * ship-to and payout boxes use.
  */
-async function sendPaymentConfirmationEmail(toEmail, firstName, amountDollars) {
+async function sendPaymentConfirmationEmail(customer, amountDollars) {
   const amountStr = `€${Number(amountDollars).toFixed(2)}`;
-  const subject = 'Payment received – your BidRoom balance has been updated';
-  const html = wrapBidRoomEmail({
-    title: 'Payment confirmed',
-    preheader: `We've received your payment of ${amountStr}.`,
-    bodyHtml: `
-      <p style="margin:0 0 16px;">Hi <strong>${firstName}</strong>,</p>
-      ${emailSuccessBox(
-        'Payment received',
-        emailAmountCard(amountStr, 'Added to your BidRoom balance')
-      )}
-      <p style="margin:16px 0 0;color:#334155;font-size:14px;line-height:1.55;">Your balance is ready to use for auctions and offers. Thank you for using BidRoom.</p>
-    `,
-    ctaUrl: `${FRONTEND_URL.replace(/\/$/, '')}/dashboard`,
-    ctaLabel: 'Go to dashboard'
+  // The third argument is the card's own label. Left at its default it read
+  // "YOUR OFFER" over a balance top-up.
+  const amountBox = emailSuccessBox(
+    emailLabel('paymentReceived', customer),
+    emailAmountCard(amountStr, emailLabel('addedToBalance', customer), emailLabel('amount', customer))
+  );
+
+  const sent = await sendLocalizedEmail(customer, 'balanceToppedUp', {
+    firstName: escapeHtml(customer.firstName || ''),
+    amount: amountStr,
+    amountBox,
+    ctaUrl: `${FRONTEND_URL.replace(/\/$/, '')}/dashboard`
   });
-  try {
-    await sendEmail(toEmail, subject, html);
-    logger.info(`${LOG_PREFIX} Confirmation email sent to ${toEmail} amount=${amountStr}`);
-  } catch (err) {
-    logger.error(`${LOG_PREFIX} Failed to send payment confirmation email to ${toEmail}:`, err.message);
-    if (err.message && err.message.includes('535')) {
-      logger.warn(`${LOG_PREFIX} Gmail SMTP auth failed: set EMAIL_USER and EMAIL_PASSWORD (use a Gmail App Password) in your environment.`);
-    }
+
+  if (sent) {
+    logger.info(`${LOG_PREFIX} Confirmation email sent to ${customer.email} amount=${amountStr}`);
   }
 }
 
@@ -415,7 +413,7 @@ async function creditBalanceForSession(session) {
 
   logger.info(`${LOG_PREFIX} Balance credited +€${amountDollars} for uid=${uid?.slice(0, 8)}... new balance would be ~€${(customer.balance || 0) + amountDollars}`);
 
-  await sendPaymentConfirmationEmail(customer.email, customer.firstName, amountDollars);
+  await sendPaymentConfirmationEmail(customer, amountDollars);
 }
 
 /**

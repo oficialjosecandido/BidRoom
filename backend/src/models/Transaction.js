@@ -184,6 +184,15 @@ const transactionSchema = new mongoose.Schema({
     type: [String],
     default: []
   },
+  /**
+   * Buyer confirm-receipt reminder milestones already sent.
+   * 'on_delivery' = estimated delivery day (or shippedAt+7d without estimate)
+   * 'pre_release' = 2 days before autoReleaseAt
+   */
+  receiptRemindersSent: {
+    type: [String],
+    default: []
+  },
   trackingNumber: {
     type: String,
     trim: true,

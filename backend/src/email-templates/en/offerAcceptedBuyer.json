@@ -1,0 +1,12 @@
+{
+  "subject": "Your offer on \"{{listingTitle}}\" was accepted",
+  "layout": "bidroom",
+  "title": "Your offer was accepted",
+  "preheader": "The seller accepted your offer of {{amount}} for {{listingTitle}}.",
+  "ctaUrl": "{{ctaUrl}}",
+  "ctaLabel": "Complete payment",
+  "signOff": "Best regards,<br><strong style=\"color:#0f172a;\">The BidRoom Team</strong>",
+  "footerNote": "Automated message · Please do not reply directly to this email",
+  "body": "<p style=\"margin:0 0 16px;\">Hi{{#if firstName}} {{firstName}}{{/if}},</p><p style=\"margin:0 0 16px;\">The seller accepted your offer for <strong style=\"color:#0f172a;\">\"{{listingTitle}}\"</strong>.</p>{{amountBox}}<p style=\"margin:0 0 16px;\">A transaction has been created. <strong style=\"color:#0f172a;\">Complete payment</strong> to secure the item — until payment goes through, the listing is not yours.</p>",
+  "text": "Hi{{#if firstName}} {{firstName}}{{/if}},\n\nYour offer of {{amount}} for \"{{listingTitle}}\" was accepted. Complete payment to secure the item.\n\n{{ctaUrl}}"
+}

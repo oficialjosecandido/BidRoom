@@ -1,0 +1,12 @@
+{
+  "subject": "Confirma la recepción de \"{{listingTitle}}\"",
+  "layout": "bidroom",
+  "title": "Confirma la recepción de tu pedido",
+  "preheader": "Indícanos si \"{{listingTitle}}\" ha llegado para poder pagar al vendedor.",
+  "ctaUrl": "{{ctaUrl}}",
+  "ctaLabel": "Confirmar recepción",
+  "signOff": "Un saludo,<br><strong style=\"color:#0f172a;\">El equipo BidRoom</strong>",
+  "footerNote": "Mensaje automático · Por favor no respondas directamente a este correo",
+  "body": "<p style=\"margin:0 0 16px;\">Hola{{#if firstName}} {{firstName}}{{/if}},</p><p style=\"margin:0 0 16px;\">{{#if isFinalReminder}}Tu pedido de <strong style=\"color:#0f172a;\">\"{{listingTitle}}\"</strong> se completará automáticamente pronto si no confirmas la recepción.{{else}}Tu pedido de <strong style=\"color:#0f172a;\">\"{{listingTitle}}\"</strong> debería haber llegado ya.{{/if}}</p><p style=\"margin:0 0 16px;\">Confirma la recepción en tu panel para liberar el pago al vendedor. Si el artículo no ha llegado o hay un problema, abre una disputa desde la misma pantalla.</p>{{#if autoReleaseDate}}<table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" role=\"presentation\" style=\"margin:20px 0;\"><tr><td style=\"background:#faf6eb;border:1px solid #e8d9a8;border-radius:12px;padding:16px 18px;color:#334155;font-size:14px;line-height:1.6;\">Si no haces nada, el pedido se completa automáticamente el <strong style=\"color:#0f172a;\">{{autoReleaseDate}}</strong>.</td></tr></table>{{/if}}",
+  "text": "Hola{{#if firstName}} {{firstName}}{{/if}},\n\nConfirma la recepción de \"{{listingTitle}}\" en tu panel para poder pagar al vendedor.\n{{#if autoReleaseDate}}Si no haces nada, el pedido se completa automáticamente el {{autoReleaseDate}}.\n{{/if}}\n{{ctaUrl}}"
+}

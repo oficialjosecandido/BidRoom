@@ -10,6 +10,7 @@ const EmailCampaign = require('../models/EmailCampaign');
 const EmailDelivery = require('../models/EmailDelivery');
 const { sendEmail } = require('../services/emailService');
 const { renderEmailTemplate } = require('../services/templateEngine');
+const { escapeHtml } = require('../utils/bidroomEmailLayout');
 const { appendPreferencesFooter } = require('../services/emailPreferencesService');
 const { newTrackingToken, injectTrackingPixel } = require('../services/emailTrackingService');
 const {
@@ -675,9 +676,12 @@ router.get('/draft-reminders', authenticateToken, requireAdmin, async (req, res)
         let previewSubject = '';
         let previewHtml = '';
         try {
+          // Must match draftReminderScheduler exactly — this is the preview of
+          // the email that scheduler actually sends, so any divergence here is a
+          // preview that lies about what the seller will receive.
           const rendered = renderEmailTemplate('draftReminder', language, {
-            firstName: d.seller.firstName || 'there',
-            draftTitle: draftTitle || '',
+            firstName: escapeHtml(d.seller.firstName),
+            draftTitle: escapeHtml(draftTitle || ''),
             resumeUrl: `${frontendUrl}/listing/add`
           });
           previewSubject = rendered.subject;

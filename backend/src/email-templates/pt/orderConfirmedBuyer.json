@@ -7,6 +7,6 @@
   "ctaLabel": "Ver transacção",
   "signOff": "Com os melhores cumprimentos,<br><strong style=\"color:#0f172a;\">A equipa BidRoom</strong>",
   "footerNote": "Mensagem automática · Por favor não responda directamente a este email",
-  "body": "<p style=\"margin:0 0 16px;\">Olá {{firstName}},</p><p style=\"margin:0 0 16px;\">O vendedor confirmou o seu pagamento de <strong style=\"color:#0f172a;\">\"{{listingTitle}}\"</strong> e vai preparar a encomenda para envio.</p><p style=\"margin:0 0 16px;\">Voltamos a enviar-lhe um email assim que for marcada como enviada.</p>",
-  "text": "Olá {{firstName}},\n\nO seu pagamento de \"{{listingTitle}}\" foi confirmado. O vendedor está a preparar a encomenda.\n\n{{ctaUrl}}"
+  "body": "<p style=\"margin:0 0 16px;\">Olá{{#if firstName}} {{firstName}}{{/if}},</p><p style=\"margin:0 0 16px;\">O vendedor confirmou o seu pagamento de <strong style=\"color:#0f172a;\">\"{{listingTitle}}\"</strong> e vai preparar a encomenda para envio.</p><p style=\"margin:0 0 16px;\">Voltamos a enviar-lhe um email assim que for marcada como enviada.</p>",
+  "text": "Olá{{#if firstName}} {{firstName}}{{/if}},\n\nO seu pagamento de \"{{listingTitle}}\" foi confirmado. O vendedor está a preparar a encomenda.\n\n{{ctaUrl}}"
 }

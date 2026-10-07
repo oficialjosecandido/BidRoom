@@ -1,0 +1,12 @@
+{
+  "subject": "Confirme a recepção de \"{{listingTitle}}\"",
+  "layout": "bidroom",
+  "title": "Confirme a recepção da encomenda",
+  "preheader": "Diga-nos se \"{{listingTitle}}\" chegou para podermos pagar o vendedor.",
+  "ctaUrl": "{{ctaUrl}}",
+  "ctaLabel": "Confirmar recepção",
+  "signOff": "Com os melhores cumprimentos,<br><strong style=\"color:#0f172a;\">A equipa BidRoom</strong>",
+  "footerNote": "Mensagem automática · Por favor não responda directamente a este email",
+  "body": "<p style=\"margin:0 0 16px;\">Olá{{#if firstName}} {{firstName}}{{/if}},</p><p style=\"margin:0 0 16px;\">{{#if isFinalReminder}}A sua encomenda de <strong style=\"color:#0f172a;\">\"{{listingTitle}}\"</strong> será concluída automaticamente em breve se não confirmar a recepção.{{else}}A sua encomenda de <strong style=\"color:#0f172a;\">\"{{listingTitle}}\"</strong> já deveria ter chegado.{{/if}}</p><p style=\"margin:0 0 16px;\">Confirme a recepção no seu painel para libertarmos o pagamento ao vendedor. Se o artigo não chegou ou há algum problema, abra uma disputa no mesmo ecrã.</p>{{#if autoReleaseDate}}<table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" role=\"presentation\" style=\"margin:20px 0;\"><tr><td style=\"background:#faf6eb;border:1px solid #e8d9a8;border-radius:12px;padding:16px 18px;color:#334155;font-size:14px;line-height:1.6;\">Se não fizer nada, a encomenda conclui-se automaticamente a <strong style=\"color:#0f172a;\">{{autoReleaseDate}}</strong>.</td></tr></table>{{/if}}",
+  "text": "Olá{{#if firstName}} {{firstName}}{{/if}},\n\nConfirme a recepção de \"{{listingTitle}}\" no seu painel para podermos pagar o vendedor.\n{{#if autoReleaseDate}}Se não fizer nada, a encomenda conclui-se automaticamente a {{autoReleaseDate}}.\n{{/if}}\n{{ctaUrl}}"
+}

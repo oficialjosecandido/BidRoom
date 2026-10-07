@@ -1,0 +1,12 @@
+{
+  "subject": "Confirme o seu email na BidRoom",
+  "layout": "bidroom",
+  "title": "Confirme o seu email",
+  "preheader": "Um clique e a sua conta BidRoom fica activa.",
+  "ctaUrl": "{{ctaUrl}}",
+  "ctaLabel": "Confirmar email",
+  "signOff": "Com os melhores cumprimentos,<br><strong style=\"color:#0f172a;\">A equipa BidRoom</strong>",
+  "footerNote": "Mensagem automática · Por favor não responda directamente a este email",
+  "body": "<p style=\"margin:0 0 16px;\">Olá{{#if firstName}} {{firstName}}{{/if}},</p><p style=\"margin:0 0 16px;\">Bem-vindo à BidRoom. Clique no botão abaixo para confirmar o seu endereço de email e activar a sua conta.</p><p style=\"margin:24px 0 6px;font-size:13px;color:#64748b;\">Se o botão não funcionar, copie este link para o seu navegador:</p><p style=\"margin:0 0 20px;font-size:12px;word-break:break-all;color:#94a3b8;\">{{ctaUrl}}</p><p style=\"margin:0;font-size:13px;color:#94a3b8;\">Se não criou uma conta na BidRoom, pode ignorar este email.</p>",
+  "text": "Olá{{#if firstName}} {{firstName}}{{/if}},\n\nBem-vindo à BidRoom. Confirme o seu endereço de email para activar a sua conta:\n\n{{ctaUrl}}\n\nSe não criou uma conta na BidRoom, pode ignorar este email."
+}

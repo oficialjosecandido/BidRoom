@@ -7,6 +7,6 @@
   "ctaLabel": "Ver anúncio",
   "signOff": "Com os melhores cumprimentos,<br><strong style=\"color:#0f172a;\">A equipa BidRoom</strong>",
   "footerNote": "Mensagem automática · Não responda directamente a este email",
-  "body": "<p style=\"margin:0 0 16px;\">Olá {{firstName}},</p><p style=\"margin:0 0 16px;\">Boas notícias — <strong style=\"color:#0f172a;\">\"{{listingTitle}}\"</strong> foi revisto e aprovado. Já está visível para os compradores.</p><p style=\"margin:0;\">O tempo do leilão começa agora, por isso a duração que escolheu conta a partir deste momento.</p>",
-  "text": "Olá {{firstName}},\n\n\"{{listingTitle}}\" foi aprovado e já está publicado. O tempo do leilão começa agora.\n\n{{listingUrl}}\n\nA equipa BidRoom"
+  "body": "<p style=\"margin:0 0 16px;\">Olá{{#if firstName}} {{firstName}}{{/if}},</p><p style=\"margin:0 0 16px;\">Boas notícias — <strong style=\"color:#0f172a;\">\"{{listingTitle}}\"</strong> foi revisto e aprovado. Já está visível para os compradores.</p><p style=\"margin:0;\">O tempo do leilão começa agora, por isso a duração que escolheu conta a partir deste momento.</p>",
+  "text": "Olá{{#if firstName}} {{firstName}}{{/if}},\n\n\"{{listingTitle}}\" foi aprovado e já está publicado. O tempo do leilão começa agora.\n\n{{listingUrl}}\n\nA equipa BidRoom"
 }

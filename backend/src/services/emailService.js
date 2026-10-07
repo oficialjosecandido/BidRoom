@@ -1,6 +1,58 @@
 const nodemailer = require('nodemailer');
 const logger = require('../utils/logger');
 
+/**
+ * A plain-text alternative derived from the HTML, for senders that have none.
+ *
+ * The 41 file templates each author their own `text`, which is always better
+ * than anything derived and so always wins. This exists for the senders that
+ * build HTML inline — admin campaigns above all, which are bulk mail and the
+ * most heavily filtered thing BidRoom sends.
+ *
+ * Link text alone is useless in plain text ("View in Dashboard" is not a URL),
+ * so each anchor keeps its href beside its label.
+ */
+function htmlToText(html) {
+  return String(html || '')
+    // Content that is markup, not prose.
+    .replace(/<(style|script|head)\b[^>]*>[\s\S]*?<\/\1>/gi, '')
+    .replace(/<a\b[^>]*href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi,
+      (m, href, label) => {
+        const clean = label.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+        return clean && !clean.includes(href) ? `${clean} (${href})` : href;
+      })
+    // Anything that ends a visual line becomes a real one. `</a>` is in here
+    // because a button is usually followed immediately by the next block, and
+    // without it the link runs into whatever comes next on one line.
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<\/(p|div|tr|h[1-6]|table|a|ul|ol)>/gi, '\n')
+    // `<li>` opens its own line, so `</li>` must not add a second one — that is
+    // what double-spaced the items.
+    .replace(/<li\b[^>]*>/gi, '\n- ')
+    .replace(/<\/li>/gi, '')
+    // Cells need a separator or a label/value row reads as "Lance actual€150.00".
+    // A tab is what a mail client renders as a column gap, so tabs survive the
+    // whitespace collapse below.
+    .replace(/<\/(td|th)>/gi, '\t')
+    .replace(/<[^>]+>/g, '')
+    // Named entities BidRoom's own markup actually uses — € above all, since
+    // every price in every email is written as an entity.
+    .replace(/&(nbsp|amp|lt|gt|quot|apos|euro|hellip|mdash|ndash|middot|times|copy|reg|deg|laquo|raquo);/gi,
+      (m, name) => ({
+        nbsp: ' ', amp: '&', lt: '<', gt: '>', quot: '"', apos: "'",
+        euro: '€', hellip: '…', mdash: '—', ndash: '–', middot: '·',
+        times: '×', copy: '©', reg: '®', deg: '°', laquo: '«', raquo: '»'
+      }[name.toLowerCase()] || m))
+    .replace(/&#(\d+);/g, (m, d) => String.fromCodePoint(Number(d)))
+    .replace(/&#x([0-9a-f]+);/gi, (m, h) => String.fromCodePoint(parseInt(h, 16)))
+    // Collapse the whitespace the markup left behind, but keep paragraphs apart.
+    .split('\n')
+    .map(line => line.replace(/[  ]+/g, ' ').replace(/\s*\t\s*/g, '\t').trim())
+    .join('\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
+
 // Create a transporter (you'll need to configure this with your email provider)
 const createTransporter = () => {
   // Check if Gmail credentials are provided (works for both development and production)
@@ -33,25 +85,41 @@ const createTransporter = () => {
 /**
  * Send email with retry logic for rate limiting
  * Optimized for fast delivery (within 5 seconds when possible)
+ *
+ * `text` is the plain-text alternative. Every template has carried one all along
+ * but nothing ever read it, so every BidRoom email went out HTML-only — which
+ * spam filters score against, and which leaves nothing at all for a client that
+ * does not render HTML. Passing it makes the message multipart/alternative.
+ *
  * @param {string} to - Recipient email
  * @param {string} subject - Email subject
  * @param {string} html - Email HTML content
- * @param {number} maxRetries - Maximum number of retries (default: 3)
- * @param {number} retryDelay - Base delay between retries in ms (default: 1000)
+ * @param {Object} [options]
+ * @param {string} [options.text] - Plain-text alternative; omitted if empty
+ * @param {number} [options.maxRetries=3] - Maximum number of attempts
+ * @param {number} [options.retryDelay=1000] - Base delay between retries in ms
  */
-const sendEmail = async (to, subject, html, maxRetries = 3, retryDelay = 1000) => {
+const sendEmail = async (to, subject, html, options = {}) => {
+  const { text, maxRetries = 3, retryDelay = 1000 } = options;
   let lastError;
-  
+
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
       const transporter = createTransporter();
-      
+
       const mailOptions = {
         from: process.env.EMAIL_FROM || 'contact@bidroom.pt',
         to,
         subject,
         html
       };
+      // An authored text part always wins; otherwise derive one. Only ever set
+      // when non-empty: an empty text part is worse than none, since a client
+      // may prefer it and show a blank message.
+      const plain = (text && String(text).trim()) || htmlToText(html);
+      if (plain) {
+        mailOptions.text = plain;
+      }
 
       const info = await transporter.sendMail(mailOptions);
       logger.info('📧 Email sent:', info.messageId);
@@ -115,6 +183,12 @@ const sendEmail = async (to, subject, html, maxRetries = 3, retryDelay = 1000) =
       // For other errors or final attempt, log and throw
       if (attempt === maxRetries) {
         logger.error(`❌ Email sending failed after ${maxRetries} attempts:`, error.message);
+        // A 535 is always the same mistake and always worth naming: the account
+        // password was used where Gmail requires an App Password. The hint lived
+        // in one route, so it only appeared for balance top-ups.
+        if (error.message && error.message.includes('535')) {
+          logger.warn('   SMTP auth rejected: set EMAIL_USER and EMAIL_PASSWORD (a Gmail App Password, not the account password).');
+        }
         // In development, log email details instead of failing completely
         if (process.env.NODE_ENV !== 'production') {
           logger.info('\n📧 EMAIL CONTENT (would have been sent):');
@@ -132,106 +206,7 @@ const sendEmail = async (to, subject, html, maxRetries = 3, retryDelay = 1000) =
   throw lastError;
 };
 
-const sendEmailVerification = async (email, firstName, verificationUrl) => {
-  const html = `
-    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-      <div style="background: linear-gradient(135deg, #7A4F84 0%, #9b6ba8 100%); color: white; padding: 24px; text-align: center; border-radius: 8px 8px 0 0;">
-        <h1 style="margin: 0; font-size: 24px;">Confirm your email</h1>
-      </div>
-      <div style="background: #f9f9f9; padding: 24px; border-radius: 0 0 8px 8px;">
-        <p>Hi ${firstName || 'there'},</p>
-        <p>Welcome to BidRoom. Click the button below to verify your email and activate your account.</p>
-        <div style="text-align: center; margin: 28px 0;">
-          <a href="${verificationUrl}" style="display: inline-block; background: #7A4F84; color: #ffffff; padding: 14px 32px; text-decoration: none; border-radius: 8px; font-size: 15px; font-weight: 600;">Verify email</a>
-        </div>
-        <p style="font-size: 13px; color: #666;">If the button doesn't work, copy and paste this link into your browser:</p>
-        <p style="word-break: break-all; color: #888; font-size: 12px;">${verificationUrl}</p>
-        <p style="font-size: 13px; color: #999; margin-top: 24px;">If you didn't create a BidRoom account, you can ignore this email.</p>
-        <p>Best regards,<br>The BidRoom Team</p>
-      </div>
-    </div>
-  `;
-
-  logger.info('\n🔗 EMAIL VERIFICATION LINK:');
-  logger.info('=====================================');
-  logger.info(`Email: ${email}`);
-  logger.info(`Verification URL: ${verificationUrl}`);
-  logger.info('=====================================\n');
-
-  return await sendEmail(email, 'Verify your BidRoom account', html);
-};
-
-const sendPasswordReset = async (email, firstName, resetUrl) => {
-  const html = `
-    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-      <div style="background: linear-gradient(135deg, #7A4F84 0%, #9b6ba8 100%); color: white; padding: 24px; text-align: center; border-radius: 8px 8px 0 0;">
-        <h1 style="margin: 0; font-size: 24px;">Reset your password</h1>
-      </div>
-      <div style="background: #f9f9f9; padding: 24px; border-radius: 0 0 8px 8px;">
-        <p>Hi ${firstName},</p>
-        <p>We received a request to reset your BidRoom password. Click the button below — this link expires in 1 hour.</p>
-        <div style="text-align: center; margin: 28px 0;">
-          <a href="${resetUrl}" style="display: inline-block; background: #7A4F84; color: #ffffff; padding: 14px 32px; text-decoration: none; border-radius: 8px; font-size: 15px; font-weight: 600;">Reset Password</a>
-        </div>
-        <p style="font-size: 13px; color: #666;">If the button doesn't work, copy and paste this link into your browser:</p>
-        <p style="word-break: break-all; color: #888; font-size: 12px;">${resetUrl}</p>
-        <p style="font-size: 13px; color: #999; margin-top: 24px;">If you didn't request a password reset, you can safely ignore this email.</p>
-        <p>Best regards,<br>The BidRoom Team</p>
-      </div>
-    </div>
-  `;
-
-  logger.info('\n🔐 PASSWORD RESET LINK:');
-  logger.info('=====================================');
-  logger.info(`Email: ${email}`);
-  logger.info(`Reset URL: ${resetUrl}`);
-  logger.info('=====================================\n');
-
-  return await sendEmail(email, 'Reset your BidRoom password', html);
-};
-
-/**
- * Notify the seller that the buyer has uploaded proof of payment for a transaction.
- */
-const sendSellerProofOfPaymentNotification = async (sellerEmail, sellerFirstName, listingTitle, buyerName, proofUrl) => {
-  const dashboardUrl = `${process.env.FRONTEND_URL || 'http://localhost:4200'}/dashboard/transactions`;
-  const html = `
-    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-      <h2 style="color: #333;">Proof of payment received</h2>
-      <p>Hi ${sellerFirstName || 'Seller'},</p>
-      <p>The buyer${buyerName ? ` (${buyerName})` : ''} has marked the transaction as paid and uploaded proof of payment for <strong>${listingTitle || 'your item'}</strong>.</p>
-      <p>You can view the proof of payment in your dashboard:</p>
-      <a href="${dashboardUrl}" style="display: inline-block; background-color: #007bff; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px;">View in Dashboard</a>
-      <p>Or open the proof document directly: <a href="${proofUrl}" target="_blank" rel="noopener">View proof of payment</a></p>
-      <p>Best regards,<br>The BidRoom Team</p>
-    </div>
-  `;
-  return sendEmail(sellerEmail, 'Proof of payment uploaded – ' + (listingTitle || 'Transaction'), html);
-};
-
-/**
- * Notify the seller that the buyer has opened a dispute for a transaction.
- */
-const sendSellerDisputeOpenedNotification = async (sellerEmail, sellerFirstName, listingTitle, buyerName, transactionId) => {
-  const dashboardUrl = `${process.env.FRONTEND_URL || 'http://localhost:4200'}/dashboard/transactions`;
-  const html = `
-    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-      <h2 style="color: #dc3545;">A dispute has been opened</h2>
-      <p>Hi ${sellerFirstName || 'Seller'},</p>
-      <p>The buyer${buyerName ? ` (${buyerName})` : ''} has opened a dispute for <strong>${listingTitle || 'your item'}</strong>.</p>
-      <p>You can view the buyer's evidence and upload your counter-evidence in your dashboard:</p>
-      <a href="${dashboardUrl}" style="display: inline-block; background-color: #007bff; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px;">View in Dashboard</a>
-      <p>Please respond promptly with your counter-evidence (e.g., original listing photos, proof of secure packaging).</p>
-      <p>Best regards,<br>The BidRoom Team</p>
-    </div>
-  `;
-  return sendEmail(sellerEmail, 'Dispute opened – ' + (listingTitle || 'Transaction'), html);
-};
-
 module.exports = {
   sendEmail,
-  sendEmailVerification,
-  sendPasswordReset,
-  sendSellerProofOfPaymentNotification,
-  sendSellerDisputeOpenedNotification
+  htmlToText
 };

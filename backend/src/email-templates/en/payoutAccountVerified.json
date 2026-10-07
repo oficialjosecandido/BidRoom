@@ -1,0 +1,12 @@
+{
+  "subject": "Your payout account is verified ✓",
+  "layout": "bidroom",
+  "title": "Payout account verified",
+  "preheader": "Stripe has verified your account — you can now receive payouts.",
+  "ctaUrl": "{{ctaUrl}}",
+  "ctaLabel": "Go to your seller dashboard",
+  "signOff": "Best regards,<br><strong style=\"color:#0f172a;\">The BidRoom Team</strong>",
+  "footerNote": "Automated message · Please do not reply directly to this email",
+  "body": "<p style=\"margin:0 0 16px;\">Hi{{#if firstName}} {{firstName}}{{/if}},</p><p style=\"margin:0 0 16px;\">Good news — Stripe has verified your payout account. You can now sell on BidRoom and receive payments directly into your bank account.</p><p style=\"margin:0;\">No further action is needed. Each sale is paid out automatically once the buyer's payment clears.</p>",
+  "text": "Hi{{#if firstName}} {{firstName}}{{/if}},\n\nStripe has verified your payout account. You can now sell on BidRoom and receive payments directly into your bank account.\n\nNo further action is needed — each sale is paid out automatically once the buyer's payment clears.\n\n{{ctaUrl}}"
+}

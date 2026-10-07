@@ -101,7 +101,7 @@ const CATEGORY_LABELS = {
 const STRINGS = {
   pt: {
     bestOffer: 'Melhor Oferta',
-    currentBid: 'Licitação atual',
+    currentBid: 'Licitação actual',
     startingBid: 'Base de licitação',
     endsToday: 'Termina hoje',
     endsInDays: d => `Termina em ${d} dia${d === 1 ? '' : 's'}`,

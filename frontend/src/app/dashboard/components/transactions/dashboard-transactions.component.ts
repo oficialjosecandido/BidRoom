@@ -14,6 +14,7 @@ import { PostHogService } from '../../../shared/services/posthog.service';
 import { AnalyticsEvents } from '../../../shared/services/analytics.events';
 import { CurrencyDisplayService } from '../../../shared/services/currency-display.service';
 import { buyerServiceFeeEuros } from '../../../shared/utils/fees';
+import { BidroomLogoComponent } from '../../../shared/components/bidroom-logo/bidroom-logo.component';
 
 const successToast = Swal.mixin({
   toast: true,
@@ -27,7 +28,7 @@ const successToast = Swal.mixin({
 @Component({
   selector: 'app-dashboard-transactions',
   standalone: true,
-  imports: [CommonModule, RouterLink, FormsModule, TranslateModule],
+  imports: [CommonModule, RouterLink, FormsModule, TranslateModule, BidroomLogoComponent],
   templateUrl: './dashboard-transactions.component.html',
   styleUrls: ['./dashboard-transactions.component.scss']
 })
@@ -887,6 +888,7 @@ export class DashboardTransactionsComponent implements OnInit {
     if (this.updatingId || t.role !== 'buyer' || this.getEffectiveStatus(t) !== 'shipped') return;
     const shippedAt = t.shippedAt ? new Date(t.shippedAt) : null;
     this.updatingId = t._id;
+    // Backend completes the order on receipt confirmation (status becomes completed).
     this.transactionsService.updateTransaction(t._id, { status: 'delivered' }).subscribe({
       next: (updated) => {
         this.replaceTransaction(updated);
@@ -1050,13 +1052,15 @@ export class DashboardTransactionsComponent implements OnInit {
     return Math.ceil(diff / (1000 * 60 * 60 * 24));
   }
 
-  /** Whether buyer can still request a return (delivered + within 7 days) */
+  /** Whether buyer can still request a return (after receipt + within policy window) */
   canRequestReturn(t: Transaction): boolean {
     if (!this.isBuyer(t)) return false;
-    if (this.getEffectiveStatus(t) !== 'delivered') return false;
+    const s = this.getEffectiveStatus(t);
+    // Confirming receipt completes the order; returns remain available on completed.
+    if (s !== 'delivered' && s !== 'completed') return false;
     if (t.listing?.returnPolicy === 'no-returns') return false;
     if (t.returnRequestedAt) return false; // already submitted
-    if (!t.deliveredAt) return true; // no deliveredAt recorded — allow
+    if (!t.deliveredAt) return s === 'delivered'; // legacy delivered without timestamp
     const returnDays = this.returnWindowDays(t);
     const deadline = new Date(t.deliveredAt);
     deadline.setDate(deadline.getDate() + returnDays);
@@ -1143,14 +1147,14 @@ export class DashboardTransactionsComponent implements OnInit {
     return t.cancellationReason === 'non_payment';
   }
 
-  /** Whether buyer can open a damage claim (delivered + within 48h + no existing claim) */
+  /** Whether buyer can open a damage claim (shipped, or within 48h of receipt) */
   canOpenDamageClaim(t: Transaction): boolean {
     if (!this.isBuyer(t)) return false;
     const s = this.getEffectiveStatus(t);
     // Allow reporting damage when the item has been shipped (before confirming receipt)
-    // or within 48h after the buyer confirmed delivery.
+    // or within 48h after the buyer confirmed delivery (order may already be completed).
     if (s === 'shipped') return this.existingClaimsByTxId[t._id] === undefined;
-    if (s !== 'delivered') return false;
+    if (s !== 'delivered' && s !== 'completed') return false;
     if (!t.deliveredAt) return false;
     const elapsed = Date.now() - new Date(t.deliveredAt).getTime();
     if (elapsed > this.CLAIM_WINDOW_MS) return false;
@@ -1381,14 +1385,6 @@ export class DashboardTransactionsComponent implements OnInit {
   /** Active score for star fill (committed or hover preview). */
   displayReviewScore(): number {
     return this.reviewScore || this.reviewScoreHover;
-  }
-
-  getScoreEmoji(score: number): string {
-    if (score <= 1) return '😞';
-    if (score <= 2) return '😐';
-    if (score <= 3) return '🙂';
-    if (score <= 4) return '😊';
-    return '🎉';
   }
 
   getScoreLabel(score: number): string {

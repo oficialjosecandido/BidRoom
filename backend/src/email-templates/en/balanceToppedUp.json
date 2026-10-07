@@ -1,0 +1,12 @@
+{
+  "subject": "Payment received — your BidRoom balance is updated",
+  "layout": "bidroom",
+  "title": "Payment confirmed",
+  "preheader": "We've received your payment of {{amount}}.",
+  "ctaUrl": "{{ctaUrl}}",
+  "ctaLabel": "Go to dashboard",
+  "signOff": "Best regards,<br><strong style=\"color:#0f172a;\">The BidRoom Team</strong>",
+  "footerNote": "Automated message · Please do not reply directly to this email",
+  "body": "<p style=\"margin:0 0 16px;\">Hi{{#if firstName}} {{firstName}}{{/if}},</p><p style=\"margin:0 0 16px;\">We have received your payment.</p>{{amountBox}}<p style=\"margin:16px 0 0;\">Your balance is ready to use for bids and offers.</p>",
+  "text": "Hi{{#if firstName}} {{firstName}}{{/if}},\n\nWe have received your payment of {{amount}}. It has been added to your BidRoom balance and is ready to use for bids and offers.\n\n{{ctaUrl}}"
+}

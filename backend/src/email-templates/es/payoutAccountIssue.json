@@ -1,0 +1,12 @@
+{
+  "subject": "Acción necesaria: problema con tu cuenta de pagos",
+  "layout": "bidroom",
+  "title": "Acción necesaria",
+  "preheader": "Stripe no ha podido verificar tu cuenta de pagos.",
+  "ctaUrl": "{{ctaUrl}}",
+  "ctaLabel": "Actualizar datos de pago",
+  "signOff": "Un saludo,<br><strong style=\"color:#0f172a;\">El equipo de BidRoom</strong>",
+  "footerNote": "Mensaje automático · Por favor, no respondas directamente a este correo",
+  "body": "<p style=\"margin:0 0 16px;\">Hola{{#if firstName}} {{firstName}}{{/if}},</p><p style=\"margin:0 0 16px;\">No hemos podido verificar tu cuenta de pagos, así que todavía no podemos abonarte las ventas. Stripe ha indicado lo siguiente:</p>{{issuesBox}}<p style=\"margin:0 0 16px;font-size:13px;color:#64748b;\">Los motivos aparecen en inglés, tal como los redacta Stripe.</p><p style=\"margin:16px 0 0;\">Abre los ajustes de pago en BidRoom y corrige los datos indicados. Stripe revisa la cuenta automáticamente al guardar y te enviaremos un correo en cuanto esté verificada.</p>",
+  "text": "Hola{{#if firstName}} {{firstName}}{{/if}},\n\nNo hemos podido verificar tu cuenta de pagos, así que todavía no podemos abonarte las ventas. Stripe ha indicado (en inglés, tal como lo redacta Stripe):\n\n{{issuesText}}\n\nAbre los ajustes de pago en BidRoom y corrige estos datos. Stripe revisa la cuenta automáticamente al guardar.\n\n{{ctaUrl}}"
+}

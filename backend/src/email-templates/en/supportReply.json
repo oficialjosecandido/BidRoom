@@ -1,0 +1,12 @@
+{
+  "subject": "New message from BidRoom support",
+  "layout": "bidroom",
+  "title": "You have a new support message",
+  "preheader": "The BidRoom team sent you a message about {{subjectLabel}}.",
+  "ctaUrl": "{{ctaUrl}}",
+  "ctaLabel": "Open support chat",
+  "signOff": "Best regards,<br><strong style=\"color:#0f172a;\">The BidRoom Team</strong>",
+  "footerNote": "Automated message · Please do not reply directly to this email",
+  "body": "<p style=\"margin:0 0 16px;\">Hi{{#if firstName}} {{firstName}}{{/if}},</p><p style=\"margin:0 0 16px;\">The BidRoom support team sent you a message{{#if subjectLabel}} about <strong style=\"color:#0f172a;\">{{subjectLabel}}</strong>{{/if}}:</p><table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" role=\"presentation\" style=\"margin:20px 0;\"><tr><td style=\"background:#faf6eb;border:1px solid #e8d9a8;border-radius:12px;padding:16px 18px;color:#334155;font-size:14px;line-height:1.6;white-space:pre-wrap;\">{{preview}}</td></tr></table><p style=\"margin:0 0 16px;\">Reply in your dashboard to continue the conversation.</p>",
+  "text": "Hi{{#if firstName}} {{firstName}}{{/if}},\n\nThe BidRoom support team sent you a message{{#if subjectLabel}} about {{subjectLabel}}{{/if}}:\n\n{{preview}}\n\nOpen support chat: {{ctaUrl}}"
+}

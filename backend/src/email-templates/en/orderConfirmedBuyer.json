@@ -7,6 +7,6 @@
   "ctaLabel": "View transaction",
   "signOff": "Best regards,<br><strong style=\"color:#0f172a;\">The BidRoom Team</strong>",
   "footerNote": "Automated message · Please do not reply directly to this email",
-  "body": "<p style=\"margin:0 0 16px;\">Hi {{firstName}},</p><p style=\"margin:0 0 16px;\">The seller confirmed your payment for <strong style=\"color:#0f172a;\">\"{{listingTitle}}\"</strong> and will prepare your order for shipment.</p><p style=\"margin:0 0 16px;\">We will email you again as soon as it is marked as shipped.</p>",
-  "text": "Hi {{firstName}},\n\nYour payment for \"{{listingTitle}}\" was confirmed. The seller is preparing your order.\n\n{{ctaUrl}}"
+  "body": "<p style=\"margin:0 0 16px;\">Hi{{#if firstName}} {{firstName}}{{/if}},</p><p style=\"margin:0 0 16px;\">The seller confirmed your payment for <strong style=\"color:#0f172a;\">\"{{listingTitle}}\"</strong> and will prepare your order for shipment.</p><p style=\"margin:0 0 16px;\">We will email you again as soon as it is marked as shipped.</p>",
+  "text": "Hi{{#if firstName}} {{firstName}}{{/if}},\n\nYour payment for \"{{listingTitle}}\" was confirmed. The seller is preparing your order.\n\n{{ctaUrl}}"
 }

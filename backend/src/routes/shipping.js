@@ -187,7 +187,7 @@ router.post('/lock-rate', requireActiveAccount, async (req, res) => {
     }
 
     await transaction.save();
-    logger.info(`${LOG_PREFIX} Rate locked txn=${transactionId} ${carrier} ${service} $${rate}`);
+    logger.info(`${LOG_PREFIX} Rate locked txn=${transactionId} ${carrier} ${service} €${rate}`);
 
     return res.json({
       success: true,

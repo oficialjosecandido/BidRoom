@@ -94,7 +94,7 @@ Bidding starts at a fraction of what comparable chronographs cost, making this a
     console.log(`   Slug: ${listing.slug}`);
     console.log(`   URL: /listing/${listing.slug}`);
     console.log(`   Title: ${listing.title}`);
-    console.log(`   Starting Price: $${listing.startingPrice}`);
+    console.log(`   Starting Price: €${listing.startingPrice}`);
     console.log(`   End Date: ${listing.endDate.toLocaleString()}`);
     console.log(`   Status: ${listing.status}`);
     console.log(`   Featured: ${listing.isFeatured}`);

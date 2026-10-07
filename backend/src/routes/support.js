@@ -7,6 +7,7 @@ const { authenticateToken, requireActiveAccount } = require('../middleware/auth'
 const { requireAdmin, isAdminEmail } = require('../utils/roles');
 const { createNotification, emitNewNotificationToUser } = require('../services/notificationService');
 const { sendEmail } = require('../services/emailService');
+const { sendLocalizedEmail } = require('../services/localizedEmail');
 const { publicBaseUrl } = require('../utils/publicUrls');
 const logger = require('../utils/logger');
 
@@ -120,21 +121,38 @@ async function createMessageAndEmit(conversation, senderType, senderUid, rawBody
     io.to('support:agents').emit('support:new-message', payload);
   }
 
-  if (senderType === 'agent' && io) {
+  if (senderType === 'agent') {
     try {
-      const customer = await Customer.findById(conversation.customer, '_id').lean();
+      const customer = await Customer.findById(
+        conversation.customer,
+        '_id email firstName lastName language uid'
+      ).lean();
       if (customer) {
         await createNotification({
           userId: customer._id,
           title: 'Resposta da equipa BidRoom',
           message: body.slice(0, 80),
           type: 'system',
-          link: '/support',
+          link: '/dashboard/support',
         });
-        await emitNewNotificationToUser(io, customer._id);
+        if (io) await emitNewNotificationToUser(io, customer._id);
+
+        const supportUrl = `${publicBaseUrl()}/dashboard/support`;
+        const preview = body.length > 280 ? `${body.slice(0, 277)}…` : body;
+        // The template substitutes these raw, and all three are things a person
+        // typed — the customer's own name, the subject they chose, and the body of
+        // the reply. The greeting and the subject are both conditional in the
+        // template, so an empty one drops its clause instead of needing a word
+        // like "there" invented for it in English.
+        await sendLocalizedEmail(customer, 'supportReply', {
+          firstName: escapeHtml(customer.firstName),
+          preview: escapeHtml(preview),
+          subjectLabel: escapeHtml(conversation.subject || conversation.category),
+          ctaUrl: supportUrl,
+        });
       }
-    } catch {
-      // notification failure is non-fatal
+    } catch (err) {
+      logger.error('Failed to notify customer of support reply:', err.message || err);
     }
   }
 
@@ -287,6 +305,71 @@ router.post('/conversations/:id/messages', authenticateToken, async (req, res) =
 
 // ─── Admin/Nexus routes ───────────────────────────────────────────────────────
 
+/**
+ * POST /admin/conversations
+ * Admin opens (or reuses) a support chat with any customer and may send the first message.
+ * Body: { customerId, subject?, category?, initialMessage? }
+ */
+router.post('/admin/conversations', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const io = req.app.get('io');
+    const customerId = String(req.body.customerId || '').trim();
+    if (!OBJECT_ID_RE.test(customerId)) {
+      return res.status(400).json({ error: 'Invalid customerId' });
+    }
+
+    const customer = await Customer.findById(customerId, '_id uid email firstName lastName language').lean();
+    if (!customer) return res.status(404).json({ error: 'Customer not found' });
+    if (!customer.uid) {
+      return res.status(400).json({
+        error: 'Customer has no login',
+        message: 'This account cannot receive chat messages until they sign in.'
+      });
+    }
+
+    let conversation = await SupportConversation.findOne({
+      customer: customer._id,
+      status: { $in: ['open', 'pending_agent', 'pending_customer'] },
+    }).sort({ lastMessageAt: -1 });
+
+    let isNewConversation = false;
+    const initialMessage = sanitizeText(req.body.initialMessage || '');
+    if (!conversation) {
+      const subject = sanitizeText(req.body.subject || '').slice(0, 200)
+        || 'Mensagem da equipa BidRoom';
+      const category = VALID_CATEGORIES.includes(req.body.category) ? req.body.category : 'other';
+      conversation = await SupportConversation.create({
+        customer: customer._id,
+        customerUid: customer.uid,
+        subject,
+        category,
+        assignedAgent: req.user.email || null,
+        // Stays open until the first agent message flips it to pending_customer.
+        status: initialMessage ? 'pending_customer' : 'open',
+      });
+      isNewConversation = true;
+    } else if (!conversation.assignedAgent && req.user.email) {
+      conversation.assignedAgent = req.user.email;
+      await conversation.save();
+    }
+
+    if (initialMessage) {
+      await createMessageAndEmit(conversation, 'agent', req.user.uid, initialMessage, io, {
+        isNewConversation,
+      });
+    }
+
+    const populated = await SupportConversation.findById(conversation._id)
+      .populate('customer', 'firstName lastName email reputationScore accountStatus')
+      .lean();
+
+    res.status(isNewConversation ? 201 : 200).json({ conversation: populated });
+  } catch (err) {
+    logger.error('POST /support/admin/conversations error:', err);
+    res.status(err.status || 500).json({ error: err.message || 'Failed to open conversation' });
+  }
+});
+
 // GET /admin/conversations — support queue for Nexus
 router.get('/admin/conversations', authenticateToken, requireAdmin, async (req, res) => {
   try {
@@ -296,6 +379,9 @@ router.get('/admin/conversations', authenticateToken, requireAdmin, async (req, 
     if (req.query.status        && VALID_STATUSES.includes(req.query.status))     filter.status = req.query.status;
     if (req.query.category      && VALID_CATEGORIES.includes(req.query.category)) filter.category = req.query.category;
     if (req.query.assignedAgent) filter.assignedAgent = req.query.assignedAgent;
+    if (req.query.customerId && OBJECT_ID_RE.test(String(req.query.customerId))) {
+      filter.customer = req.query.customerId;
+    }
 
     const [conversations, total] = await Promise.all([
       SupportConversation.find(filter)
@@ -310,6 +396,20 @@ router.get('/admin/conversations', authenticateToken, requireAdmin, async (req, 
     res.json({ conversations, total, page, pages: Math.ceil(total / limit) });
   } catch {
     res.status(500).json({ error: 'Failed to load conversations' });
+  }
+});
+
+// GET /admin/conversations/:id — single conversation (for deep-link from Customers)
+router.get('/admin/conversations/:id', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    if (!OBJECT_ID_RE.test(req.params.id)) return res.status(400).json({ error: 'Invalid ID' });
+    const conversation = await SupportConversation.findById(req.params.id)
+      .populate('customer', 'firstName lastName email reputationScore accountStatus')
+      .lean();
+    if (!conversation) return res.status(404).json({ error: 'Not found' });
+    res.json({ conversation });
+  } catch {
+    res.status(500).json({ error: 'Failed to load conversation' });
   }
 });
 

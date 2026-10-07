@@ -265,7 +265,7 @@
       "subtitle": "Três passos simples para encontrar e ganhar o que ama",
       "step1": {
         "title": "Descubra",
-        "desc": "Navegue por milhares de itens únicos em várias categorias. Encontre exatamente o que procura com a nossa pesquisa avançada e filtros."
+        "desc": "Navegue por milhares de itens únicos em várias categorias. Encontre exactamente o que procura com a nossa pesquisa avançada e filtros."
       },
       "step2": {
         "title": "Licite",
@@ -273,7 +273,7 @@
       },
       "step3": {
         "title": "Possua",
-        "desc": "Vença o leilão e complete a sua compra com segurança. O seu novo tesouro será enviado diretamente para a sua porta."
+        "desc": "Vença o leilão e complete a sua compra com segurança. O seu novo tesouro será enviado directamente para a sua porta."
       }
     },
     "endingSoon": {
@@ -285,7 +285,7 @@
     },
     "categories": {
       "title": "Navegar por Categoria",
-      "subtitle": "Encontre o que ama nas nossas categorias selecionadas",
+      "subtitle": "Encontre o que ama nas nossas categorias seleccionadas",
       "viewAll": "Ver Todas as Categorias →",
       "electronics": {
         "title": "Eletrónica",
@@ -376,14 +376,14 @@
     "translateWithDeepl": "Traduzir com DeepL",
     "charactersCount": "{{count}}/80 caracteres",
     "category": "Categoria",
-    "selectCategory": "Selecionar Categoria",
+    "selectCategory": "Seleccionar Categoria",
     "subCategory": "Subcategoria",
-    "selectSubCategory": "Selecionar Subcategoria",
+    "selectSubCategory": "Seleccionar Subcategoria",
     "listingFormat": "Formato do Anúncio",
     "formatAuction": "Leilão (Maior Licitação Ganha)",
     "formatBestOffer": "Melhor Oferta (Vendedor Escolhe a Oferta)",
     "condition": "Estado do Item",
-    "selectCondition": "Selecionar Estado",
+    "selectCondition": "Seleccionar Estado",
     "conditionNew": "Novo",
     "conditionUsedExcellent": "Usado - Excelente",
     "conditionUsedVeryGood": "Usado - Muito Bom",
@@ -404,7 +404,7 @@
       "title": "Características do item",
       "yes": "Sim",
       "no": "Não",
-      "select": "Selecione…",
+      "select": "Seleccione…",
       "required": "Campo obrigatório"
     },
     "keySpecs": "Especificações Adicionais (Opcional)",
@@ -479,7 +479,7 @@
     "privateRoomNoAcceptNote": "Nota: Se nenhum licitador convidado aceitar o convite da sala privada em 15 minutos, o leilão será encerrado sem vencedor.",
     "commissionStandard": "Taxa BidRoom: 3,5% (Padrão)",
     "shippingOptions": "Opções de Envio",
-    "selectShipping": "Selecionar Opção de Envio",
+    "selectShipping": "Seleccionar Opção de Envio",
     "shippingFlatRate": "Taxa Fixa",
     "shippingCalculated": "Envio Calculado",
     "shippingLocalPickup": "Encontro Presencial",
@@ -491,7 +491,7 @@
     "flatRateHint": "Introduza o preço fixo de envio que os compradores pagarão. Use 0 para envio grátis.",
     "calculatedHint": "As taxas da transportadora são calculadas automaticamente no checkout com base no endereço do comprador e nos detalhes da embalagem que fornecer.",
     "packageSize": "Tamanho da Embalagem",
-    "selectPackageSize": "Selecionar tamanho da embalagem",
+    "selectPackageSize": "Seleccionar tamanho da embalagem",
     "packageSmall": "Pequena – até 0,5 kg (aprox. 20 × 15 × 10 cm)",
     "packageMedium": "Média – até 2,3 kg (aprox. 30 × 25 × 20 cm)",
     "packageLarge": "Grande – até 9 kg (aprox. 51 × 41 × 30 cm)",
@@ -507,14 +507,14 @@
     "countryDE": "Alemanha",
     "countryFR": "França",
     "handlingTime": "Tempo de Preparação",
-    "selectHandling": "Selecionar Tempo de Preparação",
+    "selectHandling": "Seleccionar Tempo de Preparação",
     "handling1": "1 Dia Útil",
     "handling2": "2 Dias Úteis",
     "handling3": "3 Dias Úteis",
     "handling5": "5 Dias Úteis",
     "handling7": "7 Dias Úteis",
     "returnPolicy": "Política de Devolução",
-    "selectReturn": "Selecionar Política de Devolução",
+    "selectReturn": "Seleccionar Política de Devolução",
     "return30": "Devoluções em 30 Dias",
     "return14": "Devoluções em 14 Dias",
     "returnNo": "Sem Devoluções",
@@ -562,7 +562,7 @@
       "Projectors": "Projetores",
       "Streaming Devices": "Dispositivos de Streaming",
       "Smart Watches": "Relógios Inteligentes",
-      "Fitness Trackers": "Pulseiras de Atividade",
+      "Fitness Trackers": "Pulseiras de Actividade",
       "Wearables Accessories": "Acessórios Wearables",
       "Other Electronics": "Outros Eletrónicos",
       "Tables": "Mesas",
@@ -574,7 +574,7 @@
       "Mirrors": "Espelhos",
       "Vases": "Jarras",
       "Wall Decor": "Decoração de Parede",
-      "Decorative Objects": "Objetos Decorativos",
+      "Decorative Objects": "Objectos Decorativos",
       "Cookware": "Utensílios de Cozinha",
       "Tableware": "Louça de Mesa",
       "Glassware": "Cristalaria",
@@ -697,7 +697,7 @@
       "minValue": "O valor deve ser maior que {{min}}",
       "buyNowTooLow": "O preço de Compra Imediata deve ser maior que o Lance Inicial",
       "reserveTooLow": "O preço de reserva deve ser pelo menos o lance inicial",
-      "invalidFileType": "Tipo de arquivo inválido. Apenas imagens (JPEG, PNG, GIF, WebP, BMP) são permitidas. Rejeitados: {{files}}",
+      "invalidFileType": "Tipo de ficheiro inválido. Apenas imagens (JPEG, PNG, GIF, WebP, BMP) são permitidas. Rejeitados: {{files}}",
       "mediaMaxPhotos": "Pode adicionar no máximo 20 fotos. Remova algumas para adicionar mais. Não adicionadas: {{files}}",
       "mediaMaxPhotosWithVideo": "Com um vídeo pode adicionar no máximo 5 fotos. Remova fotos ou o vídeo para adicionar mais. Não adicionadas: {{files}}",
       "mediaVideoLimit": "Só é permitido um vídeo e no máximo 5 fotos com vídeo. Não adicionado: {{files}}",
@@ -760,12 +760,12 @@
     "startingBidHint": "O valor mínimo para o primeiro lance. Um lance inicial competitivo atrai mais licitantes.",
     "durationHint": "Artigos raros ou premium tendem a gerar mais lances com 7–10 dias.",
     "autoRelistLabel": "Reabrir automaticamente se não vender",
-    "autoRelistHint": "Se o leilão terminar sem venda (sem licitações ou reserva não atingida), será reaberto automaticamente por mais um período igual. Pode desativar a qualquer momento.",
-    "formatBestOfferDesc": "Os compradores submetem propostas e você escolhe a que prefere. Defina um preço mínimo — tem total liberdade para recusar qualquer oferta abaixo desse valor.",
-    "formatAuctionDesc": "Compradores fazem lances em tempo real e competem pelo seu artigo. Você define a duração e o lance inicial. O vencedor é apurado automaticamente.",
+    "autoRelistHint": "Se o leilão terminar sem venda (sem licitações ou reserva não atingida), será reaberto automaticamente por mais um período igual. Pode desactivar a qualquer momento.",
+    "formatBestOfferDesc": "Os compradores submetem propostas e fica ao seu critério escolher a que prefere. Defina um preço mínimo — tem total liberdade para recusar qualquer oferta abaixo desse valor.",
+    "formatAuctionDesc": "Os compradores licitam em tempo real e competem pelo seu artigo. A duração e o lance inicial são definidos por si. O vencedor é apurado automaticamente.",
     "drop": {
       "title": "Arraste as fotos para aqui",
-      "sub": "ou clique para selecionar · JPEG, PNG, WebP · máx. 20 fotos"
+      "sub": "ou clique para seleccionar · JPEG, PNG, WebP · máx. 20 fotos"
     },
     "mediaHint": "A primeira foto será a imagem principal do anúncio.",
     "mediaCover": "Principal",
@@ -780,7 +780,7 @@
       "progress": "Progresso do anúncio"
     },
     "ck": {
-      "format": "Formato selecionado",
+      "format": "Formato seleccionado",
       "title": "Título preenchido",
       "category": "Categoria escolhida",
       "condition": "Condição definida",
@@ -792,7 +792,7 @@
     "stepOf": "Passo {{step}} de {{total}}",
     "kycNotice": "Para artigos com valor ≥ €5.000 é necessária verificação de identidade (KYC) antes de publicar.",
     "stripeRequired": "Configura a conta bancária para receber vendas",
-    "stripeRequiredText": "Ainda não tens a tua conta de pagamentos configurada. Podes publicar agora, mas lembra-te de configurar antes de receberes o dinheiro.",
+    "stripeRequiredText": "Ainda não tem a sua conta de pagamentos configurada. Pode publicar agora, mas lembre-se de a configurar antes de receber o dinheiro.",
     "stripeRequiredLink": "Configurar agora →",
     "nav": {
       "dashboard": "Dashboard"
@@ -823,7 +823,7 @@
       "emailHint": "Usado apenas para o contactarmos sobre este anúncio.",
       "emailInvalid": "Indique um email válido.",
       "errorIdentity": "Indique o seu nome e um email válido para submeter o anúncio.",
-      "paymentNote": "Sem conta, o pagamento é combinado diretamente com o comprador (entrega em mão). Para receber por Stripe, transferência ou MB Way, crie uma conta.",
+      "paymentNote": "Sem conta, o pagamento é combinado directamente com o comprador (entrega em mão). Para receber por Stripe, transferência ou MB Way, crie uma conta.",
       "kycTitle": "Este valor exige conta verificada",
       "kycBody": "Anúncios a partir de {{amount}} € exigem verificação de identidade, que só é possível com conta. Baixe o valor inicial ou crie uma conta para continuar.",
       "kycCta": "Compreendi",
@@ -985,7 +985,7 @@
   "listingDetails": {
     "moderationBanner": {
       "title": "Este anúncio está em revisão",
-      "body": "O seu anúncio ainda não é visível para outros utilizadores. A nossa equipa de moderação irá revê-lo brevemente. Se aprovado, ficará ativo automaticamente."
+      "body": "O seu anúncio ainda não é visível para outros utilizadores. A nossa equipa de moderação irá revê-lo brevemente. Se aprovado, ficará activo automaticamente."
     },
     "saleType": {
       "bestOffer": "Melhor Oferta",
@@ -998,9 +998,9 @@
       "identicalUnits": "unidades idênticas incluídas",
       "bundleContents": "O Que Está Incluído"
     },
-    "loading": "Carregando detalhes do anúncio...",
+    "loading": "A carregar detalhes do anúncio...",
     "backToListings": "← Voltar aos Anúncios",
-    "currentBid": "Lance Atual",
+    "currentBid": "Lance Actual",
     "highestOffer": "Maior Oferta",
     "noOffersYet": "Nenhuma oferta ainda",
     "buyNow": "Comprar Agora",
@@ -1014,14 +1014,14 @@
       "view": "Ver Sala Privada",
       "available": "Sala privada disponível",
       "eligibleCountdownLabel": "Tempo restante para criar sala privada:",
-      "availableDescSeller": "Crie sua sala privada e convide 2 a 5 licitantes para continuar. Você recebeu um e-mail com um link para começar.",
-      "availableDescBuyer": "O vendedor pode criar uma sala privada e convidar alguns licitantes para continuar. Você será notificado se for convidado.",
+      "availableDescSeller": "Crie a sua sala privada e convide 2 a 5 licitantes para continuar. Recebeu um e-mail com um link para começar.",
+      "availableDescBuyer": "O vendedor pode criar uma sala privada e convidar alguns licitantes para continuar. Será notificado se for convidado.",
       "closed": "Sala privada encerrada",
       "closedDescWinner": "A sala privada terminou.",
       "closedNoWinner": "O leilão foi encerrado porque nenhum licitante convidado aceitou o convite em 15 minutos. Não há vencedor.",
       "ends60s": "(encerra 60s após o último lance)",
       "readyTitle": "Sala Privada Ativada",
-      "readyDesc": "Você pode convidar 2–5 licitantes para uma sala privada a qualquer momento durante o leilão.",
+      "readyDesc": "Pode convidar 2–5 licitantes para uma sala privada a qualquer momento durante o leilão.",
       "inviteBidders": "Convidar Licitantes",
       "invitedBidders": "Licitantes Convidados",
       "acceptanceDeadline": "Prazo de aceitação",
@@ -1051,18 +1051,18 @@
       "note": "Usa este botão para partilhar no WhatsApp e ver a imagem do produto."
     },
     "ended": {
-      "noBidsSeller": "Este leilão encerrou sem lances. Você pode reabri-lo por mais 7 dias abaixo.",
-      "selectWinner": "Selecione um vencedor abaixo.",
-      "winnerSelected": "Vencedor selecionado.",
-      "noOffersSeller": "Este anúncio encerrou sem ofertas. Você pode reabri-lo por mais 7 dias abaixo.",
+      "noBidsSeller": "Este leilão encerrou sem lances. Pode reabri-lo por mais 7 dias abaixo.",
+      "selectWinner": "Seleccione um vencedor abaixo.",
+      "winnerSelected": "Vencedor seleccionado.",
+      "noOffersSeller": "Este anúncio encerrou sem ofertas. Pode reabri-lo por mais 7 dias abaixo.",
       "noBidsBuyer": "Este leilão encerrou sem lances.",
-      "auctionEndedWinner": "Leilão encerrado. Um vencedor foi selecionado.",
+      "auctionEndedWinner": "Leilão encerrado. Um vencedor foi seleccionado.",
       "auctionEnded": "Leilão encerrado.",
       "listingSold": "Leilão encerrado. Item vendido.",
       "listingEnded": "Este anúncio encerrou.",
-      "youWon": "🏆 Você ganhou este leilão!",
-      "youWonDesc": "Parabéns! Aceda a Transações para concluir a sua compra.",
-      "goToTransactions": "Ir para Transações"
+      "youWon": "🏆 Ganhou este leilão!",
+      "youWonDesc": "Parabéns! Aceda a Transacções para concluir a sua compra.",
+      "goToTransactions": "Ir para Transacções"
     },
     "priceDetails": {
       "startingBid": "Lance Inicial:",
@@ -1079,17 +1079,17 @@
       "makeOffer": "Fazer Oferta",
       "addToWatchlist": "Adicionar à Lista de Desejos",
       "removeFromWatchlist": "Remover da Lista de Desejos",
-      "selectWinner": "Selecionar vencedor",
+      "selectWinner": "Seleccionar vencedor",
       "reopenForDays": "Reabrir por 7 dias",
       "reopening": "Reabrindo…",
       "editListing": "Editar anúncio",
       "createPrivateRoom": "Criar sala privada",
-      "cantBidOwnListing": "Você não pode Fazer Proposta no seu próprio anúncio.",
-      "cantOfferOwnListing": "Você não pode fazer oferta no seu próprio anúncio.",
+      "cantBidOwnListing": "Não pode Fazer Proposta no seu próprio anúncio.",
+      "cantOfferOwnListing": "Não pode fazer oferta no seu próprio anúncio.",
       "auctionClosedNoBids": "Leilão encerrado sem lances.",
       "listingClosedNoOffers": "Anúncio encerrado sem ofertas.",
       "auctionHasEndedNoBids": "Este leilão encerrou sem lances.",
-      "auctionHasEndedWinner": "Este leilão encerrou. Um vencedor foi selecionado.",
+      "auctionHasEndedWinner": "Este leilão encerrou. Um vencedor foi seleccionado.",
       "auctionHasEnded": "Este leilão encerrou.",
       "sellerHas24hOffer": "O vendedor tem 24h para aceitar uma oferta",
       "sellerHas24hWinner": "O vendedor tem 24h para escolher um vencedor"
@@ -1137,13 +1137,13 @@
       "offers": "Ofertas"
     },
     "bidHistory": {
-      "loading": "Carregando histórico de lances...",
+      "loading": "A carregar histórico de lances...",
       "tryAgain": "Tentar Novamente",
       "noBids": "Nenhum Lance Ainda",
       "noBidsDesc": "Seja o primeiro a dar um lance neste item!",
       "totalBids": "Total de lances",
       "leadingBid": "Lance liderando",
-      "lastActivity": "Última atividade",
+      "lastActivity": "Última actividade",
       "live": "AO VIVO",
       "leading": "Liderando",
       "authenticated": "Autenticado",
@@ -1152,35 +1152,35 @@
       "deposit": "Depósito",
       "noBuyerReviews": "Sem avaliações de comprador",
       "winner": "Vencedor",
-      "sellerNote": "Apenas lances de contas registradas e verificadas podem ser selecionados como lance vencedor. Visitantes devem criar uma conta e verificar o e-mail para serem elegíveis.",
-      "selectAsWinner": "Selecionar como vencedor",
-      "selecting": "Selecionando…",
+      "sellerNote": "Apenas lances de contas registadas e verificadas podem ser seleccionados como lance vencedor. Os visitantes devem criar uma conta e verificar o e-mail para serem elegíveis.",
+      "selectAsWinner": "Seleccionar como vencedor",
+      "selecting": "Seleccionando…",
       "verifiedRequired": "Conta verificada necessária",
       "notifyOutbid": "Notificar-me quando o meu lance for superado",
-      "anonymous": "Anônimo",
+      "anonymous": "Anónimo",
       "loadMore": "Ver mais",
       "loadingMore": "A carregar…"
     },
     "offerHistory": {
-      "loading": "Carregando ofertas...",
+      "loading": "A carregar ofertas...",
       "tryAgain": "Tentar Novamente",
       "noOffers": "Nenhuma Oferta Ainda",
       "noOffersDesc": "Seja o primeiro a fazer uma oferta neste item!",
       "makeOffer": "Fazer uma oferta",
       "ctaText": "Regras: Submeta a sua oferta antes do prazo. Pode retirá-la enquanto estiver pendente. Se uma ou mais ofertas atingirem ou ultrapassarem o mínimo, o vendedor tem de vender. Abaixo do mínimo, o vendedor não é obrigado a vender.",
       "offerFrom": "Oferta de",
-      "yourOffer": "Sua oferta",
-      "selectedBySeller": "Selecionada pelo vendedor",
+      "yourOffer": "A sua oferta",
+      "selectedBySeller": "Seleccionada pelo vendedor",
       "offered": "Oferecido",
       "sellerLabel": "Vendedor:",
-      "acceptDeclineNote": "Você pode aceitar ou recusar ofertas após a data de encerramento do anúncio.",
+      "acceptDeclineNote": "Pode aceitar ou recusar ofertas após a data de encerramento do anúncio.",
       "accept": "Aceitar",
       "accepting": "Aceitando…",
       "decline": "Recusar",
       "declining": "Recusando…",
       "withdraw": "Retirar",
       "withdrawing": "A retirar…",
-      "anonymous": "Anônimo",
+      "anonymous": "Anónimo",
       "verifiedLabel": "✓ Verificado",
       "statusAccepted": "Aceite pelo vendedor",
       "statusDeclined": "Recusada",
@@ -1211,13 +1211,13 @@
     },
     "bidModal": {
       "title": "Dar um lance",
-      "transparency": "Para que você saiba exatamente onde está:",
-      "currentBid": "Lance atual",
+      "transparency": "Para que saiba exactamente onde está:",
+      "currentBid": "Lance actual",
       "minimumNextBid": "Próximo lance mínimo",
       "bidIncrement": "Incremento de lance",
       "amountLabel": "Valor do seu lance",
-      "emailLabel": "Seu e-mail",
-      "emailHint": "Usaremos isso para confirmar seu lance.",
+      "emailLabel": "O seu e-mail",
+      "emailHint": "Usaremos isso para confirmar o seu lance.",
       "notifyOutbid": "Notificar-me quando o meu lance for superado",
       "cancel": "Cancelar",
       "submit": "Fazer Proposta",
@@ -1235,16 +1235,16 @@
     },
     "offerModal": {
       "title": "Fazer uma oferta",
-      "transparency": "Para que você saiba exatamente o que está oferecendo:",
-      "startingCurrent": "Inicial / atual",
+      "transparency": "Para que saiba exactamente o que está a oferecer:",
+      "startingCurrent": "Inicial / actual",
       "minimumOffer": "Oferta mínima",
       "amountLabel": "Valor da sua oferta",
-      "emailLabel": "Seu e-mail",
+      "emailLabel": "O seu e-mail",
       "emailRequiredBadge": "Obrigatório",
       "emailRequiredCallout": "Introduza o seu e-mail para o vendedor poder responder à sua oferta.",
       "emailPlaceholder": "nome@email.com",
       "emailHint": "O vendedor usará isso para responder à sua oferta.",
-      "belowMinNote": "Sua oferta está abaixo do preço mínimo do vendedor. O vendedor não é obrigado a aceitar esta oferta, mesmo que você seja o único licitante.",
+      "belowMinNote": "A sua oferta está abaixo do preço mínimo do vendedor. O vendedor não é obrigado a aceitar esta oferta, mesmo que seja o único licitante.",
       "cancel": "Cancelar",
       "submit": "Enviar oferta",
       "submitting": "Enviando oferta…",
@@ -1255,7 +1255,7 @@
       "yourOfferPreview": "Está a oferecer:",
       "successTitle": "A sua oferta foi publicada.",
       "successText": "Obrigado",
-      "successTextAccepted": "A sua oferta de {{amount}} foi aceite pelo vendedor. Conclua a compra em Transações.",
+      "successTextAccepted": "A sua oferta de {{amount}} foi aceite pelo vendedor. Conclua a compra em Transacções.",
       "successConfirm": "Entendido",
       "errorTitle": "Não foi possível enviar a oferta",
       "errorText": "Falha ao enviar a oferta. Tente novamente.",
@@ -1265,21 +1265,21 @@
       "emailInvalid": "Introduza um endereço de e-mail válido."
     },
     "watchlistModal": {
-      "title": "Salvar na Lista de Desejos",
-      "desc": "Faça login ou crie uma conta para salvar este item na sua lista de desejos e vê-lo no seu painel.",
+      "title": "Guardar na Lista de Desejos",
+      "desc": "Faça login ou crie uma conta para guardar este item na sua lista de desejos e vê-lo no seu painel.",
       "login": "Entrar",
       "signup": "Criar conta"
     },
     "selectWinnerModal": {
-      "title": "Selecionar vencedor",
-      "subtitle": "Apenas lances de contas registradas e verificadas podem ser selecionados. Visitantes não são elegíveis.",
-      "loading": "Carregando lances…",
+      "title": "Seleccionar vencedor",
+      "subtitle": "Apenas lances de contas registadas e verificadas podem ser seleccionados. Os visitantes não são elegíveis.",
+      "loading": "A carregar lances…",
       "noBids": "Nenhum lance para exibir.",
       "verified": "Verificado",
       "guest": "Visitante",
       "unverified": "Não verificado",
-      "selectBtn": "Selecionar como vencedor",
-      "selecting": "Selecionando…",
+      "selectBtn": "Seleccionar como vencedor",
+      "selecting": "Seleccionando…",
       "ineligible": "Conta verificada necessária"
     },
     "platinumBidders": {
@@ -1312,20 +1312,20 @@
     },
     "privateRoomModal": {
       "title": "Criar sala privada",
-      "subtitle": "Escolha entre 2 e 5 licitantes para convidar. Apenas licitantes registrados podem ser convidados. Os licitantes convidados receberão um link para a sala privada; os demais serão notificados que não foram selecionados.",
-      "loading": "Carregando licitantes…",
+      "subtitle": "Escolha entre 2 e 5 licitantes para convidar. Apenas licitantes registados podem ser convidados. Os licitantes convidados recebem um link para a sala privada; os restantes são notificados de que não foram seleccionados.",
+      "loading": "A carregar licitantes…",
       "noBidders": "Nenhum licitante para exibir.",
-      "selected": "Selecionados:",
+      "selected": "Seleccionados:",
       "minMax": "(mín 2, máx 5)",
       "create": "Criar sala e enviar convites",
       "creating": "Criando…",
       "cannotInvite": "Visitante (não pode ser convidado)",
-      "ineligible": "Registre-se para ser elegível",
+      "ineligible": "Registe-se para ser elegível",
       "invite": "Convidar",
       "maxBid": "Lance máx:",
       "bids": "lance(s)",
       "notEligible": "Não elegível",
-      "selectedCount": "selecionados (mín. 2, máx. 5)",
+      "selectedCount": "seleccionados (mín. 2, máx. 5)",
       "bidderFallback": "Licitante"
     },
     "nav": {
@@ -1341,10 +1341,10 @@
       "watching": "a observar",
       "views": "visualizações",
       "congratsWon": "Parabéns! Ganhou este leilão.",
-      "winnerWasSelected": "O vencedor foi selecionado.",
-      "viewTransaction": "Ver transação →",
+      "winnerWasSelected": "O vencedor foi seleccionado.",
+      "viewTransaction": "Ver transacção →",
       "privateRoomActiveDesc": "Licitação exclusiva em curso.",
-      "privateRoomClosedWinner": "Vencedor selecionado. Preço final:",
+      "privateRoomClosedWinner": "Vencedor seleccionado. Preço final:",
       "bidPrivateRoom": "Licitar na sala privada",
       "goToPrivateRoom": "Ir para a Sala Privada",
       "accessPrivateRoomSeller": "Aceder à Sala Privada",
@@ -1364,7 +1364,7 @@
       "eligibleCountdown": "Sala privada:",
       "remaining": "restantes",
       "winnerSelectionCountdownOffer": "24h para aceitar oferta",
-      "winnerSelectionCountdownWinner": "24h para selecionar vencedor",
+      "winnerSelectionCountdownWinner": "24h para seleccionar vencedor",
       "invitedRoomHeader": "Convidados para a sala",
       "buyNow": "Comprar já ·",
       "block": "Bloquear vendedor",
@@ -1395,8 +1395,8 @@
       "proTitle": "Vendedor profissional — garantia legal aplicável",
       "proNotice": "Este veículo é vendido por um profissional. Em compras a profissionais, o comprador beneficia da garantia legal de conformidade prevista no Decreto-Lei 84/2021. Confirme as condições com o vendedor antes de concluir o negócio.",
       "privateTitle": "Vendedor particular — sem garantia legal de consumo",
-      "privateNotice": "Este veículo é vendido por um particular. As vendas entre particulares não beneficiam da garantia legal de conformidade prevista no Decreto-Lei 84/2021. Recomendamos uma inspeção do veículo antes de fechar negócio.",
-      "offlineNotice": "A BidRoom organiza o leilão e coloca comprador e vendedor em contacto. O pagamento e a entrega do veículo são tratados diretamente entre as partes, fora da plataforma."
+      "privateNotice": "Este veículo é vendido por um particular. As vendas entre particulares não beneficiam da garantia legal de conformidade prevista no Decreto-Lei 84/2021. Recomendamos uma inspecção do veículo antes de fechar negócio.",
+      "offlineNotice": "A BidRoom organiza o leilão e coloca comprador e vendedor em contacto. O pagamento e a entrega do veículo são tratados directamente entre as partes, fora da plataforma."
     },
     "schedule": {
       "notOpenYet": "Este leilão ainda não abriu",
@@ -1409,9 +1409,9 @@
       "or": "ou",
       "email": "E-mail",
       "emailPlaceholder": "seu.email@exemplo.com",
-      "password": "Senha",
-      "showPassword": "Mostrar senha",
-      "hidePassword": "Ocultar senha"
+      "password": "Palavra-passe",
+      "showPassword": "Mostrar palavra-passe",
+      "hidePassword": "Ocultar palavra-passe"
     },
     "login": {
       "title": "Entrar",
@@ -1420,17 +1420,17 @@
       "orDivider": "ou",
       "emailLabel": "Endereço de E-mail",
       "emailPlaceholder": "seu.email@exemplo.com",
-      "passwordLabel": "Senha",
-      "passwordPlaceholder": "Digite sua senha",
-      "forgotPassword": "Esqueceu a senha?",
+      "passwordLabel": "Palavra-passe",
+      "passwordPlaceholder": "Introduza a sua palavra-passe",
+      "forgotPassword": "Esqueceu a palavra-passe?",
       "signIn": "Entrar",
       "signingIn": "Entrando...",
       "logIn": "Entrar",
       "loggingIn": "Entrando...",
-      "resetPassword": "Esqueceu a senha?",
+      "resetPassword": "Esqueceu a palavra-passe?",
       "noAccount": "Não tem uma conta?",
-      "signUp": "Cadastre-se",
-      "verifyEmailRequired": "Por favor, verifique seu e-mail antes de entrar. Verifique sua caixa de entrada para um link de verificação."
+      "signUp": "Registe-se",
+      "verifyEmailRequired": "Por favor, verifique o seu e-mail antes de entrar. Procure na caixa de entrada o link de verificação."
     },
     "signup": {
       "title": "Criar Conta",
@@ -1440,17 +1440,17 @@
       "firstName": "Nome",
       "lastName": "Sobrenome",
       "firstNameLabel": "Nome",
-      "firstNamePlaceholder": "Seu nome",
+      "firstNamePlaceholder": "O seu nome",
       "lastNameLabel": "Sobrenome",
-      "lastNamePlaceholder": "Seu sobrenome",
+      "lastNamePlaceholder": "O seu sobrenome",
       "emailLabel": "Endereço de E-mail",
       "emailPlaceholder": "seu.email@exemplo.com",
-      "passwordLabel": "Senha",
-      "passwordPlaceholder": "Crie uma senha forte",
-      "confirmPassword": "Confirmar senha",
-      "confirmPasswordLabel": "Confirmar Senha",
-      "confirmPasswordPlaceholder": "Repita sua senha",
-      "createPasswordPlaceholder": "Crie uma senha forte (mín. 12 caracteres)",
+      "passwordLabel": "Palavra-passe",
+      "passwordPlaceholder": "Crie uma palavra-passe forte",
+      "confirmPassword": "Confirmar palavra-passe",
+      "confirmPasswordLabel": "Confirmar Palavra-passe",
+      "confirmPasswordPlaceholder": "Repita a sua palavra-passe",
+      "createPasswordPlaceholder": "Crie uma palavra-passe forte (mín. 12 caracteres)",
       "passwordRuleLength": "Pelo menos 12 caracteres",
       "passwordRuleUpper": "Uma letra maiúscula",
       "passwordRuleLower": "Uma letra minúscula",
@@ -1468,52 +1468,52 @@
       "signIn": "Entrar"
     },
     "forgotPassword": {
-      "title": "Esqueceu a Senha",
-      "subtitle": "Digite seu e-mail e enviaremos um link de redefinição.",
+      "title": "Esqueceu a Palavra-passe",
+      "subtitle": "Introduza o seu e-mail e enviamos-lhe um link de redefinição.",
       "emailLabel": "Endereço de E-mail",
       "emailPlaceholder": "seu.email@exemplo.com",
       "sendResetLink": "Enviar Link de Redefinição",
       "sending": "Enviando...",
-      "rememberPassword": "Lembra-se da senha?",
+      "rememberPassword": "Lembra-se da palavra-passe?",
       "backToLogin": "Voltar para Entrar",
-      "successMessage": "E-mail de redefinição de senha enviado. Verifique sua caixa de entrada.",
+      "successMessage": "E-mail de redefinição de palavra-passe enviado. Verifique a sua caixa de entrada.",
       "errorMessage": "Falha ao enviar e-mail de redefinição. Tente novamente.",
       "sendFailed": "Falha ao enviar e-mail de redefinição. Tente novamente."
     },
     "resetPassword": {
-      "title": "Redefinir Senha",
-      "subtitle": "Digite sua nova senha abaixo.",
-      "password": "Nova senha",
-      "confirmPassword": "Confirmar nova senha",
-      "newPassword": "Nova senha",
-      "confirmNewPassword": "Confirmar nova senha",
-      "newPasswordLabel": "Nova Senha",
-      "newPasswordPlaceholder": "Digite a nova senha",
-      "confirmPasswordLabel": "Confirmar Nova Senha",
-      "confirmPasswordPlaceholder": "Repita a nova senha",
-      "confirmNewPasswordPlaceholder": "Repita a nova senha",
-      "passwordMust": "A senha deve ter:",
+      "title": "Redefinir Palavra-passe",
+      "subtitle": "Introduza a nova palavra-passe abaixo.",
+      "password": "Nova palavra-passe",
+      "confirmPassword": "Confirmar nova palavra-passe",
+      "newPassword": "Nova palavra-passe",
+      "confirmNewPassword": "Confirmar nova palavra-passe",
+      "newPasswordLabel": "Nova Palavra-passe",
+      "newPasswordPlaceholder": "Introduza a nova palavra-passe",
+      "confirmPasswordLabel": "Confirmar Nova Palavra-passe",
+      "confirmPasswordPlaceholder": "Repita a nova palavra-passe",
+      "confirmNewPasswordPlaceholder": "Repita a nova palavra-passe",
+      "passwordMust": "A palavra-passe deve ter:",
       "reqMinLength": "Pelo menos 12 caracteres",
       "reqUppercase": "Uma letra maiúscula",
       "reqLowercase": "Uma letra minúscula",
       "reqNumber": "Um número",
-      "requirements": "Requisitos da senha:",
+      "requirements": "Requisitos da palavra-passe:",
       "req1": "Pelo menos 12 caracteres",
       "req2": "Uma letra maiúscula",
       "req3": "Um número",
-      "resetButton": "Redefinir Senha",
+      "resetButton": "Redefinir Palavra-passe",
       "resetting": "Redefinindo...",
       "backToLogin": "Voltar para Entrar",
-      "successMessage": "Senha redefinida com sucesso. A redirecionar para iniciar sessão…",
+      "successMessage": "Palavra-passe redefinida com sucesso. A redireccionar para iniciar sessão…",
       "expiredLink": "Este link de redefinição é inválido ou expirou. Solicite um novo.",
       "errorInvalidCode": "Link de redefinição inválido. Use o link do e-mail ou solicite uma nova redefinição.",
-      "errorMismatch": "As senhas não coincidem.",
-      "errorGeneral": "Falha ao redefinir senha. Tente novamente."
+      "errorMismatch": "As palavras-passe não coincidem.",
+      "errorGeneral": "Falha ao redefinir palavra-passe. Tente novamente."
     },
     "verifyEmail": {
-      "loading": "Verificando seu e-mail...",
+      "loading": "A verificar o seu e-mail...",
       "successTitle": "E-mail Verificado!",
-      "successDesc": "Seu e-mail foi verificado. Agora você pode entrar.",
+      "successDesc": "O seu e-mail foi verificado. Já pode entrar.",
       "errorTitle": "Falha na Verificação",
       "goToLogin": "Ir para Entrar",
       "invalidCode": "Código de verificação inválido ou em falta.",
@@ -1537,10 +1537,10 @@
       "minLength": "{{field}} deve ter pelo menos {{min}} caracteres.",
       "mustAcceptTerms": "Deve aceitar os Termos e Condições.",
       "emailExists": "Este e-mail já está registado.",
-      "passwordMismatch": "As senhas não coincidem.",
+      "passwordMismatch": "As palavras-passe não coincidem.",
       "emailAlreadyInUse": "Já existe uma conta com este e-mail.",
-      "emailAlreadyInUseHint": "Já existe uma conta com este e-mail. Entre, reenvie a verificação se ainda não a concluiu, ou reponha a password.",
-      "formIncomplete": "Preencha todos os campos obrigatórios e cumpra as regras da password.",
+      "emailAlreadyInUseHint": "Já existe uma conta com este e-mail. Entre, reenvie a verificação se ainda não a concluiu, ou reponha a palavra-passe.",
+      "formIncomplete": "Preencha todos os campos obrigatórios e cumpra as regras da palavra-passe.",
       "registrationFailed": "Falha no registo. Tente novamente.",
       "loginFailed": "Falha ao entrar. Tente novamente.",
       "userDisabled": "Esta conta foi desativada.",
@@ -1548,20 +1548,20 @@
       "popupClosed": "Início de sessão cancelado.",
       "popupCancelled": "Início de sessão cancelado.",
       "popupBlocked": "O pop-up foi bloqueado. Permita pop-ups para este site.",
-      "passwordMinLength": "A senha não cumpre o comprimento mínimo.",
+      "passwordMinLength": "A palavra-passe não cumpre o comprimento mínimo.",
       "userNotFound": "Nenhuma conta encontrada com este e-mail.",
-      "wrongPassword": "Senha incorreta. Tente novamente.",
-      "wrongPasswordHint": "Senha incorreta. Se acabou de se registar, confirme o e-mail primeiro. Caso contrário, reponha a password.",
+      "wrongPassword": "Palavra-passe incorrecta. Tente novamente.",
+      "wrongPasswordHint": "Palavra-passe incorrecta. Se acabou de se registar, confirme o e-mail primeiro. Caso contrário, reponha a palavra-passe.",
       "emailInUse": "Já existe uma conta com este e-mail.",
       "weakPassword": "Password fraca. Use pelo menos 12 caracteres, com maiúscula, minúscula e um número.",
-      "invalidEmail": "Digite um endereço de e-mail válido.",
+      "invalidEmail": "Introduza um endereço de e-mail válido.",
       "emailRequired": "E-mail é obrigatório.",
-      "passwordRequired": "Senha é obrigatória.",
+      "passwordRequired": "Palavra-passe é obrigatória.",
       "firstNameRequired": "Nome é obrigatório.",
       "lastNameRequired": "Sobrenome é obrigatório.",
-      "confirmPasswordRequired": "Por favor, confirme sua senha.",
-      "passwordsDoNotMatch": "As senhas não coincidem.",
-      "termsRequired": "Você deve aceitar os Termos e Condições.",
+      "confirmPasswordRequired": "Por favor, confirme a sua palavra-passe.",
+      "passwordsDoNotMatch": "As palavras-passe não coincidem.",
+      "termsRequired": "Tem de aceitar os Termos e Condições.",
       "generic": "Ocorreu um erro. Tente novamente.",
       "tooManyRequests": "Muitas tentativas. Por favor, aguarde e tente novamente."
     }
@@ -1572,12 +1572,12 @@
       "browseAuctions": "Ver Leilões",
       "store": "Loja",
       "main": "Principal",
-      "activity": "Atividade",
+      "activity": "Actividade",
       "listings": "Anúncios",
       "account": "Conta",
       "buyer": "Comprador",
       "seller": "Vendedor",
-      "transactions": "Transações",
+      "transactions": "Transacções",
       "notifications": "Notificações",
       "myBids": "As Minhas Licitações",
       "watchlist": "Watchlist",
@@ -1585,7 +1585,7 @@
       "myListings": "Os Meus Anúncios",
       "buyerProfile": "Perfil do Comprador",
       "sellerProfile": "Perfil do Vendedor",
-      "settings": "Configurações",
+      "settings": "Definições",
       "disputes": "Disputas",
       "reviews": "Avaliações",
       "openMenu": "Abrir menu",
@@ -1626,10 +1626,10 @@
       "unblockBtn": "Desbloquear"
     },
     "common": {
-      "loading": "Carregando...",
+      "loading": "A carregar...",
       "tryAgain": "Tentar novamente",
       "cancel": "Cancelar",
-      "save": "Salvar",
+      "save": "Guardar",
       "review": "Avaliação",
       "reviews": "Avaliações",
       "submitting": "Enviando..."
@@ -1649,7 +1649,7 @@
       "sellerScore": "Pontuação como Vendedor",
       "reputation": {
         "emailNotVerifiedTitle": "Email não confirmado",
-        "emailNotVerifiedBody": "Confirme o seu email para licitar, receber atualizações de transações e construir a sua reputação como comprador.",
+        "emailNotVerifiedBody": "Confirme o seu email para licitar, receber actualizações de transacções e construir a sua reputação como comprador.",
         "emailVerifyCta": "Verificar nas definições",
         "paymentMissingTitle": "Adicione um método de pagamento",
         "paymentMissingIntro": "Alcance o Nível 3 — Pagamento Garantido e desbloqueie:",
@@ -1659,15 +1659,15 @@
       "noTopUps": "Sem recargas ainda.",
       "date": "Data",
       "amount": "Valor",
-      "status": "Status",
+      "status": "Estado",
       "membership": "Associação",
       "memberSince": "Membro desde",
       "activeListingsPreview": "Anúncios Ativos",
-      "noActiveListings": "Sem anúncios ativos.",
+      "noActiveListings": "Sem anúncios activos.",
       "viewAll": "Ver todos os anúncios",
       "errorLoading": "Falha ao carregar dados do painel.",
       "reviewError": "Falha ao enviar avaliação.",
-      "balanceModalTitle": "Seu Saldo",
+      "balanceModalTitle": "O seu Saldo",
       "topUp": "Recarregar",
       "withdraw": "Sacar",
       "balanceNote": "O saldo é usado para Fazer Propostas e concluir compras.",
@@ -1681,18 +1681,18 @@
       "reviews": "avaliações",
       "review": "avaliação",
       "viewProfile": "Ver Perfil",
-      "yourMembership": "Sua Assinatura",
+      "yourMembership": "A sua Assinatura",
       "balanceLabel": "Saldo:",
       "basedOnBalance": "com base no saldo",
       "addAtLeast": "Adicione pelo menos",
       "toUnlock": "para desbloquear",
       "addFundsToUnlock": "Adicione fundos para desbloquear um nível de assinatura.",
       "to": "para",
-      "membershipDesc": "Seu nível de assinatura é determinado pelo total de fundos adicionados.",
-      "currentTier": "Nível Atual",
+      "membershipDesc": "O seu nível de assinatura é determinado pelo total de fundos adicionados.",
+      "currentTier": "Nível Actual",
       "noFundsYet": "Nenhum fundo adicionado ainda.",
-      "balanceUsage": "Seu saldo é usado para Fazer Propostas e concluir compras.",
-      "loading": "Carregando...",
+      "balanceUsage": "O seu saldo é usado para Fazer Propostas e concluir compras.",
+      "loading": "A carregar...",
       "sellingItems": "Meus Anúncios",
       "bids": "lances",
       "ends": "Termina",
@@ -1700,10 +1700,10 @@
       "noOffersYet": "Nenhuma oferta ainda",
       "as": "como",
       "leaveReview": "Deixar Avaliação",
-      "youreReviewing": "Você está avaliando",
+      "youreReviewing": "Está a avaliar",
       "for": "por",
-      "viewTransactionDetails": "Ver Detalhes da Transação",
-      "howWouldYouRate": "Como você avaliaria sua experiência?",
+      "viewTransactionDetails": "Ver Detalhes da Transacção",
+      "howWouldYouRate": "Como avalia a sua experiência?",
       "tapToRate": "Toque para avaliar",
       "yourReview": "A sua avaliação",
       "visibleToOthers": "Visível para outros",
@@ -1716,7 +1716,7 @@
         "item_as_described": "Item conforme descrito",
         "great_packaging": "Embalagem cuidada",
         "good_communication": "Boa comunicação",
-        "smooth_transaction": "Transação sem problemas",
+        "smooth_transaction": "Transacção sem problemas",
         "trustworthy": "De confiança",
         "slow_payment": "Pagamento lento",
         "slow_shipping": "Envio lento",
@@ -1724,12 +1724,12 @@
         "poor_communication": "Má comunicação"
       },
       "balanceModalDesc": "Adicione fundos ao seu saldo para Fazer Propostas e concluir compras.",
-      "quickSelect": "Seleção rápida",
+      "quickSelect": "Selecção rápida",
       "orCustomAmount": "Ou insira um valor personalizado",
       "minimum": "Mínimo:",
-      "youllAdd": "Você adicionará",
+      "youllAdd": "Vai adicionar",
       "toYourBalance": "ao seu saldo",
-      "redirecting": "Redirecionando...",
+      "redirecting": "A redireccionar...",
       "continueToCheckout": "Continuar para o Checkout",
       "buyingWatchlist": "Compras e Lista de Favoritos",
       "analytics": {
@@ -1749,7 +1749,7 @@
         "viewDetails": "Ver detalhes",
         "loadFailed": "Não foi possível carregar analytics. Tente novamente.",
         "analyticsCustomFromRequired": "Escolha uma data de início para o período personalizado.",
-        "updating": "A atualizar…"
+        "updating": "A actualizar…"
       },
       "subtitle": "Aqui está o resumo da sua conta",
       "live": "Ativo",
@@ -1795,7 +1795,7 @@
     },
     "myAccount": {
       "title": "A Minha Conta",
-      "subtitle": "Gira as configurações da sua conta e informações de perfil",
+      "subtitle": "Gestão das definições da sua conta e das informações de perfil",
       "profileInfo": "Informação de Perfil",
       "notProvided": "Não fornecido",
       "profilePhoto": "Foto de perfil",
@@ -1822,8 +1822,8 @@
       "setupDesc": "Esta conta é obrigatória por Lei. Não podemos processar nenhum pagamento das suas vendas até esta conta estar configurada. Não precisa de conta Stripe — basta preencher os seus dados bancários abaixo.",
       "setupDescStripe": "Esta conta é obrigatória por Lei. Não podemos processar nenhum pagamento das suas vendas até esta conta estar configurada. Conclua a configuração segura no Stripe.",
       "setupBtnStripe": "Continuar no Stripe",
-      "stripeRedirectNote": "Será redirecionado para o Stripe para introduzir os seus dados de identidade e conta bancária de forma segura.",
-      "stripeRedirecting": "A redirecionar para o Stripe…",
+      "stripeRedirectNote": "Será redireccionado para o Stripe para introduzir os seus dados de identidade e conta bancária de forma segura.",
+      "stripeRedirecting": "A redireccionar para o Stripe…",
       "payoutReturnBanner": "Bem-vindo de volta! Estamos a verificar o estado da sua conta de pagamentos — normalmente demora alguns minutos.",
       "feature1": "Introduza os seus dados de identidade e bancários uma vez",
       "feature2": "O Stripe processa os pagamentos em segurança em segundo plano",
@@ -1871,11 +1871,11 @@
       "kycDoc2": "Uma selfie com verificação de vivacidade",
       "kycDoc3": "Processado em segurança pelo Stripe Identity — os seus dados não são armazenados no BidRoom",
       "kycStart": "Iniciar verificação",
-      "accountSettings": "Configurações da Conta",
-      "comingSoon": "Mais configurações de conta estarão disponíveis aqui em breve.",
+      "accountSettings": "Definições da Conta",
+      "comingSoon": "Mais definições de conta estarão disponíveis aqui em breve.",
       "connectLoading": "A verificar estado da ligação...",
       "connectError": "Algo correu mal. Verifique os seus dados e tente novamente.",
-      "payoutNowActive": "A sua conta de pagamentos está agora ativa!",
+      "payoutNowActive": "A sua conta de pagamentos está agora activa!",
       "detailsSubmitted": "Os seus dados foram submetidos. A Stripe irá verificá-los em breve — normalmente demora alguns minutos.",
       "connectNotConnected": "Não ligado",
       "connectActive": "Ativo",
@@ -1884,9 +1884,9 @@
         "title": "Garantia de Pagamento",
         "loading": "A carregar…",
         "activeBadge": "Comprador Verificado",
-        "activeDesc": "Os vendedores vêem que tens um cartão associado e dão-te prioridade nas suas decisões.",
+        "activeDesc": "Os vendedores vêem que tem um cartão associado e dão-lhe prioridade nas suas decisões.",
         "disclaimer": "O seu cartão nunca é debitado sem notificação prévia por email e prazo de contestação de 48h.",
-        "upgradeTitle": "Aumenta as tuas hipóteses de ganhar",
+        "upgradeTitle": "Aumente as suas hipóteses de ganhar",
         "benefit1": "Vendedores preferem compradores com cartão associado nos leilões Melhor Oferta",
         "benefit2": "Fica elegível para convites a Salas Privadas exclusivas",
         "benefit3": "Garantia automática ao vendedor em disputas resolvidas contra si",
@@ -1903,23 +1903,23 @@
     "myBets": {
       "title": "Meus Lances",
       "subtitle": "Todos os seus lances e ofertas num só lugar. Ofertas pendentes (Melhor Oferta) podem ser retiradas a qualquer momento; lances de leilão não.",
-      "loading": "Carregando seus lances...",
+      "loading": "A carregar os seus lances...",
       "errorLoading": "Falha ao carregar os seus lances.",
       "tryAgain": "Tentar Novamente",
       "emptyTitle": "Nenhum lance ainda",
-      "emptyDesc": "Você ainda não fez nenhum lance ou oferta. Navegue pelos anúncios e faça seu primeiro lance!",
+      "emptyDesc": "Ainda não fez nenhum lance ou oferta. Navegue pelos anúncios e faça o seu primeiro lance!",
       "browseListings": "Ver anúncios",
       "myBest": "Meu melhor",
       "bet": "lance",
       "bets": "lances",
-      "yourBets": "Seus lances",
+      "yourBets": "Os seus lances",
       "offer": "Oferta",
       "bid": "Lance",
       "winner": "Vencedor",
       "emailOutbid": "Notificar-me quando for ultrapassado",
-      "updating": "Atualizando…",
+      "updating": "Actualizando…",
       "viewListing": "Ver anúncio",
-      "viewTransaction": "Ver transação",
+      "viewTransaction": "Ver transacção",
       "withdraw": "Retirar",
       "withdrawing": "A retirar…",
       "withdrawError": "Não foi possível retirar a oferta.",
@@ -1951,7 +1951,7 @@
         "from": "De",
         "toOptional": "Até (opcional)",
         "filterCategory": "Categoria",
-        "filterInteraction": "Tipo de atividade",
+        "filterInteraction": "Tipo de actividade",
         "allCategories": "Todas as categorias",
         "allInteractions": "Licitações e propostas",
         "bidsOnly": "Só leilões",
@@ -1969,13 +1969,13 @@
         "watchlistHint": "{{n}} itens adicionados neste período",
         "winRate": "Taxa de compra",
         "winRateHint": "Compras divididas pelos anúncios em que licitou ou propôs neste período.",
-        "winRateDash": "Atividade insuficiente para calcular.",
-        "activity": "Resumo de atividade",
-        "countActive": "participações ativas",
+        "winRateDash": "Actividade insuficiente para calcular.",
+        "activity": "Resumo de actividade",
+        "countActive": "participações activas",
         "countWon": "ganhas / compradas",
         "countLost": "terminadas sem vitória",
         "countPending": "pagamento pendente",
-        "perListing": "Atividade por anúncio",
+        "perListing": "Actividade por anúncio",
         "colListing": "Anúncio",
         "colStatus": "Estado",
         "colEvents": "Ações (período)",
@@ -1985,7 +1985,7 @@
         "noListings": "Nenhuma licitação ou proposta corresponde a estes filtros.",
         "loadFailed": "Não foi possível carregar analytics. Tente novamente.",
         "analyticsCustomFromRequired": "Escolha uma data de início para o período personalizado.",
-        "updating": "A atualizar…",
+        "updating": "A actualizar…",
         "statusActive": "Ativo",
         "statusEnded": "Terminado",
         "statusCancelled": "Cancelado",
@@ -2001,7 +2001,7 @@
     },
     "seller": {
       "title": "Perfil do Vendedor",
-      "subtitle": "Gerencie os seus anúncios, salas privadas e vendas.",
+      "subtitle": "Gestão dos seus anúncios, salas privadas e vendas.",
       "noReviews": "Sem avaliações ainda.",
       "tabs": {
         "auctions": "Meus Anúncios",
@@ -2025,12 +2025,12 @@
         "viewsHint": "Carregamentos da página do anúncio neste período (anúncios filtrados).",
         "bidsOffers": "Lances e ofertas",
         "bidsOffersHint": "Número de lances e ofertas registados neste período.",
-        "salesPeriod": "Atividade de venda",
+        "salesPeriod": "Actividade de venda",
         "salesPeriodHint": "Anúncios distintos em que o comprador pagou ou concluiu o checkout neste período.",
         "followers": "Seguidores",
         "followersHint": "{{n}} novos neste período",
         "inventory": "Estado dos anúncios",
-        "countActive": "ativos",
+        "countActive": "activos",
         "countEnded": "terminados",
         "countSoldEver": "vendidos (histórico)",
         "countCancelled": "cancelados",
@@ -2048,7 +2048,7 @@
         "noListings": "Nenhum anúncio corresponde a estes filtros.",
         "loadFailed": "Não foi possível carregar as análises. Tente novamente.",
         "analyticsCustomFromRequired": "Escolha a data de início para o período personalizado.",
-        "updating": "A atualizar…",
+        "updating": "A actualizar…",
         "statusActive": "Activo",
         "statusEnded": "Terminado",
         "statusCancelled": "Cancelado",
@@ -2057,17 +2057,17 @@
     },
     "notifications": {
       "title": "Notificações",
-      "subtitle": "Fique por dentro da sua atividade de leilão.",
+      "subtitle": "Fique por dentro da sua actividade de leilão.",
       "markAllRead": "Marcar todas como lidas",
       "markRead": "Marcar como lida",
       "noNotifications": "Sem notificações ainda.",
-      "noNotificationsDesc": "Você está em dia! Vamos notificá-lo quando algo acontecer.",
+      "noNotificationsDesc": "Está em dia! Avisamos quando algo acontecer.",
       "errorLoading": "Falha ao carregar notificações.",
-      "loading": "Carregando notificações..."
+      "loading": "A carregar notificações..."
     },
     "settings": {
-      "title": "Configurações",
-      "subtitle": "Gerencie suas preferências de conta.",
+      "title": "Definições",
+      "subtitle": "Gestão das suas preferências de conta.",
       "profileInfo": "Informações do Perfil",
       "email": "E-mail",
       "displayName": "Nome de Exibição",
@@ -2080,7 +2080,7 @@
       "overallScore": "Pontuação global",
       "noReviews": "Ainda sem avaliações",
       "languagePreference": "Preferência de Idioma",
-      "languageDesc": "Escolha o idioma para sua experiência no BidRoom.",
+      "languageDesc": "Escolha o idioma para a sua experiência no BidRoom.",
       "appearance": {
         "title": "Aparência",
         "subtitle": "Claro, escuro ou igual ao dispositivo. Com sessão iniciada, a escolha fica na sua conta e sincroniza entre dispositivos.",
@@ -2088,7 +2088,7 @@
         "dark": "Escuro",
         "system": "Seguir o sistema"
       },
-      "saveLanguage": "Salvar Idioma",
+      "saveLanguage": "Guardar Idioma",
       "save": "Guardar",
       "saving": "A guardar…",
       "saved": "Guardado",
@@ -2129,26 +2129,26 @@
         "saveFailed": "Não foi possível guardar. Verifique os dados e tente novamente.",
         "pendingHint": "Os seus dados estão em análise. Não pode publicar como vendedor profissional até ser verificado — veja os requisitos ao criar anúncio.",
         "verifiedHint": "Os dados verificados do comerciante são mostrados aos compradores nos seus anúncios.",
-        "rejectedHint": "Atualize os dados e guarde novamente para solicitar nova análise."
+        "rejectedHint": "Actualize os dados e guarde novamente para solicitar nova análise."
       },
       "sellerPayments": "Pagamentos do Vendedor",
-      "checkingStripe": "Verificando status do Stripe...",
-      "stripeStatus": "Status do Stripe",
-      "stripeActive": "Sua conta Stripe está ativa e pronta para receber pagamentos.",
-      "chargesEnabled": "Cobranças habilitadas",
+      "checkingStripe": "A verificar o estado do Stripe...",
+      "stripeStatus": "Estado do Stripe",
+      "stripeActive": "A sua conta Stripe está activa e pronta para receber pagamentos.",
+      "chargesEnabled": "Cobranças activadas",
       "payouts": "Pagamentos:",
-      "enabled": "habilitados",
+      "enabled": "activados",
       "pending": "pendentes",
-      "updateStripe": "Atualizar Conta Stripe",
-      "onboardingIncomplete": "Seu processo de integração no Stripe está incompleto. Complete a configuração para receber pagamentos.",
+      "updateStripe": "Actualizar Conta Stripe",
+      "onboardingIncomplete": "O seu processo de integração no Stripe está incompleto. Complete a configuração para receber pagamentos.",
       "completeStripeSetup": "Completar Configuração do Stripe",
-      "connectStripeDesc": "Conecte sua conta Stripe para receber pagamentos como vendedor.",
+      "connectStripeDesc": "Conecte a sua conta Stripe para receber pagamentos como vendedor.",
       "noStripeRequired": "Sem taxas antecipadas",
       "identityVerification": "Verificação de identidade necessária",
       "payoutSchedule": "Pagamentos em cronograma contínuo",
       "connectStripe": "Conectar com Stripe",
-      "redirecting": "Redirecionando...",
-      "redirectingToStripe": "Redirecionando para o Stripe...",
+      "redirecting": "A redireccionar...",
+      "redirectingToStripe": "A redireccionar para o Stripe...",
       "sellerPaymentConfig": {
         "title": "Métodos de Pagamento Alternativos",
         "desc": "Configure os métodos de pagamento que os compradores podem usar além do Stripe.",
@@ -2190,16 +2190,16 @@
           "dispatch": "Artigo expedido",
           "paymentReceived": "Pagamento recebido (vendedor)",
           "newBid": "Nova licitação no seu anúncio",
-          "disputeUpdate": "Atualização de disputa"
+          "disputeUpdate": "Actualização de disputa"
         }
       },
       "paymentMethod": {
         "title": "Métodos de Pagamento",
         "loading": "A carregar…",
         "activeBadge": "Comprador Verificado",
-        "activeDesc": "Os vendedores vêem que tens um cartão associado e dão-te prioridade nas suas decisões.",
+        "activeDesc": "Os vendedores vêem que tem um cartão associado e dão-lhe prioridade nas suas decisões.",
         "disclaimer": "O seu cartão predefinido nunca é debitado sem notificação prévia por email e prazo de contestação de 48h.",
-        "upgradeTitle": "Aumenta as tuas hipóteses de ganhar",
+        "upgradeTitle": "Aumente as suas hipóteses de ganhar",
         "benefit1": "Vendedores preferem compradores com cartão associado nos leilões Melhor Oferta",
         "benefit2": "Fica elegível para convites a Salas Privadas exclusivas",
         "benefit3": "Garantia automática ao vendedor em disputas resolvidas contra si",
@@ -2228,7 +2228,7 @@
       },
       "savePrefsError": "Falha ao guardar preferências. Tente novamente.",
       "connectError": "Algo correu mal. Verifique os seus dados e tente novamente.",
-      "payoutNowActive": "A sua conta de pagamentos está agora ativa!",
+      "payoutNowActive": "A sua conta de pagamentos está agora activa!",
       "detailsSubmitted": "Os seus dados foram submetidos. A Stripe irá verificá-los em breve — normalmente demora alguns minutos.",
       "testActivated": "Conta de teste ativada!",
       "testActivationFailed": "Falha na ativação de teste.",
@@ -2256,8 +2256,8 @@
       "feature2": "O Stripe processa os pagamentos em segurança em segundo plano",
       "feature3": "Fundos transferidos directamente para a sua conta bancária",
       "setupBtnStripe": "Continuar no Stripe",
-      "stripeRedirectNote": "Será redirecionado para o Stripe para introduzir os seus dados de identidade e conta bancária de forma segura.",
-      "stripeRedirecting": "A redirecionar para o Stripe…",
+      "stripeRedirectNote": "Será redireccionado para o Stripe para introduzir os seus dados de identidade e conta bancária de forma segura.",
+      "stripeRedirecting": "A redireccionar para o Stripe…",
       "payoutReturnBanner": "Bem-vindo de volta! Estamos a verificar o estado da sua conta de pagamentos — normalmente demora alguns minutos.",
       "dobTitle": "Data de nascimento",
       "dobDay": "Dia",
@@ -2335,17 +2335,17 @@
     "myAuctions": {
       "title": "Meus Anúncios",
       "subtitle": "Acompanhe os seus leilões e o estado de cada anúncio. Pode eliminar um anúncio apenas se não tiver lances ou ofertas qualificativas (Melhor Oferta: nenhuma igual ou acima do mínimo).",
-      "loading": "Carregando seus anúncios...",
+      "loading": "A carregar os seus anúncios...",
       "errorLoading": "Falha ao carregar os seus anúncios.",
       "relistSuccess": "Anúncio reanunciado com sucesso!",
       "relistError": "Falha ao reanunciar o anúncio.",
       "emptyTitle": "Nenhum anúncio ainda",
-      "emptyDesc": "Você ainda não criou nenhum anúncio. Comece criando seu primeiro anúncio!",
+      "emptyDesc": "Ainda não criou nenhum anúncio. Comece por criar o seu primeiro anúncio!",
       "createFirst": "Criar Meu Primeiro Anúncio",
       "listingSingular": "anúncio",
       "listingPlural": "anúncios",
       "highestOffer": "Maior Oferta",
-      "currentPrice": "Preço Atual",
+      "currentPrice": "Preço Actual",
       "noOffersYet": "Nenhuma oferta ainda",
       "bids": "Lances",
       "watchlist": "Favoritos",
@@ -2382,7 +2382,7 @@
       },
       "relist": {
         "title": "Relistar Leilão",
-        "subtitle": "Ajuste as suas configurações e reliste o artigo para lhe dar outra oportunidade.",
+        "subtitle": "Ajuste as suas definições e reliste o artigo para lhe dar outra oportunidade.",
         "suggestionsLabel": "Sugestões inteligentes",
         "relistBtn": "Relistar",
         "alreadyRelisted": "Relistado",
@@ -2392,7 +2392,7 @@
         "unsoldReasons": {
           "no_bids": "Terminou sem lances",
           "no_offers": "Terminou sem propostas",
-          "pending_offers": "Tens propostas por responder — abre o anúncio para aceitar ou recusar",
+          "pending_offers": "Tem propostas por responder — abra o anúncio para aceitar ou recusar",
           "non_payment": "Comprador não concluiu o pagamento"
         },
         "suggestions": {
@@ -2416,13 +2416,13 @@
     },
     "myAuctionsBidder": {
       "title": "Meus Leilões",
-      "subtitle": "Leilões nos quais você deu lances. Acompanhe seus lances e preços atuais.",
-      "loading": "Carregando seus leilões...",
+      "subtitle": "Leilões em que licitou. Acompanhe os seus lances e os preços actuais.",
+      "loading": "A carregar os seus leilões...",
       "emptyTitle": "Nenhum leilão ainda",
-      "emptyDesc": "Você ainda não deu nenhum lance. Navegue pelos anúncios e dê seu primeiro lance!",
+      "emptyDesc": "Ainda não deu nenhum lance. Navegue pelos anúncios e dê o seu primeiro lance!",
       "browseAuctions": "Ver leilões",
       "highestOffer": "Maior Oferta",
-      "currentPrice": "Preço Atual",
+      "currentPrice": "Preço Actual",
       "noOffersYet": "Nenhuma oferta ainda",
       "myHighestBid": "Meu maior lance",
       "totalBids": "Total de lances",
@@ -2433,11 +2433,11 @@
     },
     "watchlist": {
       "title": "Minha Lista de Favoritos",
-      "subtitle": "Itens que você salvou. Clique para ver ou Fazer Propostas.",
-      "loading": "Carregando sua lista de favoritos...",
+      "subtitle": "Itens que guardou. Clique para ver ou Fazer Propostas.",
+      "loading": "A carregar a sua lista de favoritos...",
       "errorLoading": "Falha ao carregar a sua lista de favoritos.",
       "emptyTitle": "Nenhum item na sua lista de favoritos",
-      "emptyDesc": "Quando você adicionar itens à sua lista de favoritos em uma página de anúncio, eles aparecerão aqui.",
+      "emptyDesc": "Quando adicionar itens à sua lista de favoritos numa página de anúncio, eles aparecem aqui.",
       "browseAuctions": "Ver leilões",
       "noOffersYet": "Nenhuma oferta ainda",
       "remove": "Remover",
@@ -2445,8 +2445,8 @@
     }
   },
   "transactions": {
-    "title": "Transações",
-    "subtitle": "Veja e gerencie suas compras e vendas.",
+    "title": "Transacções",
+    "subtitle": "Veja e acompanhe as suas compras e vendas.",
     "unreadNotifications": "{{count}} notificação(ões) por ler",
     "markAllNotificationsRead": "Marcar todas como lidas",
     "viewAllNotifications": "Abrir centro de notificações",
@@ -2463,7 +2463,7 @@
       "amount": "Valor",
       "date": "Data",
       "manage": "Gerir",
-      "noFilterResults": "Nenhuma transação corresponde a este filtro."
+      "noFilterResults": "Nenhuma transacção corresponde a este filtro."
     },
     "drawer": {
       "details": "Detalhes",
@@ -2484,10 +2484,10 @@
     },
     "seller": "Vendedor",
     "buyer": "Comprador",
-    "loading": "Carregando transações...",
-    "errorLoading": "Falha ao carregar transações.",
-    "empty": "Sem transações ainda.",
-    "emptyDesc": "Suas compras e vendas concluídas aparecerão aqui.",
+    "loading": "A carregar transacções...",
+    "errorLoading": "Falha ao carregar transacções.",
+    "empty": "Sem transacções ainda.",
+    "emptyDesc": "As suas compras e vendas concluídas aparecerão aqui.",
     "browseAuctions": "Ver Leilões",
     "status": {
       "pending": "Pendente",
@@ -2505,22 +2505,22 @@
     "paymentMethod": "Método de pagamento",
     "paidAt": "Pago em",
     "shippingInfo": "Info de Envio",
-    "trackingNumber": "Número de rastreamento",
+    "trackingNumber": "Número de seguimento",
     "carrier": "Transportadora",
     "shippedAt": "Enviado em",
     "deliveredAt": "Entregue em",
-    "addTracking": "Adicionar Rastreamento",
-    "updateTracking": "Atualizar Rastreamento",
-    "trackingNumberLabel": "Número de Rastreamento",
+    "addTracking": "Adicionar Seguimento",
+    "updateTracking": "Actualizar Seguimento",
+    "trackingNumberLabel": "Número de Seguimento",
     "carrierLabel": "Transportadora",
-    "saveTracking": "Salvar Rastreamento",
-    "savingTracking": "Salvando...",
+    "saveTracking": "Guardar Seguimento",
+    "savingTracking": "A guardar...",
     "markAsDelivered": "Marcar como Entregue",
     "markingDelivered": "Marcando...",
     "confirmDelivery": "Confirmar Entrega",
     "confirmDeliveryDesc": "Confirme que recebeu o item e libere o pagamento ao vendedor?",
     "confirm": "Confirmar",
-    "confirming": "Confirmando...",
+    "confirming": "A confirmar...",
     "payNow": "Pagar Agora",
     "paying": "Processando...",
     "proofOfDelivery": "Comprovante de Entrega",
@@ -2536,12 +2536,12 @@
     "awaitingPayment": "Aguardando pagamento",
     "awaitingShipment": "Aguardando envio",
     "awaitingDelivery": "Aguardando entrega",
-    "completed_desc": "Transação concluída",
-    "youBuyer": "Você (Comprador)",
-    "youSeller": "Você (Vendedor)",
-    "confirmingStripe": "Confirmando seu pagamento via Stripe...",
-    "noTransactions": "Nenhuma transação ainda",
-    "noTransactionsDesc": "As transações concluídas aparecerão aqui.",
+    "completed_desc": "Transacção concluída",
+    "youBuyer": "Eu (Comprador)",
+    "youSeller": "Eu (Vendedor)",
+    "confirmingStripe": "A confirmar o seu pagamento via Stripe...",
+    "noTransactions": "Nenhuma transacção ainda",
+    "noTransactionsDesc": "As transacções concluídas aparecerão aqui.",
     "buying": "Comprando",
     "selling": "Vendendo",
     "disputeOpen": "Disputa Aberta",
@@ -2551,19 +2551,19 @@
     "shipping": "Frete",
     "freeShipping": "Grátis",
     "calculatedSeparately": "Calculado separadamente",
-    "youReceive": "Você recebe",
+    "youReceive": "Recebe",
     "totalCharged": "Total cobrado",
     "shippingLower": "frete",
     "paymentWindowEnds": "Prazo de pagamento termina",
     "passed": "expirado",
-    "paymentDeadlineExpired": "O prazo de pagamento desta transação expirou. O pagamento já não é possível.",
-    "youAreThe": "Você é o",
+    "paymentDeadlineExpired": "O prazo de pagamento desta transacção expirou. O pagamento já não é possível.",
+    "youAreThe": "É o",
     "confirmReceivedHint": "Confirme que recebeu o pagamento antes de preparar o envio.",
     "acknowledgeBy": "Por favor, confirme até",
     "deadlinePassed": "prazo expirado",
     "paymentConfirmedStripe": "Pagamento confirmado via Stripe.",
-    "stripePrepareShipHint": "O pagamento está garantido pela Stripe. Marque como enviado quando estiver pronto — rastreamento e comprovativo são opcionais.",
-    "prepareShipHint": "Marque como enviado quando estiver pronto — rastreamento e comprovativo são opcionais.",
+    "stripePrepareShipHint": "O pagamento está garantido pela Stripe. Marque como enviado quando estiver pronto — seguimento e comprovativo são opcionais.",
+    "prepareShipHint": "Marque como enviado quando estiver pronto — seguimento e comprovativo são opcionais.",
     "shippingDetailsOptional": "Detalhes de envio (opcional)",
     "optional": "opcional",
     "uploadProofOptional": "Carregar comprovativo de envio (opcional)",
@@ -2578,7 +2578,7 @@
       "pendingAcceptance": "Aceitação Pendente",
       "paymentReceived": "Pagamento Recebido"
     },
-    "selectShippingMethod": "Selecionar Método de Envio",
+    "selectShippingMethod": "Seleccionar Método de Envio",
     "streetAddress": "Endereço",
     "city": "Cidade",
     "state": "Estado / Província",
@@ -2589,22 +2589,22 @@
     "addressIncompleteWithState": "Preencha morada, cidade, estado/província e código postal.",
     "calculating": "Calculando...",
     "getShippingRates": "Obter Taxas de Envio",
-    "selectShippingOption": "Selecione uma opção de envio:",
+    "selectShippingOption": "Seleccione uma opção de envio:",
     "est": "Est.",
     "days": "dias",
     "change": "Alterar",
-    "selectShippingBeforePaying": "Selecione um método de envio antes de pagar.",
+    "selectShippingBeforePaying": "Seleccione um método de envio antes de pagar.",
     "chooseShippingMethod": "Escolher Método de Envio",
     "paySecurelyHint": "Pague com segurança via Stripe.",
-    "redirectingToStripe": "Redirecionando para o Stripe...",
+    "redirectingToStripe": "A redireccionar para o Stripe...",
     "paymentConfirmedSellerNotified": "Pagamento confirmado! O vendedor foi notificado.",
     "paymentRef": "Referência de pagamento",
     "itemShippedHowReceived": "Item enviado — como foi recebido?",
-    "updating": "Atualizando...",
-    "markAsReceivedProperly": "Marcar como Recebido Corretamente",
-    "receivedConfirmedToast": "Receção confirmada. Pode concluir a transação quando quiser.",
-    "receivedNotProperly": "Recebido Incorretamente / Abrir Disputa",
-    "bothMustReview": "Ambas as partes devem deixar uma avaliação para concluir esta transação.",
+    "updating": "Actualizando...",
+    "markAsReceivedProperly": "Marcar como Recebido Correctamente",
+    "receivedConfirmedToast": "Recepção confirmada. Pode concluir a transacção quando quiser.",
+    "receivedNotProperly": "Recebido Incorrectamente / Abrir Disputa",
+    "bothMustReview": "Ambas as partes devem deixar uma avaliação para concluir esta transacção.",
     "completeToReview": "Satisfeito com a sua compra? Marque como concluída para desbloquear avaliações.",
     "markAsCompleted": "Marcar como Concluída",
     "viewProofOfDelivery": "Ver Prova de Entrega",
@@ -2614,12 +2614,12 @@
     "confirmShipped": "Confirmar Envio",
     "review": "Avaliar",
     "reviewSubmitted": "Avaliação enviada",
-    "txCompletedTitle": "Transação concluída",
-    "txCompletedBothSides": "A transação foi concluída com sucesso do lado do comprador e do vendedor.",
+    "txCompletedTitle": "Transacção concluída",
+    "txCompletedBothSides": "A transacção foi concluída com sucesso do lado do comprador e do vendedor.",
     "as": "como",
     "for": "por",
     "score": "Pontuação",
-    "selectScore": "Selecione uma pontuação de 1 a 5.",
+    "selectScore": "Seleccione uma pontuação de 1 a 5.",
     "scoreReactions": {
       "1": "Fraco",
       "2": "Razoável",
@@ -2631,30 +2631,30 @@
     "scoreScaleHigh": "Excelente",
     "scoreSelected": "Escolheu {{score}} em 5",
     "descriptionOptional": "Descrição (opcional)",
-    "reviewPrivate": "Sua avaliação é visível para outros",
+    "reviewPrivate": "A sua avaliação é visível para outros",
     "autoCancelledBuyerTitle": "Pedido cancelado — reembolso emitido",
-    "autoCancelledBuyerMessage": "Seu pedido foi cancelado automaticamente em {{date}} porque o vendedor não enviou o item em até 5 dias úteis. Um reembolso completo foi emitido para seu método de pagamento original e pode levar de 5 a 10 dias úteis para aparecer.",
+    "autoCancelledBuyerMessage": "O seu pedido foi cancelado automaticamente em {{date}} porque o vendedor não enviou o item em até 5 dias úteis. Um reembolso completo foi emitido para o seu método de pagamento original e pode levar de 5 a 10 dias úteis para aparecer.",
     "autoCancelledSellerTitle": "Pedido cancelado — não enviado a tempo",
     "autoCancelledSellerMessage": "Este pedido foi cancelado automaticamente em {{date}} porque o envio não foi confirmado dentro do prazo de 5 dias úteis. O comprador foi reembolsado integralmente.",
     "refundRef": "Referência do reembolso",
     "expectedShipBy": "Envio esperado até (5 dias úteis)",
-    "shippingStatusLabel": "Status do envio",
+    "shippingStatusLabel": "Estado do envio",
     "sellerMustShipBy": "Envie este pedido até",
     "trackingNumberPlaceholder": "ex: 9400111899223408553805",
-    "selectCarrier": "Selecionar transportadora",
+    "selectCarrier": "Seleccionar transportadora",
     "other": "Outro",
     "estimatedDeliveryDays": "Prazo estimado de entrega (dias)",
     "estimatedDeliveryDaysPlaceholder": "ex: 5",
     "estimatedDeliveryDaysHint": "Informa ao comprador quando esperar o item.",
     "estimatedDelivery": "Entrega estimada",
-    "deliveryDueConfirmTitle": "Seu item pode ter chegado",
+    "deliveryDueConfirmTitle": "O seu item pode ter chegado",
     "deliveryDueConfirmBody": "A data de entrega estimada passou. Confirme o recebimento abaixo ou abra uma disputa se houver algum problema.",
-    "autoReleaseNotice": "O pagamento será liberado automaticamente ao vendedor em {{date}} se a entrega não for confirmada.",
-    "autoReleaseWarning": "O pagamento será liberado automaticamente em {{days}} dia(s). Confirme o recebimento ou abra uma disputa agora.",
-    "autoReleaseImminent": "O pagamento está prestes a ser liberado ao vendedor. Confirme o recebimento agora se você recebeu o item.",
-    "returnWindowNotice": "Você tem {{days}} dia(s) restante(s) para solicitar uma devolução.",
+    "autoReleaseNotice": "O pagamento será libertado automaticamente ao vendedor em {{date}} se a entrega não for confirmada.",
+    "autoReleaseWarning": "O pagamento será libertado automaticamente em {{days}} dia(s). Confirme o recebimento ou abra uma disputa agora.",
+    "autoReleaseImminent": "O pagamento está prestes a ser libertado ao vendedor. Confirme a recepção agora se já recebeu o item.",
+    "returnWindowNotice": "Tem {{days}} dia(s) restante(s) para solicitar uma devolução.",
     "requestReturn": "Solicitar Devolução",
-    "returnStatus": "Status da devolução",
+    "returnStatus": "Estado da devolução",
     "returnStatuses": {
       "pending_seller_response": "Aguardando resposta do vendedor",
       "accepted_by_seller": "Aceito pelo vendedor",
@@ -2738,30 +2738,30 @@
   },
   "disputes": {
     "title": "Disputas",
-    "subtitle": "Gerencie suas disputas abertas e elegíveis.",
+    "subtitle": "Gestão das suas disputas abertas e elegíveis.",
     "errorLoading": "Falha ao carregar disputas.",
     "submitError": "Falha ao submeter disputa.",
     "openNewDispute": "Abrir Nova Disputa",
     "eligibleToOpen": "Elegível para Abrir uma Disputa",
-    "eligibleDesc": "Estas transações são elegíveis para disputa. Você pode abrir uma disputa se tiver um problema com o item recebido.",
+    "eligibleDesc": "Estas transacções são elegíveis para disputa. Pode abrir uma disputa se tiver um problema com o item recebido.",
     "ongoingDisputes": "Disputas em Andamento",
-    "ongoingDesc": "Estas transações estão atualmente sob revisão de disputa.",
+    "ongoingDesc": "Estas transacções estão actualmente sob revisão de disputa.",
     "noOngoingDisputes": "Sem disputas em andamento.",
     "noDisputes": "Sem Disputas",
-    "noDisputesDesc": "Você não tem disputas. Se tiver um problema com uma transação, pode abrir uma disputa na página de transações.",
+    "noDisputesDesc": "Não tem disputas. Se tiver um problema com uma transacção, pode abrir uma disputa na página de transacções.",
     "openDispute": "Abrir Disputa",
     "underDispute": "Em Disputa",
     "reason": "Motivo",
     "opened": "Aberta",
-    "youBuyer": "Você (Comprador)",
-    "youSeller": "Você (Vendedor)",
+    "youBuyer": "Eu (Comprador)",
+    "youSeller": "Eu (Vendedor)",
     "uploadCounterEvidence": "Enviar Contra-Evidência",
     "counterEvidenceHint": "Envie fotos ou vídeos para contestar a reclamação do comprador.",
     "viewEvidence": "Ver evidência",
     "pending": "Upload pendente",
     "submitCounterEvidence": "Enviar Contra-Evidência",
-    "saving": "Salvando...",
-    "awaitingAdminReview": "Sua disputa está sob revisão do administrador. Entraremos em contato em breve.",
+    "saving": "A guardar...",
+    "awaitingAdminReview": "A sua disputa está sob revisão do administrador. Entraremos em contacto em breve.",
     "reasons": {
       "notAsDescribed": "Item não conforme com a descrição",
       "damagedInTransit": "Danificado no transporte",
@@ -2771,9 +2771,9 @@
     },
     "modal": {
       "title": "Abrir uma Disputa",
-      "describe": "Descreva o problema com sua compra. Nossa equipe irá analisar e entrar em contato com ambas as partes.",
+      "describe": "Descreva o problema com a sua compra. A nossa equipa irá analisar e entrar em contacto com ambas as partes.",
       "reason": "Motivo da Disputa",
-      "selectReason": "Selecione um motivo",
+      "selectReason": "Seleccione um motivo",
       "explanation": "Explicação",
       "explanationPlaceholder": "Descreva o problema em detalhes (mínimo 20 caracteres)...",
       "mediaEvidence": "Evidência em Mídia",
@@ -2785,7 +2785,7 @@
       "submitDispute": "Enviar Disputa",
       "evidenceRequired": "É necessário fornecer evidências para abrir uma disputa.",
       "evidence": "Evidências",
-      "evidenceHint": "Envie fotos ou vídeo como prova para sua disputa."
+      "evidenceHint": "Envie fotos ou vídeo como prova para a sua disputa."
     }
   },
   "howItWorks": {
@@ -3192,14 +3192,14 @@
   },
   "contact": {
     "hero": {
-      "title": "Contato",
-      "subtitle": "Estamos aqui para ajudar. Entre em contato com nossa equipe de suporte."
+      "title": "Contacto",
+      "subtitle": "Estamos aqui para ajudar. Entre em contacto com a nossa equipa de suporte."
     },
     "form": {
       "heading": "Envie-nos uma Mensagem",
-      "subheading": "Preencha o formulário e entraremos em contato o mais rápido possível.",
+      "subheading": "Preencha o formulário e entraremos em contacto o mais rápido possível.",
       "name": "Nome",
-      "namePlaceholder": "Seu nome completo",
+      "namePlaceholder": "O seu nome completo",
       "email": "E-mail",
       "inquiryType": "Tipo de Consulta",
       "inquiryGeneral": "Consulta Geral",
@@ -3211,23 +3211,23 @@
       "subject": "Assunto",
       "subjectPlaceholder": "Breve resumo da sua mensagem",
       "message": "Mensagem",
-      "messagePlaceholder": "Descreva seu problema ou pergunta em detalhes...",
+      "messagePlaceholder": "Descreva o seu problema ou pergunta em detalhes...",
       "sendMessage": "Enviar Mensagem",
       "sending": "Enviando...",
-      "successMessage": "Sua mensagem foi enviada. Entraremos em contato em até 24 horas.",
+      "successMessage": "A sua mensagem foi enviada. Entraremos em contacto em até 24 horas.",
       "errors": {
         "nameRequired": "Nome é obrigatório.",
         "emailRequired": "E-mail é obrigatório.",
-        "emailInvalid": "Digite um e-mail válido.",
-        "inquiryRequired": "Selecione um tipo de consulta.",
+        "emailInvalid": "Introduza um e-mail válido.",
+        "inquiryRequired": "Seleccione um tipo de consulta.",
         "subjectRequired": "Assunto é obrigatório.",
         "messageRequired": "Mensagem é obrigatória.",
         "messageTooShort": "A mensagem deve ter pelo menos 20 caracteres."
       }
     },
     "info": {
-      "heading": "Entre em Contato",
-      "subheading": "Escolha o método de contato que funciona melhor para você.",
+      "heading": "Entre em Contacto",
+      "subheading": "Escolha o método de contacto que lhe for mais conveniente.",
       "emailSupport": "Suporte por E-mail",
       "emailResponse": "Resposta em até 24 horas",
       "liveChat": "Chat ao Vivo",
@@ -3240,11 +3240,11 @@
       "hoursSaturday": "Sábado: 10h – 16h EST",
       "hoursSunday": "Domingo: Fechado",
       "urgentIssues": "Questões Urgentes",
-      "urgentDesc": "Para assuntos urgentes, ligue para nossa linha prioritária:",
+      "urgentDesc": "Para assuntos urgentes, ligue para a nossa linha prioritária:",
       "urgentAvailability": "Disponível 24/7 para problemas críticos"
     },
     "faqLinks": {
-      "title": "Consulte Nosso FAQ",
+      "title": "Consulte O Nosso FAQ",
       "subtitle": "Encontre respostas rápidas para perguntas comuns.",
       "accountBilling": "Conta e Faturamento",
       "accountBillingDesc": "Perguntas sobre pagamentos, faturas e gestão de conta.",
@@ -3258,13 +3258,13 @@
   "faq": {
     "hero": {
       "title": "Perguntas Frequentes",
-      "subtitle": "Encontre respostas para perguntas comuns sobre o BidRoom e nosso processo de leilão."
+      "subtitle": "Encontre respostas para perguntas comuns sobre o BidRoom e o nosso processo de leilão."
     },
     "search": {
       "placeholder": "Pesquisar FAQs...",
       "questionsFound": "pergunta(s) encontrada(s)",
       "noResults": "Nenhuma pergunta encontrada",
-      "noResultsDesc": "Tente ajustar seus termos de pesquisa ou navegue por todas as categorias.",
+      "noResultsDesc": "Tente ajustar os seus termos de pesquisa ou navegue por todas as categorias.",
       "clearFilters": "Limpar Filtros"
     },
     "categories": {
@@ -3281,16 +3281,16 @@
       "email": {
         "title": "Suporte por E-mail",
         "desc": "Envie-nos uma mensagem detalhada e responderemos em até 24 horas.",
-        "btn": "Contate-nos"
+        "btn": "Contacte-nos"
       },
       "chat": {
         "title": "Chat ao Vivo",
-        "desc": "Converse com nossa equipe de suporte em tempo real durante o horário comercial.",
+        "desc": "Converse com a nossa equipa de suporte em tempo real durante o horário comercial.",
         "btn": "Iniciar Chat"
       },
       "phone": {
         "title": "Suporte por Telefone",
-        "desc": "Ligue diretamente para assistência imediata com questões urgentes.",
+        "desc": "Ligue directamente para assistência imediata com questões urgentes.",
         "btn": "Ligar Agora"
       }
     },
@@ -3304,35 +3304,35 @@
       },
       "accountManagement": {
         "title": "Gestão de Conta",
-        "li1": "Atualizar informações da conta",
-        "li2": "Problemas com senha",
+        "li1": "Actualizar informações da conta",
+        "li2": "Problemas com palavra-passe",
         "li3": "Cancelamento de conta"
       }
     },
     "items": {
       "account1": {
         "q": "Como crio uma conta?",
-        "a": "Criar uma conta é grátis e fácil! Clique no botão \"Começar a Fazer Propostas\" em nossa página inicial, preencha o formulário de cadastro com seu e-mail e senha, e verifique seu endereço de e-mail. Você estará pronto para Fazer Propostas em minutos."
+        "a": "Criar uma conta é grátis e fácil! Clique no botão \"Começar a Fazer Propostas\" na nossa página inicial, preencha o formulário de registo com o seu e-mail e palavra-passe, e verifique o seu endereço de e-mail. Fica pronto para Fazer Propostas em minutos."
       },
       "account2": {
         "q": "É gratuito criar uma conta?",
-        "a": "Sim, criar uma conta no BidRoom é completamente gratuito. Você só paga quando vence um leilão e precisa concluir sua compra."
+        "a": "Sim, criar uma conta no BidRoom é completamente gratuito. Só paga quando vence um leilão e precisa de concluir a compra."
       },
       "account3": {
-        "q": "Quais métodos de pagamento vocês aceitam?",
+        "q": "Que métodos de pagamento aceitam?",
         "a": "Aceitamos todos os principais cartões de crédito (Visa, MasterCard, American Express), PayPal e transferências bancárias. Todos os pagamentos são processados com segurança."
       },
       "account4": {
-        "q": "Como atualizo minhas informações de pagamento?",
-        "a": "Você pode atualizar suas informações de pagamento a qualquer momento nas configurações da conta. Clique em \"Métodos de Pagamento\" e adicione ou atualize suas opções."
+        "q": "Como actualizo minhas informações de pagamento?",
+        "a": "Pode actualizar as suas informações de pagamento a qualquer momento nas definições da conta. Clique em \"Métodos de Pagamento\" e adicione ou actualize as suas opções."
       },
       "account5": {
         "q": "Posso cancelar minha conta?",
-        "a": "Sim, você pode desativar sua conta a qualquer momento nas configurações. Observe que você não pode cancelar lances ativos ou leilões em andamento."
+        "a": "Sim, pode desactivar a sua conta a qualquer momento nas definições. Tenha em conta que não pode cancelar lances activos ou leilões em curso."
       },
       "bidding1": {
         "q": "Como funciona o sistema de lances?",
-        "a": "Nosso sistema de lance por proxy permite que você defina seu valor máximo de lance. Damos lances automaticamente em seu nome até esse valor, garantindo que você pague o mínimo necessário para vencer."
+        "a": "O nosso sistema de lance automático permite definir o seu valor máximo de lance. Licitamos automaticamente em seu nome até esse valor, garantindo que paga o mínimo necessário para vencer."
       },
       "bidding2": {
         "q": "Posso cancelar um lance ou retirar uma oferta?",
@@ -3340,119 +3340,119 @@
       },
       "bidding3": {
         "q": "Como sei se ganhei um leilão?",
-        "a": "Você receberá uma notificação por e-mail imediatamente quando vencer um leilão. Também pode verificar seu painel de controle."
+        "a": "Recebe uma notificação por e-mail imediatamente quando vencer um leilão. Também pode verificar o seu painel."
       },
       "bidding4": {
         "q": "O que acontece se eu não pagar por um leilão ganho?",
-        "a": "Se você não concluir o pagamento em 48 horas após vencer, o leilão será oferecido ao próximo maior licitante. Não-pagamento repetido pode resultar na suspensão da conta."
+        "a": "Se não concluir o pagamento nas 48 horas após vencer, o leilão é oferecido ao licitante seguinte. O não-pagamento repetido pode resultar na suspensão da conta."
       },
       "bidding5": {
         "q": "Posso Fazer Propostas em vários itens ao mesmo tempo?",
-        "a": "Sim, você pode Fazer Propostas em quantos itens quiser simultaneamente. Certifique-se de ter fundos suficientes para cobrir todas as vitórias potenciais."
+        "a": "Sim, pode Fazer Propostas em quantos itens quiser simultaneamente. Certifique-se de que tem fundos suficientes para cobrir todas as vitórias potenciais."
       },
       "bidding6": {
         "q": "Como acompanho meus lances?",
-        "a": "Você pode acompanhar todos os seus lances no painel da conta. Verá lances ativos, lances vencedores e histórico de lances em um só lugar."
+        "a": "Pode acompanhar todos os seus lances no painel da conta. Vê lances activos, lances vencedores e o histórico de lances num só lugar."
       },
       "technical1": {
-        "q": "O site está carregando lentamente. O que devo fazer?",
-        "a": "Tente atualizar o navegador ou limpar o cache. Se o problema persistir, verifique sua conexão à internet ou tente usar outro navegador."
+        "q": "O site está a carregar lentamente. O que devo fazer?",
+        "a": "Tente actualizar o navegador ou limpar o cache. Se o problema persistir, verifique a sua ligação à internet ou tente usar outro navegador."
       },
       "technical2": {
         "q": "Não consigo entrar na minha conta. Ajuda!",
-        "a": "Certifique-se de usar o e-mail e a senha corretos. Se esqueceu a senha, use o link \"Esqueceu a senha\" na página de login."
+        "a": "Certifique-se de que usa o e-mail e a palavra-passe correctos. Se se esqueceu da palavra-passe, use o link \"Esqueceu a palavra-passe\" na página de início de sessão."
       },
       "technical3": {
-        "q": "Vocês têm um aplicativo móvel?",
-        "a": "Sim! Nosso aplicativo está disponível para iOS e Android. Você pode baixá-lo na App Store ou Google Play."
+        "q": "Têm uma app para telemóvel?",
+        "a": "Sim! A nossa app está disponível para iOS e Android. Pode descarregá-la na App Store ou no Google Play."
       },
       "technical4": {
         "q": "Por que não estou recebendo notificações por e-mail?",
-        "a": "Verifique sua pasta de spam primeiro. Se as notificações ainda estiverem ausentes, vá às configurações da conta e verifique se as preferências de e-mail estão habilitadas."
+        "a": "Verifique a sua pasta de spam primeiro. Se as notificações ainda estiverem ausentes, vá às definições da conta e verifique se as preferências de e-mail estão activadas."
       },
       "technical5": {
         "q": "Posso usar o BidRoom no meu tablet?",
-        "a": "Com certeza! O BidRoom é totalmente responsivo e funciona ótimo em tablets, smartphones e computadores."
+        "a": "Com certeza! O BidRoom é totalmente responsivo e funciona muito bem em tablets, smartphones e computadores."
       },
       "shipping1": {
         "q": "Como o envio é tratado?",
-        "a": "O envio é gerenciado pelos vendedores individuais. Cada anúncio mostrará os custos de envio e prazos estimados de entrega."
+        "a": "O envio é gerido por cada vendedor. Cada anúncio mostra os custos de envio e os prazos estimados de entrega."
       },
       "shipping2": {
         "q": "Posso devolver um item se não estiver satisfeito?",
-        "a": "As políticas de devolução variam por vendedor. Verifique o anúncio individual para informações de devolução. O BidRoom também oferece proteção ao comprador para compras elegíveis."
+        "a": "As políticas de devolução variam por vendedor. Verifique o anúncio individual para informações de devolução. O BidRoom também oferece protecção ao comprador para compras elegíveis."
       },
       "shipping3": {
-        "q": "Vocês enviam internacionalmente?",
-        "a": "O envio internacional depende do vendedor individual. Verifique cada anúncio para opções de envio para seu país."
+        "q": "Enviam para o estrangeiro?",
+        "a": "O envio internacional depende de cada vendedor. Verifique em cada anúncio as opções de envio para o seu país."
       },
       "shipping4": {
         "q": "Como rastreio meu envio?",
-        "a": "Após o envio do item, você receberá um número de rastreamento por e-mail. Use-o para rastrear seu pacote no site da transportadora."
+        "a": "Após o envio do item, recebe um número de seguimento por e-mail. Use-o para seguir a encomenda no site da transportadora."
       },
       "security1": {
         "q": "Minhas informações pessoais estão seguras?",
-        "a": "Sim, usamos criptografia padrão do setor para proteger suas informações pessoais e de pagamento. Nunca compartilhamos seus dados com terceiros sem seu consentimento."
+        "a": "Sim, usamos encriptação padrão do sector para proteger as suas informações pessoais e de pagamento. Nunca partilhamos os seus dados com terceiros sem o seu consentimento."
       },
       "security2": {
-        "q": "O que é proteção ao comprador?",
-        "a": "Nosso programa de proteção ao comprador cobre compras elegíveis contra fraude, deturpação e não entrega. Verifique nossos termos para detalhes completos."
+        "q": "O que é protecção ao comprador?",
+        "a": "O nosso programa de protecção ao comprador cobre compras elegíveis contra fraude, deturpação e não entrega. Verifique os nossos termos para detalhes completos."
       },
       "security3": {
         "q": "Como reporto um anúncio suspeito?",
-        "a": "Se você vir um anúncio suspeito, clique no botão \"Reportar\" na página do item ou entre em contato com nossa equipe de suporte imediatamente."
+        "a": "Se vir um anúncio suspeito, clique no botão \"Reportar\" na página do item ou entre em contacto com a nossa equipa de suporte imediatamente."
       }
     }
   },
   "privacy": {
     "hero": {
       "title": "Política de Privacidade",
-      "subtitle": "Sua privacidade é importante para nós. Esta política explica como coletamos, usamos e protegemos suas informações.",
-      "lastUpdated": "Última atualização: dezembro de 2024"
+      "subtitle": "A sua privacidade é importante para nós. Esta política explica como recolhemos, usamos e protegemos as suas informações.",
+      "lastUpdated": "Última actualização: dezembro de 2024"
     },
     "s1": {
       "title": "1. Introdução",
-      "p1": "O BidRoom (\"nós\", \"nosso\" ou \"nos\") está comprometido em proteger sua privacidade. Esta Política de Privacidade explica como coletamos, usamos, divulgamos e protegemos suas informações quando você usa nossa plataforma de marketplace de leilões.",
-      "p2": "Ao usar nosso serviço, você concorda com a coleta e uso de informações de acordo com esta política."
+      "p1": "O BidRoom (\"nós\", \"nosso\" ou \"nos\") está comprometido em proteger a sua privacidade. Esta Política de Privacidade explica como recolhemos, usamos, divulgamos e protegemos as suas informações quando usa a nossa plataforma de marketplace de leilões.",
+      "p2": "Ao usar o nosso serviço, aceita a recolha e o uso de informações de acordo com esta política."
     },
     "s2": {
-      "title": "2. Informações que Coletamos",
+      "title": "2. Informações que Recolhemos",
       "s1": {
         "title": "2.1 Informações Pessoais",
-        "intro": "Coletamos informações que você nos fornece diretamente, como:",
-        "li1": "Nome e informações de contato (endereço de e-mail, número de telefone)",
-        "li2": "Credenciais de conta (nome de usuário, senha)",
+        "intro": "Recolhemos informações que nos fornece directamente, como:",
+        "li1": "Nome e informações de contacto (endereço de e-mail, número de telefone)",
+        "li2": "Credenciais de conta (nome de utilizador, palavra-passe)",
         "li3": "Informações de pagamento (detalhes do cartão de crédito, endereço de cobrança)",
         "li4": "Informações e preferências do perfil",
         "li5": "Comunicações conosco (solicitações de suporte, feedback)"
       },
       "s2": {
         "title": "2.2 Informações de Uso",
-        "intro": "Coletamos automaticamente certas informações sobre o uso do nosso serviço:",
+        "intro": "Recolhemos automaticamente certas informações sobre o uso do nosso serviço:",
         "li1": "Informações do dispositivo (endereço IP, tipo de navegador, sistema operacional)",
         "li2": "Dados de uso (páginas visitadas, tempo gasto, recursos utilizados)",
-        "li3": "Atividade de lances e participação em leilões",
-        "li4": "Cookies e tecnologias de rastreamento similares"
+        "li3": "Actividade de lances e participação em leilões",
+        "li4": "Cookies e tecnologias de seguimento similares"
       }
     },
     "s3": {
-      "title": "3. Como Usamos Suas Informações",
-      "intro": "Usamos as informações que coletamos para:",
-      "li1": "Fornecer, manter e melhorar nossos serviços",
-      "li2": "Processar transações e gerenciar sua conta",
+      "title": "3. Como Usamos As Suas Informações",
+      "intro": "Usamos as informações que recolhemos para:",
+      "li1": "Fornecer, manter e melhorar os nossos serviços",
+      "li2": "Processar transacções e gerir a sua conta",
       "li3": "Facilitar leilões e processos de lances",
-      "li4": "Enviar atualizações e notificações importantes",
+      "li4": "Enviar actualizações e notificações importantes",
       "li5": "Fornecer suporte ao cliente",
       "li6": "Detectar e prevenir fraudes e abusos",
       "li7": "Cumprir obrigações legais",
-      "li8": "Analisar padrões de uso para melhorar a experiência do usuário"
+      "li8": "Analisar padrões de uso para melhorar a experiência do utilizador"
     },
     "s4": {
-      "title": "4. Compartilhamento e Divulgação de Informações",
-      "intro": "Não vendemos, negociamos ou alugamos suas informações pessoais a terceiros. Podemos compartilhar suas informações nas seguintes circunstâncias:",
+      "title": "4. Partilha e Divulgação de Informações",
+      "intro": "Não vendemos, negociamos ou alugamos as suas informações pessoais a terceiros. Podemos partilhar as suas informações nas seguintes circunstâncias:",
       "s1": {
         "title": "4.1 Prestadores de Serviços",
-        "intro": "Podemos compartilhar informações com prestadores de serviços terceirizados confiáveis, como:",
+        "intro": "Podemos partilhar informações com prestadores de serviços subcontratados de confiança, como:",
         "li1": "Processadores de pagamento",
         "li2": "Provedores de serviço de e-mail",
         "li3": "Serviços de análise",
@@ -3462,27 +3462,27 @@
         "title": "4.2 Requisitos Legais",
         "intro": "Podemos divulgar informações quando exigido por lei ou para:",
         "li1": "Cumprir processos legais ou solicitações governamentais",
-        "li2": "Proteger nossos direitos, propriedade ou segurança",
-        "li3": "Proteger os direitos, propriedade ou segurança de nossos usuários",
+        "li2": "Proteger os nossos direitos, propriedade ou segurança",
+        "li3": "Proteger os direitos, a propriedade ou a segurança dos nossos utilizadores",
         "li4": "Investigar possíveis violações de nossos termos"
       },
       "s3": {
         "title": "4.3 Transferências Comerciais",
-        "p": "Em caso de fusão, aquisição ou venda de ativos, suas informações podem ser transferidas como parte da transação."
+        "p": "Em caso de fusão, aquisição ou venda de activos, as suas informações podem ser transferidas como parte da transacção."
       }
     },
     "s5": {
       "title": "5. Segurança dos Dados",
-      "intro": "Implementamos medidas técnicas e organizacionais adequadas para proteger suas informações pessoais. Essas medidas incluem:",
-      "li1": "Criptografia de dados sensíveis em trânsito e em repouso",
-      "li2": "Avaliações e atualizações regulares de segurança",
-      "li3": "Controles de acesso e sistemas de autenticação",
-      "li4": "Treinamento de funcionários em proteção de dados",
+      "intro": "Implementamos medidas técnicas e organizacionais adequadas para proteger as suas informações pessoais. Essas medidas incluem:",
+      "li1": "Encriptação de dados sensíveis em trânsito e em repouso",
+      "li2": "Avaliações e actualizações regulares de segurança",
+      "li3": "Controlos de acesso e sistemas de autenticação",
+      "li4": "Formação de funcionários em protecção de dados",
       "note": "No entanto, nenhum método de transmissão pela internet é 100% seguro e não podemos garantir segurança absoluta."
     },
     "s6": {
-      "title": "6. Seus Direitos e Escolhas",
-      "intro": "Você tem certos direitos em relação às suas informações pessoais:",
+      "title": "6. Os Seus Direitos e Escolhas",
+      "intro": "Tem certos direitos em relação às suas informações pessoais:",
       "li1": {
         "label": "Acesso:",
         "text": "Solicitar acesso às suas informações pessoais"
@@ -3493,7 +3493,7 @@
       },
       "li3": {
         "label": "Exclusão:",
-        "text": "Solicitar exclusão de suas informações pessoais"
+        "text": "Solicitar exclusão das suas informações pessoais"
       },
       "li4": {
         "label": "Portabilidade:",
@@ -3503,86 +3503,86 @@
         "label": "Cancelamento:",
         "text": "Cancelar a inscrição em comunicações de marketing"
       },
-      "note": "Para exercer esses direitos, entre em contato conosco usando as informações fornecidas na seção \"Contate-nos\"."
+      "note": "Para exercer esses direitos, entre em contacto conosco usando as informações fornecidas na seção \"Contacte-nos\"."
     },
     "s7": {
-      "title": "7. Cookies e Tecnologias de Rastreamento",
-      "intro": "Usamos cookies e tecnologias similares para melhorar sua experiência em nossa plataforma. Cookies nos ajudam a:",
-      "li1": "Lembrar suas preferências e configurações",
-      "li2": "Analisar como você usa nosso serviço",
+      "title": "7. Cookies e Tecnologias de Seguimento",
+      "intro": "Usamos cookies e tecnologias similares para melhorar a sua experiência na nossa plataforma. Os cookies ajudam-nos a:",
+      "li1": "Lembrar as suas preferências e definições",
+      "li2": "Analisar como usa o nosso serviço",
       "li3": "Fornecer conteúdo e anúncios personalizados",
-      "li4": "Melhorar a funcionalidade de nossa plataforma",
-      "note": "Você pode controlar as configurações de cookies pelas preferências do navegador, mas desabilitar cookies pode afetar a funcionalidade do serviço."
+      "li4": "Melhorar a funcionalidade da nossa plataforma",
+      "note": "Pode controlar as definições de cookies através das preferências do navegador, mas desactivar os cookies pode afectar a funcionalidade do serviço."
     },
     "s8": {
       "title": "8. Retenção de Dados",
-      "intro": "Retemos suas informações pessoais pelo tempo necessário para fornecer nossos serviços. Podemos reter certas informações por períodos mais longos para:",
+      "intro": "Retemos as suas informações pessoais pelo tempo necessário para prestar os nossos serviços. Podemos reter certas informações por períodos mais longos para:",
       "li1": "Cumprir obrigações legais",
       "li2": "Resolver disputas e fazer cumprir acordos",
       "li3": "Prevenir fraudes e abusos"
     },
     "s9": {
       "title": "9. Transferências Internacionais de Dados",
-      "p": "Suas informações podem ser transferidas e processadas em países diferentes do seu. Garantimos que tais transferências cumpram as leis de proteção de dados aplicáveis."
+      "p": "As suas informações podem ser transferidas e processadas em países diferentes do seu. Garantimos que tais transferências cumpram as leis de protecção de dados aplicáveis."
     },
     "s10": {
       "title": "10. Privacidade de Crianças",
-      "p": "Nosso serviço não é destinado a crianças menores de 13 anos. Não coletamos conscientemente informações pessoais de crianças menores de 13 anos."
+      "p": "O nosso serviço não é destinado a crianças menores de 13 anos. Não recolhemos conscientemente informações pessoais de crianças menores de 13 anos."
     },
     "s11": {
       "title": "11. Alterações nesta Política de Privacidade",
-      "intro": "Podemos atualizar esta Política de Privacidade periodicamente. Notificaremos sobre alterações materiais:",
-      "li1": "Publicando a política atualizada em nosso site",
+      "intro": "Podemos actualizar esta Política de Privacidade periodicamente. Notificaremos sobre alterações materiais:",
+      "li1": "Publicando a política actualizada no nosso site",
       "li2": "Enviando uma notificação por e-mail",
-      "li3": "Exibindo um aviso em nossa plataforma",
-      "note": "O uso continuado do serviço após qualquer alteração constitui aceitação da Política de Privacidade atualizada."
+      "li3": "Exibindo um aviso na nossa plataforma",
+      "note": "O uso continuado do serviço após qualquer alteração constitui aceitação da Política de Privacidade actualizada."
     },
     "s12": {
-      "title": "12. Contate-nos",
-      "intro": "Se tiver dúvidas sobre esta Política de Privacidade, entre em contato:",
+      "title": "12. Contacte-nos",
+      "intro": "Se tiver dúvidas sobre esta Política de Privacidade, entre em contacto:",
       "emailLabel": "E-mail:",
       "addressLabel": "Endereço:",
-      "address": "Equipe de Privacidade BidRoom, 123 Auction Street, Commerce City, CC 12345",
+      "address": "Equipa de Privacidade BidRoom, 123 Auction Street, Commerce City, CC 12345",
       "phoneLabel": "Telefone:"
     }
   },
   "terms": {
     "hero": {
       "title": "Termos e Condições",
-      "subtitle": "Leia estes termos com atenção antes de usar nossa plataforma.",
-      "lastUpdated": "Última atualização: dezembro de 2024"
+      "subtitle": "Leia estes termos com atenção antes de usar a nossa plataforma.",
+      "lastUpdated": "Última actualização: dezembro de 2024"
     },
     "s1": {
       "title": "1. Aceitação dos Termos",
-      "p1": "Ao acessar e usar o BidRoom (\"o Serviço\"), você aceita e concorda em ser vinculado pelos termos deste contrato.",
-      "p2": "Estes Termos e Condições (\"Termos\") regem o uso de nossa plataforma de marketplace de leilões operada pelo BidRoom."
+      "p1": "Ao acceder e usar o BidRoom (\"o Serviço\"), aceita e concorda em ficar vinculado pelos termos deste contrato.",
+      "p2": "Estes Termos e Condições (\"Termos\") regem o uso da nossa plataforma de marketplace de leilões, operada pelo BidRoom."
     },
     "s2": {
       "title": "2. Descrição do Serviço",
-      "intro": "O BidRoom é um marketplace de leilões online que permite aos usuários:",
+      "intro": "O BidRoom é um marketplace de leilões online que permite aos utilizadores:",
       "li1": "Listar itens para leilão",
       "li2": "Participar de leilões dando lances",
       "li3": "Comprar itens pelo processo de leilão",
-      "li4": "Interagir com outros usuários em um ambiente seguro",
+      "li4": "Interagir com outros utilizadores num ambiente seguro",
       "note": "Reservamo-nos o direito de modificar, suspender ou descontinuar o Serviço a qualquer momento sem aviso prévio."
     },
     "s3": {
-      "title": "3. Contas de Usuário",
+      "title": "3. Contas de Utilizador",
       "s1": {
         "title": "3.1 Criação de Conta",
-        "intro": "Para usar nosso Serviço, você deve criar uma conta fornecendo informações precisas. Você é responsável por:",
-        "li1": "Manter a confidencialidade de suas credenciais",
-        "li2": "Todas as atividades que ocorrem sob sua conta",
+        "intro": "Para usar o nosso Serviço, tem de criar uma conta fornecendo informações precisas. É responsável por:",
+        "li1": "Manter a confidencialidade das suas credenciais",
+        "li2": "Todas as actividades que ocorrem sob a sua conta",
         "li3": "Notificar-nos imediatamente sobre qualquer uso não autorizado",
-        "li4": "Garantir que as informações da conta permaneçam atualizadas"
+        "li4": "Garantir que as informações da conta permaneçam actualizadas"
       },
       "s2": {
         "title": "3.2 Elegibilidade da Conta",
-        "p": "Você deve ter pelo menos 18 anos para criar uma conta. Ao criar uma conta, você declara que atende a este requisito."
+        "p": "Tem de ter pelo menos 18 anos para criar uma conta. Ao criar uma conta, declara que cumpre este requisito."
       },
       "s3": {
         "title": "3.3 Suspensão de Conta",
-        "p": "Reservamo-nos o direito de suspender ou encerrar contas que violem estes Termos ou se envolvam em atividades fraudulentas ou ilegais."
+        "p": "Reservamo-nos o direito de suspender ou encerrar contas que violem estes Termos ou se envolvam em actividades fraudulentas ou ilegais."
       }
     },
     "s4": {
@@ -3591,7 +3591,7 @@
         "title": "4.1 Processo de Lance",
         "intro": "Ao participar de leilões:",
         "li1": "Todos os lances são definitivos e não podem ser retirados",
-        "li2": "Você deve ter fundos suficientes para cobrir seu lance máximo",
+        "li2": "Tem de ter fundos suficientes para cobrir o seu lance máximo",
         "li3": "Usamos um sistema de lance por proxy",
         "li4": "Os licitantes vencedores são obrigados a concluir a compra"
       },
@@ -3609,7 +3609,7 @@
     },
     "s5": {
       "title": "5. Responsabilidades do Vendedor",
-      "intro": "Se você listar itens para leilão, concorda em:",
+      "intro": "Se anunciar itens para leilão, concorda em:",
       "li1": "Fornecer descrições precisas e completas",
       "li2": "Incluir fotos claras e de alta qualidade",
       "li3": "Definir preços iniciais e de reserva adequados",
@@ -3618,8 +3618,8 @@
       "li6": "Cumprir todas as leis e regulamentações aplicáveis"
     },
     "s6": {
-      "title": "6. Atividades Proibidas",
-      "intro": "Você concorda em não:",
+      "title": "6. Actividades Proibidas",
+      "intro": "Concorda em não:",
       "li1": "Usar o Serviço para fins ilegais ou não autorizados",
       "li2": "Interferir ou perturbar o Serviço ou servidores",
       "li3": "Tentar acesso não autorizado a qualquer parte do Serviço",
@@ -3627,7 +3627,7 @@
       "li5": "Participar de lances fictícios ou outras práticas fraudulentas",
       "li6": "Listar itens proibidos (armas, substâncias ilegais, etc.)",
       "li7": "Violar quaisquer leis ou regulamentações aplicáveis",
-      "li8": "Assediar, abusar ou prejudicar outros usuários"
+      "li8": "Assediar, abusar ou prejudicar outros utilizadores"
     },
     "s7": {
       "title": "7. Taxas e Pagamentos",
@@ -3635,7 +3635,7 @@
         "title": "7.1 Taxas de Serviço",
         "intro": "Podemos cobrar taxas por certos serviços, incluindo:",
         "li1": "Taxas de listagem para itens de leilão",
-        "li2": "Taxas de transação para vendas concluídas",
+        "li2": "Taxas de transacção para vendas concluídas",
         "li3": "Recursos e serviços premium"
       },
       "s2": {
@@ -3644,13 +3644,13 @@
       },
       "s3": {
         "title": "7.3 Reembolsos",
-        "p": "As políticas de reembolso variam por tipo de transação e estão sujeitas ao nosso critério e às leis aplicáveis."
+        "p": "As políticas de reembolso variam por tipo de transacção e estão sujeitas ao nosso critério e às leis aplicáveis."
       }
     },
     "s8": {
       "title": "8. Propriedade Intelectual",
-      "p1": "O Serviço e seu conteúdo original são de propriedade do BidRoom e protegidos por leis de propriedade intelectual.",
-      "p2": "Você não pode reproduzir, distribuir, modificar ou criar obras derivadas do nosso conteúdo sem permissão expressa por escrito."
+      "p1": "O Serviço e o seu conteúdo original são de propriedade do BidRoom e protegidos por leis de propriedade intelectual.",
+      "p2": "Não pode reproduzir, distribuir, modificar ou criar obras derivadas do nosso conteúdo sem permissão expressa por escrito."
     },
     "s9": {
       "title": "9. Isenções de Responsabilidade",
@@ -3660,20 +3660,20 @@
     "s10": {
       "title": "10. Limitação de Responsabilidade",
       "p1": "NA MÁXIMA EXTENSÃO PERMITIDA POR LEI, O BIDROOM NÃO SERÁ RESPONSÁVEL POR DANOS INDIRETOS, INCIDENTAIS, ESPECIAIS, CONSEQUENTES OU PUNITIVOS.",
-      "p2": "Nossa responsabilidade total para com você não excederá o valor que nos pagou nos 12 meses anteriores à reclamação."
+      "p2": "A nossa responsabilidade total para consigo não excederá o valor que nos pagou nos 12 meses anteriores à reclamação."
     },
     "s11": {
       "title": "11. Indenização",
-      "intro": "Você concorda em defender, indenizar e isentar o BidRoom e seus funcionários de quaisquer reclamações decorrentes de:",
-      "li1": "Seu uso do Serviço",
-      "li2": "Sua violação destes Termos",
-      "li3": "Sua violação de direitos de terceiros",
-      "li4": "Qualquer conteúdo que você submeta através do Serviço"
+      "intro": "Concorda em defender, indemnizar e isentar o BidRoom e os seus funcionários de quaisquer reclamações decorrentes de:",
+      "li1": "O seu uso do Serviço",
+      "li2": "A sua violação destes Termos",
+      "li3": "A sua violação de direitos de terceiros",
+      "li4": "Qualquer conteúdo que submeta através do Serviço"
     },
     "s12": {
       "title": "12. Rescisão",
-      "p1": "Podemos encerrar ou suspender sua conta imediatamente, sem aviso prévio, por qualquer motivo.",
-      "p2": "Após a rescisão, seu direito de usar o Serviço cessará imediatamente."
+      "p1": "Podemos encerrar ou suspender a sua conta imediatamente, sem aviso prévio, por qualquer motivo.",
+      "p2": "Após a rescisão, o seu direito de usar o Serviço cessará imediatamente."
     },
     "s13": {
       "title": "13. Lei Aplicável",
@@ -3686,8 +3686,8 @@
       "p2": "O uso continuado do Serviço após tais alterações constitui aceitação dos novos Termos."
     },
     "s15": {
-      "title": "15. Informações de Contato",
-      "intro": "Se tiver dúvidas sobre estes Termos, entre em contato:",
+      "title": "15. Informações de Contacto",
+      "intro": "Se tiver dúvidas sobre estes Termos, entre em contacto:",
       "emailLabel": "E-mail:",
       "addressLabel": "Endereço:",
       "address": "Departamento Jurídico BidRoom, 123 Auction Street, Commerce City, CC 12345",
@@ -3705,7 +3705,7 @@
       "offensive_content": "Conteúdo Ofensivo",
       "prohibited_item": "Item Proibido",
       "spam": "Spam",
-      "off_platform_transaction": "Tentativa de Transação Fora da Plataforma",
+      "off_platform_transaction": "Tentativa de Transacção Fora da Plataforma",
       "other": "Outro"
     },
     "descriptionLabel": "Detalhes adicionais (opcional)",
@@ -3747,7 +3747,7 @@
     "followers": "Seguidores",
     "activeListings": "Leilões Ativos",
     "endedListings": "Terminados",
-    "noActiveListings": "Sem leilões ativos de momento.",
+    "noActiveListings": "Sem leilões activos de momento.",
     "noEndedListings": "Ainda sem leilões terminados.",
     "ended": "Terminado",
     "bestOffer": "Best Offer",
@@ -3769,13 +3769,13 @@
     "filterOutbid": "Superado",
     "filterEnded": "Terminado",
     "myBest": "O meu melhor",
-    "currentPrice": "Atual",
+    "currentPrice": "Actual",
     "bids": "Lances",
     "ends": "Termina",
     "bidHistory": "Histórico de lances",
     "bidAgain": "Licitar de novo",
     "viewListing": "Ver leilão",
-    "viewTransaction": "Ver transação",
+    "viewTransaction": "Ver transacção",
     "withdraw": "Retirar",
     "withdrawing": "A retirar…",
     "notifOn": "Notificar se superado",
@@ -4042,16 +4042,16 @@
     },
     "endedPage": {
       "subtitle": "A sessão do leilão privado terminou.",
-      "viewTransactions": "Ir para transações"
+      "viewTransactions": "Ir para transacções"
     },
     "expired": {
       "titleEnded": "Sala privada terminada",
       "titleStarted": "Leilão privado iniciado",
       "titleClosed": "Sala privada encerrada",
-      "bodyWinner": "Parabéns — ganhou com a licitação mais alta de <strong>{{amount}}</strong>. Consulte o email e vá a Transações para concluir o pagamento em 48 horas.",
+      "bodyWinner": "Parabéns — ganhou com a licitação mais alta de <strong>{{amount}}</strong>. Consulte o email e vá a Transacções para concluir o pagamento em 48 horas.",
       "bodySellerWithWinner": "A sessão terminou. <strong>{{name}}</strong> ganhou com <strong>{{amount}}</strong>. Receberá os próximos passos por email.",
       "bodySellerNoWinner": "A sessão terminou sem licitação vencedora. Pode voltar a publicar o artigo em Os meus leilões.",
-      "bodyParticipantWithWinner": "A sessão terminou. <strong>{{name}}</strong> ganhou com <strong>{{amount}}</strong>. Será notificado por email se foi selecionado.",
+      "bodyParticipantWithWinner": "A sessão terminou. <strong>{{name}}</strong> ganhou com <strong>{{amount}}</strong>. Será notificado por email se foi seleccionado.",
       "bodyParticipantNoWinner": "A sessão terminou. Não houve licitação vencedora. Obrigado por participar.",
       "bodySpectatorWithWinner": "O leilão privado terminou. A licitação vencedora foi <strong>{{amount}}</strong>.",
       "bodySpectatorNoWinner": "O leilão privado terminou sem licitação vencedora.",
@@ -4059,10 +4059,10 @@
       "bodySellerLeft": "O vendedor saiu da sala. O leilão encerrou sem vencedor.",
       "bodyStartedInvited": "O prazo de aceitação terminou. As licitações estão abertas — licite antes do temporizador acabar.",
       "bodyStartedOther": "O leilão privado começou. Pode assistir em direto; só licitadores convidados podem licitar.",
-      "bodyConfirming": "O tempo acabou. Estamos a confirmar os resultados finais — esta página atualiza automaticamente.",
+      "bodyConfirming": "O tempo acabou. Estamos a confirmar os resultados finais — esta página actualiza automaticamente.",
       "confirm": "Entendido",
       "viewListing": "Ver anúncio",
-      "viewTransactions": "Ir para transações"
+      "viewTransactions": "Ir para transacções"
     }
   },
   "trust": {
@@ -4431,7 +4431,7 @@
     "ERROR_GIVEAWAY_CLOSED": "As participações neste passatempo já fecharam.",
     "ERROR_GIVEAWAY_DRAWN": "O vencedor deste passatempo já foi sorteado.",
     "ERROR_GIVEAWAY_OWN_LISTING": "Não pode participar num passatempo da sua própria conta.",
-    "ERROR_ACCOUNT_REQUIRED": "Precisa de uma conta BidRoom ativa para participar.",
+    "ERROR_ACCOUNT_REQUIRED": "Precisa de uma conta BidRoom activa para participar.",
     "ERROR_GENERIC": "Não foi possível registar a participação. Tente novamente."
   }
 }

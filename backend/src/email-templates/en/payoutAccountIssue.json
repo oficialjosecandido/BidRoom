@@ -1,0 +1,12 @@
+{
+  "subject": "Action needed: an issue with your payout account",
+  "layout": "bidroom",
+  "title": "Action required",
+  "preheader": "Stripe could not verify your payout account.",
+  "ctaUrl": "{{ctaUrl}}",
+  "ctaLabel": "Update payout details",
+  "signOff": "Best regards,<br><strong style=\"color:#0f172a;\">The BidRoom Team</strong>",
+  "footerNote": "Automated message · Please do not reply directly to this email",
+  "body": "<p style=\"margin:0 0 16px;\">Hi{{#if firstName}} {{firstName}}{{/if}},</p><p style=\"margin:0 0 16px;\">We could not verify your payout account, so your sales cannot be paid out yet. Stripe reported the following:</p>{{issuesBox}}<p style=\"margin:16px 0 0;\">Open your payout settings on BidRoom and correct the details above. Stripe rechecks the account automatically once you save, and we will email you as soon as it is verified.</p>",
+  "text": "Hi{{#if firstName}} {{firstName}}{{/if}},\n\nWe could not verify your payout account, so your sales cannot be paid out yet. Stripe reported:\n\n{{issuesText}}\n\nOpen your payout settings on BidRoom and correct these details. Stripe rechecks the account automatically once you save.\n\n{{ctaUrl}}"
+}

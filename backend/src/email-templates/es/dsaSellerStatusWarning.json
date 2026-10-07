@@ -1,0 +1,12 @@
+{
+  "subject": "Acción necesaria: confirma tu estado de vendedor",
+  "layout": "bidroom",
+  "title": "Revisión del estado de vendedor",
+  "preheader": "Tus ventas han superado los umbrales del DSA de la UE para la venta profesional.",
+  "ctaUrl": "{{ctaUrl}}",
+  "ctaLabel": "Confirmar mi estado de vendedor",
+  "signOff": "Un saludo,<br><strong style=\"color:#0f172a;\">El equipo de BidRoom</strong>",
+  "footerNote": "Mensaje automático · Por favor, no respondas directamente a este correo",
+  "body": "<p style=\"margin:0 0 16px;\">Hola{{#if firstName}} {{firstName}}{{/if}},</p><p style=\"margin:0 0 16px;\">Tu actividad de venta en BidRoom ha alcanzado los umbrales que pueden contar como <strong style=\"color:#0f172a;\">venta profesional</strong> según el Reglamento de Servicios Digitales (DSA) de la UE:</p>{{statsBox}}<p style=\"margin:20px 0 16px;\">Según el artículo 29 del DSA, las plataformas deben pedir a los vendedores que superan estos umbrales que declaren si actúan como profesionales.</p><p style=\"margin:0;\">Confirma tu estado de vendedor en el panel. Tienes <strong style=\"color:#0f172a;\">{{graceDays}} días</strong> para responder antes de que tu cuenta se marque para revisión.</p><p style=\"margin:16px 0 0;font-size:13px;color:#64748b;\">Si crees que es un error o tienes dudas, escribe al soporte.</p><p style=\"margin:12px 0 0;font-size:12px;color:#94a3b8;\">Esta notificación es obligatoria según el Reglamento (UE) 2022/2065 (Reglamento de Servicios Digitales), artículo 29.</p>",
+  "text": "Hola{{#if firstName}} {{firstName}}{{/if}},\n\nTu actividad de venta en BidRoom ha alcanzado los umbrales que pueden contar como venta profesional según el Reglamento de Servicios Digitales (DSA) de la UE:\n\n{{statsText}}\n\nSegún el artículo 29 del DSA, las plataformas deben pedir a los vendedores que superan estos umbrales que declaren si actúan como profesionales. Confirma tu estado de vendedor en el panel: tienes {{graceDays}} días para responder antes de que tu cuenta se marque para revisión.\n\n{{ctaUrl}}\n\nEsta notificación es obligatoria según el Reglamento (UE) 2022/2065 (Reglamento de Servicios Digitales), artículo 29."
+}

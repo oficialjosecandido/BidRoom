@@ -49,7 +49,14 @@ const {
   sendOfferOutbidEmail
 } = require('../services/auctionNotificationService');
 const { sendEmail } = require('../services/emailService');
-const { wrapBidRoomEmail, emailSuccessBox, emailAmountCard } = require('../utils/bidroomEmailLayout');
+const {
+  wrapBidRoomEmail,
+  emailSuccessBox,
+  emailAmountCard,
+  escapeHtml,
+  transactionUrl
+} = require('../utils/bidroomEmailLayout');
+const { sendLocalizedEmail, emailLabel } = require('../services/localizedEmail');
 const logger = require('../utils/logger');
 
 // GET /api/offers/listing/:listingId - Get all offers for a listing
@@ -387,7 +394,8 @@ router.patch('/:offerId/accept', authenticateToken, async (req, res) => {
   try {
     const offer = await Offer.findById(req.params.offerId)
       .populate('listing')
-      .populate('offerer', 'firstName lastName email');
+      // language: the "offer accepted" email is written in the buyer's language.
+      .populate('offerer', 'firstName lastName email language');
 
     if (!offer) {
       return res.status(404).json({ error: 'Offer not found' });
@@ -489,30 +497,22 @@ router.patch('/:offerId/accept', authenticateToken, async (req, res) => {
         }).catch(err => logger.error('Failed to create proposal-accepted notification:', err));
         if (io) emitNewNotificationToUser(io, buyerUserId).catch(() => {});
 
-        // Email to buyer
-        const buyerEmail = offer.offerer?.email;
-        if (buyerEmail) {
-          const buyerFirstName = offer.offerer?.firstName || 'there';
-          const amountStr = `$${Number(offer.amount).toFixed(2)}`;
-          const listingTitle = listing.title || 'your item';
-          const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:4200';
-          const txLink = `${frontendUrl}/dashboard/transactions`;
-          const html = wrapBidRoomEmail({
-            title: 'Your offer was accepted!',
-            preheader: `The seller accepted your offer of ${amountStr} for ${listingTitle}.`,
-            bodyHtml: `
-              <p style="margin:0 0 16px;">Hi <strong>${buyerFirstName}</strong>,</p>
-              ${emailSuccessBox(
-                'Great news — your offer was accepted',
-                `<p style="margin:0 0 12px;">The seller accepted your offer for this listing.</p>${emailAmountCard(amountStr, listingTitle)}`
-              )}
-              <p style="margin:16px 0 0;color:#334155;font-size:14px;line-height:1.55;">A transaction has been created. Please complete payment to proceed.</p>
-            `,
-            ctaUrl: txLink,
-            ctaLabel: 'View transaction'
-          });
-          sendEmail(buyerEmail, `Your offer on "${listingTitle}" was accepted`, html)
-            .catch(err => logger.error('Failed to send offer-accepted email:', err.message));
+        // Email to buyer, in the language they chose
+        if (offer.offerer?.email) {
+          // Was `$` — BidRoom prices, charges and pays out in euros.
+          const amountStr = `€${Number(offer.amount).toFixed(2)}`;
+          const listingTitle = listing.title || emailLabel('yourItem', offer.offerer);
+          sendLocalizedEmail(offer.offerer, 'offerAcceptedBuyer', {
+            firstName: escapeHtml(offer.offerer.firstName),
+            listingTitle: escapeHtml(listingTitle),
+            amount: amountStr,
+            amountBox: emailAmountCard(
+              amountStr,
+              escapeHtml(listingTitle),
+              emailLabel('offer', offer.offerer)
+            ),
+            ctaUrl: transactionUrl(transaction?._id?.toString?.())
+          }).catch(err => logger.error('Failed to send offer-accepted email:', err.message));
         }
       }
     }

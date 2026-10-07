@@ -27,14 +27,25 @@ const templateCache = new Map();
 function renderTemplate(template, data) {
   let rendered = template;
 
-  // {{#if var}}…{{/if}} — keep the block when the value is truthy, drop it otherwise.
+  // {{#if var}}…{{else}}…{{/if}} — keep one branch, drop the other.
   // Templates already shipped this syntax (draftReminder) while the renderer only
   // knew plain variables, so the markers were going out verbatim in real emails.
   // Non-nested and non-greedy: one level is all the templates use.
+  //
+  // `{{else}}` is optional, and was added because confirmReceiptBuyer reached
+  // for it the moment a template needed to say two different things. Without it
+  // the whole if/else was treated as a single body: a truthy value shipped BOTH
+  // sentences with a literal `{{else}}` between them, and a falsy one dropped
+  // the paragraph entirely, so the buyer got a reminder that never said what it
+  // was reminding them of.
   const conditionalRegex = /\{\{#if\s+(\w+(?:\.\w+)*)\}\}([\s\S]*?)\{\{\/if\}\}/g;
-  rendered = rendered.replace(conditionalRegex, (_match, varPath, body) => {
+  rendered = rendered.replace(conditionalRegex, (_match, varPath, block) => {
     const value = varPath.split('.').reduce((obj, key) => (obj && obj[key] !== undefined ? obj[key] : undefined), data);
-    return value ? body : '';
+    // Split on the first {{else}} only; a later one is literal text.
+    const elseAt = block.search(/\{\{else\}\}/);
+    const whenTrue = elseAt === -1 ? block : block.slice(0, elseAt);
+    const whenFalse = elseAt === -1 ? '' : block.slice(elseAt).replace(/\{\{else\}\}/, '');
+    return value ? whenTrue : whenFalse;
   });
 
   // Replace all {{variable}} or {{object.property}} occurrences
@@ -151,6 +162,9 @@ function renderEmailTemplate(templateName, language = DEFAULT_LANGUAGE, data = {
   let html;
   if (template.layout === 'bidroom') {
     html = wrapBidRoomEmail({
+      // The template that was actually loaded may be the English fallback, but
+      // the requested language is the honest declaration of intent here.
+      lang: SUPPORTED_LANGUAGES.includes(language) ? language : DEFAULT_LANGUAGE,
       title: renderTemplate(template.title, data),
       preheader: template.preheader ? renderTemplate(template.preheader, data) : undefined,
       bodyHtml: renderTemplate(template.body, data),

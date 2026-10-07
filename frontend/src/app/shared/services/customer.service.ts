@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { API_CONFIG } from '../config/api.config';
 import { ThemePreference, ThemeService } from './theme.service';
+import { LanguageService } from './language.service';
 
 export interface CustomerUser {
   _id: string;
@@ -75,7 +76,8 @@ export interface CustomerInfo {
   user: CustomerUser;
   balance: number;
   reviewCount: number;
-  language: string;
+  /** null when the customer has never chosen one — not the same as 'en'. */
+  language: string | null;
   buyerScore: number | null;
   sellerScore: number | null;
   buyerReviewCount: number;
@@ -99,17 +101,20 @@ export interface CustomerInfo {
 export class CustomerService {
   private http = inject(HttpClient);
   private themeService = inject(ThemeService);
+  private languageService = inject(LanguageService);
 
   private apiUrl = `${API_CONFIG.getApiUrl()}/customers`;
 
   getCustomer(): Observable<CustomerInfo> {
     return this.http.get<CustomerInfo>(`${this.apiUrl}/profile`).pipe(
-      tap((info) => this.themeService.mergeFromServerIfPresent(info.theme))
+      tap((info) => {
+        this.themeService.mergeFromServerIfPresent(info.theme);
+        // Reconciled here rather than only in Settings: a user who never opens
+        // Settings still needs Customer.language to match what they are reading,
+        // because that field is what their emails are written in.
+        this.languageService.syncWithServer(info.language);
+      })
     );
-  }
-
-  updateLanguage(language: string): Observable<{ language: string }> {
-    return this.http.patch<{ language: string }>(`${this.apiUrl}/language`, { language });
   }
 
   updateDeliveryAddress(

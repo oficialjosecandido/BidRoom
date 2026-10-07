@@ -17,7 +17,8 @@
 
 const Customer = require('../models/Customer');
 const Transaction = require('../models/Transaction');
-const { sendEmail } = require('./emailService');
+const { sendLocalizedEmail, emailLabel, emailLocale } = require('./localizedEmail');
+const { emailStepsList, escapeHtml } = require('../utils/bidroomEmailLayout');
 const { notifyDsaWarning, notifyDsaSuspectedProfessional, emitNewNotificationToUser } = require('./notificationService');
 const logger = require('../utils/logger');
 
@@ -35,11 +36,15 @@ async function checkDsaCompliance() {
   const graceCutoff = new Date(now.getTime() - GRACE_PERIOD_DAYS * 24 * 60 * 60 * 1000);
 
   try {
-    // Only check active private sellers
+    // Only check active private sellers.
+    //
+    // `language` is in the projection because this check emails the seller a
+    // notice that starts a 30-day clock. Left out, the lean object carries no
+    // language and the warning goes out in English to every seller.
     const privateSellers = await Customer.find({
       sellerClassification: 'private',
       accountStatus: 'active'
-    }).select('_id uid email firstName dsaWarningIssuedAt dsaWarningAcknowledgedAt dsaWarningResponse suspectedProfessional dsaListingRestricted').lean();
+    }).select('_id uid email firstName language dsaWarningIssuedAt dsaWarningAcknowledgedAt dsaWarningResponse suspectedProfessional dsaListingRestricted').lean();
 
     if (!privateSellers.length) return;
 
@@ -117,45 +122,34 @@ async function checkDsaCompliance() {
   }
 }
 
+/**
+ * The Article 29 notice, written in the seller's own language.
+ *
+ * Amounts are formatted for that language too — a Portuguese reader parses
+ * "€2.450" and an English one "€2,450", and the figure in a legal notice is the
+ * part that must not be misread.
+ */
 async function sendDsaWarningEmail(seller, stats) {
   const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:4200';
-  const salesFormatted = `€${Math.round(stats.totalSalesEur).toLocaleString()}`;
-  const subject = 'Action required: your seller status on BidRoom';
-  const html = `
-    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
-      <h2 style="color: #7A4F84;">Seller status review required</h2>
-      <p>Hi ${seller.firstName || 'there'},</p>
-      <p>
-        Your selling activity on BidRoom has reached thresholds that may qualify as
-        <strong>professional selling</strong> under EU DSA (Digital Services Act) regulations:
-      </p>
-      <ul>
-        <li>Annual sales: <strong>${salesFormatted}</strong> (threshold: €${SALES_THRESHOLD_EUR.toLocaleString()})</li>
-        <li>Annual transactions: <strong>${stats.txCount}</strong> (threshold: ${TX_COUNT_THRESHOLD})</li>
-      </ul>
-      <p>
-        Under Article 29 of the EU DSA, platforms are required to ask sellers who exceed these
-        thresholds to self-declare whether they are acting as a trader.
-      </p>
-      <p>
-        <strong>Please visit your dashboard to confirm your seller status.</strong>
-        You have <strong>${GRACE_PERIOD_DAYS} days</strong> to respond before your account is flagged for platform review.
-      </p>
-      <div style="margin: 24px 0;">
-        <a href="${frontendUrl}/dashboard/home"
-           style="background: #7A4F84; color: #fff; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: 600;">
-          Review my seller status
-        </a>
-      </div>
-      <p style="font-size: 13px; color: #666;">
-        If you believe this is an error or have questions, please contact support.
-      </p>
-      <p style="font-size: 12px; color: #999;">
-        This notification is required under EU Regulation 2022/2065 (Digital Services Act), Article 29.
-      </p>
-    </div>
-  `;
-  await sendEmail(seller.email, subject, html);
+  const locale = emailLocale(seller);
+  const money = (value) => `€${Math.round(value).toLocaleString(locale)}`;
+  const count = (value) => Number(value).toLocaleString(locale);
+
+  const threshold = emailLabel('dsaThreshold', seller);
+  const rows = [
+    [emailLabel('dsaAnnualSales', seller), money(stats.totalSalesEur), money(SALES_THRESHOLD_EUR)],
+    [emailLabel('dsaAnnualTransactions', seller), count(stats.txCount), count(TX_COUNT_THRESHOLD)]
+  ];
+
+  await sendLocalizedEmail(seller, 'dsaSellerStatusWarning', {
+    firstName: escapeHtml(seller.firstName),
+    statsBox: emailStepsList(rows.map(([label, value, limit]) =>
+      `${label}: <strong style="color:#0f172a;">${value}</strong> (${threshold}: ${limit})`
+    )),
+    statsText: rows.map(([label, value, limit]) => `- ${label}: ${value} (${threshold}: ${limit})`).join('\n'),
+    graceDays: GRACE_PERIOD_DAYS,
+    ctaUrl: `${frontendUrl.replace(/\/$/, '')}/dashboard/home`
+  });
 }
 
 function startDsaComplianceScheduler(intervalHours = 24, io = null) {

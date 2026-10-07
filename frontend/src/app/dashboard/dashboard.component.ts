@@ -39,11 +39,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
   private refreshInterval: ReturnType<typeof setInterval> | null = null;
   private subs = new Subscription();
 
-  constructor() {
-    const saved = localStorage.getItem('lang') || 'pt';
-    this.translate.use(saved);
-  }
-
   get themeGlyph(): string {
     return this.theme.resolveEffective(this.theme.preference()) === 'dark' ? '☾' : '☀';
   }

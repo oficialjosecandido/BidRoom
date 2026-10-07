@@ -7,6 +7,6 @@
   "ctaLabel": "Ver transacciones",
   "signOff": "Un saludo,<br><strong style=\"color:#0f172a;\">El equipo de BidRoom</strong>",
   "footerNote": "Mensaje automático · Por favor, no respondas directamente a este correo",
-  "body": "<p style=\"margin:0 0 16px;\">Hola {{firstName}},</p><p style=\"margin:0 0 16px;\">Tu pedido de <strong style=\"color:#0f172a;\">\"{{listingTitle}}\"</strong> se ha cancelado porque el vendedor no lo envió a tiempo.</p><p style=\"margin:0 0 16px;\">Se ha emitido un <strong style=\"color:#0f172a;\">reembolso completo</strong> a tu método de pago original. Puede tardar entre 5 y 10 días laborables en aparecer.</p><p style=\"margin:0 0 16px;\">No debes nada y el vendedor puede volver a publicar el anuncio.</p>",
-  "text": "Hola {{firstName}},\n\nTu pedido de \"{{listingTitle}}\" se ha cancelado: el vendedor no envió a tiempo. Se ha emitido un reembolso completo a tu método de pago original (5-10 días laborables).\n\n{{ctaUrl}}"
+  "body": "<p style=\"margin:0 0 16px;\">Hola{{#if firstName}} {{firstName}}{{/if}},</p><p style=\"margin:0 0 16px;\">Tu pedido de <strong style=\"color:#0f172a;\">\"{{listingTitle}}\"</strong> se ha cancelado porque el vendedor no lo envió a tiempo.</p><p style=\"margin:0 0 16px;\">Se ha emitido un <strong style=\"color:#0f172a;\">reembolso completo</strong> a tu método de pago original. Puede tardar entre 5 y 10 días laborables en aparecer.</p><p style=\"margin:0 0 16px;\">No debes nada y el vendedor puede volver a publicar el anuncio.</p>",
+  "text": "Hola{{#if firstName}} {{firstName}}{{/if}},\n\nTu pedido de \"{{listingTitle}}\" se ha cancelado: el vendedor no envió a tiempo. Se ha emitido un reembolso completo a tu método de pago original (5-10 días laborables).\n\n{{ctaUrl}}"
 }

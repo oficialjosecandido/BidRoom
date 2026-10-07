@@ -7,6 +7,6 @@
   "ctaLabel": "Ver transacção",
   "signOff": "Com os melhores cumprimentos,<br><strong style=\"color:#0f172a;\">A equipa BidRoom</strong>",
   "footerNote": "Mensagem automática · Por favor não responda directamente a este email",
-  "body": "<p style=\"margin:0 0 16px;\">Olá {{firstName}},</p><p style=\"margin:0 0 16px;\">A sua encomenda de <strong style=\"color:#0f172a;\">\"{{listingTitle}}\"</strong> foi concluída automaticamente porque o prazo de entrega já passou.</p><p style=\"margin:0 0 16px;\">O pagamento foi libertado para o vendedor. Se houver algum problema com esta encomenda, contacte o suporte BidRoom e tratamos disso.</p>",
-  "text": "Olá {{firstName}},\n\nA sua encomenda de \"{{listingTitle}}\" foi concluída automaticamente e o pagamento libertado para o vendedor.\n\n{{ctaUrl}}"
+  "body": "<p style=\"margin:0 0 16px;\">Olá{{#if firstName}} {{firstName}}{{/if}},</p><p style=\"margin:0 0 16px;\">A sua encomenda de <strong style=\"color:#0f172a;\">\"{{listingTitle}}\"</strong> foi concluída automaticamente porque o prazo de entrega já passou.</p><p style=\"margin:0 0 16px;\">O pagamento foi libertado para o vendedor. Se houver algum problema com esta encomenda, contacte o suporte BidRoom e tratamos disso.</p>",
+  "text": "Olá{{#if firstName}} {{firstName}}{{/if}},\n\nA sua encomenda de \"{{listingTitle}}\" foi concluída automaticamente e o pagamento libertado para o vendedor.\n\n{{ctaUrl}}"
 }

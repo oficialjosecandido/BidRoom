@@ -1,0 +1,12 @@
+{
+  "subject": "Nuevo mensaje del soporte de BidRoom",
+  "layout": "bidroom",
+  "title": "Tienes un nuevo mensaje de soporte",
+  "preheader": "El equipo de BidRoom te ha enviado un mensaje sobre {{subjectLabel}}.",
+  "ctaUrl": "{{ctaUrl}}",
+  "ctaLabel": "Abrir chat de soporte",
+  "signOff": "Un saludo,<br><strong style=\"color:#0f172a;\">El equipo BidRoom</strong>",
+  "footerNote": "Mensaje automático · Por favor no respondas directamente a este correo",
+  "body": "<p style=\"margin:0 0 16px;\">Hola{{#if firstName}} {{firstName}}{{/if}},</p><p style=\"margin:0 0 16px;\">El equipo de soporte de BidRoom te ha enviado un mensaje{{#if subjectLabel}} sobre <strong style=\"color:#0f172a;\">{{subjectLabel}}</strong>{{/if}}:</p><table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" role=\"presentation\" style=\"margin:20px 0;\"><tr><td style=\"background:#faf6eb;border:1px solid #e8d9a8;border-radius:12px;padding:16px 18px;color:#334155;font-size:14px;line-height:1.6;white-space:pre-wrap;\">{{preview}}</td></tr></table><p style=\"margin:0 0 16px;\">Responde en tu panel para continuar la conversación.</p>",
+  "text": "Hola{{#if firstName}} {{firstName}}{{/if}},\n\nEl equipo de soporte de BidRoom te ha enviado un mensaje{{#if subjectLabel}} sobre {{subjectLabel}}{{/if}}:\n\n{{preview}}\n\nAbrir chat de soporte: {{ctaUrl}}"
+}

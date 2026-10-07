@@ -4,7 +4,6 @@ const Listing = require('../models/Listing');
 const Customer = require('../models/Customer');
 const Review = require('../models/Review');
 const { authenticateToken, requireActiveAccount } = require('../middleware/auth');
-const { sendSellerDisputeOpenedNotification, sendEmail } = require('../services/emailService');
 const {
   notifyDisputeOpened,
   notifyEvidenceSubmitted,
@@ -19,13 +18,11 @@ const {
 const { ensureShippingDeadlinesFromPaidAt } = require('../services/shippingDeadlines');
 const { restrictBothPartiesForDispute, checkAndApplyPendingSuspensions } = require('../services/accountStatusService');
 const {
-  wrapBidRoomEmail,
   emailInfoBox,
-  emailTextLink,
   escapeHtml,
   transactionUrl
 } = require('../utils/bidroomEmailLayout');
-const { sendLocalizedEmail } = require('../services/localizedEmail');
+const { sendLocalizedEmail, emailLabel } = require('../services/localizedEmail');
 const logger = require('../utils/logger');
 const {
   attachBuyerDeliveryAddressIfMissing,
@@ -245,7 +242,10 @@ router.post('/:id/open-dispute', async (req, res) => {
 
     const transaction = await Transaction.findById(req.params.id)
       .populate('listing', 'title slug')
-      .populate('seller', 'firstName lastName email')
+      // `language` is in the seller projection because opening a dispute emails
+      // them: without it the populated seller carries no language and the notice
+      // asking for counter-evidence goes out in English whatever they chose.
+      .populate('seller', 'firstName lastName email language')
       .populate('buyer', 'firstName lastName');
 
     if (!transaction) {
@@ -309,8 +309,13 @@ router.post('/:id/open-dispute', async (req, res) => {
       );
     }
 
-    const listingTitle = transaction.listing?.title || 'Item';
-    const buyerName = [transaction.buyer?.firstName, transaction.buyer?.lastName].filter(Boolean).join(' ') || 'Buyer';
+    // Kept unresolved so the email below can fall back in the seller's own
+    // language; the in-app notification still takes the English placeholder it
+    // has always used, since every string in notificationService is English.
+    const rawListingTitle = transaction.listing?.title || '';
+    const rawBuyerName = [transaction.buyer?.firstName, transaction.buyer?.lastName].filter(Boolean).join(' ');
+    const listingTitle = rawListingTitle || 'Item';
+    const buyerName = rawBuyerName || 'Buyer';
     if (sellerUserId) {
       notifyDisputeOpened({
         transactionId: transaction._id.toString(),
@@ -322,13 +327,14 @@ router.post('/:id/open-dispute', async (req, res) => {
       if (io) emitNewNotificationToUser(io, sellerUserId).catch(() => {});
     }
     if (transaction.seller?.email) {
-      sendSellerDisputeOpenedNotification(
-        transaction.seller.email,
-        transaction.seller.firstName,
-        listingTitle,
-        buyerName,
-        transaction._id.toString()
-      ).catch((err) => logger.error('Dispute notification email:', err.message));
+      // The buyer's name and the item's title are both user-typed and the
+      // template substitutes them raw, so both are escaped here.
+      sendLocalizedEmail(transaction.seller, 'disputeOpenedSeller', {
+        firstName: escapeHtml(transaction.seller.firstName),
+        buyerName: escapeHtml(rawBuyerName) || emailLabel('theBuyer', transaction.seller),
+        itemTitle: escapeHtml(rawListingTitle) || emailLabel('yourItem', transaction.seller),
+        ctaUrl: `${(process.env.FRONTEND_URL || 'http://localhost:4200').replace(/\/$/, '')}/dashboard/transactions`
+      }).catch((err) => logger.error('Dispute notification email:', err.message));
     }
 
     const updated = await Transaction.findById(transaction._id)
@@ -470,7 +476,7 @@ router.patch('/:id', requireActiveAccount, async (req, res) => {
           const buyer = await Customer.findById(buyerUserId).select('email firstName language').lean();
           if (buyer?.email) {
             sendLocalizedEmail(buyer, 'orderConfirmedBuyer', {
-              firstName: escapeHtml(buyer.firstName) || 'there',
+              firstName: escapeHtml(buyer.firstName),
               listingTitle: escapeHtml(listingTitle),
               ctaUrl: transactionUrl(transaction._id?.toString?.())
             }).catch(err => logger.error('Failed to send seller-accepted email to buyer:', err.message));
@@ -548,7 +554,7 @@ router.patch('/:id', requireActiveAccount, async (req, res) => {
               ? `${trackingCarrier ? escapeHtml(trackingCarrier) + ' – ' : ''}${escapeHtml(trackingNumber)}`
               : '';
             sendLocalizedEmail(buyer, 'orderShipped', {
-              buyerFirstName: escapeHtml(buyer.firstName) || 'there',
+              buyerFirstName: escapeHtml(buyer.firstName),
               listingTitle: escapeHtml(listingTitle),
               trackingLine,
               proofUrl: sellerProofOfDeliveryUrl ? escapeHtml(sellerProofOfDeliveryUrl) : '',
@@ -604,14 +610,21 @@ router.patch('/:id', requireActiveAccount, async (req, res) => {
           }).catch(err => logger.error('Failed to create manual payment notification:', err));
         }
       } else if (status === 'delivered' && ts === 'shipped') {
-        transaction.transactionStatus = 'delivered';
+        // Confirming receipt completes the order immediately (unlocks reviews).
+        // Return / damage windows still use deliveredAt after completion.
+        const now = new Date();
         transaction.sendingStatus = 'delivered';
-        transaction.deliveredAt = transaction.deliveredAt || new Date();
-        transaction.autoReleaseAt = null; // buyer confirmed — auto-release no longer needed
+        transaction.deliveredAt = transaction.deliveredAt || now;
+        transaction.autoReleaseAt = null;
+        transaction.transactionStatus = 'completed';
+        transaction.completedAt = transaction.completedAt || now;
+
+        const listing = await Listing.findById(transaction.listing).select('title').lean();
+        const listingTitle = listing?.title || 'the item';
         const sellerUserId = transaction.seller?.toString?.();
+        const io = req.app.get('io');
+
         if (sellerUserId) {
-          const listing = await Listing.findById(transaction.listing).select('title').lean();
-          const listingTitle = listing?.title || 'the item';
           const buyer = await Customer.findById(transaction.buyer).select('firstName lastName').lean();
           const buyerName = buyer ? `${buyer.firstName || ''} ${buyer.lastName || ''}`.trim() : 'The buyer';
           notifyBuyerConfirmedReceipt({
@@ -620,10 +633,37 @@ router.patch('/:id', requireActiveAccount, async (req, res) => {
             buyerName,
             sellerUserId
           }).catch(err => logger.error('Failed to create buyer-confirmed-receipt notification:', err));
-          const io = req.app.get('io');
           if (io) emitNewNotificationToUser(io, sellerUserId).catch(() => {});
         }
+
+        if (!transaction.salesCountIncremented) {
+          transaction.salesCountIncremented = true;
+          if (sellerUserId) {
+            Customer.findByIdAndUpdate(sellerUserId, { $inc: { completedSalesCount: 1 } })
+              .catch(err => logger.error('[Waiver] Failed to increment completedSalesCount:', err.message));
+          }
+        }
+
+        notifyReviewPrompt({
+          buyerId: transaction.buyer,
+          sellerId: transaction.seller,
+          listingTitle,
+          listingId: transaction.listing?._id || transaction.listing,
+          transactionId: transaction._id?.toString(),
+          io
+        }).catch(err => logger.error('Failed to send review prompt notification:', err));
+
+        checkAndApplyPendingSuspensions(
+          [transaction.buyer?.toString(), transaction.seller?.toString()].filter(Boolean),
+          io
+        ).catch(err => logger.error('[AccountStatus] checkAndApplyPendingSuspensions error:', err.message));
       } else if (status === 'completed' && ['paid', 'shipped', 'delivered'].includes(ts)) {
+        // Legacy path: older orders that stopped at "delivered" can still be completed manually.
+        if (ts === 'shipped') {
+          transaction.sendingStatus = 'delivered';
+          transaction.deliveredAt = transaction.deliveredAt || new Date();
+          transaction.autoReleaseAt = null;
+        }
         transaction.transactionStatus = 'completed';
         transaction.completedAt = transaction.completedAt || new Date();
         // Idempotent: only increment seller's completed-sales counter once per transaction.
@@ -637,10 +677,17 @@ router.patch('/:id', requireActiveAccount, async (req, res) => {
         }
         // Prompt both parties to leave a review
         const io = req.app.get('io');
+        const listingId = transaction.listing?._id || transaction.listing;
+        let completedListingTitle = transaction.listing?.title || '';
+        if (!completedListingTitle && listingId) {
+          const listingDoc = await Listing.findById(listingId).select('title').lean();
+          completedListingTitle = listingDoc?.title || '';
+        }
         notifyReviewPrompt({
           buyerId: transaction.buyer,
           sellerId: transaction.seller,
-          listingTitle: transaction.listing?.title,
+          listingTitle: completedListingTitle,
+          listingId,
           transactionId: transaction._id?.toString(),
           io
         }).catch(err => logger.error('Failed to send review prompt notification:', err));
@@ -699,7 +746,8 @@ router.post('/:id/request-return', requireActiveAccount, async (req, res) => {
     if (!isBuyer) return res.status(403).json({ error: 'Only the buyer can request a return.' });
 
     const ts = transaction.transactionStatus ?? transaction.status;
-    if (ts !== 'delivered') {
+    // Receipt confirmation now moves straight to completed; returns still use deliveredAt.
+    if (!['delivered', 'completed'].includes(ts) || !transaction.deliveredAt) {
       return res.status(400).json({
         error: 'Invalid state',
         message: 'Returns can only be requested after you confirm receipt of the item.'
@@ -755,7 +803,11 @@ router.post('/:id/request-return', requireActiveAccount, async (req, res) => {
       );
     }
 
-    const listingTitle = transaction.listing?.title || 'the item';
+    // Left unresolved so the email below can fall back in the seller's language;
+    // the in-app notification keeps its English placeholder, like every other
+    // string in notificationService.
+    const rawListingTitle = transaction.listing?.title || '';
+    const listingTitle = rawListingTitle || 'the item';
     const buyerName = `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'Buyer';
     if (sellerMongoId) {
       const { notifyDisputeOpened } = require('../services/notificationService');
@@ -771,8 +823,8 @@ router.post('/:id/request-return', requireActiveAccount, async (req, res) => {
       }
       if (transaction.seller?.email) {
         sendLocalizedEmail(transaction.seller, 'returnRequestSeller', {
-          firstName: escapeHtml(transaction.seller.firstName) || 'there',
-          listingTitle: escapeHtml(listingTitle),
+          firstName: escapeHtml(transaction.seller.firstName),
+          listingTitle: escapeHtml(rawListingTitle) || emailLabel('yourItem', transaction.seller),
           // The reason is free text the buyer typed — escaped before it reaches HTML.
           returnReason: escapeHtml(transaction.returnReason),
           reasonBox: emailInfoBox(escapeHtml(transaction.returnReason)),

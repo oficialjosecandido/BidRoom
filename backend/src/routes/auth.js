@@ -4,7 +4,8 @@ const Customer = require('../models/Customer');
 const { getTrustBadges } = require('../services/reputationService');
 const { getReviewScoresForUser } = require('../services/reviewService');
 const { resolveCustomerForToken, handleAccountClaimError } = require('../services/accountClaimService');
-const { sendPasswordReset, sendEmailVerification } = require('../services/emailService');
+const { sendLocalizedEmail, requestLanguage } = require('../services/localizedEmail');
+const { escapeHtml } = require('../utils/bidroomEmailLayout');
 const admin = require('../config/firebaseAdmin');
 const logger = require('../utils/logger');
 
@@ -125,8 +126,14 @@ router.post('/forgot-password', async (req, res) => {
     const normalised = email.toLowerCase().trim();
     const firebaseLink = await admin.auth().generatePasswordResetLink(normalised);
     const resetUrl = rewriteFirebaseActionLink(firebaseLink, '/auth/reset-password', resolveFrontendBase(req));
-    const user = await Customer.findOne({ email: normalised }).select('firstName').lean();
-    await sendPasswordReset(normalised, user?.firstName || 'there', resetUrl);
+    const customer = await Customer.findOne({ email: normalised }).select('firstName language').lean();
+    // The profile's language if the account has one, otherwise what the browser
+    // asked for — a reset is often requested from a device that is not logged in.
+    await sendLocalizedEmail(
+      { email: normalised, language: customer?.language || requestLanguage(req) },
+      'passwordReset',
+      { firstName: escapeHtml(customer?.firstName || ''), ctaUrl: resetUrl }
+    );
 
     logger.info(`[Auth] Password reset email sent to ${normalised}`);
     res.json({ success: true });
@@ -166,12 +173,18 @@ router.post('/send-verification', async (req, res) => {
 
     const firebaseLink = await admin.auth().generateEmailVerificationLink(normalised);
     const verificationUrl = rewriteFirebaseActionLink(firebaseLink, '/auth/verify-email', resolveFrontendBase(req));
-    const customer = await Customer.findOne({ email: normalised }).select('firstName').lean();
+    const customer = await Customer.findOne({ email: normalised }).select('firstName language').lean();
     const name = (typeof firstName === 'string' && firstName.trim())
       || customer?.firstName
-      || 'there';
+      || '';
 
-    await sendEmailVerification(normalised, name, verificationUrl);
+    // At signup there is no Customer row yet, so the browser's Accept-Language
+    // is all we have — and this is the first email BidRoom ever sends someone.
+    await sendLocalizedEmail(
+      { email: normalised, language: customer?.language || requestLanguage(req) },
+      'emailVerification',
+      { firstName: escapeHtml(name), ctaUrl: verificationUrl }
+    );
     logger.info(`[Auth] Verification email sent to ${normalised}`);
     res.json({ success: true });
   } catch (err) {

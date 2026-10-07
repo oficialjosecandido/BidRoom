@@ -7,6 +7,6 @@
   "ctaLabel": "View transaction",
   "signOff": "Best regards,<br><strong style=\"color:#0f172a;\">The BidRoom Team</strong>",
   "footerNote": "Automated message · Please do not reply directly to this email",
-  "body": "<p style=\"margin:0 0 16px;\">Hi {{firstName}},</p><p style=\"margin:0 0 16px;\">Your order for <strong style=\"color:#0f172a;\">\"{{listingTitle}}\"</strong> was completed automatically because the delivery window has passed.</p><p style=\"margin:0 0 16px;\">The payment has been released to the seller. If something is wrong with this order, contact BidRoom support and we will look into it.</p>",
-  "text": "Hi {{firstName}},\n\nYour order for \"{{listingTitle}}\" was completed automatically and payment released to the seller.\n\n{{ctaUrl}}"
+  "body": "<p style=\"margin:0 0 16px;\">Hi{{#if firstName}} {{firstName}}{{/if}},</p><p style=\"margin:0 0 16px;\">Your order for <strong style=\"color:#0f172a;\">\"{{listingTitle}}\"</strong> was completed automatically because the delivery window has passed.</p><p style=\"margin:0 0 16px;\">The payment has been released to the seller. If something is wrong with this order, contact BidRoom support and we will look into it.</p>",
+  "text": "Hi{{#if firstName}} {{firstName}}{{/if}},\n\nYour order for \"{{listingTitle}}\" was completed automatically and payment released to the seller.\n\n{{ctaUrl}}"
 }

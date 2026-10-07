@@ -62,9 +62,6 @@ export class HeaderComponent implements OnInit, OnDestroy {
 
   constructor() {
     this.isAuthenticated$ = this.authService.isAuthenticated();
-    const saved = (typeof localStorage !== 'undefined' && localStorage.getItem('lang')) || 'pt';
-    const validLangs = ['pt', 'en', 'fr', 'es'];
-    this.translate.use(validLangs.includes(saved) ? saved : 'pt');
   }
 
   ngOnInit(): void {

@@ -70,9 +70,6 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
     // timers would also keep the zone unstable and stall the SSR render.
     if (!this.isBrowser) return;
 
-    const saved = localStorage.getItem('lang') || 'pt';
-    this.translate.use(saved);
-
     // private room timer animation
     this.timers.push(setInterval(() => {
       this.rvActiveIdx = (this.rvActiveIdx + 1) % 5;

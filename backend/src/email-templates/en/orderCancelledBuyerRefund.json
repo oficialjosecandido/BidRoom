@@ -7,6 +7,6 @@
   "ctaLabel": "View transactions",
   "signOff": "Best regards,<br><strong style=\"color:#0f172a;\">The BidRoom Team</strong>",
   "footerNote": "Automated message · Please do not reply directly to this email",
-  "body": "<p style=\"margin:0 0 16px;\">Hi {{firstName}},</p><p style=\"margin:0 0 16px;\">Your order for <strong style=\"color:#0f172a;\">\"{{listingTitle}}\"</strong> was cancelled because the seller did not ship it in time.</p><p style=\"margin:0 0 16px;\">A <strong style=\"color:#0f172a;\">full refund</strong> was issued to your original payment method. It can take 5–10 business days to appear on your statement.</p><p style=\"margin:0 0 16px;\">Nothing is owed by you and the listing may be relisted by the seller.</p>",
-  "text": "Hi {{firstName}},\n\nYour order for \"{{listingTitle}}\" was cancelled: the seller did not ship in time. A full refund was issued to your original payment method (5-10 business days).\n\n{{ctaUrl}}"
+  "body": "<p style=\"margin:0 0 16px;\">Hi{{#if firstName}} {{firstName}}{{/if}},</p><p style=\"margin:0 0 16px;\">Your order for <strong style=\"color:#0f172a;\">\"{{listingTitle}}\"</strong> was cancelled because the seller did not ship it in time.</p><p style=\"margin:0 0 16px;\">A <strong style=\"color:#0f172a;\">full refund</strong> was issued to your original payment method. It can take 5–10 business days to appear on your statement.</p><p style=\"margin:0 0 16px;\">Nothing is owed by you and the listing may be relisted by the seller.</p>",
+  "text": "Hi{{#if firstName}} {{firstName}}{{/if}},\n\nYour order for \"{{listingTitle}}\" was cancelled: the seller did not ship in time. A full refund was issued to your original payment method (5-10 business days).\n\n{{ctaUrl}}"
 }
