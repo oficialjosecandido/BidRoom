@@ -4,7 +4,9 @@
     class="notification-trigger"
     (click)="toggleDropdown()"
     [attr.aria-expanded]="dropdownOpen"
-    [attr.aria-label]="unreadCount > 0 ? unreadCount + ' new notification(s)' : 'Notifications'">
+    [attr.aria-label]="unreadCount > 0
+      ? ('header.actions.notificationsUnread' | translate: { count: unreadCount })
+      : ('header.actions.notifications' | translate)">
     <span class="notification-icon" aria-hidden="true">🔔</span>
     @if (unreadCount > 0) {
       <span class="notification-badge">{{ unreadCount > 99 ? '99+' : unreadCount }}</span>
@@ -14,22 +16,22 @@
   @if (dropdownOpen) {
     <div class="notification-dropdown">
       <div class="dropdown-header">
-        <h3 class="dropdown-title">Notifications</h3>
+        <h3 class="dropdown-title">{{ 'dashboard.notifications.title' | translate }}</h3>
         @if (unreadCount > 0) {
-          <button type="button" class="mark-all-btn" (click)="markAllAsRead()">Mark all read</button>
+          <button type="button" class="mark-all-btn" (click)="markAllAsRead()">{{ 'dashboard.notifications.markAllRead' | translate }}</button>
         }
       </div>
       <div class="dropdown-body">
         @if (loading) {
           <div class="dropdown-loading">
             <span class="loading-spinner"></span>
-            <p>Loading...</p>
+            <p>{{ 'dashboard.notifications.loading' | translate }}</p>
           </div>
         } @else if (notifications.length === 0) {
           <div class="dropdown-empty">
             <span class="empty-icon">🔔</span>
-            <p>No notifications yet</p>
-            <a routerLink="/dashboard/notifications" class="view-all-btn" (click)="closeDropdown()">View notifications</a>
+            <p>{{ 'dashboard.notifications.noNotifications' | translate }}</p>
+            <a routerLink="/dashboard/notifications" class="view-all-btn" (click)="closeDropdown()">{{ 'dashboard.notifications.viewAll' | translate }}</a>
           </div>
         } @else {
           <ul class="notification-list">
@@ -41,8 +43,8 @@
                   (click)="openNotification(notification)">
                   <span class="notification-type-icon">{{ getTypeIcon(notification.type) }}</span>
                   <div class="notification-content">
-                    <span class="notification-title">{{ notification.title }}</span>
-                    <span class="notification-message">{{ notification.message }}</span>
+                    <span class="notification-title">{{ notification | notificationText: 'title' }}</span>
+                    <span class="notification-message">{{ notification | notificationText: 'message' }}</span>
                     <span class="notification-time">{{ formatDate(notification.issuedAt) }}</span>
                   </div>
                 </button>
@@ -50,7 +52,7 @@
             }
           </ul>
           <div class="dropdown-footer">
-            <a routerLink="/dashboard/notifications" class="view-all-btn" (click)="closeDropdown()">View all notifications</a>
+            <a routerLink="/dashboard/notifications" class="view-all-btn" (click)="closeDropdown()">{{ 'dashboard.notifications.viewAll' | translate }}</a>
           </div>
         }
       </div>

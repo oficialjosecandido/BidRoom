@@ -26,7 +26,8 @@ const Customer = require('../models/Customer');
 const {
   emitNewNotificationToUser,
   createNotification,
-  notifyBuyerConfirmReceiptReminder
+  notifyBuyerConfirmReceiptReminder,
+  standIn
 } = require('./notificationService');
 const { sendLocalizedEmail, formatEmailDate, emailLabel } = require('./localizedEmail');
 const { escapeHtml, transactionUrl } = require('../utils/bidroomEmailLayout');
@@ -120,9 +121,9 @@ async function processReceiptConfirmReminders(io) {
       // copy and stamp both keys so we do not send a duplicate later.
       const isFinalReminder = dueKeys.includes('pre_release') && !dueKeys.includes('on_delivery');
       const buyerId = tx.buyer?._id?.toString?.() || tx.buyer?.toString?.();
-      // The in-app notification is still English throughout, so the English
-      // stand-in belongs there; the email takes the recipient's own.
-      const listingTitle = tx.listing?.title || 'your item';
+      // Passed through as it is: the notifier supplies its own localized
+      // stand-in when there is no title, and the email its own.
+      const listingTitle = tx.listing?.title || '';
 
       if (buyerId) {
         await notifyBuyerConfirmReceiptReminder({
@@ -205,6 +206,9 @@ async function processAutoReleases(io) {
         }, { runValidators: false });
       }
       const listingTitle = tx.listing?.title || 'the item';
+      // The same title as a parameter: a localized stand-in when the listing
+      // has no title on file, instead of one English phrase mid-sentence.
+      const titleParam = tx.listing?.title || standIn('theItem');
       const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:4200';
       const txLink = `${frontendUrl}/dashboard/transactions`;
 
@@ -221,6 +225,8 @@ async function processAutoReleases(io) {
           userId: buyerId,
           title: 'Payment auto-released to seller',
           message: `Your order for "${listingTitle}" was automatically completed. Payment has been released to the seller.`,
+          i18nKey: 'notifications.payoutAutoReleasedBuyer',
+          i18nParams: { listingTitle: titleParam },
           type: 'transaction',
           link: txLink,
           referenceId: tx._id.toString()
@@ -241,6 +247,8 @@ async function processAutoReleases(io) {
           userId: sellerId,
           title: 'Payment auto-released',
           message: `Your order for "${listingTitle}" was automatically completed. Payment has been released to you.`,
+          i18nKey: 'notifications.payoutAutoReleasedSeller',
+          i18nParams: { listingTitle: titleParam },
           type: 'transaction',
           link: txLink,
           referenceId: tx._id.toString()
@@ -297,6 +305,9 @@ async function processReturnMediations(io) {
       }, { runValidators: false });
 
       const listingTitle = tx.listing?.title || 'the item';
+      // The same title as a parameter: a localized stand-in when the listing
+      // has no title on file, instead of one English phrase mid-sentence.
+      const titleParam = tx.listing?.title || standIn('theItem');
       const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:4200';
       const txLink = `${frontendUrl}/dashboard/transactions`;
       const buyerId = tx.buyer?._id?.toString?.() || tx.buyer?.toString?.();
@@ -307,6 +318,8 @@ async function processReturnMediations(io) {
           userId: buyerId,
           title: 'Return request escalated',
           message: `The seller did not respond to your return request for "${listingTitle}". BidRoom will now mediate.`,
+          i18nKey: 'notifications.returnEscalatedBuyer',
+          i18nParams: { listingTitle: titleParam },
           type: 'dispute',
           link: txLink,
           referenceId: tx._id.toString()
@@ -319,6 +332,8 @@ async function processReturnMediations(io) {
           userId: sellerId,
           title: 'Return request escalated to platform',
           message: `You did not respond to the return request for "${listingTitle}" in time. BidRoom will now mediate.`,
+          i18nKey: 'notifications.returnEscalatedSeller',
+          i18nParams: { listingTitle: titleParam },
           type: 'dispute',
           link: txLink,
           referenceId: tx._id.toString()

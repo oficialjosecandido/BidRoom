@@ -13,6 +13,62 @@ const { renderEmailTemplate } = require('./templateEngine');
 const { publicBaseUrl } = require('../utils/publicUrls');
 const logger = require('../utils/logger');
 
+/**
+ * A stand-in for data that is not on file, as a key rather than as text.
+ *
+ * The English literals ("your listing", "the item") used to be dropped
+ * straight into the message, so a Portuguese reader whose listing title was
+ * missing got one English phrase mid-sentence. Marking it `{ t: key }` lets
+ * the client translate the stand-in along with everything else.
+ */
+function standIn(name) {
+  return { t: `notifications.standIn.${name}` };
+}
+
+/**
+ * Money, formatted once. Every notifier wrote `€${(x || 0).toFixed(2)}` by
+ * hand; as a parameter it is the client that decides where the symbol goes.
+ */
+function euros(amount) {
+  return Number(amount || 0).toFixed(2);
+}
+
+/**
+ * The shipping line of an auction-ended notification, as a parameter.
+ *
+ * A money amount is already the same in every language and passes through as
+ * text; every other option was an English word ('Free', 'Meet in Person')
+ * built by formatShippingForPricing, and those words survived into all four
+ * languages. Those become a key instead.
+ */
+function shippingParam(shippingOption, shippingCost = 0) {
+  const label = (name) => ({ t: `notifications.shipping.${name}` });
+  if (shippingOption === 'free') return label('free');
+  if (shippingOption === 'local-pickup') return label('localPickup');
+  if (shippingOption === 'calculated') return label('calculated');
+  if (shippingOption === 'flat-rate') {
+    const cost = Number(shippingCost) || 0;
+    return cost > 0 ? `€${cost.toFixed(2)}` : label('free');
+  }
+  return label('unknown');
+}
+
+/** How a manual payment was handed over. Anything unrecognised passes through. */
+const PAYMENT_METHODS = new Set(['in_person', 'bank_transfer', 'mbway']);
+function paymentMethodParam(method) {
+  return PAYMENT_METHODS.has(method)
+    ? { t: `notifications.paymentMethod.${method}` }
+    : String(method || '');
+}
+
+/** How long ago the transaction closed. Anything unrecognised passes through. */
+const MILESTONES = new Set(['24h', '48h', '7d']);
+function milestoneParam(milestone) {
+  return MILESTONES.has(milestone)
+    ? { t: `notifications.milestone.${milestone}` }
+    : String(milestone || '');
+}
+
 // In-memory debounce: prevent outbid notification floods in high-activity auctions.
 // Key: "userId:listingId", value: timestamp of last sent notification.
 const _outbidDebounce = new Map();
@@ -136,9 +192,11 @@ async function emitPrivateRoomInvitationToUser(io, userMongoId, { listingId, lis
  * @param {string} [options.link] - URL to navigate (e.g. /listing/slug?tab=offers)
  * @param {string} [options.referenceId] - Related entity ID for deduplication
  * @param {string} [options.eventType] - Preference key to check (e.g. 'outbid'). Skips creation if user disabled inApp.
+ * @param {string} [options.i18nKey] - Catalogue key the client renders from (e.g. 'notifications.newBid'). `title`/`message` become the English fallback.
+ * @param {object} [options.i18nParams] - Values to interpolate; `{ t: 'key' }` marks a value that is itself translated.
  * @returns {Promise<Notification|null>}
  */
-async function createNotification({ userId, title, message, type = 'system', link = null, referenceId = null, eventType = null }) {
+async function createNotification({ userId, title, message, type = 'system', link = null, referenceId = null, eventType = null, i18nKey = null, i18nParams = null }) {
   try {
     if (eventType) {
       const prefs = await NotificationPreferences.findOne({ user: userId })
@@ -155,6 +213,8 @@ async function createNotification({ userId, title, message, type = 'system', lin
       type,
       link: link || null,
       referenceId: referenceId || null,
+      i18nKey: i18nKey || null,
+      i18nParams: i18nKey ? (i18nParams || {}) : null,
       status: 'unread',
       issuedAt: new Date()
     });
@@ -175,6 +235,8 @@ async function notifyNewBid({ listingId, listingSlug, listingTitle, bidAmount, b
     userId: sellerUserId,
     title: 'New bid received',
     message: `${bidderName} placed a bid of €${(bidAmount || 0).toFixed(2)} on "${listingTitle || 'your listing'}"`,
+    i18nKey: 'notifications.newBid',
+    i18nParams: { bidderName: bidderName || standIn('someone'), amount: euros(bidAmount), listingTitle: listingTitle || standIn('yourListing') },
     type: 'bid',
     link,
     referenceId: listingId
@@ -198,6 +260,8 @@ async function notifyBidderOutbid({
     userId: bidderUserId,
     title: "You've been outbid",
     message: `Your bid of €${prev} on "${listingTitle || 'this auction'}" was exceeded. Current high bid: €${next}.`,
+    i18nKey: 'notifications.bidderOutbid',
+    i18nParams: { previousBid: prev, currentBid: next, listingTitle: listingTitle || standIn('thisAuction') },
     type: 'bid',
     link,
     referenceId: listingId ? String(listingId) : listingSlug || null
@@ -213,6 +277,8 @@ async function notifyNewProposal({ listingId, listingSlug, listingTitle, offerAm
     userId: sellerUserId,
     title: 'New proposal',
     message: `${offererName} made an offer of €${(offerAmount || 0).toFixed(2)} on "${listingTitle || 'your listing'}"`,
+    i18nKey: 'notifications.newProposal',
+    i18nParams: { offererName: offererName || standIn('someone'), amount: euros(offerAmount), listingTitle: listingTitle || standIn('yourListing') },
     type: 'proposal',
     link,
     referenceId: listingId
@@ -225,6 +291,8 @@ async function notifyProposalAccepted({ listingSlug, listingTitle, offerAmount, 
     userId: buyerUserId,
     title: 'Offer accepted — complete payment',
     message: `Your offer of €${(offerAmount || 0).toFixed(2)} on "${listingTitle || 'the item'}" was accepted. Open Transactions to complete payment.`,
+    i18nKey: 'notifications.proposalAccepted',
+    i18nParams: { amount: euros(offerAmount), listingTitle: listingTitle || standIn('theItem') },
     type: 'transaction',
     link: '/dashboard/transactions',
     referenceId: listingSlug || null
@@ -238,6 +306,8 @@ async function notifyProposalDeclined({ listingSlug, listingTitle, offerAmount, 
     userId: buyerUserId,
     title: 'Proposal declined',
     message: `Your offer of €${(offerAmount || 0).toFixed(2)} on "${listingTitle || 'the item'}" was declined.`,
+    i18nKey: 'notifications.proposalDeclined',
+    i18nParams: { amount: euros(offerAmount), listingTitle: listingTitle || standIn('theItem') },
     type: 'proposal',
     link,
     referenceId: listingSlug
@@ -251,6 +321,8 @@ async function notifyOfferPlaced({ listingSlug, listingTitle, offerAmount, offer
     userId: offererUserId,
     title: 'Offer confirmed',
     message: `Your offer of €${(offerAmount || 0).toFixed(2)} on "${listingTitle || 'the item'}" has been received.`,
+    i18nKey: 'notifications.offerPlaced',
+    i18nParams: { amount: euros(offerAmount), listingTitle: listingTitle || standIn('theItem') },
     type: 'proposal',
     link,
     referenceId: listingSlug
@@ -264,6 +336,8 @@ async function notifyOfferOutbid({ listingSlug, listingTitle, previousOffer, new
     userId: offererUserId,
     title: 'Higher offer received',
     message: `Your offer of €${(previousOffer || 0).toFixed(2)} on "${listingTitle || 'the item'}" was exceeded. Someone offered €${(newOffer || 0).toFixed(2)}.`,
+    i18nKey: 'notifications.offerOutbid',
+    i18nParams: { previousOffer: euros(previousOffer), newOffer: euros(newOffer), listingTitle: listingTitle || standIn('theItem') },
     type: 'proposal',
     link,
     referenceId: listingSlug
@@ -277,6 +351,8 @@ async function notifySellerBestOfferEnded({ listingSlug, listingTitle, offerCoun
     userId: sellerUserId,
     title: 'Listing ended',
     message: `Your best-offer listing "${listingTitle || 'the item'}" has ended with ${offerCount} offer(s). You have 24 hours to review and accept an offer.`,
+    i18nKey: 'notifications.bestOfferEnded',
+    i18nParams: { listingTitle: listingTitle || standIn('theItem'), offerCount },
     type: 'listing',
     link,
     referenceId: listingSlug
@@ -289,6 +365,8 @@ async function notifyListingRemoved({ listingSlug, listingTitle, sellerUserId })
     userId: sellerUserId,
     title: 'Listing removed',
     message: `"${listingTitle || 'Your listing'}" was removed due to a policy violation.`,
+    i18nKey: 'notifications.listingRemoved',
+    i18nParams: { listingTitle: listingTitle || standIn('yourListing') },
     type: 'listing',
     link: '/dashboard/seller',
     referenceId: listingSlug
@@ -302,6 +380,8 @@ async function notifyListingRequiresChanges({ listingSlug, listingTitle, sellerU
     userId: sellerUserId,
     title: 'Listing changes required',
     message: `"${listingTitle || 'Your listing'}" needs changes before it can be approved.`,
+    i18nKey: 'notifications.listingRequiresChanges',
+    i18nParams: { listingTitle: listingTitle || standIn('yourListing') },
     type: 'listing',
     link,
     referenceId: listingSlug
@@ -346,6 +426,8 @@ async function notifyItemAddedToWatchlist({ listingSlug, listingTitle, watcherNa
     userId: sellerUserId,
     title: 'Item added to watchlist',
     message: `${watcherName || 'Someone'} added "${listingTitle || 'your listing'}" to their watchlist.`,
+    i18nKey: 'notifications.itemAddedToWatchlist',
+    i18nParams: { watcherName: watcherName || standIn('someone'), listingTitle: listingTitle || standIn('yourListing') },
     type: 'watchlist',
     link,
     referenceId: listingSlug
@@ -359,6 +441,8 @@ async function notifyPrivateRoomInvitation({ listingId, listingSlug, listingTitl
     userId: bidderUserId,
     title: 'Private room invitation',
     message: `You're invited to the private room for "${listingTitle || 'an auction'}". Accept within 15 minutes.`,
+    i18nKey: 'notifications.privateRoomInvitation',
+    i18nParams: { listingTitle: listingTitle || standIn('anAuction') },
     type: 'private_room',
     link,
     referenceId: listingId
@@ -372,6 +456,8 @@ async function notifyPrivateRoomAccepted({ listingSlug, listingTitle, bidderName
     userId: sellerUserId,
     title: 'Private room accepted',
     message: `${bidderName || 'A bidder'} accepted your private room invitation for "${listingTitle || 'your listing'}".`,
+    i18nKey: 'notifications.privateRoomAccepted',
+    i18nParams: { bidderName: bidderName || standIn('aBidder'), listingTitle: listingTitle || standIn('yourListing') },
     type: 'private_room',
     link,
     referenceId: listingSlug
@@ -385,6 +471,8 @@ async function notifyPrivateRoomDeclined({ listingSlug, listingTitle, bidderName
     userId: sellerUserId,
     title: 'Private room declined',
     message: `${bidderName || 'A bidder'} declined your private room invitation for "${listingTitle || 'your listing'}".`,
+    i18nKey: 'notifications.privateRoomDeclined',
+    i18nParams: { bidderName: bidderName || standIn('aBidder'), listingTitle: listingTitle || standIn('yourListing') },
     type: 'private_room',
     link,
     referenceId: listingSlug
@@ -398,6 +486,8 @@ async function notifyPrivateRoomClosedNoAcceptanceSeller({ listingSlug, listingT
     userId: sellerUserId,
     title: 'Private room closed',
     message: `The private room for "${listingTitle || 'your listing'}" was closed because no invited bidders accepted within 15 minutes. The auction ended without a winner.`,
+    i18nKey: 'notifications.privateRoomClosedNoAcceptance',
+    i18nParams: { listingTitle: listingTitle || standIn('yourListing') },
     type: 'private_room',
     link,
     referenceId: listingSlug
@@ -411,6 +501,8 @@ async function notifyPrivateRoomClosedNoAcceptanceInvited({ listingSlug, listing
     userId: bidderUserId,
     title: 'Private room closed',
     message: `The private room for "${listingTitle || 'the auction'}" was closed because no invited bidders accepted within 15 minutes. The auction ended without a winner.`,
+    i18nKey: 'notifications.privateRoomClosedNoAcceptance',
+    i18nParams: { listingTitle: listingTitle || standIn('theAuction') },
     type: 'private_room',
     link,
     referenceId: listingSlug
@@ -424,6 +516,8 @@ async function notifySellerLeftPrivateRoomSeller({ listingSlug, listingTitle, se
     userId: sellerUserId,
     title: 'Private room closed',
     message: `The private room for "${listingTitle || 'your listing'}" was closed because you left. The auction ended without a winner.`,
+    i18nKey: 'notifications.sellerLeftRoomSeller',
+    i18nParams: { listingTitle: listingTitle || standIn('yourListing') },
     type: 'private_room',
     link,
     referenceId: listingSlug
@@ -437,6 +531,8 @@ async function notifySellerLeftPrivateRoomBuyers({ listingSlug, listingTitle, bi
     userId: bidderUserId,
     title: 'Seller left the private room',
     message: `The seller has left the private room for "${listingTitle || 'the auction'}". The auction has been closed without a winner.`,
+    i18nKey: 'notifications.sellerLeftRoomBuyers',
+    i18nParams: { listingTitle: listingTitle || standIn('theAuction') },
     type: 'private_room',
     link,
     referenceId: listingSlug
@@ -450,6 +546,8 @@ async function notifyRoomCancelled({ listingSlug, listingTitle, bidderUserId }) 
     userId: bidderUserId,
     title: 'Private room cancelled',
     message: `The private room for "${listingTitle || 'the auction'}" was cancelled by the seller.`,
+    i18nKey: 'notifications.roomCancelled',
+    i18nParams: { listingTitle: listingTitle || standIn('theAuction') },
     type: 'private_room',
     link,
     referenceId: listingSlug
@@ -465,6 +563,8 @@ async function notifyItemMarkedShipped({ transactionId, listingTitle, buyerUserI
     userId: buyerUserId,
     title: 'Item shipped',
     message: `"${listingTitle || 'Your item'}" has been marked as shipped.`,
+    i18nKey: 'notifications.itemShipped',
+    i18nParams: { listingTitle: listingTitle || standIn('yourItem') },
     type: 'shipping',
     link,
     referenceId: transactionId
@@ -480,6 +580,8 @@ async function notifyTrackingProvided({ transactionId, listingTitle, buyerUserId
     userId: buyerUserId,
     title: 'Tracking number added',
     message: `A tracking number was added for "${listingTitle || 'your item'}".`,
+    i18nKey: 'notifications.trackingProvided',
+    i18nParams: { listingTitle: listingTitle || standIn('yourItem') },
     type: 'shipping',
     link,
     referenceId: transactionId
@@ -495,6 +597,8 @@ async function notifyItemMarkedDelivered({ transactionId, listingTitle, buyerUse
     userId: buyerUserId,
     title: 'Item delivered',
     message: `"${listingTitle || 'Your item'}" has been marked as delivered.`,
+    i18nKey: 'notifications.itemDelivered',
+    i18nParams: { listingTitle: listingTitle || standIn('yourItem') },
     type: 'shipping',
     link,
     referenceId: transactionId
@@ -510,6 +614,8 @@ async function notifyShippingDeadlineStarted({ transactionId, listingTitle, sell
     userId: sellerUserId,
     title: 'Shipping deadline started',
     message: `Ship "${listingTitle || 'the item'}" by the handling deadline.`,
+    i18nKey: 'notifications.shippingDeadlineStarted',
+    i18nParams: { listingTitle: listingTitle || standIn('theItem') },
     type: 'shipping',
     link,
     referenceId: transactionId
@@ -525,6 +631,8 @@ async function notifyShippingDeadlineApproaching({ transactionId, listingTitle, 
     userId: sellerUserId,
     title: 'Shipping deadline soon',
     message: `The shipping deadline for "${listingTitle || 'the item'}" is approaching.`,
+    i18nKey: 'notifications.shippingDeadlineApproaching',
+    i18nParams: { listingTitle: listingTitle || standIn('theItem') },
     type: 'shipping',
     link,
     referenceId: transactionId
@@ -539,6 +647,8 @@ async function notifySellerShippingFinalTwoDays({ transactionId, listingTitle, s
     userId: sellerUserId,
     title: 'Ship soon — 2 days left',
     message: `You have 2 business days left to ship "${listingTitle || 'this order'}" or it will be cancelled and the buyer refunded.`,
+    i18nKey: 'notifications.shippingFinalTwoDays',
+    i18nParams: { listingTitle: listingTitle || standIn('thisOrder') },
     type: 'shipping',
     link,
     referenceId: transactionId
@@ -553,6 +663,8 @@ async function notifyBuyerOrderCancelledNoShipment({ transactionId, listingTitle
     userId: buyerUserId,
     title: 'Order cancelled — refund issued',
     message: `Your order for "${listingTitle || 'the item'}" was cancelled because the seller did not ship in time. You have been refunded in full.`,
+    i18nKey: 'notifications.orderCancelledNoShipmentBuyer',
+    i18nParams: { listingTitle: listingTitle || standIn('theItem') },
     type: 'shipping',
     link,
     referenceId: transactionId
@@ -567,6 +679,8 @@ async function notifySellerOrderCancelledNoShipment({ transactionId, listingTitl
     userId: sellerUserId,
     title: 'Order cancelled — did not ship in time',
     message: `The order for "${listingTitle || 'your sale'}" was cancelled automatically because you did not ship within the required timeframe. The buyer has been refunded.`,
+    i18nKey: 'notifications.orderCancelledNoShipmentSeller',
+    i18nParams: { listingTitle: listingTitle || standIn('yourSale') },
     type: 'shipping',
     link,
     referenceId: transactionId
@@ -582,6 +696,8 @@ async function notifyBuyerConfirmedReceipt({ transactionId, listingTitle, buyerN
     userId: sellerUserId,
     title: 'Buyer confirmed receipt',
     message: `${buyerName || 'The buyer'} confirmed receipt of "${listingTitle || 'the item'}".`,
+    i18nKey: 'notifications.buyerConfirmedReceipt',
+    i18nParams: { buyerName: buyerName || standIn('theBuyer'), listingTitle: listingTitle || standIn('theItem') },
     type: 'shipping',
     link,
     referenceId: transactionId
@@ -597,6 +713,8 @@ async function notifyBuyerConfirmReceiptReminder({ transactionId, listingTitle, 
     userId: buyerUserId,
     title: 'Confirm you received your item',
     message: `Has "${listingTitle || 'your item'}" arrived? Confirm receipt so the seller can be paid.`,
+    i18nKey: 'notifications.confirmReceiptReminder',
+    i18nParams: { listingTitle: listingTitle || standIn('yourItem') },
     type: 'shipping',
     link,
     referenceId: transactionId
@@ -610,6 +728,8 @@ async function notifyDisputeOpened({ transactionId, listingTitle, openerName, ot
     userId: otherPartyUserId,
     title: 'Dispute opened',
     message: `${openerName || 'A party'} opened a dispute for "${listingTitle || 'the transaction'}".`,
+    i18nKey: 'notifications.disputeOpened',
+    i18nParams: { openerName: openerName || standIn('aParty'), listingTitle: listingTitle || standIn('theTransaction') },
     type: 'dispute',
     link,
     referenceId: transactionId
@@ -623,6 +743,8 @@ async function notifyEvidenceSubmitted({ transactionId, listingTitle, submitterR
     userId: otherPartyUserId,
     title: 'Evidence submitted',
     message: `New evidence was submitted for the dispute on "${listingTitle || 'the transaction'}".`,
+    i18nKey: 'notifications.evidenceSubmitted',
+    i18nParams: { listingTitle: listingTitle || standIn('theTransaction') },
     type: 'dispute',
     link,
     referenceId: transactionId
@@ -636,6 +758,8 @@ async function notifyDisputeDecisionIssued({ transactionId, listingTitle, verdic
     userId,
     title: 'Dispute decision',
     message: `A decision has been issued for the dispute on "${listingTitle || 'the transaction'}": ${verdict}.`,
+    i18nKey: 'notifications.disputeDecision',
+    i18nParams: { listingTitle: listingTitle || standIn('theTransaction'), verdict },
     type: 'dispute',
     link,
     referenceId: transactionId
@@ -648,6 +772,8 @@ async function notifyStrikeApplied({ userId, reason }) {
     userId,
     title: 'Strike applied',
     message: reason || 'A strike has been applied to your account.',
+    i18nKey: reason ? 'notifications.strikeAppliedWithReason' : 'notifications.strikeApplied',
+    i18nParams: reason ? { reason } : {},
     type: 'account',
     link: '/dashboard/my-account',
     referenceId: 'strike'
@@ -660,6 +786,7 @@ async function notifyAccountRestricted({ userId }) {
     userId,
     title: 'Account restricted',
     message: 'Your account has been restricted.',
+    i18nKey: 'notifications.accountRestricted',
     type: 'account',
     link: '/dashboard/my-account',
     referenceId: 'restriction'
@@ -672,6 +799,7 @@ async function notifyAccountSuspended({ userId }) {
     userId,
     title: 'Account suspended',
     message: 'Your account has been suspended.',
+    i18nKey: 'notifications.accountSuspended',
     type: 'account',
     link: '/dashboard/my-account',
     referenceId: 'suspension'
@@ -684,6 +812,7 @@ async function notifyAccountReactivated({ userId }) {
     userId,
     title: 'Account reactivated',
     message: 'Your account has been reactivated.',
+    i18nKey: 'notifications.accountReactivated',
     type: 'account',
     link: '/dashboard/my-account',
     referenceId: 'reactivation'
@@ -696,6 +825,7 @@ async function notifyContentRestrictionLifted({ userId }) {
     userId,
     title: 'Restriction lifted',
     message: 'Your content policy restriction has been lifted by our team. You can create and edit listings again.',
+    i18nKey: 'notifications.contentRestrictionLifted',
     type: 'account',
     link: '/dashboard/my-account',
     referenceId: 'content-restriction-lifted'
@@ -711,6 +841,8 @@ async function notifyBuyerSellerAccepted({ transactionId, listingTitle, buyerUse
     userId: buyerUserId,
     title: 'Seller accepted your payment',
     message: `The seller has accepted your payment for "${listingTitle || 'the item'}". They will prepare and ship your order soon.`,
+    i18nKey: 'notifications.sellerAcceptedPayment',
+    i18nParams: { listingTitle: listingTitle || standIn('theItem') },
     type: 'transaction',
     link,
     referenceId: transactionId
@@ -734,6 +866,14 @@ async function notifySellerPaymentReceived({ transactionId, listingTitle, buyerN
     userId: sellerUserId,
     title: 'Payment received',
     message: `${who} paid for "${listingTitle || 'your listing'}". Prepare and ship the order.${shipLine}`,
+    // The address sentence is a whole clause with its own word order, so
+    // whether there is an address picks the key rather than appending text.
+    i18nKey: shipTo ? 'notifications.paymentReceivedWithAddress' : 'notifications.paymentReceived',
+    i18nParams: {
+      buyerName: buyerName || standIn('aBuyer'),
+      listingTitle: listingTitle || standIn('yourListing'),
+      ...(shipTo ? { shipTo } : {})
+    },
     type: 'transaction',
     link,
     referenceId: transactionId
@@ -747,6 +887,8 @@ async function notifySellerStripeRequiredForOffer({ listingSlug, listingTitle, o
     userId: sellerUserId,
     title: 'Action required: Connect Stripe to accept offer',
     message: `Your listing "${listingTitle || 'the item'}" has a qualifying offer of €${(offerAmount || 0).toFixed(2)}. Connect your Stripe account in Settings → Payments to accept it.`,
+    i18nKey: 'notifications.stripeRequiredForOffer',
+    i18nParams: { listingTitle: listingTitle || standIn('theItem'), amount: euros(offerAmount) },
     type: 'transaction',
     link,
     referenceId: listingSlug
@@ -759,6 +901,7 @@ async function notifyAccountClosed({ userId }) {
     userId,
     title: 'Account closed',
     message: 'Your account has been permanently closed.',
+    i18nKey: 'notifications.accountClosed',
     type: 'account',
     link: '/dashboard/my-account',
     referenceId: 'account_closed'
@@ -771,6 +914,7 @@ async function notifyAppealApproved({ userId }) {
     userId,
     title: 'Appeal approved',
     message: 'Your appeal has been reviewed and your account restriction has been lifted. You can create and edit listings again.',
+    i18nKey: 'notifications.appealApproved',
     type: 'account',
     link: '/dashboard/my-account',
     referenceId: 'appeal_approved'
@@ -785,6 +929,8 @@ async function notifyAppealRejected({ userId, adminResponse }) {
     message: adminResponse
       ? `Your appeal was reviewed: ${adminResponse}`
       : 'Your appeal was reviewed and the restriction remains in place. If you have questions, please contact support.',
+    i18nKey: adminResponse ? 'notifications.appealRejected' : 'notifications.appealRejectedNoResponse',
+    i18nParams: adminResponse ? { adminResponse } : {},
     type: 'account',
     link: '/dashboard/my-account',
     referenceId: 'appeal_rejected'
@@ -832,6 +978,14 @@ async function notifySellerWinnerSelected({
     userId: sellerUserId,
     title: 'Auction ended – winner selected',
     message,
+    i18nKey: 'notifications.winnerSelected',
+    i18nParams: {
+      winnerName: winnerName || standIn('aBidder'),
+      listingTitle: listingTitle || standIn('yourListing'),
+      amount: amount.toFixed(2),
+      fee: bidRoomFee.toFixed(2),
+      shipping: shippingParam(shippingOption, shippingCost)
+    },
     type: 'auction_ended',
     link,
     referenceId: listingSlug
@@ -859,6 +1013,12 @@ async function notifyBuyerAuctionWon({
     userId: buyerUserId,
     title: 'You won the auction!',
     message,
+    i18nKey: 'notifications.auctionWon',
+    i18nParams: {
+      listingTitle: listingTitle || standIn('theListing'),
+      amount: amount.toFixed(2),
+      shipping: shippingParam(shippingOption, shippingCost)
+    },
     type: 'auction_ended',
     link,
     referenceId: listingSlug
@@ -871,6 +1031,8 @@ async function notifyLoginFromNewDevice({ userId, deviceInfo }) {
     userId,
     title: 'Login from new device',
     message: deviceInfo || 'Your account was accessed from a new device.',
+    i18nKey: deviceInfo ? 'notifications.loginNewDevice' : 'notifications.loginNewDeviceUnknown',
+    i18nParams: deviceInfo ? { deviceInfo } : {},
     type: 'security',
     link: '/dashboard/my-account',
     referenceId: 'login'
@@ -947,6 +1109,8 @@ async function notifyBuyerPaymentDeadlineWarning({ buyerId, listingTitle, listin
     userId: buyerId,
     title: 'Payment deadline approaching',
     message: `You have less than 1 hour to complete payment for "${listingTitle || 'the item'}". Failure to pay will result in a reputation penalty.`,
+    i18nKey: 'notifications.paymentDeadlineWarning',
+    i18nParams: { listingTitle: listingTitle || standIn('theItem') },
     type: 'transaction',
     link,
     eventType: 'payment_deadline_warning'
@@ -962,10 +1126,19 @@ async function notifyBuyerNonPayment({ buyerId, listingTitle, penaltyPoints, non
     final_warning: `Payment expired for "${listingTitle || 'the item'}". A ${penaltyPoints}-point penalty and a 2/5 BidRoom review were applied. This is your 2nd non-payment — one more will result in a permanent account ban.`,
     ban: `Payment expired for "${listingTitle || 'the item'}". This is your 3rd non-payment. Your account has been suspended.`
   };
+  // The three levels are different sentences, not one with a number in it:
+  // the second names the consequence of a third, the third says it happened.
+  const keys = {
+    warning: 'notifications.nonPaymentWarning',
+    final_warning: 'notifications.nonPaymentFinalWarning',
+    ban: 'notifications.nonPaymentBan'
+  };
   await createNotification({
     userId: buyerId,
     title: 'Payment deadline expired',
     message: messages[warningLevel],
+    i18nKey: keys[warningLevel],
+    i18nParams: { listingTitle: listingTitle || standIn('theItem'), penaltyPoints },
     type: 'account',
     link,
     eventType: 'non_payment_penalty'
@@ -983,6 +1156,10 @@ async function notifySellerBuyerNonPayment({ sellerId, listingTitle, listingSlug
     userId: sellerId,
     title: 'Buyer did not pay',
     message,
+    i18nKey: hasSecondBidder
+      ? 'notifications.buyerNonPaymentSecondBidder'
+      : 'notifications.buyerNonPaymentRelisted',
+    i18nParams: { listingTitle: listingTitle || standIn('yourListing') },
     type: 'transaction',
     link,
     eventType: 'buyer_non_payment'
@@ -997,6 +1174,8 @@ async function notifySecondBidderSecondChance({ buyerId, listingTitle, listingSl
     userId: buyerId,
     title: 'Second chance to buy!',
     message: `The winner for "${listingTitle}" did not pay. As the next highest bidder, you have ${paymentDeadlineHours}h to complete payment.`,
+    i18nKey: 'notifications.secondChance',
+    i18nParams: { listingTitle: listingTitle || standIn('theItem'), hours: paymentDeadlineHours },
     type: 'transaction',
     link,
     eventType: 'second_chance_offer'
@@ -1021,6 +1200,15 @@ async function notifyDamageClaimOpened({ sellerId, buyerName, listingTitle, ship
     userId: sellerId,
     title,
     message,
+    // Who files the carrier claim is the whole point of the message, so the
+    // shipping type picks the key rather than a clause inside one.
+    i18nKey: isExternal
+      ? 'notifications.damageClaimOpenedExternal'
+      : 'notifications.damageClaimOpenedPlatform',
+    i18nParams: {
+      buyerName: buyerName || standIn('aBuyer'),
+      listingTitle: listingTitle || standIn('anItem')
+    },
     type: 'dispute',
     link,
     referenceId: transactionId,
@@ -1043,6 +1231,8 @@ async function notifyDamageClaimResolved({ buyerId, listingTitle, status, transa
     userId: buyerId,
     title,
     message,
+    i18nKey: approved ? 'notifications.damageClaimApproved' : 'notifications.damageClaimUpdate',
+    i18nParams: { listingTitle: listingTitle || standIn('theItem') },
     type: 'dispute',
     link,
     referenceId: transactionId,
@@ -1060,6 +1250,7 @@ async function notifyCategoryFollowersNewListing({ category, listingTitle, listi
 
     const title = 'New listing in a category you follow';
     const message = listingTitle || 'Check it out now';
+    const i18nParams = { listingTitle: listingTitle || standIn('newListingGeneric') };
     const link = listingSlug ? `/listing/${listingSlug}` : '/listing/list';
 
     await Promise.allSettled(
@@ -1069,6 +1260,8 @@ async function notifyCategoryFollowersNewListing({ category, listingTitle, listi
           userId: f.user,
           title,
           message,
+          i18nKey: 'notifications.categoryFollowNewListing',
+          i18nParams,
           type: 'follow',
           link,
           referenceId: listingSlug || null,
@@ -1117,6 +1310,8 @@ async function notifySimilarItemWatchers({ category, startingPrice, listingTitle
           userId: entry.user,
           title: 'Similar item to one you\'re watching',
           message: listingTitle || 'A similar item just went live',
+          i18nKey: 'notifications.similarItem',
+          i18nParams: { listingTitle: listingTitle || standIn('similarItemGeneric') },
           type: 'watchlist',
           link: listingSlug ? `/listing/${listingSlug}` : '/',
           referenceId: listingSlug || null,
@@ -1155,6 +1350,10 @@ async function notifyWatchlistersAuctionEnding({ listingId, listingTitle, listin
           message: listingTitle || (isGiveaway
             ? 'A giveaway in your watchlist closes to entries in less than an hour'
             : 'An item in your watchlist is ending in less than an hour'),
+          i18nKey: isGiveaway ? 'notifications.giveawayLastChance' : 'notifications.auctionEndingSoon',
+          i18nParams: {
+            listingTitle: listingTitle || standIn(isGiveaway ? 'giveawayEndingGeneric' : 'endingSoonGeneric')
+          },
           type: 'watchlist',
           link: listingSlug ? `/listing/${listingSlug}` : '/',
           referenceId: refId,
@@ -1177,6 +1376,15 @@ async function notifyFollowersNewListing({ sellerId, sellerFirstName, listingTit
       ? `${sellerFirstName} published a new listing`
       : 'New listing from a seller you follow';
     const message = listingTitle || 'Check it out now';
+    // The seller's name is in the title, so with no name on file the title is
+    // a different sentence rather than one with a hole in it.
+    const i18nKey = sellerFirstName
+      ? 'notifications.followedSellerNewListing'
+      : 'notifications.followedSellerNewListingAnon';
+    const i18nParams = {
+      listingTitle: listingTitle || standIn('newListingGeneric'),
+      ...(sellerFirstName ? { sellerFirstName } : {})
+    };
     const link = listingSlug ? `/listing/${listingSlug}` : '/';
 
     await Promise.allSettled(
@@ -1185,6 +1393,8 @@ async function notifyFollowersNewListing({ sellerId, sellerFirstName, listingTit
           userId: f.follower,
           title,
           message,
+          i18nKey,
+          i18nParams,
           type: 'follow',
           link,
           referenceId: sellerId,
@@ -1205,17 +1415,37 @@ async function notifyFollowersNewListing({ sellerId, sellerFirstName, listingTit
  * Sends in-app notification. Email is handled separately by the scheduler (needs volume/count context).
  */
 async function notifyDsaWarning({ userId, annualSalesEur, annualTransactionCount, io }) {
-  const salesFormatted = annualSalesEur != null ? `€${Math.round(annualSalesEur).toLocaleString()}` : null;
+  const sales = annualSalesEur != null ? Math.round(annualSalesEur).toLocaleString() : null;
+  const salesFormatted = sales != null ? `€${sales}` : null;
   const parts = [];
   if (salesFormatted) parts.push(`${salesFormatted} in sales`);
   if (annualTransactionCount != null) parts.push(`${annualTransactionCount} transactions`);
   const context = parts.length ? ` (${parts.join(', ')} this year)` : '';
+
+  // The figures used to be joined into one English clause before being
+  // dropped into the sentence, which put "in sales, N transactions this year"
+  // inside an otherwise translated message. Which figures are on file picks
+  // the key instead, so each variant is a whole sentence in each language.
+  const hasSales = sales != null;
+  const hasCount = annualTransactionCount != null;
+  const i18nKey = hasSales && hasCount
+    ? 'notifications.dsaWarningSalesAndCount'
+    : hasSales
+      ? 'notifications.dsaWarningSales'
+      : hasCount
+        ? 'notifications.dsaWarningCount'
+        : 'notifications.dsaWarning';
 
   return createNotification({
     userId,
     type: 'account',
     title: 'Seller status review required',
     message: `Your selling activity${context} may qualify as professional selling under EU DSA regulations. Please confirm your seller status in your dashboard.`,
+    i18nKey,
+    i18nParams: {
+      ...(hasSales ? { sales } : {}),
+      ...(hasCount ? { count: annualTransactionCount } : {})
+    },
     link: '/dashboard/home',
     io
   });
@@ -1231,6 +1461,7 @@ async function notifyDsaSuspectedProfessional({ userId, io }) {
     type: 'account',
     title: 'Seller account flagged for review',
     message: 'Your account has been flagged for platform review. Your selling activity exceeds thresholds for private sellers under EU DSA regulations. Action is required to continue selling.',
+    i18nKey: 'notifications.dsaSuspectedProfessional',
     link: '/dashboard/home',
     io
   });
@@ -1244,6 +1475,10 @@ async function notifyReviewReminder({ buyerId, sellerId, listingTitle, transacti
   const milestoneLabel = { '24h': '24 hours', '48h': '48 hours', '7d': '1 week' }[milestone] ?? milestone;
   const title = 'Don\'t forget to leave a review';
   const message = `It's been ${milestoneLabel} since your transaction for "${listingTitle || 'an item'}". Share your experience — reviews help the community.`;
+  const i18nParams = {
+    milestone: milestoneParam(milestone),
+    listingTitle: listingTitle || standIn('anItem')
+  };
   const link = '/dashboard/transactions';
 
   const targets = [];
@@ -1253,7 +1488,16 @@ async function notifyReviewReminder({ buyerId, sellerId, listingTitle, transacti
   if (targets.length === 0) return;
 
   await Promise.allSettled(
-    targets.map(uid => createNotification({ userId: uid, title, message, type: 'review', link, referenceId: transactionId }))
+    targets.map(uid => createNotification({
+      userId: uid,
+      title,
+      message,
+      i18nKey: 'notifications.reviewReminder',
+      i18nParams,
+      type: 'review',
+      link,
+      referenceId: transactionId
+    }))
   );
 
   if (io) {
@@ -1263,24 +1507,43 @@ async function notifyReviewReminder({ buyerId, sellerId, listingTitle, transacti
 
 async function notifySellerManualPaymentSent({ sellerId, buyerName, listingTitle, method, io }) {
   const methodLabels = {
-    in_person: 'em mão',
-    bank_transfer: 'transferência bancária',
-    mbway: 'MBWay',
+    in_person: 'in person',
+    bank_transfer: 'bank transfer',
+    mbway: 'MB WAY',
   };
   const methodLabel = methodLabels[method] || method;
-  const title = 'Pagamento enviado pelo comprador';
-  const message = `${buyerName} marcou o pagamento de "${listingTitle}" como enviado via ${methodLabel}. Confirma quando receberes o pagamento.`;
+  const title = 'Buyer marked the payment as sent';
+  const message = `${buyerName} marked the payment for "${listingTitle}" as sent by ${methodLabel}. Confirm once you have received it.`;
   const link = '/dashboard/buyer?tab=transactions';
-  await createNotification({ userId: sellerId, title, message, type: 'transaction', link });
+  await createNotification({
+    userId: sellerId,
+    title,
+    message,
+    i18nKey: 'notifications.manualPaymentSent',
+    i18nParams: {
+      buyerName: buyerName || standIn('aBuyer'),
+      listingTitle: listingTitle || standIn('yourListing'),
+      method: paymentMethodParam(method)
+    },
+    type: 'transaction',
+    link
+  });
   if (io) emitNewNotificationToUser(io, sellerId).catch(() => {});
 }
 
 async function notifyPayoutSetupReminder({ sellerId, io }) {
-  const title   = 'Configura a conta de pagamentos';
-  const message = 'Tens anúncios ativos mas ainda não configuraste a tua conta bancária. Configura-a para receberes o pagamento das tuas vendas.';
+  const title   = 'Set up your payout account';
+  const message = 'You have active listings but no bank account set up yet. Set one up so you can be paid for your sales.';
   const link    = '/dashboard/settings?tab=payout';
 
-  await createNotification({ userId: sellerId, title, message, type: 'account', link });
+  await createNotification({
+    userId: sellerId,
+    title,
+    message,
+    i18nKey: 'notifications.payoutSetupReminder',
+    type: 'account',
+    link
+  });
   if (io) emitNewNotificationToUser(io, sellerId).catch(() => {});
 }
 
@@ -1521,5 +1784,9 @@ module.exports = {
   notifyGiveawayEntered,
   notifyGiveawayWinner,
   emailGiveawayWinner,
-  notifyGiveawayResultToEntrants
+  notifyGiveawayResultToEntrants,
+  // Exported for the handful of createNotification calls that live outside
+  // this file (support replies, reports, the auto-release scheduler) so they
+  // name a stand-in the same way the notifiers here do.
+  standIn
 };

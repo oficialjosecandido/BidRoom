@@ -7,8 +7,19 @@ import { API_CONFIG } from '../config/api.config';
 export interface Notification {
   _id: string;
   user: string;
+  /** English fallback; the localized text comes from `i18nKey`. */
   title: string;
+  /** English fallback; the localized text comes from `i18nKey`. */
   message: string;
+  /**
+   * Catalogue key the text is rendered from, without the `.title`/`.message`
+   * suffix (e.g. `notifications.newBid`). Absent on notifications written
+   * before localization existed — the NotificationTextPipe then shows
+   * `title`/`message` as they are.
+   */
+  i18nKey?: string | null;
+  /** Values to interpolate; `{ t: 'key' }` marks one that is itself translated. */
+  i18nParams?: Record<string, unknown> | null;
   type: 'proposal' | 'bid' | 'auction_ended' | 'transaction' | 'dispute' | 'review' | 'listing' | 'watchlist' | 'private_room' | 'shipping' | 'account' | 'security' | 'system';
   link?: string | null;
   referenceId?: string | null;

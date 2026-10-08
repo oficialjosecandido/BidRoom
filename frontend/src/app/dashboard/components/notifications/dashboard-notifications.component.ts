@@ -4,11 +4,12 @@ import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { NotificationService, Notification } from '../../../shared/services/notification.service';
+import { NotificationTextPipe } from '../../../shared/pipes/notification-text.pipe';
 
 @Component({
   selector: 'app-dashboard-notifications',
   standalone: true,
-  imports: [CommonModule, TranslateModule],
+  imports: [CommonModule, TranslateModule, NotificationTextPipe],
   templateUrl: './dashboard-notifications.component.html',
   styleUrls: ['./dashboard-notifications.component.scss']
 })

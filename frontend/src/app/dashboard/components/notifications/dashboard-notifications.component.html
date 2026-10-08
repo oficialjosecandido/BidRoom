@@ -53,8 +53,8 @@
               {{ getTypeIcon(notification.type) }}
             </div>
             <div class="notif-body">
-              <div class="notif-title">{{ notification.title }}</div>
-              <div class="notif-msg">{{ notification.message }}</div>
+              <div class="notif-title">{{ notification | notificationText: 'title' }}</div>
+              <div class="notif-msg">{{ notification | notificationText: 'message' }}</div>
               <div class="notif-meta">{{ formatDate(notification.issuedAt) }}</div>
             </div>
             <div class="notif-actions">

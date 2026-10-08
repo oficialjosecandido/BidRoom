@@ -2063,7 +2063,8 @@
       "noNotifications": "Sem notificações ainda.",
       "noNotificationsDesc": "Está em dia! Avisamos quando algo acontecer.",
       "errorLoading": "Falha ao carregar notificações.",
-      "loading": "A carregar notificações..."
+      "loading": "A carregar notificações...",
+      "viewAll": "Ver todas as notificações"
     },
     "settings": {
       "title": "Definições",
@@ -4433,5 +4434,365 @@
     "ERROR_GIVEAWAY_OWN_LISTING": "Não pode participar num passatempo da sua própria conta.",
     "ERROR_ACCOUNT_REQUIRED": "Precisa de uma conta BidRoom activa para participar.",
     "ERROR_GENERIC": "Não foi possível registar a participação. Tente novamente."
+  },
+  "notifications": {
+    "newBid": {
+      "title": "Novo lance recebido",
+      "message": "{{bidderName}} licitou €{{amount}} em \"{{listingTitle}}\""
+    },
+    "bidderOutbid": {
+      "title": "Foi superado",
+      "message": "O seu lance de €{{previousBid}} em \"{{listingTitle}}\" foi superado. Lance mais alto actual: €{{currentBid}}."
+    },
+    "newProposal": {
+      "title": "Nova proposta",
+      "message": "{{offererName}} fez uma proposta de €{{amount}} em \"{{listingTitle}}\""
+    },
+    "proposalAccepted": {
+      "title": "Proposta aceite — complete o pagamento",
+      "message": "A sua proposta de €{{amount}} em \"{{listingTitle}}\" foi aceite. Abra Transacções para completar o pagamento."
+    },
+    "proposalDeclined": {
+      "title": "Proposta recusada",
+      "message": "A sua proposta de €{{amount}} em \"{{listingTitle}}\" foi recusada."
+    },
+    "offerPlaced": {
+      "title": "Proposta confirmada",
+      "message": "A sua proposta de €{{amount}} em \"{{listingTitle}}\" foi recebida."
+    },
+    "offerOutbid": {
+      "title": "Proposta mais alta recebida",
+      "message": "A sua proposta de €{{previousOffer}} em \"{{listingTitle}}\" foi superada. Alguém propôs €{{newOffer}}."
+    },
+    "bestOfferEnded": {
+      "title": "Anúncio terminado",
+      "message": "O seu anúncio de melhor proposta \"{{listingTitle}}\" terminou com {{offerCount}} proposta(s). Tem 24 horas para as analisar e aceitar uma."
+    },
+    "listingRemoved": {
+      "title": "Anúncio removido",
+      "message": "\"{{listingTitle}}\" foi removido por violação das regras da plataforma."
+    },
+    "listingRequiresChanges": {
+      "title": "Alterações necessárias no anúncio",
+      "message": "\"{{listingTitle}}\" precisa de alterações antes de poder ser aprovado."
+    },
+    "itemAddedToWatchlist": {
+      "title": "Artigo adicionado a uma lista de interesses",
+      "message": "{{watcherName}} adicionou \"{{listingTitle}}\" à lista de interesses."
+    },
+    "categoryFollowNewListing": {
+      "title": "Novo anúncio numa categoria que segue",
+      "message": "{{listingTitle}}"
+    },
+    "followedSellerNewListing": {
+      "title": "{{sellerFirstName}} publicou um novo anúncio",
+      "message": "{{listingTitle}}"
+    },
+    "followedSellerNewListingAnon": {
+      "title": "Novo anúncio de um vendedor que segue",
+      "message": "{{listingTitle}}"
+    },
+    "similarItem": {
+      "title": "Artigo semelhante a um que está a seguir",
+      "message": "{{listingTitle}}"
+    },
+    "auctionEndingSoon": {
+      "title": "Leilão a terminar",
+      "message": "{{listingTitle}}"
+    },
+    "giveawayLastChance": {
+      "title": "Última chance de participar",
+      "message": "{{listingTitle}}"
+    },
+    "privateRoomInvitation": {
+      "title": "Convite para sala privada",
+      "message": "Está convidado para a sala privada de \"{{listingTitle}}\". Aceite nos próximos 15 minutos."
+    },
+    "privateRoomAccepted": {
+      "title": "Sala privada aceite",
+      "message": "{{bidderName}} aceitou o seu convite para a sala privada de \"{{listingTitle}}\"."
+    },
+    "privateRoomDeclined": {
+      "title": "Sala privada recusada",
+      "message": "{{bidderName}} recusou o seu convite para a sala privada de \"{{listingTitle}}\"."
+    },
+    "privateRoomClosedNoAcceptance": {
+      "title": "Sala privada encerrada",
+      "message": "A sala privada de \"{{listingTitle}}\" foi encerrada porque nenhum dos licitantes convidados aceitou nos 15 minutos. O leilão terminou sem vencedor."
+    },
+    "sellerLeftRoomSeller": {
+      "title": "Sala privada encerrada",
+      "message": "A sala privada de \"{{listingTitle}}\" foi encerrada porque saiu. O leilão terminou sem vencedor."
+    },
+    "sellerLeftRoomBuyers": {
+      "title": "O vendedor saiu da sala privada",
+      "message": "O vendedor saiu da sala privada de \"{{listingTitle}}\". O leilão foi encerrado sem vencedor."
+    },
+    "roomCancelled": {
+      "title": "Sala privada cancelada",
+      "message": "A sala privada de \"{{listingTitle}}\" foi cancelada pelo vendedor."
+    },
+    "winnerSelected": {
+      "title": "Leilão terminado — vencedor seleccionado",
+      "message": "{{winnerName}} ganhou \"{{listingTitle}}\" com um lance de €{{amount}}. Preço final €{{amount}}; comissão BidRoom €{{fee}}; envio (pago pelo comprador): {{shipping}}."
+    },
+    "auctionWon": {
+      "title": "Ganhou o leilão!",
+      "message": "Parabéns! Ganhou \"{{listingTitle}}\" com o seu lance de €{{amount}}. Artigo €{{amount}}; envio: {{shipping}}. Complete o pagamento para prosseguir."
+    },
+    "sellerAcceptedPayment": {
+      "title": "O vendedor aceitou o seu pagamento",
+      "message": "O vendedor aceitou o seu pagamento de \"{{listingTitle}}\". Vai preparar e enviar a encomenda em breve."
+    },
+    "paymentReceived": {
+      "title": "Pagamento recebido",
+      "message": "{{buyerName}} pagou \"{{listingTitle}}\". Prepare e envie a encomenda."
+    },
+    "paymentReceivedWithAddress": {
+      "title": "Pagamento recebido",
+      "message": "{{buyerName}} pagou \"{{listingTitle}}\". Prepare e envie a encomenda. Enviar para {{buyerName}}, {{shipTo}}."
+    },
+    "manualPaymentSent": {
+      "title": "O comprador marcou o pagamento como enviado",
+      "message": "{{buyerName}} marcou o pagamento de \"{{listingTitle}}\" como enviado por {{method}}. Confirme quando o receber."
+    },
+    "stripeRequiredForOffer": {
+      "title": "Acção necessária: ligue o Stripe para aceitar a proposta",
+      "message": "O seu anúncio \"{{listingTitle}}\" tem uma proposta elegível de €{{amount}}. Ligue a sua conta Stripe em Definições → Pagamentos para a aceitar."
+    },
+    "payoutSetupReminder": {
+      "title": "Configure a conta de pagamentos",
+      "message": "Tem anúncios activos mas ainda não configurou a sua conta bancária. Configure-a para poder receber o pagamento das suas vendas."
+    },
+    "paymentDeadlineWarning": {
+      "title": "Prazo de pagamento a terminar",
+      "message": "Tem menos de 1 hora para completar o pagamento de \"{{listingTitle}}\". A falta de pagamento resulta numa penalização na reputação."
+    },
+    "nonPaymentWarning": {
+      "title": "Prazo de pagamento expirado",
+      "message": "O prazo de pagamento de \"{{listingTitle}}\" expirou. Foi aplicada uma penalização de {{penaltyPoints}} pontos de reputação, foi adicionada uma avaliação BidRoom de 2/5 ao seu perfil e o anúncio foi reanunciado automaticamente."
+    },
+    "nonPaymentFinalWarning": {
+      "title": "Prazo de pagamento expirado",
+      "message": "O pagamento de \"{{listingTitle}}\" expirou. Foram aplicados {{penaltyPoints}} pontos de penalização e uma avaliação BidRoom de 2/5. Esta é a sua 2.ª falta de pagamento — mais uma e a conta é banida definitivamente."
+    },
+    "nonPaymentBan": {
+      "title": "Prazo de pagamento expirado",
+      "message": "O pagamento de \"{{listingTitle}}\" expirou. Esta é a sua 3.ª falta de pagamento. A sua conta foi suspensa."
+    },
+    "buyerNonPaymentRelisted": {
+      "title": "O comprador não pagou",
+      "message": "O licitante vencedor de \"{{listingTitle}}\" não pagou. O seu anúncio foi reanunciado automaticamente nas mesmas condições."
+    },
+    "buyerNonPaymentSecondBidder": {
+      "title": "O comprador não pagou",
+      "message": "O licitante vencedor de \"{{listingTitle}}\" não pagou. O artigo foi oferecido automaticamente ao licitante seguinte."
+    },
+    "secondChance": {
+      "title": "Segunda oportunidade de compra!",
+      "message": "O vencedor de \"{{listingTitle}}\" não pagou. Como licitante seguinte, tem {{hours}}h para completar o pagamento."
+    },
+    "payoutAutoReleasedBuyer": {
+      "title": "Pagamento libertado automaticamente ao vendedor",
+      "message": "A sua encomenda de \"{{listingTitle}}\" foi concluída automaticamente. O pagamento foi libertado ao vendedor."
+    },
+    "payoutAutoReleasedSeller": {
+      "title": "Pagamento libertado automaticamente",
+      "message": "A venda de \"{{listingTitle}}\" foi concluída automaticamente. O pagamento foi-lhe libertado."
+    },
+    "itemShipped": {
+      "title": "Artigo enviado",
+      "message": "\"{{listingTitle}}\" foi marcado como enviado."
+    },
+    "trackingProvided": {
+      "title": "Número de seguimento adicionado",
+      "message": "Foi adicionado um número de seguimento para \"{{listingTitle}}\"."
+    },
+    "itemDelivered": {
+      "title": "Artigo entregue",
+      "message": "\"{{listingTitle}}\" foi marcado como entregue."
+    },
+    "shippingDeadlineStarted": {
+      "title": "Começou o prazo de envio",
+      "message": "Envie \"{{listingTitle}}\" dentro do prazo de preparação."
+    },
+    "shippingDeadlineApproaching": {
+      "title": "Prazo de envio a terminar",
+      "message": "O prazo de envio de \"{{listingTitle}}\" está a terminar."
+    },
+    "shippingFinalTwoDays": {
+      "title": "Envie em breve — faltam 2 dias",
+      "message": "Tem 2 dias úteis para enviar \"{{listingTitle}}\", caso contrário a venda é cancelada e o comprador reembolsado."
+    },
+    "orderCancelledNoShipmentBuyer": {
+      "title": "Encomenda cancelada — reembolso emitido",
+      "message": "A sua encomenda de \"{{listingTitle}}\" foi cancelada porque o vendedor não enviou dentro do prazo. Foi reembolsado na totalidade."
+    },
+    "orderCancelledNoShipmentSeller": {
+      "title": "Encomenda cancelada — não enviou dentro do prazo",
+      "message": "A encomenda de \"{{listingTitle}}\" foi cancelada automaticamente porque não enviou dentro do prazo exigido. O comprador foi reembolsado."
+    },
+    "buyerConfirmedReceipt": {
+      "title": "O comprador confirmou a recepção",
+      "message": "{{buyerName}} confirmou a recepção de \"{{listingTitle}}\"."
+    },
+    "confirmReceiptReminder": {
+      "title": "Confirme que recebeu o artigo",
+      "message": "Já recebeu \"{{listingTitle}}\"? Confirme a recepção para podermos pagar ao vendedor."
+    },
+    "disputeOpened": {
+      "title": "Disputa aberta",
+      "message": "{{openerName}} abriu uma disputa sobre \"{{listingTitle}}\"."
+    },
+    "evidenceSubmitted": {
+      "title": "Provas submetidas",
+      "message": "Foram submetidas novas provas na disputa sobre \"{{listingTitle}}\"."
+    },
+    "disputeDecision": {
+      "title": "Decisão da disputa",
+      "message": "Foi emitida uma decisão na disputa sobre \"{{listingTitle}}\": {{verdict}}."
+    },
+    "returnEscalatedBuyer": {
+      "title": "Pedido de devolução escalado",
+      "message": "O vendedor não respondeu ao seu pedido de devolução de \"{{listingTitle}}\". A BidRoom vai mediar."
+    },
+    "returnEscalatedSeller": {
+      "title": "Pedido de devolução escalado para a BidRoom",
+      "message": "Não respondeu em tempo ao pedido de devolução de \"{{listingTitle}}\". A BidRoom vai mediar."
+    },
+    "damageClaimOpenedExternal": {
+      "title": "Reclamação de danos aberta — da sua responsabilidade",
+      "message": "{{buyerName}} comunicou que \"{{listingTitle}}\" chegou danificado. Como expedidor, tem de abrir a reclamação junto da transportadora e resolver o caso."
+    },
+    "damageClaimOpenedPlatform": {
+      "title": "O comprador comunicou danos no transporte",
+      "message": "{{buyerName}} comunicou que \"{{listingTitle}}\" chegou danificado. A BidRoom trata da reclamação junto da transportadora."
+    },
+    "damageClaimApproved": {
+      "title": "Reclamação de danos aceite",
+      "message": "A sua reclamação de danos relativa a \"{{listingTitle}}\" foi aceite. O reembolso será processado."
+    },
+    "damageClaimUpdate": {
+      "title": "Actualização da reclamação de danos",
+      "message": "A sua reclamação de danos relativa a \"{{listingTitle}}\" foi analisada. Consulte as transacções para ver os detalhes."
+    },
+    "strikeApplied": {
+      "title": "Advertência aplicada",
+      "message": "Foi aplicada uma advertência à sua conta."
+    },
+    "strikeAppliedWithReason": {
+      "title": "Advertência aplicada",
+      "message": "{{reason}}"
+    },
+    "accountRestricted": {
+      "title": "Conta restringida",
+      "message": "A sua conta foi restringida."
+    },
+    "accountSuspended": {
+      "title": "Conta suspensa",
+      "message": "A sua conta foi suspensa."
+    },
+    "accountReactivated": {
+      "title": "Conta reactivada",
+      "message": "A sua conta foi reactivada."
+    },
+    "accountClosed": {
+      "title": "Conta encerrada",
+      "message": "A sua conta foi encerrada definitivamente."
+    },
+    "contentRestrictionLifted": {
+      "title": "Restrição levantada",
+      "message": "A nossa equipa levantou a restrição de conteúdo da sua conta. Já pode criar e editar anúncios."
+    },
+    "appealApproved": {
+      "title": "Recurso aceite",
+      "message": "O seu recurso foi analisado e a restrição da conta foi levantada. Já pode criar e editar anúncios."
+    },
+    "appealRejected": {
+      "title": "Recurso analisado",
+      "message": "O seu recurso foi analisado: {{adminResponse}}"
+    },
+    "appealRejectedNoResponse": {
+      "title": "Recurso analisado",
+      "message": "O seu recurso foi analisado e a restrição mantém-se. Se tiver dúvidas, contacte o suporte."
+    },
+    "loginNewDevice": {
+      "title": "Sessão iniciada num novo dispositivo",
+      "message": "{{deviceInfo}}"
+    },
+    "loginNewDeviceUnknown": {
+      "title": "Sessão iniciada num novo dispositivo",
+      "message": "A sua conta foi acedida a partir de um novo dispositivo."
+    },
+    "dsaWarning": {
+      "title": "Confirmação do estatuto de vendedor",
+      "message": "A sua actividade de venda pode qualificar-se como venda profissional nos termos do DSA da UE. Confirme o seu estatuto de vendedor no painel."
+    },
+    "dsaWarningSalesAndCount": {
+      "title": "Confirmação do estatuto de vendedor",
+      "message": "A sua actividade de venda (€{{sales}} em vendas e {{count}} transacções este ano) pode qualificar-se como venda profissional nos termos do DSA da UE. Confirme o seu estatuto de vendedor no painel."
+    },
+    "dsaWarningSales": {
+      "title": "Confirmação do estatuto de vendedor",
+      "message": "A sua actividade de venda (€{{sales}} em vendas este ano) pode qualificar-se como venda profissional nos termos do DSA da UE. Confirme o seu estatuto de vendedor no painel."
+    },
+    "dsaWarningCount": {
+      "title": "Confirmação do estatuto de vendedor",
+      "message": "A sua actividade de venda ({{count}} transacções este ano) pode qualificar-se como venda profissional nos termos do DSA da UE. Confirme o seu estatuto de vendedor no painel."
+    },
+    "dsaSuspectedProfessional": {
+      "title": "Conta de vendedor sinalizada para análise",
+      "message": "A sua conta foi sinalizada para análise. A sua actividade de venda excede os limites aplicáveis a vendedores particulares nos termos do DSA da UE. É necessária acção para continuar a vender."
+    },
+    "reviewReminder": {
+      "title": "Não se esqueça de deixar uma avaliação",
+      "message": "Já passaram {{milestone}} desde a sua transacção de \"{{listingTitle}}\". Partilhe a sua experiência — as avaliações ajudam a comunidade."
+    },
+    "reportReceived": {
+      "title": "Denúncia recebida",
+      "message": "A sua denúncia foi recebida e está em análise. Agiremos caso se confirme uma violação."
+    },
+    "supportReply": {
+      "title": "Resposta da equipa BidRoom",
+      "message": "{{excerpt}}"
+    },
+    "standIn": {
+      "yourListing": "o seu anúncio",
+      "theListing": "o anúncio",
+      "yourSale": "a sua venda",
+      "thisAuction": "este leilão",
+      "theAuction": "o leilão",
+      "anAuction": "um leilão",
+      "theItem": "o artigo",
+      "yourItem": "o seu artigo",
+      "anItem": "um artigo",
+      "thisOrder": "esta encomenda",
+      "theTransaction": "a transacção",
+      "theBuyer": "o comprador",
+      "aBuyer": "um comprador",
+      "aBidder": "um licitante",
+      "aParty": "uma das partes",
+      "someone": "Alguém",
+      "newListingGeneric": "Veja agora",
+      "similarItemGeneric": "Acabou de entrar um artigo semelhante",
+      "endingSoonGeneric": "Um artigo da sua lista de interesses termina dentro de uma hora",
+      "giveawayEndingGeneric": "Um passatempo da sua lista de interesses fecha as participações dentro de uma hora"
+    },
+    "shipping": {
+      "free": "Grátis",
+      "localPickup": "Entrega em mão",
+      "calculated": "Calculado no checkout",
+      "unknown": "—"
+    },
+    "paymentMethod": {
+      "in_person": "em mão",
+      "bank_transfer": "transferência bancária",
+      "mbway": "MB WAY"
+    },
+    "milestone": {
+      "24h": "24 horas",
+      "48h": "48 horas",
+      "7d": "uma semana"
+    }
   }
 }

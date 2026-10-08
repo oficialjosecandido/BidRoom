@@ -3,14 +3,16 @@ import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
+import { TranslateModule } from '@ngx-translate/core';
 import { NotificationService, Notification } from '../../../shared/services/notification.service';
+import { NotificationTextPipe } from '../../../shared/pipes/notification-text.pipe';
 import { SocketService } from '../../../shared/services/socket.service';
 import { AuthService } from '../../../auth/services/auth.service';
 
 @Component({
   selector: 'app-proposal-notifications',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, TranslateModule, NotificationTextPipe],
   templateUrl: './proposal-notifications.component.html',
   styleUrls: ['./proposal-notifications.component.scss']
 })

@@ -130,8 +130,14 @@ async function createMessageAndEmit(conversation, senderType, senderUid, rawBody
       if (customer) {
         await createNotification({
           userId: customer._id,
-          title: 'Resposta da equipa BidRoom',
+          // The title was the one notification hardcoded in Portuguese, so an
+          // English or Spanish customer got a Portuguese heading. The excerpt
+          // below it stays as the agent typed it — translating someone's
+          // written reply is not ours to do.
+          title: 'Reply from the BidRoom team',
           message: body.slice(0, 80),
+          i18nKey: 'notifications.supportReply',
+          i18nParams: { excerpt: body.slice(0, 80) },
           type: 'system',
           link: '/dashboard/support',
         });

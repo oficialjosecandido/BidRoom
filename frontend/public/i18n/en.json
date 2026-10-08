@@ -2063,7 +2063,8 @@
       "noNotifications": "No notifications yet.",
       "noNotificationsDesc": "You're all caught up! We'll notify you when something happens.",
       "errorLoading": "Failed to load notifications.",
-      "loading": "Loading notifications..."
+      "loading": "Loading notifications...",
+      "viewAll": "View all notifications"
     },
     "settings": {
       "title": "Settings",
@@ -4433,5 +4434,365 @@
     "ERROR_GIVEAWAY_OWN_LISTING": "You can't enter a giveaway run by your own account.",
     "ERROR_ACCOUNT_REQUIRED": "You need an active BidRoom account to enter.",
     "ERROR_GENERIC": "We couldn't register your entry. Please try again."
+  },
+  "notifications": {
+    "newBid": {
+      "title": "New bid received",
+      "message": "{{bidderName}} placed a bid of €{{amount}} on \"{{listingTitle}}\""
+    },
+    "bidderOutbid": {
+      "title": "You've been outbid",
+      "message": "Your bid of €{{previousBid}} on \"{{listingTitle}}\" was exceeded. Current high bid: €{{currentBid}}."
+    },
+    "newProposal": {
+      "title": "New proposal",
+      "message": "{{offererName}} made an offer of €{{amount}} on \"{{listingTitle}}\""
+    },
+    "proposalAccepted": {
+      "title": "Offer accepted — complete payment",
+      "message": "Your offer of €{{amount}} on \"{{listingTitle}}\" was accepted. Open Transactions to complete payment."
+    },
+    "proposalDeclined": {
+      "title": "Proposal declined",
+      "message": "Your offer of €{{amount}} on \"{{listingTitle}}\" was declined."
+    },
+    "offerPlaced": {
+      "title": "Offer confirmed",
+      "message": "Your offer of €{{amount}} on \"{{listingTitle}}\" has been received."
+    },
+    "offerOutbid": {
+      "title": "Higher offer received",
+      "message": "Your offer of €{{previousOffer}} on \"{{listingTitle}}\" was exceeded. Someone offered €{{newOffer}}."
+    },
+    "bestOfferEnded": {
+      "title": "Listing ended",
+      "message": "Your best-offer listing \"{{listingTitle}}\" has ended with {{offerCount}} offer(s). You have 24 hours to review and accept an offer."
+    },
+    "listingRemoved": {
+      "title": "Listing removed",
+      "message": "\"{{listingTitle}}\" was removed due to a policy violation."
+    },
+    "listingRequiresChanges": {
+      "title": "Listing changes required",
+      "message": "\"{{listingTitle}}\" needs changes before it can be approved."
+    },
+    "itemAddedToWatchlist": {
+      "title": "Item added to watchlist",
+      "message": "{{watcherName}} added \"{{listingTitle}}\" to their watchlist."
+    },
+    "categoryFollowNewListing": {
+      "title": "New listing in a category you follow",
+      "message": "{{listingTitle}}"
+    },
+    "followedSellerNewListing": {
+      "title": "{{sellerFirstName}} published a new listing",
+      "message": "{{listingTitle}}"
+    },
+    "followedSellerNewListingAnon": {
+      "title": "New listing from a seller you follow",
+      "message": "{{listingTitle}}"
+    },
+    "similarItem": {
+      "title": "Similar item to one you're watching",
+      "message": "{{listingTitle}}"
+    },
+    "auctionEndingSoon": {
+      "title": "Auction ending soon",
+      "message": "{{listingTitle}}"
+    },
+    "giveawayLastChance": {
+      "title": "Last chance to enter",
+      "message": "{{listingTitle}}"
+    },
+    "privateRoomInvitation": {
+      "title": "Private room invitation",
+      "message": "You're invited to the private room for \"{{listingTitle}}\". Accept within 15 minutes."
+    },
+    "privateRoomAccepted": {
+      "title": "Private room accepted",
+      "message": "{{bidderName}} accepted your private room invitation for \"{{listingTitle}}\"."
+    },
+    "privateRoomDeclined": {
+      "title": "Private room declined",
+      "message": "{{bidderName}} declined your private room invitation for \"{{listingTitle}}\"."
+    },
+    "privateRoomClosedNoAcceptance": {
+      "title": "Private room closed",
+      "message": "The private room for \"{{listingTitle}}\" was closed because no invited bidders accepted within 15 minutes. The auction ended without a winner."
+    },
+    "sellerLeftRoomSeller": {
+      "title": "Private room closed",
+      "message": "The private room for \"{{listingTitle}}\" was closed because you left. The auction ended without a winner."
+    },
+    "sellerLeftRoomBuyers": {
+      "title": "Seller left the private room",
+      "message": "The seller has left the private room for \"{{listingTitle}}\". The auction has been closed without a winner."
+    },
+    "roomCancelled": {
+      "title": "Private room cancelled",
+      "message": "The private room for \"{{listingTitle}}\" was cancelled by the seller."
+    },
+    "winnerSelected": {
+      "title": "Auction ended — winner selected",
+      "message": "{{winnerName}} won \"{{listingTitle}}\" with a bid of €{{amount}}. Final price €{{amount}}; BidRoom fee €{{fee}}; shipping (buyer pays): {{shipping}}."
+    },
+    "auctionWon": {
+      "title": "You won the auction!",
+      "message": "Congratulations! You won \"{{listingTitle}}\" with your bid of €{{amount}}. Item €{{amount}}; shipping: {{shipping}}. Complete payment to proceed."
+    },
+    "sellerAcceptedPayment": {
+      "title": "Seller accepted your payment",
+      "message": "The seller has accepted your payment for \"{{listingTitle}}\". They will prepare and ship your order soon."
+    },
+    "paymentReceived": {
+      "title": "Payment received",
+      "message": "{{buyerName}} paid for \"{{listingTitle}}\". Prepare and ship the order."
+    },
+    "paymentReceivedWithAddress": {
+      "title": "Payment received",
+      "message": "{{buyerName}} paid for \"{{listingTitle}}\". Prepare and ship the order. Ship to {{buyerName}}, {{shipTo}}."
+    },
+    "manualPaymentSent": {
+      "title": "Buyer marked the payment as sent",
+      "message": "{{buyerName}} marked the payment for \"{{listingTitle}}\" as sent by {{method}}. Confirm once you have received it."
+    },
+    "stripeRequiredForOffer": {
+      "title": "Action required: connect Stripe to accept the offer",
+      "message": "Your listing \"{{listingTitle}}\" has a qualifying offer of €{{amount}}. Connect your Stripe account in Settings → Payments to accept it."
+    },
+    "payoutSetupReminder": {
+      "title": "Set up your payout account",
+      "message": "You have active listings but no bank account set up yet. Set one up so you can be paid for your sales."
+    },
+    "paymentDeadlineWarning": {
+      "title": "Payment deadline approaching",
+      "message": "You have less than 1 hour to complete payment for \"{{listingTitle}}\". Failure to pay will result in a reputation penalty."
+    },
+    "nonPaymentWarning": {
+      "title": "Payment deadline expired",
+      "message": "Your payment window for \"{{listingTitle}}\" expired. A {{penaltyPoints}}-point reputation penalty was applied, a 2/5 BidRoom review was added to your profile, and the listing has been automatically relisted."
+    },
+    "nonPaymentFinalWarning": {
+      "title": "Payment deadline expired",
+      "message": "Payment expired for \"{{listingTitle}}\". A {{penaltyPoints}}-point penalty and a 2/5 BidRoom review were applied. This is your 2nd non-payment — one more will result in a permanent account ban."
+    },
+    "nonPaymentBan": {
+      "title": "Payment deadline expired",
+      "message": "Payment expired for \"{{listingTitle}}\". This is your 3rd non-payment. Your account has been suspended."
+    },
+    "buyerNonPaymentRelisted": {
+      "title": "Buyer did not pay",
+      "message": "The winning bidder for \"{{listingTitle}}\" did not pay. Your listing has been automatically relisted with the same conditions."
+    },
+    "buyerNonPaymentSecondBidder": {
+      "title": "Buyer did not pay",
+      "message": "The winning bidder for \"{{listingTitle}}\" did not pay. We have automatically offered the item to the next highest bidder."
+    },
+    "secondChance": {
+      "title": "Second chance to buy!",
+      "message": "The winner for \"{{listingTitle}}\" did not pay. As the next highest bidder, you have {{hours}}h to complete payment."
+    },
+    "payoutAutoReleasedBuyer": {
+      "title": "Payment auto-released to seller",
+      "message": "Your order for \"{{listingTitle}}\" was automatically completed. Payment has been released to the seller."
+    },
+    "payoutAutoReleasedSeller": {
+      "title": "Payment auto-released",
+      "message": "Your order for \"{{listingTitle}}\" was automatically completed. Payment has been released to you."
+    },
+    "itemShipped": {
+      "title": "Item shipped",
+      "message": "\"{{listingTitle}}\" has been marked as shipped."
+    },
+    "trackingProvided": {
+      "title": "Tracking number added",
+      "message": "A tracking number was added for \"{{listingTitle}}\"."
+    },
+    "itemDelivered": {
+      "title": "Item delivered",
+      "message": "\"{{listingTitle}}\" has been marked as delivered."
+    },
+    "shippingDeadlineStarted": {
+      "title": "Shipping deadline started",
+      "message": "Ship \"{{listingTitle}}\" by the handling deadline."
+    },
+    "shippingDeadlineApproaching": {
+      "title": "Shipping deadline soon",
+      "message": "The shipping deadline for \"{{listingTitle}}\" is approaching."
+    },
+    "shippingFinalTwoDays": {
+      "title": "Ship soon — 2 days left",
+      "message": "You have 2 business days left to ship \"{{listingTitle}}\" or it will be cancelled and the buyer refunded."
+    },
+    "orderCancelledNoShipmentBuyer": {
+      "title": "Order cancelled — refund issued",
+      "message": "Your order for \"{{listingTitle}}\" was cancelled because the seller did not ship in time. You have been refunded in full."
+    },
+    "orderCancelledNoShipmentSeller": {
+      "title": "Order cancelled — did not ship in time",
+      "message": "The order for \"{{listingTitle}}\" was cancelled automatically because you did not ship within the required timeframe. The buyer has been refunded."
+    },
+    "buyerConfirmedReceipt": {
+      "title": "Buyer confirmed receipt",
+      "message": "{{buyerName}} confirmed receipt of \"{{listingTitle}}\"."
+    },
+    "confirmReceiptReminder": {
+      "title": "Confirm you received your item",
+      "message": "Has \"{{listingTitle}}\" arrived? Confirm receipt so the seller can be paid."
+    },
+    "disputeOpened": {
+      "title": "Dispute opened",
+      "message": "{{openerName}} opened a dispute for \"{{listingTitle}}\"."
+    },
+    "evidenceSubmitted": {
+      "title": "Evidence submitted",
+      "message": "New evidence was submitted for the dispute on \"{{listingTitle}}\"."
+    },
+    "disputeDecision": {
+      "title": "Dispute decision",
+      "message": "A decision has been issued for the dispute on \"{{listingTitle}}\": {{verdict}}."
+    },
+    "returnEscalatedBuyer": {
+      "title": "Return request escalated",
+      "message": "The seller did not respond to your return request for \"{{listingTitle}}\". BidRoom will now mediate."
+    },
+    "returnEscalatedSeller": {
+      "title": "Return request escalated to BidRoom",
+      "message": "You did not respond to the return request for \"{{listingTitle}}\" in time. BidRoom will now mediate."
+    },
+    "damageClaimOpenedExternal": {
+      "title": "Damage claim opened — your responsibility",
+      "message": "{{buyerName}} reported \"{{listingTitle}}\" damaged. As the shipper, you must file the carrier claim and resolve this."
+    },
+    "damageClaimOpenedPlatform": {
+      "title": "Buyer reported the item damaged in transit",
+      "message": "{{buyerName}} reported \"{{listingTitle}}\" arrived damaged. BidRoom will handle the carrier claim."
+    },
+    "damageClaimApproved": {
+      "title": "Damage claim approved",
+      "message": "Your damage claim for \"{{listingTitle}}\" has been approved. A refund will be processed."
+    },
+    "damageClaimUpdate": {
+      "title": "Damage claim update",
+      "message": "Your damage claim for \"{{listingTitle}}\" has been reviewed. Please check your transactions for details."
+    },
+    "strikeApplied": {
+      "title": "Strike applied",
+      "message": "A strike has been applied to your account."
+    },
+    "strikeAppliedWithReason": {
+      "title": "Strike applied",
+      "message": "{{reason}}"
+    },
+    "accountRestricted": {
+      "title": "Account restricted",
+      "message": "Your account has been restricted."
+    },
+    "accountSuspended": {
+      "title": "Account suspended",
+      "message": "Your account has been suspended."
+    },
+    "accountReactivated": {
+      "title": "Account reactivated",
+      "message": "Your account has been reactivated."
+    },
+    "accountClosed": {
+      "title": "Account closed",
+      "message": "Your account has been permanently closed."
+    },
+    "contentRestrictionLifted": {
+      "title": "Restriction lifted",
+      "message": "Your content policy restriction has been lifted by our team. You can create and edit listings again."
+    },
+    "appealApproved": {
+      "title": "Appeal approved",
+      "message": "Your appeal has been reviewed and your account restriction has been lifted. You can create and edit listings again."
+    },
+    "appealRejected": {
+      "title": "Appeal reviewed",
+      "message": "Your appeal was reviewed: {{adminResponse}}"
+    },
+    "appealRejectedNoResponse": {
+      "title": "Appeal reviewed",
+      "message": "Your appeal was reviewed and the restriction remains in place. If you have questions, please contact support."
+    },
+    "loginNewDevice": {
+      "title": "Login from new device",
+      "message": "{{deviceInfo}}"
+    },
+    "loginNewDeviceUnknown": {
+      "title": "Login from new device",
+      "message": "Your account was accessed from a new device."
+    },
+    "dsaWarning": {
+      "title": "Seller status review required",
+      "message": "Your selling activity may qualify as professional selling under EU DSA regulations. Please confirm your seller status in your dashboard."
+    },
+    "dsaWarningSalesAndCount": {
+      "title": "Seller status review required",
+      "message": "Your selling activity (€{{sales}} in sales and {{count}} transactions this year) may qualify as professional selling under EU DSA regulations. Please confirm your seller status in your dashboard."
+    },
+    "dsaWarningSales": {
+      "title": "Seller status review required",
+      "message": "Your selling activity (€{{sales}} in sales this year) may qualify as professional selling under EU DSA regulations. Please confirm your seller status in your dashboard."
+    },
+    "dsaWarningCount": {
+      "title": "Seller status review required",
+      "message": "Your selling activity ({{count}} transactions this year) may qualify as professional selling under EU DSA regulations. Please confirm your seller status in your dashboard."
+    },
+    "dsaSuspectedProfessional": {
+      "title": "Seller account flagged for review",
+      "message": "Your account has been flagged for platform review. Your selling activity exceeds thresholds for private sellers under EU DSA regulations. Action is required to continue selling."
+    },
+    "reviewReminder": {
+      "title": "Don't forget to leave a review",
+      "message": "It's been {{milestone}} since your transaction for \"{{listingTitle}}\". Share your experience — reviews help the community."
+    },
+    "reportReceived": {
+      "title": "Report received",
+      "message": "Your report has been received and is under review. We will take action if a violation is found."
+    },
+    "supportReply": {
+      "title": "Reply from the BidRoom team",
+      "message": "{{excerpt}}"
+    },
+    "standIn": {
+      "yourListing": "your listing",
+      "theListing": "the listing",
+      "yourSale": "your sale",
+      "thisAuction": "this auction",
+      "theAuction": "the auction",
+      "anAuction": "an auction",
+      "theItem": "the item",
+      "yourItem": "your item",
+      "anItem": "an item",
+      "thisOrder": "this order",
+      "theTransaction": "the transaction",
+      "theBuyer": "the buyer",
+      "aBuyer": "a buyer",
+      "aBidder": "a bidder",
+      "aParty": "a party",
+      "someone": "Someone",
+      "newListingGeneric": "Check it out now",
+      "similarItemGeneric": "A similar item just went live",
+      "endingSoonGeneric": "An item in your watchlist is ending in less than an hour",
+      "giveawayEndingGeneric": "A giveaway in your watchlist closes to entries in less than an hour"
+    },
+    "shipping": {
+      "free": "Free",
+      "localPickup": "Meet in person",
+      "calculated": "Calculated at checkout",
+      "unknown": "—"
+    },
+    "paymentMethod": {
+      "in_person": "in person",
+      "bank_transfer": "bank transfer",
+      "mbway": "MB WAY"
+    },
+    "milestone": {
+      "24h": "24 hours",
+      "48h": "48 hours",
+      "7d": "1 week"
+    }
   }
 }

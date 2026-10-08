@@ -58,6 +58,7 @@ router.post('/', authenticateToken, async (req, res) => {
       userId: req.user._id,
       title: 'Report received',
       message: `Your report has been received and is under review. We will take action if a violation is found.`,
+      i18nKey: 'notifications.reportReceived',
       type: 'system'
     });
 

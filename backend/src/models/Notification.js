@@ -7,6 +7,14 @@ const notificationSchema = new mongoose.Schema({
     required: true,
     index: true
   },
+  /**
+   * English rendering of the notification, kept for two reasons: every
+   * notification written before localization existed has only this, and
+   * anything server-side that reads a notification back (push, digests) has
+   * no i18n catalogue to resolve a key against.
+   *
+   * It is a fallback, not the source of truth — see `i18nKey`.
+   */
   message: {
     type: String,
     required: true,
@@ -17,6 +25,36 @@ const notificationSchema = new mongoose.Schema({
     type: String,
     required: true,
     maxlength: 120
+  },
+  /**
+   * The i18n key the client renders this notification from, without the
+   * `.title`/`.message` suffix (e.g. `notifications.newBid`).
+   *
+   * Notifications are localized when they are READ, not when they are
+   * written: a notification list is live UI that the same person re-reads,
+   * so it has to follow them when they change language. (An email is the
+   * opposite — a snapshot in an inbox — which is why emails are rendered in
+   * the recipient's language at send time instead.) Storing the key also
+   * keeps the fan-out notifiers free of a per-recipient language lookup.
+   *
+   * Null on notifications written before this existed; the client then falls
+   * back to `title`/`message`.
+   */
+  i18nKey: {
+    type: String,
+    default: null,
+    maxlength: 120
+  },
+  /**
+   * Values to interpolate into the localized strings, by placeholder name.
+   *
+   * A value of the shape `{ t: 'some.key' }` is itself a key to translate,
+   * which is how a stand-in for missing data ("your listing") reaches the
+   * reader in their own language instead of in English.
+   */
+  i18nParams: {
+    type: mongoose.Schema.Types.Mixed,
+    default: null
   },
   /** Type of notification for grouping/filtering */
   type: {
