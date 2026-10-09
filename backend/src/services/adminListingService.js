@@ -2,6 +2,7 @@ const crypto = require('crypto');
 const Listing = require('../models/Listing');
 const Customer = require('../models/Customer');
 const { notifyListingWentLive } = require('./listingReviewService');
+const { sendPlatformListingPendingReviewAlert } = require('./auctionNotificationService');
 const logger = require('../utils/logger');
 
 const ALLOWED_CATEGORIES = [
@@ -313,6 +314,10 @@ async function createListingAsAdmin(input = {}, opts = {}) {
         logger.error(`[adminListing] went-live notify failed for ${listing.slug}:`, err.message);
       });
     }
+  } else {
+    sendPlatformListingPendingReviewAlert(listing, seller).catch((err) => {
+      logger.error(`[adminListing] pending-review ops alert failed for ${listing.slug}:`, err.message);
+    });
   }
 
   return {

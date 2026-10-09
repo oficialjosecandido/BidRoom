@@ -282,6 +282,71 @@ async function sendFirstBidNotification(listing, bid, bidderEmail, bidderName) {
 }
 
 /**
+ * Internal ops alert: email platform inbox when a listing awaits Nexus approval.
+ * Recipient: PLATFORM_LISTING_REVIEW_NOTIFY_EMAIL → PLATFORM_BID_NOTIFY_EMAIL → pt.bidnow@gmail.com.
+ */
+async function sendPlatformListingPendingReviewAlert(listing, seller) {
+  try {
+    const to = (
+      process.env.PLATFORM_LISTING_REVIEW_NOTIFY_EMAIL
+      || process.env.PLATFORM_BID_NOTIFY_EMAIL
+      || 'pt.bidnow@gmail.com'
+    ).trim();
+    if (!to) return { sent: false, reason: 'no_recipient' };
+
+    const frontendUrl = (process.env.FRONTEND_URL || 'http://localhost:4200').replace(/\/$/, '');
+    const nexusUrl = `${frontendUrl}/nexus/auctions/${listing?._id || ''}`;
+    const title = listing?.title || listing?.titlePt || 'Anúncio';
+    const format = listing?.saleFormat === 'giveaway'
+      ? 'Passatempo'
+      : (listing?.auctionFormat === 'best-offer' ? 'Best Offer' : 'Leilão');
+    const sellerName = [seller?.firstName, seller?.lastName].filter(Boolean).join(' ').trim()
+      || seller?.email
+      || 'Vendedor';
+    const sellerEmail = seller?.email ? ` (${seller.email})` : '';
+    const price = listing?.startingPrice != null
+      ? `€${Number(listing.startingPrice).toFixed(2)}`
+      : '—';
+    const category = listing?.category || '—';
+    const warning = listing?.moderationWarning?.message
+      ? String(listing.moderationWarning.message).slice(0, 280)
+      : '';
+
+    const subject = `Novo anúncio a aprovar · ${title}`;
+    const html = `<!DOCTYPE html>
+<html><head><meta charset="utf-8"></head>
+<body style="margin:0;padding:0;background:#f4f4f5;font-family:Arial,Helvetica,sans-serif;color:#1d1d1f">
+  <div style="max-width:560px;margin:24px auto;background:#fff;border-radius:12px;overflow:hidden;border:1px solid #e5e5ea">
+    <div style="background:#0a0a0a;padding:20px 24px;color:#f0ede8">
+      <div style="font-size:12px;letter-spacing:0.08em;color:#c9a84c;text-transform:uppercase;margin-bottom:6px">BidRoom · Aprovação</div>
+      <h1 style="margin:0;font-size:20px;font-weight:700">Novo anúncio aguarda revisão</h1>
+    </div>
+    <div style="padding:24px">
+      <p style="margin:0 0 16px;font-size:15px;line-height:1.5">
+        <strong>${sellerName}</strong>${sellerEmail} submeteu um anúncio que está em
+        <strong style="color:#8c6b1e">pending_review</strong>.
+      </p>
+      <table style="width:100%;border-collapse:collapse;font-size:14px;margin-bottom:20px">
+        <tr><td style="padding:8px 0;color:#666;width:40%">Anúncio</td><td style="padding:8px 0;font-weight:600">${title}</td></tr>
+        <tr><td style="padding:8px 0;color:#666">Formato</td><td style="padding:8px 0">${format}</td></tr>
+        <tr><td style="padding:8px 0;color:#666">Categoria</td><td style="padding:8px 0">${category}</td></tr>
+        <tr><td style="padding:8px 0;color:#666">Preço inicial</td><td style="padding:8px 0">${price}</td></tr>
+        ${warning ? `<tr><td style="padding:8px 0;color:#666">Aviso filtro</td><td style="padding:8px 0;color:#b45309">${warning}</td></tr>` : ''}
+      </table>
+      <a href="${nexusUrl}" style="display:inline-block;background:#c9a84c;color:#1a1408;text-decoration:none;padding:12px 20px;border-radius:8px;font-weight:700;font-size:14px">Rever no Nexus</a>
+    </div>
+  </div>
+</body></html>`;
+
+    await sendEmail(to, subject, html);
+    return { sent: true };
+  } catch (error) {
+    logger.error('Error sending platform listing-pending-review alert:', error);
+    return { sent: false, error: error.message };
+  }
+}
+
+/**
  * Internal ops alert: email platform inbox on every new bid.
  * Recipient: PLATFORM_BID_NOTIFY_EMAIL (default pt.bidnow@gmail.com).
  */
@@ -1560,6 +1625,7 @@ module.exports = {
   sendWinnerNotification,
   sendFirstBidNotification,
   sendPlatformNewBidAlert,
+  sendPlatformListingPendingReviewAlert,
   sendOfferPlacedEmail,
   sendOfferOutbidEmail
 };

@@ -18,7 +18,11 @@ const {
   requireActiveAccountIfAuthenticated,
   requireNoDisputeRestrictionIfAuthenticated
 } = require('../middleware/auth');
-const { handleWinnerSelection, handleAuctionEnd } = require('../services/auctionNotificationService');
+const {
+  handleWinnerSelection,
+  handleAuctionEnd,
+  sendPlatformListingPendingReviewAlert
+} = require('../services/auctionNotificationService');
 const { notifyFollowersNewListing, notifyCategoryFollowersNewListing, notifySimilarItemWatchers } = require('../services/notificationService');
 const { getReviewScoresForUser } = require('../services/reviewService');
 const { logAuctionCreated } = require('../services/bestOfferLogger');
@@ -1795,6 +1799,12 @@ router.post(
     if (!isGuest) {
       ListingDraft.deleteOne({ seller: user._id }).catch(() => {});
     }
+
+    // Ops inbox: every new listing lands in pending_review and needs a human
+    // in Nexus. Fire-and-forget so the seller is not waiting on mail delivery.
+    sendPlatformListingPendingReviewAlert(listing, user).catch(err =>
+      logger.error('Failed to send listing pending-review ops alert:', err.message || err)
+    );
 
     // Compliance monitoring for vehicles: raises flags for a human to review,
     // never blocks. Deliberately not awaited — the seller is not waiting on it,
