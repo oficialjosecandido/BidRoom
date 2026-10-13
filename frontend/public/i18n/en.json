@@ -95,7 +95,7 @@
         "auction": "Auction",
         "live": "Live",
         "privateRoom": "Private room",
-        "bestOffer": "Best offer"
+        "offers": "Offers"
       },
       "listing": {
         "currentBid": "Current bid",
@@ -146,7 +146,7 @@
         "titleLine1": "Simple",
         "titleLine2": "from end to end.",
         "step1Title": "Publish",
-        "step1Desc": "Auction or best offer. No listing fees. Ready in minutes.",
+        "step1Desc": "Auction or offers. No listing fees. Ready in minutes.",
         "step2Title": "Compete",
         "step2Desc": "Real-time bidding. Private offers. The system decides automatically.",
         "step3Title": "Receive securely",
@@ -183,7 +183,6 @@
         "account": "Account",
         "legal": "Legal",
         "activeAuctions": "Active auctions",
-        "bestOffer": "Best offer",
         "signIn": "Sign in",
         "register": "Register",
         "dashboard": "Dashboard",
@@ -341,7 +340,6 @@
       "bids": "bids",
       "ended": "Ended",
       "na": "N/A",
-      "bestOffer": "Best Offer",
       "clearFilter": "Clear Filter",
       "tryDifferentCategory": "Try a different category or clear your filter."
     }
@@ -349,14 +347,6 @@
   "addListing": {
     "pageTitle": "List Your Item",
     "pageSubtitle": "Follow the steps to create your listing",
-    "step1": "Item Identity",
-    "step2": "Details & Media",
-    "step3": "Pricing & Rules",
-    "step4": "Shipping & Review",
-    "step1Title": "Step 1: Item Identity & Format",
-    "step2Title": "Step 2: Details & Media",
-    "step3Title": "Step 3: Pricing & Auction Rules",
-    "step4Title": "Step 4: Shipping & Final Review",
     "listingTitle": "Listing Title",
     "titlePlaceholder": "Enter a descriptive title (max 80 characters)",
     "langPt": "Portuguese",
@@ -379,9 +369,6 @@
     "selectCategory": "Select a Category",
     "subCategory": "Sub-Category *",
     "selectSubCategory": "Select a Sub-Category",
-    "listingFormat": "Listing Format *",
-    "formatAuction": "Auction (Highest Bid Wins)",
-    "formatBestOffer": "Best Offer (Seller Chooses)",
     "condition": "Item Condition *",
     "selectCondition": "Select Condition",
     "conditionNew": "New",
@@ -470,14 +457,13 @@
     "duration30days": "30 days",
     "startingBid": "Starting Bid *",
     "buyNowPrice": "Buy Now Price (Optional)",
-    "buyNowHint": "Must be higher than Starting Bid. Allows instant purchase.",
+    "buyNowHint": "Must be higher than the starting bid. A buyer can take it at this price and end the bidding straight away.",
     "minimumAcceptPrice": "Minimum Accept Price",
-    "minimumAcceptHint": "Price threshold at which you must accept a qualifying offer",
+    "minimumAcceptHint": "The lowest you will consider. Buyers can still offer less and you may turn those down freely — but at or above this figure you are committed: you cannot decline the last offer that clears it, and if exactly one clears it when the listing closes, it is accepted for you.",
     "enablePrivateRoom": "Enable Private Room",
     "privateRoomHint": "Important: Enabling Private Room increases your commission from 3.5% to 6.0%. You must commit to this choice.",
     "commissionPrivateRoom": "Commission Rate: 6.0% (Private Room enabled)",
     "privateRoomNoAcceptNote": "Note: If no invited bidder accepts within 15 minutes, the auction will close without a winner.",
-    "commissionStandard": "Commission Rate: 3.5% (Standard)",
     "shippingOptions": "Shipping Options *",
     "selectShipping": "Select a Shipping Option",
     "shippingFlatRate": "Flat Rate",
@@ -488,7 +474,7 @@
     "vehiclePickupNotice": "Vehicles cannot be shipped by post. Delivery is in-person collection / handoff only, like OLX car listings.",
     "vehicleNoReturnsHint": "Vehicle listings do not support postal returns — the policy is set to «No Returns».",
     "flatRateCost": "Flat Rate Shipping Cost *",
-    "flatRateHint": "Enter the fixed shipping price buyers will pay. Use $0 for free shipping.",
+    "flatRateHint": "Enter the fixed shipping price buyers will pay. Use 0 for free shipping.",
     "calculatedHint": "Rates are automatically calculated at checkout based on buyer address and package details.",
     "packageSize": "Package Size *",
     "selectPackageSize": "Select package size",
@@ -707,19 +693,17 @@
       "publishFix": "Fix the highlighted errors before publishing.",
       "stepBlocked": "Fix the errors on this step before continuing.",
       "atLeastOnePhoto": "at least 1 photo",
-      "step4Pricing": "Set the listing price and duration.",
-      "step5Shipping": "Configure shipping and location.",
-      "step6Declaration": "Confirm the seller declaration to publish.",
       "specificationsIncomplete": "incomplete specifications",
       "scheduleRequired": "Pick the opening date and time",
       "schedulePast": "The opening must be in the future",
-      "scheduleTooFar": "The opening cannot be more than {{days}} days away"
+      "scheduleTooFar": "The opening cannot be more than {{days}} days away",
+      "pricing": "Set the listing price and duration.",
+      "shipping": "Configure shipping and location.",
+      "declaration": "Confirm the seller declaration to publish."
     },
     "steps": {
       "label": "Steps",
       "progress": "{{current}} / {{total}}",
-      "format": "Format",
-      "formatSub": "Auction or best offer",
       "details": "Details",
       "detailsSub": "Title, category & description",
       "photos": "Photos",
@@ -731,29 +715,6 @@
       "publish": "Publish",
       "publishSub": "Review & confirm"
     },
-    "step5Title": "Shipping",
-    "step5": "Method and origin",
-    "step6Title": "Publish",
-    "step6": "Final review",
-    "step1.section": "Choose listing format",
-    "step2.section": "Item information",
-    "step3.section": "Item photos",
-    "step4.auction.section": "Auction pricing",
-    "step4.offer.section": "Best offer pricing",
-    "step5.section": "Shipping method",
-    "step5.sectionVehicle": "Vehicle delivery",
-    "step5.location": "Location",
-    "step5.paymentMethods": "Accepted Payment Methods",
-    "step5.paymentMethodsHint": "Choose which payment methods you accept for this listing.",
-    "step5.pmStripeLabel": "Credit / debit card",
-    "step5.pmStripeDesc": "Secure online payment. Always available.",
-    "step5.pmInPerson": "In-person payment",
-    "step5.pmInPersonDesc": "The buyer pays in person at delivery.",
-    "step5.pmBankTransfer": "Bank transfer",
-    "step5.pmMbway": "MBWay",
-    "step5.pmNoConfig": "You have no alternative methods configured.",
-    "step5.pmConfigureNow": "Configure now →",
-    "step6.section": "Review and publish",
     "optional": "optional",
     "offerDeadline": "Offer deadline",
     "offerDeadlineHint": "More time means more buyers seeing your listing and more offers to receive.",
@@ -761,8 +722,6 @@
     "durationHint": "Rare or premium items tend to attract more bids over 7–10 days.",
     "autoRelistLabel": "Automatically relist if unsold",
     "autoRelistHint": "If the auction ends without a sale (no bids or reserve not met), it will be relisted automatically for another matching period. You can turn this off at any time.",
-    "formatBestOfferDesc": "Buyers submit offers and you choose which to accept. Set a minimum price — you have full freedom to decline any offer below that value.",
-    "formatAuctionDesc": "Buyers bid in real time and compete for your item. You set the duration and the starting bid. The winner is determined automatically.",
     "drop": {
       "title": "Drag photos here",
       "sub": "or click to select · JPEG, PNG, WebP · max. 20 photos"
@@ -780,7 +739,6 @@
       "progress": "Listing progress"
     },
     "ck": {
-      "format": "Format selected",
       "title": "Title filled",
       "category": "Category chosen",
       "condition": "Condition set",
@@ -870,6 +828,51 @@
       "saleValue": "Sale value",
       "netLabel": "You receive (estimate)",
       "empty": "Set a price on the listing or type an amount to simulate the fees."
+    },
+    "details": {
+      "section": "Item information"
+    },
+    "photos": {
+      "section": "Item photos",
+      "label": "Step 3: Pricing & Auction Rules"
+    },
+    "shipping": {
+      "section": "Shipping method",
+      "sectionVehicle": "Vehicle delivery",
+      "location": "Location",
+      "paymentMethods": "Accepted Payment Methods",
+      "paymentMethodsHint": "Choose which payment methods you accept for this listing.",
+      "pmBankTransfer": "Bank transfer",
+      "pmConfigureNow": "Configure now →",
+      "pmInPerson": "In-person payment",
+      "pmInPersonDesc": "The buyer pays in person at delivery.",
+      "pmMbway": "MBWay",
+      "pmNoConfig": "You have no alternative methods configured.",
+      "pmStripeDesc": "Secure online payment. Always available.",
+      "pmStripeLabel": "Credit / debit card"
+    },
+    "publish": {
+      "section": "Review and publish"
+    },
+    "sellingMode": {
+      "section": "How do you want to sell it?",
+      "hint": "Both work the same way after the sale — same payment, same shipping, same protection. The only difference is how the buyer gets to a price.",
+      "label": "Selling mode",
+      "bidding": "Buyers bid, highest bid wins",
+      "biddingDesc": "Buyers bid against each other and can see the current price. When time runs out, the highest bid wins and the sale is final.",
+      "biddingBadge": "Bidding",
+      "offers": "Buyers send offers, you decide",
+      "offersDesc": "Each buyer sends you a figure privately. Nothing is agreed until you accept.",
+      "offersBadge": "Offers",
+      "fixedNote": "You can change this until you publish. After that it stays as it is, because people will have bid or made offers on the terms you set."
+    },
+    "pricing": {
+      "section": "Price and duration"
+    },
+    "advanced": {
+      "section": "Advanced options",
+      "hint": "None of this is required.",
+      "offersEmpty": "Nothing to set here in this mode. The minimum you set above is the only figure buyers have to clear."
     }
   },
   "listingList": {
@@ -926,7 +929,6 @@
     "priceEuro": "Price (€)",
     "formatAll": "All",
     "formatAuction": "Auction",
-    "formatBestOffer": "Best Offer",
     "resultsCountOne": "{{count}} result for \"{{query}}\"",
     "resultsCountMany": "{{count}} results for \"{{query}}\"",
     "oneBid": "1 bid",
@@ -949,7 +951,6 @@
     "badgeLive": "Live",
     "badgeClosing": "Closing",
     "badgeAuction": "Auction",
-    "badgeBestOffer": "Best offer",
     "badgePrivateRoom": "Private room",
     "addWatchlist": "Add to watchlist",
     "removeWatchlist": "Remove from watchlist",
@@ -964,7 +965,9 @@
     "hoursLeft": "{{hours}}h left",
     "applyFilters": "Apply filters",
     "closeFilters": "Close filters",
-    "opensIn": "Opens in {{time}}"
+    "opensIn": "Opens in {{time}}",
+    "formatOffers": "Offers",
+    "badgeOffers": "Offers"
   },
   "categories": {
     "title": "Browse by Category",
@@ -986,10 +989,6 @@
     "moderationBanner": {
       "title": "This listing is under review",
       "body": "Your listing is not visible to other users yet. Our moderation team will review it shortly. If approved, it will go live automatically."
-    },
-    "saleType": {
-      "bestOffer": "Best Offer",
-      "auction": "Auction"
     },
     "itemMode": {
       "bundle": "Bundle",
@@ -1032,16 +1031,14 @@
       "statusDeclined": "Declined"
     },
     "time": {
-      "auctionEnds": "Auction Ends",
-      "offerDeadline": "Offer Deadline",
       "privateRoomEnds": "Private Room Ends",
-      "auctionEnded": "Auction Ended",
       "listingEnded": "Listing Ended",
       "daysCount": "{{count}} days",
       "hoursCount": "{{count}} hours",
       "endedShort": "Ended",
       "na": "—",
-      "endingSoon": "Ending soon"
+      "endingSoon": "Ending soon",
+      "listingEnds": "Ends in"
     },
     "share": {
       "button": "Share listing",
@@ -1092,7 +1089,8 @@
       "auctionHasEndedWinner": "This auction has ended. A winner has been selected.",
       "auctionHasEnded": "This auction has ended.",
       "sellerHas24hOffer": "Seller has 24h to accept an offer",
-      "sellerHas24hWinner": "Seller has 24h to choose a winner"
+      "sellerHas24hWinner": "Seller has 24h to choose a winner",
+      "actionBar": "Listing actions"
     },
     "watchlistCount": {
       "one": "person has this in their watchlist",
@@ -1244,12 +1242,12 @@
       "emailRequiredCallout": "Enter your email so the seller can respond to your offer.",
       "emailPlaceholder": "you@example.com",
       "emailHint": "The seller will use this to respond to your offer.",
-      "belowMinNote": "Your offer is below the seller's minimum price. The seller is not obliged to accept this offer, even if you're the only bidder.",
+      "belowMinNote": "Your offer is below the seller's minimum. The seller is free to turn it down, even if it is the only offer.",
       "cancel": "Cancel",
       "submit": "Send offer",
       "submitting": "Sending offer…",
-      "subtitle": "If the seller accepts, you agree to buy at that price. You can withdraw your offer while it is still pending. Auction bids cannot be withdrawn.",
-      "figuresHint": "Minimum is the lowest amount the seller will consider. Highest is the best offer so far—you can match or exceed it, or stay at the minimum.",
+      "subtitle": "If the seller accepts, you are committed to buying at that price. You can withdraw while it is still pending.",
+      "figuresHint": "Minimum is the lowest amount the seller will consider. Highest is the highest offer so far — you can match or exceed it, or stay at the minimum.",
       "highestOffer": "Highest offer",
       "valueLabel": "Amount (€)",
       "yourOfferPreview": "You are offering:",
@@ -1334,7 +1332,6 @@
       "signIn": "Sign In"
     },
     "formatPill": {
-      "auction": "Live Auction",
       "privateRoom": "Private Room"
     },
     "sidebar": {
@@ -1355,7 +1352,7 @@
       "reopenNoOffers": "No offers. You can reopen for another 7 days.",
       "inWatchlist": "In watchlist",
       "minimumOffer": "Minimum Offer",
-      "minimumOfferDesc": "Offers below this amount may be automatically declined.",
+      "minimumOfferDesc": "You can offer less, but the seller is free to turn down anything below this.",
       "minimumBid": "Next Minimum Bid",
       "bidIncrement": "Increment:",
       "reviews": "reviews",
@@ -1363,8 +1360,7 @@
       "follow": "+ Follow",
       "eligibleCountdown": "Private room:",
       "remaining": "remaining",
-      "winnerSelectionCountdownOffer": "24h to accept offer",
-      "winnerSelectionCountdownWinner": "24h to select winner",
+      "winnerSelectionCountdownOffer": "24h for the seller to decide",
       "invitedRoomHeader": "Room invitees",
       "buyNow": "Buy now ·",
       "block": "Block seller",
@@ -1402,6 +1398,52 @@
       "notOpenYet": "This auction has not opened yet",
       "opensAt": "Opens on {{date}}",
       "opensIn": "{{time}} to go"
+    },
+    "outcome": {
+      "bidding": "A bid is binding. If yours is the highest when the clock runs out, the item is yours and you have 24 hours to pay.",
+      "offers": "An offer binds you only if the seller accepts it. Nothing is agreed until then; if they accept, you have 24 hours to pay."
+    },
+    "alerts": {
+      "stayHere": "Stay here",
+      "tryAgain": "Please try again.",
+      "offerAccepted": {
+        "title": "Offer accepted!",
+        "text": "The offer has been accepted. Go to Transactions to manage and complete the sale."
+      },
+      "stripeRequired": {
+        "title": "Stripe account required",
+        "html": "You must connect your Stripe account before accepting offers.<br><br>Go to <strong>Dashboard → Settings → Payments</strong> to complete setup.",
+        "goToSettings": "Go to Settings"
+      },
+      "buyNowConfirm": {
+        "text": "Buy this item now for {{amount}}? This closes the listing immediately."
+      },
+      "buyNowSuccess": {
+        "title": "Purchase successful!",
+        "text": "Go to your transactions to complete payment.",
+        "confirm": "Go to Payment"
+      },
+      "buyNowFailed": {
+        "title": "Purchase failed",
+        "text": "The purchase could not be completed."
+      },
+      "winnerSelected": {
+        "title": "Winner selected!",
+        "text": "The winner has been notified. Go to Transactions to manage and complete the sale."
+      },
+      "selectWinnerFailed": "Could not select the winner",
+      "reopenFailed": "Could not reopen the listing",
+      "startRoomFailed": "Could not start the private room",
+      "createRoomFailed": "Could not create the private room",
+      "invalidSelection": {
+        "title": "Invalid selection",
+        "text": "Select between 2 and 5 bidders for the private room."
+      },
+      "loadBidsFailed": "Could not load the bid history",
+      "loadOffersFailed": "Could not load the offer history",
+      "acceptOfferFailed": "Could not accept the offer.",
+      "rejectOfferFailed": "Could not decline the offer.",
+      "withdrawOfferFailed": "Could not withdraw the offer."
     }
   },
   "auth": {
@@ -1579,7 +1621,7 @@
       "seller": "Seller",
       "transactions": "Transactions",
       "notifications": "Notifications",
-      "myBids": "My Bids",
+      "myBids": "Bids & Offers",
       "watchlist": "Watchlist",
       "following": "Following",
       "myListings": "My Listings",
@@ -1767,7 +1809,6 @@
       "statActionNeeded": "action needed",
       "statActiveListings": "Active listings",
       "formatAuction": "Auction",
-      "formatBestOffer": "Best offer",
       "statusWinning": "Winning",
       "statusOutbid": "Outbid",
       "statusEnded": "Ended",
@@ -1791,7 +1832,8 @@
       "payoutBannerBody": "Connect your bank account via Stripe so you can receive payments when your auctions end. Buyers won't be able to pay you until this is complete.",
       "payoutBannerCta": "Set up payouts",
       "payoutBannerDismiss": "Dismiss",
-      "checkoutError": "Failed to start checkout. Try again."
+      "checkoutError": "Failed to start checkout. Try again.",
+      "formatOffers": "Offers"
     },
     "myAccount": {
       "title": "My Account",
@@ -1850,7 +1892,7 @@
       "checkingVerification": "Checking verification status…",
       "verificationStatus": "Verification status:",
       "kycReturnBanner": "Your verification has been submitted. We'll update your status once the review is complete — this usually takes a few minutes.",
-      "kycApproved": "Your identity has been verified. You can bid on and list items above $5,000.",
+      "kycApproved": "Your identity has been verified. You can bid on and list items above €5,000.",
       "kycVerifiedOn": "Verified on",
       "kycPending": "Your identity verification is in progress. This usually takes a few minutes. You will be notified once it's complete.",
       "kycRejectedBase": "Your previous verification was not approved.",
@@ -1887,7 +1929,7 @@
         "activeDesc": "Sellers can see you have a saved card and will prioritise you in their decisions.",
         "disclaimer": "Your card is never charged without prior email notification and a 48h contestation period.",
         "upgradeTitle": "Increase your chances of winning",
-        "benefit1": "Sellers prefer buyers with a saved card in Best Offer auctions",
+        "benefit1": "With identity verification complete, a saved card puts you in the top buyer trust tier — the badge sellers see beside every bid and offer",
         "benefit2": "Become eligible for invitations to exclusive Private Rooms",
         "benefit3": "Automatic guarantee to the seller if a dispute is resolved against you",
         "addCard": "Add payment card",
@@ -1901,8 +1943,8 @@
       "toggleLabel": "Buyer or seller mode"
     },
     "myBets": {
-      "title": "My Bets",
-      "subtitle": "All your bids and offers in one place. Pending Best Offers can be withdrawn anytime; auction bids cannot.",
+      "title": "My Bids & Offers",
+      "subtitle": "All your bids and offers in one place. Pending offers can be withdrawn at any time; bids cannot.",
       "loading": "Loading your bets...",
       "errorLoading": "Failed to load your bets.",
       "tryAgain": "Try Again",
@@ -1955,12 +1997,12 @@
         "allCategories": "All categories",
         "allInteractions": "Bids & offers",
         "bidsOnly": "Auction bids only",
-        "offersOnly": "Best offers only",
+        "offersOnly": "Offers only",
         "apply": "Apply filters",
         "bidsPlaced": "Bids placed",
         "bidsPlacedHint": "Auction bids you placed in this period.",
         "offersMade": "Offers made",
-        "offersMadeHint": "Best offers you submitted in this period.",
+        "offersMadeHint": "Offers you submitted in this period.",
         "purchases": "Purchases",
         "purchasesHint": "Items you paid for or completed in this period.",
         "totalSpent": "Total spent",
@@ -2201,7 +2243,7 @@
         "activeDesc": "Sellers can see you have a saved card and will prioritise you in their decisions.",
         "disclaimer": "Your default card is never charged without prior email notification and a 48h contestation period.",
         "upgradeTitle": "Increase your chances of winning",
-        "benefit1": "Sellers prefer buyers with a saved card in Best Offer auctions",
+        "benefit1": "With identity verification complete, a saved card puts you in the top buyer trust tier — the badge sellers see beside every bid and offer",
         "benefit2": "Become eligible for invitations to exclusive Private Rooms",
         "benefit3": "Automatic guarantee to the seller if a dispute is resolved against you",
         "addCard": "Add payment card",
@@ -2335,7 +2377,7 @@
     },
     "myAuctions": {
       "title": "My Listings",
-      "subtitle": "Track your auctions and listing status. You can delete a listing only while it has no qualifying bids or offers (Best Offer: none at or above the minimum).",
+      "subtitle": "Track your auctions and listing status. You can delete a listing only while it has no qualifying bids or offers (in offers mode: none at or above the minimum).",
       "loading": "Loading your listings...",
       "errorLoading": "Failed to load your listings.",
       "relistSuccess": "Listing relisted successfully!",
@@ -2370,7 +2412,7 @@
       "editListing": "Edit",
       "deleteListing": "Delete",
       "cancelConfirmTitle": "Delete this listing?",
-      "cancelConfirmText": "You can delete this listing only if there are no qualifying offers or bids. For Best Offer: no accepted offer and no pending offer at or above the minimum. For auctions: no bids. Below-minimum pending offers will be rejected. This cannot be undone.",
+      "cancelConfirmText": "You can delete this listing only if there are no qualifying offers or bids. In offers mode: no accepted offer and no pending offer at or above the minimum. In bidding mode: no bids. Below-minimum pending offers will be rejected. This cannot be undone.",
       "cancelConfirmBtn": "Delete listing",
       "cancelSuccess": "Listing deleted",
       "cancelError": "Could not delete listing",
@@ -2412,7 +2454,7 @@
       "rejectedLabel": "Not approved",
       "rejectionReason": "Reason",
       "pendingReviewHint": "Waiting for approval. The auction clock only starts once it is approved.",
-      "deleteRulesHint": "Delete is available when there are no bids, and for Best Offer only if no offer meets the minimum price. See Terms of Use.",
+      "deleteRulesHint": "Delete is available when there are no bids, and in offers mode only if no offer meets the minimum price. See Terms of Use.",
       "deleteListingTitle": "Delete listing (only with no qualifying offers or bids)"
     },
     "myAuctionsBidder": {
@@ -2797,7 +2839,7 @@
       "sub": "We explain exactly what happens at every step — for buyers, for sellers, and for everyone taking part in Private Rooms.",
       "ctaBuyer": "I'm a buyer",
       "ctaSeller": "I'm a seller",
-      "stat1": "Auction formats",
+      "stat1": "Selling modes",
       "stat2": "Standard commission",
       "stat3": "Private Room"
     },
@@ -2810,27 +2852,28 @@
     "buyer": {
       "s1": {
         "eye": "Auction formats",
-        "title": "Two formats,",
-        "title2": "one platform.",
-        "intro": "On BidRoom you can buy through a live auction or submit your best offer. In both cases, your funds are protected until you confirm you received the item in good condition."
+        "title": "Bid or offer,",
+        "title2": "depending on the listing.",
+        "intro": "Every BidRoom listing works one of two ways, chosen by the seller and stated clearly on the item page itself. What changes is how you take part — nothing else.",
+        "equal": "Either way, payment, buyer protection and dispute resolution work exactly the same."
       },
       "auction": {
-        "title": "Highest Bid (Auction)",
-        "desc": "Bid in real time against other buyers. The highest bid when time runs out wins automatically. You can set a maximum bid and let the system bid for you.",
+        "title": "Bidding",
+        "desc": "Buyers compete in real time. Set your maximum bid and the system bids for you up to that amount. When time runs out, the highest bid wins automatically. A bid is a commitment: if you win, you pay.",
         "commission": "0% buyer commission",
         "f1": "Duration set by the seller — 1 to 15 days",
-        "f2": "Reserve price may apply — only binding if reached",
+        "f2": "Only bids placed from a registered account can win",
         "f3": "Optional buy-now price — purchase immediately without waiting",
         "f4": "After the auction a Private Room may follow"
       },
       "offer": {
-        "title": "Best Offer",
-        "desc": "Submit your proposal before the deadline. The seller chooses their preferred offer. You can add a message to your offer. You can only have one active offer per listing.",
+        "title": "Offers",
+        "desc": "You send the seller the figure you think is fair, with or without a message. They accept it, turn it down, or wait for better offers until the deadline. There is no sale until the seller accepts yours.",
         "commission": "0% buyer commission",
-        "f1": "Other buyers' names are visible",
+        "f1": "Offers are public: the amount, the message and the offerer’s initials appear on the listing — never their name",
         "f2": "You can include a message with your offer",
-        "f3": "Buy-now price: if matched, the item is yours immediately",
-        "f4": "The seller is not obliged to sell below the minimum price"
+        "f3": "You can withdraw your offer while it is still pending",
+        "f4": "You may offer below the seller’s minimum, but they are free to turn it down"
       },
       "s2": {
         "eye": "Step by step",
@@ -2847,10 +2890,10 @@
         "desc": "Browse categories — watches, art, cars, jewellery, antiques and more. Add listings to your watchlist to follow without bidding."
       },
       "step3": {
-        "title": "Bid or make an offer",
-        "desc": "<strong>Auction:</strong> each bid must beat the previous one by the set increment. If outbid, you receive an immediate notification.<br><strong>Best offer:</strong> submit the amount you consider fair, with or without a message.",
+        "title": "Place a bid or make an offer",
+        "desc": "<strong>The item page is the same either way</strong> — only the button changes. In bidding, each bid has to beat the previous one by the set increment, and you are notified the moment you are outbid. In offers, you send the figure you think is fair, with or without a message.",
         "noteTitle": "Bids vs offers.",
-        "note": "Auction bids are binding and cannot be cancelled. Best Offer proposals can be withdrawn while still pending. Once accepted, an offer becomes a binding sale."
+        "note": "A bid is binding and cannot be cancelled. An offer can be withdrawn while it is still pending; once the seller accepts it, it becomes a binding sale."
       },
       "step4": {
         "title": "If you win — pay within 24 hours",
@@ -2875,14 +2918,20 @@
         "desc": "After the transaction is completed, you can rate the seller on a scale of 1 to 10. Review descriptions are <strong>private</strong> — only the seller sees them."
       },
       "faq": {
-        "q0": "Can I cancel a bid after placing it?",
-        "a0": "Auction <strong>bids</strong> are binding and cannot be cancelled. <strong>Best Offer</strong> proposals can be withdrawn while they are still pending. Once the seller accepts, the sale is binding.",
-        "q1": "What happens if the seller doesn't ship the item?",
-        "a1": "If the seller doesn't ship within <strong>5 business days</strong>, the transaction is automatically cancelled and you will receive a full refund to your original payment method.",
-        "q2": "Do I have a right of withdrawal?",
-        "a2": "BidRoom is primarily a C2C (private individuals) platform. In online auctions between private individuals, the right of withdrawal generally does not apply. If the seller is a professional, your rights are different — check the Terms of Use.",
-        "q3": "How much commission do I pay?",
-        "a3": "<strong>Buyers pay no sales commission to BidRoom.</strong> You pay the item price plus a BidRoom service fee (2.9% + €0.30 per transaction), capped at <strong>€500</strong>, added to the total at checkout."
+        "q0": "What is the difference between bidding and making an offer?",
+        "a0": "In a bidding listing you compete in real time and, at the close, the highest bid wins automatically — a bid is <strong>binding</strong>. In an offers listing you send the seller an amount and they decide whether to accept it. The item page always shows which of the two applies, right at the button you act on.",
+        "q1": "Does my offer oblige me to buy?",
+        "a1": "Only if the seller accepts it. While it is pending you can withdraw it. Once accepted, you have <strong>24 hours</strong> to pay, exactly as if you had won an auction.",
+        "q2": "Can I make an offer on a bidding listing?",
+        "a2": "No. Each listing works in one mode only: if it takes bids, you bid; if it takes offers, you offer.",
+        "q3": "Can I cancel a bid after placing it?",
+        "a3": "<strong>Bids</strong> are binding and cannot be cancelled. <strong>Offers</strong> can be withdrawn while they are still pending. Once the seller accepts, the sale is binding.",
+        "q4": "What happens if the seller doesn't ship the item?",
+        "a4": "If the seller doesn't ship within <strong>5 business days</strong>, the transaction is automatically cancelled and you will receive a full refund to your original payment method.",
+        "q5": "Do I have a right of withdrawal?",
+        "a5": "BidRoom is primarily a C2C (private individuals) platform. In online auctions between private individuals, the right of withdrawal generally does not apply. If the seller is a professional, your rights are different — check the Terms of Use.",
+        "q6": "How much commission do I pay?",
+        "a6": "<strong>Buyers pay no sales commission to BidRoom.</strong> You pay the item price plus a BidRoom service fee (2.9% + €0.30 per transaction), capped at <strong>€500</strong>, added to the total at checkout."
       }
     },
     "seller": {
@@ -2893,14 +2942,14 @@
         "intro": "Listing an item on BidRoom is completely free. Commission is only charged when a transaction is successfully completed — and it is deducted automatically before payout."
       },
       "comm": {
-        "th1": "Format",
+        "th1": "Selling mode",
         "th2": "Seller commission",
         "th3": "Example (€1,000 item)",
-        "r1": "Auction (no Private Room)",
+        "r1": "Bidding (no Private Room)",
         "ex1": "You receive €965",
-        "r2": "Auction (with Private Room)",
+        "r2": "Bidding (with Private Room)",
         "ex2": "You receive €940 — but closes on average 32% higher",
-        "r3": "Best Offer",
+        "r3": "Offers",
         "ex3": "You receive €965",
         "note": "The BidRoom service fee (2.9% + €0.30, capped at €500) is charged to the buyer and added to the final amount at checkout — it is not deducted from your payout. Payout is transferred to your bank account via Stripe Connect after the buyer confirms receipt."
       },
@@ -2916,13 +2965,13 @@
       },
       "step2": {
         "title": "Create the listing in 6 steps",
-        "desc": "The publishing wizard guides you through: format (auction or best offer), details, photos (up to 20), price, shipping and location, and final review. You can save as a draft at any time.",
+        "desc": "The publishing wizard walks you through it: the selling mode — do you want buyers to bid (timed auction, highest bid wins) or to send you offers (you decide which to accept)? — then details, photos (up to 20), price, shipping and location, and a final review. You can save a draft at any point.",
         "noteTitle": "KYC for items ≥ €5,000.",
         "note": "To list or bid on items with a value equal to or greater than €5,000, identity verification is required under anti-money laundering legislation."
       },
       "step3": {
         "title": "Wait for the close",
-        "desc": "<strong>Auction:</strong> the winner is determined automatically when time runs out. You don't need to do anything.<br><strong>Best offer:</strong> you receive a notification for each proposal. You can accept or decline until the deadline. When you accept an offer, the remaining ones close automatically."
+        "desc": "<strong>Bidding:</strong> the winner is settled automatically when time runs out. You do not have to do anything.<br><strong>Offers:</strong> you are notified of every offer and decide until the deadline. Accepting one closes the rest automatically."
       },
       "step4": {
         "title": "The buyer pays — they have 24 hours",
@@ -2941,16 +2990,22 @@
         "note": "If the buyer does not confirm receipt within the deadline, the system releases the funds automatically (auto-release). You do not need to contact support."
       },
       "faq": {
-        "q0": "When do I receive payment?",
-        "a0": "Funds are released when the buyer confirms receipt. After that, the Stripe Connect transfer typically takes <strong>1–2 banking business days</strong>.",
-        "q1": "Can I set a minimum price in the Best Offer format?",
-        "a1": "Yes, and it is actually <strong>mandatory</strong> to set a minimum price for Best Offer listings. You are not obliged to accept any offer below that amount — you have full control over what you accept.",
-        "q2": "What happens if the buyer opens a dispute?",
-        "a2": "When a dispute is opened, both accounts are restricted and funds are held. The BidRoom team reviews the evidence from both parties. If no agreement can be reached, the case is referred to the CNIACC.",
-        "q3": "Can I cancel a listing after publishing?",
-        "a3": "Yes, while the listing is a draft, awaiting approval, or active — and only if there are no qualifying bids/offers: for Best Offer, no accepted offer and no pending offer at or above the minimum; for auctions, no bids. Below-minimum pending offers are rejected automatically. You cannot delete a listing that already has a winner or an active transaction.",
-        "q4": "What items can I not list?",
-        "a4": "Prohibited: live animals, controlled substances, weapons, and any item illegal in Portugal. BidRoom uses automatic moderation (Azure AI Content Safety) to detect and block these listings before they go live."
+        "q0": "Which selling mode should I choose?",
+        "a0": "Bidding when you want to maximise the price and there is demand — you let the market decide the value. Offers when you have a price in mind and would rather control who buys. The commission is <strong>3.5% in both modes</strong>; it only rises to 6% if you switch on the Private Room, which exists in bidding mode only.",
+        "q1": "Can I change mode after publishing?",
+        "a1": "No, to protect anyone who has already bid or offered — switching would change what their bid or offer legally means. To change it, cancel and create a new listing: there is no listing fee and no cancellation fee.",
+        "q2": "What is automatic offer acceptance?",
+        "a2": "If, when the deadline passes, there is <strong>exactly one</strong> offer at or above your minimum, that offer is accepted for you — so a valid sale is not lost to an oversight. If several clear the minimum, you decide; if none does, the listing closes unsold. Automatic acceptance requires your Stripe payment account to be set up.",
+        "q3": "When do I receive payment?",
+        "a3": "Funds are released when the buyer confirms receipt. After that, the Stripe Connect transfer typically takes <strong>1–2 banking business days</strong>.",
+        "q4": "Can I set a minimum price in offers mode?",
+        "a4": "Yes, and it is <strong>mandatory</strong> on listings in offers mode. Below that figure you can turn anything down freely. At or above it you are committed: you cannot decline the last offer that clears it, and if exactly one clears it when the listing closes, it is accepted automatically.",
+        "q5": "What happens if the buyer opens a dispute?",
+        "a5": "When a dispute is opened, both accounts are restricted and funds are held. The BidRoom team reviews the evidence from both parties. If no agreement can be reached, the case is referred to the CNIACC.",
+        "q6": "Can I cancel a listing after publishing?",
+        "a6": "Yes, while the listing is a draft, awaiting approval, or active — and only if there is nothing qualifying on it: in offers mode, no accepted offer and no pending offer at or above the minimum; in bidding mode, no bids. Below-minimum pending offers are rejected automatically. You cannot delete a listing that already has a winner or an active transaction.",
+        "q7": "What items can I not list?",
+        "a7": "Prohibited: live animals, controlled substances, weapons, and any item illegal in Portugal. BidRoom uses automatic moderation (Azure AI Content Safety) to detect and block these listings before they go live."
       },
       "card": {
         "noListingFee": "No listing fee",
@@ -2983,7 +3038,7 @@
       },
       "step1": {
         "title": "Eligibility — who can have a Private Room?",
-        "desc": "A Private Room is only possible in Highest Bid auctions with the option activated by the seller. For it to be triggered, the auction must have ended, the reserve (if any) must have been met, and there must be at least <strong>2 authenticated and registered bidders</strong>."
+        "desc": "A Private Room is only possible on listings in bidding mode with the option switched on by the seller. To be triggered, the auction must have ended and there must be at least <strong>2 authenticated, registered bidders</strong>."
       },
       "step2": {
         "title": "Seller invites — 15-minute window",
@@ -3104,7 +3159,7 @@
         "q1": "When does the seller receive my payment?",
         "a1": "The seller <strong>does not receive payment immediately</strong>. Funds are held by BidRoom until you confirm you received the item in good condition. Only then are they released. This escrow protects you from fraud.",
         "q2": "Can I pay with MB Way or Multibanco?",
-        "a2": "Yes. BidRoom supports all payment methods available via Stripe in the Portuguese market — including Visa/Mastercard cards, MB Way, Multibanco (reference) and Apple/Google Pay.",
+        "a2": "Not in BidRoom’s checkout: payment on the platform is by card — Visa, Mastercard and American Express — processed by Stripe, and Multibanco references are not supported. A seller may enable MB WAY, bank transfer or payment in person on their own listing; those are settled directly with the seller, outside BidRoom’s escrow, and then confirmed in the transaction, so the options you are offered depend on the listing.",
         "q3": "What is the reputation system?",
         "a3": "Each user has a reputation score from 0 to 100, calculated automatically based on received reviews, completed transactions and disputes. A score ≥ 60 with no lost disputes is required to be eligible for Private Rooms."
       },
@@ -3135,13 +3190,13 @@
         "col2": "Value",
         "r1": {
           "label": "Credit / debit card",
-          "sub": "Visa, Mastercard, European cards",
+          "sub": "Visa, Mastercard, American Express — via Stripe",
           "val": "Included"
         },
         "r2": {
-          "label": "Bank transfer",
-          "sub": "SEPA, Multibanco reference",
-          "val": "Included"
+          "label": "Bank transfer, MB WAY or in person",
+          "sub": "Only if the seller enables it — settled directly with them, outside escrow",
+          "val": "Seller’s choice"
         },
         "r3": {
           "label": "Payout to seller",
@@ -3321,7 +3376,7 @@
       },
       "account3": {
         "q": "What payment methods do you accept?",
-        "a": "We accept all major credit cards (Visa, MasterCard, American Express), PayPal, and bank transfers. All payments are processed securely through our encrypted payment system."
+        "a": "Card — Visa, MasterCard and American Express — processed by Stripe; BidRoom never sees or stores your card details. We do not accept PayPal. A seller may also choose to accept bank transfer, MB WAY or payment in person on their own listing: those are settled directly with the seller and then confirmed in the transaction, so the options you are offered depend on the listing."
       },
       "account4": {
         "q": "How do I update my payment information?",
@@ -3337,7 +3392,7 @@
       },
       "bidding2": {
         "q": "Can I cancel a bid or withdraw an offer?",
-        "a": "Auction bids are binding and cannot be cancelled once placed. Best Offer proposals can be withdrawn anytime while they are still pending (not yet accepted or rejected by the seller). After acceptance, the sale is binding and payment rules apply."
+        "a": "Bids are binding and cannot be cancelled once placed. Offers can be withdrawn at any time while they are still pending (not yet accepted or rejected by the seller). After acceptance, the sale is binding and the payment rules apply."
       },
       "bidding3": {
         "q": "How do I know if I won an auction?",
@@ -3345,7 +3400,7 @@
       },
       "bidding4": {
         "q": "What happens if I don't pay for a won auction?",
-        "a": "If you don't complete payment within 48 hours of winning, the auction will be offered to the next highest bidder. Repeated non-payment may result in account suspension."
+        "a": "Payment is due within 24 hours of winning — 48 hours on listings with a Private Room. If the deadline passes unpaid, the transaction is cancelled, you lose 20 reputation points and, if you have a saved payment method, a €30 penalty is charged (€10 to the seller, €20 to BidRoom). The item is then relisted automatically on the same terms; in a Private Room it is offered to the second-highest bidder, who has 24 hours to pay. A third non-payment means permanent account suspension."
       },
       "bidding5": {
         "q": "Can I bid on multiple items at once?",
@@ -3365,7 +3420,7 @@
       },
       "technical3": {
         "q": "Do you have a mobile app?",
-        "a": "Yes! Our mobile app is available for both iOS and Android devices. You can download it from the App Store or Google Play Store."
+        "a": "Not yet. For now BidRoom runs in your phone's browser — the site is built for small screens, and you can add it to your home screen to open it like an app. A native app for iOS and Android is planned; until then there is no BidRoom app on the App Store or on Google Play."
       },
       "technical4": {
         "q": "Why am I not receiving email notifications?",
@@ -3547,154 +3602,6 @@
       "phoneLabel": "Phone:"
     }
   },
-  "terms": {
-    "hero": {
-      "title": "Terms and Conditions",
-      "subtitle": "Please read these terms carefully before using our auction marketplace platform.",
-      "lastUpdated": "Last updated: December 2024"
-    },
-    "s1": {
-      "title": "1. Acceptance of Terms",
-      "p1": "By accessing and using BidRoom (\"the Service\"), you accept and agree to be bound by the terms and provision of this agreement. If you do not agree to abide by the above, please do not use this service.",
-      "p2": "These Terms and Conditions (\"Terms\") govern your use of our auction marketplace platform operated by BidRoom (\"us\", \"we\", or \"our\")."
-    },
-    "s2": {
-      "title": "2. Service Description",
-      "intro": "BidRoom is an online auction marketplace that allows users to:",
-      "li1": "List items for auction",
-      "li2": "Participate in auctions by placing bids",
-      "li3": "Purchase items through the auction process",
-      "li4": "Interact with other users in a secure environment",
-      "note": "We reserve the right to modify, suspend, or discontinue the Service at any time without notice."
-    },
-    "s3": {
-      "title": "3. User Accounts",
-      "s1": {
-        "title": "3.1 Account Creation",
-        "intro": "To use our Service, you must create an account by providing accurate and complete information. You are responsible for:",
-        "li1": "Maintaining the confidentiality of your account credentials",
-        "li2": "All activities that occur under your account",
-        "li3": "Notifying us immediately of any unauthorized use",
-        "li4": "Ensuring your account information remains current and accurate"
-      },
-      "s2": {
-        "title": "3.2 Account Eligibility",
-        "p": "You must be at least 18 years old to create an account and use our Service. By creating an account, you represent and warrant that you meet this age requirement."
-      },
-      "s3": {
-        "title": "3.3 Account Suspension",
-        "p": "We reserve the right to suspend or terminate accounts that violate these Terms or engage in fraudulent or illegal activities."
-      }
-    },
-    "s4": {
-      "title": "4. Bidding and Auctions",
-      "s1": {
-        "title": "4.1 Bidding Process",
-        "intro": "When participating in auctions:",
-        "li1": "All bids are final and cannot be withdrawn once placed",
-        "li2": "You must have sufficient funds to cover your maximum bid",
-        "li3": "We use a proxy bidding system that automatically bids on your behalf",
-        "li4": "Winning bidders are obligated to complete the purchase"
-      },
-      "s2": {
-        "title": "4.2 Auction Rules",
-        "li1": "Auctions have specific start and end times",
-        "li2": "Bids must meet minimum increments",
-        "li3": "Reserve prices may apply to certain auctions",
-        "li4": "We reserve the right to cancel auctions at our discretion"
-      },
-      "s3": {
-        "title": "4.3 Payment Obligations",
-        "p": "Winning bidders must complete payment within 48 hours of auction close. Failure to pay may result in account suspension and the item being offered to the next highest bidder."
-      }
-    },
-    "s5": {
-      "title": "5. Seller Responsibilities",
-      "intro": "If you list items for auction, you agree to:",
-      "li1": "Provide accurate and complete item descriptions",
-      "li2": "Include clear, high-quality photographs",
-      "li3": "Set appropriate starting prices",
-      "li4": "Ship items promptly after receiving payment",
-      "li5": "Respond to buyer inquiries in a timely manner",
-      "li6": "Comply with all applicable laws and regulations"
-    },
-    "s6": {
-      "title": "6. Prohibited Activities",
-      "intro": "You agree not to:",
-      "li1": "Use the Service for any illegal or unauthorized purpose",
-      "li2": "Interfere with or disrupt the Service or servers",
-      "li3": "Attempt to gain unauthorized access to any part of the Service",
-      "li4": "Create multiple accounts to circumvent restrictions",
-      "li5": "Engage in shill bidding or other fraudulent practices",
-      "li6": "List prohibited items (weapons, illegal substances, etc.)",
-      "li7": "Violate any applicable laws or regulations",
-      "li8": "Harass, abuse, or harm other users"
-    },
-    "s7": {
-      "title": "7. Fees and Payments",
-      "s1": {
-        "title": "7.1 Service Fees",
-        "intro": "We may charge fees for certain services, including:",
-        "li1": "Listing fees for auction items",
-        "li2": "Transaction fees for completed sales",
-        "li3": "Premium features and services"
-      },
-      "s2": {
-        "title": "7.2 Payment Processing",
-        "p": "All payments are processed securely through our payment partners. We accept major credit cards and other approved payment methods."
-      },
-      "s3": {
-        "title": "7.3 Refunds",
-        "p": "Refund policies vary by transaction type and are subject to our discretion and applicable laws."
-      }
-    },
-    "s8": {
-      "title": "8. Intellectual Property",
-      "p1": "The Service and its original content, features, and functionality are owned by BidRoom and are protected by international copyright, trademark, patent, trade secret, and other intellectual property laws.",
-      "p2": "You may not reproduce, distribute, modify, or create derivative works of our content without express written permission."
-    },
-    "s9": {
-      "title": "9. Disclaimers",
-      "p1": "THE SERVICE IS PROVIDED \"AS IS\" AND \"AS AVAILABLE\" WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NON-INFRINGEMENT.",
-      "p2": "We do not guarantee that the Service will be uninterrupted, secure, or error-free, or that any defects will be corrected."
-    },
-    "s10": {
-      "title": "10. Limitation of Liability",
-      "p1": "TO THE MAXIMUM EXTENT PERMITTED BY LAW, BIDROOM SHALL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES, INCLUDING WITHOUT LIMITATION, LOSS OF PROFITS, DATA, USE, GOODWILL, OR OTHER INTANGIBLE LOSSES.",
-      "p2": "Our total liability to you for any damages arising from or related to these Terms or the Service shall not exceed the amount you paid us in the 12 months preceding the claim."
-    },
-    "s11": {
-      "title": "11. Indemnification",
-      "intro": "You agree to defend, indemnify, and hold harmless BidRoom and its officers, directors, employees, and agents from and against any claims, damages, obligations, losses, liabilities, costs, or debt, and expenses (including attorney's fees) arising from:",
-      "li1": "Your use of the Service",
-      "li2": "Your violation of these Terms",
-      "li3": "Your violation of any third-party rights",
-      "li4": "Any content you submit, post, or transmit through the Service"
-    },
-    "s12": {
-      "title": "12. Termination",
-      "p1": "We may terminate or suspend your account and access to the Service immediately, without prior notice or liability, for any reason whatsoever, including without limitation if you breach the Terms.",
-      "p2": "Upon termination, your right to use the Service will cease immediately. All provisions of the Terms which by their nature should survive termination shall survive termination."
-    },
-    "s13": {
-      "title": "13. Governing Law",
-      "p1": "These Terms shall be interpreted and governed by the laws of the State of Delaware, without regard to its conflict of law provisions.",
-      "p2": "Any disputes arising from these Terms or your use of the Service shall be resolved in the courts of Delaware."
-    },
-    "s14": {
-      "title": "14. Changes to Terms",
-      "p1": "We reserve the right to modify or replace these Terms at any time. If a revision is material, we will try to provide at least 30 days notice prior to any new terms taking effect.",
-      "p2": "Your continued use of the Service after any such changes constitutes your acceptance of the new Terms."
-    },
-    "s15": {
-      "title": "15. Contact Information",
-      "intro": "If you have any questions about these Terms and Conditions, please contact us:",
-      "emailLabel": "Email:",
-      "addressLabel": "Address:",
-      "address": "BidRoom Legal Department, 123 Auction Street, Commerce City, CC 12345",
-      "phoneLabel": "Phone:"
-    }
-  },
   "report": {
     "titleListing": "Report Listing",
     "titleUser": "Report User",
@@ -3751,7 +3658,6 @@
     "noActiveListings": "No active listings at the moment.",
     "noEndedListings": "No ended listings yet.",
     "ended": "Ended",
-    "bestOffer": "Best Offer",
     "noOffersYet": "No offers yet",
     "offer": "offer",
     "offers": "offers",
@@ -3762,14 +3668,15 @@
     "follow": "Follow",
     "following": "Following",
     "mute": "Mute notifications",
-    "unmute": "Unmute notifications"
+    "unmute": "Unmute notifications",
+    "offersMode": "Offers"
   },
   "myBids": {
     "filterAll": "All",
     "filterWinning": "Winning",
     "filterOutbid": "Outbid",
     "filterEnded": "Ended",
-    "myBest": "My best",
+    "myBest": "My highest",
     "currentPrice": "Current",
     "bids": "Bids",
     "ends": "Ends",
@@ -3811,17 +3718,17 @@
       "h2": "2. Eligibility",
       "h2p1": "To use the platform, you must be at least 18 years old and have legal capacity to enter into contracts. By creating an account, you declare that you meet these requirements.",
       "h3": "3. The platform",
-      "h3p1": "BidRoom offers two listing formats:",
-      "h3li1": "<strong>Auction (Highest Bid):</strong> buyers place real-time bids. The highest bid at the end of the period wins automatically.",
-      "h3li2": "<strong>Best Offer:</strong> buyers submit offers. The seller chooses their preferred offer before the deadline. The seller is not obliged to accept any offer below the minimum price set.",
-      "h3p2": "BidRoom may also offer <strong>Private Rooms</strong>, an optional feature where the seller invites selected bidders to an additional round after the public auction ends.",
+      "h3p1": "Every BidRoom listing operates in one of two selling modes, chosen by the seller when the listing is published and shown on the item page. The selling mode cannot be changed once the listing is published:",
+      "h3li1": "<strong>Bidding:</strong> by placing a bid, the buyer makes a <strong>binding and irrevocable</strong> commitment to buy the item at the amount bid. When the listing period ends, the sale is awarded automatically to the highest bid placed from a registered account, with no action required from the seller. If the listing has a <strong>Buy Now</strong> price and that price is paid, the listing closes immediately.",
+      "h3li2": "<strong>Offers:</strong> an offer submitted by a buyer is a <strong>contractual proposal</strong> addressed to the seller. The contract of sale is formed only when the seller accepts it, either expressly or automatically under the clause below. Until it is accepted, the buyer may withdraw the offer at any time. The seller may freely reject any offer below the minimum offer price they have set; offers at or above that minimum are subject to the clause below and prevent the listing from being deleted.",
+      "h3p2": "BidRoom may also offer <strong>Private Rooms</strong>, an additional round available only on listings in <strong>Bidding</strong> mode and only where the eligibility conditions are met, in which the seller invites selected bidders after the public round has closed. The winner is always determined automatically by the highest bid; in a Private Room the seller does not select the winner.",
       "h4": "4. Fees and payments",
       "h4p1": "BidRoom charges the seller a commission on the final value of each completed transaction:",
-      "th1": "Format",
+      "th1": "Selling mode",
       "th2": "Commission (seller)",
-      "fmt1": "Auction (without Private Room)",
-      "fmt2": "Auction (with Private Room)",
-      "fmt3": "Best Offer",
+      "fmt1": "Bidding (without Private Room)",
+      "fmt2": "Bidding (with Private Room)",
+      "fmt3": "Offers",
       "h4p2": "A BidRoom service fee is charged to the buyer, added to the final transaction amount. Payments are processed by Stripe and funds are held until the buyer confirms receipt.",
       "h5": "5. Seller obligations",
       "h5li1": "The seller declares they are the legitimate owner of the listed item.",
@@ -3829,12 +3736,12 @@
       "h5li3": "The seller has <strong>5 business days</strong> to ship the item after payment confirmation.",
       "h5li4": "Failure to meet the shipping deadline results in automatic cancellation and a refund to the buyer.",
       "h5li5": "Prohibited items include: live animals, controlled substances, weapons, and any item illegal under Portuguese or EU law.",
-      "h5li6": "<strong>Deleting a listing:</strong> the seller may delete (cancel) a listing that is still a draft, awaiting approval, or active, provided that (a) for <strong>Best Offer</strong>, there is no accepted offer and no pending offer at or above the minimum offer price; (b) for <strong>Highest Bid</strong> auctions, there are no bids; and (c) there is no winner and no active transaction. Below-minimum pending offers are automatically rejected when the listing is deleted. Listings that have already sold or have qualifying bids/offers cannot be deleted unilaterally.",
+      "h5li6": "<strong>Deleting a listing:</strong> the seller may delete (cancel) a listing that is still a draft, awaiting approval, or active, provided that (a) in <strong>Offers</strong> mode, there is no accepted offer and no pending offer at or above the minimum offer price; (b) in <strong>Bidding</strong> mode, there are no bids; and (c) there is no winner and no active transaction. Below-minimum pending offers are automatically rejected when the listing is deleted. Listings that have already sold or have qualifying bids/offers cannot be deleted unilaterally.",
       "h6": "6. Buyer obligations",
-      "h6li1": "<strong>Auction bids</strong> are binding from the moment they are placed and <strong>cannot be withdrawn</strong>. By placing a bid, the buyer commits to pay if they win.",
-      "h6li2": "Payment must be made within <strong>48 hours</strong> of auction close or offer acceptance. Failure to pay within the deadline results in transaction cancellation, a loss of <strong>20 reputation points</strong>, and — if the buyer has a saved payment method — a financial penalty of <strong>€10 to the seller + €20 to BidRoom</strong>. The seller is free to relist the item.",
+      "h6li1": "<strong>Bids</strong> are binding from the moment they are placed and <strong>cannot be withdrawn</strong>. By placing a bid, the buyer commits to pay if they win.",
+      "h6li2": "Payment must be made within <strong>24 hours</strong> of the bid being awarded or the offer being accepted. On listings with the <strong>Private Room</strong> enabled, the deadline is <strong>48 hours</strong>. Failure to pay within the deadline results in transaction cancellation, a loss of <strong>20 reputation points</strong>, and — if the buyer has a saved payment method — a financial penalty of <strong>€10 to the seller + €20 to BidRoom</strong>. The item is then relisted automatically on the same terms; in a Private Room it is offered to the second-highest bidder, who has 24 hours to pay. A third non-payment means permanent account suspension.",
       "h6li3": "The buyer must confirm receipt of the item within the stipulated period.",
-      "h6li4": "<strong>Best Offer — withdrawing an offer:</strong> while an offer is still <strong>pending</strong> (not yet accepted or rejected by the seller), the buyer may withdraw it at any time from the listing page or from My Bets. Once the seller accepts an offer, it becomes a binding sale and can no longer be withdrawn — payment and fulfilment then follow the transaction rules.",
+      "h6li4": "<strong>Offers — withdrawing an offer:</strong> while an offer is still <strong>pending</strong> (not yet accepted or rejected by the seller), the buyer may withdraw it at any time from the listing page or from My Bets. Once the offer is accepted, it becomes a binding sale and can no longer be withdrawn — payment and fulfilment then follow the transaction rules.",
       "h7": "7. Right of withdrawal and returns",
       "h7p1": "BidRoom is a peer-to-peer (C2C) auction platform. In online auctions between private individuals, the right of withdrawal under Decree-Law No. 24/2014 does not apply. When one party is a professional seller (business or trader), the consumer buyer has <strong>14 days</strong> to exercise the right of withdrawal without giving a reason, under applicable law. Returns are handled directly between buyer and seller, with BidRoom mediation in case of dispute.",
       "h8": "8. Identity verification (KYC)",
@@ -3870,7 +3777,9 @@
       "h17li3": "If the buyer has a saved payment method: automatic charge of <strong>€30</strong> — <strong>€10 transferred to the seller</strong> and <strong>€20 retained by BidRoom</strong> as a penalty.",
       "h17li4": "A <strong>2/5 review from BidRoom</strong> is automatically added to the buyer's profile.",
       "h17li5": "On the third payment default, the buyer's account is <strong>permanently closed</strong>.",
-      "h17p2": "The financial penalty applies regardless of any reason given by the buyer. By placing a bid or accepting an offer, the user expressly agrees to these terms."
+      "h17p2": "The financial penalty applies regardless of any reason given by the buyer. By placing a bid or accepting an offer, the user expressly agrees to these terms.",
+      "h3li3": "<strong>Automatic acceptance of offers:</strong> if, when an Offers listing closes, there is <strong>exactly one</strong> pending offer at or above the minimum offer price, that offer is accepted automatically and the contract is formed at that moment; any other pending offers are rejected. The same applies during the listing: the seller cannot reject the last offer that meets the minimum, and rejecting others until only one qualifying offer remains accepts it automatically. Automatic acceptance — like any acceptance — requires the seller to have an active Stripe payments account; if they do not, the listing closes with no sale and the seller is notified. If two or more offers meet the minimum when the listing closes, there is no automatic acceptance and the seller decides which to accept.",
+      "h3li4": "<strong>Equal treatment after the sale:</strong> whichever selling mode applies, the provisions on payment, holding of funds, shipping deadlines, confirmation of receipt, dispute resolution and refunds apply identically."
     },
     "privacy": {
       "eyebrow": "Privacy Policy",
@@ -4064,6 +3973,93 @@
       "confirm": "Got it",
       "viewListing": "View listing",
       "viewTransactions": "Go to transactions"
+    },
+    "state": {
+      "loading": "Loading private room…"
+    },
+    "login": {
+      "title": "Login required",
+      "body": "You need to be logged in to take part in this private auction room.",
+      "sub": "If you are an invited bidder, log in to place your bids.",
+      "cta": "Log in to take part"
+    },
+    "lobby": {
+      "title": "The room has not started yet",
+      "untilStart": "until the room starts",
+      "acceptWindow": "Guests have <strong>15 minutes</strong> to accept. The auction starts automatically afterwards.",
+      "pendingInvitation": "You have a pending invitation.",
+      "accepting": "Accepting…",
+      "accept": "Accept invitation",
+      "accepted": "You accepted your invitation. The auction will start shortly.",
+      "checkEmail": "Check your email for the accept link.",
+      "starting": "Starting…",
+      "startNow": "Start the auction now",
+      "invitedBidders": "Invited bidders"
+    },
+    "product": {
+      "imageAlt": "Image {{n}}",
+      "viewDetails": "View details"
+    },
+    "bid": {
+      "quickBids": "Quick bids",
+      "currentBid": "Current bid",
+      "one": "bid",
+      "many": "bids",
+      "leading": "Leading",
+      "placing": "Placing…",
+      "place": "Bid {{amount}}",
+      "minIncrement": "Minimum increment: {{amount}}",
+      "extendsBy": "Each bid extends the timer by 60s",
+      "closingSoon": "Closing soon — the next bid extends by 60s",
+      "watching": "You are watching this room. Only invited bidders can bid.",
+      "invalidNumber": "Enter a valid amount.",
+      "failed": "Could not place the bid. Please try again.",
+      "tooLow": "Your bid must be at least {{amount}} — the current bid plus the increment.",
+      "success": "Bid of {{amount}} placed."
+    },
+    "activity": {
+      "title": "Activity",
+      "count": "{{count}} bids",
+      "empty": "No bids yet",
+      "emptySub": "Be the first to bid"
+    },
+    "participants": {
+      "title": "Participants ({{count}})",
+      "you": "(You)",
+      "seller": "Seller",
+      "viewHistory": "View the full bid history"
+    },
+    "history": {
+      "title": "Bid history",
+      "total": "{{count}} in total",
+      "latest": "Latest",
+      "empty": "No bids yet — be the first!"
+    },
+    "invitation": {
+      "accepted": "Accepted",
+      "declined": "Declined",
+      "pending": "Pending"
+    },
+    "label": {
+      "you": "You",
+      "guest": "Guest",
+      "user": "User"
+    },
+    "time": {
+      "justNow": "Just now",
+      "minutesAgo": "{{n}}m ago",
+      "hoursAgo": "{{n}}h ago",
+      "daysAgo": "{{n}}d ago"
+    },
+    "errors": {
+      "loadFailed": "Could not load the listing.",
+      "acceptTitle": "Could not accept",
+      "acceptBody": "Could not accept the invitation. Please try the link in your email.",
+      "startTitle": "Could not start",
+      "startBody": "The room could not be started. It may have already started or ended.",
+      "cannotBidTitle": "Cannot bid",
+      "cannotBidNotInvited": "Only bidders invited by the seller can bid. You can still watch the room.",
+      "cannotBidClosed": "Bidding is not available right now. The Private Room may have ended or may not be active yet."
     }
   },
   "trust": {
@@ -4123,7 +4119,7 @@
         "colT3": "Level 3",
         "r1": "Bid in auctions",
         "r1Hint": "All formats",
-        "r2": "Submit offers (Best Offer)",
+        "r2": "Submit offers",
         "r3": "Private Room eligibility",
         "r3Hint": "Reputation ≥ 60 required",
         "r4": "Auctions above €5,000",
@@ -4256,7 +4252,7 @@
         "q3": "What happens to my payment while a dispute is open?",
         "a3": "Funds are held in escrow while the dispute is active. Your account and the buyer's are preventively suspended. The hold is lifted immediately after the decision, whether in your favour (payout) or the buyer's (refund).",
         "q4": "My listing is incorrectly described and I want to withdraw it. Is there a penalty?",
-        "a4": "You can delete a listing with no qualifying bids or offers (Best Offer: none at or above the minimum) with no penalty. Listings with qualifying bids/offers, a winner, or an active transaction cannot be cancelled unilaterally — contact support for exceptional cases."
+        "a4": "You can delete a listing with no qualifying bids or offers (in offers mode: none at or above the minimum) with no penalty. Listings with qualifying bids or offers, a winner, or an active transaction cannot be cancelled unilaterally — contact support for exceptional cases."
       }
     },
     "cta": {
@@ -4466,7 +4462,7 @@
     },
     "bestOfferEnded": {
       "title": "Listing ended",
-      "message": "Your best-offer listing \"{{listingTitle}}\" has ended with {{offerCount}} offer(s). You have 24 hours to review and accept an offer."
+      "message": "Your offers listing \"{{listingTitle}}\" has ended with {{offerCount}} offer(s). You have 24 hours to review them and accept one."
     },
     "listingRemoved": {
       "title": "Listing removed",

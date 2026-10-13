@@ -74,7 +74,9 @@ bidSchema.index({ listing: 1, createdAt: -1 }); // For listing bid history
 bidSchema.index({ bidder: 1, createdAt: -1 }); // For user bid history
 bidSchema.index({ listing: 1, amount: -1 }); // For finding highest bid
 
-// Virtual for bidder display name
+// Virtual for bidder display name. Not serialized into any response — the
+// schema does not enable `toJSON: { virtuals: true }`, and the public payload
+// is built by utils/bidFormat.js, which publishes initials only.
 bidSchema.virtual('bidderName').get(function() {
   if (this.populated('bidder')) {
     return `${this.bidder.firstName} ${this.bidder.lastName}`;

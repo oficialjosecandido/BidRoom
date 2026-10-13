@@ -116,22 +116,22 @@ router.get('/:id/profile', validate(profileParamsSchema), async (req, res) => {
         Transaction.countDocuments({ buyer: oid, status: 'completed' }),
         Follow.countDocuments({ following: oid }),
         Listing.find({ seller: user._id, status: 'active' })
-          .select('_id slug title titlePt titleEn titleFr titleEs images currentPrice startingPrice bidCount endDate auctionFormat saleFormat giveaway.entryCount')
+          .select('_id slug title titlePt titleEn titleFr titleEs images currentPrice startingPrice bidCount endDate sellingMode saleFormat giveaway.entryCount')
           .sort({ endDate: 1 })
           .limit(20)
           .lean(),
         Listing.find({ seller: user._id, status: 'ended' })
-          .select('_id slug title titlePt titleEn titleFr titleEs images currentPrice startingPrice bidCount endDate auctionFormat saleFormat giveaway.entryCount')
+          .select('_id slug title titlePt titleEn titleFr titleEs images currentPrice startingPrice bidCount endDate sellingMode saleFormat giveaway.entryCount')
           .sort({ endDate: -1 })
           .limit(20)
           .lean()
       ]);
 
     const { getOfferStatsForListings } = require('../utils/listingOfferStats');
-    const allForStats = [...activeListings, ...endedListings].filter((l) => l.auctionFormat === 'best-offer');
+    const allForStats = [...activeListings, ...endedListings].filter((l) => l.sellingMode === 'offers');
     const offerStats = await getOfferStatsForListings(allForStats.map((l) => l._id));
     for (const listing of [...activeListings, ...endedListings]) {
-      if (listing.auctionFormat !== 'best-offer') continue;
+      if (listing.sellingMode !== 'offers') continue;
       const stats = offerStats[listing._id.toString()];
       listing.bidCount = stats?.offerCount ?? 0;
       listing.currentPrice = stats?.highestOffer ?? 0;
@@ -142,11 +142,28 @@ router.get('/:id/profile', validate(profileParamsSchema), async (req, res) => {
     const buyerScore = buyerAgg[0] ? Math.round(buyerAgg[0].avg * 10) / 10 : null;
     const buyerReviewCount = buyerAgg[0]?.count ?? 0;
 
+    // Sellers are named; pure buyers are not.
+    //
+    // This route is public and takes any user id, and the bid and offer
+    // histories hand out ids. So while they published full names it did not
+    // matter that the histories showed only initials — one extra request per
+    // bidder turned the initials back into a name, in bulk.
+    //
+    // A seller has to be identifiable: you are deciding whether to send money
+    // to a named person, and the DSA requires the trader to be identified. A
+    // bidder owes no one their name. "Has ever listed" is the line, taken from
+    // the data rather than a flag somebody has to remember to set.
+    const hasListed = activeListings.length > 0
+      || endedListings.length > 0
+      || (await Listing.exists({ seller: user._id })) !== null;
+    const initials = `${(user.firstName || '').charAt(0)}${(user.lastName || '').charAt(0)}`.toUpperCase();
+
     return res.json({
       _id: user._id,
       slug: user.slug || null,
-      firstName: user.firstName,
-      lastName: user.lastName,
+      firstName: hasListed ? user.firstName : (initials || null),
+      lastName: hasListed ? user.lastName : null,
+      isNamed: hasListed,
       memberSince: user.createdAt,
       lastActive: user.lastLogin,
       sellerScore,

@@ -63,7 +63,7 @@ async function createTransactionForListing(listingId, opts = {}) {
 }
 
 /**
- * Create a transaction when a best-offer is accepted.
+ * Create a transaction when a offers is accepted.
  * Idempotent: returns existing transaction if one already exists for the listing.
  * Also ensures listing.winner is set (older accepts may have left it null).
  */
@@ -122,7 +122,7 @@ async function createTransactionForAcceptedOffer(listingId, offerId) {
       }
     );
 
-    logger.info(`✅ Transaction created for best-offer listing ${listingId}: ${transaction._id}`);
+    logger.info(`✅ Transaction created for offers listing ${listingId}: ${transaction._id}`);
     logTransactionCreated(transaction);
     return transaction;
   } catch (error) {

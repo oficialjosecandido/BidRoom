@@ -11,7 +11,7 @@ import { SocketService } from '../../../shared/services/socket.service';
 import { AuthService, AppUser } from '../../../auth/services/auth.service';
 import { PrivateRoomService } from '../../services/private-room.service';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
-import { LanguageService } from '../../../shared/services/language.service';
+import { LanguageService, SUPPORTED_LANGUAGES } from '../../../shared/services/language.service';
 import { API_CONFIG } from '../../../shared/config/api.config';
 import { getLocalizedTitle } from '../../../shared/utils/listing-locale';
 import { PostHogService } from '../../../shared/services/posthog.service';
@@ -23,7 +23,15 @@ type InvitationDisplayStatus = 'pending' | 'accepted' | 'declined';
 
 interface PlatinumBidderInfo {
   id: string;
+  /**
+   * What this viewer is allowed to see of the person: their initials, or their
+   * full name when the viewer is the seller — the API decides which, and only
+   * sends names to the seller of the listing. Never derive initials from this
+   * string; use `initials`.
+   */
   name: string;
+  /** Avatar text. Always initials, whoever is looking. */
+  initials: string;
   latestBid: number;
   bidCount: number;
   /** RSVP from platinumBidderInvitations */
@@ -87,6 +95,13 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
   acceptingInvitation = false;
   selectedImageIndex = 0;
   Math = Math;
+
+  /**
+   * The switcher in the top bar used to hardcode two buttons, PT and EN, on a
+   * page that now has a full translation in four languages — a Spanish or
+   * French invitee had no way to change it from inside the room.
+   */
+  readonly languages = SUPPORTED_LANGUAGES;
 
   get currentLang(): string {
     return this.translate.currentLang || 'pt';
@@ -175,8 +190,9 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
   }
 
   getCurrentUserName(): string {
-    if (!this.currentUser) return 'Guest';
-    return this.currentUser.displayName || this.currentUser.email || 'User';
+    if (!this.currentUser) return this.translate.instant('privateRoomAuction.label.guest');
+    return this.currentUser.displayName || this.currentUser.email
+      || this.translate.instant('privateRoomAuction.label.user');
   }
 
   getCurrentUserInitials(): string {
@@ -199,7 +215,7 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
         this.cdr.detectChanges();
       },
       error: (error) => {
-        this.error = error?.message || 'Failed to load listing';
+        this.error = error?.message || this.translate.instant('privateRoomAuction.errors.loadFailed');
         this.loading = false;
         this.cdr.detectChanges();
       }
@@ -227,13 +243,17 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
     const invitations = this.listing?.platinumBidderStatus || [];
     for (const inv of invitations) {
       const bidderId = inv.bidder._id;
-      const name = [inv.bidder.firstName, inv.bidder.lastName].filter(Boolean).join(' ') || 'Invited Bidder';
+      // firstName/lastName arrive only when the viewer is the seller; everyone
+      // else gets initials, so the label falls back to those.
+      const initials = inv.bidder.initials || '?';
+      const name = [inv.bidder.firstName, inv.bidder.lastName].filter(Boolean).join(' ') || initials;
       const st = inv.status;
       const invitationStatus: InvitationDisplayStatus =
         st === 'declined' ? 'declined' : st === 'accepted' ? 'accepted' : 'pending';
       platinumMap.set(bidderId, {
         id: bidderId,
         name,
+        initials,
         latestBid: 0,
         bidCount: 0,
         invitationStatus
@@ -251,10 +271,13 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
         ? new Date(this.bids.find(x => x.bidderId === bidderId && x.amount === existing.latestBid)?.createdAt || 0).getTime()
         : 0;
       if (bidDate >= existingDate) {
-        const name = b.bidderName || [b.bidderFirstName, b.bidderLastName].filter(Boolean).join(' ') || existing.name;
+        // Identity comes from the invitation, which is the only source that can
+        // give the seller a full name; a bid carries initials and nothing more.
+        // So this loop overlays amounts only, and fills the initials in just for
+        // the case where the invitation list has not loaded them.
         platinumMap.set(bidderId, {
           ...existing,
-          name,
+          initials: existing.initials !== '?' ? existing.initials : (b.bidderInitials || '?'),
           latestBid: b.amount > existing.latestBid ? b.amount : existing.latestBid,
           bidCount: existing.bidCount + 1
           // Keep invitationStatus from platinumBidderStatus only — do not infer from bids:
@@ -288,8 +311,8 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
         this.acceptingInvitation = false;
         Swal.fire({
           icon: 'error',
-          title: 'Could not accept',
-          text: err?.error?.message || 'Failed to accept invitation. Please try the email link.',
+          title: this.translate.instant('privateRoomAuction.errors.acceptTitle'),
+          text: err?.error?.message || this.translate.instant('privateRoomAuction.errors.acceptBody'),
           confirmButtonColor: '#7A4F84'
         });
         this.cdr.detectChanges();
@@ -317,8 +340,8 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
         this.startNowLoading = false;
         Swal.fire({
           icon: 'error',
-          title: 'Could not start',
-          text: 'The room could not be started. It may have already started or ended.',
+          title: this.translate.instant('privateRoomAuction.errors.startTitle'),
+          text: this.translate.instant('privateRoomAuction.errors.startBody'),
           confirmButtonColor: '#7A4F84'
         });
         this.cdr.detectChanges();
@@ -552,7 +575,7 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
       this.translate.instant(`privateRoomAuction.expired.${key}`, params);
 
     const winner = this.getTemporaryWinner();
-    const amount = winner ? this.formatEur(winner.amount) : '';
+    const amount = winner ? this.formatMoney(winner.amount) : '';
     const name = winner?.name ?? '';
     const params = { amount, name: this.escapeHtml(name) };
 
@@ -659,7 +682,7 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
       this.translate.instant(`privateRoomAuction.expired.${key}`, params);
 
     const winner = this.getTemporaryWinner();
-    const winnerAmount = winner ? this.formatEur(winner.amount) : '';
+    const winnerAmount = winner ? this.formatMoney(winner.amount) : '';
     const winnerName = winner?.name ?? '';
     const params = { amount: winnerAmount, name: this.escapeHtml(winnerName) };
 
@@ -852,13 +875,16 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
       if (event.listingId !== this.listingId || !event.bidderId) return;
       const existing = this.platinumBidders.find(b => b.id === event.bidderId);
       if (existing) {
+        // Status only. The name this viewer may see was already decided when the
+        // listing loaded; the broadcast carries initials, so letting it write
+        // `name` would replace the seller's full name with "JC".
         existing.invitationStatus = 'accepted';
-        existing.name = event.bidderName || existing.name;
       } else {
-        const name = event.bidderName || [event.bidderFirstName, event.bidderLastName].filter(Boolean).join(' ') || 'Invited Bidder';
+        const initials = event.bidderInitials || '?';
         this.platinumBidders = [...this.platinumBidders, {
           id: event.bidderId,
-          name,
+          name: initials,
+          initials,
           latestBid: 0,
           bidCount: 0,
           invitationStatus: 'accepted'
@@ -894,11 +920,11 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
   invitationLabel(b: PlatinumBidderInfo): string {
     switch (b.invitationStatus) {
       case 'accepted':
-        return 'Accepted';
+        return this.translate.instant('privateRoomAuction.invitation.accepted');
       case 'declined':
-        return 'Declined';
+        return this.translate.instant('privateRoomAuction.invitation.declined');
       default:
-        return 'Pending';
+        return this.translate.instant('privateRoomAuction.invitation.pending');
     }
   }
 
@@ -922,19 +948,23 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
 
   /** Display name of the listing seller (for the participants panel). */
   get sellerDisplayName(): string {
-    if (!this.listing?.seller) return 'Seller';
+    const fallback = this.translate.instant('privateRoomAuction.participants.seller');
+    if (!this.listing?.seller) return fallback;
     const s = this.listing.seller as { firstName?: string; lastName?: string };
-    return [s.firstName, s.lastName].filter(Boolean).join(' ') || 'Seller';
+    return [s.firstName, s.lastName].filter(Boolean).join(' ') || fallback;
   }
 
-  /** Temporary winner = bidder with the highest bid (by amount). */
+  /**
+   * Temporary winner = bidder with the highest bid (by amount).
+   *
+   * Shown to everyone in the room, so it is initials — the seller learns who
+   * won when the auction ends and they get the winner's details, not while the
+   * other invitees are still bidding against them.
+   */
   getTemporaryWinner(): { name: string; amount: number } | null {
     if (!this.bids.length) return null;
     const highest = this.bids.reduce((best, b) => (b.amount > best.amount ? b : best), this.bids[0]);
-    const name = highest.bidderFirstName && highest.bidderLastName
-      ? `${highest.bidderFirstName} ${highest.bidderLastName}`
-      : (highest.bidderName || 'Bidder');
-    return { name, amount: highest.amount };
+    return { name: this.getBidderLabel(highest), amount: highest.amount };
   }
 
   /** URL to the listing page (for the header link). */
@@ -965,12 +995,12 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
     if (!canBid) {
       Swal.fire({
         icon: 'info',
-        title: 'Cannot place bid',
+        title: this.translate.instant('privateRoomAuction.errors.cannotBidTitle'),
         text: !this.isPlatinumBidder
-          ? 'Only invited bidders (by the seller) can place bids. You can watch the room.'
+          ? this.translate.instant('privateRoomAuction.errors.cannotBidNotInvited')
           : this.countdown <= 0
             ? this.translate.instant('privateRoomAuction.expired.bodyConfirming')
-            : 'Bidding is not currently available. The Private Room may have ended or is not yet active.',
+            : this.translate.instant('privateRoomAuction.errors.cannotBidClosed'),
         confirmButtonColor: '#7A4F84'
       });
       return;
@@ -983,11 +1013,13 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
     if (trimmed !== '') {
       const parsed = parseFloat(trimmed.replace(/[^0-9.]/g, ''));
       if (isNaN(parsed)) {
-        this.bidInputError = 'Please enter a valid number.';
+        this.bidInputError = this.translate.instant('privateRoomAuction.bid.invalidNumber');
         return;
       }
       if (parsed < minBid) {
-        this.bidInputError = `Your bid must be at least ${this.formatEur(minBid)} (current bid + increment).`;
+        this.bidInputError = this.translate.instant('privateRoomAuction.bid.tooLow', {
+          amount: this.formatMoney(minBid)
+        });
         return;
       }
       amount = parsed;
@@ -1016,7 +1048,9 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
           toast: true,
           position: 'top-end',
           icon: 'success',
-          title: `Bid of ${this.formatEur(amount)} placed successfully!`,
+          title: this.translate.instant('privateRoomAuction.bid.success', {
+            amount: this.formatMoney(amount)
+          }),
           showConfirmButton: false,
           timer: 3000,
           timerProgressBar: true
@@ -1025,17 +1059,25 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
       },
       error: (error) => {
         this.isPlacingBid = false;
-        this.bidInputError = error?.error?.message || error?.message || 'Failed to place bid. Please try again.';
+        this.bidInputError = error?.error?.message || error?.message
+          || this.translate.instant('privateRoomAuction.bid.failed');
         this.cdr.detectChanges();
       }
     });
   }
 
-  getBidderName(bidder: Bid): string {
-    if (bidder.bidderFirstName && bidder.bidderLastName) {
-      return `${bidder.bidderFirstName} ${bidder.bidderLastName}`;
+  /**
+   * How a bid is labelled in the activity feed and history.
+   *
+   * Initials: the bid history is the same payload for every viewer, and in a
+   * private room the other invitees are the competition. "You" for your own
+   * rows, which viewerBidderId already tells us.
+   */
+  getBidderLabel(bid: Bid): string {
+    if (this.viewerBidderId && bid.bidderId === this.viewerBidderId) {
+      return this.translate.instant('privateRoomAuction.label.you');
     }
-    return bidder.bidderName || 'Guest Bidder';
+    return bid.bidderInitials || this.translate.instant('privateRoomAuction.label.guest');
   }
 
   getInitial(name: string): string {
@@ -1053,12 +1095,12 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
     const diffMs = now.getTime() - date.getTime();
     const diffMins = Math.floor(diffMs / 60000);
     
-    if (diffMins < 1) return 'Just now';
-    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffMins < 1) return this.translate.instant('privateRoomAuction.time.justNow');
+    if (diffMins < 60) return this.translate.instant('privateRoomAuction.time.minutesAgo', { n: diffMins });
     const diffHours = Math.floor(diffMins / 60);
-    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffHours < 24) return this.translate.instant('privateRoomAuction.time.hoursAgo', { n: diffHours });
     const diffDays = Math.floor(diffHours / 24);
-    return `${diffDays}d ago`;
+    return this.translate.instant('privateRoomAuction.time.daysAgo', { n: diffDays });
   }
 
   navigateToLogin(): void {
@@ -1068,13 +1110,20 @@ export class PrivateRoomAuctionComponent implements OnInit, OnDestroy {
 
   logout(): void {
     this.authService.logout().subscribe({
-      next: () => this.router.navigate(['/landing']),
-      error: () => this.router.navigate(['/landing'])
+      next: () => this.router.navigate(['/']),
+      error: () => this.router.navigate(['/'])
     });
   }
 
-  private formatEur(amount: number): string {
-    return new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR' }).format(amount);
+  /**
+   * Money, in whatever currency the viewer picked. This used to be `formatEur`,
+   * hardcoded to `Intl.NumberFormat('pt-PT', … 'EUR')`, so a viewer reading the
+   * page in French with the display currency set to GBP still got "1 050,00 €"
+   * here while the pipe-rendered figures beside it showed pounds. Same source as
+   * the `displayPrice` pipe, so the two can no longer disagree.
+   */
+  private formatMoney(amount: number): string {
+    return this.currencyService.format(amount);
   }
 
   private escapeHtml(text: string): string {

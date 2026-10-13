@@ -6,6 +6,13 @@
  * every field added to the schema became public without anyone deciding to
  * publish it. If you add a field to a serializer, this test fails and you have
  * to come here and say so on purpose.
+ *
+ * Two rules are asserted beyond the key list: no payload contains an email
+ * address, and none contains a person's name. Both serializers feed
+ * unauthenticated endpoints and a socket room anyone watching a listing can
+ * join, so a bid history used to be a bulk export of named people with money.
+ * Initials are what ships; the name is added back explicitly, in the one route
+ * where the seller picks a winner (routes/bids.js).
  */
 const { formatBidPublic, bidderKey } = require('../src/utils/bidFormat');
 const { formatOfferForSocket } = require('../src/utils/offerFormat');
@@ -62,12 +69,9 @@ describe('formatBidPublic', () => {
       '_id',
       'amount',
       'bidType',
-      'bidderFirstName',
       'bidderId',
       'bidderInitials',
       'bidderKey',
-      'bidderLastName',
-      'bidderName',
       'bidderVerified',
       'buyerReviewCount',
       'buyerScore',
@@ -93,9 +97,19 @@ describe('formatBidPublic', () => {
     }
   });
 
-  it('does not build a guest display name out of their email local part', () => {
+  it('never emits the bidder\'s name, only their initials', () => {
+    const out = formatBidPublic(sensitiveBid());
+    expect(out).not.toHaveProperty('bidderName');
+    expect(out).not.toHaveProperty('bidderFirstName');
+    expect(out).not.toHaveProperty('bidderLastName');
+    expect(out.bidderInitials).toBe('AS');
+    expect(allStrings(out)).not.toContain('Ana');
+    expect(allStrings(out)).not.toContain('Silva');
+    expect(allStrings(out)).not.toContain('Ana Silva');
+  });
+
+  it('gives a guest initials, not a name built out of their email local part', () => {
     const out = formatBidPublic(sensitiveBid({ bidder: null }));
-    expect(out.bidderName).toBe('Guest Bidder');
     expect(out.bidderInitials).toBe('G');
     expect(out.bidderId).toBeNull();
     expect(out.isAuthenticated).toBe(false);
@@ -105,7 +119,6 @@ describe('formatBidPublic', () => {
     const out = formatBidPublic(sensitiveBid(), { buyerTrustTier: 3, buyerScore: 4.5, buyerReviewCount: 8 });
     expect(out).toMatchObject({
       amount: 250,
-      bidderName: 'Ana Silva',
       bidderInitials: 'AS',
       bidderVerified: true,
       reputationScore: 72,
@@ -186,7 +199,6 @@ describe('formatOfferForSocket', () => {
       'offerer',
       'offererInitials',
       'offererKey',
-      'offererName',
       'offererTier',
       'offererVerified',
       'respondedAt',
@@ -196,9 +208,17 @@ describe('formatOfferForSocket', () => {
     ]);
   });
 
-  it('reduces the nested offerer to name and id, with no email', () => {
+  it('reduces the nested offerer to an id, with no name and no email', () => {
     const out = formatOfferForSocket(sensitiveOffer());
-    expect(Object.keys(out.offerer).sort()).toEqual(['_id', 'firstName', 'lastName']);
+    expect(Object.keys(out.offerer).sort()).toEqual(['_id']);
+  });
+
+  it('never emits the offerer\'s name, only their initials', () => {
+    const out = formatOfferForSocket(sensitiveOffer());
+    expect(out).not.toHaveProperty('offererName');
+    expect(out.offererInitials).toBe('BC');
+    expect(allStrings(out)).not.toContain('Bruno');
+    expect(allStrings(out)).not.toContain('Costa');
   });
 
   it('never emits an email address, for a registered offerer or a guest', () => {
@@ -208,9 +228,8 @@ describe('formatOfferForSocket', () => {
     }
   });
 
-  it('does not build a guest display name out of their email local part', () => {
+  it('gives a guest initials, not a name built out of their email local part', () => {
     const out = formatOfferForSocket(sensitiveOffer({ offerer: null }));
-    expect(out.offererName).toBe('Guest');
     expect(out.offererInitials).toBe('G');
     expect(out.offerer).toBeNull();
     expect(out.offererKey).toEqual(expect.any(String));

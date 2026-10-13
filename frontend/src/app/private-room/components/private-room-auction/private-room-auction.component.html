@@ -17,8 +17,9 @@
 
     <div class="pr-topbar__right">
       <div class="pr-topbar__lang">
-        <button type="button" class="pr-topbar__lang-btn" [class.pr-topbar__lang-btn--on]="currentLang === 'pt'" (click)="switchLanguage('pt')">PT</button>
-        <button type="button" class="pr-topbar__lang-btn" [class.pr-topbar__lang-btn--on]="currentLang === 'en'" (click)="switchLanguage('en')">EN</button>
+        @for (code of languages; track code) {
+          <button type="button" class="pr-topbar__lang-btn" [class.pr-topbar__lang-btn--on]="currentLang === code" (click)="switchLanguage(code)">{{ code | uppercase }}</button>
+        }
       </div>
 
       @if (listing?.privateRoomStatus !== 'ended') {
@@ -47,7 +48,7 @@
         <div class="pr-topbar__user">
           <div class="pr-topbar__avatar"><span>{{ getCurrentUserInitials() }}</span></div>
           <span class="pr-topbar__user-name">{{ getCurrentUserName() }}</span>
-          <button class="pr-topbar__logout" (click)="logout()" title="Logout">&times;</button>
+          <button class="pr-topbar__logout" (click)="logout()" [title]="'dashboard.sidebar.logout' | translate">&times;</button>
         </div>
       }
     </div>
@@ -57,7 +58,7 @@
   @if (loading) {
     <div class="pr-state">
       <div class="pr-spinner"></div>
-      <p>Loading private room&hellip;</p>
+      <p>{{ 'privateRoomAuction.state.loading' | translate }}</p>
     </div>
   }
 
@@ -70,10 +71,10 @@
   @if (!isAuthenticated && (loading || !listing)) {
     <div class="pr-state">
       <div class="pr-login-card">
-        <h3>Login Required</h3>
-        <p>You need to be logged in to participate in this private auction room.</p>
-        <p class="pr-login-card__sub">If you're an invited bidder, log in to place your bids.</p>
-        <button class="pr-btn pr-btn--primary" (click)="navigateToLogin()">Log In to Participate</button>
+        <h3>{{ 'privateRoomAuction.login.title' | translate }}</h3>
+        <p>{{ 'privateRoomAuction.login.body' | translate }}</p>
+        <p class="pr-login-card__sub">{{ 'privateRoomAuction.login.sub' | translate }}</p>
+        <button class="pr-btn pr-btn--primary" (click)="navigateToLogin()">{{ 'privateRoomAuction.login.cta' | translate }}</button>
       </div>
     </div>
   }
@@ -111,28 +112,28 @@
   @if (listing && !loading && !error && listing.privateRoomStatus === 'invited') {
     <div class="pr-invited">
       <div class="pr-invited__card">
-        <h2>Room not started yet</h2>
+        <h2>{{ 'privateRoomAuction.lobby.title' | translate }}</h2>
         <div class="pr-invited__timer" [class.pr-invited__timer--warn]="countdown <= 300" [class.pr-invited__timer--critical]="countdown <= 60">
           <span class="pr-invited__timer-val">{{ formatCountdown() }}</span>
-          <span class="pr-invited__timer-lbl">until room starts</span>
+          <span class="pr-invited__timer-lbl">{{ 'privateRoomAuction.lobby.untilStart' | translate }}</span>
         </div>
-        <p>Invitees have <strong>15 minutes</strong> to accept. The auction starts automatically after.</p>
+        <p [innerHTML]="'privateRoomAuction.lobby.acceptWindow' | translate"></p>
 
         @if (isAuthenticated && invitationPending) {
-          <p class="pr-invited__sub">You have a pending invitation.</p>
+          <p class="pr-invited__sub">{{ 'privateRoomAuction.lobby.pendingInvitation' | translate }}</p>
           <button class="pr-btn pr-btn--gold" (click)="acceptInvitationInPage()" [disabled]="acceptingInvitation">
-            {{ acceptingInvitation ? 'Accepting…' : 'Accept Invitation' }}
+            {{ (acceptingInvitation ? 'privateRoomAuction.lobby.accepting' : 'privateRoomAuction.lobby.accept') | translate }}
           </button>
         } @else if (isAuthenticated && isInvitedBidder) {
-          <p class="pr-invited__sub">You accepted your invitation. The auction will start shortly.</p>
+          <p class="pr-invited__sub">{{ 'privateRoomAuction.lobby.accepted' | translate }}</p>
         } @else {
-          <p class="pr-invited__sub">Check your email for the accept link.</p>
+          <p class="pr-invited__sub">{{ 'privateRoomAuction.lobby.checkEmail' | translate }}</p>
         }
 
         @if (isSeller) {
           <div class="pr-invited__actions">
             <button class="pr-btn pr-btn--gold" (click)="startRoomNow()" [disabled]="startNowLoading">
-              {{ startNowLoading ? 'Starting…' : 'Start auction now' }}
+              {{ (startNowLoading ? 'privateRoomAuction.lobby.starting' : 'privateRoomAuction.lobby.startNow') | translate }}
             </button>
           </div>
         }
@@ -141,11 +142,11 @@
       <!-- Invited bidders list -->
       @if (platinumBidders.length > 0) {
         <div class="pr-participants pr-participants--lobby">
-          <h3 class="pr-participants__title">Invited Bidders</h3>
+          <h3 class="pr-participants__title">{{ 'privateRoomAuction.lobby.invitedBidders' | translate }}</h3>
           <div class="pr-participants__list">
             @for (bidder of platinumBidders; track bidder) {
               <div class="pr-participant" [class.pr-participant--accepted]="bidder.invitationStatus === 'accepted'" [class.pr-participant--declined]="bidder.invitationStatus === 'declined'">
-                <div class="pr-participant__avatar"><span>{{ getInitial(bidder.name) }}</span></div>
+                <div class="pr-participant__avatar"><span>{{ bidder.initials }}</span></div>
                 <div class="pr-participant__info">
                   <span class="pr-participant__name">{{ bidder.name }}</span>
                   <span class="pr-participant__status pr-participant__status--{{ bidder.invitationStatus }}">{{ invitationLabel(bidder) }}</span>
@@ -175,7 +176,7 @@
                 <div class="pr-product__thumbs">
                   @for (img of listing.images; track img; let i = $index) {
                     <button class="pr-product__thumb" [class.pr-product__thumb--active]="i === selectedImageIndex" (click)="selectedImageIndex = i">
-                      <img [src]="img" [alt]="'Image ' + (i + 1)" />
+                      <img [src]="img" [alt]="'privateRoomAuction.product.imageAlt' | translate: { n: i + 1 }" />
                     </button>
                   }
                 </div>
@@ -183,9 +184,9 @@
             </div>
           }
           <div class="pr-product__details">
-            <h2 class="pr-product__title">{{ listing.title }}</h2>
+            <h2 class="pr-product__title">{{ localizedListingTitle }}</h2>
             @if (listing.slug) {
-              <a [href]="getListingPageUrl()" class="pr-product__link" target="_blank" rel="noopener noreferrer">View Details &rarr;</a>
+              <a [href]="getListingPageUrl()" class="pr-product__link" target="_blank" rel="noopener noreferrer">{{ 'privateRoomAuction.product.viewDetails' | translate }} &rarr;</a>
             }
           </div>
         </div>
@@ -193,16 +194,16 @@
         <!-- Quick Bids -->
         @if (isInvitedBidder && listing) {
           <div class="pr-quickbids">
-            <h4 class="pr-quickbids__heading">Quick bids</h4>
+            <h4 class="pr-quickbids__heading">{{ 'privateRoomAuction.bid.quickBids' | translate }}</h4>
             <div class="pr-quickbids__grid">
               <button class="pr-quickbid" (click)="customBidAmount = ''; placeBid()" [disabled]="isPlacingBid">
-                ${{ getMinBid() | number:'1.2-2' }}
+                {{ getMinBid() | displayPrice }}
               </button>
               <button class="pr-quickbid" (click)="customBidAmount = '' + (getMinBid() + (listing.bidIncrement || 1)); placeBid()" [disabled]="isPlacingBid">
-                ${{ getMinBid() + (listing.bidIncrement || 1) | number:'1.2-2' }}
+                {{ getMinBid() + (listing.bidIncrement || 1) | displayPrice }}
               </button>
               <button class="pr-quickbid" (click)="customBidAmount = '' + (getMinBid() + 2 * (listing.bidIncrement || 1)); placeBid()" [disabled]="isPlacingBid">
-                ${{ getMinBid() + 2 * (listing.bidIncrement || 1) | number:'1.2-2' }}
+                {{ getMinBid() + 2 * (listing.bidIncrement || 1) | displayPrice }}
               </button>
             </div>
           </div>
@@ -227,20 +228,20 @@
               </defs>
             </svg>
             <div class="pr-bid-hero__inner">
-              <span class="pr-bid-hero__label">Current Bid</span>
+              <span class="pr-bid-hero__label">{{ 'privateRoomAuction.bid.currentBid' | translate }}</span>
               <span class="pr-bid-hero__amount" [class.pr-bid-hero__amount--pulse]="countdown <= 30">
                 {{ listing.currentPrice | displayPrice }}
               </span>
               @if (currencyService.displayCurrency() !== 'EUR' && currencyService.ratesAvailable()) {
                 <span class="pr-bid-hero__disclaimer">{{ 'CURRENCY.DISCLAIMER' | translate }}</span>
               }
-              <span class="pr-bid-hero__count">{{ listing.bidCount }} {{ listing.bidCount === 1 ? 'bid' : 'bids' }}</span>
+              <span class="pr-bid-hero__count">{{ listing.bidCount }} {{ (listing.bidCount === 1 ? 'privateRoomAuction.bid.one' : 'privateRoomAuction.bid.many') | translate }}</span>
             </div>
           </div>
 
           @if (getTemporaryWinner(); as winner) {
             <div class="pr-bid-hero__leader">
-              <span class="pr-bid-hero__leader-label">Leading</span>
+              <span class="pr-bid-hero__leader-label">{{ 'privateRoomAuction.bid.leading' | translate }}</span>
               <span class="pr-bid-hero__leader-name">{{ winner.name }}</span>
             </div>
           }
@@ -250,12 +251,15 @@
         @if (isInvitedBidder) {
           <div class="pr-bid-cta">
             <div class="pr-bid-cta__input-row">
+              <!-- The amount is typed and submitted in euros, whatever the display
+                   currency is, so the field is marked € and never converted. -->
+              <span class="pr-bid-cta__currency" aria-hidden="true">&euro;</span>
               <input
                 type="text"
                 class="pr-bid-cta__input"
                 [(ngModel)]="customBidAmount"
                 (ngModelChange)="bidInputError = null"
-                placeholder="{{ getMinBid() | number:'1.2-2' }}"
+                [placeholder]="'' + getMinBid()"
                 inputmode="decimal"
                 autocomplete="off"
               />
@@ -264,9 +268,12 @@
               <p class="pr-bid-cta__error">{{ bidInputError }}</p>
             }
             <button class="pr-btn pr-btn--gold pr-btn--lg" (click)="placeBid()" [disabled]="isPlacingBid || !isBiddingOpen">
-              @if (isPlacingBid) { Placing… } @else { Place Bid ${{ (customBidAmount ? +customBidAmount : getMinBid()) | number:'1.2-2' }} }
+              @if (isPlacingBid) { {{ 'privateRoomAuction.bid.placing' | translate }} }
+              @else { {{ 'privateRoomAuction.bid.place' | translate: { amount: ((customBidAmount ? +customBidAmount : getMinBid()) | displayPrice) } }} }
             </button>
-            <p class="pr-bid-cta__hint">Min increment: ${{ listing.bidIncrement || 1 | number:'1.2-2' }}&nbsp;&middot;&nbsp;Each bid extends by 60s</p>
+            <p class="pr-bid-cta__hint">
+              {{ 'privateRoomAuction.bid.minIncrement' | translate: { amount: ((listing.bidIncrement || 1) | displayPrice) } }}&nbsp;&middot;&nbsp;{{ 'privateRoomAuction.bid.extendsBy' | translate }}
+            </p>
             @if (countdown <= 0 && listing.privateRoomStatus === 'active') {
               <p class="pr-bid-cta__expired">{{ 'privateRoomAuction.expired.bodyConfirming' | translate }}</p>
             }
@@ -275,27 +282,27 @@
 
         @if (!isAuthenticated && listing.privateRoomStatus === 'active') {
           <div class="pr-bid-cta">
-            <button class="pr-btn pr-btn--primary" (click)="navigateToLogin()">Log In to Participate</button>
+            <button class="pr-btn pr-btn--primary" (click)="navigateToLogin()">{{ 'privateRoomAuction.login.cta' | translate }}</button>
           </div>
         }
 
         @if (isAuthenticated && invitationPending && listing.privateRoomStatus === 'active') {
           <div class="pr-bid-cta">
-            <p>You have a pending invitation.</p>
+            <p>{{ 'privateRoomAuction.lobby.pendingInvitation' | translate }}</p>
             <button class="pr-btn pr-btn--gold" (click)="acceptInvitationInPage()" [disabled]="acceptingInvitation">
-              {{ acceptingInvitation ? 'Accepting…' : 'Accept Invitation' }}
+              {{ (acceptingInvitation ? 'privateRoomAuction.lobby.accepting' : 'privateRoomAuction.lobby.accept') | translate }}
             </button>
           </div>
         }
 
         @if (isAuthenticated && !isInvitedBidder && !isSeller && !invitationPending && listing.privateRoomStatus === 'active') {
           <div class="pr-viewer-notice">
-            <p>You're watching this room. Only invited bidders can place bids.</p>
+            <p>{{ 'privateRoomAuction.bid.watching' | translate }}</p>
           </div>
         }
 
         @if (countdown <= 30 && isInvitedBidder) {
-          <div class="pr-soft-close">Closing soon &mdash; next bid extends by 60s</div>
+          <div class="pr-soft-close">{{ 'privateRoomAuction.bid.closingSoon' | translate }}</div>
         }
       </section>
 
@@ -304,27 +311,27 @@
         <!-- Live Activity Feed -->
         <div class="pr-activity">
           <div class="pr-activity__header">
-            <h3 class="pr-activity__title">Activity</h3>
-            <span class="pr-activity__count">{{ bids.length }} bids</span>
+            <h3 class="pr-activity__title">{{ 'privateRoomAuction.activity.title' | translate }}</h3>
+            <span class="pr-activity__count">{{ 'privateRoomAuction.activity.count' | translate: { count: bids.length } }}</span>
           </div>
           <div class="pr-activity__feed">
             @for (bid of bids.slice(0, 10); track bid; let i = $index) {
               <div class="pr-activity__item" [class.pr-activity__item--latest]="i === 0">
-                <div class="pr-activity__avatar"><span>{{ getInitial(getBidderName(bid)) }}</span></div>
+                <div class="pr-activity__avatar"><span>{{ bid.bidderInitials || 'G' }}</span></div>
                 <div class="pr-activity__details">
-                  <span class="pr-activity__name">{{ getBidderName(bid) }}</span>
+                  <span class="pr-activity__name">{{ getBidderLabel(bid) }}</span>
                   <span class="pr-activity__time">{{ formatBidTime(bid.createdAt) }}</span>
                 </div>
-                <span class="pr-activity__amount">${{ bid.amount | number:'1.2-2' }}</span>
+                <span class="pr-activity__amount">{{ bid.amount | displayPrice }}</span>
                 @if (i === 0) {
-                  <span class="pr-activity__badge">Leading</span>
+                  <span class="pr-activity__badge">{{ 'privateRoomAuction.bid.leading' | translate }}</span>
                 }
               </div>
             }
             @if (bids.length === 0) {
               <div class="pr-activity__empty">
-                <p>No bids yet</p>
-                <p class="pr-activity__empty-sub">Be the first to place a bid</p>
+                <p>{{ 'privateRoomAuction.activity.empty' | translate }}</p>
+                <p class="pr-activity__empty-sub">{{ 'privateRoomAuction.activity.emptySub' | translate }}</p>
               </div>
             }
           </div>
@@ -333,7 +340,7 @@
         <!-- Participants -->
         @if (platinumBidders.length > 0) {
           <div class="pr-participants">
-            <h3 class="pr-participants__title">Participants ({{ platinumBidders.length }})</h3>
+            <h3 class="pr-participants__title">{{ 'privateRoomAuction.participants.title' | translate: { count: platinumBidders.length } }}</h3>
             <div class="pr-participants__list">
               <!-- Seller row — always at the top -->
               @if (listing.seller) {
@@ -344,25 +351,25 @@
                   <div class="pr-participant__info">
                     <span class="pr-participant__name">
                       {{ sellerDisplayName }}
-                      @if (isSeller) { <em class="pr-participant__you">(You)</em> }
+                      @if (isSeller) { <em class="pr-participant__you">{{ 'privateRoomAuction.participants.you' | translate }}</em> }
                     </span>
-                    <span class="pr-participant__role-badge">Seller</span>
+                    <span class="pr-participant__role-badge">{{ 'privateRoomAuction.participants.seller' | translate }}</span>
                   </div>
                 </div>
               }
               @for (bidder of platinumBidders; track bidder) {
                 <div class="pr-participant" [class.pr-participant--accepted]="bidder.invitationStatus === 'accepted'">
-                  <div class="pr-participant__avatar"><span>{{ getInitial(bidder.name) }}</span></div>
+                  <div class="pr-participant__avatar"><span>{{ bidder.initials }}</span></div>
                   <div class="pr-participant__info">
                     <span class="pr-participant__name">{{ bidder.name }}</span>
                     @if (bidder.bidCount > 0) {
-                      <span class="pr-participant__bid">${{ bidder.latestBid | number:'1.2-2' }}</span>
+                      <span class="pr-participant__bid">{{ bidder.latestBid | displayPrice }}</span>
                     } @else {
                       <span class="pr-participant__status pr-participant__status--{{ bidder.invitationStatus }}">{{ invitationLabel(bidder) }}</span>
                     }
                   </div>
                   @if (bidder.bidCount > 0) {
-                    <span class="pr-participant__count">{{ bidder.bidCount }} {{ bidder.bidCount === 1 ? 'bid' : 'bids' }}</span>
+                    <span class="pr-participant__count">{{ bidder.bidCount }} {{ (bidder.bidCount === 1 ? 'privateRoomAuction.bid.one' : 'privateRoomAuction.bid.many') | translate }}</span>
                   }
                 </div>
               }
@@ -372,7 +379,7 @@
 
         <!-- Seller view bid history link -->
         @if (isSeller) {
-          <button type="button" class="pr-btn pr-btn--ghost" (click)="onSellerStartAuction()">View full bid history</button>
+          <button type="button" class="pr-btn pr-btn--ghost" (click)="onSellerStartAuction()">{{ 'privateRoomAuction.participants.viewHistory' | translate }}</button>
         }
       </section>
 
@@ -381,8 +388,8 @@
     <!-- Bid History (scroll target) -->
     <div id="bid-history-section" class="pr-history">
       <div class="pr-history__header">
-        <h3>Bid History</h3>
-        <span class="pr-history__count">{{ bids.length }} total</span>
+        <h3>{{ 'privateRoomAuction.history.title' | translate }}</h3>
+        <span class="pr-history__count">{{ 'privateRoomAuction.history.total' | translate: { count: bids.length } }}</span>
       </div>
       <div class="pr-history__list">
         @for (bid of bids.slice(0, 10); track bid; let i = $index) {
@@ -391,19 +398,19 @@
               @if (i < 3) {
                 <div class="pr-history__rank">#{{ i + 1 }}</div>
               }
-              <span class="pr-history__name">{{ getBidderName(bid) }}</span>
+              <span class="pr-history__name">{{ getBidderLabel(bid) }}</span>
               @if (i === 0) {
-                <span class="pr-history__badge">Latest</span>
+                <span class="pr-history__badge">{{ 'privateRoomAuction.history.latest' | translate }}</span>
               }
             </div>
             <div class="pr-history__right">
-              <span class="pr-history__amount">${{ bid.amount | number:'1.2-2' }}</span>
+              <span class="pr-history__amount">{{ bid.amount | displayPrice }}</span>
               <span class="pr-history__time">{{ formatBidTime(bid.createdAt) }}</span>
             </div>
           </div>
         }
         @if (bids.length === 0) {
-          <div class="pr-history__empty">No bids yet &mdash; be the first!</div>
+          <div class="pr-history__empty">{{ 'privateRoomAuction.history.empty' | translate }}</div>
         }
       </div>
     </div>

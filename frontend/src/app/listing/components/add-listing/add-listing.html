@@ -131,54 +131,14 @@
       <div class="err-banner">{{ errorMessage }}</div>
     }
 
-    <!-- ── STEP 1: Format ─────────────────────────────────────────────────── -->
-    <div class="step-panel" [class.active]="currentStep === 1">
+    <!-- ── STEP 1: Details ────────────────────────────────────────────────── -->
+    <!-- The wizard used to open on a choice between two format cards, before the
+         seller had so much as named the item. That choice is now one toggle on
+         the pricing step, where the thing it decides — what the price means — is
+         actually in front of them. -->
+    <div class="step-panel" [class.active]="currentStep === STEP.details">
       <div class="section">
-        <div class="section-title">{{ 'addListing.step1.section' | translate }}</div>
-
-        <div class="format-selector">
-          <label class="format-card" [class.selected]="listingForm.get('listingFormat')?.value === 'best-offer'">
-            <input type="radio" formControlName="listingFormat" value="best-offer" style="display:none">
-            <div class="format-check">✓</div>
-            <div class="format-card-icon">🤝</div>
-            <div class="format-card-title">{{ 'addListing.formatBestOffer' | translate }}</div>
-            <div class="format-card-desc">{{ 'addListing.formatBestOfferDesc' | translate }}</div>
-            <div class="format-commission">{{ 'addListing.commissionStandard' | translate }}</div>
-          </label>
-
-          <label class="format-card" [class.selected]="listingForm.get('listingFormat')?.value === 'auction'">
-            <input type="radio" formControlName="listingFormat" value="auction" style="display:none">
-            <div class="format-check">✓</div>
-            <div class="format-card-icon">🔨</div>
-            <div class="format-card-title">{{ 'addListing.formatAuction' | translate }}</div>
-            <div class="format-card-desc">{{ 'addListing.formatAuctionDesc' | translate }}</div>
-            <div class="format-commission">{{ 'addListing.commissionStandard' | translate }}</div>
-          </label>
-        </div>
-
-        <!-- Hidden for guests: the room is a live negotiation the seller has to be
-             signed in to attend, and the backend forces it off for them anyway. -->
-        @if (!isGuest && listingForm.get('listingFormat')?.value === 'auction') {
-          <div class="toggle-section">
-            <div class="toggle-row">
-              <div class="toggle-info">
-                <div class="toggle-title">⚡ {{ 'addListing.enablePrivateRoom' | translate }}</div>
-                <div class="toggle-desc">{{ 'addListing.privateRoomHint' | translate }}</div>
-              </div>
-              <label class="toggle">
-                <input type="checkbox" formControlName="allowPrivateRoom">
-                <span class="toggle-slider"></span>
-              </label>
-            </div>
-          </div>
-        }
-      </div>
-    </div>
-
-    <!-- ── STEP 2: Details ────────────────────────────────────────────────── -->
-    <div class="step-panel" [class.active]="currentStep === 2">
-      <div class="section">
-        <div class="section-title">{{ 'addListing.step2.section' | translate }}</div>
+        <div class="section-title">{{ 'addListing.details.section' | translate }}</div>
 
         <!-- Language tabs for title + description -->
         <div class="lang-tabs">
@@ -426,8 +386,8 @@
       </div>
     </div>
 
-    <!-- ── STEP 3: Photos ─────────────────────────────────────────────────── -->
-    <div class="step-panel" [class.active]="currentStep === 3">
+    <!-- ── STEP 2: Photos ─────────────────────────────────────────────────── -->
+    <div class="step-panel" [class.active]="currentStep === STEP.photos">
 
       <!-- Photo authenticity guide — only shown when subcategory has a guide -->
       @if (photoGuide; as guide) {
@@ -475,7 +435,7 @@
       }
 
       <div class="section">
-        <div class="section-title">{{ 'addListing.step3.section' | translate }}</div>
+        <div class="section-title">{{ 'addListing.photos.section' | translate }}</div>
 
         <div class="drop-zone" [class.has-files]="uploadedFiles.length > 0"
              (dragover)="onDragOver($event)" (drop)="onFilesDropped($event)"
@@ -528,126 +488,151 @@
       </div>
     </div>
 
-    <!-- ── STEP 4: Price ──────────────────────────────────────────────────── -->
-    <div class="step-panel" [class.active]="currentStep === 4">
+    <!-- ── STEP 3: Price ──────────────────────────────────────────────────── -->
+    <div class="step-panel" [class.active]="currentStep === STEP.pricing">
 
-      @if (listingForm.get('listingFormat')?.value === 'auction') {
-        <div class="section">
-          <div class="section-title">{{ 'addListing.step4.auction.section' | translate }}</div>
+      <!-- The one decision, asked in plain language and asked here, where the
+           price it governs is on the same screen. Two options, never a third;
+           the labels say what the buyer does, not what the mechanism is called. -->
+      <div class="section selling-mode-section">
+        <div class="section-title">{{ 'addListing.sellingMode.section' | translate }}</div>
+        <p class="field-hint field-hint--block">{{ 'addListing.sellingMode.hint' | translate }}</p>
 
-          <!-- The ceiling is said here rather than at submit, so the seller is
-               not asked to redo a listing over a limit nobody mentioned. -->
-          @if (isVehicleListing) {
-            <div class="vehicle-pickup-notice">
-              <p>{{ 'addListing.vehicle.valueCapHint' | translate:{ max: maxVehicleValue | number:'1.0-0' } }}</p>
-            </div>
-          }
+        <div class="mode-selector" role="radiogroup" [attr.aria-label]="'addListing.sellingMode.section' | translate">
+          <label class="mode-option" [class.selected]="isBiddingMode">
+            <input type="radio" formControlName="sellingMode" value="bidding" class="mode-option__input">
+            <span class="mode-option__body">
+              <span class="mode-option__title">{{ 'addListing.sellingMode.bidding' | translate }}</span>
+              <span class="mode-option__desc">{{ 'addListing.sellingMode.biddingDesc' | translate }}</span>
+            </span>
+          </label>
 
-          <div class="field-row">
+          <label class="mode-option" [class.selected]="isOffersMode">
+            <input type="radio" formControlName="sellingMode" value="offers" class="mode-option__input">
+            <span class="mode-option__body">
+              <span class="mode-option__title">{{ 'addListing.sellingMode.offers' | translate }}</span>
+              <span class="mode-option__desc">{{ 'addListing.sellingMode.offersDesc' | translate }}</span>
+            </span>
+          </label>
+        </div>
+
+        <!-- Said before publication, because no route lets it be changed after:
+             an existing bid or offer would mean something different. -->
+        <p class="mode-locked-note">{{ 'addListing.sellingMode.fixedNote' | translate }}</p>
+      </div>
+
+      <div class="section pricing-section">
+        <div class="section-title">{{ 'addListing.pricing.section' | translate }}</div>
+
+        <!-- The ceiling is said here rather than at submit, so the seller is
+             not asked to redo a listing over a limit nobody mentioned. -->
+        @if (isVehicleListing) {
+          <div class="vehicle-pickup-notice">
+            <p>{{ 'addListing.vehicle.valueCapHint' | translate:{ max: maxVehicleValue | number:'1.0-0' } }}</p>
+          </div>
+        }
+
+        <!-- One required price, whichever mode it belongs to. -->
+        <div class="field-row">
+          @if (isBiddingMode) {
             <div class="field">
               <label class="field-label">{{ 'addListing.startingBid' | translate }} <span class="req">*</span></label>
               <div class="price-input-wrap">
                 <span class="price-prefix">€</span>
                 <input class="field-input price-input" type="number" formControlName="startingBid"
-                  min="0.01" step="0.01" placeholder="0.00">
+                  min="0.01" step="0.01" placeholder="0,00">
               </div>
               <div class="field-hint">{{ 'addListing.startingBidHint' | translate }}</div>
               @if (getFieldError('startingBid')) { <div class="field-err">{{ getFieldError('startingBid') }}</div> }
             </div>
-          </div>
-
-          <div class="field">
-            <label class="field-label">
-              {{ 'addListing.buyNowPrice' | translate }}
-              <span class="optional-tag">{{ 'addListing.optional' | translate }}</span>
-            </label>
-            <div class="price-input-wrap">
-              <span class="price-prefix">€</span>
-              <input class="field-input price-input" type="number" formControlName="buyNowPrice"
-                min="0.01" step="0.01" placeholder="0.00">
+          } @else {
+            <div class="field">
+              <label class="field-label">{{ 'addListing.minimumAcceptPrice' | translate }} <span class="req">*</span></label>
+              <div class="price-input-wrap">
+                <span class="price-prefix">€</span>
+                <input class="field-input price-input" type="number" formControlName="minimumAcceptPrice"
+                  min="0.01" step="0.01" placeholder="0,00">
+              </div>
+              <div class="field-hint">{{ 'addListing.minimumAcceptHint' | translate }}</div>
+              @if (getFieldError('minimumAcceptPrice')) { <div class="field-err">{{ getFieldError('minimumAcceptPrice') }}</div> }
             </div>
-            <div class="field-hint">{{ 'addListing.buyNowHint' | translate }}</div>
-            @if (getFieldError('buyNowPrice')) { <div class="field-err">{{ getFieldError('buyNowPrice') }}</div> }
-          </div>
+          }
+        </div>
 
-          <div class="duration-field">
-            <label class="field-label">{{ 'addListing.duration' | translate }} <span class="req">*</span></label>
-            <p class="field-hint field-hint--block">{{ 'addListing.durationHint' | translate }}</p>
-            <div class="pill-group duration-pill-group">
-              @for (d of listingDurations; track d.value) {
-                <label class="pill" [class.selected]="listingForm.get('duration')?.value === d.value">
-                  <input type="radio" formControlName="duration" [value]="d.value" style="display:none">
-                  {{ d.labelKey | translate }}
-                </label>
-              }
+        <div class="duration-field">
+          <label class="field-label">
+            {{ (isBiddingMode ? 'addListing.duration' : 'addListing.offerDeadline') | translate }}
+            <span class="req">*</span>
+          </label>
+          <p class="field-hint field-hint--block">
+            {{ (isBiddingMode ? 'addListing.durationHint' : 'addListing.offerDeadlineHint') | translate }}
+          </p>
+          <div class="pill-group duration-pill-group" [class.duration-pill-group--offer]="isOffersMode">
+            @for (d of (isBiddingMode ? listingDurations : offerDurations); track d.value) {
+              <label class="pill" [class.selected]="listingForm.get('duration')?.value === d.value">
+                <input type="radio" formControlName="duration" [value]="d.value" style="display:none">
+                {{ d.labelKey | translate }}
+              </label>
+            }
+          </div>
+          @if (getFieldError('duration')) { <div class="field-err">{{ getFieldError('duration') }}</div> }
+        </div>
+      </div>
+
+      <!-- Advanced options. Collapsed, and only ever showing the extras that
+           belong to the chosen mode — a Buy Now price on an offers listing would
+           let a buyer close the sale and skip the seller's decision, which is the
+           whole point of that mode. -->
+      <details class="section advanced-section">
+        <summary class="advanced-summary">
+          <span class="advanced-summary__title">{{ 'addListing.advanced.section' | translate }}</span>
+          <span class="advanced-summary__hint">{{ 'addListing.advanced.hint' | translate }}</span>
+        </summary>
+
+        <div class="advanced-body">
+          @if (isBiddingMode) {
+            <div class="field">
+              <label class="field-label">
+                {{ 'addListing.buyNowPrice' | translate }}
+                <span class="optional-tag">{{ 'addListing.optional' | translate }}</span>
+              </label>
+              <div class="price-input-wrap">
+                <span class="price-prefix">€</span>
+                <input class="field-input price-input" type="number" formControlName="buyNowPrice"
+                  min="0.01" step="0.01" placeholder="0,00">
+              </div>
+              <div class="field-hint">{{ 'addListing.buyNowHint' | translate }}</div>
+              @if (getFieldError('buyNowPrice')) { <div class="field-err">{{ getFieldError('buyNowPrice') }}</div> }
             </div>
-            @if (getFieldError('duration')) { <div class="field-err">{{ getFieldError('duration') }}</div> }
-          </div>
 
-          <div class="field-row" style="margin-top: 12px;">
-            <label class="checkbox-row" style="display:flex; align-items:flex-start; gap:8px; cursor:pointer;">
-              <input type="checkbox" formControlName="autoRelist" style="margin-top:3px;">
+            <label class="checkbox-row advanced-check">
+              <input type="checkbox" formControlName="autoRelist">
               <span>
-                <strong style="display:block;">{{ 'addListing.autoRelistLabel' | translate }}</strong>
-                <small class="field-hint" style="display:block;">{{ 'addListing.autoRelistHint' | translate }}</small>
+                <strong>{{ 'addListing.autoRelistLabel' | translate }}</strong>
+                <small class="field-hint">{{ 'addListing.autoRelistHint' | translate }}</small>
               </span>
             </label>
-          </div>
-        </div>
-      }
 
-      @if (listingForm.get('listingFormat')?.value === 'best-offer') {
-        <div class="section pricing-section">
-          <div class="section-title">{{ 'addListing.step4.offer.section' | translate }}</div>
-
-          <div class="pricing-grid">
-            <div class="pricing-field-card">
-              <div class="field">
-                <label class="field-label">
-                  <span>{{ 'addListing.minimumAcceptPrice' | translate }}</span>
-                  <span class="req">*</span>
-                </label>
-                <div class="price-input-wrap">
-                  <span class="price-prefix">€</span>
-                  <input class="field-input price-input" type="number" formControlName="minimumAcceptPrice"
-                    min="0.01" step="0.01" placeholder="0,00">
+            <!-- Hidden for guests: the room is a live negotiation the seller has
+                 to be signed in to attend, and the backend forces it off for
+                 them anyway. -->
+            @if (!isGuest) {
+              <div class="toggle-row advanced-toggle">
+                <div class="toggle-info">
+                  <div class="toggle-title">⚡ {{ 'addListing.enablePrivateRoom' | translate }}</div>
+                  <div class="toggle-desc">{{ 'addListing.privateRoomHint' | translate }}</div>
                 </div>
-                <div class="field-hint">{{ 'addListing.minimumAcceptHint' | translate }}</div>
-                @if (getFieldError('minimumAcceptPrice')) { <div class="field-err">{{ getFieldError('minimumAcceptPrice') }}</div> }
-              </div>
-            </div>
-            <div class="pricing-field-card">
-              <div class="field">
-                <label class="field-label">
-                  <span>{{ 'addListing.buyNowPrice' | translate }}</span>
-                  <span class="optional-tag">{{ 'addListing.optional' | translate }}</span>
+                <label class="toggle">
+                  <input type="checkbox" formControlName="allowPrivateRoom">
+                  <span class="toggle-slider"></span>
                 </label>
-                <div class="price-input-wrap">
-                  <span class="price-prefix">€</span>
-                  <input class="field-input price-input" type="number" formControlName="buyNowPrice"
-                    min="0.01" step="0.01" placeholder="0,00">
-                </div>
-                <div class="field-hint">{{ 'addListing.buyNowHint' | translate }}</div>
-                @if (getFieldError('buyNowPrice')) { <div class="field-err">{{ getFieldError('buyNowPrice') }}</div> }
               </div>
-            </div>
-          </div>
-
-          <div class="duration-field">
-            <label class="field-label">{{ 'addListing.offerDeadline' | translate }} <span class="req">*</span></label>
-            <p class="field-hint field-hint--block">{{ 'addListing.offerDeadlineHint' | translate }}</p>
-            <div class="pill-group duration-pill-group duration-pill-group--offer">
-              @for (d of offerDurations; track d.value) {
-                <label class="pill" [class.selected]="listingForm.get('duration')?.value === d.value">
-                  <input type="radio" formControlName="duration" [value]="d.value" style="display:none">
-                  {{ d.labelKey | translate }}
-                </label>
-              }
-            </div>
-            @if (getFieldError('duration')) { <div class="field-err">{{ getFieldError('duration') }}</div> }
-          </div>
+            }
+          } @else {
+            <p class="advanced-empty">{{ 'addListing.advanced.offersEmpty' | translate }}</p>
+          }
         </div>
-      }
+      </details>
 
       <div class="section schedule-section">
         <div class="section-title">{{ 'addListing.schedule.section' | translate }}</div>
@@ -738,11 +723,11 @@
       }
     </div>
 
-    <!-- ── STEP 5: Shipping ───────────────────────────────────────────────── -->
-    <div class="step-panel" [class.active]="currentStep === 5">
+    <!-- ── STEP 4: Shipping ───────────────────────────────────────────────── -->
+    <div class="step-panel" [class.active]="currentStep === STEP.shipping">
       <div class="section">
         <div class="section-title">
-          {{ (isVehicleListing ? 'addListing.step5.sectionVehicle' : 'addListing.step5.section') | translate }}
+          {{ (isVehicleListing ? 'addListing.shipping.sectionVehicle' : 'addListing.shipping.section') | translate }}
         </div>
 
         @if (isVehicleListing) {
@@ -815,7 +800,7 @@
       </div>
 
       <div class="section">
-        <div class="section-title">{{ 'addListing.step5.location' | translate }}</div>
+        <div class="section-title">{{ 'addListing.shipping.location' | translate }}</div>
         <div class="field-row">
           <div class="field">
             <label class="field-label">{{ 'addListing.itemCountry' | translate }} <span class="req">*</span></label>
@@ -836,11 +821,11 @@
       </div>
     </div>
 
-    <!-- ── STEP 5b: Payment methods ──────────────────────────────────────── -->
-    <div class="step-panel" [class.active]="currentStep === 5">
+    <!-- ── STEP 4b: Payment methods ──────────────────────────────────────── -->
+    <div class="step-panel" [class.active]="currentStep === STEP.shipping">
       <div class="section">
-        <div class="section-title">{{ 'addListing.step5.paymentMethods' | translate }}</div>
-        <p class="field-hint">{{ 'addListing.step5.paymentMethodsHint' | translate }}</p>
+        <div class="section-title">{{ 'addListing.shipping.paymentMethods' | translate }}</div>
+        <p class="field-hint">{{ 'addListing.shipping.paymentMethodsHint' | translate }}</p>
 
         <!-- A guest has no Connect account to be paid out to and gave no IBAN or
              phone, so the backend forces in-person only. Say that instead of
@@ -853,8 +838,8 @@
             <input type="checkbox" formControlName="acceptPayStripe">
             <span class="pm-check-icon">💳</span>
             <div class="pm-check-info">
-              <span class="pm-check-label">Stripe ({{ 'addListing.step5.pmStripeLabel' | translate }})</span>
-              <span class="pm-check-sub">{{ 'addListing.step5.pmStripeDesc' | translate }}</span>
+              <span class="pm-check-label">Stripe ({{ 'addListing.shipping.pmStripeLabel' | translate }})</span>
+              <span class="pm-check-sub">{{ 'addListing.shipping.pmStripeDesc' | translate }}</span>
             </div>
           </label>
 
@@ -863,8 +848,8 @@
               <input type="checkbox" formControlName="acceptPayInPerson">
               <span class="pm-check-icon">🤝</span>
               <div class="pm-check-info">
-                <span class="pm-check-label">{{ 'addListing.step5.pmInPerson' | translate }}</span>
-                <span class="pm-check-sub">{{ 'addListing.step5.pmInPersonDesc' | translate }}</span>
+                <span class="pm-check-label">{{ 'addListing.shipping.pmInPerson' | translate }}</span>
+                <span class="pm-check-sub">{{ 'addListing.shipping.pmInPersonDesc' | translate }}</span>
               </div>
             </label>
           }
@@ -874,7 +859,7 @@
               <input type="checkbox" formControlName="acceptPayBankTransfer">
               <span class="pm-check-icon">🏦</span>
               <div class="pm-check-info">
-                <span class="pm-check-label">{{ 'addListing.step5.pmBankTransfer' | translate }}</span>
+                <span class="pm-check-label">{{ 'addListing.shipping.pmBankTransfer' | translate }}</span>
                 <span class="pm-check-sub">{{ sellerPaymentConfig.bankTransfer?.iban }}</span>
               </div>
             </label>
@@ -885,7 +870,7 @@
               <input type="checkbox" formControlName="acceptPayMbway">
               <span class="pm-check-icon">📱</span>
               <div class="pm-check-info">
-                <span class="pm-check-label">{{ 'addListing.step5.pmMbway' | translate }}</span>
+                <span class="pm-check-label">{{ 'addListing.shipping.pmMbway' | translate }}</span>
                 <span class="pm-check-sub">{{ sellerPaymentConfig.mbway?.phone }}</span>
               </div>
             </label>
@@ -893,8 +878,8 @@
 
           @if (!sellerPaymentConfig.inPerson && !sellerPaymentConfig.bankTransfer?.enabled && !sellerPaymentConfig.mbway?.enabled) {
             <p class="pm-no-methods-hint">
-              {{ 'addListing.step5.pmNoConfig' | translate }}
-              <a routerLink="/dashboard/settings" [queryParams]="{tab: 'payments'}">{{ 'addListing.step5.pmConfigureNow' | translate }}</a>
+              {{ 'addListing.shipping.pmNoConfig' | translate }}
+              <a routerLink="/dashboard/settings" [queryParams]="{tab: 'payments'}">{{ 'addListing.shipping.pmConfigureNow' | translate }}</a>
             </p>
           }
         </div>
@@ -902,17 +887,15 @@
       </div>
     </div>
 
-    <!-- ── STEP 6: Review & Publish ───────────────────────────────────────── -->
-    <div class="step-panel" [class.active]="currentStep === 6">
+    <!-- ── STEP 5: Review & Publish ───────────────────────────────────────── -->
+    <div class="step-panel" [class.active]="currentStep === STEP.publish">
       <div class="section">
-        <div class="section-title">{{ 'addListing.step6.section' | translate }}</div>
+        <div class="section-title">{{ 'addListing.publish.section' | translate }}</div>
 
         <div class="review-summary">
           <div class="review-row">
-            <span class="review-label">{{ 'addListing.listingFormat' | translate }}</span>
-            <span class="review-val">
-              {{ listingForm.get('listingFormat')?.value === 'auction' ? ('addListing.formatAuction' | translate) : ('addListing.formatBestOffer' | translate) }}
-            </span>
+            <span class="review-label">{{ 'addListing.sellingMode.label' | translate }}</span>
+            <span class="review-val">{{ sellingModeLabel | translate }}</span>
           </div>
           <div class="review-row">
             <span class="review-label">{{ 'addListing.listingTitle' | translate }}</span>
@@ -922,14 +905,16 @@
             <span class="review-label">{{ 'addListing.condition' | translate }}</span>
             <span class="review-val">{{ reviewConditionLabel }}</span>
           </div>
-          @if (listingForm.get('listingFormat')?.value === 'auction') {
-            <div class="review-row">
-              <span class="review-label">{{ 'addListing.startingBid' | translate }}</span>
-              <span class="review-val">€{{ listingForm.get('startingBid')?.value || '—' }}</span>
-            </div>
-          }
+          <!-- The price, under whichever name it has in this mode. The offers
+               price used to be missing from the review entirely. -->
           <div class="review-row">
-            <span class="review-label">{{ 'addListing.duration' | translate }}</span>
+            <span class="review-label">{{ previewPriceLabel }}</span>
+            <span class="review-val">{{ previewPrice }}</span>
+          </div>
+          <div class="review-row">
+            <span class="review-label">
+              {{ (isBiddingMode ? 'addListing.duration' : 'addListing.offerDeadline') | translate }}
+            </span>
             <span class="review-val">{{ reviewDurationLabel }}</span>
           </div>
           @if (scheduledStartDisplay) {
@@ -943,7 +928,7 @@
             <span class="review-val">{{ reviewShippingLabel }}</span>
           </div>
           <div class="review-row">
-            <span class="review-label">{{ 'addListing.step3Title' | translate }}</span>
+            <span class="review-label">{{ 'addListing.photos.label' | translate }}</span>
             <span class="review-val">
               {{ uploadedFiles.length }}
               {{ (uploadedFiles.length === 1 ? 'addListing.photoSingular' : 'addListing.photosLabel') | translate }}
@@ -1078,9 +1063,9 @@
           </div>
         }
         <span class="preview-badge"
-              [class.pb-auction]="previewFormat === 'auction'"
-              [class.pb-offer]="previewFormat === 'best-offer'">
-          {{ previewFormat === 'auction' ? ('addListing.formatAuction' | translate) : ('addListing.formatBestOffer' | translate) }}
+              [class.pb-auction]="isBiddingMode"
+              [class.pb-offer]="isOffersMode">
+          {{ sellingModeBadge | translate }}
         </span>
       </div>
       <div class="preview-body">

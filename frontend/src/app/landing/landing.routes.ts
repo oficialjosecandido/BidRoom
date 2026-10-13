@@ -1,8 +1,8 @@
 import { Routes } from '@angular/router';
 
 export const landingRoutes: Routes = [
-  // The homepage moved to the domain root; /landing is kept as an alias so
-  // existing links and the many router.navigate(['/landing']) calls still work.
+  // Exact /landing is 301'd to / at the Express/SWA layer. This client redirect
+  // remains as a fallback for SPA navigations that still hit the landing module.
   { path: '', redirectTo: '/', pathMatch: 'full' },
   {
     path: 'how-it-works',

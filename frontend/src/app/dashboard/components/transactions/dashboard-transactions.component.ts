@@ -809,15 +809,15 @@ export class DashboardTransactionsComponent implements OnInit {
 
   /** Auction type label: Best Offer | Highest-Bid Auction (Private Room) | Highest-Bid Auction */
   getAuctionTypeLabel(t: Transaction): string {
-    const fmt = t.listing?.auctionFormat;
-    if (fmt === 'best-offer') return 'Best Offer';
+    const fmt = t.listing?.sellingMode;
+    if (fmt === 'offers') return 'Best Offer';
     if (t.listing?.allowPrivateRoom) return 'Highest-Bid Auction (Private Room)';
     return 'Highest-Bid Auction';
   }
 
   /** Label for the sale price row, context-aware to auction type */
   getSalePriceLabel(t: Transaction): string {
-    return t.listing?.auctionFormat === 'best-offer' ? 'Accepted offer price' : 'Final auction price';
+    return t.listing?.sellingMode === 'offers' ? 'Accepted offer price' : 'Final auction price';
   }
 
   /** Commission rate as a formatted percentage string */

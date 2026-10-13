@@ -150,7 +150,7 @@ function buildHashtags(listing, { giveaway = false } = {}) {
     ? ['#BidRoom', '#passatempo', '#Portugal', '#sorteio']
     : ['#BidRoom', '#leiloes', '#Portugal'];
 
-  if (!giveaway && listing?.auctionFormat === 'best-offer') {
+  if (!giveaway && listing?.sellingMode === 'offers') {
     tags.push('#melhorOferta');
   }
 

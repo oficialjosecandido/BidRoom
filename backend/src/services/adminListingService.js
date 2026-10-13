@@ -40,11 +40,11 @@ const ALLOWED_DURATIONS = {
 const ALLOWED_SHIPPING = ['flat-rate', 'calculated', 'local-pickup', 'free'];
 const ALLOWED_GIVEAWAY_SHIPPING = ['local-pickup', 'free'];
 const ALLOWED_RETURNS = ['30-days', '14-days', 'no-returns', 'custom'];
-const ALLOWED_FORMATS = ['highest-bid', 'best-offer'];
+const ALLOWED_FORMATS = ['bidding', 'offers'];
 
 /** Giveaway is not an auction: no price, no bids, no offers — only free entry. */
 function isGiveawayRequest(input = {}) {
-  const keys = [input.saleFormat, input.listingFormat, input.auctionFormat, input.type];
+  const keys = [input.saleFormat, input.listingFormat, input.sellingMode, input.type];
   return keys.some((v) => String(v || '').toLowerCase() === 'giveaway');
 }
 
@@ -139,7 +139,7 @@ async function resolveOrCreateSeller({ sellerId, sellerEmail }) {
 /**
  * Create a listing on behalf of a seller (Nexus admin).
  * Skips seller DSA/KYC gates; still validates required fields.
- * Supports auction (highest-bid / best-offer) and giveaway.
+ * Supports auction (bidding / offers) and giveaway.
  * Best offer never allows private room.
  *
  * Auctions go live immediately — same seller email/notification as a Nexus
@@ -183,14 +183,14 @@ async function createListingAsAdmin(input = {}, opts = {}) {
   }
 
   const isGiveaway = isGiveawayRequest(input);
-  const auctionFormat = isGiveaway
-    ? 'highest-bid'
-    : (ALLOWED_FORMATS.includes(input.auctionFormat || input.listingFormat)
-      ? (input.auctionFormat || input.listingFormat)
-      : 'highest-bid');
+  const sellingMode = isGiveaway
+    ? 'bidding'
+    : (ALLOWED_FORMATS.includes(input.sellingMode || input.listingFormat)
+      ? (input.sellingMode || input.listingFormat)
+      : 'bidding');
 
   // Best offer and giveaways never get a private room.
-  const allowPrivateRoom = !isGiveaway && auctionFormat === 'highest-bid' && !!input.allowPrivateRoom;
+  const allowPrivateRoom = !isGiveaway && sellingMode === 'bidding' && !!input.allowPrivateRoom;
 
   const durationSlot = ALLOWED_DURATIONS[input.duration || input.durationSlot]
     ? (input.duration || input.durationSlot)
@@ -204,15 +204,15 @@ async function createListingAsAdmin(input = {}, opts = {}) {
   }
 
   let minimumOfferPrice = null;
-  if (!isGiveaway && auctionFormat === 'best-offer') {
+  if (!isGiveaway && sellingMode === 'offers') {
     const min = Number(input.minimumOfferPrice);
     if (!Number.isFinite(min) || min < 0.01) {
-      const err = new Error('minimumOfferPrice is required for best-offer listings (minimum 0.01).');
+      const err = new Error('minimumOfferPrice is required for offers listings (minimum 0.01).');
       err.status = 400;
       throw err;
     }
     minimumOfferPrice = min;
-    // Nexus often only collects the min for best-offer — use it as starting when unset.
+    // Nexus often only collects the min for offers — use it as starting when unset.
     if (startingPrice <= 0) startingPrice = min;
   }
 
@@ -262,7 +262,7 @@ async function createListingAsAdmin(input = {}, opts = {}) {
     subCategory,
     condition,
     saleFormat: isGiveaway ? 'giveaway' : 'auction',
-    auctionFormat,
+    sellingMode,
     durationSlot,
     startingPrice,
     currentPrice: startingPrice,
@@ -403,7 +403,7 @@ function mapCsvRowToCreateInput(row) {
     subCategory: row.subCategory || row.sub_category || 'Luxury Watches',
     condition: row.condition || 'Used - Excellent',
     saleFormat: row.saleFormat || row.sale_format || undefined,
-    listingFormat: row.auctionFormat || row.listingFormat || row.format || 'highest-bid',
+    listingFormat: row.sellingMode || row.listingFormat || row.format || 'bidding',
     startingPrice: row.startingPrice || row.price || 0,
     minimumOfferPrice: row.minimumOfferPrice || row.minimum_offer_price || undefined,
     duration: row.duration || row.durationSlot || '7 days',

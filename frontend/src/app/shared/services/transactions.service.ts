@@ -44,8 +44,8 @@ export interface TransactionListing {
   packageSize?: 'small' | 'medium' | 'large' | null;
   /** Origin postal code for calculated shipping */
   shippingOriginPostalCode?: string | null;
-  /** Auction format: highest-bid | best-offer */
-  auctionFormat?: 'highest-bid' | 'best-offer';
+  /** Auction format: bidding | offers */
+  sellingMode?: 'bidding' | 'offers';
   /** Whether the listing allowed a private room (affects commission rate) */
   allowPrivateRoom?: boolean;
   /** Return policy: 30-days | 14-days | 7-days | no-returns */

@@ -42,8 +42,15 @@ module.exports = {
    * market decided, which is a safeguard in itself. Capping the final bid would
    * mean cutting genuine auctions short for no AML gain. (This is "Option A" in
    * the spec, and the reason the alternative was rejected.)
+   *
+   * `minimumOfferPrice` is in the list because offers mode has no starting bid:
+   * the floor is the only figure the seller sets, so without it a vehicle in
+   * offers mode declared a value of 0 and cleared the ceiling whatever it was
+   * worth. Offers mode is also where the reasoning above cuts the other way —
+   * the price there is agreed privately between two people, which is the case
+   * the ceiling exists for.
    */
-  VALUE_CAP_APPLIES_TO: ['startingPrice', 'buyNowPrice'],
+  VALUE_CAP_APPLIES_TO: ['startingPrice', 'buyNowPrice', 'minimumOfferPrice'],
 
   /**
    * How many vehicles someone may list as a private seller in a rolling year

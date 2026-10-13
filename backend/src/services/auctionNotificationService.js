@@ -8,7 +8,7 @@ const { getEmailTemplate, getUserLanguage } = require('./emailTemplates');
 const { sendLocalizedEmail, formatEmailDateTime } = require('./localizedEmail');
 const { escapeHtml } = require('../utils/bidroomEmailLayout');
 const { createTransactionForListing, createTransactionForAcceptedOffer } = require('./transactionService');
-const { publicDisplayName } = require('../utils/bidFormat');
+const { publicDisplayName, greetingName } = require('../utils/bidFormat');
 const logger = require('../utils/logger');
 
 /**
@@ -31,14 +31,13 @@ async function sendAuctionClosedNotifications(listing, winnerBidId = null) {
 
     for (const bid of bids) {
       let bidderEmail = null;
-      let bidderName = 'Guest Bidder';
+      let bidderName = '';
 
       if (bid.bidder) {
         bidderEmail = bid.bidder.email?.toLowerCase();
-        bidderName = `${bid.bidder.firstName} ${bid.bidder.lastName}`;
+        bidderName = greetingName(bid.bidder);
       } else if (bid.bidderEmail) {
         bidderEmail = bid.bidderEmail.toLowerCase();
-        bidderName = bid.bidderEmail.split('@')[0];
       }
 
       // Skip if no email, already notified, is seller, or is winner
@@ -100,7 +99,7 @@ async function sendChooseWinnerNotification(listing) {
     const language = getUserLanguage(seller);
 
     const email = getEmailTemplate('chooseWinner', language, {
-      sellerName: `${seller.firstName} ${seller.lastName}`,
+      sellerName: greetingName(seller),
       listingTitle: listing.title,
       finalBid,
       chooseWinnerUrl
@@ -134,7 +133,7 @@ async function sendAuctionNotSoldNotification(listing) {
     const language = getUserLanguage(seller);
 
     const email = getEmailTemplate('auctionNotSold', language, {
-      sellerName: `${seller.firstName} ${seller.lastName}`,
+      sellerName: greetingName(seller),
       listingTitle: listing.title,
       relistUrl
     });
@@ -167,7 +166,7 @@ async function sendOutbidNotification(listing, bidderEmail, bidderName, previous
     const recipient = await Customer.findOne({ email: bidderEmail }).select('language').lean();
 
     const email = getEmailTemplate('outbid', getUserLanguage(recipient), {
-      bidderName: bidderName || bidderEmail.split('@')[0],
+      bidderName: bidderName || '',
       listingTitle: listing.title,
       previousBid,
       newBid,
@@ -188,17 +187,16 @@ async function sendOutbidNotification(listing, bidderEmail, bidderName, previous
 async function sendWinnerNotification(listing, winnerBid) {
   try {
     let winnerEmail = null;
-    let winnerName = 'Guest Bidder';
+    let winnerName = '';
 
     if (winnerBid.bidder) {
       const winner = await Customer.findById(winnerBid.bidder);
       if (winner && winner.email) {
         winnerEmail = winner.email;
-        winnerName = `${winner.firstName} ${winner.lastName}`;
+        winnerName = greetingName(winner);
       }
     } else if (winnerBid.bidderEmail) {
       winnerEmail = winnerBid.bidderEmail;
-      winnerName = winnerBid.bidderEmail.split('@')[0];
     }
 
     if (!winnerEmail) {
@@ -299,7 +297,7 @@ async function sendPlatformListingPendingReviewAlert(listing, seller) {
     const title = listing?.title || listing?.titlePt || 'Anúncio';
     const format = listing?.saleFormat === 'giveaway'
       ? 'Passatempo'
-      : (listing?.auctionFormat === 'best-offer' ? 'Best Offer' : 'Leilão');
+      : (listing?.sellingMode === 'offers' ? 'Best Offer' : 'Leilão');
     const sellerName = [seller?.firstName, seller?.lastName].filter(Boolean).join(' ').trim()
       || seller?.email
       || 'Vendedor';
@@ -401,7 +399,7 @@ async function sendPlatformNewBidAlert(listing, bidAmount, bidderName, bidderEma
 }
 
 /**
- * Send offer confirmation email to the bidder who submitted an offer (best-offer auctions)
+ * Send offer confirmation email to the bidder who submitted an offer (offers auctions)
  */
 async function sendOfferPlacedEmail(listing, offererEmail, offererName, offerAmount) {
   try {
@@ -414,7 +412,7 @@ async function sendOfferPlacedEmail(listing, offererEmail, offererName, offerAmo
     // then the only honest answer.
     const recipient = await Customer.findOne({ email: offererEmail }).select('language').lean();
     const email = getEmailTemplate('offerPlaced', getUserLanguage(recipient), {
-      offererName: offererName || offererEmail.split('@')[0],
+      offererName: offererName || '',
       listingTitle: listing.title,
       offerAmount: formattedAmount,
       listingUrl
@@ -428,7 +426,7 @@ async function sendOfferPlacedEmail(listing, offererEmail, offererName, offerAmo
 }
 
 /**
- * Send "higher offer received" email to a bidder whose offer was exceeded (best-offer auctions)
+ * Send "higher offer received" email to a bidder whose offer was exceeded (offers auctions)
  */
 async function sendOfferOutbidEmail(listing, offererEmail, offererName, previousOfferAmount, newOfferAmount) {
   try {
@@ -442,7 +440,7 @@ async function sendOfferOutbidEmail(listing, offererEmail, offererName, previous
     // then the only honest answer.
     const recipient = await Customer.findOne({ email: offererEmail }).select('language').lean();
     const email = getEmailTemplate('offerOutbid', getUserLanguage(recipient), {
-      offererName: offererName || offererEmail.split('@')[0],
+      offererName: offererName || '',
       listingTitle: listing.title,
       previousOffer,
       newOffer,
@@ -457,7 +455,7 @@ async function sendOfferOutbidEmail(listing, offererEmail, offererName, previous
 }
 
 /**
- * Send "best-offer listing ended" notification to seller - review offers within 24h
+ * Send "offers listing ended" notification to seller - review offers within 24h
  */
 async function sendBestOfferEndedNotification(listing, offerCount) {
   try {
@@ -472,7 +470,7 @@ async function sendBestOfferEndedNotification(listing, offerCount) {
     const listingUrl = `${frontendUrl}/listing/${listing.slug}?tab=offers`;
     const language = getUserLanguage(seller);
     const email = getEmailTemplate('bestOfferEnded', language || 'en', {
-      sellerName: `${seller.firstName} ${seller.lastName}`,
+      sellerName: greetingName(seller),
       listingTitle: listing.title,
       offerCount,
       listingUrl
@@ -480,7 +478,7 @@ async function sendBestOfferEndedNotification(listing, offerCount) {
     await sendEmail(seller.email, email.subject, email.html, { text: email.text });
     return { sent: true };
   } catch (error) {
-    logger.error('Error sending best-offer ended notification:', error);
+    logger.error('Error sending offers ended notification:', error);
     return { sent: false, error: error.message };
   }
 }
@@ -533,7 +531,7 @@ async function sendPrivateRoomClosedNoAcceptanceToInvitedBuyers(listing) {
       if (user.email.toLowerCase() === sellerEmail) continue;
 
       const language = getUserLanguage(user);
-      const bidderName = `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email?.split('@')[0] || 'Bidder';
+      const bidderName = greetingName(user);
       const email = getEmailTemplate('privateRoomClosedNoAcceptanceInvited', language, {
         bidderName,
         listingTitle: listing.title,
@@ -597,7 +595,7 @@ async function sendPrivateRoomClosedSellerLeftToBuyers(listing) {
       if (user.email.toLowerCase() === sellerEmail) continue;
 
       const language = getUserLanguage(user);
-      const bidderName = `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email?.split('@')[0] || 'Bidder';
+      const bidderName = greetingName(user);
       const email = getEmailTemplate('privateRoomClosedSellerLeftBuyers', language, {
         bidderName,
         listingTitle: listing.title,
@@ -806,7 +804,7 @@ async function sendPrivateRoomClosedSellerLeftToSeller(listing) {
     const listingUrl = `${frontendUrl}/listing/${listing.slug}`;
     const language = getUserLanguage(seller);
     const email = getEmailTemplate('privateRoomClosedSellerLeftSeller', language, {
-      sellerName: `${seller.firstName} ${seller.lastName}`,
+      sellerName: greetingName(seller),
       listingTitle: listing.title,
       listingUrl
     });
@@ -829,7 +827,7 @@ async function sendPrivateRoomClosedSellerLeftToBuyers(listing) {
       if (!bidder || !bidder.email) continue;
       const language = getUserLanguage(bidder);
       const email = getEmailTemplate('privateRoomClosedSellerLeftBuyers', language, {
-        bidderName: `${bidder.firstName} ${bidder.lastName}`,
+        bidderName: greetingName(bidder),
         listingTitle: listing.title,
         listingUrl
       });
@@ -857,7 +855,7 @@ async function sendCreatePrivateRoomNotification(listing) {
     const finalBid = `€${Number(listing.currentPrice).toFixed(2)}`;
     const language = getUserLanguage(seller);
     const email = getEmailTemplate('createPrivateRoomNotification', language, {
-      sellerName: `${seller.firstName} ${seller.lastName}`,
+      sellerName: greetingName(seller),
       listingTitle: listing.title,
       finalBid,
       createPrivateRoomUrl
@@ -888,14 +886,13 @@ async function sendPrivateRoomNotInvitedToBidders(listing, invitedUserIds) {
     for (const bid of bids) {
       let bidderId = null;
       let bidderEmail = null;
-      let bidderName = 'Guest Bidder';
+      let bidderName = '';
       if (bid.bidder) {
         bidderId = bid.bidder._id.toString();
         bidderEmail = (bid.bidder.email || '').toLowerCase();
-        bidderName = `${bid.bidder.firstName || ''} ${bid.bidder.lastName || ''}`.trim() || bid.bidder.email?.split('@')[0] || 'Bidder';
+        bidderName = greetingName(bid.bidder);
       } else if (bid.bidderEmail) {
         bidderEmail = bid.bidderEmail.toLowerCase();
-        bidderName = bid.bidderEmail.split('@')[0];
       }
       if (!bidderEmail || notifiedEmails.has(bidderEmail) || bidderEmail === sellerEmail) continue;
       if (bidderId && invitedSet.has(bidderId)) continue;
@@ -945,9 +942,7 @@ async function sendPlatinumBidderInvitations(listing, requestOrigin = null) {
       // was greeted "Hello Bidder" in the middle of a Portuguese email. The
       // template drops either slot when it is empty.
       await sendLocalizedEmail(user, 'platinumBidderInvitation', {
-        bidderName: escapeHtml(
-          `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email?.split('@')[0] || ''
-        ),
+        bidderName: escapeHtml(greetingName(user)),
         listingTitle: escapeHtml(listing.title),
         listingUrl,
         acceptInvitationUrl,
@@ -996,7 +991,7 @@ async function handleAuctionEnd(listingId, io = null) {
     }
 
     // Best Offer: when listing closes with exactly one offer at or above minimum → auto-accept
-    if (listing.auctionFormat === 'best-offer') {
+    if (listing.sellingMode === 'offers') {
       const offers = await Offer.find({ listing: listingId, status: 'pending' }).lean();
       const minimumOfferPrice = listing.minimumOfferPrice ?? 0;
 
@@ -1344,13 +1339,12 @@ async function sendPrivateRoomEndNotifications(listing, highestBid = null) {
     // Send winner email (private room: highest bid not outbid for 60s)
     if (highestBid) {
       let winnerEmail = null;
-      let winnerName = 'Guest Bidder';
+      let winnerName = '';
       if (highestBid.bidder?.email) {
         winnerEmail = highestBid.bidder.email.toLowerCase();
-        winnerName = `${highestBid.bidder.firstName} ${highestBid.bidder.lastName}`;
+        winnerName = greetingName(highestBid.bidder);
       } else if (highestBid.bidderEmail) {
         winnerEmail = highestBid.bidderEmail.toLowerCase();
-        winnerName = highestBid.bidderEmail.split('@')[0];
       }
       if (winnerEmail && winnerEmail !== sellerEmail) {
         const user = highestBid.bidder?._id ? await Customer.findById(highestBid.bidder._id) : null;
@@ -1370,13 +1364,12 @@ async function sendPrivateRoomEndNotifications(listing, highestBid = null) {
     // Send "not winner" email to all other bidders
     for (const bid of bids) {
       let bidderEmail = null;
-      let bidderName = 'Guest Bidder';
+      let bidderName = '';
       if (bid.bidder?.email) {
         bidderEmail = bid.bidder.email.toLowerCase();
-        bidderName = `${bid.bidder.firstName} ${bid.bidder.lastName}`;
+        bidderName = greetingName(bid.bidder);
       } else if (bid.bidderEmail) {
         bidderEmail = bid.bidderEmail.toLowerCase();
-        bidderName = bid.bidderEmail.split('@')[0];
       }
       if (!bidderEmail || notifiedEmails.has(bidderEmail) || bidderEmail === sellerEmail) continue;
       notifiedEmails.add(bidderEmail);
@@ -1456,9 +1449,11 @@ async function handlePrivateRoomEnd(listingId, io = null) {
     // Fire in-app notifications for winner and seller
     if (highestBid) {
       const { notifyBuyerAuctionWon, notifySellerWinnerSelected, emitNewNotificationToUser } = require('./notificationService');
-      const winnerName = highestBid.bidder
-        ? `${highestBid.bidder.firstName || ''} ${highestBid.bidder.lastName || ''}`.trim()
-        : (highestBid.bidderEmail || 'Bidder').split('@')[0];
+      // This one goes to the *seller*, so it is publicDisplayName, not
+      // greetingName: the seller is entitled to the winner's name because they
+      // have to ship to them, but never to the local part of a guest's email
+      // address, which is what this used to fall back to.
+      const winnerName = publicDisplayName(highestBid.bidder, 'A buyer');
       const sellerUserId = listingForNotify.seller?._id?.toString?.() || listingForNotify.seller?.toString?.();
       const buyerUserId = highestBid.bidder?._id?.toString?.() || highestBid.bidder?.toString?.();
       if (sellerUserId) {
@@ -1532,7 +1527,7 @@ async function handlePrivateRoomEligibleExpired(listingId, io = null) {
         await sendAuctionClosedNotifications(listingForNotify, highestBid._id);
         await createTransactionForListing(listingId, { privateRoom: true }).catch(err => logger.error('Tx for eligible-expired:', err.message));
         const { notifySellerWinnerSelected, notifyBuyerAuctionWon, emitNewNotificationToUser } = require('./notificationService');
-        const winnerName = `${highestBid.bidder.firstName} ${highestBid.bidder.lastName}`.trim();
+        const winnerName = publicDisplayName(highestBid.bidder, 'A buyer');
         const sellerUserId = listingForNotify.seller?._id?.toString?.() || listingForNotify.seller?.toString?.();
         const buyerUserId = highestBid.bidder?._id?.toString?.() || highestBid.bidder?.toString?.();
         if (sellerUserId) {
@@ -1587,7 +1582,7 @@ async function handlePrivateRoomSingleAcceptance(listingId, acceptedInvitation, 
       await sendAuctionClosedNotifications(listingForNotify, winnerBid._id);
       await createTransactionForListing(listingId, { privateRoom: true }).catch(err => logger.error('Tx for single-acceptance:', err.message));
       const { notifySellerWinnerSelected, notifyBuyerAuctionWon, emitNewNotificationToUser } = require('./notificationService');
-      const winnerName = `${winnerBid.bidder.firstName} ${winnerBid.bidder.lastName}`.trim();
+      const winnerName = publicDisplayName(winnerBid.bidder, 'A buyer');
       const sellerUserId = listingForNotify.seller?._id?.toString?.() || listingForNotify.seller?.toString?.();
       const buyerUserId = winnerBid.bidder?._id?.toString?.() || winnerBid.bidder?.toString?.();
       if (sellerUserId) {

@@ -204,7 +204,7 @@ export class DashboardHomeComponent implements OnInit, OnDestroy {
 
   get pendingOffersCount(): number {
     return this.bidderListings.filter((l) => {
-      if (l.auctionFormat !== 'best-offer' || l.status !== 'active') return false;
+      if (l.sellingMode !== 'offers' || l.status !== 'active') return false;
       return (l.bets || []).some((b) => b.status === 'pending');
     }).length;
   }
@@ -323,8 +323,8 @@ export class DashboardHomeComponent implements OnInit, OnDestroy {
   }
 
   getFormatLabel(listing: Listing): string {
-    return listing.auctionFormat === 'best-offer'
-      ? this.translate.instant('dashboard.home.formatBestOffer')
+    return listing.sellingMode === 'offers'
+      ? this.translate.instant('dashboard.home.formatOffers')
       : this.translate.instant('dashboard.home.formatAuction');
   }
 

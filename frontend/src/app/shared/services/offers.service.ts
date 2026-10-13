@@ -6,18 +6,19 @@ import { API_CONFIG } from '../config/api.config';
 export interface Offer {
   _id: string;
   listing: string;
+  /**
+   * Opaque id only. The API publishes neither the offerer's name nor their
+   * email — offers are public, so naming them named every buyer on the site.
+   */
   offerer: {
     _id: string;
-    firstName: string;
-    lastName: string;
-    email?: string;
   } | null;
   amount: number;
   message?: string;
   status: 'pending' | 'accepted' | 'rejected' | 'withdrawn' | 'expired';
   respondedAt?: string;
   sellerResponse?: string;
-  offererName?: string;
+  /** Initials only. The offer history does not name people. */
   offererInitials?: string;
   /** Whether the bidder has verified their email (only for registered users). */
   offererVerified?: boolean;

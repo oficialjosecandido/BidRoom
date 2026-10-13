@@ -41,8 +41,11 @@ export class HowItWorksComponent implements OnInit, OnDestroy {
   private bidInterval?:   ReturnType<typeof setInterval>;
   private seatIdx = 0;
 
-  readonly buyerFaqs    = [0, 1, 2, 3];
-  readonly sellerFaqs   = [0, 1, 2, 3, 4];
+  // The first three of each are the selling-mode questions, deliberately at the
+  // top: "what is the difference between bidding and offering" is the question
+  // the single-listing-type change exists to answer.
+  readonly buyerFaqs    = [0, 1, 2, 3, 4, 5, 6];
+  readonly sellerFaqs   = [0, 1, 2, 3, 4, 5, 6, 7];
   readonly privateFaqs  = [0, 1, 2, 3];
   readonly paymentsFaqs = [0, 1, 2, 3];
 

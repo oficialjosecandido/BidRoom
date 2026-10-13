@@ -1,7 +1,7 @@
 {
   "name": "BidRoom",
   "short_name": "BidRoom",
-  "description": "Leilões premium. Compra e vende artigos únicos através de leilões em tempo real, Melhor Proposta ou Sala Privada.",
+  "description": "Leilões premium. Compra e vende artigos únicos através de leilões em tempo real, Propostas ou Sala Privada.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#090909",

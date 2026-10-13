@@ -813,8 +813,30 @@ $radius-lg:      20px;
   max-width: 340px;
   margin: 0 auto;
 
+  // The field is euros whatever the display currency is, so the € sits inside
+  // the box rather than being formatted into the value.
   &__input-row {
     width: 100%;
+    display: flex;
+    align-items: stretch;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid $border-glass;
+    border-radius: $radius-sm;
+    overflow: hidden;
+    transition: border-color 0.2s;
+
+    &:focus-within { border-color: rgba($gold, 0.4); }
+  }
+
+  &__currency {
+    display: flex;
+    align-items: center;
+    padding: 0 0.85rem;
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: $text-muted;
+    border-right: 1px solid $border-glass;
+    flex: 0 0 auto;
   }
 
   &__input {
@@ -823,16 +845,15 @@ $radius-lg:      20px;
     font-size: 1.15rem;
     font-weight: 600;
     color: $text-primary;
-    background: rgba(255, 255, 255, 0.06);
-    border: 1px solid $border-glass;
-    border-radius: $radius-sm;
+    background: transparent;
+    border: none;
     text-align: center;
     font-variant-numeric: tabular-nums;
-    transition: border-color 0.2s;
     box-sizing: border-box;
+    min-width: 0;
 
     &::placeholder { color: $text-muted; }
-    &:focus { outline: none; border-color: rgba($gold, 0.4); }
+    &:focus { outline: none; }
   }
 
   &__error {

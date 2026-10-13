@@ -305,9 +305,9 @@ export interface AdminCreateAuctionPayload {
   condition?: string;
   /** auction (via listingFormat) or giveaway */
   saleFormat?: 'auction' | 'giveaway';
-  listingFormat?: 'highest-bid' | 'best-offer';
+  listingFormat?: 'bidding' | 'offers';
   startingPrice?: number;
-  /** Required when listingFormat is best-offer */
+  /** Required when listingFormat is offers */
   minimumOfferPrice?: number;
   duration?: string;
   shippingOption?: string;

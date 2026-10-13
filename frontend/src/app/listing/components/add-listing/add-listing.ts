@@ -327,16 +327,36 @@ export class AddListing implements OnInit, OnDestroy {
   // ─── Step management ────────────────────────────────────────────────────────
   currentStep = 1;
   mobileStepsOpen = false;
-  readonly totalSteps = 6;
   readonly isLight = computed(() => this.themeService.effective() === 'light');
 
+  /**
+   * The steps, by name.
+   *
+   * Named rather than written as literals because the numbering has already
+   * moved once and the literals did not survive it well: the selling mode used
+   * to be step 1 all on its own, which asked a seller to choose a mechanism
+   * before they had described the item. Folding it into pricing shifted every
+   * later step down by one, and a bare `=== 5` gave no clue whether it meant
+   * "shipping" or "the one before last".
+   *
+   * Public so the template addresses panels by name too.
+   */
+  readonly STEP = {
+    details: 1,
+    photos: 2,
+    pricing: 3,
+    shipping: 4,
+    publish: 5,
+  } as const;
+
+  readonly totalSteps = this.STEP.publish;
+
   readonly steps = [
-    { n: 1, titleKey: 'addListing.steps.format', subKey: 'addListing.steps.formatSub' },
-    { n: 2, titleKey: 'addListing.steps.details', subKey: 'addListing.steps.detailsSub' },
-    { n: 3, titleKey: 'addListing.steps.photos', subKey: 'addListing.steps.photosSub' },
-    { n: 4, titleKey: 'addListing.steps.pricing', subKey: 'addListing.steps.pricingSub' },
-    { n: 5, titleKey: 'addListing.steps.shipping', subKey: 'addListing.steps.shippingSub' },
-    { n: 6, titleKey: 'addListing.steps.publish', subKey: 'addListing.steps.publishSub' },
+    { n: this.STEP.details, titleKey: 'addListing.steps.details', subKey: 'addListing.steps.detailsSub' },
+    { n: this.STEP.photos, titleKey: 'addListing.steps.photos', subKey: 'addListing.steps.photosSub' },
+    { n: this.STEP.pricing, titleKey: 'addListing.steps.pricing', subKey: 'addListing.steps.pricingSub' },
+    { n: this.STEP.shipping, titleKey: 'addListing.steps.shipping', subKey: 'addListing.steps.shippingSub' },
+    { n: this.STEP.publish, titleKey: 'addListing.steps.publish', subKey: 'addListing.steps.publishSub' },
   ];
 
   toggleTheme(): void {
@@ -358,7 +378,7 @@ export class AddListing implements OnInit, OnDestroy {
       this.currentStep = n;
       this.errorMessage = '';
       this.mobileStepsOpen = false;
-      if (n === 5) this.applyVehicleLogisticsDefaults();
+      if (n === this.STEP.shipping) this.applyVehicleLogisticsDefaults();
       return;
     }
     for (let s = this.currentStep; s < n; s++) {
@@ -370,7 +390,7 @@ export class AddListing implements OnInit, OnDestroy {
     this.errorMessage = '';
     this.currentStep = n;
     this.mobileStepsOpen = false;
-    if (n === 5) this.applyVehicleLogisticsDefaults();
+    if (n === this.STEP.shipping) this.applyVehicleLogisticsDefaults();
   }
 
   nextStep(): void {
@@ -379,7 +399,7 @@ export class AddListing implements OnInit, OnDestroy {
       this.errorMessage = '';
       this.currentStep = this.currentStep + 1;
       this.mobileStepsOpen = false;
-      if (this.currentStep === 5) this.applyVehicleLogisticsDefaults();
+      if (this.currentStep === this.STEP.shipping) this.applyVehicleLogisticsDefaults();
     }
   }
 
@@ -398,18 +418,64 @@ export class AddListing implements OnInit, OnDestroy {
     return this.listingForm?.get(this.langTitleKey(this.primaryLangTab))?.value || '';
   }
   get previewCategory(): string { return this.listingForm?.get('category')?.value || ''; }
-  get previewFormat(): string { return this.listingForm?.get('listingFormat')?.value || 'auction'; }
+
+  /**
+   * The chosen selling mode, defaulting to bidding — which is both the form's
+   * default and the server's, so an unanswered control and a missing one read
+   * the same way. (They did not before: the control defaulted to best-offer
+   * while this getter fell back to auction.)
+   */
+  get sellingMode(): string { return this.listingForm?.get('sellingMode')?.value || 'bidding'; }
+  get isBiddingMode(): boolean { return this.sellingMode === 'bidding'; }
+  get isOffersMode(): boolean { return this.sellingMode === 'offers'; }
+
+  /**
+   * A selling mode out of whatever a stored draft happens to hold.
+   *
+   * Drafts outlive deploys — one saved before the rename carries
+   * `listingFormat: 'auction' | 'best-offer'`, and a seller who comes back to it
+   * must find the mode they picked, not the default. The backend normalizer in
+   * routes/listings.js accepts the same spellings for the same reason.
+   */
+  private static sellingModeFrom(...candidates: unknown[]): string | null {
+    for (const raw of candidates) {
+      if (raw == null) continue;
+      const value = String(raw).trim();
+      if (value === 'bidding' || value === 'auction' || value === 'highest-bid') return 'bidding';
+      if (value === 'offers' || value === 'best-offer') return 'offers';
+    }
+    return null;
+  }
+
+  /**
+   * The full sentence for the chosen mode, for the review step.
+   *
+   * The short badge below is a separate key on purpose: it has to fit on a card
+   * corner, and shortening the sentence to fit would have meant inventing a
+   * label like "Leilão" — exactly the abstract mechanism name this redesign set
+   * out to stop showing people.
+   */
+  get sellingModeLabel(): string {
+    return this.isBiddingMode
+      ? 'addListing.sellingMode.bidding'
+      : 'addListing.sellingMode.offers';
+  }
+
+  get sellingModeBadge(): string {
+    return this.isBiddingMode
+      ? 'addListing.sellingMode.biddingBadge'
+      : 'addListing.sellingMode.offersBadge';
+  }
 
   get previewPrice(): string {
-    const fmt = this.previewFormat;
-    const v = fmt === 'auction'
+    const v = this.isBiddingMode
       ? this.listingForm?.get('startingBid')?.value
       : this.listingForm?.get('minimumAcceptPrice')?.value;
     return v ? `€${parseFloat(v).toFixed(2)}` : '—';
   }
 
   get previewPriceLabel(): string {
-    return this.previewFormat === 'auction'
+    return this.isBiddingMode
       ? this.translate.instant('addListing.startingBid')
       : this.translate.instant('addListing.minimumAcceptPrice');
   }
@@ -444,24 +510,30 @@ export class AddListing implements OnInit, OnDestroy {
   };
 
   get checklist(): Record<string, boolean> {
-    const fmt = this.previewFormat;
     const tab = this.primaryLangTab;
     const titleCtrl = this.listingForm?.get(this.langTitleKey(tab));
     const descCtrl = this.listingForm?.get(this.langDescKey(tab));
-    const shippingOk = this.isStepValid(5, false);
+    const shippingOk = this.isStepValid(this.STEP.shipping, false);
     return {
-      format: true,
       title: !!titleCtrl?.valid,
       condition: !!this.listingForm?.get('condition')?.valid,
       description: !!descCtrl?.valid,
       photos: this.uploadedFiles.length >= 1 && this.isMediaValid,
-      price: fmt === 'best-offer' ? true : !!this.listingForm?.get('startingBid')?.valid,
+      // Each mode has its own required price: a starting bid, or a floor.
+      price: this.isBiddingMode
+        ? !!this.listingForm?.get('startingBid')?.valid
+        : !!this.listingForm?.get('minimumAcceptPrice')?.valid,
       shipping: shippingOk,
     };
   }
 
+  /**
+   * What the checklist tracks. The selling mode is deliberately not on it: it
+   * has a default and no way to unset it, so the old `format` row was ticked
+   * from the first render and gave the seller a free seventh of the progress
+   * bar for a decision they had not made yet.
+   */
   readonly checklistMeta: { key: string; labelKey: string }[] = [
-    { key: 'format', labelKey: 'addListing.ck.format' },
     { key: 'title', labelKey: 'addListing.ck.title' },
     { key: 'condition', labelKey: 'addListing.ck.condition' },
     { key: 'description', labelKey: 'addListing.ck.desc' },
@@ -872,7 +944,7 @@ export class AddListing implements OnInit, OnDestroy {
       titleEs: ['', [Validators.maxLength(80)]],
       category: [AddListing.DEFAULT_CATEGORY, Validators.required],
       subCategory: [AddListing.DEFAULT_SUBCATEGORY, Validators.required],
-      listingFormat: ['best-offer', Validators.required],
+      sellingMode: ['bidding', Validators.required],
       itemMode: ['single', Validators.required],
       quantity: [null],
       condition: ['', Validators.required],
@@ -915,13 +987,16 @@ export class AddListing implements OnInit, OnDestroy {
       guestEmail: ['']
     }, { validators: [buyNowAboveStartingBid(), scheduledStartWindow()] });
 
-    this.listingForm.get('listingFormat')?.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(format => {
-      this.updateConditionalValidators(format);
-      if (format === 'best-offer') {
-        this.listingForm.patchValue({ allowPrivateRoom: false, autoRelist: false });
+    this.listingForm.get('sellingMode')?.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(mode => {
+      this.updateConditionalValidators(mode);
+      if (mode === 'offers') {
+        // Both belong to bidding alone. Cleared here as well as on the server
+        // so the fee forecast and the review step stop showing them the moment
+        // the seller switches, rather than at publish time.
+        this.listingForm.patchValue({ allowPrivateRoom: false, autoRelist: false, buyNowPrice: null });
       }
     });
-    this.updateConditionalValidators(this.listingForm.get('listingFormat')?.value || 'best-offer');
+    this.updateConditionalValidators(this.listingForm.get('sellingMode')?.value || 'bidding');
     this.updateLangValidators();
 
     this.listingForm.get('itemMode')?.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(mode => {
@@ -1171,7 +1246,7 @@ export class AddListing implements OnInit, OnDestroy {
 
       const patch: Record<string, unknown> = {};
       const keys = [
-        'title', 'category', 'subCategory', 'listingFormat', 'itemMode', 'quantity', 'condition', 'description',
+        'title', 'category', 'subCategory', 'sellingMode', 'itemMode', 'quantity', 'condition', 'description',
         'titlePt', 'titleEn', 'titleFr', 'titleEs', 'descriptionPt', 'descriptionEn', 'descriptionFr', 'descriptionEs',
         'locationCity', 'locationCountry', 'duration', 'scheduleOpening', 'scheduledStart', 'startingBid',
         'buyNowPrice', 'minimumAcceptPrice', 'allowPrivateRoom',
@@ -1235,8 +1310,12 @@ export class AddListing implements OnInit, OnDestroy {
         this.loadAttributeSchema(subCat, cat);
       }
 
-      const format = (patch['listingFormat'] as string) || this.listingForm.get('listingFormat')?.value;
-      this.updateConditionalValidators(format || 'best-offer');
+      // Read from the raw payload, not from `patch`: a draft saved before the
+      // rename has no `sellingMode` key, so the loop above copied nothing and
+      // the mode has to come from the legacy spelling it does carry.
+      const mode = AddListing.sellingModeFrom(p['sellingMode'], p['listingFormat']) || 'bidding';
+      this.listingForm.get('sellingMode')?.setValue(mode, { emitEvent: false });
+      this.updateConditionalValidators(mode);
 
       const urls = p['imageUrls'];
       if (Array.isArray(urls) && urls.length > 0) {
@@ -1279,11 +1358,11 @@ export class AddListing implements OnInit, OnDestroy {
     const buyNowPriceControl        = this.listingForm.get('buyNowPrice');
     const minimumAcceptPriceControl = this.listingForm.get('minimumAcceptPrice');
 
-    if (format === 'auction') {
+    if (format === 'bidding') {
       startingBidControl?.setValidators([Validators.required, Validators.min(0.01)]);
       buyNowPriceControl?.setValidators([Validators.min(0.01)]);
       minimumAcceptPriceControl?.clearValidators();
-    } else if (format === 'best-offer') {
+    } else if (format === 'offers') {
       startingBidControl?.clearValidators();
       buyNowPriceControl?.clearValidators();
       minimumAcceptPriceControl?.setValidators([Validators.required, Validators.min(0.01)]);
@@ -1503,8 +1582,7 @@ export class AddListing implements OnInit, OnDestroy {
     };
     const map = n('minimumAcceptPrice');
     if (map > 0) return map;
-    const format = this.listingForm.get('listingFormat')?.value;
-    if (format === 'auction') return n('startingBid');
+    if (this.isBiddingMode) return n('startingBid');
     return n('buyNowPrice') || n('startingBid');
   }
 
@@ -1512,9 +1590,8 @@ export class AddListing implements OnInit, OnDestroy {
     const env = environment as { bidroomFeeSellerRate?: number; bidroomFeePrivateRoomRate?: number };
     const base = env.bidroomFeeSellerRate ?? 0.035;
     const privateRate = env.bidroomFeePrivateRoomRate ?? 0.06;
-    const format = this.listingForm.get('listingFormat')?.value;
     const privateRoom = !!this.listingForm.get('allowPrivateRoom')?.value;
-    if (format === 'auction' && privateRoom) return privateRate;
+    if (this.isBiddingMode && privateRoom) return privateRate;
     return base;
   }
 
@@ -1720,7 +1797,8 @@ export class AddListing implements OnInit, OnDestroy {
           buttonsStyling: false,
           customClass: { popup: 'br-swal', title: 'br-swal__title', htmlContainer: 'br-swal__body', actions: 'br-swal__actions', confirmButton: 'br-swal__btn br-swal__btn--primary' }
         });
-        this.currentStep = 4;
+        // Back to where the price was set, so they can lower it or sign up.
+        this.currentStep = this.STEP.pricing;
         return;
       }
       const status = await firstValueFrom(this.kycService.fetchStatus()).catch(() => null);
@@ -1745,14 +1823,19 @@ export class AddListing implements OnInit, OnDestroy {
       const guestToken = this.isGuest ? await this.guestSession.ensureToken() : null;
       const listing = await firstValueFrom(this.listingsService.createListing(formData, guestToken));
 
+      // `listing_format` keeps the spelling GA has years of history under; the
+      // translation lives in AnalyticsService, which is the only file that
+      // still knows the old vocabulary.
+      const gaFormat = this.analytics.listingFormatParam(formData.sellingMode);
+
       this.analytics.trackEvent(AnalyticsEvents.LISTING_PUBLISHED, {
         ...this.analytics.listingParams(listing),
-        listing_format: formData.listingFormat ?? '',
+        listing_format: gaFormat,
         allow_private_room: !!formData.allowPrivateRoom,
       });
       this.postHog.track(AnalyticsEvents.LISTING_PUBLISHED, {
         ...this.analytics.listingParams(listing),
-        listing_format: formData.listingFormat ?? '',
+        listing_format: gaFormat,
         allow_private_room: !!formData.allowPrivateRoom,
         starting_price: formData.startingPrice ?? 0,
         image_count: imageUrls.length,
@@ -1889,7 +1972,7 @@ export class AddListing implements OnInit, OnDestroy {
       }
       if (code === 'vehicle_aml_terms_required') {
         // The box is on the last step, which is where the seller already is.
-        this.currentStep = 6;
+        this.currentStep = this.totalSteps;
         this.listingForm.get('vehicleAmlDeclaration')?.markAsTouched();
         this.errorMessage = this.translate.instant('addListing.vehicle.amlRequiredError');
         return;
@@ -1910,7 +1993,7 @@ export class AddListing implements OnInit, OnDestroy {
       // Guest submission refusals. The identity fields live on the last step, so
       // send the visitor back to the field rather than to a page they cannot use.
       if (code === 'email_invalid' || code === 'name_required') {
-        this.currentStep = 6;
+        this.currentStep = this.totalSteps;
         this.listingForm.get(code === 'email_invalid' ? 'guestEmail' : 'guestName')?.markAsTouched();
         this.errorMessage = this.translate.instant(
           code === 'email_invalid' ? 'addListing.guest.emailInvalid' : 'addListing.guest.nameRequired'
@@ -1961,15 +2044,19 @@ export class AddListing implements OnInit, OnDestroy {
       category: formValue.category || AddListing.DEFAULT_CATEGORY,
       subCategory: formValue.subCategory || AddListing.DEFAULT_SUBCATEGORY,
       condition: formValue.condition,
-      listingFormat: formValue.listingFormat,
+      sellingMode: formValue.sellingMode,
       duration: formValue.duration,
       // null = opens immediately; otherwise the listing is visible but closed until then.
       scheduledStart: this.scheduledStartDate()?.toISOString() || null,
-      startingPrice: formValue.startingBid || null,
-      buyNowPrice: formValue.buyNowPrice || null,
-      minimumOfferPrice: formValue.minimumAcceptPrice || null,
-      allowPrivateRoom: formValue.allowPrivateRoom,
-      autoRelist: formValue.listingFormat === 'auction' && formValue.autoRelist === true,
+      // Each price belongs to one mode. Sent as null in the other rather than
+      // left to the server to strip, so what goes over the wire says plainly
+      // which mode this listing is in. The server enforces it regardless — see
+      // the pre-save hook in models/Listing.js.
+      startingPrice: this.isBiddingMode ? (formValue.startingBid || null) : null,
+      buyNowPrice: this.isBiddingMode ? (formValue.buyNowPrice || null) : null,
+      minimumOfferPrice: this.isOffersMode ? (formValue.minimumAcceptPrice || null) : null,
+      allowPrivateRoom: this.isBiddingMode && formValue.allowPrivateRoom === true,
+      autoRelist: this.isBiddingMode && formValue.autoRelist === true,
       commissionRate: this.sellerFeeRatePct,
       locationCity: formValue.locationCity?.trim(),
       locationCountry: formValue.locationCountry,
@@ -2006,31 +2093,31 @@ export class AddListing implements OnInit, OnDestroy {
 
   private getStepFields(step: number): string[] {
     switch (step) {
-      case 1:
-        return ['listingFormat'];
-      case 2:
+      case this.STEP.details:
         return [
           this.langTitleKey(this.primaryLangTab),
           'condition',
           this.langDescKey(this.primaryLangTab),
         ];
-      case 3:
+      case this.STEP.photos:
         return [];
-      case 4: {
-        const fields = this.listingForm.get('listingFormat')?.value === 'auction'
-          ? ['startingBid', 'duration']
-          : ['duration'];
+      case this.STEP.pricing: {
+        // The selling mode lives here now, and it decides which price is
+        // required: a starting bid in bidding mode, a floor in offers mode.
+        const fields = ['sellingMode', 'duration'];
+        if (this.isBiddingMode) fields.push('startingBid');
+        else fields.push('minimumAcceptPrice');
         if (this.scheduleOpeningEnabled) fields.push('scheduledStart');
         return fields;
       }
-      case 5: {
+      case this.STEP.shipping: {
         const fields = ['shippingOption', 'locationCity', 'locationCountry', 'returnPolicy'];
         const opt = this.listingForm.get('shippingOption')?.value;
         if (opt === 'flat-rate') fields.push('flatRateShipping');
         if (opt === 'calculated') fields.push('packageSize', 'shippingOriginPostalCode');
         return fields;
       }
-      case 6: {
+      case this.STEP.publish: {
         const fields = ['sellerDeclaration'];
         if (this.isVehicleListing) fields.push('vehicleAmlDeclaration');
         if (this.isGuest) fields.push('guestName', 'guestEmail');
@@ -2042,7 +2129,7 @@ export class AddListing implements OnInit, OnDestroy {
   }
 
   private isStepValid(step: number, markTouched: boolean): boolean {
-    if (step === 3) {
+    if (step === this.STEP.photos) {
       if (markTouched) { /* media has no form controls */ }
       return this.uploadedFiles.length >= 1 && this.isMediaValid;
     }
@@ -2050,14 +2137,14 @@ export class AddListing implements OnInit, OnDestroy {
     const fields = this.getStepFields(step);
     if (markTouched) {
       fields.forEach(f => this.listingForm.get(f)?.markAsTouched());
-      if (step === 2) {
+      if (step === this.STEP.details) {
         this.specifications.controls.forEach(c => c.markAllAsTouched());
       }
     }
 
     if (fields.some(f => this.listingForm.get(f)?.invalid)) return false;
-    if (step === 2 && this.specifications.length > 0 && this.specifications.invalid) return false;
-    if (step === 2 && this.attributesGroup?.invalid) return false;
+    if (step === this.STEP.details && this.specifications.length > 0 && this.specifications.invalid) return false;
+    if (step === this.STEP.details && this.attributesGroup?.invalid) return false;
     return true;
   }
 
@@ -2071,21 +2158,21 @@ export class AddListing implements OnInit, OnDestroy {
 
   private getStepValidationMessage(step: number): string {
     switch (step) {
-      case 2:
+      case this.STEP.details:
         return this.translate.instant('addListing.errorStep2Description');
-      case 3:
+      case this.STEP.photos:
         return this.uploadedFiles.length < 1
           ? this.translate.instant('addListing.errors.atLeastOnePhoto')
           : this.translate.instant('addListing.uploadMediaError');
-      case 4:
-        return this.translate.instant('addListing.errors.step4Pricing');
-      case 5:
-        return this.translate.instant('addListing.errors.step5Shipping');
-      case 6:
+      case this.STEP.pricing:
+        return this.translate.instant('addListing.errors.pricing');
+      case this.STEP.shipping:
+        return this.translate.instant('addListing.errors.shipping');
+      case this.STEP.publish:
         if (this.isGuest && (this.listingForm.get('guestName')?.invalid || this.listingForm.get('guestEmail')?.invalid)) {
           return this.translate.instant('addListing.guest.errorIdentity');
         }
-        return this.translate.instant('addListing.errors.step6Declaration');
+        return this.translate.instant('addListing.errors.declaration');
       default:
         return this.translate.instant('addListing.errors.stepBlocked');
     }
@@ -2177,7 +2264,7 @@ export class AddListing implements OnInit, OnDestroy {
       titleEn: 'addListing.titleEn',
       category: 'addListing.category',
       subCategory: 'addListing.subCategory',
-      listingFormat: 'addListing.listingFormat',
+      sellingMode: 'addListing.sellingMode.label',
       condition: 'addListing.condition',
       description: 'addListing.description',
       descriptionPt: 'addListing.descriptionPt',

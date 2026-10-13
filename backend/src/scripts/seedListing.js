@@ -74,7 +74,7 @@ Bidding starts at a fraction of what comparable chronographs cost, making this a
       endDate: endDate,
       seller: seller._id,
       status: 'active',
-      auctionFormat: 'highest-bid', // Highest Bid Wins format
+      sellingMode: 'bidding', // Highest Bid Wins format
       durationSlot: '7 days', // Fixed duration slot
       allowPrivateRoom: true, // Allow Private Room (2.0% commission)
       commissionRate: 0.02, // 2.0% commission with Private Room

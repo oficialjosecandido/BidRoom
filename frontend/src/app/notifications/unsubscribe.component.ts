@@ -23,7 +23,7 @@ import { API_CONFIG } from '../shared/config/api.config';
           <div class="state-icon">❌</div>
           <h1>Invalid link</h1>
           <p>{{ errorMessage }}</p>
-          <a routerLink="/landing" class="home-link">Go to homepage</a>
+          <a routerLink="/" class="home-link">Go to homepage</a>
         }
       </div>
     </div>

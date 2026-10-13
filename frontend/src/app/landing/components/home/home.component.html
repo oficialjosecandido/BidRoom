@@ -43,7 +43,7 @@
                   <div class="hc-bid">{{ listingPrice(listing) }}</div>
                 </div>
                 <div class="hc-time">
-                  <div class="hc-time-l">{{ listing.auctionFormat === 'best-offer' ? ('landing.home.listing.offers' | translate) : ('landing.home.listing.endsIn' | translate) }}</div>
+                  <div class="hc-time-l">{{ listing.sellingMode === 'offers' ? ('landing.home.listing.offers' | translate) : ('landing.home.listing.endsIn' | translate) }}</div>
                   <div class="hc-time-v">{{ timeRemaining(listing) }}</div>
                 </div>
               </div>
@@ -142,10 +142,10 @@
               <div class="lc-foot">
                 <div>
                   <div class="lc-pl">{{ listingPriceLabel(listing) | translate }}</div>
-                  <div class="lc-price" [class.g]="listing.saleFormat === 'giveaway' || listing.auctionFormat !== 'best-offer'">{{ listingPrice(listing) }}</div>
+                  <div class="lc-price" [class.g]="listing.saleFormat === 'giveaway' || listing.sellingMode !== 'offers'">{{ listingPrice(listing) }}</div>
                 </div>
                 <div>
-                  <div class="lc-ml">{{ listing.saleFormat === 'giveaway' ? ('GIVEAWAY.PARTICIPANTS_HEADING' | translate) : (listing.auctionFormat === 'best-offer' ? ('landing.home.listing.offers' | translate) : ('landing.home.listing.endsIn' | translate)) }}</div>
+                  <div class="lc-ml">{{ listing.saleFormat === 'giveaway' ? ('GIVEAWAY.PARTICIPANTS_HEADING' | translate) : (listing.sellingMode === 'offers' ? ('landing.home.listing.offers' | translate) : ('landing.home.listing.endsIn' | translate)) }}</div>
                   <div class="lc-mv">{{ timeRemaining(listing) }}</div>
                 </div>
               </div>

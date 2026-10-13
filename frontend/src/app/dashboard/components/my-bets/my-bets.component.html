@@ -56,7 +56,7 @@
                 <div class="bc-row-top">
                   <span class="bc-name">{{ listing.title }}</span>
                   <div class="bc-pills">
-                    @if (listing.auctionFormat === 'best-offer') {
+                    @if (listing.sellingMode === 'offers') {
                       <span class="bc-pill pill-offer">{{ 'myBids.typeOffer' | translate }}</span>
                     } @else {
                       <span class="bc-pill pill-live">{{ 'myBids.typeLive' | translate }}</span>

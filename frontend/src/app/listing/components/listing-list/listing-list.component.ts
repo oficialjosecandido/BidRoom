@@ -235,8 +235,8 @@ export class ListingListComponent implements OnInit, OnDestroy {
     if (this.locationFilter.trim()) params.location = this.locationFilter.trim();
     if (this.minPrice) params.minPrice = parseFloat(this.minPrice);
     if (this.maxPrice) params.maxPrice = parseFloat(this.maxPrice);
-    if (this.formatFilter === 'auction') params.auctionFormat = 'highest-bid';
-    if (this.formatFilter === 'offer') params.auctionFormat = 'best-offer';
+    if (this.formatFilter === 'auction') params.sellingMode = 'bidding';
+    if (this.formatFilter === 'offer') params.sellingMode = 'offers';
     if (this.statusEnding && this.listingStatusFilter === 'active') params.endingSoon = true;
     if (this.statusPrivate) params.allowPrivateRoom = true;
 
@@ -353,7 +353,7 @@ export class ListingListComponent implements OnInit, OnDestroy {
 
   formatFilterLabel(): string {
     if (this.formatFilter === 'auction') return this.translate.instant('listingList.formatAuction');
-    if (this.formatFilter === 'offer') return this.translate.instant('listingList.formatBestOffer');
+    if (this.formatFilter === 'offer') return this.translate.instant('listingList.formatOffers');
     return '';
   }
 
@@ -566,8 +566,8 @@ export class ListingListComponent implements OnInit, OnDestroy {
     if (listing.allowPrivateRoom) {
       badges.push({ type: 'priv', class: 'lb-priv', label: this.translate.instant('listingList.badgePrivateRoom') });
     }
-    if (listing.auctionFormat === 'best-offer') {
-      badges.push({ type: 'off', class: 'lb-off', label: this.translate.instant('listingList.badgeBestOffer') });
+    if (listing.sellingMode === 'offers') {
+      badges.push({ type: 'off', class: 'lb-off', label: this.translate.instant('listingList.badgeOffers') });
     } else if (!listing.allowPrivateRoom) {
       // Skip redundant "Auction" label when private-room already signals auction format.
       badges.push({ type: 'auc', class: 'lb-auc', label: this.translate.instant('listingList.badgeAuction') });
@@ -587,7 +587,7 @@ export class ListingListComponent implements OnInit, OnDestroy {
 
   priceLabel(listing: Listing): string {
     if (listing.saleFormat === 'giveaway') return this.translate.instant('GIVEAWAY.PILL');
-    return listing.auctionFormat === 'best-offer'
+    return listing.sellingMode === 'offers'
       ? this.translate.instant('listingList.minPrice')
       : this.translate.instant('listingList.currentBid');
   }
@@ -599,7 +599,7 @@ export class ListingListComponent implements OnInit, OnDestroy {
         ? this.translate.instant('GIVEAWAY.ONE_ENTRY')
         : this.translate.instant('GIVEAWAY.ENTRIES_COUNT', { count: n });
     }
-    if (listing.auctionFormat === 'best-offer') {
+    if (listing.sellingMode === 'offers') {
       const n = listing.bidCount || 0;
       return n === 1
         ? this.translate.instant('listingList.oneOffer')
@@ -668,7 +668,7 @@ export class ListingListComponent implements OnInit, OnDestroy {
     if (!listing.timeRemaining) return this.translate.instant('listingList.na');
     const { ended, days, hours, minutes, totalMs } = listing.timeRemaining;
     if (ended) return this.translate.instant('listingList.ended');
-    if (listing.auctionFormat === 'best-offer' && days > 0) {
+    if (listing.sellingMode === 'offers' && days > 0) {
       return this.translate.instant('listingList.hoursLeft', { hours: days * 24 + hours });
     }
     const pad = (n: number) => String(n).padStart(2, '0');

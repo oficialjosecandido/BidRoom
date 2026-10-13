@@ -19,14 +19,14 @@ const transactionSchema = new mongoose.Schema({
     required: true,
     index: true
   },
-  /** Set for auction (highest-bid) transactions */
+  /** Set for auction (bidding) transactions */
   winnerBid: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Bid',
     required: false,
     default: null
   },
-  /** Set for best-offer transactions when an offer is accepted */
+  /** Set for offers transactions when an offer is accepted */
   winnerOffer: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Offer',

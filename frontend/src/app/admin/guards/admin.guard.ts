@@ -35,7 +35,7 @@ export class AdminGuard implements CanActivate {
           switchMap((roles) => {
             if (roles.isAdmin) return of(true);
             localStorage.removeItem(ADMIN_ROUTE_KEY);
-            this.router.navigate(['/landing']);
+            this.router.navigate(['/']);
             return of(false);
           })
         );

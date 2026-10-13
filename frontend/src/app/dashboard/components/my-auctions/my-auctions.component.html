@@ -76,8 +76,8 @@
               }
             </div>
             <div class="auction-price">
-              <span class="price-label">{{ listing.auctionFormat === 'best-offer' ? ('dashboard.myAuctions.highestOffer' | translate) : ('dashboard.myAuctions.currentPrice' | translate) }}</span>
-              @if (listing.auctionFormat === 'best-offer') {
+              <span class="price-label">{{ listing.sellingMode === 'offers' ? ('dashboard.myAuctions.highestOffer' | translate) : ('dashboard.myAuctions.currentPrice' | translate) }}</span>
+              @if (listing.sellingMode === 'offers') {
                 @if ((listing.highestOfferAmount ?? listing.currentPrice) == null || (listing.highestOfferAmount ?? listing.currentPrice) === 0) {
                   <span class="price-value">{{ 'dashboard.myAuctions.noOffersYet' | translate }}</span>
                 } @else {
@@ -178,7 +178,7 @@
                     @for (platinumStatus of listing.platinumBidderStatus; track platinumStatus) {
                       <div class="invited-bidder-item" [ngClass]="'status-' + platinumStatus.status">
                         <div class="bidder-avatar">
-                          <span class="avatar-initial">{{ platinumStatus.bidder.firstName[0] }}{{ platinumStatus.bidder.lastName[0] }}</span>
+                          <span class="avatar-initial">{{ platinumStatus.bidder.initials }}</span>
                         </div>
                         <div class="bidder-details">
                           <div class="bidder-name-row">

@@ -242,13 +242,13 @@ router.get('/statistics', authenticateToken, requireAdmin, async (req, res) => {
               $switch: {
                 branches: [
                   {
-                    case: { $eq: [{ $ifNull: ['$auctionFormat', 'highest-bid'] }, 'best-offer'] },
+                    case: { $eq: [{ $ifNull: ['$sellingMode', 'bidding'] }, 'offers'] },
                     then: 'bestOffer'
                   },
                   {
                     case: {
                       $and: [
-                        { $eq: [{ $ifNull: ['$auctionFormat', 'highest-bid'] }, 'highest-bid'] },
+                        { $eq: [{ $ifNull: ['$sellingMode', 'bidding'] }, 'bidding'] },
                         { $eq: ['$allowPrivateRoom', true] }
                       ]
                     },
@@ -450,7 +450,7 @@ router.post('/auctions', authenticateToken, requireAdmin, async (req, res) => {
       metadata: {
         listingId: listing._id,
         title: listing.title,
-        auctionFormat: listing.auctionFormat,
+        sellingMode: listing.sellingMode,
         saleFormat: listing.saleFormat,
         sellerCreated: !!sellerCreated
       }
@@ -668,7 +668,7 @@ router.patch('/auctions/:id/category', authenticateToken, requireAdmin, async (r
     }
 
     // Atomic $set — avoid document.save(), which revalidates every field and
-    // 500s on legacy listings (e.g. best-offer with startingPrice 0 / bad min).
+    // 500s on legacy listings (e.g. offers with startingPrice 0 / bad min).
     const listing = await Listing.findByIdAndUpdate(
       req.params.id,
       { $set: { category, subCategory } },

@@ -95,7 +95,7 @@
         "auction": "Leilão",
         "live": "Ao vivo",
         "privateRoom": "Sala privada",
-        "bestOffer": "Melhor oferta"
+        "offers": "Propostas"
       },
       "listing": {
         "currentBid": "Lance actual",
@@ -146,7 +146,7 @@
         "titleLine1": "Simples",
         "titleLine2": "de ponta a ponta.",
         "step1Title": "Publique",
-        "step1Desc": "Leilão ou melhor oferta. Sem taxas de publicação. Pronto em minutos.",
+        "step1Desc": "Leilão ou propostas. Sem taxas de publicação. Pronto em minutos.",
         "step2Title": "Concorra",
         "step2Desc": "Licitações em tempo real. Ofertas privadas. O sistema decide automaticamente.",
         "step3Title": "Receba com segurança",
@@ -183,7 +183,6 @@
         "account": "Conta",
         "legal": "Legal",
         "activeAuctions": "Leilões activos",
-        "bestOffer": "Melhor oferta",
         "signIn": "Entrar",
         "register": "Registar",
         "dashboard": "Painel",
@@ -341,7 +340,6 @@
       "bids": "licitações",
       "ended": "Terminado",
       "na": "N/D",
-      "bestOffer": "Melhor Oferta",
       "clearFilter": "Limpar Filtro",
       "tryDifferentCategory": "Tenta uma categoria diferente ou limpa o filtro."
     }
@@ -349,14 +347,6 @@
   "addListing": {
     "pageTitle": "Liste o Seu Item",
     "pageSubtitle": "Siga os passos abaixo para criar o seu anúncio",
-    "step1": "Identidade do Item",
-    "step2": "Detalhes e Media",
-    "step3": "Preços e Regras",
-    "step4": "Envio e Revisão",
-    "step1Title": "Passo 1: Identidade e Formato do Item",
-    "step2Title": "Passo 2: Detalhes e Media",
-    "step3Title": "Passo 3: Preços e Regras do Leilão",
-    "step4Title": "Passo 4: Envio e Revisão Final",
     "listingTitle": "Título do Anúncio",
     "titlePlaceholder": "Introduza um título descritivo (máx. 80 caracteres)",
     "langPt": "Português",
@@ -379,9 +369,6 @@
     "selectCategory": "Seleccionar Categoria",
     "subCategory": "Subcategoria",
     "selectSubCategory": "Seleccionar Subcategoria",
-    "listingFormat": "Formato do Anúncio",
-    "formatAuction": "Leilão (Maior Licitação Ganha)",
-    "formatBestOffer": "Melhor Oferta (Vendedor Escolhe a Oferta)",
     "condition": "Estado do Item",
     "selectCondition": "Seleccionar Estado",
     "conditionNew": "Novo",
@@ -470,14 +457,13 @@
     "duration30days": "30 dias",
     "startingBid": "Licitação Inicial",
     "buyNowPrice": "Preço Comprar Agora (Opcional)",
-    "buyNowHint": "Deve ser superior à Licitação Inicial. Permite compra instantânea.",
+    "buyNowHint": "Tem de ser superior à licitação inicial. Um comprador pode levar o artigo por este valor e encerrar as licitações de imediato.",
     "minimumAcceptPrice": "Preço Mínimo de Aceitação",
-    "minimumAcceptHint": "Preço limite em que deve aceitar uma oferta qualificada",
+    "minimumAcceptHint": "O mínimo que admite. Os compradores podem propor menos, e essas pode recusar livremente — mas a partir deste valor fica comprometido: não pode recusar a última proposta que o cumpra e, se ao fechar o anúncio houver exactamente uma, é aceite automaticamente.",
     "enablePrivateRoom": "Ativar Sala Privada",
     "privateRoomHint": "Importante: Ativar Sala Privada aumenta a sua Taxa BidRoom de 3,5% para 6,0%. Deve comprometer-se com esta escolha.",
     "commissionPrivateRoom": "Taxa BidRoom: 6,0% (Sala Privada ativada)",
     "privateRoomNoAcceptNote": "Nota: Se nenhum licitador convidado aceitar o convite da sala privada em 15 minutos, o leilão será encerrado sem vencedor.",
-    "commissionStandard": "Taxa BidRoom: 3,5% (Padrão)",
     "shippingOptions": "Opções de Envio",
     "selectShipping": "Seleccionar Opção de Envio",
     "shippingFlatRate": "Taxa Fixa",
@@ -707,19 +693,17 @@
       "publishFix": "Corrija os erros assinalados antes de publicar.",
       "stepBlocked": "Corrija os erros neste passo antes de continuar.",
       "atLeastOnePhoto": "pelo menos 1 foto",
-      "step4Pricing": "Defina o preço e a duração do anúncio.",
-      "step5Shipping": "Configure o envio e a localização.",
-      "step6Declaration": "Confirme a declaração do vendedor para publicar.",
       "specificationsIncomplete": "especificações incompletas",
       "scheduleRequired": "Escolha a data e a hora de abertura",
       "schedulePast": "A abertura tem de ser no futuro",
-      "scheduleTooFar": "A abertura não pode ser a mais de {{days}} dias"
+      "scheduleTooFar": "A abertura não pode ser a mais de {{days}} dias",
+      "pricing": "Defina o preço e a duração do anúncio.",
+      "shipping": "Configure o envio e a localização.",
+      "declaration": "Confirme a declaração do vendedor para publicar."
     },
     "steps": {
       "label": "Passos",
       "progress": "{{current}} / {{total}}",
-      "format": "Formato",
-      "formatSub": "Leilão ou melhor oferta",
       "details": "Detalhes",
       "detailsSub": "Título, categoria e descrição",
       "photos": "Fotos",
@@ -731,29 +715,6 @@
       "publish": "Publicar",
       "publishSub": "Rever e confirmar"
     },
-    "step5Title": "Envio",
-    "step5": "Método e origem",
-    "step6Title": "Publicar",
-    "step6": "Revisão final",
-    "step1.section": "Escolha o formato do anúncio",
-    "step2.section": "Informação do artigo",
-    "step3.section": "Fotos do artigo",
-    "step4.auction.section": "Preços do leilão",
-    "step4.offer.section": "Preços da melhor oferta",
-    "step5.section": "Método de envio",
-    "step5.sectionVehicle": "Entrega do veículo",
-    "step5.location": "Localização",
-    "step5.paymentMethods": "Métodos de Pagamento Aceites",
-    "step5.paymentMethodsHint": "Escolha quais métodos de pagamento aceita para este anúncio.",
-    "step5.pmStripeLabel": "Cartão de crédito / débito",
-    "step5.pmStripeDesc": "Pagamento online seguro. Sempre disponível.",
-    "step5.pmInPerson": "Pagamento em mão",
-    "step5.pmInPersonDesc": "O comprador paga presencialmente na entrega.",
-    "step5.pmBankTransfer": "Transferência bancária",
-    "step5.pmMbway": "MBWay",
-    "step5.pmNoConfig": "Não tem métodos alternativos configurados.",
-    "step5.pmConfigureNow": "Configurar agora →",
-    "step6.section": "Revisão e publicação",
     "optional": "opcional",
     "offerDeadline": "Prazo para ofertas",
     "offerDeadlineHint": "Mais tempo significa mais compradores a ver o seu anúncio e mais propostas a receber.",
@@ -761,8 +722,6 @@
     "durationHint": "Artigos raros ou premium tendem a gerar mais lances com 7–10 dias.",
     "autoRelistLabel": "Reabrir automaticamente se não vender",
     "autoRelistHint": "Se o leilão terminar sem venda (sem licitações ou reserva não atingida), será reaberto automaticamente por mais um período igual. Pode desactivar a qualquer momento.",
-    "formatBestOfferDesc": "Os compradores submetem propostas e fica ao seu critério escolher a que prefere. Defina um preço mínimo — tem total liberdade para recusar qualquer oferta abaixo desse valor.",
-    "formatAuctionDesc": "Os compradores licitam em tempo real e competem pelo seu artigo. A duração e o lance inicial são definidos por si. O vencedor é apurado automaticamente.",
     "drop": {
       "title": "Arraste as fotos para aqui",
       "sub": "ou clique para seleccionar · JPEG, PNG, WebP · máx. 20 fotos"
@@ -780,7 +739,6 @@
       "progress": "Progresso do anúncio"
     },
     "ck": {
-      "format": "Formato seleccionado",
       "title": "Título preenchido",
       "category": "Categoria escolhida",
       "condition": "Condição definida",
@@ -870,6 +828,51 @@
       "saleValue": "Valor de venda",
       "netLabel": "Recebe (estimativa)",
       "empty": "Defina um preço no anúncio ou introduza um valor para simular as comissões."
+    },
+    "details": {
+      "section": "Informação do artigo"
+    },
+    "photos": {
+      "section": "Fotos do artigo",
+      "label": "Passo 3: Preços e Regras do Leilão"
+    },
+    "shipping": {
+      "section": "Método de envio",
+      "sectionVehicle": "Entrega do veículo",
+      "location": "Localização",
+      "paymentMethods": "Métodos de Pagamento Aceites",
+      "paymentMethodsHint": "Escolha quais métodos de pagamento aceita para este anúncio.",
+      "pmBankTransfer": "Transferência bancária",
+      "pmConfigureNow": "Configurar agora →",
+      "pmInPerson": "Pagamento em mão",
+      "pmInPersonDesc": "O comprador paga presencialmente na entrega.",
+      "pmMbway": "MBWay",
+      "pmNoConfig": "Não tem métodos alternativos configurados.",
+      "pmStripeDesc": "Pagamento online seguro. Sempre disponível.",
+      "pmStripeLabel": "Cartão de crédito / débito"
+    },
+    "publish": {
+      "section": "Revisão e publicação"
+    },
+    "sellingMode": {
+      "section": "Como quer vender?",
+      "hint": "Depois da venda é tudo igual — o mesmo pagamento, o mesmo envio, a mesma protecção. A única diferença está na forma como o comprador chega a um preço.",
+      "label": "Modo de venda",
+      "bidding": "Os compradores licitam e o lance mais alto ganha",
+      "biddingDesc": "Os compradores licitam uns contra os outros e vêem o preço actual. Quando o tempo acaba, o lance mais alto ganha e a venda está fechada.",
+      "biddingBadge": "Licitações",
+      "offers": "Os compradores enviam propostas e o senhor decide",
+      "offersDesc": "Cada comprador envia-lhe um valor em privado. Nada fica combinado sem que o senhor aceite.",
+      "offersBadge": "Propostas",
+      "fixedNote": "Pode alterar até publicar. A partir daí mantém-se, porque haverá quem tenha licitado ou feito propostas nas condições que definiu."
+    },
+    "pricing": {
+      "section": "Preço e duração"
+    },
+    "advanced": {
+      "section": "Opções avançadas",
+      "hint": "Nada aqui é obrigatório.",
+      "offersEmpty": "Neste modo não há nada a definir aqui. O mínimo que indicou acima é o único valor que os compradores têm de ultrapassar."
     }
   },
   "listingList": {
@@ -926,7 +929,6 @@
     "priceEuro": "Preço (€)",
     "formatAll": "Todos",
     "formatAuction": "Leilão",
-    "formatBestOffer": "Melhor Oferta",
     "resultsCountOne": "{{count}} resultado para \"{{query}}\"",
     "resultsCountMany": "{{count}} resultados para \"{{query}}\"",
     "oneBid": "1 licitação",
@@ -949,7 +951,6 @@
     "badgeLive": "Ao vivo",
     "badgeClosing": "A fechar",
     "badgeAuction": "Leilão",
-    "badgeBestOffer": "Melhor Oferta",
     "badgePrivateRoom": "Sala Privada",
     "addWatchlist": "Adicionar à watchlist",
     "removeWatchlist": "Remover da watchlist",
@@ -964,7 +965,9 @@
     "hoursLeft": "{{hours}}h restantes",
     "applyFilters": "Aplicar filtros",
     "closeFilters": "Fechar filtros",
-    "opensIn": "Abre em {{time}}"
+    "opensIn": "Abre em {{time}}",
+    "formatOffers": "Propostas",
+    "badgeOffers": "Propostas"
   },
   "categories": {
     "title": "Navegar por Categoria",
@@ -987,10 +990,6 @@
       "title": "Este anúncio está em revisão",
       "body": "O seu anúncio ainda não é visível para outros utilizadores. A nossa equipa de moderação irá revê-lo brevemente. Se aprovado, ficará activo automaticamente."
     },
-    "saleType": {
-      "bestOffer": "Melhor Oferta",
-      "auction": "Leilão"
-    },
     "itemMode": {
       "bundle": "Lote",
       "units": "unidades",
@@ -1001,8 +1000,8 @@
     "loading": "A carregar detalhes do anúncio...",
     "backToListings": "← Voltar aos Anúncios",
     "currentBid": "Lance Actual",
-    "highestOffer": "Maior Oferta",
-    "noOffersYet": "Nenhuma oferta ainda",
+    "highestOffer": "Proposta mais alta",
+    "noOffersYet": "Ainda sem propostas",
     "buyNow": "Comprar Agora",
     "privateRoom": {
       "active": "Sala Privada Ativa",
@@ -1032,29 +1031,27 @@
       "statusDeclined": "Recusado"
     },
     "time": {
-      "auctionEnds": "Leilão termina",
-      "offerDeadline": "Prazo para ofertas",
       "privateRoomEnds": "Sala privada termina",
-      "auctionEnded": "Leilão encerrado",
       "listingEnded": "Anúncio encerrado",
       "daysCount": "{{count}} dias",
       "hoursCount": "{{count}} horas",
       "endedShort": "Terminado",
       "na": "—",
-      "endingSoon": "A terminar em breve"
+      "endingSoon": "A terminar em breve",
+      "listingEnds": "Termina em"
     },
     "share": {
       "button": "Partilhar anúncio",
       "linkCopied": "Link copiado",
       "linkCopiedTitle": "Link copiado!",
       "shareTitle": "Partilhar",
-      "note": "Usa este botão para partilhar no WhatsApp e ver a imagem do produto."
+      "note": "Use este botão para partilhar no WhatsApp e ver a imagem do produto."
     },
     "ended": {
       "noBidsSeller": "Este leilão encerrou sem lances. Pode reabri-lo por mais 7 dias abaixo.",
       "selectWinner": "Seleccione um vencedor abaixo.",
       "winnerSelected": "Vencedor seleccionado.",
-      "noOffersSeller": "Este anúncio encerrou sem ofertas. Pode reabri-lo por mais 7 dias abaixo.",
+      "noOffersSeller": "Este anúncio encerrou sem propostas. Pode reabri-lo por mais 7 dias abaixo.",
       "noBidsBuyer": "Este leilão encerrou sem lances.",
       "auctionEndedWinner": "Leilão encerrado. Um vencedor foi seleccionado.",
       "auctionEnded": "Leilão encerrado.",
@@ -1068,15 +1065,15 @@
       "startingBid": "Lance Inicial:",
       "reservePrice": "Preço de Reserva:",
       "reserveNote": "(Vendedor deve vender se atingido)",
-      "minimumOffer": "Oferta Mínima:",
+      "minimumOffer": "Proposta Mínima:",
       "autoAcceptsNote": "(Aceita automaticamente se atingido)",
       "bidIncrement": "Incremento de Lance:"
     },
     "actions": {
       "placeBid": "Fazer Proposta",
-      "placeBidAtMin": "Fazer Proposta · {{amount}}",
+      "placeBidAtMin": "Licitar · {{amount}}",
       "placeBidEmail": "Fazer Proposta (E-mail Necessário)",
-      "makeOffer": "Fazer Oferta",
+      "makeOffer": "Fazer proposta",
       "addToWatchlist": "Adicionar à Lista de Desejos",
       "removeFromWatchlist": "Remover da Lista de Desejos",
       "selectWinner": "Seleccionar vencedor",
@@ -1085,14 +1082,15 @@
       "editListing": "Editar anúncio",
       "createPrivateRoom": "Criar sala privada",
       "cantBidOwnListing": "Não pode Fazer Proposta no seu próprio anúncio.",
-      "cantOfferOwnListing": "Não pode fazer oferta no seu próprio anúncio.",
+      "cantOfferOwnListing": "Não pode fazer proposta no seu próprio anúncio.",
       "auctionClosedNoBids": "Leilão encerrado sem lances.",
-      "listingClosedNoOffers": "Anúncio encerrado sem ofertas.",
+      "listingClosedNoOffers": "Anúncio encerrado sem propostas.",
       "auctionHasEndedNoBids": "Este leilão encerrou sem lances.",
       "auctionHasEndedWinner": "Este leilão encerrou. Um vencedor foi seleccionado.",
       "auctionHasEnded": "Este leilão encerrou.",
-      "sellerHas24hOffer": "O vendedor tem 24h para aceitar uma oferta",
-      "sellerHas24hWinner": "O vendedor tem 24h para escolher um vencedor"
+      "sellerHas24hOffer": "O vendedor tem 24h para aceitar uma proposta",
+      "sellerHas24hWinner": "O vendedor tem 24h para escolher um vencedor",
+      "actionBar": "Acções deste anúncio"
     },
     "watchlistCount": {
       "one": "pessoa tem isso na lista de desejos",
@@ -1100,11 +1098,11 @@
     },
     "info": {
       "bids": "Lances",
-      "offers": "Ofertas",
+      "offers": "Propostas",
       "bid": "lance",
       "bidsPlural": "lances",
-      "offer": "oferta",
-      "offersPlural": "ofertas",
+      "offer": "proposta",
+      "offersPlural": "propostas",
       "seller": "Vendedor",
       "condition": "Condição",
       "location": "Localização",
@@ -1134,7 +1132,7 @@
     "tabs": {
       "description": "Descrição",
       "bidHistory": "Histórico de Lances",
-      "offers": "Ofertas"
+      "offers": "Propostas"
     },
     "bidHistory": {
       "loading": "A carregar histórico de lances...",
@@ -1162,18 +1160,18 @@
       "loadingMore": "A carregar…"
     },
     "offerHistory": {
-      "loading": "A carregar ofertas...",
+      "loading": "A carregar propostas...",
       "tryAgain": "Tentar Novamente",
-      "noOffers": "Nenhuma Oferta Ainda",
-      "noOffersDesc": "Seja o primeiro a fazer uma oferta neste item!",
-      "makeOffer": "Fazer uma oferta",
-      "ctaText": "Regras: Submeta a sua oferta antes do prazo. Pode retirá-la enquanto estiver pendente. Se uma ou mais ofertas atingirem ou ultrapassarem o mínimo, o vendedor tem de vender. Abaixo do mínimo, o vendedor não é obrigado a vender.",
-      "offerFrom": "Oferta de",
-      "yourOffer": "A sua oferta",
+      "noOffers": "Ainda sem propostas",
+      "noOffersDesc": "Seja o primeiro a fazer uma proposta neste item!",
+      "makeOffer": "Fazer uma proposta",
+      "ctaText": "Regras: Submeta a sua proposta antes do prazo. Pode retirá-la enquanto estiver pendente. Se uma ou mais propostas atingirem ou ultrapassarem o mínimo, o vendedor tem de vender. Abaixo do mínimo, o vendedor não é obrigado a vender.",
+      "offerFrom": "Proposta de",
+      "yourOffer": "A sua proposta",
       "selectedBySeller": "Seleccionada pelo vendedor",
       "offered": "Oferecido",
       "sellerLabel": "Vendedor:",
-      "acceptDeclineNote": "Pode aceitar ou recusar ofertas após a data de encerramento do anúncio.",
+      "acceptDeclineNote": "Pode aceitar ou recusar propostas após a data de encerramento do anúncio.",
       "accept": "Aceitar",
       "accepting": "Aceitando…",
       "decline": "Recusar",
@@ -1188,8 +1186,8 @@
       "statusExpired": "Expirada",
       "stripeWarningPrefix": "⚠️ Ligue o Stripe em",
       "stripeSettingsLink": "Definições → Pagamentos",
-      "buyerWithdrawNote": "Pode retirar a sua oferta enquanto estiver pendente. Ofertas aceites não podem ser retiradas.",
-      "withdrawTitle": "Retirar esta oferta pendente"
+      "buyerWithdrawNote": "Pode retirar a sua proposta enquanto estiver pendente. Propostas aceites não podem ser retiradas.",
+      "withdrawTitle": "Retirar esta proposta pendente"
     },
     "shipping": {
       "title": "Envio",
@@ -1234,31 +1232,31 @@
       "errorConfirm": "OK"
     },
     "offerModal": {
-      "title": "Fazer uma oferta",
+      "title": "Fazer uma proposta",
       "transparency": "Para que saiba exactamente o que está a oferecer:",
       "startingCurrent": "Inicial / actual",
-      "minimumOffer": "Oferta mínima",
-      "amountLabel": "Valor da sua oferta",
+      "minimumOffer": "Proposta mínima",
+      "amountLabel": "Valor da sua proposta",
       "emailLabel": "O seu e-mail",
       "emailRequiredBadge": "Obrigatório",
-      "emailRequiredCallout": "Introduza o seu e-mail para o vendedor poder responder à sua oferta.",
+      "emailRequiredCallout": "Introduza o seu e-mail para o vendedor poder responder à sua proposta.",
       "emailPlaceholder": "nome@email.com",
-      "emailHint": "O vendedor usará isso para responder à sua oferta.",
-      "belowMinNote": "A sua oferta está abaixo do preço mínimo do vendedor. O vendedor não é obrigado a aceitar esta oferta, mesmo que seja o único licitante.",
+      "emailHint": "O vendedor usará isso para responder à sua proposta.",
+      "belowMinNote": "A sua proposta está abaixo do mínimo do vendedor. O vendedor é livre de a recusar, mesmo que seja a única proposta.",
       "cancel": "Cancelar",
-      "submit": "Enviar oferta",
-      "submitting": "Enviando oferta…",
-      "subtitle": "Se o vendedor aceitar, fica comprometido a comprar a esse preço. Pode retirar a oferta enquanto estiver pendente. Lances de leilão não podem ser retirados.",
-      "figuresHint": "O mínimo é o valor mais baixo que o vendedor considera. O mais alto é a melhor oferta até agora—pode igualar ou ultrapassar, ou manter-se no mínimo.",
-      "highestOffer": "Oferta mais alta",
+      "submit": "Enviar proposta",
+      "submitting": "Enviando proposta…",
+      "subtitle": "Se o vendedor aceitar, fica comprometido a comprar a esse preço. Pode retirar a proposta enquanto estiver pendente.",
+      "figuresHint": "O mínimo é o valor mais baixo que o vendedor considera. O mais alto é a proposta mais alta até agora — pode igualar ou ultrapassar, ou manter-se no mínimo.",
+      "highestOffer": "Proposta mais alta",
       "valueLabel": "Valor (€)",
       "yourOfferPreview": "Está a oferecer:",
-      "successTitle": "A sua oferta foi publicada.",
+      "successTitle": "A sua proposta foi publicada.",
       "successText": "Obrigado",
-      "successTextAccepted": "A sua oferta de {{amount}} foi aceite pelo vendedor. Conclua a compra em Transacções.",
+      "successTextAccepted": "A sua proposta de {{amount}} foi aceite pelo vendedor. Conclua a compra em Transacções.",
       "successConfirm": "Entendido",
-      "errorTitle": "Não foi possível enviar a oferta",
-      "errorText": "Falha ao enviar a oferta. Tente novamente.",
+      "errorTitle": "Não foi possível enviar a proposta",
+      "errorText": "Falha ao enviar a proposta. Tente novamente.",
       "errorConfirm": "OK",
       "invalidAmount": "Introduza um valor válido.",
       "emailRequired": "Introduza o seu e-mail para o vendedor o poder contactar.",
@@ -1334,7 +1332,6 @@
       "signIn": "Entrar"
     },
     "formatPill": {
-      "auction": "Leilão ao vivo",
       "privateRoom": "Sala Privada"
     },
     "sidebar": {
@@ -1352,10 +1349,10 @@
       "watchRoomWaiting": "Ver sala (aguarda início)",
       "ownListingNote": "Este é o seu anúncio.",
       "reopenNoBids": "Sem lances. Pode reabrir por mais 7 dias.",
-      "reopenNoOffers": "Sem ofertas. Pode reabrir por mais 7 dias.",
+      "reopenNoOffers": "Sem propostas. Pode reabrir por mais 7 dias.",
       "inWatchlist": "Na watchlist",
-      "minimumOffer": "Oferta mínima",
-      "minimumOfferDesc": "Ofertas abaixo deste valor podem ser recusadas automaticamente.",
+      "minimumOffer": "Proposta mínima",
+      "minimumOfferDesc": "Pode propor menos, mas o vendedor é livre de recusar qualquer proposta abaixo deste valor.",
       "minimumBid": "Lance mínimo seguinte",
       "bidIncrement": "Incremento:",
       "reviews": "avaliações",
@@ -1363,8 +1360,7 @@
       "follow": "+ Seguir",
       "eligibleCountdown": "Sala privada:",
       "remaining": "restantes",
-      "winnerSelectionCountdownOffer": "24h para aceitar oferta",
-      "winnerSelectionCountdownWinner": "24h para seleccionar vencedor",
+      "winnerSelectionCountdownOffer": "24h para o vendedor decidir",
       "invitedRoomHeader": "Convidados para a sala",
       "buyNow": "Comprar já ·",
       "block": "Bloquear vendedor",
@@ -1402,6 +1398,52 @@
       "notOpenYet": "Este leilão ainda não abriu",
       "opensAt": "Abre a {{date}}",
       "opensIn": "Faltam {{time}}"
+    },
+    "outcome": {
+      "bidding": "Um lance é vinculativo. Se o seu for o mais alto quando o tempo acabar, o artigo é seu e tem 24 horas para pagar.",
+      "offers": "Uma proposta só o vincula se o vendedor a aceitar. Até lá não há venda; se aceitar, tem 24 horas para pagar."
+    },
+    "alerts": {
+      "stayHere": "Ficar aqui",
+      "tryAgain": "Tente novamente.",
+      "offerAccepted": {
+        "title": "Proposta aceite!",
+        "text": "A proposta foi aceite. Vá a Transacções para gerir e concluir a venda."
+      },
+      "stripeRequired": {
+        "title": "Conta Stripe necessária",
+        "html": "Tem de ligar a sua conta Stripe antes de aceitar propostas.<br><br>Vá a <strong>Painel → Definições → Pagamentos</strong> para concluir a configuração.",
+        "goToSettings": "Ir para Definições"
+      },
+      "buyNowConfirm": {
+        "text": "Comprar este artigo agora por {{amount}}? O anúncio fecha imediatamente."
+      },
+      "buyNowSuccess": {
+        "title": "Compra concluída!",
+        "text": "Vá às suas transacções para concluir o pagamento.",
+        "confirm": "Ir para Pagamento"
+      },
+      "buyNowFailed": {
+        "title": "A compra falhou",
+        "text": "Não foi possível concluir a compra."
+      },
+      "winnerSelected": {
+        "title": "Vencedor seleccionado!",
+        "text": "O vencedor foi notificado. Vá a Transacções para gerir e concluir a venda."
+      },
+      "selectWinnerFailed": "Não foi possível seleccionar o vencedor",
+      "reopenFailed": "Não foi possível reabrir o anúncio",
+      "startRoomFailed": "Não foi possível iniciar a sala privada",
+      "createRoomFailed": "Não foi possível criar a sala privada",
+      "invalidSelection": {
+        "title": "Selecção inválida",
+        "text": "Seleccione entre 2 e 5 licitantes para a sala privada."
+      },
+      "loadBidsFailed": "Não foi possível carregar o histórico de lances",
+      "loadOffersFailed": "Não foi possível carregar o histórico de propostas",
+      "acceptOfferFailed": "Não foi possível aceitar a proposta.",
+      "rejectOfferFailed": "Não foi possível recusar a proposta.",
+      "withdrawOfferFailed": "Não foi possível retirar a proposta."
     }
   },
   "auth": {
@@ -1579,7 +1621,7 @@
       "seller": "Vendedor",
       "transactions": "Transacções",
       "notifications": "Notificações",
-      "myBids": "As Minhas Licitações",
+      "myBids": "Lances e Propostas",
       "watchlist": "Watchlist",
       "following": "A seguir",
       "myListings": "Os Meus Anúncios",
@@ -1767,7 +1809,6 @@
       "statActionNeeded": "ação necessária",
       "statActiveListings": "Anúncios activos",
       "formatAuction": "Leilão",
-      "formatBestOffer": "Melhor oferta",
       "statusWinning": "A ganhar",
       "statusOutbid": "Superado",
       "statusEnded": "Terminado",
@@ -1791,7 +1832,8 @@
       "payoutBannerBody": "Ligue a sua conta bancária via Stripe para receber pagamentos quando os seus leilões terminarem. Os compradores não poderão pagar até que isto esteja completo.",
       "payoutBannerCta": "Configurar pagamentos",
       "payoutBannerDismiss": "Dispensar",
-      "checkoutError": "Falha ao iniciar o pagamento. Tente novamente."
+      "checkoutError": "Falha ao iniciar o pagamento. Tente novamente.",
+      "formatOffers": "Propostas"
     },
     "myAccount": {
       "title": "A Minha Conta",
@@ -1850,7 +1892,7 @@
       "checkingVerification": "A verificar estado da verificação…",
       "verificationStatus": "Estado da verificação:",
       "kycReturnBanner": "A sua verificação foi submetida. Actualizaremos o seu estado assim que a análise estiver concluída — normalmente demora alguns minutos.",
-      "kycApproved": "A sua identidade foi verificada. Pode licitar e anunciar artigos acima de $5.000.",
+      "kycApproved": "A sua identidade foi verificada. Pode licitar e anunciar artigos acima de €5.000.",
       "kycVerifiedOn": "Verificado em",
       "kycPending": "A verificação da sua identidade está em curso. Normalmente demora alguns minutos. Será notificado quando estiver concluída.",
       "kycRejectedBase": "A sua verificação anterior não foi aprovada.",
@@ -1887,7 +1929,7 @@
         "activeDesc": "Os vendedores vêem que tem um cartão associado e dão-lhe prioridade nas suas decisões.",
         "disclaimer": "O seu cartão nunca é debitado sem notificação prévia por email e prazo de contestação de 48h.",
         "upgradeTitle": "Aumente as suas hipóteses de ganhar",
-        "benefit1": "Vendedores preferem compradores com cartão associado nos leilões Melhor Oferta",
+        "benefit1": "Com a identidade verificada, um cartão associado coloca-o no nível de confiança de comprador mais alto — o selo que o vendedor vê ao lado de cada lance e proposta",
         "benefit2": "Fica elegível para convites a Salas Privadas exclusivas",
         "benefit3": "Garantia automática ao vendedor em disputas resolvidas contra si",
         "addCard": "Adicionar cartão de pagamento",
@@ -1901,8 +1943,8 @@
       "toggleLabel": "Modo comprador ou vendedor"
     },
     "myBets": {
-      "title": "Meus Lances",
-      "subtitle": "Todos os seus lances e ofertas num só lugar. Ofertas pendentes (Melhor Oferta) podem ser retiradas a qualquer momento; lances de leilão não.",
+      "title": "Os Meus Lances e Propostas",
+      "subtitle": "Todos os seus lances e propostas num só lugar. As propostas pendentes podem ser retiradas a qualquer momento; os lances não.",
       "loading": "A carregar os seus lances...",
       "errorLoading": "Falha ao carregar os seus lances.",
       "tryAgain": "Tentar Novamente",
@@ -1955,12 +1997,12 @@
         "allCategories": "Todas as categorias",
         "allInteractions": "Licitações e propostas",
         "bidsOnly": "Só leilões",
-        "offersOnly": "Só melhor oferta",
+        "offersOnly": "Só propostas",
         "apply": "Aplicar filtros",
         "bidsPlaced": "Licitações feitas",
         "bidsPlacedHint": "Licitações em leilão neste período.",
         "offersMade": "Propostas enviadas",
-        "offersMadeHint": "Propostas de melhor oferta neste período.",
+        "offersMadeHint": "Propostas que enviou neste período.",
         "purchases": "Compras",
         "purchasesHint": "Itens pagos ou concluídos neste período.",
         "totalSpent": "Total gasto",
@@ -2201,7 +2243,7 @@
         "activeDesc": "Os vendedores vêem que tem um cartão associado e dão-lhe prioridade nas suas decisões.",
         "disclaimer": "O seu cartão predefinido nunca é debitado sem notificação prévia por email e prazo de contestação de 48h.",
         "upgradeTitle": "Aumente as suas hipóteses de ganhar",
-        "benefit1": "Vendedores preferem compradores com cartão associado nos leilões Melhor Oferta",
+        "benefit1": "Com a identidade verificada, um cartão associado coloca-o no nível de confiança de comprador mais alto — o selo que o vendedor vê ao lado de cada lance e proposta",
         "benefit2": "Fica elegível para convites a Salas Privadas exclusivas",
         "benefit3": "Garantia automática ao vendedor em disputas resolvidas contra si",
         "addCard": "Adicionar cartão de pagamento",
@@ -2335,7 +2377,7 @@
     },
     "myAuctions": {
       "title": "Meus Anúncios",
-      "subtitle": "Acompanhe os seus leilões e o estado de cada anúncio. Pode eliminar um anúncio apenas se não tiver lances ou ofertas qualificativas (Melhor Oferta: nenhuma igual ou acima do mínimo).",
+      "subtitle": "Acompanhe os seus leilões e o estado de cada anúncio. Pode eliminar um anúncio apenas se não tiver lances ou propostas qualificativas (no modo propostas: nenhuma igual ou acima do mínimo).",
       "loading": "A carregar os seus anúncios...",
       "errorLoading": "Falha ao carregar os seus anúncios.",
       "relistSuccess": "Anúncio reanunciado com sucesso!",
@@ -2370,7 +2412,7 @@
       "editListing": "Editar",
       "deleteListing": "Eliminar",
       "cancelConfirmTitle": "Eliminar este anúncio?",
-      "cancelConfirmText": "Só pode eliminar este anúncio se não houver ofertas ou lances qualificativos. Em Melhor Oferta: sem oferta aceite e sem oferta pendente igual ou superior ao mínimo. Em leilão: sem lances. Ofertas pendentes abaixo do mínimo serão rejeitadas. Esta ação não pode ser anulada.",
+      "cancelConfirmText": "Só pode eliminar este anúncio se não houver propostas ou lances qualificativos. No modo propostas: sem proposta aceite e sem proposta pendente igual ou superior ao mínimo. No modo licitações: sem lances. As propostas pendentes abaixo do mínimo serão rejeitadas. Esta acção não pode ser anulada.",
       "cancelConfirmBtn": "Eliminar anúncio",
       "cancelSuccess": "Anúncio eliminado",
       "cancelError": "Não foi possível eliminar o anúncio",
@@ -2412,7 +2454,7 @@
       "rejectedLabel": "Não aprovado",
       "rejectionReason": "Motivo",
       "pendingReviewHint": "À espera de aprovação. O tempo do leilão só começa quando for aprovado.",
-      "deleteRulesHint": "Eliminar está disponível quando não há lances e, em Melhor Oferta, só se nenhuma oferta atingir o preço mínimo. Consulte os Termos de Utilização.",
+      "deleteRulesHint": "Eliminar está disponível quando não há lances e, no modo propostas, só se nenhuma proposta atingir o preço mínimo. Consulte os Termos de Utilização.",
       "deleteListingTitle": "Eliminar anúncio (apenas sem ofertas ou lances qualificativos)"
     },
     "myAuctionsBidder": {
@@ -2425,7 +2467,7 @@
       "highestOffer": "Maior Oferta",
       "currentPrice": "Preço Actual",
       "noOffersYet": "Nenhuma oferta ainda",
-      "myHighestBid": "Meu maior lance",
+      "myHighestBid": "O meu lance mais alto",
       "totalBids": "Total de lances",
       "ends": "Termina",
       "emailOutbid": "Notificar-me quando for ultrapassado",
@@ -2797,7 +2839,7 @@
       "sub": "Explicamos exactamente o que acontece em cada passo — para compradores, para vendedores, e para todos os que participam nas Salas Privadas.",
       "ctaBuyer": "Sou comprador",
       "ctaSeller": "Sou vendedor",
-      "stat1": "Formatos de leilão",
+      "stat1": "Modos de venda",
       "stat2": "Comissão standard",
       "stat3": "Sala Privada"
     },
@@ -2810,27 +2852,28 @@
     "buyer": {
       "s1": {
         "eye": "Formatos de leilão",
-        "title": "Dois formatos,",
-        "title2": "uma plataforma.",
-        "intro": "No BidRoom pode comprar através de leilão em tempo real ou submeter a sua melhor oferta. Em ambos os casos, os fundos são protegidos até confirmar que recebeu o artigo em boas condições."
+        "title": "Licitar ou propor,",
+        "title2": "conforme o anúncio.",
+        "intro": "Cada anúncio no BidRoom funciona de uma de duas formas, escolhida pelo vendedor e indicada com clareza na própria página do artigo. O que muda é a forma de participar — mais nada.",
+        "equal": "Em qualquer dos casos, o pagamento, a protecção ao comprador e a resolução de problemas funcionam exactamente da mesma maneira."
       },
       "auction": {
-        "title": "Leilão (Highest Bid)",
-        "desc": "Lance em tempo real contra outros compradores. O lance mais alto quando o tempo acaba vence automaticamente. Pode definir um lance máximo e deixar o sistema licitar por si.",
+        "title": "Licitações",
+        "desc": "Os compradores competem em tempo real. Defina o seu lance máximo e o sistema licita por si até esse valor. Quando o tempo acaba, o lance mais alto vence automaticamente. Um lance é um compromisso: se vencer, paga.",
         "commission": "0% de comissão para o comprador",
         "f1": "Duração definida pelo vendedor — 1 a 15 dias",
-        "f2": "Pode existir preço de reserva — só vincula se for atingido",
+        "f2": "Só podem vencer os lances feitos com conta registada",
         "f3": "Preço de venda opcional — compre imediatamente sem esperar",
         "f4": "Após o leilão pode haver uma Sala Privada exclusiva"
       },
       "offer": {
-        "title": "Melhor Oferta (Best Offer)",
-        "desc": "Submeta a sua proposta antes do prazo. O vendedor escolhe a que prefere. Pode adicionar uma mensagem à sua oferta. Só pode ter uma oferta activa por anúncio.",
+        "title": "Propostas",
+        "desc": "Envia ao vendedor o valor que considera justo, com ou sem mensagem. Ele aceita, recusa, ou espera por propostas melhores até ao fim do prazo. Só há negócio quando o vendedor aceita a sua proposta.",
         "commission": "0% de comissão para o comprador",
-        "f1": "Nomes dos outros compradores são visíveis",
+        "f1": "As propostas são públicas: o valor, a mensagem e as iniciais de quem propõe aparecem no anúncio — o nome nunca",
         "f2": "Pode incluir mensagem com a sua oferta",
-        "f3": "Preço de venda: se fizer match, o artigo é seu imediatamente",
-        "f4": "O vendedor não é obrigado a vender abaixo do preço mínimo"
+        "f3": "Pode retirar a sua proposta enquanto estiver pendente",
+        "f4": "Pode propor abaixo do mínimo do vendedor, mas ele é livre de recusar"
       },
       "s2": {
         "eye": "Passo a passo",
@@ -2847,10 +2890,10 @@
         "desc": "Navegue por categorias — relógios, arte, automóveis, joalharia, antiguidades e mais. Adicione anúncios à watchlist para acompanhar sem licitar."
       },
       "step3": {
-        "title": "Lance ou faça uma oferta",
-        "desc": "<strong>Leilão:</strong> cada lance tem de superar o anterior pelo incremento definido. Se for superado, recebe uma notificação imediata.<br><strong>Melhor oferta:</strong> submeta o valor que considera justo, com ou sem mensagem.",
-        "noteTitle": "Lances vs ofertas.",
-        "note": "Os lances em leilão são vinculativos e não podem ser cancelados. As propostas de Melhor Oferta podem ser retiradas enquanto estiverem pendentes. Depois de aceite, a oferta torna-se uma venda vinculativa."
+        "title": "Licite ou faça uma proposta",
+        "desc": "<strong>A página do artigo é a mesma nos dois casos</strong> — muda apenas o botão. Em licitações, cada lance tem de superar o anterior pelo incremento definido, e é notificado assim que for superado. Em propostas, envia o valor que considera justo, com ou sem mensagem.",
+        "noteTitle": "Lances vs propostas.",
+        "note": "Um lance é vinculativo e não pode ser cancelado. Uma proposta pode ser retirada enquanto estiver pendente; depois de o vendedor a aceitar, torna-se uma venda vinculativa."
       },
       "step4": {
         "title": "Se ganhar — pague em 24 horas",
@@ -2875,14 +2918,20 @@
         "desc": "Após a transacção concluída, pode avaliar o vendedor numa escala de 1 a 10. As descrições das avaliações são <strong>privadas</strong> — só o vendedor as vê."
       },
       "faq": {
-        "q0": "Posso cancelar um lance depois de o fazer?",
-        "a0": "Os <strong>lances</strong> em leilão são vinculativos e não podem ser cancelados. As propostas de <strong>Melhor Oferta</strong> podem ser retiradas enquanto estiverem pendentes. Depois de o vendedor aceitar, a venda é vinculativa.",
-        "q1": "O que acontece se o vendedor não enviar o artigo?",
-        "a1": "Se o vendedor não enviar dentro de <strong>5 dias úteis</strong>, a transacção é cancelada automaticamente e receberá o reembolso completo na sua forma de pagamento original.",
-        "q2": "Tenho direito de arrependimento?",
-        "a2": "O BidRoom é maioritariamente uma plataforma C2C (particulares). Em leilões online entre particulares, o direito de arrependimento geralmente não se aplica. Se o vendedor for um profissional, os seus direitos são diferentes — verifique nos Termos de Utilização.",
-        "q3": "Quanto pago de comissão?",
-        "a3": "<strong>O comprador não paga comissão de venda ao BidRoom.</strong> Paga o valor do artigo mais uma taxa de serviço BidRoom (2,9% + €0,30 por transacção), com teto de <strong>€500</strong>, acrescentada ao total no checkout."
+        "q0": "Qual é a diferença entre licitar e fazer uma proposta?",
+        "a0": "Num anúncio de licitações compete em tempo real e, no fecho, o lance mais alto vence automaticamente — um lance é <strong>vinculativo</strong>. Num anúncio de propostas envia um valor ao vendedor e é ele que decide se aceita. A página do artigo mostra sempre qual dos dois se aplica, no próprio botão onde participa.",
+        "q1": "A minha proposta obriga-me a comprar?",
+        "a1": "Só se o vendedor a aceitar. Enquanto estiver pendente, pode retirá-la. Uma vez aceite, tem <strong>24 horas</strong> para pagar, exactamente como num leilão ganho.",
+        "q2": "Posso fazer uma proposta num anúncio de licitações?",
+        "a2": "Não. Cada anúncio funciona num único modo: se for de licitações, licita; se for de propostas, propõe.",
+        "q3": "Posso cancelar um lance depois de o colocar?",
+        "a3": "Os <strong>lances</strong> são vinculativos e não podem ser cancelados. As <strong>propostas</strong> podem ser retiradas enquanto estiverem pendentes. Depois de o vendedor aceitar, a venda é vinculativa.",
+        "q4": "O que acontece se o vendedor não enviar o artigo?",
+        "a4": "Se o vendedor não enviar no prazo de <strong>5 dias úteis</strong>, a transacção é cancelada automaticamente e recebe o reembolso integral no meio de pagamento original.",
+        "q5": "Tenho direito de livre resolução?",
+        "a5": "O BidRoom é sobretudo uma plataforma C2C (entre particulares). Em leilões em linha entre particulares, o direito de livre resolução geralmente não se aplica. Se o vendedor for profissional, os seus direitos são diferentes — consulte os Termos de Utilização.",
+        "q6": "Quanta comissão pago?",
+        "a6": "<strong>Os compradores não pagam comissão de venda ao BidRoom.</strong> Paga o preço do artigo mais uma taxa de serviço BidRoom (2,9% + 0,30 € por transacção), limitada a <strong>500 €</strong>, acrescentada ao total no pagamento."
       }
     },
     "seller": {
@@ -2893,14 +2942,14 @@
         "intro": "Publicar um anúncio no BidRoom é completamente gratuito. A comissão só é cobrada quando a transacção é concluída com sucesso — e é deduzida automaticamente antes do payout."
       },
       "comm": {
-        "th1": "Formato",
+        "th1": "Modo de venda",
         "th2": "Comissão do vendedor",
         "th3": "Exemplo (artigo de € 1.000)",
-        "r1": "Leilão (sem Sala Privada)",
+        "r1": "Licitações (sem Sala Privada)",
         "ex1": "Recebe € 965",
-        "r2": "Leilão (com Sala Privada)",
+        "r2": "Licitações (com Sala Privada)",
         "ex2": "Recebe € 940 — mas fecha em média 32% mais alto",
-        "r3": "Melhor Oferta",
+        "r3": "Propostas",
         "ex3": "Recebe € 965",
         "note": "A taxa de serviço BidRoom (2,9% + €0,30, com teto de €500) é cobrada ao comprador e acrescentada ao valor final no checkout — não é deduzida do seu pagamento. O payout é transferido para a sua conta bancária via Stripe Connect após a confirmação de recepção pelo comprador."
       },
@@ -2916,13 +2965,13 @@
       },
       "step2": {
         "title": "Crie o anúncio em 6 passos",
-        "desc": "O wizard de publicação guia-o por: formato (leilão ou melhor oferta), detalhes, fotos (até 20), preço, envio e localização, e revisão final. Pode guardar como rascunho a qualquer momento.",
+        "desc": "O assistente de publicação guia-o por tudo: o modo de venda — quer que os compradores licitem (leilão a tempo, vence o lance mais alto) ou que lhe enviem propostas (o senhor decide quais aceita)? —, depois detalhes, fotos (até 20), preço, envio e localização, e revisão final. Pode guardar como rascunho a qualquer momento.",
         "noteTitle": "KYC para artigos ≥ € 5.000.",
         "note": "Para publicar ou licitar em artigos com valor igual ou superior a € 5.000, é necessária verificação de identidade nos termos da legislação anti-branqueamento."
       },
       "step3": {
         "title": "Aguarde o encerramento",
-        "desc": "<strong>Leilão:</strong> o vencedor é apurado automaticamente quando o tempo acaba. Não precisa de fazer nada.<br><strong>Melhor oferta:</strong> recebe notificação de cada proposta. Pode aceitar ou recusar até ao prazo. Ao aceitar uma oferta, as restantes fecham automaticamente."
+        "desc": "<strong>Licitações:</strong> o vencedor é apurado automaticamente quando o tempo acaba. Não precisa de fazer nada.<br><strong>Propostas:</strong> recebe notificação de cada proposta e decide até ao prazo. Ao aceitar uma, as restantes fecham automaticamente."
       },
       "step4": {
         "title": "O comprador paga — tem 24 horas",
@@ -2941,16 +2990,22 @@
         "note": "Se o comprador não confirmar a recepção dentro do prazo, o sistema liberta os fundos automaticamente (auto-release). Não precisa de contactar o suporte."
       },
       "faq": {
-        "q0": "Quando recebo o pagamento?",
-        "a0": "Os fundos são libertados quando o comprador confirma a recepção. Depois disso, a transferência via Stripe Connect demora tipicamente <strong>1–2 dias úteis bancários</strong>.",
-        "q1": "Posso definir um preço mínimo no formato Melhor Oferta?",
-        "a1": "Sim, e é mesmo <strong>obrigatório</strong> definir um preço mínimo nos anúncios de Melhor Oferta. Não é obrigado a aceitar nenhuma oferta abaixo desse valor — tem controlo total sobre o que aceita.",
-        "q2": "O que acontece se o comprador abrir uma disputa?",
-        "a2": "Quando uma disputa é aberta, ambas as contas são restringidas e os fundos ficam retidos. A equipa BidRoom analisa as evidências de ambas as partes. Se não for possível chegar a acordo, o caso é encaminhado para o CNIACC.",
-        "q3": "Posso cancelar um anúncio após publicação?",
-        "a3": "Sim, enquanto o anúncio estiver em rascunho, à espera de aprovação ou activo — e apenas se não houver lances/ofertas qualificativos: em Melhor Oferta, sem oferta aceite e sem oferta pendente igual ou superior ao mínimo; em leilão, sem lances. Ofertas abaixo do mínimo são rejeitadas automaticamente. Não pode eliminar um anúncio que já tenha vencedor ou transacção activa.",
-        "q4": "Que artigos não posso listar?",
-        "a4": "Estão proibidos: animais vivos, substâncias controladas, armas, e qualquer artigo ilegal em Portugal. O BidRoom usa moderação automática (Azure AI Content Safety) para detectar e bloquear estas listagens antes de serem publicadas."
+        "q0": "Que modo de venda devo escolher?",
+        "a0": "Licitações quando quer maximizar o preço e há procura — deixa o mercado decidir o valor. Propostas quando tem um preço em mente e prefere controlar a quem vende. A comissão é de <strong>3,5% nos dois modos</strong>; só sobe para 6% se activar a Sala Privada, que existe apenas no modo de licitações.",
+        "q1": "Posso mudar de modo depois de publicar?",
+        "a1": "Não, para proteger quem já licitou ou propôs — mudar alteraria o que o lance ou a proposta significam juridicamente para essa pessoa. Para mudar, cancele e crie um novo anúncio: não há taxa de listagem nem de cancelamento.",
+        "q2": "O que é a aceitação automática de propostas?",
+        "a2": "Se, ao fechar o prazo, existir <strong>exactamente uma</strong> proposta igual ou acima do seu valor mínimo, essa proposta é aceite por si — para não perder uma venda válida por esquecimento. Se houver várias acima do mínimo, decide o senhor; se não houver nenhuma, o anúncio encerra sem venda. A aceitação automática exige que a sua conta de pagamentos Stripe esteja configurada.",
+        "q3": "Quando recebo o pagamento?",
+        "a3": "Os fundos são liberados quando o comprador confirma a recepção. Depois disso, a transferência via Stripe Connect leva normalmente <strong>1 a 2 dias úteis bancários</strong>.",
+        "q4": "Posso definir um preço mínimo no modo de propostas?",
+        "a4": "Sim, e é <strong>obrigatório</strong> nos anúncios em modo de propostas. Abaixo desse valor pode recusar livremente. A partir dele fica comprometido: não pode recusar a última proposta que o cumpra e, se ao fechar o anúncio houver exactamente uma, é aceite automaticamente.",
+        "q5": "O que acontece se o comprador abrir um litígio?",
+        "a5": "Quando é aberto um litígio, ambas as contas são restringidas e os fundos ficam retidos. A equipa BidRoom analisa as provas das duas partes. Se não for possível chegar a acordo, o caso é encaminhado para a CNIACC.",
+        "q6": "Posso cancelar um anúncio depois de publicado?",
+        "a6": "Sim, enquanto o anúncio estiver em rascunho, à espera de aprovação, ou activo — e apenas se não houver nada que o vincule: no modo de propostas, nenhuma proposta aceite e nenhuma proposta pendente igual ou acima do mínimo; no modo de licitações, nenhum lance. As propostas pendentes abaixo do mínimo são recusadas automaticamente. Não pode eliminar um anúncio que já tenha vencedor ou uma transacção activa.",
+        "q7": "Que artigos não posso vender?",
+        "a7": "Proibidos: animais vivos, substâncias controladas, armas, e qualquer artigo ilegal em Portugal. O BidRoom usa moderação automática (Azure AI Content Safety) para detectar e bloquear esses anúncios antes de ficarem visíveis."
       },
       "card": {
         "noListingFee": "Sem taxa de listagem",
@@ -2983,7 +3038,7 @@
       },
       "step1": {
         "title": "Elegibilidade — quem pode ter Sala Privada?",
-        "desc": "A Sala Privada só é possível em leilões do tipo Highest Bid com a opção activada pelo vendedor. Para ser accionada, é necessário que: o leilão tenha terminado, a reserva (se existir) tenha sido atingida, e existam pelo menos <strong>2 licitantes autenticados e registados</strong>."
+        "desc": "A Sala Privada só é possível em anúncios no modo de licitações e com a opção activada pelo vendedor. Para ser accionada, é necessário que o leilão tenha terminado e existam pelo menos <strong>2 licitantes autenticados e registados</strong>."
       },
       "step2": {
         "title": "Vendedor convida — janela de 15 minutos",
@@ -3104,7 +3159,7 @@
         "q1": "Quando é que o vendedor recebe o meu pagamento?",
         "a1": "O vendedor <strong>não recebe o pagamento imediatamente</strong>. Os fundos ficam retidos pelo BidRoom até confirmar que recebeu o artigo em boas condições. Só então são libertados. Esta custódia protege-o de fraudes.",
         "q2": "Posso pagar com MB Way ou Multibanco?",
-        "a2": "Sim. O BidRoom suporta todos os métodos de pagamento disponíveis via Stripe no mercado português — incluindo cartões Visa/Mastercard, MB Way, Multibanco (referência) e Apple/Google Pay.",
+        "a2": "Não no checkout do BidRoom: o pagamento na plataforma é por cartão — Visa, Mastercard e American Express — processado pela Stripe, e referências Multibanco não são suportadas. O vendedor pode activar MB WAY, transferência bancária ou pagamento em mão no seu próprio anúncio; esses são acertados directamente com o vendedor, fora da custódia do BidRoom, e depois confirmados na transacção, pelo que as opções disponíveis dependem do anúncio.",
         "q3": "O que é o sistema de reputação?",
         "a3": "Cada utilizador tem uma pontuação de reputação de 0 a 100, calculada automaticamente com base em avaliações recebidas, transacções concluídas e disputas. Uma pontuação ≥ 60 sem disputas perdidas é necessária para ser elegível para Salas Privadas."
       },
@@ -3135,13 +3190,13 @@
         "col2": "Valor",
         "r1": {
           "label": "Cartão de crédito / débito",
-          "sub": "Visa, Mastercard, cartões europeus",
+          "sub": "Visa, Mastercard, American Express — via Stripe",
           "val": "Incluído"
         },
         "r2": {
-          "label": "Transferência bancária",
-          "sub": "SEPA, referência Multibanco",
-          "val": "Incluído"
+          "label": "Transferência, MB WAY ou em mão",
+          "sub": "Só se o vendedor activar — acertado directamente com ele, fora da custódia",
+          "val": "À escolha do vendedor"
         },
         "r3": {
           "label": "Payout ao vendedor",
@@ -3321,7 +3376,7 @@
       },
       "account3": {
         "q": "Que métodos de pagamento aceitam?",
-        "a": "Aceitamos todos os principais cartões de crédito (Visa, MasterCard, American Express), PayPal e transferências bancárias. Todos os pagamentos são processados com segurança."
+        "a": "Cartão — Visa, MasterCard e American Express — processado pela Stripe; a BidRoom nunca vê nem guarda os dados do seu cartão. Não aceitamos PayPal. O vendedor pode ainda optar por aceitar transferência bancária, MB WAY ou pagamento em mão no seu anúncio: esses são acertados directamente com o vendedor e depois confirmados na transacção, pelo que as opções disponíveis dependem do anúncio."
       },
       "account4": {
         "q": "Como actualizo minhas informações de pagamento?",
@@ -3337,7 +3392,7 @@
       },
       "bidding2": {
         "q": "Posso cancelar um lance ou retirar uma oferta?",
-        "a": "Os lances em leilão são vinculativos e não podem ser cancelados depois de feitos. As propostas de Melhor Oferta podem ser retiradas a qualquer momento enquanto estiverem pendentes (ainda não aceites ou rejeitadas pelo vendedor). Após a aceitação, a venda é vinculativa e aplicam-se as regras de pagamento."
+        "a": "Os lances são vinculativos e não podem ser cancelados depois de feitos. As propostas podem ser retiradas a qualquer momento enquanto estiverem pendentes (ainda não aceites nem rejeitadas pelo vendedor). Após a aceitação, a venda é vinculativa e aplicam-se as regras de pagamento."
       },
       "bidding3": {
         "q": "Como sei se ganhei um leilão?",
@@ -3345,7 +3400,7 @@
       },
       "bidding4": {
         "q": "O que acontece se eu não pagar por um leilão ganho?",
-        "a": "Se não concluir o pagamento nas 48 horas após vencer, o leilão é oferecido ao licitante seguinte. O não-pagamento repetido pode resultar na suspensão da conta."
+        "a": "O pagamento é devido nas 24 horas seguintes à vitória — 48 horas nos anúncios com Sala Privada. Passado o prazo sem pagamento, a transacção é cancelada, perde 20 pontos de reputação e, caso tenha método de pagamento guardado, é cobrada uma penalização de €30 (€10 para o vendedor, €20 para o BidRoom). O artigo volta a ser anunciado automaticamente nas mesmas condições; na Sala Privada é oferecido ao segundo licitante mais alto, que fica com 24 horas para pagar. À terceira falta de pagamento, a conta é suspensa definitivamente."
       },
       "bidding5": {
         "q": "Posso Fazer Propostas em vários itens ao mesmo tempo?",
@@ -3365,7 +3420,7 @@
       },
       "technical3": {
         "q": "Têm uma app para telemóvel?",
-        "a": "Sim! A nossa app está disponível para iOS e Android. Pode descarregá-la na App Store ou no Google Play."
+        "a": "Ainda não. Por agora a BidRoom funciona no browser do telemóvel — o site foi feito para ecrãs pequenos e pode adicioná-lo ao ecrã principal para abrir como uma app. Uma app nativa para iOS e Android está planeada; até lá, não existe nenhuma app BidRoom na App Store nem no Google Play."
       },
       "technical4": {
         "q": "Por que não estou recebendo notificações por e-mail?",
@@ -3547,154 +3602,6 @@
       "phoneLabel": "Telefone:"
     }
   },
-  "terms": {
-    "hero": {
-      "title": "Termos e Condições",
-      "subtitle": "Leia estes termos com atenção antes de usar a nossa plataforma.",
-      "lastUpdated": "Última actualização: dezembro de 2024"
-    },
-    "s1": {
-      "title": "1. Aceitação dos Termos",
-      "p1": "Ao acceder e usar o BidRoom (\"o Serviço\"), aceita e concorda em ficar vinculado pelos termos deste contrato.",
-      "p2": "Estes Termos e Condições (\"Termos\") regem o uso da nossa plataforma de marketplace de leilões, operada pelo BidRoom."
-    },
-    "s2": {
-      "title": "2. Descrição do Serviço",
-      "intro": "O BidRoom é um marketplace de leilões online que permite aos utilizadores:",
-      "li1": "Listar itens para leilão",
-      "li2": "Participar de leilões dando lances",
-      "li3": "Comprar itens pelo processo de leilão",
-      "li4": "Interagir com outros utilizadores num ambiente seguro",
-      "note": "Reservamo-nos o direito de modificar, suspender ou descontinuar o Serviço a qualquer momento sem aviso prévio."
-    },
-    "s3": {
-      "title": "3. Contas de Utilizador",
-      "s1": {
-        "title": "3.1 Criação de Conta",
-        "intro": "Para usar o nosso Serviço, tem de criar uma conta fornecendo informações precisas. É responsável por:",
-        "li1": "Manter a confidencialidade das suas credenciais",
-        "li2": "Todas as actividades que ocorrem sob a sua conta",
-        "li3": "Notificar-nos imediatamente sobre qualquer uso não autorizado",
-        "li4": "Garantir que as informações da conta permaneçam actualizadas"
-      },
-      "s2": {
-        "title": "3.2 Elegibilidade da Conta",
-        "p": "Tem de ter pelo menos 18 anos para criar uma conta. Ao criar uma conta, declara que cumpre este requisito."
-      },
-      "s3": {
-        "title": "3.3 Suspensão de Conta",
-        "p": "Reservamo-nos o direito de suspender ou encerrar contas que violem estes Termos ou se envolvam em actividades fraudulentas ou ilegais."
-      }
-    },
-    "s4": {
-      "title": "4. Lances e Leilões",
-      "s1": {
-        "title": "4.1 Processo de Lance",
-        "intro": "Ao participar de leilões:",
-        "li1": "Todos os lances são definitivos e não podem ser retirados",
-        "li2": "Tem de ter fundos suficientes para cobrir o seu lance máximo",
-        "li3": "Usamos um sistema de lance por proxy",
-        "li4": "Os licitantes vencedores são obrigados a concluir a compra"
-      },
-      "s2": {
-        "title": "4.2 Regras dos Leilões",
-        "li1": "Os leilões têm horários específicos de início e término",
-        "li2": "Os lances devem respeitar incrementos mínimos",
-        "li3": "Preços de reserva podem se aplicar a certos leilões",
-        "li4": "Reservamo-nos o direito de cancelar leilões a nosso critério"
-      },
-      "s3": {
-        "title": "4.3 Obrigações de Pagamento",
-        "p": "Os licitantes vencedores devem concluir o pagamento em 48 horas após o encerramento do leilão. O não-pagamento pode resultar em suspensão da conta."
-      }
-    },
-    "s5": {
-      "title": "5. Responsabilidades do Vendedor",
-      "intro": "Se anunciar itens para leilão, concorda em:",
-      "li1": "Fornecer descrições precisas e completas",
-      "li2": "Incluir fotos claras e de alta qualidade",
-      "li3": "Definir preços iniciais e de reserva adequados",
-      "li4": "Enviar os itens prontamente após receber o pagamento",
-      "li5": "Responder às consultas dos compradores em tempo hábil",
-      "li6": "Cumprir todas as leis e regulamentações aplicáveis"
-    },
-    "s6": {
-      "title": "6. Actividades Proibidas",
-      "intro": "Concorda em não:",
-      "li1": "Usar o Serviço para fins ilegais ou não autorizados",
-      "li2": "Interferir ou perturbar o Serviço ou servidores",
-      "li3": "Tentar acesso não autorizado a qualquer parte do Serviço",
-      "li4": "Criar múltiplas contas para contornar restrições",
-      "li5": "Participar de lances fictícios ou outras práticas fraudulentas",
-      "li6": "Listar itens proibidos (armas, substâncias ilegais, etc.)",
-      "li7": "Violar quaisquer leis ou regulamentações aplicáveis",
-      "li8": "Assediar, abusar ou prejudicar outros utilizadores"
-    },
-    "s7": {
-      "title": "7. Taxas e Pagamentos",
-      "s1": {
-        "title": "7.1 Taxas de Serviço",
-        "intro": "Podemos cobrar taxas por certos serviços, incluindo:",
-        "li1": "Taxas de listagem para itens de leilão",
-        "li2": "Taxas de transacção para vendas concluídas",
-        "li3": "Recursos e serviços premium"
-      },
-      "s2": {
-        "title": "7.2 Processamento de Pagamento",
-        "p": "Todos os pagamentos são processados com segurança pelos nossos parceiros de pagamento."
-      },
-      "s3": {
-        "title": "7.3 Reembolsos",
-        "p": "As políticas de reembolso variam por tipo de transacção e estão sujeitas ao nosso critério e às leis aplicáveis."
-      }
-    },
-    "s8": {
-      "title": "8. Propriedade Intelectual",
-      "p1": "O Serviço e o seu conteúdo original são de propriedade do BidRoom e protegidos por leis de propriedade intelectual.",
-      "p2": "Não pode reproduzir, distribuir, modificar ou criar obras derivadas do nosso conteúdo sem permissão expressa por escrito."
-    },
-    "s9": {
-      "title": "9. Isenções de Responsabilidade",
-      "p1": "O SERVIÇO É FORNECIDO \"COMO ESTÁ\" E \"CONFORME DISPONÍVEL\" SEM GARANTIAS DE QUALQUER TIPO.",
-      "p2": "Não garantimos que o Serviço será ininterrupto, seguro ou livre de erros."
-    },
-    "s10": {
-      "title": "10. Limitação de Responsabilidade",
-      "p1": "NA MÁXIMA EXTENSÃO PERMITIDA POR LEI, O BIDROOM NÃO SERÁ RESPONSÁVEL POR DANOS INDIRETOS, INCIDENTAIS, ESPECIAIS, CONSEQUENTES OU PUNITIVOS.",
-      "p2": "A nossa responsabilidade total para consigo não excederá o valor que nos pagou nos 12 meses anteriores à reclamação."
-    },
-    "s11": {
-      "title": "11. Indenização",
-      "intro": "Concorda em defender, indemnizar e isentar o BidRoom e os seus funcionários de quaisquer reclamações decorrentes de:",
-      "li1": "O seu uso do Serviço",
-      "li2": "A sua violação destes Termos",
-      "li3": "A sua violação de direitos de terceiros",
-      "li4": "Qualquer conteúdo que submeta através do Serviço"
-    },
-    "s12": {
-      "title": "12. Rescisão",
-      "p1": "Podemos encerrar ou suspender a sua conta imediatamente, sem aviso prévio, por qualquer motivo.",
-      "p2": "Após a rescisão, o seu direito de usar o Serviço cessará imediatamente."
-    },
-    "s13": {
-      "title": "13. Lei Aplicável",
-      "p1": "Estes Termos serão interpretados e regidos pelas leis do Estado de Delaware.",
-      "p2": "Qualquer disputa decorrente destes Termos será resolvida nos tribunais de Delaware."
-    },
-    "s14": {
-      "title": "14. Alterações nos Termos",
-      "p1": "Reservamo-nos o direito de modificar ou substituir estes Termos a qualquer momento.",
-      "p2": "O uso continuado do Serviço após tais alterações constitui aceitação dos novos Termos."
-    },
-    "s15": {
-      "title": "15. Informações de Contacto",
-      "intro": "Se tiver dúvidas sobre estes Termos, entre em contacto:",
-      "emailLabel": "E-mail:",
-      "addressLabel": "Endereço:",
-      "address": "Departamento Jurídico BidRoom, 123 Auction Street, Commerce City, CC 12345",
-      "phoneLabel": "Telefone:"
-    }
-  },
   "report": {
     "titleListing": "Denunciar Anúncio",
     "titleUser": "Denunciar Utilizador",
@@ -3751,7 +3658,6 @@
     "noActiveListings": "Sem leilões activos de momento.",
     "noEndedListings": "Ainda sem leilões terminados.",
     "ended": "Terminado",
-    "bestOffer": "Best Offer",
     "noOffersYet": "Sem ofertas ainda",
     "offer": "oferta",
     "offers": "ofertas",
@@ -3762,14 +3668,15 @@
     "follow": "Seguir",
     "following": "A seguir",
     "mute": "Silenciar notificações",
-    "unmute": "Ativar notificações"
+    "unmute": "Ativar notificações",
+    "offersMode": "Propostas"
   },
   "myBids": {
     "filterAll": "Todos",
     "filterWinning": "A ganhar",
     "filterOutbid": "Superado",
     "filterEnded": "Terminado",
-    "myBest": "O meu melhor",
+    "myBest": "O meu mais alto",
     "currentPrice": "Actual",
     "bids": "Lances",
     "ends": "Termina",
@@ -3811,17 +3718,17 @@
       "h2": "2. Elegibilidade",
       "h2p1": "Para utilizar a plataforma, o utilizador deve ter pelo menos 18 anos de idade e capacidade legal para celebrar contratos. Ao criar uma conta, o utilizador declara cumprir estes requisitos.",
       "h3": "3. A plataforma",
-      "h3p1": "O BidRoom disponibiliza dois formatos de listagem:",
-      "h3li1": "<strong>Leilão (Highest Bid):</strong> compradores fazem lances em tempo real. O lance mais alto no final do período vence automaticamente.",
-      "h3li2": "<strong>Melhor Oferta (Best Offer):</strong> compradores submetem propostas. O vendedor escolhe a que prefere antes do prazo. O vendedor não é obrigado a aceitar qualquer oferta abaixo do preço mínimo definido.",
-      "h3p2": "O BidRoom pode ainda oferecer <strong>Salas Privadas</strong>, uma funcionalidade opcional disponível em leilões, onde o vendedor convida licitantes seleccionados para uma ronda adicional após o encerramento do leilão público.",
+      "h3p1": "Cada anúncio do BidRoom opera num de dois modos de venda, definido pelo vendedor no momento da publicação e indicado na página do artigo. O modo de venda não pode ser alterado depois de o anúncio ser publicado:",
+      "h3li1": "<strong>Licitações:</strong> ao submeter um lance, o comprador formula uma declaração de vontade <strong>vinculativa e irrevogável</strong> de adquirir o artigo pelo valor licitado. No termo do prazo do anúncio, a venda é adjudicada automaticamente ao lance mais elevado submetido a partir de conta registada, sem necessidade de intervenção do vendedor. Caso o anúncio tenha preço <strong>Comprar Já</strong> e este seja pago, o anúncio encerra de imediato.",
+      "h3li2": "<strong>Propostas:</strong> a proposta submetida pelo comprador constitui uma <strong>proposta contratual</strong> dirigida ao vendedor. O contrato de compra e venda apenas se forma com a aceitação pelo vendedor, expressa ou automática nos termos da alínea seguinte. Até à aceitação, o comprador pode retirar a proposta a qualquer momento. O vendedor pode recusar livremente qualquer proposta de valor inferior ao mínimo que tenha definido; as propostas de valor igual ou superior a esse mínimo ficam sujeitas ao disposto na alínea seguinte e impedem a eliminação do anúncio.",
+      "h3p2": "O BidRoom pode ainda disponibilizar <strong>Salas Privadas</strong>, uma ronda complementar disponível exclusivamente em anúncios no modo de <strong>Licitações</strong> e quando reunidas as condições de elegibilidade, na qual o vendedor convida licitantes seleccionados após o encerramento da ronda pública. O vencedor é sempre determinado automaticamente pelo lance mais elevado; na Sala Privada o vendedor não selecciona o vencedor.",
       "h4": "4. Comissões e pagamentos",
       "h4p1": "O BidRoom cobra uma comissão ao vendedor sobre o valor final de cada transacção concluída:",
-      "th1": "Formato",
+      "th1": "Modo de venda",
       "th2": "Comissão (vendedor)",
-      "fmt1": "Leilão (sem Sala Privada)",
-      "fmt2": "Leilão (com Sala Privada)",
-      "fmt3": "Melhor Oferta",
+      "fmt1": "Licitações (sem Sala Privada)",
+      "fmt2": "Licitações (com Sala Privada)",
+      "fmt3": "Propostas",
       "h4p2": "É cobrada ao comprador uma taxa de serviço BidRoom, acrescida ao valor final da transacção. Os pagamentos são processados pela Stripe e os fundos são retidos até confirmação de recepção pelo comprador.",
       "h5": "5. Obrigações do vendedor",
       "h5li1": "O vendedor declara ser o legítimo proprietário do artigo listado.",
@@ -3830,8 +3737,8 @@
       "h5li4": "O incumprimento do prazo de envio resulta em cancelamento automático e reembolso ao comprador.",
       "h5li5": "Artigos proibidos incluem: animais vivos, substâncias controladas, armas, e qualquer item ilegal na legislação portuguesa ou europeia.",
       "h6": "6. Obrigações do comprador",
-      "h6li1": "Os <strong>lances em leilão</strong> são vinculativos desde o momento em que são feitos e <strong>não podem ser retirados</strong>. Ao fazer um lance, o comprador compromete-se a pagar se for o vencedor.",
-      "h6li2": "O pagamento deve ser efectuado no prazo de <strong>48 horas</strong> após o encerramento do leilão ou aceitação da proposta. O não pagamento dentro do prazo resulta em cancelamento da transacção, perda de <strong>20 pontos de reputação</strong> e, caso o comprador tenha método de pagamento guardado, numa penalização financeira de <strong>€10 ao vendedor + €20 à BidRoom</strong>. O vendedor fica livre de reanunciar o artigo.",
+      "h6li1": "Os <strong>lances</strong> são vinculativos desde o momento em que são feitos e <strong>não podem ser retirados</strong>. Ao fazer um lance, o comprador compromete-se a pagar se for o vencedor.",
+      "h6li2": "O pagamento deve ser efectuado no prazo de <strong>24 horas</strong> a contar da adjudicação do lance ou da aceitação da proposta. Nos anúncios com <strong>Sala Privada</strong> activada, o prazo é de <strong>48 horas</strong>. O não pagamento dentro do prazo resulta em cancelamento da transacção, perda de <strong>20 pontos de reputação</strong> e, caso o comprador tenha método de pagamento guardado, numa penalização financeira de <strong>€10 ao vendedor + €20 à BidRoom</strong>. O artigo volta a ser anunciado automaticamente nas mesmas condições; na Sala Privada é oferecido ao segundo licitante mais alto, que fica com 24 horas para pagar. À terceira falta de pagamento, a conta é suspensa definitivamente.",
       "h6li3": "O comprador deve confirmar a recepção do artigo dentro do prazo estipulado.",
       "h7": "7. Direito de arrependimento e devoluções",
       "h7p1": "O BidRoom é uma plataforma de leilões entre particulares (C2C). Nos leilões online entre particulares, o direito de arrependimento previsto no Decreto-Lei n.º 24/2014 não é aplicável. Quando um dos intervenientes for um vendedor profissional (empresa ou comerciante), o comprador consumidor dispõe de um prazo de <strong>14 dias</strong> para exercer o direito de arrependimento, sem necessidade de indicar o motivo, nos termos da legislação aplicável. As devoluções são tratadas directamente entre comprador e vendedor, com mediação do BidRoom em caso de litígio.",
@@ -3869,8 +3776,10 @@
       "h17li4": "É registada automaticamente <strong>uma avaliação de 2/5 pela BidRoom</strong> no perfil do comprador.",
       "h17li5": "Ao terceiro incumprimento de pagamento, a conta do comprador é <strong>encerrada permanentemente</strong>.",
       "h17p2": "A penalização financeira aplica-se independentemente da justificação apresentada pelo comprador. Ao colocar uma proposta ou aceitar uma oferta, o utilizador aceita expressamente estes termos.",
-      "h5li6": "<strong>Eliminar um anúncio:</strong> o vendedor pode eliminar (cancelar) um anúncio que esteja em rascunho, à espera de aprovação ou activo, desde que (a) em <strong>Melhor Oferta</strong>, não exista oferta aceite nem oferta pendente igual ou superior ao preço mínimo; (b) em leilões de <strong>Maior Lance</strong>, não existam lances; e (c) não exista vencedor nem transacção activa. Ofertas pendentes abaixo do mínimo são rejeitadas automaticamente quando o anúncio é eliminado. Anúncios já vendidos ou com lances/ofertas qualificativas não podem ser eliminados unilateralmente.",
-      "h6li4": "<strong>Melhor Oferta — retirar uma oferta:</strong> enquanto a oferta estiver <strong>pendente</strong> (ainda não aceite ou rejeitada pelo vendedor), o comprador pode retirá-la a qualquer momento na página do anúncio ou em Meus Lances. Depois de o vendedor aceitar a oferta, a venda torna-se vinculativa e já não pode ser retirada — o pagamento e o cumprimento seguem as regras da transacção."
+      "h5li6": "<strong>Eliminar um anúncio:</strong> o vendedor pode eliminar (cancelar) um anúncio que esteja em rascunho, à espera de aprovação ou activo, desde que (a) no modo de <strong>Propostas</strong>, não exista proposta aceite nem proposta pendente igual ou superior ao valor mínimo; (b) no modo de <strong>Licitações</strong>, não existam lances; e (c) não exista vencedor nem transacção activa. As propostas pendentes abaixo do mínimo são rejeitadas automaticamente quando o anúncio é eliminado. Os anúncios já vendidos ou com lances/propostas qualificadas não podem ser eliminados unilateralmente.",
+      "h6li4": "<strong>Propostas — retirar uma proposta:</strong> enquanto a proposta estiver <strong>pendente</strong> (ainda não aceite nem rejeitada pelo vendedor), o comprador pode retirá-la a qualquer momento na página do anúncio ou em Meus Lances. Depois de a proposta ser aceite, a venda torna-se vinculativa e já não pode ser retirada — o pagamento e o cumprimento seguem as regras da transacção.",
+      "h3li3": "<strong>Aceitação automática de propostas:</strong> se, no termo do prazo de um anúncio em modo de Propostas, existir <strong>exactamente uma</strong> proposta pendente de valor igual ou superior ao valor mínimo, essa proposta é aceite automaticamente e o contrato forma-se nesse momento, sendo as restantes propostas pendentes rejeitadas. O mesmo se aplica durante a vigência do anúncio: o vendedor não pode recusar a última proposta que cumpra o valor mínimo, e a recusa das restantes até subsistir apenas uma proposta qualificada determina a sua aceitação automática. A aceitação automática — como qualquer aceitação — depende de o vendedor ter uma conta de pagamentos Stripe activa; não a tendo, o anúncio encerra sem venda e o vendedor é notificado. Existindo duas ou mais propostas que cumpram o valor mínimo no termo do prazo, não há aceitação automática e cabe ao vendedor decidir qual aceita.",
+      "h3li4": "<strong>Igualdade de tratamento após a venda:</strong> independentemente do modo de venda, aplicam-se de forma idêntica as disposições relativas ao pagamento, à retenção de fundos, aos prazos de envio, à confirmação de recepção, à resolução de litígios e aos reembolsos."
     },
     "privacy": {
       "eyebrow": "Política de Privacidade",
@@ -4049,21 +3958,108 @@
       "titleEnded": "Sala privada terminada",
       "titleStarted": "Leilão privado iniciado",
       "titleClosed": "Sala privada encerrada",
-      "bodyWinner": "Parabéns — ganhou com a licitação mais alta de <strong>{{amount}}</strong>. Consulte o email e vá a Transacções para concluir o pagamento em 48 horas.",
+      "bodyWinner": "Parabéns — ganhou com o lance mais alto de <strong>{{amount}}</strong>. Consulte o email e vá a Transacções para concluir o pagamento em 48 horas.",
       "bodySellerWithWinner": "A sessão terminou. <strong>{{name}}</strong> ganhou com <strong>{{amount}}</strong>. Receberá os próximos passos por email.",
-      "bodySellerNoWinner": "A sessão terminou sem licitação vencedora. Pode voltar a publicar o artigo em Os meus leilões.",
+      "bodySellerNoWinner": "A sessão terminou sem lance vencedor. Pode voltar a publicar o artigo em Os meus leilões.",
       "bodyParticipantWithWinner": "A sessão terminou. <strong>{{name}}</strong> ganhou com <strong>{{amount}}</strong>. Será notificado por email se foi seleccionado.",
-      "bodyParticipantNoWinner": "A sessão terminou. Não houve licitação vencedora. Obrigado por participar.",
-      "bodySpectatorWithWinner": "O leilão privado terminou. A licitação vencedora foi <strong>{{amount}}</strong>.",
-      "bodySpectatorNoWinner": "O leilão privado terminou sem licitação vencedora.",
-      "bodyNoAccept": "Nenhum licitador convidado aceitou a tempo. O leilão encerrou sem vencedor.",
+      "bodyParticipantNoWinner": "A sessão terminou. Não houve lance vencedor. Obrigado por participar.",
+      "bodySpectatorWithWinner": "O leilão privado terminou. O lance vencedor foi <strong>{{amount}}</strong>.",
+      "bodySpectatorNoWinner": "O leilão privado terminou sem lance vencedor.",
+      "bodyNoAccept": "Nenhum licitante convidado aceitou a tempo. O leilão encerrou sem vencedor.",
       "bodySellerLeft": "O vendedor saiu da sala. O leilão encerrou sem vencedor.",
-      "bodyStartedInvited": "O prazo de aceitação terminou. As licitações estão abertas — licite antes do temporizador acabar.",
-      "bodyStartedOther": "O leilão privado começou. Pode assistir em direto; só licitadores convidados podem licitar.",
+      "bodyStartedInvited": "O prazo de aceitação terminou. Os lances estão abertos — licite antes de o temporizador acabar.",
+      "bodyStartedOther": "O leilão privado começou. Pode assistir em direto; só licitantes convidados podem licitar.",
       "bodyConfirming": "O tempo acabou. Estamos a confirmar os resultados finais — esta página actualiza automaticamente.",
       "confirm": "Entendido",
       "viewListing": "Ver anúncio",
       "viewTransactions": "Ir para transacções"
+    },
+    "state": {
+      "loading": "A carregar a sala privada…"
+    },
+    "login": {
+      "title": "É necessário iniciar sessão",
+      "body": "Precisa de ter sessão iniciada para participar nesta sala de leilão privada.",
+      "sub": "Se é um licitante convidado, inicie sessão para licitar.",
+      "cta": "Iniciar sessão para participar"
+    },
+    "lobby": {
+      "title": "A sala ainda não começou",
+      "untilStart": "até a sala começar",
+      "acceptWindow": "Os convidados têm <strong>15 minutos</strong> para aceitar. O leilão começa automaticamente a seguir.",
+      "pendingInvitation": "Tem um convite pendente.",
+      "accepting": "A aceitar…",
+      "accept": "Aceitar convite",
+      "accepted": "Aceitou o convite. O leilão começa em breve.",
+      "checkEmail": "Consulte o email para encontrar o link de aceitação.",
+      "starting": "A iniciar…",
+      "startNow": "Iniciar o leilão agora",
+      "invitedBidders": "Licitantes convidados"
+    },
+    "product": {
+      "imageAlt": "Imagem {{n}}",
+      "viewDetails": "Ver detalhes"
+    },
+    "bid": {
+      "quickBids": "Lances rápidos",
+      "currentBid": "Lance actual",
+      "one": "lance",
+      "many": "lances",
+      "leading": "Na frente",
+      "placing": "A licitar…",
+      "place": "Licitar {{amount}}",
+      "minIncrement": "Incremento mínimo: {{amount}}",
+      "extendsBy": "Cada lance prolonga o temporizador em 60s",
+      "closingSoon": "A fechar em breve — o próximo lance prolonga em 60s",
+      "watching": "Está a assistir a esta sala. Só licitantes convidados podem licitar.",
+      "invalidNumber": "Introduza um valor válido.",
+      "failed": "Não foi possível licitar. Tente novamente.",
+      "tooLow": "O seu lance tem de ser no mínimo {{amount}} — o lance actual mais o incremento.",
+      "success": "Lance de {{amount}} registado."
+    },
+    "activity": {
+      "title": "Actividade",
+      "count": "{{count}} lances",
+      "empty": "Ainda sem lances",
+      "emptySub": "Seja o primeiro a licitar"
+    },
+    "participants": {
+      "title": "Participantes ({{count}})",
+      "you": "(Você)",
+      "seller": "Vendedor",
+      "viewHistory": "Ver o histórico completo de lances"
+    },
+    "history": {
+      "title": "Histórico de lances",
+      "total": "{{count}} no total",
+      "latest": "Mais recente",
+      "empty": "Ainda sem lances — seja o primeiro!"
+    },
+    "invitation": {
+      "accepted": "Aceite",
+      "declined": "Recusado",
+      "pending": "Pendente"
+    },
+    "label": {
+      "you": "Você",
+      "guest": "Convidado",
+      "user": "Utilizador"
+    },
+    "time": {
+      "justNow": "Agora mesmo",
+      "minutesAgo": "há {{n}}m",
+      "hoursAgo": "há {{n}}h",
+      "daysAgo": "há {{n}}d"
+    },
+    "errors": {
+      "loadFailed": "Não foi possível carregar o anúncio.",
+      "acceptTitle": "Não foi possível aceitar",
+      "acceptBody": "Não foi possível aceitar o convite. Tente o link que recebeu por email.",
+      "startTitle": "Não foi possível iniciar",
+      "startBody": "Não foi possível iniciar a sala. Pode já ter começado ou terminado.",
+      "cannotBidTitle": "Não é possível licitar",
+      "cannotBidNotInvited": "Só licitantes convidados pelo vendedor podem licitar. Pode assistir à sala.",
+      "cannotBidClosed": "Não é possível licitar neste momento. A Sala Privada pode ter terminado ou ainda não estar activa."
     }
   },
   "trust": {
@@ -4123,7 +4119,7 @@
         "colT3": "Nível 3",
         "r1": "Licitar em leilões",
         "r1Hint": "Todos os formatos",
-        "r2": "Submeter propostas (Best Offer)",
+        "r2": "Submeter propostas",
         "r3": "Elegibilidade para Sala Privada",
         "r3Hint": "Reputação ≥ 60 obrigatória",
         "r4": "Leilões acima de €5.000",
@@ -4256,7 +4252,7 @@
         "q3": "O que acontece ao meu pagamento enquanto a disputa está em aberto?",
         "a3": "Os fundos ficam bloqueados em escrow enquanto a disputa está activa. A sua conta e a do comprador ficam suspensas preventivamente. O bloqueio levanta-se imediatamente após a decisão, seja ela a seu favor (payout) ou do comprador (reembolso).",
         "q4": "O meu artigo está anunciado incorrectamente e quero retirar. Há penalização?",
-        "a4": "Pode eliminar um anúncio sem lances ou ofertas qualificativas (Melhor Oferta: nenhuma igual ou acima do mínimo) sem penalização. Anúncios com lances/ofertas qualificativos, vencedor ou transacção activa não podem ser cancelados unilateralmente — contacte o suporte para casos excepcionais."
+        "a4": "Pode eliminar um anúncio sem lances ou propostas qualificativas (no modo propostas: nenhuma igual ou acima do mínimo) sem penalização. Anúncios com lances ou propostas qualificativos, vencedor ou transacção activa não podem ser cancelados unilateralmente — contacte o suporte para casos excepcionais."
       }
     },
     "cta": {
@@ -4466,7 +4462,7 @@
     },
     "bestOfferEnded": {
       "title": "Anúncio terminado",
-      "message": "O seu anúncio de melhor proposta \"{{listingTitle}}\" terminou com {{offerCount}} proposta(s). Tem 24 horas para as analisar e aceitar uma."
+      "message": "O seu anúncio de propostas \"{{listingTitle}}\" terminou com {{offerCount}} proposta(s). Tem 24 horas para as analisar e aceitar uma."
     },
     "listingRemoved": {
       "title": "Anúncio removido",

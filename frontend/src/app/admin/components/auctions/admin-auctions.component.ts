@@ -79,7 +79,7 @@ export class AdminAuctionsComponent implements OnInit {
   reportSubmitting = false;
 
   /** UI-only: auction type includes giveaway for the create form. */
-  createSaleType: 'highest-bid' | 'best-offer' | 'giveaway' = 'highest-bid';
+  createSaleType: 'bidding' | 'offers' | 'giveaway' = 'bidding';
 
   createForm: AdminCreateAuctionPayload = this.emptyCreateForm();
 
@@ -186,7 +186,7 @@ export class AdminAuctionsComponent implements OnInit {
       subCategory: 'Luxury Watches',
       condition: 'Used - Excellent',
       saleFormat: 'auction',
-      listingFormat: 'highest-bid',
+      listingFormat: 'bidding',
       startingPrice: 0,
       minimumOfferPrice: undefined,
       duration: '7 days',
@@ -204,7 +204,7 @@ export class AdminAuctionsComponent implements OnInit {
   }
 
   get canAllowPrivateRoom(): boolean {
-    return this.createSaleType === 'highest-bid';
+    return this.createSaleType === 'bidding';
   }
 
   /** Locale checklist shown in the confirm step. */
@@ -359,7 +359,7 @@ export class AdminAuctionsComponent implements OnInit {
   onSaleTypeChange(): void {
     if (this.createSaleType === 'giveaway') {
       this.createForm.saleFormat = 'giveaway';
-      this.createForm.listingFormat = 'highest-bid';
+      this.createForm.listingFormat = 'bidding';
       this.createForm.allowPrivateRoom = false;
       this.createForm.startingPrice = 0;
       if (this.createForm.shippingOption !== 'free' && this.createForm.shippingOption !== 'local-pickup') {
@@ -372,7 +372,7 @@ export class AdminAuctionsComponent implements OnInit {
     }
     this.createForm.saleFormat = 'auction';
     this.createForm.listingFormat = this.createSaleType;
-    if (this.createSaleType === 'best-offer') {
+    if (this.createSaleType === 'offers') {
       this.createForm.allowPrivateRoom = false;
     } else {
       this.createForm.minimumOfferPrice = undefined;
@@ -546,18 +546,18 @@ export class AdminAuctionsComponent implements OnInit {
   }
 
   privateRoomApplies(auction: Listing): boolean {
-    return (auction.auctionFormat ?? 'highest-bid') === 'highest-bid';
+    return (auction.sellingMode ?? 'bidding') === 'bidding';
   }
 
-  auctionFormatLabel(auction: Listing): string {
-    const fmt = auction.auctionFormat ?? 'highest-bid';
-    if (fmt === 'best-offer') return 'Best offer';
+  sellingModeLabel(auction: Listing): string {
+    const fmt = auction.sellingMode ?? 'bidding';
+    if (fmt === 'offers') return 'Best offer';
     return 'Highest bid';
   }
 
   openCreateModal(): void {
     this.createForm = this.emptyCreateForm();
-    this.createSaleType = 'highest-bid';
+    this.createSaleType = 'bidding';
     this.activeCreateLang = 'pt';
     this.previewLang = 'pt';
     this.clearCreatePhotos();
@@ -596,7 +596,7 @@ export class AdminAuctionsComponent implements OnInit {
       alert('Add at least one photo.');
       return;
     }
-    if (this.createSaleType === 'best-offer') {
+    if (this.createSaleType === 'offers') {
       const min = Number(this.createForm.minimumOfferPrice);
       if (!Number.isFinite(min) || min < 0.01) {
         alert('Minimum offer price is required (at least €0.01).');
@@ -622,7 +622,7 @@ export class AdminAuctionsComponent implements OnInit {
       alert('Add at least one photo.');
       return;
     }
-    if (this.createSaleType === 'best-offer') {
+    if (this.createSaleType === 'offers') {
       const min = Number(this.createForm.minimumOfferPrice);
       if (!Number.isFinite(min) || min < 0.01) {
         alert('Minimum offer price is required (at least €0.01).');
@@ -652,7 +652,7 @@ export class AdminAuctionsComponent implements OnInit {
     const payload: AdminCreateAuctionPayload = {
       ...this.createForm,
       saleFormat: this.isGiveawayCreate ? 'giveaway' : 'auction',
-      listingFormat: this.isGiveawayCreate ? undefined : (this.createSaleType === 'best-offer' ? 'best-offer' : 'highest-bid'),
+      listingFormat: this.isGiveawayCreate ? undefined : (this.createSaleType === 'offers' ? 'offers' : 'bidding'),
       sellerEmail,
       title,
       description,
@@ -664,10 +664,10 @@ export class AdminAuctionsComponent implements OnInit {
       descriptionFr: (this.createForm.descriptionFr || '').trim() || undefined,
       startingPrice: this.isGiveawayCreate
         ? 0
-        : this.createSaleType === 'best-offer'
+        : this.createSaleType === 'offers'
           ? Number(this.createForm.minimumOfferPrice) || 0
           : Number(this.createForm.startingPrice) || 0,
-      minimumOfferPrice: this.createSaleType === 'best-offer'
+      minimumOfferPrice: this.createSaleType === 'offers'
         ? Number(this.createForm.minimumOfferPrice)
         : undefined,
       shippingCost: this.isGiveawayCreate ? 0 : Number(this.createForm.shippingCost) || 0,
@@ -679,7 +679,7 @@ export class AdminAuctionsComponent implements OnInit {
       delete payload.allowPrivateRoom;
       delete payload.minimumOfferPrice;
     }
-    if (this.createSaleType !== 'best-offer') {
+    if (this.createSaleType !== 'offers') {
       delete payload.minimumOfferPrice;
     }
 
@@ -749,7 +749,7 @@ export class AdminAuctionsComponent implements OnInit {
       'jewelry',
       '"Luxury Watches"',
       '"Used - Excellent"',
-      'highest-bid',
+      'bidding',
       '100',
       '',
       '"7 days"',
@@ -768,7 +768,7 @@ export class AdminAuctionsComponent implements OnInit {
       'jewelry',
       '"Luxury Watches"',
       '"Used - Excellent"',
-      'best-offer',
+      'offers',
       '',
       '150',
       '"7 days"',

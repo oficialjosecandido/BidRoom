@@ -145,15 +145,15 @@
                     }
                     @if (activeTab === 'ended') {
                       <span class="card-badge">{{ 'sellerProfile.ended' | translate }}</span>
-                    } @else if (listing.auctionFormat === 'best-offer') {
-                      <span class="card-badge card-badge--offer">{{ 'sellerProfile.bestOffer' | translate }}</span>
+                    } @else if (listing.sellingMode === 'offers') {
+                      <span class="card-badge card-badge--offer">{{ 'sellerProfile.offersMode' | translate }}</span>
                     }
                   </div>
                   <div class="card-body">
                     <p class="card-title">{{ listingTitle(listing) }}</p>
                     @if (listing.saleFormat === 'giveaway') {
                       <p class="card-price">{{ 'GIVEAWAY.FREE' | translate }}</p>
-                    } @else if (listing.auctionFormat === 'best-offer' && (listing.currentPrice == null || listing.currentPrice === 0)) {
+                    } @else if (listing.sellingMode === 'offers' && (listing.currentPrice == null || listing.currentPrice === 0)) {
                       <p class="card-price card-price--muted">{{ 'sellerProfile.noOffersYet' | translate }}</p>
                     } @else {
                       <p class="card-price">{{ formatPrice(listing.currentPrice || listing.startingPrice) }}</p>
@@ -161,7 +161,7 @@
                     <div class="card-meta">
                       @if (listing.saleFormat === 'giveaway') {
                         <span>{{ giveawayEntriesLabel(listing) }}</span>
-                      } @else if (listing.auctionFormat === 'best-offer') {
+                      } @else if (listing.sellingMode === 'offers') {
                         <span>{{ listing.bidCount }} {{ listing.bidCount === 1 ? ('sellerProfile.offer' | translate) : ('sellerProfile.offers' | translate) }}</span>
                       } @else {
                         <span>{{ listing.bidCount }} {{ listing.bidCount === 1 ? ('sellerProfile.bid' | translate) : ('sellerProfile.bids' | translate) }}</span>

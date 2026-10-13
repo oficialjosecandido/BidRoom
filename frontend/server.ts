@@ -33,7 +33,9 @@ const angularApp = new AngularNodeAppEngine({
 // A permanent redirect keeps old links and search results working while giving
 // crawlers a single canonical homepage URL. Only the exact path — the children
 // (/landing/faq, /landing/trust, …) keep their URLs.
-app.get('/landing', (_req, res) => res.redirect(301, '/'));
+// Google Search Console will keep listing /landing under "Page with redirect";
+// that is expected and correct — do not try to make /landing indexable again.
+app.get(['/landing', '/landing/'], (_req, res) => res.redirect(301, '/'));
 
 // Sitemap is generated dynamically by the backend from live listing data.
 // Proxied transparently so Google sees a 200 at www.bidroom.pt/sitemap.xml

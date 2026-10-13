@@ -45,6 +45,6 @@ export class LegalLayoutComponent {
   }
 
   navigateToLanding(): void {
-    this.router.navigate(['/landing']);
+    this.router.navigate(['/']);
   }
 }

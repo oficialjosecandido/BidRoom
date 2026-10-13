@@ -144,7 +144,7 @@ export class SeoService {
   private buildListingDescription(listing: Listing, cleanDesc: string): string {
     const price = this.resolveListingPrice(listing);
     const priceStr  = price != null ? fmtEur(price) : 'proposta';
-    const format    = listing.auctionFormat === 'best-offer' ? 'Melhor Proposta' : 'Leilão';
+    const format    = listing.sellingMode === 'offers' ? 'Melhor Proposta' : 'Leilão';
     const cta       = listing.saleFormat === 'giveaway'
       ? 'Passatempo gratuito, sem obrigação de compra. Participe já.'
       : price != null

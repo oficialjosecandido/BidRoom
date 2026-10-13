@@ -74,7 +74,7 @@ export class AuthService {
         const adminRoute = localStorage.getItem('admin_route');
         if (!adminRoute) return;
         const currentPath = window.location.pathname;
-        if ((currentPath.startsWith('/auth') || currentPath === '/landing' || currentPath === '/') && !currentPath.startsWith('/nexus')) {
+        if ((currentPath.startsWith('/auth') || currentPath === '/' || currentPath === '/landing') && !currentPath.startsWith('/nexus')) {
           setTimeout(() => {
             window.location.href = adminRoute;
           }, 100);

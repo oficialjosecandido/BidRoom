@@ -315,7 +315,7 @@ Options:
           category,
           subCategory,
           condition: row.condition || 'Used - Excellent',
-          listingFormat: row.auctionFormat || row.listingFormat || 'best-offer',
+          listingFormat: row.sellingMode || row.listingFormat || 'offers',
           startingPrice: Number(row.preco || row.startingPrice || 0) || 0,
           minimumOfferPrice: Number(row.minimumOfferPrice || row.preco || row.startingPrice || 0) || undefined,
           duration: row.duration || '30 days',

@@ -206,7 +206,7 @@ async function seed() {
       images: [PLACEHOLDER_IMAGE],
       startingPrice: item.price,
       currentPrice,
-      auctionFormat: 'highest-bid',
+      sellingMode: 'bidding',
       durationSlot: item.hours <= 24 ? '24 hours' : item.hours <= 72 ? '3 days' : '7 days',
       bidCount,
       startDate,

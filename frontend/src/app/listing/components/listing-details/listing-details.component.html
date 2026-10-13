@@ -61,12 +61,21 @@
         } @else {
           <span class="main-img-em">🏷</span>
         }
-        <div class="format-pill" [class.format-pill--giveaway]="isGiveaway">
-          @if (isGiveaway) { 🎁 {{ 'GIVEAWAY.PILL' | translate }} }
-          @else if (listing.auctionFormat === 'best-offer') { {{ 'listingDetails.saleType.bestOffer' | translate }} }
-          @else if (listing.allowPrivateRoom && listing.privateRoomStatus === 'active') { {{ 'listingDetails.formatPill.privateRoom' | translate }} }
-          @else { {{ 'listingDetails.formatPill.auction' | translate }} }
-        </div>
+        <!--
+          The pill names only what is genuinely out of the ordinary: a prize
+          nobody pays for, or a room only invited bidders can enter. It no
+          longer names the selling mode. "Leilão ao vivo" against one listing
+          and "Melhor Oferta" against the next was the loudest thing on the
+          page telling the buyer they were on two different sites, and it said
+          it over the photo, before they had anything to act on. How the buyer
+          takes part is said once, in the action block, where they take part.
+        -->
+        @if (isGiveaway || listing.privateRoomStatus === 'active') {
+          <div class="format-pill" [class.format-pill--giveaway]="isGiveaway">
+            @if (isGiveaway) { 🎁 {{ 'GIVEAWAY.PILL' | translate }} }
+            @else { {{ 'listingDetails.formatPill.privateRoom' | translate }} }
+          </div>
+        }
         @if (!isOwnListing) {
           <button
             class="wishlist-btn"
@@ -134,10 +143,10 @@
     <!-- PRICE -->
     <div class="price-section">
       <div class="price-label">
-        {{ listing.auctionFormat === 'best-offer' ? ('listingDetails.highestOffer' | translate) : ('listingDetails.currentBid' | translate) }}
+        {{ (isOffersMode ? 'listingDetails.highestOffer' : 'listingDetails.currentBid') | translate }}
       </div>
       <div class="price-big">
-        @if (listing.auctionFormat === 'best-offer') {
+        @if (isOffersMode) {
           @if (getHighestOfferAmount() === 0) { <span class="price-empty">{{ 'listingDetails.noOffersYet' | translate }}</span> }
           @else { {{ getHighestOfferAmount() | displayPrice }} }
         } @else {
@@ -149,9 +158,9 @@
       }
       <div class="price-meta">
         {{ getOfferOrBidCount() }}
-        {{ listing.auctionFormat === 'best-offer'
-          ? (getOfferOrBidCount() !== 1 ? ('listingDetails.info.offersPlural' | translate) : ('listingDetails.info.offer' | translate))
-          : (getOfferOrBidCount() !== 1 ? ('listingDetails.info.bidsPlural' | translate) : ('listingDetails.info.bid' | translate)) }}
+        {{ (isOffersMode
+          ? (getOfferOrBidCount() !== 1 ? 'listingDetails.info.offersPlural' : 'listingDetails.info.offer')
+          : (getOfferOrBidCount() !== 1 ? 'listingDetails.info.bidsPlural' : 'listingDetails.info.bid')) | translate }}
         @if ((listing.watchlistCount ?? 0) > 0) { · {{ listing.watchlistCount }} {{ 'listingDetails.sidebar.watching' | translate }} }
         · {{ listing.viewCount ?? 0 }} {{ 'listingDetails.sidebar.views' | translate }}
       </div>
@@ -192,7 +201,7 @@
       <div class="status-banner banner-ended">
         <span>🏁</span>
         <div>
-          <strong>{{ 'listingDetails.time.auctionEnded' | translate }}</strong>
+          <strong>{{ 'listingDetails.time.listingEnded' | translate }}</strong>
           @if (currentUserIsWinner()) { <p>{{ 'listingDetails.sidebar.congratsWon' | translate }}</p> }
           @else if (listing.winner && !isOwnListing) { <p>{{ 'listingDetails.sidebar.winnerWasSelected' | translate }}</p> }
           @else if (isOwnListing && listing.winner) { <p>{{ 'listingDetails.ended.winnerSelected' | translate }}</p> }
@@ -215,7 +224,9 @@
         <ul class="inv-list">
           @for (inv of listing.platinumBidderStatus!; track inv.bidder._id) {
             <li class="inv-item">
-              <span class="inv-av">{{ inv.bidder.firstName[0] }}{{ inv.bidder.lastName[0] }}</span>
+              <!-- Named here because the panel is behind isOwnListing and the
+                   API sends the names only to the seller. -->
+              <span class="inv-av">{{ inv.bidder.initials }}</span>
               <span class="inv-name">{{ inv.bidder.firstName }} {{ inv.bidder.lastName }}</span>
               <span class="inv-status inv-{{ inv.status }}">
                 {{ inv.status === 'pending' ? ('listingDetails.privateRoom.statusPending' | translate) : inv.status === 'accepted' ? ('listingDetails.privateRoom.statusAccepted' | translate) : ('listingDetails.privateRoom.statusDeclined' | translate) }}
@@ -234,7 +245,7 @@
       @if (isGiveaway) {
         <span class="dl-l">{{ (isAuctionEnded() ? 'GIVEAWAY.ENTRIES_CLOSED_LABEL' : 'GIVEAWAY.ENTRIES_CLOSE_IN') | translate }}</span>
       } @else {
-        <span class="dl-l">{{ isAuctionEnded() ? ('listingDetails.time.auctionEnded' | translate) : getAuctionEndLabel() }}</span>
+        <span class="dl-l">{{ isAuctionEnded() ? ('listingDetails.time.listingEnded' | translate) : getAuctionEndLabel() }}</span>
       }
       <span class="dl-v">{{ isAuctionEnded() ? '–' : formatTimeRemaining() }}</span>
     </div>
@@ -339,7 +350,8 @@
       <div class="countdown-alert">⏱ {{ 'listingDetails.sidebar.eligibleCountdown' | translate }} {{ formatPrivateRoomEligibleCountdown() }} {{ 'listingDetails.sidebar.remaining' | translate }}</div>
     }
     @if (showWinnerSelectionCountdown()) {
-      <div class="countdown-alert">⏱ {{ listing.auctionFormat === 'best-offer' ? ('listingDetails.sidebar.winnerSelectionCountdownOffer' | translate) : ('listingDetails.sidebar.winnerSelectionCountdownWinner' | translate) }}: {{ winnerSelectionCountdownDisplay }}</div>
+      <!-- Only offers mode has a seller decision to count down — see showWinnerSelectionCountdown(). -->
+      <div class="countdown-alert">⏱ {{ 'listingDetails.sidebar.winnerSelectionCountdownOffer' | translate }}: {{ winnerSelectionCountdownDisplay }}</div>
     }
 
     <!-- SCHEDULED OPENING: the listing is visible, but closed to bids/offers/buy-now until then -->
@@ -351,12 +363,7 @@
       </div>
     }
 
-    <!-- BUY NOW -->
-    @if (!notOpenYet && !isGiveaway && listing.buyNowPrice && listing.auctionFormat === 'highest-bid' && !isAuctionEnded() && !hasPrivateRoom() && !isOwnListing) {
-      <button class="btn-offer btn-buynow" (click)="buyNow()">{{ 'listingDetails.sidebar.buyNow' | translate }} {{ listing.buyNowPrice | displayPrice }}</button>
-    }
-
-    <!-- PRIMARY CTA: giveaway = participate (no bid, no offer). Auction keeps bid/offer. -->
+    <!-- PRIMARY CTA: giveaway = participate. No price, so no floor and no outcome note. -->
     @if (isGiveaway && isGiveawayOpen() && !isOwnListing && !giveawayState?.entered && !giveawayState?.drawn) {
       <button class="btn-offer gw-enter" (click)="enterGiveaway()" [disabled]="giveawayEntering || giveawayLoading">
         {{ giveawayEntering ? ('GIVEAWAY.ENTERING' | translate) : ('GIVEAWAY.ENTER_BUTTON' | translate) }}
@@ -366,14 +373,58 @@
       }
       <p class="gw-note">{{ 'GIVEAWAY.CONSENT' | translate }}</p>
     }
-    @if (!notOpenYet && !isGiveaway && listing.auctionFormat === 'highest-bid' && !isAuctionEnded() && !hasPrivateRoom() && !isOwnListing) {
-      <button class="btn-offer" (click)="openBidModal()">
-        {{ 'listingDetails.actions.placeBidAtMin' | translate:{ amount: formatPrice(getMinBid()) } }}
-      </button>
+
+    <!--
+      ACTION BLOCK — the only part of this page that the selling mode changes.
+      Gallery, price, countdown, seller, escrow block and description are the
+      same markup either way, which is what stops one listing reading as a
+      different site from the next.
+
+      The order inside is the same in both modes: the floor the buyer has to
+      clear, the button that clears it, then one sentence on what happens when
+      they do. The floor used to sit sixty lines further down, below the
+      watchlist button, so the two modes did not even read in the same order.
+    -->
+    @if (showActionFloor || canBuyerAct) {
+      <div class="action-block">
+        @if (showActionFloor) {
+          <div class="min-box">
+            <div class="mb-l">{{ actionFloorLabel | translate }}</div>
+            <div class="mb-v">{{ actionFloorValue | displayPrice }}</div>
+            @if (isBiddingMode) {
+              <div class="mb-d">{{ 'listingDetails.sidebar.bidIncrement' | translate }} {{ listing.bidIncrement | displayPrice }}</div>
+            } @else {
+              <div class="mb-d">{{ 'listingDetails.sidebar.minimumOfferDesc' | translate }}</div>
+            }
+          </div>
+        }
+
+        @if (canBuyerAct) {
+        <!--
+          Buy Now sits above the bid button, not below it: it is the one action
+          that ends the listing on the spot, and a buyer who wants it should not
+          have to read past the slower option. Bidding mode only — an offers
+          listing cannot carry a Buy Now price (see the pre-save hook in
+          models/Listing.js), because closing the sale outright is exactly the
+          seller decision that mode exists to protect.
+        -->
+        @if (isBiddingMode && listing.buyNowPrice) {
+          <button class="btn-offer btn-buynow" (click)="buyNow()">{{ 'listingDetails.sidebar.buyNow' | translate }} {{ listing.buyNowPrice | displayPrice }}</button>
+        }
+
+        @if (isBiddingMode) {
+          <button class="btn-offer" (click)="openBidModal()">
+            {{ 'listingDetails.actions.placeBidAtMin' | translate:{ amount: formatPrice(getMinBid()) } }}
+          </button>
+        } @else {
+          <button class="btn-offer" (click)="openOfferModal()">{{ 'listingDetails.actions.makeOffer' | translate }}</button>
+        }
+
+        <p class="action-outcome">{{ actionOutcomeNote | translate }}</p>
+        }
+      </div>
     }
-    @if (!isGiveaway && listing.auctionFormat === 'best-offer' && !hasPrivateRoom() && !isOwnListing && isBestOfferActive()) {
-      <button class="btn-offer" (click)="openOfferModal()">{{ 'listingDetails.actions.makeOffer' | translate }}</button>
-    }
+
     @if (hasPrivateRoomCreated()) {
       <button class="btn-offer" (click)="openPrivateRoom()">{{ 'listingDetails.sidebar.goToPrivateRoom' | translate }}</button>
     }
@@ -394,7 +445,7 @@
     }
     @if (canReopenListing()) {
       <div class="own-note">
-        {{ listing.auctionFormat === 'highest-bid' ? ('listingDetails.sidebar.reopenNoBids' | translate) : ('listingDetails.sidebar.reopenNoOffers' | translate) }}
+        {{ (isBiddingMode ? 'listingDetails.sidebar.reopenNoBids' : 'listingDetails.sidebar.reopenNoOffers') | translate }}
       </div>
       <button class="btn-offer" (click)="reopenAuction()" [disabled]="reopenLoading">
         {{ reopenLoading ? ('listingDetails.actions.reopening' | translate) : ('listingDetails.actions.reopenForDays' | translate) }}
@@ -415,22 +466,6 @@
       @if ((listing.watchlistCount ?? 0) > 0) {
         <p class="sidebar-note">{{ listing.watchlistCount }} {{ 'listingDetails.sidebar.watching' | translate }}</p>
       }
-    }
-
-    <!-- MIN OFFER / MIN BID -->
-    @if (listing.auctionFormat === 'best-offer' && listing.minimumOfferPrice) {
-      <div class="min-box">
-        <div class="mb-l">{{ 'listingDetails.sidebar.minimumOffer' | translate }}</div>
-        <div class="mb-v">{{ listing.minimumOfferPrice | displayPrice }}</div>
-        <div class="mb-d">{{ 'listingDetails.sidebar.minimumOfferDesc' | translate }}</div>
-      </div>
-    }
-    @if (!isGiveaway && listing.auctionFormat === 'highest-bid' && !isAuctionEnded() && listing.startingPrice) {
-      <div class="min-box">
-        <div class="mb-l">{{ 'listingDetails.sidebar.minimumBid' | translate }}</div>
-        <div class="mb-v">{{ getMinBid() | displayPrice }}</div>
-        <div class="mb-d">{{ 'listingDetails.sidebar.bidIncrement' | translate }} {{ listing.bidIncrement | displayPrice }}</div>
-      </div>
     }
 
     <!-- SHARE -->
@@ -545,12 +580,12 @@
       @if (isGiveaway) {
         <button class="tab" [class.on]="activeTab === 'rules'" (click)="setActiveTab('rules')">{{ 'GIVEAWAY.RULES_TAB' | translate }}</button>
       }
-      @if (listing.auctionFormat === 'highest-bid' && !isGiveaway) {
+      @if (isBiddingMode) {
         <button class="tab" [class.on]="activeTab === 'bids'" (click)="setActiveTab('bids')">
           {{ 'listingDetails.info.bids' | translate }} <span class="tab-c">{{ bidsTotal }}</span>
         </button>
       }
-      @if (listing.auctionFormat === 'best-offer' && !isGiveaway) {
+      @if (isOffersMode) {
         <button class="tab" [class.on]="activeTab === 'offers'" (click)="setActiveTab('offers')">
           {{ 'listingDetails.tabs.offers' | translate }} <span class="tab-c">{{ offersTotal }}</span>
         </button>
@@ -682,7 +717,7 @@
     }
 
     <!-- BIDS TAB -->
-    @if (activeTab === 'bids' && listing.auctionFormat === 'highest-bid' && !isGiveaway) {
+    @if (activeTab === 'bids' && isBiddingMode) {
       <div class="tab-panel">
         @if (isOwnListing && isAuctionEnded() && !hasPrivateRoom() && !listing.winner && bids.length > 0 && !isPrivateRoomEnded()) {
           <div class="info-note">{{ 'listingDetails.ended.selectWinner' | translate }}</div>
@@ -705,10 +740,11 @@
                   <div class="bid-av">{{ bid.bidderInitials || '?' }}</div>
                   <div class="bid-body">
                     <div class="bid-name-row">
-                      <span class="bid-name">
-                        @if (bid.bidderFirstName && bid.bidderLastName) { {{ bid.bidderFirstName }} {{ bid.bidderLastName }} }
-                        @else { {{ bid.bidderName || ('listingDetails.bidHistory.anonymous' | translate) }} }
-                      </span>
+                      <!-- Initials. bidderName is sent only to the seller of
+                           this listing, who picks the winner from this list;
+                           every other viewer gets initials and nothing more.
+                           See utils/bidFormat.js and routes/bids.js. -->
+                      <span class="bid-name">{{ bid.bidderName || bid.bidderInitials || ('listingDetails.bidHistory.anonymous' | translate) }}</span>
                       @if (bid.isAuthenticated) {
                         <span class="trust-badge" [ngClass]="getTrustTierInfo(bid.buyerTrustTier ?? 1).cssClass" [title]="getTrustTierInfo(bid.buyerTrustTier ?? 1).sellerNote">
                           {{ getTrustTierInfo(bid.buyerTrustTier ?? 1).icon }} {{ getTrustTierInfo(bid.buyerTrustTier ?? 1).labelPt }}
@@ -746,7 +782,7 @@
     }
 
     <!-- OFFERS TAB -->
-    @if (activeTab === 'offers' && listing.auctionFormat === 'best-offer') {
+    @if (activeTab === 'offers' && isOffersMode) {
       <div class="tab-panel">
         @if (offersLoading) { <p class="tab-loading">{{ 'listingDetails.offerHistory.loading' | translate }}</p> }
         @if (offersError && !offersLoading) {
@@ -757,7 +793,7 @@
           @if (offers.length === 0) {
             <div class="tab-empty">
               {{ 'listingDetails.offerHistory.noOffers' | translate }}.
-              @if (!isOwnListing && isBestOfferActive()) {
+              @if (!isOwnListing && isOffersWindowOpen()) {
                 <button class="btn-link" (click)="openOfferModal()">{{ 'listingDetails.offerHistory.makeOffer' | translate }} →</button>
               }
             </div>
@@ -773,7 +809,8 @@
                   <div class="av">{{ offer.offererInitials || 'A' }}</div>
                   <div class="om">
                     <div class="on-row">
-                      <span class="oname">{{ offer.offererName || ('listingDetails.offerHistory.anonymous' | translate) }}</span>
+                      <!-- Initials, never a name — offers are public. -->
+                      <span class="oname">{{ offer.offererInitials || ('listingDetails.offerHistory.anonymous' | translate) }}</span>
                       @if (offer.offererVerified) { <span class="chip c-ver">{{ 'listingDetails.offerHistory.verifiedLabel' | translate }}</span> }
                       @if (isMyOffer(offer)) { <span class="chip c-you">{{ 'listingDetails.offerHistory.yourOffer' | translate }}</span> }
                       @if (offer.status === 'accepted') { <span class="chip c-acc">{{ 'listingDetails.offerHistory.statusAccepted' | translate }}</span> }
@@ -835,13 +872,15 @@
 
 <!-- Mobile sticky action bar: primary CTA always reachable without scrolling past the gallery -->
 @if (showMobileStickyCta) {
-  <div class="mobile-sticky-cta" role="region" [attr.aria-label]="'listingDetails.actions.placeBid' | translate">
+  <!-- Labelled for what the bar is, not for one of the two things it can hold:
+       a screen reader on an offers listing was being told "Place a bid". -->
+  <div class="mobile-sticky-cta" role="region" [attr.aria-label]="'listingDetails.actions.actionBar' | translate">
     <div class="msc-meta">
       @if (isGiveaway) {
         <span class="msc-price">{{ 'GIVEAWAY.FREE' | translate }}</span>
       } @else if (mobileStickyPriceDisplay) {
         <span class="msc-price">{{ mobileStickyPriceDisplay }}</span>
-      } @else if (listing.auctionFormat === 'best-offer') {
+      } @else if (isOffersMode) {
         <span class="msc-price msc-price--muted">{{ 'listingDetails.noOffersYet' | translate }}</span>
       }
       @if (!isAuctionEnded()) {
@@ -873,19 +912,23 @@
         <button type="button" class="msc-btn" (click)="reopenAuction()" [disabled]="reopenLoading">
           {{ reopenLoading ? ('listingDetails.actions.reopening' | translate) : ('listingDetails.actions.reopenForDays' | translate) }}
         </button>
-      } @else if (!isGiveaway && listing.auctionFormat === 'best-offer' && isBestOfferActive() && !isOwnListing) {
-        <button type="button" class="msc-btn" (click)="openOfferModal()">
-          {{ 'listingDetails.actions.makeOffer' | translate }}
-        </button>
-      } @else if (!notOpenYet && !isGiveaway && listing.auctionFormat === 'highest-bid' && !isAuctionEnded() && !hasPrivateRoom() && !isOwnListing) {
-        @if (listing.buyNowPrice) {
-          <button type="button" class="msc-btn msc-btn--ghost" (click)="buyNow()">
-            {{ 'listingDetails.sidebar.buyNow' | translate }}
+      } @else if (canBuyerAct) {
+        <!-- Same single condition as the sidebar block, so the bar and the page
+             never disagree about whether there is anything to do here. -->
+        @if (isBiddingMode) {
+          @if (listing.buyNowPrice) {
+            <button type="button" class="msc-btn msc-btn--ghost" (click)="buyNow()">
+              {{ 'listingDetails.sidebar.buyNow' | translate }}
+            </button>
+          }
+          <button type="button" class="msc-btn" (click)="openBidModal()">
+            {{ 'listingDetails.actions.placeBidAtMin' | translate:{ amount: formatPrice(getMinBid()) } }}
+          </button>
+        } @else {
+          <button type="button" class="msc-btn" (click)="openOfferModal()">
+            {{ 'listingDetails.actions.makeOffer' | translate }}
           </button>
         }
-        <button type="button" class="msc-btn" (click)="openBidModal()">
-          {{ 'listingDetails.actions.placeBidAtMin' | translate:{ amount: formatPrice(getMinBid()) } }}
-        </button>
       }
     </div>
   </div>
@@ -916,7 +959,7 @@
         <p class="currency-disclaimer">{{ 'CURRENCY.DISCLAIMER' | translate }}</p>
       }
       <label class="f-label" for="bid-amount">{{ 'listingDetails.bidModal.valueLabel' | translate }}</label>
-      <input class="f-input" id="bid-amount" type="text" inputmode="decimal" [placeholder]="formatPrice(getMinBid())" [(ngModel)]="bidAmount" autocomplete="off" />
+      <input class="f-input" id="bid-amount" type="text" inputmode="decimal" [placeholder]="formatEuroPlain(getMinBid())" [(ngModel)]="bidAmount" autocomplete="off" />
       @if (!isAuthenticated) {
         <label class="f-label" for="bid-email">{{ 'listingDetails.bidModal.emailLabel' | translate }}</label>
         <input class="f-input" id="bid-email" type="email" placeholder="you@example.com" [(ngModel)]="bidEmail" autocomplete="email" />

@@ -12,6 +12,11 @@
   },
   "routes": [
     {
+      "route": "/landing",
+      "redirect": "/",
+      "statusCode": 301
+    },
+    {
       "route": "/api/share/*",
       "allowedRoles": ["anonymous"]
     },

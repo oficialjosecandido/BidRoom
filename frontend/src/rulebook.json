@@ -280,8 +280,9 @@
         "behaviour": "The auctionEndScheduler marks the listing as 'ended' with no winner. The seller receives a notification. Auto-relist is not implemented automatically — the seller can manually relist from their dashboard."
       },
       "reservePriceNotMet": {
-        "status": "implemented",
-        "behaviour": "If the highest bid at auction end is below the reserve price, the listing ends without a transaction. Both seller (reserve not met, no sale) and all bidders (auction ended, reserve not met) are notified. The seller may choose to: accept the highest bid manually, relist, or cancel."
+        "status": "not implemented",
+        "behaviour": "There is no reserve price. `reservePrice` is absent from models/Listing.js and from every route and service; the only occurrences in the repo are scripts/seedListing.js and this file, which until now said \"implemented\". An auction ending below what the seller hoped for therefore ends as a normal sale at the highest bid. The nearest thing that does exist is `minimumOfferPrice`, which applies to offers mode only.",
+        "ifBuilt": "Adding it means a field on the model, a check wherever a winner is selected (routes/listings.js buy-now and choose-winner, services/auctionEndScheduler.js, services/auctionNotificationService.js handlePrivateRoomEnd), two new email templates in four languages, and a decision about whether the reserve is shown to bidders."
       },
       "suspendedUserSecondaryAccount": {
         "status": "implemented",
@@ -290,9 +291,10 @@
     },
     "offersAndBuyNow": {
       "buyNowOfferRaceCondition": {
-        "status": "implemented",
-        "behaviour": "The Buy Now route uses a MongoDB findOneAndUpdate with a compound filter { status: 'active', winner: null }. Only one concurrent request can win this atomic write. The losing request receives HTTP 409 'Already purchased'. Any pending offers on the listing are automatically expired.",
-        "privateRoomPenalty": "DECISION NEEDED (@José Cândido). If a seller accepts an offer in a private room but the item was simultaneously purchased via Buy Now, should the seller face a penalty? Proposed: no penalty if the race was genuine (< 5 seconds apart); warn the seller to disable Buy Now when running private room negotiations."
+        "status": "not reachable",
+        "behaviour": "Buy Now and offers can no longer coexist on one listing, so there is no race left to lose. The unified selling-mode spec made the modes exclusive: the pre-save hook in models/Listing.js clears `buyNowPrice` on an offers listing, and routes/listings.js POST /:id/buy-now rejects any listing whose `sellingMode` is not \"bidding\" with HTTP 400 before it looks at the price.",
+        "atomicCloseStillApplies": "The compound filter { status: \"active\", winner: null } on the findOneAndUpdate is still there and still correct — it is what stops two concurrent Buy Now requests, or a Buy Now racing a choose-winner, from both closing the same bidding listing. The loser gets HTTP 409.",
+        "privateRoomBuyNow": "Resolved, and it was a real hole rather than the penalty question this entry used to ask. The old text described a seller accepting an offer inside a private room, which cannot happen: private rooms are bidding-only (the pre-save hook forces allowPrivateRoom false in offers mode) and a room has no accept step — the highest bid wins after 60 seconds with no new bid. The actual exposure was that a bidding listing may carry both a Buy Now price and allowPrivateRoom, and a running room leaves the listing at status \"active\" with winner null, which was everything the buy-now route checked. Anyone with the listing URL could close a live room from outside it. The route now returns HTTP 409 while privateRoomStatus is \"active\" or \"invited\", so no penalty rule is needed: the collision is prevented instead of adjudicated."
       },
       "buyerAcceptsOfferDoesNotPay": {
         "status": "implemented",

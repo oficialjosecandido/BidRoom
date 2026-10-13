@@ -106,7 +106,7 @@ export class FaqComponent {
   }
 
   navigateToHome(): void {
-    this.router.navigate(['/landing']);
+    this.router.navigate(['/']);
   }
 
   navigateToContact(): void {

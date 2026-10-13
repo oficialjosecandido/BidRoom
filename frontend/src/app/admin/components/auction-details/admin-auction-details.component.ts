@@ -349,7 +349,7 @@ export class AdminAuctionDetailsComponent implements OnInit, OnDestroy {
   }
 
   getAuctionTypeLabel(format: string): string {
-    return format === 'highest-bid' ? 'Highest Bid Auction' : 'Best Offer';
+    return format === 'bidding' ? 'Highest Bid Auction' : 'Best Offer';
   }
 
   formatDate(dateString: string): string {

@@ -37,13 +37,14 @@ export interface ViewerCountUpdateEvent {
 export interface SocketOfferPayload {
   _id: string;
   listing: string;
-  offerer: { _id: string; firstName: string; lastName: string; email: string } | null;
+  // This payload is broadcast to everyone in the `listing:` room, so it carries
+  // no name and no email — see backend utils/offerFormat.js.
+  offerer: { _id: string } | null;
   amount: number;
   message?: string | null;
   status: string;
   respondedAt?: string | null;
   sellerResponse?: string | null;
-  offererName?: string;
   offererInitials?: string;
   offererVerified?: boolean;
   offererTier?: string | null;
@@ -296,7 +297,11 @@ export class SocketService {
     return this.listen<ViewerCountUpdateEvent>('private-room-viewer-count-update');
   }
 
-  onInvitationAccepted(): Observable<{ listingId: string; bidderId: string | null; bidderName: string; bidderFirstName: string; bidderLastName: string }> {
+  /**
+   * Broadcast to the whole listing room, so it carries initials and not a name
+   * — see the acceptance routes in backend/src/routes/privateRoom.js.
+   */
+  onInvitationAccepted(): Observable<{ listingId: string; bidderId: string | null; bidderInitials: string }> {
     return this.listen('invitation-accepted');
   }
 

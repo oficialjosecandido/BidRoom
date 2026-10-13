@@ -243,7 +243,7 @@ async function notifyNewBid({ listingId, listingSlug, listingTitle, bidAmount, b
   });
 }
 
-/** Auction (highest-bid): previous high bidder was exceeded — in-app notification (email sent separately). */
+/** Auction (bidding): previous high bidder was exceeded — in-app notification (email sent separately). */
 async function notifyBidderOutbid({
   listingSlug,
   listingTitle,
@@ -314,7 +314,7 @@ async function notifyProposalDeclined({ listingSlug, listingTitle, offerAmount, 
   });
 }
 
-/** Offer placed - confirm to offerer (best-offer auctions) */
+/** Offer placed - confirm to offerer (offers auctions) */
 async function notifyOfferPlaced({ listingSlug, listingTitle, offerAmount, offererUserId }) {
   const link = listingSlug ? `/listing/${listingSlug}?tab=offers` : null;
   return createNotification({
@@ -329,7 +329,7 @@ async function notifyOfferPlaced({ listingSlug, listingTitle, offerAmount, offer
   });
 }
 
-/** Higher offer received - notify previous highest offerer (best-offer auctions) */
+/** Higher offer received - notify previous highest offerer (offers auctions) */
 async function notifyOfferOutbid({ listingSlug, listingTitle, previousOffer, newOffer, offererUserId }) {
   const link = listingSlug ? `/listing/${listingSlug}?tab=offers` : null;
   return createNotification({
@@ -350,7 +350,7 @@ async function notifySellerBestOfferEnded({ listingSlug, listingTitle, offerCoun
   return createNotification({
     userId: sellerUserId,
     title: 'Listing ended',
-    message: `Your best-offer listing "${listingTitle || 'the item'}" has ended with ${offerCount} offer(s). You have 24 hours to review and accept an offer.`,
+    message: `Your offers listing "${listingTitle || 'the item'}" has ended with ${offerCount} offer(s). You have 24 hours to review and accept an offer.`,
     i18nKey: 'notifications.bestOfferEnded',
     i18nParams: { listingTitle: listingTitle || standIn('theItem'), offerCount },
     type: 'listing',

@@ -37,7 +37,7 @@ async function processAutoRelists(io = null) {
     relistedAt: null,
     // Prefer auctions only: Best Offer auto-relist needs pending/accepted offer checks
     // that this scheduler does not run.
-    auctionFormat: { $ne: 'best-offer' },
+    sellingMode: { $ne: 'offers' },
   }).populate('seller', 'firstName lastName _id');
 
   for (const listing of eligible) {
@@ -67,7 +67,7 @@ async function processAutoRelists(io = null) {
         startingPrice: listing.startingPrice,
         currentPrice: listing.startingPrice,
         bidIncrement: listing.bidIncrement,
-        auctionFormat: listing.auctionFormat,
+        sellingMode: listing.sellingMode,
         durationSlot: listing.durationSlot,
         condition: listing.condition,
         location: listing.location,

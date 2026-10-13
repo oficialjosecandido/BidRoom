@@ -46,8 +46,8 @@ export class AdminSidebarComponent {
 
   logout(): void {
     this.authService.logout().subscribe({
-      next: () => this.router.navigate(['/landing']),
-      error: () => this.router.navigate(['/landing'])
+      next: () => this.router.navigate(['/']),
+      error: () => this.router.navigate(['/'])
     });
   }
 }

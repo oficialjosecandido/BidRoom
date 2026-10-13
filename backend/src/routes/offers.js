@@ -34,6 +34,7 @@ function tierFromBalance(balance) {
 }
 
 const { formatOfferForSocket } = require('../utils/offerFormat');
+const { publicDisplayName, greetingName } = require('../utils/bidFormat');
 const { syncListingOfferStats } = require('../utils/listingOfferStats');
 const { parsePageParams, pageMeta } = require('../utils/pagination');
 const {
@@ -216,7 +217,7 @@ async function createOffer(req, res) {
     }
 
     // Verify it's a Best Offer listing
-    if (listing.auctionFormat !== 'best-offer') {
+    if (listing.sellingMode !== 'offers') {
       return res.status(400).json({
         error: 'Wrong auction format',
         message: 'This listing does not accept offers. Please place a bid instead.'
@@ -298,16 +299,15 @@ async function createOffer(req, res) {
       logMultipleOffers(listingId, offerCount, offersDetail);
     }
 
-    const name = populatedOffer.offerer
-      ? `${populatedOffer.offerer.firstName} ${populatedOffer.offerer.lastName}`
-      : (populatedOffer.offererEmail ? populatedOffer.offererEmail.split('@')[0] : 'Anonymous');
-    // `name` above may be the local part of a guest's email. That is fine in the
-    // confirmation email we send to that same person, but it must never be shown
-    // to the seller or anyone else — see utils/offerFormat.js, which is where
-    // the initials shown in the UI now come from.
-    const publicName = populatedOffer.offerer
-      ? `${populatedOffer.offerer.firstName || ''} ${populatedOffer.offerer.lastName || ''}`.trim() || 'A buyer'
-      : 'A buyer';
+    // Two different questions, two different helpers. `greetingName` is how we
+    // address this person in the confirmation we send *to them*, and is '' when
+    // we have no name — it used to be the local part of their own email, which
+    // greeted guests as "Olá joao.silva92", or the English word 'Anonymous'
+    // dropped into a Portuguese email. `publicName` is what the seller and
+    // everyone else may see — see utils/offerFormat.js, which is where the
+    // initials shown in the UI come from.
+    const name = greetingName(populatedOffer.offerer);
+    const publicName = publicDisplayName(populatedOffer.offerer, 'A buyer');
 
     const io = req.app.get('io');
     const confirmEmail = populatedOffer.offerer?.email || populatedOffer.offererEmail;
@@ -340,7 +340,7 @@ async function createOffer(req, res) {
             .catch(err => logger.error('Failed offer outbid notification:', err));
           if (io) emitNewNotificationToUser(io, u).catch(() => {});
         }
-        sendOfferOutbidEmail(listing, e, o.offerer ? `${o.offerer.firstName} ${o.offerer.lastName}` : o.offererEmail?.split('@')[0], prevHigh, amount)
+        sendOfferOutbidEmail(listing, e, greetingName(o.offerer), prevHigh, amount)
           .catch(err => logger.error('Failed offer outbid email:', err));
       }
     }
@@ -363,7 +363,10 @@ async function createOffer(req, res) {
       if (io) emitNewNotificationToUser(io, sellerUserId).catch(() => {});
     }
 
-    res.status(201).json(formatOfferForSocket(populatedOffer));
+    // isMine is the only way the client can recognise its own offer now that no
+    // name or email comes back, and here it is true by construction: this is the
+    // response to the request that created it.
+    res.status(201).json({ ...formatOfferForSocket(populatedOffer), isMine: true });
 }
 
 // POST /api/offers - Create a new offer (auth optional; guests must provide email)
@@ -754,7 +757,9 @@ router.patch('/:offerId/withdraw', authenticateToken, async (req, res) => {
       });
     }
 
-    res.json(formatOfferForSocket(offer.toObject ? offer.toObject() : offer));
+    // Withdrawal is buyer-initiated and the route already checked the offer is
+    // theirs, so this response is their own offer.
+    res.json({ ...formatOfferForSocket(offer.toObject ? offer.toObject() : offer), isMine: true });
   } catch (error) {
     logger.error('Error withdrawing offer:', error);
     res.status(400).json({

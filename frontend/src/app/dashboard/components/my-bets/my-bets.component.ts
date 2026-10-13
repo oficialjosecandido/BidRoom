@@ -146,7 +146,7 @@ export class MyBetsComponent implements OnInit {
         next: (updated) => {
           bet.status = updated.status || 'withdrawn';
           this.withdrawingId = null;
-          if (listing.auctionFormat === 'best-offer') {
+          if (listing.sellingMode === 'offers') {
             const pendingOrAccepted = (listing.bets || []).filter(
               (b) => b.type === 'offer' && (b.status === 'pending' || b.status === 'accepted')
             );

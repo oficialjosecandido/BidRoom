@@ -216,15 +216,15 @@ export class AdminDashboardComponent implements OnInit {
   listingAuctionRows(): { key: string; label: string; hint?: string; count: number }[] {
     const seg = this.statistics?.listingsByAuctionSegment;
     return [
-      { key: 'best-offer', label: 'Best offer', count: seg?.bestOffer ?? 0 },
+      { key: 'offers', label: 'Offers', count: seg?.bestOffer ?? 0 },
       {
-        key: 'highest-bid',
+        key: 'bidding',
         label: 'Highest bid',
         hint: 'Standard (no private room)',
         count: seg?.highestBid ?? 0
       },
       {
-        key: 'highest-bid-private',
+        key: 'bidding-private',
         label: 'Highest bid',
         hint: 'Private room enabled',
         count: seg?.highestBidPrivateRoom ?? 0

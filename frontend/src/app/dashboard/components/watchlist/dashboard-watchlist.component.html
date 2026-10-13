@@ -39,7 +39,7 @@
               }
               @if (listing.saleFormat === 'giveaway') {
                 <span class="wl-pill wlp-offer">🎁 {{ 'GIVEAWAY.PILL' | translate }}</span>
-              } @else if (listing.auctionFormat === 'best-offer') {
+              } @else if (listing.sellingMode === 'offers') {
                 <span class="wl-pill wlp-offer">{{ 'myBids.typeOffer' | translate }}</span>
               } @else {
                 <span class="wl-pill wlp-live">{{ 'watchlist.typeLive' | translate }}</span>
@@ -60,7 +60,7 @@
               <span class="wl-price">
                 @if (listing.saleFormat === 'giveaway') {
                   {{ 'GIVEAWAY.FREE' | translate }}
-                } @else if (listing.auctionFormat === 'best-offer' && (listing.currentPrice == null || listing.currentPrice === 0)) {
+                } @else if (listing.sellingMode === 'offers' && (listing.currentPrice == null || listing.currentPrice === 0)) {
                   {{ 'dashboard.watchlist.noOffersYet' | translate }}
                 } @else {
                   {{ formatPrice(listing.currentPrice) }}

@@ -210,7 +210,7 @@ function formatPrice(amount, language) {
 /** What the price under the title actually means, which depends on the format. */
 function priceCaption(listing, language) {
   const s = STRINGS[lang(language)];
-  if (listing.auctionFormat === 'best-offer') return s.bestOffer;
+  if (listing.sellingMode === 'offers') return s.bestOffer;
   return (listing.bidCount || 0) > 0 ? s.currentBid : s.startingBid;
 }
 
@@ -259,7 +259,7 @@ function eligibleAuctionsQuery(now) {
 }
 
 const FEATURED_FIELDS =
-  'slug category images currentPrice startingPrice bidCount viewCount endDate auctionFormat ' +
+  'slug category images currentPrice startingPrice bidCount viewCount endDate sellingMode ' +
   'title titlePt titleEn titleFr titleEs';
 
 /** No price on a giveaway — the entry count is what the band has to show. */

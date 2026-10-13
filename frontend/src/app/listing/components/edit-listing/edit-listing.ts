@@ -165,7 +165,7 @@ export class EditListing implements OnInit {
   }
 
   get isBestOffer(): boolean {
-    return this.listing?.auctionFormat === 'best-offer';
+    return this.listing?.sellingMode === 'offers';
   }
 
   get pricesEditable(): boolean {

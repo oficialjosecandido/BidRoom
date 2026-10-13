@@ -1,6 +1,9 @@
 User-agent: *
 Allow: /
 
+# Homepage used to live here; it 301s to /. Keep crawlers on the canonical URL.
+Disallow: /landing$
+
 # Private — keep crawlers out
 Disallow: /nexus/
 Disallow: /dashboard/

@@ -35,7 +35,7 @@ interface PublicListing {
   startingPrice: number;
   bidCount: number;
   endDate: string;
-  auctionFormat: string;
+  sellingMode: string;
   saleFormat?: 'auction' | 'giveaway';
   giveaway?: { entryCount?: number };
 }

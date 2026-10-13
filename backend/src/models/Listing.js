@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const { imageSchema } = require('../shared/schemas/imageSchema');
+const { applySellingModeInvariants } = require('../utils/sellingMode');
 
 const listingSchema = new mongoose.Schema({
   title: {
@@ -296,9 +297,9 @@ const listingSchema = new mongoose.Schema({
   /**
    * Whether this listing is sold or given away.
    *
-   * Separate from `auctionFormat`, which only says *how the price is found* —
+   * Separate from `sellingMode`, which only says *how the price is found* —
    * this says whether there is a price at all. On a giveaway, `startingPrice`
-   * and `currentPrice` are 0, `auctionFormat` is meaningless, and no bid or
+   * and `currentPrice` are 0, `sellingMode` is meaningless, and no bid or
    * offer may ever be attached (the bid/offer routes refuse them outright).
    *
    * Not to be confused with `listingType`, which is the promotion tier.
@@ -343,11 +344,30 @@ const listingSchema = new mongoose.Schema({
       publishedAt: { type: Date, default: null }
     }
   },
-  // Auction format and mechanics
-  auctionFormat: {
+  /**
+   * How a buyer transacts on this listing. One listing, one mode, fixed at
+   * publication — changing it afterwards would move the goalposts under people
+   * who already bid or offered, so no route permits it.
+   *
+   * - `bidding` — buyers compete in the open. The highest bid at close wins
+   *   automatically, provided the reserve was met. A bid is binding.
+   * - `offers`  — buyers send the seller a figure privately. No contract until
+   *   the seller accepts, or until auto-acceptance fires at close.
+   *
+   * Everything after the sale — payment, shipping, receipt, dispute,
+   * reputation — is identical in both modes and must stay that way; that
+   * sameness is what stops the marketplace feeling like two platforms.
+   *
+   * Was `sellingMode: 'bidding' | 'offers'`. Renamed outright rather
+   * than aliased: a Mongoose virtual is absent from the database, so it cannot
+   * appear in a query filter and is stripped by `.lean()` — the ten call sites
+   * that read it that way would have returned `undefined` and empty sets
+   * without raising anything. See scripts/migrateSellingMode.js.
+   */
+  sellingMode: {
     type: String,
-    enum: ['highest-bid', 'best-offer'],
-    default: 'highest-bid',
+    enum: ['bidding', 'offers'],
+    default: 'bidding',
     index: true
   },
   // Duration slot (fixed auction lengths)
@@ -440,21 +460,25 @@ const listingSchema = new mongoose.Schema({
       // No longer used (acceptance flow removed); kept for backwards compatibility
     }
   }],
-  // Best Offer specific fields — required when auctionFormat is best-offer
+  /**
+   * The seller's floor in `offers` mode, and the trigger for auto-acceptance:
+   * exactly one offer at or above it at close is accepted automatically, so a
+   * valid sale is not lost to an inattentive seller.
+   */
   minimumOfferPrice: {
     type: Number,
     default: null,
     required: function () {
-      return this.saleFormat !== 'giveaway' && this.auctionFormat === 'best-offer';
+      return this.saleFormat !== 'giveaway' && this.sellingMode === 'offers';
     },
     validate: {
       validator: function (v) {
-        if (this.saleFormat === 'giveaway' || this.auctionFormat !== 'best-offer') {
+        if (this.saleFormat === 'giveaway' || this.sellingMode !== 'offers') {
           return v == null || v >= 0;
         }
         return v != null && Number(v) >= 0.01;
       },
-      message: 'minimumOfferPrice is required for best-offer listings and must be at least 0.01'
+      message: 'minimumOfferPrice is required for listings in offers mode and must be at least 0.01'
     }
   },
   // Renewal tracking for listings >7 days
@@ -579,7 +603,7 @@ listingSchema.methods.calculateEndDate = function(startDate) {
 
 // Method to check if Private Room should be triggered
 listingSchema.methods.checkPrivateRoomEligibility = async function() {
-  if (this.auctionFormat !== 'highest-bid' || !this.allowPrivateRoom) {
+  if (this.sellingMode !== 'bidding' || !this.allowPrivateRoom) {
     return false;
   }
   
@@ -643,15 +667,10 @@ listingSchema.pre('save', async function(next) {
     this.endDate = this.calculateEndDate();
   }
 
-  // Calculate commission rate based on Private Room setting.
-  // Skip for giveaways — there is no price, so no commission.
-  if (this.saleFormat !== 'giveaway') {
-    if (this.auctionFormat === 'highest-bid') {
-      this.commissionRate = this.allowPrivateRoom ? 0.06 : 0.035; // 6.0% or 3.5%
-    } else if (this.auctionFormat === 'best-offer') {
-      this.commissionRate = 0.035; // 3.5% for Best Offer
-    }
-  }
+  // Commission rate, and the fields each mode forbids. Lives in
+  // utils/sellingMode.js so the same rules the buy-now route enforces can be
+  // tested without a database.
+  applySellingModeInvariants(this);
 
   // Check if renewal is required (for listings >7 days)
   if (this.durationSlot === '7 days' || this.durationSlot === '3 days') {

@@ -269,7 +269,7 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
         }
         const tab = this.route.snapshot.queryParamMap.get('tab');
         this.activeTab = tab === 'rules' ? 'rules' : 'description';
-      } else if (listing.auctionFormat === 'best-offer') {
+      } else if (listing.sellingMode === 'offers') {
         this.loadOffers(listing._id);
       } else {
         this.loadBids(listing._id);
@@ -295,7 +295,7 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
         this.cdr.detectChanges();
       },
       error: () => {
-        this.bidsError = 'Failed to load bid history';
+        this.bidsError = this.translate.instant('listingDetails.alerts.loadBidsFailed');
         this.bidsLoading = false;
         this.handleChooseWinnerDeepLink();
         this.cdr.detectChanges();
@@ -328,6 +328,90 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
 
   setActiveTab(tab: 'description' | 'bids' | 'offers' | 'rules'): void {
     this.activeTab = tab;
+  }
+
+  // ── Selling mode ─────────────────────────────────────────────────────────────
+
+  /**
+   * The two selling modes, read in one place.
+   *
+   * A giveaway is neither: it has no price, so it answers false to both and the
+   * template's giveaway branches take over. Everything downstream asks these
+   * two getters rather than comparing `sellingMode` inline, so the page has one
+   * definition of "this listing takes bids" instead of twenty.
+   */
+  get isBiddingMode(): boolean {
+    return !this.isGiveaway && this.listing?.sellingMode === 'bidding';
+  }
+
+  get isOffersMode(): boolean {
+    return !this.isGiveaway && this.listing?.sellingMode === 'offers';
+  }
+
+  /**
+   * Whether the visitor can act on this listing at all — place a bid in bidding
+   * mode, send an offer in offers mode.
+   *
+   * One getter for both. The two conditions were spelled out separately in the
+   * template and had drifted: the bidding branch never checked `status`, so a
+   * listing pulled back into review still offered a Bid button that
+   * `routes/bids.js` would reject with "Listing not active". Both backends
+   * require an active listing, so both buttons require one here.
+   */
+  get canBuyerAct(): boolean {
+    if (!this.listing || this.isGiveaway || this.isOwnListing) return false;
+    if (this.notOpenYet || this.isAuctionEnded() || this.hasPrivateRoom()) return false;
+    return this.listing.status === 'active';
+  }
+
+  /**
+   * The floor the buyer has to clear, shown above the button in both modes:
+   * the next valid bid in bidding mode, the seller's minimum in offers mode.
+   *
+   * Null when there is nothing to show — an offers listing with no minimum set
+   * takes any amount, and inventing a figure there would be a lie.
+   */
+  get actionFloorValue(): number | null {
+    if (this.isBiddingMode) return this.getMinBid();
+    if (this.isOffersMode) return this.listing?.minimumOfferPrice ?? null;
+    return null;
+  }
+
+  get actionFloorLabel(): string {
+    return this.isOffersMode ? 'listingDetails.sidebar.minimumOffer' : 'listingDetails.sidebar.minimumBid';
+  }
+
+  /**
+   * Whether to show the floor at all.
+   *
+   * Shown wider than the buttons are: the seller weighing offers after the
+   * window closed is reading against the same minimum the buyers were, so it
+   * stays up for them. A closed bidding listing is the exception — "next
+   * minimum bid" is a figure nobody can use any more — and so is a live private
+   * room, where the bidding has moved off this page and the price shown here
+   * has stopped moving.
+   */
+  get showActionFloor(): boolean {
+    if (!this.listing || this.isGiveaway || this.hasPrivateRoom()) return false;
+    if (this.actionFloorValue === null) return false;
+    return !(this.isBiddingMode && this.isAuctionEnded());
+  }
+
+  /** The primary button's label. The only wording the two modes do not share. */
+  get actionButtonLabel(): string {
+    return this.isOffersMode ? 'listingDetails.actions.makeOffer' : 'listingDetails.actions.placeBidAtMin';
+  }
+
+  /**
+   * One sentence saying what happens when the buyer acts, which is the single
+   * thing the two modes genuinely differ on: a bid that is still highest at
+   * the end wins outright, an offer binds nobody until the seller accepts it.
+   *
+   * It sits under the button rather than in a tooltip or a help page, because
+   * it is the whole decision the buyer is making.
+   */
+  get actionOutcomeNote(): string {
+    return this.isOffersMode ? 'listingDetails.outcome.offers' : 'listingDetails.outcome.bidding';
   }
 
   // ── Giveaway ─────────────────────────────────────────────────────────────────
@@ -491,7 +575,7 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
         this.cdr.detectChanges();
       },
       error: () => {
-        this.offersError = 'Failed to load offer history';
+        this.offersError = this.translate.instant('listingDetails.alerts.loadOffersFailed');
         this.offersLoading = false;
         this.cdr.detectChanges();
       }
@@ -545,12 +629,18 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
     return Math.max(...valid.map(o => o.amount));
   }
 
-  /** True if the current user made this offer. */
+  /**
+   * True if the current user made this offer.
+   *
+   * `isMine` is computed server-side, which is the only place it can be
+   * computed now: the fallback here used to compare `offer.offerer.email`
+   * against the logged-in email, and the API stopped returning offerer emails
+   * (and now names) some time ago — so that branch had been dead, silently
+   * answering false. The POST response and the socket merge both carry
+   * `isMine`, so there is nothing left to guess at.
+   */
   isMyOffer(offer: Offer): boolean {
-    if (offer.isMine) return true;
-    const user = this.authService.getCurrentUser();
-    if (!user?.email || !offer.offerer?.email) return false;
-    return offer.offerer.email.toLowerCase() === user.email.toLowerCase();
+    return !!offer.isMine;
   }
 
   /** Buyer can withdraw own pending offers only (never accepted / sold). */
@@ -560,10 +650,15 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
     return true;
   }
 
-  /** Best-offer listing is still open for offers (active and not ended). */
-  isBestOfferActive(): boolean {
-    if (!this.listing || this.listing.auctionFormat !== 'best-offer') return false;
-    return this.listing.status === 'active' && !this.notOpenYet && !this.isAuctionEnded();
+  /**
+   * The offers window is open: an offers listing that is live and has not closed.
+   *
+   * Unlike `canBuyerAct` this says nothing about who is looking, so the offers
+   * tab can use it to decide whether a "make an offer" link still makes sense.
+   */
+  isOffersWindowOpen(): boolean {
+    if (!this.isOffersMode) return false;
+    return this.listing!.status === 'active' && !this.notOpenYet && !this.isAuctionEnded();
   }
 
   /**
@@ -577,25 +672,8 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
     if (this.isGiveaway && this.isGiveawayOpen() && !this.isOwnListing && !this.giveawayState?.entered && !this.giveawayState?.drawn) {
       return true;
     }
-    if (
-      !this.notOpenYet &&
-      !this.isGiveaway &&
-      this.listing.auctionFormat === 'highest-bid' &&
-      !this.isAuctionEnded() &&
-      !this.hasPrivateRoom() &&
-      !this.isOwnListing
-    ) {
-      return true;
-    }
-    if (
-      !this.isGiveaway &&
-      this.listing.auctionFormat === 'best-offer' &&
-      !this.hasPrivateRoom() &&
-      !this.isOwnListing &&
-      this.isBestOfferActive()
-    ) {
-      return true;
-    }
+    // One condition for both modes — see `canBuyerAct`.
+    if (this.canBuyerAct) return true;
     if (this.hasPrivateRoomCreated()) return true;
     if (this.isAcceptedPrivateRoomBidder() && !this.isOwnListing && this.listing.privateRoomStatus === 'active') {
       return true;
@@ -609,16 +687,16 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
   get mobileStickyPriceDisplay(): string {
     if (!this.listing) return '';
     if (this.isGiveaway) return '';
-    if (this.listing.auctionFormat === 'best-offer') {
+    if (this.isOffersMode) {
       const highest = this.getHighestOfferAmount();
-      return highest > 0 ? this.formatPrice(highest) : '';
+      return highest > 0 ? this.formatEuroPlain(highest) : '';
     }
-    return this.formatPrice(this.listing.currentPrice || this.listing.startingPrice || 0);
+    return this.formatEuroPlain(this.listing.currentPrice || this.listing.startingPrice || 0);
   }
 
-  /** True when seller can accept/decline offers (Best Offer listing and listing end date has passed). */
+  /** The seller decides once the window has closed, not while offers are still arriving. */
   canSellerAcceptOrDeclineOffers(): boolean {
-    if (!this.listing || this.listing.auctionFormat !== 'best-offer') return false;
+    if (!this.isOffersMode) return false;
     return this.isAuctionEnded();
   }
 
@@ -632,11 +710,11 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
         this.cdr.detectChanges();
         Swal.fire({
           icon: 'success',
-          title: 'Proposal Accepted!',
-          text: 'The proposal has been accepted. Go to Transactions to manage and complete the sale.',
+          title: this.translate.instant('listingDetails.alerts.offerAccepted.title'),
+          text: this.translate.instant('listingDetails.alerts.offerAccepted.text'),
           showCancelButton: true,
-          confirmButtonText: 'Go to Transactions',
-          cancelButtonText: 'Stay here',
+          confirmButtonText: this.translate.instant('listingDetails.ended.goToTransactions'),
+          cancelButtonText: this.translate.instant('listingDetails.alerts.stayHere'),
           confirmButtonColor: '#7A4F84',
           reverseButtons: true
         }).then(result => {
@@ -650,12 +728,11 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
         if (err?.error?.error === 'Stripe not connected') {
           Swal.fire({
             icon: 'warning',
-            title: 'Stripe Account Required',
-            html: 'You must connect your Stripe account before accepting offers.<br><br>' +
-              'Go to <strong>Dashboard → Settings → Payments</strong> to complete setup.',
+            title: this.translate.instant('listingDetails.alerts.stripeRequired.title'),
+            html: this.translate.instant('listingDetails.alerts.stripeRequired.html'),
             showCancelButton: true,
-            confirmButtonText: 'Go to Settings',
-            cancelButtonText: 'Cancel',
+            confirmButtonText: this.translate.instant('listingDetails.alerts.stripeRequired.goToSettings'),
+            cancelButtonText: this.translate.instant('listingDetails.cancel'),
             confirmButtonColor: '#7A4F84',
             reverseButtons: true
           }).then(result => {
@@ -664,7 +741,7 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
             }
           });
         } else {
-          this.offersError = err?.error?.message || 'Failed to accept offer.';
+          this.offersError = err?.error?.message || this.translate.instant('listingDetails.alerts.acceptOfferFailed');
         }
         this.cdr.detectChanges();
       }
@@ -693,7 +770,7 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
       },
       error: (err) => {
         this.offerActionLoadingId = null;
-        this.offersError = err?.error?.message || 'Failed to reject offer.';
+        this.offersError = err?.error?.message || this.translate.instant('listingDetails.alerts.rejectOfferFailed');
         this.cdr.detectChanges();
       }
     });
@@ -715,7 +792,7 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
       },
       error: (err) => {
         this.offerActionLoadingId = null;
-        this.offersError = err?.error?.message || 'Failed to withdraw offer.';
+        this.offersError = err?.error?.message || this.translate.instant('listingDetails.alerts.withdrawOfferFailed');
         this.cdr.detectChanges();
       }
     });
@@ -750,7 +827,28 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
   }
 
 
+  /**
+   * A money figure for display, from the same source as the `displayPrice`
+   * pipe, so the two can no longer disagree on the same screen. For a viewer
+   * who picked a display currency this appends the indicative conversion.
+   */
   formatPrice(price: number): string {
+    return this.currencyService.format(price);
+  }
+
+  /**
+   * Euros and nothing else, for the two places where the converted figure
+   * would be wrong rather than merely different:
+   *
+   *   the bid input's placeholder — the field is typed and submitted in euros
+   *   (`submitBid` parses it raw), so a placeholder reading "€1.050,00 (≈ £905)"
+   *   would be suggesting a number nobody should type;
+   *
+   *   the mobile sticky bar, which holds a price, a countdown and a CTA on one
+   *   narrow line and has no room for the approximation — the full figure is
+   *   in the sidebar on the same screen.
+   */
+  formatEuroPlain(price: number): string {
     return `€ ${price.toLocaleString('pt-PT', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
   }
 
@@ -914,41 +1012,39 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
     return this.getAuctionEndType() === 'ended';
   }
 
-  /** Bid count for ended highest-bid auctions (used for seller UI: select winner vs reopen). */
+  /** Bid count on a closed bidding listing (seller UI: select winner vs reopen). */
   getEndedBidCount(): number {
-    if (!this.listing || this.listing.auctionFormat !== 'highest-bid') return 0;
-    return this.listing.bidCount ?? 0;
+    if (!this.isBiddingMode) return 0;
+    return this.listing!.bidCount ?? 0;
   }
 
-  /** True if we can show "Reopen" (ended with no bids for highest-bid, or no offers for best-offer). */
+  /** "Reopen" is offered when the listing closed with nothing on it — no bids, or no offers. */
   canReopenListing(): boolean {
     if (!this.listing || !this.isOwnListing || !this.isAuctionEnded() || this.hasPrivateRoom()) return false;
     if (this.isGiveaway) return false;
-    if (this.listing.auctionFormat === 'highest-bid') return this.getEndedBidCount() === 0;
-    if (this.listing.auctionFormat === 'best-offer') return !this.offersLoading && this.offers.length === 0;
+    if (this.isBiddingMode) return this.getEndedBidCount() === 0;
+    if (this.isOffersMode) return !this.offersLoading && this.offers.length === 0;
     return false;
   }
 
-  /** Short closed message for best-offer (no offers vs has offers). */
-  getBestOfferClosedMessage(): string {
-    if (this.offers.length === 0) return 'Listing closed with no offers.';
-    const accepted = this.offers.filter(o => o.status === 'accepted').length;
-    if (accepted > 0) return `Listing closed. You have ${accepted} accepted offer${accepted > 1 ? 's' : ''}.`;
-    return `Listing closed with ${this.offers.length} offer${this.offers.length !== 1 ? 's' : ''}.`;
-  }
-
-  /** True when this best-offer listing has at least one accepted offer (listing sold). */
+  /** True when this listing has at least one accepted offer (listing sold). */
   hasAcceptedOffer(): boolean {
     return this.offers.some(o => o.status === 'accepted');
   }
 
-  /** True when seller has 24h to choose/accept winner and we should show the countdown (best-offer or highest-bid). */
+  /**
+   * The seller's 24h window to answer.
+   *
+   * Only offers mode has one: a bidding listing picks its own winner when the
+   * clock runs out, so there is nothing for the seller to decide and nothing to
+   * count down. The template used to branch on the mode for the label anyway,
+   * which read as if the bidding case could happen.
+   */
   showWinnerSelectionCountdown(): boolean {
+    if (!this.isOffersMode) return false;
     if (this.listing?.status !== 'ended' || !this.listing?.winnerSelectionDeadline) return false;
-    const deadline = new Date(this.listing.winnerSelectionDeadline);
-    if (deadline <= new Date()) return false;
-    if (this.listing.auctionFormat === 'best-offer') return !this.hasAcceptedOffer();
-    return false;
+    if (new Date(this.listing.winnerSelectionDeadline) <= new Date()) return false;
+    return !this.hasAcceptedOffer();
   }
 
   /** Seconds remaining until winner selection deadline. */
@@ -1015,9 +1111,9 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
 
   /** Manual winner selection via API is only allowed when private room is not enabled (see backend POST choose-winner). */
   canSellerSelectWinnerManually(): boolean {
-    if (!this.listing || this.listing.auctionFormat !== 'highest-bid') return false;
-    if (this.listing.status !== 'ended' || this.listing.winner) return false;
-    if (this.listing.allowPrivateRoom) return false;
+    if (!this.isBiddingMode) return false;
+    if (this.listing!.status !== 'ended' || this.listing!.winner) return false;
+    if (this.listing!.allowPrivateRoom) return false;
     if (this.isPrivateRoomEnded()) return false;
     return this.getEndedBidCount() > 0;
   }
@@ -1045,7 +1141,7 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
       if (this.chooseWinnerDeepLinkHandled || !this.listing?.slug) return;
       this.chooseWinnerDeepLinkHandled = true;
 
-      if (this.listing.auctionFormat === 'highest-bid') {
+      if (this.isBiddingMode) {
         this.setActiveTab('bids');
       }
       this.cdr.detectChanges();
@@ -1111,12 +1207,23 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
 
   /** Seller can create private room when auction ended, private room enabled, eligible, within 1h deadline, and there are bids. */
   canCreatePrivateRoom(): boolean {
-    if (!this.listing || this.isGiveaway || !this.isOwnListing || this.listing.auctionFormat !== 'highest-bid') return false;
-    if (this.listing.status !== 'ended' || !this.listing.allowPrivateRoom || this.listing.privateRoomStatus !== 'eligible' || (this.getEndedBidCount() ?? 0) === 0) return false;
-    if (this.listing.winnerSelectionDeadline && new Date(this.listing.winnerSelectionDeadline) < new Date()) return false;
+    if (!this.isOwnListing || !this.isBiddingMode) return false;
+    if (this.listing!.status !== 'ended' || !this.listing!.allowPrivateRoom || this.listing!.privateRoomStatus !== 'eligible' || (this.getEndedBidCount() ?? 0) === 0) return false;
+    if (this.listing!.winnerSelectionDeadline && new Date(this.listing!.winnerSelectionDeadline) < new Date()) return false;
     return true;
   }
 
+  /**
+   * The countdown's label.
+   *
+   * The same deadline in both modes, so the same words in both: it is the
+   * moment the listing closes, and what happens then is said under the button,
+   * not here. It used to read "Leilão termina" against bids and "Prazo para
+   * ofertas" against offers, which made one clock look like two.
+   *
+   * A giveaway and a private room do get their own wording — those are
+   * different clocks, not the same clock described twice.
+   */
   getAuctionEndLabel(): string {
     const endType = this.getAuctionEndType();
     if (this.isGiveaway) {
@@ -1125,14 +1232,9 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
     if (endType === 'private-room') {
       return this.translate.instant('listingDetails.time.privateRoomEnds');
     }
-    if (endType === 'ended') {
-      return this.listing?.auctionFormat === 'best-offer'
-        ? this.translate.instant('listingDetails.time.listingEnded')
-        : this.translate.instant('listingDetails.time.auctionEnded');
-    }
-    return this.listing?.auctionFormat === 'best-offer'
-      ? this.translate.instant('listingDetails.time.offerDeadline')
-      : this.translate.instant('listingDetails.time.auctionEnds');
+    return this.translate.instant(
+      endType === 'ended' ? 'listingDetails.time.listingEnded' : 'listingDetails.time.listingEnds'
+    );
   }
 
   categoryLabel(category: string): string {
@@ -1203,8 +1305,8 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
       );
     }
 
-    // Subscribe to new offer / offer update events (Best Offer listings) - in-place merge + debounced refresh
-    if (this.listing?.auctionFormat === 'best-offer') {
+    // Subscribe to new offer / offer update events - in-place merge + debounced refresh
+    if (this.isOffersMode) {
       const scheduleDebouncedRefresh = () => {
         if (this.offerRefreshDebounceTimer) clearTimeout(this.offerRefreshDebounceTimer);
         this.offerRefreshDebounceTimer = setTimeout(() => {
@@ -1558,13 +1660,15 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
     if (!this.listing || this.isGiveaway) return;
     const listing = this.listing;
     Swal.fire({
-      title: 'Buy Now',
-      text: `Buy this item now for ${this.formatPrice(listing.buyNowPrice!)}? This will instantly close the auction.`,
+      title: this.translate.instant('listingDetails.buyNow'),
+      text: this.translate.instant('listingDetails.alerts.buyNowConfirm.text', {
+        amount: this.formatPrice(listing.buyNowPrice!)
+      }),
       icon: 'question',
       showCancelButton: true,
-      confirmButtonText: 'Buy Now',
+      confirmButtonText: this.translate.instant('listingDetails.buyNow'),
       confirmButtonColor: '#7A4F84',
-      cancelButtonText: 'Cancel'
+      cancelButtonText: this.translate.instant('listingDetails.cancel')
     }).then(result => {
       if (!result.isConfirmed) return;
       this.analytics.trackEvent(AnalyticsEvents.BUY_NOW_CLICK, {
@@ -1579,16 +1683,21 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
           });
           Swal.fire({
             icon: 'success',
-            title: 'Purchase successful!',
-            text: 'Go to your transactions to complete payment.',
-            confirmButtonText: 'Go to Payment',
+            title: this.translate.instant('listingDetails.alerts.buyNowSuccess.title'),
+            text: this.translate.instant('listingDetails.alerts.buyNowSuccess.text'),
+            confirmButtonText: this.translate.instant('listingDetails.alerts.buyNowSuccess.confirm'),
             confirmButtonColor: '#7A4F84'
           }).then(() => {
             this.router.navigate(['/dashboard/transactions']);
           });
         },
         error: (err) => {
-          Swal.fire({ icon: 'error', title: 'Purchase failed', text: err.error?.message || 'Failed to complete purchase', confirmButtonColor: '#7A4F84' });
+          Swal.fire({
+            icon: 'error',
+            title: this.translate.instant('listingDetails.alerts.buyNowFailed.title'),
+            text: err.error?.message || this.translate.instant('listingDetails.alerts.buyNowFailed.text'),
+            confirmButtonColor: '#7A4F84'
+          });
         }
       });
     });
@@ -1784,11 +1893,11 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
         this.cdr.detectChanges();
         Swal.fire({
           icon: 'success',
-          title: 'Winner Selected!',
-          text: 'The winner has been notified. Go to Transactions to manage and complete the sale.',
+          title: this.translate.instant('listingDetails.alerts.winnerSelected.title'),
+          text: this.translate.instant('listingDetails.alerts.winnerSelected.text'),
           showCancelButton: true,
-          confirmButtonText: 'Go to Transactions',
-          cancelButtonText: 'Stay here',
+          confirmButtonText: this.translate.instant('listingDetails.ended.goToTransactions'),
+          cancelButtonText: this.translate.instant('listingDetails.alerts.stayHere'),
           confirmButtonColor: '#7A4F84',
           reverseButtons: true
         }).then(result => {
@@ -1800,7 +1909,12 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
       error: (err) => {
         this.selectingWinner = false;
         this.cdr.detectChanges();
-        Swal.fire({ icon: 'error', title: 'Failed to select winner', text: err.error?.message || 'Please try again.', confirmButtonColor: '#7A4F84' });
+        Swal.fire({
+          icon: 'error',
+          title: this.translate.instant('listingDetails.alerts.selectWinnerFailed'),
+          text: err.error?.message || this.translate.instant('listingDetails.alerts.tryAgain'),
+          confirmButtonColor: '#7A4F84'
+        });
       }
     });
   }
@@ -1819,7 +1933,12 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
       error: (err) => {
         this.reopenLoading = false;
         this.cdr.detectChanges();
-        Swal.fire({ icon: 'error', title: 'Failed to reopen auction', text: err.error?.message || 'Please try again.', confirmButtonColor: '#7A4F84' });
+        Swal.fire({
+          icon: 'error',
+          title: this.translate.instant('listingDetails.alerts.reopenFailed'),
+          text: err.error?.message || this.translate.instant('listingDetails.alerts.tryAgain'),
+          confirmButtonColor: '#7A4F84'
+        });
       }
     });
   }
@@ -1859,7 +1978,12 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
       error: (err) => {
         this.privateRoomStartNowLoading = false;
         this.cdr.detectChanges();
-        Swal.fire({ icon: 'error', title: 'Failed to start room', text: err.error?.message || 'Please try again.', confirmButtonColor: '#7A4F84' });
+        Swal.fire({
+          icon: 'error',
+          title: this.translate.instant('listingDetails.alerts.startRoomFailed'),
+          text: err.error?.message || this.translate.instant('listingDetails.alerts.tryAgain'),
+          confirmButtonColor: '#7A4F84'
+        });
       }
     });
   }
@@ -1910,7 +2034,12 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
     if (!this.listing?._id || this.createPrivateRoomSubmitting) return;
     const ids = Array.from(this.selectedPrivateRoomBidderIds);
     if (ids.length < 2 || ids.length > 5) {
-      Swal.fire({ icon: 'warning', title: 'Invalid selection', text: 'Please select between 2 and 5 bidders for the private room.', confirmButtonColor: '#7A4F84' });
+      Swal.fire({
+        icon: 'warning',
+        title: this.translate.instant('listingDetails.alerts.invalidSelection.title'),
+        text: this.translate.instant('listingDetails.alerts.invalidSelection.text'),
+        confirmButtonColor: '#7A4F84'
+      });
       return;
     }
     this.createPrivateRoomSubmitting = true;
@@ -1946,7 +2075,12 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
       error: (err) => {
         this.createPrivateRoomSubmitting = false;
         this.cdr.detectChanges();
-        Swal.fire({ icon: 'error', title: 'Failed to create private room', text: err.error?.message || err.error?.error || 'Please try again.', confirmButtonColor: '#7A4F84' });
+        Swal.fire({
+          icon: 'error',
+          title: this.translate.instant('listingDetails.alerts.createRoomFailed'),
+          text: err.error?.message || err.error?.error || this.translate.instant('listingDetails.alerts.tryAgain'),
+          confirmButtonColor: '#7A4F84'
+        });
       }
     });
   }
@@ -1987,9 +2121,6 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
     if (!max) return 100;
     return Math.round((bid.amount / max) * 100);
   }
-  /** @deprecated Use formatDate instead. */
-  formatOfferDate(dateString: string): string { return this.formatDate(dateString); }
-
   formatBidAmount(amount: number): string {
     return this.formatPrice(amount);
   }
@@ -2009,27 +2140,16 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
     }
   }
 
-  /** Human-readable response line for an offer (who accepted/declined and when). */
-  getOfferResponseLine(offer: Offer): string {
-    if (offer.status === 'pending' || !offer.respondedAt) return '';
-    const date = this.formatOfferDate(offer.respondedAt);
-    if (this.isOwnListing) {
-      return offer.status === 'accepted' ? `You accepted on ${date}` : `You declined on ${date}`;
-    }
-    return offer.status === 'accepted' ? `Accepted by seller on ${date}` : `Declined by seller on ${date}`;
-  }
-
-  isBestOfferListing(): boolean {
-    return this.listing?.auctionFormat === 'best-offer';
-  }
-
+  /**
+   * How many bids or offers this listing has, for the line under the price.
+   *
+   * Offers are counted from the loaded list rather than a stored total because
+   * the list is what the viewer can see: withdrawn ones are already gone from
+   * it, and a count that disagreed with the visible history would look wrong.
+   */
   getOfferOrBidCount(): number {
     if (!this.listing) return 0;
-    if (this.listing.auctionFormat === 'best-offer') {
-      // For best-offer listings, use the actual offers array length
-      return this.offers.length;
-    }
-    // For auction listings, use bidCount from listing
+    if (this.isOffersMode) return this.offers.length;
     return this.listing.bidCount || 0;
   }
 

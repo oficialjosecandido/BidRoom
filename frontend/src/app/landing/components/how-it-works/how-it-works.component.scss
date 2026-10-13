@@ -246,7 +246,19 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 16px;
-  margin-bottom: 48px;
+  margin-bottom: 20px;  // the equality line below closes the section now
+}
+
+// Spans both cards on purpose: what it says is true of both, so it reads as one
+// statement under the pair rather than a third item in the comparison.
+.format-equal {
+  font-size: 14px;
+  font-weight: 400;
+  // Inherits the page text colour rather than the muted `--hiw-sub` the intro
+  // uses: it is the conclusion of the section, not a caption on it.
+  line-height: 1.7;
+  max-width: 640px;
+  margin: 0 0 48px;
 }
 
 .format-card {

@@ -126,7 +126,7 @@ router.get('/', async (req, res) => {
 
     const [transactions, total] = await Promise.all([
       Transaction.find(filter)
-        .populate('listing', 'title slug images status commissionRate shippingCost shippingOption auctionFormat allowPrivateRoom returnPolicy acceptedPaymentMethods')
+        .populate('listing', 'title slug images status commissionRate shippingCost shippingOption sellingMode allowPrivateRoom returnPolicy acceptedPaymentMethods')
         .populate('seller', 'firstName lastName sellerPaymentConfig')
         .populate('buyer', 'firstName lastName deliveryAddress')
         .sort({ updatedAt: -1 })
@@ -199,7 +199,7 @@ router.get('/:id', async (req, res) => {
     }
 
     const transaction = await Transaction.findById(req.params.id)
-      .populate('listing', 'title slug images status commissionRate shippingCost shippingOption auctionFormat allowPrivateRoom returnPolicy acceptedPaymentMethods')
+      .populate('listing', 'title slug images status commissionRate shippingCost shippingOption sellingMode allowPrivateRoom returnPolicy acceptedPaymentMethods')
       .populate('seller', 'firstName lastName sellerPaymentConfig')
       .populate('buyer', 'firstName lastName')
       .lean();
@@ -338,7 +338,7 @@ router.post('/:id/open-dispute', async (req, res) => {
     }
 
     const updated = await Transaction.findById(transaction._id)
-      .populate('listing', 'title slug images status commissionRate shippingCost shippingOption auctionFormat allowPrivateRoom returnPolicy acceptedPaymentMethods')
+      .populate('listing', 'title slug images status commissionRate shippingCost shippingOption sellingMode allowPrivateRoom returnPolicy acceptedPaymentMethods')
       .populate('seller', 'firstName lastName sellerPaymentConfig')
       .populate('buyer', 'firstName lastName')
       .lean();
@@ -405,7 +405,7 @@ router.patch('/:id/dispute/counter-evidence', async (req, res) => {
     }
 
     const updated = await Transaction.findById(transaction._id)
-      .populate('listing', 'title slug images status commissionRate shippingCost shippingOption auctionFormat allowPrivateRoom returnPolicy acceptedPaymentMethods')
+      .populate('listing', 'title slug images status commissionRate shippingCost shippingOption sellingMode allowPrivateRoom returnPolicy acceptedPaymentMethods')
       .populate('seller', 'firstName lastName sellerPaymentConfig')
       .populate('buyer', 'firstName lastName')
       .lean();
@@ -702,7 +702,7 @@ router.patch('/:id', requireActiveAccount, async (req, res) => {
     await transaction.save();
 
     const updated = await Transaction.findById(transaction._id)
-      .populate('listing', 'title slug images status commissionRate shippingCost shippingOption auctionFormat allowPrivateRoom returnPolicy acceptedPaymentMethods')
+      .populate('listing', 'title slug images status commissionRate shippingCost shippingOption sellingMode allowPrivateRoom returnPolicy acceptedPaymentMethods')
       .populate('seller', 'firstName lastName sellerPaymentConfig')
       .populate('buyer', 'firstName lastName')
       .lean();
@@ -834,7 +834,7 @@ router.post('/:id/request-return', requireActiveAccount, async (req, res) => {
     }
 
     const updated = await Transaction.findById(transaction._id)
-      .populate('listing', 'title slug images status commissionRate shippingCost shippingOption auctionFormat allowPrivateRoom returnPolicy acceptedPaymentMethods')
+      .populate('listing', 'title slug images status commissionRate shippingCost shippingOption sellingMode allowPrivateRoom returnPolicy acceptedPaymentMethods')
       .populate('seller', 'firstName lastName sellerPaymentConfig')
       .populate('buyer', 'firstName lastName')
       .lean();

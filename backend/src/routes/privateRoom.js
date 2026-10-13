@@ -493,12 +493,13 @@ router.post('/listings/:id/accept-invitation', authenticateToken, async (req, re
       }).catch(err => logger.error('Failed to create private room accepted notification:', err));
       if (io) emitNewNotificationToUser(io, sellerUserId).catch(() => {});
     }
+    // Initials only: this is a broadcast to the listing room, which anyone
+    // watching the listing joins. `bidderName` above stays — it goes to the
+    // seller's own notification, and the seller is the one who invited them.
     emitToListingAndPrivateRoom(io, listingId, 'invitation-accepted', {
       listingId: listingId.toString(),
       bidderId: bidder?._id?.toString?.() || user._id.toString(),
-      bidderName,
-      bidderFirstName: user.firstName || '',
-      bidderLastName: user.lastName || ''
+      bidderInitials: `${(user.firstName || '').charAt(0)}${(user.lastName || '').charAt(0)}`.toUpperCase()
     });
     return res.json({ success: true, message: 'Invitation accepted. You can now place bids in the private room.', listingId });
   } catch (error) {
@@ -574,13 +575,12 @@ router.post('/invitation/accept', async (req, res) => {
       }).catch(err => logger.error('Failed to create private room accepted notification:', err));
       if (io) emitNewNotificationToUser(io, sellerUserId).catch(() => {});
     }
-    // Emit to everyone in the private room so the poker table updates live
+    // Emit to everyone in the private room so the poker table updates live.
+    // Initials only — see the in-page acceptance route above.
     emitToListingAndPrivateRoom(io, listingId, 'invitation-accepted', {
       listingId: listingId.toString(),
       bidderId: bidder?._id?.toString?.() || null,
-      bidderName,
-      bidderFirstName: bidder?.firstName || '',
-      bidderLastName: bidder?.lastName || ''
+      bidderInitials: `${(bidder?.firstName || '').charAt(0)}${(bidder?.lastName || '').charAt(0)}`.toUpperCase()
     });
     return res.json({ success: true, message: 'Invitation accepted. You can now place bids in the private room.', listingId });
   } catch (error) {

@@ -59,11 +59,37 @@ function publicDisplayName(person, fallback = 'A bidder') {
   return fallback;
 }
 
-/** Display name: real name for registered bidders, never the local part of an email. */
-function displayName(bid) {
-  return publicDisplayName(bid?.bidder, 'Guest Bidder');
+/**
+ * How to address somebody in an email we are sending *to them*.
+ *
+ * Returns '' when there is no name on file, and every template that takes a
+ * name slot guards it (`Hello{{#if bidderName}} <strong>…</strong>{{/if}},`),
+ * so an empty string degrades to a clean "Olá," / "Hola," / "Bonjour,".
+ *
+ * Two things it exists to stop, both of which were live:
+ *
+ *   `email.split('@')[0]`, which greeted people as "Olá joao.silva92" — not a
+ *   privacy leak, since the address is their own, but it reads like a database
+ *   dump and tells the recipient we never learned their name.
+ *
+ *   English literals — 'Guest Bidder', 'Bidder', 'Anonymous' — which landed
+ *   inside Portuguese, Spanish and French emails as "Olá Bidder,". A fallback
+ *   that is not translated cannot be a fallback in a four-language product, and
+ *   the empty string needs no translation.
+ *
+ * For a name shown to somebody *else*, use publicDisplayName instead: the
+ * question there is what a third party may see, not what we call you.
+ */
+function greetingName(person) {
+  return publicDisplayName(person, '');
 }
 
+/**
+ * Initials, which is all formatBidPublic publishes about a person.
+ *
+ * 'G' for a guest bid placed without an account: there is no name to take
+ * initials from, and the email is not a source of one.
+ */
 function displayInitials(bid) {
   const b = bid?.bidder;
   if (b && (b.firstName || b.lastName)) {
@@ -93,13 +119,20 @@ function formatBidPublic(bid, extra = {}) {
     bidType: bid.bidType,
     createdAt: bid.createdAt ? new Date(bid.createdAt).toISOString() : null,
 
-    // Identity, reduced to what a rival bidder legitimately needs to see.
+    // Identity, reduced to what a rival bidder legitimately needs to see:
+    // initials, and nothing else. This used to publish the bidder's full first
+    // and last name on an unauthenticated endpoint, for every bid, which turns
+    // any live listing into a list of named people who have money and want this
+    // category of thing — handed over in bulk, no account required. Initials
+    // keep the history legible as a sequence of distinct people without being
+    // the roster.
+    //
+    // bidderId stays: it is an opaque ObjectId the private room needs to match
+    // bids to invitees, and the viewer's own id arrives separately as
+    // viewerBidderId so the client can mark its own rows.
     bidderId: b && b._id ? b._id.toString() : null,
     bidderKey: bidderKey(bid, listingId),
-    bidderName: displayName(bid),
     bidderInitials: displayInitials(bid),
-    bidderFirstName: b ? (b.firstName ?? null) : null,
-    bidderLastName: b ? (b.lastName ?? null) : null,
     isAuthenticated: !!b,
     bidderVerified: b ? !!b.emailVerified : false,
 
@@ -111,4 +144,4 @@ function formatBidPublic(bid, extra = {}) {
   };
 }
 
-module.exports = { formatBidPublic, bidderKey, publicDisplayName };
+module.exports = { formatBidPublic, bidderKey, publicDisplayName, greetingName, displayInitials };

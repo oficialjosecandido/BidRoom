@@ -45,17 +45,52 @@ export class AnalyticsService {
     window.gtag!('event', name, payload);
   }
 
+  /**
+   * What GA has always called this listing's format, from what the app now
+   * calls its selling mode.
+   *
+   * The app renamed `auctionFormat: 'highest-bid' | 'best-offer'` to
+   * `sellingMode: 'bidding' | 'offers'`, but years of events are already in GA
+   * under the old property name and the old values. Renaming them there would
+   * split every report in two at the deploy date, with no way to join the
+   * halves back up — so the wire format is pinned and the translation happens
+   * here. This is the only place in the app that still speaks the old words.
+   *
+   * There are two maps because GA holds two properties for the one idea:
+   * `auction_format` was written from the stored field and `listing_format`
+   * from the creation form, which spelled the same two choices differently.
+   * That duplication is part of what the rename ended in the app; here both
+   * stay as they are, because a pinned property is a joinable one.
+   */
+  private static readonly GA_AUCTION_FORMAT: Record<string, string> = {
+    bidding: 'highest-bid',
+    offers: 'best-offer',
+  };
+
+  private static readonly GA_LISTING_FORMAT: Record<string, string> = {
+    bidding: 'auction',
+    offers: 'best-offer',
+  };
+
+  /** The `listing_format` value for a selling mode. See GA_LISTING_FORMAT. */
+  listingFormatParam(sellingMode: string | null | undefined): string {
+    if (!sellingMode) return '';
+    return AnalyticsService.GA_LISTING_FORMAT[sellingMode] ?? sellingMode;
+  }
+
   /** Common listing context for conversion events. */
   listingParams(listing: {
     _id?: string;
     slug?: string;
-    auctionFormat?: string;
+    sellingMode?: string;
     category?: string;
   }): AnalyticsEventParams {
     return {
       listing_id: listing._id ?? '',
       listing_slug: listing.slug ?? '',
-      auction_format: listing.auctionFormat ?? '',
+      auction_format: listing.sellingMode
+        ? (AnalyticsService.GA_AUCTION_FORMAT[listing.sellingMode] ?? listing.sellingMode)
+        : '',
       item_category: listing.category ?? '',
     };
   }

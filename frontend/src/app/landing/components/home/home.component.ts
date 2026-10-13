@@ -168,7 +168,7 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
         ? this.translate.instant('GIVEAWAY.ONE_ENTRY')
         : this.translate.instant('GIVEAWAY.ENTRIES_COUNT', { count: n });
     }
-    if (l.auctionFormat === 'best-offer') {
+    if (l.sellingMode === 'offers') {
       return `${l.bidCount || 0} ofertas`;
     }
     const end = new Date(l.endDate).getTime();
@@ -191,8 +191,8 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
     if (l.saleFormat === 'giveaway') {
       return this.translate.instant('GIVEAWAY.PILL');
     }
-    if (l.auctionFormat === 'best-offer') {
-      return this.translate.instant('landing.home.badges.bestOffer');
+    if (l.sellingMode === 'offers') {
+      return this.translate.instant('landing.home.badges.offers');
     }
     if (l.allowPrivateRoom) {
       return this.translate.instant('landing.home.badges.privateRoom');
@@ -201,21 +201,21 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   isOfferBadge(l: Listing): boolean {
-    return l.saleFormat === 'giveaway' || l.auctionFormat === 'best-offer';
+    return l.saleFormat === 'giveaway' || l.sellingMode === 'offers';
   }
 
   isPrivateBadge(l: Listing): boolean {
-    return l.saleFormat !== 'giveaway' && l.auctionFormat !== 'best-offer' && !!l.allowPrivateRoom;
+    return l.saleFormat !== 'giveaway' && l.sellingMode !== 'offers' && !!l.allowPrivateRoom;
   }
 
   isAuctionBadge(l: Listing): boolean {
-    return l.saleFormat !== 'giveaway' && l.auctionFormat !== 'best-offer' && !l.allowPrivateRoom;
+    return l.saleFormat !== 'giveaway' && l.sellingMode !== 'offers' && !l.allowPrivateRoom;
   }
 
   /** Caption above the price on a listing card. */
   listingPriceLabel(l: Listing): string {
     if (l.saleFormat === 'giveaway') return 'GIVEAWAY.ENTRY_LABEL';
-    return l.auctionFormat === 'best-offer' ? 'landing.home.listing.highestOffer' : 'landing.home.listing.currentBid';
+    return l.sellingMode === 'offers' ? 'landing.home.listing.highestOffer' : 'landing.home.listing.currentBid';
   }
 
   /** Card-sized WebP (w960) for hero/grid; falls back to original via onImgError. */

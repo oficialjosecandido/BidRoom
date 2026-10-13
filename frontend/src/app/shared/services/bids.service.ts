@@ -7,19 +7,24 @@ export interface Bid {
   _id: string;
   listing: string;
   /**
-   * The API no longer returns the bidder's email, nor maxBid (the proxy
-   * ceiling), nor the internal fraud/IP fields — see backend utils/bidFormat.js.
-   * Use bidderId for registered bidders and bidderKey, an opaque per-listing
-   * pseudonym, to group a guest's bids.
+   * The API no longer returns the bidder's email, nor their name, nor maxBid
+   * (the proxy ceiling), nor the internal fraud/IP fields — see backend
+   * utils/bidFormat.js. Use bidderId for registered bidders and bidderKey, an
+   * opaque per-listing pseudonym, to group a guest's bids.
    */
   bidderId?: string | null;
   bidderKey?: string | null;
   amount: number;
   bidType: 'manual' | 'proxy' | 'auto';
-  bidderName?: string;
+  /** Initials only. The public bid history does not name people. */
   bidderInitials?: string;
-  bidderFirstName?: string | null;
-  bidderLastName?: string | null;
+  /**
+   * Full name, present ONLY when the authenticated viewer is the seller of this
+   * listing — they pick the winner from this list, so they need to see who. Any
+   * other viewer, signed in or not, gets `undefined` here, so every template
+   * must fall back to bidderInitials.
+   */
+  bidderName?: string;
   isAuthenticated?: boolean;
   bidderVerified?: boolean;
   buyerTrustTier?: number;

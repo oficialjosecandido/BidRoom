@@ -38,7 +38,7 @@ function listing(overrides = {}) {
     currentPrice: 100,
     bidCount: 0,
     viewCount: 0,
-    auctionFormat: 'highest-bid',
+    sellingMode: 'bidding',
     endDate: inDays(3),
     createdAt: inDays(-1),
     titlePt: `Peça ${autoId}`,
@@ -161,7 +161,7 @@ describe('renderAuctionsBlock', () => {
   });
 
   it('names the price after the auction format and language', () => {
-    const bestOffer = listing({ auctionFormat: 'best-offer' });
+    const bestOffer = listing({ sellingMode: 'offers' });
     expect(render([bestOffer], 'pt')).toContain('Melhor Oferta');
     expect(render([bestOffer], 'fr')).toContain('Meilleure Offre');
 
@@ -346,7 +346,7 @@ describe('expandCampaignContent', () => {
   });
 
   it('translates the card for each language', async () => {
-    mockCandidates([listing({ category: 'jewelry', auctionFormat: 'best-offer' })]);
+    mockCandidates([listing({ category: 'jewelry', sellingMode: 'offers' })]);
     const { content: out } = await expandCampaignContent(content(), { now: NOW });
 
     expect(out.pt.html).toContain('Joalharia');

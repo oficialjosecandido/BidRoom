@@ -83,7 +83,7 @@ export interface Listing {
   attributes?: Record<string, string | number | boolean>;
   /**
    * 'giveaway' is a free prize draw, not a sale: no price, no bids, no offers.
-   * When set, auctionFormat, prices and private-room fields do not apply.
+   * When set, sellingMode, prices and private-room fields do not apply.
    */
   saleFormat?: 'auction' | 'giveaway';
   giveaway?: {
@@ -93,7 +93,7 @@ export interface Listing {
     winner: string | null;
   };
   // New auction mechanics
-  auctionFormat: 'highest-bid' | 'best-offer';
+  sellingMode: 'bidding' | 'offers';
   durationSlot: '5 minutes' | '2 hours' | '24 hours' | '3 days' | '7 days';
   allowPrivateRoom: boolean;
   commissionRate: number;
@@ -108,9 +108,15 @@ export interface Listing {
   platinumBidderStatus?: {
     bidder: {
       _id: string;
-      firstName: string;
-      lastName: string;
-      email: string;
+      /** Always present. A public view of the listing gets only this. */
+      initials?: string;
+      /**
+       * Present only when the viewer is the seller of this listing. The invitee
+       * list is public data on an optionalAuth route, so naming the people a
+       * seller invited would name them to everyone — see routes/listings.js.
+       */
+      firstName?: string;
+      lastName?: string;
     };
     status: 'pending' | 'accepted' | 'declined';
     invitedAt: string;
@@ -214,7 +220,7 @@ export interface ListingsQueryParams {
   locationCity?: string;
   /** @deprecated Use location */
   locationCountry?: string;
-  auctionFormat?: 'highest-bid' | 'best-offer';
+  sellingMode?: 'bidding' | 'offers';
   allowPrivateRoom?: boolean;
   endingSoon?: boolean;
   isFeatured?: boolean;
@@ -235,7 +241,7 @@ export interface SellerAnalyticsListingRow {
   slug: string;
   status: string;
   category: string;
-  auctionFormat: string;
+  sellingMode: string;
   cumulativeBidCount: number;
   viewsInRange: number;
   bidEventsInRange: number;
@@ -280,7 +286,7 @@ export interface BuyerAnalyticsListingRow {
   slug: string;
   status: string;
   category: string;
-  auctionFormat: string;
+  sellingMode: string;
   bidsInRange: number;
   offersInRange: number;
   eventsInRange: number;
@@ -478,7 +484,7 @@ export class ListingsService {
 
   /**
    * Seller soft-cancels a listing (draft / pending_review / active) when there is
-   * no qualifying activity (no offers ≥ minimum for best-offer; no bids otherwise).
+   * no qualifying activity (no offers ≥ minimum for offers; no bids otherwise).
    */
   cancelListing(listingId: string): Observable<{ message: string; listing: Listing }> {
     return this.http.post<{ message: string; listing: Listing }>(

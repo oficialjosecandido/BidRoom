@@ -12,7 +12,8 @@ const { runFraudChecks, updateUserSignals } = require('../services/fraudDetectio
 const { resolveCustomerForToken, handleAccountClaimError } = require('../services/accountClaimService');
 const Block = require('../models/Block');
 const { scheduleBlock } = require('../utils/listingSchedule');
-const { formatBidPublic } = require('../utils/bidFormat');
+const { formatBidPublic, publicDisplayName } = require('../utils/bidFormat');
+const { KYC_THRESHOLD_EUR, kycThresholdLabel } = require('../config/kycRules');
 const { parsePageParams, pageMeta } = require('../utils/pagination');
 const logger = require('../utils/logger');
 
@@ -62,28 +63,41 @@ router.get('/listing/:listingId', optionalAuth, async (req, res) => {
     const bidderIds = bids.filter((b) => b.bidder && b.bidder._id).map((b) => b.bidder._id.toString());
     const scoreMap = bidderIds.length > 0 ? await getReviewScoresForUsers(bidderIds) : {};
 
-    // This endpoint is unauthenticated (optionalAuth). Everything it returns is
-    // public, so it goes through the allowlist — which is also why there is no
-    // longer an isSeller branch here: the seller sees what every other bidder
-    // sees, and buyer contact details are read from Nexus, not from the API.
+    // The viewer's own id, so the client can tell which bids are theirs without
+    // any identifier of the other bidders being published. Looked up rather than
+    // read off the page, because the viewer's own bid may sit on another page.
+    // The same lookup answers whether the viewer is the seller.
+    let viewerBidderId = null;
+    let viewerIsSeller = false;
+    if (req.isAuthenticated && req.user?.uid) {
+      const viewer = await Customer.findOne({ uid: req.user.uid }).select('_id').lean();
+      viewerBidderId = viewer ? viewer._id.toString() : null;
+      if (viewer) {
+        viewerIsSeller = (await Listing.exists({ _id: req.params.listingId, seller: viewer._id })) !== null;
+      }
+    }
+
+    // This endpoint is unauthenticated (optionalAuth), so what it returns by
+    // default is the public allowlist: initials, no name, no email.
+    //
+    // The one exception is the seller of this listing. When an auction ends
+    // without a private room the seller picks the winner from this very list,
+    // and "JC bid €400, AM bid €400" is not a decision anyone can make. They
+    // are about to be given the winner's shipping details anyway. Still no
+    // email, to anyone — buyer contact details are read from Nexus.
     const formattedBids = bids.map(bid => {
       const bidderId = bid.bidder && bid.bidder._id ? bid.bidder._id.toString() : null;
       const scores = bidderId ? scoreMap[bidderId] : null;
-      return formatBidPublic(bid, {
+      const formatted = formatBidPublic(bid, {
         buyerTrustTier: computeBuyerTrustTier(bid.bidder),
         buyerScore: scores ? scores.buyerScore : null,
         buyerReviewCount: scores ? scores.buyerReviewCount : 0
       });
+      if (viewerIsSeller) {
+        formatted.bidderName = publicDisplayName(bid.bidder, 'Guest Bidder');
+      }
+      return formatted;
     });
-
-    // The viewer's own id, so the client can tell which bids are theirs without
-    // any identifier of the other bidders being published. Looked up rather than
-    // read off the page, because the viewer's own bid may sit on another page.
-    let viewerBidderId = null;
-    if (req.isAuthenticated && req.user?.uid) {
-      const viewer = await Customer.findOne({ uid: req.user.uid }).select('_id').lean();
-      viewerBidderId = viewer ? viewer._id.toString() : null;
-    }
 
     res.json({
       bids: formattedBids,
@@ -253,13 +267,12 @@ router.post('/', optionalAuth, requireActiveAccountIfAuthenticated, requireNoDis
     }
 
     // KYC check for high-value bids
-    const KYC_THRESHOLD = 5000;
     const bidAmount = parseFloat(amount);
-    if (bidAmount >= KYC_THRESHOLD) {
+    if (bidAmount >= KYC_THRESHOLD_EUR) {
       if (!user) {
         return res.status(403).json({
           error: 'kyc_required',
-          message: 'You must be logged in and identity-verified to bid on items valued at $5,000 or more.',
+          message: `You must be logged in and identity-verified to bid on items valued at ${kycThresholdLabel()} or more.`,
           kycStatus: 'none'
         });
       }
@@ -267,7 +280,7 @@ router.post('/', optionalAuth, requireActiveAccountIfAuthenticated, requireNoDis
       if (kycStatus !== 'approved') {
         return res.status(403).json({
           error: 'kyc_required',
-          message: 'Identity verification is required to bid on items valued at $5,000 or more.',
+          message: `Identity verification is required to bid on items valued at ${kycThresholdLabel()} or more.`,
           kycStatus
         });
       }
@@ -285,7 +298,7 @@ router.post('/', optionalAuth, requireActiveAccountIfAuthenticated, requireNoDis
     }
 
     // Check auction format
-    if (listing.auctionFormat === 'best-offer') {
+    if (listing.sellingMode === 'offers') {
       return res.status(400).json({
         error: 'Wrong auction format',
         message: 'This listing uses Best Offer format. Please submit an offer instead.'
@@ -691,6 +704,12 @@ router.post('/', optionalAuth, requireActiveAccountIfAuthenticated, requireNoDis
       });
     }
 
+    // The bidder's name, for the two recipients entitled to it: the seller of
+    // this listing, and our own ops inbox. It is read from the source document
+    // because formattedBid carries neither name nor email by design — that one
+    // is the payload broadcast to every client watching the listing.
+    const bidderDisplayName = publicDisplayName(populatedBid.bidder, 'A bidder');
+
     // Create in-app notification for the seller (someone bid on their listing)
     const sellerUserId = listing.seller?._id?.toString?.() || listing.seller?.toString?.();
     if (sellerUserId) {
@@ -699,19 +718,17 @@ router.post('/', optionalAuth, requireActiveAccountIfAuthenticated, requireNoDis
         listingSlug: listing.slug || null,
         listingTitle: listing.title || 'Your listing',
         bidAmount: amount,
-        bidderName: formattedBid.bidderName || 'A bidder',
+        bidderName: bidderDisplayName,
         sellerUserId
       }).catch(err => logger.error('Failed to create bid notification:', err));
       emitNewNotificationToUser(io, sellerUserId).catch(() => {});
     }
 
-    // Platform ops alert (every bid). The address is read from the source
-    // document, not from formattedBid — that one carries no email by design,
-    // and this alert goes to our own inbox, not to another user.
+    // Platform ops alert (every bid).
     sendPlatformNewBidAlert(
       listing,
       amount,
-      formattedBid.bidderName || 'A bidder',
+      bidderDisplayName,
       populatedBid.bidderEmail || user?.email || null
     ).catch(err => logger.error('Failed to send platform new-bid alert:', err));
 

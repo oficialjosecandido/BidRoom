@@ -43,7 +43,11 @@ const logger = require('../utils/logger');
 const { recordViewIfNew } = require('../utils/viewCounter');
 const { normalizeListingLocaleFields } = require('../utils/listingLocale');
 const { parseScheduledStart, scheduleBlock, ListingScheduleError } = require('../utils/listingSchedule');
-const { formatBidPublic } = require('../utils/bidFormat');
+const { normalizeSellingMode, buyNowBlock } = require('../utils/sellingMode');
+const { buildListingSearchClause } = require('../utils/listingSearch');
+const { lockedFieldsAttempted } = require('../utils/listingEditLocks');
+const { KYC_THRESHOLD_EUR, kycThresholdLabel } = require('../config/kycRules');
+const { formatBidPublic, publicDisplayName } = require('../utils/bidFormat');
 const { createLimiter, clientKey, guestOnly } = require('../middleware/rateLimiters');
 const { issueGuestSession } = require('../utils/guestSession');
 const { resolveGuestSeller, GuestSellerError } = require('../services/guestSellerService');
@@ -223,6 +227,7 @@ router.get('/', optionalAuth, catalogueLimiter, async (req, res) => {
       location,
       locationCity,
       locationCountry,
+      sellingMode,
       auctionFormat,
       allowPrivateRoom,
       endingSoon,
@@ -269,11 +274,11 @@ router.get('/', optionalAuth, catalogueLimiter, async (req, res) => {
     }
     
     if (search) {
-      const escapedSearch = escapeRegex(String(search).trim().slice(0, 200));
-      query.$or = [
-        { title: { $regex: escapedSearch, $options: 'i' } },
-        { description: { $regex: escapedSearch, $options: 'i' } }
-      ];
+      // Token AND + accent-insensitive match — "relógio homem" finds "Relogio de Homem".
+      const searchClause = buildListingSearchClause(search);
+      if (searchClause) {
+        query.$and = [...(query.$and || []), searchClause];
+      }
     }
 
     if (condition) {
@@ -332,8 +337,11 @@ router.get('/', optionalAuth, catalogueLimiter, async (req, res) => {
       query.$and = [...(query.$and || []), ...locationClauses];
     }
 
-    if (auctionFormat === 'highest-bid' || auctionFormat === 'best-offer') {
-      query.auctionFormat = auctionFormat;
+    // `auctionFormat` is the parameter this filter used to take; a bookmarked
+    // or shared search URL still carries it.
+    const modeFilter = normalizeSellingMode(sellingMode, auctionFormat);
+    if (modeFilter) {
+      query.sellingMode = modeFilter;
     }
 
     if (allowPrivateRoom === 'true') {
@@ -404,7 +412,7 @@ router.get('/', optionalAuth, catalogueLimiter, async (req, res) => {
 
     // Best Offer cards read bidCount/currentPrice; those fields lag unless we overlay live offer stats.
     const { getOfferStatsForListings } = require('../utils/listingOfferStats');
-    const bestOfferIds = listings.filter((l) => l.auctionFormat === 'best-offer').map((l) => l._id);
+    const bestOfferIds = listings.filter((l) => l.sellingMode === 'offers').map((l) => l._id);
     const offerStatsByListing = await getOfferStatsForListings(bestOfferIds);
 
     // Helper function to generate slug from title
@@ -432,7 +440,7 @@ router.get('/', optionalAuth, catalogueLimiter, async (req, res) => {
         listing.slug = slug;
       }
 
-      if (listing.auctionFormat === 'best-offer') {
+      if (listing.sellingMode === 'offers') {
         const stats = offerStatsByListing[listing._id.toString()];
         listing.bidCount = stats?.offerCount ?? 0;
         listing.currentPrice = stats?.highestOffer ?? 0;
@@ -598,7 +606,7 @@ router.get('/slug/:slug', optionalAuth, listingDetailLimiter, async (req, res) =
     const now = new Date();
     if (
       listing.status === 'active' &&
-      listing.auctionFormat === 'highest-bid' &&
+      listing.sellingMode === 'bidding' &&
       listing.endDate && new Date(listing.endDate) <= now &&
       !['active', 'invited'].includes(listing.privateRoomStatus || '')
     ) {
@@ -908,7 +916,7 @@ router.get('/seller/analytics', authenticateToken, async (req, res) => {
     }
 
     const listingDocs = await Listing.find(listingMatch)
-      .select('_id title slug status category auctionFormat bidCount')
+      .select('_id title slug status category sellingMode bidCount')
       .sort({ createdAt: -1 })
       .lean();
     const listingIds = listingDocs.map((l) => l._id);
@@ -1042,7 +1050,7 @@ router.get('/seller/analytics', authenticateToken, async (req, res) => {
         slug: l.slug,
         status: l.status,
         category: l.category,
-        auctionFormat: l.auctionFormat,
+        sellingMode: l.sellingMode,
         cumulativeBidCount: l.bidCount ?? 0,
         viewsInRange: views,
         bidEventsInRange: bidEvents,
@@ -1112,24 +1120,26 @@ router.get('/:id', optionalAuth, listingDetailLimiter, async (req, res) => {
       });
     }
 
+    // Is the person asking the seller? Needed twice below — for the
+    // pending-review guard, and to decide whether the invitee list comes back
+    // named — so it is resolved once here rather than looked up twice.
+    let viewerIsOwner = false;
+    if (req.user) {
+      const viewer = await Customer.findOne({ uid: req.user.uid }).select('_id').lean();
+      const sellerId = listing.seller?._id || listing.seller;
+      viewerIsOwner = !!(viewer && String(viewer._id) === String(sellerId));
+    }
+
     // Pending-review guard: only the seller can view their own listing while it's under moderation
-    if (listing.status === 'pending_review') {
-      let viewerIsOwner = false;
-      if (req.user) {
-        const viewer = await Customer.findOne({ uid: req.user.uid }).select('_id').lean();
-        const sellerId = listing.seller?._id || listing.seller;
-        viewerIsOwner = viewer && String(viewer._id) === String(sellerId);
-      }
-      if (!viewerIsOwner) {
-        return res.status(404).json({ error: 'Listing not found' });
-      }
+    if (listing.status === 'pending_review' && !viewerIsOwner) {
+      return res.status(404).json({ error: 'Listing not found' });
     }
 
     // Lazy finalize: if auction has ended by time but scheduler hasn't run yet, process it now
     const now = new Date();
     if (
       listing.status === 'active' &&
-      listing.auctionFormat === 'highest-bid' &&
+      listing.sellingMode === 'bidding' &&
       listing.endDate && new Date(listing.endDate) <= now &&
       !['active', 'invited'].includes(listing.privateRoomStatus || '')
     ) {
@@ -1151,15 +1161,25 @@ router.get('/:id', optionalAuth, listingDetailLimiter, async (req, res) => {
       endingSoon: timeRemaining.ended ? false : (timeRemaining.days === 0 && timeRemaining.hours <= 24)
     };
 
-    // Include platinum bidder invitation status (name + acceptance) for the poker table view
+    // Invitation status for the poker table view.
+    //
+    // This route is optionalAuth, so it was publishing the full first and last
+    // name of every bidder the seller invited to the Private Room — to anyone
+    // who fetched the listing. That is a worse disclosure than the bid history
+    // was, because the invitee list is precisely the people the seller rates as
+    // the serious buyers. Everyone now gets initials, except the seller, who
+    // chose these people and has an invitation panel to manage.
     if (listing.platinumBidderInvitations && listing.platinumBidderInvitations.length > 0) {
       response.platinumBidderStatus = listing.platinumBidderInvitations
         .filter(inv => inv.bidder)
         .map(inv => ({
           bidder: {
             _id: inv.bidder._id,
-            firstName: inv.bidder.firstName || '',
-            lastName: inv.bidder.lastName || ''
+            initials: `${(inv.bidder.firstName || '').charAt(0)}${(inv.bidder.lastName || '').charAt(0)}`.toUpperCase(),
+            ...(viewerIsOwner ? {
+              firstName: inv.bidder.firstName || '',
+              lastName: inv.bidder.lastName || ''
+            } : {})
           },
           status: inv.status,
           invitedAt: inv.invitedAt,
@@ -1304,7 +1324,12 @@ router.post(
     // while entry stays free, and the organiser is answerable for the rules,
     // the fairness of the draw and the participants' data. So BidRoom runs
     // them itself — sellers may not.
+    // Checked under every spelling the field has ever had, including the
+    // current one: `normalizeSellingMode` refuses 'giveaway' outright, so
+    // without this a client sending it would fall through to a priced listing
+    // instead of being stopped here.
     const isGiveaway = req.body?.saleFormat === 'giveaway'
+      || req.body?.sellingMode === 'giveaway'
       || req.body?.listingFormat === 'giveaway'
       || req.body?.auctionFormat === 'giveaway';
     if (isGiveaway && !isAdminEmail(req.user?.email)) {
@@ -1321,6 +1346,7 @@ router.post(
       category,
       subCategory,
       condition,
+      sellingMode: sellingModeInput,
       listingFormat,
       duration,
       scheduledStart,
@@ -1437,15 +1463,58 @@ router.post(
     // Note: Image upload will be handled separately. For now, allow empty images array.
     // Frontend should upload images first, then send URLs in the images array.
 
-    // KYC check for high-value listings
-    const KYC_THRESHOLD = 5000;
-    const listingPrice = parseFloat(startingPrice) || 0;
-    if (listingPrice >= KYC_THRESHOLD) {
+    // One mode, resolved once, from whichever field the client sent. Defaults
+    // to bidding, which is the model's default and what a seller who never
+    // touched the control gets.
+    //
+    // Resolved here, above the value gates below, and not further down with the
+    // rest of the pricing: both gates are about how much the thing is worth, and
+    // in offers mode the figure they need is the offer floor rather than a
+    // starting bid. Reading `startingPrice` alone, as they did, meant every
+    // offers listing declared a value of 0 and walked through both of them.
+    const resolvedSellingMode = isGiveaway
+      ? 'bidding'
+      : (normalizeSellingMode(sellingModeInput, listingFormat) || 'bidding');
+    const isBidding = !isGiveaway && resolvedSellingMode === 'bidding';
+    const isOffers = !isGiveaway && resolvedSellingMode === 'offers';
+
+    // Validate mode-specific fields
+    if (isBidding) {
+      if (!startingPrice || startingPrice <= 0) {
+        return res.status(400).json({ error: 'Starting bid is required in bidding mode' });
+      }
+      if (buyNowPrice && buyNowPrice <= startingPrice) {
+        return res.status(400).json({ error: 'Buy Now price must be higher than Starting Bid' });
+      }
+    }
+    if (isOffers) {
+      const minOffer = parseFloat(minimumOfferPrice);
+      if (!Number.isFinite(minOffer) || minOffer < 0.01) {
+        return res.status(400).json({
+          error: 'Minimum offer price is required in offers mode',
+          message: 'Please set a minimum offer price of at least €0.01.'
+        });
+      }
+    }
+
+    // Offers mode has no starting bid in the form — use the minimum as
+    // starting/current so the listing never goes live with price 0 (which made
+    // offer floors and UI fall back to €0 / €1).
+    const offersFloor = isOffers ? parseFloat(minimumOfferPrice) : null;
+    const resolvedStartingPrice = isBidding
+      ? parseFloat(startingPrice)
+      : (offersFloor != null ? offersFloor : 0);
+
+    // KYC check for high-value listings. Reads the resolved price so the
+    // threshold means the same thing in both modes — identity verification is
+    // about the value changing hands, not about how the buyer got there.
+    const listingPrice = resolvedStartingPrice;
+    if (listingPrice >= KYC_THRESHOLD_EUR) {
       const kycStatus = user.kycStatus || 'none';
       if (kycStatus !== 'approved') {
         return res.status(403).json({
           error: 'kyc_required',
-          message: 'Identity verification is required to list items valued at $5,000 or more.',
+          message: `Identity verification is required to list items valued at ${kycThresholdLabel()} or more.`,
           kycStatus
         });
       }
@@ -1461,6 +1530,9 @@ router.post(
         seller: user,
         startingPrice,
         buyNowPrice,
+        // The offer floor counts towards the value ceiling too — in offers mode
+        // it is the only price the seller sets. See VALUE_CAP_APPLIES_TO.
+        minimumOfferPrice: isOffers ? offersFloor : null,
         vehicleAmlDeclaration: req.body?.vehicleAmlDeclaration === true
       });
     } catch (err) {
@@ -1471,36 +1543,6 @@ router.post(
         ...err.details
       });
     }
-
-    // Validate format-specific fields
-    const isAuction = !isGiveaway && (listingFormat === 'highest-bid' || listingFormat === 'auction');
-    if (isAuction) {
-      if (!startingPrice || startingPrice <= 0) {
-        return res.status(400).json({ error: 'Starting bid is required for auction format' });
-      }
-      if (buyNowPrice && buyNowPrice <= startingPrice) {
-        return res.status(400).json({ error: 'Buy Now price must be higher than Starting Bid' });
-      }
-    }
-    if (!isGiveaway && listingFormat === 'best-offer') {
-      const minOffer = parseFloat(minimumOfferPrice);
-      if (!Number.isFinite(minOffer) || minOffer < 0.01) {
-        return res.status(400).json({
-          error: 'Minimum offer price is required for best-offer format',
-          message: 'Please set a minimum offer price of at least €0.01.'
-        });
-      }
-    }
-
-    // Best-offer has no auction starting bid in the form — use the minimum as
-    // starting/current so the listing never goes live with price 0 (which made
-    // offer floors and UI fall back to €0 / €1).
-    const bestOfferMin = !isGiveaway && listingFormat === 'best-offer'
-      ? parseFloat(minimumOfferPrice)
-      : null;
-    const resolvedStartingPrice = isAuction
-      ? parseFloat(startingPrice)
-      : (bestOfferMin != null ? bestOfferMin : 0);
 
     // Validate shipping cost for flat-rate
     if (shippingOption === 'flat-rate' && (!shippingCost || shippingCost < 0)) {
@@ -1668,23 +1710,29 @@ router.post(
       subCategory: resolvedSubCategory.trim(),
       condition,
       saleFormat: isGiveaway ? 'giveaway' : 'auction',
-      auctionFormat: (listingFormat === 'best-offer') ? 'best-offer' : 'highest-bid',
-      // Auto-relist scheduler only handles highest-bid; keep Best Offer off this flag.
-      autoRelist: isAuction && autoRelist === true,
+      sellingMode: resolvedSellingMode,
+      // Auto-relist scheduler only handles bidding; keep offers off this flag.
+      autoRelist: isBidding && autoRelist === true,
       durationSlot,
       startingPrice: resolvedStartingPrice,
       currentPrice: resolvedStartingPrice,
       // Every way of paying for the item is switched off on a giveaway. Free
       // entry is the one thing that keeps this a contest and not a lottery, so
       // it is enforced here rather than left to the caller not to send a price.
-      buyNowPrice: !isGiveaway && buyNowPrice ? parseFloat(buyNowPrice) : undefined,
-      minimumOfferPrice: !isGiveaway && listingFormat === 'best-offer'
+      //
+      // Buy Now also belongs to bidding alone: the buy-now route checks only
+      // that a price exists, so one stored on an offers listing would let a
+      // buyer close the sale and skip the seller's accept/decline. The pre-save
+      // hook clears it too — this is the first of the two gates.
+      buyNowPrice: isBidding && buyNowPrice ? parseFloat(buyNowPrice) : undefined,
+      minimumOfferPrice: isOffers
         ? parseFloat(minimumOfferPrice)
         : (!isGiveaway && minimumOfferPrice ? parseFloat(minimumOfferPrice) : undefined),
       // A private room is a live negotiation the seller has to be signed in to
       // attend. A guest has no session to attend it with, so the room would sit
-      // there with a buyer in it and nobody on the other side.
-      allowPrivateRoom: !isGiveaway && !isGuest && (allowPrivateRoom === true || allowPrivateRoom === 'true'),
+      // there with a buyer in it and nobody on the other side. It is a round of
+      // bidding, so it has no meaning in offers mode either.
+      allowPrivateRoom: isBidding && !isGuest && (allowPrivateRoom === true || allowPrivateRoom === 'true'),
       // Giveaways have no price — commission must stay 0 (schema default is 3.5%).
       commissionRate: isGiveaway
         ? 0
@@ -1824,7 +1872,7 @@ router.post(
       .populate('seller', SELLER_DSA_PUBLIC_SELECT)
       .lean();
 
-    if (populatedListing.auctionFormat === 'best-offer') {
+    if (populatedListing.sellingMode === 'offers') {
       logAuctionCreated(populatedListing);
     }
 
@@ -1870,18 +1918,21 @@ router.post(
 
 /**
  * Fields that may NEVER be changed once a listing is live (active), even with
- * no bids — title, category, format and duration stay fixed so buyers who
+ * no bids — title, category, selling mode and duration stay fixed so buyers who
  * opened the page before editing aren't misled about what the item is.
+ *
+ * `sellingMode` is the strictest of them: switching a live listing between
+ * bidding and offers would change what a bid or an offer legally means for
+ * everyone who already placed one, so it is rejected and the seller is told to
+ * cancel and relist instead. `auctionFormat` is listed beside it because a
+ * browser on the previous bundle still sends that name, and Mongoose's strict
+ * mode would otherwise drop it silently — an ignored edit looks like a
+ * successful one.
  *
  * Prices (`startingPrice`, `buyNowPrice`, `minimumOfferPrice`) are editable
  * while nobody has bid or offered; `currentPrice` is never written by the
  * client — it is synced from `startingPrice` on the server when needed.
  */
-const CRITICAL_FIELDS = new Set([
-  'title', 'titlePt', 'category', 'subCategory', 'currentPrice',
-  'auctionFormat', 'durationSlot', 'endDate', 'allowPrivateRoom'
-]);
-
 // PATCH /api/listings/:id - Edit a listing (state-based edit locks)
 router.patch('/:id', authenticateToken, requireActiveAccount, async (req, res) => {
   let listingContentWarning = null; // set when low-severity language is detected
@@ -1901,7 +1952,7 @@ router.patch('/:id', authenticateToken, requireActiveAccount, async (req, res) =
     const isLive   = listing.status === 'active';
     const hasBids  = listing.bidCount > 0;
     // Best-offer listings use Offer docs, not bidCount — treat any offer like a bid.
-    const hasOffers = listing.auctionFormat === 'best-offer'
+    const hasOffers = listing.sellingMode === 'offers'
       ? (await Offer.countDocuments({ listing: listing._id })) > 0
       : false;
     const hasActivity = hasBids || hasOffers;
@@ -1931,7 +1982,7 @@ router.patch('/:id', authenticateToken, requireActiveAccount, async (req, res) =
     // For live listings with no bids/offers, block changes to critical fields
     const body = req.body;
     if (isLive && !hasActivity) {
-      const attempted = Object.keys(body).filter(k => CRITICAL_FIELDS.has(k));
+      const attempted = lockedFieldsAttempted(body);
       if (attempted.length > 0) {
         return res.status(400).json({
           error: 'Field locked',
@@ -2025,7 +2076,7 @@ router.patch('/:id', authenticateToken, requireActiveAccount, async (req, res) =
     }
 
     if ('minimumOfferPrice' in updates) {
-      if (listing.auctionFormat !== 'best-offer') {
+      if (listing.sellingMode !== 'offers') {
         delete updates.minimumOfferPrice;
       } else {
         const min = parseFloat(updates.minimumOfferPrice);
@@ -2198,18 +2249,12 @@ router.post('/:id/buy-now', authenticateToken, requireActiveAccount, requireNoDi
     const listing = await Listing.findById(req.params.id).populate('seller', SELLER_DSA_PUBLIC_SELECT);
     if (!listing) return res.status(404).json({ error: 'Listing not found' });
 
-    if (!listing.buyNowPrice) {
-      return res.status(400).json({
-        error: 'Buy Now not available',
-        message: 'This listing does not have a Buy Now price.'
-      });
-    }
-
-    if (listing.status !== 'active') {
-      return res.status(400).json({
-        error: 'Listing not active',
-        message: 'This listing is no longer available.'
-      });
+    // Wrong mode, no price, not active, or a Private Room running right now —
+    // see utils/sellingMode.js, where each refusal is documented and tested.
+    const unavailable = buyNowBlock(listing);
+    if (unavailable) {
+      const { status, ...body } = unavailable;
+      return res.status(status).json(body);
     }
 
     // A seller can schedule the opening — nothing is for sale before it
@@ -2546,7 +2591,7 @@ router.post('/:id/cancel', authenticateToken, requireActiveAccount, async (req, 
       });
     }
 
-    if (listing.auctionFormat === 'best-offer') {
+    if (listing.sellingMode === 'offers') {
       const min = Number(listing.minimumOfferPrice) || 0;
       const acceptedOffer = await Offer.exists({ listing: listing._id, status: 'accepted' });
       if (acceptedOffer) {
@@ -2671,7 +2716,7 @@ router.post('/:id/relist', authenticateToken, requireActiveAccount, async (req, 
     }
 
     const { startingPrice, durationSlot, autoRelist } = req.body;
-    const isAuctionFormat = listing.auctionFormat !== 'best-offer';
+    const isAuctionFormat = listing.sellingMode !== 'offers';
 
     const newStartingPrice = startingPrice != null ? parseFloat(startingPrice) : listing.startingPrice;
     if (isNaN(newStartingPrice) || newStartingPrice < 0) {
@@ -2699,7 +2744,7 @@ router.post('/:id/relist', authenticateToken, requireActiveAccount, async (req, 
       startingPrice: newStartingPrice,
       currentPrice: newStartingPrice,
       bidIncrement: listing.bidIncrement,
-      auctionFormat: listing.auctionFormat,
+      sellingMode: listing.sellingMode,
       durationSlot: newDurationSlot,
       condition: listing.condition,
       location: listing.location,
@@ -2797,8 +2842,15 @@ router.get('/:id/bids', authenticateToken, async (req, res) => {
     // used to spread the whole document (`...bid`) and add bidderEmail on top,
     // which published maxBid, notes, ipAddress and the fraud flags along with
     // the buyer's address. Buyer contact details are read from Nexus.
+    //
+    // The name is added back here on purpose. formatBidPublic returns initials
+    // only, because it feeds the unauthenticated bid history; this route is the
+    // opposite case — the seller is choosing which of these people to sell to,
+    // has already been verified as the seller above, and will be shipping to
+    // whoever they pick. Still no email: that is Nexus's job.
     const formattedBids = bids.map(bid => ({
       ...formatBidPublic(bid),
+      bidderName: publicDisplayName(bid.bidder, 'Guest Bidder'),
       bidderHasDeposit: bid.bidder ? (bid.bidder.hasDeposit || false) : false
     }));
 
@@ -2886,9 +2938,16 @@ router.get('/seller/my-listings', authenticateToken, async (req, res) => {
             platinumBidderStatus.push({
               bidder: {
                 _id: bidder._id,
+                // Same shape as GET /listings/:id, so one template can render
+                // either: initials always, names when the viewer is the seller —
+                // which, on this route, they are by definition.
+                initials: `${(bidder.firstName || '').charAt(0)}${(bidder.lastName || '').charAt(0)}`.toUpperCase(),
+                // No email. That was the one place the API still handed out a
+                // bidder's address, against the rule the rest of the codebase
+                // follows (utils/bidFormat.js): contact details are read from
+                // Nexus, not served to a browser.
                 firstName: bidder.firstName,
-                lastName: bidder.lastName,
-                email: bidder.email
+                lastName: bidder.lastName
               },
               status: invitation.status,
               invitedAt: invitation.invitedAt,
@@ -3124,7 +3183,7 @@ router.get('/bidder/analytics', authenticateToken, async (req, res) => {
     }
 
     const listingDocs = await Listing.find(listingQuery)
-      .select('_id title slug status category auctionFormat currentPrice winner')
+      .select('_id title slug status category sellingMode currentPrice winner')
       .sort({ updatedAt: -1 })
       .lean();
 
@@ -3221,7 +3280,7 @@ router.get('/bidder/analytics', authenticateToken, async (req, res) => {
         won += 1;
       } else if (l.status === 'active') {
         if (
-          l.auctionFormat !== 'best-offer' &&
+          l.sellingMode !== 'offers' &&
           myHighestBid != null &&
           l.currentPrice != null &&
           myHighestBid >= l.currentPrice
@@ -3244,7 +3303,7 @@ router.get('/bidder/analytics', authenticateToken, async (req, res) => {
         slug: l.slug,
         status: l.status,
         category: l.category,
-        auctionFormat: l.auctionFormat,
+        sellingMode: l.sellingMode,
         bidsInRange,
         offersInRange,
         eventsInRange,
@@ -3338,7 +3397,7 @@ router.get('/bidder/my-bets', authenticateToken, async (req, res) => {
       .lean();
 
     const { getOfferStatsForListings } = require('../utils/listingOfferStats');
-    const bestOfferIds = listings.filter((l) => l.auctionFormat === 'best-offer').map((l) => l._id);
+    const bestOfferIds = listings.filter((l) => l.sellingMode === 'offers').map((l) => l._id);
     const offerStatsByListing = await getOfferStatsForListings(bestOfferIds);
 
     const enhanced = listings.map((listing) => {
@@ -3350,9 +3409,9 @@ router.get('/bidder/my-bets', authenticateToken, async (req, res) => {
         ? entry.lastBid.notifyWhenOutbid
         : true;
       const isWinner = listing.winner?.toString?.() === user._id.toString() ||
-        (listing.auctionFormat === 'best-offer' && bets.some(x => x.type === 'offer' && x.status === 'accepted'));
+        (listing.sellingMode === 'offers' && bets.some(x => x.type === 'offer' && x.status === 'accepted'));
 
-      if (listing.auctionFormat === 'best-offer') {
+      if (listing.sellingMode === 'offers') {
         const stats = offerStatsByListing[id];
         listing.bidCount = stats?.offerCount ?? 0;
         listing.currentPrice = stats?.highestOffer ?? 0;

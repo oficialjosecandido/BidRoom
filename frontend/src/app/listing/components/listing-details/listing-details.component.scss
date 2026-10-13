@@ -1063,6 +1063,30 @@ nav {
     }
   }
 }
+/* ── ACTION BLOCK ───────────────────────────────
+   The floor, the buttons and the outcome note read as one unit, in the same
+   order in both selling modes. The floor used to be a loose `.min-box` far
+   below the button with its own 18px top margin; inside the block it sits
+   against the button it belongs to. */
+.action-block {
+  margin-bottom: 18px;
+
+  .min-box {
+    margin-top: 0;
+    margin-bottom: 12px;
+  }
+}
+/* What happens when the buyer presses the button — the one real difference
+   between the modes, so it is plain text under the button rather than a
+   tooltip or a link to a help page. */
+.action-outcome {
+  font-size: 12.5px;
+  font-weight: 300;
+  color: var(--sub);
+  line-height: 1.55;
+  text-align: center;
+  margin: 2px 0 0;
+}
 .sidebar-note {
   font-size: 12px;
   font-weight: 300;

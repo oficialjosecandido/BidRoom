@@ -9,7 +9,7 @@
           <div class="header-row">
             <div>
               <h1 class="page-title">{{ auction.title }}</h1>
-              <p class="page-lead">Nexus listing · Format {{ auction.auctionFormat }}</p>
+              <p class="page-lead">Nexus listing · Format {{ auction.sellingMode }}</p>
             </div>
             <button
               type="button"
@@ -56,7 +56,7 @@
               </tr>
               <tr>
                 <th scope="row">Auction type</th>
-                <td>{{ getAuctionTypeLabel(auction.auctionFormat) }}</td>
+                <td>{{ getAuctionTypeLabel(auction.sellingMode) }}</td>
               </tr>
               <tr>
                 <th scope="row">Category</th>
@@ -103,9 +103,9 @@
                 <td>{{ auction.startingPrice | currency: 'USD' : 'symbol' : '1.2-2' }}</td>
               </tr>
               <tr>
-                <th scope="row">{{ auction.auctionFormat === 'best-offer' ? 'Highest offer' : 'Current price' }}</th>
+                <th scope="row">{{ auction.sellingMode === 'offers' ? 'Highest offer' : 'Current price' }}</th>
                 <td>
-                  @if (auction.auctionFormat === 'best-offer' && (auction.currentPrice == null || auction.currentPrice === 0)) {
+                  @if (auction.sellingMode === 'offers' && (auction.currentPrice == null || auction.currentPrice === 0)) {
                     <span class="price-highlight">No offers yet</span>
                   } @else {
                     <span class="price-highlight">{{ auction.currentPrice | currency: 'USD' : 'symbol' : '1.2-2' }}</span>

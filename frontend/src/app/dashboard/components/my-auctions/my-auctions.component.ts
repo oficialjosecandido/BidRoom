@@ -23,9 +23,11 @@ type DurationSlot = '5 minutes' | '1 hour' | '2 hours' | '7 hours' | '24 hours' 
 interface PlatinumBidderStatus {
   bidder: {
     _id: string;
+    initials: string;
+    // Names, but no email: this is the seller's own listings endpoint, so the
+    // seller sees who they invited — the address stays in Nexus.
     firstName: string;
     lastName: string;
-    email: string;
   };
   status: 'pending' | 'accepted' | 'declined';
   invitedAt: string;
@@ -145,7 +147,7 @@ export class MyAuctionsComponent implements OnInit, OnDestroy {
 
   /**
    * Seller may withdraw a listing that is not yet sold and has no qualifying
-   * activity: Best Offer with no offers ≥ minimumOfferPrice; highest-bid with
+   * activity: Best Offer with no offers ≥ minimumOfferPrice; bidding with
    * zero bids; draft / pending_review always (nothing live yet for buyers).
    */
   canCancelListing(listing: EnhancedListing): boolean {
@@ -154,7 +156,7 @@ export class MyAuctionsComponent implements OnInit, OnDestroy {
     if (listing.saleFormat === 'giveaway') {
       return (listing.giveaway?.entryCount ?? 0) === 0;
     }
-    if (listing.auctionFormat === 'best-offer') {
+    if (listing.sellingMode === 'offers') {
       if ((listing.acceptedOfferCount ?? 0) > 0) return false;
       const min = listing.minimumOfferPrice ?? 0;
       const highest = listing.highestOfferAmount;
@@ -213,7 +215,7 @@ export class MyAuctionsComponent implements OnInit, OnDestroy {
     if ((listing.acceptedOfferCount ?? 0) > 0) return false;
     if ((listing.pendingOfferCount ?? 0) > 0) return false;
     // Highest-bid with bids awaiting winner selection — not unsold
-    if (listing.auctionFormat !== 'best-offer' && (listing.bidCount ?? 0) > 0) return false;
+    if (listing.sellingMode !== 'offers' && (listing.bidCount ?? 0) > 0) return false;
     return true;
   }
 
@@ -229,7 +231,7 @@ export class MyAuctionsComponent implements OnInit, OnDestroy {
 
   getUnsoldReason(listing: EnhancedListing): UnsoldReason {
     if (listing.privateRoomClosedReason === 'non_payment_no_second_bidder') return 'non_payment';
-    if (listing.auctionFormat === 'best-offer') return 'no_offers';
+    if (listing.sellingMode === 'offers') return 'no_offers';
     return 'no_bids';
   }
 

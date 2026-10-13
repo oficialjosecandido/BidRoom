@@ -19,14 +19,14 @@ function safeJson(obj) {
 }
 
 function logAuctionCreated(populatedListing) {
-  if (populatedListing?.auctionFormat !== 'best-offer') return;
+  if (populatedListing?.sellingMode !== 'offers') return;
   const summary = {
     _id: populatedListing._id,
     slug: populatedListing.slug,
     title: populatedListing.title,
     category: populatedListing.category,
     subCategory: populatedListing.subCategory,
-    auctionFormat: populatedListing.auctionFormat,
+    sellingMode: populatedListing.sellingMode,
     minimumOfferPrice: populatedListing.minimumOfferPrice,
     startDate: populatedListing.startDate,
     endDate: populatedListing.endDate,

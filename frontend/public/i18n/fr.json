@@ -9,13 +9,19 @@
       "howItWorks": "Comment Ça Marche",
       "blog": "Blog",
       "faq": "FAQ",
-      "contact": "Contact"
+      "contact": "Contact",
+      "privateRooms": "Salles Privées",
+      "trust": "Confiance et Sécurité"
     },
     "actions": {
       "listYourItem": "Mettre en Vente",
       "myAccount": "Mon Compte",
       "signIn": "Se Connecter",
-      "startBidding": "Commencer à Enchérir"
+      "startBidding": "Commencer à Enchérir",
+      "notifications": "Notifications",
+      "notificationsUnread": "{{count}} notifications non lues",
+      "publish": "Publier",
+      "resume": "Reprendre l'Annonce"
     },
     "menu": {
       "open": "Ouvrir le menu",
@@ -26,11 +32,107 @@
       "light": "Clair",
       "dark": "Sombre",
       "system": "Comme le système"
+    },
+    "search": {
+      "open": "Rechercher",
+      "close": "Fermer la recherche",
+      "placeholder": "Rechercher des enchères, des articles, des vendeurs…"
     }
   },
   "landing": {
     "nav": {
       "language": "Choisir la langue"
+    },
+    "home": {
+      "hero": {
+        "eyebrow": "Enchères premium",
+        "titleLine1": "Achetez",
+        "titleLine2": "l'extraordinaire.",
+        "subtitleAlt": "Enchères en temps réel pour montres, œuvres d'art et pièces uniques.",
+        "ctaExplore": "Explorer les enchères",
+        "ctaHow": "Comment ça marche"
+      },
+      "stats": {
+        "auctionsHeld": "Enchères réalisées",
+        "transacted": "Transactions",
+        "completion": "Finalisation",
+        "buyerFee": "Commission acheteur"
+      },
+      "section": {
+        "ongoing": "Enchères en cours",
+        "liveNow": "En direct maintenant",
+        "viewAll": "Voir tout",
+        "noActive": "Aucune enchère en cours pour le moment.",
+        "viewAllArrow": "Voir toutes les enchères →"
+      },
+      "badges": {
+        "auction": "Enchère",
+        "privateRoom": "Salle privée",
+        "offers": "Propositions"
+      },
+      "listing": {
+        "currentBid": "Enchère actuelle",
+        "highestOffer": "Proposition la plus élevée",
+        "offers": "Propositions",
+        "endsIn": "Se termine dans"
+      },
+      "private": {
+        "eyebrow": "Salles Privées",
+        "titleLine1": "L'exclusivité",
+        "titleLine2": "sur invitation.",
+        "bodyAlt": "Après l'enchère publique, les meilleurs enchérisseurs sont invités dans une salle privée. Seuls les élus y entrent.",
+        "bidLabel": "Enchère actuelle",
+        "stat1Label": "Enchérisseurs invités",
+        "stat2Val": "60s",
+        "stat2Label": "Par enchère",
+        "stat3Val": "Auto",
+        "stat3Label": "Gagnant automatique"
+      },
+      "how": {
+        "eyebrow": "Comment ça marche",
+        "titleLine1": "Simple",
+        "titleLine2": "d'un bout à l'autre.",
+        "step1Title": "Publiez",
+        "step1Desc": "Enchère ou propositions. Aucuns frais de publication. Prêt en quelques minutes.",
+        "step2Title": "Participez",
+        "step2Desc": "Enchères en temps réel. Propositions privées. Le système décide automatiquement.",
+        "step3Title": "Recevez en toute sécurité",
+        "step3Desc": "Paiement sous séquestre. Les fonds ne sont versés qu'après confirmation de réception."
+      },
+      "cta": {
+        "titleLine1": "La prochaine enchère",
+        "titleLine2": "est à vous.",
+        "sub": "Inscrivez-vous gratuitement. Commencez à enchérir dès aujourd'hui.",
+        "createAccount": "Créer un compte gratuit",
+        "explore": "Explorer les enchères",
+        "alreadyHave": "Vous avez déjà un compte ?",
+        "signIn": "Se connecter"
+      },
+      "footer": {
+        "tagline": "La marketplace d'enchères premium",
+        "platform": "Plateforme",
+        "legal": "Légal",
+        "activeAuctions": "Enchères en cours",
+        "howItWorks": "Comment ça marche",
+        "privateRooms": "Salles Privées",
+        "categories": "Catégories",
+        "buyers": "Acheteurs",
+        "createAccount": "Créer un compte",
+        "buyerGuide": "Guide de l'acheteur",
+        "securePayment": "Paiement sécurisé",
+        "disputes": "Litiges",
+        "sellers": "Vendeurs",
+        "publishListing": "Publier une annonce",
+        "sellerGuide": "Guide du vendeur",
+        "commissions": "Commissions",
+        "payouts": "Versements",
+        "terms": "Conditions d'utilisation",
+        "privacyPolicy": "Politique de confidentialité",
+        "cookies": "Cookies",
+        "contact": "Contact",
+        "allRights": "© 2026 BidRoom.pt · Tous droits réservés",
+        "madeIn": "Fabriqué au Portugal 🇵🇹"
+      }
     }
   },
   "footer": {
@@ -45,7 +147,25 @@
     "privacyPolicy": "Politique de Confidentialité",
     "termsConditions": "Conditions Générales",
     "connect": "Réseaux Sociaux",
-    "copyright": "© 2024 BidRoom. Tous droits réservés."
+    "copyright": "© 2024 BidRoom. Tous droits réservés.",
+    "platform": "Plateforme",
+    "buyers": "Acheteurs",
+    "sellers": "Vendeurs",
+    "createAccount": "Créer un compte",
+    "publishListing": "Publier une annonce",
+    "activeAuctions": "Enchères en cours",
+    "buyerGuide": "Guide de l'acheteur",
+    "sellerGuide": "Guide du vendeur",
+    "commissions": "Commissions",
+    "payouts": "Versements",
+    "securePayment": "Paiement sécurisé",
+    "disputes": "Litiges",
+    "terms": "Conditions d'utilisation",
+    "termsShort": "Conditions",
+    "privacyShort": "Confidentialité",
+    "cookies": "Cookies",
+    "complaintsBook": "Livre de réclamations",
+    "ral": "Règlement des litiges de consommation"
   },
   "home": {
     "hero": {
@@ -107,6 +227,14 @@
       "jewelry": {
         "title": "Bijoux",
         "desc": "Bagues, montres et pierres précieuses"
+      },
+      "vehicles": {
+        "title": "Véhicules",
+        "desc": "Voitures, motos et bateaux"
+      },
+      "realEstate": {
+        "title": "Immobilier",
+        "desc": "Appartements, maisons et terrains"
       }
     },
     "liveAuctions": {
@@ -133,20 +261,14 @@
       "bid": "enchère",
       "bids": "enchères",
       "ended": "Terminé",
-      "na": "N/D"
+      "na": "N/D",
+      "clearFilter": "Effacer le Filtre",
+      "tryDifferentCategory": "Essayez une autre catégorie ou effacez le filtre."
     }
   },
   "addListing": {
     "pageTitle": "Listez Votre Article",
     "pageSubtitle": "Suivez les étapes pour créer votre annonce",
-    "step1": "Identité de l'Article",
-    "step2": "Détails et Médias",
-    "step3": "Prix et Règles",
-    "step4": "Expédition et Révision",
-    "step1Title": "Étape 1 : Identité et Format de l'Article",
-    "step2Title": "Étape 2 : Détails et Médias",
-    "step3Title": "Étape 3 : Prix et Règles des Enchères",
-    "step4Title": "Étape 4 : Expédition et Révision Finale",
     "listingTitle": "Titre de l'Annonce",
     "titlePlaceholder": "Entrez un titre descriptif (max. 80 caractères)",
     "langPt": "Portugais",
@@ -169,9 +291,6 @@
     "selectCategory": "Sélectionner une Catégorie",
     "subCategory": "Sous-catégorie *",
     "selectSubCategory": "Sélectionner une Sous-catégorie",
-    "listingFormat": "Format de l'Annonce *",
-    "formatAuction": "Enchères (Meilleure Enchère Gagne)",
-    "formatBestOffer": "Meilleure Offre (Le Vendeur Choisit)",
     "condition": "État de l'Article *",
     "selectCondition": "Sélectionner l'État",
     "conditionNew": "Neuf",
@@ -219,14 +338,13 @@
     "duration30days": "30 jours",
     "startingBid": "Enchère Initiale *",
     "buyNowPrice": "Prix Achat Immédiat (Optionnel)",
-    "buyNowHint": "Doit être supérieur à l'Enchère Initiale. Permet l'achat instantané.",
+    "buyNowHint": "Doit être supérieur à l'enchère initiale. Un acheteur peut le prendre à ce prix et clore les enchères immédiatement.",
     "minimumAcceptPrice": "Prix Minimum d'Acceptation",
-    "minimumAcceptHint": "Seuil de prix où vous devez accepter une offre qualifiée",
+    "minimumAcceptHint": "Le minimum que vous acceptez. Les acheteurs peuvent proposer moins, et celles-là vous pouvez les refuser librement — mais à partir de ce montant vous êtes engagé : vous ne pouvez pas refuser la dernière proposition qui l'atteint et, s'il n'en reste exactement qu'une à la clôture, elle est acceptée automatiquement.",
     "enablePrivateRoom": "Activer la Salle Privée",
     "privateRoomHint": "Important : Activer la Salle Privée augmente votre commission de 3,5 % à 6,0 %. Vous devez vous engager sur ce choix.",
     "commissionPrivateRoom": "Taux de Commission : 6,0 % (Salle Privée activée)",
     "privateRoomNoAcceptNote": "Note : Si aucun enchérisseur invité n'accepte en 15 minutes, l'enchère sera clôturée sans gagnant.",
-    "commissionStandard": "Taux de Commission : 3,5 % (Standard)",
     "shippingOptions": "Options d'Expédition *",
     "selectShipping": "Sélectionner une Option d'Expédition",
     "shippingFlatRate": "Tarif Fixe",
@@ -310,7 +428,9 @@
       "home-garden": "Maison et Jardin",
       "art": "Art",
       "collectibles": "Collection",
-      "jewelry": "Bijouterie"
+      "jewelry": "Bijouterie",
+      "real-estate": "Immobilier",
+      "vehicles": "Véhicules"
     },
     "successMessage": "Annonce créée avec succès !",
     "draftRestored": "Votre brouillon enregistré a été restauré.",
@@ -350,19 +470,18 @@
       "publishFix": "Corrigez les erreurs indiquées avant de publier.",
       "stepBlocked": "Corrigez les erreurs à cette étape avant de continuer.",
       "atLeastOnePhoto": "au moins 1 photo",
-      "step4Pricing": "Définissez le prix et la durée de l'annonce.",
-      "step5Shipping": "Configurez l'expédition et la localisation.",
-      "step6Declaration": "Confirmez la déclaration du vendeur pour publier.",
       "specificationsIncomplete": "spécifications incomplètes",
       "scheduleRequired": "Choisissez la date et l’heure d’ouverture",
       "schedulePast": "L’ouverture doit être dans le futur",
-      "scheduleTooFar": "L’ouverture ne peut pas dépasser {{days}} jours"
+      "scheduleTooFar": "L’ouverture ne peut pas dépasser {{days}} jours",
+      "pricing": "Définissez le prix et la durée de l'annonce.",
+      "shipping": "Configurez l'expédition et la localisation.",
+      "declaration": "Confirmez la déclaration du vendeur pour publier.",
+      "mediaVideoSize": "La vidéo dépasse la limite de 15 Mo. Compressez ou raccourcissez la vidéo avant de l'envoyer. Non ajouté : {{files}}"
     },
     "steps": {
       "label": "Étapes",
       "progress": "{{current}} / {{total}}",
-      "format": "Format",
-      "formatSub": "Enchère ou meilleure offre",
       "details": "Détails",
       "detailsSub": "Titre, catégorie et description",
       "photos": "Photos",
@@ -375,19 +494,6 @@
       "resume": "Reprendre l’annonce",
       "publishSub": "Vérifier et confirmer"
     },
-    "step5Title": "Expédition",
-    "step5": "Méthode et origine",
-    "step6Title": "Publier",
-    "step6": "Révision finale",
-    "step1.section": "Choisissez le format de l'annonce",
-    "step2.section": "Informations sur l'article",
-    "step3.section": "Photos de l'article",
-    "step4.auction.section": "Prix de la vente aux enchères",
-    "step4.offer.section": "Prix de la meilleure offre",
-    "step5.section": "Méthode d'expédition",
-    "step5.sectionVehicle": "Remise du véhicule",
-    "step5.location": "Localisation",
-    "step6.section": "Révision et publication",
     "optional": "facultatif",
     "offerDeadline": "Délai des offres",
     "offerDeadlineHint": "Plus de temps signifie plus d'acheteurs qui voient votre annonce.",
@@ -396,8 +502,6 @@
     "durationHint": "Les articles rares ou premium ont tendance à générer plus d'enchères avec 7–10 jours.",
     "autoRelistLabel": "Republier automatiquement si non vendu",
     "autoRelistHint": "Si l'enchère se termine sans vente (aucune offre ou réserve non atteinte), elle sera republiée automatiquement pour une période identique. Vous pouvez désactiver cette option à tout moment.",
-    "formatBestOfferDesc": "Les acheteurs soumettent des offres et vous choisissez celle que vous préférez. Définissez un prix minimum — vous avez toute liberté de refuser toute offre en dessous de cette valeur.",
-    "formatAuctionDesc": "Les acheteurs enchérissent en temps réel et se disputent votre article. Vous définissez la durée et la mise de départ. Le gagnant est déterminé automatiquement.",
     "drop": {
       "title": "Faites glisser les photos ici",
       "sub": "ou cliquez pour sélectionner · JPEG, PNG, WebP · max. 20 photos"
@@ -415,7 +519,6 @@
       "progress": "Progression de l'annonce"
     },
     "ck": {
-      "format": "Format sélectionné",
       "title": "Titre rempli",
       "category": "Catégorie choisie",
       "condition": "Condition définie",
@@ -506,6 +609,181 @@
       "saleValue": "Montant de vente",
       "netLabel": "Vous recevez (estimation)",
       "empty": "Indiquez un prix dans l’annonce ou saisissez un montant pour simuler les commissions."
+    },
+    "details": {
+      "section": "Informations sur l'article"
+    },
+    "photos": {
+      "section": "Photos de l'article",
+      "label": "Étape 3 : Prix et Règles des Enchères"
+    },
+    "shipping": {
+      "section": "Méthode d'expédition",
+      "sectionVehicle": "Remise du véhicule",
+      "location": "Localisation",
+      "paymentMethods": "Moyens de paiement acceptés",
+      "paymentMethodsHint": "Choisissez les moyens de paiement que vous acceptez pour cette annonce.",
+      "pmBankTransfer": "Virement bancaire",
+      "pmConfigureNow": "Configurer maintenant →",
+      "pmInPerson": "Paiement en main propre",
+      "pmInPersonDesc": "L'acheteur paie en personne à la livraison.",
+      "pmMbway": "MBWay",
+      "pmNoConfig": "Vous n'avez aucun moyen alternatif configuré.",
+      "pmStripeDesc": "Paiement en ligne sécurisé. Toujours disponible.",
+      "pmStripeLabel": "Carte de crédit / débit"
+    },
+    "publish": {
+      "section": "Révision et publication"
+    },
+    "sellingMode": {
+      "section": "Comment souhaitez-vous vendre ?",
+      "hint": "Après la vente, tout est identique : même paiement, même expédition, même protection. La seule différence est la façon dont l'acheteur arrive à un prix.",
+      "label": "Mode de vente",
+      "bidding": "Les acheteurs enchérissent, l'enchère la plus haute gagne",
+      "biddingDesc": "Les acheteurs enchérissent les uns contre les autres et voient le prix actuel. À la fin du délai, l'enchère la plus haute gagne et la vente est conclue.",
+      "biddingBadge": "Enchères",
+      "offers": "Les acheteurs envoient des propositions, vous décidez",
+      "offersDesc": "Chaque acheteur vous envoie un montant en privé. Rien n'est conclu sans votre accord.",
+      "offersBadge": "Propositions",
+      "fixedNote": "Vous pouvez le changer jusqu'à la publication. Ensuite il reste tel quel, car des personnes auront enchéri ou fait des propositions aux conditions que vous avez fixées."
+    },
+    "pricing": {
+      "section": "Prix et durée"
+    },
+    "advanced": {
+      "section": "Options avancées",
+      "hint": "Rien ici n'est obligatoire.",
+      "offersEmpty": "Dans ce mode, il n'y a rien à régler ici. Le minimum indiqué ci-dessus est le seul montant que les acheteurs doivent dépasser."
+    },
+    "feeBuyerEstimate": "{{amount}} € (max. 500 €)",
+    "itemCountry": "Pays",
+    "stripeRequiredLink": "Configurer maintenant →",
+    "countryCH": "Suisse",
+    "subcategories": {
+      "Laptops": "Ordinateurs Portables",
+      "Desktop Computers": "Ordinateurs de Bureau",
+      "Computer Components": "Composants Informatiques",
+      "Smartphones": "Smartphones",
+      "Tablets": "Tablettes",
+      "Mobile Accessories": "Accessoires Mobiles",
+      "Headphones": "Casques Audio",
+      "Speakers": "Enceintes",
+      "Hi Fi Systems": "Chaînes Hi-Fi",
+      "Turntables": "Tourne-Disques",
+      "Gaming Consoles": "Consoles de Jeux",
+      "Video Games": "Jeux Vidéo",
+      "Gaming Accessories": "Accessoires de Jeu",
+      "Digital Cameras": "Appareils Photo Numériques",
+      "Film Cameras": "Appareils Photo Argentiques",
+      "Camera Lenses": "Objectifs",
+      "Camera Accessories": "Accessoires Photo",
+      "Televisions": "Téléviseurs",
+      "Projectors": "Projecteurs",
+      "Streaming Devices": "Appareils de Streaming",
+      "Smart Watches": "Montres Connectées",
+      "Fitness Trackers": "Bracelets Connectés",
+      "Wearables Accessories": "Accessoires Connectés",
+      "Other Electronics": "Autres Appareils Électroniques",
+      "Tables": "Tables",
+      "Chairs": "Chaises",
+      "Cabinets": "Armoires",
+      "Shelves": "Étagères",
+      "Beds": "Lits",
+      "Lamps": "Lampes",
+      "Mirrors": "Miroirs",
+      "Vases": "Vases",
+      "Wall Decor": "Décoration Murale",
+      "Decorative Objects": "Objets Décoratifs",
+      "Cookware": "Ustensiles de Cuisine",
+      "Tableware": "Vaisselle",
+      "Glassware": "Verrerie",
+      "Barware": "Accessoires de Bar",
+      "Garden Furniture": "Mobilier de Jardin",
+      "Garden Tools": "Outils de Jardin",
+      "Outdoor Decor": "Décoration Extérieure",
+      "Planters": "Jardinières",
+      "Rugs": "Tapis",
+      "Curtains": "Rideaux",
+      "Blankets": "Couvertures",
+      "Cushions": "Coussins",
+      "Lighting": "Éclairage",
+      "Other Home & Garden": "Autres Maison et Jardin",
+      "Paintings": "Peintures",
+      "Drawings": "Dessins",
+      "Prints": "Estampes",
+      "Photography": "Photographie",
+      "Sculptures": "Sculptures",
+      "Figurines": "Figurines",
+      "Other Art": "Autres Œuvres d'Art",
+      "Definitive Stamps": "Timbres d'Usage Courant",
+      "Commemorative Stamps": "Timbres Commémoratifs",
+      "Airmail Stamps": "Timbres de Poste Aérienne",
+      "Postage Due Stamps": "Timbres-Taxe",
+      "Revenue / Fiscal Stamps": "Timbres Fiscaux",
+      "Official Stamps": "Timbres de Service",
+      "Military Mail": "Courrier Militaire",
+      "Local Issues": "Émissions Locales",
+      "First Day Covers (FDC)": "Plis Premier Jour (FDC)",
+      "Stamp Booklets": "Carnets de Timbres",
+      "Collections / Lots": "Collections / Lots",
+      "Classic Stamps (Before 1900)": "Timbres Classiques (avant 1900)",
+      "Early 20th Century (1900 to 1945)": "Début du XXe Siècle (1900–1945)",
+      "Post War (1945 to 1960)": "Après-Guerre (1945–1960)",
+      "Late 20th Century (1960 to 2000)": "Fin du XXe Siècle (1960–2000)",
+      "Modern Stamps (2000 to Present)": "Timbres Modernes (2000–aujourd'hui)",
+      "Coins & Banknotes": "Pièces et Billets",
+      "Trading Cards": "Cartes à Collectionner",
+      "Toys & Models": "Jouets et Maquettes",
+      "Sports Memorabilia": "Souvenirs Sportifs",
+      "Music Memorabilia": "Souvenirs Musicaux",
+      "Movie Memorabilia": "Souvenirs de Cinéma",
+      "Vintage Items": "Articles Vintage",
+      "Other Collectibles": "Autres Objets de Collection",
+      "Engagement Rings": "Bagues de Fiançailles",
+      "Wedding Rings": "Alliances",
+      "Fashion Rings": "Bagues Fantaisie",
+      "Chains": "Chaînes",
+      "Pendants": "Pendentifs",
+      "Bangles": "Bracelets Rigides",
+      "Charm Bracelets": "Bracelets à Breloques",
+      "Stud Earrings": "Boucles d'Oreilles Puces",
+      "Hoop Earrings": "Créoles",
+      "Drop Earrings": "Boucles d'Oreilles Pendantes",
+      "Luxury Watches": "Montres de Luxe",
+      "Vintage Watches": "Montres Vintage",
+      "Brooches & Pins": "Broches et Épingles",
+      "Jewelry Sets": "Parures",
+      "Loose Gemstones": "Pierres Précieuses Non Montées",
+      "Other Jewelry": "Autres Bijoux",
+      "Apartments": "Appartements",
+      "Studios": "Studios",
+      "Duplexes & Penthouses": "Duplex et Penthouses",
+      "Houses": "Maisons",
+      "Villas": "Villas",
+      "Townhouses": "Maisons de Ville",
+      "Land & Plots": "Terrains et Parcelles",
+      "Rural & Countryside": "Propriétés Rurales",
+      "Commercial Property": "Locaux Commerciaux",
+      "Office Space": "Bureaux",
+      "Industrial & Warehouse": "Industriel et Entrepôts",
+      "Garages & Parking": "Garages et Parkings",
+      "Holiday Homes": "Maisons de Vacances",
+      "Other Real Estate": "Autres Biens Immobiliers",
+      "Cars": "Voitures",
+      "Classic Cars": "Voitures de Collection",
+      "Electric & Hybrid Cars": "Voitures Électriques et Hybrides",
+      "Motorcycles": "Motos",
+      "Scooters & Mopeds": "Scooters et Mobylettes",
+      "Vans & Minibuses": "Fourgons et Minibus",
+      "Trucks & HGV": "Camions et Poids Lourds",
+      "Boats": "Bateaux",
+      "Jet Skis & Watercraft": "Jet-Skis et Motomarines",
+      "Sailboats": "Voiliers",
+      "Caravans & Motorhomes": "Caravanes et Camping-Cars",
+      "ATVs & Quad Bikes": "Quads et Véhicules Tout-Terrain",
+      "Vehicle Parts": "Pièces Détachées",
+      "Vehicle Accessories": "Accessoires Auto",
+      "Other Vehicles": "Autres Véhicules"
     }
   },
   "listingList": {
@@ -561,7 +839,6 @@
     "priceEuro": "Prix (€)",
     "formatAll": "Tous",
     "formatAuction": "Enchère",
-    "formatBestOffer": "Meilleure Offre",
     "resultsCountOne": "{{count}} résultat pour \"{{query}}\"",
     "resultsCountMany": "{{count}} résultats pour \"{{query}}\"",
     "oneBid": "1 enchère",
@@ -583,7 +860,6 @@
     "minPrice": "Prix minimum",
     "badgeLive": "En direct",
     "badgeClosing": "Se termine",
-    "badgeBestOffer": "Meilleure offre",
     "badgePrivateRoom": "Salle privée",
     "addWatchlist": "Ajouter aux favoris",
     "removeWatchlist": "Retirer des favoris",
@@ -597,7 +873,12 @@
     "offersCount": "{{count}} offres",
     "hoursLeft": "{{hours}}h restantes",
     "applyFilters": "Appliquer les filtres",
-    "opensIn": "Ouvre dans {{time}}"
+    "opensIn": "Ouvre dans {{time}}",
+    "formatOffers": "Propositions",
+    "badgeOffers": "Propositions",
+    "badgeAuction": "Enchère",
+    "bundle": "Lot",
+    "closeFilters": "Fermer les filtres"
   },
   "categories": {
     "title": "Parcourir par Catégorie",
@@ -606,7 +887,9 @@
     "allListings": "Toutes les Annonces",
     "follow": "Suivre",
     "following": "Abonné",
-    "unfollow": "Ne plus suivre"
+    "unfollow": "Ne plus suivre",
+    "browseCategory": "Voir la catégorie",
+    "subcategoryCount": "{{count}} sous-catégories"
   },
   "language": {
     "en": "English",
@@ -615,15 +898,11 @@
     "fr": "Français"
   },
   "listingDetails": {
-    "saleType": {
-      "bestOffer": "Meilleure Offre",
-      "auction": "Enchère"
-    },
     "loading": "Chargement des détails de l'annonce...",
     "backToListings": "← Retour aux annonces",
     "currentBid": "Enchère actuelle",
-    "highestOffer": "Offre la plus haute",
-    "noOffersYet": "Aucune offre pour l'instant",
+    "highestOffer": "Proposition la plus élevée",
+    "noOffersYet": "Aucune proposition pour le moment",
     "buyNow": "Acheter maintenant",
     "privateRoom": {
       "active": "Salle Privée Active",
@@ -653,18 +932,21 @@
       "statusDeclined": "Refusé"
     },
     "time": {
-      "auctionEnds": "Fin de l'enchère",
-      "offerDeadline": "Date limite pour les offres",
       "privateRoomEnds": "Fin de la Salle Privée",
-      "auctionEnded": "Enchère Terminée",
-      "listingEnded": "Annonce Terminée"
+      "listingEnded": "Annonce Terminée",
+      "daysCount": "{{count}} jours",
+      "endedShort": "Terminé",
+      "hoursCount": "{{count}} heures",
+      "na": "—",
+      "listingEnds": "Se termine dans",
+      "endingSoon": "Bientôt terminé"
     },
     "ended": {
-      "noBidsSeller": "Cette enchère s'est terminée sans offre. Vous pouvez la rouvrir pour 7 jours supplémentaires ci-dessous.",
+      "noBidsSeller": "Cette enchère s'est terminée sans proposition. Vous pouvez la rouvrir pour 7 jours supplémentaires ci-dessous.",
       "selectWinner": "Sélectionnez un gagnant ci-dessous.",
       "winnerSelected": "Le gagnant a été sélectionné.",
-      "noOffersSeller": "Cette annonce s'est terminée sans offres. Vous pouvez la rouvrir pour 7 jours supplémentaires ci-dessous.",
-      "noBidsBuyer": "Cette enchère s'est terminée sans offre.",
+      "noOffersSeller": "Cette annonce s'est terminée sans propositions. Vous pouvez la rouvrir pour 7 jours supplémentaires ci-dessous.",
+      "noBidsBuyer": "Cette enchère s'est terminée sans proposition.",
       "auctionEndedWinner": "Enchère terminée. Un gagnant a été sélectionné.",
       "auctionEnded": "Enchère terminée.",
       "listingSold": "Enchère terminée. Article vendu.",
@@ -677,14 +959,14 @@
       "startingBid": "Enchère de départ :",
       "reservePrice": "Prix de réserve :",
       "reserveNote": "(Le vendeur doit vendre si atteint)",
-      "minimumOffer": "Offre minimum :",
+      "minimumOffer": "Proposition minimum :",
       "autoAcceptsNote": "(Acceptation automatique si atteint)",
       "bidIncrement": "Incrément d'enchère :"
     },
     "actions": {
       "placeBid": "Enchérir",
       "placeBidEmail": "Enchérir (E-mail requis)",
-      "makeOffer": "Faire une Offre",
+      "makeOffer": "Faire une proposition",
       "addToWatchlist": "Ajouter aux favoris",
       "removeFromWatchlist": "Retirer des favoris",
       "selectWinner": "Sélectionner le gagnant",
@@ -692,14 +974,17 @@
       "reopening": "Réouverture…",
       "createPrivateRoom": "Créer une salle privée",
       "cantBidOwnListing": "Vous ne pouvez pas enchérir sur votre propre annonce.",
-      "cantOfferOwnListing": "Vous ne pouvez pas faire d'offre sur votre propre annonce.",
-      "auctionClosedNoBids": "Enchère fermée sans offre.",
-      "listingClosedNoOffers": "Annonce fermée sans offres.",
-      "auctionHasEndedNoBids": "Cette enchère s'est terminée sans offre.",
+      "cantOfferOwnListing": "Vous ne pouvez pas faire d'proposition sur votre propre annonce.",
+      "auctionClosedNoBids": "Enchère fermée sans proposition.",
+      "listingClosedNoOffers": "Annonce fermée sans propositions.",
+      "auctionHasEndedNoBids": "Cette enchère s'est terminée sans proposition.",
       "auctionHasEndedWinner": "Cette enchère est terminée. Un gagnant a été sélectionné.",
       "auctionHasEnded": "Cette enchère est terminée.",
-      "sellerHas24hOffer": "Le vendeur a 24h pour accepter une offre",
-      "sellerHas24hWinner": "Le vendeur a 24h pour choisir un gagnant"
+      "sellerHas24hOffer": "Le vendeur a 24h pour accepter une proposition",
+      "sellerHas24hWinner": "Le vendeur a 24h pour choisir un gagnant",
+      "editListing": "Modifier l'annonce",
+      "actionBar": "Actions de l'annonce",
+      "placeBidAtMin": "Enchérir · {{amount}}"
     },
     "watchlistCount": {
       "one": "personne a ceci dans ses favoris",
@@ -707,11 +992,11 @@
     },
     "info": {
       "bids": "Enchères",
-      "offers": "Offres",
+      "offers": "Propositions",
       "bid": "enchère",
       "bidsPlural": "enchères",
-      "offer": "offre",
-      "offersPlural": "offres",
+      "offer": "proposition",
+      "offersPlural": "propositions",
       "seller": "Vendeur",
       "condition": "État",
       "location": "Localisation",
@@ -723,7 +1008,7 @@
     "tabs": {
       "description": "Description",
       "bidHistory": "Historique des Enchères",
-      "offers": "Offres"
+      "offers": "Propositions"
     },
     "bidHistory": {
       "loading": "Chargement de l'historique des enchères...",
@@ -751,18 +1036,18 @@
       "loadingMore": "Chargement…"
     },
     "offerHistory": {
-      "loading": "Chargement des offres...",
+      "loading": "Chargement des propositions...",
       "tryAgain": "Réessayer",
-      "noOffers": "Aucune Offre Encore",
-      "noOffersDesc": "Soyez le premier à faire une offre sur cet article !",
-      "makeOffer": "Faire une offre",
-      "ctaText": "Règles : soumettez votre offre avant l’échéance. Vous pouvez la retirer tant qu’elle est en attente. Si une ou plusieurs offres atteignent ou dépassent le minimum, le vendeur doit vendre. En dessous du minimum, le vendeur n’est pas obligé de vendre.",
-      "offerFrom": "Offre de",
-      "yourOffer": "Votre offre",
+      "noOffers": "Aucune proposition pour le moment",
+      "noOffersDesc": "Soyez le premier à faire une proposition sur cet article !",
+      "makeOffer": "Faire une proposition",
+      "ctaText": "Règles : soumettez votre proposition avant l’échéance. Vous pouvez la retirer tant qu’elle est en attente. Si une ou plusieurs propositions atteignent ou dépassent le minimum, le vendeur doit vendre. En dessous du minimum, le vendeur n’est pas obligé de vendre.",
+      "offerFrom": "Proposition de",
+      "yourOffer": "Votre proposition",
       "selectedBySeller": "Sélectionnée par le vendeur",
       "offered": "Proposé",
       "sellerLabel": "Vendeur :",
-      "acceptDeclineNote": "Vous pouvez accepter ou refuser des offres après la date de clôture de l'annonce.",
+      "acceptDeclineNote": "Vous pouvez accepter ou refuser des propositions après la date de clôture de l'annonce.",
       "accept": "Accepter",
       "accepting": "Acceptation…",
       "decline": "Refuser",
@@ -777,15 +1062,16 @@
       "statusExpired": "Expirée",
       "stripeWarningPrefix": "Connectez Stripe dans",
       "stripeSettingsLink": "Paramètres → Paiements",
-      "buyerWithdrawNote": "Vous pouvez retirer votre offre tant qu’elle est en attente. Les offres acceptées ne peuvent pas être retirées.",
-      "withdrawTitle": "Retirer cette offre en attente"
+      "buyerWithdrawNote": "Vous pouvez retirer votre proposition tant qu’elle est en attente. Les propositions acceptées ne peuvent pas être retirées.",
+      "withdrawTitle": "Retirer cette proposition en attente"
     },
     "shipping": {
       "title": "Expédition",
       "free": "Livraison gratuite",
       "cost": "Frais d'expédition :",
       "from": "De :",
-      "workingDays": "jours ouvrables"
+      "workingDays": "jours ouvrables",
+      "workingDaysCount": "{{count}} jours ouvrés"
     },
     "returnPolicy": {
       "title": "Politique de retour",
@@ -812,32 +1098,45 @@
       "submitting": "Enchère en cours…",
       "subtitle": "Contraignant si vous gagnez. Suivez en temps réel.",
       "minBid": "Mise minimale",
-      "valueLabel": "Montant (€)"
+      "valueLabel": "Montant (€)",
+      "emailInvalid": "Saisissez une adresse e-mail valide.",
+      "emailRequired": "Saisissez votre e-mail pour recevoir les notifications d'enchères.",
+      "errorConfirm": "OK",
+      "errorText": "Échec de l'enchère. Veuillez réessayer.",
+      "errorTitle": "Échec de l'enchère",
+      "minBidError": "Votre enchère doit être d'au moins {{amount}}.",
+      "successTitle": "Enchère enregistrée !"
     },
     "offerModal": {
-      "title": "Faire une offre",
+      "title": "Faire une proposition",
       "transparency": "Pour que vous sachiez exactement ce que vous proposez :",
       "startingCurrent": "Départ / actuel",
-      "minimumOffer": "Offre minimum",
-      "amountLabel": "Montant de votre offre",
+      "minimumOffer": "Proposition minimum",
+      "amountLabel": "Montant de votre proposition",
       "emailLabel": "Votre e-mail",
-      "emailHint": "Le vendeur l'utilisera pour répondre à votre offre.",
-      "belowMinNote": "Votre offre est inférieure au prix minimum du vendeur. Le vendeur n'est pas obligé d'accepter cette offre, même si vous êtes le seul enchérisseur.",
+      "emailHint": "Le vendeur l'utilisera pour répondre à votre proposition.",
+      "belowMinNote": "Votre proposition est inférieure au minimum du vendeur. Le vendeur est libre de la refuser, même si c'est la seule.",
       "cancel": "Annuler",
-      "submit": "Envoyer l'offre",
-      "submitting": "Envoi de l'offre…",
-      "subtitle": "Si le vendeur accepte, vous vous engagez à acheter à ce prix. Vous pouvez retirer l’offre tant qu’elle est en attente. Les enchères ne peuvent pas être retirées.",
-      "figuresHint": "Le minimum est le montant le plus bas que le vendeur examinera. Le plus haut est la meilleure offre actuelle : vous pouvez l'égaler, la dépasser ou rester au minimum.",
-      "highestOffer": "Offre la plus haute",
+      "submit": "Envoyer l'proposition",
+      "submitting": "Envoi de l'proposition…",
+      "subtitle": "Si le vendeur accepte, vous vous engagez à acheter à ce prix. Vous pouvez la retirer tant qu'elle est en attente.",
+      "figuresHint": "Le minimum est le montant le plus bas que le vendeur examinera. Le plus haut est la proposition la plus élevée à ce jour : vous pouvez l’égaler, la dépasser ou rester au minimum.",
+      "highestOffer": "Proposition la plus haute",
       "valueLabel": "Montant (€)",
       "yourOfferPreview": "Vous proposez :",
-      "successTitle": "Votre offre a été publiée.",
+      "successTitle": "Votre proposition a été publiée.",
       "successText": "Merci",
-      "successTextAccepted": "Votre offre de {{amount}} a été acceptée par le vendeur. Finalisez l'achat dans Transactions.",
+      "successTextAccepted": "Votre proposition de {{amount}} a été acceptée par le vendeur. Finalisez l'achat dans Transactions.",
       "successConfirm": "Compris",
-      "errorTitle": "Impossible d'envoyer l'offre",
-      "errorText": "Échec de l'envoi de l'offre. Veuillez réessayer.",
-      "errorConfirm": "OK"
+      "errorTitle": "Impossible d'envoyer l'proposition",
+      "errorText": "Échec de l'envoi de l'proposition. Veuillez réessayer.",
+      "errorConfirm": "OK",
+      "emailInvalid": "Saisissez une adresse e-mail valide.",
+      "emailPlaceholder": "nom@email.com",
+      "emailRequired": "Saisissez votre e-mail pour que le vendeur puisse vous contacter.",
+      "emailRequiredBadge": "Obligatoire",
+      "emailRequiredCallout": "Saisissez votre e-mail pour que le vendeur puisse répondre à votre proposition.",
+      "invalidAmount": "Saisissez un montant valide."
     },
     "watchlistModal": {
       "title": "Enregistrer dans les favoris",
@@ -870,7 +1169,7 @@
       "ineligible": "Inscrivez-vous pour être éligible",
       "invite": "Inviter",
       "maxBid": "Mise max :",
-      "bids": "offre(s)",
+      "bids": "proposition(s)",
       "notEligible": "Non éligible",
       "selectedCount": "sélectionnés (min. 2, max. 5)",
       "bidderFallback": "Enchérisseur"
@@ -881,7 +1180,6 @@
       "signIn": "Se connecter"
     },
     "formatPill": {
-      "auction": "Enchère en direct",
       "privateRoom": "Salle Privée"
     },
     "sidebar": {
@@ -899,8 +1197,8 @@
       "reopenNoBids": "Pas de mises. Vous pouvez rouvrir 7 jours supplémentaires.",
       "reopenNoOffers": "Pas de propositions. Vous pouvez rouvrir 7 jours supplémentaires.",
       "inWatchlist": "Dans la liste de suivi",
-      "minimumOffer": "Offre minimale",
-      "minimumOfferDesc": "Les offres en dessous de ce montant peuvent être automatiquement refusées.",
+      "minimumOffer": "Proposition minimale",
+      "minimumOfferDesc": "Vous pouvez proposer moins, mais le vendeur est libre de refuser toute proposition inférieure à ce montant.",
       "minimumBid": "Prochaine mise minimale",
       "bidIncrement": "Incrément :",
       "reviews": "avis",
@@ -908,10 +1206,13 @@
       "follow": "+ Suivre",
       "eligibleCountdown": "Salle privée :",
       "remaining": "restantes",
-      "winnerSelectionCountdownOffer": "24h pour accepter l'offre",
-      "winnerSelectionCountdownWinner": "24h pour sélectionner le gagnant",
+      "winnerSelectionCountdownOffer": "24h pour la décision du vendeur",
       "invitedRoomHeader": "Invités à la salle",
-      "buyNow": "Acheter ·"
+      "buyNow": "Acheter ·",
+      "block": "Bloquer le vendeur",
+      "goToPrivateRoom": "Accéder à la Salle Privée",
+      "unblock": "Débloquer le vendeur",
+      "accessPrivateRoomSeller": "Accéder à la Salle Privée"
     },
     "payment": {
       "title": "Paiement",
@@ -949,6 +1250,112 @@
       "notOpenYet": "Cette vente n’a pas encore ouvert",
       "opensAt": "Ouvre le {{date}}",
       "opensIn": "Dans {{time}}"
+    },
+    "dsa": {
+      "address": "Adresse du siège :",
+      "legalName": "Dénomination sociale :",
+      "privateSeller": "Vendeur particulier",
+      "professionalSeller": "Vendeur professionnel",
+      "status": {
+        "none": "Informations du professionnel non fournies",
+        "pending": "Vérification en attente",
+        "verified": "Vendeur professionnel vérifié",
+        "rejected": "Vérification non acceptée"
+      },
+      "vatId": "Numéro de TVA :",
+      "consumerNoticeTitle": "Acheter auprès d’une entreprise",
+      "consumerNoticeBody": "Ce vendeur agit à titre professionnel. Selon la loi applicable, vous pouvez bénéficier de droits de consommateur lors d’un achat à distance auprès d’un professionnel (information, rétractation et voies de recours, par exemple).",
+      "contact": "Contact professionnel :",
+      "tradeName": "Nom commercial :",
+      "traderSectionTitle": "Informations du professionnel"
+    },
+    "itemMode": {
+      "bundleContents": "Ce qui est inclus",
+      "identicalUnits": "unités identiques incluses",
+      "bundle": "Lot",
+      "multiQtyLabel": "Lot multi-quantité",
+      "units": "unités"
+    },
+    "share": {
+      "button": "Partager l'annonce",
+      "linkCopied": "Lien copié",
+      "linkCopiedTitle": "Lien copié !",
+      "note": "Utilisez ce bouton pour partager sur WhatsApp et afficher l'image du produit.",
+      "shareTitle": "Partager"
+    },
+    "outcome": {
+      "bidding": "Une enchère est ferme. Si la vôtre est la plus haute à la fin du temps imparti, l'objet est à vous et vous avez 24 heures pour payer.",
+      "offers": "Une proposition ne vous engage que si le vendeur l'accepte. Jusque-là, il n'y a pas de vente ; s'il accepte, vous avez 24 heures pour payer."
+    },
+    "platinumBidders": {
+      "title": "Inviter à la Salle Privée",
+      "subtitle": "Sélectionnez jusqu’à 5 enchérisseurs à inviter dans la Salle Privée. Ces enchérisseurs pourront continuer à enchérir après la fin de l’enchère principale.",
+      "loading": "Chargement des enchérisseurs...",
+      "errorLoading": "Impossible de charger les enchérisseurs.",
+      "errorSaving": "Impossible d’enregistrer la sélection.",
+      "maxAlert": "Vous pouvez sélectionner 5 enchérisseurs au maximum.",
+      "backBtn": "Retour au Tableau de bord"
+    },
+    "privateRoomBidders": {
+      "title": "Inviter à la Salle Privée",
+      "subtitle": "Sélectionnez jusqu’à 5 enchérisseurs à inviter. Ils pourront continuer à enchérir après la fin de l’enchère principale.",
+      "loading": "Chargement des enchérisseurs…",
+      "empty": "Aucun enchérisseur pour l’instant",
+      "emptyDesc": "Les enchérisseurs apparaîtront ici dès qu’ils auront enchéri sur votre annonce.",
+      "guestNote": "Les enchérisseurs non enregistrés ne peuvent pas être invités dans la Salle Privée.",
+      "badgeAuth": "Enregistré",
+      "badgeGuest": "Visiteur",
+      "badgeInvited": "Invité",
+      "statBids": "Enchères",
+      "statHighest": "Enchère la plus haute",
+      "statLast": "Dernière enchère",
+      "ofMax": "sur 5 sélectionnés",
+      "save": "Enregistrer la sélection",
+      "saving": "Enregistrement…",
+      "retry": "Réessayer",
+      "backBtn": "Retour au Tableau de bord"
+    },
+    "alerts": {
+      "stayHere": "Rester ici",
+      "tryAgain": "Veuillez réessayer.",
+      "offerAccepted": {
+        "title": "Proposition acceptée !",
+        "text": "La proposition a été acceptée. Allez dans Transactions pour gérer et finaliser la vente."
+      },
+      "stripeRequired": {
+        "title": "Compte Stripe requis",
+        "html": "Vous devez connecter votre compte Stripe avant d’accepter des propositions.<br><br>Allez dans <strong>Tableau de bord → Paramètres → Paiements</strong> pour terminer la configuration.",
+        "goToSettings": "Aller aux Paramètres"
+      },
+      "buyNowConfirm": {
+        "text": "Acheter cet objet maintenant pour {{amount}} ? L’annonce sera close immédiatement."
+      },
+      "buyNowSuccess": {
+        "title": "Achat effectué !",
+        "text": "Allez dans vos transactions pour finaliser le paiement.",
+        "confirm": "Aller au paiement"
+      },
+      "buyNowFailed": {
+        "title": "Échec de l’achat",
+        "text": "Impossible de finaliser l’achat."
+      },
+      "winnerSelected": {
+        "title": "Gagnant sélectionné !",
+        "text": "Le gagnant a été prévenu. Allez dans Transactions pour gérer et finaliser la vente."
+      },
+      "selectWinnerFailed": "Impossible de sélectionner le gagnant",
+      "reopenFailed": "Impossible de rouvrir l’annonce",
+      "startRoomFailed": "Impossible de démarrer la salle privée",
+      "createRoomFailed": "Impossible de créer la salle privée",
+      "invalidSelection": {
+        "title": "Sélection non valide",
+        "text": "Sélectionnez entre 2 et 5 enchérisseurs pour la salle privée."
+      },
+      "loadBidsFailed": "Impossible de charger l’historique des enchères",
+      "loadOffersFailed": "Impossible de charger l’historique des propositions",
+      "acceptOfferFailed": "Impossible d’accepter la proposition.",
+      "rejectOfferFailed": "Impossible de refuser la proposition.",
+      "withdrawOfferFailed": "Impossible de retirer la proposition."
     }
   },
   "auth": {
@@ -1062,7 +1469,9 @@
       "successTitle": "E-mail vérifié !",
       "successDesc": "Votre e-mail a été vérifié. Vous pouvez maintenant vous connecter.",
       "errorTitle": "Échec de la vérification",
-      "goToLogin": "Aller à la connexion"
+      "goToLogin": "Aller à la connexion",
+      "failedGeneric": "La vérification de l'e-mail a échoué.",
+      "invalidCode": "Code de vérification invalide ou manquant."
     },
     "checkEmail": {
       "title": "Vérifiez votre e-mail",
@@ -1123,7 +1532,7 @@
       "seller": "Vendeur",
       "transactions": "Transactions",
       "notifications": "Notifications",
-      "myBids": "Mes Enchères",
+      "myBids": "Enchères et Propositions",
       "watchlist": "Liste de suivi",
       "following": "Abonnements",
       "myListings": "Mes Annonces",
@@ -1281,8 +1690,8 @@
       }
     },
     "myBets": {
-      "title": "Mes enchères",
-      "subtitle": "Toutes vos enchères et offres au même endroit. Les offres en attente (Meilleure offre) peuvent être retirées à tout moment ; les enchères ne le peuvent pas.",
+      "title": "Mes Enchères et Propositions",
+      "subtitle": "Toutes vos enchères et propositions au même endroit. Les propositions en attente peuvent être retirées à tout moment ; les enchères non.",
       "loading": "Chargement de vos enchères...",
       "tryAgain": "Réessayer",
       "emptyTitle": "Aucune enchère encore",
@@ -1431,7 +1840,7 @@
     },
     "myAuctions": {
       "title": "Mes Annonces",
-      "subtitle": "Suivez vos enchères et le statut de chaque annonce. Vous ne pouvez supprimer une annonce que s’il n’y a pas d’enchères ou d’offres qualificatives (Meilleure offre : aucune au minimum ou plus).",
+      "subtitle": "Suivez vos enchères et le statut de chaque annonce. Vous ne pouvez supprimer une annonce que s’il n’y a pas d’enchères ou de propositions qualificatives (en mode propositions : aucune au minimum ou plus).",
       "loading": "Chargement de vos annonces...",
       "emptyTitle": "Aucune annonce pour l'instant",
       "emptyDesc": "Vous n'avez pas encore créé d'annonces. Commencez par créer votre première annonce !",
@@ -1460,7 +1869,7 @@
       "editListing": "Modifier",
       "deleteListing": "Supprimer",
       "cancelConfirmTitle": "Supprimer cette annonce ?",
-      "cancelConfirmText": "Vous ne pouvez supprimer cette annonce que s’il n’y a pas d’offres ou d’enchères qualificatives. Meilleure offre : aucune offre acceptée et aucune offre en attente au minimum ou plus. Enchère : aucune enchère. Les offres sous le minimum seront rejetées. Cette action est irréversible.",
+      "cancelConfirmText": "Vous ne pouvez supprimer cette annonce que s’il n’y a pas de propositions ou d’enchères qualificatives. En mode propositions : aucune proposition acceptée et aucune proposition en attente au minimum ou plus. En mode enchères : aucune enchère. Les propositions sous le minimum seront rejetées. Cette action est irréversible.",
       "cancelConfirmBtn": "Supprimer l'annonce",
       "cancelSuccess": "Annonce supprimée",
       "cancelError": "Impossible de supprimer l'annonce",
@@ -1506,7 +1915,7 @@
       "rejectedLabel": "Non approuvée",
       "rejectionReason": "Motif",
       "pendingReviewHint": "En attente d'approbation. Le compte à rebours ne démarre qu'une fois l'annonce approuvée.",
-      "deleteRulesHint": "La suppression est disponible s’il n’y a pas d’enchères et, en Meilleure offre, seulement si aucune offre n’atteint le prix minimum. Voir les Conditions d’utilisation.",
+      "deleteRulesHint": "La suppression est disponible s’il n’y a pas d’enchères et, en mode propositions, seulement si aucune proposition n’atteint le prix minimum. Voir les Conditions d’utilisation.",
       "deleteListingTitle": "Supprimer l’annonce (uniquement sans offres ou enchères qualificatives)"
     },
     "myAuctionsBidder": {
@@ -1519,7 +1928,7 @@
       "highestOffer": "Offre la plus haute",
       "currentPrice": "Prix actuel",
       "noOffersYet": "Aucune offre pour l'instant",
-      "myHighestBid": "Ma meilleure enchère",
+      "myHighestBid": "Ma plus haute enchère",
       "totalBids": "Total des enchères",
       "ends": "Fin",
       "emailOutbid": "M'avertir lorsque je suis surenchéri",
@@ -1718,7 +2127,107 @@
     "shipToBuyerMissing": "Nous n’avons pas encore l’adresse de livraison de cet acheteur. N’expédiez pas — contactez le support et nous réglons cela avec vous.",
     "copyAddress": "Copier",
     "copied": "Copié",
-    "deliveryAddressRequired": "Enregistrez votre adresse de livraison dans Paramètres avant de payer, pour que le vendeur sache où expédier."
+    "deliveryAddressRequired": "Enregistrez votre adresse de livraison dans Paramètres avant de payer, pour que le vendeur sache où expédier.",
+    "table": {
+      "item": "Article",
+      "role": "Rôle",
+      "status": "Statut",
+      "amount": "Montant",
+      "date": "Date",
+      "manage": "Gérer",
+      "noFilterResults": "Aucune transaction ne correspond à ce filtre."
+    },
+    "buyingStatus": {
+      "paid": "Payé",
+      "paymentSubmitted": "Paiement envoyé"
+    },
+    "sellingStatus": {
+      "pendingShipment": "Expédition en attente",
+      "pendingAcceptance": "Acceptation en attente",
+      "paymentReceived": "Paiement reçu"
+    },
+    "paymentDeadlineExpired": "Le délai de paiement de cette transaction a expiré. Le paiement n'est plus possible.",
+    "stripePrepareShipHint": "Le paiement est sécurisé par Stripe. Marquez l'article comme expédié lorsque vous êtes prêt — le suivi et la preuve sont facultatifs.",
+    "prepareShipHint": "Marquez l'article comme expédié lorsque vous êtes prêt — le suivi et la preuve sont facultatifs.",
+    "shippingDetailsOptional": "Détails d'expédition (facultatif)",
+    "optional": "facultatif",
+    "uploadProofOptional": "Télécharger la preuve d'expédition (facultatif)",
+    "proofUploaded": "Preuve téléchargée",
+    "postalCodePlaceholder": "ex : 75001",
+    "addressIncomplete": "Veuillez renseigner l'adresse, la ville, le code postal et le pays.",
+    "addressIncompleteWithState": "Veuillez renseigner l'adresse, la ville, l'état/la province et le code postal.",
+    "trackingNumberPlaceholder": "ex : 9400111899223408553805",
+    "selectCarrier": "Sélectionner le transporteur",
+    "other": "Autre",
+    "estimatedDeliveryDays": "Délai de livraison estimé (jours)",
+    "estimatedDeliveryDaysPlaceholder": "ex : 5",
+    "estimatedDeliveryDaysHint": "Permet à l'acheteur de savoir quand attendre son article.",
+    "estimatedDelivery": "Livraison estimée",
+    "receivedConfirmedToast": "Réception confirmée. Vous pouvez marquer la transaction comme terminée quand vous le souhaitez.",
+    "deliveryDueConfirmTitle": "Votre article est peut-être arrivé",
+    "deliveryDueConfirmBody": "La date de livraison estimée est dépassée. Veuillez confirmer la réception ci-dessous ou ouvrir un litige en cas de problème.",
+    "autoReleaseNotice": "Le paiement sera automatiquement libéré au vendeur le {{date}} si la livraison n'est pas confirmée.",
+    "autoReleaseWarning": "Le paiement sera libéré automatiquement dans {{days}} jour(s). Confirmez la réception ou ouvrez un litige maintenant.",
+    "autoReleaseImminent": "Le paiement est sur le point d'être libéré au vendeur. Confirmez la réception maintenant si vous avez reçu l'article.",
+    "returnWindowNotice": "Il vous reste {{days}} jour(s) pour demander un retour.",
+    "requestReturn": "Demander un Retour",
+    "returnStatus": "Statut du retour",
+    "returnStatuses": {
+      "pending_seller_response": "En attente de la réponse du vendeur",
+      "accepted_by_seller": "Accepté par le vendeur",
+      "rejected_by_seller": "Refusé par le vendeur",
+      "platform_mediated": "En médiation par la plateforme"
+    },
+    "returnSellerDeadline": "Le vendeur doit répondre avant le {{date}}",
+    "reportDamage": "Signaler un dommage",
+    "damageClaimLabel": "Réclamation pour dommage",
+    "damageClaimShippedNotice": "L'article est arrivé endommagé ? Signalez-le avant de confirmer la réception.",
+    "damageClaimWindowNotice": "Article arrivé endommagé ? Il vous reste {{hours}}h pour le signaler.",
+    "damageStatuses": {
+      "pending_review": "En cours d'examen",
+      "approved_refund": "Remboursement approuvé",
+      "packaging_rejected": "Réclamation refusée",
+      "carrier_claim_filed": "Réclamation déposée auprès du transporteur",
+      "resolved": "Résolue",
+      "closed": "Clôturée"
+    },
+    "damageClaim": {
+      "title": "Signaler un article endommagé pendant le transport",
+      "subtitle": "Envoyez des photos du dommage et de l'emballage d'origine. Les réclamations doivent être ouvertes dans les 48 heures suivant la livraison.",
+      "damagePhotos": "Photos du dommage",
+      "damagePhotosHint": "Montrez clairement le dommage sur l'article (jusqu'à 5 photos).",
+      "packagingPhotos": "Photos de l'emballage",
+      "packagingPhotosHint": "Montrez le carton/l'enveloppe extérieur tel que reçu — tous les côtés si possible (jusqu'à 5 photos).",
+      "description": "Description du dommage (facultatif)",
+      "descriptionPlaceholder": "Décrivez ce qui a été endommagé et comment c'était emballé…",
+      "policyNotice": "Les réclamations peuvent être refusées si l'article a été insuffisamment emballé par le vendeur. BidRoom vérifiera le respect des règles d'emballage avant de traiter tout remboursement.",
+      "submit": "Soumettre le signalement"
+    },
+    "choosePaymentMethod": "Comment souhaitez-vous payer ?",
+    "payWithCard": "Payer par carte (Stripe)",
+    "payInPerson": "Payer en personne",
+    "payBankTransfer": "Virement bancaire",
+    "payMbway": "MBWay",
+    "bankTransferInstructions": "Virez le montant sur le compte ci-dessous puis cliquez sur « Paiement envoyé » une fois terminé.",
+    "mbwayInstructions": "Envoyez le paiement au numéro MBWay ci-dessous puis cliquez sur « Paiement envoyé » une fois terminé.",
+    "inPersonInstructions": "Convenez des modalités de remise avec le vendeur. Cliquez sur « Paiement convenu » pour le prévenir.",
+    "accountName": "Titulaire du compte",
+    "amountLabel": "Montant à virer",
+    "phoneLabel": "Numéro MBWay",
+    "iHaveSentPayment": "Paiement envoyé",
+    "iHaveArrangedPayment": "Paiement convenu",
+    "sending": "Envoi…",
+    "manualPaymentSentTitle": "En attente de la confirmation du vendeur",
+    "manualPaymentSentBody": "Le vendeur confirmera dès réception du paiement.",
+    "manualPaymentSentConfirmation": "Le vendeur a été informé que votre paiement est en route.",
+    "manualPaymentError": "Impossible d'enregistrer le paiement. Veuillez réessayer.",
+    "stripeNotAvailable": "Stripe n'est pas disponible pour les montants supérieurs à 10 000 €. Veuillez utiliser un autre moyen de paiement.",
+    "stripePaymentError": "Échec du démarrage du paiement. Veuillez réessayer.",
+    "shippingRatesError": "Échec du verrouillage du tarif d'expédition. Veuillez réessayer.",
+    "damageClaimUploadError": "Échec du téléchargement de la photo. Veuillez réessayer.",
+    "damageClaimSubmitError": "Échec de la soumission de la réclamation. Veuillez réessayer.",
+    "returnError": "Échec de la soumission de la demande de retour.",
+    "disputeError": "Échec de la soumission du litige."
   },
   "disputes": {
     "title": "Litiges",
@@ -1768,125 +2277,423 @@
       "evidenceRequired": "Des preuves sont requises pour ouvrir un litige.",
       "evidence": "Preuves",
       "evidenceHint": "Téléchargez des photos ou une vidéo comme preuve pour votre litige."
-    }
+    },
+    "errorLoading": "Échec du chargement des litiges.",
+    "submitError": "Échec de la soumission du litige."
   },
   "howItWorks": {
     "hero": {
-      "title": "Comment Fonctionne BidRoom",
-      "subtitle": "Tout ce que vous devez savoir pour acheter et vendre sur BidRoom."
+      "eye": "Comment ça marche",
+      "title": "Transparence totale,",
+      "title2": "de bout en bout.",
+      "sub": "Nous expliquons exactement ce qui se passe à chaque étape — pour les acheteurs, pour les vendeurs et pour tous ceux qui participent aux Salles Privées.",
+      "ctaBuyer": "Je suis acheteur",
+      "ctaSeller": "Je suis vendeur",
+      "stat1": "Modes de vente",
+      "stat2": "Commission standard",
+      "stat3": "Salle Privée"
     },
-    "auth": {
-      "title": "Créez votre compte",
-      "subtitle": "Inscrivez-vous gratuitement et vérifiez votre identité pour commencer à acheter et vendre.",
-      "visualTitle": "Connexion sécurisée",
+    "tabs": {
+      "buyer": "Acheteur",
+      "seller": "Vendeur",
+      "private": "Salles Privées",
+      "payments": "Paiement et Sécurité"
+    },
+    "buyer": {
+      "s1": {
+        "eye": "Formats d'enchères",
+        "title": "Enchérir ou proposer,",
+        "title2": "selon l'annonce.",
+        "intro": "Chaque annonce BidRoom fonctionne de l'une de deux façons, choisie par le vendeur et indiquée clairement sur la page de l'article elle-même. Ce qui change, c'est votre façon de participer — rien d'autre.",
+        "equal": "Dans les deux cas, le paiement, la protection de l'acheteur et la résolution des litiges fonctionnent exactement de la même manière."
+      },
+      "auction": {
+        "title": "Enchères",
+        "desc": "Les acheteurs s'affrontent en temps réel. Fixez votre enchère maximale et le système enchérit pour vous jusqu'à ce montant. À la fin du temps imparti, la plus haute enchère l'emporte automatiquement. Une enchère est un engagement : si vous gagnez, vous payez.",
+        "commission": "0 % de commission acheteur",
+        "f1": "Durée fixée par le vendeur — 1 à 15 jours",
+        "f2": "Seules les enchères placées depuis un compte enregistré peuvent gagner",
+        "f3": "Prix d'achat immédiat facultatif — achetez sans attendre",
+        "f4": "Après l'enchère, une Salle Privée peut suivre"
+      },
+      "offer": {
+        "title": "Propositions",
+        "desc": "Vous envoyez au vendeur le montant que vous jugez juste, avec ou sans message. Il l'accepte, le refuse, ou attend de meilleures propositions jusqu'à l'échéance. Il n'y a pas de vente tant que le vendeur n'a pas accepté la vôtre.",
+        "commission": "0 % de commission acheteur",
+        "f1": "Les propositions sont publiques : le montant, le message et les initiales de son auteur apparaissent sur l'annonce — jamais son nom",
+        "f2": "Vous pouvez joindre un message à votre proposition",
+        "f3": "Vous pouvez retirer votre proposition tant qu'elle est en attente",
+        "f4": "Vous pouvez proposer en dessous du minimum du vendeur, mais il est libre de refuser"
+      },
+      "s2": {
+        "eye": "Étape par étape",
+        "title": "Comment acheter",
+        "title2": "sur BidRoom",
+        "intro": "De l'inscription à la livraison, nous expliquons chaque moment du processus — y compris ce qui se passe si quelque chose va de travers."
+      },
       "step1": {
-        "title": "S'inscrire",
-        "desc": "Créez un compte gratuit avec votre e-mail ou Google.",
-        "li1": "Renseignez votre nom et e-mail",
-        "li2": "Choisissez un mot de passe sécurisé",
-        "li3": "Acceptez nos Conditions Générales"
+        "title": "Créez votre compte — c'est gratuit",
+        "desc": "Inscrivez-vous par email ou avec Google. Aucun coût d'adhésion ni frais mensuels. Le compte est gratuit pour les acheteurs."
       },
       "step2": {
-        "title": "Vérifiez votre e-mail",
-        "desc": "Cliquez sur le lien envoyé dans votre boîte de réception pour activer votre compte.",
-        "li1": "Consultez votre boîte de réception pour un e-mail de vérification",
-        "li2": "Cliquez sur le lien de confirmation",
-        "li3": "Votre compte est maintenant actif"
+        "title": "Parcourez et filtrez par catégorie",
+        "desc": "Parcourez les catégories — montres, art, voitures, bijoux, antiquités et plus encore. Ajoutez des annonces à votre liste de suivi pour les suivre sans enchérir."
       },
       "step3": {
-        "title": "Complétez votre profil",
-        "desc": "Ajoutez vos coordonnées bancaires et préférences d'expédition.",
-        "li1": "Connectez une méthode de paiement",
-        "li2": "Définissez vos préférences d'expédition",
-        "li3": "Commencez à enchérir ou à mettre en vente"
-      }
-    },
-    "listing": {
-      "title": "Mettez vos articles en vente",
-      "subtitle": "Vendre sur BidRoom est simple — décrivez votre article, fixez votre prix et mettez-le en ligne.",
-      "visualTitle": "Mise en vente d'un article",
-      "step1": {
-        "title": "Choisissez la catégorie et le format",
-        "desc": "Sélectionnez la bonne catégorie et choisissez entre une enchère ou une annonce meilleure offre.",
-        "li1": "Sélectionnez la catégorie de l'article",
-        "li2": "Choisissez Enchère (Meilleure enchère) ou Meilleure offre",
-        "li3": "Indiquez l'état de l'article",
-        "li4": "Définissez le format de l'annonce"
-      },
-      "step2": {
-        "title": "Ajoutez des photos et une description",
-        "desc": "Téléchargez des photos claires et rédigez une description détaillée pour attirer les acheteurs.",
-        "li1": "Téléchargez au moins 3 photos de qualité",
-        "li2": "Rédigez une description détaillée et précise",
-        "li3": "Ajoutez les spécifications clés",
-        "li4": "Entrez la localisation de votre article"
-      },
-      "step3": {
-        "title": "Fixez le prix et la durée",
-        "desc": "Définissez votre enchère de départ ou votre offre minimale et choisissez la durée de l'annonce.",
-        "li1": "Fixez une enchère de départ ou un prix minimum",
-        "li2": "Activez optionnellement la fonctionnalité Salle Privée",
-        "li3": "Choisissez la durée de l'annonce",
-        "li4": "Vérifiez la structure des commissions"
+        "title": "Placez une enchère ou faites une proposition",
+        "desc": "<strong>La page de l'article est la même dans les deux cas</strong> — seul le bouton change. En mode enchères, chaque enchère doit dépasser la précédente du pas fixé, et vous êtes averti dès que quelqu'un vous dépasse. En mode propositions, vous envoyez le montant que vous jugez juste, avec ou sans message.",
+        "noteTitle": "Enchère ou proposition.",
+        "note": "Une enchère est ferme et ne peut pas être annulée. Une proposition peut être retirée tant qu'elle est en attente ; dès que le vendeur l'accepte, elle devient une vente ferme."
       },
       "step4": {
-        "title": "Configurez l'expédition",
-        "desc": "Définissez vos options d'expédition et votre délai de préparation pour que les acheteurs sachent à quoi s'attendre.",
-        "li1": "Choisissez expédition tarif fixe, calculée ou gratuite",
-        "li2": "Définissez votre délai de préparation",
-        "li3": "Précisez votre politique de retour",
-        "li4": "Vérifiez les frais et soumettez"
-      }
-    },
-    "privateRoom": {
-      "title": "La Salle d'Enchères Privée",
-      "subtitle": "Notre fonctionnalité unique de Salle Privée permet aux vendeurs d'inviter des enchérisseurs sélectionnés dans une enchère exclusive à durée limitée.",
-      "visualTitle": "Salle d'enchères privée",
-      "step1": {
-        "title": "L'enchère démarre",
-        "desc": "Lorsque l'annonce est mise en ligne, les enchères sont ouvertes à tous les utilisateurs inscrits.",
-        "li1": "Tous les utilisateurs inscrits peuvent enchérir",
-        "li2": "L'historique des enchères est visible par tous",
-        "li3": "Le vendeur peut surveiller l'activité des enchères",
-        "li4": "La Salle Privée est optionnelle lors de la création de l'annonce"
-      },
-      "step2": {
-        "title": "Le vendeur crée la salle privée",
-        "desc": "À tout moment pendant l'enchère, le vendeur peut inviter 2 à 5 enchérisseurs dans une salle privée.",
-        "li1": "Le vendeur sélectionne 2 à 5 enchérisseurs à inviter",
-        "li2": "Les invités ont 15 minutes pour accepter",
-        "li3": "Les non-invités sont notifiés qu'ils n'ont pas été sélectionnés",
-        "li4": "Si personne n'accepte dans les 15 min, l'enchère se clôture sans gagnant"
-      },
-      "step3": {
-        "title": "Les enchères privées commencent",
-        "desc": "Une fois les invités acceptés, la salle d'enchères privée s'ouvre pour des enchères exclusives.",
-        "li1": "Seuls les enchérisseurs invités peuvent enchérir",
-        "li2": "Tout le monde peut regarder les enchères en direct",
-        "li3": "Les enchères doivent respecter l'incrément",
-        "li4": "La salle reste ouverte tant que les enchères sont actives"
-      },
-      "step4": {
-        "title": "Compte à rebours de la salle",
-        "desc": "La salle se ferme 60 secondes après la dernière enchère — créant une urgence.",
-        "li1": "Compte à rebours de 60 secondes après chaque enchère",
-        "li2": "Les nouvelles enchères réinitialisent le compte à rebours",
-        "li3": "Tous les spectateurs voient le minuteur en direct",
-        "li4": "L'enchère la plus haute quand le minuteur atteint zéro remporte"
+        "title": "Si vous gagnez — payez sous 24 heures",
+        "desc": "Lorsque l'enchère se termine et que votre enchère est gagnante, vous avez <strong>24 heures</strong> pour effectuer le paiement via Stripe. Vous recevrez un email et une notification sur la plateforme.",
+        "noteTitle": "Les fonds sont retenus.",
+        "note": "Le paiement ne va pas directement au vendeur — il est retenu par BidRoom jusqu'à ce que vous confirmiez avoir reçu l'article en bon état."
       },
       "step5": {
-        "title": "Gagnant et paiement",
-        "desc": "L'enchérisseur le plus offrant gagne et le paiement est traité automatiquement.",
-        "li1": "Le gagnant est notifié immédiatement",
-        "li2": "Le paiement est prélevé sur le solde du gagnant",
-        "li3": "Le vendeur reçoit son virement après confirmation de livraison",
-        "li4": "Les deux parties peuvent laisser des avis"
+        "title": "Attendez l'expédition — le vendeur a 5 jours ouvrés",
+        "desc": "Le vendeur a <strong>5 jours ouvrés</strong> (du lundi au vendredi) pour expédier l'article après la confirmation du paiement. S'il n'expédie pas dans le délai, la transaction est automatiquement annulée et vous êtes intégralement remboursé.",
+        "noteTitle": "Protection automatique.",
+        "note": "Vous n'avez rien à faire si le vendeur n'expédie pas. Le système annule et rembourse automatiquement après 5 jours ouvrés."
+      },
+      "step6": {
+        "title": "Confirmez la réception",
+        "desc": "Lorsque vous recevez l'article, confirmez sur la plateforme : <strong>Reçu en bon état</strong> — la transaction est terminée et le vendeur reçoit le paiement. <strong>Reçu avec des problèmes</strong> — un litige est ouvert ; les fonds restent retenus.",
+        "noteTitle": "48 heures pour réclamer un dommage.",
+        "note": "Si l'article est arrivé endommagé pendant le transport, vous avez 48 heures après la confirmation de la livraison pour ouvrir une réclamation, avec des photos de l'article et de l'emballage."
+      },
+      "step7": {
+        "title": "Évaluez le vendeur",
+        "desc": "Une fois la transaction terminée, vous pouvez évaluer le vendeur sur une échelle de 1 à 10. Les descriptions des avis sont <strong>privées</strong> — seul le vendeur les voit."
+      },
+      "faq": {
+        "q0": "Quelle est la différence entre enchérir et faire une proposition ?",
+        "a0": "Dans une annonce en mode enchères, vous vous affrontez en temps réel et, à la clôture, la plus haute enchère l'emporte automatiquement — une enchère est <strong>ferme</strong>. Dans une annonce en mode propositions, vous envoyez un montant au vendeur et c'est lui qui décide de l'accepter. La page de l'article indique toujours lequel des deux s'applique, juste à côté du bouton sur lequel vous agissez.",
+        "q1": "Ma proposition m'oblige-t-elle à acheter ?",
+        "a1": "Seulement si le vendeur l'accepte. Tant qu'elle est en attente, vous pouvez la retirer. Une fois acceptée, vous avez <strong>24 heures</strong> pour payer, exactement comme si vous aviez gagné une enchère.",
+        "q2": "Puis-je faire une proposition sur une annonce en mode enchères ?",
+        "a2": "Non. Chaque annonce fonctionne dans un seul mode : si elle accepte les enchères, vous enchérissez ; si elle accepte les propositions, vous proposez.",
+        "q3": "Puis-je annuler une enchère après l'avoir placée ?",
+        "a3": "Les <strong>enchères</strong> sont fermes et ne peuvent pas être annulées. Les <strong>propositions</strong> peuvent être retirées tant qu'elles sont en attente. Dès que le vendeur accepte, la vente est ferme.",
+        "q4": "Que se passe-t-il si le vendeur n'expédie pas l'article ?",
+        "a4": "Si le vendeur n'expédie pas dans les <strong>5 jours ouvrés</strong>, la transaction est automatiquement annulée et vous serez intégralement remboursé sur votre moyen de paiement d'origine.",
+        "q5": "Ai-je un droit de rétractation ?",
+        "a5": "BidRoom est avant tout une plateforme C2C (entre particuliers). Dans les ventes aux enchères en ligne entre particuliers, le droit de rétractation ne s'applique généralement pas. Si le vendeur est un professionnel, vos droits sont différents — consultez les Conditions d'Utilisation.",
+        "q6": "Quelle commission dois-je payer ?",
+        "a6": "<strong>Les acheteurs ne paient aucune commission de vente à BidRoom.</strong> Vous payez le prix de l'article plus des frais de service BidRoom (2,9 % + 0,30 € par transaction), plafonnés à <strong>500 €</strong>, ajoutés au total au moment du paiement."
+      }
+    },
+    "seller": {
+      "s1": {
+        "eye": "Commissions",
+        "title": "Vous ne payez que lorsque vous vendez.",
+        "title2": "Aucun frais de mise en vente.",
+        "intro": "Mettre un article en vente sur BidRoom est entièrement gratuit. La commission n'est prélevée que lorsqu'une transaction est menée à bien — et elle est déduite automatiquement avant le versement."
+      },
+      "comm": {
+        "th1": "Mode de vente",
+        "th2": "Commission vendeur",
+        "th3": "Exemple (article de 1 000 €)",
+        "r1": "Enchères (sans Salle Privée)",
+        "ex1": "Vous recevez 965 €",
+        "r2": "Enchères (avec Salle Privée)",
+        "ex2": "Vous recevez 940 € — mais la clôture est en moyenne 32 % plus élevée",
+        "r3": "Propositions",
+        "ex3": "Vous recevez 965 €",
+        "note": "Les frais de service BidRoom (2,9 % + 0,30 €, plafonnés à 500 €) sont facturés à l'acheteur et ajoutés au montant final au moment du paiement — ils ne sont pas déduits de votre versement. Le versement est transféré sur votre compte bancaire via Stripe Connect après que l'acheteur a confirmé la réception."
+      },
+      "s2": {
+        "eye": "Étape par étape",
+        "title": "Comment vendre",
+        "title2": "sur BidRoom",
+        "intro": "De la mise en vente au versement, le processus est simple. Vous ne payez jamais à l'avance et vous recevez toujours le paiement après la confirmation de la livraison."
+      },
+      "step1": {
+        "title": "Configurez les paiements une seule fois",
+        "desc": "Avant de publier votre première annonce, configurez votre compte de paiement via Stripe Connect dans Tableau de bord → Paramètres → Paiements. Vous aurez besoin de vos informations d'identité et de votre IBAN. Cela se fait une seule fois et n'a jamais besoin d'être répété."
+      },
+      "step2": {
+        "title": "Créez l'annonce en 6 étapes",
+        "desc": "L'assistant de publication vous guide : le mode de vente — voulez-vous que les acheteurs enchérissent (enchère à durée limitée, la plus haute enchère l'emporte) ou qu'ils vous envoient des propositions (c'est vous qui décidez laquelle accepter) ? — puis les détails, les photos (jusqu'à 20), le prix, la livraison et la localisation, et une révision finale. Vous pouvez enregistrer un brouillon à tout moment.",
+        "noteTitle": "KYC pour les articles ≥ 5 000 €.",
+        "note": "Pour mettre en vente ou enchérir sur des articles d'une valeur égale ou supérieure à 5 000 €, la vérification d'identité est obligatoire au titre de la législation contre le blanchiment d'argent."
+      },
+      "step3": {
+        "title": "Attendez la clôture",
+        "desc": "<strong>Enchères :</strong> le gagnant est déterminé automatiquement à la fin du temps imparti. Vous n'avez rien à faire.<br><strong>Propositions :</strong> vous êtes averti de chaque proposition et vous décidez jusqu'à l'échéance. En accepter une clôture automatiquement les autres."
+      },
+      "step4": {
+        "title": "L'acheteur paie — il a 24 heures",
+        "desc": "L'acheteur a <strong>24 heures</strong> pour effectuer le paiement. S'il ne paie pas dans le délai, la transaction est annulée et l'article peut être remis en vente."
+      },
+      "step5": {
+        "title": "Expédiez sous 5 jours ouvrés",
+        "desc": "Après la confirmation du paiement, vous avez <strong>5 jours ouvrés</strong> (du lundi au vendredi, UTC) pour expédier l'article. Vous recevrez un avertissement au jour 3. Si vous n'avez pas expédié au jour 5, la transaction est automatiquement annulée et l'acheteur est remboursé.",
+        "noteTitle": "Jours ouvrés = lundi–vendredi, UTC.",
+        "note": "Les week-ends et les jours fériés ne comptent pas. Le délai est calculé automatiquement par le système à partir de la confirmation du paiement."
+      },
+      "step6": {
+        "title": "Recevez votre versement automatiquement",
+        "desc": "Lorsque l'acheteur confirme avoir reçu l'article en bon état, les fonds sont automatiquement libérés et transférés sur votre compte bancaire via Stripe Connect (généralement 1–2 jours ouvrés bancaires).",
+        "noteTitle": "Si l'acheteur ne confirme pas la réception.",
+        "note": "Si l'acheteur ne confirme pas la réception dans le délai, le système libère les fonds automatiquement (libération automatique). Vous n'avez pas besoin de contacter le support."
+      },
+      "faq": {
+        "q0": "Quel mode de vente choisir ?",
+        "a0": "Les enchères lorsque vous voulez maximiser le prix et qu'il y a de la demande — vous laissez le marché décider de la valeur. Les propositions lorsque vous avez un prix en tête et préférez contrôler qui achète. La commission est de <strong>3,5 % dans les deux modes</strong> ; elle ne monte à 6 % que si vous activez la Salle Privée, qui n'existe qu'en mode enchères.",
+        "q1": "Puis-je changer de mode après la publication ?",
+        "a1": "Non, afin de protéger ceux qui ont déjà enchéri ou proposé — changer modifierait la portée juridique de leur enchère ou de leur proposition. Pour en changer, annulez et créez une nouvelle annonce : il n'y a ni frais de mise en vente ni frais d'annulation.",
+        "q2": "Qu'est-ce que l'acceptation automatique des propositions ?",
+        "a2": "Si, à l'échéance, il y a <strong>exactement une</strong> proposition égale ou supérieure à votre minimum, cette proposition est acceptée pour vous — pour qu'une vente valable ne soit pas perdue par inadvertance. Si plusieurs atteignent le minimum, c'est vous qui décidez ; si aucune ne l'atteint, l'annonce se clôture sans vente. L'acceptation automatique exige que votre compte de paiement Stripe soit configuré.",
+        "q3": "Quand reçois-je le paiement ?",
+        "a3": "Les fonds sont libérés lorsque l'acheteur confirme la réception. Ensuite, le transfert Stripe Connect prend généralement <strong>1–2 jours ouvrés bancaires</strong>.",
+        "q4": "Puis-je fixer un prix minimum en mode propositions ?",
+        "a4": "Oui, et c'est <strong>obligatoire</strong> sur les annonces en mode propositions. En dessous de ce montant, vous pouvez refuser librement. À partir de ce montant, vous êtes engagé : vous ne pouvez pas refuser la dernière proposition qui l'atteint, et si exactement une l'atteint à la clôture de l'annonce, elle est acceptée automatiquement.",
+        "q5": "Que se passe-t-il si l'acheteur ouvre un litige ?",
+        "a5": "Lorsqu'un litige est ouvert, les deux comptes sont restreints et les fonds sont retenus. L'équipe BidRoom examine les éléments fournis par les deux parties. Si aucun accord n'est possible, le dossier est transmis au CNIACC.",
+        "q6": "Puis-je annuler une annonce après la publication ?",
+        "a6": "Oui, tant que l'annonce est un brouillon, en attente d'approbation ou active — et seulement s'il n'y a rien de qualifiant dessus : en mode propositions, aucune proposition acceptée et aucune proposition en attente égale ou supérieure au minimum ; en mode enchères, aucune enchère. Les propositions en attente inférieures au minimum sont refusées automatiquement. Vous ne pouvez pas supprimer une annonce qui a déjà un gagnant ou une transaction active.",
+        "q7": "Quels articles ne puis-je pas mettre en vente ?",
+        "a7": "Interdits : animaux vivants, substances réglementées, armes, et tout article illégal au Portugal. BidRoom utilise une modération automatique (Azure AI Content Safety) pour détecter et bloquer ces annonces avant leur mise en ligne."
+      },
+      "card": {
+        "noListingFee": "Aucun frais de mise en vente",
+        "noCancellation": "Aucun frais d'annulation"
+      },
+      "card2": {
+        "badge": "Avec Salle Privée",
+        "f2": "Tour exclusif après l'enchère",
+        "f3": "Jusqu'à 5 enchérisseurs invités",
+        "f4": "Gagnant automatique garanti"
+      },
+      "tip": {
+        "tag": "Conseil aux vendeurs",
+        "title": "Activez la Salle Privée pour maximiser le prix de vente final",
+        "desc": "Les enchères avec une Salle Privée se clôturent en moyenne 30 % au-dessus de la dernière enchère publique. L'acheteur qui perd l'enchère principale est souvent prêt à payer davantage dans un tour exclusif — la Salle Privée capte cette valeur pour vous."
+      }
+    },
+    "private": {
+      "eye": "Salles Privées",
+      "title": "L'exclusivité",
+      "title2": "sur invitation.",
+      "intro": "Une Salle Privée est un tour d'enchères exclusif qui a lieu après l'enchère publique — réservé aux enchérisseurs invités par le vendeur. Nos données montrent que les enchères avec une Salle Privée se clôturent en moyenne 32 % au-dessus du prix de départ.",
+      "timerLabel": "Par enchère",
+      "stat1": "Enchérisseurs invités",
+      "stat2": "Par enchère",
+      "stat3": "Gagnant automatique",
+      "s2": {
+        "eye": "Comment ça marche, étape par étape",
+        "title": "Le processus complet"
+      },
+      "step1": {
+        "title": "Éligibilité — qui peut avoir une Salle Privée ?",
+        "desc": "Une Salle Privée n'est possible que sur les annonces en mode enchères, avec l'option activée par le vendeur. Pour être déclenchée, l'enchère doit être terminée et il doit y avoir au moins <strong>2 enchérisseurs authentifiés et enregistrés</strong>."
+      },
+      "step2": {
+        "title": "Le vendeur invite — fenêtre de 15 minutes",
+        "desc": "Après la clôture de l'enchère, le vendeur a <strong>15 minutes</strong> pour créer la salle et inviter entre 2 et 5 des enchérisseurs. Un compte à rebours visible sur la page de l'annonce indique le temps restant."
+      },
+      "step3": {
+        "title": "Les invités acceptent ou refusent — 15 minutes",
+        "desc": "Chaque invité reçoit un email et une notification et a <strong>15 minutes</strong> pour accepter ou refuser. Ceux qui ne répondent pas dans le délai deviennent inéligibles. <strong>Exception :</strong> si exactement 2 enchérisseurs ont été invités et que l'un ne répond pas, l'autre est automatiquement désigné gagnant.",
+        "noteTitle": "Lorsque tout le monde accepte.",
+        "note": "Dès que tous les invités acceptent, le compte à rebours d'ouverture passe à <strong>1 minute</strong>. La salle ouvre et les enchères commencent."
+      },
+      "step4": {
+        "title": "Enchères — la règle des 60 secondes",
+        "desc": "Dans la salle, seuls les invités ayant accepté peuvent enchérir. Toute nouvelle enchère <strong>remet le minuteur à 60 secondes</strong>. La salle se ferme lorsque 60 secondes s'écoulent sans nouvelle enchère. L'enchérisseur ayant la plus haute enchère au moment de la fermeture gagne automatiquement."
+      },
+      "step5": {
+        "title": "Gagnant automatique — transparence totale",
+        "desc": "Le système détermine le gagnant automatiquement en fonction de la plus haute enchère. Le vendeur n'intervient pas dans cette décision.",
+        "noteTitle": "Si le vendeur abandonne la salle.",
+        "note": "Si le vendeur quitte la salle pendant le tour, la salle se ferme immédiatement sans gagnant et tous les participants sont avertis. Cette action est enregistrée dans le système."
+      },
+      "vis": {
+        "title": "Qui peut voir la salle ?",
+        "text": "Tout utilisateur peut voir la salle en mode observateur. Les invités qui n'ont pas encore répondu apparaissent en gris ; ceux qui ont accepté apparaissent en surbrillance."
+      },
+      "commission": {
+        "title": "Commission avec Salle Privée",
+        "text": "La commission vendeur passe de 3,5 % à <strong>6 %</strong> lorsque la Salle Privée est active. Cette différence reflète la valeur ajoutée — les enchères avec une Salle Privée se clôturent nettement plus haut."
+      },
+      "eligible": {
+        "title": "Éligibilité pour être invité",
+        "text": "Pour être éligible comme invité d'une Salle Privée, l'acheteur doit avoir un score de réputation ≥ 60 et aucun litige perdu. Les comptes invités ou non vérifiés ne sont pas éligibles."
+      },
+      "audit": {
+        "title": "Piste d'audit complète",
+        "text": "Toutes les actions dans une Salle Privée sont enregistrées dans le système d'audit interne — invitations, acceptations, enchères et fermeture. Disponibles pour examen en cas de litige."
+      },
+      "demo": {
+        "header": "Salle Privée – démonstration en direct",
+        "status": "ACTIVE",
+        "itemName": "Rolex Submariner 5513 – 1972",
+        "itemSub": "Enchère clôturée · Salle Privée en cours",
+        "bidLabel": "Enchère actuelle",
+        "seatsLabel": "Enchérisseurs Platine dans la salle",
+        "timerLabel": "Temps restant",
+        "extendNote": "Chaque enchère prolonge de 60 secondes"
+      },
+      "faq": {
+        "q0": "Puis-je refuser une invitation à une Salle Privée ?",
+        "a0": "Oui. Vous pouvez refuser ou ignorer l'invitation dans les 15 minutes. S'il reste moins de 2 enchérisseurs invités actifs, la salle peut se fermer ou le dernier enchérisseur ayant accepté gagne automatiquement.",
+        "q1": "Et si un seul enchérisseur accepte ?",
+        "a1": "Si 1 seul enchérisseur accepte et que les autres ne répondent pas dans le délai, cet enchérisseur gagne automatiquement à la valeur de son enchère d'origine. La salle ne peut pas exister avec un seul participant actif.",
+        "q2": "Puis-je voir qui d'autre est dans la salle ?",
+        "a2": "Vous pouvez voir combien de participants sont dans la salle et leur statut, mais pas leurs noms pendant le tour. Après la fermeture, le gagnant est annoncé.",
+        "q3": "Suis-je obligé d'enchérir si j'accepte l'invitation ?",
+        "a3": "Vous n'êtes pas obligé d'enchérir, mais en acceptant l'invitation vous faites partie de la salle. Vous pouvez entrer et ne pas enchérir — dans ce cas, un autre participant gagne s'il dépasse votre enchère d'origine."
+      }
+    },
+    "payments": {
+      "eye": "Paiement et Sécurité",
+      "title": "Votre argent,",
+      "title2": "toujours protégé.",
+      "intro": "Nous expliquons exactement comment les fonds circulent entre l'acheteur, BidRoom et le vendeur — sans surprises, sans petits caractères.",
+      "escrow": {
+        "title": "Fonds retenus",
+        "text": "Le paiement de l'acheteur est retenu par BidRoom (via Stripe) jusqu'à ce que l'acheteur confirme avoir reçu l'article en bon état. Le vendeur ne reçoit le paiement qu'après cette confirmation."
+      },
+      "stripe": {
+        "title": "Propulsé par Stripe",
+        "text": "Tous les paiements sont traités par Stripe, le leader mondial du paiement en ligne. BidRoom ne stocke jamais les données de carte. Stripe est conforme à la norme PCI DSS niveau 1."
+      },
+      "refund": {
+        "title": "Remboursement automatique",
+        "text": "Si le vendeur n'expédie pas dans les 5 jours ouvrés, le remboursement est traité automatiquement. Vous n'avez pas besoin de le demander — le système s'occupe de tout."
+      },
+      "payout": {
+        "title": "Versement via Stripe Connect",
+        "text": "Les vendeurs reçoivent le paiement directement sur leur compte bancaire via Stripe Connect. BidRoom déduit la commission automatiquement avant le versement — le vendeur reçoit le montant net."
+      },
+      "tl": {
+        "eye": "Flux de la transaction",
+        "title": "De la victoire",
+        "title2": "au versement",
+        "p1": {
+          "phase": "Paiement",
+          "deadline": "24 heures",
+          "title": "L'acheteur paie",
+          "desc": "L'acheteur a <strong>24 heures</strong> après la clôture pour effectuer le paiement. Les fonds sont retenus par BidRoom via Stripe. S'il ne paie pas, la transaction est annulée."
+        },
+        "p2": {
+          "phase": "Expédition",
+          "deadline": "5 jours ouvrés",
+          "title": "Le vendeur expédie",
+          "desc": "Le vendeur a <strong>5 jours ouvrés</strong> pour expédier. Au jour 3, il reçoit un avertissement. Au jour 5, s'il n'a pas expédié, le système annule automatiquement et rembourse l'acheteur."
+        },
+        "p3": {
+          "phase": "Livraison",
+          "deadline": "Estimée",
+          "title": "L'acheteur confirme",
+          "desc": "L'acheteur confirme : article en bon état → fonds libérés ; article avec problèmes → litige ouvert. S'il ne confirme pas dans le délai → <strong>libération automatique</strong>."
+        },
+        "p4": {
+          "phase": "Litige",
+          "deadline": "Facultatif",
+          "title": "Médiation BidRoom → CNIACC",
+          "desc": "Les deux comptes sont restreints. BidRoom tente de faciliter un accord dans un délai de <strong>7 jours ouvrés</strong>. En l'absence d'accord, le dossier est transmis au CNIACC. Les fonds restent retenus jusqu'à la résolution définitive."
+        },
+        "p5": {
+          "phase": "Versement",
+          "deadline": "1–2 jours ouvrés",
+          "title": "Le vendeur reçoit",
+          "desc": "Commission déduite automatiquement. Montant net transféré via Stripe Connect sur le compte bancaire du vendeur sous <strong>1–2 jours ouvrés bancaires</strong>."
+        }
+      },
+      "faq": {
+        "q0": "BidRoom stocke-t-il les données de ma carte ?",
+        "a0": "Non. Les données de carte sont gérées exclusivement par Stripe, conforme à la norme PCI DSS niveau 1. BidRoom n'a jamais accès aux numéros de carte et ne les stocke pas.",
+        "q1": "Quand le vendeur reçoit-il mon paiement ?",
+        "a1": "Le vendeur <strong>ne reçoit pas le paiement immédiatement</strong>. Les fonds sont retenus par BidRoom jusqu'à ce que vous confirmiez avoir reçu l'article en bon état. C'est seulement alors qu'ils sont libérés. Cette retenue de fonds vous protège de la fraude.",
+        "q2": "Puis-je payer avec MB Way ou Multibanco ?",
+        "a2": "Pas dans le paiement BidRoom : sur la plateforme, le paiement se fait par carte — Visa, Mastercard et American Express — traité par Stripe, et les références Multibanco ne sont pas prises en charge. Un vendeur peut activer MB WAY, le virement bancaire ou le paiement en main propre sur sa propre annonce ; ceux-là sont réglés directement avec le vendeur, hors de la retenue de fonds de BidRoom, puis confirmés dans la transaction, de sorte que les options qui vous sont proposées dépendent de l'annonce.",
+        "q3": "Qu'est-ce que le système de réputation ?",
+        "a3": "Chaque utilisateur a un score de réputation de 0 à 100, calculé automatiquement à partir des avis reçus, des transactions réalisées et des litiges. Un score ≥ 60 sans litige perdu est requis pour être éligible aux Salles Privées."
+      },
+      "flow": {
+        "s1": {
+          "title": "Enchère gagnée",
+          "sub": "L'acheteur gagne"
+        },
+        "s2": {
+          "title": "Paiement",
+          "sub": "Paiement sécurisé"
+        },
+        "s3": {
+          "title": "Expédition",
+          "sub": "5 jours ouvrés"
+        },
+        "s4": {
+          "title": "Livraison",
+          "sub": "L'acheteur confirme"
+        },
+        "s5": {
+          "title": "Versement",
+          "sub": "IBAN du vendeur"
+        }
+      },
+      "table": {
+        "col1": "Description",
+        "col2": "Valeur",
+        "r1": {
+          "label": "Carte de crédit / débit",
+          "sub": "Visa, Mastercard, American Express — via Stripe",
+          "val": "Inclus"
+        },
+        "r2": {
+          "label": "Virement, MB WAY ou en main propre",
+          "sub": "Seulement si le vendeur l'active — réglé directement avec lui, hors retenue de fonds",
+          "val": "Au choix du vendeur"
+        },
+        "r3": {
+          "label": "Versement au vendeur",
+          "sub": "Virement SEPA vers l'IBAN enregistré",
+          "val": "Gratuit"
+        },
+        "r4": {
+          "label": "Période de retenue",
+          "sub": "Fonds retenus jusqu'à confirmation de la livraison",
+          "val": "Automatique"
+        },
+        "r5": {
+          "label": "Remboursement en cas d'annulation",
+          "sub": "Expédition non effectuée sous 5 jours ouvrés",
+          "val": "Intégral"
+        },
+        "r6": {
+          "label": "Protection en cas de litige",
+          "sub": "Médiation BidRoom – CNIACC – Tribunal",
+          "val": "Inclus"
+        }
+      }
+    },
+    "faq": {
+      "eye": "Questions fréquentes",
+      "buyer": {
+        "title": "Acheteur",
+        "title2": "— vos questions"
+      },
+      "seller": {
+        "title": "Vendeur",
+        "title2": "— vos questions"
+      },
+      "payments": {
+        "title": "Paiement et Sécurité"
+      },
+      "private": {
+        "title": "Questions fréquentes – Salle Privée"
       }
     },
     "cta": {
       "title": "Prêt à commencer ?",
-      "subtitle": "Rejoignez BidRoom aujourd'hui et découvrez une façon plus intelligente d'acheter et de vendre.",
-      "button": "Créer un compte gratuit"
+      "title2": "C'est gratuit.",
+      "sub": "Créez votre compte en moins de 2 minutes. Aucun frais d'adhésion, aucune surprise.",
+      "btn1": "Créer un compte gratuit",
+      "btn2": "Voir les enchères en direct",
+      "eye": "Prêt à démarrer ?"
     }
   },
   "contact": {
@@ -2019,7 +2826,7 @@
       },
       "account3": {
         "q": "Quelles méthodes de paiement acceptez-vous ?",
-        "a": "Nous acceptons toutes les principales cartes de crédit (Visa, MasterCard, American Express), PayPal et virements bancaires. Tous les paiements sont traités en toute sécurité via notre système de paiement crypté."
+        "a": "Carte — Visa, MasterCard et American Express — traitée par Stripe ; BidRoom ne voit ni ne conserve jamais les données de votre carte. Nous n'acceptons pas PayPal. Le vendeur peut également choisir d'accepter le virement bancaire, MB WAY ou le paiement en main propre sur son annonce : ces modes sont réglés directement avec le vendeur puis confirmés dans la transaction, de sorte que les options proposées dépendent de l'annonce."
       },
       "account4": {
         "q": "Comment mettre à jour mes informations de paiement ?",
@@ -2035,7 +2842,7 @@
       },
       "bidding2": {
         "q": "Puis-je annuler une enchère ou retirer une offre ?",
-        "a": "Les enchères sont contraignantes et ne peuvent pas être annulées une fois placées. Les propositions Meilleure offre peuvent être retirées à tout moment tant qu’elles sont en attente (pas encore acceptées ou refusées par le vendeur). Après acceptation, la vente est contraignante et les règles de paiement s’appliquent."
+        "a": "Les enchères sont contraignantes et ne peuvent pas être annulées une fois placées. Les propositions peuvent être retirées à tout moment tant qu’elles sont en attente (pas encore acceptées ou refusées par le vendeur). Après acceptation, la vente est contraignante et les règles de paiement s’appliquent."
       },
       "bidding3": {
         "q": "Comment savoir si j'ai remporté une enchère ?",
@@ -2043,7 +2850,7 @@
       },
       "bidding4": {
         "q": "Que se passe-t-il si je ne paie pas une enchère remportée ?",
-        "a": "Si vous ne finalisez pas le paiement dans les 48 heures suivant la victoire, l'enchère sera proposée au prochain enchérisseur le plus offrant. Des non-paiements répétés peuvent entraîner la suspension du compte."
+        "a": "Le paiement est dû dans les 24 heures suivant la victoire — 48 heures pour les annonces avec Salle Privée. Passé ce délai sans paiement, la transaction est annulée, vous perdez 20 points de réputation et, si vous avez un moyen de paiement enregistré, une pénalité de 30 € est prélevée (10 € pour le vendeur, 20 € pour BidRoom). L’article est ensuite remis en vente automatiquement aux mêmes conditions ; dans une Salle Privée, il est proposé au deuxième meilleur enchérisseur, qui dispose de 24 heures pour payer. Un troisième non-paiement entraîne la suspension définitive du compte."
       },
       "bidding5": {
         "q": "Puis-je enchérir sur plusieurs articles à la fois ?",
@@ -2063,7 +2870,7 @@
       },
       "technical3": {
         "q": "Avez-vous une application mobile ?",
-        "a": "Oui ! Notre application mobile est disponible pour iOS et Android. Vous pouvez la télécharger depuis l'App Store ou Google Play Store."
+        "a": "Pas encore. Pour l'instant, BidRoom fonctionne dans le navigateur de votre téléphone : le site est conçu pour les petits écrans et vous pouvez l'ajouter à votre écran d'accueil pour l'ouvrir comme une application. Une application native pour iOS et Android est prévue ; d'ici là, il n'existe aucune application BidRoom sur l'App Store ni sur Google Play."
       },
       "technical4": {
         "q": "Pourquoi ne reçois-je pas les notifications par e-mail ?",
@@ -2245,160 +3052,12 @@
       "phoneLabel": "Téléphone :"
     }
   },
-  "terms": {
-    "hero": {
-      "title": "Conditions générales",
-      "subtitle": "Veuillez lire attentivement ces conditions avant d'utiliser notre plateforme de marketplace d'enchères.",
-      "lastUpdated": "Dernière mise à jour : Décembre 2024"
-    },
-    "s1": {
-      "title": "1. Acceptation des conditions",
-      "p1": "En accédant et en utilisant BidRoom (« le Service »), vous acceptez d'être lié par les termes et dispositions du présent accord. Si vous n'acceptez pas de vous conformer à ce qui précède, veuillez ne pas utiliser ce service.",
-      "p2": "Ces Conditions générales (« Conditions ») régissent votre utilisation de notre plateforme de marketplace d'enchères exploitée par BidRoom (« nous », « notre » ou « nos »)."
-    },
-    "s2": {
-      "title": "2. Description du service",
-      "intro": "BidRoom est une marketplace d'enchères en ligne qui permet aux utilisateurs de :",
-      "li1": "Mettre des articles aux enchères",
-      "li2": "Participer aux enchères en plaçant des offres",
-      "li3": "Acheter des articles via le processus d'enchères",
-      "li4": "Interagir avec d'autres utilisateurs dans un environnement sécurisé",
-      "note": "Nous nous réservons le droit de modifier, suspendre ou interrompre le Service à tout moment sans préavis."
-    },
-    "s3": {
-      "title": "3. Comptes utilisateurs",
-      "s1": {
-        "title": "3.1 Création de compte",
-        "intro": "Pour utiliser notre Service, vous devez créer un compte en fournissant des informations exactes et complètes. Vous êtes responsable de :",
-        "li1": "La confidentialité de vos identifiants de compte",
-        "li2": "Toutes les activités qui se produisent sous votre compte",
-        "li3": "Nous notifier immédiatement de toute utilisation non autorisée",
-        "li4": "Assurer que les informations de votre compte restent à jour et exactes"
-      },
-      "s2": {
-        "title": "3.2 Éligibilité au compte",
-        "p": "Vous devez avoir au moins 18 ans pour créer un compte et utiliser notre Service. En créant un compte, vous déclarez et garantissez que vous remplissez cette condition d'âge."
-      },
-      "s3": {
-        "title": "3.3 Suspension du compte",
-        "p": "Nous nous réservons le droit de suspendre ou de résilier les comptes qui enfreignent ces Conditions ou qui se livrent à des activités frauduleuses ou illégales."
-      }
-    },
-    "s4": {
-      "title": "4. Enchères et ventes",
-      "s1": {
-        "title": "4.1 Processus d'enchères",
-        "intro": "Lors de la participation aux enchères :",
-        "li1": "Toutes les enchères sont définitives et ne peuvent être retirées une fois placées",
-        "li2": "Vous devez disposer de fonds suffisants pour couvrir votre enchère maximale",
-        "li3": "Nous utilisons un système d'enchères par procuration qui enchérit automatiquement en votre nom",
-        "li4": "Les enchérisseurs gagnants sont obligés de finaliser l'achat"
-      },
-      "s2": {
-        "title": "4.2 Règles des enchères",
-        "li1": "Les enchères ont des heures de début et de fin spécifiques",
-        "li2": "Les enchères doivent respecter les incréments minimaux",
-        "li3": "Des prix de réserve peuvent s'appliquer à certaines enchères",
-        "li4": "Nous nous réservons le droit d'annuler des enchères à notre discrétion"
-      },
-      "s3": {
-        "title": "4.3 Obligations de paiement",
-        "p": "Les enchérisseurs gagnants doivent finaliser le paiement dans les 48 heures suivant la clôture de l'enchère. Le non-paiement peut entraîner la suspension du compte et l'article peut être proposé au prochain enchérisseur le plus offrant."
-      }
-    },
-    "s5": {
-      "title": "5. Responsabilités du vendeur",
-      "intro": "Si vous mettez des articles aux enchères, vous acceptez de :",
-      "li1": "Fournir des descriptions d'articles exactes et complètes",
-      "li2": "Inclure des photographies claires et de haute qualité",
-      "li3": "Fixer des prix de départ et des prix de réserve appropriés",
-      "li4": "Expédier les articles rapidement après réception du paiement",
-      "li5": "Répondre aux demandes des acheteurs en temps opportun",
-      "li6": "Se conformer à toutes les lois et réglementations applicables"
-    },
-    "s6": {
-      "title": "6. Activités interdites",
-      "intro": "Vous acceptez de ne pas :",
-      "li1": "Utiliser le Service à des fins illégales ou non autorisées",
-      "li2": "Interférer avec ou perturber le Service ou les serveurs",
-      "li3": "Tenter d'obtenir un accès non autorisé à toute partie du Service",
-      "li4": "Créer plusieurs comptes pour contourner les restrictions",
-      "li5": "Se livrer à des enchères fictives ou autres pratiques frauduleuses",
-      "li6": "Lister des articles interdits (armes, substances illicites, etc.)",
-      "li7": "Violer toute loi ou réglementation applicable",
-      "li8": "Harceler, abuser ou nuire à d'autres utilisateurs"
-    },
-    "s7": {
-      "title": "7. Frais et paiements",
-      "s1": {
-        "title": "7.1 Frais de service",
-        "intro": "Nous pouvons facturer des frais pour certains services, notamment :",
-        "li1": "Frais de mise en vente pour les articles aux enchères",
-        "li2": "Frais de transaction pour les ventes réalisées",
-        "li3": "Fonctionnalités et services premium"
-      },
-      "s2": {
-        "title": "7.2 Traitement des paiements",
-        "p": "Tous les paiements sont traités en toute sécurité via nos partenaires de paiement. Nous acceptons les principales cartes de crédit et autres méthodes de paiement approuvées."
-      },
-      "s3": {
-        "title": "7.3 Remboursements",
-        "p": "Les politiques de remboursement varient selon le type de transaction et sont soumises à notre discrétion et aux lois applicables."
-      }
-    },
-    "s8": {
-      "title": "8. Propriété intellectuelle",
-      "p1": "Le Service et son contenu original, ses fonctionnalités et sa fonctionnalité sont la propriété de BidRoom et sont protégés par les lois internationales sur le droit d'auteur, les marques, les brevets, les secrets commerciaux et autres droits de propriété intellectuelle.",
-      "p2": "Vous ne pouvez pas reproduire, distribuer, modifier ou créer des œuvres dérivées de notre contenu sans autorisation écrite expresse."
-    },
-    "s9": {
-      "title": "9. Clauses de non-responsabilité",
-      "p1": "LE SERVICE EST FOURNI « TEL QUEL » ET « TEL QUE DISPONIBLE » SANS GARANTIES D'AUCUNE SORTE, EXPRESSES OU IMPLICITES, Y COMPRIS MAIS SANS S'Y LIMITER LES GARANTIES IMPLICITES DE QUALITÉ MARCHANDE, D'ADÉQUATION À UN USAGE PARTICULIER ET DE NON-CONTREFAÇON.",
-      "p2": "Nous ne garantissons pas que le Service sera ininterrompu, sécurisé ou sans erreur, ni que tout défaut sera corrigé."
-    },
-    "s10": {
-      "title": "10. Limitation de responsabilité",
-      "p1": "DANS TOUTE LA MESURE PERMISE PAR LA LOI, BIDROOM NE SERA PAS RESPONSABLE DES DOMMAGES INDIRECTS, ACCESSOIRES, SPÉCIAUX, CONSÉCUTIFS OU PUNITIFS, Y COMPRIS SANS LIMITATION, LA PERTE DE PROFITS, DE DONNÉES, D'UTILISATION, DE CLIENTÈLE OU D'AUTRES PERTES INCORPORELLES.",
-      "p2": "Notre responsabilité totale envers vous pour tout dommage découlant de ces Conditions ou du Service ne dépassera pas le montant que vous nous avez payé au cours des 12 mois précédant la réclamation."
-    },
-    "s11": {
-      "title": "11. Indemnisation",
-      "intro": "Vous acceptez de défendre, d'indemniser et de dégager de toute responsabilité BidRoom et ses dirigeants, directeurs, employés et agents de toute réclamation, dommage, obligation, perte, responsabilité, coût ou dette, et dépenses (y compris les honoraires d'avocat) découlant de :",
-      "li1": "Votre utilisation du Service",
-      "li2": "Votre violation de ces Conditions",
-      "li3": "Votre violation des droits de tiers",
-      "li4": "Tout contenu que vous soumettez, publiez ou transmettez via le Service"
-    },
-    "s12": {
-      "title": "12. Résiliation",
-      "p1": "Nous pouvons résilier ou suspendre votre compte et votre accès au Service immédiatement, sans préavis ni responsabilité, pour quelque raison que ce soit, notamment si vous enfreignez les Conditions.",
-      "p2": "À la résiliation, votre droit d'utiliser le Service cessera immédiatement. Toutes les dispositions des Conditions qui, par leur nature, devraient survivre à la résiliation, survivront à la résiliation."
-    },
-    "s13": {
-      "title": "13. Droit applicable",
-      "p1": "Ces Conditions seront interprétées et régies par les lois de l'État du Delaware, sans égard à ses dispositions sur les conflits de lois.",
-      "p2": "Tout litige découlant de ces Conditions ou de votre utilisation du Service sera résolu devant les tribunaux du Delaware."
-    },
-    "s14": {
-      "title": "14. Modifications des conditions",
-      "p1": "Nous nous réservons le droit de modifier ou remplacer ces Conditions à tout moment. Si une révision est importante, nous essaierons de fournir un préavis d'au moins 30 jours avant l'entrée en vigueur de nouvelles conditions.",
-      "p2": "Votre utilisation continue du Service après de tels changements constitue votre acceptation des nouvelles Conditions."
-    },
-    "s15": {
-      "title": "15. Informations de contact",
-      "intro": "Si vous avez des questions sur ces Conditions générales, veuillez nous contacter :",
-      "emailLabel": "E-mail :",
-      "addressLabel": "Adresse :",
-      "address": "Département juridique BidRoom, 123 Rue des Enchères, Commerce City, CC 12345",
-      "phoneLabel": "Téléphone :"
-    }
-  },
   "myBids": {
     "filterAll": "Tous",
     "filterWinning": "En tête",
     "filterOutbid": "Surenchéri",
     "filterEnded": "Terminé",
-    "myBest": "Ma meilleure offre",
+    "myBest": "Mon plus haut",
     "currentPrice": "Actuel",
     "bids": "Enchères",
     "ends": "Se termine",
@@ -2612,7 +3271,6 @@
     "noActiveListings": "Aucune annonce active pour le moment.",
     "noEndedListings": "Aucune annonce terminée pour l'instant.",
     "ended": "Terminée",
-    "bestOffer": "Best Offer",
     "noOffersYet": "Pas encore d'offres",
     "offer": "offre",
     "offers": "offres",
@@ -2623,7 +3281,8 @@
     "follow": "Suivre",
     "following": "Abonné",
     "mute": "Couper les notifications",
-    "unmute": "Réactiver les notifications"
+    "unmute": "Réactiver les notifications",
+    "offersMode": "Propositions"
   },
   "notifications": {
     "newBid": {
@@ -2656,7 +3315,7 @@
     },
     "bestOfferEnded": {
       "title": "Annonce terminée",
-      "message": "Votre annonce à la meilleure offre « {{listingTitle}} » est terminée avec {{offerCount}} offre(s). Vous avez 24 heures pour les examiner et en accepter une."
+      "message": "Votre annonce en mode propositions « {{listingTitle}} » est terminée avec {{offerCount}} proposition(s). Vous avez 24 heures pour les examiner et en accepter une."
     },
     "listingRemoved": {
       "title": "Annonce retirée",
@@ -2983,6 +3642,173 @@
       "24h": "24 heures",
       "48h": "48 heures",
       "7d": "une semaine"
+    }
+  },
+  "privateRoomAuction": {
+    "topbar": {
+      "backToListing": "Retour à l'annonce",
+      "title": "Salle d'Enchères Privée",
+      "viewers": "Spectateurs",
+      "auctionEnded": "Enchère terminée",
+      "acceptanceWindow": "Délai d'acceptation",
+      "closingSoon": "Fermeture imminente",
+      "timeRemaining": "Temps restant"
+    },
+    "endedPage": {
+      "subtitle": "La session de l'enchère privée est terminée.",
+      "viewTransactions": "Aller aux transactions"
+    },
+    "expired": {
+      "titleEnded": "Salle privée terminée",
+      "titleStarted": "Enchère privée démarrée",
+      "titleClosed": "Salle privée fermée",
+      "bodyWinner": "Félicitations — vous avez gagné avec la plus haute enchère de <strong>{{amount}}</strong>. Consultez votre email et allez dans Transactions pour effectuer le paiement sous 48 heures.",
+      "bodySellerWithWinner": "La session est terminée. <strong>{{name}}</strong> a gagné avec <strong>{{amount}}</strong>. Vous recevrez les prochaines étapes par email.",
+      "bodySellerNoWinner": "La session s'est terminée sans enchère gagnante. Vous pouvez remettre l'article en vente dans Mes enchères.",
+      "bodyParticipantWithWinner": "La session est terminée. <strong>{{name}}</strong> a gagné avec <strong>{{amount}}</strong>. Vous serez averti par email si vous avez été retenu.",
+      "bodyParticipantNoWinner": "La session est terminée. Il n'y a pas eu d'enchère gagnante. Merci d'avoir participé.",
+      "bodySpectatorWithWinner": "L'enchère privée est terminée. L'enchère gagnante était de <strong>{{amount}}</strong>.",
+      "bodySpectatorNoWinner": "L'enchère privée est terminée sans enchère gagnante.",
+      "bodyNoAccept": "Aucun enchérisseur invité n'a accepté à temps. L'enchère s'est fermée sans gagnant.",
+      "bodySellerLeft": "Le vendeur a quitté la salle. L'enchère s'est fermée sans gagnant.",
+      "bodyStartedInvited": "Le délai d'acceptation est écoulé. Les enchères sont ouvertes — enchérissez avant la fin du minuteur.",
+      "bodyStartedOther": "L'enchère privée a commencé. Vous pouvez la suivre en direct ; seuls les enchérisseurs invités peuvent enchérir.",
+      "bodyConfirming": "Le temps est écoulé. Nous confirmons les résultats finaux — cette page se mettra à jour automatiquement.",
+      "confirm": "Compris",
+      "viewListing": "Voir l'annonce",
+      "viewTransactions": "Aller aux transactions"
+    },
+    "state": {
+      "loading": "Chargement de la salle privée…"
+    },
+    "login": {
+      "title": "Connexion requise",
+      "body": "Vous devez être connecté pour participer à cette salle d'enchères privée.",
+      "sub": "Si vous êtes un enchérisseur invité, connectez-vous pour enchérir.",
+      "cta": "Se connecter pour participer"
+    },
+    "lobby": {
+      "title": "La salle n'a pas encore commencé",
+      "untilStart": "avant l'ouverture de la salle",
+      "acceptWindow": "Les invités ont <strong>15 minutes</strong> pour accepter. L'enchère démarre automatiquement ensuite.",
+      "pendingInvitation": "Vous avez une invitation en attente.",
+      "accepting": "Acceptation…",
+      "accept": "Accepter l'invitation",
+      "accepted": "Vous avez accepté votre invitation. L'enchère va bientôt commencer.",
+      "checkEmail": "Consultez votre email pour trouver le lien d'acceptation.",
+      "starting": "Démarrage…",
+      "startNow": "Démarrer l'enchère maintenant",
+      "invitedBidders": "Enchérisseurs invités"
+    },
+    "product": {
+      "imageAlt": "Image {{n}}",
+      "viewDetails": "Voir les détails"
+    },
+    "bid": {
+      "quickBids": "Enchères rapides",
+      "currentBid": "Enchère actuelle",
+      "one": "enchère",
+      "many": "enchères",
+      "leading": "En tête",
+      "placing": "Enchère en cours…",
+      "place": "Enchérir {{amount}}",
+      "minIncrement": "Incrément minimum : {{amount}}",
+      "extendsBy": "Chaque enchère prolonge le minuteur de 60s",
+      "closingSoon": "Fermeture imminente — la prochaine enchère prolonge de 60s",
+      "watching": "Vous suivez cette salle. Seuls les enchérisseurs invités peuvent enchérir.",
+      "invalidNumber": "Saisissez un montant valide.",
+      "failed": "Impossible d'enchérir. Veuillez réessayer.",
+      "tooLow": "Votre enchère doit être d'au moins {{amount}} — l'enchère actuelle plus l'incrément.",
+      "success": "Enchère de {{amount}} enregistrée."
+    },
+    "activity": {
+      "title": "Activité",
+      "count": "{{count}} enchères",
+      "empty": "Pas encore d'enchères",
+      "emptySub": "Soyez le premier à enchérir"
+    },
+    "participants": {
+      "title": "Participants ({{count}})",
+      "you": "(Vous)",
+      "seller": "Vendeur",
+      "viewHistory": "Voir l'historique complet des enchères"
+    },
+    "history": {
+      "title": "Historique des enchères",
+      "total": "{{count}} au total",
+      "latest": "Plus récente",
+      "empty": "Pas encore d'enchères — soyez le premier !"
+    },
+    "invitation": {
+      "accepted": "Acceptée",
+      "declined": "Refusée",
+      "pending": "En attente"
+    },
+    "label": {
+      "you": "Vous",
+      "guest": "Invité",
+      "user": "Utilisateur"
+    },
+    "time": {
+      "justNow": "À l'instant",
+      "minutesAgo": "il y a {{n}} min",
+      "hoursAgo": "il y a {{n}} h",
+      "daysAgo": "il y a {{n}} j"
+    },
+    "errors": {
+      "loadFailed": "Impossible de charger l'annonce.",
+      "acceptTitle": "Acceptation impossible",
+      "acceptBody": "Impossible d'accepter l'invitation. Essayez le lien reçu par email.",
+      "startTitle": "Démarrage impossible",
+      "startBody": "La salle n'a pas pu être démarrée. Elle a peut-être déjà commencé ou pris fin.",
+      "cannotBidTitle": "Impossible d'enchérir",
+      "cannotBidNotInvited": "Seuls les enchérisseurs invités par le vendeur peuvent enchérir. Vous pouvez suivre la salle.",
+      "cannotBidClosed": "Les enchères ne sont pas disponibles pour le moment. La Salle Privée est peut-être terminée ou pas encore active."
+    }
+  },
+  "report": {
+    "titleListing": "Signaler une Annonce",
+    "titleUser": "Signaler un Utilisateur",
+    "reportListing": "Signaler une Annonce",
+    "reportSeller": "Signaler le Vendeur",
+    "reportUser": "Signaler un Utilisateur",
+    "subtitle": "Aidez-nous à comprendre le problème. Nous examinerons votre signalement et agirons si nécessaire.",
+    "descriptionLabel": "Détails supplémentaires (facultatif)",
+    "descriptionPlaceholder": "Décrivez le problème...",
+    "submit": "Envoyer le Signalement",
+    "submitting": "Envoi...",
+    "cancel": "Annuler",
+    "reasons": {
+      "prohibited_item": "Article Interdit",
+      "fraud_scam": "Fraude ou Arnaque",
+      "offensive_content": "Contenu Offensant",
+      "off_platform_transaction": "Tentative de Transaction Hors Plateforme",
+      "spam": "Spam",
+      "other": "Autre"
+    },
+    "errors": {
+      "selectReason": "Veuillez sélectionner un motif avant de soumettre.",
+      "alreadyReported": "Vous avez déjà signalé cet article.",
+      "generic": "Une erreur est survenue. Veuillez réessayer."
+    },
+    "success": {
+      "title": "Signalement Envoyé",
+      "message": "Merci. Votre signalement a été reçu et notre équipe l'examinera sous peu.",
+      "close": "Fermer"
+    }
+  },
+  "returns": {
+    "modal": {
+      "title": "Demander un Retour",
+      "intro": "Décrivez pourquoi vous souhaitez retourner cet article et fournissez au moins 1 photo comme preuve.",
+      "reason": "Motif du retour",
+      "reasonPlaceholder": "Décrivez le problème avec l'article (ex. endommagé, non conforme à la description...)",
+      "photos": "Photos",
+      "photosHint": "Téléchargez au moins 1 photo nette montrant le problème.",
+      "addPhotos": "Télécharger des Photos",
+      "uploading": "Téléchargement...",
+      "submit": "Envoyer la Demande de Retour",
+      "submitting": "Envoi..."
     }
   }
 }

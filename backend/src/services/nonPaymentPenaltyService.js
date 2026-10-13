@@ -1,5 +1,5 @@
 /**
- * Non-payment penalty enforcement for ALL transaction types (regular auctions + best-offer).
+ * Non-payment penalty enforcement for ALL transaction types (regular auctions + offers).
  * Private-room transactions are handled separately by privateRoomPaymentService.js.
  *
  * Policy (when payment deadline expires unpaid):
@@ -68,7 +68,7 @@ async function processAllNonPayments(io = null) {
     nonPaymentProcessedAt: null,
     createdAt: { $gte: PENALTY_CUTOFF_DATE }
   })
-    .populate('listing', 'title slug seller status auctionFormat')
+    .populate('listing', 'title slug seller status sellingMode')
     .lean();
 
   for (const tx of expired) {
@@ -230,7 +230,7 @@ async function relistAfterNonPayment(listingId, sellerId, listingTitle, io) {
     startingPrice: listing.startingPrice,
     currentPrice: listing.startingPrice,
     bidIncrement: listing.bidIncrement,
-    auctionFormat: listing.auctionFormat,
+    sellingMode: listing.sellingMode,
     durationSlot: listing.durationSlot,
     condition: listing.condition,
     location: listing.location,

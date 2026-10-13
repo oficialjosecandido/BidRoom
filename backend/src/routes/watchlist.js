@@ -101,10 +101,10 @@ router.get('/', async (req, res) => {
       }));
 
     const { getOfferStatsForListings } = require('../utils/listingOfferStats');
-    const bestOfferIds = listings.filter((l) => l.auctionFormat === 'best-offer').map((l) => l._id);
+    const bestOfferIds = listings.filter((l) => l.sellingMode === 'offers').map((l) => l._id);
     const offerStatsByListing = await getOfferStatsForListings(bestOfferIds);
     for (const listing of listings) {
-      if (listing.auctionFormat !== 'best-offer') continue;
+      if (listing.sellingMode !== 'offers') continue;
       const stats = offerStatsByListing[listing._id.toString()];
       listing.bidCount = stats?.offerCount ?? 0;
       listing.currentPrice = stats?.highestOffer ?? 0;

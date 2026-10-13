@@ -36,12 +36,12 @@ async function getOfferStatsForListings(listingIds) {
 
 /**
  * Persist offer summary onto the listing so list cards stay correct.
- * No-op when the listing is not best-offer.
+ * No-op when the listing is not offers.
  */
 async function syncListingOfferStats(listingId) {
   const id = toObjectId(listingId);
-  const listing = await Listing.findById(id).select('auctionFormat').lean();
-  if (!listing || listing.auctionFormat !== 'best-offer') {
+  const listing = await Listing.findById(id).select('sellingMode').lean();
+  if (!listing || listing.sellingMode !== 'offers') {
     return null;
   }
 

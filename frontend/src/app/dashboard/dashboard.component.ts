@@ -120,12 +120,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   navigateToLanding(): void {
-    this.router.navigate(['/landing']);
+    this.router.navigate(['/']);
   }
 
   logout(): void {
     this.authService.logout().subscribe({
-      next: () => this.router.navigate(['/landing'])
+      next: () => this.router.navigate(['/'])
     });
   }
 

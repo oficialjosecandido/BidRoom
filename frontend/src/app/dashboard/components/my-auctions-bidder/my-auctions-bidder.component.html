@@ -42,8 +42,8 @@
           </span>
         </div>
         <div class="auction-price">
-          <span class="price-label">{{ listing.auctionFormat === 'best-offer' ? ('dashboard.myAuctionsBidder.highestOffer' | translate) : ('dashboard.myAuctionsBidder.currentPrice' | translate) }}</span>
-          @if (listing.auctionFormat === 'best-offer' && (listing.currentPrice == null || listing.currentPrice === 0)) {
+          <span class="price-label">{{ listing.sellingMode === 'offers' ? ('dashboard.myAuctionsBidder.highestOffer' | translate) : ('dashboard.myAuctionsBidder.currentPrice' | translate) }}</span>
+          @if (listing.sellingMode === 'offers' && (listing.currentPrice == null || listing.currentPrice === 0)) {
           <span class="price-value">{{ 'dashboard.myAuctionsBidder.noOffersYet' | translate }}</span>
           } @else {
           <span class="price-value">${{ listing.currentPrice | number:'1.2-2' }}</span>
