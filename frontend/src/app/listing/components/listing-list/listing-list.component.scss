@@ -651,7 +651,8 @@
 
   .listings-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    /* Cap at 5 per row; shrinks on narrower viewports. */
+    grid-template-columns: repeat(auto-fill, minmax(max(200px, calc((100% - 56px) / 5)), 1fr));
     gap: 14px;
     &.view-list {
       grid-template-columns: 1fr;
@@ -742,11 +743,6 @@
       font-weight: 700;
       letter-spacing: 0.06em;
     }
-    &.lb-auc {
-      background: rgba(255, 255, 255, 0.06);
-      color: var(--sr-dim);
-      border: 1px solid var(--sr-line);
-    }
     &.lb-off {
       background: #1a5276;
       color: #fff;
@@ -756,9 +752,12 @@
       letter-spacing: 0.06em;
     }
     &.lb-end {
-      background: rgba(255, 255, 255, 0.06);
-      color: var(--sr-dim);
-      border: 1px solid var(--sr-line);
+      background: #c45c1a;
+      color: #fff;
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.45);
+      font-weight: 700;
+      letter-spacing: 0.06em;
     }
     &.lb-gift {
       background: #1e6b3a;
@@ -1059,7 +1058,7 @@
     }
 
     .listings-grid {
-      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(max(160px, calc((100% - 42px) / 4)), 1fr));
     }
   }
 }
@@ -1138,8 +1137,8 @@
   }
 
   .lbadge.lb-end {
-    background: rgba(29, 29, 31, 0.06);
-    color: var(--sr-dim);
-    border-color: var(--sr-line);
+    background: #c45c1a;
+    color: #fff;
+    border-color: rgba(255, 255, 255, 0.25);
   }
 }

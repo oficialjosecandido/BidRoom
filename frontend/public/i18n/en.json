@@ -4365,10 +4365,10 @@
     "close": "Close"
   },
   "WAIVER": {
-    "FEE_LABEL": "BidRoom commission (Founding Seller)",
-    "LISTING_NOTE": "As a Founding Seller, you pay no commission on this sale. You have {{count}} free sale(s) remaining.",
-    "SIDEBAR_BADGE": "🎁 {{count}} commission-free sale(s) — Founding Seller benefit",
-    "REMAINING": "You have {{count}} sale(s) with no commission. Enjoy your Founding Seller benefit!"
+    "FEE_LABEL": "BidRoom commission",
+    "LISTING_NOTE": "",
+    "SIDEBAR_BADGE": "",
+    "REMAINING": ""
   },
   "GIVEAWAY": {
     "PILL": "Giveaway",

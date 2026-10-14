@@ -4365,10 +4365,10 @@
     "close": "Fechar"
   },
   "WAIVER": {
-    "FEE_LABEL": "Comissão BidRoom (Vendedor Fundador)",
-    "LISTING_NOTE": "Como Vendedor Fundador, não paga comissão nesta venda. Restam-lhe {{count}} venda(s) gratuita(s).",
-    "SIDEBAR_BADGE": "🎁 {{count}} venda(s) sem comissão — benefício Vendedor Fundador",
-    "REMAINING": "Tem {{count}} venda(s) sem qualquer comissão. Aproveite o benefício de Vendedor Fundador!"
+    "FEE_LABEL": "Comissão BidRoom",
+    "LISTING_NOTE": "",
+    "SIDEBAR_BADGE": "",
+    "REMAINING": ""
   },
   "GIVEAWAY": {
     "PILL": "Passatempo",
