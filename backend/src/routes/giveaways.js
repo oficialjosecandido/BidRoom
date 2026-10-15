@@ -28,10 +28,10 @@ async function loadParticipant(req) {
 /**
  * POST /api/giveaways/:id/enter
  *
- * Enter a giveaway. Free, one entry per person, and nothing about the account
- * — what it has bought, what it is worth — changes the odds. Being signed in
- * is the only requirement, and that is only so the same person cannot enter
- * twice and so there is somebody to contact if they win.
+ * Enter a giveaway. Free; the same account may enter again after one hour.
+ * Nothing about the account — what it has bought, what it is worth — changes
+ * the odds. Being signed in is required so each entry is tied to a person we
+ * can contact if they win, and so the hourly limit can be enforced.
  */
 router.post('/:id/enter', authenticateToken, requireActiveAccount, async (req, res) => {
   if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
@@ -46,13 +46,12 @@ router.post('/:id/enter', authenticateToken, requireActiveAccount, async (req, r
       });
     }
 
-    const { entryNumber, alreadyEntered } = await enterGiveaway({
+    const { entryNumber, alreadyEntered, nextEntryAt, canEnterAgain } = await enterGiveaway({
       listingId: req.params.id,
       participant
     });
 
-    // Only a new entrant is told; re-confirming an entry somebody already has
-    // would be a notification about nothing.
+    // Only a newly created entry is notified; a no-op return is not a new chance.
     if (!alreadyEntered) {
       notifyGiveawayEntered({
         listingId: req.params.id,
@@ -62,7 +61,14 @@ router.post('/:id/enter', authenticateToken, requireActiveAccount, async (req, r
       }).catch((err) => logger.error('[Giveaway] Entry notification failed:', err.message));
     }
 
-    return res.json({ success: true, entered: true, entryNumber, alreadyEntered });
+    return res.json({
+      success: true,
+      entered: true,
+      entryNumber,
+      alreadyEntered,
+      nextEntryAt: nextEntryAt ?? null,
+      canEnterAgain: !!canEnterAgain
+    });
   } catch (err) {
     return sendGiveawayError(res, err, 'POST /api/giveaways/:id/enter');
   }

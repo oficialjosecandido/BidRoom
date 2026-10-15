@@ -10,7 +10,7 @@ const mongoose = require('mongoose');
 
 const modelFiles = [
   'AccountStatusAuditLog', 'Bid', 'Block', 'BlogPost', 'CategoryFollow',
-  'Customer', 'DamageClaim', 'Follow', 'FraudEvent', 'Listing',
+  'Customer', 'DamageClaim', 'Follow', 'FraudEvent', 'GiveawayEntry', 'Listing',
   'ListingDraft', 'ListingPageView', 'ModerationAuditLog', 'Notification',
   'NotificationPreferences', 'Offer', 'PrivateRoomAuditLog', 'Report',
   'Review', 'ReviewAppeal', 'ReviewFlag', 'SupportConversation',

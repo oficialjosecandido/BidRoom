@@ -392,9 +392,29 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
       : this.translate.instant('GIVEAWAY.PEOPLE_LABEL');
   }
 
-  /** Entering needs an account — that is how one entry per person is kept — and nothing else. */
+  /** Open, not own, not drawn, and either first entry or hourly cooldown has elapsed. */
+  canEnterGiveaway(): boolean {
+    if (!this.isGiveaway || !this.isGiveawayOpen() || this.isOwnListing) return false;
+    if (this.giveawayState?.drawn) return false;
+    if (!this.giveawayState?.entered) return true;
+    return !!this.giveawayState.canEnterAgain;
+  }
+
+  giveawayEnterButtonKey(): string {
+    return this.giveawayState?.entered ? 'GIVEAWAY.ENTER_AGAIN_BUTTON' : 'GIVEAWAY.ENTER_BUTTON';
+  }
+
+  /** Formatted list of this viewer's numbers, e.g. "#0001, #0015". */
+  giveawayMyNumbersLabel(): string {
+    const nums = this.giveawayState?.entryNumbers?.length
+      ? this.giveawayState.entryNumbers
+      : (this.giveawayState?.entryNumber != null ? [this.giveawayState.entryNumber] : []);
+    return nums.map((n) => `#${formatEntryNumber(n)}`).join(', ');
+  }
+
+  /** Entering needs an account; the same account may enter again after one hour. */
   enterGiveaway(): void {
-    if (!this.listing || this.giveawayEntering) return;
+    if (!this.listing || this.giveawayEntering || !this.canEnterGiveaway()) return;
     if (!this.isAuthenticated) {
       this.router.navigate(['/auth/login'], { queryParams: { returnUrl: `/listing/${this.listing.slug}` } });
       return;
@@ -405,6 +425,12 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
     this.giveawayService.enter(listingId).subscribe({
       next: (res) => {
         this.giveawayEntering = false;
+        const prevNumbers = this.giveawayState?.entryNumbers ?? (
+          this.giveawayState?.entryNumber != null ? [this.giveawayState.entryNumber] : []
+        );
+        const entryNumbers = res.alreadyEntered
+          ? prevNumbers
+          : [...prevNumbers.filter((n) => n !== res.entryNumber), res.entryNumber].sort((a, b) => a - b);
         this.giveawayState = {
           ...(this.giveawayState ?? {
             totalEntries: 0,
@@ -418,6 +444,10 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
           }),
           entered: true,
           entryNumber: res.entryNumber,
+          entryNumbers,
+          myEntryCount: entryNumbers.length,
+          canEnterAgain: !!res.canEnterAgain,
+          nextEntryAt: res.nextEntryAt ?? null,
           totalEntries: (this.giveawayState?.totalEntries ?? this.listing?.giveaway?.entryCount ?? 0) + (res.alreadyEntered ? 0 : 1)
         };
         if (this.listing?.giveaway && !res.alreadyEntered) {
@@ -430,11 +460,28 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
       error: (err) => {
         this.giveawayEntering = false;
         const code: string | undefined = err?.error?.error;
-        const known = ['giveaway_closed', 'giveaway_drawn', 'giveaway_own_listing', 'account_required'];
-        this.giveawayError = this.translate.instant(
-          code && known.includes(code) ? `GIVEAWAY.ERROR_${code.toUpperCase()}` : 'GIVEAWAY.ERROR_GENERIC'
-        );
-        if (code === 'giveaway_closed' || code === 'giveaway_drawn') this.loadGiveawayState(listingId);
+        if (code === 'giveaway_rate_limited') {
+          const next = err?.error?.nextEntryAt;
+          if (this.giveawayState) {
+            this.giveawayState = {
+              ...this.giveawayState,
+              canEnterAgain: false,
+              nextEntryAt: next ?? this.giveawayState.nextEntryAt ?? null,
+              entryNumber: err?.error?.entryNumber ?? this.giveawayState.entryNumber
+            };
+          }
+          this.giveawayError = this.translate.instant('GIVEAWAY.ERROR_GIVEAWAY_RATE_LIMITED', {
+            time: next ? this.formatDate(next) : '—'
+          });
+        } else {
+          const known = ['giveaway_closed', 'giveaway_drawn', 'giveaway_own_listing', 'account_required'];
+          this.giveawayError = this.translate.instant(
+            code && known.includes(code) ? `GIVEAWAY.ERROR_${code.toUpperCase()}` : 'GIVEAWAY.ERROR_GENERIC'
+          );
+        }
+        if (code === 'giveaway_closed' || code === 'giveaway_drawn' || code === 'giveaway_rate_limited') {
+          this.loadGiveawayState(listingId);
+        }
         this.cdr.detectChanges();
       }
     });
@@ -574,7 +621,7 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
   get showMobileStickyCta(): boolean {
     if (!this.listing || this.showBidModal || this.showOfferModal) return false;
     if (this.currentUserIsWinner()) return true;
-    if (this.isGiveaway && this.isGiveawayOpen() && !this.isOwnListing && !this.giveawayState?.entered && !this.giveawayState?.drawn) {
+    if (this.canEnterGiveaway()) {
       return true;
     }
     if (

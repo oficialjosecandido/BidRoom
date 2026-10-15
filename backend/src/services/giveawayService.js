@@ -1,5 +1,5 @@
 /**
- * Giveaways: free entry, one chance each, a random draw that can be audited.
+ * Giveaways: free entry, equal chances, a random draw that can be audited.
  *
  * The whole feature rests on one legal fact: entry is free and no purchase can
  * ever improve anyone's odds. That is what makes this a promotional contest
@@ -7,7 +7,7 @@
  * Every rule below exists to keep that true even under load, replay, or a
  * client that does not behave:
  *
- *   - one entry per person, enforced by a unique index rather than by a check;
+ *   - the same person may enter more than once, but at most once per hour;
  *   - serial numbers issued atomically, so two entrants can never share one;
  *   - the draw picks uniformly from the entries that actually exist;
  *   - the draw is recorded — when, by whom, which number — and can only happen
@@ -21,6 +21,9 @@ const Listing = require('../models/Listing');
 const GiveawayEntry = require('../models/GiveawayEntry');
 const { isScheduled } = require('../utils/listingSchedule');
 const logger = require('../utils/logger');
+
+/** Rolling cooldown between entries from the same account on the same giveaway. */
+const ENTRY_COOLDOWN_MS = 60 * 60 * 1000;
 
 /** Thrown for conditions the caller should turn into a 4xx rather than a 500. */
 class GiveawayError extends Error {
@@ -43,12 +46,17 @@ function entriesAreOpen(listing) {
     && now <= new Date(listing.endDate);
 }
 
+function nextEntryAtFrom(createdAt) {
+  return new Date(new Date(createdAt).getTime() + ENTRY_COOLDOWN_MS);
+}
+
 /**
  * Enter a giveaway.
  *
- * Returns `{ entryNumber, alreadyEntered }`. Entering twice is not an error —
- * it returns the number the person already holds, because from their side
- * clicking again should show them their entry, not scold them.
+ * Returns `{ entryNumber, alreadyEntered: false, nextEntryAt, canEnterAgain }`.
+ * A second click within the hour is refused with `giveaway_rate_limited` and
+ * the time when they may enter again — not treated as a silent no-op, so the
+ * page can show the cooldown clearly.
  */
 async function enterGiveaway({ listingId, participant }) {
   const listing = await Listing.findById(listingId)
@@ -72,12 +80,24 @@ async function enterGiveaway({ listingId, participant }) {
     throw new GiveawayError('giveaway_own_listing', 'You cannot enter a giveaway you are running.', 403);
   }
 
-  const existing = await GiveawayEntry.findOne({
+  const latest = await GiveawayEntry.findOne({
     listing: listing._id,
     participant: participant._id
-  }).select('entryNumber').lean();
-  if (existing) {
-    return { entryNumber: existing.entryNumber, alreadyEntered: true };
+  }).sort({ createdAt: -1 }).select('entryNumber createdAt').lean();
+
+  if (latest) {
+    const nextAt = nextEntryAtFrom(latest.createdAt);
+    if (Date.now() < nextAt.getTime()) {
+      throw new GiveawayError(
+        'giveaway_rate_limited',
+        'You can enter this giveaway at most once per hour.',
+        429,
+        {
+          nextEntryAt: nextAt.toISOString(),
+          entryNumber: latest.entryNumber
+        }
+      );
+    }
   }
 
   // Claim a serial number atomically. The value that comes back is this
@@ -100,36 +120,67 @@ async function enterGiveaway({ listingId, participant }) {
     });
   } catch (err) {
     if (err.code === 11000) {
-      // The same person raced themselves (a double click, a retried request).
-      // The number just claimed is abandoned rather than handed back: undoing
-      // the $inc would re-issue a number a later entrant may already hold, and
-      // a gap in the sequence is harmless because the draw reads the entries,
-      // not the counter.
+      // Serial number collision (extremely rare) or leftover unique index on
+      // (listing, participant) from before multi-entry was allowed. Re-read
+      // and surface the cooldown rather than inventing a second chance.
       const e = await GiveawayEntry.findOne({
         listing: listing._id,
         participant: participant._id
-      }).select('entryNumber').lean();
-      if (e) return { entryNumber: e.entryNumber, alreadyEntered: true };
+      }).sort({ createdAt: -1 }).select('entryNumber createdAt').lean();
+      if (e) {
+        const nextAt = nextEntryAtFrom(e.createdAt);
+        if (Date.now() < nextAt.getTime()) {
+          throw new GiveawayError(
+            'giveaway_rate_limited',
+            'You can enter this giveaway at most once per hour.',
+            429,
+            { nextEntryAt: nextAt.toISOString(), entryNumber: e.entryNumber }
+          );
+        }
+        return {
+          entryNumber: e.entryNumber,
+          alreadyEntered: true,
+          nextEntryAt: null,
+          canEnterAgain: true
+        };
+      }
     }
     throw err;
   }
 
-  return { entryNumber, alreadyEntered: false };
+  const nextEntryAt = nextEntryAtFrom(new Date());
+  return {
+    entryNumber,
+    alreadyEntered: false,
+    nextEntryAt: nextEntryAt.toISOString(),
+    canEnterAgain: false
+  };
 }
 
-/** This person's entry, plus how many people are in — both shown on the page. */
+/** This person's entries, plus how many are in — both shown on the page. */
 async function getEntryState({ listingId, participantId = null }) {
-  const [entry, total] = await Promise.all([
+  const [mine, total] = await Promise.all([
     participantId
-      ? GiveawayEntry.findOne({ listing: listingId, participant: participantId }).select('entryNumber').lean()
-      : Promise.resolve(null),
+      ? GiveawayEntry.find({ listing: listingId, participant: participantId })
+          .sort({ entryNumber: 1 })
+          .select('entryNumber createdAt')
+          .lean()
+      : Promise.resolve([]),
     GiveawayEntry.countDocuments({ listing: listingId })
   ]);
 
+  const latest = mine.length ? mine[mine.length - 1] : null;
+  const nextEntryAt = latest ? nextEntryAtFrom(latest.createdAt) : null;
+  const canEnterAgain = !latest || Date.now() >= nextEntryAt.getTime();
+
   return {
-    entered: !!entry,
-    entryNumber: entry?.entryNumber ?? null,
-    totalEntries: total
+    entered: mine.length > 0,
+    entryNumber: latest?.entryNumber ?? null,
+    entryNumbers: mine.map((e) => e.entryNumber),
+    myEntryCount: mine.length,
+    totalEntries: total,
+    canEnterAgain,
+    nextEntryAt: canEnterAgain || !nextEntryAt ? null : nextEntryAt.toISOString()
   };
 }
 
@@ -446,6 +497,7 @@ async function closeEndedGiveaways() {
 
 module.exports = {
   GiveawayError,
+  ENTRY_COOLDOWN_MS,
   enterGiveaway,
   getEntryState,
   getPublicState,

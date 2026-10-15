@@ -1,13 +1,17 @@
 const mongoose = require('mongoose');
 
 /**
- * One person's entry in one giveaway.
+ * One entry in one giveaway.
  *
  * Entry is free and can never be paid for — that is what keeps a giveaway a
  * promotional contest rather than a lottery, so there is deliberately nothing
  * in this document that could record a payment, a purchase, or a weighting.
- * Every entry is worth exactly one chance, and the schema is what guarantees
- * it: one document per person per giveaway, one number each.
+ * Every entry is worth exactly one chance.
+ *
+ * The same person may hold several entries (each is one chance in the draw),
+ * but not more often than once per hour — that rate limit lives in
+ * giveawayService, not in a unique index, so a second entry after the cooldown
+ * is a new document with a new serial number.
  *
  * The entry is also the participant's receipt. `entryNumber` is shown to them
  * and announced publicly when the draw happens, so it is how they can check
@@ -40,15 +44,8 @@ const giveawayEntrySchema = new mongoose.Schema({
   }
 }, { timestamps: true });
 
-/**
- * One entry per person per giveaway.
- *
- * This is the fairness guarantee, enforced by the database rather than by the
- * route: even a client that replays the request cannot buy itself a second
- * chance. The route's friendly "you are already entered" response is only a
- * nicer way of saying what this index would say anyway.
- */
-giveawayEntrySchema.index({ listing: 1, participant: 1 }, { unique: true });
+/** Latest entry per person (cooldown check) and Nexus listing of a person's numbers. */
+giveawayEntrySchema.index({ listing: 1, participant: 1, createdAt: -1 });
 
 /** Ordered listing for the admin view, and the lookup the draw does. */
 giveawayEntrySchema.index({ listing: 1, entryNumber: 1 }, { unique: true });

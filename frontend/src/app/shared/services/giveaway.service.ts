@@ -6,12 +6,21 @@ import { API_CONFIG } from '../config/api.config';
 /**
  * What the listing page needs to render a giveaway. Public: anyone can read the
  * entry count and, once drawn, the winning number and the winner's public name
- * (first name and last initial). A signed-in viewer also gets their own entry.
+ * (first name and last initial). A signed-in viewer also gets their own entries
+ * and whether the hourly cooldown still blocks another entry.
  */
 export interface GiveawayState {
   entered: boolean;
+  /** Most recent entry number (kept for simple “your number” UI). */
   entryNumber: number | null;
+  /** All of this viewer's entry numbers, ascending. */
+  entryNumbers?: number[];
+  myEntryCount?: number;
   totalEntries: number;
+  /** False while within one hour of the viewer's last entry. */
+  canEnterAgain?: boolean;
+  /** ISO time when canEnterAgain becomes true; null when already allowed. */
+  nextEntryAt?: string | null;
   entriesOpen: boolean;
   endDate: string;
   drawn: boolean;
@@ -38,6 +47,8 @@ export interface GiveawayEnterResponse {
   entered: boolean;
   entryNumber: number;
   alreadyEntered: boolean;
+  nextEntryAt?: string | null;
+  canEnterAgain?: boolean;
 }
 
 /** Real-time event emitted to the listing room when the winner is drawn. */
@@ -64,7 +75,7 @@ export class GiveawayService {
     return this.http.get<GiveawayState>(`${this.apiUrl}/${listingId}`);
   }
 
-  /** Free. Entering twice returns the number already held rather than an error. */
+  /** Free. Same account may enter again after one hour; sooner returns 429. */
   enter(listingId: string): Observable<GiveawayEnterResponse> {
     return this.http.post<GiveawayEnterResponse>(`${this.apiUrl}/${listingId}/enter`, {});
   }

@@ -272,7 +272,7 @@
             @if (giveawayState!.youWon) {
               <p class="gw-you-won">{{ 'GIVEAWAY.YOU_WON' | translate }}</p>
             } @else if (giveawayState!.entered) {
-              <p class="gw-sub">{{ 'GIVEAWAY.YOUR_NUMBER_WAS' | translate:{ number: formatEntryNumber(giveawayState!.entryNumber) } }}</p>
+              <p class="gw-sub">{{ 'GIVEAWAY.YOUR_NUMBERS_WERE' | translate:{ numbers: giveawayMyNumbersLabel() } }}</p>
             }
           </div>
           @if (giveawayState!.drawVideo; as video) {
@@ -314,7 +314,18 @@
             <span class="gw-check" aria-hidden="true">✓</span>
             <p class="gw-result-label">{{ 'GIVEAWAY.ENTERED' | translate }}</p>
             <div class="gw-number">#{{ formatEntryNumber(giveawayState!.entryNumber) }}</div>
-            <p class="gw-sub">{{ (isGiveawayOpen() ? 'GIVEAWAY.ENTERED_NOTE' : 'GIVEAWAY.CLOSED') | translate }}</p>
+            @if ((giveawayState!.entryNumbers?.length ?? 0) > 1) {
+              <p class="gw-sub">{{ 'GIVEAWAY.YOUR_NUMBERS' | translate:{ numbers: giveawayMyNumbersLabel() } }}</p>
+            }
+            @if (!isGiveawayOpen()) {
+              <p class="gw-sub">{{ 'GIVEAWAY.CLOSED' | translate }}</p>
+            } @else if (giveawayState!.canEnterAgain) {
+              <p class="gw-sub">{{ 'GIVEAWAY.ENTERED_CAN_AGAIN' | translate }}</p>
+            } @else if (giveawayState!.nextEntryAt) {
+              <p class="gw-sub">{{ 'GIVEAWAY.COOLDOWN_NOTE' | translate:{ time: formatDate(giveawayState!.nextEntryAt) } }}</p>
+            } @else {
+              <p class="gw-sub">{{ 'GIVEAWAY.ENTERED_NOTE' | translate }}</p>
+            }
           </div>
         } @else if (isOwnListing) {
           <div class="own-note">{{ 'GIVEAWAY.OWN_NOTE' | translate }}</div>
@@ -357,9 +368,9 @@
     }
 
     <!-- PRIMARY CTA: giveaway = participate (no bid, no offer). Auction keeps bid/offer. -->
-    @if (isGiveaway && isGiveawayOpen() && !isOwnListing && !giveawayState?.entered && !giveawayState?.drawn) {
+    @if (canEnterGiveaway()) {
       <button class="btn-offer gw-enter" (click)="enterGiveaway()" [disabled]="giveawayEntering || giveawayLoading">
-        {{ giveawayEntering ? ('GIVEAWAY.ENTERING' | translate) : ('GIVEAWAY.ENTER_BUTTON' | translate) }}
+        {{ giveawayEntering ? ('GIVEAWAY.ENTERING' | translate) : (giveawayEnterButtonKey() | translate) }}
       </button>
       @if (!isAuthenticated) {
         <p class="gw-note">{{ 'GIVEAWAY.LOGIN_REQUIRED' | translate }}</p>
@@ -853,9 +864,9 @@
         <button type="button" class="msc-btn msc-btn--green" (click)="goToBuyerTransactions()">
           {{ 'listingDetails.sidebar.viewTransaction' | translate }}
         </button>
-      } @else if (isGiveaway && isGiveawayOpen() && !isOwnListing && !giveawayState?.entered && !giveawayState?.drawn) {
+      } @else if (canEnterGiveaway()) {
         <button type="button" class="msc-btn" (click)="enterGiveaway()" [disabled]="giveawayEntering || giveawayLoading">
-          {{ giveawayEntering ? ('GIVEAWAY.ENTERING' | translate) : ('GIVEAWAY.ENTER_BUTTON' | translate) }}
+          {{ giveawayEntering ? ('GIVEAWAY.ENTERING' | translate) : (giveawayEnterButtonKey() | translate) }}
         </button>
       } @else if (hasPrivateRoomCreated()) {
         <button type="button" class="msc-btn" (click)="openPrivateRoom()">
