@@ -2,6 +2,7 @@ import { Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
+import { switchMap } from 'rxjs';
 import {
   AdminBidder,
   AdminListing,
@@ -150,6 +151,8 @@ export class AdminAuctionDetailsComponent implements OnInit, OnDestroy {
   photoDraft: string[] = [];
   isSavingPhotos = false;
   isUploadingPhotos = false;
+  isReplacingPhoto = false;
+  pendingReplaceIndex: number | null = null;
   photoError: string | null = null;
   photoSavedMsg: string | null = null;
 
@@ -526,6 +529,50 @@ export class AdminAuctionDetailsComponent implements OnInit, OnDestroy {
       error: (err) => {
         this.isUploadingPhotos = false;
         this.photoError = apiErrorMessage(err, 'Failed to upload photos.');
+      }
+    });
+  }
+
+  onReplacePhotoSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    input.value = '';
+    const index = this.pendingReplaceIndex;
+    this.pendingReplaceIndex = null;
+    if (!file || index == null || !this.auction || this.photosDirty) return;
+
+    if (file.size > MAX_PHOTO_BYTES) {
+      this.photoError = `Each photo can be up to 10 MB: ${file.name}.`;
+      return;
+    }
+
+    const listingId = this.auctionId;
+    const before = [...this.savedPhotos];
+    if (index < 0 || index >= before.length) return;
+
+    this.isReplacingPhoto = true;
+    this.photoError = null;
+    this.adminService.addListingImages(listingId, [file]).pipe(
+      switchMap((res) => {
+        const after = res.images || [];
+        const added = after.filter(url => !before.includes(url));
+        const newUrl = added[added.length - 1];
+        if (!newUrl) {
+          throw { error: { message: 'The new photo uploaded but could not be placed.' } };
+        }
+        const next = [...before];
+        next[index] = newUrl;
+        return this.adminService.setListingImages(listingId, next, after);
+      })
+    ).subscribe({
+      next: (res) => {
+        this.isReplacingPhoto = false;
+        this.onPhotosSaved(res.images, 'Photo replaced');
+      },
+      error: (err) => {
+        this.isReplacingPhoto = false;
+        this.photoError = apiErrorMessage(err, 'Failed to replace photo.');
+        if (err?.error?.code === 'images_changed') this.reloadPhotos();
       }
     });
   }

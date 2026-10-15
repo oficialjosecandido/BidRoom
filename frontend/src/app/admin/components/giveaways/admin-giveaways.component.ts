@@ -92,6 +92,17 @@ export class AdminGiveawaysComponent implements OnInit, OnDestroy {
   // Winner email
   emailingWinner = false;
 
+  // Prize photos (same APIs as auction details)
+  readonly maxListingPhotos = 20;
+  readonly maxPhotoBytes = 10 * 1024 * 1024;
+  photoDraft: string[] = [];
+  isSavingPhotos = false;
+  isUploadingPhotos = false;
+  isReplacingPhoto = false;
+  pendingReplaceIndex: number | null = null;
+  photoError: string | null = null;
+  photoSavedMsg: string | null = null;
+
   // Draw video
   videoMode: 'upload' | 'link' = 'upload';
   replacingVideo = false;
@@ -124,6 +135,14 @@ export class AdminGiveawaysComponent implements OnInit, OnDestroy {
   readonly categories = CATEGORIES.filter(c => c.id !== 'vehicles' && c.id !== 'real-estate');
   readonly CONDITIONS = ['New', 'Used - Excellent', 'Used - Very Good', 'Used - Good', 'Used - Fair', 'For Parts or Not Working'];
   readonly DURATIONS = ['24 hours', '3 days', '7 days', '10 days', '15 days', '30 days'];
+
+  private isPlaceholderImage(url: string): boolean {
+    return /placeholder\.com/i.test(url);
+  }
+
+  private photoApiError(err: any, fallback: string): string {
+    return err?.error?.error || err?.error?.message || fallback;
+  }
 
   ngOnInit(): void {
     this.load();
@@ -158,6 +177,7 @@ export class AdminGiveawaysComponent implements OnInit, OnDestroy {
     this.entriesPage = 1;
     this.showPersonalData = false;
     this.resetVideoForm();
+    this.resetPhotoDraft();
     this.loadEntries(1);
   }
 
@@ -166,6 +186,9 @@ export class AdminGiveawaysComponent implements OnInit, OnDestroy {
     this.selected = null;
     this.entries = [];
     this.showPersonalData = false;
+    this.photoDraft = [];
+    this.photoError = null;
+    this.photoSavedMsg = null;
   }
 
   loadEntries(page: number): void {
@@ -176,7 +199,9 @@ export class AdminGiveawaysComponent implements OnInit, OnDestroy {
     this.adminService.getGiveawayEntries(id, { page, limit: this.ENTRIES_PAGE_SIZE }).subscribe({
       next: (res) => {
         if (this.selected?._id !== id) return;
-        this.selected = res.giveaway;
+        const images = this.photosDirty ? this.selected.images : res.giveaway.images;
+        this.selected = { ...res.giveaway, images };
+        if (!this.photosDirty) this.resetPhotoDraft();
         this.entries = res.entries;
         this.entriesTotal = res.total;
         this.entriesPage = res.page;
@@ -203,6 +228,156 @@ export class AdminGiveawaysComponent implements OnInit, OnDestroy {
       case 'closed': return g.totalEntries > 0 ? null : 'Nobody entered, so there is nobody to draw.';
       default: return null;
     }
+  }
+
+  // ── Prize photos ─────────────────────────────────────────────────────────
+
+  private get savedPhotos(): string[] {
+    return (this.selected?.images ?? []).filter(url => !this.isPlaceholderImage(url));
+  }
+
+  get photosDirty(): boolean {
+    return JSON.stringify(this.photoDraft) !== JSON.stringify(this.savedPhotos);
+  }
+
+  private resetPhotoDraft(): void {
+    this.photoDraft = [...this.savedPhotos];
+    this.photoError = null;
+  }
+
+  private applyPhotos(images: string[], message: string): void {
+    if (!this.selected) return;
+    this.selected = { ...this.selected, images };
+    this.giveaways = this.giveaways.map(g => g._id === this.selected!._id ? { ...g, images } : g);
+    this.isSavingPhotos = false;
+    this.resetPhotoDraft();
+    this.photoSavedMsg = message;
+    window.setTimeout(() => {
+      if (this.photoSavedMsg === message) this.photoSavedMsg = null;
+    }, 2500);
+  }
+
+  movePhoto(index: number, delta: number): void {
+    const target = index + delta;
+    if (target < 0 || target >= this.photoDraft.length) return;
+    const next = [...this.photoDraft];
+    [next[index], next[target]] = [next[target], next[index]];
+    this.photoDraft = next;
+  }
+
+  makeCover(index: number): void {
+    if (index <= 0) return;
+    const next = [...this.photoDraft];
+    const [photo] = next.splice(index, 1);
+    this.photoDraft = [photo, ...next];
+  }
+
+  removePhoto(index: number): void {
+    if (this.photoDraft.length <= 1) {
+      this.photoError = 'A giveaway needs at least one photo. Add another one before removing this.';
+      return;
+    }
+    this.photoDraft = this.photoDraft.filter((_, i) => i !== index);
+  }
+
+  discardPhotoChanges(): void {
+    this.resetPhotoDraft();
+  }
+
+  savePhotos(): void {
+    if (!this.selected || !this.photosDirty || this.isSavingPhotos) return;
+    const removed = this.savedPhotos.filter(url => !this.photoDraft.includes(url)).length;
+    if (removed > 0 && !confirm(
+      `Remove ${removed} photo${removed === 1 ? '' : 's'} from this giveaway? ` +
+      'Files not used elsewhere are deleted permanently.'
+    )) return;
+
+    this.isSavingPhotos = true;
+    this.photoError = null;
+    this.adminService.setListingImages(this.selected._id, this.photoDraft, this.selected.images ?? []).subscribe({
+      next: (res) => this.applyPhotos(res.images, 'Photos saved'),
+      error: (err) => {
+        this.isSavingPhotos = false;
+        this.photoError = this.photoApiError(err, 'Failed to save photos.');
+      }
+    });
+  }
+
+  onPhotosSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const files = Array.from(input.files ?? []);
+    input.value = '';
+    if (files.length === 0 || !this.selected) return;
+
+    this.photoError = null;
+    const tooBig = files.filter(f => f.size > this.maxPhotoBytes).map(f => f.name);
+    if (tooBig.length > 0) {
+      this.photoError = `Each photo can be up to 10 MB: ${tooBig.join(', ')}.`;
+      return;
+    }
+    if (files.length > 10) {
+      this.photoError = 'Add up to 10 photos at a time.';
+      return;
+    }
+    if (this.savedPhotos.length + files.length > this.maxListingPhotos) {
+      this.photoError = `A listing can have up to ${this.maxListingPhotos} photos (it has ${this.savedPhotos.length}).`;
+      return;
+    }
+
+    this.isUploadingPhotos = true;
+    this.adminService.addListingImages(this.selected._id, files).subscribe({
+      next: (res) => {
+        this.isUploadingPhotos = false;
+        this.applyPhotos(res.images, `${files.length} photo${files.length === 1 ? '' : 's'} added`);
+      },
+      error: (err) => {
+        this.isUploadingPhotos = false;
+        this.photoError = this.photoApiError(err, 'Failed to upload photos.');
+      }
+    });
+  }
+
+  onReplacePhotoSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    input.value = '';
+    const index = this.pendingReplaceIndex;
+    this.pendingReplaceIndex = null;
+    if (!file || index == null || !this.selected || this.photosDirty) return;
+
+    if (file.size > this.maxPhotoBytes) {
+      this.photoError = `Each photo can be up to 10 MB: ${file.name}.`;
+      return;
+    }
+
+    const listingId = this.selected._id;
+    const before = [...this.savedPhotos];
+    if (index < 0 || index >= before.length) return;
+
+    this.isReplacingPhoto = true;
+    this.photoError = null;
+    this.adminService.addListingImages(listingId, [file]).pipe(
+      switchMap((res) => {
+        const after = res.images || [];
+        const added = after.filter(url => !before.includes(url));
+        const newUrl = added[added.length - 1];
+        if (!newUrl) {
+          throw { error: { message: 'The new photo uploaded but could not be placed.' } };
+        }
+        const next = [...before];
+        next[index] = newUrl;
+        return this.adminService.setListingImages(listingId, next, after);
+      })
+    ).subscribe({
+      next: (res) => {
+        this.isReplacingPhoto = false;
+        this.applyPhotos(res.images, 'Photo replaced');
+      },
+      error: (err) => {
+        this.isReplacingPhoto = false;
+        this.photoError = this.photoApiError(err, 'Failed to replace photo.');
+      }
+    });
   }
 
   async draw(): Promise<void> {

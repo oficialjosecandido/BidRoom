@@ -179,17 +179,20 @@
                     class="photo-tile__remove"
                     title="Remove photo"
                     aria-label="Remove photo"
-                    [disabled]="isSavingPhotos || isUploadingPhotos"
+                    [disabled]="isSavingPhotos || isUploadingPhotos || isReplacingPhoto"
                     (click)="removePhoto(i)">×</button>
                   <div class="photo-tile__actions">
                     <button type="button" title="Move left" aria-label="Move left"
-                      [disabled]="first || isSavingPhotos" (click)="movePhoto(i, -1)">←</button>
+                      [disabled]="first || isSavingPhotos || isReplacingPhoto" (click)="movePhoto(i, -1)">←</button>
                     @if (!first) {
                       <button type="button" class="photo-tile__cover-btn"
-                        [disabled]="isSavingPhotos" (click)="makeCover(i)">Set as cover</button>
+                        [disabled]="isSavingPhotos || isReplacingPhoto" (click)="makeCover(i)">Set as cover</button>
                     }
+                    <button type="button" class="photo-tile__cover-btn"
+                      [disabled]="isSavingPhotos || isUploadingPhotos || isReplacingPhoto || photosDirty"
+                      (click)="pendingReplaceIndex = i; replacePhotoInput.click()">Replace</button>
                     <button type="button" title="Move right" aria-label="Move right"
-                      [disabled]="last || isSavingPhotos" (click)="movePhoto(i, 1)">→</button>
+                      [disabled]="last || isSavingPhotos || isReplacingPhoto" (click)="movePhoto(i, 1)">→</button>
                   </div>
                 </li>
               }
@@ -200,15 +203,22 @@
             </div>
           }
 
+          <input
+            #replacePhotoInput
+            type="file"
+            accept="image/jpeg,image/png,image/webp,image/gif"
+            hidden
+            (change)="onReplacePhotoSelected($event)" />
+
           <div class="edit-bar">
             <label
               class="edit-bar__upload"
-              [class.edit-bar__upload--disabled]="isUploadingPhotos || isSavingPhotos || photosDirty || photoDraft.length >= maxListingPhotos">
+              [class.edit-bar__upload--disabled]="isUploadingPhotos || isSavingPhotos || isReplacingPhoto || photosDirty || photoDraft.length >= maxListingPhotos">
               <input
                 type="file"
                 accept="image/jpeg,image/png,image/webp,image/gif"
                 multiple
-                [disabled]="isUploadingPhotos || isSavingPhotos || photosDirty || photoDraft.length >= maxListingPhotos"
+                [disabled]="isUploadingPhotos || isSavingPhotos || isReplacingPhoto || photosDirty || photoDraft.length >= maxListingPhotos"
                 (change)="onPhotosSelected($event)" />
               {{ isUploadingPhotos ? 'Uploading…' : '+ Add photos' }}
             </label>

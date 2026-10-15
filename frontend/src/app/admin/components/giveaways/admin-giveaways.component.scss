@@ -824,6 +824,129 @@
   }
 }
 
+.photos-count {
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: 0;
+  color: #94a3b8;
+  margin-left: 6px;
+}
+
+.photo-grid {
+  list-style: none;
+  margin: 0 0 14px;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 10px;
+}
+
+.photo-tile {
+  position: relative;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #f8fafc;
+
+  &--cover { border: 2px solid #0f172a; }
+
+  img {
+    display: block;
+    width: 100%;
+    aspect-ratio: 1;
+    object-fit: cover;
+  }
+
+  &__badge {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    padding: 3px 8px;
+    border-radius: 6px;
+    background: #0f172a;
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  &__remove {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 28px;
+    height: 28px;
+    border: none;
+    border-radius: 50%;
+    background: rgba(15, 23, 42, 0.75);
+    color: #fff;
+    font-size: 18px;
+    line-height: 1;
+    cursor: pointer;
+
+    &:hover:not(:disabled) { background: #dc2626; }
+    &:disabled { opacity: 0.5; cursor: not-allowed; }
+  }
+
+  &__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px;
+    padding: 6px;
+
+    button {
+      padding: 4px 8px;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      background: #fff;
+      color: #0f172a;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+
+      &:hover:not(:disabled) { border-color: #0f172a; }
+      &:disabled { opacity: 0.35; cursor: not-allowed; }
+    }
+  }
+
+  &__cover-btn { flex: 1; white-space: nowrap; }
+}
+
+.photo-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.photo-add {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 14px;
+  border-radius: 8px;
+  background: #0f172a;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+
+  input { display: none; }
+
+  &--disabled {
+    opacity: 0.45;
+    pointer-events: none;
+  }
+}
+
+.photo-ok {
+  font-size: 13px;
+  font-weight: 600;
+  color: #15803d;
+}
+
 @media (max-width: 768px) {
   .admin-giveaways { padding: 20px 16px; }
   .form-row { grid-template-columns: 1fr; }

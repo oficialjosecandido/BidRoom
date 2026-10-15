@@ -1,7 +1,34 @@
+/* Self-contained tokens — works on blog/landing pages that don't define --s1/--gold. */
+:host {
+  display: block;
+  --gold: #C9A84C;
+  --gl: rgba(201, 168, 76, 0.18);
+  --gb: rgba(201, 168, 76, 0.07);
+  --gl2: rgba(201, 168, 76, 0.28);
+  --s1: #111;
+  --text: #F0EDE8;
+  --sub: rgba(240, 237, 232, 0.5);
+  --dim: rgba(240, 237, 232, 0.15);
+  --line: rgba(240, 237, 232, 0.07);
+}
+
+:host-context(html[data-theme='light']) {
+  --gold: #8C6B1E;
+  --gl: rgba(140, 107, 30, 0.16);
+  --gb: rgba(140, 107, 30, 0.06);
+  --gl2: rgba(140, 107, 30, 0.22);
+  --s1: #f5f5f7;
+  --text: #1d1d1f;
+  --sub: rgba(29, 29, 31, 0.5);
+  --dim: rgba(29, 29, 31, 0.16);
+  --line: rgba(29, 29, 31, 0.08);
+}
+
 .footer {
   background: var(--s1);
   border-top: 1px solid var(--line);
   padding: 64px 0 32px;
+  color: var(--text);
 }
 
 .ft-wrap {

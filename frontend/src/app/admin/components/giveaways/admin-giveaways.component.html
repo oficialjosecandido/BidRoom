@@ -163,6 +163,82 @@
                 </table>
               </section>
 
+              <section class="detail-section photos-section">
+                <h4>Photos <span class="photos-count">{{ photoDraft.length }} / {{ maxListingPhotos }}</span></h4>
+
+                @if (photoDraft.length > 0) {
+                  <ul class="photo-grid">
+                    @for (photo of photoDraft; track photo; let i = $index, first = $first, last = $last) {
+                      <li class="photo-tile" [class.photo-tile--cover]="first">
+                        <img [src]="photo" [alt]="'Photo ' + (i + 1)" loading="lazy" />
+                        @if (first) {
+                          <span class="photo-tile__badge">Cover</span>
+                        }
+                        <button
+                          type="button"
+                          class="photo-tile__remove"
+                          title="Remove photo"
+                          aria-label="Remove photo"
+                          [disabled]="isSavingPhotos || isUploadingPhotos || isReplacingPhoto"
+                          (click)="removePhoto(i)">×</button>
+                        <div class="photo-tile__actions">
+                          <button type="button" title="Move left" [disabled]="first || isSavingPhotos || isReplacingPhoto" (click)="movePhoto(i, -1)">←</button>
+                          @if (!first) {
+                            <button type="button" class="photo-tile__cover-btn" [disabled]="isSavingPhotos || isReplacingPhoto" (click)="makeCover(i)">Cover</button>
+                          }
+                          <button type="button" class="photo-tile__cover-btn"
+                            [disabled]="isSavingPhotos || isUploadingPhotos || isReplacingPhoto || photosDirty"
+                            (click)="pendingReplaceIndex = i; replacePhotoInput.click()">Replace</button>
+                          <button type="button" title="Move right" [disabled]="last || isSavingPhotos || isReplacingPhoto" (click)="movePhoto(i, 1)">→</button>
+                        </div>
+                      </li>
+                    }
+                  </ul>
+                } @else {
+                  <p class="ruling-hint">This giveaway has no photos yet.</p>
+                }
+
+                <input
+                  #replacePhotoInput
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,image/gif"
+                  hidden
+                  (change)="onReplacePhotoSelected($event)" />
+
+                <div class="photo-bar">
+                  <label
+                    class="photo-add"
+                    [class.photo-add--disabled]="isUploadingPhotos || isSavingPhotos || isReplacingPhoto || photosDirty || photoDraft.length >= maxListingPhotos">
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp,image/gif"
+                      multiple
+                      [disabled]="isUploadingPhotos || isSavingPhotos || isReplacingPhoto || photosDirty || photoDraft.length >= maxListingPhotos"
+                      (change)="onPhotosSelected($event)" />
+                    {{ isUploadingPhotos ? 'Uploading…' : '+ Add photos' }}
+                  </label>
+                  @if (photosDirty) {
+                    <button type="button" class="action-btn view-action" [disabled]="isSavingPhotos" (click)="discardPhotoChanges()">Discard</button>
+                    <button type="button" class="action-btn approve-action" [disabled]="isSavingPhotos" (click)="savePhotos()">
+                      {{ isSavingPhotos ? 'Saving…' : 'Save photos' }}
+                    </button>
+                  }
+                  @if (photoSavedMsg) {
+                    <span class="photo-ok">{{ photoSavedMsg }}</span>
+                  }
+                </div>
+                @if (photoError) {
+                  <p class="ruling-error" role="alert">{{ photoError }}</p>
+                }
+                <p class="ruling-hint">
+                  @if (photosDirty) {
+                    Save or discard the order and removals before adding or replacing photos.
+                  } @else {
+                    JPEG, PNG, WebP or GIF · up to 10 MB each. The first photo is the cover on the site and social posts.
+                  }
+                </p>
+              </section>
+
               @if (selected.giveaway?.drawnAt) {
                 <section class="detail-section winner-section">
                   <h4>Result</h4>

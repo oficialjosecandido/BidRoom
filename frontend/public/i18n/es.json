@@ -9,13 +9,19 @@
       "howItWorks": "Cómo Funciona",
       "blog": "Blog",
       "faq": "FAQ",
-      "contact": "Contacto"
+      "contact": "Contacto",
+      "privateRooms": "Salas Privadas",
+      "trust": "Confianza y Seguridad"
     },
     "actions": {
       "listYourItem": "Listar Artículo",
       "myAccount": "Mi Cuenta",
       "signIn": "Iniciar Sesión",
-      "startBidding": "Empezar a Pujar"
+      "startBidding": "Empezar a Pujar",
+      "notifications": "Notificaciones",
+      "notificationsUnread": "{{count}} notificaciones sin leer",
+      "publish": "Publicar",
+      "resume": "Retomar Anuncio"
     },
     "menu": {
       "open": "Abrir menú",
@@ -26,11 +32,107 @@
       "light": "Claro",
       "dark": "Oscuro",
       "system": "Como el sistema"
+    },
+    "search": {
+      "open": "Buscar",
+      "close": "Cerrar búsqueda",
+      "placeholder": "Buscar subastas, artículos, vendedores…"
     }
   },
   "landing": {
     "nav": {
       "language": "Elegir idioma"
+    },
+    "home": {
+      "hero": {
+        "eyebrow": "Subastas premium",
+        "titleLine1": "Compra lo",
+        "titleLine2": "extraordinario.",
+        "subtitleAlt": "Subastas en tiempo real de relojes, arte y piezas únicas.",
+        "ctaExplore": "Explorar subastas",
+        "ctaHow": "Cómo funciona"
+      },
+      "stats": {
+        "auctionsHeld": "Subastas realizadas",
+        "transacted": "Transaccionado",
+        "completion": "Finalización",
+        "buyerFee": "Comisión del comprador"
+      },
+      "section": {
+        "ongoing": "Subastas activas",
+        "liveNow": "En vivo ahora",
+        "viewAll": "Ver todas",
+        "noActive": "No hay subastas activas en este momento.",
+        "viewAllArrow": "Ver todas las subastas →"
+      },
+      "badges": {
+        "auction": "Subasta",
+        "privateRoom": "Sala privada",
+        "offers": "Propuestas"
+      },
+      "listing": {
+        "currentBid": "Puja actual",
+        "highestOffer": "Propuesta más alta",
+        "offers": "Propuestas",
+        "endsIn": "Termina en"
+      },
+      "private": {
+        "eyebrow": "Salas Privadas",
+        "titleLine1": "Exclusividad",
+        "titleLine2": "por invitación.",
+        "bodyAlt": "Tras la subasta pública, los mejores pujadores son invitados a una sala privada. Solo entran los elegidos.",
+        "bidLabel": "Puja actual",
+        "stat1Label": "Pujadores invitados",
+        "stat2Val": "60s",
+        "stat2Label": "Por puja",
+        "stat3Val": "Auto",
+        "stat3Label": "Ganador automático"
+      },
+      "how": {
+        "eyebrow": "Cómo funciona",
+        "titleLine1": "Simple",
+        "titleLine2": "de principio a fin.",
+        "step1Title": "Publica",
+        "step1Desc": "Subasta o propuestas. Sin tarifas de publicación. Listo en minutos.",
+        "step2Title": "Compite",
+        "step2Desc": "Pujas en tiempo real. Propuestas privadas. El sistema decide automáticamente.",
+        "step3Title": "Recibe con seguridad",
+        "step3Desc": "Pago en depósito de garantía. Los fondos se liberan solo tras confirmar la recepción."
+      },
+      "cta": {
+        "titleLine1": "La próxima subasta",
+        "titleLine2": "es tuya.",
+        "sub": "Regístrate gratis. Empieza a pujar hoy.",
+        "createAccount": "Crear cuenta gratis",
+        "explore": "Explorar subastas",
+        "alreadyHave": "¿Ya tienes cuenta?",
+        "signIn": "Iniciar sesión"
+      },
+      "footer": {
+        "tagline": "El marketplace de subastas premium",
+        "platform": "Plataforma",
+        "legal": "Legal",
+        "activeAuctions": "Subastas activas",
+        "howItWorks": "Cómo funciona",
+        "privateRooms": "Salas Privadas",
+        "categories": "Categorías",
+        "buyers": "Compradores",
+        "createAccount": "Crear cuenta",
+        "buyerGuide": "Guía del comprador",
+        "securePayment": "Pago seguro",
+        "disputes": "Disputas",
+        "sellers": "Vendedores",
+        "publishListing": "Publicar anuncio",
+        "sellerGuide": "Guía del vendedor",
+        "commissions": "Comisiones",
+        "payouts": "Pagos",
+        "terms": "Términos de uso",
+        "privacyPolicy": "Política de privacidad",
+        "cookies": "Cookies",
+        "contact": "Contacto",
+        "allRights": "© 2026 BidRoom.pt · Todos los derechos reservados",
+        "madeIn": "Hecho en Portugal 🇵🇹"
+      }
     }
   },
   "footer": {
@@ -45,7 +147,25 @@
     "privacyPolicy": "Política de Privacidad",
     "termsConditions": "Términos y Condiciones",
     "connect": "Redes Sociales",
-    "copyright": "© 2024 BidRoom. Todos los derechos reservados."
+    "copyright": "© 2024 BidRoom. Todos los derechos reservados.",
+    "platform": "Plataforma",
+    "buyers": "Compradores",
+    "sellers": "Vendedores",
+    "createAccount": "Crear cuenta",
+    "publishListing": "Publicar anuncio",
+    "activeAuctions": "Subastas activas",
+    "buyerGuide": "Guía del comprador",
+    "sellerGuide": "Guía del vendedor",
+    "commissions": "Comisiones",
+    "payouts": "Pagos",
+    "securePayment": "Pago seguro",
+    "disputes": "Disputas",
+    "terms": "Términos de uso",
+    "termsShort": "Términos",
+    "privacyShort": "Privacidad",
+    "cookies": "Cookies",
+    "complaintsBook": "Libro de reclamaciones",
+    "ral": "Resolución de litigios de consumo"
   },
   "home": {
     "hero": {
@@ -107,6 +227,14 @@
       "jewelry": {
         "title": "Joyería",
         "desc": "Anillos, relojes y piedras preciosas"
+      },
+      "vehicles": {
+        "title": "Vehículos",
+        "desc": "Coches, motos y barcos"
+      },
+      "realEstate": {
+        "title": "Inmuebles",
+        "desc": "Pisos, casas y terrenos"
       }
     },
     "liveAuctions": {
@@ -133,7 +261,9 @@
       "bid": "puja",
       "bids": "pujas",
       "ended": "Terminado",
-      "na": "N/D"
+      "na": "N/D",
+      "clearFilter": "Limpiar Filtro",
+      "tryDifferentCategory": "Prueba otra categoría o limpia el filtro."
     }
   },
   "addListing": {
@@ -310,7 +440,9 @@
       "home-garden": "Hogar y Jardín",
       "art": "Arte",
       "collectibles": "Coleccionables",
-      "jewelry": "Joyería"
+      "jewelry": "Joyería",
+      "real-estate": "Inmuebles",
+      "vehicles": "Vehículos"
     },
     "successMessage": "¡Anuncio creado exitosamente!",
     "draftRestored": "Se restauró tu borrador guardado.",
@@ -356,7 +488,11 @@
       "specificationsIncomplete": "especificaciones incompletas",
       "scheduleRequired": "Elija la fecha y la hora de apertura",
       "schedulePast": "La apertura debe ser en el futuro",
-      "scheduleTooFar": "La apertura no puede ser a más de {{days}} días"
+      "scheduleTooFar": "La apertura no puede ser a más de {{days}} días",
+      "pricing": "Define el precio y la duración del anuncio.",
+      "shipping": "Configura el envío y la ubicación.",
+      "declaration": "Confirma la declaración del vendedor para publicar.",
+      "mediaVideoSize": "El vídeo supera el límite de 15 MB. Comprima o recorte el vídeo antes de subirlo. No añadido: {{files}}"
     },
     "steps": {
       "label": "Pasos",
@@ -506,6 +642,181 @@
       "saleValue": "Importe de venta",
       "netLabel": "Usted recibe (estimación)",
       "empty": "Fije un precio en el anuncio o introduzca un importe para simular las comisiones."
+    },
+    "details": {
+      "section": "Información del artículo"
+    },
+    "photos": {
+      "section": "Fotos del artículo",
+      "label": "Paso 3: Precios y Reglas de la Subasta"
+    },
+    "shipping": {
+      "section": "Método de envío",
+      "sectionVehicle": "Entrega del vehículo",
+      "location": "Ubicación",
+      "paymentMethods": "Métodos de pago aceptados",
+      "paymentMethodsHint": "Elija qué métodos de pago acepta para este anuncio.",
+      "pmBankTransfer": "Transferencia bancaria",
+      "pmConfigureNow": "Configurar ahora →",
+      "pmInPerson": "Pago en mano",
+      "pmInPersonDesc": "El comprador paga presencialmente en la entrega.",
+      "pmMbway": "MBWay",
+      "pmNoConfig": "No tiene métodos alternativos configurados.",
+      "pmStripeDesc": "Pago online seguro. Siempre disponible.",
+      "pmStripeLabel": "Tarjeta de crédito / débito"
+    },
+    "publish": {
+      "section": "Revisión y publicación"
+    },
+    "sellingMode": {
+      "section": "¿Cómo quiere vender?",
+      "hint": "Después de la venta todo es igual: el mismo pago, el mismo envío, la misma protección. La única diferencia está en cómo el comprador llega a un precio.",
+      "label": "Modo de venta",
+      "bidding": "Los compradores pujan y gana la puja más alta",
+      "biddingDesc": "Los compradores pujan entre sí y ven el precio actual. Cuando se acaba el tiempo, gana la puja más alta y la venta queda cerrada.",
+      "biddingBadge": "Pujas",
+      "offers": "Los compradores envían propuestas y usted decide",
+      "offersDesc": "Cada comprador le envía una cifra en privado. Nada queda acordado sin que usted acepte.",
+      "offersBadge": "Propuestas",
+      "fixedNote": "Puede cambiarlo hasta publicar. A partir de ahí se mantiene, porque habrá quien haya pujado o hecho propuestas en las condiciones que fijó."
+    },
+    "pricing": {
+      "section": "Precio y duración"
+    },
+    "advanced": {
+      "section": "Opciones avanzadas",
+      "hint": "Nada de esto es obligatorio.",
+      "offersEmpty": "En este modo no hay nada que definir aquí. El mínimo que indicó arriba es la única cifra que los compradores tienen que superar."
+    },
+    "feeBuyerEstimate": "€{{amount}} (máx. €500)",
+    "itemCountry": "País",
+    "stripeRequiredLink": "Configurar ahora →",
+    "countryCH": "Suiza",
+    "subcategories": {
+      "Laptops": "Portátiles",
+      "Desktop Computers": "Ordenadores de Sobremesa",
+      "Computer Components": "Componentes de Ordenador",
+      "Smartphones": "Smartphones",
+      "Tablets": "Tablets",
+      "Mobile Accessories": "Accesorios para Móvil",
+      "Headphones": "Auriculares",
+      "Speakers": "Altavoces",
+      "Hi Fi Systems": "Equipos Hi-Fi",
+      "Turntables": "Tocadiscos",
+      "Gaming Consoles": "Consolas de Videojuegos",
+      "Video Games": "Videojuegos",
+      "Gaming Accessories": "Accesorios de Gaming",
+      "Digital Cameras": "Cámaras Digitales",
+      "Film Cameras": "Cámaras Analógicas",
+      "Camera Lenses": "Objetivos",
+      "Camera Accessories": "Accesorios de Fotografía",
+      "Televisions": "Televisores",
+      "Projectors": "Proyectores",
+      "Streaming Devices": "Dispositivos de Streaming",
+      "Smart Watches": "Relojes Inteligentes",
+      "Fitness Trackers": "Pulseras de Actividad",
+      "Wearables Accessories": "Accesorios Wearables",
+      "Other Electronics": "Otros Electrónicos",
+      "Tables": "Mesas",
+      "Chairs": "Sillas",
+      "Cabinets": "Armarios",
+      "Shelves": "Estanterías",
+      "Beds": "Camas",
+      "Lamps": "Lámparas",
+      "Mirrors": "Espejos",
+      "Vases": "Jarrones",
+      "Wall Decor": "Decoración de Pared",
+      "Decorative Objects": "Objetos Decorativos",
+      "Cookware": "Menaje de Cocina",
+      "Tableware": "Vajilla",
+      "Glassware": "Cristalería",
+      "Barware": "Artículos de Bar",
+      "Garden Furniture": "Muebles de Jardín",
+      "Garden Tools": "Herramientas de Jardín",
+      "Outdoor Decor": "Decoración de Exterior",
+      "Planters": "Maceteros",
+      "Rugs": "Alfombras",
+      "Curtains": "Cortinas",
+      "Blankets": "Mantas",
+      "Cushions": "Cojines",
+      "Lighting": "Iluminación",
+      "Other Home & Garden": "Otros Hogar y Jardín",
+      "Paintings": "Pinturas",
+      "Drawings": "Dibujos",
+      "Prints": "Grabados",
+      "Photography": "Fotografía",
+      "Sculptures": "Esculturas",
+      "Figurines": "Figuras",
+      "Other Art": "Otro Arte",
+      "Definitive Stamps": "Sellos Ordinarios",
+      "Commemorative Stamps": "Sellos Conmemorativos",
+      "Airmail Stamps": "Sellos de Correo Aéreo",
+      "Postage Due Stamps": "Sellos de Tasa",
+      "Revenue / Fiscal Stamps": "Sellos Fiscales",
+      "Official Stamps": "Sellos Oficiales",
+      "Military Mail": "Correo Militar",
+      "Local Issues": "Emisiones Locales",
+      "First Day Covers (FDC)": "Sobres de Primer Día (FDC)",
+      "Stamp Booklets": "Carnés de Sellos",
+      "Collections / Lots": "Colecciones / Lotes",
+      "Classic Stamps (Before 1900)": "Sellos Clásicos (antes de 1900)",
+      "Early 20th Century (1900 to 1945)": "Principios del Siglo XX (1900–1945)",
+      "Post War (1945 to 1960)": "Posguerra (1945–1960)",
+      "Late 20th Century (1960 to 2000)": "Finales del Siglo XX (1960–2000)",
+      "Modern Stamps (2000 to Present)": "Sellos Modernos (2000–actualidad)",
+      "Coins & Banknotes": "Monedas y Billetes",
+      "Trading Cards": "Cartas Coleccionables",
+      "Toys & Models": "Juguetes y Maquetas",
+      "Sports Memorabilia": "Memorabilia Deportiva",
+      "Music Memorabilia": "Memorabilia Musical",
+      "Movie Memorabilia": "Memorabilia de Cine",
+      "Vintage Items": "Artículos Vintage",
+      "Other Collectibles": "Otros Coleccionables",
+      "Engagement Rings": "Anillos de Compromiso",
+      "Wedding Rings": "Alianzas",
+      "Fashion Rings": "Anillos de Moda",
+      "Chains": "Cadenas",
+      "Pendants": "Colgantes",
+      "Bangles": "Pulseras Rígidas",
+      "Charm Bracelets": "Pulseras de Charms",
+      "Stud Earrings": "Pendientes de Botón",
+      "Hoop Earrings": "Pendientes de Aro",
+      "Drop Earrings": "Pendientes Colgantes",
+      "Luxury Watches": "Relojes de Lujo",
+      "Vintage Watches": "Relojes Vintage",
+      "Brooches & Pins": "Broches y Alfileres",
+      "Jewelry Sets": "Conjuntos de Joyería",
+      "Loose Gemstones": "Gemas Sueltas",
+      "Other Jewelry": "Otra Joyería",
+      "Apartments": "Pisos",
+      "Studios": "Estudios",
+      "Duplexes & Penthouses": "Dúplex y Áticos",
+      "Houses": "Casas",
+      "Villas": "Villas",
+      "Townhouses": "Casas Adosadas",
+      "Land & Plots": "Terrenos y Parcelas",
+      "Rural & Countryside": "Fincas Rústicas",
+      "Commercial Property": "Locales Comerciales",
+      "Office Space": "Oficinas",
+      "Industrial & Warehouse": "Industrial y Naves",
+      "Garages & Parking": "Garajes y Aparcamientos",
+      "Holiday Homes": "Casas de Vacaciones",
+      "Other Real Estate": "Otros Inmuebles",
+      "Cars": "Coches",
+      "Classic Cars": "Coches Clásicos",
+      "Electric & Hybrid Cars": "Coches Eléctricos e Híbridos",
+      "Motorcycles": "Motos",
+      "Scooters & Mopeds": "Scooters y Ciclomotores",
+      "Vans & Minibuses": "Furgonetas y Microbuses",
+      "Trucks & HGV": "Camiones",
+      "Boats": "Barcos",
+      "Jet Skis & Watercraft": "Motos de Agua",
+      "Sailboats": "Veleros",
+      "Caravans & Motorhomes": "Caravanas y Autocaravanas",
+      "ATVs & Quad Bikes": "ATV y Quads",
+      "Vehicle Parts": "Piezas de Vehículo",
+      "Vehicle Accessories": "Accesorios de Vehículo",
+      "Other Vehicles": "Otros Vehículos"
     }
   },
   "listingList": {
@@ -597,7 +908,12 @@
     "offersCount": "{{count}} ofertas",
     "hoursLeft": "{{hours}}h restantes",
     "applyFilters": "Aplicar filtros",
-    "opensIn": "Abre en {{time}}"
+    "opensIn": "Abre en {{time}}",
+    "formatOffers": "Propuestas",
+    "badgeOffers": "Propuestas",
+    "badgeAuction": "Subasta",
+    "bundle": "Lote",
+    "closeFilters": "Cerrar filtros"
   },
   "categories": {
     "title": "Explorar por Categoría",
@@ -606,7 +922,9 @@
     "allListings": "Todos los Anuncios",
     "follow": "Seguir",
     "following": "Siguiendo",
-    "unfollow": "Dejar de seguir"
+    "unfollow": "Dejar de seguir",
+    "browseCategory": "Ver categoría",
+    "subcategoryCount": "{{count}} subcategorías"
   },
   "language": {
     "en": "English",
@@ -657,7 +975,13 @@
       "offerDeadline": "Plazo para Ofertas",
       "privateRoomEnds": "Sala Privada Termina",
       "auctionEnded": "Subasta Terminada",
-      "listingEnded": "Anuncio Terminado"
+      "listingEnded": "Anuncio Terminado",
+      "daysCount": "{{count}} días",
+      "endedShort": "Finalizado",
+      "hoursCount": "{{count}} horas",
+      "na": "—",
+      "listingEnds": "Termina en",
+      "endingSoon": "Termina pronto"
     },
     "ended": {
       "noBidsSeller": "Esta subasta cerró sin pujas. Puedes reabrirla por otros 7 días abajo.",
@@ -699,7 +1023,10 @@
       "auctionHasEndedWinner": "Esta subasta ha terminado. Se seleccionó un ganador.",
       "auctionHasEnded": "Esta subasta ha terminado.",
       "sellerHas24hOffer": "El vendedor tiene 24h para aceptar una oferta",
-      "sellerHas24hWinner": "El vendedor tiene 24h para elegir un ganador"
+      "sellerHas24hWinner": "El vendedor tiene 24h para elegir un ganador",
+      "editListing": "Editar anuncio",
+      "actionBar": "Acciones del anuncio",
+      "placeBidAtMin": "Pujar · {{amount}}"
     },
     "watchlistCount": {
       "one": "persona tiene esto en sus favoritos",
@@ -785,7 +1112,8 @@
       "free": "Envío gratis",
       "cost": "Costo de envío:",
       "from": "Desde:",
-      "workingDays": "días hábiles"
+      "workingDays": "días hábiles",
+      "workingDaysCount": "{{count}} días laborables"
     },
     "returnPolicy": {
       "title": "Política de devolución",
@@ -812,7 +1140,14 @@
       "submitting": "Enviando puja…",
       "subtitle": "Vinculante si ganas. Síguelo en tiempo real.",
       "minBid": "Puja mínima",
-      "valueLabel": "Importe (€)"
+      "valueLabel": "Importe (€)",
+      "emailInvalid": "Introduce una dirección de correo válida.",
+      "emailRequired": "Introduce tu correo para recibir notificaciones de pujas.",
+      "errorConfirm": "OK",
+      "errorText": "No se pudo realizar la puja. Inténtalo de nuevo.",
+      "errorTitle": "Error al pujar",
+      "minBidError": "Tu puja debe ser de al menos {{amount}}.",
+      "successTitle": "¡Puja realizada!"
     },
     "offerModal": {
       "title": "Hacer una oferta",
@@ -840,7 +1175,10 @@
       "successConfirm": "Entendido",
       "errorTitle": "No se pudo enviar la oferta",
       "errorText": "Error al enviar la oferta. Inténtalo de nuevo.",
-      "errorConfirm": "OK"
+      "errorConfirm": "OK",
+      "emailInvalid": "Introduce una dirección de correo válida.",
+      "emailRequired": "Introduce tu correo para que el vendedor pueda contactarte.",
+      "invalidAmount": "Introduce un importe válido."
     },
     "watchlistModal": {
       "title": "Guardar en Favoritos",
@@ -914,7 +1252,11 @@
       "winnerSelectionCountdownOffer": "24h para aceptar oferta",
       "winnerSelectionCountdownWinner": "24h para seleccionar ganador",
       "invitedRoomHeader": "Invitados a la sala",
-      "buyNow": "Comprar ya ·"
+      "buyNow": "Comprar ya ·",
+      "block": "Bloquear vendedor",
+      "goToPrivateRoom": "Ir a la Sala Privada",
+      "unblock": "Desbloquear vendedor",
+      "accessPrivateRoomSeller": "Acceder a la Sala Privada"
     },
     "payment": {
       "title": "Pago",
@@ -952,6 +1294,112 @@
       "notOpenYet": "Esta subasta aún no ha abierto",
       "opensAt": "Abre el {{date}}",
       "opensIn": "Faltan {{time}}"
+    },
+    "dsa": {
+      "address": "Domicilio social:",
+      "legalName": "Denominación social:",
+      "privateSeller": "Vendedor particular",
+      "professionalSeller": "Vendedor profesional",
+      "status": {
+        "none": "Datos de comerciante no enviados",
+        "pending": "Verificación pendiente",
+        "verified": "Vendedor profesional verificado",
+        "rejected": "Verificación no aceptada"
+      },
+      "vatId": "Número de IVA:",
+      "consumerNoticeTitle": "Comprar a una empresa",
+      "consumerNoticeBody": "Este vendedor actúa en calidad profesional. Según la ley aplicable, puedes tener derechos de consumidor en las compras a distancia a comerciantes (por ejemplo, información, desistimiento y vías de reclamación).",
+      "contact": "Contacto comercial:",
+      "tradeName": "Nombre comercial:",
+      "traderSectionTitle": "Información del comerciante"
+    },
+    "itemMode": {
+      "bundleContents": "Qué incluye",
+      "identicalUnits": "unidades idénticas incluidas",
+      "bundle": "Lote",
+      "multiQtyLabel": "Lote multicantidad",
+      "units": "unidades"
+    },
+    "share": {
+      "button": "Compartir anuncio",
+      "linkCopied": "Enlace copiado",
+      "linkCopiedTitle": "¡Enlace copiado!",
+      "note": "Usa este botón para compartir en WhatsApp y ver la imagen del producto.",
+      "shareTitle": "Compartir"
+    },
+    "outcome": {
+      "bidding": "Una puja es vinculante. Si la tuya es la más alta cuando se agote el tiempo, el artículo es tuyo y tienes 24 horas para pagar.",
+      "offers": "Una propuesta solo te vincula si el vendedor la acepta. Hasta entonces no hay venta; si la acepta, tienes 24 horas para pagar."
+    },
+    "platinumBidders": {
+      "title": "Invitar a la Sala Privada",
+      "subtitle": "Selecciona hasta 5 postores para invitar a la Sala Privada. Estos postores podrán seguir pujando después de que termine la subasta principal.",
+      "loading": "Cargando postores...",
+      "errorLoading": "No se pudieron cargar los postores.",
+      "errorSaving": "No se pudo guardar la selección.",
+      "maxAlert": "Puedes seleccionar un máximo de 5 postores.",
+      "backBtn": "Volver al Panel"
+    },
+    "privateRoomBidders": {
+      "title": "Invitar a la Sala Privada",
+      "subtitle": "Selecciona hasta 5 postores para invitar. Podrán seguir pujando después de que termine la subasta principal.",
+      "loading": "Cargando postores…",
+      "empty": "Aún no hay postores",
+      "emptyDesc": "Los postores aparecerán aquí en cuanto pujen por tu anuncio.",
+      "guestNote": "Los postores no registrados no pueden ser invitados a la Sala Privada.",
+      "badgeAuth": "Registrado",
+      "badgeGuest": "Visitante",
+      "badgeInvited": "Invitado",
+      "statBids": "Pujas",
+      "statHighest": "Puja más alta",
+      "statLast": "Última puja",
+      "ofMax": "de 5 seleccionados",
+      "save": "Guardar selección",
+      "saving": "Guardando…",
+      "retry": "Inténtalo de nuevo",
+      "backBtn": "Volver al Panel"
+    },
+    "alerts": {
+      "stayHere": "Quedarme aquí",
+      "tryAgain": "Inténtalo de nuevo.",
+      "offerAccepted": {
+        "title": "¡Propuesta aceptada!",
+        "text": "La propuesta ha sido aceptada. Ve a Transacciones para gestionar y completar la venta."
+      },
+      "stripeRequired": {
+        "title": "Cuenta de Stripe necesaria",
+        "html": "Debes conectar tu cuenta de Stripe antes de aceptar propuestas.<br><br>Ve a <strong>Panel → Configuración → Pagos</strong> para completar la configuración.",
+        "goToSettings": "Ir a Configuración"
+      },
+      "buyNowConfirm": {
+        "text": "¿Comprar este artículo ahora por {{amount}}? El anuncio se cierra de inmediato."
+      },
+      "buyNowSuccess": {
+        "title": "¡Compra realizada!",
+        "text": "Ve a tus transacciones para completar el pago.",
+        "confirm": "Ir al Pago"
+      },
+      "buyNowFailed": {
+        "title": "La compra ha fallado",
+        "text": "No se pudo completar la compra."
+      },
+      "winnerSelected": {
+        "title": "¡Ganador seleccionado!",
+        "text": "El ganador ha sido notificado. Ve a Transacciones para gestionar y completar la venta."
+      },
+      "selectWinnerFailed": "No se pudo seleccionar el ganador",
+      "reopenFailed": "No se pudo reabrir el anuncio",
+      "startRoomFailed": "No se pudo iniciar la sala privada",
+      "createRoomFailed": "No se pudo crear la sala privada",
+      "invalidSelection": {
+        "title": "Selección no válida",
+        "text": "Selecciona entre 2 y 5 postores para la sala privada."
+      },
+      "loadBidsFailed": "No se pudo cargar el historial de pujas",
+      "loadOffersFailed": "No se pudo cargar el historial de propuestas",
+      "acceptOfferFailed": "No se pudo aceptar la propuesta.",
+      "rejectOfferFailed": "No se pudo rechazar la propuesta.",
+      "withdrawOfferFailed": "No se pudo retirar la propuesta."
     }
   },
   "auth": {
@@ -1065,7 +1513,9 @@
       "successTitle": "¡Correo Verificado!",
       "successDesc": "Tu correo ha sido verificado. Ahora puedes iniciar sesión.",
       "errorTitle": "Error de Verificación",
-      "goToLogin": "Ir a Iniciar Sesión"
+      "goToLogin": "Ir a Iniciar Sesión",
+      "failedGeneric": "La verificación del correo ha fallado.",
+      "invalidCode": "Código de verificación inválido o ausente."
     },
     "checkEmail": {
       "title": "Revisa Tu Correo",
@@ -1273,7 +1723,81 @@
         "morning": "Buenos días",
         "afternoon": "Buenas tardes",
         "evening": "Buenas noches"
-      }
+      },
+      "analytics": {
+        "range": "Período",
+        "custom": "Personalizado",
+        "from": "Desde",
+        "toOptional": "Hasta (opcional)",
+        "last7d": "Últimos 7 días",
+        "last30d": "Últimos 30 días",
+        "loadFailed": "No se han podido cargar las estadísticas. Inténtalo de nuevo.",
+        "analyticsCustomFromRequired": "Elige una fecha de inicio para el período personalizado.",
+        "title": "Estadísticas",
+        "apply": "Aplicar",
+        "modeOverview": "Resumen",
+        "updating": "Actualizando…",
+        "modeBuyer": "Comprando",
+        "buyingTitle": "Comprando",
+        "modeSeller": "Vendiendo",
+        "sellingTitle": "Vendiendo",
+        "viewDetails": "Ver detalles"
+      },
+      "accountClosedTitle": "Cuenta Cerrada",
+      "accountClosedBody": "Tu cuenta ha sido cerrada permanentemente. Contacta con soporte si crees que se trata de un error.",
+      "accountSuspendedTitle": "Cuenta Restringida Temporalmente",
+      "accountSuspendedBody": "Tu cuenta ha sido restringida temporalmente mientras se revisa una disputa. No puedes crear anuncios, pujar ni iniciar nuevas transacciones hasta que el caso se resuelva. Las transacciones iniciadas antes de la disputa continúan y pueden completarse con normalidad (pago, envío, entrega).",
+      "checkoutError": "No se ha podido iniciar el pago. Inténtalo de nuevo.",
+      "dsaTitle": "Es necesario revisar tu estatus de vendedor en la UE",
+      "dsaBody": "Tu actividad de venta de este año puede considerarse venta profesional según el Reglamento de Servicios Digitales de la UE (artículo 29). Debes confirmar tu estatus de vendedor — los vendedores profesionales tienen que mostrar la información de la empresa a los compradores.",
+      "dsaDismiss": "Descartar por ahora",
+      "dsaRemainPrivate": "Seguir como particular",
+      "dsaSwitchPro": "Cambiar a profesional",
+      "endsInDays": "Termina en {{days}} días",
+      "endsInHours": "Termina en {{hours}} h {{minutes}} min",
+      "payoutBannerTitle": "Configura los pagos para vender en BidRoom",
+      "payoutBannerBody": "Conecta tu cuenta bancaria mediante Stripe para poder recibir pagos cuando terminen tus subastas. Los compradores no podrán pagarte hasta que lo completes.",
+      "payoutBannerCta": "Configurar pagos",
+      "payoutBannerDismiss": "Descartar",
+      "reputation": {
+        "emailNotVerifiedTitle": "Correo no verificado",
+        "emailNotVerifiedBody": "Confirma tu correo para pujar, recibir actualizaciones de tus transacciones y construir tu reputación como comprador.",
+        "emailVerifyCta": "Verificar en Ajustes",
+        "paymentCta": "Añadir tarjeta de pago en Ajustes",
+        "paymentMissingTitle": "Añade un método de pago",
+        "paymentMissingIntro": "Alcanza el Nivel 3 — Pago Garantizado y desbloquea:"
+      },
+      "reviewPendingFrom": "Reseña tu transacción con {{name}} · {{role}}",
+      "reviewTagsLabel": "¿Qué destacó? (opcional, elige hasta 5)",
+      "reviewTags": {
+        "fast_payment": "Pago rápido",
+        "slow_payment": "Pago lento",
+        "fast_shipping": "Envío rápido",
+        "slow_shipping": "Envío lento",
+        "good_communication": "Buena comunicación",
+        "poor_communication": "Mala comunicación",
+        "great_packaging": "Embalaje cuidado",
+        "item_as_described": "Artículo según la descripción",
+        "not_as_described": "No según la descripción",
+        "smooth_transaction": "Transacción sin problemas",
+        "trustworthy": "De confianza"
+      },
+      "statActiveBids": "Pujas activas",
+      "statActiveListings": "Anuncios activos",
+      "statPendingOffers": "Propuestas pendientes",
+      "statPendingTx": "Transacciones pendientes",
+      "statAcrossAuctions": "en {{count}} subastas",
+      "statActionNeeded": "requiere acción",
+      "statAwaitingSeller": "esperando al vendedor",
+      "statusWinning": "Ganando",
+      "statusOutbid": "Superado",
+      "statusEnded": "Terminado",
+      "ended": "Terminado",
+      "formatAuction": "Subasta",
+      "formatOffers": "Propuestas",
+      "roleBuyer": "Comprador",
+      "roleSeller": "Vendedor",
+      "reviewBtn": "Reseñar"
     },
     "buyer": {
       "title": "Perfil del Comprador",
@@ -1288,6 +1812,62 @@
         "watchlist": "Seguidos",
         "transactions": "Transacciones",
         "disputes": "Disputas"
+      },
+      "analytics": {
+        "range": "Período",
+        "custom": "Personalizado",
+        "from": "Desde",
+        "toOptional": "Hasta (opcional)",
+        "last7d": "Últimos 7 días",
+        "last30d": "Últimos 30 días",
+        "loadFailed": "No se han podido cargar las estadísticas. Inténtalo de nuevo.",
+        "analyticsCustomFromRequired": "Elige una fecha de inicio para el período personalizado.",
+        "allCategories": "Todas las categorías",
+        "colListing": "Anuncio",
+        "title": "Estadísticas del Comprador",
+        "activity": "Desglose de actividad",
+        "perListing": "Actividad por anuncio",
+        "filterInteraction": "Tipo de actividad",
+        "allInteractions": "Pujas y propuestas",
+        "bidsOnly": "Solo pujas de subasta",
+        "offersOnly": "Solo propuestas",
+        "bidsPlaced": "Pujas realizadas",
+        "bidsPlacedHint": "Pujas de subasta que has realizado en este período.",
+        "offersMade": "Propuestas enviadas",
+        "offersMadeHint": "Propuestas que has enviado en este período.",
+        "purchases": "Compras",
+        "purchasesHint": "Artículos que has pagado o completado en este período.",
+        "purchaseThisPeriod": "Comprado en este período",
+        "totalSpent": "Total gastado",
+        "totalSpentHint": "Importe que se te ha cobrado por las compras de este período.",
+        "winRate": "Tasa de compra",
+        "winRateDash": "Actividad insuficiente para calcular.",
+        "winRateHint": "Compras divididas por los anuncios en los que has pujado o has hecho una propuesta en este período.",
+        "watchlistHint": "{{n}} artículos añadidos en este período",
+        "noListings": "Ninguna puja ni propuesta coincide con estos filtros.",
+        "colEvents": "Acciones (período)",
+        "colOutcome": "Resultado",
+        "countActive": "participaciones activas",
+        "countWon": "ganadas / compradas",
+        "countLost": "terminadas sin victoria",
+        "countPending": "pago pendiente",
+        "outcome": {
+          "active": "En curso",
+          "won": "Ganado",
+          "lost": "Perdido",
+          "purchased": "Comprado",
+          "leading": "Puja líder",
+          "pending_payment": "Pago pendiente"
+        },
+        "updating": "Actualizando…",
+        "apply": "Aplicar filtros",
+        "colStatus": "Estado",
+        "filterCategory": "Categoría",
+        "colMyBest": "Mi mejor",
+        "watchlist": "Seguidos",
+        "statusActive": "Activo",
+        "statusCancelled": "Cancelado",
+        "statusEnded": "Finalizado"
       }
     },
     "myBets": {
@@ -1335,6 +1915,52 @@
         "auctions": "Mis Anuncios",
         "transactions": "Transacciones",
         "disputes": "Disputas"
+      },
+      "analytics": {
+        "range": "Período",
+        "custom": "Personalizado",
+        "from": "Desde",
+        "toOptional": "Hasta (opcional)",
+        "last7d": "Últimos 7 días",
+        "last30d": "Últimos 30 días",
+        "loadFailed": "No se han podido cargar las estadísticas. Inténtalo de nuevo.",
+        "analyticsCustomFromRequired": "Elige una fecha de inicio para el período personalizado.",
+        "allCategories": "Todas las categorías",
+        "colListing": "Anuncio",
+        "title": "Estadísticas",
+        "filterListing": "Anuncio",
+        "allListings": "Todos los anuncios",
+        "inventory": "Desglose de anuncios",
+        "perListing": "Rendimiento por anuncio",
+        "noListings": "Ningún anuncio publicado coincide con estos filtros.",
+        "views": "Visitas a la página",
+        "viewsHint": "Cargas de la página de detalle en este período para los anuncios filtrados.",
+        "colViews": "Visitas (período)",
+        "colBids": "Acciones de puja (histórico)",
+        "colSold": "Vendido",
+        "bidsOffers": "Acciones de puja y propuesta",
+        "bidsOffersHint": "Número de pujas y propuestas registradas en este período.",
+        "salesPeriod": "Actividad de venta",
+        "salesPeriodHint": "Anuncios distintos en los que un comprador ha pagado o ha completado la compra en este período.",
+        "saleThisPeriod": "Pago/conclusión en este período",
+        "conversionTitle": "Tasa de conversión",
+        "conversionDash": "No hay anuncios suficientes para calcular.",
+        "conversionDefinition": "ventas con pago o conclusión en este período divididas por los anuncios publicados filtrados.",
+        "followersHint": "{{n}} nuevos en este período",
+        "countActive": "activos",
+        "countEnded": "finalizados",
+        "countCancelled": "cancelados",
+        "countSoldEver": "vendidos (histórico)",
+        "updating": "Actualizando…",
+        "apply": "Aplicar filtros",
+        "colStatus": "Estado",
+        "filterCategory": "Categoría",
+        "followers": "Seguidores",
+        "yes": "Sí",
+        "statusActive": "Activo",
+        "statusCancelled": "Cancelado",
+        "statusEnded": "Finalizado",
+        "statusDraft": "Borrador"
       }
     },
     "notifications": {
@@ -1439,7 +2065,153 @@
       "deliveryAddressClear": "Borrar dirección",
       "deliveryAddressIncomplete": "Completa la dirección, ciudad, código postal y país.",
       "deliveryAddressStateRequired": "La provincia / región es obligatoria para este país.",
-      "deliveryAddressSaveError": "No se pudo guardar la dirección. Inténtalo de nuevo."
+      "deliveryAddressSaveError": "No se pudo guardar la dirección. Inténtalo de nuevo.",
+      "addressRequired": "Rellena tu dirección completa.",
+      "dobRequired": "Introduce tu fecha de nacimiento.",
+      "ibanRequired": "Introduce tu IBAN.",
+      "phoneRequired": "Introduce tu número de teléfono móvil.",
+      "tosRequired": "Debes aceptar los Términos del Servicio.",
+      "phoneLabel": "Teléfono móvil",
+      "phoneHint": "Exigido por Stripe para verificar tu cuenta. No se muestra a los compradores.",
+      "opening": "Abriendo Stripe…",
+      "payoutsLabel": "Pagos",
+      "savePrefsError": "No se han podido guardar las preferencias. Inténtalo de nuevo.",
+      "testActivated": "¡Cuenta de prueba activada!",
+      "testActivationFailed": "La activación de prueba ha fallado.",
+      "verifyWithDoc": "Verificar identidad con Stripe",
+      "verifyDocHint": "Stripe no ha podido confirmar tu identidad con los datos introducidos. Continúa en Stripe para subir un documento de identidad (DNI o pasaporte).",
+      "dsa": {
+        "title": "Clasificación del vendedor (DSA)",
+        "subtitle": "Indica si vendes como particular o como comerciante. Los vendedores profesionales deben facilitar los datos del comerciante; la plataforma los verifica antes de mostrarlos públicamente en los anuncios.",
+        "classificationLabel": "Vendo como",
+        "private": "Particular (no comerciante)",
+        "professional": "Vendedor profesional / empresa",
+        "traderSection": "Datos del comerciante",
+        "legalName": "Denominación social",
+        "tradeName": "Nombre comercial (opcional)",
+        "vatId": "NIF / IVA",
+        "addressLine1": "Dirección línea 1",
+        "addressLine2": "Dirección línea 2 (opcional)",
+        "region": "Región / provincia",
+        "country": "País (ISO-2)",
+        "contactEmail": "Correo comercial",
+        "contactPhone": "Teléfono comercial",
+        "save": "Guardar información de vendedor",
+        "saveFailed": "No se ha podido guardar. Revisa tus datos e inténtalo de nuevo.",
+        "validationRequired": "Rellena todos los campos obligatorios del comerciante.",
+        "invalidCountry": "El país debe ser un código de 2 letras (p. ej. PT, ES).",
+        "verificationLabel": "Estado de verificación",
+        "status": {
+          "none": "No enviado",
+          "pending": "Pendiente de revisión",
+          "rejected": "Rechazado",
+          "verified": "Verificado"
+        },
+        "submittedAt": "Último envío",
+        "verifiedAt": "Verificado el",
+        "rejectionNote": "Nota de la revisión",
+        "pendingHint": "Tus datos están en revisión. No puedes publicar como vendedor profesional hasta que se verifiquen — consulta los requisitos al crear un anuncio.",
+        "rejectedHint": "Actualiza tus datos y guarda de nuevo para solicitar una nueva revisión.",
+        "verifiedHint": "Los datos verificados del comerciante se muestran a los compradores en tus anuncios.",
+        "unavailable": "La conformidad de vendedor aún no está disponible para tu cuenta. Inténtalo más tarde o contacta con soporte.",
+        "city": "Ciudad",
+        "postalCode": "Código postal",
+        "saved": "Guardado",
+        "saving": "Guardando..."
+      },
+      "paymentMethod": {
+        "title": "Métodos de Pago",
+        "addCard": "Añadir tarjeta de pago",
+        "addAnotherCard": "Añadir otra tarjeta",
+        "cardDetails": "Datos de la tarjeta",
+        "saveCard": "Guardar tarjeta",
+        "saveError": "No se ha podido guardar la tarjeta. Inténtalo de nuevo.",
+        "setupError": "No se ha podido iniciar el proceso. Inténtalo de nuevo.",
+        "expires": "Caduca",
+        "defaultBadge": "Predeterminada",
+        "setDefault": "Establecer como predeterminada",
+        "removeCard": "Eliminar tarjeta",
+        "removeConfirmBtn": "Eliminar tarjeta",
+        "removeModalTitle": "Eliminar tarjeta",
+        "removeModalDesc": "¿Seguro que quieres eliminar la tarjeta {{brand}} •••• {{last4}}? Esta acción no se puede deshacer.",
+        "removeError": "No se ha podido eliminar la tarjeta.",
+        "removing": "Eliminando…",
+        "cannotRemoveDefault": "No puedes eliminar la tarjeta predeterminada. Establece otra como predeterminada primero.",
+        "cannotRemoveOnly": "No puedes eliminar el único método de pago válido de tu cuenta.",
+        "activeBadge": "Comprador Verificado",
+        "activeDesc": "Los vendedores ven que tienes una tarjeta guardada y te darán prioridad en sus decisiones.",
+        "upgradeTitle": "Aumenta tus posibilidades de ganar",
+        "benefit1": "Con la identidad verificada, una tarjeta guardada te sitúa en el nivel de confianza de comprador más alto — el distintivo que los vendedores ven junto a cada puja y propuesta",
+        "benefit2": "Pasas a ser elegible para invitaciones a Salas Privadas exclusivas",
+        "benefit3": "Garantía automática al vendedor si una disputa se resuelve en tu contra",
+        "disclaimer": "Tu tarjeta predeterminada nunca se cobra sin aviso previo por correo electrónico y un plazo de reclamación de 48 h.",
+        "stripeNote": "Los datos de tu tarjeta están cifrados por Stripe (PCI DSS nivel 1) — BidRoom nunca ve el número completo de la tarjeta.",
+        "cancel": "Cancelar",
+        "loading": "Cargando…",
+        "saving": "Guardando…"
+      },
+      "notifications": {
+        "title": "Preferencias de Notificación",
+        "save": "Guardar Preferencias",
+        "saved": "Preferencias guardadas",
+        "loading": "Cargando preferencias...",
+        "loadError": "No se han podido cargar las preferencias de notificación.",
+        "event": "Evento",
+        "channelInApp": "En la app",
+        "globalEmailUnsubscribed": "Darse de baja de todas las notificaciones (correo y en la app)",
+        "events": {
+          "newBid": "Nueva puja en tu anuncio",
+          "outbid": "Puja superada en una subasta",
+          "offerReceived": "Propuesta recibida (vendedor)",
+          "offerAccepted": "Propuesta aceptada (comprador)",
+          "paymentReceived": "Pago recibido (vendedor)",
+          "dispatch": "Artículo enviado",
+          "disputeUpdate": "Actualización de disputa",
+          "auctionEndingSoon": "La subasta termina pronto",
+          "auctionWon": "Subasta ganada"
+        },
+        "channelEmail": "Correo",
+        "saving": "Guardando...",
+        "retry": "Reintentar"
+      },
+      "activating": "Activando…",
+      "addressTitle": "Dirección",
+      "bankTitle": "Cuenta bancaria (IBAN)",
+      "cancelBtn": "Cancelar",
+      "checkingPayout": "Verificando estado de la cuenta de pagos...",
+      "city": "Ciudad",
+      "connectActive": "Activa",
+      "connectError": "Ha ocurrido un error. Revisa tus datos e inténtalo de nuevo.",
+      "connectNotConnected": "No conectada",
+      "connectPending": "Verificación pendiente",
+      "country": "País",
+      "detailsSubmitted": "Tus datos se han enviado. Stripe los verificará en breve — normalmente tarda unos minutos.",
+      "dobDay": "Día",
+      "dobMonth": "Mes",
+      "dobTitle": "Fecha de nacimiento",
+      "dobYear": "Año",
+      "feature1": "Introduce tus datos de identidad y bancarios una sola vez",
+      "feature2": "Stripe procesa los pagos de forma segura en segundo plano",
+      "feature3": "Fondos transferidos directamente a tu cuenta bancaria",
+      "ibanHint": "Tu Número Internacional de Cuenta Bancaria. Los espacios se ignoran.",
+      "ibanLabel": "IBAN",
+      "payoutAccount": "Cuenta de Cobros del Vendedor",
+      "payoutActive": "Tu cuenta de pagos está activa. Los compradores pueden pagarte directamente — los fondos se enviarán a tu cuenta bancaria registrada.",
+      "payoutNowActive": "¡Tu cuenta de pagos ya está activa!",
+      "payoutStatus": "Estado de los pagos:",
+      "postalCode": "Código postal",
+      "requirementIssue": "Hay un problema con los datos de tu cuenta de pagos:",
+      "setupBtn": "Configurar cuenta de pagos",
+      "setupDesc": "Esta cuenta es obligatoria por ley. No podemos procesar ningún pago de tus ventas hasta que esta cuenta esté configurada. No necesitas una cuenta de Stripe — solo rellena tus datos bancarios abajo.",
+      "simulateVerification": "⚡ Simular verificación",
+      "streetAddress": "Calle y número",
+      "submitBtn": "Guardar cuenta de pagos",
+      "submitting": "Enviando…",
+      "tosLink": "Acuerdo de Cuenta Conectada de Stripe",
+      "tosText": "Autorizo a BidRoom a enviar mi información a Stripe para la verificación de identidad y el procesamiento de pagos, y acepto el",
+      "updateBank": "Actualizar cuenta bancaria",
+      "updateDetails": "Actualizar datos",
+      "verifyingDetails": "Tus datos se han enviado y Stripe los está verificando. Normalmente tarda unos minutos."
     },
     "myAuctions": {
       "title": "Mis Anuncios",
@@ -1819,7 +2591,107 @@
     "shipToBuyerMissing": "Aún no tenemos la dirección de entrega de este comprador. No envíeds — contacta con soporte y lo resolvemos contigo.",
     "copyAddress": "Copiar",
     "copied": "Copiado",
-    "deliveryAddressRequired": "Guarda tu dirección de entrega en Ajustes antes de pagar, para que el vendedor sepa adónde enviar."
+    "deliveryAddressRequired": "Guarda tu dirección de entrega en Ajustes antes de pagar, para que el vendedor sepa adónde enviar.",
+    "table": {
+      "item": "Artículo",
+      "role": "Rol",
+      "status": "Estado",
+      "amount": "Importe",
+      "date": "Fecha",
+      "manage": "Gestionar",
+      "noFilterResults": "Ninguna transacción coincide con este filtro."
+    },
+    "buyingStatus": {
+      "paid": "Pagado",
+      "paymentSubmitted": "Pago Enviado"
+    },
+    "sellingStatus": {
+      "pendingShipment": "Envío Pendiente",
+      "pendingAcceptance": "Aceptación Pendiente",
+      "paymentReceived": "Pago Recibido"
+    },
+    "paymentDeadlineExpired": "El plazo de pago de esta transacción ha vencido. El pago ya no es posible.",
+    "stripePrepareShipHint": "El pago está garantizado por Stripe. Marca el artículo como enviado cuando esté listo — el seguimiento y el comprobante son opcionales.",
+    "prepareShipHint": "Marca el artículo como enviado cuando esté listo — el seguimiento y el comprobante son opcionales.",
+    "shippingDetailsOptional": "Detalles de envío (opcional)",
+    "optional": "opcional",
+    "uploadProofOptional": "Subir comprobante de envío (opcional)",
+    "proofUploaded": "Comprobante subido",
+    "postalCodePlaceholder": "ej: 28001",
+    "addressIncomplete": "Rellena la dirección, la ciudad, el código postal y el país.",
+    "addressIncompleteWithState": "Rellena la dirección, la ciudad, el estado/provincia y el código postal.",
+    "trackingNumberPlaceholder": "ej: 9400111899223408553805",
+    "selectCarrier": "Seleccionar transportista",
+    "other": "Otro",
+    "estimatedDeliveryDays": "Plazo estimado de entrega (días)",
+    "estimatedDeliveryDaysPlaceholder": "ej: 5",
+    "estimatedDeliveryDaysHint": "Ayuda al comprador a saber cuándo esperar su artículo.",
+    "estimatedDelivery": "Entrega estimada",
+    "receivedConfirmedToast": "Recepción confirmada. Puedes marcar la transacción como completada cuando quieras.",
+    "deliveryDueConfirmTitle": "Tu artículo puede haber llegado",
+    "deliveryDueConfirmBody": "La fecha de entrega estimada ya ha pasado. Confirma la recepción abajo o abre una disputa si hay algún problema.",
+    "autoReleaseNotice": "El pago se liberará automáticamente al vendedor el {{date}} si no se confirma la entrega.",
+    "autoReleaseWarning": "El pago se liberará automáticamente en {{days}} día(s). Confirma la recepción o abre una disputa ahora.",
+    "autoReleaseImminent": "El pago está a punto de liberarse al vendedor. Confirma la recepción ahora si ya has recibido el artículo.",
+    "returnWindowNotice": "Te quedan {{days}} día(s) para solicitar una devolución.",
+    "requestReturn": "Solicitar una Devolución",
+    "returnStatus": "Estado de la devolución",
+    "returnStatuses": {
+      "pending_seller_response": "Esperando respuesta del vendedor",
+      "accepted_by_seller": "Aceptada por el vendedor",
+      "rejected_by_seller": "Rechazada por el vendedor",
+      "platform_mediated": "En mediación de la plataforma"
+    },
+    "returnSellerDeadline": "El vendedor debe responder antes del {{date}}",
+    "reportDamage": "Informar de Daños",
+    "damageClaimLabel": "Reclamación por daños",
+    "damageClaimShippedNotice": "¿El artículo llegó dañado? Infórmalo antes de confirmar la recepción.",
+    "damageClaimWindowNotice": "¿El artículo llegó dañado? Te quedan {{hours}}h para informarlo.",
+    "damageStatuses": {
+      "pending_review": "En revisión",
+      "approved_refund": "Reembolso aprobado",
+      "packaging_rejected": "Reclamación rechazada",
+      "carrier_claim_filed": "Reclamación presentada al transportista",
+      "resolved": "Resuelta",
+      "closed": "Cerrada"
+    },
+    "damageClaim": {
+      "title": "Informar de Artículo Dañado en el Transporte",
+      "subtitle": "Envía fotos del daño y del embalaje original. Las reclamaciones deben abrirse en un plazo de 48 horas desde la entrega.",
+      "damagePhotos": "Fotos del daño",
+      "damagePhotosHint": "Muestra claramente el daño en el artículo (hasta 5 fotos).",
+      "packagingPhotos": "Fotos del embalaje",
+      "packagingPhotosHint": "Muestra la caja/el sobre exterior tal como lo recibiste — todos los lados si es posible (hasta 5 fotos).",
+      "description": "Descripción del daño (opcional)",
+      "descriptionPlaceholder": "Describe qué se dañó y cómo estaba embalado…",
+      "policyNotice": "Las reclamaciones pueden ser rechazadas si el vendedor no embaló el artículo de forma suficiente. BidRoom revisará el cumplimiento de las normas de embalaje antes de procesar cualquier reembolso.",
+      "submit": "Enviar Informe de Daños"
+    },
+    "choosePaymentMethod": "¿Cómo quieres pagar?",
+    "payWithCard": "Pagar con tarjeta (Stripe)",
+    "payInPerson": "Pagar en persona",
+    "payBankTransfer": "Transferencia bancaria",
+    "payMbway": "MBWay",
+    "bankTransferInstructions": "Transfiere el importe a la cuenta indicada abajo y haz clic en \"Pago enviado\" cuando hayas terminado.",
+    "mbwayInstructions": "Envía el pago al número MBWay indicado abajo y haz clic en \"Pago enviado\" cuando hayas terminado.",
+    "inPersonInstructions": "Acuerda con el vendedor los detalles de la entrega. Haz clic en \"Pago acordado\" para avisarle.",
+    "accountName": "Titular de la cuenta",
+    "amountLabel": "Importe a transferir",
+    "phoneLabel": "Número MBWay",
+    "iHaveSentPayment": "Pago enviado",
+    "iHaveArrangedPayment": "Pago acordado",
+    "sending": "Enviando…",
+    "manualPaymentSentTitle": "Esperando confirmación del vendedor",
+    "manualPaymentSentBody": "El vendedor confirmará cuando reciba el pago.",
+    "manualPaymentSentConfirmation": "Se ha notificado al vendedor que tu pago está en camino.",
+    "manualPaymentError": "No se pudo registrar el pago. Inténtalo de nuevo.",
+    "stripeNotAvailable": "Stripe no está disponible para importes superiores a 10.000 €. Utiliza otro método de pago.",
+    "stripePaymentError": "Error al iniciar el pago. Inténtalo de nuevo.",
+    "shippingRatesError": "Error al fijar la tarifa de envío. Inténtalo de nuevo.",
+    "damageClaimUploadError": "Error al subir la foto. Inténtalo de nuevo.",
+    "damageClaimSubmitError": "Error al enviar la reclamación. Inténtalo de nuevo.",
+    "returnError": "Error al enviar la solicitud de devolución.",
+    "disputeError": "Error al enviar la disputa."
   },
   "disputes": {
     "title": "Disputas",
@@ -1869,12 +2741,22 @@
       "evidenceRequired": "Se requiere evidencia para abrir una disputa.",
       "evidence": "Evidencia",
       "evidenceHint": "Sube fotos o video como evidencia para tu disputa."
-    }
+    },
+    "errorLoading": "Error al cargar las disputas.",
+    "submitError": "Error al enviar la disputa."
   },
   "howItWorks": {
     "hero": {
       "title": "Cómo Funciona BidRoom",
-      "subtitle": "Todo lo que necesitas saber para comprar y vender en BidRoom."
+      "subtitle": "Todo lo que necesitas saber para comprar y vender en BidRoom.",
+      "eye": "Cómo funciona",
+      "title2": "de principio a fin.",
+      "sub": "Explicamos exactamente lo que ocurre en cada paso — para compradores, para vendedores y para todos los que participan en las Salas Privadas.",
+      "ctaBuyer": "Soy comprador",
+      "ctaSeller": "Soy vendedor",
+      "stat1": "Modos de venta",
+      "stat2": "Comisión estándar",
+      "stat3": "Sala Privada"
     },
     "auth": {
       "title": "Crea Tu Cuenta",
@@ -1987,7 +2869,406 @@
     "cta": {
       "title": "¿Listo para Empezar?",
       "subtitle": "Únete a BidRoom hoy y descubre una forma más inteligente de comprar y vender.",
-      "button": "Crear Cuenta Gratis"
+      "button": "Crear Cuenta Gratis",
+      "title2": "Es gratis.",
+      "sub": "Crea tu cuenta en menos de 2 minutos. Sin cuotas de alta, sin sorpresas.",
+      "btn1": "Crear cuenta gratis",
+      "btn2": "Ver subastas activas",
+      "eye": "¿Listo para empezar?"
+    },
+    "tabs": {
+      "buyer": "Comprador",
+      "seller": "Vendedor",
+      "private": "Salas Privadas",
+      "payments": "Pago y Seguridad"
+    },
+    "buyer": {
+      "s1": {
+        "eye": "Formatos de subasta",
+        "title": "Pujar o proponer,",
+        "title2": "según el anuncio.",
+        "intro": "Cada anuncio de BidRoom funciona de una de dos formas, elegida por el vendedor e indicada con claridad en la propia página del artículo. Lo que cambia es cómo participas — nada más.",
+        "equal": "En cualquier caso, el pago, la protección al comprador y la resolución de disputas funcionan exactamente igual."
+      },
+      "auction": {
+        "title": "Pujas",
+        "desc": "Los compradores compiten en tiempo real. Fija tu puja máxima y el sistema puja por ti hasta ese importe. Cuando se agota el tiempo, la puja más alta gana automáticamente. Una puja es un compromiso: si ganas, pagas.",
+        "commission": "0% de comisión para el comprador",
+        "f1": "Duración fijada por el vendedor — de 1 a 15 días",
+        "f2": "Solo pueden ganar las pujas hechas desde una cuenta registrada",
+        "f3": "Precio de compra inmediata opcional — compra al momento sin esperar",
+        "f4": "Después de la subasta puede haber una Sala Privada"
+      },
+      "offer": {
+        "title": "Propuestas",
+        "desc": "Envías al vendedor el importe que te parece justo, con o sin mensaje. Él lo acepta, lo rechaza o espera propuestas mejores hasta el final del plazo. No hay venta hasta que el vendedor acepta la tuya.",
+        "commission": "0% de comisión para el comprador",
+        "f1": "Las propuestas son públicas: el importe, el mensaje y las iniciales de quien propone aparecen en el anuncio — su nombre nunca",
+        "f2": "Puedes incluir un mensaje con tu propuesta",
+        "f3": "Puedes retirar tu propuesta mientras siga pendiente",
+        "f4": "Puedes proponer por debajo del mínimo del vendedor, pero él es libre de rechazarlo"
+      },
+      "s2": {
+        "eye": "Paso a paso",
+        "title": "Cómo comprar",
+        "title2": "en BidRoom",
+        "intro": "Del registro a la entrega, explicamos cada momento del proceso — incluido lo que ocurre si algo sale mal."
+      },
+      "step1": {
+        "title": "Crea tu cuenta — es gratis",
+        "desc": "Regístrate con email o con Google. Sin cuotas de alta ni tarifas mensuales. La cuenta es gratuita para compradores."
+      },
+      "step2": {
+        "title": "Explora y filtra por categoría",
+        "desc": "Navega por categorías — relojes, arte, coches, joyería, antigüedades y más. Añade anuncios a tu lista de seguimiento para seguirlos sin pujar."
+      },
+      "step3": {
+        "title": "Haz una puja o una propuesta",
+        "desc": "<strong>La página del artículo es la misma en los dos casos</strong> — solo cambia el botón. En pujas, cada puja tiene que superar la anterior por el incremento fijado, y te avisamos en el momento en que te superan. En propuestas, envías el importe que te parece justo, con o sin mensaje.",
+        "noteTitle": "Pujas vs propuestas.",
+        "note": "Una puja es vinculante y no se puede cancelar. Una propuesta se puede retirar mientras siga pendiente; cuando el vendedor la acepta, se convierte en una venta vinculante."
+      },
+      "step4": {
+        "title": "Si ganas — paga en 24 horas",
+        "desc": "Cuando la subasta cierra y tu puja es la ganadora, tienes <strong>24 horas</strong> para realizar el pago a través de Stripe. Recibirás un email y una notificación en la plataforma.",
+        "noteTitle": "Los fondos quedan en custodia.",
+        "note": "El pago no va directamente al vendedor — BidRoom lo retiene hasta que confirmes que has recibido el artículo en buen estado."
+      },
+      "step5": {
+        "title": "Espera el envío — el vendedor tiene 5 días laborables",
+        "desc": "El vendedor tiene <strong>5 días laborables</strong> (de lunes a viernes) para enviar el artículo tras la confirmación del pago. Si no lo envía dentro del plazo, la transacción se cancela automáticamente y recibes el reembolso íntegro.",
+        "noteTitle": "Protección automática.",
+        "note": "No tienes que hacer nada si el vendedor no envía. El sistema cancela y reembolsa automáticamente al cabo de 5 días laborables."
+      },
+      "step6": {
+        "title": "Confirma la recepción",
+        "desc": "Cuando recibas el artículo, confirma en la plataforma: <strong>Recibido en buen estado</strong> — la transacción se completa y el vendedor cobra. <strong>Recibido con problemas</strong> — se abre una disputa; los fondos siguen retenidos.",
+        "noteTitle": "48 horas para reclamar daños.",
+        "note": "Si el artículo llegó dañado en el transporte, tienes 48 horas desde la confirmación de la entrega para abrir una reclamación de daños, con fotos del artículo y del embalaje."
+      },
+      "step7": {
+        "title": "Valora al vendedor",
+        "desc": "Una vez completada la transacción, puedes valorar al vendedor en una escala de 1 a 10. Las descripciones de las valoraciones son <strong>privadas</strong> — solo las ve el vendedor."
+      },
+      "faq": {
+        "q0": "¿Cuál es la diferencia entre pujar y hacer una propuesta?",
+        "a0": "En un anuncio de pujas compites en tiempo real y, al cierre, la puja más alta gana automáticamente — una puja es <strong>vinculante</strong>. En un anuncio de propuestas envías un importe al vendedor y es él quien decide si lo acepta. La página del artículo muestra siempre cuál de los dos se aplica, justo en el botón con el que participas.",
+        "q1": "¿Mi propuesta me obliga a comprar?",
+        "a1": "Solo si el vendedor la acepta. Mientras siga pendiente puedes retirarla. Una vez aceptada, tienes <strong>24 horas</strong> para pagar, exactamente como si hubieras ganado una subasta.",
+        "q2": "¿Puedo hacer una propuesta en un anuncio de pujas?",
+        "a2": "No. Cada anuncio funciona en un solo modo: si acepta pujas, pujas; si acepta propuestas, propones.",
+        "q3": "¿Puedo cancelar una puja después de hacerla?",
+        "a3": "Las <strong>pujas</strong> son vinculantes y no se pueden cancelar. Las <strong>propuestas</strong> se pueden retirar mientras sigan pendientes. Una vez que el vendedor acepta, la venta es vinculante.",
+        "q4": "¿Qué ocurre si el vendedor no envía el artículo?",
+        "a4": "Si el vendedor no envía en el plazo de <strong>5 días laborables</strong>, la transacción se cancela automáticamente y recibirás el reembolso íntegro en tu método de pago original.",
+        "q5": "¿Tengo derecho de desistimiento?",
+        "a5": "BidRoom es sobre todo una plataforma C2C (entre particulares). En las subastas en línea entre particulares, el derecho de desistimiento generalmente no se aplica. Si el vendedor es un profesional, tus derechos son distintos — consulta los Términos de Uso.",
+        "q6": "¿Cuánta comisión pago?",
+        "a6": "<strong>Los compradores no pagan comisión de venta a BidRoom.</strong> Pagas el precio del artículo más una tarifa de servicio de BidRoom (2,9% + 0,30 € por transacción), con un límite de <strong>500 €</strong>, añadida al total al pagar."
+      }
+    },
+    "seller": {
+      "s1": {
+        "eye": "Comisiones",
+        "title": "Solo pagas si vendes.",
+        "title2": "Sin tarifas de publicación.",
+        "intro": "Publicar un artículo en BidRoom es completamente gratis. La comisión solo se cobra cuando la transacción se completa con éxito — y se deduce automáticamente antes del pago."
+      },
+      "comm": {
+        "th1": "Modo de venta",
+        "th2": "Comisión del vendedor",
+        "th3": "Ejemplo (artículo de 1.000 €)",
+        "r1": "Pujas (sin Sala Privada)",
+        "ex1": "Recibes 965 €",
+        "r2": "Pujas (con Sala Privada)",
+        "ex2": "Recibes 940 € — pero cierra de media un 32% más alto",
+        "r3": "Propuestas",
+        "ex3": "Recibes 965 €",
+        "note": "La tarifa de servicio de BidRoom (2,9% + 0,30 €, con un límite de 500 €) se cobra al comprador y se añade al importe final al pagar — no se deduce de tu cobro. El importe se transfiere a tu cuenta bancaria mediante Stripe Connect después de que el comprador confirme la recepción."
+      },
+      "s2": {
+        "eye": "Paso a paso",
+        "title": "Cómo vender",
+        "title2": "en BidRoom",
+        "intro": "De la publicación al cobro, el proceso es directo. Nunca pagas por adelantado y siempre cobras después de confirmarse la entrega."
+      },
+      "step1": {
+        "title": "Configura los pagos una sola vez",
+        "desc": "Antes de publicar tu primer anuncio, configura tu cuenta de pagos mediante Stripe Connect en Panel → Ajustes → Pagos. Necesitarás datos de identidad y un IBAN. Se hace una sola vez y no hay que repetirlo."
+      },
+      "step2": {
+        "title": "Crea el anuncio en 6 pasos",
+        "desc": "El asistente de publicación te guía: el modo de venta — ¿quieres que los compradores pujen (subasta con tiempo, gana la puja más alta) o que te envíen propuestas (tú decides cuál aceptas)? —, luego detalles, fotos (hasta 20), precio, envío y ubicación, y una revisión final. Puedes guardar un borrador en cualquier momento.",
+        "noteTitle": "KYC para artículos ≥ 5.000 €.",
+        "note": "Para publicar o pujar en artículos con un valor igual o superior a 5.000 €, es necesaria la verificación de identidad conforme a la legislación de prevención del blanqueo de capitales."
+      },
+      "step3": {
+        "title": "Espera el cierre",
+        "desc": "<strong>Pujas:</strong> el ganador se determina automáticamente cuando se agota el tiempo. No tienes que hacer nada.<br><strong>Propuestas:</strong> recibes un aviso de cada propuesta y decides hasta el final del plazo. Al aceptar una, las demás se cierran automáticamente."
+      },
+      "step4": {
+        "title": "El comprador paga — tiene 24 horas",
+        "desc": "El comprador tiene <strong>24 horas</strong> para realizar el pago. Si no paga dentro del plazo, la transacción se cancela y el artículo puede volver a publicarse."
+      },
+      "step5": {
+        "title": "Envía en 5 días laborables",
+        "desc": "Tras la confirmación del pago, tienes <strong>5 días laborables</strong> (de lunes a viernes, UTC) para enviar el artículo. Recibirás un aviso el día 3. Si no has enviado el día 5, la transacción se cancela automáticamente y se reembolsa al comprador.",
+        "noteTitle": "Días laborables = de lunes a viernes, UTC.",
+        "note": "Los fines de semana y los festivos no cuentan. El plazo lo calcula automáticamente el sistema desde la confirmación del pago."
+      },
+      "step6": {
+        "title": "Cobra automáticamente",
+        "desc": "Cuando el comprador confirma que ha recibido el artículo en buen estado, los fondos se liberan automáticamente y se transfieren a tu cuenta bancaria mediante Stripe Connect (normalmente 1–2 días laborables bancarios).",
+        "noteTitle": "Si el comprador no confirma la recepción.",
+        "note": "Si el comprador no confirma la recepción dentro del plazo, el sistema libera los fondos automáticamente (auto-release). No necesitas contactar con el soporte."
+      },
+      "faq": {
+        "q0": "¿Qué modo de venta debo elegir?",
+        "a0": "Pujas cuando quieras maximizar el precio y haya demanda — dejas que el mercado decida el valor. Propuestas cuando tengas un precio en mente y prefieras controlar a quién vendes. La comisión es del <strong>3,5% en los dos modos</strong>; solo sube al 6% si activas la Sala Privada, que existe únicamente en el modo de pujas.",
+        "q1": "¿Puedo cambiar de modo después de publicar?",
+        "a1": "No, para proteger a quien ya ha pujado o propuesto — cambiarlo alteraría lo que su puja o su propuesta significa jurídicamente. Para cambiarlo, cancela y crea un anuncio nuevo: no hay tarifa de publicación ni de cancelación.",
+        "q2": "¿Qué es la aceptación automática de propuestas?",
+        "a2": "Si, al vencer el plazo, hay <strong>exactamente una</strong> propuesta igual o superior a tu mínimo, esa propuesta se acepta por ti — para que no se pierda una venta válida por un descuido. Si varias superan el mínimo, decides tú; si ninguna lo hace, el anuncio cierra sin venta. La aceptación automática requiere que tu cuenta de pagos de Stripe esté configurada.",
+        "q3": "¿Cuándo recibo el pago?",
+        "a3": "Los fondos se liberan cuando el comprador confirma la recepción. Después de eso, la transferencia por Stripe Connect tarda normalmente <strong>1–2 días laborables bancarios</strong>.",
+        "q4": "¿Puedo fijar un precio mínimo en el modo de propuestas?",
+        "a4": "Sí, y es <strong>obligatorio</strong> en los anuncios en modo de propuestas. Por debajo de esa cifra puedes rechazar libremente. A partir de ella quedas comprometido: no puedes rechazar la última propuesta que la alcance y, si al cerrar el anuncio hay exactamente una que la alcanza, se acepta automáticamente.",
+        "q5": "¿Qué ocurre si el comprador abre una disputa?",
+        "a5": "Cuando se abre una disputa, las dos cuentas quedan restringidas y los fondos retenidos. El equipo de BidRoom revisa las pruebas de las dos partes. Si no se llega a un acuerdo, el caso se remite a la CNIACC.",
+        "q6": "¿Puedo cancelar un anuncio después de publicarlo?",
+        "a6": "Sí, mientras el anuncio esté en borrador, pendiente de aprobación o activo — y solo si no hay nada que lo vincule: en modo de propuestas, ninguna propuesta aceptada y ninguna propuesta pendiente igual o superior al mínimo; en modo de pujas, ninguna puja. Las propuestas pendientes por debajo del mínimo se rechazan automáticamente. No puedes eliminar un anuncio que ya tenga ganador o una transacción activa.",
+        "q7": "¿Qué artículos no puedo publicar?",
+        "a7": "Prohibidos: animales vivos, sustancias controladas, armas y cualquier artículo ilegal en Portugal. BidRoom usa moderación automática (Azure AI Content Safety) para detectar y bloquear esos anuncios antes de que se publiquen."
+      },
+      "card": {
+        "noListingFee": "Sin tarifa de publicación",
+        "noCancellation": "Sin tarifa de cancelación"
+      },
+      "card2": {
+        "badge": "Con Sala Privada",
+        "f2": "Ronda exclusiva posterior a la subasta",
+        "f3": "Hasta 5 pujadores invitados",
+        "f4": "Ganador automático garantizado"
+      },
+      "tip": {
+        "tag": "Consejo para vendedores",
+        "title": "Activa la Sala Privada para maximizar el precio final de venta",
+        "desc": "Las subastas con Sala Privada cierran de media un 30% por encima de la última puja pública. El comprador que pierde la subasta principal a menudo está dispuesto a pagar más en una ronda exclusiva — la Sala Privada captura ese valor para ti."
+      }
+    },
+    "private": {
+      "eye": "Salas Privadas",
+      "title": "Exclusividad",
+      "title2": "por invitación.",
+      "intro": "Una Sala Privada es una ronda de pujas exclusiva que tiene lugar después de la subasta pública — solo para los pujadores invitados por el vendedor. Nuestros datos muestran que las subastas con Sala Privada cierran de media un 32% por encima del precio inicial.",
+      "timerLabel": "Por puja",
+      "stat1": "Pujadores invitados",
+      "stat2": "Por puja",
+      "stat3": "Ganador automático",
+      "s2": {
+        "eye": "Cómo funciona paso a paso",
+        "title": "El proceso completo"
+      },
+      "step1": {
+        "title": "Elegibilidad — ¿quién puede tener una Sala Privada?",
+        "desc": "Una Sala Privada solo es posible en anuncios en modo de pujas y con la opción activada por el vendedor. Para que se active, la subasta tiene que haber terminado y debe haber al menos <strong>2 pujadores autenticados y registrados</strong>."
+      },
+      "step2": {
+        "title": "El vendedor invita — ventana de 15 minutos",
+        "desc": "Tras el cierre de la subasta, el vendedor tiene <strong>15 minutos</strong> para crear la sala e invitar a entre 2 y 5 de los pujadores. Una cuenta atrás visible en la página del anuncio muestra el tiempo restante."
+      },
+      "step3": {
+        "title": "Los invitados aceptan o rechazan — 15 minutos",
+        "desc": "Cada invitado recibe un email y una notificación y tiene <strong>15 minutos</strong> para aceptar o rechazar. Quien no responda dentro del plazo queda no elegible. <strong>Excepción:</strong> si se invitó exactamente a 2 pujadores y uno no responde, el otro se selecciona automáticamente como ganador.",
+        "noteTitle": "Cuando todos aceptan.",
+        "note": "En cuanto todos los invitados aceptan, la cuenta atrás de apertura baja a <strong>1 minuto</strong>. La sala abre y empiezan las pujas."
+      },
+      "step4": {
+        "title": "Pujas — la regla de los 60 segundos",
+        "desc": "Dentro de la sala solo pueden pujar los invitados que han aceptado. Cualquier puja nueva <strong>reinicia el temporizador a 60 segundos</strong>. La sala cierra cuando pasan 60 segundos sin ninguna puja nueva. El pujador con la puja más alta en el momento del cierre gana automáticamente."
+      },
+      "step5": {
+        "title": "Ganador automático — transparencia total",
+        "desc": "El sistema determina el ganador automáticamente en función de la puja más alta. El vendedor no interviene en esa decisión.",
+        "noteTitle": "Si el vendedor abandona la sala.",
+        "note": "Si el vendedor sale de la sala durante la ronda, la sala cierra de inmediato sin ganador y se notifica a todos los participantes. Esta acción queda registrada en el sistema."
+      },
+      "vis": {
+        "title": "¿Quién puede ver la sala?",
+        "text": "Cualquier usuario puede ver la sala en modo observador. Los invitados que aún no han respondido aparecen en gris; los que han aceptado aparecen destacados."
+      },
+      "commission": {
+        "title": "Comisión con Sala Privada",
+        "text": "La comisión del vendedor sube del 3,5% al <strong>6%</strong> cuando la Sala Privada está activa. Esta diferencia refleja el valor añadido — las subastas con Sala Privada cierran bastante más alto."
+      },
+      "eligible": {
+        "title": "Elegibilidad para ser invitado",
+        "text": "Para ser elegible como invitado de una Sala Privada, el comprador necesita una reputación ≥ 60 y cero disputas perdidas. Las cuentas de invitado o sin verificar no son elegibles."
+      },
+      "audit": {
+        "title": "Auditoría completa",
+        "text": "Todas las acciones de una Sala Privada quedan registradas en el sistema de auditoría interno — invitaciones, aceptaciones, pujas y cierre. Disponible para su revisión en caso de disputa."
+      },
+      "demo": {
+        "header": "Sala Privada – demostración en directo",
+        "status": "ACTIVA",
+        "itemName": "Rolex Submariner 5513 – 1972",
+        "itemSub": "Subasta cerrada · Sala Privada en curso",
+        "bidLabel": "Puja actual",
+        "seatsLabel": "Platinum Bidders en la sala",
+        "timerLabel": "Tiempo restante",
+        "extendNote": "Cada puja amplía 60 segundos"
+      },
+      "faq": {
+        "q0": "¿Puedo rechazar una invitación a una Sala Privada?",
+        "a0": "Sí. Puedes rechazar o ignorar la invitación dentro de los 15 minutos. Si quedan menos de 2 pujadores invitados activos, la sala puede cerrarse o el último pujador que aceptó gana automáticamente.",
+        "q1": "¿Y si solo acepta un pujador?",
+        "a1": "Si solo 1 pujador acepta y los demás no responden dentro del plazo, ese pujador gana automáticamente por el importe de su puja original. La sala no puede existir con un solo participante activo.",
+        "q2": "¿Puedo ver quién más está en la sala?",
+        "a2": "Puedes ver cuántos participantes hay en la sala y su estado, pero no sus nombres durante la ronda. Tras el cierre se anuncia el ganador.",
+        "q3": "¿Tengo que pujar si acepto la invitación?",
+        "a3": "No estás obligado a pujar, pero al aceptar la invitación formas parte de la sala. Puedes entrar y no pujar — en ese caso gana otro participante si supera tu puja original."
+      }
+    },
+    "payments": {
+      "eye": "Pago y Seguridad",
+      "title": "Tu dinero,",
+      "title2": "siempre protegido.",
+      "intro": "Explicamos exactamente cómo fluyen los fondos entre comprador, BidRoom y vendedor — sin sorpresas ni letra pequeña.",
+      "escrow": {
+        "title": "Fondos en custodia",
+        "text": "BidRoom retiene el pago del comprador (mediante Stripe) hasta que el comprador confirma que ha recibido el artículo en buen estado. El vendedor solo cobra después de esa confirmación."
+      },
+      "stripe": {
+        "title": "Con tecnología de Stripe",
+        "text": "Todos los pagos los procesa Stripe, líder mundial en pagos en línea. BidRoom nunca almacena datos de tarjetas. Stripe cumple PCI DSS de nivel 1."
+      },
+      "refund": {
+        "title": "Reembolso automático",
+        "text": "Si el vendedor no envía en 5 días laborables, el reembolso se procesa automáticamente. No tienes que pedirlo — el sistema se encarga de todo."
+      },
+      "payout": {
+        "title": "Cobro mediante Stripe Connect",
+        "text": "Los vendedores cobran directamente en su cuenta bancaria mediante Stripe Connect. BidRoom deduce la comisión automáticamente antes del pago — el vendedor recibe el importe neto."
+      },
+      "tl": {
+        "eye": "Flujo de una transacción",
+        "title": "De ganar",
+        "title2": "al cobro",
+        "p1": {
+          "phase": "Pago",
+          "deadline": "24 horas",
+          "title": "El comprador paga",
+          "desc": "El comprador tiene <strong>24 horas</strong> desde el cierre para realizar el pago. Los fondos quedan retenidos en la custodia de Stripe de BidRoom. Si no paga, la transacción se cancela."
+        },
+        "p2": {
+          "phase": "Envío",
+          "deadline": "5 días laborables",
+          "title": "El vendedor envía",
+          "desc": "El vendedor tiene <strong>5 días laborables</strong> para enviar. El día 3 recibe un aviso. El día 5, si no ha enviado, el sistema cancela automáticamente y reembolsa al comprador."
+        },
+        "p3": {
+          "phase": "Entrega",
+          "deadline": "Estimada",
+          "title": "El comprador confirma",
+          "desc": "El comprador confirma: artículo en buen estado → fondos liberados; artículo con problemas → disputa abierta. Si no confirma dentro del plazo → <strong>auto-release</strong> automático."
+        },
+        "p4": {
+          "phase": "Disputa",
+          "deadline": "Opcional",
+          "title": "Mediación de BidRoom → CNIACC",
+          "desc": "Las dos cuentas quedan restringidas. BidRoom intenta facilitar un acuerdo en <strong>7 días laborables</strong>. Si no hay acuerdo, el caso se remite a la CNIACC. Los fondos siguen retenidos hasta la resolución final."
+        },
+        "p5": {
+          "phase": "Cobro",
+          "deadline": "1–2 días laborables",
+          "title": "El vendedor cobra",
+          "desc": "Comisión deducida automáticamente. Importe neto transferido mediante Stripe Connect a la cuenta bancaria del vendedor en <strong>1–2 días laborables bancarios</strong>."
+        }
+      },
+      "faq": {
+        "q0": "¿BidRoom guarda los datos de mi tarjeta?",
+        "a0": "No. Los datos de tarjeta los gestiona exclusivamente Stripe, que cumple PCI DSS de nivel 1. BidRoom nunca tiene acceso a los números de tarjeta ni los almacena.",
+        "q1": "¿Cuándo recibe el vendedor mi pago?",
+        "a1": "El vendedor <strong>no cobra de inmediato</strong>. BidRoom retiene los fondos hasta que confirmes que has recibido el artículo en buen estado. Solo entonces se liberan. Esta custodia te protege del fraude.",
+        "q2": "¿Puedo pagar con MB WAY o Multibanco?",
+        "a2": "No en el checkout de BidRoom: el pago en la plataforma es con tarjeta — Visa, Mastercard y American Express — procesada por Stripe, y no se admiten referencias Multibanco. El vendedor puede activar MB WAY, transferencia bancaria o pago en mano en su propio anuncio; esos se liquidan directamente con el vendedor, fuera de la custodia de BidRoom, y después se confirman en la transacción, por lo que las opciones disponibles dependen del anuncio.",
+        "q3": "¿Qué es el sistema de reputación?",
+        "a3": "Cada usuario tiene una puntuación de reputación de 0 a 100, calculada automáticamente a partir de las valoraciones recibidas, las transacciones completadas y las disputas. Para ser elegible para las Salas Privadas hace falta una puntuación ≥ 60 sin disputas perdidas."
+      },
+      "flow": {
+        "s1": {
+          "title": "Subasta ganada",
+          "sub": "El comprador gana"
+        },
+        "s2": {
+          "title": "Pago",
+          "sub": "Checkout seguro"
+        },
+        "s3": {
+          "title": "Envío",
+          "sub": "5 días laborables"
+        },
+        "s4": {
+          "title": "Entrega",
+          "sub": "El comprador confirma"
+        },
+        "s5": {
+          "title": "Cobro",
+          "sub": "IBAN del vendedor"
+        }
+      },
+      "table": {
+        "col1": "Descripción",
+        "col2": "Valor",
+        "r1": {
+          "label": "Tarjeta de crédito / débito",
+          "sub": "Visa, Mastercard, American Express — mediante Stripe",
+          "val": "Incluido"
+        },
+        "r2": {
+          "label": "Transferencia, MB WAY o en mano",
+          "sub": "Solo si el vendedor lo activa — se liquida directamente con él, fuera de la custodia",
+          "val": "A elección del vendedor"
+        },
+        "r3": {
+          "label": "Cobro del vendedor",
+          "sub": "Transferencia SEPA al IBAN registrado",
+          "val": "Gratis"
+        },
+        "r4": {
+          "label": "Periodo de custodia",
+          "sub": "Fondos retenidos hasta confirmarse la entrega",
+          "val": "Automático"
+        },
+        "r5": {
+          "label": "Reembolso por cancelación",
+          "sub": "Envío no realizado en 5 días laborables",
+          "val": "Íntegro"
+        },
+        "r6": {
+          "label": "Protección en disputas",
+          "sub": "Mediación de BidRoom – CNIACC – Tribunal",
+          "val": "Incluido"
+        }
+      }
+    },
+    "faq": {
+      "eye": "Preguntas frecuentes",
+      "buyer": {
+        "title": "Comprador",
+        "title2": "— tus dudas"
+      },
+      "seller": {
+        "title": "Vendedor",
+        "title2": "— tus dudas"
+      },
+      "payments": {
+        "title": "Pago y Seguridad"
+      },
+      "private": {
+        "title": "Preguntas frecuentes – Sala Privada"
+      }
     }
   },
   "contact": {
@@ -2724,7 +4005,8 @@
     "follow": "Seguir",
     "following": "Siguiendo",
     "mute": "Silenciar notificaciones",
-    "unmute": "Activar notificaciones"
+    "unmute": "Activar notificaciones",
+    "offersMode": "Propuestas"
   },
   "notifications": {
     "newBid": {
@@ -3084,6 +4366,374 @@
       "24h": "24 horas",
       "48h": "48 horas",
       "7d": "una semana"
+    }
+  },
+  "privateRoomAuction": {
+    "topbar": {
+      "backToListing": "Volver al anuncio",
+      "title": "Sala de Subasta Privada",
+      "viewers": "Espectadores",
+      "auctionEnded": "Subasta terminada",
+      "acceptanceWindow": "Plazo de aceptación",
+      "closingSoon": "Cierra en breve",
+      "timeRemaining": "Tiempo restante"
+    },
+    "endedPage": {
+      "subtitle": "La sesión de la subasta privada ha concluido.",
+      "viewTransactions": "Ir a transacciones"
+    },
+    "expired": {
+      "titleEnded": "Sala privada terminada",
+      "titleStarted": "Subasta privada iniciada",
+      "titleClosed": "Sala privada cerrada",
+      "bodyWinner": "Enhorabuena — has ganado con la puja más alta de <strong>{{amount}}</strong>. Consulta tu correo y ve a Transacciones para completar el pago en 48 horas.",
+      "bodySellerWithWinner": "La sesión ha terminado. <strong>{{name}}</strong> ha ganado con <strong>{{amount}}</strong>. Recibirás los siguientes pasos por correo.",
+      "bodySellerNoWinner": "La sesión terminó sin puja ganadora. Puedes volver a publicar el artículo en Mis subastas.",
+      "bodyParticipantWithWinner": "La sesión ha terminado. <strong>{{name}}</strong> ha ganado con <strong>{{amount}}</strong>. Se te notificará por correo si has sido seleccionado.",
+      "bodyParticipantNoWinner": "La sesión ha terminado. No hubo puja ganadora. Gracias por participar.",
+      "bodySpectatorWithWinner": "La subasta privada ha terminado. La puja ganadora fue <strong>{{amount}}</strong>.",
+      "bodySpectatorNoWinner": "La subasta privada ha terminado sin puja ganadora.",
+      "bodyNoAccept": "Ningún pujador invitado aceptó a tiempo. La subasta cerró sin ganador.",
+      "bodySellerLeft": "El vendedor salió de la sala. La subasta cerró sin ganador.",
+      "bodyStartedInvited": "El plazo de aceptación ha terminado. Las pujas están abiertas — puja antes de que se agote el temporizador.",
+      "bodyStartedOther": "La subasta privada ha comenzado. Puedes verla en directo; solo los pujadores invitados pueden pujar.",
+      "bodyConfirming": "Se ha agotado el tiempo. Estamos confirmando los resultados finales — esta página se actualizará automáticamente.",
+      "confirm": "Entendido",
+      "viewListing": "Ver anuncio",
+      "viewTransactions": "Ir a transacciones"
+    },
+    "state": {
+      "loading": "Cargando la sala privada…"
+    },
+    "login": {
+      "title": "Inicio de sesión necesario",
+      "body": "Necesitas iniciar sesión para participar en esta sala de subasta privada.",
+      "sub": "Si eres un pujador invitado, inicia sesión para pujar.",
+      "cta": "Iniciar sesión para participar"
+    },
+    "lobby": {
+      "title": "La sala aún no ha empezado",
+      "untilStart": "hasta que empiece la sala",
+      "acceptWindow": "Los invitados tienen <strong>15 minutos</strong> para aceptar. La subasta empieza automáticamente después.",
+      "pendingInvitation": "Tienes una invitación pendiente.",
+      "accepting": "Aceptando…",
+      "accept": "Aceptar invitación",
+      "accepted": "Has aceptado tu invitación. La subasta empezará en breve.",
+      "checkEmail": "Consulta tu correo para encontrar el enlace de aceptación.",
+      "starting": "Iniciando…",
+      "startNow": "Iniciar la subasta ahora",
+      "invitedBidders": "Pujadores invitados"
+    },
+    "product": {
+      "imageAlt": "Imagen {{n}}",
+      "viewDetails": "Ver detalles"
+    },
+    "bid": {
+      "quickBids": "Pujas rápidas",
+      "currentBid": "Puja actual",
+      "one": "puja",
+      "many": "pujas",
+      "leading": "En cabeza",
+      "placing": "Pujando…",
+      "place": "Pujar {{amount}}",
+      "minIncrement": "Incremento mínimo: {{amount}}",
+      "extendsBy": "Cada puja prolonga el temporizador en 60s",
+      "closingSoon": "Cierra en breve — la próxima puja prolonga 60s",
+      "watching": "Estás viendo esta sala. Solo los pujadores invitados pueden pujar.",
+      "invalidNumber": "Introduce un importe válido.",
+      "failed": "No se ha podido pujar. Inténtalo de nuevo.",
+      "tooLow": "Tu puja debe ser de al menos {{amount}} — la puja actual más el incremento.",
+      "success": "Puja de {{amount}} registrada."
+    },
+    "activity": {
+      "title": "Actividad",
+      "count": "{{count}} pujas",
+      "empty": "Aún sin pujas",
+      "emptySub": "Sé el primero en pujar"
+    },
+    "participants": {
+      "title": "Participantes ({{count}})",
+      "you": "(Tú)",
+      "seller": "Vendedor",
+      "viewHistory": "Ver el historial completo de pujas"
+    },
+    "history": {
+      "title": "Historial de pujas",
+      "total": "{{count}} en total",
+      "latest": "Más reciente",
+      "empty": "Aún sin pujas — ¡sé el primero!"
+    },
+    "invitation": {
+      "accepted": "Aceptada",
+      "declined": "Rechazada",
+      "pending": "Pendiente"
+    },
+    "label": {
+      "you": "Tú",
+      "guest": "Invitado",
+      "user": "Usuario"
+    },
+    "time": {
+      "justNow": "Ahora mismo",
+      "minutesAgo": "hace {{n}}m",
+      "hoursAgo": "hace {{n}}h",
+      "daysAgo": "hace {{n}}d"
+    },
+    "errors": {
+      "loadFailed": "No se ha podido cargar el anuncio.",
+      "acceptTitle": "No se ha podido aceptar",
+      "acceptBody": "No se ha podido aceptar la invitación. Prueba el enlace que recibiste por correo.",
+      "startTitle": "No se ha podido iniciar",
+      "startBody": "No se ha podido iniciar la sala. Puede que ya haya empezado o terminado.",
+      "cannotBidTitle": "No se puede pujar",
+      "cannotBidNotInvited": "Solo los pujadores invitados por el vendedor pueden pujar. Puedes ver la sala.",
+      "cannotBidClosed": "No se puede pujar en este momento. La Sala Privada puede haber terminado o no estar activa todavía."
+    }
+  },
+  "report": {
+    "titleListing": "Denunciar Anuncio",
+    "titleUser": "Denunciar Usuario",
+    "reportListing": "Denunciar Anuncio",
+    "reportSeller": "Denunciar Vendedor",
+    "reportUser": "Denunciar Usuario",
+    "subtitle": "Ayúdanos a entender qué va mal. Revisaremos tu denuncia y actuaremos si es necesario.",
+    "descriptionLabel": "Detalles adicionales (opcional)",
+    "descriptionPlaceholder": "Describe el problema...",
+    "submit": "Enviar Denuncia",
+    "submitting": "Enviando...",
+    "cancel": "Cancelar",
+    "reasons": {
+      "prohibited_item": "Artículo Prohibido",
+      "fraud_scam": "Fraude o Estafa",
+      "offensive_content": "Contenido Ofensivo",
+      "off_platform_transaction": "Intento de Transacción Fuera de la Plataforma",
+      "spam": "Spam",
+      "other": "Otro"
+    },
+    "errors": {
+      "selectReason": "Selecciona un motivo antes de enviar.",
+      "alreadyReported": "Ya has denunciado este artículo.",
+      "generic": "Ha ocurrido un error. Inténtalo de nuevo."
+    },
+    "success": {
+      "title": "Denuncia Enviada",
+      "message": "Gracias. Hemos recibido tu denuncia y nuestro equipo la revisará en breve.",
+      "close": "Cerrar"
+    }
+  },
+  "returns": {
+    "modal": {
+      "title": "Solicitar una Devolución",
+      "intro": "Describe por qué quieres devolver este artículo y aporta al menos 1 foto como evidencia.",
+      "reason": "Motivo de la devolución",
+      "reasonPlaceholder": "Describe el problema con el artículo (p. ej. dañado, no corresponde a la descripción...)",
+      "photos": "Fotos",
+      "photosHint": "Sube al menos 1 foto nítida que muestre el problema.",
+      "addPhotos": "Subir Fotos",
+      "uploading": "Subiendo...",
+      "submit": "Enviar Solicitud de Devolución",
+      "submitting": "Enviando..."
+    }
+  },
+  "trust": {
+    "buyer": {
+      "tiers": {
+        "t1Name": "Correo verificado",
+        "t2Badge": "Identidad Verificada",
+        "t2Name": "Documento verificado",
+        "t3Badge": "Pago Garantizado",
+        "t3Name": "Identidad + tarjeta guardada",
+        "t1Num": "Nivel 1",
+        "t2Num": "Nivel 2",
+        "t3Num": "Nivel 3",
+        "eyebrow": "Tu nivel de confianza",
+        "title": "Tres niveles.",
+        "titleBold": "Más nivel, más credibilidad.",
+        "desc": "Tu nivel de confianza se calcula automáticamente a partir de los pasos que has completado. Es visible para todos los vendedores cuando pujas — funciona como tu reputación instantánea.",
+        "t1Cond": "Requisito: confirmar el correo de registro.",
+        "t1Guarantee": "⚠️ Sin garantía de pago. Si no pagas después de ganar una subasta, el vendedor depende únicamente de tu historial de reputación.",
+        "t2Cond": "Requisito: verificar la identidad mediante Stripe Identity (pasaporte o DNI).",
+        "t2Guarantee": "🔒 Tu identidad es conocida. En caso de disputa sin resolver, puedes ser considerado legalmente responsable.",
+        "t3Cond": "Requisito: KYC completado + tarjeta de crédito/débito válida registrada en tu cuenta.",
+        "t3Guarantee": "🛡️ <strong>Compensación automática.</strong> Si pierdes una disputa, BidRoom carga directamente tu tarjeta guardada — sin proceso manual.",
+        "t1Badge": "Verificado"
+      },
+      "levelUp": {
+        "titleBold": "Pago Garantizado",
+        "eyebrow": "Cómo subir de nivel",
+        "title": "Del Nivel 1 al",
+        "desc": "Tres pasos secuenciales. Cada uno lleva menos de 5 minutos. Puedes detenerte en cualquier nivel — pero el Nivel 3 desbloquea ventajas exclusivas.",
+        "s1Title": "Crear cuenta y verificar el correo",
+        "s1Desc": "Regístrate con correo o Google. Confirma el enlace enviado a tu correo. Inmediato.",
+        "s1Tag": "Alcanza el Nivel 1 — Verificado",
+        "s2Title": "Verificar tu identidad",
+        "s2Desc": "En tu Panel → Ajustes → Identidad. Envía una foto de tu pasaporte o DNI mediante Stripe Identity. Seguro y cifrado. Resultado en segundos.",
+        "s2Tag": "Alcanza el Nivel 2 — Identidad Verificada",
+        "s3Title": "Añadir una tarjeta de pago",
+        "s3Desc": "En tu Panel → Ajustes → Métodos de Pago. Guarda una tarjeta válida. La tarjeta <strong>nunca se cobra de forma preventiva</strong> — solo si pierdes una disputa formal. Procesado por Stripe (PCI DSS Nivel 1).",
+        "s3Tag": "Alcanza el Nivel 3 — Pago Garantizado"
+      },
+      "faq": {
+        "title": "Preguntas sobre",
+        "titleBold": "tu nivel de confianza",
+        "q1": "¿Mi nivel de confianza es público? ¿Puede alguien ver que tengo una tarjeta guardada?",
+        "a1": "No. Lo único visible es el distintivo — «Verificado», «Identidad Verificada» o «Pago Garantizado». Ningún dato de tarjeta, IBAN o documento es visible para terceros. El vendedor solo sabe que tienes una tarjeta válida registrada, no cuál ni sus datos.",
+        "q2": "¿Puedo eliminar la tarjeta guardada en cualquier momento?",
+        "a2": "Sí, puedes eliminar la tarjeta en cualquier momento en Panel → Ajustes → Métodos de Pago. Al hacerlo, tu nivel de confianza baja al Nivel 2 (si tienes KYC) o al Nivel 1. El distintivo se actualiza de inmediato en todas las subastas activas en las que ya has pujado.",
+        "q3": "¿Qué pasa si mi tarjeta caduca?",
+        "a3": "Recibirás un correo de aviso 30 días antes de que caduque tu tarjeta. Si caduca sin que la actualices, el nivel de confianza baja automáticamente. Cualquier disputa activa en ese momento no se ve afectada — sigue sujeta al proceso manual.",
+        "q4": "¿Puede BidRoom cobrarme sin que yo lo sepa?",
+        "a4": "No. Todo cargo en la tarjeta guardada va siempre precedido de una notificación por correo con el importe, el motivo (decisión de disputa) y un plazo de impugnación de 48 horas. Si consideras que el cargo es injusto, puedes contactar con soporte antes del procesamiento final.",
+        "q5": "¿La verificación de identidad (Nivel 2) es obligatoria para pujar?",
+        "a5": "No es obligatoria para la mayoría de las subastas. Pasa a ser obligatoria en subastas con un valor por encima de 5.000 €, en los términos de la Ley 83/2017 (prevención del blanqueo de capitales). Para todas las demás subastas, el Nivel 1 (correo verificado) es suficiente.",
+        "eyebrow": "Preguntas frecuentes"
+      },
+      "benefits": {
+        "colT1": "Nivel 1",
+        "colT2": "Nivel 2",
+        "colT3": "Nivel 3",
+        "eyebrow": "Ventajas por nivel",
+        "title": "Lo que",
+        "titleBold": "ganas al subir de nivel",
+        "desc": "Cada nivel desbloquea ventajas concretas — no solo un distintivo.",
+        "colFeature": "Función",
+        "r1": "Pujar en subastas",
+        "r1Hint": "Todos los formatos",
+        "r2": "Enviar propuestas",
+        "r3": "Elegibilidad para la Sala Privada",
+        "r3Hint": "Requiere reputación ≥ 60",
+        "r4": "Subastas por encima de 5.000 €",
+        "r4Hint": "Ley 83/2017 AML",
+        "r5": "Distintivo visible para los vendedores",
+        "r5Hint": "En el historial de pujas",
+        "r5T1": "Básico",
+        "r5T2": "Mejorado",
+        "r5T3": "Destacado",
+        "r6": "Prioridad en las invitaciones a la Sala Privada",
+        "r6Hint": "Sugerido al vendedor",
+        "r7": "Compensación automática al vendedor",
+        "r7Hint": "En disputa resuelta en tu contra"
+      },
+      "disputes": {
+        "eyebrow": "Protección del comprador",
+        "title": "Qué pasa",
+        "titleBold": "en caso de disputa",
+        "desc": "BidRoom actúa como facilitador, nunca como árbitro final. El proceso tiene siempre tres fases antes de cualquier decisión irreversible.",
+        "p1Num": "Fase 01",
+        "p1Title": "Mediación de BidRoom",
+        "p1Desc": "El comprador abre la disputa con pruebas. El vendedor responde en 7 días laborables. BidRoom analiza e intenta un acuerdo.",
+        "p1Note": "⏱ 7 días laborables máximo",
+        "p2Num": "Fase 02",
+        "p2Title": "CNIACC (arbitraje)",
+        "p2Desc": "Si la mediación no produce un acuerdo, cualquiera de las partes puede escalar a la CNIACC — una entidad portuguesa independiente de resolución alternativa de litigios.",
+        "p2Note": "Voluntario para ambas partes",
+        "p3Num": "Fase 03",
+        "p3Title": "Tribunal",
+        "p3Desc": "Último recurso. La sentencia judicial es vinculante. Los registros de la plataforma (registros de actividad, comunicaciones, transacciones) se conservan 5 años como prueba.",
+        "p3Note": "Plataforma europea de RLL disponible",
+        "alertTitle": "La tarjeta guardada (Nivel 3) nunca se cobra de forma preventiva",
+        "alertDesc": "El cargo automático en la tarjeta guardada solo se produce después de una decisión formal de disputa resuelta en contra del comprador — nunca antes, nunca sin notificación previa por correo. El importe cargado nunca supera el valor de la transacción."
+      }
+    },
+    "seller": {
+      "tiers": {
+        "t1Name": "Correo verificado",
+        "t2Badge": "Identidad Verificada",
+        "t2Name": "Documento verificado",
+        "t3Badge": "Pago Garantizado",
+        "t3Name": "Identidad + tarjeta guardada",
+        "eyebrow": "Niveles de confianza del comprador",
+        "title": "Lo que cada distintivo",
+        "titleBold": "significa para ti",
+        "desc": "Como vendedor, ves el nivel de confianza de cada pujador en tiempo real, directamente en el historial de pujas. Esto es lo que implica cada distintivo para tu protección.",
+        "t1Num": "Comprador Nivel 1",
+        "t1Cond": "Cuenta creada y correo confirmado. Sin verificación adicional.",
+        "t1Guarantee": "Si este comprador gana y no paga, o la disputa se resuelve a tu favor: BidRoom registra la infracción en su reputación. <strong>Sin compensación económica automática.</strong>",
+        "t2Num": "Comprador Nivel 2",
+        "t2Cond": "Identidad real confirmada mediante Stripe Identity.",
+        "t2Guarantee": "Si la disputa se resuelve a tu favor: la identidad del comprador es conocida. Puedes exigirle responsabilidad legal. BidRoom facilita los registros necesarios. <strong>Sin cargo automático.</strong>",
+        "t3Num": "Comprador Nivel 3",
+        "t3Cond": "KYC completado y tarjeta válida registrada en la cuenta de BidRoom.",
+        "t3Guarantee": "Si la disputa se resuelve a tu favor: BidRoom carga automáticamente la tarjeta del comprador. <strong>Recibes el importe de la transacción directamente en tu IBAN.</strong>",
+        "alertTitle": "Consejo para las Salas Privadas",
+        "alertDesc": "Al seleccionar invitados para la Sala Privada, los pujadores con <strong>Pago Garantizado</strong> aparecen sugeridos primero. No estás obligado a elegirlos — pero para artículos de alto valor es el camino más seguro.",
+        "t1Badge": "Verificado"
+      },
+      "faq": {
+        "title": "Preguntas sobre",
+        "titleBold": "la protección del vendedor",
+        "q1": "¿Puedo rechazar a un comprador de Nivel 1 antes de que termine la subasta?",
+        "a1": "No puedes rechazar pujas por el nivel de confianza durante una subasta pública — iría contra el principio de mercado abierto. Lo que sí puedes hacer es activar la Sala Privada y seleccionar solo a los compradores del nivel que prefieras para la ronda exclusiva.",
+        "q2": "Si un comprador de Nivel 3 gana y no paga, ¿me compensan automáticamente?",
+        "a2": "El Nivel 3 se refiere a la compensación en caso de disputa resuelta a tu favor — no a la falta de pago inmediata. Para la falta de pago, el proceso es el mismo con independencia del nivel: cancelación automática a las 24 h, penalización de reputación al comprador, y puedes relistar el artículo gratis.",
+        "q3": "¿Qué pasa con mi pago mientras hay una disputa abierta?",
+        "a3": "Los fondos quedan en custodia mientras la disputa está activa. Tu cuenta y la del comprador quedan suspendidas de forma preventiva. La retención se levanta inmediatamente después de la decisión, sea a tu favor (pago) o a favor del comprador (reembolso).",
+        "q4": "Mi anuncio está mal descrito y quiero retirarlo. ¿Hay penalización?",
+        "a4": "Puedes eliminar un anuncio sin pujas ni propuestas que cualifiquen (en modo propuestas: ninguna igual o superior al mínimo) sin penalización. Los anuncios con pujas o propuestas que cualifiquen, con un ganador o con una transacción activa no pueden cancelarse unilateralmente — contacta con soporte para casos excepcionales.",
+        "eyebrow": "Preguntas frecuentes"
+      },
+      "bidFeed": {
+        "eyebrow": "Lo que ves en el anuncio",
+        "title": "Cómo leer el",
+        "titleBold": "historial de pujas",
+        "desc": "En cada uno de tus anuncios, el historial de pujas muestra el distintivo de cada pujador junto a su nombre. En el resumen bajo la lista ves cuántos tienen cada nivel de garantía.",
+        "s1Title": "Ver el distintivo en el historial de pujas",
+        "s1Desc": "Cada línea del historial muestra el nombre + el distintivo. El distintivo se actualiza en tiempo real si el comprador cambia de nivel durante la subasta (raro, pero posible).",
+        "s2Title": "Leer el resumen de garantías",
+        "s2Desc": "Bajo el historial, un resumen indica: «X de Y pujadores con compensación automática». Te da una visión rápida del nivel de riesgo global de la subasta.",
+        "s3Title": "Ordenar por garantía en la Sala Privada",
+        "s3Desc": "Al crear la Sala Privada, usa el filtro «Ordenar por mayor garantía» para ver primero a los pujadores con Pago Garantizado antes de seleccionar invitados.",
+        "filterBtn": "Filtrar"
+      },
+      "protection": {
+        "eyebrow": "Protección del vendedor",
+        "title": "Cómo te",
+        "titleBold": "protegemos en cada escenario",
+        "desc": "Independientemente del nivel de confianza del comprador, tienes protecciones activas en cada etapa de la transacción.",
+        "c1Title": "Falta de pago tras subasta ganada",
+        "c1Desc": "El comprador tiene 24 horas para pagar. Si no paga, la transacción se cancela automáticamente, el artículo vuelve a su estado original y el comprador recibe una penalización de reputación (-15 puntos). Puedes relistar gratis.",
+        "c2Title": "Artículo enviado pero no confirmado",
+        "c2Desc": "Tras la confirmación de envío, el plazo de entrega se calcula automáticamente. Si el comprador no lo marca como recibido, el pago se te libera automáticamente al vencer el plazo — sin necesidad de ninguna acción.",
+        "c3Title": "Disputa abierta por el comprador",
+        "c3Desc": "Tanto tu cuenta como la del comprador quedan suspendidas de forma preventiva. BidRoom analiza las pruebas de ambas partes. Si la decisión es a tu favor, se carga al comprador (Nivel 3) o se le exige responsabilidad legal (Nivel 2).",
+        "c4Title": "Registros para la exigencia de responsabilidad legal",
+        "c4Desc": "Todas las comunicaciones, pujas, transacciones y pruebas de disputa se conservan 5 años. En caso de proceso judicial, BidRoom pone a disposición los registros necesarios para tu defensa."
+      },
+      "sellerTrust": {
+        "eyebrow": "Tu confianza como vendedor",
+        "title": "Los compradores también",
+        "titleBold": "evalúan tu credibilidad",
+        "desc": "La confianza no es solo para los compradores. Los compradores ven tu perfil — y deciden si confían en que entregues lo prometido.",
+        "colFeature": "Lo que los compradores ven en tu perfil",
+        "colHow": "Cómo mejorarlo",
+        "r1Label": "⭐ Reseñas de compradores anteriores",
+        "r1How": "Entrega a tiempo, comunica bien, describe el artículo con precisión",
+        "r2Label": "📊 Puntuación de reputación (0–100)",
+        "r2How": "Cada transacción completada con éxito: +2 puntos",
+        "r3Label": "⚡ Tasa de envío a tiempo",
+        "r3How": "Envía siempre en los 5 días laborables siguientes al pago",
+        "r4Label": "🛡️ Historial de disputas",
+        "r4How": "Cero disputas abiertas = confianza máxima",
+        "r5Label": "🪪 Clasificación DSA (particular / profesional)",
+        "r5How": "En Ajustes → Clasificación del vendedor — rellénala con precisión",
+        "alertTitle": "Los vendedores profesionales tienen obligaciones adicionales",
+        "alertDesc": "Si vendes con regularidad y con fines comerciales (comerciante), debes clasificarte como «Vendedor profesional» en Ajustes. Es una obligación legal derivada del DSA (Digital Services Act) — y te da acceso a funciones de facturación y estadísticas avanzadas."
+      }
+    },
+    "hero": {
+      "pill": "Confianza y Seguridad",
+      "title1": "La plataforma solo funciona",
+      "titleBold": "si todos confían en ella",
+      "sub": "BidRoom protege a compradores y vendedores en cada transacción. Nuestro sistema de confianza hace visible esa protección — para que cada decisión sea una decisión informada.",
+      "tabBuyer": "Soy comprador",
+      "tabSeller": "Soy vendedor"
+    },
+    "cta": {
+      "title": "¿Listo para pujar",
+      "titleBold": "con confianza?",
+      "desc": "Crea tu cuenta, verifica tu identidad y añade una tarjeta — todo en menos de 10 minutos. Los vendedores verán tu distintivo de inmediato.",
+      "btnSecondary": "Ver subastas activas",
+      "btnPrimary": "Crear cuenta gratis"
     }
   }
 }
