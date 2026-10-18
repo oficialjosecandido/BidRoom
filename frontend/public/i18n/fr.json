@@ -301,7 +301,7 @@
     "selectSubCategory": "Sélectionner une Sous-catégorie",
     "listingFormat": "Format de l'Annonce *",
     "formatAuction": "Enchères (Meilleure Enchère Gagne)",
-    "formatBestOffer": "Meilleure Offre (Le Vendeur Choisit)",
+    "formatBestOffer": "Meilleure Proposition (Le Vendeur Choisit)",
     "condition": "État de l'Article *",
     "selectCondition": "Sélectionner l'État",
     "conditionNew": "Neuf",
@@ -351,7 +351,7 @@
     "buyNowPrice": "Prix Achat Immédiat (Optionnel)",
     "buyNowHint": "Doit être supérieur à l'Enchère Initiale. Permet l'achat instantané.",
     "minimumAcceptPrice": "Prix Minimum d'Acceptation",
-    "minimumAcceptHint": "Seuil de prix où vous devez accepter une offre qualifiée",
+    "minimumAcceptHint": "Seuil de prix où vous devez accepter une proposition qualifiée",
     "enablePrivateRoom": "Activer la Salle Privée",
     "privateRoomHint": "Important : Activer la Salle Privée augmente votre commission de 3,5 % à 6,0 %. Vous devez vous engager sur ce choix.",
     "commissionPrivateRoom": "Taux de Commission : 6,0 % (Salle Privée activée)",
@@ -498,7 +498,7 @@
       "label": "Étapes",
       "progress": "{{current}} / {{total}}",
       "format": "Format",
-      "formatSub": "Enchère ou meilleure offre",
+      "formatSub": "Enchère ou meilleure proposition",
       "details": "Détails",
       "detailsSub": "Titre, catégorie et description",
       "photos": "Photos",
@@ -519,20 +519,20 @@
     "step2.section": "Informations sur l'article",
     "step3.section": "Photos de l'article",
     "step4.auction.section": "Prix de la vente aux enchères",
-    "step4.offer.section": "Prix de la meilleure offre",
+    "step4.offer.section": "Prix de la meilleure proposition",
     "step5.section": "Méthode d'expédition",
     "step5.sectionVehicle": "Remise du véhicule",
     "step5.location": "Localisation",
     "step6.section": "Révision et publication",
     "optional": "facultatif",
-    "offerDeadline": "Délai des offres",
+    "offerDeadline": "Délai des propositions",
     "offerDeadlineHint": "Plus de temps signifie plus d'acheteurs qui voient votre annonce.",
     "startingBidHint": "La valeur minimale pour la première mise. Une mise de départ compétitive attire plus d'enchérisseurs.",
     "reserveHint": "L'enchère ne lie le gagnant que si cette valeur est atteinte.",
     "durationHint": "Les articles rares ou premium ont tendance à générer plus d'enchères avec 7–10 jours.",
     "autoRelistLabel": "Republier automatiquement si non vendu",
-    "autoRelistHint": "Si l'enchère se termine sans vente (aucune offre ou réserve non atteinte), elle sera republiée automatiquement pour une période identique. Vous pouvez désactiver cette option à tout moment.",
-    "formatBestOfferDesc": "Les acheteurs soumettent des offres et vous choisissez celle que vous préférez. Définissez un prix minimum — vous avez toute liberté de refuser toute offre en dessous de cette valeur.",
+    "autoRelistHint": "Si l'enchère se termine sans vente (aucune enchère reçue ou réserve non atteinte), elle sera republiée automatiquement pour une période identique. Vous pouvez désactiver cette option à tout moment.",
+    "formatBestOfferDesc": "Les acheteurs soumettent des propositions et vous choisissez celle que vous préférez. Définissez un prix minimum — vous avez toute liberté de refuser toute proposition en dessous de cette valeur.",
     "formatAuctionDesc": "Les acheteurs enchérissent en temps réel et se disputent votre article. Vous définissez la durée et la mise de départ. Le gagnant est déterminé automatiquement.",
     "drop": {
       "title": "Faites glisser les photos ici",
@@ -839,7 +839,7 @@
     "loading": "Chargement des annonces...",
     "error": "Erreur",
     "tryAgain": "Réessayer",
-    "noOffersYet": "Pas d'offres encore",
+    "noOffersYet": "Pas de propositions encore",
     "startedAt": "Démarré à",
     "bid": "enchère",
     "bids": "enchères",
@@ -872,7 +872,7 @@
     "priceEuro": "Prix (€)",
     "formatAll": "Tous",
     "formatAuction": "Enchère",
-    "formatBestOffer": "Meilleure Offre",
+    "formatBestOffer": "Meilleure Proposition",
     "resultsCountOne": "{{count}} résultat pour \"{{query}}\"",
     "resultsCountMany": "{{count}} résultats pour \"{{query}}\"",
     "oneBid": "1 enchère",
@@ -894,7 +894,7 @@
     "minPrice": "Prix minimum",
     "badgeLive": "En direct",
     "badgeClosing": "Se termine",
-    "badgeBestOffer": "Meilleure offre",
+    "badgeBestOffer": "Meilleure proposition",
     "badgePrivateRoom": "Salle privée",
     "addWatchlist": "Ajouter aux favoris",
     "removeWatchlist": "Retirer des favoris",
@@ -904,8 +904,8 @@
     "price500to2k": "€500–2K",
     "price2kto10k": "€2K–10K",
     "priceOver10k": "> €10K",
-    "oneOffer": "1 offre",
-    "offersCount": "{{count}} offres",
+    "oneOffer": "1 proposition",
+    "offersCount": "{{count}} propositions",
     "hoursLeft": "{{hours}}h restantes",
     "applyFilters": "Appliquer les filtres",
     "opensIn": "Ouvre dans {{time}}",
@@ -934,14 +934,14 @@
   },
   "listingDetails": {
     "saleType": {
-      "bestOffer": "Meilleure Offre",
+      "bestOffer": "Meilleure Proposition",
       "auction": "Enchère"
     },
     "loading": "Chargement des détails de l'annonce...",
     "backToListings": "← Retour aux annonces",
     "currentBid": "Enchère actuelle",
-    "highestOffer": "Offre la plus haute",
-    "noOffersYet": "Aucune offre pour l'instant",
+    "highestOffer": "Proposition la plus haute",
+    "noOffersYet": "Aucune proposition pour l'instant",
     "buyNow": "Acheter maintenant",
     "privateRoom": {
       "active": "Salle Privée Active",
@@ -972,7 +972,7 @@
     },
     "time": {
       "auctionEnds": "Fin de l'enchère",
-      "offerDeadline": "Date limite pour les offres",
+      "offerDeadline": "Date limite pour les propositions",
       "privateRoomEnds": "Fin de la Salle Privée",
       "auctionEnded": "Enchère Terminée",
       "listingEnded": "Annonce Terminée",
@@ -1008,7 +1008,7 @@
     "actions": {
       "placeBid": "Enchérir",
       "placeBidEmail": "Enchérir (E-mail requis)",
-      "makeOffer": "Faire une Offre",
+      "makeOffer": "Faire une Proposition",
       "addToWatchlist": "Ajouter aux favoris",
       "removeFromWatchlist": "Retirer des favoris",
       "selectWinner": "Sélectionner le gagnant",
@@ -1037,8 +1037,8 @@
       "offers": "Offres",
       "bid": "enchère",
       "bidsPlural": "enchères",
-      "offer": "offre",
-      "offersPlural": "offres",
+      "offer": "proposition",
+      "offersPlural": "propositions",
       "seller": "Vendeur",
       "condition": "État",
       "location": "Localisation",
@@ -1050,7 +1050,7 @@
     "tabs": {
       "description": "Description",
       "bidHistory": "Historique des Enchères",
-      "offers": "Offres"
+      "offers": "Propositions"
     },
     "bidHistory": {
       "loading": "Chargement de l'historique des enchères...",
@@ -1078,18 +1078,18 @@
       "loadingMore": "Chargement…"
     },
     "offerHistory": {
-      "loading": "Chargement des offres...",
+      "loading": "Chargement des propositions...",
       "tryAgain": "Réessayer",
-      "noOffers": "Aucune Offre Encore",
+      "noOffers": "Aucune Proposition Encore",
       "noOffersDesc": "Soyez le premier à faire une offre sur cet article !",
-      "makeOffer": "Faire une offre",
+      "makeOffer": "Faire une proposition",
       "ctaText": "Règles : soumettez votre offre avant l’échéance. Vous pouvez la retirer tant qu’elle est en attente. Si une ou plusieurs offres atteignent ou dépassent le minimum, le vendeur doit vendre. En dessous du minimum, le vendeur n’est pas obligé de vendre.",
       "offerFrom": "Offre de",
-      "yourOffer": "Votre offre",
+      "yourOffer": "Votre proposition",
       "selectedBySeller": "Sélectionnée par le vendeur",
       "offered": "Proposé",
       "sellerLabel": "Vendeur :",
-      "acceptDeclineNote": "Vous pouvez accepter ou refuser des offres après la date de clôture de l'annonce.",
+      "acceptDeclineNote": "Vous pouvez accepter ou refuser des propositions après la date de clôture de l'annonce.",
       "accept": "Accepter",
       "accepting": "Acceptation…",
       "decline": "Refuser",
@@ -1104,8 +1104,8 @@
       "statusExpired": "Expirée",
       "stripeWarningPrefix": "Connectez Stripe dans",
       "stripeSettingsLink": "Paramètres → Paiements",
-      "buyerWithdrawNote": "Vous pouvez retirer votre offre tant qu’elle est en attente. Les offres acceptées ne peuvent pas être retirées.",
-      "withdrawTitle": "Retirer cette offre en attente"
+      "buyerWithdrawNote": "Vous pouvez retirer votre proposition tant qu’elle est en attente. Les propositions acceptées ne peuvent pas être retirées.",
+      "withdrawTitle": "Retirer cette proposition en attente"
     },
     "shipping": {
       "title": "Expédition",
@@ -1150,28 +1150,28 @@
       "successTitle": "Enchère enregistrée !"
     },
     "offerModal": {
-      "title": "Faire une offre",
+      "title": "Faire une proposition",
       "transparency": "Pour que vous sachiez exactement ce que vous proposez :",
       "startingCurrent": "Départ / actuel",
-      "minimumOffer": "Offre minimum",
+      "minimumOffer": "Proposition minimum",
       "amountLabel": "Montant de votre offre",
       "emailLabel": "Votre e-mail",
-      "emailHint": "Le vendeur l'utilisera pour répondre à votre offre.",
-      "belowMinNote": "Votre offre est inférieure au prix minimum du vendeur. Le vendeur n'est pas obligé d'accepter cette offre, même si vous êtes le seul enchérisseur.",
+      "emailHint": "Le vendeur l'utilisera pour répondre à votre proposition.",
+      "belowMinNote": "Votre proposition est inférieure au prix minimum du vendeur. Le vendeur n'est pas obligé d'accepter cette proposition, même si vous êtes le seul enchérisseur.",
       "cancel": "Annuler",
-      "submit": "Envoyer l'offre",
-      "submitting": "Envoi de l'offre…",
-      "subtitle": "Si le vendeur accepte, vous vous engagez à acheter à ce prix. Vous pouvez retirer l’offre tant qu’elle est en attente. Les enchères ne peuvent pas être retirées.",
+      "submit": "Envoyer la proposition",
+      "submitting": "Envoi de la proposition…",
+      "subtitle": "Si le vendeur accepte, vous vous engagez à acheter à ce prix. Vous pouvez retirer la proposition tant qu’elle est en attente. Les enchères ne peuvent pas être retirées.",
       "figuresHint": "Le minimum est le montant le plus bas que le vendeur examinera. Le plus haut est la meilleure offre actuelle : vous pouvez l'égaler, la dépasser ou rester au minimum.",
-      "highestOffer": "Offre la plus haute",
+      "highestOffer": "Proposition la plus haute",
       "valueLabel": "Montant (€)",
       "yourOfferPreview": "Vous proposez :",
-      "successTitle": "Votre offre a été publiée.",
+      "successTitle": "Votre proposition a été publiée.",
       "successText": "Merci",
-      "successTextAccepted": "Votre offre de {{amount}} a été acceptée par le vendeur. Finalisez l'achat dans Transactions.",
+      "successTextAccepted": "Votre proposition de {{amount}} a été acceptée par le vendeur. Finalisez l'achat dans Transactions.",
       "successConfirm": "Compris",
-      "errorTitle": "Impossible d'envoyer l'offre",
-      "errorText": "Échec de l'envoi de l'offre. Veuillez réessayer.",
+      "errorTitle": "Impossible d'envoyer la proposition",
+      "errorText": "Échec de l'envoi de la proposition. Veuillez réessayer.",
       "errorConfirm": "OK",
       "emailInvalid": "Saisissez une adresse e-mail valide.",
       "emailPlaceholder": "nom@email.com",
@@ -1211,7 +1211,7 @@
       "ineligible": "Inscrivez-vous pour être éligible",
       "invite": "Inviter",
       "maxBid": "Mise max :",
-      "bids": "offre(s)",
+      "bids": "enchère(s)",
       "notEligible": "Non éligible",
       "selectedCount": "sélectionnés (min. 2, max. 5)",
       "bidderFallback": "Enchérisseur"
@@ -1240,8 +1240,8 @@
       "reopenNoBids": "Pas de mises. Vous pouvez rouvrir 7 jours supplémentaires.",
       "reopenNoOffers": "Pas de propositions. Vous pouvez rouvrir 7 jours supplémentaires.",
       "inWatchlist": "Dans la liste de suivi",
-      "minimumOffer": "Offre minimale",
-      "minimumOfferDesc": "Les offres en dessous de ce montant peuvent être automatiquement refusées.",
+      "minimumOffer": "Proposition minimale",
+      "minimumOfferDesc": "Les propositions en dessous de ce montant peuvent être automatiquement refusées.",
       "minimumBid": "Prochaine mise minimale",
       "bidIncrement": "Incrément :",
       "reviews": "avis",
@@ -1249,7 +1249,7 @@
       "follow": "+ Suivre",
       "eligibleCountdown": "Salle privée :",
       "remaining": "restantes",
-      "winnerSelectionCountdownOffer": "24h pour accepter l'offre",
+      "winnerSelectionCountdownOffer": "24h pour accepter la proposition",
       "winnerSelectionCountdownWinner": "24h pour sélectionner le gagnant",
       "invitedRoomHeader": "Invités à la salle",
       "buyNow": "Acheter ·",
@@ -1872,11 +1872,11 @@
     },
     "myBets": {
       "title": "Mes enchères",
-      "subtitle": "Toutes vos enchères et offres au même endroit. Les offres en attente (Meilleure offre) peuvent être retirées à tout moment ; les enchères ne le peuvent pas.",
+      "subtitle": "Toutes vos enchères et propositions au même endroit. Les propositions en attente (mode Meilleure proposition) peuvent être retirées à tout moment ; les enchères ne le peuvent pas.",
       "loading": "Chargement de vos enchères...",
       "tryAgain": "Réessayer",
       "emptyTitle": "Aucune enchère encore",
-      "emptyDesc": "Vous n'avez pas encore fait d'enchère ou d'offre. Parcourez les annonces et faites votre première enchère !",
+      "emptyDesc": "Vous n'avez pas encore fait d'enchère ou de proposition. Parcourez les annonces et faites votre première enchère !",
       "browseListings": "Voir les annonces",
       "myBest": "Ma meilleure",
       "bet": "enchère",
@@ -1891,7 +1891,7 @@
       "viewTransaction": "Voir la transaction",
       "withdraw": "Retirer",
       "withdrawing": "Retrait…",
-      "withdrawError": "Impossible de retirer l'offre.",
+      "withdrawError": "Impossible de retirer la proposition.",
       "statusActive": "Actif",
       "statusEnded": "Terminé",
       "statusCancelled": "Annulé",
@@ -1899,9 +1899,9 @@
       "statusAccepted": "Accepté",
       "statusRejected": "Refusé",
       "statusWithdrawn": "Retirée",
-      "rulesHint": "Offres : retirables tant qu’elles sont en attente. Les enchères sont contraignantes et ne peuvent pas être annulées.",
-      "withdrawTitle": "Retirer cette offre en attente",
-      "withdrawConfirmText": "Vous ne pouvez retirer une offre que tant qu’elle est en attente. Les offres acceptées ne peuvent pas être retirées.",
+      "rulesHint": "Propositions : retirables tant qu’elles sont en attente. Les enchères sont contraignantes et ne peuvent pas être annulées.",
+      "withdrawTitle": "Retirer cette proposition en attente",
+      "withdrawConfirmText": "Vous ne pouvez retirer une proposition que tant qu’elle est en attente. Les propositions acceptées ne peuvent pas être retirées.",
       "errorLoading": "Échec du chargement de vos enchères et propositions."
     },
     "seller": {
@@ -2215,14 +2215,14 @@
     },
     "myAuctions": {
       "title": "Mes Annonces",
-      "subtitle": "Suivez vos enchères et le statut de chaque annonce. Vous ne pouvez supprimer une annonce que s’il n’y a pas d’enchères ou d’offres qualificatives (Meilleure offre : aucune au minimum ou plus).",
+      "subtitle": "Suivez vos enchères et le statut de chaque annonce. Vous ne pouvez supprimer une annonce que s’il n’y a pas d’enchères ou de propositions qualificatives (mode Meilleure proposition : aucune au minimum ou plus).",
       "loading": "Chargement de vos annonces...",
       "emptyTitle": "Aucune annonce pour l'instant",
       "emptyDesc": "Vous n'avez pas encore créé d'annonces. Commencez par créer votre première annonce !",
       "createFirst": "Créer ma première annonce",
-      "highestOffer": "Offre la plus haute",
+      "highestOffer": "Proposition la plus haute",
       "currentPrice": "Prix actuel",
-      "noOffersYet": "Aucune offre pour l'instant",
+      "noOffersYet": "Aucune proposition pour l'instant",
       "bids": "Enchères",
       "watchlist": "Favoris",
       "started": "Démarré",
@@ -2244,7 +2244,7 @@
       "editListing": "Modifier",
       "deleteListing": "Supprimer",
       "cancelConfirmTitle": "Supprimer cette annonce ?",
-      "cancelConfirmText": "Vous ne pouvez supprimer cette annonce que s’il n’y a pas d’offres ou d’enchères qualificatives. Meilleure offre : aucune offre acceptée et aucune offre en attente au minimum ou plus. Enchère : aucune enchère. Les offres sous le minimum seront rejetées. Cette action est irréversible.",
+      "cancelConfirmText": "Vous ne pouvez supprimer cette annonce que s’il n’y a pas de propositions ou d’enchères qualificatives. Mode Meilleure proposition : aucune proposition acceptée et aucune proposition en attente au minimum ou plus. Enchère : aucune enchère. Les propositions sous le minimum seront rejetées. Cette action est irréversible.",
       "cancelConfirmBtn": "Supprimer l'annonce",
       "cancelSuccess": "Annonce supprimée",
       "cancelError": "Impossible de supprimer l'annonce",
@@ -2290,8 +2290,8 @@
       "rejectedLabel": "Non approuvée",
       "rejectionReason": "Motif",
       "pendingReviewHint": "En attente d'approbation. Le compte à rebours ne démarre qu'une fois l'annonce approuvée.",
-      "deleteRulesHint": "La suppression est disponible s’il n’y a pas d’enchères et, en Meilleure offre, seulement si aucune offre n’atteint le prix minimum. Voir les Conditions d’utilisation.",
-      "deleteListingTitle": "Supprimer l’annonce (uniquement sans offres ou enchères qualificatives)",
+      "deleteRulesHint": "La suppression est disponible s’il n’y a pas d’enchères et, en mode Meilleure proposition, seulement si aucune proposition n’atteint le prix minimum. Voir les Conditions d’utilisation.",
+      "deleteListingTitle": "Supprimer l’annonce (uniquement sans propositions ou enchères qualificatives)",
       "errorLoading": "Échec du chargement de vos annonces.",
       "relistSuccess": "Annonce remise en vente avec succès !",
       "relistError": "Échec de la remise en vente de l'annonce.",
@@ -2306,9 +2306,9 @@
       "emptyTitle": "Aucune enchère pour l'instant",
       "emptyDesc": "Vous n'avez pas encore misé. Parcourez les annonces et placez votre première enchère !",
       "browseAuctions": "Parcourir les enchères",
-      "highestOffer": "Offre la plus haute",
+      "highestOffer": "Proposition la plus haute",
       "currentPrice": "Prix actuel",
-      "noOffersYet": "Aucune offre pour l'instant",
+      "noOffersYet": "Aucune proposition pour l'instant",
       "myHighestBid": "Ma meilleure enchère",
       "totalBids": "Total des enchères",
       "ends": "Fin",
@@ -2323,7 +2323,7 @@
       "emptyTitle": "Aucun article dans vos favoris",
       "emptyDesc": "Lorsque vous ajoutez des articles à vos favoris depuis une annonce, ils apparaîtront ici.",
       "browseAuctions": "Parcourir les enchères",
-      "noOffersYet": "Aucune offre pour l'instant",
+      "noOffersYet": "Aucune proposition pour l'instant",
       "remove": "Supprimer",
       "removing": "...",
       "errorLoading": "Échec du chargement de votre liste de favoris."
@@ -2951,20 +2951,22 @@
         "desc": "Une fois la transaction terminée, vous pouvez évaluer le vendeur sur une échelle de 1 à 10. Les descriptions des avis sont <strong>privées</strong> — seul le vendeur les voit."
       },
       "faq": {
+        "q0": "Puis-je annuler une enchère après l'avoir placée ?",
+        "a0": "Les <strong>enchères</strong> sont fermes et ne peuvent pas être annulées. Les <strong>propositions</strong> peuvent être retirées tant qu'elles sont en attente. Dès que le vendeur accepte, la vente est ferme.",
+        "q1": "Que se passe-t-il si le vendeur n'expédie pas l'article ?",
+        "a1": "Si le vendeur n'expédie pas dans les <strong>5 jours ouvrés</strong>, la transaction est automatiquement annulée et vous serez intégralement remboursé sur votre moyen de paiement d'origine.",
+        "q2": "Ai-je un droit de rétractation ?",
+        "a2": "BidRoom est avant tout une plateforme C2C (entre particuliers). Dans les ventes aux enchères en ligne entre particuliers, le droit de rétractation ne s'applique généralement pas. Si le vendeur est un professionnel, vos droits sont différents — consultez les Conditions d'Utilisation.",
+        "q3": "Quelle commission dois-je payer ?",
+        "a3": "<strong>Les acheteurs ne paient aucune commission de vente à BidRoom.</strong> Vous payez le prix de l'article plus des frais de service BidRoom (2,9 % + 0,30 € par transaction), plafonnés à <strong>500 €</strong>, ajoutés au total au moment du paiement."
+      },
+      "faqExtra": {
         "q0": "Quelle est la différence entre enchérir et faire une proposition ?",
         "a0": "Dans une annonce en mode enchères, vous vous affrontez en temps réel et, à la clôture, la plus haute enchère l'emporte automatiquement — une enchère est <strong>ferme</strong>. Dans une annonce en mode propositions, vous envoyez un montant au vendeur et c'est lui qui décide de l'accepter. La page de l'article indique toujours lequel des deux s'applique, juste à côté du bouton sur lequel vous agissez.",
         "q1": "Ma proposition m'oblige-t-elle à acheter ?",
         "a1": "Seulement si le vendeur l'accepte. Tant qu'elle est en attente, vous pouvez la retirer. Une fois acceptée, vous avez <strong>24 heures</strong> pour payer, exactement comme si vous aviez gagné une enchère.",
         "q2": "Puis-je faire une proposition sur une annonce en mode enchères ?",
-        "a2": "Non. Chaque annonce fonctionne dans un seul mode : si elle accepte les enchères, vous enchérissez ; si elle accepte les propositions, vous proposez.",
-        "q3": "Puis-je annuler une enchère après l'avoir placée ?",
-        "a3": "Les <strong>enchères</strong> sont fermes et ne peuvent pas être annulées. Les <strong>propositions</strong> peuvent être retirées tant qu'elles sont en attente. Dès que le vendeur accepte, la vente est ferme.",
-        "q4": "Que se passe-t-il si le vendeur n'expédie pas l'article ?",
-        "a4": "Si le vendeur n'expédie pas dans les <strong>5 jours ouvrés</strong>, la transaction est automatiquement annulée et vous serez intégralement remboursé sur votre moyen de paiement d'origine.",
-        "q5": "Ai-je un droit de rétractation ?",
-        "a5": "BidRoom est avant tout une plateforme C2C (entre particuliers). Dans les ventes aux enchères en ligne entre particuliers, le droit de rétractation ne s'applique généralement pas. Si le vendeur est un professionnel, vos droits sont différents — consultez les Conditions d'Utilisation.",
-        "q6": "Quelle commission dois-je payer ?",
-        "a6": "<strong>Les acheteurs ne paient aucune commission de vente à BidRoom.</strong> Vous payez le prix de l'article plus des frais de service BidRoom (2,9 % + 0,30 € par transaction), plafonnés à <strong>500 €</strong>, ajoutés au total au moment du paiement."
+        "a2": "Non. Chaque annonce fonctionne dans un seul mode : si elle accepte les enchères, vous enchérissez ; si elle accepte les propositions, vous proposez."
       }
     },
     "seller": {
@@ -3023,22 +3025,16 @@
         "note": "Si l'acheteur ne confirme pas la réception dans le délai, le système libère les fonds automatiquement (libération automatique). Vous n'avez pas besoin de contacter le support."
       },
       "faq": {
-        "q0": "Quel mode de vente choisir ?",
-        "a0": "Les enchères lorsque vous voulez maximiser le prix et qu'il y a de la demande — vous laissez le marché décider de la valeur. Les propositions lorsque vous avez un prix en tête et préférez contrôler qui achète. La commission est de <strong>3,5 % dans les deux modes</strong> ; elle ne monte à 6 % que si vous activez la Salle Privée, qui n'existe qu'en mode enchères.",
-        "q1": "Puis-je changer de mode après la publication ?",
-        "a1": "Non, afin de protéger ceux qui ont déjà enchéri ou proposé — changer modifierait la portée juridique de leur enchère ou de leur proposition. Pour en changer, annulez et créez une nouvelle annonce : il n'y a ni frais de mise en vente ni frais d'annulation.",
-        "q2": "Qu'est-ce que l'acceptation automatique des propositions ?",
-        "a2": "Si, à l'échéance, il y a <strong>exactement une</strong> proposition égale ou supérieure à votre minimum, cette proposition est acceptée pour vous — pour qu'une vente valable ne soit pas perdue par inadvertance. Si plusieurs atteignent le minimum, c'est vous qui décidez ; si aucune ne l'atteint, l'annonce se clôture sans vente. L'acceptation automatique exige que votre compte de paiement Stripe soit configuré.",
-        "q3": "Quand reçois-je le paiement ?",
-        "a3": "Les fonds sont libérés lorsque l'acheteur confirme la réception. Ensuite, le transfert Stripe Connect prend généralement <strong>1–2 jours ouvrés bancaires</strong>.",
-        "q4": "Puis-je fixer un prix minimum en mode propositions ?",
-        "a4": "Oui, et c'est <strong>obligatoire</strong> sur les annonces en mode propositions. En dessous de ce montant, vous pouvez refuser librement. À partir de ce montant, vous êtes engagé : vous ne pouvez pas refuser la dernière proposition qui l'atteint, et si exactement une l'atteint à la clôture de l'annonce, elle est acceptée automatiquement.",
-        "q5": "Que se passe-t-il si l'acheteur ouvre un litige ?",
-        "a5": "Lorsqu'un litige est ouvert, les deux comptes sont restreints et les fonds sont retenus. L'équipe BidRoom examine les éléments fournis par les deux parties. Si aucun accord n'est possible, le dossier est transmis au CNIACC.",
-        "q6": "Puis-je annuler une annonce après la publication ?",
-        "a6": "Oui, tant que l'annonce est un brouillon, en attente d'approbation ou active — et seulement s'il n'y a rien de qualifiant dessus : en mode propositions, aucune proposition acceptée et aucune proposition en attente égale ou supérieure au minimum ; en mode enchères, aucune enchère. Les propositions en attente inférieures au minimum sont refusées automatiquement. Vous ne pouvez pas supprimer une annonce qui a déjà un gagnant ou une transaction active.",
-        "q7": "Quels articles ne puis-je pas mettre en vente ?",
-        "a7": "Interdits : animaux vivants, substances réglementées, armes, et tout article illégal au Portugal. BidRoom utilise une modération automatique (Azure AI Content Safety) pour détecter et bloquer ces annonces avant leur mise en ligne."
+        "q0": "Quand reçois-je le paiement ?",
+        "a0": "Les fonds sont libérés lorsque l'acheteur confirme la réception. Ensuite, le transfert Stripe Connect prend généralement <strong>1–2 jours ouvrés bancaires</strong>.",
+        "q1": "Puis-je fixer un prix minimum en mode propositions ?",
+        "a1": "Oui, et c'est <strong>obligatoire</strong> sur les annonces en mode propositions. En dessous de ce montant, vous pouvez refuser librement. À partir de ce montant, vous êtes engagé : vous ne pouvez pas refuser la dernière proposition qui l'atteint, et si exactement une l'atteint à la clôture de l'annonce, elle est acceptée automatiquement.",
+        "q2": "Que se passe-t-il si l'acheteur ouvre un litige ?",
+        "a2": "Lorsqu'un litige est ouvert, les deux comptes sont restreints et les fonds sont retenus. L'équipe BidRoom examine les éléments fournis par les deux parties. Si aucun accord n'est possible, le dossier est transmis au CNIACC.",
+        "q3": "Puis-je annuler une annonce après la publication ?",
+        "a3": "Oui, tant que l'annonce est un brouillon, en attente d'approbation ou active — et seulement s'il n'y a rien de qualifiant dessus : en mode propositions, aucune proposition acceptée et aucune proposition en attente égale ou supérieure au minimum ; en mode enchères, aucune enchère. Les propositions en attente inférieures au minimum sont refusées automatiquement. Vous ne pouvez pas supprimer une annonce qui a déjà un gagnant ou une transaction active.",
+        "q4": "Quels articles ne puis-je pas mettre en vente ?",
+        "a4": "Interdits : animaux vivants, substances réglementées, armes, et tout article illégal au Portugal. BidRoom utilise une modération automatique (Azure AI Content Safety) pour détecter et bloquer ces annonces avant leur mise en ligne."
       },
       "card": {
         "noListingFee": "Aucun frais de mise en vente",
@@ -3054,6 +3050,14 @@
         "tag": "Conseil aux vendeurs",
         "title": "Activez la Salle Privée pour maximiser le prix de vente final",
         "desc": "Les enchères avec une Salle Privée se clôturent en moyenne 30 % au-dessus de la dernière enchère publique. L'acheteur qui perd l'enchère principale est souvent prêt à payer davantage dans un tour exclusif — la Salle Privée capte cette valeur pour vous."
+      },
+      "faqExtra": {
+        "q0": "Quel mode de vente choisir ?",
+        "a0": "Les enchères lorsque vous voulez maximiser le prix et qu'il y a de la demande — vous laissez le marché décider de la valeur. Les propositions lorsque vous avez un prix en tête et préférez contrôler qui achète. La commission est de <strong>3,5 % dans les deux modes</strong> ; elle ne monte à 6 % que si vous activez la Salle Privée, qui n'existe qu'en mode enchères.",
+        "q1": "Puis-je changer de mode après la publication ?",
+        "a1": "Non, afin de protéger ceux qui ont déjà enchéri ou proposé — changer modifierait la portée juridique de leur enchère ou de leur proposition. Pour en changer, annulez et créez une nouvelle annonce : il n'y a ni frais de mise en vente ni frais d'annulation.",
+        "q2": "Qu'est-ce que l'acceptation automatique des propositions ?",
+        "a2": "Si, à l'échéance, il y a <strong>exactement une</strong> proposition égale ou supérieure à votre minimum, cette proposition est acceptée pour vous — pour qu'une vente valable ne soit pas perdue par inadvertance. Si plusieurs atteignent le minimum, c'est vous qui décidez ; si aucune ne l'atteint, l'annonce se clôture sans vente. L'acceptation automatique exige que votre compte de paiement Stripe soit configuré."
       }
     },
     "private": {
@@ -3416,8 +3420,8 @@
         "a": "Notre système d'enchères par procuration vous permet de définir votre montant d'enchère maximum. Nous enchérissons automatiquement en votre nom jusqu'à ce montant, garantissant que vous ne payez que le minimum nécessaire pour gagner."
       },
       "bidding2": {
-        "q": "Puis-je annuler une enchère ou retirer une offre ?",
-        "a": "Les enchères sont contraignantes et ne peuvent pas être annulées une fois placées. Les propositions Meilleure offre peuvent être retirées à tout moment tant qu’elles sont en attente (pas encore acceptées ou refusées par le vendeur). Après acceptation, la vente est contraignante et les règles de paiement s’appliquent."
+        "q": "Puis-je annuler une enchère ou retirer une proposition ?",
+        "a": "Les enchères sont contraignantes et ne peuvent pas être annulées une fois placées. Les propositions en mode Meilleure proposition peuvent être retirées à tout moment tant qu’elles sont en attente (pas encore acceptées ou refusées par le vendeur). Après acceptation, la vente est contraignante et les règles de paiement s’appliquent."
       },
       "bidding3": {
         "q": "Comment savoir si j'ai remporté une enchère ?",
@@ -3780,7 +3784,7 @@
     "filterWinning": "En tête",
     "filterOutbid": "Surenchéri",
     "filterEnded": "Terminé",
-    "myBest": "Ma meilleure offre",
+    "myBest": "Ma meilleure proposition",
     "currentPrice": "Actuel",
     "bids": "Enchères",
     "ends": "Se termine",
@@ -3792,7 +3796,7 @@
     "withdrawing": "Retrait…",
     "notifOn": "Notifier si surenchéri",
     "notifOff": "Notifications désactivées",
-    "typeOffer": "Offre",
+    "typeOffer": "Proposition",
     "typeLive": "En direct",
     "statusActive": "Actif",
     "statusEnded": "Terminé"
@@ -3906,6 +3910,8 @@
   },
   "GIVEAWAY": {
     "PILL": "Jeu-concours",
+    "PROMOTER": "Organisateur",
+    "PROMOTER_NAME": "BidRoom",
     "FREE": "Gratuit",
     "FREE_ENTRY": "Participation gratuite",
     "ENTRY_LABEL": "Participation",
@@ -4001,9 +4007,9 @@
     "noEndedListings": "Aucune annonce terminée pour l'instant.",
     "ended": "Terminée",
     "bestOffer": "Best Offer",
-    "noOffersYet": "Pas encore d'offres",
-    "offer": "offre",
-    "offers": "offres",
+    "noOffersYet": "Pas encore de propositions",
+    "offer": "proposition",
+    "offers": "propositions",
     "bid": "enchère",
     "bids": "enchères",
     "notFound": "Ce profil est introuvable.",
@@ -4025,27 +4031,27 @@
     },
     "newProposal": {
       "title": "Nouvelle proposition",
-      "message": "{{offererName}} a fait une offre de €{{amount}} sur « {{listingTitle}} »"
+      "message": "{{offererName}} a fait une proposition de €{{amount}} sur « {{listingTitle}} »"
     },
     "proposalAccepted": {
-      "title": "Offre acceptée — finalisez le paiement",
-      "message": "Votre offre de €{{amount}} sur « {{listingTitle}} » a été acceptée. Ouvrez Transactions pour finaliser le paiement."
+      "title": "Proposition acceptée — finalisez le paiement",
+      "message": "Votre proposition de €{{amount}} sur « {{listingTitle}} » a été acceptée. Ouvrez Transactions pour finaliser le paiement."
     },
     "proposalDeclined": {
       "title": "Proposition refusée",
-      "message": "Votre offre de €{{amount}} sur « {{listingTitle}} » a été refusée."
+      "message": "Votre proposition de €{{amount}} sur « {{listingTitle}} » a été refusée."
     },
     "offerPlaced": {
-      "title": "Offre confirmée",
-      "message": "Votre offre de €{{amount}} sur « {{listingTitle}} » a bien été reçue."
+      "title": "Proposition confirmée",
+      "message": "Votre proposition de €{{amount}} sur « {{listingTitle}} » a bien été reçue."
     },
     "offerOutbid": {
-      "title": "Offre plus élevée reçue",
-      "message": "Votre offre de €{{previousOffer}} sur « {{listingTitle}} » a été dépassée. Quelqu'un a offert €{{newOffer}}."
+      "title": "Proposition plus élevée reçue",
+      "message": "Votre proposition de €{{previousOffer}} sur « {{listingTitle}} » a été dépassée. Quelqu'un a proposé €{{newOffer}}."
     },
     "bestOfferEnded": {
       "title": "Annonce terminée",
-      "message": "Votre annonce à la meilleure offre « {{listingTitle}} » est terminée avec {{offerCount}} offre(s). Vous avez 24 heures pour les examiner et en accepter une."
+      "message": "Votre annonce en mode propositions « {{listingTitle}} » est terminée avec {{offerCount}} proposition(s). Vous avez 24 heures pour les examiner et en accepter une."
     },
     "listingRemoved": {
       "title": "Annonce retirée",
@@ -4136,8 +4142,8 @@
       "message": "{{buyerName}} a marqué le paiement de « {{listingTitle}} » comme envoyé par {{method}}. Confirmez dès réception."
     },
     "stripeRequiredForOffer": {
-      "title": "Action requise : connectez Stripe pour accepter l'offre",
-      "message": "Votre annonce « {{listingTitle}} » a une offre éligible de €{{amount}}. Connectez votre compte Stripe dans Paramètres → Paiements pour l'accepter."
+      "title": "Action requise : connectez Stripe pour accepter la proposition",
+      "message": "Votre annonce « {{listingTitle}} » a une proposition éligible de €{{amount}}. Connectez votre compte Stripe dans Paramètres → Paiements pour l'accepter."
     },
     "payoutSetupReminder": {
       "title": "Configurez votre compte de versement",

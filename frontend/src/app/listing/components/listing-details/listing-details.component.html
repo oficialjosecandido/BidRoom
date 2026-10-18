@@ -457,9 +457,16 @@
 
     <div class="sep"></div>
 
-    <!-- SELLER -->
-    <div class="seller-label">{{ 'listingDetails.info.seller' | translate }}</div>
-    @if (listing.seller) {
+    <!-- SELLER / giveaway promoter (always BidRoom publicly) -->
+    <div class="seller-label">{{ (isGiveaway ? 'GIVEAWAY.PROMOTER' : 'listingDetails.info.seller') | translate }}</div>
+    @if (isGiveaway) {
+    <div class="seller-row">
+      <div class="s-av">BR</div>
+      <div>
+        <span class="s-name">{{ 'GIVEAWAY.PROMOTER_NAME' | translate }}</span>
+      </div>
+    </div>
+    } @else if (listing.seller) {
     <div class="seller-row">
       <div class="s-av">{{ listing.seller.firstName[0] || '?' }}{{ listing.seller.lastName[0] || '' }}</div>
       <div>
@@ -471,18 +478,18 @@
     </div>
     }
 
-    @if (listing.sellerScore !== null) {
+    @if (!isGiveaway && listing.sellerScore !== null) {
       <div class="s-rating">
         <span class="stars">★★★★★</span>
         <span class="rv">{{ listing.sellerScore | number:'1.1-1' }}</span>
         <span> · {{ listing.sellerReviewCount ?? 0 }} {{ 'listingDetails.sidebar.reviews' | translate }}</span>
       </div>
     }
-    @if (listing.sellerScore === null && (listing.sellerReviewCount ?? 0) === 0) {
+    @if (!isGiveaway && listing.sellerScore === null && (listing.sellerReviewCount ?? 0) === 0) {
       <div class="s-rating">{{ 'listingDetails.info.noReviews' | translate }}</div>
     }
 
-    @if (isAuthenticated && !isOwnListing) {
+    @if (!isGiveaway && isAuthenticated && !isOwnListing) {
       <button class="btn-follow" [class.following]="sellerFollowStatus.following" [disabled]="followLoading" (click)="toggleFollowSeller()">
         {{ sellerFollowStatus.following ? ('listingDetails.sidebar.following' | translate) : ('listingDetails.sidebar.follow' | translate) }}
       </button>

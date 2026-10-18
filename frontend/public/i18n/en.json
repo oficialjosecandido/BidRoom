@@ -4372,6 +4372,8 @@
   },
   "GIVEAWAY": {
     "PILL": "Giveaway",
+    "PROMOTER": "Promoter",
+    "PROMOTER_NAME": "BidRoom",
     "FREE": "Free",
     "FREE_ENTRY": "Free entry",
     "ENTRY_LABEL": "Entry",

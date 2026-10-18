@@ -1,39 +1,46 @@
-<div class="check-email-container">
-  <div class="check-email-card">
-    <div class="icon-wrapper">
-      <span class="icon">✉️</span>
+<div class="auth-pg" [class.light]="isLight()">
+  <nav class="auth-nav">
+    <a routerLink="/" class="auth-brand" aria-label="BidRoom">
+      <app-bidroom-logo [height]="28" />
+    </a>
+  </nav>
+
+  <div class="auth-shell">
+    <div class="auth-card">
+      <header class="auth-card-head">
+        <h1 class="auth-title">{{ 'auth.checkEmail.title' | translate }}</h1>
+        <p class="auth-subtitle">
+          {{ 'auth.checkEmail.sentTo' | translate }}
+          @if (email) {
+            <strong class="check-email-addr">{{ email }}</strong>
+          } @else {
+            <span>{{ 'auth.checkEmail.yourEmail' | translate }}</span>
+          }.
+        </p>
+      </header>
+
+      <p class="check-email-body">{{ 'auth.checkEmail.instruction' | translate }}</p>
+      <p class="check-email-hint">{{ 'auth.checkEmail.hint' | translate }}</p>
+
+      @if (resendMessage) {
+        <div class="auth-success">{{ resendMessage }}</div>
+      }
+      @if (resendError) {
+        <div class="auth-error">
+          <p class="auth-error-text">{{ resendError }}</p>
+        </div>
+      }
+
+      <div class="check-email-actions">
+        @if (email) {
+          <button type="button" class="check-email-secondary" (click)="resend()" [disabled]="resending">
+            {{ resending ? ('auth.checkEmail.resending' | translate) : ('auth.checkEmail.resend' | translate) }}
+          </button>
+        }
+        <button type="button" class="auth-submit" (click)="goToLogin()">
+          {{ 'auth.verifyEmail.goToLogin' | translate }}
+        </button>
+      </div>
     </div>
-    <h1 class="title">{{ 'auth.checkEmail.title' | translate }}</h1>
-    <p class="message">
-      {{ 'auth.checkEmail.sentTo' | translate }}
-      @if (email) {
-        <strong>{{ email }}</strong>
-      } @else {
-        <span>{{ 'auth.checkEmail.yourEmail' | translate }}</span>
-      }.
-    </p>
-    <p class="instructions">
-      {{ 'auth.checkEmail.instruction' | translate }}
-    </p>
-    <p class="hint">
-      {{ 'auth.checkEmail.hint' | translate }}
-    </p>
-
-    @if (resendMessage) {
-      <p class="resend-ok">{{ resendMessage }}</p>
-    }
-    @if (resendError) {
-      <p class="resend-err">{{ resendError }}</p>
-    }
-
-    @if (email) {
-      <button type="button" class="resend-btn" (click)="resend()" [disabled]="resending">
-        {{ resending ? ('auth.checkEmail.resending' | translate) : ('auth.checkEmail.resend' | translate) }}
-      </button>
-    }
-
-    <button type="button" class="login-btn" (click)="goToLogin()">
-      {{ 'auth.verifyEmail.goToLogin' | translate }}
-    </button>
   </div>
 </div>

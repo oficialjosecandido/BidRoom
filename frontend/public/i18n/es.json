@@ -301,7 +301,7 @@
     "selectSubCategory": "Seleccionar Subcategoría",
     "listingFormat": "Formato del Anuncio *",
     "formatAuction": "Subasta (Gana la Mayor Puja)",
-    "formatBestOffer": "Mejor Oferta (El Vendedor Elige)",
+    "formatBestOffer": "Mejor Propuesta (El Vendedor Elige)",
     "condition": "Estado del Artículo *",
     "selectCondition": "Seleccionar Estado",
     "conditionNew": "Nuevo",
@@ -351,7 +351,7 @@
     "buyNowPrice": "Precio Comprar Ya (Opcional)",
     "buyNowHint": "Debe ser mayor que la Puja Inicial. Permite compra instantánea.",
     "minimumAcceptPrice": "Precio Mínimo de Aceptación",
-    "minimumAcceptHint": "Umbral de precio donde debes aceptar una oferta cualificada",
+    "minimumAcceptHint": "Umbral de precio donde debes aceptar una propuesta cualificada",
     "enablePrivateRoom": "Activar Sala Privada",
     "privateRoomHint": "Importante: Activar Sala Privada aumenta tu comisión del 3,5% al 6,0%. Debes comprometerte con esta elección.",
     "commissionPrivateRoom": "Tasa de Comisión: 6,0% (Sala Privada activada)",
@@ -498,7 +498,7 @@
       "label": "Pasos",
       "progress": "{{current}} / {{total}}",
       "format": "Formato",
-      "formatSub": "Subasta o mejor oferta",
+      "formatSub": "Subasta o mejor propuesta",
       "details": "Detalles",
       "detailsSub": "Título, categoría y descripción",
       "photos": "Fotos",
@@ -519,20 +519,20 @@
     "step2.section": "Información del artículo",
     "step3.section": "Fotos del artículo",
     "step4.auction.section": "Precios de la subasta",
-    "step4.offer.section": "Precios de la mejor oferta",
+    "step4.offer.section": "Precios de la mejor propuesta",
     "step5.section": "Método de envío",
     "step5.sectionVehicle": "Entrega del vehículo",
     "step5.location": "Ubicación",
     "step6.section": "Revisión y publicación",
     "optional": "opcional",
-    "offerDeadline": "Plazo de ofertas",
+    "offerDeadline": "Plazo de propuestas",
     "offerDeadlineHint": "Más tiempo significa más compradores viendo tu anuncio y más propuestas.",
     "startingBidHint": "El valor mínimo para la primera puja. Una puja inicial competitiva atrae más licitadores.",
     "reserveHint": "La subasta solo vincula al ganador si se alcanza este valor.",
     "durationHint": "Los artículos raros o premium tienden a generar más pujas con 7–10 días.",
     "autoRelistLabel": "Volver a publicar automáticamente si no se vende",
     "autoRelistHint": "Si la subasta termina sin venta (sin pujas o sin alcanzar la reserva), se volverá a publicar automáticamente por otro período igual. Puedes desactivarlo en cualquier momento.",
-    "formatBestOfferDesc": "Los compradores envían propuestas y tú eliges cuál aceptar. Define un precio mínimo — tienes total libertad para rechazar cualquier oferta por debajo de ese valor.",
+    "formatBestOfferDesc": "Los compradores envían propuestas y tú eliges cuál aceptar. Define un precio mínimo — tienes total libertad para rechazar cualquier propuesta por debajo de ese valor.",
     "formatAuctionDesc": "Los compradores pujan en tiempo real y compiten por tu artículo. Defines la duración y la puja inicial. El ganador se determina automáticamente.",
     "drop": {
       "title": "Arrastra las fotos aquí",
@@ -625,7 +625,7 @@
     "schedule": {
       "section": "Programar apertura",
       "toggleLabel": "Programar la apertura de esta subasta",
-      "toggleHint": "El anuncio es visible en cuanto se aprueba, pero nadie puede pujar, ofertar ni comprar antes de la fecha elegida.",
+      "toggleHint": "El anuncio es visible en cuanto se aprueba, pero nadie puede pujar, proponer ni comprar antes de la fecha elegida.",
       "dateLabel": "Fecha y hora de apertura",
       "dateHint": "Hasta {{days}} días desde hoy. La duración elegida empieza a contar en la apertura.",
       "opensAt": "Abre el {{date}}",
@@ -839,7 +839,7 @@
     "loading": "Cargando anuncios...",
     "error": "Error",
     "tryAgain": "Intentar de Nuevo",
-    "noOffersYet": "Sin ofertas aún",
+    "noOffersYet": "Sin propuestas aún",
     "startedAt": "Comenzó en",
     "bid": "puja",
     "bids": "pujas",
@@ -872,7 +872,7 @@
     "priceEuro": "Precio (€)",
     "formatAll": "Todos",
     "formatAuction": "Subasta",
-    "formatBestOffer": "Mejor Oferta",
+    "formatBestOffer": "Mejor Propuesta",
     "resultsCountOne": "{{count}} resultado para \"{{query}}\"",
     "resultsCountMany": "{{count}} resultados para \"{{query}}\"",
     "oneBid": "1 puja",
@@ -894,7 +894,7 @@
     "minPrice": "Precio mínimo",
     "badgeLive": "En vivo",
     "badgeClosing": "Por cerrar",
-    "badgeBestOffer": "Mejor oferta",
+    "badgeBestOffer": "Mejor propuesta",
     "badgePrivateRoom": "Sala privada",
     "addWatchlist": "Añadir a favoritos",
     "removeWatchlist": "Quitar de favoritos",
@@ -904,8 +904,8 @@
     "price500to2k": "€500–2K",
     "price2kto10k": "€2K–10K",
     "priceOver10k": "> €10K",
-    "oneOffer": "1 oferta",
-    "offersCount": "{{count}} ofertas",
+    "oneOffer": "1 propuesta",
+    "offersCount": "{{count}} propuestas",
     "hoursLeft": "{{hours}}h restantes",
     "applyFilters": "Aplicar filtros",
     "opensIn": "Abre en {{time}}",
@@ -934,14 +934,14 @@
   },
   "listingDetails": {
     "saleType": {
-      "bestOffer": "Mejor Oferta",
+      "bestOffer": "Mejor Propuesta",
       "auction": "Subasta"
     },
     "loading": "Cargando detalles del anuncio...",
     "backToListings": "← Volver a los Anuncios",
     "currentBid": "Puja Actual",
-    "highestOffer": "Oferta Más Alta",
-    "noOffersYet": "Sin ofertas aún",
+    "highestOffer": "Propuesta Más Alta",
+    "noOffersYet": "Sin propuestas aún",
     "buyNow": "Comprar Ahora",
     "privateRoom": {
       "active": "Sala Privada Activa",
@@ -972,7 +972,7 @@
     },
     "time": {
       "auctionEnds": "Subasta Termina",
-      "offerDeadline": "Plazo para Ofertas",
+      "offerDeadline": "Plazo para Propuestas",
       "privateRoomEnds": "Sala Privada Termina",
       "auctionEnded": "Subasta Terminada",
       "listingEnded": "Anuncio Terminado",
@@ -1008,7 +1008,7 @@
     "actions": {
       "placeBid": "Pujar",
       "placeBidEmail": "Pujar (Correo Requerido)",
-      "makeOffer": "Hacer Oferta",
+      "makeOffer": "Hacer Propuesta",
       "addToWatchlist": "Agregar a Favoritos",
       "removeFromWatchlist": "Quitar de Favoritos",
       "selectWinner": "Seleccionar ganador",
@@ -1037,8 +1037,8 @@
       "offers": "Ofertas",
       "bid": "puja",
       "bidsPlural": "pujas",
-      "offer": "oferta",
-      "offersPlural": "ofertas",
+      "offer": "propuesta",
+      "offersPlural": "propuestas",
       "seller": "Vendedor",
       "condition": "Condición",
       "location": "Ubicación",
@@ -1050,7 +1050,7 @@
     "tabs": {
       "description": "Descripción",
       "bidHistory": "Historial de Pujas",
-      "offers": "Ofertas"
+      "offers": "Propuestas"
     },
     "bidHistory": {
       "loading": "Cargando historial de pujas...",
@@ -1078,18 +1078,18 @@
       "loadingMore": "Cargando…"
     },
     "offerHistory": {
-      "loading": "Cargando ofertas...",
+      "loading": "Cargando propuestas...",
       "tryAgain": "Intentar de Nuevo",
-      "noOffers": "Sin Ofertas Aún",
+      "noOffers": "Sin Propuestas Aún",
       "noOffersDesc": "¡Sé el primero en hacer una oferta por este artículo!",
-      "makeOffer": "Hacer una oferta",
+      "makeOffer": "Hacer una propuesta",
       "ctaText": "Reglas: Envía tu oferta antes del plazo. Puedes retirarla mientras esté pendiente. Si una o más ofertas alcanzan o superan el mínimo, el vendedor debe vender. Por debajo del mínimo, el vendedor no está obligado a vender.",
       "offerFrom": "Oferta de",
-      "yourOffer": "Tu oferta",
+      "yourOffer": "Tu propuesta",
       "selectedBySeller": "Seleccionada por el vendedor",
       "offered": "Ofrecido",
       "sellerLabel": "Vendedor:",
-      "acceptDeclineNote": "Puedes aceptar o rechazar ofertas después de la fecha de cierre del anuncio.",
+      "acceptDeclineNote": "Puedes aceptar o rechazar propuestas después de la fecha de cierre del anuncio.",
       "accept": "Aceptar",
       "accepting": "Aceptando…",
       "decline": "Rechazar",
@@ -1104,8 +1104,8 @@
       "statusExpired": "Caducada",
       "stripeWarningPrefix": "⚠️ Conecta Stripe en",
       "stripeSettingsLink": "Configuración → Pagos",
-      "buyerWithdrawNote": "Puedes retirar tu oferta mientras esté pendiente. Las ofertas aceptadas no se pueden retirar.",
-      "withdrawTitle": "Retirar esta oferta pendiente"
+      "buyerWithdrawNote": "Puedes retirar tu propuesta mientras esté pendiente. Las propuestas aceptadas no se pueden retirar.",
+      "withdrawTitle": "Retirar esta propuesta pendiente"
     },
     "shipping": {
       "title": "Envío",
@@ -1150,31 +1150,31 @@
       "successTitle": "¡Puja realizada!"
     },
     "offerModal": {
-      "title": "Hacer una oferta",
+      "title": "Hacer una propuesta",
       "transparency": "Para que sepas exactamente lo que estás ofreciendo:",
       "startingCurrent": "Inicial / actual",
-      "minimumOffer": "Oferta mínima",
+      "minimumOffer": "Propuesta mínima",
       "amountLabel": "Monto de tu oferta",
       "emailLabel": "Tu correo",
       "emailRequiredBadge": "Obligatorio",
-      "emailRequiredCallout": "Introduce tu correo para que el vendedor pueda responder a tu oferta.",
+      "emailRequiredCallout": "Introduce tu correo para que el vendedor pueda responder a tu propuesta.",
       "emailPlaceholder": "nombre@email.com",
-      "emailHint": "El vendedor lo usará para responder a tu oferta.",
-      "belowMinNote": "Tu oferta está por debajo del precio mínimo del vendedor. El vendedor no está obligado a aceptar esta oferta, incluso si eres el único postor.",
+      "emailHint": "El vendedor lo usará para responder a tu propuesta.",
+      "belowMinNote": "Tu propuesta está por debajo del precio mínimo del vendedor. El vendedor no está obligado a aceptar esta propuesta, incluso si eres el único postor.",
       "cancel": "Cancelar",
-      "submit": "Enviar oferta",
-      "submitting": "Enviando oferta…",
-      "subtitle": "Si el vendedor acepta, te comprometes a comprar a ese precio. Puedes retirar la oferta mientras esté pendiente. Las pujas de subasta no se pueden retirar.",
+      "submit": "Enviar propuesta",
+      "submitting": "Enviando propuesta…",
+      "subtitle": "Si el vendedor acepta, te comprometes a comprar a ese precio. Puedes retirar la propuesta mientras esté pendiente. Las pujas de subasta no se pueden retirar.",
       "figuresHint": "La mínima es la cantidad más baja que el vendedor valorará. La más alta es la mejor oferta hasta ahora: puedes igualarla o superarla, o quedarte en el mínimo.",
-      "highestOffer": "Oferta más alta",
+      "highestOffer": "Propuesta más alta",
       "valueLabel": "Importe (€)",
-      "yourOfferPreview": "Estás ofreciendo:",
-      "successTitle": "Tu oferta ha sido publicada.",
+      "yourOfferPreview": "Estás proponiendo:",
+      "successTitle": "Tu propuesta ha sido publicada.",
       "successText": "Gracias",
-      "successTextAccepted": "Tu oferta de {{amount}} fue aceptada por el vendedor. Completa la compra en Transacciones.",
+      "successTextAccepted": "Tu propuesta de {{amount}} fue aceptada por el vendedor. Completa la compra en Transacciones.",
       "successConfirm": "Entendido",
-      "errorTitle": "No se pudo enviar la oferta",
-      "errorText": "Error al enviar la oferta. Inténtalo de nuevo.",
+      "errorTitle": "No se pudo enviar la propuesta",
+      "errorText": "Error al enviar la propuesta. Inténtalo de nuevo.",
       "errorConfirm": "OK",
       "emailInvalid": "Introduce una dirección de correo válida.",
       "emailRequired": "Introduce tu correo para que el vendedor pueda contactarte.",
@@ -1238,10 +1238,10 @@
       "watchRoomWaiting": "Ver sala (esperando inicio)",
       "ownListingNote": "Este es tu anuncio.",
       "reopenNoBids": "Sin pujas. Puedes reabrir 7 días más.",
-      "reopenNoOffers": "Sin ofertas. Puedes reabrir 7 días más.",
+      "reopenNoOffers": "Sin propuestas. Puedes reabrir 7 días más.",
       "inWatchlist": "En lista de seguimiento",
-      "minimumOffer": "Oferta mínima",
-      "minimumOfferDesc": "Las ofertas por debajo de este importe pueden ser rechazadas automáticamente.",
+      "minimumOffer": "Propuesta mínima",
+      "minimumOfferDesc": "Las propuestas por debajo de este importe pueden ser rechazadas automáticamente.",
       "minimumBid": "Próxima puja mínima",
       "bidIncrement": "Incremento:",
       "reviews": "valoraciones",
@@ -1249,7 +1249,7 @@
       "follow": "+ Seguir",
       "eligibleCountdown": "Sala privada:",
       "remaining": "restantes",
-      "winnerSelectionCountdownOffer": "24h para aceptar oferta",
+      "winnerSelectionCountdownOffer": "24h para aceptar propuesta",
       "winnerSelectionCountdownWinner": "24h para seleccionar ganador",
       "invitedRoomHeader": "Invitados a la sala",
       "buyNow": "Comprar ya ·",
@@ -1872,11 +1872,11 @@
     },
     "myBets": {
       "title": "Mis Pujas",
-      "subtitle": "Todas tus pujas y ofertas en un solo lugar. Las ofertas pendientes (Mejor Oferta) se pueden retirar en cualquier momento; las pujas de subasta no.",
+      "subtitle": "Todas tus pujas y propuestas en un solo lugar. Las propuestas pendientes (modo Mejor Propuesta) se pueden retirar en cualquier momento; las pujas de subasta no.",
       "loading": "Cargando tus pujas...",
       "tryAgain": "Intentar de nuevo",
       "emptyTitle": "Sin pujas aún",
-      "emptyDesc": "Aún no has hecho ninguna puja u oferta. Navega por los anuncios y haz tu primera puja!",
+      "emptyDesc": "¡Aún no has hecho ninguna puja o propuesta! Navega por los anuncios y haz tu primera puja.",
       "browseListings": "Ver anuncios",
       "myBest": "Mi mejor",
       "bet": "puja",
@@ -1891,7 +1891,7 @@
       "viewTransaction": "Ver transacción",
       "withdraw": "Retirar",
       "withdrawing": "Retirando…",
-      "withdrawError": "No se pudo retirar la oferta.",
+      "withdrawError": "No se pudo retirar la propuesta.",
       "statusActive": "Activo",
       "statusEnded": "Terminado",
       "statusCancelled": "Cancelado",
@@ -1899,9 +1899,9 @@
       "statusAccepted": "Aceptado",
       "statusRejected": "Rechazado",
       "statusWithdrawn": "Retirada",
-      "rulesHint": "Ofertas: puedes retirarlas mientras estén pendientes. Las pujas de subasta son vinculantes y no se pueden cancelar.",
-      "withdrawTitle": "Retirar esta oferta pendiente",
-      "withdrawConfirmText": "Solo puedes retirar una oferta mientras esté pendiente. Las ofertas aceptadas no se pueden retirar.",
+      "rulesHint": "Propuestas: puedes retirarlas mientras estén pendientes. Las pujas de subasta son vinculantes y no se pueden cancelar.",
+      "withdrawTitle": "Retirar esta propuesta pendiente",
+      "withdrawConfirmText": "Solo puedes retirar una propuesta mientras esté pendiente. Las propuestas aceptadas no se pueden retirar.",
       "errorLoading": "Error al cargar tus pujas y propuestas."
     },
     "seller": {
@@ -2215,14 +2215,14 @@
     },
     "myAuctions": {
       "title": "Mis Anuncios",
-      "subtitle": "Sigue tus subastas y el estado de cada anuncio. Solo puedes eliminar un anuncio si no tiene pujas u ofertas cualificadas (Mejor Oferta: ninguna igual o superior al mínimo).",
+      "subtitle": "Sigue tus subastas y el estado de cada anuncio. Solo puedes eliminar un anuncio si no tiene pujas o propuestas cualificadas (modo Mejor Propuesta: ninguna igual o superior al mínimo).",
       "loading": "Cargando tus anuncios...",
       "emptyTitle": "Aún sin anuncios",
       "emptyDesc": "Aún no has creado ningún anuncio. ¡Comienza creando tu primer anuncio!",
       "createFirst": "Crear Mi Primer Anuncio",
-      "highestOffer": "Oferta Más Alta",
+      "highestOffer": "Propuesta Más Alta",
       "currentPrice": "Precio Actual",
-      "noOffersYet": "Sin ofertas aún",
+      "noOffersYet": "Sin propuestas aún",
       "bids": "Pujas",
       "watchlist": "Seguidos",
       "started": "Iniciado",
@@ -2244,7 +2244,7 @@
       "editListing": "Editar",
       "deleteListing": "Eliminar",
       "cancelConfirmTitle": "¿Eliminar este anuncio?",
-      "cancelConfirmText": "Solo puedes eliminar este anuncio si no hay ofertas o pujas cualificadas. En Mejor Oferta: sin oferta aceptada y sin oferta pendiente igual o superior al mínimo. En subasta: sin pujas. Las ofertas pendientes por debajo del mínimo se rechazarán. Esta acción no se puede deshacer.",
+      "cancelConfirmText": "Solo puedes eliminar este anuncio si no hay propuestas o pujas cualificadas. En el modo Mejor Propuesta: sin propuesta aceptada y sin propuesta pendiente igual o superior al mínimo. En subasta: sin pujas. Las propuestas pendientes por debajo del mínimo se rechazarán. Esta acción no se puede deshacer.",
       "cancelConfirmBtn": "Eliminar anuncio",
       "cancelSuccess": "Anuncio eliminado",
       "cancelError": "No se pudo eliminar el anuncio",
@@ -2290,8 +2290,8 @@
       "rejectedLabel": "No aprobado",
       "rejectionReason": "Motivo",
       "pendingReviewHint": "A la espera de aprobación. El tiempo de la subasta solo empieza cuando se apruebe.",
-      "deleteRulesHint": "Eliminar está disponible cuando no hay pujas y, en Mejor Oferta, solo si ninguna oferta alcanza el precio mínimo. Consulta los Términos de Uso.",
-      "deleteListingTitle": "Eliminar anuncio (solo sin ofertas o pujas cualificadas)",
+      "deleteRulesHint": "Eliminar está disponible cuando no hay pujas y, en el modo Mejor Propuesta, solo si ninguna propuesta alcanza el precio mínimo. Consulta los Términos de Uso.",
+      "deleteListingTitle": "Eliminar anuncio (solo sin propuestas o pujas cualificadas)",
       "errorLoading": "Error al cargar tus anuncios.",
       "relistSuccess": "¡Anuncio relistado correctamente!",
       "relistError": "Error al relistar el anuncio.",
@@ -2306,9 +2306,9 @@
       "emptyTitle": "Aún sin subastas",
       "emptyDesc": "Aún no has pujado. ¡Explora los anuncios y haz tu primera puja!",
       "browseAuctions": "Ver subastas",
-      "highestOffer": "Oferta Más Alta",
+      "highestOffer": "Propuesta Más Alta",
       "currentPrice": "Precio Actual",
-      "noOffersYet": "Sin ofertas aún",
+      "noOffersYet": "Sin propuestas aún",
       "myHighestBid": "Mi puja más alta",
       "totalBids": "Total de pujas",
       "ends": "Termina",
@@ -2323,7 +2323,7 @@
       "emptyTitle": "Ningún artículo en tu lista de seguimiento",
       "emptyDesc": "Cuando añadas artículos a tu lista de seguimiento desde una página de anuncio, aparecerán aquí.",
       "browseAuctions": "Ver subastas",
-      "noOffersYet": "Sin ofertas aún",
+      "noOffersYet": "Sin propuestas aún",
       "remove": "Eliminar",
       "removing": "...",
       "errorLoading": "Error al cargar tu lista de seguimiento."
@@ -2951,20 +2951,22 @@
         "desc": "Una vez completada la transacción, puedes valorar al vendedor en una escala de 1 a 10. Las descripciones de las valoraciones son <strong>privadas</strong> — solo las ve el vendedor."
       },
       "faq": {
+        "q0": "¿Puedo cancelar una puja después de hacerla?",
+        "a0": "Las <strong>pujas</strong> son vinculantes y no se pueden cancelar. Las <strong>propuestas</strong> se pueden retirar mientras sigan pendientes. Una vez que el vendedor acepta, la venta es vinculante.",
+        "q1": "¿Qué ocurre si el vendedor no envía el artículo?",
+        "a1": "Si el vendedor no envía en el plazo de <strong>5 días laborables</strong>, la transacción se cancela automáticamente y recibirás el reembolso íntegro en tu método de pago original.",
+        "q2": "¿Tengo derecho de desistimiento?",
+        "a2": "BidRoom es sobre todo una plataforma C2C (entre particulares). En las subastas en línea entre particulares, el derecho de desistimiento generalmente no se aplica. Si el vendedor es un profesional, tus derechos son distintos — consulta los Términos de Uso.",
+        "q3": "¿Cuánta comisión pago?",
+        "a3": "<strong>Los compradores no pagan comisión de venta a BidRoom.</strong> Pagas el precio del artículo más una tarifa de servicio de BidRoom (2,9% + 0,30 € por transacción), con un límite de <strong>500 €</strong>, añadida al total al pagar."
+      },
+      "faqExtra": {
         "q0": "¿Cuál es la diferencia entre pujar y hacer una propuesta?",
         "a0": "En un anuncio de pujas compites en tiempo real y, al cierre, la puja más alta gana automáticamente — una puja es <strong>vinculante</strong>. En un anuncio de propuestas envías un importe al vendedor y es él quien decide si lo acepta. La página del artículo muestra siempre cuál de los dos se aplica, justo en el botón con el que participas.",
         "q1": "¿Mi propuesta me obliga a comprar?",
         "a1": "Solo si el vendedor la acepta. Mientras siga pendiente puedes retirarla. Una vez aceptada, tienes <strong>24 horas</strong> para pagar, exactamente como si hubieras ganado una subasta.",
         "q2": "¿Puedo hacer una propuesta en un anuncio de pujas?",
-        "a2": "No. Cada anuncio funciona en un solo modo: si acepta pujas, pujas; si acepta propuestas, propones.",
-        "q3": "¿Puedo cancelar una puja después de hacerla?",
-        "a3": "Las <strong>pujas</strong> son vinculantes y no se pueden cancelar. Las <strong>propuestas</strong> se pueden retirar mientras sigan pendientes. Una vez que el vendedor acepta, la venta es vinculante.",
-        "q4": "¿Qué ocurre si el vendedor no envía el artículo?",
-        "a4": "Si el vendedor no envía en el plazo de <strong>5 días laborables</strong>, la transacción se cancela automáticamente y recibirás el reembolso íntegro en tu método de pago original.",
-        "q5": "¿Tengo derecho de desistimiento?",
-        "a5": "BidRoom es sobre todo una plataforma C2C (entre particulares). En las subastas en línea entre particulares, el derecho de desistimiento generalmente no se aplica. Si el vendedor es un profesional, tus derechos son distintos — consulta los Términos de Uso.",
-        "q6": "¿Cuánta comisión pago?",
-        "a6": "<strong>Los compradores no pagan comisión de venta a BidRoom.</strong> Pagas el precio del artículo más una tarifa de servicio de BidRoom (2,9% + 0,30 € por transacción), con un límite de <strong>500 €</strong>, añadida al total al pagar."
+        "a2": "No. Cada anuncio funciona en un solo modo: si acepta pujas, pujas; si acepta propuestas, propones."
       }
     },
     "seller": {
@@ -3023,22 +3025,16 @@
         "note": "Si el comprador no confirma la recepción dentro del plazo, el sistema libera los fondos automáticamente (auto-release). No necesitas contactar con el soporte."
       },
       "faq": {
-        "q0": "¿Qué modo de venta debo elegir?",
-        "a0": "Pujas cuando quieras maximizar el precio y haya demanda — dejas que el mercado decida el valor. Propuestas cuando tengas un precio en mente y prefieras controlar a quién vendes. La comisión es del <strong>3,5% en los dos modos</strong>; solo sube al 6% si activas la Sala Privada, que existe únicamente en el modo de pujas.",
-        "q1": "¿Puedo cambiar de modo después de publicar?",
-        "a1": "No, para proteger a quien ya ha pujado o propuesto — cambiarlo alteraría lo que su puja o su propuesta significa jurídicamente. Para cambiarlo, cancela y crea un anuncio nuevo: no hay tarifa de publicación ni de cancelación.",
-        "q2": "¿Qué es la aceptación automática de propuestas?",
-        "a2": "Si, al vencer el plazo, hay <strong>exactamente una</strong> propuesta igual o superior a tu mínimo, esa propuesta se acepta por ti — para que no se pierda una venta válida por un descuido. Si varias superan el mínimo, decides tú; si ninguna lo hace, el anuncio cierra sin venta. La aceptación automática requiere que tu cuenta de pagos de Stripe esté configurada.",
-        "q3": "¿Cuándo recibo el pago?",
-        "a3": "Los fondos se liberan cuando el comprador confirma la recepción. Después de eso, la transferencia por Stripe Connect tarda normalmente <strong>1–2 días laborables bancarios</strong>.",
-        "q4": "¿Puedo fijar un precio mínimo en el modo de propuestas?",
-        "a4": "Sí, y es <strong>obligatorio</strong> en los anuncios en modo de propuestas. Por debajo de esa cifra puedes rechazar libremente. A partir de ella quedas comprometido: no puedes rechazar la última propuesta que la alcance y, si al cerrar el anuncio hay exactamente una que la alcanza, se acepta automáticamente.",
-        "q5": "¿Qué ocurre si el comprador abre una disputa?",
-        "a5": "Cuando se abre una disputa, las dos cuentas quedan restringidas y los fondos retenidos. El equipo de BidRoom revisa las pruebas de las dos partes. Si no se llega a un acuerdo, el caso se remite a la CNIACC.",
-        "q6": "¿Puedo cancelar un anuncio después de publicarlo?",
-        "a6": "Sí, mientras el anuncio esté en borrador, pendiente de aprobación o activo — y solo si no hay nada que lo vincule: en modo de propuestas, ninguna propuesta aceptada y ninguna propuesta pendiente igual o superior al mínimo; en modo de pujas, ninguna puja. Las propuestas pendientes por debajo del mínimo se rechazan automáticamente. No puedes eliminar un anuncio que ya tenga ganador o una transacción activa.",
-        "q7": "¿Qué artículos no puedo publicar?",
-        "a7": "Prohibidos: animales vivos, sustancias controladas, armas y cualquier artículo ilegal en Portugal. BidRoom usa moderación automática (Azure AI Content Safety) para detectar y bloquear esos anuncios antes de que se publiquen."
+        "q0": "¿Cuándo recibo el pago?",
+        "a0": "Los fondos se liberan cuando el comprador confirma la recepción. Después de eso, la transferencia por Stripe Connect tarda normalmente <strong>1–2 días laborables bancarios</strong>.",
+        "q1": "¿Puedo fijar un precio mínimo en el modo de propuestas?",
+        "a1": "Sí, y es <strong>obligatorio</strong> en los anuncios en modo de propuestas. Por debajo de esa cifra puedes rechazar libremente. A partir de ella quedas comprometido: no puedes rechazar la última propuesta que la alcance y, si al cerrar el anuncio hay exactamente una que la alcanza, se acepta automáticamente.",
+        "q2": "¿Qué ocurre si el comprador abre una disputa?",
+        "a2": "Cuando se abre una disputa, las dos cuentas quedan restringidas y los fondos retenidos. El equipo de BidRoom revisa las pruebas de las dos partes. Si no se llega a un acuerdo, el caso se remite a la CNIACC.",
+        "q3": "¿Puedo cancelar un anuncio después de publicarlo?",
+        "a3": "Sí, mientras el anuncio esté en borrador, pendiente de aprobación o activo — y solo si no hay nada que lo vincule: en modo de propuestas, ninguna propuesta aceptada y ninguna propuesta pendiente igual o superior al mínimo; en modo de pujas, ninguna puja. Las propuestas pendientes por debajo del mínimo se rechazan automáticamente. No puedes eliminar un anuncio que ya tenga ganador o una transacción activa.",
+        "q4": "¿Qué artículos no puedo publicar?",
+        "a4": "Prohibidos: animales vivos, sustancias controladas, armas y cualquier artículo ilegal en Portugal. BidRoom usa moderación automática (Azure AI Content Safety) para detectar y bloquear esos anuncios antes de que se publiquen."
       },
       "card": {
         "noListingFee": "Sin tarifa de publicación",
@@ -3054,6 +3050,14 @@
         "tag": "Consejo para vendedores",
         "title": "Activa la Sala Privada para maximizar el precio final de venta",
         "desc": "Las subastas con Sala Privada cierran de media un 30% por encima de la última puja pública. El comprador que pierde la subasta principal a menudo está dispuesto a pagar más en una ronda exclusiva — la Sala Privada captura ese valor para ti."
+      },
+      "faqExtra": {
+        "q0": "¿Qué modo de venta debo elegir?",
+        "a0": "Pujas cuando quieras maximizar el precio y haya demanda — dejas que el mercado decida el valor. Propuestas cuando tengas un precio en mente y prefieras controlar a quién vendes. La comisión es del <strong>3,5% en los dos modos</strong>; solo sube al 6% si activas la Sala Privada, que existe únicamente en el modo de pujas.",
+        "q1": "¿Puedo cambiar de modo después de publicar?",
+        "a1": "No, para proteger a quien ya ha pujado o propuesto — cambiarlo alteraría lo que su puja o su propuesta significa jurídicamente. Para cambiarlo, cancela y crea un anuncio nuevo: no hay tarifa de publicación ni de cancelación.",
+        "q2": "¿Qué es la aceptación automática de propuestas?",
+        "a2": "Si, al vencer el plazo, hay <strong>exactamente una</strong> propuesta igual o superior a tu mínimo, esa propuesta se acepta por ti — para que no se pierda una venta válida por un descuido. Si varias superan el mínimo, decides tú; si ninguna lo hace, el anuncio cierra sin venta. La aceptación automática requiere que tu cuenta de pagos de Stripe esté configurada."
       }
     },
     "private": {
@@ -3416,8 +3420,8 @@
         "a": "Nuestro sistema de puja por proxy te permite establecer tu monto máximo. Pujamos automáticamente en tu nombre."
       },
       "bidding2": {
-        "q": "¿Puedo cancelar una puja o retirar una oferta?",
-        "a": "Las pujas de subasta son vinculantes y no se pueden cancelar una vez realizadas. Las propuestas de Mejor Oferta se pueden retirar en cualquier momento mientras estén pendientes (aún no aceptadas o rechazadas por el vendedor). Tras la aceptación, la venta es vinculante y se aplican las reglas de pago."
+        "q": "¿Puedo cancelar una puja o retirar una propuesta?",
+        "a": "Las pujas de subasta son vinculantes y no se pueden cancelar una vez realizadas. Las propuestas en el modo Mejor Propuesta se pueden retirar en cualquier momento mientras estén pendientes (aún no aceptadas o rechazadas por el vendedor). Tras la aceptación, la venta es vinculante y se aplican las reglas de pago."
       },
       "bidding3": {
         "q": "¿Cómo sé si gané una subasta?",
@@ -3780,7 +3784,7 @@
     "filterWinning": "Ganando",
     "filterOutbid": "Superado",
     "filterEnded": "Finalizado",
-    "myBest": "Mi mejor oferta",
+    "myBest": "Mi mejor propuesta",
     "currentPrice": "Actual",
     "bids": "Pujas",
     "ends": "Termina",
@@ -3792,7 +3796,7 @@
     "withdrawing": "Retirando…",
     "notifOn": "Notificar si superado",
     "notifOff": "Notificaciones desactivadas",
-    "typeOffer": "Oferta",
+    "typeOffer": "Propuesta",
     "typeLive": "En vivo",
     "statusActive": "Activo",
     "statusEnded": "Finalizado"
@@ -3906,6 +3910,8 @@
   },
   "GIVEAWAY": {
     "PILL": "Sorteo",
+    "PROMOTER": "Promotor",
+    "PROMOTER_NAME": "BidRoom",
     "FREE": "Gratis",
     "FREE_ENTRY": "Participación gratuita",
     "ENTRY_LABEL": "Participación",
@@ -4001,9 +4007,9 @@
     "noEndedListings": "Aún sin anuncios finalizados.",
     "ended": "Finalizado",
     "bestOffer": "Best Offer",
-    "noOffersYet": "Sin ofertas aún",
-    "offer": "oferta",
-    "offers": "ofertas",
+    "noOffersYet": "Sin propuestas aún",
+    "offer": "propuesta",
+    "offers": "propuestas",
     "bid": "puja",
     "bids": "pujas",
     "notFound": "Este perfil no se encontró.",
@@ -4025,27 +4031,27 @@
     },
     "newProposal": {
       "title": "Nueva propuesta",
-      "message": "{{offererName}} ha hecho una oferta de €{{amount}} por \"{{listingTitle}}\""
+      "message": "{{offererName}} ha hecho una propuesta de €{{amount}} por \"{{listingTitle}}\""
     },
     "proposalAccepted": {
-      "title": "Oferta aceptada — completa el pago",
-      "message": "Tu oferta de €{{amount}} por \"{{listingTitle}}\" ha sido aceptada. Abre Transacciones para completar el pago."
+      "title": "Propuesta aceptada — completa el pago",
+      "message": "Tu propuesta de €{{amount}} por \"{{listingTitle}}\" ha sido aceptada. Abre Transacciones para completar el pago."
     },
     "proposalDeclined": {
       "title": "Propuesta rechazada",
-      "message": "Tu oferta de €{{amount}} por \"{{listingTitle}}\" ha sido rechazada."
+      "message": "Tu propuesta de €{{amount}} por \"{{listingTitle}}\" ha sido rechazada."
     },
     "offerPlaced": {
-      "title": "Oferta confirmada",
-      "message": "Hemos recibido tu oferta de €{{amount}} por \"{{listingTitle}}\"."
+      "title": "Propuesta confirmada",
+      "message": "Hemos recibido tu propuesta de €{{amount}} por \"{{listingTitle}}\"."
     },
     "offerOutbid": {
-      "title": "Se ha recibido una oferta más alta",
-      "message": "Tu oferta de €{{previousOffer}} por \"{{listingTitle}}\" ha sido superada. Alguien ha ofrecido €{{newOffer}}."
+      "title": "Se ha recibido una propuesta más alta",
+      "message": "Tu propuesta de €{{previousOffer}} por \"{{listingTitle}}\" ha sido superada. Alguien ha propuesto €{{newOffer}}."
     },
     "bestOfferEnded": {
       "title": "Anuncio finalizado",
-      "message": "Tu anuncio de mejor oferta \"{{listingTitle}}\" ha finalizado con {{offerCount}} oferta(s). Tienes 24 horas para revisarlas y aceptar una."
+      "message": "Tu anuncio de propuestas \"{{listingTitle}}\" ha finalizado con {{offerCount}} propuesta(s). Tienes 24 horas para revisarlas y aceptar una."
     },
     "listingRemoved": {
       "title": "Anuncio retirado",
@@ -4136,8 +4142,8 @@
       "message": "{{buyerName}} ha marcado el pago de \"{{listingTitle}}\" como enviado por {{method}}. Confírmalo cuando lo recibas."
     },
     "stripeRequiredForOffer": {
-      "title": "Acción necesaria: conecta Stripe para aceptar la oferta",
-      "message": "Tu anuncio \"{{listingTitle}}\" tiene una oferta válida de €{{amount}}. Conecta tu cuenta de Stripe en Ajustes → Pagos para aceptarla."
+      "title": "Acción necesaria: conecta Stripe para aceptar la propuesta",
+      "message": "Tu anuncio \"{{listingTitle}}\" tiene una propuesta válida de €{{amount}}. Conecta tu cuenta de Stripe en Ajustes → Pagos para aceptarla."
     },
     "payoutSetupReminder": {
       "title": "Configura tu cuenta de pagos",
