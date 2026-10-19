@@ -23,10 +23,13 @@ import { AdminSidebarComponent } from '../sidebar/admin-sidebar.component';
 type EmailsTab = 'newsletter' | 'personalized' | 'history' | 'preferences';
 
 /**
- * The one weekly edition. There is deliberately no second template: this file
- * is what goes out every week, and only the blocks inside it change.
+ * Default shell with `{{GIVEAWAY}}` / `{{AUCTIONS}}` filled at send time.
+ * Curated editions (hardcoded listings) live beside it under the same folder.
  */
 const WEEKLY_TEMPLATE = 'leiloes-da-semana.campaign.json';
+
+/** This week’s curated edition: Kenzo giveaway + blog + featured listings. */
+const CURATED_EDITION = '2026-10-kenzo-semana.campaign.json';
 
 /** Kept in step with the same patterns in `services/newsletterService`. */
 const AUCTIONS_PATTERN = /\{\{\s*(?:AUCTIONS|LEILOES|LEILÕES)\s*\}\}/gi;
@@ -213,18 +216,23 @@ export class AdminEmailsComponent implements OnInit {
   }
 
   /**
-   * The weekly template, in all four languages.
-   *
-   * There is only one, and it is loaded when the page opens: the edition never
-   * changes from week to week, only the auctions inside it, and those are
-   * chosen by the backend at send time.
+   * Dynamic weekly shell: `{{GIVEAWAY}}` / `{{AUCTIONS}}` are filled at send time.
    */
   async loadWeeklyTemplate(): Promise<void> {
+    await this.loadCampaignFile(WEEKLY_TEMPLATE, 'Não foi possível carregar o template da newsletter.');
+  }
+
+  /** Curated Kenzo week: giveaway + blog + fixed featured listings (no placeholders). */
+  async loadCuratedEdition(): Promise<void> {
+    await this.loadCampaignFile(CURATED_EDITION, 'Não foi possível carregar a edição Kenzo da semana.');
+  }
+
+  private async loadCampaignFile(file: string, errorMessage: string): Promise<void> {
     if (this.loadingPreset) return;
     this.loadingPreset = true;
     this.presetError = null;
     try {
-      const res = await fetch(`/newsletters/${WEEKLY_TEMPLATE}`);
+      const res = await fetch(`/newsletters/${file}`);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json() as CampaignContent;
       for (const lang of this.LANGUAGES) {
@@ -236,7 +244,7 @@ export class AdminEmailsComponent implements OnInit {
       }
       this.activeLanguage = 'pt';
     } catch {
-      this.presetError = 'Não foi possível carregar o template da newsletter.';
+      this.presetError = errorMessage;
     } finally {
       this.loadingPreset = false;
     }
@@ -256,6 +264,11 @@ export class AdminEmailsComponent implements OnInit {
 
   get hasGiveawayBlock(): boolean {
     return this.hasBlock(GIVEAWAY_PATTERN, this.content[this.activeLanguage].html);
+  }
+
+  /** Curated editions ship ready-made cards — missing placeholders is expected. */
+  get isCuratedEdition(): boolean {
+    return (this.content[this.activeLanguage].html || '').includes('giveaway-kenzo-world');
   }
 
   loadWeekPreview(): void {

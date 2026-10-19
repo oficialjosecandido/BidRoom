@@ -103,7 +103,7 @@
               }
             </div>
             <p class="hint-text">Cada destinatário recebe a versão no seu idioma (campo Idioma na lista de contactos).</p>
-            @if (content[activeLanguage].html.trim() && (!hasAuctionsBlock || !hasGiveawayBlock)) {
+            @if (content[activeLanguage].html.trim() && (hasAuctionsBlock || hasGiveawayBlock) === false && !isCuratedEdition) {
               <p class="result-message error">
                 O HTML em {{ activeLanguage.toUpperCase() }} já não tem
                 @if (!hasGiveawayBlock) { o bloco do giveaway } @if (!hasAuctionsBlock && !hasGiveawayBlock) { nem } @if (!hasAuctionsBlock) { o bloco dos leilões }
@@ -111,8 +111,11 @@
               </p>
             }
             <div class="auctions-actions">
+              <button type="button" class="btn btn-secondary" [disabled]="loadingPreset" (click)="loadCuratedEdition()">
+                {{ loadingPreset ? 'A carregar…' : 'Carregar edição Kenzo (esta semana)' }}
+              </button>
               <button type="button" class="btn btn-secondary" [disabled]="loadingPreset" (click)="loadWeeklyTemplate()">
-                {{ loadingPreset ? 'A carregar…' : 'Repor template semanal' }}
+                {{ loadingPreset ? 'A carregar…' : 'Repor template dinâmico' }}
               </button>
             </div>
             @if (presetError) { <p class="result-message error">{{ presetError }}</p> }
