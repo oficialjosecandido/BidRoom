@@ -718,8 +718,6 @@
     "steps": {
       "label": "Passos",
       "progress": "{{current}} / {{total}}",
-      "format": "Formato",
-      "formatSub": "Leilão ou melhor proposta",
       "details": "Detalhes",
       "detailsSub": "Título, categoria e descrição",
       "photos": "Fotos",
@@ -780,7 +778,6 @@
       "progress": "Progresso do anúncio"
     },
     "ck": {
-      "format": "Formato seleccionado",
       "title": "Título preenchido",
       "category": "Categoria escolhida",
       "condition": "Condição definida",
@@ -870,7 +867,20 @@
       "saleValue": "Valor de venda",
       "netLabel": "Recebe (estimativa)",
       "empty": "Defina um preço no anúncio ou introduza um valor para simular as comissões."
-    }
+    },
+    "sellingMode": {
+      "section": "Como quer vender?",
+      "hint": "Depois da venda é tudo igual — o mesmo pagamento, o mesmo envio, a mesma protecção. A única diferença está na forma como o comprador chega a um preço.",
+      "label": "Modo de venda",
+      "bidding": "Os compradores licitam e o lance mais alto ganha",
+      "biddingDesc": "Os compradores licitam uns contra os outros e vêem o preço actual. Quando o tempo acaba, o lance mais alto ganha e a venda está fechada.",
+      "biddingBadge": "Licitações",
+      "offers": "Os compradores enviam propostas e o senhor decide",
+      "offersDesc": "Cada comprador envia-lhe um valor em privado. Nada fica combinado sem que o senhor aceite.",
+      "offersBadge": "Propostas",
+      "fixedNote": "Pode alterar até publicar. A partir daí mantém-se, porque haverá quem tenha licitado ou feito propostas nas condições que definiu."
+    },
+    "formatCommissionNote": "A comissão do vendedor é 3,5% nas duas opções. 6% apenas se activar Private Room nas licitações."
   },
   "listingList": {
     "searchPlaceholder": "Pesquisar leilões...",

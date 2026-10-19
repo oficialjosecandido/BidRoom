@@ -131,52 +131,8 @@
       <div class="err-banner">{{ errorMessage }}</div>
     }
 
-    <!-- ── STEP 1: Format ─────────────────────────────────────────────────── -->
-    <div class="step-panel" [class.active]="currentStep === 1">
-      <div class="section">
-        <div class="section-title">{{ 'addListing.step1.section' | translate }}</div>
-
-        <div class="format-selector">
-          <label class="format-card" [class.selected]="listingForm.get('listingFormat')?.value === 'best-offer'">
-            <input type="radio" formControlName="listingFormat" value="best-offer" style="display:none">
-            <div class="format-check">✓</div>
-            <div class="format-card-icon">🤝</div>
-            <div class="format-card-title">{{ 'addListing.formatBestOffer' | translate }}</div>
-            <div class="format-card-desc">{{ 'addListing.formatBestOfferDesc' | translate }}</div>
-            <div class="format-commission">{{ 'addListing.commissionStandard' | translate }}</div>
-          </label>
-
-          <label class="format-card" [class.selected]="listingForm.get('listingFormat')?.value === 'auction'">
-            <input type="radio" formControlName="listingFormat" value="auction" style="display:none">
-            <div class="format-check">✓</div>
-            <div class="format-card-icon">🔨</div>
-            <div class="format-card-title">{{ 'addListing.formatAuction' | translate }}</div>
-            <div class="format-card-desc">{{ 'addListing.formatAuctionDesc' | translate }}</div>
-            <div class="format-commission">{{ 'addListing.commissionStandard' | translate }}</div>
-          </label>
-        </div>
-
-        <!-- Hidden for guests: the room is a live negotiation the seller has to be
-             signed in to attend, and the backend forces it off for them anyway. -->
-        @if (!isGuest && listingForm.get('listingFormat')?.value === 'auction') {
-          <div class="toggle-section">
-            <div class="toggle-row">
-              <div class="toggle-info">
-                <div class="toggle-title">⚡ {{ 'addListing.enablePrivateRoom' | translate }}</div>
-                <div class="toggle-desc">{{ 'addListing.privateRoomHint' | translate }}</div>
-              </div>
-              <label class="toggle">
-                <input type="checkbox" formControlName="allowPrivateRoom">
-                <span class="toggle-slider"></span>
-              </label>
-            </div>
-          </div>
-        }
-      </div>
-    </div>
-
-    <!-- ── STEP 2: Details ────────────────────────────────────────────────── -->
-    <div class="step-panel" [class.active]="currentStep === 2">
+    <!-- ── STEP 1: Details ────────────────────────────────────────────────── -->
+    <div class="step-panel" [class.active]="currentStep === STEP.details">
       <div class="section">
         <div class="section-title">{{ 'addListing.step2.section' | translate }}</div>
 
@@ -426,8 +382,8 @@
       </div>
     </div>
 
-    <!-- ── STEP 3: Photos ─────────────────────────────────────────────────── -->
-    <div class="step-panel" [class.active]="currentStep === 3">
+    <!-- ── STEP 2: Photos ─────────────────────────────────────────────────── -->
+    <div class="step-panel" [class.active]="currentStep === STEP.photos">
 
       <!-- Photo authenticity guide — only shown when subcategory has a guide -->
       @if (photoGuide; as guide) {
@@ -528,10 +484,53 @@
       </div>
     </div>
 
-    <!-- ── STEP 4: Price ──────────────────────────────────────────────────── -->
-    <div class="step-panel" [class.active]="currentStep === 4">
+    <!-- ── STEP 3: Price ──────────────────────────────────────────────────── -->
+    <div class="step-panel" [class.active]="currentStep === STEP.pricing">
 
-      @if (listingForm.get('listingFormat')?.value === 'auction') {
+      <!-- How buyers reach a price — asked here with the price fields. -->
+      <div class="section selling-mode-section">
+        <div class="section-title">{{ 'addListing.sellingMode.section' | translate }}</div>
+        <p class="field-hint field-hint--block">{{ 'addListing.sellingMode.hint' | translate }}</p>
+
+        <div class="mode-selector" role="radiogroup" [attr.aria-label]="'addListing.sellingMode.section' | translate">
+          <label class="mode-option" [class.selected]="isBestOfferFormat">
+            <input type="radio" formControlName="listingFormat" value="best-offer" class="mode-option__input">
+            <span class="mode-option__body">
+              <span class="mode-option__title">{{ 'addListing.sellingMode.offers' | translate }}</span>
+              <span class="mode-option__desc">{{ 'addListing.sellingMode.offersDesc' | translate }}</span>
+            </span>
+          </label>
+
+          <label class="mode-option" [class.selected]="isAuctionFormat">
+            <input type="radio" formControlName="listingFormat" value="auction" class="mode-option__input">
+            <span class="mode-option__body">
+              <span class="mode-option__title">{{ 'addListing.sellingMode.bidding' | translate }}</span>
+              <span class="mode-option__desc">{{ 'addListing.sellingMode.biddingDesc' | translate }}</span>
+            </span>
+          </label>
+        </div>
+
+        <p class="mode-commission-note">{{ 'addListing.formatCommissionNote' | translate }}</p>
+        <p class="mode-locked-note">{{ 'addListing.sellingMode.fixedNote' | translate }}</p>
+
+        @if (!isGuest && isAuctionFormat) {
+          <div class="toggle-section" style="margin-top:16px">
+            <div class="toggle-row">
+              <div class="toggle-info">
+                <div class="toggle-title">⚡ {{ 'addListing.enablePrivateRoom' | translate }}</div>
+                <div class="toggle-desc">{{ 'addListing.privateRoomHint' | translate }}</div>
+              </div>
+              <label class="toggle">
+                <input type="checkbox" formControlName="allowPrivateRoom">
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+        }
+      </div>
+
+
+      @if (isAuctionFormat) {
         <div class="section">
           <div class="section-title">{{ 'addListing.step4.auction.section' | translate }}</div>
 
@@ -596,7 +595,7 @@
         </div>
       }
 
-      @if (listingForm.get('listingFormat')?.value === 'best-offer') {
+      @if (isBestOfferFormat) {
         <div class="section pricing-section">
           <div class="section-title">{{ 'addListing.step4.offer.section' | translate }}</div>
 
@@ -738,8 +737,8 @@
       }
     </div>
 
-    <!-- ── STEP 5: Shipping ───────────────────────────────────────────────── -->
-    <div class="step-panel" [class.active]="currentStep === 5">
+    <!-- ── STEP 4: Shipping ───────────────────────────────────────────────── -->
+    <div class="step-panel" [class.active]="currentStep === STEP.shipping">
       <div class="section">
         <div class="section-title">
           {{ (isVehicleListing ? 'addListing.step5.sectionVehicle' : 'addListing.step5.section') | translate }}
@@ -836,8 +835,8 @@
       </div>
     </div>
 
-    <!-- ── STEP 5b: Payment methods ──────────────────────────────────────── -->
-    <div class="step-panel" [class.active]="currentStep === 5">
+    <!-- ── STEP 4b: Payment methods ──────────────────────────────────────── -->
+    <div class="step-panel" [class.active]="currentStep === STEP.shipping">
       <div class="section">
         <div class="section-title">{{ 'addListing.step5.paymentMethods' | translate }}</div>
         <p class="field-hint">{{ 'addListing.step5.paymentMethodsHint' | translate }}</p>
@@ -902,17 +901,15 @@
       </div>
     </div>
 
-    <!-- ── STEP 6: Review & Publish ───────────────────────────────────────── -->
-    <div class="step-panel" [class.active]="currentStep === 6">
+    <!-- ── STEP 5: Review & Publish ───────────────────────────────────────── -->
+    <div class="step-panel" [class.active]="currentStep === STEP.publish">
       <div class="section">
         <div class="section-title">{{ 'addListing.step6.section' | translate }}</div>
 
         <div class="review-summary">
           <div class="review-row">
-            <span class="review-label">{{ 'addListing.listingFormat' | translate }}</span>
-            <span class="review-val">
-              {{ listingForm.get('listingFormat')?.value === 'auction' ? ('addListing.formatAuction' | translate) : ('addListing.formatBestOffer' | translate) }}
-            </span>
+            <span class="review-label">{{ 'addListing.sellingMode.label' | translate }}</span>
+            <span class="review-val">{{ sellingModeLabelKey | translate }}</span>
           </div>
           <div class="review-row">
             <span class="review-label">{{ 'addListing.listingTitle' | translate }}</span>
@@ -922,7 +919,7 @@
             <span class="review-label">{{ 'addListing.condition' | translate }}</span>
             <span class="review-val">{{ reviewConditionLabel }}</span>
           </div>
-          @if (listingForm.get('listingFormat')?.value === 'auction') {
+          @if (isAuctionFormat) {
             <div class="review-row">
               <span class="review-label">{{ 'addListing.startingBid' | translate }}</span>
               <span class="review-val">€{{ listingForm.get('startingBid')?.value || '—' }}</span>
@@ -1078,9 +1075,9 @@
           </div>
         }
         <span class="preview-badge"
-              [class.pb-auction]="previewFormat === 'auction'"
-              [class.pb-offer]="previewFormat === 'best-offer'">
-          {{ previewFormat === 'auction' ? ('addListing.formatAuction' | translate) : ('addListing.formatBestOffer' | translate) }}
+              [class.pb-auction]="isAuctionFormat"
+              [class.pb-offer]="isBestOfferFormat">
+          {{ sellingModeBadgeKey | translate }}
         </span>
       </div>
       <div class="preview-body">

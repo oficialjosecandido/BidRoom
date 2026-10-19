@@ -718,8 +718,6 @@
     "steps": {
       "label": "Steps",
       "progress": "{{current}} / {{total}}",
-      "format": "Format",
-      "formatSub": "Auction or best offer",
       "details": "Details",
       "detailsSub": "Title, category & description",
       "photos": "Photos",
@@ -780,7 +778,6 @@
       "progress": "Listing progress"
     },
     "ck": {
-      "format": "Format selected",
       "title": "Title filled",
       "category": "Category chosen",
       "condition": "Condition set",
@@ -870,7 +867,20 @@
       "saleValue": "Sale value",
       "netLabel": "You receive (estimate)",
       "empty": "Set a price on the listing or type an amount to simulate the fees."
-    }
+    },
+    "sellingMode": {
+      "section": "How do you want to sell it?",
+      "hint": "Both work the same way after the sale — same payment, same shipping, same protection. The only difference is how the buyer gets to a price.",
+      "label": "Selling mode",
+      "bidding": "Buyers bid, highest bid wins",
+      "biddingDesc": "Buyers bid against each other and can see the current price. When time runs out, the highest bid wins and the sale is final.",
+      "biddingBadge": "Bidding",
+      "offers": "Buyers send offers, you decide",
+      "offersDesc": "Each buyer sends you a figure privately. Nothing is agreed until you accept.",
+      "offersBadge": "Offers",
+      "fixedNote": "You can change this until you publish. After that it stays as it is, because people will have bid or made offers on the terms you set."
+    },
+    "formatCommissionNote": "Seller commission is 3.5% for both options. 6% only if you enable Private Room on bidding."
   },
   "listingList": {
     "searchPlaceholder": "Search auctions...",

@@ -497,8 +497,6 @@
     "steps": {
       "label": "Pasos",
       "progress": "{{current}} / {{total}}",
-      "format": "Formato",
-      "formatSub": "Subasta o mejor propuesta",
       "details": "Detalles",
       "detailsSub": "Título, categoría y descripción",
       "photos": "Fotos",
@@ -508,7 +506,6 @@
       "shipping": "Envío",
       "shippingSub": "Método y ubicación",
       "publish": "Publicar",
-      "resume": "Retomar anuncio",
       "publishSub": "Revisar y confirmar"
     },
     "step5Title": "Envío",
@@ -551,7 +548,6 @@
       "progress": "Progreso del anuncio"
     },
     "ck": {
-      "format": "Formato seleccionado",
       "title": "Título completado",
       "category": "Categoría elegida",
       "condition": "Condición definida",
@@ -817,7 +813,8 @@
       "Vehicle Parts": "Piezas de Vehículo",
       "Vehicle Accessories": "Accesorios de Vehículo",
       "Other Vehicles": "Otros Vehículos"
-    }
+    },
+    "formatCommissionNote": "La comisión del vendedor es del 3,5% en ambas opciones. El 6% solo si activa Private Room en las pujas."
   },
   "listingList": {
     "searchPlaceholder": "Buscar subastas...",

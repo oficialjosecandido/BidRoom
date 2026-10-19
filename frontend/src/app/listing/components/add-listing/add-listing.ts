@@ -325,18 +325,26 @@ export class AddListing implements OnInit, OnDestroy {
   guestSessionError = false;
 
   // ─── Step management ────────────────────────────────────────────────────────
+  // Format is no longer its own step — mode lives on Pricing (see sellingMode UX).
+  readonly STEP = {
+    details: 1,
+    photos: 2,
+    pricing: 3,
+    shipping: 4,
+    publish: 5,
+  } as const;
+
   currentStep = 1;
   mobileStepsOpen = false;
-  readonly totalSteps = 6;
+  readonly totalSteps = this.STEP.publish;
   readonly isLight = computed(() => this.themeService.effective() === 'light');
 
   readonly steps = [
-    { n: 1, titleKey: 'addListing.steps.format', subKey: 'addListing.steps.formatSub' },
-    { n: 2, titleKey: 'addListing.steps.details', subKey: 'addListing.steps.detailsSub' },
-    { n: 3, titleKey: 'addListing.steps.photos', subKey: 'addListing.steps.photosSub' },
-    { n: 4, titleKey: 'addListing.steps.pricing', subKey: 'addListing.steps.pricingSub' },
-    { n: 5, titleKey: 'addListing.steps.shipping', subKey: 'addListing.steps.shippingSub' },
-    { n: 6, titleKey: 'addListing.steps.publish', subKey: 'addListing.steps.publishSub' },
+    { n: this.STEP.details, titleKey: 'addListing.steps.details', subKey: 'addListing.steps.detailsSub' },
+    { n: this.STEP.photos, titleKey: 'addListing.steps.photos', subKey: 'addListing.steps.photosSub' },
+    { n: this.STEP.pricing, titleKey: 'addListing.steps.pricing', subKey: 'addListing.steps.pricingSub' },
+    { n: this.STEP.shipping, titleKey: 'addListing.steps.shipping', subKey: 'addListing.steps.shippingSub' },
+    { n: this.STEP.publish, titleKey: 'addListing.steps.publish', subKey: 'addListing.steps.publishSub' },
   ];
 
   toggleTheme(): void {
@@ -358,7 +366,7 @@ export class AddListing implements OnInit, OnDestroy {
       this.currentStep = n;
       this.errorMessage = '';
       this.mobileStepsOpen = false;
-      if (n === 5) this.applyVehicleLogisticsDefaults();
+      if (n === this.STEP.shipping) this.applyVehicleLogisticsDefaults();
       return;
     }
     for (let s = this.currentStep; s < n; s++) {
@@ -370,7 +378,7 @@ export class AddListing implements OnInit, OnDestroy {
     this.errorMessage = '';
     this.currentStep = n;
     this.mobileStepsOpen = false;
-    if (n === 5) this.applyVehicleLogisticsDefaults();
+    if (n === this.STEP.shipping) this.applyVehicleLogisticsDefaults();
   }
 
   nextStep(): void {
@@ -379,7 +387,7 @@ export class AddListing implements OnInit, OnDestroy {
       this.errorMessage = '';
       this.currentStep = this.currentStep + 1;
       this.mobileStepsOpen = false;
-      if (this.currentStep === 5) this.applyVehicleLogisticsDefaults();
+      if (this.currentStep === this.STEP.shipping) this.applyVehicleLogisticsDefaults();
     }
   }
 
@@ -398,18 +406,32 @@ export class AddListing implements OnInit, OnDestroy {
     return this.listingForm?.get(this.langTitleKey(this.primaryLangTab))?.value || '';
   }
   get previewCategory(): string { return this.listingForm?.get('category')?.value || ''; }
-  get previewFormat(): string { return this.listingForm?.get('listingFormat')?.value || 'auction'; }
+  get previewFormat(): string { return this.listingForm?.get('listingFormat')?.value || 'best-offer'; }
+  get isAuctionFormat(): boolean { return this.previewFormat === 'auction'; }
+  get isBestOfferFormat(): boolean { return this.previewFormat === 'best-offer'; }
+
+  /** Review / preview label — buyer action, not product names. */
+  get sellingModeLabelKey(): string {
+    return this.isAuctionFormat
+      ? 'addListing.sellingMode.bidding'
+      : 'addListing.sellingMode.offers';
+  }
+
+  get sellingModeBadgeKey(): string {
+    return this.isAuctionFormat
+      ? 'addListing.sellingMode.biddingBadge'
+      : 'addListing.sellingMode.offersBadge';
+  }
 
   get previewPrice(): string {
-    const fmt = this.previewFormat;
-    const v = fmt === 'auction'
+    const v = this.isAuctionFormat
       ? this.listingForm?.get('startingBid')?.value
       : this.listingForm?.get('minimumAcceptPrice')?.value;
     return v ? `€${parseFloat(v).toFixed(2)}` : '—';
   }
 
   get previewPriceLabel(): string {
-    return this.previewFormat === 'auction'
+    return this.isAuctionFormat
       ? this.translate.instant('addListing.startingBid')
       : this.translate.instant('addListing.minimumAcceptPrice');
   }
@@ -444,24 +466,28 @@ export class AddListing implements OnInit, OnDestroy {
   };
 
   get checklist(): Record<string, boolean> {
-    const fmt = this.previewFormat;
     const tab = this.primaryLangTab;
     const titleCtrl = this.listingForm?.get(this.langTitleKey(tab));
     const descCtrl = this.listingForm?.get(this.langDescKey(tab));
-    const shippingOk = this.isStepValid(5, false);
+    const shippingOk = this.isStepValid(this.STEP.shipping, false);
     return {
-      format: true,
       title: !!titleCtrl?.valid,
       condition: !!this.listingForm?.get('condition')?.valid,
       description: !!descCtrl?.valid,
       photos: this.uploadedFiles.length >= 1 && this.isMediaValid,
-      price: fmt === 'best-offer' ? true : !!this.listingForm?.get('startingBid')?.valid,
+      // Mode has a default; track the price field that mode requires.
+      price: this.isAuctionFormat
+        ? !!this.listingForm?.get('startingBid')?.valid
+        : !!this.listingForm?.get('minimumAcceptPrice')?.valid,
       shipping: shippingOk,
     };
   }
 
+  /**
+   * Mode is not listed: it defaults and cannot be unset, so a "format selected"
+   * row used to inflate progress before the seller had done anything.
+   */
   readonly checklistMeta: { key: string; labelKey: string }[] = [
-    { key: 'format', labelKey: 'addListing.ck.format' },
     { key: 'title', labelKey: 'addListing.ck.title' },
     { key: 'condition', labelKey: 'addListing.ck.condition' },
     { key: 'description', labelKey: 'addListing.ck.desc' },
@@ -1720,7 +1746,7 @@ export class AddListing implements OnInit, OnDestroy {
           buttonsStyling: false,
           customClass: { popup: 'br-swal', title: 'br-swal__title', htmlContainer: 'br-swal__body', actions: 'br-swal__actions', confirmButton: 'br-swal__btn br-swal__btn--primary' }
         });
-        this.currentStep = 4;
+        this.currentStep = this.STEP.pricing;
         return;
       }
       const status = await firstValueFrom(this.kycService.fetchStatus()).catch(() => null);
@@ -1889,7 +1915,7 @@ export class AddListing implements OnInit, OnDestroy {
       }
       if (code === 'vehicle_aml_terms_required') {
         // The box is on the last step, which is where the seller already is.
-        this.currentStep = 6;
+        this.currentStep = this.STEP.publish;
         this.listingForm.get('vehicleAmlDeclaration')?.markAsTouched();
         this.errorMessage = this.translate.instant('addListing.vehicle.amlRequiredError');
         return;
@@ -1910,7 +1936,7 @@ export class AddListing implements OnInit, OnDestroy {
       // Guest submission refusals. The identity fields live on the last step, so
       // send the visitor back to the field rather than to a page they cannot use.
       if (code === 'email_invalid' || code === 'name_required') {
-        this.currentStep = 6;
+        this.currentStep = this.STEP.publish;
         this.listingForm.get(code === 'email_invalid' ? 'guestEmail' : 'guestName')?.markAsTouched();
         this.errorMessage = this.translate.instant(
           code === 'email_invalid' ? 'addListing.guest.emailInvalid' : 'addListing.guest.nameRequired'
@@ -2006,31 +2032,29 @@ export class AddListing implements OnInit, OnDestroy {
 
   private getStepFields(step: number): string[] {
     switch (step) {
-      case 1:
-        return ['listingFormat'];
-      case 2:
+      case this.STEP.details:
         return [
           this.langTitleKey(this.primaryLangTab),
           'condition',
           this.langDescKey(this.primaryLangTab),
         ];
-      case 3:
+      case this.STEP.photos:
         return [];
-      case 4: {
-        const fields = this.listingForm.get('listingFormat')?.value === 'auction'
-          ? ['startingBid', 'duration']
-          : ['duration'];
+      case this.STEP.pricing: {
+        const fields = ['listingFormat', 'duration'];
+        if (this.isAuctionFormat) fields.push('startingBid');
+        else fields.push('minimumAcceptPrice');
         if (this.scheduleOpeningEnabled) fields.push('scheduledStart');
         return fields;
       }
-      case 5: {
+      case this.STEP.shipping: {
         const fields = ['shippingOption', 'locationCity', 'locationCountry', 'returnPolicy'];
         const opt = this.listingForm.get('shippingOption')?.value;
         if (opt === 'flat-rate') fields.push('flatRateShipping');
         if (opt === 'calculated') fields.push('packageSize', 'shippingOriginPostalCode');
         return fields;
       }
-      case 6: {
+      case this.STEP.publish: {
         const fields = ['sellerDeclaration'];
         if (this.isVehicleListing) fields.push('vehicleAmlDeclaration');
         if (this.isGuest) fields.push('guestName', 'guestEmail');
@@ -2042,7 +2066,7 @@ export class AddListing implements OnInit, OnDestroy {
   }
 
   private isStepValid(step: number, markTouched: boolean): boolean {
-    if (step === 3) {
+    if (step === this.STEP.photos) {
       if (markTouched) { /* media has no form controls */ }
       return this.uploadedFiles.length >= 1 && this.isMediaValid;
     }
@@ -2050,14 +2074,14 @@ export class AddListing implements OnInit, OnDestroy {
     const fields = this.getStepFields(step);
     if (markTouched) {
       fields.forEach(f => this.listingForm.get(f)?.markAsTouched());
-      if (step === 2) {
+      if (step === this.STEP.details) {
         this.specifications.controls.forEach(c => c.markAllAsTouched());
       }
     }
 
     if (fields.some(f => this.listingForm.get(f)?.invalid)) return false;
-    if (step === 2 && this.specifications.length > 0 && this.specifications.invalid) return false;
-    if (step === 2 && this.attributesGroup?.invalid) return false;
+    if (step === this.STEP.details && this.specifications.length > 0 && this.specifications.invalid) return false;
+    if (step === this.STEP.details && this.attributesGroup?.invalid) return false;
     return true;
   }
 
@@ -2071,17 +2095,17 @@ export class AddListing implements OnInit, OnDestroy {
 
   private getStepValidationMessage(step: number): string {
     switch (step) {
-      case 2:
+      case this.STEP.details:
         return this.translate.instant('addListing.errorStep2Description');
-      case 3:
+      case this.STEP.photos:
         return this.uploadedFiles.length < 1
           ? this.translate.instant('addListing.errors.atLeastOnePhoto')
           : this.translate.instant('addListing.uploadMediaError');
-      case 4:
+      case this.STEP.pricing:
         return this.translate.instant('addListing.errors.step4Pricing');
-      case 5:
+      case this.STEP.shipping:
         return this.translate.instant('addListing.errors.step5Shipping');
-      case 6:
+      case this.STEP.publish:
         if (this.isGuest && (this.listingForm.get('guestName')?.invalid || this.listingForm.get('guestEmail')?.invalid)) {
           return this.translate.instant('addListing.guest.errorIdentity');
         }

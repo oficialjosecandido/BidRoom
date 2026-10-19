@@ -475,6 +475,16 @@
           {{ listing.seller.firstName }} {{ listing.seller.lastName }}
         </a>
         @if (listing.locationCity) { <div class="s-since">{{ listing.locationCity }}</div> }
+        <div class="seller-badges">
+          <span class="dsa-badge" [class.dsa-pro]="listing.seller.sellerClassification === 'professional'">
+            {{ listing.seller.sellerClassification === 'professional' ? ('listingDetails.dsa.professionalSeller' | translate) : ('listingDetails.dsa.privateSeller' | translate) }}
+          </span>
+          @if (listing.seller.sellerClassification === 'professional') {
+            <span class="dsa-badge dsa-status" [ngClass]="'dsa-' + (listing.seller.professionalVerificationStatus || 'none')">
+              {{ listing.seller.professionalVerificationStatus === 'verified' ? ('listingDetails.dsa.status.verified' | translate) : listing.seller.professionalVerificationStatus === 'pending' ? ('listingDetails.dsa.status.pending' | translate) : ('listingDetails.dsa.status.none' | translate) }}
+            </span>
+          }
+        </div>
       </div>
     </div>
     }
@@ -603,28 +613,18 @@
           </div>
         }
 
-        <!-- DSA seller info -->
-        @if (listing.seller) {
+        <!-- DSA trader details (badges live next to seller info in the sidebar) -->
+        @if (listing.seller?.sellerClassification === 'professional' && listing.seller.professionalVerificationStatus === 'verified') {
           <div class="dsa-block">
-            <span class="dsa-badge" [class.dsa-pro]="listing.seller.sellerClassification === 'professional'">
-              {{ listing.seller.sellerClassification === 'professional' ? ('listingDetails.dsa.professionalSeller' | translate) : ('listingDetails.dsa.privateSeller' | translate) }}
-            </span>
-            @if (listing.seller.sellerClassification === 'professional') {
-              <span class="dsa-badge dsa-status" [ngClass]="'dsa-' + (listing.seller.professionalVerificationStatus || 'none')">
-                {{ listing.seller.professionalVerificationStatus === 'verified' ? ('listingDetails.dsa.status.verified' | translate) : listing.seller.professionalVerificationStatus === 'pending' ? ('listingDetails.dsa.status.pending' | translate) : ('listingDetails.dsa.status.none' | translate) }}
-              </span>
-            }
-            @if (listing.seller.sellerClassification === 'professional' && listing.seller.professionalVerificationStatus === 'verified') {
-              <div class="dsa-trader">
-                @if (listing.seller.professionalLegalName) { <p><span class="dsa-k">{{ 'listingDetails.dsa.legalName' | translate }}</span> {{ listing.seller.professionalLegalName }}</p> }
-                @if (listing.seller.professionalVatId) { <p><span class="dsa-k">{{ 'listingDetails.dsa.vatId' | translate }}</span> {{ listing.seller.professionalVatId }}</p> }
-                @if (sellerVerifiedAddressLines().length) {
-                  <p><span class="dsa-k">{{ 'listingDetails.dsa.address' | translate }}</span>
-                    @for (line of sellerVerifiedAddressLines(); track $index) { {{ line }} }
-                  </p>
-                }
-              </div>
-            }
+            <div class="dsa-trader">
+              @if (listing.seller.professionalLegalName) { <p><span class="dsa-k">{{ 'listingDetails.dsa.legalName' | translate }}</span> {{ listing.seller.professionalLegalName }}</p> }
+              @if (listing.seller.professionalVatId) { <p><span class="dsa-k">{{ 'listingDetails.dsa.vatId' | translate }}</span> {{ listing.seller.professionalVatId }}</p> }
+              @if (sellerVerifiedAddressLines().length) {
+                <p><span class="dsa-k">{{ 'listingDetails.dsa.address' | translate }}</span>
+                  @for (line of sellerVerifiedAddressLines(); track $index) { {{ line }} }
+                </p>
+              }
+            </div>
           </div>
         }
 

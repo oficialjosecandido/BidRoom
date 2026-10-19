@@ -497,18 +497,15 @@
     "steps": {
       "label": "Étapes",
       "progress": "{{current}} / {{total}}",
-      "format": "Format",
-      "formatSub": "Enchère ou meilleure proposition",
       "details": "Détails",
       "detailsSub": "Titre, catégorie et description",
       "photos": "Photos",
-      "photosSub": "Téléverser les images",
-      "pricing": "Tarification",
+      "photosSub": "Télécharger les images de l'article",
+      "pricing": "Prix",
       "pricingSub": "Prix, durée et règles",
       "shipping": "Expédition",
-      "shippingSub": "Méthode et localisation",
+      "shippingSub": "Méthode et lieu",
       "publish": "Publier",
-      "resume": "Reprendre l’annonce",
       "publishSub": "Vérifier et confirmer"
     },
     "step5Title": "Expédition",
@@ -551,7 +548,6 @@
       "progress": "Progression de l'annonce"
     },
     "ck": {
-      "format": "Format sélectionné",
       "title": "Titre rempli",
       "category": "Catégorie choisie",
       "condition": "Condition définie",
@@ -817,7 +813,8 @@
       "Vehicle Parts": "Pièces Détachées",
       "Vehicle Accessories": "Accessoires Auto",
       "Other Vehicles": "Autres Véhicules"
-    }
+    },
+    "formatCommissionNote": "La commission vendeur est de 3,5 % pour les deux options. 6 % uniquement si vous activez la Private Room sur les enchères."
   },
   "listingList": {
     "searchPlaceholder": "Rechercher des enchères...",
