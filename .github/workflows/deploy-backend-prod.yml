@@ -1,60 +1,31 @@
+# DISABLED — superseded by ericeira-prod_bidroom-backend-prod.yml
+#
+# That workflow uses Azure OIDC (AZUREAPPSERVICE_* secrets) and deploys
+# successfully to bidroom-backend-prod on every push to ericeira-prod.
+#
+# This file used AZURE_CREDENTIALS + resource group bidroom-dev-rg. That
+# service principal no longer sees Microsoft.Web/Sites/bidroom-backend-prod
+# ("Resource … doesn't exist"), so every run failed while the OIDC deploy
+# still succeeded — confusing red Xes on the same commit.
+#
+# Kept for history. Do not re-enable without aligning credentials + app name
+# with the live App Service. Prefer the OIDC workflow above.
 name: Deploy Backend (prod) to Azure
 
 on:
-  push:
-    branches:
-      - ericeira-prod
-    paths:
-      - 'backend/**'
-      - '.github/workflows/deploy-backend-prod.yml'
   workflow_dispatch:
-
-env:
-  AZURE_WEBAPP_NAME: bidroom-backend-prod
-  AZURE_RESOURCE_GROUP: bidroom-dev-rg
-  NODE_VERSION: '22.x'
+    inputs:
+      confirm:
+        description: 'Type ENABLE only if you intentionally want this legacy path'
+        required: true
+        default: ''
 
 jobs:
-  build-and-deploy:
+  skipped:
+    if: ${{ github.event.inputs.confirm == 'ENABLE' }}
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-          cache-dependency-path: backend/package-lock.json
-
-      - name: Install dependencies
+      - name: Refuse legacy deploy
         run: |
-          cd backend
-          npm ci
-
-      - name: Create deployment package
-        run: |
-          cd backend
-          zip -r ../backend-deploy.zip . \
-            -x "*.git*" \
-            -x "*.log" \
-            -x "*.env*" \
-            -x "*.example" \
-            -x "*.md" \
-            -x "*test*" \
-            -x "*.test.js" \
-            -x "*.spec.js"
-          echo "Package size: $(du -sh ../backend-deploy.zip | cut -f1)"
-
-      - name: Azure Login
-        uses: azure/login@v2
-        with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
-
-      - name: Deploy to Azure Web App (prod)
-        uses: azure/webapps-deploy@v3
-        with:
-          app-name: ${{ env.AZURE_WEBAPP_NAME }}
-          package: ./backend-deploy.zip
+          echo "::error::deploy-backend-prod.yml is retired. Use workflow 'Build and deploy Node.js app to Azure Web App - bidroom-backend-prod' (ericeira-prod_bidroom-backend-prod.yml)."
+          exit 1
