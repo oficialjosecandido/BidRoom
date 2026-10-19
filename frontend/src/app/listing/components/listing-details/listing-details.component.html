@@ -56,7 +56,8 @@
             width="800"
             height="800"
             fetchpriority="high"
-            decoding="async"
+            loading="eager"
+            decoding="sync"
             (error)="onGalleryImgError($event, mainImageOriginal())" />
         } @else {
           <span class="main-img-em">🏷</span>
@@ -1099,12 +1100,14 @@
 }
 
 @if (showReportModal && listing && (showReportModal === 'listing' || listing.seller)) {
-  <app-report-modal
-    [reportType]="showReportModal === 'listing' ? 'listing' : 'user'"
-    [targetId]="showReportModal === 'listing' ? listing._id : listing.seller!._id"
-    [targetName]="showReportModal === 'listing' ? listing.title : (listing.seller!.firstName + ' ' + listing.seller!.lastName)"
-    (closed)="showReportModal = null"
-  ></app-report-modal>
+  @defer (on immediate) {
+    <app-report-modal
+      [reportType]="showReportModal === 'listing' ? 'listing' : 'user'"
+      [targetId]="showReportModal === 'listing' ? listing._id : listing.seller!._id"
+      [targetName]="showReportModal === 'listing' ? listing.title : (listing.seller!.firstName + ' ' + listing.seller!.lastName)"
+      (closed)="showReportModal = null"
+    ></app-report-modal>
+  }
 }
 
 <app-footer></app-footer>

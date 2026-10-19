@@ -6,7 +6,6 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { filter, finalize, take, timeout } from 'rxjs/operators';
 import { MAX_DISPLAYED_BIDS, EMAIL_REGEX } from '../../../shared/config/listing.constants';
-import Swal from 'sweetalert2';
 import { ListingsService, Listing } from '../../../shared/services/listings.service';
 import { BidsService, Bid } from '../../../shared/services/bids.service';
 import { OffersService, Offer } from '../../../shared/services/offers.service';
@@ -252,7 +251,7 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
       { name: categoryName, path: `/listing/list?category=${encodeURIComponent(listing.category || '')}` },
       { name: listingName, path: `/listing/${listing.slug}` },
     ]);
-    if (this.isAuthenticated && !this.isOwnListing && listing.seller?._id) {
+    if (this.isBrowser && this.isAuthenticated && !this.isOwnListing && listing.seller?._id) {
       this.loadSellerFollowStatus(listing.seller._id);
       this.loadSellerBlockStatus(listing.seller._id);
     }
@@ -276,9 +275,10 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
         }
         const tab = this.route.snapshot.queryParamMap.get('tab');
         this.activeTab = tab === 'rules' ? 'rules' : 'description';
-      } else if (listing.auctionFormat === 'best-offer') {
+      } else if (this.isBrowser && listing.auctionFormat === 'best-offer') {
+        // Bids/offers are below the fold — never block SSR on them (LCP / Speed Index).
         this.loadOffers(listing._id);
-      } else {
+      } else if (this.isBrowser) {
         this.loadBids(listing._id);
       }
       // Connect to Socket.io and join listing room for real-time updates
@@ -286,6 +286,14 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
       // and opening one would keep the render from ever reaching whenStable()).
       if (this.isBrowser) this.setupRealTimeUpdates(listing._id);
     }
+  }
+
+  /** SweetAlert2 stays out of the listing route chunk until a dialog is needed. */
+  private async swalFire(
+    options: import('sweetalert2').SweetAlertOptions
+  ): Promise<import('sweetalert2').SweetAlertResult> {
+    const { default: Swal } = await import('sweetalert2');
+    return Swal.fire(options);
   }
 
   loadBids(listingId: string): void {
@@ -684,7 +692,7 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
         this.offerActionLoadingId = null;
         this.loadListing(this.route.snapshot.paramMap.get('slug') || '');
         this.cdr.detectChanges();
-        Swal.fire({
+        this.swalFire({
           icon: 'success',
           title: 'Proposal Accepted!',
           text: 'The proposal has been accepted. Go to Transactions to manage and complete the sale.',
@@ -702,7 +710,7 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
       error: (err) => {
         this.offerActionLoadingId = null;
         if (err?.error?.error === 'Stripe not connected') {
-          Swal.fire({
+          this.swalFire({
             icon: 'warning',
             title: 'Stripe Account Required',
             html: 'You must connect your Stripe account before accepting offers.<br><br>' +
@@ -1450,7 +1458,7 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
         this.closeBidModal();
         this.loadListing(this.listing!.slug); // loadListing already calls loadBids internally
         this.cdr.markForCheck();
-        Swal.fire({
+        this.swalFire({
           toast: true,
           position: 'top-end',
           icon: 'success',
@@ -1469,7 +1477,7 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
         const msg = err?.error?.message || err?.message || this.translate.instant('listingDetails.bidModal.errorText');
         this.bidModalError = msg;
         this.cdr.markForCheck();
-        Swal.fire({
+        this.swalFire({
           icon: 'error',
           title: this.translate.instant('listingDetails.bidModal.errorTitle'),
           text: msg,
@@ -1582,7 +1590,7 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
         const msg = err.error?.message || this.translate.instant('listingDetails.offerModal.errorText');
         this.offerModalError = msg;
         this.cdr.markForCheck();
-        void Swal.fire({
+        void this.swalFire({
           icon: 'error',
           title: this.translate.instant('listingDetails.offerModal.errorTitle'),
           text: msg,
@@ -1594,7 +1602,7 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
   }
 
   private showOfferSuccessAlert(amount: number, wasAccepted: boolean): void {
-    void Swal.fire({
+    void this.swalFire({
       icon: 'success',
       title: this.translate.instant('listingDetails.offerModal.successTitle'),
       text: wasAccepted
@@ -1611,7 +1619,7 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
   buyNow(): void {
     if (!this.listing || this.isGiveaway) return;
     const listing = this.listing;
-    Swal.fire({
+    this.swalFire({
       title: 'Buy Now',
       text: `Buy this item now for ${this.formatPrice(listing.buyNowPrice!)}? This will instantly close the auction.`,
       icon: 'question',
@@ -1631,7 +1639,7 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
             ...this.analytics.listingParams(listing),
             amount: listing.buyNowPrice ?? 0,
           });
-          Swal.fire({
+          this.swalFire({
             icon: 'success',
             title: 'Purchase successful!',
             text: 'Go to your transactions to complete payment.',
@@ -1642,7 +1650,7 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
           });
         },
         error: (err) => {
-          Swal.fire({ icon: 'error', title: 'Purchase failed', text: err.error?.message || 'Failed to complete purchase', confirmButtonColor: '#7A4F84' });
+          this.swalFire({ icon: 'error', title: 'Purchase failed', text: err.error?.message || 'Failed to complete purchase', confirmButtonColor: '#7A4F84' });
         }
       });
     });
@@ -1836,7 +1844,7 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
         this.closeSelectWinnerModal();
         this.selectingWinner = false;
         this.cdr.detectChanges();
-        Swal.fire({
+        this.swalFire({
           icon: 'success',
           title: 'Winner Selected!',
           text: 'The winner has been notified. Go to Transactions to manage and complete the sale.',
@@ -1854,7 +1862,7 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
       error: (err) => {
         this.selectingWinner = false;
         this.cdr.detectChanges();
-        Swal.fire({ icon: 'error', title: 'Failed to select winner', text: err.error?.message || 'Please try again.', confirmButtonColor: '#7A4F84' });
+        this.swalFire({ icon: 'error', title: 'Failed to select winner', text: err.error?.message || 'Please try again.', confirmButtonColor: '#7A4F84' });
       }
     });
   }
@@ -1873,7 +1881,7 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
       error: (err) => {
         this.reopenLoading = false;
         this.cdr.detectChanges();
-        Swal.fire({ icon: 'error', title: 'Failed to reopen auction', text: err.error?.message || 'Please try again.', confirmButtonColor: '#7A4F84' });
+        this.swalFire({ icon: 'error', title: 'Failed to reopen auction', text: err.error?.message || 'Please try again.', confirmButtonColor: '#7A4F84' });
       }
     });
   }
@@ -1913,7 +1921,7 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
       error: (err) => {
         this.privateRoomStartNowLoading = false;
         this.cdr.detectChanges();
-        Swal.fire({ icon: 'error', title: 'Failed to start room', text: err.error?.message || 'Please try again.', confirmButtonColor: '#7A4F84' });
+        this.swalFire({ icon: 'error', title: 'Failed to start room', text: err.error?.message || 'Please try again.', confirmButtonColor: '#7A4F84' });
       }
     });
   }
@@ -1964,7 +1972,7 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
     if (!this.listing?._id || this.createPrivateRoomSubmitting) return;
     const ids = Array.from(this.selectedPrivateRoomBidderIds);
     if (ids.length < 2 || ids.length > 5) {
-      Swal.fire({ icon: 'warning', title: 'Invalid selection', text: 'Please select between 2 and 5 bidders for the private room.', confirmButtonColor: '#7A4F84' });
+      this.swalFire({ icon: 'warning', title: 'Invalid selection', text: 'Please select between 2 and 5 bidders for the private room.', confirmButtonColor: '#7A4F84' });
       return;
     }
     this.createPrivateRoomSubmitting = true;
@@ -2000,7 +2008,7 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
       error: (err) => {
         this.createPrivateRoomSubmitting = false;
         this.cdr.detectChanges();
-        Swal.fire({ icon: 'error', title: 'Failed to create private room', text: err.error?.message || err.error?.error || 'Please try again.', confirmButtonColor: '#7A4F84' });
+        this.swalFire({ icon: 'error', title: 'Failed to create private room', text: err.error?.message || err.error?.error || 'Please try again.', confirmButtonColor: '#7A4F84' });
       }
     });
   }
