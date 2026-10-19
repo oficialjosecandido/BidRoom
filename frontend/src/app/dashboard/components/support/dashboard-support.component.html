@@ -145,7 +145,18 @@
                     <span class="msg__sender">{{ msg.senderType === 'agent' ? 'BidRoom' : 'Tu' }}</span>
                     <time class="msg__time">{{ msg.createdAt | date:'d MMM, HH:mm' }}</time>
                   </div>
-                  <p class="msg__body">{{ msg.body }}</p>
+                  @if (msg.body) {
+                    <p class="msg__body" [innerHTML]="msg.body | linkify"></p>
+                  }
+                  @if (msg.attachments?.length) {
+                    <div class="msg__attachments">
+                      @for (att of msg.attachments; track att.url) {
+                        <a class="msg__att" [href]="att.url" target="_blank" rel="noopener noreferrer">
+                          <img [src]="att.url" alt="" loading="lazy" />
+                        </a>
+                      }
+                    </div>
+                  }
                 </div>
               }
             }

@@ -11,11 +11,12 @@ import { AuthService } from '../../../auth/services/auth.service';
 import { SupportService, SupportConversation, SupportMessage } from '../../services/support.service';
 import { PostHogService } from '../../services/posthog.service';
 import { AnalyticsEvents } from '../../services/analytics.events';
+import { LinkifyPipe } from '../../pipes/linkify.pipe';
 
 @Component({
   selector: 'app-support-chat-widget',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, LinkifyPipe],
   templateUrl: './support-chat-widget.component.html',
   styleUrls: ['./support-chat-widget.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,

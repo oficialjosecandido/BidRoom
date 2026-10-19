@@ -371,6 +371,39 @@ $sw-header:       #111111;
       font-style: italic;
       padding: 4px 0;
     }
+
+    a {
+      color: inherit;
+      text-decoration: underline;
+      text-underline-offset: 2px;
+      word-break: break-all;
+
+      &:hover { opacity: 0.85; }
+    }
+  }
+
+  &__attachments {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 2px;
+  }
+
+  &__att {
+    display: block;
+    width: 96px;
+    height: 96px;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid $sw-border;
+    background: $sw-bg;
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
   }
 
   &__time {

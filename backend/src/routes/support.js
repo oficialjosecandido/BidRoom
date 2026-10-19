@@ -9,15 +9,46 @@ const { createNotification, emitNewNotificationToUser } = require('../services/n
 const { sendEmail } = require('../services/emailService');
 const { sendLocalizedEmail } = require('../services/localizedEmail');
 const { publicBaseUrl } = require('../utils/publicUrls');
+const azureStorageService = require('../services/azureStorage.service');
 const logger = require('../utils/logger');
 
 const OBJECT_ID_RE = /^[a-f\d]{24}$/i;
 const VALID_CATEGORIES = ['payment', 'shipping', 'dispute', 'account', 'listing', 'other'];
 const VALID_STATUSES   = ['open', 'pending_customer', 'pending_agent', 'resolved', 'closed'];
+/** Same per-request cap as POST /api/uploads; keep support threads light. */
+const MAX_SUPPORT_ATTACHMENTS = 5;
 
 function sanitizeText(str) {
   if (typeof str !== 'string') return '';
   return str.replace(/<[^>]*>/g, '').trim();
+}
+
+/**
+ * Only URLs already in our Azure container (from POST /api/uploads) are kept.
+ * Agents attach images; customers cannot inject arbitrary URLs via the API.
+ */
+function normalizeAttachmentUrls(raw) {
+  if (!Array.isArray(raw)) return [];
+  const base = azureStorageService.getContainerBaseUrl();
+  if (!base) return [];
+  const out = [];
+  const seen = new Set();
+  for (const item of raw) {
+    const url = typeof item === 'string' ? item.trim() : String(item?.url || '').trim();
+    if (!url || !url.startsWith(base) || seen.has(url)) continue;
+    seen.add(url);
+    out.push({ url, contentType: 'image/jpeg' });
+    if (out.length >= MAX_SUPPORT_ATTACHMENTS) break;
+  }
+  return out;
+}
+
+function messageExcerpt(body, attachments) {
+  if (body) return body;
+  const n = attachments?.length || 0;
+  if (n === 1) return '[1 image]';
+  if (n > 1) return `[${n} images]`;
+  return '';
 }
 
 function escapeHtml(str) {
@@ -87,15 +118,21 @@ async function notifySupportOps({ conversation, messageBody, isNewConversation, 
   }
 }
 
-async function createMessageAndEmit(conversation, senderType, senderUid, rawBody, io, { isNewConversation = false } = {}) {
+async function createMessageAndEmit(conversation, senderType, senderUid, rawBody, io, {
+  isNewConversation = false,
+  attachmentUrls = [],
+} = {}) {
   const body = sanitizeText(rawBody).slice(0, 5000);
-  if (!body) {
+  // Only agents may attach images (customer UI has no upload; ignore if sent).
+  const attachments = senderType === 'agent' ? normalizeAttachmentUrls(attachmentUrls) : [];
+  if (!body && attachments.length === 0) {
     const err = new Error('Message body is empty');
     err.status = 400;
     throw err;
   }
 
   const senderName = senderType !== 'system' ? await resolveDisplayName(senderUid) : 'BidRoom';
+  const excerpt = messageExcerpt(body, attachments);
 
   const message = await SupportMessage.create({
     conversation: conversation._id,
@@ -103,6 +140,7 @@ async function createMessageAndEmit(conversation, senderType, senderUid, rawBody
     senderUid: senderUid || null,
     senderName,
     body,
+    attachments,
   });
 
   const isFromCustomer = senderType === 'customer';
@@ -135,16 +173,16 @@ async function createMessageAndEmit(conversation, senderType, senderUid, rawBody
           // below it stays as the agent typed it — translating someone's
           // written reply is not ours to do.
           title: 'Reply from the BidRoom team',
-          message: body.slice(0, 80),
+          message: excerpt.slice(0, 80),
           i18nKey: 'notifications.supportReply',
-          i18nParams: { excerpt: body.slice(0, 80) },
+          i18nParams: { excerpt: excerpt.slice(0, 80) },
           type: 'system',
           link: '/dashboard/support',
         });
         if (io) await emitNewNotificationToUser(io, customer._id);
 
         const supportUrl = `${publicBaseUrl()}/dashboard/support`;
-        const preview = body.length > 280 ? `${body.slice(0, 277)}…` : body;
+        const preview = excerpt.length > 280 ? `${excerpt.slice(0, 277)}…` : excerpt;
         // The template substitutes these raw, and all three are things a person
         // typed — the customer's own name, the subject they chose, and the body of
         // the reply. The greeting and the subject are both conditional in the
@@ -300,7 +338,11 @@ router.post('/conversations/:id/messages', authenticateToken, async (req, res) =
       isAgent ? 'agent' : 'customer',
       req.user.uid,
       req.body.body,
-      io
+      io,
+      {
+        // Customers cannot attach; normalizeAttachmentUrls also no-ops for them.
+        attachmentUrls: isAgent ? (req.body.attachmentUrls || req.body.attachments) : [],
+      }
     );
 
     res.json({ message });

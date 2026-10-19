@@ -45,7 +45,18 @@
                 @if (msg.senderType === 'agent') {
                   <span class="sw-msg__name">BidRoom</span>
                 }
-                <p class="sw-msg__body">{{ msg.body }}</p>
+                @if (msg.body) {
+                  <p class="sw-msg__body" [innerHTML]="msg.body | linkify"></p>
+                }
+                @if (msg.attachments?.length) {
+                  <div class="sw-msg__attachments">
+                    @for (att of msg.attachments; track att.url) {
+                      <a class="sw-msg__att" [href]="att.url" target="_blank" rel="noopener noreferrer">
+                        <img [src]="att.url" alt="" loading="lazy" />
+                      </a>
+                    }
+                  </div>
+                }
                 <time class="sw-msg__time" [attr.datetime]="msg.createdAt">
                   {{ msg.createdAt | date:'HH:mm' }}
                 </time>

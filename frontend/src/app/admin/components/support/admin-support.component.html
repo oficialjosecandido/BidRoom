@@ -166,7 +166,18 @@
                         {{ msg.createdAt | date:'d MMM yyyy, HH:mm' }}
                       </time>
                     </div>
-                    <p class="thread-msg__body">{{ msg.body }}</p>
+                    @if (msg.body) {
+                      <p class="thread-msg__body" [innerHTML]="msg.body | linkify"></p>
+                    }
+                    @if (msg.attachments?.length) {
+                      <div class="thread-msg__attachments">
+                        @for (att of msg.attachments; track att.url) {
+                          <a class="thread-msg__att" [href]="att.url" target="_blank" rel="noopener noreferrer">
+                            <img [src]="att.url" alt="Anexo de suporte" loading="lazy" />
+                          </a>
+                        }
+                      </div>
+                    }
                   </div>
                 }
               }
@@ -174,6 +185,33 @@
 
             @if (selected.status !== 'closed' && selected.status !== 'resolved') {
               <div class="thread-reply">
+                <input
+                  #replyFileInput
+                  type="file"
+                  accept="image/jpeg,image/png,image/gif,image/webp,image/bmp"
+                  multiple
+                  hidden
+                  (change)="onReplyImagesSelected($event)"
+                />
+                @if (pendingImages.length) {
+                  <div class="thread-reply__previews">
+                    @for (img of pendingImages; track img.previewUrl; let i = $index) {
+                      <div class="thread-reply__preview">
+                        <img [src]="img.previewUrl" alt="" />
+                        <button
+                          type="button"
+                          class="thread-reply__preview-remove"
+                          (click)="removePendingImage(i)"
+                          [disabled]="sending"
+                          aria-label="Remover imagem"
+                        >×</button>
+                      </div>
+                    }
+                  </div>
+                }
+                @if (uploadError) {
+                  <p class="thread-reply__error" role="alert">{{ uploadError }}</p>
+                }
                 <textarea
                   class="thread-reply__input"
                   [(ngModel)]="replyDraft"
@@ -184,14 +222,25 @@
                   aria-label="Resposta de suporte"
                 ></textarea>
                 <div class="thread-reply__footer">
-                  <span class="thread-reply__hint">Ctrl + Enter para enviar</span>
+                  <div class="thread-reply__actions-left">
+                    <button
+                      type="button"
+                      class="thread-reply__attach"
+                      (click)="openImagePicker()"
+                      [disabled]="sending || pendingImages.length >= maxReplyImages"
+                      title="Anexar imagens"
+                    >
+                      🖼 Imagem
+                    </button>
+                    <span class="thread-reply__hint">Ctrl + Enter para enviar</span>
+                  </div>
                   <button
                     type="button"
                     class="action-btn action-btn--primary"
                     (click)="sendReply()"
-                    [disabled]="!replyDraft.trim() || sending"
+                    [disabled]="(!replyDraft.trim() && !pendingImages.length) || sending"
                   >
-                    {{ sending ? 'A enviar…' : 'Responder' }}
+                    {{ uploadingImages ? 'A carregar imagens…' : sending ? 'A enviar…' : 'Responder' }}
                   </button>
                 </div>
               </div>

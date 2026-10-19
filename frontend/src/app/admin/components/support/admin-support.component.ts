@@ -3,16 +3,30 @@ import {
   ChangeDetectorRef, DestroyRef, inject, ViewChild, ElementRef, AfterViewChecked,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { firstValueFrom } from 'rxjs';
 import { AdminSidebarComponent } from '../sidebar/admin-sidebar.component';
 import { AuthService } from '../../../auth/services/auth.service';
+import { API_CONFIG } from '../../../shared/config/api.config';
 import {
   SupportService,
   SupportConversation,
   SupportMessage,
 } from '../../../shared/services/support.service';
+import { LinkifyPipe } from '../../../shared/pipes/linkify.pipe';
+
+/** Same limits as POST /api/uploads (admin listing photos). */
+const MAX_REPLY_IMAGES = 5;
+const MAX_REPLY_IMAGE_BYTES = 5 * 1024 * 1024;
+const REPLY_IMAGE_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'image/bmp'];
+
+interface PendingReplyImage {
+  file: File;
+  previewUrl: string;
+}
 
 const STATUS_LABELS: Record<SupportConversation['status'], string> = {
   open:             'Aberta',
@@ -34,7 +48,7 @@ const CATEGORY_LABELS: Record<string, string> = {
 @Component({
   selector: 'app-admin-support',
   standalone: true,
-  imports: [CommonModule, FormsModule, AdminSidebarComponent],
+  imports: [CommonModule, FormsModule, AdminSidebarComponent, LinkifyPipe],
   templateUrl: './admin-support.component.html',
   styleUrls: ['./admin-support.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -43,11 +57,13 @@ export class AdminSupportComponent implements OnInit, OnDestroy, AfterViewChecke
   private destroyRef = inject(DestroyRef);
   private support    = inject(SupportService);
   private auth       = inject(AuthService);
+  private http       = inject(HttpClient);
   private route      = inject(ActivatedRoute);
   private router     = inject(Router);
   private cdr        = inject(ChangeDetectorRef);
 
   @ViewChild('threadBody') private threadRef?: ElementRef<HTMLElement>;
+  @ViewChild('replyFileInput') private replyFileInput?: ElementRef<HTMLInputElement>;
 
   conversations: SupportConversation[] = [];
   selected:      SupportConversation | null = null;
@@ -56,8 +72,13 @@ export class AdminSupportComponent implements OnInit, OnDestroy, AfterViewChecke
   loading        = true;
   messagesLoading = false;
   sending        = false;
+  uploadingImages = false;
   replyDraft     = '';
+  pendingImages: PendingReplyImage[] = [];
+  uploadError = '';
   statusFilter   = 'pending_agent';
+
+  readonly maxReplyImages = MAX_REPLY_IMAGES;
 
   currentAgentEmail: string | null = null;
 
@@ -248,26 +269,108 @@ export class AdminSupportComponent implements OnInit, OnDestroy, AfterViewChecke
     this.selected = null;
     this.messages = [];
     this.replyDraft = '';
+    this.clearPendingImages();
+    this.uploadError = '';
     this.messagesLoading = false;
     this.cdr.markForCheck();
   }
 
-  sendReply(): void {
+  openImagePicker(): void {
+    this.replyFileInput?.nativeElement?.click();
+  }
+
+  onReplyImagesSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const files = Array.from(input.files || []);
+    input.value = '';
+    if (!files.length) return;
+
+    this.uploadError = '';
+    const room = MAX_REPLY_IMAGES - this.pendingImages.length;
+    if (room <= 0) {
+      this.uploadError = `Máximo de ${MAX_REPLY_IMAGES} imagens por resposta.`;
+      this.cdr.markForCheck();
+      return;
+    }
+
+    for (const file of files.slice(0, room)) {
+      if (!REPLY_IMAGE_TYPES.includes(file.type)) {
+        this.uploadError = 'Só são aceites imagens (JPEG, PNG, GIF, WebP).';
+        continue;
+      }
+      if (file.size > MAX_REPLY_IMAGE_BYTES) {
+        this.uploadError = 'Cada imagem pode ter no máximo 5 MB.';
+        continue;
+      }
+      this.pendingImages = [
+        ...this.pendingImages,
+        { file, previewUrl: URL.createObjectURL(file) },
+      ];
+    }
+    this.cdr.markForCheck();
+  }
+
+  removePendingImage(index: number): void {
+    const removed = this.pendingImages[index];
+    if (removed?.previewUrl) URL.revokeObjectURL(removed.previewUrl);
+    this.pendingImages = this.pendingImages.filter((_, i) => i !== index);
+    this.cdr.markForCheck();
+  }
+
+  private clearPendingImages(): void {
+    for (const img of this.pendingImages) {
+      if (img.previewUrl) URL.revokeObjectURL(img.previewUrl);
+    }
+    this.pendingImages = [];
+  }
+
+  private async uploadPendingImages(): Promise<string[]> {
+    if (this.pendingImages.length === 0) return [];
+    const formData = new FormData();
+    for (const img of this.pendingImages) {
+      formData.append('images', img.file, img.file.name);
+    }
+    const res = await firstValueFrom(
+      this.http.post<{ urls: string[] }>(`${API_CONFIG.getApiUrl()}/uploads`, formData)
+    );
+    const urls = res?.urls ?? [];
+    if (urls.length !== this.pendingImages.length) {
+      throw new Error('Upload incompleto. Tenta novamente.');
+    }
+    return urls;
+  }
+
+  async sendReply(): Promise<void> {
     const body = this.replyDraft.trim();
-    if (!body || !this.selected || this.sending) return;
+    if ((!body && this.pendingImages.length === 0) || !this.selected || this.sending) return;
+
     this.sending = true;
-    this.support.sendMessage(this.selected._id, body)
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: ({ message }) => {
-          this.messages    = [...this.messages, message];
-          this.replyDraft  = '';
-          this.sending     = false;
-          this.needsScroll = true;
-          this.cdr.markForCheck();
-        },
-        error: () => { this.sending = false; this.cdr.markForCheck(); },
-      });
+    this.uploadError = '';
+    this.cdr.markForCheck();
+
+    try {
+      let attachmentUrls: string[] = [];
+      if (this.pendingImages.length > 0) {
+        this.uploadingImages = true;
+        this.cdr.markForCheck();
+        attachmentUrls = await this.uploadPendingImages();
+        this.uploadingImages = false;
+      }
+
+      const { message } = await firstValueFrom(
+        this.support.sendMessage(this.selected._id, body, attachmentUrls)
+      );
+      this.messages = [...this.messages, message];
+      this.replyDraft = '';
+      this.clearPendingImages();
+      this.needsScroll = true;
+    } catch {
+      this.uploadError = 'Não foi possível enviar. Verifica a ligação e tenta de novo.';
+    } finally {
+      this.sending = false;
+      this.uploadingImages = false;
+      this.cdr.markForCheck();
+    }
   }
 
   setConvStatus(status: SupportConversation['status']): void {

@@ -522,6 +522,39 @@ $nexus-bg-queue: #fafbfc;
       font-style: italic;
       padding: 4px 0;
     }
+
+    a {
+      color: inherit;
+      text-decoration: underline;
+      text-underline-offset: 2px;
+      word-break: break-all;
+
+      &:hover { opacity: 0.85; }
+    }
+  }
+
+  &__attachments {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 6px;
+  }
+
+  &__att {
+    display: block;
+    width: 120px;
+    height: 120px;
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1px solid $nexus-border;
+    background: $nexus-bg;
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
   }
 }
 
@@ -565,6 +598,75 @@ $nexus-bg-queue: #fafbfc;
     align-items: center;
     justify-content: space-between;
     gap: 12px;
+  }
+
+  &__actions-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    min-width: 0;
+  }
+
+  &__attach {
+    border: 1px solid $nexus-border;
+    background: #fff;
+    color: $nexus-text;
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+
+    &:hover:not(:disabled) { border-color: $nexus-accent; color: $nexus-accent; }
+    &:disabled { opacity: 0.5; cursor: not-allowed; }
+  }
+
+  &__previews {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  &__preview {
+    position: relative;
+    width: 64px;
+    height: 64px;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid $nexus-border;
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+  }
+
+  &__preview-remove {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    width: 20px;
+    height: 20px;
+    border: none;
+    border-radius: 50%;
+    background: rgba(15, 23, 42, 0.75);
+    color: #fff;
+    font-size: 14px;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+  }
+
+  &__error {
+    margin: 0;
+    font-size: 12px;
+    color: #b91c1c;
   }
 
   &__hint {

@@ -13,6 +13,7 @@ import {
 } from '../../../shared/services/support.service';
 import { PostHogService } from '../../../shared/services/posthog.service';
 import { AnalyticsEvents } from '../../../shared/services/analytics.events';
+import { LinkifyPipe } from '../../../shared/pipes/linkify.pipe';
 
 const STATUS_LABELS: Record<SupportConversation['status'], string> = {
   open:             'Aberta',
@@ -34,7 +35,7 @@ const CATEGORY_LABELS: Record<string, string> = {
 @Component({
   selector: 'app-dashboard-support',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, LinkifyPipe],
   templateUrl: './dashboard-support.component.html',
   styleUrls: ['./dashboard-support.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,

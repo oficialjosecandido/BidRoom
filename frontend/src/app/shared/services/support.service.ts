@@ -19,12 +19,19 @@ export interface SupportConversation {
   createdAt: string;
 }
 
+export interface SupportAttachment {
+  url: string;
+  contentType?: string;
+}
+
 export interface SupportMessage {
   _id: string;
   conversation: string;
   senderType: 'customer' | 'agent' | 'system';
   senderName: string;
   body: string;
+  /** Agent-only image URLs (from POST /api/uploads). */
+  attachments?: SupportAttachment[];
   readByRecipient: boolean;
   createdAt: string;
 }
@@ -55,10 +62,14 @@ export class SupportService {
     return this.http.get<{ messages: SupportMessage[] }>(`${this.base}/conversations/${conversationId}/messages`);
   }
 
-  sendMessage(conversationId: string, body: string): Observable<{ message: SupportMessage }> {
+  sendMessage(
+    conversationId: string,
+    body: string,
+    attachmentUrls: string[] = []
+  ): Observable<{ message: SupportMessage }> {
     return this.http.post<{ message: SupportMessage }>(
       `${this.base}/conversations/${conversationId}/messages`,
-      { body }
+      { body, attachmentUrls }
     );
   }
 
