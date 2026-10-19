@@ -27,15 +27,29 @@ function sanitizeText(str) {
  * Only URLs already in our Azure container (from POST /api/uploads) are kept.
  * Agents attach images; customers cannot inject arbitrary URLs via the API.
  */
+function isOurBlobUrl(url) {
+  const base = azureStorageService.getContainerBaseUrl();
+  if (!base || !url) return false;
+  if (url.startsWith(base)) return true;
+  // Same account/container even if encoding or trailing-slash differs.
+  try {
+    const baseUrl = new URL(base);
+    const u = new URL(url);
+    const container = azureStorageService.containerName || '';
+    return u.hostname === baseUrl.hostname
+      && (!container || u.pathname.includes(`/${container}/`) || u.pathname.startsWith(`/${container}`));
+  } catch {
+    return false;
+  }
+}
+
 function normalizeAttachmentUrls(raw) {
   if (!Array.isArray(raw)) return [];
-  const base = azureStorageService.getContainerBaseUrl();
-  if (!base) return [];
   const out = [];
   const seen = new Set();
   for (const item of raw) {
     const url = typeof item === 'string' ? item.trim() : String(item?.url || '').trim();
-    if (!url || !url.startsWith(base) || seen.has(url)) continue;
+    if (!url || !isOurBlobUrl(url) || seen.has(url)) continue;
     seen.add(url);
     out.push({ url, contentType: 'image/jpeg' });
     if (out.length >= MAX_SUPPORT_ATTACHMENTS) break;
@@ -333,16 +347,27 @@ router.post('/conversations/:id/messages', authenticateToken, async (req, res) =
     }
 
     const io = req.app.get('io');
+    const rawAttachments = isAgent ? (req.body.attachmentUrls || req.body.attachments || []) : [];
+    const attachmentUrls = Array.isArray(rawAttachments) ? rawAttachments : [];
+    // Fail loudly if the agent thought they attached something but every URL
+    // was rejected — silent drop produced "text-only" messages in Nexus.
+    if (isAgent && attachmentUrls.length > 0) {
+      const kept = normalizeAttachmentUrls(attachmentUrls);
+      if (kept.length === 0) {
+        return res.status(400).json({
+          error: 'Invalid attachments',
+          message: 'Image URLs were rejected. Re-upload the image and try again.',
+        });
+      }
+    }
+
     const message = await createMessageAndEmit(
       conversation,
       isAgent ? 'agent' : 'customer',
       req.user.uid,
       req.body.body,
       io,
-      {
-        // Customers cannot attach; normalizeAttachmentUrls also no-ops for them.
-        attachmentUrls: isAgent ? (req.body.attachmentUrls || req.body.attachments) : [],
-      }
+      { attachmentUrls }
     );
 
     res.json({ message });

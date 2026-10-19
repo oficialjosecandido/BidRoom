@@ -184,15 +184,38 @@
             </div>
 
             @if (selected.status !== 'closed' && selected.status !== 'resolved') {
-              <div class="thread-reply">
+              <div
+                class="thread-reply"
+                [class.thread-reply--drop]="dragOverReply"
+                (dragover)="onReplyDragOver($event)"
+                (dragleave)="onReplyDragLeave($event)"
+                (drop)="onReplyDrop($event)"
+              >
+                <!-- Always in DOM when reply is open so ViewChild / click work. -->
                 <input
                   #replyFileInput
                   type="file"
                   accept="image/jpeg,image/png,image/gif,image/webp,image/bmp"
                   multiple
-                  hidden
+                  class="sr-only"
                   (change)="onReplyImagesSelected($event)"
                 />
+
+                <div class="thread-reply__toolbar">
+                  <button
+                    type="button"
+                    class="thread-reply__attach"
+                    (click)="openImagePicker()"
+                    [disabled]="sending || pendingImages.length >= maxReplyImages"
+                    title="Anexar imagens (ou cola / arrasta para a caixa)"
+                  >
+                    🖼 Anexar imagem
+                  </button>
+                  <span class="thread-reply__hint">
+                    Até {{ maxReplyImages }} · cola ou arrasta · Ctrl+Enter envia
+                  </span>
+                </div>
+
                 @if (pendingImages.length) {
                   <div class="thread-reply__previews">
                     @for (img of pendingImages; track img.previewUrl; let i = $index) {
@@ -215,25 +238,21 @@
                 <textarea
                   class="thread-reply__input"
                   [(ngModel)]="replyDraft"
-                  placeholder="Escrever resposta…"
-                  rows="3"
+                  placeholder="Escrever resposta… (podes colar ou arrastar imagens)"
+                  rows="2"
                   [disabled]="sending"
                   (keydown)="onReplyKeydown($event)"
+                  (paste)="onReplyPaste($event)"
                   aria-label="Resposta de suporte"
                 ></textarea>
                 <div class="thread-reply__footer">
-                  <div class="thread-reply__actions-left">
-                    <button
-                      type="button"
-                      class="thread-reply__attach"
-                      (click)="openImagePicker()"
-                      [disabled]="sending || pendingImages.length >= maxReplyImages"
-                      title="Anexar imagens"
-                    >
-                      🖼 Imagem
-                    </button>
-                    <span class="thread-reply__hint">Ctrl + Enter para enviar</span>
-                  </div>
+                  @if (pendingImages.length) {
+                    <span class="thread-reply__pending-count">
+                      {{ pendingImages.length }} imagem{{ pendingImages.length === 1 ? '' : 'ns' }} pronta{{ pendingImages.length === 1 ? '' : 's' }}
+                    </span>
+                  } @else {
+                    <span></span>
+                  }
                   <button
                     type="button"
                     class="action-btn action-btn--primary"

@@ -76,6 +76,7 @@ export class AdminSupportComponent implements OnInit, OnDestroy, AfterViewChecke
   replyDraft     = '';
   pendingImages: PendingReplyImage[] = [];
   uploadError = '';
+  dragOverReply = false;
   statusFilter   = 'pending_agent';
 
   readonly maxReplyImages = MAX_REPLY_IMAGES;
@@ -276,13 +277,52 @@ export class AdminSupportComponent implements OnInit, OnDestroy, AfterViewChecke
   }
 
   openImagePicker(): void {
-    this.replyFileInput?.nativeElement?.click();
+    const el = this.replyFileInput?.nativeElement;
+    if (el) {
+      el.click();
+      return;
+    }
+    this.uploadError = 'Não foi possível abrir o selector de ficheiros. Recarrega a página.';
+    this.cdr.markForCheck();
   }
 
   onReplyImagesSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
     const files = Array.from(input.files || []);
     input.value = '';
+    this.addReplyImageFiles(files);
+  }
+
+  onReplyPaste(event: ClipboardEvent): void {
+    const files = Array.from(event.clipboardData?.files || []).filter((f) =>
+      f.type.startsWith('image/')
+    );
+    if (!files.length) return;
+    event.preventDefault();
+    this.addReplyImageFiles(files);
+  }
+
+  onReplyDragOver(event: DragEvent): void {
+    if (!event.dataTransfer?.types?.includes('Files')) return;
+    event.preventDefault();
+    this.dragOverReply = true;
+    this.cdr.markForCheck();
+  }
+
+  onReplyDragLeave(event: DragEvent): void {
+    event.preventDefault();
+    this.dragOverReply = false;
+    this.cdr.markForCheck();
+  }
+
+  onReplyDrop(event: DragEvent): void {
+    event.preventDefault();
+    this.dragOverReply = false;
+    const files = Array.from(event.dataTransfer?.files || []);
+    this.addReplyImageFiles(files);
+  }
+
+  private addReplyImageFiles(files: File[]): void {
     if (!files.length) return;
 
     this.uploadError = '';
@@ -293,6 +333,7 @@ export class AdminSupportComponent implements OnInit, OnDestroy, AfterViewChecke
       return;
     }
 
+    let added = 0;
     for (const file of files.slice(0, room)) {
       if (!REPLY_IMAGE_TYPES.includes(file.type)) {
         this.uploadError = 'Só são aceites imagens (JPEG, PNG, GIF, WebP).';
@@ -306,6 +347,10 @@ export class AdminSupportComponent implements OnInit, OnDestroy, AfterViewChecke
         ...this.pendingImages,
         { file, previewUrl: URL.createObjectURL(file) },
       ];
+      added += 1;
+    }
+    if (added === 0 && !this.uploadError) {
+      this.uploadError = 'Nenhuma imagem válida foi adicionada.';
     }
     this.cdr.markForCheck();
   }
@@ -364,8 +409,10 @@ export class AdminSupportComponent implements OnInit, OnDestroy, AfterViewChecke
       this.replyDraft = '';
       this.clearPendingImages();
       this.needsScroll = true;
-    } catch {
-      this.uploadError = 'Não foi possível enviar. Verifica a ligação e tenta de novo.';
+    } catch (err: unknown) {
+      const apiMsg = (err as { error?: { message?: string; error?: string } })?.error;
+      this.uploadError =
+        apiMsg?.message || apiMsg?.error || 'Não foi possível enviar. Verifica a ligação e tenta de novo.';
     } finally {
       this.sending = false;
       this.uploadingImages = false;
