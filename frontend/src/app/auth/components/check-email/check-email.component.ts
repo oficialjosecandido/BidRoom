@@ -1,12 +1,14 @@
-import { Component, inject } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
+import { Component, computed, inject } from '@angular/core';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { AuthService } from '../../services/auth.service';
+import { ThemeService } from '../../../shared/services/theme.service';
+import { BidroomLogoComponent } from '../../../shared/components/bidroom-logo/bidroom-logo.component';
 
 @Component({
   selector: 'app-check-email',
   standalone: true,
-  imports: [TranslateModule],
+  imports: [TranslateModule, RouterLink, BidroomLogoComponent],
   templateUrl: './check-email.component.html',
   styleUrls: ['./check-email.component.scss']
 })
@@ -15,6 +17,9 @@ export class CheckEmailComponent {
   private router = inject(Router);
   private authService = inject(AuthService);
   private translate = inject(TranslateService);
+  private themeService = inject(ThemeService);
+
+  readonly isLight = computed(() => this.themeService.effective() === 'light');
 
   email = '';
   resending = false;
