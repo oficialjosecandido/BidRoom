@@ -245,6 +245,13 @@ export class ListingDetailsComponent implements OnInit, OnDestroy {
     this.updateIsOwnListing();
     this.loading = false;
     this.seo.setListing(listing);
+    const categoryName = this.categoryLabel(listing.category) || listing.category || 'Auctions';
+    const listingName = listing.titlePt || listing.titleEn || listing.title || 'Listing';
+    this.seo.setBreadcrumbs([
+      { name: 'BidRoom', path: '/' },
+      { name: categoryName, path: `/listing/list?category=${encodeURIComponent(listing.category || '')}` },
+      { name: listingName, path: `/listing/${listing.slug}` },
+    ]);
     if (this.isAuthenticated && !this.isOwnListing && listing.seller?._id) {
       this.loadSellerFollowStatus(listing.seller._id);
       this.loadSellerBlockStatus(listing.seller._id);

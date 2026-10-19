@@ -110,7 +110,10 @@ export const routes: Routes = [
     loadComponent: () => import('./notifications/email-preferences.component').then(m => m.EmailPreferencesComponent)
   },
   // Note: no '**' catch-all here — Angular SSR build fails with path-to-regexp v8 on unnamed wildcards.
-  // Unknown paths are handled at the server level (Express redirects to /landing).
-  // On the browser SPA, unknown paths simply don't navigate (stays on current route).
-  { path: 'not-found', redirectTo: '/landing', pathMatch: 'full' }
+  // Unknown paths get a real HTML 404 from Express (server.ts). SPA deep-links use /not-found.
+  {
+    path: 'not-found',
+    loadComponent: () =>
+      import('./landing/components/not-found/not-found.component').then((m) => m.NotFoundComponent),
+  },
 ];

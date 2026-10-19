@@ -91,13 +91,20 @@ app.use(async (req, res, next) => {
     } else {
       // No Angular route matched — real 404 (avoid Soft 404 / redirect loops for crawlers).
       res.status(404).type('html').send(`<!DOCTYPE html>
-<html lang="pt"><head><meta charset="utf-8"><title>404 · BidRoom</title>
+<html lang="pt"><head><meta charset="utf-8"><title>Página não encontrada · BidRoom</title>
 <meta name="robots" content="noindex">
+<meta name="description" content="Esta página não existe no BidRoom. Volte aos leilões, ao blog ou ao contacto.">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-</head><body style="font-family:system-ui,sans-serif;max-width:40rem;margin:4rem auto;padding:0 1.5rem;color:#1d1d1f">
-<h1 style="font-size:1.5rem">Página não encontrada</h1>
-<p style="color:#6e6e73">O endereço que pediu não existe ou foi removido.</p>
-<p><a href="/" style="color:#8C6B1E">Voltar ao BidRoom</a></p>
+</head><body style="font-family:system-ui,sans-serif;max-width:40rem;margin:4rem auto;padding:0 1.5rem;color:#111;background:#f8f7f4">
+<p style="margin:0 0 .5rem;font-size:3rem;font-weight:800;color:#C9A84C;line-height:1">404</p>
+<h1 style="font-size:1.5rem;margin:0 0 .75rem">Página não encontrada</h1>
+<p style="color:#64748b;line-height:1.55">O endereço que pediu não existe ou foi removido. Escolha um destino abaixo.</p>
+<p style="margin:1.5rem 0;display:flex;flex-wrap:wrap;gap:.75rem">
+  <a href="/" style="display:inline-block;padding:.7rem 1.1rem;border-radius:999px;background:#C9A84C;color:#111;font-weight:700;text-decoration:none">Início</a>
+  <a href="/listing/list" style="display:inline-block;padding:.7rem 1.1rem;border-radius:999px;border:1px solid #e8d9a8;color:#111;font-weight:700;text-decoration:none">Leilões</a>
+  <a href="/landing/contact" style="display:inline-block;padding:.7rem 1.1rem;border-radius:999px;border:1px solid #e8d9a8;color:#111;font-weight:700;text-decoration:none">Contacto</a>
+</p>
+<p style="font-size:.9rem"><a href="/landing/faq" style="color:#a8872e">FAQ</a> · <a href="/blog" style="color:#a8872e">Blog</a> · <a href="/landing/how-it-works" style="color:#a8872e">Como funciona</a></p>
 </body></html>`);
     }
   } catch (err) {

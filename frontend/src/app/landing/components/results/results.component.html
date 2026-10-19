@@ -1,0 +1,42 @@
+<app-header></app-header>
+
+<main class="res">
+  <header class="res-head">
+    <p class="res-eyebrow">{{ 'seoPages.results.eyebrow' | translate }}</p>
+    <h1 class="res-title">{{ 'seoPages.results.title' | translate }}</h1>
+    <p class="res-lead">{{ 'seoPages.results.lead' | translate }}</p>
+  </header>
+
+  <div class="res-stats" role="list">
+    <div class="res-stat" role="listitem">
+      <span class="res-stat-n">4.200+</span>
+      <span class="res-stat-l">{{ 'landing.home.stats.auctionsHeld' | translate }}</span>
+    </div>
+    <div class="res-stat" role="listitem">
+      <span class="res-stat-n">€ 2.8M</span>
+      <span class="res-stat-l">{{ 'landing.home.stats.transacted' | translate }}</span>
+    </div>
+    <div class="res-stat" role="listitem">
+      <span class="res-stat-n">98%</span>
+      <span class="res-stat-l">{{ 'landing.home.stats.completion' | translate }}</span>
+    </div>
+  </div>
+
+  <section class="res-cases" [attr.aria-label]="'seoPages.results.casesLabel' | translate">
+    @for (key of caseKeys; track key) {
+      <article class="res-case">
+        <p class="res-case-kicker">{{ ('seoPages.results.' + key + '.kicker') | translate }}</p>
+        <h2 class="res-case-title">{{ ('seoPages.results.' + key + '.title') | translate }}</h2>
+        <p class="res-case-body">{{ ('seoPages.results.' + key + '.body') | translate }}</p>
+        <p class="res-case-result">{{ ('seoPages.results.' + key + '.result') | translate }}</p>
+      </article>
+    }
+  </section>
+
+  <div class="res-cta">
+    <a routerLink="/listing/list" class="res-btn">{{ 'seoPages.results.cta' | translate }}</a>
+    <a routerLink="/landing/contact" class="res-link">{{ 'seoPages.results.contact' | translate }}</a>
+  </div>
+</main>
+
+<app-footer></app-footer>

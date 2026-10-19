@@ -1,8 +1,9 @@
 import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { Router } from '@angular/router';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { HeaderComponent } from '../../../shared/components/header/header.component';
 import { FooterComponent } from '../../../shared/components/footer/footer.component';
+import { SeoService } from '../../../shared/services/seo.service';
 
 type Tab = 'buyer' | 'seller' | 'private' | 'payments';
 
@@ -26,6 +27,8 @@ const PR_BIDS = [8200, 8450, 8700, 8950, 9200, 9500, 9800, 10100, 10400, 10700];
 })
 export class HowItWorksComponent implements OnInit, OnDestroy {
   private router = inject(Router);
+  private seo = inject(SeoService);
+  private translate = inject(TranslateService);
 
   activeTab: Tab = 'buyer';
   openFaqs: Record<string, number | null> = { buyer: null, seller: null, private: null, payments: null };
@@ -47,6 +50,16 @@ export class HowItWorksComponent implements OnInit, OnDestroy {
   readonly paymentsFaqs = [0, 1, 2, 3];
 
   ngOnInit(): void {
+    this.seo.setPage({
+      title: this.translate.instant('seoPages.howItWorks.titleTag'),
+      description: this.translate.instant('seoPages.howItWorks.description'),
+      path: '/landing/how-it-works',
+    });
+    this.seo.setBreadcrumbs([
+      { name: 'BidRoom', path: '/' },
+      { name: this.translate.instant('footer.howItWorks'), path: '/landing/how-it-works' },
+    ]);
+
     this.timerInterval = setInterval(() => {
       this.prTimer = this.prTimer > 0 ? this.prTimer - 1 : 58;
     }, 1000);

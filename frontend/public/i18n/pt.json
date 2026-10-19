@@ -3988,7 +3988,7 @@
     "contact": {
       "eyebrow": "Contacto",
       "title": "Como podemos ajudar?",
-      "response": "Respondemos em 1–2 dias úteis",
+      "response": "Respondemos em até 24 horas úteis",
       "name": "Nome completo",
       "email": "Email",
       "subject": "Assunto",
@@ -4013,7 +4013,7 @@
       "legalLabel": "Legal / RGPD",
       "address": "Morada",
       "company": "BidRoom Unipessoal Lda",
-      "addressLine": "Rua Exemplo, 123 · 1000-001 Lisboa",
+      "addressLine": "Lisboa, Portugal",
       "hours": "Horário de suporte",
       "hoursVal": "Seg–Sex · 9h–18h (Lisboa)",
       "reclamacoesLabel": "Livro de Reclamações",
@@ -4021,7 +4021,11 @@
       "reclamacoesDesc": "Pode apresentar uma reclamação formal através do Livro de Reclamações Electrónico, disponível em livroreclamacoes.pt. As reclamações são respondidas no prazo de 15 dias úteis.",
       "reclamacoesBtn": "Aceder ao Livro de Reclamações",
       "ralLabel": "Resolução Alternativa de Litígios",
-      "ralSub": "Para litígios não resolvidos pela plataforma"
+      "ralSub": "Para litígios não resolvidos pela plataforma",
+      "mapLabel": "Mapa e como chegar",
+      "mapNote": "Estamos sediados em Lisboa. O mapa mostra a cidade; o atendimento é por email em dias úteis.",
+      "mapTitle": "Mapa de Lisboa — BidRoom",
+      "mapOpen": "Abrir no OpenStreetMap"
     },
     "banner": {
       "title": "Utilizamos cookies",
@@ -4801,6 +4805,94 @@
       "24h": "24 horas",
       "48h": "48 horas",
       "7d": "uma semana"
+    }
+  },
+  "seoPages": {
+    "home": {
+      "titleTag": "BidRoom — Leilões premium em Portugal",
+      "description": "Compre e venda artigos únicos em leilões em tempo real, Melhor Proposta ou Sala Privada. Pagamentos seguros com Stripe."
+    },
+    "howItWorks": {
+      "titleTag": "Como funciona | BidRoom",
+      "description": "Guia do comprador e do vendedor: licitar, propor, salas privadas e payouts na BidRoom."
+    },
+    "faq": {
+      "titleTag": "Perguntas frequentes | BidRoom",
+      "description": "Respostas sobre contas, lances, envios, pagamentos e segurança no marketplace de leilões BidRoom."
+    },
+    "contact": {
+      "titleTag": "Contacto | BidRoom",
+      "description": "Fale com a BidRoom em Lisboa. Respondemos em até 24 horas úteis."
+    },
+    "notFound": {
+      "titleTag": "Página não encontrada · BidRoom",
+      "description": "Esta página não existe. Volte ao início, aos leilões ou ao contacto BidRoom.",
+      "title": "Página não encontrada",
+      "body": "O endereço que pediu não existe ou foi removido. Escolha um destino abaixo.",
+      "home": "Ir ao início",
+      "auctions": "Ver leilões",
+      "contact": "Contacto",
+      "moreLabel": "Mais páginas"
+    },
+    "thankYou": {
+      "titleTag": "Mensagem recebida · BidRoom",
+      "description": "Obrigado pelo contacto. A equipa BidRoom responde em até 24 horas úteis.",
+      "eyebrow": "Mensagem recebida",
+      "title": "Obrigado — já recebemos a sua mensagem",
+      "body": "A sua mensagem chegou à equipa BidRoom. Guardámos o pedido e vamos responder no email que indicou.",
+      "sla": "Prazo de resposta: até 24 horas úteis.",
+      "auctions": "Explorar leilões",
+      "home": "Voltar ao início"
+    },
+    "results": {
+      "nav": "Resultados",
+      "titleTag": "Resultados e prova social | BidRoom",
+      "description": "Números e casos reais da BidRoom: leilões concluídos, pagamentos protegidos e passatempos transparentes.",
+      "eyebrow": "Prova social",
+      "title": "Resultados que se podem verificar",
+      "lead": "A BidRoom é um marketplace de leilões com pagamentos protegidos, formato público e regras claras. Estes são resultados e práticas que qualquer visitante pode confirmar na plataforma.",
+      "casesLabel": "Casos",
+      "cta": "Ver leilões activos",
+      "contact": "Falar connosco",
+      "c1": {
+        "kicker": "Pagamentos",
+        "title": "Fundos retidos até confirmação de entrega",
+        "body": "As compras na BidRoom passam por Stripe: o pagamento é capturado e só é libertado ao vendedor depois da confirmação do comprador — ou mediação, se for preciso.",
+        "result": "Resultado: menos risco de “paguei e não recebi”."
+      },
+      "c2": {
+        "kicker": "Passatempos",
+        "title": "Giveaways com número de série e sorteio público",
+        "body": "Cada participação recebe um número; o sorteio é aleatório, registado e pode ser documentado na página do passatempo.",
+        "result": "Resultado: o vencedor é auditável — não uma caixa negra."
+      },
+      "c3": {
+        "kicker": "Conteúdo",
+        "title": "Guias que ensinam a comprar (e a não ser enganado)",
+        "body": "O blog publica guias práticos — por exemplo sobre relógios de luxo como investimento e sinais de fraude — para o mercado português.",
+        "result": "Resultado: educação que reduz erros caros de compra."
+      }
+    },
+    "about": {
+      "nav": "Sobre nós",
+      "titleTag": "Sobre a BidRoom | Equipa em Lisboa",
+      "description": "A BidRoom é um marketplace de leilões premium com sede em Lisboa. Conheça a história e a equipa.",
+      "eyebrow": "Sobre nós",
+      "title": "Marketplace de leilões, feito em Portugal",
+      "lead": "A BidRoom liga compradores e vendedores de peças especiais — relógios, joalharia, arte e mais — com licitação em tempo real e pagamentos protegidos.",
+      "storyTitle": "A história",
+      "storyBody": "Nasceu para tornar o leilão online tão claro quanto uma sala presencial: regras públicas, preços transparentes e payouts directos. Operamos a partir de Lisboa e servimos todo o país.",
+      "teamLabel": "Equipa",
+      "teamTitle": "Quem está por trás",
+      "teamNote": "Mostramos pessoas reais da empresa — sem stock photos. A equipa operacional partilha o mesmo contacto de suporte.",
+      "whereTitle": "Onde estamos",
+      "whereBody": "Sede em Lisboa. Atendimento por email em dias úteis, com resposta em até 24 horas.",
+      "contactCta": "Contactar a BidRoom",
+      "p1": {
+        "name": "José Cândido",
+        "role": "Fundador",
+        "bio": "Responsável pelo produto e pela operação da BidRoom em Portugal."
+      }
     }
   }
 }

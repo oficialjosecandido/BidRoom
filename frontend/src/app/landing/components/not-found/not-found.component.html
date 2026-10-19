@@ -1,0 +1,20 @@
+<app-header></app-header>
+
+<main class="nf">
+  <p class="nf-code" aria-hidden="true">404</p>
+  <h1 class="nf-title">{{ 'seoPages.notFound.title' | translate }}</h1>
+  <p class="nf-sub">{{ 'seoPages.notFound.body' | translate }}</p>
+  <div class="nf-actions">
+    <a routerLink="/" class="nf-btn nf-btn--primary">{{ 'seoPages.notFound.home' | translate }}</a>
+    <a routerLink="/listing/list" class="nf-btn">{{ 'seoPages.notFound.auctions' | translate }}</a>
+    <a routerLink="/landing/contact" class="nf-btn">{{ 'seoPages.notFound.contact' | translate }}</a>
+  </div>
+  <nav class="nf-links" [attr.aria-label]="'seoPages.notFound.moreLabel' | translate">
+    <a routerLink="/landing/how-it-works">{{ 'footer.howItWorks' | translate }}</a>
+    <a routerLink="/landing/faq">{{ 'footer.faq' | translate }}</a>
+    <a routerLink="/blog">{{ 'footer.blog' | translate }}</a>
+    <a routerLink="/landing/results">{{ 'seoPages.results.nav' | translate }}</a>
+  </nav>
+</main>
+
+<app-footer></app-footer>

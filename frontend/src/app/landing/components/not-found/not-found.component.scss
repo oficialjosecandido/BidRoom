@@ -1,0 +1,71 @@
+.nf {
+  max-width: 36rem;
+  margin: 0 auto;
+  padding: 4.5rem 1.25rem 5rem;
+  text-align: center;
+}
+
+.nf-code {
+  margin: 0 0 0.5rem;
+  font-size: 4rem;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  color: #c9a84c;
+  line-height: 1;
+}
+
+.nf-title {
+  margin: 0 0 0.75rem;
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: #111;
+  letter-spacing: -0.02em;
+}
+
+.nf-sub {
+  margin: 0 0 1.75rem;
+  font-size: 1rem;
+  line-height: 1.55;
+  color: #64748b;
+}
+
+.nf-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  justify-content: center;
+  margin-bottom: 2rem;
+}
+
+.nf-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.7rem 1.15rem;
+  border-radius: 999px;
+  border: 1px solid #e8d9a8;
+  color: #111;
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-decoration: none;
+  background: #fff;
+}
+
+.nf-btn--primary {
+  background: #c9a84c;
+  border-color: #c9a84c;
+}
+
+.nf-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.25rem;
+  justify-content: center;
+  font-size: 0.875rem;
+}
+
+.nf-links a {
+  color: #a8872e;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}

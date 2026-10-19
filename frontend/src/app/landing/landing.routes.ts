@@ -13,8 +13,20 @@ export const landingRoutes: Routes = [
     loadComponent: () => import('./components/contact/contact.component').then(m => m.ContactComponent)
   },
   {
+    path: 'thank-you',
+    loadComponent: () => import('./components/thank-you/thank-you.component').then(m => m.ThankYouComponent)
+  },
+  {
     path: 'faq',
     loadComponent: () => import('./components/faq/faq.component').then(m => m.FaqComponent)
+  },
+  {
+    path: 'results',
+    loadComponent: () => import('./components/results/results.component').then(m => m.ResultsComponent)
+  },
+  {
+    path: 'about',
+    loadComponent: () => import('./components/about/about.component').then(m => m.AboutComponent)
   },
   {
     path: 'privacy-policy',

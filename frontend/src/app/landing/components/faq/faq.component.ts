@@ -1,10 +1,11 @@
-import { Component, inject } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { HeaderComponent } from '../../../shared/components/header/header.component';
 import { FooterComponent } from '../../../shared/components/footer/footer.component';
+import { SeoService } from '../../../shared/services/seo.service';
 
 interface FAQItem {
   id: string;
@@ -20,13 +21,29 @@ interface FAQItem {
   templateUrl: './faq.component.html',
   styleUrls: ['./faq.component.scss']
 })
-export class FaqComponent {
+export class FaqComponent implements OnInit {
   private router = inject(Router);
   private translate = inject(TranslateService);
+  private seo = inject(SeoService);
 
   selectedCategory = 'all';
   searchTerm = '';
   expandedItems = new Set<string>();
+
+  ngOnInit(): void {
+    this.seo.setPage({
+      title: this.translate.instant('seoPages.faq.titleTag'),
+      description: this.translate.instant('seoPages.faq.description'),
+      path: '/landing/faq',
+    });
+    this.seo.setBreadcrumbs([
+      { name: 'BidRoom', path: '/' },
+      { name: this.translate.instant('footer.faq'), path: '/landing/faq' },
+    ]);
+    this.seo.setFaqSchema(
+      this.faqItems.slice(0, 12).map((f) => ({ question: f.question, answer: f.answer }))
+    );
+  }
 
   get faqItems(): FAQItem[] {
     return [

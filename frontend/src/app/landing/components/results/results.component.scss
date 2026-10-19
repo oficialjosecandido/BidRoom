@@ -1,0 +1,131 @@
+.res {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 3.5rem 1.25rem 4.5rem;
+}
+
+.res-eyebrow {
+  margin: 0 0 0.4rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #a8872e;
+}
+
+.res-title {
+  margin: 0 0 0.75rem;
+  font-size: clamp(1.6rem, 3vw, 2rem);
+  font-weight: 800;
+  color: #111;
+  letter-spacing: -0.02em;
+}
+
+.res-lead {
+  margin: 0 0 2rem;
+  font-size: 1.05rem;
+  line-height: 1.6;
+  color: #64748b;
+}
+
+.res-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+  margin-bottom: 2.25rem;
+}
+
+.res-stat {
+  padding: 1rem 0.75rem;
+  border: 1px solid #e8d9a8;
+  border-radius: 12px;
+  text-align: center;
+  background: #fff;
+}
+
+.res-stat-n {
+  display: block;
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #111;
+}
+
+.res-stat-l {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
+.res-cases {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.res-case {
+  padding: 1.35rem 1.25rem;
+  border: 1px solid #ececea;
+  border-radius: 12px;
+  background: #fff;
+}
+
+.res-case-kicker {
+  margin: 0 0 0.35rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #a8872e;
+}
+
+.res-case-title {
+  margin: 0 0 0.5rem;
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #111;
+}
+
+.res-case-body {
+  margin: 0 0 0.65rem;
+  font-size: 0.95rem;
+  line-height: 1.55;
+  color: #475569;
+}
+
+.res-case-result {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #111;
+}
+
+.res-cta {
+  margin-top: 2.25rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.25rem;
+  align-items: center;
+}
+
+.res-btn {
+  display: inline-flex;
+  padding: 0.75rem 1.35rem;
+  border-radius: 999px;
+  background: #c9a84c;
+  color: #111;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.res-link {
+  color: #a8872e;
+  font-weight: 600;
+  text-decoration: underline;
+}
+
+@media (max-width: 560px) {
+  .res-stats {
+    grid-template-columns: 1fr;
+  }
+}

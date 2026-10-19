@@ -34,7 +34,75 @@ export class SeoService {
   setDefault(): void {
     this.apply(DEFAULTS);
     this.removeListingLcpPreload();
+    this.removeJsonLd('breadcrumb-schema');
+    this.removeJsonLd('faq-schema');
     this.injectOrganizationSchema();
+  }
+
+  /**
+   * Title + description + canonical for a static marketing / legal page.
+   * Keeps Organization schema; clears listing/blog/faq/breadcrumb JSON-LD.
+   */
+  setPage(opts: { title: string; description: string; path: string }): void {
+    const clean = opts.path.split(/[?#]/)[0].replace(/\/+$/, '') || '/';
+    const url = clean === '/' ? BASE_URL : `${BASE_URL}${clean.startsWith('/') ? clean : `/${clean}`}`;
+    this.apply({
+      title: opts.title.slice(0, 70),
+      description: opts.description.length > 155 ? `${opts.description.slice(0, 152)}…` : opts.description,
+      url,
+      image: DEFAULT_OG,
+    });
+    this.setCanonical(url);
+    this.setListingOgType('website');
+    this.removeListingLcpPreload();
+    this.removeJsonLd('listing-schema');
+    this.removeJsonLd('blogpost-schema');
+    this.removeJsonLd('breadcrumb-schema');
+    this.removeJsonLd('faq-schema');
+    this.injectOrganizationSchema();
+  }
+
+  /** BreadcrumbList JSON-LD — items are { name, path } from root to current page. */
+  setBreadcrumbs(items: { name: string; path: string }[]): void {
+    if (!items?.length) {
+      this.removeJsonLd('breadcrumb-schema');
+      return;
+    }
+    this.injectJsonLd('breadcrumb-schema', {
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      itemListElement: items.map((item, i) => ({
+        '@type': 'ListItem',
+        position: i + 1,
+        name: item.name,
+        item: item.path.startsWith('http')
+          ? item.path
+          : `${BASE_URL}${item.path.startsWith('/') ? item.path : `/${item.path}`}`,
+      })),
+    });
+  }
+
+  /** FAQPage JSON-LD from real Q&A shown on the page. */
+  setFaqSchema(faqs: { question: string; answer: string }[]): void {
+    const cleaned = (faqs || [])
+      .map((f) => ({
+        question: String(f.question || '').replace(/\s+/g, ' ').trim(),
+        answer: String(f.answer || '').replace(/\s+/g, ' ').trim(),
+      }))
+      .filter((f) => f.question && f.answer);
+    if (cleaned.length < 2) {
+      this.removeJsonLd('faq-schema');
+      return;
+    }
+    this.injectJsonLd('faq-schema', {
+      '@context': 'https://schema.org',
+      '@type': 'FAQPage',
+      mainEntity: cleaned.map((f) => ({
+        '@type': 'Question',
+        name: f.question,
+        acceptedAnswer: { '@type': 'Answer', text: f.answer },
+      })),
+    });
   }
 
   /**
@@ -299,26 +367,49 @@ export class SeoService {
       '@context': 'https://schema.org',
       '@graph': [
         {
-          '@type': 'Organization',
-          name:    'BidRoom',
-          url:     BASE_URL,
-          logo:    `${BASE_URL}/favicon.svg`,
-          sameAs:  [
+          '@type': ['Organization', 'OnlineBusiness'],
+          '@id': `${BASE_URL}/#organization`,
+          name: 'BidRoom',
+          legalName: 'BidRoom Unipessoal Lda',
+          url: BASE_URL,
+          logo: `${BASE_URL}/favicon.svg`,
+          email: 'contact@bidroom.pt',
+          address: {
+            '@type': 'PostalAddress',
+            addressLocality: 'Lisboa',
+            addressCountry: 'PT',
+          },
+          areaServed: {
+            '@type': 'Country',
+            name: 'Portugal',
+          },
+          contactPoint: [
+            {
+              '@type': 'ContactPoint',
+              contactType: 'customer support',
+              email: 'contact@bidroom.pt',
+              availableLanguage: ['Portuguese', 'English', 'French', 'Spanish'],
+              areaServed: 'PT',
+            },
+          ],
+          sameAs: [
             'https://www.instagram.com/bidroompt',
             'https://twitter.com/bidroompt',
           ],
         },
         {
           '@type': 'WebSite',
-          name:    'BidRoom',
-          url:     BASE_URL,
+          '@id': `${BASE_URL}/#website`,
+          name: 'BidRoom',
+          url: BASE_URL,
+          publisher: { '@id': `${BASE_URL}/#organization` },
           potentialAction: {
-            '@type':        'SearchAction',
+            '@type': 'SearchAction',
             target: {
-              '@type':      'EntryPoint',
-              urlTemplate:  `${BASE_URL}/listings?q={search_term_string}`,
+              '@type': 'EntryPoint',
+              urlTemplate: `${BASE_URL}/listings?q={search_term_string}`,
             },
-            'query-input':  'required name=search_term_string',
+            'query-input': 'required name=search_term_string',
           },
         },
       ],

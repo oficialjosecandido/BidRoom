@@ -15,6 +15,7 @@ import {
   onListingImageError
 } from '../../../shared/utils/listing-image';
 import { BidroomLogoComponent } from '../../../shared/components/bidroom-logo/bidroom-logo.component';
+import { SeoService } from '../../../shared/services/seo.service';
 
 /** Matches hero card width in CSS: min(380px, 78vw). */
 const HERO_IMG_SIZES = 'min(380px, 78vw)';
@@ -33,6 +34,7 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
   private listingsService = inject(ListingsService);
   readonly themeService = inject(ThemeService);
   private router = inject(Router);
+  private seo = inject(SeoService);
   private zone = inject(NgZone);
   private cdr = inject(ChangeDetectorRef);
   private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
@@ -87,6 +89,11 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    this.seo.setPage({
+      title: this.translate.instant('seoPages.home.titleTag'),
+      description: this.translate.instant('seoPages.home.description'),
+      path: '/',
+    });
     this.loadFeaturedListings();
     this.loadActiveListings();
   }

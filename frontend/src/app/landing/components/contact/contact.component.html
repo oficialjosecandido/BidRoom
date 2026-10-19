@@ -6,10 +6,6 @@
       <div class="legal-updated">{{ 'legal.contact.response' | translate }}</div>
     </div>
 
-    @if (submitMessage) {
-      <p class="form-success" role="status">{{ submitMessage }}</p>
-    }
-
     <div class="contact-grid">
       <form [formGroup]="contactForm" (ngSubmit)="onSubmit()" class="contact-form">
         <div class="form-field">
@@ -88,6 +84,26 @@
               <div class="cic-val">{{ 'legal.contact.hoursVal' | translate }}</div>
             </div>
           </div>
+        </div>
+
+        <div class="contact-map-block">
+          <div class="cic-label">{{ 'legal.contact.mapLabel' | translate }}</div>
+          <p class="contact-map-note">{{ 'legal.contact.mapNote' | translate }}</p>
+          <div class="contact-map">
+            <iframe
+              [src]="mapUrl"
+              [attr.title]="'legal.contact.mapTitle' | translate"
+              loading="lazy"
+              referrerpolicy="no-referrer-when-downgrade"
+              allowfullscreen></iframe>
+          </div>
+          <a
+            class="contact-map-link"
+            href="https://www.openstreetmap.org/?mlat=38.7223&mlon=-9.1393#map=13/38.7223/-9.1393"
+            target="_blank"
+            rel="noopener noreferrer">
+            {{ 'legal.contact.mapOpen' | translate }} ↗
+          </a>
         </div>
 
         <div class="reclamacoes-card">

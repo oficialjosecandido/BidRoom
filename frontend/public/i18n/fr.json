@@ -4747,5 +4747,103 @@
       "btnSecondary": "Voir les enchères actives",
       "btnPrimary": "Créer un compte gratuit"
     }
+  },
+  "seoPages": {
+    "home": {
+      "titleTag": "BidRoom — Enchères premium au Portugal",
+      "description": "Achetez et vendez des pièces uniques via enchères en direct, Meilleure offre ou Salle privée. Paiements sécurisés Stripe."
+    },
+    "howItWorks": {
+      "titleTag": "Comment ça marche | BidRoom",
+      "description": "Guide acheteur et vendeur : enchères, offres, salles privées et paiements sur BidRoom."
+    },
+    "faq": {
+      "titleTag": "FAQ | BidRoom",
+      "description": "Réponses sur les comptes, enchères, livraisons, paiements et sécurité sur BidRoom."
+    },
+    "contact": {
+      "titleTag": "Contact | BidRoom",
+      "description": "Contactez BidRoom à Lisbonne. Réponse sous 24 heures ouvrées."
+    },
+    "notFound": {
+      "titleTag": "Page introuvable · BidRoom",
+      "description": "Cette page n’existe pas. Retour à l’accueil, aux enchères ou au contact.",
+      "title": "Page introuvable",
+      "body": "L’adresse demandée n’existe pas ou a été retirée. Choisissez une destination ci-dessous.",
+      "home": "Accueil",
+      "auctions": "Voir les enchères",
+      "contact": "Contact",
+      "moreLabel": "Plus de pages"
+    },
+    "thankYou": {
+      "titleTag": "Message reçu · BidRoom",
+      "description": "Merci pour votre message. BidRoom répond sous 24 heures ouvrées.",
+      "eyebrow": "Message reçu",
+      "title": "Merci — nous avons bien reçu votre message",
+      "body": "Votre message est arrivé à l’équipe BidRoom. Nous répondrons à l’e-mail indiqué.",
+      "sla": "Délai de réponse : sous 24 heures ouvrées.",
+      "auctions": "Explorer les enchères",
+      "home": "Retour à l’accueil"
+    },
+    "results": {
+      "nav": "Résultats",
+      "titleTag": "Résultats et preuve sociale | BidRoom",
+      "description": "Chiffres et pratiques vérifiables de BidRoom : enchères, paiements protégés et tirages transparents.",
+      "eyebrow": "Preuve sociale",
+      "title": "Des résultats que l’on peut vérifier",
+      "lead": "BidRoom est une place de marché d’enchères avec paiements protégés, formats publics et règles claires. Voici des résultats et pratiques que chacun peut contrôler.",
+      "casesLabel": "Cas",
+      "cta": "Voir les enchères en cours",
+      "contact": "Nous contacter",
+      "c1": {
+        "kicker": "Paiements",
+        "title": "Fonds retenus jusqu’à confirmation de livraison",
+        "body": "Les achats passent par Stripe : le paiement est capturé et n’est libéré au vendeur qu’après confirmation de l’acheteur — ou médiation si besoin.",
+        "result": "Résultat : moins de risque « j’ai payé et rien reçu »."
+      },
+      "c2": {
+        "kicker": "Jeux-concours",
+        "title": "Tirages avec numéro de série et tirage public",
+        "body": "Chaque participation reçoit un numéro ; le tirage est aléatoire, enregistré et peut être documenté sur la page du concours.",
+        "result": "Résultat : le gagnant est auditable — pas une boîte noire."
+      },
+      "c3": {
+        "kicker": "Contenu",
+        "title": "Des guides pour acheter (et éviter la fraude)",
+        "body": "Le blog publie des guides pratiques — par exemple sur les montres de luxe comme investissement et les signaux de fraude — pour le marché portugais.",
+        "result": "Résultat : une éducation qui évite les erreurs coûteuses."
+      }
+    },
+    "about": {
+      "nav": "À propos",
+      "titleTag": "À propos de BidRoom | Équipe à Lisbonne",
+      "description": "BidRoom est une place de marché d’enchères premium basée à Lisbonne. Découvrez l’histoire et l’équipe.",
+      "eyebrow": "À propos",
+      "title": "Une place d’enchères, faite au Portugal",
+      "lead": "BidRoom relie acheteurs et vendeurs de pièces spéciales — montres, joaillerie, art et plus — avec enchères en direct et paiements protégés.",
+      "storyTitle": "L’histoire",
+      "storyBody": "Créée pour rendre l’enchère en ligne aussi claire qu’une salle : règles publiques, prix transparents et paiements directs. Nous opérons depuis Lisbonne.",
+      "teamLabel": "Équipe",
+      "teamTitle": "Qui est derrière",
+      "teamNote": "Nous montrons de vraies personnes de l’entreprise — pas de photos de banque d’images. Les opérations partagent la même boîte support.",
+      "whereTitle": "Où nous sommes",
+      "whereBody": "Siège à Lisbonne. Support par e-mail les jours ouvrés, réponse sous 24 heures.",
+      "contactCta": "Contacter BidRoom",
+      "p1": {
+        "name": "José Cândido",
+        "role": "Fondateur",
+        "bio": "Responsable du produit et des opérations BidRoom au Portugal."
+      }
+    }
+  },
+  "legal": {
+    "contact": {
+      "response": "Nous répondons sous 24 heures ouvrées",
+      "addressLine": "Lisbonne, Portugal",
+      "mapLabel": "Carte et accès",
+      "mapNote": "Nous sommes basés à Lisbonne. La carte montre la ville ; le support se fait par e-mail les jours ouvrés.",
+      "mapTitle": "Carte de Lisbonne — BidRoom",
+      "mapOpen": "Ouvrir dans OpenStreetMap"
+    }
   }
 }

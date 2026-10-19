@@ -3988,7 +3988,7 @@
     "contact": {
       "eyebrow": "Contact",
       "title": "How can we help?",
-      "response": "We respond within 1–2 business days",
+      "response": "We reply within 24 business hours",
       "name": "Full name",
       "email": "Email",
       "subject": "Subject",
@@ -4013,7 +4013,7 @@
       "legalLabel": "Legal / GDPR",
       "address": "Address",
       "company": "BidRoom Unipessoal Lda",
-      "addressLine": "Rua Exemplo, 123 · 1000-001 Lisbon",
+      "addressLine": "Lisbon, Portugal",
       "hours": "Support hours",
       "hoursVal": "Mon–Fri · 9am–6pm (Lisbon)",
       "reclamacoesLabel": "Complaints Book",
@@ -4021,7 +4021,11 @@
       "reclamacoesDesc": "You can submit a formal complaint through the Electronic Complaints Book at livroreclamacoes.pt. Complaints are answered within 15 business days.",
       "reclamacoesBtn": "Access the Complaints Book",
       "ralLabel": "Alternative Dispute Resolution",
-      "ralSub": "For disputes not resolved by the platform"
+      "ralSub": "For disputes not resolved by the platform",
+      "mapLabel": "Map & how to get there",
+      "mapNote": "We are based in Lisbon. The map shows the city; support is by email on business days.",
+      "mapTitle": "Lisbon map — BidRoom",
+      "mapOpen": "Open in OpenStreetMap"
     },
     "banner": {
       "title": "We use cookies",
@@ -4801,6 +4805,94 @@
       "24h": "24 hours",
       "48h": "48 hours",
       "7d": "1 week"
+    }
+  },
+  "seoPages": {
+    "home": {
+      "titleTag": "BidRoom — Premium auctions in Portugal",
+      "description": "Buy and sell unique pieces via live auctions, Best Offer or Private Rooms. Secure Stripe payments."
+    },
+    "howItWorks": {
+      "titleTag": "How it works | BidRoom",
+      "description": "Buyer and seller guide: bidding, offers, private rooms and payouts on BidRoom."
+    },
+    "faq": {
+      "titleTag": "FAQ | BidRoom",
+      "description": "Answers about accounts, bids, shipping, payments and safety on the BidRoom auction marketplace."
+    },
+    "contact": {
+      "titleTag": "Contact | BidRoom",
+      "description": "Reach BidRoom in Lisbon. We reply within 24 business hours."
+    },
+    "notFound": {
+      "titleTag": "Page not found · BidRoom",
+      "description": "This page does not exist. Go home, browse auctions or contact BidRoom.",
+      "title": "Page not found",
+      "body": "The address you asked for does not exist or was removed. Pick a destination below.",
+      "home": "Go home",
+      "auctions": "Browse auctions",
+      "contact": "Contact",
+      "moreLabel": "More pages"
+    },
+    "thankYou": {
+      "titleTag": "Message received · BidRoom",
+      "description": "Thanks for getting in touch. BidRoom replies within 24 business hours.",
+      "eyebrow": "Message received",
+      "title": "Thank you — we got your message",
+      "body": "Your message reached the BidRoom team. We will reply to the email you provided.",
+      "sla": "Response time: within 24 business hours.",
+      "auctions": "Browse auctions",
+      "home": "Back home"
+    },
+    "results": {
+      "nav": "Results",
+      "titleTag": "Results & social proof | BidRoom",
+      "description": "BidRoom numbers and verifiable practices: completed auctions, protected payments and transparent giveaways.",
+      "eyebrow": "Social proof",
+      "title": "Results you can verify",
+      "lead": "BidRoom is an auction marketplace with protected payments, public formats and clear rules. These are outcomes and practices anyone can check on the platform.",
+      "casesLabel": "Cases",
+      "cta": "See live auctions",
+      "contact": "Talk to us",
+      "c1": {
+        "kicker": "Payments",
+        "title": "Funds held until delivery is confirmed",
+        "body": "Purchases go through Stripe: payment is captured and only released to the seller after the buyer confirms — or after mediation if needed.",
+        "result": "Outcome: less “I paid and got nothing” risk."
+      },
+      "c2": {
+        "kicker": "Giveaways",
+        "title": "Giveaways with serial numbers and a public draw",
+        "body": "Every entry gets a number; the draw is random, recorded and can be documented on the giveaway page.",
+        "result": "Outcome: the winner is auditable — not a black box."
+      },
+      "c3": {
+        "kicker": "Content",
+        "title": "Guides that teach how to buy (and avoid fraud)",
+        "body": "The blog publishes practical guides — for example on luxury watches as investments and fraud signals — for the Portuguese market.",
+        "result": "Outcome: education that prevents expensive buying mistakes."
+      }
+    },
+    "about": {
+      "nav": "About",
+      "titleTag": "About BidRoom | Team in Lisbon",
+      "description": "BidRoom is a premium auction marketplace based in Lisbon. Meet the story and the people.",
+      "eyebrow": "About us",
+      "title": "An auction marketplace, made in Portugal",
+      "lead": "BidRoom connects buyers and sellers of special pieces — watches, jewellery, art and more — with live bidding and protected payments.",
+      "storyTitle": "The story",
+      "storyBody": "It was built to make online auctions as clear as a live room: public rules, transparent prices and direct payouts. We operate from Lisbon and serve the whole country.",
+      "teamLabel": "Team",
+      "teamTitle": "Who is behind it",
+      "teamNote": "We show real people from the company — no stock photos. Operations share the same support inbox.",
+      "whereTitle": "Where we are",
+      "whereBody": "Based in Lisbon. Email support on business days, with a reply within 24 hours.",
+      "contactCta": "Contact BidRoom",
+      "p1": {
+        "name": "José Cândido",
+        "role": "Founder",
+        "bio": "Responsible for BidRoom’s product and operations in Portugal."
+      }
     }
   }
 }

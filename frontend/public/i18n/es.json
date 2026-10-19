@@ -4747,5 +4747,103 @@
       "btnSecondary": "Ver subastas activas",
       "btnPrimary": "Crear cuenta gratis"
     }
+  },
+  "seoPages": {
+    "home": {
+      "titleTag": "BidRoom — Subastas premium en Portugal",
+      "description": "Compra y vende piezas únicas en subastas en tiempo real, Mejor Oferta o Sala Privada. Pagos seguros con Stripe."
+    },
+    "howItWorks": {
+      "titleTag": "Cómo funciona | BidRoom",
+      "description": "Guía del comprador y del vendedor: pujas, ofertas, salas privadas y pagos en BidRoom."
+    },
+    "faq": {
+      "titleTag": "Preguntas frecuentes | BidRoom",
+      "description": "Respuestas sobre cuentas, pujas, envíos, pagos y seguridad en el marketplace de subastas BidRoom."
+    },
+    "contact": {
+      "titleTag": "Contacto | BidRoom",
+      "description": "Contacta con BidRoom en Lisboa. Respondemos en un máximo de 24 horas laborables."
+    },
+    "notFound": {
+      "titleTag": "Página no encontrada · BidRoom",
+      "description": "Esta página no existe. Vuelve al inicio, a las subastas o al contacto.",
+      "title": "Página no encontrada",
+      "body": "La dirección que pediste no existe o fue eliminada. Elige un destino abajo.",
+      "home": "Ir al inicio",
+      "auctions": "Ver subastas",
+      "contact": "Contacto",
+      "moreLabel": "Más páginas"
+    },
+    "thankYou": {
+      "titleTag": "Mensaje recibido · BidRoom",
+      "description": "Gracias por contactarnos. BidRoom responde en un máximo de 24 horas laborables.",
+      "eyebrow": "Mensaje recibido",
+      "title": "Gracias — ya recibimos tu mensaje",
+      "body": "Tu mensaje llegó al equipo de BidRoom. Responderemos al email que indicaste.",
+      "sla": "Plazo de respuesta: hasta 24 horas laborables.",
+      "auctions": "Explorar subastas",
+      "home": "Volver al inicio"
+    },
+    "results": {
+      "nav": "Resultados",
+      "titleTag": "Resultados y prueba social | BidRoom",
+      "description": "Números y prácticas verificables de BidRoom: subastas, pagos protegidos y sorteos transparentes.",
+      "eyebrow": "Prueba social",
+      "title": "Resultados que se pueden verificar",
+      "lead": "BidRoom es un marketplace de subastas con pagos protegidos, formatos públicos y reglas claras. Estos son resultados y prácticas que cualquiera puede comprobar.",
+      "casesLabel": "Casos",
+      "cta": "Ver subastas activas",
+      "contact": "Hablar con nosotros",
+      "c1": {
+        "kicker": "Pagos",
+        "title": "Fondos retenidos hasta confirmar la entrega",
+        "body": "Las compras pasan por Stripe: el pago se captura y solo se libera al vendedor tras la confirmación del comprador — o mediación si hace falta.",
+        "result": "Resultado: menos riesgo de “pagué y no recibí”."
+      },
+      "c2": {
+        "kicker": "Sorteos",
+        "title": "Sorteos con número de serie y sorteo público",
+        "body": "Cada participación recibe un número; el sorteo es aleatorio, registrado y puede documentarse en la página del sorteo.",
+        "result": "Resultado: el ganador es auditable — no una caja negra."
+      },
+      "c3": {
+        "kicker": "Contenido",
+        "title": "Guías para comprar (y no ser engañado)",
+        "body": "El blog publica guías prácticas — por ejemplo sobre relojes de lujo como inversión y señales de fraude — para el mercado portugués.",
+        "result": "Resultado: educación que evita errores caros."
+      }
+    },
+    "about": {
+      "nav": "Sobre nosotros",
+      "titleTag": "Sobre BidRoom | Equipo en Lisboa",
+      "description": "BidRoom es un marketplace de subastas premium con sede en Lisboa. Conoce la historia y el equipo.",
+      "eyebrow": "Sobre nosotros",
+      "title": "Marketplace de subastas, hecho en Portugal",
+      "lead": "BidRoom conecta compradores y vendedores de piezas especiales — relojes, joyería, arte y más — con pujas en tiempo real y pagos protegidos.",
+      "storyTitle": "La historia",
+      "storyBody": "Nació para hacer la subasta online tan clara como una sala presencial: reglas públicas, precios transparentes y pagos directos. Operamos desde Lisboa.",
+      "teamLabel": "Equipo",
+      "teamTitle": "Quién está detrás",
+      "teamNote": "Mostramos personas reales de la empresa — sin fotos de stock. Operaciones comparte el mismo email de soporte.",
+      "whereTitle": "Dónde estamos",
+      "whereBody": "Sede en Lisboa. Atención por email en días laborables, con respuesta en hasta 24 horas.",
+      "contactCta": "Contactar BidRoom",
+      "p1": {
+        "name": "José Cândido",
+        "role": "Fundador",
+        "bio": "Responsable del producto y de la operación de BidRoom en Portugal."
+      }
+    }
+  },
+  "legal": {
+    "contact": {
+      "response": "Respondemos en un máximo de 24 horas laborables",
+      "addressLine": "Lisboa, Portugal",
+      "mapLabel": "Mapa y cómo llegar",
+      "mapNote": "Estamos en Lisboa. El mapa muestra la ciudad; la atención es por email en días laborables.",
+      "mapTitle": "Mapa de Lisboa — BidRoom",
+      "mapOpen": "Abrir en OpenStreetMap"
+    }
   }
 }
