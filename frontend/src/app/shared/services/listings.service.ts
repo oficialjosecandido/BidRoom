@@ -176,6 +176,9 @@ export type CreatedListing = Listing & {
 
 export interface AttributeDef {
   key: string;
+  /** i18n key under addListing.attributes.fields.* */
+  labelKey?: string;
+  /** Portuguese fallback when labelKey is missing / untranslated */
   label: string;
   type: 'text' | 'number' | 'boolean' | 'enum';
   required: boolean;

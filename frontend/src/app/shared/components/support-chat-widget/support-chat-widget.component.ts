@@ -34,6 +34,8 @@ export class SupportChatWidgetComponent implements OnInit, OnDestroy, AfterViewC
 
   /** Hidden on Nexus — agents use the admin support page instead. */
   hiddenOnRoute = false;
+  /** Lift FAB above sticky bottom bars (add/edit listing wizard). */
+  liftAboveFooter = false;
   isAuthenticated = false;
   isOpen          = false;
   loading         = false;
@@ -50,13 +52,12 @@ export class SupportChatWidgetComponent implements OnInit, OnDestroy, AfterViewC
   ngOnInit(): void {
     if (!isPlatformBrowser(this.platformId)) return;
 
-    this.hiddenOnRoute = this.router.url.startsWith('/nexus');
+    this.applyRouteFlags(this.router.url);
     this.router.events.pipe(
       filter((e): e is NavigationEnd => e instanceof NavigationEnd),
       takeUntilDestroyed(this.destroyRef),
-    ).subscribe(() => {
-      this.hiddenOnRoute = this.router.url.startsWith('/nexus');
-      if (this.hiddenOnRoute) this.isOpen = false;
+    ).subscribe((e) => {
+      this.applyRouteFlags(e.urlAfterRedirects || e.url);
       this.cdr.markForCheck();
     });
 
@@ -91,6 +92,15 @@ export class SupportChatWidgetComponent implements OnInit, OnDestroy, AfterViewC
   }
 
   ngOnDestroy(): void {}
+
+  private applyRouteFlags(url: string): void {
+    const path = url.split('?')[0];
+    this.hiddenOnRoute = path.startsWith('/nexus');
+    // Wizard sticky footer (~72px) would otherwise cover the FAB.
+    this.liftAboveFooter =
+      path === '/listing/add' || /^\/listing\/[^/]+\/edit$/.test(path);
+    if (this.hiddenOnRoute) this.isOpen = false;
+  }
 
   ngAfterViewChecked(): void {
     if (this.needsScroll) {

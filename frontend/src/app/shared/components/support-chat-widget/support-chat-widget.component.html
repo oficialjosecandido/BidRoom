@@ -1,5 +1,5 @@
 @if (isAuthenticated && !hiddenOnRoute) {
-  <div class="sw-root">
+  <div class="sw-root" [class.sw-root--above-footer]="liftAboveFooter">
 
     @if (isOpen) {
       <div class="sw-panel" role="dialog" aria-label="Suporte BidRoom" aria-modal="true">

@@ -1377,6 +1377,13 @@ export class AddListing implements OnInit, OnDestroy {
     this.attributesGroup?.get(key)?.markAsDirty();
   }
 
+  /** Translate schema labelKey; fall back to API Portuguese label. */
+  attributeLabel(attr: { key: string; labelKey?: string; label: string }): string {
+    const i18nKey = `addListing.attributes.fields.${attr.labelKey || attr.key}`;
+    const translated = this.translate.instant(i18nKey);
+    return translated !== i18nKey ? translated : (attr.label || attr.key);
+  }
+
   onFileSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files.length > 0) {

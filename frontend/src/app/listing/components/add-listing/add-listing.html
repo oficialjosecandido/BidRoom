@@ -312,7 +312,7 @@
             @for (attr of attributeSchema(); track attr.key) {
               <div class="attr-field" [class.attr-field--full]="attr.type === 'boolean'">
                 <label class="field-label">
-                  {{ attr.label }}
+                  {{ attributeLabel(attr) }}
                   @if (attr.required) { <span class="req">*</span> }
                 </label>
 
